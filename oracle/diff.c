@@ -967,6 +967,74 @@ static void test_synth_setup(void)
     report("synth setup", cases, bad, 0);
 }
 
+/* Every amplitude at zero leaves nothing excited and nothing ringing, so the
+   block loop takes its silence path and the synthesis body never runs. That
+   exercises the loop, the output call and the frame tail on their own. */
+static void test_synth_silence(void)
+{
+    int cases = 0, bad = 0;
+    int t, i;
+    static const int32_t rates[] = {8000, 11025};
+
+    rng_seed(0x511e0c1au);
+    for (t = 0; t < 20000; t++) {
+        klatt_state *mine = ibm_klatt_new((void *)0x1234);
+        klatt_state *theirs = klatt_new((void *)0x1234);
+        KlattConstParms parms;
+        int32_t frame[63];
+        unsigned char *pp = (unsigned char *)&parms;
+        int ra, rb;
+        size_t b;
+
+        for (b = 0; b < sizeof(parms); b++)
+            pp[b] = (unsigned char)rng_next();
+        parms.sample_rate = rates[rng_next() % 2u];
+        parms.n_formants = (int32_t)(rng_next() % 9u);
+        parms.error_fn = error_sink;
+        parms.samples_fn = sample_sink;
+        parms.unknown_00 = (int32_t)(rng_next() % 20u) + 1;
+        parms.unknown_20 = (int32_t)(rng_next() % 100u);
+        parms.unknown_24 = (int32_t)(rng_next() % 100u);
+        parms.unknown_28 = (int32_t)(rng_next() % 100u);
+        parms.unknown_2c = (int32_t)(rng_next() % 100u);
+
+        ibm_KlattSetConstParms(mine, parms);
+        KlattSetConstParms(theirs, parms);
+
+        for (i = 0; i < 63; i++)
+            frame[i] = (int32_t)(rng_next() % 6000u) - 500;
+        frame[0] = (int32_t)(rng_next() % 500u);   /* duration */
+        frame[2] = 0;                              /* av */
+        frame[7] = 0;                              /* ah */
+        frame[8] = 0;                              /* af */
+        frame[43] = (int32_t)(rng_next() % 100u);
+        for (i = 35; i <= 42; i++)
+            frame[i] = (int32_t)(rng_next() % 100u);
+
+        mine->volume = theirs->volume = 100;
+        mine->cp.callback_mode = theirs->cp.callback_mode =
+            (int32_t)(rng_next() % 3u);
+
+        rb = ibm_KlattSynth(mine, frame);
+        ra = KlattSynth(theirs, frame);
+
+        cases++;
+        if (ra != rb || state_differs(mine, theirs)) {
+            if (bad < 4)
+                printf("  silence differs ui=%ld u00=%ld rate=%ld at 0x%04lx\n",
+                       (long)frame[0], (long)parms.unknown_00,
+                       (long)parms.sample_rate,
+                       first_difference(mine, theirs));
+            bad++;
+        }
+
+        ibm_klatt_delete(mine);
+        klatt_delete(theirs);
+    }
+
+    report("synth silence", cases, bad, 0);
+}
+
 int main(void)
 {
     printf("diff: comparing our transcription against IBM clsyn.obj\n");
@@ -989,6 +1057,7 @@ int main(void)
     test_tables();
     test_setconstparms();
     test_synth_setup();
+    test_synth_silence();
 
     printf("diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;

@@ -70,7 +70,7 @@ int KlattSynth(void *handle, const int32_t *parms)
 {
     klatt_state *k = handle;
     int32_t freq[21], bw[21], amp[21];
-    int32_t n_samples, i, j, first;
+    int32_t n_samples, i, j, first, remaining;
     int32_t ab_base;
     int16_t four;
 
@@ -295,8 +295,28 @@ int KlattSynth(void *handle, const int32_t *parms)
     if (k->ah != 0)
         (void)db2lin(k->unknown_1834 + k->unknown_1838 + k->ah);
 
-    /* The per-sample loop belongs here. With n_samples of zero the original
-       jumps straight past it to the frame tail below. */
+    /* Samples come out in blocks of at most one noise buffer at a time. */
+    remaining = n_samples;
+    while (remaining > 0) {
+        int32_t block = k->noise_count < remaining ? k->noise_count : remaining;
+
+        k->noise_count = block;
+        k->unknown_14a0 = mul32(k->noise_count, 1000) / k->cp.sample_rate;
+        remaining -= k->noise_count;
+
+        /* Nothing excited and nothing still ringing: hand back silence rather
+           than run the whole synthesis chain over zeros. */
+        if (k->unknown_1498 <= 0 && k->unknown_149c <= 0 &&
+            k->unknown_14e0 == 0 && k->unknown_14f0 == 0 &&
+            k->unknown_14e4 == 0) {
+            for (i = 0; i < k->noise_count; i++)
+                k->out[i] = 0;
+        } else {
+            /* The synthesis body belongs here. */
+        }
+
+        output_speech(k, k->noise_count);
+    }
 
     k->length += n_samples;
 
