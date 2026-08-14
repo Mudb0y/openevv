@@ -1200,6 +1200,93 @@ static void test_synth_voiced(void)
     report("synth voiced", cases, bad, 0);
 }
 
+/* How the engine is really driven: a run of frames through one handle, so
+   every carried-over pulse, decaying resonator and alternating period has to
+   survive from one call to the next. Some handles are also given an odd sample
+   rate after a valid one, which leaves the tables in place but selects the
+   third tilt path. */
+static void test_synth_sequence(void)
+{
+    int cases = 0, bad = 0;
+    int t, i, f;
+    static const int32_t rates[] = {8000, 11025};
+
+    rng_seed(0x5e9ce11cu);
+    for (t = 0; t < 3000; t++) {
+        klatt_state *mine = ibm_klatt_new((void *)0x1234);
+        klatt_state *theirs = klatt_new((void *)0x1234);
+        KlattConstParms parms;
+        unsigned char *pp = (unsigned char *)&parms;
+        size_t b;
+        int odd = (int)(rng_next() % 4u) == 0;
+
+        for (b = 0; b < sizeof(parms); b++)
+            pp[b] = (unsigned char)rng_next();
+        parms.sample_rate = rates[rng_next() % 2u];
+        parms.n_formants = (int32_t)(rng_next() % 9u);
+        parms.error_fn = error_sink;
+        parms.samples_fn = sample_sink;
+        parms.unknown_00 = (int32_t)(rng_next() % 20u) + 1;
+        parms.unknown_1c = 0;
+        parms.unknown_20 = (int32_t)(rng_next() % 100u);
+        parms.unknown_24 = (int32_t)(rng_next() % 100u);
+        parms.unknown_28 = (int32_t)(rng_next() % 100u);
+        parms.unknown_2c = (int32_t)(rng_next() % 100u);
+
+        ibm_KlattSetConstParms(mine, parms);
+        KlattSetConstParms(theirs, parms);
+
+        if (odd) {
+            parms.sample_rate = 16000;
+            ibm_KlattSetConstParms(mine, parms);
+            KlattSetConstParms(theirs, parms);
+        }
+
+        ibm_KlattOpen(mine);
+        KlattOpen(theirs);
+        mine->volume = theirs->volume = 100;
+        mine->cp.callback_mode = theirs->cp.callback_mode =
+            (int32_t)(rng_next() % 3u);
+
+        for (f = 0; f < 12; f++) {
+            int32_t frame[63];
+            int ra, rb;
+
+            for (i = 0; i < 63; i++)
+                frame[i] = (int32_t)(rng_next() % 6000u) - 500;
+            frame[0] = (int32_t)(rng_next() % 400u);
+            frame[1] = (int32_t)(rng_next() % 3500u) + 500;
+            frame[2] = (int32_t)(rng_next() % 90u);
+            frame[3] = (int32_t)(rng_next() % 90u) + 5;
+            frame[4] = (int32_t)(rng_next() % 40u);
+            frame[5] = (int32_t)(rng_next() % 200u);
+            frame[6] = (int32_t)(rng_next() % 30u);
+            frame[7] = (int32_t)(rng_next() % 90u);
+            frame[8] = (int32_t)(rng_next() % 90u);
+            frame[43] = (int32_t)(rng_next() % 100u);
+            for (i = 35; i <= 42; i++)
+                frame[i] = (int32_t)(rng_next() % 100u);
+
+            rb = ibm_KlattSynth(mine, frame);
+            ra = KlattSynth(theirs, frame);
+
+            cases++;
+            if (ra != rb || state_differs(mine, theirs)) {
+                if (bad < 4)
+                    printf("  sequence differs at frame %d (odd=%d) at 0x%04lx\n",
+                           f, odd, first_difference(mine, theirs));
+                bad++;
+                break;
+            }
+        }
+
+        ibm_klatt_delete(mine);
+        klatt_delete(theirs);
+    }
+
+    report("synth sequence", cases, bad, 0);
+}
+
 int main(void)
 {
     printf("diff: comparing our transcription against IBM clsyn.obj\n");
@@ -1225,6 +1312,7 @@ int main(void)
     test_synth_silence();
     test_synth_ring();
     test_synth_voiced();
+    test_synth_sequence();
 
     printf("diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
