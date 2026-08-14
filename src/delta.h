@@ -27,24 +27,32 @@ typedef struct {
 /* The backtracking stack. Its true size is not established: only the fields
    below have been seen, so the tail is however much room the records need. */
 typedef struct {
-    uint8_t   pad_0000[0xac];
-    int32_t   step_ac;       /* 0x00ac */
-    int32_t   step_b0;       /* 0x00b0 */
-    int32_t   ca_size;       /* 0x00b4, how far a context record moves it */
-    int32_t   step_b8;       /* 0x00b8 */
-    int32_t   boa_size;      /* 0x00bc, and a begin-or-alternative record */
+    uint8_t   pad_0000[0xa8];
+    int32_t   size_a8;       /* 0x00a8, what an unrecognised record costs */
+    int32_t   size_ac;       /* 0x00ac */
+    int32_t   size_b0;       /* 0x00b0, a saved scan position */
+    int32_t   ca_size;       /* 0x00b4, a context record */
+    int32_t   size_b8;       /* 0x00b8 */
+    int32_t   boa_size;      /* 0x00bc, a begin-or-alternative marker */
     uint8_t   pad_00c0[0x4f8 - 0xc0];
     uint8_t  *top;           /* 0x04f8 */
     uint8_t  *limit;         /* 0x04fc */
-    uint8_t   pad_0500[0x100];
+    uint8_t   pad_0500[0xc];
+    int32_t   vbot;          /* 0x050c */
+    uint8_t   pad_0510[0x40];
 } delta_stack;
 
 /* Where the rules keep their variables and the result of the last compare.
    Size not established either. */
 typedef struct {
-    uint8_t   pad_0000[0xfe0];
+    uint8_t   pad_0000[0xfcc];
+    uint8_t   scan[8];         /* 0x0fcc, the current scan position */
+    uint8_t   pad_0fd4[0xc];
     int8_t    compared_equal;  /* 0x0fe0 */
-    uint8_t   pad_0fe1[0x120];
+    int8_t    fence_count;     /* 0x0fe1, how many characters are fenced */
+    uint8_t   pad_0fe2[0x1174 - 0xfe2];
+    int32_t   fence_base;      /* 0x1174 */
+    uint8_t   pad_1178[0x40];
 } delta_vars;
 
 typedef struct delta_state delta_state;
@@ -56,7 +64,13 @@ struct delta_state {
     uint8_t      pad_0060[8];
     delta_vars  *vars;            /* 0x0068 */
     delta_stack *stack;           /* 0x006c */
-    uint8_t      pad_0070[DELTA_STATE_BYTES - 0x70];
+    uint8_t      pad_0070[0x14];
+    uint8_t     *fence_chars;     /* 0x0084, fenced character by index */
+    uint8_t      pad_0088[4];
+    uint8_t     *fence_index;     /* 0x008c, index by fenced character */
+    uint8_t      pad_0090[8];
+    uint8_t      fence_fill;      /* 0x0098 */
+    uint8_t      pad_0099[DELTA_STATE_BYTES - 0x99];
 };
 
 /* What the rules load their pointer registers from. Only the second word is
@@ -70,7 +84,8 @@ typedef struct {
 typedef struct {
     int8_t  kind;
     int8_t  pad_01[3];
-    int32_t value;
+    int32_t value;   /* +0x04 */
+    int32_t length;  /* +0x08, only a variable length record carries one */
 } delta_frame;
 
 void lpta_loadp(delta_state *d, const delta_token *p);
@@ -84,7 +99,16 @@ void bspush_ca(delta_state *d, int16_t tag);
 void bspush_boa(delta_state *d);
 void bspush_nboa(delta_state *d);
 
+void bspush_ca_scan(delta_state *d, int16_t tag);
+
 int  testeq(delta_state *d);
 int  testneq(delta_state *d);
+
+void  fence(delta_state *d, int8_t n, const uint8_t *chars);
+void *TFLDS(void *p);
+int32_t getDeltaStackVBot(delta_state *d);
+void  setDeltaStackVBot(delta_state *d, int32_t v);
+void *popDeltaStackTop(delta_state *d);
+int   FENCED(delta_state *d, const int32_t *table, int8_t idx);
 
 #endif

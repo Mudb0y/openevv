@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <string.h>
 
 #include "delta.h"
 
@@ -100,4 +101,86 @@ int testeq(delta_state *d)
 int testneq(delta_state *d)
 {
     return d->vars->compared_equal == 0;
+}
+
+AT(fence_chars, 0x0084);
+AT(fence_index, 0x008c);
+AT(fence_fill, 0x0098);
+
+/* A context record and a saved scan position together, which is what a rule
+   pushes when it is about to try a match it may need to unwind. */
+void bspush_ca_scan(delta_state *d, int16_t tag)
+{
+    delta_frame *ca = bs_push(d->stack, d->stack->ca_size);
+    delta_frame *save;
+
+    ca->kind = 0;
+    ca->value = tag;
+
+    save = bs_push(d->stack, d->stack->size_b0);
+    save->kind = 1;
+    memcpy(&save->value, d->vars->scan, 8);
+}
+
+/* Build the character fence: a set of characters the rules match against,
+   held both ways round so either direction is a single lookup. */
+void fence(delta_state *d, int8_t n, const uint8_t *chars)
+{
+    uint8_t i;
+
+    d->vars->fence_count = n;
+    memset(d->fence_index, d->fence_fill, d->fence_fill);
+
+    for (i = 0; (int)i < (int)(uint8_t)n; i++) {
+        d->fence_chars[i] = chars[i];
+        d->fence_index[chars[i]] = i;
+    }
+}
+
+/* The field block of a record sits eight bytes in. */
+void *TFLDS(void *p)
+{
+    return (uint8_t *)p + 8;
+}
+
+int32_t getDeltaStackVBot(delta_state *d)
+{
+    return d->stack->vbot;
+}
+
+void setDeltaStackVBot(delta_state *d, int32_t v)
+{
+    d->stack->vbot = v;
+}
+
+/* Undo the topmost record. What it cost depends on what kind it was, and a
+   kind outside the eight the original knows about leaves the size it moves by
+   uninitialised, so callers never produce one. */
+void *popDeltaStackTop(delta_state *d)
+{
+    delta_frame *slot = (delta_frame *)d->stack->top;
+    int32_t kind = slot->kind;
+    int32_t size = 0;
+
+    switch (kind) {
+    case 0: size = d->stack->ca_size;  break;
+    case 1: size = d->stack->size_b0;  break;
+    case 2: size = (((slot->length - 1) & ~1) | 1) + d->stack->size_ac + 1; break;
+    case 3: size = d->stack->ca_size;  break;
+    case 4: size = d->stack->boa_size; break;
+    case 5: size = d->stack->size_b8;  break;
+    case 6: size = d->stack->boa_size; break;
+    case 7: size = d->stack->size_a8;  break;
+    default: return slot;
+    }
+
+    d->stack->top += size;
+    d->stack->limit += size;
+    return slot;
+}
+
+/* Is the character at this offset from the fence base one of the fenced set. */
+int FENCED(delta_state *d, const int32_t *table, int8_t idx)
+{
+    return (table[d->vars->fence_base + idx] & 2) != 0;
 }
