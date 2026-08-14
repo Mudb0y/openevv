@@ -46,6 +46,7 @@ void zero_filter(filter_parms *fp, const zero_ABCs *z, int32_t *buf, int32_t n);
 /* buf must have two writable samples before it: the resonator seeds its own
    history there and reads them back as y[n-1] and y[n-2]. */
 void pole_filter(filter_parms *fp, int32_t *buf, int32_t n);
+void parallel0_filter(filter_parms *fp, int32_t *buf, int32_t n);
 
 extern const char KlattVersionString[];
 

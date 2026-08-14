@@ -207,6 +207,31 @@ void pole_filter(filter_parms *fp, int32_t *buf, int32_t n)
     }
 }
 
+/* The same resonator with no input term and no ramp: it runs purely on its
+   own history, which is what the parallel branch wants when the excitation is
+   summed in somewhere else. */
+void parallel0_filter(filter_parms *fp, int32_t *buf, int32_t n)
+{
+    int32_t i, t1, t2;
+
+    buf[-2] = fp->d2;
+    buf[-1] = fp->d1;
+
+    for (i = 0; i < n; i++) {
+        t1 = fxmul_scaled(fp->sc, buf[i - 2]);
+        t2 = fxmul_scaled(fp->sb, buf[i - 1]);
+        buf[i] = t1 + t2 * 2;
+    }
+
+    if (n > 1) {
+        fp->d2 = buf[i - 2];
+        fp->d1 = buf[i - 1];
+    } else {
+        fp->d2 = fp->d1;
+        fp->d1 = buf[i - 1];
+    }
+}
+
 void zero_filter(filter_parms *fp, const zero_ABCs *z, int32_t *buf, int32_t n)
 {
     int32_t p1, p2, x, i, count, k;

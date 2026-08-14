@@ -20,6 +20,7 @@ extern int32_t  ibm_db2lin(int32_t db);
 extern int      ibm_verifyKlattHandle(void *handle);
 extern const char ibm_KlattVersion[];
 extern void     ibm_pole_filter(filter_parms *fp, int32_t *buf, int32_t n);
+extern void     ibm_parallel0_filter(filter_parms *fp, int32_t *buf, int32_t n);
 extern void     ibm_zero_filter(filter_parms *fp, const zero_ABCs *z,
                                 int32_t *buf, int32_t n);
 
@@ -448,6 +449,41 @@ static void test_pole_filter(void)
     report("pole_filter", cases, bad, 0);
 }
 
+static void test_parallel0_filter(void)
+{
+    int cases = 0, bad = 0;
+    int k, i;
+
+    rng_seed(0x27182818u);
+    for (k = 0; k < 40000; k++) {
+        filter_parms mine, theirs;
+        int32_t rawa[MAXLEN + 2], rawb[MAXLEN + 2];
+        int32_t *bufa = rawa + 2, *bufb = rawb + 2;
+        int32_t n = (int32_t)(rng_next() % (MAXLEN + 1));
+        unsigned char *pm = (unsigned char *)&mine;
+        unsigned char *pt = (unsigned char *)&theirs;
+
+        for (i = 0; i < (int)sizeof(filter_parms); i++)
+            pm[i] = pt[i] = (unsigned char)rng_next();
+
+        for (i = 0; i < MAXLEN + 2; i++)
+            rawa[i] = rawb[i] = (int32_t)rng_next();
+
+        ibm_parallel0_filter(&theirs, bufb, n);
+        parallel0_filter(&mine, bufa, n);
+
+        cases++;
+        if (memcmp(rawa, rawb, sizeof(rawa)) != 0 ||
+            memcmp(&mine, &theirs, sizeof(mine)) != 0) {
+            if (bad < 5)
+                printf("  parallel0_filter n=%ld differs\n", (long)n);
+            bad++;
+        }
+    }
+
+    report("parallel0_filter", cases, bad, 0);
+}
+
 int main(void)
 {
     printf("diff: comparing our transcription against IBM clsyn.obj\n");
@@ -462,6 +498,7 @@ int main(void)
     test_verify_handle();
     test_zero_filter();
     test_pole_filter();
+    test_parallel0_filter();
 
     printf("diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
