@@ -35,11 +35,25 @@ DELTA_OBJS := \
   $(ENUS)/link.obj $(ENUS)/capp.obj $(ENUS)/win_etistr.obj \
   $(ENUS)/filio.obj $(ENUS)/win_filename.obj
 
-delta: $(BUILD)/delta_probe.exe
+IBMDELTA := $(wildcard ../analysis/delta-ibm/*.obj)
+# Support objects the runtime needs but that define no primitive we shadow,
+# so they link unprefixed.
+DELTA_SUPPORT := $(ENUS)/win_dynabuf.obj $(ENUS)/logio.obj $(ENUS)/win_hash.obj \
+  $(ENUS)/link.obj $(ENUS)/capp.obj $(ENUS)/win_etistr.obj \
+  $(ENUS)/filio.obj $(ENUS)/win_filename.obj
+
+delta: $(BUILD)/delta_probe.exe $(BUILD)/delta_diff.exe
+
+$(BUILD)/delta_diff.exe: delta_diff.c delta_stubs.c ../src/delta.c ../src/delta.h
+	@mkdir -p $(BUILD)
+	@$(CC) $(CFLAGS) delta_diff.c delta_stubs.c ../src/delta.c $(IBMDELTA) $(DELTA_SUPPORT) $(MINGW_LDFLAGS) -o $@ 2> $(BUILD)/link.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
 
 $(BUILD)/delta_probe.exe: delta_probe.c delta_stubs.c
 	@mkdir -p $(BUILD)
-	$(CC) $(CFLAGS) delta_probe.c delta_stubs.c $(DELTA_OBJS) $(MINGW_LDFLAGS) -o $@ 2>&1 | grep -v "corrupt .drectve" || true
+	@$(CC) $(CFLAGS) delta_probe.c delta_stubs.c $(DELTA_OBJS) $(MINGW_LDFLAGS) -o $@ 2> $(BUILD)/link.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
 
-delta-run: $(BUILD)/delta_probe.exe
+delta-run: delta
 	wine $(BUILD)/delta_probe.exe
+	wine $(BUILD)/delta_diff.exe

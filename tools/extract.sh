@@ -66,3 +66,31 @@ llvm-objdump --syms clsyn-ibm.obj \
 $OBJCOPY --globalize-symbols=globalize.txt clsyn-ibm.obj
 rm -f test-glob.obj
 echo "extract: renamed $(wc -l < rename.txt) symbols, widened $(wc -l < globalize.txt) statics"
+
+# The Delta runtime, prefixed the same way so IBM's primitives and ours can sit
+# in one binary. The map is built from every object at once and applied to
+# every object, so the cross references between them stay consistent.
+DELTA_OBJS="assign debug delta dfault extra for io misc optimize pointer
+            stack test init gener access ctxt ddelta deltaimp deltio dttime
+            dutil heap mem prdelta prdeltao rectbuf"
+
+cd "$ROOT/analysis/enus"
+: > delta-rename.txt
+for o in $DELTA_OBJS; do
+  [ -f "$o.obj" ] || continue
+  llvm-objdump --syms "$o.obj" \
+    | awk '$0 ~ /\(sec  *[1-9]/ {
+             n = $NF
+             if (n ~ /^[.@$?]/) next
+             if (n !~ /^_[A-Za-z]/) next
+             print n " _ibm" n
+           }'
+done | sort -u > delta-rename.txt
+
+mkdir -p "$ROOT/analysis/delta-ibm"
+for o in $DELTA_OBJS; do
+  [ -f "$o.obj" ] || continue
+  i686-w64-mingw32-objcopy --redefine-syms=delta-rename.txt \
+    --remove-section=.drectve "$o.obj" "$ROOT/analysis/delta-ibm/$o.obj"
+done
+echo "extract: prefixed $(wc -l < delta-rename.txt) Delta symbols into analysis/delta-ibm"
