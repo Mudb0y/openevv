@@ -10,6 +10,7 @@
 /* Resonator slots in the filter array. Five through twelve are the cascade
    formants and thirteen through twenty their parallel counterparts, which
    share the cascade's frequencies but carry their own bandwidths. */
+#define TILT           0
 #define NASAL_ZERO     1
 #define TRACHEAL_ZERO  2
 #define NASAL_POLE     3
@@ -344,8 +345,8 @@ int KlattSynth(void *handle, const int32_t *parms)
 
             if (written > 0) {
                 filtered = written;
-                if (parms[P_AB] != 0)
-                    pole_filter(&k->filters[0], k->ptr_a, written);
+                if (k->filters[TILT].enabled != 0)
+                    pole_filter(&k->filters[TILT], k->ptr_a, written);
             }
 
             if (left > 0) {
@@ -413,8 +414,8 @@ int KlattSynth(void *handle, const int32_t *parms)
                 }
             }
 
-            if (parms[P_AB] != 0)
-                pole_filter(&k->filters[0], k->ptr_a + filtered,
+            if (k->filters[TILT].enabled != 0)
+                pole_filter(&k->filters[TILT], k->ptr_a + filtered,
                             k->noise_count - filtered);
 
             if (k->cp.unknown_1c == 0) {
