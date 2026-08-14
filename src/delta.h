@@ -170,5 +170,11 @@ void CLRONESTM(delta_node *t);
 void CLRALLNSQ(delta_node *t);
 void bsclear(delta_state *d);
 void *bspop_boa(delta_state *d);
+void starttest_e(delta_state *d, int16_t tag);
+void starttest_l(delta_state *d, int16_t tag);
+void SETFENCE(delta_state *d, int32_t *table, int8_t idx);
+void UNSETFENCE(delta_state *d, int32_t *table, int8_t idx);
+void addfence(delta_state *d, int8_t idx);
+void remfence(delta_state *d, int8_t idx);
 
 #endif

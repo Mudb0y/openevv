@@ -326,3 +326,31 @@ void *bspop_boa(delta_state *d)
     popDeltaStackTop(d);
     return slot;
 }
+
+/* The original carries three separate entry points for opening a test and
+   compiles the same body into each. They are kept apart here because the
+   generated rules call all three by name. */
+void starttest_e(delta_state *d, int16_t tag) { starttest(d, tag); }
+void starttest_l(delta_state *d, int16_t tag) { starttest(d, tag); }
+
+/* Fencing is one bit in the same word FENCED reads. */
+void SETFENCE(delta_state *d, int32_t *table, int8_t idx)
+{
+    table[d->vars->fence_base + idx] |= 2;
+}
+
+void UNSETFENCE(delta_state *d, int32_t *table, int8_t idx)
+{
+    table[d->vars->fence_base + idx] &= ~2;
+}
+
+/* And the rules fence through whatever the left pointer register holds. */
+void addfence(delta_state *d, int8_t idx)
+{
+    SETFENCE(d, (int32_t *)d->lpta.value, idx);
+}
+
+void remfence(delta_state *d, int8_t idx)
+{
+    UNSETFENCE(d, (int32_t *)d->lpta.value, idx);
+}

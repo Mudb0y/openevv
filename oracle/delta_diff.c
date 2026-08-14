@@ -48,6 +48,12 @@ extern void ibm_CLRONESTM(delta_node *);
 extern void ibm_CLRALLNSQ(delta_node *);
 extern void ibm_bsclear(delta_state *);
 extern void *ibm_bspop_boa(delta_state *);
+extern void ibm_starttest_e(delta_state *, int16_t);
+extern void ibm_starttest_l(delta_state *, int16_t);
+extern void ibm_SETFENCE(delta_state *, int32_t *, int8_t);
+extern void ibm_UNSETFENCE(delta_state *, int32_t *, int8_t);
+extern void ibm_addfence(delta_state *, int8_t);
+extern void ibm_remfence(delta_state *, int8_t);
 
 #define RECORDS   0x200   /* room for the stack to push into */
 #define FENCE_MAP 0x100   /* the reverse fence table is indexed by a byte */
@@ -418,6 +424,33 @@ static void test_nodes(void)
     report("spine accessors", cases, bad);
 }
 
+BEGIN(starttest_e)
+    int16_t tag = (int16_t)rng_next();
+    m->records[0x20] = o->records[0x20] = (uint8_t)(rng_next() % 2u ? 8 : 3);
+    ibm_starttest_e(&m->state, tag); starttest_e(&o->state, tag);
+END(starttest_e)
+
+BEGIN(starttest_l)
+    int16_t tag = (int16_t)rng_next();
+    m->records[0x20] = o->records[0x20] = (uint8_t)(rng_next() % 2u ? 8 : 3);
+    ibm_starttest_l(&m->state, tag); starttest_l(&o->state, tag);
+END(starttest_l)
+
+BEGIN(fences)
+    /* The fence bit lives in a table the left register points at, so aim it
+       at the record area and keep the index inside it. */
+    int8_t idx = (int8_t)(rng_next() % 0x20u);
+    m->vars.fence_base = o->vars.fence_base = (int32_t)(rng_next() % 0x10u);
+    m->state.lpta.value = (int32_t)(intptr_t)m->records;
+    o->state.lpta.value = (int32_t)(intptr_t)o->records;
+    if (rng_next() % 2u) {
+        ibm_addfence(&m->state, idx); addfence(&o->state, idx);
+    } else {
+        ibm_remfence(&m->state, idx); remfence(&o->state, idx);
+    }
+    m->state.lpta.value = o->state.lpta.value = 0;
+END(fences)
+
 int main(void)
 {
     printf("delta diff: comparing our primitives against IBM's\n");
@@ -442,6 +475,9 @@ int main(void)
     test_bsclear();
     test_bspop_boa();
     test_nodes();
+    test_starttest_e();
+    test_starttest_l();
+    test_fences();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
