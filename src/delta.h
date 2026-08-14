@@ -205,5 +205,11 @@ int  push_ptr(delta_state *d, int32_t p);
 int  ret_ptr_active_record(delta_state *d);
 void throwDeltaErrorNow(delta_state *d);
 void vnspop(delta_state *d, delta_operand *out);
+void vpush_var(delta_state *d, const delta_operand *v);
+void DELSPINE(delta_state *d, delta_node *t);
+
+/* Bumped whenever the spine is relinked, so anything holding a position knows
+   to look again. */
+extern int32_t spine_changed;
 
 #endif

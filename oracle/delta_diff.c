@@ -66,6 +66,9 @@ extern int  ibm_push_ptr(delta_state *, int32_t);
 extern int  ibm_ret_ptr_active_record(delta_state *);
 extern void ibm_throwDeltaErrorNow(delta_state *);
 extern void ibm_vnspop(delta_state *, delta_operand *);
+extern void ibm_vpush_var(delta_state *, const delta_operand *);
+extern void ibm_DELSPINE(delta_state *, delta_node *);
+extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
 #define FENCE_MAP 0x100   /* the reverse fence table is indexed by a byte */
@@ -611,6 +614,48 @@ static void test_fields(void)
     report("fields and syncs", cases, bad);
 }
 
+BEGIN(vpush_var)
+    delta_operand v;
+    static const int16_t kinds[] = {-1, -2, -3, -4, -6, 0, 1, 2};
+    /* size_ac decides where the copy lands, so keep it inside the records. */
+    m->stack.size_ac = o->stack.size_ac = 12;
+    v.ptr = m->records + 0x80;
+    v.kind = kinds[rng_next() % 8u];
+    v.pad_06 = 0;
+    ibm_vpush_var(&m->state, &v);
+    v.ptr = o->records + 0x80;
+    vpush_var(&o->state, &v);
+    /* The record keeps the source pointer, which differs between worlds. */
+    *(int32_t *)(m->stack.top + 4) = 0;
+    *(int32_t *)(o->stack.top + 4) = 0;
+END(vpush_var)
+
+BEGIN(DELSPINE)
+    /* Both links have to point at something real, since unlinking writes
+       through each of them. */
+    delta_node *t = (delta_node *)(m->records + 0x60);
+    delta_node *u = (delta_node *)(o->records + 0x60);
+    m->vars.fence_base = o->vars.fence_base = 4;
+    t->link = (int32_t)(intptr_t)(m->records + 0x20);
+    u->link = (int32_t)(intptr_t)(o->records + 0x20);
+    *(int32_t *)((char *)t + 4 * 4 - 8) = (int32_t)(intptr_t)(m->records + 0x40);
+    *(int32_t *)((char *)u + 4 * 4 - 8) = (int32_t)(intptr_t)(o->records + 0x40);
+    {
+        int32_t before_ibm = ibm_spine_changed, before_ours = spine_changed;
+        ibm_DELSPINE(&m->state, t); DELSPINE(&o->state, u);
+        if (ibm_spine_changed - before_ibm != spine_changed - before_ours)
+            bad++;
+    }
+    /* The links themselves hold addresses, so blank them before comparing. */
+    *(int32_t *)(m->records + 0x20 + 4 * 4 - 8) = 0;
+    *(int32_t *)(o->records + 0x20 + 4 * 4 - 8) = 0;
+    *(int32_t *)(m->records + 0x40 + 4) = 0;
+    *(int32_t *)(o->records + 0x40 + 4) = 0;
+    t->link = u->link = 0;
+    *(int32_t *)((char *)t + 4 * 4 - 8) = 0;
+    *(int32_t *)((char *)u + 4 * 4 - 8) = 0;
+END(DELSPINE)
+
 int main(void)
 {
     printf("delta diff: comparing our primitives against IBM's\n");
@@ -645,6 +690,8 @@ int main(void)
     test_ptr_stack();
     test_vnspop();
     test_fields();
+    test_vpush_var();
+    test_DELSPINE();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

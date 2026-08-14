@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "delta.h"
 
@@ -509,4 +510,63 @@ void vnspop(delta_state *d, delta_operand *out)
     }
 
     s->names_depth = (int8_t)(s->names_depth - 1);
+}
+
+/* Save a variable on the backtracking stack so an unwind can put it back.
+   The record is variable length, which is what popDeltaStackTop's second kind
+   is measuring when it reads the length back out of offset eight. */
+void vpush_var(delta_state *d, const delta_operand *v)
+{
+    delta_stack *s = d->stack;
+    int32_t size;
+    int32_t pad;
+    int32_t step;
+    uint8_t *slot;
+
+    if (v->kind == DK_SYNC)
+        size = 4;
+    else if (v->kind == DK_SHORT2)
+        size = 2;
+    else if (v->kind <= DK_SHORT2)
+        size = *(const int32_t *)
+            (vstmtbl + (int32_t)v->kind * VSTMTBL_ENTRY + VSTMTBL_LEN);
+    else if (v->kind <= DK_SHORT)
+        size = 4;
+    else if (v->kind == DK_UBYTE)
+        size = 1;
+    else
+        size = *(const int32_t *)
+            (vstmtbl + (int32_t)v->kind * VSTMTBL_ENTRY + VSTMTBL_LEN);
+
+    pad = ((size - 1) & ~1) | 1;
+    step = s->size_ac + pad + 1;
+
+    s->top -= step;
+    slot = s->top;
+    s->limit -= step;
+
+    slot[0] = 2;
+    *(int16_t *)(slot + 2) = v->kind;
+    *(int32_t *)(slot + 8) = size;
+    *(int32_t *)(slot + 4) = (int32_t)(intptr_t)v->ptr;
+
+    memcpy(slot + s->size_ac, v->ptr, (size_t)(pad + 1));
+}
+
+/* Bumped whenever the spine is relinked. */
+int32_t spine_changed;
+
+/* Unlink a node from the spine, keeping the tag bits that ride in the low two
+   bits of each link. */
+void DELSPINE(delta_state *d, delta_node *t)
+{
+    int32_t base = d->vars->fence_base;
+    int32_t next = t->link & ~3;
+    int32_t prev = *(int32_t *)((char *)t + base * 4 - 8) & ~3;
+    int32_t *back = (int32_t *)((char *)(intptr_t)next + base * 4 - 8);
+    int32_t *fwd = (int32_t *)((char *)(intptr_t)prev + 4);
+
+    *back = (*back & 3) | prev;
+    *fwd = (*fwd & 3) | next;
+    spine_changed++;
 }
