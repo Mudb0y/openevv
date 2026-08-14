@@ -350,24 +350,57 @@ int KlattSynth(void *handle, const int32_t *parms)
             k->smooth_span = 0;
             k->spans[k->smooth_span] = 0;
 
+            /* Three leftovers a previous block may have handed on: silence
+               before the next pulse, a pulse cut off part way through, and the
+               closed phase that follows it. */
             if (k->carry_lead != 0) {
-                /* NOT YET TRANSCRIBED: silence carried in from the previous
-                   frame. Only reachable on a continuation frame. */
+                int32_t n = k->carry_lead < left ? k->carry_lead : left;
+
+                clr_vector(k->ptr_a + written, n);
+                k->carry_lead -= n;
+                left -= n;
+                written += n;
+                k->spans[k->smooth_span] += n;
             }
 
             k->smooth_span++;
             k->spans[k->smooth_span] = 0;
 
             if (k->carry_open != 0) {
-                /* NOT YET TRANSCRIBED: a glottal period left half finished by
-                   the previous frame. Only reachable on a continuation. */
+                int16_t slope = fxdivl(mul32(k->carry_amp, 3),
+                                       k->cp.sample_rate << 2);
+                int32_t at, i2;
+
+                k->open_part = k->carry_open < left ? k->carry_open : left;
+                at = written;
+
+                for (i2 = at; i2 < at + k->open_part; i2++) {
+                    /* The pulse resumes where it stopped, so the fraction is
+                       measured from the start of the original period. */
+                    int16_t frac = fxdivl(k->carry_period - k->carry_open
+                                          + i2 - at, k->carry_period);
+                    int32_t v = fxmul_scaled(frac, 0x5555 - frac);
+
+                    v <<= 4;
+                    k->ptr_a[i2] = fxmul_scaled(slope, v);
+                }
+
+                k->carry_open -= k->open_part;
+                left -= k->open_part;
+                written += k->open_part;
+                k->spans[k->smooth_span] += k->open_part;
             }
 
             k->smooth_span++;
             k->spans[k->smooth_span] = 0;
 
             if (k->carry_closed != 0 && left != 0) {
-                /* NOT YET TRANSCRIBED: likewise a carried-over closed phase. */
+                k->closed_part = k->carry_closed < left ? k->carry_closed : left;
+                clr_vector(k->ptr_a + written, k->closed_part);
+                k->carry_closed -= k->closed_part;
+                left -= k->closed_part;
+                written += k->closed_part;
+                k->spans[k->smooth_span] += k->closed_part;
             }
 
             if (written > 0) {

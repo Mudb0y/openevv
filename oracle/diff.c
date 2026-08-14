@@ -1136,9 +1136,7 @@ static void test_synth_voiced(void)
         parms.n_formants = (int32_t)(rng_next() % 9u);
         parms.error_fn = error_sink;
         parms.samples_fn = sample_sink;
-        /* One block at most: resuming a period across blocks needs the carry
-           branches, which are not transcribed yet. */
-        parms.unknown_00 = 1;
+        parms.unknown_00 = (int32_t)(rng_next() % 20u) + 1;
         parms.unknown_1c = 0;
         parms.unknown_20 = (int32_t)(rng_next() % 100u);
         parms.unknown_24 = (int32_t)(rng_next() % 100u);
@@ -1152,13 +1150,13 @@ static void test_synth_voiced(void)
 
         for (i = 0; i < 63; i++)
             frame[i] = (int32_t)(rng_next() % 6000u) - 500;
-        frame[0] = (int32_t)(rng_next() % 1700u) + 1;   /* duration */
+        frame[0] = (int32_t)(rng_next() % 400u) + 1;    /* duration */
         frame[1] = (int32_t)(rng_next() % 3500u) + 500; /* f0, tenths of a hertz */
         frame[2] = (int32_t)(rng_next() % 90u) + 1;     /* av on */
         frame[3] = (int32_t)(rng_next() % 90u) + 5;     /* open quotient */
-        frame[4] = 0;                                   /* tilt off */
+        frame[4] = (int32_t)(rng_next() % 40u);         /* tilt */
         frame[5] = 0;                                   /* flutter off */
-        frame[6] = 0;                                   /* diplophonia off */
+        frame[6] = (int32_t)(rng_next() % 30u);         /* diplophonia */
         frame[7] = (int32_t)(rng_next() % 90u);         /* ah */
         frame[8] = (int32_t)(rng_next() % 90u);         /* af */
         frame[43] = (int32_t)(rng_next() % 100u);
