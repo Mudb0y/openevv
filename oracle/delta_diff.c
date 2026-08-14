@@ -54,6 +54,12 @@ extern void ibm_SETFENCE(delta_state *, int32_t *, int8_t);
 extern void ibm_UNSETFENCE(delta_state *, int32_t *, int8_t);
 extern void ibm_addfence(delta_state *, int8_t);
 extern void ibm_remfence(delta_state *, int8_t);
+extern int32_t ibm_deltaErrorThrown(delta_state *);
+extern int  ibm_emptyDeltaStack(delta_state *);
+extern void *ibm_popDeltaStackFrame(delta_state *, uint8_t *);
+extern void ibm_vnspush(delta_state *, const delta_operand *);
+extern void ibm_vadd(delta_state *, const delta_operand *, const delta_operand *);
+extern int32_t ibm_VLSYNC(const delta_node *, int8_t);
 
 #define RECORDS   0x200   /* room for the stack to push into */
 #define FENCE_MAP 0x100   /* the reverse fence table is indexed by a byte */
@@ -68,6 +74,7 @@ typedef struct {
     uint8_t     chars[FENCE_MAP];
     uint8_t     map[FENCE_MAP];
     uint8_t     blockhdr[0x20];   /* the allocation header, read at +0x10 */
+    uint8_t     names[0x200];     /* the name stack */
 } delta_world;
 
 static int total_cases;
@@ -109,6 +116,8 @@ static void world_link(delta_world *w)
     w->state.fence_index = w->map;
     w->state.fence_fill = (uint8_t)(rng_next() % FENCE_MAP);
 
+    w->stack.names = w->names;
+    w->stack.names_depth = (int8_t)(rng_next() % 0x10u);
     w->stack.top = w->records + RECORDS / 2;
     w->stack.limit = w->records + RECORDS / 2 - 0x40;
     w->stack.block = w->blockhdr;
@@ -148,6 +157,7 @@ static void normalise(delta_world *w, delta_state *st, delta_vars *va,
     REBASE(sk->block);
     REBASE(sk->vbot);
     REBASE(sk->base);
+    REBASE(sk->names);
 #undef REBASE
 }
 
@@ -177,8 +187,10 @@ static int world_differs(delta_world *a, delta_world *b)
         return 1;
     if (memcmp(a->blockhdr, b->blockhdr, 0x10) != 0)
         return 1;
-    return memcmp(a->blockhdr + 0x14, b->blockhdr + 0x14,
-                  sizeof(a->blockhdr) - 0x14) != 0;
+    if (memcmp(a->blockhdr + 0x14, b->blockhdr + 0x14,
+               sizeof(a->blockhdr) - 0x14) != 0)
+        return 1;
+    return memcmp(a->names, b->names, sizeof(a->names)) != 0;
 }
 
 #define BEGIN(name)                                                  \
@@ -451,6 +463,78 @@ BEGIN(fences)
     m->state.lpta.value = o->state.lpta.value = 0;
 END(fences)
 
+BEGIN(vnspush)
+    delta_operand v;
+    static const int16_t kinds[] = {-1, -2, -3, -4, -6, 0};
+    v.ptr = m->records + 0x80;
+    v.kind = kinds[rng_next() % 6u];
+    v.pad_06 = 0;
+    ibm_vnspush(&m->state, &v);
+    v.ptr = o->records + 0x80;
+    vnspush(&o->state, &v);
+END(vnspush)
+
+BEGIN(vadd)
+    delta_operand a, b;
+    static const int16_t kinds[] = {-1, -2, -3, -4, -6, 0};
+    a.ptr = m->records + 0x80; b.ptr = m->records + 0x90;
+    a.kind = kinds[rng_next() % 6u]; b.kind = kinds[rng_next() % 6u];
+    a.pad_06 = b.pad_06 = 0;
+    ibm_vadd(&m->state, &a, &b);
+    a.ptr = o->records + 0x80; b.ptr = o->records + 0x90;
+    vadd(&o->state, &a, &b);
+END(vadd)
+
+BEGIN(popDeltaStackFrame)
+    ptrdiff_t x, y;
+    uint8_t *to = m->records + (rng_next() % RECORDS);
+    x = (char *)ibm_popDeltaStackFrame(&m->state, to) - (char *)m;
+    y = (char *)popDeltaStackFrame(&o->state, o->records + (to - m->records))
+        - (char *)o;
+    if (x != y) bad++;
+END(popDeltaStackFrame)
+
+static void test_queries(void)
+{
+    int cases = 0, bad = 0, t;
+
+    rng_seed(0x9111e5edu);
+    for (t = 0; t < 20000; t++) {
+        delta_world *w = malloc(sizeof(delta_world));
+        delta_node n;
+        int8_t i;
+
+        fill(w, sizeof(delta_world));
+        world_link(w);
+        /* size_a8 indexes off the unwind mark, so keep it inside the block. */
+        w->stack.size_a8 = (int32_t)(rng_next() % 0x40u);
+
+        cases += 3;
+        if (ibm_deltaErrorThrown(&w->state) != deltaErrorThrown(&w->state)) {
+            if (bad < 3) printf("  deltaErrorThrown differs\n");
+            bad++;
+        }
+        if (ibm_emptyDeltaStack(&w->state) != emptyDeltaStack(&w->state)) {
+            if (bad < 3) printf("  emptyDeltaStack differs\n");
+            bad++;
+        }
+
+        /* A sync link is followed one step, so it must point somewhere real. */
+        fill(&n, sizeof(n));
+        i = (int8_t)(rng_next() % 8u);
+        n.syncs[i] = (rng_next() % 2u)
+            ? 0 : (int32_t)(intptr_t)(w->records + 0x40);
+        if (ibm_VLSYNC(&n, i) != VLSYNC(&n, i)) {
+            if (bad < 3) printf("  VLSYNC differs\n");
+            bad++;
+        }
+
+        free(w);
+    }
+
+    report("state queries", cases, bad);
+}
+
 int main(void)
 {
     printf("delta diff: comparing our primitives against IBM's\n");
@@ -478,6 +562,10 @@ int main(void)
     test_starttest_e();
     test_starttest_l();
     test_fences();
+    test_vnspush();
+    test_vadd();
+    test_popDeltaStackFrame();
+    test_queries();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

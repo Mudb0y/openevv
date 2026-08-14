@@ -354,3 +354,82 @@ void remfence(delta_state *d, int8_t idx)
 {
     UNSETFENCE(d, (int32_t *)d->lpta.value, idx);
 }
+
+int32_t deltaErrorThrown(delta_state *d)
+{
+    return d->vars->error_thrown;
+}
+
+/* Nothing is left once the record at the unwind point is the bottom marker. */
+int emptyDeltaStack(delta_state *d)
+{
+    return d->vars->back[d->stack->size_a8] == 8;
+}
+
+void *popDeltaStackFrame(delta_state *d, uint8_t *to)
+{
+    freeDeltaStackTo(d, to);
+    return to;
+}
+
+/* Push a value onto the name stack, keeping its type alongside it so whatever
+   pops it knows how wide it was. */
+void vnspush(delta_state *d, const delta_operand *v)
+{
+    delta_stack *s = d->stack;
+    uint8_t *slot;
+
+    s->names_depth = (int8_t)(s->names_depth + 1);
+    slot = s->names + (int32_t)s->names_depth * 8;
+
+    *(int16_t *)(slot + 4) = v->kind;
+
+    switch (v->kind) {
+    case DK_UBYTE:
+        *(int8_t *)slot = *(int8_t *)v->ptr;
+        break;
+    case DK_LONG:
+        *(int32_t *)slot = *(int32_t *)v->ptr;
+        break;
+    case DK_SHORT:
+    case DK_SHORT2:
+        *(int16_t *)slot = *(int16_t *)v->ptr;
+        break;
+    default:
+        break;
+    }
+}
+
+/* Add the right operand into the left, in whichever width the left is. The
+   state is passed but never touched. */
+void vadd(delta_state *d, const delta_operand *a, const delta_operand *b)
+{
+    (void)d;
+
+    if (a->kind == DK_LONG) {
+        if (b->kind == DK_LONG)
+            *(int32_t *)a->ptr = *(int32_t *)a->ptr + *(int32_t *)b->ptr;
+        else if (b->kind == DK_SHORT2)
+            *(int32_t *)a->ptr = *(int16_t *)b->ptr + *(int32_t *)a->ptr;
+    } else if (a->kind == DK_SHORT2) {
+        if (b->kind == DK_LONG)
+            *(int16_t *)a->ptr =
+                (int16_t)(*(int16_t *)a->ptr + *(int32_t *)b->ptr);
+        else if (b->kind == DK_SHORT2)
+            *(int16_t *)a->ptr =
+                (int16_t)(*(int16_t *)a->ptr + *(int16_t *)b->ptr);
+    }
+}
+
+/* Follow a field's left sync link. A link that is itself marked as a sync is
+   the answer; otherwise the answer is one step further on. */
+int32_t VLSYNC(const delta_node *t, int8_t i)
+{
+    int32_t p = t->syncs[i] & ~3;
+
+    if (p == 0)
+        return p;
+    if ((*(int32_t *)p & 2) != 0)
+        return p;
+    return *(int32_t *)p & ~3;
+}

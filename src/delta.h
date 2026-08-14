@@ -27,7 +27,10 @@ typedef struct {
 /* The backtracking stack. Its true size is not established: only the fields
    below have been seen, so the tail is however much room the records need. */
 typedef struct {
-    uint8_t   pad_0000[0xa8];
+    uint8_t   pad_0000[0xa0];
+    uint8_t  *names;         /* 0x00a0, the name stack, eight bytes an entry */
+    int8_t    names_depth;   /* 0x00a4 */
+    uint8_t   pad_00a5[3];
     int32_t   size_a8;       /* 0x00a8, what an unrecognised record costs */
     int32_t   size_ac;       /* 0x00ac */
     int32_t   size_b0;       /* 0x00b0, a saved scan position */
@@ -49,7 +52,9 @@ typedef struct {
 /* Where the rules keep their variables and the result of the last compare.
    Size not established either. */
 typedef struct {
-    uint8_t   pad_0000[0xfc4];
+    uint8_t   pad_0000[0xfa8];
+    int32_t   error_thrown;    /* 0x0fa8 */
+    uint8_t   pad_0fac[0x18];
     int32_t   test_tag;        /* 0x0fc4, what the running test is matching */
     uint8_t   pad_0fc8[4];
     uint8_t   scan[8];         /* 0x0fcc, the current scan position */
@@ -176,5 +181,11 @@ void SETFENCE(delta_state *d, int32_t *table, int8_t idx);
 void UNSETFENCE(delta_state *d, int32_t *table, int8_t idx);
 void addfence(delta_state *d, int8_t idx);
 void remfence(delta_state *d, int8_t idx);
+int32_t deltaErrorThrown(delta_state *d);
+int  emptyDeltaStack(delta_state *d);
+void *popDeltaStackFrame(delta_state *d, uint8_t *to);
+void vnspush(delta_state *d, const delta_operand *v);
+void vadd(delta_state *d, const delta_operand *a, const delta_operand *b);
+int32_t VLSYNC(const delta_node *t, int8_t i);
 
 #endif
