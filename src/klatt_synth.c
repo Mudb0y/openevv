@@ -353,7 +353,15 @@ int KlattSynth(void *handle, const int32_t *parms)
                     /* NOT YET TRANSCRIBED: the voiced source. */
                 } else {
                     if (k->ah != 0) {
-                        /* NOT YET TRANSCRIBED: the aspiration-only source. */
+                        /* Aspiration with no pitch: the whole block counts as
+                           one open span, so the noise runs through unbroken. */
+                        k->voicing_size = left;
+                        k->unknown_14d0 = left;
+                        k->smooth_span++;
+                        k->spans[k->smooth_span] = left;
+                        k->unknown_14d8 = 0;
+                        k->smooth_span++;
+                        k->spans[k->smooth_span] = 0;
                     } else {
                         k->unknown_14d0 = 0;
                         k->smooth_span++;
