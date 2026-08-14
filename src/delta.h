@@ -52,7 +52,12 @@ typedef struct {
 /* Where the rules keep their variables and the result of the last compare.
    Size not established either. */
 typedef struct {
-    uint8_t   pad_0000[0xfa8];
+    /* The block opens with the active record stack: a count and 999 slots,
+       which is exactly what push_ptr refuses to exceed. */
+    int32_t   ptr_count;       /* 0x0000 */
+    int32_t   ptr_stack[999];  /* 0x0004 */
+    uint8_t   pad_0fa0[4];
+    int32_t   active_record;   /* 0x0fa4 */
     int32_t   error_thrown;    /* 0x0fa8 */
     uint8_t   pad_0fac[0x18];
     int32_t   test_tag;        /* 0x0fc4, what the running test is matching */
@@ -187,5 +192,18 @@ void *popDeltaStackFrame(delta_state *d, uint8_t *to);
 void vnspush(delta_state *d, const delta_operand *v);
 void vadd(delta_state *d, const delta_operand *a, const delta_operand *b);
 int32_t VLSYNC(const delta_node *t, int8_t i);
+int32_t VRSYNC(delta_state *d, const int32_t *t, int8_t i);
+
+/* Two sixteen-bit halves; resetting one clears the second. */
+typedef struct {
+    int16_t a;
+    int16_t b;
+} delta_field;
+
+void reset_field(delta_field *f);
+int  push_ptr(delta_state *d, int32_t p);
+int  ret_ptr_active_record(delta_state *d);
+void throwDeltaErrorNow(delta_state *d);
+void vnspop(delta_state *d, delta_operand *out);
 
 #endif

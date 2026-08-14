@@ -433,3 +433,80 @@ int32_t VLSYNC(const delta_node *t, int8_t i)
         return p;
     return *(int32_t *)p & ~3;
 }
+
+/* The right sync link, reached through the fence base rather than a fixed
+   offset, and one step further on if the link is not itself a sync. */
+int32_t VRSYNC(delta_state *d, const int32_t *t, int8_t i)
+{
+    int32_t p = t[d->vars->fence_base + i] & ~3;
+
+    if (p == 0)
+        return p;
+    if ((*(int32_t *)p & 2) != 0)
+        return p;
+    return *(int32_t *)(p + 4) & ~3;
+}
+
+void reset_field(delta_field *f)
+{
+    if (f->a >= 0)
+        f->b = -1;
+}
+
+/* Remember an active record. The stack is fixed at 999 and a push past that
+   fails rather than growing it. */
+int push_ptr(delta_state *d, int32_t p)
+{
+    delta_vars *v = d->vars;
+
+    if (v->ptr_count >= 999)
+        return 0;
+
+    v->ptr_stack[v->ptr_count] = p;
+    v->ptr_count++;
+    return 1;
+}
+
+/* And take one back. The count is reloaded from the saved slot before being
+   stepped back, which is what the original does rather than simply popping. */
+int ret_ptr_active_record(delta_state *d)
+{
+    delta_vars *v = d->vars;
+
+    if (v->ptr_count <= 0)
+        return 0;
+
+    v->ptr_count = v->active_record;
+    v->ptr_count--;
+    v->active_record = v->ptr_stack[v->ptr_count];
+    return 1;
+}
+
+void throwDeltaErrorNow(delta_state *d)
+{
+    d->vars->error_thrown = 1;
+}
+
+/* Take the top of the name stack, handing back where it sits rather than
+   copying it out. Only the four sized types get a pointer. */
+void vnspop(delta_state *d, delta_operand *out)
+{
+    delta_stack *s = d->stack;
+    uint8_t *slot = s->names + (int32_t)s->names_depth * 8;
+
+    out->kind = *(int16_t *)(slot + 4);
+    *((int8_t *)out + 6) = 0;
+
+    switch (out->kind) {
+    case DK_UBYTE:
+    case DK_SHORT:
+    case DK_LONG:
+    case DK_SHORT2:
+        out->ptr = slot;
+        break;
+    default:
+        break;
+    }
+
+    s->names_depth = (int8_t)(s->names_depth - 1);
+}

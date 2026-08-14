@@ -92,5 +92,13 @@ for o in $DELTA_OBJS; do
   [ -f "$o.obj" ] || continue
   i686-w64-mingw32-objcopy --redefine-syms=delta-rename.txt \
     --remove-section=.drectve "$o.obj" "$ROOT/analysis/delta-ibm/$o.obj"
+  # Several of these are static in the original and so invisible to a linker.
+  llvm-objdump --syms "$ROOT/analysis/delta-ibm/$o.obj" \
+    | awk '/\(scl   3\)/ && /_ibm_/ { print $NF }' | sort -u > glob-$o.txt
+  if [ -s glob-$o.txt ]; then
+    i686-w64-mingw32-objcopy --globalize-symbols=glob-$o.txt \
+      "$ROOT/analysis/delta-ibm/$o.obj"
+  fi
+  rm -f glob-$o.txt
 done
 echo "extract: prefixed $(wc -l < delta-rename.txt) Delta symbols into analysis/delta-ibm"

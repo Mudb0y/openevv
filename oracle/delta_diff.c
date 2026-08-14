@@ -60,6 +60,12 @@ extern void *ibm_popDeltaStackFrame(delta_state *, uint8_t *);
 extern void ibm_vnspush(delta_state *, const delta_operand *);
 extern void ibm_vadd(delta_state *, const delta_operand *, const delta_operand *);
 extern int32_t ibm_VLSYNC(const delta_node *, int8_t);
+extern int32_t ibm_VRSYNC(delta_state *, const int32_t *, int8_t);
+extern void ibm_reset_field(delta_field *);
+extern int  ibm_push_ptr(delta_state *, int32_t);
+extern int  ibm_ret_ptr_active_record(delta_state *);
+extern void ibm_throwDeltaErrorNow(delta_state *);
+extern void ibm_vnspop(delta_state *, delta_operand *);
 
 #define RECORDS   0x200   /* room for the stack to push into */
 #define FENCE_MAP 0x100   /* the reverse fence table is indexed by a byte */
@@ -535,6 +541,76 @@ static void test_queries(void)
     report("state queries", cases, bad);
 }
 
+BEGIN(ptr_stack)
+    /* Keep the count inside the 999 slots so both sides do real work. */
+    int32_t p = (int32_t)rng_next();
+    m->vars.ptr_count = o->vars.ptr_count = (int32_t)(rng_next() % 1002u);
+    m->vars.active_record = o->vars.active_record =
+        (int32_t)(rng_next() % 999u);
+    if (rng_next() % 2u) {
+        if (ibm_push_ptr(&m->state, p) != push_ptr(&o->state, p)) bad++;
+    } else {
+        if (ibm_ret_ptr_active_record(&m->state)
+            != ret_ptr_active_record(&o->state)) bad++;
+    }
+    ibm_throwDeltaErrorNow(&m->state); throwDeltaErrorNow(&o->state);
+END(ptr_stack)
+
+BEGIN(vnspop)
+    delta_operand a, b;
+    fill(&a, sizeof(a)); b = a;
+    ibm_vnspop(&m->state, &a); vnspop(&o->state, &b);
+    /* A type outside the four sized ones leaves the pointer alone, so it is
+       still the same garbage on both sides and compares directly. */
+    if (a.kind != b.kind || a.pad_06 != b.pad_06) {
+        bad++;
+    } else if (a.kind >= -4 && a.kind <= -1) {
+        if ((char *)a.ptr - (char *)m != (char *)b.ptr - (char *)o) bad++;
+    } else if (a.ptr != b.ptr) {
+        bad++;
+    }
+END(vnspop)
+
+static void test_fields(void)
+{
+    int cases = 0, bad = 0, t;
+
+    rng_seed(0xf1e1d5edu);
+    for (t = 0; t < 20000; t++) {
+        delta_world *w = malloc(sizeof(delta_world));
+        delta_field fa, fb;
+        int8_t i;
+
+        fill(w, sizeof(delta_world));
+        world_link(w);
+        fill(&fa, sizeof(fa));
+        fb = fa;
+
+        cases += 2;
+        ibm_reset_field(&fa); reset_field(&fb);
+        if (memcmp(&fa, &fb, sizeof(fa))) {
+            if (bad < 3) printf("  reset_field differs\n");
+            bad++;
+        }
+
+        /* The right sync walk indexes off the fence base, so keep the pair
+           inside the record area and let half of them be null. */
+        w->vars.fence_base = 0;
+        i = (int8_t)(rng_next() % 8u);
+        ((int32_t *)w->records)[i] = (rng_next() % 2u)
+            ? 0 : (int32_t)(intptr_t)(w->records + 0x40);
+        if (ibm_VRSYNC(&w->state, (int32_t *)w->records, i)
+            != VRSYNC(&w->state, (int32_t *)w->records, i)) {
+            if (bad < 3) printf("  VRSYNC differs\n");
+            bad++;
+        }
+
+        free(w);
+    }
+
+    report("fields and syncs", cases, bad);
+}
+
 int main(void)
 {
     printf("delta diff: comparing our primitives against IBM's\n");
@@ -566,6 +642,9 @@ int main(void)
     test_vadd();
     test_popDeltaStackFrame();
     test_queries();
+    test_ptr_stack();
+    test_vnspop();
+    test_fields();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
