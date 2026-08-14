@@ -44,6 +44,7 @@ AT(unknown_19e4, 0x19e4);
 AT(callback_result, 0x19ec);
 AT(unknown_1818, 0x1818);
 AT(unknown_1830, 0x1830);
+AT(voiced_flags, 0x19f8);
 AT(unknown_1d18, 0x1d18);
 AT(output_samples, 0x1d1c);
 AT(rate_code, 0x1d20);

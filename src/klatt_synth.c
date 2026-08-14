@@ -72,7 +72,7 @@ int KlattSynth(void *handle, const int32_t *parms)
     int32_t freq[21], bw[21], amp[21];
     int32_t n_samples, i, j, first, remaining;
     int32_t ab_base;
-    int16_t four;
+    int16_t four, asp_gain;
 
     if (!verifyKlattHandle(handle))
         return 0;
@@ -292,8 +292,11 @@ int KlattSynth(void *handle, const int32_t *parms)
 
     k->noise_count = n_samples > 200 ? 200 : n_samples;
 
+    asp_gain = 0;
     if (k->ah != 0)
-        (void)db2lin(k->unknown_1834 + k->unknown_1838 + k->ah);
+        asp_gain = (int16_t)fxmul_scaled(0x3200,
+                                         db2lin(k->unknown_1834
+                                                + k->unknown_1838 + k->ah));
 
     /* Samples come out in blocks of at most one noise buffer at a time. */
     remaining = n_samples;
@@ -312,7 +315,159 @@ int KlattSynth(void *handle, const int32_t *parms)
             for (i = 0; i < k->noise_count; i++)
                 k->out[i] = 0;
         } else {
-            /* The synthesis body belongs here. */
+            int32_t left = block;      /* samples of this block still to fill */
+            int32_t written = 0;       /* how far into the buffer we have got */
+            int32_t filtered = 0;      /* where the bypass pole last stopped */
+
+            k->smooth_span = 0;
+            k->spans[k->smooth_span] = 0;
+
+            if (k->unknown_14e0 != 0) {
+                /* NOT YET TRANSCRIBED: silence carried in from the previous
+                   frame. Only reachable on a continuation frame. */
+            }
+
+            k->smooth_span++;
+            k->spans[k->smooth_span] = 0;
+
+            if (k->unknown_14e4 != 0) {
+                /* NOT YET TRANSCRIBED: a glottal period left half finished by
+                   the previous frame. Only reachable on a continuation. */
+            }
+
+            k->smooth_span++;
+            k->spans[k->smooth_span] = 0;
+
+            if (k->unknown_14f0 != 0 && left != 0) {
+                /* NOT YET TRANSCRIBED: likewise a carried-over closed phase. */
+            }
+
+            if (written > 0) {
+                filtered = written;
+                if (parms[P_AB] != 0)
+                    pole_filter(&k->filters[0], k->ptr_a, written);
+            }
+
+            if (left > 0) {
+                if (k->f0 != 0 && k->av != 0) {
+                    /* NOT YET TRANSCRIBED: the voiced source. */
+                } else {
+                    if (k->ah != 0) {
+                        /* NOT YET TRANSCRIBED: the aspiration-only source. */
+                    } else {
+                        k->unknown_14d0 = 0;
+                        k->smooth_span++;
+                        k->spans[k->smooth_span] = 0;
+                        k->voicing_size = left;
+                        k->unknown_14d8 = left;
+                        k->smooth_span++;
+                        k->spans[k->smooth_span] = left;
+                    }
+
+                    /* Neither voiced nor aspirated: the block is silent at the
+                       source, and the resonators still ring over the zeros. */
+                    clr_vector(k->ptr_a + written, left);
+                    k->v_start = 0;
+                    left = 0;
+                }
+
+                if (left > 0)
+                    compute_voicing_size(k);
+
+                if (left >= k->voicing_size && left > 0) {
+                    /* NOT YET TRANSCRIBED: the whole-period source loop. */
+                }
+
+                if (left > 0) {
+                    /* NOT YET TRANSCRIBED: the part-period source loop. */
+                }
+
+                k->unknown_14f0 = 0;
+                k->unknown_14e4 = 0;
+                k->unknown_14e0 = 0;
+            }
+
+            k->smooth_span++;
+            k->spans[k->smooth_span] = 0;
+            k->smooth_span++;
+            k->spans[k->smooth_span] = 0;
+
+            if (k->unknown_19f0 != 0) {
+                int32_t upto = 0, m = 0;
+
+                for (i = 0; i < k->smooth_span / 2; i++) {
+                    upto += k->spans[i * 2];
+                    for (; m < upto; m++)
+                        k->voiced_flags[m] = 0;
+                    upto += k->spans[i * 2 + 1];
+                    for (; m < upto; m++)
+                        k->voiced_flags[m] = 1;
+                }
+            }
+
+            if (parms[P_AB] != 0)
+                pole_filter(&k->filters[0], k->ptr_a + filtered,
+                            k->noise_count - filtered);
+
+            if (k->cp.unknown_1c == 0) {
+                if (k->unknown_1498 > 0) {
+                    if (k->ah != 0) {
+                        k->unknown_19dc = (int32_t)noise(k, k->unknown_19dc);
+                        fxmul1_vector(k->noise_buf, asp_gain, k->ptr_a,
+                                      k->noise_count);
+                    }
+
+                    /* The cascade, run from the highest formant down so each
+                       resonator sees the one above it already applied. */
+                    if (k->filters[NASAL_POLE].enabled)
+                        pole_filter(&k->filters[NASAL_POLE], k->ptr_a,
+                                    k->noise_count);
+                    if (k->filters[NASAL_ZERO].enabled)
+                        zero_filter(&k->filters[NASAL_ZERO],
+                                    (const zero_ABCs *)&k->zeros[NASAL_ZERO],
+                                    k->ptr_a, k->noise_count);
+                    if (k->filters[TRACHEAL_POLE].enabled)
+                        pole_filter(&k->filters[TRACHEAL_POLE], k->ptr_a,
+                                    k->noise_count);
+                    if (k->filters[TRACHEAL_ZERO].enabled)
+                        zero_filter(&k->filters[TRACHEAL_ZERO],
+                                    (const zero_ABCs *)&k->zeros[TRACHEAL_ZERO],
+                                    k->ptr_a, k->noise_count);
+
+                    for (i = k->n_formants + 4; i > CASCADE_BASE; i--)
+                        if (k->filters[i].enabled)
+                            pole_filter(&k->filters[i], k->ptr_a,
+                                        k->noise_count);
+
+                    if (k->filters[CASCADE_BASE].enabled)
+                        pole_filter(&k->filters[CASCADE_BASE], k->ptr_a,
+                                    k->noise_count);
+
+                    if (k->ah == 0 && k->av == 0) {
+                        k->unknown_1498 -= k->unknown_14a0;
+                        if (k->unknown_1498 < 0)
+                            k->unknown_1498 = 0;
+                    }
+                }
+
+                if (k->unknown_149c > 0) {
+                    /* NOT YET TRANSCRIBED: the parallel branch and the
+                       frication source that drives it. */
+                }
+            }
+
+            /* Down from the accumulator's headroom into sample range, keeping
+               the largest magnitude seen so KlattMax can report it. */
+            for (i = 0; i < k->noise_count; i++) {
+                int32_t v;
+
+                k->out[i] = k->ptr_a[i] >> 4;
+                v = k->out[i];
+                if (v < 0)
+                    v = (int32_t)(-(uint32_t)v);
+                if (v > k->max)
+                    k->max = v;
+            }
         }
 
         output_speech(k, k->noise_count);

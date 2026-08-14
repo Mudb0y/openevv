@@ -131,7 +131,10 @@ struct klatt_state {
     int32_t          unknown_19e8;        /* 0x19e8 */
     int32_t          callback_result;     /* 0x19ec */
     int32_t          unknown_19f0;        /* 0x19f0 */
-    uint8_t          pad_19f4[804];
+    int32_t          unknown_19f4;        /* 0x19f4 */
+    /* One flag per sample saying whether it fell inside a glottal period,
+       built from the span list above. */
+    int32_t          voiced_flags[200];   /* 0x19f8 */
     int32_t          unknown_1d18;        /* 0x1d18 */
     int32_t          output_samples;      /* 0x1d1c */
     int32_t          rate_code;           /* 0x1d20, 0 at 8k, 1 at 11k, else 2 */
