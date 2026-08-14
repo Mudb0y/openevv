@@ -587,11 +587,9 @@ static void test_noise(void)
         mine->av = theirs->av = (int32_t)(rng_next() % 2u);
         span = (int32_t)(rng_next() % 17u);
         mine->smooth_span = theirs->smooth_span = span;
-        mine->noise_limit = theirs->noise_limit = (int32_t)(rng_next() % 201u);
-        for (j = 0; j < 100; j++) {
-            mine->pairs[j].a = theirs->pairs[j].a = (int32_t)(rng_next() % 8u);
-            mine->pairs[j].b = theirs->pairs[j].b = (int32_t)(rng_next() % 8u);
-        }
+        for (j = 0; j < 199; j++)
+            mine->spans[j] = theirs->spans[j] = (int32_t)(rng_next() % 8u);
+        mine->spans[0] = theirs->spans[0] = (int32_t)(rng_next() % 201u);
         mine->version = theirs->version = KlattVersionString;
 
         rb = ibm_noise(theirs, seed);

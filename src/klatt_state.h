@@ -27,11 +27,6 @@ typedef struct klatt_state klatt_state;
 typedef void (*klatt_error_fn)(void *user, const char *tag, const char *msg);
 typedef int  (*klatt_samples_fn)(void *user, KlattSamplesStruct *s);
 
-typedef struct {
-    int32_t a;
-    int32_t b;
-} klatt_pair;
-
 /* Everything KlattSetConstParms is handed, 68 bytes copied wholesale into the
    state. It arrives by value, seventeen words wide, which is why the original
    sets it with a rep movsl rather than field by field. */
@@ -106,11 +101,12 @@ struct klatt_state {
     int32_t          unknown_14f0;        /* 0x14f0 */
     int32_t          length;              /* 0x14f4, KlattLength returns this */
     int32_t          max;                 /* 0x14f8, KlattMax returns this */
-    int32_t          noise_limit;         /* 0x14fc */
-    /* The smoothing spans noise() walks. The array cannot reach past 0x1818,
-       because KlattSetConstParms writes 0x181c as a scalar; how much shorter
-       than 99 it really is has not been established. */
-    klatt_pair       pairs[99];           /* 0x1500 */
+    /* One run length per pitch period. KlattSynth walks this forward as it
+       finds periods, using the index in smooth_span, and noise() walks the
+       same list back to decide where to attenuate. Entry zero is where the
+       first attenuation run ends; after that they come in pairs, a skip and
+       a run. It stops at 0x1818 because 0x181c is written as a scalar. */
+    int32_t          spans[199];          /* 0x14fc */
     int32_t          unknown_1818;        /* 0x1818 */
     int32_t          n_formants;          /* 0x181c, copied from the const parms */
     uint8_t          pad_1820[4];

@@ -33,8 +33,7 @@ AT(unknown_14e0, 0x14e0);
 AT(unknown_14f0, 0x14f0);
 AT(length, 0x14f4);
 AT(max, 0x14f8);
-AT(noise_limit, 0x14fc);
-AT(pairs, 0x1500);
+AT(spans, 0x14fc);
 AT(av, 0x1824);
 AT(ah, 0x1828);
 AT(af, 0x182c);
@@ -64,14 +63,14 @@ uint32_t noise(klatt_state *k, uint32_t seed)
         return seed;
 
     i = 0;
-    limit = k->noise_limit;
+    limit = k->spans[0];
 
     for (j = 0; j < k->smooth_span / 2; j++) {
         for (; i < limit; i++)
             k->noise_buf[i] = (int16_t)(k->noise_buf[i] >> 1);
 
-        i = i + k->pairs[j].a;
-        limit = i + k->pairs[j].b;
+        i = i + k->spans[1 + 2 * j];
+        limit = i + k->spans[2 + 2 * j];
     }
 
     return seed;
