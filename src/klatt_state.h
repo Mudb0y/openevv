@@ -69,7 +69,9 @@ struct klatt_state {
     int32_t          open_state;          /* 0x005c, 2 once open */
     uint8_t          pad_0060[4];
     filter_parms     filters[21];         /* 0x0064, ends at 0x0748 */
-    uint8_t          pad_0748[24];
+    /* Steady-state coefficients for the two zeros, filters 1 and 2. Eight
+       bytes apiece rather than six, so the array stays word aligned. */
+    struct { int16_t a, b, c, pad; } zeros[3];   /* 0x0748 */
     int32_t          out[200];            /* 0x0760, the sample buffer */
     KlattConstParms  cp;                  /* 0x0a80 */
     uint8_t          pad_0ac4[8];
@@ -78,13 +80,17 @@ struct klatt_state {
     uint8_t          pad_0df0[808];
     int32_t          buf_b[200];          /* 0x1118 */
     int32_t         *ptr_b;               /* 0x1438, points at buf_b */
-    uint8_t          pad_143c[92];
+    int16_t          ab_gain;             /* 0x143c, the bypass path */
+    int16_t          co[21];              /* 0x143e, cosine term per resonator */
+    int16_t          ex[21];              /* 0x1468, damping term per resonator */
+    uint8_t          pad_1492[6];
     int32_t          unknown_1498;        /* 0x1498 */
     int32_t          unknown_149c;        /* 0x149c */
     int32_t          unknown_14a0;        /* 0x14a0 */
-    uint8_t          pad_14a4[8];
-    int32_t          unknown_14ac;        /* 0x14ac, divides the sample rate */
-    int32_t          unknown_14b0;        /* 0x14b0 */
+    uint8_t          pad_14a4[4];
+    int32_t          di;                  /* 0x14a8, diplophonia */
+    int32_t          f0;                  /* 0x14ac, pitch */
+    int32_t          oq;                  /* 0x14b0, open quotient */
     int32_t          v_start;             /* 0x14b4 */
     uint8_t          pad_14b8[12];
     int32_t          noise_count;         /* 0x14c4 */
@@ -106,7 +112,7 @@ struct klatt_state {
        than 99 it really is has not been established. */
     klatt_pair       pairs[99];           /* 0x1500 */
     int32_t          unknown_1818;        /* 0x1818 */
-    int32_t          unknown_181c;        /* 0x181c */
+    int32_t          n_formants;          /* 0x181c, copied from the const parms */
     uint8_t          pad_1820[4];
     /* KlattSynth copies three amplitudes straight out of the parameter frame
        into these. noise() gates its smoothing on av, so the noise follows the
@@ -128,7 +134,8 @@ struct klatt_state {
     int32_t          unknown_19e4;        /* 0x19e4 */
     int32_t          unknown_19e8;        /* 0x19e8 */
     int32_t          callback_result;     /* 0x19ec */
-    uint8_t          pad_19f0[808];
+    int32_t          unknown_19f0;        /* 0x19f0 */
+    uint8_t          pad_19f4[804];
     int32_t          unknown_1d18;        /* 0x1d18 */
     int32_t          output_samples;      /* 0x1d1c */
     int32_t          rate_code;           /* 0x1d20, 0 at 8k, 1 at 11k, else 2 */
@@ -149,5 +156,6 @@ void     KlattSetOutputSamplesOption(void *handle, int32_t option);
 void     klattSetVolumeMultiplier(void *handle, int32_t volume);
 int      errorKlattIgnore(void);
 void     KlattSetConstParms(void *handle, KlattConstParms parms);
+int      KlattSynth(void *handle, const int32_t *parms);
 
 #endif

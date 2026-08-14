@@ -72,36 +72,6 @@ int16_t fxdivl(int32_t num, int32_t den)
     return result;
 }
 
-/* Both vector multiplies want (coef * x) >> 15 but must not overflow 32 bits,
-   so they pre-shift x by however much its magnitude demands and take the rest
-   out of the final shift. The staged form drops low bits that a wider multiply
-   would keep, so it cannot be folded back into a single expression. */
-static int32_t fxmul_scaled(int16_t coef, int32_t x)
-{
-    int32_t c = coef;
-
-    if (x > 0) {
-        if (x < 0x10000)
-            return mul32(c, x) >> 15;
-        if (x < 0x100000)
-            return mul32(c, x >> 4) >> 11;
-        if (x < 0x1000000)
-            return mul32(c, x >> 8) >> 7;
-        if (x < 0x10000000)
-            return mul32(c, x >> 12) >> 3;
-        return mul32(c, x >> 15);
-    }
-
-    if ((uint32_t)x > 0xffff0000u)
-        return mul32(c, x) >> 15;
-    if ((uint32_t)x > 0xfff00000u)
-        return mul32(c, x >> 4) >> 11;
-    if ((uint32_t)x > 0xff000000u)
-        return mul32(c, x >> 8) >> 7;
-    if ((uint32_t)x > 0xf0000000u)
-        return mul32(c, x >> 12) >> 3;
-    return mul32(c, x >> 15);
-}
 
 void fxmul_vector(const int32_t *src, int16_t coef, int32_t *acc, int32_t n)
 {

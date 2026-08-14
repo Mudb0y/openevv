@@ -22,8 +22,9 @@ AT(buf_b, 0x1118);
 AT(ptr_b, 0x1438);
 AT(unknown_1498, 0x1498);
 AT(unknown_14a0, 0x14a0);
-AT(unknown_14ac, 0x14ac);
-AT(unknown_14b0, 0x14b0);
+AT(di, 0x14a8);
+AT(f0, 0x14ac);
+AT(oq, 0x14b0);
 AT(v_start, 0x14b4);
 AT(noise_count, 0x14c4);
 AT(voicing_size, 0x14c8);
@@ -79,18 +80,18 @@ uint32_t noise(klatt_state *k, uint32_t seed)
 void compute_v_start(klatt_state *k)
 {
     k->v_start = k->v_start + mul32(k->voicing_size, 1000)
-               - mul32(k->cp.sample_rate, 10000) / k->unknown_14ac;
+               - mul32(k->cp.sample_rate, 10000) / k->f0;
 }
 
 void compute_voicing_size(klatt_state *k)
 {
     k->voicing_size =
-        (mul32(k->cp.sample_rate, 10000) / k->unknown_14ac - k->v_start + 999) / 1000;
+        (mul32(k->cp.sample_rate, 10000) / k->f0 - k->v_start + 999) / 1000;
 
     k->unknown_14d0 =
-        (mul32(mul32(k->cp.sample_rate, 100), k->unknown_14b0)
-         + mul32(499 - k->v_start, k->unknown_14ac))
-        / mul32(k->unknown_14ac, 1000);
+        (mul32(mul32(k->cp.sample_rate, 100), k->oq)
+         + mul32(499 - k->v_start, k->f0))
+        / mul32(k->f0, 1000);
 
     k->unknown_14d4 = k->unknown_14d0;
     k->unknown_14d8 = k->voicing_size - k->unknown_14d0;
@@ -174,12 +175,12 @@ int KlattOpen(void *handle)
     for (i = 0; i < 21; i++) {
         k->filters[i].d1 = 0;
         k->filters[i].d2 = 0;
-        k->filters[i].unknown_2c[0] = 0;
-        k->filters[i].unknown_2c[2] = -1;
-        k->filters[i].unknown_2c[3] = -1;
+        k->filters[i].prev_freq = 0;
+        k->filters[i].unknown_34 = -1;
+        k->filters[i].unknown_38 = -1;
         k->filters[i].enabled = 0;
         k->filters[i].ramp = 0;
-        k->filters[i].unknown_50 = 0;
+        k->filters[i].frames = 0;
     }
 
     k->unknown_0010 = 0;
@@ -268,7 +269,7 @@ void KlattSetConstParms(void *handle, KlattConstParms parms)
     }
 
     k->v_start = 0;
-    k->unknown_181c = k->cp.n_formants;
+    k->n_formants = k->cp.n_formants;
     k->unknown_1d18 = 0;
     k->unknown_1830 = k->cp.unknown_20;
     k->unknown_1834 = k->cp.unknown_2c;

@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include <stdlib.h>
+#include <stddef.h>
 
 #include "klatt_fx.h"
 #include "klatt_state.h"
@@ -504,22 +505,47 @@ static void test_parallel0_filter(void)
    banner pointer, and the two pointers the state holds into itself. Compare
    the banner as a string and blank the self-pointers; test_api checks those
    separately, as offsets. */
+static void normalize(klatt_state *dst, const klatt_state *src)
+{
+    *dst = *src;
+    dst->version = NULL;
+    dst->ptr_a = NULL;
+    dst->ptr_b = NULL;
+    /* Each side points at its own copy of the lookup tables; which table got
+       picked is checked by name in test_setconstparms. */
+    dst->ex_table = NULL;
+    dst->co_table = NULL;
+}
+
 static int state_differs(const klatt_state *a, const klatt_state *b)
 {
-    klatt_state ca = *a, cb = *b;
+    klatt_state ca, cb;
 
     if (strcmp(a->version, b->version) != 0)
         return 1;
 
-    ca.version = cb.version = NULL;
-    ca.ptr_a = cb.ptr_a = NULL;
-    ca.ptr_b = cb.ptr_b = NULL;
-    /* Each side points at its own copy of the lookup tables; which table got
-       picked is checked by name in test_setconstparms. */
-    ca.ex_table = cb.ex_table = NULL;
-    ca.co_table = cb.co_table = NULL;
+    normalize(&ca, a);
+    normalize(&cb, b);
 
     return memcmp(&ca, &cb, sizeof(ca)) != 0;
+}
+
+/* Offset of the first byte that really differs, ignoring the fields above. */
+static long first_difference(const klatt_state *a, const klatt_state *b)
+{
+    klatt_state ca, cb;
+    const unsigned char *pa, *pb;
+    size_t i;
+
+    normalize(&ca, a);
+    normalize(&cb, b);
+    pa = (const unsigned char *)&ca;
+    pb = (const unsigned char *)&cb;
+
+    for (i = 0; i < sizeof(ca); i++)
+        if (pa[i] != pb[i])
+            return (long)i;
+    return -1;
 }
 
 static int self_pointers_differ(const klatt_state *a, const klatt_state *b)
@@ -601,11 +627,11 @@ static void test_compute(void)
 
         /* A zero rate divides by zero in the original just as it would here. */
         rate = (int32_t)(rng_next() % 48000u) + 1;
-        mine->unknown_14ac = theirs->unknown_14ac = rate;
+        mine->f0 = theirs->f0 = rate;
         mine->cp.sample_rate = theirs->cp.sample_rate = (int32_t)(rng_next() % 2000u);
         mine->v_start = theirs->v_start = (int32_t)(rng_next() % 4000u) - 2000;
         mine->voicing_size = theirs->voicing_size = (int32_t)(rng_next() % 2000u);
-        mine->unknown_14b0 = theirs->unknown_14b0 = (int32_t)(rng_next() % 1000u);
+        mine->oq = theirs->oq = (int32_t)(rng_next() % 1000u);
         mine->version = theirs->version = KlattVersionString;
 
         ibm_compute_voicing_size(theirs);
@@ -858,6 +884,89 @@ static void test_setconstparms(void)
     report("SetConstParms", cases, bad, 0);
 }
 
+extern int ibm_KlattSynth(void *handle, const int32_t *parms);
+
+/* A frame of zero duration makes the sample count zero, and the original then
+   jumps straight past its per-sample loop to the frame tail. That isolates the
+   setup phase so it can be checked on its own. */
+static void test_synth_setup(void)
+{
+    int cases = 0, bad = 0;
+    int t, i;
+    static const int32_t rates[] = {8000, 11025};
+
+    rng_seed(0x5ec7e70au);
+    for (t = 0; t < 20000; t++) {
+        klatt_state *mine = ibm_klatt_new((void *)0x1234);
+        klatt_state *theirs = klatt_new((void *)0x1234);
+        KlattConstParms parms;
+        int32_t frame[63];
+        unsigned char *pp = (unsigned char *)&parms;
+        int ra, rb;
+        size_t b;
+
+        for (b = 0; b < sizeof(parms); b++)
+            pp[b] = (unsigned char)rng_next();
+        parms.sample_rate = rates[rng_next() % 2u];
+        parms.n_formants = (int32_t)(rng_next() % 9u);
+        parms.error_fn = error_sink;
+        parms.samples_fn = sample_sink;
+
+        /* These four end up summed into db2lin's argument, and db2lin is only
+           faithful below 7182219; random 32-bit values sail past that. */
+        parms.unknown_20 = (int32_t)(rng_next() % 100u);
+        parms.unknown_24 = (int32_t)(rng_next() % 100u);
+        parms.unknown_28 = (int32_t)(rng_next() % 100u);
+        parms.unknown_2c = (int32_t)(rng_next() % 100u);
+
+        ibm_KlattSetConstParms(mine, parms);
+        KlattSetConstParms(theirs, parms);
+
+        /* Frequencies and bandwidths land inside the table range once the
+           clamps have run, and amplitudes stay inside db2lin's domain. */
+        for (i = 0; i < 63; i++)
+            frame[i] = (int32_t)(rng_next() % 6000u) - 500;
+        frame[0] = 0;                                  /* zero duration */
+        frame[43] = (int32_t)(rng_next() % 100u);      /* ab */
+        for (i = 35; i <= 42; i++)
+            frame[i] = (int32_t)(rng_next() % 100u);   /* a1f..a8f */
+
+        rb = ibm_KlattSynth(mine, frame);
+        ra = KlattSynth(theirs, frame);
+
+        cases++;
+        if (ra != rb || state_differs(mine, theirs)) {
+            if (bad < 4) {
+                long o = first_difference(mine, theirs);
+                long base = (long)offsetof(klatt_state, filters);
+                long end = base + 21 * (long)sizeof(filter_parms);
+
+                printf("  setup differs nf=%ld rate=%ld at 0x%04lx",
+                       (long)parms.n_formants, (long)parms.sample_rate, o);
+
+                if (o >= base && o < end) {
+                    long f = (o - base) / (long)sizeof(filter_parms);
+                    long fld = (o - base) % (long)sizeof(filter_parms);
+                    const filter_parms *x = &mine->filters[f];
+                    const filter_parms *y = &theirs->filters[f];
+
+                    printf(" = filter %ld field 0x%02lx: en %ld/%ld"
+                           " sa %d/%d sb %d/%d sc %d/%d",
+                           f, fld, (long)x->enabled, (long)y->enabled,
+                           x->sa, y->sa, x->sb, y->sb, x->sc, y->sc);
+                }
+                printf("\n");
+            }
+            bad++;
+        }
+
+        ibm_klatt_delete(mine);
+        klatt_delete(theirs);
+    }
+
+    report("synth setup", cases, bad, 0);
+}
+
 int main(void)
 {
     printf("diff: comparing our transcription against IBM clsyn.obj\n");
@@ -879,6 +988,7 @@ int main(void)
     test_api();
     test_tables();
     test_setconstparms();
+    test_synth_setup();
 
     printf("diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;

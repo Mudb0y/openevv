@@ -13,6 +13,37 @@ static inline int32_t mul32(int32_t a, int32_t b)
     return (int32_t)((uint32_t)a * (uint32_t)b);
 }
 
+/* Both vector multiplies want (coef * x) >> 15 but must not overflow 32 bits,
+   so they pre-shift x by however much its magnitude demands and take the rest
+   out of the final shift. The staged form drops low bits that a wider multiply
+   would keep, so it cannot be folded back into a single expression. */
+static inline int32_t fxmul_scaled(int16_t coef, int32_t x)
+{
+    int32_t c = coef;
+
+    if (x > 0) {
+        if (x < 0x10000)
+            return mul32(c, x) >> 15;
+        if (x < 0x100000)
+            return mul32(c, x >> 4) >> 11;
+        if (x < 0x1000000)
+            return mul32(c, x >> 8) >> 7;
+        if (x < 0x10000000)
+            return mul32(c, x >> 12) >> 3;
+        return mul32(c, x >> 15);
+    }
+
+    if ((uint32_t)x > 0xffff0000u)
+        return mul32(c, x) >> 15;
+    if ((uint32_t)x > 0xfff00000u)
+        return mul32(c, x >> 4) >> 11;
+    if ((uint32_t)x > 0xff000000u)
+        return mul32(c, x >> 8) >> 7;
+    if ((uint32_t)x > 0xf0000000u)
+        return mul32(c, x >> 12) >> 3;
+    return mul32(c, x >> 15);
+}
+
 void     clr_vector(int32_t *v, int32_t n);
 uint32_t klatt_rand(int16_t *out, int32_t n, uint32_t seed);
 int16_t  fxdivl(int32_t num, int32_t den);
@@ -28,7 +59,7 @@ typedef struct {
     int16_t sa;              /* 0x00, steady state, weight on the input */
     int16_t sb;              /* 0x02, weight on y[n-1] */
     int16_t sc;              /* 0x04, weight on y[n-2] */
-    int8_t  kind;            /* 0x06, KlattSynth sets 2 for a cascade pole */
+    int8_t  kind;            /* 0x06, KlattSynth sets 2 for a resonator */
     int8_t  fresh;           /* 0x07, set whenever the coefficients change */
     int32_t unknown_08;      /* 0x08 */
     int16_t a[3];            /* 0x0c, coefficients ramped over three samples */
@@ -37,10 +68,21 @@ typedef struct {
     int16_t unknown_1e[3];   /* 0x1e */
     int32_t d1;              /* 0x24, previous sample */
     int32_t d2;              /* 0x28, the one before that */
-    int32_t unknown_2c[7];   /* 0x2c */
-    int32_t enabled;         /* 0x48 */
+    int32_t prev_freq;       /* 0x2c, last frame's frequency in hertz */
+    int32_t prev_bw;         /* 0x30, last frame's bandwidth */
+    int32_t unknown_34;      /* 0x34, KlattOpen sets -1 */
+    int32_t unknown_38;      /* 0x38, KlattOpen sets -1 */
+    /* A snapshot of the first four fields taken at the end of each frame, so
+       the next frame can slide from the old coefficients to the new ones. */
+    int16_t old_sa;          /* 0x3c */
+    int16_t old_sb;          /* 0x3e */
+    int16_t old_sc;          /* 0x40 */
+    int8_t  old_kind;        /* 0x42 */
+    int8_t  old_fresh;       /* 0x43 */
+    int32_t old_unknown_08;  /* 0x44 */
+    int32_t enabled;         /* 0x48, frames this resonator stays live */
     int32_t ramp;            /* 0x4c, samples left of the coefficient ramp */
-    int32_t unknown_50;      /* 0x50 */
+    int32_t frames;          /* 0x50, frames since this resonator woke up */
 } filter_parms;
 
 /* Steady-state coefficients a zero uses once its ramp has run out. */
