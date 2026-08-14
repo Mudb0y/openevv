@@ -28,17 +28,21 @@ done
 
 # GNU as cannot parse '?' in a symbol reference, and we want IBM's functions
 # and ours in one binary anyway, so give every original symbol an ibm_ prefix.
-# i386 PE prefixes C identifiers with an underscore, so the new names carry
-# one even though the MSVC C++ manglings they replace do not.
+# Every symbol the object defines gets an ibm_ prefix, functions and tables
+# alike, so the original and the rewrite can sit in one binary. i386 PE
+# prefixes C identifiers with an underscore, so the new names carry one even
+# though the MSVC C++ manglings they replace do not. String literals (??_C@)
+# and compiler bookkeeping are left alone.
 llvm-objdump --syms clsyn.obj \
-  | grep -oE '\?[A-Za-z_0-9]+@@[^ ]+' | sort -u \
-  | awk '{ n = $0; sub(/@@.*/, "", n); sub(/^\?/, "", n); print $0 " _ibm_" n }' \
-  > rename.txt
-
-llvm-objdump --syms clsyn.obj \
-  | grep -oE '_(Klatt|klatt)[A-Za-z_0-9]*$' | sort -u \
-  | awk '{ n = substr($0, 2); print $0 " _ibm_" n }' \
-  >> rename.txt
+  | awk '$0 ~ /\(sec  *[1-9]/ {
+           n = $NF
+           if (n ~ /^\?\?_C@/) next
+           if (n ~ /^[.@]/) next
+           if (n ~ /^\?[A-Za-z_]/) { s = n; sub(/@@.*/, "", s); sub(/^\?/, "", s) }
+           else if (n ~ /^_[A-Za-z]/) { s = substr(n, 2) }
+           else next
+           print n " _ibm_" s
+         }' | sort -u > rename.txt
 
 # llvm-objcopy refuses symbol surgery on COFF, so the binutils one does it.
 # .drectve carries MSVC /DEFAULTLIB directives that GNU ld cannot parse.

@@ -9,7 +9,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <stdlib.h>
+
 #include "klatt_fx.h"
+#include "klatt_state.h"
 
 extern void     ibm_clr_vector(int32_t *v, int32_t n);
 extern uint32_t ibm_klatt_rand(int16_t *out, int32_t n, uint32_t seed);
@@ -23,6 +26,19 @@ extern void     ibm_pole_filter(filter_parms *fp, int32_t *buf, int32_t n);
 extern void     ibm_parallel0_filter(filter_parms *fp, int32_t *buf, int32_t n);
 extern void     ibm_zero_filter(filter_parms *fp, const zero_ABCs *z,
                                 int32_t *buf, int32_t n);
+extern uint32_t ibm_noise(klatt_state *k, uint32_t seed);
+extern void     ibm_compute_v_start(klatt_state *k);
+extern void     ibm_compute_voicing_size(klatt_state *k);
+extern void     ibm_output_speech(klatt_state *k, int32_t n);
+extern void    *ibm_klatt_new(void *user);
+extern void     ibm_klatt_delete(void *handle);
+extern int      ibm_KlattOpen(void *handle);
+extern void     ibm_KlattClose(void *handle);
+extern int32_t  ibm_KlattLength(void *handle);
+extern int32_t  ibm_KlattMax(void *handle);
+extern void     ibm_KlattSetOutputSamplesOption(void *handle, int32_t option);
+extern void     ibm_klattSetVolumeMultiplier(void *handle, int32_t volume);
+extern int      ibm_errorKlattIgnore(void);
 
 #define MAXLEN 64
 
@@ -484,6 +500,271 @@ static void test_parallel0_filter(void)
     report("parallel0_filter", cases, bad, 0);
 }
 
+/* Three fields legitimately differ between two allocations: each side's
+   banner pointer, and the two pointers the state holds into itself. Compare
+   the banner as a string and blank the self-pointers; test_api checks those
+   separately, as offsets. */
+static int state_differs(const klatt_state *a, const klatt_state *b)
+{
+    klatt_state ca = *a, cb = *b;
+
+    if (strcmp(a->version, b->version) != 0)
+        return 1;
+
+    ca.version = cb.version = NULL;
+    ca.ptr_a = cb.ptr_a = NULL;
+    ca.ptr_b = cb.ptr_b = NULL;
+
+    return memcmp(&ca, &cb, sizeof(ca)) != 0;
+}
+
+static int self_pointers_differ(const klatt_state *a, const klatt_state *b)
+{
+    return ((const char *)a->ptr_a - (const char *)a)
+        != ((const char *)b->ptr_a - (const char *)b)
+        || ((const char *)a->ptr_b - (const char *)a)
+        != ((const char *)b->ptr_b - (const char *)b);
+}
+
+static void fill_state(klatt_state *k, uint32_t (*next)(void))
+{
+    unsigned char *p = (unsigned char *)k;
+    size_t i;
+
+    for (i = 0; i < sizeof(klatt_state); i++)
+        p[i] = (unsigned char)next();
+}
+
+static void test_noise(void)
+{
+    int cases = 0, bad = 0;
+    int t, j;
+
+    rng_seed(0x77777777u);
+    for (t = 0; t < 20000; t++) {
+        klatt_state *mine = malloc(sizeof(klatt_state));
+        klatt_state *theirs = malloc(sizeof(klatt_state));
+        uint32_t seed = rng_next();
+        uint32_t ra, rb;
+        int32_t span;
+
+        fill_state(mine, rng_next);
+        memcpy(theirs, mine, sizeof(klatt_state));
+
+        /* Keep every index the smoothing walk produces inside noise_buf;
+           the original does no bounds checking of its own. */
+        mine->noise_count = theirs->noise_count = (int32_t)(rng_next() % 205u);
+        mine->smooth_noise = theirs->smooth_noise = (int32_t)(rng_next() % 2u);
+        span = (int32_t)(rng_next() % 17u);
+        mine->smooth_span = theirs->smooth_span = span;
+        mine->noise_limit = theirs->noise_limit = (int32_t)(rng_next() % 205u);
+        for (j = 0; j < 100; j++) {
+            mine->pairs[j].a = theirs->pairs[j].a = (int32_t)(rng_next() % 8u);
+            mine->pairs[j].b = theirs->pairs[j].b = (int32_t)(rng_next() % 8u);
+        }
+        mine->version = theirs->version = KlattVersionString;
+
+        rb = ibm_noise(theirs, seed);
+        ra = noise(mine, seed);
+
+        cases++;
+        if (ra != rb || state_differs(mine, theirs)) {
+            if (bad < 5)
+                printf("  noise count=%ld span=%ld differs\n",
+                       (long)theirs->noise_count, (long)span);
+            bad++;
+        }
+        free(mine);
+        free(theirs);
+    }
+
+    report("noise", cases, bad, 0);
+}
+
+static void test_compute(void)
+{
+    int cases = 0, bad = 0;
+    int t;
+
+    rng_seed(0x13571357u);
+    for (t = 0; t < 20000; t++) {
+        klatt_state *mine = malloc(sizeof(klatt_state));
+        klatt_state *theirs = malloc(sizeof(klatt_state));
+        int32_t rate;
+
+        fill_state(mine, rng_next);
+        memcpy(theirs, mine, sizeof(klatt_state));
+
+        /* A zero rate divides by zero in the original just as it would here. */
+        rate = (int32_t)(rng_next() % 48000u) + 1;
+        mine->sample_rate = theirs->sample_rate = rate;
+        mine->period = theirs->period = (int32_t)(rng_next() % 2000u);
+        mine->v_start = theirs->v_start = (int32_t)(rng_next() % 4000u) - 2000;
+        mine->voicing_size = theirs->voicing_size = (int32_t)(rng_next() % 2000u);
+        mine->unknown_14b0 = theirs->unknown_14b0 = (int32_t)(rng_next() % 1000u);
+        mine->version = theirs->version = KlattVersionString;
+
+        ibm_compute_voicing_size(theirs);
+        compute_voicing_size(mine);
+        cases++;
+        if (state_differs(mine, theirs)) {
+            if (bad < 5)
+                printf("  compute_voicing_size rate=%ld differs\n", (long)rate);
+            bad++;
+        }
+
+        ibm_compute_v_start(theirs);
+        compute_v_start(mine);
+        cases++;
+        if (state_differs(mine, theirs)) {
+            if (bad < 5)
+                printf("  compute_v_start rate=%ld differs\n", (long)rate);
+            bad++;
+        }
+
+        free(mine);
+        free(theirs);
+    }
+
+    report("compute_*", cases, bad, 0);
+}
+
+static int sample_sink(void *user, KlattSamplesStruct *s)
+{
+    (void)user;
+    return (int)(s->count * 3 + 7);
+}
+
+static void test_output_speech(void)
+{
+    int cases = 0, bad = 0;
+    int t;
+
+    rng_seed(0x24682468u);
+    for (t = 0; t < 20000; t++) {
+        klatt_state *mine = malloc(sizeof(klatt_state));
+        klatt_state *theirs = malloc(sizeof(klatt_state));
+        int32_t n = (int32_t)(rng_next() % 201u);
+
+        fill_state(mine, rng_next);
+        memcpy(theirs, mine, sizeof(klatt_state));
+
+        mine->output_samples = theirs->output_samples = (int32_t)(rng_next() % 2u);
+        mine->callback_mode = theirs->callback_mode = (int32_t)(rng_next() % 3u);
+        mine->volume = theirs->volume = (int32_t)(rng_next() % 201u);
+        mine->samples_fn = theirs->samples_fn = sample_sink;
+        mine->version = theirs->version = KlattVersionString;
+
+        ibm_output_speech(theirs, n);
+        output_speech(mine, n);
+
+        cases++;
+        if (state_differs(mine, theirs)) {
+            if (bad < 5)
+                printf("  output_speech n=%ld vol=%ld differs\n",
+                       (long)n, (long)theirs->volume);
+            bad++;
+        }
+        free(mine);
+        free(theirs);
+    }
+
+    report("output_speech", cases, bad, 0);
+}
+
+static char seen_tag[128];
+static char seen_msg[256];
+
+static void error_sink(void *user, const char *tag, const char *msg)
+{
+    (void)user;
+    strncpy(seen_tag, tag ? tag : "", sizeof(seen_tag) - 1);
+    strncpy(seen_msg, msg ? msg : "", sizeof(seen_msg) - 1);
+}
+
+static void test_api(void)
+{
+    int cases = 0, bad = 0;
+    int t;
+
+    rng_seed(0x99887766u);
+    for (t = 0; t < 4000; t++) {
+        klatt_state *mine = ibm_klatt_new((void *)0x1234);
+        klatt_state *theirs = klatt_new((void *)0x1234);
+        char ibm_tag[128], ibm_msg[256];
+        int32_t setting = (int32_t)rng_next();
+        int ra, rb;
+
+        /* klatt_new's own output first, before anything else touches it. */
+        cases++;
+        if (state_differs(mine, theirs)) {
+            if (bad < 5)
+                printf("  klatt_new differs\n");
+            bad++;
+        }
+
+        mine->error_fn = theirs->error_fn = error_sink;
+        mine->const_parms_set = theirs->const_parms_set =
+            (int32_t)(rng_next() % 2u);
+        mine->open_state = theirs->open_state =
+            (int32_t)(rng_next() % 3u);
+
+        seen_tag[0] = seen_msg[0] = '\0';
+        rb = ibm_KlattOpen(mine);
+        strcpy(ibm_tag, seen_tag);
+        strcpy(ibm_msg, seen_msg);
+
+        seen_tag[0] = seen_msg[0] = '\0';
+        ra = KlattOpen(theirs);
+
+        cases++;
+        if (ra != rb || state_differs(mine, theirs) ||
+            strcmp(ibm_tag, seen_tag) != 0 || strcmp(ibm_msg, seen_msg) != 0 ||
+            (rb == 1 && self_pointers_differ(mine, theirs))) {
+            if (bad < 5)
+                printf("  KlattOpen differs: ibm %d \"%s\", ours %d \"%s\"\n",
+                       rb, ibm_msg, ra, seen_msg);
+            bad++;
+        }
+
+        ibm_klattSetVolumeMultiplier(mine, setting);
+        klattSetVolumeMultiplier(theirs, setting);
+        ibm_KlattSetOutputSamplesOption(mine, setting);
+        KlattSetOutputSamplesOption(theirs, setting);
+        mine->length = theirs->length = (int32_t)rng_next();
+        mine->max = theirs->max = (int32_t)rng_next();
+
+        cases++;
+        if (ibm_KlattLength(mine) != KlattLength(theirs) ||
+            ibm_KlattMax(mine) != KlattMax(theirs) ||
+            state_differs(mine, theirs)) {
+            if (bad < 5)
+                printf("  setters or getters differ\n");
+            bad++;
+        }
+
+        ibm_KlattClose(mine);
+        KlattClose(theirs);
+        cases++;
+        if (state_differs(mine, theirs)) {
+            if (bad < 5)
+                printf("  KlattClose differs\n");
+            bad++;
+        }
+
+        cases++;
+        if (ibm_errorKlattIgnore() != errorKlattIgnore()) {
+            printf("  errorKlattIgnore differs\n");
+            bad++;
+        }
+
+        ibm_klatt_delete(mine);
+        klatt_delete(theirs);
+    }
+
+    report("klatt api", cases, bad, 0);
+}
+
 int main(void)
 {
     printf("diff: comparing our transcription against IBM clsyn.obj\n");
@@ -499,6 +780,10 @@ int main(void)
     test_zero_filter();
     test_pole_filter();
     test_parallel0_filter();
+    test_noise();
+    test_compute();
+    test_output_speech();
+    test_api();
 
     printf("diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;

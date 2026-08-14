@@ -6,6 +6,13 @@
 /* IBM built clsyn.cpp for a 32-bit target where long is 32 bits. Nothing here
    may use long: on LP64 hosts that silently changes every result. */
 
+/* imull keeps the low 32 bits and lets the rest go. Signed overflow is
+   undefined in C, so wrap in unsigned and reinterpret to get the same bits. */
+static inline int32_t mul32(int32_t a, int32_t b)
+{
+    return (int32_t)((uint32_t)a * (uint32_t)b);
+}
+
 void     clr_vector(int32_t *v, int32_t n);
 uint32_t klatt_rand(int16_t *out, int32_t n, uint32_t seed);
 int16_t  fxdivl(int32_t num, int32_t den);

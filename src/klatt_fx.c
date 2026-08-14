@@ -71,13 +71,6 @@ int16_t fxdivl(int32_t num, int32_t den)
     return result;
 }
 
-/* imull keeps the low 32 bits and lets the rest go. Signed overflow is
-   undefined in C, so wrap in unsigned and reinterpret to get the same bits. */
-static int32_t mul32(int32_t a, int32_t b)
-{
-    return (int32_t)((uint32_t)a * (uint32_t)b);
-}
-
 /* Both vector multiplies want (coef * x) >> 15 but must not overflow 32 bits,
    so they pre-shift x by however much its magnitude demands and take the rest
    out of the final shift. The staged form drops low bits that a wider multiply
