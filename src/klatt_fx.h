@@ -59,8 +59,13 @@ typedef struct {
     int16_t sa;              /* 0x00, steady state, weight on the input */
     int16_t sb;              /* 0x02, weight on y[n-1] */
     int16_t sc;              /* 0x04, weight on y[n-2] */
-    int8_t  kind;            /* 0x06, KlattSynth sets 2 for a resonator */
-    int8_t  fresh;           /* 0x07, set whenever the coefficients change */
+    /* How far sa and sb have already been shifted. pole_filter's fixed
+       weights of four and two correspond to two and one, and the normal path
+       always builds the coefficients at exactly those scales. Only the tilt
+       table supplies coefficients at other scales, and KlattSynth normalises
+       them up to these before use. */
+    int8_t  sa_scale;        /* 0x06 */
+    int8_t  sb_scale;        /* 0x07 */
     int32_t unknown_08;      /* 0x08 */
     int16_t a[3];            /* 0x0c, coefficients ramped over three samples */
     int16_t b[3];            /* 0x12 */
@@ -77,8 +82,8 @@ typedef struct {
     int16_t old_sa;          /* 0x3c */
     int16_t old_sb;          /* 0x3e */
     int16_t old_sc;          /* 0x40 */
-    int8_t  old_kind;        /* 0x42 */
-    int8_t  old_fresh;       /* 0x43 */
+    int8_t  old_sa_scale;    /* 0x42 */
+    int8_t  old_sb_scale;    /* 0x43 */
     int32_t old_unknown_08;  /* 0x44 */
     int32_t enabled;         /* 0x48, frames this resonator stays live */
     int32_t ramp;            /* 0x4c, samples left of the coefficient ramp */

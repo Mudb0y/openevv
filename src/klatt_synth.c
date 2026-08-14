@@ -59,11 +59,11 @@ static void set_coefficients(filter_parms *fp, int16_t ex, int16_t co)
 {
     fp->sc = (int16_t)fxmul_scaled((int16_t)-ex, ex);
     fp->sb = (int16_t)fxmul_scaled(ex, co);
-    fp->fresh = 1;
+    fp->sb_scale = 1;
     fp->sb = (int16_t)(fp->sb & ~1);
     fp->sc = (int16_t)(fp->sc & ~3);
     fp->sa = (int16_t)(0x2000 - (fp->sb >> 1) - (fp->sc >> 2));
-    fp->kind = 2;
+    fp->sa_scale = 2;
     fp->unknown_08 = 1;
 }
 
@@ -237,8 +237,8 @@ int KlattSynth(void *handle, const int32_t *parms)
         if (fp->enabled != 0) {
             fp->sc = (int16_t)fxmul_scaled((int16_t)-k->ex[i], k->ex[i]);
             fp->sb = (int16_t)fxmul_scaled(k->ex[i], k->co[i]);
-            fp->fresh = 1;
-            fp->kind = 2;
+            fp->sb_scale = 1;
+            fp->sa_scale = 2;
 
             if (amp[i] != 0) {
                 int16_t gain = (int16_t)fxmul_scaled(four,
@@ -539,8 +539,8 @@ int KlattSynth(void *handle, const int32_t *parms)
             fp->old_sa = fp->sa;
             fp->old_sb = fp->sb;
             fp->old_sc = fp->sc;
-            fp->old_kind = fp->kind;
-            fp->old_fresh = fp->fresh;
+            fp->old_sa_scale = fp->sa_scale;
+            fp->old_sb_scale = fp->sb_scale;
             fp->old_unknown_08 = fp->unknown_08;
             fp->frames++;
         } else {
@@ -551,8 +551,8 @@ int KlattSynth(void *handle, const int32_t *parms)
             fp->old_sa = 0;
             fp->old_sb = 0;
             fp->old_sc = 0;
-            fp->old_kind = 0;
-            fp->old_fresh = 0;
+            fp->old_sa_scale = 0;
+            fp->old_sb_scale = 0;
             fp->unknown_08 = 1;
             fp->frames = 0;
         }
