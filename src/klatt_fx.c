@@ -1,0 +1,161 @@
+#include <string.h>
+
+#include "klatt_fx.h"
+
+/* The original relies on >> sign-extending negative operands, which C leaves
+   implementation-defined. Every compiler we target does this; fail the build
+   rather than produce silently wrong audio on one that does not. */
+typedef char kfx_needs_arithmetic_shift[((int32_t)-8 >> 1) == -4 ? 1 : -1];
+
+void clr_vector(int32_t *v, int32_t n)
+{
+    memset(v, 0, (size_t)n * 4u);
+}
+
+uint32_t klatt_rand(int16_t *out, int32_t n, uint32_t seed)
+{
+    int32_t i;
+
+    for (i = 0; i < n; i++) {
+        seed = seed * 0x19660du + 0x3c6ef35fu;
+        *out++ = (int16_t)(seed & 0xffffu);
+    }
+    return seed;
+}
+
+int16_t fxdivl(int32_t num, int32_t den)
+{
+    int      positive = 1;
+    int16_t  result;
+    uint32_t n, q;
+    int32_t  shift;
+
+    if (den < 0) {
+        den = -den;
+        num = -num;
+    }
+    if (num < 0) {
+        positive = 0;
+        num = -num;
+    }
+
+    /* Saturation is not an early exit in the original: it still runs the sign
+       fixup below, so a saturated negative quotient comes back as -32767. */
+    if (den == 0 || num >= den) {
+        result = 0x7fff;
+    } else if (num == 0) {
+        result = 0;
+    } else {
+        /* Normalising stalls forever when num's low 16 bits are all zero,
+           because num << 16 is then zero and no shift ever sets bit 31. The
+           original has the same hole; the engine only feeds it small
+           magnitudes. */
+        n = (uint32_t)num << 16;
+        shift = 16;
+        while ((n & 0x80000000u) == 0) {
+            n <<= 1;
+            shift++;
+        }
+
+        q = n / (uint32_t)den;
+        q <<= (31 - shift);
+
+        result = (int16_t)(q >> 16);
+        if (q & 0x8000u)
+            result = (int16_t)(result + 1);
+    }
+
+    if (!positive && result != 0)
+        result = (int16_t)(-result);
+
+    return result;
+}
+
+/* imull keeps the low 32 bits and lets the rest go. Signed overflow is
+   undefined in C, so wrap in unsigned and reinterpret to get the same bits. */
+static int32_t mul32(int32_t a, int32_t b)
+{
+    return (int32_t)((uint32_t)a * (uint32_t)b);
+}
+
+/* Both vector multiplies want (coef * x) >> 15 but must not overflow 32 bits,
+   so they pre-shift x by however much its magnitude demands and take the rest
+   out of the final shift. The staged form drops low bits that a wider multiply
+   would keep, so it cannot be folded back into a single expression. */
+static int32_t fxmul_scaled(int16_t coef, int32_t x)
+{
+    int32_t c = coef;
+
+    if (x > 0) {
+        if (x < 0x10000)
+            return mul32(c, x) >> 15;
+        if (x < 0x100000)
+            return mul32(c, x >> 4) >> 11;
+        if (x < 0x1000000)
+            return mul32(c, x >> 8) >> 7;
+        if (x < 0x10000000)
+            return mul32(c, x >> 12) >> 3;
+        return mul32(c, x >> 15);
+    }
+
+    if ((uint32_t)x > 0xffff0000u)
+        return mul32(c, x) >> 15;
+    if ((uint32_t)x > 0xfff00000u)
+        return mul32(c, x >> 4) >> 11;
+    if ((uint32_t)x > 0xff000000u)
+        return mul32(c, x >> 8) >> 7;
+    if ((uint32_t)x > 0xf0000000u)
+        return mul32(c, x >> 12) >> 3;
+    return mul32(c, x >> 15);
+}
+
+void fxmul_vector(const int32_t *src, int16_t coef, int32_t *acc, int32_t n)
+{
+    int32_t i;
+
+    for (i = 0; i < n; i++)
+        acc[i] += fxmul_scaled(coef, src[i]);
+}
+
+void fxmul1_vector(const int16_t *src, int16_t coef, int32_t *acc, int32_t n)
+{
+    int32_t i;
+
+    for (i = 0; i < n; i++)
+        acc[i] += fxmul_scaled(coef, (int32_t)src[i] << 4);
+}
+
+/* 2^(i/20) in Q15, copied out of clsyn.obj rather than recomputed: rounding
+   of the last place is part of the output we have to match. */
+static const int16_t fxl2[20] = {
+    16384, 16962, 17560, 18179, 18820, 19484, 20171, 20882, 21619, 22381,
+    23170, 23988, 24834, 25709, 26616, 27554, 28526, 29532, 30574, 31652
+};
+
+int32_t db2lin(int32_t db)
+{
+    int32_t t, quot, rem;
+
+    if (db <= 0)
+        return 0;
+
+    /* 299/90 is log2(10) to four places, so this is dB expressed in
+       twentieths of an octave, clamped at 20 doublings. */
+    t = mul32(db, 299) / 90;
+    if (t >= 400)
+        t = 400;
+
+    quot = t / 20;
+    rem = t % 20;
+
+    return fxmul_scaled(fxl2[rem], 2 << quot);
+}
+
+const char KlattVersionString[] =
+    "\r\nKlattID version 4.0 \xa9 International Business Machines, Inc. "
+    "1996, 1997 \r\n";
+
+int verifyKlattHandle(void *handle)
+{
+    return strcmp(*(char **)handle, KlattVersionString) == 0;
+}

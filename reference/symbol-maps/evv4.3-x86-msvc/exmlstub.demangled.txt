@@ -1,0 +1,127 @@
+$L2758
+$L2776
+$T2767
+$T2771
+$T2782
+$T2784
+??0CPTables@@QAE@XZ
+public: __thiscall CPTables::CPTables(void)
+??0XMLp@@QAE@W4EStringType@@PAXH@Z
+public: __thiscall XMLp::XMLp(enum EStringType, void *, int)
+??1CPTables@@QAE@XZ
+public: __thiscall CPTables::~CPTables(void)
+??1XMLp@@QAE@XZ
+public: __thiscall XMLp::~XMLp(void)
+?AddCPTable@XMLp@@QAE?AW4XMLpRC@@PADPAI@Z
+public: enum XMLpRC __thiscall XMLp::AddCPTable(char *, unsigned int *)
+?AttDef@XMLp@@AAEXPAXH@Z
+private: void __thiscall XMLp::AttDef(void *, int)
+?AttlistDecl@XMLp@@AAEXXZ
+private: void __thiscall XMLp::AttlistDecl(void)
+?Attribute@XMLp@@AAEXAAHAAPAX010@Z
+private: void __thiscall XMLp::Attribute(int &, void *&, int &, void *&, int &)
+?AttType@XMLp@@AAEXAAPAXAAH@Z
+private: void __thiscall XMLp::AttType(void *&, int &)
+?CheckEncoding@XMLp@@AAEXPAXH@Z
+private: void __thiscall XMLp::CheckEncoding(void *, int)
+?Children@XMLp@@AAEXPAVXMLpElemContent@@@Z
+private: void __thiscall XMLp::Children(class XMLpElemContent *)
+?ChoiceSeq@XMLp@@AAEXPAVXMLpElemContent@@@Z
+private: void __thiscall XMLp::ChoiceSeq(class XMLpElemContent *)
+@comp.id
+?Content@XMLp@@AAEXXZ
+private: void __thiscall XMLp::Content(void)
+?Cp@XMLp@@AAEXPAVXMLpElemContent@@@Z
+private: void __thiscall XMLp::Cp(class XMLpElemContent *)
+?DefaultDecl@XMLp@@AAEXAAHAAPAX0@Z
+private: void __thiscall XMLp::DefaultDecl(int &, void *&, int &)
+?DocTypeDecl@XMLp@@AAEXAAH@Z
+private: void __thiscall XMLp::DocTypeDecl(int &)
+?Document@XMLp@@AAEXXZ
+private: void __thiscall XMLp::Document(void)
+?DropToken@XMLp@@AAEXXZ
+private: void __thiscall XMLp::DropToken(void)
+E:/build/embedded/obj/product/share/nt/x86/waveio/xmlapistub.obj:
+_ehhandler$??0XMLp@@QAE@W4EStringType@@PAXH@Z
+_ehhandler$??1XMLp@@QAE@XZ
+?ElementDecl@XMLp@@AAEXXZ
+private: void __thiscall XMLp::ElementDecl(void)
+?Element@XMLp@@AAEXH@Z
+private: void __thiscall XMLp::Element(int)
+?EncodingDecl@XMLp@@AAEXAAHAAPAX0@Z
+private: void __thiscall XMLp::EncodingDecl(int &, void *&, int &)
+?EntityDecl@XMLp@@AAEXXZ
+private: void __thiscall XMLp::EntityDecl(void)
+?EntityDef@XMLp@@AAEXAAPAXAAH010101@Z
+private: void __thiscall XMLp::EntityDef(void *&, int &, void *&, int &, void *&, int &, void *&, int &)
+?Eq@XMLp@@AAEXXZ
+private: void __thiscall XMLp::Eq(void)
+?ETag@XMLp@@AAEXAAPAXAAH@Z
+private: void __thiscall XMLp::ETag(void *&, int &)
+?ExternalID@XMLp@@AAEXAAHAAPAX010@Z
+private: void __thiscall XMLp::ExternalID(int &, void *&, int &, void *&, int &)
+?ExternalID@XMLp@@AAEXAAPAXAAH01@Z
+private: void __thiscall XMLp::ExternalID(void *&, int &, void *&, int &)
+@feat.00
+?GetErrorMsg@XMLp@@QAEPADW4XMLpRC@@@Z
+public: char * __thiscall XMLp::GetErrorMsg(enum XMLpRC)
+?GetPosition@XMLp@@QAEXAAH0@Z
+public: void __thiscall XMLp::GetPosition(int &, int &)
+?GetSType@XMLp@@QAE?AW4EStringType@@XZ
+public: enum EStringType __thiscall XMLp::GetSType(void)
+?IntSubset@XMLp@@AAEXAAHPAXH1H1H@Z
+private: void __thiscall XMLp::IntSubset(int &, void *, int, void *, int, void *, int)
+?IsTokenMatched@XMLp@@AAEHW4XMLlTT@@@Z
+private: int __thiscall XMLp::IsTokenMatched(enum XMLlTT)
+?IsTokenPrepared@XMLp@@AAEHXZ
+private: int __thiscall XMLp::IsTokenPrepared(void)
+?MatchToken@XMLp@@AAEXW4XMLlTT@@@Z
+private: void __thiscall XMLp::MatchToken(enum XMLlTT)
+?Misc@XMLp@@AAEXAAHW4XMLlCT@@@Z
+private: void __thiscall XMLp::Misc(int &, enum XMLlCT)
+?Mixed@XMLp@@AAEXPAVXMLpElemContent@@@Z
+private: void __thiscall XMLp::Mixed(class XMLpElemContent *)
+?NotationDecl@XMLp@@AAEXXZ
+private: void __thiscall XMLp::NotationDecl(void)
+?PEDef@XMLp@@AAEXAAPAXAAH0101@Z
+private: void __thiscall XMLp::PEDef(void *&, int &, void *&, int &, void *&, int &)
+?PI@XMLp@@AAEXXZ
+private: void __thiscall XMLp::PI(void)
+?Prolog@XMLp@@AAEXXZ
+private: void __thiscall XMLp::Prolog(void)
+?SetAttListDeclHandler@XMLp@@QAEXP6AXPAXQAXH1H1H1HH@Z@Z
+public: void __thiscall XMLp::SetAttListDeclHandler(void (__cdecl *)(void *, void *const, int, void *const, int, void *const, int, void *const, int, int))
+?SetCharDataHandler@XMLp@@QAEXP6AXPAXQAXH@Z@Z
+public: void __thiscall XMLp::SetCharDataHandler(void (__cdecl *)(void *, void *const, int))
+?SetCommentHandler@XMLp@@QAEXP6AXPAXQAXH@Z@Z
+public: void __thiscall XMLp::SetCommentHandler(void (__cdecl *)(void *, void *const, int))
+?SetDefaultHandler@XMLp@@QAEXP6AXPAXQAXH@Z@Z
+public: void __thiscall XMLp::SetDefaultHandler(void (__cdecl *)(void *, void *const, int))
+?SetElementDeclHandler@XMLp@@QAEXP6AXPAXQAXHPAVXMLpElemContent@@@Z@Z
+public: void __thiscall XMLp::SetElementDeclHandler(void (__cdecl *)(void *, void *const, int, class XMLpElemContent *))
+?SetElementHandler@XMLp@@QAEXP6AXPAXHQAXHPAUXMLpAtt@@H@ZP6AX01H@Z@Z
+public: void __thiscall XMLp::SetElementHandler(void (__cdecl *)(void *, int, void *const, int, struct XMLpAtt *, int), void (__cdecl *)(void *, void *const, int))
+?SetEndDoctypeDeclHandler@XMLp@@QAEXP6AXPAX@Z@Z
+public: void __thiscall XMLp::SetEndDoctypeDeclHandler(void (__cdecl *)(void *))
+?SetEntityDeclHandler@XMLp@@QAEXP6AXPAXQAXHH1H1H1H1H@Z@Z
+public: void __thiscall XMLp::SetEntityDeclHandler(void (__cdecl *)(void *, void *const, int, int, void *const, int, void *const, int, void *const, int, void *const, int))
+?SetNotationDeclHandler@XMLp@@QAEXP6AXPAXQAXH1H1H@Z@Z
+public: void __thiscall XMLp::SetNotationDeclHandler(void (__cdecl *)(void *, void *const, int, void *const, int, void *const, int))
+?SetPIHandler@XMLp@@QAEXP6AXPAXQAXH1H@Z@Z
+public: void __thiscall XMLp::SetPIHandler(void (__cdecl *)(void *, void *const, int, void *const, int))
+?SetStartDoctypeDeclHandler@XMLp@@QAEXP6AXPAXQAXH1H1HH@Z@Z
+public: void __thiscall XMLp::SetStartDoctypeDeclHandler(void (__cdecl *)(void *, void *const, int, void *const, int, void *const, int, int))
+?SetUserData@XMLp@@QAEXPAX@Z
+public: void __thiscall XMLp::SetUserData(void *)
+?SetXmlDeclHandler@XMLp@@QAEXP6AXPAXQAXH1HH@Z@Z
+public: void __thiscall XMLp::SetXmlDeclHandler(void (__cdecl *)(void *, void *const, int, void *const, int, int))
+?StandaloneDecl@XMLp@@AAEXAAH@Z
+private: void __thiscall XMLp::StandaloneDecl(int &)
+?S@XMLp@@AAEXXZ
+private: void __thiscall XMLp::S(void)
+?VersionInfo@XMLp@@AAEXAAPAXAAH@Z
+private: void __thiscall XMLp::VersionInfo(void *&, int &)
+?XMLDecl@XMLp@@AAEXAAH@Z
+private: void __thiscall XMLp::XMLDecl(int &)
+?XMLParse@XMLp@@QAE?AW4XMLpRC@@XZ
+public: enum XMLpRC __thiscall XMLp::XMLParse(void)

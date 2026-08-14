@@ -1,0 +1,665 @@
+$E1
+$E2
+$L3043
+$L3077
+$L3110
+$L3111
+$L3156
+$L3157
+$L63772
+$L63941
+$L64071
+$L64249
+$L64250
+$L64251
+$L64375
+$L64376
+$L64398
+$S3
+$T3047
+$T3051
+$T3079
+$T3081
+$T3125
+$T3142
+$T3171
+$T3188
+$T63776
+$T63780
+$T63947
+$T63950
+$T64080
+$T64082
+$T64272
+$T64284
+$T64383
+$T64385
+$T64413
+$T64453
+??0adwPhones@@QAE@PAVCEDUParms@@@Z
+public: __thiscall adwPhones::adwPhones(class CEDUParms *)
+??0Callback_info@@QAE@XZ
+public: __thiscall Callback_info::Callback_info(void)
+??0CRegisteredEBGModels@@QAE@XZ
+public: __thiscall CRegisteredEBGModels::CRegisteredEBGModels(void)
+??0dPool@@QAE@AAVVocVocabulary@@W4EVVLocale@@@Z
+public: __thiscall dPool::dPool(class VocVocabulary &, enum EVVLocale)
+??0EBGWrapper@@QAE@XZ
+public: __thiscall EBGWrapper::EBGWrapper(void)
+??0EVVEXMLApi@@QAE@XZ
+public: __thiscall EVVEXMLApi::EVVEXMLApi(void)
+??0extphone@@QAE@XZ
+public: __thiscall extphone::extphone(void)
+??0intphone@@QAE@XZ
+public: __thiscall intphone::intphone(void)
+??0langdesc@@QAE@XZ
+public: __thiscall langdesc::langdesc(void)
+??0mysem@@QAE@_N@Z
+public: __thiscall mysem::mysem(bool)
+??0phones@@QAE@PAVCEDUParms@@@Z
+public: __thiscall phones::phones(class CEDUParms *)
+??0StanzaFile@@QAE@PAVCEDUParms@@@Z
+public: __thiscall StanzaFile::StanzaFile(class CEDUParms *)
+??0StanzaReader@@QAE@PAVCEDUParms@@@Z
+public: __thiscall StanzaReader::StanzaReader(class CEDUParms *)
+??0VocVocabulary@@QAE@XZ
+public: __thiscall VocVocabulary::VocVocabulary(void)
+??0XMLApi@@QAE@XZ
+public: __thiscall XMLApi::XMLApi(void)
+??1CEncryptedStanzaFile@@QAE@XZ
+public: __thiscall CEncryptedStanzaFile::~CEncryptedStanzaFile(void)
+??1CRegisteredEBGModels@@QAE@XZ
+public: __thiscall CRegisteredEBGModels::~CRegisteredEBGModels(void)
+??1dPool@@QAE@XZ
+public: __thiscall dPool::~dPool(void)
+??1EBGWrapper@@QAE@XZ
+public: __thiscall EBGWrapper::~EBGWrapper(void)
+??1EVVEXMLApi@@UAE@XZ
+public: virtual __thiscall EVVEXMLApi::~EVVEXMLApi(void)
+??1extphone@@QAE@XZ
+public: __thiscall extphone::~extphone(void)
+??1intphone@@QAE@XZ
+public: __thiscall intphone::~intphone(void)
+??1mysem@@QAE@XZ
+public: __thiscall mysem::~mysem(void)
+??1phones@@QAE@XZ
+public: __thiscall phones::~phones(void)
+??1StanzaFile@@QAE@XZ
+public: __thiscall StanzaFile::~StanzaFile(void)
+??1StanzaReader@@QAE@XZ
+public: __thiscall StanzaReader::~StanzaReader(void)
+??1VocVocabulary@@QAE@XZ
+public: __thiscall VocVocabulary::~VocVocabulary(void)
+??1XMLApi@@UAE@XZ
+public: virtual __thiscall XMLApi::~XMLApi(void)
+??_7EVVEXMLApi@@6B@
+const EVVEXMLApi::`vftable'
+??_7StanzaFile@@6B@
+const StanzaFile::`vftable'
+??_7XMLApi@@6B@
+const XMLApi::`vftable'
+?addDynamicPools@VocVocabulary@@QAEHXZ
+public: int __thiscall VocVocabulary::addDynamicPools(void)
+?addPool@VocVocabulary@@QAEXPAVdPool@@@Z
+public: void __thiscall VocVocabulary::addPool(class dPool *)
+?Base2Bin@dPool@@QAEHPAU_ESRBaseformInternal@@AAUMY_SDATA_S@@@Z
+public: int __thiscall dPool::Base2Bin(struct _ESRBaseformInternal *, struct MY_SDATA_S &)
+?ByteSwap@VocVocabulary@@QAEHPAEH0@Z
+public: int __thiscall VocVocabulary::ByteSwap(unsigned char *, int, unsigned char *)
+??_C@_00CNPNBAHC@?$AA@
+""
+??_C@_01CLKCMJKC@?5?$AA@
+" "
+??_C@_02OCDGNCGI@?5?8?$AA@
+" \'"
+??_C@_02OJDBNLEE@?5?7?$AA@
+" \t"
+??_C@_04FABLJDN@Name?$AA@
+"Name"
+??_C@_04GOLNGIJ@EXIT?$AA@
+"EXIT"
+??_C@_04KHKKIIL@Null?$AA@
+"Null"
+??_C@_05EILAAIMH@de_de?$AA@
+"de_de"
+??_C@_05GNDAMFNA@es_us?$AA@
+"es_us"
+??_C@_05GPEHGAND@zh_cn?$AA@
+"zh_cn"
+??_C@_05HBBGGGKA@es_es?$AA@
+"es_es"
+??_C@_05IMHJAOFM@pt_br?$AA@
+"pt_br"
+??_C@_05KCIEHPFN@Shape?$AA@
+"Shape"
+??_C@_05KJOBNINN@new?$CI?$CJ?$AA@
+"new()"
+??_C@_05LGEFKHJN@ENTRY?$AA@
+"ENTRY"
+??_C@_05LGJLDBNP@fr_ca?$AA@
+"fr_ca"
+??_C@_05LJDLMCON@en_gb?$AA@
+"en_gb"
+??_C@_05LKBBAEGJ@ja_jp?$AA@
+"ja_jp"
+??_C@_05NBLPLCKG@fr_fr?$AA@
+"fr_fr"
+??_C@_05OKPEJFIC@Onset?$AA@
+"Onset"
+??_C@_05ONCOHMDO@zh_tw?$AA@
+"zh_tw"
+??_C@_05PCKPBFGI@it_it?$AA@
+"it_it"
+??_C@_05PFEAJGOD@en_us?$AA@
+"en_us"
+??_C@_05PNFBJMGD@getUv?$AA@
+"getUv"
+??_C@_05PNIJGBBI@ko_kr?$AA@
+"ko_kr"
+??_C@_06CIMKLFJF@IBMi?$CFd?$AA@
+"IBMi%d"
+??_C@_06GGLIPOFD@?5?5?5?5?5?5?$AA@
+"      "
+??_C@_06IONACMBM@Number?$AA@
+"Number"
+??_C@_06OAILNFGL@RESTR_?$AA@
+"RESTR_"
+??_C@_06ODGBNGPL@RESSBG?$AA@
+"RESSBG"
+??_C@_06OOFALCG@?5Exit?9?$AA@
+" Exit-"
+??_C@_06PADADDFN@Entry?9?$AA@
+"Entry-"
+??_C@_06PLFAKHFC@ERROR?9?$AA@
+"ERROR-"
+??_C@_07DLHCIBDH@default?$AA@
+"default"
+??_C@_07EFCJIPGP@Trailer?$AA@
+"Trailer"
+??_C@_07ELFIAEPC@Lexemic?$AA@
+"Lexemic"
+??_C@_07JLONIIOI@Phone?$CFd?$AA@
+"Phone%d"
+??_C@_07PBHPJLM@Fenemic?$AA@
+"Fenemic"
+??_C@_08JLPDEEDC@Phonetic?$AA@
+"Phonetic"
+??_C@_09JAKPHPGA@vocCreate?$AA@
+"vocCreate"
+??_C@_0BA@EHDDBDNE@searchInclude?$CI?$CJ?$AA@
+"searchInclude()"
+??_C@_0BA@HDAPEGEL@Base2Bin?5failed?$AA@
+"Base2Bin failed"
+??_C@_0BA@PNJADJBB@Add_Pool?5failed?$AA@
+"Add_Pool failed"
+??_C@_0BB@EGPHLJBK@Invalid?5Vocabset?$AA@
+"Invalid Vocabset"
+??_C@_0BB@HAFFCJOJ@dpool?5new?5failed?$AA@
+"dpool new failed"
+??_C@_0BC@DDFCAJKJ@cb?4pfnIncludeCB?$CI?$CJ?$AA@
+"cb.pfnIncludeCB()"
+??_C@_0BC@LNJDGJFO@depFindLanguage?$CI?$CJ?$AA@
+"depFindLanguage()"
+??_C@_0BC@MPBNFKDI@cb?4pfnLexiconCB?$CI?$CJ?$AA@
+"cb.pfnLexiconCB()"
+??_C@_0BC@OJLKPBJB@taskid?5new?5failed?$AA@
+"taskid new failed"
+??_C@_0BD@JLPFEMDP@generateVocabSet?$CI?$CJ?$AA@
+"generateVocabSet()"
+??_C@_0BD@KBGDHNKP@AddSpelling?5failed?$AA@
+"AddSpelling failed"
+??_C@_0BD@MBCICJIH@vocPoolAddSpelling?$AA@
+"vocPoolAddSpelling"
+??_C@_0BD@MLLPDHAM@generateBaseform?$CI?$CJ?$AA@
+"generateBaseform()"
+??_C@_0BD@ONLPMKCC@vocabSetGenerate?$CI?$CJ?$AA@
+"vocabSetGenerate()"
+??_C@_0BE@CGCPMCAB@BsfTrans?5new?5failed?$AA@
+"BsfTrans new failed"
+??_C@_0BE@CIKACGIG@new?5mem?5alloc?5error?$AA@
+"new mem alloc error"
+??_C@_0BE@DCAKNAJK@vocabSetAddsource?$CI?$CJ?$AA@
+"vocabSetAddsource()"
+??_C@_0BE@LAPLFCDJ@vocabSetAddSource?$CI?$CJ?$AA@
+"vocabSetAddSource()"
+??_C@_0BE@LIHJNNOO@Invalid?5string?5type?$AA@
+"Invalid string type"
+??_C@_0BF@EEGINPHL@vocPoolAddSpelling?$CI?$CJ?$AA@
+"vocPoolAddSpelling()"
+??_C@_0BF@EFPMKDFJ@BsfTrans?5init?5failed?$AA@
+"BsfTrans init failed"
+??_C@_0BF@FKEPOKDJ@vocabSetInitialize?$CI?$CJ?$AA@
+"vocabSetInitialize()"
+??_C@_0BF@GJOIEGEF@?$CFs?5?$CFs?5?$CFs?5VOCRC?5?$DN?5?$CFd?6?$AA@
+"%s %s %s VOCRC = %d\n"
+??_C@_0BF@JNIIEBOM@invalid?5Grammar?5type?$AA@
+"invalid Grammar type"
+??_C@_0BG@CDDACEOJ@vocPoolDeleteSpelling?$AA@
+"vocPoolDeleteSpelling"
+??_C@_0BG@ENLHEAEL@?$CFs?5eduGetBlockByID?$CI?$CJ?6?$AA@
+"%s eduGetBlockByID()\n"
+??_C@_0BG@MLOIDKHL@generateTTSBaseform?$CI?$CJ?$AA@
+"generateTTSBaseform()"
+??_C@_0BH@BNCHGFIB@EseCompiler?5new?5failed?$AA@
+"EseCompiler new failed"
+??_C@_0BH@FAAAEMD@EseBsfCloud?5new?5failed?$AA@
+"EseBsfCloud new failed"
+??_C@_0BH@GDNDGBOB@vocabSetUninitialize?$CI?$CJ?$AA@
+"vocabSetUninitialize()"
+??_C@_0BH@JFNHKODC@BsfCloud?5TransP?5failed?$AA@
+"BsfCloud TransP failed"
+??_C@_0BH@LHBHOMEA@addDynamicPools?5failed?$AA@
+"addDynamicPools failed"
+??_C@_0BI@CJHMCEDD@?$CFs?5ERROR?5?$CFs?5VOCRC?5?$DN?5?$CFd?6?$AA@
+"%s ERROR %s VOCRC = %d\n"
+??_C@_0BI@EGFBKCIE@generateBaseform?5failed?$AA@
+"generateBaseform failed"
+??_C@_0BI@FDCOJIJK@No?5EBG?5model?5registered?$AA@
+"No EBG model registered"
+??_C@_0BI@HKACLLOH@Grammar?5mismatch?5failed?$AA@
+"Grammar mismatch failed"
+??_C@_0BI@HNCINKIC@MakeESRBaseformResult?$CI?$CJ?$AA@
+"MakeESRBaseformResult()"
+??_C@_0BI@LPGNJLB@CheckTransHeader?5failed?$AA@
+"CheckTransHeader failed"
+??_C@_0BI@PGKDJCAI@Language?5setting?5failed?$AA@
+"Language setting failed"
+??_C@_0BJ@BDIDLJKB@CreateDynamicPool?5failed?$AA@
+"CreateDynamicPool failed"
+??_C@_0BJ@CFDOLOIO@Lexicon?5call?5back?5failed?$AA@
+"Lexicon call back failed"
+??_C@_0BJ@JGMPMAOK@uv?5failed?5to?5Initialize?5?$AA@
+"uv failed to Initialize "
+??_C@_0BJ@MBCHDHOM@merge?5TTS?5and?5SBF?5error2?$AA@
+"merge TTS and SBF error2"
+??_C@_0BJ@OIOAONAE@Include?5call?5back?5failed?$AA@
+"Include call back failed"
+??_C@_0BJ@OKAKGECP@merge?5TTS?5and?5SBF?5error1?$AA@
+"merge TTS and SBF error1"
+??_C@_0BK@HKHJPJBD@INCLUDE?5CB?5not?5registered?$AA@
+"INCLUDE CB not registered"
+??_C@_0BK@NMFDEMGJ@removeDynamicPools?5failed?$AA@
+"removeDynamicPools failed"
+??_C@_0BK@PLKPJEAJ@MergeESRBaseformResults?$CI?$CJ?$AA@
+"MergeESRBaseformResults()"
+??_C@_0BM@CDMGKAHD@?$CFs?5eduGetBlockByID?$CI?$CJ?5rc?$DN?$CFd?6?$AA@
+"%s eduGetBlockByID() rc=%d\n"
+??_C@_0BM@CJOKPNAC@EseCompiler?5GetError?5failed?$AA@
+"EseCompiler GetError failed"
+??_C@_0BM@PFKKLKFJ@Lock?5After?5LexiconCB?5failed?$AA@
+"Lock After LexiconCB failed"
+??_C@_0BN@PAGMDMED@EseCompiler?5AddSource?5failed?$AA@
+"EseCompiler AddSource failed"
+??_C@_0BO@FOFFOKHC@vocab?5set?5construction?5failed?$AA@
+"vocab set construction failed"
+??_C@_0CA@EIJNAKCL@Compiler?5Obj?5is?5already?5created?$AA@
+"Compiler Obj is already created"
+??_C@_0CB@MOAJJPMG@Lexicon?5call?5back?5not?5registered@
+"Lexicon call back not registered"...
+??_C@_0CB@PDOPDBEG@Invalid?5labeler?5data?5file?5?$CIlang?$CJ@
+"Invalid labeler data file (lang)"...
+??_C@_0CC@DEJBEFLL@Compiler?5obj?5has?5not?5been?5create@
+"Compiler obj has not been create"...
+??_C@_0CC@ICIPHHMI@EseCompiler?5GenerateSet?5?$CD2?5faile@
+"EseCompiler GenerateSet #2 faile"...
+??_C@_0CC@LLACELAN@EseCompiler?5GenerateSet?5?$CD1?5faile@
+"EseCompiler GenerateSet #1 faile"...
+??_C@_0CD@JIBKMIPP@Alloc?5Memory?5for?5Vocab?$CLCfgi?5fail@
+"Alloc Memory for Vocab+Cfgi fail"...
+??_C@_0CG@BDKDKBLA@EseCompiler?5GenerateCfgiSet?5?$CD2?5f@
+"EseCompiler GenerateCfgiSet #2 f"...
+??_C@_0CG@CKCOJNHF@EseCompiler?5GenerateCfgiSet?5?$CD1?5f@
+"EseCompiler GenerateCfgiSet #1 f"...
+??_C@_0CI@PEKDNONF@?$CFs?5ERROR?5?$CFs?5VOCRC?5?$DN?5?$CFd?5file?3?$CFs?5l@
+"%s ERROR %s VOCRC = %d file:%s l"...
+??_C@_0CL@DCHBOJHL@?$CK?$CK?$CK?5error?4?5Cannot?5open?5file?5?$CFs?5f@
+"*** error. Cannot open file %s f"...
+??_C@_0DH@PMDEMOCN@?$CFs?5Internal?5Error?9Collection?5typ@
+"%s Internal Error-Collection typ"...
+??_C@_0DI@IKALKCKP@?$CFs?5Internal?5Error?9Requested?5Bloc@
+"%s Internal Error-Requested Bloc"...
+??_C@_0DN@NJNAHMMB@?$EA?$CI?$CD?$CJ?5$Id?3?5eseimage?4cpp?0v?51?45?5200@
+"@(#) $Id: eseimage.cpp,v 1.5 200"...
+??_C@_0EB@FKEMKHLG@?$CFs?5Internal?5Error?9Collection?5sig@
+"%s Internal Error-Collection sig"...
+??_C@_0EH@FAJHCAHN@ERROR?9Internal?5Error?3?5Mutex?3?3Mut@
+"ERROR-Internal Error: Mutex::Mut"...
+??_C@_0EI@FAIFAIME@ERROR?9Internal?5Error?3?5Mutex?3?3loc@
+"ERROR-Internal Error: Mutex::loc"...
+??_C@_0EL@CCBFJIDG@?$CFsInput?3?5pEduCollection?$DN?$CI?$CFp?$CJ?5ulE@
+"%sInput: pEduCollection=(%p) ulE"...
+??_C@_0EL@MPOJLMOD@ERROR?9Internal?5Error?3?5Mutex?3?3rel@
+"ERROR-Internal Error: Mutex::rel"...
+??_C@_0FD@JKEHDHIO@?$CFs?5Internal?5Error?9Collection?5ver@
+"%s Internal Error-Collection ver"...
+??_C@_0L@IMBKGKPO@setAttrs?$CI?$CJ?$AA@
+"setAttrs()"
+??_C@_0L@JCDFNNLH@getAttrs?$CI?$CJ?$AA@
+"getAttrs()"
+??_C@_0M@KDCFHCGG@src?1voc?4cpp?$AA@
+"src/voc.cpp"
+??_C@_0M@OHKMKKDH@Description?$AA@
+"Description"
+??_C@_0O@DEJGILGN@setStr?5failed?$AA@
+"setStr failed"
+??_C@_0O@FOJNEOCH@vocPoolEnable?$AA@
+"vocPoolEnable"
+??_C@_0O@IMHFIAOC@malloc?5failed?$AA@
+"malloc failed"
+??_C@_0O@PODCPONC@bfmMergeEsr?$CI?$CJ?$AA@
+"bfmMergeEsr()"
+??_C@_0P@PEKPLMLP@Clean?5all?5objs?$AA@
+"Clean all objs"
+?chararray@langdesc@@0PADA
+private: static char *langdesc::chararray
+?CheckImageHeader@EBGWrapper@@QAEHPAXPAPAX@Z
+public: int __thiscall EBGWrapper::CheckImageHeader(void *, void **)
+?CheckTransHeader@VocVocabulary@@QAEHPAX@Z
+public: int __thiscall VocVocabulary::CheckTransHeader(void *)
+?CompareInfo@VocVocabulary@@QAEHPAU_VOCVsetInfo@@PAU_ESREngineInfo@@@Z
+public: int __thiscall VocVocabulary::CompareInfo(struct _VOCVsetInfo *, struct _ESREngineInfo *)
+@comp.id
+?Constructed@VocVocabulary@@QAE_NXZ
+public: bool __thiscall VocVocabulary::Constructed(void)
+?copybuf@Callback_info@@QAEHPAPAXHH@Z
+public: int __thiscall Callback_info::copybuf(void **, int, int)
+?CreateParser@EVVEXMLApi@@UAEXW4EStringType@@PADH@Z
+public: virtual void __thiscall EVVEXMLApi::CreateParser(enum EStringType, char *, int)
+?deinitBfModel@EBGWrapper@@QAEHXZ
+public: int __thiscall EBGWrapper::deinitBfModel(void)
+?deleteAllPools@VocVocabulary@@AAEXXZ
+private: void __thiscall VocVocabulary::deleteAllPools(void)
+?deletePool@VocVocabulary@@QAEHPAVdPool@@@Z
+public: int __thiscall VocVocabulary::deletePool(class dPool *)
+?disable@dPool@@QAEHXZ
+public: int __thiscall dPool::disable(void)
+?dPoolsFlush@VocVocabulary@@QAEXXZ
+public: void __thiscall VocVocabulary::dPoolsFlush(void)
+E:/build/embedded/obj/product/share/nt/x86/waveio/edu_api.obj:
+E:/build/embedded/obj/product/share/nt/x86/waveio/eseimage.obj:
+E:/build/embedded/obj/product/voc/d/nt/x86/waveio/voc.obj:
+E:/build/embedded/obj/product/voc/nt/x86/waveio/adwphones.obj:
+E:/build/embedded/obj/product/voc/nt/x86/waveio/dpool.obj:
+E:/build/embedded/obj/product/voc/nt/x86/waveio/phones.obj:
+E:/build/embedded/obj/product/voc/nt/x86/waveio/quotedstring.obj:
+E:/build/embedded/obj/product/voc/nt/x86/waveio/version.obj:
+??_Eextphone@@QAEPAXI@Z
+public: void * __thiscall extphone::`vector deleting dtor'(unsigned int)
+_ehhandler$??0phones@@QAE@PAVCEDUParms@@@Z
+_ehhandler$??1EVVEXMLApi@@UAE@XZ
+_ehhandler$??1StanzaFile@@QAE@XZ
+_ehhandler$??1VocVocabulary@@QAE@XZ
+_ehhandler$?CreateParser@EVVEXMLApi@@UAEXW4EStringType@@PADH@Z
+_ehhandler$?getUv@VocVocabulary@@QAEPAVUVocabBfConv@@AAH@Z
+_ehhandler$?initialiseEncrypted@phones@@QAEHPBD@Z
+_ehhandler$?initialise@phones@@QAEHPBD@Z
+_ehhandler$?vocabSetGenerate@VocVocabulary@@QAEHPAPAEH0PAH0@Z
+_ehhandler$?vocabSetInitialize@VocVocabulary@@QAEHW4EStringType@@PAU_VOCInitializationData@@@Z
+??_Eintphone@@QAEPAXI@Z
+public: void * __thiscall intphone::`vector deleting dtor'(unsigned int)
+?enable@dPool@@QAEHXZ
+public: int __thiscall dPool::enable(void)
+@feat.00
+?findindex@langdesc@@AAE?AW4langenum@1@D@Z
+private: enum langdesc::langenum __thiscall langdesc::findindex(char)
+?findindex@langdesc@@AAE?AW4langenum@1@W4EVVLocale@@@Z
+private: enum langdesc::langenum __thiscall langdesc::findindex(enum EVVLocale)
+??_GCEncryptedStanzaFile@@QAEPAXI@Z
+public: void * __thiscall CEncryptedStanzaFile::`scalar deleting dtor'(unsigned int)
+?g_charset@@3W4EStringType@@A
+enum EStringType g_charset
+??_GdPool@@QAEPAXI@Z
+public: void * __thiscall dPool::`scalar deleting dtor'(unsigned int)
+?generateBaseform@VocVocabulary@@QAEHPBEW4EStringType@@PAPAEPAH@Z
+public: int __thiscall VocVocabulary::generateBaseform(unsigned char const *, enum EStringType, unsigned char **, int *)
+?GenerateBGAnswers@EBGWrapper@@QAEHPBEPAU_BGAnswers@@@Z
+public: int __thiscall EBGWrapper::GenerateBGAnswers(unsigned char const *, struct _BGAnswers *)
+?generateTTSBaseform@VocVocabulary@@QAEHPBEW4EStringType@@PAD@Z
+public: int __thiscall VocVocabulary::generateTTSBaseform(unsigned char const *, enum EStringType, char *)
+??_GEseBsfCloud@@QAEPAXI@Z
+public: void * __thiscall EseBsfCloud::`scalar deleting dtor'(unsigned int)
+?GetAt@CRegisteredEBGModels@@QAEPBU_EBGModel@@PAX@Z
+public: struct _EBGModel const * __thiscall CRegisteredEBGModels::GetAt(void *)
+?getAttrs@VocVocabulary@@QAEHPAU_VOCAttrs@@@Z
+public: int __thiscall VocVocabulary::getAttrs(struct _VOCAttrs *)
+?getBuffer@StanzaFile@@QAEPADXZ
+public: char * __thiscall StanzaFile::getBuffer(void)
+?getChar@langdesc@@QAEDXZ
+public: char __thiscall langdesc::getChar(void)
+?get_description@phones@@QAEPBDH@Z
+public: char const * __thiscall phones::get_description(int)
+?GetErrorMsg@EVVEXMLApi@@UAEPADW4XMLpRC@@@Z
+public: virtual char * __thiscall EVVEXMLApi::GetErrorMsg(enum XMLpRC)
+?getEVVLocale@langdesc@@QAE?AW4EVVLocale@@XZ
+public: enum EVVLocale __thiscall langdesc::getEVVLocale(void)
+?get_external_name@phones@@QAEPBDH@Z
+public: char const * __thiscall phones::get_external_name(int)
+?GetFirst@CRegisteredEBGModels@@QAEPBU_EBGModel@@PAPAX@Z
+public: struct _EBGModel const * __thiscall CRegisteredEBGModels::GetFirst(void **)
+?get_internal_name@phones@@QAEHPBD@Z
+public: int __thiscall phones::get_internal_name(char const *)
+?GetNext@CRegisteredEBGModels@@QAEPBU_EBGModel@@PAPAX@Z
+public: struct _EBGModel const * __thiscall CRegisteredEBGModels::GetNext(void **)
+?getNullPhone@adwPhones@@QAEPADXZ
+public: char * __thiscall adwPhones::getNullPhone(void)
+?getNumRead@CEDUParms@@QAEIXZ
+public: unsigned int __thiscall CEDUParms::getNumRead(void)
+?GetNumRegistered@CRegisteredEBGModels@@QAE?BHXZ
+public: int const __thiscall CRegisteredEBGModels::GetNumRegistered(void)
+?GetNumStanzas@StanzaReader@@QAEHXZ
+public: int __thiscall StanzaReader::GetNumStanzas(void)
+?get_phone_shape@phones@@QAE?AW4shape@@H@Z
+public: enum shape __thiscall phones::get_phone_shape(int)
+?GetPosition@EVVEXMLApi@@UAEXAAH0@Z
+public: virtual void __thiscall EVVEXMLApi::GetPosition(int &, int &)
+?getString@langdesc@@QAEPADXZ
+public: char * __thiscall langdesc::getString(void)
+?getUv@VocVocabulary@@QAEPAVUVocabBfConv@@AAH@Z
+public: class UVocabBfConv * __thiscall VocVocabulary::getUv(int &)
+?Get_XX@extphone@@QAEPBDXZ
+public: char const * __thiscall extphone::Get_XX(void)
+??_GEVVEXMLApi@@UAEPAXI@Z
+public: virtual void * __thiscall EVVEXMLApi::`scalar deleting dtor'(unsigned int)
+??_GStanzaFile@@QAEPAXI@Z
+public: void * __thiscall StanzaFile::`scalar deleting dtor'(unsigned int)
+??_GVocVocabulary@@QAEPAXI@Z
+public: void * __thiscall VocVocabulary::`scalar deleting dtor'(unsigned int)
+??_GXMLApi@@UAEPAXI@Z
+public: virtual void * __thiscall XMLApi::`scalar deleting dtor'(unsigned int)
+?handle2Inst@VocVocabulary@@SAHPAXAAPAV1@@Z
+public: static int __cdecl VocVocabulary::handle2Inst(void *, class VocVocabulary *&)
+?handle2Inst@@YAHPAX0AAPAVdPool@@AAPAVVocVocabulary@@@Z
+int __cdecl handle2Inst(void *, void *, class dPool *&, class VocVocabulary *&)
+?initBfModel@EBGWrapper@@QAEHPBU_EBGModel@@@Z
+public: int __thiscall EBGWrapper::initBfModel(struct _EBGModel const *)
+?initialiseEncrypted@phones@@QAEHPBD@Z
+public: int __thiscall phones::initialiseEncrypted(char const *)
+?initialise@phones@@QAEHPBD@Z
+public: int __thiscall phones::initialise(char const *)
+?Initialize@adwPhones@@QAEHPBD_N@Z
+public: int __thiscall adwPhones::Initialize(char const *, bool)
+?init@langdesc@@QAEHD@Z
+public: int __thiscall langdesc::init(char)
+?init@langdesc@@QAEHW4EVVLocale@@@Z
+public: int __thiscall langdesc::init(enum EVVLocale)
+intEduGetBlockByID
+_int_getCollectionBlockCount
+_int_test_collection
+_int_test_coll_signature
+_int_test_coll_type
+_int_test_coll_version
+?langPhCount@dPool@@AAEHW4EVVLocale@@@Z
+private: int __thiscall dPool::langPhCount(enum EVVLocale)
+?localearray@langdesc@@0PAW4EVVLocale@@A
+private: static enum EVVLocale *langdesc::localearray
+?lock@mysem@@QAE_NXZ
+public: bool __thiscall mysem::lock(void)
+?lookupEntityImg@EseImage@@SAPAXPAXH@Z
+public: static void * __cdecl EseImage::lookupEntityImg(void *, int)
+?lookupResourceImg@EseImage@@SAPAXPAXHH@Z
+public: static void * __cdecl EseImage::lookupResourceImg(void *, int, int)
+?lookupVocImg@EseImage@@SAPAXPADH@Z
+public: static void * __cdecl EseImage::lookupVocImg(char *, int)
+?MakeESRBaseformResult@@YAPAEDPAEHDPAH@Z
+unsigned char * __cdecl MakeESRBaseformResult(char, unsigned char *, int, char, int *)
+?maximum_phone_number@phones@@QAEHXZ
+public: int __thiscall phones::maximum_phone_number(void)
+?MergeBaseforms@EBGWrapper@@QAEHAAVlangdesc@@HPAU_BGAnswers@@HPAPAEPAH@Z
+public: int __thiscall EBGWrapper::MergeBaseforms(class langdesc &, int, struct _BGAnswers *, int, unsigned char **, int *)
+?MergeESRBaseformResults@@YAHW4EVVLocale@@PAEH1HPAPAEPAH@Z
+int __cdecl MergeESRBaseformResults(enum EVVLocale, unsigned char *, int, unsigned char *, int, unsigned char **, int *)
+mystrcmp
+?ParserFree@EVVEXMLApi@@UAEXXZ
+public: virtual void __thiscall EVVEXMLApi::ParserFree(void)
+?PHONE_SEP@@3PBDB
+char const *PHONE_SEP
+?phoneStrLen@adwPhones@@QAEHPAD@Z
+public: int __thiscall adwPhones::phoneStrLen(char *)
+?Pool@EseBsfCloud@@QAEPAVEvvBinPool@@F@Z
+public: class EvvBinPool * __thiscall EseBsfCloud::Pool(short)
+?QueryInfo@VocVocabulary@@QAEHPAEHPAU_VOCVsetInfo@@@Z
+public: int __thiscall VocVocabulary::QueryInfo(unsigned char *, int, struct _VOCVsetInfo *)
+?quoteString@@YAPADPAD0@Z
+char * __cdecl quoteString(char *, char *)
+rcsid
+_real@0000000000000000
+?regEBGModel@CRegisteredEBGModels@@QAEHPAU_VOCEBGModel@@PADKPAPAX@Z
+public: int __thiscall CRegisteredEBGModels::regEBGModel(struct _VOCEBGModel *, char *, unsigned long, void **)
+?registerAllocCB@Callback_info@@QAEHP6AHPAPAXHHPAX@Z1@Z
+public: int __thiscall Callback_info::registerAllocCB(int (__cdecl *)(void **, int, int, void *), void *)
+?registerEBGModel@EBGWrapper@@QAEHPAU_VOCEBGModel@@PAPAXPAD@Z
+public: int __thiscall EBGWrapper::registerEBGModel(struct _VOCEBGModel *, void **, char *)
+?registerEBGModelMultiTree@EBGWrapper@@QAEHPAU_VOCEBGModel@@PAPAXPAD@Z
+public: int __thiscall EBGWrapper::registerEBGModelMultiTree(struct _VOCEBGModel *, void **, char *)
+?removeDynamicPools@VocVocabulary@@QAEHXZ
+public: int __thiscall VocVocabulary::removeDynamicPools(void)
+?searchInclude@VocVocabulary@@QAEHW4EStringType@@W4VOCGrammarType@@W4VOCVocabSetType@@@Z
+public: int __thiscall VocVocabulary::searchInclude(enum EStringType, enum VOCGrammarType, enum VOCVocabSetType)
+?setAttrs@VocVocabulary@@QAEHPAU_VOCAttrs@@@Z
+public: int __thiscall VocVocabulary::setAttrs(struct _VOCAttrs *)
+?SetCharDataHandler@EVVEXMLApi@@UAEXP6AXPAXQAXH@Z@Z
+public: virtual void __thiscall EVVEXMLApi::SetCharDataHandler(void (__cdecl *)(void *, void *const, int))
+?SetCommentHandler@EVVEXMLApi@@UAEXP6AXPAXQAXH@Z@Z
+public: virtual void __thiscall EVVEXMLApi::SetCommentHandler(void (__cdecl *)(void *, void *const, int))
+?setCount@VocVocabulary@@2HA
+public: static int VocVocabulary::setCount
+?SetDefaultHandler@EVVEXMLApi@@UAEXP6AXPAXQAXH@Z@Z
+public: virtual void __thiscall EVVEXMLApi::SetDefaultHandler(void (__cdecl *)(void *, void *const, int))
+?SetElementHandler@EVVEXMLApi@@UAEXP6AXPAXHQAXHPAUXMLpAtt@@H@ZP6AX01H@Z@Z
+public: virtual void __thiscall EVVEXMLApi::SetElementHandler(void (__cdecl *)(void *, int, void *const, int, struct XMLpAtt *, int), void (__cdecl *)(void *, void *const, int))
+?SetEndDoctypeDeclHandler@EVVEXMLApi@@UAEXP6AXPAX@Z@Z
+public: virtual void __thiscall EVVEXMLApi::SetEndDoctypeDeclHandler(void (__cdecl *)(void *))
+?setEvvHandle@VocVocabulary@@QAEXPAPAX@Z
+public: void __thiscall VocVocabulary::setEvvHandle(void **)
+?setGCParms@VocVocabulary@@AAEHW4VOCVocabSetType@@@Z
+private: int __thiscall VocVocabulary::setGCParms(enum VOCVocabSetType)
+?SetPIHandler@EVVEXMLApi@@UAEXP6AXPAXQAXH1H@Z@Z
+public: virtual void __thiscall EVVEXMLApi::SetPIHandler(void (__cdecl *)(void *, void *const, int, void *const, int))
+?SetStartDoctypeDeclHandler@EVVEXMLApi@@UAEXP6AXPAXQAXH1H1HH@Z@Z
+public: virtual void __thiscall EVVEXMLApi::SetStartDoctypeDeclHandler(void (__cdecl *)(void *, void *const, int, void *const, int, void *const, int, int))
+?setStr@VocVocabulary@@QAE_NW4EStringType@@PAD@Z
+public: bool __thiscall VocVocabulary::setStr(enum EStringType, char *)
+?SetUserData@EVVEXMLApi@@UAEXPAX@Z
+public: virtual void __thiscall EVVEXMLApi::SetUserData(void *)
+?SetXmlDeclHandler@EVVEXMLApi@@UAEXP6AXPAXQAXH1HH@Z@Z
+public: virtual void __thiscall EVVEXMLApi::SetXmlDeclHandler(void (__cdecl *)(void *, void *const, int, void *const, int, int))
+strBuffer
+?stringarray@langdesc@@0PAPADA
+private: static char **langdesc::stringarray
+?szCopyright_VOC@@3PADA
+char *szCopyright_VOC
+?szLocalBuffer@adwPhones@@0PADA
+private: static char *adwPhones::szLocalBuffer
+?tokenize@VocVocabulary@@QAEPADPAD@Z
+public: char * __thiscall VocVocabulary::tokenize(char *)
+?translate2External@adwPhones@@QAEPADPAD0H@Z
+public: char * __thiscall adwPhones::translate2External(char *, char *, int)
+?translate2External@adwPhones@@QAEPADPAFPADH@Z
+public: char * __thiscall adwPhones::translate2External(short *, char *, int)
+?translate2External@adwPhones@@QAEPADPBEPAD@Z
+public: char * __thiscall adwPhones::translate2External(unsigned char const *, char *)
+?translate2Internal@adwPhones@@QAEPADPAD0H@Z
+public: char * __thiscall adwPhones::translate2Internal(char *, char *, int)
+?translate2Internal@adwPhones@@QAEPAFPADPAFH@Z
+public: short * __thiscall adwPhones::translate2Internal(char *, short *, int)
+?translateEBPRCtoVOCRC@@YAHH@Z
+int __cdecl translateEBPRCtoVOCRC(int)
+?translateGCRCtoVOCRC@VocVocabulary@@QAEHH@Z
+public: int __thiscall VocVocabulary::translateGCRCtoVOCRC(int)
+?TransP@EseBsfCloud@@QAEPAVEseBsfTrans@@PAV2@@Z
+public: class EseBsfTrans * __thiscall EseBsfCloud::TransP(class EseBsfTrans *)
+?unHandle@VocVocabulary@@QAEXXZ
+public: void __thiscall VocVocabulary::unHandle(void)
+?unlock@mysem@@QAEXXZ
+public: void __thiscall mysem::unlock(void)
+?unquoteString@@YAPADW4EStringType@@PAD1@Z
+char * __cdecl unquoteString(enum EStringType, char *, char *)
+?unregEBGModel@CRegisteredEBGModels@@QAEHPAX@Z
+public: int __thiscall CRegisteredEBGModels::unregEBGModel(void *)
+?unregisterAllocCB@Callback_info@@QAEHPAPAX@Z
+public: int __thiscall Callback_info::unregisterAllocCB(void **)
+?unregisterEBGModel@EBGWrapper@@QAEHPAX@Z
+public: int __thiscall EBGWrapper::unregisterEBGModel(void *)
+?validatePhoneString@adwPhones@@QAEHPAD0@Z
+public: int __thiscall adwPhones::validatePhoneString(char *, char *)
+?visualizeResourceImg@EseImage@@SAXPAX@Z
+public: static void __cdecl EseImage::visualizeResourceImg(void *)
+?vocabSetAbort@VocVocabulary@@QAEHXZ
+public: int __thiscall VocVocabulary::vocabSetAbort(void)
+?vocabSetAddSource@VocVocabulary@@QAEHW4VOCGrammarType@@W4VOCVocabSetType@@W4EStringType@@PAE3H@Z
+public: int __thiscall VocVocabulary::vocabSetAddSource(enum VOCGrammarType, enum VOCVocabSetType, enum EStringType, unsigned char *, unsigned char *, int)
+?vocabSetGenerate@VocVocabulary@@QAEHPAPAEH0PAH0@Z
+public: int __thiscall VocVocabulary::vocabSetGenerate(unsigned char **, int, unsigned char **, int *, unsigned char **)
+?vocabSetInitialize@VocVocabulary@@QAEHW4EStringType@@PAU_VOCInitializationData@@@Z
+public: int __thiscall VocVocabulary::vocabSetInitialize(enum EStringType, struct _VOCInitializationData *)
+?vocabSetUninitialize@VocVocabulary@@QAEHXZ
+public: int __thiscall VocVocabulary::vocabSetUninitialize(void)
+vocBsfmGenerate
+vocBsfmRegisterModel
+vocBsfmUnregisterModel
+vocCreate
+vocDestroy
+vocGenerateBaseform
+vocGenerateVocabSet
+vocGetAttrs
+?VocGlock@@3Vmysem@@A
+class mysem VocGlock
+vocPoolAddSpelling
+vocPoolCreate
+vocPoolDeleteSpelling
+vocPoolDestroy
+vocPoolDisable
+vocPoolEnable
+vocRegisterAllocCB
+vocSetAttrs
+?vocTraceError@@YAHPAD0H0H@Z
+int __cdecl vocTraceError(char *, char *, int, char *, int)
+?vocTraceError@@YAHPAD0H@Z
+int __cdecl vocTraceError(char *, char *, int)
+?vocTraceInternal@@YAXPAD@Z
+void __cdecl vocTraceInternal(char *)
+?vocTrace@@YAXW4ELGLevels@@PAD1@Z
+void __cdecl vocTrace(enum ELGLevels, char *, char *)
+vocUnregisterAllocCB
+vocVsetAbort
+vocVsetAddSource
+vocVsetByteSwap
+vocVsetCompareInfo
+vocVsetGenerate
+vocVsetInitialize
+vocVsetQueryInfo
+vocVsetRegisterIncludeCB
+vocVsetRegisterLexiconCB
+vocVsetUninitialize
+vocVsetUnregisterIncludeCB
+vocVsetUnregisterLexiconCB
+?vSetRegisterIncludeCB@Callback_info@@QAEHP6AHPAXPAU_VOCDocResolutionData@@W4EStringType@@W4VOCGrammarType@@W4VOCVocabSetType@@0@Z0@Z
+public: int __thiscall Callback_info::vSetRegisterIncludeCB(int (__cdecl *)(void *, struct _VOCDocResolutionData *, enum EStringType, enum VOCGrammarType, enum VOCVocabSetType, void *), void *)
+?vSetRegisterLexiconCB@Callback_info@@QAEHP6AHPAXPAU_VOCDocResolutionData@@W4EStringType@@W4VOCGrammarType@@0@Z0@Z
+public: int __thiscall Callback_info::vSetRegisterLexiconCB(int (__cdecl *)(void *, struct _VOCDocResolutionData *, enum EStringType, enum VOCGrammarType, void *), void *)
+?vSetUnregisterIncludeCB@Callback_info@@QAEHPAPAX@Z
+public: int __thiscall Callback_info::vSetUnregisterIncludeCB(void **)
+?vSetUnregisterLexiconCB@Callback_info@@QAEHPAPAX@Z
+public: int __thiscall Callback_info::vSetUnregisterLexiconCB(void **)
+?XMLParse@EVVEXMLApi@@UAE?AW4XMLpRC@@XZ
+public: virtual enum XMLpRC __thiscall EVVEXMLApi::XMLParse(void)

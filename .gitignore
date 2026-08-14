@@ -1,0 +1,5 @@
+analysis/
+build/
+.wine/
+result
+result-*

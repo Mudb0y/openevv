@@ -1,0 +1,269 @@
+$E1
+$E2
+$L2603
+$L2604
+$L2618
+$L2619
+$L2675
+$L2676
+$L2677
+$L2678
+$L2687
+$L2688
+$L2689
+$L2690
+$L3658
+$L3675
+$L3676
+$S3
+$T2609
+$T2613
+$T2622
+$T2624
+$T2681
+$T2683
+$T2693
+$T2695
+$T3663
+$T3667
+$T3678
+$T3680
+??0CAOPCircBuf@@QAE@H@Z
+public: __thiscall CAOPCircBuf::CAOPCircBuf(int)
+??0CAOP@@QAE@K@Z
+public: __thiscall CAOP::CAOP(unsigned long)
+??0CAopSNRBuf@@QAE@HHH@Z
+public: __thiscall CAopSNRBuf::CAopSNRBuf(int, int, int)
+??0CAopThreshWindow@@QAE@HH@Z
+public: __thiscall CAopThreshWindow::CAopThreshWindow(int, int)
+??0CMonitorCondition@@QAE@PAVCMonitor@@@Z
+public: __thiscall CMonitorCondition::CMonitorCondition(class CMonitor *)
+??0CMonitor@@QAE@XZ
+public: __thiscall CMonitor::CMonitor(void)
+??0CMonitorSemaphore@@QAE@H@Z
+public: __thiscall CMonitorSemaphore::CMonitorSemaphore(int)
+??0CMonitorSemaphore@@QAE@XZ
+public: __thiscall CMonitorSemaphore::CMonitorSemaphore(void)
+??1CAOPCircBuf@@UAE@XZ
+public: virtual __thiscall CAOPCircBuf::~CAOPCircBuf(void)
+??1CAopSNRBuf@@UAE@XZ
+public: virtual __thiscall CAopSNRBuf::~CAopSNRBuf(void)
+??1CAopThreshWindow@@UAE@XZ
+public: virtual __thiscall CAopThreshWindow::~CAopThreshWindow(void)
+??1CAOP@@UAE@XZ
+public: virtual __thiscall CAOP::~CAOP(void)
+??1CMonitorCondition@@UAE@XZ
+public: virtual __thiscall CMonitorCondition::~CMonitorCondition(void)
+??1CMonitorSemaphore@@UAE@XZ
+public: virtual __thiscall CMonitorSemaphore::~CMonitorSemaphore(void)
+??1CMonitor@@UAE@XZ
+public: virtual __thiscall CMonitor::~CMonitor(void)
+??_7CAOP@@6B@
+const CAOP::`vftable'
+??_7CAOPCircBuf@@6B@
+const CAOPCircBuf::`vftable'
+??_7CAopSNRBuf@@6B@
+const CAopSNRBuf::`vftable'
+??_7CAopThreshWindow@@6B@
+const CAopThreshWindow::`vftable'
+??_7CMonitor@@6B@
+const CMonitor::`vftable'
+??_7CMonitorCondition@@6B@
+const CMonitorCondition::`vftable'
+??_7CMonitorSemaphore@@6B@
+const CMonitorSemaphore::`vftable'
+?AddNewThreshValue@CAopThreshWindow@@IAEKHH@Z
+protected: unsigned long __thiscall CAopThreshWindow::AddNewThreshValue(int, int)
+aopCreate
+aopDestroy
+aopGetAttrs
+aopProcessFrameStats
+aopQueryLastUtteranceSNR
+aopQuerySNR
+aopSetAttrs
+aopStartUtterance
+aopStopUtterance
+?Average@CAOPCircBuf@@QAEKAAH@Z
+public: unsigned long __thiscall CAOPCircBuf::Average(int &)
+??_C@_06GGLIPOFD@?5?5?5?5?5?5?$AA@
+"      "
+??_C@_06OOFALCG@?5Exit?9?$AA@
+" Exit-"
+??_C@_06PADADDFN@Entry?9?$AA@
+"Entry-"
+??_C@_06PLFAKHFC@ERROR?9?$AA@
+"ERROR-"
+??_C@_0BA@KEGAGDDN@?$CFs?5aopCreate?$CI?$CJ?6?$AA@
+"%s aopCreate()\n"
+??_C@_0BB@OAGECAKF@?$CFs?5aopDestroy?$CI?$CJ?6?$AA@
+"%s aopDestroy()\n"
+??_C@_0BC@CFFHIOBI@?$CFs?5aopQuerySNR?$CI?$CJ?6?$AA@
+"%s aopQuerySNR()\n"
+??_C@_0BC@KGEMBBCM@?$CFs?5aopSetAttrs?$CI?$CJ?6?$AA@
+"%s aopSetAttrs()\n"
+??_C@_0BC@KJFCMHKP@?$CFs?5aopGetAttrs?$CI?$CJ?6?$AA@
+"%s aopGetAttrs()\n"
+??_C@_0BE@LAFKGNHH@?$CFsInput?3?5hAop?$DN?$CI?$CFd?$CJ?6?$AA@
+"%sInput: hAop=(%d)\n"
+??_C@_0BG@GFGMHBHE@?$CFs?5aopCreate?$CI?$CJ?5rc?$DN?$CFd?6?$AA@
+"%s aopCreate() rc=%d\n"
+??_C@_0BH@DABOOKGP@?$CFs?5aopStopUtterance?$CI?$CJ?6?$AA@
+"%s aopStopUtterance()\n"
+??_C@_0BH@HDPLHFII@?$CFs?5aopDestroy?$CI?$CJ?5rc?$DN?$CFd?6?$AA@
+"%s aopDestroy() rc=%d\n"
+??_C@_0BI@GPECFHDA@?$CFs?5aopQuerySNR?$CI?$CJ?5rc?$DN?$CFd?6?$AA@
+"%s aopQuerySNR() rc=%d\n"
+??_C@_0BI@MHJENHAN@?$CFs?5aopSetAttrs?$CI?$CJ?5rc?$DN?$CFd?6?$AA@
+"%s aopSetAttrs() rc=%d\n"
+??_C@_0BI@OCGIKKDG@?$CFs?5aopStartUtterance?$CI?$CJ?6?$AA@
+"%s aopStartUtterance()\n"
+??_C@_0BI@OCJPFMBD@?$CFs?5aopGetAttrs?$CI?$CJ?5rc?$DN?$CFd?6?$AA@
+"%s aopGetAttrs() rc=%d\n"
+??_C@_0BL@HLKKLEOE@?$CFs?5aopProcessFrameStats?$CI?$CJ?6?$AA@
+"%s aopProcessFrameStats()\n"
+??_C@_0BN@OJCGMNOI@?$CFs?5aopStopUtterance?$CI?$CJ?5rc?$DN?$CFd?6?$AA@
+"%s aopStopUtterance() rc=%d\n"
+??_C@_0BO@FKANNCIA@?$CFs?5aopStartUtterance?$CI?$CJ?5rc?$DN?$CFd?6?$AA@
+"%s aopStartUtterance() rc=%d\n"
+??_C@_0CB@IOPGDECN@?$CFsInput?3?5hAop?$DN?$CI?$CFd?$CJ?5piSNR?$DN?$CI0x?$CFp?$CJ?6@
+"%sInput: hAop=(%d) piSNR=(0x%p)\n"...
+??_C@_0CB@PEKNODLF@?$CFs?5aopProcessFrameStats?$CI?$CJ?5rc?$DN?$CFd?6@
+"%s aopProcessFrameStats() rc=%d\n"...
+??_C@_0CC@EJFJNDLH@?$CFsInput?3?5hAop?$DN?$CI?$CFd?$CJ?5pAopAttrs?$CI?$CFp?$CJ@
+"%sInput: hAop=(%d) pAopAttrs(%p)"...
+??_C@_0CO@ECJKLAP@?$CFsInput?3?5phAop?$DN?$CI?$CFp?$CJ?5EalId?$DN?$CI?$CFd?$CJ?5p@
+"%sInput: phAop=(%p) EalId=(%d) p"...
+??_C@_0DL@MCHMDOCE@?$CFsInput?3?5hAop?$DN?$CI?$CFd?$CJ?5pSDFrameStats@
+"%sInput: hAop=(%d) pSDFrameStats"...
+?CacheVolumeDelta@CAOP@@AAEKH@Z
+private: unsigned long __thiscall CAOP::CacheVolumeDelta(int)
+?Claim@CMonitorSemaphore@@QAEHK@Z
+public: int __thiscall CMonitorSemaphore::Claim(unsigned long)
+?Claim@CMonitorSemaphore@@QAEHXZ
+public: int __thiscall CMonitorSemaphore::Claim(void)
+@comp.id
+?CreateBuf@CAOPCircBuf@@IAEKXZ
+protected: unsigned long __thiscall CAOPCircBuf::CreateBuf(void)
+?DeleteBuf@CAOPCircBuf@@IAEKXZ
+protected: unsigned long __thiscall CAOPCircBuf::DeleteBuf(void)
+E:/build/embedded/obj/product/aop/nt/x86/waveio/aop.obj:
+E:/build/embedded/obj/product/aop/nt/x86/waveio/caopcircbuf.obj:
+E:/build/embedded/obj/product/aop/nt/x86/waveio/caop.obj:
+E:/build/embedded/obj/product/aop/nt/x86/waveio/caopsnrbuf.obj:
+E:/build/embedded/obj/product/aop/nt/x86/waveio/semaphore.obj:
+_ehhandler$??0CAOP@@QAE@K@Z
+_ehhandler$??0CAopSNRBuf@@QAE@HHH@Z
+_ehhandler$??0CAopThreshWindow@@QAE@HH@Z
+_ehhandler$??1CAopSNRBuf@@UAE@XZ
+_ehhandler$??1CAopThreshWindow@@UAE@XZ
+_ehhandler$??1CAOP@@UAE@XZ
+@feat.00
+?FindLowestThreshValue@CAopThreshWindow@@IAEKAAH0@Z
+protected: unsigned long __thiscall CAopThreshWindow::FindLowestThreshValue(int &, int &)
+?FindNewThreshValue@CAopThreshWindow@@IAEKAAH00@Z
+protected: unsigned long __thiscall CAopThreshWindow::FindNewThreshValue(int &, int &, int &)
+??_GCAOPCircBuf@@UAEPAXI@Z
+public: virtual void * __thiscall CAOPCircBuf::`scalar deleting dtor'(unsigned int)
+??_GCAopSNRBuf@@UAEPAXI@Z
+public: virtual void * __thiscall CAopSNRBuf::`scalar deleting dtor'(unsigned int)
+??_GCAopThreshWindow@@UAEPAXI@Z
+public: virtual void * __thiscall CAopThreshWindow::`scalar deleting dtor'(unsigned int)
+??_GCAOP@@UAEPAXI@Z
+public: virtual void * __thiscall CAOP::`scalar deleting dtor'(unsigned int)
+??_GCMonitorCondition@@UAEPAXI@Z
+public: virtual void * __thiscall CMonitorCondition::`scalar deleting dtor'(unsigned int)
+??_GCMonitorSemaphore@@UAEPAXI@Z
+public: virtual void * __thiscall CMonitorSemaphore::`scalar deleting dtor'(unsigned int)
+??_GCMonitor@@UAEPAXI@Z
+public: virtual void * __thiscall CMonitor::`scalar deleting dtor'(unsigned int)
+?GetAttrs@CAOP@@QAEKPAU_AOPAttrs@@@Z
+public: unsigned long __thiscall CAOP::GetAttrs(struct _AOPAttrs *)
+?GetElement@CAOPCircBuf@@QAEKHAAH@Z
+public: unsigned long __thiscall CAOPCircBuf::GetElement(int, int &)
+?GetLength@CAOPCircBuf@@QAEHXZ
+public: int __thiscall CAOPCircBuf::GetLength(void)
+?GetSize@CAOPCircBuf@@QAEHXZ
+public: int __thiscall CAOPCircBuf::GetSize(void)
+?getThreshold@CAopThreshWindow@@QAEHXZ
+public: int __thiscall CAopThreshWindow::getThreshold(void)
+?GetTotal@CAOPCircBuf@@QAEHXZ
+public: int __thiscall CAOPCircBuf::GetTotal(void)
+?getWindowSize@CAopSNRBuf@@QAEXAAH00@Z
+public: void __thiscall CAopSNRBuf::getWindowSize(int &, int &, int &)
+?getWindowSize@CAopThreshWindow@@QAEHXZ
+public: int __thiscall CAopThreshWindow::getWindowSize(void)
+?hAOPInstSem@@3VCMonitorSemaphore@@A
+class CMonitorSemaphore hAOPInstSem
+?Init@CAOP@@QAEKPAU_AOPAttrs@@@Z
+public: unsigned long __thiscall CAOP::Init(struct _AOPAttrs *)
+?iNumOfAOPInst@@3HA
+int iNumOfAOPInst
+?InUtterance@CAOP@@QAEKXZ
+public: unsigned long __thiscall CAOP::InUtterance(void)
+?lock@CMonitor@@MAEHXZ
+protected: virtual int __thiscall CMonitor::lock(void)
+pAOP
+?Pop@CAOPCircBuf@@QAEKAAH@Z
+public: unsigned long __thiscall CAOPCircBuf::Pop(int &)
+?ProcessAvgEnergy@CAOP@@AAEKHPAW4AOPStatus@@@Z
+private: unsigned long __thiscall CAOP::ProcessAvgEnergy(int, enum AOPStatus *)
+?ProcessAvgSil@CAOP@@AAEKHPAW4AOPStatus@@@Z
+private: unsigned long __thiscall CAOP::ProcessAvgSil(int, enum AOPStatus *)
+?ProcessClipData@CAOP@@AAEKPAU_ESRSpeechDetectorFrameStatsStruct@@PAW4AOPStatus@@@Z
+private: unsigned long __thiscall CAOP::ProcessClipData(struct _ESRSpeechDetectorFrameStatsStruct *, enum AOPStatus *)
+?ProcessFrameStats@CAOP@@QAEKPAU_ESRSpeechDetectorFrameStatsStruct@@PAW4AOPStatus@@@Z
+public: unsigned long __thiscall CAOP::ProcessFrameStats(struct _ESRSpeechDetectorFrameStatsStruct *, enum AOPStatus *)
+?ProcessFrameStats@CAopSNRBuf@@QAEKPAU_ESRSpeechDetectorFrameStatsStruct@@@Z
+public: unsigned long __thiscall CAopSNRBuf::ProcessFrameStats(struct _ESRSpeechDetectorFrameStatsStruct *)
+?ProcessSingleFrame@CAopSNRBuf@@QAEKW4ESRFrameSpeechState@@K@Z
+public: unsigned long __thiscall CAopSNRBuf::ProcessSingleFrame(enum ESRFrameSpeechState, unsigned long)
+?Push@CAOPCircBuf@@QAEKHAA_NAAH@Z
+public: unsigned long __thiscall CAOPCircBuf::Push(int, bool &, int &)
+?Push@CAOPCircBuf@@QAEKH@Z
+public: unsigned long __thiscall CAOPCircBuf::Push(int)
+?Push@CAopThreshWindow@@QAEKHAA_N@Z
+public: unsigned long __thiscall CAopThreshWindow::Push(int, bool &)
+?QueryLastUtteranceSNR@CAOP@@QAEKPAH@Z
+public: unsigned long __thiscall CAOP::QueryLastUtteranceSNR(int *)
+?QueryLastUtteranceSNR@CAopSNRBuf@@QAEKPAH@Z
+public: unsigned long __thiscall CAopSNRBuf::QueryLastUtteranceSNR(int *)
+?QuerySNR@CAOP@@QAEKPAH@Z
+public: unsigned long __thiscall CAOP::QuerySNR(int *)
+?QuerySNR@CAopSNRBuf@@QAEKPAH@Z
+public: unsigned long __thiscall CAopSNRBuf::QuerySNR(int *)
+?release@CMonitor@@MAEHXZ
+protected: virtual int __thiscall CMonitor::release(void)
+?Release@CMonitorSemaphore@@QAEHXZ
+public: int __thiscall CMonitorSemaphore::Release(void)
+?ResetBuffers@CAOP@@AAEKXZ
+private: unsigned long __thiscall CAOP::ResetBuffers(void)
+?Reset@CAOPCircBuf@@QAEKXZ
+public: unsigned long __thiscall CAOPCircBuf::Reset(void)
+?Reset@CAopSNRBuf@@QAEKXZ
+public: unsigned long __thiscall CAopSNRBuf::Reset(void)
+?Reset@CAopThreshWindow@@QAEKXZ
+public: unsigned long __thiscall CAopThreshWindow::Reset(void)
+?SetElement@CAOPCircBuf@@QAEKHH@Z
+public: unsigned long __thiscall CAOPCircBuf::SetElement(int, int)
+?SetSize@CAOPCircBuf@@QAEKH@Z
+public: unsigned long __thiscall CAOPCircBuf::SetSize(int)
+?SetThresholdSize@CAopThreshWindow@@QAEKHH@Z
+public: unsigned long __thiscall CAopThreshWindow::SetThresholdSize(int, int)
+?SetVolume@CAOP@@AAEKXZ
+private: unsigned long __thiscall CAOP::SetVolume(void)
+?SetWindowSize@CAopSNRBuf@@QAEKHHH@Z
+public: unsigned long __thiscall CAopSNRBuf::SetWindowSize(int, int, int)
+?signal@CMonitorCondition@@QAEXXZ
+public: void __thiscall CMonitorCondition::signal(void)
+?StartUtterance@CAOP@@QAEKXZ
+public: unsigned long __thiscall CAOP::StartUtterance(void)
+?StartUtterance@CAopSNRBuf@@QAEKXZ
+public: unsigned long __thiscall CAopSNRBuf::StartUtterance(void)
+?StopUtterance@CAOP@@QAEKXZ
+public: unsigned long __thiscall CAOP::StopUtterance(void)
+?StopUtterance@CAopSNRBuf@@QAEKXZ
+public: unsigned long __thiscall CAopSNRBuf::StopUtterance(void)
+?Uninit@CAOP@@QAEKXZ
+public: unsigned long __thiscall CAOP::Uninit(void)
+?wait@CMonitorCondition@@QAEXXZ
+public: void __thiscall CMonitorCondition::wait(void)

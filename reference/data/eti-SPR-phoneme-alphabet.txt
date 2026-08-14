@@ -1,0 +1,88 @@
+SPR Symbols
+
+The symbols allowed in Symbolic Phonetic Representations (SPRs) are listed in the table below.
+  See Some Tips on SPR Symbols in order to use these symbols most effectively. 
+
+
+VOWELS
+
+Regular Vowels	Symbol	Example Words
+	a  	rod, father
+	A  	back, had
+	e  	cake, pain
+	E  	hedge, let
+	i  	see, speak, believe
+	I  	pick, ill
+	o  	both, oak
+	c  	law, cough
+ 	u  	zoo, truth
+	U  	took, put
+	H  	but, mug, son
+	R  	butter, hurt
+
+
+Reduced (unstressed) Vowels	Symbol	Example Words
+	x  	sofa, alone, suppose, tedious, America
+	X  	roses, connect, melody, symphony, hinted
+
+
+Diphthongs	Symbol	Example Words
+	W  	out, cow
+	O  	toil, boy
+	Y  	life, fine
+
+
+
+CONSONANTS
+
+	Symbol	Example Words
+	b  	bad, sob
+	p  	pit, rip
+	d  	dip, had
+	t  	tip, pet
+"Flap"	F  	writer, fiddle
+	g  	good, bug
+	k  	kill, make, back
+	D  	this, breathe
+	T  	thing, Beth
+	v  	vase, save
+	f  	field, if, graph
+	z  	zip, phase
+	s  	seal, miss, ceiling
+	Z  	treasure, garage
+	S  	ship, wish
+	J  	Jane, huge
+	C  	chip, witch
+	h  	hot, hero
+	m  	man, hum, summer
+	n  	never, sun, winner
+"Syllabic Nasal"	N  	button, satin, eaten, burden
+	G  	sing, finger
+	r  	borrow, rake
+	l  	low, hall
+	y  	yes, Virginia
+	w  	wear, quick
+"Glottal Stop"	?  	kitten, Latin
+
+
+Syllable Stress 
+
+1  	primary stress (most prominent stress in the word)
+2  	secondary stress
+0  	no stress
+
+
+Syllable Boundary 
+
+.  	(period)  beginning of a syllable
+
+Some Tips on Entering and Interpreting SPR Symbols
+
+·	Note that the symbols are case-sensitive, so `[a] and `[A] represent two different sounds.
+·	Since English, like other languages, exhibits dialectal variation in pronunciation, your own pronunciation may not match every example shown here.
+·	The sounds of every language have specific distributional patterns.  For example, in all dialects of English, the sound [G], as in "sing" `[.1sIG], does not occur at the beginning of a word.  Other sounds in English that have a particularly narrow distribution are the glottal stop [?], the flap [F], and the syllabic nasal [N].   If you enter a sound symbol in a context where it does not normally occur, the resulting speech may sound unnatural.
+
+·	ETI-Eloquence applies a sophisticated set of linguistic rules to its input to reflect the processes by which sounds change in specific contexts in natural language.  For example, in American English, the sound [t] of "write" `[.1rYt] is pronounced as a flap in "writer" `[.1rY.0FR].   SPR input will undergo these modifications in the same way that ordinary text input does.  In this example, whether you enter `[1rY.0tR] or `[1rY.0FR], the output of the program will be the same.
+
+
+

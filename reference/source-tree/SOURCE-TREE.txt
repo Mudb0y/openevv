@@ -1,0 +1,102 @@
+Reconstructed source tree of IBM Embedded ViaVoice / ECI
+Recovered 14 August 2026 from source paths left in shipped binaries.
+Root as it existed on IBM's build machine: E:/build/embedded
+2947 distinct paths, 2871 of them under that root. No source code — only
+the tree structure and real filenames.
+
+Products, by module count:
+  eci                    736
+  share                  211
+  etidev                 200
+  eng                    134
+  enu                    132
+  deu                    124
+  frc                    118
+  fra                    116
+  esr                    113
+  ita                    110
+  esp                    102
+  esm                    102
+  jpnsdict               98
+  jpnrom                 90
+  jpn                    84
+  torembed               80
+  librvcReconstruction   32
+  eloqc                  28
+  eal                    26
+  libttsrvc              24
+  dlang                  24
+  delta                  24
+  ccode                  24
+  ssmlprocessor          21
+  voc                    18
+  sound                  18
+  rom                    14
+  libeTTS                14
+  aop                    10
+  logio                  8
+  parsexml               6
+  embed                  6
+  eduapi                 6
+  ssmlfilter             3
+  filters                3
+  ral                    2
+  klatt                  2
+
+Filenames for the parts that matter to a reimplementation:
+
+  klatt:
+    clsyn.obj
+
+  delta:
+    access.obj
+    ctxt.obj
+    ddelta.obj
+    deltaimp.obj
+    delta.obj
+    deltio.obj
+    dttime.obj
+    dutil.obj
+    heap.obj
+    mem.obj
+    prdelta.obj
+    prdeltao.obj
+    rectbuf.obj
+    util.obj
+
+  dlang:
+    arraygen.obj
+    capp.obj
+    dictinit.obj
+    dict.obj
+    gener.obj
+    optbl.obj
+    profile.obj
+    runklatt.obj
+    stmarray.obj
+    stmgen.obj
+    stmqueue.obj
+    usrdct.obj
+
+  ccode:
+    assign.obj
+    debug.obj
+    delta.obj
+    dfault.obj
+    extra.obj
+    for.obj
+    io.obj
+    misc.obj
+    optimize.obj
+    pointer.obj
+    stack.obj
+    test.obj
+
+  libeTTS:
+    endians.obj
+    FixUtils.obj
+    FtrsData.obj
+    LogSteps32.obj
+    LogSteps.obj
+    LookupTable.obj
+    OccInfo.obj

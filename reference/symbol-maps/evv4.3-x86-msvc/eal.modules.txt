@@ -1,0 +1,9 @@
+E:/build/embedded/obj/product/eal/ealapi/nt/x86/waveio/eallock.obj
+E:/build/embedded/obj/product/eal/ealapi/nt/x86/waveio/ealbufqueue.obj
+E:/build/embedded/obj/product/eal/ealapi/nt/x86/waveio/ealcb.obj
+E:/build/embedded/obj/product/eal/ealapi/nt/x86/waveio/ealfcmgr.obj
+E:/build/embedded/obj/product/eal/ealapi/nt/x86/waveio/ealvmap.obj
+E:/build/embedded/obj/product/eal/ealapi/nt/x86/waveio/version.obj
+E:/build/embedded/obj/product/eal/ealapi/nt/x86/waveio/ealsys.obj
+E:/build/embedded/obj/product/eal/ealapi/nt/x86/waveio/ealmain.obj
+E:/build/embedded/obj/product/eal/ealapi/nt/x86/waveio/ealdev.obj

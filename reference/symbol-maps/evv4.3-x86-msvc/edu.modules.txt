@@ -1,0 +1,3 @@
+E:/build/embedded/obj/product/eduapi/nt/x86/waveio/version.obj
+E:/build/embedded/obj/product/eduapi/nt/x86/waveio/edu_api_load.obj
+E:/build/embedded/obj/product/eduapi/nt/x86/waveio/edu_api.obj

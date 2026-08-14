@@ -1,0 +1,5 @@
+E:/build/embedded/obj/product/aop/nt/x86/waveio/caopsnrbuf.obj
+E:/build/embedded/obj/product/aop/nt/x86/waveio/caopcircbuf.obj
+E:/build/embedded/obj/product/aop/nt/x86/waveio/semaphore.obj
+E:/build/embedded/obj/product/aop/nt/x86/waveio/caop.obj
+E:/build/embedded/obj/product/aop/nt/x86/waveio/aop.obj
