@@ -45,6 +45,7 @@ AT(av, 0x1824);
 AT(ah, 0x1828);
 AT(af, 0x182c);
 AT(smooth_span, 0x1840);
+AT(flutter, 0x1848);
 AT(noise_buf, 0x184c);
 AT(unknown_19dc, 0x19dc);
 AT(diplo_on, 0x19e4);

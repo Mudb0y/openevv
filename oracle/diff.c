@@ -1155,7 +1155,7 @@ static void test_synth_voiced(void)
         frame[2] = (int32_t)(rng_next() % 90u) + 1;     /* av on */
         frame[3] = (int32_t)(rng_next() % 90u) + 5;     /* open quotient */
         frame[4] = (int32_t)(rng_next() % 40u);         /* tilt */
-        frame[5] = 0;                                   /* flutter off */
+        frame[5] = (int32_t)(rng_next() % 200u);        /* flutter */
         frame[6] = (int32_t)(rng_next() % 30u);         /* diplophonia */
         frame[7] = (int32_t)(rng_next() % 90u);         /* ah */
         frame[8] = (int32_t)(rng_next() % 90u);         /* af */

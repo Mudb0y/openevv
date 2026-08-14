@@ -17,7 +17,7 @@ static inline int32_t mul32(int32_t a, int32_t b)
    so they pre-shift x by however much its magnitude demands and take the rest
    out of the final shift. The staged form drops low bits that a wider multiply
    would keep, so it cannot be folded back into a single expression. */
-static inline int32_t fxmul_scaled(int16_t coef, int32_t x)
+static inline int32_t fxmul_scaled(int32_t coef, int32_t x)
 {
     int32_t c = coef;
 

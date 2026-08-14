@@ -415,7 +415,39 @@ int KlattSynth(void *handle, const int32_t *parms)
                         setup_pending = 0;
 
                         if (parms[P_FL] != 0) {
-                            /* NOT YET TRANSCRIBED: pitch flutter. */
+                            /* Three sine terms at fixed rates, each rebuilt
+                               from a quarter-wave table, wobble the pitch so a
+                               held vowel does not sound mechanical. */
+                            static const int16_t rate[3] = {0xa37, 0x5b6, 0x3c8};
+                            int16_t sine = 0;
+                            int n;
+
+                            for (n = 0; n < 3; n++) {
+                                int16_t ph = fxdivl(mul32(rate[n], k->length)
+                                                    % k->cp.sample_rate,
+                                                    k->cp.sample_rate);
+                                int32_t q;
+
+                                if (ph > 0x6000) {
+                                    q = fxmul_scaled((int16_t)(ph - 0x6000), 50);
+                                    sine = (int16_t)(sine - klatt_flutter_sine[50 - q]);
+                                } else if (ph > 0x4000) {
+                                    q = fxmul_scaled((int16_t)(ph - 0x4000), 50);
+                                    sine = (int16_t)(sine - klatt_flutter_sine[q]);
+                                } else if (ph > 0x2000) {
+                                    q = fxmul_scaled((int16_t)(ph - 0x2000), 50);
+                                    sine = (int16_t)(sine + klatt_flutter_sine[50 - q]);
+                                } else {
+                                    q = fxmul_scaled(ph, 50);
+                                    sine = (int16_t)(sine + klatt_flutter_sine[q]);
+                                }
+                            }
+
+                            k->flutter = fxmul_scaled(sine, k->f0);
+                            k->flutter = fxmul_scaled(parms[P_FL], k->flutter);
+                            k->f0 += k->flutter;
+                            if (k->f0 <= 0)
+                                k->f0 = 1;
                         }
 
                         if (k->oq > 0) {

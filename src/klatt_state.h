@@ -127,7 +127,8 @@ struct klatt_state {
     int32_t          unknown_1838;        /* 0x1838 */
     int32_t          unknown_183c;        /* 0x183c */
     int32_t          smooth_span;         /* 0x1840 */
-    uint8_t          pad_1844[8];
+    int32_t          unknown_1844;        /* 0x1844 */
+    int32_t          flutter;             /* 0x1848, this frame's pitch wobble */
     /* Same reasoning as pairs: 0x19dc is written as a 32-bit scalar, so the
        buffer stops there. */
     int16_t          noise_buf[200];      /* 0x184c */
