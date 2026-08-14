@@ -143,12 +143,12 @@ void *TFLDS(void *p)
     return (uint8_t *)p + 8;
 }
 
-int32_t getDeltaStackVBot(delta_state *d)
+void *getDeltaStackVBot(delta_state *d)
 {
     return d->stack->vbot;
 }
 
-void setDeltaStackVBot(delta_state *d, int32_t v)
+void setDeltaStackVBot(delta_state *d, void *v)
 {
     d->stack->vbot = v;
 }
@@ -183,4 +183,54 @@ void *popDeltaStackTop(delta_state *d)
 int FENCED(delta_state *d, const int32_t *table, int8_t idx)
 {
     return (table[d->vars->fence_base + idx] & 2) != 0;
+}
+
+/* A sync number is kept in the low bits of a pointer, so reading the pointer
+   back means masking them off. A null one is not a pointer at all. */
+int32_t absoluteSyncNumPtr(int32_t p)
+{
+    if (p == 0)
+        return -1;
+    return p & ~3;
+}
+
+/* Drop everything the stack has above a mark. The limit is recomputed from
+   the allocation rather than moved, so it stays right however far this goes. */
+void freeDeltaStackTo(delta_state *d, uint8_t *to)
+{
+    delta_stack *s = d->stack;
+    int32_t used;
+
+    if (s->block == NULL)
+        return;
+
+    s->top = to;
+    used = (int32_t)(*(uint8_t **)((char *)s->block + 0x10) - s->top);
+    s->limit = s->base - used;
+}
+
+/* Unwind to whichever mark applies: a record of kind eight at the bottom
+   means the rule wants the saved one instead. */
+void clearDeltaStackBack(delta_state *d)
+{
+    if (*d->stack->vbot == 8)
+        freeDeltaStackTo(d, d->vars->back);
+    else
+        freeDeltaStackTo(d, d->stack->vbot);
+}
+
+/* Open a test: remember what it is matching, clear anything a previous one
+   left, and push the context record it will unwind to. */
+void starttest(delta_state *d, int16_t tag)
+{
+    delta_frame *slot;
+
+    d->vars->test_tag = tag;
+    clearDeltaStackBack(d);
+
+    slot = bs_push(d->stack, d->stack->ca_size);
+    slot->kind = 0;
+    slot->value = d->vars->test_tag;
+
+    d->vars->testing = 1;
 }

@@ -37,17 +37,25 @@ typedef struct {
     uint8_t   pad_00c0[0x4f8 - 0xc0];
     uint8_t  *top;           /* 0x04f8 */
     uint8_t  *limit;         /* 0x04fc */
-    uint8_t   pad_0500[0xc];
-    int32_t   vbot;          /* 0x050c */
-    uint8_t   pad_0510[0x40];
+    uint8_t   pad_0500[4];
+    void     *block;         /* 0x0504, the allocation the stack lives in */
+    uint8_t   pad_0508[4];
+    uint8_t  *vbot;          /* 0x050c, how far back an unwind may go */
+    uint8_t   pad_0510[8];
+    uint8_t  *base;          /* 0x0518 */
+    uint8_t   pad_051c[0x40];
 } delta_stack;
 
 /* Where the rules keep their variables and the result of the last compare.
    Size not established either. */
 typedef struct {
-    uint8_t   pad_0000[0xfcc];
+    uint8_t   pad_0000[0xfc4];
+    int32_t   test_tag;        /* 0x0fc4, what the running test is matching */
+    uint8_t   pad_0fc8[4];
     uint8_t   scan[8];         /* 0x0fcc, the current scan position */
-    uint8_t   pad_0fd4[0xc];
+    int8_t    testing;         /* 0x0fd4, a test is under way */
+    uint8_t   pad_0fd5[7];
+    uint8_t  *back;            /* 0x0fdc, where an unwind returns to */
     int8_t    compared_equal;  /* 0x0fe0 */
     int8_t    fence_count;     /* 0x0fe1, how many characters are fenced */
     uint8_t   pad_0fe2[0x1174 - 0xfe2];
@@ -106,9 +114,14 @@ int  testneq(delta_state *d);
 
 void  fence(delta_state *d, int8_t n, const uint8_t *chars);
 void *TFLDS(void *p);
-int32_t getDeltaStackVBot(delta_state *d);
-void  setDeltaStackVBot(delta_state *d, int32_t v);
+void *getDeltaStackVBot(delta_state *d);
+void  setDeltaStackVBot(delta_state *d, void *v);
 void *popDeltaStackTop(delta_state *d);
 int   FENCED(delta_state *d, const int32_t *table, int8_t idx);
+
+int32_t absoluteSyncNumPtr(int32_t p);
+void  freeDeltaStackTo(delta_state *d, uint8_t *to);
+void  clearDeltaStackBack(delta_state *d);
+void  starttest(delta_state *d, int16_t tag);
 
 #endif

@@ -27,10 +27,14 @@ extern int  ibm_testeq(delta_state *);
 extern int  ibm_testneq(delta_state *);
 extern void ibm_fence(delta_state *, int8_t, const uint8_t *);
 extern void *ibm_TFLDS(void *);
-extern int32_t ibm_getDeltaStackVBot(delta_state *);
-extern void ibm_setDeltaStackVBot(delta_state *, int32_t);
+extern void *ibm_getDeltaStackVBot(delta_state *);
+extern void ibm_setDeltaStackVBot(delta_state *, void *);
 extern void *ibm_popDeltaStackTop(delta_state *);
 extern int  ibm_FENCED(delta_state *, const int32_t *, int8_t);
+extern int32_t ibm_absoluteSyncNumPtr(int32_t);
+extern void ibm_freeDeltaStackTo(delta_state *, uint8_t *);
+extern void ibm_clearDeltaStackBack(delta_state *);
+extern void ibm_starttest(delta_state *, int16_t);
 
 #define RECORDS   0x200   /* room for the stack to push into */
 #define FENCE_MAP 0x100   /* the reverse fence table is indexed by a byte */
@@ -44,6 +48,7 @@ typedef struct {
     uint8_t     records[RECORDS];
     uint8_t     chars[FENCE_MAP];
     uint8_t     map[FENCE_MAP];
+    uint8_t     blockhdr[0x20];   /* the allocation header, read at +0x10 */
 } delta_world;
 
 static int total_cases;
@@ -87,6 +92,11 @@ static void world_link(delta_world *w)
 
     w->stack.top = w->records + RECORDS / 2;
     w->stack.limit = w->records + RECORDS / 2 - 0x40;
+    w->stack.block = w->blockhdr;
+    *(uint8_t **)(w->blockhdr + 0x10) = w->records + RECORDS;
+    w->stack.base = w->records + RECORDS;
+    w->stack.vbot = w->records + 0x20;
+    w->vars.back = w->records + 0x30;
     w->stack.size_a8 = 4;
     w->stack.size_ac = 12;
     w->stack.size_b0 = 16;
@@ -95,25 +105,47 @@ static void world_link(delta_world *w)
     w->stack.boa_size = 24;
 }
 
-/* The three block pointers differ between allocations, so compare around them
-   and check the stack pointers as offsets instead. */
+/* Every pointer in the state and its blocks points into the world it belongs
+   to, so two worlds can never hold equal pointer values. Rewrite each one as
+   an offset from the world's base before comparing, and anything that is not
+   a pointer is then compared byte for byte. */
+static void normalise(delta_world *w, delta_state *st, delta_vars *va,
+                      delta_stack *sk)
+{
+    char *base = (char *)w;
+
+    *st = w->state;
+    *va = w->vars;
+    *sk = w->stack;
+
+#define REBASE(p) ((p) = (void *)((char *)(p) - base))
+    REBASE(st->vars);
+    REBASE(st->stack);
+    REBASE(st->fence_chars);
+    REBASE(st->fence_index);
+    REBASE(va->back);
+    REBASE(sk->top);
+    REBASE(sk->limit);
+    REBASE(sk->block);
+    REBASE(sk->vbot);
+    REBASE(sk->base);
+#undef REBASE
+}
+
 static int world_differs(delta_world *a, delta_world *b)
 {
-    delta_state sa = a->state, sb = b->state;
+    delta_state sa, sb;
+    delta_vars va, vb;
+    delta_stack ka, kb;
 
-    if (a->stack.top - a->records != b->stack.top - b->records)
-        return 1;
-    if (a->stack.limit - a->records != b->stack.limit - b->records)
-        return 1;
-
-    sa.vars = sb.vars = NULL;
-    sa.stack = sb.stack = NULL;
-    sa.fence_chars = sb.fence_chars = NULL;
-    sa.fence_index = sb.fence_index = NULL;
+    normalise(a, &sa, &va, &ka);
+    normalise(b, &sb, &vb, &kb);
 
     if (memcmp(&sa, &sb, sizeof(sa)) != 0)
         return 1;
-    if (memcmp(&a->vars, &b->vars, sizeof(a->vars)) != 0)
+    if (memcmp(&va, &vb, sizeof(va)) != 0)
+        return 1;
+    if (memcmp(&ka, &kb, sizeof(ka)) != 0)
         return 1;
     if (memcmp(a->records, b->records, RECORDS) != 0)
         return 1;
@@ -121,11 +153,13 @@ static int world_differs(delta_world *a, delta_world *b)
         return 1;
     if (memcmp(a->map, b->map, FENCE_MAP) != 0)
         return 1;
-
-    /* Everything in the stack block except the two pointers, already checked. */
-    return memcmp((char *)&a->stack + 0x500, (char *)&b->stack + 0x500,
-                  sizeof(delta_stack) - 0x500) != 0
-        || memcmp(&a->stack, &b->stack, 0x4f8) != 0;
+    if (*(char **)(a->blockhdr + 0x10) - (char *)a
+        != *(char **)(b->blockhdr + 0x10) - (char *)b)
+        return 1;
+    if (memcmp(a->blockhdr, b->blockhdr, 0x10) != 0)
+        return 1;
+    return memcmp(a->blockhdr + 0x14, b->blockhdr + 0x14,
+                  sizeof(a->blockhdr) - 0x14) != 0;
 }
 
 #define BEGIN(name)                                                  \
@@ -208,9 +242,10 @@ BEGIN(fence)
 END(fence)
 
 BEGIN(vbot)
-    int32_t v = (int32_t)rng_next();
-    ibm_setDeltaStackVBot(&m->state, v); setDeltaStackVBot(&o->state, v);
-    if (ibm_getDeltaStackVBot(&m->state) != getDeltaStackVBot(&o->state))
+    void *vm = m->records + 0x10, *vo = o->records + 0x10;
+    ibm_setDeltaStackVBot(&m->state, vm); setDeltaStackVBot(&o->state, vo);
+    if ((char *)ibm_getDeltaStackVBot(&m->state) - (char *)m
+        != (char *)getDeltaStackVBot(&o->state) - (char *)o)
         bad++;
 END(vbot)
 
@@ -267,6 +302,43 @@ static void test_scalars(void)
     report("scalars", cases, bad);
 }
 
+BEGIN(freeDeltaStackTo)
+    uint8_t *to = m->records + (rng_next() % RECORDS);
+    ibm_freeDeltaStackTo(&m->state, m->records + (to - m->records));
+    freeDeltaStackTo(&o->state, o->records + (to - m->records));
+END(freeDeltaStackTo)
+
+BEGIN(clearDeltaStackBack)
+    /* Whether the mark at the bottom is a kind eight record decides which
+       way this goes, so exercise both. */
+    m->records[0x20] = o->records[0x20] = (uint8_t)(rng_next() % 2u ? 8 : 3);
+    ibm_clearDeltaStackBack(&m->state); clearDeltaStackBack(&o->state);
+END(clearDeltaStackBack)
+
+BEGIN(starttest)
+    int16_t tag = (int16_t)rng_next();
+    m->records[0x20] = o->records[0x20] = (uint8_t)(rng_next() % 2u ? 8 : 3);
+    ibm_starttest(&m->state, tag); starttest(&o->state, tag);
+END(starttest)
+
+static void test_syncnum(void)
+{
+    int cases = 0, bad = 0, t;
+
+    rng_seed(0x5ec0ffeeu);
+    for (t = 0; t < 20000; t++) {
+        int32_t v = (t % 16 == 0) ? 0 : (int32_t)rng_next();
+
+        cases++;
+        if (ibm_absoluteSyncNumPtr(v) != absoluteSyncNumPtr(v)) {
+            if (bad < 3) printf("  absoluteSyncNumPtr differs at %ld\n", (long)v);
+            bad++;
+        }
+    }
+
+    report("absoluteSyncNumPtr", cases, bad);
+}
+
 int main(void)
 {
     printf("delta diff: comparing our primitives against IBM's\n");
@@ -283,6 +355,10 @@ int main(void)
     test_vbot();
     test_popDeltaStackTop();
     test_scalars();
+    test_syncnum();
+    test_freeDeltaStackTo();
+    test_clearDeltaStackBack();
+    test_starttest();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
