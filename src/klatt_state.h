@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "klatt_fx.h"
+#include "klatt_tables.h"
 
 /* The synthesizer's whole working state: one calloc of 0x1d24 bytes, handed
    back to the caller as an opaque handle.
@@ -11,7 +12,7 @@
  * Named fields are ones a decoded function actually touches. The pad arrays
  * are not guesses: their sizes fall out of the distance between two offsets
  * we do know, so naming more of them later cannot move anything already here.
- * offsetof assertions at the bottom of klatt_fx.c hold every field in place.
+ * offsetof assertions at the top of klatt_state.c hold every field in place.
  */
 
 /* What output_speech hands the host: a count and the samples themselves.
@@ -31,10 +32,36 @@ typedef struct {
     int32_t b;
 } klatt_pair;
 
+/* Everything KlattSetConstParms is handed, 68 bytes copied wholesale into the
+   state. It arrives by value, seventeen words wide, which is why the original
+   sets it with a rep movsl rather than field by field. */
+typedef struct {
+    int32_t          unknown_00;
+    int32_t          sample_rate;      /* 8000 and 11025 are the only two the
+                                          original recognises by name */
+    int32_t          unknown_08;
+    int32_t          unknown_0c;
+    int16_t          unknown_10;
+    int16_t          unknown_12;
+    int32_t          unknown_14;
+    int32_t          unknown_18;
+    int32_t          unknown_1c;
+    int32_t          unknown_20;
+    int32_t          unknown_24;
+    int32_t          unknown_28;
+    int32_t          unknown_2c;
+    int32_t          unknown_30;
+    int32_t          unknown_34;
+    klatt_error_fn   error_fn;
+    int32_t          callback_mode;    /* 2 means deliver samples */
+    klatt_samples_fn samples_fn;
+} KlattConstParms;
+
 struct klatt_state {
     const char      *version;             /* 0x0000, doubles as the handle check */
     void            *user;                /* 0x0004 */
-    uint8_t          pad_0008[8];
+    const int16_t   *ex_table;            /* 0x0008, EX8 or EX11 */
+    const int16_t   *co_table;            /* 0x000c, CO8 or CO11 */
     int32_t          unknown_0010;        /* 0x0010 */
     int32_t          const_parms_set;     /* 0x0014, KlattOpen refuses until 1 */
     uint8_t          pad_0018[64];
@@ -43,12 +70,8 @@ struct klatt_state {
     uint8_t          pad_0060[4];
     filter_parms     filters[21];         /* 0x0064, ends at 0x0748 */
     uint8_t          pad_0748[24];
-    int32_t          out[201];            /* 0x0760, the sample buffer */
-    int32_t          period;              /* 0x0a84 */
-    uint8_t          pad_0a88[48];
-    klatt_error_fn   error_fn;            /* 0x0ab8 */
-    int32_t          callback_mode;       /* 0x0abc, 2 means deliver samples */
-    klatt_samples_fn samples_fn;          /* 0x0ac0 */
+    int32_t          out[200];            /* 0x0760, the sample buffer */
+    KlattConstParms  cp;                  /* 0x0a80 */
     uint8_t          pad_0ac4[8];
     int32_t          buf_a[200];          /* 0x0acc */
     int32_t         *ptr_a;               /* 0x0dec, points at buf_a */
@@ -60,7 +83,7 @@ struct klatt_state {
     int32_t          unknown_149c;        /* 0x149c */
     int32_t          unknown_14a0;        /* 0x14a0 */
     uint8_t          pad_14a4[8];
-    int32_t          sample_rate;         /* 0x14ac */
+    int32_t          unknown_14ac;        /* 0x14ac, divides the sample rate */
     int32_t          unknown_14b0;        /* 0x14b0 */
     int32_t          v_start;             /* 0x14b4 */
     uint8_t          pad_14b8[12];
@@ -78,19 +101,33 @@ struct klatt_state {
     int32_t          length;              /* 0x14f4, KlattLength returns this */
     int32_t          max;                 /* 0x14f8, KlattMax returns this */
     int32_t          noise_limit;         /* 0x14fc */
-    klatt_pair       pairs[100];          /* 0x1500, noise smoothing spans */
+    /* The smoothing spans noise() walks. The array cannot reach past 0x1818,
+       because KlattSetConstParms writes 0x181c as a scalar; how much shorter
+       than 99 it really is has not been established. */
+    klatt_pair       pairs[99];           /* 0x1500 */
+    int32_t          unknown_1818;        /* 0x1818 */
+    int32_t          unknown_181c;        /* 0x181c */
     uint8_t          pad_1820[4];
     int32_t          smooth_noise;        /* 0x1824 */
-    uint8_t          pad_1828[24];
+    uint8_t          pad_1828[8];
+    int32_t          unknown_1830;        /* 0x1830 */
+    int32_t          unknown_1834;        /* 0x1834 */
+    int32_t          unknown_1838;        /* 0x1838 */
+    int32_t          unknown_183c;        /* 0x183c */
     int32_t          smooth_span;         /* 0x1840 */
     uint8_t          pad_1844[8];
-    int16_t          noise_buf[204];      /* 0x184c */
+    /* Same reasoning as pairs: 0x19dc is written as a 32-bit scalar, so the
+       buffer stops there. */
+    int16_t          noise_buf[200];      /* 0x184c */
+    int32_t          unknown_19dc;        /* 0x19dc */
+    int32_t          unknown_19e0;        /* 0x19e0 */
     int32_t          unknown_19e4;        /* 0x19e4 */
     int32_t          unknown_19e8;        /* 0x19e8 */
     int32_t          callback_result;     /* 0x19ec */
-    uint8_t          pad_19f0[812];
+    uint8_t          pad_19f0[808];
+    int32_t          unknown_1d18;        /* 0x1d18 */
     int32_t          output_samples;      /* 0x1d1c */
-    uint8_t          pad_1d20[4];
+    int32_t          rate_code;           /* 0x1d20, 0 at 8k, 1 at 11k, else 2 */
 };
 
 uint32_t noise(klatt_state *k, uint32_t seed);
@@ -107,5 +144,6 @@ int32_t  KlattMax(void *handle);
 void     KlattSetOutputSamplesOption(void *handle, int32_t option);
 void     klattSetVolumeMultiplier(void *handle, int32_t volume);
 int      errorKlattIgnore(void);
+void     KlattSetConstParms(void *handle, KlattConstParms parms);
 
 #endif

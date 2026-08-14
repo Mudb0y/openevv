@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "klatt_fx.h"
+#include "klatt_tables.h"
 
 /* The original relies on >> sign-extending negative operands, which C leaves
    implementation-defined. Every compiler we target does this; fail the build
@@ -118,13 +119,6 @@ void fxmul1_vector(const int16_t *src, int16_t coef, int32_t *acc, int32_t n)
         acc[i] += fxmul_scaled(coef, (int32_t)src[i] << 4);
 }
 
-/* 2^(i/20) in Q15, copied out of clsyn.obj rather than recomputed: rounding
-   of the last place is part of the output we have to match. */
-static const int16_t fxl2[20] = {
-    16384, 16962, 17560, 18179, 18820, 19484, 20171, 20882, 21619, 22381,
-    23170, 23988, 24834, 25709, 26616, 27554, 28526, 29532, 30574, 31652
-};
-
 int32_t db2lin(int32_t db)
 {
     int32_t t, quot, rem;
@@ -141,7 +135,7 @@ int32_t db2lin(int32_t db)
     quot = t / 20;
     rem = t % 20;
 
-    return fxmul_scaled(fxl2[rem], 2 << quot);
+    return fxmul_scaled(klatt_fxl2[rem], 2 << quot);
 }
 
 const char KlattVersionString[] =

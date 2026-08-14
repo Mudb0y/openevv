@@ -514,6 +514,10 @@ static int state_differs(const klatt_state *a, const klatt_state *b)
     ca.version = cb.version = NULL;
     ca.ptr_a = cb.ptr_a = NULL;
     ca.ptr_b = cb.ptr_b = NULL;
+    /* Each side points at its own copy of the lookup tables; which table got
+       picked is checked by name in test_setconstparms. */
+    ca.ex_table = cb.ex_table = NULL;
+    ca.co_table = cb.co_table = NULL;
 
     return memcmp(&ca, &cb, sizeof(ca)) != 0;
 }
@@ -553,11 +557,11 @@ static void test_noise(void)
 
         /* Keep every index the smoothing walk produces inside noise_buf;
            the original does no bounds checking of its own. */
-        mine->noise_count = theirs->noise_count = (int32_t)(rng_next() % 205u);
+        mine->noise_count = theirs->noise_count = (int32_t)(rng_next() % 201u);
         mine->smooth_noise = theirs->smooth_noise = (int32_t)(rng_next() % 2u);
         span = (int32_t)(rng_next() % 17u);
         mine->smooth_span = theirs->smooth_span = span;
-        mine->noise_limit = theirs->noise_limit = (int32_t)(rng_next() % 205u);
+        mine->noise_limit = theirs->noise_limit = (int32_t)(rng_next() % 201u);
         for (j = 0; j < 100; j++) {
             mine->pairs[j].a = theirs->pairs[j].a = (int32_t)(rng_next() % 8u);
             mine->pairs[j].b = theirs->pairs[j].b = (int32_t)(rng_next() % 8u);
@@ -597,8 +601,8 @@ static void test_compute(void)
 
         /* A zero rate divides by zero in the original just as it would here. */
         rate = (int32_t)(rng_next() % 48000u) + 1;
-        mine->sample_rate = theirs->sample_rate = rate;
-        mine->period = theirs->period = (int32_t)(rng_next() % 2000u);
+        mine->unknown_14ac = theirs->unknown_14ac = rate;
+        mine->cp.sample_rate = theirs->cp.sample_rate = (int32_t)(rng_next() % 2000u);
         mine->v_start = theirs->v_start = (int32_t)(rng_next() % 4000u) - 2000;
         mine->voicing_size = theirs->voicing_size = (int32_t)(rng_next() % 2000u);
         mine->unknown_14b0 = theirs->unknown_14b0 = (int32_t)(rng_next() % 1000u);
@@ -650,9 +654,9 @@ static void test_output_speech(void)
         memcpy(theirs, mine, sizeof(klatt_state));
 
         mine->output_samples = theirs->output_samples = (int32_t)(rng_next() % 2u);
-        mine->callback_mode = theirs->callback_mode = (int32_t)(rng_next() % 3u);
+        mine->cp.callback_mode = theirs->cp.callback_mode = (int32_t)(rng_next() % 3u);
         mine->volume = theirs->volume = (int32_t)(rng_next() % 201u);
-        mine->samples_fn = theirs->samples_fn = sample_sink;
+        mine->cp.samples_fn = theirs->cp.samples_fn = sample_sink;
         mine->version = theirs->version = KlattVersionString;
 
         ibm_output_speech(theirs, n);
@@ -703,7 +707,7 @@ static void test_api(void)
             bad++;
         }
 
-        mine->error_fn = theirs->error_fn = error_sink;
+        mine->cp.error_fn = theirs->cp.error_fn = error_sink;
         mine->const_parms_set = theirs->const_parms_set =
             (int32_t)(rng_next() % 2u);
         mine->open_state = theirs->open_state =
@@ -765,6 +769,95 @@ static void test_api(void)
     report("klatt api", cases, bad, 0);
 }
 
+extern const int16_t ibm_EX8[], ibm_CO8[], ibm_EX11[], ibm_CO11[];
+extern const int16_t ibm_fxl2[], ibm_tilt8[], ibm_tilt11[];
+extern const int16_t ibm_flutter_sine[], ibm_tl_table[];
+
+extern void ibm_KlattSetConstParms(void *handle, KlattConstParms parms);
+
+static void test_tables(void)
+{
+    struct { const char *name; const int16_t *ours; const int16_t *ibm; size_t n; }
+    t[] = {
+        {"fxl2",         klatt_fxl2,         ibm_fxl2,         sizeof(klatt_fxl2)},
+        {"tl_table",     klatt_tl_table,     ibm_tl_table,     sizeof(klatt_tl_table)},
+        {"tilt8",        klatt_tilt8,        ibm_tilt8,        sizeof(klatt_tilt8)},
+        {"tilt11",       klatt_tilt11,       ibm_tilt11,       sizeof(klatt_tilt11)},
+        {"flutter_sine", klatt_flutter_sine, ibm_flutter_sine, sizeof(klatt_flutter_sine)},
+        {"EX8",          klatt_EX8,          ibm_EX8,          sizeof(klatt_EX8)},
+        {"CO8",          klatt_CO8,          ibm_CO8,          sizeof(klatt_CO8)},
+        {"EX11",         klatt_EX11,         ibm_EX11,         sizeof(klatt_EX11)},
+        {"CO11",         klatt_CO11,         ibm_CO11,         sizeof(klatt_CO11)}
+    };
+    int cases = 0, bad = 0;
+    int i;
+
+    for (i = 0; i < (int)(sizeof(t) / sizeof(t[0])); i++) {
+        cases++;
+        if (memcmp(t[i].ours, t[i].ibm, t[i].n) != 0) {
+            printf("  table %s differs from IBM's copy\n", t[i].name);
+            bad++;
+        }
+    }
+
+    report("tables", cases, bad, 0);
+}
+
+/* Which of the four tables a pointer refers to, so the two sides' choices can
+   be compared even though they point at different copies. */
+static int table_id(const void *p, int ibm)
+{
+    if (p == NULL)
+        return 0;
+    if (ibm)
+        return p == ibm_EX8 ? 1 : p == ibm_CO8 ? 2
+             : p == ibm_EX11 ? 3 : p == ibm_CO11 ? 4 : -1;
+    return p == klatt_EX8 ? 1 : p == klatt_CO8 ? 2
+         : p == klatt_EX11 ? 3 : p == klatt_CO11 ? 4 : -1;
+}
+
+static void test_setconstparms(void)
+{
+    int cases = 0, bad = 0;
+    int t;
+    static const int32_t rates[] = {8000, 11025, 22050, 0, 16000, -1};
+
+    rng_seed(0xc0ffee11u);
+    for (t = 0; t < 4000; t++) {
+        klatt_state *mine = ibm_klatt_new((void *)0x1234);
+        klatt_state *theirs = klatt_new((void *)0x1234);
+        KlattConstParms parms;
+        unsigned char *pp = (unsigned char *)&parms;
+        size_t i;
+
+        for (i = 0; i < sizeof(parms); i++)
+            pp[i] = (unsigned char)rng_next();
+        parms.sample_rate = rates[rng_next() % 6u];
+        parms.error_fn = error_sink;
+        parms.samples_fn = sample_sink;
+
+        mine->open_state = theirs->open_state = (int32_t)(rng_next() % 3u);
+
+        ibm_KlattSetConstParms(mine, parms);
+        KlattSetConstParms(theirs, parms);
+
+        cases++;
+        if (state_differs(mine, theirs) ||
+            table_id(mine->ex_table, 1) != table_id(theirs->ex_table, 0) ||
+            table_id(mine->co_table, 1) != table_id(theirs->co_table, 0)) {
+            if (bad < 5)
+                printf("  KlattSetConstParms rate=%ld differs\n",
+                       (long)parms.sample_rate);
+            bad++;
+        }
+
+        ibm_klatt_delete(mine);
+        klatt_delete(theirs);
+    }
+
+    report("SetConstParms", cases, bad, 0);
+}
+
 int main(void)
 {
     printf("diff: comparing our transcription against IBM clsyn.obj\n");
@@ -784,6 +877,8 @@ int main(void)
     test_compute();
     test_output_speech();
     test_api();
+    test_tables();
+    test_setconstparms();
 
     printf("diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;

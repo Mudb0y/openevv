@@ -7,7 +7,7 @@ all: $(BUILD)/diff.exe
 
 $(BUILD)/diff.exe: diff.c ../src/klatt_fx.c ../src/klatt_state.c ../src/klatt_fx.h ../src/klatt_state.h $(IBM)
 	@mkdir -p $(BUILD)
-	$(CC) $(CFLAGS) diff.c ../src/klatt_fx.c ../src/klatt_state.c $(IBM) $(MINGW_LDFLAGS) -o $@
+	$(CC) $(CFLAGS) diff.c ../src/klatt_fx.c ../src/klatt_state.c ../src/klatt_tables.c $(IBM) $(MINGW_LDFLAGS) -o $@
 
 $(IBM):
 	@echo "run tools/extract.sh first" >&2; exit 1
