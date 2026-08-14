@@ -103,12 +103,24 @@ typedef struct {
 #define DK_SHORT2 (-4)
 #define DK_SYNC   (-6)
 
-/* The language module's statement table: 64-byte entries carrying, among
-   other things, how long a value of that type is. The runtime is parameterised
-   by it rather than owning it. */
+/* The language module's statement table: 64-byte entries, one per statement
+   type. Entry+0x04 points at a descriptor and entry+0x24 is a length. The
+   runtime is parameterised by this table rather than owning it, and English
+   ships about ten entries. */
 extern const uint8_t vstmtbl[];
 #define VSTMTBL_ENTRY 0x40
+#define VSTMTBL_DESC  0x04
 #define VSTMTBL_LEN   0x24
+
+/* A node on the spine: the linked structure the rules walk over. Its links
+   are tagged pointers, with flags in the low two bits that a reader has to
+   mask off. */
+typedef struct {
+    int32_t flags0;    /* +0x00, bit 1 marks a sync */
+    int32_t link;      /* +0x04, bit 0 one statement, bit 1 all nonsequential */
+    int32_t flags8;    /* +0x08, bit 1 nonsequential */
+    int32_t syncs[8];  /* +0x0c, one per field */
+} delta_node;
 
 /* A record pushed on the backtracking stack. */
 typedef struct {
@@ -146,5 +158,17 @@ void  freeDeltaStackTo(delta_state *d, uint8_t *to);
 void  clearDeltaStackBack(delta_state *d);
 void  starttest(delta_state *d, int16_t tag);
 void  vcompare(delta_state *d, const delta_operand *a, const delta_operand *b);
+
+int16_t STMTYP(int8_t kind);
+int  ONESTM(const delta_node *t);
+int  ALLNSQ(const delta_node *t);
+int  NONSEQ(const delta_node *t);
+void SETONESTM(delta_node *t);
+void SETALLNSQ(delta_node *t);
+void SETNONSEQ(delta_node *t);
+void CLRONESTM(delta_node *t);
+void CLRALLNSQ(delta_node *t);
+void bsclear(delta_state *d);
+void *bspop_boa(delta_state *d);
 
 #endif

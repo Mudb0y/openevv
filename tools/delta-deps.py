@@ -53,7 +53,50 @@ def scan(obj):
     return functions
 
 
+def closure(everything, roots):
+    """Everything the roots reach, in an order that puts callees first."""
+    order, seen, stack = [], set(), []
+
+    def visit(fn):
+        if fn in seen:
+            return
+        seen.add(fn)
+        stack.append(fn)
+        if fn in everything:
+            for c in sorted(everything[fn][1]):
+                if c not in LIBC:
+                    visit(c)
+        stack.pop()
+        order.append(fn)
+
+    for r in roots:
+        visit(r)
+    return order
+
+
 def main():
+    if sys.argv[1:2] == ['--closure']:
+        roots = sys.argv[2:]
+        everything = {}
+        for o in OBJECTS:
+            path = os.path.join(ENUS, o + '.obj')
+            if os.path.exists(path):
+                for fn, calls in scan(path).items():
+                    everything.setdefault(fn, (o, calls))
+        order = closure(everything, roots)
+        missing = [f for f in order if f not in everything]
+        print('reachable: %d functions, %d of them outside the runtime'
+              % (len(order), len(missing)))
+        print()
+        for fn in order:
+            if fn in everything:
+                obj, calls = everything[fn]
+                deps = sorted(c for c in calls if c not in LIBC and c != fn)
+                print('  %-24s %-11s %s' % (fn, obj, ' '.join(deps)))
+            else:
+                print('  %-24s %-11s (not in the runtime objects)' % (fn, ''))
+        return 0
+
     wanted = set(sys.argv[1:])
     everything = {}
 

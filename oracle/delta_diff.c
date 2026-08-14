@@ -37,6 +37,17 @@ extern void ibm_clearDeltaStackBack(delta_state *);
 extern void ibm_starttest(delta_state *, int16_t);
 extern void ibm_vcompare(delta_state *, const delta_operand *,
                          const delta_operand *);
+extern int16_t ibm_STMTYP(int8_t);
+extern int  ibm_ONESTM(const delta_node *);
+extern int  ibm_ALLNSQ(const delta_node *);
+extern int  ibm_NONSEQ(const delta_node *);
+extern void ibm_SETONESTM(delta_node *);
+extern void ibm_SETALLNSQ(delta_node *);
+extern void ibm_SETNONSEQ(delta_node *);
+extern void ibm_CLRONESTM(delta_node *);
+extern void ibm_CLRALLNSQ(delta_node *);
+extern void ibm_bsclear(delta_state *);
+extern void *ibm_bspop_boa(delta_state *);
 
 #define RECORDS   0x200   /* room for the stack to push into */
 #define FENCE_MAP 0x100   /* the reverse fence table is indexed by a byte */
@@ -346,7 +357,7 @@ BEGIN(vcompare)
        has something real to read, and the type codes cover every arm
        including the pair that dispatch on the right operand as well. */
     delta_operand a, b;
-    static const int16_t kinds[] = {-1, -2, -3, -4, -5, -6, -7, 0, 1, 2};
+    static const int16_t kinds[] = {-1, -2, -3, -4, -6, 0, 1, 2, 3, 4};
 
     a.ptr = m->records + 0x80;
     b.ptr = m->records + 0x90;
@@ -358,6 +369,54 @@ BEGIN(vcompare)
     b.ptr = o->records + 0x90;
     vcompare(&o->state, &a, &b);
 END(vcompare)
+
+BEGIN(bsclear)
+    m->records[0x20] = o->records[0x20] = (uint8_t)(rng_next() % 2u ? 8 : 3);
+    ibm_bsclear(&m->state); bsclear(&o->state);
+END(bsclear)
+
+BEGIN(bspop_boa)
+    ptrdiff_t a, b;
+    m->records[RECORDS / 2] = o->records[RECORDS / 2] = (uint8_t)(rng_next() % 8u);
+    a = (char *)ibm_bspop_boa(&m->state) - (char *)m;
+    b = (char *)bspop_boa(&o->state) - (char *)o;
+    if (a != b) bad++;
+END(bspop_boa)
+
+static void test_nodes(void)
+{
+    int cases = 0, bad = 0, t;
+
+    rng_seed(0x0de50eedu);
+    for (t = 0; t < 20000; t++) {
+        delta_node a, b;
+        /* The English table has about ten entries; past that is off the end. */
+        int8_t kind = (int8_t)(rng_next() % 10u);
+
+        fill(&a, sizeof(a));
+        b = a;
+
+        cases += 10;
+        if (ibm_STMTYP(kind) != STMTYP(kind)) { if (bad < 3) printf("  STMTYP differs\n"); bad++; }
+        if (ibm_ONESTM(&a) != ONESTM(&a)) { if (bad < 3) printf("  ONESTM differs\n"); bad++; }
+        if (ibm_ALLNSQ(&a) != ALLNSQ(&a)) { if (bad < 3) printf("  ALLNSQ differs\n"); bad++; }
+        if (ibm_NONSEQ(&a) != NONSEQ(&a)) { if (bad < 3) printf("  NONSEQ differs\n"); bad++; }
+
+        ibm_SETONESTM(&a); SETONESTM(&b);
+        if (memcmp(&a, &b, sizeof(a))) { if (bad < 3) printf("  SETONESTM differs\n"); bad++; }
+        ibm_SETALLNSQ(&a); SETALLNSQ(&b);
+        if (memcmp(&a, &b, sizeof(a))) { if (bad < 3) printf("  SETALLNSQ differs\n"); bad++; }
+        ibm_SETNONSEQ(&a); SETNONSEQ(&b);
+        if (memcmp(&a, &b, sizeof(a))) { if (bad < 3) printf("  SETNONSEQ differs\n"); bad++; }
+        ibm_CLRONESTM(&a); CLRONESTM(&b);
+        if (memcmp(&a, &b, sizeof(a))) { if (bad < 3) printf("  CLRONESTM differs\n"); bad++; }
+        ibm_CLRALLNSQ(&a); CLRALLNSQ(&b);
+        if (memcmp(&a, &b, sizeof(a))) { if (bad < 3) printf("  CLRALLNSQ differs\n"); bad++; }
+        if (memcmp(&a, &b, sizeof(a))) { bad++; }
+    }
+
+    report("spine accessors", cases, bad);
+}
 
 int main(void)
 {
@@ -380,6 +439,9 @@ int main(void)
     test_clearDeltaStackBack();
     test_starttest();
     test_vcompare();
+    test_bsclear();
+    test_bspop_boa();
+    test_nodes();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

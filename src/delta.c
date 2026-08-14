@@ -291,3 +291,38 @@ void vcompare(delta_state *d, const delta_operand *a, const delta_operand *b)
         break;
     }
 }
+
+/* Accessors the compiler emitted as calls rather than inlining. The spine's
+   flags live in the spare bits of its own link words, so reading one is a
+   mask and writing one is a read, modify and write back. */
+int16_t STMTYP(int8_t kind)
+{
+    const uint8_t *desc = *(const uint8_t *const *)
+        (vstmtbl + (int32_t)kind * VSTMTBL_ENTRY + VSTMTBL_DESC);
+
+    return *(const int16_t *)(desc + 0x12);
+}
+
+int ONESTM(const delta_node *t)   { return (t->link & 1) != 0; }
+int ALLNSQ(const delta_node *t)   { return (t->link & 2) != 0; }
+int NONSEQ(const delta_node *t)   { return (t->flags8 & 2) != 0; }
+
+void SETONESTM(delta_node *t)     { t->link |= 1; }
+void SETALLNSQ(delta_node *t)     { t->link |= 2; }
+void SETNONSEQ(delta_node *t)     { t->flags8 |= 2; }
+void CLRONESTM(delta_node *t)     { t->link &= ~1; }
+void CLRALLNSQ(delta_node *t)     { t->link &= ~2; }
+
+void bsclear(delta_state *d)
+{
+    clearDeltaStackBack(d);
+}
+
+/* Take the alternative marker off the stack, handing back where it was. */
+void *bspop_boa(delta_state *d)
+{
+    void *slot = d->stack->top;
+
+    popDeltaStackTop(d);
+    return slot;
+}
