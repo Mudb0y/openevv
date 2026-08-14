@@ -18,7 +18,10 @@ int      verifyKlattHandle(void *handle);
    these in an array starting at offset 0x64. Fields still called unknown are
    ones only pole_filter and KlattSynth have touched so far. */
 typedef struct {
-    int16_t unknown_00[6];   /* 0x00 */
+    int16_t sa;              /* 0x00, steady state, weight on the input */
+    int16_t sb;              /* 0x02, weight on y[n-1] */
+    int16_t sc;              /* 0x04, weight on y[n-2] */
+    int16_t unknown_06[3];   /* 0x06 */
     int16_t a[3];            /* 0x0c, coefficients ramped over three samples */
     int16_t b[3];            /* 0x12 */
     int16_t c[3];            /* 0x18 */
@@ -39,6 +42,10 @@ typedef struct {
 } zero_ABCs;
 
 void zero_filter(filter_parms *fp, const zero_ABCs *z, int32_t *buf, int32_t n);
+
+/* buf must have two writable samples before it: the resonator seeds its own
+   history there and reads them back as y[n-1] and y[n-2]. */
+void pole_filter(filter_parms *fp, int32_t *buf, int32_t n);
 
 extern const char KlattVersionString[];
 

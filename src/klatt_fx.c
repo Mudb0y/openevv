@@ -162,6 +162,51 @@ int verifyKlattHandle(void *handle)
 
 typedef char filter_parms_is_84_bytes[sizeof(filter_parms) == 84 ? 1 : -1];
 
+/* A two-pole resonator. It keeps its history in the sample buffer itself,
+   two slots ahead of the pointer it was handed, rather than in locals.
+   The three products are weighted 1, 2 and 4 on the way out, so the three
+   coefficients are held at three different fixed-point scales. */
+void pole_filter(filter_parms *fp, int32_t *buf, int32_t n)
+{
+    int32_t i, count, k, t1, t2, t3;
+
+    if (fp->enabled == 0)
+        return;
+
+    buf[-2] = fp->d2;
+    buf[-1] = fp->d1;
+    i = 0;
+
+    if (fp->ramp != 0) {
+        count = fp->ramp < n ? fp->ramp : n;
+        k = 3 - fp->ramp;
+
+        for (; i < count; i++) {
+            t1 = fxmul_scaled(fp->c[k], buf[i - 2]);
+            t2 = fxmul_scaled(fp->b[k], buf[i - 1]);
+            t3 = fxmul_scaled(fp->a[k], buf[i]);
+            buf[i] = t1 + t2 * 2 + t3 * 4;
+            k++;
+        }
+        fp->ramp -= count;
+    }
+
+    for (; i < n; i++) {
+        t1 = fxmul_scaled(fp->sc, buf[i - 2]);
+        t2 = fxmul_scaled(fp->sb, buf[i - 1]);
+        t3 = fxmul_scaled(fp->sa, buf[i]);
+        buf[i] = t1 + t2 * 2 + t3 * 4;
+    }
+
+    if (n > 1) {
+        fp->d2 = buf[i - 2];
+        fp->d1 = buf[i - 1];
+    } else {
+        fp->d2 = fp->d1;
+        fp->d1 = buf[i - 1];
+    }
+}
+
 void zero_filter(filter_parms *fp, const zero_ABCs *z, int32_t *buf, int32_t n)
 {
     int32_t p1, p2, x, i, count, k;
