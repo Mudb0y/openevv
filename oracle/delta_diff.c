@@ -35,6 +35,8 @@ extern int32_t ibm_absoluteSyncNumPtr(int32_t);
 extern void ibm_freeDeltaStackTo(delta_state *, uint8_t *);
 extern void ibm_clearDeltaStackBack(delta_state *);
 extern void ibm_starttest(delta_state *, int16_t);
+extern void ibm_vcompare(delta_state *, const delta_operand *,
+                         const delta_operand *);
 
 #define RECORDS   0x200   /* room for the stack to push into */
 #define FENCE_MAP 0x100   /* the reverse fence table is indexed by a byte */
@@ -339,6 +341,24 @@ static void test_syncnum(void)
     report("absoluteSyncNumPtr", cases, bad);
 }
 
+BEGIN(vcompare)
+    /* Both operands point at eight bytes inside the world so the comparison
+       has something real to read, and the type codes cover every arm
+       including the pair that dispatch on the right operand as well. */
+    delta_operand a, b;
+    static const int16_t kinds[] = {-1, -2, -3, -4, -5, -6, -7, 0, 1, 2};
+
+    a.ptr = m->records + 0x80;
+    b.ptr = m->records + 0x90;
+    a.kind = kinds[rng_next() % 10u];
+    b.kind = kinds[rng_next() % 10u];
+    a.pad_06 = b.pad_06 = 0;
+    ibm_vcompare(&m->state, &a, &b);
+    a.ptr = o->records + 0x80;
+    b.ptr = o->records + 0x90;
+    vcompare(&o->state, &a, &b);
+END(vcompare)
+
 int main(void)
 {
     printf("delta diff: comparing our primitives against IBM's\n");
@@ -359,6 +379,7 @@ int main(void)
     test_freeDeltaStackTo();
     test_clearDeltaStackBack();
     test_starttest();
+    test_vcompare();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

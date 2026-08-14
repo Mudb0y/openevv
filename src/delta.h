@@ -88,6 +88,28 @@ typedef struct {
     int32_t value;
 } delta_token;
 
+/* What a comparison is handed: where the value is and what type it is. The
+   type codes are negative; anything else indexes the language's statement
+   table for a length and the two values are compared as bytes. */
+typedef struct {
+    void   *ptr;      /* +0x00 */
+    int16_t kind;     /* +0x04 */
+    int16_t pad_06;
+} delta_operand;
+
+#define DK_UBYTE  (-1)
+#define DK_SHORT  (-2)
+#define DK_LONG   (-3)
+#define DK_SHORT2 (-4)
+#define DK_SYNC   (-6)
+
+/* The language module's statement table: 64-byte entries carrying, among
+   other things, how long a value of that type is. The runtime is parameterised
+   by it rather than owning it. */
+extern const uint8_t vstmtbl[];
+#define VSTMTBL_ENTRY 0x40
+#define VSTMTBL_LEN   0x24
+
 /* A record pushed on the backtracking stack. */
 typedef struct {
     int8_t  kind;
@@ -123,5 +145,6 @@ int32_t absoluteSyncNumPtr(int32_t p);
 void  freeDeltaStackTo(delta_state *d, uint8_t *to);
 void  clearDeltaStackBack(delta_state *d);
 void  starttest(delta_state *d, int16_t tag);
+void  vcompare(delta_state *d, const delta_operand *a, const delta_operand *b);
 
 #endif

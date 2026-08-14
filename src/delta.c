@@ -234,3 +234,60 @@ void starttest(delta_state *d, int16_t tag)
 
     d->vars->testing = 1;
 }
+
+static void set3(delta_state *d, int32_t x, int32_t y)
+{
+    d->vars->compared_equal = (int8_t)(x < y ? -1 : (x == y ? 0 : 1));
+}
+
+/* Three-way comparison, dispatched on the type of the left operand. Only the
+   two integer widths look at the right operand's type as well; the rest
+   assume it matches. */
+void vcompare(delta_state *d, const delta_operand *a, const delta_operand *b)
+{
+    switch (a->kind) {
+    case DK_UBYTE:
+        set3(d, *(uint8_t *)a->ptr, *(uint8_t *)b->ptr);
+        break;
+
+    case DK_SHORT:
+        set3(d, *(int16_t *)a->ptr, *(int16_t *)b->ptr);
+        break;
+
+    case DK_LONG:
+        if (b->kind == DK_LONG)
+            set3(d, *(int32_t *)a->ptr, *(int32_t *)b->ptr);
+        else if (b->kind == DK_SHORT2)
+            set3(d, *(int32_t *)a->ptr, *(int16_t *)b->ptr);
+        break;
+
+    case DK_SHORT2:
+        if (b->kind == DK_LONG)
+            set3(d, *(int16_t *)a->ptr, *(int32_t *)b->ptr);
+        else if (b->kind == DK_SHORT2)
+            set3(d, *(int16_t *)a->ptr, *(int16_t *)b->ptr);
+        break;
+
+    case DK_SYNC:
+        /* A sync number has no ordering, only same or different. */
+        d->vars->compared_equal =
+            absoluteSyncNumPtr(*(int32_t *)a->ptr)
+            == absoluteSyncNumPtr(*(int32_t *)b->ptr) ? 0 : 1;
+        break;
+
+    default:
+        if (b->kind != a->kind) {
+            d->vars->compared_equal = 1;
+        } else {
+            const int32_t *len = (const int32_t *)
+                (vstmtbl + (int32_t)a->kind * VSTMTBL_ENTRY + VSTMTBL_LEN);
+
+            /* The original keeps only the low byte of what memcmp returns,
+               so the exact value matters and not just its sign. That was
+               already true of IBM's builds; using memcmp keeps it so. */
+            d->vars->compared_equal =
+                (int8_t)memcmp(a->ptr, b->ptr, (size_t)*len);
+        }
+        break;
+    }
+}
