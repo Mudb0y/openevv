@@ -34,7 +34,9 @@ AT(length, 0x14f4);
 AT(max, 0x14f8);
 AT(noise_limit, 0x14fc);
 AT(pairs, 0x1500);
-AT(smooth_noise, 0x1824);
+AT(av, 0x1824);
+AT(ah, 0x1828);
+AT(af, 0x182c);
 AT(smooth_span, 0x1840);
 AT(noise_buf, 0x184c);
 AT(unknown_19dc, 0x19dc);
@@ -57,7 +59,7 @@ uint32_t noise(klatt_state *k, uint32_t seed)
 
     seed = klatt_rand(k->noise_buf, k->noise_count, seed);
 
-    if (k->smooth_noise == 0)
+    if (k->av == 0)
         return seed;
 
     i = 0;
@@ -266,7 +268,7 @@ void KlattSetConstParms(void *handle, KlattConstParms parms)
     }
 
     k->v_start = 0;
-    k->unknown_181c = k->cp.unknown_0c;
+    k->unknown_181c = k->cp.n_formants;
     k->unknown_1d18 = 0;
     k->unknown_1830 = k->cp.unknown_20;
     k->unknown_1834 = k->cp.unknown_2c;

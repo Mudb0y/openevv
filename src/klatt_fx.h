@@ -28,7 +28,9 @@ typedef struct {
     int16_t sa;              /* 0x00, steady state, weight on the input */
     int16_t sb;              /* 0x02, weight on y[n-1] */
     int16_t sc;              /* 0x04, weight on y[n-2] */
-    int16_t unknown_06[3];   /* 0x06 */
+    int8_t  kind;            /* 0x06, KlattSynth sets 2 for a cascade pole */
+    int8_t  fresh;           /* 0x07, set whenever the coefficients change */
+    int32_t unknown_08;      /* 0x08 */
     int16_t a[3];            /* 0x0c, coefficients ramped over three samples */
     int16_t b[3];            /* 0x12 */
     int16_t c[3];            /* 0x18 */

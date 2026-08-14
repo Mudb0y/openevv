@@ -558,7 +558,7 @@ static void test_noise(void)
         /* Keep every index the smoothing walk produces inside noise_buf;
            the original does no bounds checking of its own. */
         mine->noise_count = theirs->noise_count = (int32_t)(rng_next() % 201u);
-        mine->smooth_noise = theirs->smooth_noise = (int32_t)(rng_next() % 2u);
+        mine->av = theirs->av = (int32_t)(rng_next() % 2u);
         span = (int32_t)(rng_next() % 17u);
         mine->smooth_span = theirs->smooth_span = span;
         mine->noise_limit = theirs->noise_limit = (int32_t)(rng_next() % 201u);

@@ -40,7 +40,7 @@ typedef struct {
     int32_t          sample_rate;      /* 8000 and 11025 are the only two the
                                           original recognises by name */
     int32_t          unknown_08;
-    int32_t          unknown_0c;
+    int32_t          n_formants;       /* KlattSynth loops formants 5..n+4 */
     int16_t          unknown_10;
     int16_t          unknown_12;
     int32_t          unknown_14;
@@ -108,8 +108,12 @@ struct klatt_state {
     int32_t          unknown_1818;        /* 0x1818 */
     int32_t          unknown_181c;        /* 0x181c */
     uint8_t          pad_1820[4];
-    int32_t          smooth_noise;        /* 0x1824 */
-    uint8_t          pad_1828[8];
+    /* KlattSynth copies three amplitudes straight out of the parameter frame
+       into these. noise() gates its smoothing on av, so the noise follows the
+       pitch periods only while there is voicing to follow. */
+    int32_t          av;                  /* 0x1824, amplitude of voicing */
+    int32_t          ah;                  /* 0x1828, aspiration */
+    int32_t          af;                  /* 0x182c, frication */
     int32_t          unknown_1830;        /* 0x1830 */
     int32_t          unknown_1834;        /* 0x1834 */
     int32_t          unknown_1838;        /* 0x1838 */
