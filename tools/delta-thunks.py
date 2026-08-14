@@ -86,7 +86,8 @@ def shape(ops):
 
 
 def main():
-    obj = sys.argv[1] if len(sys.argv) > 1 else \
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    obj = args[0] if args else \
         os.path.join(ROOT, "analysis", "enus", "glob.obj")
 
     print("delta-thunks: reading %s" % os.path.basename(obj))
@@ -108,8 +109,9 @@ def main():
     print("distinct call sequences (candidate opcodes): %d" % len(shapes))
     print("distinct runtime primitives used: %d" % len(prims))
     print()
-    print("=== the twenty most common shapes ===")
-    for s, n in shapes.most_common(20):
+    print("=== call sequences, most used first ===")
+    limit = None if "--all" in sys.argv else 20
+    for s, n in shapes.most_common(limit):
         print("  %5d  %s" % (n, s))
     print()
     print("=== how the shapes are distributed ===")
