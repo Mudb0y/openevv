@@ -19,6 +19,8 @@ extern void     ibm_fxmul1_vector(int16_t *src, int16_t coef, int32_t *acc, int3
 extern int32_t  ibm_db2lin(int32_t db);
 extern int      ibm_verifyKlattHandle(void *handle);
 extern const char ibm_KlattVersion[];
+extern void     ibm_zero_filter(filter_parms *fp, const zero_ABCs *z,
+                                int32_t *buf, int32_t n);
 
 #define MAXLEN 64
 
@@ -361,6 +363,51 @@ static void test_verify_handle(void)
     report("verifyKlattHandle", cases, bad, 0);
 }
 
+static void test_zero_filter(void)
+{
+    int cases = 0, bad = 0;
+    int k, i;
+
+    rng_seed(0xa5a5f00du);
+    for (k = 0; k < 40000; k++) {
+        filter_parms mine, theirs;
+        int32_t bufa[MAXLEN], bufb[MAXLEN];
+        zero_ABCs z;
+        int32_t n = (int32_t)(rng_next() % (MAXLEN + 1));
+        unsigned char *pm = (unsigned char *)&mine;
+        unsigned char *pt = (unsigned char *)&theirs;
+
+        for (i = 0; i < (int)sizeof(filter_parms); i++)
+            pm[i] = pt[i] = (unsigned char)rng_next();
+
+        /* A ramp longer than three samples indexes off the front of the
+           coefficient tables in the original, so the engine never sets one. */
+        mine.ramp = theirs.ramp = (int32_t)(rng_next() % 4u);
+        mine.enabled = theirs.enabled = (int32_t)(rng_next() % 2u);
+
+        z.a = (int16_t)rng_next();
+        z.b = (int16_t)rng_next();
+        z.c = (int16_t)rng_next();
+
+        for (i = 0; i < MAXLEN; i++)
+            bufa[i] = bufb[i] = (int32_t)rng_next();
+
+        ibm_zero_filter(&theirs, &z, bufb, n);
+        zero_filter(&mine, &z, bufa, n);
+
+        cases++;
+        if (memcmp(bufa, bufb, sizeof(bufa)) != 0 ||
+            memcmp(&mine, &theirs, sizeof(mine)) != 0) {
+            if (bad < 5)
+                printf("  zero_filter n=%ld ramp=%ld enabled=%ld differs\n",
+                       (long)n, (long)theirs.ramp, (long)theirs.enabled);
+            bad++;
+        }
+    }
+
+    report("zero_filter", cases, bad, 0);
+}
+
 int main(void)
 {
     printf("diff: comparing our transcription against IBM clsyn.obj\n");
@@ -373,6 +420,7 @@ int main(void)
     test_fxmul1_vector();
     test_db2lin();
     test_verify_handle();
+    test_zero_filter();
 
     printf("diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;

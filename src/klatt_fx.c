@@ -159,3 +159,55 @@ int verifyKlattHandle(void *handle)
 {
     return strcmp(*(char **)handle, KlattVersionString) == 0;
 }
+
+typedef char filter_parms_is_84_bytes[sizeof(filter_parms) == 84 ? 1 : -1];
+
+void zero_filter(filter_parms *fp, const zero_ABCs *z, int32_t *buf, int32_t n)
+{
+    int32_t p1, p2, x, i, count, k;
+
+    if (fp->enabled == 0)
+        return;
+
+    p2 = fp->d2;
+    p1 = fp->d1;
+    i = 0;
+
+    /* While the ramp is live the coefficients come from the three-entry
+       tables, one entry per sample, so a parameter change slides in instead
+       of stepping. ramp above 3 would index off the front of them. */
+    if (fp->ramp != 0) {
+        count = fp->ramp < n ? fp->ramp : n;
+        k = 3 - fp->ramp;
+
+        for (; i < count; i++) {
+            x = buf[i];
+            buf[i] = (mul32(fp->a[k], x) >> 4)
+                   + (mul32(fp->b[k], p1) >> 4)
+                   + (mul32(fp->c[k], p2) >> 4);
+            k++;
+            p2 = p1;
+            p1 = x;
+        }
+        fp->ramp -= count;
+    }
+
+    for (; i < n; i++) {
+        x = buf[i];
+        buf[i] = (mul32(z->a, x) >> 4)
+               + (mul32(z->b, p1) >> 4)
+               + (mul32(z->c, p2) >> 4);
+        p2 = p1;
+        p1 = x;
+    }
+
+    /* With n of zero the original saves the untouched d1 into d2 rather than
+       the real d2, so a zero-length call is not a no-op. */
+    if (n > 1) {
+        fp->d2 = p2;
+        fp->d1 = p1;
+    } else {
+        fp->d2 = fp->d1;
+        fp->d1 = p1;
+    }
+}
