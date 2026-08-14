@@ -44,6 +44,13 @@ llvm-objdump --syms clsyn.obj \
            print n " _ibm_" s
          }' | sort -u > rename.txt
 
+# The whole English module, for the Delta work. Every object, because the
+# generated rules, the compiler's helper file and the lookup sets are spread
+# across all of them.
+mkdir -p "$ROOT/analysis/enus"
+(cd "$ROOT/analysis/enus" && llvm-ar x "$LIBDIR/ecienus.lib")
+echo "extract: $(ls "$ROOT/analysis/enus"/*.obj | wc -l) objects from ecienus.lib"
+
 # llvm-objcopy refuses symbol surgery on COFF, so the binutils one does it.
 # .drectve carries MSVC /DEFAULTLIB directives that GNU ld cannot parse.
 OBJCOPY=i686-w64-mingw32-objcopy
