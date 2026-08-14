@@ -59,13 +59,22 @@ def disassemble(obj):
             current["insns"].append(("insn", m.group(1), m.group(2).strip()))
             continue
 
-    # Sections are zero padded to alignment, and a run of zero bytes
-    # disassembles as "addb %al, (%eax)". Drop that tail.
+    # MSVC puts a switch's jump table after the function body, and the
+    # disassembler decodes those addresses as instructions. Everything past
+    # the last return is data, so cut there and count it separately.
     for fn in functions:
-        while fn["insns"] and fn["insns"][-1][0] == "insn" \
-                and fn["insns"][-1][1] == "addb" \
-                and fn["insns"][-1][2] == "%al, (%eax)":
-            fn["insns"].pop()
+        last = -1
+        for i, (kind, mnem, _ops) in enumerate(fn["insns"]):
+            if kind == "insn" and mnem in ("retl", "ret"):
+                last = i
+        fn["data"] = 0
+        if last >= 0:
+            fn["data"] = sum(1 for k, _m, _o in fn["insns"][last + 1:]
+                             if k == "insn")
+            fn["insns"] = fn["insns"][:last + 1]
+        else:
+            fn["data"] = sum(1 for k, _m, _o in fn["insns"] if k == "insn")
+            fn["insns"] = []
 
     return [f for f in functions if f["name"]]
 
@@ -108,6 +117,17 @@ SHAPES = [
     ("switch",    r"^jmpl?\s+\*"),
     # Zero padding and jump table entries both disassemble as this.
     ("pad",       r"^addb\s+%al, \(%eax\)$"),
+    # Everything else the rules do inline: scalar moves and arithmetic on
+    # locals, on the state through a pointer, and the odd division. A lifter
+    # has to translate these rather than re-emit a call, so they are counted
+    # apart from the threaded part.
+    ("inline",    r"^(mov[blwq]?|movz[bw]l|movs[bw]l)\s"),
+    ("inline",    r"^(add|sub|and|or|xor|cmp|test|inc|dec|neg|not|adc|sbb)[blw]?\s"),
+    ("inline",    r"^(imul|mul|idiv|div|sar|shl|shr|rol|ror)[blwq]?\s"),
+    ("inline",    r"^(cltd|cwtl|cbtw|nop|leal)\b"),
+    ("inline",    r"^(set|cmov)[a-z]+\s"),
+    ("inline",    r"^(pushl|popl)\s"),
+    ("inline",    r"^(rep|repne|scas|stos|movs|cmps)[a-z]*\b"),
 ]
 
 
@@ -126,42 +146,52 @@ def main():
         print("usage: lift-delta.py <object> [<object> ...]", file=sys.stderr)
         return 2
 
-    total = 0
+    code = 0        # instructions in the function body
+    data = 0        # words after the body: jump tables and alignment padding
     covered = 0
-    padding = 0
     unknown = collections.Counter()
     prims = collections.Counter()
+    mix = collections.Counter()
     nfuncs = 0
 
     for obj in sys.argv[1:]:
         print("lift-delta: reading %s" % os.path.basename(obj))
         for fn in disassemble(obj):
             nfuncs += 1
+            data += fn["data"]
             for kind, mnem, ops in fn["insns"]:
                 if kind != "insn":
                     continue
-                total += 1
                 what = classify(mnem, ops)
+                if what == "pad":
+                    data += 1
+                    continue
+                code += 1
                 if what is None:
                     key = re.sub(r"0x[0-9a-f]+", "N",
                                  (mnem + " " + (ops or "")).strip())
                     key = re.sub(r"\s*->\S+$", "", key)
                     unknown[key] += 1
-                elif what == "pad":
-                    padding += 1
                 else:
                     covered += 1
+                    mix[what] += 1
                     if what == "call" and ops and "->" in ops:
                         prims[ops.split("->")[-1]] += 1
 
     print()
     print("functions: %d" % nfuncs)
-    print("instructions: %d, of which %d padding or table data" % (total, padding))
-    print("accounted for: %d of %d real (%.2f%%)" % (covered, total - padding, 100.0 * covered / max(total - padding, 1)))
+    print("code instructions: %d" % code)
+    print("jump tables and padding: %d words" % data)
+    print("accounted for: %d of %d (%.2f%%)"
+          % (covered, code, 100.0 * covered / max(code, 1)))
     print("distinct call targets: %d" % len(prims))
     print()
+    print("=== what the code is made of ===")
+    for what, n in mix.most_common():
+        print("  %-10s %7d  %5.1f%%" % (what, n, 100.0 * n / max(code, 1)))
+    print()
     print("=== shapes the model does not explain, most common first ===")
-    for text, n in unknown.most_common(25):
+    for text, n in unknown.most_common(60):
         print("  %6d  %s" % (n, text))
     if not unknown:
         print("  (none)")
