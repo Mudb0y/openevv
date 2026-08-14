@@ -72,7 +72,10 @@ struct klatt_state {
     uint8_t          pad_0ac4[8];
     int32_t          buf_a[200];          /* 0x0acc */
     int32_t         *ptr_a;               /* 0x0dec, points at buf_a */
-    uint8_t          pad_0df0[808];
+    /* The frication noise, scaled up into accumulator range. The eight bytes
+       after it are buf_b's history headroom, the same as before buf_a. */
+    int32_t          frication[200];      /* 0x0df0 */
+    uint8_t          pad_1110[8];
     int32_t          buf_b[200];          /* 0x1118 */
     int32_t         *ptr_b;               /* 0x1438, points at buf_b */
     int16_t          ab_gain;             /* 0x143c, the bypass path */

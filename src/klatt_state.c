@@ -18,6 +18,7 @@ AT(out, 0x0760);
 AT(cp, 0x0a80);
 AT(buf_a, 0x0acc);
 AT(ptr_a, 0x0dec);
+AT(frication, 0x0df0);
 AT(buf_b, 0x1118);
 AT(ptr_b, 0x1438);
 AT(unknown_1498, 0x1498);

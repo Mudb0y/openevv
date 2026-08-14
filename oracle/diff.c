@@ -1079,9 +1079,9 @@ static void test_synth_ring(void)
         frame[1] = 0;                                  /* f0 off */
         frame[2] = (int32_t)(rng_next() % 90u);        /* av */
         frame[7] = (int32_t)(rng_next() % 90u);        /* ah */
-        frame[8] = 0;                                  /* af off */
-        if (frame[2] == 0 && frame[7] == 0)
-            frame[2] = 1;                              /* stay off the silence path */
+        frame[8] = (int32_t)(rng_next() % 90u);        /* af */
+        if (frame[2] == 0 && frame[7] == 0 && frame[8] == 0)
+            frame[8] = 1;                              /* stay off the silence path */
         frame[43] = (int32_t)(rng_next() % 100u);
         for (i = 35; i <= 42; i++)
             frame[i] = (int32_t)(rng_next() % 100u);
@@ -1107,7 +1107,7 @@ static void test_synth_ring(void)
         klatt_delete(theirs);
     }
 
-    report("synth aspir", cases, bad, 0);
+    report("synth unvoiced", cases, bad, 0);
 }
 
 int main(void)

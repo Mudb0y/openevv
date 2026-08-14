@@ -459,8 +459,54 @@ int KlattSynth(void *handle, const int32_t *parms)
                 }
 
                 if (k->unknown_149c > 0) {
-                    /* NOT YET TRANSCRIBED: the parallel branch and the
-                       frication source that drives it. */
+                    if (k->af != 0) {
+                        k->unknown_19e0 = (int32_t)noise(k, k->unknown_19e0);
+                        for (i = 0; i < k->noise_count; i++)
+                            k->frication[i] = (int32_t)k->noise_buf[i] << 4;
+                    }
+
+                    if (parms[P_AB] != 0 && k->af != 0)
+                        fxmul_vector(k->frication, k->ab_gain, k->ptr_a,
+                                     k->noise_count);
+
+                    /* Each parallel resonator runs on its own copy of the
+                       frication and its output is summed back in. */
+                    for (i = PARALLEL_BASE;
+                         i < k->n_formants + PARALLEL_BASE; i++) {
+                        int32_t m;
+
+                        if (k->filters[i].enabled == 0)
+                            continue;
+
+                        if (k->af != 0 && amp[i] != 0) {
+                            for (m = 0; m < k->noise_count; m++)
+                                k->ptr_b[m] = k->frication[m];
+                            pole_filter(&k->filters[i], k->ptr_b,
+                                        k->noise_count);
+                        } else {
+                            parallel0_filter(&k->filters[i], k->ptr_b,
+                                             k->noise_count);
+                        }
+
+                        /* The original compares this amplitude as a double
+                           against zero, which is where its three floating
+                           point instructions come from. Every int32 converts
+                           exactly, so an integer test gives the same answer. */
+                        if (amp[i] == 0) {
+                            k->filters[i].enabled -= k->unknown_14a0;
+                            if (k->filters[i].enabled < 0)
+                                k->filters[i].enabled = 0;
+                        }
+
+                        for (m = 0; m < k->noise_count; m++)
+                            k->ptr_a[m] += k->ptr_b[m];
+                    }
+
+                    if (k->af == 0) {
+                        k->unknown_149c -= k->unknown_14a0;
+                        if (k->unknown_149c < 0)
+                            k->unknown_149c = 0;
+                    }
                 }
             }
 
