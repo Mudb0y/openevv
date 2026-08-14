@@ -794,14 +794,16 @@ static void test_api(void)
 }
 
 extern const int16_t ibm_EX8[], ibm_CO8[], ibm_EX11[], ibm_CO11[];
-extern const int16_t ibm_fxl2[], ibm_tilt8[], ibm_tilt11[];
-extern const int16_t ibm_flutter_sine[], ibm_tl_table[];
+extern const int16_t ibm_tilt8[], ibm_tilt11[];
+extern const int16_t ibm_fxl2[];
+extern const int32_t ibm_tl_table[];
+extern const int16_t ibm_flutter_sine[];
 
 extern void ibm_KlattSetConstParms(void *handle, KlattConstParms parms);
 
 static void test_tables(void)
 {
-    struct { const char *name; const int16_t *ours; const int16_t *ibm; size_t n; }
+    struct { const char *name; const void *ours; const void *ibm; size_t n; }
     t[] = {
         {"fxl2",         klatt_fxl2,         ibm_fxl2,         sizeof(klatt_fxl2)},
         {"tl_table",     klatt_tl_table,     ibm_tl_table,     sizeof(klatt_tl_table)},
@@ -1110,6 +1112,96 @@ static void test_synth_ring(void)
     report("synth unvoiced", cases, bad, 0);
 }
 
+/* A voiced frame: pitch and voicing amplitude on, flutter off so the pitch
+   holds steady, diplophonia off so every period is the same length. */
+static void test_synth_voiced(void)
+{
+    int cases = 0, bad = 0;
+    int t, i;
+    static const int32_t rates[] = {8000, 11025};
+
+    rng_seed(0x0117ce5du);
+    for (t = 0; t < 20000; t++) {
+        klatt_state *mine = ibm_klatt_new((void *)0x1234);
+        klatt_state *theirs = klatt_new((void *)0x1234);
+        KlattConstParms parms;
+        int32_t frame[63];
+        unsigned char *pp = (unsigned char *)&parms;
+        int ra, rb;
+        size_t b;
+
+        for (b = 0; b < sizeof(parms); b++)
+            pp[b] = (unsigned char)rng_next();
+        parms.sample_rate = rates[rng_next() % 2u];
+        parms.n_formants = (int32_t)(rng_next() % 9u);
+        parms.error_fn = error_sink;
+        parms.samples_fn = sample_sink;
+        /* One block at most: resuming a period across blocks needs the carry
+           branches, which are not transcribed yet. */
+        parms.unknown_00 = 1;
+        parms.unknown_1c = 0;
+        parms.unknown_20 = (int32_t)(rng_next() % 100u);
+        parms.unknown_24 = (int32_t)(rng_next() % 100u);
+        parms.unknown_28 = (int32_t)(rng_next() % 100u);
+        parms.unknown_2c = (int32_t)(rng_next() % 100u);
+
+        ibm_KlattSetConstParms(mine, parms);
+        KlattSetConstParms(theirs, parms);
+        ibm_KlattOpen(mine);
+        KlattOpen(theirs);
+
+        for (i = 0; i < 63; i++)
+            frame[i] = (int32_t)(rng_next() % 6000u) - 500;
+        frame[0] = (int32_t)(rng_next() % 1700u) + 1;   /* duration */
+        frame[1] = (int32_t)(rng_next() % 3500u) + 500; /* f0, tenths of a hertz */
+        frame[2] = (int32_t)(rng_next() % 90u) + 1;     /* av on */
+        frame[3] = (int32_t)(rng_next() % 90u) + 5;     /* open quotient */
+        frame[4] = 0;                                   /* tilt off */
+        frame[5] = 0;                                   /* flutter off */
+        frame[6] = 0;                                   /* diplophonia off */
+        frame[7] = (int32_t)(rng_next() % 90u);         /* ah */
+        frame[8] = (int32_t)(rng_next() % 90u);         /* af */
+        frame[43] = (int32_t)(rng_next() % 100u);
+        for (i = 35; i <= 42; i++)
+            frame[i] = (int32_t)(rng_next() % 100u);
+
+        mine->volume = theirs->volume = 100;
+        mine->cp.callback_mode = theirs->cp.callback_mode =
+            (int32_t)(rng_next() % 3u);
+
+        rb = ibm_KlattSynth(mine, frame);
+        ra = KlattSynth(theirs, frame);
+
+        cases++;
+        if (ra != rb || state_differs(mine, theirs)) {
+            if (bad < 4) {
+                printf("  voiced differs ui=%ld f0=%ld oq=%ld rate=%ld at 0x%04lx\n",
+                       (long)frame[0], (long)frame[1], (long)frame[3],
+                       (long)parms.sample_rate,
+                       first_difference(mine, theirs));
+                printf("    vs %ld/%ld open %ld/%ld part %ld/%ld closed %ld/%ld"
+                       " amp %ld/%ld vstart %ld/%ld span %ld/%ld"
+                       " carry o %ld/%ld c %ld/%ld\n",
+                       (long)mine->voicing_size, (long)theirs->voicing_size,
+                       (long)mine->open_len, (long)theirs->open_len,
+                       (long)mine->open_part, (long)theirs->open_part,
+                       (long)mine->closed_part, (long)theirs->closed_part,
+                       (long)mine->pulse_amp, (long)theirs->pulse_amp,
+                       (long)mine->v_start, (long)theirs->v_start,
+                       (long)mine->smooth_span, (long)theirs->smooth_span,
+                       (long)mine->carry_open, (long)theirs->carry_open,
+                       (long)mine->carry_closed, (long)theirs->carry_closed);
+            }
+            bad++;
+        }
+
+        ibm_klatt_delete(mine);
+        klatt_delete(theirs);
+    }
+
+    report("synth voiced", cases, bad, 0);
+}
+
 int main(void)
 {
     printf("diff: comparing our transcription against IBM clsyn.obj\n");
@@ -1134,6 +1226,7 @@ int main(void)
     test_synth_setup();
     test_synth_silence();
     test_synth_ring();
+    test_synth_voiced();
 
     printf("diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;

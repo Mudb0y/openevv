@@ -27,21 +27,27 @@ AT(di, 0x14a8);
 AT(f0, 0x14ac);
 AT(oq, 0x14b0);
 AT(v_start, 0x14b4);
+AT(closed_pct, 0x14a4);
+AT(pulse_amp, 0x14b8);
+AT(pulse_amp_base, 0x14c0);
 AT(noise_count, 0x14c4);
 AT(voicing_size, 0x14c8);
-AT(unknown_14d0, 0x14d0);
-AT(unknown_14e0, 0x14e0);
-AT(unknown_14f0, 0x14f0);
+AT(diplo_shift, 0x14cc);
+AT(open_len, 0x14d0);
+AT(carry_lead, 0x14e0);
+AT(carry_period, 0x14e8);
+AT(carry_closed, 0x14f0);
 AT(length, 0x14f4);
 AT(max, 0x14f8);
 AT(spans, 0x14fc);
+AT(tilt, 0x1820);
 AT(av, 0x1824);
 AT(ah, 0x1828);
 AT(af, 0x182c);
 AT(smooth_span, 0x1840);
 AT(noise_buf, 0x184c);
 AT(unknown_19dc, 0x19dc);
-AT(unknown_19e4, 0x19e4);
+AT(diplo_on, 0x19e4);
 AT(callback_result, 0x19ec);
 AT(unknown_1818, 0x1818);
 AT(unknown_1830, 0x1830);
@@ -89,14 +95,14 @@ void compute_voicing_size(klatt_state *k)
     k->voicing_size =
         (mul32(k->cp.sample_rate, 10000) / k->f0 - k->v_start + 999) / 1000;
 
-    k->unknown_14d0 =
+    k->open_len =
         (mul32(mul32(k->cp.sample_rate, 100), k->oq)
          + mul32(499 - k->v_start, k->f0))
         / mul32(k->f0, 1000);
 
-    k->unknown_14d4 = k->unknown_14d0;
-    k->unknown_14d8 = k->voicing_size - k->unknown_14d0;
-    k->unknown_14dc = k->unknown_14d8;
+    k->open_part = k->open_len;
+    k->closed_len = k->voicing_size - k->open_len;
+    k->closed_part = k->closed_len;
 }
 
 void output_speech(klatt_state *k, int32_t n)
@@ -131,13 +137,13 @@ void *klatt_new(void *user)
     k->version = KlattVersionString;
     k->user = user;
     k->open_state = 0;
-    k->unknown_14e0 = 0;
-    k->unknown_14e4 = 0;
-    k->unknown_14f0 = 0;
+    k->carry_lead = 0;
+    k->carry_open = 0;
+    k->carry_closed = 0;
     k->length = 0;
     k->max = 0;
-    k->unknown_19e4 = 0;
-    k->unknown_19e8 = 0;
+    k->diplo_on = 0;
+    k->diplo_alt = 0;
     k->output_samples = 1;
 
     return k;
@@ -187,14 +193,14 @@ int KlattOpen(void *handle)
     k->unknown_0010 = 0;
     k->unknown_1498 = 0;
     k->unknown_149c = 0;
-    k->unknown_14e0 = 0;
-    k->unknown_14e4 = 0;
-    k->unknown_14f0 = 0;
+    k->carry_lead = 0;
+    k->carry_open = 0;
+    k->carry_closed = 0;
     k->length = 0;
     k->output_samples = 1;
     k->max = 0;
-    k->unknown_19e4 = 0;
-    k->unknown_19e8 = 0;
+    k->diplo_on = 0;
+    k->diplo_alt = 0;
 
     return 1;
 }

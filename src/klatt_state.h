@@ -85,23 +85,26 @@ struct klatt_state {
     int32_t          unknown_1498;        /* 0x1498 */
     int32_t          unknown_149c;        /* 0x149c */
     int32_t          unknown_14a0;        /* 0x14a0 */
-    uint8_t          pad_14a4[4];
+    int32_t          closed_pct;          /* 0x14a4, 100 minus diplophonia */
     int32_t          di;                  /* 0x14a8, diplophonia */
     int32_t          f0;                  /* 0x14ac, pitch */
     int32_t          oq;                  /* 0x14b0, open quotient */
     int32_t          v_start;             /* 0x14b4 */
-    uint8_t          pad_14b8[12];
+    int32_t          pulse_amp;           /* 0x14b8, this period's pulse */
+    int32_t          pulse_amp_alt;       /* 0x14bc, the alternate period's */
+    int32_t          pulse_amp_base;      /* 0x14c0, from av and open quotient */
     int32_t          noise_count;         /* 0x14c4 */
     int32_t          voicing_size;        /* 0x14c8 */
-    uint8_t          pad_14cc[4];
-    int32_t          unknown_14d0;        /* 0x14d0 */
-    int32_t          unknown_14d4;        /* 0x14d4 */
-    int32_t          unknown_14d8;        /* 0x14d8 */
-    int32_t          unknown_14dc;        /* 0x14dc */
-    int32_t          unknown_14e0;        /* 0x14e0 */
-    int32_t          unknown_14e4;        /* 0x14e4 */
-    uint8_t          pad_14e8[8];
-    int32_t          unknown_14f0;        /* 0x14f0 */
+    int32_t          diplo_shift;         /* 0x14cc, how far the alternate slips */
+    int32_t          open_len;        /* 0x14d0 */
+    int32_t          open_part;        /* 0x14d4 */
+    int32_t          closed_len;        /* 0x14d8 */
+    int32_t          closed_part;        /* 0x14dc */
+    int32_t          carry_lead;        /* 0x14e0 */
+    int32_t          carry_open;        /* 0x14e4 */
+    int32_t          carry_period;        /* 0x14e8, the period it belonged to */
+    int32_t          carry_amp;           /* 0x14ec, and its pulse amplitude */
+    int32_t          carry_closed;        /* 0x14f0 */
     int32_t          length;              /* 0x14f4, KlattLength returns this */
     int32_t          max;                 /* 0x14f8, KlattMax returns this */
     /* One run length per pitch period. KlattSynth walks this forward as it
@@ -112,7 +115,7 @@ struct klatt_state {
     int32_t          spans[199];          /* 0x14fc */
     int32_t          unknown_1818;        /* 0x1818 */
     int32_t          n_formants;          /* 0x181c, copied from the const parms */
-    uint8_t          pad_1820[4];
+    int32_t          tilt;                /* 0x1820, spectral tilt, capped at 35 */
     /* KlattSynth copies three amplitudes straight out of the parameter frame
        into these. noise() gates its smoothing on av, so the noise follows the
        pitch periods only while there is voicing to follow. */
@@ -130,8 +133,8 @@ struct klatt_state {
     int16_t          noise_buf[200];      /* 0x184c */
     int32_t          unknown_19dc;        /* 0x19dc */
     int32_t          unknown_19e0;        /* 0x19e0 */
-    int32_t          unknown_19e4;        /* 0x19e4 */
-    int32_t          unknown_19e8;        /* 0x19e8 */
+    int32_t          diplo_on;        /* 0x19e4 */
+    int32_t          diplo_alt;        /* 0x19e8 */
     int32_t          callback_result;     /* 0x19ec */
     int32_t          unknown_19f0;        /* 0x19f0 */
     int32_t          unknown_19f4;        /* 0x19f4 */

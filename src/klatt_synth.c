@@ -30,6 +30,31 @@ enum {
     P_ATV, P_MS
 };
 
+/* One glottal pulse, sample by sample. The shape is a parabola: the fraction
+   through the open phase times a third minus that same fraction, which is the
+   published Klatt waveform rather than anything IBM invented. */
+static void glottal_pulse(klatt_state *k, int32_t at, int32_t count,
+                          int32_t period)
+{
+    int16_t slope;
+    int32_t i;
+
+    if (k->pulse_amp == 0) {
+        clr_vector(k->ptr_a + at, count);
+        return;
+    }
+
+    slope = fxdivl(mul32(k->pulse_amp, 3), k->cp.sample_rate << 2);
+
+    for (i = at; i < at + count; i++) {
+        int16_t frac = fxdivl(i - at, period);
+        int32_t v = fxmul_scaled(frac, 0x5555 - frac);
+
+        v <<= 4;
+        k->ptr_a[i] = fxmul_scaled(slope, v);
+    }
+}
+
 static int32_t clamp(int32_t v, int32_t lo, int32_t hi)
 {
     if (v < lo)
@@ -74,6 +99,7 @@ int KlattSynth(void *handle, const int32_t *parms)
     int32_t n_samples, i, j, first, remaining;
     int32_t ab_base;
     int16_t four, asp_gain;
+    int32_t setup_pending;
 
     if (!verifyKlattHandle(handle))
         return 0;
@@ -93,6 +119,7 @@ int KlattSynth(void *handle, const int32_t *parms)
         k->unknown_149c = 20;
 
     first = 1;
+    setup_pending = 1;
     k->unknown_19f0 = 0;
 
     freq[NASAL_POLE]    = parms[P_FNP];
@@ -311,8 +338,8 @@ int KlattSynth(void *handle, const int32_t *parms)
         /* Nothing excited and nothing still ringing: hand back silence rather
            than run the whole synthesis chain over zeros. */
         if (k->unknown_1498 <= 0 && k->unknown_149c <= 0 &&
-            k->unknown_14e0 == 0 && k->unknown_14f0 == 0 &&
-            k->unknown_14e4 == 0) {
+            k->carry_lead == 0 && k->carry_closed == 0 &&
+            k->carry_open == 0) {
             for (i = 0; i < k->noise_count; i++)
                 k->out[i] = 0;
         } else {
@@ -323,7 +350,7 @@ int KlattSynth(void *handle, const int32_t *parms)
             k->smooth_span = 0;
             k->spans[k->smooth_span] = 0;
 
-            if (k->unknown_14e0 != 0) {
+            if (k->carry_lead != 0) {
                 /* NOT YET TRANSCRIBED: silence carried in from the previous
                    frame. Only reachable on a continuation frame. */
             }
@@ -331,7 +358,7 @@ int KlattSynth(void *handle, const int32_t *parms)
             k->smooth_span++;
             k->spans[k->smooth_span] = 0;
 
-            if (k->unknown_14e4 != 0) {
+            if (k->carry_open != 0) {
                 /* NOT YET TRANSCRIBED: a glottal period left half finished by
                    the previous frame. Only reachable on a continuation. */
             }
@@ -339,7 +366,7 @@ int KlattSynth(void *handle, const int32_t *parms)
             k->smooth_span++;
             k->spans[k->smooth_span] = 0;
 
-            if (k->unknown_14f0 != 0 && left != 0) {
+            if (k->carry_closed != 0 && left != 0) {
                 /* NOT YET TRANSCRIBED: likewise a carried-over closed phase. */
             }
 
@@ -351,24 +378,109 @@ int KlattSynth(void *handle, const int32_t *parms)
 
             if (left > 0) {
                 if (k->f0 != 0 && k->av != 0) {
-                    /* NOT YET TRANSCRIBED: the voiced source. */
+                    if (setup_pending) {
+                        setup_pending = 0;
+
+                        if (parms[P_FL] != 0) {
+                            /* NOT YET TRANSCRIBED: pitch flutter. */
+                        }
+
+                        if (k->oq > 0) {
+                            int32_t v = k->av + k->unknown_1830
+                                      + k->unknown_1834;
+
+                            k->pulse_amp_base = v > 0
+                                ? mul32(db2lin(v), 0x24f) >> 5 : 0;
+                        }
+
+                        /* Diplophonia alternates long and short periods, so it
+                           needs a flag saying which of the two is next. */
+                        if (k->diplo_on != 0) {
+                            if (k->di == 0) {
+                                k->diplo_alt = 0;
+                                k->diplo_on = 0;
+                            }
+                        } else if (k->di > 0) {
+                            k->diplo_on = 1;
+                            k->diplo_alt = 0;
+                        }
+
+                        if (k->diplo_on != 0) {
+                            k->closed_pct = 100 - k->di;
+                            k->diplo_shift =
+                                mul32(mul32(k->di, k->cp.sample_rate),
+                                      100 - k->oq)
+                                / mul32(k->f0, 1000);
+                            k->pulse_amp_alt = k->closed_pct > 0
+                                ? mul32(k->pulse_amp_base, k->closed_pct) / 100
+                                : 0;
+                        } else {
+                            k->pulse_amp = k->pulse_amp_base;
+                        }
+
+                        k->tilt = parms[P_TL] > 0x23 ? 0x23 : parms[P_TL];
+
+                        if (k->tilt != 0 && k->unknown_1498 > 0) {
+                            filter_parms *tp = &k->filters[TILT];
+
+                            first = 0;
+                            tp->enabled = k->unknown_1498;
+                            tp->ramp = 0;
+                            bw[TILT] = klatt_tl_table[k->tilt];
+                            freq[TILT] = mul32(bw[TILT], 3) >> 3;
+                            tp->unknown_08 = 1;
+
+                            if (k->rate_code == 1 || k->rate_code == 0) {
+                                const int16_t *t = k->rate_code == 1
+                                    ? klatt_tilt11 : klatt_tilt8;
+                                const int8_t *tb = (const int8_t *)t;
+
+                                tp->sa = t[k->tilt * 4 + 0];
+                                tp->sb = t[k->tilt * 4 + 1];
+                                tp->sc = t[k->tilt * 4 + 2];
+                                tp->sa_scale = tb[k->tilt * 8 + 6];
+                                tp->sb_scale = tb[k->tilt * 8 + 7];
+
+                                /* The table may hold them at a coarser scale
+                                   than pole_filter's fixed weights expect. */
+                                if (tp->sa_scale < 2) {
+                                    tp->sa = (int16_t)(tp->sa >> (2 - tp->sa_scale));
+                                    tp->sa_scale = 2;
+                                }
+                                if (tp->sb_scale < 1) {
+                                    tp->sb = (int16_t)(tp->sb >> (1 - tp->sb_scale));
+                                    tp->sb_scale = 1;
+                                }
+                                tp->sb = (int16_t)(tp->sb & ~1);
+                                tp->sc = (int16_t)(tp->sc & ~3);
+                            } else {
+                                freq[TILT] = clamp(freq[TILT], 10, 5000);
+                                bw[TILT] = clamp(bw[TILT], 10, 4000);
+                                if (tp->enabled != 0)
+                                    set_coefficients(tp, ex_of(k, bw[TILT]),
+                                                     co_of(k, freq[TILT]));
+                            }
+                        } else {
+                            k->filters[TILT].enabled = 0;
+                        }
+                    }
                 } else {
                     if (k->ah != 0) {
                         /* Aspiration with no pitch: the whole block counts as
                            one open span, so the noise runs through unbroken. */
                         k->voicing_size = left;
-                        k->unknown_14d0 = left;
+                        k->open_len = left;
                         k->smooth_span++;
                         k->spans[k->smooth_span] = left;
-                        k->unknown_14d8 = 0;
+                        k->closed_len = 0;
                         k->smooth_span++;
                         k->spans[k->smooth_span] = 0;
                     } else {
-                        k->unknown_14d0 = 0;
+                        k->open_len = 0;
                         k->smooth_span++;
                         k->spans[k->smooth_span] = 0;
                         k->voicing_size = left;
-                        k->unknown_14d8 = left;
+                        k->closed_len = left;
                         k->smooth_span++;
                         k->spans[k->smooth_span] = left;
                     }
@@ -383,17 +495,94 @@ int KlattSynth(void *handle, const int32_t *parms)
                 if (left > 0)
                     compute_voicing_size(k);
 
-                if (left >= k->voicing_size && left > 0) {
-                    /* NOT YET TRANSCRIBED: the whole-period source loop. */
+                /* Whole glottal periods, for as long as one still fits. */
+                while (left >= k->voicing_size && left > 0) {
+                    if (k->diplo_on != 0) {
+                        if (k->diplo_alt != 0) {
+                            k->pulse_amp = k->pulse_amp_alt;
+                            k->closed_part = k->closed_len - k->diplo_shift;
+                            clr_vector(k->ptr_a + written, k->diplo_shift);
+                            written += k->diplo_shift;
+                            k->spans[k->smooth_span] += k->diplo_shift;
+                        } else {
+                            k->pulse_amp = k->pulse_amp_base;
+                            k->closed_part = k->closed_len;
+                        }
+                        k->diplo_alt = (k->diplo_alt == 0);
+                    }
+
+                    k->smooth_span++;
+                    k->spans[k->smooth_span] = 0;
+
+                    glottal_pulse(k, written, k->open_len, k->open_len);
+                    written += k->open_len;
+                    k->spans[k->smooth_span] += k->open_len;
+
+                    k->smooth_span++;
+                    k->spans[k->smooth_span] = 0;
+
+                    clr_vector(k->ptr_a + written, k->closed_part);
+                    written += k->closed_part;
+                    k->spans[k->smooth_span] += k->closed_part;
+
+                    left -= k->voicing_size;
+                    compute_v_start(k);
+                    compute_voicing_size(k);
                 }
 
+                /* Whatever is left is part of a period; the remainder of it is
+                   recorded so the next call can pick the pulse up mid-flight. */
                 if (left > 0) {
-                    /* NOT YET TRANSCRIBED: the part-period source loop. */
-                }
+                    int32_t n;
 
-                k->unknown_14f0 = 0;
-                k->unknown_14e4 = 0;
-                k->unknown_14e0 = 0;
+                    if (k->diplo_on != 0) {
+                        if (k->diplo_alt != 0) {
+                            k->pulse_amp = k->pulse_amp_alt;
+                            k->closed_part = k->closed_part - k->diplo_shift;
+                            n = k->diplo_shift < left ? k->diplo_shift : left;
+                            clr_vector(k->ptr_a + written, n);
+                            k->carry_lead = k->diplo_shift - n;
+                            written += n;
+                            left -= n;
+                            k->spans[k->smooth_span] += n;
+                        } else {
+                            k->pulse_amp = k->pulse_amp_base;
+                            k->closed_part = k->closed_len;
+                            k->carry_lead = 0;
+                        }
+                        k->diplo_alt = (k->diplo_alt == 0);
+                    }
+
+                    k->smooth_span++;
+                    k->spans[k->smooth_span] = 0;
+
+                    k->open_part = k->open_len < left ? k->open_len : left;
+
+                    glottal_pulse(k, written, k->open_part, k->open_len);
+
+                    k->carry_open = k->open_len - k->open_part;
+                    k->carry_period = k->open_len;
+                    k->carry_amp = k->pulse_amp;
+
+                    written += k->open_part;
+                    left -= k->open_part;
+                    k->spans[k->smooth_span] += k->open_part;
+
+                    k->smooth_span++;
+                    k->spans[k->smooth_span] = 0;
+
+                    n = k->closed_part < left ? k->closed_part : left;
+                    clr_vector(k->ptr_a + written, n);
+                    k->carry_closed = k->closed_part - n;
+                    left -= n;
+                    k->spans[k->smooth_span] += n;
+
+                    compute_v_start(k);
+                } else {
+                    k->carry_closed = 0;
+                    k->carry_open = 0;
+                    k->carry_lead = 0;
+                }
             }
 
             k->smooth_span++;

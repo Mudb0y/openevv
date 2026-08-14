@@ -7,7 +7,7 @@
 
 extern const int16_t klatt_fxl2[20];
 
-extern const int16_t klatt_tl_table[84];
+extern const int32_t klatt_tl_table[42];
 
 extern const int16_t klatt_tilt8[168];
 

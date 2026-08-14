@@ -19,12 +19,19 @@ WANTED = ["fxl2", "tl_table", "tilt8", "tilt11", "flutter_sine",
           "EX8", "CO8", "EX11", "CO11"]
 
 
+# KlattSynth indexes tl_table four bytes at a time; every other table is 16 bit.
+WIDE = ("tl_table",)
+
+
 def load(name):
     path = os.path.join(TABLES, name + ".bin")
     with open(path, "rb") as fh:
         blob = fh.read()
+    if name in WIDE:
+        count = len(blob) // 4
+        return struct.unpack("<%di" % count, blob[:count * 4]), len(blob), "int32_t"
     count = len(blob) // 2
-    return struct.unpack("<%dh" % count, blob[:count * 2]), len(blob)
+    return struct.unpack("<%dh" % count, blob[:count * 2]), len(blob), "int16_t"
 
 
 def main():
@@ -41,14 +48,14 @@ def main():
                 "\n#include <stdint.h>\n")
 
         for name in WANTED:
-            values, nbytes = load(name)
+            values, nbytes, ctype = load(name)
             sym = "klatt_" + name
-            h.write("\nextern const int16_t %s[%d];\n" % (sym, len(values)))
-            c.write("\n/* %d bytes at .rdata, read as %d signed 16-bit words. */\n"
+            h.write("\nextern const %s %s[%d];\n" % (ctype, sym, len(values)))
+            c.write("\n/* %d bytes at .rdata, read as %d signed words. */\n"
                     % (nbytes, len(values)))
-            c.write("const int16_t %s[%d] = {\n" % (sym, len(values)))
+            c.write("const %s %s[%d] = {\n" % (ctype, sym, len(values)))
             for i in range(0, len(values), 12):
-                row = ", ".join("%6d" % v for v in values[i:i + 12])
+                row = ", ".join("%8d" % v for v in values[i:i + 12])
                 c.write("    " + row + ",\n")
             c.write("};\n")
             print("gen-tables: %-14s %6d bytes, %5d words"
