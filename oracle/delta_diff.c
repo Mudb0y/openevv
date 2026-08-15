@@ -63,7 +63,7 @@ extern void ibm_vnspush(delta_state *, const delta_operand *);
 extern void ibm_vadd(delta_state *, const delta_operand *, const delta_operand *);
 extern int32_t ibm_VLSYNC(const delta_node *, int8_t);
 extern int32_t ibm_VRSYNC(delta_state *, const int32_t *, int8_t);
-extern void ibm_reset_field(delta_field *);
+extern void ibm_reset_field(delta_loc *);
 extern int  ibm_push_ptr(delta_state *, int32_t);
 extern int  ibm_ret_ptr_active_record(delta_state *);
 extern void ibm_throwDeltaErrorNow(delta_state *);
@@ -77,7 +77,7 @@ extern void ibm_SETSPINER(delta_state *, int32_t *, int32_t);
 extern void ibm_bspush_ca_boa(delta_state *, int16_t);
 extern void ibm_bspush_ca_scan_boa(delta_state *, int16_t);
 extern void ibm_forceErrorBacktrack(delta_state *);
-extern void ibm_push_ptr_init(delta_state *, delta_ptrvar *);
+extern void ibm_push_ptr_init(delta_state *, delta_loc *);
 extern void ibm_npush_i(delta_state *, int32_t);
 extern void ibm_npush_s(delta_state *, int32_t);
 extern void ibm_vscaninit(delta_state *);
@@ -92,14 +92,18 @@ extern void ibm_vassign(delta_state *, const delta_operand *,
 extern int  ibm_npush_fld(delta_state *, uint8_t, uint8_t);
 extern int32_t *ibm_ctxspine(delta_state *, int32_t *, uint8_t, int32_t);
 extern void ibm_vnsqflags(delta_state *, int32_t *);
-extern void ibm_vinitloc_new(delta_state *, delta_operand *, const int16_t *);
+extern void ibm_vinitloc_new(delta_state *, delta_operand *, const delta_loc *);
 extern void ibm_startloop(delta_state *, int16_t);
-extern void ibm_save_var(delta_state *, const int16_t *);
+extern void ibm_save_var(delta_state *, const delta_loc *);
 extern int  ibm_testFldeq(delta_state *, uint8_t, uint8_t, uint8_t);
 extern void ibm_vinitflds(delta_state *, uint8_t, void *, const void *);
 extern int  ibm_vscanadvOverToken(delta_state *, int32_t);
 extern int  ibm_vscanadvUptoTokenOrMarker(delta_state *, int32_t, int32_t);
 extern void ibm_seqscan(delta_state *, delta_seqctl *);
+extern int  ibm_advance_tok(delta_state *);
+extern int  ibm_forall_cont_from(delta_state *, int16_t, int16_t, int32_t,
+                                 delta_loc *, const delta_loc *);
+extern void ibm_savescptr(delta_state *, int16_t, delta_loc *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -212,6 +216,43 @@ static void normalise(delta_world *w, delta_state *st, delta_vars *va,
 #undef REBASE
 }
 
+/* Compare the stack area. A record holds the pointer it saved, which differs
+   by world, and records are not four-byte aligned, so this walks byte by byte
+   and treats four bytes that are an address in both worlds as equal when they
+   name the same offset. */
+static int records_differ(delta_world *a, delta_world *b)
+{
+    int32_t ba = (int32_t)(intptr_t)a;
+    int32_t bb = (int32_t)(intptr_t)b;
+    int32_t span = (int32_t)sizeof(delta_world);
+    size_t i = 0;
+
+    while (i + 4 <= RECORDS) {
+        int32_t wa, wb;
+
+        memcpy(&wa, a->records + i, 4);
+        memcpy(&wb, b->records + i, 4);
+
+        if (wa >= ba && wa < ba + span && wb >= bb && wb < bb + span) {
+            if (wa - ba != wb - bb)
+                return 1;
+            i += 4;
+            continue;
+        }
+        if (a->records[i] != b->records[i])
+            return 1;
+        i++;
+    }
+
+    for (; i < RECORDS; i++)
+        if (a->records[i] != b->records[i])
+            return 1;
+
+    return 0;
+}
+
+static const char *diff_where;
+
 static int world_differs(delta_world *a, delta_world *b)
 {
     delta_state sa, sb;
@@ -221,20 +262,34 @@ static int world_differs(delta_world *a, delta_world *b)
     normalise(a, &sa, &va, &ka);
     normalise(b, &sb, &vb, &kb);
 
-    if (memcmp(&sa, &sb, sizeof(sa)) != 0)
+    if (memcmp(&sa, &sb, sizeof(sa)) != 0) {
+        diff_where = "state";
         return 1;
-    if (memcmp(&va, &vb, sizeof(va)) != 0)
+    }
+    if (memcmp(&va, &vb, sizeof(va)) != 0) {
+        diff_where = "vars";
         return 1;
-    if (memcmp(&ka, &kb, sizeof(ka)) != 0)
+    }
+    if (memcmp(&ka, &kb, sizeof(ka)) != 0) {
+        diff_where = "stack";
         return 1;
-    if (memcmp(a->records, b->records, RECORDS) != 0)
+    }
+    if (records_differ(a, b)) {
+        diff_where = "records";
         return 1;
-    if (memcmp(a->chars, b->chars, FENCE_MAP) != 0)
+    }
+    if (memcmp(a->chars, b->chars, FENCE_MAP) != 0) {
+        diff_where = "chars";
         return 1;
-    if (memcmp(a->map, b->map, FENCE_MAP) != 0)
+    }
+    if (memcmp(a->map, b->map, FENCE_MAP) != 0) {
+        diff_where = "map";
         return 1;
-    if (memcmp(a->marks, b->marks, FENCE_MAP) != 0)
+    }
+    if (memcmp(a->marks, b->marks, FENCE_MAP) != 0) {
+        diff_where = "marks";
         return 1;
+    }
     if (*(char **)(a->blockhdr + 0x10) - (char *)a
         != *(char **)(b->blockhdr + 0x10) - (char *)b)
         return 1;
@@ -243,13 +298,24 @@ static int world_differs(delta_world *a, delta_world *b)
     if (memcmp(a->blockhdr + 0x14, b->blockhdr + 0x14,
                sizeof(a->blockhdr) - 0x14) != 0)
         return 1;
-    if (memcmp(a->names, b->names, sizeof(a->names)) != 0)
+    if (memcmp(a->names, b->names, sizeof(a->names)) != 0) {
+        diff_where = "names";
         return 1;
-    if (memcmp(a->nodes, b->nodes, sizeof(a->nodes)) != 0)
+    }
+    if (memcmp(a->nodes, b->nodes, sizeof(a->nodes)) != 0) {
+        diff_where = "nodes";
         return 1;
-    if (memcmp(a->nsqf, b->nsqf, sizeof(a->nsqf)) != 0)
+    }
+    if (memcmp(a->nsqf, b->nsqf, sizeof(a->nsqf)) != 0) {
+        diff_where = "nsqf";
         return 1;
-    return memcmp(a->nsqm, b->nsqm, sizeof(a->nsqm)) != 0;
+    }
+    if (memcmp(a->nsqm, b->nsqm, sizeof(a->nsqm)) != 0) {
+        diff_where = "nsqm";
+        return 1;
+    }
+    diff_where = "none";
+    return 0;
 }
 
 #define BEGIN(name)                                                  \
@@ -270,7 +336,7 @@ static int world_differs(delta_world *a, delta_world *b)
 #define END(name)                                                    \
             cases++;                                                 \
             if (world_differs(m, o)) {                               \
-                if (bad < 3) printf("  " #name " differs\n");        \
+                if (bad < 3) printf("  " #name " differs in %s\n", diff_where);        \
                 bad++;                                               \
             }                                                        \
             free(m); free(o);                                        \
@@ -631,7 +697,7 @@ static void test_fields(void)
     rng_seed(0xf1e1d5edu);
     for (t = 0; t < 20000; t++) {
         delta_world *w = malloc(sizeof(delta_world));
-        delta_field fa, fb;
+        delta_loc fa, fb;
         int8_t i;
 
         fill(w, sizeof(delta_world));
@@ -796,12 +862,12 @@ BEGIN(bspush_boa_pairs)
 END(bspush_boa_pairs)
 
 BEGIN(push_ptr_init)
-    delta_ptrvar pm, po;
+    delta_loc pm, po;
     fill(&pm, sizeof(pm)); po = pm;
     m->vars.ptr_count = o->vars.ptr_count = (int32_t)(rng_next() % 1002u);
     ibm_push_ptr_init(&m->state, &pm);
     push_ptr_init(&o->state, &po);
-    if (pm.kind != po.kind || pm.pad_02 != po.pad_02 || pm.value != po.value)
+    if (pm.kind != po.kind || pm.field != po.field || pm.value != po.value)
         bad++;
     /* The slot the count landed on holds the address of a local. */
     if (m->vars.ptr_count == o->vars.ptr_count && m->vars.ptr_count > 0)
@@ -1178,8 +1244,8 @@ END(vnsqflags)
 
 BEGIN(vinitloc_new)
     delta_operand am, ao;
-    int16_t *lm = (int16_t *)m->nodes;
-    int16_t *lo = (int16_t *)o->nodes;
+    delta_loc *lm = (delta_loc *)m->nodes;
+    delta_loc *lo = (delta_loc *)o->nodes;
     static const int16_t kinds[] = {-1, -2, -3, -4, -6};
 
     memset(m->nodes, 0, sizeof(m->nodes));
@@ -1188,13 +1254,13 @@ BEGIN(vinitloc_new)
     memcpy(o->nodes + 4, m->nodes + 4, 0x20);
 
     if (rng_next() % 2u) {
-        lm[0] = lo[0] = kinds[rng_next() % 5u];
-        lm[1] = lo[1] = (int16_t)rng_next();
+        lm->kind = lo->kind = kinds[rng_next() % 5u];
+        lm->field = lo->field = (int16_t)rng_next();
     } else {
         int st = (int)(rng_next() % NSTMT);
 
-        lm[0] = lo[0] = (int16_t)st;
-        lm[1] = lo[1] = (rng_next() % 4u == 0) ? (int16_t)-1
+        lm->kind = lo->kind = (int16_t)st;
+        lm->field = lo->field = (rng_next() % 4u == 0) ? (int16_t)-1
             : (int16_t)(rng_next() % (uint32_t)vstmtbl[st].nfields);
     }
 
@@ -1222,8 +1288,8 @@ BEGIN(startloop)
 END(startloop)
 
 BEGIN(save_var)
-    int16_t *lm = (int16_t *)m->nodes;
-    int16_t *lo = (int16_t *)o->nodes;
+    delta_loc *lm = (delta_loc *)m->nodes;
+    delta_loc *lo = (delta_loc *)o->nodes;
     /* vinitloc_new leaves the pointer alone for the byte and short kinds,
        so a save through one copies from an uninitialised local. That is what
        the original does too; feed it only the kinds it sets. */
@@ -1236,13 +1302,13 @@ BEGIN(save_var)
     m->stack.size_ac = o->stack.size_ac = 12;
 
     if (rng_next() % 2u) {
-        lm[0] = lo[0] = kinds[rng_next() % 3u];
-        lm[1] = lo[1] = (int16_t)rng_next();
+        lm->kind = lo->kind = kinds[rng_next() % 3u];
+        lm->field = lo->field = (int16_t)rng_next();
     } else {
         int st = (int)(rng_next() % NSTMT);
 
-        lm[0] = lo[0] = (int16_t)st;
-        lm[1] = lo[1] = (rng_next() % 4u == 0) ? (int16_t)-1
+        lm->kind = lo->kind = (int16_t)st;
+        lm->field = lo->field = (rng_next() % 4u == 0) ? (int16_t)-1
             : (int16_t)(rng_next() % (uint32_t)vstmtbl[st].nfields);
     }
 
@@ -1482,6 +1548,118 @@ BEGIN(seqscan)
     memset(o->nodes, 0, sizeof(o->nodes));
 END(seqscan)
 
+
+BEGIN(advance_tok)
+    int ra, rb, i;
+
+    build_chain(m, o);
+    m->vars.fence_base = o->vars.fence_base = 13;
+    m->vars.fence_count = o->vars.fence_count = (int8_t)(rng_next() % 4u);
+    m->vars.scan_field = o->vars.scan_field = (uint8_t)(rng_next() % 3u);
+    m->vars.scan_rev = o->vars.scan_rev = (uint8_t)(rng_next() % 2u);
+    m->vars.scan_held = o->vars.scan_held = (uint8_t)(rng_next() % 2u);
+    for (i = 0; i < 4; i++) {
+        m->chars[i] = o->chars[i] = (uint8_t)i;
+        m->marks[i] = o->marks[i] = (uint8_t)(rng_next() % 2u);
+    }
+    m->vars.scan_ptr = (int32_t)(intptr_t)m->nodes;
+    o->vars.scan_ptr = (int32_t)(intptr_t)o->nodes;
+
+    ra = ibm_advance_tok(&m->state);
+    rb = advance_tok(&o->state);
+    if (ra != rb)
+        bad++;
+    if ((m->vars.scan_ptr == 0) != (o->vars.scan_ptr == 0))
+        bad++;
+    else if (m->vars.scan_ptr != 0
+             && m->vars.scan_ptr - (int32_t)(intptr_t)m
+                != o->vars.scan_ptr - (int32_t)(intptr_t)o)
+        bad++;
+
+    m->vars.scan_ptr = o->vars.scan_ptr = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(advance_tok)
+
+/* Fill in a location the two location-taking primitives will accept, in both
+   worlds at once. The byte and short kinds are left out because
+   vinitloc_new does not set a pointer for them. */
+static void make_loc(delta_world *m, delta_world *o, int32_t at)
+{
+    static const int16_t kinds[] = {-3, -4, -6};
+    delta_loc *lm = (delta_loc *)(m->nodes + at);
+    delta_loc *lo = (delta_loc *)(o->nodes + at);
+
+    if (rng_next() % 2u) {
+        lm->kind = lo->kind = kinds[rng_next() % 3u];
+        lm->field = lo->field = (int16_t)rng_next();
+    } else {
+        int st = (int)(rng_next() % NSTMT);
+
+        lm->kind = lo->kind = (int16_t)st;
+        lm->field = lo->field = (rng_next() % 4u == 0) ? (int16_t)-1
+            : (int16_t)(rng_next() % (uint32_t)vstmtbl[st].nfields);
+    }
+}
+
+BEGIN(forall_cont_from)
+    int16_t tag = (int16_t)rng_next();
+    int16_t loop = (int16_t)rng_next();
+    int ra, rb;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    memset(m->records, 0, RECORDS);
+    memset(o->records, 0, RECORDS);
+    fill(m->nodes + 0x100, 0x80);
+    memcpy(o->nodes + 0x100, m->nodes + 0x100, 0x80);
+    m->stack.size_ac = o->stack.size_ac = 12;
+    m->vars.testing = (int8_t)(rng_next() % 2u);
+    o->vars.testing = m->vars.testing;
+
+    make_loc(m, o, 0x00);
+    make_loc(m, o, 0x40);
+
+    ra = ibm_forall_cont_from(&m->state, tag, loop, 0,
+                              (delta_loc *)m->nodes,
+                              (const delta_loc *)(m->nodes + 0x40));
+    rb = forall_cont_from(&o->state, tag, loop, 0,
+                          (delta_loc *)o->nodes,
+                          (const delta_loc *)(o->nodes + 0x40));
+    if (ra != rb)
+        bad++;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(forall_cont_from)
+
+BEGIN(savescptr)
+    int16_t tag = (int16_t)rng_next();
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    memset(m->records, 0, RECORDS);
+    memset(o->records, 0, RECORDS);
+    m->stack.size_ac = o->stack.size_ac = 12;
+    m->vars.testing = (int8_t)(rng_next() % 2u);
+    o->vars.testing = m->vars.testing;
+    m->vars.scan_ptr = (int32_t)(intptr_t)(m->nodes + 0x80);
+    o->vars.scan_ptr = (int32_t)(intptr_t)(o->nodes + 0x80);
+
+    make_loc(m, o, 0x00);
+
+    ibm_savescptr(&m->state, tag, (delta_loc *)m->nodes);
+    savescptr(&o->state, tag, (delta_loc *)o->nodes);
+
+    /* The location and the saved record both now hold the scan pointer. */
+    if (((delta_loc *)m->nodes)->value - (int32_t)(intptr_t)m
+        != ((delta_loc *)o->nodes)->value - (int32_t)(intptr_t)o)
+        bad++;
+    ((delta_loc *)m->nodes)->value = ((delta_loc *)o->nodes)->value = 0;
+    m->vars.scan_ptr = o->vars.scan_ptr = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(savescptr)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -1541,6 +1719,9 @@ int main(void)
     test_vscanadvOverToken();
     test_vscanadvUptoTokenOrMarker();
     test_seqscan();
+    test_advance_tok();
+    test_forall_cont_from();
+    test_savescptr();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

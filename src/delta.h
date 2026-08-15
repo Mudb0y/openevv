@@ -30,7 +30,8 @@ typedef struct {
     uint8_t       pad_0000[0x5c];
     const int8_t *nsq_fields;  /* 0x005c, which fields decide the flags,
                                   terminated by a negative entry */
-    uint8_t       pad_0060[0xa0 - 0x60];
+    uint8_t       pad_0060[0x9c - 0x60];
+    int32_t       unknown_9c;  /* 0x009c, cleared when a loop restarts */
     uint8_t  *names;         /* 0x00a0, the name stack, eight bytes an entry */
     int8_t    names_depth;   /* 0x00a4 */
     uint8_t   pad_00a5[3];
@@ -63,7 +64,8 @@ typedef struct {
     int32_t   active_record;   /* 0x0fa4 */
     int32_t   error_thrown;    /* 0x0fa8 */
     void     *err_jmp;         /* 0x0fac, where a thrown error lands */
-    uint8_t   pad_0fb0[0x14];
+    uint8_t   pad_0fb0[0x10];
+    int32_t   loop_tag;        /* 0x0fc0, what a forall is iterating */
     int32_t   test_tag;        /* 0x0fc4, what the running test is matching */
     uint8_t   pad_0fc8[4];
     int32_t   scan_ptr;        /* 0x0fcc, where the scan has got to */
@@ -124,6 +126,17 @@ typedef struct {
 #define DK_LONG   (-3)
 #define DK_SHORT2 (-4)
 #define DK_SYNC   (-6)
+
+/* A compiled location: what a rule names when it refers to a variable. A
+   negative kind means the value follows inline at +0x04; otherwise the pair
+   names a statement type and one of its fields, and -1 for the field means
+   the whole record. It is the same eight bytes whether a rule is reading it,
+   pushing it or saving it. */
+typedef struct {
+    int16_t kind;    /* +0x00 */
+    int16_t field;   /* +0x02 */
+    int32_t value;   /* +0x04 */
+} delta_loc;
 
 /* One field of a statement type, as the language declares it: a name, a
    printf format for the debugger, and the table of names its values may
@@ -243,21 +256,13 @@ void vadd(delta_state *d, const delta_operand *a, const delta_operand *b);
 int32_t VLSYNC(const delta_node *t, int8_t i);
 int32_t VRSYNC(delta_state *d, const int32_t *t, int8_t i);
 
-/* What push_ptr_init hands to push_ptr: a kind and a value, the mirror image
-   of delta_operand. */
-typedef struct {
-    int16_t kind;
-    int16_t pad_02;
-    int32_t value;
-} delta_ptrvar;
-
 /* Two sixteen-bit halves; resetting one clears the second. */
 typedef struct {
     int16_t a;
     int16_t b;
 } delta_field;
 
-void reset_field(delta_field *f);
+void reset_field(delta_loc *f);
 int  push_ptr(delta_state *d, int32_t p);
 int  ret_ptr_active_record(delta_state *d);
 void throwDeltaErrorNow(delta_state *d);
@@ -271,7 +276,7 @@ void SETSPINER(delta_state *d, int32_t *t, int32_t v);
 void bspush_ca_boa(delta_state *d, int16_t tag);
 void bspush_ca_scan_boa(delta_state *d, int16_t tag);
 void forceErrorBacktrack(delta_state *d);
-void push_ptr_init(delta_state *d, delta_ptrvar *p);
+void push_ptr_init(delta_state *d, delta_loc *p);
 void npush_i(delta_state *d, int32_t x);
 void npush_s(delta_state *d, int32_t x);
 void vscaninit(delta_state *d);
@@ -285,9 +290,9 @@ void vassign(delta_state *d, const delta_operand *dst, const delta_operand *src)
 int  npush_fld(delta_state *d, uint8_t st, uint8_t fld);
 int32_t *ctxspine(delta_state *d, int32_t *t, uint8_t f, int32_t back);
 void vnsqflags(delta_state *d, int32_t *t);
-void vinitloc_new(delta_state *d, delta_operand *out, const int16_t *loc);
+void vinitloc_new(delta_state *d, delta_operand *out, const delta_loc *loc);
 void startloop(delta_state *d, int16_t tag);
-void save_var(delta_state *d, const int16_t *loc);
+void save_var(delta_state *d, const delta_loc *loc);
 int  testFldeq(delta_state *d, uint8_t st, uint8_t fld, uint8_t val);
 void vinitflds(delta_state *d, uint8_t st, void *dst, const void *src);
 int  vscanadvOverToken(delta_state *d, int32_t usefence);
@@ -305,6 +310,10 @@ typedef struct {
 } delta_seqctl;
 
 void seqscan(delta_state *d, delta_seqctl *c);
+int  advance_tok(delta_state *d);
+int  forall_cont_from(delta_state *d, int16_t tag, int16_t loop,
+                      int32_t unused, delta_loc *dst, const delta_loc *src);
+void savescptr(delta_state *d, int16_t tag, delta_loc *v);
 
 /* Bumped whenever the spine is relinked, so anything holding a position knows
    to look again. */

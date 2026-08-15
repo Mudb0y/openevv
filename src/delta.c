@@ -127,6 +127,7 @@ AT(fence_index, 0x008c);
 AT(fence_fill, 0x0098);
 AT(fence_marks, 0x0094);
 AT_VARS(err_jmp, 0x0fac);
+AT_VARS(loop_tag, 0x0fc0);
 AT_VARS(nsq_marks, 0x116c);
 AT_VARS(fence_base, 0x1174);
 
@@ -466,10 +467,10 @@ int32_t VRSYNC(delta_state *d, const int32_t *t, int8_t i)
     return *(int32_t *)(p + 4) & ~3;
 }
 
-void reset_field(delta_field *f)
+void reset_field(delta_loc *f)
 {
-    if (f->a >= 0)
-        f->b = -1;
+    if (f->kind >= 0)
+        f->field = -1;
 }
 
 /* Remember an active record. The stack is fixed at 999 and a push past that
@@ -721,7 +722,7 @@ void forceErrorBacktrack(delta_state *d)
     longjmp(*(jmp_buf *)d->vars->err_jmp, 1);
 }
 
-void push_ptr_init(delta_state *d, delta_ptrvar *p)
+void push_ptr_init(delta_state *d, delta_loc *p)
 {
     p->value = 0;
     p->kind = DK_SYNC;
@@ -1027,12 +1028,12 @@ void vnsqflags(delta_state *d, int32_t *t)
    of the sized kinds and the value follows inline; otherwise it names a
    statement type and the second half a field, which the language's own
    reader locates. */
-void vinitloc_new(delta_state *d, delta_operand *out, const int16_t *loc)
+void vinitloc_new(delta_state *d, delta_operand *out, const delta_loc *loc)
 {
     (void)d;
 
-    if (loc[0] < 0) {
-        out->kind = loc[0];
+    if (loc->kind < 0) {
+        out->kind = loc->kind;
         switch (out->kind) {
         case DK_LONG:
             out->ptr = (char *)(intptr_t)loc + 4;
@@ -1050,16 +1051,16 @@ void vinitloc_new(delta_state *d, delta_operand *out, const int16_t *loc)
         return;
     }
 
-    if (loc[1] == -1) {
-        out->kind = loc[0];
+    if (loc->field == -1) {
+        out->kind = loc->kind;
         out->ptr = (char *)(intptr_t)loc + 4;
         out->flag = 0;
         return;
     }
 
     {
-        const delta_stmt *e = &vstmtbl[loc[0]];
-        int32_t f = loc[1];
+        const delta_stmt *e = &vstmtbl[loc->kind];
+        int32_t f = loc->field;
 
         out->ptr = e->get[f]((char *)(intptr_t)loc + 4);
         out->kind = e->fields[f].kind;
@@ -1074,7 +1075,7 @@ void startloop(delta_state *d, int16_t tag)
     d->vars->testing = 0;
 }
 
-void save_var(delta_state *d, const int16_t *loc)
+void save_var(delta_state *d, const delta_loc *loc)
 {
     delta_operand v;
 
@@ -1245,4 +1246,62 @@ void seqscan(delta_state *d, delta_seqctl *c)
         else
             t = *(int32_t *)(intptr_t)(t + 4) & ~3;
     }
+}
+
+int advance_tok(delta_state *d)
+{
+    return vscanadvOverToken(d, 1) ? 0 : 1;
+}
+
+/* Restart a forall from a given value: assign the source to the loop
+   variable, note what is being iterated, and drop the backtracking the
+   previous pass left. */
+int forall_cont_from(delta_state *d, int16_t tag, int16_t loop,
+                     int32_t unused, delta_loc *dst, const delta_loc *src)
+{
+    delta_operand dv, sv;
+
+    (void)unused;
+
+    if (d->vars->testing)
+        save_var(d, dst);
+
+    vinitloc_new(d, &dv, dst);
+    vinitloc_new(d, &sv, src);
+    vassign(d, &dv, &sv);
+
+    d->vars->loop_tag = loop;
+    d->vars->test_tag = tag;
+    clearDeltaStackBack(d);
+    d->stack->unknown_9c = 0;
+
+    reset_field(dst);
+    reset_field((delta_loc *)(intptr_t)src);
+    return 2;
+}
+
+/* Remember where the scan is, both in the caller's variable and on the
+   backtracking stack, so an unwind can put it back. */
+void savescptr(delta_state *d, int16_t tag, delta_loc *v)
+{
+    delta_stack *s = d->stack;
+    uint8_t *ca;
+    uint8_t *save;
+
+    if (d->vars->testing)
+        save_var(d, v);
+
+    v->value = d->vars->scan_ptr;
+
+    s->top -= s->ca_size;
+    ca = s->top;
+    s->limit -= s->ca_size;
+    ca[0] = 3;
+    *(int32_t *)(ca + 4) = tag;
+
+    s->top -= s->size_b0;
+    save = s->top;
+    s->limit -= s->size_b0;
+    save[0] = 1;
+    memcpy(save + 4, &d->vars->scan_ptr, 8);
 }
