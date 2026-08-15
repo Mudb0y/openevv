@@ -4726,3 +4726,97 @@ int calcWPM2ETI(delta_state *d, const delta_loc *in, delta_loc *out)
 
     return 0;
 }
+
+/* Hertz from semitones. The table covers one octave in tenths of a
+   semitone; anything above or below is brought into that octave and the
+   answer doubled or halved once per octave moved. */
+int calcST2HZ(delta_state *d, const delta_loc *in, delta_loc *out)
+{
+    int16_t shift = 0;
+    int16_t v = (int16_t)in->value;
+    int16_t idx;
+    int16_t hz;
+
+    (void)d;
+
+    v = (int16_t)(v * 100);
+
+    if (v > 0x1770) {
+        shift = (int16_t)((v - 0x1770) / 0x4b0 + 1);
+        idx = (int16_t)(v - shift * 0x4b0);
+        idx = (int16_t)((idx - 0x12c0) / 10);
+        hz = (int16_t)delta_frequencyInHz[idx];
+        hz = (int16_t)(hz << shift);
+    } else if (v < 0x12c0) {
+        shift = (int16_t)((0x12c0 - v) / 0x4b0 + 1);
+        idx = (int16_t)(v + shift * 0x4b0);
+        idx = (int16_t)((idx - 0x12c0) / 10);
+        hz = (int16_t)delta_frequencyInHz[idx];
+        hz = (int16_t)(hz >> shift);
+    } else {
+        idx = (int16_t)((v - 0x12c0) / 10);
+        hz = (int16_t)delta_frequencyInHz[idx];
+    }
+
+    out->field = hz;
+    return 0;
+}
+
+/* Semitones from hertz, the other way round. The frequency is halved or
+   doubled until it lands in the octave the table covers, the table is
+   scanned for the first entry at or above it, and the octaves moved are
+   added back on.
+
+   The original leaves its answer unset until the scan finds an entry. The
+   scan cannot come up empty, because the octave adjustment above is what
+   puts the frequency inside the table's range. */
+int calcHZ2ST(delta_state *d, const delta_loc *in, delta_loc *out)
+{
+    int16_t v = in->field;
+    int16_t oct = 0;
+    int16_t st = 0;
+    int16_t i;
+
+    (void)d;
+
+    v = (int16_t)(v * 100);
+
+    if (v > 0x65f4) {
+        while (v > 0x6633) {
+            v = (int16_t)(v >> 1);
+            oct = (int16_t)(oct + 1);
+        }
+        for (i = 0; i < 0x7a; i = (int16_t)(i + 1)) {
+            if (delta_frequencyInHz[i] >= v) {
+                st = (int16_t)delta_frequencyInST[i];
+                break;
+            }
+        }
+        st = (int16_t)(st + oct * 0x4b0);
+    } else if (v < 0x32c8) {
+        while (v < 0x3319) {
+            /* Shifted as a bit pattern and cut back to sixteen bits, which
+               is what the instruction does and what C will not promise for
+               a signed left shift. */
+            v = (int16_t)((uint32_t)(int32_t)v << 1);
+            oct = (int16_t)(oct + 1);
+        }
+        for (i = 0; i < 0x7a; i = (int16_t)(i + 1)) {
+            if (delta_frequencyInHz[i] >= v) {
+                st = (int16_t)delta_frequencyInST[i];
+                break;
+            }
+        }
+        st = (int16_t)(st - oct * 0x4b0);
+    } else {
+        for (i = 0; i < 0x7a; i = (int16_t)(i + 1)) {
+            if (delta_frequencyInHz[i] >= v) {
+                st = (int16_t)delta_frequencyInST[i];
+                break;
+            }
+        }
+    }
+
+    out->field = st;
+    return 0;
+}

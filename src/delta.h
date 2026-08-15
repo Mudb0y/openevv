@@ -596,6 +596,8 @@ int  modulo(delta_state *d, const delta_loc *a, const delta_loc *b,
 int  ctxt_clstr(delta_state *d, int32_t t, int8_t f);
 int  chstream(delta_state *d, int16_t v, uint8_t f);
 int  calcWPM2ETI(delta_state *d, const delta_loc *in, delta_loc *out);
+int  calcST2HZ(delta_state *d, const delta_loc *in, delta_loc *out);
+int  calcHZ2ST(delta_state *d, const delta_loc *in, delta_loc *out);
 
 /* The runtime's constant tables, lifted out of the original by
    tools/delta-tables.py. */
@@ -611,7 +613,10 @@ extern const int16_t delta_LogTab[160];
 extern const int16_t delta_Mi2HzTable[228];
 extern const int16_t delta_MidlineVals[104];
 extern const int16_t delta_PwindModTable[12];
-extern const int16_t delta_SpeedTable[640];
+extern const int16_t delta_SpeedTable[152];
+/* Four-byte records; the runtime reads the first half of each. */
+extern const int32_t delta_frequencyInHz[122];
+extern const int32_t delta_frequencyInST[122];
 
 /* Supplied by the language, not the runtime: lay a string of values into a
    range the caller has already opened. */

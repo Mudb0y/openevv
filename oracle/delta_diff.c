@@ -270,6 +270,8 @@ extern int  ibm_modulo(delta_state *, const delta_loc *, const delta_loc *,
 extern int  ibm_ctxt_clstr(delta_state *, int32_t, int8_t);
 extern int  ibm_chstream(delta_state *, int16_t, uint8_t);
 extern int  ibm_calcWPM2ETI(delta_state *, const delta_loc *, delta_loc *);
+extern int  ibm_calcST2HZ(delta_state *, const delta_loc *, delta_loc *);
+extern int  ibm_calcHZ2ST(delta_state *, const delta_loc *, delta_loc *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -5242,7 +5244,7 @@ BEGIN(if_tests_v_i)
     delta_loc *lm = (delta_loc *)(m->nodes + 0x300);
     delta_loc *lo = (delta_loc *)(o->nodes + 0x300);
     int32_t x = (int32_t)rng_next();
-    uint32_t which = rng_next() % 5u;
+    uint32_t which = rng_next() % 6u;
     int ra, rb;
 
     var_setup_at(m, o, lm, lo);
@@ -5424,7 +5426,7 @@ BEGIN(calc_tables)
        the range, so both ends of the clamp and both ends of the search are
        exercised. */
     delta_loc in, am, ao;
-    uint32_t which = rng_next() % 4u;
+    uint32_t which = rng_next() % 6u;
     int ra, rb;
 
     memset(&in, 0, sizeof(in));
@@ -5433,7 +5435,21 @@ BEGIN(calc_tables)
                                       : (int16_t)(rng_next() % 0x400u);
     ao = am;
 
-    if (which == 3) {
+    if (which == 5) {
+        /* Frequencies spread across several octaves, so the halving and
+           the doubling both run. The figure is multiplied by a hundred
+           inside a sixteen-bit slot, so anything above about 327 wraps and
+           the walk it then takes is the original's own affair. */
+        in.field = (int16_t)(20u + rng_next() % 300u);
+        ra = ibm_calcHZ2ST(&m->state, &in, &am);
+        rb = calcHZ2ST(&o->state, &in, &ao);
+    } else if (which == 4) {
+        /* This one reads the value slot rather than the field slot, and
+           the octave it lands in is what decides the shift. */
+        in.value = (int32_t)(int16_t)(rng_next() % 0x100u) - 0x40;
+        ra = ibm_calcST2HZ(&m->state, &in, &am);
+        rb = calcST2HZ(&o->state, &in, &ao);
+    } else if (which == 3) {
         ra = ibm_calcWPM2ETI(&m->state, &in, &am);
         rb = calcWPM2ETI(&o->state, &in, &ao);
     } else if (which == 0) {

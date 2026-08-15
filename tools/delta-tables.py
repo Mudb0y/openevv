@@ -31,6 +31,9 @@ WIDTH = {
     "ExpTab": 2,
     "LogTab": 2,
     "SpeedTable": 2,
+    # Four-byte records whose first half is the value the code reads.
+    "frequencyInHz": 4,
+    "frequencyInST": 4,
     "ExpTableCh0": 4,
     "ExpTableCh1": 4,
     "ExpTableCh2": 4,
@@ -65,9 +68,10 @@ def symbols(obj):
                          check=True, capture_output=True, text=True).stdout
     found = []
     for line in out.splitlines():
-        m = re.match(r"^([0-9a-f]+) ([dr]) _(\S+)$", line)
+        m = re.match(r"^([0-9a-f]+) ([dDrR]) _(\S+)$", line)
         if m:
-            found.append((m.group(3), m.group(2), int(m.group(1), 16)))
+            found.append((m.group(3), m.group(2).lower(),
+                          int(m.group(1), 16)))
     return found
 
 
