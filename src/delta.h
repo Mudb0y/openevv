@@ -612,6 +612,7 @@ void proj_l(delta_state *d, uint8_t f);
 int  forto_adv_upto_l(delta_state *d, int16_t tag, int16_t loop,
                       int16_t bound, uint8_t f, delta_token *tok,
                       const delta_token *end);
+int  calcHZ2ETI(delta_state *d, const delta_loc *in, delta_loc *out);
 
 /* Supplied by the language module, not by the runtime. */
 const uint8_t *actdlookup(delta_state *d, int32_t l, int32_t r,

@@ -272,6 +272,7 @@ extern int  ibm_chstream(delta_state *, int16_t, uint8_t);
 extern int  ibm_calcWPM2ETI(delta_state *, const delta_loc *, delta_loc *);
 extern int  ibm_calcST2HZ(delta_state *, const delta_loc *, delta_loc *);
 extern int  ibm_calcHZ2ST(delta_state *, const delta_loc *, delta_loc *);
+extern int  ibm_calcHZ2ETI(delta_state *, const delta_loc *, delta_loc *);
 extern void ibm_project_rl(delta_state *, delta_node *, int32_t, int32_t,
                            delta_node *, delta_node *, uint8_t);
 extern int  ibm_actd_lookup(delta_state *, int16_t, delta_token *,
@@ -5079,7 +5080,7 @@ static void two_numbers(delta_world *m, delta_world *o)
 }
 
 BEGIN(if_tests)
-    uint32_t which = rng_next() % 6u;
+    uint32_t which = rng_next() % 7u;
     int ra, rb;
 
     two_numbers(m, o);
@@ -5257,7 +5258,7 @@ BEGIN(if_tests_v_i)
     delta_loc *lm = (delta_loc *)(m->nodes + 0x300);
     delta_loc *lo = (delta_loc *)(o->nodes + 0x300);
     int32_t x = (int32_t)rng_next();
-    uint32_t which = rng_next() % 6u;
+    uint32_t which = rng_next() % 7u;
     int ra, rb;
 
     var_setup_at(m, o, lm, lo);
@@ -5439,7 +5440,7 @@ BEGIN(calc_tables)
        the range, so both ends of the clamp and both ends of the search are
        exercised. */
     delta_loc in, am, ao;
-    uint32_t which = rng_next() % 6u;
+    uint32_t which = rng_next() % 7u;
     int ra, rb;
 
     memset(&in, 0, sizeof(in));
@@ -5448,7 +5449,12 @@ BEGIN(calc_tables)
                                       : (int16_t)(rng_next() % 0x400u);
     ao = am;
 
-    if (which == 5) {
+    if (which == 6) {
+        /* Frequencies across and beyond the table's range. */
+        in.field = (int16_t)(rng_next() % 0x1400u);
+        ra = ibm_calcHZ2ETI(&m->state, &in, &am);
+        rb = calcHZ2ETI(&o->state, &in, &ao);
+    } else if (which == 5) {
         /* Frequencies spread across several octaves, so the halving and
            the doubling both run. The figure is multiplied by a hundred
            inside a sixteen-bit slot, so anything above about 327 wraps and

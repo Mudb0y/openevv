@@ -5118,3 +5118,64 @@ int forto_adv_upto_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
     tok->value = v->scan_ptr;
     return 2;
 }
+
+/* The engine's own pitch number from a frequency: the same search
+   calcWPM2ETI does, over the baseline table instead, and with the frequency
+   brought into the table's range first.
+
+   Outside that range the original answers with the table's own end value
+   rather than with its index, as its twin does. */
+int calcHZ2ETI(delta_state *d, const delta_loc *in, delta_loc *out)
+{
+    int16_t hi = 0x65;
+    int16_t lo = 0;
+    int16_t v = in->field;
+
+    (void)d;
+
+    if (v < 0x190)
+        v = 0x190;
+    if (v > 0x107d)
+        v = 0x107d;
+
+    if (v < delta_MidlineVals[0]) {
+        out->field = delta_MidlineVals[0];
+        return 0;
+    }
+    if (v >= delta_MidlineVals[100]) {
+        out->field = delta_MidlineVals[100];
+        return 0;
+    }
+
+    while (hi > lo) {
+        int16_t mid = (int16_t)(lo + (hi - lo) / 2);
+
+        if (v != delta_MidlineVals[mid] && (hi - lo) >= 2) {
+            if (v < delta_MidlineVals[mid])
+                hi = mid;
+            else
+                lo = mid;
+            continue;
+        }
+
+        if (v == delta_MidlineVals[mid] || hi == lo) {
+            out->field = mid;
+            return 0;
+        }
+
+        {
+            int32_t a = v - delta_MidlineVals[hi];
+            int32_t b = v - delta_MidlineVals[lo];
+
+            if (a < 0)
+                a = -a;
+            if (b < 0)
+                b = -b;
+
+            out->field = (a < b) ? hi : lo;
+        }
+        return 0;
+    }
+
+    return 0;
+}
