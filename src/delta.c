@@ -3255,3 +3255,51 @@ int32_t vsplit_time(delta_state *d, uint8_t f, int32_t t, int32_t off)
 
     return t;
 }
+
+/* Settle a position and, if an offset was left over, cut the run there so
+   the position lands on a sync of its own. */
+int vsync_tv(delta_state *d, delta_tpos *p)
+{
+    int32_t r;
+    int32_t off;
+
+    if ((p->flags & 1) != 0)
+        return 1;
+
+    r = vnormalize(d, p);
+    off = p->offset;
+
+    if (r == 2)
+        p->node = vsplit_time(d, p->field, p->node, off);
+
+    p->flags = 1;
+    return 1;
+}
+
+/* The same, but a position that fell just short of a run is dragged to its
+   end rather than cutting anything. */
+int vtmark_tv(delta_state *d, delta_tpos *p, uint8_t back)
+{
+    int32_t r;
+    int32_t off;
+
+    if ((p->flags & 1) != 0)
+        return 1;
+
+    r = vnormalize(d, p);
+    off = p->offset;
+
+    if (r == 2) {
+        p->node = vsplit_time(d, p->field, p->node, off);
+    } else if (r == 3) {
+        if (back == 0)
+            p->node = (int32_t)(intptr_t)
+                rmost(d, p->field, (int32_t *)(intptr_t)p->node);
+        else
+            p->node = (int32_t)(intptr_t)
+                lmost(d, p->field, (delta_node *)(intptr_t)p->node);
+    }
+
+    p->flags = 1;
+    return 1;
+}

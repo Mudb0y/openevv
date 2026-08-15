@@ -170,6 +170,8 @@ extern int  ibm_ins_tokens_s(delta_state *, uint8_t, const uint8_t *, uint8_t,
 extern int  ibm_ins_tokens_i(delta_state *, uint8_t, const uint8_t *, uint8_t,
                              int32_t);
 extern int32_t ibm_vsplit_time(delta_state *, uint8_t, int32_t, int32_t);
+extern int  ibm_vsync_tv(delta_state *, delta_tpos *);
+extern int  ibm_vtmark_tv(delta_state *, delta_tpos *, uint8_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -3697,6 +3699,85 @@ BEGIN(vsplit_time)
         bad++;
 END(vsplit_time)
 
+
+BEGIN(time_marks)
+    /* Both of these settle a position and then cut the run, so they need the
+       edit scaffold rather than the plain timing spine. */
+    static const uint8_t sets[4] = {0, 1, 4, 8};
+    uint8_t f = 0xffu;
+    uint8_t back = (uint8_t)(rng_next() % 2u);
+    delta_tpos pm, po;
+    int ra, rb, i;
+
+    for (i = 0; i < NSTMT; i++) {
+        int k = (int)((rng_next() + (uint32_t)i) % NSTMT);
+        int16_t kind = vstmtbl[k].fields[0].kind;
+
+        if (kind == DK_LONG || kind == DK_SHORT2) {
+            f = (uint8_t)k;
+            break;
+        }
+    }
+    if (f == 0xffu) {
+        free(m); free(o);
+        continue;
+    }
+
+    build_edit(m, o, (int8_t)(rng_next() % 4u));
+
+    /* The ends must not be syncs, or rmost and lmost park on them, and every
+       value must be non-zero or those two keep walking past. */
+    for (i = 0; i < 4; i++) {
+        uint32_t r = 16u + rng_next() % 16u;
+
+        if (i == 0 || i == 3) {
+            ((int32_t *)(m->nodes + i * 0x80))[0] &= ~2;
+            ((int32_t *)(o->nodes + i * 0x80))[0] &= ~2;
+        }
+        if (vstmtbl[f].fields[0].kind == DK_LONG) {
+            *(int32_t *)vstmtbl[f].get[0](m->nodes + i * 0x80 + 8) =
+                (int32_t)r;
+            *(int32_t *)vstmtbl[f].get[0](o->nodes + i * 0x80 + 8) =
+                (int32_t)r;
+        } else {
+            *(int16_t *)vstmtbl[f].get[0](m->nodes + i * 0x80 + 8) =
+                (int16_t)r;
+            *(int16_t *)vstmtbl[f].get[0](o->nodes + i * 0x80 + 8) =
+                (int16_t)r;
+        }
+    }
+
+    pm.node = (int32_t)(intptr_t)(m->nodes + 0x80);
+    po.node = (int32_t)(intptr_t)(o->nodes + 0x80);
+    pm.field = po.field = (int8_t)f;
+    pm.pad_05[0] = po.pad_05[0] = 0;
+    pm.pad_05[1] = po.pad_05[1] = 0;
+    pm.pad_05[2] = po.pad_05[2] = 0;
+    pm.offset = po.offset = (int32_t)(rng_next() % 21u) - 10;
+    pm.flags = po.flags = sets[rng_next() % 4u];
+    pm.pad_0d[0] = po.pad_0d[0] = 0;
+    pm.pad_0d[1] = po.pad_0d[1] = 0;
+    pm.pad_0d[2] = po.pad_0d[2] = 0;
+
+    if (rng_next() % 2u) {
+        ra = ibm_vsync_tv(&m->state, &pm);
+        rb = vsync_tv(&o->state, &po);
+    } else {
+        ra = ibm_vtmark_tv(&m->state, &pm, back);
+        rb = vtmark_tv(&o->state, &po, back);
+    }
+
+    if (ra != rb)
+        bad++;
+    if (pm.offset != po.offset || pm.flags != po.flags)
+        bad++;
+    if ((pm.node == 0) != (po.node == 0))
+        bad++;
+    else if (pm.node != 0
+             && pm.node - (int32_t)(intptr_t)m != po.node - (int32_t)(intptr_t)o)
+        bad++;
+END(time_marks)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -3797,6 +3878,7 @@ int main(void)
     test_vinit_stm();
     test_ins_tokens();
     test_vsplit_time();
+    test_time_marks();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
