@@ -139,7 +139,7 @@ typedef struct {
     int32_t   relink;          /* 0x1124, keep the spine order consistent */
     uint8_t   pad_1128[0x116c - 0x1128];
     const int8_t *nsq_marks;   /* 0x116c, one per fenced field */
-    uint8_t   pad_1170[4];
+    int32_t   unknown_1170;    /* 0x1170, cleared after an insert */
     int32_t   fence_base;      /* 0x1174 */
     uint8_t   pad_1178[0x40];
 } delta_vars;
@@ -437,6 +437,7 @@ int  compare_ptas(delta_state *d);
 void delsync(delta_state *d, void *p);
 int  mashtoks(delta_state *d, uint8_t f, int32_t t);
 int  vchkseqbad(delta_state *d, int32_t t, uint8_t f, const char *what);
+void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r);
 
 /* Supplied by the language, not the runtime: match the span between the two
    registers against one of its lookup sets. */

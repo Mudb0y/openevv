@@ -156,6 +156,7 @@ extern int  ibm_compare_ptas(delta_state *);
 extern void ibm_delsync(delta_state *, void *);
 extern int  ibm_mashtoks(delta_state *, uint8_t, int32_t);
 extern int  ibm_vchkseqbad(delta_state *, int32_t, uint8_t, const char *);
+extern void *ibm_vins_sync(delta_state *, uint8_t, int32_t, int32_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -3255,6 +3256,60 @@ BEGIN(vchkseqbad)
         bad++;
 END(vchkseqbad)
 
+
+BEGIN(vins_sync)
+    /* Four nodes with the right-hand spine link pointing forward, so the span
+       walk between the two neighbours reaches its end. Every node is a sync,
+       which is the case where the new one is linked through the field. */
+    enum { FB = 15, NNODE = 4, STEP = 0x80 };
+    uint8_t f = (uint8_t)(rng_next() % NSTMT);
+    void *ra, *rb;
+    int i, j;
+
+    build_pspine(m, o);
+    build_heap(m, o);
+    m->stack.sync_size = o->stack.sync_size = 0x80;
+    for (i = 0; i < NSEG; i++) {
+        int32_t used = (int32_t)(intptr_t)m->segs[i].end & 3;
+
+        if (((int32_t)(intptr_t)m->segs[i].end & 7) == 0)
+            used += 4;
+        m->segs[i].used = o->segs[i].used = used;
+    }
+
+    for (i = 0; i < NNODE; i++) {
+        int hi = i + 1 < NNODE ? i + 1 : NNODE - 1;
+
+        ((int32_t *)(m->nodes + i * STEP))[0] |= 2;
+        ((int32_t *)(o->nodes + i * STEP))[0] |= 2;
+        ((int32_t *)(m->nodes + i * STEP))[FB - 2] =
+            (int32_t)(intptr_t)(m->nodes + hi * STEP);
+        ((int32_t *)(o->nodes + i * STEP))[FB - 2] =
+            (int32_t)(intptr_t)(o->nodes + hi * STEP);
+        for (j = 0; j < 10; j++) {
+            uint32_t r = rng_next();
+
+            ((int32_t *)(m->nodes + i * STEP))[FB + j] =
+                (int32_t)((intptr_t)(m->nodes + hi * STEP) | (r & 3u));
+            ((int32_t *)(o->nodes + i * STEP))[FB + j] =
+                (int32_t)((intptr_t)(o->nodes + hi * STEP) | (r & 3u));
+        }
+    }
+
+    ra = ibm_vins_sync(&m->state, f,
+                       (int32_t)(intptr_t)m->nodes,
+                       (int32_t)(intptr_t)(m->nodes + 2 * STEP));
+    rb = vins_sync(&o->state, f,
+                   (int32_t)(intptr_t)o->nodes,
+                   (int32_t)(intptr_t)(o->nodes + 2 * STEP));
+
+    if ((ra == NULL) != (rb == NULL))
+        bad++;
+    else if (ra != NULL
+             && (char *)ra - (char *)m != (char *)rb - (char *)o)
+        bad++;
+END(vins_sync)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -3348,6 +3403,7 @@ int main(void)
     test_vcomp_pta();
     test_mashtoks();
     test_vchkseqbad();
+    test_vins_sync();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

@@ -2620,3 +2620,102 @@ int vchkseqbad(delta_state *d, int32_t t, uint8_t f, const char *what)
 
     return 1;
 }
+
+/* Put a fresh sync into a field between two nodes.
+
+   The new sync carries the field, and joins the chain on both sides: a
+   neighbour that is itself a sync is linked through the field, one that is
+   not is linked through its own words. Then, if the spine is being kept in
+   order, everything between the two neighbours is marked nonsequential,
+   either because the field is fenced or because something in the span was
+   not a lone statement. */
+void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r)
+{
+    delta_vars *v = d->vars;
+    int32_t base = v->fence_base;
+    delta_node *s = alloc_sync(d);
+    int32_t sv;
+    int32_t left;
+    int32_t right;
+    int32_t p;
+    int32_t nonseq;
+
+    if (s == NULL)
+        return NULL;
+
+    sv = (int32_t)(intptr_t)s;
+
+    *(int32_t *)(intptr_t)(sv + (base + f) * 4) |= 1;
+
+    if (v->nsq_marks[f] != 0)
+        SETALLNSQ(s);
+
+    *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+
+    if (l != 0 && (*(int32_t *)(intptr_t)l & 2) != 0) {
+        left = l;
+        *(int32_t *)(intptr_t)(left + (base + f) * 4) =
+            (*(int32_t *)(intptr_t)(left + (base + f) * 4) & 3) | sv;
+    } else {
+        left = *(int32_t *)(intptr_t)l & ~3;
+        ((delta_node *)(intptr_t)l)->link = sv;
+    }
+
+    *(int32_t *)(intptr_t)(sv + 0xc + f * 4) =
+        (*(int32_t *)(intptr_t)(sv + 0xc + f * 4) & 3) | l;
+
+    if (r != 0 && (*(int32_t *)(intptr_t)r & 2) != 0) {
+        right = r;
+        *(int32_t *)(intptr_t)(right + 0xc + f * 4) =
+            (*(int32_t *)(intptr_t)(right + 0xc + f * 4) & 3) | sv;
+    } else {
+        right = *(int32_t *)(intptr_t)(r + 4) & ~3;
+        *(int32_t *)(intptr_t)r = sv;
+    }
+
+    *(int32_t *)(intptr_t)(sv + (base + f) * 4) =
+        (*(int32_t *)(intptr_t)(sv + (base + f) * 4) & 3) | r;
+
+    if (v->relink != 0) {
+        p = *rlink(d, left) & ~3;
+
+        if (p != right) {
+            nonseq = 0;
+
+            if (v->nsq_marks[f] != 0) {
+                nonseq = 1;
+            } else {
+                while (p != right) {
+                    if (!ONESTM((const delta_node *)(intptr_t)p)
+                        && !ALLNSQ((const delta_node *)(intptr_t)p)) {
+                        nonseq = 1;
+                        break;
+                    }
+                    p = *rlink(d, p) & ~3;
+                }
+            }
+
+            if (nonseq != 0) {
+                SETNONSEQ(s);
+                if (v->ctx_both != 0 && !ONESTM(s)
+                    && !vchkseqbad(d, sv, f, "i5"))
+                    return NULL;
+            } else {
+                p = *rlink(d, left) & ~3;
+                while (p != right) {
+                    SETNONSEQ((delta_node *)(intptr_t)p);
+                    if (v->ctx_both != 0
+                        && !ONESTM((const delta_node *)(intptr_t)p)
+                        && !vchkseqbad(d, p, f, "i1"))
+                        return NULL;
+                    p = *rlink(d, p) & ~3;
+                }
+            }
+        }
+
+        INSSPINER(d, s, (delta_node *)(intptr_t)left);
+    }
+
+    v->unknown_1170 = 0;
+    return s;
+}
