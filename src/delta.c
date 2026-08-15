@@ -1394,3 +1394,119 @@ int test_synch(delta_state *d, int16_t tag, uint8_t n, const uint8_t *list)
 
     return 0;
 }
+
+/* Where the scan's field points from a given node, which the string tests
+   need before they have moved the scan. */
+static int32_t scan_peek(delta_state *d)
+{
+    delta_vars *v = d->vars;
+
+    if (v->scan_rev != 0)
+        return *(int32_t *)(intptr_t)
+            (v->scan_ptr + (v->fence_base + v->scan_field) * 4) & ~3;
+    return *(int32_t *)(intptr_t)
+        (v->scan_ptr + 0xc + v->scan_field * 4) & ~3;
+}
+
+/* Match a run of statements against a string of sixteen-bit values, each
+   stored big end first with the sign in the top bit of the first byte. */
+int test_string_i(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
+{
+    const delta_stmt *e = &vstmtbl[st];
+    const uint8_t *p = str;
+    const uint8_t *end = str + n;
+    int16_t want = 0;
+    delta_operand a, b;
+
+    a.ptr = &want;
+    a.kind = DK_SHORT2;
+    a.flag = e->fields[0].flag;
+    b.kind = e->fields[0].kind;
+    b.flag = e->fields[0].flag;
+
+    while (p < end) {
+        int32_t node = scan_peek(d);
+
+        if (node == 0)
+            return 1;
+
+        if ((*(int32_t *)(intptr_t)node & 2) == 0) {
+            want = (int16_t)(((p[0] & 0x7f) << 8) | p[1]);
+            if ((p[0] & 0x80) != 0)
+                want = (int16_t)(-want);
+            p += 2;
+
+            b.ptr = e->get[0](TFLDS((void *)(intptr_t)node));
+            vcompare(d, &a, &b);
+            if (d->vars->compared_equal != 0)
+                return 1;
+        }
+
+        if (!vscanadv(d, 1, 1))
+            return 1;
+    }
+
+    return 0;
+}
+
+/* The same against a string of bytes. When the language already declares the
+   field as a byte the comparison is direct; otherwise it goes through the
+   general one. */
+int test_string_s(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
+{
+    const delta_stmt *e = &vstmtbl[st];
+    const uint8_t *p = str;
+    const uint8_t *end = str + n;
+
+    if (e->fields[0].kind == DK_UBYTE) {
+        while (p < end) {
+            int32_t node = scan_peek(d);
+
+            if (node == 0)
+                return 1;
+
+            if ((*(int32_t *)(intptr_t)node & 2) == 0) {
+                if (*(const uint8_t *)
+                    e->get[0](TFLDS((void *)(intptr_t)node)) != *p)
+                    return 1;
+                p++;
+            }
+
+            if (!vscanadv(d, 1, 1))
+                return 1;
+        }
+
+        return 0;
+    }
+
+    {
+        delta_operand a, b;
+
+        a.kind = DK_UBYTE;
+        a.flag = e->fields[0].flag;
+        b.kind = e->fields[0].kind;
+        b.flag = a.flag;
+
+        while (p < end) {
+            int32_t node = scan_peek(d);
+
+            if (node == 0)
+                return 1;
+
+            if ((*(int32_t *)(intptr_t)node & 2) == 0) {
+                a.ptr = (void *)(intptr_t)p;
+                p++;
+
+                b.ptr = e->get[0](TFLDS((void *)(intptr_t)node));
+                vcompare(d, &a, &b);
+                if (d->vars->compared_equal != 0)
+                    return 1;
+            }
+
+            if (!vscanadv(d, 1, 1))
+                return 1;
+        }
+    }
+
+    return 0;
+}

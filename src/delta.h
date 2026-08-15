@@ -316,6 +316,8 @@ int  forall_cont_from(delta_state *d, int16_t tag, int16_t loop,
 void savescptr(delta_state *d, int16_t tag, delta_loc *v);
 int  get_parm(delta_state *d, delta_loc *out, delta_loc *loc, int16_t kind);
 int  test_synch(delta_state *d, int16_t tag, uint8_t n, const uint8_t *list);
+int  test_string_i(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str);
+int  test_string_s(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str);
 
 /* Bumped whenever the spine is relinked, so anything holding a position knows
    to look again. */

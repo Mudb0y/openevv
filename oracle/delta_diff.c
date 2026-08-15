@@ -106,6 +106,8 @@ extern int  ibm_forall_cont_from(delta_state *, int16_t, int16_t, int32_t,
 extern void ibm_savescptr(delta_state *, int16_t, delta_loc *);
 extern int  ibm_get_parm(delta_state *, delta_loc *, delta_loc *, int16_t);
 extern int  ibm_test_synch(delta_state *, int16_t, uint8_t, const uint8_t *);
+extern int  ibm_test_string_i(delta_state *, uint8_t, uint8_t, const uint8_t *);
+extern int  ibm_test_string_s(delta_state *, uint8_t, uint8_t, const uint8_t *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -1756,6 +1758,119 @@ BEGIN(test_synch)
     memset(o->nodes, 0, sizeof(o->nodes));
 END(test_synch)
 
+
+/* The two string tests need a chain the scan can walk and field bytes small
+   enough that a match happens often rather than never. */
+static void string_setup(delta_world *m, delta_world *o, uint8_t st)
+{
+    static const int32_t at[4] = {0x00, 0x80, 0x100, 0x180};
+    int i;
+
+    build_chain(m, o);
+
+    /* These two loop, and vscanadv can leave the scan on null without saying
+       so, which the next pass then dereferences. The original faults there
+       too, so keep every step word pointing at something: each node forward,
+       the last at itself, and its first word not a sync or the string would
+       never be consumed. */
+    for (i = 0; i < 4; i++) {
+        int32_t to = at[i + (i < 3)];
+        uint32_t tag = rng_next() & 3u;
+
+        ((int32_t *)(m->nodes + at[i]))[0] =
+            (int32_t)((intptr_t)(m->nodes + to) | (i == 3 ? (tag & 1u) : tag));
+        ((int32_t *)(o->nodes + at[i]))[0] =
+            (int32_t)((intptr_t)(o->nodes + to) | (i == 3 ? (tag & 1u) : tag));
+        tag = rng_next() & 3u;
+        ((int32_t *)(m->nodes + at[i]))[1] =
+            (int32_t)((intptr_t)(m->nodes + to) | tag);
+        ((int32_t *)(o->nodes + at[i]))[1] =
+            (int32_t)((intptr_t)(o->nodes + to) | tag);
+    }
+    for (i = 3; i < 24; i++) {
+        uint32_t tag = rng_next() & 3u;
+
+        ((int32_t *)(m->nodes + at[3]))[i] =
+            (int32_t)((intptr_t)(m->nodes + at[3]) | tag);
+        ((int32_t *)(o->nodes + at[3]))[i] =
+            (int32_t)((intptr_t)(o->nodes + at[3]) | tag);
+    }
+    m->vars.fence_base = o->vars.fence_base = 13;
+    m->vars.fence_count = o->vars.fence_count = (int8_t)(rng_next() % 3u);
+    m->vars.scan_field = o->vars.scan_field = (uint8_t)(rng_next() % 3u);
+    m->vars.scan_rev = o->vars.scan_rev = (uint8_t)(rng_next() % 2u);
+    m->vars.scan_held = o->vars.scan_held = (uint8_t)(rng_next() % 2u);
+
+    for (i = 0; i < 4; i++) {
+        m->chars[i] = o->chars[i] = (uint8_t)i;
+        m->marks[i] = o->marks[i] = (uint8_t)(rng_next() % 2u);
+    }
+
+    for (i = 0; i < 4; i++) {
+        uint8_t v = (uint8_t)(rng_next() % 4u);
+
+        *(uint8_t *)vstmtbl[st].get[0](m->nodes + at[i] + 8) = v;
+        *(uint8_t *)vstmtbl[st].get[0](o->nodes + at[i] + 8) = v;
+    }
+
+    m->vars.scan_ptr = (int32_t)(intptr_t)m->nodes;
+    o->vars.scan_ptr = (int32_t)(intptr_t)o->nodes;
+}
+
+BEGIN(test_string_i)
+    uint8_t st = (uint8_t)(rng_next() % NSTMT);
+    uint8_t str[8];
+    uint8_t n = (uint8_t)(2u * (1u + rng_next() % 3u));
+    int ra, rb, i;
+
+    string_setup(m, o, st);
+    for (i = 0; i < 8; i += 2) {
+        str[i] = (uint8_t)(rng_next() % 2u ? 0x80 : 0x00);
+        str[i + 1] = (uint8_t)(rng_next() % 4u);
+    }
+
+    ra = ibm_test_string_i(&m->state, st, n, str);
+    rb = test_string_i(&o->state, st, n, str);
+    if (ra != rb)
+        bad++;
+    if ((m->vars.scan_ptr == 0) != (o->vars.scan_ptr == 0))
+        bad++;
+    else if (m->vars.scan_ptr != 0
+             && m->vars.scan_ptr - (int32_t)(intptr_t)m
+                != o->vars.scan_ptr - (int32_t)(intptr_t)o)
+        bad++;
+
+    m->vars.scan_ptr = o->vars.scan_ptr = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(test_string_i)
+
+BEGIN(test_string_s)
+    uint8_t st = (uint8_t)(rng_next() % NSTMT);
+    uint8_t str[8];
+    uint8_t n = (uint8_t)(1u + rng_next() % 4u);
+    int ra, rb, i;
+
+    string_setup(m, o, st);
+    for (i = 0; i < 8; i++)
+        str[i] = (uint8_t)(rng_next() % 4u);
+
+    ra = ibm_test_string_s(&m->state, st, n, str);
+    rb = test_string_s(&o->state, st, n, str);
+    if (ra != rb)
+        bad++;
+    if ((m->vars.scan_ptr == 0) != (o->vars.scan_ptr == 0))
+        bad++;
+    else if (m->vars.scan_ptr != 0
+             && m->vars.scan_ptr - (int32_t)(intptr_t)m
+                != o->vars.scan_ptr - (int32_t)(intptr_t)o)
+        bad++;
+
+    m->vars.scan_ptr = o->vars.scan_ptr = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(test_string_s)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -1820,6 +1935,8 @@ int main(void)
     test_savescptr();
     test_get_parm();
     test_test_synch();
+    test_test_string_i();
+    test_test_string_s();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
