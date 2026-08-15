@@ -2587,3 +2587,36 @@ int mashtoks(delta_state *d, uint8_t f, int32_t t)
     cacheDeletedDeltaObject(d, (void *)(intptr_t)r);
     return 1;
 }
+
+/* Whether a statement may take part in a change. One that is neither a lone
+   statement nor wholly nonsequential may not; nor may one that carries more
+   than one field with any of them unmarked. */
+int vchkseqbad(delta_state *d, int32_t t, uint8_t f, const char *what)
+{
+    int32_t present = 0;
+    int32_t marked = 0;
+    uint8_t i;
+
+    if (!ONESTM((const delta_node *)(intptr_t)t)
+        && !ALLNSQ((const delta_node *)(intptr_t)t)) {
+        vseqbad(d, (void *)(intptr_t)t, (void *)(intptr_t)(int32_t)f, what);
+        return 0;
+    }
+
+    for (i = 0; i < d->fence_fill; i++) {
+        if ((*(int32_t *)(intptr_t)
+             (t + (d->vars->fence_base + i) * 4) & 1) == 0)
+            continue;
+
+        present++;
+        if (d->vars->nsq_marks[i] != 0)
+            marked++;
+    }
+
+    if (marked < present && present > 1) {
+        vseqbad(d, (void *)(intptr_t)t, (void *)(intptr_t)(int32_t)f, what);
+        return 0;
+    }
+
+    return 1;
+}

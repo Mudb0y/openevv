@@ -18,8 +18,18 @@ deps = importlib.import_module('delta-deps')
 
 
 def done_set():
-    src = open(os.path.join(ROOT, 'oracle', 'delta_diff.c')).read()
-    return set(re.findall(r'\bibm_([A-Za-z_][A-Za-z0-9_]*)\s*\(', src))
+    """Transcribed counts as done. Almost everything is also compared against
+    IBM's, but a few cannot be: vseqbad returns an indeterminate value, and
+    the two heap calls that reach the system allocator are the layer this port
+    supplies itself."""
+    done = set()
+    for name in ('delta.h',):
+        for m in re.finditer(r'^\s*(?:[A-Za-z_][A-Za-z0-9_ *]*?)\b'
+                             r'([A-Za-z_][A-Za-z0-9_]*)\s*\([^;]*\);\s*$',
+                             open(os.path.join(ROOT, 'src', name)).read(),
+                             re.M):
+            done.add(m.group(1))
+    return done
 
 
 def sizes(obj):

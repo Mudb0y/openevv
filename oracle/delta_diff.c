@@ -155,6 +155,7 @@ extern void ibm_cacheDeletedDeltaObject(delta_state *, void *);
 extern int  ibm_compare_ptas(delta_state *);
 extern void ibm_delsync(delta_state *, void *);
 extern int  ibm_mashtoks(delta_state *, uint8_t, int32_t);
+extern int  ibm_vchkseqbad(delta_state *, int32_t, uint8_t, const char *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -3240,6 +3241,20 @@ BEGIN(mashtoks)
         bad++;
 END(mashtoks)
 
+
+BEGIN(vchkseqbad)
+    uint8_t f = (uint8_t)(rng_next() % NSTMT);
+    int ra, rb;
+
+    build_pspine(m, o);
+    ra = ibm_vchkseqbad(&m->state, (int32_t)(intptr_t)(m->nodes + 0x80), f,
+                        "insertion");
+    rb = vchkseqbad(&o->state, (int32_t)(intptr_t)(o->nodes + 0x80), f,
+                    "insertion");
+    if (ra != rb)
+        bad++;
+END(vchkseqbad)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -3332,6 +3347,7 @@ int main(void)
     test_heap_objects();
     test_vcomp_pta();
     test_mashtoks();
+    test_vchkseqbad();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

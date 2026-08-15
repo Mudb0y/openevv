@@ -436,6 +436,7 @@ void cacheDeletedDeltaObject(delta_state *d, void *p);
 int  compare_ptas(delta_state *d);
 void delsync(delta_state *d, void *p);
 int  mashtoks(delta_state *d, uint8_t f, int32_t t);
+int  vchkseqbad(delta_state *d, int32_t t, uint8_t f, const char *what);
 
 /* Supplied by the language, not the runtime: match the span between the two
    registers against one of its lookup sets. */
