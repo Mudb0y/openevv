@@ -231,11 +231,11 @@ void freeDeltaStackTo(delta_state *d, uint8_t *to)
     delta_stack *s = d->stack;
     int32_t used;
 
-    if (s->block == NULL)
+    if (s->seg == NULL)
         return;
 
     s->top = to;
-    used = (int32_t)(*(uint8_t **)((char *)s->block + 0x10) - s->top);
+    used = (int32_t)(s->seg->end - s->top);
     s->limit = s->base - used;
 }
 

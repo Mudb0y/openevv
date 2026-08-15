@@ -1,6 +1,7 @@
 #ifndef DELTA_H
 #define DELTA_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 /* The Delta machine's working state: one allocation of 0x1088 bytes.
@@ -31,6 +32,32 @@ typedef struct {
 
 typedef delta_tpos delta_pta;
 
+/* One segment of the Delta heap. Objects are carved off the top of the block
+   downwards, so an allocation returns end minus used; the odd starting value
+   of used is the alignment fudge that keeps those addresses eight-aligned.
+   The backtracking stack is itself carved out of a segment this way. */
+typedef struct delta_seg delta_seg;
+struct delta_seg {
+    delta_seg *prev;     /* +0x00 */
+    int32_t    used;     /* +0x04 */
+    int32_t    live;     /* +0x08, objects still allocated in it */
+    uint8_t   *block;    /* +0x0c */
+    uint8_t   *end;      /* +0x10, the last byte of the block */
+    delta_seg *next;     /* +0x14 */
+};
+
+/* Where a rule can rewind the heap to. Ten of them, and the runtime picks
+   whichever is free. */
+typedef struct {
+    uint8_t   *pos;      /* +0x00, what the caller was handed back */
+    delta_seg *seg;      /* +0x04 */
+    int32_t    unused;   /* +0x08, set means this slot is spare */
+    int32_t    used;     /* +0x0c */
+    int32_t    live;     /* +0x10 */
+} delta_mark;
+
+#define DELTA_MARKS 10
+
 /* The backtracking stack. Its true size is not established: only the fields
    below have been seen, so the tail is however much room the records need. */
 typedef struct {
@@ -44,7 +71,9 @@ typedef struct {
     uint8_t       pad_0040[0x5c - 0x40];
     const int8_t *nsq_fields;  /* 0x005c, which fields decide the flags,
                                   terminated by a negative entry */
-    uint8_t       pad_0060[0x9c - 0x60];
+    uint8_t       pad_0060[0x94 - 0x60];
+    int32_t       sync_size;   /* 0x0094, how big one sync node is */
+    uint8_t       pad_0098[4];
     int32_t       unknown_9c;  /* 0x009c, cleared when a loop restarts */
     uint8_t  *names;         /* 0x00a0, the name stack, eight bytes an entry */
     int8_t    names_depth;   /* 0x00a4 */
@@ -67,13 +96,17 @@ typedef struct {
     int32_t   left_hits[50];   /* 0x0430 */
     uint8_t  *top;           /* 0x04f8 */
     uint8_t  *limit;         /* 0x04fc */
-    uint8_t   pad_0500[4];
-    void     *block;         /* 0x0504, the allocation the stack lives in */
-    uint8_t   pad_0508[4];
-    uint8_t  *vbot;          /* 0x050c, how far back an unwind may go */
-    uint8_t   pad_0510[8];
-    uint8_t  *base;          /* 0x0518 */
-    uint8_t   pad_051c[0x40];
+    delta_seg *heap_first;   /* 0x0500, where the heap starts */
+    delta_seg *seg;          /* 0x0504, the segment the stack lives in */
+    delta_seg *heap_cur;     /* 0x0508, where the next object comes from */
+    uint8_t   *vbot;         /* 0x050c, how far back an unwind may go */
+    uint8_t    pad_0510[4];
+    int32_t    seg_size;     /* 0x0514 */
+    uint8_t   *base;         /* 0x0518 */
+    delta_mark marks[DELTA_MARKS];  /* 0x051c */
+    int32_t    free_count;   /* 0x05e4, how many spare segments are held */
+    delta_seg *free_segs;    /* 0x05e8 */
+    uint8_t    pad_05ec[0x14];
 } delta_stack;
 
 /* Where the rules keep their variables and the result of the last compare.
@@ -380,6 +413,23 @@ int  vmark(delta_state *d, uint8_t st, uint8_t fld, int32_t t, int32_t stop,
            const void *value);
 int  visleft(delta_state *d, int32_t a, int32_t b);
 int  visright(delta_state *d, int32_t a, int32_t b);
+
+/* The Delta heap. The structure is the original's; where the raw memory comes
+   from is not, so that a target without a general allocator can supply an
+   arena instead. */
+void *delta_sys_alloc(size_t n);
+void  delta_sys_free(void *p);
+
+int   initializeDeltaHeap(delta_state *d, int32_t size);
+void  resetDeltaHeap(delta_state *d);
+void *allocDeltaHeapObject(delta_state *d, int32_t size);
+void  freeDeltaHeapObject(delta_state *d, void *p);
+void  freeDeltaHeapTo(delta_state *d, uint8_t *pos, int32_t release);
+int32_t getDeltaHeapSegNumber(delta_state *d, uint8_t *p, int32_t unit);
+int   recordDeltaHeapPos(delta_state *d);
+void  free_heap(delta_state *d, void *p);
+void *alloc_tok(delta_state *d, const delta_stmt *e);
+void *alloc_sync(delta_state *d);
 
 /* Supplied by the language, not the runtime: match the span between the two
    registers against one of its lookup sets. */

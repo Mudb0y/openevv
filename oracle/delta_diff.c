@@ -138,9 +138,23 @@ extern int  ibm_vmark(delta_state *, uint8_t, uint8_t, int32_t, int32_t,
                       const void *);
 extern int  ibm_visleft(delta_state *, int32_t, int32_t);
 extern int  ibm_visright(delta_state *, int32_t, int32_t);
+/* These two keep their MSVC fastcall manglings, which the rename pass leaves
+   alone, so they are reached by their literal symbol names. */
+extern void * __attribute__((fastcall))
+ibm_allocDeltaHeapObject(delta_state *, int32_t) __asm__("@allocDeltaHeapObject@8");
+extern void __attribute__((fastcall))
+ibm_freeDeltaHeapObject(delta_state *, void *) __asm__("@freeDeltaHeapObject@8");
+extern void ibm_freeDeltaHeapTo(delta_state *, uint8_t *, int32_t);
+extern int32_t ibm_getDeltaHeapSegNumber(delta_state *, uint8_t *, int32_t);
+extern int  ibm_recordDeltaHeapPos(delta_state *);
+extern void *ibm_alloc_tok(delta_state *, const delta_stmt *);
+extern void *ibm_alloc_sync(delta_state *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
+#define NSEG      6       /* segments the heap tests build */
+#define SEGBYTES  0x100
+#define SEGWORDS  (SEGBYTES / 8)
 #define FENCE_MAP 0x100   /* the reverse fence table is indexed by a byte */
 
 /* A state with everything it can reach hanging off it, so one comparison
@@ -153,7 +167,9 @@ typedef struct {
     uint8_t     chars[FENCE_MAP];
     uint8_t     map[FENCE_MAP];
     uint8_t     marks[FENCE_MAP];
-    uint8_t     blockhdr[0x20];   /* the allocation header, read at +0x10 */
+    delta_seg   stackseg;         /* the segment the stack lives in */
+    delta_seg   segs[NSEG];       /* a heap built inside the world */
+    int64_t     heapmem[NSEG][SEGWORDS];
     uint8_t     names[0x200];     /* the name stack */
     uint8_t     nodes[0x400];     /* room to build a spine to walk */
     int8_t      nsqf[0x20];       /* which fields decide the spine flags */
@@ -210,8 +226,8 @@ static void world_link(delta_world *w)
     w->stack.names_depth = (int8_t)(rng_next() % 0x10u);
     w->stack.top = w->records + RECORDS / 2;
     w->stack.limit = w->records + RECORDS / 2 - 0x40;
-    w->stack.block = w->blockhdr;
-    *(uint8_t **)(w->blockhdr + 0x10) = w->records + RECORDS;
+    w->stack.seg = &w->stackseg;
+    w->stackseg.end = w->records + RECORDS;
     w->stack.base = w->records + RECORDS;
     w->stack.vbot = w->records + 0x20;
     w->vars.back = w->records + 0x30;
@@ -269,7 +285,29 @@ static void normalise(delta_world *w, delta_state *st, delta_vars *va,
     REBASE(va->back);
     REBASE(sk->top);
     REBASE(sk->limit);
-    REBASE(sk->block);
+    REBASE(sk->seg);
+
+    /* The heap's own pointers. Most tests never set these up, so rewrite one
+       only when it really points into this world. */
+#define REBASE_P(p)                                                     \
+    do {                                                                \
+        char *v_ = (char *)(p);                                         \
+        if (v_ >= (char *)w_                                            \
+            && v_ < (char *)w_ + sizeof(delta_world))                   \
+            (p) = (void *)(v_ - base);                                  \
+    } while (0)
+    REBASE_P(sk->heap_first);
+    REBASE_P(sk->heap_cur);
+    REBASE_P(sk->free_segs);
+    {
+        int mi;
+
+        for (mi = 0; mi < DELTA_MARKS; mi++) {
+            REBASE_P(sk->marks[mi].pos);
+            REBASE_P(sk->marks[mi].seg);
+        }
+    }
+#undef REBASE_P
     REBASE(sk->vbot);
     REBASE(sk->base);
     REBASE(sk->names);
@@ -351,14 +389,21 @@ static int world_differs(delta_world *a, delta_world *b)
         diff_where = "marks";
         return 1;
     }
-    if (*(char **)(a->blockhdr + 0x10) - (char *)a
-        != *(char **)(b->blockhdr + 0x10) - (char *)b)
+    if (region_differs(a, b, (const uint8_t *)&a->stackseg,
+                       (const uint8_t *)&b->stackseg, sizeof(a->stackseg))) {
+        diff_where = "stackseg";
         return 1;
-    if (memcmp(a->blockhdr, b->blockhdr, 0x10) != 0)
+    }
+    if (region_differs(a, b, (const uint8_t *)a->segs,
+                       (const uint8_t *)b->segs, sizeof(a->segs))) {
+        diff_where = "segs";
         return 1;
-    if (memcmp(a->blockhdr + 0x14, b->blockhdr + 0x14,
-               sizeof(a->blockhdr) - 0x14) != 0)
+    }
+    if (region_differs(a, b, (const uint8_t *)a->heapmem,
+                       (const uint8_t *)b->heapmem, sizeof(a->heapmem))) {
+        diff_where = "heapmem";
         return 1;
+    }
     if (memcmp(a->names, b->names, sizeof(a->names)) != 0) {
         diff_where = "names";
         return 1;
@@ -2879,6 +2924,189 @@ BEGIN(visleft)
     }
 END(visleft)
 
+
+/* A whole Delta heap inside the world, so every address the harness compares
+   is an offset. Three segments live and three on the free list, which keeps
+   the free count under ten: every path except the two that reach the system
+   allocator then runs without ever calling it, and those two are the layer
+   this port deliberately supplies itself. */
+static void build_heap(delta_world *m, delta_world *o)
+{
+    int i;
+
+    for (i = 0; i < NSEG; i++) {
+        delta_seg *a = &m->segs[i];
+        delta_seg *b = &o->segs[i];
+        int32_t used;
+
+        a->block = (uint8_t *)m->heapmem[i];
+        b->block = (uint8_t *)o->heapmem[i];
+        a->end = a->block + SEGBYTES - 1;
+        b->end = b->block + SEGBYTES - 1;
+
+        used = (int32_t)(intptr_t)a->end & 3;
+        if (((int32_t)(intptr_t)a->end & 7) == 0)
+            used += 4;
+        used += (int32_t)(rng_next() % 0x40u) * 8;
+        a->used = b->used = used;
+        a->live = b->live = (int32_t)(1u + rng_next() % 3u);
+        a->prev = b->prev = NULL;
+        a->next = b->next = NULL;
+    }
+
+    for (i = 0; i < 3; i++) {
+        m->segs[i].next = (i < 2) ? &m->segs[i + 1] : NULL;
+        o->segs[i].next = (i < 2) ? &o->segs[i + 1] : NULL;
+        m->segs[i].prev = (i > 0) ? &m->segs[i - 1] : NULL;
+        o->segs[i].prev = (i > 0) ? &o->segs[i - 1] : NULL;
+    }
+    for (i = 3; i < NSEG; i++) {
+        m->segs[i].next = (i + 1 < NSEG) ? &m->segs[i + 1] : NULL;
+        o->segs[i].next = (i + 1 < NSEG) ? &o->segs[i + 1] : NULL;
+    }
+
+    m->stack.heap_first = &m->segs[0];
+    o->stack.heap_first = &o->segs[0];
+    m->stack.heap_cur = &m->segs[2];
+    o->stack.heap_cur = &o->segs[2];
+    m->stack.free_segs = &m->segs[3];
+    o->stack.free_segs = &o->segs[3];
+    m->stack.free_count = o->stack.free_count = 3;
+    m->stack.seg_size = o->stack.seg_size = SEGBYTES;
+    m->stack.sync_size = o->stack.sync_size = 0x20;
+
+    for (i = 0; i < DELTA_MARKS; i++) {
+        m->stack.marks[i].unused = o->stack.marks[i].unused = 1;
+        m->stack.marks[i].pos = NULL;
+        o->stack.marks[i].pos = NULL;
+        m->stack.marks[i].seg = NULL;
+        o->stack.marks[i].seg = NULL;
+        m->stack.marks[i].used = o->stack.marks[i].used = 0;
+        m->stack.marks[i].live = o->stack.marks[i].live = 0;
+    }
+}
+
+/* Point a pointer at a place in a segment with that segment stamped in front
+   of it, which is the shape allocDeltaHeapObject hands back. */
+static void stamp_object(delta_world *w, int seg, int32_t off, uint8_t **out)
+{
+    uint8_t *p = (uint8_t *)w->heapmem[seg] + off;
+
+    *(delta_seg **)p = &w->segs[seg];
+    *out = p + 4;
+}
+
+BEGIN(heap_record)
+    int ra, rb, i;
+
+    build_heap(m, o);
+    /* Use up some of the ten so the search has to skip. */
+    for (i = 0; i < DELTA_MARKS; i++) {
+        int32_t taken = (int32_t)(rng_next() % 2u);
+
+        m->stack.marks[i].unused = o->stack.marks[i].unused = 1 - taken;
+    }
+
+    ra = ibm_recordDeltaHeapPos(&m->state);
+    rb = recordDeltaHeapPos(&o->state);
+    if (ra != rb)
+        bad++;
+END(heap_record)
+
+BEGIN(heap_segnum)
+    int32_t ra, rb;
+    uint8_t *pm, *po;
+    int32_t unit = (int32_t)(1u + rng_next() % 8u);
+    int seg = (int)(rng_next() % NSEG);
+    int32_t off = (int32_t)((rng_next() % 0x18u) * 8u + 8u);
+
+    build_heap(m, o);
+    stamp_object(m, seg, off, &pm);
+    stamp_object(o, seg, off, &po);
+
+    ra = ibm_getDeltaHeapSegNumber(&m->state, pm, unit);
+    rb = getDeltaHeapSegNumber(&o->state, po, unit);
+    if (ra != rb)
+        bad++;
+END(heap_segnum)
+
+BEGIN(heap_alloc)
+    void *ra, *rb;
+    int32_t size = (int32_t)(rng_next() % 0x60u);
+
+    build_heap(m, o);
+    ra = ibm_allocDeltaHeapObject(&m->state, size);
+    rb = allocDeltaHeapObject(&o->state, size);
+
+    if ((ra == NULL) != (rb == NULL))
+        bad++;
+    else if (ra != NULL
+             && (char *)ra - (char *)m != (char *)rb - (char *)o)
+        bad++;
+END(heap_alloc)
+
+BEGIN(heap_free)
+    uint8_t *pm, *po;
+    /* Never segment zero: freeing the first one unlinks through a null. */
+    int seg = (int)(1u + rng_next() % 2u);
+    int32_t off = (int32_t)((rng_next() % 0x18u) * 8u + 8u);
+
+    build_heap(m, o);
+    m->segs[seg].live = o->segs[seg].live = (int32_t)(1u + rng_next() % 2u);
+    stamp_object(m, seg, off, &pm);
+    stamp_object(o, seg, off, &po);
+
+    ibm_freeDeltaHeapObject(&m->state, pm);
+    freeDeltaHeapObject(&o->state, po);
+END(heap_free)
+
+BEGIN(heap_rewind)
+    int32_t release = (int32_t)(rng_next() % 2u);
+    int slot = (int)(rng_next() % DELTA_MARKS);
+    uint8_t *pos;
+
+    build_heap(m, o);
+    /* Aim the mark at the segment being filled: unwinding past a segment is
+       the one path that gives memory back to the system. */
+    m->stack.marks[slot].unused = o->stack.marks[slot].unused = 0;
+    m->stack.marks[slot].seg = m->stack.heap_cur;
+    o->stack.marks[slot].seg = o->stack.heap_cur;
+    m->stack.marks[slot].used = o->stack.marks[slot].used =
+        (int32_t)(rng_next() % 0x40u) * 8;
+    m->stack.marks[slot].live = o->stack.marks[slot].live =
+        (int32_t)(rng_next() % 4u);
+    m->stack.marks[slot].pos =
+        m->stack.heap_cur->end - m->stack.marks[slot].used;
+    o->stack.marks[slot].pos =
+        o->stack.heap_cur->end - o->stack.marks[slot].used;
+
+    pos = (rng_next() % 4u == 0) ? NULL : m->stack.marks[slot].pos;
+    ibm_freeDeltaHeapTo(&m->state, pos, release);
+    freeDeltaHeapTo(&o->state,
+                    pos ? o->stack.marks[slot].pos : NULL, release);
+END(heap_rewind)
+
+BEGIN(heap_objects)
+    void *ra, *rb;
+
+    build_heap(m, o);
+    if (rng_next() % 2u) {
+        const delta_stmt *e = &vstmtbl[rng_next() % NSTMT];
+
+        ra = ibm_alloc_tok(&m->state, e);
+        rb = alloc_tok(&o->state, e);
+    } else {
+        ra = ibm_alloc_sync(&m->state);
+        rb = alloc_sync(&o->state);
+    }
+
+    if ((ra == NULL) != (rb == NULL))
+        bad++;
+    else if (ra != NULL
+             && (char *)ra - (char *)m != (char *)rb - (char *)o)
+        bad++;
+END(heap_objects)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -2963,6 +3191,12 @@ int main(void)
     test_setd_lookup();
     test_vmark();
     test_visleft();
+    test_heap_record();
+    test_heap_segnum();
+    test_heap_alloc();
+    test_heap_free();
+    test_heap_rewind();
+    test_heap_objects();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
