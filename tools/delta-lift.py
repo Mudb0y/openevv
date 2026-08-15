@@ -6,8 +6,13 @@ flat run of calls to the runtime with a little inline arithmetic between them,
 and a jump table at the end that the backtracker dispatches through. All of
 that is recoverable, so this reads it rather than reimplementing it.
 
+A rule is recognised by saving an activation record rather than by which
+object it lives in, which is what tells the generated rules apart from the
+runtime they sit beside.
+
 Nothing is guessed. Every instruction in every rule has to fall into one of the
-shapes below or it is counted as a hole and named.
+shapes below or it is counted as a hole and named, and every jump has to land
+on the start of a block.
 """
 
 import collections
@@ -18,7 +23,13 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-RULE_OBJECTS = ("ea_", "ed_", "es_", "et_", "ut_")
+def is_rule(items):
+    """A rule is exactly a function that saves an activation record. That is
+    what separates the generated rules from the runtime they call, so the
+    objects need no naming convention to be told apart."""
+    return any(kind == "REL32" and target == "_ventproc"
+               for _a, _l, _m, _o, relocs in items
+               for kind, target in relocs)
 
 CONDS = ("je", "jne", "jz", "jnz", "jl", "jle", "jg", "jge", "ja", "jae",
          "jb", "jbe", "js", "jns", "jo", "jp")
@@ -212,12 +223,21 @@ class Decoder:
             return ("indirect", held[1], off)
         return None
 
+    # What a register may stand in for when its contents are read as a
+    # value. Only the ones that cannot change between here and the read: a
+    # constant, or the address of something. Anything else is read out of the
+    # register itself, because the memory it came from may have moved on.
+    STANDS_FOR = ("imm", "slotaddr", "paramaddr", "state", "sym")
+
     def value(self, text):
         """A source operand: a constant, a register's contents, or memory."""
         if text.startswith("$"):
             return ("imm", int(text.lstrip("$"), 0))
         if text.startswith("%"):
-            return self.regs.get(text, ("reg", text))
+            held = self.regs.get(text)
+            if held is not None and held[0] in self.STANDS_FOR:
+                return held
+            return ("reg", text)
         return self.mem(text)
 
     def emit(self, op):
@@ -329,7 +349,7 @@ class Decoder:
                 disp = int(m2.group(1), 0) if m2.group(1) else 0
                 base = self.regs.get(m2.group(2)) if m2.group(2) else None
                 index = self.regs.get(m2.group(3))
-                self.regs[dst] = ("computed",)
+                self.regs.pop(dst, None)
                 scale = int(m2.group(4)) if m2.group(4) else 1
                 self.emit(("scale", disp, base, index, scale, dst))
                 return i
@@ -351,11 +371,12 @@ class Decoder:
                 if held and held[0] == "slotaddr":
                     self.regs[dst] = ("slotaddr", held[1] + off)
                     return i
-                if held and held[0] in ("loaded", "computed", "imm"):
+                if held is None or held[0] in ("loaded", "imm"):
                     # Not an address at all: adding a constant to a value
                     # without disturbing the flags.
-                    self.regs[dst] = ("computed",)
-                    self.emit(("addk", off, held, dst))
+                    v = self.value(base)
+                    self.regs.pop(dst, None)
+                    self.emit(("addk", off, v, dst))
                     return i
             self.hole("lea %s" % src)
             self.regs[dst] = ("?", src)
@@ -374,7 +395,6 @@ class Decoder:
             self.emit(("call", reloc.lstrip("_") if reloc else "?", args))
             for r in ("%eax", "%ecx", "%edx"):
                 self.regs.pop(r, None)
-            self.regs["%eax"] = ("result",)
             return i
 
         if mnem in ("addl", "add") and ops.endswith("%esp") \
@@ -399,8 +419,13 @@ class Decoder:
             if va is None or vb is None or not dst.startswith("%"):
                 self.hole("%s %s" % (mnem, ops))
                 return i
-            self.regs[dst] = ("computed",)
+            self.regs.pop(dst, None)
             self.emit(("mul", mnem, va, vb, dst))
+            return i
+
+        # Taking the frame apart again on the way out of a large frame.
+        if mnem in ("addl", "add") and ops.endswith("%ebp") \
+                and i < len(it) and it[i][2] == "leave":
             return i
 
         if mnem in ALU and "," in ops:
@@ -410,7 +435,11 @@ class Decoder:
                 self.hole("%s %s" % (mnem, ops))
                 return i
             if dst.startswith("%"):
-                self.regs[dst] = self.fold(mnem, a, b)
+                folded = self.fold(mnem, a, b)
+                if folded is None:
+                    self.regs.pop(dst, None)
+                else:
+                    self.regs[dst] = folded
             self.emit(("alu", mnem, a, b))
             return i
 
@@ -420,7 +449,11 @@ class Decoder:
                 self.hole("%s %s" % (mnem, ops))
                 return i
             if ops.startswith("%"):
-                self.regs[ops] = self.fold(mnem, None, b)
+                folded = self.fold(mnem, None, b)
+                if folded is None:
+                    self.regs.pop(ops, None)
+                else:
+                    self.regs[ops] = folded
             self.emit(("alu", mnem, None, b))
             return i
 
@@ -443,12 +476,18 @@ class Decoder:
                 self.hole("%s %s" % (mnem, ops))
                 return i
             self.emit(("div", mnem, a))
-            self.regs["%eax"] = ("computed",)
-            self.regs["%edx"] = ("computed",)
+            self.regs.pop("%eax", None)
+            self.regs.pop("%edx", None)
             return i
 
         if mnem in CONDS:
             self.emit(("branch", mnem, self.target(ops)))
+            return i
+
+        # The comparison's answer as a value rather than as a branch.
+        if mnem.startswith("set") and ops.startswith("%"):
+            self.regs.pop(ops, None)
+            self.emit(("setcc", mnem[3:], ops))
             return i
 
         if mnem in ("jmp", "jmpl") and not ops.startswith("*"):
@@ -468,7 +507,9 @@ class Decoder:
             return i
 
         if mnem in ("retl", "ret"):
-            self.emit(("return",))
+            # The rule answers with a small number, so carry it out with the
+            # return rather than leaving it in a register.
+            self.emit(("return", self.value("%eax")))
             return i
 
         if mnem == "leave":
@@ -487,7 +528,7 @@ class Decoder:
         # A read out of one of the rule's own tables: the byte map that turns
         # a backtrack tag into an entry in the jump table.
         if reloc and reloc in self.data and dst.startswith("%"):
-            self.regs[dst] = ("computed",)
+            self.regs.pop(dst, None)
             self.emit(("map", reloc, self.value(src.split("(")[-1]
                                                 .rstrip(")"))))
             return i
@@ -577,7 +618,7 @@ class Decoder:
         still knowable. The tag the backtracker dispatches on is counted up
         this way, so following it is what turns a tag into a constant."""
         if b is None or b[0] != "imm":
-            return ("computed",)
+            return None
         n = b[1]
         if mnem in ("incl", "incw"):
             return ("imm", n + 1)
@@ -595,7 +636,7 @@ class Decoder:
                 return ("imm", n | k)
             if mnem in ("shll", "shlw"):
                 return ("imm", n << k)
-        return ("computed",)
+        return None
 
     def target(self, ops):
         m = re.search(r"<([^>]+)>", ops)
@@ -632,10 +673,8 @@ def show_operand(op):
         return "[%s]%+d" % (show_operand(op[1]), op[2])
     if kind == "loaded":
         return show_operand(op[1])
-    if kind == "result":
-        return "result"
-    if kind == "computed":
-        return "computed"
+    if kind == "reg":
+        return op[1]
     return "?" + str(op[1:])
 
 
@@ -660,7 +699,7 @@ def show(op):
     if kind == "map":
         return "index the %s table by %s" % (op[1], show_operand(op[2]))
     if kind == "return":
-        return "return"
+        return "return %s" % show_operand(op[1])
     if kind == "scale":
         return "scale %s by %d plus %s and %d -> %s" \
             % (show_operand(op[3]), op[4], show_operand(op[2]), op[1], op[5])
@@ -673,14 +712,15 @@ def show(op):
         return "divide by %s" % show_operand(op[2])
     if kind == "widen":
         return op[1]
+    if kind == "setcc":
+        return "%s -> %s" % (op[1], op[2])
     return str(op)
 
 
 def dump(where, wanted):
-    for obj in sorted(f for f in os.listdir(where)
-                      if f.endswith(".obj") and f.startswith(RULE_OBJECTS)):
+    for obj in sorted(f for f in os.listdir(where) if f.endswith(".obj")):
         for name, items in read_functions(os.path.join(where, obj)):
-            if name != wanted:
+            if name != wanted or not is_rule(items):
                 continue
             data, tables = find_data(items)
             d = Decoder(name, items, data, tables).run()
@@ -705,8 +745,7 @@ def main():
         if a.startswith("--rule="):
             return dump(where, a.split("=", 1)[1])
 
-    objects = sorted(f for f in os.listdir(where)
-                     if f.endswith(".obj") and f.startswith(RULE_OBJECTS))
+    objects = sorted(f for f in os.listdir(where) if f.endswith(".obj"))
 
     total = 0
     clean = 0
@@ -719,6 +758,8 @@ def main():
 
     for obj in objects:
         for name, items in read_functions(os.path.join(where, obj)):
+            if not is_rule(items):
+                continue
             data, tables = find_data(items)
             d = Decoder(name, items, data, tables).run()
             total += 1
