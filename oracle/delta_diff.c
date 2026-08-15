@@ -284,6 +284,8 @@ extern int  ibm_lpta_tstctxtl(delta_state *, uint8_t);
 extern int  ibm_lpta_tstctxtr(delta_state *, uint8_t);
 extern int  ibm_f0_stepi(delta_state *, const delta_loc *, const delta_loc *,
                          const delta_loc *, const delta_loc *, delta_loc *);
+extern int32_t ibm_dur2(delta_state *, const delta_tpos *,
+                        const delta_tpos *, int8_t, int32_t);
 extern void ibm_project_rl(delta_state *, delta_node *, int32_t, int32_t,
                            delta_node *, delta_node *, uint8_t);
 extern int  ibm_actd_lookup(delta_state *, int16_t, delta_token *,
@@ -6471,6 +6473,165 @@ BEGIN(f0_stepi)
         bad++;
 END(f0_stepi)
 
+
+BEGIN(dur2)
+    /* The spine the context lookup needs, since that is what decides
+       whether a position has an answer at all, with two positions on it. */
+    enum { FB = 15, NNODE = 6, STEP = 0x80 };
+    uint8_t f = (uint8_t)(rng_next() % NSTMT);
+    /* Always the near path. Asking which position comes first sends this
+       through visleft, whose walks need a spine with null ends, and the
+       context lookup here needs one whose ends point at themselves; the two
+       cannot be satisfied at once, and visleft has its own test. */
+    int32_t back = 1;
+    delta_tpos am, ao, bm, bo;
+    uint32_t ia = rng_next() % NNODE;
+    uint32_t ib = rng_next() % NNODE;
+    int32_t ra, rb;
+    int i, j;
+
+    /* Told to take the near path, the walk runs forward from the first
+       position and never turns round, so the first has to be the leftmost
+       or it never arrives. */
+    if (ia > ib) {
+        uint32_t t = ia;
+
+        ia = ib;
+        ib = t;
+    }
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.fence_base = o->vars.fence_base = FB;
+    m->state.fence_fill = o->state.fence_fill = (uint8_t)(rng_next() % 5u);
+    m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
+    for (i = 0; i < 0x20; i++)
+        m->nsqm[i] = o->nsqm[i] = (int8_t)(rng_next() % 2u);
+    for (i = 0; i < 50; i++) {
+        m->stack.left_a[i] = o->stack.left_a[i] = 0;
+        m->stack.left_b[i] = o->stack.left_b[i] = 0;
+        m->stack.left_ans[i] = o->stack.left_ans[i] = 0;
+        m->stack.left_hits[i] = o->stack.left_hits[i] = 0;
+    }
+    m->stack.left_next = o->stack.left_next = 0;
+    m->stack.left_stamp = o->stack.left_stamp = spine_changed + 1;
+
+#define NODE(w, i) ((int32_t *)((w)->nodes + (i) * STEP))
+#define AT(w, i)   ((int32_t)(intptr_t)((w)->nodes + (i) * STEP))
+    for (i = 0; i < NNODE; i++) {
+        int lo = i > 0 ? i - 1 : 0;
+        int hi = i + 1 < NNODE ? i + 1 : NNODE - 1;
+        uint32_t r;
+
+        /* Bit one makes a statement a marker, which the walk steps over by
+           its fence link. The two ends must not be markers: their links
+           point at themselves and the walk would never leave. */
+        r = rng_next();
+        NODE(m, i)[0] = AT(m, lo) | (int32_t)(r & 1u)
+            | (int32_t)((i > 0 && i + 1 < NNODE) ? 2 : 0);
+        NODE(o, i)[0] = AT(o, lo) | (int32_t)(r & 1u)
+            | (int32_t)((i > 0 && i + 1 < NNODE) ? 2 : 0);
+
+        NODE(m, i)[1] = AT(m, hi);
+        NODE(o, i)[1] = AT(o, hi);
+
+        r = rng_next();
+        NODE(m, i)[2] = (int32_t)(r & 3u);
+        NODE(o, i)[2] = (int32_t)(r & 3u);
+
+        for (j = 0; j < 10; j++) {
+            r = rng_next();
+            NODE(m, i)[3 + j] = AT(m, lo) | (int32_t)(r & 1u);
+            NODE(o, i)[3 + j] = AT(o, lo) | (int32_t)(r & 1u);
+
+            r = rng_next();
+            NODE(m, i)[FB + j] = AT(m, hi) | (int32_t)(r & 1u);
+            NODE(o, i)[FB + j] = AT(o, hi) | (int32_t)(r & 1u);
+        }
+
+        NODE(m, i)[FB - 2] = AT(m, lo);
+        NODE(o, i)[FB - 2] = AT(o, lo);
+        NODE(m, i)[FB - 1] = 0;
+        NODE(o, i)[FB - 1] = 0;
+
+        if (vstmtbl[f].fields[0].kind == DK_LONG) {
+            int32_t x = (int32_t)(rng_next() % 0x40u);
+
+            *(int32_t *)vstmtbl[f].get[0](m->nodes + i * STEP + 8) = x;
+            *(int32_t *)vstmtbl[f].get[0](o->nodes + i * STEP + 8) = x;
+        } else if (vstmtbl[f].fields[0].kind == DK_SHORT2) {
+            int16_t x = (int16_t)(rng_next() % 0x40u);
+
+            *(int16_t *)vstmtbl[f].get[0](m->nodes + i * STEP + 8) = x;
+            *(int16_t *)vstmtbl[f].get[0](o->nodes + i * STEP + 8) = x;
+        }
+    }
+    NODE(m, NNODE - 1)[FB + f] |= 1;
+    NODE(o, NNODE - 1)[FB + f] |= 1;
+    NODE(m, NNODE - 1)[2] &= ~2;
+    NODE(o, NNODE - 1)[2] &= ~2;
+    NODE(m, 0)[FB + f] |= 1;
+    NODE(o, 0)[FB + f] |= 1;
+    NODE(m, 0)[2] &= ~2;
+    NODE(o, 0)[2] &= ~2;
+
+    m->stack.spine_l = AT(m, 0);
+    o->stack.spine_l = AT(o, 0);
+    m->stack.spine_r = AT(m, NNODE - 1);
+    o->stack.spine_r = AT(o, NNODE - 1);
+
+    memset(&am, 0, sizeof(am));
+    am.node = AT(m, ia);
+    am.field = (int8_t)f;
+    am.offset = (int32_t)(rng_next() % 0x20u);
+    am.flags = (uint8_t)(rng_next() % 4u);
+    ao = am;
+    ao.node = AT(o, ia);
+    memset(&bm, 0, sizeof(bm));
+    bm.node = AT(m, ib);
+    bm.field = (int8_t)f;
+    bm.offset = (int32_t)(rng_next() % 0x20u);
+    bm.flags = (uint8_t)(rng_next() % 4u);
+    bo = bm;
+    bo.node = AT(o, ib);
+
+    /* A position whose context the lookup cannot find sends the walk
+       through a null, which is the original's own hazard. */
+    if (!(NODE(m, ia)[FB + f] & 1)
+        && (vgetsc(&o->state, 1, 1, AT(o, ia), f) == 0
+            || vgetsc(&o->state, 0, 1, AT(o, ia), f) == 0)) {
+        m->stack.spine_l = o->stack.spine_l = 0;
+        m->stack.spine_r = o->stack.spine_r = 0;
+        free(m); free(o);
+        continue;
+    }
+    if (!(NODE(m, ib)[FB + f] & 1)
+        && (vgetsc(&o->state, 1, 1, AT(o, ib), f) == 0
+            || vgetsc(&o->state, 0, 1, AT(o, ib), f) == 0)) {
+        m->stack.spine_l = o->stack.spine_l = 0;
+        m->stack.spine_r = o->stack.spine_r = 0;
+        free(m); free(o);
+        continue;
+    }
+
+    ra = ibm_dur2(&m->state, &am, &bm, (int8_t)f, back);
+    rb = dur2(&o->state, &ao, &bo, (int8_t)f, back);
+#undef NODE
+#undef AT
+
+    if (ra != rb)
+        bad++;
+
+    for (i = 0; i < 50; i++) {
+        m->stack.left_a[i] = o->stack.left_a[i] = 0;
+        m->stack.left_b[i] = o->stack.left_b[i] = 0;
+    }
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(dur2)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -6623,6 +6784,7 @@ int main(void)
     test_proj_r();
     test_insert_lv();
     test_f0_stepi();
+    test_dur2();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

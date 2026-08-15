@@ -5491,3 +5491,77 @@ int f0_stepi(delta_state *d, const delta_loc *n, const delta_loc *f0,
     out->field = (int16_t)((a - b) / div);
     return 0;
 }
+
+/* How long the run between two timing positions is, in the units the field
+   counts. The walk runs from whichever position comes first, adding each
+   statement's value and stepping over markers by their fence link, and the
+   two positions' own offsets are added or taken off at the ends according
+   to which way round the walk went.
+
+   A position whose statement does not carry the field, and whose context
+   is not empty of it either, has no answer; so does a run of no statements
+   that comes to nothing. Both say so with the same sentinel. */
+int32_t dur2(delta_state *d, const delta_tpos *a, const delta_tpos *b,
+             int8_t f, int32_t back)
+{
+    int32_t fb = d->vars->fence_base + f;
+    int32_t from, to;
+    int32_t total = 0;
+    uint8_t counted = 0;
+
+    if (a->node == b->node)
+        return b->offset - a->offset;
+
+    if (back != 0 || visleft(d, a->node, b->node)) {
+        from = a->node;
+        to = b->node;
+    } else {
+        from = b->node;
+        to = a->node;
+    }
+
+    if (!(((const int32_t *)(intptr_t)a->node)[fb] & 1)
+        && !ctxt_clstr(d, a->node, f))
+        return (int32_t)0x80000001u;
+
+    if (!(((const int32_t *)(intptr_t)b->node)[fb] & 1)
+        && !ctxt_clstr(d, b->node, f))
+        return (int32_t)0x80000001u;
+
+    while (from != to && from != 0) {
+        if (*(const int32_t *)(intptr_t)from & 2) {
+            from = ((const int32_t *)(intptr_t)from)[fb] & -4;
+            continue;
+        }
+
+        counted = 1;
+
+        if (vstmtbl[f].fields[0].kind == DK_LONG) {
+            total += *(const int32_t *)
+                vstmtbl[f].get[0](TFLDS((void *)(intptr_t)from));
+        } else if (vstmtbl[f].fields[0].kind == DK_SHORT2) {
+            total += *(const int16_t *)
+                vstmtbl[f].get[0](TFLDS((void *)(intptr_t)from));
+        }
+
+        from = ((const int32_t *)(intptr_t)from)[1] & -4;
+    }
+
+    if (to == a->node) {
+        if (a->flags & 2)
+            total += a->offset;
+        if (b->flags & 2)
+            total -= b->offset;
+        total = -total;
+    } else {
+        if (a->flags & 2)
+            total -= a->offset;
+        if (b->flags & 2)
+            total += b->offset;
+    }
+
+    if (!counted && total == 0)
+        return (int32_t)0x80000001u;
+
+    return total;
+}

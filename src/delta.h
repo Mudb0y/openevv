@@ -627,6 +627,9 @@ int  f0_stepi(delta_state *d, const delta_loc *n, const delta_loc *f0,
 
 /* The printing, reading and file layer, stubbed rather than transcribed.
    See src/delta_trace.c for what that costs and why. */
+int32_t dur2(delta_state *d, const delta_tpos *a, const delta_tpos *b,
+             int8_t f, int32_t back);
+
 void print_lit(delta_state *d, ...);
 void print_var(delta_state *d, ...);
 void print_stream(delta_state *d, ...);
