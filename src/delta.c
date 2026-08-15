@@ -2538,3 +2538,52 @@ int compare_ptas(delta_state *d)
 {
     return vcomp_pta(d, &d->lpta, &d->rpta) != 0;
 }
+
+void delsync(delta_state *d, void *p)
+{
+    cacheDeletedDeltaObject(d, p);
+}
+
+/* Fold the statement on one side of a sync into the one on the other, then
+   unlink the sync. Only a language that says the type is walkable allows it,
+   and only when neither neighbour is itself a sync. */
+int mashtoks(delta_state *d, uint8_t f, int32_t t)
+{
+    int32_t base = d->vars->fence_base;
+    int32_t l = *(int32_t *)(intptr_t)(t + 0xc + f * 4) & ~3;
+    int32_t r = *(int32_t *)(intptr_t)(t + (base + f) * 4) & ~3;
+    const delta_stmt *e = &vstmtbl[f];
+    delta_operand a;
+    delta_operand b;
+    int32_t nx;
+
+    if ((l != 0 && (*(int32_t *)(intptr_t)l & 2) != 0)
+        || (r != 0 && (*(int32_t *)(intptr_t)r & 2) != 0))
+        return 1;
+
+    b.kind = STMTYP((int8_t)f);
+    a.kind = b.kind;
+    b.flag = e->fields[0].flag;
+    a.flag = b.flag;
+
+    a.ptr = e->get[0](TFLDS((void *)(intptr_t)l));
+    b.ptr = e->get[0](TFLDS((void *)(intptr_t)r));
+
+    if (e->walkable == 0)
+        return 0;
+
+    vadd(d, &b, &a);
+    vinitflds(d, f, a.ptr, b.ptr);
+
+    *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+
+    nx = *(int32_t *)(intptr_t)(r + 4) & ~3;
+
+    *(int32_t *)(intptr_t)(t + (base + f) * 4) =
+        (*(int32_t *)(intptr_t)(t + (base + f) * 4) & 3) | nx;
+    *(int32_t *)(intptr_t)(nx + 0xc + f * 4) =
+        (*(int32_t *)(intptr_t)(nx + 0xc + f * 4) & 3) | t;
+
+    cacheDeletedDeltaObject(d, (void *)(intptr_t)r);
+    return 1;
+}

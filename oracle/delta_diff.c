@@ -153,6 +153,8 @@ extern void ibm_free_heap(delta_state *, void *);
 extern int  ibm_vcomp_pta(delta_state *, delta_tpos *, delta_tpos *);
 extern void ibm_cacheDeletedDeltaObject(delta_state *, void *);
 extern int  ibm_compare_ptas(delta_state *);
+extern void ibm_delsync(delta_state *, void *);
+extern int  ibm_mashtoks(delta_state *, uint8_t, int32_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -3068,7 +3070,11 @@ BEGIN(heap_free)
     stamp_object(m, seg, off, &pm);
     stamp_object(o, seg, off, &po);
 
-    switch (rng_next() % 3u) {
+    switch (rng_next() % 4u) {
+    case 3:
+        ibm_delsync(&m->state, pm);
+        delsync(&o->state, po);
+        break;
     case 0:
         ibm_freeDeltaHeapObject(&m->state, pm);
         freeDeltaHeapObject(&o->state, po);
@@ -3203,6 +3209,37 @@ BEGIN(vcomp_pta)
     }
 END(vcomp_pta)
 
+
+BEGIN(mashtoks)
+    /* Only a walkable statement type gets past the second guard, and only Ms
+       is walkable, so most draws take the short way out and a fixed share
+       goes all the way through. Neither neighbour may be a sync, hence the
+       cleared bits. */
+    uint8_t f = (rng_next() % 2u) ? 9 : (uint8_t)(rng_next() % NSTMT);
+    int32_t t;
+    int ra, rb, i;
+
+    build_pspine(m, o);
+    build_heap(m, o);
+    for (i = 0; i < 4; i++) {
+        ((int32_t *)(m->nodes + i * 0x80))[0] &= ~2;
+        ((int32_t *)(o->nodes + i * 0x80))[0] &= ~2;
+    }
+    /* The merged statement goes back to the heap, so it has to look like an
+       object that came from one. */
+    for (i = 0; i < 4; i++) {
+        *(delta_seg **)(m->nodes + i * 0x80 - 4 + 0x80) = &m->segs[1];
+        *(delta_seg **)(o->nodes + i * 0x80 - 4 + 0x80) = &o->segs[1];
+    }
+    m->segs[1].live = o->segs[1].live = 8;
+
+    t = (int32_t)(intptr_t)(m->nodes + 0x80);
+    ra = ibm_mashtoks(&m->state, f, t);
+    rb = mashtoks(&o->state, f, (int32_t)(intptr_t)(o->nodes + 0x80));
+    if (ra != rb)
+        bad++;
+END(mashtoks)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -3294,6 +3331,7 @@ int main(void)
     test_heap_rewind();
     test_heap_objects();
     test_vcomp_pta();
+    test_mashtoks();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
