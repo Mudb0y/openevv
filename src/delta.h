@@ -629,6 +629,8 @@ int  f0_stepi(delta_state *d, const delta_loc *n, const delta_loc *f0,
    See src/delta_trace.c for what that costs and why. */
 int32_t dur2(delta_state *d, const delta_tpos *a, const delta_tpos *b,
              int8_t f, int32_t back);
+int32_t vdur(delta_state *d, const delta_tpos *a, const delta_tpos *b,
+             int8_t f);
 
 void print_lit(delta_state *d, ...);
 void print_var(delta_state *d, ...);

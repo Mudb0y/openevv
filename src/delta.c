@@ -5565,3 +5565,10 @@ int32_t dur2(delta_state *d, const delta_tpos *a, const delta_tpos *b,
 
     return total;
 }
+
+/* The same, asking which position comes first rather than being told. */
+int32_t vdur(delta_state *d, const delta_tpos *a, const delta_tpos *b,
+             int8_t f)
+{
+    return dur2(d, a, b, f, 0);
+}
