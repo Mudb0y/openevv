@@ -2988,3 +2988,56 @@ void fdel(delta_state *d, int32_t whole, int32_t arg)
 
     flushDeletedDeltaObjects(d);
 }
+
+/* Delete one statement: fold it into its neighbour if the language allows,
+   then take the run out. */
+int vdel_1pt(delta_state *d, uint8_t f, int32_t t, int32_t arg)
+{
+    delta_stack *s = d->stack;
+
+    *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+
+    s->del_field = (int8_t)f;
+    s->del_to = t;
+    s->del_from = t;
+    s->del_left = VLSYNC((const delta_node *)(intptr_t)t, s->del_field);
+    s->del_right = VRSYNC(d, (const int32_t *)(intptr_t)t, s->del_field);
+
+    if ((*(int32_t *)(intptr_t)
+         (t + (d->vars->fence_base + f) * 4) & 1) == 0)
+        return 1;
+
+    mashtoks(d, f, t);
+    fdel(d, 1, arg);
+    return 1;
+}
+
+/* Delete everything between two statements. When the right-hand end turns out
+   to be the first thing past the left one there is nothing between them, and
+   only a stray non-sync is removed. */
+int vdel_2pt(delta_state *d, uint8_t f, int32_t l, int32_t r)
+{
+    delta_stack *s = d->stack;
+
+    s->del_field = (int8_t)f;
+    s->del_left = l;
+    s->del_right = r;
+    s->del_from = VRSYNC(d, (const int32_t *)(intptr_t)s->del_left,
+                         s->del_field);
+    s->del_to = VLSYNC((const delta_node *)(intptr_t)s->del_right,
+                       s->del_field);
+
+    *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+
+    if (s->del_right == s->del_from) {
+        int32_t p = *(int32_t *)(intptr_t)
+            (s->del_left + (d->vars->fence_base + s->del_field) * 4) & ~3;
+
+        if (p == 0 || (*(int32_t *)(intptr_t)p & 2) == 0)
+            fdeldel(d, p, p, 0);
+    } else {
+        fdel(d, 0, 0);
+    }
+
+    return 1;
+}

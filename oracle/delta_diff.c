@@ -160,6 +160,8 @@ extern void *ibm_vins_sync(delta_state *, uint8_t, int32_t, int32_t);
 extern int  ibm_chkdelnonseq(delta_state *, int32_t, uint8_t);
 extern int  ibm_fdeldel(delta_state *, int32_t, int32_t, int32_t);
 extern void ibm_fdel(delta_state *, int32_t, int32_t);
+extern int  ibm_vdel_1pt(delta_state *, uint8_t, int32_t, int32_t);
+extern int  ibm_vdel_2pt(delta_state *, uint8_t, int32_t, int32_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -3443,6 +3445,21 @@ BEGIN(fdeldel)
             ibm_fdel(&m->state, whole, arg);
             fdel(&o->state, whole, arg);
             ra = rb = 0;
+
+            /* The two entry points that fill the block in for themselves. */
+            if (rng_next() % 2u) {
+                ra = ibm_vdel_1pt(&m->state, (uint8_t)fd,
+                                  (int32_t)(intptr_t)(m->nodes + STEP), arg);
+                rb = vdel_1pt(&o->state, (uint8_t)fd,
+                              (int32_t)(intptr_t)(o->nodes + STEP), arg);
+            } else {
+                ra = ibm_vdel_2pt(&m->state, (uint8_t)fd,
+                                  (int32_t)(intptr_t)m->nodes,
+                                  (int32_t)(intptr_t)(m->nodes + 3 * STEP));
+                rb = vdel_2pt(&o->state, (uint8_t)fd,
+                              (int32_t)(intptr_t)o->nodes,
+                              (int32_t)(intptr_t)(o->nodes + 3 * STEP));
+            }
 
             m->stack.del_from = o->stack.del_from = 0;
             m->stack.del_to = o->stack.del_to = 0;
