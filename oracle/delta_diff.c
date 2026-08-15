@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <setjmp.h>
+
 #include "delta.h"
 
 extern void ibm_lpta_loadp(delta_state *, const delta_token *);
@@ -68,6 +70,21 @@ extern void ibm_throwDeltaErrorNow(delta_state *);
 extern void ibm_vnspop(delta_state *, delta_operand *);
 extern void ibm_vpush_var(delta_state *, const delta_operand *);
 extern void ibm_DELSPINE(delta_state *, delta_node *);
+extern int  ibm_vscanadv(delta_state *, int32_t, int32_t);
+extern void ibm_flushDeletedDeltaObjects(delta_state *);
+extern void ibm_SETSPINEL(delta_node *, int32_t);
+extern void ibm_SETSPINER(delta_state *, int32_t *, int32_t);
+extern void ibm_bspush_ca_boa(delta_state *, int16_t);
+extern void ibm_bspush_ca_scan_boa(delta_state *, int16_t);
+extern void ibm_forceErrorBacktrack(delta_state *);
+extern void ibm_push_ptr_init(delta_state *, delta_ptrvar *);
+extern void ibm_npush_i(delta_state *, int32_t);
+extern void ibm_npush_s(delta_state *, int32_t);
+extern void ibm_vscaninit(delta_state *);
+extern delta_node *ibm_vmovel(delta_node *, uint8_t);
+extern int32_t *ibm_vmover(delta_state *, int32_t *, uint8_t);
+extern void ibm_INSSPINEL(delta_state *, delta_node *, delta_node *);
+extern void ibm_INSSPINER(delta_state *, delta_node *, delta_node *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -82,6 +99,7 @@ typedef struct {
     uint8_t     records[RECORDS];
     uint8_t     chars[FENCE_MAP];
     uint8_t     map[FENCE_MAP];
+    uint8_t     marks[FENCE_MAP];
     uint8_t     blockhdr[0x20];   /* the allocation header, read at +0x10 */
     uint8_t     names[0x200];     /* the name stack */
 } delta_world;
@@ -123,6 +141,7 @@ static void world_link(delta_world *w)
     w->state.stack = &w->stack;
     w->state.fence_chars = w->chars;
     w->state.fence_index = w->map;
+    w->state.fence_marks = w->marks;
     w->state.fence_fill = (uint8_t)(rng_next() % FENCE_MAP);
 
     w->stack.names = w->names;
@@ -160,6 +179,7 @@ static void normalise(delta_world *w, delta_state *st, delta_vars *va,
     REBASE(st->stack);
     REBASE(st->fence_chars);
     REBASE(st->fence_index);
+    REBASE(st->fence_marks);
     REBASE(va->back);
     REBASE(sk->top);
     REBASE(sk->limit);
@@ -190,6 +210,8 @@ static int world_differs(delta_world *a, delta_world *b)
     if (memcmp(a->chars, b->chars, FENCE_MAP) != 0)
         return 1;
     if (memcmp(a->map, b->map, FENCE_MAP) != 0)
+        return 1;
+    if (memcmp(a->marks, b->marks, FENCE_MAP) != 0)
         return 1;
     if (*(char **)(a->blockhdr + 0x10) - (char *)a
         != *(char **)(b->blockhdr + 0x10) - (char *)b)
@@ -656,8 +678,267 @@ BEGIN(DELSPINE)
     *(int32_t *)((char *)u + 4 * 4 - 8) = 0;
 END(DELSPINE)
 
+BEGIN(vscanadv)
+    int32_t step = (int32_t)(rng_next() % 2u);
+    int32_t usef = (int32_t)(rng_next() % 2u);
+    int32_t ra, rb;
+    int i;
+
+    /* The scan walks tagged pointers, so the ground it walks has to hold real
+       addresses rather than the random fill. Two nodes are enough: one to
+       start on and one to arrive at. */
+    memset(m->records, 0, RECORDS);
+    memset(o->records, 0, RECORDS);
+
+    m->vars.fence_base = o->vars.fence_base = 2;
+    m->vars.fence_count = o->vars.fence_count = (int8_t)(rng_next() % 4u);
+    m->vars.scan_field = o->vars.scan_field = (uint8_t)(rng_next() % 2u);
+    m->vars.scan_rev = o->vars.scan_rev = (uint8_t)(rng_next() % 2u);
+    m->vars.scan_held = o->vars.scan_held = (uint8_t)(rng_next() % 2u);
+
+    for (i = 0; i < 4; i++) {
+        m->chars[i] = o->chars[i] = (uint8_t)i;
+        m->marks[i] = o->marks[i] = (uint8_t)(rng_next() % 2u);
+    }
+
+    /* Every word the walk can read is either null or a tagged address, with
+       the tag bits random so both the fence bit and the sync bit get used. */
+    for (i = 0; i < 8; i++) {
+        uint32_t r = rng_next();
+        int null = (r % 5u) == 0;
+        ((int32_t *)(m->records + 0x100))[i] = null ? 0
+            : (int32_t)((intptr_t)(m->records + 0x140) | (r & 3u));
+        ((int32_t *)(o->records + 0x100))[i] = null ? 0
+            : (int32_t)((intptr_t)(o->records + 0x140) | (r & 3u));
+    }
+    for (i = 0; i < 2; i++) {
+        uint32_t r = rng_next();
+        int null = (r % 5u) == 0;
+        ((int32_t *)(m->records + 0x140))[i] = null ? 0
+            : (int32_t)((intptr_t)(m->records + 0x180) | (r & 3u));
+        ((int32_t *)(o->records + 0x140))[i] = null ? 0
+            : (int32_t)((intptr_t)(o->records + 0x180) | (r & 3u));
+    }
+    m->vars.scan_ptr = (int32_t)(intptr_t)(m->records + 0x100);
+    o->vars.scan_ptr = (int32_t)(intptr_t)(o->records + 0x100);
+
+    ra = ibm_vscanadv(&m->state, step, usef);
+    rb = vscanadv(&o->state, step, usef);
+    if (ra != rb)
+        bad++;
+    /* The second hop is not checked for null, so the scan can legitimately
+       land on nothing; that is not an address and must not be rebased. */
+    if ((m->vars.scan_ptr == 0) != (o->vars.scan_ptr == 0))
+        bad++;
+    else if (m->vars.scan_ptr != 0
+             && m->vars.scan_ptr - (int32_t)(intptr_t)m
+                != o->vars.scan_ptr - (int32_t)(intptr_t)o)
+        bad++;
+
+    /* Everything left holding an address goes before the byte comparison. */
+    m->vars.scan_ptr = o->vars.scan_ptr = 0;
+    memset(m->records + 0x100, 0, 0x60);
+    memset(o->records + 0x100, 0, 0x60);
+END(vscanadv)
+
+
+BEGIN(spine_setters)
+    /* The value written is a plain number rather than an address, so the
+       records still compare byte for byte afterwards. */
+    int32_t v = (int32_t)(rng_next() & ~3u);
+    delta_node *tm = (delta_node *)(m->records + 0x60);
+    delta_node *to = (delta_node *)(o->records + 0x60);
+    m->vars.fence_base = o->vars.fence_base = (int32_t)(rng_next() % 8u);
+    if (rng_next() % 2u) {
+        ibm_SETSPINEL(tm, v); SETSPINEL(to, v);
+    } else {
+        ibm_SETSPINER(&m->state, (int32_t *)tm, v);
+        SETSPINER(&o->state, (int32_t *)to, v);
+    }
+END(spine_setters)
+
+BEGIN(bspush_boa_pairs)
+    int16_t tag = (int16_t)rng_next();
+    if (rng_next() % 2u) {
+        ibm_bspush_ca_boa(&m->state, tag); bspush_ca_boa(&o->state, tag);
+    } else {
+        ibm_bspush_ca_scan_boa(&m->state, tag);
+        bspush_ca_scan_boa(&o->state, tag);
+    }
+END(bspush_boa_pairs)
+
+BEGIN(push_ptr_init)
+    delta_ptrvar pm, po;
+    fill(&pm, sizeof(pm)); po = pm;
+    m->vars.ptr_count = o->vars.ptr_count = (int32_t)(rng_next() % 1002u);
+    ibm_push_ptr_init(&m->state, &pm);
+    push_ptr_init(&o->state, &po);
+    if (pm.kind != po.kind || pm.pad_02 != po.pad_02 || pm.value != po.value)
+        bad++;
+    /* The slot the count landed on holds the address of a local. */
+    if (m->vars.ptr_count == o->vars.ptr_count && m->vars.ptr_count > 0)
+        m->vars.ptr_stack[m->vars.ptr_count - 1] =
+            o->vars.ptr_stack[o->vars.ptr_count - 1] = 0;
+    ibm_flushDeletedDeltaObjects(&m->state);
+    flushDeletedDeltaObjects(&o->state);
+END(push_ptr_init)
+
+BEGIN(npush_scalars)
+    int32_t x = (int32_t)rng_next();
+    m->stack.names_depth = o->stack.names_depth = (int8_t)(rng_next() % 0x10u);
+    if (rng_next() % 2u) {
+        ibm_npush_i(&m->state, x); npush_i(&o->state, x);
+    } else {
+        ibm_npush_s(&m->state, x); npush_s(&o->state, x);
+    }
+END(npush_scalars)
+
+BEGIN(vscaninit)
+    ibm_vscaninit(&m->state); vscaninit(&o->state);
+END(vscaninit)
+
+BEGIN(vmove)
+    /* A chain of three nodes, each link null or tagged, so the walk both
+       stops early and runs to the end. */
+    int32_t base[3];
+    uint8_t f;
+    int i, j;
+    void *ra, *rb;
+
+    memset(m->records, 0, RECORDS);
+    memset(o->records, 0, RECORDS);
+    m->vars.fence_base = o->vars.fence_base = 3;
+    f = (uint8_t)(rng_next() % 3u);
+    base[0] = 0x40; base[1] = 0x90; base[2] = 0xe0;
+
+    for (i = 0; i < 3; i++) {
+        for (j = 0; j < 12; j++) {
+            uint32_t r = rng_next();
+            int null = (r % 3u) == 0 || i == 2;
+            ((int32_t *)(m->records + base[i]))[j] = null ? 0
+                : (int32_t)((intptr_t)(m->records + base[i + (i < 2)]) | (r & 3u));
+            ((int32_t *)(o->records + base[i]))[j] = null ? 0
+                : (int32_t)((intptr_t)(o->records + base[i + (i < 2)]) | (r & 3u));
+        }
+    }
+
+    if (rng_next() % 2u) {
+        ra = ibm_vmovel((delta_node *)(m->records + 0x40), f);
+        rb = vmovel((delta_node *)(o->records + 0x40), f);
+    } else {
+        ra = ibm_vmover(&m->state, (int32_t *)(m->records + 0x40), f);
+        rb = vmover(&o->state, (int32_t *)(o->records + 0x40), f);
+    }
+    if ((char *)ra - (char *)m != (char *)rb - (char *)o)
+        bad++;
+    memset(m->records, 0, RECORDS);
+    memset(o->records, 0, RECORDS);
+END(vmove)
+
+BEGIN(insspine)
+    /* Three nodes, every link pointing at a real one, since a splice writes
+       through all of them. A fence base of five puts the right link at +0x0c,
+       clear of the left one at +0x04. */
+    enum { FB = 5, RL = FB * 4 - 8 };
+    static const int32_t at[3] = {0x40, 0x90, 0xe0};
+    delta_node *nm = (delta_node *)(m->records + at[0]);
+    delta_node *no = (delta_node *)(o->records + at[0]);
+    delta_node *tm = (delta_node *)(m->records + at[1]);
+    delta_node *to = (delta_node *)(o->records + at[1]);
+    int32_t om = (int32_t)(intptr_t)(m->records + at[2]);
+    int32_t oo = (int32_t)(intptr_t)(o->records + at[2]);
+    int left = (int)(rng_next() % 2u);
+    int32_t before_ibm, before_ours;
+    int i, k;
+
+    memset(m->records, 0, RECORDS);
+    memset(o->records, 0, RECORDS);
+    m->vars.fence_base = o->vars.fence_base = FB;
+
+#define LINK(w, node, off, val) \
+    (*(int32_t *)((char *)(w) + (off)) = (val))
+    {
+        int32_t tag_l = (int32_t)(rng_next() & 3u);
+        int32_t tag_r = (int32_t)(rng_next() & 3u);
+        int32_t tag_n = (int32_t)(rng_next() & 3u);
+
+        LINK(tm, 0, 4, om | tag_l);
+        LINK(to, 0, 4, oo | tag_l);
+        LINK(tm, 0, RL, om | tag_r);
+        LINK(to, 0, RL, oo | tag_r);
+        LINK((char *)(intptr_t)om, 0, 4, (int32_t)(intptr_t)tm | tag_r);
+        LINK((char *)(intptr_t)oo, 0, 4, (int32_t)(intptr_t)to | tag_r);
+        LINK((char *)(intptr_t)om, 0, RL, (int32_t)(intptr_t)tm | tag_l);
+        LINK((char *)(intptr_t)oo, 0, RL, (int32_t)(intptr_t)to | tag_l);
+        LINK(nm, 0, 4, tag_n);
+        LINK(no, 0, 4, tag_n);
+        LINK(nm, 0, RL, tag_n);
+        LINK(no, 0, RL, tag_n);
+    }
+#undef LINK
+
+    before_ibm = ibm_spine_changed; before_ours = spine_changed;
+    if (left) {
+        ibm_INSSPINEL(&m->state, nm, tm); INSSPINEL(&o->state, no, to);
+    } else {
+        ibm_INSSPINER(&m->state, nm, tm); INSSPINER(&o->state, no, to);
+    }
+    if (ibm_spine_changed - before_ibm != spine_changed - before_ours)
+        bad++;
+
+    /* Both links of all three nodes now hold addresses, so compare each as a
+       tag plus an offset rather than as a word. */
+    for (i = 0; i < 3; i++) {
+        static const int32_t off[2] = {4, RL};
+
+        for (k = 0; k < 2; k++) {
+            int32_t a = *(int32_t *)(m->records + at[i] + off[k]);
+            int32_t b = *(int32_t *)(o->records + at[i] + off[k]);
+
+            if ((a & 3) != (b & 3))
+                bad++;
+            else if (((a & ~3) == 0) != ((b & ~3) == 0))
+                bad++;
+            else if ((a & ~3) != 0
+                     && (a & ~3) - (int32_t)(intptr_t)m
+                        != (b & ~3) - (int32_t)(intptr_t)o)
+                bad++;
+        }
+    }
+    memset(m->records, 0, RECORDS);
+    memset(o->records, 0, RECORDS);
+END(insspine)
+
+/* longjmp lands back in this frame, so the buffer and the call have to sit
+   in a function of their own rather than in the test's loop body. */
+static void jump_ibm(delta_state *d)
+{
+    jmp_buf jb;
+
+    d->vars->err_jmp = jb;
+    if (setjmp(jb) == 0)
+        ibm_forceErrorBacktrack(d);
+    d->vars->err_jmp = 0;
+}
+
+static void jump_ours(delta_state *d)
+{
+    jmp_buf jb;
+
+    d->vars->err_jmp = jb;
+    if (setjmp(jb) == 0)
+        forceErrorBacktrack(d);
+    d->vars->err_jmp = 0;
+}
+
+BEGIN(forceErrorBacktrack)
+    jump_ibm(&m->state);
+    jump_ours(&o->state);
+END(forceErrorBacktrack)
+
 int main(void)
 {
+    setvbuf(stdout, NULL, _IONBF, 0);
     printf("delta diff: comparing our primitives against IBM's\n");
     test_lpta_loadp();
     test_lpta_loadpn();
@@ -692,6 +973,15 @@ int main(void)
     test_fields();
     test_vpush_var();
     test_DELSPINE();
+    test_vscanadv();
+    test_spine_setters();
+    test_bspush_boa_pairs();
+    test_push_ptr_init();
+    test_npush_scalars();
+    test_vscaninit();
+    test_vmove();
+    test_insspine();
+    test_forceErrorBacktrack();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

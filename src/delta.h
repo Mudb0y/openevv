@@ -59,10 +59,15 @@ typedef struct {
     uint8_t   pad_0fa0[4];
     int32_t   active_record;   /* 0x0fa4 */
     int32_t   error_thrown;    /* 0x0fa8 */
-    uint8_t   pad_0fac[0x18];
+    void     *err_jmp;         /* 0x0fac, where a thrown error lands */
+    uint8_t   pad_0fb0[0x14];
     int32_t   test_tag;        /* 0x0fc4, what the running test is matching */
     uint8_t   pad_0fc8[4];
-    uint8_t   scan[8];         /* 0x0fcc, the current scan position */
+    int32_t   scan_ptr;        /* 0x0fcc, where the scan has got to */
+    uint8_t   scan_field;      /* 0x0fd0, which field it is walking */
+    uint8_t   scan_rev;        /* 0x0fd1, walking right rather than left */
+    uint8_t   scan_held;       /* 0x0fd2, the fence check is suspended */
+    uint8_t   pad_0fd3;
     int8_t    testing;         /* 0x0fd4, a test is under way */
     uint8_t   pad_0fd5[7];
     uint8_t  *back;            /* 0x0fdc, where an unwind returns to */
@@ -86,7 +91,8 @@ struct delta_state {
     uint8_t     *fence_chars;     /* 0x0084, fenced character by index */
     uint8_t      pad_0088[4];
     uint8_t     *fence_index;     /* 0x008c, index by fenced character */
-    uint8_t      pad_0090[8];
+    uint8_t      pad_0090[4];
+    uint8_t     *fence_marks;     /* 0x0094, one per fenced character */
     uint8_t      fence_fill;      /* 0x0098 */
     uint8_t      pad_0099[DELTA_STATE_BYTES - 0x99];
 };
@@ -194,6 +200,14 @@ void vadd(delta_state *d, const delta_operand *a, const delta_operand *b);
 int32_t VLSYNC(const delta_node *t, int8_t i);
 int32_t VRSYNC(delta_state *d, const int32_t *t, int8_t i);
 
+/* What push_ptr_init hands to push_ptr: a kind and a value, the mirror image
+   of delta_operand. */
+typedef struct {
+    int16_t kind;
+    int16_t pad_02;
+    int32_t value;
+} delta_ptrvar;
+
 /* Two sixteen-bit halves; resetting one clears the second. */
 typedef struct {
     int16_t a;
@@ -207,6 +221,21 @@ void throwDeltaErrorNow(delta_state *d);
 void vnspop(delta_state *d, delta_operand *out);
 void vpush_var(delta_state *d, const delta_operand *v);
 void DELSPINE(delta_state *d, delta_node *t);
+int  vscanadv(delta_state *d, int32_t step, int32_t usefence);
+void flushDeletedDeltaObjects(delta_state *d);
+void SETSPINEL(delta_node *t, int32_t v);
+void SETSPINER(delta_state *d, int32_t *t, int32_t v);
+void bspush_ca_boa(delta_state *d, int16_t tag);
+void bspush_ca_scan_boa(delta_state *d, int16_t tag);
+void forceErrorBacktrack(delta_state *d);
+void push_ptr_init(delta_state *d, delta_ptrvar *p);
+void npush_i(delta_state *d, int32_t x);
+void npush_s(delta_state *d, int32_t x);
+void vscaninit(delta_state *d);
+delta_node *vmovel(delta_node *t, uint8_t f);
+int32_t *vmover(delta_state *d, int32_t *t, uint8_t f);
+void INSSPINEL(delta_state *d, delta_node *n, delta_node *t);
+void INSSPINER(delta_state *d, delta_node *n, delta_node *t);
 
 /* Bumped whenever the spine is relinked, so anything holding a position knows
    to look again. */

@@ -2,10 +2,14 @@
 #include <string.h>
 #include <stdint.h>
 
+#include <setjmp.h>
+
 #include "delta.h"
 
 #define AT(field, offset) \
     typedef char field##_at_##offset[offsetof(delta_state, field) == offset ? 1 : -1]
+#define AT_VARS(field, offset) \
+    typedef char field##_at_##offset[offsetof(delta_vars, field) == offset ? 1 : -1]
 
 AT(lpta, 0x0040);
 AT(rpta, 0x0050);
@@ -107,6 +111,8 @@ int testneq(delta_state *d)
 AT(fence_chars, 0x0084);
 AT(fence_index, 0x008c);
 AT(fence_fill, 0x0098);
+AT(fence_marks, 0x0094);
+AT_VARS(err_jmp, 0x0fac);
 
 /* A context record and a saved scan position together, which is what a rule
    pushes when it is about to try a match it may need to unwind. */
@@ -120,7 +126,7 @@ void bspush_ca_scan(delta_state *d, int16_t tag)
 
     save = bs_push(d->stack, d->stack->size_b0);
     save->kind = 1;
-    memcpy(&save->value, d->vars->scan, 8);
+    memcpy(&save->value, &d->vars->scan_ptr, 8);
 }
 
 /* Build the character fence: a set of characters the rules match against,
@@ -568,5 +574,216 @@ void DELSPINE(delta_state *d, delta_node *t)
 
     *back = (*back & 3) | prev;
     *fwd = (*fwd & 3) | next;
+    spine_changed++;
+}
+
+/* Move the scan on by one node in whichever direction is set, refusing to
+   cross a fenced character it has not already been let past. Each fenced
+   character is marked once so a second attempt at the same one succeeds. */
+int vscanadv(delta_state *d, int32_t step, int32_t usefence)
+{
+    delta_vars *v = d->vars;
+    int32_t cur = v->scan_ptr;
+    int32_t field = v->scan_field;
+    int32_t next;
+    int32_t i = 0;
+
+    if (v->fence_count != 0 && usefence != 0 && v->scan_held == 0) {
+        for (; i < v->fence_count; i++) {
+            uint8_t c = d->fence_chars[i];
+
+            if ((*(int32_t *)(cur + (v->fence_base + c) * 4) & 1) != 0)
+                return 0;
+
+            if (FENCED(d, (const int32_t *)cur, (int8_t)d->fence_chars[i])
+                && field != d->fence_chars[i]
+                && d->fence_marks[i] == 0)
+                return 0;
+
+            d->fence_marks[i] = 0;
+        }
+    }
+
+    if (cur == 0)
+        return 0;
+
+    if (v->scan_rev != 0)
+        next = *(int32_t *)(cur + (v->fence_base + field) * 4) & ~3;
+    else
+        next = *(int32_t *)(cur + 0xc + field * 4) & ~3;
+
+    if (next == 0)
+        return 0;
+
+    /* A node that is not itself a sync needs one more step, and only if the
+       caller asked to keep going. */
+    if ((*(int32_t *)next & 2) == 0) {
+        if (step == 0)
+            return 0;
+        if (v->scan_rev != 0)
+            next = *(int32_t *)(next + 4) & ~3;
+        else
+            next = *(int32_t *)next & ~3;
+    }
+
+    v->scan_ptr = next;
+    v->scan_held = 0;
+
+    /* Carrying on from where the fence loop stopped, not from zero: a full
+       pass has already cleared every mark, and a skipped one leaves i at
+       zero so the whole array still gets cleared. */
+    for (; i < v->fence_count; i++)
+        d->fence_marks[i] = 0;
+
+    return 1;
+}
+
+/* The right-hand spine link has no fixed offset: it sits one word before the
+   sync array's end, so how many fields the language declares decides where. */
+static int32_t *rlink(delta_state *d, int32_t p)
+{
+    return (int32_t *)((char *)(intptr_t)p + d->vars->fence_base * 4 - 8);
+}
+
+/* Present so the caller need not know whether deletion is deferred; on this
+   build nothing is. */
+void flushDeletedDeltaObjects(delta_state *d)
+{
+    (void)d;
+}
+
+void SETSPINEL(delta_node *t, int32_t v)
+{
+    t->link = (t->link & 3) | v;
+}
+
+void SETSPINER(delta_state *d, int32_t *t, int32_t v)
+{
+    int32_t *r = rlink(d, (int32_t)(intptr_t)t);
+
+    *r = (*r & 3) | v;
+}
+
+void bspush_ca_boa(delta_state *d, int16_t tag)
+{
+    bspush_boa(d);
+    bspush_ca(d, tag);
+}
+
+void bspush_ca_scan_boa(delta_state *d, int16_t tag)
+{
+    bspush_boa(d);
+    bspush_ca_scan(d, tag);
+}
+
+void forceErrorBacktrack(delta_state *d)
+{
+    throwDeltaErrorNow(d);
+    longjmp(*(jmp_buf *)d->vars->err_jmp, 1);
+}
+
+void push_ptr_init(delta_state *d, delta_ptrvar *p)
+{
+    p->value = 0;
+    p->kind = DK_SYNC;
+    push_ptr(d, (int32_t)(intptr_t)p);
+}
+
+/* The two-byte and one-byte name pushes. Each builds an operand pointing at
+   its own argument slot, which is why the value is taken by copy. */
+void npush_i(delta_state *d, int32_t x)
+{
+    delta_operand v;
+
+    v.ptr = &x;
+    v.kind = DK_SHORT2;
+    v.pad_06 = 0;
+    vnspush(d, &v);
+}
+
+void npush_s(delta_state *d, int32_t x)
+{
+    delta_operand v;
+
+    v.ptr = &x;
+    v.kind = DK_UBYTE;
+    v.pad_06 = 0;
+    vnspush(d, &v);
+}
+
+void vscaninit(delta_state *d)
+{
+    delta_vars *v = d->vars;
+
+    v->scan_ptr = 0;
+    v->scan_field = 0;
+    v->scan_rev = 1;
+    v->scan_held = 1;
+}
+
+/* Follow a field's sync chain leftward as far as it keeps landing on syncs. */
+delta_node *vmovel(delta_node *t, uint8_t f)
+{
+    for (;;) {
+        int32_t next = t->syncs[f] & ~3;
+
+        if (next == 0)
+            return t;
+        if ((*(int32_t *)(intptr_t)next & 2) == 0)
+            return t;
+        t = (delta_node *)(intptr_t)next;
+    }
+}
+
+/* The same walk rightward, where the field's link is past the sync array. */
+int32_t *vmover(delta_state *d, int32_t *t, uint8_t f)
+{
+    for (;;) {
+        int32_t next = t[d->vars->fence_base + f] & ~3;
+
+        if (next == 0)
+            return t;
+        if ((*(int32_t *)(intptr_t)next & 2) == 0)
+            return t;
+        t = (int32_t *)(intptr_t)next;
+    }
+}
+
+/* Splice n into the spine on t's left, then on t's right. Both keep the tag
+   bits of whichever link they overwrite. */
+void INSSPINEL(delta_state *d, delta_node *n, delta_node *t)
+{
+    int32_t old = t->link & ~3;
+    int32_t *r;
+
+    n->link = (n->link & 3) | old;
+
+    r = rlink(d, old);
+    *r = (*r & 3) | (int32_t)(intptr_t)n;
+
+    t->link = (t->link & 3) | (int32_t)(intptr_t)n;
+
+    r = rlink(d, (int32_t)(intptr_t)n);
+    *r = (*r & 3) | (int32_t)(intptr_t)t;
+
+    spine_changed++;
+}
+
+void INSSPINER(delta_state *d, delta_node *n, delta_node *t)
+{
+    int32_t old = *rlink(d, (int32_t)(intptr_t)t) & ~3;
+    int32_t *r;
+
+    r = rlink(d, (int32_t)(intptr_t)n);
+    *r = (*r & 3) | old;
+
+    ((delta_node *)(intptr_t)old)->link =
+        (((delta_node *)(intptr_t)old)->link & 3) | (int32_t)(intptr_t)n;
+
+    r = rlink(d, (int32_t)(intptr_t)t);
+    *r = (*r & 3) | (int32_t)(intptr_t)n;
+
+    n->link = (n->link & 3) | (int32_t)(intptr_t)t;
+
     spine_changed++;
 }
