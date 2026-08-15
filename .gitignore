@@ -3,3 +3,4 @@ build/
 .wine/
 result
 result-*
+__pycache__/
