@@ -606,6 +606,8 @@ int  actd_lookup(delta_state *d, int16_t n, delta_token *outl,
                  delta_token *outr);
 int  vproj_r(delta_state *d, delta_node *t, delta_node *at, uint8_t f);
 int  conj_merge(delta_state *d, delta_token *tok);
+int  vproj_l(delta_state *d, delta_node *t, delta_node *at, uint8_t f);
+void proj_r(delta_state *d, uint8_t f);
 
 /* Supplied by the language module, not by the runtime. */
 const uint8_t *actdlookup(delta_state *d, int32_t l, int32_t r,

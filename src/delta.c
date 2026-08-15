@@ -4999,3 +4999,56 @@ int conj_merge(delta_state *d, delta_token *tok)
 
     return 0;
 }
+
+/* The mirror of vproj_r: project a statement onto the field to the left of
+   another.
+
+   The original re-tests, inside the context block, the same condition it has
+   already returned on, so the branch it guards can never be taken. Only the
+   side it does take is written here. As in vproj_r the two lookups are made
+   for the relinking they do, not for what they answer. */
+int vproj_l(delta_state *d, delta_node *t, delta_node *at, uint8_t f)
+{
+    delta_vars *v = d->vars;
+    int32_t fb = v->fence_base + f;
+    int32_t prev;
+    int32_t before;
+
+    if (((const int32_t *)t)[fb] & 1)
+        return 1;
+
+    if (v->ctx_both != 0) {
+        vgetsc(d, 1, 1, (int32_t)(intptr_t)t, f);
+        vgetsc(d, 0, 1, (int32_t)(intptr_t)t, f);
+    }
+
+    prev = ((const int32_t *)at)[3 + f] & -4;
+
+    /* A marker stands in for itself; anything else hands back to what comes
+       before it. The original reads through a null here rather than
+       stopping. */
+    if (prev != 0 && (*(const int32_t *)(intptr_t)prev & 2))
+        before = prev;
+    else
+        before = *(const int32_t *)(intptr_t)prev & -4;
+
+    project_rl(d, t, before, (int32_t)(intptr_t)at,
+               (delta_node *)(intptr_t)prev, at, f);
+
+    if (NONSEQ(t) && v->relink != 0) {
+        DELSPINE(d, t);
+        INSSPINER(d, t, (delta_node *)(intptr_t)before);
+    }
+
+    return 1;
+}
+
+/* Project the statement the right pointer names onto the field to the right
+   of the one the left pointer names. Either step refusing is a fault. */
+void proj_r(delta_state *d, uint8_t f)
+{
+    if (!vsync_tv(d, &d->lpta)
+        || !vproj_r(d, (delta_node *)(intptr_t)d->rpta.node,
+                    (delta_node *)(intptr_t)d->lpta.node, f))
+        forceErrorBacktrack(d);
+}

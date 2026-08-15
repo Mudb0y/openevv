@@ -278,6 +278,8 @@ extern int  ibm_actd_lookup(delta_state *, int16_t, delta_token *,
                             delta_token *);
 extern int  ibm_vproj_r(delta_state *, delta_node *, delta_node *, uint8_t);
 extern int  ibm_conj_merge(delta_state *, delta_token *);
+extern int  ibm_vproj_l(delta_state *, delta_node *, delta_node *, uint8_t);
+extern void ibm_proj_r(delta_state *, uint8_t);
 extern const unsigned char *actd_stub_answer;
 extern int32_t ibm_spine_changed;
 
@@ -6053,6 +6055,7 @@ BEGIN(vproj_r)
     /* The pointer spine, since the context lookups and the relink walk it.
        A statement is projected onto the field to the right of another. */
     uint8_t f = (uint8_t)(rng_next() % NSTMT);
+    int left = (int)(rng_next() % 2u);
     int ra, rb;
 
     build_pspine(m, o);
@@ -6073,18 +6076,27 @@ BEGIN(vproj_r)
     o->stack.spine_r = (int32_t)(intptr_t)(o->nodes + 3 * 0x80);
 
     /* The statement stepped onto must be a real one, because the original
-       reads through whatever the field link hands back. */
-    if ((((int32_t *)(m->nodes + 2 * 0x80))[15 + f] & -4) == 0) {
+       reads through whatever the field link hands back; the left projection
+       steps the other way and needs its own link real too. */
+    if ((((int32_t *)(m->nodes + 2 * 0x80))[15 + f] & -4) == 0
+        || (((int32_t *)(m->nodes + 2 * 0x80))[3 + f] & -4) == 0) {
         m->stack.spine_l = o->stack.spine_l = 0;
         m->stack.spine_r = o->stack.spine_r = 0;
         free(m); free(o);
         continue;
     }
 
-    ra = ibm_vproj_r(&m->state, (delta_node *)(m->nodes + 0x80),
-                     (delta_node *)(m->nodes + 2 * 0x80), f);
-    rb = vproj_r(&o->state, (delta_node *)(o->nodes + 0x80),
-                 (delta_node *)(o->nodes + 2 * 0x80), f);
+    if (left) {
+        ra = ibm_vproj_l(&m->state, (delta_node *)(m->nodes + 0x80),
+                         (delta_node *)(m->nodes + 2 * 0x80), f);
+        rb = vproj_l(&o->state, (delta_node *)(o->nodes + 0x80),
+                     (delta_node *)(o->nodes + 2 * 0x80), f);
+    } else {
+        ra = ibm_vproj_r(&m->state, (delta_node *)(m->nodes + 0x80),
+                         (delta_node *)(m->nodes + 2 * 0x80), f);
+        rb = vproj_r(&o->state, (delta_node *)(o->nodes + 0x80),
+                     (delta_node *)(o->nodes + 2 * 0x80), f);
+    }
 
     if (ra != rb)
         bad++;
@@ -6160,6 +6172,89 @@ BEGIN(conj_merge)
     memset(m->nodes, 0, sizeof(m->nodes));
     memset(o->nodes, 0, sizeof(o->nodes));
 END(conj_merge)
+
+
+static void run_proj_r(delta_state *d, uint8_t f, int ours)
+{
+    GUARDED(ours ? proj_r(d, f) : ibm_proj_r(d, f));
+}
+
+BEGIN(proj_r)
+    /* The edit scaffold, since settling the left pointer onto a sync is the
+       first thing this does. */
+    static const uint8_t sets[4] = {0, 1, 4, 8};
+    uint8_t g = (uint8_t)(rng_next() % NSTMT);
+    uint8_t f = 0xffu;
+    int i;
+
+    for (i = 0; i < NSTMT; i++) {
+        int k = (int)((rng_next() + (uint32_t)i) % NSTMT);
+        int16_t kind = vstmtbl[k].fields[0].kind;
+
+        if (kind == DK_LONG || kind == DK_SHORT2) {
+            f = (uint8_t)k;
+            break;
+        }
+    }
+    if (f == 0xffu) {
+        free(m); free(o);
+        continue;
+    }
+
+    build_edit(m, o, (int8_t)(rng_next() % 4u));
+
+    for (i = 0; i < 4; i++) {
+        uint32_t r = 16u + rng_next() % 16u;
+
+        if (i == 0 || i == 3) {
+            ((int32_t *)(m->nodes + i * 0x80))[0] &= ~2;
+            ((int32_t *)(o->nodes + i * 0x80))[0] &= ~2;
+        }
+        if (vstmtbl[f].fields[0].kind == DK_LONG) {
+            *(int32_t *)vstmtbl[f].get[0](m->nodes + i * 0x80 + 8) =
+                (int32_t)r;
+            *(int32_t *)vstmtbl[f].get[0](o->nodes + i * 0x80 + 8) =
+                (int32_t)r;
+        } else {
+            *(int16_t *)vstmtbl[f].get[0](m->nodes + i * 0x80 + 8) =
+                (int16_t)r;
+            *(int16_t *)vstmtbl[f].get[0](o->nodes + i * 0x80 + 8) =
+                (int16_t)r;
+        }
+    }
+
+    memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+    memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+    memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+    memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+    m->state.lpta.node = (int32_t)(intptr_t)(m->nodes + 0x80);
+    o->state.lpta.node = (int32_t)(intptr_t)(o->nodes + 0x80);
+    m->state.rpta.node = (int32_t)(intptr_t)(m->nodes + 2 * 0x80);
+    o->state.rpta.node = (int32_t)(intptr_t)(o->nodes + 2 * 0x80);
+    m->state.lpta.field = o->state.lpta.field = (int8_t)f;
+    m->state.rpta.field = o->state.rpta.field = (int8_t)f;
+    m->state.lpta.flags = o->state.lpta.flags = sets[rng_next() % 4u];
+    m->vars.ctx_both = o->vars.ctx_both = (int32_t)(rng_next() % 2u);
+    m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
+
+    /* The projection reads through whatever the field link hands back. */
+    if ((((int32_t *)(m->nodes + 0x80))[15 + g] & -4) == 0) {
+        memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+        memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+        memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+        memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+        free(m); free(o);
+        continue;
+    }
+
+    run_proj_r(&m->state, g, 0);
+    run_proj_r(&o->state, g, 1);
+
+    memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+    memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+    memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+    memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+END(proj_r)
 
 int main(void)
 {
@@ -6310,6 +6405,7 @@ int main(void)
     test_actd_lookup();
     test_vproj_r();
     test_conj_merge();
+    test_proj_r();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
