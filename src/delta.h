@@ -620,6 +620,8 @@ int  forall_adv_upto_r(delta_state *d, int16_t tag, int16_t loop,
                        int16_t bound, uint8_t f, delta_token *tok);
 void insert_lv(delta_state *d, uint8_t st, delta_loc *loc, uint8_t mode);
 int  vtstctx_tv(delta_state *d, delta_tpos *p, int32_t back);
+int  lpta_tstctxtl(delta_state *d, uint8_t f);
+int  lpta_tstctxtr(delta_state *d, uint8_t f);
 
 /* Supplied by the language module, not by the runtime. */
 const uint8_t *actdlookup(delta_state *d, int32_t l, int32_t r,

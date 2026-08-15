@@ -5406,3 +5406,34 @@ int vtstctx_tv(delta_state *d, delta_tpos *p, int32_t back)
 
     return 0;
 }
+
+/* Take the left pointer to its context, asking rather than faulting: a
+   pointer that cannot be settled is an answer, not an error. A statement
+   already carrying the field stays where it is.
+
+   The two directions hand the settling step and the lookup opposite
+   answers, which is why one argument is the other's complement. */
+static int lpta_tstctxt(delta_state *d, uint8_t f, int32_t back)
+{
+    const int32_t *node;
+
+    if (vtstctx_tv(d, &d->lpta, back))
+        return 1;
+
+    node = (const int32_t *)(intptr_t)d->lpta.node;
+    if (node[d->vars->fence_base + f] & 1)
+        return 0;
+
+    d->lpta.node = vgetsc(d, back ? 0 : 1, 1, d->lpta.node, f);
+    return 0;
+}
+
+int lpta_tstctxtl(delta_state *d, uint8_t f)
+{
+    return lpta_tstctxt(d, f, 0);
+}
+
+int lpta_tstctxtr(delta_state *d, uint8_t f)
+{
+    return lpta_tstctxt(d, f, 1);
+}

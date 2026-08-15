@@ -280,6 +280,8 @@ extern int  ibm_forall_adv_upto_r(delta_state *, int16_t, int16_t, int16_t,
                                   uint8_t, delta_token *);
 extern void ibm_insert_lv(delta_state *, uint8_t, delta_loc *, uint8_t);
 extern int  ibm_vtstctx_tv(delta_state *, delta_tpos *, int32_t);
+extern int  ibm_lpta_tstctxtl(delta_state *, uint8_t);
+extern int  ibm_lpta_tstctxtr(delta_state *, uint8_t);
 extern void ibm_project_rl(delta_state *, delta_node *, int32_t, int32_t,
                            delta_node *, delta_node *, uint8_t);
 extern int  ibm_actd_lookup(delta_state *, int16_t, delta_token *,
@@ -5381,7 +5383,7 @@ BEGIN(pta_ctxt)
        walking the timing spine this scaffold does not build. */
     enum { FB = 15, NNODE = 6, STEP = 0x80 };
     uint8_t f = (uint8_t)(rng_next() % NSTMT);
-    uint32_t which = rng_next() % 4u;
+    uint32_t which = rng_next() % 6u;
     delta_tpos *pm, *po;
     int i, j;
 
@@ -5441,8 +5443,8 @@ BEGIN(pta_ctxt)
     m->stack.spine_r = AT(m, NNODE - 1);
     o->stack.spine_r = AT(o, NNODE - 1);
 
-    pm = (which < 2) ? &m->state.lpta : &m->state.rpta;
-    po = (which < 2) ? &o->state.lpta : &o->state.rpta;
+    pm = (which == 2 || which == 3) ? &m->state.rpta : &m->state.lpta;
+    po = (which == 2 || which == 3) ? &o->state.rpta : &o->state.lpta;
     memset(pm, 0, sizeof(*pm));
     memset(po, 0, sizeof(*po));
     pm->node = AT(m, 2);
@@ -5454,7 +5456,15 @@ BEGIN(pta_ctxt)
     case 0: ibm_lpta_ctxtl(&m->state, f); lpta_ctxtl(&o->state, f); break;
     case 1: ibm_lpta_ctxtr(&m->state, f); lpta_ctxtr(&o->state, f); break;
     case 2: ibm_rpta_ctxtl(&m->state, f); rpta_ctxtl(&o->state, f); break;
-    default: ibm_rpta_ctxtr(&m->state, f); rpta_ctxtr(&o->state, f); break;
+    case 3: ibm_rpta_ctxtr(&m->state, f); rpta_ctxtr(&o->state, f); break;
+    case 4:
+        if (ibm_lpta_tstctxtl(&m->state, f) != lpta_tstctxtl(&o->state, f))
+            bad++;
+        break;
+    default:
+        if (ibm_lpta_tstctxtr(&m->state, f) != lpta_tstctxtr(&o->state, f))
+            bad++;
+        break;
     }
 #undef NODE
 #undef AT
