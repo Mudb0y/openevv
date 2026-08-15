@@ -267,6 +267,9 @@ extern void ibm_setDeltaCcodeReturnValue(const void *, int16_t, delta_loc *);
 extern void ibm_setDeltaReturnCode(delta_state *, uint8_t);
 extern int  ibm_modulo(delta_state *, const delta_loc *, const delta_loc *,
                        delta_loc *);
+extern int  ibm_ctxt_clstr(delta_state *, int32_t, int8_t);
+extern int  ibm_chstream(delta_state *, int16_t, uint8_t);
+extern int  ibm_calcWPM2ETI(delta_state *, const delta_loc *, delta_loc *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -5417,19 +5420,23 @@ END(pta_ctxt)
 
 
 BEGIN(calc_tables)
-    /* The three that read a table: every input including the ones outside
-       the range, so both ends of the clamp are exercised. */
+    /* The four that read a table: every input including the ones outside
+       the range, so both ends of the clamp and both ends of the search are
+       exercised. */
     delta_loc in, am, ao;
-    uint32_t which = rng_next() % 3u;
+    uint32_t which = rng_next() % 4u;
     int ra, rb;
 
     memset(&in, 0, sizeof(in));
     memset(&am, 0, sizeof(am));
     in.field = (rng_next() % 4u == 0) ? (int16_t)rng_next()
-                                      : (int16_t)(rng_next() % 0x100u);
+                                      : (int16_t)(rng_next() % 0x400u);
     ao = am;
 
-    if (which == 0) {
+    if (which == 3) {
+        ra = ibm_calcWPM2ETI(&m->state, &in, &am);
+        rb = calcWPM2ETI(&o->state, &in, &ao);
+    } else if (which == 0) {
         ra = ibm_calcETI2WPM(&m->state, &in, &am);
         rb = calcETI2WPM(&o->state, &in, &ao);
     } else if (which == 1) {
@@ -5742,6 +5749,164 @@ BEGIN(modulo)
         bad++;
 END(modulo)
 
+
+BEGIN(ctxt_clstr)
+    /* The same spine the context lookup needs, since that is what settles
+       where the run starts and ends. */
+    enum { FB = 15, NNODE = 6, STEP = 0x80 };
+    uint8_t f = (uint8_t)(rng_next() % NSTMT);
+    int ra, rb, i, j;
+
+    /* Only a type whose first field is a long or a short is read at all;
+       the others fall straight through to the next statement. */
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.fence_base = o->vars.fence_base = FB;
+    m->state.fence_fill = o->state.fence_fill = (uint8_t)(rng_next() % 5u);
+    m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
+    for (i = 0; i < 0x20; i++)
+        m->nsqm[i] = o->nsqm[i] = (int8_t)(rng_next() % 2u);
+
+#define NODE(w, i) ((int32_t *)((w)->nodes + (i) * STEP))
+#define AT(w, i)   ((int32_t)(intptr_t)((w)->nodes + (i) * STEP))
+    for (i = 0; i < NNODE; i++) {
+        int lo = i > 0 ? i - 1 : 0;
+        int hi = i + 1 < NNODE ? i + 1 : NNODE - 1;
+        uint32_t r;
+
+        r = rng_next();
+        NODE(m, i)[0] = AT(m, lo) | 2 | (int32_t)(r & 1u);
+        NODE(o, i)[0] = AT(o, lo) | 2 | (int32_t)(r & 1u);
+
+        NODE(m, i)[1] = AT(m, hi);
+        NODE(o, i)[1] = AT(o, hi);
+
+        r = rng_next();
+        NODE(m, i)[2] = (int32_t)(r & 3u);
+        NODE(o, i)[2] = (int32_t)(r & 3u);
+
+        for (j = 0; j < 10; j++) {
+            r = rng_next();
+            NODE(m, i)[3 + j] = AT(m, lo) | (int32_t)(r & 1u);
+            NODE(o, i)[3 + j] = AT(o, lo) | (int32_t)(r & 1u);
+
+            r = rng_next();
+            NODE(m, i)[FB + j] = AT(m, hi) | (int32_t)(r & 1u);
+            NODE(o, i)[FB + j] = AT(o, hi) | (int32_t)(r & 1u);
+        }
+
+        NODE(m, i)[FB - 2] = AT(m, lo);
+        NODE(o, i)[FB - 2] = AT(o, lo);
+        NODE(m, i)[FB - 1] = 0;
+        NODE(o, i)[FB - 1] = 0;
+
+        /* The value the walk reads, sometimes zero and sometimes not. */
+        if (vstmtbl[f].fields[0].kind == DK_LONG) {
+            int32_t x = (int32_t)(rng_next() % 3u);
+
+            *(int32_t *)vstmtbl[f].get[0](m->nodes + i * STEP + 8) = x;
+            *(int32_t *)vstmtbl[f].get[0](o->nodes + i * STEP + 8) = x;
+        } else if (vstmtbl[f].fields[0].kind == DK_SHORT2) {
+            int16_t x = (int16_t)(rng_next() % 3u);
+
+            *(int16_t *)vstmtbl[f].get[0](m->nodes + i * STEP + 8) = x;
+            *(int16_t *)vstmtbl[f].get[0](o->nodes + i * STEP + 8) = x;
+        }
+    }
+    NODE(m, NNODE - 1)[FB + f] |= 1;
+    NODE(o, NNODE - 1)[FB + f] |= 1;
+    NODE(m, NNODE - 1)[2] &= ~2;
+    NODE(o, NNODE - 1)[2] &= ~2;
+    NODE(m, 0)[FB + f] |= 1;
+    NODE(o, 0)[FB + f] |= 1;
+    NODE(m, 0)[2] &= ~2;
+    NODE(o, 0)[2] &= ~2;
+
+    m->stack.spine_l = AT(m, 0);
+    o->stack.spine_l = AT(o, 0);
+    m->stack.spine_r = AT(m, NNODE - 1);
+    o->stack.spine_r = AT(o, NNODE - 1);
+
+    /* The walk dereferences whatever the context lookup hands back without
+       checking it, so a run that starts or ends on nothing faults in the
+       original as surely as here. Leave those out. */
+    if (vgetsc(&o->state, 1, 1, AT(o, 2), f) == 0
+        || vgetsc(&o->state, 0, 1, AT(o, 2), f) == 0) {
+        m->stack.spine_l = o->stack.spine_l = 0;
+        m->stack.spine_r = o->stack.spine_r = 0;
+        free(m); free(o);
+        continue;
+    }
+
+    ra = ibm_ctxt_clstr(&m->state, AT(m, 2), (int8_t)f);
+    rb = ctxt_clstr(&o->state, AT(o, 2), (int8_t)f);
+#undef NODE
+#undef AT
+
+    if (ra != rb)
+        bad++;
+
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(ctxt_clstr)
+
+BEGIN(chstream)
+    /* The scan walks forward over the same shape vscanadv is exercised on,
+       and then two records go on the stack. */
+    uint8_t f = (uint8_t)(rng_next() % 4u);
+    int16_t v = (int16_t)rng_next();
+    int ra, rb, i;
+
+    memset(m->records, 0, RECORDS);
+    memset(o->records, 0, RECORDS);
+    m->vars.fence_base = o->vars.fence_base = 2;
+    m->vars.fence_count = o->vars.fence_count = (int8_t)(rng_next() % 4u);
+    m->vars.scan_field = o->vars.scan_field = (uint8_t)(rng_next() % 2u);
+    m->vars.scan_rev = o->vars.scan_rev = (uint8_t)(rng_next() % 2u);
+    m->vars.scan_held = o->vars.scan_held = (uint8_t)(rng_next() % 2u);
+
+    for (i = 0; i < FENCE_MAP; i++)
+        m->map[i] = o->map[i] = (uint8_t)(rng_next() % 4u);
+    for (i = 0; i < 4; i++) {
+        m->chars[i] = o->chars[i] = (uint8_t)i;
+        m->marks[i] = o->marks[i] = (uint8_t)(rng_next() % 2u);
+    }
+    for (i = 0; i < 8; i++) {
+        uint32_t r = rng_next();
+        int null = (r % 5u) == 0;
+
+        ((int32_t *)(m->records + 0x100))[i] = null ? 0
+            : (int32_t)((intptr_t)(m->records + 0x140) | (r & 3u));
+        ((int32_t *)(o->records + 0x100))[i] = null ? 0
+            : (int32_t)((intptr_t)(o->records + 0x140) | (r & 3u));
+    }
+    for (i = 0; i < 8; i++) {
+        uint32_t r = rng_next();
+        int null = (r % 5u) == 0;
+
+        ((int32_t *)(m->records + 0x140))[i] = null ? 0
+            : (int32_t)((intptr_t)(m->records + 0x180) | (r & 3u));
+        ((int32_t *)(o->records + 0x140))[i] = null ? 0
+            : (int32_t)((intptr_t)(o->records + 0x180) | (r & 3u));
+    }
+    m->vars.scan_ptr = (int32_t)(intptr_t)(m->records + 0x100);
+    o->vars.scan_ptr = (int32_t)(intptr_t)(o->records + 0x100);
+
+    ra = ibm_chstream(&m->state, v, f);
+    rb = chstream(&o->state, v, f);
+
+    if (ra != rb)
+        bad++;
+    else if ((m->vars.scan_ptr == 0) != (o->vars.scan_ptr == 0))
+        bad++;
+    else if (m->vars.scan_ptr != 0
+             && m->vars.scan_ptr - (int32_t)(intptr_t)m
+                != o->vars.scan_ptr - (int32_t)(intptr_t)o)
+        bad++;
+END(chstream)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -5885,6 +6050,8 @@ int main(void)
     test_numeric_helpers();
     test_ccode_boundary();
     test_modulo();
+    test_ctxt_clstr();
+    test_chstream();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

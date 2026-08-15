@@ -4607,3 +4607,122 @@ int modulo(delta_state *d, const delta_loc *a, const delta_loc *b,
     setDeltaCcodeReturnValue(&r, DK_LONG, out);
     return 0;
 }
+
+/* Is the whole run between a statement's two contexts empty of this field?
+   The walk steps over markers by their fence link and over statements by
+   the forward one, and stops at the first statement that carries a value. */
+int ctxt_clstr(delta_state *d, int32_t t, int8_t f)
+{
+    void *(*get)(void *) = vstmtbl[f].get[0];
+    int32_t a = vgetsc(d, 1, 1, t, f);
+    int32_t b = vgetsc(d, 0, 1, t, f);
+
+    while (a != b) {
+        if (a != 0 && (*(const int32_t *)(intptr_t)a & 2)) {
+            a = ((const int32_t *)(intptr_t)a)[d->vars->fence_base + f] & -4;
+            continue;
+        }
+
+        if (vstmtbl[f].fields[0].kind == DK_LONG) {
+            if (*(const int32_t *)get(TFLDS((void *)(intptr_t)a)) != 0)
+                return 0;
+        } else if (vstmtbl[f].fields[0].kind == DK_SHORT2) {
+            if (*(const int16_t *)get(TFLDS((void *)(intptr_t)a)) != 0)
+                return 0;
+        }
+
+        a = ((const int32_t *)(intptr_t)a)[1] & -4;
+    }
+
+    return 1;
+}
+
+/* Move the scan onto another stream. The scan is first walked forward until
+   it stands on a statement that carries the field, then two records go on
+   the stack so the move can be undone, and the fence is marked. */
+int chstream(delta_state *d, int16_t v, uint8_t f)
+{
+    delta_vars *va = d->vars;
+    delta_stack *s = d->stack;
+    uint8_t *ctx;
+    uint8_t *pos;
+
+    while (!(((const int32_t *)(intptr_t)va->scan_ptr)[va->fence_base + f]
+             & 1)) {
+        if (!vscanadv(d, 0, 1))
+            return 1;
+    }
+
+    s->top -= s->ca_size;
+    ctx = s->top;
+    s->limit -= s->ca_size;
+    ctx[0] = 3;
+    *(int32_t *)(ctx + 4) = v;
+
+    s->top -= s->size_b0;
+    pos = s->top;
+    s->limit -= s->size_b0;
+    pos[0] = 1;
+    memcpy(pos + 4, &va->scan_ptr, 8);
+
+    d->fence_marks[d->fence_index[f]] = 1;
+    va->scan_field = f;
+    return 0;
+}
+
+/* The engine's own speed number from a words-a-minute figure: a binary
+   search through the same table the other direction reads, settling on
+   whichever of the two ends it closes on is nearer.
+
+   Outside the table's range the original answers with the table's own end
+   value rather than with its index. That is what it does and it is left
+   alone. */
+int calcWPM2ETI(delta_state *d, const delta_loc *in, delta_loc *out)
+{
+    int16_t hi = 0xfb;
+    int16_t lo = 0;
+    int16_t v = in->field;
+
+    (void)d;
+
+    if (v < delta_ETI2WPM_Table[0]) {
+        out->field = delta_ETI2WPM_Table[0];
+        return 0;
+    }
+    if (v >= delta_ETI2WPM_Table[250]) {
+        out->field = delta_ETI2WPM_Table[250];
+        return 0;
+    }
+
+    while (hi > lo) {
+        int16_t mid = (int16_t)(lo + (hi - lo) / 2);
+
+        if (v != delta_ETI2WPM_Table[mid] && (hi - lo) >= 2) {
+            if (v < delta_ETI2WPM_Table[mid])
+                hi = mid;
+            else
+                lo = mid;
+            continue;
+        }
+
+        if (v == delta_ETI2WPM_Table[mid] || hi == lo) {
+            out->field = mid;
+            return 0;
+        }
+
+        {
+            int32_t a = v - delta_ETI2WPM_Table[hi];
+            int32_t b = v - delta_ETI2WPM_Table[lo];
+
+            if (a < 0)
+                a = -a;
+            if (b < 0)
+                b = -b;
+
+            out->field = (a < b) ? hi : lo;
+        }
+        return 0;
+    }
+
+    return 0;
+}

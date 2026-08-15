@@ -593,6 +593,9 @@ void setDeltaCcodeReturnValue(const void *src, int16_t from, delta_loc *dst);
 void setDeltaReturnCode(delta_state *d, uint8_t code);
 int  modulo(delta_state *d, const delta_loc *a, const delta_loc *b,
             delta_loc *out);
+int  ctxt_clstr(delta_state *d, int32_t t, int8_t f);
+int  chstream(delta_state *d, int16_t v, uint8_t f);
+int  calcWPM2ETI(delta_state *d, const delta_loc *in, delta_loc *out);
 
 /* The runtime's constant tables, lifted out of the original by
    tools/delta-tables.py. */
