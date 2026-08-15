@@ -159,6 +159,7 @@ extern int  ibm_vchkseqbad(delta_state *, int32_t, uint8_t, const char *);
 extern void *ibm_vins_sync(delta_state *, uint8_t, int32_t, int32_t);
 extern int  ibm_chkdelnonseq(delta_state *, int32_t, uint8_t);
 extern int  ibm_fdeldel(delta_state *, int32_t, int32_t, int32_t);
+extern void ibm_fdel(delta_state *, int32_t, int32_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -3420,10 +3421,34 @@ BEGIN(fdeldel)
     {
         int32_t arg = (int32_t)rng_next();
 
-        ra = ibm_fdeldel(&m->state, (int32_t)(intptr_t)(m->nodes + STEP),
-                         (int32_t)(intptr_t)(m->nodes + 2 * STEP), arg);
-        rb = fdeldel(&o->state, (int32_t)(intptr_t)(o->nodes + STEP),
-                     (int32_t)(intptr_t)(o->nodes + 2 * STEP), arg);
+        if (rng_next() % 2u) {
+            ra = ibm_fdeldel(&m->state, (int32_t)(intptr_t)(m->nodes + STEP),
+                             (int32_t)(intptr_t)(m->nodes + 2 * STEP), arg);
+            rb = fdeldel(&o->state, (int32_t)(intptr_t)(o->nodes + STEP),
+                         (int32_t)(intptr_t)(o->nodes + 2 * STEP), arg);
+        } else {
+            /* fdel takes the same run out of the stack block. A whole delete
+               names the two ends; a partial one steps in from each. */
+            int32_t whole = (int32_t)(rng_next() % 2u);
+
+            m->stack.del_from = (int32_t)(intptr_t)(m->nodes + STEP);
+            o->stack.del_from = (int32_t)(intptr_t)(o->nodes + STEP);
+            m->stack.del_to = (int32_t)(intptr_t)(m->nodes + 2 * STEP);
+            o->stack.del_to = (int32_t)(intptr_t)(o->nodes + 2 * STEP);
+            m->stack.del_left = (int32_t)(intptr_t)m->nodes;
+            o->stack.del_left = (int32_t)(intptr_t)o->nodes;
+            m->stack.del_right = (int32_t)(intptr_t)(m->nodes + 3 * STEP);
+            o->stack.del_right = (int32_t)(intptr_t)(o->nodes + 3 * STEP);
+
+            ibm_fdel(&m->state, whole, arg);
+            fdel(&o->state, whole, arg);
+            ra = rb = 0;
+
+            m->stack.del_from = o->stack.del_from = 0;
+            m->stack.del_to = o->stack.del_to = 0;
+            m->stack.del_left = o->stack.del_left = 0;
+            m->stack.del_right = o->stack.del_right = 0;
+        }
     }
     if (ra != rb)
         bad++;

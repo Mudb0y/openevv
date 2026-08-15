@@ -2966,3 +2966,25 @@ int fdeldel(delta_state *d, int32_t from, int32_t to, int32_t arg)
     flushDeletedDeltaObjects(d);
     return 1;
 }
+
+/* Delete what the stack block says to. A whole delete takes the run between
+   the two nodes it recorded; a partial one takes what lies between the two
+   ends, one step in from each. */
+void fdel(delta_state *d, int32_t whole, int32_t arg)
+{
+    delta_stack *s = d->stack;
+    int32_t fd = s->del_field;
+
+    if (whole != 0) {
+        fdeldel(d, s->del_from, s->del_to, arg);
+    } else {
+        int32_t from = *(int32_t *)(intptr_t)
+            (s->del_left + (d->vars->fence_base + fd) * 4) & ~3;
+        int32_t to = *(int32_t *)(intptr_t)
+            (s->del_right + 0xc + fd * 4) & ~3;
+
+        fdeldel(d, from, to, arg);
+    }
+
+    flushDeletedDeltaObjects(d);
+}
