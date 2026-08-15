@@ -18,6 +18,20 @@ AT(stack, 0x006c);
 
 typedef char delta_state_is_0x1088[sizeof(delta_state) == DELTA_STATE_BYTES ? 1 : -1];
 typedef char delta_pta_is_16[sizeof(delta_pta) == 16 ? 1 : -1];
+typedef char delta_stmt_is_0x40[sizeof(delta_stmt) == 0x40 ? 1 : -1];
+typedef char delta_fielddesc_is_0x18[sizeof(delta_fielddesc) == 0x18 ? 1 : -1];
+
+/* How long a language-declared record is. Two of the callers can arrive with
+   a negative kind, which the original indexes the table with regardless, so
+   this goes through a byte offset rather than letting the compiler decide it
+   knows the subscript is out of range. */
+static int32_t stmt_length(int32_t kind)
+{
+    uintptr_t p = (uintptr_t)vstmtbl
+                  + (uintptr_t)(intptr_t)(kind * (int32_t)sizeof(delta_stmt));
+
+    return *(const int32_t *)(p + offsetof(delta_stmt, length));
+}
 
 /* Point the left register at a token. The flag says a load happened and the
    cleared word is whatever the previous load left behind. */
@@ -286,14 +300,13 @@ void vcompare(delta_state *d, const delta_operand *a, const delta_operand *b)
         if (b->kind != a->kind) {
             d->vars->compared_equal = 1;
         } else {
-            const int32_t *len = (const int32_t *)
-                (vstmtbl + (int32_t)a->kind * VSTMTBL_ENTRY + VSTMTBL_LEN);
+            int32_t len = stmt_length(a->kind);
 
             /* The original keeps only the low byte of what memcmp returns,
                so the exact value matters and not just its sign. That was
                already true of IBM's builds; using memcmp keeps it so. */
             d->vars->compared_equal =
-                (int8_t)memcmp(a->ptr, b->ptr, (size_t)*len);
+                (int8_t)memcmp(a->ptr, b->ptr, (size_t)len);
         }
         break;
     }
@@ -304,10 +317,7 @@ void vcompare(delta_state *d, const delta_operand *a, const delta_operand *b)
    mask and writing one is a read, modify and write back. */
 int16_t STMTYP(int8_t kind)
 {
-    const uint8_t *desc = *(const uint8_t *const *)
-        (vstmtbl + (int32_t)kind * VSTMTBL_ENTRY + VSTMTBL_DESC);
-
-    return *(const int16_t *)(desc + 0x12);
+    return vstmtbl[kind].fields[0].kind;
 }
 
 int ONESTM(const delta_node *t)   { return (t->link & 1) != 0; }
@@ -534,15 +544,13 @@ void vpush_var(delta_state *d, const delta_operand *v)
     else if (v->kind == DK_SHORT2)
         size = 2;
     else if (v->kind <= DK_SHORT2)
-        size = *(const int32_t *)
-            (vstmtbl + (int32_t)v->kind * VSTMTBL_ENTRY + VSTMTBL_LEN);
+        size = stmt_length(v->kind);
     else if (v->kind <= DK_SHORT)
         size = 4;
     else if (v->kind == DK_UBYTE)
         size = 1;
     else
-        size = *(const int32_t *)
-            (vstmtbl + (int32_t)v->kind * VSTMTBL_ENTRY + VSTMTBL_LEN);
+        size = stmt_length(v->kind);
 
     pad = ((size - 1) & ~1) | 1;
     step = s->size_ac + pad + 1;
@@ -786,4 +794,143 @@ void INSSPINER(delta_state *d, delta_node *n, delta_node *t)
     n->link = (n->link & 3) | (int32_t)(intptr_t)t;
 
     spine_changed++;
+}
+
+/* The leftmost node of a field's run. Walk the field's sync chain while it
+   keeps landing on syncs, then keep going through nodes whose first field
+   reads as zero, which is how the language marks a continuation. */
+delta_node *lmost(delta_state *d, int8_t f, delta_node *t)
+{
+    const delta_stmt *e = &vstmtbl[f];
+    void *(*get)(void *) = e->get[0];
+    uint8_t walkable = e->walkable;
+    int16_t kind = e->fields[0].kind;
+    int32_t next = *(int32_t *)((char *)t + 0xc + f * 4) & ~3;
+    /* The original never assigns this in the default case, so a statement
+       type of any other kind reads whatever the frame held. None of the ten
+       English types does. */
+    int32_t keep = 0;
+
+    (void)d;
+
+    for (;;) {
+        if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
+            t = (delta_node *)(intptr_t)next;
+            next = *(int32_t *)((char *)t + 0xc + f * 4) & ~3;
+            continue;
+        }
+
+        if (kind == DK_SHORT2)
+            keep = next != 0 && walkable != 0
+                && *(int16_t *)get(TFLDS((void *)(intptr_t)next)) == 0;
+        else if (kind == DK_LONG)
+            keep = next != 0 && walkable != 0
+                && *(int32_t *)get(TFLDS((void *)(intptr_t)next)) == 0;
+
+        if (!keep)
+            return t;
+
+        next = *(int32_t *)(intptr_t)next & ~3;
+    }
+}
+
+/* The same walk the other way, over the links past the sync array. */
+int32_t *rmost(delta_state *d, int8_t f, int32_t *t)
+{
+    const delta_stmt *e = &vstmtbl[f];
+    void *(*get)(void *) = e->get[0];
+    uint8_t walkable = e->walkable;
+    int16_t kind = e->fields[0].kind;
+    int32_t next = t[d->vars->fence_base + f] & ~3;
+    int32_t keep = 0;
+
+    for (;;) {
+        if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
+            t = (int32_t *)(intptr_t)next;
+            next = t[d->vars->fence_base + f] & ~3;
+            continue;
+        }
+
+        if (kind == DK_SHORT2)
+            keep = next != 0 && walkable != 0
+                && *(int16_t *)get(TFLDS((void *)(intptr_t)next)) == 0;
+        else if (kind == DK_LONG)
+            keep = next != 0 && walkable != 0
+                && *(int32_t *)get(TFLDS((void *)(intptr_t)next)) == 0;
+
+        if (!keep)
+            return t;
+
+        next = *(int32_t *)((char *)(intptr_t)next + 4) & ~3;
+    }
+}
+
+/* Copy one value onto another. The narrowing and widening cases are spelled
+   out; anything the language declares is copied whole by length. */
+void vassign(delta_state *d, const delta_operand *dst, const delta_operand *src)
+{
+    (void)d;
+
+    switch (dst->kind) {
+    case DK_UBYTE:
+        *(int8_t *)dst->ptr = *(const int8_t *)src->ptr;
+        break;
+    case DK_SHORT:
+        *(int16_t *)dst->ptr = *(const int16_t *)src->ptr;
+        break;
+    case DK_LONG:
+        if (src->kind == DK_LONG)
+            *(int32_t *)dst->ptr = *(const int32_t *)src->ptr;
+        else if (src->kind == DK_SHORT2)
+            *(int32_t *)dst->ptr = *(const int16_t *)src->ptr;
+        break;
+    case DK_SHORT2:
+        if (src->kind == DK_LONG || src->kind == DK_SHORT2)
+            *(int16_t *)dst->ptr = *(const int16_t *)src->ptr;
+        break;
+    case DK_SYNC:
+        memcpy(dst->ptr, src->ptr, 4);
+        break;
+    default:
+        memcpy(dst->ptr, src->ptr, (size_t)stmt_length(dst->kind));
+        break;
+    }
+}
+
+/* Push the named field of the statement the scan is sitting on. Returns
+   nonzero when there was nothing there to push. */
+int npush_fld(delta_state *d, uint8_t st, uint8_t fld)
+{
+    delta_vars *v = d->vars;
+    const delta_stmt *e = &vstmtbl[st];
+    delta_operand out;
+    int32_t p;
+
+    out.kind = e->fields[fld].kind;
+    out.pad_06 = e->fields[fld].flag;
+
+    if (v->scan_rev == 0)
+        p = *(int32_t *)((char *)(intptr_t)v->scan_ptr
+                         + 0xc + v->scan_field * 4) & ~3;
+    else
+        p = *(int32_t *)((char *)(intptr_t)v->scan_ptr
+                         + (v->fence_base + v->scan_field) * 4) & ~3;
+
+    if (p == 0)
+        return 1;
+
+    while (*(int32_t *)(intptr_t)p & 2) {
+        if (v->scan_rev == 0)
+            p = *(int32_t *)((char *)(intptr_t)p
+                             + 0xc + v->scan_field * 4) & ~3;
+        else
+            p = *(int32_t *)((char *)(intptr_t)p
+                             + (v->fence_base + v->scan_field) * 4) & ~3;
+        if (p == 0)
+            return 1;
+    }
+
+    out.ptr = e->get[fld](TFLDS((void *)(intptr_t)p));
+    vnspush(d, &out);
+    return 0;
 }

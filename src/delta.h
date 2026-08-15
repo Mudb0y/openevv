@@ -119,14 +119,50 @@ typedef struct {
 #define DK_SHORT2 (-4)
 #define DK_SYNC   (-6)
 
-/* The language module's statement table: 64-byte entries, one per statement
-   type. Entry+0x04 points at a descriptor and entry+0x24 is a length. The
-   runtime is parameterised by this table rather than owning it, and English
-   ships about ten entries. */
-extern const uint8_t vstmtbl[];
-#define VSTMTBL_ENTRY 0x40
-#define VSTMTBL_DESC  0x04
-#define VSTMTBL_LEN   0x24
+/* One field of a statement type, as the language declares it: a name, a
+   printf format for the debugger, and the table of names its values may
+   take. English's phone statement declares name, class, voicing, sonority,
+   manner_of_artic, place_of_artic and backness this way. */
+typedef struct {
+    const char *name;         /* +0x00 */
+    const char *format;       /* +0x04 */
+    const void *values;       /* +0x08 */
+    int32_t     unknown_0c;
+    int16_t     unknown_10;
+    int16_t     kind;         /* +0x12, the type code a comparison sees */
+    int8_t      flag;         /* +0x14 */
+    int8_t      pad_15[3];
+} delta_fielddesc;
+
+/* The language module's statement table, one 64-byte entry per statement
+   type. The runtime is parameterised by this rather than owning it: English
+   declares ten types, named char_count, inp, phone, morph, word, inton_phr,
+   klatt, syllable, F0 and Ms.
+
+   A statement type doubles as a field index into a spine node, so the same
+   number indexes both this table and the node's sync array. */
+typedef struct {
+    const char            *name;      /* +0x00 */
+    const delta_fielddesc *fields;    /* +0x04 */
+    void *(*const         *get)(void *);  /* +0x08, one reader per field */
+    void  *const          *print;     /* +0x0c, one printer per field */
+    const uint8_t         *variants;  /* +0x10, null unless the type has any */
+    const uint8_t         *deflt;     /* +0x14, what a fresh statement holds */
+    uint8_t                pad_18[0x20 - 0x18];
+    int32_t                nfields;   /* +0x20, how many the type declares */
+    int32_t                length;    /* +0x24, the whole record in bytes */
+    int32_t                stride;    /* +0x28, one variant */
+    int32_t                varlen;    /* +0x2c, how much of one to copy */
+    uint8_t                pad_30[4];
+    uint8_t                marks[2];  /* +0x34, the pair the printer brackets
+                                         a statement with */
+    uint8_t                walkable;  /* +0x36, only Ms sets this */
+    uint8_t                pad_37;
+    int32_t                unknown_38;
+    int32_t                unknown_3c;
+} delta_stmt;
+
+extern const delta_stmt vstmtbl[];
 
 /* A node on the spine: the linked structure the rules walk over. Its links
    are tagged pointers, with flags in the low two bits that a reader has to
@@ -236,6 +272,10 @@ delta_node *vmovel(delta_node *t, uint8_t f);
 int32_t *vmover(delta_state *d, int32_t *t, uint8_t f);
 void INSSPINEL(delta_state *d, delta_node *n, delta_node *t);
 void INSSPINER(delta_state *d, delta_node *n, delta_node *t);
+delta_node *lmost(delta_state *d, int8_t f, delta_node *t);
+int32_t *rmost(delta_state *d, int8_t f, int32_t *t);
+void vassign(delta_state *d, const delta_operand *dst, const delta_operand *src);
+int  npush_fld(delta_state *d, uint8_t st, uint8_t fld);
 
 /* Bumped whenever the spine is relinked, so anything holding a position knows
    to look again. */

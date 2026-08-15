@@ -85,6 +85,11 @@ extern delta_node *ibm_vmovel(delta_node *, uint8_t);
 extern int32_t *ibm_vmover(delta_state *, int32_t *, uint8_t);
 extern void ibm_INSSPINEL(delta_state *, delta_node *, delta_node *);
 extern void ibm_INSSPINER(delta_state *, delta_node *, delta_node *);
+extern delta_node *ibm_lmost(delta_state *, int8_t, delta_node *);
+extern int32_t *ibm_rmost(delta_state *, int8_t, int32_t *);
+extern void ibm_vassign(delta_state *, const delta_operand *,
+                        const delta_operand *);
+extern int  ibm_npush_fld(delta_state *, uint8_t, uint8_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -102,6 +107,7 @@ typedef struct {
     uint8_t     marks[FENCE_MAP];
     uint8_t     blockhdr[0x20];   /* the allocation header, read at +0x10 */
     uint8_t     names[0x200];     /* the name stack */
+    uint8_t     nodes[0x400];     /* room to build a spine to walk */
 } delta_world;
 
 static int total_cases;
@@ -221,7 +227,9 @@ static int world_differs(delta_world *a, delta_world *b)
     if (memcmp(a->blockhdr + 0x14, b->blockhdr + 0x14,
                sizeof(a->blockhdr) - 0x14) != 0)
         return 1;
-    return memcmp(a->names, b->names, sizeof(a->names)) != 0;
+    if (memcmp(a->names, b->names, sizeof(a->names)) != 0)
+        return 1;
+    return memcmp(a->nodes, b->nodes, sizeof(a->nodes)) != 0;
 }
 
 #define BEGIN(name)                                                  \
@@ -936,6 +944,150 @@ BEGIN(forceErrorBacktrack)
     jump_ours(&o->state);
 END(forceErrorBacktrack)
 
+
+/* The ten statement types English declares. Only Ms is walkable, so only a
+   walk over that one reaches the field reader the language supplies. */
+#define NSTMT 10
+
+BEGIN(stmt_walks)
+    static const int32_t at[4] = {0x00, 0x80, 0x100, 0x180};
+    /* The original never initialises the flag that decides whether to keep
+       walking unless the type's first field is a long or a short, and then
+       dereferences a null on that path. Only feed it the types it is really
+       called with. */
+    int8_t f = -1;
+    void *ra, *rb;
+    int i, j;
+
+    for (i = 0; i < NSTMT; i++) {
+        int k = (int)((rng_next() + (uint32_t)i) % NSTMT);
+
+        if (vstmtbl[k].fields[0].kind == DK_LONG
+            || vstmtbl[k].fields[0].kind == DK_SHORT2) {
+            f = (int8_t)k;
+            break;
+        }
+    }
+    if (f < 0) {
+        free(m); free(o);
+        break;
+    }
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.fence_base = o->vars.fence_base = 13;
+
+    /* Four nodes in a row, each link either null or pointing at the next,
+       so a walk always makes progress and always terminates. */
+    for (i = 0; i < 4; i++) {
+        int32_t to = at[i < 3 ? i + 1 : 3];
+
+        for (j = 0; j < 24; j++) {
+            uint32_t r = rng_next();
+            int null = (r % 3u) == 0 || i == 3;
+
+            ((int32_t *)(m->nodes + at[i]))[j] = null ? 0
+                : (int32_t)((intptr_t)(m->nodes + to) | (r & 3u));
+            ((int32_t *)(o->nodes + at[i]))[j] = null ? 0
+                : (int32_t)((intptr_t)(o->nodes + to) | (r & 3u));
+        }
+    }
+
+    if (rng_next() % 2u) {
+        ra = ibm_lmost(&m->state, f, (delta_node *)m->nodes);
+        rb = lmost(&o->state, f, (delta_node *)o->nodes);
+    } else {
+        ra = ibm_rmost(&m->state, f, (int32_t *)m->nodes);
+        rb = rmost(&o->state, f, (int32_t *)o->nodes);
+    }
+    if ((char *)ra - (char *)m != (char *)rb - (char *)o)
+        bad++;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(stmt_walks)
+
+BEGIN(vassign)
+    delta_operand dm, sm, dof, so;
+    static const int16_t scalars[] = {-1, -2, -3, -4, -6};
+    int16_t dk, sk;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+
+    /* A language kind copies a whole record, so pick one only when it fits
+       in the room the two operands have. */
+    if (rng_next() % 4u == 0) {
+        dk = (int16_t)(rng_next() % NSTMT);
+        if (vstmtbl[dk].length > 0x100)
+            dk = 0;
+    } else {
+        dk = scalars[rng_next() % 5u];
+    }
+    sk = scalars[rng_next() % 5u];
+
+    fill(m->nodes + 0x200, 0x40);
+    memcpy(o->nodes + 0x200, m->nodes + 0x200, 0x40);
+
+    dm.ptr = m->nodes;        dm.kind = dk; dm.pad_06 = 0;
+    sm.ptr = m->nodes + 0x200; sm.kind = sk; sm.pad_06 = 0;
+    dof.ptr = o->nodes;        dof.kind = dk; dof.pad_06 = 0;
+    so.ptr = o->nodes + 0x200; so.kind = sk; so.pad_06 = 0;
+
+    ibm_vassign(&m->state, &dm, &sm);
+    vassign(&o->state, &dof, &so);
+END(vassign)
+
+BEGIN(npush_fld)
+    static const int32_t at[4] = {0x00, 0x80, 0x100, 0x180};
+    uint8_t st = (uint8_t)(rng_next() % NSTMT);
+    uint8_t fld = (uint8_t)(rng_next() % (uint32_t)vstmtbl[st].nfields);
+    int ra, rb;
+    int i, j;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.fence_base = o->vars.fence_base = 13;
+    m->vars.scan_field = o->vars.scan_field = (uint8_t)(rng_next() % NSTMT);
+    m->vars.scan_rev = o->vars.scan_rev = (uint8_t)(rng_next() % 2u);
+    m->stack.names_depth = o->stack.names_depth = (int8_t)(rng_next() % 0x10u);
+
+    for (i = 0; i < 4; i++) {
+        int32_t to = at[i < 3 ? i + 1 : 3];
+
+        for (j = 0; j < 24; j++) {
+            uint32_t r = rng_next();
+            int null = (r % 3u) == 0 || i == 3;
+
+            ((int32_t *)(m->nodes + at[i]))[j] = null ? 0
+                : (int32_t)((intptr_t)(m->nodes + to) | (r & 3u));
+            ((int32_t *)(o->nodes + at[i]))[j] = null ? 0
+                : (int32_t)((intptr_t)(o->nodes + to) | (r & 3u));
+        }
+    }
+    m->vars.scan_ptr = (int32_t)(intptr_t)m->nodes;
+    o->vars.scan_ptr = (int32_t)(intptr_t)o->nodes;
+
+    ra = ibm_npush_fld(&m->state, st, fld);
+    rb = npush_fld(&o->state, st, fld);
+    if (ra != rb)
+        bad++;
+
+    /* What lands on the name stack is a pointer into the spine when the
+       field is one of the sized kinds, so blank the slot it used. */
+    {
+        int32_t slot = (int32_t)m->stack.names_depth * 8;
+
+        if (slot >= 0 && slot + 8 <= (int32_t)sizeof(m->names)) {
+            memset(m->names + slot, 0, 8);
+            memset(o->names + slot, 0, 8);
+        }
+    }
+    m->vars.scan_ptr = o->vars.scan_ptr = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(npush_fld)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -982,6 +1134,9 @@ int main(void)
     test_vmove();
     test_insspine();
     test_forceErrorBacktrack();
+    test_stmt_walks();
+    test_vassign();
+    test_npush_fld();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
