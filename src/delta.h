@@ -572,6 +572,16 @@ void rpta_ctxtr(delta_state *d, uint8_t f);
 int  calcETI2WPM(delta_state *d, const delta_loc *in, delta_loc *out);
 int  calcMidline(delta_state *d, const delta_loc *in, delta_loc *out);
 int  calcSpeedFactori(delta_state *d, const delta_loc *in, delta_loc *out);
+void copyvar(delta_state *d, delta_loc *a, delta_loc *b);
+int  forall_adv_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
+                  uint8_t f, delta_token *tok);
+int  forto_adv_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
+                 uint8_t f, delta_token *tok, const delta_token *end);
+int  for_test(delta_state *d, delta_loc *var, delta_loc *bound,
+              delta_loc *step);
+int  for_adv(delta_state *d, int16_t test_tag, int16_t loop_tag,
+             delta_loc *var, delta_loc *bound, delta_loc *step);
+int  savetok(delta_state *d, delta_loc *loc);
 
 /* The runtime's constant tables, lifted out of the original by
    tools/delta-tables.py. */

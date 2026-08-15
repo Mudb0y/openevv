@@ -4308,3 +4308,163 @@ int calcSpeedFactori(delta_state *d, const delta_loc *in, delta_loc *out)
     out->value = delta_SpeedTable[(int16_t)n];
     return 0;
 }
+
+/* Copy one rule variable into another. */
+void copyvar(delta_state *d, delta_loc *a, delta_loc *b)
+{
+    delta_operand x, y;
+
+    if (d->vars->testing)
+        save_var(d, a);
+
+    vinitloc_new(d, &x, a);
+    vinitloc_new(d, &y, b);
+    vassign(d, &x, &y);
+
+    if (a->kind >= 0)
+        reset_field(a);
+    if (b->kind >= 0)
+        reset_field(b);
+}
+
+/* Step a forall loop leftwards. The scan runs forward through the spine and
+   the loop carries on for as long as there is somewhere to go. */
+int forall_adv_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
+                 uint8_t f, delta_token *tok)
+{
+    delta_vars *v = d->vars;
+
+    if (!for_loop_preamble(d, tag, loop, f, tok))
+        return 1;
+
+    v->scan_rev = 0;
+
+    if (!vscanadv(d, 1, 0))
+        return 0;
+
+    clearDeltaStackBack(d);
+    d->stack->unknown_9c = 0;
+    v->testing = 1;
+    d->unknown_3c = bound;
+    tok->value = v->scan_ptr;
+    return 2;
+}
+
+/* The same with an end to stop at. */
+int forto_adv_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
+                uint8_t f, delta_token *tok, const delta_token *end)
+{
+    delta_vars *v = d->vars;
+
+    if (!for_loop_preamble(d, tag, loop, f, tok))
+        return 1;
+
+    v->scan_rev = 0;
+
+    if (!vscanadv(d, 1, 0))
+        return 0;
+    if (v->scan_ptr == end->value)
+        return 0;
+
+    clearDeltaStackBack(d);
+    d->stack->unknown_9c = 0;
+    v->testing = 1;
+    d->unknown_3c = bound;
+    tok->value = v->scan_ptr;
+    return 2;
+}
+
+/* Has a counting loop reached its bound? Which way round the answer goes
+   depends on the sign of the step. */
+int for_test(delta_state *d, delta_loc *var, delta_loc *bound,
+             delta_loc *step)
+{
+    delta_operand a, b, c;
+    delta_vars *v = d->vars;
+
+    v->testing = 0;
+
+    vinitloc_new(d, &a, var);
+    vinitloc_new(d, &b, bound);
+    vinitloc_new(d, &c, step);
+    vcompare(d, &a, &b);
+
+    reset_field(var);
+    reset_field(bound);
+    reset_field(step);
+
+    if (vnegative(d, &c)) {
+        if (v->compared_equal != -1)
+            return 0;
+    } else if (v->compared_equal != 1) {
+        return 0;
+    }
+
+    d->unknown_3c = v->test_tag;
+    return 2;
+}
+
+/* Step a counting loop on and say whether it has another round in it. */
+int for_adv(delta_state *d, int16_t test_tag, int16_t loop_tag,
+            delta_loc *var, delta_loc *bound, delta_loc *step)
+{
+    delta_operand a, b, c;
+    delta_vars *v = d->vars;
+
+    v->loop_tag = loop_tag;
+    v->test_tag = test_tag;
+    v->testing = 0;
+
+    vinitloc_new(d, &a, var);
+    vinitloc_new(d, &c, step);
+    vinitloc_new(d, &b, bound);
+
+    vadd(d, &a, &c);
+    vcompare(d, &a, &b);
+
+    reset_field(var);
+    reset_field(bound);
+    reset_field(step);
+
+    if (vnegative(d, &c))
+        return (v->compared_equal == -1) ? 0 : 2;
+
+    return (v->compared_equal == 1) ? 0 : 2;
+}
+
+/* Put the token the scan is standing on into a rule variable. The scan may
+   be sitting on a marked link, in which case it is followed until a real
+   one turns up or the walk runs out. */
+int savetok(delta_state *d, delta_loc *loc)
+{
+    delta_vars *v = d->vars;
+    delta_operand dst, src;
+    int32_t t;
+
+    t = ((const int32_t *)(intptr_t)v->scan_ptr)[3 + v->scan_field] & -4;
+    if (t == 0) {
+        reset_field(loc);
+        return 1;
+    }
+
+    while (t != 0 && (*(const int32_t *)(intptr_t)t & 2)) {
+        t = ((const int32_t *)(intptr_t)t)[3 + v->scan_field] & -4;
+        if (t == 0) {
+            reset_field(loc);
+            return 1;
+        }
+    }
+
+    vinitloc_new(d, &dst, loc);
+
+    src.kind = v->scan_field;
+    src.ptr = TFLDS((void *)(intptr_t)t);
+    src.flag = 0;
+
+    if (v->testing)
+        vpush_var(d, &dst);
+
+    vassign(d, &dst, &src);
+    reset_field(loc);
+    return 0;
+}

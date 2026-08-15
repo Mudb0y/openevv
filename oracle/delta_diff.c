@@ -246,6 +246,16 @@ extern int  ibm_calcETI2WPM(delta_state *, const delta_loc *, delta_loc *);
 extern int  ibm_calcMidline(delta_state *, const delta_loc *, delta_loc *);
 extern int  ibm_calcSpeedFactori(delta_state *, const delta_loc *,
                                  delta_loc *);
+extern void ibm_copyvar(delta_state *, delta_loc *, delta_loc *);
+extern int  ibm_forall_adv_l(delta_state *, int16_t, int16_t, int16_t,
+                             uint8_t, delta_token *);
+extern int  ibm_forto_adv_l(delta_state *, int16_t, int16_t, int16_t,
+                            uint8_t, delta_token *, const delta_token *);
+extern int  ibm_for_test(delta_state *, delta_loc *, delta_loc *,
+                         delta_loc *);
+extern int  ibm_for_adv(delta_state *, int16_t, int16_t, delta_loc *,
+                        delta_loc *, delta_loc *);
+extern int  ibm_savetok(delta_state *, delta_loc *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -5425,6 +5435,191 @@ BEGIN(calc_tables)
         bad++;
 END(calc_tables)
 
+
+BEGIN(copyvar)
+    delta_loc *am = (delta_loc *)(m->nodes + 0x300);
+    delta_loc *ao = (delta_loc *)(o->nodes + 0x300);
+    delta_loc *bm = (delta_loc *)(m->nodes + 0x310);
+    delta_loc *bo = (delta_loc *)(o->nodes + 0x310);
+
+    var_setup_at(m, o, am, ao);
+    m->vars.testing = o->vars.testing = (int8_t)(rng_next() % 2u);
+    bm->kind = bo->kind = am->kind;
+    bm->field = bo->field = am->field;
+    bm->value = bo->value = am->value;
+
+    ibm_copyvar(&m->state, am, bm);
+    copyvar(&o->state, ao, bo);
+
+    if (m->vars.testing) {
+        *(int32_t *)(m->stack.top + 4) = 0;
+        *(int32_t *)(o->stack.top + 4) = 0;
+    }
+    if (am->field != ao->field || bm->field != bo->field)
+        bad++;
+END(copyvar)
+
+/* The three counting-loop steps share their variables: a value, a bound and
+   a step, all of one kind so the comparison and the addition agree. */
+static void loop_vars(delta_world *m, delta_world *o, delta_loc *l, int n)
+{
+    static const int16_t kinds[3] = {-3, -4, -6};
+    int16_t k = kinds[rng_next() % 3u];
+    int i;
+
+    for (i = 0; i < n; i++) {
+        l[i].kind = k;
+        l[i].field = (int16_t)(rng_next() % 0x40u);
+        l[i].value = (int32_t)(rng_next() % 0x40u);
+    }
+    (void)m;
+    (void)o;
+}
+
+BEGIN(for_steps)
+    delta_loc lm[3], lo[3];
+    int16_t tag = (int16_t)rng_next();
+    int16_t loop = (int16_t)rng_next();
+    int ra, rb;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    loop_vars(m, o, lm, 3);
+    memcpy(lo, lm, sizeof(lm));
+
+    if (rng_next() % 2u) {
+        ra = ibm_for_test(&m->state, &lm[0], &lm[1], &lm[2]);
+        rb = for_test(&o->state, &lo[0], &lo[1], &lo[2]);
+    } else {
+        ra = ibm_for_adv(&m->state, tag, loop, &lm[0], &lm[1], &lm[2]);
+        rb = for_adv(&o->state, tag, loop, &lo[0], &lo[1], &lo[2]);
+    }
+
+    if (ra != rb)
+        bad++;
+    else if (memcmp(lm, lo, sizeof(lm)) != 0)
+        bad++;
+END(for_steps)
+
+BEGIN(forx_adv_l)
+    delta_token tm, to, em, eo;
+    int8_t f = build_tspine(m, o);
+    int16_t tag = (int16_t)rng_next();
+    int16_t loop = (int16_t)rng_next();
+    int16_t bound = (int16_t)rng_next();
+    int32_t which = (int32_t)(rng_next() % NSTMT);
+    int upto = (int)(rng_next() % 2u);
+    int ra, rb, i;
+
+    if (f < 0) {
+        free(m); free(o);
+        continue;
+    }
+    for (i = 0; i < FENCE_MAP; i++)
+        m->map[i] = o->map[i] = (uint8_t)(rng_next() % 4u);
+    for (i = 0; i < 4; i++) {
+        m->chars[i] = o->chars[i] = (uint8_t)i;
+        m->marks[i] = o->marks[i] = (uint8_t)(rng_next() % 2u);
+    }
+    m->vars.fence_count = o->vars.fence_count = (int8_t)(rng_next() % 3u);
+
+    tm.unknown_00 = to.unknown_00 = (int32_t)rng_next();
+    tm.value = (int32_t)(intptr_t)(m->nodes + 2 * 0x80);
+    to.value = (int32_t)(intptr_t)(o->nodes + 2 * 0x80);
+    em.unknown_00 = eo.unknown_00 = (int32_t)rng_next();
+    {
+        uint32_t k = rng_next() % 6u;
+
+        em.value = (int32_t)(intptr_t)(m->nodes + k * 0x80);
+        eo.value = (int32_t)(intptr_t)(o->nodes + k * 0x80);
+    }
+    m->state.lpta.field = o->state.lpta.field = f;
+
+    if (upto) {
+        ra = ibm_forto_adv_l(&m->state, tag, loop, bound, (uint8_t)which,
+                             &tm, &em);
+        rb = forto_adv_l(&o->state, tag, loop, bound, (uint8_t)which,
+                         &to, &eo);
+    } else {
+        ra = ibm_forall_adv_l(&m->state, tag, loop, bound, (uint8_t)which,
+                              &tm);
+        rb = forall_adv_l(&o->state, tag, loop, bound, (uint8_t)which, &to);
+    }
+
+    if (ra != rb)
+        bad++;
+    else if (tm.value - (int32_t)(intptr_t)m
+             != to.value - (int32_t)(intptr_t)o)
+        bad++;
+
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(forx_adv_l)
+
+
+BEGIN(savetok)
+    /* The scan sits on a node of a spine whose forward links are real, so
+       the walk over marked links has somewhere to go and somewhere to stop. */
+    enum { NNODE = 4, STEP = 0x80 };
+    delta_loc lm, lo;
+    static const int16_t kinds[3] = {-3, -4, -6};
+    int16_t kind = kinds[rng_next() % 3u];
+    uint8_t fld = (uint8_t)(rng_next() % NSTMT);
+    int ra, rb, i, j;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.scan_field = o->vars.scan_field = fld;
+    m->vars.testing = o->vars.testing = (int8_t)(rng_next() % 2u);
+    m->stack.size_ac = o->stack.size_ac = 12;
+
+    for (i = 0; i < NNODE; i++) {
+        for (j = 0; j < NSTMT; j++) {
+            uint32_t r = rng_next();
+            int last = (i + 1 == NNODE);
+            int32_t to = last ? 0
+                : (int32_t)(intptr_t)(m->nodes + (i + 1) * STEP);
+            int32_t so = last ? 0
+                : (int32_t)(intptr_t)(o->nodes + (i + 1) * STEP);
+
+            ((int32_t *)(m->nodes + i * STEP))[3 + j] = to | (int32_t)(r & 1u);
+            ((int32_t *)(o->nodes + i * STEP))[3 + j] = so | (int32_t)(r & 1u);
+        }
+        /* Bit one says the node is only a marker, so the walk steps past it. */
+        ((int32_t *)(m->nodes + i * STEP))[0] =
+        ((int32_t *)(o->nodes + i * STEP))[0] =
+            (i > 0 && i + 1 < NNODE) ? 2 : 0;
+    }
+
+    m->vars.scan_ptr = (int32_t)(intptr_t)m->nodes;
+    o->vars.scan_ptr = (int32_t)(intptr_t)o->nodes;
+
+    memset(&lm, 0, sizeof(lm));
+    lm.kind = kind;
+    lm.field = (int16_t)(rng_next() % 0x40u);
+    lm.value = (int32_t)rng_next();
+    lo = lm;
+
+    ra = ibm_savetok(&m->state, &lm);
+    rb = savetok(&o->state, &lo);
+
+    if (ra != rb)
+        bad++;
+    else if (lm.kind != lo.kind || lm.field != lo.field)
+        bad++;
+
+    /* A push records where the value came from, and that is a node of the
+       world it belongs to. */
+    if (m->vars.testing) {
+        *(int32_t *)(m->stack.top + 4) = 0;
+        *(int32_t *)(o->stack.top + 4) = 0;
+    }
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(savetok)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -5560,6 +5755,10 @@ int main(void)
     test_proj_def_mult();
     test_pta_ctxt();
     test_calc_tables();
+    test_copyvar();
+    test_for_steps();
+    test_forx_adv_l();
+    test_savetok();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
