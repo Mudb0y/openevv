@@ -172,6 +172,12 @@ extern int  ibm_ins_tokens_i(delta_state *, uint8_t, const uint8_t *, uint8_t,
 extern int32_t ibm_vsplit_time(delta_state *, uint8_t, int32_t, int32_t);
 extern int  ibm_vsync_tv(delta_state *, delta_tpos *);
 extern int  ibm_vtmark_tv(delta_state *, delta_tpos *, uint8_t);
+extern void ibm_delete_1pt(delta_state *, uint8_t);
+extern void ibm_lpta_storep(delta_state *, delta_loc *);
+extern int  ibm_vrange_l(delta_state *, delta_tpos *, delta_tpos *, int8_t,
+                         uint8_t);
+extern int  ibm_vrange_r(delta_state *, delta_tpos *, delta_tpos *, int8_t,
+                         uint8_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -3505,7 +3511,10 @@ BEGIN(vins_tok)
     m->nsqf[0] = o->nsqf[0] = -1;
 
     for (i = 0; i < NNODE; i++) {
-        for (j = 0; j < NFIELD; j++) {
+        /* Every field of every statement type, not just the fenced four: a
+           context lookup walks until it finds a node carrying the one it was
+           asked about, and never stops if nothing does. */
+        for (j = 0; j < NSTMT; j++) {
             ((int32_t *)(m->nodes + i * STEP))[FB + j] |= 1;
             ((int32_t *)(o->nodes + i * STEP))[FB + j] |= 1;
         }
@@ -3570,7 +3579,10 @@ static void build_edit(delta_world *m, delta_world *o, int8_t fd)
     }
 
     for (i = 0; i < NNODE; i++) {
-        for (j = 0; j < NFIELD; j++) {
+        /* Every field of every statement type, not just the fenced four: a
+           context lookup walks until it finds a node carrying the one it was
+           asked about, and never stops if nothing does. */
+        for (j = 0; j < NSTMT; j++) {
             ((int32_t *)(m->nodes + i * STEP))[FB + j] |= 1;
             ((int32_t *)(o->nodes + i * STEP))[FB + j] |= 1;
         }
@@ -3778,6 +3790,175 @@ BEGIN(time_marks)
         bad++;
 END(time_marks)
 
+
+/* The edit scaffold with a field the timing code can read and ends that no
+   walk parks on, which is what everything from here down needs. */
+static int build_time_edit(delta_world *m, delta_world *o, uint8_t *out)
+{
+    uint8_t f = 0xffu;
+    int i;
+
+    for (i = 0; i < NSTMT; i++) {
+        int k = (int)((rng_next() + (uint32_t)i) % NSTMT);
+        int16_t kind = vstmtbl[k].fields[0].kind;
+
+        if (kind == DK_LONG || kind == DK_SHORT2) {
+            f = (uint8_t)k;
+            break;
+        }
+    }
+    if (f == 0xffu)
+        return 0;
+
+    build_edit(m, o, (int8_t)(rng_next() % 4u));
+
+    for (i = 0; i < 4; i++) {
+        uint32_t r = 16u + rng_next() % 16u;
+
+        if (i == 0 || i == 3) {
+            ((int32_t *)(m->nodes + i * 0x80))[0] &= ~2;
+            ((int32_t *)(o->nodes + i * 0x80))[0] &= ~2;
+        }
+        if (vstmtbl[f].fields[0].kind == DK_LONG) {
+            *(int32_t *)vstmtbl[f].get[0](m->nodes + i * 0x80 + 8) = (int32_t)r;
+            *(int32_t *)vstmtbl[f].get[0](o->nodes + i * 0x80 + 8) = (int32_t)r;
+        } else {
+            *(int16_t *)vstmtbl[f].get[0](m->nodes + i * 0x80 + 8) = (int16_t)r;
+            *(int16_t *)vstmtbl[f].get[0](o->nodes + i * 0x80 + 8) = (int16_t)r;
+        }
+    }
+
+    *out = f;
+    return 1;
+}
+
+/* Both of these backtrack when they cannot do what was asked, so each side
+   needs somewhere to land. */
+static void store_ibm(delta_state *d, delta_loc *loc, uint8_t f, int which)
+{
+    jmp_buf jb;
+
+    d->vars->err_jmp = jb;
+    if (setjmp(jb) == 0) {
+        if (which)
+            ibm_lpta_storep(d, loc);
+        else
+            ibm_delete_1pt(d, f);
+    }
+    d->vars->err_jmp = 0;
+}
+
+static void store_ours(delta_state *d, delta_loc *loc, uint8_t f, int which)
+{
+    jmp_buf jb;
+
+    d->vars->err_jmp = jb;
+    if (setjmp(jb) == 0) {
+        if (which)
+            lpta_storep(d, loc);
+        else
+            delete_1pt(d, f);
+    }
+    d->vars->err_jmp = 0;
+}
+
+BEGIN(point_edits)
+    uint8_t f;
+    int which = (int)(rng_next() % 2u);
+    /* The saved record keeps the address of what was saved, so it has to be
+       somewhere the harness can rewrite as an offset. */
+    delta_loc *lm;
+    delta_loc *lo;
+
+    if (!build_time_edit(m, o, &f)) {
+        free(m); free(o);
+        continue;
+    }
+    lm = (delta_loc *)(m->nodes + 0x300);
+    lo = (delta_loc *)(o->nodes + 0x300);
+
+    m->state.lpta.node = (int32_t)(intptr_t)(m->nodes + 0x80);
+    o->state.lpta.node = (int32_t)(intptr_t)(o->nodes + 0x80);
+    m->state.lpta.field = o->state.lpta.field = (int8_t)f;
+    /* A left-over offset would send this down the cut-and-insert path, which
+       vsplit_time's own test already covers; here the position is exact. */
+    m->state.lpta.offset = o->state.lpta.offset = 0;
+    m->state.lpta.flags = o->state.lpta.flags = (uint8_t)(rng_next() % 2u);
+    m->vars.testing = o->vars.testing = (int8_t)(rng_next() % 2u);
+    m->stack.size_ac = o->stack.size_ac = 12;
+
+    memset(lm, 0, sizeof(*lm));
+    memset(lo, 0, sizeof(*lo));
+    lm->kind = lo->kind = DK_SYNC;
+
+    store_ibm(&m->state, lm, f, which);
+    store_ours(&o->state, lo, f, which);
+
+    if (lm->kind != lo->kind || lm->field != lo->field)
+        bad++;
+    if ((lm->value == 0) != (lo->value == 0))
+        bad++;
+    else if (lm->value != 0
+             && lm->value - (int32_t)(intptr_t)m
+                != lo->value - (int32_t)(intptr_t)o)
+        bad++;
+END(point_edits)
+
+BEGIN(vrange)
+    uint8_t f;
+    uint8_t dup = (uint8_t)(rng_next() % 2u);
+    int left = (int)(rng_next() % 2u);
+    delta_tpos pm, po, om, oo;
+    int ra, rb;
+
+    if (!build_time_edit(m, o, &f)) {
+        free(m); free(o);
+        continue;
+    }
+
+    /* Keep the context lookup on its cheap path: the full one borrows links
+       and this spine is not built for it. */
+    m->vars.relink = o->vars.relink = 1;
+    for (ra = 0; ra < 0x20; ra++)
+        m->nsqm[ra] = o->nsqm[ra] = 0;
+
+    memset(&pm, 0, sizeof(pm));
+    pm.node = (int32_t)(intptr_t)(m->nodes + 0x80);
+    pm.field = (int8_t)f;
+    /* Exact, for the same reason point_edits is: a left-over offset sends
+       this through the cut and insert, which vsplit_time covers itself. */
+    pm.offset = 0;
+    pm.flags = (uint8_t)(rng_next() % 2u);
+    po = pm;
+    po.node = (int32_t)(intptr_t)(o->nodes + 0x80);
+    memset(&om, 0, sizeof(om));
+    oo = om;
+
+    if (left) {
+        ra = ibm_vrange_l(&m->state, &pm, &om, (int8_t)f, dup);
+        rb = vrange_l(&o->state, &po, &oo, (int8_t)f, dup);
+    } else {
+        ra = ibm_vrange_r(&m->state, &pm, &om, (int8_t)f, dup);
+        rb = vrange_r(&o->state, &po, &oo, (int8_t)f, dup);
+    }
+
+    if (ra != rb)
+        bad++;
+    if (om.flags != oo.flags || pm.flags != po.flags
+        || pm.offset != po.offset)
+        bad++;
+    if ((om.node == 0) != (oo.node == 0))
+        bad++;
+    else if (om.node != 0
+             && om.node - (int32_t)(intptr_t)m != oo.node - (int32_t)(intptr_t)o)
+        bad++;
+    if ((pm.node == 0) != (po.node == 0))
+        bad++;
+    else if (pm.node != 0
+             && pm.node - (int32_t)(intptr_t)m != po.node - (int32_t)(intptr_t)o)
+        bad++;
+END(vrange)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -3879,6 +4060,8 @@ int main(void)
     test_ins_tokens();
     test_vsplit_time();
     test_time_marks();
+    test_point_edits();
+    test_vrange();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

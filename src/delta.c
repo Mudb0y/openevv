@@ -3303,3 +3303,75 @@ int vtmark_tv(delta_state *d, delta_tpos *p, uint8_t back)
     p->flags = 1;
     return 1;
 }
+
+/* What a rule writes when it deletes at a point: settle the register, cut
+   the run there, and take the statement out. Either failing backtracks. */
+void delete_1pt(delta_state *d, uint8_t f)
+{
+    if (!vsync_tv(d, &d->lpta) || !vdel_1pt(d, f, d->lpta.node, 1))
+        forceErrorBacktrack(d);
+}
+
+/* Store where the left register points into a rule's variable. */
+void lpta_storep(delta_state *d, delta_loc *loc)
+{
+    if (!vsync_tv(d, &d->lpta))
+        forceErrorBacktrack(d);
+
+    if (d->vars->testing)
+        save_var(d, loc);
+
+    loc->value = d->lpta.node;
+}
+
+/* Open a range at a position: settle it, make sure the field has something
+   in it, then put a sync just to the left and hand it back. */
+int vrange_l(delta_state *d, delta_tpos *p, delta_tpos *out, int8_t f,
+             uint8_t dup)
+{
+    if (!vtmark_tv(d, p, 1))
+        return 0;
+    if (!vdef_proj(d, p->node, (uint8_t)f))
+        return 0;
+
+    if (p->node == d->stack->spine_l)
+        return 0;
+
+    out->node = (int32_t)(intptr_t)vins_sync(d, (uint8_t)f,
+        *(int32_t *)(intptr_t)(p->node + 0xc + f * 4) & ~3, p->node);
+
+    if (out->node == 0)
+        return 0;
+
+    if (dup != 0)
+        dupsync(d, out->node, p->node, 1);
+
+    out->flags = 1;
+    return 1;
+}
+
+/* And the same at the other end. */
+int vrange_r(delta_state *d, delta_tpos *p, delta_tpos *out, int8_t f,
+             uint8_t dup)
+{
+    if (!vtmark_tv(d, p, 0))
+        return 0;
+    if (!vdef_proj(d, p->node, (uint8_t)f))
+        return 0;
+
+    if (p->node == d->stack->spine_r)
+        return 0;
+
+    out->node = (int32_t)(intptr_t)vins_sync(d, (uint8_t)f, p->node,
+        *(int32_t *)(intptr_t)
+        (p->node + (d->vars->fence_base + f) * 4) & ~3);
+
+    if (out->node == 0)
+        return 0;
+
+    if (dup != 0)
+        dupsync(d, out->node, p->node, 0);
+
+    out->flags = 1;
+    return 1;
+}

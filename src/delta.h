@@ -460,6 +460,12 @@ int  ins_tokens_i(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
 int32_t vsplit_time(delta_state *d, uint8_t f, int32_t t, int32_t off);
 int  vsync_tv(delta_state *d, delta_tpos *p);
 int  vtmark_tv(delta_state *d, delta_tpos *p, uint8_t back);
+void delete_1pt(delta_state *d, uint8_t f);
+void lpta_storep(delta_state *d, delta_loc *loc);
+int  vrange_l(delta_state *d, delta_tpos *p, delta_tpos *out, int8_t f,
+              uint8_t dup);
+int  vrange_r(delta_state *d, delta_tpos *p, delta_tpos *out, int8_t f,
+              uint8_t dup);
 void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r);
 
 /* Supplied by the language, not the runtime: match the span between the two
