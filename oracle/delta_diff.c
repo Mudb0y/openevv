@@ -134,6 +134,8 @@ extern int  ibm_forto_adv_r(delta_state *, int16_t, int16_t, int16_t, uint8_t,
 extern int  ibm_forto_adv_upto_r(delta_state *, int16_t, int16_t, int16_t,
                                  uint8_t, delta_token *, const delta_token *);
 extern int  ibm_setd_lookup(delta_state *, int32_t, int16_t);
+extern int  ibm_vmark(delta_state *, uint8_t, uint8_t, int32_t, int32_t,
+                      const void *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -2750,6 +2752,37 @@ BEGIN(setd_lookup)
         bad++;
 END(setd_lookup)
 
+
+BEGIN(vmark)
+    /* The write goes through the language's own field setter, so the field
+       index has to be one the statement type declares, and every link the
+       walk follows has to be real: the original hands a null straight to the
+       setter. */
+    uint8_t st = (uint8_t)(rng_next() % NSTMT);
+    uint8_t fld = (uint8_t)(rng_next() % (uint32_t)vstmtbl[st].nfields);
+    uint8_t value = (uint8_t)(rng_next() % 4u);
+    int ra, rb;
+
+    build_pspine(m, o);
+    {
+        uint32_t k = rng_next() % 5u;
+
+        ra = ibm_vmark(&m->state, st, fld,
+                       (int32_t)(intptr_t)(m->nodes),
+                       (k < 4) ? (int32_t)(intptr_t)(m->nodes + k * 0x80) : 0,
+                       &value);
+        rb = vmark(&o->state, st, fld,
+                   (int32_t)(intptr_t)(o->nodes),
+                   (k < 4) ? (int32_t)(intptr_t)(o->nodes + k * 0x80) : 0,
+                   &value);
+    }
+    if (ra != rb)
+        bad++;
+
+    /* The parked field address is a stack address, which no two runs share. */
+    m->stack.mark_fld = o->stack.mark_fld = NULL;
+END(vmark)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -2832,6 +2865,7 @@ int main(void)
     test_forto_adv_r();
     test_forto_adv_upto_r();
     test_setd_lookup();
+    test_vmark();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

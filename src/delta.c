@@ -2266,3 +2266,36 @@ int setd_lookup(delta_state *d, int32_t arg, int16_t set)
 
     return 0;
 }
+
+/* Write a value into one field of every statement in a run.
+
+   The original parks the address of its own field argument in the stack
+   block, which is the caller's frame and so stays valid for as long as the
+   caller needs it. A local copy is the closest C gets; it holds the same
+   byte and dies at the same point in the call, but not afterwards. */
+int vmark(delta_state *d, uint8_t st, uint8_t fld, int32_t t, int32_t stop,
+          const void *value)
+{
+    delta_stack *s = d->stack;
+    int32_t base = d->vars->fence_base;
+    const delta_stmt *e = &vstmtbl[st];
+
+    s->mark_kind = -1;
+    s->mark_fld = &fld;
+    s->mark_flag = 0;
+
+    while (t != s->spine_r && t != stop) {
+        int32_t next = *(int32_t *)(intptr_t)(t + (base + st) * 4) & ~3;
+
+        if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
+            t = next;
+            continue;
+        }
+
+        e->put[fld](TFLDS((void *)(intptr_t)next), value);
+        t = *(int32_t *)(intptr_t)(next + 4) & ~3;
+    }
+
+    *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+    return 1;
+}

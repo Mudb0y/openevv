@@ -36,7 +36,12 @@ typedef delta_tpos delta_pta;
 typedef struct {
     int32_t       spine_l;     /* 0x0000, the node the spine starts at */
     int32_t       spine_r;     /* 0x0004, and the one it ends at */
-    uint8_t       pad_0008[0x5c - 8];
+    uint8_t       pad_0008[0x38 - 8];
+    const uint8_t *mark_fld;   /* 0x0038, which field a mark is writing */
+    int16_t       mark_kind;   /* 0x003c */
+    uint8_t       mark_flag;   /* 0x003e */
+    uint8_t       pad_003f;
+    uint8_t       pad_0040[0x5c - 0x40];
     const int8_t *nsq_fields;  /* 0x005c, which fields decide the flags,
                                   terminated by a negative entry */
     uint8_t       pad_0060[0x9c - 0x60];
@@ -362,6 +367,8 @@ int  forto_adv_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
 int  forto_adv_upto_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
                       uint8_t f, delta_token *tok, const delta_token *end);
 int  setd_lookup(delta_state *d, int32_t arg, int16_t set);
+int  vmark(delta_state *d, uint8_t st, uint8_t fld, int32_t t, int32_t stop,
+           const void *value);
 
 /* Supplied by the language, not the runtime: match the span between the two
    registers against one of its lookup sets. */
