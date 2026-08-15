@@ -158,6 +158,7 @@ extern int  ibm_mashtoks(delta_state *, uint8_t, int32_t);
 extern int  ibm_vchkseqbad(delta_state *, int32_t, uint8_t, const char *);
 extern void *ibm_vins_sync(delta_state *, uint8_t, int32_t, int32_t);
 extern int  ibm_chkdelnonseq(delta_state *, int32_t, uint8_t);
+extern int  ibm_fdeldel(delta_state *, int32_t, int32_t, int32_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -3381,6 +3382,53 @@ BEGIN(chkdelnonseq)
         bad++;
 END(chkdelnonseq)
 
+
+BEGIN(fdeldel)
+    /* Six nodes so the run has somewhere to start and stop with neighbours
+       left over on each side. Every node carries every field, which makes
+       chkdelnonseq refuse early and so keeps its scans out of this test;
+       what is being compared here is the unlinking and the rejoining. */
+    enum { FB = 15, NNODE = 4, STEP = 0x80, NFIELD = 4 };
+    int8_t fd = (int8_t)(rng_next() % NFIELD);
+    int ra, rb, i, j;
+
+    build_pspine(m, o);
+    build_heap(m, o);
+    m->state.fence_fill = o->state.fence_fill = NFIELD;
+    m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
+    m->vars.ctx_both = o->vars.ctx_both = (int32_t)(rng_next() % 2u);
+    m->stack.del_field = o->stack.del_field = fd;
+    m->nsqf[0] = o->nsqf[0] = -1;
+
+    for (i = 0; i < NNODE; i++) {
+        for (j = 0; j < NFIELD; j++) {
+            ((int32_t *)(m->nodes + i * STEP))[FB + j] |= 1;
+            ((int32_t *)(o->nodes + i * STEP))[FB + j] |= 1;
+        }
+        ((int32_t *)(m->nodes + i * STEP))[2] &= ~2;
+        ((int32_t *)(o->nodes + i * STEP))[2] &= ~2;
+        /* Anything that goes back to the heap has to look like it came from
+           one, so stamp the segment in the four bytes in front. Not the
+           first node: those four bytes are outside the array. */
+        if (i > 0) {
+            *(delta_seg **)(m->nodes + i * STEP - 4) = &m->segs[1];
+            *(delta_seg **)(o->nodes + i * STEP - 4) = &o->segs[1];
+        }
+    }
+    m->segs[1].live = o->segs[1].live = 16;
+
+    {
+        int32_t arg = (int32_t)rng_next();
+
+        ra = ibm_fdeldel(&m->state, (int32_t)(intptr_t)(m->nodes + STEP),
+                         (int32_t)(intptr_t)(m->nodes + 2 * STEP), arg);
+        rb = fdeldel(&o->state, (int32_t)(intptr_t)(o->nodes + STEP),
+                     (int32_t)(intptr_t)(o->nodes + 2 * STEP), arg);
+    }
+    if (ra != rb)
+        bad++;
+END(fdeldel)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -3476,6 +3524,7 @@ int main(void)
     test_vchkseqbad();
     test_vins_sync();
     test_chkdelnonseq();
+    test_fdeldel();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

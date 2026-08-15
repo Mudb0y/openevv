@@ -80,7 +80,9 @@ typedef struct {
     int16_t       mark_kind;   /* 0x003c */
     uint8_t       mark_flag;   /* 0x003e */
     uint8_t       pad_003f;
-    uint8_t       pad_0040[0x5c - 0x40];
+    uint8_t       pad_0040[0x50 - 0x40];
+    int8_t        del_field;   /* 0x0050, which field a delete is working in */
+    uint8_t       pad_0051[0x5c - 0x51];
     const int8_t *nsq_fields;  /* 0x005c, which fields decide the flags,
                                   terminated by a negative entry */
     uint8_t       pad_0060[0x94 - 0x60];
@@ -439,6 +441,7 @@ void delsync(delta_state *d, void *p);
 int  mashtoks(delta_state *d, uint8_t f, int32_t t);
 int  vchkseqbad(delta_state *d, int32_t t, uint8_t f, const char *what);
 int  chkdelnonseq(delta_state *d, int32_t t, uint8_t f);
+int  fdeldel(delta_state *d, int32_t from, int32_t to, int32_t arg);
 void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r);
 
 /* Supplied by the language, not the runtime: match the span between the two

@@ -2881,3 +2881,88 @@ int chkdelnonseq(delta_state *d, int32_t t, uint8_t f)
             p = ((const delta_node *)(intptr_t)p)->link & ~3;
     }
 }
+
+/* Delete a run of the spine, from one node up to and including another.
+
+   Each sync in the run is unlinked from the field and either dropped from the
+   spine outright, when it was the only statement there, or left for
+   chkdelnonseq to work out what the removal did to the ordering. Anything
+   that is not a sync goes straight back to the heap. What was on each side of
+   the run is then joined up. */
+int fdeldel(delta_state *d, int32_t from, int32_t to, int32_t arg)
+{
+    delta_stack *s = d->stack;
+    delta_vars *v = d->vars;
+    int32_t base = v->fence_base;
+    int32_t fd = s->del_field;
+    int32_t before;
+    int32_t p;
+    int32_t next = 0;
+
+    /* The original passes this on to delsync, which takes two arguments and
+       ignores it. */
+    (void)arg;
+
+    *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+
+    if (from != 0 && (*(int32_t *)(intptr_t)from & 2) != 0)
+        before = *(int32_t *)(intptr_t)(from + 0xc + fd * 4) & ~3;
+    else
+        before = *(int32_t *)(intptr_t)from & ~3;
+
+    p = from;
+
+    for (;;) {
+        if (p == 0)
+            return 0;
+
+        if ((*(int32_t *)(intptr_t)p & 2) != 0) {
+            int32_t t = p;
+            int32_t nonseq;
+
+            next = *(int32_t *)(intptr_t)(t + (base + fd) * 4) & ~3;
+            nonseq = ONESTM((const delta_node *)(intptr_t)t) ? 0 : 1;
+
+            /* The immediate is 0xfffffffe, so this clears bit zero. */
+            *(int32_t *)(intptr_t)(t + (base + fd) * 4) &= ~1;
+            *(int32_t *)(intptr_t)(t + 0xc + fd * 4) &= 3;
+            *(int32_t *)(intptr_t)(t + (base + fd) * 4) &= 3;
+
+            if (nonseq == 0) {
+                if (v->relink != 0)
+                    DELSPINE(d, (delta_node *)(intptr_t)t);
+                delsync(d, (void *)(intptr_t)t);
+            } else {
+                vnsqflags(d, (int32_t *)(intptr_t)t);
+                chkdelnonseq(d, t, (uint8_t)fd);
+            }
+        } else {
+            next = *(int32_t *)(intptr_t)(p + 4) & ~3;
+            cacheDeletedDeltaObject(d, (void *)(intptr_t)p);
+        }
+
+        if (p == to)
+            break;
+
+        p = next;
+    }
+
+    if (before != 0 && (*(int32_t *)(intptr_t)before & 2) != 0) {
+        *(int32_t *)(intptr_t)(before + (base + fd) * 4) =
+            (*(int32_t *)(intptr_t)(before + (base + fd) * 4) & 3) | next;
+    } else {
+        if (next == 0 || (*(int32_t *)(intptr_t)next & 2) == 0)
+            return 0;
+        ((delta_node *)(intptr_t)before)->link = next;
+    }
+
+    if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
+        *(int32_t *)(intptr_t)(next + 0xc + fd * 4) =
+            (*(int32_t *)(intptr_t)(next + 0xc + fd * 4) & 3) | before;
+    } else {
+        *(int32_t *)(intptr_t)next = before;
+    }
+
+    flushDeletedDeltaObjects(d);
+    return 1;
+}
