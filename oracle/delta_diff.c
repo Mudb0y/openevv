@@ -136,6 +136,7 @@ extern int  ibm_forto_adv_upto_r(delta_state *, int16_t, int16_t, int16_t,
 extern int  ibm_setd_lookup(delta_state *, int32_t, int16_t);
 extern int  ibm_vmark(delta_state *, uint8_t, uint8_t, int32_t, int32_t,
                       const void *);
+extern int  ibm_visleft(delta_state *, int32_t, int32_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -2783,6 +2784,93 @@ BEGIN(vmark)
     m->stack.mark_fld = o->stack.mark_fld = NULL;
 END(vmark)
 
+
+BEGIN(visleft)
+    /* Both the remembered path and the field-by-field one, on the same four
+       node spine the projection primitives use. The cache lives in the stack
+       block, so filling it in one world and not the other would show up. */
+    int32_t ra, rb;
+    uint32_t ia, ib;
+    int i;
+
+    build_pspine(m, o);
+
+
+    /* Both of visleft's walks run off the end of the spine to answer no, so
+       the ends have to be null here rather than pointing at themselves. */
+    for (i = 0; i < 10; i++) {
+        ((int32_t *)m->nodes)[3 + i] = 0;
+        ((int32_t *)o->nodes)[3 + i] = 0;
+    }
+    ((int32_t *)(m->nodes + 3 * 0x80))[1] = 0;
+    ((int32_t *)(o->nodes + 3 * 0x80))[1] = 0;
+
+    /* Without a field both nodes carry, visleft falls through to vgetsc and
+       hands its null straight to a dereference. Give it one. */
+    m->state.fence_fill = o->state.fence_fill = (uint8_t)(1u + rng_next() % 4u);
+    {
+        int k = (int)(rng_next() % m->state.fence_fill);
+        int n;
+
+        for (n = 0; n < 4; n++) {
+            ((int32_t *)(m->nodes + n * 0x80))[15 + k] |= 1;
+            ((int32_t *)(o->nodes + n * 0x80))[15 + k] |= 1;
+        }
+    }
+
+    for (i = 0; i < 50; i++) {
+        uint32_t r = rng_next();
+
+        m->stack.left_a[i] = o->stack.left_a[i] = 0;
+        m->stack.left_b[i] = o->stack.left_b[i] = 0;
+        m->stack.left_ans[i] = o->stack.left_ans[i] = (int32_t)(r & 1u);
+        m->stack.left_hits[i] = o->stack.left_hits[i] =
+            (int32_t)((r >> 8) % 20u);
+    }
+    m->stack.left_next = o->stack.left_next = (int32_t)(rng_next() % 50u);
+    /* Half the time the table is current, half the time it is stale. */
+    m->stack.left_stamp = o->stack.left_stamp =
+        (rng_next() % 2u) ? spine_changed : spine_changed + 1;
+
+    ia = rng_next() % 4u;
+    ib = rng_next() % 4u;
+
+    /* Seed one entry so the hit path gets used too. */
+    if (rng_next() % 2u) {
+        int32_t k = m->stack.left_next;
+
+        m->stack.left_a[k] = (int32_t)(intptr_t)(m->nodes + ia * 0x80);
+        o->stack.left_a[k] = (int32_t)(intptr_t)(o->nodes + ia * 0x80);
+        m->stack.left_b[k] = (int32_t)(intptr_t)(m->nodes + ib * 0x80);
+        o->stack.left_b[k] = (int32_t)(intptr_t)(o->nodes + ib * 0x80);
+    }
+
+    ra = ibm_visleft(&m->state, (int32_t)(intptr_t)(m->nodes + ia * 0x80),
+                     (int32_t)(intptr_t)(m->nodes + ib * 0x80));
+    rb = visleft(&o->state, (int32_t)(intptr_t)(o->nodes + ia * 0x80),
+                 (int32_t)(intptr_t)(o->nodes + ib * 0x80));
+    if (ra != rb)
+        bad++;
+
+    /* The table holds node addresses; compare each as an offset. */
+    for (i = 0; i < 50; i++) {
+        if ((m->stack.left_a[i] == 0) != (o->stack.left_a[i] == 0))
+            bad++;
+        else if (m->stack.left_a[i] != 0
+                 && m->stack.left_a[i] - (int32_t)(intptr_t)m
+                    != o->stack.left_a[i] - (int32_t)(intptr_t)o)
+            bad++;
+        if ((m->stack.left_b[i] == 0) != (o->stack.left_b[i] == 0))
+            bad++;
+        else if (m->stack.left_b[i] != 0
+                 && m->stack.left_b[i] - (int32_t)(intptr_t)m
+                    != o->stack.left_b[i] - (int32_t)(intptr_t)o)
+            bad++;
+        m->stack.left_a[i] = o->stack.left_a[i] = 0;
+        m->stack.left_b[i] = o->stack.left_b[i] = 0;
+    }
+END(visleft)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -2866,6 +2954,7 @@ int main(void)
     test_forto_adv_upto_r();
     test_setd_lookup();
     test_vmark();
+    test_visleft();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

@@ -2299,3 +2299,122 @@ int vmark(delta_state *d, uint8_t st, uint8_t fld, int32_t t, int32_t stop,
     *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
     return 1;
 }
+
+/* Whether one statement comes before another on the spine.
+
+   With the spine kept in order this is a walk along the links, and the answer
+   is worth remembering: the table of fifty is thrown away whenever the spine
+   is relinked. Otherwise it has to be worked out field by field, and the slot
+   guards on that path can never fire, because every route that sets a slot
+   returns before reaching them. They are kept because the original has them. */
+int visleft(delta_state *d, int32_t a, int32_t b)
+{
+    delta_stack *s = d->stack;
+    int32_t base = d->vars->fence_base;
+    int32_t slot = -1;
+    int32_t p;
+    int32_t i;
+    int8_t j;
+    int8_t fld = -10;
+    int8_t alt = 0;
+
+    if (a == b)
+        return 0;
+
+    if (d->vars->relink != 0
+        && !NONSEQ((const delta_node *)(intptr_t)a)
+        && !NONSEQ((const delta_node *)(intptr_t)b)) {
+        if (s->left_stamp == spine_changed) {
+            for (i = 0; i < 50; i++) {
+                if (s->left_a[i] != a || s->left_b[i] != b)
+                    continue;
+                s->left_hits[i]++;
+                return s->left_ans[i];
+            }
+
+            s->left_next++;
+            if (s->left_next >= 50)
+                s->left_next = 0;
+
+            slot = s->left_next;
+            while (s->left_hits[slot] > 12) {
+                slot++;
+                if (slot >= 50)
+                    slot = 0;
+                if (slot == s->left_next)
+                    break;
+            }
+
+            s->left_next = slot;
+            s->left_a[slot] = a;
+            s->left_b[slot] = b;
+            s->left_hits[slot] = 1;
+        } else {
+            for (i = 0; i < 50; i++) {
+                s->left_a[i] = 0;
+                s->left_b[i] = 0;
+                s->left_hits[i] = 0;
+            }
+
+            slot = 0;
+            s->left_a[0] = a;
+            s->left_b[0] = b;
+            s->left_hits[0] = 1;
+            s->left_next = 0;
+            s->left_stamp = spine_changed;
+        }
+
+        p = ((const delta_node *)(intptr_t)b)->link & ~3;
+        for (i = 0; ; i++) {
+            if (p == 0) {
+                s->left_ans[slot] = 0;
+                return 0;
+            }
+            if (p == a) {
+                s->left_ans[slot] = 1;
+                return 1;
+            }
+            p = ((const delta_node *)(intptr_t)p)->link & ~3;
+        }
+    }
+
+    for (j = (int8_t)(d->fence_fill - 1); j >= 0; j--) {
+        if ((*(int32_t *)(intptr_t)(a + (base + j) * 4) & 1) == 0)
+            continue;
+
+        if ((*(int32_t *)(intptr_t)(b + (base + j) * 4) & 1) != 0) {
+            fld = j;
+            break;
+        }
+
+        alt = j;
+    }
+
+    if (fld != -10) {
+        p = VLSYNC((const delta_node *)(intptr_t)b, fld);
+        if (p == 0) {
+            if (slot >= 0)
+                s->left_ans[slot] = 0;
+            return 0;
+        }
+    } else {
+        fld = alt;
+        p = vgetsc(d, 1, 1, b, (uint8_t)fld);
+    }
+
+    while (p != a) {
+        p = *(int32_t *)(intptr_t)(p + 0xc + fld * 4) & ~3;
+        if (p == 0) {
+            if (slot >= 0)
+                s->left_ans[slot] = 0;
+            return 0;
+        }
+
+        if ((*(int32_t *)(intptr_t)p & 2) == 0)
+            p = *(int32_t *)(intptr_t)p & ~3;
+    }
+
+    if (slot >= 0)
+        s->left_ans[slot] = 1;
+    return 1;
+}

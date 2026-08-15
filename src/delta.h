@@ -55,7 +55,16 @@ typedef struct {
     int32_t   ca_size;       /* 0x00b4, a context record */
     int32_t   size_b8;       /* 0x00b8 */
     int32_t   boa_size;      /* 0x00bc, a begin-or-alternative marker */
-    uint8_t   pad_00c0[0x4f8 - 0xc0];
+    uint8_t   pad_00c0[0x1d0 - 0xc0];
+    /* visleft remembers its last fifty answers here. The whole table is
+       thrown away whenever the spine is relinked, which is what the stamp
+       is for; the counts keep a hot pair from being evicted. */
+    int32_t   left_stamp;      /* 0x01d0 */
+    int32_t   left_next;       /* 0x01d4 */
+    int32_t   left_a[50];      /* 0x01d8 */
+    int32_t   left_b[50];      /* 0x02a0 */
+    int32_t   left_ans[50];    /* 0x0368 */
+    int32_t   left_hits[50];   /* 0x0430 */
     uint8_t  *top;           /* 0x04f8 */
     uint8_t  *limit;         /* 0x04fc */
     uint8_t   pad_0500[4];
@@ -369,6 +378,7 @@ int  forto_adv_upto_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
 int  setd_lookup(delta_state *d, int32_t arg, int16_t set);
 int  vmark(delta_state *d, uint8_t st, uint8_t fld, int32_t t, int32_t stop,
            const void *value);
+int  visleft(delta_state *d, int32_t a, int32_t b);
 
 /* Supplied by the language, not the runtime: match the span between the two
    registers against one of its lookup sets. */
