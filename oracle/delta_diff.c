@@ -104,6 +104,8 @@ extern int  ibm_advance_tok(delta_state *);
 extern int  ibm_forall_cont_from(delta_state *, int16_t, int16_t, int32_t,
                                  delta_loc *, const delta_loc *);
 extern void ibm_savescptr(delta_state *, int16_t, delta_loc *);
+extern int  ibm_get_parm(delta_state *, delta_loc *, delta_loc *, int16_t);
+extern int  ibm_test_synch(delta_state *, int16_t, uint8_t, const uint8_t *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -1660,6 +1662,100 @@ BEGIN(savescptr)
     memset(o->nodes, 0, sizeof(o->nodes));
 END(savescptr)
 
+
+BEGIN(get_parm)
+    static const int16_t kinds[] = {-1, -2, -3, -4, -6};
+    int16_t want = kinds[rng_next() % 5u];
+    delta_loc *om = (delta_loc *)(m->nodes + 0x100);
+    delta_loc *oo = (delta_loc *)(o->nodes + 0x100);
+    int ra, rb;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    memset(m->records, 0, RECORDS);
+    memset(o->records, 0, RECORDS);
+    m->vars.ptr_count = o->vars.ptr_count = (int32_t)(rng_next() % 1002u);
+
+    make_loc(m, o, 0x00);
+    /* The source may also be one of the two kinds vinitloc_new skips, since
+       get_parm only reads its halves in that case. */
+    if (rng_next() % 4u == 0) {
+        ((delta_loc *)m->nodes)->kind = ((delta_loc *)o->nodes)->kind
+            = (rng_next() % 2u) ? (int16_t)-1 : (int16_t)-2;
+    }
+    ((delta_loc *)m->nodes)->value = ((delta_loc *)o->nodes)->value
+        = (int32_t)rng_next();
+
+    fill(om, sizeof(*om));
+    *oo = *om;
+
+    ra = ibm_get_parm(&m->state, om, (delta_loc *)m->nodes, want);
+    rb = get_parm(&o->state, oo, (delta_loc *)o->nodes, want);
+    if (ra != rb)
+        bad++;
+    if (om->kind != oo->kind || om->field != oo->field
+        || om->value != oo->value)
+        bad++;
+    /* A sync parameter is pushed by address, which differs by world. */
+    if (m->vars.ptr_count == o->vars.ptr_count && m->vars.ptr_count > 0)
+        m->vars.ptr_stack[m->vars.ptr_count - 1] =
+            o->vars.ptr_stack[o->vars.ptr_count - 1] = 0;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(get_parm)
+
+BEGIN(test_synch)
+    static const int32_t at[4] = {0x00, 0x80, 0x100, 0x180};
+    int16_t tag = (int16_t)rng_next();
+    uint8_t n = (uint8_t)(1u + rng_next() % 3u);
+    uint8_t list[3];
+    int ra, rb, i, j;
+
+    build_chain(m, o);
+    memset(m->records, 0, RECORDS);
+    memset(o->records, 0, RECORDS);
+    m->vars.fence_base = o->vars.fence_base = 13;
+    m->vars.fence_count = o->vars.fence_count = (int8_t)(rng_next() % 3u);
+    m->vars.scan_field = o->vars.scan_field = (uint8_t)(rng_next() % 3u);
+    m->vars.scan_rev = o->vars.scan_rev = (uint8_t)(rng_next() % 2u);
+    m->vars.scan_held = o->vars.scan_held = (uint8_t)(rng_next() % 2u);
+    m->stack.size_b0 = o->stack.size_b0 = 16;
+    m->stack.ca_size = o->stack.ca_size = 8;
+
+    for (i = 0; i < 4; i++) {
+        m->chars[i] = o->chars[i] = (uint8_t)i;
+        m->marks[i] = o->marks[i] = (uint8_t)(rng_next() % 2u);
+    }
+    for (i = 0; i < 3; i++)
+        list[i] = (uint8_t)(rng_next() % 4u);
+    for (i = 0; i < FENCE_MAP; i++)
+        m->map[i] = o->map[i] = (uint8_t)(rng_next() % 4u);
+
+    /* The last node carries every field, so the walk always terminates. */
+    for (j = 0; j < 4; j++) {
+        ((int32_t *)(m->nodes + at[3]))[13 + j] |= 1;
+        ((int32_t *)(o->nodes + at[3]))[13 + j] |= 1;
+    }
+    m->vars.scan_ptr = (int32_t)(intptr_t)m->nodes;
+    o->vars.scan_ptr = (int32_t)(intptr_t)o->nodes;
+
+    ra = ibm_test_synch(&m->state, tag, n, list);
+    rb = test_synch(&o->state, tag, n, list);
+    if (ra != rb)
+        bad++;
+    if ((m->vars.scan_ptr == 0) != (o->vars.scan_ptr == 0))
+        bad++;
+    else if (m->vars.scan_ptr != 0
+             && m->vars.scan_ptr - (int32_t)(intptr_t)m
+                != o->vars.scan_ptr - (int32_t)(intptr_t)o)
+        bad++;
+
+    m->vars.scan_ptr = o->vars.scan_ptr = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(test_synch)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -1722,6 +1818,8 @@ int main(void)
     test_advance_tok();
     test_forall_cont_from();
     test_savescptr();
+    test_get_parm();
+    test_test_synch();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

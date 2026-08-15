@@ -314,6 +314,8 @@ int  advance_tok(delta_state *d);
 int  forall_cont_from(delta_state *d, int16_t tag, int16_t loop,
                       int32_t unused, delta_loc *dst, const delta_loc *src);
 void savescptr(delta_state *d, int16_t tag, delta_loc *v);
+int  get_parm(delta_state *d, delta_loc *out, delta_loc *loc, int16_t kind);
+int  test_synch(delta_state *d, int16_t tag, uint8_t n, const uint8_t *list);
 
 /* Bumped whenever the spine is relinked, so anything holding a position knows
    to look again. */

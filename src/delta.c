@@ -1280,18 +1280,13 @@ int forall_cont_from(delta_state *d, int16_t tag, int16_t loop,
     return 2;
 }
 
-/* Remember where the scan is, both in the caller's variable and on the
-   backtracking stack, so an unwind can put it back. */
-void savescptr(delta_state *d, int16_t tag, delta_loc *v)
+/* A context record naming what is being tried, then a copy of where the scan
+   had got to. Anything that may have to be unwound pushes this pair. */
+static void push_ca_and_scan(delta_state *d, int16_t tag)
 {
     delta_stack *s = d->stack;
     uint8_t *ca;
     uint8_t *save;
-
-    if (d->vars->testing)
-        save_var(d, v);
-
-    v->value = d->vars->scan_ptr;
 
     s->top -= s->ca_size;
     ca = s->top;
@@ -1304,4 +1299,98 @@ void savescptr(delta_state *d, int16_t tag, delta_loc *v)
     s->limit -= s->size_b0;
     save[0] = 1;
     memcpy(save + 4, &d->vars->scan_ptr, 8);
+}
+
+/* Remember where the scan is, both in the caller's variable and on the
+   backtracking stack, so an unwind can put it back. */
+void savescptr(delta_state *d, int16_t tag, delta_loc *v)
+{
+
+    if (d->vars->testing)
+        save_var(d, v);
+
+    v->value = d->vars->scan_ptr;
+    push_ca_and_scan(d, tag);
+}
+
+/* Fetch a rule's parameter into a cell of the wanted kind, narrowing or
+   widening as the source needs. A short parameter lands in the cell's field
+   half and a long one in its value. */
+int get_parm(delta_state *d, delta_loc *out, delta_loc *loc, int16_t kind)
+{
+    int32_t err = 0;
+    delta_operand v;
+
+    out->kind = kind;
+
+    switch (out->kind) {
+    case DK_SYNC:
+        out->value = loc->value;
+        if (!push_ptr(d, (int32_t)(intptr_t)out))
+            err = 1;
+        break;
+
+    case DK_LONG:
+        if (loc->kind == DK_LONG) {
+            out->value = loc->value;
+        } else if (loc->kind == DK_SHORT2) {
+            out->value = loc->field;
+        } else if (loc->kind >= 0) {
+            vinitloc_new(d, &v, loc);
+            out->value = *(const int16_t *)v.ptr;
+            reset_field(loc);
+        } else {
+            err = 1;
+        }
+        break;
+
+    case DK_SHORT2:
+        if (loc->kind == DK_LONG) {
+            out->field = (int16_t)loc->value;
+        } else if (loc->kind == DK_SHORT2) {
+            out->field = loc->field;
+        } else if (loc->kind >= 0) {
+            vinitloc_new(d, &v, loc);
+            out->field = *(const int16_t *)v.ptr;
+            reset_field(loc);
+        } else {
+            err = 1;
+        }
+        break;
+
+    default:
+        err = 1;
+        break;
+    }
+
+    return err;
+}
+
+/* Walk the scan forward until every one of the named fields is present at
+   once, then mark them so the fence lets the rule past them. */
+int test_synch(delta_state *d, int16_t tag, uint8_t n, const uint8_t *list)
+{
+    delta_vars *v = d->vars;
+    int32_t ok = 0;
+    int32_t i;
+
+    while (ok == 0) {
+        ok = 1;
+        for (i = 0; i < n && ok != 0; i++) {
+            if ((*(int32_t *)(intptr_t)
+                 (v->scan_ptr + (v->fence_base + list[i]) * 4) & 1) != 0)
+                continue;
+
+            ok = 0;
+            if (!vscanadv(d, 0, 1))
+                return 1;
+        }
+    }
+
+    push_ca_and_scan(d, tag);
+
+    for (i = 0; i < n; i++)
+        d->fence_marks[d->fence_index[list[i]]] = 1;
+
+    return 0;
 }
