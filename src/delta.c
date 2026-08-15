@@ -5052,3 +5052,69 @@ void proj_r(delta_state *d, uint8_t f)
                     (delta_node *)(intptr_t)d->lpta.node, f))
         forceErrorBacktrack(d);
 }
+
+/* The mirror of proj_r: settle the right pointer onto a sync and project
+   what it names onto the field to the left of what the left pointer names. */
+void proj_l(delta_state *d, uint8_t f)
+{
+    if (!vsync_tv(d, &d->rpta)
+        || !vproj_l(d, (delta_node *)(intptr_t)d->rpta.node,
+                    (delta_node *)(intptr_t)d->lpta.node, f))
+        forceErrorBacktrack(d);
+}
+
+/* Where the scan stands, looking back along the field rather than on. */
+static int32_t scan_back(delta_state *d)
+{
+    delta_vars *v = d->vars;
+
+    return *(int32_t *)(intptr_t)
+        (v->scan_ptr + (3 + v->scan_field) * 4) & ~3;
+}
+
+/* The mirror of forto_adv_upto_r. Two statements have to lie between the
+   scan and the end for the loop to have another round in it, and neither
+   may be a marker. */
+int forto_adv_upto_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
+                     uint8_t f, delta_token *tok, const delta_token *end)
+{
+    delta_vars *v = d->vars;
+    int32_t nx;
+
+    if (!for_loop_preamble(d, tag, loop, f, tok))
+        return 1;
+
+    v->scan_rev = 0;
+
+    vscanadvUptoTokenOrMarker(d, end->value, 0);
+    if (v->scan_ptr == end->value)
+        return 0;
+
+    nx = scan_back(d);
+    if (nx == 0)
+        return 0;
+    if ((*(const int32_t *)(intptr_t)nx & 2) != 0)
+        return 0;
+
+    if (!vscanadv(d, 1, 0))
+        return 0;
+    if (v->scan_ptr == end->value)
+        return 0;
+
+    vscanadvUptoTokenOrMarker(d, end->value, 0);
+    if (v->scan_ptr == end->value)
+        return 0;
+
+    nx = scan_back(d);
+    if (nx == 0)
+        return 0;
+    if ((*(const int32_t *)(intptr_t)nx & 2) != 0)
+        return 0;
+
+    clearDeltaStackBack(d);
+    d->stack->unknown_9c = 0;
+    v->testing = 1;
+    d->unknown_3c = bound;
+    tok->value = v->scan_ptr;
+    return 2;
+}

@@ -280,6 +280,10 @@ extern int  ibm_vproj_r(delta_state *, delta_node *, delta_node *, uint8_t);
 extern int  ibm_conj_merge(delta_state *, delta_token *);
 extern int  ibm_vproj_l(delta_state *, delta_node *, delta_node *, uint8_t);
 extern void ibm_proj_r(delta_state *, uint8_t);
+extern void ibm_proj_l(delta_state *, uint8_t);
+extern int  ibm_forto_adv_upto_l(delta_state *, int16_t, int16_t, int16_t,
+                                 uint8_t, delta_token *,
+                                 const delta_token *);
 extern const unsigned char *actd_stub_answer;
 extern int32_t ibm_spine_changed;
 
@@ -5551,7 +5555,7 @@ BEGIN(forx_adv_l)
     int16_t loop = (int16_t)rng_next();
     int16_t bound = (int16_t)rng_next();
     int32_t which = (int32_t)(rng_next() % NSTMT);
-    int upto = (int)(rng_next() % 2u);
+    int upto = (int)(rng_next() % 3u);
     int ra, rb, i;
 
     if (f < 0) {
@@ -5578,7 +5582,12 @@ BEGIN(forx_adv_l)
     }
     m->state.lpta.field = o->state.lpta.field = f;
 
-    if (upto) {
+    if (upto == 2) {
+        ra = ibm_forto_adv_upto_l(&m->state, tag, loop, bound,
+                                  (uint8_t)which, &tm, &em);
+        rb = forto_adv_upto_l(&o->state, tag, loop, bound, (uint8_t)which,
+                              &to, &eo);
+    } else if (upto) {
         ra = ibm_forto_adv_l(&m->state, tag, loop, bound, (uint8_t)which,
                              &tm, &em);
         rb = forto_adv_l(&o->state, tag, loop, bound, (uint8_t)which,
@@ -6179,6 +6188,11 @@ static void run_proj_r(delta_state *d, uint8_t f, int ours)
     GUARDED(ours ? proj_r(d, f) : ibm_proj_r(d, f));
 }
 
+static void run_proj_l(delta_state *d, uint8_t f, int ours)
+{
+    GUARDED(ours ? proj_l(d, f) : ibm_proj_l(d, f));
+}
+
 BEGIN(proj_r)
     /* The edit scaffold, since settling the left pointer onto a sync is the
        first thing this does. */
@@ -6237,8 +6251,10 @@ BEGIN(proj_r)
     m->vars.ctx_both = o->vars.ctx_both = (int32_t)(rng_next() % 2u);
     m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
 
-    /* The projection reads through whatever the field link hands back. */
-    if ((((int32_t *)(m->nodes + 0x80))[15 + g] & -4) == 0) {
+    /* The projection reads through whatever the field link hands back, and
+       the left one steps the other way, so both links must be real. */
+    if ((((int32_t *)(m->nodes + 0x80))[15 + g] & -4) == 0
+        || (((int32_t *)(m->nodes + 0x80))[3 + g] & -4) == 0) {
         memset(&m->state.lpta, 0, sizeof(m->state.lpta));
         memset(&o->state.lpta, 0, sizeof(o->state.lpta));
         memset(&m->state.rpta, 0, sizeof(m->state.rpta));
@@ -6247,8 +6263,13 @@ BEGIN(proj_r)
         continue;
     }
 
-    run_proj_r(&m->state, g, 0);
-    run_proj_r(&o->state, g, 1);
+    if (rng_next() % 2u) {
+        run_proj_l(&m->state, g, 0);
+        run_proj_l(&o->state, g, 1);
+    } else {
+        run_proj_r(&m->state, g, 0);
+        run_proj_r(&o->state, g, 1);
+    }
 
     memset(&m->state.lpta, 0, sizeof(m->state.lpta));
     memset(&o->state.lpta, 0, sizeof(o->state.lpta));

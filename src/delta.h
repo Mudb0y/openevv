@@ -608,6 +608,10 @@ int  vproj_r(delta_state *d, delta_node *t, delta_node *at, uint8_t f);
 int  conj_merge(delta_state *d, delta_token *tok);
 int  vproj_l(delta_state *d, delta_node *t, delta_node *at, uint8_t f);
 void proj_r(delta_state *d, uint8_t f);
+void proj_l(delta_state *d, uint8_t f);
+int  forto_adv_upto_l(delta_state *d, int16_t tag, int16_t loop,
+                      int16_t bound, uint8_t f, delta_token *tok,
+                      const delta_token *end);
 
 /* Supplied by the language module, not by the runtime. */
 const uint8_t *actdlookup(delta_state *d, int32_t l, int32_t r,
