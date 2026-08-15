@@ -276,6 +276,8 @@ extern void ibm_project_rl(delta_state *, delta_node *, int32_t, int32_t,
                            delta_node *, delta_node *, uint8_t);
 extern int  ibm_actd_lookup(delta_state *, int16_t, delta_token *,
                             delta_token *);
+extern int  ibm_vproj_r(delta_state *, delta_node *, delta_node *, uint8_t);
+extern int  ibm_conj_merge(delta_state *, delta_token *);
 extern const unsigned char *actd_stub_answer;
 extern int32_t ibm_spine_changed;
 
@@ -6046,6 +6048,119 @@ BEGIN(actd_lookup)
     memset(o->nodes, 0, sizeof(o->nodes));
 END(actd_lookup)
 
+
+BEGIN(vproj_r)
+    /* The pointer spine, since the context lookups and the relink walk it.
+       A statement is projected onto the field to the right of another. */
+    uint8_t f = (uint8_t)(rng_next() % NSTMT);
+    int ra, rb;
+
+    build_pspine(m, o);
+    m->vars.ctx_both = o->vars.ctx_both = (int32_t)(rng_next() % 2u);
+    m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
+    ((int32_t *)(m->nodes))[15 + f] |= 1;
+    ((int32_t *)(o->nodes))[15 + f] |= 1;
+    ((int32_t *)(m->nodes))[2] &= ~2;
+    ((int32_t *)(o->nodes))[2] &= ~2;
+    ((int32_t *)(m->nodes + 3 * 0x80))[15 + f] |= 1;
+    ((int32_t *)(o->nodes + 3 * 0x80))[15 + f] |= 1;
+    ((int32_t *)(m->nodes + 3 * 0x80))[2] &= ~2;
+    ((int32_t *)(o->nodes + 3 * 0x80))[2] &= ~2;
+
+    m->stack.spine_l = (int32_t)(intptr_t)m->nodes;
+    o->stack.spine_l = (int32_t)(intptr_t)o->nodes;
+    m->stack.spine_r = (int32_t)(intptr_t)(m->nodes + 3 * 0x80);
+    o->stack.spine_r = (int32_t)(intptr_t)(o->nodes + 3 * 0x80);
+
+    /* The statement stepped onto must be a real one, because the original
+       reads through whatever the field link hands back. */
+    if ((((int32_t *)(m->nodes + 2 * 0x80))[15 + f] & -4) == 0) {
+        m->stack.spine_l = o->stack.spine_l = 0;
+        m->stack.spine_r = o->stack.spine_r = 0;
+        free(m); free(o);
+        continue;
+    }
+
+    ra = ibm_vproj_r(&m->state, (delta_node *)(m->nodes + 0x80),
+                     (delta_node *)(m->nodes + 2 * 0x80), f);
+    rb = vproj_r(&o->state, (delta_node *)(o->nodes + 0x80),
+                 (delta_node *)(o->nodes + 2 * 0x80), f);
+
+    if (ra != rb)
+        bad++;
+    else if (region_differs(m, o, m->nodes, o->nodes, 4 * 0x80))
+        bad++;
+
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(vproj_r)
+
+
+BEGIN(conj_merge)
+    /* The same spine the left and right tests are exercised on, with the
+       scan standing on one of its nodes and the token on another. */
+    delta_token tm, to;
+    uint32_t ia, ib;
+    int ra, rb, i, k;
+
+    build_pspine(m, o);
+    for (i = 0; i < 10; i++) {
+        ((int32_t *)m->nodes)[3 + i] = 0;
+        ((int32_t *)o->nodes)[3 + i] = 0;
+    }
+    ((int32_t *)(m->nodes + 3 * 0x80))[1] = 0;
+    ((int32_t *)(o->nodes + 3 * 0x80))[1] = 0;
+
+    m->state.fence_fill = o->state.fence_fill = (uint8_t)(1u + rng_next() % 4u);
+    k = (int)(rng_next() % m->state.fence_fill);
+    for (i = 0; i < 4; i++) {
+        ((int32_t *)(m->nodes + i * 0x80))[15 + k] |= 1;
+        ((int32_t *)(o->nodes + i * 0x80))[15 + k] |= 1;
+    }
+
+    for (i = 0; i < 50; i++) {
+        m->stack.left_a[i] = o->stack.left_a[i] = 0;
+        m->stack.left_b[i] = o->stack.left_b[i] = 0;
+        m->stack.left_ans[i] = o->stack.left_ans[i] = 0;
+        m->stack.left_hits[i] = o->stack.left_hits[i] = 0;
+    }
+    m->stack.left_next = o->stack.left_next = 0;
+    m->stack.left_stamp = o->stack.left_stamp = spine_changed + 1;
+
+    m->vars.scan_field = o->vars.scan_field = (uint8_t)k;
+    m->vars.scan_rev = o->vars.scan_rev = (uint8_t)(rng_next() % 2u);
+
+    ia = rng_next() % 4u;
+    ib = rng_next() % 4u;
+    m->vars.scan_ptr = (int32_t)(intptr_t)(m->nodes + ia * 0x80);
+    o->vars.scan_ptr = (int32_t)(intptr_t)(o->nodes + ia * 0x80);
+    memset(&tm, 0, sizeof(tm));
+    tm.unknown_00 = (int32_t)rng_next();
+    to = tm;
+    tm.value = (int32_t)(intptr_t)(m->nodes + ib * 0x80);
+    to.value = (int32_t)(intptr_t)(o->nodes + ib * 0x80);
+
+    ra = ibm_conj_merge(&m->state, &tm);
+    rb = conj_merge(&o->state, &to);
+
+    if (ra != rb)
+        bad++;
+    else if (tm.value - (int32_t)(intptr_t)m
+             != to.value - (int32_t)(intptr_t)o)
+        bad++;
+
+    for (i = 0; i < 50; i++) {
+        m->stack.left_a[i] = o->stack.left_a[i] = 0;
+        m->stack.left_b[i] = o->stack.left_b[i] = 0;
+    }
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(conj_merge)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -6193,6 +6308,8 @@ int main(void)
     test_chstream();
     test_project_rl();
     test_actd_lookup();
+    test_vproj_r();
+    test_conj_merge();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

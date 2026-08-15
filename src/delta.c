@@ -4918,3 +4918,84 @@ int actd_lookup(delta_state *d, int16_t n, delta_token *outl,
 
     return 0;
 }
+
+/* Project a statement onto the field to the right of another. A statement
+   already carrying the field is left where it is.
+
+   The two context lookups are made for what they do to the spine, not for
+   what they answer: the original keeps their answers in locals it never
+   reads again. They are kept because dropping them would drop the relinking
+   they do on the way. */
+int vproj_r(delta_state *d, delta_node *t, delta_node *at, uint8_t f)
+{
+    delta_vars *v = d->vars;
+    int32_t fb = v->fence_base + f;
+    int32_t next;
+    int32_t after;
+
+    if (((const int32_t *)t)[fb] & 1)
+        return 1;
+
+    if (v->ctx_both != 0) {
+        vgetsc(d, 1, 1, (int32_t)(intptr_t)t, f);
+        vgetsc(d, 0, 1, (int32_t)(intptr_t)t, f);
+    }
+
+    next = ((const int32_t *)at)[fb] & -4;
+
+    /* A marker stands in for itself; anything else hands on to what follows
+       it. The original reads through a null here rather than stopping. */
+    if (next != 0 && (*(const int32_t *)(intptr_t)next & 2))
+        after = next;
+    else
+        after = ((const int32_t *)(intptr_t)next)[1] & -4;
+
+    project_rl(d, t, (int32_t)(intptr_t)at, after, at,
+               (delta_node *)(intptr_t)next, f);
+
+    if (NONSEQ(t) && v->relink != 0) {
+        DELSPINE(d, t);
+        INSSPINEL(d, t, (delta_node *)(intptr_t)after);
+    }
+
+    return 1;
+}
+
+/* Bring a token up to where the scan now stands, if the two are joined by
+   nothing but markers. Which way the walk runs, and which links it follows,
+   depends on which side of the token the scan is; a real statement in the
+   way means they cannot be merged. */
+int conj_merge(delta_state *d, delta_token *tok)
+{
+    delta_vars *v = d->vars;
+    int32_t start = tok->value;
+    int32_t node = start;
+
+    if (visleft(d, v->scan_ptr, start)) {
+        while (node != v->scan_ptr) {
+            if (node == 0 || !(*(const int32_t *)(intptr_t)node & 2))
+                return 1;
+            node = ((const int32_t *)(intptr_t)node)[3 + v->scan_field] & -4;
+        }
+        if (v->scan_rev == 0)
+            tok->value = v->scan_ptr;
+        return 0;
+    }
+
+    if (visright(d, v->scan_ptr, start)) {
+        while (node != v->scan_ptr) {
+            if (node == 0 || !(*(const int32_t *)(intptr_t)node & 2))
+                return 1;
+            node = ((const int32_t *)(intptr_t)node)
+                [v->fence_base + v->scan_field] & -4;
+        }
+        if (v->scan_rev == 1)
+            tok->value = v->scan_ptr;
+        return 0;
+    }
+
+    if (v->scan_ptr != start)
+        return 1;
+
+    return 0;
+}
