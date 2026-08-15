@@ -614,6 +614,12 @@ int  forto_adv_upto_l(delta_state *d, int16_t tag, int16_t loop,
                       const delta_token *end);
 int  calcHZ2ETI(delta_state *d, const delta_loc *in, delta_loc *out);
 int  vscanadvUptoToken(delta_state *d, int32_t usefence);
+int  forall_adv_over_r(delta_state *d, int16_t tag, int16_t loop,
+                       int16_t bound, uint8_t f, delta_token *tok);
+int  forall_adv_upto_r(delta_state *d, int16_t tag, int16_t loop,
+                       int16_t bound, uint8_t f, delta_token *tok);
+void insert_lv(delta_state *d, uint8_t st, delta_loc *loc, uint8_t mode);
+int  vtstctx_tv(delta_state *d, delta_tpos *p, int32_t back);
 
 /* Supplied by the language module, not by the runtime. */
 const uint8_t *actdlookup(delta_state *d, int32_t l, int32_t r,

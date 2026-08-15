@@ -274,6 +274,12 @@ extern int  ibm_calcST2HZ(delta_state *, const delta_loc *, delta_loc *);
 extern int  ibm_calcHZ2ST(delta_state *, const delta_loc *, delta_loc *);
 extern int  ibm_calcHZ2ETI(delta_state *, const delta_loc *, delta_loc *);
 extern int  ibm_vscanadvUptoToken(delta_state *, int32_t);
+extern int  ibm_forall_adv_over_r(delta_state *, int16_t, int16_t, int16_t,
+                                  uint8_t, delta_token *);
+extern int  ibm_forall_adv_upto_r(delta_state *, int16_t, int16_t, int16_t,
+                                  uint8_t, delta_token *);
+extern void ibm_insert_lv(delta_state *, uint8_t, delta_loc *, uint8_t);
+extern int  ibm_vtstctx_tv(delta_state *, delta_tpos *, int32_t);
 extern void ibm_project_rl(delta_state *, delta_node *, int32_t, int32_t,
                            delta_node *, delta_node *, uint8_t);
 extern int  ibm_actd_lookup(delta_state *, int16_t, delta_token *,
@@ -478,6 +484,10 @@ static int region_differs(delta_world *a, delta_world *b,
     int32_t span = (int32_t)sizeof(delta_world);
     size_t i = 0;
 
+    /* Byte by byte, taking four at a time whenever they form an address in
+       both worlds. A byte that differs may still be part of an address the
+       walk has drifted past the start of, so look back as far as three
+       bytes for one before calling it a difference. */
     while (i + 4 <= len) {
         int32_t wa, wb;
 
@@ -490,8 +500,29 @@ static int region_differs(delta_world *a, delta_world *b,
             i += 4;
             continue;
         }
-        if (pa[i] != pb[i])
-            return 1;
+        if (pa[i] != pb[i]) {
+            size_t k;
+            int found = 0;
+
+            for (k = (i >= 3) ? i - 3 : 0; k <= i; k++) {
+                int32_t xa, xb;
+
+                if (k + 4 > len)
+                    break;
+                memcpy(&xa, pa + k, 4);
+                memcpy(&xb, pb + k, 4);
+                if (xa >= ba && xa < ba + span
+                    && xb >= bb && xb < bb + span
+                    && xa - ba == xb - bb) {
+                    i = k + 4;
+                    found = 1;
+                    break;
+                }
+            }
+            if (!found)
+                return 1;
+            continue;
+        }
         i++;
     }
 
@@ -2477,7 +2508,7 @@ BEGIN(timing_tests)
     static const uint8_t sets[4] = {0, 1, 4, 8};
     delta_tpos pm, po;
     int8_t f = build_tspine(m, o);
-    uint32_t which = rng_next() % 3u;
+    uint32_t which = rng_next() % 4u;
     int ra, rb;
 
     if (f < 0) {
@@ -2492,11 +2523,16 @@ BEGIN(timing_tests)
     } else if (which == 1) {
         ra = ibm_vtstsnc_tv(&m->state, &pm);
         rb = vtstsnc_tv(&o->state, &po);
-    } else {
+    } else if (which == 2) {
         uint8_t back = (uint8_t)(rng_next() % 2u);
 
         ra = ibm_vtsttmark_tv(&m->state, &pm, back);
         rb = vtsttmark_tv(&o->state, &po, back);
+    } else {
+        int32_t back = (int32_t)(rng_next() % 2u);
+
+        ra = ibm_vtstctx_tv(&m->state, &pm, back);
+        rb = vtstctx_tv(&o->state, &po, back);
     }
 
     if (ra != rb)
@@ -5567,7 +5603,7 @@ BEGIN(forx_adv_l)
     int16_t loop = (int16_t)rng_next();
     int16_t bound = (int16_t)rng_next();
     int32_t which = (int32_t)(rng_next() % NSTMT);
-    int upto = (int)(rng_next() % 3u);
+    int upto = (int)(rng_next() % 5u);
     int ra, rb, i;
 
     if (f < 0) {
@@ -5594,7 +5630,17 @@ BEGIN(forx_adv_l)
     }
     m->state.lpta.field = o->state.lpta.field = f;
 
-    if (upto == 2) {
+    if (upto == 4) {
+        ra = ibm_forall_adv_upto_r(&m->state, tag, loop, bound,
+                                   (uint8_t)which, &tm);
+        rb = forall_adv_upto_r(&o->state, tag, loop, bound, (uint8_t)which,
+                               &to);
+    } else if (upto == 3) {
+        ra = ibm_forall_adv_over_r(&m->state, tag, loop, bound,
+                                   (uint8_t)which, &tm);
+        rb = forall_adv_over_r(&o->state, tag, loop, bound, (uint8_t)which,
+                               &to);
+    } else if (upto == 2) {
         ra = ibm_forto_adv_upto_l(&m->state, tag, loop, bound,
                                   (uint8_t)which, &tm, &em);
         rb = forto_adv_upto_l(&o->state, tag, loop, bound, (uint8_t)which,
@@ -6289,6 +6335,104 @@ BEGIN(proj_r)
     memset(&o->state.rpta, 0, sizeof(o->state.rpta));
 END(proj_r)
 
+
+static void run_insert_lv(delta_state *d, uint8_t st, delta_loc *l,
+                          uint8_t mode, int ours)
+{
+    GUARDED(ours ? insert_lv(d, st, l, mode)
+                 : ibm_insert_lv(d, st, l, mode));
+}
+
+BEGIN(insert_lv)
+    /* The range check settles the pointers first, so this needs the timing
+       edit scaffold that vrange_l is itself exercised on. */
+    static const uint8_t modes[4] = {0xcd, 0xce, 0xcf, 0x11};
+    /* The byte and short kinds are left out: the operand the copy reads
+       through is one vinitloc_new never sets for them. */
+    static const int16_t kinds[3] = {-3, -4, 0};
+    uint8_t f;
+    uint8_t mode = modes[rng_next() % 4u];
+    delta_loc *lm;
+    delta_loc *lo;
+    int16_t kind = kinds[rng_next() % 3u];
+    int i;
+
+    if (!build_time_edit(m, o, &f)) {
+        free(m); free(o);
+        continue;
+    }
+    /* The insert allocates its statement, and without a heap of the world's
+       own the allocator reaches for the system's, whose addresses belong to
+       neither world. */
+    build_heap(m, o);
+    m->segs[1].live = o->segs[1].live = 16;
+    m->vars.relink = o->vars.relink = 1;
+    for (i = 0; i < 0x20; i++)
+        m->nsqm[i] = o->nsqm[i] = 0;
+
+    memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+    memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+    memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+    memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+    m->state.lpta.node = (int32_t)(intptr_t)(m->nodes + 0x80);
+    o->state.lpta.node = (int32_t)(intptr_t)(o->nodes + 0x80);
+    m->state.rpta.node = (int32_t)(intptr_t)(m->nodes + 2 * 0x80);
+    o->state.rpta.node = (int32_t)(intptr_t)(o->nodes + 2 * 0x80);
+    m->state.lpta.field = o->state.lpta.field = (int8_t)f;
+    m->state.rpta.field = o->state.rpta.field = (int8_t)f;
+
+    /* A variable of a language kind keeps its value where the record would
+       be, and the getter reads on past the four bytes the record names, so
+       the variable has to sit in the world with known ground behind it. */
+    lm = (delta_loc *)(m->nodes + 0x300);
+    lo = (delta_loc *)(o->nodes + 0x300);
+    fill(m->nodes + 0x300, 0x40);
+    memcpy(o->nodes + 0x300, m->nodes + 0x300, 0x40);
+    memset(lm, 0, sizeof(*lm));
+    lm->kind = kind ? kind : (int16_t)f;
+    lm->field = (lm->kind >= 0)
+        ? (int16_t)(rng_next() % (uint32_t)vstmtbl[lm->kind].nfields)
+        : (int16_t)rng_next();
+    lm->value = (lm->kind >= 0) ? 0 : (int32_t)rng_next();
+    memcpy(lo, lm, sizeof(*lm));
+
+    /* A type whose own kind is none of the four leaves the scratch pointer
+       unset and the copy then goes through whatever the local held. */
+    {
+        int16_t sk = STMTYP((int8_t)f);
+
+        if (lm->kind < 0 && lm->kind != sk
+            && sk != DK_UBYTE && sk != DK_SHORT
+            && sk != DK_LONG && sk != DK_SHORT2) {
+            memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+            memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+            memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+            memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+            m->stack.spine_l = o->stack.spine_l = 0;
+            m->stack.spine_r = o->stack.spine_r = 0;
+            free(m); free(o);
+            continue;
+        }
+    }
+
+    run_insert_lv(&m->state, f, lm, mode, 0);
+    run_insert_lv(&o->state, f, lo, mode, 1);
+
+    if (lm->kind != lo->kind || lm->field != lo->field)
+        bad++;
+
+    for (i = 0; i < 50; i++) {
+        m->stack.left_a[i] = o->stack.left_a[i] = 0;
+        m->stack.left_b[i] = o->stack.left_b[i] = 0;
+    }
+    memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+    memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+    memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+    memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+END(insert_lv)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -6439,6 +6583,7 @@ int main(void)
     test_vproj_r();
     test_conj_merge();
     test_proj_r();
+    test_insert_lv();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

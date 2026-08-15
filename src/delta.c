@@ -5211,3 +5211,198 @@ int vscanadvUptoToken(delta_state *d, int32_t usefence)
             d->fence_marks[i] = 0;
     }
 }
+
+/* Step a forall loop over one token to the right. The walk runs to the next
+   real token and the loop carries on if what it finds there is a token and
+   not a marker.
+
+   The original recomputes where the scan stands three times over; the scan
+   does not move between them, so it is read once here. */
+int forall_adv_over_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
+                      uint8_t f, delta_token *tok)
+{
+    delta_vars *v = d->vars;
+    int32_t nx;
+
+    if (!for_loop_preamble(d, tag, loop, f, tok))
+        return 1;
+
+    v->scan_rev = 1;
+
+    vscanadvUptoToken(d, 0);
+
+    nx = scan_here(d);
+    if (nx == 0)
+        return 0;
+    if ((*(const int32_t *)(intptr_t)nx & 2) != 0)
+        return 0;
+
+    if (!vscanadv(d, 1, 0))
+        return 0;
+
+    clearDeltaStackBack(d);
+    d->stack->unknown_9c = 0;
+    v->testing = 1;
+    d->unknown_3c = bound;
+    tok->value = v->scan_ptr;
+    return 2;
+}
+
+/* The same over two tokens: both have to be real for the loop to go on. */
+int forall_adv_upto_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
+                      uint8_t f, delta_token *tok)
+{
+    delta_vars *v = d->vars;
+    int32_t nx;
+
+    if (!for_loop_preamble(d, tag, loop, f, tok))
+        return 1;
+
+    v->scan_rev = 1;
+
+    vscanadvUptoToken(d, 0);
+
+    nx = scan_here(d);
+    if (nx == 0)
+        return 0;
+    if ((*(const int32_t *)(intptr_t)nx & 2) != 0)
+        return 0;
+
+    if (!vscanadv(d, 1, 0))
+        return 0;
+
+    vscanadvUptoToken(d, 0);
+
+    nx = scan_here(d);
+    if (nx == 0)
+        return 0;
+    if ((*(const int32_t *)(intptr_t)nx & 2) != 0)
+        return 0;
+
+    clearDeltaStackBack(d);
+    d->stack->unknown_9c = 0;
+    v->testing = 1;
+    d->unknown_3c = bound;
+    tok->value = v->scan_ptr;
+    return 2;
+}
+
+/* Insert a statement of a given type carrying a variable's value. A
+   variable whose kind already matches the type goes in as it stands; one
+   that does not is copied through a scratch slot of the right width first.
+
+   A type whose own kind is none of the four leaves the scratch pointer
+   unset and the copy then goes through whatever the local held. That is the
+   original's hazard and the language never asks for such a type. */
+void insert_lv(delta_state *d, uint8_t st, delta_loc *loc, uint8_t mode)
+{
+    delta_vars *v = d->vars;
+    delta_operand src;
+    delta_operand var;
+
+    if (!vrange_l(d, &d->rpta, &d->lpta, (int8_t)st, mode))
+        forceErrorBacktrack(d);
+
+    if (loc->kind >= 0 || loc->kind == STMTYP((int8_t)st)) {
+        vinitloc_new(d, &var, loc);
+        if (!vins_tok(d, st, d->lpta.node, d->rpta.node, &var))
+            forceErrorBacktrack(d);
+        reset_field(loc);
+        return;
+    }
+
+    src.kind = STMTYP((int8_t)st);
+
+    switch (src.kind) {
+    case DK_UBYTE:
+        src.ptr = &v->scratch_b;
+        break;
+    case DK_LONG:
+        src.ptr = &v->scratch_l;
+        break;
+    case DK_SHORT:
+    case DK_SHORT2:
+        src.ptr = &v->scratch_s;
+        break;
+    default:
+        break;
+    }
+
+    src.flag = vstmtbl[st].fields[0].flag;
+
+    vinitloc_new(d, &var, loc);
+    vassign(d, &src, &var);
+
+    if (!vins_tok(d, st, d->lpta.node, d->rpta.node, &src))
+        forceErrorBacktrack(d);
+
+    reset_field(loc);
+}
+
+/* Settle a timing pointer onto the statement its offset points into,
+   carrying the offset across as it steps. Unlike vctxt_tv this answers zero
+   when it managed and one when normalising gave an answer it does not know.
+
+   A statement type whose first field is neither a long nor a short leaves
+   the value it reads indeterminate in the original. Zero is used here,
+   which leaves the offset alone; the language declares no such type. */
+int vtstctx_tv(delta_state *d, delta_tpos *p, int32_t back)
+{
+    if (p->flags & 1)
+        return 0;
+
+    switch (vnormalize(d, p)) {
+    case 3:
+    case 4:
+        p->flags = 1;
+        return 0;
+    case 2:
+        break;
+    default:
+        return 1;
+    }
+
+    if (p->offset > 0 && back == 1) {
+        void *(*get)(void *) = vstmtbl[p->field].get[0];
+        int32_t val = 0;
+
+        p->node = ((const int32_t *)(intptr_t)p->node)
+            [d->vars->fence_base + p->field] & -4;
+
+        if (vstmtbl[p->field].fields[0].kind == DK_LONG) {
+            val = *(const int32_t *)get(TFLDS((void *)(intptr_t)p->node));
+        } else if (vstmtbl[p->field].fields[0].kind == DK_SHORT2) {
+            val = *(const int16_t *)get(TFLDS((void *)(intptr_t)p->node));
+            if (val == -0x7fff)
+                val = (int32_t)0x80000001u;
+        }
+
+        if (val != (int32_t)0x80000001u)
+            p->offset -= val;
+
+        p->node = ((const int32_t *)(intptr_t)p->node)[1] & -4;
+        return 0;
+    }
+
+    if (p->offset < 0 && back == 0) {
+        void *(*get)(void *) = vstmtbl[p->field].get[0];
+        int32_t val = 0;
+
+        p->node = ((const int32_t *)(intptr_t)p->node)[3 + p->field] & -4;
+
+        if (vstmtbl[p->field].fields[0].kind == DK_LONG) {
+            val = *(const int32_t *)get(TFLDS((void *)(intptr_t)p->node));
+        } else if (vstmtbl[p->field].fields[0].kind == DK_SHORT2) {
+            val = *(const int16_t *)get(TFLDS((void *)(intptr_t)p->node));
+            if (val == -0x7fff)
+                val = (int32_t)0x80000001u;
+        }
+
+        if (val != (int32_t)0x80000001u)
+            p->offset += val;
+
+        p->node = *(const int32_t *)(intptr_t)p->node & -4;
+    }
+
+    return 0;
+}
