@@ -1954,3 +1954,63 @@ int test_ptr(delta_state *d)
             return 1;
     }
 }
+
+/* Walk the left register to the end of a field's run. Settling the position
+   first can fail, and a rule that asked to move somewhere it cannot go is
+   backtracked rather than left half moved. */
+void lpta_movel(delta_state *d, uint8_t f)
+{
+    if (!vmove_tv(d, &d->lpta))
+        forceErrorBacktrack(d);
+
+    d->lpta.node = (int32_t)(intptr_t)
+        vmovel((delta_node *)(intptr_t)d->lpta.node, f);
+}
+
+void lpta_mover(delta_state *d, uint8_t f)
+{
+    if (!vmove_tv(d, &d->lpta))
+        forceErrorBacktrack(d);
+
+    d->lpta.node = (int32_t)(intptr_t)
+        vmover(d, (int32_t *)(intptr_t)d->lpta.node, f);
+}
+
+/* The same rightward walk, but as a test: it only moves if the position was
+   already on a timing mark. */
+int lpta_tstmover(delta_state *d, uint8_t f)
+{
+    if (vtsttmark_tv(d, &d->lpta, 0) != 0)
+        return 1;
+
+    d->lpta.node = (int32_t)(intptr_t)
+        vmover(d, (int32_t *)(intptr_t)d->lpta.node, f);
+    return 0;
+}
+
+/* Put the scan where the left register points, following a given field. The
+   four spellings differ only in which way the scan will walk and whether the
+   fence is left armed. */
+static int setscan(delta_state *d, uint8_t f, uint8_t rev, uint8_t held)
+{
+    delta_vars *v = d->vars;
+
+    if (vtstsnc_tv(d, &d->lpta) != 0)
+        return 1;
+
+    if (d->lpta.node == 0
+        || (*(int32_t *)(intptr_t)(d->lpta.node + (v->fence_base + f) * 4)
+            & 1) == 0)
+        return 1;
+
+    v->scan_ptr = d->lpta.node;
+    v->scan_field = f;
+    v->scan_rev = rev;
+    v->scan_held = held;
+    return 0;
+}
+
+int setscan_l(delta_state *d, uint8_t f)     { return setscan(d, f, 0, 1); }
+int setscan_r(delta_state *d, uint8_t f)     { return setscan(d, f, 1, 1); }
+int setscan_nof_l(delta_state *d, uint8_t f) { return setscan(d, f, 0, 0); }
+int setscan_nof_r(delta_state *d, uint8_t f) { return setscan(d, f, 1, 0); }

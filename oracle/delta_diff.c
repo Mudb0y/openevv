@@ -115,6 +115,13 @@ extern int  ibm_vmove_tv(delta_state *, delta_tpos *);
 extern int  ibm_vtstsnc_tv(delta_state *, delta_tpos *);
 extern int  ibm_vtsttmark_tv(delta_state *, delta_tpos *, uint8_t);
 extern int  ibm_test_ptr(delta_state *);
+extern void ibm_lpta_movel(delta_state *, uint8_t);
+extern void ibm_lpta_mover(delta_state *, uint8_t);
+extern int  ibm_lpta_tstmover(delta_state *, uint8_t);
+extern int  ibm_setscan_l(delta_state *, uint8_t);
+extern int  ibm_setscan_r(delta_state *, uint8_t);
+extern int  ibm_setscan_nof_l(delta_state *, uint8_t);
+extern int  ibm_setscan_nof_r(delta_state *, uint8_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -206,10 +213,30 @@ static void normalise(delta_world *w, delta_state *st, delta_vars *va,
                       delta_stack *sk)
 {
     char *base = (char *)w;
+    delta_world *w_ = w;
 
     *st = w->state;
     *va = w->vars;
     *sk = w->stack;
+
+    /* Several fields hold a node address as a plain word rather than as a
+       pointer. Rewrite those the same way, but only when they really are
+       addresses in this world; elsewhere they are untouched fill and have to
+       compare as they stand. */
+#define REBASE_WORD(w)                                                  \
+    do {                                                                \
+        int32_t v_ = (w);                                               \
+        if (v_ >= (int32_t)(intptr_t)w_                                 \
+            && v_ < (int32_t)(intptr_t)w_ + (int32_t)sizeof(delta_world)) \
+            (w) = v_ - (int32_t)(intptr_t)w_;                           \
+    } while (0)
+
+    REBASE_WORD(st->lpta.node);
+    REBASE_WORD(st->rpta.node);
+    REBASE_WORD(va->scan_ptr);
+    REBASE_WORD(sk->spine_l);
+    REBASE_WORD(sk->spine_r);
+#undef REBASE_WORD
 
 #define REBASE(p) ((p) = (void *)((char *)(p) - base))
     REBASE(st->vars);
@@ -2225,6 +2252,83 @@ BEGIN(test_ptr)
     memset(o->nodes, 0, sizeof(o->nodes));
 END(test_ptr)
 
+
+/* The register walks and the scan setters all settle the left register
+   first, so they need the timing spine and a register aimed into it. */
+static int8_t reg_setup(delta_world *m, delta_world *o)
+{
+    int8_t f = build_tspine(m, o);
+    delta_tpos pm, po;
+
+    if (f < 0)
+        return -1;
+
+    make_tpos(m, o, f, &pm, &po, (uint8_t)(rng_next() % 2u));
+    m->state.lpta = pm;
+    o->state.lpta = po;
+    return f;
+}
+
+BEGIN(lpta_walks)
+    int8_t f = reg_setup(m, o);
+    uint32_t which = rng_next() % 3u;
+    int ra = 0, rb = 0;
+
+    if (f < 0) {
+        free(m); free(o);
+        break;
+    }
+
+    if (which == 0) {
+        ibm_lpta_movel(&m->state, (uint8_t)f);
+        lpta_movel(&o->state, (uint8_t)f);
+    } else if (which == 1) {
+        ibm_lpta_mover(&m->state, (uint8_t)f);
+        lpta_mover(&o->state, (uint8_t)f);
+    } else {
+        ra = ibm_lpta_tstmover(&m->state, (uint8_t)f);
+        rb = lpta_tstmover(&o->state, (uint8_t)f);
+    }
+
+    if (ra != rb)
+        bad++;
+
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+END(lpta_walks)
+
+BEGIN(setscan)
+    int8_t f = reg_setup(m, o);
+    uint32_t which = rng_next() % 4u;
+    int ra, rb;
+
+    if (f < 0) {
+        free(m); free(o);
+        break;
+    }
+
+    if (which == 0) {
+        ra = ibm_setscan_l(&m->state, (uint8_t)f);
+        rb = setscan_l(&o->state, (uint8_t)f);
+    } else if (which == 1) {
+        ra = ibm_setscan_r(&m->state, (uint8_t)f);
+        rb = setscan_r(&o->state, (uint8_t)f);
+    } else if (which == 2) {
+        ra = ibm_setscan_nof_l(&m->state, (uint8_t)f);
+        rb = setscan_nof_l(&o->state, (uint8_t)f);
+    } else {
+        ra = ibm_setscan_nof_r(&m->state, (uint8_t)f);
+        rb = setscan_nof_r(&o->state, (uint8_t)f);
+    }
+
+    if (ra != rb)
+        bad++;
+
+    m->vars.scan_ptr = o->vars.scan_ptr = 0;
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+END(setscan)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -2296,6 +2400,8 @@ int main(void)
     test_vproject();
     test_timing_tests();
     test_test_ptr();
+    test_lpta_walks();
+    test_setscan();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

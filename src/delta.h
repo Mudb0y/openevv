@@ -338,6 +338,13 @@ int vmove_tv(delta_state *d, delta_tpos *p);
 int vtstsnc_tv(delta_state *d, delta_tpos *p);
 int vtsttmark_tv(delta_state *d, delta_tpos *p, uint8_t back);
 int test_ptr(delta_state *d);
+void lpta_movel(delta_state *d, uint8_t f);
+void lpta_mover(delta_state *d, uint8_t f);
+int  lpta_tstmover(delta_state *d, uint8_t f);
+int  setscan_l(delta_state *d, uint8_t f);
+int  setscan_r(delta_state *d, uint8_t f);
+int  setscan_nof_l(delta_state *d, uint8_t f);
+int  setscan_nof_r(delta_state *d, uint8_t f);
 int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f);
 
 /* Where the runtime tells its owner the spine moved. */
