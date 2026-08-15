@@ -52,8 +52,36 @@ def sizes(obj):
     return counts
 
 
+def rule_roots():
+    """Everything the generated rules call straight, minus the rules
+    themselves and the thunks. That is the real remaining surface, so it
+    beats guessing a root by hand."""
+    lift = importlib.import_module('delta-lift')
+    roots = set()
+    rules = set()
+    calls = set()
+    for obj in sorted(f for f in os.listdir(deps.ENUS) if f.endswith('.obj')):
+        for name, items in lift.read_functions(os.path.join(deps.ENUS, obj)):
+            if not lift.is_rule(items):
+                continue
+            rules.add(name)
+            data, tables = lift.find_data(items)
+            d = lift.Decoder(name, items, data, tables).run()
+            for _label, _start, block in d.blocks:
+                for op in block:
+                    if op[0] == 'call' and not op[1].startswith('ZZ'):
+                        calls.add(op[1])
+    for c in calls:
+        if c not in rules:
+            roots.add(c)
+    return sorted(roots)
+
+
 def main():
-    roots = sys.argv[1:] or ['DeltaProc_main']
+    if sys.argv[1:2] == ['--rules']:
+        roots = rule_roots()
+    else:
+        roots = sys.argv[1:] or ['DeltaProc_main']
     everything, size = {}, {}
     for o in deps.OBJECTS:
         path = os.path.join(deps.ENUS, o + '.obj')
