@@ -11,6 +11,7 @@
 #define AT_VARS(field, offset) \
     typedef char field##_at_##offset[offsetof(delta_vars, field) == offset ? 1 : -1]
 
+AT(sets, 0x0028);
 AT(unknown_3c, 0x003c);
 AT(lpta, 0x0040);
 AT(rpta, 0x0050);
@@ -2188,4 +2189,80 @@ int forto_adv_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
     d->unknown_3c = bound;
     tok->value = v->scan_ptr;
     return 2;
+}
+
+/* Where the scan's field points from where the scan is now. */
+static int32_t scan_here(delta_state *d)
+{
+    delta_vars *v = d->vars;
+
+    return *(int32_t *)(intptr_t)
+        (v->scan_ptr + (v->fence_base + v->scan_field) * 4) & ~3;
+}
+
+/* One step of a forto that must stop before a named token. It checks twice,
+   once on arriving and once after stepping past the statement, that there is
+   something real ahead that is not itself a sync. */
+int forto_adv_upto_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
+                     uint8_t f, delta_token *tok, const delta_token *end)
+{
+    delta_vars *v = d->vars;
+    int32_t nx;
+
+    if (!for_loop_preamble(d, tag, loop, f, tok))
+        return 1;
+
+    v->scan_rev = 1;
+
+    vscanadvUptoTokenOrMarker(d, end->value, 0);
+    if (v->scan_ptr == end->value)
+        return 0;
+
+    nx = scan_here(d);
+    if (nx == 0)
+        return 0;
+    if ((*(int32_t *)(intptr_t)nx & 2) != 0)
+        return 0;
+
+    if (!vscanadv(d, 1, 0))
+        return 0;
+    if (v->scan_ptr == end->value)
+        return 0;
+
+    vscanadvUptoTokenOrMarker(d, end->value, 0);
+    if (v->scan_ptr == end->value)
+        return 0;
+
+    nx = scan_here(d);
+    if (nx == 0)
+        return 0;
+    if ((*(int32_t *)(intptr_t)nx & 2) != 0)
+        return 0;
+
+    clearDeltaStackBack(d);
+    d->stack->unknown_9c = 0;
+    v->testing = 1;
+    d->unknown_3c = bound;
+    tok->value = v->scan_ptr;
+    return 2;
+}
+
+/* Hand the span between the two registers to one of the language's lookup
+   sets. A span that cannot be settled backtracks the rule. */
+int setd_lookup(delta_state *d, int32_t arg, int16_t set)
+{
+    uint8_t *desc;
+
+    if (d->lpta.node == 0 || d->rpta.node == 0)
+        return 1;
+
+    if (!vprt_range(d, &d->lpta, &d->rpta))
+        forceErrorBacktrack(d);
+
+    desc = d->sets + (int32_t)set * 0x24;
+
+    if (!setdlookup(d, d->lpta.node, d->rpta.node, desc, arg))
+        return 1;
+
+    return 0;
 }

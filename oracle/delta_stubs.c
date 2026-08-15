@@ -19,7 +19,11 @@ int  DeltaProc_main(void *d)               { (void)d; return 0; }
 int  ins_tokens(void *d)                   { (void)d; return 0; }
 int  ins_rdtoks(void *d)                   { (void)d; return 0; }
 int  actdlookup(void *d)                   { (void)d; return 0; }
-int  setdlookup(void *d)                   { (void)d; return 0; }
+int  setdlookup(void *d, int a, int b, void *c, int e)
+{
+    (void)d; (void)a; (void)b; (void)c; (void)e;
+    return 0;
+}
 int  vdictinit(void *d)                    { (void)d; return 0; }
 int  vlinkinit(void *d)                    { (void)d; return 0; }
 int  errorIgnore(void *a, void *b)         { (void)a; (void)b; return 0; }

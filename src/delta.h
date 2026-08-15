@@ -100,7 +100,10 @@ typedef struct {
 typedef struct delta_state delta_state;
 
 struct delta_state {
-    uint8_t      pad_0000[0x3c];
+    uint8_t      pad_0000[0x28];
+    uint8_t     *sets;            /* 0x0028, the language's lookup sets, one
+                                     0x24-byte descriptor each */
+    uint8_t      pad_002c[0x3c - 0x2c];
     int32_t      unknown_3c;      /* 0x003c, a forto's third parameter */
     delta_pta    lpta;            /* 0x0040 */
     delta_pta    rpta;            /* 0x0050 */
@@ -356,6 +359,14 @@ int  vdef_proj(delta_state *d, int32_t t, uint8_t f);
 int  vprt_range(delta_state *d, delta_tpos *a, delta_tpos *b);
 int  forto_adv_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
                  uint8_t f, delta_token *tok, const delta_token *end);
+int  forto_adv_upto_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
+                      uint8_t f, delta_token *tok, const delta_token *end);
+int  setd_lookup(delta_state *d, int32_t arg, int16_t set);
+
+/* Supplied by the language, not the runtime: match the span between the two
+   registers against one of its lookup sets. */
+int setdlookup(delta_state *d, int32_t from, int32_t to, void *set,
+               int32_t arg);
 int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f);
 
 /* Where the runtime tells its owner the spine moved. */

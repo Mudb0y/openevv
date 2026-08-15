@@ -131,6 +131,9 @@ extern int  ibm_vdef_proj(delta_state *, int32_t, uint8_t);
 extern int  ibm_vprt_range(delta_state *, delta_tpos *, delta_tpos *);
 extern int  ibm_forto_adv_r(delta_state *, int16_t, int16_t, int16_t, uint8_t,
                             delta_token *, const delta_token *);
+extern int  ibm_forto_adv_upto_r(delta_state *, int16_t, int16_t, int16_t,
+                                 uint8_t, delta_token *, const delta_token *);
+extern int  ibm_setd_lookup(delta_state *, int32_t, int16_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -152,6 +155,7 @@ typedef struct {
     int8_t      nsqf[0x20];       /* which fields decide the spine flags */
     int8_t      nsqm[0x20];       /* one mark per fenced field */
     uint8_t     owner[0x200];     /* what the runtime tells about a move */
+    uint8_t     sets[0x200];      /* the language's lookup set descriptors */
 } delta_world;
 
 static int total_cases;
@@ -195,6 +199,7 @@ static void world_link(delta_world *w)
     w->stack.nsq_fields = w->nsqf;
     w->vars.nsq_marks = w->nsqm;
     w->state.owner = w->owner;
+    w->state.sets = w->sets;
     w->state.fence_fill = (uint8_t)(rng_next() % FENCE_MAP);
 
     w->stack.names = w->names;
@@ -256,6 +261,7 @@ static void normalise(delta_world *w, delta_state *st, delta_vars *va,
     REBASE(sk->nsq_fields);
     REBASE(va->nsq_marks);
     REBASE(st->owner);
+    REBASE(st->sets);
     REBASE(va->back);
     REBASE(sk->top);
     REBASE(sk->limit);
@@ -367,6 +373,10 @@ static int world_differs(delta_world *a, delta_world *b)
     }
     if (region_differs(a, b, a->owner, b->owner, sizeof(a->owner))) {
         diff_where = "owner";
+        return 1;
+    }
+    if (region_differs(a, b, a->sets, b->sets, sizeof(a->sets))) {
+        diff_where = "sets";
         return 1;
     }
     diff_where = "none";
@@ -2637,6 +2647,109 @@ BEGIN(forto_adv_r)
         bad++;
 END(forto_adv_r)
 
+
+BEGIN(forto_adv_upto_r)
+    delta_token tm, to, em, eo;
+    int8_t f = build_tspine(m, o);
+    int16_t tag = (int16_t)rng_next();
+    int16_t loop = (int16_t)rng_next();
+    int16_t bound = (int16_t)rng_next();
+    int32_t which = (int32_t)(rng_next() % NSTMT);
+    int ra, rb, i;
+
+    if (f < 0) {
+        free(m); free(o);
+        break;
+    }
+    for (i = 0; i < FENCE_MAP; i++)
+        m->map[i] = o->map[i] = (uint8_t)(rng_next() % 4u);
+    for (i = 0; i < 4; i++) {
+        m->chars[i] = o->chars[i] = (uint8_t)i;
+        m->marks[i] = o->marks[i] = (uint8_t)(rng_next() % 2u);
+    }
+    m->vars.fence_count = o->vars.fence_count = (int8_t)(rng_next() % 3u);
+
+    tm.unknown_00 = to.unknown_00 = (int32_t)rng_next();
+    tm.value = (int32_t)(intptr_t)(m->nodes + 2 * 0x80);
+    to.value = (int32_t)(intptr_t)(o->nodes + 2 * 0x80);
+    em.unknown_00 = eo.unknown_00 = (int32_t)rng_next();
+    {
+        uint32_t k = rng_next() % 6u;
+
+        em.value = (int32_t)(intptr_t)(m->nodes + k * 0x80);
+        eo.value = (int32_t)(intptr_t)(o->nodes + k * 0x80);
+    }
+    m->state.lpta.field = o->state.lpta.field = f;
+
+    ra = ibm_forto_adv_upto_r(&m->state, tag, loop, bound, (uint8_t)which,
+                              &tm, &em);
+    rb = forto_adv_upto_r(&o->state, tag, loop, bound, (uint8_t)which,
+                          &to, &eo);
+
+    if (ra != rb)
+        bad++;
+    if (tm.value - (int32_t)(intptr_t)m != to.value - (int32_t)(intptr_t)o)
+        bad++;
+END(forto_adv_upto_r)
+
+/* setd_lookup backtracks a span it cannot settle, so each side needs a place
+   to land. The lookup itself is not part of the runtime and is stubbed, so
+   what this compares is the guard, the range settling and the descriptor the
+   set index picks out. */
+static int lookup_ibm(delta_state *d, int32_t arg, int16_t set)
+{
+    jmp_buf jb;
+    int r = -1;
+
+    d->vars->err_jmp = jb;
+    if (setjmp(jb) == 0)
+        r = ibm_setd_lookup(d, arg, set);
+    d->vars->err_jmp = 0;
+    return r;
+}
+
+static int lookup_ours(delta_state *d, int32_t arg, int16_t set)
+{
+    jmp_buf jb;
+    int r = -1;
+
+    d->vars->err_jmp = jb;
+    if (setjmp(jb) == 0)
+        r = setd_lookup(d, arg, set);
+    d->vars->err_jmp = 0;
+    return r;
+}
+
+BEGIN(setd_lookup)
+    static const uint8_t sets[4] = {0, 1, 2, 4};
+    delta_tpos am, ao, bm, bo;
+    int8_t f = build_tspine(m, o);
+    int16_t which = (int16_t)(rng_next() % 8u);
+    int32_t arg = (int32_t)rng_next();
+    int ra, rb;
+
+    if (f < 0) {
+        free(m); free(o);
+        break;
+    }
+    make_tpos(m, o, f, &am, &ao, sets[rng_next() % 4u]);
+    make_tpos(m, o, f, &bm, &bo, sets[rng_next() % 4u]);
+
+    /* Sometimes leave a register empty, which is the early way out. */
+    if (rng_next() % 4u == 0)
+        am.node = ao.node = 0;
+    if (rng_next() % 4u == 0)
+        bm.node = bo.node = 0;
+
+    m->state.lpta = am; m->state.rpta = bm;
+    o->state.lpta = ao; o->state.rpta = bo;
+
+    ra = lookup_ibm(&m->state, arg, which);
+    rb = lookup_ours(&o->state, arg, which);
+    if (ra != rb)
+        bad++;
+END(setd_lookup)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -2717,6 +2830,8 @@ int main(void)
     test_vdef_proj();
     test_vprt_range();
     test_forto_adv_r();
+    test_forto_adv_upto_r();
+    test_setd_lookup();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
