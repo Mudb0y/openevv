@@ -4820,3 +4820,101 @@ int calcHZ2ST(delta_state *d, const delta_loc *in, delta_loc *out)
     out->field = st;
     return 0;
 }
+
+/* Splice a statement into a field's chain between the two statements that
+   will stand either side of it, and mark it as carrying the field.
+
+   The original takes two arguments it never reads, and it tests each
+   neighbour for null only to choose which of that neighbour's links to
+   write, not to decide whether to write at all; a null neighbour is
+   therefore written through. Both are kept as they stand. */
+void project_rl(delta_state *d, delta_node *t, int32_t unused_10,
+                int32_t unused_14, delta_node *l, delta_node *r, uint8_t f)
+{
+    delta_vars *v = d->vars;
+    int32_t fb = v->fence_base + f;
+    int32_t *tw = (int32_t *)t;
+
+    (void)unused_10;
+    (void)unused_14;
+
+    tw[fb] |= 1;
+    CLRONESTM(t);
+
+    if (ALLNSQ(t) && v->nsq_marks[f] == 0)
+        CLRALLNSQ(t);
+
+    if (l == r)
+        return;
+
+    tw[3 + f] = (tw[3 + f] & 3) | (int32_t)(intptr_t)l;
+    tw[fb] = (tw[fb] & 3) | (int32_t)(intptr_t)r;
+
+    if (l != NULL && (*(const int32_t *)l & 2)) {
+        int32_t *lw = (int32_t *)l;
+
+        lw[fb] = (lw[fb] & 3) | (int32_t)(intptr_t)t;
+    } else {
+        ((int32_t *)l)[1] = (int32_t)(intptr_t)t;
+    }
+
+    if (r != NULL && (*(const int32_t *)r & 2)) {
+        int32_t *rw = (int32_t *)r;
+
+        rw[3 + f] = (rw[3 + f] & 3) | (int32_t)(intptr_t)t;
+    } else {
+        ((int32_t *)r)[0] = (int32_t)(intptr_t)t;
+    }
+}
+
+/* Look a phrase up in the dictionary's action table and hand back the two
+   statements its answer spans. The answer names how many statements to step
+   over from the left pointer for each end; markers along the way are
+   stepped over without counting. */
+int actd_lookup(delta_state *d, int16_t n, delta_token *outl,
+                delta_token *outr)
+{
+    delta_vars *v = d->vars;
+    const uint8_t *entry;
+    const uint8_t *p;
+    int32_t which;
+
+    if (!vprt_range(d, &d->lpta, &d->rpta))
+        forceErrorBacktrack(d);
+
+    entry = d->act_table + (int32_t)n * 0x28;
+    p = actdlookup(d, d->lpta.node, d->rpta.node, entry);
+    if (p == NULL)
+        return 1;
+
+    memcpy(&v->unknown_11ec, p + 2, 2);
+
+    for (which = 0; which <= 1; which++) {
+        uint8_t count = *p;
+        int32_t node = d->lpta.node;
+        int32_t steps = 0;
+
+        p++;
+        if (count == 0xff)
+            continue;
+
+        while (steps < count) {
+            if (node != 0 && (*(const int32_t *)(intptr_t)node & 2)) {
+                node = ((const int32_t *)(intptr_t)node)
+                    [v->fence_base + entry[8]] & -4;
+                continue;
+            }
+            node = ((const int32_t *)(intptr_t)node)[1] & -4;
+            steps++;
+        }
+
+        if (which == 0) {
+            if (outl != NULL)
+                outl->value = node;
+        } else if (outr != NULL) {
+            outr->value = node;
+        }
+    }
+
+    return 0;
+}

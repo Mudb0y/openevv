@@ -272,6 +272,11 @@ extern int  ibm_chstream(delta_state *, int16_t, uint8_t);
 extern int  ibm_calcWPM2ETI(delta_state *, const delta_loc *, delta_loc *);
 extern int  ibm_calcST2HZ(delta_state *, const delta_loc *, delta_loc *);
 extern int  ibm_calcHZ2ST(delta_state *, const delta_loc *, delta_loc *);
+extern void ibm_project_rl(delta_state *, delta_node *, int32_t, int32_t,
+                           delta_node *, delta_node *, uint8_t);
+extern int  ibm_actd_lookup(delta_state *, int16_t, delta_token *,
+                            delta_token *);
+extern const unsigned char *actd_stub_answer;
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -5923,6 +5928,124 @@ BEGIN(chstream)
         bad++;
 END(chstream)
 
+
+BEGIN(project_rl)
+    /* Three real nodes and the field's chain between them. A null
+       neighbour is written through by the original, so both are real. */
+    enum { FB = 15, STEP = 0x80 };
+    uint8_t f = (uint8_t)(rng_next() % NSTMT);
+    int32_t x = (int32_t)rng_next();
+    int32_t y = (int32_t)rng_next();
+    int i;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.fence_base = o->vars.fence_base = FB;
+    for (i = 0; i < 0x20; i++)
+        m->nsqm[i] = o->nsqm[i] = (int8_t)(rng_next() % 2u);
+
+    for (i = 0; i < 3; i++) {
+        int j;
+
+        for (j = 0; j < 0x20; j++) {
+            uint32_t r = rng_next();
+
+            ((int32_t *)(m->nodes + i * STEP))[j] = (int32_t)(r & 3u);
+            ((int32_t *)(o->nodes + i * STEP))[j] = (int32_t)(r & 3u);
+        }
+    }
+
+    ibm_project_rl(&m->state, (delta_node *)(m->nodes + STEP), x, y,
+                   (delta_node *)m->nodes,
+                   (delta_node *)(m->nodes + 2 * STEP), f);
+    project_rl(&o->state, (delta_node *)(o->nodes + STEP), x, y,
+               (delta_node *)o->nodes,
+               (delta_node *)(o->nodes + 2 * STEP), f);
+
+    if (region_differs(m, o, m->nodes, o->nodes, 3 * STEP))
+        bad++;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(project_rl)
+
+
+static void run_actd(delta_state *d, int16_t n, delta_token *l,
+                     delta_token *r, int ours)
+{
+    GUARDED(ours ? (void)actd_lookup(d, n, l, r)
+                 : (void)ibm_actd_lookup(d, n, l, r));
+}
+
+BEGIN(actd_lookup)
+    /* The range check at the top needs the timing spine its own test uses.
+       The lookup itself belongs to the language, so the harness answers it
+       and both sides then walk the same counts over the same spine. */
+    static const uint8_t sets[4] = {0, 1, 2, 4};
+    static unsigned char answer[4];
+    static unsigned char entry[0x28];
+    delta_tpos am, ao, bm, bo;
+    delta_token tlm, tlo, trm, tro;
+    int8_t f = build_tspine(m, o);
+    int found = (int)(rng_next() % 4u) != 0;
+
+    if (f < 0) {
+        free(m); free(o);
+        continue;
+    }
+    make_tpos(m, o, f, &am, &ao, sets[rng_next() % 4u]);
+    make_tpos(m, o, f, &bm, &bo, sets[rng_next() % 4u]);
+    m->state.lpta = am;
+    o->state.lpta = ao;
+    m->state.rpta = bm;
+    o->state.rpta = bo;
+
+    memset(entry, 0, sizeof(entry));
+    entry[8] = (unsigned char)f;
+    /* One step at most, so the walk cannot run off the end of the spine. */
+    answer[0] = (unsigned char)(rng_next() % 2u);
+    answer[1] = (rng_next() % 3u == 0) ? 0xff
+                                       : (unsigned char)(rng_next() % 2u);
+    answer[2] = (unsigned char)rng_next();
+    answer[3] = (unsigned char)rng_next();
+
+    m->state.act_table = entry;
+    o->state.act_table = entry;
+    actd_stub_answer = found ? answer : NULL;
+
+    memset(&tlm, 0, sizeof(tlm));
+    memset(&trm, 0, sizeof(trm));
+    tlo = tlm;
+    tro = trm;
+
+    run_actd(&m->state, 0, &tlm, &trm, 0);
+    run_actd(&o->state, 0, &tlo, &tro, 1);
+
+    if ((tlm.value == 0) != (tlo.value == 0))
+        bad++;
+    else if (tlm.value != 0
+             && tlm.value - (int32_t)(intptr_t)m
+                != tlo.value - (int32_t)(intptr_t)o)
+        bad++;
+    else if ((trm.value == 0) != (tro.value == 0))
+        bad++;
+    else if (trm.value != 0
+             && trm.value - (int32_t)(intptr_t)m
+                != tro.value - (int32_t)(intptr_t)o)
+        bad++;
+
+    m->state.act_table = o->state.act_table = NULL;
+    actd_stub_answer = NULL;
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+    memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+    memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+    memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+    memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(actd_lookup)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -6068,6 +6191,8 @@ int main(void)
     test_modulo();
     test_ctxt_clstr();
     test_chstream();
+    test_project_rl();
+    test_actd_lookup();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

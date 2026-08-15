@@ -203,7 +203,9 @@ struct delta_state {
     uint8_t      pad_0000[0x28];
     uint8_t     *sets;            /* 0x0028, the language's lookup sets, one
                                      0x24-byte descriptor each */
-    uint8_t      pad_002c[0x3c - 0x2c];
+    uint8_t     *act_table;       /* 0x002c, the dictionary's action table,
+                                     one 0x28-byte entry each */
+    uint8_t      pad_0030[0x3c - 0x30];
     int32_t      unknown_3c;      /* 0x003c, a forto's third parameter */
     delta_pta    lpta;            /* 0x0040 */
     delta_pta    rpta;            /* 0x0050 */
@@ -598,6 +600,14 @@ int  chstream(delta_state *d, int16_t v, uint8_t f);
 int  calcWPM2ETI(delta_state *d, const delta_loc *in, delta_loc *out);
 int  calcST2HZ(delta_state *d, const delta_loc *in, delta_loc *out);
 int  calcHZ2ST(delta_state *d, const delta_loc *in, delta_loc *out);
+void project_rl(delta_state *d, delta_node *t, int32_t unused_10,
+                int32_t unused_14, delta_node *l, delta_node *r, uint8_t f);
+int  actd_lookup(delta_state *d, int16_t n, delta_token *outl,
+                 delta_token *outr);
+
+/* Supplied by the language module, not by the runtime. */
+const uint8_t *actdlookup(delta_state *d, int32_t l, int32_t r,
+                          const void *entry);
 
 /* The runtime's constant tables, lifted out of the original by
    tools/delta-tables.py. */

@@ -22,7 +22,15 @@ int  ins_tokens(void *d, int f, const void *s, int n, int a)
     return 0;
 }
 int  ins_rdtoks(void *d)                   { (void)d; return 0; }
-int  actdlookup(void *d)                   { (void)d; return 0; }
+/* The language supplies the real lookup. The harness answers with whatever
+   the test has arranged, so both sides walk the same table. */
+const unsigned char *actd_stub_answer;
+const unsigned char *actdlookup(void *d, int l, int r,
+                                const void *entry)
+{
+    (void)d; (void)l; (void)r; (void)entry;
+    return actd_stub_answer;
+}
 int  setdlookup(void *d, int a, int b, void *c, int e)
 {
     (void)d; (void)a; (void)b; (void)c; (void)e;
