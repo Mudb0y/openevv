@@ -3394,3 +3394,116 @@ void insert_r(delta_state *d, int8_t f, const uint8_t *str, uint8_t n,
         || !ins_tokens(d, f, n, str, 0))
         forceErrorBacktrack(d);
 }
+
+/* Open a range between two positions.
+
+   With no mode the two are compared and, if they differ, each is settled and
+   given a place in the field. With one, the first position decides the shape:
+   a leftover offset cuts the run there, an exact position that sits on a
+   whole statement takes that statement's ends, and anything else has a sync
+   put in beside it. The three modes name which ends are wanted. */
+int vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
+               uint8_t mode)
+{
+    int32_t base = d->vars->fence_base;
+    int32_t r;
+
+    if (mode == 0) {
+        delta_tpos ca;
+        delta_tpos cb;
+
+        memcpy(&ca, a, sizeof(ca));
+        memcpy(&cb, b, sizeof(cb));
+
+        if (vcomp_pta(d, &ca, &cb))
+            return 1;
+        if (d->vars->compared_equal == 0)
+            return 1;
+
+        if (!vtmark_tv(d, a, 0))
+            return 1;
+        if (!vtmark_tv(d, b, 1))
+            return 1;
+
+        if (!vdef_proj(d, a->node, (uint8_t)f))
+            return 1;
+        if (!vdef_proj(d, b->node, (uint8_t)f))
+            return 1;
+
+        return 0;
+    }
+
+    if ((*(int32_t *)(intptr_t)
+         (a->node + (base + a->field) * 4) & 1) != 0
+        && a->offset == 0)
+        r = 3;
+    else
+        r = vnormalize(d, a);
+
+    if (r == 2) {
+        int32_t off = a->offset;
+
+        a->node = vsplit_time(d, (uint8_t)a->field, a->node, off);
+        b->node = (int32_t)(intptr_t)vins_sync(d, (uint8_t)a->field, a->node,
+            *(int32_t *)(intptr_t)
+            (a->node + (base + a->field) * 4) & ~3);
+
+        if (b->node == 0)
+            return 1;
+    } else if (r == 3 || r == 4) {
+        if (r == 3) {
+            b->node = a->node;
+
+            if (mode == 0xcd || mode == 0xce)
+                a->node = (int32_t)(intptr_t)
+                    lmost(d, a->field, (delta_node *)(intptr_t)a->node);
+
+            if (mode == 0xcd || mode == 0xcf)
+                b->node = (int32_t)(intptr_t)
+                    rmost(d, a->field, (int32_t *)(intptr_t)b->node);
+
+            /* Two different ends is already a range; the same one falls
+               through to have a sync put in beside it. */
+            if (a->node != b->node)
+                goto settle;
+        }
+
+        if (mode == 0xce
+            || (mode == 0xcd && a->node == d->stack->spine_r)) {
+            if (a->node == d->stack->spine_l)
+                return 1;
+
+            b->node = a->node;
+            a->node = (int32_t)(intptr_t)vins_sync(d, (uint8_t)a->field,
+                *(int32_t *)(intptr_t)
+                (a->node + 0xc + a->field * 4) & ~3, a->node);
+
+            if (a->node == 0)
+                return 1;
+        } else {
+            if (a->node == d->stack->spine_r)
+                return 1;
+
+            b->node = (int32_t)(intptr_t)vins_sync(d, (uint8_t)a->field,
+                a->node,
+                *(int32_t *)(intptr_t)
+                (a->node + (base + a->field) * 4) & ~3);
+
+            if (b->node == 0)
+                return 1;
+        }
+    } else {
+        return 1;
+    }
+
+settle:
+    a->flags = 1;
+    b->flags = 1;
+
+    if (!vdef_proj(d, a->node, (uint8_t)f))
+        return 1;
+    if (!vdef_proj(d, b->node, (uint8_t)f))
+        return 1;
+
+    return 0;
+}

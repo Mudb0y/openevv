@@ -466,6 +466,8 @@ int  vrange_l(delta_state *d, delta_tpos *p, delta_tpos *out, int8_t f,
               uint8_t dup);
 int  vrange_r(delta_state *d, delta_tpos *p, delta_tpos *out, int8_t f,
               uint8_t dup);
+int  vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
+                uint8_t mode);
 void insert_l(delta_state *d, int8_t f, const uint8_t *str, uint8_t n,
               uint8_t dup);
 void insert_r(delta_state *d, int8_t f, const uint8_t *str, uint8_t n,

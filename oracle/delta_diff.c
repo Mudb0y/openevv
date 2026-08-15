@@ -178,6 +178,8 @@ extern int  ibm_vrange_l(delta_state *, delta_tpos *, delta_tpos *, int8_t,
                          uint8_t);
 extern int  ibm_vrange_r(delta_state *, delta_tpos *, delta_tpos *, int8_t,
                          uint8_t);
+extern int  ibm_vrange_2pt(delta_state *, delta_tpos *, delta_tpos *, int8_t,
+                           uint8_t);
 extern void ibm_insert_l(delta_state *, int8_t, const uint8_t *, uint8_t,
                          uint8_t);
 extern void ibm_insert_r(delta_state *, int8_t, const uint8_t *, uint8_t,
@@ -4029,6 +4031,75 @@ BEGIN(insert_points)
     insert_ours(&o->state, (int8_t)f, str, 2, dup, left);
 END(insert_points)
 
+
+BEGIN(vrange_2pt)
+    /* No mode at all sends this through vcomp_pta, whose remembered walk
+       follows the forward links and never leaves this spine's self-pointing
+       end. That path is what vcomp_pta's own test is for. */
+    static const uint8_t modes[4] = {0xcd, 0xce, 0xcf, 0x11};
+    uint8_t f;
+    uint8_t mode = modes[rng_next() % 4u];
+    delta_tpos am, ao, bm, bo;
+    int ra, rb, i;
+
+    if (!build_time_edit(m, o, &f)) {
+        free(m); free(o);
+        continue;
+    }
+    m->vars.relink = o->vars.relink = 1;
+    for (i = 0; i < 0x20; i++)
+        m->nsqm[i] = o->nsqm[i] = 0;
+    for (i = 0; i < 50; i++) {
+        m->stack.left_a[i] = o->stack.left_a[i] = 0;
+        m->stack.left_b[i] = o->stack.left_b[i] = 0;
+        m->stack.left_ans[i] = o->stack.left_ans[i] = 0;
+        m->stack.left_hits[i] = o->stack.left_hits[i] = 0;
+    }
+    m->stack.left_next = o->stack.left_next = 0;
+    m->stack.left_stamp = o->stack.left_stamp = spine_changed;
+
+    memset(&am, 0, sizeof(am));
+    am.node = (int32_t)(intptr_t)(m->nodes + 0x80);
+    am.field = (int8_t)f;
+    /* Exact: a leftover offset would cut, which vsplit_time covers itself. */
+    am.offset = 0;
+    am.flags = (uint8_t)(rng_next() % 2u);
+    ao = am;
+    ao.node = (int32_t)(intptr_t)(o->nodes + 0x80);
+
+    memset(&bm, 0, sizeof(bm));
+    bm.node = (int32_t)(intptr_t)(m->nodes + 2 * 0x80);
+    bm.field = (int8_t)f;
+    bm.offset = 0;
+    bm.flags = (uint8_t)(rng_next() % 2u);
+    bo = bm;
+    bo.node = (int32_t)(intptr_t)(o->nodes + 2 * 0x80);
+
+    ra = ibm_vrange_2pt(&m->state, &am, &bm, (int8_t)f, mode);
+    rb = vrange_2pt(&o->state, &ao, &bo, (int8_t)f, mode);
+
+    if (ra != rb)
+        bad++;
+    if (am.flags != ao.flags || bm.flags != bo.flags
+        || am.offset != ao.offset || bm.offset != bo.offset)
+        bad++;
+    if ((am.node == 0) != (ao.node == 0))
+        bad++;
+    else if (am.node != 0
+             && am.node - (int32_t)(intptr_t)m != ao.node - (int32_t)(intptr_t)o)
+        bad++;
+    if ((bm.node == 0) != (bo.node == 0))
+        bad++;
+    else if (bm.node != 0
+             && bm.node - (int32_t)(intptr_t)m != bo.node - (int32_t)(intptr_t)o)
+        bad++;
+
+    for (i = 0; i < 50; i++) {
+        m->stack.left_a[i] = o->stack.left_a[i] = 0;
+        m->stack.left_b[i] = o->stack.left_b[i] = 0;
+    }
+END(vrange_2pt)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -4133,6 +4204,7 @@ int main(void)
     test_point_edits();
     test_vrange();
     test_insert_points();
+    test_vrange_2pt();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
