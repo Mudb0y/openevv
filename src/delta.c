@@ -3804,3 +3804,38 @@ int succeed(delta_state *d)
 {
     return vretproc(d, 1);
 }
+
+/* Put a small integer into a rule's variable. A variable of one of the sized
+   kinds takes it directly; one the language declares goes through vassign.
+   A kind below those is a fault and backtracks. */
+void move_i(delta_state *d, delta_loc *loc, int16_t value)
+{
+    delta_operand a;
+    delta_operand b;
+
+    if (d->vars->testing)
+        save_var(d, loc);
+
+    if (loc->kind == DK_SYNC || loc->kind == DK_LONG) {
+        loc->value = value;
+        return;
+    }
+
+    if (loc->kind == DK_SHORT2) {
+        loc->field = value;
+        return;
+    }
+
+    if (loc->kind < 0) {
+        forceErrorBacktrack(d);
+        return;
+    }
+
+    a.kind = DK_SHORT2;
+    a.ptr = &value;
+    a.flag = 0;
+
+    vinitloc_new(d, &b, loc);
+    vassign(d, &b, &a);
+    reset_field(loc);
+}

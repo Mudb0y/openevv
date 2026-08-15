@@ -525,6 +525,7 @@ int  ventproc(delta_state *d, delta_actrec *rec, uint8_t *index,
               uint8_t *chars, uint8_t *marks, void *jb);
 int  vretproc(delta_state *d, int32_t tag);
 int  succeed(delta_state *d);
+void move_i(delta_state *d, delta_loc *loc, int16_t value);
 
 /* Supplied by the language, not the runtime: lay a string of values into a
    range the caller has already opened. */

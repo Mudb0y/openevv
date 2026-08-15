@@ -199,6 +199,7 @@ extern int  ibm_ventproc(delta_state *, delta_actrec *, uint8_t *, uint8_t *,
                          uint8_t *, void *);
 extern int  ibm_vretproc(delta_state *, int32_t);
 extern int  ibm_succeed(delta_state *);
+extern void ibm_move_i(delta_state *, delta_loc *, int16_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -4439,6 +4440,79 @@ BEGIN(rule_frame)
 
 END(rule_frame)
 
+
+static void move_ibm(delta_state *d, delta_loc *loc, int16_t v)
+{
+    jmp_buf jb;
+
+    d->vars->err_jmp = jb;
+    if (setjmp(jb) == 0)
+        ibm_move_i(d, loc, v);
+    d->vars->err_jmp = 0;
+}
+
+static void move_ours(delta_state *d, delta_loc *loc, int16_t v)
+{
+    jmp_buf jb;
+
+    d->vars->err_jmp = jb;
+    if (setjmp(jb) == 0)
+        move_i(d, loc, v);
+    d->vars->err_jmp = 0;
+}
+
+BEGIN(move_i)
+    /* Every kind, including the ones that only backtrack, since each side
+       has its own place to land. The byte and short kinds are left out when
+       the rule is under test, because saving one copies through the pointer
+       vinitloc_new never sets; that is the original's own hazard and the
+       save_var test leaves them out for the same reason. */
+    static const int16_t kinds[7] = {-1, -2, -3, -4, -5, -6, 0};
+    static const int16_t safe[4] = {-3, -4, -6, 0};
+    delta_loc *lm = (delta_loc *)(m->nodes + 0x300);
+    delta_loc *lo = (delta_loc *)(o->nodes + 0x300);
+    int16_t v = (int16_t)rng_next();
+    int16_t kind;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    memset(m->records, 0, RECORDS);
+    memset(o->records, 0, RECORDS);
+    m->stack.size_ac = o->stack.size_ac = 12;
+    m->vars.testing = o->vars.testing = (int8_t)(rng_next() % 2u);
+    m->vars.error_thrown = o->vars.error_thrown = 0;
+
+    kind = m->vars.testing ? safe[rng_next() % 4u] : kinds[rng_next() % 7u];
+
+    if (kind == 0)
+        kind = (int16_t)(rng_next() % NSTMT);
+
+    memset(lm, 0, sizeof(*lm));
+    memset(lo, 0, sizeof(*lo));
+    lm->kind = lo->kind = kind;
+    lm->field = lo->field = (kind >= 0)
+        ? (int16_t)(rng_next() % (uint32_t)vstmtbl[kind].nfields)
+        : (int16_t)rng_next();
+    /* The value a variable of a language kind holds sits in the record
+       itself, so this is a number in every case and never a pointer. */
+    lm->value = lo->value = (int32_t)rng_next();
+
+    move_ibm(&m->state, lm, v);
+    move_ours(&o->state, lo, v);
+
+    /* Saving a variable records where it came from, and that address is a
+       different one in each world. */
+    if (m->vars.testing) {
+        *(int32_t *)(m->stack.top + 4) = 0;
+        *(int32_t *)(o->stack.top + 4) = 0;
+    }
+
+    if (lm->kind != lo->kind || lm->field != lo->field)
+        bad++;
+    else if (region_differs(m, o, m->nodes, o->nodes, sizeof(m->nodes)))
+        bad++;
+END(move_i)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -4548,6 +4622,7 @@ int main(void)
     test_var_edits();
     test_reinit();
     test_rule_frame();
+    test_move_i();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
