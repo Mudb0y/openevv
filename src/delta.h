@@ -468,14 +468,21 @@ int  vrange_r(delta_state *d, delta_tpos *p, delta_tpos *out, int8_t f,
               uint8_t dup);
 int  vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
                 uint8_t mode);
-void insert_l(delta_state *d, int8_t f, const uint8_t *str, uint8_t n,
+void insert_l(delta_state *d, int8_t f, uint8_t n, const uint8_t *str,
               uint8_t dup);
-void insert_r(delta_state *d, int8_t f, const uint8_t *str, uint8_t n,
+void insert_r(delta_state *d, int8_t f, uint8_t n, const uint8_t *str,
               uint8_t dup);
+int  insert_2pt_s(delta_state *d, uint8_t f, uint8_t n, const uint8_t *str,
+                  uint8_t mode);
+int  insert_2pt_i(delta_state *d, uint8_t f, uint8_t n, const uint8_t *str,
+                  uint8_t mode);
+int  delete_2pt(delta_state *d, uint8_t f, uint8_t mode);
+int  mark_s(delta_state *d, uint8_t f, uint8_t fld, uint8_t value,
+            uint8_t mode);
 
 /* Supplied by the language, not the runtime: lay a string of values into a
    range the caller has already opened. */
-int ins_tokens(delta_state *d, int8_t f, uint8_t n, const uint8_t *str,
+int ins_tokens(delta_state *d, int8_t f, const uint8_t *str, uint8_t n,
                int32_t arg);
 void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r);
 

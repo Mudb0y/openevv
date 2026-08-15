@@ -16,9 +16,9 @@ void dlang_delete(void *d)                 { (void)d; }
 int  eloqc_new(void *d)                    { (void)d; return 0; }
 void eloqc_delete(void *d)                 { (void)d; }
 int  DeltaProc_main(void *d)               { (void)d; return 0; }
-int  ins_tokens(void *d, int f, int n, const void *s, int a)
+int  ins_tokens(void *d, int f, const void *s, int n, int a)
 {
-    (void)d; (void)f; (void)n; (void)s; (void)a;
+    (void)d; (void)f; (void)s; (void)n; (void)a;
     return 0;
 }
 int  ins_rdtoks(void *d)                   { (void)d; return 0; }

@@ -3379,19 +3379,19 @@ int vrange_r(delta_state *d, delta_tpos *p, delta_tpos *out, int8_t f,
 /* What a rule writes when it inserts at a point: open a range on one side of
    the left register, then let the language fill it. Either failing
    backtracks. */
-void insert_l(delta_state *d, int8_t f, const uint8_t *str, uint8_t n,
+void insert_l(delta_state *d, int8_t f, uint8_t n, const uint8_t *str,
               uint8_t dup)
 {
     if (!vrange_l(d, &d->rpta, &d->lpta, f, dup)
-        || !ins_tokens(d, f, n, str, 0))
+        || !ins_tokens(d, f, str, n, 0))
         forceErrorBacktrack(d);
 }
 
-void insert_r(delta_state *d, int8_t f, const uint8_t *str, uint8_t n,
+void insert_r(delta_state *d, int8_t f, uint8_t n, const uint8_t *str,
               uint8_t dup)
 {
     if (!vrange_r(d, &d->lpta, &d->rpta, f, dup)
-        || !ins_tokens(d, f, n, str, 0))
+        || !ins_tokens(d, f, str, n, 0))
         forceErrorBacktrack(d);
 }
 
@@ -3504,6 +3504,50 @@ settle:
         return 1;
     if (!vdef_proj(d, b->node, (uint8_t)f))
         return 1;
+
+    return 0;
+}
+
+/* The two-point spellings: open a range between the registers, then fill,
+   empty or mark it. */
+int insert_2pt_s(delta_state *d, uint8_t f, uint8_t n, const uint8_t *str,
+                 uint8_t mode)
+{
+    if (vrange_2pt(d, &d->lpta, &d->rpta, (int8_t)f, mode))
+        return 1;
+
+    ins_tokens_s(d, f, str, n, 0);
+    return 0;
+}
+
+int insert_2pt_i(delta_state *d, uint8_t f, uint8_t n, const uint8_t *str,
+                 uint8_t mode)
+{
+    if (vrange_2pt(d, &d->lpta, &d->rpta, (int8_t)f, mode))
+        return 1;
+
+    ins_tokens_i(d, f, str, n, 0);
+    return 0;
+}
+
+int delete_2pt(delta_state *d, uint8_t f, uint8_t mode)
+{
+    if (vrange_2pt(d, &d->lpta, &d->rpta, (int8_t)f, mode))
+        return 1;
+
+    vdel_2pt(d, f, d->lpta.node, d->rpta.node);
+    return 0;
+}
+
+/* Write one byte into a field of every statement in the range. As in vmark,
+   the address handed on is of the argument itself. */
+int mark_s(delta_state *d, uint8_t f, uint8_t fld, uint8_t value, uint8_t mode)
+{
+    if (vrange_2pt(d, &d->lpta, &d->rpta, (int8_t)f, mode))
+        return 1;
+
+    if (vstmtbl[f].fields[fld].kind == DK_UBYTE)
+        vmark(d, f, fld, d->lpta.node, d->rpta.node, &value);
 
     return 0;
 }

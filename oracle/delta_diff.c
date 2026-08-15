@@ -180,10 +180,16 @@ extern int  ibm_vrange_r(delta_state *, delta_tpos *, delta_tpos *, int8_t,
                          uint8_t);
 extern int  ibm_vrange_2pt(delta_state *, delta_tpos *, delta_tpos *, int8_t,
                            uint8_t);
-extern void ibm_insert_l(delta_state *, int8_t, const uint8_t *, uint8_t,
+extern void ibm_insert_l(delta_state *, int8_t, uint8_t, const uint8_t *,
                          uint8_t);
-extern void ibm_insert_r(delta_state *, int8_t, const uint8_t *, uint8_t,
+extern void ibm_insert_r(delta_state *, int8_t, uint8_t, const uint8_t *,
                          uint8_t);
+extern int  ibm_insert_2pt_s(delta_state *, uint8_t, uint8_t, const uint8_t *,
+                             uint8_t);
+extern int  ibm_insert_2pt_i(delta_state *, uint8_t, uint8_t, const uint8_t *,
+                             uint8_t);
+extern int  ibm_delete_2pt(delta_state *, uint8_t, uint8_t);
+extern int  ibm_mark_s(delta_state *, uint8_t, uint8_t, uint8_t, uint8_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -3969,32 +3975,32 @@ END(vrange)
 /* Both of these backtrack when the range cannot be opened, and the language
    call that would fill it is not part of the runtime, so what is compared is
    the range opening and the backtrack. */
-static void insert_ibm(delta_state *d, int8_t f, const uint8_t *str,
-                       uint8_t n, uint8_t dup, int left)
+static void insert_ibm(delta_state *d, int8_t f, uint8_t n,
+                       const uint8_t *str, uint8_t dup, int left)
 {
     jmp_buf jb;
 
     d->vars->err_jmp = jb;
     if (setjmp(jb) == 0) {
         if (left)
-            ibm_insert_l(d, f, str, n, dup);
+            ibm_insert_l(d, f, n, str, dup);
         else
-            ibm_insert_r(d, f, str, n, dup);
+            ibm_insert_r(d, f, n, str, dup);
     }
     d->vars->err_jmp = 0;
 }
 
-static void insert_ours(delta_state *d, int8_t f, const uint8_t *str,
-                        uint8_t n, uint8_t dup, int left)
+static void insert_ours(delta_state *d, int8_t f, uint8_t n,
+                        const uint8_t *str, uint8_t dup, int left)
 {
     jmp_buf jb;
 
     d->vars->err_jmp = jb;
     if (setjmp(jb) == 0) {
         if (left)
-            insert_l(d, f, str, n, dup);
+            insert_l(d, f, n, str, dup);
         else
-            insert_r(d, f, str, n, dup);
+            insert_r(d, f, n, str, dup);
     }
     d->vars->err_jmp = 0;
 }
@@ -4027,8 +4033,8 @@ BEGIN(insert_points)
     m->state.lpta.flags = o->state.lpta.flags = (uint8_t)(rng_next() % 2u);
     m->state.rpta.flags = o->state.rpta.flags = (uint8_t)(rng_next() % 2u);
 
-    insert_ibm(&m->state, (int8_t)f, str, 2, dup, left);
-    insert_ours(&o->state, (int8_t)f, str, 2, dup, left);
+    insert_ibm(&m->state, (int8_t)f, 2, str, dup, left);
+    insert_ours(&o->state, (int8_t)f, 2, str, dup, left);
 END(insert_points)
 
 
@@ -4099,6 +4105,60 @@ BEGIN(vrange_2pt)
         m->stack.left_b[i] = o->stack.left_b[i] = 0;
     }
 END(vrange_2pt)
+
+
+BEGIN(two_point_edits)
+    static const uint8_t modes[4] = {0xcd, 0xce, 0xcf, 0x11};
+    uint8_t f;
+    uint8_t mode = modes[rng_next() % 4u];
+    uint8_t str[4];
+    /* The byte spelling is left out: it can only feed a statement whose
+       first field is a byte, and the range code here needs a long or a
+       short. ins_tokens tests that pairing itself. */
+    uint32_t which = 1u + rng_next() % 3u;
+    int ra, rb, i;
+
+    if (!build_time_edit(m, o, &f)) {
+        free(m); free(o);
+        continue;
+    }
+    m->vars.relink = o->vars.relink = 1;
+    for (i = 0; i < 0x20; i++)
+        m->nsqm[i] = o->nsqm[i] = 0;
+    for (i = 0; i < 4; i++)
+        str[i] = (uint8_t)rng_next();
+
+    m->state.lpta.node = (int32_t)(intptr_t)(m->nodes + 0x80);
+    o->state.lpta.node = (int32_t)(intptr_t)(o->nodes + 0x80);
+    m->state.rpta.node = (int32_t)(intptr_t)(m->nodes + 2 * 0x80);
+    o->state.rpta.node = (int32_t)(intptr_t)(o->nodes + 2 * 0x80);
+    m->state.lpta.field = o->state.lpta.field = (int8_t)f;
+    m->state.rpta.field = o->state.rpta.field = (int8_t)f;
+    m->state.lpta.offset = o->state.lpta.offset = 0;
+    m->state.rpta.offset = o->state.rpta.offset = 0;
+    m->state.lpta.flags = o->state.lpta.flags = (uint8_t)(rng_next() % 2u);
+    m->state.rpta.flags = o->state.rpta.flags = (uint8_t)(rng_next() % 2u);
+
+    if (which == 1) {
+        ra = ibm_insert_2pt_i(&m->state, f, 2, str, mode);
+        rb = insert_2pt_i(&o->state, f, 2, str, mode);
+    } else if (which == 2) {
+        ra = ibm_delete_2pt(&m->state, f, mode);
+        rb = delete_2pt(&o->state, f, mode);
+    } else {
+        uint8_t fld = (uint8_t)(rng_next() % (uint32_t)vstmtbl[f].nfields);
+        uint8_t v = (uint8_t)(rng_next() % 4u);
+
+        ra = ibm_mark_s(&m->state, f, fld, v, mode);
+        rb = mark_s(&o->state, f, fld, v, mode);
+    }
+
+    if (ra != rb)
+        bad++;
+
+    /* vmark parks the address of its own argument, which is a stack one. */
+    m->stack.mark_fld = o->stack.mark_fld = NULL;
+END(two_point_edits)
 
 int main(void)
 {
@@ -4205,6 +4265,7 @@ int main(void)
     test_vrange();
     test_insert_points();
     test_vrange_2pt();
+    test_two_point_edits();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
