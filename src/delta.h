@@ -379,6 +379,7 @@ int  setd_lookup(delta_state *d, int32_t arg, int16_t set);
 int  vmark(delta_state *d, uint8_t st, uint8_t fld, int32_t t, int32_t stop,
            const void *value);
 int  visleft(delta_state *d, int32_t a, int32_t b);
+int  visright(delta_state *d, int32_t a, int32_t b);
 
 /* Supplied by the language, not the runtime: match the span between the two
    registers against one of its lookup sets. */

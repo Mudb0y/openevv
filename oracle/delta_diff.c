@@ -137,6 +137,7 @@ extern int  ibm_setd_lookup(delta_state *, int32_t, int16_t);
 extern int  ibm_vmark(delta_state *, uint8_t, uint8_t, int32_t, int32_t,
                       const void *);
 extern int  ibm_visleft(delta_state *, int32_t, int32_t);
+extern int  ibm_visright(delta_state *, int32_t, int32_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -2845,10 +2846,17 @@ BEGIN(visleft)
         o->stack.left_b[k] = (int32_t)(intptr_t)(o->nodes + ib * 0x80);
     }
 
-    ra = ibm_visleft(&m->state, (int32_t)(intptr_t)(m->nodes + ia * 0x80),
-                     (int32_t)(intptr_t)(m->nodes + ib * 0x80));
-    rb = visleft(&o->state, (int32_t)(intptr_t)(o->nodes + ia * 0x80),
-                 (int32_t)(intptr_t)(o->nodes + ib * 0x80));
+    if (rng_next() % 2u) {
+        ra = ibm_visleft(&m->state, (int32_t)(intptr_t)(m->nodes + ia * 0x80),
+                         (int32_t)(intptr_t)(m->nodes + ib * 0x80));
+        rb = visleft(&o->state, (int32_t)(intptr_t)(o->nodes + ia * 0x80),
+                     (int32_t)(intptr_t)(o->nodes + ib * 0x80));
+    } else {
+        ra = ibm_visright(&m->state, (int32_t)(intptr_t)(m->nodes + ia * 0x80),
+                          (int32_t)(intptr_t)(m->nodes + ib * 0x80));
+        rb = visright(&o->state, (int32_t)(intptr_t)(o->nodes + ia * 0x80),
+                      (int32_t)(intptr_t)(o->nodes + ib * 0x80));
+    }
     if (ra != rb)
         bad++;
 

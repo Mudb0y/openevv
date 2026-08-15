@@ -2418,3 +2418,8 @@ int visleft(delta_state *d, int32_t a, int32_t b)
         s->left_ans[slot] = 1;
     return 1;
 }
+
+int visright(delta_state *d, int32_t a, int32_t b)
+{
+    return visleft(d, b, a);
+}
