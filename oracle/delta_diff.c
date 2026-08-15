@@ -230,6 +230,22 @@ extern int  ibm_forall_to_test(delta_state *, delta_loc *, delta_loc *);
 extern int  ibm_mark_i(delta_state *, uint8_t, uint8_t, const void *,
                        uint8_t);
 extern int  ibm_vctxt_tv(delta_state *, delta_tpos *);
+extern int  ibm_testeq_tvars(delta_state *, delta_loc *, delta_loc *);
+extern int  ibm_if_testeq_v_i(delta_state *, delta_loc *, int32_t);
+extern int  ibm_if_testneq_v_i(delta_state *, delta_loc *, int32_t);
+extern int  ibm_if_testlt_v_i(delta_state *, delta_loc *, int32_t);
+extern int  ibm_if_testgt_v_i(delta_state *, delta_loc *, int32_t);
+extern int  ibm_if_testge_v_i(delta_state *, delta_loc *, int32_t);
+extern void ibm_proj_def_mult(delta_state *, uint8_t, const uint8_t *,
+                              const delta_token *);
+extern void ibm_lpta_ctxtl(delta_state *, uint8_t);
+extern void ibm_lpta_ctxtr(delta_state *, uint8_t);
+extern void ibm_rpta_ctxtl(delta_state *, uint8_t);
+extern void ibm_rpta_ctxtr(delta_state *, uint8_t);
+extern int  ibm_calcETI2WPM(delta_state *, const delta_loc *, delta_loc *);
+extern int  ibm_calcMidline(delta_state *, const delta_loc *, delta_loc *);
+extern int  ibm_calcSpeedFactori(delta_state *, const delta_loc *,
+                                 delta_loc *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -5178,6 +5194,237 @@ BEGIN(vctxt_tv)
     memset(o->nodes, 0, sizeof(o->nodes));
 END(vctxt_tv)
 
+
+BEGIN(testeq_tvars)
+    delta_loc *am = (delta_loc *)(m->nodes + 0x300);
+    delta_loc *ao = (delta_loc *)(o->nodes + 0x300);
+    delta_loc *bm = (delta_loc *)(m->nodes + 0x310);
+    delta_loc *bo = (delta_loc *)(o->nodes + 0x310);
+    int ra, rb;
+
+    var_setup_at(m, o, am, ao);
+    bm->kind = bo->kind = am->kind;
+    bm->field = bo->field = am->field;
+    bm->value = bo->value = (rng_next() % 2u) ? am->value
+                                              : (int32_t)rng_next();
+
+    ra = ibm_testeq_tvars(&m->state, am, bm);
+    rb = testeq_tvars(&o->state, ao, bo);
+    if (ra != rb)
+        bad++;
+END(testeq_tvars)
+
+BEGIN(if_tests_v_i)
+    delta_loc *lm = (delta_loc *)(m->nodes + 0x300);
+    delta_loc *lo = (delta_loc *)(o->nodes + 0x300);
+    int32_t x = (int32_t)rng_next();
+    uint32_t which = rng_next() % 5u;
+    int ra, rb;
+
+    var_setup_at(m, o, lm, lo);
+    m->stack.names_depth = o->stack.names_depth = 0;
+
+    switch (which) {
+    case 0:
+        ra = ibm_if_testeq_v_i(&m->state, lm, x);
+        rb = if_testeq_v_i(&o->state, lo, x);
+        break;
+    case 1:
+        ra = ibm_if_testneq_v_i(&m->state, lm, x);
+        rb = if_testneq_v_i(&o->state, lo, x);
+        break;
+    case 2:
+        ra = ibm_if_testlt_v_i(&m->state, lm, x);
+        rb = if_testlt_v_i(&o->state, lo, x);
+        break;
+    case 3:
+        ra = ibm_if_testgt_v_i(&m->state, lm, x);
+        rb = if_testgt_v_i(&o->state, lo, x);
+        break;
+    default:
+        ra = ibm_if_testge_v_i(&m->state, lm, x);
+        rb = if_testge_v_i(&o->state, lo, x);
+        break;
+    }
+    if (ra != rb)
+        bad++;
+END(if_tests_v_i)
+
+static void run_proj_def_mult(delta_state *d, uint8_t n, const uint8_t *str,
+                              const delta_token *p, int ours)
+{
+    GUARDED(ours ? proj_def_mult(d, n, str, p)
+                 : ibm_proj_def_mult(d, n, str, p));
+}
+
+BEGIN(proj_def_mult)
+    uint8_t str[4];
+    uint8_t n = (uint8_t)(rng_next() % 5u);
+    delta_token tok;
+    int i;
+
+    for (i = 0; i < 4; i++)
+        str[i] = (uint8_t)(rng_next() % NSTMT);
+
+    build_pspine(m, o);
+    for (i = 0; i < 4; i++) {
+        ((int32_t *)(m->nodes))[15 + str[i]] |= 1;
+        ((int32_t *)(o->nodes))[15 + str[i]] |= 1;
+        ((int32_t *)(m->nodes + 3 * 0x80))[15 + str[i]] |= 1;
+        ((int32_t *)(o->nodes + 3 * 0x80))[15 + str[i]] |= 1;
+    }
+    ((int32_t *)(m->nodes))[2] &= ~2;
+    ((int32_t *)(o->nodes))[2] &= ~2;
+    ((int32_t *)(m->nodes + 3 * 0x80))[2] &= ~2;
+    ((int32_t *)(o->nodes + 3 * 0x80))[2] &= ~2;
+
+    /* The token names the statement the projections start from, so it has
+       to name one of this spine's nodes. */
+    memset(&tok, 0, sizeof(tok));
+    tok.value = (int32_t)(intptr_t)(m->nodes + 0x80);
+    run_proj_def_mult(&m->state, n, str, &tok, 0);
+    tok.value = (int32_t)(intptr_t)(o->nodes + 0x80);
+    run_proj_def_mult(&o->state, n, str, &tok, 1);
+
+    memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+    memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(proj_def_mult)
+
+BEGIN(pta_ctxt)
+    /* The spine is the one the context lookup needs. The pointer arrives
+       already settled, because whether it can be settled at all is what
+       vctxt_tv's own test covers, and an unsettled one here would only be
+       walking the timing spine this scaffold does not build. */
+    enum { FB = 15, NNODE = 6, STEP = 0x80 };
+    uint8_t f = (uint8_t)(rng_next() % NSTMT);
+    uint32_t which = rng_next() % 4u;
+    delta_tpos *pm, *po;
+    int i, j;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.fence_base = o->vars.fence_base = FB;
+    m->state.fence_fill = o->state.fence_fill = (uint8_t)(rng_next() % 5u);
+    m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
+    for (i = 0; i < 0x20; i++)
+        m->nsqm[i] = o->nsqm[i] = (int8_t)(rng_next() % 2u);
+
+#define NODE(w, i) ((int32_t *)((w)->nodes + (i) * STEP))
+#define AT(w, i)   ((int32_t)(intptr_t)((w)->nodes + (i) * STEP))
+    for (i = 0; i < NNODE; i++) {
+        int lo = i > 0 ? i - 1 : 0;
+        int hi = i + 1 < NNODE ? i + 1 : NNODE - 1;
+        uint32_t r;
+
+        r = rng_next();
+        NODE(m, i)[0] = AT(m, lo) | 2 | (int32_t)(r & 1u);
+        NODE(o, i)[0] = AT(o, lo) | 2 | (int32_t)(r & 1u);
+
+        r = rng_next();
+        NODE(m, i)[1] = AT(m, hi) | (int32_t)(r & 3u);
+        NODE(o, i)[1] = AT(o, hi) | (int32_t)(r & 3u);
+
+        r = rng_next();
+        NODE(m, i)[2] = (int32_t)(r & 3u);
+        NODE(o, i)[2] = (int32_t)(r & 3u);
+
+        for (j = 0; j < 10; j++) {
+            r = rng_next();
+            NODE(m, i)[3 + j] = AT(m, lo) | (int32_t)(r & 1u);
+            NODE(o, i)[3 + j] = AT(o, lo) | (int32_t)(r & 1u);
+
+            r = rng_next();
+            NODE(m, i)[FB + j] = AT(m, hi) | (int32_t)(r & 1u);
+            NODE(o, i)[FB + j] = AT(o, hi) | (int32_t)(r & 1u);
+        }
+
+        NODE(m, i)[FB - 2] = AT(m, lo);
+        NODE(o, i)[FB - 2] = AT(o, lo);
+        NODE(m, i)[FB - 1] = 0;
+        NODE(o, i)[FB - 1] = 0;
+    }
+    NODE(m, NNODE - 1)[FB + f] |= 1;
+    NODE(o, NNODE - 1)[FB + f] |= 1;
+    NODE(m, NNODE - 1)[2] &= ~2;
+    NODE(o, NNODE - 1)[2] &= ~2;
+    NODE(m, 0)[FB + f] |= 1;
+    NODE(o, 0)[FB + f] |= 1;
+    NODE(m, 0)[2] &= ~2;
+    NODE(o, 0)[2] &= ~2;
+
+    m->stack.spine_l = AT(m, 0);
+    o->stack.spine_l = AT(o, 0);
+    m->stack.spine_r = AT(m, NNODE - 1);
+    o->stack.spine_r = AT(o, NNODE - 1);
+
+    pm = (which < 2) ? &m->state.lpta : &m->state.rpta;
+    po = (which < 2) ? &o->state.lpta : &o->state.rpta;
+    memset(pm, 0, sizeof(*pm));
+    memset(po, 0, sizeof(*po));
+    pm->node = AT(m, 2);
+    po->node = AT(o, 2);
+    pm->field = po->field = (int8_t)f;
+    pm->flags = po->flags = 1;
+
+    switch (which) {
+    case 0: ibm_lpta_ctxtl(&m->state, f); lpta_ctxtl(&o->state, f); break;
+    case 1: ibm_lpta_ctxtr(&m->state, f); lpta_ctxtr(&o->state, f); break;
+    case 2: ibm_rpta_ctxtl(&m->state, f); rpta_ctxtl(&o->state, f); break;
+    default: ibm_rpta_ctxtr(&m->state, f); rpta_ctxtr(&o->state, f); break;
+    }
+#undef NODE
+#undef AT
+
+    if ((pm->node == 0) != (po->node == 0))
+        bad++;
+    else if (pm->node != 0
+             && pm->node - (int32_t)(intptr_t)m
+                != po->node - (int32_t)(intptr_t)o)
+        bad++;
+
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+    memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+    memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+    memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+    memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(pta_ctxt)
+
+
+BEGIN(calc_tables)
+    /* The three that read a table: every input including the ones outside
+       the range, so both ends of the clamp are exercised. */
+    delta_loc in, am, ao;
+    uint32_t which = rng_next() % 3u;
+    int ra, rb;
+
+    memset(&in, 0, sizeof(in));
+    memset(&am, 0, sizeof(am));
+    in.field = (rng_next() % 4u == 0) ? (int16_t)rng_next()
+                                      : (int16_t)(rng_next() % 0x100u);
+    ao = am;
+
+    if (which == 0) {
+        ra = ibm_calcETI2WPM(&m->state, &in, &am);
+        rb = calcETI2WPM(&o->state, &in, &ao);
+    } else if (which == 1) {
+        ra = ibm_calcMidline(&m->state, &in, &am);
+        rb = calcMidline(&o->state, &in, &ao);
+    } else {
+        ra = ibm_calcSpeedFactori(&m->state, &in, &am);
+        rb = calcSpeedFactori(&o->state, &in, &ao);
+    }
+
+    if (ra != rb)
+        bad++;
+    else if (memcmp(&am, &ao, sizeof(am)) != 0)
+        bad++;
+END(calc_tables)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -5308,6 +5555,11 @@ int main(void)
     test_forall_to_test();
     test_mark_i();
     test_vctxt_tv();
+    test_testeq_tvars();
+    test_if_tests_v_i();
+    test_proj_def_mult();
+    test_pta_ctxt();
+    test_calc_tables();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

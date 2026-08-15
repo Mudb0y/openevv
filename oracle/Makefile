@@ -44,9 +44,9 @@ DELTA_SUPPORT := $(ENUS)/win_dynabuf.obj $(ENUS)/logio.obj $(ENUS)/win_hash.obj 
 
 delta: $(BUILD)/delta_probe.exe $(BUILD)/delta_diff.exe
 
-$(BUILD)/delta_diff.exe: delta_diff.c delta_stubs.c ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c ../src/delta.h
+$(BUILD)/delta_diff.exe: delta_diff.c delta_stubs.c ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c ../src/delta_tables.c ../src/delta.h
 	@mkdir -p $(BUILD)
-	@$(CC) $(CFLAGS) delta_diff.c delta_stubs.c ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c $(IBMDELTA) $(DELTA_SUPPORT) $(MINGW_LDFLAGS) -o $@ 2> $(BUILD)/link.err; \
+	@$(CC) $(CFLAGS) delta_diff.c delta_stubs.c ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c ../src/delta_tables.c $(IBMDELTA) $(DELTA_SUPPORT) $(MINGW_LDFLAGS) -o $@ 2> $(BUILD)/link.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
 
 $(BUILD)/delta_probe.exe: delta_probe.c delta_stubs.c

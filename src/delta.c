@@ -4167,3 +4167,144 @@ int vctxt_tv(delta_state *d, delta_tpos *p)
         return 0;
     }
 }
+
+/* Compare two timing variables and answer whether they came out equal. */
+int testeq_tvars(delta_state *d, delta_loc *a, delta_loc *b)
+{
+    compare_tvars(d, a, b);
+    return testeq(d);
+}
+
+/* A variable against a constant: push both and run the ordinary test. */
+int if_testeq_v_i(delta_state *d, delta_loc *loc, int32_t x)
+{
+    npush_v(d, loc);
+    npush_i(d, x);
+    return if_testeq(d);
+}
+
+int if_testneq_v_i(delta_state *d, delta_loc *loc, int32_t x)
+{
+    npush_v(d, loc);
+    npush_i(d, x);
+    return if_testneq(d);
+}
+
+int if_testlt_v_i(delta_state *d, delta_loc *loc, int32_t x)
+{
+    npush_v(d, loc);
+    npush_i(d, x);
+    return if_testlt(d);
+}
+
+int if_testgt_v_i(delta_state *d, delta_loc *loc, int32_t x)
+{
+    npush_v(d, loc);
+    npush_i(d, x);
+    return if_testgt(d);
+}
+
+int if_testge_v_i(delta_state *d, delta_loc *loc, int32_t x)
+{
+    npush_v(d, loc);
+    npush_i(d, x);
+    return if_testge(d);
+}
+
+/* Give a run of statements their default projections, one per letter of the
+   spelling, each starting from the same token. */
+void proj_def_mult(delta_state *d, uint8_t n, const uint8_t *str,
+                   const delta_token *p)
+{
+    int32_t i;
+
+    for (i = 0; i < (int32_t)n; i++) {
+        lpta_loadp(d, p);
+        proj_def(d, str[i]);
+    }
+}
+
+/* Take a pointer to its context. A statement already carrying the field
+   stays where it is; otherwise the pointer moves to the one that has it,
+   looking to the left or to the right. */
+static void pta_ctxt(delta_state *d, delta_tpos *p, uint8_t f, int32_t back)
+{
+    const int32_t *node;
+
+    if (!vctxt_tv(d, p))
+        forceErrorBacktrack(d);
+
+    node = (const int32_t *)(intptr_t)p->node;
+    if (node[d->vars->fence_base + f] & 1)
+        return;
+
+    p->node = vgetsc(d, back, 1, p->node, f);
+}
+
+void lpta_ctxtl(delta_state *d, uint8_t f)
+{
+    pta_ctxt(d, &d->lpta, f, 1);
+}
+
+void lpta_ctxtr(delta_state *d, uint8_t f)
+{
+    pta_ctxt(d, &d->lpta, f, 0);
+}
+
+void rpta_ctxtl(delta_state *d, uint8_t f)
+{
+    pta_ctxt(d, &d->rpta, f, 1);
+}
+
+void rpta_ctxtr(delta_state *d, uint8_t f)
+{
+    pta_ctxt(d, &d->rpta, f, 0);
+}
+
+/* Words a minute from the engine's own speed number. */
+int calcETI2WPM(delta_state *d, const delta_loc *in, delta_loc *out)
+{
+    int16_t v = in->field;
+
+    (void)d;
+    if (v < 0)
+        v = 0;
+    if (v >= 0xfb)
+        v = 0xfa;
+
+    out->field = delta_ETI2WPM_Table[v];
+    return 0;
+}
+
+/* The pitch a voice sits at, from the baseline setting. */
+int calcMidline(delta_state *d, const delta_loc *in, delta_loc *out)
+{
+    int16_t v = in->field;
+
+    (void)d;
+    if (v < 0)
+        v = 0;
+    if (v > 0x64)
+        v = 0x64;
+
+    /* The original checks the address of the field it is about to write,
+       not the record, so the check can never fire. It is kept as it is. */
+    if ((uintptr_t)&out->field != 0)
+        out->field = delta_MidlineVals[v];
+
+    return 0;
+}
+
+/* How much to stretch or squeeze a duration, from the speed setting. */
+int calcSpeedFactori(delta_state *d, const delta_loc *in, delta_loc *out)
+{
+    int16_t v = in->field;
+    int32_t n = (v < 0) ? 0 : v;
+
+    (void)d;
+    if (n > 0x96)
+        n = 0x96;
+
+    out->value = delta_SpeedTable[(int16_t)n];
+    return 0;
+}

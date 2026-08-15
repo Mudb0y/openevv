@@ -557,6 +557,37 @@ int  forall_to_test(delta_state *d, delta_loc *a, delta_loc *b);
 int  mark_i(delta_state *d, uint8_t st, uint8_t fld, const void *v,
             uint8_t mode);
 int  vctxt_tv(delta_state *d, delta_tpos *p);
+int  testeq_tvars(delta_state *d, delta_loc *a, delta_loc *b);
+int  if_testeq_v_i(delta_state *d, delta_loc *loc, int32_t x);
+int  if_testneq_v_i(delta_state *d, delta_loc *loc, int32_t x);
+int  if_testlt_v_i(delta_state *d, delta_loc *loc, int32_t x);
+int  if_testgt_v_i(delta_state *d, delta_loc *loc, int32_t x);
+int  if_testge_v_i(delta_state *d, delta_loc *loc, int32_t x);
+void proj_def_mult(delta_state *d, uint8_t n, const uint8_t *str,
+                   const delta_token *p);
+void lpta_ctxtl(delta_state *d, uint8_t f);
+void lpta_ctxtr(delta_state *d, uint8_t f);
+void rpta_ctxtl(delta_state *d, uint8_t f);
+void rpta_ctxtr(delta_state *d, uint8_t f);
+int  calcETI2WPM(delta_state *d, const delta_loc *in, delta_loc *out);
+int  calcMidline(delta_state *d, const delta_loc *in, delta_loc *out);
+int  calcSpeedFactori(delta_state *d, const delta_loc *in, delta_loc *out);
+
+/* The runtime's constant tables, lifted out of the original by
+   tools/delta-tables.py. */
+extern const int16_t delta_ETI2WPM_Table[252];
+extern const int16_t delta_ExpTab[176];
+extern const int16_t delta_ExpTable[128];
+extern const int32_t delta_ExpTableCh0[8];
+extern const int32_t delta_ExpTableCh1[8];
+extern const int32_t delta_ExpTableCh2[8];
+extern const int16_t delta_Hz2MiTable[287];
+extern const int16_t delta_LnTable[268];
+extern const int16_t delta_LogTab[160];
+extern const int16_t delta_Mi2HzTable[228];
+extern const int16_t delta_MidlineVals[104];
+extern const int16_t delta_PwindModTable[12];
+extern const int16_t delta_SpeedTable[640];
 
 /* Supplied by the language, not the runtime: lay a string of values into a
    range the caller has already opened. */
