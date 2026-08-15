@@ -200,6 +200,36 @@ extern int  ibm_ventproc(delta_state *, delta_actrec *, uint8_t *, uint8_t *,
 extern int  ibm_vretproc(delta_state *, int32_t);
 extern int  ibm_succeed(delta_state *);
 extern void ibm_move_i(delta_state *, delta_loc *, int16_t);
+extern void ibm_pause(delta_state *);
+extern int  ibm_actd_goto(delta_state *);
+extern void ibm_npush_lng(delta_state *, int32_t);
+extern void ibm_npush_v(delta_state *, delta_loc *);
+extern void ibm_npush_vf(delta_state *, delta_loc *);
+extern void ibm_c_assvar(delta_state *, delta_loc *);
+extern int  ibm_advance_strm(delta_state *);
+extern int32_t ibm_absoluteSyncNum(delta_state *, uint8_t *);
+extern int  ibm_while_iterate(delta_state *, int16_t, int16_t);
+extern void ibm_proj_def(delta_state *, uint8_t);
+extern void ibm_rpta_movel(delta_state *, uint8_t);
+extern int  ibm_lpta_tstmovel(delta_state *, uint8_t);
+extern void ibm_rpta_storep(delta_state *, delta_loc *);
+extern void ibm_lpta_loadv(delta_state *, uint8_t, const delta_loc *);
+extern void ibm_settvar_i(delta_state *, delta_loc *, int32_t);
+extern void ibm_settvar_s(delta_state *, delta_loc *, int32_t);
+extern int  ibm_vnegative(delta_state *, const delta_operand *);
+extern void ibm_compare_tvars(delta_state *, delta_loc *, delta_loc *);
+extern int  ibm_if_testeq(delta_state *);
+extern int  ibm_if_testneq(delta_state *);
+extern int  ibm_if_testlt(delta_state *);
+extern int  ibm_if_testle(delta_state *);
+extern int  ibm_if_testgt(delta_state *);
+extern int  ibm_if_testge(delta_state *);
+extern void ibm_npop(delta_state *, delta_loc *);
+extern void ibm_ncompare_s(delta_state *, uint8_t);
+extern int  ibm_forall_to_test(delta_state *, delta_loc *, delta_loc *);
+extern int  ibm_mark_i(delta_state *, uint8_t, uint8_t, const void *,
+                       uint8_t);
+extern int  ibm_vctxt_tv(delta_state *, delta_tpos *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -4513,6 +4543,641 @@ BEGIN(move_i)
         bad++;
 END(move_i)
 
+
+BEGIN(actd_goto)
+    int ra, rb;
+
+    m->vars.unknown_11ec = o->vars.unknown_11ec = (int16_t)rng_next();
+    ibm_pause(&m->state);
+    pause(&o->state);
+    ra = ibm_actd_goto(&m->state);
+    rb = actd_goto(&o->state);
+    if (ra != rb)
+        bad++;
+END(actd_goto)
+
+BEGIN(while_iterate)
+    int16_t a = (int16_t)rng_next();
+    int16_t b = (int16_t)rng_next();
+    int ra = ibm_while_iterate(&m->state, a, b);
+    int rb = while_iterate(&o->state, a, b);
+
+    if (ra != rb)
+        bad++;
+END(while_iterate)
+
+BEGIN(npush_lng)
+    int32_t v = (int32_t)rng_next();
+
+    ibm_npush_lng(&m->state, v);
+    npush_lng(&o->state, v);
+END(npush_lng)
+
+/* The kinds a variable can take when a rule saves or pushes it. The byte and
+   short kinds are left out because vinitloc_new never sets the pointer for
+   them, so anything that copies through it reads a stale local; that is the
+   original's own hazard, and save_var's test avoids it the same way. */
+static int16_t var_kind(void)
+{
+    static const int16_t kinds[4] = {-3, -4, -6, 0};
+    int16_t k = kinds[rng_next() % 4u];
+
+    return k ? k : (int16_t)(rng_next() % NSTMT);
+}
+
+static void var_setup_at(delta_world *m, delta_world *o,
+                      delta_loc *lm, delta_loc *lo)
+{
+    int16_t kind = var_kind();
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->stack.size_ac = o->stack.size_ac = 12;
+    lm->kind = lo->kind = kind;
+    lm->field = lo->field = (kind >= 0)
+        ? (int16_t)(rng_next() % (uint32_t)vstmtbl[kind].nfields)
+        : (int16_t)rng_next();
+    /* A variable of a language kind names a record, so it is left naming
+       nothing rather than naming a number. The number kinds keep their value
+       here and are given one. */
+    lm->value = lo->value = (kind >= 0) ? 0 : (int32_t)rng_next();
+}
+
+BEGIN(npush_v)
+    delta_loc *lm = (delta_loc *)(m->nodes + 0x300);
+    delta_loc *lo = (delta_loc *)(o->nodes + 0x300);
+
+    var_setup_at(m, o, lm, lo);
+    if (rng_next() % 2u) {
+        ibm_npush_v(&m->state, lm);
+        npush_v(&o->state, lo);
+    } else {
+        ibm_npush_vf(&m->state, lm);
+        npush_vf(&o->state, lo);
+    }
+    if (lm->kind != lo->kind || lm->field != lo->field
+        || lm->value != lo->value)
+        bad++;
+END(npush_v)
+
+BEGIN(c_assvar)
+    delta_loc *lm = (delta_loc *)(m->nodes + 0x300);
+    delta_loc *lo = (delta_loc *)(o->nodes + 0x300);
+
+    var_setup_at(m, o, lm, lo);
+    m->vars.testing = o->vars.testing = (int8_t)(rng_next() % 2u);
+
+    ibm_c_assvar(&m->state, lm);
+    c_assvar(&o->state, lo);
+
+    /* Saving records where the value came from, and that address belongs to
+       the world it was taken from. */
+    if (m->vars.testing) {
+        *(int32_t *)(m->stack.top + 4) = 0;
+        *(int32_t *)(o->stack.top + 4) = 0;
+    }
+    if (lm->kind != lo->kind || lm->field != lo->field
+        || lm->value != lo->value)
+        bad++;
+END(c_assvar)
+
+BEGIN(absoluteSyncNum)
+    int32_t ra, rb;
+    uint8_t *pm, *po;
+    int seg = (int)(rng_next() % NSEG);
+    int32_t off = (int32_t)((rng_next() % 0x18u) * 8u + 8u);
+    int null = (rng_next() % 4u) == 0;
+
+    build_heap(m, o);
+    stamp_object(m, seg, off, &pm);
+    stamp_object(o, seg, off, &po);
+    m->stack.sync_size = o->stack.sync_size = (int32_t)(1u + rng_next() % 8u);
+
+    ra = ibm_absoluteSyncNum(&m->state, null ? NULL : pm);
+    rb = absoluteSyncNum(&o->state, null ? NULL : po);
+    if (ra != rb)
+        bad++;
+END(absoluteSyncNum)
+
+BEGIN(advance_strm)
+    int ra, rb;
+    int i;
+
+    memset(m->records, 0, RECORDS);
+    memset(o->records, 0, RECORDS);
+
+    m->vars.fence_base = o->vars.fence_base = 2;
+    m->vars.fence_count = o->vars.fence_count = (int8_t)(rng_next() % 4u);
+    m->vars.scan_field = o->vars.scan_field = (uint8_t)(rng_next() % 2u);
+    m->vars.scan_rev = o->vars.scan_rev = (uint8_t)(rng_next() % 2u);
+    m->vars.scan_held = o->vars.scan_held = (uint8_t)(rng_next() % 2u);
+
+    for (i = 0; i < 4; i++) {
+        m->chars[i] = o->chars[i] = (uint8_t)i;
+        m->marks[i] = o->marks[i] = (uint8_t)(rng_next() % 2u);
+    }
+    for (i = 0; i < 8; i++) {
+        uint32_t r = rng_next();
+        int null = (r % 5u) == 0;
+        ((int32_t *)(m->records + 0x100))[i] = null ? 0
+            : (int32_t)((intptr_t)(m->records + 0x140) | (r & 3u));
+        ((int32_t *)(o->records + 0x100))[i] = null ? 0
+            : (int32_t)((intptr_t)(o->records + 0x140) | (r & 3u));
+    }
+    for (i = 0; i < 2; i++) {
+        uint32_t r = rng_next();
+        int null = (r % 5u) == 0;
+        ((int32_t *)(m->records + 0x140))[i] = null ? 0
+            : (int32_t)((intptr_t)(m->records + 0x180) | (r & 3u));
+        ((int32_t *)(o->records + 0x140))[i] = null ? 0
+            : (int32_t)((intptr_t)(o->records + 0x180) | (r & 3u));
+    }
+    m->vars.scan_ptr = (int32_t)(intptr_t)(m->records + 0x100);
+    o->vars.scan_ptr = (int32_t)(intptr_t)(o->records + 0x100);
+
+    ra = ibm_advance_strm(&m->state);
+    rb = advance_strm(&o->state);
+    if (ra != rb)
+        bad++;
+    if ((m->vars.scan_ptr == 0) != (o->vars.scan_ptr == 0))
+        bad++;
+    else if (m->vars.scan_ptr != 0
+             && m->vars.scan_ptr - (int32_t)(intptr_t)m
+                != o->vars.scan_ptr - (int32_t)(intptr_t)o)
+        bad++;
+END(advance_strm)
+
+
+/* Anything that can fault needs somewhere to land, one landing place per
+   world, so the two are never compared across a jump. */
+#define GUARDED(call)                                                    \
+    do {                                                                 \
+        jmp_buf jb;                                                      \
+        d->vars->err_jmp = jb;                                           \
+        if (setjmp(jb) == 0) { call; }                                   \
+        d->vars->err_jmp = 0;                                            \
+    } while (0)
+
+static void run_proj_def(delta_state *d, uint8_t f, int ours)
+{
+    GUARDED(ours ? proj_def(d, f) : ibm_proj_def(d, f));
+}
+
+static void run_rpta_movel(delta_state *d, uint8_t f, int ours)
+{
+    GUARDED(ours ? rpta_movel(d, f) : ibm_rpta_movel(d, f));
+}
+
+static void run_rpta_storep(delta_state *d, delta_loc *l, int ours)
+{
+    GUARDED(ours ? rpta_storep(d, l) : ibm_rpta_storep(d, l));
+}
+
+static void run_lpta_loadv(delta_state *d, uint8_t f, const delta_loc *l,
+                           int ours)
+{
+    GUARDED(ours ? lpta_loadv(d, f, l) : ibm_lpta_loadv(d, f, l));
+}
+
+BEGIN(pta_movel)
+    static const uint8_t sets[4] = {0, 1, 4, 8};
+    delta_tpos pm, po;
+    int8_t f = build_tspine(m, o);
+    uint8_t g = (uint8_t)(rng_next() % NSTMT);
+    int right = (int)(rng_next() % 2u);
+    int ra = 0, rb = 0;
+
+    if (f < 0) {
+        free(m); free(o);
+        continue;
+    }
+    make_tpos(m, o, f, &pm, &po, sets[rng_next() % 4u]);
+
+    if (right) {
+        m->state.rpta = pm;
+        o->state.rpta = po;
+        run_rpta_movel(&m->state, g, 0);
+        run_rpta_movel(&o->state, g, 1);
+        pm = m->state.rpta;
+        po = o->state.rpta;
+    } else {
+        m->state.lpta = pm;
+        o->state.lpta = po;
+        ra = ibm_lpta_tstmovel(&m->state, g);
+        rb = lpta_tstmovel(&o->state, g);
+        pm = m->state.lpta;
+        po = o->state.lpta;
+    }
+
+    if (ra != rb)
+        bad++;
+    else if (pm.offset != po.offset || pm.flags != po.flags)
+        bad++;
+    else if ((pm.node == 0) != (po.node == 0))
+        bad++;
+    else if (pm.node != 0
+             && pm.node - (int32_t)(intptr_t)m
+                != po.node - (int32_t)(intptr_t)o)
+        bad++;
+
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+    memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+    memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+    memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+    memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(pta_movel)
+
+BEGIN(proj_def)
+    uint8_t g = (uint8_t)(rng_next() % NSTMT);
+
+    /* The projection walk needs the pointer spine, not the timing one, so the
+       pointer is placed on a node of that. vsync_tv decides for itself
+       whether the statement is one it can project, and either answer is a
+       path through the rule. */
+    build_pspine(m, o);
+    ((int32_t *)(m->nodes))[15 + g] |= 1;
+    ((int32_t *)(o->nodes))[15 + g] |= 1;
+    ((int32_t *)(m->nodes))[2] &= ~2;
+    ((int32_t *)(o->nodes))[2] &= ~2;
+    ((int32_t *)(m->nodes + 3 * 0x80))[15 + g] |= 1;
+    ((int32_t *)(o->nodes + 3 * 0x80))[15 + g] |= 1;
+    ((int32_t *)(m->nodes + 3 * 0x80))[2] &= ~2;
+    ((int32_t *)(o->nodes + 3 * 0x80))[2] &= ~2;
+
+    memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+    memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+    m->state.lpta.node = (int32_t)(intptr_t)(m->nodes + 0x80);
+    o->state.lpta.node = (int32_t)(intptr_t)(o->nodes + 0x80);
+    m->state.lpta.field = o->state.lpta.field = (int8_t)g;
+
+    run_proj_def(&m->state, g, 0);
+    run_proj_def(&o->state, g, 1);
+
+    memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+    memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(proj_def)
+
+BEGIN(rpta_storep)
+    /* Settling the pointer onto a sync needs the edit scaffold, the same one
+       the timing marks need, rather than the plain timing spine. */
+    static const uint8_t sets[4] = {0, 1, 4, 8};
+    static const int16_t kinds[4] = {-3, -4, -6, 0};
+    uint8_t f = 0xffu;
+    delta_loc *lm, *lo;
+    int16_t kind = kinds[rng_next() % 4u];
+    int i;
+
+    for (i = 0; i < NSTMT; i++) {
+        int k = (int)((rng_next() + (uint32_t)i) % NSTMT);
+        int16_t fk = vstmtbl[k].fields[0].kind;
+
+        if (fk == DK_LONG || fk == DK_SHORT2) {
+            f = (uint8_t)k;
+            break;
+        }
+    }
+    if (f == 0xffu) {
+        free(m); free(o);
+        continue;
+    }
+
+    build_edit(m, o, (int8_t)(rng_next() % 4u));
+
+    for (i = 0; i < 4; i++) {
+        uint32_t r = 16u + rng_next() % 16u;
+
+        if (i == 0 || i == 3) {
+            ((int32_t *)(m->nodes + i * 0x80))[0] &= ~2;
+            ((int32_t *)(o->nodes + i * 0x80))[0] &= ~2;
+        }
+        if (vstmtbl[f].fields[0].kind == DK_LONG) {
+            *(int32_t *)vstmtbl[f].get[0](m->nodes + i * 0x80 + 8) =
+                (int32_t)r;
+            *(int32_t *)vstmtbl[f].get[0](o->nodes + i * 0x80 + 8) =
+                (int32_t)r;
+        } else {
+            *(int16_t *)vstmtbl[f].get[0](m->nodes + i * 0x80 + 8) =
+                (int16_t)r;
+            *(int16_t *)vstmtbl[f].get[0](o->nodes + i * 0x80 + 8) =
+                (int16_t)r;
+        }
+    }
+
+    memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+    memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+    m->state.rpta.node = (int32_t)(intptr_t)(m->nodes + 0x80);
+    o->state.rpta.node = (int32_t)(intptr_t)(o->nodes + 0x80);
+    m->state.rpta.field = o->state.rpta.field = (int8_t)f;
+    m->state.rpta.offset = o->state.rpta.offset =
+        (int32_t)(rng_next() % 21u) - 10;
+    m->state.rpta.flags = o->state.rpta.flags = sets[rng_next() % 4u];
+
+    m->stack.size_ac = o->stack.size_ac = 12;
+    m->vars.testing = o->vars.testing = (int8_t)(rng_next() % 2u);
+
+    /* The variable sits in a node the edit scaffold leaves alone, so that
+       the address the save records is one that rebases. */
+    lm = (delta_loc *)(m->nodes + 0x300);
+    lo = (delta_loc *)(o->nodes + 0x300);
+    memset(lm, 0, sizeof(*lm));
+    lm->kind = kind ? kind : (int16_t)(rng_next() % NSTMT);
+    lm->field = (lm->kind >= 0)
+        ? (int16_t)(rng_next() % (uint32_t)vstmtbl[lm->kind].nfields)
+        : (int16_t)rng_next();
+    lm->value = (lm->kind >= 0) ? 0 : (int32_t)rng_next();
+    *lo = *lm;
+
+    run_rpta_storep(&m->state, lm, 0);
+    run_rpta_storep(&o->state, lo, 1);
+
+    if (m->vars.testing) {
+        *(int32_t *)(m->stack.top + 4) = 0;
+        *(int32_t *)(o->stack.top + 4) = 0;
+    }
+    if (lm->kind != lo->kind || lm->field != lo->field)
+        bad++;
+    else if ((lm->value == 0) != (lo->value == 0))
+        bad++;
+    else if (lm->value != 0
+             && lm->value - (int32_t)(intptr_t)m
+                != lo->value - (int32_t)(intptr_t)o)
+        bad++;
+
+    memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+    memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+END(rpta_storep)
+
+BEGIN(lpta_loadv)
+    static const int16_t kinds[4] = {-3, -4, -1, 0};
+    delta_loc *lm = (delta_loc *)(m->nodes + 0x300);
+    delta_loc *lo = (delta_loc *)(o->nodes + 0x300);
+    uint8_t g = (uint8_t)(rng_next() % NSTMT);
+    int16_t kind = kinds[rng_next() % 4u];
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    lm->kind = lo->kind = kind ? kind : (int16_t)(rng_next() % NSTMT);
+    lm->field = lo->field = (int16_t)rng_next();
+    lm->value = lo->value = (int32_t)rng_next();
+
+    run_lpta_loadv(&m->state, g, lm, 0);
+    run_lpta_loadv(&o->state, g, lo, 1);
+END(lpta_loadv)
+
+BEGIN(settvar)
+    delta_loc *lm = (delta_loc *)(m->nodes + 0x300);
+    delta_loc *lo = (delta_loc *)(o->nodes + 0x300);
+    int32_t v = (int32_t)rng_next();
+    int16_t st = (int16_t)(rng_next() % NSTMT);
+
+    var_setup_at(m, o, lm, lo);
+    /* The setter looks the kind up in the statement table, so it has to be
+       a statement number and not one of the scalar kinds. */
+    lm->kind = lo->kind = st;
+    lm->field = lo->field =
+        (int16_t)(rng_next() % (uint32_t)vstmtbl[st].nfields);
+    lm->value = lo->value = 0;
+    m->vars.testing = o->vars.testing = (int8_t)(rng_next() % 2u);
+
+    if (rng_next() % 2u) {
+        ibm_settvar_i(&m->state, lm, v);
+        settvar_i(&o->state, lo, v);
+    } else {
+        ibm_settvar_s(&m->state, lm, v);
+        settvar_s(&o->state, lo, v);
+    }
+
+    if (m->vars.testing) {
+        *(int32_t *)(m->stack.top + 4) = 0;
+        *(int32_t *)(o->stack.top + 4) = 0;
+    }
+END(settvar)
+
+
+BEGIN(vnegative)
+    static const int16_t kinds[6] = {-1, -2, -3, -4, -6, 0};
+    delta_operand a;
+    int ra, rb;
+
+    fill(m->records + 0x80, 8);
+    memcpy(o->records + 0x80, m->records + 0x80, 8);
+    a.kind = kinds[rng_next() % 6u];
+    a.flag = 0;
+
+    a.ptr = m->records + 0x80;
+    ra = ibm_vnegative(&m->state, &a);
+    a.ptr = o->records + 0x80;
+    rb = vnegative(&o->state, &a);
+    if (ra != rb)
+        bad++;
+END(vnegative)
+
+BEGIN(compare_tvars)
+    delta_loc *am = (delta_loc *)(m->nodes + 0x300);
+    delta_loc *ao = (delta_loc *)(o->nodes + 0x300);
+    delta_loc *bm = (delta_loc *)(m->nodes + 0x310);
+    delta_loc *bo = (delta_loc *)(o->nodes + 0x310);
+
+    var_setup_at(m, o, am, ao);
+    bm->kind = bo->kind = am->kind;
+    bm->field = bo->field = am->field;
+    bm->value = bo->value = (int32_t)rng_next();
+
+    ibm_compare_tvars(&m->state, am, bm);
+    compare_tvars(&o->state, ao, bo);
+
+    if (am->field != ao->field || bm->field != bo->field)
+        bad++;
+END(compare_tvars)
+
+/* The number stack the six comparisons and npop read from. Two numbers of
+   the same kind, so the comparison has something it can answer about.
+
+   The sync kind is left out: the push never writes its value and the pop
+   never sets the operand's pointer for it, so a comparison of two of those
+   reads through whatever the caller's local happened to hold. That is the
+   original's own hazard and the language never pushes one. */
+static void two_numbers(delta_world *m, delta_world *o)
+{
+    static const int16_t kinds[4] = {-1, -2, -3, -4};
+    delta_operand v;
+    int16_t k = kinds[rng_next() % 4u];
+    int i;
+
+    m->stack.names_depth = o->stack.names_depth = 0;
+    for (i = 0; i < 2; i++) {
+        fill(m->records + 0x80 + 0x10 * i, 8);
+        memcpy(o->records + 0x80 + 0x10 * i,
+               m->records + 0x80 + 0x10 * i, 8);
+        v.kind = k;
+        v.flag = 0;
+        v.ptr = m->records + 0x80 + 0x10 * i;
+        ibm_vnspush(&m->state, &v);
+        v.ptr = o->records + 0x80 + 0x10 * i;
+        vnspush(&o->state, &v);
+    }
+}
+
+BEGIN(if_tests)
+    uint32_t which = rng_next() % 6u;
+    int ra, rb;
+
+    two_numbers(m, o);
+
+    switch (which) {
+    case 0: ra = ibm_if_testeq(&m->state);  rb = if_testeq(&o->state);  break;
+    case 1: ra = ibm_if_testneq(&m->state); rb = if_testneq(&o->state); break;
+    case 2: ra = ibm_if_testlt(&m->state);  rb = if_testlt(&o->state);  break;
+    case 3: ra = ibm_if_testle(&m->state);  rb = if_testle(&o->state);  break;
+    case 4: ra = ibm_if_testgt(&m->state);  rb = if_testgt(&o->state);  break;
+    default: ra = ibm_if_testge(&m->state); rb = if_testge(&o->state);  break;
+    }
+    if (ra != rb)
+        bad++;
+END(if_tests)
+
+BEGIN(npop)
+    delta_loc *lm = (delta_loc *)(m->nodes + 0x300);
+    delta_loc *lo = (delta_loc *)(o->nodes + 0x300);
+
+    var_setup_at(m, o, lm, lo);
+    m->vars.testing = o->vars.testing = (int8_t)(rng_next() % 2u);
+    two_numbers(m, o);
+
+    ibm_npop(&m->state, lm);
+    npop(&o->state, lo);
+
+    if (m->vars.testing) {
+        *(int32_t *)(m->stack.top + 4) = 0;
+        *(int32_t *)(o->stack.top + 4) = 0;
+    }
+    if (lm->kind != lo->kind || lm->field != lo->field)
+        bad++;
+END(npop)
+
+
+BEGIN(ncompare_s)
+    uint8_t c = (uint8_t)rng_next();
+
+    two_numbers(m, o);
+    ibm_ncompare_s(&m->state, c);
+    ncompare_s(&o->state, c);
+END(ncompare_s)
+
+BEGIN(forall_to_test)
+    delta_loc *am = (delta_loc *)(m->nodes + 0x300);
+    delta_loc *ao = (delta_loc *)(o->nodes + 0x300);
+    delta_loc *bm = (delta_loc *)(m->nodes + 0x310);
+    delta_loc *bo = (delta_loc *)(o->nodes + 0x310);
+    int ra, rb;
+
+    var_setup_at(m, o, am, ao);
+    bm->kind = bo->kind = am->kind;
+    bm->field = bo->field = am->field;
+    bm->value = bo->value = (rng_next() % 2u) ? am->value
+                                              : (int32_t)rng_next();
+
+    ra = ibm_forall_to_test(&m->state, am, bm);
+    rb = forall_to_test(&o->state, ao, bo);
+    if (ra != rb)
+        bad++;
+END(forall_to_test)
+
+BEGIN(mark_i)
+    /* Spanning a range between the two pointers needs the timing edit
+       scaffold, the same one vrange_2pt is exercised on. */
+    static const uint8_t modes[4] = {0xcd, 0xce, 0xcf, 0x11};
+    uint8_t f;
+    uint8_t mode = modes[rng_next() % 4u];
+    uint8_t fld;
+    void *v = (void *)(intptr_t)(rng_next() % 4u);
+    int ra, rb, i;
+
+    if (!build_time_edit(m, o, &f)) {
+        free(m); free(o);
+        continue;
+    }
+    fld = (uint8_t)(rng_next() % (uint32_t)vstmtbl[f].nfields);
+    m->vars.relink = o->vars.relink = 1;
+    for (i = 0; i < 0x20; i++)
+        m->nsqm[i] = o->nsqm[i] = 0;
+    for (i = 0; i < 50; i++) {
+        m->stack.left_a[i] = o->stack.left_a[i] = 0;
+        m->stack.left_b[i] = o->stack.left_b[i] = 0;
+        m->stack.left_ans[i] = o->stack.left_ans[i] = 0;
+        m->stack.left_hits[i] = o->stack.left_hits[i] = 0;
+    }
+    m->stack.left_next = o->stack.left_next = 0;
+    m->stack.left_stamp = o->stack.left_stamp = spine_changed;
+
+    memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+    memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+    memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+    memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+    m->state.lpta.node = (int32_t)(intptr_t)(m->nodes + 0x80);
+    o->state.lpta.node = (int32_t)(intptr_t)(o->nodes + 0x80);
+    m->state.rpta.node = (int32_t)(intptr_t)(m->nodes + 2 * 0x80);
+    o->state.rpta.node = (int32_t)(intptr_t)(o->nodes + 2 * 0x80);
+    m->state.lpta.field = o->state.lpta.field = (int8_t)f;
+    m->state.rpta.field = o->state.rpta.field = (int8_t)f;
+    m->state.lpta.flags = o->state.lpta.flags = (uint8_t)(rng_next() % 2u);
+    m->state.rpta.flags = o->state.rpta.flags = (uint8_t)(rng_next() % 2u);
+
+    ra = ibm_mark_i(&m->state, f, fld, v, mode);
+    rb = mark_i(&o->state, f, fld, v, mode);
+    if (ra != rb)
+        bad++;
+
+    /* The remembered walk keeps the nodes it visited, and the spine ends
+       name nodes too; those addresses belong to the world they came from. */
+    for (i = 0; i < 50; i++) {
+        m->stack.left_a[i] = o->stack.left_a[i] = 0;
+        m->stack.left_b[i] = o->stack.left_b[i] = 0;
+    }
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+    /* The mark keeps the address of the value it is writing, and that is
+       the caller's own argument slot, which is nowhere near either world. */
+    m->stack.mark_fld = o->stack.mark_fld = NULL;
+    memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+    memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+    memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+    memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+END(mark_i)
+
+BEGIN(vctxt_tv)
+    static const uint8_t sets[4] = {0, 1, 4, 8};
+    delta_tpos pm, po;
+    int8_t f = build_tspine(m, o);
+    int ra, rb;
+
+    if (f < 0) {
+        free(m); free(o);
+        continue;
+    }
+    make_tpos(m, o, f, &pm, &po, sets[rng_next() % 4u]);
+
+    ra = ibm_vctxt_tv(&m->state, &pm);
+    rb = vctxt_tv(&o->state, &po);
+    if (ra != rb)
+        bad++;
+    else if (pm.offset != po.offset || pm.flags != po.flags)
+        bad++;
+    else if (pm.node - (int32_t)(intptr_t)m
+             != po.node - (int32_t)(intptr_t)o)
+        bad++;
+
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(vctxt_tv)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -4623,6 +5288,26 @@ int main(void)
     test_reinit();
     test_rule_frame();
     test_move_i();
+    test_actd_goto();
+    test_while_iterate();
+    test_npush_lng();
+    test_npush_v();
+    test_c_assvar();
+    test_absoluteSyncNum();
+    test_advance_strm();
+    test_pta_movel();
+    test_proj_def();
+    test_rpta_storep();
+    test_lpta_loadv();
+    test_settvar();
+    test_vnegative();
+    test_compare_tvars();
+    test_if_tests();
+    test_npop();
+    test_ncompare_s();
+    test_forall_to_test();
+    test_mark_i();
+    test_vctxt_tv();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

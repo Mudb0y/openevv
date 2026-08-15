@@ -192,7 +192,8 @@ typedef struct {
     int32_t   fence_base;      /* 0x1174 */
     uint8_t   pad_1178[0x11e8 - 0x1178];
     int32_t   unknown_11e8;    /* 0x11e8, cleared when a rule returns */
-    uint8_t   pad_11ec[0x20];
+    int16_t   unknown_11ec;    /* 0x11ec, what actd_goto answers with */
+    uint8_t   pad_11ee[0x1e];
 } delta_vars;
 
 typedef struct delta_state delta_state;
@@ -526,6 +527,36 @@ int  ventproc(delta_state *d, delta_actrec *rec, uint8_t *index,
 int  vretproc(delta_state *d, int32_t tag);
 int  succeed(delta_state *d);
 void move_i(delta_state *d, delta_loc *loc, int16_t value);
+void pause(delta_state *d);
+int  actd_goto(delta_state *d);
+void npush_lng(delta_state *d, int32_t v);
+void npush_v(delta_state *d, delta_loc *loc);
+void npush_vf(delta_state *d, delta_loc *loc);
+void c_assvar(delta_state *d, delta_loc *loc);
+int  advance_strm(delta_state *d);
+int32_t absoluteSyncNum(delta_state *d, uint8_t *p);
+int  while_iterate(delta_state *d, int16_t test_tag, int16_t loop_tag);
+void proj_def(delta_state *d, uint8_t f);
+void rpta_movel(delta_state *d, uint8_t f);
+int  lpta_tstmovel(delta_state *d, uint8_t f);
+void rpta_storep(delta_state *d, delta_loc *loc);
+void lpta_loadv(delta_state *d, uint8_t f, const delta_loc *loc);
+void settvar_i(delta_state *d, delta_loc *loc, int32_t v);
+void settvar_s(delta_state *d, delta_loc *loc, int32_t v);
+int  vnegative(delta_state *d, const delta_operand *v);
+void compare_tvars(delta_state *d, delta_loc *a, delta_loc *b);
+int  if_testeq(delta_state *d);
+int  if_testneq(delta_state *d);
+int  if_testlt(delta_state *d);
+int  if_testle(delta_state *d);
+int  if_testgt(delta_state *d);
+int  if_testge(delta_state *d);
+void npop(delta_state *d, delta_loc *loc);
+void ncompare_s(delta_state *d, uint8_t c);
+int  forall_to_test(delta_state *d, delta_loc *a, delta_loc *b);
+int  mark_i(delta_state *d, uint8_t st, uint8_t fld, const void *v,
+            uint8_t mode);
+int  vctxt_tv(delta_state *d, delta_tpos *p);
 
 /* Supplied by the language, not the runtime: lay a string of values into a
    range the caller has already opened. */

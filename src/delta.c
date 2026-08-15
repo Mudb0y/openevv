@@ -3839,3 +3839,331 @@ void move_i(delta_state *d, delta_loc *loc, int16_t value)
     vassign(d, &b, &a);
     reset_field(loc);
 }
+
+/* Nothing at all: the original is a frame and a return. */
+void pause(delta_state *d)
+{
+    (void)d;
+}
+
+/* Hand the dictionary's next step back through the slot a rule reads after
+   a statement changes. */
+int actd_goto(delta_state *d)
+{
+    d->unknown_3c = d->vars->unknown_11ec;
+    return 2;
+}
+
+/* Push a long on the number stack. The operand points at the argument the
+   caller is still holding, which is why the value arrives by address. */
+void npush_lng(delta_state *d, int32_t v)
+{
+    delta_operand op;
+
+    op.ptr = &v;
+    op.kind = DK_LONG;
+    op.flag = 0;
+    vnspush(d, &op);
+}
+
+/* And push a variable, which leaves its field unselected afterwards. */
+void npush_v(delta_state *d, delta_loc *loc)
+{
+    delta_operand op;
+
+    vinitloc_new(d, &op, loc);
+    vnspush(d, &op);
+    reset_field(loc);
+}
+
+/* The same again under a second name, as the original has it. */
+void npush_vf(delta_state *d, delta_loc *loc)
+{
+    delta_operand op;
+
+    vinitloc_new(d, &op, loc);
+    vnspush(d, &op);
+    reset_field(loc);
+}
+
+/* Note a variable is about to be assigned, so a rule under test can put it
+   back on the way out. */
+void c_assvar(delta_state *d, delta_loc *loc)
+{
+    if (d->vars->testing)
+        save_var(d, loc);
+    reset_field(loc);
+}
+
+/* Step the scan on by one, answering the other way round from vscanadv. */
+int advance_strm(delta_state *d)
+{
+    return vscanadv(d, 0, 1) ? 0 : 1;
+}
+
+/* Which sync a pointer belongs to. Nothing belongs to nowhere. */
+int32_t absoluteSyncNum(delta_state *d, uint8_t *p)
+{
+    if (p == NULL)
+        return -1;
+
+    return getDeltaHeapSegNumber(d, p, d->stack->sync_size);
+}
+
+/* Start a while loop: remember where the test and the body are, drop the
+   backtracking the last round left, and clear the stack's round marker. */
+int while_iterate(delta_state *d, int16_t test_tag, int16_t loop_tag)
+{
+    delta_vars *v = d->vars;
+
+    v->loop_tag = loop_tag;
+    v->test_tag = test_tag;
+    clearDeltaStackBack(d);
+    d->stack->unknown_9c = 0;
+    return 2;
+}
+
+/* Give the left pointer's statement a default projection. Either step can
+   refuse, and a refusal backtracks. */
+void proj_def(delta_state *d, uint8_t f)
+{
+    if (!vsync_tv(d, &d->lpta) || !vdef_proj(d, d->lpta.node, f))
+        forceErrorBacktrack(d);
+}
+
+/* Move the right pointer one statement leftwards. */
+void rpta_movel(delta_state *d, uint8_t f)
+{
+    if (!vmove_tv(d, &d->rpta))
+        forceErrorBacktrack(d);
+
+    d->rpta.node = (int32_t)(intptr_t)
+        vmovel((delta_node *)(intptr_t)d->rpta.node, f);
+}
+
+/* The same for the left pointer, but asking first rather than faulting: a
+   mark in the way is an answer, not an error. */
+int lpta_tstmovel(delta_state *d, uint8_t f)
+{
+    if (vtsttmark_tv(d, &d->lpta, 0))
+        return 1;
+
+    d->lpta.node = (int32_t)(intptr_t)
+        vmovel((delta_node *)(intptr_t)d->lpta.node, f);
+    return 0;
+}
+
+/* Put the right pointer into a rule's variable. */
+void rpta_storep(delta_state *d, delta_loc *loc)
+{
+    if (!vsync_tv(d, &d->rpta))
+        forceErrorBacktrack(d);
+
+    if (d->vars->testing)
+        save_var(d, loc);
+
+    loc->value = d->rpta.node;
+}
+
+/* Point the left pointer at a field of a statement a variable names. The
+   long kind holds the statement, the short kind holds it in the field slot,
+   and anything else is a fault. */
+void lpta_loadv(delta_state *d, uint8_t f, const delta_loc *loc)
+{
+    d->lpta.flags = 2;
+    d->lpta.field = (int8_t)f;
+
+    if (loc->kind == DK_LONG)
+        d->lpta.offset = loc->value;
+    else if (loc->kind == DK_SHORT2)
+        d->lpta.offset = loc->field;
+    else
+        forceErrorBacktrack(d);
+}
+
+/* Set a timing variable. The two names are the same code in the original. */
+void settvar_i(delta_state *d, delta_loc *loc, int32_t v)
+{
+    if (d->vars->testing)
+        save_var(d, loc);
+
+    vinitflds(d, (uint8_t)*(const int8_t *)loc, &loc->value, &v);
+}
+
+void settvar_s(delta_state *d, delta_loc *loc, int32_t v)
+{
+    if (d->vars->testing)
+        save_var(d, loc);
+
+    vinitflds(d, (uint8_t)*(const int8_t *)loc, &loc->value, &v);
+}
+
+/* Is a number negative? Only the two number kinds can be; anything else
+   answers no rather than faulting. */
+int vnegative(delta_state *d, const delta_operand *v)
+{
+    (void)d;
+
+    if (v->kind == DK_LONG)
+        return *(const int32_t *)v->ptr < 0;
+
+    if (v->kind == DK_SHORT2)
+        return *(const int16_t *)v->ptr < 0;
+
+    return 0;
+}
+
+/* Compare two timing variables, leaving the answer where a test reads it. */
+void compare_tvars(delta_state *d, delta_loc *a, delta_loc *b)
+{
+    delta_operand x, y;
+
+    vinitloc_new(d, &x, a);
+    vinitloc_new(d, &y, b);
+    vcompare(d, &x, &y);
+    reset_field(a);
+    reset_field(b);
+}
+
+/* The six comparisons a rule can branch on. Each pops two numbers, compares
+   them, and answers whether the test FAILED, which is the sense every rule
+   is written against.
+
+   The pop leaves the operand's pointer alone for a kind it does not know,
+   and the comparison then reads through it. That is the original's own
+   hazard and it is left as it stands; the number stack only ever holds the
+   kinds the pop does know. */
+static int compare_two(delta_state *d)
+{
+    delta_operand a, b;
+
+    vnspop(d, &a);
+    vnspop(d, &b);
+    vcompare(d, &a, &b);
+    return d->vars->compared_equal;
+}
+
+int if_testeq(delta_state *d)
+{
+    return compare_two(d) != 0;
+}
+
+int if_testneq(delta_state *d)
+{
+    return compare_two(d) == 0;
+}
+
+int if_testlt(delta_state *d)
+{
+    return compare_two(d) != -1;
+}
+
+int if_testle(delta_state *d)
+{
+    return compare_two(d) == 1;
+}
+
+int if_testgt(delta_state *d)
+{
+    return compare_two(d) != 1;
+}
+
+int if_testge(delta_state *d)
+{
+    return compare_two(d) == -1;
+}
+
+/* Take a number off the stack and into a rule's variable. */
+void npop(delta_state *d, delta_loc *loc)
+{
+    delta_operand v, dst;
+
+    vnspop(d, &v);
+
+    if (d->vars->testing)
+        save_var(d, loc);
+
+    vinitloc_new(d, &dst, loc);
+    vassign(d, &dst, &v);
+    reset_field(loc);
+}
+
+/* Compare the number on top of the stack against a byte the rule names.
+   A byte on the stack is compared here; anything else goes the long way
+   round through the general comparison. */
+void ncompare_s(delta_state *d, uint8_t c)
+{
+    delta_operand v;
+    delta_operand w;
+
+    vnspop(d, &v);
+
+    if (v.kind == DK_UBYTE) {
+        unsigned a = *(const uint8_t *)v.ptr;
+
+        if (a == c)
+            d->vars->compared_equal = 0;
+        else if ((int)a > (int)c)
+            d->vars->compared_equal = 1;
+        else
+            d->vars->compared_equal = -1;
+        return;
+    }
+
+    w.kind = DK_UBYTE;
+    w.ptr = &c;
+    w.flag = 0;
+    vcompare(d, &w, &v);
+}
+
+/* Has a forall loop reached its end? Equal means yes, and then the rule is
+   told where its test lives. */
+int forall_to_test(delta_state *d, delta_loc *a, delta_loc *b)
+{
+    delta_operand x, y;
+
+    vinitloc_new(d, &x, a);
+    vinitloc_new(d, &y, b);
+    vcompare(d, &x, &y);
+    reset_field(a);
+    reset_field(b);
+
+    if (d->vars->compared_equal != 0)
+        return 0;
+
+    d->unknown_3c = d->vars->test_tag;
+    return 2;
+}
+
+/* Mark a field across the range the two pointers span. Only a short field
+   can carry a mark, and a range the pointers cannot span is a refusal. */
+int mark_i(delta_state *d, uint8_t st, uint8_t fld, const void *v,
+           uint8_t mode)
+{
+    if (vrange_2pt(d, &d->lpta, &d->rpta, (int8_t)st, mode))
+        return 1;
+
+    if (vstmtbl[st].fields[fld].kind == DK_SHORT2)
+        vmark(d, st, fld, d->lpta.node, d->rpta.node, &v);
+
+    return 0;
+}
+
+/* Can a timing pointer take a context? One already flagged can, and
+   otherwise it depends on what normalising it makes of it. */
+int vctxt_tv(delta_state *d, delta_tpos *p)
+{
+    if (p->flags & 1)
+        return 1;
+
+    switch (vnormalize(d, p)) {
+    case 2:
+        return 1;
+    case 3:
+    case 4:
+        p->flags = 1;
+        return 1;
+    default:
+        return 0;
+    }
+}
