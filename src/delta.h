@@ -259,7 +259,7 @@ typedef struct {
     const uint8_t         *deflt;     /* +0x14, what a fresh statement holds */
     int32_t                unknown_18; /* +0x18, set when the type has a
                                           statement worth starting from */
-    uint8_t                pad_1c[4];
+    int32_t                unknown_1c; /* +0x1c, cleared on a reinit */
     int32_t                nfields;   /* +0x20, how many the type declares */
     int32_t                length;    /* +0x24, the whole record in bytes */
     int32_t                stride;    /* +0x28, one variant */
@@ -489,6 +489,8 @@ int  mark_s(delta_state *d, uint8_t f, uint8_t fld, uint8_t value,
 int  mark_v(delta_state *d, uint8_t f, uint8_t fld, delta_loc *loc,
             uint8_t mode);
 int  insert_2ptv(delta_state *d, uint8_t f, delta_loc *loc, uint8_t mode);
+void deltaReinit(delta_state *d, int32_t full);
+void initdelta(delta_state *d, uint8_t n, const uint8_t *list);
 
 /* Supplied by the language, not the runtime: lay a string of values into a
    range the caller has already opened. */

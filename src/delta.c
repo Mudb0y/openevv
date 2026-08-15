@@ -3625,3 +3625,64 @@ int insert_2ptv(delta_state *d, uint8_t f, delta_loc *loc, uint8_t mode)
     reset_field(loc);
     return 0;
 }
+
+/* Put the spine back to an empty one: the two ends carry every field and
+   point at each other, and with the flag set each field is given the
+   language's starting statement again.
+
+   The word it clears in each statement table entry is the language's own
+   data, which the runtime writes to here and nowhere else. */
+void deltaReinit(delta_state *d, int32_t full)
+{
+    delta_stack *s = d->stack;
+    int32_t base = d->vars->fence_base;
+    uint8_t i;
+
+    CLRONESTM((delta_node *)(intptr_t)s->spine_l);
+    CLRONESTM((delta_node *)(intptr_t)s->spine_r);
+
+    for (i = 0; i < d->fence_fill; i++) {
+        ((delta_stmt *)(uintptr_t)vstmtbl)[i].unknown_1c = 0;
+
+        *(int32_t *)(intptr_t)(s->spine_l + (base + i) * 4) |= 1;
+        *(int32_t *)(intptr_t)(s->spine_r + (base + i) * 4) |= 1;
+
+        *(int32_t *)(intptr_t)(s->spine_l + (base + i) * 4) =
+            (*(int32_t *)(intptr_t)(s->spine_l + (base + i) * 4) & 3)
+            | s->spine_r;
+        *(int32_t *)(intptr_t)(s->spine_r + 0xc + i * 4) =
+            (*(int32_t *)(intptr_t)(s->spine_r + 0xc + i * 4) & 3)
+            | s->spine_l;
+
+        if (full != 0)
+            vinit_stm(d, (int8_t)i);
+    }
+
+    SETSPINER(d, (int32_t *)(intptr_t)s->spine_l, s->spine_r);
+    SETSPINEL((delta_node *)(intptr_t)s->spine_r, s->spine_l);
+}
+
+/* Start a delta off. With no list every field is initialised; with a list as
+   long as there are fields the whole thing is thrown away and rebuilt; with
+   a shorter one only the fields it names. */
+void initdelta(delta_state *d, uint8_t n, const uint8_t *list)
+{
+    uint8_t i;
+
+    if (n == 0) {
+        for (i = 0; i < d->fence_fill; i++) {
+            if (!vinit_stm(d, (int8_t)i))
+                forceErrorBacktrack(d);
+        }
+    } else if (n == d->fence_fill) {
+        freeDeltaHeapTo(d, (uint8_t *)(intptr_t)d->stack->spine_r, 0);
+        deltaReinit(d, 1);
+    } else {
+        for (i = 0; i < n; i++) {
+            if (!vinit_stm(d, (int8_t)list[i]))
+                forceErrorBacktrack(d);
+        }
+    }
+
+    vscaninit(d);
+}

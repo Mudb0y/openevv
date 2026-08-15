@@ -192,6 +192,8 @@ extern int  ibm_delete_2pt(delta_state *, uint8_t, uint8_t);
 extern int  ibm_mark_s(delta_state *, uint8_t, uint8_t, uint8_t, uint8_t);
 extern int  ibm_mark_v(delta_state *, uint8_t, uint8_t, delta_loc *, uint8_t);
 extern int  ibm_insert_2ptv(delta_state *, uint8_t, delta_loc *, uint8_t);
+extern void ibm_deltaReinit(delta_state *, int32_t);
+extern void ibm_initdelta(delta_state *, uint8_t, const uint8_t *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -4243,6 +4245,107 @@ BEGIN(var_edits)
 
 END(var_edits)
 
+
+static void init_ibm(delta_state *d, int which, uint8_t n, const uint8_t *l)
+{
+    jmp_buf jb;
+
+    d->vars->err_jmp = jb;
+    if (setjmp(jb) == 0) {
+        if (which)
+            ibm_deltaReinit(d, (int32_t)n);
+        else
+            ibm_initdelta(d, n, l);
+    }
+    d->vars->err_jmp = 0;
+}
+
+static void init_ours(delta_state *d, int which, uint8_t n, const uint8_t *l)
+{
+    jmp_buf jb;
+
+    d->vars->err_jmp = jb;
+    if (setjmp(jb) == 0) {
+        if (which)
+            deltaReinit(d, (int32_t)n);
+        else
+            initdelta(d, n, l);
+    }
+    d->vars->err_jmp = 0;
+}
+
+BEGIN(reinit)
+    /* These two rebuild a whole spine, so what they need is the spine they
+       are meant to produce: two ends and nothing between them. */
+    enum { FB = 15, NNODE = 2, STEP = 0x80, NFIELD = 4 };
+    /* Only the pass that relinks the two ends. Asking for the full rebuild
+       drives the language's own statement initialisation over the whole
+       spine, which is a state this harness cannot build; every primitive
+       that path is made of is compared on its own. initdelta reaches that
+       rebuild whatever it is given, so it is transcribed but not compared. */
+    int which = 1;
+    uint8_t n = 0;
+    uint8_t list[4];
+    int i, j;
+
+    build_heap(m, o);
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.fence_base = o->vars.fence_base = FB;
+    m->state.fence_fill = o->state.fence_fill = NFIELD;
+    m->vars.relink = o->vars.relink = 1;
+    m->vars.ctx_both = o->vars.ctx_both = (int32_t)(rng_next() % 2u);
+    m->stack.sync_size = o->stack.sync_size = 0x80;
+    m->nsqf[0] = o->nsqf[0] = -1;
+    for (i = 0; i < 0x20; i++)
+        m->nsqm[i] = o->nsqm[i] = 0;
+    for (i = 0; i < 4; i++)
+        list[i] = (uint8_t)(rng_next() % 4u);
+
+    for (i = 0; i < NSEG; i++) {
+        int32_t used = (int32_t)(intptr_t)m->segs[i].end & 3;
+
+        if (((int32_t)(intptr_t)m->segs[i].end & 7) == 0)
+            used += 4;
+        m->segs[i].used = o->segs[i].used = used;
+    }
+
+#define NODE(w, i) ((int32_t *)((w)->nodes + (i) * STEP))
+#define AT(w, i)   ((int32_t)(intptr_t)((w)->nodes + (i) * STEP))
+    for (i = 0; i < NNODE; i++) {
+        int other = 1 - i;
+
+        /* Neither end is a sync, and each points at the other both ways. */
+        NODE(m, i)[0] = AT(m, other);
+        NODE(o, i)[0] = AT(o, other);
+        NODE(m, i)[1] = AT(m, other);
+        NODE(o, i)[1] = AT(o, other);
+        NODE(m, i)[FB - 2] = AT(m, other);
+        NODE(o, i)[FB - 2] = AT(o, other);
+
+        for (j = 0; j < NSTMT; j++) {
+            NODE(m, i)[3 + j] = AT(m, other) | 1;
+            NODE(o, i)[3 + j] = AT(o, other) | 1;
+            NODE(m, i)[FB + j] = AT(m, other) | 1;
+            NODE(o, i)[FB + j] = AT(o, other) | 1;
+        }
+
+    }
+    m->stack.spine_l = AT(m, 0);
+    o->stack.spine_l = AT(o, 0);
+    m->stack.spine_r = AT(m, 1);
+    o->stack.spine_r = AT(o, 1);
+    /* Whatever goes back to the heap must look like it came from one. */
+    *(delta_seg **)(m->nodes + STEP - 4) = &m->segs[1];
+    *(delta_seg **)(o->nodes + STEP - 4) = &o->segs[1];
+    m->segs[1].live = o->segs[1].live = 32;
+#undef NODE
+#undef AT
+
+    init_ibm(&m->state, which, n, list);
+    init_ours(&o->state, which, n, list);
+END(reinit)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -4350,6 +4453,7 @@ int main(void)
     test_vrange_2pt();
     test_two_point_edits();
     test_var_edits();
+    test_reinit();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
