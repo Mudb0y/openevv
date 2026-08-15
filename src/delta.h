@@ -290,6 +290,21 @@ void startloop(delta_state *d, int16_t tag);
 void save_var(delta_state *d, const int16_t *loc);
 int  testFldeq(delta_state *d, uint8_t st, uint8_t fld, uint8_t val);
 void vinitflds(delta_state *d, uint8_t st, void *dst, const void *src);
+int  vscanadvOverToken(delta_state *d, int32_t usefence);
+int  vscanadvUptoTokenOrMarker(delta_state *d, int32_t target, int32_t usefence);
+
+/* What seqscan is handed and fills in: which way to walk, where to start,
+   how far it got, and whether anything along the way was not a lone
+   sequential statement. */
+typedef struct {
+    int8_t  kind;      /* +0x00, one means walk the other way */
+    int8_t  pad_01[3];
+    int32_t flag;      /* +0x04 */
+    int32_t start;     /* +0x08 */
+    int32_t cur;       /* +0x0c */
+} delta_seqctl;
+
+void seqscan(delta_state *d, delta_seqctl *c);
 
 /* Bumped whenever the spine is relinked, so anything holding a position knows
    to look again. */

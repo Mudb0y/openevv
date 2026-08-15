@@ -97,6 +97,9 @@ extern void ibm_startloop(delta_state *, int16_t);
 extern void ibm_save_var(delta_state *, const int16_t *);
 extern int  ibm_testFldeq(delta_state *, uint8_t, uint8_t, uint8_t);
 extern void ibm_vinitflds(delta_state *, uint8_t, void *, const void *);
+extern int  ibm_vscanadvOverToken(delta_state *, int32_t);
+extern int  ibm_vscanadvUptoTokenOrMarker(delta_state *, int32_t, int32_t);
+extern void ibm_seqscan(delta_state *, delta_seqctl *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -1303,6 +1306,182 @@ BEGIN(vinitflds)
     vinitflds(&o->state, st, o->nodes, o->nodes + 0x200);
 END(vinitflds)
 
+
+/* Build a forward chain of four nodes in the spare node area, the last one
+   all null so any walk over it terminates. Both worlds get the same shape. */
+static void build_chain(delta_world *m, delta_world *o)
+{
+    static const int32_t at[4] = {0x00, 0x80, 0x100, 0x180};
+    int i, j;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+
+    for (i = 0; i < 4; i++) {
+        int32_t to = at[i + (i < 3)];
+
+        for (j = 0; j < 24; j++) {
+            uint32_t r = rng_next();
+            int null = (r % 3u) == 0 || i == 3;
+
+            ((int32_t *)(m->nodes + at[i]))[j] = null ? 0
+                : (int32_t)((intptr_t)(m->nodes + to) | (r & 3u));
+            ((int32_t *)(o->nodes + at[i]))[j] = null ? 0
+                : (int32_t)((intptr_t)(o->nodes + to) | (r & 3u));
+        }
+    }
+}
+
+BEGIN(vscanadvOverToken)
+    int32_t usef = (int32_t)(rng_next() % 2u);
+    int ra, rb, i;
+
+    build_chain(m, o);
+    m->vars.fence_base = o->vars.fence_base = 13;
+    m->vars.fence_count = o->vars.fence_count = (int8_t)(rng_next() % 4u);
+    m->vars.scan_field = o->vars.scan_field = (uint8_t)(rng_next() % 3u);
+    m->vars.scan_rev = o->vars.scan_rev = (uint8_t)(rng_next() % 2u);
+    m->vars.scan_held = o->vars.scan_held = (uint8_t)(rng_next() % 2u);
+    for (i = 0; i < 4; i++) {
+        m->chars[i] = o->chars[i] = (uint8_t)i;
+        m->marks[i] = o->marks[i] = (uint8_t)(rng_next() % 2u);
+    }
+    m->vars.scan_ptr = (int32_t)(intptr_t)m->nodes;
+    o->vars.scan_ptr = (int32_t)(intptr_t)o->nodes;
+
+    ra = ibm_vscanadvOverToken(&m->state, usef);
+    rb = vscanadvOverToken(&o->state, usef);
+    if (ra != rb)
+        bad++;
+    if ((m->vars.scan_ptr == 0) != (o->vars.scan_ptr == 0))
+        bad++;
+    else if (m->vars.scan_ptr != 0
+             && m->vars.scan_ptr - (int32_t)(intptr_t)m
+                != o->vars.scan_ptr - (int32_t)(intptr_t)o)
+        bad++;
+
+    m->vars.scan_ptr = o->vars.scan_ptr = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(vscanadvOverToken)
+
+BEGIN(vscanadvUptoTokenOrMarker)
+    static const int32_t at[4] = {0x00, 0x80, 0x100, 0x180};
+    int32_t usef = (int32_t)(rng_next() % 2u);
+    int32_t which = (int32_t)(rng_next() % 5u);
+    int32_t tm, to;
+    int ra, rb, i;
+
+    build_chain(m, o);
+    m->vars.fence_base = o->vars.fence_base = 13;
+    m->vars.fence_count = o->vars.fence_count = (int8_t)(rng_next() % 4u);
+    m->vars.scan_field = o->vars.scan_field = (uint8_t)(rng_next() % 3u);
+    m->vars.scan_rev = o->vars.scan_rev = (uint8_t)(rng_next() % 2u);
+    m->vars.scan_held = o->vars.scan_held = (uint8_t)(rng_next() % 2u);
+    for (i = 0; i < 4; i++) {
+        m->chars[i] = o->chars[i] = (uint8_t)i;
+        m->marks[i] = o->marks[i] = (uint8_t)(rng_next() % 2u);
+    }
+    m->vars.scan_ptr = (int32_t)(intptr_t)m->nodes;
+    o->vars.scan_ptr = (int32_t)(intptr_t)o->nodes;
+
+    /* Aim the marker at one of the nodes most of the time, so the early
+       stop gets used as well as the walk running out. */
+    tm = (which < 4) ? (int32_t)(intptr_t)(m->nodes + at[which]) : 0;
+    to = (which < 4) ? (int32_t)(intptr_t)(o->nodes + at[which]) : 0;
+
+    ra = ibm_vscanadvUptoTokenOrMarker(&m->state, tm, usef);
+    rb = vscanadvUptoTokenOrMarker(&o->state, to, usef);
+    if (ra != rb)
+        bad++;
+    if ((m->vars.scan_ptr == 0) != (o->vars.scan_ptr == 0))
+        bad++;
+    else if (m->vars.scan_ptr != 0
+             && m->vars.scan_ptr - (int32_t)(intptr_t)m
+                != o->vars.scan_ptr - (int32_t)(intptr_t)o)
+        bad++;
+
+    m->vars.scan_ptr = o->vars.scan_ptr = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(vscanadvUptoTokenOrMarker)
+
+BEGIN(seqscan)
+    /* Five nodes: four in a row plus the peer the walk reads its stopping
+       fields from. The last of the four carries every one of them, so the
+       walk always terminates. */
+    static const int32_t at[5] = {0x00, 0x80, 0x100, 0x180, 0x200};
+    enum { BASE = 13, FILL = 4 };
+    delta_seqctl cm, co;
+    int32_t back, walk, peer;
+    int i, j;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.fence_base = o->vars.fence_base = BASE;
+    m->state.fence_fill = o->state.fence_fill = FILL;
+
+    cm.kind = co.kind = (int8_t)(rng_next() % 2u);
+    back = cm.kind == 1;
+    walk = back ? (BASE * 4 - 8) / 4 : 1;
+    peer = back ? 1 : (BASE * 4 - 8) / 4;
+
+    for (i = 0; i < 5; i++) {
+        for (j = 0; j < 24; j++) {
+            uint32_t r = rng_next();
+
+            ((int32_t *)(m->nodes + at[i]))[j] = (int32_t)(r & 3u);
+            ((int32_t *)(o->nodes + at[i]))[j] = (int32_t)(r & 3u);
+        }
+    }
+    for (i = 0; i < 4; i++) {
+        int32_t to = at[i + (i < 3)];
+        uint32_t tag = rng_next() & 3u;
+
+        ((int32_t *)(m->nodes + at[i]))[walk] =
+            (int32_t)((intptr_t)(m->nodes + to) | tag);
+        ((int32_t *)(o->nodes + at[i]))[walk] =
+            (int32_t)((intptr_t)(o->nodes + to) | tag);
+    }
+    {
+        uint32_t tag = rng_next() & 3u;
+
+        ((int32_t *)m->nodes)[peer] =
+            (int32_t)((intptr_t)(m->nodes + at[4]) | tag);
+        ((int32_t *)o->nodes)[peer] =
+            (int32_t)((intptr_t)(o->nodes + at[4]) | tag);
+    }
+    /* At least one field has to be collected or the walk never stops. */
+    for (i = 0; i < FILL; i++) {
+        int32_t bit = (int32_t)(rng_next() % 2u);
+
+        ((int32_t *)(m->nodes + at[4]))[BASE + i] = bit;
+        ((int32_t *)(o->nodes + at[4]))[BASE + i] = bit;
+        ((int32_t *)(m->nodes + at[3]))[BASE + i] |= 1;
+        ((int32_t *)(o->nodes + at[3]))[BASE + i] |= 1;
+    }
+    ((int32_t *)(m->nodes + at[4]))[BASE] = 1;
+    ((int32_t *)(o->nodes + at[4]))[BASE] = 1;
+
+    cm.flag = co.flag = (int32_t)rng_next();
+    cm.start = (int32_t)(intptr_t)m->nodes;
+    co.start = (int32_t)(intptr_t)o->nodes;
+    cm.pad_01[0] = co.pad_01[0] = 0;
+    cm.pad_01[1] = co.pad_01[1] = 0;
+    cm.pad_01[2] = co.pad_01[2] = 0;
+
+    ibm_seqscan(&m->state, &cm);
+    seqscan(&o->state, &co);
+
+    if (cm.flag != co.flag)
+        bad++;
+    if (cm.cur - (int32_t)(intptr_t)m != co.cur - (int32_t)(intptr_t)o)
+        bad++;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(seqscan)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -1359,6 +1538,9 @@ int main(void)
     test_save_var();
     test_testFldeq();
     test_vinitflds();
+    test_vscanadvOverToken();
+    test_vscanadvUptoTokenOrMarker();
+    test_seqscan();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

@@ -587,6 +587,52 @@ void DELSPINE(delta_state *d, delta_node *t)
     spine_changed++;
 }
 
+/* The fence check vscanadv and its two siblings share. Returns nonzero when
+   the scan may not pass, and leaves the loop counter where it stopped so the
+   caller can finish clearing the marks from there. */
+static int scan_fenced(delta_state *d, int32_t cur, int32_t field,
+                       int32_t usefence, int32_t *at)
+{
+    delta_vars *v = d->vars;
+    int32_t i = 0;
+
+    if (v->fence_count != 0 && usefence != 0 && v->scan_held == 0) {
+        for (; i < v->fence_count; i++) {
+            uint8_t ch = d->fence_chars[i];
+
+            if ((*(int32_t *)(intptr_t)(cur + (v->fence_base + ch) * 4) & 1)
+                != 0) {
+                *at = i;
+                return 1;
+            }
+
+            if (FENCED(d, (const int32_t *)(intptr_t)cur,
+                       (int8_t)d->fence_chars[i])
+                && field != d->fence_chars[i]
+                && d->fence_marks[i] == 0) {
+                *at = i;
+                return 1;
+            }
+
+            d->fence_marks[i] = 0;
+        }
+    }
+
+    *at = i;
+    return 0;
+}
+
+/* Where the scan's next node is, in whichever direction is set. */
+static int32_t scan_step(delta_state *d, int32_t cur, int32_t field)
+{
+    delta_vars *v = d->vars;
+
+    if (v->scan_rev != 0)
+        return *(int32_t *)(intptr_t)
+            (cur + (v->fence_base + field) * 4) & ~3;
+    return *(int32_t *)(intptr_t)(cur + 0xc + field * 4) & ~3;
+}
+
 /* Move the scan on by one node in whichever direction is set, refusing to
    cross a fenced character it has not already been let past. Each fenced
    character is marked once so a second attempt at the same one succeeds. */
@@ -596,44 +642,27 @@ int vscanadv(delta_state *d, int32_t step, int32_t usefence)
     int32_t cur = v->scan_ptr;
     int32_t field = v->scan_field;
     int32_t next;
-    int32_t i = 0;
+    int32_t i;
 
-    if (v->fence_count != 0 && usefence != 0 && v->scan_held == 0) {
-        for (; i < v->fence_count; i++) {
-            uint8_t c = d->fence_chars[i];
-
-            if ((*(int32_t *)(cur + (v->fence_base + c) * 4) & 1) != 0)
-                return 0;
-
-            if (FENCED(d, (const int32_t *)cur, (int8_t)d->fence_chars[i])
-                && field != d->fence_chars[i]
-                && d->fence_marks[i] == 0)
-                return 0;
-
-            d->fence_marks[i] = 0;
-        }
-    }
+    if (scan_fenced(d, cur, field, usefence, &i))
+        return 0;
 
     if (cur == 0)
         return 0;
 
-    if (v->scan_rev != 0)
-        next = *(int32_t *)(cur + (v->fence_base + field) * 4) & ~3;
-    else
-        next = *(int32_t *)(cur + 0xc + field * 4) & ~3;
-
+    next = scan_step(d, cur, field);
     if (next == 0)
         return 0;
 
     /* A node that is not itself a sync needs one more step, and only if the
        caller asked to keep going. */
-    if ((*(int32_t *)next & 2) == 0) {
+    if ((*(int32_t *)(intptr_t)next & 2) == 0) {
         if (step == 0)
             return 0;
         if (v->scan_rev != 0)
-            next = *(int32_t *)(next + 4) & ~3;
+            next = *(int32_t *)(intptr_t)(next + 4) & ~3;
         else
-            next = *(int32_t *)next & ~3;
+            next = *(int32_t *)(intptr_t)next & ~3;
     }
 
     v->scan_ptr = next;
@@ -1101,4 +1130,119 @@ void vinitflds(delta_state *d, uint8_t st, void *dst, const void *src)
     else if (e->fields[0].kind == DK_UBYTE)
         memmove(dst, e->variants + *(const uint8_t *)src * e->stride,
                 (size_t)e->varlen);
+}
+
+/* Advance the scan past a whole token: keep going while each node it reaches
+   is a sync, and stop on the first that is not. */
+int vscanadvOverToken(delta_state *d, int32_t usefence)
+{
+    delta_vars *v = d->vars;
+    int32_t cur = v->scan_ptr;
+    int32_t field = v->scan_field;
+
+    for (;;) {
+        int32_t next, i;
+
+        if (cur == 0)
+            return 0;
+
+        if (scan_fenced(d, cur, field, usefence, &i))
+            return 0;
+
+        next = scan_step(d, cur, field);
+        if (next == 0)
+            return 0;
+
+        v->scan_ptr = next;
+        v->scan_held = 0;
+        for (; i < v->fence_count; i++)
+            d->fence_marks[i] = 0;
+
+        if ((*(int32_t *)(intptr_t)next & 2) != 0) {
+            cur = next;
+            continue;
+        }
+
+        if (v->scan_rev != 0)
+            v->scan_ptr = *(int32_t *)(intptr_t)(next + 4) & ~3;
+        else
+            v->scan_ptr = *(int32_t *)(intptr_t)next & ~3;
+        return 1;
+    }
+}
+
+/* The same walk, but stopping either at a node that is not a sync or at a
+   named one, whichever comes first. */
+int vscanadvUptoTokenOrMarker(delta_state *d, int32_t target, int32_t usefence)
+{
+    delta_vars *v = d->vars;
+    int32_t cur = v->scan_ptr;
+    int32_t field = v->scan_field;
+
+    for (;;) {
+        int32_t next, i;
+
+        if (cur == 0)
+            return 0;
+
+        if (scan_fenced(d, cur, field, usefence, &i))
+            return 0;
+
+        next = scan_step(d, cur, field);
+        if (next == 0)
+            return 0;
+        if ((*(int32_t *)(intptr_t)next & 2) == 0)
+            return 1;
+
+        cur = next;
+        v->scan_ptr = next;
+        v->scan_held = 0;
+        for (; i < v->fence_count; i++)
+            d->fence_marks[i] = 0;
+
+        if (next == target)
+            return 1;
+    }
+}
+
+/* Walk a run of statements, stopping at the first that carries one of the
+   fields the node behind the start declares. */
+void seqscan(delta_state *d, delta_seqctl *c)
+{
+    int32_t base = d->vars->fence_base;
+    int32_t back = c->kind == 1;
+    int32_t t = c->start;
+    int32_t peer;
+    /* The original's own array, sized by what its frame gave it. */
+    uint8_t fields[104];
+    uint8_t n = 0;
+    uint8_t i;
+
+    c->cur = c->start;
+
+    if (back)
+        peer = *(int32_t *)(intptr_t)(t + 4) & ~3;
+    else
+        peer = *(int32_t *)(intptr_t)(t + base * 4 - 8) & ~3;
+
+    for (i = 0; i < d->fence_fill; i++)
+        if ((*(int32_t *)(intptr_t)(peer + (base + i) * 4) & 1) != 0)
+            fields[n++] = i;
+
+    for (;;) {
+        for (i = 0; i < n; i++)
+            if ((*(int32_t *)(intptr_t)(t + (base + fields[i]) * 4) & 1) != 0)
+                return;
+
+        if (!ONESTM((const delta_node *)(intptr_t)t)
+            || !ALLNSQ((const delta_node *)(intptr_t)t))
+            c->flag = 1;
+
+        c->cur = t;
+
+        if (back)
+            t = *(int32_t *)(intptr_t)(t + base * 4 - 8) & ~3;
+        else
+            t = *(int32_t *)(intptr_t)(t + 4) & ~3;
+    }
 }
