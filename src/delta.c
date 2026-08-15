@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 
@@ -3183,4 +3184,74 @@ int ins_tokens_i(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
                  int32_t arg)
 {
     return ins_tokens(d, f, str, n, arg, 1);
+}
+
+/* Split a run of time in two at a given offset, on whichever side of the
+   statement the sign says. A fresh sync goes in, the statement that keeps the
+   remainder has its value reduced by the amount taken, and a new statement
+   holding that amount is inserted beside it. Returns the new sync. */
+int32_t vsplit_time(delta_state *d, uint8_t f, int32_t t, int32_t off)
+{
+    const delta_stmt *e = &vstmtbl[f];
+    int32_t base = d->vars->fence_base;
+    int32_t neighbour;
+    int32_t keep;
+    int32_t l;
+    int32_t r;
+    int32_t amount;
+    int32_t wide = 0;
+    int16_t narrow = 0;
+    delta_operand v;
+
+    if (off < 0) {
+        neighbour = *(int32_t *)(intptr_t)(t + 0xc + f * 4) & ~3;
+        keep = (neighbour != 0
+                && (*(int32_t *)(intptr_t)neighbour & 2) != 0) ? 0 : neighbour;
+        r = t;
+        l = (int32_t)(intptr_t)vins_sync(d, f, neighbour, t);
+        t = l;
+    } else {
+        neighbour = *(int32_t *)(intptr_t)(t + (base + f) * 4) & ~3;
+        keep = (neighbour != 0
+                && (*(int32_t *)(intptr_t)neighbour & 2) != 0) ? 0 : neighbour;
+        l = t;
+        r = (int32_t)(intptr_t)vins_sync(d, f, t, neighbour);
+        t = r;
+    }
+
+    if (t == 0)
+        return 0;
+
+    if (keep != 0) {
+        void *p = TFLDS((void *)(intptr_t)keep);
+
+        if (e->fields[0].kind == DK_LONG) {
+            wide = *(int32_t *)e->get[0](p) - abs(off);
+            vinitflds(d, f, TFLDS((void *)(intptr_t)keep), &wide);
+        } else if (e->fields[0].kind == DK_SHORT2) {
+            wide = *(int16_t *)e->get[0](p) - abs(off);
+            narrow = (int16_t)wide;
+            vinitflds(d, f, TFLDS((void *)(intptr_t)keep), &narrow);
+        }
+    }
+
+    amount = abs(off);
+
+    /* Anything but these two kinds leaves the operand as it stands, which in
+       the original is whatever the frame held. No shipped type does. */
+    if (e->fields[0].kind == DK_LONG) {
+        v.kind = DK_LONG;
+        v.ptr = &amount;
+        v.flag = 0;
+    } else if (e->fields[0].kind == DK_SHORT2) {
+        v.kind = DK_SHORT2;
+        narrow = (int16_t)amount;
+        v.ptr = &narrow;
+        v.flag = 0;
+    }
+
+    if (!vins_tok(d, f, l, r, &v))
+        return 0;
+
+    return t;
 }

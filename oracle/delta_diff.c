@@ -169,6 +169,7 @@ extern int  ibm_ins_tokens_s(delta_state *, uint8_t, const uint8_t *, uint8_t,
                              int32_t);
 extern int  ibm_ins_tokens_i(delta_state *, uint8_t, const uint8_t *, uint8_t,
                              int32_t);
+extern int32_t ibm_vsplit_time(delta_state *, uint8_t, int32_t, int32_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -3659,6 +3660,43 @@ BEGIN(ins_tokens)
 
 END(ins_tokens)
 
+
+BEGIN(vsplit_time)
+    /* Only the two kinds the split knows how to read; anything else leaves
+       the operand it inserts with whatever the frame held. */
+    uint8_t f = 0xffu;
+    int32_t off = (int32_t)(rng_next() % 21u) - 10;
+    int32_t ra, rb;
+    int i;
+
+    for (i = 0; i < NSTMT; i++) {
+        int k = (int)((rng_next() + (uint32_t)i) % NSTMT);
+        int16_t kind = vstmtbl[k].fields[0].kind;
+
+        if (kind == DK_LONG || kind == DK_SHORT2) {
+            f = (uint8_t)k;
+            break;
+        }
+    }
+    if (f == 0xffu) {
+        free(m); free(o);
+        continue;
+    }
+
+    build_edit(m, o, (int8_t)(rng_next() % 4u));
+
+    ra = ibm_vsplit_time(&m->state, f,
+                         (int32_t)(intptr_t)(m->nodes + 0x80), off);
+    rb = vsplit_time(&o->state, f,
+                     (int32_t)(intptr_t)(o->nodes + 0x80), off);
+
+    if ((ra == 0) != (rb == 0))
+        bad++;
+    else if (ra != 0
+             && ra - (int32_t)(intptr_t)m != rb - (int32_t)(intptr_t)o)
+        bad++;
+END(vsplit_time)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -3758,6 +3796,7 @@ int main(void)
     test_vins_tok();
     test_vinit_stm();
     test_ins_tokens();
+    test_vsplit_time();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
