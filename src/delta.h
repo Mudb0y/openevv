@@ -622,6 +622,8 @@ void insert_lv(delta_state *d, uint8_t st, delta_loc *loc, uint8_t mode);
 int  vtstctx_tv(delta_state *d, delta_tpos *p, int32_t back);
 int  lpta_tstctxtl(delta_state *d, uint8_t f);
 int  lpta_tstctxtr(delta_state *d, uint8_t f);
+int  f0_stepi(delta_state *d, const delta_loc *n, const delta_loc *f0,
+              const delta_loc *step, const delta_loc *count, delta_loc *out);
 
 /* Supplied by the language module, not by the runtime. */
 const uint8_t *actdlookup(delta_state *d, int32_t l, int32_t r,

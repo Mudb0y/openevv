@@ -282,6 +282,8 @@ extern void ibm_insert_lv(delta_state *, uint8_t, delta_loc *, uint8_t);
 extern int  ibm_vtstctx_tv(delta_state *, delta_tpos *, int32_t);
 extern int  ibm_lpta_tstctxtl(delta_state *, uint8_t);
 extern int  ibm_lpta_tstctxtr(delta_state *, uint8_t);
+extern int  ibm_f0_stepi(delta_state *, const delta_loc *, const delta_loc *,
+                         const delta_loc *, const delta_loc *, delta_loc *);
 extern void ibm_project_rl(delta_state *, delta_node *, int32_t, int32_t,
                            delta_node *, delta_node *, uint8_t);
 extern int  ibm_actd_lookup(delta_state *, int16_t, delta_token *,
@@ -6443,6 +6445,32 @@ BEGIN(insert_lv)
     m->stack.spine_r = o->stack.spine_r = 0;
 END(insert_lv)
 
+
+BEGIN(f0_stepi)
+    /* Five plain variables. The divisor is never zero, because the original
+       divides by it without asking. */
+    delta_loc lm[6], lo[6];
+    int ra, rb, i;
+
+    for (i = 0; i < 6; i++) {
+        lm[i].kind = 0;
+        lm[i].field = (int16_t)(rng_next() % 0x1200u);
+        lm[i].value = 0;
+    }
+    lm[0].field = (int16_t)(1u + rng_next() % 0x40u);
+    lm[3].field = (int16_t)(rng_next() % 0x20u);
+    lm[4].field = (int16_t)(rng_next() % 0x20u);
+    memcpy(lo, lm, sizeof(lm));
+
+    ra = ibm_f0_stepi(&m->state, &lm[0], &lm[1], &lm[3], &lm[4], &lm[5]);
+    rb = f0_stepi(&o->state, &lo[0], &lo[1], &lo[3], &lo[4], &lo[5]);
+
+    if (ra != rb)
+        bad++;
+    else if (memcmp(lm, lo, sizeof(lm)) != 0)
+        bad++;
+END(f0_stepi)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -6594,6 +6622,7 @@ int main(void)
     test_conj_merge();
     test_proj_r();
     test_insert_lv();
+    test_f0_stepi();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

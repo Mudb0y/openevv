@@ -5437,3 +5437,57 @@ int lpta_tstctxtr(delta_state *d, uint8_t f)
 {
     return lpta_tstctxt(d, f, 1);
 }
+
+/* The logarithm table read at a sixteenth of a step, straight when the
+   value lands on an entry and interpolated when it falls between two. */
+static int16_t ln_at(int16_t v)
+{
+    int16_t idx = (int16_t)(v >> 4);
+    int32_t frac = v % 16;
+
+    if (frac == 0)
+        return delta_LnTable[idx];
+
+    return (int16_t)(delta_LnTable[idx]
+        + (int16_t)(((delta_LnTable[idx + 1] - delta_LnTable[idx]) * frac)
+                    >> 4));
+}
+
+/* One step of a pitch contour: how far the fundamental moves over a run of
+   statements, as a ratio read off the logarithm table and divided down. */
+int f0_stepi(delta_state *d, const delta_loc *n, const delta_loc *f0,
+             const delta_loc *step, const delta_loc *count, delta_loc *out)
+{
+    int16_t div = n->field;
+    int16_t base = f0->field;
+    int16_t st = step->field;
+    int16_t cnt = count->field;
+    int16_t delta;
+    int16_t a, b;
+    int32_t v;
+
+    (void)d;
+
+    if (base + st * cnt > 0)
+        delta = (int16_t)(st * cnt);
+    else
+        delta = (int16_t)(0x14 - base);
+
+    if (delta == 0) {
+        out->field = 0;
+        return 0;
+    }
+
+    v = (base >= 0x1070) ? 0x1070 : base;
+    if (v < 0)
+        v = 0;
+    a = ln_at((int16_t)v);
+
+    v = (base + delta >= 0x1070) ? 0x1070 : base + delta;
+    if (v < 0)
+        v = 0;
+    b = ln_at((int16_t)v);
+
+    out->field = (int16_t)((a - b) / div);
+    return 0;
+}
