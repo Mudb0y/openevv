@@ -127,6 +127,8 @@ AT(fence_index, 0x008c);
 AT(fence_fill, 0x0098);
 AT(fence_marks, 0x0094);
 AT_VARS(err_jmp, 0x0fac);
+AT_VARS(nsq_marks, 0x116c);
+AT_VARS(fence_base, 0x1174);
 
 /* A context record and a saved scan position together, which is what a rule
    pushes when it is about to try a match it may need to unwind. */
@@ -705,7 +707,7 @@ void npush_i(delta_state *d, int32_t x)
 
     v.ptr = &x;
     v.kind = DK_SHORT2;
-    v.pad_06 = 0;
+    v.flag = 0;
     vnspush(d, &v);
 }
 
@@ -715,7 +717,7 @@ void npush_s(delta_state *d, int32_t x)
 
     v.ptr = &x;
     v.kind = DK_UBYTE;
-    v.pad_06 = 0;
+    v.flag = 0;
     vnspush(d, &v);
 }
 
@@ -907,7 +909,7 @@ int npush_fld(delta_state *d, uint8_t st, uint8_t fld)
     int32_t p;
 
     out.kind = e->fields[fld].kind;
-    out.pad_06 = e->fields[fld].flag;
+    out.flag = e->fields[fld].flag;
 
     if (v->scan_rev == 0)
         p = *(int32_t *)((char *)(intptr_t)v->scan_ptr
@@ -933,4 +935,105 @@ int npush_fld(delta_state *d, uint8_t st, uint8_t fld)
     out.ptr = e->get[fld](TFLDS((void *)(intptr_t)p));
     vnspush(d, &out);
     return 0;
+}
+
+/* Step along the spine until a node both carries the wanted field and is
+   sequential. Which way it steps is the caller's choice. */
+int32_t *ctxspine(delta_state *d, int32_t *t, uint8_t f, int32_t back)
+{
+    for (;;) {
+        if ((t[d->vars->fence_base + f] & 1) != 0
+            && !NONSEQ((const delta_node *)t))
+            return t;
+
+        if (back != 0)
+            t = (int32_t *)(intptr_t)(*(int32_t *)((char *)t + 4) & ~3);
+        else
+            t = (int32_t *)(intptr_t)
+                (*(int32_t *)((char *)t + d->vars->fence_base * 4 - 8) & ~3);
+    }
+}
+
+/* Recompute a node's one-statement and all-nonsequential flags from which of
+   its fields are present. The first pass counts the fields the language
+   nominates, the second sweeps the fenced ones from the top down. */
+void vnsqflags(delta_state *d, int32_t *t)
+{
+    int32_t i = 0;
+    int32_t count = 0;
+    int32_t all = 0;
+
+    while (d->stack->nsq_fields[i] > -1) {
+        if ((t[d->vars->fence_base + d->stack->nsq_fields[i]] & 1) != 0) {
+            count++;
+            all = 1;
+        }
+        i++;
+    }
+
+    for (i = (int32_t)d->fence_fill - 1; i >= 0; i--) {
+        if ((t[d->vars->fence_base + i] & 1) == 0)
+            continue;
+
+        if (d->vars->nsq_marks[i] == 0) {
+            all = 0;
+            count++;
+        }
+        if (count > 1 && all == 0)
+            break;
+    }
+
+    if (count == 1)
+        SETONESTM((delta_node *)t);
+    else
+        CLRONESTM((delta_node *)t);
+
+    if (all)
+        SETALLNSQ((delta_node *)t);
+    else
+        CLRALLNSQ((delta_node *)t);
+}
+
+/* Turn a compiled location into an operand. A negative first half names one
+   of the sized kinds and the value follows inline; otherwise it names a
+   statement type and the second half a field, which the language's own
+   reader locates. */
+void vinitloc_new(delta_state *d, delta_operand *out, const int16_t *loc)
+{
+    (void)d;
+
+    if (loc[0] < 0) {
+        out->kind = loc[0];
+        switch (out->kind) {
+        case DK_LONG:
+            out->ptr = (char *)(intptr_t)loc + 4;
+            break;
+        case DK_SHORT2:
+            out->ptr = (char *)(intptr_t)loc + 2;
+            break;
+        case DK_SYNC:
+            out->ptr = (char *)(intptr_t)loc + 4;
+            break;
+        default:
+            break;
+        }
+        out->flag = 0;
+        return;
+    }
+
+    if (loc[1] == -1) {
+        out->kind = loc[0];
+        out->ptr = (char *)(intptr_t)loc + 4;
+        out->flag = 0;
+        return;
+    }
+
+    {
+        const delta_stmt *e = &vstmtbl[loc[0]];
+        int32_t f = loc[1];
+
+        out->ptr = e->get[f]((char *)(intptr_t)loc + 4);
+        out->kind = e->fields[f].kind;
+        out->flag = e->fields[f].flag;
+    }
 }

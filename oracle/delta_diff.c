@@ -90,6 +90,9 @@ extern int32_t *ibm_rmost(delta_state *, int8_t, int32_t *);
 extern void ibm_vassign(delta_state *, const delta_operand *,
                         const delta_operand *);
 extern int  ibm_npush_fld(delta_state *, uint8_t, uint8_t);
+extern int32_t *ibm_ctxspine(delta_state *, int32_t *, uint8_t, int32_t);
+extern void ibm_vnsqflags(delta_state *, int32_t *);
+extern void ibm_vinitloc_new(delta_state *, delta_operand *, const int16_t *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -108,6 +111,8 @@ typedef struct {
     uint8_t     blockhdr[0x20];   /* the allocation header, read at +0x10 */
     uint8_t     names[0x200];     /* the name stack */
     uint8_t     nodes[0x400];     /* room to build a spine to walk */
+    int8_t      nsqf[0x20];       /* which fields decide the spine flags */
+    int8_t      nsqm[0x20];       /* one mark per fenced field */
 } delta_world;
 
 static int total_cases;
@@ -148,6 +153,8 @@ static void world_link(delta_world *w)
     w->state.fence_chars = w->chars;
     w->state.fence_index = w->map;
     w->state.fence_marks = w->marks;
+    w->stack.nsq_fields = w->nsqf;
+    w->vars.nsq_marks = w->nsqm;
     w->state.fence_fill = (uint8_t)(rng_next() % FENCE_MAP);
 
     w->stack.names = w->names;
@@ -186,6 +193,8 @@ static void normalise(delta_world *w, delta_state *st, delta_vars *va,
     REBASE(st->fence_chars);
     REBASE(st->fence_index);
     REBASE(st->fence_marks);
+    REBASE(sk->nsq_fields);
+    REBASE(va->nsq_marks);
     REBASE(va->back);
     REBASE(sk->top);
     REBASE(sk->limit);
@@ -229,7 +238,11 @@ static int world_differs(delta_world *a, delta_world *b)
         return 1;
     if (memcmp(a->names, b->names, sizeof(a->names)) != 0)
         return 1;
-    return memcmp(a->nodes, b->nodes, sizeof(a->nodes)) != 0;
+    if (memcmp(a->nodes, b->nodes, sizeof(a->nodes)) != 0)
+        return 1;
+    if (memcmp(a->nsqf, b->nsqf, sizeof(a->nsqf)) != 0)
+        return 1;
+    return memcmp(a->nsqm, b->nsqm, sizeof(a->nsqm)) != 0;
 }
 
 #define BEGIN(name)                                                  \
@@ -420,7 +433,7 @@ BEGIN(vcompare)
     b.ptr = m->records + 0x90;
     a.kind = kinds[rng_next() % 10u];
     b.kind = kinds[rng_next() % 10u];
-    a.pad_06 = b.pad_06 = 0;
+    a.flag = b.flag = 0;
     ibm_vcompare(&m->state, &a, &b);
     a.ptr = o->records + 0x80;
     b.ptr = o->records + 0x90;
@@ -507,7 +520,7 @@ BEGIN(vnspush)
     static const int16_t kinds[] = {-1, -2, -3, -4, -6, 0};
     v.ptr = m->records + 0x80;
     v.kind = kinds[rng_next() % 6u];
-    v.pad_06 = 0;
+    v.flag = 0;
     ibm_vnspush(&m->state, &v);
     v.ptr = o->records + 0x80;
     vnspush(&o->state, &v);
@@ -518,7 +531,7 @@ BEGIN(vadd)
     static const int16_t kinds[] = {-1, -2, -3, -4, -6, 0};
     a.ptr = m->records + 0x80; b.ptr = m->records + 0x90;
     a.kind = kinds[rng_next() % 6u]; b.kind = kinds[rng_next() % 6u];
-    a.pad_06 = b.pad_06 = 0;
+    a.flag = b.flag = 0;
     ibm_vadd(&m->state, &a, &b);
     a.ptr = o->records + 0x80; b.ptr = o->records + 0x90;
     vadd(&o->state, &a, &b);
@@ -595,7 +608,7 @@ BEGIN(vnspop)
     ibm_vnspop(&m->state, &a); vnspop(&o->state, &b);
     /* A type outside the four sized ones leaves the pointer alone, so it is
        still the same garbage on both sides and compares directly. */
-    if (a.kind != b.kind || a.pad_06 != b.pad_06) {
+    if (a.kind != b.kind || a.flag != b.flag) {
         bad++;
     } else if (a.kind >= -4 && a.kind <= -1) {
         if ((char *)a.ptr - (char *)m != (char *)b.ptr - (char *)o) bad++;
@@ -651,7 +664,7 @@ BEGIN(vpush_var)
     m->stack.size_ac = o->stack.size_ac = 12;
     v.ptr = m->records + 0x80;
     v.kind = kinds[rng_next() % 8u];
-    v.pad_06 = 0;
+    v.flag = 0;
     ibm_vpush_var(&m->state, &v);
     v.ptr = o->records + 0x80;
     vpush_var(&o->state, &v);
@@ -1029,10 +1042,10 @@ BEGIN(vassign)
     fill(m->nodes + 0x200, 0x40);
     memcpy(o->nodes + 0x200, m->nodes + 0x200, 0x40);
 
-    dm.ptr = m->nodes;        dm.kind = dk; dm.pad_06 = 0;
-    sm.ptr = m->nodes + 0x200; sm.kind = sk; sm.pad_06 = 0;
-    dof.ptr = o->nodes;        dof.kind = dk; dof.pad_06 = 0;
-    so.ptr = o->nodes + 0x200; so.kind = sk; so.pad_06 = 0;
+    dm.ptr = m->nodes;        dm.kind = dk; dm.flag = 0;
+    sm.ptr = m->nodes + 0x200; sm.kind = sk; sm.flag = 0;
+    dof.ptr = o->nodes;        dof.kind = dk; dof.flag = 0;
+    so.ptr = o->nodes + 0x200; so.kind = sk; so.flag = 0;
 
     ibm_vassign(&m->state, &dm, &sm);
     vassign(&o->state, &dof, &so);
@@ -1088,6 +1101,113 @@ BEGIN(npush_fld)
     memset(o->nodes, 0, sizeof(o->nodes));
 END(npush_fld)
 
+
+BEGIN(ctxspine)
+    static const int32_t at[4] = {0x00, 0x80, 0x100, 0x180};
+    uint8_t f = (uint8_t)(rng_next() % NSTMT);
+    int32_t back = (int32_t)(rng_next() % 2u);
+    void *ra, *rb;
+    int i, j;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.fence_base = o->vars.fence_base = 13;
+
+    /* The walk has no stop other than finding what it wants, so the last
+       node always satisfies it. */
+    for (i = 0; i < 4; i++) {
+        int32_t to = at[i < 3 ? i + 1 : 3];
+
+        for (j = 0; j < 24; j++) {
+            uint32_t r = rng_next();
+
+            ((int32_t *)(m->nodes + at[i]))[j] =
+                (int32_t)((intptr_t)(m->nodes + to) | (r & 3u));
+            ((int32_t *)(o->nodes + at[i]))[j] =
+                (int32_t)((intptr_t)(o->nodes + to) | (r & 3u));
+        }
+    }
+    ((int32_t *)(m->nodes + at[3]))[13 + f] |= 1;
+    ((int32_t *)(o->nodes + at[3]))[13 + f] |= 1;
+    ((int32_t *)(m->nodes + at[3]))[2] &= ~2;
+    ((int32_t *)(o->nodes + at[3]))[2] &= ~2;
+
+    ra = ibm_ctxspine(&m->state, (int32_t *)m->nodes, f, back);
+    rb = ctxspine(&o->state, (int32_t *)o->nodes, f, back);
+    if ((char *)ra - (char *)m != (char *)rb - (char *)o)
+        bad++;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(ctxspine)
+
+BEGIN(vnsqflags)
+    int i;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.fence_base = o->vars.fence_base = 13;
+    m->state.fence_fill = o->state.fence_fill = (uint8_t)(rng_next() % 0x0au);
+
+    for (i = 0; i < 0x20; i++) {
+        int8_t v = (int8_t)(rng_next() % 12u);
+
+        /* A negative entry ends the nominated list; make one likely early. */
+        m->nsqf[i] = o->nsqf[i] = (rng_next() % 4u == 0) ? (int8_t)-1 : v;
+        m->nsqm[i] = o->nsqm[i] = (int8_t)(rng_next() % 2u);
+    }
+    m->nsqf[0x1f] = o->nsqf[0x1f] = -1;
+
+    for (i = 0; i < 24; i++) {
+        uint32_t r = rng_next();
+
+        ((int32_t *)m->nodes)[i] = (int32_t)(r & 3u);
+        ((int32_t *)o->nodes)[i] = (int32_t)(r & 3u);
+    }
+
+    ibm_vnsqflags(&m->state, (int32_t *)m->nodes);
+    vnsqflags(&o->state, (int32_t *)o->nodes);
+END(vnsqflags)
+
+BEGIN(vinitloc_new)
+    delta_operand am, ao;
+    int16_t *lm = (int16_t *)m->nodes;
+    int16_t *lo = (int16_t *)o->nodes;
+    static const int16_t kinds[] = {-1, -2, -3, -4, -6};
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    fill(m->nodes + 4, 0x20);
+    memcpy(o->nodes + 4, m->nodes + 4, 0x20);
+
+    if (rng_next() % 2u) {
+        lm[0] = lo[0] = kinds[rng_next() % 5u];
+        lm[1] = lo[1] = (int16_t)rng_next();
+    } else {
+        int st = (int)(rng_next() % NSTMT);
+
+        lm[0] = lo[0] = (int16_t)st;
+        lm[1] = lo[1] = (rng_next() % 4u == 0) ? (int16_t)-1
+            : (int16_t)(rng_next() % (uint32_t)vstmtbl[st].nfields);
+    }
+
+    /* Two of the kinds leave the pointer alone, so seed it with something
+       that rebases rather than with garbage that cannot. */
+    fill(&am, sizeof(am)); ao = am;
+    am.ptr = m->nodes + 0x300;
+    ao.ptr = o->nodes + 0x300;
+    ibm_vinitloc_new(&m->state, &am, lm);
+    vinitloc_new(&o->state, &ao, lo);
+
+    if (am.kind != ao.kind || am.flag != ao.flag)
+        bad++;
+    else if ((char *)am.ptr - (char *)m != (char *)ao.ptr - (char *)o)
+        bad++;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(vinitloc_new)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -1137,6 +1257,9 @@ int main(void)
     test_stmt_walks();
     test_vassign();
     test_npush_fld();
+    test_ctxspine();
+    test_vnsqflags();
+    test_vinitloc_new();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

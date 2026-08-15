@@ -27,7 +27,10 @@ typedef struct {
 /* The backtracking stack. Its true size is not established: only the fields
    below have been seen, so the tail is however much room the records need. */
 typedef struct {
-    uint8_t   pad_0000[0xa0];
+    uint8_t       pad_0000[0x5c];
+    const int8_t *nsq_fields;  /* 0x005c, which fields decide the flags,
+                                  terminated by a negative entry */
+    uint8_t       pad_0060[0xa0 - 0x60];
     uint8_t  *names;         /* 0x00a0, the name stack, eight bytes an entry */
     int8_t    names_depth;   /* 0x00a4 */
     uint8_t   pad_00a5[3];
@@ -73,7 +76,9 @@ typedef struct {
     uint8_t  *back;            /* 0x0fdc, where an unwind returns to */
     int8_t    compared_equal;  /* 0x0fe0 */
     int8_t    fence_count;     /* 0x0fe1, how many characters are fenced */
-    uint8_t   pad_0fe2[0x1174 - 0xfe2];
+    uint8_t   pad_0fe2[0x116c - 0xfe2];
+    const int8_t *nsq_marks;   /* 0x116c, one per fenced field */
+    uint8_t   pad_1170[4];
     int32_t   fence_base;      /* 0x1174 */
     uint8_t   pad_1178[0x40];
 } delta_vars;
@@ -110,7 +115,8 @@ typedef struct {
 typedef struct {
     void   *ptr;      /* +0x00 */
     int16_t kind;     /* +0x04 */
-    int16_t pad_06;
+    int8_t  flag;     /* +0x06, one byte, copied from the field descriptor */
+    int8_t  pad_07;
 } delta_operand;
 
 #define DK_UBYTE  (-1)
@@ -276,6 +282,9 @@ delta_node *lmost(delta_state *d, int8_t f, delta_node *t);
 int32_t *rmost(delta_state *d, int8_t f, int32_t *t);
 void vassign(delta_state *d, const delta_operand *dst, const delta_operand *src);
 int  npush_fld(delta_state *d, uint8_t st, uint8_t fld);
+int32_t *ctxspine(delta_state *d, int32_t *t, uint8_t f, int32_t back);
+void vnsqflags(delta_state *d, int32_t *t);
+void vinitloc_new(delta_state *d, delta_operand *out, const int16_t *loc);
 
 /* Bumped whenever the spine is relinked, so anything holding a position knows
    to look again. */
