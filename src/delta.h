@@ -250,7 +250,9 @@ typedef struct {
                                       /* +0x0c, one writer per field */
     const uint8_t         *variants;  /* +0x10, null unless the type has any */
     const uint8_t         *deflt;     /* +0x14, what a fresh statement holds */
-    uint8_t                pad_18[0x20 - 0x18];
+    int32_t                unknown_18; /* +0x18, set when the type has a
+                                          statement worth starting from */
+    uint8_t                pad_1c[4];
     int32_t                nfields;   /* +0x20, how many the type declares */
     int32_t                length;    /* +0x24, the whole record in bytes */
     int32_t                stride;    /* +0x28, one variant */
@@ -450,6 +452,11 @@ int  vdel_1pt(delta_state *d, uint8_t f, int32_t t, int32_t arg);
 int  vdel_2pt(delta_state *d, uint8_t f, int32_t l, int32_t r);
 int  vins_tok(delta_state *d, uint8_t f, int32_t l, int32_t r,
               const delta_operand *v);
+int  vinit_stm(delta_state *d, int8_t f);
+int  ins_tokens_s(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
+                  int32_t arg);
+int  ins_tokens_i(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
+                  int32_t arg);
 void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r);
 
 /* Supplied by the language, not the runtime: match the span between the two

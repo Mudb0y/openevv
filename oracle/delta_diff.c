@@ -164,6 +164,11 @@ extern int  ibm_vdel_1pt(delta_state *, uint8_t, int32_t, int32_t);
 extern int  ibm_vdel_2pt(delta_state *, uint8_t, int32_t, int32_t);
 extern int  ibm_vins_tok(delta_state *, uint8_t, int32_t, int32_t,
                          const delta_operand *);
+extern int  ibm_vinit_stm(delta_state *, int8_t);
+extern int  ibm_ins_tokens_s(delta_state *, uint8_t, const uint8_t *, uint8_t,
+                             int32_t);
+extern int  ibm_ins_tokens_i(delta_state *, uint8_t, const uint8_t *, uint8_t,
+                             int32_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -1197,7 +1202,7 @@ BEGIN(stmt_walks)
     }
     if (f < 0) {
         free(m); free(o);
-        break;
+        continue;
     }
 
     memset(m->nodes, 0, sizeof(m->nodes));
@@ -2199,7 +2204,7 @@ BEGIN(vnormalize)
 
     if (f < 0) {
         free(m); free(o);
-        break;
+        continue;
     }
     make_tpos(m, o, f, &pm, &po, sets[rng_next() % 3u]);
 
@@ -2347,7 +2352,7 @@ BEGIN(timing_tests)
 
     if (f < 0) {
         free(m); free(o);
-        break;
+        continue;
     }
     make_tpos(m, o, f, &pm, &po, sets[rng_next() % 4u]);
 
@@ -2439,7 +2444,7 @@ BEGIN(lpta_walks)
 
     if (f < 0) {
         free(m); free(o);
-        break;
+        continue;
     }
 
     if (which == 0) {
@@ -2467,7 +2472,7 @@ BEGIN(setscan)
 
     if (f < 0) {
         free(m); free(o);
-        break;
+        continue;
     }
 
     if (which == 0) {
@@ -2582,7 +2587,7 @@ BEGIN(vtimept_tv)
 
     if (f < 0) {
         free(m); free(o);
-        break;
+        continue;
     }
     make_tpos(m, o, f, &pm, &po, sets[rng_next() % 4u]);
 
@@ -2607,7 +2612,7 @@ BEGIN(for_loop_preamble)
 
     if (f < 0) {
         free(m); free(o);
-        break;
+        continue;
     }
     for (i = 0; i < FENCE_MAP; i++)
         m->map[i] = o->map[i] = (uint8_t)(rng_next() % 4u);
@@ -2668,7 +2673,7 @@ BEGIN(vprt_range)
 
     if (f < 0) {
         free(m); free(o);
-        break;
+        continue;
     }
     make_tpos(m, o, f, &am, &ao, sets[rng_next() % 4u]);
     make_tpos(m, o, f, &bm, &bo, sets[rng_next() % 4u]);
@@ -2699,7 +2704,7 @@ BEGIN(forto_adv_r)
 
     if (f < 0) {
         free(m); free(o);
-        break;
+        continue;
     }
     for (i = 0; i < FENCE_MAP; i++)
         m->map[i] = o->map[i] = (uint8_t)(rng_next() % 4u);
@@ -2743,7 +2748,7 @@ BEGIN(forto_adv_upto_r)
 
     if (f < 0) {
         free(m); free(o);
-        break;
+        continue;
     }
     for (i = 0; i < FENCE_MAP; i++)
         m->map[i] = o->map[i] = (uint8_t)(rng_next() % 4u);
@@ -2814,7 +2819,7 @@ BEGIN(setd_lookup)
 
     if (f < 0) {
         free(m); free(o);
-        break;
+        continue;
     }
     make_tpos(m, o, f, &am, &ao, sets[rng_next() % 4u]);
     make_tpos(m, o, f, &bm, &bo, sets[rng_next() % 4u]);
@@ -3167,7 +3172,7 @@ BEGIN(vcomp_pta)
 
     if (f < 0) {
         free(m); free(o);
-        break;
+        continue;
     }
     /* visleft's remembered path walks the forward links, and on the timing
        spine those close a loop between the last node and its terminator.
@@ -3535,6 +3540,125 @@ BEGIN(vins_tok)
         bad++;
 END(vins_tok)
 
+
+/* The spine and heap the insert and delete entry points share: four nodes,
+   every field carried so chkdelnonseq refuses early, and every node stamped
+   as a heap object so it can go back. */
+static void build_edit(delta_world *m, delta_world *o, int8_t fd)
+{
+    enum { FB = 15, NNODE = 4, STEP = 0x80, NFIELD = 4 };
+    int i, j;
+
+    build_pspine(m, o);
+    build_heap(m, o);
+    m->state.fence_fill = o->state.fence_fill = NFIELD;
+    m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
+    m->vars.ctx_both = o->vars.ctx_both = (int32_t)(rng_next() % 2u);
+    m->stack.del_field = o->stack.del_field = fd;
+    m->nsqf[0] = o->nsqf[0] = -1;
+    m->stack.sync_size = o->stack.sync_size = 0x80;
+
+    for (i = 0; i < NSEG; i++) {
+        int32_t used = (int32_t)(intptr_t)m->segs[i].end & 3;
+
+        if (((int32_t)(intptr_t)m->segs[i].end & 7) == 0)
+            used += 4;
+        m->segs[i].used = o->segs[i].used = used;
+    }
+
+    for (i = 0; i < NNODE; i++) {
+        for (j = 0; j < NFIELD; j++) {
+            ((int32_t *)(m->nodes + i * STEP))[FB + j] |= 1;
+            ((int32_t *)(o->nodes + i * STEP))[FB + j] |= 1;
+        }
+        ((int32_t *)(m->nodes + i * STEP))[2] &= ~2;
+        ((int32_t *)(o->nodes + i * STEP))[2] &= ~2;
+        if (i > 0) {
+            *(delta_seg **)(m->nodes + i * STEP - 4) = &m->segs[1];
+            *(delta_seg **)(o->nodes + i * STEP - 4) = &o->segs[1];
+        }
+
+        /* The right-hand spine link has to run forward here: vins_sync walks
+           it looking for the far end of the span, and build_pspine points it
+           the other way. */
+        {
+            int hi = i + 1 < NNODE ? i + 1 : NNODE - 1;
+
+            ((int32_t *)(m->nodes + i * STEP))[FB - 2] =
+                (int32_t)(intptr_t)(m->nodes + hi * STEP);
+            ((int32_t *)(o->nodes + i * STEP))[FB - 2] =
+                (int32_t)(intptr_t)(o->nodes + hi * STEP);
+        }
+    }
+    m->segs[1].live = o->segs[1].live = 16;
+
+    m->stack.spine_l = (int32_t)(intptr_t)m->nodes;
+    o->stack.spine_l = (int32_t)(intptr_t)o->nodes;
+    m->stack.spine_r = (int32_t)(intptr_t)(m->nodes + 3 * STEP);
+    o->stack.spine_r = (int32_t)(intptr_t)(o->nodes + 3 * STEP);
+}
+
+BEGIN(vinit_stm)
+    int8_t f = (int8_t)(rng_next() % NSTMT);
+    int ra, rb;
+
+    build_edit(m, o, (int8_t)(rng_next() % 4u));
+
+    ra = ibm_vinit_stm(&m->state, f);
+    rb = vinit_stm(&o->state, f);
+    if (ra != rb)
+        bad++;
+END(vinit_stm)
+
+BEGIN(ins_tokens)
+    /* A byte string can only feed a statement whose first field is itself a
+       byte: vassign refuses to widen a byte into anything larger, so what the
+       original writes there is whatever the stack held. A wide string fits
+       every kind, so pick the statement first and the width to suit it. */
+    uint8_t f = 0xffu;
+    int wide = 1;
+    uint8_t str[8];
+    uint8_t n;
+    int ra, rb, i;
+
+    for (i = 0; i < NSTMT; i++) {
+        int k = (int)((rng_next() + (uint32_t)i) % NSTMT);
+        int16_t kind = vstmtbl[k].fields[0].kind;
+
+        if (kind >= -4 && kind <= -1) {
+            f = (uint8_t)k;
+            if (kind == DK_UBYTE)
+                wide = (int)(rng_next() % 2u);
+            break;
+        }
+    }
+    if (f == 0xffu) {
+        free(m); free(o);
+        continue;
+    }
+    n = (uint8_t)(wide ? 2u * (rng_next() % 3u) : (rng_next() % 3u));
+
+    build_edit(m, o, (int8_t)(rng_next() % 4u));
+    for (i = 0; i < 8; i++)
+        str[i] = (uint8_t)rng_next();
+
+    m->state.lpta.node = (int32_t)(intptr_t)(m->nodes + 0x80);
+    o->state.lpta.node = (int32_t)(intptr_t)(o->nodes + 0x80);
+    m->state.rpta.node = (int32_t)(intptr_t)(m->nodes + 2 * 0x80);
+    o->state.rpta.node = (int32_t)(intptr_t)(o->nodes + 2 * 0x80);
+
+    if (wide) {
+        ra = ibm_ins_tokens_i(&m->state, f, str, n, 0);
+        rb = ins_tokens_i(&o->state, f, str, n, 0);
+    } else {
+        ra = ibm_ins_tokens_s(&m->state, f, str, n, 0);
+        rb = ins_tokens_s(&o->state, f, str, n, 0);
+    }
+    if (ra != rb)
+        bad++;
+
+END(ins_tokens)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -3632,6 +3756,8 @@ int main(void)
     test_chkdelnonseq();
     test_fdeldel();
     test_vins_tok();
+    test_vinit_stm();
+    test_ins_tokens();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

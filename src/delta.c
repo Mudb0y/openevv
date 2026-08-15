@@ -3080,3 +3080,107 @@ int vins_tok(delta_state *d, uint8_t f, int32_t l, int32_t r,
     d->vars->unknown_1170 = 0;
     return 1;
 }
+
+/* Empty a field and put the language's own starting statement in it. */
+int vinit_stm(delta_state *d, int8_t f)
+{
+    const delta_stmt *e = &vstmtbl[f];
+    delta_stack *s = d->stack;
+    delta_operand v;
+
+    vdel_2pt(d, (uint8_t)f, s->spine_l, s->spine_r);
+
+    if (e->unknown_18 == 0)
+        return 1;
+
+    v.kind = e->fields[0].kind;
+    v.flag = e->fields[0].flag;
+    v.ptr = e->get[0]((void *)(intptr_t)e->deflt);
+
+    if (!vins_tok(d, (uint8_t)f, s->spine_l, s->spine_r, &v))
+        return 0;
+
+    return 1;
+}
+
+/* Insert a run of statements, one per value in the string, with a fresh sync
+   between each pair. Both spellings share everything but how they read a
+   value; a string of nothing is a plain delete. */
+static int ins_tokens(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
+                      int32_t arg, int wide)
+{
+    delta_operand a;
+    delta_operand b;
+    uint8_t ch = 0;
+    int32_t lng = 0;
+    int16_t shrt = 0;
+    const uint8_t *end;
+
+    if (n == 0) {
+        vdel_2pt(d, f, d->lpta.node, d->rpta.node);
+        return 1;
+    }
+
+    a.kind = STMTYP((int8_t)f);
+    a.flag = vstmtbl[f].fields[0].flag;
+
+    switch (STMTYP((int8_t)f)) {
+    case DK_UBYTE:  a.ptr = &ch; break;
+    case DK_LONG:   a.ptr = &lng; break;
+    case DK_SHORT2:
+    case DK_SHORT:  a.ptr = &shrt; break;
+    default:        return 0;
+    }
+
+    end = str + n;
+
+    if (wide) {
+        b.kind = DK_SHORT2;
+        b.ptr = &shrt;
+    } else {
+        b.kind = DK_UBYTE;
+        b.ptr = &ch;
+    }
+    b.flag = vstmtbl[f].fields[0].flag;
+
+    while (str < end) {
+        if (wide) {
+            shrt = (int16_t)(((str[0] & 0x7f) << 8) | str[1]);
+            if ((str[0] & 0x80) != 0)
+                shrt = (int16_t)(-shrt);
+            str += 2;
+        } else {
+            ch = *str;
+            str++;
+        }
+
+        if (a.kind != b.kind)
+            vassign(d, &a, &b);
+
+        if (!vins_tok(d, f, d->lpta.node, d->rpta.node, &a))
+            return 0;
+
+        if (str < end) {
+            d->lpta.node = (int32_t)(intptr_t)vins_sync(d, f,
+                *(int32_t *)(intptr_t)(d->rpta.node + 0xc + f * 4) & ~3,
+                d->rpta.node);
+            (void)arg;
+            if (d->lpta.node == 0)
+                return 0;
+        }
+    }
+
+    return 1;
+}
+
+int ins_tokens_s(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
+                 int32_t arg)
+{
+    return ins_tokens(d, f, str, n, arg, 0);
+}
+
+int ins_tokens_i(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
+                 int32_t arg)
+{
+    return ins_tokens(d, f, str, n, arg, 1);
+}
