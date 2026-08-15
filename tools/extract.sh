@@ -72,7 +72,7 @@ echo "extract: renamed $(wc -l < rename.txt) symbols, widened $(wc -l < globaliz
 # every object, so the cross references between them stay consistent.
 DELTA_OBJS="assign debug delta dfault extra for io misc optimize pointer
             stack test init gener access ctxt ddelta deltaimp deltio dttime
-            dutil heap mem prdelta prdeltao rectbuf"
+            dutil heap mem prdelta prdeltao rectbuf capp"
 
 cd "$ROOT/analysis/enus"
 : > delta-rename.txt

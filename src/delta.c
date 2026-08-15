@@ -4468,3 +4468,142 @@ int savetok(delta_state *d, delta_loc *loc)
     reset_field(loc);
     return 0;
 }
+
+/* Does this string spell a whole number? A sign is allowed only at the
+   front, and everything after it has to be a digit. A lone sign passes,
+   which is what the original does.
+
+   The original hands a sign-extended character to the C library's digit
+   test; the test is written out here instead, which answers the same for
+   every input and asks nothing of the library. */
+int chk_itok(const char *s)
+{
+    if (*s != '-' && *s != '+' && !(*s >= '0' && *s <= '9'))
+        return 0;
+
+    for (;;) {
+        s++;
+        if (*s == 0)
+            return 1;
+        if (!(*s >= '0' && *s <= '9'))
+            return 0;
+    }
+}
+
+/* Scale an intonation value by a strength, through the exponential table. */
+int calcIntoni(delta_state *d, const delta_loc *base, const delta_loc *a,
+               const delta_loc *b, delta_loc *out)
+{
+    int32_t f0 = base->field;
+    int16_t x = a->field;
+    int16_t y = b->field;
+    int32_t r;
+
+    (void)d;
+
+    if (x == 0) {
+        r = f0;
+    } else {
+        int32_t p = (int32_t)x * (int32_t)y;
+        int32_t n = (p >= 0x7f) ? 0x7f : p;
+
+        if (n < 0)
+            n = 0;
+        else
+            n = (p >= 0x7f) ? 0x7f : p;
+
+        r = ((int32_t)delta_ExpTable[(int16_t)n] * f0) >> 14;
+        if (r > 0x7fff)
+            r = 0x7fff;
+    }
+
+    out->field = (int16_t)r;
+    return 0;
+}
+
+/* Modulate a breathiness pair by a roughness setting. */
+int modulate_pwindi(delta_state *d, const delta_loc *in, delta_loc *a,
+                    delta_loc *b)
+{
+    int16_t v = in->field;
+    int32_t n;
+
+    (void)d;
+
+    n = (v > 9) ? 9 : v;
+    if (n < 1)
+        n = 1;
+    else
+        n = (v > 9) ? 9 : v;
+
+    v = (int16_t)n;
+
+    a->field = (int16_t)(((int32_t)a->field * delta_PwindModTable[v]) >> 7);
+
+    if (v >= 5)
+        b->field = (int16_t)(((int32_t)b->field * (0x69 - v)) / 0x64);
+    else
+        b->field = (int16_t)(((int32_t)b->field * (v + 0x5f)) / 0x64);
+
+    return 0;
+}
+
+/* The boundary a helper written in C sees. A rule variable holds its value
+   in the field slot or in the value slot depending on its kind, and the
+   helper wants it at a width of its own choosing; these two move it across
+   in both directions. A kind that is neither of the two number kinds is
+   left alone rather than refused. */
+void getDeltaCcodeParm(const delta_loc *src, void *dst, int16_t want)
+{
+    if (src->kind == DK_SHORT2) {
+        if (want == DK_SHORT2)
+            *(int16_t *)dst = src->field;
+        else if (want == DK_LONG)
+            *(int32_t *)dst = src->field;
+        return;
+    }
+
+    if (src->kind == DK_LONG) {
+        if (want == DK_SHORT2)
+            *(int16_t *)dst = (int16_t)src->value;
+        else if (want == DK_LONG)
+            *(int32_t *)dst = src->value;
+    }
+}
+
+void setDeltaCcodeReturnValue(const void *src, int16_t from, delta_loc *dst)
+{
+    if (dst->kind == DK_SHORT2) {
+        /* Both widths give up the same sixteen bits here. */
+        if (from == DK_SHORT2 || from == DK_LONG)
+            dst->field = *(const int16_t *)src;
+        return;
+    }
+
+    if (dst->kind == DK_LONG) {
+        if (from == DK_SHORT2)
+            dst->value = *(const int16_t *)src;
+        else if (from == DK_LONG)
+            dst->value = *(const int32_t *)src;
+    }
+}
+
+/* And what such a helper answers the rule with. */
+void setDeltaReturnCode(delta_state *d, uint8_t code)
+{
+    d->vars->return_code = code;
+}
+
+/* One of those helpers: the remainder of one variable by another. */
+int modulo(delta_state *d, const delta_loc *a, const delta_loc *b,
+           delta_loc *out)
+{
+    int32_t x, y, r;
+
+    (void)d;
+    getDeltaCcodeParm(a, &x, DK_LONG);
+    getDeltaCcodeParm(b, &y, DK_LONG);
+    r = x % y;
+    setDeltaCcodeReturnValue(&r, DK_LONG, out);
+    return 0;
+}

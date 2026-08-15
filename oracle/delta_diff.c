@@ -256,6 +256,17 @@ extern int  ibm_for_test(delta_state *, delta_loc *, delta_loc *,
 extern int  ibm_for_adv(delta_state *, int16_t, int16_t, delta_loc *,
                         delta_loc *, delta_loc *);
 extern int  ibm_savetok(delta_state *, delta_loc *);
+extern int  ibm_chk_itok(const char *);
+extern int  ibm_calcIntoni(delta_state *, const delta_loc *,
+                           const delta_loc *, const delta_loc *,
+                           delta_loc *);
+extern int  ibm_modulate_pwindi(delta_state *, const delta_loc *,
+                                delta_loc *, delta_loc *);
+extern void ibm_getDeltaCcodeParm(const delta_loc *, void *, int16_t);
+extern void ibm_setDeltaCcodeReturnValue(const void *, int16_t, delta_loc *);
+extern void ibm_setDeltaReturnCode(delta_state *, uint8_t);
+extern int  ibm_modulo(delta_state *, const delta_loc *, const delta_loc *,
+                       delta_loc *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -5620,6 +5631,117 @@ BEGIN(savetok)
     memset(o->nodes, 0, sizeof(o->nodes));
 END(savetok)
 
+
+BEGIN(chk_itok)
+    /* Strings built out of the characters the answer turns on, so both
+       answers come up often. */
+    static const char alphabet[8] = {'-', '+', '0', '5', '9', 'a', ' ', 0};
+    char buf[8];
+    int ra, rb, i;
+    int n = (int)(rng_next() % 7u) + 1;
+
+    for (i = 0; i < n; i++)
+        buf[i] = alphabet[rng_next() % 8u];
+    buf[n] = 0;
+
+    ra = ibm_chk_itok(buf);
+    rb = chk_itok(buf);
+    if (ra != rb)
+        bad++;
+END(chk_itok)
+
+BEGIN(numeric_helpers)
+    delta_loc lm[4], lo[4];
+    int ra, rb, i;
+
+    for (i = 0; i < 4; i++) {
+        lm[i].kind = 0;
+        lm[i].field = (rng_next() % 4u == 0) ? (int16_t)rng_next()
+                                             : (int16_t)(rng_next() % 0x40u);
+        lm[i].value = 0;
+    }
+    memcpy(lo, lm, sizeof(lm));
+
+    if (rng_next() % 2u) {
+        ra = ibm_calcIntoni(&m->state, &lm[0], &lm[1], &lm[2], &lm[3]);
+        rb = calcIntoni(&o->state, &lo[0], &lo[1], &lo[2], &lo[3]);
+    } else {
+        ra = ibm_modulate_pwindi(&m->state, &lm[0], &lm[1], &lm[2]);
+        rb = modulate_pwindi(&o->state, &lo[0], &lo[1], &lo[2]);
+    }
+
+    if (ra != rb)
+        bad++;
+    else if (memcmp(lm, lo, sizeof(lm)) != 0)
+        bad++;
+END(numeric_helpers)
+
+
+BEGIN(ccode_boundary)
+    /* Every pairing of the kind a variable has with the width the helper
+       asks for, including the kinds neither side handles. */
+    static const int16_t kinds[6] = {-1, -2, -3, -4, -6, 0};
+    delta_loc lm, lo;
+    int16_t want = kinds[rng_next() % 6u];
+    uint32_t which = rng_next() % 3u;
+    int32_t am[2], ao[2];
+
+    memset(&lm, 0, sizeof(lm));
+    lm.kind = kinds[rng_next() % 6u];
+    lm.field = (int16_t)rng_next();
+    lm.value = (int32_t)rng_next();
+    lo = lm;
+    am[0] = ao[0] = (int32_t)rng_next();
+    am[1] = ao[1] = (int32_t)rng_next();
+
+    if (which == 0) {
+        ibm_getDeltaCcodeParm(&lm, am, want);
+        getDeltaCcodeParm(&lo, ao, want);
+    } else if (which == 1) {
+        ibm_setDeltaCcodeReturnValue(am, want, &lm);
+        setDeltaCcodeReturnValue(ao, want, &lo);
+    } else {
+        uint8_t code = (uint8_t)rng_next();
+
+        ibm_setDeltaReturnCode(&m->state, code);
+        setDeltaReturnCode(&o->state, code);
+    }
+
+    if (memcmp(&lm, &lo, sizeof(lm)) != 0)
+        bad++;
+    else if (memcmp(am, ao, sizeof(am)) != 0)
+        bad++;
+END(ccode_boundary)
+
+BEGIN(modulo)
+    delta_loc lm[3], lo[3];
+    static const int16_t kinds[2] = {-3, -4};
+    int ra, rb, i;
+
+    for (i = 0; i < 3; i++) {
+        lm[i].kind = kinds[rng_next() % 2u];
+        lm[i].field = (int16_t)(rng_next() % 0x100u);
+        lm[i].value = (int32_t)(rng_next() % 0x100u);
+    }
+    /* The original divides without asking, so a zero divisor would fault
+       there as surely as here. */
+    if (lm[1].kind == DK_SHORT2) {
+        if (lm[1].field == 0)
+            lm[1].field = 1;
+    } else if (lm[1].value == 0) {
+        lm[1].value = 1;
+    }
+    memcpy(lo, lm, sizeof(lm));
+
+    ra = ibm_modulo(&m->state, &lm[0], &lm[1], &lm[2]);
+    rb = modulo(&o->state, &lo[0], &lo[1], &lo[2]);
+
+    if (ra != rb)
+        bad++;
+    else if (memcmp(lm, lo, sizeof(lm)) != 0)
+        bad++;
+END(modulo)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -5759,6 +5881,10 @@ int main(void)
     test_for_steps();
     test_forx_adv_l();
     test_savetok();
+    test_chk_itok();
+    test_numeric_helpers();
+    test_ccode_boundary();
+    test_modulo();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

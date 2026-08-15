@@ -32,14 +32,14 @@ DELTA_OBJS := \
   $(ENUS)/deltio.obj $(ENUS)/dttime.obj $(ENUS)/dutil.obj $(ENUS)/heap.obj \
   $(ENUS)/mem.obj $(ENUS)/prdelta.obj $(ENUS)/prdeltao.obj $(ENUS)/rectbuf.obj \
   $(ENUS)/win_dynabuf.obj $(ENUS)/logio.obj $(ENUS)/win_hash.obj \
-  $(ENUS)/link.obj $(ENUS)/capp.obj $(ENUS)/win_etistr.obj \
+  $(ENUS)/link.obj $(ENUS)/win_etistr.obj \
   $(ENUS)/filio.obj $(ENUS)/win_filename.obj
 
 IBMDELTA := $(wildcard ../analysis/delta-ibm/*.obj)
 # Support objects the runtime needs but that define no primitive we shadow,
 # so they link unprefixed.
 DELTA_SUPPORT := $(ENUS)/win_dynabuf.obj $(ENUS)/logio.obj $(ENUS)/win_hash.obj \
-  $(ENUS)/link.obj $(ENUS)/capp.obj $(ENUS)/win_etistr.obj \
+  $(ENUS)/link.obj $(ENUS)/win_etistr.obj \
   $(ENUS)/filio.obj $(ENUS)/win_filename.obj
 
 delta: $(BUILD)/delta_probe.exe $(BUILD)/delta_diff.exe

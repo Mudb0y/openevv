@@ -161,7 +161,8 @@ typedef struct {
     int32_t   active_record;   /* 0x0fa4 */
     int32_t   error_thrown;    /* 0x0fa8 */
     void     *err_jmp;         /* 0x0fac, where a thrown error lands */
-    uint8_t   pad_0fb0[0x10];
+    uint8_t   return_code;     /* 0x0fb0, what a C helper answered with */
+    uint8_t   pad_0fb1[0xf];
     int32_t   loop_tag;        /* 0x0fc0, what a forall is iterating */
     int32_t   test_tag;        /* 0x0fc4, what the running test is matching */
     uint8_t   pad_0fc8[4];
@@ -582,6 +583,16 @@ int  for_test(delta_state *d, delta_loc *var, delta_loc *bound,
 int  for_adv(delta_state *d, int16_t test_tag, int16_t loop_tag,
              delta_loc *var, delta_loc *bound, delta_loc *step);
 int  savetok(delta_state *d, delta_loc *loc);
+int  chk_itok(const char *s);
+int  calcIntoni(delta_state *d, const delta_loc *base, const delta_loc *a,
+                const delta_loc *b, delta_loc *out);
+int  modulate_pwindi(delta_state *d, const delta_loc *in, delta_loc *a,
+                     delta_loc *b);
+void getDeltaCcodeParm(const delta_loc *src, void *dst, int16_t want);
+void setDeltaCcodeReturnValue(const void *src, int16_t from, delta_loc *dst);
+void setDeltaReturnCode(delta_state *d, uint8_t code);
+int  modulo(delta_state *d, const delta_loc *a, const delta_loc *b,
+            delta_loc *out);
 
 /* The runtime's constant tables, lifted out of the original by
    tools/delta-tables.py. */
