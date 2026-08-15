@@ -625,6 +625,26 @@ int  lpta_tstctxtr(delta_state *d, uint8_t f);
 int  f0_stepi(delta_state *d, const delta_loc *n, const delta_loc *f0,
               const delta_loc *step, const delta_loc *count, delta_loc *out);
 
+/* The printing, reading and file layer, stubbed rather than transcribed.
+   See src/delta_trace.c for what that costs and why. */
+void print_lit(delta_state *d, ...);
+void print_var(delta_state *d, ...);
+void print_stream(delta_state *d, ...);
+void print_prompt(delta_state *d, ...);
+void vprt_var(delta_state *d, ...);
+void vprt_strm(delta_state *d, ...);
+void disptok(delta_state *d, ...);
+void lithex(delta_state *d, ...);
+void open_input(delta_state *d, ...);
+void open_output(delta_state *d, ...);
+int  read_tvar(delta_state *d, ...);
+int  vrd_tvar(delta_state *d, ...);
+int  gettok(delta_state *d, ...);
+int  getbksl(delta_state *d, ...);
+void readErrorReport(delta_state *d, ...);
+void var_rderr(delta_state *d, ...);
+void rdtokverr(delta_state *d, ...);
+
 /* Supplied by the language module, not by the runtime. */
 const uint8_t *actdlookup(delta_state *d, int32_t l, int32_t r,
                           const void *entry);
