@@ -151,7 +151,14 @@ typedef struct {
     uint8_t  *back;            /* 0x0fdc, where an unwind returns to */
     int8_t    compared_equal;  /* 0x0fe0 */
     int8_t    fence_count;     /* 0x0fe1, how many characters are fenced */
-    uint8_t   pad_0fe2[0x1120 - 0xfe2];
+    uint8_t   pad_0fe2[0x1006 - 0xfe2];
+    /* Scratch the runtime builds a value in when it has to convert one. */
+    uint8_t   scratch_b;       /* 0x1006 */
+    uint8_t   pad_1007[0x100c - 0x1007];
+    int32_t   scratch_l;       /* 0x100c */
+    uint8_t   pad_1010[0x1022 - 0x1010];
+    int16_t   scratch_s;       /* 0x1022 */
+    uint8_t   pad_1024[0x1120 - 0x1024];
     int32_t   ctx_both;        /* 0x1120, look both ways for a context */
     int32_t   relink;          /* 0x1124, keep the spine order consistent */
     uint8_t   pad_1128[0x116c - 0x1128];
@@ -479,6 +486,9 @@ int  insert_2pt_i(delta_state *d, uint8_t f, uint8_t n, const uint8_t *str,
 int  delete_2pt(delta_state *d, uint8_t f, uint8_t mode);
 int  mark_s(delta_state *d, uint8_t f, uint8_t fld, uint8_t value,
             uint8_t mode);
+int  mark_v(delta_state *d, uint8_t f, uint8_t fld, delta_loc *loc,
+            uint8_t mode);
+int  insert_2ptv(delta_state *d, uint8_t f, delta_loc *loc, uint8_t mode);
 
 /* Supplied by the language, not the runtime: lay a string of values into a
    range the caller has already opened. */

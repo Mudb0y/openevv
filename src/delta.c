@@ -3551,3 +3551,77 @@ int mark_s(delta_state *d, uint8_t f, uint8_t fld, uint8_t value, uint8_t mode)
 
     return 0;
 }
+
+/* Write a rule's variable into a field of every statement in the range.
+
+   The original marks once when the value's kind already matches the field,
+   and then tests the kind again and marks a second time for every kind it
+   knows; an exact match therefore marks twice. It is writing the same bytes
+   both times. */
+int mark_v(delta_state *d, uint8_t f, uint8_t fld, delta_loc *loc,
+           uint8_t mode)
+{
+    delta_operand v;
+
+    if (vrange_2pt(d, &d->lpta, &d->rpta, (int8_t)f, mode)) {
+        reset_field(loc);
+        return 1;
+    }
+
+    vinitloc_new(d, &v, loc);
+
+    if (v.kind == vstmtbl[f].fields[fld].kind) {
+        vmark(d, f, fld, d->lpta.node, d->rpta.node, v.ptr);
+
+        if (v.kind == DK_SYNC || (v.kind > -5 && v.kind < 0))
+            vmark(d, f, fld, d->lpta.node, d->rpta.node, v.ptr);
+    }
+
+    reset_field(loc);
+    return 0;
+}
+
+/* Insert a rule's variable as a statement in the range. A value of a kind the
+   statement does not use is converted through a scratch cell first. */
+int insert_2ptv(delta_state *d, uint8_t f, delta_loc *loc, uint8_t mode)
+{
+    delta_operand a;
+    delta_operand b;
+
+    if (vrange_2pt(d, &d->lpta, &d->rpta, (int8_t)f, mode)) {
+        reset_field(loc);
+        return 1;
+    }
+
+    if (loc->kind < 0 && loc->kind != STMTYP((int8_t)f)) {
+        a.kind = STMTYP((int8_t)f);
+
+        switch (a.kind) {
+        case DK_UBYTE:  a.ptr = &d->vars->scratch_b; break;
+        case DK_LONG:   a.ptr = &d->vars->scratch_l; break;
+        case DK_SHORT2:
+        case DK_SHORT:  a.ptr = &d->vars->scratch_s; break;
+        default:        break;
+        }
+
+        a.flag = vstmtbl[f].fields[0].flag;
+
+        vinitloc_new(d, &b, loc);
+        vassign(d, &a, &b);
+
+        if (!vins_tok(d, f, d->lpta.node, d->rpta.node, &a)) {
+            forceErrorBacktrack(d);
+            return 1;
+        }
+    } else {
+        vinitloc_new(d, &b, loc);
+
+        if (!vins_tok(d, f, d->lpta.node, d->rpta.node, &b)) {
+            forceErrorBacktrack(d);
+            return 1;
+        }
+    }
+
+    reset_field(loc);
+    return 0;
+}

@@ -190,6 +190,8 @@ extern int  ibm_insert_2pt_i(delta_state *, uint8_t, uint8_t, const uint8_t *,
                              uint8_t);
 extern int  ibm_delete_2pt(delta_state *, uint8_t, uint8_t);
 extern int  ibm_mark_s(delta_state *, uint8_t, uint8_t, uint8_t, uint8_t);
+extern int  ibm_mark_v(delta_state *, uint8_t, uint8_t, delta_loc *, uint8_t);
+extern int  ibm_insert_2ptv(delta_state *, uint8_t, delta_loc *, uint8_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -4160,6 +4162,87 @@ BEGIN(two_point_edits)
     m->stack.mark_fld = o->stack.mark_fld = NULL;
 END(two_point_edits)
 
+
+static void var_ibm(delta_state *d, uint8_t f, uint8_t fld, delta_loc *loc,
+                    uint8_t mode, int which, int *out)
+{
+    jmp_buf jb;
+
+    d->vars->err_jmp = jb;
+    if (setjmp(jb) == 0)
+        *out = which ? ibm_mark_v(d, f, fld, loc, mode)
+                     : ibm_insert_2ptv(d, f, loc, mode);
+    d->vars->err_jmp = 0;
+}
+
+static void var_ours(delta_state *d, uint8_t f, uint8_t fld, delta_loc *loc,
+                     uint8_t mode, int which, int *out)
+{
+    jmp_buf jb;
+
+    d->vars->err_jmp = jb;
+    if (setjmp(jb) == 0)
+        *out = which ? mark_v(d, f, fld, loc, mode)
+                     : insert_2ptv(d, f, loc, mode);
+    d->vars->err_jmp = 0;
+}
+
+BEGIN(var_edits)
+    static const uint8_t modes[4] = {0xcd, 0xce, 0xcf, 0x11};
+    static const int16_t kinds[3] = {-3, -4, -6};
+    uint8_t f;
+    uint8_t mode = modes[rng_next() % 4u];
+    int which = (int)(rng_next() % 2u);
+    delta_loc *lm;
+    delta_loc *lo;
+    int ra = -1, rb = -1;
+    int i;
+
+    if (!build_time_edit(m, o, &f)) {
+        free(m); free(o);
+        continue;
+    }
+    m->vars.relink = o->vars.relink = 1;
+    for (i = 0; i < 0x20; i++)
+        m->nsqm[i] = o->nsqm[i] = 0;
+
+    m->state.lpta.node = (int32_t)(intptr_t)(m->nodes + 0x80);
+    o->state.lpta.node = (int32_t)(intptr_t)(o->nodes + 0x80);
+    m->state.rpta.node = (int32_t)(intptr_t)(m->nodes + 2 * 0x80);
+    o->state.rpta.node = (int32_t)(intptr_t)(o->nodes + 2 * 0x80);
+    m->state.lpta.field = o->state.lpta.field = (int8_t)f;
+    m->state.rpta.field = o->state.rpta.field = (int8_t)f;
+    m->state.lpta.offset = o->state.lpta.offset = 0;
+    m->state.rpta.offset = o->state.rpta.offset = 0;
+    m->state.lpta.flags = o->state.lpta.flags = (uint8_t)(rng_next() % 2u);
+    m->state.rpta.flags = o->state.rpta.flags = (uint8_t)(rng_next() % 2u);
+
+    /* The variable lives in the world so its address rebases, and its kind
+       is one vinitloc_new gives a pointer for. */
+    lm = (delta_loc *)(m->nodes + 0x300);
+    lo = (delta_loc *)(o->nodes + 0x300);
+    memset(lm, 0, sizeof(*lm));
+    memset(lo, 0, sizeof(*lo));
+    lm->kind = lo->kind = kinds[rng_next() % 3u];
+    lm->field = lo->field = (int16_t)rng_next();
+    lm->value = lo->value = (int32_t)rng_next();
+
+    {
+        uint8_t fld = (uint8_t)(rng_next() % (uint32_t)vstmtbl[f].nfields);
+
+        var_ibm(&m->state, f, fld, lm, mode, which, &ra);
+        var_ours(&o->state, f, fld, lo, mode, which, &rb);
+    }
+
+    if (ra != rb)
+        bad++;
+    if (lm->kind != lo->kind || lm->field != lo->field)
+        bad++;
+
+    m->stack.mark_fld = o->stack.mark_fld = NULL;
+
+END(var_edits)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -4266,6 +4349,7 @@ int main(void)
     test_insert_points();
     test_vrange_2pt();
     test_two_point_edits();
+    test_var_edits();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
