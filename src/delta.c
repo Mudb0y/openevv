@@ -3107,8 +3107,8 @@ int vinit_stm(delta_state *d, int8_t f)
 /* Insert a run of statements, one per value in the string, with a fresh sync
    between each pair. Both spellings share everything but how they read a
    value; a string of nothing is a plain delete. */
-static int ins_tokens(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
-                      int32_t arg, int wide)
+static int ins_tokens_run(delta_state *d, uint8_t f, const uint8_t *str,
+                          uint8_t n, int32_t arg, int wide)
 {
     delta_operand a;
     delta_operand b;
@@ -3177,13 +3177,13 @@ static int ins_tokens(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
 int ins_tokens_s(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
                  int32_t arg)
 {
-    return ins_tokens(d, f, str, n, arg, 0);
+    return ins_tokens_run(d, f, str, n, arg, 0);
 }
 
 int ins_tokens_i(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
                  int32_t arg)
 {
-    return ins_tokens(d, f, str, n, arg, 1);
+    return ins_tokens_run(d, f, str, n, arg, 1);
 }
 
 /* Split a run of time in two at a given offset, on whichever side of the
@@ -3374,4 +3374,23 @@ int vrange_r(delta_state *d, delta_tpos *p, delta_tpos *out, int8_t f,
 
     out->flags = 1;
     return 1;
+}
+
+/* What a rule writes when it inserts at a point: open a range on one side of
+   the left register, then let the language fill it. Either failing
+   backtracks. */
+void insert_l(delta_state *d, int8_t f, const uint8_t *str, uint8_t n,
+              uint8_t dup)
+{
+    if (!vrange_l(d, &d->rpta, &d->lpta, f, dup)
+        || !ins_tokens(d, f, n, str, 0))
+        forceErrorBacktrack(d);
+}
+
+void insert_r(delta_state *d, int8_t f, const uint8_t *str, uint8_t n,
+              uint8_t dup)
+{
+    if (!vrange_r(d, &d->lpta, &d->rpta, f, dup)
+        || !ins_tokens(d, f, n, str, 0))
+        forceErrorBacktrack(d);
 }

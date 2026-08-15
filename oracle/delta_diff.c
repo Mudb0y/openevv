@@ -178,6 +178,10 @@ extern int  ibm_vrange_l(delta_state *, delta_tpos *, delta_tpos *, int8_t,
                          uint8_t);
 extern int  ibm_vrange_r(delta_state *, delta_tpos *, delta_tpos *, int8_t,
                          uint8_t);
+extern void ibm_insert_l(delta_state *, int8_t, const uint8_t *, uint8_t,
+                         uint8_t);
+extern void ibm_insert_r(delta_state *, int8_t, const uint8_t *, uint8_t,
+                         uint8_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -3959,6 +3963,72 @@ BEGIN(vrange)
         bad++;
 END(vrange)
 
+
+/* Both of these backtrack when the range cannot be opened, and the language
+   call that would fill it is not part of the runtime, so what is compared is
+   the range opening and the backtrack. */
+static void insert_ibm(delta_state *d, int8_t f, const uint8_t *str,
+                       uint8_t n, uint8_t dup, int left)
+{
+    jmp_buf jb;
+
+    d->vars->err_jmp = jb;
+    if (setjmp(jb) == 0) {
+        if (left)
+            ibm_insert_l(d, f, str, n, dup);
+        else
+            ibm_insert_r(d, f, str, n, dup);
+    }
+    d->vars->err_jmp = 0;
+}
+
+static void insert_ours(delta_state *d, int8_t f, const uint8_t *str,
+                        uint8_t n, uint8_t dup, int left)
+{
+    jmp_buf jb;
+
+    d->vars->err_jmp = jb;
+    if (setjmp(jb) == 0) {
+        if (left)
+            insert_l(d, f, str, n, dup);
+        else
+            insert_r(d, f, str, n, dup);
+    }
+    d->vars->err_jmp = 0;
+}
+
+BEGIN(insert_points)
+    uint8_t f;
+    uint8_t dup = (uint8_t)(rng_next() % 2u);
+    int left = (int)(rng_next() % 2u);
+    uint8_t str[4];
+    int i;
+
+    if (!build_time_edit(m, o, &f)) {
+        free(m); free(o);
+        continue;
+    }
+    m->vars.relink = o->vars.relink = 1;
+    for (i = 0; i < 0x20; i++)
+        m->nsqm[i] = o->nsqm[i] = 0;
+    for (i = 0; i < 4; i++)
+        str[i] = (uint8_t)rng_next();
+
+    m->state.lpta.node = (int32_t)(intptr_t)(m->nodes + 0x80);
+    o->state.lpta.node = (int32_t)(intptr_t)(o->nodes + 0x80);
+    m->state.rpta.node = (int32_t)(intptr_t)(m->nodes + 2 * 0x80);
+    o->state.rpta.node = (int32_t)(intptr_t)(o->nodes + 2 * 0x80);
+    m->state.lpta.field = o->state.lpta.field = (int8_t)f;
+    m->state.rpta.field = o->state.rpta.field = (int8_t)f;
+    m->state.lpta.offset = o->state.lpta.offset = 0;
+    m->state.rpta.offset = o->state.rpta.offset = 0;
+    m->state.lpta.flags = o->state.lpta.flags = (uint8_t)(rng_next() % 2u);
+    m->state.rpta.flags = o->state.rpta.flags = (uint8_t)(rng_next() % 2u);
+
+    insert_ibm(&m->state, (int8_t)f, str, 2, dup, left);
+    insert_ours(&o->state, (int8_t)f, str, 2, dup, left);
+END(insert_points)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -4062,6 +4132,7 @@ int main(void)
     test_time_marks();
     test_point_edits();
     test_vrange();
+    test_insert_points();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
