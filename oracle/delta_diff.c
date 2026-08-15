@@ -151,6 +151,8 @@ extern void *ibm_alloc_tok(delta_state *, const delta_stmt *);
 extern void *ibm_alloc_sync(delta_state *);
 extern void ibm_free_heap(delta_state *, void *);
 extern int  ibm_vcomp_pta(delta_state *, delta_tpos *, delta_tpos *);
+extern void ibm_cacheDeletedDeltaObject(delta_state *, void *);
+extern int  ibm_compare_ptas(delta_state *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -3066,12 +3068,19 @@ BEGIN(heap_free)
     stamp_object(m, seg, off, &pm);
     stamp_object(o, seg, off, &po);
 
-    if (rng_next() % 2u) {
+    switch (rng_next() % 3u) {
+    case 0:
         ibm_freeDeltaHeapObject(&m->state, pm);
         freeDeltaHeapObject(&o->state, po);
-    } else {
+        break;
+    case 1:
         ibm_free_heap(&m->state, pm);
         free_heap(&o->state, po);
+        break;
+    default:
+        ibm_cacheDeletedDeltaObject(&m->state, pm);
+        cacheDeletedDeltaObject(&o->state, po);
+        break;
     }
 END(heap_free)
 
@@ -3164,8 +3173,18 @@ BEGIN(vcomp_pta)
     make_tpos(m, o, f, &am, &ao, sets[rng_next() % 4u]);
     make_tpos(m, o, f, &bm, &bo, sets[rng_next() % 4u]);
 
-    ra = ibm_vcomp_pta(&m->state, &am, &bm);
-    rb = vcomp_pta(&o->state, &ao, &bo);
+    if (rng_next() % 2u) {
+        ra = ibm_vcomp_pta(&m->state, &am, &bm);
+        rb = vcomp_pta(&o->state, &ao, &bo);
+    } else {
+        /* compare_ptas is the same thing on the two registers. */
+        m->state.lpta = am; m->state.rpta = bm;
+        o->state.lpta = ao; o->state.rpta = bo;
+        ra = ibm_compare_ptas(&m->state);
+        rb = compare_ptas(&o->state);
+        am = m->state.lpta; bm = m->state.rpta;
+        ao = o->state.lpta; bo = o->state.rpta;
+    }
 
     if (ra != rb)
         bad++;

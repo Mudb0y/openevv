@@ -2527,3 +2527,14 @@ const char *vseqbad(void *w, void *x, void *y, const char *what)
     default:  return "???";
     }
 }
+
+/* Deletion is not deferred on this build: the object goes back at once. */
+void cacheDeletedDeltaObject(delta_state *d, void *p)
+{
+    free_heap(d, p);
+}
+
+int compare_ptas(delta_state *d)
+{
+    return vcomp_pta(d, &d->lpta, &d->rpta) != 0;
+}
