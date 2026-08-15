@@ -11,6 +11,7 @@
 #define AT_VARS(field, offset) \
     typedef char field##_at_##offset[offsetof(delta_vars, field) == offset ? 1 : -1]
 
+AT(unknown_3c, 0x003c);
 AT(lpta, 0x0040);
 AT(rpta, 0x0050);
 AT(vars, 0x0068);
@@ -130,6 +131,7 @@ AT(owner, 0x0064);
 AT(fence_marks, 0x0094);
 AT_VARS(err_jmp, 0x0fac);
 AT_VARS(loop_tag, 0x0fc0);
+AT_VARS(ctx_both, 0x1120);
 AT_VARS(relink, 0x1124);
 AT_VARS(nsq_marks, 0x116c);
 AT_VARS(fence_base, 0x1174);
@@ -2097,4 +2099,93 @@ int for_loop_preamble(delta_state *d, int32_t tag, int32_t loop, int32_t f,
     v->scan_held = 1;
     d->fence_marks[d->fence_index[f]] = 1;
     return 1;
+}
+
+/* Give a statement the same place in every field another one occupies. */
+int dupsync(delta_state *d, int32_t t, int32_t src, uint8_t back)
+{
+    int32_t bs = d->vars->fence_base;
+    uint8_t i;
+
+    for (i = 0; i < d->fence_fill; i++) {
+        int32_t here = *(int32_t *)(intptr_t)(src + (bs + i) * 4);
+
+        if ((here & 1) == 0)
+            continue;
+
+        if (back != 0) {
+            int32_t l = *(int32_t *)(intptr_t)(src + 0xc + i * 4) & ~3;
+
+            if (!vproject(d, t, l, src, i))
+                return 0;
+        } else {
+            if (!vproject(d, t, src, here & ~3, i))
+                return 0;
+        }
+    }
+
+    return 1;
+}
+
+/* Put a statement where the language says it belongs by default: find what
+   is on each side of it in the field and splice it between them. */
+int vdef_proj(delta_state *d, int32_t t, uint8_t f)
+{
+    int32_t l;
+    int32_t r;
+
+    if ((*(int32_t *)(intptr_t)(t + (d->vars->fence_base + f) * 4) & 1) != 0)
+        return 1;
+
+    l = vgetsc(d, 1, 1, t, f);
+
+    if (d->vars->ctx_both != 0)
+        r = vgetsc(d, 0, 1, t, f);
+    else
+        r = VRSYNC(d, (const int32_t *)(intptr_t)l, (int8_t)f);
+
+    return vproject(d, t, l, r, f);
+}
+
+/* Settle both ends of a range, then pull each onto the sync it is next to if
+   it is still leaning the wrong way. */
+int vprt_range(delta_state *d, delta_tpos *a, delta_tpos *b)
+{
+    if (!vtimept_tv(d, a, 0))
+        return 0;
+    if (!vtimept_tv(d, b, 1))
+        return 0;
+
+    if ((a->flags & 2) != 0 && a->offset > 0)
+        a->node = VRSYNC(d, (const int32_t *)(intptr_t)a->node, a->field);
+
+    if ((b->flags & 2) != 0 && b->offset < 0)
+        b->node = VLSYNC((const delta_node *)(intptr_t)b->node, b->field);
+
+    return 1;
+}
+
+/* One step of a forto walking rightward. Two means the loop body should run,
+   one that it never started, zero that it is finished. */
+int forto_adv_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
+                uint8_t f, delta_token *tok, const delta_token *end)
+{
+    delta_vars *v = d->vars;
+
+    if (!for_loop_preamble(d, tag, loop, f, tok))
+        return 1;
+
+    v->scan_rev = 1;
+
+    if (!vscanadv(d, 1, 0))
+        return 0;
+    if (v->scan_ptr == end->value)
+        return 0;
+
+    clearDeltaStackBack(d);
+    d->stack->unknown_9c = 0;
+    v->testing = 1;
+    d->unknown_3c = bound;
+    tok->value = v->scan_ptr;
+    return 2;
 }

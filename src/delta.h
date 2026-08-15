@@ -87,7 +87,8 @@ typedef struct {
     uint8_t  *back;            /* 0x0fdc, where an unwind returns to */
     int8_t    compared_equal;  /* 0x0fe0 */
     int8_t    fence_count;     /* 0x0fe1, how many characters are fenced */
-    uint8_t   pad_0fe2[0x1124 - 0xfe2];
+    uint8_t   pad_0fe2[0x1120 - 0xfe2];
+    int32_t   ctx_both;        /* 0x1120, look both ways for a context */
     int32_t   relink;          /* 0x1124, keep the spine order consistent */
     uint8_t   pad_1128[0x116c - 0x1128];
     const int8_t *nsq_marks;   /* 0x116c, one per fenced field */
@@ -99,7 +100,8 @@ typedef struct {
 typedef struct delta_state delta_state;
 
 struct delta_state {
-    uint8_t      pad_0000[0x40];
+    uint8_t      pad_0000[0x3c];
+    int32_t      unknown_3c;      /* 0x003c, a forto's third parameter */
     delta_pta    lpta;            /* 0x0040 */
     delta_pta    rpta;            /* 0x0050 */
     uint8_t      pad_0060[4];
@@ -349,6 +351,11 @@ int32_t vgetsc(delta_state *d, int32_t back, int32_t ctx, int32_t t, uint8_t f);
 int  vtimept_tv(delta_state *d, delta_tpos *p, uint8_t back);
 int  for_loop_preamble(delta_state *d, int32_t tag, int32_t loop, int32_t f,
                        const delta_token *tok);
+int  dupsync(delta_state *d, int32_t t, int32_t src, uint8_t back);
+int  vdef_proj(delta_state *d, int32_t t, uint8_t f);
+int  vprt_range(delta_state *d, delta_tpos *a, delta_tpos *b);
+int  forto_adv_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
+                 uint8_t f, delta_token *tok, const delta_token *end);
 int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f);
 
 /* Where the runtime tells its owner the spine moved. */

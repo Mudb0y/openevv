@@ -126,6 +126,11 @@ extern int32_t ibm_vgetsc(delta_state *, int32_t, int32_t, int32_t, uint8_t);
 extern int  ibm_vtimept_tv(delta_state *, delta_tpos *, uint8_t);
 extern int  ibm_for_loop_preamble(delta_state *, int32_t, int32_t, int32_t,
                                   const delta_token *);
+extern int  ibm_dupsync(delta_state *, int32_t, int32_t, uint8_t);
+extern int  ibm_vdef_proj(delta_state *, int32_t, uint8_t);
+extern int  ibm_vprt_range(delta_state *, delta_tpos *, delta_tpos *);
+extern int  ibm_forto_adv_r(delta_state *, int16_t, int16_t, int16_t, uint8_t,
+                            delta_token *, const delta_token *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -2119,6 +2124,66 @@ BEGIN(vnormalize)
 END(vnormalize)
 
 
+
+/* The spine the projection primitives need: four nodes in a row with every
+   neighbour real, because two of the three splices write through one of them
+   without checking. Only the flag bits vary. */
+static void build_pspine(delta_world *m, delta_world *o)
+{
+    enum { FB = 15, NNODE = 4, STEP = 0x80 };
+    int i, j;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.fence_base = o->vars.fence_base = FB;
+    m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
+    m->vars.ctx_both = o->vars.ctx_both = (int32_t)(rng_next() % 2u);
+    m->state.fence_fill = o->state.fence_fill = (uint8_t)(rng_next() % 5u);
+    for (i = 0; i < 0x20; i++)
+        m->nsqm[i] = o->nsqm[i] = (int8_t)(rng_next() % 2u);
+
+#define NODE(w, i) ((int32_t *)((w)->nodes + (i) * STEP))
+#define AT(w, i)   ((int32_t)(intptr_t)((w)->nodes + (i) * STEP))
+    for (i = 0; i < NNODE; i++) {
+        int lo = i > 0 ? i - 1 : 0;
+        int hi = i + 1 < NNODE ? i + 1 : NNODE - 1;
+        uint32_t r;
+
+        r = rng_next();
+        NODE(m, i)[0] = AT(m, lo) | 2 | (int32_t)(r & 1u);
+        NODE(o, i)[0] = AT(o, lo) | 2 | (int32_t)(r & 1u);
+
+        r = rng_next();
+        NODE(m, i)[1] = AT(m, hi) | (int32_t)(r & 3u);
+        NODE(o, i)[1] = AT(o, hi) | (int32_t)(r & 3u);
+
+        r = rng_next();
+        NODE(m, i)[2] = (int32_t)(r & 3u);
+        NODE(o, i)[2] = (int32_t)(r & 3u);
+
+        for (j = 0; j < 10; j++) {
+            r = rng_next();
+            NODE(m, i)[3 + j] = AT(m, lo) | (int32_t)(r & 3u);
+            NODE(o, i)[3 + j] = AT(o, lo) | (int32_t)(r & 3u);
+
+            r = rng_next();
+            NODE(m, i)[FB + j] = AT(m, hi) | (int32_t)(r & 3u);
+            NODE(o, i)[FB + j] = AT(o, hi) | (int32_t)(r & 3u);
+        }
+
+        NODE(m, i)[FB - 2] = AT(m, lo);
+        NODE(o, i)[FB - 2] = AT(o, lo);
+        NODE(m, i)[FB - 1] = 0;
+        NODE(o, i)[FB - 1] = 0;
+    }
+    m->stack.spine_l = AT(m, 0);
+    o->stack.spine_l = AT(o, 0);
+    m->stack.spine_r = AT(m, NNODE - 1);
+    o->stack.spine_r = AT(o, NNODE - 1);
+#undef NODE
+#undef AT
+}
+
 BEGIN(vproject)
     /* Four nodes. The two neighbours are always real, because two of the
        three splices write through one of them without checking, and only
@@ -2465,6 +2530,113 @@ BEGIN(for_loop_preamble)
         bad++;
 END(for_loop_preamble)
 
+
+BEGIN(dupsync)
+    uint8_t back = (uint8_t)(rng_next() % 2u);
+    int ra, rb;
+
+    build_pspine(m, o);
+    ra = ibm_dupsync(&m->state, (int32_t)(intptr_t)(m->nodes + 0x80),
+                     (int32_t)(intptr_t)(m->nodes + 0x100), back);
+    rb = dupsync(&o->state, (int32_t)(intptr_t)(o->nodes + 0x80),
+                 (int32_t)(intptr_t)(o->nodes + 0x100), back);
+    if (ra != rb)
+        bad++;
+END(dupsync)
+
+BEGIN(vdef_proj)
+    uint8_t f = (uint8_t)(rng_next() % NSTMT);
+    int ra, rb;
+
+    build_pspine(m, o);
+    /* vgetsc with a context can reach ctxlook, which stops on a node that is
+       both marked and sequential; give it one at each end. */
+    ((int32_t *)(m->nodes))[15 + f] |= 1;
+    ((int32_t *)(o->nodes))[15 + f] |= 1;
+    ((int32_t *)(m->nodes))[2] &= ~2;
+    ((int32_t *)(o->nodes))[2] &= ~2;
+    ((int32_t *)(m->nodes + 3 * 0x80))[15 + f] |= 1;
+    ((int32_t *)(o->nodes + 3 * 0x80))[15 + f] |= 1;
+    ((int32_t *)(m->nodes + 3 * 0x80))[2] &= ~2;
+    ((int32_t *)(o->nodes + 3 * 0x80))[2] &= ~2;
+
+    ra = ibm_vdef_proj(&m->state, (int32_t)(intptr_t)(m->nodes + 0x80), f);
+    rb = vdef_proj(&o->state, (int32_t)(intptr_t)(o->nodes + 0x80), f);
+    if (ra != rb)
+        bad++;
+END(vdef_proj)
+
+BEGIN(vprt_range)
+    static const uint8_t sets[4] = {0, 1, 2, 4};
+    delta_tpos am, ao, bm, bo;
+    int8_t f = build_tspine(m, o);
+    int ra, rb;
+
+    if (f < 0) {
+        free(m); free(o);
+        break;
+    }
+    make_tpos(m, o, f, &am, &ao, sets[rng_next() % 4u]);
+    make_tpos(m, o, f, &bm, &bo, sets[rng_next() % 4u]);
+
+    ra = ibm_vprt_range(&m->state, &am, &bm);
+    rb = vprt_range(&o->state, &ao, &bo);
+
+    if (ra != rb)
+        bad++;
+    if (am.offset != ao.offset || am.flags != ao.flags)
+        bad++;
+    if (bm.offset != bo.offset || bm.flags != bo.flags)
+        bad++;
+    if (am.node - (int32_t)(intptr_t)m != ao.node - (int32_t)(intptr_t)o)
+        bad++;
+    if (bm.node - (int32_t)(intptr_t)m != bo.node - (int32_t)(intptr_t)o)
+        bad++;
+END(vprt_range)
+
+BEGIN(forto_adv_r)
+    delta_token tm, to, em, eo;
+    int8_t f = build_tspine(m, o);
+    int16_t tag = (int16_t)rng_next();
+    int16_t loop = (int16_t)rng_next();
+    int16_t bound = (int16_t)rng_next();
+    int32_t which = (int32_t)(rng_next() % NSTMT);
+    int ra, rb, i;
+
+    if (f < 0) {
+        free(m); free(o);
+        break;
+    }
+    for (i = 0; i < FENCE_MAP; i++)
+        m->map[i] = o->map[i] = (uint8_t)(rng_next() % 4u);
+    for (i = 0; i < 4; i++) {
+        m->chars[i] = o->chars[i] = (uint8_t)i;
+        m->marks[i] = o->marks[i] = (uint8_t)(rng_next() % 2u);
+    }
+    m->vars.fence_count = o->vars.fence_count = (int8_t)(rng_next() % 3u);
+
+    tm.unknown_00 = to.unknown_00 = (int32_t)rng_next();
+    tm.value = (int32_t)(intptr_t)(m->nodes + 2 * 0x80);
+    to.value = (int32_t)(intptr_t)(o->nodes + 2 * 0x80);
+    em.unknown_00 = eo.unknown_00 = (int32_t)rng_next();
+    {
+        uint32_t k = rng_next() % 6u;
+
+        em.value = (int32_t)(intptr_t)(m->nodes + k * 0x80);
+        eo.value = (int32_t)(intptr_t)(o->nodes + k * 0x80);
+    }
+    m->state.lpta.field = o->state.lpta.field = f;
+
+    ra = ibm_forto_adv_r(&m->state, tag, loop, bound, (uint8_t)which,
+                         &tm, &em);
+    rb = forto_adv_r(&o->state, tag, loop, bound, (uint8_t)which, &to, &eo);
+
+    if (ra != rb)
+        bad++;
+    if (tm.value - (int32_t)(intptr_t)m != to.value - (int32_t)(intptr_t)o)
+        bad++;
+END(forto_adv_r)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -2541,6 +2713,10 @@ int main(void)
     test_vgetsc();
     test_vtimept_tv();
     test_for_loop_preamble();
+    test_dupsync();
+    test_vdef_proj();
+    test_vprt_range();
+    test_forto_adv_r();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
