@@ -108,6 +108,9 @@ extern int  ibm_get_parm(delta_state *, delta_loc *, delta_loc *, int16_t);
 extern int  ibm_test_synch(delta_state *, int16_t, uint8_t, const uint8_t *);
 extern int  ibm_test_string_i(delta_state *, uint8_t, uint8_t, const uint8_t *);
 extern int  ibm_test_string_s(delta_state *, uint8_t, uint8_t, const uint8_t *);
+extern int32_t ibm_ctxlook(delta_state *, int32_t, uint8_t, int32_t);
+extern int  ibm_vnormalize(delta_state *, delta_tpos *);
+extern int  ibm_vproject(delta_state *, int32_t, int32_t, int32_t, uint8_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -128,6 +131,7 @@ typedef struct {
     uint8_t     nodes[0x400];     /* room to build a spine to walk */
     int8_t      nsqf[0x20];       /* which fields decide the spine flags */
     int8_t      nsqm[0x20];       /* one mark per fenced field */
+    uint8_t     owner[0x200];     /* what the runtime tells about a move */
 } delta_world;
 
 static int total_cases;
@@ -170,6 +174,7 @@ static void world_link(delta_world *w)
     w->state.fence_marks = w->marks;
     w->stack.nsq_fields = w->nsqf;
     w->vars.nsq_marks = w->nsqm;
+    w->state.owner = w->owner;
     w->state.fence_fill = (uint8_t)(rng_next() % FENCE_MAP);
 
     w->stack.names = w->names;
@@ -210,6 +215,7 @@ static void normalise(delta_world *w, delta_state *st, delta_vars *va,
     REBASE(st->fence_marks);
     REBASE(sk->nsq_fields);
     REBASE(va->nsq_marks);
+    REBASE(st->owner);
     REBASE(va->back);
     REBASE(sk->top);
     REBASE(sk->limit);
@@ -224,18 +230,19 @@ static void normalise(delta_world *w, delta_state *st, delta_vars *va,
    by world, and records are not four-byte aligned, so this walks byte by byte
    and treats four bytes that are an address in both worlds as equal when they
    name the same offset. */
-static int records_differ(delta_world *a, delta_world *b)
+static int region_differs(delta_world *a, delta_world *b,
+                          const uint8_t *pa, const uint8_t *pb, size_t len)
 {
     int32_t ba = (int32_t)(intptr_t)a;
     int32_t bb = (int32_t)(intptr_t)b;
     int32_t span = (int32_t)sizeof(delta_world);
     size_t i = 0;
 
-    while (i + 4 <= RECORDS) {
+    while (i + 4 <= len) {
         int32_t wa, wb;
 
-        memcpy(&wa, a->records + i, 4);
-        memcpy(&wb, b->records + i, 4);
+        memcpy(&wa, pa + i, 4);
+        memcpy(&wb, pb + i, 4);
 
         if (wa >= ba && wa < ba + span && wb >= bb && wb < bb + span) {
             if (wa - ba != wb - bb)
@@ -243,13 +250,13 @@ static int records_differ(delta_world *a, delta_world *b)
             i += 4;
             continue;
         }
-        if (a->records[i] != b->records[i])
+        if (pa[i] != pb[i])
             return 1;
         i++;
     }
 
-    for (; i < RECORDS; i++)
-        if (a->records[i] != b->records[i])
+    for (; i < len; i++)
+        if (pa[i] != pb[i])
             return 1;
 
     return 0;
@@ -278,7 +285,7 @@ static int world_differs(delta_world *a, delta_world *b)
         diff_where = "stack";
         return 1;
     }
-    if (records_differ(a, b)) {
+    if (region_differs(a, b, a->records, b->records, RECORDS)) {
         diff_where = "records";
         return 1;
     }
@@ -306,7 +313,7 @@ static int world_differs(delta_world *a, delta_world *b)
         diff_where = "names";
         return 1;
     }
-    if (memcmp(a->nodes, b->nodes, sizeof(a->nodes)) != 0) {
+    if (region_differs(a, b, a->nodes, b->nodes, sizeof(a->nodes))) {
         diff_where = "nodes";
         return 1;
     }
@@ -316,6 +323,10 @@ static int world_differs(delta_world *a, delta_world *b)
     }
     if (memcmp(a->nsqm, b->nsqm, sizeof(a->nsqm)) != 0) {
         diff_where = "nsqm";
+        return 1;
+    }
+    if (region_differs(a, b, a->owner, b->owner, sizeof(a->owner))) {
+        diff_where = "owner";
         return 1;
     }
     diff_where = "none";
@@ -1871,6 +1882,255 @@ BEGIN(test_string_s)
     memset(o->nodes, 0, sizeof(o->nodes));
 END(test_string_s)
 
+
+BEGIN(ctxlook)
+    /* A real little spine: six nodes in a row, three header words, ten left
+       syncs, two trailer words, then ten right syncs, so the fence base is
+       fifteen. Every sync points at the neighbour rather than anywhere, which
+       is what makes the walk converge; only the flag bits are randomised. */
+    enum { FB = 15, NNODE = 6, STEP = 0x80 };
+    uint8_t f = (uint8_t)(rng_next() % NSTMT);
+    int32_t right = (int32_t)(rng_next() % 2u);
+    int32_t ra, rb;
+    int i, j;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.fence_base = o->vars.fence_base = FB;
+    m->state.fence_fill = o->state.fence_fill = (uint8_t)(rng_next() % 5u);
+
+#define NODE(w, i) ((int32_t *)((w)->nodes + (i) * STEP))
+#define AT(w, i)   ((int32_t)(intptr_t)((w)->nodes + (i) * STEP))
+    for (i = 0; i < NNODE; i++) {
+        uint32_t r;
+
+        /* Every node is itself a sync, so a lookup lands on the neighbour
+           rather than taking a second hop into nothing. */
+        r = rng_next();
+        NODE(m, i)[0] = 2 | (int32_t)(r & 1u);
+        NODE(o, i)[0] = NODE(m, i)[0];
+
+        r = rng_next();
+        NODE(m, i)[1] = (i + 1 < NNODE ? AT(m, i + 1) : 0) | (int32_t)(r & 3u);
+        NODE(o, i)[1] = (i + 1 < NNODE ? AT(o, i + 1) : 0) | (int32_t)(r & 3u);
+
+        r = rng_next();
+        NODE(m, i)[2] = (r % 3u == 0) ? 0
+            : (AT(m, (int)((r >> 8) % NNODE)) | (int32_t)(r & 3u));
+        NODE(o, i)[2] = (r % 3u == 0) ? 0
+            : (AT(o, (int)((r >> 8) % NNODE)) | (int32_t)(r & 3u));
+
+        for (j = 0; j < 10; j++) {
+            r = rng_next();
+            NODE(m, i)[3 + j] = (i > 0 ? AT(m, i - 1) : 0) | (int32_t)(r & 1u);
+            NODE(o, i)[3 + j] = (i > 0 ? AT(o, i - 1) : 0) | (int32_t)(r & 1u);
+
+            r = rng_next();
+            NODE(m, i)[FB + j] =
+                (i + 1 < NNODE ? AT(m, i + 1) : 0) | (int32_t)(r & 1u);
+            NODE(o, i)[FB + j] =
+                (i + 1 < NNODE ? AT(o, i + 1) : 0) | (int32_t)(r & 1u);
+        }
+
+        NODE(m, i)[FB - 2] = (i > 0 ? AT(m, i - 1) : 0);
+        NODE(o, i)[FB - 2] = (i > 0 ? AT(o, i - 1) : 0);
+        /* The context link is what ctxlook borrows, and the runtime leaves it
+           at zero when idle. Anything else lets its chain close on itself. */
+        NODE(m, i)[FB - 1] = 0;
+        NODE(o, i)[FB - 1] = 0;
+    }
+
+    m->stack.spine_l = AT(m, 0);
+    o->stack.spine_l = AT(o, 0);
+    m->stack.spine_r = AT(m, NNODE - 1);
+    o->stack.spine_r = AT(o, NNODE - 1);
+
+    ra = ibm_ctxlook(&m->state, AT(m, 2), f, right);
+    rb = ctxlook(&o->state, AT(o, 2), f, right);
+#undef NODE
+#undef AT
+
+    if ((ra == 0) != (rb == 0))
+        bad++;
+    else if (ra != 0
+             && ra - (int32_t)(intptr_t)m != rb - (int32_t)(intptr_t)o)
+        bad++;
+
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+END(ctxlook)
+
+
+BEGIN(vnormalize)
+    /* Six nodes in a row plus a terminator at each end. Every link has to be
+       followable, because the walk spends its offset stepping along the field
+       and never checks for a null; but the ends cannot point at themselves
+       either, or lmost and rmost never stop. The terminators are not syncs,
+       which is what makes both walks halt on them. Field values are all
+       positive, so spending the offset always finishes. */
+    enum { FB = 15, NSPINE = 6, NNODE = 8, STEP = 0x80 };
+    delta_tpos pm, po;
+    int8_t f = -1;
+    int ra, rb, i, j;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.fence_base = o->vars.fence_base = FB;
+
+    /* lmost and rmost only have defined behaviour for these two kinds. */
+    for (i = 0; i < NSTMT; i++) {
+        int k = (int)((rng_next() + (uint32_t)i) % NSTMT);
+
+        if (vstmtbl[k].fields[0].kind == DK_LONG
+            || vstmtbl[k].fields[0].kind == DK_SHORT2) {
+            f = (int8_t)k;
+            break;
+        }
+    }
+    if (f < 0) {
+        free(m); free(o);
+        break;
+    }
+
+#define NODE(w, i) ((int32_t *)((w)->nodes + (i) * STEP))
+#define AT(w, i)   ((int32_t)(intptr_t)((w)->nodes + (i) * STEP))
+    for (i = 0; i < NNODE; i++) {
+        int end = i >= NSPINE;
+        int lo = end ? 0 : (i > 0 ? i - 1 : NSPINE);
+        int hi = end ? NSPINE - 1 : (i + 1 < NSPINE ? i + 1 : NSPINE + 1);
+        uint32_t r;
+
+        /* A terminator is never a sync, so a walk stops when it reaches one. */
+        r = rng_next();
+        NODE(m, i)[0] = AT(m, lo) | (int32_t)(end ? (r & 1u) : (r & 3u));
+        NODE(o, i)[0] = AT(o, lo) | (int32_t)(end ? (r & 1u) : (r & 3u));
+
+        r = rng_next();
+        NODE(m, i)[1] = AT(m, hi) | (int32_t)(r & 3u);
+        NODE(o, i)[1] = AT(o, hi) | (int32_t)(r & 3u);
+
+        for (j = 0; j < 10; j++) {
+            r = rng_next();
+            NODE(m, i)[3 + j] = AT(m, lo) | (int32_t)(r & 3u);
+            NODE(o, i)[3 + j] = AT(o, lo) | (int32_t)(r & 3u);
+
+            r = rng_next();
+            NODE(m, i)[FB + j] = AT(m, hi) | (int32_t)(r & 3u);
+            NODE(o, i)[FB + j] = AT(o, hi) | (int32_t)(r & 3u);
+        }
+
+        /* A strictly positive length, so spending the offset terminates. */
+        r = 1u + rng_next() % 4u;
+        if (vstmtbl[f].fields[0].kind == DK_LONG) {
+            *(int32_t *)vstmtbl[f].get[0](m->nodes + i * STEP + 8) =
+                (int32_t)r;
+            *(int32_t *)vstmtbl[f].get[0](o->nodes + i * STEP + 8) =
+                (int32_t)r;
+        } else {
+            *(int16_t *)vstmtbl[f].get[0](m->nodes + i * STEP + 8) =
+                (int16_t)r;
+            *(int16_t *)vstmtbl[f].get[0](o->nodes + i * STEP + 8) =
+                (int16_t)r;
+        }
+    }
+
+    m->stack.spine_l = AT(m, 0);
+    o->stack.spine_l = AT(o, 0);
+    m->stack.spine_r = AT(m, NSPINE - 1);
+    o->stack.spine_r = AT(o, NSPINE - 1);
+
+    pm.node = AT(m, 2);
+    po.node = AT(o, 2);
+#undef NODE
+#undef AT
+    pm.field = po.field = f;
+    pm.pad_05[0] = po.pad_05[0] = 0;
+    pm.pad_05[1] = po.pad_05[1] = 0;
+    pm.pad_05[2] = po.pad_05[2] = 0;
+    pm.offset = po.offset = (int32_t)(rng_next() % 21u) - 10;
+    {
+        static const uint8_t sets[3] = {0, 4, 8};
+
+        pm.flags = po.flags = sets[rng_next() % 3u];
+    }
+    pm.pad_0d[0] = po.pad_0d[0] = 0;
+    pm.pad_0d[1] = po.pad_0d[1] = 0;
+    pm.pad_0d[2] = po.pad_0d[2] = 0;
+
+    ra = ibm_vnormalize(&m->state, &pm);
+    rb = vnormalize(&o->state, &po);
+
+    if (ra != rb)
+        bad++;
+    if (pm.offset != po.offset || pm.flags != po.flags)
+        bad++;
+    if (pm.node - (int32_t)(intptr_t)m != po.node - (int32_t)(intptr_t)o)
+        bad++;
+
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+END(vnormalize)
+
+
+BEGIN(vproject)
+    /* Four nodes. The two neighbours are always real, because two of the
+       three splices write through one of them without checking, and only
+       their sync bits are varied. */
+    enum { FB = 15, NNODE = 4, STEP = 0x80 };
+    uint8_t f = (uint8_t)(rng_next() % NSTMT);
+    int32_t ra, rb;
+    int i, j;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.fence_base = o->vars.fence_base = FB;
+    m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
+    for (i = 0; i < 0x20; i++)
+        m->nsqm[i] = o->nsqm[i] = (int8_t)(rng_next() % 2u);
+
+#define NODE(w, i) ((int32_t *)((w)->nodes + (i) * STEP))
+#define AT(w, i)   ((int32_t)(intptr_t)((w)->nodes + (i) * STEP))
+    for (i = 0; i < NNODE; i++) {
+        int lo = i > 0 ? i - 1 : 0;
+        int hi = i + 1 < NNODE ? i + 1 : NNODE - 1;
+        uint32_t r;
+
+        r = rng_next();
+        NODE(m, i)[0] = AT(m, lo) | (int32_t)(r & 3u);
+        NODE(o, i)[0] = AT(o, lo) | (int32_t)(r & 3u);
+
+        r = rng_next();
+        NODE(m, i)[1] = AT(m, hi) | (int32_t)(r & 3u);
+        NODE(o, i)[1] = AT(o, hi) | (int32_t)(r & 3u);
+
+        r = rng_next();
+        NODE(m, i)[2] = (int32_t)(r & 3u);
+        NODE(o, i)[2] = (int32_t)(r & 3u);
+
+        for (j = 0; j < 10; j++) {
+            r = rng_next();
+            NODE(m, i)[3 + j] = AT(m, lo) | (int32_t)(r & 3u);
+            NODE(o, i)[3 + j] = AT(o, lo) | (int32_t)(r & 3u);
+
+            r = rng_next();
+            NODE(m, i)[FB + j] = AT(m, hi) | (int32_t)(r & 3u);
+            NODE(o, i)[FB + j] = AT(o, hi) | (int32_t)(r & 3u);
+        }
+
+        /* The right-hand spine link INSSPINEL writes through. */
+        NODE(m, i)[FB - 2] = AT(m, lo);
+        NODE(o, i)[FB - 2] = AT(o, lo);
+    }
+
+    ra = ibm_vproject(&m->state, AT(m, 1), AT(m, 0), AT(m, 2), f);
+    rb = vproject(&o->state, AT(o, 1), AT(o, 0), AT(o, 2), f);
+#undef NODE
+#undef AT
+
+    if (ra != rb)
+        bad++;
+END(vproject)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -1937,6 +2197,9 @@ int main(void)
     test_test_synch();
     test_test_string_i();
     test_test_string_s();
+    test_ctxlook();
+    test_vnormalize();
+    test_vproject();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

@@ -125,9 +125,11 @@ int testneq(delta_state *d)
 AT(fence_chars, 0x0084);
 AT(fence_index, 0x008c);
 AT(fence_fill, 0x0098);
+AT(owner, 0x0064);
 AT(fence_marks, 0x0094);
 AT_VARS(err_jmp, 0x0fac);
 AT_VARS(loop_tag, 0x0fc0);
+AT_VARS(relink, 0x1124);
 AT_VARS(nsq_marks, 0x116c);
 AT_VARS(fence_base, 0x1174);
 
@@ -676,6 +678,13 @@ int vscanadv(delta_state *d, int32_t step, int32_t usefence)
         d->fence_marks[i] = 0;
 
     return 1;
+}
+
+/* A node's context link, the second of the two trailer words that sit between
+   its left and right sync arrays. The first is the right-hand spine link. */
+static int32_t *clink(delta_state *d, int32_t p)
+{
+    return (int32_t *)((char *)(intptr_t)p + d->vars->fence_base * 4 - 4);
 }
 
 /* The right-hand spine link has no fixed offset: it sits one word before the
@@ -1509,4 +1518,365 @@ int test_string_s(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
     }
 
     return 0;
+}
+
+/* Find the statement that governs a context. Three passes: thread every node
+   that carries the field onto a chain through the context links, walk that
+   chain following each node's nonsequential link until one reaches the end of
+   the spine, then unpick the chain and return whichever node survived.
+
+   Every link it borrows is put back before it returns, which is why the last
+   pass masks the same words twice: it clears the pointer, then the two flag
+   bits, in the order the original does. */
+int32_t ctxlook(delta_state *d, int32_t t, uint8_t f, int32_t right)
+{
+    int32_t base = d->vars->fence_base;
+    int32_t first = t;
+    int32_t anchor = t;
+    int32_t cur = t;
+    int32_t marked = 0;
+    int32_t depth = 1;
+    int32_t next = 0;
+    int32_t limit;
+    int32_t result = 0;
+    uint8_t i;
+
+    while (depth > 0) {
+        while (cur != 0
+               && (*(int32_t *)(intptr_t)(cur + (base + f) * 4) & 1) != 0) {
+            marked = cur;
+            cur = *clink(d, cur) & ~3;
+        }
+
+        if (cur == 0)
+            break;
+
+        for (i = 0; i < d->fence_fill; i++) {
+            int32_t sync;
+
+            if ((*(int32_t *)(intptr_t)(cur + (base + i) * 4) & 1) == 0)
+                continue;
+
+            if (right)
+                sync = VLSYNC((const delta_node *)(intptr_t)cur, (int8_t)i);
+            else
+                sync = VRSYNC(d, (const int32_t *)(intptr_t)cur, (int8_t)i);
+
+            if (sync == 0)
+                continue;
+            if ((*clink(d, sync) & ~3) != 0)
+                continue;
+            if (sync == anchor)
+                continue;
+
+            *clink(d, anchor) = (*clink(d, anchor) & 3) | sync;
+            anchor = sync;
+            depth++;
+        }
+
+        next = *clink(d, cur) & ~3;
+        *clink(d, cur) &= 3;
+
+        if (marked != 0)
+            *clink(d, marked) = (*clink(d, marked) & 3) | next;
+        else
+            first = next;
+
+        cur = next;
+        depth--;
+    }
+
+    limit = right ? d->stack->spine_r : d->stack->spine_l;
+    result = 0;
+
+    while (depth > 1) {
+        cur = first;
+
+        while (cur != 0) {
+            delta_node *n = (delta_node *)(intptr_t)cur;
+            int32_t nx;
+            int32_t sync;
+            int32_t from;
+
+            next = *clink(d, cur) & ~3;
+
+            if ((n->flags8 & 1) != 0) {
+                cur = next;
+                continue;
+            }
+
+            nx = n->flags8 & ~3;
+            from = nx ? nx : cur;
+
+            if (right)
+                sync = VRSYNC(d, (const int32_t *)(intptr_t)from, (int8_t)f);
+            else
+                sync = VLSYNC((const delta_node *)(intptr_t)from, (int8_t)f);
+
+            if (sync == limit) {
+                depth = 1;
+                result = cur;
+                break;
+            }
+
+            if ((*clink(d, sync) & ~3) != 0 || sync == anchor) {
+                n->flags8 |= 1;
+                depth--;
+            } else {
+                n->flags8 = (n->flags8 & 3) | sync;
+            }
+
+            cur = next;
+        }
+    }
+
+    cur = first;
+    while (cur != 0) {
+        delta_node *n = (delta_node *)(intptr_t)cur;
+
+        if (result == 0 && (n->flags8 & 1) == 0)
+            result = cur;
+
+        next = *clink(d, cur) & ~3;
+
+        /* The immediate is 0xfffffffe: it clears bit zero, not bit one. */
+        *clink(d, cur) &= 3;
+        n->flags8 &= 3;
+        n->flags8 &= ~1;
+        *clink(d, cur) &= ~1;
+
+        cur = next;
+    }
+
+    return result;
+}
+
+/* Read a field's first value out of a node, in whichever width the language
+   declares it. The short form has its own spelling of "no value". */
+static int32_t tfield(const delta_stmt *e, void *(*get)(void *), int32_t node,
+                      int32_t previous)
+{
+    int16_t kind = e->fields[0].kind;
+    int32_t value = previous;
+
+    if (kind == DK_LONG) {
+        value = *(int32_t *)get(TFLDS((void *)(intptr_t)node));
+    } else if (kind == DK_SHORT2) {
+        value = *(int16_t *)get(TFLDS((void *)(intptr_t)node));
+        if (value == (int32_t)0xffff8001)
+            value = (int32_t)0x80000001;
+    }
+
+    return value;
+}
+
+/* Put a timing position back in range: spend its offset walking the field's
+   run until it fits inside one statement, then snap to a boundary if the
+   caller asked for one. The return says what was found. One means the walk
+   ran off the end of the spine, two that an offset is left over, three that
+   the next statement holds nothing, four that the position is exact.
+
+   The original leaves the value it reads uninitialised for any statement type
+   whose first field is neither a long nor a short, and no shipped type is. */
+int vnormalize(delta_state *d, delta_tpos *p)
+{
+    const delta_stmt *e;
+    void *(*get)(void *);
+    int32_t node = p->node;
+    int8_t f = p->field;
+    int32_t off = p->offset;
+    int32_t base = d->vars->fence_base;
+    int32_t next;
+    int32_t value = 0;
+    uint8_t went_right;
+    uint8_t adjusted;
+
+    e = &vstmtbl[f];
+    get = e->get[0];
+
+    if (off < 0) {
+        went_right = 0;
+        next = *(int32_t *)(intptr_t)(node + 0xc + f * 4) & ~3;
+
+        while (node != d->stack->spine_l) {
+            if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
+                node = next;
+                next = *(int32_t *)(intptr_t)(node + 0xc + f * 4) & ~3;
+                continue;
+            }
+
+            value = tfield(e, get, next, value);
+            if (value == (int32_t)0x80000001)
+                break;
+            if (off + value > 0)
+                break;
+
+            off += value;
+            next = *(int32_t *)(intptr_t)next & ~3;
+        }
+    } else {
+        went_right = 1;
+        next = *(int32_t *)(intptr_t)(node + (base + f) * 4) & ~3;
+
+        while (node != d->stack->spine_r) {
+            if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
+                node = next;
+                next = *(int32_t *)(intptr_t)(node + (base + f) * 4) & ~3;
+                continue;
+            }
+
+            value = tfield(e, get, next, value);
+            if (value == (int32_t)0x80000001)
+                break;
+            if (off - value < 0)
+                break;
+
+            off -= value;
+            next = *(int32_t *)(intptr_t)(next + 4) & ~3;
+        }
+    }
+
+    if ((p->flags & 4) != 0) {
+        if (off < 0) {
+            next = *(int32_t *)(intptr_t)(node + 0xc + f * 4) & ~3;
+            if (next == 0 || (*(int32_t *)(intptr_t)next & 2) == 0)
+                node = *(int32_t *)(intptr_t)next & ~3;
+        } else if (off == 0) {
+            node = (int32_t)(intptr_t)lmost(d, f,
+                                            (delta_node *)(intptr_t)node);
+        }
+        off = 0;
+        went_right = 0;
+        p->flags ^= 4;
+        adjusted = 1;
+    } else if ((p->flags & 8) != 0) {
+        if (off > 0) {
+            next = *(int32_t *)(intptr_t)(node + (base + f) * 4) & ~3;
+            if (next == 0 || (*(int32_t *)(intptr_t)next & 2) == 0)
+                node = *(int32_t *)(intptr_t)(next + 4) & ~3;
+        } else if (off == 0) {
+            node = (int32_t)(intptr_t)rmost(d, f,
+                                            (int32_t *)(intptr_t)node);
+        }
+        off = 0;
+        went_right = 1;
+        p->flags ^= 8;
+        adjusted = 1;
+    } else {
+        adjusted = 0;
+    }
+
+    p->node = node;
+    p->offset = off;
+
+    if ((node == d->stack->spine_l && off < 0)
+        || (node == d->stack->spine_r && off > 0))
+        return 1;
+    if (off != 0)
+        return 2;
+    if (adjusted)
+        return 4;
+
+    /* Look the other way from the one it travelled: an exact position is at
+       the start of a run only if what precedes it holds nothing. */
+    if (went_right)
+        next = *(int32_t *)(intptr_t)(node + 0xc + f * 4) & ~3;
+    else
+        next = *(int32_t *)(intptr_t)(node + (base + f) * 4) & ~3;
+
+    if (e->fields[0].kind == DK_LONG) {
+        if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0)
+            return 3;
+        if (next == 0)
+            return 4;
+        if (*(int32_t *)get(TFLDS((void *)(intptr_t)next)) == 0)
+            return 3;
+    } else if (e->fields[0].kind == DK_SHORT2) {
+        if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0)
+            return 3;
+        if (next == 0)
+            return 4;
+        if (*(int16_t *)get(TFLDS((void *)(intptr_t)next)) == 0)
+            return 3;
+    }
+
+    return 4;
+}
+
+/* Give a statement a place in a field's chain, between the two neighbours the
+   caller found. Whether both, one or neither of them is a sync decides which
+   of the three splices happens; none of them and there is nothing to do.
+
+   The two locals the original computes for the first case are never read
+   again, so only their reads survive here, in the branch that would have
+   made them. */
+int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f)
+{
+    int32_t base = d->vars->fence_base;
+    int32_t l = left;
+    int32_t r = right;
+
+    if ((*(int32_t *)(intptr_t)(t + (base + f) * 4) & 1) != 0)
+        return 1;
+
+    if (left != 0 && (*(int32_t *)(intptr_t)left & 2) != 0
+        && right != 0 && (*(int32_t *)(intptr_t)right & 2) != 0) {
+        *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+        *(int32_t *)(intptr_t)(t + (base + f) * 4) |= 1;
+
+        CLRONESTM((delta_node *)(intptr_t)t);
+        if (ALLNSQ((const delta_node *)(intptr_t)t)
+            && d->vars->nsq_marks[f] == 0)
+            CLRALLNSQ((delta_node *)(intptr_t)t);
+
+        *(int32_t *)(intptr_t)(l + (base + f) * 4) =
+            (*(int32_t *)(intptr_t)(l + (base + f) * 4) & 3) | t;
+        *(int32_t *)(intptr_t)(r + 0xc + f * 4) =
+            (*(int32_t *)(intptr_t)(r + 0xc + f * 4) & 3) | t;
+        *(int32_t *)(intptr_t)(t + (base + f) * 4) =
+            (*(int32_t *)(intptr_t)(t + (base + f) * 4) & 3) | r;
+        *(int32_t *)(intptr_t)(t + 0xc + f * 4) =
+            (*(int32_t *)(intptr_t)(t + 0xc + f * 4) & 3) | l;
+    } else if (right != 0 && (*(int32_t *)(intptr_t)right & 2) != 0) {
+        *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+        *(int32_t *)(intptr_t)(t + (base + f) * 4) |= 1;
+
+        CLRONESTM((delta_node *)(intptr_t)t);
+        if (ALLNSQ((const delta_node *)(intptr_t)t)
+            && d->vars->nsq_marks[f] == 0)
+            CLRALLNSQ((delta_node *)(intptr_t)t);
+
+        ((delta_node *)(intptr_t)left)->link = t;
+        *(int32_t *)(intptr_t)(t + (base + f) * 4) =
+            (*(int32_t *)(intptr_t)(t + (base + f) * 4) & 3) | right;
+        *(int32_t *)(intptr_t)(r + 0xc + f * 4) =
+            (*(int32_t *)(intptr_t)(r + 0xc + f * 4) & 3) | t;
+        *(int32_t *)(intptr_t)(t + 0xc + f * 4) =
+            (*(int32_t *)(intptr_t)(t + 0xc + f * 4) & 3) | left;
+    } else if (left != 0 && (*(int32_t *)(intptr_t)left & 2) != 0) {
+        *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+        *(int32_t *)(intptr_t)(t + (base + f) * 4) |= 1;
+
+        CLRONESTM((delta_node *)(intptr_t)t);
+        if (ALLNSQ((const delta_node *)(intptr_t)t)
+            && d->vars->nsq_marks[f] == 0)
+            CLRALLNSQ((delta_node *)(intptr_t)t);
+
+        *(int32_t *)(intptr_t)(l + (base + f) * 4) =
+            (*(int32_t *)(intptr_t)(l + (base + f) * 4) & 3) | t;
+        *(int32_t *)(intptr_t)(t + (base + f) * 4) =
+            (*(int32_t *)(intptr_t)(t + (base + f) * 4) & 3) | right;
+        *(int32_t *)(intptr_t)right = t;
+        *(int32_t *)(intptr_t)(t + 0xc + f * 4) =
+            (*(int32_t *)(intptr_t)(t + 0xc + f * 4) & 3) | left;
+    } else {
+        return 0;
+    }
+
+    if (NONSEQ((const delta_node *)(intptr_t)t) && d->vars->relink != 0) {
+        DELSPINE(d, (delta_node *)(intptr_t)t);
+        INSSPINEL(d, (delta_node *)(intptr_t)t, (delta_node *)(intptr_t)r);
+    }
+
+    return 1;
 }

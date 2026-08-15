@@ -27,7 +27,9 @@ typedef struct {
 /* The backtracking stack. Its true size is not established: only the fields
    below have been seen, so the tail is however much room the records need. */
 typedef struct {
-    uint8_t       pad_0000[0x5c];
+    int32_t       spine_l;     /* 0x0000, the node the spine starts at */
+    int32_t       spine_r;     /* 0x0004, and the one it ends at */
+    uint8_t       pad_0008[0x5c - 8];
     const int8_t *nsq_fields;  /* 0x005c, which fields decide the flags,
                                   terminated by a negative entry */
     uint8_t       pad_0060[0x9c - 0x60];
@@ -78,7 +80,9 @@ typedef struct {
     uint8_t  *back;            /* 0x0fdc, where an unwind returns to */
     int8_t    compared_equal;  /* 0x0fe0 */
     int8_t    fence_count;     /* 0x0fe1, how many characters are fenced */
-    uint8_t   pad_0fe2[0x116c - 0xfe2];
+    uint8_t   pad_0fe2[0x1124 - 0xfe2];
+    int32_t   relink;          /* 0x1124, keep the spine order consistent */
+    uint8_t   pad_1128[0x116c - 0x1128];
     const int8_t *nsq_marks;   /* 0x116c, one per fenced field */
     uint8_t   pad_1170[4];
     int32_t   fence_base;      /* 0x1174 */
@@ -91,7 +95,9 @@ struct delta_state {
     uint8_t      pad_0000[0x40];
     delta_pta    lpta;            /* 0x0040 */
     delta_pta    rpta;            /* 0x0050 */
-    uint8_t      pad_0060[8];
+    uint8_t      pad_0060[4];
+    uint8_t     *owner;           /* 0x0064, whoever wants to know the spine
+                                     moved; the flag it sets is at 0x1b8 */
     delta_vars  *vars;            /* 0x0068 */
     delta_stack *stack;           /* 0x006c */
     uint8_t      pad_0070[0x14];
@@ -318,6 +324,25 @@ int  get_parm(delta_state *d, delta_loc *out, delta_loc *loc, int16_t kind);
 int  test_synch(delta_state *d, int16_t tag, uint8_t n, const uint8_t *list);
 int  test_string_i(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str);
 int  test_string_s(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str);
+int32_t ctxlook(delta_state *d, int32_t t, uint8_t f, int32_t right);
+
+/* Where the timing code is looking: a node, which field it is following, how
+   far past that node in the field's own units, and flags asking for the
+   position to be snapped to the start or the end of a run. */
+typedef struct {
+    int32_t node;     /* +0x00 */
+    int8_t  field;    /* +0x04 */
+    int8_t  pad_05[3];
+    int32_t offset;   /* +0x08 */
+    uint8_t flags;    /* +0x0c, bit 2 snap left, bit 3 snap right */
+    uint8_t pad_0d[3];
+} delta_tpos;
+
+int vnormalize(delta_state *d, delta_tpos *p);
+int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f);
+
+/* Where the runtime tells its owner the spine moved. */
+#define DELTA_OWNER_CHANGED 0x1b8
 
 /* Bumped whenever the spine is relinked, so anything holding a position knows
    to look again. */
