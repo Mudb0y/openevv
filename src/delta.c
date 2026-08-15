@@ -2014,3 +2014,87 @@ int setscan_l(delta_state *d, uint8_t f)     { return setscan(d, f, 0, 1); }
 int setscan_r(delta_state *d, uint8_t f)     { return setscan(d, f, 1, 1); }
 int setscan_nof_l(delta_state *d, uint8_t f) { return setscan(d, f, 0, 0); }
 int setscan_nof_r(delta_state *d, uint8_t f) { return setscan(d, f, 1, 0); }
+
+/* Where a context starts. With no context wanted it is just the neighbour in
+   the field; with one, either the cheap spine walk or the full lookup,
+   depending on whether the node is sequential and the field is fenced. */
+int32_t vgetsc(delta_state *d, int32_t back, int32_t ctx, int32_t t, uint8_t f)
+{
+    if (ctx != 0) {
+        if (d->vars->relink != 0
+            && !NONSEQ((const delta_node *)(intptr_t)t)
+            && d->vars->nsq_marks[f] == 0)
+            return (int32_t)(intptr_t)
+                ctxspine(d, (int32_t *)(intptr_t)t, f, back);
+
+        return ctxlook(d, t, f, back);
+    }
+
+    if (back != 0)
+        return *(int32_t *)(intptr_t)(t + 0xc + f * 4) & ~3;
+
+    return *(int32_t *)(intptr_t)(t + (d->vars->fence_base + f) * 4) & ~3;
+}
+
+/* Whether a position sits on a timing point. Like vtsttmark_tv, but a
+   position that fell short is dragged to the end of its run and still
+   counts. */
+int vtimept_tv(delta_state *d, delta_tpos *p, uint8_t back)
+{
+    int32_t r;
+
+    if ((p->flags & 1) != 0)
+        return 1;
+
+    r = vnormalize(d, p);
+
+    if (r == 2)
+        return 1;
+
+    if (r == 3) {
+        if (back == 0)
+            p->node = (int32_t)(intptr_t)
+                rmost(d, p->field, (int32_t *)(intptr_t)p->node);
+        else
+            p->node = (int32_t)(intptr_t)
+                lmost(d, p->field, (delta_node *)(intptr_t)p->node);
+        p->flags = 1;
+        return 1;
+    }
+
+    if (r == 4) {
+        p->flags = 1;
+        return 1;
+    }
+
+    return 0;
+}
+
+/* Set a forall going: note what it iterates, point the left register at the
+   token it starts from, and put the scan there with the field fenced. */
+int for_loop_preamble(delta_state *d, int32_t tag, int32_t loop, int32_t f,
+                      const delta_token *tok)
+{
+    delta_vars *v = d->vars;
+
+    v->loop_tag = loop;
+    v->test_tag = tag;
+    v->testing = 0;
+
+    d->lpta.flags = 1;
+    d->lpta.node = tok->value;
+
+    if (vtstsnc_tv(d, &d->lpta) != 0)
+        return 0;
+
+    if (d->lpta.node == 0
+        || (*(int32_t *)(intptr_t)(d->lpta.node + (v->fence_base + f) * 4)
+            & 1) == 0)
+        return 0;
+
+    v->scan_ptr = d->lpta.node;
+    v->scan_field = (uint8_t)f;
+    v->scan_held = 1;
+    d->fence_marks[d->fence_index[f]] = 1;
+    return 1;
+}

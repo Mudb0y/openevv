@@ -122,6 +122,10 @@ extern int  ibm_setscan_l(delta_state *, uint8_t);
 extern int  ibm_setscan_r(delta_state *, uint8_t);
 extern int  ibm_setscan_nof_l(delta_state *, uint8_t);
 extern int  ibm_setscan_nof_r(delta_state *, uint8_t);
+extern int32_t ibm_vgetsc(delta_state *, int32_t, int32_t, int32_t, uint8_t);
+extern int  ibm_vtimept_tv(delta_state *, delta_tpos *, uint8_t);
+extern int  ibm_for_loop_preamble(delta_state *, int32_t, int32_t, int32_t,
+                                  const delta_token *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -2329,6 +2333,138 @@ BEGIN(setscan)
     m->stack.spine_r = o->stack.spine_r = 0;
 END(setscan)
 
+
+BEGIN(vgetsc)
+    /* ctxlook and ctxspine both need the spine ctxlook's own test builds,
+       with the context links idle. */
+    enum { FB = 15, NNODE = 6, STEP = 0x80 };
+    uint8_t f = (uint8_t)(rng_next() % NSTMT);
+    int32_t back = (int32_t)(rng_next() % 2u);
+    int32_t ctx = (int32_t)(rng_next() % 2u);
+    int32_t ra, rb;
+    int i, j;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.fence_base = o->vars.fence_base = FB;
+    m->state.fence_fill = o->state.fence_fill = (uint8_t)(rng_next() % 5u);
+    m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
+    for (i = 0; i < 0x20; i++)
+        m->nsqm[i] = o->nsqm[i] = (int8_t)(rng_next() % 2u);
+
+#define NODE(w, i) ((int32_t *)((w)->nodes + (i) * STEP))
+#define AT(w, i)   ((int32_t)(intptr_t)((w)->nodes + (i) * STEP))
+    for (i = 0; i < NNODE; i++) {
+        int lo = i > 0 ? i - 1 : 0;
+        int hi = i + 1 < NNODE ? i + 1 : NNODE - 1;
+        uint32_t r;
+
+        r = rng_next();
+        NODE(m, i)[0] = AT(m, lo) | 2 | (int32_t)(r & 1u);
+        NODE(o, i)[0] = AT(o, lo) | 2 | (int32_t)(r & 1u);
+
+        r = rng_next();
+        NODE(m, i)[1] = AT(m, hi) | (int32_t)(r & 3u);
+        NODE(o, i)[1] = AT(o, hi) | (int32_t)(r & 3u);
+
+        r = rng_next();
+        NODE(m, i)[2] = (int32_t)(r & 3u);
+        NODE(o, i)[2] = (int32_t)(r & 3u);
+
+        for (j = 0; j < 10; j++) {
+            r = rng_next();
+            NODE(m, i)[3 + j] = AT(m, lo) | (int32_t)(r & 1u);
+            NODE(o, i)[3 + j] = AT(o, lo) | (int32_t)(r & 1u);
+
+            r = rng_next();
+            NODE(m, i)[FB + j] = AT(m, hi) | (int32_t)(r & 1u);
+            NODE(o, i)[FB + j] = AT(o, hi) | (int32_t)(r & 1u);
+        }
+
+        NODE(m, i)[FB - 2] = AT(m, lo);
+        NODE(o, i)[FB - 2] = AT(o, lo);
+        NODE(m, i)[FB - 1] = 0;
+        NODE(o, i)[FB - 1] = 0;
+    }
+    /* ctxspine only stops on a node that both carries the field and is
+       sequential, so the far end has to be one. */
+    NODE(m, NNODE - 1)[FB + f] |= 1;
+    NODE(o, NNODE - 1)[FB + f] |= 1;
+    NODE(m, NNODE - 1)[2] &= ~2;
+    NODE(o, NNODE - 1)[2] &= ~2;
+    NODE(m, 0)[FB + f] |= 1;
+    NODE(o, 0)[FB + f] |= 1;
+    NODE(m, 0)[2] &= ~2;
+    NODE(o, 0)[2] &= ~2;
+
+    m->stack.spine_l = AT(m, 0);
+    o->stack.spine_l = AT(o, 0);
+    m->stack.spine_r = AT(m, NNODE - 1);
+    o->stack.spine_r = AT(o, NNODE - 1);
+
+    ra = ibm_vgetsc(&m->state, back, ctx, AT(m, 2), f);
+    rb = vgetsc(&o->state, back, ctx, AT(o, 2), f);
+#undef NODE
+#undef AT
+
+    if ((ra == 0) != (rb == 0))
+        bad++;
+    else if (ra != 0
+             && ra - (int32_t)(intptr_t)m != rb - (int32_t)(intptr_t)o)
+        bad++;
+END(vgetsc)
+
+BEGIN(vtimept_tv)
+    static const uint8_t sets[4] = {0, 1, 4, 8};
+    delta_tpos pm, po;
+    int8_t f = build_tspine(m, o);
+    uint8_t back = (uint8_t)(rng_next() % 2u);
+    int ra, rb;
+
+    if (f < 0) {
+        free(m); free(o);
+        break;
+    }
+    make_tpos(m, o, f, &pm, &po, sets[rng_next() % 4u]);
+
+    ra = ibm_vtimept_tv(&m->state, &pm, back);
+    rb = vtimept_tv(&o->state, &po, back);
+
+    if (ra != rb)
+        bad++;
+    if (pm.offset != po.offset || pm.flags != po.flags)
+        bad++;
+    if (pm.node - (int32_t)(intptr_t)m != po.node - (int32_t)(intptr_t)o)
+        bad++;
+END(vtimept_tv)
+
+BEGIN(for_loop_preamble)
+    delta_token tm, to;
+    int8_t f = build_tspine(m, o);
+    int32_t tag = (int32_t)rng_next();
+    int32_t loop = (int32_t)rng_next();
+    int32_t which = (int32_t)(rng_next() % NSTMT);
+    int ra, rb, i;
+
+    if (f < 0) {
+        free(m); free(o);
+        break;
+    }
+    for (i = 0; i < FENCE_MAP; i++)
+        m->map[i] = o->map[i] = (uint8_t)(rng_next() % 4u);
+
+    tm.unknown_00 = to.unknown_00 = (int32_t)rng_next();
+    tm.value = (int32_t)(intptr_t)(m->nodes + 2 * 0x80);
+    to.value = (int32_t)(intptr_t)(o->nodes + 2 * 0x80);
+    m->state.lpta.field = o->state.lpta.field = f;
+
+    ra = ibm_for_loop_preamble(&m->state, tag, loop, which, &tm);
+    rb = for_loop_preamble(&o->state, tag, loop, which, &to);
+
+    if (ra != rb)
+        bad++;
+END(for_loop_preamble)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -2402,6 +2538,9 @@ int main(void)
     test_test_ptr();
     test_lpta_walks();
     test_setscan();
+    test_vgetsc();
+    test_vtimept_tv();
+    test_for_loop_preamble();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

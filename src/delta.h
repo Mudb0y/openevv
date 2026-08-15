@@ -345,6 +345,10 @@ int  setscan_l(delta_state *d, uint8_t f);
 int  setscan_r(delta_state *d, uint8_t f);
 int  setscan_nof_l(delta_state *d, uint8_t f);
 int  setscan_nof_r(delta_state *d, uint8_t f);
+int32_t vgetsc(delta_state *d, int32_t back, int32_t ctx, int32_t t, uint8_t f);
+int  vtimept_tv(delta_state *d, delta_tpos *p, uint8_t back);
+int  for_loop_preamble(delta_state *d, int32_t tag, int32_t loop, int32_t f,
+                       const delta_token *tok);
 int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f);
 
 /* Where the runtime tells its owner the spine moved. */
