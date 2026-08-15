@@ -18,6 +18,7 @@ AT(stack, 0x006c);
 
 typedef char delta_state_is_0x1088[sizeof(delta_state) == DELTA_STATE_BYTES ? 1 : -1];
 typedef char delta_pta_is_16[sizeof(delta_pta) == 16 ? 1 : -1];
+typedef char delta_tpos_is_16[sizeof(delta_tpos) == 16 ? 1 : -1];
 typedef char delta_stmt_is_0x40[sizeof(delta_stmt) == 0x40 ? 1 : -1];
 typedef char delta_fielddesc_is_0x18[sizeof(delta_fielddesc) == 0x18 ? 1 : -1];
 
@@ -37,17 +38,17 @@ static int32_t stmt_length(int32_t kind)
    cleared word is whatever the previous load left behind. */
 void lpta_loadp(delta_state *d, const delta_token *p)
 {
-    d->lpta.loaded = 1;
-    d->lpta.value = p->value;
-    d->lpta.unknown_08 = 0;
+    d->lpta.flags = 1;
+    d->lpta.node = p->value;
+    d->lpta.offset = 0;
 }
 
 /* Byte for byte the same as lpta_loadp in the original. */
 void lpta_loadpn(delta_state *d, const delta_token *p)
 {
-    d->lpta.loaded = 1;
-    d->lpta.value = p->value;
-    d->lpta.unknown_08 = 0;
+    d->lpta.flags = 1;
+    d->lpta.node = p->value;
+    d->lpta.offset = 0;
 }
 
 /* Loading the right register clears the left register's word rather than its
@@ -55,16 +56,16 @@ void lpta_loadpn(delta_state *d, const delta_token *p)
    rather than corrected; lpta_rpta_loadp clears both. */
 void rpta_loadp(delta_state *d, const delta_token *p)
 {
-    d->rpta.loaded = 1;
-    d->rpta.value = p->value;
-    d->lpta.unknown_08 = 0;
+    d->rpta.flags = 1;
+    d->rpta.node = p->value;
+    d->lpta.offset = 0;
 }
 
 void rpta_loadpn(delta_state *d, const delta_token *p)
 {
-    d->rpta.loaded = 1;
-    d->rpta.value = p->value;
-    d->lpta.unknown_08 = 0;
+    d->rpta.flags = 1;
+    d->rpta.node = p->value;
+    d->lpta.offset = 0;
 }
 
 /* Both registers at once, which is what a rule matching across a span wants
@@ -72,12 +73,12 @@ void rpta_loadpn(delta_state *d, const delta_token *p)
 void lpta_rpta_loadp(delta_state *d, const delta_token *lp,
                      const delta_token *rp)
 {
-    d->rpta.loaded = 1;
-    d->lpta.loaded = 1;
-    d->lpta.value = lp->value;
-    d->rpta.value = rp->value;
-    d->rpta.unknown_08 = 0;
-    d->lpta.unknown_08 = 0;
+    d->rpta.flags = 1;
+    d->lpta.flags = 1;
+    d->lpta.node = lp->value;
+    d->rpta.node = rp->value;
+    d->rpta.offset = 0;
+    d->lpta.offset = 0;
 }
 
 /* The stack grows downward, and both pointers move together by whatever the
@@ -369,12 +370,12 @@ void UNSETFENCE(delta_state *d, int32_t *table, int8_t idx)
 /* And the rules fence through whatever the left pointer register holds. */
 void addfence(delta_state *d, int8_t idx)
 {
-    SETFENCE(d, (int32_t *)d->lpta.value, idx);
+    SETFENCE(d, (int32_t *)d->lpta.node, idx);
 }
 
 void remfence(delta_state *d, int8_t idx)
 {
-    UNSETFENCE(d, (int32_t *)d->lpta.value, idx);
+    UNSETFENCE(d, (int32_t *)d->lpta.node, idx);
 }
 
 int32_t deltaErrorThrown(delta_state *d)
@@ -1879,4 +1880,77 @@ int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f)
     }
 
     return 1;
+}
+
+/* Settle a timing position and leave it settled. */
+int vmove_tv(delta_state *d, delta_tpos *p)
+{
+    if ((p->flags & 1) != 0)
+        return 1;
+
+    vnormalize(d, p);
+    p->flags = 1;
+    return 1;
+}
+
+/* Whether a position lands on a sync. Anything vnormalize could not place
+   settles the position and fails. */
+int vtstsnc_tv(delta_state *d, delta_tpos *p)
+{
+    int32_t r;
+
+    if ((p->flags & 1) != 0)
+        return 0;
+
+    r = vnormalize(d, p);
+    if (r >= 0 && (r <= 1 || r == 2))
+        return 1;
+
+    p->flags = 1;
+    return 0;
+}
+
+/* Whether a position lands on a timing mark. A position that fell just short
+   of one is dragged to the end of the run it is in first. */
+int vtsttmark_tv(delta_state *d, delta_tpos *p, uint8_t back)
+{
+    int32_t r;
+
+    if ((p->flags & 1) != 0)
+        return 0;
+
+    r = vnormalize(d, p);
+
+    if (r >= 0) {
+        if (r <= 1 || r == 2)
+            return 1;
+        if (r == 3) {
+            if (back == 0)
+                p->node = (int32_t)(intptr_t)
+                    rmost(d, p->field, (int32_t *)(intptr_t)p->node);
+            else
+                p->node = (int32_t)(intptr_t)
+                    lmost(d, p->field, (delta_node *)(intptr_t)p->node);
+        }
+    }
+
+    p->flags = 1;
+    return 0;
+}
+
+/* Whether the scan has reached where the left register points. */
+int test_ptr(delta_state *d)
+{
+    if (d->lpta.node == 0)
+        return 1;
+
+    if ((d->lpta.flags & 2) != 0)
+        vnormalize(d, &d->lpta);
+
+    for (;;) {
+        if (d->vars->scan_ptr == d->lpta.node)
+            return 0;
+        if (!vscanadv(d, 0, 1))
+            return 1;
+    }
 }

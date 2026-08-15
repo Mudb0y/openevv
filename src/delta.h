@@ -13,16 +13,23 @@
 
 #define DELTA_STATE_BYTES 0x1088
 
-/* A pointer register. The rules work through two of them, a left and a right,
-   and the generated code loads them a great deal more often than anything
-   else it does. */
+/* Where the runtime is looking: a node, which field it is following, how far
+   past that node in the field's own units, and flags. Bit 0 says the position
+   is settled, bit 1 that it needs normalising, bits 2 and 3 ask for it to be
+   snapped to the start or the end of a run.
+
+   A rule's two pointer registers are the same sixteen bytes, which is why
+   loading one clears its offset and marks it settled. */
 typedef struct {
-    int32_t value;         /* +0x00, copied out of the token the rule names */
-    int32_t unknown_04;    /* +0x04 */
-    int32_t unknown_08;    /* +0x08, cleared on every load */
-    int8_t  loaded;        /* +0x0c, set on every load */
-    int8_t  pad_0d[3];
-} delta_pta;
+    int32_t node;      /* +0x00 */
+    int8_t  field;     /* +0x04 */
+    int8_t  pad_05[3];
+    int32_t offset;    /* +0x08 */
+    uint8_t flags;     /* +0x0c */
+    uint8_t pad_0d[3];
+} delta_tpos;
+
+typedef delta_tpos delta_pta;
 
 /* The backtracking stack. Its true size is not established: only the fields
    below have been seen, so the tail is however much room the records need. */
@@ -326,19 +333,11 @@ int  test_string_i(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str);
 int  test_string_s(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str);
 int32_t ctxlook(delta_state *d, int32_t t, uint8_t f, int32_t right);
 
-/* Where the timing code is looking: a node, which field it is following, how
-   far past that node in the field's own units, and flags asking for the
-   position to be snapped to the start or the end of a run. */
-typedef struct {
-    int32_t node;     /* +0x00 */
-    int8_t  field;    /* +0x04 */
-    int8_t  pad_05[3];
-    int32_t offset;   /* +0x08 */
-    uint8_t flags;    /* +0x0c, bit 2 snap left, bit 3 snap right */
-    uint8_t pad_0d[3];
-} delta_tpos;
-
 int vnormalize(delta_state *d, delta_tpos *p);
+int vmove_tv(delta_state *d, delta_tpos *p);
+int vtstsnc_tv(delta_state *d, delta_tpos *p);
+int vtsttmark_tv(delta_state *d, delta_tpos *p, uint8_t back);
+int test_ptr(delta_state *d);
 int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f);
 
 /* Where the runtime tells its owner the spine moved. */

@@ -111,6 +111,10 @@ extern int  ibm_test_string_s(delta_state *, uint8_t, uint8_t, const uint8_t *);
 extern int32_t ibm_ctxlook(delta_state *, int32_t, uint8_t, int32_t);
 extern int  ibm_vnormalize(delta_state *, delta_tpos *);
 extern int  ibm_vproject(delta_state *, int32_t, int32_t, int32_t, uint8_t);
+extern int  ibm_vmove_tv(delta_state *, delta_tpos *);
+extern int  ibm_vtstsnc_tv(delta_state *, delta_tpos *);
+extern int  ibm_vtsttmark_tv(delta_state *, delta_tpos *, uint8_t);
+extern int  ibm_test_ptr(delta_state *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -593,14 +597,14 @@ BEGIN(fences)
        at the record area and keep the index inside it. */
     int8_t idx = (int8_t)(rng_next() % 0x20u);
     m->vars.fence_base = o->vars.fence_base = (int32_t)(rng_next() % 0x10u);
-    m->state.lpta.value = (int32_t)(intptr_t)m->records;
-    o->state.lpta.value = (int32_t)(intptr_t)o->records;
+    m->state.lpta.node = (int32_t)(intptr_t)m->records;
+    o->state.lpta.node = (int32_t)(intptr_t)o->records;
     if (rng_next() % 2u) {
         ibm_addfence(&m->state, idx); addfence(&o->state, idx);
     } else {
         ibm_remfence(&m->state, idx); remfence(&o->state, idx);
     }
-    m->state.lpta.value = o->state.lpta.value = 0;
+    m->state.lpta.node = o->state.lpta.node = 0;
 END(fences)
 
 BEGIN(vnspush)
@@ -1961,23 +1965,24 @@ BEGIN(ctxlook)
 END(ctxlook)
 
 
-BEGIN(vnormalize)
-    /* Six nodes in a row plus a terminator at each end. Every link has to be
-       followable, because the walk spends its offset stepping along the field
-       and never checks for a null; but the ends cannot point at themselves
-       either, or lmost and rmost never stop. The terminators are not syncs,
-       which is what makes both walks halt on them. Field values are all
-       positive, so spending the offset always finishes. */
+
+/* Six nodes in a row plus a terminator at each end, in both worlds. Every
+   link is followable, because the timing walks spend an offset stepping along
+   a field and never check for a null; the ends cannot point at themselves
+   either, or lmost and rmost never stop. A terminator is not a sync, which is
+   what makes both walks halt on it. Every field value is positive, so
+   spending an offset always finishes. Returns the field to use, or -1 when
+   no statement type has a kind the timing code can read. */
+static int8_t build_tspine(delta_world *m, delta_world *o)
+{
     enum { FB = 15, NSPINE = 6, NNODE = 8, STEP = 0x80 };
-    delta_tpos pm, po;
     int8_t f = -1;
-    int ra, rb, i, j;
+    int i, j;
 
     memset(m->nodes, 0, sizeof(m->nodes));
     memset(o->nodes, 0, sizeof(o->nodes));
     m->vars.fence_base = o->vars.fence_base = FB;
 
-    /* lmost and rmost only have defined behaviour for these two kinds. */
     for (i = 0; i < NSTMT; i++) {
         int k = (int)((rng_next() + (uint32_t)i) % NSTMT);
 
@@ -1987,10 +1992,8 @@ BEGIN(vnormalize)
             break;
         }
     }
-    if (f < 0) {
-        free(m); free(o);
-        break;
-    }
+    if (f < 0)
+        return -1;
 
 #define NODE(w, i) ((int32_t *)((w)->nodes + (i) * STEP))
 #define AT(w, i)   ((int32_t)(intptr_t)((w)->nodes + (i) * STEP))
@@ -2000,7 +2003,6 @@ BEGIN(vnormalize)
         int hi = end ? NSPINE - 1 : (i + 1 < NSPINE ? i + 1 : NSPINE + 1);
         uint32_t r;
 
-        /* A terminator is never a sync, so a walk stops when it reaches one. */
         r = rng_next();
         NODE(m, i)[0] = AT(m, lo) | (int32_t)(end ? (r & 1u) : (r & 3u));
         NODE(o, i)[0] = AT(o, lo) | (int32_t)(end ? (r & 1u) : (r & 3u));
@@ -2019,7 +2021,6 @@ BEGIN(vnormalize)
             NODE(o, i)[FB + j] = AT(o, hi) | (int32_t)(r & 3u);
         }
 
-        /* A strictly positive length, so spending the offset terminates. */
         r = 1u + rng_next() % 4u;
         if (vstmtbl[f].fields[0].kind == DK_LONG) {
             *(int32_t *)vstmtbl[f].get[0](m->nodes + i * STEP + 8) =
@@ -2038,24 +2039,39 @@ BEGIN(vnormalize)
     o->stack.spine_l = AT(o, 0);
     m->stack.spine_r = AT(m, NSPINE - 1);
     o->stack.spine_r = AT(o, NSPINE - 1);
-
-    pm.node = AT(m, 2);
-    po.node = AT(o, 2);
 #undef NODE
 #undef AT
-    pm.field = po.field = f;
-    pm.pad_05[0] = po.pad_05[0] = 0;
-    pm.pad_05[1] = po.pad_05[1] = 0;
-    pm.pad_05[2] = po.pad_05[2] = 0;
-    pm.offset = po.offset = (int32_t)(rng_next() % 21u) - 10;
-    {
-        static const uint8_t sets[3] = {0, 4, 8};
+    return f;
+}
 
-        pm.flags = po.flags = sets[rng_next() % 3u];
+/* Where a timing test starts from, filled in for both worlds at once. */
+static void make_tpos(delta_world *m, delta_world *o, int8_t f,
+                      delta_tpos *pm, delta_tpos *po, uint8_t flags)
+{
+    pm->node = (int32_t)(intptr_t)(m->nodes + 2 * 0x80);
+    po->node = (int32_t)(intptr_t)(o->nodes + 2 * 0x80);
+    pm->field = po->field = f;
+    pm->pad_05[0] = po->pad_05[0] = 0;
+    pm->pad_05[1] = po->pad_05[1] = 0;
+    pm->pad_05[2] = po->pad_05[2] = 0;
+    pm->offset = po->offset = (int32_t)(rng_next() % 21u) - 10;
+    pm->flags = po->flags = flags;
+    pm->pad_0d[0] = po->pad_0d[0] = 0;
+    pm->pad_0d[1] = po->pad_0d[1] = 0;
+    pm->pad_0d[2] = po->pad_0d[2] = 0;
+}
+
+BEGIN(vnormalize)
+    static const uint8_t sets[3] = {0, 4, 8};
+    delta_tpos pm, po;
+    int8_t f = build_tspine(m, o);
+    int ra, rb;
+
+    if (f < 0) {
+        free(m); free(o);
+        break;
     }
-    pm.pad_0d[0] = po.pad_0d[0] = 0;
-    pm.pad_0d[1] = po.pad_0d[1] = 0;
-    pm.pad_0d[2] = po.pad_0d[2] = 0;
+    make_tpos(m, o, f, &pm, &po, sets[rng_next() % 3u]);
 
     ra = ibm_vnormalize(&m->state, &pm);
     rb = vnormalize(&o->state, &po);
@@ -2131,6 +2147,84 @@ BEGIN(vproject)
         bad++;
 END(vproject)
 
+
+BEGIN(timing_tests)
+    static const uint8_t sets[4] = {0, 1, 4, 8};
+    delta_tpos pm, po;
+    int8_t f = build_tspine(m, o);
+    uint32_t which = rng_next() % 3u;
+    int ra, rb;
+
+    if (f < 0) {
+        free(m); free(o);
+        break;
+    }
+    make_tpos(m, o, f, &pm, &po, sets[rng_next() % 4u]);
+
+    if (which == 0) {
+        ra = ibm_vmove_tv(&m->state, &pm);
+        rb = vmove_tv(&o->state, &po);
+    } else if (which == 1) {
+        ra = ibm_vtstsnc_tv(&m->state, &pm);
+        rb = vtstsnc_tv(&o->state, &po);
+    } else {
+        uint8_t back = (uint8_t)(rng_next() % 2u);
+
+        ra = ibm_vtsttmark_tv(&m->state, &pm, back);
+        rb = vtsttmark_tv(&o->state, &po, back);
+    }
+
+    if (ra != rb)
+        bad++;
+    if (pm.offset != po.offset || pm.flags != po.flags)
+        bad++;
+    if (pm.node - (int32_t)(intptr_t)m != po.node - (int32_t)(intptr_t)o)
+        bad++;
+
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+END(timing_tests)
+
+BEGIN(test_ptr)
+    int ra, rb, i;
+
+    build_chain(m, o);
+    m->vars.fence_base = o->vars.fence_base = 13;
+    m->vars.fence_count = o->vars.fence_count = (int8_t)(rng_next() % 3u);
+    m->vars.scan_field = o->vars.scan_field = (uint8_t)(rng_next() % 3u);
+    m->vars.scan_rev = o->vars.scan_rev = (uint8_t)(rng_next() % 2u);
+    m->vars.scan_held = o->vars.scan_held = (uint8_t)(rng_next() % 2u);
+    for (i = 0; i < 4; i++) {
+        m->chars[i] = o->chars[i] = (uint8_t)i;
+        m->marks[i] = o->marks[i] = (uint8_t)(rng_next() % 2u);
+    }
+    m->vars.scan_ptr = (int32_t)(intptr_t)m->nodes;
+    o->vars.scan_ptr = (int32_t)(intptr_t)o->nodes;
+
+    /* Aim the register at one of the nodes, and sometimes at nothing. The
+       normalising path is left out: it would need the timing spine, which
+       the scan chain is not. */
+    {
+        uint32_t k = rng_next() % 5u;
+
+        m->state.lpta.node = (k < 4)
+            ? (int32_t)(intptr_t)(m->nodes + k * 0x80) : 0;
+        o->state.lpta.node = (k < 4)
+            ? (int32_t)(intptr_t)(o->nodes + k * 0x80) : 0;
+    }
+    m->state.lpta.flags = o->state.lpta.flags = (uint8_t)(rng_next() % 2u);
+
+    ra = ibm_test_ptr(&m->state);
+    rb = test_ptr(&o->state);
+    if (ra != rb)
+        bad++;
+
+    m->state.lpta.node = o->state.lpta.node = 0;
+    m->vars.scan_ptr = o->vars.scan_ptr = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(test_ptr)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -2200,6 +2294,8 @@ int main(void)
     test_ctxlook();
     test_vnormalize();
     test_vproject();
+    test_timing_tests();
+    test_test_ptr();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
