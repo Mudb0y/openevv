@@ -2423,3 +2423,107 @@ int visright(delta_state *d, int32_t a, int32_t b)
 {
     return visleft(d, b, a);
 }
+
+/* Compare two positions. Two settled ones compare by node alone. Two loose
+   ones are settled and compared whole. One of each is the interesting case:
+   the loose one is settled, and if it landed just short of a run it counts as
+   equal when the other end sits inside the same run. */
+int vcomp_pta(delta_state *d, delta_tpos *a, delta_tpos *b)
+{
+    delta_vars *v = d->vars;
+    delta_tpos *loose;
+    int32_t other;
+    int32_t r;
+
+    if ((a->flags & 1) != 0 && (b->flags & 1) != 0) {
+        v->compared_equal = (int8_t)(a->node != b->node);
+        return 0;
+    }
+
+    if ((a->flags & 2) != 0 && (b->flags & 2) != 0) {
+        vnormalize(d, a);
+        vnormalize(d, b);
+
+        if (a->field == b->field && a->node == b->node
+            && a->offset == b->offset)
+            v->compared_equal = 0;
+        else
+            v->compared_equal = 1;
+
+        return 0;
+    }
+
+    if ((a->flags & 2) != 0) {
+        loose = a;
+        other = b->node;
+    } else {
+        loose = b;
+        other = a->node;
+    }
+
+    r = vnormalize(d, loose);
+
+    if (r == 0)
+        return 1;
+
+    if (r == 1 || r == 2) {
+        v->compared_equal = 1;
+        return 0;
+    }
+
+    if (r == 3) {
+        int32_t lm = (int32_t)(intptr_t)
+            lmost(d, loose->field, (delta_node *)(intptr_t)loose->node);
+        int32_t rm = (int32_t)(intptr_t)
+            rmost(d, loose->field, (int32_t *)(intptr_t)loose->node);
+        int32_t lo;
+        int32_t hi;
+
+        if ((*(int32_t *)(intptr_t)
+             (other + (v->fence_base + loose->field) * 4) & 1) != 0) {
+            hi = other;
+            lo = hi;
+        } else {
+            lo = *(int32_t *)(intptr_t)
+                (other + 0xc + loose->field * 4) & ~3;
+            hi = *(int32_t *)(intptr_t)
+                (other + (v->fence_base + loose->field) * 4) & ~3;
+        }
+
+        if ((lo == lm || visleft(d, lm, lo))
+            && (hi == rm || visright(d, rm, hi)))
+            v->compared_equal = 0;
+        else
+            v->compared_equal = 1;
+
+        return 0;
+    }
+
+    if (r == 4) {
+        v->compared_equal = (int8_t)(loose->node != other);
+        return 0;
+    }
+
+    return 0;
+}
+
+/* Name the kind of change that went wrong, for a message.
+
+   The original picks the name into a local it never reads, so what it hands
+   back is whatever was in the register; it was plainly meant to return the
+   name and the call that printed it has been compiled out. Returning the name
+   is the only sensible reading, and nothing can depend on the original's
+   value because that value is indeterminate. */
+const char *vseqbad(void *w, void *x, void *y, const char *what)
+{
+    (void)w;
+    (void)x;
+    (void)y;
+
+    switch (*what) {
+    case 'p': return "projection";
+    case 'i': return "insertion";
+    case 'd': return "deletion";
+    default:  return "???";
+    }
+}

@@ -149,6 +149,8 @@ extern int32_t ibm_getDeltaHeapSegNumber(delta_state *, uint8_t *, int32_t);
 extern int  ibm_recordDeltaHeapPos(delta_state *);
 extern void *ibm_alloc_tok(delta_state *, const delta_stmt *);
 extern void *ibm_alloc_sync(delta_state *);
+extern void ibm_free_heap(delta_state *, void *);
+extern int  ibm_vcomp_pta(delta_state *, delta_tpos *, delta_tpos *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -2094,8 +2096,11 @@ static int8_t build_tspine(delta_world *m, delta_world *o)
 #define AT(w, i)   ((int32_t)(intptr_t)((w)->nodes + (i) * STEP))
     for (i = 0; i < NNODE; i++) {
         int end = i >= NSPINE;
-        int lo = end ? 0 : (i > 0 ? i - 1 : NSPINE);
-        int hi = end ? NSPINE - 1 : (i + 1 < NSPINE ? i + 1 : NSPINE + 1);
+        /* A terminator points only at itself. Anything that walks off the
+           end has to stop there rather than be sent back into the spine,
+           which would close a loop no walk ever leaves. */
+        int lo = end ? i : (i > 0 ? i - 1 : NSPINE);
+        int hi = end ? i : (i + 1 < NSPINE ? i + 1 : NSPINE + 1);
         uint32_t r;
 
         r = rng_next();
@@ -2106,17 +2111,22 @@ static int8_t build_tspine(delta_world *m, delta_world *o)
         NODE(m, i)[1] = AT(m, hi) | (int32_t)(r & 3u);
         NODE(o, i)[1] = AT(o, hi) | (int32_t)(r & 3u);
 
+        /* A terminator's sync arrays are empty. Anything that walks them
+           has to be able to reach an end, and pointing them back into the
+           spine closes a loop the walk never leaves. */
         for (j = 0; j < 10; j++) {
             r = rng_next();
-            NODE(m, i)[3 + j] = AT(m, lo) | (int32_t)(r & 3u);
-            NODE(o, i)[3 + j] = AT(o, lo) | (int32_t)(r & 3u);
+            NODE(m, i)[3 + j] = end ? 0 : (AT(m, lo) | (int32_t)(r & 3u));
+            NODE(o, i)[3 + j] = end ? 0 : (AT(o, lo) | (int32_t)(r & 3u));
 
             r = rng_next();
-            NODE(m, i)[FB + j] = AT(m, hi) | (int32_t)(r & 3u);
-            NODE(o, i)[FB + j] = AT(o, hi) | (int32_t)(r & 3u);
+            NODE(m, i)[FB + j] = end ? 0 : (AT(m, hi) | (int32_t)(r & 3u));
+            NODE(o, i)[FB + j] = end ? 0 : (AT(o, hi) | (int32_t)(r & 3u));
         }
 
-        r = 1u + rng_next() % 4u;
+        /* Comfortably more than any offset a test hands in, so a walk
+           always runs out on the first statement it looks at. */
+        r = 16u + rng_next() % 16u;
         if (vstmtbl[f].fields[0].kind == DK_LONG) {
             *(int32_t *)vstmtbl[f].get[0](m->nodes + i * STEP + 8) =
                 (int32_t)r;
@@ -3056,8 +3066,13 @@ BEGIN(heap_free)
     stamp_object(m, seg, off, &pm);
     stamp_object(o, seg, off, &po);
 
-    ibm_freeDeltaHeapObject(&m->state, pm);
-    freeDeltaHeapObject(&o->state, po);
+    if (rng_next() % 2u) {
+        ibm_freeDeltaHeapObject(&m->state, pm);
+        freeDeltaHeapObject(&o->state, po);
+    } else {
+        ibm_free_heap(&m->state, pm);
+        free_heap(&o->state, po);
+    }
 END(heap_free)
 
 BEGIN(heap_rewind)
@@ -3106,6 +3121,68 @@ BEGIN(heap_objects)
              && (char *)ra - (char *)m != (char *)rb - (char *)o)
         bad++;
 END(heap_objects)
+
+
+BEGIN(vcomp_pta)
+    static const uint8_t sets[4] = {0, 1, 2, 3};
+    delta_tpos am, ao, bm, bo;
+    int8_t f = build_tspine(m, o);
+    int ra, rb, i;
+
+    if (f < 0) {
+        free(m); free(o);
+        break;
+    }
+    /* visleft's remembered path walks the forward links, and on the timing
+       spine those close a loop between the last node and its terminator.
+       That path has its own test; here visleft takes the field walk. */
+    m->vars.relink = o->vars.relink = 0;
+    m->state.fence_fill = o->state.fence_fill = (uint8_t)(1u + rng_next() % 4u);
+    for (i = 0; i < 0x20; i++)
+        m->nsqm[i] = o->nsqm[i] = (int8_t)(rng_next() % 2u);
+
+    /* Without a field every node carries, visleft falls through to vgetsc and
+       hands its null straight to a dereference. */
+    {
+        int k = (int)(rng_next() % m->state.fence_fill);
+        int n;
+
+        for (n = 0; n < 8; n++) {
+            ((int32_t *)(m->nodes + n * 0x80))[15 + k] |= 1;
+            ((int32_t *)(o->nodes + n * 0x80))[15 + k] |= 1;
+        }
+    }
+    for (i = 0; i < 50; i++) {
+        m->stack.left_a[i] = o->stack.left_a[i] = 0;
+        m->stack.left_b[i] = o->stack.left_b[i] = 0;
+        m->stack.left_ans[i] = o->stack.left_ans[i] = 0;
+        m->stack.left_hits[i] = o->stack.left_hits[i] = 0;
+    }
+    m->stack.left_next = o->stack.left_next = 0;
+    m->stack.left_stamp = o->stack.left_stamp = spine_changed;
+
+    make_tpos(m, o, f, &am, &ao, sets[rng_next() % 4u]);
+    make_tpos(m, o, f, &bm, &bo, sets[rng_next() % 4u]);
+
+    ra = ibm_vcomp_pta(&m->state, &am, &bm);
+    rb = vcomp_pta(&o->state, &ao, &bo);
+
+    if (ra != rb)
+        bad++;
+    if (am.offset != ao.offset || am.flags != ao.flags)
+        bad++;
+    if (bm.offset != bo.offset || bm.flags != bo.flags)
+        bad++;
+    if (am.node - (int32_t)(intptr_t)m != ao.node - (int32_t)(intptr_t)o)
+        bad++;
+    if (bm.node - (int32_t)(intptr_t)m != bo.node - (int32_t)(intptr_t)o)
+        bad++;
+
+    for (i = 0; i < 50; i++) {
+        m->stack.left_a[i] = o->stack.left_a[i] = 0;
+        m->stack.left_b[i] = o->stack.left_b[i] = 0;
+    }
+END(vcomp_pta)
 
 int main(void)
 {
@@ -3197,6 +3274,7 @@ int main(void)
     test_heap_free();
     test_heap_rewind();
     test_heap_objects();
+    test_vcomp_pta();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

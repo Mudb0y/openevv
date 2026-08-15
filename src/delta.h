@@ -430,6 +430,8 @@ int   recordDeltaHeapPos(delta_state *d);
 void  free_heap(delta_state *d, void *p);
 void *alloc_tok(delta_state *d, const delta_stmt *e);
 void *alloc_sync(delta_state *d);
+int   vcomp_pta(delta_state *d, delta_tpos *a, delta_tpos *b);
+const char *vseqbad(void *w, void *x, void *y, const char *what);
 
 /* Supplied by the language, not the runtime: match the span between the two
    registers against one of its lookup sets. */
