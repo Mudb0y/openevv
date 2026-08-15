@@ -3041,3 +3041,42 @@ int vdel_2pt(delta_state *d, uint8_t f, int32_t l, int32_t r)
 
     return 1;
 }
+
+/* Put a new statement into a field between two nodes. Anything already
+   between them goes first. The value is either copied in whole, when the
+   caller has a record of the language's own type, or laid down field by
+   field from whatever it does have. */
+int vins_tok(delta_state *d, uint8_t f, int32_t l, int32_t r,
+             const delta_operand *v)
+{
+    int32_t base = d->vars->fence_base;
+    int32_t t;
+
+    *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+
+    if ((*(int32_t *)(intptr_t)(l + (base + f) * 4) & ~3) != r
+        || (*(int32_t *)(intptr_t)(r + 0xc + f * 4) & ~3) != l)
+        vdel_2pt(d, f, l, r);
+
+    t = (int32_t)(intptr_t)alloc_tok(d, &vstmtbl[f]);
+    if (t == 0)
+        return 0;
+
+    *(int32_t *)(intptr_t)(l + (base + f) * 4) =
+        (*(int32_t *)(intptr_t)(l + (base + f) * 4) & 3) | t;
+    *(int32_t *)(intptr_t)(r + 0xc + f * 4) =
+        (*(int32_t *)(intptr_t)(r + 0xc + f * 4) & 3) | t;
+
+    ((delta_node *)(intptr_t)t)->link = r;
+    *(int32_t *)(intptr_t)t = l;
+
+    if (v->kind >= 0)
+        memcpy(TFLDS((void *)(intptr_t)t), v->ptr,
+               (size_t)vstmtbl[f].length);
+    else
+        vinitflds(d, f, (char *)(intptr_t)t + 8, v->ptr);
+
+    *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+    d->vars->unknown_1170 = 0;
+    return 1;
+}

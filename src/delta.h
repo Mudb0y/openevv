@@ -448,6 +448,8 @@ int  fdeldel(delta_state *d, int32_t from, int32_t to, int32_t arg);
 void fdel(delta_state *d, int32_t whole, int32_t arg);
 int  vdel_1pt(delta_state *d, uint8_t f, int32_t t, int32_t arg);
 int  vdel_2pt(delta_state *d, uint8_t f, int32_t l, int32_t r);
+int  vins_tok(delta_state *d, uint8_t f, int32_t l, int32_t r,
+              const delta_operand *v);
 void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r);
 
 /* Supplied by the language, not the runtime: match the span between the two

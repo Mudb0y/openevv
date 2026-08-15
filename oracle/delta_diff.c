@@ -162,6 +162,8 @@ extern int  ibm_fdeldel(delta_state *, int32_t, int32_t, int32_t);
 extern void ibm_fdel(delta_state *, int32_t, int32_t);
 extern int  ibm_vdel_1pt(delta_state *, uint8_t, int32_t, int32_t);
 extern int  ibm_vdel_2pt(delta_state *, uint8_t, int32_t, int32_t);
+extern int  ibm_vins_tok(delta_state *, uint8_t, int32_t, int32_t,
+                         const delta_operand *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -283,6 +285,10 @@ static void normalise(delta_world *w, delta_state *st, delta_vars *va,
     REBASE_WORD(va->scan_ptr);
     REBASE_WORD(sk->spine_l);
     REBASE_WORD(sk->spine_r);
+    REBASE_WORD(sk->del_from);
+    REBASE_WORD(sk->del_to);
+    REBASE_WORD(sk->del_left);
+    REBASE_WORD(sk->del_right);
     {
         int ri;
 
@@ -3471,6 +3477,64 @@ BEGIN(fdeldel)
         bad++;
 END(fdeldel)
 
+
+BEGIN(vins_tok)
+    /* The same four-node spine and heap the deletions use, since an insert
+       between two nodes that are not already neighbours deletes first. */
+    enum { FB = 15, NNODE = 4, STEP = 0x80, NFIELD = 4 };
+    uint8_t f = (uint8_t)(rng_next() % NSTMT);
+    int8_t fd = (int8_t)(rng_next() % NFIELD);
+    int wide = (int)(rng_next() % 2u);
+    delta_operand vm, vo;
+    int ra, rb, i, j;
+
+    build_pspine(m, o);
+    build_heap(m, o);
+    m->state.fence_fill = o->state.fence_fill = NFIELD;
+    m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
+    m->vars.ctx_both = o->vars.ctx_both = (int32_t)(rng_next() % 2u);
+    m->stack.del_field = o->stack.del_field = fd;
+    m->nsqf[0] = o->nsqf[0] = -1;
+
+    for (i = 0; i < NNODE; i++) {
+        for (j = 0; j < NFIELD; j++) {
+            ((int32_t *)(m->nodes + i * STEP))[FB + j] |= 1;
+            ((int32_t *)(o->nodes + i * STEP))[FB + j] |= 1;
+        }
+        ((int32_t *)(m->nodes + i * STEP))[2] &= ~2;
+        ((int32_t *)(o->nodes + i * STEP))[2] &= ~2;
+        if (i > 0) {
+            *(delta_seg **)(m->nodes + i * STEP - 4) = &m->segs[1];
+            *(delta_seg **)(o->nodes + i * STEP - 4) = &o->segs[1];
+        }
+    }
+    m->segs[1].live = o->segs[1].live = 16;
+
+    /* Either a record of the language's own type, copied whole, or something
+       narrower that gets laid down field by field. */
+    vm.kind = vo.kind = wide ? (int16_t)f : (int16_t)-1;
+    vm.flag = vo.flag = 0;
+    vm.pad_07 = vo.pad_07 = 0;
+    fill(m->nodes + 0x300, 0x40);
+    memcpy(o->nodes + 0x300, m->nodes + 0x300, 0x40);
+    vm.ptr = m->nodes + 0x300;
+    vo.ptr = o->nodes + 0x300;
+
+    if (rng_next() % 2u) {
+        ra = ibm_vins_tok(&m->state, f, (int32_t)(intptr_t)(m->nodes + STEP),
+                          (int32_t)(intptr_t)(m->nodes + 2 * STEP), &vm);
+        rb = vins_tok(&o->state, f, (int32_t)(intptr_t)(o->nodes + STEP),
+                      (int32_t)(intptr_t)(o->nodes + 2 * STEP), &vo);
+    } else {
+        ra = ibm_vins_tok(&m->state, f, (int32_t)(intptr_t)m->nodes,
+                          (int32_t)(intptr_t)(m->nodes + 3 * STEP), &vm);
+        rb = vins_tok(&o->state, f, (int32_t)(intptr_t)o->nodes,
+                      (int32_t)(intptr_t)(o->nodes + 3 * STEP), &vo);
+    }
+    if (ra != rb)
+        bad++;
+END(vins_tok)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -3567,6 +3631,7 @@ int main(void)
     test_vins_sync();
     test_chkdelnonseq();
     test_fdeldel();
+    test_vins_tok();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
