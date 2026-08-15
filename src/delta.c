@@ -5179,3 +5179,35 @@ int calcHZ2ETI(delta_state *d, const delta_loc *in, delta_loc *out)
 
     return 0;
 }
+
+/* Walk the scan forward until it stands on a real token. The same walk as
+   vscanadvUptoTokenOrMarker without an end to stop at: it runs until a
+   token turns up, a fence blocks it, or the chain runs out. */
+int vscanadvUptoToken(delta_state *d, int32_t usefence)
+{
+    delta_vars *v = d->vars;
+    int32_t cur = v->scan_ptr;
+    int32_t field = v->scan_field;
+
+    for (;;) {
+        int32_t next, i;
+
+        if (cur == 0)
+            return 0;
+
+        if (scan_fenced(d, cur, field, usefence, &i))
+            return 0;
+
+        next = scan_step(d, cur, field);
+        if (next == 0)
+            return 0;
+        if ((*(int32_t *)(intptr_t)next & 2) == 0)
+            return 1;
+
+        cur = next;
+        v->scan_ptr = next;
+        v->scan_held = 0;
+        for (; i < v->fence_count; i++)
+            d->fence_marks[i] = 0;
+    }
+}

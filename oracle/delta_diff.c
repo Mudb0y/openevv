@@ -273,6 +273,7 @@ extern int  ibm_calcWPM2ETI(delta_state *, const delta_loc *, delta_loc *);
 extern int  ibm_calcST2HZ(delta_state *, const delta_loc *, delta_loc *);
 extern int  ibm_calcHZ2ST(delta_state *, const delta_loc *, delta_loc *);
 extern int  ibm_calcHZ2ETI(delta_state *, const delta_loc *, delta_loc *);
+extern int  ibm_vscanadvUptoToken(delta_state *, int32_t);
 extern void ibm_project_rl(delta_state *, delta_node *, int32_t, int32_t,
                            delta_node *, delta_node *, uint8_t);
 extern int  ibm_actd_lookup(delta_state *, int16_t, delta_token *,
@@ -1726,8 +1727,13 @@ BEGIN(vscanadvUptoTokenOrMarker)
     tm = (which < 4) ? (int32_t)(intptr_t)(m->nodes + at[which]) : 0;
     to = (which < 4) ? (int32_t)(intptr_t)(o->nodes + at[which]) : 0;
 
-    ra = ibm_vscanadvUptoTokenOrMarker(&m->state, tm, usef);
-    rb = vscanadvUptoTokenOrMarker(&o->state, to, usef);
+    if (rng_next() % 2u) {
+        ra = ibm_vscanadvUptoToken(&m->state, usef);
+        rb = vscanadvUptoToken(&o->state, usef);
+    } else {
+        ra = ibm_vscanadvUptoTokenOrMarker(&m->state, tm, usef);
+        rb = vscanadvUptoTokenOrMarker(&o->state, to, usef);
+    }
     if (ra != rb)
         bad++;
     if ((m->vars.scan_ptr == 0) != (o->vars.scan_ptr == 0))
