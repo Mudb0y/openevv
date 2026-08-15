@@ -2719,3 +2719,165 @@ void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r)
     v->unknown_1170 = 0;
     return s;
 }
+
+/* Whether a statement may be deleted, and if so, mark the run it leaves
+   behind as nonsequential.
+
+   The two neighbours are the first sequential node on each side. Every field
+   is then classified: carried by the statement and by the left neighbour,
+   carried by the statement and the right one, or carried by both neighbours
+   but not the statement. A field shared with both neighbours, or a mixture of
+   left and right, means the deletion would break the ordering and the answer
+   is no. Otherwise the three control blocks in the stack drive seqscan over
+   the affected run, and the walk at the end marks it. */
+int chkdelnonseq(delta_state *d, int32_t t, uint8_t f)
+{
+    delta_stack *s = d->stack;
+    delta_vars *v = d->vars;
+    int32_t base = v->fence_base;
+    int32_t nboth = 0;
+    int32_t nleft = 0;
+    int32_t nright = 0;
+    int32_t l;
+    int32_t r;
+    int32_t i;
+    delta_seqctl *ctl;
+    int32_t kind;
+    int32_t p;
+
+#define CARRIES(node, fld) \
+    ((*(int32_t *)(intptr_t)((node) + (base + (fld)) * 4) & 1) != 0)
+
+    if (v->relink == 0)
+        return 1;
+
+    l = ((const delta_node *)(intptr_t)t)->link & ~3;
+    while (NONSEQ((const delta_node *)(intptr_t)l))
+        l = ((const delta_node *)(intptr_t)l)->link & ~3;
+
+    r = *rlink(d, t) & ~3;
+    while (NONSEQ((const delta_node *)(intptr_t)r))
+        r = *rlink(d, r) & ~3;
+
+    for (i = (int32_t)d->fence_fill - 1; i >= (int32_t)f; i--) {
+        if (CARRIES(t, i)) {
+            if (CARRIES(l, i)) {
+                if (nright != 0)
+                    return 0;
+                if (CARRIES(r, i))
+                    return 0;
+                nleft++;
+            } else if (nright == 0 && CARRIES(r, i)) {
+                if (nleft != 0)
+                    return 0;
+                nright++;
+            }
+        } else if (nboth == 0 && CARRIES(l, i) && CARRIES(r, i)) {
+            nboth++;
+        }
+    }
+
+    for (i = 0; i < (int32_t)f; i++) {
+        if (CARRIES(t, i)) {
+            if (CARRIES(l, i)) {
+                nleft++;
+                if (nright != 0)
+                    return 0;
+                if (CARRIES(r, i))
+                    return 0;
+            } else if (nright == 0) {
+                if (CARRIES(r, i)) {
+                    if (nleft != 0)
+                        return 0;
+                    nright++;
+                } else if (nleft != 0) {
+                    return 0;
+                }
+            }
+        } else if (nboth == 0 && CARRIES(l, i) && CARRIES(r, i)) {
+            nboth++;
+        }
+    }
+#undef CARRIES
+
+    if (nright != 0 && nleft != 0)
+        return 0;
+
+    if (nboth != 0) {
+        s->runs[0].kind = 0;
+        s->runs[0].cur = t;
+        s->runs[0].start = t;
+        s->runs[0].flag = (!ALLNSQ((const delta_node *)(intptr_t)t)
+                           && !ONESTM((const delta_node *)(intptr_t)t));
+
+        if (nright != 0) {
+            s->runs[1].start = l;
+            s->runs[1].kind = -1;
+        } else if (nleft != 0) {
+            s->runs[1].start = r;
+            s->runs[1].kind = 1;
+        } else {
+            s->runs[1].kind = 2;
+        }
+    } else if (nright != 0) {
+        s->runs[0].start = l;
+        s->runs[0].kind = -1;
+        s->runs[1].start = t;
+        s->runs[1].kind = 1;
+    } else if (nleft != 0) {
+        s->runs[0].start = r;
+        s->runs[0].kind = 1;
+        s->runs[1].start = t;
+        s->runs[1].kind = -1;
+    } else {
+        return 0;
+    }
+
+    if (s->runs[0].kind != 0)
+        seqscan(d, &s->runs[0]);
+
+    kind = s->runs[1].kind;
+
+    if (kind == -1 || kind == 1) {
+        seqscan(d, &s->runs[1]);
+    } else if (kind == 2) {
+        if (s->runs[0].start != l || s->runs[0].kind != -1) {
+            s->runs[2].start = l;
+            s->runs[2].kind = -1;
+            seqscan(d, &s->runs[2]);
+        } else {
+            s->runs[2].start = l;
+            s->runs[2].kind = -1;
+            s->runs[2].cur = s->runs[0].cur;
+            s->runs[2].flag = s->runs[0].flag;
+        }
+
+        s->runs[1].kind = 1;
+        s->runs[1].start = r;
+        seqscan(d, &s->runs[1]);
+
+        s->runs[1].start = s->runs[2].cur;
+        s->runs[1].flag |= s->runs[2].flag;
+    }
+
+    ctl = &s->runs[s->runs[0].flag != 0 ? 1 : 0];
+    kind = ctl->kind;
+    p = ctl->start;
+
+    for (;;) {
+        SETNONSEQ((delta_node *)(intptr_t)p);
+
+        if (v->ctx_both != 0
+            && !ONESTM((const delta_node *)(intptr_t)p)
+            && !vchkseqbad(d, p, f, "d8"))
+            return 0;
+
+        if (p == ctl->cur)
+            return 1;
+
+        if (kind >= 0)
+            p = *rlink(d, p) & ~3;
+        else
+            p = ((const delta_node *)(intptr_t)p)->link & ~3;
+    }
+}

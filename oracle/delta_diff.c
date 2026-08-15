@@ -157,6 +157,7 @@ extern void ibm_delsync(delta_state *, void *);
 extern int  ibm_mashtoks(delta_state *, uint8_t, int32_t);
 extern int  ibm_vchkseqbad(delta_state *, int32_t, uint8_t, const char *);
 extern void *ibm_vins_sync(delta_state *, uint8_t, int32_t, int32_t);
+extern int  ibm_chkdelnonseq(delta_state *, int32_t, uint8_t);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -278,6 +279,14 @@ static void normalise(delta_world *w, delta_state *st, delta_vars *va,
     REBASE_WORD(va->scan_ptr);
     REBASE_WORD(sk->spine_l);
     REBASE_WORD(sk->spine_r);
+    {
+        int ri;
+
+        for (ri = 0; ri < 3; ri++) {
+            REBASE_WORD(sk->runs[ri].start);
+            REBASE_WORD(sk->runs[ri].cur);
+        }
+    }
 #undef REBASE_WORD
 
 #define REBASE(p) ((p) = (void *)((char *)(p) - base))
@@ -3310,6 +3319,68 @@ BEGIN(vins_sync)
         bad++;
 END(vins_sync)
 
+
+BEGIN(chkdelnonseq)
+    /* Four nodes. The statement is the second, so the neighbour walks have
+       somewhere to stop; the two outer nodes carry every field and are
+       sequential, which is what lets seqscan and the closing walk reach an
+       end. Every node carries at least one field, or the peer seqscan reads
+       would nominate nothing and it would never stop. */
+    enum { FB = 15, NNODE = 4, STEP = 0x80, NFIELD = 4 };
+    uint8_t f = (uint8_t)(rng_next() % NFIELD);
+    int ra, rb, i, j;
+
+    build_pspine(m, o);
+    m->state.fence_fill = o->state.fence_fill = NFIELD;
+    m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
+    m->vars.ctx_both = o->vars.ctx_both = (int32_t)(rng_next() % 2u);
+
+    for (i = 0; i < NNODE; i++) {
+        int outer = (i == 0 || i == NNODE - 1);
+        uint32_t bits = outer ? 0xfu : (1u + rng_next() % 15u);
+
+        for (j = 0; j < NFIELD; j++) {
+            int32_t *a = &((int32_t *)(m->nodes + i * STEP))[FB + j];
+            int32_t *b = &((int32_t *)(o->nodes + i * STEP))[FB + j];
+
+            if ((bits >> j) & 1u) {
+                *a |= 1;
+                *b |= 1;
+            } else {
+                *a &= ~1;
+                *b &= ~1;
+            }
+        }
+
+        /* The outer two have to be sequential or the neighbour walks that
+           look for the first sequential node never finish. */
+        if (outer) {
+            ((int32_t *)(m->nodes + i * STEP))[2] &= ~2;
+            ((int32_t *)(o->nodes + i * STEP))[2] &= ~2;
+        }
+    }
+
+    /* The statement itself must count as neither a lone statement nor wholly
+       nonsequential, so the flag that picks the closing walk is set. */
+    ((int32_t *)(m->nodes + STEP))[1] &= ~3;
+    ((int32_t *)(o->nodes + STEP))[1] &= ~3;
+
+    for (i = 0; i < 3; i++) {
+        m->stack.runs[i].kind = o->stack.runs[i].kind = 0;
+        m->stack.runs[i].pad_01[0] = o->stack.runs[i].pad_01[0] = 0;
+        m->stack.runs[i].pad_01[1] = o->stack.runs[i].pad_01[1] = 0;
+        m->stack.runs[i].pad_01[2] = o->stack.runs[i].pad_01[2] = 0;
+        m->stack.runs[i].flag = o->stack.runs[i].flag = 0;
+        m->stack.runs[i].start = o->stack.runs[i].start = 0;
+        m->stack.runs[i].cur = o->stack.runs[i].cur = 0;
+    }
+
+    ra = ibm_chkdelnonseq(&m->state, (int32_t)(intptr_t)(m->nodes + STEP), f);
+    rb = chkdelnonseq(&o->state, (int32_t)(intptr_t)(o->nodes + STEP), f);
+    if (ra != rb)
+        bad++;
+END(chkdelnonseq)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -3404,6 +3475,7 @@ int main(void)
     test_mashtoks();
     test_vchkseqbad();
     test_vins_sync();
+    test_chkdelnonseq();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

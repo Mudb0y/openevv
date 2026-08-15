@@ -32,6 +32,17 @@ typedef struct {
 
 typedef delta_tpos delta_pta;
 
+/* What seqscan is handed and fills in: which way to walk, where to start,
+   how far it got, and whether anything along the way was not a lone
+   sequential statement. */
+typedef struct {
+    int8_t  kind;      /* +0x00, one means walk the other way */
+    int8_t  pad_01[3];
+    int32_t flag;      /* +0x04 */
+    int32_t start;     /* +0x08 */
+    int32_t cur;       /* +0x0c */
+} delta_seqctl;
+
 /* One segment of the Delta heap. Objects are carved off the top of the block
    downwards, so an allocation returns end minus used; the odd starting value
    of used is the alignment fudge that keeps those addresses eight-aligned.
@@ -63,7 +74,8 @@ typedef struct {
 typedef struct {
     int32_t       spine_l;     /* 0x0000, the node the spine starts at */
     int32_t       spine_r;     /* 0x0004, and the one it ends at */
-    uint8_t       pad_0008[0x38 - 8];
+    delta_seqctl  runs[3];     /* 0x0008, what chkdelnonseq works through */
+    uint8_t       pad_0038[0x38 - 0x38];
     const uint8_t *mark_fld;   /* 0x0038, which field a mark is writing */
     int16_t       mark_kind;   /* 0x003c */
     uint8_t       mark_flag;   /* 0x003e */
@@ -363,17 +375,6 @@ void vinitflds(delta_state *d, uint8_t st, void *dst, const void *src);
 int  vscanadvOverToken(delta_state *d, int32_t usefence);
 int  vscanadvUptoTokenOrMarker(delta_state *d, int32_t target, int32_t usefence);
 
-/* What seqscan is handed and fills in: which way to walk, where to start,
-   how far it got, and whether anything along the way was not a lone
-   sequential statement. */
-typedef struct {
-    int8_t  kind;      /* +0x00, one means walk the other way */
-    int8_t  pad_01[3];
-    int32_t flag;      /* +0x04 */
-    int32_t start;     /* +0x08 */
-    int32_t cur;       /* +0x0c */
-} delta_seqctl;
-
 void seqscan(delta_state *d, delta_seqctl *c);
 int  advance_tok(delta_state *d);
 int  forall_cont_from(delta_state *d, int16_t tag, int16_t loop,
@@ -437,6 +438,7 @@ int  compare_ptas(delta_state *d);
 void delsync(delta_state *d, void *p);
 int  mashtoks(delta_state *d, uint8_t f, int32_t t);
 int  vchkseqbad(delta_state *d, int32_t t, uint8_t f, const char *what);
+int  chkdelnonseq(delta_state *d, int32_t t, uint8_t f);
 void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r);
 
 /* Supplied by the language, not the runtime: match the span between the two
