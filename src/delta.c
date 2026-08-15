@@ -1037,3 +1037,68 @@ void vinitloc_new(delta_state *d, delta_operand *out, const int16_t *loc)
         out->flag = e->fields[f].flag;
     }
 }
+
+void startloop(delta_state *d, int16_t tag)
+{
+    d->vars->test_tag = tag;
+    clearDeltaStackBack(d);
+    d->vars->testing = 0;
+}
+
+void save_var(delta_state *d, const int16_t *loc)
+{
+    delta_operand v;
+
+    vinitloc_new(d, &v, loc);
+    vpush_var(d, &v);
+}
+
+/* Whether the field of the next real statement holds a given byte. The
+   field's declared kind does not come into it: the comparison is always one
+   byte wide. */
+int testFldeq(delta_state *d, uint8_t st, uint8_t fld, uint8_t val)
+{
+    delta_vars *v = d->vars;
+    int32_t p = v->scan_ptr;
+    const uint8_t *q;
+
+    for (;;) {
+        if (v->scan_rev == 0)
+            p = *(int32_t *)((char *)(intptr_t)p
+                             + 0xc + v->scan_field * 4) & ~3;
+        else
+            p = *(int32_t *)((char *)(intptr_t)p
+                             + (v->fence_base + v->scan_field) * 4) & ~3;
+
+        if (p == 0)
+            return 1;
+        if ((*(int32_t *)(intptr_t)p & 2) == 0)
+            break;
+    }
+
+    q = vstmtbl[st].get[fld](TFLDS((void *)(intptr_t)p));
+    return *q == val ? 0 : 1;
+}
+
+/* Lay down a fresh statement: the language's default record, then its first
+   field set from the caller's value, then whichever variant that value
+   selects for the types that declare any. */
+void vinitflds(delta_state *d, uint8_t st, void *dst, const void *src)
+{
+    const delta_stmt *e = &vstmtbl[st];
+
+    (void)d;
+
+    memmove(dst, e->deflt, (size_t)e->length);
+    e->put[0](dst, src);
+
+    if (e->variants == NULL)
+        return;
+
+    if (e->fields[0].kind == DK_SHORT)
+        memmove(dst, e->variants + *(const int16_t *)src * e->stride,
+                (size_t)e->varlen);
+    else if (e->fields[0].kind == DK_UBYTE)
+        memmove(dst, e->variants + *(const uint8_t *)src * e->stride,
+                (size_t)e->varlen);
+}

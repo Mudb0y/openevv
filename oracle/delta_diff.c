@@ -93,6 +93,10 @@ extern int  ibm_npush_fld(delta_state *, uint8_t, uint8_t);
 extern int32_t *ibm_ctxspine(delta_state *, int32_t *, uint8_t, int32_t);
 extern void ibm_vnsqflags(delta_state *, int32_t *);
 extern void ibm_vinitloc_new(delta_state *, delta_operand *, const int16_t *);
+extern void ibm_startloop(delta_state *, int16_t);
+extern void ibm_save_var(delta_state *, const int16_t *);
+extern int  ibm_testFldeq(delta_state *, uint8_t, uint8_t, uint8_t);
+extern void ibm_vinitflds(delta_state *, uint8_t, void *, const void *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -1208,6 +1212,97 @@ BEGIN(vinitloc_new)
     memset(o->nodes, 0, sizeof(o->nodes));
 END(vinitloc_new)
 
+
+BEGIN(startloop)
+    int16_t tag = (int16_t)rng_next();
+    ibm_startloop(&m->state, tag); startloop(&o->state, tag);
+END(startloop)
+
+BEGIN(save_var)
+    int16_t *lm = (int16_t *)m->nodes;
+    int16_t *lo = (int16_t *)o->nodes;
+    /* vinitloc_new leaves the pointer alone for the byte and short kinds,
+       so a save through one copies from an uninitialised local. That is what
+       the original does too; feed it only the kinds it sets. */
+    static const int16_t kinds[] = {-3, -4, -6};
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    fill(m->nodes + 4, 0x20);
+    memcpy(o->nodes + 4, m->nodes + 4, 0x20);
+    m->stack.size_ac = o->stack.size_ac = 12;
+
+    if (rng_next() % 2u) {
+        lm[0] = lo[0] = kinds[rng_next() % 3u];
+        lm[1] = lo[1] = (int16_t)rng_next();
+    } else {
+        int st = (int)(rng_next() % NSTMT);
+
+        lm[0] = lo[0] = (int16_t)st;
+        lm[1] = lo[1] = (rng_next() % 4u == 0) ? (int16_t)-1
+            : (int16_t)(rng_next() % (uint32_t)vstmtbl[st].nfields);
+    }
+
+    ibm_save_var(&m->state, lm);
+    save_var(&o->state, lo);
+    /* The record keeps the source pointer, which differs between worlds. */
+    *(int32_t *)(m->stack.top + 4) = 0;
+    *(int32_t *)(o->stack.top + 4) = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(save_var)
+
+BEGIN(testFldeq)
+    static const int32_t at[4] = {0x00, 0x80, 0x100, 0x180};
+    uint8_t st = (uint8_t)(rng_next() % NSTMT);
+    uint8_t fld = (uint8_t)(rng_next() % (uint32_t)vstmtbl[st].nfields);
+    uint8_t val = (uint8_t)(rng_next() % 4u);
+    int ra, rb, i, j;
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    m->vars.fence_base = o->vars.fence_base = 13;
+    m->vars.scan_field = o->vars.scan_field = (uint8_t)(rng_next() % NSTMT);
+    m->vars.scan_rev = o->vars.scan_rev = (uint8_t)(rng_next() % 2u);
+
+    for (i = 0; i < 4; i++) {
+        int32_t to = at[i < 3 ? i + 1 : 3];
+
+        for (j = 0; j < 24; j++) {
+            uint32_t r = rng_next();
+            int null = (r % 3u) == 0 || i == 3;
+
+            ((int32_t *)(m->nodes + at[i]))[j] = null ? 0
+                : (int32_t)((intptr_t)(m->nodes + to) | (r & 3u));
+            ((int32_t *)(o->nodes + at[i]))[j] = null ? 0
+                : (int32_t)((intptr_t)(o->nodes + to) | (r & 3u));
+        }
+    }
+    m->vars.scan_ptr = (int32_t)(intptr_t)m->nodes;
+    o->vars.scan_ptr = (int32_t)(intptr_t)o->nodes;
+
+    ra = ibm_testFldeq(&m->state, st, fld, val);
+    rb = testFldeq(&o->state, st, fld, val);
+    if (ra != rb)
+        bad++;
+
+    m->vars.scan_ptr = o->vars.scan_ptr = 0;
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+END(testFldeq)
+
+BEGIN(vinitflds)
+    uint8_t st = (uint8_t)(rng_next() % NSTMT);
+
+    memset(m->nodes, 0, sizeof(m->nodes));
+    memset(o->nodes, 0, sizeof(o->nodes));
+    fill(m->nodes + 0x200, 0x20);
+    memcpy(o->nodes + 0x200, m->nodes + 0x200, 0x20);
+
+    ibm_vinitflds(&m->state, st, m->nodes, m->nodes + 0x200);
+    vinitflds(&o->state, st, o->nodes, o->nodes + 0x200);
+END(vinitflds)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -1260,6 +1355,10 @@ int main(void)
     test_ctxspine();
     test_vnsqflags();
     test_vinitloc_new();
+    test_startloop();
+    test_save_var();
+    test_testFldeq();
+    test_vinitflds();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }

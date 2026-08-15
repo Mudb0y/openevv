@@ -151,7 +151,8 @@ typedef struct {
     const char            *name;      /* +0x00 */
     const delta_fielddesc *fields;    /* +0x04 */
     void *(*const         *get)(void *);  /* +0x08, one reader per field */
-    void  *const          *print;     /* +0x0c, one printer per field */
+    void (*const          *put)(void *, const void *);
+                                      /* +0x0c, one writer per field */
     const uint8_t         *variants;  /* +0x10, null unless the type has any */
     const uint8_t         *deflt;     /* +0x14, what a fresh statement holds */
     uint8_t                pad_18[0x20 - 0x18];
@@ -285,6 +286,10 @@ int  npush_fld(delta_state *d, uint8_t st, uint8_t fld);
 int32_t *ctxspine(delta_state *d, int32_t *t, uint8_t f, int32_t back);
 void vnsqflags(delta_state *d, int32_t *t);
 void vinitloc_new(delta_state *d, delta_operand *out, const int16_t *loc);
+void startloop(delta_state *d, int16_t tag);
+void save_var(delta_state *d, const int16_t *loc);
+int  testFldeq(delta_state *d, uint8_t st, uint8_t fld, uint8_t val);
+void vinitflds(delta_state *d, uint8_t st, void *dst, const void *src);
 
 /* Bumped whenever the spine is relinked, so anything holding a position knows
    to look again. */
