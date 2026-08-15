@@ -3686,3 +3686,121 @@ void initdelta(delta_state *d, uint8_t n, const uint8_t *list)
 
     vscaninit(d);
 }
+
+int init_ptr_active_record(delta_state *d)
+{
+    delta_vars *v = d->vars;
+
+    if (!push_ptr(d, v->active_record))
+        return 0;
+
+    v->active_record = v->ptr_count;
+    return 1;
+}
+
+/* Enter a rule: save everything a backtrack would have to undo into the
+   record the rule keeps in its own frame, push a marker on the backtracking
+   stack pointing at it, and swap in the rule's own fence arrays. */
+int ventproc(delta_state *d, delta_actrec *rec, uint8_t *index,
+             uint8_t *chars, uint8_t *marks, void *jb)
+{
+    delta_vars *v = d->vars;
+    delta_stack *s = d->stack;
+    uint8_t *slot;
+
+    d->unknown_3c = 0;
+
+    if (rec == NULL || !init_ptr_active_record(d))
+        return 1;
+
+    rec->unknown_00 = v->unknown_fd8;
+    memcpy(rec->tags, &v->loop_tag, 8);
+    rec->testing = (uint8_t)v->testing;
+    rec->back = v->back;
+    rec->top = s->top;
+    rec->vbot = getDeltaStackVBot(d);
+    rec->fence_count = (uint8_t)v->fence_count;
+    rec->err_jmp = v->err_jmp;
+    memcpy(rec->scan, &v->scan_ptr, 8);
+    memcpy(&rec->lpta, &d->lpta, sizeof(rec->lpta));
+    memcpy(&rec->rpta, &d->rpta, sizeof(rec->rpta));
+    rec->compared_equal = (uint8_t)v->compared_equal;
+    rec->names_depth = (uint8_t)s->names_depth;
+
+    s->top -= s->size_a8;
+    slot = s->top;
+    s->limit -= s->size_a8;
+
+    slot[0] = 7;
+    *(delta_actrec **)(slot + 4) = rec;
+
+    *(uint8_t **)(slot + 0xc) = d->fence_chars;
+    d->fence_chars = chars;
+    *(uint8_t **)(slot + 8) = d->fence_index;
+    d->fence_index = index;
+    *(uint8_t **)(slot + 0x10) = d->fence_marks;
+    d->fence_marks = marks;
+
+    v->back = s->top;
+    v->err_jmp = jb;
+    return 0;
+}
+
+/* Leave a rule: pop its marker, put back everything the record holds, and
+   report whether the rule left an error behind. The tag it is handed is not
+   read. */
+int vretproc(delta_state *d, int32_t tag)
+{
+    delta_vars *v = d->vars;
+    delta_stack *s = d->stack;
+    int32_t exhausted = 0;
+    int32_t r;
+    uint8_t *frame;
+    delta_actrec *rec;
+
+    (void)tag;
+
+    r = ret_ptr_active_record(d) ? 0 : 1;
+
+    /* Nothing left below this frame: a rule reaching its end there has run
+       the backtracking stack out, which is what the code says. */
+    if (emptyDeltaStack(d))
+        exhausted = 1;
+
+    frame = popDeltaStackFrame(d, v->back);
+    rec = *(delta_actrec **)(frame + 4);
+
+    frame = s->top;
+    d->fence_chars = *(uint8_t **)(frame + 0xc);
+    d->fence_index = *(uint8_t **)(frame + 8);
+    d->fence_marks = *(uint8_t **)(frame + 0x10);
+
+    v->unknown_fd8 = rec->unknown_00;
+    memcpy(&v->loop_tag, rec->tags, 8);
+    v->testing = (int8_t)rec->testing;
+    v->back = rec->back;
+    freeDeltaStackTo(d, rec->top);
+    setDeltaStackVBot(d, rec->vbot);
+    v->fence_count = (int8_t)rec->fence_count;
+    v->err_jmp = rec->err_jmp;
+    memcpy(&v->scan_ptr, rec->scan, 8);
+    memcpy(&d->lpta, &rec->lpta, sizeof(d->lpta));
+    memcpy(&d->rpta, &rec->rpta, sizeof(d->rpta));
+    v->compared_equal = (int8_t)rec->compared_equal;
+    s->names_depth = (int8_t)rec->names_depth;
+    v->unknown_11e8 = 0;
+
+    if (exhausted) {
+        *(int32_t *)(d->owner + DELTA_OWNER_CODE) = 0xea;
+        r = deltaErrorThrown(d) ? 1 : 0;
+    } else if (deltaErrorThrown(d)) {
+        forceErrorBacktrack(d);
+    }
+
+    return r;
+}
+
+int succeed(delta_state *d)
+{
+    return vretproc(d, 1);
+}

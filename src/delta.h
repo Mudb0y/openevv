@@ -32,6 +32,30 @@ typedef struct {
 
 typedef delta_tpos delta_pta;
 
+/* What a rule saves of the machine before its body runs, so that a backtrack
+   into it can put everything back. ventproc fills it in and vretproc
+   restores it, field for field. */
+typedef struct {
+    int32_t    unknown_00;      /* +0x00 */
+    uint8_t    pad_04[0x0c];
+    uint8_t    tags[8];         /* +0x10, the loop and test tags together */
+    uint8_t    testing;         /* +0x18 */
+    uint8_t    pad_19[3];
+    uint8_t   *back;            /* +0x1c */
+    uint8_t   *top;             /* +0x20 */
+    void      *vbot;            /* +0x24 */
+    uint8_t    fence_count;     /* +0x28 */
+    uint8_t    pad_29[3];
+    void      *err_jmp;         /* +0x2c */
+    uint8_t    scan[8];         /* +0x30 */
+    delta_tpos lpta;            /* +0x38 */
+    delta_tpos rpta;            /* +0x48 */
+    uint8_t    compared_equal;  /* +0x58 */
+    uint8_t    names_depth;     /* +0x59 */
+    uint8_t    pad_5a[2];
+} delta_actrec;
+
+
 /* What seqscan is handed and fills in: which way to walk, where to start,
    how far it got, and whether anything along the way was not a lone
    sequential statement. */
@@ -147,7 +171,8 @@ typedef struct {
     uint8_t   scan_held;       /* 0x0fd2, the fence check is suspended */
     uint8_t   pad_0fd3;
     int8_t    testing;         /* 0x0fd4, a test is under way */
-    uint8_t   pad_0fd5[7];
+    uint8_t   pad_0fd5[3];
+    int32_t   unknown_fd8;     /* 0x0fd8, saved and restored around a rule */
     uint8_t  *back;            /* 0x0fdc, where an unwind returns to */
     int8_t    compared_equal;  /* 0x0fe0 */
     int8_t    fence_count;     /* 0x0fe1, how many characters are fenced */
@@ -165,7 +190,9 @@ typedef struct {
     const int8_t *nsq_marks;   /* 0x116c, one per fenced field */
     int32_t   unknown_1170;    /* 0x1170, cleared after an insert */
     int32_t   fence_base;      /* 0x1174 */
-    uint8_t   pad_1178[0x40];
+    uint8_t   pad_1178[0x11e8 - 0x1178];
+    int32_t   unknown_11e8;    /* 0x11e8, cleared when a rule returns */
+    uint8_t   pad_11ec[0x20];
 } delta_vars;
 
 typedef struct delta_state delta_state;
@@ -492,6 +519,13 @@ int  insert_2ptv(delta_state *d, uint8_t f, delta_loc *loc, uint8_t mode);
 void deltaReinit(delta_state *d, int32_t full);
 void initdelta(delta_state *d, uint8_t n, const uint8_t *list);
 
+/* The frame a compiled rule runs inside. */
+int  init_ptr_active_record(delta_state *d);
+int  ventproc(delta_state *d, delta_actrec *rec, uint8_t *index,
+              uint8_t *chars, uint8_t *marks, void *jb);
+int  vretproc(delta_state *d, int32_t tag);
+int  succeed(delta_state *d);
+
 /* Supplied by the language, not the runtime: lay a string of values into a
    range the caller has already opened. */
 int ins_tokens(delta_state *d, int8_t f, const uint8_t *str, uint8_t n,
@@ -504,8 +538,11 @@ int setdlookup(delta_state *d, int32_t from, int32_t to, void *set,
                int32_t arg);
 int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f);
 
-/* Where the runtime tells its owner the spine moved. */
+/* Where the runtime tells its owner the spine moved, and where it leaves a
+   code when a rule returns with the backtracking stack not empty. */
 #define DELTA_OWNER_CHANGED 0x1b8
+#define DELTA_OWNER_CODE    0x1a4
+
 
 /* Bumped whenever the spine is relinked, so anything holding a position knows
    to look again. */

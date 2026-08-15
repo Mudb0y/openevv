@@ -194,6 +194,11 @@ extern int  ibm_mark_v(delta_state *, uint8_t, uint8_t, delta_loc *, uint8_t);
 extern int  ibm_insert_2ptv(delta_state *, uint8_t, delta_loc *, uint8_t);
 extern void ibm_deltaReinit(delta_state *, int32_t);
 extern void ibm_initdelta(delta_state *, uint8_t, const uint8_t *);
+extern int  ibm_init_ptr_active_record(delta_state *);
+extern int  ibm_ventproc(delta_state *, delta_actrec *, uint8_t *, uint8_t *,
+                         uint8_t *, void *);
+extern int  ibm_vretproc(delta_state *, int32_t);
+extern int  ibm_succeed(delta_state *);
 extern int32_t ibm_spine_changed;
 
 #define RECORDS   0x200   /* room for the stack to push into */
@@ -220,6 +225,8 @@ typedef struct {
     int8_t      nsqf[0x20];       /* which fields decide the spine flags */
     int8_t      nsqm[0x20];       /* one mark per fenced field */
     uint8_t     owner[0x200];     /* what the runtime tells about a move */
+    delta_actrec actrec;          /* what a rule frame saves */
+    uint8_t     fence2[3][0x40];  /* the fence arrays a rule brings itself */
     uint8_t     sets[0x200];      /* the language's lookup set descriptors */
 } delta_world;
 
@@ -479,6 +486,11 @@ static int world_differs(delta_world *a, delta_world *b)
     }
     if (region_differs(a, b, a->owner, b->owner, sizeof(a->owner))) {
         diff_where = "owner";
+        return 1;
+    }
+    if (region_differs(a, b, (const uint8_t *)&a->actrec,
+                       (const uint8_t *)&b->actrec, sizeof(a->actrec))) {
+        diff_where = "actrec";
         return 1;
     }
     if (region_differs(a, b, a->sets, b->sets, sizeof(a->sets))) {
@@ -4346,6 +4358,87 @@ BEGIN(reinit)
     init_ours(&o->state, which, n, list);
 END(reinit)
 
+
+/* Entering and leaving a rule is the frame protocol the compiled rules are
+   built on: ventproc saves the machine into the rule's own record and pushes
+   a marker, vretproc pops it and puts everything back. */
+static int frame_ibm(delta_state *d, delta_world *w, int enter)
+{
+    jmp_buf jb;
+    int r = -1;
+
+    d->vars->err_jmp = jb;
+    if (setjmp(jb) == 0) {
+        if (enter)
+            r = ibm_ventproc(d, &w->actrec, w->fence2[0], w->fence2[1],
+                             w->fence2[2], jb);
+        else
+            r = ibm_vretproc(d, 1);
+    }
+    d->vars->err_jmp = 0;
+    return r;
+}
+
+static int frame_ours(delta_state *d, delta_world *w, int enter)
+{
+    jmp_buf jb;
+    int r = -1;
+
+    d->vars->err_jmp = jb;
+    if (setjmp(jb) == 0) {
+        if (enter)
+            r = ventproc(d, &w->actrec, w->fence2[0], w->fence2[1],
+                         w->fence2[2], jb);
+        else
+            r = vretproc(d, 1);
+    }
+    d->vars->err_jmp = 0;
+    return r;
+}
+
+BEGIN(rule_frame)
+    int ra, rb;
+
+    memset(m->records, 0, RECORDS);
+    memset(o->records, 0, RECORDS);
+    /* Left as fill this would look like an error already thrown, and
+       vretproc would backtrack into a frame that has already returned. */
+    m->vars.error_thrown = o->vars.error_thrown = 0;
+    m->vars.ptr_count = o->vars.ptr_count = (int32_t)(rng_next() % 900u);
+    m->vars.active_record = o->vars.active_record =
+        (int32_t)(rng_next() % 900u);
+    m->stack.size_a8 = o->stack.size_a8 = 0x18;
+    m->vars.back = m->records + 0x40;
+    o->vars.back = o->records + 0x40;
+    m->stack.vbot = m->records + 0x20;
+    o->stack.vbot = o->records + 0x20;
+
+    if (rng_next() % 2u) {
+        ra = frame_ibm(&m->state, m, 1);
+        rb = frame_ours(&o->state, o, 1);
+    } else {
+        /* Leaving needs a frame to pop, so enter first on both sides. */
+        frame_ibm(&m->state, m, 1);
+        frame_ours(&o->state, o, 1);
+        if (rng_next() % 2u) {
+            ra = frame_ibm(&m->state, m, 0);
+            rb = frame_ours(&o->state, o, 0);
+        } else {
+            ra = ibm_succeed(&m->state);
+            rb = succeed(&o->state);
+        }
+    }
+
+    if (ra != rb)
+        bad++;
+
+    /* The record and the pushed marker both hold addresses of the caller's
+       own frame, which no two runs share. */
+    m->actrec.err_jmp = o->actrec.err_jmp = NULL;
+    m->vars.err_jmp = o->vars.err_jmp = NULL;
+
+END(rule_frame)
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -4454,6 +4547,7 @@ int main(void)
     test_two_point_edits();
     test_var_edits();
     test_reinit();
+    test_rule_frame();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
