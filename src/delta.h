@@ -267,7 +267,7 @@ typedef struct {
     const char *format;       /* +0x04 */
     const void *values;       /* +0x08 */
     int32_t     unknown_0c;
-    int16_t     unknown_10;
+    int16_t     nvalues;      /* +0x10, how many names above */
     int16_t     kind;         /* +0x12, the type code a comparison sees */
     int8_t      flag;         /* +0x14 */
     int8_t      pad_15[3];
@@ -295,7 +295,9 @@ typedef struct {
     int32_t                length;    /* +0x24, the whole record in bytes */
     int32_t                stride;    /* +0x28, one variant */
     int32_t                varlen;    /* +0x2c, how much of one to copy */
-    uint8_t                pad_30[4];
+    int32_t                whole_token; /* +0x30, one means the
+                                          reader takes a whole
+                                          line as one token */
     uint8_t                marks[2];  /* +0x34, the pair the printer brackets
                                          a statement with */
     uint8_t                walkable;  /* +0x36, only Ms sets this */
@@ -639,7 +641,10 @@ void dur_expr(delta_state *d, uint8_t f, delta_loc *field);
 int  open_input(delta_state *d, int32_t which);
 int  open_output(delta_state *d, int32_t which);
 int  read_tvar(delta_state *d, int8_t f, delta_loc *field);
-int  vrd_tvar(delta_state *d, int8_t f, const delta_operand *v);
+int  vrd_tvar(delta_state *d, int32_t f, const delta_operand *v);
+int  checkInterrupt(delta_state *d);
+int  vf_getc(delta_state *d, int32_t f);
+void vf_ungetc(delta_state *d, int32_t f);
 void *logicalFileName(delta_state *d, int32_t which, int32_t out);
 int  logicalFileOpen(delta_state *d, void *name);
 
@@ -653,7 +658,8 @@ void lithex(delta_state *d, ...);
 int  getbksl(delta_state *d, ...);
 void readErrorReport(delta_state *d, ...);
 void var_rderr(delta_state *d, ...);
-void rdtokverr(delta_state *d, ...);
+int  rdtokverr(delta_state *d, int32_t f, uint8_t st,
+               const char *buf);
 
 /* Supplied by the language module, not by the runtime. */
 const uint8_t *actdlookup(delta_state *d, int32_t l, int32_t r,

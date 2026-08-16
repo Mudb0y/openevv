@@ -40,13 +40,3 @@ int  vdictinit(void *d)                    { (void)d; return 0; }
 int  vlinkinit(void *d)                    { (void)d; return 0; }
 int  errorIgnore(void *a, void *b)         { (void)a; (void)b; return 0; }
 void dtSetErrorCallback(void *a, void *b)  { (void)a; (void)b; }
-
-/* The live reader, which the harness never calls: our own read_tvar names
-   it and the runtime it belongs to is not linked here. */
-int vrd_tvar(void *d, int f, const void *v)
-{
-    (void)d;
-    (void)f;
-    (void)v;
-    return 0;
-}
