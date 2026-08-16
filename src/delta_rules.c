@@ -29,7 +29,7 @@
 enum {
     OP_CALL, OP_JUMP, OP_BRANCH, OP_CMP, OP_ALU2, OP_ALU1, OP_LOAD,
     OP_STORE, OP_SWITCH, OP_MAP, OP_RETURN, OP_SCALE, OP_ADDK, OP_MUL,
-    OP_DIV, OP_WIDEN, OP_SETCC, OP_PUSH, OP_SETARG, OP_POPN
+    OP_DIV, OP_WIDEN, OP_SETCC, OP_PUSH, OP_SETARG, OP_POPN, OP_POPREG
 };
 
 /* The argument area is kept as it was rather than worked out per call. The
@@ -463,6 +463,17 @@ static void step(interp *st)
         if (st->argn < 0)
             st->argn = 0;
         break;
+
+    case OP_POPREG: {
+        unsigned char code = *p++;
+
+        if (st->argn > 0) {
+            st->argn--;
+            if (st->argn < NARG)
+                reg_write(st, code, st->arg[st->argn]);
+        }
+        break;
+    }
 
     case OP_JUMP:
         st->pc = get16s(p);

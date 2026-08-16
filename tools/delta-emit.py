@@ -31,7 +31,7 @@ spec.loader.exec_module(dl)
 OPS = [
     "CALL", "JUMP", "BRANCH", "CMP", "ALU2", "ALU1", "LOAD", "STORE",
     "SWITCH", "MAP", "RETURN", "SCALE", "ADDK", "MUL", "DIV", "WIDEN",
-    "SETCC", "PUSH", "SETARG", "POPN",
+    "SETCC", "PUSH", "SETARG", "POPN", "POPREG",
 ]
 OP = {name: i for i, name in enumerate(OPS)}
 
@@ -225,6 +225,9 @@ class Emitter:
                 elif kind == "popn":
                     self.u8(OP["POPN"])
                     self.u8(op[1])
+                elif kind == "popreg":
+                    self.u8(OP["POPREG"])
+                    self.u8(reg_code(op[1]))
                 elif kind == "jump":
                     self.u8(OP["JUMP"])
                     target(op[1])

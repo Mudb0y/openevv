@@ -461,7 +461,14 @@ class Decoder:
                 return i
             if self.stack:
                 self.stack.pop()
-            self.emit(("popn", 1))
+            if ops.startswith("%"):
+                # A pop takes the top of the area into the register, which
+                # is how the compiler writes a constant into one when it
+                # cannot spare an instruction that touches the flags.
+                self.drop(ops)
+                self.emit(("popreg", ops))
+            else:
+                self.emit(("popn", 1))
             return i
 
         if mnem in ("leal", "lea") and "," in ops:
@@ -858,6 +865,8 @@ def show(op):
         return "argument %d is %s" % (op[1], show_operand(op[2]))
     if kind == "popn":
         return "drop %d" % op[1]
+    if kind == "popreg":
+        return "take the top into %s" % op[1]
     if kind == "branch":
         return "%s -> %s" % (op[1], op[2])
     if kind == "jump":
