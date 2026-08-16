@@ -636,19 +636,20 @@ int  vdur_ass(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
 int  dur_ass(delta_state *d, int8_t f, delta_loc *field, uint8_t mode);
 void dur_expr(delta_state *d, uint8_t f, delta_loc *field);
 
+int  open_input(delta_state *d, int32_t which);
+int  open_output(delta_state *d, int32_t which);
+int  read_tvar(delta_state *d, int8_t f, delta_loc *field);
+int  vrd_tvar(delta_state *d, int8_t f, const delta_operand *v);
+void *logicalFileName(delta_state *d, int32_t which, int32_t out);
+int  logicalFileOpen(delta_state *d, void *name);
+
 void print_lit(delta_state *d, ...);
 void print_var(delta_state *d, ...);
 void print_stream(delta_state *d, ...);
-void print_prompt(delta_state *d, ...);
 void vprt_var(delta_state *d, ...);
 void vprt_strm(delta_state *d, ...);
 void disptok(delta_state *d, ...);
 void lithex(delta_state *d, ...);
-void open_input(delta_state *d, ...);
-void open_output(delta_state *d, ...);
-int  read_tvar(delta_state *d, ...);
-int  vrd_tvar(delta_state *d, ...);
-int  gettok(delta_state *d, ...);
 int  getbksl(delta_state *d, ...);
 void readErrorReport(delta_state *d, ...);
 void var_rderr(delta_state *d, ...);

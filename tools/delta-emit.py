@@ -523,7 +523,7 @@ def defining_objects(where):
     return out
 
 
-def write_trace(e, where, out_c, out_dir, known):
+def write_trace(e, where, out_c, out_dir, known, swapped):
     """A wrapper for every runtime entry the rules call, saying what it was
     asked before handing over.
 
@@ -541,11 +541,26 @@ def write_trace(e, where, out_c, out_dir, known):
         obj = defs.get(name)
         if obj is None:
             continue
-        wrapped.append((name, known.get(name, 1), obj))
-        by_obj[obj].append(name)
+        wrapped.append((name, known.get(name, 1), obj, name in swapped))
+        if name not in swapped:
+            # One our own sources supply is stood aside by the swap
+            # already; renaming it here as well would take it twice.
+            by_obj[obj].append(name)
+
+    # Everything our own sources supply gets a wrapper too, whether or not
+    # a rule ever names it: the swap stands the original aside for all of
+    # them, so something has to answer to the plain name. How many
+    # arguments one takes is only known where a rule calls it; the rest are
+    # given a wide signature, which cdecl lets the callee ignore.
+    seen = set(n for n, _a, _o, _m in wrapped)
+    for name in sorted(swapped):
+        if name not in seen and name in defs:
+            wrapped.append((name, known.get(name, 8), defs[name], True))
 
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
+    for stale in os.listdir(out_dir):
+        os.remove(os.path.join(out_dir, stale))
     for obj, names in sorted(by_obj.items()):
         with open(os.path.join(out_dir, obj[:-4] + ".ren"), "w") as f:
             for name in sorted(names):
@@ -633,9 +648,10 @@ def write_trace(e, where, out_c, out_dir, known):
                 "    if (on && !hidden(obj))\n"
                 "        fprintf(stderr, \"   = %08x\\n\", (unsigned)r);\n"
                 "}\n\n")
-        for name, n, obj in wrapped:
+        for name, n, obj, mine in wrapped:
             args = ", ".join("int32_t a%d" % j for j in range(n))
-            f.write("extern int32_t ibm_%s();\n" % name)
+            f.write("extern int32_t %s_%s();\n"
+                    % ("our" if mine else "ibm", name))
             f.write("int32_t %s(%s)\n{\n" % (name, args))
             f.write("    int32_t a[%d];\n    int32_t r;\n\n" % n)
             for j in range(n):
@@ -645,8 +661,9 @@ def write_trace(e, where, out_c, out_dir, known):
                 f.write('    if (on) fprintf(stderr, "   tag slot %08x\\n",\n'
                         "                    (unsigned)*(int32_t *)(size_t)"
                         "(unsigned)a[1]);\n")
-            f.write("    r = ibm_%s(%s);\n"
-                    % (name, ", ".join("a%d" % j for j in range(n))))
+            f.write("    r = %s_%s(%s);\n"
+                    % ("our" if mine else "ibm", name,
+                       ", ".join("a%d" % j for j in range(n))))
             f.write('    answered(r, "%s");\n    return r;\n}\n\n' % obj)
     return len(wrapped), len(by_obj)
 
@@ -680,6 +697,7 @@ def write_reference(e, out_c):
         for name, _off, _len, _fr, _pb, params in e.rules:
             n = max(params, 1)
             args = ", ".join("int32_t a%d" % j for j in range(n))
+
             f.write("extern int32_t ibm_%s();\n" % name)
             f.write("int32_t %s(%s)\n{\n" % (name, args))
             f.write("    int32_t a[%d];\n\n" % n)
@@ -784,9 +802,19 @@ def main():
     write_reference(e, os.path.join(out, "delta_rules_ref.c"))
     k = write_renames(e, os.path.join(out, "rules"))
     print("objects whose rules step aside: %d" % k)
+    swapped = set()
+    names = os.path.join(out, "prim", "names")
+    if os.path.exists(names):
+        swapped = set(open(names).read().split())
     w, wo = write_trace(e, where, os.path.join(out, "delta_rules_trace.c"),
-                        os.path.join(out, "trace"), known)
+                        os.path.join(out, "trace"), known, set())
     print("runtime entries wrapped for a trace: %d over %d objects" % (w, wo))
+    if swapped:
+        w, wo = write_trace(e, where,
+                            os.path.join(out, "delta_rules_trace_prim.c"),
+                            os.path.join(out, "trace_prim"), known, swapped)
+        print("the same again over our own primitives: %d over %d objects"
+              % (w, wo))
     return 0
 
 

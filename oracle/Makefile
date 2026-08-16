@@ -219,6 +219,10 @@ $(BUILD)/delta_rules_trace.obj: ../src/delta_rules_trace.c
 	@mkdir -p $(BUILD)
 	@$(CC) -O2 -std=c99 -w -I../src -c $< -o $@
 
+$(BUILD)/delta_rules_trace_prim.obj: ../src/delta_rules_trace_prim.c
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=c99 -w -I../src -c $< -o $@
+
 TRACE_REST = $(filter-out $(ENUS)/eci.obj \
                $(patsubst %,$(ENUS)/%.obj,$(TRACE_OBJS)),$(wildcard $(ENUS)/*.obj))
 
@@ -244,3 +248,84 @@ $(BUILD)/trace_rules.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
 
 .PHONY: trace
+
+# The same engine again with our own transcribed primitives underneath the
+# interpreted rules, so that what runs is the port rather than the original.
+# Each object that defines a primitive we have has its own definition stood
+# aside, the same way the rules were, and our sources supply the name.
+# Which objects hand their primitives over to us. Narrowing this is how a
+# fault gets pinned to one of them.
+PRIM_ONLY  ?= $(shell cat ../src/prim/objects 2>/dev/null)
+PRIM_OBJS  := $(PRIM_ONLY)
+SWAP_OBJS  := $(sort $(RULE_OBJS) $(PRIM_OBJS))
+SWAP_SWAP  := $(patsubst %,$(BUILD)/swap/%.obj,$(SWAP_OBJS))
+OUR_DELTA  := ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c \
+              ../src/delta_tables.c ../src/delta_trace.c
+
+speak-prim: $(BUILD)/speak_prim.exe
+
+$(BUILD)/swap/%.obj: $(ENUS)/%.obj ../src/delta_rules_enus.c ../src/prim/objects
+	@mkdir -p $(BUILD)/swap
+	@cat ../src/rules/$*.ren ../src/prim/$*.ren 2>/dev/null \
+	  > $(BUILD)/swap/$*.ren || true
+	@g=""; [ -s ../src/rules/$*.glob ] \
+	  && g="--globalize-symbols=../src/rules/$*.glob"; \
+	  $(OBJCOPY) --redefine-syms=$(BUILD)/swap/$*.ren $$g $< $@
+
+$(BUILD)/speak_prim.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
+    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj \
+    $(BUILD)/delta_rules_shim.obj $(SWAP_SWAP) $(OUR_DELTA)
+	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
+	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules.obj \
+	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_rules_shim.obj \
+	  $(OUR_DELTA) $(SWAP_SWAP) \
+	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(SWAP_OBJS)),\
+	    $(wildcard $(ENUS)/*.obj)) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
+
+.PHONY: speak-prim
+
+# And the same again with a trace, so that where our primitives and the
+# original's part company can be found the way the rules' were.
+TSWAP_OBJS := $(sort $(RULE_OBJS) $(PRIM_OBJS) \
+                $(shell cat ../src/trace_prim/objects 2>/dev/null))
+TSWAP_SWAP := $(patsubst %,$(BUILD)/tswap/%.obj,$(TSWAP_OBJS))
+
+trace-prim: $(BUILD)/trace_prim.exe
+
+$(BUILD)/tswap/%.obj: $(ENUS)/%.obj ../src/delta_rules_enus.c ../src/prim/objects
+	@mkdir -p $(BUILD)/tswap
+	@cat ../src/rules/$*.ren ../src/prim/$*.ren \
+	  ../src/trace_prim/$*.ren 2>/dev/null > $(BUILD)/tswap/$*.ren || true
+	@g=""; [ -s ../src/rules/$*.glob ] \
+	  && g="--globalize-symbols=../src/rules/$*.glob"; \
+	  $(OBJCOPY) --redefine-syms=$(BUILD)/tswap/$*.ren $$g $< $@
+
+# Our own primitives under a name of their own, so the wrapper in between
+# can take the plain one and say what it was asked.
+$(BUILD)/our_delta.obj: $(OUR_DELTA) ../src/prim/ours.ren
+	@mkdir -p $(BUILD)
+	@for f in $(OUR_DELTA); do \
+	  $(CC) -O2 -std=c99 -w -I../src -c $$f \
+	    -o $(BUILD)/our_$$(basename $$f .c).o; done
+	@i686-w64-mingw32-ld -r -o $(BUILD)/our_delta.tmp.o \
+	  $(patsubst ../src/%.c,$(BUILD)/our_%.o,$(OUR_DELTA))
+	@$(OBJCOPY) --redefine-syms=../src/prim/ours.ren \
+	  $(BUILD)/our_delta.tmp.o $@
+
+$(BUILD)/trace_prim.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
+    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj \
+    $(BUILD)/delta_rules_shim.obj $(BUILD)/delta_rules_trace_prim.obj \
+    $(TSWAP_SWAP) $(BUILD)/our_delta.obj
+	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
+	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules.obj \
+	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_rules_shim.obj \
+	  $(BUILD)/delta_rules_trace_prim.obj $(BUILD)/our_delta.obj \
+	  $(TSWAP_SWAP) \
+	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(TSWAP_OBJS)),\
+	    $(wildcard $(ENUS)/*.obj)) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
+
+.PHONY: trace-prim
