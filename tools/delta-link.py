@@ -63,9 +63,15 @@ class Coff:
                 inside = True
                 continue
             if inside:
-                m = re.match(r"\s+([0-9A-F]{4}): ((?:[0-9A-F ]{4}\s?)+)\|", line)
+                # The offset is as wide as the section needs, so it is read
+                # rather than counted on, and the bytes are placed by it.
+                m = re.match(r"\s+([0-9A-F]{4,}): ((?:[0-9A-F ]{4}\s?)+)\|", line)
                 if m:
-                    data.extend(bytes.fromhex(m.group(2).replace(" ", "")))
+                    at = int(m.group(1), 16)
+                    raw = bytes.fromhex(m.group(2).replace(" ", ""))
+                    if len(data) < at + len(raw):
+                        data.extend(bytes(at + len(raw) - len(data)))
+                    data[at:at + len(raw)] = raw
                 else:
                     inside = False
         if number is not None:

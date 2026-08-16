@@ -205,23 +205,40 @@ struct delta_state {
                                      0x24-byte descriptor each */
     uint8_t     *act_table;       /* 0x002c, the dictionary's action table,
                                      one 0x28-byte entry each */
-    uint8_t      pad_0030[0x3c - 0x30];
+    const uint8_t *const *set_store;  /* 0x0030, one pointer per set to the
+                                         entries themselves */
+    uint8_t      pad_0034[0x3c - 0x34];
     int32_t      unknown_3c;      /* 0x003c, a forto's third parameter */
     delta_pta    lpta;            /* 0x0040 */
     delta_pta    rpta;            /* 0x0050 */
-    uint8_t      pad_0060[4];
+    const uint8_t *const *act_store;  /* 0x0060, the same for the actions */
     uint8_t     *owner;           /* 0x0064, whoever wants to know the spine
                                      moved; the flag it sets is at 0x1b8 */
     delta_vars  *vars;            /* 0x0068 */
     delta_stack *stack;           /* 0x006c */
-    uint8_t      pad_0070[0x14];
+    uint8_t      pad_0070[0x7c - 0x70];
+    uint8_t      fence_room;      /* 0x007c, how many the arrays below hold */
+    uint8_t      pad_007d[3];
+    /* Each of the three fenced-character arrays is kept twice: where it was
+       allocated, and where the machine is working in it. */
+    uint8_t     *fence_chars_base;   /* 0x0080 */
     uint8_t     *fence_chars;     /* 0x0084, fenced character by index */
-    uint8_t      pad_0088[4];
+    uint8_t     *fence_index_base;   /* 0x0088 */
     uint8_t     *fence_index;     /* 0x008c, index by fenced character */
-    uint8_t      pad_0090[4];
+    uint8_t     *fence_marks_base;   /* 0x0090 */
     uint8_t     *fence_marks;     /* 0x0094, one per fenced character */
     uint8_t      fence_fill;      /* 0x0098 */
-    uint8_t      pad_0099[DELTA_STATE_BYTES - 0x99];
+    uint8_t      pad_0099;
+    int16_t      lang_a;          /* 0x009a */
+    int16_t      lang_b;          /* 0x009c */
+    int16_t      pad_009e;
+    const char *const *lfnames;   /* 0x00a0, the streams that can be opened */
+    uint8_t      nlfnames;        /* 0x00a4 */
+    uint8_t      pad_00a5;
+    int16_t      nsets;           /* 0x00a6 */
+    const char  *dictfile;        /* 0x00a8 */
+    int16_t      nactions;        /* 0x00ac */
+    uint8_t      pad_00ae[DELTA_STATE_BYTES - 0xae];
 };
 
 /* What the rules load their pointer registers from. Only the second word is
@@ -313,6 +330,17 @@ extern delta_stmt vstmtbl[];
 /* The language telling the runtime how big one variant of a
    statement type is, which the table alone does not say. */
 void viasizes(void);
+
+/* What the language hands the machine on the way in, and takes back on the
+   way out: the lookup sets, the dictionary's actions, and the little
+   arrays it fences characters with. */
+void set_dict_new(delta_state *d);
+void set_dict_delete(delta_state *d);
+void act_dict_new(delta_state *d);
+void act_dict_delete(delta_state *d);
+void link_new(delta_state *d);
+void link_delete(delta_state *d);
+void delta_delete(delta_state *d);
 
 /* A node on the spine: the linked structure the rules walk over. Its links
    are tagged pointers, with flags in the low two bits that a reader has to
