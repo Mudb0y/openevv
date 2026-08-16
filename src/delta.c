@@ -128,7 +128,7 @@ int testneq(delta_state *d)
 
 AT(fence_chars, 0x0084);
 AT(fence_index, 0x008c);
-AT(fence_fill, 0x0098);
+AT(nstmts, 0x0098);
 AT(owner, 0x0064);
 AT(fence_marks, 0x0094);
 AT_VARS(err_jmp, 0x0fac);
@@ -160,7 +160,7 @@ void fence(delta_state *d, int8_t n, const uint8_t *chars)
     uint8_t i;
 
     d->vars->fence_count = n;
-    memset(d->fence_index, d->fence_fill, d->fence_fill);
+    memset(d->fence_index, d->nstmts, d->nstmts);
 
     for (i = 0; (int)i < (int)(uint8_t)n; i++) {
         d->fence_chars[i] = chars[i];
@@ -1015,7 +1015,7 @@ void vnsqflags(delta_state *d, int32_t *t)
         i++;
     }
 
-    for (i = (int32_t)d->fence_fill - 1; i >= 0; i--) {
+    for (i = (int32_t)d->nstmts - 1; i >= 0; i--) {
         if ((t[d->vars->fence_base + i] & 1) == 0)
             continue;
 
@@ -1240,7 +1240,7 @@ void seqscan(delta_state *d, delta_seqctl *c)
     else
         peer = *(int32_t *)(intptr_t)(t + base * 4 - 8) & ~3;
 
-    for (i = 0; i < d->fence_fill; i++)
+    for (i = 0; i < d->nstmts; i++)
         if ((*(int32_t *)(intptr_t)(peer + (base + i) * 4) & 1) != 0)
             fields[n++] = i;
 
@@ -1556,7 +1556,7 @@ int32_t ctxlook(delta_state *d, int32_t t, uint8_t f, int32_t right)
         if (cur == 0)
             break;
 
-        for (i = 0; i < d->fence_fill; i++) {
+        for (i = 0; i < d->nstmts; i++) {
             int32_t sync;
 
             if ((*(int32_t *)(intptr_t)(cur + (base + i) * 4) & 1) == 0)
@@ -2109,7 +2109,7 @@ int dupsync(delta_state *d, int32_t t, int32_t src, uint8_t back)
     int32_t bs = d->vars->fence_base;
     uint8_t i;
 
-    for (i = 0; i < d->fence_fill; i++) {
+    for (i = 0; i < d->nstmts; i++) {
         int32_t here = *(int32_t *)(intptr_t)(src + (bs + i) * 4);
 
         if ((here & 1) == 0)
@@ -2379,7 +2379,7 @@ int visleft(delta_state *d, int32_t a, int32_t b)
         }
     }
 
-    for (j = (int8_t)(d->fence_fill - 1); j >= 0; j--) {
+    for (j = (int8_t)(d->nstmts - 1); j >= 0; j--) {
         if ((*(int32_t *)(intptr_t)(a + (base + j) * 4) & 1) == 0)
             continue;
 
@@ -2604,7 +2604,7 @@ int vchkseqbad(delta_state *d, int32_t t, uint8_t f, const char *what)
         return 0;
     }
 
-    for (i = 0; i < d->fence_fill; i++) {
+    for (i = 0; i < d->nstmts; i++) {
         if ((*(int32_t *)(intptr_t)
              (t + (d->vars->fence_base + i) * 4) & 1) == 0)
             continue;
@@ -2760,7 +2760,7 @@ int chkdelnonseq(delta_state *d, int32_t t, uint8_t f)
     while (NONSEQ((const delta_node *)(intptr_t)r))
         r = *rlink(d, r) & ~3;
 
-    for (i = (int32_t)d->fence_fill - 1; i >= (int32_t)f; i--) {
+    for (i = (int32_t)d->nstmts - 1; i >= (int32_t)f; i--) {
         if (CARRIES(t, i)) {
             if (CARRIES(l, i)) {
                 if (nright != 0)
@@ -3641,7 +3641,7 @@ void deltaReinit(delta_state *d, int32_t full)
     CLRONESTM((delta_node *)(intptr_t)s->spine_l);
     CLRONESTM((delta_node *)(intptr_t)s->spine_r);
 
-    for (i = 0; i < d->fence_fill; i++) {
+    for (i = 0; i < d->nstmts; i++) {
         ((delta_stmt *)(uintptr_t)vstmtbl)[i].unknown_1c = 0;
 
         *(int32_t *)(intptr_t)(s->spine_l + (base + i) * 4) |= 1;
@@ -3670,11 +3670,11 @@ void initdelta(delta_state *d, uint8_t n, const uint8_t *list)
     uint8_t i;
 
     if (n == 0) {
-        for (i = 0; i < d->fence_fill; i++) {
+        for (i = 0; i < d->nstmts; i++) {
             if (!vinit_stm(d, (int8_t)i))
                 forceErrorBacktrack(d);
         }
-    } else if (n == d->fence_fill) {
+    } else if (n == d->nstmts) {
         freeDeltaHeapTo(d, (uint8_t *)(intptr_t)d->stack->spine_r, 0);
         deltaReinit(d, 1);
     } else {
@@ -3713,7 +3713,7 @@ int ventproc(delta_state *d, delta_actrec *rec, uint8_t *index,
     if (rec == NULL || !init_ptr_active_record(d))
         return 1;
 
-    rec->unknown_00 = v->unknown_fd8;
+    rec->unknown_00 = v->running;
     memcpy(rec->tags, &v->loop_tag, 8);
     rec->testing = (uint8_t)v->testing;
     rec->back = v->back;
@@ -3775,7 +3775,7 @@ int vretproc(delta_state *d, int32_t tag)
     d->fence_index = *(uint8_t **)(frame + 8);
     d->fence_marks = *(uint8_t **)(frame + 0x10);
 
-    v->unknown_fd8 = rec->unknown_00;
+    v->running = rec->unknown_00;
     memcpy(&v->loop_tag, rec->tags, 8);
     v->testing = (int8_t)rec->testing;
     v->back = rec->back;

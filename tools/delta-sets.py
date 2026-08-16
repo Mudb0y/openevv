@@ -57,7 +57,7 @@ void link_new(delta_state *d)
     d->fence_marks_base = d->fence_marks = malloc(%d);
     if (d->fence_marks == 0) { delta_delete(d); return; }
 
-    d->fence_fill = %d;
+    d->nstmts = %d;
     d->lang_a = %d;
     d->lang_b = %d;
     d->lfnames = lfnames;

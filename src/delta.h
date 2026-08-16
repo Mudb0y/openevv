@@ -125,7 +125,21 @@ typedef struct {
     int32_t   ca_size;       /* 0x00b4, a context record */
     int32_t   size_b8;       /* 0x00b8 */
     int32_t   boa_size;      /* 0x00bc, a begin-or-alternative marker */
-    uint8_t   pad_00c0[0x1d0 - 0xc0];
+    uint8_t   pad_00c0[0xfc - 0xc0];
+    /* What the save layer works in. It is only ever reached through the
+       routines at the end of delta_trace.c, which the engine does not use;
+       a target that wants to write the machine out and read it back is what
+       they are for. */
+    int32_t  *saved_spine;   /* 0x00fc, one slot per statement type */
+    char      line[0x146 - 0x100];  /* 0x0100, a line being built */
+    uint8_t   save_stream;   /* 0x0146, where the script is written */
+    uint8_t   pad_0147;
+    void     *save_file;     /* 0x0148, and where the bytes go */
+    uint8_t   pad_014c[4];
+    char      save_name[100];  /* 0x0150, the name last read off it; the
+                                  original writes past the end of this
+                                  rather than stop at it */
+    uint8_t   pad_01b4[0x1d0 - 0x1b4];
     /* visleft remembers its last fifty answers here. The whole table is
        thrown away whenever the spine is relinked, which is what the stamp
        is for; the counts keep a hot pair from being evicted. */
@@ -173,7 +187,10 @@ typedef struct {
     uint8_t   pad_0fd3;
     int8_t    testing;         /* 0x0fd4, a test is under way */
     uint8_t   pad_0fd5[3];
-    int32_t   unknown_fd8;     /* 0x0fd8, saved and restored around a rule */
+    /* The rule now running, as the language compiled it. Kept as a number
+       because that is how a rule names an activation when it asks for a
+       variable; only the save layer ever reads through it. */
+    int32_t   running;         /* 0x0fd8, saved and restored around a rule */
     uint8_t  *back;            /* 0x0fdc, where an unwind returns to */
     int8_t    compared_equal;  /* 0x0fe0 */
     int8_t    fence_count;     /* 0x0fe1, how many characters are fenced */
@@ -196,6 +213,24 @@ typedef struct {
     int16_t   unknown_11ec;    /* 0x11ec, what actd_goto answers with */
     uint8_t   pad_11ee[0x1e];
 } delta_vars;
+
+/* One variable of a rule, as the language compiled it. */
+typedef struct {
+    const char *name;         /* +0x00 */
+    int32_t     unknown_04;
+    int16_t     kind;         /* +0x08, DK_SYNC for one that holds a node */
+    int8_t      flag;         /* +0x0a, bit 7 means the rule keeps it to
+                                 itself and nothing outside may name it */
+    int8_t      pad_0b;
+} delta_varinfo;
+
+/* A rule as the language compiled it, so far as the save layer reads one. */
+typedef struct {
+    uint8_t              pad_00[8];
+    const delta_varinfo *locals;   /* +0x08 */
+    uint8_t              pad_0c[0x22 - 0x0c];
+    int16_t              nlocals;  /* +0x22 */
+} delta_actdesc;
 
 typedef struct delta_state delta_state;
 
@@ -227,7 +262,12 @@ struct delta_state {
     uint8_t     *fence_index;     /* 0x008c, index by fenced character */
     uint8_t     *fence_marks_base;   /* 0x0090 */
     uint8_t     *fence_marks;     /* 0x0094, one per fenced character */
-    uint8_t      fence_fill;      /* 0x0098 */
+    uint8_t      nstmts;         /* 0x0098, how many statement types
+                                    the language declares, which is
+                                    also how many fields a node has;
+                                    the fence index uses it as the
+                                    mark for a field it does not
+                                    fence */
     uint8_t      pad_0099;
     int16_t      lang_a;          /* 0x009a */
     int16_t      lang_b;          /* 0x009c */
@@ -698,6 +738,36 @@ int  vrd_nvar(delta_state *d, int32_t f, const delta_operand *v);
 int  vrd_delta(delta_state *d, int32_t f, uint8_t st);
 void *varloc(delta_state *d, uint8_t hi, uint8_t lo, int32_t ctx);
 void *vonstack(delta_state *d, int32_t ctx);
+
+/* Writing the machine out and reading it back. Nothing in the engine calls
+   any of this; see the end of delta_trace.c. */
+void    svgeterr(delta_state *d, int32_t which);
+void    svgetmsg(delta_state *d);
+void    svgetimp(delta_state *d, int32_t which);
+void    svputerr(delta_state *d);
+int32_t svgetl(delta_state *d);
+int     svgeti(delta_state *d);
+int8_t  svgetc(delta_state *d);
+uint8_t svgetu(delta_state *d);
+char   *svgets(delta_state *d);
+void    svputl(delta_state *d, int32_t v);
+void    svputi(delta_state *d, int32_t v);
+void    svputc(delta_state *d, int8_t c);
+void    svputu(delta_state *d, uint8_t c);
+void    svputs(delta_state *d, const char *s);
+void    svputgptrs(delta_state *d);
+void    svputlptrs(delta_state *d, int32_t node, int8_t sep);
+int32_t findsync(delta_state *d, int32_t n, int8_t dir);
+int     vsvdelta(delta_state *d, uint8_t stream);
+void    vsv2delta(delta_state *d);
+int     vrsdelta2(delta_state *d);
+
+/* Where those bytes go. The original reaches straight for the C library on
+   a FILE it keeps in the stack block; these two are the seam a target puts
+   its own file layer behind, and src/delta_savefile.c is the C library one.
+   Both answer how many bytes moved. */
+int32_t delta_save_read(delta_state *d, void *buf, int32_t n);
+int32_t delta_save_write(delta_state *d, const void *buf, int32_t n);
 
 /* Supplied by the language module, not by the runtime. */
 const uint8_t *actdlookup(delta_state *d, int32_t l, int32_t r,

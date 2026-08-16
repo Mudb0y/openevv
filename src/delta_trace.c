@@ -419,8 +419,8 @@ void *varloc(delta_state *d, uint8_t hi, uint8_t lo, int32_t ctx)
         return *(void *const *)((uint8_t *)d->vars + 0x11e4 + 4 * idx);
 
     if (ctx == 0)
-        ctx = d->vars->unknown_fd8;
-    if (ctx == d->vars->unknown_fd8)
+        ctx = d->vars->running;
+    if (ctx == d->vars->running)
         act = ((void *const *)d->vars->back)[1];
     else
         act = vonstack(d, ctx);
@@ -590,3 +590,200 @@ int vrd_delta(delta_state *d, int32_t f, uint8_t st)
         vpush_var(d, &v);
     }
 }
+
+/* Writing the machine out and reading it back.
+
+   Nothing in the engine calls any of this; it is the Delta debugger's save
+   and restore, and it is here because a target that wants to keep a machine
+   between runs is what it is for. The numbers go out big end first, however
+   the target orders its own.
+
+   Four of them are empty in the original and empty here: what to do about a
+   read that came up short, a message to go with it, a limit the format
+   cannot express, and a write that failed. They are the places a target
+   would put its own answer. */
+void svgeterr(delta_state *d, int32_t which)  { (void)d; (void)which; }
+void svgetmsg(delta_state *d)                 { (void)d; }
+void svgetimp(delta_state *d, int32_t which)  { (void)d; (void)which; }
+void svputerr(delta_state *d)                 { (void)d; }
+
+int32_t svgetl(delta_state *d)
+{
+    uint8_t b[4];
+
+    if (delta_save_read(d, b, 4) != 4)
+        svgeterr(d, 1);
+    return ((int32_t)b[0] << 24) | ((int32_t)b[1] << 16)
+         | ((int32_t)b[2] << 8) | b[3];
+}
+
+int svgeti(delta_state *d)
+{
+    uint8_t b[2];
+    int16_t v;
+
+    if (delta_save_read(d, b, 2) != 2)
+        svgeterr(d, 1);
+    v = (int16_t)b[0];
+    v = (int16_t)((v << 8) | b[1]);
+    return v;
+}
+
+int8_t svgetc(delta_state *d)
+{
+    int8_t c;
+
+    if (delta_save_read(d, &c, 1) != 1)
+        svgeterr(d, 2);
+    return c;
+}
+
+uint8_t svgetu(delta_state *d)
+{
+    uint8_t c;
+
+    if (delta_save_read(d, &c, 1) != 1)
+        svgeterr(d, 3);
+    return c;
+}
+
+/* One name off the stream, up to its terminator. The hundred it has room
+   for is a limit it reports rather than one it keeps to, which is the
+   original's own behaviour and worth knowing before a target trusts it. */
+char *svgets(delta_state *d)
+{
+    char *buf = d->stack->save_name;
+    int i;
+
+    for (i = 0;; i++) {
+        if (i >= (int)sizeof d->stack->save_name)
+            svgetimp(d, 1);
+        if (delta_save_read(d, buf + i, 1) != 1)
+            svgeterr(d, 4);
+        if (buf[i] == 0)
+            break;
+    }
+    return buf;
+}
+
+void svputl(delta_state *d, int32_t v)
+{
+    uint8_t b[4];
+
+    b[0] = (uint8_t)((v >> 24) & 0xff);
+    b[1] = (uint8_t)((v >> 16) & 0xff);
+    b[2] = (uint8_t)((v >> 8) & 0xff);
+    b[3] = (uint8_t)(v & 0xff);
+    if (delta_save_write(d, b, 4) != 4)
+        svputerr(d);
+}
+
+void svputi(delta_state *d, int32_t v)
+{
+    uint8_t b[2];
+
+    b[0] = (uint8_t)((v >> 8) & 0xff);
+    b[1] = (uint8_t)(v & 0xff);
+    if (delta_save_write(d, b, 2) != 2)
+        svputerr(d);
+}
+
+void svputc(delta_state *d, int8_t c)
+{
+    if (delta_save_write(d, &c, 1) != 1)
+        svputerr(d);
+}
+
+void svputu(delta_state *d, uint8_t c)
+{
+    if (delta_save_write(d, &c, 1) != 1)
+        svputerr(d);
+}
+
+void svputs(delta_state *d, const char *s)
+{
+    int32_t n = (int32_t)strlen(s) + 1;
+
+    if (delta_save_write(d, s, n) != n)
+        svputerr(d);
+}
+
+/* The global variables pointing at a node. Empty in the original, and the
+   local ones below are what it was going to be. */
+void svputgptrs(delta_state *d) { (void)d; }
+
+/* Every variable of the running rule that points at this node, written out
+   as names with a separator before the first and an empty name after the
+   last. Only the sync-valued ones count, and only those the rule has not
+   marked as its own. */
+void svputlptrs(delta_state *d, int32_t node, int8_t sep)
+{
+    const delta_actdesc *desc;
+    void *const *slots;
+    void *act;
+    int wrote = 0;
+    int i;
+
+    if (d->vars->back == 0)
+        return;
+    act = ((void *const *)d->vars->back)[1];
+    if (act == 0)
+        return;
+    desc = (const delta_actdesc *)d->vars->running;
+    if (desc == 0)
+        return;
+
+    slots = (void *const *)((void *const *)act)[2];
+    for (i = 0; i < desc->nlocals; i++) {
+        const delta_varinfo *v = &desc->locals[i];
+
+        if (v->kind != DK_SYNC || (v->flag & 0x80))
+            continue;
+        if (*(const int32_t *)slots[i] != node)
+            continue;
+        if (!wrote) {
+            svputc(d, sep);
+            wrote = 1;
+        }
+        svputs(d, v->name);
+    }
+    if (wrote)
+        svputs(d, "");
+}
+
+/* The sync node with this number, looked for from one end of the spine.
+   Not finding it is a limit rather than an error, because a saved machine
+   may name a node this one does not have. */
+int32_t findsync(delta_state *d, int32_t n, int8_t dir)
+{
+    int32_t want = n * 4;
+    int32_t s = d->stack->spine_l;
+
+    while (s != 0) {
+        if ((*(const int32_t *)(size_t)s & ~3) == want)
+            break;
+        s = VRSYNC(d, (const int32_t *)(size_t)s, dir);
+    }
+    if (s == 0)
+        svgetimp(d, 2);
+    return s;
+}
+
+/* Write the machine out as a Delta command script, and read one back.
+
+   The writer is not a serialiser: it prints the commands that would build
+   the spine again, which is why every line of it goes through the printing
+   half. With that half stubbed there is nothing for it to write, so it is
+   stubbed too rather than transcribed into a routine that walks the spine
+   and says nothing. The other two are empty in the original as well: the
+   reader was never written. */
+int vsvdelta(delta_state *d, uint8_t stream)
+{
+    (void)stream;
+    if (d->stack->sync_size == 0)
+        return 0;
+    return 0;
+}
+
+void vsv2delta(delta_state *d)  { (void)d; }
+int  vrsdelta2(delta_state *d)  { (void)d; return 0; }

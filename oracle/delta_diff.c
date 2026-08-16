@@ -376,7 +376,7 @@ static void world_link(delta_world *w)
     w->vars.nsq_marks = w->nsqm;
     w->state.owner = w->owner;
     w->state.sets = w->sets;
-    w->state.fence_fill = (uint8_t)(rng_next() % FENCE_MAP);
+    w->state.nstmts = (uint8_t)(rng_next() % FENCE_MAP);
 
     w->stack.names = w->names;
     w->stack.names_depth = (int8_t)(rng_next() % 0x10u);
@@ -1547,7 +1547,7 @@ BEGIN(vnsqflags)
     memset(m->nodes, 0, sizeof(m->nodes));
     memset(o->nodes, 0, sizeof(o->nodes));
     m->vars.fence_base = o->vars.fence_base = 13;
-    m->state.fence_fill = o->state.fence_fill = (uint8_t)(rng_next() % 0x0au);
+    m->state.nstmts = o->state.nstmts = (uint8_t)(rng_next() % 0x0au);
 
     for (i = 0; i < 0x20; i++) {
         int8_t v = (int8_t)(rng_next() % 12u);
@@ -1817,7 +1817,7 @@ BEGIN(seqscan)
     memset(m->nodes, 0, sizeof(m->nodes));
     memset(o->nodes, 0, sizeof(o->nodes));
     m->vars.fence_base = o->vars.fence_base = BASE;
-    m->state.fence_fill = o->state.fence_fill = FILL;
+    m->state.nstmts = o->state.nstmts = FILL;
 
     cm.kind = co.kind = (int8_t)(rng_next() % 2u);
     back = cm.kind == 1;
@@ -2214,7 +2214,7 @@ BEGIN(ctxlook)
     memset(m->nodes, 0, sizeof(m->nodes));
     memset(o->nodes, 0, sizeof(o->nodes));
     m->vars.fence_base = o->vars.fence_base = FB;
-    m->state.fence_fill = o->state.fence_fill = (uint8_t)(rng_next() % 5u);
+    m->state.nstmts = o->state.nstmts = (uint8_t)(rng_next() % 5u);
 
 #define NODE(w, i) ((int32_t *)((w)->nodes + (i) * STEP))
 #define AT(w, i)   ((int32_t)(intptr_t)((w)->nodes + (i) * STEP))
@@ -2423,7 +2423,7 @@ static void build_pspine(delta_world *m, delta_world *o)
     m->vars.fence_base = o->vars.fence_base = FB;
     m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
     m->vars.ctx_both = o->vars.ctx_both = (int32_t)(rng_next() % 2u);
-    m->state.fence_fill = o->state.fence_fill = (uint8_t)(rng_next() % 5u);
+    m->state.nstmts = o->state.nstmts = (uint8_t)(rng_next() % 5u);
     for (i = 0; i < 0x20; i++)
         m->nsqm[i] = o->nsqm[i] = (int8_t)(rng_next() % 2u);
 
@@ -2702,7 +2702,7 @@ BEGIN(vgetsc)
     memset(m->nodes, 0, sizeof(m->nodes));
     memset(o->nodes, 0, sizeof(o->nodes));
     m->vars.fence_base = o->vars.fence_base = FB;
-    m->state.fence_fill = o->state.fence_fill = (uint8_t)(rng_next() % 5u);
+    m->state.nstmts = o->state.nstmts = (uint8_t)(rng_next() % 5u);
     m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
     for (i = 0; i < 0x20; i++)
         m->nsqm[i] = o->nsqm[i] = (int8_t)(rng_next() % 2u);
@@ -3084,9 +3084,9 @@ BEGIN(visleft)
 
     /* Without a field both nodes carry, visleft falls through to vgetsc and
        hands its null straight to a dereference. Give it one. */
-    m->state.fence_fill = o->state.fence_fill = (uint8_t)(1u + rng_next() % 4u);
+    m->state.nstmts = o->state.nstmts = (uint8_t)(1u + rng_next() % 4u);
     {
-        int k = (int)(rng_next() % m->state.fence_fill);
+        int k = (int)(rng_next() % m->state.nstmts);
         int n;
 
         for (n = 0; n < 4; n++) {
@@ -3369,14 +3369,14 @@ BEGIN(vcomp_pta)
        spine those close a loop between the last node and its terminator.
        That path has its own test; here visleft takes the field walk. */
     m->vars.relink = o->vars.relink = 0;
-    m->state.fence_fill = o->state.fence_fill = (uint8_t)(1u + rng_next() % 4u);
+    m->state.nstmts = o->state.nstmts = (uint8_t)(1u + rng_next() % 4u);
     for (i = 0; i < 0x20; i++)
         m->nsqm[i] = o->nsqm[i] = (int8_t)(rng_next() % 2u);
 
     /* Without a field every node carries, visleft falls through to vgetsc and
        hands its null straight to a dereference. */
     {
-        int k = (int)(rng_next() % m->state.fence_fill);
+        int k = (int)(rng_next() % m->state.nstmts);
         int n;
 
         for (n = 0; n < 8; n++) {
@@ -3537,7 +3537,7 @@ BEGIN(chkdelnonseq)
     int ra, rb, i, j;
 
     build_pspine(m, o);
-    m->state.fence_fill = o->state.fence_fill = NFIELD;
+    m->state.nstmts = o->state.nstmts = NFIELD;
     m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
     m->vars.ctx_both = o->vars.ctx_both = (int32_t)(rng_next() % 2u);
 
@@ -3599,7 +3599,7 @@ BEGIN(fdeldel)
 
     build_pspine(m, o);
     build_heap(m, o);
-    m->state.fence_fill = o->state.fence_fill = NFIELD;
+    m->state.nstmts = o->state.nstmts = NFIELD;
     m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
     m->vars.ctx_both = o->vars.ctx_both = (int32_t)(rng_next() % 2u);
     m->stack.del_field = o->stack.del_field = fd;
@@ -3686,7 +3686,7 @@ BEGIN(vins_tok)
 
     build_pspine(m, o);
     build_heap(m, o);
-    m->state.fence_fill = o->state.fence_fill = NFIELD;
+    m->state.nstmts = o->state.nstmts = NFIELD;
     m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
     m->vars.ctx_both = o->vars.ctx_both = (int32_t)(rng_next() % 2u);
     m->stack.del_field = o->stack.del_field = fd;
@@ -3745,7 +3745,7 @@ static void build_edit(delta_world *m, delta_world *o, int8_t fd)
 
     build_pspine(m, o);
     build_heap(m, o);
-    m->state.fence_fill = o->state.fence_fill = NFIELD;
+    m->state.nstmts = o->state.nstmts = NFIELD;
     m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
     m->vars.ctx_both = o->vars.ctx_both = (int32_t)(rng_next() % 2u);
     m->stack.del_field = o->stack.del_field = fd;
@@ -4458,7 +4458,7 @@ BEGIN(reinit)
     memset(m->nodes, 0, sizeof(m->nodes));
     memset(o->nodes, 0, sizeof(o->nodes));
     m->vars.fence_base = o->vars.fence_base = FB;
-    m->state.fence_fill = o->state.fence_fill = NFIELD;
+    m->state.nstmts = o->state.nstmts = NFIELD;
     m->vars.relink = o->vars.relink = 1;
     m->vars.ctx_both = o->vars.ctx_both = (int32_t)(rng_next() % 2u);
     m->stack.sync_size = o->stack.sync_size = 0x80;
@@ -5413,7 +5413,7 @@ BEGIN(pta_ctxt)
     memset(m->nodes, 0, sizeof(m->nodes));
     memset(o->nodes, 0, sizeof(o->nodes));
     m->vars.fence_base = o->vars.fence_base = FB;
-    m->state.fence_fill = o->state.fence_fill = (uint8_t)(rng_next() % 5u);
+    m->state.nstmts = o->state.nstmts = (uint8_t)(rng_next() % 5u);
     m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
     for (i = 0; i < 0x20; i++)
         m->nsqm[i] = o->nsqm[i] = (int8_t)(rng_next() % 2u);
@@ -5887,7 +5887,7 @@ BEGIN(ctxt_clstr)
     memset(m->nodes, 0, sizeof(m->nodes));
     memset(o->nodes, 0, sizeof(o->nodes));
     m->vars.fence_base = o->vars.fence_base = FB;
-    m->state.fence_fill = o->state.fence_fill = (uint8_t)(rng_next() % 5u);
+    m->state.nstmts = o->state.nstmts = (uint8_t)(rng_next() % 5u);
     m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
     for (i = 0; i < 0x20; i++)
         m->nsqm[i] = o->nsqm[i] = (int8_t)(rng_next() % 2u);
@@ -6225,8 +6225,8 @@ BEGIN(conj_merge)
     ((int32_t *)(m->nodes + 3 * 0x80))[1] = 0;
     ((int32_t *)(o->nodes + 3 * 0x80))[1] = 0;
 
-    m->state.fence_fill = o->state.fence_fill = (uint8_t)(1u + rng_next() % 4u);
-    k = (int)(rng_next() % m->state.fence_fill);
+    m->state.nstmts = o->state.nstmts = (uint8_t)(1u + rng_next() % 4u);
+    k = (int)(rng_next() % m->state.nstmts);
     for (i = 0; i < 4; i++) {
         ((int32_t *)(m->nodes + i * 0x80))[15 + k] |= 1;
         ((int32_t *)(o->nodes + i * 0x80))[15 + k] |= 1;
@@ -6522,7 +6522,7 @@ BEGIN(dur2)
     memset(m->nodes, 0, sizeof(m->nodes));
     memset(o->nodes, 0, sizeof(o->nodes));
     m->vars.fence_base = o->vars.fence_base = FB;
-    m->state.fence_fill = o->state.fence_fill = (uint8_t)(rng_next() % 5u);
+    m->state.nstmts = o->state.nstmts = (uint8_t)(rng_next() % 5u);
     m->vars.relink = o->vars.relink = (int32_t)(rng_next() % 2u);
     for (i = 0; i < 0x20; i++)
         m->nsqm[i] = o->nsqm[i] = (int8_t)(rng_next() % 2u);
@@ -6698,12 +6698,12 @@ static int dur_scaffold(delta_world *m, delta_world *o, int8_t f,
     int i;
 
     m->vars.relink = o->vars.relink = 0;
-    m->state.fence_fill = o->state.fence_fill = (uint8_t)(1u + rng_next() % 4u);
+    m->state.nstmts = o->state.nstmts = (uint8_t)(1u + rng_next() % 4u);
     for (i = 0; i < 0x20; i++)
         m->nsqm[i] = o->nsqm[i] = 0;
 
     {
-        int k = (int)(rng_next() % m->state.fence_fill);
+        int k = (int)(rng_next() % m->state.nstmts);
 
         for (i = 0; i < 8; i++) {
             ((int32_t *)(m->nodes + i * 0x80))[15 + k] |= 1;
