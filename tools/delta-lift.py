@@ -226,6 +226,7 @@ class Decoder:
         # straight-line scan happens to be holding by then.
         self.at_entry = {}
         self.targets = set()
+        self.called = False
 
     def hold(self, text):
         """What a whole register is known to hold, or None."""
@@ -278,16 +279,17 @@ class Decoder:
             return ("slot", off)
         held = self.hold(base)
         if held is None:
-            return None
+            # Nothing known about it, which is no obstacle: the register
+            # holds an address at run time whether or not the lift can say
+            # what it is.
+            return ("indirect", ("reg", base), off)
         if held[0] == "state":
             return ("statefld", held[1] + off)
         if held[0] == "slotaddr":
             return ("slot", held[1] + off)
         if held[0] in ("param", "slot", "statefld", "arg"):
             return ("indirect", held, off)
-        if held[0] == "loaded":
-            return ("indirect", ("reg", base), off)
-        return None
+        return ("indirect", ("reg", base), off)
 
     # What a register may stand in for when its contents are read as a
     # value. Only the ones that cannot change between here and the read: a
@@ -358,6 +360,25 @@ class Decoder:
         for addr, lab, _m, _o, _r in it:
             if lab is not None:
                 self.labels[addr] = lab
+
+        # Then every place a branch can land, whichever way it goes. A
+        # backward jump is written after the place it lands on, so waiting
+        # to meet it leaves the landing place unknown while the scan is
+        # going past it.
+        for addr, lab, mnem, ops, _r in it:
+            if lab is not None or not ops:
+                continue
+            if mnem in CONDS or (mnem in ("jmp", "jmpl")
+                                 and not ops.startswith("*")):
+                at = self.resolve(self.target(ops))
+                if at is not None:
+                    self.targets.add(at)
+        for entries in self.tables.values():
+            for entry in entries:
+                at = self.resolve(entry)
+                if at is not None:
+                    self.targets.add(at)
+
         i = 1 if it and it[0][1] is not None else 0
         self.start_block(it[0][1] if i else self.name, 0)
         i = self.prologue(i)
@@ -369,14 +390,13 @@ class Decoder:
             if addr in self.at_entry:
                 self.stack = [list(slot) for slot in self.at_entry[addr]]
             if addr in self.targets:
-                # A constant a register was counted up to on the way past is
-                # not what it holds on the way in, and reading it as one is
-                # how a rule ends up taking the wrong branch. An address is
-                # left alone: the compiler works one out again on each path
-                # it needs it, and dropping those only loses the rule.
-                for r in list(self.regs):
-                    if self.regs[r][0] == "imm":
-                        del self.regs[r]
+                # Nothing a register was left holding on the way past can
+                # be relied on on the way in, not even the machine itself:
+                # the compiler is free to use any of them for anything
+                # between one landing place and the next. From here on they
+                # are read out of the registers, which is what the code they
+                # came from does.
+                self.regs.clear()
 
             if label is not None:
                 if label in self.data:
@@ -410,10 +430,15 @@ class Decoder:
                 self.emit(("load", "movl", v, it[i][3]))
                 return i + 1
             if reloc:
-                self.stack.append([("sym", reloc.lstrip("_")), True])
+                v = ("sym", reloc.lstrip("_"))
+                self.stack.append([v, True])
+                self.emit(("push", v))
                 return i
             if ops in ("%ebx", "%esi", "%edi") and self.hold(ops) is None \
-                    and not self.stack:
+                    and not self.stack and not self.called:
+                # Putting a register by for the caller, which the compiler
+                # only ever does on the way in. The same push later on is an
+                # argument, and reading it as a save loses it.
                 self.saved.append(ops)
                 return i
             v = self.value(ops)
@@ -421,13 +446,22 @@ class Decoder:
                 self.hole("push %s" % ops)
                 v = ("?", ops)
             self.stack.append([v, True])
+            self.emit(("push", v))
             return i
 
         if mnem in ("popl", "pop"):
-            if ops in ("%ebx", "%esi", "%edi", "%ebp") and not self.stack:
+            # Taking a saved register back on the way out, which is not a
+            # cleanup of the argument area. Anything else is, and has to be
+            # counted whatever this end of the lift believes is there, or
+            # the two drift apart and a later call reads the wrong slot.
+            if ops in self.saved and not self.stack:
+                self.saved.remove(ops)
+                return i
+            if ops == "%ebp" and not self.stack:
                 return i
             if self.stack:
                 self.stack.pop()
+            self.emit(("popn", 1))
             return i
 
         if mnem in ("leal", "lea") and "," in ops:
@@ -494,11 +528,11 @@ class Decoder:
             want = self.arity.get(reloc.lstrip("_") if reloc else "?")
             if want is not None and want > n:
                 n = min(want, len(self.stack))
-            args = [slot[0] for slot in self.stack[len(self.stack) - n:]]
-            args.reverse()
             for slot in self.stack:
                 slot[1] = False
-            self.emit(("call", reloc.lstrip("_") if reloc else "?", args))
+            self.called = True
+            self.emit(("call", reloc.lstrip("_") if reloc else "?", n,
+                       len(self.stack)))
             for r in ("%eax", "%ecx", "%edx"):
                 self.drop(r)
             return i
@@ -507,6 +541,7 @@ class Decoder:
                 and ops.startswith("$"):
             n = int(ops.split(",")[0].lstrip("$"), 0) // 4
             del self.stack[len(self.stack) - n:]
+            self.emit(("popn", n))
             return i
 
         if mnem in MOV and "," in ops:
@@ -657,6 +692,14 @@ class Decoder:
             return i
 
         if dst.startswith("%"):
+            if reloc and src.startswith("$"):
+                # An address written as though it were a constant: the
+                # instruction says nought and the relocation says what it
+                # really is. Reading only the nought loses the string.
+                v = ("sym", reloc.lstrip("_"))
+                self.put(dst, v)
+                self.emit(("load", "movl", v, dst))
+                return i
             v = self.value(src)
             if v is None:
                 self.hole("%s %s" % (mnem, ops))
@@ -680,12 +723,14 @@ class Decoder:
         if where is None:
             self.hole("%s %s" % (mnem, ops))
             return i
-        v = self.value(src)
+        v = ("sym", reloc.lstrip("_")) if (reloc and src.startswith("$")) \
+            else self.value(src)
         if v is None:
             self.hole("%s %s" % (mnem, ops))
             return i
         if where[0] == "pending":
             self.stack[where[1]] = [v, True]
+            self.emit(("setarg", len(self.stack) - 1 - where[1], v))
             return i
         self.emit(("store", mnem, v, where))
         return i
@@ -806,7 +851,13 @@ def show_operand(op):
 def show(op):
     kind = op[0]
     if kind == "call":
-        return "%s(%s)" % (op[1], ", ".join(show_operand(a) for a in op[2]))
+        return "%s with %d of %d" % (op[1], op[2], op[3])
+    if kind == "push":
+        return "push %s" % show_operand(op[1])
+    if kind == "setarg":
+        return "argument %d is %s" % (op[1], show_operand(op[2]))
+    if kind == "popn":
+        return "drop %d" % op[1]
     if kind == "branch":
         return "%s -> %s" % (op[1], op[2])
     if kind == "jump":

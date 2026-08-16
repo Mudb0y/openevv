@@ -29,8 +29,15 @@
 enum {
     OP_CALL, OP_JUMP, OP_BRANCH, OP_CMP, OP_ALU2, OP_ALU1, OP_LOAD,
     OP_STORE, OP_SWITCH, OP_MAP, OP_RETURN, OP_SCALE, OP_ADDK, OP_MUL,
-    OP_DIV, OP_WIDEN, OP_SETCC
+    OP_DIV, OP_WIDEN, OP_SETCC, OP_PUSH, OP_SETARG, OP_POPN
 };
+
+/* The argument area is kept as it was rather than worked out per call. The
+   compiler pushes an argument once and lets two paths spend it, writes over
+   a slot an earlier call left behind rather than pushing again, and clears
+   several calls' worth at once, so anything that tries to say which values
+   belong to which call gets it wrong sooner or later. */
+#define NARG 64
 
 enum {
     K_NONE, K_IMM, K_SYM, K_SLOT, K_SLOTADDR, K_STATE, K_STATEFLD,
@@ -67,8 +74,14 @@ extern int delta_rule_trace;
    the definitions they reach. */
 static const delta_rule *delta_rule_here;
 
+/* Told to the trace so that it can pass over the calls a run of the
+   original cannot see. Nothing outside a trace build defines it. */
+extern const char *delta_trace_caller __attribute__((weak));
+
 typedef struct {
     int32_t        reg[NREG];
+    int32_t        arg[NARG];
+    int            argn;
     unsigned char *base;          /* the frame base: offset zero */
     void          *state;
     const uint8_t *code;          /* the rule's own first byte */
@@ -396,11 +409,17 @@ static void step(interp *st)
 
         p += 2;
         n = *p++;
+        {
+            int want = *p++;
+
+            if (delta_rule_trace && want != st->argn && want < 255)
+                fprintf(stderr, "# %s: %d in the area, %d expected\n",
+                        delta_rule_entry_name[which], st->argn, want);
+        }
         memset(a, 0, sizeof(a));
+        /* The last thing pushed is the first argument. */
         for (i = 0; i < n && i < MAXARG; i++)
-            a[i] = operand_read(st, &p, 4, 0);
-        for (; i < n; i++)
-            operand_skip(st, &p);
+            a[i] = (st->argn - 1 - i >= 0) ? st->arg[st->argn - 1 - i] : 0;
         if (delta_rule_trace && delta_rule_here != 0
             && strcmp(delta_rule_entry_name[which],
                       "backtrack_function") == 0) {
@@ -419,6 +438,31 @@ static void step(interp *st)
         st->reg[0] = call_entry(delta_rule_entry[which], a, n);
         break;
     }
+
+    case OP_PUSH: {
+        int32_t v = operand_read(st, &p, 4, 0);
+
+        if (st->argn < NARG)
+            st->arg[st->argn] = v;
+        st->argn++;
+        break;
+    }
+
+    case OP_SETARG: {
+        int k = *p++;
+        int32_t v = operand_read(st, &p, 4, 0);
+        int at = st->argn - 1 - k;
+
+        if (at >= 0 && at < NARG)
+            st->arg[at] = v;
+        break;
+    }
+
+    case OP_POPN:
+        st->argn -= *p++;
+        if (st->argn < 0)
+            st->argn = 0;
+        break;
 
     case OP_JUMP:
         st->pc = get16s(p);
@@ -687,6 +731,7 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
 {
     unsigned char frame[DELTA_RULE_FRAME_MAX];
     const delta_rule *volatile was;
+    volatile int depth = 0;
     interp st;
     int i;
 
@@ -726,6 +771,8 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
 
     was = delta_rule_here;
     delta_rule_here = r;
+    if (&delta_trace_caller != 0)
+        delta_trace_caller = r->object;
 
     while (!st.done) {
         const uint8_t *p = st.code + st.pc;
@@ -734,16 +781,14 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
            rule's behalf: a landing place has to be planted in this frame,
            not in the runtime's. */
         if (*p == OP_CALL && (int)get16(p + 1) == delta_rule_setjmp) {
-            const uint8_t *q = p + 4;
-            int n = p[3];
-            int32_t buf;
-            int j;
+            int32_t buf = (st.argn > 0) ? st.arg[st.argn - 1] : 0;
 
-            buf = operand_read(&st, &q, 4, 0);
-            for (j = 1; j < n; j++)
-                operand_skip(&st, &q);
-            st.pc = (int32_t)(q - st.code);
+            st.pc = (int32_t)(p + 5 - st.code);
+            /* Landing here again puts the stack pointer back where it was,
+               so the argument area goes back with it. */
+            depth = st.argn;
             st.reg[0] = setjmp(*(jmp_buf *)(intptr_t)buf);
+            st.argn = depth;
             continue;
         }
         step(&st);
@@ -751,6 +796,8 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
     }
 
     delta_rule_here = was;
+    if (&delta_trace_caller != 0)
+        delta_trace_caller = was ? was->object : 0;
     if (delta_rule_trace) {
         fprintf(stderr, "# %s left with %08x\n", r->name,
                 (unsigned)st.answer);

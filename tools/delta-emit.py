@@ -31,7 +31,7 @@ spec.loader.exec_module(dl)
 OPS = [
     "CALL", "JUMP", "BRANCH", "CMP", "ALU2", "ALU1", "LOAD", "STORE",
     "SWITCH", "MAP", "RETURN", "SCALE", "ADDK", "MUL", "DIV", "WIDEN",
-    "SETCC",
+    "SETCC", "PUSH", "SETARG", "POPN",
 ]
 OP = {name: i for i, name in enumerate(OPS)}
 
@@ -213,9 +213,18 @@ class Emitter:
                 if kind == "call":
                     self.u8(OP["CALL"])
                     self.u16(self.entry.add(op[1]))
-                    self.u8(len(op[2]))
-                    for a in op[2]:
-                        self.operand(a, d.pbase)
+                    self.u8(op[2])
+                    self.u8(min(op[3], 255))
+                elif kind == "push":
+                    self.u8(OP["PUSH"])
+                    self.operand(op[1], d.pbase)
+                elif kind == "setarg":
+                    self.u8(OP["SETARG"])
+                    self.u8(op[1])
+                    self.operand(op[2], d.pbase)
+                elif kind == "popn":
+                    self.u8(OP["POPN"])
+                    self.u8(op[1])
                 elif kind == "jump":
                     self.u8(OP["JUMP"])
                     target(op[1])
@@ -326,7 +335,22 @@ def c_name(obj, sym, n):
 def write_c(e, where, out_c, out_h, out_syms):
     names = []
     per_obj = collections.defaultdict(list)
+    local = local_symbols(where)
+    defs = defining_objects(where)
+    spelt = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
     for n, (obj, real) in enumerate(e.sym.items):
+        if not local.get((obj, real)):
+            # Already a name of its own across the whole language. It may
+            # still be one the C++ compiler mangled, in which case it needs
+            # a fresh one, and the object that defines it is told to answer
+            # to that rather than the one that named it.
+            if spelt.match(real):
+                names.append(real)
+                continue
+            name = c_name(obj, real, n)
+            per_obj[defs.get(real, obj)].append((real, name))
+            names.append(name)
+            continue
         name = c_name(obj, real, n)
         per_obj[obj].append((real, name))
         names.append(name)
@@ -383,8 +407,9 @@ def write_c(e, where, out_c, out_h, out_syms):
             f.write('    "%s",\n' % name)
         f.write("};\n\n")
 
-        f.write("/* The language's string constants. */\n")
-        for name in names:
+        f.write("/* The language's string constants, and whatever else a\n"
+                "   rule names by address. */\n")
+        for name in sorted(set(names)):
             f.write("extern const char %s[];\n" % name)
         f.write("\nconst void *const delta_rule_sym[] = {\n")
         for name in names:
@@ -464,6 +489,23 @@ def write_shims(e, out_c, out_ren):
     return len(e.rules)
 
 
+def local_symbols(where):
+    """Which names each object keeps to itself.
+
+    Every object numbers its own string constants from one, so those names
+    collide and have to be renamed; a name that is already global belongs to
+    one object only and is left alone. """
+    out = {}
+    for obj in sorted(f for f in os.listdir(where) if f.endswith(".obj")):
+        text = subprocess.run(["llvm-nm", os.path.join(where, obj)],
+                              capture_output=True, text=True).stdout
+        for line in text.splitlines():
+            m = re.match(r"^[0-9a-f]+ ([a-z]) (\S+)$", line.strip())
+            if m:
+                out[(obj, m.group(2).lstrip("_"))] = True
+    return out
+
+
 def defining_objects(where):
     """Which object defines each name, so that the one to be stood aside
     from can be told apart from the ones that only call it."""
@@ -496,7 +538,7 @@ def write_trace(e, where, out_c, out_dir, known):
         obj = defs.get(name)
         if obj is None:
             continue
-        wrapped.append((name, known.get(name, 1)))
+        wrapped.append((name, known.get(name, 1), obj))
         by_obj[obj].append(name)
 
     if not os.path.isdir(out_dir):
@@ -515,6 +557,13 @@ def write_trace(e, where, out_c, out_dir, known):
                 "#include <string.h>\n#include <stdint.h>\n\n"
                 "static int on = -1;\n"
                 "static int sums;\n\n"
+                "/* Which object the rule now running was compiled in, set\n"
+                "   by the interpreter and left alone by the original. A\n"
+                "   call that does not leave its own object cannot be seen\n"
+                "   in a run of the original, because the renaming that\n"
+                "   stood its definition aside took that call with it, so\n"
+                "   the same ones are passed over here. */\n"
+                "const char *delta_trace_caller;\n\n"
                 "/* A running sum of the machine and its variables, so that\n"
                 "   a difference the calls themselves do not show still\n"
                 "   turns up at the first call after it was made. */\n"
@@ -544,14 +593,20 @@ def write_trace(e, where, out_c, out_dir, known):
                 "            h = (h ^ ((w >> (j * 8)) & 0xff)) * 16777619u;\n"
                 "    }\n"
                 "    return h;\n}\n\n"
-                "static void say(const char *name, const int32_t *a, int n)\n"
+                "static int hidden(const char *obj)\n"
+                "{\n"
+                "    return delta_trace_caller != 0\n"
+                "        && strcmp(delta_trace_caller, obj) == 0;\n"
+                "}\n\n"
+                "static void say(const char *name, const char *obj,\n"
+                "                const int32_t *a, int n)\n"
                 "{\n"
                 "    int i;\n\n"
                 "    if (on < 0) {\n"
                 "        on = getenv(\"DELTA_CALL_TRACE\") != 0;\n"
                 "        sums = getenv(\"DELTA_CALL_SUM\") != 0;\n"
                 "    }\n"
-                "    if (!on)\n        return;\n"
+                "    if (!on || hidden(obj))\n        return;\n"
                 "    if (sums && n > 0 && a[0] != 0) {\n"
                 "        const unsigned char *d = (const unsigned char *)\n"
                 "            (size_t)(unsigned)a[0];\n"
@@ -570,26 +625,26 @@ def write_trace(e, where, out_c, out_dir, known):
                 "                (unsigned)a[i]);\n"
                 "    fprintf(stderr, \")\\n\");\n"
                 "    fflush(stderr);\n}\n\n"
-                "static void answered(int32_t r)\n"
+                "static void answered(int32_t r, const char *obj)\n"
                 "{\n"
-                "    if (on)\n"
+                "    if (on && !hidden(obj))\n"
                 "        fprintf(stderr, \"   = %08x\\n\", (unsigned)r);\n"
                 "}\n\n")
-        for name, n in wrapped:
+        for name, n, obj in wrapped:
             args = ", ".join("int32_t a%d" % j for j in range(n))
             f.write("extern int32_t ibm_%s();\n" % name)
             f.write("int32_t %s(%s)\n{\n" % (name, args))
             f.write("    int32_t a[%d];\n    int32_t r;\n\n" % n)
             for j in range(n):
                 f.write("    a[%d] = a%d;\n" % (j, j))
-            f.write('    say("%s", a, %d);\n' % (name, n))
+            f.write('    say("%s", "%s", a, %d);\n' % (name, obj, n))
             if name == "backtrack_function":
                 f.write('    if (on) fprintf(stderr, "   tag slot %08x\\n",\n'
                         "                    (unsigned)*(int32_t *)(size_t)"
                         "(unsigned)a[1]);\n")
             f.write("    r = ibm_%s(%s);\n"
                     % (name, ", ".join("a%d" % j for j in range(n))))
-            f.write("    answered(r);\n    return r;\n}\n\n")
+            f.write('    answered(r, "%s");\n    return r;\n}\n\n' % obj)
     return len(wrapped), len(by_obj)
 
 
@@ -624,7 +679,7 @@ def write_reference(e, out_c):
             args = ", ".join("int32_t a%d" % j for j in range(n))
             f.write("extern int32_t ibm_%s();\n" % name)
             f.write("int32_t %s(%s)\n{\n" % (name, args))
-            f.write("    int32_t a[%d];\n    int32_t r;\n\n" % n)
+            f.write("    int32_t a[%d];\n\n" % n)
             for j in range(n):
                 f.write("    a[%d] = a%d;\n" % (j, j))
             f.write('    say("%s", a, %d);\n' % (name, n))
@@ -678,7 +733,7 @@ def main():
             for _l, _s, block in d.blocks:
                 for op in block:
                     if op[0] == "call" and op[2]:
-                        arity[op[1]][len(op[2])] += 1
+                        arity[op[1]][op[2]] += 1
     known = {k: v.most_common(1)[0][0] for k, v in arity.items()}
 
     e = Emitter()
