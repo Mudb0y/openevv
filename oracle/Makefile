@@ -134,3 +134,113 @@ $(BUILD)/speak_probe.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
 
 .PHONY: speak speak-probe
+
+# The same engine again with every rule run by our interpreter instead of by
+# the code the language's compiler generated for it. Each object that defines
+# rules has its own definitions renamed out of the way, so everything that
+# reaches a rule by name reaches the stand-in; the rename is per object
+# because renaming a rule everywhere would take the calls other objects make
+# to it along with it, and those are the calls that have to arrive.
+RULE_OBJS := $(shell cat ../src/rules/objects 2>/dev/null)
+RULE_SWAP := $(patsubst %,$(BUILD)/rules/%.obj,$(RULE_OBJS))
+
+speak-rules: $(BUILD)/speak_rules.exe
+
+$(BUILD)/rules/%.obj: $(ENUS)/%.obj ../src/rules/%.ren
+	@mkdir -p $(BUILD)/rules
+	@g=""; [ -s ../src/rules/$*.glob ] \
+	  && g="--globalize-symbols=../src/rules/$*.glob"; \
+	  $(OBJCOPY) --redefine-syms=../src/rules/$*.ren $$g $< $@
+
+$(BUILD)/delta_rules.obj: ../src/delta_rules.c ../src/delta_rules.h
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=c99 -w -I../src -c $< -o $@
+
+$(BUILD)/delta_rules_enus.obj: ../src/delta_rules_enus.c ../src/delta_rules.h
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=c99 -w -I../src -c $< -o $@
+
+$(BUILD)/delta_rules_shim.obj: ../src/delta_rules_shim.c ../src/delta_rules.h
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=c99 -w -I../src -c $< -o $@
+
+$(BUILD)/speak_rules.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
+    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj \
+    $(BUILD)/delta_rules_shim.obj $(RULE_SWAP)
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
+	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules.obj \
+	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_rules_shim.obj \
+	  $(RULE_SWAP) \
+	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(RULE_OBJS)),\
+	    $(wildcard $(ENUS)/*.obj)) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
+
+.PHONY: speak-rules
+
+# The original rules again, each saying that it ran before handing over, so
+# that a run of the engine as it was and a run with the interpreter can be
+# set side by side and the first place they part company found.
+speak-ref: $(BUILD)/speak_ref.exe
+
+$(BUILD)/delta_rules_ref.obj: ../src/delta_rules_ref.c ../src/delta_rules.h
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=c99 -w -I../src -c $< -o $@
+
+$(BUILD)/speak_ref.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
+    $(BUILD)/eci.obj $(BUILD)/delta_rules_ref.obj $(RULE_SWAP)
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
+	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules_ref.obj \
+	  $(RULE_SWAP) \
+	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(RULE_OBJS)),\
+	    $(wildcard $(ENUS)/*.obj)) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
+
+.PHONY: speak-ref
+
+# Both engines again with every runtime entry saying what it was asked. The
+# two runs then say the same things about themselves and can be set side by
+# side; where they first differ is where to look.
+TRACE_OBJS := $(sort $(RULE_OBJS) $(shell cat ../src/trace/objects 2>/dev/null))
+TRACE_SWAP := $(patsubst %,$(BUILD)/traced/%.obj,$(TRACE_OBJS))
+
+$(BUILD)/traced/%.obj: $(ENUS)/%.obj
+	@mkdir -p $(BUILD)/traced
+	@cat ../src/rules/$*.ren ../src/trace/$*.ren 2>/dev/null \
+	  > $(BUILD)/traced/$*.ren || true
+	@g=""; [ -s ../src/rules/$*.glob ] \
+	  && g="--globalize-symbols=../src/rules/$*.glob"; \
+	  $(OBJCOPY) --redefine-syms=$(BUILD)/traced/$*.ren $$g $< $@
+
+$(BUILD)/delta_rules_trace.obj: ../src/delta_rules_trace.c
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=c99 -w -I../src -c $< -o $@
+
+TRACE_REST = $(filter-out $(ENUS)/eci.obj \
+               $(patsubst %,$(ENUS)/%.obj,$(TRACE_OBJS)),$(wildcard $(ENUS)/*.obj))
+
+trace: $(BUILD)/trace_ref.exe $(BUILD)/trace_rules.exe
+
+$(BUILD)/trace_ref.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
+    $(BUILD)/eci.obj $(BUILD)/delta_rules_ref.obj \
+    $(BUILD)/delta_rules_trace.obj $(TRACE_SWAP)
+	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
+	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules_ref.obj \
+	  $(BUILD)/delta_rules_trace.obj $(TRACE_SWAP) $(TRACE_REST) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
+
+$(BUILD)/trace_rules.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
+    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj \
+    $(BUILD)/delta_rules_shim.obj $(BUILD)/delta_rules_trace.obj $(TRACE_SWAP)
+	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
+	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules.obj \
+	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_rules_shim.obj \
+	  $(BUILD)/delta_rules_trace.obj $(TRACE_SWAP) $(TRACE_REST) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
+
+.PHONY: trace

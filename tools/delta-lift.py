@@ -162,6 +162,31 @@ def find_data(items):
     return data, tables
 
 
+# A register name and the part of the register it names. The compiler counts
+# the backtracker's tag up in one register and reads it back through another
+# name for the same thing, so a value put there under one name has to be
+# found again under the other.
+FULL = {"ax": "%eax", "cx": "%ecx", "dx": "%edx", "bx": "%ebx",
+        "si": "%esi", "di": "%edi", "sp": "%esp", "bp": "%ebp",
+        "al": "%eax", "cl": "%ecx", "dl": "%edx", "bl": "%ebx",
+        "ah": "%eax", "ch": "%ecx", "dh": "%edx", "bh": "%ebx"}
+
+
+def canon(text):
+    """(the whole register, which part of it) for a register name."""
+    n = text.lstrip("%")
+    if n.startswith("e") or n in ("esp", "ebp"):
+        return "%" + n, "all"
+    whole = FULL.get(n)
+    if whole is None:
+        return text, "all"
+    if n.endswith("h"):
+        return whole, "high8"
+    if n.endswith("l"):
+        return whole, "low8"
+    return whole, "low16"
+
+
 class Decoder:
     """One rule, turned into blocks of operations.
 
@@ -170,8 +195,13 @@ class Decoder:
     caller-saved ones are dropped at a call.
     """
 
-    def __init__(self, name, items, data, tables):
+    def __init__(self, name, items, data, tables, arity=None):
         self.name = name
+        # How many arguments each runtime entry takes, where that is known
+        # from somewhere it was called with the slots freshly written. The
+        # compiler pushes an argument once and lets two paths share it, so a
+        # call reached the second way has nothing fresh above it at all.
+        self.arity = arity or {}
         self.items = items
         self.data = data
         self.tables = tables
@@ -189,6 +219,42 @@ class Decoder:
         self.ops = []
         self.labels = {}
         self.addr = 0
+        # What the argument area looked like where a branch left for each
+        # place it can land. The compiler pushes an argument before a branch
+        # and lets both paths spend it, so the path that jumps has to arrive
+        # with what the branch was carrying rather than with whatever the
+        # straight-line scan happens to be holding by then.
+        self.at_entry = {}
+        self.targets = set()
+
+    def hold(self, text):
+        """What a whole register is known to hold, or None."""
+        key, part = canon(text)
+        held = self.regs.get(key)
+        return held if part == "all" else None
+
+    def put(self, text, value):
+        """Remember what a register holds. Writing part of one loses what
+        the whole was."""
+        key, part = canon(text)
+        if part == "all" and value is not None:
+            self.regs[key] = value
+        else:
+            self.regs.pop(key, None)
+
+    def drop(self, text):
+        self.regs.pop(canon(text)[0], None)
+
+    def carry(self, where):
+        """Remember the argument area for a place a branch can land, and
+        note that it is a landing place at all: what the working registers
+        hold on the way past is not what they hold on the way in."""
+        at = self.resolve(where)
+        if at is None:
+            return
+        self.targets.add(at)
+        if at > self.addr and at not in self.at_entry:
+            self.at_entry[at] = [list(slot) for slot in self.stack]
 
     def hole(self, what):
         self.holes.append(what)
@@ -210,17 +276,17 @@ class Decoder:
                 self.params = max(self.params, (off - self.pbase) // 4 + 1)
                 return ("param", (off - self.pbase) // 4)
             return ("slot", off)
-        held = self.regs.get(base)
+        held = self.hold(base)
         if held is None:
             return None
         if held[0] == "state":
-            return ("statefld", off)
+            return ("statefld", held[1] + off)
         if held[0] == "slotaddr":
             return ("slot", held[1] + off)
         if held[0] in ("param", "slot", "statefld", "arg"):
             return ("indirect", held, off)
         if held[0] == "loaded":
-            return ("indirect", held[1], off)
+            return ("indirect", ("reg", base), off)
         return None
 
     # What a register may stand in for when its contents are read as a
@@ -234,10 +300,19 @@ class Decoder:
         if text.startswith("$"):
             return ("imm", int(text.lstrip("$"), 0))
         if text.startswith("%"):
-            held = self.regs.get(text)
-            if held is not None and held[0] in self.STANDS_FOR:
+            key, part = canon(text)
+            held = self.regs.get(key)
+            if held is None or held[0] not in self.STANDS_FOR:
+                return ("reg", text)
+            if part == "all":
                 return held
-            return ("reg", text)
+            if held[0] != "imm":
+                return ("reg", text)
+            if part == "low16":
+                return ("imm", held[1] & 0xffff)
+            if part == "low8":
+                return ("imm", held[1] & 0xff)
+            return ("imm", (held[1] >> 8) & 0xff)
         return self.mem(text)
 
     def emit(self, op):
@@ -246,7 +321,7 @@ class Decoder:
     def start_block(self, label, addr=0):
         self.labels[addr] = label
         for r in ("%eax", "%ecx", "%edx"):
-            self.regs.pop(r, None)
+            self.drop(r)
 
     def prologue(self, i):
         """Read past the frame setup and work out where the arguments are.
@@ -283,6 +358,18 @@ class Decoder:
             addr, label, mnem, ops, relocs = it[i]
             i += 1
 
+            if addr in self.at_entry:
+                self.stack = [list(slot) for slot in self.at_entry[addr]]
+            if addr in self.targets:
+                # A constant a register was counted up to on the way past is
+                # not what it holds on the way in, and reading it as one is
+                # how a rule ends up taking the wrong branch. An address is
+                # left alone: the compiler works one out again on each path
+                # it needs it, and dropping those only loses the rule.
+                for r in list(self.regs):
+                    if self.regs[r][0] == "imm":
+                        del self.regs[r]
+
             if label is not None:
                 if label in self.data:
                     # Data, not code: skip to the next label.
@@ -310,12 +397,14 @@ class Decoder:
             # constant into a register.
             if i < len(it) and it[i][2] in ("popl", "pop") \
                     and it[i][3].startswith("%") and ops.startswith("$"):
-                self.regs[it[i][3]] = ("imm", int(ops.lstrip("$"), 0))
+                v = ("imm", int(ops.lstrip("$"), 0))
+                self.put(it[i][3], v)
+                self.emit(("load", "movl", v, it[i][3]))
                 return i + 1
             if reloc:
                 self.stack.append([("sym", reloc.lstrip("_")), True])
                 return i
-            if ops in ("%ebx", "%esi", "%edi") and ops not in self.regs \
+            if ops in ("%ebx", "%esi", "%edi") and self.hold(ops) is None \
                     and not self.stack:
                 self.saved.append(ops)
                 return i
@@ -347,9 +436,9 @@ class Decoder:
                 # Scaled address arithmetic: the compiler's way of writing a
                 # multiplication by a small constant.
                 disp = int(m2.group(1), 0) if m2.group(1) else 0
-                base = self.regs.get(m2.group(2)) if m2.group(2) else None
-                index = self.regs.get(m2.group(3))
-                self.regs.pop(dst, None)
+                base = self.value(m2.group(2)) if m2.group(2) else None
+                index = self.value(m2.group(3))
+                self.drop(dst)
                 scale = int(m2.group(4)) if m2.group(4) else 1
                 self.emit(("scale", disp, base, index, scale, dst))
                 return i
@@ -358,28 +447,34 @@ class Decoder:
                 off = int(m.group(1), 0) if m.group(1) else 0
                 base = m.group(2)
                 if base == "%ebp":
-                    self.regs[dst] = ("slotaddr", off)
+                    v = ("slotaddr", off)
                     if off >= self.pbase:
                         n = (off - self.pbase) // 4
                         self.params = max(self.params, n + 1)
-                        self.regs[dst] = ("paramaddr", n)
+                        v = ("paramaddr", n)
+                    self.put(dst, v)
+                    self.emit(("load", "movl", v, dst))
                     return i
-                held = self.regs.get(base)
+                held = self.hold(base)
                 if held and held[0] == "state":
-                    self.regs[dst] = ("state", held[1] + off)
+                    v = ("state", held[1] + off)
+                    self.put(dst, v)
+                    self.emit(("load", "movl", v, dst))
                     return i
                 if held and held[0] == "slotaddr":
-                    self.regs[dst] = ("slotaddr", held[1] + off)
+                    v = ("slotaddr", held[1] + off)
+                    self.put(dst, v)
+                    self.emit(("load", "movl", v, dst))
                     return i
                 if held is None or held[0] in ("loaded", "imm"):
                     # Not an address at all: adding a constant to a value
                     # without disturbing the flags.
                     v = self.value(base)
-                    self.regs.pop(dst, None)
+                    self.drop(dst)
                     self.emit(("addk", off, v, dst))
                     return i
             self.hole("lea %s" % src)
-            self.regs[dst] = ("?", src)
+            self.put(dst, None)
             return i
 
         if mnem in ("calll", "call"):
@@ -388,13 +483,16 @@ class Decoder:
             n = 0
             while n < len(self.stack) and self.stack[-1 - n][1]:
                 n += 1
+            want = self.arity.get(reloc.lstrip("_") if reloc else "?")
+            if want is not None and want > n:
+                n = min(want, len(self.stack))
             args = [slot[0] for slot in self.stack[len(self.stack) - n:]]
             args.reverse()
             for slot in self.stack:
                 slot[1] = False
             self.emit(("call", reloc.lstrip("_") if reloc else "?", args))
             for r in ("%eax", "%ecx", "%edx"):
-                self.regs.pop(r, None)
+                self.drop(r)
             return i
 
         if mnem in ("addl", "add") and ops.endswith("%esp") \
@@ -409,7 +507,8 @@ class Decoder:
         if mnem in ("xorl", "xorw", "xorb") and "," in ops:
             src, dst = split_operands(ops)
             if src == dst and src.startswith("%"):
-                self.regs[dst] = ("imm", 0)
+                self.put(dst, ("imm", 0))
+                self.emit(("load", "movl", ("imm", 0), dst))
                 return i
 
         # Three operands: multiply a value by a constant into a register.
@@ -419,7 +518,7 @@ class Decoder:
             if va is None or vb is None or not dst.startswith("%"):
                 self.hole("%s %s" % (mnem, ops))
                 return i
-            self.regs.pop(dst, None)
+            self.drop(dst)
             self.emit(("mul", mnem, va, vb, dst))
             return i
 
@@ -437,9 +536,13 @@ class Decoder:
             if dst.startswith("%"):
                 folded = self.fold(mnem, a, b)
                 if folded is None:
-                    self.regs.pop(dst, None)
+                    self.drop(dst)
                 else:
-                    self.regs[dst] = folded
+                    self.put(dst, folded)
+                # Knowing what it comes to is for reading it back here; the
+                # register itself still has to be written, or a later read
+                # of it under another name finds what was there before.
+                b = ("reg", dst)
             self.emit(("alu", mnem, a, b))
             return i
 
@@ -451,9 +554,10 @@ class Decoder:
             if ops.startswith("%"):
                 folded = self.fold(mnem, None, b)
                 if folded is None:
-                    self.regs.pop(ops, None)
+                    self.drop(ops)
                 else:
-                    self.regs[ops] = folded
+                    self.put(ops, folded)
+                b = ("reg", ops)
             self.emit(("alu", mnem, None, b))
             return i
 
@@ -476,22 +580,26 @@ class Decoder:
                 self.hole("%s %s" % (mnem, ops))
                 return i
             self.emit(("div", mnem, a))
-            self.regs.pop("%eax", None)
-            self.regs.pop("%edx", None)
+            self.drop("%eax")
+            self.drop("%edx")
             return i
 
         if mnem in CONDS:
-            self.emit(("branch", mnem, self.target(ops)))
+            where = self.target(ops)
+            self.emit(("branch", mnem, where))
+            self.carry(where)
             return i
 
         # The comparison's answer as a value rather than as a branch.
         if mnem.startswith("set") and ops.startswith("%"):
-            self.regs.pop(ops, None)
+            self.drop(ops)
             self.emit(("setcc", mnem[3:], ops))
             return i
 
         if mnem in ("jmp", "jmpl") and not ops.startswith("*"):
-            self.emit(("jump", self.target(ops)))
+            where = self.target(ops)
+            self.emit(("jump", where))
+            self.carry(where)
             return i
 
         if mnem in ("jmp", "jmpl") and ops.startswith("*"):
@@ -503,7 +611,14 @@ class Decoder:
             if table is None or table not in self.tables:
                 self.hole("dispatch with no table")
                 return i
-            self.emit(("switch", self.tables[table]))
+            m = re.search(r"\(\s*(?:%\w+)?\s*,\s*(%\w+)\s*,\s*(\d)\)",
+                          ops)
+            if m is None:
+                self.hole("dispatch %s" % ops)
+                return i
+            self.emit(("switch", self.tables[table], self.value(m.group(1))))
+            for entry in self.tables[table]:
+                self.carry(entry)
             return i
 
         if mnem in ("retl", "ret"):
@@ -528,26 +643,28 @@ class Decoder:
         # A read out of one of the rule's own tables: the byte map that turns
         # a backtrack tag into an entry in the jump table.
         if reloc and reloc in self.data and dst.startswith("%"):
-            self.regs.pop(dst, None)
+            self.drop(dst)
             self.emit(("map", reloc, self.value(src.split("(")[-1]
-                                                .rstrip(")"))))
+                                                .rstrip(")")), dst))
             return i
 
         if dst.startswith("%"):
             v = self.value(src)
             if v is None:
                 self.hole("%s %s" % (mnem, ops))
-                self.regs[dst] = ("?", src)
+                self.put(dst, None)
                 return i
             if v[0] == "param" and v[1] == 0:
                 # The rule's own first argument is the machine state, and it
                 # stays in a register for the whole body.
-                self.regs[dst] = ("state", 0)
+                self.put(dst, ("state", 0))
+                self.emit(("load", "movl", ("state", 0), dst))
                 return i
             if src.startswith("%") or src.startswith("$"):
-                self.regs[dst] = v
+                self.put(dst, v)
+                self.emit(("load", mnem, v, dst))
                 return i
-            self.regs[dst] = ("loaded", v, mnem)
+            self.put(dst, ("loaded", v, mnem, dst))
             self.emit(("load", mnem, v, dst))
             return i
 
@@ -672,7 +789,7 @@ def show_operand(op):
     if kind == "indirect":
         return "[%s]%+d" % (show_operand(op[1]), op[2])
     if kind == "loaded":
-        return show_operand(op[1])
+        return op[3]
     if kind == "reg":
         return op[1]
     return "?" + str(op[1:])
@@ -695,9 +812,11 @@ def show(op):
     if kind == "store":
         return "%s %s -> %s" % (op[1], show_operand(op[2]), show_operand(op[3]))
     if kind == "switch":
-        return "switch over %d entries" % len(op[1])
+        return "switch on %s over %d entries" \
+            % (show_operand(op[2]), len(op[1]))
     if kind == "map":
-        return "index the %s table by %s" % (op[1], show_operand(op[2]))
+        return "index the %s table by %s -> %s" \
+            % (op[1], show_operand(op[2]), op[3])
     if kind == "return":
         return "return %s" % show_operand(op[1])
     if kind == "scale":

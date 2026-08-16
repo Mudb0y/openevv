@@ -4,3 +4,15 @@ build/
 result
 result-*
 __pycache__/
+
+# Lifted from the language's own objects by tools/delta-emit.py, and
+# regenerated whenever the lifter changes.
+src/delta_rules.h
+src/delta_rules_enus.c
+src/delta_rules_enus.ren
+src/delta_rules_enus.syms
+src/delta_rules_shim.c
+src/delta_rules_ref.c
+src/delta_rules_trace.c
+src/rules/
+src/trace/
