@@ -253,7 +253,7 @@ struct delta_state {
     delta_stack *stack;           /* 0x006c */
     uint8_t      pad_0070[4];
     void        *logio;           /* 0x0074, the logical file table */
-    uint8_t      pad_0078[0x7c - 0x78];
+    void        *eloqc;           /* 0x0078, what the machine keeps for ECI */
     uint8_t      fence_room;      /* 0x007c, how many the arrays below hold */
     uint8_t      pad_007d[3];
     /* Each of the three fenced-character arrays is kept twice: where it was
@@ -750,6 +750,22 @@ int32_t vf_printf(delta_state *d, int32_t lf, int32_t flush,
                   const char *fmt, ...);
 void vfstat(delta_state *d, int32_t lf);
 void vfstatall(delta_state *d);
+void *logicalNullClass(delta_state *d);
+
+/* Where the Delta machine meets ECI. */
+int32_t eloqc_new(delta_state *d);
+void eloqc_delete(delta_state *d);
+int32_t ecilink_new(delta_state *d);
+int32_t ecilink_delete(delta_state *d);
+int32_t initializeIO(delta_state *d);
+int32_t closeIO(delta_state *d);
+void eciLinkCleanup(delta_state *d);
+int32_t multitask(delta_state *d);
+void callSetEngsynError(delta_state *d, const void *what);
+
+/* Supplied by the layers above, not by us. */
+void initDllLink(void);
+void setEngsynError(delta_state *d, int32_t code);
 
 void print_lit(delta_state *d, ...);
 void print_var(delta_state *d, ...);

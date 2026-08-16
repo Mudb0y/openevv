@@ -19,21 +19,6 @@
 #include "delta.h"
 #include "eci_io.h"
 
-/* One place a stream reads from or writes to. The five functions come from
-   a class, copied in rather than pointed at, because the original hands
-   these around by value. */
-typedef struct PhysicalFile PhysicalFile;
-struct PhysicalFile {
-    delta_state *d;      /* +0x00, whose machine this belongs to */
-    char        *name;   /* +0x04 */
-    void        *handle; /* +0x08, a FILE, a DynaBuf, or nothing */
-    int  (*open)(delta_state *d, PhysicalFile *p, int mode);   /* +0x0c */
-    int  (*read)(PhysicalFile *p, DynaBuf *b, const char *prompt);
-    int  (*write)(PhysicalFile *p, const char *s, int flush);
-    int  (*eof)(PhysicalFile *p);
-    int  (*close)(PhysicalFile *p);
-};
-
 typedef struct InFile InFile;
 struct InFile {
     char        *name;   /* +0x00 */
@@ -410,6 +395,12 @@ int32_t logio_new(delta_state *d)
     setClass(&g->err, stdErrorFileOpen, stdErrorFileRead, stdErrorFileWrite,
              stdErrorFileEof, stdErrorFileClose);
     return 0;
+}
+
+/* The class a stream gets when it is wired to nothing. */
+void *logicalNullClass(delta_state *d)
+{
+    return &LOGIO(d)->none;
 }
 
 void logio_delete(delta_state *d)

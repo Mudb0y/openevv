@@ -21,6 +21,22 @@ typedef struct {
     uint32_t  at;     /* +0x0c, where the cursor is */
 } DynaBuf;
 
+/* One place a stream reads from or writes to. The five functions come from
+   a class, copied in rather than pointed at, because a physical file carries
+   its own three words of state beside them. */
+struct delta_state;
+typedef struct PhysicalFile PhysicalFile;
+struct PhysicalFile {
+    struct delta_state *d;   /* +0x00, whose machine this belongs to */
+    char        *name;       /* +0x04 */
+    void        *handle;     /* +0x08, a FILE, a DynaBuf, a link, or nothing */
+    int  (*open)(struct delta_state *d, PhysicalFile *p, int mode); /* +0x0c */
+    int  (*read)(PhysicalFile *p, DynaBuf *b, const char *prompt);
+    int  (*write)(PhysicalFile *p, const char *s, int flush);
+    int  (*eof)(PhysicalFile *p);
+    int  (*close)(PhysicalFile *p);
+};
+
 DynaBuf *dynaBufNew(uint32_t size);
 int      dynaBufDelete(DynaBuf *b);
 DynaBuf *dynaBufReset(DynaBuf *b);
