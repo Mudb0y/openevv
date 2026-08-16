@@ -61,6 +61,12 @@ enum { M_MOVL, M_MOVW, M_MOVB, M_MOVSWL, M_MOVZWL, M_MOVSBL, M_MOVZBL };
 
 extern int delta_rule_trace;
 
+/* Which rule is running, so that a run can be told about in the same terms
+   as a run of the original: only the calls that leave the object they were
+   compiled in can be seen there, because the others were renamed along with
+   the definitions they reach. */
+static const delta_rule *delta_rule_here;
+
 typedef struct {
     int32_t        reg[NREG];
     unsigned char *base;          /* the frame base: offset zero */
@@ -395,6 +401,12 @@ static void step(interp *st)
             a[i] = operand_read(st, &p, 4, 0);
         for (; i < n; i++)
             operand_skip(st, &p);
+        if (delta_rule_trace && delta_rule_here != 0
+            && strcmp(delta_rule_entry_name[which],
+                      "backtrack_function") == 0) {
+            fprintf(stderr, "# %s dispatches\n", delta_rule_here->name);
+            fflush(stderr);
+        }
         if (delta_rule_trace > 1) {
             int j;
 
@@ -539,6 +551,9 @@ static void step(interp *st)
 
         if (at != 0)
             memcpy(at, &v, (size_t)w);
+        if (delta_rule_trace > 1)
+            fprintf(stderr, "# store %d at %08x = %08x\n", w,
+                    (unsigned)(size_t)at, (unsigned)v);
         break;
     }
 
@@ -656,7 +671,7 @@ long delta_rule_steps;
    as a run of the original: only the calls that leave the object they were
    compiled in can be seen there, because the others were renamed along with
    the definitions they reach. */
-static const delta_rule *delta_rule_here;
+
 int delta_rule_trace = -1;
 static long delta_rule_limit;
 
@@ -736,6 +751,11 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
     }
 
     delta_rule_here = was;
+    if (delta_rule_trace) {
+        fprintf(stderr, "# %s left with %08x\n", r->name,
+                (unsigned)st.answer);
+        fflush(stderr);
+    }
     return st.answer;
 }
 
