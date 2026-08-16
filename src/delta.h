@@ -631,6 +631,10 @@ int32_t dur2(delta_state *d, const delta_tpos *a, const delta_tpos *b,
              int8_t f, int32_t back);
 int32_t vdur(delta_state *d, const delta_tpos *a, const delta_tpos *b,
              int8_t f);
+int  vdur_ass(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
+              int32_t total);
+int  dur_ass(delta_state *d, int8_t f, delta_loc *field, uint8_t mode);
+void dur_expr(delta_state *d, uint8_t f, delta_loc *field);
 
 void print_lit(delta_state *d, ...);
 void print_var(delta_state *d, ...);

@@ -5572,3 +5572,126 @@ int32_t vdur(delta_state *d, const delta_tpos *a, const delta_tpos *b,
 {
     return dur2(d, a, b, f, 0);
 }
+
+/* Give the run between two positions a total duration, dividing it among
+   the statements in proportion to what they already hold.
+
+   The factor is in thousandths of what the run measures now, so a run
+   already the right length leaves everything alone. Markers are stepped
+   over by their fence link and take no share. Five hundred is added before
+   each division by a thousand so the shares round to nearest rather than
+   towards zero, and away from zero on the other side as well, which is why
+   the sign of the factor picks which five hundred.
+
+   Answers whether it gave up, which only happens when the two positions do
+   not bound a run of this field at all. */
+int vdur_ass(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
+             int32_t total)
+{
+    const delta_stmt *e = &vstmtbl[f];
+    int32_t span;
+    int32_t factor;
+    int32_t bias;
+    int32_t p;
+
+    if (vrange_2pt(d, a, b, f, 0))
+        return 1;
+
+    span = vdur(d, a, b, f);
+    factor = (span != 0)
+        ? (int32_t)((uint32_t)total * 1000u) / span
+        : 0;
+
+    if (e->fields[0].kind == DK_SHORT2 || e->fields[0].kind == DK_LONG)
+        bias = (factor < 0) ? -500 : 500;
+    else
+        bias = 0;
+
+    p = a->node;
+    while (p != b->node) {
+        if (p != 0 && (*(const int32_t *)(intptr_t)p & 2)) {
+            p = ((const int32_t *)(intptr_t)p)[d->vars->fence_base + f] & -4;
+            continue;
+        }
+
+        if (e->fields[0].kind == DK_LONG) {
+            int32_t was = *(const int32_t *)
+                e->get[0](TFLDS((void *)(intptr_t)p));
+
+            total = (int32_t)((uint32_t)was * (uint32_t)factor
+                              + (uint32_t)bias) / 1000;
+            vinitflds(d, (uint8_t)f, TFLDS((void *)(intptr_t)p), &total);
+        } else {
+            int32_t was = *(const int16_t *)
+                e->get[0](TFLDS((void *)(intptr_t)p));
+            int16_t share;
+
+            total = (int32_t)((uint32_t)was * (uint32_t)factor
+                              + (uint32_t)bias) / 1000;
+            share = (int16_t)total;
+            vinitflds(d, (uint8_t)f, TFLDS((void *)(intptr_t)p), &share);
+        }
+
+        p = ((const int32_t *)(intptr_t)p)[1] & -4;
+    }
+
+    return 0;
+}
+
+/* The statement form of the same thing: read the wanted duration out of the
+   variable the rule names, then spread it over the run between the two
+   pointer registers. The field is released whichever way it goes. */
+int dur_ass(delta_state *d, int8_t f, delta_loc *field, uint8_t mode)
+{
+    delta_operand want;
+    delta_operand loc;
+    int32_t total;
+
+    if (vrange_2pt(d, &d->lpta, &d->rpta, f, mode)) {
+        reset_field(field);
+        return 1;
+    }
+
+    want.kind = DK_LONG;
+    want.ptr = &total;
+    want.flag = 0;
+
+    vinitloc_new(d, &loc, field);
+    vassign(d, &want, &loc);
+
+    if (vdur_ass(d, &d->lpta, &d->rpta, f, total)) {
+        reset_field(field);
+        return 1;
+    }
+
+    reset_field(field);
+    return 0;
+}
+
+/* The other direction: measure the run between the two pointer registers
+   and put the answer in the variable the rule names. A run with no answer
+   is reported as no time at all rather than passed on. Both registers have
+   to be timing positions first, and a rule that asks otherwise is made to
+   backtrack. */
+void dur_expr(delta_state *d, uint8_t f, delta_loc *field)
+{
+    delta_operand dst;
+    delta_operand src;
+    int32_t total;
+
+    if (!vtimept_tv(d, &d->lpta, 0) || !vtimept_tv(d, &d->rpta, 1))
+        forceErrorBacktrack(d);
+
+    vinitloc_new(d, &dst, field);
+
+    total = vdur(d, &d->lpta, &d->rpta, (int8_t)f);
+    if (total == (int32_t)0x80000001u)
+        total = 0;
+
+    src.flag = vstmtbl[f].fields[0].flag;
+    src.kind = DK_LONG;
+    src.ptr = &total;
+    vassign(d, &dst, &src);
+
+    reset_field(field);
+}

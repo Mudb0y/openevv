@@ -286,6 +286,10 @@ extern int  ibm_f0_stepi(delta_state *, const delta_loc *, const delta_loc *,
                          const delta_loc *, const delta_loc *, delta_loc *);
 extern int32_t ibm_dur2(delta_state *, const delta_tpos *,
                         const delta_tpos *, int8_t, int32_t);
+extern int  ibm_vdur_ass(delta_state *, delta_tpos *, delta_tpos *, int8_t,
+                         int32_t);
+extern int  ibm_dur_ass(delta_state *, int8_t, delta_loc *, uint8_t);
+extern void ibm_dur_expr(delta_state *, uint8_t, delta_loc *);
 extern void ibm_project_rl(delta_state *, delta_node *, int32_t, int32_t,
                            delta_node *, delta_node *, uint8_t);
 extern int  ibm_actd_lookup(delta_state *, int16_t, delta_token *,
@@ -624,6 +628,21 @@ static int world_differs(delta_world *a, delta_world *b)
     }
     diff_where = "none";
     return 0;
+}
+
+/* The remembered comparisons, which every one of these disturbs. */
+static void dur_clear(delta_world *m, delta_world *o)
+{
+    int i;
+
+    for (i = 0; i < 50; i++) {
+        m->stack.left_a[i] = o->stack.left_a[i] = 0;
+        m->stack.left_b[i] = o->stack.left_b[i] = 0;
+        m->stack.left_ans[i] = o->stack.left_ans[i] = 0;
+        m->stack.left_hits[i] = o->stack.left_hits[i] = 0;
+    }
+    m->stack.left_next = o->stack.left_next = 0;
+    m->stack.left_stamp = o->stack.left_stamp = spine_changed;
 }
 
 #define BEGIN(name)                                                  \
@@ -6632,6 +6651,266 @@ BEGIN(dur2)
     memset(o->nodes, 0, sizeof(o->nodes));
 END(dur2)
 
+/* Whether the walks the three duration primitives do can reach their end.
+
+   Measuring a run asks which position comes first and then runs that way
+   over the forward links; spreading a duration runs forward from the first
+   whatever the answer. On the timing spine, whose ends point at themselves
+   so that the comparison walk has somewhere to stop, either can set off in
+   a direction it never comes back from. The two cannot both be satisfied by
+   one spine, so the draws where it would happen are left out instead. */
+static int dur_walk_ok(delta_world *o, int8_t f, int32_t a, int32_t b)
+{
+    int32_t fb = o->vars.fence_base + f;
+    int which;
+
+    if (a == 0 || b == 0)
+        return 0;
+
+    for (which = 0; which < 2; which++) {
+        int32_t from = a;
+        int32_t to = b;
+        int n;
+
+        if (which == 0 && !visleft(&o->state, a, b)) {
+            from = b;
+            to = a;
+        }
+        for (n = 0; from != to && from != 0 && n < 64; n++) {
+            if (*(const int32_t *)(intptr_t)from & 2)
+                from = ((const int32_t *)(intptr_t)from)[fb] & -4;
+            else
+                from = ((const int32_t *)(intptr_t)from)[1] & -4;
+        }
+        if (from != to && from != 0)
+            return 0;
+    }
+    return 1;
+}
+
+/* What all three want under them: the timing spine, no relinking so the
+   comparison takes the field walk that ends on it, and the field present on
+   every statement so the context lookup is never asked and never answers
+   with the null the original would dereference. */
+static int dur_scaffold(delta_world *m, delta_world *o, int8_t f,
+                        int *ia, int *ib)
+{
+    int i;
+
+    m->vars.relink = o->vars.relink = 0;
+    m->state.fence_fill = o->state.fence_fill = (uint8_t)(1u + rng_next() % 4u);
+    for (i = 0; i < 0x20; i++)
+        m->nsqm[i] = o->nsqm[i] = 0;
+
+    {
+        int k = (int)(rng_next() % m->state.fence_fill);
+
+        for (i = 0; i < 8; i++) {
+            ((int32_t *)(m->nodes + i * 0x80))[15 + k] |= 1;
+            ((int32_t *)(o->nodes + i * 0x80))[15 + k] |= 1;
+            ((int32_t *)(m->nodes + i * 0x80))[15 + f] |= 1;
+            ((int32_t *)(o->nodes + i * 0x80))[15 + f] |= 1;
+        }
+    }
+
+    if (*ia > *ib) {
+        int t = *ia;
+
+        *ia = *ib;
+        *ib = t;
+    }
+
+    dur_clear(m, o);
+    if (!dur_walk_ok(o, f, (int32_t)(intptr_t)(o->nodes + *ia * 0x80),
+                     (int32_t)(intptr_t)(o->nodes + *ib * 0x80)))
+        return 0;
+    dur_clear(m, o);
+    return 1;
+}
+
+static int run_dur_ass(delta_state *d, int8_t f, delta_loc *l, uint8_t mode,
+                       int ours)
+{
+    int r = 0;
+
+    GUARDED(r = ours ? dur_ass(d, f, l, mode) : ibm_dur_ass(d, f, l, mode));
+    return r;
+}
+
+static void run_dur_expr(delta_state *d, uint8_t f, delta_loc *l, int ours)
+{
+    GUARDED(ours ? dur_expr(d, f, l) : ibm_dur_expr(d, f, l));
+}
+
+BEGIN(vdur_ass)
+    int8_t f = build_tspine(m, o);
+    delta_tpos am, ao, bm, bo;
+    int ia = (int)(rng_next() % 6u);
+    int ib = (int)(rng_next() % 6u);
+    /* Small enough that the thousandfold and the per statement product stay
+       inside a long, which the original does nothing about either. */
+    int32_t total = (int32_t)(rng_next() % 4000u) - 2000;
+    int ra, rb, i;
+
+    if (f < 0) {
+        free(m); free(o);
+        continue;
+    }
+    if (!dur_scaffold(m, o, f, &ia, &ib)) {
+        m->stack.spine_l = o->stack.spine_l = 0;
+        m->stack.spine_r = o->stack.spine_r = 0;
+        free(m); free(o);
+        continue;
+    }
+    memset(&am, 0, sizeof(am));
+    am.node = (int32_t)(intptr_t)(m->nodes + ia * 0x80);
+    am.field = f;
+    am.offset = 0;
+    am.flags = (uint8_t)(rng_next() % 2u);
+    ao = am;
+    ao.node = (int32_t)(intptr_t)(o->nodes + ia * 0x80);
+
+    memset(&bm, 0, sizeof(bm));
+    bm.node = (int32_t)(intptr_t)(m->nodes + ib * 0x80);
+    bm.field = f;
+    bm.offset = 0;
+    bm.flags = (uint8_t)(rng_next() % 2u);
+    bo = bm;
+    bo.node = (int32_t)(intptr_t)(o->nodes + ib * 0x80);
+
+    ra = ibm_vdur_ass(&m->state, &am, &bm, f, total);
+    rb = vdur_ass(&o->state, &ao, &bo, f, total);
+
+    if (ra != rb)
+        bad++;
+    if (am.flags != ao.flags || bm.flags != bo.flags
+        || am.offset != ao.offset || bm.offset != bo.offset)
+        bad++;
+
+    dur_clear(m, o);
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+END(vdur_ass)
+
+
+BEGIN(dur_ass)
+    static const int16_t kinds[2] = {DK_LONG, DK_SHORT2};
+    int8_t f = build_tspine(m, o);
+    /* No mode at all, which is what the spread it goes on to do asks for
+       anyway. A mode sends the range check down the editing path, which
+       wants the edit scaffold rather than the timing spine; that path is
+       the range check's own test. */
+    uint8_t mode = 0;
+    int ia = (int)(rng_next() % 6u);
+    int ib = (int)(rng_next() % 6u);
+    /* The wanted duration is read through the variable, so it is one that
+       carries its value inline rather than naming a record. */
+    delta_loc *lm;
+    delta_loc *lo;
+    int i;
+
+    if (f < 0) {
+        free(m); free(o);
+        continue;
+    }
+    if (!dur_scaffold(m, o, f, &ia, &ib)) {
+        m->stack.spine_l = o->stack.spine_l = 0;
+        m->stack.spine_r = o->stack.spine_r = 0;
+        free(m); free(o);
+        continue;
+    }
+    memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+    memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+    memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+    memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+    m->state.lpta.node = (int32_t)(intptr_t)(m->nodes + ia * 0x80);
+    o->state.lpta.node = (int32_t)(intptr_t)(o->nodes + ia * 0x80);
+    m->state.rpta.node = (int32_t)(intptr_t)(m->nodes + ib * 0x80);
+    o->state.rpta.node = (int32_t)(intptr_t)(o->nodes + ib * 0x80);
+    m->state.lpta.field = o->state.lpta.field = f;
+    m->state.rpta.field = o->state.rpta.field = f;
+
+    /* Not in the node array: this spine fills every byte of it. */
+    lm = (delta_loc *)(m->names + 0x100);
+    lo = (delta_loc *)(o->names + 0x100);
+    memset(lm, 0, 0x20);
+    memset(lo, 0, 0x20);
+    lm->kind = kinds[rng_next() % 2u];
+    lm->field = 0;
+    lm->value = (int32_t)(rng_next() % 4000u) - 2000;
+    memcpy(lo, lm, sizeof(*lm));
+
+    if (run_dur_ass(&m->state, f, lm, mode, 0)
+        != run_dur_ass(&o->state, f, lo, mode, 1))
+        bad++;
+
+    dur_clear(m, o);
+    memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+    memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+    memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+    memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+END(dur_ass)
+
+
+BEGIN(dur_expr)
+    static const int16_t kinds[2] = {DK_LONG, DK_SHORT2};
+    int8_t f = build_tspine(m, o);
+    int ia = (int)(rng_next() % 6u);
+    int ib = (int)(rng_next() % 6u);
+    /* The answer is written back through the variable, so again one that
+       carries its value inline. */
+    delta_loc *lm;
+    delta_loc *lo;
+    int i;
+
+    if (f < 0) {
+        free(m); free(o);
+        continue;
+    }
+    if (!dur_scaffold(m, o, f, &ia, &ib)) {
+        m->stack.spine_l = o->stack.spine_l = 0;
+        m->stack.spine_r = o->stack.spine_r = 0;
+        free(m); free(o);
+        continue;
+    }
+    memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+    memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+    memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+    memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+    m->state.lpta.node = (int32_t)(intptr_t)(m->nodes + ia * 0x80);
+    o->state.lpta.node = (int32_t)(intptr_t)(o->nodes + ia * 0x80);
+    m->state.rpta.node = (int32_t)(intptr_t)(m->nodes + ib * 0x80);
+    o->state.rpta.node = (int32_t)(intptr_t)(o->nodes + ib * 0x80);
+    m->state.lpta.field = o->state.lpta.field = f;
+    m->state.rpta.field = o->state.rpta.field = f;
+    m->state.lpta.flags = o->state.lpta.flags = (uint8_t)(rng_next() % 4u);
+    m->state.rpta.flags = o->state.rpta.flags = (uint8_t)(rng_next() % 4u);
+
+    /* Not in the node array: this spine fills every byte of it. */
+    lm = (delta_loc *)(m->names + 0x100);
+    lo = (delta_loc *)(o->names + 0x100);
+    memset(lm, 0, 0x20);
+    memset(lo, 0, 0x20);
+    lm->kind = kinds[rng_next() % 2u];
+    lm->field = 0;
+    lm->value = 0;
+    memcpy(lo, lm, sizeof(*lm));
+
+    run_dur_expr(&m->state, (uint8_t)f, lm, 0);
+    run_dur_expr(&o->state, (uint8_t)f, lo, 1);
+
+    dur_clear(m, o);
+    memset(&m->state.lpta, 0, sizeof(m->state.lpta));
+    memset(&o->state.lpta, 0, sizeof(o->state.lpta));
+    memset(&m->state.rpta, 0, sizeof(m->state.rpta));
+    memset(&o->state.rpta, 0, sizeof(o->state.rpta));
+    m->stack.spine_l = o->stack.spine_l = 0;
+    m->stack.spine_r = o->stack.spine_r = 0;
+END(dur_expr)
+
+
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -6785,6 +7064,9 @@ int main(void)
     test_insert_lv();
     test_f0_stepi();
     test_dur2();
+    test_vdur_ass();
+    test_dur_ass();
+    test_dur_expr();
     printf("delta diff: %d cases, %d mismatches\n", total_cases, total_bad);
     return total_bad != 0;
 }
