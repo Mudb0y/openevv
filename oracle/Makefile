@@ -262,7 +262,7 @@ SWAP_SWAP  := $(patsubst %,$(BUILD)/swap/%.obj,$(SWAP_OBJS))
 OUR_DELTA  := ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c \
               ../src/delta_tables.c ../src/delta_trace.c \
               ../src/klatt_fx.c ../src/klatt_state.c ../src/klatt_synth.c \
-              ../src/klatt_tables.c
+              ../src/klatt_tables.c ../src/delta_link_enus.c
 
 speak-prim: $(BUILD)/speak_prim.exe
 
@@ -286,7 +286,23 @@ $(BUILD)/speak_prim.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
 
-.PHONY: speak-prim
+# The statement table we lifted set against the one it came from, linked
+# exactly as the engine links it so that what is compared is what runs.
+stmt-diff: $(BUILD)/stmt_diff.exe
+
+$(BUILD)/stmt_diff.exe: stmt_diff.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
+    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj \
+    $(BUILD)/delta_rules_shim.obj $(SWAP_SWAP) $(OUR_DELTA)
+	@$(CC) -O2 -std=gnu99 -w -I../src stmt_diff.c $(BUILD)/ral_shim.obj \
+	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules.obj \
+	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_rules_shim.obj \
+	  $(OUR_DELTA) $(SWAP_SWAP) \
+	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(SWAP_OBJS)),\
+	    $(wildcard $(ENUS)/*.obj)) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
+
+.PHONY: speak-prim stmt-diff
 
 # And the same again with a trace, so that where our primitives and the
 # original's part company can be found the way the rules' were.

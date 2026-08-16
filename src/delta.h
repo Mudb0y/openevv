@@ -306,7 +306,13 @@ typedef struct {
     int32_t                unknown_3c;
 } delta_stmt;
 
-extern const delta_stmt vstmtbl[];
+/* Not const: the runtime marks a type when it has a statement
+   worth starting from, and clears that again on a reinit. */
+extern delta_stmt vstmtbl[];
+
+/* The language telling the runtime how big one variant of a
+   statement type is, which the table alone does not say. */
+void viasizes(void);
 
 /* A node on the spine: the linked structure the rules walk over. Its links
    are tagged pointers, with flags in the low two bits that a reader has to

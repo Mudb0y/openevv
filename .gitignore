@@ -19,3 +19,4 @@ src/trace/
 src/delta_rules_trace_prim.c
 src/prim/
 src/trace_prim/
+src/delta_link_enus.c

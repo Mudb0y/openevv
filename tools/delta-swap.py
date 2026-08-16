@@ -24,31 +24,33 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 OURS = ["delta.c", "delta_heap.c", "delta_sysmem.c", "delta_tables.c",
         "delta_trace.c", "klatt_fx.c", "klatt_state.c", "klatt_synth.c",
-        "klatt_tables.c"]
+        "klatt_tables.c", "delta_link_enus.c"]
 
 
-def defined_by(obj):
+def defined_by(obj, kinds="TDBR"):
     """Every name an object defines, without the leading underscore."""
     text = subprocess.run(["llvm-nm", obj], capture_output=True,
                           text=True).stdout
     out = set()
     for line in text.splitlines():
         m = re.match(r"^[0-9a-f]+ ([TDBR]) _(\w+)$", line.strip())
-        if m:
+        if m and m.group(1) in kinds:
             out.add(m.group(2))
     return out
 
 
 def ours(where, cc, cflags):
-    """Every name our own sources define."""
+    """Every name our own sources define, and which of them are code."""
     out = set()
+    code = set()
     for name in OURS:
         obj = os.path.join(where, name[:-2] + ".swapcheck.o")
         subprocess.run(cc + cflags + ["-c", os.path.join(ROOT, "src", name),
                                       "-o", obj], check=True)
         out |= defined_by(obj)
+        code |= defined_by(obj, "T")
         os.remove(obj)
-    return out
+    return out, code
 
 
 def main():
@@ -62,7 +64,7 @@ def main():
     for stale in os.listdir(out):
         os.remove(os.path.join(out, stale))
 
-    mine = ours("/tmp", cc, cflags)
+    mine, mine_code = ours("/tmp", cc, cflags)
     objects = []
     taken = set()
     total = 0
@@ -89,10 +91,14 @@ def main():
     swapped = sorted(taken)
     with open(os.path.join(out, "names"), "w") as f:
         for name in swapped:
-            f.write("%s\n" % name)
+            if name in mine_code:
+                f.write("%s\n" % name)
     with open(os.path.join(out, "ours.ren"), "w") as f:
         for name in swapped:
-            f.write("_%s _our_%s\n" % (name, name))
+            # Only what is code: a wrapper can stand in front of a call, and
+            # there is nothing to stand in front of for a table.
+            if name in mine_code:
+                f.write("_%s _our_%s\n" % (name, name))
 
     print("ours: %d names" % len(mine))
     print("stood aside: %d names over %d objects" % (total, len(objects)))
