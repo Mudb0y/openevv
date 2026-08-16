@@ -32,7 +32,7 @@ ENUS    := ../analysis/enus
 #
 # Dropping a name that something still calls is a link error rather than a
 # quiet change, so this list cannot go stale without saying so.
-DEAD    := deltio logio filio ecilink toeci stmqueue win_cryptstdio expire win_reg \
+DEAD    := deltio logio filio ecilink toeci stmqueue ecistate win_cryptstdio expire win_reg \
            win_searchlib win_dbgtest win_ecitrace win_hrtime win_debug \
            debug plot
 
@@ -270,6 +270,7 @@ OUR_DELTA  := ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c \
               ../src/delta_savefile.c ../src/eci_dynabuf.c \
               ../src/eci_logio.c ../src/eci_link.c \
               ../src/eci_toeci.c ../src/eci_tvqueue.c \
+              ../src/eci_state.c \
                             ../src/klatt_fx.c ../src/klatt_state.c ../src/klatt_synth.c \
               ../src/klatt_tables.c ../src/delta_link_enus.c \
               ../src/delta_sets_enus.c
