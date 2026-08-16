@@ -16,3 +16,6 @@ src/delta_rules_ref.c
 src/delta_rules_trace.c
 src/rules/
 src/trace/
+src/delta_rules_trace_prim.c
+src/prim/
+src/trace_prim/
