@@ -234,7 +234,7 @@ void lithex(const char *in, char *out, int32_t max)
    underneath is still the platform's. */
 int open_input(delta_state *d, int32_t which)
 {
-    int r = logicalFileOpen(d, logicalFileName(d, which, 0));
+    int r = logicalFileOpen(d, logicalFileName(d, which), 0);
 
     if (r == 0)
         forceErrorBacktrack(d);
@@ -243,7 +243,7 @@ int open_input(delta_state *d, int32_t which)
 
 int open_output(delta_state *d, int32_t which)
 {
-    int r = logicalFileOpen(d, logicalFileName(d, which, 1));
+    int r = logicalFileOpen(d, logicalFileName(d, which), 1);
 
     if (r == 0)
         forceErrorBacktrack(d);

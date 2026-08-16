@@ -32,20 +32,9 @@ ENUS    := ../analysis/enus
 #
 # Dropping a name that something still calls is a link error rather than a
 # quiet change, so this list cannot go stale without saying so.
-DEAD    := deltio ut_dict ddelta dutil win_cryptstdio expire win_reg \
+DEAD    := deltio logio filio win_cryptstdio expire win_reg \
            win_searchlib win_dbgtest win_ecitrace win_hrtime win_debug \
-           debug plot test
-DELTA_OBJS := \
-  $(ENUS)/assign.obj $(ENUS)/debug.obj $(ENUS)/delta.obj $(ENUS)/dfault.obj \
-  $(ENUS)/extra.obj $(ENUS)/for.obj $(ENUS)/io.obj $(ENUS)/misc.obj \
-  $(ENUS)/optimize.obj $(ENUS)/pointer.obj $(ENUS)/stack.obj $(ENUS)/test.obj \
-  $(ENUS)/init.obj $(ENUS)/gener.obj \
-  $(ENUS)/access.obj $(ENUS)/ctxt.obj $(ENUS)/ddelta.obj $(ENUS)/deltaimp.obj \
-  $(ENUS)/deltio.obj $(ENUS)/dttime.obj $(ENUS)/dutil.obj $(ENUS)/heap.obj \
-  $(ENUS)/mem.obj $(ENUS)/prdelta.obj $(ENUS)/prdeltao.obj $(ENUS)/rectbuf.obj \
-  $(ENUS)/win_dynabuf.obj $(ENUS)/logio.obj $(ENUS)/win_hash.obj \
-  $(ENUS)/link.obj $(ENUS)/win_etistr.obj \
-  $(ENUS)/filio.obj $(ENUS)/win_filename.obj $(ENUS)/capp.obj
+           debug plot
 
 IBMDELTA := $(wildcard ../analysis/delta-ibm/*.obj)
 # Support objects the runtime needs but that define no primitive we shadow,
@@ -273,12 +262,14 @@ $(BUILD)/trace_rules.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 # fault gets pinned to one of them.
 PRIM_ONLY  ?= $(shell cat ../src/prim/objects 2>/dev/null)
 PRIM_OBJS  := $(PRIM_ONLY)
-SWAP_OBJS  := $(sort $(RULE_OBJS) $(PRIM_OBJS))
+# An object the link does without cannot also be stood aside from.
+SWAP_OBJS  := $(filter-out $(DEAD),$(sort $(RULE_OBJS) $(PRIM_OBJS)))
 SWAP_SWAP  := $(patsubst %,$(BUILD)/swap/%.obj,$(SWAP_OBJS))
 OUR_DELTA  := ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c \
               ../src/delta_tables.c ../src/delta_trace.c \
               ../src/delta_savefile.c ../src/eci_dynabuf.c \
-              ../src/klatt_fx.c ../src/klatt_state.c ../src/klatt_synth.c \
+              ../src/eci_logio.c \
+                            ../src/klatt_fx.c ../src/klatt_state.c ../src/klatt_synth.c \
               ../src/klatt_tables.c ../src/delta_link_enus.c \
               ../src/delta_sets_enus.c
 
@@ -324,8 +315,8 @@ $(BUILD)/stmt_diff.exe: stmt_diff.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 
 # And the same again with a trace, so that where our primitives and the
 # original's part company can be found the way the rules' were.
-TSWAP_OBJS := $(sort $(RULE_OBJS) $(PRIM_OBJS) \
-                $(shell cat ../src/trace_prim/objects 2>/dev/null))
+TSWAP_OBJS := $(filter-out $(DEAD),$(sort $(RULE_OBJS) $(PRIM_OBJS) \
+                $(shell cat ../src/trace_prim/objects 2>/dev/null)))
 TSWAP_SWAP := $(patsubst %,$(BUILD)/tswap/%.obj,$(TSWAP_OBJS))
 
 trace-prim: $(BUILD)/trace_prim.exe

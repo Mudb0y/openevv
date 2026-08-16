@@ -251,7 +251,9 @@ struct delta_state {
                                      moved; the flag it sets is at 0x1b8 */
     delta_vars  *vars;            /* 0x0068 */
     delta_stack *stack;           /* 0x006c */
-    uint8_t      pad_0070[0x7c - 0x70];
+    uint8_t      pad_0070[4];
+    void        *logio;           /* 0x0074, the logical file table */
+    uint8_t      pad_0078[0x7c - 0x78];
     uint8_t      fence_room;      /* 0x007c, how many the arrays below hold */
     uint8_t      pad_007d[3];
     /* Each of the three fenced-character arrays is kept twice: where it was
@@ -718,9 +720,36 @@ int  read_tvar(delta_state *d, int8_t f, delta_loc *field);
 int  vrd_tvar(delta_state *d, int32_t f, const delta_operand *v);
 int  checkInterrupt(delta_state *d);
 int  vf_getc(delta_state *d, int32_t f);
-void vf_ungetc(delta_state *d, int32_t f);
-void *logicalFileName(delta_state *d, int32_t which, int32_t out);
-int  logicalFileOpen(delta_state *d, void *name);
+int32_t vf_ungetc(delta_state *d, int32_t f);
+void *logicalFileName(delta_state *d, int32_t which);
+int  logicalFileOpen(delta_state *d, void *name, int32_t mode);
+void vfclose_lf(delta_state *d, int32_t lf);
+int8_t vffind_lf(delta_state *d, const char *name);
+int32_t vf_gets(delta_state *d, int32_t lf, const char *prompt);
+int32_t vf_puts(delta_state *d, int32_t lf, const char *s, int32_t flush);
+void vf_clrbuf(delta_state *d, int32_t lf);
+int32_t vf_eof(delta_state *d, int32_t lf);
+void setInterrupt(delta_state *d, int32_t v);
+int32_t logio_new(delta_state *d);
+void logio_delete(delta_state *d);
+int32_t logicalIOInit(delta_state *d, int32_t room, void *report);
+void logicalIOCleanup(delta_state *d);
+int8_t addLogicalFile(delta_state *d, const char *name);
+int8_t vfdef_lf(delta_state *d, const char *name);
+int32_t vfundef_lf(delta_state *d, const char *name);
+int32_t builtInLogicalFiles(delta_state *d);
+int32_t logicalFileAddPhysical(delta_state *d, int32_t lf, const char *name,
+                               void *cls, void *handle, int32_t mode);
+int32_t logicalFileRemovePhysical(delta_state *d, int32_t lf,
+                                  const char *name, int32_t input);
+int32_t logicalFileRemoveAllPhysical(delta_state *d, int32_t lf,
+                                     int32_t input);
+int32_t logicalFileFindPhysical(delta_state *d, int32_t lf, const char *name,
+                                int32_t input, int32_t current);
+int32_t vf_printf(delta_state *d, int32_t lf, int32_t flush,
+                  const char *fmt, ...);
+void vfstat(delta_state *d, int32_t lf);
+void vfstatall(delta_state *d);
 
 void print_lit(delta_state *d, ...);
 void print_var(delta_state *d, ...);
