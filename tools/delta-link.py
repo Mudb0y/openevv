@@ -44,17 +44,32 @@ class Coff:
         text = self._run("--sections", "--section-data")
         number = None
         name = None
+        size = 0
         data = bytearray()
         inside = False
+
+        def close():
+            # A section that holds nothing but zeros carries no bytes at
+            # all, so its length is the one it declares, not the one the
+            # dump shows.
+            if len(data) < size:
+                data.extend(bytes(size - len(data)))
+            self.section[number] = bytes(data)
+            self.secname[number] = name
+
         for line in text.splitlines():
             m = re.match(r"\s+Number: (\d+)", line)
             if m:
                 if number is not None:
-                    self.section[number] = bytes(data)
-                    self.secname[number] = name
+                    close()
                 number = int(m.group(1))
                 data = bytearray()
+                size = 0
                 inside = False
+                continue
+            m = re.match(r"\s+RawDataSize: (\d+)", line)
+            if m:
+                size = int(m.group(1))
                 continue
             m = re.match(r"\s+Name: (\S+)", line)
             if m and number is not None and name != m.group(1):
@@ -75,8 +90,7 @@ class Coff:
                 else:
                     inside = False
         if number is not None:
-            self.section[number] = bytes(data)
-            self.secname[number] = name
+            close()
 
     def _symbols(self):
         text = self._run("--symbols")

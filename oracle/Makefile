@@ -160,17 +160,21 @@ $(BUILD)/delta_rules_enus.obj: ../src/delta_rules_enus.c ../src/delta_rules.h
 	@mkdir -p $(BUILD)
 	@$(CC) -O2 -std=c99 -w -I../src -c $< -o $@
 
+$(BUILD)/delta_consts_enus.obj: ../src/delta_consts_enus.c
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=c99 -w -I../src -c $< -o $@
+
 $(BUILD)/delta_rules_shim.obj: ../src/delta_rules_shim.c ../src/delta_rules.h
 	@mkdir -p $(BUILD)
 	@$(CC) -O2 -std=c99 -w -I../src -c $< -o $@
 
 $(BUILD)/speak_rules.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
-    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj \
+    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj \
     $(BUILD)/delta_rules_shim.obj $(RULE_SWAP)
 	@mkdir -p $(BUILD)
 	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
 	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules.obj \
-	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_rules_shim.obj \
+	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj $(BUILD)/delta_rules_shim.obj \
 	  $(RULE_SWAP) \
 	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(RULE_OBJS)),\
 	    $(wildcard $(ENUS)/*.obj)) \
@@ -238,11 +242,11 @@ $(BUILD)/trace_ref.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
 
 $(BUILD)/trace_rules.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
-    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj \
+    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj \
     $(BUILD)/delta_rules_shim.obj $(BUILD)/delta_rules_trace.obj $(TRACE_SWAP)
 	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
 	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules.obj \
-	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_rules_shim.obj \
+	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj $(BUILD)/delta_rules_shim.obj \
 	  $(BUILD)/delta_rules_trace.obj $(TRACE_SWAP) $(TRACE_REST) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
@@ -276,11 +280,11 @@ $(BUILD)/swap/%.obj: $(ENUS)/%.obj ../src/delta_rules_enus.c ../src/prim/objects
 	  $(OBJCOPY) --redefine-syms=$(BUILD)/swap/$*.ren $$g $< $@
 
 $(BUILD)/speak_prim.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
-    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj \
+    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj \
     $(BUILD)/delta_rules_shim.obj $(SWAP_SWAP) $(OUR_DELTA)
 	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
 	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules.obj \
-	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_rules_shim.obj \
+	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj $(BUILD)/delta_rules_shim.obj \
 	  $(OUR_DELTA) $(SWAP_SWAP) \
 	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(SWAP_OBJS)),\
 	    $(wildcard $(ENUS)/*.obj)) \
@@ -292,11 +296,11 @@ $(BUILD)/speak_prim.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 stmt-diff: $(BUILD)/stmt_diff.exe
 
 $(BUILD)/stmt_diff.exe: stmt_diff.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
-    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj \
+    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj \
     $(BUILD)/delta_rules_shim.obj $(SWAP_SWAP) $(OUR_DELTA)
 	@$(CC) -O2 -std=gnu99 -w -I../src stmt_diff.c $(BUILD)/ral_shim.obj \
 	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules.obj \
-	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_rules_shim.obj \
+	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj $(BUILD)/delta_rules_shim.obj \
 	  $(OUR_DELTA) $(SWAP_SWAP) \
 	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(SWAP_OBJS)),\
 	    $(wildcard $(ENUS)/*.obj)) \
@@ -334,12 +338,12 @@ $(BUILD)/our_delta.obj: $(OUR_DELTA) ../src/prim/ours.ren
 	  $(BUILD)/our_delta.tmp.o $@
 
 $(BUILD)/trace_prim.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
-    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj \
+    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj \
     $(BUILD)/delta_rules_shim.obj $(BUILD)/delta_rules_trace_prim.obj \
     $(TSWAP_SWAP) $(BUILD)/our_delta.obj
 	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
 	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules.obj \
-	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_rules_shim.obj \
+	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj $(BUILD)/delta_rules_shim.obj \
 	  $(BUILD)/delta_rules_trace_prim.obj $(BUILD)/our_delta.obj \
 	  $(TSWAP_SWAP) \
 	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(TSWAP_OBJS)),\
