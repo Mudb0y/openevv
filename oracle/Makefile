@@ -146,7 +146,7 @@ RULE_SWAP := $(patsubst %,$(BUILD)/rules/%.obj,$(RULE_OBJS))
 
 speak-rules: $(BUILD)/speak_rules.exe
 
-$(BUILD)/rules/%.obj: $(ENUS)/%.obj ../src/rules/%.ren
+$(BUILD)/rules/%.obj: $(ENUS)/%.obj ../src/delta_rules_enus.c
 	@mkdir -p $(BUILD)/rules
 	@g=""; [ -s ../src/rules/$*.glob ] \
 	  && g="--globalize-symbols=../src/rules/$*.glob"; \
@@ -207,7 +207,7 @@ $(BUILD)/speak_ref.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 TRACE_OBJS := $(sort $(RULE_OBJS) $(shell cat ../src/trace/objects 2>/dev/null))
 TRACE_SWAP := $(patsubst %,$(BUILD)/traced/%.obj,$(TRACE_OBJS))
 
-$(BUILD)/traced/%.obj: $(ENUS)/%.obj
+$(BUILD)/traced/%.obj: $(ENUS)/%.obj ../src/delta_rules_enus.c
 	@mkdir -p $(BUILD)/traced
 	@cat ../src/rules/$*.ren ../src/trace/$*.ren 2>/dev/null \
 	  > $(BUILD)/traced/$*.ren || true

@@ -350,6 +350,14 @@ class Decoder:
 
     def run(self):
         it = self.items
+        # Every label first, so that a jump forward can be resolved where it
+        # is written rather than only once the scan has been past it. A
+        # landing place that is not known to be one is read as though the
+        # straight-line path were the only way in, and what a register was
+        # counted up to on that path is then believed on every other.
+        for addr, lab, _m, _o, _r in it:
+            if lab is not None:
+                self.labels[addr] = lab
         i = 1 if it and it[0][1] is not None else 0
         self.start_block(it[0][1] if i else self.name, 0)
         i = self.prologue(i)
