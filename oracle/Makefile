@@ -24,10 +24,17 @@ clean:
 # compared against them the way the Klatt ones were.
 ENUS    := ../analysis/enus
 
-# Objects of the original that nothing reaches any more: everything in them
-# that anything called is ours, and the rest was never called by anything.
-# They are left out of the link entirely rather than stood aside from.
-DEAD    := deltio
+# Objects of the original the link does without. deltio is one we replaced:
+# everything in it that anything called is ours. The rest are ones a spoken
+# sentence never goes through at all, each one taken out on its own, relinked
+# and listened to: the Delta debugger's display, the licence expiry and
+# registry, the trace and plot helpers, and the user dictionary's own reader.
+#
+# Dropping a name that something still calls is a link error rather than a
+# quiet change, so this list cannot go stale without saying so.
+DEAD    := deltio ut_dict ddelta dutil win_cryptstdio expire win_reg \
+           win_searchlib win_dbgtest win_ecitrace win_hrtime win_debug \
+           debug plot test
 DELTA_OBJS := \
   $(ENUS)/assign.obj $(ENUS)/debug.obj $(ENUS)/delta.obj $(ENUS)/dfault.obj \
   $(ENUS)/extra.obj $(ENUS)/for.obj $(ENUS)/io.obj $(ENUS)/misc.obj \
