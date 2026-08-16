@@ -23,7 +23,8 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 OURS = ["delta.c", "delta_heap.c", "delta_sysmem.c", "delta_tables.c",
-        "delta_trace.c"]
+        "delta_trace.c", "klatt_fx.c", "klatt_state.c", "klatt_synth.c",
+        "klatt_tables.c"]
 
 
 def defined_by(obj):

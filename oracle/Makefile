@@ -260,7 +260,9 @@ PRIM_OBJS  := $(PRIM_ONLY)
 SWAP_OBJS  := $(sort $(RULE_OBJS) $(PRIM_OBJS))
 SWAP_SWAP  := $(patsubst %,$(BUILD)/swap/%.obj,$(SWAP_OBJS))
 OUR_DELTA  := ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c \
-              ../src/delta_tables.c ../src/delta_trace.c
+              ../src/delta_tables.c ../src/delta_trace.c \
+              ../src/klatt_fx.c ../src/klatt_state.c ../src/klatt_synth.c \
+              ../src/klatt_tables.c
 
 speak-prim: $(BUILD)/speak_prim.exe
 
