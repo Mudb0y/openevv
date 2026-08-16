@@ -277,7 +277,7 @@ SWAP_OBJS  := $(sort $(RULE_OBJS) $(PRIM_OBJS))
 SWAP_SWAP  := $(patsubst %,$(BUILD)/swap/%.obj,$(SWAP_OBJS))
 OUR_DELTA  := ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c \
               ../src/delta_tables.c ../src/delta_trace.c \
-              ../src/delta_savefile.c \
+              ../src/delta_savefile.c ../src/eci_dynabuf.c \
               ../src/klatt_fx.c ../src/klatt_state.c ../src/klatt_synth.c \
               ../src/klatt_tables.c ../src/delta_link_enus.c \
               ../src/delta_sets_enus.c
