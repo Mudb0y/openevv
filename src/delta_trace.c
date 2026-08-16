@@ -13,17 +13,18 @@
    token off one: none of those is a file operation in any useful sense on
    the way in, whatever their names suggest.
 
-   Three deliberate divergences, all so that a rule keeps running rather
-   than derailing on a machine that cannot do what it asked:
+   One divergence, and it is the printing again: the debugger's trace and
+   display do nothing at all, and neither does the line an error report
+   would have written.
 
-     - A bad token is not reported, and the read is not tried again. The
-       original reports it and reads on, which here would turn for ever on
-       a token that never parses.
-
-     - Nothing reads a backslash escape, so a token containing one takes
-       whatever getbksl answers, which is nothing.
-
-     - The debugger's trace and display do nothing at all.
+   What a report decides is another matter, and that is not a divergence.
+   Both reporters ask whether the console the Delta debugger reads from is
+   open, by looking for a physical file called cmdwin or one called pgmwin.
+   No object in the library ever creates either, so neither is ever found,
+   and both answer that the read should be given up rather than tried
+   again. That is what the two below answer, which is what the original
+   answers here; a target that ever grows a console is where the rest of
+   them would go back in.
 
    Two names the runtime calls are not here: gettok and print_prompt are
    rules the language supplies rather than runtime entries, and stubbing
@@ -39,6 +40,88 @@
 #include <string.h>
 
 #include "delta.h"
+
+/* The character a backslash stands for.
+
+   Three digits at most is not what this does: it reads octal digits until
+   one is not, and hex the same way after an x, putting the character that
+   ended it back. Everything else is the C escapes, and a backslash before
+   anything else is that thing. */
+int8_t getbksl(delta_state *d, int32_t f)
+{
+    int32_t c = vf_getc(d, f);
+    int32_t v = 0;
+
+    if (c >= '0' && c <= '7') {
+        while (c >= '0' && c <= '7') {
+            v = v * 8 + (c - '0');
+            c = vf_getc(d, f);
+        }
+        vf_ungetc(d, f);
+        return (int8_t)v;
+    }
+
+    if (c == 'x' || c == 'X') {
+        for (;;) {
+            int32_t adjust;
+
+            c = vf_getc(d, f);
+            if (c >= '0' && c <= '9')
+                adjust = -'0';
+            else if (c >= 'a' && c <= 'f')
+                adjust = -('a' - 10);
+            else if (c >= 'A' && c <= 'F')
+                adjust = -('A' - 10);
+            else
+                break;
+            v = v * 16 + c + adjust;
+        }
+        vf_ungetc(d, f);
+        return (int8_t)v;
+    }
+
+    switch (c) {
+    case 'a':  v = 7;  break;
+    case 'b':  v = 8;  break;
+    case 'f':  v = 12; break;
+    case 'n':  v = 10; break;
+    case 'r':  v = 13; break;
+    case 't':  v = 9;  break;
+    case 'v':  v = 11; break;
+    default:   v = c;  break;
+    }
+    return (int8_t)v;
+}
+
+/* One run of characters off the stream, with no notion of quoting or of a
+   statement type: spaces before it are skipped, a space after it ends it,
+   and so does the end of the line. Answers the character it stopped on, or
+   nought when there is nothing left. */
+static int8_t getnum(delta_state *d, int32_t f, char *buf)
+{
+    int started = 0;
+
+    for (;;) {
+        int32_t c = vf_getc(d, f);
+
+        if (c == 10) {
+            *buf = 0;
+            return (int8_t)c;
+        }
+        if (c == -1 || c == 0) {
+            *buf = 0;
+            return 0;
+        }
+        if (c == ' ') {
+            if (!started)
+                continue;
+            *buf = 0;
+            return (int8_t)c;
+        }
+        *buf++ = (char)c;
+        started = 1;
+    }
+}
 
 /* One token off the stream.
 
@@ -133,7 +216,16 @@ void print_stream(delta_state *d, ...)  { (void)d; }
 void vprt_var(delta_state *d, ...)      { (void)d; }
 void vprt_strm(delta_state *d, ...)     { (void)d; }
 void disptok(delta_state *d, ...)       { (void)d; }
-void lithex(delta_state *d, ...)        { (void)d; }
+
+/* Spell a token so that it can be shown: the printable characters as they
+   are, everything else as an escape. Only a report ever asks, so it leaves
+   the answer empty. */
+void lithex(const char *in, char *out, int32_t max)
+{
+    (void)in;
+    (void)max;
+    *out = 0;
+}
 
 /* Three of them are not stubs, because a run uses them. Opening a stream
    is how the engine reaches its own input and output, which are not files
@@ -269,18 +361,232 @@ int read_tvar(delta_state *d, int8_t f, delta_loc *field)
     return r;
 }
 
-int  getbksl(delta_state *d, ...)       { (void)d; return 0; }
-
+/* Say what went wrong. The original writes the line to whichever output
+   stream goes with the input it was reading; the printing half is stubbed,
+   so nothing is written. */
 void readErrorReport(delta_state *d, ...) { (void)d; }
-void var_rderr(delta_state *d, ...)       { (void)d; }
-/* Nothing here reports a bad token, and answering that the read should be
-   tried again would turn for ever on one that never parses, so it says to
-   give up. That is a divergence: the original reports it and reads on. */
-int  rdtokverr(delta_state *d, int32_t f, uint8_t st, const char *buf)
+
+/* Whether to give up on a read rather than try it again.
+
+   The original tries again only if the Delta debugger's console is there
+   to type the answer into: it looks for a physical file called cmdwin, and
+   failing that one called pgmwin, and if it finds one it rubs the bad
+   token out of the input buffer, prints the complaint and asks the caller
+   to read on. Nothing in the library ever creates either file, so the
+   search fails and the answer is to give up, which is all these two do. */
+int var_rderr(delta_state *d, int32_t f, const char *buf)
 {
     (void)d;
     (void)f;
-    (void)st;
     (void)buf;
     return 1;
+}
+
+/* The same, and it drops everything the stack has above the block a read
+   was collecting into before it answers. That only happens on the console
+   side, which is not reached here. */
+static int dlt_rderr(delta_state *d, int32_t f, const char *buf)
+{
+    return var_rderr(d, f, buf);
+}
+
+int rdtokverr(delta_state *d, int32_t f, uint8_t st, const char *buf)
+{
+    char spelt[75];
+
+    lithex(buf, spelt, (int32_t)sizeof spelt);
+    readErrorReport(d, f, "DELTIO",
+                    "\"%s\" is not a token name in stream %s",
+                    spelt, vstmtbl[st].name);
+    return var_rderr(d, f, spelt) ? 1 : 0;
+}
+
+/* Where a variable lives.
+
+   A reference with the top bit set names one of the language's own, which
+   are kept in a table after everything else the variables block holds. The
+   rest name a variable of whichever rule activation was asked for: the one
+   running unless the caller says otherwise, and that one is reached
+   through the record an unwind would return to rather than by searching
+   the stack for it. */
+void *varloc(delta_state *d, uint8_t hi, uint8_t lo, int32_t ctx)
+{
+    int32_t ref = ((int32_t)hi << 8) | lo;
+    int32_t idx = ref & 0x3fff;
+    void *act;
+
+    if (ref & 0x8000)
+        return *(void *const *)((uint8_t *)d->vars + 0x11e4 + 4 * idx);
+
+    if (ctx == 0)
+        ctx = d->vars->unknown_fd8;
+    if (ctx == d->vars->unknown_fd8)
+        act = ((void *const *)d->vars->back)[1];
+    else
+        act = vonstack(d, ctx);
+    if (act == 0)
+        return 0;
+    return ((void *const *)((void *const *)act)[2])[idx];
+}
+
+/* Read a number off a stream into a variable.
+
+   Unlike the token reader this takes whatever is between the spaces and
+   asks only that it spell a whole number. Nothing to read is not the end
+   of the story: the original prompts and reads on if there is a console,
+   which here there is not, so it gives up. */
+int vrd_nvar(delta_state *d, int32_t f, const delta_operand *v)
+{
+    char buf[44];
+    int8_t c = 0;
+    int again = 1;
+
+    while (again) {
+        again = 0;
+        c = getnum(d, f, buf);
+
+        if (c == 0) {
+            d->owner[0x14] = 0;
+            memset(d->owner + 0x1a8, 0, 4);
+            again = 1;
+            if (var_rderr(d, f, buf))
+                return 1;
+            continue;
+        }
+
+        switch (v->kind) {
+        case DK_LONG:
+            if (chk_itok(buf)) {
+                *(int32_t *)v->ptr = atol(buf);
+                break;
+            }
+            readErrorReport(d, f, "DELTIO",
+                            "\"%s\" is not an long integer (long)", buf);
+            if (var_rderr(d, f, buf))
+                return 1;
+            again = 1;
+            break;
+
+        case DK_SHORT2:
+            if (chk_itok(buf)) {
+                *(int16_t *)v->ptr = (int16_t)atoi(buf);
+                break;
+            }
+            readErrorReport(d, f, "DELTIO", "\"%s\" is not an integer", buf);
+            if (var_rderr(d, f, buf))
+                return 1;
+            again = 1;
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    /* The line the number was on ends here unless something else is on it. */
+    if (c != 10 && vf_getc(d, f) != 10)
+        vf_ungetc(d, f);
+    return 0;
+}
+
+/* Read a whole line of one statement type's values off a stream.
+
+   Everything read goes on the Delta stack, under a block of its own so
+   that the caller can drop the lot in one go, and each value is pushed as
+   it is parsed. The line ends the read; nothing to read ends it as well,
+   and so does an interrupt.
+
+   The original carries a flag saying not to push what it just read.
+   Nothing ever sets it, so everything read is pushed. */
+int vrd_delta(delta_state *d, int32_t f, uint8_t st)
+{
+    char buf[40];
+    delta_operand v;
+    delta_frame *block;
+    int32_t lval = 0;
+    int32_t ival = 0;
+    int16_t sval = 0;
+    uint8_t bval = 0;
+    const delta_fielddesc *fd = &vstmtbl[st].fields[0];
+
+    v.ptr = 0;
+    v.kind = STMTYP((int8_t)st);
+    v.flag = fd->flag;
+
+    d->stack->top -= d->stack->size_b8;
+    block = (delta_frame *)d->stack->top;
+    d->stack->limit -= d->stack->size_b8;
+    block->kind = 5;
+    block->value = (int32_t)getDeltaStackVBot(d);
+    setDeltaStackVBot(d, block);
+
+    for (;;) {
+        int8_t c = read_token(d, st, f, buf);
+
+        if (c == 10)
+            return 0;
+        if (checkInterrupt(d))
+            return 1;
+        if (c == 0) {
+            d->owner[0x14] = 0;
+            memset(d->owner + 0x1a8, 0, 4);
+            return 1;
+        }
+
+        switch (STMTYP((int8_t)st)) {
+        case DK_UBYTE:
+            v.ptr = &bval;
+            for (bval = 0; bval < fd->nvalues; bval++)
+                if (strcmp(buf, ((const char *const *)fd->values)[bval]) == 0)
+                    break;
+            if (bval == fd->nvalues) {
+                readErrorReport(d, f, "DELTIO", "\"%s\" is not a token name",
+                                buf);
+                if (dlt_rderr(d, f, buf))
+                    return 1;
+            }
+            break;
+
+        case DK_SHORT:
+            v.ptr = &ival;
+            for (ival = 0; ival < fd->nvalues; ival++)
+                if (strcmp(buf, ((const char *const *)fd->values)[ival]) == 0)
+                    break;
+            if (ival == fd->nvalues) {
+                readErrorReport(d, f, "DELTIO", "\"%s\" is not a token name",
+                                buf);
+                v.ptr = 0;
+                if (dlt_rderr(d, f, buf))
+                    return 1;
+            }
+            break;
+
+        case DK_LONG:
+            v.ptr = &lval;
+            if (chk_itok(buf)) {
+                lval = atol(buf);
+                break;
+            }
+            readErrorReport(d, f, "DELTIO", "\"%s\" is not a token name", buf);
+            if (dlt_rderr(d, f, buf))
+                return 1;
+            break;
+
+        case DK_SHORT2:
+            v.ptr = &sval;
+            if (chk_itok(buf)) {
+                sval = (int16_t)atoi(buf);
+                break;
+            }
+            readErrorReport(d, f, "DELTIO", "\"%s\" is not a token name", buf);
+            if (dlt_rderr(d, f, buf))
+                return 1;
+            break;
+
+        default:
+            break;
+        }
+
+        vpush_var(d, &v);
+    }
 }

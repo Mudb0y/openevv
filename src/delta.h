@@ -688,12 +688,16 @@ void print_stream(delta_state *d, ...);
 void vprt_var(delta_state *d, ...);
 void vprt_strm(delta_state *d, ...);
 void disptok(delta_state *d, ...);
-void lithex(delta_state *d, ...);
-int  getbksl(delta_state *d, ...);
+void lithex(const char *in, char *out, int32_t max);
+int8_t getbksl(delta_state *d, int32_t f);
 void readErrorReport(delta_state *d, ...);
-void var_rderr(delta_state *d, ...);
+int  var_rderr(delta_state *d, int32_t f, const char *buf);
 int  rdtokverr(delta_state *d, int32_t f, uint8_t st,
                const char *buf);
+int  vrd_nvar(delta_state *d, int32_t f, const delta_operand *v);
+int  vrd_delta(delta_state *d, int32_t f, uint8_t st);
+void *varloc(delta_state *d, uint8_t hi, uint8_t lo, int32_t ctx);
+void *vonstack(delta_state *d, int32_t ctx);
 
 /* Supplied by the language module, not by the runtime. */
 const uint8_t *actdlookup(delta_state *d, int32_t l, int32_t r,

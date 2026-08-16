@@ -23,6 +23,11 @@ clean:
 # The Delta runtime, linked from IBM's own objects so our primitives can be
 # compared against them the way the Klatt ones were.
 ENUS    := ../analysis/enus
+
+# Objects of the original that nothing reaches any more: everything in them
+# that anything called is ours, and the rest was never called by anything.
+# They are left out of the link entirely rather than stood aside from.
+DEAD    := deltio
 DELTA_OBJS := \
   $(ENUS)/assign.obj $(ENUS)/debug.obj $(ENUS)/delta.obj $(ENUS)/dfault.obj \
   $(ENUS)/extra.obj $(ENUS)/for.obj $(ENUS)/io.obj $(ENUS)/misc.obj \
@@ -128,7 +133,7 @@ $(BUILD)/speak_probe.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
 	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/probe.obj \
 	  $(patsubst %,$(BUILD)/probe/%.obj,$(PROBE_OBJS)) \
-	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(PROBE_OBJS)),\
+	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(DEAD)) $(patsubst %,$(ENUS)/%.obj,$(PROBE_OBJS)),\
 	    $(wildcard $(ENUS)/*.obj)) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
@@ -176,7 +181,7 @@ $(BUILD)/speak_rules.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules.obj \
 	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj $(BUILD)/delta_rules_shim.obj \
 	  $(RULE_SWAP) \
-	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(RULE_OBJS)),\
+	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(DEAD)) $(patsubst %,$(ENUS)/%.obj,$(RULE_OBJS)),\
 	    $(wildcard $(ENUS)/*.obj)) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
@@ -198,7 +203,7 @@ $(BUILD)/speak_ref.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
 	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules_ref.obj \
 	  $(RULE_SWAP) \
-	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(RULE_OBJS)),\
+	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(DEAD)) $(patsubst %,$(ENUS)/%.obj,$(RULE_OBJS)),\
 	    $(wildcard $(ENUS)/*.obj)) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
@@ -286,7 +291,7 @@ $(BUILD)/speak_prim.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules.obj \
 	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj $(BUILD)/delta_rules_shim.obj \
 	  $(OUR_DELTA) $(SWAP_SWAP) \
-	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(SWAP_OBJS)),\
+	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(DEAD)) $(patsubst %,$(ENUS)/%.obj,$(SWAP_OBJS)),\
 	    $(wildcard $(ENUS)/*.obj)) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
@@ -302,7 +307,7 @@ $(BUILD)/stmt_diff.exe: stmt_diff.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules.obj \
 	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj $(BUILD)/delta_rules_shim.obj \
 	  $(OUR_DELTA) $(SWAP_SWAP) \
-	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(SWAP_OBJS)),\
+	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(DEAD)) $(patsubst %,$(ENUS)/%.obj,$(SWAP_OBJS)),\
 	    $(wildcard $(ENUS)/*.obj)) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
@@ -346,7 +351,7 @@ $(BUILD)/trace_prim.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj $(BUILD)/delta_rules_shim.obj \
 	  $(BUILD)/delta_rules_trace_prim.obj $(BUILD)/our_delta.obj \
 	  $(TSWAP_SWAP) \
-	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(TSWAP_OBJS)),\
+	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(DEAD)) $(patsubst %,$(ENUS)/%.obj,$(TSWAP_OBJS)),\
 	    $(wildcard $(ENUS)/*.obj)) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
