@@ -227,6 +227,7 @@ class Decoder:
         self.at_entry = {}
         self.targets = set()
         self.called = False
+        self.noframe = False
 
     def hold(self, text):
         """What a whole register is known to hold, or None."""
@@ -270,8 +271,19 @@ class Decoder:
         if base == "%esp":
             # A slot of the argument area. The compiler writes over a slot a
             # previous call left behind rather than pushing again.
-            n = len(self.stack) - 1 - off // 4
-            return ("pending", n) if 0 <= n < len(self.stack) else None
+            j = off // 4
+            if j < len(self.stack):
+                return ("pending", len(self.stack) - 1 - j)
+            # Below the area sit the registers this one put by on the way
+            # in, and below those the caller's: the return address, and then
+            # this one's own arguments. Only where there is no frame
+            # pointer, because otherwise the locals are down there instead.
+            if self.noframe:
+                k = j - len(self.stack) - len(self.saved) - 1
+                if k >= 0:
+                    self.params = max(self.params, k + 1)
+                    return ("param", k)
+            return None
         if base == "%ebp":
             if off >= self.pbase:
                 self.params = max(self.params, (off - self.pbase) // 4 + 1)
@@ -331,9 +343,16 @@ class Decoder:
         A small frame gets the textbook prologue and the arguments start
         eight bytes above the base pointer. A large one has the base pointer
         planted part way down the frame instead, so the arguments start that
-        much further up and locals sit on both sides of it.
+        much further up and locals sit on both sides of it. A helper with
+        nothing to keep has no frame at all and reaches its arguments past
+        the return address.
         """
+        return self.prologue_body(i)
+
+    def prologue_body(self, i):
         it = self.items
+        self.noframe = not (it[i][2] in ("pushl", "push")
+                            and it[i][3] == "%ebp")
         if it[i][2] in ("pushl", "push") and it[i][3] == "%ebp":
             nxt = it[i + 1]
             if nxt[2] in ("movl", "mov") and nxt[3] == "%esp, %ebp":

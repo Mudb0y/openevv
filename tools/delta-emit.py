@@ -784,7 +784,37 @@ def main():
                 if failed[str(err).split(" ")[0]] < 3:
                     print("  %s in %s: %s" % (name, obj, err))
 
-    print("rules emitted: %d" % len(e.rules))
+    rules_done = len(e.rules)
+
+    # The helper thunks the compiler generated beside the rules. They are
+    # not rules, so nothing above picks them up, but they are the same kind
+    # of thing: a fixed run of calls into the runtime, and the interpreter
+    # runs them the same way.
+    glob = os.path.join(where, "glob.obj")
+    if os.path.exists(glob):
+        raws = None
+        for name, items in dl.read_functions(glob):
+            if not name.startswith("ZZ"):
+                continue
+            data, tables = dl.find_data(items)
+            d = dl.Decoder(name, items, data, tables, known).run()
+            if d.holes:
+                failed["holes"] += 1
+                continue
+            # A thunk passes its caller's arguments through, and the ones it
+            # never reads itself are still there to be passed on, so where
+            # the call sites say more than it reads, they are right.
+            d.params = max(d.params, known.get(name, 0))
+            if raws is None:
+                raws = raw_bytes(glob)
+            try:
+                e.rule(name, d, raws, "glob.obj")
+                e.origin[name] = "glob.obj"
+            except ValueError as err:
+                failed[str(err).split(" ")[0]] += 1
+
+    print("rules emitted: %d, helper thunks: %d"
+          % (rules_done, len(e.rules) - rules_done))
     print("bytecode: %d bytes" % len(e.code))
     print("constants: %d, strings: %d, entry points: %d"
           % (len(e.imm.items), len(e.sym.items), len(e.entry.items)))
