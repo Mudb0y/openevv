@@ -63,12 +63,17 @@ typedef struct {
 #define ST_MARKS(t)     ST_PTR(t, 0x3b4)  /* where index notes are queued */
 #define ST_FLAGS(t)     ST_U32(t, 0x3b8)
 #define ST_CONCAT(t)    ST_PTR(t, 0x3c4)  /* ConcatenationManager, may be 0 */
+#define ST_DIRECT(t)    ST_I32(t, 0x3cc)  /* set while talking to the engine */
+#define ST_FILTERS(t)   ST_PTR(t, 0x3d4)  /* FilterManager, may be 0 */
 #define ST_FILTER(t)    ST_PTR(t, 0x3d8)  /* the one filter in play */
+#define ST_FRESH(t)     (*(uint8_t *)((char *)(t) + 0x3dc))  /* nothing said
+                                             to the engine since the reset */
 #define ST_TOLD_CAT(t)  ST_I32(t, 0x3e0)  /* told the caller we went concat */
 
 /* Bits of ST_FLAGS this side reads. */
 #define STF_WORD_MARKS  0x100  /* report where each word starts */
 #define STF_ROMANIZING  0x200  /* index marks go through the romanizer */
+#define STF_WORD_STARTS 0x001  /* the plainer of the two word reports */
 
 /* The application queue's count of what it has been told about, and the flag
    saying whether anyone is listening. */
