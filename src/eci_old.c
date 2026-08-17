@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "eci_synththread.h"
 
 /* Which call was refused. Every entry point has its own bit; the ones here
@@ -66,6 +67,27 @@ extern int eciGetAvailableLanguages2(uint32_t *out, int *count)
     MANGLED("?eciGetAvailableLanguages2@@YAHPAW4ECILanguageDialect@@PAH@Z");
 extern int32_t __stdcall eciGetParam(OldInst *h, int32_t which)
     MANGLED("_eciGetParam@8");
+extern int32_t __stdcall eciNew2(void **out, int32_t language)
+    MANGLED("_eciNew2@8");
+extern int32_t __stdcall eciDelete2(void *h2) MANGLED("_eciDelete2@4");
+extern int32_t __stdcall eciGetParam2(void *h2, int32_t k, int32_t p,
+                                      int32_t *out) MANGLED("_eciGetParam2@16");
+extern void __stdcall eciRegisterCallback2(void *h2, void *cb, void *inst,
+                                           void *a, void *b)
+    MANGLED("_eciRegisterCallback2@20");
+extern void *eciGetRomMngr2(void *h2) MANGLED("_eciGetRomMngr2");
+extern void *eciGetFilterMngr2(void *h2) MANGLED("_eciGetFilterMngr2");
+extern int __stdcall eciSetOutputDevice(OldInst *h, int32_t which)
+    MANGLED("_eciSetOutputDevice@8");
+extern void setRealWorldParamsFromECIParams(void *voice, int32_t which)
+    MANGLED("_setRealWorldParamsFromECIParams");
+extern THIS void *standardConcatenativeVoicesCtor(void *v)
+    MANGLED("??0StandardConcatenativeVoices@@QAE@XZ");
+
+/* Two tables the original keeps to itself. The build makes them visible so
+   this file can read them, the same way it already does for two others. */
+extern int32_t g_DefaultEnvironment[] MANGLED("_g_DefaultEnvironment");
+extern char standardVoices[] MANGLED("_standardVoices");
 extern int isUnicodeCodeSet(int32_t bit, int32_t mode)
     MANGLED("_isUnicodeCodeSet");
 
@@ -74,6 +96,8 @@ int32_t setECIerror(int32_t rc, OldInst *h);
 /* Declared here because the entry points call one another. The queue that
    the caller fills is still the original's; only emptying it is ours. */
 int __stdcall eo_stop(OldInst *h);
+int __stdcall eo_speaking(OldInst *h);
+int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data);
 
 /* Refuse a call that arrived while another was still running, and remember
    which one it was. Answers true when the call must not go on. */
@@ -85,6 +109,37 @@ static int eo_reentered(OldInst *h, uint32_t bit)
     OI_REFUSEDALL(h) |= bit;
     return 1;
 }
+
+/* How big an instance is, and how big the voice table it carries. */
+#define INSTANCE_BYTES  0x6cc
+#define CONCAT_VOICES_BYTES 0x21db0
+
+/* The environment, and the copy kept beside it so a change can be undone. */
+#define OI_ENV(h)       ((int32_t *)((char *)(h) + 0x018))
+#define OI_ENV_SAVED(h) ((int32_t *)((char *)(h) + 0x060))
+#define OI_ENV_WORDS    0x12
+#define OI_DEVICE(h)    (*(int32_t *)((char *)(h) + 0x02c))
+#define OI_LANG(h)      (*(int32_t *)((char *)(h) + 0x03c))
+#define OI_VOICENO(h)   (*(int32_t *)((char *)(h) + 0x05c))
+
+/* The voice in play, its saved copy, and the eight the caller may edit. */
+#define OI_VOICE(h)     ((char *)(h) + 0x0a8)
+#define OI_VOICE_SAVED(h) ((char *)(h) + 0x0f8)
+#define OI_VOICES(h)    ((char *)(h) + 0x148)
+#define VOICE_BYTES     0x50
+#define OLD_VOICES      8
+
+#define OI_READY(h)     (*(int32_t *)((char *)(h) + 0x6a4))
+#define OI_READY2(h)    (*(int32_t *)((char *)(h) + 0x6a8))
+#define OI_ROMMGR(h)    (*(void **)((char *)(h) + 0x6b8))
+#define OI_FILTERMGR(h) (*(void **)((char *)(h) + 0x6bc))
+#define OI_CONCAT(h)    (*(void **)((char *)(h) + 0x6c8))
+
+/* Where the standard voices sit: two dialects to a family, sixteen voices to
+   a dialect after a word of its own, and the old interface shows eight. */
+#define SV_FAMILY_BYTES  0xa08
+#define SV_DIALECT_BYTES 0x504
+#define SV_FIRST         4
 
 /* ---- turning the newer interface's answers into the older one's ---- */
 
@@ -154,8 +209,11 @@ int32_t setECIerror(int32_t rc, OldInst *h)
 #define OI_REPORT(h)   ((char *)(h) + 0x5f4)
 #define OI_REPORT_MODE(h) (*(int32_t *)((char *)(h) + 0x5fe))
 
-typedef int32_t (*OldCallback)(void *inst, int32_t msg, int32_t param,
-                               void *data);
+/* The published callback is stdcall. Calling it as cdecl leaves the stack
+   sixteen bytes high and the return lands in data, one call later. */
+typedef int32_t (__attribute__((stdcall)) *OldCallback)(void *inst, int32_t msg,
+                                                        int32_t param,
+                                                        void *data);
 
 /* Tell the caller one thing, and turn its answer into ours. */
 static int32_t eo_tell(OldInst *h, void *inst, int32_t msg, int32_t param,
@@ -335,6 +393,184 @@ void eo_clearManualQueue(OldInst *h)
     OI_QTAIL(h) = 0;
 }
 
+/* ---- what a new instance starts out as ---- */
+
+/* Copy the settings every instance starts with. The language is not among
+   them: it is asked of the instance itself, because the instance may have
+   settled on something other than what was asked for.
+
+   Two of the eighteen settings are left as they were found, which is the
+   original's doing rather than an oversight here; they are the two the
+   caller has no say in. */
+static const uint8_t ENV_COPIED[] = {
+    0x00, 0x04, 0x08, 0x0c, 0x14, 0x1c, 0x20, 0x28,
+    0x2c, 0x30, 0x34, 0x38, 0x3c, 0x40, 0x44
+};
+
+int eo_getDefaultEnvironment(OldInst *h, int32_t check)
+{
+    size_t i;
+
+    /* Changing anything while it is speaking is refused. */
+    if (check && eo_speaking(h)) {
+        OI_REFUSED(h) = 0x100;
+        OI_REFUSEDALL(h) |= 0x100;
+        return 0;
+    }
+
+    for (i = 0; i < sizeof ENV_COPIED; i++) {
+        int32_t at = ENV_COPIED[i];
+
+        *(int32_t *)((char *)OI_ENV(h) + at) =
+            *(int32_t *)((char *)g_DefaultEnvironment + at);
+    }
+
+    if (eciGetParam2(OI_NEW(h), 0, 2, &OI_LANG(h))) {
+        OI_REFUSED(h) = 0x80;
+        OI_REFUSEDALL(h) |= 0x80;
+        return 0;
+    }
+    memcpy(OI_ENV_SAVED(h), OI_ENV(h), OI_ENV_WORDS * 4);
+    return 1;
+}
+
+/* And the voice it starts out speaking with. The concatenative side is asked
+   first, because a voice it knows about overrides the standard one; a voice
+   it has nothing to say about falls back to the table. */
+int eo_getDefaultActiveVoice(OldInst *h, int32_t check)
+{
+    uint8_t family, dialect;
+    char *entry;
+
+    if (check && eo_speaking(h)) {
+        OI_REFUSED(h) = 0x100;
+        OI_REFUSEDALL(h) |= 0x100;
+        return 0;
+    }
+
+    family = (uint8_t)((OI_LANG(h) & 0xff0000) >> 16);
+    dialect = (uint8_t)(OI_LANG(h) & 0xff);
+
+    entry = (char *)OI_CONCAT(h)
+          + ((int8_t)family - 1) * 0x1e18
+          + (int8_t)dialect * 0xf0c
+          + OI_DEVICE(h) * SV_DIALECT_BYTES
+          + (OI_VOICENO(h) - 1) * VOICE_BYTES;
+
+    if (*(int32_t *)(entry + 0x44)) {
+        memcpy(OI_VOICE(h), entry + SV_FIRST, VOICE_BYTES);
+    } else {
+        char *std = standardVoices
+                  + ((int8_t)family - 1) * SV_FAMILY_BYTES
+                  + (int8_t)dialect * SV_DIALECT_BYTES
+                  + (OI_VOICENO(h) - 1) * VOICE_BYTES;
+
+        memcpy(OI_VOICE(h), std + SV_FIRST, VOICE_BYTES);
+    }
+
+    /* The settings the caller reads back are in its own units, not the
+       engine's, so they are converted once here. */
+    setRealWorldParamsFromECIParams(OI_VOICE(h), -1);
+    memcpy(OI_VOICE_SAVED(h), OI_VOICE(h), VOICE_BYTES);
+    return 1;
+}
+
+/* ---- making an instance ---- */
+
+/* Both ways of making one, which differ only in where the language comes
+   from: one is told, the other takes whatever the settings say.
+
+   Everything after the allocation can fail, and all of it unwinds through
+   the same tail. The four attempts at an output device are tried in turn
+   because a machine with no sound card should still be able to synthesise
+   into a buffer. */
+static OldInst *eo_newInstance(int32_t language, int told)
+{
+    OldInst *h;
+    void *voices;
+    int failed = 1;
+    int i;
+
+    h = (OldInst *)malloc(INSTANCE_BYTES);
+    if (!h)
+        return 0;
+    memset(h, 0, INSTANCE_BYTES);
+
+    voices = cpp_new(CONCAT_VOICES_BYTES);
+    OI_CONCAT(h) = voices ? standardConcatenativeVoicesCtor(voices) : 0;
+    if (!OI_CONCAT(h)) {
+        free(h);
+        return 0;
+    }
+
+    OI_DEVICE(h) = g_DefaultEnvironment[5];
+    if (told)
+        OI_LANG(h) = language;
+    OI_VOICENO(h) = g_DefaultEnvironment[17];
+
+    if (eciNew2(&OI_NEW(h), language) == 0 && OI_NEW(h)) {
+        failed = 0;
+        if (!eo_getDefaultEnvironment(h, 0) || !eo_getDefaultActiveVoice(h, 0)) {
+            failed = 1;
+        } else {
+            uint8_t family = (uint8_t)((OI_LANG(h) & 0xff0000) >> 16);
+            uint8_t dialect = (uint8_t)(OI_LANG(h) & 0xff);
+            char *base = standardVoices
+                       + ((int8_t)family - 1) * SV_FAMILY_BYTES
+                       + (int8_t)dialect * SV_DIALECT_BYTES;
+
+            OI_READY(h) = 1;
+            OI_READY2(h) = 1;
+
+            /* The eight the caller may edit start as the standard ones but
+               under a name that says they are its own. */
+            for (i = 0; i < OLD_VOICES; i++) {
+                memcpy(OI_VOICES(h) + i * VOICE_BYTES,
+                       base + SV_FIRST + i * VOICE_BYTES, VOICE_BYTES);
+                strcpy(OI_VOICES(h) + i * VOICE_BYTES, "User-Defined");
+            }
+
+            eciRegisterCallback2(OI_NEW(h), (void *)eo_callbackFn, h, 0, 0);
+
+            if (!eciSetOutputDevice(h, 0)) {
+                OI_DEVICE(h) = 1;
+                if (!eciSetOutputDevice(h, 0)) {
+                    OI_DEVICE(h) = 0;
+                    if (!eciSetOutputDevice(h, 0)) {
+                        OI_DEVICE(h) = 3;
+                        if (!eciSetOutputDevice(h, 0))
+                            failed = 1;
+                    }
+                }
+            }
+            OI_ROMMGR(h) = eciGetRomMngr2(OI_NEW(h));
+            OI_FILTERMGR(h) = eciGetFilterMngr2(OI_NEW(h));
+        }
+    }
+
+    if (!failed)
+        return h;
+
+    if (OI_NEW(h)) {
+        eciDelete2(OI_NEW(h));
+        OI_NEW(h) = 0;
+    }
+    if (OI_CONCAT(h))
+        cpp_delete(OI_CONCAT(h));
+    free(h);
+    return 0;
+}
+
+OldInst *__stdcall eo_new(void)
+{
+    return eo_newInstance(g_DefaultEnvironment[9], 0);
+}
+
+OldInst *__stdcall eo_newEx(int32_t language)
+{
+    return eo_newInstance(language, 1);
+}
+
 /* ---- the entry points ---- */
 
 /* Nothing to do: errors are cleared as they are read. */
@@ -465,3 +701,9 @@ ALIAS_N("_eciVersion@4", "eo_version", 4);
 ALIAS("?clearManualQueue@@YAXPAUoldECIInstData@@@Z", "eo_clearManualQueue");
 ALIAS("?setECIerror@@YAJJPAUoldECIInstData@@@Z", "setECIerror");
 ALIAS("?eciCallbackFn@@YAJPAXJJ0@Z", "eo_callbackFn");
+ALIAS("?getDefaultEnvironment@@YAHPAUoldECIInstData@@H@Z",
+      "eo_getDefaultEnvironment");
+ALIAS("?getDefaultActiveVoice@@YAHPAUoldECIInstData@@H@Z",
+      "eo_getDefaultActiveVoice");
+ALIAS_N("_eciNew@0", "eo_new", 0);
+ALIAS_N("_eciNewEx@4", "eo_newEx", 4);

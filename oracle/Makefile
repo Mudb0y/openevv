@@ -98,10 +98,14 @@ $(BUILD)/eci.obj: $(ENUS)/eci.obj
 # The same object again with whatever we have replaced in it stood aside.
 # Only the builds that link our sources want this one; the reference wants
 # the original untouched.
+# Two tables the object keeps to itself are made visible as well, because
+# the routines that read them are ours now and live elsewhere.
 $(BUILD)/eci_swap.obj: $(BUILD)/swap/eci.obj
 	@mkdir -p $(BUILD)
 	@$(OBJCOPY) --globalize-symbol=_protectFirstTime \
-	  --globalize-symbol=_initializeStandardVoices $< $@
+	  --globalize-symbol=_initializeStandardVoices \
+	  --globalize-symbol=_g_DefaultEnvironment \
+	  --globalize-symbol=_standardVoices $< $@
 
 $(BUILD)/speak.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(BUILD)/eci.obj
 	@mkdir -p $(BUILD)
