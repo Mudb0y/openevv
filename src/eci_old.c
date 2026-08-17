@@ -64,10 +64,12 @@ extern void __stdcall eciVersion2(int32_t *a, int32_t *b, int32_t *c,
                                   int32_t *d) MANGLED("_eciVersion2@16");
 extern int eciGetAvailableLanguages2(uint32_t *out, int *count)
     MANGLED("?eciGetAvailableLanguages2@@YAHPAW4ECILanguageDialect@@PAH@Z");
-/* The one routine in this object that is driven by a jump table, so it is
-   still the original's until those tables are lifted. */
-extern int32_t setECIerror(int32_t rc, OldInst *h)
-    MANGLED("?setECIerror@@YAJJPAUoldECIInstData@@@Z");
+extern int32_t __stdcall eciGetParam(OldInst *h, int32_t which)
+    MANGLED("_eciGetParam@8");
+extern int isUnicodeCodeSet(int32_t bit, int32_t mode)
+    MANGLED("_isUnicodeCodeSet");
+
+int32_t setECIerror(int32_t rc, OldInst *h);
 
 /* Declared here because the entry points call one another. The queue that
    the caller fills is still the original's; only emptying it is ours. */
@@ -82,6 +84,235 @@ static int eo_reentered(OldInst *h, uint32_t bit)
     OI_REFUSED(h) = bit;
     OI_REFUSEDALL(h) |= bit;
     return 1;
+}
+
+/* ---- turning the newer interface's answers into the older one's ---- */
+
+/* Every refusal the newer interface can give has a bit in the older one's
+   word of errors. This is that table, read off the original's own two: a
+   byte table from the answer to a case, and a table of cases to bits.
+   Answers outside the range, and four inside it, set no bit at all.
+
+   The answer itself is handed straight back, so a caller that looks at the
+   number rather than the bits sees what really happened. */
+static const uint16_t ERROR_BIT[21] = {
+    /* -21 */ 0x4000,
+    /* -20 */ 0, 0, 0, 0,
+    /* -16 */ 0x0020,
+    /* -15 */ 0x0010,
+    /* -14 */ 0x4000,
+    /* -13 */ 0x0200,
+    /* -12 */ 0, 0, 0,
+    /*  -9 */ 0x0100,
+    /*  -8 */ 0x0080,
+    /*  -7 */ 0x0080,
+    /*  -6 */ 0x0080,
+    /*  -5 */ 0x0020,
+    /*  -4 */ 0x0020,
+    /*  -3 */ 0x0080,
+    /*  -2 */ 0x0002,
+    /*  -1 */ 0x0001,
+};
+
+int32_t setECIerror(int32_t rc, OldInst *h)
+{
+    uint32_t at = (uint32_t)(rc + 21);
+
+    if (at <= 20 && ERROR_BIT[at]) {
+        OI_REFUSED(h) = ERROR_BIT[at];
+        OI_REFUSEDALL(h) |= ERROR_BIT[at];
+    }
+    return rc;
+}
+
+/* ---- the bridge from the engine's callback to the caller's ---- */
+
+/* What the older interface calls each kind of report. */
+#define ECI_WAVEFORM      0
+#define ECI_PHONEMES      1
+#define ECI_INDEX         2
+#define ECI_PHONEME_INDEX 3
+#define ECI_WORD_INDEX    4
+#define ECI_STRING_INDEX  5
+#define ECI_AUDIO_INDEX   6
+#define ECI_BREAK      0x32
+
+/* And what the caller can answer. */
+#define CALLER_ABORT   0
+#define CALLER_STOP    2
+#define CALLER_TOOK    1
+
+/* What this bridge answers back down. */
+#define BRIDGE_ABORT   (-1)
+#define BRIDGE_STOP    (-18)
+
+/* Which parameter names the text mode, and the bit that means it is wide. */
+#define PARAM_CODESET  9
+#define CODESET_WIDE   0x800
+
+/* Where the phoneme report is built before the caller is shown it. */
+#define OI_REPORT(h)   ((char *)(h) + 0x5f4)
+#define OI_REPORT_MODE(h) (*(int32_t *)((char *)(h) + 0x5fe))
+
+typedef int32_t (*OldCallback)(void *inst, int32_t msg, int32_t param,
+                               void *data);
+
+/* Tell the caller one thing, and turn its answer into ours. */
+static int32_t eo_tell(OldInst *h, void *inst, int32_t msg, int32_t param,
+                       int32_t *ret)
+{
+    int32_t said = ((OldCallback)OI_CALLBACK(h))(inst, msg, param,
+                                                 OI_CBDATA(h));
+
+    if (said == CALLER_ABORT)
+        *ret = BRIDGE_ABORT;
+    else if (said == CALLER_STOP)
+        *ret = BRIDGE_STOP;
+    return said;
+}
+
+/* The engine reports everything here, and this is where it is turned into
+   what the older interface promised. The instance the caller knows is the
+   one handed back as the data, so it is passed on as the handle. */
+int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data)
+{
+    OldInst *h = (OldInst *)data;
+    int32_t ret = 0;
+
+    switch (msg) {
+    case 0:     /* an index mark reached */
+        if (h && OI_CALLBACK(h))
+            eo_tell(h, inst, ECI_INDEX, param, &ret);
+        if (h)
+            OI_LASTINDEX(h) = param;
+        break;
+
+    case 1:     /* samples, counted in bytes here and in samples there */
+        if (h && OI_CALLBACK(h))
+            eo_tell(h, inst, ECI_WAVEFORM, param / 2, &ret);
+        break;
+
+    case 2:     /* phonemes */
+        if (h && OI_CALLBACK(h))
+            eo_tell(h, inst, ECI_PHONEMES, param, &ret);
+        break;
+
+    case 3: {   /* a phoneme reached, with everything known about it */
+        char *rec = (char *)(size_t)param;
+        int32_t mode;
+
+        if (!h || !OI_CALLBACK(h))
+            break;
+        if (!param) {
+            OI_REFUSED(h) = 0x10;
+            OI_REFUSEDALL(h) |= 0x10;
+            break;
+        }
+        mode = eciGetParam(h, PARAM_CODESET);
+        OI_REPORT_MODE(h) = *(int32_t *)(rec + 0x0c);
+
+        /* The name of the phoneme is four characters, wide or narrow
+           depending on what the caller asked to be spoken to in. */
+        if (isUnicodeCodeSet(CODESET_WIDE, mode)) {
+            uint16_t *out = (uint16_t *)OI_REPORT(h);
+            int i;
+
+            OI_REPORT_MODE(h) |= CODESET_WIDE;
+            for (i = 0; i < 4; i++)
+                out[i] = (uint8_t)rec[i];
+        } else {
+            char *out = OI_REPORT(h);
+            int i;
+
+            for (i = 0; i < 4; i++)
+                out[i] = rec[i];
+        }
+
+        /* And eight more things about it, each a word in the engine's
+           record and a byte in the caller's. */
+        {
+            int i;
+
+            for (i = 0; i < 8; i++)
+                OI_REPORT(h)[0x0e + i] = rec[0x10 + i * 4];
+        }
+        eo_tell(h, inst, ECI_PHONEME_INDEX, (int32_t)(size_t)OI_REPORT(h),
+                &ret);
+        break;
+    }
+
+    case 4:     /* the engine gave up */
+        if (h) {
+            OI_REFUSED(h) = 0x10;
+            OI_REFUSEDALL(h) |= 0x10;
+        }
+        break;
+
+    case 5:     /* the device gave up */
+        if (h) {
+            OI_REFUSED(h) = 0x20;
+            OI_REFUSEDALL(h) |= 0x20;
+        }
+        break;
+
+    case 6:     /* a mark was lost */
+        if (h) {
+            OI_REFUSED(h) = 0x02;
+            OI_REFUSEDALL(h) |= 0x02;
+        }
+        break;
+
+    case 8:     /* the start of a word */
+        if (h && OI_CALLBACK(h))
+            eo_tell(h, inst, ECI_WORD_INDEX, param, &ret);
+        if (h)
+            OI_LASTINDEX(h) = param;
+        break;
+
+    case 9:     /* the romanizer gave up */
+        if (h) {
+            OI_REFUSED(h) = 0x1000;
+            OI_REFUSEDALL(h) |= 0x1000;
+        }
+        break;
+
+    case 10:    /* and gave up over a language */
+        if (h) {
+            OI_REFUSED(h) = 0x4000;
+            OI_REFUSEDALL(h) |= 0x4000;
+        }
+        break;
+
+    case 12:    /* a piece of speech ended */
+        if (h && OI_CALLBACK(h))
+            eo_tell(h, inst, ECI_BREAK, param, &ret);
+        break;
+
+    case 13:    /* an index mark named by a string */
+    case 14: {  /* and one naming a piece of audio */
+        int32_t which = msg == 13 ? ECI_STRING_INDEX : ECI_AUDIO_INDEX;
+
+        /* The name was copied for the caller and is ours to give back.
+           A caller that says it took the name keeps it; one that does not,
+           and one that never asked for a callback at all, does not. */
+        if (h && OI_CALLBACK(h)) {
+            if (eo_tell(h, inst, which, param, &ret) == CALLER_TOOK
+                && param) {
+                free((void *)(size_t)param);
+                param = 0;
+            }
+            OI_LASTINDEX(h) = param;
+        } else if (param) {
+            free((void *)(size_t)param);
+            param = 0;
+        }
+        break;
+    }
+
+    default:
+        break;
+    }
+    return ret;
 }
 
 /* ---- the queue the caller fills before speaking ---- */
@@ -232,3 +463,5 @@ ALIAS_N("_eciStop@4", "eo_stop", 4);
 ALIAS_N("_eciSpeaking@4", "eo_speaking", 4);
 ALIAS_N("_eciVersion@4", "eo_version", 4);
 ALIAS("?clearManualQueue@@YAXPAUoldECIInstData@@@Z", "eo_clearManualQueue");
+ALIAS("?setECIerror@@YAJJPAUoldECIInstData@@@Z", "setECIerror");
+ALIAS("?eciCallbackFn@@YAJPAXJJ0@Z", "eo_callbackFn");
