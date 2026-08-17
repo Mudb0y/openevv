@@ -45,9 +45,9 @@ DELTA_SUPPORT := $(ENUS)/win_dynabuf.obj $(ENUS)/logio.obj $(ENUS)/win_hash.obj 
 
 delta: $(BUILD)/delta_probe.exe $(BUILD)/delta_diff.exe
 
-$(BUILD)/delta_diff.exe: delta_diff.c delta_stubs.c ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c ../src/delta_tables.c ../src/delta_trace.c ../src/delta.h
+$(BUILD)/delta_diff.exe: delta_diff.c delta_stubs.c ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c ../src/delta_tables.c ../src/delta_trace.c ../src/delta_savefile.c ../src/delta.h
 	@mkdir -p $(BUILD)
-	@$(CC) $(CFLAGS) delta_diff.c delta_stubs.c ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c ../src/delta_tables.c ../src/delta_trace.c $(IBMDELTA) $(DELTA_SUPPORT) $(MINGW_LDFLAGS) -o $@ 2> $(BUILD)/link.err; \
+	@$(CC) $(CFLAGS) delta_diff.c delta_stubs.c ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c ../src/delta_tables.c ../src/delta_trace.c ../src/delta_savefile.c $(IBMDELTA) $(DELTA_SUPPORT) $(MINGW_LDFLAGS) -o $@ 2> $(BUILD)/link.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
 
 $(BUILD)/delta_probe.exe: delta_probe.c delta_stubs.c
@@ -272,7 +272,7 @@ OUR_DELTA  := ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c \
               ../src/eci_toeci.c ../src/eci_tvqueue.c \
               ../src/eci_state.c ../src/eci_instance.c \
               ../src/eci_api2.c ../src/eci_msgqueue.c ../src/eci_appqueue.c ../src/eci_thread.c ../src/eci_soundthread.c \
-              ../src/eci_textfilter.c \
+              ../src/eci_textfilter.c ../src/eci_synthmsg.c \
                             ../src/klatt_fx.c ../src/klatt_state.c ../src/klatt_synth.c \
               ../src/klatt_tables.c ../src/delta_link_enus.c \
               ../src/delta_sets_enus.c

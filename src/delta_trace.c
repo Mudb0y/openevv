@@ -401,6 +401,34 @@ int rdtokverr(delta_state *d, int32_t f, uint8_t st, const char *buf)
     return var_rderr(d, f, spelt) ? 1 : 0;
 }
 
+/* Find a rule activation on the stack by the number it goes under.
+
+   Unwinding is threaded twice over: each return record points at the
+   activation that made it and each activation points at the record beneath
+   it, so following the two alternately walks the stack outwards. What comes
+   back is not the activation whose number matched but the one a step further
+   out, because a rule names the activation it would return into rather than
+   its own.
+
+   Nothing checks that the step further out exists. The original does not
+   either, and by the time this is called the activation asked for is one the
+   caller has already been handed a number for, so there is always something
+   under it. */
+void *vonstack(delta_state *d, int32_t ctx)
+{
+    void **p = (void **)d->vars->back;
+
+    while (p) {
+        void **act = (void **)p[1];
+        int found = *(const int32_t *)act == ctx;
+
+        p = (void **)act[7];
+        if (found)
+            return p[1];
+    }
+    return 0;
+}
+
 /* Where a variable lives.
 
    A reference with the top bit set names one of the language's own, which
