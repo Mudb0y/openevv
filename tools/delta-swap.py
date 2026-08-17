@@ -24,7 +24,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 OURS = ["delta.c", "delta_heap.c", "delta_sysmem.c", "delta_tables.c",
         "delta_trace.c", "klatt_fx.c", "klatt_state.c", "klatt_synth.c",
-        "klatt_tables.c", "delta_link_enus.c", "delta_sets_enus.c", "delta_savefile.c", "eci_dynabuf.c", "eci_logio.c", "eci_link.c", "eci_toeci.c", "eci_tvqueue.c", "eci_state.c", "eci_instance.c", "eci_api2.c", "eci_msgqueue.c", "eci_appqueue.c", "eci_thread.c"]
+        "klatt_tables.c", "delta_link_enus.c", "delta_sets_enus.c", "delta_savefile.c", "eci_dynabuf.c", "eci_logio.c", "eci_link.c", "eci_toeci.c", "eci_tvqueue.c", "eci_state.c", "eci_instance.c", "eci_api2.c", "eci_msgqueue.c", "eci_appqueue.c", "eci_thread.c", "eci_soundthread.c"]
 
 
 def defined_by(obj, kinds="TDBR"):
