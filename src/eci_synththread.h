@@ -44,24 +44,34 @@ typedef struct {
 #define ST_U32(t, off)  (*(uint32_t *)((char *)(t) + (off)))
 #define ST_PTR(t, off)  (*(void **)((char *)(t) + (off)))
 
+#define ST_ENGINES(t)   ST_AT(t, 0x08c)  /* EngineArray, one per language */
 #define ST_ENGINE(t)    ST_PTR(t, 0x2dc)  /* the synthesiser itself */
-#define ST_ENGINE_ID(t) ST_U32(t, 0x2e0)  /* which one, packed into a word */
+#define ST_ENGINE_ID(t) ST_U32(t, 0x2e0)  /* which one, packed into a word;
+                                             also the language record, whose
+                                             printable part follows it */
+/* The second byte of that word is the dialect. Two ids that differ only
+   there are the same engine, so the change path compares them without it. */
+#define LANG_ENGINE_MASK 0xffff00ffu
 #define ST_LOCK(t)      ST_AT(t, 0x2f4)   /* held around the counts below */
 #define ST_POSTED(t)    ST_I32(t, 0x300)  /* something is on the queue */
 #define ST_SAMPLES(t)   ST_I32(t, 0x304)  /* how much sound has been made */
 #define ST_PENDING(t)   ST_I32(t, 0x308)  /* how much is still to come */
 #define ST_LASTMARK(t)  ST_I32(t, 0x30c)  /* where the last index went in */
 #define ST_INDEXQ(t)    ST_AT(t, 0x310)   /* IndexQueue */
+#define ST_OUTFMT(t)    ST_PTR(t, 0x320)  /* a format handed in from outside */
 #define ST_SOUND(t)     ST_PTR(t, 0x330)  /* SoundThread, null before setup */
 #define ST_INDEXMGR(t)  ST_AT(t, 0x334)   /* IndexManager */
 #define ST_FORMAT(t)    ST_AT(t, 0x324)   /* ECIsampleFormat */
 #define ST_APP(t)       ST_PTR(t, 0x370)  /* ETIappMessageQueue */
 #define ST_STATE(t)     ST_PTR(t, 0x374)  /* ECIstate */
+#define ST_OWNFMT(t)    ST_I32(t, 0x378)  /* set when the format above ours */
+#define ST_PHONEMES(t)  ST_I32(t, 0x384)  /* phonemes are owed to the caller */
 #define ST_SILENT(t)    ST_I32(t, 0x39c)  /* set when no device is wanted */
 #define ST_BLOCKER(t)   ST_PTR(t, 0x3ac)  /* Semaphore, made on first block */
 #define ST_ROMAN(t)     ST_PTR(t, 0x3b0)  /* RomanizerManager */
 #define ST_MARKS(t)     ST_PTR(t, 0x3b4)  /* where index notes are queued */
 #define ST_FLAGS(t)     ST_U32(t, 0x3b8)
+#define ST_CORPORA(t)   ST_U32(t, 0x3c0)  /* which corpora this engine has */
 #define ST_CONCAT(t)    ST_PTR(t, 0x3c4)  /* ConcatenationManager, may be 0 */
 #define ST_DIRECT(t)    ST_I32(t, 0x3cc)  /* set while talking to the engine */
 #define ST_FILTERS(t)   ST_PTR(t, 0x3d4)  /* FilterManager, may be 0 */
