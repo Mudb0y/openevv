@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "klatt_state.h"
 
 /* The engine's own handle. Only the one field this file needs is named. */
 typedef struct DeltaThis DeltaThis;
@@ -46,6 +47,9 @@ typedef struct SynthDevice SynthDevice;
 #define SD_SLEEPCYCLE(v)  (*(int32_t *)((char *)(v) + 0x24))
 #define SD_LAST_CLOCK(v)  (*(int32_t *)((char *)(v) + 0x3c))
 #define SD_UNKNOWN_38(v)  (*(int32_t *)((char *)(v) + 0x38))
+#define SD_PENDING(v)     (*(int32_t *)((char *)(v) + 0x38))
+#define SD_OPEN(v)        (*(int32_t *)((char *)(v) + 0x2c))
+#define SD_HOLD(v)        (*(int32_t *)((char *)(v) + 0x40))
 #define SD_INDEX_CB(v)    (*(void **)((char *)(v) + 0x44))
 #define SD_INDEX_DATA(v)  (*(void **)((char *)(v) + 0x48))
 #define SD_PHONEME_CB(v)  (*(void **)((char *)(v) + 0x4c))
@@ -80,8 +84,6 @@ typedef int (*PhonemeCallback)(int32_t a, int32_t b, void *data);
 typedef int (THIS *IsEmptyFn)(void *self);
 
 extern void setInterrupt(DeltaThis *d, int32_t on) MANGLED("_setInterrupt");
-extern void klatt_delete(void *k) MANGLED("_klatt_delete");
-extern void KlattClose(void *k) MANGLED("_KlattClose");
 extern int32_t deleteSleepCycle(int32_t h) MANGLED("_deleteSleepCycle");
 extern long clock(void);
 extern void stmarray_delete(DeltaThis *d) MANGLED("_stmarray_delete");
@@ -435,16 +437,30 @@ static const int32_t DEFAULT_FRAME[FRAME_WORDS] = {
 static const int32_t last_glob[LAST_GLOB_WORDS] = { 1, 0, 0, 5, 8, 1 };
 
 extern void *cpp_new_bytes(uint32_t n) MANGLED("??2@YAPAXI@Z");
-extern THIS void *soundDeviceInfoCtor(void *self)
-    MANGLED("??0SoundDeviceInfo@@QAE@XZ");
+THIS void *soundDeviceInfoCtor(void *self);
+extern THIS void *indexQueueCtor(void *self)
+    MANGLED("??0IndexQueue@@QAE@XZ");
+
+/* What the language record keeps of the last utterance: the synthesiser's
+   constant parameters, the volume, and the frame. */
+typedef struct LastGlob {
+    KlattConstParms cp;
+    int32_t         volume;
+    int32_t         frame[FRAME_WORDS];
+} LastGlob;
+
+/* Where the engine keeps the table that turns a stream number into an
+   offset. */
+#define DT_SYMBOLS(d)   (*(void **)((char *)(d) + 0x68))
 extern int stmarray_new(DeltaThis *d) MANGLED("_stmarray_new");
-extern void *klatt_new(DeltaThis *d) MANGLED("_klatt_new");
-extern int synthesize(DeltaThis *d, void *buf, int32_t a, int32_t b,
-                      int32_t c, int32_t d1, int32_t d2, int32_t d3,
-                      int32_t d4, int32_t d5, int32_t d6, int32_t d7,
-                      int32_t d8, int32_t d9, int32_t d10, int32_t d11,
-                      int32_t d12, const int32_t *frame)
-    MANGLED("_synthesize");
+int synthesize(DeltaThis *d, void *buf, int32_t isArray, int32_t *streamA,
+               int32_t *streamB, int32_t from, int32_t to, int32_t more,
+               int32_t a5, int32_t rate, int32_t a7, int32_t nFormants,
+               int32_t addC, int32_t addA, int32_t addB, int32_t addD,
+               int32_t volume, const int32_t *frame);
+
+/* An error reporter that does nothing, which is what the engine installs. */
+extern int errorIgnore(void) MANGLED("_errorIgnore");
 
 /* What the engine answers when it has run out of memory. */
 #define DELTA_NO_ROOM  (-2)
@@ -598,8 +614,381 @@ int callSynthesizeArray(DeltaThis *d, Cell *rate, Cell *c2, Cell *c3,
     return ok;
 }
 
+
+/* ---- choosing which stream feeds which parameter -------------------- */
+
+/* The names the engine knows each parameter by, in frame order. The last is
+   not a parameter at all but the duration stream, which is why it is looked
+   up differently below. */
+#define PARM_NAMES_COUNT (FRAME_WORDS + 1)
+#define PARM_MS          FRAME_WORDS
+
+static const char *const parmNames[PARM_NAMES_COUNT] = {
+    "ui",  "f0",  "av",  "oq",  "tl",  "fl",  "di",  "ah",
+    "af",  "f1",  "b1",  "df1", "db1", "f2",  "b2",  "f3",
+    "b3",  "f4",  "b4",  "f5",  "b5",  "f6",  "b6",  "f7",
+    "b7",  "f8",  "b8",  "fnp", "bnp", "fnz", "bnz", "ftp",
+    "btp", "ftz", "btz", "a1f", "a2f", "a3f", "a4f", "a5f",
+    "a6f", "a7f", "a8f", "ab",  "b1f", "b2f", "b3f", "b4f",
+    "b5f", "b6f", "b7f", "b8f", "anv", "a1v", "a2v", "a3v",
+    "a4v", "a5v", "a6v", "a7v", "a8v", "atv", "ms",
+};
+
+/* Which stream each parameter is to be read from. Kept in the language
+   record's own two hundred and fifty-six bytes. */
+typedef struct ParmAssignments {
+    int32_t kind;                       /* nought stream, one array */
+    int32_t slot[PARM_NAMES_COUNT];
+} ParmAssignments;
+
+/* The value a slot holds when nothing supplies it. */
+#define SLOT_NONE  (-10)
+
+extern int arrayStreamFind(DeltaThis *d, const char *name)
+    MANGLED("_arrayStreamFind");
+extern int num_streams(DeltaThis *d) MANGLED("_num_streams");
+extern const char *stream_name(int8_t n) MANGLED("_stream_name");
+extern int ralStrIcmp(void *ctx, const char *a, const char *b)
+    MANGLED("_ralStrIcmp");
+extern int enum_field(int8_t n, int32_t which) MANGLED("_enum_field");
+extern int time_stream(int8_t n) MANGLED("_time_stream");
+extern int checkInterrupt(DeltaThis *d) MANGLED("_checkInterrupt");
+extern int timeDuration(DeltaThis *d, void *a, void *b, int8_t which)
+    MANGLED("_timeDuration");
+extern int sendArrayParameters(DeltaThis *d, int32_t a, int32_t b, int32_t c,
+                               int32_t e, int32_t f, int32_t g, int32_t h,
+                               void *pa, const int32_t *frame)
+    MANGLED("_sendArrayParameters");
+extern int sendStreamParameters(DeltaThis *d, void *a, void *b, int32_t c,
+                                int32_t e, int32_t f, int32_t g, int32_t h,
+                                int32_t i, void *pa, const int32_t *frame)
+    MANGLED("_sendStreamParameters");
+extern THIS uint32_t indexQueueReduceLeadTime(void *self, uint32_t n)
+    MANGLED("?reduceLeadTime@IndexQueue@@QAEKK@Z");
+extern THIS int indexQueueIndexDue(void *self)
+    MANGLED("?indexDue@IndexQueue@@QBEHXZ");
+
+/* Work out where every parameter's values are coming from.
+
+   For an array the answer is a stream index found by name, and any one of
+   them being found is enough. For a stream the search is by name over the
+   streams the engine has, and the duration parameter at the end is matched
+   against the stream that carries time rather than a value.
+
+   The original never clears the duration slot before that second search, so
+   what it compares against at the end is whatever was there. Kept as it is,
+   because a differential port is the point. */
+int assignParameters(DeltaThis *d, int32_t kind, ParmAssignments *pa)
+{
+    int i;
+    int8_t n;
+
+    pa->kind = kind;
+
+    if (kind) {
+        int any = 0;
+
+        for (i = 0; i < FRAME_WORDS; i++) {
+            pa->slot[i] = arrayStreamFind(d, parmNames[i]);
+            if (pa->slot[i] != -1)
+                any = 1;
+        }
+        return any;
+    }
+
+    for (i = 0; i < FRAME_WORDS; i++) {
+        *(int8_t *)&pa->slot[i] = SLOT_NONE;
+        for (n = 0; n < num_streams(d); n++)
+            if (ralStrIcmp(0, parmNames[i], stream_name(n)) == 0
+                && enum_field(n, 0) == 0)
+                *(int8_t *)&pa->slot[i] = n;
+    }
+
+    for (n = 0; n < num_streams(d); n++)
+        if (ralStrIcmp(0, parmNames[PARM_MS], stream_name(n)) == 0
+            && time_stream(n))
+            *(int8_t *)&pa->slot[PARM_MS] = n;
+
+    return *(int8_t *)&pa->slot[PARM_MS] != SLOT_NONE;
+}
+
+/* ---- samples coming back out ---------------------------------------- */
+
+/* What the synthesiser hands back: how many samples, and where they are. */
+typedef struct KlattSamples {
+    int32_t  count;
+    int32_t *samples;
+} KlattSamples;
+
+typedef void (*SampleFn)(uint32_t n, int32_t *samples, void *data);
+
+/* Called by the synthesiser with each run of samples it has made.
+
+   The run is handed on to the caller in pieces, each piece no longer than
+   the distance to the next index mark, so that a mark can be reported at
+   exactly the sample it belongs to rather than at the end of the block.
+   Marks that have come due are released between pieces. */
+int ourKlattCallback(void *user, KlattSamples *s)
+{
+    DeltaThis *d = (DeltaThis *)user;
+    SynthDevice *dev = DL_DEVICE(DT_LANG(d));
+    void *q = SD_QUEUE(dev);
+    int32_t done = 0;
+
+    /* Held: wait, but keep looking for a reason to give up. */
+    while (SD_HOLD(dev)) {
+        if (checkInterrupt(d))
+            return 0;
+    }
+
+    while (done < s->count) {
+        IsEmptyFn isEmpty = (IsEmptyFn)(*(void ***)q)[0];
+        uint32_t piece;
+
+        if (isEmpty(q))
+            piece = s->count - done;
+        else
+            piece = indexQueueReduceLeadTime(q, s->count - done);
+
+        if (SD_SAMPLE_CB(dev))
+            ((SampleFn)SD_SAMPLE_CB(dev))(piece, s->samples + done,
+                                          SD_SAMPLE_DATA(dev));
+
+        while (indexQueueIndexDue(q)) {
+            if (!insertSynthIndex(d, indexQueueRemove(q)))
+                return 0;
+        }
+        done += piece;
+    }
+    return 1;
+}
+
+/* ---- one utterance ---------------------------------------------------- */
+
+/* Turn a stretch of parameters into sound.
+
+   Most of this is deciding whether anything has changed since last time. The
+   synthesiser's constant parameters and the frame are both kept in the
+   language record, and if neither has moved the synthesiser is left open and
+   only the new values are sent. That matters: reopening it resets the filter
+   state and would be audible at every boundary.
+
+   The work itself is two calls. The first sends the parameters with nothing
+   asked of them, which is how the engine finds out how long the result will
+   be; the second sends them again and lets the samples come. */
+int synthesize(DeltaThis *d, void *buf, int32_t isArray, int32_t *streamA,
+               int32_t *streamB, int32_t from, int32_t to, int32_t more,
+               int32_t a5, int32_t rate, int32_t a7, int32_t nFormants,
+               int32_t addC, int32_t addA, int32_t addB, int32_t addD,
+               int32_t volume, const int32_t *frame)
+{
+    DeltaLang *lang = DT_LANG(d);
+    SynthDevice *dev = DL_DEVICE(lang);
+    KlattConstParms cp;
+    LastGlob *last;
+    int32_t duration;
+    int wasIdle;
+    int changed = 0;
+    int finish = 0;
+    int rc;
+
+    SD_INTERRUPTED(dev) = 1;
+
+    /* The first time through, and whenever the caller changes its mind about
+       arrays or streams, the parameter-to-stream map is rebuilt. */
+    if (DL_FLAG_18(lang)) {
+        if (!assignParameters(d, isArray, DL_BUF_100(lang))) {
+            SD_INTERRUPTED(dev) = 0;
+            return 0;
+        }
+        DL_FLAG_18(lang) = 0;
+    }
+
+    wasIdle = (SD_PLAYING(dev) == 0);
+    SD_PLAYING(dev) = 1;
+
+    if (isArray != ((ParmAssignments *)DL_BUF_100(lang))->kind
+        && !assignParameters(d, isArray, DL_BUF_100(lang))) {
+        SD_PLAYING(dev) = 0;
+        SD_INTERRUPTED(dev) = 0;
+        return 0;
+    }
+
+    if (isArray) {
+        duration = to - from;
+        if (duration < 0 || (duration == 0 && more == 0)) {
+            SD_PLAYING(dev) = 0;
+            SD_INTERRUPTED(dev) = 0;
+            return 0;
+        }
+    } else {
+        int8_t which =
+            *(int8_t *)&((ParmAssignments *)DL_BUF_100(lang))->slot[PARM_MS];
+        int32_t at = *(int32_t *)((char *)DT_SYMBOLS(d) + 0x1174) + which;
+
+        if (!(streamA[at] & 1) || !(streamB[at] & 1)) {
+            SD_INTERRUPTED(dev) = 0;
+            return 0;
+        }
+        duration = timeDuration(d, streamA, streamB, which);
+        if (duration == 0 && more == 0) {
+            SD_PLAYING(dev) = 0;
+            SD_INTERRUPTED(dev) = 0;
+            return 0;
+        }
+    }
+
+    if (SD_FILENAME(dev))
+        buf = SD_FILENAME(dev);
+    else if (!buf)
+        buf = "";
+
+    /* Build the synthesiser's constant parameters, then see whether any of
+       the six that matter have moved since the last utterance. */
+    memset(&cp, 0, sizeof cp);
+    cp.unknown_00 = 100;
+    cp.sample_rate = 0;
+    cp.unknown_08 = 16;
+    cp.n_formants = 5;
+    cp.unknown_10 = 8;
+    cp.unknown_14 = 1;
+    cp.error_fn = (klatt_error_fn)errorKlattIgnore;
+
+    if (rate) {
+        cp.sample_rate = rate;
+        DL_RATE(lang) = rate;
+    }
+    if (nFormants)
+        cp.n_formants = nFormants;
+    cp.unknown_2c += addC;
+    cp.unknown_24 += addA;
+    cp.unknown_28 += addB;
+    cp.unknown_20 += addD;
+    cp.error_fn = (klatt_error_fn)errorIgnore;
+    cp.callback_mode = 2;
+    cp.samples_fn = (klatt_samples_fn)ourKlattCallback;
+
+    if (!a7)
+        a7 = 5;
+
+    last = (LastGlob *)DL_BUF_140(lang);
+    if (cp.sample_rate != last->cp.sample_rate
+        || cp.n_formants != last->cp.n_formants
+        || cp.unknown_2c != last->cp.unknown_2c
+        || cp.unknown_24 != last->cp.unknown_24
+        || cp.unknown_28 != last->cp.unknown_28
+        || cp.unknown_20 != last->cp.unknown_20) {
+        changed = 1;
+        last->cp = cp;
+    }
+
+    /* Lazy writing: if nothing at all has changed, the whole utterance can
+       be skipped. Finding that out costs one pass with nothing asked of it. */
+    if (SD_LAZY_WRITE(dev)) {
+        int again = 1;
+
+        /* Coming back from idle there is nothing to compare against, and
+           when nothing has moved there is nothing to ask. */
+        if (wasIdle)
+            again = 0;
+        else if (!changed && last->volume == volume
+                 && memcmp(last->frame, frame, FRAME_WORDS * 4) == 0)
+            again = 0;
+
+        if (again) {
+            if (isArray)
+                rc = sendArrayParameters(d, from, from, 1, 0, 1, 0, a7,
+                                         DL_BUF_100(lang), frame);
+            else
+                rc = sendStreamParameters(d, streamA, streamA, 0, 1, 0, 1, 0,
+                                          a7, DL_BUF_100(lang), frame);
+            if (!rc) {
+                SD_PLAYING(dev) = 0;
+                SD_INTERRUPTED(dev) = 0;
+                return 0;
+            }
+        }
+
+        last->volume = volume;
+        memcpy(last->frame, frame, FRAME_WORDS * 4);
+    }
+
+    if (changed) {
+        KlattSetConstParms(DL_KLATT(lang), cp);
+        SD_OPEN(dev) = 0;
+    }
+
+    if (!SD_OPEN(dev)) {
+        if (!KlattOpen(DL_KLATT(lang))) {
+            SD_PLAYING(dev) = 0;
+            SD_INTERRUPTED(dev) = 0;
+            return 0;
+        }
+        SD_OPEN(dev) = 1;
+    }
+
+    /* How much of this utterance is being asked for now, and how much is
+       being carried over. */
+    if (more) {
+        SD_PENDING(dev) = (more > duration) ? more : duration;
+        if (SD_SAMPLE_CB(dev) && SD_DUR_CB(dev))
+            ((void (*)(int32_t, uint32_t, void *))SD_DUR_CB(dev))(
+                SD_PENDING(dev) * rate / MS_PER_SECOND,
+                (uint32_t)(a5 * rate) / MS_PER_SECOND,
+                SD_DUR_DATA(dev));
+    } else {
+        SD_PENDING(dev) = 0;
+        finish = 1;
+    }
+
+    klattSetVolumeMultiplier(DL_KLATT(lang), volume);
+
+    if (isArray)
+        rc = sendArrayParameters(d, from, to, SD_LAZY_WRITE(dev), wasIdle,
+                                 finish, 0, a7, DL_BUF_100(lang), frame);
+    else
+        rc = sendStreamParameters(d, streamA, streamB, duration,
+                                  SD_LAZY_WRITE(dev), wasIdle, finish, 0, a7,
+                                  DL_BUF_100(lang), frame);
+
+    if (checkInterrupt(d))
+        SD_PENDING(dev) = 0;
+
+    if (SD_PENDING(dev) > duration)
+        SD_PENDING(dev) -= duration;
+    else
+        SD_PENDING(dev) = 0;
+
+    if (finish)
+        finishSynthesis(d);
+
+    SD_INTERRUPTED(dev) = 0;
+    return rc;
+}
+
+/* The device record starts empty but for its index queue and the handle it
+   uses to say it has no sleep cycle yet. */
+THIS void *soundDeviceInfoCtor(void *self)
+{
+    char *v = (char *)self;
+    int i;
+
+    for (i = 0; i < 5; i++)
+        ((int32_t *)v)[i] = 0;
+    indexQueueCtor(v + 0x14);
+    SD_SLEEPCYCLE(v) = -1;
+    for (i = 0x28; i <= 0x50; i += 4)
+        *(int32_t *)(v + i) = 0;
+    return self;
+}
+
 ALIAS("?finishSynthesis@@YAXPAUDelta_This_Struct@@@Z", "finishSynthesis");
 ALIAS("?deleteOutputDevice@@YAXPAUDelta_This_Struct@@@Z",
       "deleteOutputDevice");
 ALIAS("?sleepCycleCallback@@YAHPAUSoundDeviceInfo@@H@Z",
       "sleepCycleCallback");
+ALIAS("?assignParameters@@YAHPAUDelta_This_Struct@@HPAUParmAssignments@@@Z",
+      "assignParameters");
+ALIAS("?ourKlattCallback@@YAHPAXPAUKlattSamplesStruct@@@Z",
+      "ourKlattCallback");
+ALIAS("??0SoundDeviceInfo@@QAE@XZ", "soundDeviceInfoCtor");
