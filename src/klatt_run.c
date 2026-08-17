@@ -20,6 +20,7 @@
    original's aside on that alone. */
 
 #include <stdint.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include "eci_synththread.h"
@@ -55,7 +56,11 @@ typedef struct SynthDevice SynthDevice;
 #define DL_DEVICE(l)      (*(SynthDevice **)((char *)(l) + 0x10))
 #define DL_BUF_100(l)     (*(void **)((char *)(l) + 0x14))
 #define DL_BUF_140(l)     (*(void **)((char *)(l) + 0x1c))
+#define DL_EXTENSION(l)   (*(const char **)((char *)(l) + 0x08))
+#define DL_VOICE_FILE(l)  (*(const char **)((char *)(l) + 0x0c))
+#define DL_FLAG_18(l)     (*(int32_t *)((char *)(l) + 0x18))
 #define DL_KLATT(l)       (*(void **)((char *)(l) + 0x20))
+#define DL_BYTE_3C(l)     (*(int8_t *)((char *)(l) + 0x3c))
 #define DL_BUF_4(l)       (*(void **)((char *)(l) + 0x30))
 #define DL_SPOKEN(l)      (*(int32_t *)((char *)(l) + 0x44))
 #define DL_MARKED(l)      (*(int32_t *)((char *)(l) + 0x48))
@@ -391,6 +396,206 @@ void deltaCleanup(DeltaThis *d)
     vnstackCleanup(d);
     vdelCleanup(d);
     logicalIOCleanup(d);
+}
+
+
+/* ---- building an engine's language half ----------------------------- */
+
+/* One of the engine's value cells. Only the two fields read here are
+   named: a word at two and a long at four. */
+typedef struct Cell {
+    int16_t pad;
+    int16_t w;
+    int32_t l;
+} Cell;
+
+/* The parameter frame the synthesiser works from, and the defaults every
+   frame starts at: a hundred hertz, the eight formants at five hundred,
+   fifteen hundred, twenty-five hundred and so on, and everything not named
+   at nought. Lifted out of the original, which builds this on the stack one
+   store at a time. */
+#define FRAME_WORDS   62
+#define FRAME_END     63
+
+static const int32_t DEFAULT_FRAME[FRAME_WORDS] = {
+        5,  1000,    60,    50,     0,     0,     0,     0,
+        0,   500,    60,     0,     0,  1500,    90,  2500,
+      150,  3250,   200,  3700,   200,  5000,   500,  6300,
+      500,  7500,   600,   280,    90,   280,    90,   250,
+       90,   250,    90,     0,     0,     0,     0,     0,
+        0,     0,     0,     0,    80,   200,   350,  1000,
+      800,  1000,  1500,  1500,     0,     0,     0,     0,
+        0,     0,     0,     0,     0,     0
+};
+
+/* The block of default parameters every language record starts from. Read
+   out of the original's data, where it is written once and never again. */
+#define LAST_GLOB_WORDS  (BUF_140_BYTES / 4)
+
+static const int32_t last_glob[LAST_GLOB_WORDS] = { 1, 0, 0, 5, 8, 1 };
+
+extern void *cpp_new_bytes(uint32_t n) MANGLED("??2@YAPAXI@Z");
+extern THIS void *soundDeviceInfoCtor(void *self)
+    MANGLED("??0SoundDeviceInfo@@QAE@XZ");
+extern int stmarray_new(DeltaThis *d) MANGLED("_stmarray_new");
+extern void *klatt_new(DeltaThis *d) MANGLED("_klatt_new");
+extern int synthesize(DeltaThis *d, void *buf, int32_t a, int32_t b,
+                      int32_t c, int32_t d1, int32_t d2, int32_t d3,
+                      int32_t d4, int32_t d5, int32_t d6, int32_t d7,
+                      int32_t d8, int32_t d9, int32_t d10, int32_t d11,
+                      int32_t d12, const int32_t *frame)
+    MANGLED("_synthesize");
+
+/* What the engine answers when it has run out of memory. */
+#define DELTA_NO_ROOM  (-2)
+
+/* Build the language half of an engine handle: a record, two working
+   buffers, a device, a word of scratch, the statement array and the
+   synthesiser itself. Each step that fails gives back everything the steps
+   before it took, which is why this reads as a staircase. */
+int dlang_new(DeltaThis *d)
+{
+    DeltaLang *lang;
+    void *dev;
+
+    DT_LANG(d) = malloc(DL_BYTES);
+    if (!DT_LANG(d))
+        return DELTA_NO_ROOM;
+    lang = DT_LANG(d);
+    memset(lang, 0, DL_BYTES);
+
+    DL_BUF_100(lang) = malloc(BUF_100_BYTES);
+    if (!DL_BUF_100(lang)) {
+        free(lang);
+        DT_LANG(d) = 0;
+        return DELTA_NO_ROOM;
+    }
+    memset(DL_BUF_100(lang), 0, BUF_100_BYTES);
+
+    dev = cpp_new_bytes(0x54);
+    DL_DEVICE(lang) = dev ? soundDeviceInfoCtor(dev) : 0;
+    if (!DL_DEVICE(lang)) {
+        free(DL_BUF_100(lang));
+        DL_BUF_100(lang) = 0;
+        free(lang);
+        DT_LANG(d) = 0;
+        return DELTA_NO_ROOM;
+    }
+
+    DL_EXTENSION(lang) = "wav";
+    DL_VOICE_FILE(lang) = "audio.cdv";
+    DL_FLAG_18(lang) = 1;
+
+    DL_BUF_140(lang) = malloc(BUF_140_BYTES);
+    if (!DL_BUF_140(lang)) {
+        free(DL_BUF_100(lang));
+        DL_BUF_100(lang) = 0;
+        cpp_delete(DL_DEVICE(lang));
+        DL_DEVICE(lang) = 0;
+        free(lang);
+        DT_LANG(d) = 0;
+        return DELTA_NO_ROOM;
+    }
+    memcpy(DL_BUF_140(lang), last_glob, BUF_140_BYTES);
+
+    DL_BUF_4(lang) = malloc(BUF_4_BYTES);
+    if (!DL_BUF_4(lang)) {
+        free(DL_BUF_100(lang));
+        DL_BUF_100(lang) = 0;
+        cpp_delete(DL_DEVICE(lang));
+        DL_DEVICE(lang) = 0;
+        free(DL_BUF_140(lang));
+        DL_BUF_140(lang) = 0;
+        free(lang);
+        DT_LANG(d) = 0;
+        return DELTA_NO_ROOM;
+    }
+    memset(DL_BUF_4(lang), 0, BUF_4_BYTES);
+    DL_BYTE_3C(lang) = -1;
+
+    if (stmarray_new(d)) {
+        free(DL_BUF_100(lang));
+        DL_BUF_100(lang) = 0;
+        cpp_delete(DL_DEVICE(lang));
+        DL_DEVICE(lang) = 0;
+        free(DL_BUF_140(lang));
+        DL_BUF_140(lang) = 0;
+        free(DL_BUF_4(lang));
+        DL_BUF_4(lang) = 0;
+        free(lang);
+        DT_LANG(d) = 0;
+        return DELTA_NO_ROOM;
+    }
+
+    DL_KLATT(lang) = klatt_new(d);
+    return 0;
+}
+
+/* ---- one utterance, from a frame of parameters ---------------------- */
+
+/* Speak from a parameter frame.
+
+   Thirteen cells carry the fixed arguments. After them comes a run of pairs,
+   an index and a value, ending at an index of nought; each pair overrides one
+   word of the frame. The indices the caller gives are counted from one.
+
+   The frame starts at the defaults, is then overwritten by the assignment
+   table, and only then by the caller's pairs. */
+int callSynthesizeArray(DeltaThis *d, Cell *rate, Cell *c2, Cell *c3,
+                        Cell *c4, Cell *c5, Cell *c6, Cell *c7, Cell *c8,
+                        Cell *c9, Cell *c10, Cell *c11, Cell *c12, Cell *c13,
+                        ...)
+{
+    int32_t frame[FRAME_WORDS];
+    int32_t v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13;
+    va_list ap;
+    void *buf;
+    int32_t n;
+    int ok;
+    int i;
+
+    (void)rate;
+
+    buf = cpp_new_bytes(0x0d);
+    if (!buf)
+        return 1;
+
+    v2 = c2->l;
+    v3 = c3->l;
+    v4 = c4->l;
+    v5 = c5->l;
+    v6 = c6->w;
+    v7 = c7->w;
+    v8 = c8->w;
+    v9 = c9->w;
+    v10 = c10->w;
+    v11 = c11->w;
+    v12 = c12->w;
+    v13 = c13->w;
+
+    for (i = 0; i < FRAME_WORDS; i++)
+        frame[i] = 0;
+    for (i = 0; i < FRAME_WORDS; i++)
+        frame[i] = DEFAULT_FRAME[i];
+
+    va_start(ap, c13);
+    n = va_arg(ap, Cell *)->w;
+    while (n != 0) {
+        n--;
+        if (n < 0) {
+            va_end(ap);
+            cpp_delete(buf);
+            return 1;
+        }
+        frame[n] = va_arg(ap, Cell *)->w;
+        n = va_arg(ap, Cell *)->w;
+    }
+    va_end(ap);
+
+    ok = synthesize(d, buf, 1, 0, 0, v2, v3, v4, v5, v6, v7, v8, v9, v10,
+                    v11, v12, v13, frame) ? 0 : 1;
+    cpp_delete(buf);
+    return ok;
 }
 
 ALIAS("?finishSynthesis@@YAXPAUDelta_This_Struct@@@Z", "finishSynthesis");
