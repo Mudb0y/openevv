@@ -103,6 +103,7 @@ struct MarkQueue { const MarkQueueVtbl *vt; };
 #define ST_CONCAT(t)    ST_PTR(t, 0x3c4)  /* ConcatenationManager, may be 0 */
 #define ST_DIRECT(t)    ST_I32(t, 0x3cc)  /* set while talking to the engine */
 #define ST_FILTERS(t)   ST_PTR(t, 0x3d4)  /* FilterManager, may be 0 */
+#define ST_OLD_ENGINE(t) ST_I32(t, 0x3d0) /* the engine's answer, kept */
 #define ST_FILTER(t)    ST_PTR(t, 0x3d8)  /* the one filter in play */
 #define ST_FRESH(t)     (*(uint8_t *)((char *)(t) + 0x3dc))  /* nothing said
                                              to the engine since the reset */
