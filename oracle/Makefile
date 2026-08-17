@@ -32,7 +32,7 @@ ENUS    := ../analysis/enus
 #
 # Dropping a name that something still calls is a link error rather than a
 # quiet change, so this list cannot go stale without saying so.
-DEAD    := filtermanager filter ssmlprocessor xmltok ssmlmap ssmlstate ssmlfilter ssmllangstack ssmlsayas ssmlintstack ssmlstrstack win_ssmlutils parserxml soundfil sndmangr ealaudio audiocvt sndoutpt runklatt clsyn deltio logio filio ecilink toeci stmqueue ecistate eciinst eci2 msgqueue appqueue win_etithrd sndthrd textfilt win_cryptstdio expire win_reg \
+DEAD    := concatmanager filtermanager filter ssmlprocessor xmltok ssmlmap ssmlstate ssmlfilter ssmllangstack ssmlsayas ssmlintstack ssmlstrstack win_ssmlutils parserxml soundfil sndmangr ealaudio audiocvt sndoutpt runklatt clsyn deltio logio filio ecilink toeci stmqueue ecistate eciinst eci2 msgqueue appqueue win_etithrd sndthrd textfilt win_cryptstdio expire win_reg \
            win_searchlib win_dbgtest win_ecitrace win_hrtime win_debug \
            debug plot
 

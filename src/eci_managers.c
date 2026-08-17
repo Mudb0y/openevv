@@ -481,3 +481,32 @@ ALIAS("?updateFilter@FilterManager@@QAE?AW4ECIFilterError@@PAX0J0J@Z",
 
 ALIAS("?lexerMutex@SSMLFilter@@1VMutex@@A", "ssml_lexerMutex");
 
+
+ALIAS("??0ConcatenationManager@@QAE@PAVSynthThread@@@Z", "cm_ctor");
+ALIAS("??1ConcatenationManager@@QAE@XZ", "cm_dtor");
+ALIAS("?bufferSPR@ConcatenationManager@@QAEXPBDH@Z", "cm_bufferSPR");
+ALIAS("?engineSupportsConcatenative@ConcatenationManager@@QAEHKK@Z",
+      "cm_engineSupports");
+ALIAS("?getActiveSampleRate@ConcatenationManager@@QAEIXZ",
+      "cm_getActiveSampleRate");
+ALIAS("?processStarCommand@ConcatenationManager@@QAEXPAD@Z",
+      "cm_processStarCommand");
+ALIAS("?registerCallback@ConcatenationManager@@QAEXKP6AXHPAX@Z0@Z",
+      "cm_registerCallbackA");
+ALIAS("?registerCallback@ConcatenationManager@@QAEXKP6AXPAX@Z0@Z",
+      "cm_registerCallbackB");
+ALIAS("?registerCallback@ConcatenationManager@@QAEXP6AXHPAJPAX@Z1@Z",
+      "cm_registerCallbackC");
+ALIAS("?registerVoice@ConcatenationManager@@QAEJHPAUECIExtendedVoiceAttrib@@PAX@Z",
+      "cm_registerVoice");
+ALIAS("?setParam@ConcatenationManager@@QAEHJHH@Z", "cm_setParam");
+ALIAS("?setTorrentParam1@ConcatenationManager@@QAEHKJ@Z",
+      "cm_setTorrentParam1");
+ALIAS("?setTorrentParam2@ConcatenationManager@@QAEHKJ@Z",
+      "cm_setTorrentParam2");
+ALIAS("?unregisterVoice@ConcatenationManager@@QAEJHPAUECIVoiceAttrib@@PAPAX@Z",
+      "cm_unregisterVoice");
+ALIAS("?usingConcatenativeEngine@ConcatenationManager@@QAEHXZ",
+      "cm_usingConcatenativeEngine");
+ALIAS("?voiceIsConcatenative@ConcatenationManager@@QAEHH@Z",
+      "cm_voiceIsConcatenative");
