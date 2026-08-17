@@ -85,7 +85,9 @@ typedef struct { int32_t layout, rate, width; } SampleFormat;
 /* And what the sound manager keeps about a format it is already playing.
    Only the fields the comparison reaches are named. */
 typedef struct {
-    uint8_t pad_00[0x0c];
+    uint8_t pad_00[0x04];
+    void   *sound;      /* +0x04, the device this format is played on */
+    uint8_t pad_08[0x04];
     int32_t a;          /* +0x0c */
     int32_t b;          /* +0x10 */
     int32_t c;          /* +0x14 */
@@ -108,6 +110,15 @@ extern void *m_soundManager
     MANGLED("?m_soundManager@SynthThread@@0PAVSoundManager@@A");
 extern THIS void sm_removeAudioFormat(void *m, AudioFormat *f)
     MANGLED("?removeAudioFormat@SoundManager@@QAEXPAVAudioFormat@@@Z");
+extern THIS void sm_replaceDefaults(void *m, AudioRequest *want)
+    MANGLED("?replaceDefaultFieldsWithValues@SoundManager@@QAEXPAUECIaudioFormat@@@Z");
+extern THIS int32_t sm_requestAudioFormat(void *m, AudioRequest *want,
+                                          AudioFormat **out)
+    MANGLED("?requestAudioFormat@SoundManager@@QAEJPAUECIaudioFormat@@PAPAVAudioFormat@@@Z");
+extern THIS int32_t cat_engineSupports(void *c, uint32_t a, uint32_t b)
+    MANGLED("?engineSupportsConcatenative@ConcatenationManager@@QAEHKK@Z");
+extern THIS void stb_postEngineError(SynthThread *t2)
+    MANGLED("?postEngineError@SynthThread@@AAEXXZ");
 
 extern THIS void stb_postEngineError(SynthThread *t)
     MANGLED("?postEngineError@SynthThread@@AAEXXZ");
@@ -402,6 +413,118 @@ done:
     return rc;
 }
 
+/* ---- a whole new format from the sound manager ---- */
+
+/* Ask the sound manager for a format, and with it the device that plays it.
+
+   Most of this is the same taking down and putting back of the reporting
+   callbacks the two buffer registrations do, with one difference: the word
+   callback only goes to the concatenative side if the side says it knows
+   this engine, rather than if it is the one speaking.
+
+   One fault kept as it stands and marked below: if the converter cannot be
+   made, the format is handed back to the manager but not forgotten, and the
+   device is then read out of it anyway. */
+THIS int32_t stf_newAudioFormat(SynthThread *t, AudioRequest *want)
+{
+    void *lock = ST_LOCK(t);
+    int32_t rc = ERR_REFUSED;
+    EngCommand command;
+    SampleFormat fmt;
+
+    mutex_wait(lock, -1);
+    if (ST_POSTED(t))
+        goto done;
+    if (ST_SAMPBUF(t)) {
+        rc = ERR_HAVE_SAMP;
+        goto done;
+    }
+    if (ST_PHONBUF(t)) {
+        rc = ERR_HAVE_PHON;
+        goto done;
+    }
+
+    rc = OK;
+    sm_replaceDefaults(m_soundManager, want);
+    /* Already playing exactly this? Then there is nothing to do. */
+    if (ST_OUTFMT(t)
+        && stf_audioFormatEquals((AudioFormat *)ST_OUTFMT(t), want))
+        goto done;
+    if (ST_OUTFMT(t))
+        stf_deleteAudioFormat(t);
+
+    rc = sm_requestAudioFormat(m_soundManager, want,
+                               (AudioFormat **)&ST_OUTFMT(t));
+    if (rc)
+        goto done;
+
+    stf_reportingOff(t);
+
+    /* Put the reporting back. The word branch asks whether the
+       concatenative side knows this engine at all, which is not the same
+       question the buffer registrations ask. */
+    if (ST_FLAGS(t) & STF_ROMANIZING) {
+        EngSetUser set = (EngSetUser)ENG_CALL(t, ENG_USER_INDEX_CB);
+
+        set(ST_ENGINE(t), stb_staticUserIndexCallback, t);
+    } else if (ST_FLAGS(t) & STF_WORD_STARTS) {
+        EngSetIndex set = (EngSetIndex)ENG_CALL(t, ENG_WORD_START_CB);
+
+        set(ST_ENGINE(t), stb_staticWordCallback, t);
+        if (cat_engineSupports(ST_CONCAT(t), (ST_ENGINE_ID(t) >> 16) & 0xff,
+                               ST_ENGINE_ID(t) & 0xff))
+            cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_START,
+                                      stb_staticWordCallback, t);
+    }
+    cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_BREAK,
+                              stb_staticSynthesisBreakCallback, t);
+
+    if (cat_setParam(ST_CONCAT(t), CAT_SAMPLE_RATE, want->b, 1) == -1)
+        rc = ERR_ENGINE;
+
+    fmt.layout = want->a;
+    fmt.rate = want->b;
+    fmt.width = want->c;
+    if (stw_createAudioConverter(t, &fmt)) {
+        /* Marked: given back but not forgotten. */
+        sm_removeAudioFormat(m_soundManager, (AudioFormat *)ST_OUTFMT(t));
+        rc = ERR_ENGINE;
+    }
+
+    rom_setParam(ST_ROMAN(t), ROM_CONCATENATIVE, ST_CONCAT(t) ? 1 : 0);
+
+    command = (EngCommand)ENG_CALL(t, ENG_COMMAND);
+    if (ST_CONCAT(t) && cat_inUse(ST_CONCAT(t))) {
+        cat_registerSynthCallback(ST_CONCAT(t), stb_staticSynthCallback, t);
+        if (ST_FLAGS(t) & STF_ROMANIZING)
+            cat_registerUserCallback(ST_CONCAT(t), CAT_CB_USER_INDEX,
+                                     stb_staticUserIndexCallback, t);
+        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_PHONEME,
+                                  stb_staticTorrentPhonemeCallback, t);
+        ST_DIRECT(t) = 1;
+        if (command(ST_ENGINE(t), CMD_CONCATENATIVE))
+            stb_postEngineError(t);
+        ST_DIRECT(t) = 0;
+        if (ST_FLAGS(t) & STF_WORD_STARTS)
+            cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_START,
+                                      stb_staticWordCallback, t);
+        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_BREAK,
+                                  stb_staticSynthesisBreakCallback, t);
+    } else {
+        if (command(ST_ENGINE(t), CMD_PHONEMES_OFF))
+            stb_postEngineError(t);
+    }
+
+    /* The device belongs to the format, so it comes out of it. */
+    ST_SOUND(t) = ((AudioFormat *)ST_OUTFMT(t))->sound;
+
+done:
+    mutex_release(lock);
+    return rc;
+}
+
+ALIAS("?newAudioFormat@SynthThread@@QAEJPAUECIaudioFormat@@@Z",
+      "stf_newAudioFormat");
 ALIAS("?equals@AudioFormat@@QAEHPAUECIaudioFormat@@@Z",
       "stf_audioFormatEquals");
 ALIAS("?deleteAudioFormat@SynthThread@@QAEJXZ", "stf_deleteAudioFormat");
