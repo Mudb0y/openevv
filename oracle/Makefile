@@ -32,7 +32,7 @@ ENUS    := ../analysis/enus
 #
 # Dropping a name that something still calls is a link error rather than a
 # quiet change, so this list cannot go stale without saying so.
-DEAD    := sndmangr ealaudio audiocvt sndoutpt runklatt clsyn deltio logio filio ecilink toeci stmqueue ecistate eciinst eci2 msgqueue appqueue win_etithrd sndthrd textfilt win_cryptstdio expire win_reg \
+DEAD    := soundfil sndmangr ealaudio audiocvt sndoutpt runklatt clsyn deltio logio filio ecilink toeci stmqueue ecistate eciinst eci2 msgqueue appqueue win_etithrd sndthrd textfilt win_cryptstdio expire win_reg \
            win_searchlib win_dbgtest win_ecitrace win_hrtime win_debug \
            debug plot
 
@@ -285,7 +285,7 @@ OUR_DELTA  := ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c \
               ../src/eci_toeci.c ../src/eci_tvqueue.c \
               ../src/eci_state.c ../src/eci_instance.c \
               ../src/eci_api2.c ../src/eci_msgqueue.c ../src/eci_appqueue.c ../src/eci_thread.c ../src/eci_soundthread.c \
-              ../src/eci_textfilter.c ../src/eci_synthmsg.c ../src/eci_synthrun.c ../src/eci_synthtext.c ../src/eci_synthlang.c ../src/eci_synthback.c ../src/eci_synthwork.c ../src/eci_synthbuf.c ../src/eci_synthlife.c ../src/eci_synthidx.c ../src/eci_synthmisc.c ../src/eci_synthdict.c ../src/eci_old.c ../src/eci_env.c ../src/eci_text.c ../src/eci_voice.c ../src/eci_misc.c ../src/eci_dict.c ../src/eci_pcm.c ../src/eci_sndmgr.c \
+              ../src/eci_textfilter.c ../src/eci_synthmsg.c ../src/eci_synthrun.c ../src/eci_synthtext.c ../src/eci_synthlang.c ../src/eci_synthback.c ../src/eci_synthwork.c ../src/eci_synthbuf.c ../src/eci_synthlife.c ../src/eci_synthidx.c ../src/eci_synthmisc.c ../src/eci_synthdict.c ../src/eci_old.c ../src/eci_env.c ../src/eci_text.c ../src/eci_voice.c ../src/eci_misc.c ../src/eci_dict.c ../src/eci_pcm.c ../src/eci_sndmgr.c ../src/eci_soundfile.c \
                             ../src/klatt_fx.c ../src/klatt_state.c ../src/klatt_synth.c ../src/klatt_run.c \
               ../src/klatt_tables.c ../src/delta_link_enus.c \
               ../src/delta_sets_enus.c
