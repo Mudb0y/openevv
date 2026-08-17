@@ -24,7 +24,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 OURS = ["delta.c", "delta_heap.c", "delta_sysmem.c", "delta_tables.c",
         "delta_trace.c", "klatt_fx.c", "klatt_state.c", "klatt_synth.c",
-        "klatt_tables.c", "delta_link_enus.c", "delta_sets_enus.c", "delta_savefile.c", "eci_dynabuf.c", "eci_logio.c", "eci_link.c", "eci_toeci.c", "eci_tvqueue.c", "eci_state.c", "eci_instance.c", "eci_api2.c", "eci_msgqueue.c", "eci_appqueue.c", "eci_thread.c", "eci_soundthread.c", "eci_textfilter.c", "eci_synthmsg.c", "eci_synthrun.c", "eci_synthtext.c", "eci_synthlang.c", "eci_synthback.c", "eci_synthwork.c", "eci_synthbuf.c", "eci_synthlife.c", "eci_synthidx.c", "eci_synthmisc.c", "eci_synthdict.c"]
+        "klatt_tables.c", "delta_link_enus.c", "delta_sets_enus.c", "delta_savefile.c", "eci_dynabuf.c", "eci_logio.c", "eci_link.c", "eci_toeci.c", "eci_tvqueue.c", "eci_state.c", "eci_instance.c", "eci_api2.c", "eci_msgqueue.c", "eci_appqueue.c", "eci_thread.c", "eci_soundthread.c", "eci_textfilter.c", "eci_synthmsg.c", "eci_synthrun.c", "eci_synthtext.c", "eci_synthlang.c", "eci_synthback.c", "eci_synthwork.c", "eci_synthbuf.c", "eci_synthlife.c", "eci_synthidx.c", "eci_synthmisc.c", "eci_synthdict.c", "eci_old.c"]
 
 
 def defined_by(obj, kinds="TDBR"):
@@ -35,6 +35,10 @@ def defined_by(obj, kinds="TDBR"):
     all through it, and is kept exactly as it stands. Both have to be here,
     because a class we replace is emitted into every object that uses it and
     every one of those copies has to stand aside.
+
+    A name the compiler decorated for stdcall carries an at sign and the
+    size of its arguments. Those are plain C names too and are kept the same
+    way, decoration and all, because that is how the linker spells them.
     """
     text = subprocess.run(["llvm-nm", obj], capture_output=True,
                           text=True).stdout
@@ -44,7 +48,7 @@ def defined_by(obj, kinds="TDBR"):
         if not m or m.group(1) not in kinds:
             continue
         name = m.group(2)
-        if name.startswith("_") and re.match(r"^_\w+$", name):
+        if name.startswith("_") and re.match(r"^_\w+(@\d+)?$", name):
             out.add(name[1:])
         elif name.startswith("?"):
             out.add(name)

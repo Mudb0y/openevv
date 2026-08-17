@@ -95,6 +95,14 @@ $(BUILD)/eci.obj: $(ENUS)/eci.obj
 	@$(OBJCOPY) --globalize-symbol=_protectFirstTime \
 	  --globalize-symbol=_initializeStandardVoices $< $@
 
+# The same object again with whatever we have replaced in it stood aside.
+# Only the builds that link our sources want this one; the reference wants
+# the original untouched.
+$(BUILD)/eci_swap.obj: $(BUILD)/swap/eci.obj
+	@mkdir -p $(BUILD)
+	@$(OBJCOPY) --globalize-symbol=_protectFirstTime \
+	  --globalize-symbol=_initializeStandardVoices $< $@
+
 $(BUILD)/speak.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(BUILD)/eci.obj
 	@mkdir -p $(BUILD)
 	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
@@ -263,7 +271,7 @@ $(BUILD)/trace_rules.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 PRIM_ONLY  ?= $(shell cat ../src/prim/objects 2>/dev/null)
 PRIM_OBJS  := $(PRIM_ONLY)
 # An object the link does without cannot also be stood aside from.
-SWAP_OBJS  := $(filter-out $(DEAD),$(sort $(RULE_OBJS) $(PRIM_OBJS)))
+SWAP_OBJS  := $(filter-out $(DEAD) eci,$(sort $(RULE_OBJS) $(PRIM_OBJS)))
 SWAP_SWAP  := $(patsubst %,$(BUILD)/swap/%.obj,$(SWAP_OBJS))
 OUR_DELTA  := ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c \
               ../src/delta_tables.c ../src/delta_trace.c \
@@ -272,7 +280,7 @@ OUR_DELTA  := ../src/delta.c ../src/delta_heap.c ../src/delta_sysmem.c \
               ../src/eci_toeci.c ../src/eci_tvqueue.c \
               ../src/eci_state.c ../src/eci_instance.c \
               ../src/eci_api2.c ../src/eci_msgqueue.c ../src/eci_appqueue.c ../src/eci_thread.c ../src/eci_soundthread.c \
-              ../src/eci_textfilter.c ../src/eci_synthmsg.c ../src/eci_synthrun.c ../src/eci_synthtext.c ../src/eci_synthlang.c ../src/eci_synthback.c ../src/eci_synthwork.c ../src/eci_synthbuf.c ../src/eci_synthlife.c ../src/eci_synthidx.c ../src/eci_synthmisc.c ../src/eci_synthdict.c \
+              ../src/eci_textfilter.c ../src/eci_synthmsg.c ../src/eci_synthrun.c ../src/eci_synthtext.c ../src/eci_synthlang.c ../src/eci_synthback.c ../src/eci_synthwork.c ../src/eci_synthbuf.c ../src/eci_synthlife.c ../src/eci_synthidx.c ../src/eci_synthmisc.c ../src/eci_synthdict.c ../src/eci_old.c \
                             ../src/klatt_fx.c ../src/klatt_state.c ../src/klatt_synth.c \
               ../src/klatt_tables.c ../src/delta_link_enus.c \
               ../src/delta_sets_enus.c
@@ -288,10 +296,10 @@ $(BUILD)/swap/%.obj: $(ENUS)/%.obj ../src/delta_rules_enus.c ../src/prim/objects
 	  $(OBJCOPY) --redefine-syms=$(BUILD)/swap/$*.ren $$g $< $@
 
 $(BUILD)/speak_prim.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
-    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj \
+    $(BUILD)/eci_swap.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj \
     $(BUILD)/delta_rules_shim.obj $(SWAP_SWAP) $(OUR_DELTA)
 	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
-	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules.obj \
+	  $(BUILD)/ctors.obj $(BUILD)/eci_swap.obj $(BUILD)/delta_rules.obj \
 	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj $(BUILD)/delta_rules_shim.obj \
 	  $(OUR_DELTA) $(SWAP_SWAP) \
 	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(DEAD)) $(patsubst %,$(ENUS)/%.obj,$(SWAP_OBJS)),\
@@ -304,10 +312,10 @@ $(BUILD)/speak_prim.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 stmt-diff: $(BUILD)/stmt_diff.exe
 
 $(BUILD)/stmt_diff.exe: stmt_diff.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
-    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj \
+    $(BUILD)/eci_swap.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj \
     $(BUILD)/delta_rules_shim.obj $(SWAP_SWAP) $(OUR_DELTA)
 	@$(CC) -O2 -std=gnu99 -w -I../src stmt_diff.c $(BUILD)/ral_shim.obj \
-	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules.obj \
+	  $(BUILD)/ctors.obj $(BUILD)/eci_swap.obj $(BUILD)/delta_rules.obj \
 	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj $(BUILD)/delta_rules_shim.obj \
 	  $(OUR_DELTA) $(SWAP_SWAP) \
 	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(DEAD)) $(patsubst %,$(ENUS)/%.obj,$(SWAP_OBJS)),\
@@ -319,7 +327,7 @@ $(BUILD)/stmt_diff.exe: stmt_diff.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 
 # And the same again with a trace, so that where our primitives and the
 # original's part company can be found the way the rules' were.
-TSWAP_OBJS := $(filter-out $(DEAD),$(sort $(RULE_OBJS) $(PRIM_OBJS) \
+TSWAP_OBJS := $(filter-out $(DEAD) eci,$(sort $(RULE_OBJS) $(PRIM_OBJS) \
                 $(shell cat ../src/trace_prim/objects 2>/dev/null)))
 TSWAP_SWAP := $(patsubst %,$(BUILD)/tswap/%.obj,$(TSWAP_OBJS))
 
@@ -346,11 +354,11 @@ $(BUILD)/our_delta.obj: $(OUR_DELTA) ../src/prim/ours.ren
 	  $(BUILD)/our_delta.tmp.o $@
 
 $(BUILD)/trace_prim.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
-    $(BUILD)/eci.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj \
+    $(BUILD)/eci_swap.obj $(BUILD)/delta_rules.obj $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj \
     $(BUILD)/delta_rules_shim.obj $(BUILD)/delta_rules_trace_prim.obj \
     $(TSWAP_SWAP) $(BUILD)/our_delta.obj
 	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
-	  $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/delta_rules.obj \
+	  $(BUILD)/ctors.obj $(BUILD)/eci_swap.obj $(BUILD)/delta_rules.obj \
 	  $(BUILD)/delta_rules_enus.obj $(BUILD)/delta_consts_enus.obj $(BUILD)/delta_rules_shim.obj \
 	  $(BUILD)/delta_rules_trace_prim.obj $(BUILD)/our_delta.obj \
 	  $(TSWAP_SWAP) \
