@@ -41,6 +41,8 @@ int __stdcall eciSynchronizeSynth(ECIHand);
 int __stdcall eciSetOutputBuffer(ECIHand, int, short *);
 void __stdcall eciRegisterCallback(ECIHand, ECICallback, void *);
 int __stdcall eciSetParam(ECIHand, int, int);
+int __stdcall eciGetVoiceParam(ECIHand, int, int);
+int __stdcall eciGetParam(ECIHand, int);
 int __stdcall eciGetAvailableLanguages(unsigned *, int *);
 ECIHand __stdcall eciNewEx(unsigned);
 int __stdcall eciSpeaking(ECIHand);
@@ -165,6 +167,14 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    /* A third argument turns the annotation input type on, which is the
+       only way to reach the layer that reads annotations before the engine
+       does. Without it that whole path is never walked. */
+    if (argc > 3 && argv[3][0] == 'a') {
+        if (eciSetParam(h, 1, 1) < 0)
+            printf("speak: eciSetParam refused\n");
+    }
+
     /* An index mark in the middle of the text, so that the path that
        reports one back is walked at all. */
     if (!eciInsertIndex(h, 4242))
@@ -186,6 +196,19 @@ int main(int argc, char **argv)
 
         for (i = 0; i < 3000 && eciSpeaking(h); i++)
             Sleep(10);
+    }
+
+    /* In annotation mode, show what the annotations left behind in the
+       instance's own records. The engine acts on the annotations itself, so
+       this is the only place their effect on those records shows. */
+    if (argc > 3 && argv[3][0] == 'a') {
+        int i;
+
+        for (i = 0; i < 8; i++)
+            printf("speak: voice param %d = %d\n", i,
+                   eciGetVoiceParam(h, 0, i));
+        for (i = 0; i < 17; i++)
+            printf("speak: param %d = %d\n", i, eciGetParam(h, i));
     }
 
     printf("speak: %lu samples\n", (unsigned long)nsamples);

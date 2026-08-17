@@ -107,7 +107,7 @@ extern int32_t setECIerror(int32_t rc, OldInst *h);
 
 /* Read out of the original's own table. A pair to a setting: the least it
    will take and the most. */
-static const int32_t PARAM_RANGE[0x12][2] = {
+const int32_t ev_paramRange[0x12][2] = {
     { 0, 1 }, { 0, 1 }, { 0, 3 }, { 0, 1 },
     { 0, 100 }, { 0, 2 }, { 0, 100 }, { 0, 1 },
     { 0, 1 }, { 0, 0x7fffffff }, { 0, 1 }, { 0, 1 },
@@ -478,7 +478,7 @@ int32_t __stdcall ev_setParam(OldInst *h, int32_t which, int32_t value)
         return -1;
     if (which < 0 || which >= 0x12)
         return -1;
-    if (value < PARAM_RANGE[which][0] || value > PARAM_RANGE[which][1])
+    if (value < ev_paramRange[which][0] || value > ev_paramRange[which][1])
         return -1;
 
     accepted = 1;
