@@ -32,7 +32,7 @@ ENUS    := ../analysis/enus
 #
 # Dropping a name that something still calls is a link error rather than a
 # quiet change, so this list cannot go stale without saying so.
-DEAD    := deltio logio filio ecilink toeci stmqueue ecistate eciinst eci2 msgqueue appqueue win_etithrd sndthrd textfilt win_cryptstdio expire win_reg \
+DEAD    := clsyn deltio logio filio ecilink toeci stmqueue ecistate eciinst eci2 msgqueue appqueue win_etithrd sndthrd textfilt win_cryptstdio expire win_reg \
            win_searchlib win_dbgtest win_ecitrace win_hrtime win_debug \
            debug plot
 
@@ -111,7 +111,8 @@ $(BUILD)/speak.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(BUILD)/ec
 	@mkdir -p $(BUILD)
 	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
 	  $(BUILD)/ctors.obj $(BUILD)/eci.obj \
-	  $(filter-out $(ENUS)/eci.obj,$(wildcard $(ENUS)/*.obj)) \
+	  $(filter-out $(ENUS)/eci.obj $(patsubst %,$(ENUS)/%.obj,$(CUT)),\
+	    $(wildcard $(ENUS)/*.obj)) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
 
