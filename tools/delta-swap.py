@@ -24,19 +24,36 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 OURS = ["delta.c", "delta_heap.c", "delta_sysmem.c", "delta_tables.c",
         "delta_trace.c", "klatt_fx.c", "klatt_state.c", "klatt_synth.c",
-        "klatt_tables.c", "delta_link_enus.c", "delta_sets_enus.c", "delta_savefile.c", "eci_dynabuf.c", "eci_logio.c", "eci_link.c", "eci_toeci.c", "eci_tvqueue.c", "eci_state.c", "eci_instance.c", "eci_api2.c"]
+        "klatt_tables.c", "delta_link_enus.c", "delta_sets_enus.c", "delta_savefile.c", "eci_dynabuf.c", "eci_logio.c", "eci_link.c", "eci_toeci.c", "eci_tvqueue.c", "eci_state.c", "eci_instance.c", "eci_api2.c", "eci_msgqueue.c"]
 
 
 def defined_by(obj, kinds="TDBR"):
-    """Every name an object defines, without the leading underscore."""
+    """Every name an object defines, as the assembler spells it.
+
+    A plain C name arrives with a leading underscore and is kept without
+    one; a name the C++ compiler mangled has no underscore and punctuation
+    all through it, and is kept exactly as it stands. Both have to be here,
+    because a class we replace is emitted into every object that uses it and
+    every one of those copies has to stand aside.
+    """
     text = subprocess.run(["llvm-nm", obj], capture_output=True,
                           text=True).stdout
     out = set()
     for line in text.splitlines():
-        m = re.match(r"^[0-9a-f]+ ([TDBR]) _(\w+)$", line.strip())
-        if m and m.group(1) in kinds:
-            out.add(m.group(2))
+        m = re.match(r"^[0-9a-f]+ ([TDBR]) (\S+)$", line.strip())
+        if not m or m.group(1) not in kinds:
+            continue
+        name = m.group(2)
+        if name.startswith("_") and re.match(r"^_\w+$", name):
+            out.add(name[1:])
+        elif name.startswith("?"):
+            out.add(name)
     return out
+
+
+def spelt(name):
+    """How the assembler writes a name we hold without its underscore."""
+    return name if name.startswith("?") else "_" + name
 
 
 def ours(where, cc, cflags):
@@ -75,7 +92,7 @@ def main():
             continue
         with open(os.path.join(out, obj[:-4] + ".ren"), "w") as f:
             for name in sorted(shared):
-                f.write("_%s _ibm_%s\n" % (name, name))
+                f.write("%s ibm_%s\n" % (spelt(name), name.lstrip("?")))
         objects.append(obj[:-4])
         taken |= shared
         total += len(shared)
@@ -91,14 +108,16 @@ def main():
     swapped = sorted(taken)
     with open(os.path.join(out, "names"), "w") as f:
         for name in swapped:
-            if name in mine_code:
+            # A mangled name has no plain spelling for a trace wrapper to
+            # take, so only the C ones are listed here.
+            if name in mine_code and not name.startswith("?"):
                 f.write("%s\n" % name)
     with open(os.path.join(out, "ours.ren"), "w") as f:
         for name in swapped:
             # Only what is code: a wrapper can stand in front of a call, and
             # there is nothing to stand in front of for a table.
             if name in mine_code:
-                f.write("_%s _our_%s\n" % (name, name))
+                f.write("%s our_%s\n" % (spelt(name), name.lstrip("?")))
 
     print("ours: %d names" % len(mine))
     print("stood aside: %d names over %d objects" % (total, len(objects)))
