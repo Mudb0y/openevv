@@ -4,8 +4,8 @@
    drop an index mark in -- is a message. The caller takes the thread's lock,
    builds the message, posts it and returns; the thread picks it up later and
    calls the matching Run method. This file is the near half of that: the
-   twenty message classes and the twenty-one senders. The Run methods on the
-   far side still belong to the original.
+   twenty message classes and the twenty-one senders. The far half is in
+   eci_synthrun.c.
 
    The senders look alike but are not interchangeable, and the differences
    are the whole reason this file is written out longhand rather than
@@ -25,9 +25,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define THIS __attribute__((thiscall))
-#define MANGLED(name) __asm__("\"" name "\"")
+#include "eci_synththread.h"
 
 /* What a post can answer. Only a plain "queued" commits the numbering. */
 #define POST_FAILED  0
@@ -39,9 +37,6 @@
 #define ERR_NO_DEVICE  (-13)
 #define ERR_BAD_LANG   (-14)
 #define ERR_NO_SOUND   (-16)
-
-typedef struct ETImessage ETImessage;
-typedef struct SynthThread SynthThread;
 
 /* Slot for slot as the original's table has them. */
 typedef struct {
@@ -84,14 +79,6 @@ struct ETImessage {
 #define MSG_CHANGE_EMPHASIS 0x7de
 #define MSG_STRING_INDEX    0x7df
 #define MSG_AUDIO_INDEX     0x7e0
-
-/* A language name as the rest of the engine passes it about. Only its first
-   word is copied when a message takes one; setString rebuilds the printable
-   part of the record from it. */
-typedef struct {
-    uint32_t id;            /* +0x00 */
-    uint8_t  rest[0x10];    /* +0x04 */
-} LangIdentifier;
 
 /* The shapes. In nearly all of them the thread the message is for sits at
    +0x20 and the application-queue slot it claimed comes last. */
@@ -157,34 +144,8 @@ typedef struct {            /* 0x34 */
     int32_t     last;       /* +0x30, addText only */
 } MsgText;
 
-/* SynthThread stays opaque here: this file replaces its outward face, not
-   its insides, so it reaches in by offset rather than pretending to know the
-   whole shape. */
-#define ST_AT(t, off)   ((void *)((char *)(t) + (off)))
-#define ST_I32(t, off)  (*(int32_t *)((char *)(t) + (off)))
-#define ST_PTR(t, off)  (*(void **)((char *)(t) + (off)))
-
-#define ST_LOCK(t)      ST_AT(t, 0x2f4)   /* held across a whole send */
-#define ST_POSTED(t)    ST_I32(t, 0x300)  /* something is on the queue */
-#define ST_PENDING(t)   ST_I32(t, 0x308)  /* how much is still to come */
-#define ST_SOUND(t)     ST_PTR(t, 0x330)  /* SoundThread, null before setup */
-#define ST_APP(t)       ST_PTR(t, 0x370)  /* ETIappMessageQueue */
-#define ST_SILENT(t)    ST_I32(t, 0x39c)  /* set when no device is wanted */
-#define ST_BLOCKER(t)   ST_PTR(t, 0x3ac)  /* Semaphore, made on first block */
-
-/* The application queue's count of what it has been told about. Every
-   message that will produce anything audible claims the next one. */
-#define APP_POSTED(a)   (*(int32_t *)((char *)(a) + 0x58))
-
-extern THIS int32_t mutex_wait(void *m, int32_t ms)
-    MANGLED("?wait@Mutex@@QAEHJ@Z");
-extern THIS int32_t mutex_release(void *m)
-    MANGLED("?release@Mutex@@QAEHXZ");
-extern THIS void mutex_dtor(void *m)
-    MANGLED("??1Mutex@@QAE@XZ");
-
-extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
-extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
+/* The offsets this file reaches into SynthThread by, and the count the
+   application queue keeps, are in eci_synththread.h. */
 
 extern THIS ETImessage *msg_ctor(ETImessage *m, uint32_t type)
     MANGLED("??0ETImessage@@QAE@K@Z");
@@ -1030,9 +991,6 @@ TABLE(vt_setPhonemeIndicies, destroy_plain, run_setPhonemeIndicies);
 TABLE(vt_insertIndex, destroy_plain, run_insertIndex);
 
 /* The names the rest of the engine reaches all of this by. */
-#define ALIAS(mangled, ours) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "\n")
-
 ALIAS("??_7ETImsgAddText@@6B@", "vt_addText");
 ALIAS("??_7ETImsgAddParam@@6B@", "vt_addParam");
 ALIAS("??_7ETImsgBlock@@6B@", "vt_block");
