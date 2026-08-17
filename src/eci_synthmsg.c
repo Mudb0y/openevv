@@ -510,7 +510,7 @@ THIS MsgText *ctor_addParam(MsgText *x, SynthThread *t, char *text,
 /* Anything that will make sound has to find the device open first. The
    caller is told whether this call is the one that opened it, because if the
    post then fails it is the one that has to close it again. */
-static int32_t startUpSound(SynthThread *t, int32_t *opened)
+THIS int32_t stg_startUpSound(SynthThread *t, int32_t *opened)
 {
     int32_t rc = ERR_NO_SOUND;
     int16_t status, r;
@@ -622,7 +622,7 @@ static int32_t sendValueWithSound(SynthThread *t, uint32_t type,
 
     mutex_wait(lock, -1);
     if (ST_SOUND(t))
-        rc = startUpSound(t, &opened);
+        rc = stg_startUpSound(t, &opened);
     if (rc == OK) {
         seq = claim(t);
         rc = ERR_FAILED;
@@ -653,7 +653,7 @@ static int32_t sendString(SynthThread *t, uint32_t type,
 
     mutex_wait(lock, -1);
     if (ST_SOUND(t))
-        rc = startUpSound(t, &opened);
+        rc = stg_startUpSound(t, &opened);
     if (rc == OK) {
         seq = claim(t);
         rc = ERR_FAILED;
@@ -685,7 +685,7 @@ THIS int32_t st_addText(SynthThread *t, char *text, uint32_t len,
 
     mutex_wait(lock, -1);
     if (ST_SOUND(t))
-        rc = startUpSound(t, &opened);
+        rc = stg_startUpSound(t, &opened);
     if (rc == OK) {
         seq = claim(t);
         rc = ERR_FAILED;
@@ -709,7 +709,7 @@ THIS int32_t st_addParam(SynthThread *t, char *text, uint32_t len)
 
     mutex_wait(lock, -1);
     if (ST_SOUND(t))
-        rc = startUpSound(t, &opened);
+        rc = stg_startUpSound(t, &opened);
     if (rc == OK) {
         seq = claim(t);
         rc = ERR_FAILED;
@@ -1075,6 +1075,7 @@ DTOR_ALIAS("ETImsgInsertIndex", "destroy_plain");
 ALIAS("??0ETImsgAddText@@QAE@PAVSynthThread@@PADKJH@Z", "ctor_addText");
 ALIAS("??0ETImsgAddParam@@QAE@PAVSynthThread@@PADKJ@Z", "ctor_addParam");
 
+ALIAS("?startUpSound@SynthThread@@AAEJPAH@Z", "stg_startUpSound");
 ALIAS("?addText@SynthThread@@QAEJPADKH@Z", "st_addText");
 ALIAS("?addParam@SynthThread@@QAEJPADK@Z", "st_addParam");
 ALIAS("?block@SynthThread@@QAEJXZ", "st_block");
