@@ -129,15 +129,6 @@ extern THIS int32_t idxq_addOffsetFromLast(void *q, uint32_t id, int32_t off)
 extern THIS int32_t semaphore_wait(void *s)
     MANGLED("?wait@Semaphore@@QAEHXZ");
 
-/* Where the index notes go. Only the second slot of its table is used from
-   here, and only ever to hand it one more note. */
-typedef struct MarkSink MarkSink;
-typedef struct {
-    THIS void *(*destroy)(MarkSink *self, int32_t free_it);
-    THIS void  (*add)(MarkSink *self, IndexNote *n);
-} MarkSinkVtbl;
-struct MarkSink { const MarkSinkVtbl *vt; };
-
 /* The engine's own table, reached by byte offset because only a handful of
    its slots are named here and the rest are the original's. */
 #define ENG_CALL(t, off) \
@@ -354,12 +345,12 @@ THIS void changeFilterRun(SynthThread *t, uint32_t which, uint32_t value,
 static void markRun(SynthThread *t, int32_t kind, int32_t payload)
 {
     if (ST_FLAGS(t) & STF_ROMANIZING) {
-        MarkSink *sink = (MarkSink *)ST_MARKS(t);
+        MarkQueue *q = ST_MARKS(t);
         IndexNote *n = (IndexNote *)cpp_new(sizeof(IndexNote));
 
         n->payload = payload;
         n->kind = kind;
-        sink->vt->add(sink, n);
+        q->vt->push(q, n);
         if (!rom_insertIndex(ST_ROMAN(t))) {
             postRomanizerError(t, 0);
             return;

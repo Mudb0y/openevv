@@ -39,12 +39,24 @@ typedef struct {
     int32_t payload;        /* +0x04 */
 } Index;
 
+/* Index notes wait in a plain queue between the romanizer putting one in and
+   the engine asking for it. Slot for slot as ETIqueue has them. */
+typedef struct MarkQueue MarkQueue;
+typedef struct {
+    THIS void   *(*destroy)(MarkQueue *self, int32_t free_it);
+    THIS int32_t (*push)(MarkQueue *self, void *item);
+    THIS int32_t (*pop)(MarkQueue *self, void **item);
+    THIS int32_t (*peekHead)(MarkQueue *self, void **item);
+} MarkQueueVtbl;
+struct MarkQueue { const MarkQueueVtbl *vt; };
+
 #define ST_AT(t, off)   ((void *)((char *)(t) + (off)))
 #define ST_I32(t, off)  (*(int32_t *)((char *)(t) + (off)))
 #define ST_U32(t, off)  (*(uint32_t *)((char *)(t) + (off)))
 #define ST_PTR(t, off)  (*(void **)((char *)(t) + (off)))
 
 #define ST_ENGINES(t)   ST_AT(t, 0x08c)  /* EngineArray, one per language */
+#define ST_CONVERTER(t) ST_PTR(t, 0x088)  /* AudioConverter, may be 0 */
 #define ST_ENGINE(t)    ST_PTR(t, 0x2dc)  /* the synthesiser itself */
 #define ST_ENGINE_ID(t) ST_U32(t, 0x2e0)  /* which one, packed into a word;
                                              also the language record, whose
@@ -52,6 +64,9 @@ typedef struct {
 /* The second byte of that word is the dialect. Two ids that differ only
    there are the same engine, so the change path compares them without it. */
 #define LANG_ENGINE_MASK 0xffff00ffu
+/* And one bit of it says the engine names its phonemes in wide characters
+   rather than bytes. */
+#define LANG_WIDE_PHONEMES 0x800u
 #define ST_LOCK(t)      ST_AT(t, 0x2f4)   /* held around the counts below */
 #define ST_POSTED(t)    ST_I32(t, 0x300)  /* something is on the queue */
 #define ST_SAMPLES(t)   ST_I32(t, 0x304)  /* how much sound has been made */
@@ -63,13 +78,26 @@ typedef struct {
 #define ST_INDEXMGR(t)  ST_AT(t, 0x334)   /* IndexManager */
 #define ST_FORMAT(t)    ST_AT(t, 0x324)   /* ECIsampleFormat */
 #define ST_APP(t)       ST_PTR(t, 0x370)  /* ETIappMessageQueue */
+#define ST_SYNCED(t)    ST_AT(t, 0x364)  /* ETIEvent, an internal index */
 #define ST_STATE(t)     ST_PTR(t, 0x374)  /* ECIstate */
-#define ST_OWNFMT(t)    ST_I32(t, 0x378)  /* set when the format above ours */
-#define ST_PHONEMES(t)  ST_I32(t, 0x384)  /* phonemes are owed to the caller */
-#define ST_SILENT(t)    ST_I32(t, 0x39c)  /* set when no device is wanted */
+/* The two buffers the caller registers to be handed results in, each with
+   the room it has and how much of it is filled. A null one means the caller
+   did not ask for that kind of result. */
+#define ST_SAMPBUF(t)   (*(int16_t **)((char *)(t) + 0x378))
+#define ST_SAMPROOM(t)  ST_I32(t, 0x37c)  /* in bytes, not samples */
+#define ST_SAMPHELD(t)  ST_I32(t, 0x380)  /* in samples */
+#define ST_PHONBUF(t)   ST_PTR(t, 0x384)
+#define ST_ENGPHON(t)   (*(char **)((char *)(t) + 0x388))  /* the engine's */
+#define ST_ENGPHONROOM(t) ST_I32(t, 0x38c)
+#define ST_PHONHELD(t)  ST_I32(t, 0x390)
+/* Each kind of error is reported to the caller once and then kept quiet. */
+#define ST_ENGERR(t)    ST_I32(t, 0x394)
+#define ST_ROMERR(t)    ST_I32(t, 0x398)
+#define ST_SILENT(t)    ST_I32(t, 0x39c)  /* the device is not to be used;
+                                             set for good once it fails */
 #define ST_BLOCKER(t)   ST_PTR(t, 0x3ac)  /* Semaphore, made on first block */
 #define ST_ROMAN(t)     ST_PTR(t, 0x3b0)  /* RomanizerManager */
-#define ST_MARKS(t)     ST_PTR(t, 0x3b4)  /* where index notes are queued */
+#define ST_MARKS(t)     ((MarkQueue *)ST_PTR(t, 0x3b4))
 #define ST_FLAGS(t)     ST_U32(t, 0x3b8)
 #define ST_CORPORA(t)   ST_U32(t, 0x3c0)  /* which corpora this engine has */
 #define ST_CONCAT(t)    ST_PTR(t, 0x3c4)  /* ConcatenationManager, may be 0 */

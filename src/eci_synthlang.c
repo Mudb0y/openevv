@@ -212,9 +212,10 @@ static void switchEngine(SynthThread *t, LangIdentifier *lang)
     else if (ST_FLAGS(t) & STF_WORD_STARTS)
         cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_MARK, 0, t);
 
-    /* The sample format is ours to work out unless something outside handed
-       one in, in which case its three words are copied out and used. */
-    if (ST_OWNFMT(t)) {
+    /* The sample format is ours to work out when the caller registered a
+       buffer of its own; otherwise a format handed in from outside is used,
+       its three words copied out first. */
+    if (ST_SAMPBUF(t)) {
         if (createAudioConverter(t, ST_FORMAT(t)))
             postEngineError(t);
     } else if (ST_OUTFMT(t)) {
@@ -286,7 +287,7 @@ THIS void changeLanguageRun(SynthThread *t, LangIdentifier *lang, int32_t seq)
     (void)seq;
 
     processRemaining(t);
-    if (ST_PHONEMES(t))
+    if (ST_PHONBUF(t))
         sendRemainingPhonemesToUser(t);
 
     lock = ST_LOCK(t);

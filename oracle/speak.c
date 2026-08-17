@@ -44,6 +44,7 @@ int __stdcall eciSetParam(ECIHand, int, int);
 int __stdcall eciGetAvailableLanguages(unsigned *, int *);
 ECIHand __stdcall eciNewEx(unsigned);
 int __stdcall eciSpeaking(ECIHand);
+int __stdcall eciInsertIndex(ECIHand, int);
 
 void evvRunStaticInitialisers(void);
 
@@ -77,6 +78,8 @@ static enum ECICallbackReturn __stdcall on_message(ECIHand h,
 
     if (msg == eciWaveformBuffer)
         keep(frame, (size_t)param);
+    else if (msg == eciIndexReply)
+        printf("speak: index %ld\n", param);
 
     return eciDataProcessed;
 }
@@ -161,6 +164,11 @@ int main(int argc, char **argv)
         printf("speak: eciSetOutputBuffer refused\n");
         return 1;
     }
+
+    /* An index mark in the middle of the text, so that the path that
+       reports one back is walked at all. */
+    if (!eciInsertIndex(h, 4242))
+        printf("speak: eciInsertIndex refused\n");
 
     if (!eciAddText(h, text)) {
         printf("speak: eciAddText refused\n");
