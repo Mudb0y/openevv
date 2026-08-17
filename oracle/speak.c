@@ -43,6 +43,11 @@ void __stdcall eciRegisterCallback(ECIHand, ECICallback, void *);
 int __stdcall eciSetParam(ECIHand, int, int);
 int __stdcall eciGetVoiceParam(ECIHand, int, int);
 int __stdcall eciGetParam(ECIHand, int);
+void *__stdcall eciNewDict(ECIHand);
+int __stdcall eciSetDict(ECIHand, void *);
+void *__stdcall eciGetDict(ECIHand);
+int __stdcall eciDeleteDict(ECIHand, void *);
+int __stdcall eciLoadDict(ECIHand, void *, int, const char *);
 int __stdcall eciGetAvailableLanguages(unsigned *, int *);
 ECIHand __stdcall eciNewEx(unsigned);
 int __stdcall eciSpeaking(ECIHand);
@@ -181,6 +186,21 @@ int main(int argc, char **argv)
     if (argc > 3 && strchr(argv[3], 'r')) {
         if (eciSetParam(h, 8, 1) < 0)
             printf("speak: eciSetParam refused\n");
+    }
+
+    /* A d walks the dictionary layer, which nothing else here reaches.
+       Whether the engine accepts any of it is beside the point; what is
+       compared is that both builds answer the same way. */
+    if (argc > 3 && strchr(argv[3], 'd')) {
+        void *dict = eciNewDict(h);
+
+        printf("speak: newDict %s\n", dict ? "made" : "refused");
+        printf("speak: setDict %d\n", eciSetDict(h, dict));
+        printf("speak: getDict %s\n", eciGetDict(h) == dict ? "same"
+                                                            : "other");
+        printf("speak: loadDict %d\n", eciLoadDict(h, dict, 0, "x"));
+        printf("speak: setDict none %d\n", eciSetDict(h, NULL));
+        printf("speak: deleteDict %d\n", eciDeleteDict(h, dict));
     }
 
     /* An index mark in the middle of the text, so that the path that
