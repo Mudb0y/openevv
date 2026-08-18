@@ -125,7 +125,11 @@ typedef struct {
     int32_t   ca_size;       /* 0x00b4, a context record */
     int32_t   size_b8;       /* 0x00b8 */
     int32_t   boa_size;      /* 0x00bc, a begin-or-alternative marker */
-    uint8_t   pad_00c0[0xfc - 0xc0];
+    uint8_t   pad_00c0[0xdc - 0xc0];
+    /* What a value named "undefined" reads back as. The tables spell the
+       absent value one way and whoever asks is told another. */
+    const char *undefined_text;  /* 0x00dc */
+    uint8_t   pad_00e0[0xfc - 0xe0];
     /* What the save layer works in. It is only ever reached through the
        routines at the end of delta_trace.c, which the engine does not use;
        a target that wants to write the machine out and read it back is what
