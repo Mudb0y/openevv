@@ -82,7 +82,7 @@ extern int STDCALL ev_setOutputDevice(OldInst *h, int32_t which)
     MANGLED("_eciSetOutputDevice@8");
 extern void setRealWorldParamsFromECIParams(void *voice, int32_t which)
     MANGLED("_setRealWorldParamsFromECIParams");
-extern THIS void *standardConcatenativeVoicesCtor(void *v)
+extern THIS void *scv_ctor(void *v)
     MANGLED("??0StandardConcatenativeVoices@@QAE@XZ");
 
 /* Two tables the original keeps to itself. The build makes them visible so
@@ -498,7 +498,7 @@ static OldInst *eo_newInstance(int32_t language, int told)
     memset(h, 0, INSTANCE_BYTES);
 
     voices = cpp_new(CONCAT_VOICES_BYTES);
-    OI_CONCAT(h) = voices ? standardConcatenativeVoicesCtor(voices) : 0;
+    OI_CONCAT(h) = voices ? scv_ctor(voices) : 0;
     if (!OI_CONCAT(h)) {
         free(h);
         return 0;
