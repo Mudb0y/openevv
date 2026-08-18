@@ -49,7 +49,7 @@ extern void cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
 
 extern THIS void *stl_ctor(void *t, void *queue, ECIstate *s)
     MANGLED("??0SynthThread@@QAE@PAVETIappMessageQueue@@PAVECIstate@@@Z");
-extern THIS void *thread_ctor_lang(void *t, void *queue, ECIstate *s,
+extern THIS void *stl_ctorWithLanguage(void *t, void *queue, ECIstate *s,
                                    int32_t lang)
     MANGLED("??0SynthThread@@QAE@PAVETIappMessageQueue@@PAVECIstate@@W4ECILanguageDialect@@@Z");
 
@@ -101,11 +101,11 @@ extern THIS int32_t stm_deleteFilter(void *t, void *a)
     MANGLED("?deleteFilter@SynthThread@@QAEJPAX@Z");
 extern THIS int32_t std_findFirstDictEntry(void *t, void *a, int32_t b, void **c, int32_t *d, void **e, int32_t *f, int32_t g)
     MANGLED("?findFirstDictEntry@SynthThread@@QAEJPAXJPAPAXPAJ12J@Z");
-extern THIS int32_t st_findFirstDictEntryExt(void *t, void *a, int32_t b, void **c, int32_t *d, void **e, int32_t *f, int32_t *g, int32_t h)
+extern THIS int32_t std_findFirstDictEntryExt(void *t, void *a, int32_t b, void **c, int32_t *d, void **e, int32_t *f, int32_t *g, int32_t h)
     MANGLED("?findFirstDictEntryExt@SynthThread@@QAEJPAXJPAPAXPAJ12PAW4ECIPartOfSpeech@@W4ECILanguageDialect@@@Z");
 extern THIS int32_t std_findNextDictEntry(void *t, void *a, int32_t b, void **c, int32_t *d, void **e, int32_t *f, int32_t g)
     MANGLED("?findNextDictEntry@SynthThread@@QAEJPAXJPAPAXPAJ12J@Z");
-extern THIS int32_t st_findNextDictEntryExt(void *t, void *a, int32_t b, void **c, int32_t *d, void **e, int32_t *f, int32_t *g, int32_t h)
+extern THIS int32_t std_findNextDictEntryExt(void *t, void *a, int32_t b, void **c, int32_t *d, void **e, int32_t *f, int32_t *g, int32_t h)
     MANGLED("?findNextDictEntryExt@SynthThread@@QAEJPAXJPAPAXPAJ12PAW4ECIPartOfSpeech@@W4ECILanguageDialect@@@Z");
 extern THIS int32_t std_getActiveDict(void *t, int32_t a, void **b)
     MANGLED("?getActiveDict@SynthThread@@QAEJJPAPAX@Z");
@@ -123,7 +123,7 @@ extern THIS int32_t std_loadDictVolume(void *t, void *a, int32_t b, const char *
     MANGLED("?loadDictVolume@SynthThread@@QAEJPAXJPBD@Z");
 extern THIS int32_t std_lookupDict(void *t, void *a, int32_t b, void *c, int32_t d, void **e, int32_t *f, int32_t g)
     MANGLED("?lookupDict@SynthThread@@QAEJPAXJ0JPAPAXPAJJ@Z");
-extern THIS int32_t st_lookupDictExt(void *t, void *a, int32_t b, void *c, int32_t d, void **e, int32_t *f, int32_t *g, int32_t h)
+extern THIS int32_t std_lookupDictExt(void *t, void *a, int32_t b, void *c, int32_t d, void **e, int32_t *f, int32_t *g, int32_t h)
     MANGLED("?lookupDictExt@SynthThread@@QAEJPAXJ0JPAPAXPAJPAW4ECIPartOfSpeech@@W4ECILanguageDialect@@@Z");
 extern THIS int32_t stf_newAudioFormat(void *t, void *a)
     MANGLED("?newAudioFormat@SynthThread@@QAEJPAUECIaudioFormat@@@Z");
@@ -151,7 +151,7 @@ extern THIS int32_t stm_unregisterVoice(void *t, int32_t a, void *b, void **c)
     MANGLED("?unregisterVoice@SynthThread@@QAEJHPAUECIVoiceAttrib@@PAPAX@Z");
 extern THIS int32_t std_updateDict(void *t, void *a, int32_t b, void *c, int32_t d, void *e, int32_t f, int32_t g)
     MANGLED("?updateDict@SynthThread@@QAEJPAXJ0J0JJ@Z");
-extern THIS int32_t st_updateDictExt(void *t, void *a, int32_t b, void *c, int32_t d, void *e, int32_t f, int32_t g, int32_t h)
+extern THIS int32_t std_updateDictExt(void *t, void *a, int32_t b, void *c, int32_t d, void *e, int32_t f, int32_t g, int32_t h)
     MANGLED("?updateDictExt@SynthThread@@QAEJPAXJ0J0JW4ECIPartOfSpeech@@W4ECILanguageDialect@@@Z");
 extern THIS int32_t stm_updateFilter(void *t, void *a, void *b, int32_t c, void *d, int32_t e, int32_t f)
     MANGLED("?updateFilter@SynthThread@@QAEJPAX0J0JJ@Z");
@@ -214,7 +214,7 @@ THIS ECIinstance *ei_ctor_lang(ECIinstance *self, int32_t lang)
     es_ctor(&self->state);
     tf_ctor(self->filter);
     raw = cpp_new(0x3e4);
-    self->thread = raw ? thread_ctor_lang(raw, self->queue, &self->state, lang) : 0;
+    self->thread = raw ? stl_ctorWithLanguage(raw, self->queue, &self->state, lang) : 0;
     if (self->thread == 0) {
         self->error = -2;
         return self;
@@ -358,7 +358,7 @@ THIS int32_t ei_find_first(ECIinstance *self, void *a, int32_t b, void **c, int3
 
 THIS int32_t ei_find_first_ext(ECIinstance *self, void *a, int32_t b, void **c, int32_t *d, void **ee, int32_t *f, int32_t *g, int32_t h)
 {
-    return st_findFirstDictEntryExt(self->thread, a, b, c, d, ee, f, g, h);
+    return std_findFirstDictEntryExt(self->thread, a, b, c, d, ee, f, g, h);
 }
 
 THIS int32_t ei_find_next(ECIinstance *self, void *a, int32_t b, void **c, int32_t *d, void **ee, int32_t *f, int32_t g)
@@ -368,7 +368,7 @@ THIS int32_t ei_find_next(ECIinstance *self, void *a, int32_t b, void **c, int32
 
 THIS int32_t ei_find_next_ext(ECIinstance *self, void *a, int32_t b, void **c, int32_t *d, void **ee, int32_t *f, int32_t *g, int32_t h)
 {
-    return st_findNextDictEntryExt(self->thread, a, b, c, d, ee, f, g, h);
+    return std_findNextDictEntryExt(self->thread, a, b, c, d, ee, f, g, h);
 }
 
 THIS int32_t ei_get_active_dict(ECIinstance *self, int32_t a, void **b)
@@ -413,7 +413,7 @@ THIS int32_t ei_lookup_dict(ECIinstance *self, void *a, int32_t b, void *c, int3
 
 THIS int32_t ei_lookup_dict_ext(ECIinstance *self, void *a, int32_t b, void *c, int32_t d, void **ee, int32_t *f, int32_t *g, int32_t h)
 {
-    return st_lookupDictExt(self->thread, a, b, c, d, ee, f, g, h);
+    return std_lookupDictExt(self->thread, a, b, c, d, ee, f, g, h);
 }
 
 THIS int32_t ei_new_audio_fmt(ECIinstance *self, void *a)
@@ -483,7 +483,7 @@ THIS int32_t ei_update_dict(ECIinstance *self, void *a, int32_t b, void *c, int3
 
 THIS int32_t ei_update_dict_ext(ECIinstance *self, void *a, int32_t b, void *c, int32_t d, void *ee, int32_t f, int32_t g, int32_t h)
 {
-    return st_updateDictExt(self->thread, a, b, c, d, ee, f, g, h);
+    return std_updateDictExt(self->thread, a, b, c, d, ee, f, g, h);
 }
 
 THIS int32_t ei_update_filter(ECIinstance *self, void *a, void *b, int32_t c, void *d, int32_t ee, int32_t f)
