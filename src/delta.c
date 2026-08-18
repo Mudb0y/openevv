@@ -210,6 +210,100 @@ void *popDeltaStackTop(delta_state *d)
     return slot;
 }
 
+/* Unwind until something says stop.
+ *
+ * The same eight kinds popDeltaStackTop knows the size of, and what each
+ * one means on the way back: a context record answers with the tag it was
+ * pushed under, a saved scan position is put back, a copied span is copied
+ * back, an alternative marker moves the count of how deep we are, and the
+ * floor marker restores how far an unwind may go.
+ *
+ * The count is what the caller is looking for. Above nought it is walking
+ * out of alternatives it does not want; at nought the next context record
+ * is the one to answer with.
+ */
+int32_t vback(delta_state *d, int32_t depth)
+{
+    delta_frame *slot;
+    int32_t      flag;
+    int32_t      size;
+
+    if (d->vars->error_thrown)
+        return -1;
+
+    /* Told once to skip an unwind. The flag is spent rather than tested,
+       and it is the answer that time. */
+    flag = d->unknown_3c;
+    if (flag != 0) {
+        d->unknown_3c = 0;
+        return flag;
+    }
+
+    for (;;) {
+        slot = (delta_frame *)d->stack->top;
+
+        switch ((int32_t)slot->kind) {
+        case 0:
+            size = d->stack->ca_size;
+            d->stack->limit += size;
+            d->stack->top   += size;
+            if (depth == 0)
+                return slot->value;
+            break;
+
+        case 1:
+            size = d->stack->size_b0;
+            d->stack->limit += size;
+            d->stack->top   += size;
+            memcpy(&d->vars->scan_ptr, &slot->value, 8);
+            break;
+
+        case 2:
+            size = (((slot->length - 1) & ~1) | 1) + d->stack->size_ac + 1;
+            d->stack->limit += size;
+            d->stack->top   += size;
+            memcpy((void *)(intptr_t)slot->value,
+                   (char *)slot + d->stack->size_ac,
+                   (size_t)slot->length);
+            break;
+
+        case 3:
+            size = d->stack->ca_size;
+            d->stack->limit += size;
+            d->stack->top   += size;
+            if (depth == 0 && vscanadv(d, 0, 1))
+                return slot->value;
+            break;
+
+        case 4:
+            size = d->stack->boa_size;
+            d->stack->limit += size;
+            d->stack->top   += size;
+            if (depth > 0)
+                depth--;
+            break;
+
+        case 5:
+            size = d->stack->size_b8;
+            d->stack->limit += size;
+            d->stack->top   += size;
+            setDeltaStackVBot(d, (void *)(intptr_t)slot->value);
+            break;
+
+        case 6:
+            size = d->stack->boa_size;
+            d->stack->limit += size;
+            d->stack->top   += size;
+            depth++;
+            break;
+
+        case 7:
+        default:
+            return -1;
+        }
+    }
+}
+
 /* Is the character at this offset from the fence base one of the fenced set. */
 int FENCED(delta_state *d, const int32_t *table, int8_t idx)
 {

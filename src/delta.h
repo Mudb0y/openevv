@@ -486,6 +486,7 @@ void  fence(delta_state *d, int8_t n, const uint8_t *chars);
 void *TFLDS(void *p);
 void *getDeltaStackVBot(delta_state *d);
 void  setDeltaStackVBot(delta_state *d, void *v);
+int32_t vback(delta_state *d, int32_t depth);
 void *popDeltaStackTop(delta_state *d);
 int   FENCED(delta_state *d, const int32_t *table, int8_t idx);
 

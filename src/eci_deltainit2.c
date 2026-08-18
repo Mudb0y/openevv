@@ -47,7 +47,6 @@ static const char *const stream_names[] = {
 extern int32_t createStreamArrays(void *d, int16_t count);
 extern int32_t initStreamArray(void *d, int16_t which, const char *name);
 extern int32_t setUserDictInputStream(delta_state *d, const char *name);
-extern int32_t vback(delta_state *d, int32_t arg);
 
 /* Made once. Asking twice is not an error; the second answer is the same
    as the first. */
