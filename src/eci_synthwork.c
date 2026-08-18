@@ -155,21 +155,21 @@ extern void stb_staticVoiceChangeCallback(int32_t, int16_t *, int16_t *,
                                           void *)
     MANGLED("?staticVoiceChangeCallback@SynthThread@@CAXJPAF0000PAX@Z");
 
-extern THIS int32_t rom_processRemaining(void *r, char **out)
+extern THIS int32_t rz_processRemaining(void *r, char **out)
     MANGLED("?processRemaining@RomanizerManager@@QAEHPAPAD@Z");
-extern THIS void rom_clearErrors(void *r)
+extern THIS void rz_romClearErrors(void *r)
     MANGLED("?romClearErrors@RomanizerManager@@QAEXXZ");
 
 extern THIS char *fm_filterText(void *m, const char *text, int32_t engine)
     MANGLED("?filterText@FilterManager@@QAEPADPBDJ@Z");
 
-extern THIS int32_t cat_registerIndexCallback(void *c, uint32_t which,
+extern THIS int32_t cm_registerCallbackA(void *c, uint32_t which,
                                               IndexCallback cb, void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXKP6AXHPAX@Z0@Z");
-extern THIS int32_t cat_registerUserCallback(void *c, uint32_t which,
+extern THIS int32_t cm_registerCallbackB(void *c, uint32_t which,
                                              UserCallback cb, void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXKP6AXPAX@Z0@Z");
-extern THIS int32_t cat_engineSupports(void *c, uint32_t a, uint32_t b)
+extern THIS int32_t cm_engineSupports(void *c, uint32_t a, uint32_t b)
     MANGLED("?engineSupportsConcatenative@ConcatenationManager@@QAEHKK@Z");
 
 extern THIS void *ea_getEngine(void *a, const LangIdentifier *l)
@@ -177,15 +177,15 @@ extern THIS void *ea_getEngine(void *a, const LangIdentifier *l)
 extern THIS void lang_setString(LangIdentifier *l)
     MANGLED("?setString@LangIdentifier@@AAEXXZ");
 
-extern THIS int32_t app_postUser(void *a, int32_t what, int32_t value)
+extern THIS int32_t aq_postUser(void *a, int32_t what, int32_t value)
     MANGLED("?postUser@ETIappMessageQueue@@QAEHJJ@Z");
-extern THIS void app_pause(void *a, int32_t how)
+extern THIS void stm_pauseMessageQueue(void *a, int32_t how)
     MANGLED("?pauseMessageQueue@ETIappMessageQueue@@QAEXH@Z");
-extern THIS int32_t app_poll(void *a)
+extern THIS int32_t aq_poll(void *a)
     MANGLED("?poll@ETIappMessageQueue@@QAEJXZ");
-extern THIS int32_t app_synchronize(void *a)
+extern THIS int32_t aq_synchronize(void *a)
     MANGLED("?synchronize@ETIappMessageQueue@@QAEJXZ");
-extern THIS void app_registerCallback(void *a, void *inst, void *cb,
+extern THIS void aq_registerCallback(void *a, void *inst, void *cb,
                                       void *param, int16_t n, void *extra)
     MANGLED("?registerCallback@ETIappMessageQueue@@QAEXPAXP6AJ0JJ0@Z0F0@Z");
 
@@ -202,30 +202,30 @@ extern THIS int32_t snd_write(void *s, const int32_t *samples, uint32_t n)
 extern THIS int32_t snd_insertIndex(void *s, int32_t id)
     MANGLED("?insertIndex@SoundThread@@QAEHJ@Z");
 
-extern THIS uint32_t idx_newIndex(void *m)
+extern THIS uint32_t sti_newIndex(void *m)
     MANGLED("?newIndex@IndexManager@@QAEKXZ");
-extern THIS Index *idx_getIndex(void *m, uint32_t id)
+extern THIS Index *sti_getIndex(void *m, uint32_t id)
     MANGLED("?getIndex@IndexManager@@QAEPAUIndex@@K@Z");
 
-extern THIS uint32_t idxq_reduceLeadTime(void *q, uint32_t n)
+extern THIS uint32_t iq_reduceLeadTime(void *q, uint32_t n)
     MANGLED("?reduceLeadTime@IndexQueue@@QAEKK@Z");
-extern THIS int32_t idxq_indexDue(const void *q)
+extern THIS int32_t sti_indexDue(const void *q)
     MANGLED("?indexDue@IndexQueue@@QBEHXZ");
-extern THIS uint32_t idxq_remove(void *q)
+extern THIS uint32_t iq_remove(void *q)
     MANGLED("?remove@IndexQueue@@QAEHXZ");
 
-extern THIS int32_t event_wait(void *e, int32_t ms)
+extern THIS int32_t sy_eventWait(void *e, int32_t ms)
     MANGLED("?wait@ETIEvent@@QAEHJ@Z");
-extern THIS int32_t event_unsignal(void *e)
+extern THIS int32_t sy_eventUnsignal(void *e)
     MANGLED("?unsignal@ETIEvent@@QAEHXZ");
-extern THIS int32_t semaphore_release(void *s, int32_t n)
+extern THIS int32_t sy_semRelease(void *s, int32_t n)
     MANGLED("?release@Semaphore@@QAEHJ@Z");
 
-extern THIS void *audio_ctor(void *c) MANGLED("??0AudioConverter@@QAE@XZ");
-extern THIS void audio_dtor(void *c) MANGLED("??1AudioConverter@@QAE@XZ");
-extern THIS int32_t audio_setSource(void *c, WaveFormat *f)
+extern THIS void *pcm_cvt_ctor(void *c) MANGLED("??0AudioConverter@@QAE@XZ");
+extern THIS void pcm_cvt_dtor(void *c) MANGLED("??1AudioConverter@@QAE@XZ");
+extern THIS int32_t pcm_cvt_setSource(void *c, WaveFormat *f)
     MANGLED("?setSourceFormat@AudioConverter@@QAEJPAUtWAVEFORMATEX@@@Z");
-extern THIS int32_t audio_setDest(void *c, WaveFormat *f)
+extern THIS int32_t pcm_cvt_setDest(void *c, WaveFormat *f)
     MANGLED("?setDestFormat@AudioConverter@@QAEJPAUtWAVEFORMATEX@@@Z");
 
 /* Same collection table as the callbacks use: isEmpty comes first. */
@@ -255,7 +255,7 @@ THIS int32_t stw_clearErrors(SynthThread *t)
     ST_ENGERR(t) = 0;
     ST_ROMERR(t) = 0;
     ST_SILENT(t) = 0;
-    rom_clearErrors(ST_ROMAN(t));
+    rz_romClearErrors(ST_ROMAN(t));
     return OK;
 }
 
@@ -300,7 +300,7 @@ THIS int32_t stw_pause(SynthThread *t, int32_t how)
 {
     int32_t rc = OK;
 
-    app_pause(ST_APP(t), how);
+    stm_pauseMessageQueue(ST_APP(t), how);
     if (ST_SOUND(t) && !snd_hold(ST_SOUND(t), how))
         rc = ERR_NO_SOUND;
     return rc;
@@ -311,7 +311,7 @@ THIS int32_t stw_unblock(SynthThread *t)
 {
     int32_t rc = OK;
 
-    if (!ST_BLOCKER(t) || !semaphore_release(ST_BLOCKER(t), 1))
+    if (!ST_BLOCKER(t) || !sy_semRelease(ST_BLOCKER(t), 1))
         rc = ERR_FAILED;
     return rc;
 }
@@ -320,7 +320,7 @@ THIS int32_t stw_unblock(SynthThread *t)
    nothing left. Either way, catching up means nothing is outstanding. */
 THIS int32_t stw_poll(SynthThread *t)
 {
-    int32_t rc = app_poll(ST_APP(t));
+    int32_t rc = aq_poll(ST_APP(t));
 
     if (rc == QUEUE_CAUGHT_UP)
         ST_POSTED(t) = 0;
@@ -329,7 +329,7 @@ THIS int32_t stw_poll(SynthThread *t)
 
 THIS int32_t stw_synchronize(SynthThread *t)
 {
-    int32_t rc = app_synchronize(ST_APP(t));
+    int32_t rc = aq_synchronize(ST_APP(t));
 
     if (rc == QUEUE_CAUGHT_UP)
         ST_POSTED(t) = 0;
@@ -345,12 +345,12 @@ THIS int32_t stw_registerCallback(SynthThread *t, void *inst, void *cb,
     void *lock = ST_LOCK(t);
     int32_t rc = ERR_REFUSED;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     if (!ST_POSTED(t)) {
-        app_registerCallback(ST_APP(t), inst, cb, param, n, extra);
+        aq_registerCallback(ST_APP(t), inst, cb, param, n, extra);
         rc = OK;
     }
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return rc;
 }
 
@@ -373,7 +373,7 @@ THIS void stw_addTextToEngine(SynthThread *t, char *text, int32_t len)
 
     if (!copy) {
         if (APP_LISTENING(ST_APP(t)))
-            app_postUser(ST_APP(t), APP_INDEX_LOST, 0);
+            aq_postUser(ST_APP(t), APP_INDEX_LOST, 0);
         return;
     }
 
@@ -410,7 +410,7 @@ THIS void stw_processRemaining(SynthThread *t)
     int32_t n;
     EngCommand command;
 
-    n = rom_processRemaining(ST_ROMAN(t), &left);
+    n = rz_processRemaining(ST_ROMAN(t), &left);
     if (n == -1)
         stb_postRomanizerError(t, 0);
     else if (n == 0)
@@ -439,9 +439,9 @@ THIS void stw_removeCharsFromEngine(SynthThread *t, int32_t n)
         ST_LASTMARK(t) = 0;
 
     while (!stw_queueIsEmpty(ST_INDEXQ(t)) && !done) {
-        n -= (int32_t)idxq_reduceLeadTime(ST_INDEXQ(t), (uint32_t)n);
-        if (idxq_indexDue(ST_INDEXQ(t))) {
-            uint32_t id = idxq_remove(ST_INDEXQ(t));
+        n -= (int32_t)iq_reduceLeadTime(ST_INDEXQ(t), (uint32_t)n);
+        if (sti_indexDue(ST_INDEXQ(t))) {
+            uint32_t id = iq_remove(ST_INDEXQ(t));
             EngInsertIndex insert =
                 (EngInsertIndex)ENG_CALL(t, ENG_INSERT_INDEX);
 
@@ -470,9 +470,9 @@ THIS void stw_shutDownSound(SynthThread *t)
         return;
     }
 
-    id = idx_newIndex(ST_INDEXMGR(t));
+    id = sti_newIndex(ST_INDEXMGR(t));
     if (id) {
-        Index *ix = idx_getIndex(ST_INDEXMGR(t), id);
+        Index *ix = sti_getIndex(ST_INDEXMGR(t), id);
         int32_t silence = 0;
 
         ix->kind = MARK_SYNCHRONISE;
@@ -482,22 +482,22 @@ THIS void stw_shutDownSound(SynthThread *t)
         if (snd_insertIndex(ST_SOUND(t), (int32_t)id)
             && snd_write(ST_SOUND(t), &silence, 1)
             && snd_flush(ST_SOUND(t))) {
-            event_wait(ST_SYNCED(t), -1);
-            event_unsignal(ST_SYNCED(t));
+            sy_eventWait(ST_SYNCED(t), -1);
+            sy_eventUnsignal(ST_SYNCED(t));
         } else {
             stb_postSoundError(t);
         }
     } else if (APP_LISTENING(ST_APP(t))) {
-        app_postUser(ST_APP(t), APP_INDEX_LOST, 0);
+        aq_postUser(ST_APP(t), APP_INDEX_LOST, 0);
     }
 
     lock = ST_LOCK(t);
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     if (ST_PENDING(t) == 0 && !ST_SILENT(t)) {
         if (!snd_close(ST_SOUND(t)))
             stb_postSoundError(t);
     }
-    mutex_release(lock);
+    sy_mutexRelease(lock);
 }
 
 /* The end of a run. Only the message that finds nothing else outstanding
@@ -507,10 +507,10 @@ THIS void stw_shutDown(SynthThread *t)
     void *lock = ST_LOCK(t);
     int last;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     last = ST_PENDING(t) == 0;
     if (!last) {
-        mutex_release(lock);
+        sy_mutexRelease(lock);
         return;
     }
 
@@ -518,7 +518,7 @@ THIS void stw_shutDown(SynthThread *t)
     ST_LASTMARK(t) = 0;
     if (!ST_SILENT(t) && ST_SOUND(t))
         stw_shutDownSound(t);
-    mutex_release(lock);
+    sy_mutexRelease(lock);
 
     if (ST_SAMPBUF(t))
         stb_sendRemainingSamplesToUser(t);
@@ -531,10 +531,10 @@ THIS void stw_stopSynthesis(SynthThread *t, int32_t seq)
 {
     void *lock = ST_LOCK(t);
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     if (ST_PENDING(t) == 0)
-        app_postUser(ST_APP(t), APP_SPEAKING_DONE, seq);
-    mutex_release(lock);
+        aq_postUser(ST_APP(t), APP_SPEAKING_DONE, seq);
+    sy_mutexRelease(lock);
 }
 
 /* ---- choosing a language and a rate ---- */
@@ -612,7 +612,7 @@ THIS int32_t stw_createAudioConverter(SynthThread *t, SampleFormat *fmt)
            taken out again. */
         rc = OK;
         if (ST_CONVERTER(t)) {
-            audio_dtor(ST_CONVERTER(t));
+            pcm_cvt_dtor(ST_CONVERTER(t));
             cpp_delete(ST_CONVERTER(t));
             ST_CONVERTER(t) = 0;
         }
@@ -620,7 +620,7 @@ THIS int32_t stw_createAudioConverter(SynthThread *t, SampleFormat *fmt)
         if (!ST_CONVERTER(t)) {
             void *c = cpp_new(0x64);
 
-            ST_CONVERTER(t) = c ? audio_ctor(c) : 0;
+            ST_CONVERTER(t) = c ? pcm_cvt_ctor(c) : 0;
         }
 
         wave.tag = WAVE_PCM;
@@ -630,11 +630,11 @@ THIS int32_t stw_createAudioConverter(SynthThread *t, SampleFormat *fmt)
         wave.blockAlign = (uint16_t)(wave.bitsPerSample / 8);
         wave.rate = (uint32_t)native;
         wave.bytesPerSecond = (uint32_t)(wave.blockAlign * native);
-        rc = audio_setSource(ST_CONVERTER(t), &wave);
+        rc = pcm_cvt_setSource(ST_CONVERTER(t), &wave);
         if (rc == OK) {
             wave.rate = (uint32_t)wanted;
             wave.bytesPerSecond = (uint32_t)(wave.blockAlign * wanted);
-            rc = audio_setDest(ST_CONVERTER(t), &wave);
+            rc = pcm_cvt_setDest(ST_CONVERTER(t), &wave);
         }
     }
 
@@ -656,7 +656,7 @@ THIS int32_t stw_createAudioConverter(SynthThread *t, SampleFormat *fmt)
     }
 
     if (rc != OK && ST_CONVERTER(t)) {
-        audio_dtor(ST_CONVERTER(t));
+        pcm_cvt_dtor(ST_CONVERTER(t));
         cpp_delete(ST_CONVERTER(t));
         ST_CONVERTER(t) = 0;
     }
@@ -683,14 +683,14 @@ THIS int32_t stw_engineInitialize(SynthThread *t, void *engine)
         EngSetUser setUser = (EngSetUser)ENG_CALL_ON(engine, ENG_USER_INDEX_CB);
 
         setUser(engine, stb_staticUserIndexCallback, t);
-        cat_registerUserCallback(ST_CONCAT(t), 4,
+        cm_registerCallbackB(ST_CONCAT(t), 4,
                                  stb_staticUserIndexCallback, t);
     } else if (ST_FLAGS(t) & STF_WORD_STARTS) {
         EngSetIndex setWord =
             (EngSetIndex)ENG_CALL_ON(engine, ENG_WORD_START_CB);
 
         setWord(engine, stb_staticWordCallback, t);
-        cat_registerIndexCallback(ST_CONCAT(t), 2,
+        cm_registerCallbackA(ST_CONCAT(t), 2,
                                   stb_staticWordIndexCallback, t);
     }
 
@@ -713,7 +713,7 @@ THIS int32_t stw_engineInitialize(SynthThread *t, void *engine)
         setAnno(engine, stb_staticAnnoCallback, t);
     }
 
-    if (cat_engineSupports(ST_CONCAT(t), (ST_ENGINE_ID(t) >> 16) & 0xff,
+    if (cm_engineSupports(ST_CONCAT(t), (ST_ENGINE_ID(t) >> 16) & 0xff,
                            ST_ENGINE_ID(t) & 0xff)) {
         EngSetVoice setVoice = (EngSetVoice)ENG_CALL_ON(engine, ENG_VOICE_CB);
         EngSetUser setSPR = (EngSetUser)ENG_CALL_ON(engine, ENG_SPR_CB);

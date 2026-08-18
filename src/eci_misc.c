@@ -52,12 +52,12 @@ typedef struct OldInst OldInst;
 /* What the layer beneath answers when the caller has gone away. */
 #define POLL_ABORTED    (-18)
 
-extern int32_t __stdcall eciReset2(void *h2, int32_t language)
+extern int32_t __stdcall api_reset(void *h2, int32_t language)
     MANGLED("_eciReset2@8");
-extern int32_t __stdcall eciDelete2(void *h2) MANGLED("_eciDelete2@4");
-extern int32_t __stdcall eciSynchronize2(void *h2)
+extern int32_t __stdcall api_delete(void *h2) MANGLED("_eciDelete2@4");
+extern int32_t __stdcall api_synchronize(void *h2)
     MANGLED("_eciSynchronize2@4");
-extern int32_t __stdcall eciPause2(void *h2, int32_t on)
+extern int32_t __stdcall api_pause(void *h2, int32_t on)
     MANGLED("_eciPause2@8");
 extern int FilterText2(OldInst *h, void *a, void *b, void *c)
     MANGLED("_FilterText2");
@@ -69,14 +69,14 @@ extern char standardVoices[] MANGLED("_standardVoices");
 extern int32_t g_DefaultEnvironment[] MANGLED("_g_DefaultEnvironment");
 
 /* Entry points of the same interface that these ones lean on. */
-extern OldInst *__stdcall eciNewEx(int32_t language) MANGLED("_eciNewEx@4");
-extern int __stdcall eciStop(OldInst *h) MANGLED("_eciStop@4");
-extern int __stdcall eciAddText(OldInst *h, const char *text)
+extern OldInst *__stdcall eo_newEx(int32_t language) MANGLED("_eciNewEx@4");
+extern int __stdcall eo_stop(OldInst *h) MANGLED("_eciStop@4");
+extern int __stdcall et_addText(OldInst *h, const char *text)
     MANGLED("_eciAddText@8");
-extern int __stdcall eciSynthesize(OldInst *h) MANGLED("_eciSynthesize@4");
-extern int32_t __stdcall eciSetParam(OldInst *h, int32_t which, int32_t v)
+extern int __stdcall et_synthesize(OldInst *h) MANGLED("_eciSynthesize@4");
+extern int32_t __stdcall ev_setParam(OldInst *h, int32_t which, int32_t v)
     MANGLED("_eciSetParam@12");
-extern int __stdcall eciCopyVoice(OldInst *h, int32_t from, int32_t to)
+extern int __stdcall vc_copyVoice(OldInst *h, int32_t from, int32_t to)
     MANGLED("_eciCopyVoice@12");
 
 extern int32_t setECIerror(int32_t rc, OldInst *h);
@@ -215,7 +215,7 @@ int __stdcall es_synchronize(OldInst *h)
     if (!inst)
         return 0;
 
-    rc = setECIerror(eciSynchronize2(OI_NEW(inst)), inst);
+    rc = setECIerror(api_synchronize(OI_NEW(inst)), inst);
     ok = (rc == -2 || rc == 1) ? 0 : 1;
     if (rc == 1) {
         OI_REFUSED(inst) = 0x400;
@@ -223,7 +223,7 @@ int __stdcall es_synchronize(OldInst *h)
     }
     OI_BUSY(inst) = 0;
     if (rc == POLL_ABORTED)
-        eciStop(inst);
+        eo_stop(inst);
     return ok;
 }
 
@@ -236,7 +236,7 @@ int __stdcall es_pause(OldInst *h, int32_t on)
     inst = h;
     if (!inst)
         return 0;
-    return setECIerror(eciPause2(OI_NEW(inst), on), inst) >= 0;
+    return setECIerror(api_pause(OI_NEW(inst), on), inst) >= 0;
 }
 
 /* End an instance and give back everything it holds. Answers nought
@@ -254,7 +254,7 @@ int __stdcall es_delete(OldInst *h)
     if (!inst)
         return 0;
 
-    eciDelete2(OI_NEW(inst));
+    api_delete(OI_NEW(inst));
 
     if (OI_DIRECT(inst))
         OI_DIRECT(inst) = 0;
@@ -295,7 +295,7 @@ int __stdcall es_reset(OldInst *h)
     if (!inst)
         return 0;
 
-    if (setECIerror(eciReset2(OI_NEW(inst),
+    if (setECIerror(api_reset(OI_NEW(inst),
                               g_DefaultEnvironment[ENV_LANGUAGE]), inst)) {
         OI_BUSY(inst) = 0;
         return 0;
@@ -365,9 +365,9 @@ static int es_speakWith(OldInst *inst, const char *text, int32_t annotate)
         return 0;
 
     if (annotate)
-        eciSetParam(inst, 1, 1);
+        ev_setParam(inst, 1, 1);
 
-    if (!eciAddText(inst, text) || !eciSynthesize(inst)
+    if (!et_addText(inst, text) || !et_synthesize(inst)
         || !es_synchronize(inst))
         return 0;
 
@@ -377,14 +377,14 @@ static int es_speakWith(OldInst *inst, const char *text, int32_t annotate)
 
 int __stdcall es_speakText(const char *text, int32_t annotate)
 {
-    return es_speakWith(eciNewEx(g_DefaultEnvironment[ENV_LANGUAGE]), text,
+    return es_speakWith(eo_newEx(g_DefaultEnvironment[ENV_LANGUAGE]), text,
                         annotate);
 }
 
 int __stdcall es_speakTextEx(const char *text, int32_t annotate,
                              int32_t language)
 {
-    return es_speakWith(eciNewEx(language), text, annotate);
+    return es_speakWith(eo_newEx(language), text, annotate);
 }
 
 /* Say the phrase the engine keeps for checking that it works at all, in the
@@ -407,14 +407,14 @@ int __stdcall es_testPhrase(OldInst *h)
     if (isUnicodeCodeSet(0x800, es_getParam(h, ENV_LANGUAGE))) {
         if (MBCSConverter(h, narrow, &wide))
             return 0;
-        if (!eciStop(h) || !eciCopyVoice(h, 1, 0)
-            || !eciAddText(h, (const char *)wide) || !eciSynthesize(h))
+        if (!eo_stop(h) || !vc_copyVoice(h, 1, 0)
+            || !et_addText(h, (const char *)wide) || !et_synthesize(h))
             return 0;
         return 1;
     }
 
-    if (!eciStop(h) || !eciCopyVoice(h, 1, 0) || !eciAddText(h, narrow)
-        || !eciSynthesize(h))
+    if (!eo_stop(h) || !vc_copyVoice(h, 1, 0) || !et_addText(h, narrow)
+        || !et_synthesize(h))
         return 0;
     return 1;
 }

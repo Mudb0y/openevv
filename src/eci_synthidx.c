@@ -19,11 +19,11 @@
    They belong to the original; only the methods below are ours. */
 extern const void *vtbl_eCollection MANGLED("??_7ECollection@@6B@");
 extern const void *vtbl_eList MANGLED("??_7EList@@6B@");
-extern const void *vtbl_eSList MANGLED("??_7ESList@@6B@");
-extern const void *vtbl_eListQueue MANGLED("??_7EListQueue@@6B@");
-extern const void *vtbl_indexQueue MANGLED("??_7IndexQueue@@6B@");
+extern const void *vtbl_eslist MANGLED("??_7ESList@@6B@");
+extern const void *vtbl_elistqueue MANGLED("??_7EListQueue@@6B@");
+extern const void *vtbl_indexqueue MANGLED("??_7IndexQueue@@6B@");
 
-extern THIS void elist_reset(void *l) MANGLED("?reset@EList@@QAEXXZ");
+extern THIS void el_listReset(void *l) MANGLED("?reset@EList@@QAEXXZ");
 extern THIS void lang_setString(LangIdentifier *l)
     MANGLED("?setString@LangIdentifier@@AAEXXZ");
 
@@ -70,11 +70,11 @@ THIS List *sti_indexQueueCtor(List *l)
 {
     l->vt = &vtbl_eCollection;
     l->vt = &vtbl_eList;
-    l->vt = &vtbl_eSList;
+    l->vt = &vtbl_eslist;
     l->head = 0;
     l->tail = 0;
-    l->vt = &vtbl_eListQueue;
-    l->vt = &vtbl_indexQueue;
+    l->vt = &vtbl_elistqueue;
+    l->vt = &vtbl_indexqueue;
     l->extra = 0;
     return l;
 }
@@ -83,10 +83,10 @@ THIS List *sti_indexQueueCtor(List *l)
    was built at. */
 THIS void *sti_indexQueueDestroy(List *l, int32_t free_it)
 {
-    l->vt = &vtbl_eListQueue;
-    elist_reset(l);
-    l->vt = &vtbl_eSList;
-    elist_reset(l);
+    l->vt = &vtbl_elistqueue;
+    el_listReset(l);
+    l->vt = &vtbl_eslist;
+    el_listReset(l);
     if (free_it & 1)
         cpp_delete(l);
     return l;
@@ -94,10 +94,10 @@ THIS void *sti_indexQueueDestroy(List *l, int32_t free_it)
 
 THIS void *sti_eListQueueDestroy(List *l, int32_t free_it)
 {
-    l->vt = &vtbl_eListQueue;
-    elist_reset(l);
-    l->vt = &vtbl_eSList;
-    elist_reset(l);
+    l->vt = &vtbl_elistqueue;
+    el_listReset(l);
+    l->vt = &vtbl_eslist;
+    el_listReset(l);
     if (free_it & 1)
         cpp_delete(l);
     return l;
@@ -105,8 +105,8 @@ THIS void *sti_eListQueueDestroy(List *l, int32_t free_it)
 
 THIS void *sti_esListDestroy(List *l, int32_t free_it)
 {
-    l->vt = &vtbl_eSList;
-    elist_reset(l);
+    l->vt = &vtbl_eslist;
+    el_listReset(l);
     if (free_it & 1)
         cpp_delete(l);
     return l;
@@ -139,9 +139,9 @@ THIS uint32_t sti_newIndex(IndexMemory *m)
     void *lock = IDXMGR_LOCK(m);
     uint32_t id;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     id = mm_newMemory(m);
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return id;
 }
 
@@ -152,9 +152,9 @@ THIS Index *sti_getIndex(IndexMemory *m, uint32_t id)
     void *lock = IDXMGR_LOCK(m);
     Index *ix;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     ix = (Index *)(m->base + IDXMGR_FIRST + (int32_t)(id - 1) * m->stride);
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return ix;
 }
 
@@ -162,18 +162,18 @@ THIS void sti_deleteIndex(IndexMemory *m, uint32_t id)
 {
     void *lock = IDXMGR_LOCK(m);
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     mm_deleteMemory(m, id);
-    mutex_release(lock);
+    sy_mutexRelease(lock);
 }
 
 THIS void sti_deleteAll(IndexMemory *m)
 {
     void *lock = IDXMGR_LOCK(m);
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     mm_deleteAll(m);
-    mutex_release(lock);
+    sy_mutexRelease(lock);
 }
 
 /* ---- the name of a language ---- */

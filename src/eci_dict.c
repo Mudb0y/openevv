@@ -41,27 +41,27 @@ typedef struct OldInst OldInst;
 /* Whether an instance is in the middle of speaking. */
 #define SYNTH_BUSY      3
 
-extern int32_t __stdcall eciCheckSynthesizing2(void *h2)
+extern int32_t __stdcall api_check_synth(void *h2)
     MANGLED("_eciCheckSynthesizing2@4");
-extern int32_t __stdcall eciSynthesize2(void *h2)
+extern int32_t __stdcall api_synthesize(void *h2)
     MANGLED("_eciSynthesize2@4");
-extern int32_t __stdcall eciSynchronize2(void *h2)
+extern int32_t __stdcall api_synchronize(void *h2)
     MANGLED("_eciSynchronize2@4");
-extern int32_t __stdcall eciNewDict2(void *h2, int32_t lang, void **out)
+extern int32_t __stdcall api_new_dict(void *h2, int32_t lang, void **out)
     MANGLED("_eciNewDict2@12");
-extern int32_t __stdcall eciDeleteDict2(void *h2, void *dict)
+extern int32_t __stdcall api_delete_dict(void *h2, void *dict)
     MANGLED("_eciDeleteDict2@8");
-extern int32_t __stdcall eciActivateDict2(void *h2, void *dict)
+extern int32_t __stdcall api_activate_dict(void *h2, void *dict)
     MANGLED("_eciActivateDict2@8");
-extern int32_t __stdcall eciDeactivateDict2(void *h2, void *dict)
+extern int32_t __stdcall api_deactivate_dict(void *h2, void *dict)
     MANGLED("_eciDeactivateDict2@8");
-extern int32_t __stdcall eciGetActiveDict2(void *h2, int32_t lang,
+extern int32_t __stdcall api_get_active_dict(void *h2, int32_t lang,
                                            void **out)
     MANGLED("_eciGetActiveDict2@12");
-extern int32_t __stdcall eciGetDictLanguage2(void *h2, void *dict,
+extern int32_t __stdcall api_get_dict_language(void *h2, void *dict,
                                              int32_t *lang)
     MANGLED("_eciGetDictLanguage2@12");
-extern int32_t __stdcall eciGetParam(OldInst *h, int32_t which)
+extern int32_t __stdcall es_getParam(OldInst *h, int32_t which)
     MANGLED("_eciGetParam@8");
 
 extern int ev_sendParameters(OldInst *h);
@@ -83,7 +83,7 @@ int ed_rc_to_ECIDictError(int32_t rc)
 int32_t ed_add_active_dict(OldInst *h, void *dict)
 {
     int32_t lang;
-    int32_t rc = eciGetDictLanguage2(OI_NEW(h), dict, &lang);
+    int32_t rc = api_get_dict_language(OI_NEW(h), dict, &lang);
 
     if (rc >= 0)
         ACTIVE_DICT(h, (lang & 0xff0000) >> 16, lang & 0xff) = dict;
@@ -94,7 +94,7 @@ int32_t ed_add_active_dict(OldInst *h, void *dict)
 int32_t ed_delete_active_dict(OldInst *h, void *dict)
 {
     int32_t lang;
-    int32_t rc = eciGetDictLanguage2(OI_NEW(h), dict, &lang);
+    int32_t rc = api_get_dict_language(OI_NEW(h), dict, &lang);
 
     if (rc >= 0) {
         int family = (lang & 0xff0000) >> 16;
@@ -117,7 +117,7 @@ int32_t ed_deactivate_all_dicts(OldInst *h)
             void *dict = ACTIVE_DICT(h, family, dialect);
 
             if (dict)
-                eciDeactivateDict2(OI_NEW(h), dict);
+                api_deactivate_dict(OI_NEW(h), dict);
             ACTIVE_DICT(h, family, dialect) = 0;
         }
     return 0;
@@ -140,19 +140,19 @@ void *__stdcall ed_newDict(OldInst *h)
     if (!h)
         return 0;
 
-    if (eciCheckSynthesizing2(OI_NEW(inst)) == SYNTH_BUSY) {
+    if (api_check_synth(OI_NEW(inst)) == SYNTH_BUSY) {
         OI_REFUSED(inst) = 0x2000;
         OI_REFUSEDALL(inst) |= 0x2000;
         return 0;
     }
 
     ev_sendParameters(inst);
-    eciSynthesize2(OI_NEW(inst));
-    eciSynchronize2(OI_NEW(inst));
+    api_synthesize(OI_NEW(inst));
+    api_synchronize(OI_NEW(inst));
 
-    lang = eciGetParam(h, ENV_LANGUAGE);
+    lang = es_getParam(h, ENV_LANGUAGE);
     if (lang >= 0)
-        rc = eciNewDict2(OI_NEW(inst), lang, &dict);
+        rc = api_new_dict(OI_NEW(inst), lang, &dict);
 
     return (rc >= 0) ? dict : 0;
 }
@@ -167,9 +167,9 @@ void *__stdcall ed_getDict(OldInst *h)
     if (!h)
         return 0;
 
-    lang = eciGetParam(h, ENV_LANGUAGE);
+    lang = es_getParam(h, ENV_LANGUAGE);
     if (lang >= 0)
-        rc = eciGetActiveDict2(OI_NEW(h), lang, &dict);
+        rc = api_get_active_dict(OI_NEW(h), lang, &dict);
 
     return (rc >= 0) ? dict : 0;
 }
@@ -185,7 +185,7 @@ int __stdcall ed_setDict(OldInst *h, void *dict)
     if (!dict) {
         rc = ed_deactivate_all_dicts(h);
     } else {
-        rc = eciActivateDict2(OI_NEW(h), dict);
+        rc = api_activate_dict(OI_NEW(h), dict);
         if (rc >= 0)
             rc = ed_add_active_dict(h, dict);
     }
@@ -202,7 +202,7 @@ int __stdcall ed_deleteDict(OldInst *h, void *dict)
 
     rc = ed_delete_active_dict(h, dict);
     if (rc >= 0)
-        eciDeleteDict2(OI_NEW(h), dict);
+        api_delete_dict(OI_NEW(h), dict);
     return 0;
 }
 

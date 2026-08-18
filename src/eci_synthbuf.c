@@ -106,16 +106,16 @@ typedef struct {
     int32_t d, e, f, g; /* +0x10 .. +0x1c */
 } AudioRequest;
 
-extern void *m_soundManager
+extern void *st_soundManager
     MANGLED("?m_soundManager@SynthThread@@0PAVSoundManager@@A");
 extern THIS void sm_removeAudioFormat(void *m, AudioFormat *f)
     MANGLED("?removeAudioFormat@SoundManager@@QAEXPAVAudioFormat@@@Z");
-extern THIS void sm_replaceDefaults(void *m, AudioRequest *want)
+extern THIS void sm_replaceDefaultFieldsWithValues(void *m, AudioRequest *want)
     MANGLED("?replaceDefaultFieldsWithValues@SoundManager@@QAEXPAUECIaudioFormat@@@Z");
 extern THIS int32_t sm_requestAudioFormat(void *m, AudioRequest *want,
                                           AudioFormat **out)
     MANGLED("?requestAudioFormat@SoundManager@@QAEJPAUECIaudioFormat@@PAPAVAudioFormat@@@Z");
-extern THIS int32_t cat_engineSupports(void *c, uint32_t a, uint32_t b)
+extern THIS int32_t cm_engineSupports(void *c, uint32_t a, uint32_t b)
     MANGLED("?engineSupportsConcatenative@ConcatenationManager@@QAEHKK@Z");
 extern THIS void stb_postEngineError(SynthThread *t2)
     MANGLED("?postEngineError@SynthThread@@AAEXXZ");
@@ -136,22 +136,22 @@ extern void stb_staticUserIndexCallback(void *)
 extern void stb_staticSynthesisBreakCallback(int32_t, void *)
     MANGLED("?staticSynthesisBreakCallback@SynthThread@@CAXHPAX@Z");
 
-extern THIS int32_t cat_inUse(void *c)
+extern THIS int32_t cm_usingConcatenativeEngine(void *c)
     MANGLED("?usingConcatenativeEngine@ConcatenationManager@@QAEHXZ");
-extern THIS int32_t cat_setParam(void *c, int32_t which, int32_t value,
+extern THIS int32_t cm_setParam(void *c, int32_t which, int32_t value,
                                  int32_t extra)
     MANGLED("?setParam@ConcatenationManager@@QAEHJHH@Z");
-extern THIS void cat_registerIndexCallback(void *c, uint32_t which,
+extern THIS void cm_registerCallbackA(void *c, uint32_t which,
                                            IndexCallback cb, void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXKP6AXHPAX@Z0@Z");
-extern THIS void cat_registerUserCallback(void *c, uint32_t which,
+extern THIS void cm_registerCallbackB(void *c, uint32_t which,
                                           UserCallback cb, void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXKP6AXPAX@Z0@Z");
-extern THIS void cat_registerSynthCallback(void *c, SynthCallback cb,
+extern THIS void cm_registerCallbackC(void *c, SynthCallback cb,
                                            void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXP6AXHPAJPAX@Z1@Z");
 
-extern THIS int32_t rom_setParam(void *r, int32_t which, int32_t value)
+extern THIS int32_t rz_setParam(void *r, int32_t which, int32_t value)
     MANGLED("?setParam@RomanizerManager@@QAEHJH@Z");
 
 /* Where the state block records that phonemes are wanted. */
@@ -167,12 +167,12 @@ static void stf_reportingOff(SynthThread *t)
         EngSetUser set = (EngSetUser)ENG_CALL(t, ENG_USER_INDEX_CB);
 
         set(ST_ENGINE(t), 0, t);
-        cat_registerUserCallback(ST_CONCAT(t), CAT_CB_USER_INDEX, 0, t);
+        cm_registerCallbackB(ST_CONCAT(t), CAT_CB_USER_INDEX, 0, t);
     } else if (ST_FLAGS(t) & STF_WORD_STARTS) {
         EngSetIndex set = (EngSetIndex)ENG_CALL(t, ENG_WORD_START_CB);
 
         set(ST_ENGINE(t), 0, t);
-        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_MARK, 0, t);
+        cm_registerCallbackA(ST_CONCAT(t), CAT_CB_WORD_MARK, 0, t);
     }
 }
 
@@ -185,17 +185,17 @@ static void stf_reportingOn(SynthThread *t)
         EngSetUser set = (EngSetUser)ENG_CALL(t, ENG_USER_INDEX_CB);
 
         set(ST_ENGINE(t), stb_staticUserIndexCallback, t);
-        cat_registerUserCallback(ST_CONCAT(t), CAT_CB_USER_INDEX,
+        cm_registerCallbackB(ST_CONCAT(t), CAT_CB_USER_INDEX,
                                  stb_staticUserIndexCallback, t);
     } else if (ST_FLAGS(t) & STF_WORD_STARTS) {
         EngSetIndex set = (EngSetIndex)ENG_CALL(t, ENG_WORD_START_CB);
 
         set(ST_ENGINE(t), stb_staticWordCallback, t);
-        if (ST_CONCAT(t) && cat_inUse(ST_CONCAT(t)))
-            cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_START,
+        if (ST_CONCAT(t) && cm_usingConcatenativeEngine(ST_CONCAT(t)))
+            cm_registerCallbackA(ST_CONCAT(t), CAT_CB_WORD_START,
                                       stb_staticWordCallback, t);
     }
-    cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_BREAK,
+    cm_registerCallbackA(ST_CONCAT(t), CAT_CB_BREAK,
                               stb_staticSynthesisBreakCallback, t);
 }
 
@@ -231,18 +231,18 @@ THIS int32_t stf_deleteAudioFormat(SynthThread *t)
     void *lock = ST_LOCK(t);
     int32_t rc = ERR_REFUSED;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     if (!ST_POSTED(t)) {
         rc = OK;
         if (ST_OUTFMT(t)) {
-            sm_removeAudioFormat(m_soundManager, (AudioFormat *)ST_OUTFMT(t));
+            sm_removeAudioFormat(st_soundManager, (AudioFormat *)ST_OUTFMT(t));
             ST_OUTFMT(t) = 0;
             ST_SOUND(t) = 0;
         }
         if (ST_SILENT(t))
             ST_SILENT(t) = 0;
     }
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return rc;
 }
 
@@ -264,7 +264,7 @@ THIS int32_t stf_registerPhonemeBuffer(SynthThread *t, void *buf, int32_t n)
     int32_t rc = ERR_REFUSED;
     EngCommand command;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     if (ST_POSTED(t))
         goto done;
     if (ST_OUTFMT(t)) {
@@ -289,7 +289,7 @@ THIS int32_t stf_registerPhonemeBuffer(SynthThread *t, void *buf, int32_t n)
             rc = ERR_ENGINE;
         } else {
             STATE_PHONEMES(ST_STATE(t)) = 1;
-            rom_setParam(ST_ROMAN(t), ROM_PHONEMES, 1);
+            rz_setParam(ST_ROMAN(t), ROM_PHONEMES, 1);
             ST_DIRECT(t) = 0;
             stf_reportingOn(t);
         }
@@ -298,7 +298,7 @@ THIS int32_t stf_registerPhonemeBuffer(SynthThread *t, void *buf, int32_t n)
             rc = ERR_ENGINE;
         } else {
             STATE_PHONEMES(ST_STATE(t)) = 0;
-            rom_setParam(ST_ROMAN(t), ROM_PHONEMES, 0);
+            rz_setParam(ST_ROMAN(t), ROM_PHONEMES, 0);
             stf_reportingOn(t);
         }
     }
@@ -315,7 +315,7 @@ THIS int32_t stf_registerPhonemeBuffer(SynthThread *t, void *buf, int32_t n)
     }
 
 done:
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return rc;
 }
 
@@ -336,7 +336,7 @@ THIS int32_t stf_registerSampleBuffer(SynthThread *t, int16_t *buf,
     int32_t rc = ERR_REFUSED;
     EngCommand command;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     if (ST_POSTED(t))
         goto done;
 
@@ -376,20 +376,20 @@ THIS int32_t stf_registerSampleBuffer(SynthThread *t, int16_t *buf,
     }
 
     stf_reportingOff(t);
-    if (cat_setParam(ST_CONCAT(t), CAT_SAMPLE_RATE, fmt->rate, 1) == -1)
+    if (cm_setParam(ST_CONCAT(t), CAT_SAMPLE_RATE, fmt->rate, 1) == -1)
         rc = ERR_ENGINE;
 
     ST_DIRECT(t) = 1;
     command = (EngCommand)ENG_CALL(t, ENG_COMMAND);
 
-    if (ST_CONCAT(t) && cat_inUse(ST_CONCAT(t))) {
-        cat_registerSynthCallback(ST_CONCAT(t), stb_staticSynthCallback, t);
-        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_PHONEME,
+    if (ST_CONCAT(t) && cm_usingConcatenativeEngine(ST_CONCAT(t))) {
+        cm_registerCallbackC(ST_CONCAT(t), stb_staticSynthCallback, t);
+        cm_registerCallbackA(ST_CONCAT(t), CAT_CB_PHONEME,
                                   stb_staticTorrentPhonemeCallback, t);
         if (command(ST_ENGINE(t), CMD_CONCATENATIVE))
             stb_postEngineError(t);
-        rom_setParam(ST_ROMAN(t), ROM_CONCATENATIVE, 1);
-        rom_setParam(ST_ROMAN(t), ROM_SAMPLE_RATE, fmt->rate);
+        rz_setParam(ST_ROMAN(t), ROM_CONCATENATIVE, 1);
+        rz_setParam(ST_ROMAN(t), ROM_SAMPLE_RATE, fmt->rate);
     } else {
         EngSetSynth setSynth = (EngSetSynth)ENG_CALL(t, ENG_SYNTH_CB);
 
@@ -397,7 +397,7 @@ THIS int32_t stf_registerSampleBuffer(SynthThread *t, int16_t *buf,
             || command(ST_ENGINE(t), CMD_SAMPLES))
             rc = ERR_ENGINE;
         else
-            rom_setParam(ST_ROMAN(t), ROM_CONCATENATIVE, 0);
+            rz_setParam(ST_ROMAN(t), ROM_CONCATENATIVE, 0);
     }
     ST_DIRECT(t) = 0;
 
@@ -409,7 +409,7 @@ THIS int32_t stf_registerSampleBuffer(SynthThread *t, int16_t *buf,
     stf_reportingOn(t);
 
 done:
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return rc;
 }
 
@@ -432,7 +432,7 @@ THIS int32_t stf_newAudioFormat(SynthThread *t, AudioRequest *want)
     EngCommand command;
     SampleFormat fmt;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     if (ST_POSTED(t))
         goto done;
     if (ST_SAMPBUF(t)) {
@@ -445,7 +445,7 @@ THIS int32_t stf_newAudioFormat(SynthThread *t, AudioRequest *want)
     }
 
     rc = OK;
-    sm_replaceDefaults(m_soundManager, want);
+    sm_replaceDefaultFieldsWithValues(st_soundManager, want);
     /* Already playing exactly this? Then there is nothing to do. */
     if (ST_OUTFMT(t)
         && stf_audioFormatEquals((AudioFormat *)ST_OUTFMT(t), want))
@@ -453,7 +453,7 @@ THIS int32_t stf_newAudioFormat(SynthThread *t, AudioRequest *want)
     if (ST_OUTFMT(t))
         stf_deleteAudioFormat(t);
 
-    rc = sm_requestAudioFormat(m_soundManager, want,
+    rc = sm_requestAudioFormat(st_soundManager, want,
                                (AudioFormat **)&ST_OUTFMT(t));
     if (rc)
         goto done;
@@ -471,15 +471,15 @@ THIS int32_t stf_newAudioFormat(SynthThread *t, AudioRequest *want)
         EngSetIndex set = (EngSetIndex)ENG_CALL(t, ENG_WORD_START_CB);
 
         set(ST_ENGINE(t), stb_staticWordCallback, t);
-        if (cat_engineSupports(ST_CONCAT(t), (ST_ENGINE_ID(t) >> 16) & 0xff,
+        if (cm_engineSupports(ST_CONCAT(t), (ST_ENGINE_ID(t) >> 16) & 0xff,
                                ST_ENGINE_ID(t) & 0xff))
-            cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_START,
+            cm_registerCallbackA(ST_CONCAT(t), CAT_CB_WORD_START,
                                       stb_staticWordCallback, t);
     }
-    cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_BREAK,
+    cm_registerCallbackA(ST_CONCAT(t), CAT_CB_BREAK,
                               stb_staticSynthesisBreakCallback, t);
 
-    if (cat_setParam(ST_CONCAT(t), CAT_SAMPLE_RATE, want->b, 1) == -1)
+    if (cm_setParam(ST_CONCAT(t), CAT_SAMPLE_RATE, want->b, 1) == -1)
         rc = ERR_ENGINE;
 
     fmt.layout = want->a;
@@ -487,28 +487,28 @@ THIS int32_t stf_newAudioFormat(SynthThread *t, AudioRequest *want)
     fmt.width = want->c;
     if (stw_createAudioConverter(t, &fmt)) {
         /* Marked: given back but not forgotten. */
-        sm_removeAudioFormat(m_soundManager, (AudioFormat *)ST_OUTFMT(t));
+        sm_removeAudioFormat(st_soundManager, (AudioFormat *)ST_OUTFMT(t));
         rc = ERR_ENGINE;
     }
 
-    rom_setParam(ST_ROMAN(t), ROM_CONCATENATIVE, ST_CONCAT(t) ? 1 : 0);
+    rz_setParam(ST_ROMAN(t), ROM_CONCATENATIVE, ST_CONCAT(t) ? 1 : 0);
 
     command = (EngCommand)ENG_CALL(t, ENG_COMMAND);
-    if (ST_CONCAT(t) && cat_inUse(ST_CONCAT(t))) {
-        cat_registerSynthCallback(ST_CONCAT(t), stb_staticSynthCallback, t);
+    if (ST_CONCAT(t) && cm_usingConcatenativeEngine(ST_CONCAT(t))) {
+        cm_registerCallbackC(ST_CONCAT(t), stb_staticSynthCallback, t);
         if (ST_FLAGS(t) & STF_ROMANIZING)
-            cat_registerUserCallback(ST_CONCAT(t), CAT_CB_USER_INDEX,
+            cm_registerCallbackB(ST_CONCAT(t), CAT_CB_USER_INDEX,
                                      stb_staticUserIndexCallback, t);
-        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_PHONEME,
+        cm_registerCallbackA(ST_CONCAT(t), CAT_CB_PHONEME,
                                   stb_staticTorrentPhonemeCallback, t);
         ST_DIRECT(t) = 1;
         if (command(ST_ENGINE(t), CMD_CONCATENATIVE))
             stb_postEngineError(t);
         ST_DIRECT(t) = 0;
         if (ST_FLAGS(t) & STF_WORD_STARTS)
-            cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_START,
+            cm_registerCallbackA(ST_CONCAT(t), CAT_CB_WORD_START,
                                       stb_staticWordCallback, t);
-        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_BREAK,
+        cm_registerCallbackA(ST_CONCAT(t), CAT_CB_BREAK,
                                   stb_staticSynthesisBreakCallback, t);
     } else {
         if (command(ST_ENGINE(t), CMD_PHONEMES_OFF))
@@ -519,7 +519,7 @@ THIS int32_t stf_newAudioFormat(SynthThread *t, AudioRequest *want)
     ST_SOUND(t) = ((AudioFormat *)ST_OUTFMT(t))->sound;
 
 done:
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return rc;
 }
 

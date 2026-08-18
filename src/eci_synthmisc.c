@@ -31,23 +31,23 @@
    milliseconds. */
 #define QUEUE_TICK 30
 
-extern THIS int32_t fm_activateFilter(void *m, uint32_t id, uint8_t flag)
+extern THIS int32_t fm_activateById(void *m, uint32_t id, uint8_t flag)
     MANGLED("?activateFilter@FilterManager@@QAEJK_N@Z");
-extern THIS int32_t fm_activateFilterPtr(void *m, void *f)
+extern THIS int32_t fm_activateByHandle(void *m, void *f)
     MANGLED("?activateFilter@FilterManager@@QAEJPAX@Z");
-extern THIS int32_t fm_deactivateFilter(void *m, uint32_t id, uint8_t flag)
+extern THIS int32_t fm_deactivateById(void *m, uint32_t id, uint8_t flag)
     MANGLED("?deactivateFilter@FilterManager@@QAEJK_N@Z");
-extern THIS int32_t fm_deactivateFilterPtr(void *m, void *f)
+extern THIS int32_t fm_deactivateByHandle(void *m, void *f)
     MANGLED("?deactivateFilter@FilterManager@@QAEJPAX@Z");
 extern THIS int32_t fm_deactivateAll(void *m)
     MANGLED("?deactivateAllFilters@FilterManager@@QAEJXZ");
-extern THIS int32_t fm_deleteFilter(void *m, int32_t a, int32_t b)
+extern THIS int32_t fm_deleteById(void *m, int32_t a, int32_t b)
     MANGLED("?deleteFilter@FilterManager@@QAEJJH@Z");
-extern THIS int32_t fm_deleteFilterPtr(void *m, void *f)
+extern THIS int32_t fm_deleteByHandle(void *m, void *f)
     MANGLED("?deleteFilter@FilterManager@@QAEJPAX@Z");
-extern THIS int32_t fm_isFilterActive(void *m, uint32_t id)
+extern THIS int32_t fm_isActiveById(void *m, uint32_t id)
     MANGLED("?isFilterActive@FilterManager@@QAEHI@Z");
-extern THIS int32_t fm_isFilterAutoload(void *m, int32_t engine, uint32_t id)
+extern THIS int32_t fm_isAutoload(void *m, int32_t engine, uint32_t id)
     MANGLED("?isFilterAutoload@FilterManager@@QAEHJI@Z");
 extern THIS int32_t fm_loadFilter(void *m, int32_t engine, int32_t which,
                                   void **out)
@@ -62,10 +62,10 @@ extern THIS void fm_getFilterDescription(void *m, int32_t engine, uint32_t id,
                                          char *out)
     MANGLED("?getFilterDescription@FilterManager@@QAEXJIPAD@Z");
 
-extern THIS int32_t cat_registerVoice(void *c, int32_t voice, void *attrib,
+extern THIS int32_t cm_registerVoice(void *c, int32_t voice, void *attrib,
                                       void *extra)
     MANGLED("?registerVoice@ConcatenationManager@@QAEJHPAUECIExtendedVoiceAttrib@@PAX@Z");
-extern THIS int32_t cat_unregisterVoice(void *c, int32_t voice, void *attrib,
+extern THIS int32_t cm_unregisterVoice(void *c, int32_t voice, void *attrib,
                                         void **out)
     MANGLED("?unregisterVoice@ConcatenationManager@@QAEJHPAUECIVoiceAttrib@@PAPAX@Z");
 
@@ -77,7 +77,7 @@ THIS int32_t stm_activateFilterById(SynthThread *t, uint32_t id)
     int32_t rc = 0;
 
     if (ST_FILTERS(t))
-        fm_activateFilter(ST_FILTERS(t), id, 0);
+        fm_activateById(ST_FILTERS(t), id, 0);
     return rc;
 }
 
@@ -88,7 +88,7 @@ THIS int32_t stm_activateFilterByIdFlag(SynthThread *t, uint32_t id,
     int32_t rc = 0;
 
     if (ST_FILTERS(t))
-        fm_activateFilter(ST_FILTERS(t), id, flag);
+        fm_activateById(ST_FILTERS(t), id, flag);
     return rc;
 }
 
@@ -97,7 +97,7 @@ THIS int32_t stm_activateFilter(SynthThread *t, void *f)
     int32_t rc = 0;
 
     if (ST_FILTERS(t))
-        rc = fm_activateFilterPtr(ST_FILTERS(t), f);
+        rc = fm_activateByHandle(ST_FILTERS(t), f);
     return rc;
 }
 
@@ -107,7 +107,7 @@ THIS int32_t stm_deactivateFilterById(SynthThread *t, uint32_t id)
     int32_t rc = 0;
 
     if (ST_FILTERS(t))
-        fm_deactivateFilter(ST_FILTERS(t), id, 0);
+        fm_deactivateById(ST_FILTERS(t), id, 0);
     return rc;
 }
 
@@ -118,7 +118,7 @@ THIS int32_t stm_deactivateFilterByIdFlag(SynthThread *t, uint32_t id,
     int32_t rc = 0;
 
     if (ST_FILTERS(t))
-        fm_deactivateFilter(ST_FILTERS(t), id, flag);
+        fm_deactivateById(ST_FILTERS(t), id, flag);
     return rc;
 }
 
@@ -127,7 +127,7 @@ THIS int32_t stm_deactivateFilter(SynthThread *t, void *f)
     int32_t rc = 0;
 
     if (ST_FILTERS(t))
-        rc = fm_deactivateFilterPtr(ST_FILTERS(t), f);
+        rc = fm_deactivateByHandle(ST_FILTERS(t), f);
     return rc;
 }
 
@@ -146,7 +146,7 @@ THIS int32_t stm_deleteFilterByNumbers(SynthThread *t, int32_t a, int32_t b)
     int32_t rc = 0;
 
     if (ST_FILTERS(t))
-        rc = fm_deleteFilter(ST_FILTERS(t), a, b);
+        rc = fm_deleteById(ST_FILTERS(t), a, b);
     return rc;
 }
 
@@ -155,7 +155,7 @@ THIS int32_t stm_deleteFilter(SynthThread *t, void *f)
     int32_t rc = 0;
 
     if (ST_FILTERS(t))
-        rc = fm_deleteFilterPtr(ST_FILTERS(t), f);
+        rc = fm_deleteByHandle(ST_FILTERS(t), f);
     return rc;
 }
 
@@ -164,7 +164,7 @@ THIS int32_t stm_isFilterActive(SynthThread *t, uint32_t id)
     int32_t rc = 0;
 
     if (ST_FILTERS(t))
-        rc = fm_isFilterActive(ST_FILTERS(t), id);
+        rc = fm_isActiveById(ST_FILTERS(t), id);
     return rc;
 }
 
@@ -173,7 +173,7 @@ THIS int32_t stm_isFilterAutoload(SynthThread *t, int32_t engine, uint32_t id)
     int32_t rc = 0;
 
     if (ST_FILTERS(t))
-        rc = fm_isFilterAutoload(ST_FILTERS(t), engine, id);
+        rc = fm_isAutoload(ST_FILTERS(t), engine, id);
     return rc;
 }
 
@@ -227,7 +227,7 @@ THIS int32_t stm_registerVoice(SynthThread *t, int32_t voice, void *attrib,
     int32_t rc = ERR_NO_VOICE;
 
     if (ST_CONCAT(t))
-        rc = cat_registerVoice(ST_CONCAT(t), voice, attrib, extra);
+        rc = cm_registerVoice(ST_CONCAT(t), voice, attrib, extra);
     return rc;
 }
 
@@ -237,7 +237,7 @@ THIS int32_t stm_unregisterVoice(SynthThread *t, int32_t voice, void *attrib,
     int32_t rc = ERR_NO_VOICE;
 
     if (ST_CONCAT(t))
-        rc = cat_unregisterVoice(ST_CONCAT(t), voice, attrib, out);
+        rc = cm_unregisterVoice(ST_CONCAT(t), voice, attrib, out);
     return rc;
 }
 
@@ -261,11 +261,11 @@ struct MsgQueue { const MsgQueueVtbl *vt; };
 /* The thread is running. */
 #define THREAD_RUNNING 1
 
-extern THIS int32_t event_wait(void *e, int32_t ms)
+extern THIS int32_t sy_eventWait(void *e, int32_t ms)
     MANGLED("?wait@ETIEvent@@QAEHJ@Z");
-extern THIS int32_t thread_getStatus(void *t)
+extern THIS int32_t th_getStatus(void *t)
     MANGLED("?getStatus@ETIThread@@QAE?AW4TStatus@1@XZ");
-extern THIS int32_t thread_shouldTerminate(const void *t)
+extern THIS int32_t th_shouldTerminate(const void *t)
     MANGLED("?shouldTerminate@ETIThread@@QBEHXZ");
 
 /* Stop the thread taking anything else off its queue, and wait until the one
@@ -275,12 +275,12 @@ THIS int16_t stm_qtSuspend(QueueThread *t)
 {
     int16_t ok = 0;
 
-    event_wait(QT_QUITTING(t), -1);
-    if (thread_getStatus(t) == THREAD_RUNNING && !thread_shouldTerminate(t)) {
+    sy_eventWait(QT_QUITTING(t), -1);
+    if (th_getStatus(t) == THREAD_RUNNING && !th_shouldTerminate(t)) {
         MsgQueue *q = QT_QUEUE(t);
 
         q->vt->suspend(q);
-        event_wait(QT_TURN(t), -1);
+        sy_eventWait(QT_TURN(t), -1);
         ok = 1;
     }
     return ok;
@@ -292,8 +292,8 @@ THIS int16_t stm_qtResume(QueueThread *t)
 {
     int16_t ok = 0;
 
-    event_wait(QT_QUITTING(t), -1);
-    if (thread_getStatus(t) == THREAD_RUNNING && !thread_shouldTerminate(t)) {
+    sy_eventWait(QT_QUITTING(t), -1);
+    if (th_getStatus(t) == THREAD_RUNNING && !th_shouldTerminate(t)) {
         MsgQueue *q = QT_QUEUE(t);
 
         q->vt->resume(q);

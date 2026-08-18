@@ -108,12 +108,12 @@ THIS void    *tt_destroy(TimerThread *t, int32_t free_it);
 
 /* Putting a message on a queue thread already belongs to the sound thread's
    own file, so it is borrowed rather than written twice. */
-extern THIS int16_t tt_postToQueue(ETImessageQueueThread *q, ETImessage *m)
+extern THIS int16_t qt_postMessage(ETImessageQueueThread *q, ETImessage *m)
     MANGLED("?postMessage@ETImessageQueueThread@@QAEFPAVETImessage@@@Z");
 
 THIS void tt_timerPost(TimerThreadTimer *timer)
 {
-    tt_postToQueue(timer->queue, timer->message);
+    qt_postMessage(timer->queue, timer->message);
 }
 
 /* ---- one timer -------------------------------------------------------- */

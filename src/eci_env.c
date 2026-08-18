@@ -84,17 +84,17 @@ typedef struct ECIVoice { int32_t w[0x14]; } ECIVoice;
 #define SV_DIALECT_BYTES 0x0504
 #define SV_FIRST         4
 
-extern int32_t __stdcall eciSetParam2(void *h2, int32_t k, int32_t p,
+extern int32_t __stdcall api_set_param(void *h2, int32_t k, int32_t p,
                                       int32_t v) MANGLED("_eciSetParam2@16");
-extern int32_t __stdcall eciRegisterSampleBuffer2(void *h2, void *buf,
+extern int32_t __stdcall api_register_samples(void *h2, void *buf,
                                                   int32_t bytes, void *fmt)
     MANGLED("_eciRegisterSampleBuffer2@16");
-extern int32_t __stdcall eciRegisterPhonemeBuffer2(void *h2, void *buf,
+extern int32_t __stdcall api_register_phonemes(void *h2, void *buf,
                                                    int32_t n, int32_t kind)
     MANGLED("_eciRegisterPhonemeBuffer2@16");
-extern int32_t __stdcall eciNewAudioFormat2(void *h2, void *fmt)
+extern int32_t __stdcall api_new_audio_format(void *h2, void *fmt)
     MANGLED("_eciNewAudioFormat2@8");
-extern int32_t __stdcall eciDeleteAudioFormat2(void *h2)
+extern int32_t __stdcall api_delete_audio_format(void *h2)
     MANGLED("_eciDeleteAudioFormat2@4");
 extern int ealQueryDevCaps(int32_t dev, int32_t kind, int32_t *n, void *out)
     MANGLED("_ealQueryDevCaps");
@@ -216,12 +216,12 @@ int ev_setOutputToDevice(OldInst *h, int32_t rate, int32_t a, int32_t b,
     AudioFormat fmt;
 
     if (OI_WHERE(h) == WHERE_SAMPLES) {
-        if (setECIerror(eciRegisterSampleBuffer2(OI_NEW(h), 0, 0, 0), h))
+        if (setECIerror(api_register_samples(OI_NEW(h), 0, 0, 0), h))
             return 0;
         OI_SAMPROOM(h) = 0;
         OI_SAMPBUF(h) = 0;
     } else if (OI_WHERE(h) == WHERE_PHONEMES) {
-        if (setECIerror(eciRegisterPhonemeBuffer2(OI_NEW(h), 0, 0, 7), h))
+        if (setECIerror(api_register_phonemes(OI_NEW(h), 0, 0, 7), h))
             return 0;
     }
 
@@ -235,7 +235,7 @@ int ev_setOutputToDevice(OldInst *h, int32_t rate, int32_t a, int32_t b,
     fmt.hz = ev_deviceHz(rate);
     fmt.flags = 0;
 
-    if (setECIerror(eciNewAudioFormat2(OI_NEW(h), &fmt), h))
+    if (setECIerror(api_new_audio_format(OI_NEW(h), &fmt), h))
         return 0;
     OI_WHERE(h) = WHERE_DEVICE;
     return 1;
@@ -247,10 +247,10 @@ int ev_setOutputToSampleCallback(OldInst *h, int32_t rate)
     AudioFormat fmt;
 
     if (OI_WHERE(h) == WHERE_DEVICE) {
-        if (setECIerror(eciDeleteAudioFormat2(OI_NEW(h)), h))
+        if (setECIerror(api_delete_audio_format(OI_NEW(h)), h))
             return 0;
     } else if (OI_WHERE(h) == WHERE_PHONEMES) {
-        if (setECIerror(eciRegisterPhonemeBuffer2(OI_NEW(h), 0, 0, 7), h))
+        if (setECIerror(api_register_phonemes(OI_NEW(h), 0, 0, 7), h))
             return 0;
     }
 
@@ -260,7 +260,7 @@ int ev_setOutputToSampleCallback(OldInst *h, int32_t rate)
     fmt.flags = 0;
 
     /* The room is counted in samples here and in bytes underneath. */
-    if (setECIerror(eciRegisterSampleBuffer2(OI_NEW(h), OI_SAMPBUF(h),
+    if (setECIerror(api_register_samples(OI_NEW(h), OI_SAMPBUF(h),
                                              OI_SAMPROOM(h) * 2, &fmt), h))
         return 0;
     OI_WHERE(h) = WHERE_SAMPLES;
@@ -271,14 +271,14 @@ int ev_setOutputToSampleCallback(OldInst *h, int32_t rate)
 int ev_setOutputToPhonemeCallback(OldInst *h, int32_t n, void *buf)
 {
     if (OI_WHERE(h) == WHERE_DEVICE) {
-        if (setECIerror(eciDeleteAudioFormat2(OI_NEW(h)), h))
+        if (setECIerror(api_delete_audio_format(OI_NEW(h)), h))
             return 0;
     } else if (OI_WHERE(h) == WHERE_SAMPLES) {
-        if (setECIerror(eciRegisterSampleBuffer2(OI_NEW(h), 0, 0, 0), h))
+        if (setECIerror(api_register_samples(OI_NEW(h), 0, 0, 0), h))
             return 0;
     }
 
-    if (setECIerror(eciRegisterPhonemeBuffer2(OI_NEW(h), buf, n, 7), h))
+    if (setECIerror(api_register_phonemes(OI_NEW(h), buf, n, 7), h))
         return 0;
     OI_WHERE(h) = WHERE_PHONEMES;
     return 1;
@@ -313,7 +313,7 @@ int ev_setDefaultEnvironment(OldInst *h, int32_t unused)
 
     (void)unused;
     for (i = 0; i < 6; i++) {
-        int32_t rc = eciSetParam2(OI_NEW(h), 0, SEND[i].param,
+        int32_t rc = api_set_param(OI_NEW(h), 0, SEND[i].param,
                                   OI_ENV(h)[SEND[i].env]);
         if (setECIerror(rc, h))
             return 0;
@@ -333,7 +333,7 @@ int ev_sendChangedActiveVoice(OldInst *h, ECIVoice v, int32_t force)
 
         if (!force && *want == *sent)
             continue;
-        err = setECIerror(eciSetParam2(OI_NEW(h), 1, i, *want), h);
+        err = setECIerror(api_set_param(OI_NEW(h), 1, i, *want), h);
         *sent = *want;
     }
     return err == 0;
@@ -384,7 +384,7 @@ int ev_sendChangedEnvironment(OldInst *h, Environment env, int32_t force)
     /* The language first and on its own, because a change of family has to
        be noticed before the romanizer setting is decided. */
     if (force || e[ENV_LANGUAGE] != sent[ENV_LANGUAGE]) {
-        if (setECIerror(eciSetParam2(OI_NEW(h), 0, 2, e[ENV_LANGUAGE]), h))
+        if (setECIerror(api_set_param(OI_NEW(h), 0, 2, e[ENV_LANGUAGE]), h))
             return 0;
         if (((sent[ENV_LANGUAGE] & 0xff0000) >> 16)
             != ((e[ENV_LANGUAGE] & 0xff0000) >> 16))
@@ -397,14 +397,14 @@ int ev_sendChangedEnvironment(OldInst *h, Environment env, int32_t force)
 
         if (!force && e[n] == sent[n])
             continue;
-        if (setECIerror(eciSetParam2(OI_NEW(h), 0, SEND[i].param, e[n]), h))
+        if (setECIerror(api_set_param(OI_NEW(h), 0, SEND[i].param, e[n]), h))
             return 0;
         sent[n] = e[n];
     }
 
     /* And the romanizer last, forced as well when the family moved. */
     if (force || langMoved || e[ENV_ROMAN] != sent[ENV_ROMAN]) {
-        if (setECIerror(eciSetParam2(OI_NEW(h), 0, 0x0e, e[ENV_ROMAN]), h))
+        if (setECIerror(api_set_param(OI_NEW(h), 0, 0x0e, e[ENV_ROMAN]), h))
             return 0;
         sent[ENV_ROMAN] = e[ENV_ROMAN];
     }

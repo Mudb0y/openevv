@@ -60,18 +60,18 @@ typedef struct SoundManager {
 /* What a sound thread answers when it has set itself up. */
 #define SETUP_OK           1
 
-extern THIS void *mutexCtor(void *m, int32_t recursive)
+extern THIS void *sy_mutexCtor(void *m, int32_t recursive)
     MANGLED("??0Mutex@@QAE@H@Z");
-extern THIS void mutexDtor(void *m) MANGLED("??1Mutex@@QAE@XZ");
-extern THIS int mutexWait(void *m, int32_t ms) MANGLED("?wait@Mutex@@QAEHJ@Z");
-extern THIS int mutexRelease(void *m) MANGLED("?release@Mutex@@QAEHXZ");
-extern THIS void *timerThreadCtor(void *t) MANGLED("??0TimerThread@@QAE@XZ");
-extern THIS void timerThreadDtor(void *t) MANGLED("??1TimerThread@@UAE@XZ");
-extern THIS void *soundThreadCtor(void *t, void *timer)
+extern THIS void sy_mutexDtor(void *m) MANGLED("??1Mutex@@QAE@XZ");
+extern THIS int sy_mutexWait(void *m, int32_t ms) MANGLED("?wait@Mutex@@QAEHJ@Z");
+extern THIS int sy_mutexRelease(void *m) MANGLED("?release@Mutex@@QAEHXZ");
+extern THIS void *tt_ctor(void *t) MANGLED("??0TimerThread@@QAE@XZ");
+extern THIS void tt_dtor(void *t) MANGLED("??1TimerThread@@UAE@XZ");
+extern THIS void *snd_ctor(void *t, void *timer)
     MANGLED("??0SoundThread@@QAE@PAVTimerThread@@@Z");
-extern THIS int32_t soundThreadClose(void *t)
+extern THIS int32_t snd_close(void *t)
     MANGLED("?close@SoundThread@@QAEHXZ");
-extern THIS int16_t soundThreadSetup(void *t, char *name, int32_t *hz,
+extern THIS int16_t snd_setup(void *t, char *name, int32_t *hz,
                                      int32_t *flags, int32_t *kind,
                                      int32_t *blocks, int32_t *blockBytes,
                                      int32_t *prerollBlocks,
@@ -124,7 +124,7 @@ THIS AudioFormat *sm_formatCtor(AudioFormat *a, uint32_t slot,
     strcpy(name, want->name);
 
     thread = cpp_new(SOUND_THREAD_BYTES);
-    a->thread = thread ? soundThreadCtor(thread, timer) : 0;
+    a->thread = thread ? snd_ctor(thread, timer) : 0;
     return a;
 }
 
@@ -153,7 +153,7 @@ THIS uint32_t sm_release(AudioFormat *a)
         return a->refs;
 
     if (a->thread) {
-        soundThreadClose(a->thread);
+        snd_close(a->thread);
         sm_deleteThread(a->thread);
         a->thread = 0;
     }
@@ -168,7 +168,7 @@ THIS int sm_isSupported(AudioFormat *a)
 {
     if (!a->thread)
         return 0;
-    return soundThreadSetup(a->thread, a->fmt.name, &a->fmt.hz,
+    return snd_setup(a->thread, a->fmt.name, &a->fmt.hz,
                             &a->fmt.flags, &a->fmt.kind, &a->fmt.blocks,
                             &a->fmt.blockBytes, &a->fmt.prerollBlocks,
                             &a->fmt.prerollBytes) == SETUP_OK;
@@ -178,11 +178,11 @@ THIS int sm_isSupported(AudioFormat *a)
 
 THIS SoundManager *sm_ctor(SoundManager *m)
 {
-    mutexCtor(m, 0);
+    sy_mutexCtor(m, 0);
     m->formats = 0;
     m->count = 0;
     m->capacity = 0;
-    timerThreadCtor(m->timer);
+    tt_ctor(m->timer);
     return m;
 }
 
@@ -193,8 +193,8 @@ THIS void sm_dtor(SoundManager *m)
         cpp_delete(m->formats);
         m->formats = 0;
     }
-    timerThreadDtor(m->timer);
-    mutexDtor(m);
+    tt_dtor(m->timer);
+    sy_mutexDtor(m);
 }
 
 /* Make sure there is room for one more. The array doubles, which means a
@@ -250,7 +250,7 @@ THIS int32_t sm_requestAudioFormat(SoundManager *m, ECIaudioFormat *want,
     ECIaudioFormat defaults;
     int32_t rc = FORMAT_NO_REQUEST;
 
-    mutexWait(m, WAIT_FOREVER);
+    sy_mutexWait(m, WAIT_FOREVER);
 
     if (!out)
         goto done;
@@ -303,7 +303,7 @@ THIS int32_t sm_requestAudioFormat(SoundManager *m, ECIaudioFormat *want,
     rc = FORMAT_OK;
 
 done:
-    mutexRelease(m);
+    sy_mutexRelease(m);
     return rc;
 }
 
@@ -311,7 +311,7 @@ done:
    the gap is filled from the end so the array stays packed. */
 THIS void sm_removeAudioFormat(SoundManager *m, AudioFormat *a)
 {
-    mutexWait(m, WAIT_FOREVER);
+    sy_mutexWait(m, WAIT_FOREVER);
 
     if (a) {
         uint32_t slot = a->slot;
@@ -326,7 +326,7 @@ THIS void sm_removeAudioFormat(SoundManager *m, AudioFormat *a)
         }
     }
 
-    mutexRelease(m);
+    sy_mutexRelease(m);
 }
 
 ALIAS("??0AudioFormat@@QAE@KPAUECIaudioFormat@@PAVTimerThread@@@Z",

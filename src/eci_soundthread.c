@@ -112,14 +112,14 @@ extern int32_t RAL_THREAD_PRIORITY_NORMAL;
 
 extern THIS ETImessage *msg_ctor(ETImessage *m, uint32_t type)
     MANGLED("??0ETImessage@@QAE@K@Z");
-extern THIS void mutex_dtor(void *m) MANGLED("??1Mutex@@QAE@XZ");
-extern THIS void event_ctor(void *e, int32_t held)
+extern THIS void sy_mutexDtor(void *m) MANGLED("??1Mutex@@QAE@XZ");
+extern THIS void sy_eventCtor(void *e, int32_t held)
     MANGLED("??0ETIEvent@@QAE@H@Z");
-extern THIS void event_dtor(void *e) MANGLED("??1ETIEvent@@QAE@XZ");
-extern THIS int32_t event_wait(void *e, int32_t ms)
+extern THIS void sy_eventDtor(void *e) MANGLED("??1ETIEvent@@QAE@XZ");
+extern THIS int32_t sy_eventWait(void *e, int32_t ms)
     MANGLED("?wait@ETIEvent@@QAEHJ@Z");
-extern THIS int32_t event_signal(void *e) MANGLED("?signal@ETIEvent@@QAEHXZ");
-extern THIS int32_t event_unsignal(void *e)
+extern THIS int32_t sy_eventSignal(void *e) MANGLED("?signal@ETIEvent@@QAEHXZ");
+extern THIS int32_t sy_eventUnsignal(void *e)
     MANGLED("?unsignal@ETIEvent@@QAEHXZ");
 
 extern THIS void *th_ctor(void *t) MANGLED("??0ETIThread@@IAE@XZ");
@@ -143,23 +143,23 @@ extern THIS uint32_t qt_run(void *t) MANGLED("?run@ETImessageQueueThread@@MAEKXZ
 extern THIS void qt_terminate(void *t)
     MANGLED("?terminate@ETImessageQueueThread@@MAEXXZ");
 
-extern THIS void *so_ctor(SoundOutput *o) MANGLED("??0SoundOutput@@QAE@XZ");
-extern THIS void  so_dtor(SoundOutput *o) MANGLED("??1SoundOutput@@QAE@XZ");
-extern THIS int16_t so_open(SoundOutput *o)
+extern THIS void *pcm_ctor(SoundOutput *o) MANGLED("??0SoundOutput@@QAE@XZ");
+extern THIS void  pcm_dtor(SoundOutput *o) MANGLED("??1SoundOutput@@QAE@XZ");
+extern THIS int16_t pcm_open(SoundOutput *o)
     MANGLED("?open@SoundOutput@@QAE?AW4SoundFileErrorEnum@@XZ");
-extern THIS int32_t so_close(SoundOutput *o) MANGLED("?close@SoundOutput@@QAEHXZ");
-extern THIS int32_t so_reset(SoundOutput *o) MANGLED("?reset@SoundOutput@@QAEHXZ");
-extern THIS int32_t so_flush(SoundOutput *o)
+extern THIS int32_t pcm_close(SoundOutput *o) MANGLED("?close@SoundOutput@@QAEHXZ");
+extern THIS int32_t pcm_reset(SoundOutput *o) MANGLED("?reset@SoundOutput@@QAEHXZ");
+extern THIS int32_t pcm_flush(SoundOutput *o)
     MANGLED("?flush@SoundOutput@@QAE?AW4SoundFileErrorEnum@@XZ");
-extern THIS int32_t so_hold(SoundOutput *o, int32_t on)
+extern THIS int32_t pcm_hold(SoundOutput *o, int32_t on)
     MANGLED("?hold@SoundOutput@@QAEHH@Z");
-extern THIS int32_t so_write(SoundOutput *o, const int32_t *data, uint32_t n)
+extern THIS int32_t pcm_write(SoundOutput *o, const int32_t *data, uint32_t n)
     MANGLED("?write@SoundOutput@@QAE?AW4SoundFileErrorEnum@@PBJI@Z");
-extern THIS int32_t so_insertIndex(SoundOutput *o, int32_t i)
+extern THIS int32_t pcm_insertIndex(SoundOutput *o, int32_t i)
     MANGLED("?insertIndex@SoundOutput@@QAEHJ@Z");
-extern THIS int16_t so_getStatus(SoundOutput *o)
+extern THIS int16_t pcm_getStatus(SoundOutput *o)
     MANGLED("?getStatus@SoundOutput@@QAE?AW4SoundFileStatusEnum@@XZ");
-extern THIS int32_t so_setup(SoundOutput *o, char *a, int32_t *b, int32_t *c,
+extern THIS int32_t pcm_setup(SoundOutput *o, char *a, int32_t *b, int32_t *c,
                              int32_t *d, int32_t *e, int32_t *f, int32_t *g,
                              int32_t *h)
     MANGLED("?setup@SoundOutput@@QAEHPADPAJ111111@Z");
@@ -205,8 +205,8 @@ THIS ETImessageQueueThread *qt_ctor(ETImessageQueueThread *t)
     th_ctor(t);
     t->vt = &vtbl_mqthread;
     mq_ctor(&t->queue);
-    event_ctor(t->turn, 1);
-    event_ctor(t->gate, 1);
+    sy_eventCtor(t->turn, 1);
+    sy_eventCtor(t->gate, 1);
     t->asked_to_stop = 0;
     return t;
 }
@@ -215,8 +215,8 @@ THIS void qt_dtor(ETImessageQueueThread *t)
 {
     t->vt = &vtbl_mqthread;
     th_terminateAndWait(t);
-    event_dtor(t->gate);
-    event_dtor(t->turn);
+    sy_eventDtor(t->gate);
+    sy_eventDtor(t->turn);
     mq_dtor(&t->queue);
     th_dtor(t);
 }
@@ -245,11 +245,11 @@ THIS int32_t qt_waitForExit(ETImessageQueueThread *t)
 {
     int32_t rc = 0;
 
-    event_wait(t->gate, -1);
-    event_unsignal(t->gate);
+    sy_eventWait(t->gate, -1);
+    sy_eventUnsignal(t->gate);
     if (t->asked_to_stop != 0)
         rc = th_waitForExit(t);
-    event_signal(t->gate);
+    sy_eventSignal(t->gate);
     return rc;
 }
 
@@ -259,7 +259,7 @@ THIS int16_t qt_postMessage(ETImessageQueueThread *t, ETImessage *m)
 {
     int16_t rc = 0;
 
-    event_wait(t->gate, -1);
+    sy_eventWait(t->gate, -1);
     if (th_getStatus(t) == 1 && !th_shouldTerminate(t))
         rc = t->queue.vt->postMessage(&t->queue, m, 0, 0, 0);
     return rc;
@@ -269,7 +269,7 @@ THIS int16_t qt_sendMessage(ETImessageQueueThread *t, ETImessage *m)
 {
     int16_t rc = 0;
 
-    event_wait(t->gate, -1);
+    sy_eventWait(t->gate, -1);
     if (th_getStatus(t) == 1 && !th_shouldTerminate(t))
         rc = t->queue.vt->sendMessage(&t->queue, m, 0, 0, 0);
     return rc;
@@ -280,7 +280,7 @@ THIS int16_t qt_sendMessage(ETImessageQueueThread *t, ETImessage *m)
 static THIS void *snd_destroy(ETImessage *m, int32_t free_it)
 {
     m->vt = &vtbl_message;
-    mutex_dtor(m->lock);
+    sy_mutexDtor(m->lock);
     if (free_it & 1)
         cpp_delete(m);
     return m;
@@ -290,7 +290,7 @@ static THIS void run_open(ETImessage *m)
 {
     SndMsg *s = (SndMsg *)m;
 
-    s->answer = so_open(s->subject);
+    s->answer = pcm_open(s->subject);
 }
 
 static THIS void run_close(ETImessage *m)
@@ -302,35 +302,35 @@ static THIS void run_close(ETImessage *m)
         tt_killTimer(t->timers, t->tick);
         t->tick = 0;
     }
-    s->answer = so_close(&t->out);
+    s->answer = pcm_close(&t->out);
 }
 
 static THIS void run_reset(ETImessage *m)
 {
     SndMsg *s = (SndMsg *)m;
 
-    s->answer = so_reset(s->subject);
+    s->answer = pcm_reset(s->subject);
 }
 
 static THIS void run_flush(ETImessage *m)
 {
     SndMsg *s = (SndMsg *)m;
 
-    s->answer = so_flush(s->subject);
+    s->answer = pcm_flush(s->subject);
 }
 
 static THIS void run_hold(ETImessage *m)
 {
     SndMsg *s = (SndMsg *)m;
 
-    s->answer = so_hold(s->subject, s->a);
+    s->answer = pcm_hold(s->subject, s->a);
 }
 
 static THIS void run_write(ETImessage *m)
 {
     SndMsg *s = (SndMsg *)m;
 
-    s->answer = so_write(s->subject, (const int32_t *)(size_t)s->a,
+    s->answer = pcm_write(s->subject, (const int32_t *)(size_t)s->a,
                          (uint32_t)s->b);
 }
 
@@ -338,7 +338,7 @@ static THIS void run_setup(ETImessage *m)
 {
     SndMsg *s = (SndMsg *)m;
 
-    s->answer = so_setup(s->subject, (char *)(size_t)s->a,
+    s->answer = pcm_setup(s->subject, (char *)(size_t)s->a,
                          (int32_t *)(size_t)s->b,
                          (int32_t *)(size_t)s->c[0],
                          (int32_t *)(size_t)s->c[1],
@@ -358,14 +358,14 @@ static THIS void run_insertIndex(ETImessage *m)
 
     s->answer = 1;
     if (t->tick != 0)
-        so_insertIndex(&t->out, s->a);
+        pcm_insertIndex(&t->out, s->a);
 }
 
 static THIS void run_status(ETImessage *m)
 {
     StatusMsg *s = (StatusMsg *)m;
 
-    s->answer = so_getStatus(s->out);
+    s->answer = pcm_getStatus(s->out);
 }
 
 static THIS void run_poll(ETImessage *m)
@@ -569,17 +569,17 @@ THIS int32_t snd_closeDirect(SoundThread *t)
         tt_killTimer(t->timers, t->tick);
         t->tick = 0;
     }
-    return so_close(&t->out);
+    return pcm_close(&t->out);
 }
 
 THIS int32_t snd_resetDirect(SoundThread *t)
 {
-    return so_reset(&t->out);
+    return pcm_reset(&t->out);
 }
 
 THIS int16_t snd_getStatusDirect(SoundThread *t)
 {
-    return so_getStatus(&t->out);
+    return pcm_getStatus(&t->out);
 }
 
 /* ---- the thread itself ------------------------------------------------ */
@@ -588,7 +588,7 @@ THIS SoundThread *snd_ctor(SoundThread *t, TimerThread *timers)
 {
     qt_ctor(&t->base);
     t->base.vt = &vtbl_sound;
-    so_ctor(&t->out);
+    pcm_ctor(&t->out);
     t->timers = timers;
     t->tick = 0;
     th_start(t, RAL_THREAD_PRIORITY_NORMAL);
@@ -603,7 +603,7 @@ THIS void snd_dtor(SoundThread *t)
         tt_killTimer(t->timers, t->tick);
         t->tick = 0;
     }
-    so_dtor(&t->out);
+    pcm_dtor(&t->out);
     qt_dtor(&t->base);
 }
 

@@ -91,14 +91,14 @@ typedef struct VoiceRegistration {
     int32_t params[8];          /* +0x28 */
 } VoiceRegistration;
 
-extern int32_t __stdcall eciGetParam(OldInst *h, int32_t which)
+extern int32_t __stdcall es_getParam(OldInst *h, int32_t which)
     MANGLED("_eciGetParam@8");
-extern int32_t __stdcall eciCheckSynthesizing2(void *h2)
+extern int32_t __stdcall api_check_synth(void *h2)
     MANGLED("_eciCheckSynthesizing2@4");
-extern int32_t __stdcall eciRegisterVoice2(void *h2, int32_t voiceno,
+extern int32_t __stdcall api_register_voice(void *h2, int32_t voiceno,
                                            void *a, VoiceRegistration *out)
     MANGLED("_eciRegisterVoice2@16");
-extern int32_t __stdcall eciUnregisterVoice2(void *h2, int32_t voiceno,
+extern int32_t __stdcall api_unregister_voice(void *h2, int32_t voiceno,
                                              void *reg, void *a)
     MANGLED("_eciUnregisterVoice2@16");
 extern int eci2RealWorld(int32_t realWorld, int32_t which, int32_t value)
@@ -447,7 +447,7 @@ int __stdcall vc_getVoiceName(OldInst *h, int32_t voiceno, void *out)
     else
         strcpy(name, vc_languageVoice(inst, voiceno));
 
-    if (!isUnicodeCodeSet(0x800, eciGetParam(h, ENV_CODESET))) {
+    if (!isUnicodeCodeSet(0x800, es_getParam(h, ENV_CODESET))) {
         strcpy(out, name);
         return 1;
     }
@@ -474,7 +474,7 @@ int __stdcall vc_setVoiceName(OldInst *h, int32_t voiceno, const char *name)
 
     inst = h;
 
-    if (isUnicodeCodeSet(0x800, eciGetParam(h, ENV_CODESET))) {
+    if (isUnicodeCodeSet(0x800, es_getParam(h, ENV_CODESET))) {
         if (UnicodeConverter(h, name, &s, 1)) {
             OI_REFUSED(inst) = 0x1000;
             OI_REFUSEDALL(inst) |= 0x1000;
@@ -516,13 +516,13 @@ int __stdcall vc_registerVoice(OldInst *h, int32_t voiceno, void *a,
     if (!h || !OI_NEW(inst))
         return vc_rc_to_VoiceError(rc);
 
-    if (eciCheckSynthesizing2(OI_NEW(inst)) == SYNTH_BUSY) {
+    if (api_check_synth(OI_NEW(inst)) == SYNTH_BUSY) {
         OI_REFUSED(inst) = 0x2000;
         OI_REFUSEDALL(inst) |= 0x2000;
         return vc_rc_to_VoiceError(0x2000);
     }
 
-    rc = eciRegisterVoice2(OI_NEW(inst), voiceno, a, &reg);
+    rc = api_register_voice(OI_NEW(inst), voiceno, a, &reg);
     if (rc != 0)
         return vc_rc_to_VoiceError(rc);
 
@@ -567,7 +567,7 @@ int __stdcall vc_unregisterVoice(OldInst *h, int32_t voiceno,
     if (!h || !OI_NEW(inst))
         return vc_rc_to_VoiceError(rc);
 
-    if (eciCheckSynthesizing2(OI_NEW(inst)) == SYNTH_BUSY) {
+    if (api_check_synth(OI_NEW(inst)) == SYNTH_BUSY) {
         OI_REFUSED(inst) = 0x2000;
         OI_REFUSEDALL(inst) |= 0x2000;
         return vc_rc_to_VoiceError(0x2000);
@@ -578,7 +578,7 @@ int __stdcall vc_unregisterVoice(OldInst *h, int32_t voiceno,
     *(int32_t *)(vc_concatEntry(inst, family, dialect, reg->rate, voiceno)
                  + VOICE_PRESENT) = 0;
 
-    rc = eciUnregisterVoice2(OI_NEW(inst), voiceno, reg, a);
+    rc = api_unregister_voice(OI_NEW(inst), voiceno, reg, a);
     OI_READY(inst) = 1;
 
     if (voiceno == OI_VOICENO(inst))

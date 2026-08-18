@@ -149,19 +149,19 @@ typedef struct {            /* 0x34 */
 
 extern THIS ETImessage *msg_ctor(ETImessage *m, uint32_t type)
     MANGLED("??0ETImessage@@QAE@K@Z");
-extern THIS void *semaphore_ctor(void *s, int32_t held)
+extern THIS void *sy_semCtor(void *s, int32_t held)
     MANGLED("??0Semaphore@@QAE@J@Z");
 
 /* The six base-class slots every table below shares. */
-extern THIS uint32_t base_addRef(ETImessage *m)
+extern THIS uint32_t msg_addRef(ETImessage *m)
     MANGLED("?addRef@ETImessage@@UAEKXZ");
-extern THIS uint32_t base_release(ETImessage *m)
+extern THIS uint32_t msg_release(ETImessage *m)
     MANGLED("?release@ETImessage@@UAEKXZ");
-extern THIS uint32_t base_getMessageType(const ETImessage *m)
+extern THIS uint32_t msg_getType(const ETImessage *m)
     MANGLED("?getMessageType@ETImessage@@UBEKXZ");
-extern THIS int32_t base_equalsMessage(ETImessage *m, ETImessage *other)
+extern THIS int32_t msg_equalsMessage(ETImessage *m, ETImessage *other)
     MANGLED("?equals@ETImessage@@UAEHPAV1@@Z");
-extern THIS int32_t base_equalsType(ETImessage *m, uint32_t type)
+extern THIS int32_t msg_equalsType(ETImessage *m, uint32_t type)
     MANGLED("?equals@ETImessage@@UAEHK@Z");
 extern const MessageVtbl vtbl_message MANGLED("??_7ETImessage@@6B@");
 
@@ -181,7 +181,7 @@ extern THIS int32_t snd_setIndexCallback(void *s,
                                          void (*cb)(int32_t, void *),
                                          void *param)
     MANGLED("?setIndexCallback@SoundThread@@QAEHP6AXHPAX@Z0@Z");
-extern void deviceIndexCallback(int32_t index, void *param)
+extern void stb_staticDeviceIndexCallback(int32_t index, void *param)
     MANGLED("?staticDeviceIndexCallback@SynthThread@@CAXHPAX@Z");
 
 /* The far half. These still belong to the original. */
@@ -372,7 +372,7 @@ THIS void run_insertAudioIndex(ETImessage *m)
 THIS void *destroy_plain(ETImessage *m, int32_t free_it)
 {
     m->vt = &vtbl_message;
-    mutex_dtor(m->lock);
+    sy_mutexDtor(m->lock);
     if (free_it & 1)
         cpp_delete(m);
     return m;
@@ -391,7 +391,7 @@ THIS void dtor_addText(ETImessage *m)
         x->text = 0;
     }
     m->vt = &vtbl_message;
-    mutex_dtor(m->lock);
+    sy_mutexDtor(m->lock);
 }
 
 THIS void *destroy_addText(ETImessage *m, int32_t free_it)
@@ -412,7 +412,7 @@ THIS void dtor_addParam(ETImessage *m)
         x->text = 0;
     }
     m->vt = &vtbl_message;
-    mutex_dtor(m->lock);
+    sy_mutexDtor(m->lock);
 }
 
 THIS void *destroy_addParam(ETImessage *m, int32_t free_it)
@@ -434,7 +434,7 @@ THIS void dtor_insertStringIndex(ETImessage *m)
     if (x->text)
         free(x->text);
     m->vt = &vtbl_message;
-    mutex_dtor(m->lock);
+    sy_mutexDtor(m->lock);
 }
 
 THIS void *destroy_insertStringIndex(ETImessage *m, int32_t free_it)
@@ -453,7 +453,7 @@ THIS void dtor_insertAudioIndex(ETImessage *m)
     if (x->text)
         free(x->text);
     m->vt = &vtbl_message;
-    mutex_dtor(m->lock);
+    sy_mutexDtor(m->lock);
 }
 
 THIS void *destroy_insertAudioIndex(ETImessage *m, int32_t free_it)
@@ -526,7 +526,7 @@ THIS int32_t stg_startUpSound(SynthThread *t, int32_t *opened)
 
     r = snd_open(ST_SOUND(t));
     if (r == 1) {
-        if (snd_setIndexCallback(ST_SOUND(t), deviceIndexCallback, t)) {
+        if (snd_setIndexCallback(ST_SOUND(t), stb_staticDeviceIndexCallback, t)) {
             *opened = 1;
         } else {
             rc = ERR_FAILED;
@@ -596,7 +596,7 @@ static int32_t sendValue(SynthThread *t, uint32_t type,
     int32_t seq;
     MsgValue *m;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     seq = claim(t);
     m = (MsgValue *)cpp_new(sizeof(MsgValue));
     if (m) {
@@ -607,7 +607,7 @@ static int32_t sendValue(SynthThread *t, uint32_t type,
         m->seq = seq;
         rc = postAndCommit(t, &m->base, seq, 1, 0);
     }
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return rc;
 }
 
@@ -620,7 +620,7 @@ static int32_t sendValueWithSound(SynthThread *t, uint32_t type,
     int32_t rc = OK, opened = 0, seq;
     MsgValue *m;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     if (ST_SOUND(t))
         rc = stg_startUpSound(t, &opened);
     if (rc == OK) {
@@ -638,7 +638,7 @@ static int32_t sendValueWithSound(SynthThread *t, uint32_t type,
         if (rc != OK && opened)
             snd_close(ST_SOUND(t));
     }
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return rc;
 }
 
@@ -651,7 +651,7 @@ static int32_t sendString(SynthThread *t, uint32_t type,
     int32_t rc = OK, opened = 0, seq;
     MsgString *m;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     if (ST_SOUND(t))
         rc = stg_startUpSound(t, &opened);
     if (rc == OK) {
@@ -670,7 +670,7 @@ static int32_t sendString(SynthThread *t, uint32_t type,
         if (rc != OK && opened)
             snd_close(ST_SOUND(t));
     }
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return rc;
 }
 
@@ -683,7 +683,7 @@ THIS int32_t st_addText(SynthThread *t, char *text, uint32_t len,
     int32_t rc = OK, opened = 0, seq = 0;
     MsgText *m;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     if (ST_SOUND(t))
         rc = stg_startUpSound(t, &opened);
     if (rc == OK) {
@@ -697,7 +697,7 @@ THIS int32_t st_addText(SynthThread *t, char *text, uint32_t len,
         if (rc != OK && opened)
             snd_close(ST_SOUND(t));
     }
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return rc;
 }
 
@@ -707,7 +707,7 @@ THIS int32_t st_addParam(SynthThread *t, char *text, uint32_t len)
     int32_t rc = OK, opened = 0, seq = 0;
     MsgText *m;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     if (ST_SOUND(t))
         rc = stg_startUpSound(t, &opened);
     if (rc == OK) {
@@ -721,7 +721,7 @@ THIS int32_t st_addParam(SynthThread *t, char *text, uint32_t len)
         if (rc != OK && opened)
             snd_close(ST_SOUND(t));
     }
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return rc;
 }
 
@@ -735,11 +735,11 @@ THIS int32_t st_block(SynthThread *t)
     int32_t rc = ERR_FAILED;
     MsgPlain *m;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     if (!ST_BLOCKER(t)) {
         void *s = cpp_new(0x28);
         if (s)
-            semaphore_ctor(s, 0);
+            sy_semCtor(s, 0);
         ST_BLOCKER(t) = s;
     }
     if (ST_BLOCKER(t)) {
@@ -757,7 +757,7 @@ THIS int32_t st_block(SynthThread *t)
             }
         }
     }
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return rc;
 }
 
@@ -767,7 +767,7 @@ THIS int32_t st_synthesize(SynthThread *t)
     int32_t rc = ERR_FAILED, seq;
     MsgSeq *m;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     seq = claim(t);
     m = (MsgSeq *)cpp_new(sizeof(MsgSeq));
     if (m) {
@@ -777,7 +777,7 @@ THIS int32_t st_synthesize(SynthThread *t)
         m->seq = seq;
         rc = postAndCommit(t, &m->base, seq, 1, 1);
     }
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return rc;
 }
 
@@ -789,7 +789,7 @@ THIS int32_t st_changeLanguage(SynthThread *t, LangIdentifier *lang)
     int32_t rc = ERR_FAILED, seq;
     MsgLanguage *m;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     seq = claim(t);
     m = (MsgLanguage *)cpp_new(sizeof(MsgLanguage));
     if (m) {
@@ -801,7 +801,7 @@ THIS int32_t st_changeLanguage(SynthThread *t, LangIdentifier *lang)
         m->seq = seq;
         rc = postAndCommit(t, &m->base, seq, 1, 0);
     }
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return rc;
 }
 
@@ -811,7 +811,7 @@ THIS int32_t st_changeRomParam(SynthThread *t, int32_t a, int32_t b)
     int32_t rc = ERR_FAILED, seq;
     MsgPair *m;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     seq = claim(t);
     m = (MsgPair *)cpp_new(sizeof(MsgPair));
     if (m) {
@@ -823,7 +823,7 @@ THIS int32_t st_changeRomParam(SynthThread *t, int32_t a, int32_t b)
         m->seq = seq;
         rc = postAndCommit(t, &m->base, seq, 1, 0);
     }
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return rc;
 }
 
@@ -837,7 +837,7 @@ THIS int32_t st_changeFilter(SynthThread *t, int32_t unused, uint32_t which,
     MsgFilter *m;
 
     (void)unused;
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     seq = claim(t);
     m = (MsgFilter *)cpp_new(sizeof(MsgFilter));
     if (m) {
@@ -850,7 +850,7 @@ THIS int32_t st_changeFilter(SynthThread *t, int32_t unused, uint32_t which,
         m->flag = flag;
         rc = postAndCommit(t, &m->base, seq, 1, 0);
     }
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return rc;
 }
 
@@ -917,7 +917,7 @@ THIS int32_t st_changeETIEmphasis(SynthThread *t)
     int32_t rc = ERR_FAILED, seq;
     MsgSeq *m;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     seq = claim(t);
     m = (MsgSeq *)cpp_new(sizeof(MsgSeq));
     if (m) {
@@ -927,7 +927,7 @@ THIS int32_t st_changeETIEmphasis(SynthThread *t)
         m->seq = seq;
         rc = postAndCommit(t, &m->base, seq, 1, 0);
     }
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     return rc;
 }
 
@@ -959,11 +959,11 @@ THIS int32_t st_insertAudioIndex(SynthThread *t, char *name)
 #define TABLE(name, dtor, runner)     \
     const MessageVtbl name = {        \
         dtor,                         \
-        base_addRef,                  \
-        base_release,                 \
-        base_getMessageType,          \
-        base_equalsMessage,           \
-        base_equalsType,              \
+        msg_addRef,                  \
+        msg_release,                 \
+        msg_getType,          \
+        msg_equalsMessage,           \
+        msg_equalsType,              \
         runner,                       \
     }
 

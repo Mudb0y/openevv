@@ -80,18 +80,18 @@ typedef int  (THIS *RomAddFn)(RomInstance *r, const char *s, int32_t a,
 typedef int  (THIS *RomConvFn)(RomInstance *r, const uint16_t *in,
                                char **out, int32_t n);
 
-extern THIS void *mutexCtor(void *m, int32_t recursive)
+extern THIS void *sy_mutexCtor(void *m, int32_t recursive)
     MANGLED("??0Mutex@@QAE@H@Z");
-extern THIS void mutexDtor(void *m) MANGLED("??1Mutex@@QAE@XZ");
-extern THIS int mutexWait(void *m, int32_t ms) MANGLED("?wait@Mutex@@QAEHJ@Z");
-extern THIS int mutexRelease(void *m) MANGLED("?release@Mutex@@QAEHXZ");
-extern THIS void *iniFileReaderCtor(void *r)
+extern THIS void sy_mutexDtor(void *m) MANGLED("??1Mutex@@QAE@XZ");
+extern THIS int sy_mutexWait(void *m, int32_t ms) MANGLED("?wait@Mutex@@QAEHJ@Z");
+extern THIS int sy_mutexRelease(void *m) MANGLED("?release@Mutex@@QAEHXZ");
+extern THIS void *ini_ctor(void *r)
     MANGLED("??0IniFileReader@@QAE@XZ");
-extern THIS void iniFileReaderDtor(void *r)
+extern THIS void ini_dtor(void *r)
     MANGLED("??1IniFileReader@@QAE@XZ");
-extern THIS void addTextToEngine(SynthThread *t, char *text, int32_t n)
+extern THIS void stw_addTextToEngine(SynthThread *t, char *text, int32_t n)
     MANGLED("?addTextToEngine@SynthThread@@QAEXPADH@Z");
-extern THIS void threadProcessRemaining(SynthThread *t)
+extern THIS void stw_processRemaining(SynthThread *t)
     MANGLED("?processRemaining@SynthThread@@QAEXXZ");
 
 /* The table that maps one byte to another when no corpus is loaded. */
@@ -161,8 +161,8 @@ static void rz_forgetAll(RomanizerManager *m)
 
 THIS void *rz_ctor(RomanizerManager *m, SynthThread *thread)
 {
-    mutexCtor(RM_LOCK(m), 0);
-    iniFileReaderCtor(RM_INI(m));
+    sy_mutexCtor(RM_LOCK(m), 0);
+    ini_ctor(RM_INI(m));
     RM_THREAD(m) = thread;
     rz_forgetAll(m);
     RM_OUT(m) = 0;
@@ -185,8 +185,8 @@ THIS void rz_dtor(RomanizerManager *m)
     if (RM_OUT(m))
         cpp_delete(RM_OUT(m));
 
-    iniFileReaderDtor(RM_INI(m));
-    mutexDtor(RM_LOCK(m));
+    ini_dtor(RM_INI(m));
+    sy_mutexDtor(RM_LOCK(m));
 }
 
 /* ---- what runs when there is no romanizer --------------------------- */
@@ -200,7 +200,7 @@ THIS int rz_addParam(RomanizerManager *m, const char *s, int32_t n)
         return ((RomTwoFn)ROM_SLOT(RM_ACTIVE(m), ROM_ADD_PARAM))(
                    RM_ACTIVE(m), s, n);
 
-    addTextToEngine(RM_THREAD(m), (char *)s, n);
+    stw_addTextToEngine(RM_THREAD(m), (char *)s, n);
     return 1;
 }
 
@@ -212,7 +212,7 @@ THIS int rz_insertIndex(RomanizerManager *m)
         return ((RomIntFn)ROM_SLOT(RM_ACTIVE(m), ROM_INSERT_INDEX))(
                    RM_ACTIVE(m));
 
-    addTextToEngine(RM_THREAD(m), "`ui", 3);
+    stw_addTextToEngine(RM_THREAD(m), "`ui", 3);
     return 1;
 }
 
@@ -310,7 +310,7 @@ static const char backSlash[] = "\\";
 static const char doubleBackSlash[] = "\\\\";
 static const char quadBackSlash[] = "\\\\\\\\ ";
 
-extern THIS int isOldEngine(SynthThread *t)
+extern THIS int stw_isOldEngine(SynthThread *t)
     MANGLED("?isOldEngine@SynthThread@@QAEHXZ");
 
 /* ---- rewriting the text --------------------------------------------- */
@@ -325,7 +325,7 @@ THIS int rz_countAdditionSpace(RomanizerManager *m, uint8_t *text,
 
     for (; *text; text++) {
         if (*text == '|') {
-            if (RM_THREAD(m) && isOldEngine(RM_THREAD(m)))
+            if (RM_THREAD(m) && stw_isOldEngine(RM_THREAD(m)))
                 extra += strlen(backSlash);
             continue;
         }
@@ -362,7 +362,7 @@ THIS int32_t rz_processSpecial(RomanizerManager *m, char **runStart,
     char *q = *runStart;
 
     if (*q == '|') {
-        if (RM_THREAD(m) && isOldEngine(RM_THREAD(m)))
+        if (RM_THREAD(m) && stw_isOldEngine(RM_THREAD(m)))
             strcat(out, backSlash);
     } else if (*q == '\\') {
         strcat(out, quadBackSlash);
@@ -538,7 +538,7 @@ THIS int rz_addText(RomanizerManager *m, const char *text, int32_t len,
 
         rz_processRemaining(m, &held);
         if (held)
-            addTextToEngine(RM_THREAD(m), held, strlen(held));
+            stw_addTextToEngine(RM_THREAD(m), held, strlen(held));
     }
 
     RM_PENDING(m) = (char *)text;
@@ -563,14 +563,14 @@ THIS int rz_addText(RomanizerManager *m, const char *text, int32_t len,
 THIS RomInstance *rz_getRomanizerInst(RomanizerManager *m, uint8_t family,
                                       uint8_t dialect)
 {
-    mutexWait(RM_LOCK(m), -1);
+    sy_mutexWait(RM_LOCK(m), -1);
     if (RM_ROMS(m, family, dialect)) {
         RomInstance *r = RM_ROMS(m, family, dialect);
 
-        mutexRelease(RM_LOCK(m));
+        sy_mutexRelease(RM_LOCK(m));
         return r;
     }
-    mutexRelease(RM_LOCK(m));
+    sy_mutexRelease(RM_LOCK(m));
     return 0;
 }
 
@@ -597,7 +597,7 @@ THIS int rz_setParam(RomanizerManager *m, int32_t which, int32_t value)
         rc = ((RomOneFn)ROM_SLOT(RM_ACTIVE(m), ROM_GET_PARAM))(RM_ACTIVE(m),
                                                                which);
     if (rc != value)
-        threadProcessRemaining(RM_THREAD(m));
+        stw_processRemaining(RM_THREAD(m));
 
     if (which == 2) {
         uint8_t family = (uint8_t)((value & 0xff0000) >> 16);

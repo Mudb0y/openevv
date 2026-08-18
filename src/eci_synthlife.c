@@ -99,69 +99,69 @@ extern int32_t RAL_THREAD_PRIORITY_NORMAL MANGLED("_RAL_THREAD_PRIORITY_NORMAL")
 
 /* What every synthesis thread in the process shares, and how many of them
    are still holding it. */
-extern void *m_soundManager
+extern void *st_soundManager
     MANGLED("?m_soundManager@SynthThread@@0PAVSoundManager@@A");
-extern void *m_phonemes MANGLED("?m_phonemes@SynthThread@@0PAVPhonemes@@A");
-extern int32_t nRefPointers MANGLED("?nRefPointers@SynthThread@@0HA");
-extern uint8_t m_protectInitialization[]
+extern void *st_phonemes MANGLED("?m_phonemes@SynthThread@@0PAVPhonemes@@A");
+extern int32_t st_nRefPointers MANGLED("?nRefPointers@SynthThread@@0HA");
+extern uint8_t st_protectInitialization[]
     MANGLED("?m_protectInitialization@SynthThread@@0VMutex@@A");
 
 extern THIS void *qt_ctor(void *t) MANGLED("??0ETImessageQueueThread@@QAE@XZ");
 extern THIS void qt_dtor(void *t) MANGLED("??1ETImessageQueueThread@@UAE@XZ");
-extern THIS int16_t qt_suspend(void *t)
+extern THIS int16_t stm_qtSuspend(void *t)
     MANGLED("?suspend@ETImessageQueueThread@@QAEFXZ");
-extern THIS int16_t qt_resume(void *t)
+extern THIS int16_t stm_qtResume(void *t)
     MANGLED("?resume@ETImessageQueueThread@@QAEFXZ");
-extern THIS int32_t thread_start(void *t, int32_t priority)
+extern THIS int32_t th_start(void *t, int32_t priority)
     MANGLED("?start@ETIThread@@QAEHH@Z");
-extern THIS int32_t thread_terminateAndWait(void *t)
+extern THIS int32_t th_terminateAndWait(void *t)
     MANGLED("?terminateAndWait@ETIThread@@QAEHXZ");
 
-extern THIS void *mutex_ctor(void *m, int32_t kind)
+extern THIS void *sy_mutexCtor(void *m, int32_t kind)
     MANGLED("??0Mutex@@QAE@H@Z");
-extern THIS void *event_ctor(void *e, int32_t kind)
+extern THIS void *sy_eventCtor(void *e, int32_t kind)
     MANGLED("??0ETIEvent@@QAE@H@Z");
-extern THIS void event_dtor(void *e) MANGLED("??1ETIEvent@@QAE@XZ");
-extern THIS int32_t event_signal(void *e) MANGLED("?signal@ETIEvent@@QAEHXZ");
-extern THIS int32_t event_unsignal(void *e)
+extern THIS void sy_eventDtor(void *e) MANGLED("??1ETIEvent@@QAE@XZ");
+extern THIS int32_t sy_eventSignal(void *e) MANGLED("?signal@ETIEvent@@QAEHXZ");
+extern THIS int32_t sy_eventUnsignal(void *e)
     MANGLED("?unsignal@ETIEvent@@QAEHXZ");
 
-extern THIS void *enginelist_ctor(void *a) MANGLED("??0EngineList@@QAE@XZ");
-extern THIS void enginelist_dtor(void *a) MANGLED("??1EngineList@@QAE@XZ");
-extern THIS void *inifile_ctor(void *r) MANGLED("??0IniFileReader@@QAE@XZ");
-extern THIS void inifile_dtor(void *r) MANGLED("??1IniFileReader@@QAE@XZ");
-extern THIS void *indexq_ctor(void *q) MANGLED("??0IndexQueue@@QAE@XZ");
-extern THIS void *memmgr_ctor(void *m, uint32_t block)
+extern THIS void *eng_ctor(void *a) MANGLED("??0EngineList@@QAE@XZ");
+extern THIS void eng_dtor(void *a) MANGLED("??1EngineList@@QAE@XZ");
+extern THIS void *ini_ctor(void *r) MANGLED("??0IniFileReader@@QAE@XZ");
+extern THIS void ini_dtor(void *r) MANGLED("??1IniFileReader@@QAE@XZ");
+extern THIS void *sti_indexQueueCtor(void *q) MANGLED("??0IndexQueue@@QAE@XZ");
+extern THIS void *mm_ctor(void *m, uint32_t block)
     MANGLED("??0MemoryManager@@QAE@K@Z");
-extern THIS void memmgr_dtor(void *m) MANGLED("??1MemoryManager@@QAE@XZ");
-extern THIS void *lang_ctor(LangIdentifier *l)
+extern THIS void mm_dtor(void *m) MANGLED("??1MemoryManager@@QAE@XZ");
+extern THIS void *sti_langCtor(LangIdentifier *l)
     MANGLED("??0LangIdentifier@@QAE@XZ");
 extern THIS void lang_setString(LangIdentifier *l)
     MANGLED("?setString@LangIdentifier@@AAEXXZ");
 
-extern THIS void *rom_ctor(void *r, SynthThread *t)
+extern THIS void *rz_ctor(void *r, SynthThread *t)
     MANGLED("??0RomanizerManager@@QAE@PAVSynthThread@@@Z");
-extern THIS void rom_dtor(void *r) MANGLED("??1RomanizerManager@@QAE@XZ");
-extern THIS void *cat_ctor(void *c, SynthThread *t)
+extern THIS void rz_dtor(void *r) MANGLED("??1RomanizerManager@@QAE@XZ");
+extern THIS void *cm_ctor(void *c, SynthThread *t)
     MANGLED("??0ConcatenationManager@@QAE@PAVSynthThread@@@Z");
-extern THIS void cat_dtor(void *c) MANGLED("??1ConcatenationManager@@QAE@XZ");
+extern THIS void cm_dtor(void *c) MANGLED("??1ConcatenationManager@@QAE@XZ");
 extern THIS void *fm_ctor(void *m, SynthThread *t)
     MANGLED("??0FilterManager@@QAE@PAVSynthThread@@@Z");
 extern THIS void fm_dtor(void *m) MANGLED("??1FilterManager@@QAE@XZ");
-extern THIS void *queue_ctor(void *q, uint32_t room)
+extern THIS void *eq_ctor(void *q, uint32_t room)
     MANGLED("??0ETIqueue@@QAE@K@Z");
-extern THIS void *soundmgr_ctor(void *m) MANGLED("??0SoundManager@@QAE@XZ");
-extern THIS void soundmgr_dtor(void *m) MANGLED("??1SoundManager@@QAE@XZ");
-extern THIS void *phonemes_ctor(void *p) MANGLED("??0Phonemes@@QAE@XZ");
-extern THIS void audio_dtor(void *c) MANGLED("??1AudioConverter@@QAE@XZ");
-extern THIS void semaphore_dtor(void *s) MANGLED("??1Semaphore@@QAE@XZ");
+extern THIS void *sm_ctor(void *m) MANGLED("??0SoundManager@@QAE@XZ");
+extern THIS void sm_dtor(void *m) MANGLED("??1SoundManager@@QAE@XZ");
+extern THIS void *ph_ctor(void *p) MANGLED("??0Phonemes@@QAE@XZ");
+extern THIS void pcm_cvt_dtor(void *c) MANGLED("??1AudioConverter@@QAE@XZ");
+extern THIS void sy_semDtor(void *s) MANGLED("??1Semaphore@@QAE@XZ");
 
 extern THIS void sm_removeAudioFormat(void *m, void *f)
     MANGLED("?removeAudioFormat@SoundManager@@QAEXPAVAudioFormat@@@Z");
-extern THIS void idx_deleteAll(void *m)
+extern THIS void sti_deleteAll(void *m)
     MANGLED("?deleteAll@IndexManager@@QAEXXZ");
-extern THIS void elist_reset(void *l) MANGLED("?reset@EList@@QAEXXZ");
-extern THIS void etiqueue_reset(void *q) MANGLED("?reset@ETIqueue@@QAEXXZ");
+extern THIS void el_listReset(void *l) MANGLED("?reset@EList@@QAEXXZ");
+extern THIS void eq_reset(void *q) MANGLED("?reset@ETIqueue@@QAEXXZ");
 
 extern THIS void ea_removeEngine(void *a, const LangIdentifier *l)
     MANGLED("?removeEngine@EngineArray@@QAEXQBVLangIdentifier@@@Z");
@@ -172,38 +172,38 @@ extern THIS uint32_t ea_getCallbackFnFlag(void *a, const LangIdentifier *l)
 extern THIS uint32_t ea_getCorporaVersion(void *a, const LangIdentifier *l)
     MANGLED("?getCorporaVersion@EngineArray@@QAEKQBVLangIdentifier@@@Z");
 
-extern THIS void rom_removeUnused(void *r, LangIdentifier *l)
+extern THIS void rz_removeUnused(void *r, LangIdentifier *l)
     MANGLED("?removeUnusedRomanizer@RomanizerManager@@QAEXPAVLangIdentifier@@@Z");
-extern THIS int32_t rom_setParam(void *r, int32_t which, int32_t value)
+extern THIS int32_t rz_setParam(void *r, int32_t which, int32_t value)
     MANGLED("?setParam@RomanizerManager@@QAEHJH@Z");
-extern THIS int32_t rom_stop(void *r) MANGLED("?stop@RomanizerManager@@QAEHXZ");
-extern THIS void rom_clear(void *r) MANGLED("?clear@RomanizerManager@@QAEXXZ");
-extern THIS int32_t rom_resume(void *r)
+extern THIS int32_t rz_stop(void *r) MANGLED("?stop@RomanizerManager@@QAEHXZ");
+extern THIS void rz_clear(void *r) MANGLED("?clear@RomanizerManager@@QAEXXZ");
+extern THIS int32_t rz_resume(void *r)
     MANGLED("?resume@RomanizerManager@@QAEHXZ");
 
-extern THIS int32_t cat_inUse(void *c)
+extern THIS int32_t cm_usingConcatenativeEngine(void *c)
     MANGLED("?usingConcatenativeEngine@ConcatenationManager@@QAEHXZ");
-extern THIS int32_t cat_setParam(void *c, int32_t which, int32_t value,
+extern THIS int32_t cm_setParam(void *c, int32_t which, int32_t value,
                                  int32_t extra)
     MANGLED("?setParam@ConcatenationManager@@QAEHJHH@Z");
-extern THIS int32_t cat_engineSupports(void *c, uint32_t a, uint32_t b)
+extern THIS int32_t cm_engineSupports(void *c, uint32_t a, uint32_t b)
     MANGLED("?engineSupportsConcatenative@ConcatenationManager@@QAEHKK@Z");
-extern THIS void cat_registerIndexCallback(void *c, uint32_t which,
+extern THIS void cm_registerCallbackA(void *c, uint32_t which,
                                            IndexCallback cb, void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXKP6AXHPAX@Z0@Z");
-extern THIS void cat_registerUserCallback(void *c, uint32_t which,
+extern THIS void cm_registerCallbackB(void *c, uint32_t which,
                                           UserCallback cb, void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXKP6AXPAX@Z0@Z");
-extern THIS void cat_registerSynthCallback(void *c, SynthCallback cb,
+extern THIS void cm_registerCallbackC(void *c, SynthCallback cb,
                                            void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXP6AXHPAJPAX@Z1@Z");
 
 extern THIS void fm_autoLoadFilter(void *m, LangIdentifier *l)
     MANGLED("?autoLoadFilter@FilterManager@@QAEXPAVLangIdentifier@@@Z");
 
-extern THIS void st_paramFromEngine(void *s, int32_t which, int32_t value)
+extern THIS void es_paramFromEngine(void *s, int32_t which, int32_t value)
     MANGLED("?paramFromEngine@ECIstate@@QAEXJJ@Z");
-extern THIS void app_pause(void *a, int32_t how)
+extern THIS void stm_pauseMessageQueue(void *a, int32_t how)
     MANGLED("?pauseMessageQueue@ETIappMessageQueue@@QAEXH@Z");
 
 extern THIS int16_t snd_getStatusDirect(void *s)
@@ -242,20 +242,20 @@ extern void stb_staticVoiceChangeCallback(int32_t, int16_t *, int16_t *,
    message-queue thread's, slot for slot as its own .rdata has them. */
 typedef struct { void *slot[6]; } ThreadVtbl;
 extern const ThreadVtbl vt_synthThread;
-extern THIS void qt_terminate_fn(void *t)
+extern THIS void qt_terminate(void *t)
     MANGLED("?terminate@ETImessageQueueThread@@MAEXXZ");
-extern THIS int32_t qt_waitForExit_fn(void *t)
+extern THIS int32_t qt_waitForExit(void *t)
     MANGLED("?waitForExit@ETImessageQueueThread@@MAEHXZ");
-extern THIS uint32_t qt_run_fn(void *t)
+extern THIS uint32_t qt_run(void *t)
     MANGLED("?run@ETImessageQueueThread@@MAEKXZ");
-extern THIS void qt_setToTerminate_fn(void *t)
+extern THIS void qt_setToTerminate(void *t)
     MANGLED("?setToTerminate@ETImessageQueueThread@@MAEXXZ");
-extern THIS void qt_translateMessage_fn(void *t, void **m)
+extern THIS void qt_translateMessage(void *t, void **m)
     MANGLED("?translateMessage@ETImessageQueueThread@@MAEXPAPAVETImessage@@@Z");
 
 /* The two tables the index queue wears in turn while it is emptied. */
-extern const void *vtbl_eListQueue MANGLED("??_7EListQueue@@6B@");
-extern const void *vtbl_eSList MANGLED("??_7ESList@@6B@");
+extern const void *vtbl_elistqueue MANGLED("??_7EListQueue@@6B@");
+extern const void *vtbl_eslist MANGLED("??_7ESList@@6B@");
 
 /* The application queue's own table, of which only two slots are reached
    from here. */
@@ -284,21 +284,21 @@ static void stl_build(SynthThread *t, void *app, void *state)
 
     *(const ThreadVtbl **)t = &vt_synthThread;
     ST_CONVERTER(t) = 0;
-    enginelist_ctor(ST_ENGINELIST(t));
-    inifile_ctor(ST_INIFILE(t));
+    eng_ctor(ST_ENGINELIST(t));
+    ini_ctor(ST_INIFILE(t));
     ST_ENGINE(t) = 0;
 
-    mutex_ctor(ST_LOCK(t), 0);
+    sy_mutexCtor(ST_LOCK(t), 0);
     ST_POSTED(t) = 0;
     ST_SAMPLES(t) = 0;
     ST_PENDING(t) = 0;
     ST_LASTMARK(t) = 0;
-    indexq_ctor(ST_INDEXQ(t));
+    sti_indexQueueCtor(ST_INDEXQ(t));
     ST_OUTFMT(t) = 0;
     ST_SOUND(t) = 0;
-    memmgr_ctor(ST_IDXMEM(t), INDEX_BLOCK);
-    mutex_ctor(ST_IDXLOCK(t), 0);
-    event_ctor(ST_SYNCED(t), 0);
+    mm_ctor(ST_IDXMEM(t), INDEX_BLOCK);
+    sy_mutexCtor(ST_IDXLOCK(t), 0);
+    sy_eventCtor(ST_SYNCED(t), 0);
 
     ST_APP(t) = app;
     ST_STATE(t) = state;
@@ -328,15 +328,15 @@ static void stl_build(SynthThread *t, void *app, void *state)
     ST_TOLD_CAT(t) = 0;
 
     p = cpp_new(SIZE_ROMANIZER);
-    ST_ROMAN(t) = p ? rom_ctor(p, t) : 0;
+    ST_ROMAN(t) = p ? rz_ctor(p, t) : 0;
     if (!ST_ROMAN(t))
         ST_STATUS(t) = ERR_FAILED;
 
     p = cpp_new(SIZE_CONCAT);
-    ST_CONCAT(t) = p ? cat_ctor(p, t) : 0;
+    ST_CONCAT(t) = p ? cm_ctor(p, t) : 0;
 
     p = cpp_new(SIZE_MARKQUEUE);
-    ST_PTR(t, 0x3b4) = p ? queue_ctor(p, MARKQUEUE_ROOM) : 0;
+    ST_PTR(t, 0x3b4) = p ? eq_ctor(p, MARKQUEUE_ROOM) : 0;
     if (!ST_MARKS(t))
         ST_STATUS(t) = ERR_FAILED;
 
@@ -352,23 +352,23 @@ static void stl_takeShared(SynthThread *t)
 {
     void *p;
 
-    mutex_wait(m_protectInitialization, -1);
+    sy_mutexWait(st_protectInitialization, -1);
 
-    if (!m_soundManager) {
+    if (!st_soundManager) {
         p = cpp_new(SIZE_SOUNDMGR);
-        m_soundManager = p ? soundmgr_ctor(p) : 0;
-        if (!m_soundManager)
+        st_soundManager = p ? sm_ctor(p) : 0;
+        if (!st_soundManager)
             ST_STATUS(t) = ERR_FAILED;
     }
-    if (!m_phonemes) {
+    if (!st_phonemes) {
         p = cpp_new(SIZE_PHONEMES);
-        m_phonemes = p ? phonemes_ctor(p) : 0;
-        if (!m_phonemes)
+        st_phonemes = p ? ph_ctor(p) : 0;
+        if (!st_phonemes)
             ST_STATUS(t) = ERR_FAILED;
     }
-    nRefPointers += 1;
+    st_nRefPointers += 1;
 
-    mutex_release(m_protectInitialization);
+    sy_mutexRelease(st_protectInitialization);
 }
 
 /* Built without a language: the thread is not started and no language is
@@ -393,10 +393,10 @@ THIS SynthThread *stl_ctorWithLanguage(SynthThread *t, void *app, void *state,
     LangIdentifier want;
 
     qt_ctor(t);
-    lang_ctor(ST_LANG(t));
+    sti_langCtor(ST_LANG(t));
     stl_build(t, app, state);
 
-    thread_start(t, RAL_THREAD_PRIORITY_NORMAL);
+    th_start(t, RAL_THREAD_PRIORITY_NORMAL);
 
     want.id = language;
     want.id = language;
@@ -431,7 +431,7 @@ THIS int32_t stl_initialize(SynthThread *t, LangIdentifier *want)
     lang_setString(ST_LANG(t));
 
     if (ST_ROMAN(t))
-        rom_removeUnused(ST_ROMAN(t), want);
+        rz_removeUnused(ST_ROMAN(t), want);
 
     engine = ea_getEngine(ST_ENGINES(t), want);
     if (!engine)
@@ -447,12 +447,12 @@ THIS int32_t stl_initialize(SynthThread *t, LangIdentifier *want)
         EngSetAnno setAnno = (EngSetAnno)ENG_CALL_ON(engine, ENG_ANNO_CB);
 
         setPhonemes(engine, 0);
-        st_paramFromEngine(ST_STATE(t), ECI_PARAM_PHONEMES, 0);
+        es_paramFromEngine(ST_STATE(t), ECI_PARAM_PHONEMES, 0);
         setAnno(engine, stb_staticAnnoCallback, t);
     }
 
     if (ST_CONCAT(t)
-        && cat_engineSupports(ST_CONCAT(t), (want->id & 0xff0000) >> 16,
+        && cm_engineSupports(ST_CONCAT(t), (want->id & 0xff0000) >> 16,
                               want->id & 0xff)) {
         EngSetVoice setVoice = (EngSetVoice)ENG_CALL_ON(engine, ENG_VOICE_CB);
         EngSetUser setSPR = (EngSetUser)ENG_CALL_ON(engine, ENG_SPR_CB);
@@ -467,14 +467,14 @@ THIS int32_t stl_initialize(SynthThread *t, LangIdentifier *want)
         EngSetUser set = (EngSetUser)ENG_CALL_ON(engine, ENG_USER_INDEX_CB);
 
         set(engine, 0, t);
-        cat_registerUserCallback(ST_CONCAT(t), CAT_CB_USER_INDEX, 0, t);
+        cm_registerCallbackB(ST_CONCAT(t), CAT_CB_USER_INDEX, 0, t);
     } else if (ST_FLAGS(t) & STF_WORD_STARTS) {
         EngSetIndex set = (EngSetIndex)ENG_CALL_ON(engine, ENG_WORD_START_CB);
 
         set(engine, 0, t);
-        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_MARK, 0, t);
+        cm_registerCallbackA(ST_CONCAT(t), CAT_CB_WORD_MARK, 0, t);
     }
-    cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_BREAK, 0, t);
+    cm_registerCallbackA(ST_CONCAT(t), CAT_CB_BREAK, 0, t);
 
     command = (EngCommand)ENG_CALL_ON(engine, ENG_COMMAND);
     ST_DIRECT(t) = 1;
@@ -495,32 +495,32 @@ THIS int32_t stl_initialize(SynthThread *t, LangIdentifier *want)
 
     ST_LANG(t)->id = want->id;
     lang_setString(ST_LANG(t));
-    st_paramFromEngine(ST_STATE(t), ECI_PARAM_LANGUAGE, (int32_t)want->id);
+    es_paramFromEngine(ST_STATE(t), ECI_PARAM_LANGUAGE, (int32_t)want->id);
 
-    if (rom_setParam(ST_ROMAN(t), ROM_LANGUAGE, (int32_t)want->id) == -1)
+    if (rz_setParam(ST_ROMAN(t), ROM_LANGUAGE, (int32_t)want->id) == -1)
         rc = ERR_ROM_LANG;
-    if (cat_setParam(ST_CONCAT(t), CAT_LANGUAGE, (int32_t)want->id, 1) == -1) {
+    if (cm_setParam(ST_CONCAT(t), CAT_LANGUAGE, (int32_t)want->id, 1) == -1) {
         rc = ERR_CAT_LANG;
         return rc;
     }
 
-    if (cat_inUse(ST_CONCAT(t))) {
-        cat_registerSynthCallback(ST_CONCAT(t), stb_staticSynthCallback, t);
-        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_PHONEME,
+    if (cm_usingConcatenativeEngine(ST_CONCAT(t))) {
+        cm_registerCallbackC(ST_CONCAT(t), stb_staticSynthCallback, t);
+        cm_registerCallbackA(ST_CONCAT(t), CAT_CB_PHONEME,
                                   stb_staticTorrentPhonemeCallback, t);
         if (ST_FLAGS(t) & STF_WORD_STARTS)
-            cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_START,
+            cm_registerCallbackA(ST_CONCAT(t), CAT_CB_WORD_START,
                                       stb_staticWordCallback, t);
         if (ST_FLAGS(t) & STF_WORD_MARKS)
-            cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_MARK,
+            cm_registerCallbackA(ST_CONCAT(t), CAT_CB_WORD_MARK,
                                       stb_staticWordIndexCallback, t);
-        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_BREAK,
+        cm_registerCallbackA(ST_CONCAT(t), CAT_CB_BREAK,
                                   stb_staticSynthesisBreakCallback, t);
         ST_DIRECT(t) = 1;
         if (command(engine, CMD_CONCATENATIVE))
             rc = ERR_ENGINE;
         ST_DIRECT(t) = 0;
-        rom_setParam(ST_ROMAN(t), ROM_CONCATENATIVE, 1);
+        rz_setParam(ST_ROMAN(t), ROM_CONCATENATIVE, 1);
     }
 
     fm_autoLoadFilter(ST_FILTERS(t), want);
@@ -544,7 +544,7 @@ THIS int32_t stl_stop(SynthThread *t)
     if (ST_SOUND(t)) {
         int16_t status;
 
-        qt_suspend(ST_SOUND(t));
+        stm_qtSuspend(ST_SOUND(t));
         status = snd_getStatusDirect(ST_SOUND(t));
         if (status == 3 || status == 1) {
             if (!snd_resetDirect(ST_SOUND(t))
@@ -554,24 +554,24 @@ THIS int32_t stl_stop(SynthThread *t)
             rc = ERR_NO_SOUND;
         }
         /* Wake anything waiting on the mark the device would have reached. */
-        event_signal(ST_SYNCED(t));
+        sy_eventSignal(ST_SYNCED(t));
     }
 
     lock = ST_LOCK(t);
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     if (ST_ENGINE(t)) {
         EngReset reset = (EngReset)ENG_CALL_ON(ST_ENGINE(t), ENG_RESET);
 
         if (reset(ST_ENGINE(t), 1))
             rc = ERR_ENGINE;
     }
-    mutex_release(lock);
+    sy_mutexRelease(lock);
 
     app = (AppQueue *)ST_APP(t);
     app->vt->suspend(app);
-    rom_stop(ST_ROMAN(t));
-    qt_suspend(t);
-    rom_clear(ST_ROMAN(t));
+    rz_stop(ST_ROMAN(t));
+    stm_qtSuspend(t);
+    rz_clear(ST_ROMAN(t));
 
     if (ST_ENGINE(t)) {
         EngReset reset = (EngReset)ENG_CALL_ON(ST_ENGINE(t), ENG_RESET);
@@ -581,8 +581,8 @@ THIS int32_t stl_stop(SynthThread *t)
     }
 
     *(int32_t *)((char *)ST_INDEXQ(t) + 0x0c) = 0;
-    elist_reset(ST_INDEXQ(t));
-    etiqueue_reset(ST_MARKS(t));
+    el_listReset(ST_INDEXQ(t));
+    eq_reset(ST_MARKS(t));
 
     ST_SAMPHELD(t) = 0;
     ST_PHONHELD(t) = 0;
@@ -591,18 +591,18 @@ THIS int32_t stl_stop(SynthThread *t)
     ST_PENDING(t) = 0;
     ST_STOPPED(t) = 0;
     ST_POSTED(t) = 0;
-    event_unsignal(ST_SYNCED(t));
+    sy_eventUnsignal(ST_SYNCED(t));
 
     if (ST_SOUND(t))
-        qt_resume(ST_SOUND(t));
-    qt_resume(t);
-    rom_resume(ST_ROMAN(t));
+        stm_qtResume(ST_SOUND(t));
+    stm_qtResume(t);
+    rz_resume(ST_ROMAN(t));
 
     /* The application queue forgets what it was told about too, or the next
        run would be numbered from where the last one stopped. */
     APP_POSTED(ST_APP(t)) = 0;
     *(int32_t *)((char *)ST_APP(t) + 0x5c) = 0;
-    app_pause(ST_APP(t), 0);
+    stm_pauseMessageQueue(ST_APP(t), 0);
     app->vt->resume(app);
     return rc;
 }
@@ -616,21 +616,21 @@ THIS void stl_dtor(SynthThread *t)
 {
     *(const ThreadVtbl **)t = &vt_synthThread;
     stl_stop(t);
-    thread_terminateAndWait(t);
+    th_terminateAndWait(t);
     ST_POSTED(t) = 0;
 
     if (ST_OUTFMT(t)) {
-        sm_removeAudioFormat(m_soundManager, ST_OUTFMT(t));
+        sm_removeAudioFormat(st_soundManager, ST_OUTFMT(t));
         ST_SOUND(t) = 0;
         ST_OUTFMT(t) = 0;
     }
     if (ST_CONVERTER(t)) {
-        audio_dtor(ST_CONVERTER(t));
+        pcm_cvt_dtor(ST_CONVERTER(t));
         cpp_delete(ST_CONVERTER(t));
         ST_CONVERTER(t) = 0;
     }
 
-    idx_deleteAll(ST_INDEXMGR(t));
+    sti_deleteAll(ST_INDEXMGR(t));
     ST_SAMPBUF(t) = 0;
     ST_SAMPROOM(t) = 0;
     ST_SAMPHELD(t) = 0;
@@ -643,7 +643,7 @@ THIS void stl_dtor(SynthThread *t)
     ST_PHONHELD(t) = 0;
 
     if (ST_BLOCKER(t)) {
-        semaphore_dtor(ST_BLOCKER(t));
+        sy_semDtor(ST_BLOCKER(t));
         cpp_delete(ST_BLOCKER(t));
         ST_BLOCKER(t) = 0;
     }
@@ -652,11 +652,11 @@ THIS void stl_dtor(SynthThread *t)
     if (ST_SPARE2(t)) { cpp_delete(ST_SPARE2(t)); ST_SPARE2(t) = 0; }
 
     if (ST_ROMAN(t)) {
-        rom_dtor(ST_ROMAN(t));
+        rz_dtor(ST_ROMAN(t));
         cpp_delete(ST_ROMAN(t));
     }
     if (ST_CONCAT(t)) {
-        cat_dtor(ST_CONCAT(t));
+        cm_dtor(ST_CONCAT(t));
         cpp_delete(ST_CONCAT(t));
     }
     if (ST_FILTERS(t)) {
@@ -669,36 +669,36 @@ THIS void stl_dtor(SynthThread *t)
         q->vt->destroy(q, 1);
     }
 
-    mutex_wait(m_protectInitialization, -1);
-    nRefPointers -= 1;
-    if (nRefPointers == 0) {
-        if (m_soundManager) {
-            soundmgr_dtor(m_soundManager);
-            cpp_delete(m_soundManager);
+    sy_mutexWait(st_protectInitialization, -1);
+    st_nRefPointers -= 1;
+    if (st_nRefPointers == 0) {
+        if (st_soundManager) {
+            sm_dtor(st_soundManager);
+            cpp_delete(st_soundManager);
         }
-        m_soundManager = 0;
-        if (m_phonemes) {
+        st_soundManager = 0;
+        if (st_phonemes) {
             /* The phoneme table's destructor and the engine list's are the
                same code, so the linker kept one of the two names. */
-            enginelist_dtor(m_phonemes);
-            cpp_delete(m_phonemes);
+            eng_dtor(st_phonemes);
+            cpp_delete(st_phonemes);
         }
-        m_phonemes = 0;
+        st_phonemes = 0;
     }
-    mutex_release(m_protectInitialization);
+    sy_mutexRelease(st_protectInitialization);
 
-    event_dtor(ST_SYNCED(t));
-    mutex_dtor(ST_IDXLOCK(t));
-    memmgr_dtor(ST_IDXMEM(t));
+    sy_eventDtor(ST_SYNCED(t));
+    sy_mutexDtor(ST_IDXLOCK(t));
+    mm_dtor(ST_IDXMEM(t));
     /* The index queue is two lists over one another, and each has to be put
        back to its own table before being emptied. */
-    *(const void **)ST_INDEXQ(t) = &vtbl_eListQueue;
-    elist_reset(ST_INDEXQ(t));
-    *(const void **)ST_INDEXQ(t) = &vtbl_eSList;
-    elist_reset(ST_INDEXQ(t));
-    mutex_dtor(ST_LOCK(t));
-    inifile_dtor(ST_INIFILE(t));
-    enginelist_dtor(ST_ENGINELIST(t));
+    *(const void **)ST_INDEXQ(t) = &vtbl_elistqueue;
+    el_listReset(ST_INDEXQ(t));
+    *(const void **)ST_INDEXQ(t) = &vtbl_eslist;
+    el_listReset(ST_INDEXQ(t));
+    sy_mutexDtor(ST_LOCK(t));
+    ini_dtor(ST_INIFILE(t));
+    eng_dtor(ST_ENGINELIST(t));
     qt_dtor(t);
 }
 
@@ -712,9 +712,9 @@ THIS void *stl_destroy(SynthThread *t, int32_t free_it)
 }
 
 const ThreadVtbl vt_synthThread = {
-    { (void *)stl_destroy, (void *)qt_terminate_fn, (void *)qt_waitForExit_fn,
-      (void *)qt_run_fn, (void *)qt_setToTerminate_fn,
-      (void *)qt_translateMessage_fn }
+    { (void *)stl_destroy, (void *)qt_terminate, (void *)qt_waitForExit,
+      (void *)qt_run, (void *)qt_setToTerminate,
+      (void *)qt_translateMessage }
 };
 
 ALIAS("??_7SynthThread@@6B@", "vt_synthThread");

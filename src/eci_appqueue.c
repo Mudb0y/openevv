@@ -118,36 +118,36 @@ extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
 
 extern THIS ETImessage *msg_ctor(ETImessage *m, uint32_t type)
     MANGLED("??0ETImessage@@QAE@K@Z");
-extern THIS void mutex_ctor2(void *m, int32_t k) MANGLED("??0Mutex@@QAE@H@Z");
-extern THIS void mutex_dtor(void *m) MANGLED("??1Mutex@@QAE@XZ");
-extern THIS void event_ctor(void *e, int32_t k) MANGLED("??0ETIEvent@@QAE@H@Z");
-extern THIS void event_dtor(void *e) MANGLED("??1ETIEvent@@QAE@XZ");
-extern THIS int32_t event_signal(void *e) MANGLED("?signal@ETIEvent@@QAEHXZ");
-extern THIS void *etiq_ctor(ETIqueue *q, uint32_t n)
+extern THIS void sy_mutexCtor(void *m, int32_t k) MANGLED("??0Mutex@@QAE@H@Z");
+extern THIS void sy_mutexDtor(void *m) MANGLED("??1Mutex@@QAE@XZ");
+extern THIS void sy_eventCtor(void *e, int32_t k) MANGLED("??0ETIEvent@@QAE@H@Z");
+extern THIS void sy_eventDtor(void *e) MANGLED("??1ETIEvent@@QAE@XZ");
+extern THIS int32_t sy_eventSignal(void *e) MANGLED("?signal@ETIEvent@@QAEHXZ");
+extern THIS void *eq_ctor(ETIqueue *q, uint32_t n)
     MANGLED("??0ETIqueue@@QAE@K@Z");
-extern THIS void etiq_dtor(ETIqueue *q) MANGLED("??1ETIqueue@@UAE@XZ");
-extern THIS int32_t etiq_push(ETIqueue *q, void *p)
+extern THIS void eq_dtor(ETIqueue *q) MANGLED("??1ETIqueue@@UAE@XZ");
+extern THIS int32_t eq_push(ETIqueue *q, void *p)
     MANGLED("?push@ETIqueue@@UAEHPAX@Z");
-extern THIS int32_t etiq_pop(ETIqueue *q, void **out)
+extern THIS int32_t eq_pop(ETIqueue *q, void **out)
     MANGLED("?pop@ETIqueue@@UAEHPAPAX@Z");
-extern THIS int32_t etiq_peek(ETIqueue *q, void **out)
+extern THIS int32_t eq_peekHead(ETIqueue *q, void **out)
     MANGLED("?peekHead@ETIqueue@@UAEHPAPAX@Z");
-extern THIS void base_suspend(ETImessageQueue *q)
+extern THIS void q_suspend(ETImessageQueue *q)
     MANGLED("?suspend@ETImessageQueue@@UAEXXZ");
-extern THIS void base_resume(ETImessageQueue *q)
+extern THIS void q_resume(ETImessageQueue *q)
     MANGLED("?resume@ETImessageQueue@@UAEXXZ");
-extern THIS int16_t base_sendMessage(ETImessageQueue *q, ETImessage *m,
+extern THIS int16_t q_sendMessage(ETImessageQueue *q, ETImessage *m,
                                      int32_t a, void *w, int32_t b)
     MANGLED("?sendMessage@ETImessageQueue@@UAEFPAVETImessage@@JPAX1@Z");
-extern THIS int16_t base_postMessage(ETImessageQueue *q, ETImessage *m,
+extern THIS int16_t q_postMessage(ETImessageQueue *q, ETImessage *m,
                                      int32_t a, void *w, int32_t b)
     MANGLED("?postMessage@ETImessageQueue@@UAEFPAVETImessage@@JPAX1@Z");
-extern THIS int16_t base_popMessage(ETImessageQueue *q, ETImessage **out,
+extern THIS int16_t q_popMessage(ETImessageQueue *q, ETImessage **out,
                                     int32_t f, void *e)
     MANGLED("?popMessage@ETImessageQueue@@UAEFPAPAVETImessage@@W4MessageQueueFlag@@PAVETIEvent@@@Z");
-extern THIS void base_clearMessages(ETImessageQueue *q)
+extern THIS void q_clearMessages(ETImessageQueue *q)
     MANGLED("?clearMessages@ETImessageQueue@@EAEXXZ");
-extern int32_t thread_sleep(int32_t ms, int32_t kind)
+extern int32_t th_sleep(int32_t ms, int32_t kind)
     MANGLED("?sleep@ETIThread@@SA?AW4TSleepReturn@1@JH@Z");
 
 extern const QueueVtbl vtbl_queue;
@@ -179,29 +179,29 @@ static int KillTimer(void *a, unsigned b) { (void)a; (void)b; return 0; }
 THIS ETImessageQueue *mq_ctor(ETImessageQueue *q)
 {
     q->vt = &vtbl_queue;
-    etiq_ctor(&q->queue, 0x40);
+    eq_ctor(&q->queue, 0x40);
     q->queue.vt = &vtbl_inner;
-    mutex_ctor2(q->lock, 0);
-    event_ctor(q->ready, 0);
+    sy_mutexCtor(q->lock, 0);
+    sy_eventCtor(q->ready, 0);
     q->suspended = 0;
-    event_ctor(q->done, 0);
-    mutex_ctor2(q->send_lock, 0);
+    sy_eventCtor(q->done, 0);
+    sy_mutexCtor(q->send_lock, 0);
     return q;
 }
 
 THIS void mq_dtor(ETImessageQueue *q)
 {
     q->vt = &vtbl_queue;
-    mutex_dtor(q->send_lock);
-    event_dtor(q->done);
-    event_dtor(q->ready);
-    mutex_dtor(q->lock);
-    etiq_dtor(&q->queue);
+    sy_mutexDtor(q->send_lock);
+    sy_eventDtor(q->done);
+    sy_eventDtor(q->ready);
+    sy_mutexDtor(q->lock);
+    eq_dtor(&q->queue);
 }
 
 THIS void *inner_destroy(ETIqueue *q, int32_t free_it)
 {
-    etiq_dtor(q);
+    eq_dtor(q);
     if (free_it & 1)
         cpp_delete(q);
     return q;
@@ -332,7 +332,7 @@ static THIS void aq_finish(ETIappMessageQueue *q, ETImessage *m)
 
 THIS void aq_suspend(ETIappMessageQueue *q)
 {
-    base_suspend(&q->base);
+    q_suspend(&q->base);
     if (q->held != 0) {
         aq_doTimer(q, 0);
         aq_finish(q, q->held);
@@ -343,7 +343,7 @@ THIS void aq_suspend(ETIappMessageQueue *q)
 
 THIS void aq_resume(ETIappMessageQueue *q)
 {
-    base_resume(&q->base);
+    q_resume(&q->base);
 }
 
 /* One turn of the application's own loop. Whatever is waiting is run here,
@@ -462,7 +462,7 @@ THIS int32_t aq_synchronize(ETIappMessageQueue *q)
             m->result = 1;
             answer = ((ETImsgUser *)m)->answer;
             while (answer == APP_AGAIN) {
-                thread_sleep(30, 0);
+                th_sleep(30, 0);
                 m->vt->run(m);
                 m->result = 1;
                 answer = ((ETImsgUser *)m)->answer;
@@ -489,13 +489,13 @@ extern THIS int32_t msg_equalsMessage(ETImessage *m, ETImessage *o)
     MANGLED("?equals@ETImessage@@UAEHPAV1@@Z");
 extern THIS int32_t msg_equalsType(ETImessage *m, uint32_t t)
     MANGLED("?equals@ETImessage@@UAEHK@Z");
-extern THIS void base_signalProcessed(ETImessageQueue *q, ETImessage *m)
+extern THIS void mq_signalProcessed(ETImessageQueue *q, ETImessage *m)
     MANGLED("?signalProcessed@ETImessageQueue@@UAEXPAVETImessage@@@Z");
 
 THIS void *msguser_destroy(ETImessage *m, int32_t free_it)
 {
     m->vt = &vtbl_message;
-    mutex_dtor(m->lock);
+    sy_mutexDtor(m->lock);
     if (free_it & 1)
         cpp_delete(m);
     return m;
@@ -504,22 +504,22 @@ THIS void *msguser_destroy(ETImessage *m, int32_t free_it)
 THIS void mq_signalProcessed(ETImessageQueue *q, ETImessage *m)
 {
     if (m != 0 && m->is_send != 0)
-        event_signal(q->done);
+        sy_eventSignal(q->done);
 }
 
 const ETIqueueVtbl vtbl_inner = {
-    inner_destroy, etiq_push, etiq_pop, etiq_peek
+    inner_destroy, eq_push, eq_pop, eq_peekHead
 };
 
 const QueueVtbl vtbl_queue = {
-    base_sendMessage, base_postMessage, base_popMessage,
-    base_suspend, base_resume, mq_signalProcessed, base_clearMessages
+    q_sendMessage, q_postMessage, q_popMessage,
+    q_suspend, q_resume, mq_signalProcessed, q_clearMessages
 };
 
 const QueueVtbl vtbl_appqueue = {
-    base_sendMessage, base_postMessage, base_popMessage,
+    q_sendMessage, q_postMessage, q_popMessage,
     (void *)aq_suspend, (void *)aq_resume, mq_signalProcessed,
-    base_clearMessages
+    q_clearMessages
 };
 
 const MessageVtbl vtbl_msguser = {

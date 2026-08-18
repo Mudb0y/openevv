@@ -23,6 +23,12 @@
           pkgs.pkgsCross.mingw32.buildPackages.binutils
           pkgs.wine
 
+          # The first native target. Thirty-two bit, because the machine
+          # keeps its values in an int32 and puts host addresses in them,
+          # so sixty-four bit needs the arena work first.
+          pkgs.pkgsCross.gnu32.buildPackages.gcc
+          pkgs.pkgsCross.gnu32.buildPackages.binutils
+
           pkgs.llvm
           pkgs.gcc
           pkgs.gnumake

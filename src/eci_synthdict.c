@@ -122,7 +122,7 @@ extern THIS void *ea_getEngine(void *a, const LangIdentifier *l)
     MANGLED("?getEngine@EngineArray@@QAEPAVEngineWrapper@@QBVLangIdentifier@@@Z");
 extern THIS void *ea_getEngineData(void *a, const LangIdentifier *l)
     MANGLED("?getEngineData@EngineArray@@QAEPAVEngineData@@QBVLangIdentifier@@@Z");
-extern THIS void *rom_getRom(void *r, uint32_t language)
+extern THIS void *rz_getRom(void *r, uint32_t language)
     MANGLED("?getRom@RomanizerManager@@QAEPAVRomInstance@@K@Z");
 
 /* Name a language by its number, the way every one of these begins. */
@@ -266,9 +266,9 @@ THIS int32_t std_newDict(SynthThread *t, int32_t language, void **out)
     rc = ERR_NO_LANG;
 
     lock = ST_LOCK(t);
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     engine = ea_getEngine(ST_ENGINES(t), &want);
-    mutex_release(lock);
+    sy_mutexRelease(lock);
     if (!engine)
         return rc;
 
@@ -277,7 +277,7 @@ THIS int32_t std_newDict(SynthThread *t, int32_t language, void **out)
     if (!engDict)
         return rc;
 
-    rom = rom_getRom(ST_ROMAN(t), (uint32_t)language);
+    rom = rz_getRom(ST_ROMAN(t), (uint32_t)language);
     if (rom)
         romDict = ((RomNewDict)VT_AT(rom, ROM_NEW_DICT))(rom);
 

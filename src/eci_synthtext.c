@@ -56,55 +56,55 @@ typedef ENGCALL int32_t (*EngCommand)(void *engine, const char *line);
 #define ENG_CALL(t, off) \
     (*(void **)(*(char **)ST_ENGINE(t) + (off)))
 
-extern THIS void postRomanizerError(SynthThread *t, int32_t which)
+extern THIS void stb_postRomanizerError(SynthThread *t, int32_t which)
     MANGLED("?postRomanizerError@SynthThread@@AAEXH@Z");
-extern THIS void postEngineError(SynthThread *t)
+extern THIS void stb_postEngineError(SynthThread *t)
     MANGLED("?postEngineError@SynthThread@@AAEXXZ");
-extern THIS int32_t isOldEngine(SynthThread *t)
+extern THIS int32_t stw_isOldEngine(SynthThread *t)
     MANGLED("?isOldEngine@SynthThread@@QAEHXZ");
-extern THIS char *filterText(SynthThread *t, const char *text, int32_t engine)
+extern THIS char *stw_filterText(SynthThread *t, const char *text, int32_t engine)
     MANGLED("?filterText@SynthThread@@QAEPADPBDJ@Z");
-extern THIS void addTextToEngine(SynthThread *t, char *text, int32_t len)
+extern THIS void stw_addTextToEngine(SynthThread *t, char *text, int32_t len)
     MANGLED("?addTextToEngine@SynthThread@@QAEXPADH@Z");
 
-extern void synthCallback(int32_t a, int32_t *b, void *param)
+extern void stb_staticSynthCallback(int32_t a, int32_t *b, void *param)
     MANGLED("?staticSynthCallback@SynthThread@@CAXHPAJPAX@Z");
-extern void phonemeCallback(int32_t index, void *param)
+extern void stb_staticTorrentPhonemeCallback(int32_t index, void *param)
     MANGLED("?staticTorrentPhonemeCallback@SynthThread@@CAXHPAX@Z");
-extern void userIndexCallback(void *param)
+extern void stb_staticUserIndexCallback(void *param)
     MANGLED("?staticUserIndexCallback@SynthThread@@CAXPAX@Z");
-extern void wordCallback(int32_t index, void *param)
+extern void stb_staticWordCallback(int32_t index, void *param)
     MANGLED("?staticWordCallback@SynthThread@@CAXHPAX@Z");
 
-extern THIS int32_t cat_inUse(void *c)
+extern THIS int32_t cm_usingConcatenativeEngine(void *c)
     MANGLED("?usingConcatenativeEngine@ConcatenationManager@@QAEHXZ");
-extern THIS void cat_processStarCommand(void *c, char *line)
+extern THIS void cm_processStarCommand(void *c, char *line)
     MANGLED("?processStarCommand@ConcatenationManager@@QAEXPAD@Z");
-extern THIS void cat_registerIndexCallback(void *c, uint32_t which,
+extern THIS void cm_registerCallbackA(void *c, uint32_t which,
                                            IndexCallback cb, void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXKP6AXHPAX@Z0@Z");
-extern THIS void cat_registerUserCallback(void *c, uint32_t which,
+extern THIS void cm_registerCallbackB(void *c, uint32_t which,
                                           UserCallback cb, void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXKP6AXPAX@Z0@Z");
-extern THIS void cat_registerSynthCallback(void *c, SynthCallback cb,
+extern THIS void cm_registerCallbackC(void *c, SynthCallback cb,
                                            void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXP6AXHPAJPAX@Z1@Z");
 
-extern THIS int32_t rom_setParam(void *r, int32_t which, int32_t value)
+extern THIS int32_t rz_setParam(void *r, int32_t which, int32_t value)
     MANGLED("?setParam@RomanizerManager@@QAEHJH@Z");
-extern THIS void *rom_getRom(void *r, uint32_t engine)
+extern THIS void *rz_getRom(void *r, uint32_t engine)
     MANGLED("?getRom@RomanizerManager@@QAEPAVRomInstance@@K@Z");
-extern THIS int32_t rom_unicodeToMBCS(void *r, uint32_t engine,
+extern THIS int32_t rz_UnicodeToMBCS(void *r, uint32_t engine,
                                       const uint16_t *wide, char **out,
                                       int32_t flag)
     MANGLED("?UnicodeToMBCS@RomanizerManager@@QAEHKPBGPAPADH@Z");
-extern THIS int32_t rom_addText(void *r, const char *text, int32_t len,
+extern THIS int32_t rz_addText(void *r, const char *text, int32_t len,
                                 int32_t last)
     MANGLED("?addText@RomanizerManager@@QAEHPBDHH@Z");
-extern THIS int32_t rom_processSentence(void *r, char **out, int32_t flag)
+extern THIS int32_t rz_processSentence(void *r, char **out, int32_t flag)
     MANGLED("?processSentence@RomanizerManager@@QAEHPAPADH@Z");
 
-extern THIS int32_t app_postUser(void *a, int32_t what, int32_t value)
+extern THIS int32_t aq_postUser(void *a, int32_t what, int32_t value)
     MANGLED("?postUser@ETIappMessageQueue@@QAEHJJ@Z");
 
 extern THIS void fm_getAvailableFilters(void *m, int32_t engine,
@@ -113,7 +113,7 @@ extern THIS void fm_getAvailableFilters(void *m, int32_t engine,
 extern THIS void fm_getFilterDescription(void *m, int32_t engine, uint32_t id,
                                          char *out)
     MANGLED("?getFilterDescription@FilterManager@@QAEXJIPAD@Z");
-extern THIS int32_t fm_isFilterActive(void *m, uint32_t id)
+extern THIS int32_t fm_isActiveById(void *m, uint32_t id)
     MANGLED("?isFilterActive@FilterManager@@QAEHI@Z");
 
 /* The two lines of engine command language this sends. The first turns on
@@ -143,17 +143,17 @@ static const struct { uint32_t cp; uint8_t byte; } WESTERN[] = {
    has changed since the last time anyone was told. */
 static void reportConcatenative(SynthThread *t)
 {
-    if (ST_CONCAT(t) && cat_inUse(ST_CONCAT(t))) {
+    if (ST_CONCAT(t) && cm_usingConcatenativeEngine(ST_CONCAT(t))) {
         if (!ST_TOLD_CAT(t)) {
             if (APP_LISTENING(ST_APP(t)))
-                app_postUser(ST_APP(t), APP_CONCATENATIVE, 1);
+                aq_postUser(ST_APP(t), APP_CONCATENATIVE, 1);
             ST_TOLD_CAT(t) = 1;
         }
     } else if (ST_TOLD_CAT(t) == 1) {
         if (APP_LISTENING(ST_APP(t)))
-            app_postUser(ST_APP(t), APP_CONCATENATIVE, 0);
+            aq_postUser(ST_APP(t), APP_CONCATENATIVE, 0);
         ST_TOLD_CAT(t) = 0;
-        rom_setParam(ST_ROMAN(t), ROM_CONCATENATIVE, 0);
+        rz_setParam(ST_ROMAN(t), ROM_CONCATENATIVE, 0);
     }
 }
 
@@ -163,36 +163,36 @@ static void openTheEngine(SynthThread *t)
 {
     EngCommand command = (EngCommand)ENG_CALL(t, ENG_COMMAND);
 
-    if (ST_CONCAT(t) && cat_inUse(ST_CONCAT(t))) {
-        cat_registerSynthCallback(ST_CONCAT(t), synthCallback, t);
-        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_PHONEME,
-                                  phonemeCallback, t);
+    if (ST_CONCAT(t) && cm_usingConcatenativeEngine(ST_CONCAT(t))) {
+        cm_registerCallbackC(ST_CONCAT(t), stb_staticSynthCallback, t);
+        cm_registerCallbackA(ST_CONCAT(t), CAT_CB_PHONEME,
+                                  stb_staticTorrentPhonemeCallback, t);
 
         if (ST_FLAGS(t) & STF_ROMANIZING)
-            cat_registerUserCallback(ST_CONCAT(t), CAT_CB_USER_INDEX,
-                                     userIndexCallback, t);
+            cm_registerCallbackB(ST_CONCAT(t), CAT_CB_USER_INDEX,
+                                     stb_staticUserIndexCallback, t);
         else if (ST_FLAGS(t) & STF_WORD_STARTS)
-            cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_START,
-                                      wordCallback, t);
+            cm_registerCallbackA(ST_CONCAT(t), CAT_CB_WORD_START,
+                                      stb_staticWordCallback, t);
 
         /* Word marks are registered as nothing at all here. Whatever wants
            them puts itself in later; this only makes the slot exist. */
         if (ST_FLAGS(t) & STF_WORD_MARKS)
-            cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_MARK, 0, t);
+            cm_registerCallbackA(ST_CONCAT(t), CAT_CB_WORD_MARK, 0, t);
 
         /* The phoneme callback goes in twice. It is the same callback under
            the same number both times, so the second is spent effort, but it
            is what the original does. */
-        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_PHONEME,
-                                  phonemeCallback, t);
+        cm_registerCallbackA(ST_CONCAT(t), CAT_CB_PHONEME,
+                                  stb_staticTorrentPhonemeCallback, t);
 
         ST_DIRECT(t) = 1;
         if (command(ST_ENGINE(t), CMD_CONCATENATIVE))
-            postEngineError(t);
+            stb_postEngineError(t);
         ST_DIRECT(t) = 0;
-    } else if (ST_CONCAT(t) && !cat_inUse(ST_CONCAT(t))) {
+    } else if (ST_CONCAT(t) && !cm_usingConcatenativeEngine(ST_CONCAT(t))) {
         if (command(ST_ENGINE(t), CMD_PLAIN))
-            postEngineError(t);
+            stb_postEngineError(t);
     }
     ST_FRESH(t) = 0;
 }
@@ -331,17 +331,17 @@ static void recodeForSSML(SynthThread *t, const char *text, uint32_t len,
         fm_getFilterDescription(ST_FILTERS(t), 0, ids[i], desc);
         if (strcmp(desc, SSML_FILTER) != 0)
             continue;
-        if (!fm_isFilterActive(ST_FILTERS(t), ids[i]))
+        if (!fm_isActiveById(ST_FILTERS(t), ids[i]))
             continue;
 
         engine = ST_ENGINE_ID(t);
-        if (rom_getRom(ST_ROMAN(t), engine)) {
+        if (rz_getRom(ST_ROMAN(t), engine)) {
             uint16_t *wide = (uint16_t *)cpp_new(2 * len + 2);
 
             if (wide) {
                 memset(wide, 0, 2 * len + 2);
                 utf8ToWide(text, len, wide);
-                rom_unicodeToMBCS(ST_ROMAN(t), engine | WIDE_TEXT, wide,
+                rz_UnicodeToMBCS(ST_ROMAN(t), engine | WIDE_TEXT, wide,
                                   mapped_out, 1);
                 cpp_delete(wide);
             }
@@ -383,8 +383,8 @@ THIS void addTextRun(SynthThread *t, char *text, uint32_t len, int32_t seq,
        over without being looked at. An engine too old to have that side goes
        without, and the text is dropped. */
     if (text[0] == '`' && text[1] == '*') {
-        if ((ST_CONCAT(t) && cat_inUse(ST_CONCAT(t))) || !isOldEngine(t))
-            cat_processStarCommand(ST_CONCAT(t), text + 1);
+        if ((ST_CONCAT(t) && cm_usingConcatenativeEngine(ST_CONCAT(t))) || !stw_isOldEngine(t))
+            cm_processStarCommand(ST_CONCAT(t), text + 1);
         goto counted;
     }
 
@@ -402,15 +402,15 @@ THIS void addTextRun(SynthThread *t, char *text, uint32_t len, int32_t seq,
     /* The filters proper, which may hand back something longer or shorter
        than they were given. What is outstanding has to follow it, because
        the count is in characters and the characters have just changed. */
-    filtered = filterText(t, source, (int32_t)ST_ENGINE_ID(t));
+    filtered = stw_filterText(t, source, (int32_t)ST_ENGINE_ID(t));
     len = filtered ? (uint32_t)strlen(filtered) : 0;
     if (len < asked)
         ST_PENDING(t) -= (int32_t)(asked - len);
     else if (len > asked)
         ST_PENDING(t) += (int32_t)(len - asked);
 
-    if (rom_addText(ST_ROMAN(t), filtered, (int32_t)len, last) == -1) {
-        postRomanizerError(t, 0);
+    if (rz_addText(ST_ROMAN(t), filtered, (int32_t)len, last) == -1) {
+        stb_postRomanizerError(t, 0);
         return;
     }
 
@@ -418,15 +418,15 @@ THIS void addTextRun(SynthThread *t, char *text, uint32_t len, int32_t seq,
        whole one left. */
     for (;;) {
         char *sentence;
-        int32_t n = rom_processSentence(ST_ROMAN(t), &sentence, 0);
+        int32_t n = rz_processSentence(ST_ROMAN(t), &sentence, 0);
 
         if (n == -1) {
-            postRomanizerError(t, 0);
+            stb_postRomanizerError(t, 0);
             return;
         }
         if (n == 0)
             break;
-        addTextToEngine(t, sentence, n);
+        stw_addTextToEngine(t, sentence, n);
     }
 
     if (wide_out)
@@ -436,9 +436,9 @@ THIS void addTextRun(SynthThread *t, char *text, uint32_t len, int32_t seq,
 
 counted:
     lock = ST_LOCK(t);
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     ST_PENDING(t) -= (int32_t)len;
-    mutex_release(lock);
+    sy_mutexRelease(lock);
 }
 
 ALIAS("?addTextRun@SynthThread@@AAEXPADKJH@Z", "addTextRun");

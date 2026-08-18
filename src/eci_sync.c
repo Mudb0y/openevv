@@ -57,7 +57,7 @@ static void sy_complain(const char *what, int rc)
 typedef struct Mutex { unsigned char opaque[0x0c]; } Mutex;
 
 /* The flag says whether the same thread may take it twice. */
-THIS Mutex *sy_mutexCtor(Mutex *m, int32_t recursive)
+THIS void *sy_mutexCtor(void *m, int32_t recursive)
 {
     struct ral_req r;
     int rc;
@@ -70,7 +70,7 @@ THIS Mutex *sy_mutexCtor(Mutex *m, int32_t recursive)
     return m;
 }
 
-THIS void sy_mutexDtor(Mutex *m)
+THIS void sy_mutexDtor(void *m)
 {
     struct ral_req r;
     int rc;
@@ -84,7 +84,7 @@ THIS void sy_mutexDtor(Mutex *m)
 
 /* The timeout is taken and ignored, as it is in the original: this waits
    until it has it. */
-THIS int sy_mutexWait(Mutex *m, int32_t ms)
+THIS int32_t sy_mutexWait(void *m, int32_t ms)
 {
     struct ral_req r;
 
@@ -97,7 +97,7 @@ THIS int sy_mutexWait(Mutex *m, int32_t ms)
     return 0;
 }
 
-THIS int sy_mutexRelease(Mutex *m)
+THIS int32_t sy_mutexRelease(void *m)
 {
     struct ral_req r;
 

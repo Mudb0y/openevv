@@ -71,18 +71,18 @@ extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
 extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
 
 /* The user dictionary, which this layer only ever hands on to. */
-extern THIS void *dictset_ctor(void *s, delta_state *d)
+extern THIS void *ds_ctor(void *s, delta_state *d)
     MANGLED("??0DictionarySet@@QAE@PAUDelta_This_Struct@@@Z");
-extern THIS void dictset_dtor(void *s) MANGLED("??1DictionarySet@@QAE@XZ");
-extern THIS int32_t dictset_load(void *s, int32_t volume, const char *name)
+extern THIS void ds_dtor(void *s) MANGLED("??1DictionarySet@@QAE@XZ");
+extern THIS int32_t ds_load(void *s, int32_t volume, const char *name)
     MANGLED("?load@DictionarySet@@QAEHW4DictVolume@@PBD@Z");
-extern THIS int32_t dictset_findFirst(void *s, int32_t volume,
+extern THIS int32_t ds_findFirst(void *s, int32_t volume,
                                       const char **a, const char **b)
     MANGLED("?findFirst@DictionarySet@@QAEHW4DictVolume@@AAPBD1@Z");
-extern THIS int32_t dictset_findNext(void *s, int32_t volume,
+extern THIS int32_t ds_findNext(void *s, int32_t volume,
                                      const char **a, const char **b)
     MANGLED("?findNext@DictionarySet@@QAEHW4DictVolume@@AAPBD1@Z");
-extern THIS const char *dictset_lookup(void *s, int32_t volume,
+extern THIS const char *ds_lookup(void *s, int32_t volume,
                                        const char *word)
     MANGLED("?lookup@DictionarySet@@QAEPBDW4DictVolume@@PBD@Z");
 extern int32_t setCurrentUserDict(delta_state *d, void *s)
@@ -108,9 +108,9 @@ extern int32_t DeltaProc_process_sentences(delta_state *d);
 extern int32_t DeltaProc_process_remaining(delta_state *d);
 extern int32_t deltaErrorThrown(delta_state *d);
 extern int32_t eciLinkDataToECI(void *link, char *buf, int32_t room, void *n);
-extern THIS int32_t dictset_save(void *s, int32_t volume, const char *name)
+extern THIS int32_t ds_save(void *s, int32_t volume, const char *name)
     MANGLED("?save@DictionarySet@@QAEHW4DictVolume@@PBD@Z");
-extern THIS int32_t dictset_updateEntry(void *s, int32_t volume,
+extern THIS int32_t ds_updateEntry(void *s, int32_t volume,
                                         const char *key, const char *value)
     MANGLED("?updateEntry@DictionarySet@@QAEHW4DictVolume@@PBD1@Z");
 
@@ -241,10 +241,10 @@ STDCALL int32_t es_engsynInsertDelayedSynthesisIndex(delta_state *d,
 STDCALL void *es_engsynNewDict(delta_state *d)
 {
     void *room = cpp_new(0x18);
-    void *set  = room ? dictset_ctor(room, d) : 0;
+    void *set  = room ? ds_ctor(room, d) : 0;
 
     if (set && DICTSET_FAILED(set) != 0) {
-        dictset_dtor(set);
+        ds_dtor(set);
         cpp_delete(set);
         set = 0;
     }
@@ -254,7 +254,7 @@ STDCALL void *es_engsynNewDict(delta_state *d)
 STDCALL int32_t es_engsynDeleteDict(void *set)
 {
     if (set) {
-        dictset_dtor(set);
+        ds_dtor(set);
         cpp_delete(set);
     }
     return 0;
@@ -279,7 +279,7 @@ STDCALL int32_t es_engsynLoadDict(delta_state *d, void *set, int32_t volume,
 
     if (set == 0 || name == 0)
         return ERR_ARGUMENT;
-    return dictset_load(set, volume, name);
+    return ds_load(set, volume, name);
 }
 
 STDCALL int32_t es_engsynDictFindFirst(void *set, int32_t volume,
@@ -287,7 +287,7 @@ STDCALL int32_t es_engsynDictFindFirst(void *set, int32_t volume,
 {
     if (set == 0)
         return ERR_ARGUMENT;
-    return dictset_findFirst(set, volume, a, b);
+    return ds_findFirst(set, volume, a, b);
 }
 
 STDCALL int32_t es_engsynDictFindNext(void *set, int32_t volume,
@@ -295,7 +295,7 @@ STDCALL int32_t es_engsynDictFindNext(void *set, int32_t volume,
 {
     if (set == 0)
         return ERR_ARGUMENT;
-    return dictset_findNext(set, volume, a, b);
+    return ds_findNext(set, volume, a, b);
 }
 
 STDCALL const char *es_engsynDictLookup(void *set, int32_t volume,
@@ -303,7 +303,7 @@ STDCALL const char *es_engsynDictLookup(void *set, int32_t volume,
 {
     if (set == 0)
         return 0;
-    return dictset_lookup(set, volume, word);
+    return ds_lookup(set, volume, word);
 }
 
 
@@ -532,7 +532,7 @@ STDCALL int32_t es_engsynSaveDict(void *set, int32_t volume, const char *name)
 {
     if (set == 0 || name == 0)
         return ERR_ARGUMENT;
-    return dictset_save(set, volume, name);
+    return ds_save(set, volume, name);
 }
 
 STDCALL int32_t es_engsynUpdateDict(void *set, int32_t volume,
@@ -540,7 +540,7 @@ STDCALL int32_t es_engsynUpdateDict(void *set, int32_t volume,
 {
     if (set == 0 || key == 0)
         return ERR_ARGUMENT;
-    return dictset_updateEntry(set, volume, key, value);
+    return ds_updateEntry(set, volume, key, value);
 }
 
 ALIAS_N("_engsynStart@4", "es_engsynStart", 4);

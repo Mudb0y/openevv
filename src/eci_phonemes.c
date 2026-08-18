@@ -79,7 +79,7 @@ extern THIS int32_t eng_setData(void *el, const void *lang, void *data)
     MANGLED("?setData@EngineList@@QAEHQBVLangIdentifier@@PAVEngineListData@@@Z");
 extern THIS void *eng_getData(void *el, const void *lang)
     MANGLED("?getData@EngineList@@QAEPAVEngineListData@@QBVLangIdentifier@@@Z");
-extern THIS void *li_ctor(void *l) MANGLED("??0LangIdentifier@@QAE@XZ");
+extern THIS void *sti_langCtor(void *l) MANGLED("??0LangIdentifier@@QAE@XZ");
 
 typedef THIS void *(*DeleteFn)(void *self, int32_t freeIt);
 #define DELETE_ITSELF(p) ((*(DeleteFn *)(*(void ***)(p)))((p), 1))
@@ -237,7 +237,7 @@ THIS void *ph_ctor(void *self)
     uint8_t lang[0x14];
 
     eng_ctor(self);
-    li_ctor(lang);
+    sti_langCtor(lang);
 
     if (!eng_getFirstLanguage(self, lang))
         return self;

@@ -116,17 +116,17 @@ struct ETImessageQueueThread {
 
 /* ---- what the original supplies -------------------------------------- */
 
-extern THIS void *mutex_ctor(void *m, int32_t kind) MANGLED("??0Mutex@@QAE@H@Z");
-extern THIS void  mutex_dtor(void *m) MANGLED("??1Mutex@@QAE@XZ");
-extern THIS int32_t mutex_wait(void *m, int32_t ms) MANGLED("?wait@Mutex@@QAEHJ@Z");
-extern THIS int32_t mutex_release(void *m) MANGLED("?release@Mutex@@QAEHXZ");
+extern THIS void *sy_mutexCtor(void *m, int32_t kind) MANGLED("??0Mutex@@QAE@H@Z");
+extern THIS void  sy_mutexDtor(void *m) MANGLED("??1Mutex@@QAE@XZ");
+extern THIS int32_t sy_mutexWait(void *m, int32_t ms) MANGLED("?wait@Mutex@@QAEHJ@Z");
+extern THIS int32_t sy_mutexRelease(void *m) MANGLED("?release@Mutex@@QAEHXZ");
 
-extern THIS int32_t event_signal(void *e) MANGLED("?signal@ETIEvent@@QAEHXZ");
-extern THIS int32_t event_unsignal(void *e) MANGLED("?unsignal@ETIEvent@@QAEHXZ");
-extern THIS int32_t event_wait(void *e, int32_t ms) MANGLED("?wait@ETIEvent@@QAEHJ@Z");
+extern THIS int32_t sy_eventSignal(void *e) MANGLED("?signal@ETIEvent@@QAEHXZ");
+extern THIS int32_t sy_eventUnsignal(void *e) MANGLED("?unsignal@ETIEvent@@QAEHXZ");
+extern THIS int32_t sy_eventWait(void *e, int32_t ms) MANGLED("?wait@ETIEvent@@QAEHJ@Z");
 
-extern THIS int32_t queue_isEmpty(ETIqueue *q) MANGLED("?isEmpty@ETIqueue@@QAEHXZ");
-extern THIS int32_t thread_shouldTerminate(const void *t)
+extern THIS int32_t eq_isEmpty(ETIqueue *q) MANGLED("?isEmpty@ETIqueue@@QAEHXZ");
+extern THIS int32_t th_shouldTerminate(const void *t)
     MANGLED("?shouldTerminate@ETIThread@@QBEHXZ");
 
 extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
@@ -163,7 +163,7 @@ THIS ETImessage *msg_ctor(ETImessage *m, uint32_t type)
     m->result = 0;
     m->refs = 0;
     m->is_send = 0;
-    mutex_ctor(m->lock, 0);
+    sy_mutexCtor(m->lock, 0);
     return m;
 }
 
@@ -171,10 +171,10 @@ THIS uint32_t msg_addRef(ETImessage *m)
 {
     uint32_t now;
 
-    mutex_wait(m->lock, -1);
+    sy_mutexWait(m->lock, -1);
     m->refs++;
     now = (uint32_t)m->refs;
-    mutex_release(m->lock);
+    sy_mutexRelease(m->lock);
     return now;
 }
 
@@ -184,14 +184,14 @@ THIS uint32_t msg_release(ETImessage *m)
 {
     uint32_t left;
 
-    mutex_wait(m->lock, -1);
+    sy_mutexWait(m->lock, -1);
     m->refs--;
     left = (uint32_t)m->refs;
     if (m->refs != 0) {
-        mutex_release(m->lock);
+        sy_mutexRelease(m->lock);
         return left;
     }
-    mutex_release(m->lock);
+    sy_mutexRelease(m->lock);
     m->vt->destroy(m, 1);
     return 0;
 }
@@ -216,7 +216,7 @@ THIS int32_t msg_equalsMessage(ETImessage *m, ETImessage *other)
 THIS void *msg_destroy(ETImessage *m, int32_t free_it)
 {
     m->vt = &vtbl_message;
-    mutex_dtor(m->lock);
+    sy_mutexDtor(m->lock);
     if (free_it & 1)
         cpp_delete(m);
     return m;
@@ -225,7 +225,7 @@ THIS void *msg_destroy(ETImessage *m, int32_t free_it)
 THIS void *quit_destroy(ETImessage *m, int32_t free_it)
 {
     m->vt = &vtbl_message;
-    mutex_dtor(m->lock);
+    sy_mutexDtor(m->lock);
     if (free_it & 1)
         cpp_delete(m);
     return m;
@@ -247,13 +247,13 @@ THIS int16_t q_postMessage(ETImessageQueue *q, ETImessage *m, int32_t a,
     int16_t rc = POST_REFUSED;
     int32_t ok;
 
-    mutex_wait(q->lock, -1);
+    sy_mutexWait(q->lock, -1);
     m->result = 0;
     if (q->suspended == 0) {
         m->vt->addRef(m);
         ok = q->queue.vt->push(&q->queue, m);
         if (ok) {
-            ok = event_signal(q->ready);
+            ok = sy_eventSignal(q->ready);
             if (ok && win != 0)
                 ok = wakeWindow(win, a, b);
             if (!ok)
@@ -266,7 +266,7 @@ THIS int16_t q_postMessage(ETImessageQueue *q, ETImessage *m, int32_t a,
             rc = POST_QUEUED;
         }
     }
-    mutex_release(q->lock);
+    sy_mutexRelease(q->lock);
     return rc;
 }
 
@@ -278,20 +278,20 @@ THIS int16_t q_sendMessage(ETImessageQueue *q, ETImessage *m, int32_t a,
 {
     int16_t rc;
 
-    mutex_wait(q->send_lock, -1);
+    sy_mutexWait(q->send_lock, -1);
     m->vt->addRef(m);
     m->is_send = 1;
     rc = q->vt->postMessage(q, m, a, win, b);
     if (rc == POST_QUEUED) {
-        if (!event_wait(q->done, -1)) {
+        if (!sy_eventWait(q->done, -1)) {
             rc = POST_FAILED;
         } else {
             if (m->result == 0)
                 rc = POST_REFUSED;
-            event_unsignal(q->done);
+            sy_eventUnsignal(q->done);
         }
     }
-    mutex_release(q->send_lock);
+    sy_mutexRelease(q->send_lock);
     m->vt->release(m);
     return rc;
 }
@@ -307,39 +307,39 @@ THIS int16_t q_popMessage(ETImessageQueue *q, ETImessage **out, int32_t flag,
 
     *out = 0;
     if (flag == 0)
-        ok = event_wait(q->ready, -1);
+        ok = sy_eventWait(q->ready, -1);
     if (!ok)
         return rc;
 
-    mutex_wait(q->lock, -1);
-    if (queue_isEmpty(&q->queue)) {
+    sy_mutexWait(q->lock, -1);
+    if (eq_isEmpty(&q->queue)) {
         rc = 1;
-        event_unsignal(q->ready);
+        sy_eventUnsignal(q->ready);
     } else if (q->queue.vt->pop(&q->queue, (void **)out)) {
         rc = 1;
         if (event != 0)
-            event_unsignal(event);
-        if (queue_isEmpty(&q->queue))
-            event_unsignal(q->ready);
+            sy_eventUnsignal(event);
+        if (eq_isEmpty(&q->queue))
+            sy_eventUnsignal(q->ready);
     }
-    mutex_release(q->lock);
+    sy_mutexRelease(q->lock);
     return rc;
 }
 
 /* A suspended queue throws away what it is holding and refuses more. */
 THIS void q_suspend(ETImessageQueue *q)
 {
-    mutex_wait(q->lock, -1);
+    sy_mutexWait(q->lock, -1);
     q->vt->clearMessages(q);
     q->suspended = 1;
-    mutex_release(q->lock);
+    sy_mutexRelease(q->lock);
 }
 
 THIS void q_resume(ETImessageQueue *q)
 {
-    mutex_wait(q->lock, -1);
+    sy_mutexWait(q->lock, -1);
     q->suspended = 0;
-    mutex_release(q->lock);
+    sy_mutexRelease(q->lock);
 }
 
 /* Anyone waiting on a thrown-away message is told it is done with, or they
@@ -350,7 +350,7 @@ THIS void q_clearMessages(ETImessageQueue *q)
     int32_t more = 1;
 
     while (more) {
-        if (queue_isEmpty(&q->queue))
+        if (eq_isEmpty(&q->queue))
             break;
         more = q->queue.vt->pop(&q->queue, (void **)&m);
         if (!more)
@@ -358,7 +358,7 @@ THIS void q_clearMessages(ETImessageQueue *q)
         q->vt->signalProcessed(q, m);
         m->vt->release(m);
     }
-    event_unsignal(q->ready);
+    sy_eventUnsignal(q->ready);
 }
 
 /* ---- the thread that runs them --------------------------------------- */
@@ -367,7 +367,7 @@ THIS uint32_t qt_run(ETImessageQueueThread *t)
 {
     ETImessage *m = 0;
 
-    while (!thread_shouldTerminate(t)) {
+    while (!th_shouldTerminate(t)) {
         if (!t->queue.vt->popMessage(&t->queue, &m, 0, t->turn))
             break;
         if (m != 0) {
@@ -381,7 +381,7 @@ THIS uint32_t qt_run(ETImessageQueueThread *t)
             m->vt->release(m);
             m = 0;
         }
-        event_signal(t->turn);
+        sy_eventSignal(t->turn);
     }
     return 0;
 }
@@ -390,8 +390,8 @@ THIS uint32_t qt_run(ETImessageQueueThread *t)
    stops between two messages rather than in the middle of one. */
 THIS void qt_terminate(ETImessageQueueThread *t)
 {
-    event_wait(t->quitting, -1);
-    event_unsignal(t->quitting);
+    sy_eventWait(t->quitting, -1);
+    sy_eventUnsignal(t->quitting);
 
     if (t->asked_to_stop == 0) {
         ETImsgQuit *q = cpp_new(sizeof *q);
@@ -410,7 +410,7 @@ THIS void qt_terminate(ETImessageQueueThread *t)
             m->vt->release(m);
         }
     }
-    event_signal(t->quitting);
+    sy_eventSignal(t->quitting);
 }
 
 /* ---- the tables ------------------------------------------------------ */

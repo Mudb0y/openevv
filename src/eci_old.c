@@ -58,26 +58,26 @@ typedef struct QueueElement {
 #define OI_REFUSED(h)   (*(uint32_t *)((char *)(h) + 0x6b0))
 #define OI_BUSY(h)      (*(int32_t *)((char *)(h) + 0x6b4))
 
-extern int32_t __stdcall eciPoll2(void *h) MANGLED("_eciPoll2@4");
-extern int32_t __stdcall eciStop2(void *h) MANGLED("_eciStop2@4");
-extern int32_t __stdcall eciSynthesize2(void *h) MANGLED("_eciSynthesize2@4");
-extern void __stdcall eciVersion2(int32_t *a, int32_t *b, int32_t *c,
+extern int32_t __stdcall api_poll(void *h) MANGLED("_eciPoll2@4");
+extern int32_t __stdcall api_stop(void *h) MANGLED("_eciStop2@4");
+extern int32_t __stdcall api_synthesize(void *h) MANGLED("_eciSynthesize2@4");
+extern void __stdcall api_version(int32_t *a, int32_t *b, int32_t *c,
                                   int32_t *d) MANGLED("_eciVersion2@16");
-extern int eciGetAvailableLanguages2(uint32_t *out, int *count)
+extern int lg_eciGetAvailableLanguages2(uint32_t *out, int *count)
     MANGLED("?eciGetAvailableLanguages2@@YAHPAW4ECILanguageDialect@@PAH@Z");
-extern int32_t __stdcall eciGetParam(OldInst *h, int32_t which)
+extern int32_t __stdcall es_getParam(OldInst *h, int32_t which)
     MANGLED("_eciGetParam@8");
-extern int32_t __stdcall eciNew2(void **out, int32_t language)
+extern int32_t __stdcall api_new(void **out, int32_t language)
     MANGLED("_eciNew2@8");
-extern int32_t __stdcall eciDelete2(void *h2) MANGLED("_eciDelete2@4");
-extern int32_t __stdcall eciGetParam2(void *h2, int32_t k, int32_t p,
+extern int32_t __stdcall api_delete(void *h2) MANGLED("_eciDelete2@4");
+extern int32_t __stdcall api_get_param(void *h2, int32_t k, int32_t p,
                                       int32_t *out) MANGLED("_eciGetParam2@16");
-extern void __stdcall eciRegisterCallback2(void *h2, void *cb, void *inst,
+extern void __stdcall api_register_callback(void *h2, void *cb, void *inst,
                                            void *a, void *b)
     MANGLED("_eciRegisterCallback2@20");
-extern void *eciGetRomMngr2(void *h2) MANGLED("_eciGetRomMngr2");
-extern void *eciGetFilterMngr2(void *h2) MANGLED("_eciGetFilterMngr2");
-extern int __stdcall eciSetOutputDevice(OldInst *h, int32_t which)
+extern void *api_get_rom_mngr(void *h2) MANGLED("_eciGetRomMngr2");
+extern void *api_get_filter_mngr(void *h2) MANGLED("_eciGetFilterMngr2");
+extern int __stdcall ev_setOutputDevice(OldInst *h, int32_t which)
     MANGLED("_eciSetOutputDevice@8");
 extern void setRealWorldParamsFromECIParams(void *voice, int32_t which)
     MANGLED("_setRealWorldParamsFromECIParams");
@@ -266,7 +266,7 @@ int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data)
             OI_REFUSEDALL(h) |= 0x10;
             break;
         }
-        mode = eciGetParam(h, PARAM_CODESET);
+        mode = es_getParam(h, PARAM_CODESET);
         OI_REPORT_MODE(h) = *(int32_t *)(rec + 0x0c);
 
         /* The name of the phoneme is four characters, wide or narrow
@@ -425,7 +425,7 @@ int eo_getDefaultEnvironment(OldInst *h, int32_t check)
             *(int32_t *)((char *)g_DefaultEnvironment + at);
     }
 
-    if (eciGetParam2(OI_NEW(h), 0, 2, &OI_LANG(h))) {
+    if (api_get_param(OI_NEW(h), 0, 2, &OI_LANG(h))) {
         OI_REFUSED(h) = 0x80;
         OI_REFUSEDALL(h) |= 0x80;
         return 0;
@@ -508,7 +508,7 @@ static OldInst *eo_newInstance(int32_t language, int told)
         OI_LANG(h) = language;
     OI_VOICENO(h) = g_DefaultEnvironment[17];
 
-    if (eciNew2(&OI_NEW(h), language) == 0 && OI_NEW(h)) {
+    if (api_new(&OI_NEW(h), language) == 0 && OI_NEW(h)) {
         failed = 0;
         if (!eo_getDefaultEnvironment(h, 0) || !eo_getDefaultActiveVoice(h, 0)) {
             failed = 1;
@@ -530,21 +530,21 @@ static OldInst *eo_newInstance(int32_t language, int told)
                 strcpy(OI_VOICES(h) + i * VOICE_BYTES, "User-Defined");
             }
 
-            eciRegisterCallback2(OI_NEW(h), (void *)eo_callbackFn, h, 0, 0);
+            api_register_callback(OI_NEW(h), (void *)eo_callbackFn, h, 0, 0);
 
-            if (!eciSetOutputDevice(h, 0)) {
+            if (!ev_setOutputDevice(h, 0)) {
                 OI_DEVICE(h) = 1;
-                if (!eciSetOutputDevice(h, 0)) {
+                if (!ev_setOutputDevice(h, 0)) {
                     OI_DEVICE(h) = 0;
-                    if (!eciSetOutputDevice(h, 0)) {
+                    if (!ev_setOutputDevice(h, 0)) {
                         OI_DEVICE(h) = 3;
-                        if (!eciSetOutputDevice(h, 0))
+                        if (!ev_setOutputDevice(h, 0))
                             failed = 1;
                     }
                 }
             }
-            OI_ROMMGR(h) = eciGetRomMngr2(OI_NEW(h));
-            OI_FILTERMGR(h) = eciGetFilterMngr2(OI_NEW(h));
+            OI_ROMMGR(h) = api_get_rom_mngr(OI_NEW(h));
+            OI_FILTERMGR(h) = api_get_filter_mngr(OI_NEW(h));
         }
     }
 
@@ -552,7 +552,7 @@ static OldInst *eo_newInstance(int32_t language, int told)
         return h;
 
     if (OI_NEW(h)) {
-        eciDelete2(OI_NEW(h));
+        api_delete(OI_NEW(h));
         OI_NEW(h) = 0;
     }
     if (OI_CONCAT(h))
@@ -587,7 +587,7 @@ void __stdcall eo_synchronizeSynth(OldInst *h)
 
 int __stdcall eo_getAvailableLanguages(uint32_t *out, int *count)
 {
-    return eciGetAvailableLanguages2(out, count);
+    return lg_eciGetAvailableLanguages2(out, count);
 }
 
 /* The last index mark the callback was told about, kept so a caller that did
@@ -635,7 +635,7 @@ int __stdcall eo_stop(OldInst *h)
         return 0;
 
     eo_clearManualQueue(h);
-    if (setECIerror(eciStop2(OI_NEW(h)), h)) {
+    if (setECIerror(api_stop(OI_NEW(h)), h)) {
         OI_BUSY(h) = 0;
         return 0;
     }
@@ -664,7 +664,7 @@ int __stdcall eo_speaking(OldInst *h)
     if (!h)
         return 0;
 
-    rc = setECIerror(eciPoll2(OI_NEW(h)), h);
+    rc = setECIerror(api_poll(OI_NEW(h)), h);
     OI_BUSY(h) = 0;
     if (rc == POLL_ABORTED) {
         eo_stop(h);
@@ -680,7 +680,7 @@ void __stdcall eo_version(char *out)
 
     if (!out)
         return;
-    eciVersion2(&a, &b, &c, &d);
+    api_version(&a, &b, &c, &d);
     sprintf(out, "%d.%d.%d.%d", a, b, c, d);
 }
 

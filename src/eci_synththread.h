@@ -119,11 +119,11 @@ struct MarkQueue { const MarkQueueVtbl *vt; };
 #define APP_POSTED(a)   (*(int32_t *)((char *)(a) + 0x58))
 #define APP_LISTENING(a) (*(int32_t *)((char *)(a) + 0x4c))
 
-extern THIS int32_t mutex_wait(void *m, int32_t ms)
+extern THIS int32_t sy_mutexWait(void *m, int32_t ms)
     MANGLED("?wait@Mutex@@QAEHJ@Z");
-extern THIS int32_t mutex_release(void *m)
+extern THIS int32_t sy_mutexRelease(void *m)
     MANGLED("?release@Mutex@@QAEHXZ");
-extern THIS void mutex_dtor(void *m)
+extern THIS void sy_mutexDtor(void *m)
     MANGLED("??1Mutex@@QAE@XZ");
 
 extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");

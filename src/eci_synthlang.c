@@ -58,34 +58,34 @@ typedef struct { int32_t a, b, c; } SampleFormat;
 
 static const char CMD_CONCATENATIVE[] = "`esp2";
 
-extern THIS void processRemaining(SynthThread *t)
+extern THIS void stw_processRemaining(SynthThread *t)
     MANGLED("?processRemaining@SynthThread@@QAEXXZ");
-extern THIS void sendRemainingPhonemesToUser(SynthThread *t)
+extern THIS void stb_sendRemainingPhonemesToUser(SynthThread *t)
     MANGLED("?sendRemainingPhonemesToUser@SynthThread@@AAEXXZ");
-extern THIS void postEngineError(SynthThread *t)
+extern THIS void stb_postEngineError(SynthThread *t)
     MANGLED("?postEngineError@SynthThread@@AAEXXZ");
-extern THIS void postRomanizerError(SynthThread *t, int32_t which)
+extern THIS void stb_postRomanizerError(SynthThread *t, int32_t which)
     MANGLED("?postRomanizerError@SynthThread@@AAEXH@Z");
-extern THIS int32_t checkLanguage(SynthThread *t, LangIdentifier *l)
+extern THIS int32_t stw_checkLanguage(SynthThread *t, LangIdentifier *l)
     MANGLED("?checkLanguage@SynthThread@@AAEHPAVLangIdentifier@@@Z");
-extern THIS int32_t deactivateAllFilters(SynthThread *t)
+extern THIS int32_t stm_deactivateAllFilters(SynthThread *t)
     MANGLED("?deactivateAllFilters@SynthThread@@QAEJXZ");
-extern THIS int32_t isOldEngine(SynthThread *t)
+extern THIS int32_t stw_isOldEngine(SynthThread *t)
     MANGLED("?isOldEngine@SynthThread@@QAEHXZ");
-extern THIS int32_t engineInitialize(SynthThread *t, void *engine)
+extern THIS int32_t stw_engineInitialize(SynthThread *t, void *engine)
     MANGLED("?engineInitialize@SynthThread@@AAEHPAVEngineWrapper@@@Z");
-extern THIS int32_t createAudioConverter(SynthThread *t, void *format)
+extern THIS int32_t stw_createAudioConverter(SynthThread *t, void *format)
     MANGLED("?createAudioConverter@SynthThread@@AAEJAAUECIsampleFormat@@@Z");
 
-extern void synthCallback(int32_t a, int32_t *b, void *param)
+extern void stb_staticSynthCallback(int32_t a, int32_t *b, void *param)
     MANGLED("?staticSynthCallback@SynthThread@@CAXHPAJPAX@Z");
-extern void phonemeCallback(int32_t index, void *param)
+extern void stb_staticTorrentPhonemeCallback(int32_t index, void *param)
     MANGLED("?staticTorrentPhonemeCallback@SynthThread@@CAXHPAX@Z");
-extern void userIndexCallback(void *param)
+extern void stb_staticUserIndexCallback(void *param)
     MANGLED("?staticUserIndexCallback@SynthThread@@CAXPAX@Z");
-extern void wordCallback(int32_t index, void *param)
+extern void stb_staticWordCallback(int32_t index, void *param)
     MANGLED("?staticWordCallback@SynthThread@@CAXHPAX@Z");
-extern void synthesisBreakCallback(int32_t index, void *param)
+extern void stb_staticSynthesisBreakCallback(int32_t index, void *param)
     MANGLED("?staticSynthesisBreakCallback@SynthThread@@CAXHPAX@Z");
 
 extern THIS void ea_removeEngine(void *a, const LangIdentifier *l)
@@ -100,35 +100,35 @@ extern THIS uint32_t ea_getCorporaVersion(void *a, const LangIdentifier *l)
 extern THIS void lang_setString(LangIdentifier *l)
     MANGLED("?setString@LangIdentifier@@AAEXXZ");
 
-extern THIS void rom_removeUnused(void *r, LangIdentifier *l)
+extern THIS void rz_removeUnused(void *r, LangIdentifier *l)
     MANGLED("?removeUnusedRomanizer@RomanizerManager@@QAEXPAVLangIdentifier@@@Z");
-extern THIS int32_t rom_setParam(void *r, int32_t which, int32_t value)
+extern THIS int32_t rz_setParam(void *r, int32_t which, int32_t value)
     MANGLED("?setParam@RomanizerManager@@QAEHJH@Z");
 
-extern THIS int32_t cat_inUse(void *c)
+extern THIS int32_t cm_usingConcatenativeEngine(void *c)
     MANGLED("?usingConcatenativeEngine@ConcatenationManager@@QAEHXZ");
-extern THIS int32_t cat_setParam(void *c, int32_t which, int32_t value,
+extern THIS int32_t cm_setParam(void *c, int32_t which, int32_t value,
                                  int32_t extra)
     MANGLED("?setParam@ConcatenationManager@@QAEHJHH@Z");
-extern THIS void cat_registerIndexCallback(void *c, uint32_t which,
+extern THIS void cm_registerCallbackA(void *c, uint32_t which,
                                            IndexCallback cb, void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXKP6AXHPAX@Z0@Z");
-extern THIS void cat_registerUserCallback(void *c, uint32_t which,
+extern THIS void cm_registerCallbackB(void *c, uint32_t which,
                                           UserCallback cb, void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXKP6AXPAX@Z0@Z");
-extern THIS void cat_registerSynthCallback(void *c, SynthCallback cb,
+extern THIS void cm_registerCallbackC(void *c, SynthCallback cb,
                                            void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXP6AXHPAJPAX@Z1@Z");
 
 extern THIS void fm_autoLoadFilter(void *m, LangIdentifier *l)
     MANGLED("?autoLoadFilter@FilterManager@@QAEXPAVLangIdentifier@@@Z");
 
-extern THIS void st_paramFromEngine(void *s, int32_t which, int32_t value)
+extern THIS void es_paramFromEngine(void *s, int32_t which, int32_t value)
     MANGLED("?paramFromEngine@ECIstate@@QAEXJJ@Z");
-extern THIS int32_t st_setCurrentState(void *s, void *engine, int32_t concat)
+extern THIS int32_t es_setCurrentState(void *s, void *engine, int32_t concat)
     MANGLED("?setCurrentState@ECIstate@@QAEHPAVEngineWrapper@@H@Z");
 
-extern THIS int32_t app_postUser(void *a, int32_t what, int32_t value)
+extern THIS int32_t aq_postUser(void *a, int32_t what, int32_t value)
     MANGLED("?postUser@ETIappMessageQueue@@QAEHJJ@Z");
 
 /* Say whether the voice is concatenative, but only if that has changed. */
@@ -137,12 +137,12 @@ static void tellCaller(SynthThread *t, int32_t now)
     if (now) {
         if (!ST_TOLD_CAT(t)) {
             if (APP_LISTENING(ST_APP(t)))
-                app_postUser(ST_APP(t), APP_CONCATENATIVE, 1);
+                aq_postUser(ST_APP(t), APP_CONCATENATIVE, 1);
             ST_TOLD_CAT(t) = 1;
         }
     } else if (ST_TOLD_CAT(t) == 1) {
         if (APP_LISTENING(ST_APP(t)))
-            app_postUser(ST_APP(t), APP_CONCATENATIVE, 0);
+            aq_postUser(ST_APP(t), APP_CONCATENATIVE, 0);
         ST_TOLD_CAT(t) = 0;
     }
 }
@@ -151,9 +151,9 @@ static void tellCaller(SynthThread *t, int32_t now)
    language is in play, and both are told the whole id, dialect and all. */
 static void tellTheOthers(SynthThread *t, int32_t id)
 {
-    if (rom_setParam(ST_ROMAN(t), ROM_LANGUAGE, id) == -1)
-        postRomanizerError(t, ROM_ERR_LANGUAGE);
-    cat_setParam(ST_CONCAT(t), CAT_LANGUAGE, id, 0);
+    if (rz_setParam(ST_ROMAN(t), ROM_LANGUAGE, id) == -1)
+        stb_postRomanizerError(t, ROM_ERR_LANGUAGE);
+    cm_setParam(ST_CONCAT(t), CAT_LANGUAGE, id, 0);
 }
 
 /* Whichever of the two ways of reporting positions this engine wants, wired
@@ -181,13 +181,13 @@ static void switchEngine(SynthThread *t, LangIdentifier *lang)
 
     ea_removeEngine(ST_ENGINES(t), current);
     if (ST_ROMAN(t))
-        rom_removeUnused(ST_ROMAN(t), lang);
+        rz_removeUnused(ST_ROMAN(t), lang);
 
     /* Asked for something the array has not got, stay where we are. */
-    if (!checkLanguage(t, lang))
+    if (!stw_checkLanguage(t, lang))
         lang = current;
 
-    deactivateAllFilters(t);
+    stm_deactivateAllFilters(t);
     ST_FILTER(t) = 0;
 
     ST_ENGINE(t) = ea_getEngine(ST_ENGINES(t), lang);
@@ -195,29 +195,29 @@ static void switchEngine(SynthThread *t, LangIdentifier *lang)
     ST_CORPORA(t) = ea_getCorporaVersion(ST_ENGINES(t), lang);
     /* Asked and the answer thrown away. It is called for whatever it does on
        the way rather than for what it says. */
-    isOldEngine(t);
+    stw_isOldEngine(t);
 
     current->id = lang->id;
     lang_setString(current);
 
-    if (!engineInitialize(t, ST_ENGINE(t)))
-        postEngineError(t);
+    if (!stw_engineInitialize(t, ST_ENGINE(t)))
+        stb_postEngineError(t);
     fm_autoLoadFilter(ST_FILTERS(t), lang);
-    st_paramFromEngine(ST_STATE(t), ECI_PARAM_LANGUAGE, (int32_t)lang->id);
+    es_paramFromEngine(ST_STATE(t), ECI_PARAM_LANGUAGE, (int32_t)lang->id);
 
     /* Take the old reporting down before the format moves under it. */
     wireReporting(t, 0, 0);
     if (ST_FLAGS(t) & STF_ROMANIZING)
-        cat_registerUserCallback(ST_CONCAT(t), CAT_CB_USER_INDEX, 0, t);
+        cm_registerCallbackB(ST_CONCAT(t), CAT_CB_USER_INDEX, 0, t);
     else if (ST_FLAGS(t) & STF_WORD_STARTS)
-        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_MARK, 0, t);
+        cm_registerCallbackA(ST_CONCAT(t), CAT_CB_WORD_MARK, 0, t);
 
     /* The sample format is ours to work out when the caller registered a
        buffer of its own; otherwise a format handed in from outside is used,
        its three words copied out first. */
     if (ST_SAMPBUF(t)) {
-        if (createAudioConverter(t, ST_FORMAT(t)))
-            postEngineError(t);
+        if (stw_createAudioConverter(t, ST_FORMAT(t)))
+            stb_postEngineError(t);
     } else if (ST_OUTFMT(t)) {
         const int32_t *given =
             (const int32_t *)((char *)ST_OUTFMT(t) + OUTFMT_AT);
@@ -226,16 +226,16 @@ static void switchEngine(SynthThread *t, LangIdentifier *lang)
         fmt.a = given[0];
         fmt.c = given[2];
         fmt.b = given[1];
-        if (createAudioConverter(t, &fmt))
-            postEngineError(t);
+        if (stw_createAudioConverter(t, &fmt))
+            stb_postEngineError(t);
     }
 
     /* And now put the reporting back, on the new engine. */
-    wireReporting(t, userIndexCallback, wordCallback);
+    wireReporting(t, stb_staticUserIndexCallback, stb_staticWordCallback);
 
     tellTheOthers(t, (int32_t)lang->id);
 
-    if (cat_inUse(ST_CONCAT(t))) {
+    if (cm_usingConcatenativeEngine(ST_CONCAT(t))) {
         tellCaller(t, 1);
 
         /* The flag that says we are talking to the engine ourselves goes up
@@ -243,38 +243,38 @@ static void switchEngine(SynthThread *t, LangIdentifier *lang)
            original's; it reads as though two of the three were meant to be
            its opposite. */
         ST_DIRECT(t) = 1;
-        if (!st_setCurrentState(ST_STATE(t), ST_ENGINE(t), 1))
-            postEngineError(t);
+        if (!es_setCurrentState(ST_STATE(t), ST_ENGINE(t), 1))
+            stb_postEngineError(t);
         ST_DIRECT(t) = 1;
 
-        cat_registerSynthCallback(ST_CONCAT(t), synthCallback, t);
-        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_PHONEME,
-                                  phonemeCallback, t);
+        cm_registerCallbackC(ST_CONCAT(t), stb_staticSynthCallback, t);
+        cm_registerCallbackA(ST_CONCAT(t), CAT_CB_PHONEME,
+                                  stb_staticTorrentPhonemeCallback, t);
         if (ST_FLAGS(t) & STF_ROMANIZING)
-            cat_registerUserCallback(ST_CONCAT(t), CAT_CB_USER_INDEX,
-                                     userIndexCallback, t);
+            cm_registerCallbackB(ST_CONCAT(t), CAT_CB_USER_INDEX,
+                                     stb_staticUserIndexCallback, t);
         else if (ST_FLAGS(t) & STF_WORD_STARTS)
-            cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_START,
-                                      wordCallback, t);
-        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_BREAK,
-                                  synthesisBreakCallback, t);
+            cm_registerCallbackA(ST_CONCAT(t), CAT_CB_WORD_START,
+                                      stb_staticWordCallback, t);
+        cm_registerCallbackA(ST_CONCAT(t), CAT_CB_BREAK,
+                                  stb_staticSynthesisBreakCallback, t);
         if (ST_FLAGS(t) & STF_WORD_MARKS)
-            cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_MARK, 0, t);
+            cm_registerCallbackA(ST_CONCAT(t), CAT_CB_WORD_MARK, 0, t);
         /* The phoneme callback again, exactly as it went in the first time. */
-        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_PHONEME,
-                                  phonemeCallback, t);
+        cm_registerCallbackA(ST_CONCAT(t), CAT_CB_PHONEME,
+                                  stb_staticTorrentPhonemeCallback, t);
 
         ST_DIRECT(t) = 1;
         {
             EngCommand command = (EngCommand)ENG_CALL(t, ENG_COMMAND);
 
             if (command(ST_ENGINE(t), CMD_CONCATENATIVE))
-                postEngineError(t);
+                stb_postEngineError(t);
         }
         ST_DIRECT(t) = 0;
     } else {
-        if (!st_setCurrentState(ST_STATE(t), ST_ENGINE(t), 0))
-            postEngineError(t);
+        if (!es_setCurrentState(ST_STATE(t), ST_ENGINE(t), 0))
+            stb_postEngineError(t);
         tellCaller(t, 0);
     }
 }
@@ -286,12 +286,12 @@ THIS void changeLanguageRun(SynthThread *t, LangIdentifier *lang, int32_t seq)
 
     (void)seq;
 
-    processRemaining(t);
+    stw_processRemaining(t);
     if (ST_PHONBUF(t))
-        sendRemainingPhonemesToUser(t);
+        stb_sendRemainingPhonemesToUser(t);
 
     lock = ST_LOCK(t);
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
 
     if (lang)
         same_engine = (lang->id & LANG_ENGINE_MASK)
@@ -315,7 +315,7 @@ THIS void changeLanguageRun(SynthThread *t, LangIdentifier *lang, int32_t seq)
     }
 
     ST_PENDING(t) -= 1;
-    mutex_release(lock);
+    sy_mutexRelease(lock);
 }
 
 ALIAS("?changeLanguageRun@SynthThread@@AAEXPAVLangIdentifier@@J@Z",

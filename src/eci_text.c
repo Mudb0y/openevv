@@ -77,16 +77,16 @@ typedef struct QueueElement {
 #define VOICE_PARAM(v, i) (*(int32_t *)((char *)(v) + 0x20 + (i) * 4))
 #define VOICE_BYTES       0x50
 
-extern int32_t __stdcall eciAddText2(void *h2, const char *s, int32_t len,
+extern int32_t __stdcall api_add_text(void *h2, const char *s, int32_t len,
                                      int32_t a, int32_t annotate, int32_t b)
     MANGLED("_eciAddText2@24");
-extern int32_t __stdcall eciInsertIndex2(void *h2, int32_t n)
+extern int32_t __stdcall api_insert_index(void *h2, int32_t n)
     MANGLED("_eciInsertIndex2@8");
-extern int32_t __stdcall eciBlock2(void *h2) MANGLED("_eciBlock2@4");
-extern int32_t __stdcall eciUnblock2(void *h2) MANGLED("_eciUnblock2@4");
-extern int32_t __stdcall eciSynthesize2(void *h2)
+extern int32_t __stdcall api_block(void *h2) MANGLED("_eciBlock2@4");
+extern int32_t __stdcall api_unblock(void *h2) MANGLED("_eciUnblock2@4");
+extern int32_t __stdcall api_synthesize(void *h2)
     MANGLED("_eciSynthesize2@4");
-extern int splitLanguageString(char *s, uint8_t *family, uint8_t *dialect,
+extern int lg_splitLanguageString(char *s, uint8_t *family, uint8_t *dialect,
                                uint8_t *extra)
     MANGLED("?splitLanguageString@@YAHPADPAE11@Z");
 extern int realWorld2eci(int32_t realWorld, int32_t which, int32_t value,
@@ -98,7 +98,7 @@ extern int CheckUnicodeHeaderTag(const char *text)
 extern int CheckSSMLFilterActive(void *filterMgr)
     MANGLED("_CheckSSMLFilterActive");
 extern unsigned UniStrlen(const uint16_t *s) MANGLED("?UniStrlen@@YAIPBG@Z");
-extern int ConvertUCS2toUTF8(const uint16_t *in, int n, uint8_t *out,
+extern int u8_convertUCS2toUTF8(const uint16_t *in, int n, uint8_t *out,
                              uint32_t *made)
     MANGLED("?ConvertUCS2toUTF8@@YAHPBGHPAEAAK@Z");
 extern int UnicodeConverter(OldInst *h, const char *text, char **out,
@@ -228,7 +228,7 @@ void et_processAnnotations(void *concat, int32_t *voice, int32_t *env,
 
             w++;
             r++;
-            n = splitLanguageString(text + r, &family, &dialect, &extra);
+            n = lg_splitLanguageString(text + r, &family, &dialect, &extra);
             if (n <= 0)
                 continue;
             if (family < 1 || family > 0x12)
@@ -516,7 +516,7 @@ int et_processManualQueue(OldInst *h)
     e = OI_QHEAD(h);
     if (e) {
         failed = 1;
-        if (!setECIerror(eciBlock2(OI_NEW(h)), h)) {
+        if (!setECIerror(api_block(OI_NEW(h)), h)) {
             blocked = 1;
             failed = 0;
         }
@@ -545,7 +545,7 @@ int et_processManualQueue(OldInst *h)
                                           (int32_t *)OI_VOICE_SAVED(h),
                                           OI_ENV_SAVED(h), 0, 0, 0, e->text);
 
-                rc = setECIerror(eciAddText2(OI_NEW(h), e->text,
+                rc = setECIerror(api_add_text(OI_NEW(h), e->text,
                                              strlen(e->text), 0, annotate,
                                              0), h);
                 /* Text the engine simply had no room for is not a failure. */
@@ -553,7 +553,7 @@ int et_processManualQueue(OldInst *h)
                     failed = 1;
                 free(e->text);
             } else if (e->kind == 1) {
-                if (setECIerror(eciInsertIndex2(OI_NEW(h),
+                if (setECIerror(api_insert_index(OI_NEW(h),
                                                 (int32_t)(size_t)e->text), h))
                     failed = 1;
             }
@@ -574,7 +574,7 @@ int et_processManualQueue(OldInst *h)
 
 unblock:
     if (blocked)
-        setECIerror(eciUnblock2(OI_NEW(h)), h);
+        setECIerror(api_unblock(OI_NEW(h)), h);
     return ok;
 }
 
@@ -615,7 +615,7 @@ int __stdcall et_insertIndex(OldInst *h, int32_t n)
 
     if (!ev_sendParameters(inst))
         return 0;
-    if (setECIerror(eciInsertIndex2(OI_NEW(inst), n), inst))
+    if (setECIerror(api_insert_index(OI_NEW(inst), n), inst))
         return 0;
     return 1;
 }
@@ -636,7 +636,7 @@ int __stdcall et_synthesize(OldInst *h)
 
     if (!et_processManualQueue(inst))
         return 0;
-    return setECIerror(eciSynthesize2(OI_NEW(inst)), inst) == 0;
+    return setECIerror(api_synthesize(OI_NEW(inst)), inst) == 0;
 }
 
 /* Everything the entry point below may have allocated on its way through. */
@@ -701,7 +701,7 @@ int __stdcall et_addText(OldInst *h, const char *text)
         mine = 1;
         memset(s, 0, n * 2);
         made = n * 2;
-        ConvertUCS2toUTF8(u, n, (uint8_t *)s, &made);
+        u8_convertUCS2toUTF8(u, n, (uint8_t *)s, &made);
         s[made] = 0;
     } else if (UnicodeConverter(h, text, &s, 1)) {
         OI_REFUSED(inst) = 0x1000;
@@ -785,11 +785,11 @@ int __stdcall et_addText(OldInst *h, const char *text)
         et_processAnnotations(OI_CONCAT(inst), (int32_t *)OI_VOICE(inst),
                               OI_ENV(inst), (int32_t *)OI_VOICE_SAVED(inst),
                               OI_ENV_SAVED(inst), OI_ENV(inst)[8], copy);
-        rc = setECIerror(eciAddText2(OI_NEW(inst), copy, strlen(copy), 0,
+        rc = setECIerror(api_add_text(OI_NEW(inst), copy, strlen(copy), 0,
                                      annotate, 0), inst);
         free(copy);
     } else {
-        rc = setECIerror(eciAddText2(OI_NEW(inst), s, strlen(s), 0, annotate,
+        rc = setECIerror(api_add_text(OI_NEW(inst), s, strlen(s), 0, annotate,
                                      0), inst);
     }
 

@@ -107,9 +107,9 @@ static int stb_queueIsEmpty(void *q)
     return c->vt->isEmpty(c);
 }
 
-extern THIS int32_t audio_convertSamples(void *c, SDATA in, SDATA **out)
+extern THIS int32_t pcm_cvt_convert(void *c, SDATA in, SDATA **out)
     MANGLED("?convertSamples@AudioConverter@@QAEJUSDATA@@PAPAU2@@Z");
-extern THIS void audio_storeHistory(void *c)
+extern THIS void pcm_cvt_storeHistory(void *c)
     MANGLED("?storeHistory@AudioConverter@@QAEXXZ");
 
 extern THIS int32_t snd_write(void *s, const int32_t *samples, uint32_t n)
@@ -119,61 +119,61 @@ extern THIS int32_t snd_insertIndex(void *s, int32_t id)
 extern THIS int32_t snd_close(void *s)
     MANGLED("?close@SoundThread@@QAEHXZ");
 
-extern THIS int32_t app_postUser(void *a, int32_t what, int32_t value)
+extern THIS int32_t aq_postUser(void *a, int32_t what, int32_t value)
     MANGLED("?postUser@ETIappMessageQueue@@QAEHJJ@Z");
-extern THIS int32_t app_sendUser(void *a, int32_t what, int32_t value)
+extern THIS int32_t aq_sendUser(void *a, int32_t what, int32_t value)
     MANGLED("?sendUser@ETIappMessageQueue@@QAEHJJ@Z");
 
-extern THIS int32_t event_signal(void *e)
+extern THIS int32_t sy_eventSignal(void *e)
     MANGLED("?signal@ETIEvent@@QAEHXZ");
 
-extern THIS uint32_t idx_newIndex(void *m)
+extern THIS uint32_t sti_newIndex(void *m)
     MANGLED("?newIndex@IndexManager@@QAEKXZ");
-extern THIS Index *idx_getIndex(void *m, uint32_t id)
+extern THIS Index *sti_getIndex(void *m, uint32_t id)
     MANGLED("?getIndex@IndexManager@@QAEPAUIndex@@K@Z");
-extern THIS void idx_deleteIndex(void *m, uint32_t id)
+extern THIS void sti_deleteIndex(void *m, uint32_t id)
     MANGLED("?deleteIndex@IndexManager@@QAEXK@Z");
 
-extern THIS uint32_t idxq_reduceLeadTime(void *q, uint32_t n)
+extern THIS uint32_t iq_reduceLeadTime(void *q, uint32_t n)
     MANGLED("?reduceLeadTime@IndexQueue@@QAEKK@Z");
-extern THIS int32_t idxq_indexDue(const void *q)
+extern THIS int32_t sti_indexDue(const void *q)
     MANGLED("?indexDue@IndexQueue@@QBEHXZ");
-extern THIS uint32_t idxq_remove(void *q)
+extern THIS uint32_t iq_remove(void *q)
     MANGLED("?remove@IndexQueue@@QAEHXZ");
 
-extern THIS int32_t cat_inUse(void *c)
+extern THIS int32_t cm_usingConcatenativeEngine(void *c)
     MANGLED("?usingConcatenativeEngine@ConcatenationManager@@QAEHXZ");
-extern THIS int32_t cat_voiceIsConcatenative(void *c, int32_t voice)
+extern THIS int32_t cm_voiceIsConcatenative(void *c, int32_t voice)
     MANGLED("?voiceIsConcatenative@ConcatenationManager@@QAEHH@Z");
-extern THIS int32_t cat_setParam1(void *c, uint32_t which, int32_t value)
+extern THIS int32_t cm_setTorrentParam1(void *c, uint32_t which, int32_t value)
     MANGLED("?setTorrentParam1@ConcatenationManager@@QAEHKJ@Z");
-extern THIS int32_t cat_setParam2(void *c, uint32_t which, int32_t value)
+extern THIS int32_t cm_setTorrentParam2(void *c, uint32_t which, int32_t value)
     MANGLED("?setTorrentParam2@ConcatenationManager@@QAEHKJ@Z");
-extern THIS void cat_bufferSPR(void *c, const char *text, int32_t len)
+extern THIS void cm_bufferSPR(void *c, const char *text, int32_t len)
     MANGLED("?bufferSPR@ConcatenationManager@@QAEXPBDH@Z");
-extern THIS void cat_registerIndexCallback(void *c, uint32_t which,
+extern THIS void cm_registerCallbackA(void *c, uint32_t which,
                                            IndexCallback cb, void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXKP6AXHPAX@Z0@Z");
-extern THIS void cat_registerUserCallback(void *c, uint32_t which,
+extern THIS void cm_registerCallbackB(void *c, uint32_t which,
                                           UserCallback cb, void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXKP6AXPAX@Z0@Z");
-extern THIS void cat_registerSynthCallback(void *c, SynthCallback cb,
+extern THIS void cm_registerCallbackC(void *c, SynthCallback cb,
                                            void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXP6AXHPAJPAX@Z1@Z");
 
-extern THIS void st_paramFromEngine(void *s, int32_t which, int32_t value)
+extern THIS void es_paramFromEngine(void *s, int32_t which, int32_t value)
     MANGLED("?paramFromEngine@ECIstate@@QAEXJJ@Z");
-extern THIS int32_t st_getParam(void *s, int32_t k, int32_t p, int32_t *out)
+extern THIS int32_t es_getParam(void *s, int32_t k, int32_t p, int32_t *out)
     MANGLED("?getParam@ECIstate@@QAEJJJPAJ@Z");
 
-extern THIS int32_t isOldEngine(SynthThread *t)
+extern THIS int32_t stw_isOldEngine(SynthThread *t)
     MANGLED("?isOldEngine@SynthThread@@QAEHXZ");
-extern THIS void removeCharsFromEngine(SynthThread *t, int32_t n)
+extern THIS void stw_removeCharsFromEngine(SynthThread *t, int32_t n)
     MANGLED("?removeCharsFromEngine@SynthThread@@QAEXH@Z");
 
 /* Every phoneme the engine can name, kept once for the whole library rather
    than once per thread. */
-extern void *m_phonemes MANGLED("?m_phonemes@SynthThread@@0PAVPhonemes@@A");
+extern void *st_phonemes MANGLED("?m_phonemes@SynthThread@@0PAVPhonemes@@A");
 extern THIS int32_t ph_getPhoneme(void *p, LangIdentifier *l, int32_t which)
     MANGLED("?getPhoneme@Phonemes@@QAEJPAVLangIdentifier@@J@Z");
 
@@ -210,7 +210,7 @@ THIS void stb_postEngineError(SynthThread *t)
         return;
     if (!LISTENING(t))
         return;
-    app_postUser(ST_APP(t), APP_ENGINE_ERROR, 0);
+    aq_postUser(ST_APP(t), APP_ENGINE_ERROR, 0);
     ST_ENGERR(t) = 1;
 }
 
@@ -220,7 +220,7 @@ THIS void stb_postRomanizerError(SynthThread *t, int32_t language)
         return;
     if (!LISTENING(t))
         return;
-    app_postUser(ST_APP(t),
+    aq_postUser(ST_APP(t),
                  language ? APP_ROM_LANG_ERROR : APP_ROM_ERROR, 0);
     ST_ROMERR(t) = 1;
 }
@@ -231,12 +231,12 @@ THIS void stb_postSoundError(SynthThread *t)
 {
     void *lock = ST_LOCK(t);
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     if (LISTENING(t))
-        app_postUser(ST_APP(t), APP_SOUND_ERROR, 0);
+        aq_postUser(ST_APP(t), APP_SOUND_ERROR, 0);
     snd_close(ST_SOUND(t));
     ST_SILENT(t) = 1;
-    mutex_release(lock);
+    sy_mutexRelease(lock);
 }
 
 /* ---- filling the caller's buffers ---- */
@@ -254,7 +254,7 @@ THIS void stb_sendSamplesToUser(SynthThread *t, int32_t count,
         ST_SAMPHELD(t) += 1;
         if (ST_SAMPHELD(t) * 2 == ST_SAMPROOM(t)) {
             if (LISTENING(t))
-                app_sendUser(ST_APP(t), APP_SAMPLES, ST_SAMPHELD(t) * 2);
+                aq_sendUser(ST_APP(t), APP_SAMPLES, ST_SAMPHELD(t) * 2);
             ST_SAMPHELD(t) = 0;
         }
     }
@@ -267,7 +267,7 @@ THIS void stb_sendRemainingSamplesToUser(SynthThread *t)
     if (ST_SAMPHELD(t) <= 0)
         return;
     if (LISTENING(t))
-        app_sendUser(ST_APP(t), APP_SAMPLES, ST_SAMPHELD(t) * 2);
+        aq_sendUser(ST_APP(t), APP_SAMPLES, ST_SAMPHELD(t) * 2);
     ST_SAMPHELD(t) = 0;
 }
 
@@ -329,7 +329,7 @@ THIS void stb_sendPhonemesToUser(SynthThread *t)
         }
         if (LISTENING(t)) {
             stb_copyPhonemes(t, wide);
-            app_sendUser(ST_APP(t), APP_PHONEMES, ST_PHONHELD(t));
+            aq_sendUser(ST_APP(t), APP_PHONEMES, ST_PHONHELD(t));
         }
         ST_PHONHELD(t) = 0;
     }
@@ -343,7 +343,7 @@ THIS void stb_sendRemainingPhonemesToUser(SynthThread *t)
         return;
     if (LISTENING(t)) {
         stb_copyPhonemes(t, (ST_ENGINE_ID(t) & LANG_WIDE_PHONEMES) != 0);
-        app_sendUser(ST_APP(t), APP_PHONEMES, ST_PHONHELD(t));
+        aq_sendUser(ST_APP(t), APP_PHONEMES, ST_PHONHELD(t));
     }
     ST_PHONHELD(t) = 0;
 }
@@ -359,46 +359,46 @@ THIS void stb_postIndexToUser(SynthThread *t, int32_t id)
 
     if (!id)
         return;
-    ix = idx_getIndex(ST_INDEXMGR(t), (uint32_t)id);
+    ix = sti_getIndex(ST_INDEXMGR(t), (uint32_t)id);
     switch (ix->kind) {
     case MARK_PLAIN:
         if (LISTENING(t))
-            app_postUser(ST_APP(t), APP_INDEX, ix->payload);
+            aq_postUser(ST_APP(t), APP_INDEX, ix->payload);
         break;
 
     case MARK_SYNCHRONISE:
-        event_signal(ST_SYNCED(t));
+        sy_eventSignal(ST_SYNCED(t));
         break;
 
     case MARK_STRING:
         if (LISTENING(t))
-            app_postUser(ST_APP(t), APP_STRING_INDEX, ix->payload);
+            aq_postUser(ST_APP(t), APP_STRING_INDEX, ix->payload);
         break;
 
     case MARK_AUDIO:
         if (LISTENING(t))
-            app_postUser(ST_APP(t), APP_AUDIO_INDEX, ix->payload);
+            aq_postUser(ST_APP(t), APP_AUDIO_INDEX, ix->payload);
         break;
 
     case MARK_WORD:
         if (LISTENING(t))
-            app_postUser(ST_APP(t), APP_WORD_INDEX, ix->payload);
+            aq_postUser(ST_APP(t), APP_WORD_INDEX, ix->payload);
         break;
 
     case MARK_PHONEME:
         /* The mark carries the engine's own number for the phoneme; what
            goes to the caller is the name it goes under. */
-        ix->payload = ph_getPhoneme(m_phonemes,
+        ix->payload = ph_getPhoneme(st_phonemes,
                                     (LangIdentifier *)ST_AT(t, 0x2e0),
                                     ix->payload);
         if (ix->payload && LISTENING(t))
-            app_postUser(ST_APP(t), APP_PHONEME_INDEX, ix->payload);
+            aq_postUser(ST_APP(t), APP_PHONEME_INDEX, ix->payload);
         break;
 
     default:
         break;
     }
-    idx_deleteIndex(ST_INDEXMGR(t), (uint32_t)id);
+    sti_deleteIndex(ST_INDEXMGR(t), (uint32_t)id);
 }
 
 /* ---- what the engine and the concatenative side call ---- */
@@ -426,7 +426,7 @@ THIS void stb_synthCallback(SynthThread *t, int32_t count, int32_t *samples)
 
         in.at = samples;
         in.bytes = (uint32_t)count << 2;
-        if (audio_convertSamples(ST_CONVERTER(t), in, &out) == 0) {
+        if (pcm_cvt_convert(ST_CONVERTER(t), in, &out) == 0) {
             samples = (int32_t *)out->at;
             count = (int32_t)(out->bytes >> 2);
         }
@@ -439,7 +439,7 @@ THIS void stb_synthCallback(SynthThread *t, int32_t count, int32_t *samples)
     if (ST_SAMPBUF(t))
         stb_sendSamplesToUser(t, count, samples);
     if (ST_CONVERTER(t))
-        audio_storeHistory(ST_CONVERTER(t));
+        pcm_cvt_storeHistory(ST_CONVERTER(t));
 }
 
 /* The engine has reached a mark. Where it goes depends on whether there is a
@@ -471,13 +471,13 @@ THIS void stb_phonemeCallback(SynthThread *t, int32_t phoneme, uint32_t k)
 {
     uint32_t id;
 
-    if (!isOldEngine(t)) {
+    if (!stw_isOldEngine(t)) {
         stb_torrentPhonemeCallback(t, phoneme);
         return;
     }
-    id = idx_newIndex(ST_INDEXMGR(t));
+    id = sti_newIndex(ST_INDEXMGR(t));
     if (id) {
-        Index *ix = idx_getIndex(ST_INDEXMGR(t), id);
+        Index *ix = sti_getIndex(ST_INDEXMGR(t), id);
         EngPhonemeIndex mark =
             (EngPhonemeIndex)ENG_CALL(t, ENG_PHONEME_INDEX);
 
@@ -486,7 +486,7 @@ THIS void stb_phonemeCallback(SynthThread *t, int32_t phoneme, uint32_t k)
         if (mark(ST_ENGINE(t), id, k))
             stb_postEngineError(t);
     } else if (LISTENING(t)) {
-        app_postUser(ST_APP(t), APP_INDEX_LOST, 0);
+        aq_postUser(ST_APP(t), APP_INDEX_LOST, 0);
     }
 }
 
@@ -498,11 +498,11 @@ THIS void stb_torrentPhonemeCallback(SynthThread *t, int32_t phoneme)
     int32_t wanted = 0;
     int32_t name;
 
-    st_getParam(ST_STATE(t), 0, ECI_PARAM_PHONEMES, &wanted);
+    es_getParam(ST_STATE(t), 0, ECI_PARAM_PHONEMES, &wanted);
     if (!wanted)
         return;
 
-    name = ph_getPhoneme(m_phonemes, (LangIdentifier *)ST_AT(t, 0x2e0),
+    name = ph_getPhoneme(st_phonemes, (LangIdentifier *)ST_AT(t, 0x2e0),
                          phoneme);
     if (!phoneme)
         return;
@@ -511,7 +511,7 @@ THIS void stb_torrentPhonemeCallback(SynthThread *t, int32_t phoneme)
     if (!name)
         return;
 
-    app_postUser(ST_APP(t), APP_PHONEME_INDEX, name);
+    aq_postUser(ST_APP(t), APP_PHONEME_INDEX, name);
     if (ST_SAMPBUF(t))
         stb_sendRemainingSamplesToUser(t);
     if (ST_PHONBUF(t))
@@ -533,9 +533,9 @@ THIS void stb_wordCallback(SynthThread *t, int32_t n)
         ST_LASTMARK(t) = 0;
 
     while (!stb_queueIsEmpty(ST_INDEXQ(t)) && !done) {
-        n -= (int32_t)idxq_reduceLeadTime(ST_INDEXQ(t), (uint32_t)n);
-        if (idxq_indexDue(ST_INDEXQ(t))) {
-            uint32_t id = idxq_remove(ST_INDEXQ(t));
+        n -= (int32_t)iq_reduceLeadTime(ST_INDEXQ(t), (uint32_t)n);
+        if (sti_indexDue(ST_INDEXQ(t))) {
+            uint32_t id = iq_remove(ST_INDEXQ(t));
             EngInsertIndex insert =
                 (EngInsertIndex)ENG_CALL(t, ENG_INSERT_INDEX);
 
@@ -550,10 +550,10 @@ THIS void stb_wordCallback(SynthThread *t, int32_t n)
 /* A word mark the engine itself will report back when it reaches it. */
 THIS void stb_wordIndexCallback(SynthThread *t, int32_t where)
 {
-    uint32_t id = idx_newIndex(ST_INDEXMGR(t));
+    uint32_t id = sti_newIndex(ST_INDEXMGR(t));
 
     if (id) {
-        Index *ix = idx_getIndex(ST_INDEXMGR(t), id);
+        Index *ix = sti_getIndex(ST_INDEXMGR(t), id);
         EngInsertIndex insert = (EngInsertIndex)ENG_CALL(t, ENG_INSERT_INDEX);
 
         ix->kind = MARK_WORD;
@@ -580,9 +580,9 @@ THIS void stb_userIndexCallback(SynthThread *t)
         note->kind = 0;
     }
 
-    id = idx_newIndex(ST_INDEXMGR(t));
+    id = sti_newIndex(ST_INDEXMGR(t));
     if (id) {
-        Index *ix = idx_getIndex(ST_INDEXMGR(t), id);
+        Index *ix = sti_getIndex(ST_INDEXMGR(t), id);
         EngInsertIndex insert = (EngInsertIndex)ENG_CALL(t, ENG_INSERT_INDEX);
 
         ix->kind = note->kind;
@@ -602,7 +602,7 @@ THIS void stb_synthesisBreakCallback(SynthThread *t, int32_t where)
     if (!ST_SAMPBUF(t))
         return;
     stb_sendRemainingSamplesToUser(t);
-    app_postUser(ST_APP(t), APP_BREAK, where);
+    aq_postUser(ST_APP(t), APP_BREAK, where);
 }
 
 /* The engine met an annotation in the text and acted on it. The state block
@@ -610,15 +610,15 @@ THIS void stb_synthesisBreakCallback(SynthThread *t, int32_t where)
    be passed on to the concatenative side as well. */
 THIS void stb_annoCallback(SynthThread *t, int32_t param, int32_t value)
 {
-    st_paramFromEngine(ST_STATE(t), param, value);
+    es_paramFromEngine(ST_STATE(t), param, value);
     switch (param) {
     case ANNO_VOLUME:
-        if (ST_CONCAT(t) && cat_inUse(ST_CONCAT(t)))
-            cat_setParam1(ST_CONCAT(t), (uint32_t)param, (value << 10) / 100);
+        if (ST_CONCAT(t) && cm_usingConcatenativeEngine(ST_CONCAT(t)))
+            cm_setTorrentParam1(ST_CONCAT(t), (uint32_t)param, (value << 10) / 100);
         break;
     case ANNO_PARAM2:
-        if (ST_CONCAT(t) && cat_inUse(ST_CONCAT(t)))
-            cat_setParam2(ST_CONCAT(t), (uint32_t)param, value);
+        if (ST_CONCAT(t) && cm_usingConcatenativeEngine(ST_CONCAT(t)))
+            cm_setTorrentParam2(ST_CONCAT(t), (uint32_t)param, value);
         break;
     default:
         break;
@@ -646,7 +646,7 @@ THIS void stb_enhancedSPRCallback(SynthThread *t)
         if (fetch(ST_ENGINE(t), line, 0x64, &got)) {
             stb_postEngineError(t);
         } else if (!ST_DIRECT(t)) {
-            cat_bufferSPR(ST_CONCAT(t), line, got);
+            cm_bufferSPR(ST_CONCAT(t), line, got);
             break;
         } else {
             int32_t i;
@@ -661,7 +661,7 @@ THIS void stb_enhancedSPRCallback(SynthThread *t)
                     continue;
                 if (n > (uint32_t)ST_SAMPLES(t))
                     continue;
-                removeCharsFromEngine(t, (int32_t)n);
+                stw_removeCharsFromEngine(t, (int32_t)n);
             }
         }
     } while (got != 0);
@@ -676,24 +676,24 @@ THIS void stb_voiceChangeCallback(SynthThread *t, int32_t voice, int16_t *ok,
 {
     if (!ST_CONCAT(t))
         return;
-    if (!cat_voiceIsConcatenative(ST_CONCAT(t), voice)) {
+    if (!cm_voiceIsConcatenative(ST_CONCAT(t), voice)) {
         *ok = 0;
         return;
     }
 
-    cat_registerSynthCallback(ST_CONCAT(t), stb_staticSynthCallback, t);
-    cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_PHONEME,
+    cm_registerCallbackC(ST_CONCAT(t), stb_staticSynthCallback, t);
+    cm_registerCallbackA(ST_CONCAT(t), CAT_CB_PHONEME,
                               stb_staticTorrentPhonemeCallback, t);
     if (ST_FLAGS(t) & STF_ROMANIZING)
-        cat_registerUserCallback(ST_CONCAT(t), CAT_CB_USER_INDEX,
+        cm_registerCallbackB(ST_CONCAT(t), CAT_CB_USER_INDEX,
                                  stb_staticUserIndexCallback, t);
     else if (ST_FLAGS(t) & STF_WORD_STARTS)
-        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_START,
+        cm_registerCallbackA(ST_CONCAT(t), CAT_CB_WORD_START,
                                   stb_staticWordCallback, t);
     if (ST_FLAGS(t) & STF_WORD_MARKS)
-        cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_WORD_MARK,
+        cm_registerCallbackA(ST_CONCAT(t), CAT_CB_WORD_MARK,
                                   stb_staticWordIndexCallback, t);
-    cat_registerIndexCallback(ST_CONCAT(t), CAT_CB_BREAK,
+    cm_registerCallbackA(ST_CONCAT(t), CAT_CB_BREAK,
                               stb_staticSynthesisBreakCallback, t);
 
     *ok = 1;
@@ -702,10 +702,10 @@ THIS void stb_voiceChangeCallback(SynthThread *t, int32_t voice, int16_t *ok,
     *speed = *(int16_t *)((char *)ST_CONCAT(t) + 0x2b0);
     *volume = *(int16_t *)((char *)ST_CONCAT(t) + 0x2bc);
 
-    cat_setParam1(ST_CONCAT(t), CAT_SPEED, *speed);
-    cat_setParam1(ST_CONCAT(t), CAT_PITCH, *pitch);
-    cat_setParam1(ST_CONCAT(t), CAT_FLUCTUATION, *fluctuation);
-    cat_setParam1(ST_CONCAT(t), CAT_VOLUME, (*volume << 10) / 100);
+    cm_setTorrentParam1(ST_CONCAT(t), CAT_SPEED, *speed);
+    cm_setTorrentParam1(ST_CONCAT(t), CAT_PITCH, *pitch);
+    cm_setTorrentParam1(ST_CONCAT(t), CAT_FLUCTUATION, *fluctuation);
+    cm_setTorrentParam1(ST_CONCAT(t), CAT_VOLUME, (*volume << 10) / 100);
 }
 
 /* Text the concatenative side should keep for later. */
@@ -713,7 +713,7 @@ THIS void stb_sendEnhancedSPRToTorrentManager(SynthThread *t, char *text,
                                           int32_t len)
 {
     if (ST_CONCAT(t))
-        cat_bufferSPR(ST_CONCAT(t), text, len);
+        cm_bufferSPR(ST_CONCAT(t), text, len);
 }
 
 /* ---- the plain functions the other side holds ----

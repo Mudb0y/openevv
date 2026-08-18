@@ -63,9 +63,9 @@ extern THIS int32_t es_setParam(void *s, int32_t k, int32_t p, int32_t v,
     MANGLED("?setParam@ECIstate@@QAEJJJJPAVSynthThread@@J@Z");
 extern THIS int32_t st_addText(void *t, char *s, uint32_t n, int32_t flag)
     MANGLED("?addText@SynthThread@@QAEJPADKH@Z");
-extern THIS char *st_filterText(void *t, const char *s, int32_t n)
+extern THIS char *stw_filterText(void *t, const char *s, int32_t n)
     MANGLED("?filterText@SynthThread@@QAEPADPBDJ@Z");
-extern THIS int32_t st_insertIndex(void *t, char *s)
+extern THIS int32_t st_insertStringIndex(void *t, char *s)
     MANGLED("?insertIndex@SynthThread@@QAEJPAD@Z");
 extern THIS int32_t st_insertAudioIndex(void *t, char *s)
     MANGLED("?insertAudioIndex@SynthThread@@QAEJPAD@Z");
@@ -473,7 +473,7 @@ static THIS int32_t tf_processText(TextFilter *f, char *text, uint32_t len,
                 got = tf_stringCallback(f, p, &skip, &mark);
                 if (got == 0 && skip > 0 && mark != 0) {
                     flushWords(f, &last, p, flag, &stop, &rc);
-                    st_insertIndex(f->thread, mark);
+                    st_insertStringIndex(f->thread, mark);
                     cpp_delete(mark);
                     blankOut(last, skip, &p);
                 } else {
@@ -527,7 +527,7 @@ static int32_t runThroughFilters(TextFilter *f, char *from, char *to,
         memset(copy, 0, room);
         strncpy(copy, from, room - 1);
     }
-    filtered = st_filterText(f->thread, copy, 0);
+    filtered = stw_filterText(f->thread, copy, 0);
     n = filtered ? (uint32_t)strlen(filtered) : 0;
     err = tf_processText(f, filtered, n, flag);
     if (copy != 0)

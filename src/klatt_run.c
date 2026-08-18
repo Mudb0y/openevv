@@ -94,10 +94,10 @@ extern void vdelCleanup(DeltaThis *d) MANGLED("_vdelCleanup");
 extern void logicalIOCleanup(DeltaThis *d) MANGLED("_logicalIOCleanup");
 extern char *dupstr(const char *s) MANGLED("__strdup");
 
-extern THIS void eListReset(void *self) MANGLED("?reset@EList@@QAEXXZ");
-extern THIS int indexQueueRemove(void *self)
+extern THIS void el_listReset(void *self) MANGLED("?reset@EList@@QAEXXZ");
+extern THIS int iq_remove(void *self)
     MANGLED("?remove@IndexQueue@@QAEHXZ");
-extern THIS int indexQueueAddOffsetFromLast(void *self, int32_t index,
+extern THIS int iq_addOffsetFromLast(void *self, int32_t index,
                                             uint32_t offset)
     MANGLED("?addOffsetFromLast@IndexQueue@@QAEHHK@Z");
 
@@ -304,7 +304,7 @@ int insertDelayedSynthIndex(DeltaThis *d, int32_t index)
         && DL_MARKED(lang) == DL_SPOKEN(lang))
         return insertSynthIndex(d, index);
 
-    rc = indexQueueAddOffsetFromLast(
+    rc = iq_addOffsetFromLast(
              SD_QUEUE(DL_DEVICE(lang)), index,
              (DL_QUEUED(lang) - DL_MARKED(lang)) * DL_RATE(lang)
                  / MS_PER_SECOND);
@@ -330,7 +330,7 @@ void resetDelayedSynthQueue(DeltaThis *d)
     void *q = SD_QUEUE(DL_DEVICE(DT_LANG(d)));
 
     *(int32_t *)((char *)q + 0x0c) = 0;
-    eListReset(q);
+    el_listReset(q);
 }
 
 /* Let every held mark go at once. */
@@ -342,7 +342,7 @@ int flushDelayedSynthQueue(DeltaThis *d)
 
         if (isEmpty(q))
             return 1;
-        if (!insertSynthIndex(d, indexQueueRemove(q)))
+        if (!insertSynthIndex(d, iq_remove(q)))
             return 0;
     }
 }
@@ -438,7 +438,7 @@ static const int32_t last_glob[LAST_GLOB_WORDS] = { 1, 0, 0, 5, 8, 1 };
 
 extern void *cpp_new_bytes(uint32_t n) MANGLED("??2@YAPAXI@Z");
 THIS void *soundDeviceInfoCtor(void *self);
-extern THIS void *indexQueueCtor(void *self)
+extern THIS void *sti_indexQueueCtor(void *self)
     MANGLED("??0IndexQueue@@QAE@XZ");
 
 /* What the language record keeps of the last utterance: the synthesiser's
@@ -663,9 +663,9 @@ extern int sendStreamParameters(DeltaThis *d, void *a, void *b, int32_t c,
                                 int32_t e, int32_t f, int32_t g, int32_t h,
                                 int32_t i, void *pa, const int32_t *frame)
     MANGLED("_sendStreamParameters");
-extern THIS uint32_t indexQueueReduceLeadTime(void *self, uint32_t n)
+extern THIS uint32_t iq_reduceLeadTime(void *self, uint32_t n)
     MANGLED("?reduceLeadTime@IndexQueue@@QAEKK@Z");
-extern THIS int indexQueueIndexDue(void *self)
+extern THIS int sti_indexDue(void *self)
     MANGLED("?indexDue@IndexQueue@@QBEHXZ");
 
 /* Work out where every parameter's values are coming from.
@@ -748,14 +748,14 @@ int ourKlattCallback(void *user, KlattSamples *s)
         if (isEmpty(q))
             piece = s->count - done;
         else
-            piece = indexQueueReduceLeadTime(q, s->count - done);
+            piece = iq_reduceLeadTime(q, s->count - done);
 
         if (SD_SAMPLE_CB(dev))
             ((SampleFn)SD_SAMPLE_CB(dev))(piece, s->samples + done,
                                           SD_SAMPLE_DATA(dev));
 
-        while (indexQueueIndexDue(q)) {
-            if (!insertSynthIndex(d, indexQueueRemove(q)))
+        while (sti_indexDue(q)) {
+            if (!insertSynthIndex(d, iq_remove(q)))
                 return 0;
         }
         done += piece;
@@ -975,7 +975,7 @@ THIS void *soundDeviceInfoCtor(void *self)
 
     for (i = 0; i < 5; i++)
         ((int32_t *)v)[i] = 0;
-    indexQueueCtor(v + 0x14);
+    sti_indexQueueCtor(v + 0x14);
     SD_SLEEPCYCLE(v) = -1;
     for (i = 0x28; i <= 0x50; i += 4)
         *(int32_t *)(v + i) = 0;

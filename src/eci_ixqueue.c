@@ -41,7 +41,7 @@ typedef THIS int32_t    (*IqEmptyFn)(IndexQueue *q);
 typedef THIS IndexPair *(*IqHeadFn)(IndexQueue *q);
 typedef THIS int32_t    (*IqAddFn)(IndexQueue *q, IndexPair p);
 
-extern THIS void iq_removeHead(IndexQueue *q) MANGLED("?removeHead@ESList@@UAEXXZ");
+extern THIS void el_removeHead(IndexQueue *q) MANGLED("?removeHead@ESList@@UAEXXZ");
 
 static IndexPair *iq_head(IndexQueue *q)
 {
@@ -105,7 +105,7 @@ THIS int32_t iq_remove(IndexQueue *q)
     int32_t index = iq_head(q)->index;
 
     q->total -= iq_head(q)->lead;
-    iq_removeHead(q);
+    el_removeHead(q);
     return index;
 }
 

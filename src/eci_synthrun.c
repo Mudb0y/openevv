@@ -8,7 +8,7 @@
 
    Nearly all of them begin the same way too, by flushing whatever text is
    half-processed. A parameter change has to land between words rather than
-   inside one, and processRemaining is what makes sure of that.
+   inside one, and stw_processRemaining is what makes sure of that.
 
    The two long ones, addTextRun and changeLanguageRun, are not here yet;
    they are still the original's.
@@ -69,64 +69,64 @@ typedef ENGCALL void (*EngSetPhonemes)(void *engine, int32_t on);
 typedef ENGCALL void (*EngWordCallback)(void *engine, IndexCallback cb,
                                         void *param);
 
-extern THIS void processRemaining(SynthThread *t)
+extern THIS void stw_processRemaining(SynthThread *t)
     MANGLED("?processRemaining@SynthThread@@QAEXXZ");
-extern THIS void shutDown(SynthThread *t)
+extern THIS void stw_shutDown(SynthThread *t)
     MANGLED("?shutDown@SynthThread@@AAEXXZ");
-extern THIS void stopSynthesis(SynthThread *t, int32_t seq)
+extern THIS void stw_stopSynthesis(SynthThread *t, int32_t seq)
     MANGLED("?stopSynthesis@SynthThread@@AAEXJ@Z");
-extern THIS void postRomanizerError(SynthThread *t, int32_t which)
+extern THIS void stb_postRomanizerError(SynthThread *t, int32_t which)
     MANGLED("?postRomanizerError@SynthThread@@AAEXH@Z");
-extern THIS void postEngineError(SynthThread *t)
+extern THIS void stb_postEngineError(SynthThread *t)
     MANGLED("?postEngineError@SynthThread@@AAEXXZ");
-extern THIS int32_t newFilter(SynthThread *t, int32_t engine, int32_t which,
+extern THIS int32_t stm_newFilter(SynthThread *t, int32_t engine, int32_t which,
                               void **out)
     MANGLED("?newFilter@SynthThread@@QAEJJJPAPAX@Z");
-extern THIS int32_t activateFilter(SynthThread *t, void *f)
+extern THIS int32_t stm_activateFilter(SynthThread *t, void *f)
     MANGLED("?activateFilter@SynthThread@@QAEJPAX@Z");
-extern THIS int32_t deactivateFilter(SynthThread *t, void *f)
+extern THIS int32_t stm_deactivateFilter(SynthThread *t, void *f)
     MANGLED("?deactivateFilter@SynthThread@@QAEJPAX@Z");
-extern THIS int32_t deleteFilter(SynthThread *t, void *f)
+extern THIS int32_t stm_deleteFilter(SynthThread *t, void *f)
     MANGLED("?deleteFilter@SynthThread@@QAEJPAX@Z");
-extern THIS int32_t createAudioConverter(SynthThread *t, void *format)
+extern THIS int32_t stw_createAudioConverter(SynthThread *t, void *format)
     MANGLED("?createAudioConverter@SynthThread@@AAEJAAUECIsampleFormat@@@Z");
-extern void wordIndexCallback(int32_t index, void *param)
+extern void stb_staticWordIndexCallback(int32_t index, void *param)
     MANGLED("?staticWordIndexCallback@SynthThread@@CAXHPAX@Z");
 
-extern THIS int32_t cat_setParam(void *c, uint32_t which, int32_t value)
+extern THIS int32_t cm_setTorrentParam1(void *c, uint32_t which, int32_t value)
     MANGLED("?setTorrentParam1@ConcatenationManager@@QAEHKJ@Z");
-extern THIS int32_t cat_voiceIsConcatenative(void *c, int32_t voice)
+extern THIS int32_t cm_voiceIsConcatenative(void *c, int32_t voice)
     MANGLED("?voiceIsConcatenative@ConcatenationManager@@QAEHH@Z");
-extern THIS uint32_t cat_getActiveSampleRate(void *c)
+extern THIS uint32_t cm_getActiveSampleRate(void *c)
     MANGLED("?getActiveSampleRate@ConcatenationManager@@QAEIXZ");
-extern THIS int32_t cat_engineSupports(void *c, uint32_t a, uint32_t b)
+extern THIS int32_t cm_engineSupports(void *c, uint32_t a, uint32_t b)
     MANGLED("?engineSupportsConcatenative@ConcatenationManager@@QAEHKK@Z");
-extern THIS int32_t cat_inUse(void *c)
+extern THIS int32_t cm_usingConcatenativeEngine(void *c)
     MANGLED("?usingConcatenativeEngine@ConcatenationManager@@QAEHXZ");
-extern THIS void cat_registerCallback(void *c, uint32_t which,
+extern THIS void cm_registerCallbackA(void *c, uint32_t which,
                                       IndexCallback cb, void *param)
     MANGLED("?registerCallback@ConcatenationManager@@QAEXKP6AXHPAX@Z0@Z");
 
-extern THIS int32_t rom_addParam(void *r, const char *text, int32_t len)
+extern THIS int32_t rz_addParam(void *r, const char *text, int32_t len)
     MANGLED("?addParam@RomanizerManager@@QAEHPBDH@Z");
-extern THIS int32_t rom_setParam(void *r, int32_t which, int32_t value)
+extern THIS int32_t rz_setParam(void *r, int32_t which, int32_t value)
     MANGLED("?setParam@RomanizerManager@@QAEHJH@Z");
-extern THIS int32_t rom_insertIndex(void *r)
+extern THIS int32_t rz_insertIndex(void *r)
     MANGLED("?insertIndex@RomanizerManager@@QAEHXZ");
 
-extern THIS void st_paramFromEngine(void *s, int32_t which, int32_t value)
+extern THIS void es_paramFromEngine(void *s, int32_t which, int32_t value)
     MANGLED("?paramFromEngine@ECIstate@@QAEXJJ@Z");
-extern THIS int32_t app_postUser(void *a, int32_t what, int32_t value)
+extern THIS int32_t aq_postUser(void *a, int32_t what, int32_t value)
     MANGLED("?postUser@ETIappMessageQueue@@QAEHJJ@Z");
 
-extern THIS uint32_t idx_newIndex(void *m)
+extern THIS uint32_t sti_newIndex(void *m)
     MANGLED("?newIndex@IndexManager@@QAEKXZ");
-extern THIS Index *idx_getIndex(void *m, uint32_t id)
+extern THIS Index *sti_getIndex(void *m, uint32_t id)
     MANGLED("?getIndex@IndexManager@@QAEPAUIndex@@K@Z");
-extern THIS int32_t idxq_addOffsetFromLast(void *q, uint32_t id, int32_t off)
+extern THIS int32_t iq_addOffsetFromLast(void *q, uint32_t id, int32_t off)
     MANGLED("?addOffsetFromLast@IndexQueue@@QAEHHK@Z");
 
-extern THIS int32_t semaphore_wait(void *s)
+extern THIS int32_t sy_semWait(void *s)
     MANGLED("?wait@Semaphore@@QAEHXZ");
 
 /* The engine's own table, reached by byte offset because only a handful of
@@ -140,9 +140,9 @@ static void finished(SynthThread *t)
 {
     void *lock = ST_LOCK(t);
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     ST_PENDING(t) -= 1;
-    mutex_release(lock);
+    sy_mutexRelease(lock);
 }
 
 /* ---- the parameter changes ---- */
@@ -152,9 +152,9 @@ static void finished(SynthThread *t)
    from the state block rather than being told. */
 static void toldConcat(SynthThread *t, uint32_t which, int32_t value)
 {
-    processRemaining(t);
+    stw_processRemaining(t);
     if (ST_CONCAT(t))
-        cat_setParam(ST_CONCAT(t), which, value);
+        cm_setTorrentParam1(ST_CONCAT(t), which, value);
     finished(t);
 }
 
@@ -164,9 +164,9 @@ static void toldConcat(SynthThread *t, uint32_t which, int32_t value)
    it leaks a little on a voice that is not concatenative. */
 static void toldConcatNamed(SynthThread *t, uint32_t which, int32_t name)
 {
-    processRemaining(t);
+    stw_processRemaining(t);
     if (ST_CONCAT(t)) {
-        cat_setParam(ST_CONCAT(t), which, name);
+        cm_setTorrentParam1(ST_CONCAT(t), which, name);
         free((void *)name);
     }
     finished(t);
@@ -224,9 +224,9 @@ THIS void changeFluctuationStringRun(SynthThread *t, int32_t name,
 THIS void changeVolumeRun(SynthThread *t, int32_t v, int32_t seq)
 {
     (void)seq;
-    processRemaining(t);
+    stw_processRemaining(t);
     if (ST_CONCAT(t))
-        cat_setParam(ST_CONCAT(t), CAT_VOLUME, (v << 10) / 100);
+        cm_setTorrentParam1(ST_CONCAT(t), CAT_VOLUME, (v << 10) / 100);
     finished(t);
 }
 
@@ -240,10 +240,10 @@ THIS void setPhonemeIndiciesRun(SynthThread *t, int32_t on, int32_t seq)
     EngSetPhonemes set;
 
     (void)seq;
-    processRemaining(t);
+    stw_processRemaining(t);
     set = (EngSetPhonemes)ENG_CALL(t, ENG_SET_PHONEMES);
     set(ST_ENGINE(t), on);
-    st_paramFromEngine(ST_STATE(t), ECI_PARAM_PHONEMES, on);
+    es_paramFromEngine(ST_STATE(t), ECI_PARAM_PHONEMES, on);
     finished(t);
 }
 
@@ -253,29 +253,29 @@ THIS void setPhonemeIndiciesRun(SynthThread *t, int32_t on, int32_t seq)
 THIS void changeVoiceRun(SynthThread *t, int32_t voice, int32_t seq)
 {
     (void)seq;
-    processRemaining(t);
-    st_paramFromEngine(ST_STATE(t), ECI_PARAM_VOICE, voice);
-    createAudioConverter(t, ST_FORMAT(t));
+    stw_processRemaining(t);
+    es_paramFromEngine(ST_STATE(t), ECI_PARAM_VOICE, voice);
+    stw_createAudioConverter(t, ST_FORMAT(t));
 
     if (ST_CONCAT(t)) {
-        if (cat_voiceIsConcatenative(ST_CONCAT(t), voice)) {
+        if (cm_voiceIsConcatenative(ST_CONCAT(t), voice)) {
             if (!ST_TOLD_CAT(t)) {
                 if (APP_LISTENING(ST_APP(t)))
-                    app_postUser(ST_APP(t), APP_CONCATENATIVE, 1);
+                    aq_postUser(ST_APP(t), APP_CONCATENATIVE, 1);
                 ST_TOLD_CAT(t) = 1;
             }
-            rom_setParam(ST_ROMAN(t), ROM_CONCATENATIVE, 1);
+            rz_setParam(ST_ROMAN(t), ROM_CONCATENATIVE, 1);
         } else {
-            rom_setParam(ST_ROMAN(t), ROM_CONCATENATIVE, 0);
+            rz_setParam(ST_ROMAN(t), ROM_CONCATENATIVE, 0);
             if (ST_TOLD_CAT(t) == 1) {
                 if (APP_LISTENING(ST_APP(t)))
-                    app_postUser(ST_APP(t), APP_CONCATENATIVE, 0);
+                    aq_postUser(ST_APP(t), APP_CONCATENATIVE, 0);
                 ST_TOLD_CAT(t) = 0;
             }
         }
-        rom_setParam(ST_ROMAN(t), ROM_VOICE, voice);
-        rom_setParam(ST_ROMAN(t), ROM_SAMPLE_RATE,
-                     (int32_t)cat_getActiveSampleRate(ST_CONCAT(t)));
+        rz_setParam(ST_ROMAN(t), ROM_VOICE, voice);
+        rz_setParam(ST_ROMAN(t), ROM_SAMPLE_RATE,
+                     (int32_t)cm_getActiveSampleRate(ST_CONCAT(t)));
     }
     finished(t);
 }
@@ -290,21 +290,21 @@ THIS void changeRomParamRun(SynthThread *t, int32_t param, int32_t value,
 
     if (param == ECI_PARAM_ROM && (ST_FLAGS(t) & STF_WORD_MARKS)) {
         EngWordCallback setCallback;
-        IndexCallback cb = value == 1 ? wordIndexCallback : 0;
+        IndexCallback cb = value == 1 ? stb_staticWordIndexCallback : 0;
 
         if (ST_CONCAT(t) &&
-            cat_engineSupports(ST_CONCAT(t), (ST_ENGINE_ID(t) >> 16) & 0xff,
+            cm_engineSupports(ST_CONCAT(t), (ST_ENGINE_ID(t) >> 16) & 0xff,
                                ST_ENGINE_ID(t) & 0xff))
-            st_paramFromEngine(ST_STATE(t), ECI_PARAM_ROM, value);
+            es_paramFromEngine(ST_STATE(t), ECI_PARAM_ROM, value);
 
         setCallback = (EngWordCallback)ENG_CALL(t, ENG_WORD_CALLBACK);
         setCallback(ST_ENGINE(t), cb, t);
-        if (cat_inUse(ST_CONCAT(t)))
-            cat_registerCallback(ST_CONCAT(t), CAT_CALLBACK_WORD, cb, t);
+        if (cm_usingConcatenativeEngine(ST_CONCAT(t)))
+            cm_registerCallbackA(ST_CONCAT(t), CAT_CALLBACK_WORD, cb, t);
     }
 
-    if (rom_setParam(ST_ROMAN(t), param, value) == -1) {
-        postRomanizerError(t, 0);
+    if (rz_setParam(ST_ROMAN(t), param, value) == -1) {
+        stb_postRomanizerError(t, 0);
         return;
     }
     finished(t);
@@ -317,17 +317,17 @@ THIS void changeFilterRun(SynthThread *t, uint32_t which, uint32_t value,
                           int32_t seq, uint8_t any_engine)
 {
     (void)seq;
-    processRemaining(t);
+    stw_processRemaining(t);
 
     if (value == 1) {
         int32_t engine = any_engine ? 0 : (int32_t)ST_ENGINE_ID(t);
 
-        newFilter(t, engine, (int32_t)which, &ST_FILTER(t));
+        stm_newFilter(t, engine, (int32_t)which, &ST_FILTER(t));
         if (ST_FILTER(t))
-            activateFilter(t, ST_FILTER(t));
+            stm_activateFilter(t, ST_FILTER(t));
     } else {
-        deactivateFilter(t, ST_FILTER(t));
-        deleteFilter(t, ST_FILTER(t));
+        stm_deactivateFilter(t, ST_FILTER(t));
+        stm_deleteFilter(t, ST_FILTER(t));
     }
     finished(t);
 }
@@ -351,15 +351,15 @@ static void markRun(SynthThread *t, int32_t kind, int32_t payload)
         n->payload = payload;
         n->kind = kind;
         q->vt->push(q, n);
-        if (!rom_insertIndex(ST_ROMAN(t))) {
-            postRomanizerError(t, 0);
+        if (!rz_insertIndex(ST_ROMAN(t))) {
+            stb_postRomanizerError(t, 0);
             return;
         }
     } else {
-        uint32_t id = idx_newIndex(ST_INDEXMGR(t));
+        uint32_t id = sti_newIndex(ST_INDEXMGR(t));
 
         if (id) {
-            Index *ix = idx_getIndex(ST_INDEXMGR(t), id);
+            Index *ix = sti_getIndex(ST_INDEXMGR(t), id);
 
             ix->kind = kind;
             ix->payload = payload;
@@ -368,17 +368,17 @@ static void markRun(SynthThread *t, int32_t kind, int32_t payload)
 
                 insert = (EngInsertIndex)ENG_CALL(t, ENG_INSERT_INDEX);
                 if (insert(ST_ENGINE(t), id))
-                    postEngineError(t);
-            } else if (!idxq_addOffsetFromLast(ST_INDEXQ(t), id,
+                    stb_postEngineError(t);
+            } else if (!iq_addOffsetFromLast(ST_INDEXQ(t), id,
                                                ST_SAMPLES(t)
                                                - ST_LASTMARK(t))) {
-                app_postUser(ST_APP(t), APP_INDEX_LOST, 0);
+                aq_postUser(ST_APP(t), APP_INDEX_LOST, 0);
             }
             /* Both roads move the watermark, including the one that just
                told the caller the mark was lost. */
             ST_LASTMARK(t) = ST_SAMPLES(t);
         } else if (APP_LISTENING(ST_APP(t))) {
-            app_postUser(ST_APP(t), APP_INDEX_LOST, 0);
+            aq_postUser(ST_APP(t), APP_INDEX_LOST, 0);
         }
     }
     finished(t);
@@ -415,14 +415,14 @@ THIS void addParamRun(SynthThread *t, char *text, uint32_t len, int32_t seq)
     void *lock;
 
     (void)seq;
-    if (rom_addParam(ST_ROMAN(t), text, (int32_t)len) == -1) {
-        postRomanizerError(t, 0);
+    if (rz_addParam(ST_ROMAN(t), text, (int32_t)len) == -1) {
+        stb_postRomanizerError(t, 0);
         return;
     }
     lock = ST_LOCK(t);
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     ST_PENDING(t) -= (int32_t)len;
-    mutex_release(lock);
+    sy_mutexRelease(lock);
 }
 
 /* The end of a run of speech. Whatever is still half-processed is flushed
@@ -433,22 +433,22 @@ THIS void synthesizeRun(SynthThread *t, int32_t seq)
     void *lock = ST_LOCK(t);
     int32_t was_last;
 
-    mutex_wait(lock, -1);
+    sy_mutexWait(lock, -1);
     ST_PENDING(t) -= 1;
     was_last = ST_PENDING(t) == 0;
-    mutex_release(lock);
+    sy_mutexRelease(lock);
 
     if (was_last)
-        processRemaining(t);
-    shutDown(t);
-    stopSynthesis(t, seq);
+        stw_processRemaining(t);
+    stw_shutDown(t);
+    stw_stopSynthesis(t, seq);
 }
 
 /* Someone asked the thread to stand still. It does so here, on the thread
    itself, which is what makes the queue behind it stop moving. */
 THIS void blockRun(SynthThread *t)
 {
-    semaphore_wait(ST_BLOCKER(t));
+    sy_semWait(ST_BLOCKER(t));
 }
 
 ALIAS("?changeEmphasisRun@SynthThread@@QAEXJ@Z", "changeEmphasisRun");

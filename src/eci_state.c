@@ -55,7 +55,7 @@ extern THIS int32_t st_changeRomParam(void *t, int32_t p, int32_t v)
     MANGLED("?changeRomParam@SynthThread@@QAEJJJ@Z");
 extern THIS int32_t st_changeLanguage(void *t, LangIdentifier *l)
     MANGLED("?changeLanguage@SynthThread@@QAEJPAVLangIdentifier@@@Z");
-extern THIS int32_t st_initialize(void *t, LangIdentifier *l)
+extern THIS int32_t stl_initialize(void *t, LangIdentifier *l)
     MANGLED("?initialize@SynthThread@@QAEJPAVLangIdentifier@@@Z");
 extern THIS int32_t st_changeVoice(void *t, int32_t v)
     MANGLED("?changeVoice@SynthThread@@QAEJJ@Z");
@@ -64,13 +64,13 @@ extern THIS int32_t st_setPhonemeIndicies(void *t, int32_t v)
 extern THIS int32_t st_changeFilter(void *t, int32_t a, int32_t b, int32_t c,
                                     int8_t d)
     MANGLED("?changeFilter@SynthThread@@QAEJJJJ_N@Z");
-extern THIS int32_t st_newFilter(void *t, int32_t a, int32_t b, void **out)
+extern THIS int32_t stm_newFilter(void *t, int32_t a, int32_t b, void **out)
     MANGLED("?newFilter@SynthThread@@QAEJJJPAPAX@Z");
-extern THIS int32_t st_activateFilter(void *t, uint32_t id, int8_t on)
+extern THIS int32_t stm_activateFilterByIdFlag(void *t, uint32_t id, int8_t on)
     MANGLED("?activateFilter@SynthThread@@QAEJK_N@Z");
-extern THIS int32_t st_deactivateFilter(void *t, uint32_t id, int8_t on)
+extern THIS int32_t stm_deactivateFilterByIdFlag(void *t, uint32_t id, int8_t on)
     MANGLED("?deactivateFilter@SynthThread@@QAEJK_N@Z");
-extern THIS int32_t st_deleteFilter(void *t, int32_t a, int32_t b)
+extern THIS int32_t stm_deleteFilterByNumbers(void *t, int32_t a, int32_t b)
     MANGLED("?deleteFilter@SynthThread@@QAEJJJ@Z");
 extern THIS int32_t st_changePitch(void *t, int32_t p, int32_t v)
     MANGLED("?changePitch@SynthThread@@QAEJJJ@Z");
@@ -91,12 +91,12 @@ extern THIS int32_t st_changeETIEmphasis(void *t)
 extern THIS int32_t st_addParam(void *t, char *s, uint32_t n)
     MANGLED("?addParam@SynthThread@@QAEJPADK@Z");
 
-extern THIS int32_t mutex_wait(void *m, int32_t ms)
+extern THIS int32_t sy_mutexWait(void *m, int32_t ms)
     MANGLED("?wait@Mutex@@QAEHJ@Z");
-extern THIS int32_t mutex_release(void *m)
+extern THIS int32_t sy_mutexRelease(void *m)
     MANGLED("?release@Mutex@@QAEHXZ");
 
-extern THIS void lang_setPackedInt(LangIdentifier *l)
+extern THIS void li_setPackedInt(LangIdentifier *l)
     MANGLED("?setPackedInt@LangIdentifier@@AAEXXZ");
 
 /* The reader keeps its own buffer, so the object is bigger than anything
@@ -104,9 +104,9 @@ extern THIS void lang_setPackedInt(LangIdentifier *l)
 #define INI_BYTES 0x128
 extern THIS void *ini_ctor(void *r) MANGLED("??0IniFileReader@@QAE@XZ");
 extern THIS void  ini_dtor(void *r) MANGLED("??1IniFileReader@@QAE@XZ");
-extern THIS const char *ini_first(void *r)
+extern THIS const char *ini_getFirstSection(void *r)
     MANGLED("?getFirstSection@IniFileReader@@QAEPBDXZ");
-extern THIS const char *ini_next(void *r)
+extern THIS const char *ini_getNextSection(void *r)
     MANGLED("?getNextSection@IniFileReader@@QAEPBDXZ");
 
 extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
@@ -130,7 +130,7 @@ THIS LangIdentifier *lang_ctor(LangIdentifier *l, const char *s)
     l->packed = 0;
     strncpy(l->text, s, sizeof l->text);
     l->pad_10[0] = 0;
-    lang_setPackedInt(l);
+    li_setPackedInt(l);
     return l;
 }
 
@@ -262,9 +262,9 @@ THIS void es_paramFromEngine(ECIstate *s, int32_t p, int32_t v)
 {
     void *m = s->mutex;
 
-    mutex_wait(m, -1);
+    sy_mutexWait(m, -1);
     s->param[p] = v;
-    mutex_release(m);
+    sy_mutexRelease(m);
 }
 
 /* Nought asks for a general parameter, one for a voice parameter, and each
@@ -274,7 +274,7 @@ THIS int32_t es_getParam(ECIstate *s, int32_t kind, int32_t p, int32_t *out)
     void *m = s->mutex;
     int32_t rc = -3;
 
-    mutex_wait(m, -1);
+    sy_mutexWait(m, -1);
     if (out != 0) {
         rc = 0;
         *out = -1;
@@ -292,7 +292,7 @@ THIS int32_t es_getParam(ECIstate *s, int32_t kind, int32_t p, int32_t *out)
             rc = ECI_BAD_PARAM;
         }
     }
-    mutex_release(m);
+    sy_mutexRelease(m);
     return rc;
 }
 
@@ -365,13 +365,13 @@ static THIS int32_t setGeneral(ECIstate *s, int32_t p, int32_t v,
         if (extra == 1) {
             void *made = 0;
 
-            st_newFilter(thread, 0, v, &made);
+            stm_newFilter(thread, 0, v, &made);
             if (made != 0)
-                rc = st_activateFilter(thread, (uint32_t)v, 1);
+                rc = stm_activateFilterByIdFlag(thread, (uint32_t)v, 1);
             return rc;
         }
-        rc = st_deactivateFilter(thread, (uint32_t)v, 1);
-        if (rc == 0 && st_deleteFilter(thread, 0, v) == 0)
+        rc = stm_deactivateFilterByIdFlag(thread, (uint32_t)v, 1);
+        if (rc == 0 && stm_deleteFilterByNumbers(thread, 0, v) == 0)
             rc = 0;
         return rc;
 
@@ -552,12 +552,12 @@ THIS int32_t es_setInitialState(ECIstate *s, void *thread, int32_t lang)
     }
 
     if (s->lang == 0) {
-        const char *first = ini_first(ini);
+        const char *first = ini_getFirstSection(ini);
 
         rc = ECI_NO_LANG;
         if (first != 0) {
             for (;;) {
-                const char *next = ini_next(ini);
+                const char *next = ini_getNextSection(ini);
 
                 if (next == 0)
                     break;
@@ -569,7 +569,7 @@ THIS int32_t es_setInitialState(ECIstate *s, void *thread, int32_t lang)
     }
 
     if (s->lang != 0)
-        rc = st_initialize(thread, s->lang);
+        rc = stl_initialize(thread, s->lang);
     if (rc != 0 && lang != 0) {
         ini_dtor(ini);
         return rc;
@@ -583,7 +583,7 @@ THIS int32_t es_setInitialState(ECIstate *s, void *thread, int32_t lang)
         int32_t here, hi, lo;
 
         high_name = high;
-        sec = ini_first(ini);
+        sec = ini_getFirstSection(ini);
         here = es_iniToIntTimes10(s, (char *)sec);
         hi = es_iniToIntTimes10(s, high_name);
         lo = es_iniToIntTimes10(s, low_name);
@@ -593,7 +593,7 @@ THIS int32_t es_setInitialState(ECIstate *s, void *thread, int32_t lang)
                 high_name = (char *)sec;
                 hi = es_iniToIntTimes10(s, high_name);
             }
-            sec = ini_next(ini);
+            sec = ini_getNextSection(ini);
             here = es_iniToIntTimes10(s, (char *)sec);
         }
 
@@ -609,7 +609,7 @@ THIS int32_t es_setInitialState(ECIstate *s, void *thread, int32_t lang)
         strncpy(low_name, high_name, strlen(high_name));
         s->lang = langFromSection(high_name);
         if (s->lang != 0)
-            rc = st_initialize(thread, s->lang);
+            rc = stl_initialize(thread, s->lang);
     }
 
     ini_dtor(ini);
