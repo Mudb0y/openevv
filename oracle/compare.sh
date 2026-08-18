@@ -10,6 +10,11 @@
 # hung case is the original's problem, not ours, and calling it a difference
 # has cost several false alarms.
 #
+# The audio-marker sentence in the annotation set is the one that does this,
+# and it is kept deliberately rather than removed: it is the only coverage
+# there is of that path, it now labels itself, and a part of the engine the
+# original cannot reproduce is one worth keeping an eye on.
+#
 # Each run works in its own directory, so two of these can be going at once
 # without treading on each other's output.
 #
