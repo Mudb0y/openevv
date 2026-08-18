@@ -134,12 +134,45 @@ static void write_wav(const char *path, unsigned long rate)
     fclose(f);
 }
 
+/* A case may hold bytes the command line cannot carry unchanged: Wine
+   turns the UTF-8 line it is given into the process's ANSI code page
+   before main sees it, and a native run gets the bytes as they were. So a
+   text argument beginning with an at sign names a file to read instead,
+   and both builds then see exactly the same bytes. */
+static char *slurp(const char *path)
+{
+    FILE  *f = fopen(path, "rb");
+    char  *buf;
+    long   n;
+
+    if (f == NULL) {
+        fprintf(stderr, "speak: cannot read %s\n", path);
+        exit(1);
+    }
+    fseek(f, 0, SEEK_END);
+    n = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    buf = malloc((size_t)n + 1);
+    if (buf == NULL || fread(buf, 1, (size_t)n, f) != (size_t)n) {
+        fprintf(stderr, "speak: cannot read %s\n", path);
+        exit(1);
+    }
+    fclose(f);
+    buf[n] = 0;
+    while (n > 0 && (buf[n - 1] == '\n' || buf[n - 1] == '\r'))
+        buf[--n] = 0;
+    return buf;
+}
+
 int main(int argc, char **argv)
 {
     const char *text = (argc > 1) ? argv[1]
         : "Hello. This is the Eloquence synthesizer speaking.";
     const char *out = (argc > 2) ? argv[2] : "speak.wav";
     ECIHand h;
+
+    if (text[0] == '@')
+        text = slurp(text + 1);
 
     setvbuf(stdout, NULL, _IONBF, 0);
     evvRunStaticInitialisers();

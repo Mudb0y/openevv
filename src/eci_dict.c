@@ -62,7 +62,7 @@ extern int32_t STDCALL api_get_active_dict(void *h2, int32_t lang,
 extern int32_t STDCALL api_get_dict_language(void *h2, void *dict,
                                              int32_t *lang)
     MANGLED("_eciGetDictLanguage2@12");
-extern int32_t STDCALL es_getParam(OldInst *h, int32_t which)
+extern int32_t STDCALL eo_getParam(OldInst *h, int32_t which)
     MANGLED("_eciGetParam@8");
 
 extern int ev_sendParameters(OldInst *h);
@@ -151,7 +151,7 @@ void *STDCALL ed_newDict(OldInst *h)
     api_synthesize(OI_NEW(inst));
     api_synchronize(OI_NEW(inst));
 
-    lang = es_getParam(h, ENV_LANGUAGE);
+    lang = eo_getParam(h, ENV_LANGUAGE);
     if (lang >= 0)
         rc = api_new_dict(OI_NEW(inst), lang, &dict);
 
@@ -168,7 +168,7 @@ void *STDCALL ed_getDict(OldInst *h)
     if (!h)
         return 0;
 
-    lang = es_getParam(h, ENV_LANGUAGE);
+    lang = eo_getParam(h, ENV_LANGUAGE);
     if (lang >= 0)
         rc = api_get_active_dict(OI_NEW(h), lang, &dict);
 

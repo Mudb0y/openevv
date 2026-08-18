@@ -5,9 +5,11 @@
 # int32 and puts host addresses in some of them, so a sixty-four bit build
 # needs the arena work before it can be anything but a crash.
 #
-# Nothing here speaks yet. What our own sources need from the original is
-# still a long list, and `make missing' writes it out: that list is the
-# work left, and it shrinks as objects are transcribed.
+# It speaks. `make speak' builds a driver against the archive and
+# `suite.sh' sets what comes out against IBM's own binary under Wine, case
+# for case. Nothing is borrowed any more: `make missing' answers nothing,
+# and it is worth re-running whenever a source is added, since a name that
+# reappears there is a call that has quietly gone back to the original.
 
 SRC   := ../src
 BUILD := ../build/native
@@ -28,14 +30,28 @@ SOURCES := $(filter-out $(SRC)/port_win32.c $(SRC)/delta_rules_trace.c \
 # out of the original's own object.
 OBJECTS := $(patsubst $(SRC)/%.c,$(BUILD)/%.o,$(SOURCES))
 
-.PHONY: all missing clean
+.PHONY: all missing clean speak
 all: $(BUILD)/libevv.a
+
+# The engine driven on this machine. Nothing is linked beside it, so what
+# comes out is ours from end to end.
+speak: $(BUILD)/speak
+
+$(BUILD)/speak: speak.c $(BUILD)/libevv.a
+	@$(CC) $(CFLAGS) speak.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
 
 $(BUILD)/%.o: $(SRC)/%.c
 	@mkdir -p $(BUILD)
 	@$(CC) $(CFLAGS) -c $< -o $@
 
+# A source that gets renamed leaves its object behind, and a stale one is
+# a duplicate definition waiting to happen, so they go before the archive
+# is built rather than at the next link.
 $(BUILD)/libevv.a: $(OBJECTS)
+	@for o in $(BUILD)/*.o; do \
+	   case " $(OBJECTS) " in *" $$o "*) ;; *) rm -f "$$o" ;; esac; \
+	 done
 	@rm -f $@
 	@ar rcs $@ $(OBJECTS)
 	@echo "built $@ from $(words $(OBJECTS)) objects"

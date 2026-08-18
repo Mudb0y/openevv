@@ -112,7 +112,7 @@ static int32_t es_flipDictionary(int32_t v)
 
 /* ---- reading and writing settings ----------------------------------- */
 
-int32_t STDCALL es_getParam(OldInst *h, int32_t which)
+int32_t STDCALL eo_getParam(OldInst *h, int32_t which)
 {
     OldInst *inst = h;
     int32_t v = -1;
@@ -405,7 +405,7 @@ int STDCALL es_testPhrase(OldInst *h)
     memset(narrow, 0, sizeof narrow);
     sprintf(narrow, "1 2 3.");
 
-    if (isUnicodeCodeSet(0x800, es_getParam(h, ENV_LANGUAGE))) {
+    if (isUnicodeCodeSet(0x800, eo_getParam(h, ENV_LANGUAGE))) {
         if (MBCSConverter(h, narrow, &wide))
             return 0;
         if (!eo_stop(h) || !vc_copyVoice(h, 1, 0)
@@ -507,7 +507,7 @@ int STDCALL es_dialogBox(void *a, void *b, void *c, void *d, void *e)
 }
 
 
-ALIAS_N("_eciGetParam@8", "es_getParam", 8);
+ALIAS_N("_eciGetParam@8", "eo_getParam", 8);
 ALIAS_N("_eciGetDefaultParam@4", "es_getDefaultParam", 4);
 ALIAS_N("_eciSetDefaultParam@8", "es_setDefaultParam", 8);
 ALIAS_N("_eciSynchronize@4", "es_synchronize", 4);

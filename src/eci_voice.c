@@ -92,7 +92,7 @@ typedef struct VoiceRegistration {
     int32_t params[8];          /* +0x28 */
 } VoiceRegistration;
 
-extern int32_t STDCALL es_getParam(OldInst *h, int32_t which)
+extern int32_t STDCALL eo_getParam(OldInst *h, int32_t which)
     MANGLED("_eciGetParam@8");
 extern int32_t STDCALL api_check_synth(void *h2)
     MANGLED("_eciCheckSynthesizing2@4");
@@ -448,7 +448,7 @@ int STDCALL vc_getVoiceName(OldInst *h, int32_t voiceno, void *out)
     else
         strcpy(name, vc_languageVoice(inst, voiceno));
 
-    if (!isUnicodeCodeSet(0x800, es_getParam(h, ENV_CODESET))) {
+    if (!isUnicodeCodeSet(0x800, eo_getParam(h, ENV_CODESET))) {
         strcpy(out, name);
         return 1;
     }
@@ -475,7 +475,7 @@ int STDCALL vc_setVoiceName(OldInst *h, int32_t voiceno, const char *name)
 
     inst = h;
 
-    if (isUnicodeCodeSet(0x800, es_getParam(h, ENV_CODESET))) {
+    if (isUnicodeCodeSet(0x800, eo_getParam(h, ENV_CODESET))) {
         if (UnicodeConverter(h, name, &s, 1)) {
             OI_REFUSED(inst) = 0x1000;
             OI_REFUSEDALL(inst) |= 0x1000;

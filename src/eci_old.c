@@ -66,7 +66,7 @@ extern void STDCALL api_version(int32_t *a, int32_t *b, int32_t *c,
                                   int32_t *d) MANGLED("_eciVersion2@16");
 extern int lg_eciGetAvailableLanguages2(uint32_t *out, int *count)
     MANGLED("?eciGetAvailableLanguages2@@YAHPAW4ECILanguageDialect@@PAH@Z");
-extern int32_t STDCALL es_getParam(OldInst *h, int32_t which)
+extern int32_t STDCALL eo_getParam(OldInst *h, int32_t which)
     MANGLED("_eciGetParam@8");
 extern int32_t STDCALL api_new(void **out, int32_t language)
     MANGLED("_eciNew2@8");
@@ -267,7 +267,7 @@ int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data)
             OI_REFUSEDALL(h) |= 0x10;
             break;
         }
-        mode = es_getParam(h, PARAM_CODESET);
+        mode = eo_getParam(h, PARAM_CODESET);
         OI_REPORT_MODE(h) = *(int32_t *)(rec + 0x0c);
 
         /* The name of the phoneme is four characters, wide or narrow
