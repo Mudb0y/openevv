@@ -22,10 +22,10 @@ SOURCES := $(filter-out $(SRC)/port_win32.c $(SRC)/delta_rules_trace.c \
                         $(SRC)/delta_rules_trace_prim.c $(SRC)/delta_rules_ref.c, \
              $(wildcard $(SRC)/*.c))
 
-# Two files belong to this target alone. port_files.c answers what the
+# Three files belong to this target alone. port_files.c answers what the
 # differential build gets from the platform it is linked beside, and
-# eci_env_defaults.c holds a table that build still reads out of the
-# original's own object.
+# eci_env_defaults.c and eci_statics.c hold blocks that build still reads
+# out of the original's own object.
 OBJECTS := $(patsubst $(SRC)/%.c,$(BUILD)/%.o,$(SOURCES))
 
 .PHONY: all missing clean

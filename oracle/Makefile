@@ -86,18 +86,13 @@ $(BUILD)/ral_shim.obj: ../src/port_ral.c $(PORT) ../src/evv_port.h
 	  -o $(BUILD)/ral_both.tmp.o
 	@$(OBJCOPY) --redefine-syms=$(BUILD)/uni.syms $(BUILD)/ral_both.tmp.o $@
 
-$(BUILD)/ctors.obj: ctors.c
+# The initialisers are ours now and call the objects by the names we
+# define them under, so nothing has to be renamed afterwards. Two of the
+# five objects are still the original's; they are made visible by the two
+# rules below.
+$(BUILD)/ctors.obj: ../src/port_ctors.c
 	@mkdir -p $(BUILD)
-	@printf '%s\n' \
-	  '_evv_mutex_ctor ??0Mutex@@QAE@H@Z' \
-	  '_evv_isv_ctor ??0InitializeStandardVoices@@QAE@XZ' \
-	  '_evv_filter_load_mutex ?m_protectFilterLoad@FilterManager@@0VMutex@@A' \
-	  '_evv_ssml_lexer_mutex ?lexerMutex@SSMLFilter@@1VMutex@@A' \
-	  '_evv_synth_init_mutex ?m_protectInitialization@SynthThread@@0VMutex@@A' \
-	  '_evv_protect_first_time _protectFirstTime' \
-	  '_evv_standard_voices _initializeStandardVoices' > $(BUILD)/ctors.syms
-	@$(CC) -O2 -std=gnu99 -w -c $< -o $(BUILD)/ctors.tmp.o
-	@$(OBJCOPY) --redefine-syms=$(BUILD)/ctors.syms $(BUILD)/ctors.tmp.o $@
+	@$(CC) -O2 -std=gnu99 -w -I../src -c $< -o $@
 
 $(BUILD)/eci.obj: $(ENUS)/eci.obj
 	@mkdir -p $(BUILD)
