@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 #
-# All six comparisons, one after another. Answers non-zero if anything
+# The comparisons, one after another. long is not in the default set:
+# it is minutes rather than seconds, and it is there for the queue between
+# the text side and the synthesis thread, which one sentence never fills. Answers non-zero if anything
 # differed or hung, so it can be used as a check rather than read.
 #
-# usage: suite.sh [name ...]     with no names, runs all of them
+# usage: suite.sh [name ...]     with no names, runs all but long
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -28,6 +30,7 @@ for one in $want; do
     anno)      run anno      "$here/cases/anno.txt"  ""    ""      || bad=1 ;;
     anno3)     run anno3     "$here/cases/anno.txt"  anno  "$TEXT" || bad=1 ;;
     realworld) run realworld "$here/cases/anno.txt"  ar    "$TEXT" || bad=1 ;;
+    long)      run long      "$here/cases/long.txt" ""    ""      || bad=1 ;;
     dict)      run dict      "$here/cases/plain.txt" ard   "$DICT" || bad=1 ;;
     *) echo "suite: no such comparison: $one" >&2; bad=1 ;;
     esac
