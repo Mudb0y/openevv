@@ -125,7 +125,10 @@ typedef struct {
     int32_t   ca_size;       /* 0x00b4, a context record */
     int32_t   size_b8;       /* 0x00b8 */
     int32_t   boa_size;      /* 0x00bc, a begin-or-alternative marker */
-    uint8_t   pad_00c0[0xdc - 0xc0];
+    int32_t   list_fld;      /* 0x00c0, which entry of a stream list the
+                                field walk is on */
+    int32_t   list_val;      /* 0x00c4, and which field of that entry */
+    uint8_t   pad_00c8[0xdc - 0xc8];
     /* What a value named "undefined" reads back as. The tables spell the
        absent value one way and whoever asks is told another. */
     const char *undefined_text;  /* 0x00dc */
