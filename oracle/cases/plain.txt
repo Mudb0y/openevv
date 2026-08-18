@@ -1,0 +1,7 @@
+Hello. This is the Eloquence synthesizer speaking.
+Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
+The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
+Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
+A one-word line. And another; plus "quoted text" inside.
+Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.

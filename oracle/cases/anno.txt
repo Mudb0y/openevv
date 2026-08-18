@@ -1,0 +1,20 @@
+Normal speech `vs50 now much slower than before.
+Volume `vv30 quieter, then `vv90 louder again.
+Pitch `vb20 low and `vb80 high in one sentence.
+Voice `v2 two, `v5 five, and `v1 back to one.
+A pause `0 short and `4 long between words.
+Roughness `vr40 and breathiness `vf60 changed.
+A literal \`backtick should be spoken as text.
+Speed by name `vsfast and then `vsslow again.
+Head size `vh30 then `vh70 in the same line.
+Gender `vg1 and `vg0 switching over.
+Before `ui"mark one" and after the index mark.
+Audio `aud"beep" marker in the middle of a line.
+`vs40 An annotation right at the very beginning.
+Ending with an annotation at the very end `vs60
+Malformed `vzz and `q and `v999 all in one line.
+Two `vs30`vv40 annotations with nothing between.
+`ui"a"`ui"b" two marks with nothing between them.
+An unterminated `ui"mark that never closes here
+Mixed `v3 voice `vs70 speed `vv50 volume together.
+Tab	and newline handling with `vb40 a change.
