@@ -59,6 +59,10 @@ typedef THIS void   *(*PostIncFn)(void *self, int32_t unused);
 
 /* The tables our own code already fills in elsewhere. */
 extern THIS int32_t  sti_esListIsEmpty(const ESList *l);
+extern THIS int32_t  sti_indexQueueIsEmpty(const ESList *l);
+extern THIS int32_t  sti_eListQueueIsEmpty(const ESList *l);
+extern THIS void    *sti_indexQueueDestroy(ESList *l, int32_t free_it);
+extern THIS void    *sti_eListQueueDestroy(ESList *l, int32_t free_it);
 extern THIS void    *sti_esListHead(const ESList *l);
 extern THIS void    *sti_esListTail(const ESList *l);
 extern THIS void    *sti_esListDestroy(ESList *l, int32_t free_it);
@@ -278,7 +282,40 @@ const void *vtbl_ecollectiter[7] = {
 };
 
 
+/* The two lists built on this one differ from it in exactly two places:
+   what they call empty, and what they do when they are deleted. Everything
+   between is the list's own. */
+const void *vtbl_indexqueue[11] = {
+    (void *)sti_indexQueueIsEmpty,
+    (void *)el_newIter,
+    (void *)el_collectionSize,
+    (void *)sti_esListHead,
+    (void *)sti_esListTail,
+    (void *)el_addToHead,
+    (void *)el_addToTail,
+    (void *)el_addAfter,
+    (void *)el_removeHead,
+    (void *)el_removeAfter,
+    (void *)sti_indexQueueDestroy
+};
+
+const void *vtbl_elistqueue[11] = {
+    (void *)sti_eListQueueIsEmpty,
+    (void *)el_newIter,
+    (void *)el_collectionSize,
+    (void *)sti_esListHead,
+    (void *)sti_esListTail,
+    (void *)el_addToHead,
+    (void *)el_addToTail,
+    (void *)el_addAfter,
+    (void *)el_removeHead,
+    (void *)el_removeAfter,
+    (void *)sti_eListQueueDestroy
+};
+
 ALIAS("??_7ESList@@6B@", "vtbl_eslist");
+ALIAS("??_7IndexQueue@@6B@", "vtbl_indexqueue");
+ALIAS("??_7EListQueue@@6B@", "vtbl_elistqueue");
 ALIAS("??_7ESListIter@@6B@", "vtbl_eslistiter");
 ALIAS("??_7EListIter@@6B@", "vtbl_elistiter");
 ALIAS("??_7EIterator@@6B@", "vtbl_eiterator");
