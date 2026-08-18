@@ -149,7 +149,11 @@ static void *ral_find(struct ral_req *r, int *slot)
     return ral_obj[i];
 }
 
-/* The plain semaphores: count in, identifier out. */
+/* The plain semaphores: count in the second slot, identifier back in the
+   first. The other families here read the first slot and write the second,
+   and this one is the other way round -- ETIThread hands the initial count
+   in the slot everything else uses for a timeout, and then takes the thing
+   it will name the semaphore by out of the slot it passed in empty. */
 static int ral_sem_create(struct ral_req *r, int max)
 {
     int key;
@@ -159,9 +163,9 @@ static int ral_sem_create(struct ral_req *r, int max)
         return 10041;
 
     key = ++ral_next;
-    rc = ral_bind(key, evv_sem_create(r->a ? 1 : 0, max), RAL_SEM);
+    rc = ral_bind(key, evv_sem_create(r->b ? 1 : 0, max), RAL_SEM);
     if (rc == 0)
-        r->b = key;
+        r->a = key;
     ral_say("ralSemaphoreCreate", key, rc);
     return rc;
 }
