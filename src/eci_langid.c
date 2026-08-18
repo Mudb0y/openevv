@@ -13,6 +13,7 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
 #include "eci_synththread.h"
 
 /* Where the text sits inside the identifier. */
@@ -47,4 +48,18 @@ THIS void li_setPackedInt(void *l)
     LANG_PACKED(l) = ((int32_t)major << 16) | minor;
 }
 
+/* The other direction: write the packed word back out as text, which is
+   where the text beside it comes from in the first place. Both halves are
+   taken as bytes, so a language numbered above two hundred and fifty-five
+   comes back wrong -- the same limit the packing has. */
+THIS void li_setString(void *l)
+{
+    int32_t packed = LANG_PACKED(l);
+
+    sprintf((char *)l + 4, "%u.%u",
+            (unsigned)((packed >> 16) & 0xff),
+            (unsigned)(packed & 0xff));
+}
+
 ALIAS("?setPackedInt@LangIdentifier@@AAEXXZ", "li_setPackedInt");
+ALIAS("?setString@LangIdentifier@@AAEXXZ", "li_setString");
