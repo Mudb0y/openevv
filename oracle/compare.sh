@@ -71,7 +71,7 @@ attempt() {
     return 0
 }
 
-n=0; matched=0; differed=0; hung=0
+n=0; matched=0; differed=0; hung=0; unstable=0
 
 while IFS= read -r line; do
     n=$((n + 1))
@@ -106,10 +106,28 @@ while IFS= read -r line; do
         echo "$n same"
         matched=$((matched + 1))
     else
-        echo "$n DIFFER"
-        differed=$((differed + 1))
+        # Before believing a difference, ask whether the original agrees
+        # with itself. It does not always: an audio marker goes through the
+        # sound path, and under Wine that does not come out the same twice.
+        # A case the original cannot reproduce cannot tell us anything.
+        cp x.wav ref-first.wav
+        [ -n "$pattern" ] && cp x.txt ref-first.txt
+        if speak_once speak.exe "$line" x.wav x.txt \
+           && cmp -s ref-first.wav x.wav \
+           && { [ -z "$pattern" ] || cmp -s ref-first.txt x.txt; }; then
+            echo "$n DIFFER"
+            differed=$((differed + 1))
+        else
+            echo "$n UNSTABLE (the original differs from itself)"
+            unstable=$((unstable + 1))
+        fi
     fi
 done < "$cases"
 
-echo "TOTAL: $n cases, $matched matched, $differed differed, $hung hung"
+echo "TOTAL: $n cases, $matched matched, $differed differed," \
+     "$hung hung, $unstable unstable"
+
+# Unstable cases are the original's business, not ours, so they do not fail
+# the run -- but they are counted and named so they cannot be mistaken for
+# agreement.
 [ "$differed" = 0 ] && [ "$hung" = 0 ]
