@@ -1,4 +1,4 @@
-# EVV port — starting brief
+# openevv — starting brief
 
 Assembled 14 August 2026 out of the Eloquence history research in
 `~/Projects/Chat/software/eloquence-history/`. That project is finished; this one

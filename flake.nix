@@ -1,5 +1,5 @@
 {
-  description = "Eloquence / Embedded ViaVoice fixed-point port";
+  description = "openevv - a portable Eloquence / Embedded ViaVoice";
 
   # The channel tarball rather than a github rev, so this shares the binary
   # cache the machine already populated instead of rebuilding gcc.

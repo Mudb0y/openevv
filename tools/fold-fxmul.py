@@ -5,10 +5,12 @@ and it is already transcribed and verified, so folding each expansion back to a
 single call makes the surrounding logic readable.
 """
 
+import os
 import re
 
-SRC = '/home/stas/Projects/evv-port/analysis/clsyn/functions/KlattSynth.asm'
-OUT = '/home/stas/Projects/evv-port/analysis/clsyn/KlattSynth.folded.asm'
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC = os.path.join(ROOT, 'analysis/clsyn/functions/KlattSynth.asm')
+OUT = os.path.join(ROOT, 'analysis/clsyn/KlattSynth.folded.asm')
 
 LADDER = ('$0x10000,', '$0x100000,', '$0x1000000,', '$0x10000000,',
           '$0xffff0000,', '$0xfff00000,', '$0xff000000,', '$0xf0000000,')

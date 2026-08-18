@@ -1,4 +1,4 @@
-cd /home/stas/Projects/evv-port/build
+cd "$(dirname "$0")/../build"
 n=0
 while IFS= read -r line; do
   n=$((n+1))
