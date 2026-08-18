@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* The request block the layer takes, with the two slots that matter. */
 struct ral_req {

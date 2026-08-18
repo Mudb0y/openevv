@@ -7,10 +7,9 @@
 
 #include <string.h>
 #include <stdint.h>
+#include "evv_abi.h"
 
-#define THIS __attribute__((thiscall))
 #define STD  __attribute__((stdcall))
-#define MANGLED(name) __asm__("\"" name "\"")
 
 /* Only the last field is read from here: how the constructor went. */
 typedef struct {
@@ -476,11 +475,6 @@ STD int32_t api_register_voice(void *self, int32_t a, void *b, void *c)
     return ei_reg_voice(self, a, c, b);
 }
 
-/* The names the original's callers know these by. */
-#define ALIAS(mangled, ours) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "\n")
-#define ALIAS_N(mangled, ours, n) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "@" #n "\n")
 
 ALIAS_N("_eciRegisterVoice2@16", "api_register_voice", 16);
 ALIAS_N("_eciNew2@8", "api_new", 8);

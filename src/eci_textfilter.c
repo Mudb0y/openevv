@@ -23,9 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include "evv_abi.h"
 
-#define THIS __attribute__((thiscall))
-#define MANGLED(name) __asm__("\"" name "\"")
 
 typedef struct { int32_t packed; char text[12]; char pad_10[4]; }
     LangIdentifier;
@@ -613,8 +612,6 @@ THIS int32_t tf_addText(TextFilter *f, void *text, int32_t len, int32_t unused,
     return tf_globalFilters(f, (char *)text, len, flag);
 }
 
-#define ALIAS(mangled, ours) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "\n")
 
 ALIAS("??0TextFilter@@QAE@XZ", "tf_ctor");
 ALIAS("??1TextFilter@@QAE@XZ", "tf_dtor");

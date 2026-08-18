@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* Answers this layer gives back. */
 #define OK               0

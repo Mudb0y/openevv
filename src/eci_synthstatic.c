@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 void   *st_soundManager;
 void   *st_phonemes;

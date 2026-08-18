@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* Where the blob is and how long it is. Both are built into the engine. */
 extern const char eciIni[] MANGLED("?eciIni@@3QBDB");

@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* What a post can answer. Only a plain "queued" commits the numbering. */
 #define POST_FAILED  0

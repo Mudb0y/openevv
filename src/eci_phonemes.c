@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* One phoneme, and how many of the numbers on its line go where. */
 #define RECORD_BYTES 0x30

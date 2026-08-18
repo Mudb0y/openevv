@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* Where the samples are going. Only what this file touches is named. */
 typedef struct SoundFile {

@@ -17,6 +17,7 @@
 
 #include <stdint.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 typedef struct OldInst OldInst;
 
@@ -41,27 +42,27 @@ typedef struct OldInst OldInst;
 /* Whether an instance is in the middle of speaking. */
 #define SYNTH_BUSY      3
 
-extern int32_t __stdcall api_check_synth(void *h2)
+extern int32_t STDCALL api_check_synth(void *h2)
     MANGLED("_eciCheckSynthesizing2@4");
-extern int32_t __stdcall api_synthesize(void *h2)
+extern int32_t STDCALL api_synthesize(void *h2)
     MANGLED("_eciSynthesize2@4");
-extern int32_t __stdcall api_synchronize(void *h2)
+extern int32_t STDCALL api_synchronize(void *h2)
     MANGLED("_eciSynchronize2@4");
-extern int32_t __stdcall api_new_dict(void *h2, int32_t lang, void **out)
+extern int32_t STDCALL api_new_dict(void *h2, int32_t lang, void **out)
     MANGLED("_eciNewDict2@12");
-extern int32_t __stdcall api_delete_dict(void *h2, void *dict)
+extern int32_t STDCALL api_delete_dict(void *h2, void *dict)
     MANGLED("_eciDeleteDict2@8");
-extern int32_t __stdcall api_activate_dict(void *h2, void *dict)
+extern int32_t STDCALL api_activate_dict(void *h2, void *dict)
     MANGLED("_eciActivateDict2@8");
-extern int32_t __stdcall api_deactivate_dict(void *h2, void *dict)
+extern int32_t STDCALL api_deactivate_dict(void *h2, void *dict)
     MANGLED("_eciDeactivateDict2@8");
-extern int32_t __stdcall api_get_active_dict(void *h2, int32_t lang,
+extern int32_t STDCALL api_get_active_dict(void *h2, int32_t lang,
                                            void **out)
     MANGLED("_eciGetActiveDict2@12");
-extern int32_t __stdcall api_get_dict_language(void *h2, void *dict,
+extern int32_t STDCALL api_get_dict_language(void *h2, void *dict,
                                              int32_t *lang)
     MANGLED("_eciGetDictLanguage2@12");
-extern int32_t __stdcall es_getParam(OldInst *h, int32_t which)
+extern int32_t STDCALL es_getParam(OldInst *h, int32_t which)
     MANGLED("_eciGetParam@8");
 
 extern int ev_sendParameters(OldInst *h);
@@ -130,7 +131,7 @@ int32_t ed_deactivate_all_dicts(OldInst *h)
    Everything queued is spoken and waited for first. A dictionary changes how
    words are pronounced, so anything already on its way has to come out under
    the old rules before the new dictionary can exist. */
-void *__stdcall ed_newDict(OldInst *h)
+void *STDCALL ed_newDict(OldInst *h)
 {
     OldInst *inst = h;
     void *dict = 0;
@@ -158,7 +159,7 @@ void *__stdcall ed_newDict(OldInst *h)
 }
 
 /* Which dictionary is in force for the language in force. */
-void *__stdcall ed_getDict(OldInst *h)
+void *STDCALL ed_getDict(OldInst *h)
 {
     void *dict = 0;
     int32_t rc = -1;
@@ -175,7 +176,7 @@ void *__stdcall ed_getDict(OldInst *h)
 }
 
 /* Put one in force, or with nothing named, take all of them out. */
-int __stdcall ed_setDict(OldInst *h, void *dict)
+int STDCALL ed_setDict(OldInst *h, void *dict)
 {
     int32_t rc = -1;
 
@@ -193,7 +194,7 @@ int __stdcall ed_setDict(OldInst *h, void *dict)
 }
 
 /* Take one away for good. Answers nought whatever happens. */
-int __stdcall ed_deleteDict(OldInst *h, void *dict)
+int STDCALL ed_deleteDict(OldInst *h, void *dict)
 {
     int32_t rc;
 
@@ -208,7 +209,7 @@ int __stdcall ed_deleteDict(OldInst *h, void *dict)
 
 /* Reading a dictionary from a file and writing one to a file were published
    and never written. */
-int __stdcall ed_loadDict(OldInst *h, void *dict, int32_t kind,
+int STDCALL ed_loadDict(OldInst *h, void *dict, int32_t kind,
                           const char *name)
 {
     (void)h;
@@ -218,7 +219,7 @@ int __stdcall ed_loadDict(OldInst *h, void *dict, int32_t kind,
     return DICT_NOT_SUPPORTED;
 }
 
-int __stdcall ed_saveDict(OldInst *h, void *dict, int32_t kind,
+int STDCALL ed_saveDict(OldInst *h, void *dict, int32_t kind,
                           const char *name)
 {
     (void)h;
@@ -236,8 +237,6 @@ ALIAS("?delete_active_dict@@YAJPAUoldECIInstData@@PAX@Z",
 ALIAS("?deactivate_all_dicts@@YAJPAUoldECIInstData@@@Z",
       "ed_deactivate_all_dicts");
 
-#define ALIAS_N(mangled, ours, n) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "@" #n "\n")
 
 ALIAS_N("_eciNewDict@4", "ed_newDict", 4);
 ALIAS_N("_eciGetDict@4", "ed_getDict", 4);

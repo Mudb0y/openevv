@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* What a caller describes a format with. The name doubles as the device
    number when it is one, which is why it is a string. */

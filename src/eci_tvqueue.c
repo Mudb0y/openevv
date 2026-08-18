@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include "evv_abi.h"
 
 typedef struct {
     int16_t time;
@@ -31,7 +32,6 @@ typedef struct {
     uint16_t       want;  /* +0x0a, the size it was asked for */
 } TimeValueQueue;
 
-#define THIS __attribute__((thiscall))
 
 THIS uint16_t tvq_size(TimeValueQueue *q)
 {
@@ -207,9 +207,6 @@ THIS TimeValuePair *tvq_getElements(TimeValueQueue *q, int32_t *n)
     return out;
 }
 
-/* The names the original's callers know these by. */
-#define ALIAS(mangled, ours) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "\n")
 
 ALIAS("??0TimeValueQueue@@QAE@G@Z", "tvq_ctor");
 ALIAS("??1TimeValueQueue@@QAE@XZ", "tvq_dtor");

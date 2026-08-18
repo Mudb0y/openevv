@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 #define ECI_PARAMETER_ERROR  0x80
 

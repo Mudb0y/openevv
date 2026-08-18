@@ -12,9 +12,8 @@
 
 #include <string.h>
 #include <stdint.h>
+#include "evv_abi.h"
 
-#define THIS __attribute__((thiscall))
-#define MANGLED(name) __asm__("\"" name "\"")
 
 typedef struct { int32_t packed; char text[12]; char pad_10[4]; } LangIdentifier;
 
@@ -502,9 +501,6 @@ THIS void ei_get_filter_desc(ECIinstance *self, int32_t a, uint32_t b, char *c)
     stm_getFilterDescription(self->thread, a, b, c);
 }
 
-/* The names the original's callers know these by. */
-#define ALIAS(mangled, ours) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "\n")
 
 ALIAS("??0ECIinstance@@QAE@XZ", "ei_ctor");
 ALIAS("??0ECIinstance@@QAE@W4ECILanguageDialect@@@Z", "ei_ctor_lang");

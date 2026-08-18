@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 typedef struct RomanizerManager RomanizerManager;
 typedef struct RomInstance RomInstance;

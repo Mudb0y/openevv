@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 typedef struct OldInst OldInst;
 
@@ -52,12 +53,12 @@ typedef struct OldInst OldInst;
 /* What the layer beneath answers when the caller has gone away. */
 #define POLL_ABORTED    (-18)
 
-extern int32_t __stdcall api_reset(void *h2, int32_t language)
+extern int32_t STDCALL api_reset(void *h2, int32_t language)
     MANGLED("_eciReset2@8");
-extern int32_t __stdcall api_delete(void *h2) MANGLED("_eciDelete2@4");
-extern int32_t __stdcall api_synchronize(void *h2)
+extern int32_t STDCALL api_delete(void *h2) MANGLED("_eciDelete2@4");
+extern int32_t STDCALL api_synchronize(void *h2)
     MANGLED("_eciSynchronize2@4");
-extern int32_t __stdcall api_pause(void *h2, int32_t on)
+extern int32_t STDCALL api_pause(void *h2, int32_t on)
     MANGLED("_eciPause2@8");
 extern int FilterText2(OldInst *h, void *a, void *b, void *c)
     MANGLED("_FilterText2");
@@ -69,14 +70,14 @@ extern char standardVoices[] MANGLED("_standardVoices");
 extern int32_t g_DefaultEnvironment[] MANGLED("_g_DefaultEnvironment");
 
 /* Entry points of the same interface that these ones lean on. */
-extern OldInst *__stdcall eo_newEx(int32_t language) MANGLED("_eciNewEx@4");
-extern int __stdcall eo_stop(OldInst *h) MANGLED("_eciStop@4");
-extern int __stdcall et_addText(OldInst *h, const char *text)
+extern OldInst *STDCALL eo_newEx(int32_t language) MANGLED("_eciNewEx@4");
+extern int STDCALL eo_stop(OldInst *h) MANGLED("_eciStop@4");
+extern int STDCALL et_addText(OldInst *h, const char *text)
     MANGLED("_eciAddText@8");
-extern int __stdcall et_synthesize(OldInst *h) MANGLED("_eciSynthesize@4");
-extern int32_t __stdcall ev_setParam(OldInst *h, int32_t which, int32_t v)
+extern int STDCALL et_synthesize(OldInst *h) MANGLED("_eciSynthesize@4");
+extern int32_t STDCALL ev_setParam(OldInst *h, int32_t which, int32_t v)
     MANGLED("_eciSetParam@12");
-extern int __stdcall vc_copyVoice(OldInst *h, int32_t from, int32_t to)
+extern int STDCALL vc_copyVoice(OldInst *h, int32_t from, int32_t to)
     MANGLED("_eciCopyVoice@12");
 
 extern int32_t setECIerror(int32_t rc, OldInst *h);
@@ -111,7 +112,7 @@ static int32_t es_flipDictionary(int32_t v)
 
 /* ---- reading and writing settings ----------------------------------- */
 
-int32_t __stdcall es_getParam(OldInst *h, int32_t which)
+int32_t STDCALL es_getParam(OldInst *h, int32_t which)
 {
     OldInst *inst = h;
     int32_t v = -1;
@@ -134,7 +135,7 @@ int32_t __stdcall es_getParam(OldInst *h, int32_t which)
 /* The same, but of the defaults a new instance would start from. A language
    of nought means none has been chosen, and the answer is the one built
    in. */
-int32_t __stdcall es_getDefaultParam(int32_t which)
+int32_t STDCALL es_getDefaultParam(int32_t which)
 {
     int32_t v = -1;
 
@@ -149,7 +150,7 @@ int32_t __stdcall es_getDefaultParam(int32_t which)
     return v;
 }
 
-int32_t __stdcall es_setDefaultParam(int32_t which, int32_t value)
+int32_t STDCALL es_setDefaultParam(int32_t which, int32_t value)
 {
     int32_t v = value;
     int32_t old = -1;
@@ -200,7 +201,7 @@ int32_t __stdcall es_setDefaultParam(int32_t which, int32_t value)
 
 /* Wait for everything queued to be spoken. The instance is marked busy for
    the whole wait, so a callback that tries to call back in is refused. */
-int __stdcall es_synchronize(OldInst *h)
+int STDCALL es_synchronize(OldInst *h)
 {
     OldInst *inst;
     int32_t rc;
@@ -227,7 +228,7 @@ int __stdcall es_synchronize(OldInst *h)
     return ok;
 }
 
-int __stdcall es_pause(OldInst *h, int32_t on)
+int STDCALL es_pause(OldInst *h, int32_t on)
 {
     OldInst *inst;
 
@@ -241,7 +242,7 @@ int __stdcall es_pause(OldInst *h, int32_t on)
 
 /* End an instance and give back everything it holds. Answers nought
    always. */
-int __stdcall es_delete(OldInst *h)
+int STDCALL es_delete(OldInst *h)
 {
     OldInst *inst;
 
@@ -280,7 +281,7 @@ int __stdcall es_delete(OldInst *h)
    eight editable voices back to the standard ones, the queue emptied, and
    the output rebuilt. The rate is tried as it stands, then eleven thousand,
    then eight; only if all three are refused does this fail. */
-int __stdcall es_reset(OldInst *h)
+int STDCALL es_reset(OldInst *h)
 {
     OldInst *inst;
     int failed = 0;
@@ -375,13 +376,13 @@ static int es_speakWith(OldInst *inst, const char *text, int32_t annotate)
     return 1;
 }
 
-int __stdcall es_speakText(const char *text, int32_t annotate)
+int STDCALL es_speakText(const char *text, int32_t annotate)
 {
     return es_speakWith(eo_newEx(g_DefaultEnvironment[ENV_LANGUAGE]), text,
                         annotate);
 }
 
-int __stdcall es_speakTextEx(const char *text, int32_t annotate,
+int STDCALL es_speakTextEx(const char *text, int32_t annotate,
                              int32_t language)
 {
     return es_speakWith(eo_newEx(language), text, annotate);
@@ -389,7 +390,7 @@ int __stdcall es_speakTextEx(const char *text, int32_t annotate,
 
 /* Say the phrase the engine keeps for checking that it works at all, in the
    first of the standard voices. */
-int __stdcall es_testPhrase(OldInst *h)
+int STDCALL es_testPhrase(OldInst *h)
 {
     OldInst *inst;
     char narrow[0xd0];
@@ -421,7 +422,7 @@ int __stdcall es_testPhrase(OldInst *h)
 
 /* ---- run the filters over a string without speaking it -------------- */
 
-int __stdcall es_getFilteredText(OldInst *h, void *a, void *b, void *c)
+int STDCALL es_getFilteredText(OldInst *h, void *a, void *b, void *c)
 {
     if (!h)
         return 0;
@@ -432,7 +433,7 @@ int __stdcall es_getFilteredText(OldInst *h, void *a, void *b, void *c)
 /* ---- and the ones that were never written --------------------------- */
 
 /* Naming a file to write to was published and does nothing. */
-int __stdcall es_setOutputFilename(OldInst *h, const char *name)
+int STDCALL es_setOutputFilename(OldInst *h, const char *name)
 {
     (void)name;
     if (es_reentered(h))
@@ -440,7 +441,7 @@ int __stdcall es_setOutputFilename(OldInst *h, const char *name)
     return 0;
 }
 
-int __stdcall es_synthesizeFile(OldInst *h, const char *name)
+int STDCALL es_synthesizeFile(OldInst *h, const char *name)
 {
     (void)name;
     if (es_reentered(h))
@@ -448,54 +449,54 @@ int __stdcall es_synthesizeFile(OldInst *h, const char *name)
     return 0;
 }
 
-int __stdcall es_isBeingReentered(OldInst *h)
+int STDCALL es_isBeingReentered(OldInst *h)
 {
     (void)h;
     return 0;
 }
 
-int __stdcall es_progStatus(OldInst *h)
+int STDCALL es_progStatus(OldInst *h)
 {
     (void)h;
     return 0;
 }
 
-int __stdcall es_requestLicense(void *a)
+int STDCALL es_requestLicense(void *a)
 {
     (void)a;
     return 0;
 }
 
-void __stdcall es_errorMessage(OldInst *h, void *out)
+void STDCALL es_errorMessage(OldInst *h, void *out)
 {
     (void)h;
     (void)out;
 }
 
-void __stdcall es_startLogging(int32_t what)
+void STDCALL es_startLogging(int32_t what)
 {
     (void)what;
 }
 
-void __stdcall es_stopLogging(int32_t what)
+void STDCALL es_stopLogging(int32_t what)
 {
     (void)what;
 }
 
-int __stdcall es_getLog(void *a)
+int STDCALL es_getLog(void *a)
 {
     (void)a;
     return 0;
 }
 
-int __stdcall es_getIntLog(void *a, void *b)
+int STDCALL es_getIntLog(void *a, void *b)
 {
     (void)a;
     (void)b;
     return 0;
 }
 
-int __stdcall es_dialogBox(void *a, void *b, void *c, void *d, void *e)
+int STDCALL es_dialogBox(void *a, void *b, void *c, void *d, void *e)
 {
     (void)a;
     (void)b;
@@ -505,8 +506,6 @@ int __stdcall es_dialogBox(void *a, void *b, void *c, void *d, void *e)
     return 1;
 }
 
-#define ALIAS_N(mangled, ours, n) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "@" #n "\n")
 
 ALIAS_N("_eciGetParam@8", "es_getParam", 8);
 ALIAS_N("_eciGetDefaultParam@4", "es_getDefaultParam", 4);

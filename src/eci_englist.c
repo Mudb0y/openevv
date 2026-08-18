@@ -21,6 +21,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* The reader is embedded in the list, so its size has to be right. */
 typedef struct IniFileReader {

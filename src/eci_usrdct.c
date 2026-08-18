@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include "delta.h"
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* The language module's own handle, which is where the current dictionary
    and the stream it works in are kept. */

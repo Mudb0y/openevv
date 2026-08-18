@@ -15,6 +15,7 @@
 
 #include <stdint.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 #define UTF8_NO_ROOM  (-3)
 

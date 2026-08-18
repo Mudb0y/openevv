@@ -13,8 +13,8 @@
 
 #include <stdint.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
-#define STDCALL __attribute__((stdcall))
 
 typedef STDCALL uint32_t (*AddRefFn)(void *self);
 

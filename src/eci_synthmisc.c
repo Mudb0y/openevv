@@ -22,7 +22,9 @@
    Names are prefixed; the aliases carry the real ones. */
 
 #include <stdint.h>
+#include <stddef.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 #define ERR_BAD_ARG   (-3)
 #define ERR_NO_VOICE  (-22)

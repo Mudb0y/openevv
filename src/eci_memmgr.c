@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
 extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");

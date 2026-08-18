@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* While this is set every call reports itself, which is how the claim above
    was established rather than assumed. */

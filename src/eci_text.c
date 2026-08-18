@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 typedef struct OldInst OldInst;
 
@@ -77,14 +78,14 @@ typedef struct QueueElement {
 #define VOICE_PARAM(v, i) (*(int32_t *)((char *)(v) + 0x20 + (i) * 4))
 #define VOICE_BYTES       0x50
 
-extern int32_t __stdcall api_add_text(void *h2, const char *s, int32_t len,
+extern int32_t STDCALL api_add_text(void *h2, const char *s, int32_t len,
                                      int32_t a, int32_t annotate, int32_t b)
     MANGLED("_eciAddText2@24");
-extern int32_t __stdcall api_insert_index(void *h2, int32_t n)
+extern int32_t STDCALL api_insert_index(void *h2, int32_t n)
     MANGLED("_eciInsertIndex2@8");
-extern int32_t __stdcall api_block(void *h2) MANGLED("_eciBlock2@4");
-extern int32_t __stdcall api_unblock(void *h2) MANGLED("_eciUnblock2@4");
-extern int32_t __stdcall api_synthesize(void *h2)
+extern int32_t STDCALL api_block(void *h2) MANGLED("_eciBlock2@4");
+extern int32_t STDCALL api_unblock(void *h2) MANGLED("_eciUnblock2@4");
+extern int32_t STDCALL api_synthesize(void *h2)
     MANGLED("_eciSynthesize2@4");
 extern int lg_splitLanguageString(char *s, uint8_t *family, uint8_t *dialect,
                                uint8_t *extra)
@@ -590,7 +591,7 @@ static int et_reentered(OldInst *h, uint32_t bit)
     return 1;
 }
 
-int __stdcall et_insertIndex(OldInst *h, int32_t n)
+int STDCALL et_insertIndex(OldInst *h, int32_t n)
 {
     OldInst *inst;
 
@@ -620,7 +621,7 @@ int __stdcall et_insertIndex(OldInst *h, int32_t n)
     return 1;
 }
 
-int __stdcall et_synthesize(OldInst *h)
+int STDCALL et_synthesize(OldInst *h)
 {
     OldInst *inst;
 
@@ -663,7 +664,7 @@ static void et_letGo(char **filtered, int mine, char **s)
    Note that the annotated path sends the string the filter and the byte
    order mark left, while the plain path sends the one that came in. That is
    what the original does. */
-int __stdcall et_addText(OldInst *h, const char *text)
+int STDCALL et_addText(OldInst *h, const char *text)
 {
     OldInst *inst;
     char *s;
@@ -809,8 +810,6 @@ ALIAS("?addToManualQueue@@YAXPAUoldECIInstData@@PAUQueueElement@@@Z",
 ALIAS("?processManualQueue@@YAHPAUoldECIInstData@@@Z",
       "et_processManualQueue");
 
-#define ALIAS_N(mangled, ours, n) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "@" #n "\n")
 
 ALIAS_N("_eciInsertIndex@8", "et_insertIndex", 8);
 ALIAS_N("_eciSynthesize@4", "et_synthesize", 4);

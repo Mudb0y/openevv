@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 typedef struct ETIThread ETIThread;
 typedef struct ETImessage ETImessage;

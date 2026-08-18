@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 extern const int32_t ev_voiceParamRange[8][2];
 

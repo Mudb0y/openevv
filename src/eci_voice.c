@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 typedef struct OldInst OldInst;
 
@@ -91,14 +92,14 @@ typedef struct VoiceRegistration {
     int32_t params[8];          /* +0x28 */
 } VoiceRegistration;
 
-extern int32_t __stdcall es_getParam(OldInst *h, int32_t which)
+extern int32_t STDCALL es_getParam(OldInst *h, int32_t which)
     MANGLED("_eciGetParam@8");
-extern int32_t __stdcall api_check_synth(void *h2)
+extern int32_t STDCALL api_check_synth(void *h2)
     MANGLED("_eciCheckSynthesizing2@4");
-extern int32_t __stdcall api_register_voice(void *h2, int32_t voiceno,
+extern int32_t STDCALL api_register_voice(void *h2, int32_t voiceno,
                                            void *a, VoiceRegistration *out)
     MANGLED("_eciRegisterVoice2@16");
-extern int32_t __stdcall api_unregister_voice(void *h2, int32_t voiceno,
+extern int32_t STDCALL api_unregister_voice(void *h2, int32_t voiceno,
                                              void *reg, void *a)
     MANGLED("_eciUnregisterVoice2@16");
 extern int eci2RealWorld(int32_t realWorld, int32_t which, int32_t value)
@@ -278,7 +279,7 @@ static int vc_writable(int32_t voiceno)
 
 /* Copy one voice over another. Copying onto the one in play also remembers
    which number it came from and forces everything to be sent down again. */
-int __stdcall vc_copyVoice(OldInst *h, int32_t from, int32_t to)
+int STDCALL vc_copyVoice(OldInst *h, int32_t from, int32_t to)
 {
     OldInst *inst;
     char buf[VOICE_BYTES];
@@ -330,7 +331,7 @@ int __stdcall vc_copyVoice(OldInst *h, int32_t from, int32_t to)
 }
 
 /* Read one setting of one voice. */
-int __stdcall vc_getVoiceParam(OldInst *h, int32_t voiceno, int32_t which)
+int STDCALL vc_getVoiceParam(OldInst *h, int32_t voiceno, int32_t which)
 {
     OldInst *inst = h;
     int realWorld;
@@ -374,7 +375,7 @@ int __stdcall vc_getVoiceParam(OldInst *h, int32_t voiceno, int32_t which)
    The number the caller gives is in whichever units it asked for, so it is
    checked twice: once against what that unit will take at all, and once
    against the engine's own range converted into those units. */
-int __stdcall vc_setVoiceParam(OldInst *h, int32_t voiceno, int32_t which,
+int STDCALL vc_setVoiceParam(OldInst *h, int32_t voiceno, int32_t which,
                                int32_t value)
 {
     OldInst *inst;
@@ -423,7 +424,7 @@ int __stdcall vc_setVoiceParam(OldInst *h, int32_t voiceno, int32_t which,
 
 /* Read a voice's name, in whichever encoding the caller is being spoken
    to in. */
-int __stdcall vc_getVoiceName(OldInst *h, int32_t voiceno, void *out)
+int STDCALL vc_getVoiceName(OldInst *h, int32_t voiceno, void *out)
 {
     OldInst *inst = h;
     char name[VOICE_NAME_ROOM];
@@ -463,7 +464,7 @@ int __stdcall vc_getVoiceName(OldInst *h, int32_t voiceno, void *out)
 /* Write one. Only the voice in play and the eight editable ones have a name
    the caller owns, but an out-of-range number is still answered with
    success, which is what the original does. */
-int __stdcall vc_setVoiceName(OldInst *h, int32_t voiceno, const char *name)
+int STDCALL vc_setVoiceName(OldInst *h, int32_t voiceno, const char *name)
 {
     OldInst *inst;
     char *s = 0;
@@ -500,7 +501,7 @@ int __stdcall vc_setVoiceName(OldInst *h, int32_t voiceno, const char *name)
 /* Tell the engine about a voice of the caller's own, and write what it
    answers into the concatenative table so the rest of this file can find
    it. */
-int __stdcall vc_registerVoice(OldInst *h, int32_t voiceno, void *a,
+int STDCALL vc_registerVoice(OldInst *h, int32_t voiceno, void *a,
                                VoiceRegistration *out)
 {
     OldInst *inst;
@@ -553,7 +554,7 @@ int __stdcall vc_registerVoice(OldInst *h, int32_t voiceno, void *a,
 }
 
 /* And take it away again. */
-int __stdcall vc_unregisterVoice(OldInst *h, int32_t voiceno,
+int STDCALL vc_unregisterVoice(OldInst *h, int32_t voiceno,
                                  VoiceRegistration *reg, void *a)
 {
     OldInst *inst;
@@ -592,8 +593,6 @@ ALIAS("?rc_to_VoiceError@@YA?AW4ECIVoiceError@@J@Z", "vc_rc_to_VoiceError");
    alias; the swap stands the original's aside on the strength of the name
    alone. */
 
-#define ALIAS_N(mangled, ours, n) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "@" #n "\n")
 
 ALIAS_N("_eciCopyVoice@12", "vc_copyVoice", 12);
 ALIAS_N("_eciGetVoiceParam@12", "vc_getVoiceParam", 12);

@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 const char eciIni[3145] = {
     91, 76, 97, 110, 103, 117, 97, 103, 101, 73, 110, 100, 101, 112, 101, 110,

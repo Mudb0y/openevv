@@ -17,8 +17,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
-#define STDCALL __attribute__((stdcall))
 
 /* Embedded in both the list and the array, so its size has to be right. */
 typedef struct IniFileReader {

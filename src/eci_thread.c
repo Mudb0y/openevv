@@ -16,9 +16,9 @@
    is the same on any target that can start a task and hold a semaphore. */
 
 #include <stdint.h>
+#include <stddef.h>
+#include "evv_abi.h"
 
-#define THIS __attribute__((thiscall))
-#define MANGLED(name) __asm__("\"" name "\"")
 
 typedef struct ETIThread ETIThread;
 
@@ -361,8 +361,6 @@ const ThreadVtbl vtbl_thread = {
     th_destroy, th_terminate, th_waitForExit, th_run
 };
 
-#define ALIAS(mangled, ours) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "\n")
 
 ALIAS("??_7ETIThread@@6B@", "vtbl_thread");
 ALIAS("??0ETIThread@@IAE@XZ", "th_ctor");

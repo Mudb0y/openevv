@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* Which call was refused. Every entry point has its own bit; the ones here
    share the same one because the original gives them the same one. */
@@ -58,26 +59,26 @@ typedef struct QueueElement {
 #define OI_REFUSED(h)   (*(uint32_t *)((char *)(h) + 0x6b0))
 #define OI_BUSY(h)      (*(int32_t *)((char *)(h) + 0x6b4))
 
-extern int32_t __stdcall api_poll(void *h) MANGLED("_eciPoll2@4");
-extern int32_t __stdcall api_stop(void *h) MANGLED("_eciStop2@4");
-extern int32_t __stdcall api_synthesize(void *h) MANGLED("_eciSynthesize2@4");
-extern void __stdcall api_version(int32_t *a, int32_t *b, int32_t *c,
+extern int32_t STDCALL api_poll(void *h) MANGLED("_eciPoll2@4");
+extern int32_t STDCALL api_stop(void *h) MANGLED("_eciStop2@4");
+extern int32_t STDCALL api_synthesize(void *h) MANGLED("_eciSynthesize2@4");
+extern void STDCALL api_version(int32_t *a, int32_t *b, int32_t *c,
                                   int32_t *d) MANGLED("_eciVersion2@16");
 extern int lg_eciGetAvailableLanguages2(uint32_t *out, int *count)
     MANGLED("?eciGetAvailableLanguages2@@YAHPAW4ECILanguageDialect@@PAH@Z");
-extern int32_t __stdcall es_getParam(OldInst *h, int32_t which)
+extern int32_t STDCALL es_getParam(OldInst *h, int32_t which)
     MANGLED("_eciGetParam@8");
-extern int32_t __stdcall api_new(void **out, int32_t language)
+extern int32_t STDCALL api_new(void **out, int32_t language)
     MANGLED("_eciNew2@8");
-extern int32_t __stdcall api_delete(void *h2) MANGLED("_eciDelete2@4");
-extern int32_t __stdcall api_get_param(void *h2, int32_t k, int32_t p,
+extern int32_t STDCALL api_delete(void *h2) MANGLED("_eciDelete2@4");
+extern int32_t STDCALL api_get_param(void *h2, int32_t k, int32_t p,
                                       int32_t *out) MANGLED("_eciGetParam2@16");
-extern void __stdcall api_register_callback(void *h2, void *cb, void *inst,
+extern void STDCALL api_register_callback(void *h2, void *cb, void *inst,
                                            void *a, void *b)
     MANGLED("_eciRegisterCallback2@20");
 extern void *api_get_rom_mngr(void *h2) MANGLED("_eciGetRomMngr2");
 extern void *api_get_filter_mngr(void *h2) MANGLED("_eciGetFilterMngr2");
-extern int __stdcall ev_setOutputDevice(OldInst *h, int32_t which)
+extern int STDCALL ev_setOutputDevice(OldInst *h, int32_t which)
     MANGLED("_eciSetOutputDevice@8");
 extern void setRealWorldParamsFromECIParams(void *voice, int32_t which)
     MANGLED("_setRealWorldParamsFromECIParams");
@@ -95,8 +96,8 @@ int32_t setECIerror(int32_t rc, OldInst *h);
 
 /* Declared here because the entry points call one another. The queue that
    the caller fills is still the original's; only emptying it is ours. */
-int __stdcall eo_stop(OldInst *h);
-int __stdcall eo_speaking(OldInst *h);
+int STDCALL eo_stop(OldInst *h);
+int STDCALL eo_speaking(OldInst *h);
 int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data);
 
 /* Refuse a call that arrived while another was still running, and remember
@@ -561,12 +562,12 @@ static OldInst *eo_newInstance(int32_t language, int told)
     return 0;
 }
 
-OldInst *__stdcall eo_new(void)
+OldInst *STDCALL eo_new(void)
 {
     return eo_newInstance(g_DefaultEnvironment[9], 0);
 }
 
-OldInst *__stdcall eo_newEx(int32_t language)
+OldInst *STDCALL eo_newEx(int32_t language)
 {
     return eo_newInstance(language, 1);
 }
@@ -574,25 +575,25 @@ OldInst *__stdcall eo_newEx(int32_t language)
 /* ---- the entry points ---- */
 
 /* Nothing to do: errors are cleared as they are read. */
-void __stdcall eo_clearErrors(OldInst *h)
+void STDCALL eo_clearErrors(OldInst *h)
 {
     (void)h;
 }
 
 /* Nor here: the newer interface has no separate step for this. */
-void __stdcall eo_synchronizeSynth(OldInst *h)
+void STDCALL eo_synchronizeSynth(OldInst *h)
 {
     (void)h;
 }
 
-int __stdcall eo_getAvailableLanguages(uint32_t *out, int *count)
+int STDCALL eo_getAvailableLanguages(uint32_t *out, int *count)
 {
     return lg_eciGetAvailableLanguages2(out, count);
 }
 
 /* The last index mark the callback was told about, kept so a caller that did
    not want a callback can ask instead. */
-int32_t __stdcall eo_getIndex(OldInst *h)
+int32_t STDCALL eo_getIndex(OldInst *h)
 {
     if (!h)
         return 0;
@@ -601,7 +602,7 @@ int32_t __stdcall eo_getIndex(OldInst *h)
 
 /* Where the caller's own callback is put. Nothing else happens: the bridge
    between it and the engine's was installed when the instance was made. */
-void __stdcall eo_registerCallback(OldInst *h, void *cb, void *data)
+void STDCALL eo_registerCallback(OldInst *h, void *cb, void *data)
 {
     if (eo_reentered(h, REFUSED_GENERAL))
         return;
@@ -612,7 +613,7 @@ void __stdcall eo_registerCallback(OldInst *h, void *cb, void *data)
 }
 
 /* Throw away what has been given but not yet spoken. */
-int __stdcall eo_clearInput(OldInst *h)
+int STDCALL eo_clearInput(OldInst *h)
 {
     if (eo_reentered(h, REFUSED_GENERAL))
         return 0;
@@ -625,7 +626,7 @@ int __stdcall eo_clearInput(OldInst *h)
 /* Stop speaking and forget what was queued. Answering that it worked is not
    the same as the engine agreeing: a refusal from underneath leaves the
    instance marked not busy and answers false. */
-int __stdcall eo_stop(OldInst *h)
+int STDCALL eo_stop(OldInst *h)
 {
     if (eo_reentered(h, REFUSED_GENERAL))
         return 0;
@@ -653,7 +654,7 @@ int __stdcall eo_stop(OldInst *h)
    a caller that never asks never hears anything.
 
    A caller that has gone away is answered by stopping outright. */
-int __stdcall eo_speaking(OldInst *h)
+int STDCALL eo_speaking(OldInst *h)
 {
     int32_t rc;
 
@@ -674,7 +675,7 @@ int __stdcall eo_speaking(OldInst *h)
 }
 
 /* The version, as four numbers in a string. */
-void __stdcall eo_version(char *out)
+void STDCALL eo_version(char *out)
 {
     int32_t a = 0, b = 0, c = 0, d = 0;
 
@@ -684,10 +685,6 @@ void __stdcall eo_version(char *out)
     sprintf(out, "%d.%d.%d.%d", a, b, c, d);
 }
 
-/* A stdcall name carries the size of its arguments, so these need the alias
-   that puts it back. */
-#define ALIAS_N(mangled, ours, n) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "@" #n "\n")
 
 ALIAS_N("_eciClearErrors@4", "eo_clearErrors", 4);
 ALIAS_N("_eciSynchronizeSynth@4", "eo_synchronizeSynth", 4);

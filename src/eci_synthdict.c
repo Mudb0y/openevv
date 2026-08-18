@@ -30,6 +30,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 #define OK               0
 #define ERR_BAD_ARG    (-3)

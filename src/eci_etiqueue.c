@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 typedef struct ETIqueue {
     const void *vt;         /* +0x00 */

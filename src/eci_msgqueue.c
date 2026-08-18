@@ -17,9 +17,8 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include "evv_abi.h"
 
-#define THIS __attribute__((thiscall))
-#define MANGLED(name) __asm__("\"" name "\"")
 
 /* Answers a post can give. */
 #define POST_FAILED    0
@@ -429,8 +428,6 @@ const MessageVtbl vtbl_quit = {
     msg_equalsMessage, msg_equalsType, quit_run
 };
 
-#define ALIAS(mangled, ours) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "\n")
 
 ALIAS("??_7ETImessage@@6B@", "vtbl_message");
 ALIAS("??_7ETImsgQuit@@6B@", "vtbl_quit");

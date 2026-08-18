@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 typedef struct OldInst OldInst;
 
@@ -84,17 +85,17 @@ typedef struct ECIVoice { int32_t w[0x14]; } ECIVoice;
 #define SV_DIALECT_BYTES 0x0504
 #define SV_FIRST         4
 
-extern int32_t __stdcall api_set_param(void *h2, int32_t k, int32_t p,
+extern int32_t STDCALL api_set_param(void *h2, int32_t k, int32_t p,
                                       int32_t v) MANGLED("_eciSetParam2@16");
-extern int32_t __stdcall api_register_samples(void *h2, void *buf,
+extern int32_t STDCALL api_register_samples(void *h2, void *buf,
                                                   int32_t bytes, void *fmt)
     MANGLED("_eciRegisterSampleBuffer2@16");
-extern int32_t __stdcall api_register_phonemes(void *h2, void *buf,
+extern int32_t STDCALL api_register_phonemes(void *h2, void *buf,
                                                    int32_t n, int32_t kind)
     MANGLED("_eciRegisterPhonemeBuffer2@16");
-extern int32_t __stdcall api_new_audio_format(void *h2, void *fmt)
+extern int32_t STDCALL api_new_audio_format(void *h2, void *fmt)
     MANGLED("_eciNewAudioFormat2@8");
-extern int32_t __stdcall api_delete_audio_format(void *h2)
+extern int32_t STDCALL api_delete_audio_format(void *h2)
     MANGLED("_eciDeleteAudioFormat2@4");
 extern int ealQueryDevCaps(int32_t dev, int32_t kind, int32_t *n, void *out)
     MANGLED("_ealQueryDevCaps");
@@ -454,7 +455,7 @@ static char *ev_standardVoice(OldInst *h, int family, int dialect)
    made. The dictionary setting is the one place where the caller's sense of
    the number is the opposite of the engine's, so it is turned round on the
    way in and the old value turned back on the way out. */
-int32_t __stdcall ev_setParam(OldInst *h, int32_t which, int32_t value)
+int32_t STDCALL ev_setParam(OldInst *h, int32_t which, int32_t value)
 {
     OldInst *inst;
     int32_t v;
@@ -580,7 +581,7 @@ static int ev_reentered(OldInst *h)
 /* Send the sound to a device, named by its number. The name is what the
    layer beneath opens, so it is written into the instance before the format
    is built, and put back if the format is refused. */
-int __stdcall ev_setOutputDevice(OldInst *h, int32_t dev)
+int STDCALL ev_setOutputDevice(OldInst *h, int32_t dev)
 {
     OldInst *inst;
     int32_t n;
@@ -612,7 +613,7 @@ int __stdcall ev_setOutputDevice(OldInst *h, int32_t dev)
 
 /* Or into the caller's own buffer. Asking for no buffer at all means going
    back to the device at whatever rate the defaults name. */
-int __stdcall ev_setOutputBuffer(OldInst *h, int32_t n, void *buf)
+int STDCALL ev_setOutputBuffer(OldInst *h, int32_t n, void *buf)
 {
     OldInst *inst;
 
@@ -641,8 +642,6 @@ int __stdcall ev_setOutputBuffer(OldInst *h, int32_t n, void *buf)
     return 1;
 }
 
-#define ALIAS_N(mangled, ours, n) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "@" #n "\n")
 
 ALIAS("?checklang@@YAHH@Z", "ev_checklang");
 ALIAS("?sampleRateSupported@@YAHH@Z", "ev_sampleRateSupported");

@@ -20,13 +20,9 @@
 #include <string.h>
 #include "delta.h"
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
-#define STDCALL __attribute__((stdcall))
 
-/* A stdcall name carries the size of its arguments, so these need the alias
-   that puts it back. */
-#define ALIAS_N(mangled, ours, n) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "@" #n "\n")
 
 /* What the block the machine keeps for ECI holds for this layer. */
 #define ELOQ(d)          ((unsigned char *)(d)->eloqc)

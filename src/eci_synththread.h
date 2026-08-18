@@ -10,12 +10,9 @@
 #define ECI_SYNTHTHREAD_H
 
 #include <stdint.h>
+#include "evv_abi.h"
 
-#define THIS __attribute__((thiscall))
-#define MANGLED(name) __asm__("\"" name "\"")
 
-#define ALIAS(mangled, ours) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "\n")
 
 typedef struct ETImessage ETImessage;
 typedef struct SynthThread SynthThread;

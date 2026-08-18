@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* Where the text sits inside the identifier. */
 #define LANG_TEXT(l)    ((const char *)(l) + 4)

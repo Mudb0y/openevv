@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* Parameters the concatenative side understands. Numbered from its own list,
    which is not the one the published interface uses. */

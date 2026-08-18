@@ -25,6 +25,7 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "klatt_state.h"
+#include "evv_abi.h"
 
 /* The engine's own handle. Only the one field this file needs is named. */
 typedef struct DeltaThis DeltaThis;
@@ -436,7 +437,7 @@ static const int32_t DEFAULT_FRAME[FRAME_WORDS] = {
 
 static const int32_t last_glob[LAST_GLOB_WORDS] = { 1, 0, 0, 5, 8, 1 };
 
-extern void *cpp_new_bytes(uint32_t n) MANGLED("??2@YAPAXI@Z");
+extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
 THIS void *soundDeviceInfoCtor(void *self);
 extern THIS void *sti_indexQueueCtor(void *self)
     MANGLED("??0IndexQueue@@QAE@XZ");
@@ -488,7 +489,7 @@ int dlang_new(DeltaThis *d)
     }
     memset(DL_BUF_100(lang), 0, BUF_100_BYTES);
 
-    dev = cpp_new_bytes(0x54);
+    dev = cpp_new(0x54);
     DL_DEVICE(lang) = dev ? soundDeviceInfoCtor(dev) : 0;
     if (!DL_DEVICE(lang)) {
         free(DL_BUF_100(lang));
@@ -572,7 +573,7 @@ int callSynthesizeArray(DeltaThis *d, Cell *rate, Cell *c2, Cell *c3,
 
     (void)rate;
 
-    buf = cpp_new_bytes(0x0d);
+    buf = cpp_new(0x0d);
     if (!buf)
         return 1;
 

@@ -17,9 +17,9 @@
    audio buffers are drained. */
 
 #include <stdint.h>
+#include <stddef.h>
+#include "evv_abi.h"
 
-#define THIS __attribute__((thiscall))
-#define MANGLED(name) __asm__("\"" name "\"")
 
 typedef struct ETImessage ETImessage;
 
@@ -654,8 +654,6 @@ const ThreadVtbl vtbl_sound = {
     (void *)qt_setToTerminate, (void *)qt_translateMessage
 };
 
-#define ALIAS(mangled, ours) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "\n")
 
 ALIAS("??_7ETImessageQueueThread@@6B@", "vtbl_mqthread");
 ALIAS("??_7SoundThread@@6B@", "vtbl_sound");

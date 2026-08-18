@@ -16,9 +16,9 @@
    Minus eighteen means stop altogether. */
 
 #include <stdint.h>
+#include <stddef.h>
+#include "evv_abi.h"
 
-#define THIS __attribute__((thiscall))
-#define MANGLED(name) __asm__("\"" name "\"")
 
 typedef struct ETImessage ETImessage;
 typedef struct ETIappMessageQueue ETIappMessageQueue;
@@ -527,8 +527,6 @@ const MessageVtbl vtbl_msguser = {
     msg_equalsMessage, msg_equalsType, msguser_run
 };
 
-#define ALIAS(mangled, ours) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "\n")
 
 ALIAS("??_7ETImessageQueue@@6B@", "vtbl_queue");
 ALIAS("??_7ETIappMessageQueue@@6B@", "vtbl_appqueue");

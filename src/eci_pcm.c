@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 static void pcm_saw(const char *what)
 {

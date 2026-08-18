@@ -18,8 +18,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include "evv_abi.h"
 
-#define THIS __attribute__((thiscall))
 #define STD  __attribute__((stdcall))
 
 /* How ECI names a language: a packed number and the same thing as text. */
@@ -49,7 +49,6 @@ typedef struct { const EngineVtbl *vt; } EngineWrapper;
 
 /* ---- what the original supplies -------------------------------------- */
 
-#define MANGLED(name) __asm__("\"" name "\"")
 
 extern THIS int32_t st_changeRomParam(void *t, int32_t p, int32_t v)
     MANGLED("?changeRomParam@SynthThread@@QAEJJJ@Z");
@@ -616,9 +615,6 @@ THIS int32_t es_setInitialState(ECIstate *s, void *thread, int32_t lang)
     return rc;
 }
 
-/* The names the original's callers know these by. */
-#define ALIAS(mangled, ours) \
-    __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "\n")
 
 /* The compiler put a copy of this one in every object that names a
    language, so ours gives way to whichever copy is still linked. */

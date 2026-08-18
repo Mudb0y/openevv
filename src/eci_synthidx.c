@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* Every one of the collection tables the construction chain passes through.
    They belong to the original; only the methods below are ours. */

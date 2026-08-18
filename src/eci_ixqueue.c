@@ -17,6 +17,7 @@
 
 #include <stdint.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* One mark and what it is still waiting for. */
 typedef struct IndexPair {

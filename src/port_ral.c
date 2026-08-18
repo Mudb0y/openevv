@@ -3,8 +3,9 @@
    The original ships this in a separate library: threads, semaphores,
    events, a little string handling, an audio device interface and a trace
    log. None of it is speech, and none of it is what this port is about, so
-   it is supplied here rather than transcribed. Only enough to let the
-   engine run and hand samples back through its own buffer interface.
+   it is written afresh on top of evv_port.h rather than transcribed. Only
+   enough to let the engine run and hand samples back through its own
+   buffer interface.
 
    The audio device half is deliberately empty. Asked how many devices there
    are, it answers none, which is what sends the engine down the buffer path
@@ -13,6 +14,7 @@
 #include "evv_port.h"
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include <stdlib.h>
 
 #include <stdarg.h>
@@ -470,6 +472,25 @@ int ralStrCpy(int n, char *dst, const char *src)
     return 0;
 }
 
+/* Written out rather than taken from the C library, because the name for
+   it differs between every one of the targets this has to reach and none
+   of them is in the standard. */
+static int icmp(const char *a, const char *b, int n, int limited)
+{
+    int i;
+
+    for (i = 0; !limited || i < n; i++) {
+        int x = tolower((unsigned char)a[i]);
+        int y = tolower((unsigned char)b[i]);
+
+        if (x != y)
+            return x < y ? -1 : 1;
+        if (x == 0)
+            return 0;
+    }
+    return 0;
+}
+
 /* Three arguments, not two: a length first, then the two strings, which is
    how the sound format table looks a format up by name. Zero there means
    the whole string. */
@@ -477,7 +498,7 @@ int ralStrIcmp(int n, const char *a, const char *b)
 {
     if (a == NULL || b == NULL)
         return a == b ? 0 : 1;
-    return n > 0 ? _strnicmp(a, b, (size_t)n) : _stricmp(a, b);
+    return icmp(a, b, n, n > 0);
 }
 
 /* The audio device layer.

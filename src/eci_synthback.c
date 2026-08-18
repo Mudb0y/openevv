@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* What the application queue is being told about. These are its own
    numbers, not the ones the published interface hands the caller. */

@@ -17,6 +17,7 @@
 
 #include <stdint.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 #define APP_CONCATENATIVE  0xc
 #define ECI_PARAM_LANGUAGE 2

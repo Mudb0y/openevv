@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 /* One stream, and how many bytes of it there are. */
 #define STREAM_BYTES 0x18

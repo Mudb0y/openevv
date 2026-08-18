@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "eci_synththread.h"
+#include "evv_abi.h"
 
 #define APP_INDEX_LOST     0x06
 #define APP_SPEAKING_DONE  0x07
