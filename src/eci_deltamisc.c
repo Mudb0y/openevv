@@ -27,8 +27,6 @@
 /* One word the variable block clears before a run. */
 #define VARS_1128(d)    (*(int32_t *)((char *)(d)->vars + 0x1128))
 
-extern int32_t val_expr2(delta_state *d, int32_t a, int32_t b, int32_t c,
-                         int32_t e, int32_t width, int32_t *spill);
 extern int32_t vcmdinit(delta_state *d, int32_t argc, char **argv);
 extern int32_t vinitrun(delta_state *d);
 
@@ -68,14 +66,11 @@ int32_t etiwinMainDLL(delta_state *d, int32_t argc, char **argv)
 
 /* ---- dttime --------------------------------------------------------- */
 
-/* The same as the wider form, at the default width, throwing away what it
-   would have said about how much it used. */
-int32_t val_expr(delta_state *d, int32_t a, int32_t b, int32_t c, int32_t e)
-{
-    int32_t spill;
-
-    return val_expr2(d, a, b, c, e, 9, &spill);
-}
+/* val_expr is not here. Its one caller is val_expr1 in misc, and val_expr1
+   is named by no call and by no relocation anywhere in the language, so the
+   chain is entered from nothing. Writing it would have pulled in val_expr2,
+   durcalc, firstdefd, gcql and gcqr, about eight hundred instructions, for
+   a path no sentence can reach. */
 
 /* ---- dterror -------------------------------------------------------- */
 
