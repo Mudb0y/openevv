@@ -17,23 +17,6 @@
 #include <string.h>
 #include "delta.h"
 
-/* The four lists of globals: how many of each, and where they are. */
-#define G_COMPOUND_N(d)  (*(int32_t *)((char *)(d) + 0x00))
-#define G_LONG_N(d)      (*(int32_t *)((char *)(d) + 0x04))
-#define G_SHORT_N(d)     (*(int32_t *)((char *)(d) + 0x08))
-#define G_WORD_N(d)      (*(int32_t *)((char *)(d) + 0x10))
-#define G_WORD(d)        (*(int32_t ***)((char *)(d) + 0x14))
-#define G_COMPOUND(d)    (*(unsigned char **)((char *)(d) + 0x18))
-#define G_LONG(d)        (*(int32_t ***)((char *)(d) + 0x1c))
-#define G_SHORT(d)       (*(int16_t ***)((char *)(d) + 0x20))
-
-/* One entry of the compound list: where it lives, what it starts as, and
-   how many bytes follow that. */
-#define COMPOUND_SIZE 0xc
-#define C_AT(d, i)     (*(unsigned char **)(G_COMPOUND(d) + (i) * COMPOUND_SIZE))
-#define C_INIT(d, i)   (*(int16_t *)(G_COMPOUND(d) + (i) * COMPOUND_SIZE + 4))
-#define C_BYTES(d, i)  (*(int32_t *)(G_COMPOUND(d) + (i) * COMPOUND_SIZE + 8))
-
 extern int32_t init_new(delta_state *d);
 extern void    init_delete(delta_state *d);
 extern void    ccode_new(delta_state *d);
@@ -110,20 +93,22 @@ void initGlobalVars(delta_state *d)
 {
     int32_t i;
 
-    for (i = 0; i < G_WORD_N(d); i++)
-        *G_WORD(d)[i] = 0;
+    /* Each index holds its list twice, so every variable is done twice.
+       That is the original's doing and it costs nothing. */
+    for (i = 0; i < d->nword; i++)
+        *d->word[i] = 0;
 
-    for (i = 0; i < G_COMPOUND_N(d); i++) {
-        unsigned char *at = C_AT(d, i);
+    for (i = 0; i < d->ncompound; i++) {
+        unsigned char *at = d->compound[i].at;
 
-        *(int16_t *)at = C_INIT(d, i);
+        *(int16_t *)at = (int16_t)d->compound[i].init;
         *(int16_t *)(at + 2) |= (int16_t)-1;
-        memset(at + 4, 0, (size_t)C_BYTES(d, i));
+        memset(at + 4, 0, (size_t)d->compound[i].bytes);
     }
 
-    for (i = 0; i < G_LONG_N(d); i++)
-        *G_LONG(d)[i] = 0;
+    for (i = 0; i < d->nlong; i++)
+        *d->lng[i] = 0;
 
-    for (i = 0; i < G_SHORT_N(d); i++)
-        *G_SHORT(d)[i] = 0;
+    for (i = 0; i < d->nshort; i++)
+        *d->shrt[i] = 0;
 }

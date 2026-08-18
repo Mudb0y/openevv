@@ -32,14 +32,6 @@
 /* What the owner keeps that says the spine moved. */
 #define OWNER_MOVED(d) (*(int32_t *)((d)->owner + 0x1b8))
 
-/* The compound globals, exactly as initGlobalVars has them. */
-#define G_COMPOUND_N(d) (*(int32_t *)((char *)(d) + 0x00))
-#define G_COMPOUND(d)   (*(unsigned char **)((char *)(d) + 0x18))
-#define COMPOUND_SIZE   0xc
-#define C_AT(d, i)      (*(unsigned char **)(G_COMPOUND(d) + (i) * COMPOUND_SIZE))
-#define C_INIT(d, i)    (*(int16_t *)(G_COMPOUND(d) + (i) * COMPOUND_SIZE + 4))
-#define C_BYTES(d, i)   (*(int32_t *)(G_COMPOUND(d) + (i) * COMPOUND_SIZE + 8))
-
 /* What the last C helper answered with, when it means the machine cannot be
    trusted to still hold a spine: never ran, or ran and failed. */
 #define NEVER_RAN 0xf9
@@ -104,12 +96,12 @@ int32_t vinitrun(delta_state *d)
 
     OWNER_MOVED(d) = 0;
 
-    for (i = 0; i < G_COMPOUND_N(d); i++) {
-        unsigned char *at = C_AT(d, i);
+    for (i = 0; i < d->ncompound; i++) {
+        unsigned char *at = d->compound[i].at;
 
-        *(int16_t *)at = C_INIT(d, i);
+        *(int16_t *)at = (int16_t)d->compound[i].init;
         *(int16_t *)(at + 2) |= (int16_t)-1;
-        memset(at + 4, 0, (size_t)C_BYTES(d, i));
+        memset(at + 4, 0, (size_t)d->compound[i].bytes);
     }
 
     return 1;
