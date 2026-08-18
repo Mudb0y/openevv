@@ -189,14 +189,12 @@ int32_t sync_to_right(delta_state *d, int8_t f, int32_t at)
     return VRSYNC(d, NODE(at), f);
 }
 
-/* Whether a sync mark stands at this field of the node the bits describe.
-   The language's fields do not start at zero in that array; the machine
-   says where they do. */
-int sync_in_stm(delta_state *d, int8_t f, const int32_t *bits)
+/* Whether a sync mark stands at this field of a node. The language's
+   fields do not start at zero in a node's words; the machine says where
+   they do. */
+int sync_in_stm(delta_state *d, int8_t f, int32_t at)
 {
-    int32_t i = d->vars->fence_base + f;
-
-    return (bits[i] & 1) != 0;
+    return (NODE(at)[d->vars->fence_base + f] & 1) != 0;
 }
 
 /* Take one mark out, and the pair between two. Both answer one whether or
