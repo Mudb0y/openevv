@@ -143,7 +143,7 @@ void resetDeltaHeap(delta_state *d)
 
 /* Hand out an object, with the segment it came from stamped in the four bytes
    in front of it so freeing knows where to put it back. */
-void *allocDeltaHeapObject(delta_state *d, int32_t size)
+DELTA_FASTCALL void *allocDeltaHeapObject(delta_state *d, int32_t size)
 {
     delta_stack *s = d->stack;
     uint8_t *p = allocDynaMem(d, s->heap_cur, size + 4);
@@ -159,7 +159,7 @@ void *allocDeltaHeapObject(delta_state *d, int32_t size)
     return p + 4;
 }
 
-void freeDeltaHeapObject(delta_state *d, void *p)
+DELTA_FASTCALL void freeDeltaHeapObject(delta_state *d, void *p)
 {
     delta_stack *s = d->stack;
     uint8_t *head = (uint8_t *)p - 4;
@@ -197,6 +197,50 @@ void freeDeltaHeapObject(delta_state *d, void *p)
 /* How far into the heap a pointer is, counted in units. A negative answer
    means it is not in the heap at all: minus one when nothing holds it, minus
    two when only the free list does. */
+/* Give back everything the heap and the stack are holding: the segments kept
+   on the free list, the heap's own chain, and the one the stack lives in.
+   Each chain is freed from its head, which takes the whole chain with it. */
+void deltaHeapCleanup(delta_state *d)
+{
+    delta_stack *s = d->stack;
+
+    if (s->free_segs != NULL)
+        freeDynaMem(s->free_segs);
+    if (s->heap_first != NULL)
+        freeDynaMem(s->heap_first);
+    if (s->seg != NULL)
+        freeDynaMem(s->seg);
+
+    s->seg = NULL;
+    s->heap_cur = NULL;
+    s->heap_first = NULL;
+    s->free_segs = NULL;
+}
+
+/* One segment for the stack, and the two ends recorded in it. The stack runs
+   downwards, so the top starts at the end of the segment and the limit at
+   the far end, and both are then pulled back by the size of a
+   begin-or-alternative marker -- one of which is written at the top before
+   anything else, so an unwind always finds a floor. */
+int32_t initializeDeltaStack(delta_state *d, int32_t size)
+{
+    delta_stack *s = d->stack;
+
+    s->seg = allocDynaSegment(d, size);
+
+    s->top = s->seg->end - s->seg->used;
+    s->base = (uint8_t *)(intptr_t)size;
+    s->limit = (uint8_t *)(intptr_t)(size - s->seg->used);
+
+    s->top -= s->boa_size;
+    s->limit -= s->boa_size;
+
+    *s->top = 8;
+    setDeltaStackVBot(d, s->top);
+
+    return s->seg != NULL;
+}
+
 int32_t getDeltaHeapSegNumber(delta_state *d, uint8_t *p, int32_t unit)
 {
     delta_seg *owner = *(delta_seg **)(p - 4);

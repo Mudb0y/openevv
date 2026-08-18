@@ -546,8 +546,23 @@ void  delta_sys_free(void *p);
 
 int   initializeDeltaHeap(delta_state *d, int32_t size);
 void  resetDeltaHeap(delta_state *d);
-void *allocDeltaHeapObject(delta_state *d, int32_t size);
-void  freeDeltaHeapObject(delta_state *d, void *p);
+/* These two are fastcall in the original -- the machine in ecx and the size
+   or the object in edx -- which is how their names come to carry the
+   argument size. Everything else here is cdecl. */
+#ifndef DELTA_FASTCALL
+#if defined(__i386__)
+#define DELTA_FASTCALL __attribute__((fastcall))
+#else
+#define DELTA_FASTCALL
+#endif
+#endif
+
+DELTA_FASTCALL void *allocDeltaHeapObject(delta_state *d, int32_t size);
+DELTA_FASTCALL void  freeDeltaHeapObject(delta_state *d, void *p);
+
+/* Giving the heap and the stack back, and setting the stack up. */
+void  deltaHeapCleanup(delta_state *d);
+int32_t initializeDeltaStack(delta_state *d, int32_t size);
 void  freeDeltaHeapTo(delta_state *d, uint8_t *pos, int32_t release);
 int32_t getDeltaHeapSegNumber(delta_state *d, uint8_t *p, int32_t unit);
 int   recordDeltaHeapPos(delta_state *d);
