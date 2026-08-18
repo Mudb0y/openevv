@@ -616,11 +616,6 @@ THIS int32_t es_setInitialState(ECIstate *s, void *thread, int32_t lang)
 }
 
 
-/* The compiler put a copy of this one in every object that names a
-   language, so ours gives way to whichever copy is still linked. */
-#define WEAK_ALIAS(mangled, ours) \
-    __asm__(".weak \"" mangled "\"\n.set \"" mangled "\", _" ours "\n")
-
 ALIAS("??0LangIdentifier@@QAE@PBD@Z", "lang_ctor");
 WEAK_ALIAS("?setString@LangIdentifier@@AAEXXZ", "lang_setString");
 ALIAS("?setInitialState@ECIstate@@QAEJPAVSynthThread@@W4ECILanguageDialect@@@Z",

@@ -39,11 +39,17 @@
 #define ALIAS_N(mangled, ours, n) \
     __asm__(".globl \"" mangled "\"\n.set \"" mangled "\", _" ours "@" #n "\n")
 
+/* The compiler put a copy of some of these in every object that used one,
+   so ours has to give way to whichever copy is still linked. */
+#define WEAK_ALIAS(mangled, ours) \
+    __asm__(".weak \"" mangled "\"\n.set \"" mangled "\", _" ours "\n")
+
 #else
 
 #define MANGLED(name)
 #define ALIAS(mangled, ours)
 #define ALIAS_N(mangled, ours, n)
+#define WEAK_ALIAS(mangled, ours)
 
 #endif
 
