@@ -17,6 +17,7 @@
  */
 
 #include <stdint.h>
+#include <string.h>
 #include "delta.h"
 #include "eci_synththread.h"
 
@@ -34,6 +35,8 @@
 #define ELOQ_FLUSHING(d) (*(int32_t *)(ELOQ(d) + 0x0c))
 #define ELOQ_BUSY(d)     (*(int32_t *)(ELOQ(d) + 0x10))
 #define ELOQ_MAINLINK(d) (*(void **)(ELOQ(d) + 0xa0))
+#define ELOQ_ERRLINK(d)  (*(void **)(ELOQ(d) + 0xa4))
+#define ELOQ_CONSLINK(d) (*(void **)(ELOQ(d) + 0xa8))
 
 /* What can go wrong, as this layer numbers it. */
 #define ERR_LINK      (-2)
@@ -87,12 +90,35 @@ extern int32_t setCurrentUserDict(delta_state *d, void *s)
 extern void *getCurrentUserDict(delta_state *d)
     MANGLED("?getCurrentUserDict@@YAPAVDictionarySet@@PAUDelta_This_Struct@@@Z");
 
+extern void    setSynthDurationCallback(delta_state *d, void *fn, void *param);
+extern void    registerSynthIndexCallback(delta_state *d, void *fn, void *param);
+extern void    registerPhonemeCallback(delta_state *d, void *fn, void *param);
+extern void    initGlobalVars(delta_state *d);
+extern void    resetDelayedSynthQueue(delta_state *d);
+extern void    flushDelayedSynthQueue(delta_state *d);
+extern int32_t vdltinit(delta_state *d, int32_t how);
+extern int32_t vinitrun(delta_state *d);
+extern int8_t  vffind_lf(delta_state *d, const char *name);
+extern void    vf_clrbuf(delta_state *d, int32_t lf);
+extern int32_t synthDevicePlaying(delta_state *d);
+extern int32_t holdSynthDevice(delta_state *d, int32_t on);
+extern int32_t setSynthToNamedFile(delta_state *d, const char *name);
+extern int32_t setSynthToCallback(delta_state *d, void *fn, void *param);
+extern int32_t DeltaProc_process_sentences(delta_state *d);
+extern int32_t DeltaProc_process_remaining(delta_state *d);
+extern int32_t deltaErrorThrown(delta_state *d);
+extern int32_t eciLinkDataToECI(void *link, char *buf, int32_t room, void *n);
+extern THIS int32_t dictset_save(void *s, int32_t volume, const char *name)
+    MANGLED("?save@DictionarySet@@QAEHW4DictVolume@@PBD@Z");
+extern THIS int32_t dictset_updateEntry(void *s, int32_t volume,
+                                        const char *key, const char *value)
+    MANGLED("?updateEntry@DictionarySet@@QAEHW4DictVolume@@PBD1@Z");
+
 /* A dictionary set records what went wrong in one field of its own; nought
    there means it came up cleanly. */
 #define DICTSET_FAILED(s)  (*(int32_t *)((char *)(s) + 0x14))
 
-/* Still the original's; it comes later in this batch. */
-extern STDCALL int32_t engsynRestart(delta_state *d);
+STDCALL int32_t es_engsynRestart(delta_state *d);
 
 /* ---- coming up and going down --------------------------------------- */
 
@@ -173,7 +199,7 @@ STDCALL int32_t es_engsynFlush(delta_state *d, int32_t stop)
         throwDeltaErrorNow(d);
         stopSynthesizing(d);
     } else {
-        engsynRestart(d);
+        es_engsynRestart(d);
     }
 
     return checkEngsynError(d);
@@ -280,6 +306,243 @@ STDCALL const char *es_engsynDictLookup(void *set, int32_t volume,
     return dictset_lookup(set, volume, word);
 }
 
+
+/* ---- where the answers go ------------------------------------------- */
+
+/* Each of these is one slot for a function and one for whatever the caller
+   wants handed back with it, side by side in the block the machine keeps
+   for ECI. Three of them are not kept here at all and go straight through
+   to the layer that owns them. */
+#define ELOQ_CB(d, off)     (*(void **)(ELOQ(d) + (off)))
+
+STDCALL void es_engsynWantPhonemeIndices(delta_state *d, int32_t on)
+{
+    *(int32_t *)(ELOQ(d) + 0x00) = on;
+}
+
+STDCALL void es_engsynRegisterWordCallback(delta_state *d, void *fn, void *param)
+{
+    ELOQ_CB(d, 0x14) = fn;
+    ELOQ_CB(d, 0x18) = param;
+}
+
+STDCALL void es_engsynRegisterWordIndexCallback(delta_state *d, void *fn,
+                                                void *param)
+{
+    ELOQ_CB(d, 0x1c) = fn;
+    ELOQ_CB(d, 0x20) = param;
+}
+
+STDCALL void es_engsynRegisterUserIndexCallback(delta_state *d, void *fn,
+                                                void *param)
+{
+    ELOQ_CB(d, 0x24) = fn;
+    ELOQ_CB(d, 0x28) = param;
+}
+
+STDCALL void es_engsynRegisterAnnoCallback(delta_state *d, void *fn, void *param)
+{
+    ELOQ_CB(d, 0x2c) = fn;
+    ELOQ_CB(d, 0x30) = param;
+}
+
+STDCALL void es_engsynRegisterEnhancedSPRCallback(delta_state *d, void *fn,
+                                                  void *param)
+{
+    ELOQ_CB(d, 0x34) = fn;
+    ELOQ_CB(d, 0x38) = param;
+}
+
+STDCALL void es_engsynRegisterVoiceCallback(delta_state *d, void *fn,
+                                            void *param)
+{
+    ELOQ_CB(d, 0x3c) = fn;
+    ELOQ_CB(d, 0x40) = param;
+}
+
+STDCALL void es_engsynRegisterIndexCallback(delta_state *d, void *fn,
+                                            void *param)
+{
+    registerSynthIndexCallback(d, fn, param);
+}
+
+STDCALL void es_engsynRegisterPhonemeCallback(delta_state *d, void *fn,
+                                              void *param)
+{
+    registerPhonemeCallback(d, fn, param);
+}
+
+STDCALL void es_engsynSetDurationCallback(delta_state *d, void *fn, void *param)
+{
+    setSynthDurationCallback(d, fn, param);
+}
+
+/* ---- where the sound goes ------------------------------------------- */
+
+/* All three answer true for success where the layer below answers nought. */
+STDCALL int32_t es_engsynSetSynthToNamedFile(delta_state *d, const char *name)
+{
+    return setSynthToNamedFile(d, name) == 0;
+}
+
+STDCALL int32_t es_engsynSetSynthToCallback(delta_state *d, void *fn,
+                                            void *param)
+{
+    return setSynthToCallback(d, fn, param) == 0;
+}
+
+STDCALL int32_t es_engsynPause(delta_state *d, int32_t on)
+{
+    return holdSynthDevice(d, on) == 0;
+}
+
+/* Still playing if something is being processed, or if the device says so. */
+STDCALL int32_t es_engsynOutputPlaying(delta_state *d)
+{
+    if (ELOQ_BUSY(d) != 0 || synthDevicePlaying(d))
+        return 1;
+    return 0;
+}
+
+/* ---- putting text in and taking answers out ------------------------- */
+
+/* The two are the same but for which of the machine's doors they go
+   through. Both refuse to run inside themselves, which is what the busy
+   flag is for, and both clear it again on every way out. */
+STDCALL int32_t es_engsynProcessSentences(delta_state *d, const char *text)
+{
+    if (ELOQ_BUSY(d) != 0) {
+        setEngsynError(d, ERR_BUSY);
+    } else {
+        ELOQ_BUSY(d) = 1;
+        if (ELOQ_MAINLINK(d) == 0) {
+            setEngsynError(d, -1);
+        } else {
+            if (!eciLinkDataFromECI(ELOQ_MAINLINK(d), text))
+                setEngsynError(d, ERR_LINK);
+            if (DeltaProc_process_sentences(d) || deltaErrorThrown(d))
+                setEngsynError(d, ERR_ENGINE);
+        }
+        ELOQ_BUSY(d) = 0;
+    }
+    return checkEngsynError(d);
+}
+
+/* The one difference besides the door: a link that would not take the text
+   stops this one, and whatever was waiting is let go at the end. */
+STDCALL int32_t es_engsynProcessRemaining(delta_state *d, const char *text)
+{
+    if (ELOQ_BUSY(d) != 0) {
+        setEngsynError(d, ERR_BUSY);
+    } else {
+        ELOQ_BUSY(d) = 1;
+        if (ELOQ_MAINLINK(d) == 0) {
+            setEngsynError(d, -1);
+        } else if (!eciLinkDataFromECI(ELOQ_MAINLINK(d), text)) {
+            setEngsynError(d, ERR_LINK);
+        } else if (DeltaProc_process_remaining(d) || deltaErrorThrown(d)) {
+            setEngsynError(d, ERR_ENGINE);
+        }
+        ELOQ_BUSY(d) = 0;
+    }
+    flushDelayedSynthQueue(d);
+    return checkEngsynError(d);
+}
+
+/* Reading back what the engine produced, each from its own link. */
+STDCALL int32_t es_engsynReadPhonemes(delta_state *d, char *buf, int32_t room,
+                                      void *n)
+{
+    if (ELOQ_MAINLINK(d) != 0
+        && !eciLinkDataToECI(ELOQ_MAINLINK(d), buf, room, n))
+        setEngsynError(d, ERR_LINK);
+
+    return checkEngsynError(d);
+}
+
+STDCALL int32_t es_engsynReadConSprs(delta_state *d, char *buf, int32_t room,
+                                     void *n)
+{
+    if (ELOQ_CONSLINK(d) != 0
+        && !eciLinkDataToECI(ELOQ_CONSLINK(d), buf, room, n))
+        setEngsynError(d, ERR_LINK);
+
+    return checkEngsynError(d);
+}
+
+/* The odd one out. It looks at the main link to decide whether to try, but
+   reads from the error link, and it answers true only when it could not get
+   a message and had to put a fixed one there instead. */
+STDCALL int32_t es_engsynReadErrorMessage(delta_state *d, char *buf,
+                                          int32_t room, void *n)
+{
+    if (ELOQ_MAINLINK(d) == 0)
+        return 0;
+
+    if (eciLinkDataToECI(ELOQ_ERRLINK(d), buf, room, n))
+        return 0;
+
+    strncpy(buf, "Unable to get error message from engine.", (size_t)room);
+    buf[room] = 0;
+    return 1;
+}
+
+/* ---- stopping and starting again ------------------------------------ */
+
+/* Abort is not a request: it sets the error and throws immediately, so
+   whatever the machine was in the middle of unwinds. */
+STDCALL int32_t es_engsynSetAbort(delta_state *d)
+{
+    setEngsynError(d, -7);
+    throwDeltaErrorNow(d);
+    return 0;
+}
+
+/* Put the machine back where it started: globals, the delayed queue, the
+   variable stack, the run state, and the word buffer if there is one. Then
+   stop whatever is playing and start the engine again. */
+STDCALL int32_t es_engsynRestart(delta_state *d)
+{
+    int8_t lf;
+
+    resetEngsynError(d);
+    initGlobalVars(d);
+    resetDelayedSynthQueue(d);
+    flushDelayedSynthQueue(d);
+
+    if (!vdltinit(d, 1) || !vinitrun(d))
+        return 1;
+
+    lf = vffind_lf(d, "wordsin");
+    if (lf != -1)
+        vf_clrbuf(d, lf);
+
+    stopSynthesizing(d);
+    if (DeltaProc_start(d))
+        setEngsynError(d, ERR_ENGINE);
+
+    ELOQ_BUSY(d) = 0;
+    ELOQ_FLUSHING(d) = 0;
+    return checkEngsynError(d);
+}
+
+/* ---- the rest of the user dictionary -------------------------------- */
+
+STDCALL int32_t es_engsynSaveDict(void *set, int32_t volume, const char *name)
+{
+    if (set == 0 || name == 0)
+        return ERR_ARGUMENT;
+    return dictset_save(set, volume, name);
+}
+
+STDCALL int32_t es_engsynUpdateDict(void *set, int32_t volume,
+                                    const char *key, const char *value)
+{
+    if (set == 0 || key == 0)
+        return ERR_ARGUMENT;
+    return dictset_updateEntry(set, volume, key, value);
+}
+
 ALIAS_N("_engsynStart@4", "es_engsynStart", 4);
 ALIAS_N("_engsynEnd@4", "es_engsynEnd", 4);
 ALIAS_N("_engsynClose@4", "es_engsynClose", 4);
@@ -297,3 +560,26 @@ ALIAS_N("_engsynLoadDict@16", "es_engsynLoadDict", 16);
 ALIAS_N("_engsynDictFindFirst@16", "es_engsynDictFindFirst", 16);
 ALIAS_N("_engsynDictFindNext@16", "es_engsynDictFindNext", 16);
 ALIAS_N("_engsynDictLookup@12", "es_engsynDictLookup", 12);
+ALIAS_N("_engsynWantPhonemeIndices@8", "es_engsynWantPhonemeIndices", 8);
+ALIAS_N("_engsynRegisterWordCallback@12", "es_engsynRegisterWordCallback", 12);
+ALIAS_N("_engsynRegisterWordIndexCallback@12", "es_engsynRegisterWordIndexCallback", 12);
+ALIAS_N("_engsynRegisterUserIndexCallback@12", "es_engsynRegisterUserIndexCallback", 12);
+ALIAS_N("_engsynRegisterAnnoCallback@12", "es_engsynRegisterAnnoCallback", 12);
+ALIAS_N("_engsynRegisterEnhancedSPRCallback@12", "es_engsynRegisterEnhancedSPRCallback", 12);
+ALIAS_N("_engsynRegisterVoiceCallback@12", "es_engsynRegisterVoiceCallback", 12);
+ALIAS_N("_engsynRegisterIndexCallback@12", "es_engsynRegisterIndexCallback", 12);
+ALIAS_N("_engsynRegisterPhonemeCallback@12", "es_engsynRegisterPhonemeCallback", 12);
+ALIAS_N("_engsynSetDurationCallback@12", "es_engsynSetDurationCallback", 12);
+ALIAS_N("_engsynSetSynthToNamedFile@8", "es_engsynSetSynthToNamedFile", 8);
+ALIAS_N("_engsynSetSynthToCallback@12", "es_engsynSetSynthToCallback", 12);
+ALIAS_N("_engsynPause@8", "es_engsynPause", 8);
+ALIAS_N("_engsynOutputPlaying@4", "es_engsynOutputPlaying", 4);
+ALIAS_N("_engsynProcessSentences@8", "es_engsynProcessSentences", 8);
+ALIAS_N("_engsynProcessRemaining@8", "es_engsynProcessRemaining", 8);
+ALIAS_N("_engsynReadPhonemes@16", "es_engsynReadPhonemes", 16);
+ALIAS_N("_engsynReadConSprs@16", "es_engsynReadConSprs", 16);
+ALIAS_N("_engsynReadErrorMessage@16", "es_engsynReadErrorMessage", 16);
+ALIAS_N("_engsynSetAbort@4", "es_engsynSetAbort", 4);
+ALIAS_N("_engsynRestart@4", "es_engsynRestart", 4);
+ALIAS_N("_engsynSaveDict@12", "es_engsynSaveDict", 12);
+ALIAS_N("_engsynUpdateDict@16", "es_engsynUpdateDict", 16);
