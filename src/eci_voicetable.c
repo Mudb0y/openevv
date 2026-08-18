@@ -16,6 +16,15 @@
 #include <string.h>
 #include "evv_abi.h"
 
+/* The concatenative table is the same again with a rate between the
+   dialect and the voice, and it belongs to an instance rather than to the
+   library. */
+#define CV_FAMILY_BYTES  0x1e18
+#define CV_DIALECT_BYTES 0x0f0c
+#define CV_RATE_BYTES    0x0504
+#define CV_TABLE_BYTES   (FAMILIES * CV_FAMILY_BYTES)
+#define RATES            3
+
 /* One language and dialect, and one voice inside it. */
 #define SV_FAMILY_BYTES  0x0a08
 #define SV_DIALECT_BYTES 0x0504
@@ -64,6 +73,9 @@ extern int32_t lg_splitLanguageString(char *s, uint8_t *first, uint8_t *second,
 extern void setRealWorldParamsFromECIParams(char *voice, int32_t which);
 extern void cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
 
+static void loadStandardVoice(char *table, char *section,
+                              IniFileReader *ini);
+
 /* Sixteen records a dialect, eighteen families, two dialects each. The
    block itself is in eci_voicebuf.c, which the differential build leaves
    out: there it is still the original's, so that the original's own
@@ -83,9 +95,9 @@ static const char *const voice_names[VOICES] = {
 };
 
 /* The block one language and dialect keeps its voices in. */
-static char *voice_block(uint8_t family, uint8_t dialect)
+static char *voice_block(char *table, uint8_t family, uint8_t dialect)
 {
-    return standardVoices
+    return table
          + (family - 1) * SV_FAMILY_BYTES
          + dialect * SV_DIALECT_BYTES;
 }
@@ -93,7 +105,8 @@ static char *voice_block(uint8_t family, uint8_t dialect)
 /* One section of the settings: a language, then its voices. A section that
    does not read as a language is left alone, and so is a voice the file
    says nothing about. */
-static void loadStandardVoice(char *section, IniFileReader *ini)
+static void loadStandardVoice(char *table, char *section,
+                              IniFileReader *ini)
 {
     char    line[LINE_ROOM];
     uint8_t family, dialect, third;
@@ -108,7 +121,7 @@ static void loadStandardVoice(char *section, IniFileReader *ini)
 
     lg_splitLanguageString(section, &family, &dialect, &third);
 
-    *(int32_t *)voice_block(family, dialect) = 1;
+    *(int32_t *)voice_block(table, family, dialect) = 1;
 
     for (voice = 1; voice <= VOICES; voice++) {
         char    key[SECTION_ROOM];
@@ -123,7 +136,8 @@ static void loadStandardVoice(char *section, IniFileReader *ini)
         strcpy(line, value);
         cpp_delete(value);
 
-        entry  = voice_block(family, dialect) + (voice - 1) * VOICE_BYTES;
+        entry  = voice_block(table, family, dialect)
+               + (voice - 1) * VOICE_BYTES;
         record = entry + SV_FIRST;
 
         tok = strtok(line, " ");
@@ -144,38 +158,128 @@ static void loadStandardVoice(char *section, IniFileReader *ini)
     }
 }
 
+/* The same eight voices again, for each of the three rates the
+   concatenative synthesiser offers, under a key that names all four of
+   the things that pick a dataset out.
+
+   Every one of them is marked absent whether or not it was found, which
+   is what the original does; the table is read only where something else
+   has since said a voice is there. */
+static void loadStandardConcatenativeVoice(char *table, char *section,
+                                           IniFileReader *ini)
+{
+    static const int32_t rates[RATES] = { 8000, 11025, 22050 };
+
+    char    line[LINE_ROOM];
+    uint8_t family, dialect, third;
+    int32_t major, minor;
+    int32_t voice, rate;
+
+    line[0] = 0;
+    memset(line + 1, 0, sizeof line - 1);
+
+    if (sscanf(section, "%d . %d", &major, &minor) != 2)
+        return;
+
+    lg_splitLanguageString(section, &family, &dialect, &third);
+
+    for (voice = 1; voice <= VOICES; voice++)
+        for (rate = 0; rate < RATES; rate++) {
+            char    key[SECTION_ROOM];
+            char   *entry, *record, *value, *tok;
+            int32_t i;
+
+            sprintf(key, "Voice%uDataset%u.%u.%u", (unsigned)voice,
+                    (unsigned)family, (unsigned)dialect,
+                    (unsigned)rates[rate]);
+
+            entry = table
+                  + (family - 1) * CV_FAMILY_BYTES
+                  + dialect * CV_DIALECT_BYTES
+                  + rate * CV_RATE_BYTES
+                  + (voice - 1) * VOICE_BYTES;
+            record = entry + SV_FIRST;
+
+            value = ini_getString(ini, section, key);
+            if (value == 0) {
+                *(int32_t *)(entry + VOICE_PRESENT) = 0;
+                continue;
+            }
+
+            strcpy(line, value);
+            cpp_delete(value);
+
+            tok = strtok(line, " ");
+            sscanf(tok, "%d", (int32_t *)(record + VOICE_PARAMS));
+            for (i = 1; i < PARAMS; i++) {
+                tok = strtok(NULL, " ");
+                sscanf(tok, "%d", (int32_t *)(record + VOICE_PARAMS + i * 4));
+            }
+
+            setRealWorldParamsFromECIParams(record, ALL_PARAMS);
+
+            if (voice >= 1 && voice <= VOICES)
+                strcpy(record, voice_names[voice - 1]);
+            else
+                strcpy(record, "");
+
+            *(int32_t *)(entry + VOICE_PRESENT) = 0;
+        }
+}
+
+/* Walking the sections is the same walk twice over, so it is written
+   once. Whichever loader is handed in is called with the name out of its
+   brackets. */
+static void walk_sections(char *table, IniFileReader *ini,
+                          void (*load)(char *, char *, IniFileReader *))
+{
+    char        section[SECTION_ROOM];
+    const char *name;
+
+    name = ini_getFirstSection(ini);
+    if (name == 0)
+        return;
+
+    strncpy(section, name + 1, strlen(name) - 2);
+    section[strlen(name) - 2] = 0;
+    load(table, section, ini);
+
+    for (;;) {
+        name = ini_getNextSection(ini);
+        if (name == 0)
+            return;
+        if (strcmp(name, "[LanguageIndependent]") == 0)
+            continue;
+
+        strncpy(section, name + 1, strlen(name) - 2);
+        section[strlen(name) - 2] = 0;
+        load(table, section, ini);
+    }
+}
+
+THIS void *scv_ctor(char *table)
+{
+    IniFileReader ini;
+
+    ini_ctor(&ini);
+    memset(table, 0, CV_TABLE_BYTES);
+    walk_sections(table, &ini, loadStandardConcatenativeVoice);
+    ini_dtor(&ini);
+    return table;
+}
+
 /* Every section of the settings but the one that belongs to no language.
    The names arrive in their brackets and are copied out of them. */
 THIS void *isv_ctor(void *self)
 {
     IniFileReader ini;
-    char          section[SECTION_ROOM];
-    const char   *name;
 
     ini_ctor(&ini);
     memset(standardVoices, 0, VOICE_TABLE_BYTES);
-
-    name = ini_getFirstSection(&ini);
-    if (name != 0) {
-        strncpy(section, name + 1, strlen(name) - 2);
-        section[strlen(name) - 2] = 0;
-        loadStandardVoice(section, &ini);
-
-        for (;;) {
-            name = ini_getNextSection(&ini);
-            if (name == 0)
-                break;
-            if (strcmp(name, "[LanguageIndependent]") == 0)
-                continue;
-
-            strncpy(section, name + 1, strlen(name) - 2);
-            section[strlen(name) - 2] = 0;
-            loadStandardVoice(section, &ini);
-        }
-    }
-
+    walk_sections(standardVoices, &ini, loadStandardVoice);
     ini_dtor(&ini);
     return self;
 }
 
 ALIAS("??0InitializeStandardVoices@@QAE@XZ", "isv_ctor");
+ALIAS("??0StandardConcatenativeVoices@@QAE@XZ", "scv_ctor");
