@@ -211,7 +211,9 @@ typedef struct {
     uint8_t   pad_1178[0x11e8 - 0x1178];
     int32_t   unknown_11e8;    /* 0x11e8, cleared when a rule returns */
     int16_t   unknown_11ec;    /* 0x11ec, what actd_goto answers with */
-    uint8_t   pad_11ee[0x1e];
+    /* The block is 0x11f0 bytes: that is what ccode_new asks malloc for,
+       so the two bytes after the last named field are all there is. */
+    uint8_t   pad_11ee[2];
 } delta_vars;
 
 /* One variable of a rule, as the language compiled it. */
