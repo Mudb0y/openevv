@@ -243,17 +243,70 @@ typedef struct {
     int16_t              nlocals;  /* +0x22 */
 } delta_actdesc;
 
+/* One global variable of the machine, as the language declared it. Every
+   variable lives in the tail of delta_state as a cell: its type tag first,
+   then its value, so that a pointer to the value always has the tag just
+   in front of it. There are four kinds and the tag says which. */
+#define DG_WORD      (-6)   /* a 32-bit value, in an eight-byte cell */
+#define DG_LONG      (-3)   /* likewise, but the language calls it a long */
+#define DG_SHORT     (-4)   /* a 16-bit value, in a four-byte cell */
+#define DG_COMPOUND  (-9)   /* a run of bytes, described separately */
+
+/* Where the cells start, which is the first byte of delta_state the fields
+   above do not name. */
+#define DG_BASE 0xb0
+
+/* What a compound variable needs beyond its kind: what its first word is
+   set to when the machine is reset, and how many bytes follow it. The
+   whole cell is that plus the four bytes in front. */
+typedef struct {
+    int32_t init;
+    int32_t bytes;
+} delta_compound_decl;
+
+/* The language's variable list, in the order it declared them, and the
+   compound ones' extra description in the same order. Generated. */
+extern const int8_t  delta_globals[];
+extern const int32_t delta_globals_n;
+extern const delta_compound_decl delta_compounds[];
+extern const int32_t delta_compounds_n;
+
+/* One entry of the compound index the machine builds. */
+typedef struct {
+    unsigned char *at;     /* +0x00 */
+    int32_t        init;   /* +0x04 */
+    int32_t        bytes;  /* +0x08 */
+} delta_compound;
+
 typedef struct delta_state delta_state;
 
 struct delta_state {
-    uint8_t      pad_0000[0x28];
+    /* How many of each kind the language declared -- but doubled. Every one
+       of the four indexes below holds its list twice, back to back, and
+       these counts are of the doubled list. */
+    int32_t      ncompound;       /* 0x0000 */
+    int32_t      nlong;           /* 0x0004 */
+    int32_t      nshort;          /* 0x0008 */
+    int32_t      unknown_000c;
+    int32_t      nword;           /* 0x0010 */
+    /* Where each variable's value is. Nothing outside delta_new knows what
+       offset a variable landed at; everything reaches one through these. */
+    int32_t    **word;            /* 0x0014 */
+    delta_compound *compound;     /* 0x0018 */
+    int32_t    **lng;             /* 0x001c */
+    int16_t    **shrt;            /* 0x0020 */
+    int32_t      unknown_0024;
     uint8_t     *sets;            /* 0x0028, the language's lookup sets, one
                                      0x24-byte descriptor each */
     uint8_t     *act_table;       /* 0x002c, the dictionary's action table,
                                      one 0x28-byte entry each */
     const uint8_t *const *set_store;  /* 0x0030, one pointer per set to the
                                          entries themselves */
-    uint8_t      pad_0034[0x3c - 0x34];
+    /* Two direct handles on the second and third word variable, kept here
+       beside the language's own tables. Nothing transcribed so far reads
+       either of them, so what they are for is still open. */
+    int16_t     *direct_a;        /* 0x0034 */
+    int16_t     *direct_b;        /* 0x0038 */
     int32_t      unknown_3c;      /* 0x003c, a forto's third parameter */
     delta_pta    lpta;            /* 0x0040 */
     delta_pta    rpta;            /* 0x0050 */
