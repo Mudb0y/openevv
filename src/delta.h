@@ -114,7 +114,7 @@ typedef struct {
                                   terminated by a negative entry */
     uint8_t       pad_0060[0x94 - 0x60];
     int32_t       sync_size;   /* 0x0094, how big one sync node is */
-    uint8_t       pad_0098[4];
+    int32_t       unknown_98;  /* 0x0098, cleared when memory is set up */
     int32_t       unknown_9c;  /* 0x009c, cleared when a loop restarts */
     uint8_t  *names;         /* 0x00a0, the name stack, eight bytes an entry */
     int8_t    names_depth;   /* 0x00a4 */
