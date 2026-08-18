@@ -57,7 +57,8 @@ typedef struct PhonemeData {
 
 extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
 extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
-extern const void *vtbl_enginelistdata MANGLED("??_7EngineListData@@6B@");
+/* One slot each: how anything the list holds is told to delete itself. */
+extern const void *vtbl_enginelistdata[1];
 
 /* One slot: how the list tells a table to delete itself. */
 extern const void *vtbl_phonemedata[1];
@@ -268,8 +269,10 @@ THIS int32_t ph_getPhoneme(void *self, void *lang, int32_t want)
 }
 
 const void *vtbl_phonemedata[1] = { (void *)ph_dataDestroy };
+const void *vtbl_enginelistdata[1] = { (void *)ph_listDataDestroy };
 
 ALIAS("??_7PhonemeData@@6B@", "vtbl_phonemedata");
+ALIAS("??_7EngineListData@@6B@", "vtbl_enginelistdata");
 ALIAS("??_EPhonemeData@@UAEPAXI@Z", "ph_dataDestroy");
 ALIAS("??_EEngineListData@@UAEPAXI@Z", "ph_listDataDestroy");
 ALIAS("??0Phonemes@@QAE@XZ", "ph_ctor");
