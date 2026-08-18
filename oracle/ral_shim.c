@@ -10,7 +10,7 @@
    are, it answers none, which is what sends the engine down the buffer path
    we want. */
 
-#include <windows.h>
+#include "evv_port.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -60,9 +60,15 @@ struct ral_req {
 
 #define RAL_MAX 1024
 
-static int    ral_key[RAL_MAX];
-static HANDLE ral_obj[RAL_MAX];
-static DWORD  ral_owner[RAL_MAX];
+/* An entry is a semaphore or an event, and which it is has to be
+   remembered because they are destroyed and waited on differently. */
+#define RAL_SEM    1
+#define RAL_EVENT  2
+
+static int      ral_key[RAL_MAX];
+static void    *ral_obj[RAL_MAX];
+static int      ral_kind[RAL_MAX];
+static unsigned ral_owner[RAL_MAX];
 static int    ral_depth[RAL_MAX];
 static int    ral_next = 1;
 static int    ral_trace;
@@ -77,8 +83,16 @@ static void ral_say(const char *what, int key, int rc)
 {
     if (ral_trace)
         fprintf(stderr, "ral: %6lu %-28s key=%08x rc=%d thread=%lx\n",
-                (unsigned long)GetTickCount(), what, key, rc,
-                (unsigned long)GetCurrentThreadId());
+                (unsigned long)evv_ticks_ms(), what, key, rc,
+                (unsigned long)evv_task_self());
+}
+
+static void ral_free(void *h, int kind)
+{
+    if (kind == RAL_EVENT)
+        evv_event_destroy((evv_event *)h);
+    else
+        evv_sem_destroy((evv_sem *)h);
 }
 
 static int ral_slot(int key)
@@ -91,7 +105,7 @@ static int ral_slot(int key)
     return -1;
 }
 
-static int ral_bind(int key, HANDLE h)
+static int ral_bind(int key, void *h, int kind)
 {
     int i;
 
@@ -104,21 +118,22 @@ static int ral_bind(int key, HANDLE h)
             if (ral_obj[i] == NULL)
                 break;
     if (i >= RAL_MAX) {
-        CloseHandle(h);
+        ral_free(h, kind);
         return 10041;
     }
 
     if (ral_obj[i] != NULL)
-        CloseHandle(ral_obj[i]);
+        ral_free(ral_obj[i], ral_kind[i]);
 
     ral_key[i] = key;
     ral_obj[i] = h;
+    ral_kind[i] = kind;
     ral_owner[i] = 0;
     ral_depth[i] = 0;
     return 0;
 }
 
-static HANDLE ral_find(struct ral_req *r, int *slot)
+static void *ral_find(struct ral_req *r, int *slot)
 {
     int i;
 
@@ -133,7 +148,7 @@ static HANDLE ral_find(struct ral_req *r, int *slot)
 }
 
 /* The plain semaphores: count in, identifier out. */
-static int ral_sem_create(struct ral_req *r, LONG max)
+static int ral_sem_create(struct ral_req *r, int max)
 {
     int key;
     int rc;
@@ -142,7 +157,7 @@ static int ral_sem_create(struct ral_req *r, LONG max)
         return 10041;
 
     key = ++ral_next;
-    rc = ral_bind(key, CreateSemaphoreA(NULL, r->a ? 1 : 0, max, NULL));
+    rc = ral_bind(key, evv_sem_create(r->a ? 1 : 0, max), RAL_SEM);
     if (rc == 0)
         r->b = key;
     ral_say("ralSemaphoreCreate", key, rc);
@@ -166,7 +181,7 @@ int ralEventCreate(struct ral_req *r)
 
     if (r == NULL)
         return 10041;
-    rc = ral_bind(r->b, CreateEventA(NULL, TRUE, r->a ? TRUE : FALSE, NULL));
+    rc = ral_bind(r->b, evv_event_create(r->a ? 1 : 0), RAL_EVENT);
     ral_say("ralEventCreate", r->b, rc);
     return rc;
 }
@@ -179,7 +194,7 @@ int ralRecMutexSemaphoreCreate(struct ral_req *r)
 
     if (r == NULL)
         return 10041;
-    rc = ral_bind(r->a, CreateSemaphoreA(NULL, 1, 1, NULL));
+    rc = ral_bind(r->a, evv_sem_create(1, 1), RAL_SEM);
     ral_say("ralRecMutexSemaphoreCreate", r->a, rc);
     return rc;
 }
@@ -187,15 +202,16 @@ int ralRecMutexSemaphoreCreate(struct ral_req *r)
 static int ral_drop(struct ral_req *r, const char *what)
 {
     int i = -1;
-    HANDLE h = ral_find(r, &i);
+    void *h = ral_find(r, &i);
 
     if (h == NULL) {
         ral_say(what, r ? r->a : 0, 10041);
         return 10041;
     }
-    CloseHandle(h);
+    ral_free(h, ral_kind[i]);
     ral_key[i] = 0;
     ral_obj[i] = NULL;
+    ral_kind[i] = 0;
     ral_say(what, r->a, 0);
     return 0;
 }
@@ -222,12 +238,12 @@ int ralEventDelete(struct ral_req *r)
 
 static int ral_post(struct ral_req *r, const char *what)
 {
-    HANDLE h = ral_find(r, NULL);
+    void *h = ral_find(r, NULL);
 
     ral_say(what, r ? r->a : 0, h == NULL ? 10041 : 0);
     if (h == NULL)
         return 10041;
-    ReleaseSemaphore(h, 1, NULL);
+    evv_sem_post((evv_sem *)h, 1);
     return 0;
 }
 
@@ -241,6 +257,20 @@ int ralCountingSemaphoreSignal(struct ral_req *r)
     return ral_post(r, "ralCountingSemaphoreSignal");
 }
 
+/* A waiter does not know whether it holds a semaphore or an event, so ask
+   the table. */
+static int ral_wait_any(void *h, int ms)
+{
+    int i;
+
+    for (i = 0; i < RAL_MAX; i++)
+        if (ral_obj[i] == h)
+            return ral_kind[i] == RAL_EVENT
+                   ? evv_event_wait((evv_event *)h, ms)
+                   : evv_sem_wait((evv_sem *)h, ms);
+    return EVV_WAIT_FAILED;
+}
+
 /* Two answers, not one. Nearly everything here reports the way a C function
    reports an error, zero meaning nothing went wrong. Waiting on a semaphore
    does not: its callers compare against 0x2739, so that value is what "you
@@ -250,15 +280,15 @@ int ralCountingSemaphoreSignal(struct ral_req *r)
 
 static int ral_wait(struct ral_req *r, const char *what, int got, int lost)
 {
-    HANDLE h = ral_find(r, NULL);
-    DWORD w;
+    void *h = ral_find(r, NULL);
+    int w;
 
     ral_say(what, r ? r->a : 0, -1);
     if (h == NULL)
         return lost;
-    w = WaitForSingleObject(h, INFINITE);
-    ral_say(what, r->a, w == WAIT_OBJECT_0 ? got : lost);
-    return w == WAIT_OBJECT_0 ? got : lost;
+    w = ral_wait_any(h, EVV_FOREVER);
+    ral_say(what, r->a, w == EVV_WAIT_OK ? got : lost);
+    return w == EVV_WAIT_OK ? got : lost;
 }
 
 int ralBinarySemaphoreTest(struct ral_req *r)
@@ -282,8 +312,8 @@ int ralEventWait(struct ral_req *r)
 int ralRecMutexSemaphoreTest(struct ral_req *r)
 {
     int i = -1;
-    HANDLE h = ral_find(r, &i);
-    DWORD me = GetCurrentThreadId();
+    void *h = ral_find(r, &i);
+    unsigned me = evv_task_self();
 
     ral_say("ralRecMutexSemaphoreTest", r ? r->a : 0, h == NULL ? 0 : -1);
     if (h == NULL)
@@ -294,7 +324,7 @@ int ralRecMutexSemaphoreTest(struct ral_req *r)
         return RAL_GOT;
     }
 
-    if (WaitForSingleObject(h, INFINITE) != WAIT_OBJECT_0)
+    if (evv_sem_wait((evv_sem *)h, EVV_FOREVER) != EVV_WAIT_OK)
         return 0;
 
     ral_owner[i] = me;
@@ -305,7 +335,7 @@ int ralRecMutexSemaphoreTest(struct ral_req *r)
 int ralRecMutexSemaphoreSignal(struct ral_req *r)
 {
     int i = -1;
-    HANDLE h = ral_find(r, &i);
+    void *h = ral_find(r, &i);
 
     ral_say("ralRecMutexSemaphoreSignal", r ? r->a : 0, h == NULL ? 10041 : 0);
     if (h == NULL)
@@ -315,24 +345,24 @@ int ralRecMutexSemaphoreSignal(struct ral_req *r)
         ral_depth[i]--;
     if (ral_depth[i] == 0) {
         ral_owner[i] = 0;
-        ReleaseSemaphore(h, 1, NULL);
+        evv_sem_post((evv_sem *)h, 1);
     }
     return 0;
 }
 
 static int ral_event_set(struct ral_req *r, int how, const char *what)
 {
-    HANDLE h = ral_find(r, NULL);
+    void *h = ral_find(r, NULL);
 
     ral_say(what, r ? r->a : 0, h == NULL ? 10041 : 0);
     if (h == NULL)
         return 10041;
     if (how > 0)
-        SetEvent(h);
+        evv_event_signal((evv_event *)h);
     else if (how < 0)
-        ResetEvent(h);
+        evv_event_unsignal((evv_event *)h);
     else
-        PulseEvent(h);
+        evv_event_pulse((evv_event *)h);
     return 0;
 }
 
@@ -369,7 +399,7 @@ struct ral_start {
     void *arg;
 };
 
-static DWORD WINAPI ral_trampoline(LPVOID p)
+static void ral_trampoline(void *p)
 {
     struct ral_start *s = p;
     void *(*entry)(void *) = s->entry;
@@ -377,13 +407,12 @@ static DWORD WINAPI ral_trampoline(LPVOID p)
 
     free(s);
     entry(arg);
-    return 0;
 }
 
 int ralTaskCreate(struct ral_task *t)
 {
     struct ral_start *s;
-    HANDLE h;
+    evv_task *h;
 
     if (t == NULL || t->entry == NULL)
         return 10041;
@@ -394,8 +423,7 @@ int ralTaskCreate(struct ral_task *t)
     s->entry = t->entry;
     s->arg = t->arg;
 
-    h = CreateThread(NULL, (SIZE_T)(t->stack > 0 ? t->stack : 0x10000),
-                     ral_trampoline, s, 0, NULL);
+    h = evv_task_start(ral_trampoline, s, t->stack > 0 ? t->stack : 0x10000);
     if (h == NULL) {
         free(s);
         return 10041;
@@ -413,7 +441,7 @@ int ralTaskTerminate(void *h)
 
 int ralTaskDelay(int ms)
 {
-    Sleep((DWORD)(ms < 0 ? 0 : ms));
+    evv_sleep_ms(ms);
     return 0;
 }
 

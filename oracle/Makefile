@@ -71,11 +71,20 @@ OBJCOPY := i686-w64-mingw32-objcopy
 
 speak: $(BUILD)/speak.exe
 
-$(BUILD)/ral_shim.obj: ral_shim.c
+# The runtime abstraction layer, plus the one file that gives it a machine
+# to run on. They are joined into a single object so that every target which
+# already links the layer picks up the backing without a further edit; to
+# build for something else, swap which port file is named here.
+PORT := ../src/port_win32.c
+
+$(BUILD)/ral_shim.obj: ral_shim.c $(PORT) ../src/evv_port.h
 	@mkdir -p $(BUILD)
 	@printf '_uni_strlen ?UniStrlen@@YAIPBG@Z\n_uni_strstr ?UniStrstr@@YAPAGPBG0@Z\n' > $(BUILD)/uni.syms
-	@$(CC) -O2 -std=gnu99 -w -c $< -o $(BUILD)/ral_shim.tmp.o
-	@$(OBJCOPY) --redefine-syms=$(BUILD)/uni.syms $(BUILD)/ral_shim.tmp.o $@
+	@$(CC) -O2 -std=gnu99 -w -I../src -c ral_shim.c -o $(BUILD)/ral_shim.tmp.o
+	@$(CC) -O2 -std=gnu99 -w -I../src -c $(PORT) -o $(BUILD)/port.tmp.o
+	@i686-w64-mingw32-ld -r $(BUILD)/ral_shim.tmp.o $(BUILD)/port.tmp.o \
+	  -o $(BUILD)/ral_both.tmp.o
+	@$(OBJCOPY) --redefine-syms=$(BUILD)/uni.syms $(BUILD)/ral_both.tmp.o $@
 
 $(BUILD)/ctors.obj: ctors.c
 	@mkdir -p $(BUILD)
