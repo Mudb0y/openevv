@@ -21,6 +21,9 @@ CFLAGS := -O2 -std=gnu99 -w -I$(SRC)
 SOURCES := $(filter-out $(SRC)/port_win32.c $(SRC)/delta_rules_trace.c \
                         $(SRC)/delta_rules_trace_prim.c $(SRC)/delta_rules_ref.c, \
              $(wildcard $(SRC)/*.c))
+
+# port_files.c answers two things the differential build gets from the
+# platform it is linked beside, so it belongs to this target alone.
 OBJECTS := $(patsubst $(SRC)/%.c,$(BUILD)/%.o,$(SOURCES))
 
 .PHONY: all missing clean

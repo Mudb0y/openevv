@@ -74,16 +74,16 @@ int32_t vdelinit(delta_state *d)
 {
     int32_t i;
 
-    d->vars->nsq_marks = (const int8_t *)malloc((size_t)d->nstmts);
-    d->stack->nsq_fields = (const int8_t *)malloc((size_t)d->nstmts);
+    d->vars->nsq_marks = (int8_t *)malloc((size_t)d->nstmts);
+    d->stack->nsq_fields = (int8_t *)malloc((size_t)d->nstmts);
 
     if (!d->vars->nsq_marks || !d->stack->nsq_fields)
         return 0;
 
     for (i = 0; i < d->nstmts; i++)
-        ((int8_t *)d->vars->nsq_marks)[i] = 0;
+        d->vars->nsq_marks[i] = 0;
 
-    *(int8_t *)d->stack->nsq_fields = -1;
+    d->stack->nsq_fields[0] = -1;
     return 1;
 }
 

@@ -110,7 +110,7 @@ typedef struct {
     int32_t       del_right;   /* 0x004c */
     int8_t        del_field;   /* 0x0050, which field a delete is working in */
     uint8_t       pad_0051[0x5c - 0x51];
-    const int8_t *nsq_fields;  /* 0x005c, which fields decide the flags,
+    int8_t       *nsq_fields;  /* 0x005c, which fields decide the flags,
                                   terminated by a negative entry */
     uint8_t       pad_0060[0x94 - 0x60];
     int32_t       sync_size;   /* 0x0094, how big one sync node is */
@@ -214,7 +214,7 @@ typedef struct {
     int32_t   ctx_both;        /* 0x1120, look both ways for a context */
     int32_t   relink;          /* 0x1124, keep the spine order consistent */
     uint8_t   pad_1128[0x116c - 0x1128];
-    const int8_t *nsq_marks;   /* 0x116c, one per fenced field */
+    int8_t       *nsq_marks;   /* 0x116c, one per fenced field */
     int32_t   unknown_1170;    /* 0x1170, cleared after an insert */
     int32_t   fence_base;      /* 0x1174 */
     uint8_t   pad_1178[0x11e8 - 0x1178];
