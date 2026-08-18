@@ -161,7 +161,9 @@ typedef struct {
     delta_mark marks[DELTA_MARKS];  /* 0x051c */
     int32_t    free_count;   /* 0x05e4, how many spare segments are held */
     delta_seg *free_segs;    /* 0x05e8 */
-    uint8_t    pad_05ec[0x14];
+    /* The block is 0x664 bytes: that is what delta_lib_new asks malloc
+       for, so this runs to the end of it. */
+    uint8_t    pad_05ec[0x664 - 0x5ec];
 } delta_stack;
 
 /* Where the rules keep their variables and the result of the last compare.
