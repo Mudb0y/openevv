@@ -57,6 +57,8 @@ extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
 extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
 
 /* The user dictionary, which this layer only ever hands on to. */
+extern const uint32_t ds_bytes;
+extern int32_t ds_failed(const void *s);
 extern THIS void *ds_ctor(void *s, delta_state *d)
     MANGLED("??0DictionarySet@@QAE@PAUDelta_This_Struct@@@Z");
 extern THIS void ds_dtor(void *s) MANGLED("??1DictionarySet@@QAE@XZ");
@@ -101,7 +103,6 @@ extern THIS int32_t ds_updateEntry(void *s, int32_t volume,
 
 /* A dictionary set records what went wrong in one field of its own; nought
    there means it came up cleanly. */
-#define DICTSET_FAILED(s)  (*(int32_t *)((char *)(s) + 0x14))
 
 STDCALL int32_t es_engsynRestart(delta_state *d);
 
@@ -225,10 +226,10 @@ STDCALL int32_t es_engsynInsertDelayedSynthesisIndex(delta_state *d,
    apart again and nothing comes back. */
 STDCALL void *es_engsynNewDict(delta_state *d)
 {
-    void *room = cpp_new(0x18);
+    void *room = cpp_new(ds_bytes);
     void *set  = room ? ds_ctor(room, d) : 0;
 
-    if (set && DICTSET_FAILED(set) != 0) {
+    if (set && ds_failed(set) != 0) {
         ds_dtor(set);
         cpp_delete(set);
         set = 0;

@@ -87,6 +87,15 @@ typedef struct DictionarySet {
     int32_t               status;           /* +0x14 */
 } DictionarySet;
 
+/* What a caller has to allocate for one. Only this file knows what is in it. */
+const uint32_t ds_bytes = sizeof(DictionarySet);
+
+/* Whether it managed to open its volumes. */
+int32_t ds_failed(const DictionarySet *s)
+{
+    return s->status;
+}
+
 extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
 extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
 
