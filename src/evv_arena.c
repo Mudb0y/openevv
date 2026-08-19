@@ -14,11 +14,12 @@
 
 #include "evv_arena.h"
 
-#if defined(EVV_ARENA) && EVV_ARENA
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if defined(EVV_ARENA) && EVV_ARENA
+
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -295,3 +296,39 @@ int32_t evv_ref_checked(const void *p)
 }
 
 #endif
+
+/* ---- one rule's frame ------------------------------------------------- */
+
+#define FRAME_STACK (4u * 1024u * 1024u)
+#define FRAME_ALIGN 16
+#define FRAME_ROUND(n) (((n) + (FRAME_ALIGN - 1)) & ~(size_t)(FRAME_ALIGN - 1))
+
+static __thread unsigned char *fs_base, *fs_top, *fs_end;
+
+void *evv_frame_push(size_t n)
+{
+    unsigned char *p;
+
+    if (fs_base == 0) {
+        fs_base = evv_arena_alloc(FRAME_STACK);
+        if (fs_base == 0)
+            return 0;
+        fs_top = fs_base;
+        fs_end = fs_base + FRAME_STACK;
+    }
+
+    n = FRAME_ROUND(n);
+    if (fs_top + n > fs_end)
+        return 0;
+
+    p = fs_top;
+    fs_top += n;
+    return p;
+}
+
+void evv_frame_pop(void *p)
+{
+    if (p != 0)
+        fs_top = (unsigned char *)p;
+}
+

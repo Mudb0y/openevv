@@ -783,12 +783,14 @@ static void delta_rule_report(void)
 static int32_t run_bytecode(void *state, const delta_rule *r,
                             const int32_t *args, int nargs)
 {
-    unsigned char frame[DELTA_RULE_FRAME_MAX];
+    unsigned char *frame = evv_frame_push(DELTA_RULE_FRAME_MAX);
     volatile int depth = 0;
     interp st;
     int i;
 
-    memset(frame, 0, sizeof(frame));
+    if (frame == 0)
+        return 0;
+    memset(frame, 0, DELTA_RULE_FRAME_MAX);
     memset(&st, 0, sizeof(st));
     st.base = frame + r->frame;
     st.state = state;
@@ -819,6 +821,7 @@ static int32_t run_bytecode(void *state, const delta_rule *r,
         delta_rule_steps++;
     }
 
+    evv_frame_pop(frame);
     return st.answer;
 }
 

@@ -54,13 +54,11 @@ void  evv_arena_free(void *p);
 char *evv_arena_strdup(const char *s);
 #define strdup(s)       evv_arena_strdup(s)
 
-/* A block a thread can run its stack on. A rule keeps its frame on the stack
-   and hands the machine the address of it, so a thread that runs rules needs
-   its whole stack inside the arena; taking it from here is what makes that so,
-   and means no rule has to be written differently. Page-aligned, because that
-   is what pthread_attr_setstack wants, and never freed: the alignment slack in
-   front of it is not a block boundary. */
+/* A block a thread can run its stack on. Page-aligned, because that is what
+   pthread_attr_setstack wants, and never freed: the alignment slack in front
+   of it is not a block boundary. */
 void *evv_arena_stack(size_t n);
+
 
 /* Turning a pointer into a value the machine can hold. Anything outside the
    arena cannot be named in 32 bits and is a fault in whoever allocated it,
@@ -82,5 +80,14 @@ int32_t evv_ref_checked(const void *p);
 #define evv_arena_stack(n)  ((void *)0)
 
 #endif
+
+/* One rule's frame, and giving it back. A rule hands the machine the address
+   of its own frame, so the frame cannot be an ordinary local: where a value
+   is 32 bits and an address is not, the thread that sets the engine up is the
+   process's own and nothing can move its stack somewhere a value could name.
+   They nest strictly, so a stack of them is all that is wanted, and it comes
+   from the same place as everything else. */
+void *evv_frame_push(size_t n);
+void  evv_frame_pop(void *p);
 
 #endif

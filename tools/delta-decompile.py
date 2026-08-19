@@ -305,7 +305,8 @@ def emit(rule):
             body.append('        r0 = (int32_t)(num / by);')
             body.append('        r2 = (int32_t)(num % by); } }')
         elif op == 'return':
-            body.append('    return %s;' % v(ops[0]))
+            body.append('    { int32_t out = %s; evv_frame_pop(frame);'
+                        ' return out; }' % v(ops[0]))
             pending = None
         elif op == 'switch':
             body.append('    switch (%s) {' % v(ops[0]))
@@ -337,6 +338,7 @@ HEAD = """\
 
 #include "delta_rules.h"
 #include "delta_rules_c.h"
+#include "evv_arena.h"
 
 """
 
@@ -359,7 +361,11 @@ def write(names):
         text.append('/* %s, from %s */\n' % (name, rule.obj))
         text.append('static int32_t evv_%s(void *state, const int32_t *args,'
                     ' int nargs)\n{\n' % name)
-        text.append('    unsigned char frame[DELTA_RULE_FRAME_MAX];\n')
+        # The frame is not an ordinary local. A rule hands the machine the
+        # address of it, and where a value is 32 bits and an address is not,
+        # the only stack that can be named in one is the arena's.
+        text.append('    unsigned char *frame = evv_frame_push('
+                    'DELTA_RULE_FRAME_MAX);\n')
         text.append('    unsigned char *base = frame + %d;\n' % frame)
         text.append('    int32_t arg[%d];\n' % MAXARG)
         # A landing from a backtrack comes back into the middle of the
@@ -373,14 +379,14 @@ def write(names):
                     ' r4 = 0, r5 = 0, r6 = 0, r7 = 0;\n')
         text.append('    delta_flags fl;\n')
         text.append('    int i;\n\n')
-        text.append('    memset(frame, 0, sizeof frame);\n')
+        text.append('    memset(frame, 0, DELTA_RULE_FRAME_MAX);\n')
         text.append('    memset(arg, 0, sizeof arg);\n')
         text.append('    memset(&fl, 0, sizeof fl);\n')
         text.append('    for (i = 0; i < nargs && i < %d; i++)\n' % params)
         text.append('        memcpy(base + %d + 4 * i, &args[i], 4);\n\n'
                     % pbase)
         text.append('\n'.join(body))
-        text.append('\n    return r0;\n}\n\n')
+        text.append('\n    evv_frame_pop(frame);\n    return r0;\n}\n\n')
         done.append(name)
 
     text.append('const delta_rule_c delta_rule_native[] = {\n')
