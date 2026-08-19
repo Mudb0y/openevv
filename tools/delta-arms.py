@@ -43,6 +43,11 @@ never reached -- execution would not care, but anything reading the rule from
 its first byte would otherwise lose its place. The rule also checks the action
 against how many arms it has before it dispatches, and that check is raised
 too, or the new action is thrown out before the switch ever sees it.
+
+Where a rule states the length itself the new arm states it too. Where it
+states it by which of its own it calls, the new arm names its record and is
+then sent to whichever block already lays a record of that length down, so the
+lengths it can be given are the ones the language once compiled.
 """
 
 import importlib
@@ -686,7 +691,18 @@ class Arms:
                 return i
         return None
 
-    def add_arm(self, model, data):
+    def routes(self):
+        """Where an arm can be sent for each length this rule already lays a
+        record down in. A rule that says the length by which wrapper it calls
+        has one of these per length, and a new arm reaches a length by being
+        pointed at the one that already does it."""
+        out = {}
+        for act, r in self.records().items():
+            if r.cont is not None:
+                out.setdefault(r.length, r)
+        return out
+
+    def add_arm(self, data):
         """A new action, laying down a record of its own.
 
         The switch cannot be grown where it stands without pushing everything
@@ -695,21 +711,42 @@ class Arms:
         after that jump are never reached again. Answers the new action
         number.
         """
-        r = self.read(model)
-        if r is None or r.cont is None:
+        by_length = self.routes()
+        if not by_length:
             raise ValueError('%s has no arm to copy the shape of' % self.name)
-        if self.slot is None:
-            raise ValueError('%s says how long a record is a way a new arm '
-                             'cannot state' % self.name)
+
+        # Found before anything is written, since a rule whose check cannot be
+        # raised must be left exactly as it was.
+        bound = self._bound()
+        if bound is None:
+            raise ValueError('%s does not check its action against a number '
+                             'this recognises, so a new arm cannot be reached'
+                             % self.name)
+
+        if self.slot is not None:
+            # The arm can state the length itself, so any arm will do to copy.
+            r = by_length[min(by_length)]
+        elif len(data) in by_length:
+            # It cannot, so it has to be sent where that length is already
+            # laid down, and only lengths the language once compiled exist.
+            r = by_length[len(data)]
+        else:
+            raise ValueError('%s says how long a record is by which of its '
+                             'own it calls, so a new one has to be a length '
+                             'it already lays down, and %d is not one of %s'
+                             % (self.name, len(data),
+                                ', '.join(str(n) for n in
+                                          sorted(by_length))))
 
         off = self.rules.add_record(r.blob, data)
         sym = self.rules.add_sym(r.blob, off)
-        imm = self.rules.add_imm(len(data))
 
         arm = bytearray()
-        arm += bytes([OP_STORE, census.MOVK.index(self.template),
-                      K_IMM, imm & 0xff, (imm >> 8) & 0xff,
-                      K_SLOT, self.slot & 0xff, (self.slot >> 8) & 0xff])
+        if self.slot is not None:
+            imm = self.rules.add_imm(len(data))
+            arm += bytes([OP_STORE, census.MOVK.index(self.template),
+                          K_IMM, imm & 0xff, (imm >> 8) & 0xff,
+                          K_SLOT, self.slot & 0xff, (self.slot >> 8) & 0xff])
         at, size, where = r.sym_insn
         copy = bytearray(self.rules.code[self.start + at:
                                          self.start + at + size])
@@ -723,11 +760,6 @@ class Arms:
         # The rule checks the action against the number of arms before it
         # dispatches, so the check has to be raised too or the new one is
         # thrown out before the switch ever sees it.
-        bound = self._bound()
-        if bound is None:
-            raise ValueError('%s does not check its action against a number '
-                             'this recognises, so a new arm cannot be reached'
-                             % self.name)
         self.rules.set16(bound, self.rules.add_imm(len(self.arms)))
 
         # The switch again, one arm wider, reading the same operand.
@@ -747,8 +779,7 @@ class Arms:
         # of it is filled with instructions that decode but are never reached.
         # Execution would not care, but anything reading the rule from its
         # first byte would lose its place in the middle of an instruction.
-        size = self.insns[self.switch_at][4]
-        spare = size - 3
+        spare = self.insns[self.switch_at][4] - 3
         filler = bytearray()
         if spare % 2:
             filler += bytes([OP_JUMP, 0, 0])

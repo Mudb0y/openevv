@@ -220,7 +220,7 @@ def lay_down(want, alpha):
     return out, starts
 
 
-def mint(arms, used, codes, model, why):
+def mint(arms, used, codes, why):
     """An action of this word's own: a spare arm of the rule if one is going,
     and otherwise an arm added to it."""
     act = arms.spare(used)
@@ -232,9 +232,7 @@ def mint(arms, used, codes, model, why):
         except ValueError:
             # It looked spare but cannot be written; do not offer it again.
             used.add(act)
-    if model is None:
-        raise ValueError('%s has no arm to copy the shape of' % why)
-    act = arms.add_arm(model, bytes(codes))
+    act = arms.add_arm(bytes(codes))
     used.add(act)
     return act
 
@@ -334,8 +332,6 @@ def build():
             continue
 
         used = set(e[3] for e in d['entries'] if e[3] is not None)
-        fits = [a for a, r in arms.records().items() if r.cont is not None]
-        model = min(fits) if fits else None
         touched = True
 
         def point(where, act):
@@ -346,7 +342,7 @@ def build():
         try:
             # What one word wants and another on the same action does not.
             for act, codes, where in split:
-                new = mint(arms, used, codes, model, d['name'])
+                new = mint(arms, used, codes, d['name'])
                 point(where, new)
                 split_off += 1
                 print('%s: %s now has an action of its own, %d, because it '
@@ -359,17 +355,18 @@ def build():
                     arms.rewrite(act, bytes(codes))
                     changed += 1
                 except ValueError as why:
-                    new = mint(arms, used, codes, model, d['name'])
+                    new = mint(arms, used, codes, d['name'])
                     point(where, new)
                     split_off += 1
                     print('%s: %s now has an action of its own, %d, because '
+                          'what it said could not be changed where it stood -- '
                           '%s' % (d['name'], d['entries'][where[0]][0], new,
-                                  str(why).split(': ', 1)[-1]))
+                                  why))
 
             # Words being added.
             for i in fresh:
                 codes = unsay(d['entries'][i][4], d['kind'], alpha)
-                new = mint(arms, used, codes, model, d['name'])
+                new = mint(arms, used, codes, d['name'])
                 point([i], new)
                 added += 1
         except ValueError as why:
