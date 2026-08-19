@@ -85,7 +85,7 @@ static const char CMD_CONCATENATIVE[] = "`esp2";
    layer above reads once it has the object. */
 
 /* How big each of the things the constructor makes is. */
-#define SIZE_ROMANIZER   0x278
+extern const uint32_t rm_bytes;
 #define SIZE_CONCAT      0x2c0
 #define SIZE_MARKQUEUE   0x14
 #define MARKQUEUE_ROOM   0x200
@@ -326,7 +326,7 @@ static void stl_build(SynthThread *t, void *app, void *state)
     ST_FRESH(t) = 0;
     ST_TOLD_CAT(t) = 0;
 
-    p = cpp_new(SIZE_ROMANIZER);
+    p = cpp_new(rm_bytes);
     ST_ROMAN(t) = p ? rz_ctor(p, t) : 0;
     if (!ST_ROMAN(t))
         ST_STATUS(t) = ERR_FAILED;

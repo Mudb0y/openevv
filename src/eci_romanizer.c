@@ -25,31 +25,51 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "eci_engine.h"
 
-typedef struct RomanizerManager RomanizerManager;
 typedef struct RomInstance RomInstance;
 typedef struct SynthThread SynthThread;
 
 /* The manager's own record. The two arrays are eighteen language families
    of two dialects each: one of romanizers held open, one of the names they
    were loaded from. */
-#define RM_LOCK(m)        ((void *)(m))                         /* +0x000 */
-#define RM_INI(m)         ((void *)((char *)(m) + 0x00c))       /* +0x00c */
-#define RM_NAMES(m, f, d) (*(char **)((char *)(m) + 0x130 + (f) * 8 + (d) * 4))
-#define RM_ACTIVE(m)      (*(RomInstance **)((char *)(m) + 0x1c4))
-#define RM_LAST_FLAG(m)   (*(int32_t *)((char *)(m) + 0x1c8))
-#define RM_STOPPED(m)     (*(int32_t *)((char *)(m) + 0x1cc))
-/* Indexed by a one-based family number, which is why the original's own
-   two users of it disagree by eight about where it starts. */
-#define RM_ROMS(m, f, d)  (*(RomInstance **)((char *)(m) + 0x1c8 + (f) * 8 \
-                                             + (d) * 4))
-#define RM_THREAD(m)      (*(SynthThread **)((char *)(m) + 0x260))
-#define RM_FAMILY(m)      (*(int32_t *)((char *)(m) + 0x264))
-#define RM_DIALECT(m)     (*(int32_t *)((char *)(m) + 0x268))
-#define RM_PENDING(m)     (*(char **)((char *)(m) + 0x26c))
-#define RM_OUT(m)         (*(char **)((char *)(m) + 0x270))
-/* How much text is held, not a flag: it is the length the caller gave. */
-#define RM_PENDING_LEN(m) (*(int32_t *)((char *)(m) + 0x274))
+typedef struct RomanizerManager {
+    uint8_t       lock[0x0c];   /* +0x000 */
+    IniFileReader ini;          /* +0x00c */
+    /* Eighteen language families of two dialects each: one array of the names
+       the romanizers were loaded from, one of the romanizers themselves. */
+    char         *names[0x12][2];   /* +0x130 */
+    int32_t       unknown_1c0;      /* +0x1c0 */
+    RomInstance  *active;           /* +0x1c4 */
+    int32_t       last_flag;        /* +0x1c8 */
+    int32_t       stopped;          /* +0x1cc */
+    /* Indexed by a one-based family number, which is why the original's own
+       two users of it disagree by eight about where it starts. */
+    RomInstance  *roms[0x12][2];    /* +0x1d0 */
+    SynthThread  *thread;           /* +0x260 */
+    int32_t       family;           /* +0x264 */
+    int32_t       dialect;          /* +0x268 */
+    char         *pending;          /* +0x26c */
+    char         *out;              /* +0x270 */
+    int32_t       pending_len;      /* +0x274 */
+} RomanizerManager;
+
+/* What a caller has to allocate for one. Only this file knows what is in it. */
+const uint32_t rm_bytes = sizeof(RomanizerManager);
+
+#define RM_LOCK(m)        ((void *)(m)->lock)
+#define RM_INI(m)         ((void *)&(m)->ini)
+#define RM_NAMES(m, f, d) ((m)->names[f][d])
+#define RM_ACTIVE(m)      ((m)->active)
+#define RM_LAST_FLAG(m)   ((m)->last_flag)
+#define RM_STOPPED(m)     ((m)->stopped)
+#define RM_ROMS(m, f, d)  ((m)->roms[(f) - 1][d])
+#define RM_THREAD(m)      ((m)->thread)
+#define RM_FAMILY(m)      ((m)->family)
+#define RM_DIALECT(m)     ((m)->dialect)
+#define RM_PENDING(m)     ((m)->pending)
+#define RM_OUT(m)         ((m)->out)
+#define RM_PENDING_LEN(m) ((m)->pending_len)
 
 #define RM_FAMILIES  0x12
 #define RM_DIALECTS  2
