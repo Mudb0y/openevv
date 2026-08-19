@@ -432,28 +432,28 @@ static int32_t askThread(SoundThread *t, SndMsg *s, int32_t on_failure)
 
 THIS int16_t snd_open(SoundThread *t)
 {
-    return (int16_t)askThread(t, newSnd(0x28, SND_OPEN, &vtbl_open, &t->out),
+    return (int16_t)askThread(t, newSnd(sizeof(SndMsg), SND_OPEN, &vtbl_open, &t->out),
                               0);
 }
 
 THIS int32_t snd_close(SoundThread *t)
 {
-    return askThread(t, newSnd(0x28, SND_CLOSE, &vtbl_close, t), 0);
+    return askThread(t, newSnd(sizeof(SndMsg), SND_CLOSE, &vtbl_close, t), 0);
 }
 
 THIS int32_t snd_reset(SoundThread *t)
 {
-    return askThread(t, newSnd(0x28, SND_RESET, &vtbl_reset, &t->out), 0);
+    return askThread(t, newSnd(sizeof(SndMsg), SND_RESET, &vtbl_reset, &t->out), 0);
 }
 
 THIS int32_t snd_flush(SoundThread *t)
 {
-    return askThread(t, newSnd(0x28, SND_FLUSH, &vtbl_flush, &t->out), 0);
+    return askThread(t, newSnd(sizeof(SndMsg), SND_FLUSH, &vtbl_flush, &t->out), 0);
 }
 
 THIS int32_t snd_hold(SoundThread *t, int32_t on)
 {
-    SndMsg *s = newSnd(0x2c, SND_HOLD, &vtbl_hold, &t->out);
+    SndMsg *s = newSnd(sizeof(SndMsg), SND_HOLD, &vtbl_hold, &t->out);
 
     if (s != 0)
         s->a = on;
@@ -462,7 +462,7 @@ THIS int32_t snd_hold(SoundThread *t, int32_t on)
 
 THIS int32_t snd_write(SoundThread *t, const int32_t *data, uint32_t n)
 {
-    SndMsg *s = newSnd(0x30, SND_WRITE, &vtbl_write, &t->out);
+    SndMsg *s = newSnd(sizeof(SndMsg), SND_WRITE, &vtbl_write, &t->out);
 
     if (s != 0) {
         s->a = (int32_t)(size_t)data;
@@ -475,7 +475,7 @@ THIS int16_t snd_setup(SoundThread *t, char *a, int32_t *b, int32_t *c,
                        int32_t *d, int32_t *e, int32_t *f, int32_t *g,
                        int32_t *h)
 {
-    SndMsg *s = newSnd(0x48, SND_SETUP, &vtbl_setup, &t->out);
+    SndMsg *s = newSnd(sizeof(SndMsg), SND_SETUP, &vtbl_setup, &t->out);
 
     if (s != 0) {
         s->a = (int32_t)(size_t)a;
@@ -493,7 +493,7 @@ THIS int16_t snd_setup(SoundThread *t, char *a, int32_t *b, int32_t *c,
 /* Posted rather than sent: nobody is waiting for a mark to be laid down. */
 THIS int32_t snd_insertIndex(SoundThread *t, int32_t index)
 {
-    SndMsg *s = newSnd(0x2c, SND_INDEX, &vtbl_index, t);
+    SndMsg *s = newSnd(sizeof(SndMsg), SND_INDEX, &vtbl_index, t);
     int32_t rc = 0;
 
     if (s == 0)
@@ -533,7 +533,7 @@ THIS int16_t snd_getStatus(SoundThread *t)
 
 THIS int32_t snd_setIndexCallback(SoundThread *t, void *cb, void *param)
 {
-    SndMsg *s = newSnd(0x30, SND_SETCB, &vtbl_setcb, cb);
+    SndMsg *s = newSnd(sizeof(SndMsg), SND_SETCB, &vtbl_setcb, cb);
     int32_t rc = 0;
     int16_t sent;
 

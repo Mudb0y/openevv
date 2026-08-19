@@ -144,6 +144,7 @@ typedef struct {            /* 0x34 */
 
 extern THIS ETImessage *msg_ctor(ETImessage *m, uint32_t type)
     MANGLED("??0ETImessage@@QAE@K@Z");
+extern const uint32_t sem_bytes;
 extern THIS void *sy_semCtor(void *s, int32_t held)
     MANGLED("??0Semaphore@@QAE@J@Z");
 
@@ -732,7 +733,7 @@ THIS int32_t st_block(SynthThread *t)
 
     sy_mutexWait(lock, -1);
     if (!ST_BLOCKER(t)) {
-        void *s = cpp_new(0x28);
+        void *s = cpp_new(sem_bytes);
         if (s)
             sy_semCtor(s, 0);
         ST_BLOCKER(t) = s;

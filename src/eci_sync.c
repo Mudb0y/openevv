@@ -184,6 +184,9 @@ typedef struct Semaphore {
     int32_t   count;        /* +0x24 */
 } Semaphore;
 
+/* What a caller has to allocate for one. */
+const uint32_t sem_bytes = sizeof(Semaphore);
+
 THIS Semaphore *sy_semCtor(Semaphore *s, int32_t count)
 {
     sy_mutexCtor(&s->guard, 0);
