@@ -71,8 +71,18 @@ typedef delta_state DeltaThis;
 #define DL_RATE(l)        ((l)->rate)
 #define DL_BYTES          sizeof(DeltaLang)
 
+/* What the language record keeps of the last utterance: the synthesiser's
+   constant parameters, the volume, and the frame. */
+#define FRAME_WORDS   62
+
+typedef struct LastGlob {
+    KlattConstParms cp;
+    int32_t         volume;
+    int32_t         frame[FRAME_WORDS];
+} LastGlob;
+
 #define BUF_100_BYTES     0x100
-#define BUF_140_BYTES     0x140
+#define BUF_140_BYTES     sizeof(LastGlob)
 #define BUF_4_BYTES       0x004
 
 /* Durations are counted in milliseconds against a rate in hertz. */
@@ -431,22 +441,18 @@ static const int32_t DEFAULT_FRAME[FRAME_WORDS] = {
 
 /* The block of default parameters every language record starts from. Read
    out of the original's data, where it is written once and never again. */
-#define LAST_GLOB_WORDS  (BUF_140_BYTES / 4)
-
-static const int32_t last_glob[LAST_GLOB_WORDS] = { 1, 0, 0, 5, 8, 1 };
+/* What a language starts with. The original writes it as the six words it
+   comes to, which is the same block only where a function pointer is four
+   bytes; these are the fields those words were. */
+static const LastGlob last_glob = {
+    { 1, 0, 0, 5, 8, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    0, { 0 }
+};
 
 extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
 THIS void *soundDeviceInfoCtor(void *self);
 extern THIS void *sti_indexQueueCtor(void *self)
     MANGLED("??0IndexQueue@@QAE@XZ");
-
-/* What the language record keeps of the last utterance: the synthesiser's
-   constant parameters, the volume, and the frame. */
-typedef struct LastGlob {
-    KlattConstParms cp;
-    int32_t         volume;
-    int32_t         frame[FRAME_WORDS];
-} LastGlob;
 
 extern int stmarray_new(DeltaThis *d) MANGLED("_stmarray_new");
 int synthesize(DeltaThis *d, void *buf, int32_t isArray, int32_t *streamA,
@@ -508,7 +514,7 @@ int dlang_new(DeltaThis *d)
         d->dlang = EVV_REF(0);
         return DELTA_NO_ROOM;
     }
-    memcpy(DL_BUF_140(lang), last_glob, BUF_140_BYTES);
+    memcpy(DL_BUF_140(lang), &last_glob, BUF_140_BYTES);
 
     DL_BUF_4(lang) = malloc(BUF_4_BYTES);
     if (!DL_BUF_4(lang)) {
