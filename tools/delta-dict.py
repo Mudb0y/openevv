@@ -65,7 +65,11 @@ HEADER = """\
 #
 # What it says is written in ETI's phone letters where the section says sound,
 # spaced one phone apart, and in the language's own characters where it says
-# characters. A phone or a character that no name picks out on its own is
+# characters. A word laid down in more than one piece has its pieces written
+# out in order with `then' between them -- the currencies spell an
+# abbreviation, then a space, then a name -- and any piece the rule names
+# itself rather than the word is shared with every word using it and cannot be
+# changed for one of them. A phone or a character that no name picks out on its own is
 # written as a hash and its number. An entry with nothing after its action
 # lays no record down, or lays one down a way this cannot yet read.
 #
@@ -100,20 +104,26 @@ def collated(keys):
     return list(keys) == sorted(keys)
 
 
-def say(codes, kind, alpha):
+# A word laid down in more than one piece has its pieces written out in
+# order, since that is what is said and any one of them may be the part worth
+# changing.
+JOIN = ' then '
+
+
+def say(parts, kind, alpha):
+    table = alpha.get(kind, [])
+    once = lex.unique_names(table)
     if kind == SOUND_STMT:
-        table = alpha.get(SOUND_STMT, [])
-        return lex.sound_text(codes, table, lex.unique_names(table))
-    table = alpha.get(CHAR_STMT, [])
-    return lex.word(codes, table, lex.unique_names(table))
+        return JOIN.join(lex.sound_text(c, table, once) for c in parts)
+    return JOIN.join(lex.word(c, table, once) for c in parts)
 
 
 def unsay(text, kind, alpha):
+    table = alpha.get(kind, [])
+    once = lex.unique_names(table)
     if kind == SOUND_STMT:
-        table = alpha.get(SOUND_STMT, [])
-        return lex.sound_codes(text, lex.unique_names(table))
-    table = alpha.get(CHAR_STMT, [])
-    return lex.codes_of(text, table, lex.unique_names(table))
+        return [lex.sound_codes(t, once) for t in text.split(JOIN)]
+    return [lex.codes_of(t, table, once) for t in text.split(JOIN)]
 
 
 def read_tables():
@@ -220,9 +230,21 @@ def lay_down(want, alpha):
     return out, starts
 
 
+def lay(arms, act, codes):
+    """Give one action what it is to say, in however many pieces."""
+    if len(codes) == 1:
+        arms.rewrite(act, bytes(codes[0]))
+    else:
+        arms.rewrite_parts(act, [bytes(c) for c in codes])
+
+
 def mint(arms, used, codes, why):
     """An action of this word's own: a spare arm of the rule if one is going,
     and otherwise an arm added to it."""
+    if len(codes) > 1:
+        raise ValueError('%s lays a word down in pieces, and a word cannot yet '
+                         'be given an action of its own in one' % why)
+    codes = codes[0]
     act = arms.spare(used)
     if act is not None:
         try:
@@ -253,14 +275,14 @@ def work_out(d, alpha, laid):
     change, split = [], []
     for act, idxs in groups.items():
         now = laid.get(act)
-        now = tuple(now) if now is not None else None
+        now = tuple(tuple(c) for c in now) if now is not None else None
 
         texts = []
         for i in idxs:
             text = d['entries'][i][4]
             if text is None:
                 continue
-            codes = tuple(unsay(text, d['kind'], alpha))
+            codes = tuple(tuple(c) for c in unsay(text, d['kind'], alpha))
             for seen, where in texts:
                 if seen == codes:
                     where.append(i)
@@ -352,10 +374,13 @@ def build():
             # What the action itself is to say.
             for act, codes, where in change:
                 try:
-                    arms.rewrite(act, bytes(codes))
+                    lay(arms, act, codes)
                     changed += 1
                 except ValueError as why:
-                    new = mint(arms, used, codes, d['name'])
+                    try:
+                        new = mint(arms, used, codes, d['name'])
+                    except ValueError as also:
+                        raise ValueError('%s, and %s' % (why, also))
                     point(where, new)
                     split_off += 1
                     print('%s: %s now has an action of its own, %d, because '

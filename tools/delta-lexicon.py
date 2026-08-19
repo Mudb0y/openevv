@@ -164,15 +164,29 @@ def rules():
 
 
 def actions(rule_name):
-    """What each action number of a dictionary lays down, as the codes of its
-    record. Empty when the rule lays records down a way this cannot read."""
+    """What each action number of a dictionary lays down, as a list of records
+    in the order they are laid. Most actions lay down one; the currencies lay
+    an abbreviation, a space and a name. Empty for an action laid down a way
+    this cannot read."""
     a = arms_mod.Arms(rules(), rule_name)
     if not a.ok:
         return {}
+
+    def bytes_of(blob, off, length):
+        return list(rules().blobs.get(blob, b'')[off:off + length])
+
     out = {}
     for act, r in a.records().items():
-        body = rules().blobs.get(r.blob, b'')
-        out[act] = list(body[r.off:r.off + r.length])
+        out[act] = [bytes_of(r.blob, r.off, r.length)]
+    for act in range(1, len(a.arms) + 1):
+        if act in out:
+            continue
+        # Only as a second try, and only for an action that really does lay
+        # down more than one thing: a single record this way came off a path
+        # the first try had already refused.
+        got = a.parts(act)
+        if got and len(got) > 1:
+            out[act] = [bytes_of(p.blob, p.off, p.length) for p in got]
     return out
 
 
@@ -199,7 +213,7 @@ def choose(records, alphas):
     records they fit, because the character one has four times the codes and
     so fits almost anything. A dictionary counts as pronunciations unless a
     real share of its records will not sit in the phone alphabet at all."""
-    real = [r for r in records if r]
+    real = [r for group in records for r in group if r]
     if not real:
         return RECORD_STMTS[0]
     phone = alphas.get(2, [])

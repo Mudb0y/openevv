@@ -7,7 +7,11 @@
 #
 # What it says is written in ETI's phone letters where the section says sound,
 # spaced one phone apart, and in the language's own characters where it says
-# characters. A phone or a character that no name picks out on its own is
+# characters. A word laid down in more than one piece has its pieces written
+# out in order with `then' between them -- the currencies spell an
+# abbreviation, then a space, then a name -- and any piece the rule names
+# itself rather than the word is shared with every word using it and cannot be
+# changed for one of them. A phone or a character that no name picks out on its own is
 # written as a hash and its number. An entry with nothing after its action
 # lays no record down, or lays one down a way this cannot yet read.
 #
@@ -5735,178 +5739,178 @@ dictionary eng_tok_dict statement 1 width 0 records characters
   (s)he 255 255 50 says she[ ]or[ ]he
   (S)he 255 255 50 says she[ ]or[ ]he
 
-dictionary eng_cur_dict statement 1 width 0 records sound
-  AED 255 255 1
-  AOA 255 255 6
-  AUD 255 255 8
-  AFA 255 255 2
-  ALL 255 255 3
-  AMD 255 255 4
-  ANG 255 255 5
-  ARS 255 255 7
-  AWG 255 255 9
-  AZM 255 255 10
-  EEK 255 255 41
-  EUR 255 255 45
-  EGP 255 255 42
-  ERN 255 255 43
-  ETB 255 255 44
-  IDR 255 255 62
-  ILS 255 255 63
-  IMP 255 255 64
-  INR 255 255 65
-  IQD 255 255 66
-  IRR 255 255 67
-  ISK 255 255 68
-  OMR 255 255 111
-  UAH 255 255 150
-  UGX 255 255 151
+dictionary eng_cur_dict statement 1 width 0 records characters
+  AED 255 255 1 says [§][ ]yu[ ]ey[ ]ee[ ] then [§] then Dirham
+  AOA 255 255 6 says [§][ ] then [§] then Kwanza
+  AUD 255 255 8 says [§][ ]Australian[ ] then [§] then Dollar
+  AFA 255 255 2 says [§][ ] then [§] then Afghani
+  ALL 255 255 3 says [§][ ] then [§] then Leke
+  AMD 255 255 4 says [§][ ] then [§] then Dram
+  ANG 255 255 5 says [§][ ]Netherlands[ ]Antilles[ ] then [§] then Guilder
+  ARS 255 255 7 says [§][ ]Argentine[ ] then [§] then Peso
+  AWG 255 255 9 says [§][ ]Aruban[ ] then [§] then Guilder
+  AZM 255 255 10 says [§][ ]Azerbaijani[ ] then [§] then Manat
+  EEK 255 255 41 says [§][ ] then [§] then krooni
+  EUR 255 255 45 says [§][ ] then [§] then euro
+  EGP 255 255 42 says [§][ ]Egyptian[ ] then [§] then pound
+  ERN 255 255 43 says [§][ ] then [§] then nakfa
+  ETB 255 255 44 says [§][ ] then [§] then birr
+  IDR 255 255 62 says [§][ ] then [§] then rupiah
+  ILS 255 255 63 says [§][ ] then [§] then shekel
+  IMP 255 255 64 says [§][ ]Isle[ ]of[ ]Man[ ] then [§] then pound
+  INR 255 255 65 says [§][ ]Indian[ ] then [§] then rupi
+  IQD 255 255 66 says [§][ ]Iraqi[ ] then [§] then dinar
+  IRR 255 255 67 says [§][ ]Iranian[ ] then [§] then rial
+  ISK 255 255 68 says [§][ ] then [§] then kronur
+  OMR 255 255 111 says [§][ ]Omani[ ] then [§] then rial
+  UAH 255 255 150 says [§][ ] then [§] then hryvnia
+  UGX 255 255 151 says [§][ ]Ugandan[ ] then [§] then shilling
   USD 255 255 152
-  UYU 255 255 153
-  UZS 255 255 154
-  BAM 255 255 11
-  BIF 255 255 16
-  BOB 255 255 19
+  UYU 255 255 153 says [§][ ]Uruguayan[ ] then [§] then peso
+  UZS 255 255 154 says [§][ ]Uzbekistani[ ] then [§] then sum
+  BAM 255 255 11 says [§][ ] then [§] then Marka
+  BIF 255 255 16 says [§][ ]Burundian[ ] then [§] then franc
+  BOB 255 255 19 says [§][ ] then [§] then boliviano
   BBD 255 255 12
-  BDT 255 255 13
-  BGL 255 255 14
-  BHD 255 255 15
+  BDT 255 255 13 says [§][ ] then [§] then taka
+  BGL 255 255 14 says [§][ ] then [§] then leva
+  BHD 255 255 15 says [§][ ]Bahraini[ ] then [§] then dinar
   BMD 255 255 17
   BND 255 255 18
-  BRL 255 255 20
+  BRL 255 255 20 says [§][ ] then [§] then real
   BSD 255 255 21
-  BTN 255 255 22
-  BWP 255 255 23
-  BYR 255 255 24
+  BTN 255 255 22 says [§][ ] then [§] then ngultrum
+  BWP 255 255 23 says [§][ ] then [§] then pula
+  BYR 255 255 24 says [§][ ]Belarus[ ] then [§] then ruble
   BZD 255 255 25
   CAD 255 255 26
-  COP 255 255 31
-  CUP 255 255 33
-  CDF 255 255 27
-  CHF 255 255 28
-  CLP 255 255 29
-  CNY 255 255 30
-  CRC 255 255 32
-  CVE 255 255 34
-  CYP 255 255 35
-  CZK 255 255 36
-  DOP 255 255 39
-  DJF 255 255 37
-  DKK 255 255 38
-  DZD 255 255 40
+  COP 255 255 31 says [§][ ]Colombian[ ] then [§] then peso
+  CUP 255 255 33 says [§][ ]Cuban[ ] then [§] then peso
+  CDF 255 255 27 says [§][ ]Congolese[ ] then [§] then franc
+  CHF 255 255 28 says [§][ ]Swiss[ ] then [§] then franc
+  CLP 255 255 29 says [§][ ]Chilian[ ] then [§] then peso
+  CNY 255 255 30 says [§][ ]Chinese[ ] then [§] then yuan
+  CRC 255 255 32 says [§][ ]Costa[ ]Rican[ ] then [§] then colon
+  CVE 255 255 34 says [§][ ]Cape[ ]Verde[ ] then [§] then escudo
+  CYP 255 255 35 says [§][ ]Cyprian[ ] then [§] then pound
+  CZK 255 255 36 says [§][ ]Czech[ ] then [§] then koruny
+  DOP 255 255 39 says [§][ ]Dominican[ ] then [§] then peso
+  DJF 255 255 37 says [§][ ]Djibouti[ ] then [§] then franc
+  DKK 255 255 38 says [§][ ]Danish[ ] then [§] then kroner
+  DZD 255 255 40 says [§][ ]Algerian[ ] then [§] then dinar
   FJD 255 255 46
-  FKP 255 255 47
-  GEL 255 255 49
-  GIP 255 255 52
-  GBP 255 255 48
-  GGP 255 255 50
-  GHC 255 255 51
-  GMD 255 255 53
-  GNF 255 255 54
-  GTQ 255 255 55
+  FKP 255 255 47 says [§][ ]Falkland[ ]Islands[ ] then [§] then pound
+  GEL 255 255 49 says [§][ ] then [§] then lari
+  GIP 255 255 52 says [§][ ]Gibraltar[ ] then [§] then pound
+  GBP 255 255 48 says [§][ ]yu[ ]kay[ ] then [§] then pound
+  GGP 255 255 50 says [§][ ]Guernsey[ ] then [§] then pound
+  GHC 255 255 51 says [§][ ] then [§] then cedi
+  GMD 255 255 53 says [§][ ] then [§] then dalasi
+  GNF 255 255 54 says [§][ ]Guinea[ ] then [§] then franc
+  GTQ 255 255 55 says [§][ ] then [§] then quetzal
   GYD 255 255 56
-  HUF 255 255 61
+  HUF 255 255 61 says [§][ ] then [§] then forint
   HKD 255 255 57
-  HNL 255 255 58
-  HRK 255 255 59
-  HTG 255 255 60
-  JEP 255 255 69
-  JOD 255 255 71
+  HNL 255 255 58 says [§][ ] then [§] then lempira
+  HRK 255 255 59 says [§][ ] then [§] then kuna
+  HTG 255 255 60 says [§][ ] then [§] then gourde
+  JEP 255 255 69 says [§][ ]Jersey[ ] then [§] then pound
+  JOD 255 255 71 says [§][ ]Jordanian[ ] then [§] then dinar
   JMD 255 255 70
-  JPY 255 255 72
-  KES 255 255 73
-  KGS 255 255 74
-  KHR 255 255 75
-  KMF 255 255 76
-  KPW 255 255 77
-  KRW 255 255 78
-  KWD 255 255 79
+  JPY 255 255 72 says [§][ ] then [§] then yen
+  KES 255 255 73 says [§][ ]Kenyan[ ] then [§] then shilling
+  KGS 255 255 74 says [§][ ] then [§] then som
+  KHR 255 255 75 says [§][ ] then [§] then riel
+  KMF 255 255 76 says [§][ ]Comoros[ ] then [§] then franc
+  KPW 255 255 77 says [§][ ]North[ ]Korean[ ] then [§] then won
+  KRW 255 255 78 says [§][ ]South[ ]Korean[ ] then [§] then won
+  KWD 255 255 79 says [§][ ]Kuwaiti[ ] then [§] then dinar
   KYD 255 255 80
-  KZT 255 255 81
-  LAK 255 255 82
-  LBP 255 255 83
-  LKR 255 255 84
+  KZT 255 255 81 says [§][ ] then [§] then tenge
+  LAK 255 255 82 says [§][ ] then [§] then kip
+  LBP 255 255 83 says [§][ ]Lebanese[ ] then [§] then pound
+  LKR 255 255 84 says [§][ ]Sri[ ]Lankan[ ] then [§] then rupi
   LRD 255 255 85
-  LSL 255 255 86
-  LTL 255 255 87
-  LVL 255 255 88
-  LYD 255 255 89
-  MAD 255 255 90
-  MOP 255 255 96
-  MUR 255 255 99
-  MDL 255 255 91
-  MGF 255 255 92
-  MKD 255 255 93
-  MMK 255 255 94
-  MNT 255 255 95
-  MRO 255 255 97
-  MTL 255 255 98
-  MVR 255 255 100
-  MWK 255 255 101
-  MXN 255 255 102
-  MYR 255 255 103
-  MZM 255 255 104
+  LSL 255 255 86 says [§][ ] then [§] then maloti
+  LTL 255 255 87 says [§][ ] then [§] then litai
+  LVL 255 255 88 says [§][ ] then [§] then lati
+  LYD 255 255 89 says [§][ ]Libian[ ] then [§] then dinar
+  MAD 255 255 90 says [§][ ]Moroccan[ ] then [§] then dirham
+  MOP 255 255 96 says [§][ ] then [§] then pataca
+  MUR 255 255 99 says [§][ ]Mauritius[ ] then [§] then rupi
+  MDL 255 255 91 says [§][ ]Moldova[ ] then [§] then lei
+  MGF 255 255 92 says [§][ ]Malagasy[ ] then [§] then franc
+  MKD 255 255 93 says [§][ ] then [§] then denar
+  MMK 255 255 94 says [§][ ] then [§] then kyat
+  MNT 255 255 95 says [§][ ] then [§] then tugrik
+  MRO 255 255 97 says [§][ ] then [§] then ouguiya
+  MTL 255 255 98 says [§][ ] then [§] then liri
+  MVR 255 255 100 says [§][ ] then [§] then rufiya
+  MWK 255 255 101 says [§][ ] then [§] then kwacha
+  MXN 255 255 102 says [§][ ]Mexican[ ] then [§] then peso
+  MYR 255 255 103 says [§][ ] then [§] then ringgit
+  MZM 255 255 104 says [§][ ] then [§] then meticai
   NAD 255 255 105
-  NIO 255 255 107
-  NOK 255 255 108
-  NGN 255 255 106
-  NPR 255 255 109
+  NIO 255 255 107 says [§][ ] then [§] then cordoba
+  NOK 255 255 108 says [§][ ] then [§] then krone
+  NGN 255 255 106 says [§][ ] then [§] then naira
+  NPR 255 255 109 says [§][ ]Nepalese[ ] then [§] then rupi
   NZD 255 255 110
-  PAB 255 255 112
-  PEN 255 255 113
-  PGK 255 255 114
-  PHP 255 255 115
-  PKR 255 255 116
-  PLN 255 255 117
-  PYG 255 255 118
-  QAR 255 255 119
-  ROL 255 255 120
-  RUR 255 255 121
-  RWF 255 255 122
-  SAR 255 255 123
-  SEK 255 255 127
-  SIT 255 255 130
-  SOS 255 255 133
+  PAB 255 255 112 says [§][ ] then [§] then balboa
+  PEN 255 255 113 says [§][ ] then [§] then soley
+  PGK 255 255 114 says [§][ ] then [§] then kina
+  PHP 255 255 115 says [§][ ]Philippine[ ] then [§] then peso
+  PKR 255 255 116 says [§][ ]Pakistani[ ] then [§] then rupi
+  PLN 255 255 117 says [§][ ] then [§] then zlotych
+  PYG 255 255 118 says [§][ ] then [§] then guarani
+  QAR 255 255 119 says [§][ ]Qatari[ ] then [§] then rial
+  ROL 255 255 120 says [§][ ]Romanian[ ] then [§] then lei
+  RUR 255 255 121 says [§][ ]Russian[ ] then [§] then ruble
+  RWF 255 255 122 says [§][ ]Rwandan[ ] then [§] then franc
+  SAR 255 255 123 says [§][ ]Saudi[ ]Arabian[ ] then [§] then rials
+  SEK 255 255 127 says [§][ ] then [§] then kronor
+  SIT 255 255 130 says [§][ ]Slovene[ ] then [§] then tolar
+  SOS 255 255 133 says [§][ ]Somalian[ ] then [§] then shilling
   SBD 255 255 124
-  SCR 255 255 125
-  SDD 255 255 126
+  SCR 255 255 125 says [§][ ]Seychelles[ ] then [§] then rupi
+  SDD 255 255 126 says [§][ ]Sudanese[ ] then [§] then dinar
   SGD 255 255 128
-  SHP 255 255 129
-  SKK 255 255 131
-  SLL 255 255 132
-  SPL 255 255 134
-  SRG 255 255 135
-  STD 255 255 136
-  SVC 255 255 137
-  SYP 255 255 138
-  SZL 255 255 139
-  TOP 255 255 144
-  THB 255 255 140
-  TJR 255 255 141
-  TMM 255 255 142
-  TND 255 255 143
-  TRL 255 255 145
+  SHP 255 255 129 says [§][ ]Saint[ ]Helena[ ] then [§] then pound
+  SKK 255 255 131 says [§][ ]Slovakian[ ] then [§] then koruny
+  SLL 255 255 132 says [§][ ] then [§] then leon
+  SPL 255 255 134 says [§][ ]Somalian[ ] then [§] then luigini
+  SRG 255 255 135 says [§][ ]Surinam[ ] then [§] then guilder
+  STD 255 255 136 says [§][ ] then [§] then dobra
+  SVC 255 255 137 says [§][ ]El[ ]Salvadorian[ ] then [§] then colon
+  SYP 255 255 138 says [§][ ]Syrian[ ] then [§] then pound
+  SZL 255 255 139 says [§][ ] then [§] then emalangeni
+  TOP 255 255 144 says [§][ ]pa[ ] then [§] then anga
+  THB 255 255 140 says [§][ ] then [§] then baht
+  TJR 255 255 141 says [§][ ]Tajikistani[ ] then [§] then ruble
+  TMM 255 255 142 says [§][ ]Turkmenistani[ ] then [§] then manat
+  TND 255 255 143 says [§][ ]Tunisian[ ] then [§] then dinar
+  TRL 255 255 145 says [§][ ]Turkish[ ] then [§] then lira
   TTD 255 255 146
   TVD 255 255 147
   TWD 255 255 148
-  TZS 255 255 149
-  VEB 255 255 155
-  VUV 255 255 157
-  VND 255 255 156
-  WST 255 255 158
-  XAU 255 255 161
-  XAF 255 255 159
-  XAG 255 255 160
-  XOF 255 255 164
+  TZS 255 255 149 says [§][ ]Tanzanian[ ] then [§] then shilling
+  VEB 255 255 155 says [§][ ] then [§] then bolivar
+  VUV 255 255 157 says [§][ ] then [§] then vatu
+  VND 255 255 156 says [§][ ] then [§] then dong
+  WST 255 255 158 says [§][ ] then [§] then tala
+  XAU 255 255 161 says [§][ ]gold[ ] then [§] then ounce
+  XAF 255 255 159 says [§][ ]bi[ ]ee[ ]ey[ ]cea[ ] then [§] then franc
+  XAG 255 255 160 says [§][ ]silver[ ] then [§] then ounce
+  XOF 255 255 164 says [§][ ]bi[ ]cea[ ]ee[ ]ey[ ]oh[ ] then [§] then franc
   XCD 255 255 162
-  XDR 255 255 163
-  XPD 255 255 165
-  XPF 255 255 166
-  XPT 255 255 167
-  YER 255 255 168
-  YUM 255 255 169
-  ZAR 255 255 170
-  ZMK 255 255 171
+  XDR 255 255 163 says [§][ ]eye[ ]em[ ]eff[ ]special[ ]drawing[ ] then [§] then right
+  XPD 255 255 165 says [§][ ]Palladium[ ] then [§] then ounce
+  XPF 255 255 166 says [§][ ]komptwoir[ ]fransais[ ]du[ ]pacifik[ ] then [§] then franc
+  XPT 255 255 167 says [§][ ]Platinum[ ] then [§] then ounce
+  YER 255 255 168 says [§][ ]Yemeni[ ] then [§] then rial
+  YUM 255 255 169 says [§][ ]Yugoslavian[ ]new[ ] then [§] then dinar
+  ZAR 255 255 170 says [§][ ] then [§] then rand
+  ZMK 255 255 171 says [§][ ]Zambian[ ] then [§] then kwacha
   ZWD 255 255 172
 
 dictionary eng_words statement 1 width 0 records sound

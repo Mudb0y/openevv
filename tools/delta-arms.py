@@ -74,6 +74,9 @@ TARGET_MAX = 0x7fff
 # name, so that asking for another length means calling a different one.
 WRAPPER = re.compile(r'^(.*insert_2pt_s[a-z0-9_]*?_1_)([0-9]+)$')
 
+# The other family of them, which lays a piece of a word rather than a word.
+LAYER = re.compile(r'^(.*insert_l[a-z0-9_]*?_1_)([0-9]+)$')
+
 
 def carve_rules_full(text):
     """Every field of the rule table, since the offsets have to be written
@@ -100,6 +103,21 @@ class Record:
         self.count_insn = count_insn  # (at, size, movk) or None
         self.cont = cont              # where the arm's setup gives out
         self.arm_slot = arm_slot      # where the switch keeps this arm
+
+
+class Part:
+    """One record an action lays down. A fixed one is named by the wrapper
+    that lays it rather than by the arm, so it is shared with everything else
+    that calls that wrapper and is not one word's to change."""
+
+    def __init__(self, blob, off, length, sym_at, sym_where, call_at, fixed):
+        self.blob = blob
+        self.off = off
+        self.length = length
+        self.sym_at = sym_at
+        self.sym_where = sym_where
+        self.call_at = call_at
+        self.fixed = fixed
 
 
 class Rules:
@@ -491,6 +509,101 @@ class Arms:
             self._step(p, state, pushes)
             p += size
 
+    def _wrapper(self, name):
+        """What one of the rule's own laying-down wrappers does: the record it
+        names itself, if it names one, and how long a record it lays. A
+        wrapper that names its own is a fixed piece -- a space between two
+        words, say -- shared by everything that calls it."""
+        if self.rules.index_of(name) is None:
+            return None
+        inner = Arms(self.rules, name)
+        state = ([None] * 8, {})
+        pushes, fixed = [], None
+        for off in sorted(inner.insns):
+            shape, vals, ops, targets, size = inner.insns[off]
+            for kind, val, _w in ops:
+                if kind == 'sym' and val < len(self.rules.syms):
+                    fixed = self.rules.syms[val]
+            if shape[0] == 'call':
+                if 'insert' in shape[1]:
+                    length = pushes[2] if len(pushes) > 2 else None
+                    return fixed, (length.n if length else None)
+                pushes = []
+                continue
+            if shape[0] in ('jump', 'branch', 'return', 'switch'):
+                return None
+            inner._step(off, state, pushes)
+        return None
+
+    def parts(self, act):
+        """What one action lays down, in order. Most lay down one thing; the
+        currencies spell an abbreviation, then a space, then a name, and that
+        is three. Answers nothing where any of it cannot be read."""
+        if not self.ok or not 1 <= act <= len(self.arms):
+            return None
+        regs, slots = self._state0()
+        state = (list(regs), dict(slots))
+        pushes, out = [], []
+        sym = None
+        seen = set()
+        p = self.arms[act - 1]
+        steps = 0
+
+        while p in self.insns and p not in seen and steps < 300:
+            seen.add(p)
+            steps += 1
+            shape, vals, ops, targets, size = self.insns[p]
+
+            for kind, val, _w in ops:
+                if kind == 'sym' and val < len(self.rules.syms):
+                    sym = (self.rules.syms[val], p, _w)
+
+            if shape[0] == 'call':
+                name = shape[1]
+                if 'insert' in name:
+                    if name.startswith('insert_'):
+                        rec = pushes[1] if len(pushes) > 1 else None
+                        length = pushes[2] if len(pushes) > 2 else None
+                        if sym is None or length is None or length.n is None:
+                            return None
+                        out.append(Part(sym[0][0], sym[0][1], length.n,
+                                        sym[1], sym[2], p, False))
+                    else:
+                        got = self._wrapper(name)
+                        if got is None:
+                            return None
+                        fixed, length = got
+                        if length is None:
+                            return None
+                        if fixed is not None:
+                            out.append(Part(fixed[0], fixed[1], length,
+                                            None, None, p, True))
+                        elif sym is not None:
+                            out.append(Part(sym[0][0], sym[0][1], length,
+                                            sym[1], sym[2], p, False))
+                        else:
+                            return None
+                    sym = None
+                for r in CLOBBERED:
+                    state[0][r] = None
+                pushes = []
+                p += size
+                continue
+
+            if shape[0] == 'jump':
+                p = targets[0]
+                continue
+            if shape[0] in ('return', 'switch'):
+                break
+            if shape[0] == 'branch':
+                # One way only, and only once the pieces are all named.
+                break
+
+            self._step(p, state, pushes)
+            p += size
+
+        return out or None
+
     def _reach(self, at, limit=200):
         """Every instruction one arm can run through on its way to laying its
         record down, both ways at a branch."""
@@ -796,6 +909,52 @@ class Arms:
         act = n
         self.__init__(self.rules, self.name)
         return act
+
+    def rewrite_parts(self, act, datas):
+        """Change what an action laid down in pieces. Each piece is its own
+        record and is changed on its own; a piece the wrapper names rather
+        than the arm belongs to every word that uses that wrapper and is not
+        one word's to change."""
+        got = self.parts(act)
+        if got is None:
+            raise ValueError('%s action %d lays down nothing this can read'
+                             % (self.name, act))
+        if len(got) != len(datas):
+            raise ValueError('%s action %d lays down %d piece(s), not %d; a '
+                             'piece cannot be added or taken away'
+                             % (self.name, act, len(got), len(datas)))
+
+        for part, data in zip(got, datas):
+            body = self.rules.blobs.get(part.blob, b'')
+            if bytes(body[part.off:part.off + part.length]) == data:
+                continue
+            if part.fixed:
+                raise ValueError('%s action %d: that piece is named by the '
+                                 'rule that lays it and is shared with every '
+                                 'word using it, so it is not this word\'s to '
+                                 'change' % (self.name, act))
+            if not self._alone(part.sym_at):
+                raise ValueError('%s action %d names one of its pieces in code '
+                                 'other words run through'
+                                 % (self.name, act))
+
+            off = self.rules.add_record(part.blob, data)
+            sym = self.rules.add_sym(part.blob, off)
+
+            if len(data) != part.length:
+                name = self.insns[part.call_at][0][1]
+                m = WRAPPER.match(name) or LAYER.match(name)
+                if not (m and self._alone(part.call_at)):
+                    raise ValueError('%s action %d cannot have that piece made '
+                                     'a different length' % (self.name, act))
+                wanted = '%s%d' % (m.group(1), len(data))
+                if wanted not in self.rules.entries:
+                    raise ValueError('%s action %d would need %s, which the '
+                                     'language never compiled'
+                                     % (self.name, act, wanted))
+                self.rules.set16(self.start + part.call_at + 1,
+                                 self.rules.entries.index(wanted))
+            self.rules.set16(part.sym_where, sym)
 
     def rewrite(self, act, data):
         """Give one action a record of its own, and the length to go with it.
