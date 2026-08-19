@@ -6,6 +6,7 @@
 #include <setjmp.h>
 
 #include "delta.h"
+#include "evv_arena.h"
 
 #define AT(field, offset) \
     typedef char field##_at_##offset[offsetof(delta_state, field) == offset ? 1 : -1]
@@ -666,7 +667,7 @@ void vpush_var(delta_state *d, const delta_operand *v)
     slot[0] = 2;
     *(int16_t *)(slot + 2) = v->kind;
     *(int32_t *)(slot + 8) = size;
-    *(int32_t *)(slot + 4) = (int32_t)(intptr_t)v->ptr;
+    *(int32_t *)(slot + 4) = EVV_REF(v->ptr);
 
     memcpy(slot + s->size_ac, v->ptr, (size_t)(pad + 1));
 }
@@ -807,7 +808,7 @@ void SETSPINEL(delta_node *t, int32_t v)
 
 void SETSPINER(delta_state *d, int32_t *t, int32_t v)
 {
-    int32_t *r = rlink(d, (int32_t)(intptr_t)t);
+    int32_t *r = rlink(d, EVV_REF(t));
 
     *r = (*r & 3) | v;
 }
@@ -834,7 +835,7 @@ void push_ptr_init(delta_state *d, delta_loc *p)
 {
     p->value = 0;
     p->kind = DK_SYNC;
-    push_ptr(d, (int32_t)(intptr_t)p);
+    push_ptr(d, EVV_REF(p));
 }
 
 /* The two-byte and one-byte name pushes. Each builds an operand pointing at
@@ -907,31 +908,31 @@ void INSSPINEL(delta_state *d, delta_node *n, delta_node *t)
     n->link = (n->link & 3) | old;
 
     r = rlink(d, old);
-    *r = (*r & 3) | (int32_t)(intptr_t)n;
+    *r = (*r & 3) | EVV_REF(n);
 
-    t->link = (t->link & 3) | (int32_t)(intptr_t)n;
+    t->link = (t->link & 3) | EVV_REF(n);
 
-    r = rlink(d, (int32_t)(intptr_t)n);
-    *r = (*r & 3) | (int32_t)(intptr_t)t;
+    r = rlink(d, EVV_REF(n));
+    *r = (*r & 3) | EVV_REF(t);
 
     spine_changed++;
 }
 
 void INSSPINER(delta_state *d, delta_node *n, delta_node *t)
 {
-    int32_t old = *rlink(d, (int32_t)(intptr_t)t) & ~3;
+    int32_t old = *rlink(d, EVV_REF(t)) & ~3;
     int32_t *r;
 
-    r = rlink(d, (int32_t)(intptr_t)n);
+    r = rlink(d, EVV_REF(n));
     *r = (*r & 3) | old;
 
     ((delta_node *)(intptr_t)old)->link =
-        (((delta_node *)(intptr_t)old)->link & 3) | (int32_t)(intptr_t)n;
+        (((delta_node *)(intptr_t)old)->link & 3) | EVV_REF(n);
 
-    r = rlink(d, (int32_t)(intptr_t)t);
-    *r = (*r & 3) | (int32_t)(intptr_t)n;
+    r = rlink(d, EVV_REF(t));
+    *r = (*r & 3) | EVV_REF(n);
 
-    n->link = (n->link & 3) | (int32_t)(intptr_t)t;
+    n->link = (n->link & 3) | EVV_REF(t);
 
     spine_changed++;
 }
@@ -1434,7 +1435,7 @@ int get_parm(delta_state *d, delta_loc *out, delta_loc *loc, int16_t kind)
     switch (out->kind) {
     case DK_SYNC:
         out->value = loc->value;
-        if (!push_ptr(d, (int32_t)(intptr_t)out))
+        if (!push_ptr(d, EVV_REF(out)))
             err = 1;
         break;
 
@@ -1841,8 +1842,8 @@ int vnormalize(delta_state *d, delta_tpos *p)
             if (next == 0 || (*(int32_t *)(intptr_t)next & 2) == 0)
                 node = *(int32_t *)(intptr_t)next & ~3;
         } else if (off == 0) {
-            node = (int32_t)(intptr_t)lmost(d, f,
-                                            (delta_node *)(intptr_t)node);
+            node = EVV_REF(lmost(d, f,
+                                            (delta_node *)(intptr_t)node));
         }
         off = 0;
         went_right = 0;
@@ -1854,8 +1855,8 @@ int vnormalize(delta_state *d, delta_tpos *p)
             if (next == 0 || (*(int32_t *)(intptr_t)next & 2) == 0)
                 node = *(int32_t *)(intptr_t)(next + 4) & ~3;
         } else if (off == 0) {
-            node = (int32_t)(intptr_t)rmost(d, f,
-                                            (int32_t *)(intptr_t)node);
+            node = EVV_REF(rmost(d, f,
+                                            (int32_t *)(intptr_t)node));
         }
         off = 0;
         went_right = 1;
@@ -2024,11 +2025,9 @@ int vtsttmark_tv(delta_state *d, delta_tpos *p, uint8_t back)
             return 1;
         if (r == 3) {
             if (back == 0)
-                p->node = (int32_t)(intptr_t)
-                    rmost(d, p->field, (int32_t *)(intptr_t)p->node);
+                p->node = EVV_REF(rmost(d, p->field, (int32_t *)(intptr_t)p->node));
             else
-                p->node = (int32_t)(intptr_t)
-                    lmost(d, p->field, (delta_node *)(intptr_t)p->node);
+                p->node = EVV_REF(lmost(d, p->field, (delta_node *)(intptr_t)p->node));
         }
     }
 
@@ -2061,8 +2060,7 @@ void lpta_movel(delta_state *d, uint8_t f)
     if (!vmove_tv(d, &d->lpta))
         forceErrorBacktrack(d);
 
-    d->lpta.node = (int32_t)(intptr_t)
-        vmovel((delta_node *)(intptr_t)d->lpta.node, f);
+    d->lpta.node = EVV_REF(vmovel((delta_node *)(intptr_t)d->lpta.node, f));
 }
 
 void lpta_mover(delta_state *d, uint8_t f)
@@ -2070,8 +2068,7 @@ void lpta_mover(delta_state *d, uint8_t f)
     if (!vmove_tv(d, &d->lpta))
         forceErrorBacktrack(d);
 
-    d->lpta.node = (int32_t)(intptr_t)
-        vmover(d, (int32_t *)(intptr_t)d->lpta.node, f);
+    d->lpta.node = EVV_REF(vmover(d, (int32_t *)(intptr_t)d->lpta.node, f));
 }
 
 /* The same rightward walk, but as a test: it only moves if the position was
@@ -2081,8 +2078,7 @@ int lpta_tstmover(delta_state *d, uint8_t f)
     if (vtsttmark_tv(d, &d->lpta, 0) != 0)
         return 1;
 
-    d->lpta.node = (int32_t)(intptr_t)
-        vmover(d, (int32_t *)(intptr_t)d->lpta.node, f);
+    d->lpta.node = EVV_REF(vmover(d, (int32_t *)(intptr_t)d->lpta.node, f));
     return 0;
 }
 
@@ -2122,8 +2118,7 @@ int32_t vgetsc(delta_state *d, int32_t back, int32_t ctx, int32_t t, uint8_t f)
         if (d->vars->relink != 0
             && !NONSEQ((const delta_node *)(intptr_t)t)
             && d->vars->nsq_marks[f] == 0)
-            return (int32_t)(intptr_t)
-                ctxspine(d, (int32_t *)(intptr_t)t, f, back);
+            return EVV_REF(ctxspine(d, (int32_t *)(intptr_t)t, f, back));
 
         return ctxlook(d, t, f, back);
     }
@@ -2151,11 +2146,9 @@ int vtimept_tv(delta_state *d, delta_tpos *p, uint8_t back)
 
     if (r == 3) {
         if (back == 0)
-            p->node = (int32_t)(intptr_t)
-                rmost(d, p->field, (int32_t *)(intptr_t)p->node);
+            p->node = EVV_REF(rmost(d, p->field, (int32_t *)(intptr_t)p->node));
         else
-            p->node = (int32_t)(intptr_t)
-                lmost(d, p->field, (delta_node *)(intptr_t)p->node);
+            p->node = EVV_REF(lmost(d, p->field, (delta_node *)(intptr_t)p->node));
         p->flags = 1;
         return 1;
     }
@@ -2567,10 +2560,8 @@ int vcomp_pta(delta_state *d, delta_tpos *a, delta_tpos *b)
     }
 
     if (r == 3) {
-        int32_t lm = (int32_t)(intptr_t)
-            lmost(d, loose->field, (delta_node *)(intptr_t)loose->node);
-        int32_t rm = (int32_t)(intptr_t)
-            rmost(d, loose->field, (int32_t *)(intptr_t)loose->node);
+        int32_t lm = EVV_REF(lmost(d, loose->field, (delta_node *)(intptr_t)loose->node));
+        int32_t rm = EVV_REF(rmost(d, loose->field, (int32_t *)(intptr_t)loose->node));
         int32_t lo;
         int32_t hi;
 
@@ -2738,7 +2729,7 @@ void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r)
     if (s == NULL)
         return NULL;
 
-    sv = (int32_t)(intptr_t)s;
+    sv = EVV_REF(s);
 
     *(int32_t *)(intptr_t)(sv + (base + f) * 4) |= 1;
 
@@ -3153,7 +3144,7 @@ int vins_tok(delta_state *d, uint8_t f, int32_t l, int32_t r,
         || (*(int32_t *)(intptr_t)(r + 0xc + f * 4) & ~3) != l)
         vdel_2pt(d, f, l, r);
 
-    t = (int32_t)(intptr_t)alloc_tok(d, &vstmtbl[f]);
+    t = EVV_REF(alloc_tok(d, &vstmtbl[f]));
     if (t == 0)
         return 0;
 
@@ -3256,9 +3247,9 @@ static int ins_tokens_run(delta_state *d, uint8_t f, const uint8_t *str,
             return 0;
 
         if (str < end) {
-            d->lpta.node = (int32_t)(intptr_t)vins_sync(d, f,
+            d->lpta.node = EVV_REF(vins_sync(d, f,
                 *(int32_t *)(intptr_t)(d->rpta.node + 0xc + f * 4) & ~3,
-                d->rpta.node);
+                d->rpta.node));
             (void)arg;
             if (d->lpta.node == 0)
                 return 0;
@@ -3302,14 +3293,14 @@ int32_t vsplit_time(delta_state *d, uint8_t f, int32_t t, int32_t off)
         keep = (neighbour != 0
                 && (*(int32_t *)(intptr_t)neighbour & 2) != 0) ? 0 : neighbour;
         r = t;
-        l = (int32_t)(intptr_t)vins_sync(d, f, neighbour, t);
+        l = EVV_REF(vins_sync(d, f, neighbour, t));
         t = l;
     } else {
         neighbour = *(int32_t *)(intptr_t)(t + (base + f) * 4) & ~3;
         keep = (neighbour != 0
                 && (*(int32_t *)(intptr_t)neighbour & 2) != 0) ? 0 : neighbour;
         l = t;
-        r = (int32_t)(intptr_t)vins_sync(d, f, t, neighbour);
+        r = EVV_REF(vins_sync(d, f, t, neighbour));
         t = r;
     }
 
@@ -3387,11 +3378,9 @@ int vtmark_tv(delta_state *d, delta_tpos *p, uint8_t back)
         p->node = vsplit_time(d, p->field, p->node, off);
     } else if (r == 3) {
         if (back == 0)
-            p->node = (int32_t)(intptr_t)
-                rmost(d, p->field, (int32_t *)(intptr_t)p->node);
+            p->node = EVV_REF(rmost(d, p->field, (int32_t *)(intptr_t)p->node));
         else
-            p->node = (int32_t)(intptr_t)
-                lmost(d, p->field, (delta_node *)(intptr_t)p->node);
+            p->node = EVV_REF(lmost(d, p->field, (delta_node *)(intptr_t)p->node));
     }
 
     p->flags = 1;
@@ -3431,8 +3420,8 @@ int vrange_l(delta_state *d, delta_tpos *p, delta_tpos *out, int8_t f,
     if (p->node == d->stack->spine_l)
         return 0;
 
-    out->node = (int32_t)(intptr_t)vins_sync(d, (uint8_t)f,
-        *(int32_t *)(intptr_t)(p->node + 0xc + f * 4) & ~3, p->node);
+    out->node = EVV_REF(vins_sync(d, (uint8_t)f,
+        *(int32_t *)(intptr_t)(p->node + 0xc + f * 4) & ~3, p->node));
 
     if (out->node == 0)
         return 0;
@@ -3456,9 +3445,9 @@ int vrange_r(delta_state *d, delta_tpos *p, delta_tpos *out, int8_t f,
     if (p->node == d->stack->spine_r)
         return 0;
 
-    out->node = (int32_t)(intptr_t)vins_sync(d, (uint8_t)f, p->node,
+    out->node = EVV_REF(vins_sync(d, (uint8_t)f, p->node,
         *(int32_t *)(intptr_t)
-        (p->node + (d->vars->fence_base + f) * 4) & ~3);
+        (p->node + (d->vars->fence_base + f) * 4) & ~3));
 
     if (out->node == 0)
         return 0;
@@ -3538,9 +3527,9 @@ int vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
         int32_t off = a->offset;
 
         a->node = vsplit_time(d, (uint8_t)a->field, a->node, off);
-        b->node = (int32_t)(intptr_t)vins_sync(d, (uint8_t)a->field, a->node,
+        b->node = EVV_REF(vins_sync(d, (uint8_t)a->field, a->node,
             *(int32_t *)(intptr_t)
-            (a->node + (base + a->field) * 4) & ~3);
+            (a->node + (base + a->field) * 4) & ~3));
 
         if (b->node == 0)
             return 1;
@@ -3549,12 +3538,10 @@ int vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
             b->node = a->node;
 
             if (mode == 0xcd || mode == 0xce)
-                a->node = (int32_t)(intptr_t)
-                    lmost(d, a->field, (delta_node *)(intptr_t)a->node);
+                a->node = EVV_REF(lmost(d, a->field, (delta_node *)(intptr_t)a->node));
 
             if (mode == 0xcd || mode == 0xcf)
-                b->node = (int32_t)(intptr_t)
-                    rmost(d, a->field, (int32_t *)(intptr_t)b->node);
+                b->node = EVV_REF(rmost(d, a->field, (int32_t *)(intptr_t)b->node));
 
             /* Two different ends is already a range; the same one falls
                through to have a sync put in beside it. */
@@ -3568,9 +3555,9 @@ int vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
                 return 1;
 
             b->node = a->node;
-            a->node = (int32_t)(intptr_t)vins_sync(d, (uint8_t)a->field,
+            a->node = EVV_REF(vins_sync(d, (uint8_t)a->field,
                 *(int32_t *)(intptr_t)
-                (a->node + 0xc + a->field * 4) & ~3, a->node);
+                (a->node + 0xc + a->field * 4) & ~3, a->node));
 
             if (a->node == 0)
                 return 1;
@@ -3578,10 +3565,10 @@ int vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
             if (a->node == d->stack->spine_r)
                 return 1;
 
-            b->node = (int32_t)(intptr_t)vins_sync(d, (uint8_t)a->field,
+            b->node = EVV_REF(vins_sync(d, (uint8_t)a->field,
                 a->node,
                 *(int32_t *)(intptr_t)
-                (a->node + (base + a->field) * 4) & ~3);
+                (a->node + (base + a->field) * 4) & ~3));
 
             if (b->node == 0)
                 return 1;
@@ -4031,8 +4018,7 @@ void rpta_movel(delta_state *d, uint8_t f)
     if (!vmove_tv(d, &d->rpta))
         forceErrorBacktrack(d);
 
-    d->rpta.node = (int32_t)(intptr_t)
-        vmovel((delta_node *)(intptr_t)d->rpta.node, f);
+    d->rpta.node = EVV_REF(vmovel((delta_node *)(intptr_t)d->rpta.node, f));
 }
 
 /* The same for the left pointer, but asking first rather than faulting: a
@@ -4042,8 +4028,7 @@ int lpta_tstmovel(delta_state *d, uint8_t f)
     if (vtsttmark_tv(d, &d->lpta, 0))
         return 1;
 
-    d->lpta.node = (int32_t)(intptr_t)
-        vmovel((delta_node *)(intptr_t)d->lpta.node, f);
+    d->lpta.node = EVV_REF(vmovel((delta_node *)(intptr_t)d->lpta.node, f));
     return 0;
 }
 
@@ -4941,23 +4926,23 @@ void project_rl(delta_state *d, delta_node *t, int32_t unused_10,
     if (l == r)
         return;
 
-    tw[3 + f] = (tw[3 + f] & 3) | (int32_t)(intptr_t)l;
-    tw[fb] = (tw[fb] & 3) | (int32_t)(intptr_t)r;
+    tw[3 + f] = (tw[3 + f] & 3) | EVV_REF(l);
+    tw[fb] = (tw[fb] & 3) | EVV_REF(r);
 
     if (l != NULL && (*(const int32_t *)l & 2)) {
         int32_t *lw = (int32_t *)l;
 
-        lw[fb] = (lw[fb] & 3) | (int32_t)(intptr_t)t;
+        lw[fb] = (lw[fb] & 3) | EVV_REF(t);
     } else {
-        ((int32_t *)l)[1] = (int32_t)(intptr_t)t;
+        ((int32_t *)l)[1] = EVV_REF(t);
     }
 
     if (r != NULL && (*(const int32_t *)r & 2)) {
         int32_t *rw = (int32_t *)r;
 
-        rw[3 + f] = (rw[3 + f] & 3) | (int32_t)(intptr_t)t;
+        rw[3 + f] = (rw[3 + f] & 3) | EVV_REF(t);
     } else {
-        ((int32_t *)r)[0] = (int32_t)(intptr_t)t;
+        ((int32_t *)r)[0] = EVV_REF(t);
     }
 }
 
@@ -5031,8 +5016,8 @@ int vproj_r(delta_state *d, delta_node *t, delta_node *at, uint8_t f)
         return 1;
 
     if (v->ctx_both != 0) {
-        vgetsc(d, 1, 1, (int32_t)(intptr_t)t, f);
-        vgetsc(d, 0, 1, (int32_t)(intptr_t)t, f);
+        vgetsc(d, 1, 1, EVV_REF(t), f);
+        vgetsc(d, 0, 1, EVV_REF(t), f);
     }
 
     next = ((const int32_t *)at)[fb] & -4;
@@ -5044,7 +5029,7 @@ int vproj_r(delta_state *d, delta_node *t, delta_node *at, uint8_t f)
     else
         after = ((const int32_t *)(intptr_t)next)[1] & -4;
 
-    project_rl(d, t, (int32_t)(intptr_t)at, after, at,
+    project_rl(d, t, EVV_REF(at), after, at,
                (delta_node *)(intptr_t)next, f);
 
     if (NONSEQ(t) && v->relink != 0) {
@@ -5112,8 +5097,8 @@ int vproj_l(delta_state *d, delta_node *t, delta_node *at, uint8_t f)
         return 1;
 
     if (v->ctx_both != 0) {
-        vgetsc(d, 1, 1, (int32_t)(intptr_t)t, f);
-        vgetsc(d, 0, 1, (int32_t)(intptr_t)t, f);
+        vgetsc(d, 1, 1, EVV_REF(t), f);
+        vgetsc(d, 0, 1, EVV_REF(t), f);
     }
 
     prev = ((const int32_t *)at)[3 + f] & -4;
@@ -5126,7 +5111,7 @@ int vproj_l(delta_state *d, delta_node *t, delta_node *at, uint8_t f)
     else
         before = *(const int32_t *)(intptr_t)prev & -4;
 
-    project_rl(d, t, before, (int32_t)(intptr_t)at,
+    project_rl(d, t, before, EVV_REF(at),
                (delta_node *)(intptr_t)prev, at, f);
 
     if (NONSEQ(t) && v->relink != 0) {

@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "delta.h"
+#include "evv_arena.h"
 
 #define ELOQ(d)      ((unsigned char *)(d)->eloqc)
 #define ELOQ_CB(d, off) (*(void **)(ELOQ(d) + (off)))
@@ -82,7 +83,7 @@ int32_t voiceChangeCallback(delta_state *d, const void *value, void *b,
                             void *c, void *e, void *f, void *g)
 {
     if (ELOQ_CB(d, CB_VOICE) == 0)
-        return (int32_t)(intptr_t)ELOQ(d);
+        return EVV_REF(ELOQ(d));
 
     return ((VoiceFn)ELOQ_CB(d, CB_VOICE))(TOKEN_VALUE(value),
                                            (char *)b + 2, (char *)c + 2,

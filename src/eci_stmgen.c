@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include "delta.h"
 #include "klatt_state.h"
+#include "evv_arena.h"
 
 /* How many parameters a frame carries, and the one that means "no stream". */
 #define FRAME_PARMS 0x3e
@@ -285,8 +286,8 @@ static int32_t valueSetValue(delta_state *d, ValueSet *vs, int8_t stream,
             }
 
             {
-                int32_t m = (int32_t)(intptr_t)vmovel(
-                        (delta_node *)(intptr_t)c->left, (uint8_t)stream);
+                int32_t m = EVV_REF(vmovel(
+                        (delta_node *)(intptr_t)c->left, (uint8_t)stream));
                 int32_t held = FIELD(m, OWN_WORDS + stream) & LINK_MASK;
 
                 c->at_left = held ? integerValue(held, stream) : 0;

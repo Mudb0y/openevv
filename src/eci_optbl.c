@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 #include "delta.h"
+#include "evv_arena.h"
 
 #define NODE(n)   ((int32_t *)(intptr_t)(n))
 #define OWN_WORDS 3
@@ -111,9 +112,9 @@ int ins_tokens(delta_state *d, int8_t f, const uint8_t *str, uint8_t n,
             return 0;
 
         if (str < end) {
-            d->lpta.node = (int32_t)(intptr_t)vins_sync(d, f,
+            d->lpta.node = EVV_REF(vins_sync(d, f,
                 NODE(d->rpta.node)[OWN_WORDS + f] & LINK_MASK,
-                d->rpta.node);
+                d->rpta.node));
             if (d->lpta.node == 0)
                 return 0;
         }

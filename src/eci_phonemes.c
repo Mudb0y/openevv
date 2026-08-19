@@ -20,6 +20,7 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "evv_arena.h"
 
 /* One phoneme, and how many of the numbers on its line go where. */
 #define RECORD_BYTES 0x30
@@ -131,7 +132,7 @@ THIS int32_t ph_search(PhonemeData *p, int32_t want, int16_t lo, int16_t hi)
         return 0;
 
     if (REC_NAME(REC_AT(p, mid)) == want)
-        return (int32_t)(intptr_t)REC_AT(p, mid);
+        return EVV_REF(REC_AT(p, mid));
 
     if (REC_NAME(REC_AT(p, mid)) > want)
         return ph_search(p, want, lo, (int16_t)(mid - 1));

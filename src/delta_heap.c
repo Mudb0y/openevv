@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "delta.h"
+#include "evv_arena.h"
 
 /* The Delta heap. Rules build tokens and syncs here and throw them away
    wholesale when a match fails, so what matters is the mark and rewind
@@ -43,8 +44,8 @@ static delta_seg *allocDynaSegment(delta_state *d, int32_t size)
         s->free_segs = seg->next;
         s->free_count--;
 
-        seg->used = (int32_t)(intptr_t)seg->end & 3;
-        if (((int32_t)(intptr_t)seg->end & 7) == 0)
+        seg->used = EVV_REF(seg->end) & 3;
+        if ((EVV_REF(seg->end) & 7) == 0)
             seg->used += 4;
 
         seg->next = NULL;
@@ -67,8 +68,8 @@ static delta_seg *allocDynaSegment(delta_state *d, int32_t size)
     }
 
     seg->end = seg->block + size - 1;
-    seg->used = (int32_t)(intptr_t)seg->end & 3;
-    if (((int32_t)(intptr_t)seg->end & 7) == 0)
+    seg->used = EVV_REF(seg->end) & 3;
+    if ((EVV_REF(seg->end) & 7) == 0)
         seg->used += 4;
 
     return seg;
@@ -171,7 +172,7 @@ DELTA_FASTCALL void freeDeltaHeapObject(delta_state *d, void *p)
 
     if (seg == s->heap_cur) {
         /* Nothing is left in the segment being filled, so start it over. */
-        s->heap_cur->used = (int32_t)(intptr_t)s->heap_cur->end & 3;
+        s->heap_cur->used = EVV_REF(s->heap_cur->end) & 3;
         return;
     }
 

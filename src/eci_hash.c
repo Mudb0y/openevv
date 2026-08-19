@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include "evv_arena.h"
 
 /* What a table with nothing asked of it takes. */
 #define DEFAULT_BUCKETS 0xd3
@@ -288,7 +289,7 @@ void *hashLookupInt(void *table, int32_t key)
     HashEntry *e = h->at[intHashFunction(h, (uint32_t)key)];
 
     while (e) {
-        if ((int32_t)(intptr_t)e->key == key)
+        if (EVV_REF(e->key) == key)
             return e->value;
         e = e->next;
     }
@@ -303,7 +304,7 @@ int32_t hashDeleteInt(void *table, int32_t key, int32_t freeValue)
     HashEntry *prev = h->at[i];
     HashEntry *e;
 
-    if ((int32_t)(intptr_t)prev->key == key) {
+    if (EVV_REF(prev->key) == key) {
         h->at[i] = prev->next;
         if (freeValue && prev->value)
             free(prev->value);
@@ -312,7 +313,7 @@ int32_t hashDeleteInt(void *table, int32_t key, int32_t freeValue)
     }
 
     for (e = prev->next; e; e = prev->next) {
-        if ((int32_t)(intptr_t)e->key == key)
+        if (EVV_REF(e->key) == key)
             break;
         prev = e;
     }
@@ -334,7 +335,7 @@ void *hashMoveInt(void *table, int32_t oldKey, int32_t newKey)
     uint32_t   to;
     HashEntry *e = h->at[from];
 
-    while (e && (int32_t)(intptr_t)e->key != oldKey) {
+    while (e && EVV_REF(e->key) != oldKey) {
         prev = e;
         e = e->next;
     }
@@ -402,7 +403,7 @@ const char *hashIterString(void *iter)
 
 int32_t hashIterInt(void *iter)
 {
-    return (int32_t)(intptr_t)((HashIter *)iter)->entry->key;
+    return EVV_REF(((HashIter *)iter)->entry->key);
 }
 
 void *hashIterRef(void *iter)

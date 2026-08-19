@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "delta.h"
+#include "evv_arena.h"
 
 /* The name stack: eight bytes an entry, and room for this many. */
 #define NAME_STACK_BYTES 0x28
@@ -84,8 +85,8 @@ int32_t vdltinit(delta_state *d, int32_t initStatements)
     s->sync_size = (d->nstmts * 2 + 6) * 4;
 
     resetDeltaHeap(d);
-    s->spine_l = (int32_t)(intptr_t)alloc_sync(d);
-    s->spine_r = (int32_t)(intptr_t)alloc_sync(d);
+    s->spine_l = EVV_REF(alloc_sync(d));
+    s->spine_r = EVV_REF(alloc_sync(d));
     if (!s->spine_l || !s->spine_r)
         return 0;
 

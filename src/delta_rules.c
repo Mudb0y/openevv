@@ -26,6 +26,7 @@
 
 #include "delta_rules.h"
 #include "delta_rules_c.h"
+#include "evv_arena.h"
 
 enum {
     OP_CALL, OP_JUMP, OP_BRANCH, OP_CMP, OP_ALU2, OP_ALU1, OP_LOAD,
@@ -344,15 +345,15 @@ static int32_t operand_read(interp *st, const uint8_t **pp, int w, int sext)
         *pp = p + 3;
         return v;
     case K_SYM:
-        v = (int32_t)(intptr_t)delta_rule_sym[get16(p + 1)];
+        v = EVV_REF(delta_rule_sym[get16(p + 1)]);
         *pp = p + 3;
         return v;
     case K_SLOTADDR:
-        v = (int32_t)(intptr_t)(st->base + get16s(p + 1));
+        v = EVV_REF((st->base + get16s(p + 1)));
         *pp = p + 3;
         return v;
     case K_STATE:
-        v = (int32_t)(intptr_t)((unsigned char *)st->state + get16s(p + 1));
+        v = EVV_REF(((unsigned char *)st->state + get16s(p + 1)));
         *pp = p + 3;
         return v;
     case K_REG:

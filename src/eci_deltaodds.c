@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <ctype.h>
 #include "delta.h"
+#include "evv_arena.h"
 
 /* Where the machine keeps the two tables the link-up pass walks, and how big
    an entry of each is. Neither has ever needed naming anywhere else. */
@@ -141,10 +142,10 @@ void *vardesc(delta_state *d, uint8_t hi, uint8_t lo, void *frame)
     if (frame == 0)
         frame = (void *)(intptr_t)v->running;
 
-    if ((int32_t)(intptr_t)frame == v->running)
+    if (EVV_REF(frame) == v->running)
         base = *(void **)(v->back + 4);
     else
-        base = vonstack(d, (int32_t)(intptr_t)frame);
+        base = vonstack(d, EVV_REF(frame));
 
     if (!base)
         return 0;
