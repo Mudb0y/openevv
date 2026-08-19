@@ -24,6 +24,7 @@
 #include "eci_synththread.h"
 #include "evv_abi.h"
 #include "evv_arena.h"
+#include "eci_old.h"
 
 /* Which call was refused. Every entry point has its own bit; the ones here
    share the same one because the original gives them the same one. */
@@ -36,8 +37,6 @@
 #define POLL_WORKING     1
 #define POLL_BUSY        3
 
-typedef struct OldInst OldInst;
-
 /* One thing the caller put on the queue before asking for it to be spoken.
    Only what this file touches is named. */
 typedef struct QueueElement {
@@ -49,16 +48,6 @@ typedef struct QueueElement {
 
 /* The old interface's own record. Named by offset because most of it still
    belongs to the original. */
-#define OI_NEW(h)       (*(void **)((char *)(h) + 0x00c))
-#define OI_CALLBACK(h)  (*(void **)((char *)(h) + 0x010))
-#define OI_CBDATA(h)    (*(void **)((char *)(h) + 0x014))
-#define OI_LASTINDEX(h) (*(int32_t *)((char *)(h) + 0x3d8))
-#define OI_QHEAD(h)     (*(QueueElement **)((char *)(h) + 0x60c))
-#define OI_QTAIL(h)     (*(QueueElement **)((char *)(h) + 0x610))
-#define OI_STOPPED(h)   (*(int32_t *)((char *)(h) + 0x6a4))
-#define OI_REFUSEDALL(h) (*(uint32_t *)((char *)(h) + 0x6ac))
-#define OI_REFUSED(h)   (*(uint32_t *)((char *)(h) + 0x6b0))
-#define OI_BUSY(h)      (*(int32_t *)((char *)(h) + 0x6b4))
 
 extern int32_t STDCALL api_poll(void *h) MANGLED("_eciPoll2@4");
 extern int32_t STDCALL api_stop(void *h) MANGLED("_eciStop2@4");
@@ -113,29 +102,12 @@ static int eo_reentered(OldInst *h, uint32_t bit)
 }
 
 /* How big an instance is, and how big the voice table it carries. */
-#define INSTANCE_BYTES  0x6cc
+#define INSTANCE_BYTES  sizeof(OldInst)
 #define CONCAT_VOICES_BYTES 0x21db0
 
 /* The environment, and the copy kept beside it so a change can be undone. */
-#define OI_ENV(h)       ((int32_t *)((char *)(h) + 0x018))
-#define OI_ENV_SAVED(h) ((int32_t *)((char *)(h) + 0x060))
-#define OI_ENV_WORDS    0x12
-#define OI_DEVICE(h)    (*(int32_t *)((char *)(h) + 0x02c))
-#define OI_LANG(h)      (*(int32_t *)((char *)(h) + 0x03c))
-#define OI_VOICENO(h)   (*(int32_t *)((char *)(h) + 0x05c))
 
 /* The voice in play, its saved copy, and the eight the caller may edit. */
-#define OI_VOICE(h)     ((char *)(h) + 0x0a8)
-#define OI_VOICE_SAVED(h) ((char *)(h) + 0x0f8)
-#define OI_VOICES(h)    ((char *)(h) + 0x148)
-#define VOICE_BYTES     0x50
-#define OLD_VOICES      8
-
-#define OI_READY(h)     (*(int32_t *)((char *)(h) + 0x6a4))
-#define OI_READY2(h)    (*(int32_t *)((char *)(h) + 0x6a8))
-#define OI_ROMMGR(h)    (*(void **)((char *)(h) + 0x6b8))
-#define OI_FILTERMGR(h) (*(void **)((char *)(h) + 0x6bc))
-#define OI_CONCAT(h)    (*(void **)((char *)(h) + 0x6c8))
 
 /* Where the standard voices sit: two dialects to a family, sixteen voices to
    a dialect after a word of its own, and the old interface shows eight. */
@@ -208,8 +180,6 @@ int32_t setECIerror(int32_t rc, OldInst *h)
 #define CODESET_WIDE   0x800
 
 /* Where the phoneme report is built before the caller is shown it. */
-#define OI_REPORT(h)   ((char *)(h) + 0x5f4)
-#define OI_REPORT_MODE(h) (*(int32_t *)((char *)(h) + 0x5fe))
 
 /* The published callback is stdcall. Calling it as cdecl leaves the stack
    sixteen bytes high and the return lands in data, one call later. */
@@ -685,7 +655,6 @@ void STDCALL eo_version(char *out)
     api_version(&a, &b, &c, &d);
     sprintf(out, "%d.%d.%d.%d", a, b, c, d);
 }
-
 
 ALIAS_N("_eciClearErrors@4", "eo_clearErrors", 4);
 ALIAS_N("_eciSynchronizeSynth@4", "eo_synchronizeSynth", 4);

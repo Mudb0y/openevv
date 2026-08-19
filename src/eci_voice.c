@@ -23,29 +23,13 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
-
-typedef struct OldInst OldInst;
-
-#define OI_NEW(h)       (*(void **)((char *)(h) + 0x00c))
-#define OI_ENV(h)       ((int32_t *)((char *)(h) + 0x018))
-#define OI_RATE(h)      (*(int32_t *)((char *)(h) + 0x02c))
-#define OI_LANG(h)      (*(int32_t *)((char *)(h) + 0x03c))
-#define OI_PREV_VOICENO(h) (*(int32_t *)((char *)(h) + 0x0a4))
-#define OI_VOICENO(h)   (*(int32_t *)((char *)(h) + 0x05c))
-#define OI_VOICE(h)     ((char *)(h) + 0x0a8)
-#define OI_VOICES(h)    ((char *)(h) + 0x148)
-#define OI_READY(h)     (*(int32_t *)((char *)(h) + 0x6a4))
-#define OI_REFUSEDALL(h) (*(uint32_t *)((char *)(h) + 0x6ac))
-#define OI_REFUSED(h)   (*(uint32_t *)((char *)(h) + 0x6b0))
-#define OI_BUSY(h)      (*(int32_t *)((char *)(h) + 0x6b4))
-#define OI_CONCAT(h)    (*(void **)((char *)(h) + 0x6c8))
+#include "eci_old.h"
 
 /* Whether the caller wants the engine's units or a person's. */
 #define ENV_REALWORLD   8
 #define ENV_CODESET     9
 
 /* What a voice is made of. */
-#define VOICE_BYTES       0x50
 #define VOICE_NAME_ROOM   0x1e
 #define VOICE_PARAMS      0x20
 #define VOICE_PARAM(v, i) (*(int32_t *)((char *)(v) + VOICE_PARAMS + (i) * 4))
@@ -592,7 +576,6 @@ ALIAS("?rc_to_VoiceError@@YA?AW4ECIVoiceError@@J@Z", "vc_rc_to_VoiceError");
 /* These three already carry the names the object uses, so they need no
    alias; the swap stands the original's aside on the strength of the name
    alone. */
-
 
 ALIAS_N("_eciCopyVoice@12", "vc_copyVoice", 12);
 ALIAS_N("_eciGetVoiceParam@12", "vc_getVoiceParam", 12);

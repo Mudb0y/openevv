@@ -18,31 +18,7 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
-
-typedef struct OldInst OldInst;
-
-#define OI_NEW(h)       (*(void **)((char *)(h) + 0x00c))
-#define OI_CALLBACK(h)  (*(void **)((char *)(h) + 0x010))
-#define OI_ENV(h)       ((int32_t *)((char *)(h) + 0x018))
-#define OI_ENV_SAVED(h) ((int32_t *)((char *)(h) + 0x060))
-#define OI_RATE(h)      (*(int32_t *)((char *)(h) + 0x02c))
-#define OI_LANG(h)      (*(int32_t *)((char *)(h) + 0x03c))
-#define OI_VOICENO(h)   (*(int32_t *)((char *)(h) + 0x05c))
-#define OI_VOICE(h)     ((char *)(h) + 0x0a8)
-#define OI_VOICE_SAVED(h) ((char *)(h) + 0x0f8)
-#define OI_FILENAME(h)  ((char *)(h) + 0x3f4)
-#define OI_FILENAME_SAVED(h) ((char *)(h) + 0x4f4)
-#define OI_SAMPBUF(h)   (*(void **)((char *)(h) + 0x3c8))
-#define OI_SAMPBUF_SAVED(h) (*(void **)((char *)(h) + 0x3cc))
-#define OI_SAMPROOM(h)  (*(int32_t *)((char *)(h) + 0x3d0))
-#define OI_SAMPROOM_SAVED(h) (*(int32_t *)((char *)(h) + 0x3d4))
-#define OI_WHERE(h)     (*(int32_t *)((char *)(h) + 0x3dc))
-#define OI_READY(h)     (*(int32_t *)((char *)(h) + 0x6a4))
-#define OI_READY2(h)    (*(int32_t *)((char *)(h) + 0x6a8))
-#define OI_REFUSEDALL(h) (*(uint32_t *)((char *)(h) + 0x6ac))
-#define OI_REFUSED(h)   (*(uint32_t *)((char *)(h) + 0x6b0))
-#define OI_BUSY(h)      (*(int32_t *)((char *)(h) + 0x6b4))
-#define OI_CONCAT(h)    (*(void **)((char *)(h) + 0x6c8))
+#include "eci_old.h"
 
 /* Where the samples are going. */
 #define WHERE_DEVICE    0
@@ -641,7 +617,6 @@ int STDCALL ev_setOutputBuffer(OldInst *h, int32_t n, void *buf)
     OI_ENV_SAVED(inst)[ENV_RATE] = OI_RATE(inst);
     return 1;
 }
-
 
 ALIAS("?checklang@@YAHH@Z", "ev_checklang");
 ALIAS("?sampleRateSupported@@YAHH@Z", "ev_sampleRateSupported");

@@ -20,33 +20,12 @@
 #include "eci_synththread.h"
 #include "evv_abi.h"
 #include "evv_arena.h"
-
-typedef struct OldInst OldInst;
-
-#define OI_NEW(h)       (*(void **)((char *)(h) + 0x00c))
-#define OI_ENV(h)       ((int32_t *)((char *)(h) + 0x018))
-#define OI_RATE(h)      (*(int32_t *)((char *)(h) + 0x02c))
-#define OI_LANG(h)      (*(int32_t *)((char *)(h) + 0x03c))
-#define OI_VOICES(h)    ((char *)(h) + 0x148)
-#define OI_FILENAME(h)  ((char *)(h) + 0x3f4)
-#define OI_DIRECT(h)    (*(void **)((char *)(h) + 0x3e0))
-#define OI_DIRECT2(h)   (*(void **)((char *)(h) + 0x3e4))
-#define OI_ROMMGR(h)    (*(void **)((char *)(h) + 0x6b8))
-#define OI_READY(h)     (*(int32_t *)((char *)(h) + 0x6a4))
-#define OI_READY2(h)    (*(int32_t *)((char *)(h) + 0x6a8))
-#define OI_REFUSEDALL(h) (*(uint32_t *)((char *)(h) + 0x6ac))
-#define OI_REFUSED(h)   (*(uint32_t *)((char *)(h) + 0x6b0))
-#define OI_BUSY(h)      (*(int32_t *)((char *)(h) + 0x6b4))
-#define OI_OWNED1(h)    (*(void **)((char *)(h) + 0x6c0))
-#define OI_OWNED2(h)    (*(void **)((char *)(h) + 0x6c4))
-#define OI_CONCAT(h)    (*(void **)((char *)(h) + 0x6c8))
+#include "eci_old.h"
 
 #define ENV_DICTIONARY  3
 #define ENV_RATE        5
 #define ENV_LANGUAGE    9
 #define ENV_WORDS       0x12
-#define VOICE_BYTES     0x50
-#define OLD_VOICES      8
 #define SV_FAMILY_BYTES 0x0a08
 #define SV_DIALECT_BYTES 0x0504
 #define SV_FIRST        4
@@ -506,7 +485,6 @@ int STDCALL es_dialogBox(void *a, void *b, void *c, void *d, void *e)
     (void)e;
     return 1;
 }
-
 
 ALIAS_N("_eciGetParam@8", "eo_getParam", 8);
 ALIAS_N("_eciGetDefaultParam@4", "es_getDefaultParam", 4);
