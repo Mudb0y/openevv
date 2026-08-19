@@ -25,6 +25,7 @@
 #include <stddef.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "eci_objects.h"
 
 #define ERR_BAD_ARG   (-3)
 #define ERR_NO_VOICE  (-22)
@@ -245,20 +246,20 @@ THIS int32_t stm_unregisterVoice(SynthThread *t, int32_t voice, void *attrib,
 
 /* ---- stopping and starting a message queue thread ---- */
 
-typedef struct QueueThread QueueThread;
-typedef struct MsgQueue MsgQueue;
-typedef struct {
+typedef ETImessageQueueThread QueueThread;
+typedef ETImessageQueue MsgQueue;
+
+struct QueueVtbl {
     THIS int16_t (*sendMessage)(MsgQueue *, void *, int32_t, void *, void *);
     THIS int16_t (*postMessage)(MsgQueue *, void *, int32_t, void *, void *);
     THIS int16_t (*popMessage)(MsgQueue *, void **, int32_t, void *);
     THIS void    (*suspend)(MsgQueue *);
     THIS void    (*resume)(MsgQueue *);
-} MsgQueueVtbl;
-struct MsgQueue { const MsgQueueVtbl *vt; };
+};
 
-#define QT_QUEUE(t)    ((MsgQueue *)((char *)(t) + 0x20))
-#define QT_TURN(t)     ((void *)((char *)(t) + 0x6c))
-#define QT_QUITTING(t) ((void *)((char *)(t) + 0x78))
+#define QT_QUEUE(t)    (&(t)->queue)
+#define QT_TURN(t)     ((void *)(t)->turn)
+#define QT_QUITTING(t) ((void *)(t)->gate)
 
 /* The thread is running. */
 #define THREAD_RUNNING 1
@@ -307,11 +308,11 @@ THIS int16_t stm_qtResume(QueueThread *t)
 /* ---- the application queue's timer ---- */
 
 /* Fields of the application queue this pair reaches. */
-#define AQ_PARAM(q)   (*(void **)((char *)(q) + 0x50))
-#define AQ_STOPPING(q) (*(int32_t *)((char *)(q) + 0x60))
-#define AQ_HELD(q)    (*(void **)((char *)(q) + 0x64))
-#define AQ_WINDOW(q)  (*(void **)((char *)(q) + 0x68))
-#define AQ_MESSAGE(q) (*(int16_t *)((char *)(q) + 0x6c))
+#define AQ_PARAM(q)    (((ETIappMessageQueue *)(q))->cb_param)
+#define AQ_STOPPING(q) (((ETIappMessageQueue *)(q))->stopping)
+#define AQ_HELD(q)     (((ETIappMessageQueue *)(q))->held)
+#define AQ_WINDOW(q)   (((ETIappMessageQueue *)(q))->win)
+#define AQ_MESSAGE(q)  (((ETIappMessageQueue *)(q))->post_flag)
 
 #ifdef _WIN32
 __attribute__((dllimport, stdcall)) unsigned SetTimer(void *, unsigned,
