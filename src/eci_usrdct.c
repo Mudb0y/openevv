@@ -28,14 +28,14 @@
 #include "delta.h"
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "klatt_lang.h"
 
 /* The language module's own handle, which is where the current dictionary
    and the stream it works in are kept. */
-typedef struct DeltaLang DeltaLang;
 
 #define DT_LANG(d)      EVV_AT(DeltaLang *, (d)->dlang)
-#define DL_CURRENT(l)   (*(struct DictionarySet **)((char *)(l) + 0x38))
-#define DL_STREAM(l)    (*(int8_t *)((char *)(l) + 0x3c))
+#define DL_CURRENT(l)   ((l)->current)
+#define DL_STREAM(l)    ((l)->stream)
 
 /* Which side of the machine wants to hear that the spine moved. */
 #define OWNER_MOVED(d)  (*(int32_t *)(EVV_AT(uint8_t *, (d)->owner) + 0x1b8))

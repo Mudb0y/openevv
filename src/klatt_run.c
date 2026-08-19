@@ -28,52 +28,48 @@
 #include "evv_abi.h"
 #include "evv_arena.h"
 #include "delta.h"
+#include "klatt_lang.h"
 
 /* The engine's own handle. Only the one field this file needs is named. */
 typedef delta_state DeltaThis;
-typedef struct DeltaLang DeltaLang;
-typedef struct SynthDevice SynthDevice;
 
 #define DT_LANG(d)      EVV_AT(DeltaLang *, (d)->dlang)
 
-/* Where the sound is going, and what is to be reported about it. */
-#define SD_SAMPLE_CB(v)   (*(void **)((char *)(v) + 0x00))
-#define SD_SAMPLE_DATA(v) (*(void **)((char *)(v) + 0x04))
-#define SD_DUR_CB(v)      (*(void **)((char *)(v) + 0x08))
-#define SD_DUR_DATA(v)    (*(void **)((char *)(v) + 0x0c))
-#define SD_FILENAME(v)    (*(char **)((char *)(v) + 0x10))
-#define SD_QUEUE(v)       ((void *)((char *)(v) + 0x14))
-#define SD_PLAYING(v)     (*(int32_t *)((char *)(v) + 0x28))
-#define SD_INTERRUPTED(v) (*(int32_t *)((char *)(v) + 0x30))
-#define SD_LAZY_WRITE(v)  (*(int32_t *)((char *)(v) + 0x34))
-#define SD_UNKNOWN_2C(v)  (*(int32_t *)((char *)(v) + 0x2c))
-#define SD_SLEEPCYCLE(v)  (*(int32_t *)((char *)(v) + 0x24))
-#define SD_LAST_CLOCK(v)  (*(int32_t *)((char *)(v) + 0x3c))
-#define SD_UNKNOWN_38(v)  (*(int32_t *)((char *)(v) + 0x38))
-#define SD_PENDING(v)     (*(int32_t *)((char *)(v) + 0x38))
-#define SD_OPEN(v)        (*(int32_t *)((char *)(v) + 0x2c))
-#define SD_HOLD(v)        (*(int32_t *)((char *)(v) + 0x40))
-#define SD_INDEX_CB(v)    (*(void **)((char *)(v) + 0x44))
-#define SD_INDEX_DATA(v)  (*(void **)((char *)(v) + 0x48))
-#define SD_PHONEME_CB(v)  (*(void **)((char *)(v) + 0x4c))
-#define SD_PHONEME_DATA(v) (*(void **)((char *)(v) + 0x50))
+#define SD_SAMPLE_CB(v)   ((v)->sample_cb)
+#define SD_SAMPLE_DATA(v) ((v)->sample_data)
+#define SD_DUR_CB(v)      ((v)->dur_cb)
+#define SD_DUR_DATA(v)    ((v)->dur_data)
+#define SD_FILENAME(v)    ((v)->filename)
+#define SD_QUEUE(v)       ((void *)(v)->queue)
+#define SD_PLAYING(v)     ((v)->playing)
+#define SD_INTERRUPTED(v) ((v)->interrupted)
+#define SD_LAZY_WRITE(v)  ((v)->lazy_write)
+#define SD_UNKNOWN_2C(v)  ((v)->open)
+#define SD_SLEEPCYCLE(v)  ((v)->sleepcycle)
+#define SD_LAST_CLOCK(v)  ((v)->last_clock)
+#define SD_UNKNOWN_38(v)  ((v)->pending)
+#define SD_PENDING(v)     ((v)->pending)
+#define SD_OPEN(v)        ((v)->open)
+#define SD_HOLD(v)        ((v)->hold)
+#define SD_INDEX_CB(v)    ((v)->index_cb)
+#define SD_INDEX_DATA(v)  ((v)->index_data)
+#define SD_PHONEME_CB(v)  ((v)->phoneme_cb)
+#define SD_PHONEME_DATA(v) ((v)->phoneme_data)
 
-/* The language record. Its three running totals are the whole of the mark
-   timing, and the rest is memory it owns. */
-#define DL_DEVICE(l)      (*(SynthDevice **)((char *)(l) + 0x10))
-#define DL_BUF_100(l)     (*(void **)((char *)(l) + 0x14))
-#define DL_BUF_140(l)     (*(void **)((char *)(l) + 0x1c))
-#define DL_EXTENSION(l)   (*(const char **)((char *)(l) + 0x08))
-#define DL_VOICE_FILE(l)  (*(const char **)((char *)(l) + 0x0c))
-#define DL_FLAG_18(l)     (*(int32_t *)((char *)(l) + 0x18))
-#define DL_KLATT(l)       (*(void **)((char *)(l) + 0x20))
-#define DL_BYTE_3C(l)     (*(int8_t *)((char *)(l) + 0x3c))
-#define DL_BUF_4(l)       (*(void **)((char *)(l) + 0x30))
-#define DL_SPOKEN(l)      (*(int32_t *)((char *)(l) + 0x44))
-#define DL_MARKED(l)      (*(int32_t *)((char *)(l) + 0x48))
-#define DL_QUEUED(l)      (*(int32_t *)((char *)(l) + 0x4c))
-#define DL_RATE(l)        (*(int32_t *)((char *)(l) + 0x50))
-#define DL_BYTES          0x54
+#define DL_DEVICE(l)      ((l)->device)
+#define DL_BUF_100(l)     ((l)->buf_100)
+#define DL_BUF_140(l)     ((l)->buf_140)
+#define DL_EXTENSION(l)   ((l)->extension)
+#define DL_VOICE_FILE(l)  ((l)->voice_file)
+#define DL_FLAG_18(l)     ((l)->flag_18)
+#define DL_KLATT(l)       ((l)->klatt)
+#define DL_BYTE_3C(l)     ((l)->stream)
+#define DL_BUF_4(l)       ((l)->buf_4)
+#define DL_SPOKEN(l)      ((l)->spoken)
+#define DL_MARKED(l)      ((l)->marked)
+#define DL_QUEUED(l)      ((l)->queued)
+#define DL_RATE(l)        ((l)->rate)
+#define DL_BYTES          sizeof(DeltaLang)
 
 #define BUF_100_BYTES     0x100
 #define BUF_140_BYTES     0x140
@@ -488,7 +484,7 @@ int dlang_new(DeltaThis *d)
     }
     memset(DL_BUF_100(lang), 0, BUF_100_BYTES);
 
-    dev = cpp_new(0x54);
+    dev = cpp_new(sizeof(SynthDevice));
     DL_DEVICE(lang) = dev ? soundDeviceInfoCtor(dev) : 0;
     if (!DL_DEVICE(lang)) {
         free(DL_BUF_100(lang));
@@ -970,15 +966,26 @@ int synthesize(DeltaThis *d, void *buf, int32_t isArray, int32_t *streamA,
    uses to say it has no sleep cycle yet. */
 THIS void *soundDeviceInfoCtor(void *self)
 {
-    char *v = (char *)self;
-    int i;
+    SynthDevice *v = self;
 
-    for (i = 0; i < 5; i++)
-        ((int32_t *)v)[i] = 0;
-    sti_indexQueueCtor(v + 0x14);
+    SD_SAMPLE_CB(v) = 0;
+    SD_SAMPLE_DATA(v) = 0;
+    SD_DUR_CB(v) = 0;
+    SD_DUR_DATA(v) = 0;
+    SD_FILENAME(v) = 0;
+    sti_indexQueueCtor(SD_QUEUE(v));
     SD_SLEEPCYCLE(v) = -1;
-    for (i = 0x28; i <= 0x50; i += 4)
-        *(int32_t *)(v + i) = 0;
+    SD_PLAYING(v) = 0;
+    SD_OPEN(v) = 0;
+    SD_INTERRUPTED(v) = 0;
+    SD_LAZY_WRITE(v) = 0;
+    SD_PENDING(v) = 0;
+    SD_LAST_CLOCK(v) = 0;
+    SD_HOLD(v) = 0;
+    SD_INDEX_CB(v) = 0;
+    SD_INDEX_DATA(v) = 0;
+    SD_PHONEME_CB(v) = 0;
+    SD_PHONEME_DATA(v) = 0;
     return self;
 }
 
