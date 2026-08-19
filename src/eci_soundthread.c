@@ -78,6 +78,9 @@ typedef struct {
     TimerThreadTimer *tick;      /* +0xcc */
 } SoundThread;
 
+/* What a caller has to allocate for one. Only this file knows what is in it. */
+const uint32_t st_bytes = sizeof(SoundThread);
+
 /* What each message is for. */
 #define SND_OPEN    0x3e8
 #define SND_WRITE   0x3e9

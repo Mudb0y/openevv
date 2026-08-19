@@ -40,8 +40,7 @@ typedef struct AudioFormat {
     ECIaudioFormat  fmt;        /* +0x0c */
 } AudioFormat;
 
-#define AUDIO_FORMAT_BYTES  0x2c
-#define SOUND_THREAD_BYTES  0xd0
+extern const uint32_t st_bytes;
 
 /* The manager itself: a lock, a growable array of formats, and the timer
    thread every sound thread shares. */
@@ -129,7 +128,7 @@ THIS AudioFormat *sm_formatCtor(AudioFormat *a, uint32_t slot,
         return a;
     strcpy(name, want->name);
 
-    thread = cpp_new(SOUND_THREAD_BYTES);
+    thread = cpp_new(st_bytes);
     a->thread = thread ? snd_ctor(thread, timer) : 0;
     return a;
 }
@@ -268,7 +267,7 @@ THIS int32_t sm_requestAudioFormat(SoundManager *m, ECIaudioFormat *want,
     sm_replaceDefaultFieldsWithValues(m, want);
 
     {
-        AudioFormat *a = cpp_new(AUDIO_FORMAT_BYTES);
+        AudioFormat *a = cpp_new(sizeof(AudioFormat));
 
         *out = a ? sm_formatCtor(a, m->count, want, &m->timer) : 0;
     }
