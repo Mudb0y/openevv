@@ -11,6 +11,11 @@
 # written as a hash and its number. An entry with nothing after its action
 # lays no record down, or lays one down a way this cannot yet read.
 #
+# To add a word, put a line in with the word `new' where its action number
+# goes and say what it is to sound like. Building gives it an action of its
+# own and writes the number back here. `delta-dict.py where <dictionary>
+# <word>' says which two words it belongs between.
+#
 # What a word says belongs to its action rather than to the word, so two words
 # sharing an action say the same thing and changing one changes both.
 #

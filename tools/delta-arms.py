@@ -34,6 +34,15 @@ packs it into a constant has the constant replaced with the other byte kept.
 Nothing shared is ever patched: an instruction more than one arm can run
 through is refused, because changing it would change what some other word
 says.
+
+A word needing a pronunciation nobody has yet gets an action of its own. A
+switch cannot be widened where it stands without pushing everything after it
+along, so a wider copy goes at the end of the rule and the old one is jumped
+over, with what is left of it filled with instructions that decode but are
+never reached -- execution would not care, but anything reading the rule from
+its first byte would otherwise lose its place. The rule also checks the action
+against how many arms it has before it dispatches, and that check is raised
+too, or the new action is thrown out before the switch ever sees it.
 """
 
 import importlib
@@ -585,16 +594,24 @@ class Arms:
 
     def _continuation(self, at):
         """Where an arm's own setup gives out and the shared work begins,
-        which is what a replacement block has to jump to."""
+        which is what a replacement block has to jump to.
+
+        It has to come after the record is named. An arm whose target lands in
+        the middle of a shared block does its naming further along, and a
+        block that jumped back to the start of it would have the original
+        undo everything the replacement had just done, so that answers
+        nothing and the arm is left alone."""
+        named = False
         for p in self._flow(at):
             shape, vals, ops, targets, size = self.insns[p]
             if any(o[0] == 'sym' for o in ops):
+                named = True
                 continue
             if self._count_store(p) is not None:
                 continue
             if shape[0] == 'jump':
                 continue
-            return p
+            return p if named else None
         return None
 
     def read(self, act):
@@ -634,6 +651,121 @@ class Arms:
         other word says."""
         return self.owners().get(at, 2) == 1
 
+    def _bound(self):
+        """Where the rule keeps the largest action it will dispatch. It is
+        the immediate of the comparison just before the switch, and it counts
+        from zero, so it is one less than the number of arms."""
+        want = len(self.arms) - 1
+        # Once a switch has been widened it sits at the end of the rule and
+        # is reached by a jump from where it used to be, so the check is
+        # before that jump rather than before the switch itself.
+        stop = self.switch_at
+        for off in sorted(self.insns):
+            shape = self.insns[off][0]
+            if shape[0] == 'jump' and self.insns[off][3][0] == self.switch_at:
+                stop = min(stop, off)
+        best = None
+        for off in sorted(self.insns):
+            if off >= stop:
+                break
+            shape, vals, ops, targets, size = self.insns[off]
+            if shape[0] != 'cmp' or not ops or ops[0][0] != 'imm':
+                continue
+            if ops[0][1] < len(self.rules.imm) \
+                    and self.rules.imm[ops[0][1]] == want:
+                best = ops[0][2]
+        return best
+
+    def spare(self, used):
+        """An arm the dictionary never dispatches to, which a new word can be
+        given without touching anything. Only one that already lays a record
+        down is any use, since that is what tells us how this rule does it."""
+        got = self.records()
+        for i in range(1, len(self.arms) + 1):
+            if i not in used and i in got and got[i].cont is not None:
+                return i
+        return None
+
+    def add_arm(self, model, data):
+        """A new action, laying down a record of its own.
+
+        The switch cannot be grown where it stands without pushing everything
+        after it along, so a wider copy of it goes at the end of the rule and
+        the old one is replaced by a jump to it. The bytes of the old switch
+        after that jump are never reached again. Answers the new action
+        number.
+        """
+        r = self.read(model)
+        if r is None or r.cont is None:
+            raise ValueError('%s has no arm to copy the shape of' % self.name)
+        if self.slot is None:
+            raise ValueError('%s says how long a record is a way a new arm '
+                             'cannot state' % self.name)
+
+        off = self.rules.add_record(r.blob, data)
+        sym = self.rules.add_sym(r.blob, off)
+        imm = self.rules.add_imm(len(data))
+
+        arm = bytearray()
+        arm += bytes([OP_STORE, census.MOVK.index(self.template),
+                      K_IMM, imm & 0xff, (imm >> 8) & 0xff,
+                      K_SLOT, self.slot & 0xff, (self.slot >> 8) & 0xff])
+        at, size, where = r.sym_insn
+        copy = bytearray(self.rules.code[self.start + at:
+                                         self.start + at + size])
+        inside = where - (self.start + at)
+        copy[inside] = sym & 0xff
+        copy[inside + 1] = (sym >> 8) & 0xff
+        arm += copy
+        arm += bytes([OP_JUMP, r.cont & 0xff, (r.cont >> 8) & 0xff])
+        where_arm = self.rules.append_block(self.index, arm)
+
+        # The rule checks the action against the number of arms before it
+        # dispatches, so the check has to be raised too or the new one is
+        # thrown out before the switch ever sees it.
+        bound = self._bound()
+        if bound is None:
+            raise ValueError('%s does not check its action against a number '
+                             'this recognises, so a new arm cannot be reached'
+                             % self.name)
+        self.rules.set16(bound, self.rules.add_imm(len(self.arms)))
+
+        # The switch again, one arm wider, reading the same operand.
+        head = self.start + self.switch_at
+        _name, _val, _w, after = self.rules.c.operand(head + 1)
+        table = bytearray()
+        table.append(census.OPS.index('switch'))
+        table += self.rules.code[head + 1:after]
+        n = len(self.arms) + 1
+        table += bytes([n & 0xff, (n >> 8) & 0xff])
+        for t in self.arms:
+            table += bytes([t & 0xff, (t >> 8) & 0xff])
+        table += bytes([where_arm & 0xff, (where_arm >> 8) & 0xff])
+        where_table = self.rules.append_block(self.index, table)
+
+        # The old switch is jumped over rather than removed, and what is left
+        # of it is filled with instructions that decode but are never reached.
+        # Execution would not care, but anything reading the rule from its
+        # first byte would lose its place in the middle of an instruction.
+        size = self.insns[self.switch_at][4]
+        spare = size - 3
+        filler = bytearray()
+        if spare % 2:
+            filler += bytes([OP_JUMP, 0, 0])
+            spare -= 3
+        if spare < 0:
+            raise ValueError('%s has no room to jump past its switch'
+                             % self.name)
+        filler += bytes([census.OPS.index('widen'), 0]) * (spare // 2)
+
+        self.rules.code[head] = OP_JUMP
+        self.rules.set16(head + 1, where_table)
+        self.rules.code[head + 3:head + 3 + len(filler)] = filler
+
+        act = n
+        self.__init__(self.rules, self.name)
+        return act
+
     def rewrite(self, act, data):
         """Give one action a record of its own, and the length to go with it.
 
@@ -664,7 +796,7 @@ class Arms:
 
         # A rule that pushes the length out of a frame slot can have the whole
         # arm replaced, which is the cleanest way in and needs nothing shared.
-        if self.slot is not None:
+        if self.slot is not None and r.cont is not None:
             imm = self.rules.add_imm(len(data))
             block = bytearray()
             block += bytes([OP_STORE, census.MOVK.index(self.template),

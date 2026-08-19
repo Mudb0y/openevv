@@ -6,6 +6,12 @@
 front of each dictionary, where each dictionary begins, the count in each
 table entry, and -- where a pronunciation has been changed -- a record of its
 own in the constant blob with the rule's switch pointed at it.
+`where' says which two words a new one belongs between, since the order is
+the engine's and not the alphabet's.
+
+A word written with `new' where its action number goes is one being added.
+It is given a spare arm of its rule if there is one going, and otherwise an
+arm of its own, and the number it was given is written back into the file.
 
 The file is in the order the engine searches, which is by the language's own
 character codes and not by letter, because that order is the one thing about
@@ -59,6 +65,11 @@ HEADER = """\
 # characters. A phone or a character that no name picks out on its own is
 # written as a hash and its number. An entry with nothing after its action
 # lays no record down, or lays one down a way this cannot yet read.
+#
+# To add a word, put a line in with the word `new' where its action number
+# goes and say what it is to sound like. Building gives it an action of its
+# own and writes the number back here. `delta-dict.py where <dictionary>
+# <word>' says which two words it belongs between.
 #
 # What a word says belongs to its action rather than to the word, so two words
 # sharing an action say the same thing and changing one changes both.
@@ -165,7 +176,10 @@ def read_file():
                           'entries': []})
             continue
         f = line[2:].split(' ')
-        word, left, right, action = f[0], int(f[1]), int(f[2]), int(f[3])
+        word, left, right = f[0], int(f[1]), int(f[2])
+        # A word written with `new' where its action number goes is one being
+        # added, and building gives it an action of its own.
+        action = None if f[3] == 'new' else int(f[3])
         text = ' '.join(f[5:]) if len(f) > 4 and f[4] == 'says' else None
         dicts[-1]['entries'].append((word, left, right, action, text))
     return dicts
@@ -207,7 +221,7 @@ def wanted_records(d, alpha):
     pair of words that disagree about it."""
     said, trouble = {}, []
     for word, _l, _r, act, text in d['entries']:
-        if text is None:
+        if text is None or act is None:
             continue
         codes = unsay(text, d['kind'], alpha)
         if act in said and said[act][0] != codes:
@@ -239,8 +253,57 @@ def build():
     if bad:
         return 1
 
-    # The pronunciations first, because they are the part that can be refused.
+    # Words being added come first: each needs an action of its own before
+    # anything can be laid down, and giving it one may grow its rule.
     rules = lex.rules()
+    added = 0
+    minted = {}
+    for d in want:
+        fresh = [e for e in d['entries'] if e[3] is None]
+        if not fresh:
+            continue
+        if any(text is None for _w, _l, _r, _a, text in fresh):
+            print('%s: a new word has to say something' % d['name'],
+                  file=sys.stderr)
+            bad = 1
+            continue
+        arms = arms_mod.Arms(rules, d['name'])
+        if not arms.ok:
+            print('%s lays its records down a way this cannot write, so %d '
+                  'new word(s) in it were refused' % (d['name'], len(fresh)),
+                  file=sys.stderr)
+            bad = 1
+            continue
+        used = set(e[3] for e in d['entries'] if e[3] is not None)
+        model = min(arms.records()) if arms.records() else None
+        for i, e in enumerate(d['entries']):
+            if e[3] is not None:
+                continue
+            codes = unsay(e[4], d['kind'], alpha)
+            try:
+                act = arms.spare(used)
+                if act is not None:
+                    arms.rewrite(act, bytes(codes))
+                elif model is None:
+                    raise ValueError('%s has no arm to copy the shape of'
+                                     % d['name'])
+                else:
+                    act = arms.add_arm(model, bytes(codes))
+            except ValueError as why:
+                print(why, file=sys.stderr)
+                bad = 1
+                break
+            used.add(act)
+            minted.setdefault(d['name'], set()).add(act)
+            d['entries'][i] = (e[0], e[1], e[2], act, e[4])
+            added += 1
+    if bad:
+        return 1
+
+    if added:
+        rename(want)
+
+    # The pronunciations of words already there.
     changed = 0
     for d in want:
         recs, trouble = wanted_records(d, alpha)
@@ -252,7 +315,10 @@ def build():
             continue
 
         now = laid[d['name']]
-        edits = {a: c for a, c in recs.items() if now.get(a) != c}
+        # An action minted a moment ago already says what it was told to.
+        fresh = minted.get(d['name'], set())
+        edits = {a: c for a, c in recs.items()
+                 if a not in fresh and now.get(a) != c}
         if not edits:
             continue
 
@@ -297,43 +363,74 @@ def build():
     open(SETS_C, 'w').write(text)
 
     print('%d dictionaries, %d entries, %d bytes of store, %d pronunciation(s) '
-          'rewritten' % (len(want), sum(len(d['entries']) for d in want),
-                         len(out), changed))
-    return compare(was, laid)
+          'rewritten, %d word(s) added'
+          % (len(want), sum(len(d['entries']) for d in want), len(out),
+             changed, added))
+    return compare()
 
 
-def compare(was, laid):
-    """Read it all back and hold it against what it said before. The store is
-    laid out afresh, so the bytes are not the same bytes; what has to be the
-    same is every dictionary's words and values in order, and every action's
-    record except the ones deliberately changed."""
-    _alpha, _table, _store, now, now_laid, _kind = read_tables()
-    if len(now) != len(was):
-        print('the tables now hold %d dictionaries, not %d'
-              % (len(now), len(was)), file=sys.stderr)
-        return 1
+def compare():
+    """Read it all back and hold it against what the file asked for. The store
+    is laid out afresh, so the bytes are not the same bytes; what has to be the
+    same is every dictionary's words, values and pronunciations."""
+    alpha, _table, _store, now, laid, _kind = read_tables()
+    want = read_file()
 
     bad = 0
-    for a, b in zip(was, now):
-        before = [(tuple(k), bytes(v)) for _o, k, v in a['entries']]
-        after = [(tuple(k), bytes(v)) for _o, k, v in b['entries']]
-        if a['name'] != b['name'] or before != after:
+    for asked, got in zip(want, now):
+        letters = alpha.get(asked['stmt'], [])
+        once = lex.unique_names(letters)
+        mine = [(tuple(lex.codes_of(w, letters, once)), l, r, a)
+                for w, l, r, a, _t in asked['entries']]
+        theirs = [(tuple(k), v[0], v[1], struct.unpack_from('<H', v, 2)[0])
+                  for _o, k, v in got['entries']]
+        if mine != theirs:
             bad += 1
-            print('%s reads back differently' % a['name'], file=sys.stderr)
+            print('%s reads back differently' % asked['name'],
+                  file=sys.stderr)
+            for i, (x, y) in enumerate(zip(mine, theirs)):
+                if x != y:
+                    print('  first at entry %d' % i, file=sys.stderr)
+                    break
 
-    want = {d['name']: dict(wanted_records(d, _alpha)[0]) for d in read_file()}
-    for name, recs in now_laid.items():
-        for act, codes in recs.items():
-            asked = want.get(name, {}).get(act)
-            if asked is not None and asked != codes:
+        for _w, _l, _r, act, text in asked['entries']:
+            if text is None or act is None:
+                continue
+            said = laid[asked['name']].get(act)
+            if said is None:
+                bad += 1
+                print('%s action %d lays nothing down, though it was told to '
+                      'say something' % (asked['name'], act), file=sys.stderr)
+            elif said != unsay(text, asked['kind'], alpha):
                 bad += 1
                 print('%s action %d says something other than it was told to'
-                      % (name, act), file=sys.stderr)
+                      % (asked['name'], act), file=sys.stderr)
 
     if bad:
         return 1
     print('reads back word for word, value for value and sound for sound')
     return 0
+
+
+def rename(want):
+    """Write the action numbers just handed out back into the file, so that a
+    word added once is not added again the next time it is built."""
+    numbers = {}
+    for d in want:
+        for word, _l, _r, act, _t in d['entries']:
+            numbers.setdefault(d['name'], {})[word] = act
+
+    out, where = [], None
+    for line in open(DICT_FILE):
+        if line.startswith('dictionary '):
+            where = line.split()[1]
+        elif line.startswith('  ') and where:
+            f = line[2:].rstrip('\n').split(' ')
+            if len(f) > 3 and f[3] == 'new':
+                f[3] = str(numbers[where][f[0]])
+                line = '  ' + ' '.join(f) + '\n'
+        out.append(line)
+    open(DICT_FILE, 'w').writelines(out)
 
 
 def splice(text, name, body):
@@ -343,6 +440,33 @@ def splice(text, name, body):
     return text[:open_at + 1] + '\n' + body + text[close_at:]
 
 
+def where():
+    """Which two words a new one belongs between. The order is by the
+    language's own character codes, so the vowels come first and no ordinary
+    sense of alphabetical says where a word goes."""
+    name, want = sys.argv[2], sys.argv[3]
+    alpha, _t, _s, dicts = lex.dictionaries()
+    for d in dicts:
+        if d['name'] != name:
+            continue
+        table = alpha.get(d['stmt'], [])
+        once = lex.unique_names(table)
+        codes = lex.codes_of(want, table, once)
+        keys = [k for _o, k, _v in d['entries']]
+        at = 0
+        for i, k in enumerate(keys):
+            if k < codes:
+                at = i + 1
+        print('%s goes after %s and before %s'
+              % (want,
+                 lex.word(keys[at - 1], table, once) if at else '(the first)',
+                 lex.word(keys[at], table, once) if at < len(keys)
+                 else '(the last)'))
+        return 0
+    print('no dictionary called %s' % name, file=sys.stderr)
+    return 1
+
+
 if __name__ == '__main__':
     mode = sys.argv[1] if len(sys.argv) > 1 else 'dump'
-    sys.exit(dump() if mode == 'dump' else build())
+    sys.exit({'dump': dump, 'build': build, 'where': where}[mode]())
