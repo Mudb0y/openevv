@@ -590,8 +590,11 @@ int callSynthesizeArray(DeltaThis *d, Cell *rate, Cell *c2, Cell *c3,
     for (i = 0; i < FRAME_WORDS; i++)
         frame[i] = DEFAULT_FRAME[i];
 
+    /* Everything after the fixed arguments was pushed by a rule, so each one
+       is a value and has to be read back as one: a pointer is wider than that
+       where a pointer is wider than a value. */
     va_start(ap, c13);
-    n = va_arg(ap, Cell *)->w;
+    n = EVV_AT(Cell *, va_arg(ap, int32_t))->w;
     while (n != 0) {
         n--;
         if (n < 0) {
@@ -599,8 +602,8 @@ int callSynthesizeArray(DeltaThis *d, Cell *rate, Cell *c2, Cell *c3,
             cpp_delete(buf);
             return 1;
         }
-        frame[n] = va_arg(ap, Cell *)->w;
-        n = va_arg(ap, Cell *)->w;
+        frame[n] = EVV_AT(Cell *, va_arg(ap, int32_t))->w;
+        n = EVV_AT(Cell *, va_arg(ap, int32_t))->w;
     }
     va_end(ap);
 

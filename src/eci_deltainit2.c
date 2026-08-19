@@ -118,7 +118,7 @@ int32_t setNonSequential(delta_state *d, const void *count_tok, ...)
     /* The original walks the stack itself, which is the same thing on the
        machine it was built for and nothing at all on the others. */
     va_start(ap, count_tok);
-    one = va_arg(ap, const void *);
+    one = EVV_AT(const void *, va_arg(ap, int32_t));
 
     while (left != 0 && one != 0) {
         int32_t stm;
@@ -133,7 +133,7 @@ int32_t setNonSequential(delta_state *d, const void *count_tok, ...)
             setnonseqIndex(d, (int8_t)stm);
         }
 
-        one = va_arg(ap, const void *);
+        one = EVV_AT(const void *, va_arg(ap, int32_t));
         left--;
     }
 
