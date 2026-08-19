@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "delta_rules.h"
+#include "delta_rules_c.h"
 
 enum {
     OP_CALL, OP_JUMP, OP_BRANCH, OP_CMP, OP_ALU2, OP_ALU1, OP_LOAD,
@@ -88,7 +89,7 @@ typedef struct {
     int32_t        pc;
     int32_t        answer;
     int            done;
-    int            zf, sf, cf, of;
+    delta_flags    fl;
 } interp;
 
 /* ---- flags ---------------------------------------------------------- */
@@ -111,61 +112,127 @@ static int sign_of(uint32_t v, int w)
     return (int)((v >> 31) & 1);
 }
 
-static void flags_logic(interp *st, uint32_t r, int w)
+static void flags_logic(delta_flags *f, uint32_t r, int w)
 {
     r = mask_to(r, w);
-    st->zf = (r == 0);
-    st->sf = sign_of(r, w);
-    st->cf = 0;
-    st->of = 0;
+    f->zf = (r == 0);
+    f->sf = sign_of(r, w);
+    f->cf = 0;
+    f->of = 0;
 }
 
 /* b minus a, which is the way round a comparison is written. */
-static uint32_t flags_sub(interp *st, uint32_t a, uint32_t b, int w, int keepcf)
+static uint32_t flags_sub(delta_flags *f, uint32_t a, uint32_t b, int w, int keepcf)
 {
     uint32_t ma = mask_to(a, w);
     uint32_t mb = mask_to(b, w);
     uint32_t r = mask_to(mb - ma, w);
 
-    st->zf = (r == 0);
-    st->sf = sign_of(r, w);
+    f->zf = (r == 0);
+    f->sf = sign_of(r, w);
     if (!keepcf)
-        st->cf = (mb < ma);
-    st->of = (sign_of(mb, w) != sign_of(ma, w))
+        f->cf = (mb < ma);
+    f->of = (sign_of(mb, w) != sign_of(ma, w))
         && (sign_of(r, w) != sign_of(mb, w));
     return r;
 }
 
-static uint32_t flags_add(interp *st, uint32_t a, uint32_t b, int w, int keepcf)
+static uint32_t flags_add(delta_flags *f, uint32_t a, uint32_t b, int w, int keepcf)
 {
     uint32_t ma = mask_to(a, w);
     uint32_t mb = mask_to(b, w);
     uint32_t r = mask_to(mb + ma, w);
 
-    st->zf = (r == 0);
-    st->sf = sign_of(r, w);
+    f->zf = (r == 0);
+    f->sf = sign_of(r, w);
     if (!keepcf)
-        st->cf = (r < mb);
-    st->of = (sign_of(mb, w) == sign_of(ma, w))
+        f->cf = (r < mb);
+    f->of = (sign_of(mb, w) == sign_of(ma, w))
         && (sign_of(r, w) != sign_of(mb, w));
     return r;
 }
 
-static int condition(const interp *st, int cond)
+/* One operation of the machine's arithmetic, flags and all. The interpreter
+   and a rule written as C both come here, so neither can drift from the
+   other over what a comparison afterwards will say. */
+int32_t delta_rule_alu(delta_flags *f, int kind, int32_t ain, int32_t bin)
+{
+    int w = alu_width[kind];
+    uint32_t a = (uint32_t)ain;
+    uint32_t b = (uint32_t)bin;
+    uint32_t r;
+
+    switch (kind) {
+    case A_ADDL: case A_ADDW: r = flags_add(f, a, b, w, 0); break;
+    case A_SUBL: case A_SUBW: r = flags_sub(f, a, b, w, 0); break;
+    case A_ANDL: case A_ANDW: r = mask_to(a & b, w);
+        flags_logic(f, r, w); break;
+    case A_ORL:  case A_ORW:  r = mask_to(a | b, w);
+        flags_logic(f, r, w); break;
+    case A_INCL: case A_INCW: r = flags_add(f, 1, b, w, 1); break;
+    case A_DECL: case A_DECW: r = flags_sub(f, 1, b, w, 1); break;
+    case A_SHLL: case A_SHLW:
+        r = mask_to(b << (a & 31), w);
+        f->zf = (r == 0);
+        f->sf = sign_of(r, w);
+        break;
+    case A_SARL: case A_SARW: {
+        int32_t sv = (w == 2) ? (int32_t)(int16_t)b : (int32_t)b;
+
+        r = mask_to((uint32_t)(sv >> (a & 31)), w);
+        f->zf = (r == 0);
+        f->sf = sign_of(r, w);
+        break;
+    }
+    case A_NEGL: case A_NEGW:
+        r = flags_sub(f, b, 0, w, 0);
+        f->cf = (mask_to(b, w) != 0);
+        break;
+    case A_SBBL:
+        r = mask_to(b - a - (uint32_t)f->cf, w);
+        flags_sub(f, a + (uint32_t)f->cf, b, w, 0);
+        break;
+    case A_IMULL: case A_IMULW:
+        r = mask_to(a * b, w);
+        break;
+    default:
+        r = b;
+        break;
+    }
+
+
+    return (int32_t)r;
+}
+
+/* And one comparison, which sets the flags and nothing else. */
+void delta_rule_cmp(delta_flags *f, int kind, int32_t ain, int32_t bin)
+{
+    int w = (kind == CMP_TESTB || kind == CMP_CMPB) ? 1
+        : (kind == CMP_TESTW || kind == CMP_CMPW) ? 2 : 4;
+    uint32_t a = (uint32_t)ain;
+    uint32_t b = (uint32_t)bin;
+
+    if (kind <= CMP_TESTB)
+        flags_logic(f, a & b, w);
+    else
+        flags_sub(f, a, b, w, 0);
+}
+
+int delta_condition(const delta_flags *f, int cond)
 {
     switch (cond) {
-    case C_E:  return st->zf;
-    case C_NE: return !st->zf;
-    case C_A:  return !st->cf && !st->zf;
-    case C_AE: return !st->cf;
-    case C_B:  return st->cf;
-    case C_BE: return st->cf || st->zf;
-    case C_G:  return !st->zf && (st->sf == st->of);
-    case C_GE: return st->sf == st->of;
-    case C_L:  return st->sf != st->of;
-    case C_LE: return st->zf || (st->sf != st->of);
-    case C_S:  return st->sf;
-    case C_NS: return !st->sf;
+    case C_E:  return f->zf;
+    case C_NE: return !f->zf;
+    case C_A:  return !f->cf && !f->zf;
+    case C_AE: return !f->cf;
+    case C_B:  return f->cf;
+    case C_BE: return f->cf || f->zf;
+    case C_G:  return !f->zf && (f->sf == f->of);
+    case C_GE: return f->sf == f->of;
+    case C_L:  return f->sf != f->of;
+    case C_LE: return f->zf || (f->sf != f->of);
+    case C_S:  return f->sf;
+    case C_NS: return !f->sf;
     }
     return 0;
 }
@@ -416,26 +483,9 @@ static void step(interp *st)
                 fprintf(stderr, "# %s: %d in the area, %d expected\n",
                         delta_rule_entry_name[which], st->argn, want);
         }
-        memset(a, 0, sizeof(a));
-        /* The last thing pushed is the first argument. */
-        for (i = 0; i < n && i < MAXARG; i++)
-            a[i] = (st->argn - 1 - i >= 0) ? st->arg[st->argn - 1 - i] : 0;
-        if (delta_rule_trace && delta_rule_here != 0
-            && strcmp(delta_rule_entry_name[which],
-                      "backtrack_function") == 0) {
-            fprintf(stderr, "# %s dispatches\n", delta_rule_here->name);
-            fflush(stderr);
-        }
-        if (delta_rule_trace > 1) {
-            int j;
-
-            fprintf(stderr, "  %s(", delta_rule_entry_name[which]);
-            for (j = 0; j < n && j < MAXARG; j++)
-                fprintf(stderr, "%s%08x", j ? ", " : "", (unsigned)a[j]);
-            fprintf(stderr, ")\n");
-            fflush(stderr);
-        }
-        st->reg[0] = call_entry(delta_rule_entry[which], a, n);
+        (void)a;
+        (void)i;
+        st->reg[0] = delta_rule_called(which, st->arg, st->argn, n);
         break;
     }
 
@@ -484,7 +534,7 @@ static void step(interp *st)
         int32_t to = get16s(p);
 
         p += 2;
-        if (condition(st, cond)) {
+        if (delta_condition(&st->fl, cond)) {
             st->pc = to;
             return;
         }
@@ -498,10 +548,7 @@ static void step(interp *st)
         uint32_t a = (uint32_t)operand_read(st, &p, w, 0);
         uint32_t b = (uint32_t)operand_read(st, &p, w, 0);
 
-        if (kind <= CMP_TESTB)
-            flags_logic(st, a & b, w);
-        else
-            flags_sub(st, a, b, w, 0);
+        delta_rule_cmp(&st->fl, kind, (int32_t)a, (int32_t)b);
         break;
     }
 
@@ -511,7 +558,7 @@ static void step(interp *st)
         int w = alu_width[kind];
         uint32_t a = 0;
         const uint8_t *q;
-        uint32_t b, r;
+        uint32_t b;
         int32_t out;
 
         if (op == OP_ALU2)
@@ -525,45 +572,7 @@ static void step(interp *st)
         q = p;
         b = (uint32_t)operand_read(st, &p, w, 0);
 
-        switch (kind) {
-        case A_ADDL: case A_ADDW: r = flags_add(st, a, b, w, 0); break;
-        case A_SUBL: case A_SUBW: r = flags_sub(st, a, b, w, 0); break;
-        case A_ANDL: case A_ANDW: r = mask_to(a & b, w);
-            flags_logic(st, r, w); break;
-        case A_ORL:  case A_ORW:  r = mask_to(a | b, w);
-            flags_logic(st, r, w); break;
-        case A_INCL: case A_INCW: r = flags_add(st, 1, b, w, 1); break;
-        case A_DECL: case A_DECW: r = flags_sub(st, 1, b, w, 1); break;
-        case A_SHLL: case A_SHLW:
-            r = mask_to(b << (a & 31), w);
-            st->zf = (r == 0);
-            st->sf = sign_of(r, w);
-            break;
-        case A_SARL: case A_SARW: {
-            int32_t sv = (w == 2) ? (int32_t)(int16_t)b : (int32_t)b;
-
-            r = mask_to((uint32_t)(sv >> (a & 31)), w);
-            st->zf = (r == 0);
-            st->sf = sign_of(r, w);
-            break;
-        }
-        case A_NEGL: case A_NEGW:
-            r = flags_sub(st, b, 0, w, 0);
-            st->cf = (mask_to(b, w) != 0);
-            break;
-        case A_SBBL:
-            r = mask_to(b - a - (uint32_t)st->cf, w);
-            flags_sub(st, a + (uint32_t)st->cf, b, w, 0);
-            break;
-        case A_IMULL: case A_IMULW:
-            r = mask_to(a * b, w);
-            break;
-        default:
-            r = b;
-            break;
-        }
-
-        out = (int32_t)r;
+        out = delta_rule_alu(&st->fl, kind, (int32_t)a, (int32_t)b);
         {
             const uint8_t *w2 = q;
 
@@ -705,7 +714,7 @@ static void step(interp *st)
         unsigned char code = *p++;
 
         reg_write(st, (unsigned char)(0x20 | (code & 0x0f)),
-                  condition(st, cond) ? 1 : 0);
+                  delta_condition(&st->fl, cond) ? 1 : 0);
         break;
     }
 
@@ -729,6 +738,35 @@ long delta_rule_steps;
 
 int delta_rule_trace = -1;
 static long delta_rule_limit;
+
+/* Every call a rule makes, from the interpreter and from a rule written as C
+   alike, so that a run says the same thing about itself either way. */
+int32_t delta_rule_called(int which, const int32_t *stack, int argn, int want)
+{
+    int32_t a[MAXARG];
+    int i;
+
+    memset(a, 0, sizeof(a));
+    /* The last thing pushed is the first argument. */
+    for (i = 0; i < want && i < MAXARG; i++)
+        a[i] = (argn - 1 - i >= 0) ? stack[argn - 1 - i] : 0;
+
+    if (delta_rule_trace && delta_rule_here != 0
+        && strcmp(delta_rule_entry_name[which], "backtrack_function") == 0) {
+        fprintf(stderr, "# %s dispatches\n", delta_rule_here->name);
+        fflush(stderr);
+    }
+    if (delta_rule_trace > 1) {
+        int j;
+
+        fprintf(stderr, "  %s(", delta_rule_entry_name[which]);
+        for (j = 0; j < want && j < MAXARG; j++)
+            fprintf(stderr, "%s%08x", j ? ", " : "", (unsigned)a[j]);
+        fprintf(stderr, ")\n");
+        fflush(stderr);
+    }
+    return call_entry(delta_rule_entry[which], a, want);
+}
 
 static void delta_rule_report(void)
 {
@@ -784,6 +822,23 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
     delta_rule_here = r;
     if (&delta_trace_caller != 0)
         delta_trace_caller = r->object;
+
+    /* A rule written as C runs as C, but only from here, where everything a
+       run says about itself has already been said. The two are then
+       interchangeable, and a run with one and a run with the other say the
+       same thing or the translation is wrong. */
+    {
+        const delta_rule_c *w;
+        int n = (int)(r - delta_rules);
+
+        for (w = delta_rule_native; w->fn != 0; w++) {
+            if (w->rule != n)
+                continue;
+            st.answer = w->fn(state, args, nargs);
+            st.done = 1;
+            break;
+        }
+    }
 
     while (!st.done) {
         const uint8_t *p = st.code + st.pc;
