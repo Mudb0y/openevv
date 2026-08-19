@@ -21,18 +21,9 @@
 #include "delta.h"
 #include "eci_synththread.h"
 #include "evv_abi.h"
-
-
+#include "eci_eloqc.h"
 
 /* What the block the machine keeps for ECI holds for this layer. */
-#define ELOQ(d)          EVV_AT(unsigned char *, (d)->eloqc)
-#define ELOQ_STARTED(d)  (*(int32_t *)(ELOQ(d) + 0x04))
-#define ELOQ_ENDED(d)    (*(int32_t *)(ELOQ(d) + 0x08))
-#define ELOQ_FLUSHING(d) (*(int32_t *)(ELOQ(d) + 0x0c))
-#define ELOQ_BUSY(d)     (*(int32_t *)(ELOQ(d) + 0x10))
-#define ELOQ_MAINLINK(d) (*(void **)(ELOQ(d) + 0xa0))
-#define ELOQ_ERRLINK(d)  (*(void **)(ELOQ(d) + 0xa4))
-#define ELOQ_CONSLINK(d) (*(void **)(ELOQ(d) + 0xa8))
 
 /* What can go wrong, as this layer numbers it. */
 #define ERR_LINK      (-2)
@@ -59,7 +50,6 @@ extern void    throwDeltaErrorNow(delta_state *d);
 extern void    stopSynthesizing(delta_state *d);
 extern void    eciLinkCleanup(delta_state *d);
 extern void    deltaCleanup(delta_state *d);
-extern int32_t eciLinkDataFromECI(void *link, const char *text);
 extern int32_t insertDelayedSynthIndex(delta_state *d, int32_t index,
                                        int32_t delay);
 
@@ -103,7 +93,6 @@ extern int32_t setSynthToCallback(delta_state *d, void *fn, void *param);
 extern int32_t DeltaProc_process_sentences(delta_state *d);
 extern int32_t DeltaProc_process_remaining(delta_state *d);
 extern int32_t deltaErrorThrown(delta_state *d);
-extern int32_t eciLinkDataToECI(void *link, char *buf, int32_t room, void *n);
 extern THIS int32_t ds_save(void *s, int32_t volume, const char *name)
     MANGLED("?save@DictionarySet@@QAEHW4DictVolume@@PBD@Z");
 extern THIS int32_t ds_updateEntry(void *s, int32_t volume,
@@ -302,18 +291,16 @@ STDCALL const char *es_engsynDictLookup(void *set, int32_t volume,
     return ds_lookup(set, volume, word);
 }
 
-
 /* ---- where the answers go ------------------------------------------- */
 
 /* Each of these is one slot for a function and one for whatever the caller
    wants handed back with it, side by side in the block the machine keeps
    for ECI. Three of them are not kept here at all and go straight through
    to the layer that owns them. */
-#define ELOQ_CB(d, off)     (*(void **)(ELOQ(d) + (off)))
 
 STDCALL void es_engsynWantPhonemeIndices(delta_state *d, int32_t on)
 {
-    *(int32_t *)(ELOQ(d) + 0x00) = on;
+    ELOQ_WANT_PHONEMES(d) = on;
 }
 
 STDCALL void es_engsynRegisterWordCallback(delta_state *d, void *fn, void *param)

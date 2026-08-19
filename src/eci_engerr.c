@@ -15,12 +15,9 @@
 
 #include <stdint.h>
 #include "delta.h"
+#include "eci_eloqc.h"
 
 /* Where the machine keeps the block, and the three words in it. */
-#define ELOQ(d)          EVV_AT(unsigned char *, (d)->eloqc)
-#define ERROR_FROM(d)    (*(int32_t *)(ELOQ(d) + 0x88))
-#define ERROR_TO(d)      (*(int32_t *)(ELOQ(d) + 0x8c))
-#define ERROR_CODE(d)    (*(int32_t *)(ELOQ(d) + 0x90))
 
 extern void catchDeltaError(delta_state *d);
 

@@ -13,24 +13,7 @@
 #include "delta.h"
 #include "eci_io.h"
 #include "eci_link.h"
-
-/* What the machine keeps for ECI's sake. Only the fields below are ours;
-   the rest of the block belongs to the layers above, which reach into it by
-   offset, so its size is fixed at what the original allocates. */
-typedef struct {
-    uint8_t      pad_00[0x44];
-    PhysicalFile link_class;   /* +0x44 */
-    PhysicalFile dialog_class; /* +0x64 */
-    uint8_t      pad_84[0x98 - 0x84];
-    int8_t       unknown_98;   /* +0x98, starts at minus one */
-    uint8_t      pad_99[0xa0 - 0x99];
-    EciLink     *main_link;    /* +0xa0, the text and the answers */
-    EciLink     *error_link;   /* +0xa4 */
-    EciLink     *cons_link;    /* +0xa8 */
-    int32_t      io_done;      /* +0xac */
-} Eloqc;
-
-#define ELOQC(d) EVV_AT(Eloqc *, (d)->eloqc)
+#include "eci_eloqc.h"
 
 /* The Delta debugger's window. The original decides here whether to put its
    own output on screen; nothing in this library ever wants that. */

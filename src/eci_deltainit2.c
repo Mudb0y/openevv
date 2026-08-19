@@ -12,11 +12,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "delta.h"
+#include "eci_eloqc.h"
 
 /* The block the machine keeps for ECI, and the flag in it that says the
    parameter streams have already been made. */
-#define ELOQ(d)        EVV_AT(unsigned char *, (d)->eloqc)
-#define ELOQ_STREAMS(d) (*(int32_t *)(ELOQ(d) + 0x94))
 
 /* A token carries its value as an int16 two bytes in, and says what kind
    of value that is in the two bytes before. */

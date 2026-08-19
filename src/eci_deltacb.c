@@ -15,12 +15,10 @@
 #include <string.h>
 #include "delta.h"
 #include "evv_arena.h"
+#include "eci_eloqc.h"
 
-#define ELOQ(d)      EVV_AT(unsigned char *, (d)->eloqc)
-#define ELOQ_CB(d, off) (*(void **)(ELOQ(d) + (off)))
 
 /* Not a callback: the flag that says phoneme indices are wanted at all. */
-#define ELOQ_WANT_PHONEMES(d) (*(int32_t *)(ELOQ(d) + 0x00))
 
 #define CB_WORD   0x14
 #define CB_ANNO   0x2c
@@ -83,7 +81,7 @@ int32_t voiceChangeCallback(delta_state *d, const void *value, void *b,
                             void *c, void *e, void *f, void *g)
 {
     if (ELOQ_CB(d, CB_VOICE) == 0)
-        return EVV_REF(ELOQ(d));
+        return EVV_REF(ELOQC(d));
 
     return ((VoiceFn)ELOQ_CB(d, CB_VOICE))(TOKEN_VALUE(value),
                                            (char *)b + 2, (char *)c + 2,
