@@ -143,11 +143,24 @@ def codes_of(text, alpha, once):
     out, i = [], 0
     while i < len(text):
         if text[i] == '[':
-            end = text.index(']', i)
+            end = text.find(']', i)
+            if end < 0:
+                raise ValueError('a bracket is opened and not closed in %r'
+                                 % text)
             body = text[i + 1:end]
-            out.append(int(body[1:]) if body.startswith('#') else once[body])
+            if body.startswith('#'):
+                out.append(int(body[1:]))
+            elif body in once:
+                out.append(once[body])
+            else:
+                raise ValueError('the language has no character called %r'
+                                 % body)
             i = end + 1
         else:
+            if text[i] not in once:
+                raise ValueError('the language has no character %r; one it '
+                                 'does not spell as an ordinary letter goes '
+                                 'in brackets' % text[i])
             out.append(once[text[i]])
             i += 1
     return out
@@ -247,7 +260,15 @@ def sound_text(codes, alpha, once):
 
 
 def sound_codes(text, once):
-    return [int(t[1:]) if t.startswith('#') else once[t] for t in text.split()]
+    out = []
+    for t in text.split():
+        if t.startswith('#'):
+            out.append(int(t[1:]))
+        elif t in once:
+            out.append(once[t])
+        else:
+            raise ValueError('the language has no phone called %r' % t)
+    return out
 
 
 def choose(records, alphas):

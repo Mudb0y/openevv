@@ -21,7 +21,8 @@
 # To add a word, put a line in with the word `new' where its action number
 # goes and say what it is to sound like. Building gives it an action of its
 # own and writes the number back here. `delta-dict.py where <dictionary>
-# <word>' says which two words it belongs between.
+# <word>' says which two words it belongs between, and `delta-dict.py find
+# <word>' says which dictionaries hold it and what each says it sounds like.
 #
 # What a word says belongs to its action rather than to the word, so two words
 # sharing an action say the same thing. Give one of them something else to say

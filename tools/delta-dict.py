@@ -7,7 +7,9 @@ front of each dictionary, where each dictionary begins, the count in each
 table entry, and -- where a pronunciation has been changed -- a record of its
 own in the constant blob with the rule's switch pointed at it.
 `where' says which two words a new one belongs between, since the order is
-the engine's and not the alphabet's.
+the engine's and not the alphabet's, and `find' says which dictionaries hold a
+word at all, since there are twenty-eight of them and a word can be in
+several.
 
 A word written with `new' where its action number goes is one being added.
 It is given a spare arm of its rule if there is one going, and otherwise an
@@ -81,7 +83,8 @@ HEADER = """\
 # To add a word, put a line in with the word `new' where its action number
 # goes and say what it is to sound like. Building gives it an action of its
 # own and writes the number back here. `delta-dict.py where <dictionary>
-# <word>' says which two words it belongs between.
+# <word>' says which two words it belongs between, and `delta-dict.py find
+# <word>' says which dictionaries hold it and what each says it sounds like.
 #
 # What a word says belongs to its action rather than to the word, so two words
 # sharing an action say the same thing. Give one of them something else to say
@@ -286,7 +289,11 @@ def work_out(d, alpha, laid):
             text = d['entries'][i][4]
             if text is None:
                 continue
-            codes = frozen(unsay(text, d['kind'], alpha))
+            try:
+                codes = frozen(unsay(text, d['kind'], alpha))
+            except ValueError as why:
+                raise ValueError('%s, %s: %s'
+                                 % (d['name'], d['entries'][i][0], why))
             for seen, where in texts:
                 if seen == codes:
                     where.append(i)
@@ -323,8 +330,13 @@ def build():
     for d in want:
         letters = alpha.get(d['stmt'], [])
         once = lex.unique_names(letters)
-        keys = [lex.codes_of(w, letters, once) for w, _l, _r, _a, _t in
-                d['entries']]
+        try:
+            keys = [lex.codes_of(w, letters, once) for w, _l, _r, _a, _t in
+                    d['entries']]
+        except ValueError as why:
+            print('%s: %s' % (d['name'], why), file=sys.stderr)
+            bad = 1
+            continue
         if not collated(keys):
             print('%s is not in the order the engine searches, and words in '
                   'it would not be found' % d['name'], file=sys.stderr)
@@ -338,7 +350,12 @@ def build():
 
     for d in want:
         fresh = [i for i, e in enumerate(d['entries']) if e[3] is None]
-        change, split = work_out(d, alpha, laid[d['name']])
+        try:
+            change, split = work_out(d, alpha, laid[d['name']])
+        except ValueError as why:
+            print(why, file=sys.stderr)
+            bad = 1
+            continue
         if not fresh and not change and not split:
             continue
 
@@ -529,6 +546,36 @@ def where():
     return 1
 
 
+def find():
+    """Every dictionary holding a word, and what each says it sounds like. A
+    word can be in several, and what any one of them does with it depends on
+    where the engine is when it looks."""
+    want = sys.argv[2]
+    alpha, _t, _s, dicts, laid, kind = read_tables()
+    found = 0
+    for d in dicts:
+        table = alpha.get(d['stmt'], [])
+        once = lex.unique_names(table)
+        for _off, key, value in d['entries']:
+            if lex.word(key, table, once) != want:
+                continue
+            act = struct.unpack_from('<H', value, 2)[0]
+            said = laid[d['name']].get(act)
+            print('%-28s action %-4d %s'
+                  % (d['name'], act,
+                     say(said, kind[d['name']], alpha) if said
+                     else '(nothing this can read)'))
+            found += 1
+    if not found:
+        print('no dictionary holds %s' % want)
+    return 0
+
+
 if __name__ == '__main__':
     mode = sys.argv[1] if len(sys.argv) > 1 else 'dump'
-    sys.exit({'dump': dump, 'build': build, 'where': where}[mode]())
+    how = {'dump': dump, 'build': build, 'where': where, 'find': find}
+    if mode not in how:
+        print('usage: delta-dict.py [dump | build | where <dictionary> <word> '
+              '| find <word>]', file=sys.stderr)
+        sys.exit(2)
+    sys.exit(how[mode]())
