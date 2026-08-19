@@ -3,6 +3,14 @@
 #include <string.h>
 
 #include "klatt_state.h"
+#include "evv_arena.h"
+
+/* Where every field of the synthesiser's block sits, as the original had it.
+   It only has to hold where our block and the original's are handed to each
+   other, which is the differential build; a build that links nothing of
+   theirs lets the compiler place the fields and the pointers among them
+   widen. */
+#if !defined(EVV_ARENA) || !EVV_ARENA
 
 #define AT(field, offset) \
     typedef char field##_at_##offset[offsetof(klatt_state, field) == offset ? 1 : -1]
@@ -58,6 +66,8 @@ AT(output_samples, 0x1d1c);
 AT(rate_code, 0x1d20);
 
 typedef char klatt_state_is_0x1d24[sizeof(klatt_state) == 0x1d24 ? 1 : -1];
+
+#endif
 
 /* Fill the noise buffer, then optionally halve it in place over a series of
    spans. Each pair says how far to skip and how far to keep attenuating, so

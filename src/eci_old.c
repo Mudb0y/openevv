@@ -23,6 +23,7 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "evv_arena.h"
 
 /* Which call was refused. Every entry point has its own bit; the ones here
    share the same one because the original gives them the same one. */

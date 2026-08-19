@@ -25,6 +25,7 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "evv_arena.h"
 
 #define APP_CONCATENATIVE  0xc
 #define ROM_CONCATENATIVE  0x3e8

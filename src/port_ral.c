@@ -18,6 +18,7 @@
 #include <stdlib.h>
 
 #include <stdarg.h>
+#include "evv_arena.h"
 
 int g_iTTSLogLevel = 9;
 int RAL_THREAD_PRIORITY_NORMAL = 0;

@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "evv_abi.h"
+#include "evv_arena.h"
 
 /* Asking for nothing still has to answer with something of its own, since
    the caller will compare it against nothing to see whether it worked. */

@@ -545,7 +545,7 @@ int vrd_delta(delta_state *d, int32_t f, uint8_t st)
     block = (delta_frame *)EVV_AT(uint8_t *, EVV_AT(delta_stack *, d->stack)->top);
     EVV_AT(delta_stack *, d->stack)->limit -= EVV_AT(delta_stack *, d->stack)->size_b8;
     block->kind = 5;
-    block->value = (int32_t)getDeltaStackVBot(d);
+    block->value = EVV_REF(getDeltaStackVBot(d));
     setDeltaStackVBot(d, block);
 
     for (;;) {

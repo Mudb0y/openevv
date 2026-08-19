@@ -10,6 +10,7 @@
 #include <windows.h>
 #include <stdlib.h>
 #include "evv_port.h"
+#include "evv_arena.h"
 
 void evv_port_start(void) { }
 void evv_port_finish(void) { }

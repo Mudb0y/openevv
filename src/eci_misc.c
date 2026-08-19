@@ -19,6 +19,7 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "evv_arena.h"
 
 typedef struct OldInst OldInst;
 

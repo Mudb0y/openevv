@@ -55,7 +55,30 @@ typedef struct {
     THIS void    (*signalProcessed)(ETImessageQueue *q, ETImessage *m);
     THIS void    (*clearMessages)(ETImessageQueue *q);
 } QueueVtbl;
-struct ETImessageQueue { const QueueVtbl *vt; uint8_t rest[0x48]; };
+typedef struct ETIqueue ETIqueue;
+typedef struct {
+    THIS void   *(*destroy)(ETIqueue *self, int32_t free_it);
+    THIS int32_t (*push)(ETIqueue *self, void *p);
+    THIS int32_t (*pop)(ETIqueue *self, void **out);
+    THIS int32_t (*peekHead)(ETIqueue *self, void **out);
+} ETIqueueVtbl;
+struct ETIqueue {
+    const ETIqueueVtbl *vt;   /* +0x00 */
+    void              **array; /* +0x04 */
+    uint32_t            capacity; /* +0x08 */
+    uint32_t            head;  /* +0x0c */
+    uint32_t            tail;  /* +0x10 */
+};
+
+struct ETImessageQueue {
+    const QueueVtbl *vt;      /* +0x00 */
+    ETIqueue queue;           /* +0x04 */
+    uint8_t  lock[0x0c];      /* +0x18 */
+    uint8_t  ready[0x0c];     /* +0x24 */
+    int32_t  suspended;       /* +0x30 */
+    uint8_t  done[0x0c];      /* +0x34 */
+    uint8_t  send_lock[0x0c]; /* +0x40 */
+};
 
 typedef struct ETIThread ETIThread;
 typedef struct ETImessageQueueThread ETImessageQueueThread;

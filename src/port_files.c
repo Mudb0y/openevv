@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "evv_arena.h"
 
 /* What the original allows a found name to run to. */
 #define PATH_ROOM 0x104

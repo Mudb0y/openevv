@@ -17,6 +17,7 @@
 #if defined(EVV_ARENA) && EVV_ARENA
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -156,6 +157,20 @@ void evv_arena_free(void *p)
             n = next_block(w);
         }
     }
+}
+
+char *evv_arena_strdup(const char *s)
+{
+    size_t n;
+    char *p;
+
+    if (s == 0)
+        return 0;
+    n = strlen(s) + 1;
+    p = evv_arena_alloc(n);
+    if (p != 0)
+        memcpy(p, s, n);
+    return p;
 }
 
 void *evv_arena_calloc(size_t n, size_t m)

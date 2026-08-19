@@ -26,6 +26,7 @@
 #include "eci_synththread.h"
 #include "klatt_state.h"
 #include "evv_abi.h"
+#include "evv_arena.h"
 
 /* The engine's own handle. Only the one field this file needs is named. */
 typedef struct DeltaThis DeltaThis;

@@ -51,6 +51,8 @@ void  evv_arena_free(void *p);
 #define calloc(n, m)    evv_arena_calloc(n, m)
 #define realloc(p, n)   evv_arena_realloc(p, n)
 #define free(p)         evv_arena_free(p)
+char *evv_arena_strdup(const char *s);
+#define strdup(s)       evv_arena_strdup(s)
 
 /* A block a thread can run its stack on. A rule keeps its frame on the stack
    and hands the machine the address of it, so a thread that runs rules needs

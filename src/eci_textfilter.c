@@ -24,6 +24,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "evv_abi.h"
+#include "evv_arena.h"
 
 
 typedef struct { int32_t packed; char text[12]; char pad_10[4]; }

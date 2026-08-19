@@ -19,6 +19,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "evv_abi.h"
+#include "evv_arena.h"
 
 #define STD  __attribute__((stdcall))
 

@@ -22,6 +22,7 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "evv_arena.h"
 
 /* Parameters the concatenative side understands. Numbered from its own list,
    which is not the one the published interface uses. */
@@ -397,13 +398,13 @@ THIS void insertIndexRun(SynthThread *t, int32_t index, int32_t seq)
 THIS void insertStringIndexRun(SynthThread *t, char *name, int32_t seq)
 {
     (void)seq;
-    markRun(t, 4, (int32_t)strdup(name));
+    markRun(t, 4, EVV_REF(strdup(name)));
 }
 
 THIS void insertAudioIndexRun(SynthThread *t, char *name, int32_t seq)
 {
     (void)seq;
-    markRun(t, 5, (int32_t)strdup(name));
+    markRun(t, 5, EVV_REF(strdup(name)));
 }
 
 /* ---- the rest ---- */

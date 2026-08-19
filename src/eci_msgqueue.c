@@ -77,12 +77,17 @@ typedef struct {
     THIS int32_t (*peekHead)(ETIqueue *self, void **out);
 } ETIqueueVtbl;
 
-struct ETIqueue { const ETIqueueVtbl *vt; };
+struct ETIqueue {
+    const ETIqueueVtbl *vt;   /* +0x00 */
+    void              **array; /* +0x04 */
+    uint32_t            capacity; /* +0x08 */
+    uint32_t            head;  /* +0x0c */
+    uint32_t            tail;  /* +0x10 */
+};
 
 struct ETImessageQueue {
     const QueueVtbl *vt;      /* +0x00 */
     ETIqueue queue;           /* +0x04 */
-    uint8_t  pad_08[0x18 - 0x08];
     uint8_t  lock[0x0c];      /* +0x18 */
     uint8_t  ready[0x0c];     /* +0x24, something is waiting to be run */
     int32_t  suspended;       /* +0x30 */
@@ -107,7 +112,12 @@ struct ETImessageQueueThread {
     const ThreadVtbl *vt;      /* +0x00 */
     uint8_t pad_04[0x20 - 0x04];
     ETImessageQueue queue;     /* +0x20 */
+    /* The queue is wider where a pointer is eight bytes, and there is
+       nothing to line the rest of the object up with: the original's own is
+       only ever linked beside a thirty-two bit build. */
+#if !defined(EVV_ARENA) || !EVV_ARENA
     uint8_t pad_6c_gap[0x6c - 0x20 - sizeof(ETImessageQueue)];
+#endif
     uint8_t turn[0x0c];        /* +0x6c, one round of the loop is over */
     uint8_t quitting[0x0c];    /* +0x78 */
     int32_t asked_to_stop;     /* +0x84 */

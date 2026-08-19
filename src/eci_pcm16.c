@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "evv_abi.h"
+#include "evv_arena.h"
 
 /* A sound file, as far as a format is concerned. */
 #define SF_MODE(f)    (*(int32_t *)((char *)(f) + 0x04))

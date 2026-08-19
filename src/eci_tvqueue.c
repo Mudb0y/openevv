@@ -18,6 +18,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "evv_abi.h"
+#include "evv_arena.h"
 
 typedef struct {
     int16_t time;

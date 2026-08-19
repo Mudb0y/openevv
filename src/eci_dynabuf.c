@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "eci_io.h"
+#include "evv_arena.h"
 
 /* Room is taken in sixteens. */
 static uint32_t roundUp(uint32_t n)
