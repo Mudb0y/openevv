@@ -11,7 +11,10 @@
 # out in order with `then' between them -- the currencies spell an
 # abbreviation, then a space, then a name -- and any piece the rule names
 # itself rather than the word is shared with every word using it and cannot be
-# changed for one of them. A phone or a character that no name picks out on its own is
+# changed for one of them. A word read one way before one thing and another
+# way before another has both written out with `or' between them; those are
+# shown as they are and cannot be changed, since which of the two is taken is
+# decided in code the other words using that test run through. A phone or a character that no name picks out on its own is
 # written as a hash and its number. An entry with nothing after its action
 # lays no record down, or lays one down a way this cannot yet read.
 #
@@ -521,72 +524,72 @@ dictionary homog_roots statement 1 width 0 records sound
   abuse 255 255 1 says x b y u s
   allied 255 255 2 says x l Y d
   ally 255 255 3
-  analyse 255 255 4
-  articulate 255 255 5
+  analyse 255 255 4 says x n A l Xx s i or A n x l a y z
+  articulate 255 255 5 says a r t I k y x l Xx t or a r t I k y x l e t
   inter 255 255 19 says I n t R
   overall 255 255 31 says o v R c l
-  use 255 255 50
+  use 255 255 50 says y u z or y u s
   usurious 255 255 51 says y u Z U r i x s
-  bass 255 255 6
+  bass 255 255 6 says b e s or b A s
   baton 255 255 8
-  batman 255 255 7
+  batman 255 255 7 says b A t m A n or b A t m X n
   bologna 255 255 9
   bow 255 255 10
-  buffet 255 255 12
-  breath 255 255 11
-  contract 255 255 14
+  buffet 255 255 12 says b H f X t or b x f e
+  breath 255 255 11 says b r i D or b r E T
+  contract 255 255 14 says k x n t r A k t or k a@ n t r A k t
   close 255 255 13
-  crooked 255 255 15
-  dogged 255 255 16
+  crooked 255 255 15 says k r U k t or k r U k X d
+  dogged 255 255 16 says d c@ g d or d c@ g X d
   dove 255 255 17
   house 255 255 18
-  kilo 255 255 20
-  lead 255 255 21
+  kilo 255 255 20 says k i l o or k I l x
+  lead 255 255 21 says l i d or l E d
   lech 255 255 22 says l E k
-  live 255 255 23
-  louis 255 255 24
-  minute 255 255 25
-  mobile 255 255 26
+  live 255 255 23 says l Y v or l I v
+  louis 255 255 24 says l u i or l u I s
+  minute 255 255 25 says m Y n y u t or m Y n u t or m I n X t
+  mobile 255 255 26 says m o b i l or m o b x l
   moped 255 255 27 says m o p E d
   neuroses 255 255 28
   newfoundland 255 255 29
   news 255 255 30
-  pince 255 255 32
+  pince 255 255 32 says p I n s or p a n s
   polish 255 255 33
   puerile 255 255 36 says p y u r x l
-  putting 255 255 37
+  putting 255 255 37 says p U t I G or p H t I G
   princess 255 255 34 says p r I n s X s
   produce 255 255 35
-  ragged 255 255 38
+  ragged 255 255 38 says r A g d or r A g X d
   read 255 255 39
   rein 255 255 41 says r e n
-  rebus 255 255 40
+  rebus 255 255 40 says r i b x s or r i b H s
   ros 255 255 42
   separate 255 255 44 says s E p x r e t
-  sceptic 255 255 43
-  slough 255 255 45
-  stein 255 255 46
+  sceptic 255 255 43 says s k E p t X s or s k E p t X k
+  slough 255 255 45 says s l W or s l H f
+  stein 255 255 46 says s t Y n or s t i n
   tangier 255 255 47
-  tear 255 255 48
-  ton 255 255 49
+  tear 255 255 48 says t E r or t i r
+  ton 255 255 49 says t H n or t a@ n
   vice 255 255 52 says v Y s
-  wind 255 255 54
+  wind 255 255 54 says w I n d or w Y n d
   wound 255 255 56
   won 255 255 55
-  whoop 255 255 53
+  whoop 255 255 53 says w u p or w U p
 
 dictionary eng_homog_words statement 1 width 0 records sound
   always 255 255 1 says c l w X z
-  en 255 255 5
-  itself 255 255 26
+  en 255 255 5 says a n or E n
+  itself 255 255 26 says X t s E l f or I t s E l f
   ourselves 255 255 31 says W R s E l v z
   upstairs 255 255 48 says H p s t e r z
   des 255 255 2
   downstairs 255 255 3 says d W n s t e r z
   during 255 255 4 says d R r I G
-  fein 255 255 6
+  fein 255 255 6 says f Y n or f e n
   forever 255 255 7 says f R E v x r
-  francisco 255 255 8
+  francisco 255 255 8 says f r A n s I s k o or f r Xx n s I s k o
   hereafter 255 255 9
   hereas 255 255 10
   hereat 255 255 11
@@ -602,16 +605,16 @@ dictionary eng_homog_words statement 1 width 0 records sound
   hereto 255 255 16
   herewith 255 255 22 says h i r w I T
   herself 255 255 23 says h R s E l f
-  himself 255 255 24
+  himself 255 255 24 says h X m s E l f or h I m s E l f
   hurriedly 255 255 25 says h R X d l i
   jean 255 255 27
-  lima 255 255 28
+  lima 255 255 28 says l Y m x or l i m x
   macho 255 255 29 says m a C o
   myself 255 255 30 says m a y s E l f
   rapprochements 255 255 32
   sinn 255 255 33 says S I n
   somewhat 255 255 34 says s H m w H t
-  supposed 255 255 35
+  supposed 255 255 35 says s x p o z d or s x p o s t or s x p o z X d
   toward 255 255 45 says t w c r d
   towards 255 255 46 says t w c r d z
   themselves 255 255 36 says D X m s E l v z
@@ -624,7 +627,7 @@ dictionary eng_homog_words statement 1 width 0 records sound
   therewithal 255 255 43 says D e r w X T a l
   thoroughly 255 255 44 says T R x l i
   thyself 255 255 47 says D a y s E l f
-  voyage 255 255 49
+  voyage 255 255 49 says v O x J or v O a Z
   whatever 255 255 50 says w H
   whatsoever 255 255 51 says w H t s o E v x r
   whereas 255 255 52 says w e r A z
@@ -1067,8 +1070,8 @@ dictionary suffixes statement 1 width 0 records sound
   ee 255 255 20
   eer 255 255 21 says i r
   ed 255 255 17
-  edly 255 255 18
-  edness 255 255 19
+  edly 255 255 18 says d l i or X d l i
+  edness 255 255 19 says d n Xx s or X d n Xx s
   ella 255 255 22 says E l x
   elle 255 255 23
   ellen 255 255 24 says E l X n
@@ -1085,7 +1088,7 @@ dictionary suffixes statement 1 width 0 records sound
   ing 255 255 42
   ish 255 255 44 says X S
   ism 255 255 45 says I z x m
-  ist 255 255 46
+  ist 255 255 46 says I s t or X s t
   istic 255 255 47 says I s t X k
   ize 255 255 48
   or 255 255 62
@@ -4545,7 +4548,7 @@ dictionary roots2 statement 1 width 0 records sound
   hireling 255 255 68 says h Y x r l I G
   hood 255 255 79 says h U d
   hour 255 255 81 says W R
-  house 255 255 82
+  house 255 255 82 says h W z or h W s
   homage 255 255 70 says a@ m X J
   homemade 255 255 69 says h o m e d
   homophone 255 255 71 says h a@ m x f o n
@@ -5132,7 +5135,7 @@ dictionary eng_abbr statement 1 width 0 records characters
   Okla 255 255 223 says oklahoma
   Ore 255 255 226 says oregon
   OH 255 255 221 says ohio
-  OK 255 255 222
+  OK 255 255 222 says oklahoma or okay
   ONN 255 255 224 says oe[ ]en[ ]en
   OR 255 255 225 says oregon
   Utd 255 255 278 says united
@@ -5163,7 +5166,7 @@ dictionary eng_abbr statement 1 width 0 records characters
   dm 255 255 79 says decimeter
   dB 255 255 66 says decibel
   fed 255 255 92 says federal
-  ft 255 255 99
+  ft 255 255 99 says foot or feet
   g 255 255 100 says gram
   govt 255 255 106 says government
   gm 255 255 104 says gram
@@ -5275,7 +5278,7 @@ dictionary eng_abbr statement 1 width 0 records characters
   Div 255 255 73 says division
   DE 255 255 68 says delaware
   DEM 255 255 72 says german[ ]mark
-  Dr 255 255 81
+  Dr 255 255 81 says doctor or drive
   Drs 255 255 82 says doctors
   DC 255 255 67
   DKK 255 255 75 says danish[ ]krone
@@ -5338,7 +5341,7 @@ dictionary eng_abbr statement 1 width 0 records characters
   Mr 255 255 184 says mister
   Mrs 255 255 185 says misses
   Ms 255 255 187 says miz
-  Mt 255 255 189
+  Mt 255 255 189 says mount or mountain
   MD 255 255 164 says maryland
   MHz 255 255 169 says megahertz
   MN 255 255 172 says minnesota
@@ -5357,7 +5360,7 @@ dictionary eng_abbr statement 1 width 0 records characters
   No 255 255 211
   Nov 255 255 212 says november
   NA 255 255 193 says en[ ]ay
-  NE 255 255 199
+  NE 255 255 199 says nebraska or northeast
   NO 255 255 211
   NC 255 255 195 says north[ ]
   ND 255 255 197 says north[ ]
@@ -5422,7 +5425,7 @@ dictionary eng_abbr statement 1 width 0 records characters
   TX 255 255 274 says texas
   V 255 255 276 says volt
   Va 255 255 279 says virginia
-  VA 255 255 280
+  VA 255 255 280 says virginia or vee[ ]aye
   VT 255 255 282 says vermont
   W 255 255 283 says watt
   Wash 255 255 285
@@ -5440,58 +5443,58 @@ dictionary eng_abbr statement 1 width 0 records characters
   XOF 255 255 294 says see[ ]ef[ ]ay[ ]franc
 
 dictionary eng_char_name statement 1 width 0 records characters
-  a 255 255 43
+  a 255 255 43 says alpha or ay
   e 255 255 47
-  i 255 255 51
+  i 255 255 51 says india or igh
   o 255 255 57
-  u 255 255 63
-  A 255 255 43
+  u 255 255 63 says uniform or yue
+  A 255 255 43 says alpha or ay
   E 255 255 47
-  I 255 255 51
+  I 255 255 51 says india or igh
   O 255 255 57
-  U 255 255 63
-  b 255 255 44
-  c 255 255 45
-  d 255 255 46
-  f 255 255 48
-  g 255 255 49
-  h 255 255 50
-  j 255 255 52
-  k 255 255 53
+  U 255 255 63 says uniform or yue
+  b 255 255 44 says bravo or bea
+  c 255 255 45 says charlie or cea
+  d 255 255 46 says delta or dee
+  f 255 255 48 says foxtrot or eff
+  g 255 255 49 says golf or jee
+  h 255 255 50 says hotel or aitch
+  j 255 255 52 says juliet or jeigh
+  k 255 255 53 says kilo or keigh
   l 255 255 54
   m 255 255 55
   n 255 255 56
-  p 255 255 58
-  q 255 255 59
+  p 255 255 58 says papa or pea
+  q 255 255 59 says kaybeck or kew
   r 255 255 60
   s 255 255 61
-  t 255 255 62
-  v 255 255 64
-  w 255 255 65
-  x 255 255 66
-  y 255 255 67
-  z 255 255 68
-  B 255 255 44
-  C 255 255 45
-  D 255 255 46
-  F 255 255 48
-  G 255 255 49
-  H 255 255 50
-  J 255 255 52
-  K 255 255 53
+  t 255 255 62 says tango or tea
+  v 255 255 64 says victor or vee
+  w 255 255 65 says whiskey or doubleyou
+  x 255 255 66 says xray or eks
+  y 255 255 67 says yankee or wie
+  z 255 255 68 says zulu or zee
+  B 255 255 44 says bravo or bea
+  C 255 255 45 says charlie or cea
+  D 255 255 46 says delta or dee
+  F 255 255 48 says foxtrot or eff
+  G 255 255 49 says golf or jee
+  H 255 255 50 says hotel or aitch
+  J 255 255 52 says juliet or jeigh
+  K 255 255 53 says kilo or keigh
   L 255 255 54
   M 255 255 55
   N 255 255 56
-  P 255 255 58
-  Q 255 255 59
+  P 255 255 58 says papa or pea
+  Q 255 255 59 says kaybeck or kew
   R 255 255 60
   S 255 255 61
-  T 255 255 62
-  V 255 255 64
-  W 255 255 65
-  X 255 255 66
-  Y 255 255 67
-  Z 255 255 68
+  T 255 255 62 says tango or tea
+  V 255 255 64 says victor or vee
+  W 255 255 65 says whiskey or doubleyou
+  X 255 255 66 says xray or eks
+  Y 255 255 67 says yankee or wie
+  Z 255 255 68 says zulu or zee
   0 255 255 42
   1 255 255 33 says wun
   2 255 255 34 says two
@@ -5511,7 +5514,7 @@ dictionary eng_char_name statement 1 width 0 records characters
   ! 255 255 1 says exclamation[ ]point
   ( 255 255 9 says left[ ]parenthesis
   ) 255 255 10 says right[ ]parenthesis
-  ' 255 255 25
+  ' 255 255 25 says acute[ ]accent or apostrophe
   # 255 255 3 says number
   _ 255 255 12 says underscore
   [#76] 255 255 17 says backquote
@@ -5634,14 +5637,14 @@ dictionary eng_char_name statement 1 width 0 records characters
   [ ] 255 255 109
   [¤] 255 255 114 says symbol
   [¦] 255 255 116 says symbol
-  [§] 255 255 117
+  [§] 255 255 117 says sections or section
   [©] 255 255 119 says copyright
   [¬] 255 255 122 says optional[ ]hyphen
   [­] 255 255 123 says dash
   [®] 255 255 124 says registered
   [¯] 255 255 125 says macron
   [µ] 255 255 130 says mu
-  [¶] 255 255 131
+  [¶] 255 255 131 says paragraphs or paragraph
 
 dictionary eng_tok_dict statement 1 width 0 records characters
   am 255 255 2 says ay[ ]emm

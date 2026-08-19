@@ -27,10 +27,12 @@ of them still wants what the action already says keeps it. The same happens
 when a pronunciation cannot be changed where it stands. Both are changes in
 what the dictionary means, so both are reported.
 
-An entry with nothing after its action says nothing this can read faithfully:
-either its rule chooses between two records depending on what follows the
-word, or it lays the word down in pieces, as the currencies do. Those are left
-alone rather than half-reported.
+A word laid down in more than one piece has its pieces written out in order
+with `then' between them, and a word with two readings has both with `or'
+between them. Pieces can be changed one at a time; readings cannot, since
+which of the two is taken is decided in shared code. An entry with nothing
+after its action says nothing this can read faithfully and is left alone
+rather than half-reported.
 
 Building checks itself: it reads its own work back and holds every word, value
 and pronunciation against what was there before.
@@ -69,7 +71,10 @@ HEADER = """\
 # out in order with `then' between them -- the currencies spell an
 # abbreviation, then a space, then a name -- and any piece the rule names
 # itself rather than the word is shared with every word using it and cannot be
-# changed for one of them. A phone or a character that no name picks out on its own is
+# changed for one of them. A word read one way before one thing and another
+# way before another has both written out with `or' between them; those are
+# shown as they are and cannot be changed, since which of the two is taken is
+# decided in code the other words using that test run through. A phone or a character that no name picks out on its own is
 # written as a hash and its number. An entry with nothing after its action
 # lays no record down, or lays one down a way this cannot yet read.
 #
@@ -104,26 +109,17 @@ def collated(keys):
     return list(keys) == sorted(keys)
 
 
-# A word laid down in more than one piece has its pieces written out in
-# order, since that is what is said and any one of them may be the part worth
-# changing.
-JOIN = ' then '
+def frozen(segments):
+    """The pieces of what an action says, in a shape that can be compared."""
+    return tuple((tuple(codes), joiner) for codes, joiner in segments)
 
 
-def say(parts, kind, alpha):
-    table = alpha.get(kind, [])
-    once = lex.unique_names(table)
-    if kind == SOUND_STMT:
-        return JOIN.join(lex.sound_text(c, table, once) for c in parts)
-    return JOIN.join(lex.word(c, table, once) for c in parts)
+def say(segments, kind, alpha):
+    return lex.render(segments, kind, alpha)
 
 
 def unsay(text, kind, alpha):
-    table = alpha.get(kind, [])
-    once = lex.unique_names(table)
-    if kind == SOUND_STMT:
-        return [lex.sound_codes(t, once) for t in text.split(JOIN)]
-    return [lex.codes_of(t, table, once) for t in text.split(JOIN)]
+    return lex.parse(text, kind, alpha)
 
 
 def read_tables():
@@ -230,21 +226,29 @@ def lay_down(want, alpha):
     return out, starts
 
 
-def lay(arms, act, codes):
+def lay(arms, act, segments):
     """Give one action what it is to say, in however many pieces."""
-    if len(codes) == 1:
-        arms.rewrite(act, bytes(codes[0]))
+    datas = [bytes(codes) for codes, _j in segments]
+    if len(datas) == 1:
+        arms.rewrite(act, datas[0])
+    elif segments[1][1] == lex.THEN:
+        arms.rewrite_parts(act, datas)
     else:
-        arms.rewrite_parts(act, [bytes(c) for c in codes])
+        # Both readings are chosen in code the other words using that test run
+        # through, in every one of the 191 actions that has two, so there is
+        # nothing here that could be changed for one word alone.
+        raise ValueError('a word with two readings is shown as it is but '
+                         'cannot be changed: which of the two is taken is '
+                         'decided in code other words run through')
 
 
 def mint(arms, used, codes, why):
     """An action of this word's own: a spare arm of the rule if one is going,
     and otherwise an arm added to it."""
     if len(codes) > 1:
-        raise ValueError('%s lays a word down in pieces, and a word cannot yet '
-                         'be given an action of its own in one' % why)
-    codes = codes[0]
+        raise ValueError('nor can it be given an action of its own, %s '
+                         'saying things in more than one piece' % why)
+    codes = codes[0][0]
     act = arms.spare(used)
     if act is not None:
         try:
@@ -275,14 +279,14 @@ def work_out(d, alpha, laid):
     change, split = [], []
     for act, idxs in groups.items():
         now = laid.get(act)
-        now = tuple(tuple(c) for c in now) if now is not None else None
+        now = frozen(now) if now is not None else None
 
         texts = []
         for i in idxs:
             text = d['entries'][i][4]
             if text is None:
                 continue
-            codes = tuple(tuple(c) for c in unsay(text, d['kind'], alpha))
+            codes = frozen(unsay(text, d['kind'], alpha))
             for seen, where in texts:
                 if seen == codes:
                     where.append(i)

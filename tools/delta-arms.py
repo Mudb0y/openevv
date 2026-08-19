@@ -535,6 +535,31 @@ class Arms:
             inner._step(off, state, pushes)
         return None
 
+    def ways(self, act):
+        """The readings an action has where it tests something and takes one of
+        two paths -- an abbreviation read one way before a name and another
+        before a number. Each is a record of its own and can be changed on its
+        own. The straight way through comes first, which is the order they are
+        written in and read back."""
+        if not self.ok or not 1 <= act <= len(self.arms):
+            return None
+        regs, slots = self._state0()
+        found = []
+        self._walk(self.arms[act - 1], (list(regs), dict(slots)), [], None,
+                   set(), 0, found, False)
+
+        out, seen = [], set()
+        for sym, length, where in reversed(found):
+            if sym is None or length is None or length.n is None:
+                return None
+            key = (sym[0], length.n)
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(Part(sym[0][0], sym[0][1], length.n, sym[1], sym[2],
+                            where[1], False))
+        return out or None
+
     def parts(self, act):
         """What one action lays down, in order. Most lay down one thing; the
         currencies spell an abbreviation, then a space, then a name, and that

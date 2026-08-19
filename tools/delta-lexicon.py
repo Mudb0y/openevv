@@ -163,31 +163,77 @@ def rules():
     return LOADED[0]
 
 
+# How the pieces of what a word says are strung together when it is written
+# out: `then' between the pieces of one word laid down in several, `or' between
+# two readings a word has depending on what follows it.
+THEN = ' then '
+OR = ' or '
+
+
 def actions(rule_name):
-    """What each action number of a dictionary lays down, as a list of records
-    in the order they are laid. Most actions lay down one; the currencies lay
-    an abbreviation, a space and a name. Empty for an action laid down a way
-    this cannot read."""
+    """What each action of a dictionary lays down, as the pieces it is written
+    out in: a list of (codes, what goes in front of them). Most actions lay one
+    record and so have one piece with nothing in front."""
     a = arms_mod.Arms(rules(), rule_name)
     if not a.ok:
         return {}
 
-    def bytes_of(blob, off, length):
-        return list(rules().blobs.get(blob, b'')[off:off + length])
+    def codes(part):
+        body = rules().blobs.get(part.blob, b'')
+        return list(body[part.off:part.off + part.length])
 
     out = {}
     for act, r in a.records().items():
-        out[act] = [bytes_of(r.blob, r.off, r.length)]
+        out[act] = [(list(rules().blobs.get(r.blob, b'')
+                          [r.off:r.off + r.length]), '')]
+
     for act in range(1, len(a.arms) + 1):
         if act in out:
             continue
-        # Only as a second try, and only for an action that really does lay
-        # down more than one thing: a single record this way came off a path
-        # the first try had already refused.
-        got = a.parts(act)
-        if got and len(got) > 1:
-            out[act] = [bytes_of(p.blob, p.off, p.length) for p in got]
+        # A word laid down in pieces, then a word with two readings. Both are
+        # second tries: one record found either way came off a path the first
+        # try refused for a reason, and taking it would undo that.
+        for how, joiner in ((a.parts, THEN), (a.ways, OR)):
+            got = how(act)
+            if got and len(got) > 1:
+                out[act] = [(codes(p), '' if n == 0 else joiner)
+                            for n, p in enumerate(got)]
+                break
     return out
+
+
+def render(segments, kind, alpha):
+    """What an action says, written out."""
+    table = alpha.get(kind, [])
+    once = unique_names(table)
+    out = []
+    for codes, joiner in segments:
+        out.append(joiner)
+        out.append(sound_text(codes, table, once) if kind == 2
+                   else word(codes, table, once))
+    return ''.join(out)
+
+
+def parse(text, kind, alpha):
+    """And back into the pieces it was written out in."""
+    table = alpha.get(kind, [])
+    once = unique_names(table)
+    out, rest, joiner = [], text, ''
+    while True:
+        at_then = rest.find(THEN)
+        at_or = rest.find(OR)
+        cuts = [x for x in (at_then, at_or) if x >= 0]
+        if not cuts:
+            head, nxt, rest = rest, None, ''
+        else:
+            cut = min(cuts)
+            nxt = THEN if cut == at_then else OR
+            head, rest = rest[:cut], rest[cut + len(nxt):]
+        out.append((sound_codes(head, once) if kind == 2
+                    else codes_of(head, table, once), joiner))
+        if nxt is None:
+            return out
+        joiner = nxt
 
 
 def sound_text(codes, alpha, once):
@@ -213,19 +259,12 @@ def choose(records, alphas):
     records they fit, because the character one has four times the codes and
     so fits almost anything. A dictionary counts as pronunciations unless a
     real share of its records will not sit in the phone alphabet at all."""
-    real = [r for group in records for r in group if r]
+    real = [codes for group in records for codes, _j in group if codes]
     if not real:
         return RECORD_STMTS[0]
     phone = alphas.get(2, [])
     fits = sum(1 for r in real if all(c < len(phone) for c in r))
     return 2 if fits >= 0.9 * len(real) else 1
-
-
-def spell(run, alpha, stmt):
-    """A record as text. A pronunciation is a run of phones and reads better
-    spaced; anything spelled out in characters is a word and does not."""
-    names = [alpha[c] if c < len(alpha) else '?%d' % c for c in run]
-    return (' ' if stmt == 2 else '').join(names)
 
 
 def dictionaries():
@@ -296,7 +335,7 @@ def main():
               % (name, d['stmt'], d['width'], count))
         for key, act, run in said:
             print('    %-28s %4d  %s'
-                  % (key, act, spell(run, alpha.get(holds, []), holds)))
+                  % (key, act, render(run, holds, alpha) if run else ''))
 
     if not want:
         print()
