@@ -29,23 +29,7 @@
 #include "eci_synththread.h"
 #include "evv_abi.h"
 #include "evv_arena.h"
-
-typedef struct OldInst OldInst;
-
-#define OI_NEW(h)       (*(void **)((char *)(h) + 0x00c))
-#define OI_ENV(h)       ((int32_t *)((char *)(h) + 0x018))
-#define OI_LANG(h)      (*(int32_t *)((char *)(h) + 0x03c))
-#define OI_ENV_SAVED(h) ((int32_t *)((char *)(h) + 0x060))
-#define OI_VOICE(h)     ((char *)(h) + 0x0a8)
-#define OI_VOICE_SAVED(h) ((char *)(h) + 0x0f8)
-#define OI_QHEAD(h)     (*(QueueElement **)((char *)(h) + 0x60c))
-#define OI_QTAIL(h)     (*(QueueElement **)((char *)(h) + 0x610))
-#define OI_READY(h)     (*(int32_t *)((char *)(h) + 0x6a4))
-#define OI_REFUSEDALL(h) (*(uint32_t *)((char *)(h) + 0x6ac))
-#define OI_REFUSED(h)   (*(uint32_t *)((char *)(h) + 0x6b0))
-#define OI_BUSY(h)      (*(int32_t *)((char *)(h) + 0x6b4))
-#define OI_FILTERMGR(h) (*(void **)((char *)(h) + 0x6bc))
-#define OI_CONCAT(h)    (*(void **)((char *)(h) + 0x6c8))
+#include "eci_old.h"
 
 /* Which of the eighteen settings say how text is to be handled. */
 #define ENV_SYNTHMODE   0
@@ -77,7 +61,6 @@ typedef struct QueueElement {
 
 /* Where a voice keeps the eight things an annotation may move. */
 #define VOICE_PARAM(v, i) (*(int32_t *)((char *)(v) + 0x20 + (i) * 4))
-#define VOICE_BYTES       0x50
 
 extern int32_t STDCALL api_add_text(void *h2, const char *s, int32_t len,
                                      int32_t a, int32_t annotate, int32_t b)
@@ -810,7 +793,6 @@ ALIAS("?addToManualQueue@@YAXPAUoldECIInstData@@PAUQueueElement@@@Z",
       "et_addToManualQueue");
 ALIAS("?processManualQueue@@YAHPAUoldECIInstData@@@Z",
       "et_processManualQueue");
-
 
 ALIAS_N("_eciInsertIndex@8", "et_insertIndex", 8);
 ALIAS_N("_eciSynthesize@4", "et_synthesize", 4);

@@ -18,12 +18,7 @@
 #include <stdint.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
-
-typedef struct OldInst OldInst;
-
-#define OI_NEW(h)       (*(void **)((char *)(h) + 0x00c))
-#define OI_REFUSEDALL(h) (*(uint32_t *)((char *)(h) + 0x6ac))
-#define OI_REFUSED(h)   (*(uint32_t *)((char *)(h) + 0x6b0))
+#include "eci_old.h"
 
 /* The dictionary in force for one language and dialect. Families run from
    one to eighteen and dialects are nought or one. */
@@ -236,7 +231,6 @@ ALIAS("?delete_active_dict@@YAJPAUoldECIInstData@@PAX@Z",
       "ed_delete_active_dict");
 ALIAS("?deactivate_all_dicts@@YAJPAUoldECIInstData@@@Z",
       "ed_deactivate_all_dicts");
-
 
 ALIAS_N("_eciNewDict@4", "ed_newDict", 4);
 ALIAS_N("_eciGetDict@4", "ed_getDict", 4);

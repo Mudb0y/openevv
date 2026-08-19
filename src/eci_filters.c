@@ -14,14 +14,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "evv_abi.h"
+#include "eci_old.h"
 
 /* What the instance keeps for this layer. */
-#define OI_NEW(h)        (*(void **)((char *)(h) + 0x00c))
-#define OI_LANG(h)       (*(int32_t *)((char *)(h) + 0x03c))
-#define OI_REFUSEDALL(h) (*(uint32_t *)((char *)(h) + 0x6ac))
-#define OI_REFUSED(h)    (*(uint32_t *)((char *)(h) + 0x6b0))
-#define OI_ROMMGR(h)     (*(void **)((char *)(h) + 0x6b8))
-#define OI_FILTERMGR(h)  (*(void **)((char *)(h) + 0x6bc))
 
 /* Refusing to convert is reported as this, both against the call and in
    the running total the instance keeps. */
@@ -78,7 +73,6 @@ extern STDCALL int32_t api_get_available_filters(void *h2, int32_t lang,
 extern STDCALL int32_t api_get_filter_description(void *h2, int32_t lang,
                                                   uint32_t id, char *out)
     MANGLED("_eciGetFilterDescription2@16");
-
 
 /* ---- text in one code set or another --------------------------------- */
 
@@ -139,9 +133,10 @@ static int wide_language(int32_t lang)
 /* Both converters answer nought when they had nothing to do or did it, and
    the refusal code when they could not; a language that needs no conversion
    has its text passed along unchanged. */
-int32_t UnicodeConverter(void *inst, const uint16_t *in, char **out,
+int32_t UnicodeConverter(void *p, const uint16_t *in, char **out,
                          int32_t n)
 {
+    OldInst *inst = p;
     int32_t lang, rc = 0;
 
     if (inst == 0)
@@ -161,8 +156,9 @@ int32_t UnicodeConverter(void *inst, const uint16_t *in, char **out,
     return REFUSED_CONVERSION;
 }
 
-int32_t MBCSConverter(void *inst, const char *in, uint16_t **out)
+int32_t MBCSConverter(void *p, const char *in, uint16_t **out)
 {
+    OldInst *inst = p;
     int32_t lang = OI_LANG(inst);
     int32_t rc = 0;
 
@@ -179,11 +175,11 @@ int32_t MBCSConverter(void *inst, const char *in, uint16_t **out)
     return REFUSED_CONVERSION;
 }
 
-
 /* ---- the filters ----------------------------------------------------- */
 
-int32_t FilterText2(void *inst, void *filter, const char *text, char **out)
+int32_t FilterText2(void *p, void *filter, const char *text, char **out)
 {
+    OldInst *inst = p;
     *out = fm_filterTextByHandle(OI_FILTERMGR(inst), filter, text);
     return 0;
 }
@@ -268,8 +264,9 @@ int32_t addFilterAnnotation(const char *text, char **out, int32_t id,
 /* Turn on every filter this language has that says it should be on by
    itself, wrapping the text in the annotation each one wants. Answers
    whether any of them was. */
-int32_t enableFilter(void *inst, int32_t lang, const char *text, char **out)
+int32_t enableFilter(void *p, int32_t lang, const char *text, char **out)
 {
+    OldInst *inst = p;
     uint32_t ids[FILTERS_AT_ONCE];
     uint32_t n = FILTERS_AT_ONCE;
     char     description[DESCRIPTION_ROOM];
