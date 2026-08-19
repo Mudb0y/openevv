@@ -21,6 +21,7 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "delta.h"
 
 /* One stream, and how many bytes of it there are. */
 #define STREAM_BYTES 0x18
@@ -49,7 +50,7 @@ typedef struct StreamArrayList {
 
 /* Where the list hangs off the machine, and the moment a cleared stream
    starts counting from. */
-#define GEN(d)       (*(unsigned char **)((char *)(d) + 0x70))
+#define GEN(d)       EVV_AT(unsigned char *, ((delta_state *)(d))->dlang)
 #define GEN_LIST(d)  (*(StreamArrayList **)(GEN(d) + 0x24))
 #define GEN_ZERO(d)  (*(uint32_t *)(GEN(d) + 0x28))
 
@@ -69,7 +70,8 @@ extern THIS int32_t tvq_isEmpty(void *q)
     MANGLED("?isEmpty@TimeValueQueue@@QAEHXZ");
 
 /* The machine is only ever passed through here, never looked into. */
-typedef struct delta_state_fwd delta_state_fwd;
+/* The machine, under the name this file already used for it. */
+typedef delta_state delta_state_fwd;
 
 /* How much room a stream's queue starts with. */
 #define QUEUE_ROOM 0x12c

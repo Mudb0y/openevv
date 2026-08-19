@@ -22,8 +22,10 @@
 
 /* The two places that hold a copy of where the spine starts and ends.
    Neither has ever needed naming anywhere else. */
-#define SPINE_L_HOLDER(d) (*(char **)((char *)(d) + 0x34))
-#define SPINE_R_HOLDER(d) (*(char **)((char *)(d) + 0x38))
+/* The two word variables something wants a direct handle on. The handle is
+   on the cell, tag and all, so the value is four bytes further in. */
+#define SPINE_L_HOLDER(d) EVV_AT(char *, (d)->direct_a)
+#define SPINE_R_HOLDER(d) EVV_AT(char *, (d)->direct_b)
 
 /* Three words of the variable block cleared before a run. */
 #define VARS_FF0(v)   (*(uint8_t *)((char *)(v) + 0xff0))

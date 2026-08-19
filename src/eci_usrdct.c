@@ -33,7 +33,7 @@
    and the stream it works in are kept. */
 typedef struct DeltaLang DeltaLang;
 
-#define DT_LANG(d)      (*(DeltaLang **)((char *)(d) + 0x70))
+#define DT_LANG(d)      EVV_AT(DeltaLang *, (d)->dlang)
 #define DL_CURRENT(l)   (*(struct DictionarySet **)((char *)(l) + 0x38))
 #define DL_STREAM(l)    (*(int8_t *)((char *)(l) + 0x3c))
 

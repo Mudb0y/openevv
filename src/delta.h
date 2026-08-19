@@ -317,7 +317,8 @@ struct delta_state {
                                      moved; the flag it sets is at 0x1b8 */
     evv_ref     vars;            /* 0x0068 */
     evv_ref     stack;           /* 0x006c */
-    uint8_t      pad_0070[4];
+    evv_ref     dlang;           /* 0x0070, the language's own block: the
+                                     statement generator hangs off it */
     evv_ref     logio;           /* 0x0074, the logical file table */
     evv_ref     eloqc;           /* 0x0078, what the machine keeps for ECI */
     uint8_t      fence_room;      /* 0x007c, how many the arrays below hold */
@@ -833,6 +834,7 @@ int32_t vf_printf(delta_state *d, int32_t lf, int32_t flush,
 void vfstat(delta_state *d, int32_t lf);
 void vfstatall(delta_state *d);
 void *logicalNullClass(delta_state *d);
+int32_t logicalStandardStream(delta_state *d, int32_t which);
 
 /* Where the Delta machine meets ECI. */
 int32_t eloqc_new(delta_state *d);

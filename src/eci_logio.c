@@ -403,6 +403,22 @@ void *logicalNullClass(delta_state *d)
     return &LOGIO(d)->none;
 }
 
+/* Which logical file each of the six standard streams is. They are the first
+   six bytes of the block, but only this file knows that. */
+int32_t logicalStandardStream(delta_state *d, int32_t which)
+{
+    const LogIO *g = LOGIO(d);
+
+    switch (which) {
+    case 0: return g->pgmin;
+    case 1: return g->cmdin;
+    case 2: return g->prompt;
+    case 3: return g->prmout;
+    case 4: return g->cmdout;
+    default: return g->pgmout;
+    }
+}
+
 void logio_delete(delta_state *d)
 {
     if (d == 0 || EVV_AT(void *, d->logio) == 0)

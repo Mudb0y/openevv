@@ -27,13 +27,14 @@
 #include "klatt_state.h"
 #include "evv_abi.h"
 #include "evv_arena.h"
+#include "delta.h"
 
 /* The engine's own handle. Only the one field this file needs is named. */
-typedef struct DeltaThis DeltaThis;
+typedef delta_state DeltaThis;
 typedef struct DeltaLang DeltaLang;
 typedef struct SynthDevice SynthDevice;
 
-#define DT_LANG(d)      (*(DeltaLang **)((char *)(d) + 0x70))
+#define DT_LANG(d)      EVV_AT(DeltaLang *, (d)->dlang)
 
 /* Where the sound is going, and what is to be reported about it. */
 #define SD_SAMPLE_CB(v)   (*(void **)((char *)(v) + 0x00))
@@ -389,7 +390,7 @@ void dlang_delete(DeltaThis *d)
 
     memset(lang, 0, DL_BYTES);
     free(lang);
-    DT_LANG(d) = 0;
+    d->dlang = EVV_REF(0);
 }
 
 /* And the five other things an engine handle carries. */
@@ -451,9 +452,6 @@ typedef struct LastGlob {
     int32_t         frame[FRAME_WORDS];
 } LastGlob;
 
-/* Where the engine keeps the table that turns a stream number into an
-   offset. */
-#define DT_SYMBOLS(d)   (*(void **)((char *)(d) + 0x68))
 extern int stmarray_new(DeltaThis *d) MANGLED("_stmarray_new");
 int synthesize(DeltaThis *d, void *buf, int32_t isArray, int32_t *streamA,
                int32_t *streamB, int32_t from, int32_t to, int32_t more,
@@ -476,7 +474,7 @@ int dlang_new(DeltaThis *d)
     DeltaLang *lang;
     void *dev;
 
-    DT_LANG(d) = malloc(DL_BYTES);
+    d->dlang = EVV_REF(malloc(DL_BYTES));
     if (!DT_LANG(d))
         return DELTA_NO_ROOM;
     lang = DT_LANG(d);
@@ -485,7 +483,7 @@ int dlang_new(DeltaThis *d)
     DL_BUF_100(lang) = malloc(BUF_100_BYTES);
     if (!DL_BUF_100(lang)) {
         free(lang);
-        DT_LANG(d) = 0;
+        d->dlang = EVV_REF(0);
         return DELTA_NO_ROOM;
     }
     memset(DL_BUF_100(lang), 0, BUF_100_BYTES);
@@ -496,7 +494,7 @@ int dlang_new(DeltaThis *d)
         free(DL_BUF_100(lang));
         DL_BUF_100(lang) = 0;
         free(lang);
-        DT_LANG(d) = 0;
+        d->dlang = EVV_REF(0);
         return DELTA_NO_ROOM;
     }
 
@@ -511,7 +509,7 @@ int dlang_new(DeltaThis *d)
         cpp_delete(DL_DEVICE(lang));
         DL_DEVICE(lang) = 0;
         free(lang);
-        DT_LANG(d) = 0;
+        d->dlang = EVV_REF(0);
         return DELTA_NO_ROOM;
     }
     memcpy(DL_BUF_140(lang), last_glob, BUF_140_BYTES);
@@ -525,7 +523,7 @@ int dlang_new(DeltaThis *d)
         free(DL_BUF_140(lang));
         DL_BUF_140(lang) = 0;
         free(lang);
-        DT_LANG(d) = 0;
+        d->dlang = EVV_REF(0);
         return DELTA_NO_ROOM;
     }
     memset(DL_BUF_4(lang), 0, BUF_4_BYTES);
@@ -541,7 +539,7 @@ int dlang_new(DeltaThis *d)
         free(DL_BUF_4(lang));
         DL_BUF_4(lang) = 0;
         free(lang);
-        DT_LANG(d) = 0;
+        d->dlang = EVV_REF(0);
         return DELTA_NO_ROOM;
     }
 
@@ -826,7 +824,7 @@ int synthesize(DeltaThis *d, void *buf, int32_t isArray, int32_t *streamA,
     } else {
         int8_t which =
             *(int8_t *)&((ParmAssignments *)DL_BUF_100(lang))->slot[PARM_MS];
-        int32_t at = *(int32_t *)((char *)DT_SYMBOLS(d) + 0x1174) + which;
+        int32_t at = EVV_AT(delta_vars *, d->vars)->fence_base + which;
 
         if (!(streamA[at] & 1) || !(streamB[at] & 1)) {
             SD_INTERRUPTED(dev) = 0;

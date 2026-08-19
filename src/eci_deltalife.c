@@ -81,7 +81,7 @@ void runtime_delete(delta_state *d)
     d->owner = EVV_REF(0);
     d->vars = EVV_REF(0);
     d->stack = EVV_REF(0);
-    *(int32_t *)((char *)d + 0x70) = 0;
+    d->dlang = EVV_REF(0);
     d->logio = EVV_REF(0);
     d->eloqc = EVV_REF(0);
 }

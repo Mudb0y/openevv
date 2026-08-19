@@ -43,7 +43,7 @@ typedef struct ValueSet {
 } ValueSet;
 
 /* What the array generator hangs off the machine. */
-#define GEN(d)          (*(unsigned char **)((char *)(d) + 0x70))
+#define GEN(d)       EVV_AT(unsigned char *, ((delta_state *)(d))->dlang)
 #define GEN_SET(d)      (*(ValueSet **)(GEN(d) + 0x00))
 #define GEN_AT(d)       (*(int32_t *)(GEN(d) + 0x04))
 #define GEN_KLATT(d)    (*(void **)(GEN(d) + 0x20))

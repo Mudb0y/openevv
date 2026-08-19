@@ -26,8 +26,6 @@
 #define NAMES 6
 
 /* Which of the physical files the logical table starts from. */
-#define LOGIO_KIND(d, n) (*(uint8_t *)(EVV_AT(char *, (d)->logio) + (n)))
-#define LOGIO_ROOM(d)    (EVV_AT(char *, (d)->logio) + 0x80)
 
 extern void    errorIgnore(void);
 extern void    throwDeltaErrorNow(delta_state *d);
@@ -139,11 +137,11 @@ int32_t vcmdinit(delta_state *d, int32_t argc, char **argv)
     /* Five physical files, all of them nowhere: the engine is driven through
        memory rather than through a filing system, so every one of them is
        the null device. */
-    if (!logicalFileAddPhysical(d, LOGIO_KIND(d, 0), "null", LOGIO_ROOM(d), (void *)0, 0)
-     || !logicalFileAddPhysical(d, LOGIO_KIND(d, 5), "null", LOGIO_ROOM(d), (void *)0, 1)
-     || !logicalFileAddPhysical(d, LOGIO_KIND(d, 1), "null", LOGIO_ROOM(d), (void *)0, 0)
-     || !logicalFileAddPhysical(d, LOGIO_KIND(d, 4), "null", LOGIO_ROOM(d), (void *)0, 1)
-     || !logicalFileAddPhysical(d, LOGIO_KIND(d, 2), "null", LOGIO_ROOM(d), (void *)0, 1))
+    if (!logicalFileAddPhysical(d, logicalStandardStream(d, 0), "null", logicalNullClass(d), (void *)0, 0)
+     || !logicalFileAddPhysical(d, logicalStandardStream(d, 5), "null", logicalNullClass(d), (void *)0, 1)
+     || !logicalFileAddPhysical(d, logicalStandardStream(d, 1), "null", logicalNullClass(d), (void *)0, 0)
+     || !logicalFileAddPhysical(d, logicalStandardStream(d, 4), "null", logicalNullClass(d), (void *)0, 1)
+     || !logicalFileAddPhysical(d, logicalStandardStream(d, 2), "null", logicalNullClass(d), (void *)0, 1))
         return 0;
 
     if (!logicalFileOpen(d, (void *)"pgmin", 0)
