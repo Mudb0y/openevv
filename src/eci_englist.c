@@ -156,10 +156,11 @@ THIS EngineList *eng_ctor(EngineList *el)
 
     if (el->langs != 0) {
         el->dialects = (uint8_t)(el->dialects + 1);
-        el->data = (void **)cpp_new((uint32_t)(el->langs * el->dialects * 4));
+        el->data = cpp_new((uint32_t)(el->langs * el->dialects)
+                           * (uint32_t)sizeof *el->data);
         if (el->data) {
             memset(el->data, 0,
-                   (size_t)(el->langs * el->dialects * 4));
+                   (size_t)(el->langs * el->dialects) * sizeof *el->data);
         } else {
             el->langs = 0;
             el->dialects = 0;
