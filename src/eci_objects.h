@@ -87,4 +87,19 @@ typedef struct ETImessageQueueThread {
 /* What the application is called back through. */
 typedef int32_t (*Callback)(void *inst, int32_t a, int32_t b, void *param);
 
+/* The queue the other way: what the engine has to say to whoever called it,
+   and the callback it says it through. */
+typedef struct ETIappMessageQueue {
+    ETImessageQueue base;
+    Callback cb;
+    void    *cb_param;
+    void    *cb_inst;
+    int32_t  posted;
+    int32_t  seen;
+    int32_t  stopping;
+    ETImessage *held;        /* one the callback asked to defer */
+    void    *win;
+    int16_t  post_flag;
+} ETIappMessageQueue;
+
 #endif

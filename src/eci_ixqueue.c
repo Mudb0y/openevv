@@ -26,12 +26,6 @@ typedef struct IndexPair {
 } IndexPair;
 
 /* The list, plus the running total the queue adds on the end. */
-typedef struct IndexQueue {
-    const void *vt;
-    void       *head;
-    void       *tail;
-    uint32_t    total;      /* +0x0c, every lead in the queue added up */
-} IndexQueue;
 
 #define IQ_SLOT(q, off) ((*(void ***)(q))[(off) / 4])
 #define IQ_IS_EMPTY  0x00

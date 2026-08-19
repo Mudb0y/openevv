@@ -44,13 +44,8 @@ typedef struct {
     int32_t extra;      /* +0x0c, the index queue's own */
 } List;
 
-/* The allocator behind the index manager: how big one is, where they start,
-   and a lock at a fixed distance in. */
-typedef struct {
-    int32_t stride;     /* +0x00 */
-    char   *base;       /* +0x04 */
-} IndexMemory;
-#define IDXMGR_LOCK(m) ((void *)((char *)(m) + 0x24))
+typedef IndexManager IndexMemory;
+#define IDXMGR_LOCK(m) ((void *)(m)->lock)
 /* The blocks start a little way past whatever the allocator keeps first. */
 #define IDXMGR_FIRST   0x0c
 
@@ -184,8 +179,8 @@ THIS void sti_deleteAll(IndexMemory *m)
    and kept beside it, so the two can never disagree. */
 THIS LangIdentifier *sti_langCtor(LangIdentifier *l)
 {
-    l->id = 0;
-    l->id = (0u << 16) | (0u << 8) | 0u;
+    l->packed = 0;
+    l->packed = (0u << 16) | (0u << 8) | 0u;
     lang_setString(l);
     return l;
 }

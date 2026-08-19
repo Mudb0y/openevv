@@ -21,6 +21,7 @@
 #include "eci_synththread.h"
 #include "evv_abi.h"
 #include "evv_arena.h"
+#include "eci_engine.h"
 
 /* One phoneme, and how many of the numbers on its line go where. */
 #define RECORD_BYTES 0x30
@@ -32,14 +33,6 @@
 #define PHONEME_KEY "Phoneme%u"
 
 /* The reader is built on the stack, so its size has to be right. */
-typedef struct IniFileReader {
-    const char *text;
-    int32_t     room;
-    int32_t     unused_08;
-    char        gap[0x110];
-    int32_t     at;
-    int32_t     size;
-} IniFileReader;
 
 typedef struct PhonemeData {
     const void *vt;        /* +0x00 */

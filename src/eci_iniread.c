@@ -23,6 +23,7 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "eci_engine.h"
 
 /* Where the blob is and how long it is. Both are built into the engine. */
 extern const char eciIni[] MANGLED("?eciIni@@3QBDB");
@@ -30,15 +31,6 @@ extern const int32_t      eciIniSize MANGLED("?eciIniSize@@3HB");
 
 extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
 extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
-
-typedef struct IniFileReader {
-    const char *text;       /* +0x000 */
-    int32_t     room;       /* +0x004, only used by the growing buffer */
-    int32_t     unused_08;
-    char        gap[0x110]; /* +0x00c, never touched from here */
-    int32_t     at;         /* +0x11c, where the walk has got to */
-    int32_t     size;       /* +0x120 */
-} IniFileReader;
 
 /* The blob ends on this, read as a signed character. */
 #define INI_END  (-1)

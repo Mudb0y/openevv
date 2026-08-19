@@ -119,9 +119,7 @@ const uint8_t ConversionTable[256] = {
     0xf0,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,0xf8,0xf9,0xfa,0xfb,0xfc,0xfd,0xfe,0xff,
 };
 
-
-/* Where the synthesis thread keeps its corpora. */
-#define ST_CORPORA_AT(t) (*(void **)((char *)(t) + 0x3c0))
+#define ST_CORPORA_AT(t) ST_CORPORA((SynthThread *)(t))
 
 int rz_isRomExist(int32_t family, int32_t dialect);
 void rz_removeUnusedByCode(RomanizerManager *m, uint8_t f, uint8_t d);
@@ -302,7 +300,6 @@ THIS void rz_convertText(RomanizerManager *m, uint8_t *text)
     for (; *text; text++)
         *text = ConversionTable[*text];
 }
-
 
 /* What a character that means something to the engine is replaced with.
    Four backslashes and a space is not a typo: the engine strips one layer

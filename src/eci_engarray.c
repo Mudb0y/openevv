@@ -18,30 +18,9 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
-
+#include "eci_engine.h"
 
 /* Embedded in both the list and the array, so its size has to be right. */
-typedef struct IniFileReader {
-    const char *text;
-    int32_t     room;
-    int32_t     unused_08;
-    char        gap[0x110];
-    int32_t     at;
-    int32_t     size;
-} IniFileReader;
-
-typedef struct EngineList {
-    void        **data;
-    uint8_t       langs;
-    uint8_t       dialects;
-    uint8_t       pad_06[2];
-    IniFileReader ini;
-} EngineList;
-
-typedef struct EngineArray {
-    EngineList    base;  /* +0x000 */
-    IniFileReader ini;   /* +0x12c, the array's own, not the list's */
-} EngineArray;
 
 /* What the list keeps in a slot. The callback word is never set here: the
    base leaves it alone and so does this, which is the original's doing. */
@@ -109,7 +88,6 @@ THIS void        *ed_deleteItself(EngineData *e, int32_t freeIt);
 THIS EngineData  *ea_getEngineData(EngineArray *a, const void *lang);
 THIS const char  *ea_getLibraryName(EngineArray *a, const void *lang);
 
-
 /* Make one, try it, and keep it only if it started without complaint. The
    name is taken but not used: this build has the engine linked in. */
 THIS EngineData *ed_ctor(EngineData *e, const char *name)
@@ -160,7 +138,6 @@ THIS void *ed_deleteItself(EngineData *e, int32_t freeIt)
         cpp_delete(e);
     return e;
 }
-
 
 /* Only one language has a library, and the caller frees what comes back.
    When the language is not that one the buffer is still allocated and then

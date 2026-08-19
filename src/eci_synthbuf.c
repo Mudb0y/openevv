@@ -81,7 +81,6 @@ static const char CMD_CONCATENATIVE[] = "`esp2";
 static const char CMD_SAMPLES[] = "`esp1";
 
 /* What the caller hands down to say how it wants the samples. */
-typedef struct { int32_t layout, rate, width; } SampleFormat;
 
 /* And what the sound manager keeps about a format it is already playing.
    Only the fields the comparison reaches are named. */

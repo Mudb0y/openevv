@@ -13,9 +13,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "evv_abi.h"
-
-
-typedef struct { int32_t packed; char text[12]; char pad_10[4]; } LangIdentifier;
+#include "eci_synththread.h"
 
 /* The parameters, as eci_state.c lays them out. */
 typedef struct {
@@ -25,12 +23,16 @@ typedef struct {
     uint8_t mutex[0x0c];    /* +0x58 */
 } ECIstate;
 
+/* What text passes through on the way in. Two words of it are read here and
+   the whole of it lives in eci_textfilter.c. */
+typedef struct { void *thread; void *state; } TextFilter;
+
 typedef struct {
-    void    *thread;        /* +0x00 */
-    uint8_t  queue[0x70];   /* +0x04, the messages coming back */
-    ECIstate state;         /* +0x74 */
-    uint8_t  filter[8];     /* +0xd8, what text passes through on the way in */
-    int32_t  error;         /* +0xe0, how the last thing went */
+    SynthThread *thread;       /* +0x00 */
+    ETIappMessageQueue queue;  /* +0x04, the messages coming back */
+    ECIstate  state;           /* +0x74 */
+    TextFilter filter;         /* +0xd8 */
+    int32_t   error;           /* +0xe0, how the last thing went */
 } ECIinstance;
 
 /* A thread is thrown away through the first slot of its table, with one
@@ -191,16 +193,16 @@ THIS ECIinstance *ei_ctor(ECIinstance *self)
 {
     void *raw;
 
-    aq_ctor(self->queue);
+    aq_ctor(&self->queue);
     es_ctor(&self->state);
-    tf_ctor(self->filter);
-    raw = cpp_new(0x3e4);
-    self->thread = raw ? stl_ctor(raw, self->queue, &self->state) : 0;
+    tf_ctor(&self->filter);
+    raw = cpp_new(sizeof(SynthThread));
+    self->thread = raw ? stl_ctor(raw, &self->queue, &self->state) : 0;
     if (self->thread == 0) {
         self->error = -2;
         return self;
     }
-    self->error = *(const int32_t *)((const char *)self->thread + 0x3bc);
+    self->error = ST_STATUS((SynthThread *)self->thread);
     if (self->error == 0)
         self->error = es_setInitialState(&self->state, self->thread, 0);
     return self;
@@ -210,11 +212,11 @@ THIS ECIinstance *ei_ctor_lang(ECIinstance *self, int32_t lang)
 {
     void *raw;
 
-    aq_ctor(self->queue);
+    aq_ctor(&self->queue);
     es_ctor(&self->state);
-    tf_ctor(self->filter);
-    raw = cpp_new(0x3e4);
-    self->thread = raw ? stl_ctorWithLanguage(raw, self->queue, &self->state, lang) : 0;
+    tf_ctor(&self->filter);
+    raw = cpp_new(sizeof(SynthThread));
+    self->thread = raw ? stl_ctorWithLanguage(raw, &self->queue, &self->state, lang) : 0;
     if (self->thread == 0) {
         self->error = -2;
         return self;
@@ -229,9 +231,9 @@ THIS void ei_dtor(ECIinstance *self)
         (*(ThreadVtbl *const *)self->thread)->destroy(self->thread, 1);
         self->thread = 0;
     }
-    tf_dtor(self->filter);
+    tf_dtor(&self->filter);
     es_dtor(&self->state);
-    aq_dtor(self->queue);
+    aq_dtor(&self->queue);
 }
 
 /* ---- the ones that are not plain forwarding ---------------------------- */
@@ -265,7 +267,8 @@ THIS int32_t ei_reg_callback(ECIinstance *self, void *cb, void *a, int16_t b,
 THIS int32_t ei_add_text(ECIinstance *self, void *a, int32_t b, int32_t c,
                          int32_t d, int32_t f)
 {
-    return tf_addText(self->filter, a, b, c, d, f, &self->state, self->thread);
+    return tf_addText(&self->filter, a, b, c, d, f, &self->state,
+                      self->thread);
 }
 
 THIS int32_t ei_set_param(ECIinstance *self, int32_t k, int32_t p, int32_t v)
@@ -500,7 +503,6 @@ THIS void ei_get_filter_desc(ECIinstance *self, int32_t a, uint32_t b, char *c)
 {
     stm_getFilterDescription(self->thread, a, b, c);
 }
-
 
 ALIAS("??0ECIinstance@@QAE@XZ", "ei_ctor");
 ALIAS("??0ECIinstance@@QAE@W4ECILanguageDialect@@@Z", "ei_ctor_lang");

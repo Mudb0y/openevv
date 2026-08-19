@@ -15,18 +15,11 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "eci_engine.h"
 
 #define ECI_PARAMETER_ERROR  0x80
 
 /* The reader is built on the stack, so its size has to be right. */
-typedef struct IniFileReader {
-    const char *text;
-    int32_t     room;
-    int32_t     unused_08;
-    char        gap[0x110];
-    int32_t     at;
-    int32_t     size;
-} IniFileReader;
 
 extern THIS IniFileReader *ini_ctor(IniFileReader *r);
 extern THIS void           ini_dtor(IniFileReader *r);

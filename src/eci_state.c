@@ -20,15 +20,11 @@
 #include <stdint.h>
 #include "evv_abi.h"
 #include "evv_arena.h"
+#include "eci_synththread.h"
 
 #define STD  __attribute__((stdcall))
 
 /* How ECI names a language: a packed number and the same thing as text. */
-typedef struct {
-    int32_t packed;    /* +0x00 */
-    char    text[12];  /* +0x04 */
-    char    pad_10[4];
-} LangIdentifier;
 
 typedef struct {
     int32_t param[20];      /* +0x00 */
@@ -49,7 +45,6 @@ typedef struct {
 typedef struct { const EngineVtbl *vt; } EngineWrapper;
 
 /* ---- what the original supplies -------------------------------------- */
-
 
 extern THIS int32_t st_changeRomParam(void *t, int32_t p, int32_t v)
     MANGLED("?changeRomParam@SynthThread@@QAEJJJ@Z");
@@ -425,11 +420,11 @@ static THIS int32_t setVoice(ECIstate *s, int32_t p, int32_t v, void *thread)
     case 12:
         /* Volume is told to the synthesizer before the annotation when the
            thread has no output of its own, and after it when it has. */
-        if (*(void *const *)((const char *)thread + 0x3c0) == 0)
+        if (ST_CORPORA((SynthThread *)thread) == 0)
             rc = st_changeVolume(thread, p, v);
         if (rc == 0)
             rc = es_sendAnnotationInt(s, "vv", v, thread);
-        if (*(void *const *)((const char *)thread + 0x3c0) != 0)
+        if (ST_CORPORA((SynthThread *)thread) != 0)
             rc = st_changeVolume(thread, p, v);
         return rc;
 
@@ -615,7 +610,6 @@ THIS int32_t es_setInitialState(ECIstate *s, void *thread, int32_t lang)
     ini_dtor(ini);
     return rc;
 }
-
 
 ALIAS("??0LangIdentifier@@QAE@PBD@Z", "lang_ctor");
 WEAK_ALIAS("?setString@LangIdentifier@@AAEXXZ", "lang_setString");

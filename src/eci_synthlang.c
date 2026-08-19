@@ -54,7 +54,6 @@ typedef ENGCALL void (*EngSetWordStart)(void *engine, IndexCallback cb,
 
 /* The three words of sample format the outside world hands in sit a little
    way into whatever it handed in. */
-typedef struct { int32_t a, b, c; } SampleFormat;
 #define OUTFMT_AT 0x0c
 
 static const char CMD_CONCATENATIVE[] = "`esp2";
@@ -178,7 +177,7 @@ static void wireReporting(SynthThread *t, UserCallback user,
 /* The whole engine changes under us. */
 static void switchEngine(SynthThread *t, LangIdentifier *lang)
 {
-    LangIdentifier *current = (LangIdentifier *)ST_AT(t, 0x2e0);
+    LangIdentifier *current = &t->lang;
 
     ea_removeEngine(ST_ENGINES(t), current);
     if (ST_ROMAN(t))
@@ -198,13 +197,13 @@ static void switchEngine(SynthThread *t, LangIdentifier *lang)
        the way rather than for what it says. */
     stw_isOldEngine(t);
 
-    current->id = lang->id;
+    current->packed = lang->packed;
     lang_setString(current);
 
     if (!stw_engineInitialize(t, ST_ENGINE(t)))
         stb_postEngineError(t);
     fm_autoLoadFilter(ST_FILTERS(t), lang);
-    es_paramFromEngine(ST_STATE(t), ECI_PARAM_LANGUAGE, (int32_t)lang->id);
+    es_paramFromEngine(ST_STATE(t), ECI_PARAM_LANGUAGE, (int32_t)lang->packed);
 
     /* Take the old reporting down before the format moves under it. */
     wireReporting(t, 0, 0);
@@ -224,9 +223,9 @@ static void switchEngine(SynthThread *t, LangIdentifier *lang)
             (const int32_t *)((char *)ST_OUTFMT(t) + OUTFMT_AT);
         SampleFormat fmt;
 
-        fmt.a = given[0];
-        fmt.c = given[2];
-        fmt.b = given[1];
+        fmt.layout = given[0];
+        fmt.width = given[2];
+        fmt.rate = given[1];
         if (stw_createAudioConverter(t, &fmt))
             stb_postEngineError(t);
     }
@@ -234,7 +233,7 @@ static void switchEngine(SynthThread *t, LangIdentifier *lang)
     /* And now put the reporting back, on the new engine. */
     wireReporting(t, stb_staticUserIndexCallback, stb_staticWordCallback);
 
-    tellTheOthers(t, (int32_t)lang->id);
+    tellTheOthers(t, (int32_t)lang->packed);
 
     if (cm_usingConcatenativeEngine(ST_CONCAT(t))) {
         tellCaller(t, 1);
@@ -295,7 +294,7 @@ THIS void changeLanguageRun(SynthThread *t, LangIdentifier *lang, int32_t seq)
     sy_mutexWait(lock, -1);
 
     if (lang)
-        same_engine = (lang->id & LANG_ENGINE_MASK)
+        same_engine = (lang->packed & LANG_ENGINE_MASK)
                       == (ST_ENGINE_ID(t) & LANG_ENGINE_MASK);
 
     if (!same_engine) {
@@ -305,13 +304,13 @@ THIS void changeLanguageRun(SynthThread *t, LangIdentifier *lang, int32_t seq)
         int same_dialect = 0;
 
         if (lang)
-            same_dialect = lang->id == ST_ENGINE_ID(t);
+            same_dialect = lang->packed == ST_ENGINE_ID(t);
         if (!same_dialect) {
-            LangIdentifier *current = (LangIdentifier *)ST_AT(t, 0x2e0);
+            LangIdentifier *current = &t->lang;
 
-            current->id = lang->id;
+            current->packed = lang->packed;
             lang_setString(current);
-            tellTheOthers(t, (int32_t)lang->id);
+            tellTheOthers(t, (int32_t)lang->packed);
         }
     }
 

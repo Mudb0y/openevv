@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "evv_abi.h"
+#include "eci_engine.h"
 
 /* The concatenative table is the same again with a rate between the
    dialect and the voice, and it belongs to an instance rather than to the
@@ -48,14 +49,6 @@
 
 /* Embedded here by value, so its size has to be right; it is the same
    block eci_iniread.c works in. */
-typedef struct IniFileReader {
-    const char *text;
-    int32_t     room;
-    int32_t     unused_08;
-    char        gap[0x110];
-    int32_t     at;
-    int32_t     size;
-} IniFileReader;
 
 extern THIS IniFileReader *ini_ctor(IniFileReader *r)
     MANGLED("??0IniFileReader@@QAE@XZ");

@@ -22,24 +22,9 @@
 #include <ctype.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "eci_engine.h"
 
 /* The reader is embedded in the list, so its size has to be right. */
-typedef struct IniFileReader {
-    const char *text;
-    int32_t     room;
-    int32_t     unused_08;
-    char        gap[0x110];
-    int32_t     at;
-    int32_t     size;
-} IniFileReader;
-
-typedef struct EngineList {
-    void        **data;      /* +0x00, one slot per language and dialect */
-    uint8_t       langs;     /* +0x04, the widest language numbered */
-    uint8_t       dialects;  /* +0x05, and the widest dialect, plus one */
-    uint8_t       pad_06[2];
-    IniFileReader ini;       /* +0x08 */
-} EngineList;
 
 /* A language identifier: the packed word, then the same as text. */
 #define LANG_PACKED(l)  (*(const int32_t *)(l))

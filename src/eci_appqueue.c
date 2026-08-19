@@ -20,8 +20,6 @@
 #include "evv_abi.h"
 #include "eci_objects.h"
 
-typedef struct ETIappMessageQueue ETIappMessageQueue;
-
 struct MessageVtbl {
     THIS void    *(*destroy)(ETImessage *self, int32_t free_it);
     THIS uint32_t (*addRef)(ETImessage *self);
@@ -69,19 +67,6 @@ struct QueueVtbl {
 typedef struct QueueVtbl QueueVtbl;
 
 typedef int32_t (*Callback)(void *inst, int32_t a, int32_t b, void *param);
-
-struct ETIappMessageQueue {
-    ETImessageQueue base;   /* +0x00 */
-    Callback cb;            /* +0x4c */
-    void    *cb_param;      /* +0x50 */
-    void    *cb_inst;       /* +0x54 */
-    int32_t  posted;        /* +0x58 */
-    int32_t  seen;          /* +0x5c */
-    int32_t  stopping;      /* +0x60 */
-    ETImessage *held;       /* +0x64, one the callback asked to defer */
-    void    *win;           /* +0x68 */
-    int16_t  post_flag;     /* +0x6c */
-};
 
 /* What poll and synchronize answer. */
 #define APP_IDLE      1

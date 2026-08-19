@@ -118,7 +118,6 @@ typedef struct {
 
 /* And the format the layer above hands down: how the samples are laid out,
    what rate they are at, and one more word this layer only carries. */
-typedef struct { int32_t layout, rate, extra; } SampleFormat;
 
 extern THIS void stb_postEngineError(SynthThread *t)
     MANGLED("?postEngineError@SynthThread@@AAEXXZ");
@@ -550,16 +549,16 @@ THIS void stw_stopSynthesis(SynthThread *t, int32_t seq)
 THIS int32_t stw_checkLanguage(SynthThread *t, LangIdentifier *want)
 {
     void *engine = 0;
-    uint8_t family = (uint8_t)(want->id >> 16);
-    uint8_t dialect = (uint8_t)(want->id & 0xff);
-    uint8_t variant = (uint8_t)((want->id & 0xff00) >> 8);
+    uint8_t family = (uint8_t)(want->packed >> 16);
+    uint8_t dialect = (uint8_t)(want->packed & 0xff);
+    uint8_t variant = (uint8_t)((want->packed & 0xff00) >> 8);
     LangIdentifier *probe;
     uint8_t tried = 0;
 
     probe = (LangIdentifier *)cpp_new(0x14);
     if (probe) {
-        probe->id = 0;
-        probe->id = ((uint32_t)family << 16) | ((uint32_t)variant << 8)
+        probe->packed = 0;
+        probe->packed = ((uint32_t)family << 16) | ((uint32_t)variant << 8)
                     | (dialect == 3 ? 0u : dialect);
         lang_setString(probe);
     }
@@ -569,11 +568,11 @@ THIS int32_t stw_checkLanguage(SynthThread *t, LangIdentifier *want)
             engine = ea_getEngine(ST_ENGINES(t), probe);
             if (!engine) {
                 tried += 1;
-                probe->id = ((uint32_t)family << 16)
+                probe->packed = ((uint32_t)family << 16)
                             | ((uint32_t)variant << 8) | tried;
                 lang_setString(probe);
             } else {
-                want->id = ((uint32_t)family << 16)
+                want->packed = ((uint32_t)family << 16)
                            | ((uint32_t)variant << 8) | tried;
                 lang_setString(want);
             }
@@ -648,11 +647,11 @@ THIS int32_t stw_createAudioConverter(SynthThread *t, SampleFormat *fmt)
         rc = command(ST_ENGINE(t), line);
         ST_DIRECT(t) = 0;
         if (rc == OK) {
-            SampleFormat *kept = (SampleFormat *)ST_FORMAT(t);
+            SampleFormat *kept = ST_FORMAT(t);
 
             kept->layout = fmt->layout;
             kept->rate = fmt->rate;
-            kept->extra = fmt->extra;
+            kept->width = fmt->width;
         }
     }
 
