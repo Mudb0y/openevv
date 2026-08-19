@@ -16,11 +16,25 @@ length stored into a frame slot, one packed into a byte of a constant and
 shifted out, and one written into the name of the wrapper rule the arm calls,
 without having to tell them apart.
 
+An arm may also lay a record into a statement other than the one the word is
+said in, which is a mark the rule leaves on its way rather than anything
+spoken. The statement is the fourth thing handed to the call, and which one a
+rule speaks in is settled by a vote over the records its arms name for
+themselves -- a record a wrapper names could be either. A mark counted as a
+reading had the suffix `ance' saying "Xx n s or d".
+
+An insert this cannot read at all is stepped over rather than reported, which
+also means whatever is found after it is not the whole of what the word says.
+
 Two shapes answer nothing rather than guess. An arm may test something and
 take one of two ways -- an abbreviation read one way before a name and another
 before a number -- and both ways are followed, an answer given only when they
 agree. And an arm may lay a word down in pieces, as the currencies do, which
 is not one record and is not reported as one.
+
+A wrapper may name its own record rather than take one, which is how a suffix
+that always says the same thing is written. Those read, but there is nothing
+of the word's to change and they say so.
 
 Writing appends: the record goes at the end of its blob and the pools grow, so
 nothing that names the old bytes is disturbed. Three ways in, in order of how
@@ -134,6 +148,10 @@ class Rules:
                       census.carve_blobs(open(CONSTS_C).read()).items()}
         self.c = census.Code(self.code, self.entries, self.imm, self.syms)
         self.touched = False
+        # Which statement each rule's records go into, worked out once: it
+        # costs a walk of every arm and nothing about it changes as records
+        # are rewritten.
+        self.fields = {}
 
     def index_of(self, name):
         for i, r in enumerate(self.rules):
@@ -297,6 +315,11 @@ class Arms:
         self.default = self._default() if self.slot is not None else None
         self.template = self._template() if self.slot is not None else 'movb'
         self._owners = None
+        # Worked out with nothing filtered, since the filtering depends on it.
+        self.field = None
+        if name not in rules.fields:
+            rules.fields[name] = self._field()
+        self.field = rules.fields[name]
         self.ok = True
 
     # ---- reading ---------------------------------------------------------
@@ -443,14 +466,14 @@ class Arms:
             return None, None, None
 
         def key(f):
-            sym, length, where = f
+            sym, length, where, field = f
             return (sym[0] if sym else None,
                     length.n if length else None)
 
         first = key(found[0])
         if any(key(f) != first for f in found[1:]):
             return None, None, None
-        return found[0]
+        return found[0][:3]
 
     def _walk(self, at, state, pushes, sym, seen, depth, found, pieces=False):
         """One way through an arm, collecting what it hands over. A branch
@@ -472,21 +495,55 @@ class Arms:
 
             if shape[0] == 'call':
                 name = shape[1]
-                if 'insert_2pt_s' in name:
+                if 'insert' in name:
+                    length = field = None
+                    got = None
+                    if name.startswith('insert_'):
+                        length = pushes[2] if len(pushes) > 2 else None
+                        field = (pushes[3].n if len(pushes) > 3 and pushes[3]
+                                 else None)
+                    elif self.rules.index_of(name) is not None:
+                        got = self._wrapper(name)
+                        if got:
+                            field = got[2]
+                        length = Arms(self.rules, name)._pushed()
+
+                    if length is None or length.n is None:
+                        # An insert this cannot read. Skipping it is the only
+                        # honest thing, and it means whatever is found later
+                        # is not the whole of what the word says.
+                        pieces = True
+                        for r in CLOBBERED:
+                            state[0][r] = None
+                        pushes = []
+                        p += size
+                        continue
+
+                    if (self.field is not None and field is not None
+                            and field != self.field):
+                        # Laid into another statement, so it is a mark the
+                        # rule leaves on its way, not what the word says.
+                        for r in CLOBBERED:
+                            state[0][r] = None
+                        pushes = []
+                        p += size
+                        continue
+
                     # An arm that lays a word down in pieces -- the currencies
                     # spell out an abbreviation, then a space, then a name --
                     # is not one record and is not reported as one.
                     if pieces:
                         return
-                    if name.startswith('insert_'):
-                        length = pushes[2] if len(pushes) > 2 else None
-                        found.append((sym, length, ('here', p)))
-                    elif self.rules.index_of(name) is not None:
-                        length = Arms(self.rules, name)._pushed()
-                        found.append((sym, length, ('wrapper', p, name)))
+                    # A wrapper may name the record itself rather than take
+                    # one, which is how a suffix that always says the same
+                    # thing is written; there is then nothing in the arm
+                    # naming it, and nothing of the word's to change.
+                    if sym is None and got and got[0] is not None:
+                        sym = (got[0], None, None)
+                    found.append((sym, length,
+                                  ('here', p) if name.startswith('insert_')
+                                  else ('wrapper', p, name), field))
                     return
-                if 'insert' in name:
-                    pieces = True
                 for r in CLOBBERED:
                     state[0][r] = None
                 pushes = []
@@ -509,6 +566,24 @@ class Arms:
             self._step(p, state, pushes)
             p += size
 
+    def _field(self):
+        """Which statement this rule's records go into. A rule may also leave
+        a mark in another statement as it goes, and a mark is not what the word
+        says. The vote is over the records the arm names for itself, which are
+        certainly the word's own; a wrapper naming its own record could be
+        either."""
+        votes = {}
+        for at in self.arms:
+            found = []
+            regs, slots = self._state0()
+            self._walk(at, (list(regs), dict(slots)), [], None, set(), 0,
+                       found, False)
+            for sym, length, where, field in found:
+                if field is None or sym is None or sym[1] is None:
+                    continue
+                votes[field] = votes.get(field, 0) + 1
+        return max(votes, key=votes.get) if votes else None
+
     def _wrapper(self, name):
         """What one of the rule's own laying-down wrappers does: the record it
         names itself, if it names one, and how long a record it lays. A
@@ -527,7 +602,9 @@ class Arms:
             if shape[0] == 'call':
                 if 'insert' in shape[1]:
                     length = pushes[2] if len(pushes) > 2 else None
-                    return fixed, (length.n if length else None)
+                    field = pushes[3] if len(pushes) > 3 else None
+                    return (fixed, (length.n if length else None),
+                            (field.n if field else None))
                 pushes = []
                 continue
             if shape[0] in ('jump', 'branch', 'return', 'switch'):
@@ -549,7 +626,7 @@ class Arms:
                    set(), 0, found, False)
 
         out, seen = [], set()
-        for sym, length, where in reversed(found):
+        for sym, length, where, field in reversed(found):
             if sym is None or length is None or length.n is None:
                 return None
             key = (sym[0], length.n)
@@ -587,25 +664,40 @@ class Arms:
                 name = shape[1]
                 if 'insert' in name:
                     if name.startswith('insert_'):
-                        rec = pushes[1] if len(pushes) > 1 else None
                         length = pushes[2] if len(pushes) > 2 else None
+                        field = pushes[3] if len(pushes) > 3 else None
+                        here = field.n if field else None
+                        if out and here is not None and here != out[0][1]:
+                            for r in CLOBBERED:
+                                state[0][r] = None
+                            pushes = []
+                            p += size
+                            continue
                         if sym is None or length is None or length.n is None:
                             return None
-                        out.append(Part(sym[0][0], sym[0][1], length.n,
-                                        sym[1], sym[2], p, False))
+                        out.append((Part(sym[0][0], sym[0][1], length.n,
+                                         sym[1], sym[2], p, False), here))
                     else:
                         got = self._wrapper(name)
                         if got is None:
                             return None
-                        fixed, length = got
+                        fixed, length, field = got
                         if length is None:
                             return None
+                        if out and field is not None and field != out[0][1]:
+                            # A record laid into another statement is a mark
+                            # the rule leaves, not what the word says.
+                            for r in CLOBBERED:
+                                state[0][r] = None
+                            pushes = []
+                            p += size
+                            continue
                         if fixed is not None:
-                            out.append(Part(fixed[0], fixed[1], length,
-                                            None, None, p, True))
+                            out.append((Part(fixed[0], fixed[1], length,
+                                             None, None, p, True), field))
                         elif sym is not None:
-                            out.append(Part(sym[0][0], sym[0][1], length,
-                                            sym[1], sym[2], p, False))
+                            out.append((Part(sym[0][0], sym[0][1], length,
+                                             sym[1], sym[2], p, False), field))
                         else:
                             return None
                     sym = None
@@ -627,7 +719,7 @@ class Arms:
             self._step(p, state, pushes)
             p += size
 
-        return out or None
+        return [part for part, _field in out] or None
 
     def _reach(self, at, limit=200):
         """Every instruction one arm can run through on its way to laying its
@@ -767,6 +859,12 @@ class Arms:
             return None
 
         (blob, off), sym_at, sym_where = sym
+        if sym_at is None:
+            # Named by the rule that lays it, so there is no instruction of
+            # this word's to point somewhere else.
+            return Record(blob, off, length.n, 'fixed', (None, None, None),
+                          (length, where), self._continuation(at),
+                          self.arm_slots()[act - 1])
         size = self.insns[sym_at][4]
         how = {'here': 'slot', 'wrapper': 'wrapper'}.get(where[0], '?')
         if where[0] == 'here' and length.at is not None:
@@ -825,7 +923,8 @@ class Arms:
         down is any use, since that is what tells us how this rule does it."""
         got = self.records()
         for i in range(1, len(self.arms) + 1):
-            if i not in used and i in got and got[i].cont is not None:
+            if (i not in used and i in got and got[i].cont is not None
+                    and got[i].sym_insn[0] is not None):
                 return i
         return None
 
@@ -836,7 +935,7 @@ class Arms:
         pointed at the one that already does it."""
         out = {}
         for act, r in self.records().items():
-            if r.cont is not None:
+            if r.cont is not None and r.sym_insn[0] is not None:
                 out.setdefault(r.length, r)
         return out
 
@@ -996,6 +1095,11 @@ class Arms:
 
         sym_at, sym_size, sym_where = r.sym_insn
         length, where = r.count_insn
+        if sym_at is None:
+            raise ValueError('%s action %d has its record named by the rule '
+                             'that lays it rather than by the word, so there '
+                             'is nothing of this word\'s to change'
+                             % (self.name, act))
 
         off = self.rules.add_record(r.blob, data)
         sym = self.rules.add_sym(r.blob, off)

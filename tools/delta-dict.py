@@ -73,7 +73,9 @@ HEADER = """\
 # out in order with `then' between them -- the currencies spell an
 # abbreviation, then a space, then a name -- and any piece the rule names
 # itself rather than the word is shared with every word using it and cannot be
-# changed for one of them. A word read one way before one thing and another
+# changed for one of them, and neither can one the rule that lays it names for
+# itself, which is how a suffix that always says the same thing is written.
+# A word read one way before one thing and another
 # way before another has both written out with `or' between them; those are
 # shown as they are and cannot be changed, since which of the two is taken is
 # decided in code the other words using that test run through. A phone or a character that no name picks out on its own is
