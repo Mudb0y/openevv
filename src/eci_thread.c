@@ -18,27 +18,15 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "evv_abi.h"
+#include "eci_objects.h"
 
-
-typedef struct ETIThread ETIThread;
-
-typedef struct {
+struct ETIThreadVtbl {
     THIS void    *(*destroy)(ETIThread *self, int32_t free_it);
     THIS void     (*terminate)(ETIThread *self);
     THIS int32_t  (*waitForExit)(ETIThread *self);
     THIS uint32_t (*run)(ETIThread *self);
-} ThreadVtbl;
-
-struct ETIThread {
-    const ThreadVtbl *vt;  /* +0x00 */
-    void *done;            /* +0x04, the body has come back */
-    void *may_finish;      /* +0x08, and may now stop */
-    void *gate;            /* +0x0c, one start at a time */
-    void *finished;        /* +0x10 */
-    int32_t task;          /* +0x14 */
-    int32_t status;        /* +0x18 */
-    int32_t asked_to_stop; /* +0x1c */
 };
+typedef struct ETIThreadVtbl ThreadVtbl;
 
 /* What getStatus answers. */
 #define TH_NEW      0
@@ -360,7 +348,6 @@ THIS int32_t th_waitForExit(ETIThread *t)
 const ThreadVtbl vtbl_thread = {
     th_destroy, th_terminate, th_waitForExit, th_run
 };
-
 
 ALIAS("??_7ETIThread@@6B@", "vtbl_thread");
 ALIAS("??0ETIThread@@IAE@XZ", "th_ctor");

@@ -21,21 +21,15 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "eci_objects.h"
 
-typedef struct ETIqueue {
-    const void *vt;         /* +0x00 */
-    void      **array;      /* +0x04 */
-    uint32_t    capacity;   /* +0x08 */
-    uint32_t    head;       /* +0x0c */
-    uint32_t    tail;       /* +0x10 */
-} ETIqueue;
-
-typedef struct ETIqueueVtbl {
+struct ETIqueueVtbl {
     THIS void    *(*destroy)(ETIqueue *self, int32_t free_it);
     THIS int32_t  (*push)(ETIqueue *self, void *p);
     THIS int32_t  (*pop)(ETIqueue *self, void **out);
     THIS int32_t  (*peekHead)(ETIqueue *self, void **out);
-} ETIqueueVtbl;
+};
+typedef struct ETIqueueVtbl ETIqueueVtbl;
 
 extern const ETIqueueVtbl vtbl_etiqueue;
 

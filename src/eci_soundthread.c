@@ -19,11 +19,11 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "evv_abi.h"
-
+#include "eci_objects.h"
 
 typedef struct ETImessage ETImessage;
 
-typedef struct {
+struct MessageVtbl {
     THIS void    *(*destroy)(ETImessage *self, int32_t free_it);
     THIS uint32_t (*addRef)(ETImessage *self);
     THIS uint32_t (*release)(ETImessage *self);
@@ -31,19 +31,10 @@ typedef struct {
     THIS int32_t  (*equalsMessage)(ETImessage *self, ETImessage *other);
     THIS int32_t  (*equalsType)(ETImessage *self, uint32_t type);
     THIS void     (*run)(ETImessage *self);
-} MessageVtbl;
-
-struct ETImessage {
-    const MessageVtbl *vt;
-    uint32_t type;
-    int32_t  result;
-    int32_t  refs;
-    int32_t  is_send;
-    uint8_t  lock[0x0c];
 };
+typedef struct MessageVtbl MessageVtbl;
 
-typedef struct ETImessageQueue ETImessageQueue;
-typedef struct {
+struct QueueVtbl {
     THIS int16_t (*sendMessage)(ETImessageQueue *q, ETImessage *m, int32_t a,
                                 void *w, int32_t b);
     THIS int16_t (*postMessage)(ETImessageQueue *q, ETImessage *m, int32_t a,
@@ -54,51 +45,26 @@ typedef struct {
     THIS void    (*resume)(ETImessageQueue *q);
     THIS void    (*signalProcessed)(ETImessageQueue *q, ETImessage *m);
     THIS void    (*clearMessages)(ETImessageQueue *q);
-} QueueVtbl;
-typedef struct ETIqueue ETIqueue;
-typedef struct {
+};
+typedef struct QueueVtbl QueueVtbl;
+struct ETIqueueVtbl {
     THIS void   *(*destroy)(ETIqueue *self, int32_t free_it);
     THIS int32_t (*push)(ETIqueue *self, void *p);
     THIS int32_t (*pop)(ETIqueue *self, void **out);
     THIS int32_t (*peekHead)(ETIqueue *self, void **out);
-} ETIqueueVtbl;
-struct ETIqueue {
-    const ETIqueueVtbl *vt;   /* +0x00 */
-    void              **array; /* +0x04 */
-    uint32_t            capacity; /* +0x08 */
-    uint32_t            head;  /* +0x0c */
-    uint32_t            tail;  /* +0x10 */
 };
+typedef struct ETIqueueVtbl ETIqueueVtbl;
 
-struct ETImessageQueue {
-    const QueueVtbl *vt;      /* +0x00 */
-    ETIqueue queue;           /* +0x04 */
-    uint8_t  lock[0x0c];      /* +0x18 */
-    uint8_t  ready[0x0c];     /* +0x24 */
-    int32_t  suspended;       /* +0x30 */
-    uint8_t  done[0x0c];      /* +0x34 */
-    uint8_t  send_lock[0x0c]; /* +0x40 */
-};
-
-typedef struct ETIThread ETIThread;
 typedef struct ETImessageQueueThread ETImessageQueueThread;
-typedef struct {
+struct ETImqThreadVtbl {
     THIS void    *(*destroy)(void *self, int32_t free_it);
     THIS void     (*terminate)(void *self);
     THIS int32_t  (*waitForExit)(void *self);
     THIS uint32_t (*run)(void *self);
     THIS void     (*setToTerminate)(void *self);
     THIS void     (*translateMessage)(void *self, ETImessage **m);
-} ThreadVtbl;
-
-struct ETImessageQueueThread {
-    const ThreadVtbl *vt;      /* +0x00 */
-    uint8_t  base[0x20 - 4];   /* the rest of ETIThread */
-    ETImessageQueue queue;     /* +0x20 */
-    uint8_t  turn[0x0c];       /* +0x6c */
-    uint8_t  gate[0x0c];       /* +0x78 */
-    int32_t  asked_to_stop;    /* +0x84 */
 };
+typedef struct ETImqThreadVtbl ThreadVtbl;
 
 /* The device, and the timer that keeps asking it how far it has got. */
 typedef struct { uint8_t opaque[0x40]; } SoundOutput;
@@ -676,7 +642,6 @@ const ThreadVtbl vtbl_sound = {
     (void *)snd_destroy_thread, qt_terminate, (void *)qt_waitForExit, qt_run,
     (void *)qt_setToTerminate, (void *)qt_translateMessage
 };
-
 
 ALIAS("??_7ETImessageQueueThread@@6B@", "vtbl_mqthread");
 ALIAS("??_7SoundThread@@6B@", "vtbl_sound");

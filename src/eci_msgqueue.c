@@ -18,17 +18,15 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "evv_abi.h"
-
+#include "eci_objects.h"
 
 /* Answers a post can give. */
 #define POST_FAILED    0
 #define POST_QUEUED    1
 #define POST_REFUSED   2
 
-typedef struct ETImessage ETImessage;
-
 /* Slot for slot as the original's table has them. */
-typedef struct {
+struct MessageVtbl {
     THIS void    *(*destroy)(ETImessage *self, int32_t free_it);
     THIS uint32_t (*addRef)(ETImessage *self);
     THIS uint32_t (*release)(ETImessage *self);
@@ -36,16 +34,8 @@ typedef struct {
     THIS int32_t  (*equalsMessage)(ETImessage *self, ETImessage *other);
     THIS int32_t  (*equalsType)(ETImessage *self, uint32_t type);
     THIS void     (*run)(ETImessage *self);
-} MessageVtbl;
-
-struct ETImessage {
-    const MessageVtbl *vt;  /* +0x00 */
-    uint32_t type;          /* +0x04 */
-    int32_t  result;        /* +0x08, one once the thread has run it */
-    int32_t  refs;          /* +0x0c */
-    int32_t  is_send;       /* +0x10, someone is waiting for the answer */
-    uint8_t  lock[0x0c];    /* +0x14 */
 };
+typedef struct MessageVtbl MessageVtbl;
 
 /* The one message the queue itself sends: stop. */
 typedef struct {
@@ -53,9 +43,7 @@ typedef struct {
     void      *thread;      /* +0x20 */
 } ETImsgQuit;
 
-typedef struct ETImessageQueue ETImessageQueue;
-
-typedef struct {
+struct QueueVtbl {
     THIS int16_t (*sendMessage)(ETImessageQueue *self, ETImessage *m,
                                 int32_t a, void *win, int32_t b);
     THIS int16_t (*postMessage)(ETImessageQueue *self, ETImessage *m,
@@ -66,39 +54,22 @@ typedef struct {
     THIS void    (*resume)(ETImessageQueue *self);
     THIS void    (*signalProcessed)(ETImessageQueue *self, ETImessage *m);
     THIS void    (*clearMessages)(ETImessageQueue *self);
-} QueueVtbl;
+};
+typedef struct QueueVtbl QueueVtbl;
 
 /* The queue of pointers underneath, which is a class of its own. */
-typedef struct ETIqueue ETIqueue;
-typedef struct {
+struct ETIqueueVtbl {
     THIS void   *(*destroy)(ETIqueue *self, int32_t free_it);
     THIS int32_t (*push)(ETIqueue *self, void *p);
     THIS int32_t (*pop)(ETIqueue *self, void **out);
     THIS int32_t (*peekHead)(ETIqueue *self, void **out);
-} ETIqueueVtbl;
-
-struct ETIqueue {
-    const ETIqueueVtbl *vt;   /* +0x00 */
-    void              **array; /* +0x04 */
-    uint32_t            capacity; /* +0x08 */
-    uint32_t            head;  /* +0x0c */
-    uint32_t            tail;  /* +0x10 */
 };
-
-struct ETImessageQueue {
-    const QueueVtbl *vt;      /* +0x00 */
-    ETIqueue queue;           /* +0x04 */
-    uint8_t  lock[0x0c];      /* +0x18 */
-    uint8_t  ready[0x0c];     /* +0x24, something is waiting to be run */
-    int32_t  suspended;       /* +0x30 */
-    uint8_t  done[0x0c];      /* +0x34, the last send has been answered */
-    uint8_t  send_lock[0x0c]; /* +0x40 */
-};
+typedef struct ETIqueueVtbl ETIqueueVtbl;
 
 /* A thread with a queue inside it, and the two events it is driven by. */
 typedef struct ETImessageQueueThread ETImessageQueueThread;
 
-typedef struct {
+struct ETImqThreadVtbl {
     THIS void   *(*destroy)(ETImessageQueueThread *self, int32_t free_it);
     THIS void    (*terminate)(ETImessageQueueThread *self);
     THIS int32_t (*waitForExit)(ETImessageQueueThread *self);
@@ -106,22 +77,8 @@ typedef struct {
     THIS void    (*setToTerminate)(ETImessageQueueThread *self);
     THIS void    (*translateMessage)(ETImessageQueueThread *self,
                                      ETImessage **m);
-} ThreadVtbl;
-
-struct ETImessageQueueThread {
-    const ThreadVtbl *vt;      /* +0x00 */
-    uint8_t pad_04[0x20 - 0x04];
-    ETImessageQueue queue;     /* +0x20 */
-    /* The queue is wider where a pointer is eight bytes, and there is
-       nothing to line the rest of the object up with: the original's own is
-       only ever linked beside a thirty-two bit build. */
-#if !defined(EVV_ARENA) || !EVV_ARENA
-    uint8_t pad_6c_gap[0x6c - 0x20 - sizeof(ETImessageQueue)];
-#endif
-    uint8_t turn[0x0c];        /* +0x6c, one round of the loop is over */
-    uint8_t quitting[0x0c];    /* +0x78 */
-    int32_t asked_to_stop;     /* +0x84 */
 };
+typedef struct ETImqThreadVtbl ThreadVtbl;
 
 /* ---- what the original supplies -------------------------------------- */
 
@@ -399,8 +356,8 @@ THIS uint32_t qt_run(ETImessageQueueThread *t)
    stops between two messages rather than in the middle of one. */
 THIS void qt_terminate(ETImessageQueueThread *t)
 {
-    sy_eventWait(t->quitting, -1);
-    sy_eventUnsignal(t->quitting);
+    sy_eventWait(t->gate, -1);
+    sy_eventUnsignal(t->gate);
 
     if (t->asked_to_stop == 0) {
         ETImsgQuit *q = cpp_new(sizeof *q);
@@ -419,7 +376,7 @@ THIS void qt_terminate(ETImessageQueueThread *t)
             m->vt->release(m);
         }
     }
-    sy_eventSignal(t->quitting);
+    sy_eventSignal(t->gate);
 }
 
 /* ---- the tables ------------------------------------------------------ */
@@ -437,7 +394,6 @@ const MessageVtbl vtbl_quit = {
     quit_destroy, msg_addRef, msg_release, msg_getType,
     msg_equalsMessage, msg_equalsType, quit_run
 };
-
 
 ALIAS("??_7ETImessage@@6B@", "vtbl_message");
 ALIAS("??_7ETImsgQuit@@6B@", "vtbl_quit");

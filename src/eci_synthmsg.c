@@ -28,6 +28,7 @@
 #include "eci_synththread.h"
 #include "evv_abi.h"
 #include "evv_arena.h"
+#include "eci_objects.h"
 
 /* What a post can answer. Only a plain "queued" commits the numbering. */
 #define POST_FAILED  0
@@ -41,7 +42,7 @@
 #define ERR_NO_SOUND   (-16)
 
 /* Slot for slot as the original's table has them. */
-typedef struct {
+struct MessageVtbl {
     THIS void    *(*destroy)(ETImessage *self, int32_t free_it);
     THIS uint32_t (*addRef)(ETImessage *self);
     THIS uint32_t (*release)(ETImessage *self);
@@ -49,16 +50,8 @@ typedef struct {
     THIS int32_t  (*equalsMessage)(ETImessage *self, ETImessage *other);
     THIS int32_t  (*equalsType)(ETImessage *self, uint32_t type);
     THIS void     (*run)(ETImessage *self);
-} MessageVtbl;
-
-struct ETImessage {
-    const MessageVtbl *vt;  /* +0x00 */
-    uint32_t type;          /* +0x04 */
-    int32_t  result;        /* +0x08 */
-    int32_t  refs;          /* +0x0c */
-    int32_t  is_send;       /* +0x10 */
-    uint8_t  lock[0x0c];    /* +0x14 */
 };
+typedef struct MessageVtbl MessageVtbl;
 
 /* The kinds. The original numbers them from 0x7d0 in the order they were
    written, not in any order that means anything, and three pairs share a

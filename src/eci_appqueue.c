@@ -18,12 +18,11 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "evv_abi.h"
+#include "eci_objects.h"
 
-
-typedef struct ETImessage ETImessage;
 typedef struct ETIappMessageQueue ETIappMessageQueue;
 
-typedef struct {
+struct MessageVtbl {
     THIS void    *(*destroy)(ETImessage *self, int32_t free_it);
     THIS uint32_t (*addRef)(ETImessage *self);
     THIS uint32_t (*release)(ETImessage *self);
@@ -31,16 +30,8 @@ typedef struct {
     THIS int32_t  (*equalsMessage)(ETImessage *self, ETImessage *other);
     THIS int32_t  (*equalsType)(ETImessage *self, uint32_t type);
     THIS void     (*run)(ETImessage *self);
-} MessageVtbl;
-
-struct ETImessage {
-    const MessageVtbl *vt;
-    uint32_t type;
-    int32_t  result;
-    int32_t  refs;
-    int32_t  is_send;
-    uint8_t  lock[0x0c];
 };
+typedef struct MessageVtbl MessageVtbl;
 
 /* A message that carries one call back to the application. */
 typedef struct {
@@ -54,23 +45,16 @@ typedef struct {
 #define MSG_USER  0xbb8
 #define MSG_COUNT 7
 
-typedef struct ETIqueue ETIqueue;
-typedef struct {
+struct ETIqueueVtbl {
     THIS void   *(*destroy)(ETIqueue *self, int32_t free_it);
     THIS int32_t (*push)(ETIqueue *self, void *p);
     THIS int32_t (*pop)(ETIqueue *self, void **out);
     THIS int32_t (*peekHead)(ETIqueue *self, void **out);
-} ETIqueueVtbl;
-struct ETIqueue {
-    const ETIqueueVtbl *vt;   /* +0x00 */
-    void              **array; /* +0x04 */
-    uint32_t            capacity; /* +0x08 */
-    uint32_t            head;  /* +0x0c */
-    uint32_t            tail;  /* +0x10 */
 };
+typedef struct ETIqueueVtbl ETIqueueVtbl;
 
 typedef struct ETImessageQueue ETImessageQueue;
-typedef struct {
+struct QueueVtbl {
     THIS int16_t (*sendMessage)(ETImessageQueue *self, ETImessage *m,
                                 int32_t a, void *win, int32_t b);
     THIS int16_t (*postMessage)(ETImessageQueue *self, ETImessage *m,
@@ -81,17 +65,8 @@ typedef struct {
     THIS void    (*resume)(ETImessageQueue *self);
     THIS void    (*signalProcessed)(ETImessageQueue *self, ETImessage *m);
     THIS void    (*clearMessages)(ETImessageQueue *self);
-} QueueVtbl;
-
-struct ETImessageQueue {
-    const QueueVtbl *vt;      /* +0x00 */
-    ETIqueue queue;           /* +0x04 */
-    uint8_t  lock[0x0c];      /* +0x18 */
-    uint8_t  ready[0x0c];     /* +0x24 */
-    int32_t  suspended;       /* +0x30 */
-    uint8_t  done[0x0c];      /* +0x34 */
-    uint8_t  send_lock[0x0c]; /* +0x40 */
 };
+typedef struct QueueVtbl QueueVtbl;
 
 typedef int32_t (*Callback)(void *inst, int32_t a, int32_t b, void *param);
 
@@ -531,7 +506,6 @@ const MessageVtbl vtbl_msguser = {
     msguser_destroy, msg_addRef, msg_release, msg_getType,
     msg_equalsMessage, msg_equalsType, msguser_run
 };
-
 
 ALIAS("??_7ETImessageQueue@@6B@", "vtbl_queue");
 ALIAS("??_7ETIappMessageQueue@@6B@", "vtbl_appqueue");
