@@ -12,7 +12,14 @@
 
    Segments are carved from the top down. A segment that empties is kept on a
    free list rather than returned, up to ten of them, because the same shapes
-   are allocated over and over. */
+   are allocated over and over.
+
+   Every link between segments is a reference rather than a pointer, because a
+   segment header is a fixed shape the rules reach into by offset. Chasing one
+   therefore reads SEG(x) rather than x, which is what the shorthand below is
+   for; on a 32-bit build it is the cast the file always had. */
+
+#define SEG(r) EVV_AT(delta_seg *, (r))
 
 #define SEG_HEADER 0x18
 
@@ -33,97 +40,97 @@ typedef char delta_mark_is_0x14[sizeof(delta_mark) == 0x14 ? 1 : -1];
 
 /* Take a segment from the free list, or make one. The starting value of used
    is chosen so that end minus used is eight-aligned. */
-static delta_seg *allocDynaSegment(delta_state *d, int32_t size)
+static evv_ref allocDynaSegment(delta_state *d, int32_t size)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     delta_seg *seg;
+    evv_ref ref;
 
-    if (s->free_segs != NULL) {
-        seg = s->free_segs;
+    if (s->free_segs != 0) {
+        ref = s->free_segs;
+        seg = SEG(ref);
         seg->live = 0;
         s->free_segs = seg->next;
         s->free_count--;
 
-        seg->used = EVV_REF(seg->end) & 3;
-        if ((EVV_REF(seg->end) & 7) == 0)
+        seg->used = seg->end & 3;
+        if ((seg->end & 7) == 0)
             seg->used += 4;
 
-        seg->next = NULL;
-        seg->prev = NULL;
-        return seg;
+        seg->next = 0;
+        seg->prev = 0;
+        return ref;
     }
 
     seg = delta_sys_alloc(SEG_HEADER);
     if (seg == NULL)
-        return NULL;
+        return 0;
 
-    seg->next = NULL;
-    seg->prev = NULL;
+    seg->next = 0;
+    seg->prev = 0;
     seg->live = 0;
 
-    seg->block = delta_sys_alloc((size_t)size);
-    if (seg->block == NULL) {
+    seg->block = EVV_REF(delta_sys_alloc((size_t)size));
+    if (seg->block == 0) {
         delta_sys_free(seg);
-        return NULL;
+        return 0;
     }
 
     seg->end = seg->block + size - 1;
-    seg->used = EVV_REF(seg->end) & 3;
-    if ((EVV_REF(seg->end) & 7) == 0)
+    seg->used = seg->end & 3;
+    if ((seg->end & 7) == 0)
         seg->used += 4;
 
-    return seg;
+    return EVV_REF(seg);
 }
 
 /* Give a whole chain of segments back. */
-static void freeDynaMem(delta_seg *seg)
+static void freeDynaMem(evv_ref ref)
 {
-    while (seg != NULL) {
-        delta_seg *next = seg->next;
+    while (ref != 0) {
+        evv_ref next = SEG(ref)->next;
 
-        delta_sys_free(seg->block);
-        delta_sys_free(seg);
-        seg = next;
+        delta_sys_free(EVV_AT(void *, SEG(ref)->block));
+        delta_sys_free(SEG(ref));
+        ref = next;
     }
 }
 
 /* Carve size bytes off a segment, moving on to a fresh one when this will not
    fit. A size of zero or less asks how much is left rather than taking any. */
-static uint8_t *allocDynaMem(delta_state *d, delta_seg *seg, int32_t size)
+static uint8_t *allocDynaMem(delta_state *d, evv_ref ref, int32_t size)
 {
+    delta_seg *seg = SEG(ref);
     int32_t slack = size & 7;
-    uint8_t *out;
 
     if (size <= 0)
-        return seg->end - seg->used;
+        return EVV_AT(uint8_t *, seg->end - seg->used);
 
     if (slack != 0)
         size += 8 - slack;
 
     seg->used += size;
 
-    if (seg->used < d->stack->seg_size)
-        return seg->end - seg->used;
+    if (seg->used < EVV_AT(delta_stack *, d->stack)->seg_size)
+        return EVV_AT(uint8_t *, seg->end - seg->used);
 
     seg->used -= size;
-    seg->next = allocDynaSegment(d, d->stack->seg_size);
-    if (seg->next == NULL)
+    seg->next = allocDynaSegment(d, EVV_AT(delta_stack *, d->stack)->seg_size);
+    if (seg->next == 0)
         return NULL;
 
-    seg->next->prev = seg;
-    seg->next->used += size;
+    SEG(seg->next)->prev = ref;
+    SEG(seg->next)->used += size;
 
-    if (seg->next->used > d->stack->seg_size)
-        out = NULL;
-    else
-        out = seg->next->end - seg->next->used;
+    if (SEG(seg->next)->used > EVV_AT(delta_stack *, d->stack)->seg_size)
+        return NULL;
 
-    return out;
+    return EVV_AT(uint8_t *, SEG(seg->next)->end - SEG(seg->next)->used);
 }
 
 int initializeDeltaHeap(delta_state *d, int32_t size)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     int32_t i;
 
     s->heap_first = allocDynaSegment(d, size);
@@ -133,65 +140,66 @@ int initializeDeltaHeap(delta_state *d, int32_t size)
     for (i = 0; i < DELTA_MARKS; i++)
         s->marks[i].unused = 1;
 
-    return s->heap_first != NULL;
+    return s->heap_first != 0;
 }
 
 void resetDeltaHeap(delta_state *d)
 {
-    freeDynaMem(d->stack->heap_first);
-    initializeDeltaHeap(d, d->stack->seg_size);
+    freeDynaMem(EVV_AT(delta_stack *, d->stack)->heap_first);
+    initializeDeltaHeap(d, EVV_AT(delta_stack *, d->stack)->seg_size);
 }
 
 /* Hand out an object, with the segment it came from stamped in the four bytes
    in front of it so freeing knows where to put it back. */
 DELTA_FASTCALL void *allocDeltaHeapObject(delta_state *d, int32_t size)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     uint8_t *p = allocDynaMem(d, s->heap_cur, size + 4);
 
     if (p == NULL)
         return NULL;
 
-    if (s->heap_cur->next != NULL)
-        s->heap_cur = s->heap_cur->next;
+    if (SEG(s->heap_cur)->next != 0)
+        s->heap_cur = SEG(s->heap_cur)->next;
 
-    *(delta_seg **)p = s->heap_cur;
-    s->heap_cur->live++;
+    *(evv_ref *)p = s->heap_cur;
+    SEG(s->heap_cur)->live++;
     return p + 4;
 }
 
 DELTA_FASTCALL void freeDeltaHeapObject(delta_state *d, void *p)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     uint8_t *head = (uint8_t *)p - 4;
-    delta_seg *seg = *(delta_seg **)head;
+    evv_ref ref = *(evv_ref *)head;
+    delta_seg *seg = SEG(ref);
 
     seg->live--;
     if (seg->live != 0)
         return;
 
-    if (seg == s->heap_cur) {
+    if (ref == s->heap_cur) {
         /* Nothing is left in the segment being filled, so start it over. */
-        s->heap_cur->used = EVV_REF(s->heap_cur->end) & 3;
+        seg->used = seg->end & 3;
         return;
     }
 
     if (s->free_count < DELTA_MARKS) {
-        seg->prev->next = seg->next;
-        if (seg->next != NULL)
-            seg->next->prev = seg->prev;
+        SEG(seg->prev)->next = seg->next;
+        if (seg->next != 0)
+            SEG(seg->next)->prev = seg->prev;
 
         seg->next = s->free_segs;
-        s->free_segs = seg;
+        s->free_segs = ref;
         s->free_count++;
         return;
     }
 
-    seg->prev->next = seg->next;
-    if (seg->next != NULL)
-        seg->next->prev = seg->prev;
+    SEG(seg->prev)->next = seg->next;
+    if (seg->next != 0)
+        SEG(seg->next)->prev = seg->prev;
 
-    delta_sys_free(seg->block);
+    delta_sys_free(EVV_AT(void *, seg->block));
     delta_sys_free(seg);
 }
 
@@ -203,19 +211,19 @@ DELTA_FASTCALL void freeDeltaHeapObject(delta_state *d, void *p)
    Each chain is freed from its head, which takes the whole chain with it. */
 void deltaHeapCleanup(delta_state *d)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
 
-    if (s->free_segs != NULL)
+    if (s->free_segs != 0)
         freeDynaMem(s->free_segs);
-    if (s->heap_first != NULL)
+    if (s->heap_first != 0)
         freeDynaMem(s->heap_first);
-    if (s->seg != NULL)
+    if (s->seg != 0)
         freeDynaMem(s->seg);
 
-    s->seg = NULL;
-    s->heap_cur = NULL;
-    s->heap_first = NULL;
-    s->free_segs = NULL;
+    s->seg = 0;
+    s->heap_cur = 0;
+    s->heap_first = 0;
+    s->free_segs = 0;
 }
 
 /* One segment for the stack, and the two ends recorded in it. The stack runs
@@ -225,50 +233,50 @@ void deltaHeapCleanup(delta_state *d)
    anything else, so an unwind always finds a floor. */
 int32_t initializeDeltaStack(delta_state *d, int32_t size)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
 
     s->seg = allocDynaSegment(d, size);
 
-    s->top = s->seg->end - s->seg->used;
-    s->base = (uint8_t *)(intptr_t)size;
-    s->limit = (uint8_t *)(intptr_t)(size - s->seg->used);
+    s->top = SEG(s->seg)->end - SEG(s->seg)->used;
+    s->base = size;
+    s->limit = size - SEG(s->seg)->used;
 
     s->top -= s->boa_size;
     s->limit -= s->boa_size;
 
-    *s->top = 8;
-    setDeltaStackVBot(d, s->top);
+    *EVV_AT(uint8_t *, s->top) = 8;
+    setDeltaStackVBot(d, EVV_AT(uint8_t *, s->top));
 
-    return s->seg != NULL;
+    return s->seg != 0;
 }
 
 int32_t getDeltaHeapSegNumber(delta_state *d, uint8_t *p, int32_t unit)
 {
-    delta_seg *owner = *(delta_seg **)(p - 4);
-    delta_seg *seg = d->stack->heap_first;
+    evv_ref owner = *(evv_ref *)(p - 4);
+    evv_ref seg = EVV_AT(delta_stack *, d->stack)->heap_first;
     int32_t n = 0;
 
-    while (seg != NULL && seg != owner) {
+    while (seg != 0 && seg != owner) {
         n++;
-        seg = seg->next;
+        seg = SEG(seg)->next;
     }
 
-    if (seg == NULL) {
-        seg = d->stack->free_segs;
-        while (seg != NULL && seg != owner)
-            seg = seg->next;
+    if (seg == 0) {
+        seg = EVV_AT(delta_stack *, d->stack)->free_segs;
+        while (seg != 0 && seg != owner)
+            seg = SEG(seg)->next;
 
-        return seg == NULL ? -1 : -2;
+        return seg == 0 ? -1 : -2;
     }
 
-    return (int32_t)((uint32_t)d->stack->seg_size / (uint32_t)unit) * n
-           + (int32_t)(owner->end - p) / unit;
+    return (int32_t)((uint32_t)EVV_AT(delta_stack *, d->stack)->seg_size / (uint32_t)unit) * n
+           + (int32_t)(SEG(owner)->end - EVV_REF(p)) / unit;
 }
 
 /* Take a mark. Returns zero when all ten are already in use. */
 int recordDeltaHeapPos(delta_state *d)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     int32_t i;
 
     for (i = 0; i < DELTA_MARKS; i++) {
@@ -276,9 +284,9 @@ int recordDeltaHeapPos(delta_state *d)
             continue;
 
         s->marks[i].unused = 0;
-        s->marks[i].pos = s->heap_cur->end - s->heap_cur->used;
-        s->marks[i].used = s->heap_cur->used;
-        s->marks[i].live = s->heap_cur->live;
+        s->marks[i].pos = SEG(s->heap_cur)->end - SEG(s->heap_cur)->used;
+        s->marks[i].used = SEG(s->heap_cur)->used;
+        s->marks[i].live = SEG(s->heap_cur)->live;
         s->marks[i].seg = s->heap_cur;
         return 1;
     }
@@ -289,28 +297,28 @@ int recordDeltaHeapPos(delta_state *d)
 /* Put the heap back to a mark, dropping every segment filled since. */
 void freeDeltaHeapTo(delta_state *d, uint8_t *pos, int32_t release)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     int32_t i;
 
     for (i = 0; i < DELTA_MARKS; i++) {
         if (s->marks[i].unused != 0)
             continue;
-        if (pos != s->marks[i].pos)
+        if (EVV_REF(pos) != s->marks[i].pos)
             continue;
 
-        while (s->heap_cur != s->marks[i].seg && s->heap_cur != NULL) {
-            delta_seg *gone = s->heap_cur;
+        while (s->heap_cur != s->marks[i].seg && s->heap_cur != 0) {
+            evv_ref gone = s->heap_cur;
 
-            delta_sys_free(gone->block);
-            s->heap_cur = gone->prev;
-            delta_sys_free(gone);
+            delta_sys_free(EVV_AT(void *, SEG(gone)->block));
+            s->heap_cur = SEG(gone)->prev;
+            delta_sys_free(SEG(gone));
         }
 
-        if (s->heap_cur == NULL)
+        if (s->heap_cur == 0)
             continue;
 
-        s->heap_cur->used = s->marks[i].used;
-        s->heap_cur->live = s->marks[i].live;
+        SEG(s->heap_cur)->used = s->marks[i].used;
+        SEG(s->heap_cur)->live = s->marks[i].live;
 
         if (release != 0)
             s->marks[i].unused = 1;
@@ -333,7 +341,7 @@ void *alloc_tok(delta_state *d, const delta_stmt *e)
 /* A sync is one node, blanked and marked as one. */
 void *alloc_sync(delta_state *d)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     delta_node *t = allocDeltaHeapObject(d, s->sync_size);
 
     if (t == NULL)

@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "evv_arena.h"
+
 /* The Delta machine's working state: one allocation of 0x1088 bytes.
  *
  * Named fields are ones a decoded primitive touches. As with the synthesizer,
@@ -41,12 +43,12 @@ typedef struct {
     uint8_t    tags[8];         /* +0x10, the loop and test tags together */
     uint8_t    testing;         /* +0x18 */
     uint8_t    pad_19[3];
-    uint8_t   *back;            /* +0x1c */
-    uint8_t   *top;             /* +0x20 */
-    void      *vbot;            /* +0x24 */
+    evv_ref    back;            /* +0x1c */
+    evv_ref    top;             /* +0x20 */
+    evv_ref    vbot;            /* +0x24 */
     uint8_t    fence_count;     /* +0x28 */
     uint8_t    pad_29[3];
-    void      *err_jmp;         /* +0x2c */
+    evv_ref    err_jmp;         /* +0x2c */
     uint8_t    scan[8];         /* +0x30 */
     delta_tpos lpta;            /* +0x38 */
     delta_tpos rpta;            /* +0x48 */
@@ -73,19 +75,19 @@ typedef struct {
    The backtracking stack is itself carved out of a segment this way. */
 typedef struct delta_seg delta_seg;
 struct delta_seg {
-    delta_seg *prev;     /* +0x00 */
+    evv_ref    prev;     /* +0x00 */
     int32_t    used;     /* +0x04 */
     int32_t    live;     /* +0x08, objects still allocated in it */
-    uint8_t   *block;    /* +0x0c */
-    uint8_t   *end;      /* +0x10, the last byte of the block */
-    delta_seg *next;     /* +0x14 */
+    evv_ref    block;    /* +0x0c */
+    evv_ref    end;      /* +0x10, the last byte of the block */
+    evv_ref    next;     /* +0x14 */
 };
 
 /* Where a rule can rewind the heap to. Ten of them, and the runtime picks
    whichever is free. */
 typedef struct {
-    uint8_t   *pos;      /* +0x00, what the caller was handed back */
-    delta_seg *seg;      /* +0x04 */
+    evv_ref    pos;      /* +0x00, what the caller was handed back */
+    evv_ref    seg;      /* +0x04 */
     int32_t    unused;   /* +0x08, set means this slot is spare */
     int32_t    used;     /* +0x0c */
     int32_t    live;     /* +0x10 */
@@ -100,7 +102,7 @@ typedef struct {
     int32_t       spine_r;     /* 0x0004, and the one it ends at */
     delta_seqctl  runs[3];     /* 0x0008, what chkdelnonseq works through */
     uint8_t       pad_0038[0x38 - 0x38];
-    const uint8_t *mark_fld;   /* 0x0038, which field a mark is writing */
+    evv_ref       mark_fld;    /* 0x0038, which field a mark is writing */
     int16_t       mark_kind;   /* 0x003c */
     uint8_t       mark_flag;   /* 0x003e */
     uint8_t       pad_003f;
@@ -110,13 +112,13 @@ typedef struct {
     int32_t       del_right;   /* 0x004c */
     int8_t        del_field;   /* 0x0050, which field a delete is working in */
     uint8_t       pad_0051[0x5c - 0x51];
-    int8_t       *nsq_fields;  /* 0x005c, which fields decide the flags,
+    evv_ref       nsq_fields;  /* 0x005c, which fields decide the flags,
                                   terminated by a negative entry */
     uint8_t       pad_0060[0x94 - 0x60];
     int32_t       sync_size;   /* 0x0094, how big one sync node is */
     int32_t       unknown_98;  /* 0x0098, cleared when memory is set up */
     int32_t       unknown_9c;  /* 0x009c, cleared when a loop restarts */
-    uint8_t  *names;         /* 0x00a0, the name stack, eight bytes an entry */
+    evv_ref   names;         /* 0x00a0, the name stack, eight bytes an entry */
     int8_t    names_depth;   /* 0x00a4 */
     uint8_t   pad_00a5[3];
     int32_t   size_a8;       /* 0x00a8, what an unrecognised record costs */
@@ -131,17 +133,17 @@ typedef struct {
     uint8_t   pad_00c8[0xdc - 0xc8];
     /* What a value named "undefined" reads back as. The tables spell the
        absent value one way and whoever asks is told another. */
-    const char *undefined_text;  /* 0x00dc */
+    evv_ref     undefined_text;  /* 0x00dc */
     uint8_t   pad_00e0[0xfc - 0xe0];
     /* What the save layer works in. It is only ever reached through the
        routines at the end of delta_trace.c, which the engine does not use;
        a target that wants to write the machine out and read it back is what
        they are for. */
-    int32_t  *saved_spine;   /* 0x00fc, one slot per statement type */
+    evv_ref   saved_spine;   /* 0x00fc, one slot per statement type */
     char      line[0x146 - 0x100];  /* 0x0100, a line being built */
     uint8_t   save_stream;   /* 0x0146, where the script is written */
     uint8_t   pad_0147;
-    void     *save_file;     /* 0x0148, and where the bytes go */
+    evv_ref   save_file;     /* 0x0148, and where the bytes go */
     uint8_t   pad_014c[4];
     char      save_name[100];  /* 0x0150, the name last read off it; the
                                   original writes past the end of this
@@ -156,18 +158,18 @@ typedef struct {
     int32_t   left_b[50];      /* 0x02a0 */
     int32_t   left_ans[50];    /* 0x0368 */
     int32_t   left_hits[50];   /* 0x0430 */
-    uint8_t  *top;           /* 0x04f8 */
-    uint8_t  *limit;         /* 0x04fc */
-    delta_seg *heap_first;   /* 0x0500, where the heap starts */
-    delta_seg *seg;          /* 0x0504, the segment the stack lives in */
-    delta_seg *heap_cur;     /* 0x0508, where the next object comes from */
-    uint8_t   *vbot;         /* 0x050c, how far back an unwind may go */
+    evv_ref   top;           /* 0x04f8 */
+    evv_ref   limit;         /* 0x04fc */
+    evv_ref    heap_first;   /* 0x0500, where the heap starts */
+    evv_ref    seg;          /* 0x0504, the segment the stack lives in */
+    evv_ref    heap_cur;     /* 0x0508, where the next object comes from */
+    evv_ref    vbot;         /* 0x050c, how far back an unwind may go */
     uint8_t    pad_0510[4];
     int32_t    seg_size;     /* 0x0514 */
-    uint8_t   *base;         /* 0x0518 */
+    evv_ref    base;         /* 0x0518 */
     delta_mark marks[DELTA_MARKS];  /* 0x051c */
     int32_t    free_count;   /* 0x05e4, how many spare segments are held */
-    delta_seg *free_segs;    /* 0x05e8 */
+    evv_ref    free_segs;    /* 0x05e8 */
     /* The block is 0x664 bytes: that is what delta_lib_new asks malloc
        for, so this runs to the end of it. */
     uint8_t    pad_05ec[0x664 - 0x5ec];
@@ -183,7 +185,7 @@ typedef struct {
     uint8_t   pad_0fa0[4];
     int32_t   active_record;   /* 0x0fa4 */
     int32_t   error_thrown;    /* 0x0fa8 */
-    void     *err_jmp;         /* 0x0fac, where a thrown error lands */
+    evv_ref   err_jmp;         /* 0x0fac, where a thrown error lands */
     uint8_t   return_code;     /* 0x0fb0, what a C helper answered with */
     uint8_t   pad_0fb1[0xf];
     int32_t   loop_tag;        /* 0x0fc0, what a forall is iterating */
@@ -200,7 +202,7 @@ typedef struct {
        because that is how a rule names an activation when it asks for a
        variable; only the save layer ever reads through it. */
     int32_t   running;         /* 0x0fd8, saved and restored around a rule */
-    uint8_t  *back;            /* 0x0fdc, where an unwind returns to */
+    evv_ref   back;            /* 0x0fdc, where an unwind returns to */
     int8_t    compared_equal;  /* 0x0fe0 */
     int8_t    fence_count;     /* 0x0fe1, how many characters are fenced */
     uint8_t   pad_0fe2[0x1006 - 0xfe2];
@@ -214,7 +216,7 @@ typedef struct {
     int32_t   ctx_both;        /* 0x1120, look both ways for a context */
     int32_t   relink;          /* 0x1124, keep the spine order consistent */
     uint8_t   pad_1128[0x116c - 0x1128];
-    int8_t       *nsq_marks;   /* 0x116c, one per fenced field */
+    evv_ref       nsq_marks;   /* 0x116c, one per fenced field */
     int32_t   unknown_1170;    /* 0x1170, cleared after an insert */
     int32_t   fence_base;      /* 0x1174 */
     uint8_t   pad_1178[0x11e8 - 0x1178];
@@ -291,43 +293,43 @@ struct delta_state {
     int32_t      nword;           /* 0x0010 */
     /* Where each variable's value is. Nothing outside delta_new knows what
        offset a variable landed at; everything reaches one through these. */
-    int32_t    **word;            /* 0x0014 */
-    delta_compound *compound;     /* 0x0018 */
-    int32_t    **lng;             /* 0x001c */
-    int16_t    **shrt;            /* 0x0020 */
+    evv_ref     word;            /* 0x0014 */
+    evv_ref     compound;     /* 0x0018 */
+    evv_ref     lng;             /* 0x001c */
+    evv_ref     shrt;            /* 0x0020 */
     int32_t      unknown_0024;
-    uint8_t     *sets;            /* 0x0028, the language's lookup sets, one
+    evv_ref     sets;            /* 0x0028, the language's lookup sets, one
                                      0x24-byte descriptor each */
-    uint8_t     *act_table;       /* 0x002c, the dictionary's action table,
+    evv_ref     act_table;       /* 0x002c, the dictionary's action table,
                                      one 0x28-byte entry each */
-    const uint8_t *const *set_store;  /* 0x0030, one pointer per set to the
+    evv_ref     set_store;  /* 0x0030, one pointer per set to the
                                          entries themselves */
     /* Two direct handles on the second and third word variable, kept here
        beside the language's own tables. Nothing transcribed so far reads
        either of them, so what they are for is still open. */
-    int16_t     *direct_a;        /* 0x0034 */
-    int16_t     *direct_b;        /* 0x0038 */
+    evv_ref     direct_a;        /* 0x0034 */
+    evv_ref     direct_b;        /* 0x0038 */
     int32_t      unknown_3c;      /* 0x003c, a forto's third parameter */
     delta_pta    lpta;            /* 0x0040 */
     delta_pta    rpta;            /* 0x0050 */
-    const uint8_t *const *act_store;  /* 0x0060, the same for the actions */
-    uint8_t     *owner;           /* 0x0064, whoever wants to know the spine
+    evv_ref     act_store;  /* 0x0060, the same for the actions */
+    evv_ref     owner;           /* 0x0064, whoever wants to know the spine
                                      moved; the flag it sets is at 0x1b8 */
-    delta_vars  *vars;            /* 0x0068 */
-    delta_stack *stack;           /* 0x006c */
+    evv_ref     vars;            /* 0x0068 */
+    evv_ref     stack;           /* 0x006c */
     uint8_t      pad_0070[4];
-    void        *logio;           /* 0x0074, the logical file table */
-    void        *eloqc;           /* 0x0078, what the machine keeps for ECI */
+    evv_ref     logio;           /* 0x0074, the logical file table */
+    evv_ref     eloqc;           /* 0x0078, what the machine keeps for ECI */
     uint8_t      fence_room;      /* 0x007c, how many the arrays below hold */
     uint8_t      pad_007d[3];
     /* Each of the three fenced-character arrays is kept twice: where it was
        allocated, and where the machine is working in it. */
-    uint8_t     *fence_chars_base;   /* 0x0080 */
-    uint8_t     *fence_chars;     /* 0x0084, fenced character by index */
-    uint8_t     *fence_index_base;   /* 0x0088 */
-    uint8_t     *fence_index;     /* 0x008c, index by fenced character */
-    uint8_t     *fence_marks_base;   /* 0x0090 */
-    uint8_t     *fence_marks;     /* 0x0094, one per fenced character */
+    evv_ref     fence_chars_base;   /* 0x0080 */
+    evv_ref     fence_chars;     /* 0x0084, fenced character by index */
+    evv_ref     fence_index_base;   /* 0x0088 */
+    evv_ref     fence_index;     /* 0x008c, index by fenced character */
+    evv_ref     fence_marks_base;   /* 0x0090 */
+    evv_ref     fence_marks;     /* 0x0094, one per fenced character */
     uint8_t      nstmts;         /* 0x0098, how many statement types
                                     the language declares, which is
                                     also how many fields a node has;
@@ -338,11 +340,11 @@ struct delta_state {
     int16_t      lang_a;          /* 0x009a */
     int16_t      lang_b;          /* 0x009c */
     int16_t      pad_009e;
-    const char *const *lfnames;   /* 0x00a0, the streams that can be opened */
+    evv_ref     lfnames;   /* 0x00a0, the streams that can be opened */
     uint8_t      nlfnames;        /* 0x00a4 */
     uint8_t      pad_00a5;
     int16_t      nsets;           /* 0x00a6 */
-    const char  *dictfile;        /* 0x00a8 */
+    evv_ref     dictfile;        /* 0x00a8 */
     int16_t      nactions;        /* 0x00ac */
     uint8_t      pad_00ae[DELTA_STATE_BYTES - 0xae];
 };

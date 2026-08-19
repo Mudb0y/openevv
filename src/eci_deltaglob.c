@@ -41,10 +41,10 @@ delta_state *delta_new(void)
     /* Cleared before anything can fail, because the failure path below
        hands the whole thing to delta_delete and that frees all four. The
        original left them holding whatever malloc did. */
-    d->word     = 0;
-    d->compound = 0;
-    d->lng      = 0;
-    d->shrt     = 0;
+    d->word = EVV_REF(0);
+    d->compound = EVV_REF(0);
+    d->lng = EVV_REF(0);
+    d->shrt = EVV_REF(0);
 
     for (i = 0; i < delta_globals_n; i++)
         switch (delta_globals[i]) {
@@ -59,23 +59,23 @@ delta_state *delta_new(void)
     d->nshort    = nshort * 2;
     d->ncompound = ncompound * 2;
 
-    d->word = malloc((size_t)d->nword * sizeof *d->word);
-    if (d->word == 0) {
+    d->word = EVV_REF(malloc((size_t)d->nword * sizeof *EVV_AT(int32_t **, d->word)));
+    if (EVV_AT(int32_t **, d->word) == 0) {
         delta_delete(d);
         return 0;
     }
-    d->compound = malloc((size_t)d->ncompound * sizeof *d->compound);
-    if (d->compound == 0) {
+    d->compound = EVV_REF(malloc((size_t)d->ncompound * sizeof *EVV_AT(delta_compound *, d->compound)));
+    if (EVV_AT(delta_compound *, d->compound) == 0) {
         delta_delete(d);
         return 0;
     }
-    d->lng = malloc((size_t)d->nlong * sizeof *d->lng);
-    if (d->lng == 0) {
+    d->lng = EVV_REF(malloc((size_t)d->nlong * sizeof *EVV_AT(int32_t **, d->lng)));
+    if (EVV_AT(int32_t **, d->lng) == 0) {
         delta_delete(d);
         return 0;
     }
-    d->shrt = malloc((size_t)d->nshort * sizeof *d->shrt);
-    if (d->shrt == 0) {
+    d->shrt = EVV_REF(malloc((size_t)d->nshort * sizeof *EVV_AT(int16_t **, d->shrt)));
+    if (EVV_AT(int16_t **, d->shrt) == 0) {
         delta_delete(d);
         return 0;
     }
@@ -93,7 +93,7 @@ delta_state *delta_new(void)
             cell = (unsigned char *)d + at;
             *(int16_t *)cell        = DG_WORD;
             *(int32_t *)(cell + 4)  = 0;
-            d->word[w] = d->word[w + nword] = (int32_t *)(cell + 4);
+            EVV_AT(int32_t **, d->word)[w] = EVV_AT(int32_t **, d->word)[w + nword] = (int32_t *)(cell + 4);
             w++;
             at += 8;
             break;
@@ -103,7 +103,7 @@ delta_state *delta_new(void)
             cell = (unsigned char *)d + at;
             *(int16_t *)cell        = DG_LONG;
             *(int32_t *)(cell + 4)  = 0;
-            d->lng[l] = d->lng[l + nlong] = (int32_t *)(cell + 4);
+            EVV_AT(int32_t **, d->lng)[l] = EVV_AT(int32_t **, d->lng)[l + nlong] = (int32_t *)(cell + 4);
             l++;
             at += 8;
             break;
@@ -113,7 +113,7 @@ delta_state *delta_new(void)
             cell = (unsigned char *)d + at;
             *(int16_t *)cell        = DG_SHORT;
             *(int16_t *)(cell + 2)  = 0;
-            d->shrt[s] = d->shrt[s + nshort] = (int16_t *)(cell + 2);
+            EVV_AT(int16_t **, d->shrt)[s] = EVV_AT(int16_t **, d->shrt)[s + nshort] = (int16_t *)(cell + 2);
             s++;
             at += 4;
             break;
@@ -121,10 +121,10 @@ delta_state *delta_new(void)
         case DG_COMPOUND:
             at   = ALIGN_UP(at, 2);
             cell = (unsigned char *)d + at;
-            d->compound[c].at    = cell;
-            d->compound[c].init  = delta_compounds[c].init;
-            d->compound[c].bytes = delta_compounds[c].bytes;
-            d->compound[c + ncompound] = d->compound[c];
+            EVV_AT(delta_compound *, d->compound)[c].at    = cell;
+            EVV_AT(delta_compound *, d->compound)[c].init  = delta_compounds[c].init;
+            EVV_AT(delta_compound *, d->compound)[c].bytes = delta_compounds[c].bytes;
+            EVV_AT(delta_compound *, d->compound)[c + ncompound] = EVV_AT(delta_compound *, d->compound)[c];
             at += 4 + ALIGN_UP(delta_compounds[c].bytes, 2);
             c++;
             break;
@@ -133,8 +133,8 @@ delta_state *delta_new(void)
 
     /* The second and third word variable, which something wants a direct
        handle on. The handle is on the cell, tag and all, not the value. */
-    d->direct_a = (int16_t *)((char *)d->word[1] - 4);
-    d->direct_b = (int16_t *)((char *)d->word[2] - 4);
+    d->direct_a = EVV_REF((int16_t *)((char *)EVV_AT(int32_t **, d->word)[1] - 4));
+    d->direct_b = EVV_REF((int16_t *)((char *)EVV_AT(int32_t **, d->word)[2] - 4));
 
     link_new(d);
     set_dict_new(d);
@@ -159,21 +159,21 @@ void delta_delete(delta_state *d)
     act_dict_delete(d);
     runtime_delete(d);
 
-    if (d->word != 0) {
-        free(d->word);
-        d->word = 0;
+    if (EVV_AT(int32_t **, d->word) != 0) {
+        free(EVV_AT(int32_t **, d->word));
+        d->word = EVV_REF(0);
     }
-    if (d->compound != 0) {
-        free(d->compound);
-        d->compound = 0;
+    if (EVV_AT(delta_compound *, d->compound) != 0) {
+        free(EVV_AT(delta_compound *, d->compound));
+        d->compound = EVV_REF(0);
     }
-    if (d->shrt != 0) {
-        free(d->shrt);
-        d->shrt = 0;
+    if (EVV_AT(int16_t **, d->shrt) != 0) {
+        free(EVV_AT(int16_t **, d->shrt));
+        d->shrt = EVV_REF(0);
     }
-    if (d->lng != 0) {
-        free(d->lng);
-        d->lng = 0;
+    if (EVV_AT(int32_t **, d->lng) != 0) {
+        free(EVV_AT(int32_t **, d->lng));
+        d->lng = EVV_REF(0);
     }
 
     free(d);

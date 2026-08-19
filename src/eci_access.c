@@ -19,7 +19,7 @@
 #include "delta.h"
 
 /* Which side of the machine wants to hear that the spine moved. */
-#define OWNER_MOVED(d) (*(int32_t *)((d)->owner + 0x1b8))
+#define OWNER_MOVED(d) (*(int32_t *)(EVV_AT(uint8_t *, (d)->owner) + 0x1b8))
 
 /* A spine position is carried as an int32, so reaching a node's words means
    casting one back. The first three words are the node's own; the sync
@@ -125,12 +125,12 @@ int enum_field(int8_t f, int32_t i)
 /* The two ends of it. */
 int32_t left_delta(delta_state *d)
 {
-    return d->stack->spine_l;
+    return EVV_AT(delta_stack *, d->stack)->spine_l;
 }
 
 int32_t right_delta(delta_state *d)
 {
-    return d->stack->spine_r;
+    return EVV_AT(delta_stack *, d->stack)->spine_r;
 }
 
 /* Two marks are the same mark when they are the same node. */
@@ -154,7 +154,7 @@ int32_t prev_token(int8_t f, int32_t at)
 
 int32_t next_token(delta_state *d, int8_t f, int32_t at)
 {
-    return NODE(at)[d->vars->fence_base + f] & LINK_MASK;
+    return NODE(at)[EVV_AT(delta_vars *, d->vars)->fence_base + f] & LINK_MASK;
 }
 
 /* Whether what stands there is a token rather than another sync. Nothing
@@ -170,7 +170,7 @@ int is_token_prev(int8_t f, int32_t at)
 
 int is_token_next(delta_state *d, int8_t f, int32_t at)
 {
-    int32_t p = NODE(at)[d->vars->fence_base + f] & LINK_MASK;
+    int32_t p = NODE(at)[EVV_AT(delta_vars *, d->vars)->fence_base + f] & LINK_MASK;
 
     if (p != 0 && (NODE(p)[0] & IS_SYNC) != 0)
         return 0;
@@ -194,7 +194,7 @@ int32_t sync_to_right(delta_state *d, int8_t f, int32_t at)
    they do. */
 int sync_in_stm(delta_state *d, int8_t f, int32_t at)
 {
-    return (NODE(at)[d->vars->fence_base + f] & 1) != 0;
+    return (NODE(at)[EVV_AT(delta_vars *, d->vars)->fence_base + f] & 1) != 0;
 }
 
 /* Take one mark out, and the pair between two. Both answer one whether or
@@ -219,7 +219,7 @@ int32_t ins_sync(delta_state *d, int8_t f, int32_t at, int32_t left)
         return sync_to_left(d, f, at);
     }
 
-    vins_sync(d, f, at, NODE(at)[d->vars->fence_base + f] & LINK_MASK);
+    vins_sync(d, f, at, NODE(at)[EVV_AT(delta_vars *, d->vars)->fence_base + f] & LINK_MASK);
     return sync_to_right(d, f, at);
 }
 
@@ -420,7 +420,7 @@ int non_unique_value(delta_state *d, int8_t f, int32_t fld, const char *s,
 
     *out_name = names[lfound];
     if (strcmp(*out_name, UNDEFINED) == 0)
-        *out_name = d->stack->undefined_text;
+        *out_name = EVV_AT(const char *, EVV_AT(delta_stack *, d->stack)->undefined_text);
 
     if (FD(f, fld)->kind == KIND_NAMED8) {
         sfound     = (int8_t)lfound;
@@ -557,7 +557,7 @@ int can_del_sync(delta_state *d, int8_t f, int32_t at)
     int32_t prev, next;
     int32_t i;
 
-    if (at == d->stack->spine_l || at == d->stack->spine_r)
+    if (at == EVV_AT(delta_stack *, d->stack)->spine_l || at == EVV_AT(delta_stack *, d->stack)->spine_r)
         return 0;
 
     if (!is_token_next(d, f, at) || !is_token_prev(f, at))
@@ -715,7 +715,7 @@ int fill_stream_list(delta_state *d, stream_list *list, const uint8_t *spec)
 int first_field(delta_state *d, const stream_list *list, int8_t *out_stm,
                 int32_t *out_fld)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
 
     s->list_val = 0;
     s->list_fld = 0;
@@ -733,7 +733,7 @@ int first_field(delta_state *d, const stream_list *list, int8_t *out_stm,
 int next_field(delta_state *d, const stream_list *list, int8_t *out_stm,
                int32_t *out_fld)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
 
     s->list_val++;
     if (s->list_val >= list->e[s->list_fld].nfields) {

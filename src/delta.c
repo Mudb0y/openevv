@@ -23,8 +23,15 @@ AT(stack, 0x006c);
 typedef char delta_state_is_0x1088[sizeof(delta_state) == DELTA_STATE_BYTES ? 1 : -1];
 typedef char delta_pta_is_16[sizeof(delta_pta) == 16 ? 1 : -1];
 typedef char delta_tpos_is_16[sizeof(delta_tpos) == 16 ? 1 : -1];
+/* The language's own description of itself. Nothing compiled from a rule
+   reaches into either table -- a rule names a statement type by number and
+   asks the runtime -- so where a pointer is eight bytes these two are allowed
+   to grow. Everything above holds whatever the host is, because the rules do
+   reach into all of it. */
+#if !defined(EVV_ARENA) || !EVV_ARENA
 typedef char delta_stmt_is_0x40[sizeof(delta_stmt) == 0x40 ? 1 : -1];
 typedef char delta_fielddesc_is_0x18[sizeof(delta_fielddesc) == 0x18 ? 1 : -1];
+#endif
 
 /* How long a language-declared record is. Two of the callers can arrive with
    a negative kind, which the original indexes the table with regardless, so
@@ -92,7 +99,7 @@ static delta_frame *bs_push(delta_stack *s, int32_t size)
     delta_frame *slot;
 
     s->top -= size;
-    slot = (delta_frame *)s->top;
+    slot = (delta_frame *)EVV_AT(uint8_t *, s->top);
     s->limit -= size;
     return slot;
 }
@@ -100,7 +107,7 @@ static delta_frame *bs_push(delta_stack *s, int32_t size)
 /* A context record, carrying the tag the rule is testing against. */
 void bspush_ca(delta_state *d, int16_t tag)
 {
-    delta_frame *slot = bs_push(d->stack, d->stack->ca_size);
+    delta_frame *slot = bs_push(EVV_AT(delta_stack *, d->stack), EVV_AT(delta_stack *, d->stack)->ca_size);
 
     slot->kind = 0;
     slot->value = tag;
@@ -109,22 +116,22 @@ void bspush_ca(delta_state *d, int16_t tag)
 /* The two markers a rule leaves where an alternative begins. */
 void bspush_boa(delta_state *d)
 {
-    bs_push(d->stack, d->stack->boa_size)->kind = 4;
+    bs_push(EVV_AT(delta_stack *, d->stack), EVV_AT(delta_stack *, d->stack)->boa_size)->kind = 4;
 }
 
 void bspush_nboa(delta_state *d)
 {
-    bs_push(d->stack, d->stack->boa_size)->kind = 6;
+    bs_push(EVV_AT(delta_stack *, d->stack), EVV_AT(delta_stack *, d->stack)->boa_size)->kind = 6;
 }
 
 int testeq(delta_state *d)
 {
-    return d->vars->compared_equal != 0;
+    return EVV_AT(delta_vars *, d->vars)->compared_equal != 0;
 }
 
 int testneq(delta_state *d)
 {
-    return d->vars->compared_equal == 0;
+    return EVV_AT(delta_vars *, d->vars)->compared_equal == 0;
 }
 
 AT(fence_chars, 0x0084);
@@ -143,15 +150,15 @@ AT_VARS(fence_base, 0x1174);
    pushes when it is about to try a match it may need to unwind. */
 void bspush_ca_scan(delta_state *d, int16_t tag)
 {
-    delta_frame *ca = bs_push(d->stack, d->stack->ca_size);
+    delta_frame *ca = bs_push(EVV_AT(delta_stack *, d->stack), EVV_AT(delta_stack *, d->stack)->ca_size);
     delta_frame *save;
 
     ca->kind = 0;
     ca->value = tag;
 
-    save = bs_push(d->stack, d->stack->size_b0);
+    save = bs_push(EVV_AT(delta_stack *, d->stack), EVV_AT(delta_stack *, d->stack)->size_b0);
     save->kind = 1;
-    memcpy(&save->value, &d->vars->scan_ptr, 8);
+    memcpy(&save->value, &EVV_AT(delta_vars *, d->vars)->scan_ptr, 8);
 }
 
 /* Build the character fence: a set of characters the rules match against,
@@ -160,12 +167,12 @@ void fence(delta_state *d, int8_t n, const uint8_t *chars)
 {
     uint8_t i;
 
-    d->vars->fence_count = n;
-    memset(d->fence_index, d->nstmts, d->nstmts);
+    EVV_AT(delta_vars *, d->vars)->fence_count = n;
+    memset(EVV_AT(uint8_t *, d->fence_index), d->nstmts, d->nstmts);
 
     for (i = 0; (int)i < (int)(uint8_t)n; i++) {
-        d->fence_chars[i] = chars[i];
-        d->fence_index[chars[i]] = i;
+        EVV_AT(uint8_t *, d->fence_chars)[i] = chars[i];
+        EVV_AT(uint8_t *, d->fence_index)[chars[i]] = i;
     }
 }
 
@@ -177,12 +184,12 @@ void *TFLDS(void *p)
 
 void *getDeltaStackVBot(delta_state *d)
 {
-    return d->stack->vbot;
+    return EVV_AT(uint8_t *, EVV_AT(delta_stack *, d->stack)->vbot);
 }
 
 void setDeltaStackVBot(delta_state *d, void *v)
 {
-    d->stack->vbot = v;
+    EVV_AT(delta_stack *, d->stack)->vbot = EVV_REF(v);
 }
 
 /* Undo the topmost record. What it cost depends on what kind it was, and a
@@ -190,24 +197,24 @@ void setDeltaStackVBot(delta_state *d, void *v)
    uninitialised, so callers never produce one. */
 void *popDeltaStackTop(delta_state *d)
 {
-    delta_frame *slot = (delta_frame *)d->stack->top;
+    delta_frame *slot = (delta_frame *)EVV_AT(uint8_t *, EVV_AT(delta_stack *, d->stack)->top);
     int32_t kind = slot->kind;
     int32_t size = 0;
 
     switch (kind) {
-    case 0: size = d->stack->ca_size;  break;
-    case 1: size = d->stack->size_b0;  break;
-    case 2: size = (((slot->length - 1) & ~1) | 1) + d->stack->size_ac + 1; break;
-    case 3: size = d->stack->ca_size;  break;
-    case 4: size = d->stack->boa_size; break;
-    case 5: size = d->stack->size_b8;  break;
-    case 6: size = d->stack->boa_size; break;
-    case 7: size = d->stack->size_a8;  break;
+    case 0: size = EVV_AT(delta_stack *, d->stack)->ca_size;  break;
+    case 1: size = EVV_AT(delta_stack *, d->stack)->size_b0;  break;
+    case 2: size = (((slot->length - 1) & ~1) | 1) + EVV_AT(delta_stack *, d->stack)->size_ac + 1; break;
+    case 3: size = EVV_AT(delta_stack *, d->stack)->ca_size;  break;
+    case 4: size = EVV_AT(delta_stack *, d->stack)->boa_size; break;
+    case 5: size = EVV_AT(delta_stack *, d->stack)->size_b8;  break;
+    case 6: size = EVV_AT(delta_stack *, d->stack)->boa_size; break;
+    case 7: size = EVV_AT(delta_stack *, d->stack)->size_a8;  break;
     default: return slot;
     }
 
-    d->stack->top += size;
-    d->stack->limit += size;
+    EVV_AT(delta_stack *, d->stack)->top += size;
+    EVV_AT(delta_stack *, d->stack)->limit += size;
     return slot;
 }
 
@@ -229,7 +236,7 @@ int32_t vback(delta_state *d, int32_t depth)
     int32_t      flag;
     int32_t      size;
 
-    if (d->vars->error_thrown)
+    if (EVV_AT(delta_vars *, d->vars)->error_thrown)
         return -1;
 
     /* Told once to skip an unwind. The flag is spent rather than tested,
@@ -241,60 +248,60 @@ int32_t vback(delta_state *d, int32_t depth)
     }
 
     for (;;) {
-        slot = (delta_frame *)d->stack->top;
+        slot = (delta_frame *)EVV_AT(uint8_t *, EVV_AT(delta_stack *, d->stack)->top);
 
         switch ((int32_t)slot->kind) {
         case 0:
-            size = d->stack->ca_size;
-            d->stack->limit += size;
-            d->stack->top   += size;
+            size = EVV_AT(delta_stack *, d->stack)->ca_size;
+            EVV_AT(delta_stack *, d->stack)->limit += size;
+            EVV_AT(delta_stack *, d->stack)->top   += size;
             if (depth == 0)
                 return slot->value;
             break;
 
         case 1:
-            size = d->stack->size_b0;
-            d->stack->limit += size;
-            d->stack->top   += size;
-            memcpy(&d->vars->scan_ptr, &slot->value, 8);
+            size = EVV_AT(delta_stack *, d->stack)->size_b0;
+            EVV_AT(delta_stack *, d->stack)->limit += size;
+            EVV_AT(delta_stack *, d->stack)->top   += size;
+            memcpy(&EVV_AT(delta_vars *, d->vars)->scan_ptr, &slot->value, 8);
             break;
 
         case 2:
-            size = (((slot->length - 1) & ~1) | 1) + d->stack->size_ac + 1;
-            d->stack->limit += size;
-            d->stack->top   += size;
+            size = (((slot->length - 1) & ~1) | 1) + EVV_AT(delta_stack *, d->stack)->size_ac + 1;
+            EVV_AT(delta_stack *, d->stack)->limit += size;
+            EVV_AT(delta_stack *, d->stack)->top   += size;
             memcpy((void *)(intptr_t)slot->value,
-                   (char *)slot + d->stack->size_ac,
+                   (char *)slot + EVV_AT(delta_stack *, d->stack)->size_ac,
                    (size_t)slot->length);
             break;
 
         case 3:
-            size = d->stack->ca_size;
-            d->stack->limit += size;
-            d->stack->top   += size;
+            size = EVV_AT(delta_stack *, d->stack)->ca_size;
+            EVV_AT(delta_stack *, d->stack)->limit += size;
+            EVV_AT(delta_stack *, d->stack)->top   += size;
             if (depth == 0 && vscanadv(d, 0, 1))
                 return slot->value;
             break;
 
         case 4:
-            size = d->stack->boa_size;
-            d->stack->limit += size;
-            d->stack->top   += size;
+            size = EVV_AT(delta_stack *, d->stack)->boa_size;
+            EVV_AT(delta_stack *, d->stack)->limit += size;
+            EVV_AT(delta_stack *, d->stack)->top   += size;
             if (depth > 0)
                 depth--;
             break;
 
         case 5:
-            size = d->stack->size_b8;
-            d->stack->limit += size;
-            d->stack->top   += size;
+            size = EVV_AT(delta_stack *, d->stack)->size_b8;
+            EVV_AT(delta_stack *, d->stack)->limit += size;
+            EVV_AT(delta_stack *, d->stack)->top   += size;
             setDeltaStackVBot(d, (void *)(intptr_t)slot->value);
             break;
 
         case 6:
-            size = d->stack->boa_size;
-            d->stack->limit += size;
-            d->stack->top   += size;
+            size = EVV_AT(delta_stack *, d->stack)->boa_size;
+            EVV_AT(delta_stack *, d->stack)->limit += size;
+            EVV_AT(delta_stack *, d->stack)->top   += size;
             depth++;
             break;
 
@@ -308,7 +315,7 @@ int32_t vback(delta_state *d, int32_t depth)
 /* Is the character at this offset from the fence base one of the fenced set. */
 int FENCED(delta_state *d, const int32_t *table, int8_t idx)
 {
-    return (table[d->vars->fence_base + idx] & 2) != 0;
+    return (table[EVV_AT(delta_vars *, d->vars)->fence_base + idx] & 2) != 0;
 }
 
 /* A sync number is kept in the low bits of a pointer, so reading the pointer
@@ -324,25 +331,25 @@ int32_t absoluteSyncNumPtr(int32_t p)
    the allocation rather than moved, so it stays right however far this goes. */
 void freeDeltaStackTo(delta_state *d, uint8_t *to)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     int32_t used;
 
-    if (s->seg == NULL)
+    if (EVV_AT(delta_seg *, s->seg) == NULL)
         return;
 
-    s->top = to;
-    used = (int32_t)(s->seg->end - s->top);
-    s->limit = s->base - used;
+    s->top = EVV_REF(to);
+    used = (int32_t)(EVV_AT(delta_seg *, s->seg)->end - s->top);
+    s->limit = EVV_REF(EVV_AT(uint8_t *, s->base) - used);
 }
 
 /* Unwind to whichever mark applies: a record of kind eight at the bottom
    means the rule wants the saved one instead. */
 void clearDeltaStackBack(delta_state *d)
 {
-    if (*d->stack->vbot == 8)
-        freeDeltaStackTo(d, d->vars->back);
+    if (*EVV_AT(uint8_t *, EVV_AT(delta_stack *, d->stack)->vbot) == 8)
+        freeDeltaStackTo(d, EVV_AT(uint8_t *, EVV_AT(delta_vars *, d->vars)->back));
     else
-        freeDeltaStackTo(d, d->stack->vbot);
+        freeDeltaStackTo(d, EVV_AT(uint8_t *, EVV_AT(delta_stack *, d->stack)->vbot));
 }
 
 /* Open a test: remember what it is matching, clear anything a previous one
@@ -351,19 +358,19 @@ void starttest(delta_state *d, int16_t tag)
 {
     delta_frame *slot;
 
-    d->vars->test_tag = tag;
+    EVV_AT(delta_vars *, d->vars)->test_tag = tag;
     clearDeltaStackBack(d);
 
-    slot = bs_push(d->stack, d->stack->ca_size);
+    slot = bs_push(EVV_AT(delta_stack *, d->stack), EVV_AT(delta_stack *, d->stack)->ca_size);
     slot->kind = 0;
-    slot->value = d->vars->test_tag;
+    slot->value = EVV_AT(delta_vars *, d->vars)->test_tag;
 
-    d->vars->testing = 1;
+    EVV_AT(delta_vars *, d->vars)->testing = 1;
 }
 
 static void set3(delta_state *d, int32_t x, int32_t y)
 {
-    d->vars->compared_equal = (int8_t)(x < y ? -1 : (x == y ? 0 : 1));
+    EVV_AT(delta_vars *, d->vars)->compared_equal = (int8_t)(x < y ? -1 : (x == y ? 0 : 1));
 }
 
 /* Three-way comparison, dispatched on the type of the left operand. Only the
@@ -396,21 +403,21 @@ void vcompare(delta_state *d, const delta_operand *a, const delta_operand *b)
 
     case DK_SYNC:
         /* A sync number has no ordering, only same or different. */
-        d->vars->compared_equal =
+        EVV_AT(delta_vars *, d->vars)->compared_equal =
             absoluteSyncNumPtr(*(int32_t *)a->ptr)
             == absoluteSyncNumPtr(*(int32_t *)b->ptr) ? 0 : 1;
         break;
 
     default:
         if (b->kind != a->kind) {
-            d->vars->compared_equal = 1;
+            EVV_AT(delta_vars *, d->vars)->compared_equal = 1;
         } else {
             int32_t len = stmt_length(a->kind);
 
             /* The original keeps only the low byte of what memcmp returns,
                so the exact value matters and not just its sign. That was
                already true of IBM's builds; using memcmp keeps it so. */
-            d->vars->compared_equal =
+            EVV_AT(delta_vars *, d->vars)->compared_equal =
                 (int8_t)memcmp(a->ptr, b->ptr, (size_t)len);
         }
         break;
@@ -443,7 +450,7 @@ void bsclear(delta_state *d)
 /* Take the alternative marker off the stack, handing back where it was. */
 void *bspop_boa(delta_state *d)
 {
-    void *slot = d->stack->top;
+    void *slot = EVV_AT(uint8_t *, EVV_AT(delta_stack *, d->stack)->top);
 
     popDeltaStackTop(d);
     return slot;
@@ -458,12 +465,12 @@ void starttest_l(delta_state *d, int16_t tag) { starttest(d, tag); }
 /* Fencing is one bit in the same word FENCED reads. */
 void SETFENCE(delta_state *d, int32_t *table, int8_t idx)
 {
-    table[d->vars->fence_base + idx] |= 2;
+    table[EVV_AT(delta_vars *, d->vars)->fence_base + idx] |= 2;
 }
 
 void UNSETFENCE(delta_state *d, int32_t *table, int8_t idx)
 {
-    table[d->vars->fence_base + idx] &= ~2;
+    table[EVV_AT(delta_vars *, d->vars)->fence_base + idx] &= ~2;
 }
 
 /* And the rules fence through whatever the left pointer register holds. */
@@ -479,13 +486,13 @@ void remfence(delta_state *d, int8_t idx)
 
 int32_t deltaErrorThrown(delta_state *d)
 {
-    return d->vars->error_thrown;
+    return EVV_AT(delta_vars *, d->vars)->error_thrown;
 }
 
 /* Nothing is left once the record at the unwind point is the bottom marker. */
 int emptyDeltaStack(delta_state *d)
 {
-    return d->vars->back[d->stack->size_a8] == 8;
+    return EVV_AT(uint8_t *, EVV_AT(delta_vars *, d->vars)->back)[EVV_AT(delta_stack *, d->stack)->size_a8] == 8;
 }
 
 void *popDeltaStackFrame(delta_state *d, uint8_t *to)
@@ -498,11 +505,11 @@ void *popDeltaStackFrame(delta_state *d, uint8_t *to)
    pops it knows how wide it was. */
 void vnspush(delta_state *d, const delta_operand *v)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     uint8_t *slot;
 
     s->names_depth = (int8_t)(s->names_depth + 1);
-    slot = s->names + (int32_t)s->names_depth * 8;
+    slot = EVV_AT(uint8_t *, s->names) + (int32_t)s->names_depth * 8;
 
     *(int16_t *)(slot + 4) = v->kind;
 
@@ -560,7 +567,7 @@ int32_t VLSYNC(const delta_node *t, int8_t i)
    offset, and one step further on if the link is not itself a sync. */
 int32_t VRSYNC(delta_state *d, const int32_t *t, int8_t i)
 {
-    int32_t p = t[d->vars->fence_base + i] & ~3;
+    int32_t p = t[EVV_AT(delta_vars *, d->vars)->fence_base + i] & ~3;
 
     if (p == 0)
         return p;
@@ -579,7 +586,7 @@ void reset_field(delta_loc *f)
    fails rather than growing it. */
 int push_ptr(delta_state *d, int32_t p)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     if (v->ptr_count >= 999)
         return 0;
@@ -593,7 +600,7 @@ int push_ptr(delta_state *d, int32_t p)
    stepped back, which is what the original does rather than simply popping. */
 int ret_ptr_active_record(delta_state *d)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     if (v->ptr_count <= 0)
         return 0;
@@ -606,15 +613,15 @@ int ret_ptr_active_record(delta_state *d)
 
 void throwDeltaErrorNow(delta_state *d)
 {
-    d->vars->error_thrown = 1;
+    EVV_AT(delta_vars *, d->vars)->error_thrown = 1;
 }
 
 /* Take the top of the name stack, handing back where it sits rather than
    copying it out. Only the four sized types get a pointer. */
 void vnspop(delta_state *d, delta_operand *out)
 {
-    delta_stack *s = d->stack;
-    uint8_t *slot = s->names + (int32_t)s->names_depth * 8;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+    uint8_t *slot = EVV_AT(uint8_t *, s->names) + (int32_t)s->names_depth * 8;
 
     out->kind = *(int16_t *)(slot + 4);
     *((int8_t *)out + 6) = 0;
@@ -638,7 +645,7 @@ void vnspop(delta_state *d, delta_operand *out)
    is measuring when it reads the length back out of offset eight. */
 void vpush_var(delta_state *d, const delta_operand *v)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     int32_t size;
     int32_t pad;
     int32_t step;
@@ -661,7 +668,7 @@ void vpush_var(delta_state *d, const delta_operand *v)
     step = s->size_ac + pad + 1;
 
     s->top -= step;
-    slot = s->top;
+    slot = EVV_AT(uint8_t *, s->top);
     s->limit -= step;
 
     slot[0] = 2;
@@ -679,7 +686,7 @@ int32_t spine_changed;
    bits of each link. */
 void DELSPINE(delta_state *d, delta_node *t)
 {
-    int32_t base = d->vars->fence_base;
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     int32_t next = t->link & ~3;
     int32_t prev = *(int32_t *)((char *)t + base * 4 - 8) & ~3;
     int32_t *back = (int32_t *)((char *)(intptr_t)next + base * 4 - 8);
@@ -696,12 +703,12 @@ void DELSPINE(delta_state *d, delta_node *t)
 static int scan_fenced(delta_state *d, int32_t cur, int32_t field,
                        int32_t usefence, int32_t *at)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t i = 0;
 
     if (v->fence_count != 0 && usefence != 0 && v->scan_held == 0) {
         for (; i < v->fence_count; i++) {
-            uint8_t ch = d->fence_chars[i];
+            uint8_t ch = EVV_AT(uint8_t *, d->fence_chars)[i];
 
             if ((*(int32_t *)(intptr_t)(cur + (v->fence_base + ch) * 4) & 1)
                 != 0) {
@@ -710,14 +717,14 @@ static int scan_fenced(delta_state *d, int32_t cur, int32_t field,
             }
 
             if (FENCED(d, (const int32_t *)(intptr_t)cur,
-                       (int8_t)d->fence_chars[i])
-                && field != d->fence_chars[i]
-                && d->fence_marks[i] == 0) {
+                       (int8_t)EVV_AT(uint8_t *, d->fence_chars)[i])
+                && field != EVV_AT(uint8_t *, d->fence_chars)[i]
+                && EVV_AT(uint8_t *, d->fence_marks)[i] == 0) {
                 *at = i;
                 return 1;
             }
 
-            d->fence_marks[i] = 0;
+            EVV_AT(uint8_t *, d->fence_marks)[i] = 0;
         }
     }
 
@@ -728,7 +735,7 @@ static int scan_fenced(delta_state *d, int32_t cur, int32_t field,
 /* Where the scan's next node is, in whichever direction is set. */
 static int32_t scan_step(delta_state *d, int32_t cur, int32_t field)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     if (v->scan_rev != 0)
         return *(int32_t *)(intptr_t)
@@ -741,7 +748,7 @@ static int32_t scan_step(delta_state *d, int32_t cur, int32_t field)
    character is marked once so a second attempt at the same one succeeds. */
 int vscanadv(delta_state *d, int32_t step, int32_t usefence)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t cur = v->scan_ptr;
     int32_t field = v->scan_field;
     int32_t next;
@@ -775,7 +782,7 @@ int vscanadv(delta_state *d, int32_t step, int32_t usefence)
        pass has already cleared every mark, and a skipped one leaves i at
        zero so the whole array still gets cleared. */
     for (; i < v->fence_count; i++)
-        d->fence_marks[i] = 0;
+        EVV_AT(uint8_t *, d->fence_marks)[i] = 0;
 
     return 1;
 }
@@ -784,14 +791,14 @@ int vscanadv(delta_state *d, int32_t step, int32_t usefence)
    its left and right sync arrays. The first is the right-hand spine link. */
 static int32_t *clink(delta_state *d, int32_t p)
 {
-    return (int32_t *)((char *)(intptr_t)p + d->vars->fence_base * 4 - 4);
+    return (int32_t *)((char *)(intptr_t)p + EVV_AT(delta_vars *, d->vars)->fence_base * 4 - 4);
 }
 
 /* The right-hand spine link has no fixed offset: it sits one word before the
    sync array's end, so how many fields the language declares decides where. */
 static int32_t *rlink(delta_state *d, int32_t p)
 {
-    return (int32_t *)((char *)(intptr_t)p + d->vars->fence_base * 4 - 8);
+    return (int32_t *)((char *)(intptr_t)p + EVV_AT(delta_vars *, d->vars)->fence_base * 4 - 8);
 }
 
 /* Present so the caller need not know whether deletion is deferred; on this
@@ -828,7 +835,7 @@ void bspush_ca_scan_boa(delta_state *d, int16_t tag)
 void forceErrorBacktrack(delta_state *d)
 {
     throwDeltaErrorNow(d);
-    longjmp(*(jmp_buf *)d->vars->err_jmp, 1);
+    longjmp(*(jmp_buf *)EVV_AT(void *, EVV_AT(delta_vars *, d->vars)->err_jmp), 1);
 }
 
 void push_ptr_init(delta_state *d, delta_loc *p)
@@ -862,7 +869,7 @@ void npush_s(delta_state *d, int32_t x)
 
 void vscaninit(delta_state *d)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     v->scan_ptr = 0;
     v->scan_field = 0;
@@ -888,7 +895,7 @@ delta_node *vmovel(delta_node *t, uint8_t f)
 int32_t *vmover(delta_state *d, int32_t *t, uint8_t f)
 {
     for (;;) {
-        int32_t next = t[d->vars->fence_base + f] & ~3;
+        int32_t next = t[EVV_AT(delta_vars *, d->vars)->fence_base + f] & ~3;
 
         if (next == 0)
             return t;
@@ -982,13 +989,13 @@ int32_t *rmost(delta_state *d, int8_t f, int32_t *t)
     void *(*get)(void *) = e->get[0];
     uint8_t walkable = e->walkable;
     int16_t kind = e->fields[0].kind;
-    int32_t next = t[d->vars->fence_base + f] & ~3;
+    int32_t next = t[EVV_AT(delta_vars *, d->vars)->fence_base + f] & ~3;
     int32_t keep = 0;
 
     for (;;) {
         if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
             t = (int32_t *)(intptr_t)next;
-            next = t[d->vars->fence_base + f] & ~3;
+            next = t[EVV_AT(delta_vars *, d->vars)->fence_base + f] & ~3;
             continue;
         }
 
@@ -1042,7 +1049,7 @@ void vassign(delta_state *d, const delta_operand *dst, const delta_operand *src)
    nonzero when there was nothing there to push. */
 int npush_fld(delta_state *d, uint8_t st, uint8_t fld)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     const delta_stmt *e = &vstmtbl[st];
     delta_operand out;
     int32_t p;
@@ -1081,7 +1088,7 @@ int npush_fld(delta_state *d, uint8_t st, uint8_t fld)
 int32_t *ctxspine(delta_state *d, int32_t *t, uint8_t f, int32_t back)
 {
     for (;;) {
-        if ((t[d->vars->fence_base + f] & 1) != 0
+        if ((t[EVV_AT(delta_vars *, d->vars)->fence_base + f] & 1) != 0
             && !NONSEQ((const delta_node *)t))
             return t;
 
@@ -1089,7 +1096,7 @@ int32_t *ctxspine(delta_state *d, int32_t *t, uint8_t f, int32_t back)
             t = (int32_t *)(intptr_t)(*(int32_t *)((char *)t + 4) & ~3);
         else
             t = (int32_t *)(intptr_t)
-                (*(int32_t *)((char *)t + d->vars->fence_base * 4 - 8) & ~3);
+                (*(int32_t *)((char *)t + EVV_AT(delta_vars *, d->vars)->fence_base * 4 - 8) & ~3);
     }
 }
 
@@ -1102,8 +1109,8 @@ void vnsqflags(delta_state *d, int32_t *t)
     int32_t count = 0;
     int32_t all = 0;
 
-    while (d->stack->nsq_fields[i] > -1) {
-        if ((t[d->vars->fence_base + d->stack->nsq_fields[i]] & 1) != 0) {
+    while (EVV_AT(int8_t *, EVV_AT(delta_stack *, d->stack)->nsq_fields)[i] > -1) {
+        if ((t[EVV_AT(delta_vars *, d->vars)->fence_base + EVV_AT(int8_t *, EVV_AT(delta_stack *, d->stack)->nsq_fields)[i]] & 1) != 0) {
             count++;
             all = 1;
         }
@@ -1111,10 +1118,10 @@ void vnsqflags(delta_state *d, int32_t *t)
     }
 
     for (i = (int32_t)d->nstmts - 1; i >= 0; i--) {
-        if ((t[d->vars->fence_base + i] & 1) == 0)
+        if ((t[EVV_AT(delta_vars *, d->vars)->fence_base + i] & 1) == 0)
             continue;
 
-        if (d->vars->nsq_marks[i] == 0) {
+        if (EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks)[i] == 0) {
             all = 0;
             count++;
         }
@@ -1179,9 +1186,9 @@ void vinitloc_new(delta_state *d, delta_operand *out, const delta_loc *loc)
 
 void startloop(delta_state *d, int16_t tag)
 {
-    d->vars->test_tag = tag;
+    EVV_AT(delta_vars *, d->vars)->test_tag = tag;
     clearDeltaStackBack(d);
-    d->vars->testing = 0;
+    EVV_AT(delta_vars *, d->vars)->testing = 0;
 }
 
 void save_var(delta_state *d, const delta_loc *loc)
@@ -1197,7 +1204,7 @@ void save_var(delta_state *d, const delta_loc *loc)
    byte wide. */
 int testFldeq(delta_state *d, uint8_t st, uint8_t fld, uint8_t val)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t p = v->scan_ptr;
     const uint8_t *q;
 
@@ -1246,7 +1253,7 @@ void vinitflds(delta_state *d, uint8_t st, void *dst, const void *src)
    is a sync, and stop on the first that is not. */
 int vscanadvOverToken(delta_state *d, int32_t usefence)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t cur = v->scan_ptr;
     int32_t field = v->scan_field;
 
@@ -1266,7 +1273,7 @@ int vscanadvOverToken(delta_state *d, int32_t usefence)
         v->scan_ptr = next;
         v->scan_held = 0;
         for (; i < v->fence_count; i++)
-            d->fence_marks[i] = 0;
+            EVV_AT(uint8_t *, d->fence_marks)[i] = 0;
 
         if ((*(int32_t *)(intptr_t)next & 2) != 0) {
             cur = next;
@@ -1285,7 +1292,7 @@ int vscanadvOverToken(delta_state *d, int32_t usefence)
    named one, whichever comes first. */
 int vscanadvUptoTokenOrMarker(delta_state *d, int32_t target, int32_t usefence)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t cur = v->scan_ptr;
     int32_t field = v->scan_field;
 
@@ -1308,7 +1315,7 @@ int vscanadvUptoTokenOrMarker(delta_state *d, int32_t target, int32_t usefence)
         v->scan_ptr = next;
         v->scan_held = 0;
         for (; i < v->fence_count; i++)
-            d->fence_marks[i] = 0;
+            EVV_AT(uint8_t *, d->fence_marks)[i] = 0;
 
         if (next == target)
             return 1;
@@ -1319,7 +1326,7 @@ int vscanadvUptoTokenOrMarker(delta_state *d, int32_t target, int32_t usefence)
    fields the node behind the start declares. */
 void seqscan(delta_state *d, delta_seqctl *c)
 {
-    int32_t base = d->vars->fence_base;
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     int32_t back = c->kind == 1;
     int32_t t = c->start;
     int32_t peer;
@@ -1372,17 +1379,17 @@ int forall_cont_from(delta_state *d, int16_t tag, int16_t loop,
 
     (void)unused;
 
-    if (d->vars->testing)
+    if (EVV_AT(delta_vars *, d->vars)->testing)
         save_var(d, dst);
 
     vinitloc_new(d, &dv, dst);
     vinitloc_new(d, &sv, src);
     vassign(d, &dv, &sv);
 
-    d->vars->loop_tag = loop;
-    d->vars->test_tag = tag;
+    EVV_AT(delta_vars *, d->vars)->loop_tag = loop;
+    EVV_AT(delta_vars *, d->vars)->test_tag = tag;
     clearDeltaStackBack(d);
-    d->stack->unknown_9c = 0;
+    EVV_AT(delta_stack *, d->stack)->unknown_9c = 0;
 
     reset_field(dst);
     reset_field((delta_loc *)(intptr_t)src);
@@ -1393,21 +1400,21 @@ int forall_cont_from(delta_state *d, int16_t tag, int16_t loop,
    had got to. Anything that may have to be unwound pushes this pair. */
 static void push_ca_and_scan(delta_state *d, int16_t tag)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     uint8_t *ca;
     uint8_t *save;
 
     s->top -= s->ca_size;
-    ca = s->top;
+    ca = EVV_AT(uint8_t *, s->top);
     s->limit -= s->ca_size;
     ca[0] = 3;
     *(int32_t *)(ca + 4) = tag;
 
     s->top -= s->size_b0;
-    save = s->top;
+    save = EVV_AT(uint8_t *, s->top);
     s->limit -= s->size_b0;
     save[0] = 1;
-    memcpy(save + 4, &d->vars->scan_ptr, 8);
+    memcpy(save + 4, &EVV_AT(delta_vars *, d->vars)->scan_ptr, 8);
 }
 
 /* Remember where the scan is, both in the caller's variable and on the
@@ -1415,10 +1422,10 @@ static void push_ca_and_scan(delta_state *d, int16_t tag)
 void savescptr(delta_state *d, int16_t tag, delta_loc *v)
 {
 
-    if (d->vars->testing)
+    if (EVV_AT(delta_vars *, d->vars)->testing)
         save_var(d, v);
 
-    v->value = d->vars->scan_ptr;
+    v->value = EVV_AT(delta_vars *, d->vars)->scan_ptr;
     push_ca_and_scan(d, tag);
 }
 
@@ -1479,7 +1486,7 @@ int get_parm(delta_state *d, delta_loc *out, delta_loc *loc, int16_t kind)
    once, then mark them so the fence lets the rule past them. */
 int test_synch(delta_state *d, int16_t tag, uint8_t n, const uint8_t *list)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t ok = 0;
     int32_t i;
 
@@ -1499,7 +1506,7 @@ int test_synch(delta_state *d, int16_t tag, uint8_t n, const uint8_t *list)
     push_ca_and_scan(d, tag);
 
     for (i = 0; i < n; i++)
-        d->fence_marks[d->fence_index[list[i]]] = 1;
+        EVV_AT(uint8_t *, d->fence_marks)[EVV_AT(uint8_t *, d->fence_index)[list[i]]] = 1;
 
     return 0;
 }
@@ -1508,7 +1515,7 @@ int test_synch(delta_state *d, int16_t tag, uint8_t n, const uint8_t *list)
    need before they have moved the scan. */
 static int32_t scan_peek(delta_state *d)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     if (v->scan_rev != 0)
         return *(int32_t *)(intptr_t)
@@ -1547,7 +1554,7 @@ int test_string_i(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
 
             b.ptr = e->get[0](TFLDS((void *)(intptr_t)node));
             vcompare(d, &a, &b);
-            if (d->vars->compared_equal != 0)
+            if (EVV_AT(delta_vars *, d->vars)->compared_equal != 0)
                 return 1;
         }
 
@@ -1608,7 +1615,7 @@ int test_string_s(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
 
                 b.ptr = e->get[0](TFLDS((void *)(intptr_t)node));
                 vcompare(d, &a, &b);
-                if (d->vars->compared_equal != 0)
+                if (EVV_AT(delta_vars *, d->vars)->compared_equal != 0)
                     return 1;
             }
 
@@ -1630,7 +1637,7 @@ int test_string_s(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
    bits, in the order the original does. */
 int32_t ctxlook(delta_state *d, int32_t t, uint8_t f, int32_t right)
 {
-    int32_t base = d->vars->fence_base;
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     int32_t first = t;
     int32_t anchor = t;
     int32_t cur = t;
@@ -1686,7 +1693,7 @@ int32_t ctxlook(delta_state *d, int32_t t, uint8_t f, int32_t right)
         depth--;
     }
 
-    limit = right ? d->stack->spine_r : d->stack->spine_l;
+    limit = right ? EVV_AT(delta_stack *, d->stack)->spine_r : EVV_AT(delta_stack *, d->stack)->spine_l;
     result = 0;
 
     while (depth > 1) {
@@ -1785,7 +1792,7 @@ int vnormalize(delta_state *d, delta_tpos *p)
     int32_t node = p->node;
     int8_t f = p->field;
     int32_t off = p->offset;
-    int32_t base = d->vars->fence_base;
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     int32_t next;
     int32_t value = 0;
     uint8_t went_right;
@@ -1798,7 +1805,7 @@ int vnormalize(delta_state *d, delta_tpos *p)
         went_right = 0;
         next = *(int32_t *)(intptr_t)(node + 0xc + f * 4) & ~3;
 
-        while (node != d->stack->spine_l) {
+        while (node != EVV_AT(delta_stack *, d->stack)->spine_l) {
             if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
                 node = next;
                 next = *(int32_t *)(intptr_t)(node + 0xc + f * 4) & ~3;
@@ -1818,7 +1825,7 @@ int vnormalize(delta_state *d, delta_tpos *p)
         went_right = 1;
         next = *(int32_t *)(intptr_t)(node + (base + f) * 4) & ~3;
 
-        while (node != d->stack->spine_r) {
+        while (node != EVV_AT(delta_stack *, d->stack)->spine_r) {
             if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
                 node = next;
                 next = *(int32_t *)(intptr_t)(node + (base + f) * 4) & ~3;
@@ -1869,8 +1876,8 @@ int vnormalize(delta_state *d, delta_tpos *p)
     p->node = node;
     p->offset = off;
 
-    if ((node == d->stack->spine_l && off < 0)
-        || (node == d->stack->spine_r && off > 0))
+    if ((node == EVV_AT(delta_stack *, d->stack)->spine_l && off < 0)
+        || (node == EVV_AT(delta_stack *, d->stack)->spine_r && off > 0))
         return 1;
     if (off != 0)
         return 2;
@@ -1912,7 +1919,7 @@ int vnormalize(delta_state *d, delta_tpos *p)
    made them. */
 int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f)
 {
-    int32_t base = d->vars->fence_base;
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     int32_t l = left;
     int32_t r = right;
 
@@ -1921,12 +1928,12 @@ int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f)
 
     if (left != 0 && (*(int32_t *)(intptr_t)left & 2) != 0
         && right != 0 && (*(int32_t *)(intptr_t)right & 2) != 0) {
-        *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+        *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
         *(int32_t *)(intptr_t)(t + (base + f) * 4) |= 1;
 
         CLRONESTM((delta_node *)(intptr_t)t);
         if (ALLNSQ((const delta_node *)(intptr_t)t)
-            && d->vars->nsq_marks[f] == 0)
+            && EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks)[f] == 0)
             CLRALLNSQ((delta_node *)(intptr_t)t);
 
         *(int32_t *)(intptr_t)(l + (base + f) * 4) =
@@ -1938,12 +1945,12 @@ int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f)
         *(int32_t *)(intptr_t)(t + 0xc + f * 4) =
             (*(int32_t *)(intptr_t)(t + 0xc + f * 4) & 3) | l;
     } else if (right != 0 && (*(int32_t *)(intptr_t)right & 2) != 0) {
-        *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+        *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
         *(int32_t *)(intptr_t)(t + (base + f) * 4) |= 1;
 
         CLRONESTM((delta_node *)(intptr_t)t);
         if (ALLNSQ((const delta_node *)(intptr_t)t)
-            && d->vars->nsq_marks[f] == 0)
+            && EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks)[f] == 0)
             CLRALLNSQ((delta_node *)(intptr_t)t);
 
         ((delta_node *)(intptr_t)left)->link = t;
@@ -1954,12 +1961,12 @@ int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f)
         *(int32_t *)(intptr_t)(t + 0xc + f * 4) =
             (*(int32_t *)(intptr_t)(t + 0xc + f * 4) & 3) | left;
     } else if (left != 0 && (*(int32_t *)(intptr_t)left & 2) != 0) {
-        *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+        *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
         *(int32_t *)(intptr_t)(t + (base + f) * 4) |= 1;
 
         CLRONESTM((delta_node *)(intptr_t)t);
         if (ALLNSQ((const delta_node *)(intptr_t)t)
-            && d->vars->nsq_marks[f] == 0)
+            && EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks)[f] == 0)
             CLRALLNSQ((delta_node *)(intptr_t)t);
 
         *(int32_t *)(intptr_t)(l + (base + f) * 4) =
@@ -1973,7 +1980,7 @@ int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f)
         return 0;
     }
 
-    if (NONSEQ((const delta_node *)(intptr_t)t) && d->vars->relink != 0) {
+    if (NONSEQ((const delta_node *)(intptr_t)t) && EVV_AT(delta_vars *, d->vars)->relink != 0) {
         DELSPINE(d, (delta_node *)(intptr_t)t);
         INSSPINEL(d, (delta_node *)(intptr_t)t, (delta_node *)(intptr_t)r);
     }
@@ -2045,7 +2052,7 @@ int test_ptr(delta_state *d)
         vnormalize(d, &d->lpta);
 
     for (;;) {
-        if (d->vars->scan_ptr == d->lpta.node)
+        if (EVV_AT(delta_vars *, d->vars)->scan_ptr == d->lpta.node)
             return 0;
         if (!vscanadv(d, 0, 1))
             return 1;
@@ -2087,7 +2094,7 @@ int lpta_tstmover(delta_state *d, uint8_t f)
    fence is left armed. */
 static int setscan(delta_state *d, uint8_t f, uint8_t rev, uint8_t held)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     if (vtstsnc_tv(d, &d->lpta) != 0)
         return 1;
@@ -2115,9 +2122,9 @@ int setscan_nof_r(delta_state *d, uint8_t f) { return setscan(d, f, 1, 0); }
 int32_t vgetsc(delta_state *d, int32_t back, int32_t ctx, int32_t t, uint8_t f)
 {
     if (ctx != 0) {
-        if (d->vars->relink != 0
+        if (EVV_AT(delta_vars *, d->vars)->relink != 0
             && !NONSEQ((const delta_node *)(intptr_t)t)
-            && d->vars->nsq_marks[f] == 0)
+            && EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks)[f] == 0)
             return EVV_REF(ctxspine(d, (int32_t *)(intptr_t)t, f, back));
 
         return ctxlook(d, t, f, back);
@@ -2126,7 +2133,7 @@ int32_t vgetsc(delta_state *d, int32_t back, int32_t ctx, int32_t t, uint8_t f)
     if (back != 0)
         return *(int32_t *)(intptr_t)(t + 0xc + f * 4) & ~3;
 
-    return *(int32_t *)(intptr_t)(t + (d->vars->fence_base + f) * 4) & ~3;
+    return *(int32_t *)(intptr_t)(t + (EVV_AT(delta_vars *, d->vars)->fence_base + f) * 4) & ~3;
 }
 
 /* Whether a position sits on a timing point. Like vtsttmark_tv, but a
@@ -2166,7 +2173,7 @@ int vtimept_tv(delta_state *d, delta_tpos *p, uint8_t back)
 int for_loop_preamble(delta_state *d, int32_t tag, int32_t loop, int32_t f,
                       const delta_token *tok)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     v->loop_tag = loop;
     v->test_tag = tag;
@@ -2186,14 +2193,14 @@ int for_loop_preamble(delta_state *d, int32_t tag, int32_t loop, int32_t f,
     v->scan_ptr = d->lpta.node;
     v->scan_field = (uint8_t)f;
     v->scan_held = 1;
-    d->fence_marks[d->fence_index[f]] = 1;
+    EVV_AT(uint8_t *, d->fence_marks)[EVV_AT(uint8_t *, d->fence_index)[f]] = 1;
     return 1;
 }
 
 /* Give a statement the same place in every field another one occupies. */
 int dupsync(delta_state *d, int32_t t, int32_t src, uint8_t back)
 {
-    int32_t bs = d->vars->fence_base;
+    int32_t bs = EVV_AT(delta_vars *, d->vars)->fence_base;
     uint8_t i;
 
     for (i = 0; i < d->nstmts; i++) {
@@ -2223,12 +2230,12 @@ int vdef_proj(delta_state *d, int32_t t, uint8_t f)
     int32_t l;
     int32_t r;
 
-    if ((*(int32_t *)(intptr_t)(t + (d->vars->fence_base + f) * 4) & 1) != 0)
+    if ((*(int32_t *)(intptr_t)(t + (EVV_AT(delta_vars *, d->vars)->fence_base + f) * 4) & 1) != 0)
         return 1;
 
     l = vgetsc(d, 1, 1, t, f);
 
-    if (d->vars->ctx_both != 0)
+    if (EVV_AT(delta_vars *, d->vars)->ctx_both != 0)
         r = vgetsc(d, 0, 1, t, f);
     else
         r = VRSYNC(d, (const int32_t *)(intptr_t)l, (int8_t)f);
@@ -2259,7 +2266,7 @@ int vprt_range(delta_state *d, delta_tpos *a, delta_tpos *b)
 int forto_adv_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
                 uint8_t f, delta_token *tok, const delta_token *end)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     if (!for_loop_preamble(d, tag, loop, f, tok))
         return 1;
@@ -2272,7 +2279,7 @@ int forto_adv_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
         return 0;
 
     clearDeltaStackBack(d);
-    d->stack->unknown_9c = 0;
+    EVV_AT(delta_stack *, d->stack)->unknown_9c = 0;
     v->testing = 1;
     d->unknown_3c = bound;
     tok->value = v->scan_ptr;
@@ -2282,7 +2289,7 @@ int forto_adv_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
 /* Where the scan's field points from where the scan is now. */
 static int32_t scan_here(delta_state *d)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     return *(int32_t *)(intptr_t)
         (v->scan_ptr + (v->fence_base + v->scan_field) * 4) & ~3;
@@ -2294,7 +2301,7 @@ static int32_t scan_here(delta_state *d)
 int forto_adv_upto_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
                      uint8_t f, delta_token *tok, const delta_token *end)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t nx;
 
     if (!for_loop_preamble(d, tag, loop, f, tok))
@@ -2328,7 +2335,7 @@ int forto_adv_upto_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
         return 0;
 
     clearDeltaStackBack(d);
-    d->stack->unknown_9c = 0;
+    EVV_AT(delta_stack *, d->stack)->unknown_9c = 0;
     v->testing = 1;
     d->unknown_3c = bound;
     tok->value = v->scan_ptr;
@@ -2347,7 +2354,7 @@ int setd_lookup(delta_state *d, int32_t arg, int16_t set)
     if (!vprt_range(d, &d->lpta, &d->rpta))
         forceErrorBacktrack(d);
 
-    desc = d->sets + (int32_t)set * 0x24;
+    desc = EVV_AT(uint8_t *, d->sets) + (int32_t)set * 0x24;
 
     if (!setdlookup(d, d->lpta.node, d->rpta.node, desc, arg))
         return 1;
@@ -2364,12 +2371,12 @@ int setd_lookup(delta_state *d, int32_t arg, int16_t set)
 int vmark(delta_state *d, uint8_t st, uint8_t fld, int32_t t, int32_t stop,
           const void *value)
 {
-    delta_stack *s = d->stack;
-    int32_t base = d->vars->fence_base;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     const delta_stmt *e = &vstmtbl[st];
 
     s->mark_kind = -1;
-    s->mark_fld = &fld;
+    s->mark_fld = EVV_REF(&fld);
     s->mark_flag = 0;
 
     while (t != s->spine_r && t != stop) {
@@ -2384,7 +2391,7 @@ int vmark(delta_state *d, uint8_t st, uint8_t fld, int32_t t, int32_t stop,
         t = *(int32_t *)(intptr_t)(next + 4) & ~3;
     }
 
-    *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+    *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
     return 1;
 }
 
@@ -2397,8 +2404,8 @@ int vmark(delta_state *d, uint8_t st, uint8_t fld, int32_t t, int32_t stop,
    returns before reaching them. They are kept because the original has them. */
 int visleft(delta_state *d, int32_t a, int32_t b)
 {
-    delta_stack *s = d->stack;
-    int32_t base = d->vars->fence_base;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     int32_t slot = -1;
     int32_t p;
     int32_t i;
@@ -2409,7 +2416,7 @@ int visleft(delta_state *d, int32_t a, int32_t b)
     if (a == b)
         return 0;
 
-    if (d->vars->relink != 0
+    if (EVV_AT(delta_vars *, d->vars)->relink != 0
         && !NONSEQ((const delta_node *)(intptr_t)a)
         && !NONSEQ((const delta_node *)(intptr_t)b)) {
         if (s->left_stamp == spine_changed) {
@@ -2518,7 +2525,7 @@ int visright(delta_state *d, int32_t a, int32_t b)
    equal when the other end sits inside the same run. */
 int vcomp_pta(delta_state *d, delta_tpos *a, delta_tpos *b)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     delta_tpos *loose;
     int32_t other;
     int32_t r;
@@ -2635,7 +2642,7 @@ void delsync(delta_state *d, void *p)
    and only when neither neighbour is itself a sync. */
 int mashtoks(delta_state *d, uint8_t f, int32_t t)
 {
-    int32_t base = d->vars->fence_base;
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     int32_t l = *(int32_t *)(intptr_t)(t + 0xc + f * 4) & ~3;
     int32_t r = *(int32_t *)(intptr_t)(t + (base + f) * 4) & ~3;
     const delta_stmt *e = &vstmtbl[f];
@@ -2661,7 +2668,7 @@ int mashtoks(delta_state *d, uint8_t f, int32_t t)
     vadd(d, &b, &a);
     vinitflds(d, f, a.ptr, b.ptr);
 
-    *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+    *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
 
     nx = *(int32_t *)(intptr_t)(r + 4) & ~3;
 
@@ -2691,11 +2698,11 @@ int vchkseqbad(delta_state *d, int32_t t, uint8_t f, const char *what)
 
     for (i = 0; i < d->nstmts; i++) {
         if ((*(int32_t *)(intptr_t)
-             (t + (d->vars->fence_base + i) * 4) & 1) == 0)
+             (t + (EVV_AT(delta_vars *, d->vars)->fence_base + i) * 4) & 1) == 0)
             continue;
 
         present++;
-        if (d->vars->nsq_marks[i] != 0)
+        if (EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks)[i] != 0)
             marked++;
     }
 
@@ -2717,7 +2724,7 @@ int vchkseqbad(delta_state *d, int32_t t, uint8_t f, const char *what)
    not a lone statement. */
 void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t base = v->fence_base;
     delta_node *s = alloc_sync(d);
     int32_t sv;
@@ -2733,10 +2740,10 @@ void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r)
 
     *(int32_t *)(intptr_t)(sv + (base + f) * 4) |= 1;
 
-    if (v->nsq_marks[f] != 0)
+    if (EVV_AT(int8_t *, v->nsq_marks)[f] != 0)
         SETALLNSQ(s);
 
-    *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+    *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
 
     if (l != 0 && (*(int32_t *)(intptr_t)l & 2) != 0) {
         left = l;
@@ -2768,7 +2775,7 @@ void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r)
         if (p != right) {
             nonseq = 0;
 
-            if (v->nsq_marks[f] != 0) {
+            if (EVV_AT(int8_t *, v->nsq_marks)[f] != 0) {
                 nonseq = 1;
             } else {
                 while (p != right) {
@@ -2818,8 +2825,8 @@ void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r)
    the affected run, and the walk at the end marks it. */
 int chkdelnonseq(delta_state *d, int32_t t, uint8_t f)
 {
-    delta_stack *s = d->stack;
-    delta_vars *v = d->vars;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t base = v->fence_base;
     int32_t nboth = 0;
     int32_t nleft = 0;
@@ -2977,8 +2984,8 @@ int chkdelnonseq(delta_state *d, int32_t t, uint8_t f)
    the run is then joined up. */
 int fdeldel(delta_state *d, int32_t from, int32_t to, int32_t arg)
 {
-    delta_stack *s = d->stack;
-    delta_vars *v = d->vars;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t base = v->fence_base;
     int32_t fd = s->del_field;
     int32_t before;
@@ -2989,7 +2996,7 @@ int fdeldel(delta_state *d, int32_t from, int32_t to, int32_t arg)
        ignores it. */
     (void)arg;
 
-    *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+    *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
 
     if (from != 0 && (*(int32_t *)(intptr_t)from & 2) != 0)
         before = *(int32_t *)(intptr_t)(from + 0xc + fd * 4) & ~3;
@@ -3058,14 +3065,14 @@ int fdeldel(delta_state *d, int32_t from, int32_t to, int32_t arg)
    ends, one step in from each. */
 void fdel(delta_state *d, int32_t whole, int32_t arg)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     int32_t fd = s->del_field;
 
     if (whole != 0) {
         fdeldel(d, s->del_from, s->del_to, arg);
     } else {
         int32_t from = *(int32_t *)(intptr_t)
-            (s->del_left + (d->vars->fence_base + fd) * 4) & ~3;
+            (s->del_left + (EVV_AT(delta_vars *, d->vars)->fence_base + fd) * 4) & ~3;
         int32_t to = *(int32_t *)(intptr_t)
             (s->del_right + 0xc + fd * 4) & ~3;
 
@@ -3079,9 +3086,9 @@ void fdel(delta_state *d, int32_t whole, int32_t arg)
    then take the run out. */
 int vdel_1pt(delta_state *d, uint8_t f, int32_t t, int32_t arg)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
 
-    *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+    *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
 
     s->del_field = (int8_t)f;
     s->del_to = t;
@@ -3090,7 +3097,7 @@ int vdel_1pt(delta_state *d, uint8_t f, int32_t t, int32_t arg)
     s->del_right = VRSYNC(d, (const int32_t *)(intptr_t)t, s->del_field);
 
     if ((*(int32_t *)(intptr_t)
-         (t + (d->vars->fence_base + f) * 4) & 1) == 0)
+         (t + (EVV_AT(delta_vars *, d->vars)->fence_base + f) * 4) & 1) == 0)
         return 1;
 
     mashtoks(d, f, t);
@@ -3103,7 +3110,7 @@ int vdel_1pt(delta_state *d, uint8_t f, int32_t t, int32_t arg)
    only a stray non-sync is removed. */
 int vdel_2pt(delta_state *d, uint8_t f, int32_t l, int32_t r)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
 
     s->del_field = (int8_t)f;
     s->del_left = l;
@@ -3113,11 +3120,11 @@ int vdel_2pt(delta_state *d, uint8_t f, int32_t l, int32_t r)
     s->del_to = VLSYNC((const delta_node *)(intptr_t)s->del_right,
                        s->del_field);
 
-    *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+    *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
 
     if (s->del_right == s->del_from) {
         int32_t p = *(int32_t *)(intptr_t)
-            (s->del_left + (d->vars->fence_base + s->del_field) * 4) & ~3;
+            (s->del_left + (EVV_AT(delta_vars *, d->vars)->fence_base + s->del_field) * 4) & ~3;
 
         if (p == 0 || (*(int32_t *)(intptr_t)p & 2) == 0)
             fdeldel(d, p, p, 0);
@@ -3135,10 +3142,10 @@ int vdel_2pt(delta_state *d, uint8_t f, int32_t l, int32_t r)
 int vins_tok(delta_state *d, uint8_t f, int32_t l, int32_t r,
              const delta_operand *v)
 {
-    int32_t base = d->vars->fence_base;
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     int32_t t;
 
-    *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
+    *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
 
     if ((*(int32_t *)(intptr_t)(l + (base + f) * 4) & ~3) != r
         || (*(int32_t *)(intptr_t)(r + 0xc + f * 4) & ~3) != l)
@@ -3162,8 +3169,8 @@ int vins_tok(delta_state *d, uint8_t f, int32_t l, int32_t r,
     else
         vinitflds(d, f, (char *)(intptr_t)t + 8, v->ptr);
 
-    *(int32_t *)(d->owner + DELTA_OWNER_CHANGED) = 1;
-    d->vars->unknown_1170 = 0;
+    *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
+    EVV_AT(delta_vars *, d->vars)->unknown_1170 = 0;
     return 1;
 }
 
@@ -3171,7 +3178,7 @@ int vins_tok(delta_state *d, uint8_t f, int32_t l, int32_t r,
 int vinit_stm(delta_state *d, int8_t f)
 {
     const delta_stmt *e = &vstmtbl[f];
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     delta_operand v;
 
     vdel_2pt(d, (uint8_t)f, s->spine_l, s->spine_r);
@@ -3278,7 +3285,7 @@ int ins_tokens_i(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
 int32_t vsplit_time(delta_state *d, uint8_t f, int32_t t, int32_t off)
 {
     const delta_stmt *e = &vstmtbl[f];
-    int32_t base = d->vars->fence_base;
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     int32_t neighbour;
     int32_t keep;
     int32_t l;
@@ -3401,7 +3408,7 @@ void lpta_storep(delta_state *d, delta_loc *loc)
     if (!vsync_tv(d, &d->lpta))
         forceErrorBacktrack(d);
 
-    if (d->vars->testing)
+    if (EVV_AT(delta_vars *, d->vars)->testing)
         save_var(d, loc);
 
     loc->value = d->lpta.node;
@@ -3417,7 +3424,7 @@ int vrange_l(delta_state *d, delta_tpos *p, delta_tpos *out, int8_t f,
     if (!vdef_proj(d, p->node, (uint8_t)f))
         return 0;
 
-    if (p->node == d->stack->spine_l)
+    if (p->node == EVV_AT(delta_stack *, d->stack)->spine_l)
         return 0;
 
     out->node = EVV_REF(vins_sync(d, (uint8_t)f,
@@ -3442,12 +3449,12 @@ int vrange_r(delta_state *d, delta_tpos *p, delta_tpos *out, int8_t f,
     if (!vdef_proj(d, p->node, (uint8_t)f))
         return 0;
 
-    if (p->node == d->stack->spine_r)
+    if (p->node == EVV_AT(delta_stack *, d->stack)->spine_r)
         return 0;
 
     out->node = EVV_REF(vins_sync(d, (uint8_t)f, p->node,
         *(int32_t *)(intptr_t)
-        (p->node + (d->vars->fence_base + f) * 4) & ~3));
+        (p->node + (EVV_AT(delta_vars *, d->vars)->fence_base + f) * 4) & ~3));
 
     if (out->node == 0)
         return 0;
@@ -3488,7 +3495,7 @@ void insert_r(delta_state *d, int8_t f, uint8_t n, const uint8_t *str,
 int vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
                uint8_t mode)
 {
-    int32_t base = d->vars->fence_base;
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     int32_t r;
 
     if (mode == 0) {
@@ -3500,7 +3507,7 @@ int vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
 
         if (vcomp_pta(d, &ca, &cb))
             return 1;
-        if (d->vars->compared_equal == 0)
+        if (EVV_AT(delta_vars *, d->vars)->compared_equal == 0)
             return 1;
 
         if (!vtmark_tv(d, a, 0))
@@ -3550,8 +3557,8 @@ int vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
         }
 
         if (mode == 0xce
-            || (mode == 0xcd && a->node == d->stack->spine_r)) {
-            if (a->node == d->stack->spine_l)
+            || (mode == 0xcd && a->node == EVV_AT(delta_stack *, d->stack)->spine_r)) {
+            if (a->node == EVV_AT(delta_stack *, d->stack)->spine_l)
                 return 1;
 
             b->node = a->node;
@@ -3562,7 +3569,7 @@ int vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
             if (a->node == 0)
                 return 1;
         } else {
-            if (a->node == d->stack->spine_r)
+            if (a->node == EVV_AT(delta_stack *, d->stack)->spine_r)
                 return 1;
 
             b->node = EVV_REF(vins_sync(d, (uint8_t)a->field,
@@ -3678,10 +3685,10 @@ int insert_2ptv(delta_state *d, uint8_t f, delta_loc *loc, uint8_t mode)
         a.kind = STMTYP((int8_t)f);
 
         switch (a.kind) {
-        case DK_UBYTE:  a.ptr = &d->vars->scratch_b; break;
-        case DK_LONG:   a.ptr = &d->vars->scratch_l; break;
+        case DK_UBYTE:  a.ptr = &EVV_AT(delta_vars *, d->vars)->scratch_b; break;
+        case DK_LONG:   a.ptr = &EVV_AT(delta_vars *, d->vars)->scratch_l; break;
         case DK_SHORT2:
-        case DK_SHORT:  a.ptr = &d->vars->scratch_s; break;
+        case DK_SHORT:  a.ptr = &EVV_AT(delta_vars *, d->vars)->scratch_s; break;
         default:        break;
         }
 
@@ -3715,8 +3722,8 @@ int insert_2ptv(delta_state *d, uint8_t f, delta_loc *loc, uint8_t mode)
    data, which the runtime writes to here and nowhere else. */
 void deltaReinit(delta_state *d, int32_t full)
 {
-    delta_stack *s = d->stack;
-    int32_t base = d->vars->fence_base;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     uint8_t i;
 
     CLRONESTM((delta_node *)(intptr_t)s->spine_l);
@@ -3756,7 +3763,7 @@ void initdelta(delta_state *d, uint8_t n, const uint8_t *list)
                 forceErrorBacktrack(d);
         }
     } else if (n == d->nstmts) {
-        freeDeltaHeapTo(d, (uint8_t *)(intptr_t)d->stack->spine_r, 0);
+        freeDeltaHeapTo(d, (uint8_t *)(intptr_t)EVV_AT(delta_stack *, d->stack)->spine_r, 0);
         deltaReinit(d, 1);
     } else {
         for (i = 0; i < n; i++) {
@@ -3770,7 +3777,7 @@ void initdelta(delta_state *d, uint8_t n, const uint8_t *list)
 
 int init_ptr_active_record(delta_state *d)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     if (!push_ptr(d, v->active_record))
         return 0;
@@ -3785,8 +3792,8 @@ int init_ptr_active_record(delta_state *d)
 int ventproc(delta_state *d, delta_actrec *rec, uint8_t *index,
              uint8_t *chars, uint8_t *marks, void *jb)
 {
-    delta_vars *v = d->vars;
-    delta_stack *s = d->stack;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     uint8_t *slot;
 
     d->unknown_3c = 0;
@@ -3797,11 +3804,11 @@ int ventproc(delta_state *d, delta_actrec *rec, uint8_t *index,
     rec->unknown_00 = v->running;
     memcpy(rec->tags, &v->loop_tag, 8);
     rec->testing = (uint8_t)v->testing;
-    rec->back = v->back;
-    rec->top = s->top;
-    rec->vbot = getDeltaStackVBot(d);
+    rec->back = EVV_REF(EVV_AT(uint8_t *, v->back));
+    rec->top = EVV_REF(EVV_AT(uint8_t *, s->top));
+    rec->vbot = EVV_REF(getDeltaStackVBot(d));
     rec->fence_count = (uint8_t)v->fence_count;
-    rec->err_jmp = v->err_jmp;
+    rec->err_jmp = EVV_REF(EVV_AT(void *, v->err_jmp));
     memcpy(rec->scan, &v->scan_ptr, 8);
     memcpy(&rec->lpta, &d->lpta, sizeof(rec->lpta));
     memcpy(&rec->rpta, &d->rpta, sizeof(rec->rpta));
@@ -3809,21 +3816,21 @@ int ventproc(delta_state *d, delta_actrec *rec, uint8_t *index,
     rec->names_depth = (uint8_t)s->names_depth;
 
     s->top -= s->size_a8;
-    slot = s->top;
+    slot = EVV_AT(uint8_t *, s->top);
     s->limit -= s->size_a8;
 
     slot[0] = 7;
     *(delta_actrec **)(slot + 4) = rec;
 
-    *(uint8_t **)(slot + 0xc) = d->fence_chars;
-    d->fence_chars = chars;
-    *(uint8_t **)(slot + 8) = d->fence_index;
-    d->fence_index = index;
-    *(uint8_t **)(slot + 0x10) = d->fence_marks;
-    d->fence_marks = marks;
+    *(uint8_t **)(slot + 0xc) = EVV_AT(uint8_t *, d->fence_chars);
+    d->fence_chars = EVV_REF(chars);
+    *(uint8_t **)(slot + 8) = EVV_AT(uint8_t *, d->fence_index);
+    d->fence_index = EVV_REF(index);
+    *(uint8_t **)(slot + 0x10) = EVV_AT(uint8_t *, d->fence_marks);
+    d->fence_marks = EVV_REF(marks);
 
-    v->back = s->top;
-    v->err_jmp = jb;
+    v->back = EVV_REF(EVV_AT(uint8_t *, s->top));
+    v->err_jmp = EVV_REF(jb);
     return 0;
 }
 
@@ -3832,8 +3839,8 @@ int ventproc(delta_state *d, delta_actrec *rec, uint8_t *index,
    read. */
 int vretproc(delta_state *d, int32_t tag)
 {
-    delta_vars *v = d->vars;
-    delta_stack *s = d->stack;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     int32_t exhausted = 0;
     int32_t r;
     uint8_t *frame;
@@ -3848,22 +3855,22 @@ int vretproc(delta_state *d, int32_t tag)
     if (emptyDeltaStack(d))
         exhausted = 1;
 
-    frame = popDeltaStackFrame(d, v->back);
+    frame = popDeltaStackFrame(d, EVV_AT(uint8_t *, v->back));
     rec = *(delta_actrec **)(frame + 4);
 
-    frame = s->top;
-    d->fence_chars = *(uint8_t **)(frame + 0xc);
-    d->fence_index = *(uint8_t **)(frame + 8);
-    d->fence_marks = *(uint8_t **)(frame + 0x10);
+    frame = EVV_AT(uint8_t *, s->top);
+    d->fence_chars = EVV_REF(*(uint8_t **)(frame + 0xc));
+    d->fence_index = EVV_REF(*(uint8_t **)(frame + 8));
+    d->fence_marks = EVV_REF(*(uint8_t **)(frame + 0x10));
 
     v->running = rec->unknown_00;
     memcpy(&v->loop_tag, rec->tags, 8);
     v->testing = (int8_t)rec->testing;
-    v->back = rec->back;
-    freeDeltaStackTo(d, rec->top);
-    setDeltaStackVBot(d, rec->vbot);
+    v->back = EVV_REF(EVV_AT(uint8_t *, rec->back));
+    freeDeltaStackTo(d, EVV_AT(uint8_t *, rec->top));
+    setDeltaStackVBot(d, EVV_AT(void *, rec->vbot));
     v->fence_count = (int8_t)rec->fence_count;
-    v->err_jmp = rec->err_jmp;
+    v->err_jmp = EVV_REF(EVV_AT(void *, rec->err_jmp));
     memcpy(&v->scan_ptr, rec->scan, 8);
     memcpy(&d->lpta, &rec->lpta, sizeof(d->lpta));
     memcpy(&d->rpta, &rec->rpta, sizeof(d->rpta));
@@ -3872,7 +3879,7 @@ int vretproc(delta_state *d, int32_t tag)
     v->unknown_11e8 = 0;
 
     if (exhausted) {
-        *(int32_t *)(d->owner + DELTA_OWNER_CODE) = 0xea;
+        *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CODE) = 0xea;
         r = deltaErrorThrown(d) ? 1 : 0;
     } else if (deltaErrorThrown(d)) {
         forceErrorBacktrack(d);
@@ -3894,7 +3901,7 @@ void move_i(delta_state *d, delta_loc *loc, int16_t value)
     delta_operand a;
     delta_operand b;
 
-    if (d->vars->testing)
+    if (EVV_AT(delta_vars *, d->vars)->testing)
         save_var(d, loc);
 
     if (loc->kind == DK_SYNC || loc->kind == DK_LONG) {
@@ -3931,7 +3938,7 @@ void pause(delta_state *d)
    a statement changes. */
 int actd_goto(delta_state *d)
 {
-    d->unknown_3c = d->vars->unknown_11ec;
+    d->unknown_3c = EVV_AT(delta_vars *, d->vars)->unknown_11ec;
     return 2;
 }
 
@@ -3971,7 +3978,7 @@ void npush_vf(delta_state *d, delta_loc *loc)
    back on the way out. */
 void c_assvar(delta_state *d, delta_loc *loc)
 {
-    if (d->vars->testing)
+    if (EVV_AT(delta_vars *, d->vars)->testing)
         save_var(d, loc);
     reset_field(loc);
 }
@@ -3988,19 +3995,19 @@ int32_t absoluteSyncNum(delta_state *d, uint8_t *p)
     if (p == NULL)
         return -1;
 
-    return getDeltaHeapSegNumber(d, p, d->stack->sync_size);
+    return getDeltaHeapSegNumber(d, p, EVV_AT(delta_stack *, d->stack)->sync_size);
 }
 
 /* Start a while loop: remember where the test and the body are, drop the
    backtracking the last round left, and clear the stack's round marker. */
 int while_iterate(delta_state *d, int16_t test_tag, int16_t loop_tag)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     v->loop_tag = loop_tag;
     v->test_tag = test_tag;
     clearDeltaStackBack(d);
-    d->stack->unknown_9c = 0;
+    EVV_AT(delta_stack *, d->stack)->unknown_9c = 0;
     return 2;
 }
 
@@ -4038,7 +4045,7 @@ void rpta_storep(delta_state *d, delta_loc *loc)
     if (!vsync_tv(d, &d->rpta))
         forceErrorBacktrack(d);
 
-    if (d->vars->testing)
+    if (EVV_AT(delta_vars *, d->vars)->testing)
         save_var(d, loc);
 
     loc->value = d->rpta.node;
@@ -4063,7 +4070,7 @@ void lpta_loadv(delta_state *d, uint8_t f, const delta_loc *loc)
 /* Set a timing variable. The two names are the same code in the original. */
 void settvar_i(delta_state *d, delta_loc *loc, int32_t v)
 {
-    if (d->vars->testing)
+    if (EVV_AT(delta_vars *, d->vars)->testing)
         save_var(d, loc);
 
     vinitflds(d, (uint8_t)*(const int8_t *)loc, &loc->value, &v);
@@ -4071,7 +4078,7 @@ void settvar_i(delta_state *d, delta_loc *loc, int32_t v)
 
 void settvar_s(delta_state *d, delta_loc *loc, int32_t v)
 {
-    if (d->vars->testing)
+    if (EVV_AT(delta_vars *, d->vars)->testing)
         save_var(d, loc);
 
     vinitflds(d, (uint8_t)*(const int8_t *)loc, &loc->value, &v);
@@ -4119,7 +4126,7 @@ static int compare_two(delta_state *d)
     vnspop(d, &a);
     vnspop(d, &b);
     vcompare(d, &a, &b);
-    return d->vars->compared_equal;
+    return EVV_AT(delta_vars *, d->vars)->compared_equal;
 }
 
 int if_testeq(delta_state *d)
@@ -4159,7 +4166,7 @@ void npop(delta_state *d, delta_loc *loc)
 
     vnspop(d, &v);
 
-    if (d->vars->testing)
+    if (EVV_AT(delta_vars *, d->vars)->testing)
         save_var(d, loc);
 
     vinitloc_new(d, &dst, loc);
@@ -4181,11 +4188,11 @@ void ncompare_s(delta_state *d, uint8_t c)
         unsigned a = *(const uint8_t *)v.ptr;
 
         if (a == c)
-            d->vars->compared_equal = 0;
+            EVV_AT(delta_vars *, d->vars)->compared_equal = 0;
         else if ((int)a > (int)c)
-            d->vars->compared_equal = 1;
+            EVV_AT(delta_vars *, d->vars)->compared_equal = 1;
         else
-            d->vars->compared_equal = -1;
+            EVV_AT(delta_vars *, d->vars)->compared_equal = -1;
         return;
     }
 
@@ -4207,10 +4214,10 @@ int forall_to_test(delta_state *d, delta_loc *a, delta_loc *b)
     reset_field(a);
     reset_field(b);
 
-    if (d->vars->compared_equal != 0)
+    if (EVV_AT(delta_vars *, d->vars)->compared_equal != 0)
         return 0;
 
-    d->unknown_3c = d->vars->test_tag;
+    d->unknown_3c = EVV_AT(delta_vars *, d->vars)->test_tag;
     return 2;
 }
 
@@ -4314,7 +4321,7 @@ static void pta_ctxt(delta_state *d, delta_tpos *p, uint8_t f, int32_t back)
         forceErrorBacktrack(d);
 
     node = (const int32_t *)(intptr_t)p->node;
-    if (node[d->vars->fence_base + f] & 1)
+    if (node[EVV_AT(delta_vars *, d->vars)->fence_base + f] & 1)
         return;
 
     p->node = vgetsc(d, back, 1, p->node, f);
@@ -4393,7 +4400,7 @@ void copyvar(delta_state *d, delta_loc *a, delta_loc *b)
 {
     delta_operand x, y;
 
-    if (d->vars->testing)
+    if (EVV_AT(delta_vars *, d->vars)->testing)
         save_var(d, a);
 
     vinitloc_new(d, &x, a);
@@ -4411,7 +4418,7 @@ void copyvar(delta_state *d, delta_loc *a, delta_loc *b)
 int forall_adv_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
                  uint8_t f, delta_token *tok)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     if (!for_loop_preamble(d, tag, loop, f, tok))
         return 1;
@@ -4422,7 +4429,7 @@ int forall_adv_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
         return 0;
 
     clearDeltaStackBack(d);
-    d->stack->unknown_9c = 0;
+    EVV_AT(delta_stack *, d->stack)->unknown_9c = 0;
     v->testing = 1;
     d->unknown_3c = bound;
     tok->value = v->scan_ptr;
@@ -4433,7 +4440,7 @@ int forall_adv_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
 int forto_adv_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
                 uint8_t f, delta_token *tok, const delta_token *end)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     if (!for_loop_preamble(d, tag, loop, f, tok))
         return 1;
@@ -4446,7 +4453,7 @@ int forto_adv_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
         return 0;
 
     clearDeltaStackBack(d);
-    d->stack->unknown_9c = 0;
+    EVV_AT(delta_stack *, d->stack)->unknown_9c = 0;
     v->testing = 1;
     d->unknown_3c = bound;
     tok->value = v->scan_ptr;
@@ -4459,7 +4466,7 @@ int for_test(delta_state *d, delta_loc *var, delta_loc *bound,
              delta_loc *step)
 {
     delta_operand a, b, c;
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     v->testing = 0;
 
@@ -4488,7 +4495,7 @@ int for_adv(delta_state *d, int16_t test_tag, int16_t loop_tag,
             delta_loc *var, delta_loc *bound, delta_loc *step)
 {
     delta_operand a, b, c;
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     v->loop_tag = loop_tag;
     v->test_tag = test_tag;
@@ -4516,7 +4523,7 @@ int for_adv(delta_state *d, int16_t test_tag, int16_t loop_tag,
    one turns up or the walk runs out. */
 int savetok(delta_state *d, delta_loc *loc)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     delta_operand dst, src;
     int32_t t;
 
@@ -4670,7 +4677,7 @@ void setDeltaCcodeReturnValue(const void *src, int16_t from, delta_loc *dst)
 /* And what such a helper answers the rule with. */
 void setDeltaReturnCode(delta_state *d, uint8_t code)
 {
-    d->vars->return_code = code;
+    EVV_AT(delta_vars *, d->vars)->return_code = code;
 }
 
 /* One of those helpers: the remainder of one variable by another. */
@@ -4698,7 +4705,7 @@ int ctxt_clstr(delta_state *d, int32_t t, int8_t f)
 
     while (a != b) {
         if (a != 0 && (*(const int32_t *)(intptr_t)a & 2)) {
-            a = ((const int32_t *)(intptr_t)a)[d->vars->fence_base + f] & -4;
+            a = ((const int32_t *)(intptr_t)a)[EVV_AT(delta_vars *, d->vars)->fence_base + f] & -4;
             continue;
         }
 
@@ -4721,8 +4728,8 @@ int ctxt_clstr(delta_state *d, int32_t t, int8_t f)
    the stack so the move can be undone, and the fence is marked. */
 int chstream(delta_state *d, int16_t v, uint8_t f)
 {
-    delta_vars *va = d->vars;
-    delta_stack *s = d->stack;
+    delta_vars *va = EVV_AT(delta_vars *, d->vars);
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     uint8_t *ctx;
     uint8_t *pos;
 
@@ -4733,18 +4740,18 @@ int chstream(delta_state *d, int16_t v, uint8_t f)
     }
 
     s->top -= s->ca_size;
-    ctx = s->top;
+    ctx = EVV_AT(uint8_t *, s->top);
     s->limit -= s->ca_size;
     ctx[0] = 3;
     *(int32_t *)(ctx + 4) = v;
 
     s->top -= s->size_b0;
-    pos = s->top;
+    pos = EVV_AT(uint8_t *, s->top);
     s->limit -= s->size_b0;
     pos[0] = 1;
     memcpy(pos + 4, &va->scan_ptr, 8);
 
-    d->fence_marks[d->fence_index[f]] = 1;
+    EVV_AT(uint8_t *, d->fence_marks)[EVV_AT(uint8_t *, d->fence_index)[f]] = 1;
     va->scan_field = f;
     return 0;
 }
@@ -4910,7 +4917,7 @@ int calcHZ2ST(delta_state *d, const delta_loc *in, delta_loc *out)
 void project_rl(delta_state *d, delta_node *t, int32_t unused_10,
                 int32_t unused_14, delta_node *l, delta_node *r, uint8_t f)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t fb = v->fence_base + f;
     int32_t *tw = (int32_t *)t;
 
@@ -4920,7 +4927,7 @@ void project_rl(delta_state *d, delta_node *t, int32_t unused_10,
     tw[fb] |= 1;
     CLRONESTM(t);
 
-    if (ALLNSQ(t) && v->nsq_marks[f] == 0)
+    if (ALLNSQ(t) && EVV_AT(int8_t *, v->nsq_marks)[f] == 0)
         CLRALLNSQ(t);
 
     if (l == r)
@@ -4953,7 +4960,7 @@ void project_rl(delta_state *d, delta_node *t, int32_t unused_10,
 int actd_lookup(delta_state *d, int16_t n, delta_token *outl,
                 delta_token *outr)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     const uint8_t *entry;
     const uint8_t *p;
     int32_t which;
@@ -4961,7 +4968,7 @@ int actd_lookup(delta_state *d, int16_t n, delta_token *outl,
     if (!vprt_range(d, &d->lpta, &d->rpta))
         forceErrorBacktrack(d);
 
-    entry = d->act_table + (int32_t)n * 0x28;
+    entry = EVV_AT(uint8_t *, d->act_table) + (int32_t)n * 0x28;
     p = actdlookup(d, d->lpta.node, d->rpta.node, entry);
     if (p == NULL)
         return 1;
@@ -5007,7 +5014,7 @@ int actd_lookup(delta_state *d, int16_t n, delta_token *outl,
    they do on the way. */
 int vproj_r(delta_state *d, delta_node *t, delta_node *at, uint8_t f)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t fb = v->fence_base + f;
     int32_t next;
     int32_t after;
@@ -5046,7 +5053,7 @@ int vproj_r(delta_state *d, delta_node *t, delta_node *at, uint8_t f)
    way means they cannot be merged. */
 int conj_merge(delta_state *d, delta_token *tok)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t start = tok->value;
     int32_t node = start;
 
@@ -5088,7 +5095,7 @@ int conj_merge(delta_state *d, delta_token *tok)
    for the relinking they do, not for what they answer. */
 int vproj_l(delta_state *d, delta_node *t, delta_node *at, uint8_t f)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t fb = v->fence_base + f;
     int32_t prev;
     int32_t before;
@@ -5145,7 +5152,7 @@ void proj_l(delta_state *d, uint8_t f)
 /* Where the scan stands, looking back along the field rather than on. */
 static int32_t scan_back(delta_state *d)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     return *(int32_t *)(intptr_t)
         (v->scan_ptr + (3 + v->scan_field) * 4) & ~3;
@@ -5157,7 +5164,7 @@ static int32_t scan_back(delta_state *d)
 int forto_adv_upto_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
                      uint8_t f, delta_token *tok, const delta_token *end)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t nx;
 
     if (!for_loop_preamble(d, tag, loop, f, tok))
@@ -5191,7 +5198,7 @@ int forto_adv_upto_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
         return 0;
 
     clearDeltaStackBack(d);
-    d->stack->unknown_9c = 0;
+    EVV_AT(delta_stack *, d->stack)->unknown_9c = 0;
     v->testing = 1;
     d->unknown_3c = bound;
     tok->value = v->scan_ptr;
@@ -5264,7 +5271,7 @@ int calcHZ2ETI(delta_state *d, const delta_loc *in, delta_loc *out)
    token turns up, a fence blocks it, or the chain runs out. */
 int vscanadvUptoToken(delta_state *d, int32_t usefence)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t cur = v->scan_ptr;
     int32_t field = v->scan_field;
 
@@ -5287,7 +5294,7 @@ int vscanadvUptoToken(delta_state *d, int32_t usefence)
         v->scan_ptr = next;
         v->scan_held = 0;
         for (; i < v->fence_count; i++)
-            d->fence_marks[i] = 0;
+            EVV_AT(uint8_t *, d->fence_marks)[i] = 0;
     }
 }
 
@@ -5300,7 +5307,7 @@ int vscanadvUptoToken(delta_state *d, int32_t usefence)
 int forall_adv_over_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
                       uint8_t f, delta_token *tok)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t nx;
 
     if (!for_loop_preamble(d, tag, loop, f, tok))
@@ -5320,7 +5327,7 @@ int forall_adv_over_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
         return 0;
 
     clearDeltaStackBack(d);
-    d->stack->unknown_9c = 0;
+    EVV_AT(delta_stack *, d->stack)->unknown_9c = 0;
     v->testing = 1;
     d->unknown_3c = bound;
     tok->value = v->scan_ptr;
@@ -5331,7 +5338,7 @@ int forall_adv_over_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
 int forall_adv_upto_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
                       uint8_t f, delta_token *tok)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t nx;
 
     if (!for_loop_preamble(d, tag, loop, f, tok))
@@ -5359,7 +5366,7 @@ int forall_adv_upto_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
         return 0;
 
     clearDeltaStackBack(d);
-    d->stack->unknown_9c = 0;
+    EVV_AT(delta_stack *, d->stack)->unknown_9c = 0;
     v->testing = 1;
     d->unknown_3c = bound;
     tok->value = v->scan_ptr;
@@ -5375,7 +5382,7 @@ int forall_adv_upto_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
    original's hazard and the language never asks for such a type. */
 void insert_lv(delta_state *d, uint8_t st, delta_loc *loc, uint8_t mode)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     delta_operand src;
     delta_operand var;
 
@@ -5446,7 +5453,7 @@ int vtstctx_tv(delta_state *d, delta_tpos *p, int32_t back)
         int32_t val = 0;
 
         p->node = ((const int32_t *)(intptr_t)p->node)
-            [d->vars->fence_base + p->field] & -4;
+            [EVV_AT(delta_vars *, d->vars)->fence_base + p->field] & -4;
 
         if (vstmtbl[p->field].fields[0].kind == DK_LONG) {
             val = *(const int32_t *)get(TFLDS((void *)(intptr_t)p->node));
@@ -5500,7 +5507,7 @@ static int lpta_tstctxt(delta_state *d, uint8_t f, int32_t back)
         return 1;
 
     node = (const int32_t *)(intptr_t)d->lpta.node;
-    if (node[d->vars->fence_base + f] & 1)
+    if (node[EVV_AT(delta_vars *, d->vars)->fence_base + f] & 1)
         return 0;
 
     d->lpta.node = vgetsc(d, back ? 0 : 1, 1, d->lpta.node, f);
@@ -5583,7 +5590,7 @@ int f0_stepi(delta_state *d, const delta_loc *n, const delta_loc *f0,
 int32_t dur2(delta_state *d, const delta_tpos *a, const delta_tpos *b,
              int8_t f, int32_t back)
 {
-    int32_t fb = d->vars->fence_base + f;
+    int32_t fb = EVV_AT(delta_vars *, d->vars)->fence_base + f;
     int32_t from, to;
     int32_t total = 0;
     uint8_t counted = 0;
@@ -5689,7 +5696,7 @@ int vdur_ass(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
     p = a->node;
     while (p != b->node) {
         if (p != 0 && (*(const int32_t *)(intptr_t)p & 2)) {
-            p = ((const int32_t *)(intptr_t)p)[d->vars->fence_base + f] & -4;
+            p = ((const int32_t *)(intptr_t)p)[EVV_AT(delta_vars *, d->vars)->fence_base + f] & -4;
             continue;
         }
 

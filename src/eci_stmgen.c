@@ -106,11 +106,11 @@ int32_t timeDuration(delta_state *d, int32_t from, int32_t to, int8_t field)
     int32_t p = from;
 
     while (p != to) {
-        if (p == d->stack->spine_r)
+        if (p == EVV_AT(delta_stack *, d->stack)->spine_r)
             return 0;
 
         if (p != 0 && (*(int32_t *)(intptr_t)p & SPACER)) {
-            p = FIELD(p, d->vars->fence_base + field) & LINK_MASK;
+            p = FIELD(p, EVV_AT(delta_vars *, d->vars)->fence_base + field) & LINK_MASK;
         } else {
             total += integerValue(p, field);
             p = *(int32_t *)(intptr_t)(p + 4) & LINK_MASK;
@@ -127,14 +127,14 @@ static int32_t moveRightOverSpaces(delta_state *d, int32_t node, int8_t field,
                                    int8_t valField, int32_t *out,
                                    int32_t *failed)
 {
-    int32_t base = d->vars->fence_base;
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     int32_t found = 0;
     int32_t p = node;
 
     for (;;) {
         int32_t next;
 
-        if (p == d->stack->spine_r)
+        if (p == EVV_AT(delta_stack *, d->stack)->spine_r)
             break;
 
         next = FIELD(p, base + field) & LINK_MASK;
@@ -162,7 +162,7 @@ static int32_t moveRightOverVal(delta_state *d, int32_t node, int8_t field,
                                 int8_t valField, int32_t *out,
                                 int32_t *failed)
 {
-    int32_t base = d->vars->fence_base;
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     int32_t found = 0;
     int32_t p = node;
 
@@ -171,7 +171,7 @@ static int32_t moveRightOverVal(delta_state *d, int32_t node, int8_t field,
     for (;;) {
         int32_t next;
 
-        if (p == d->stack->spine_r) {
+        if (p == EVV_AT(delta_stack *, d->stack)->spine_r) {
             found = p;
             break;
         }
@@ -261,7 +261,7 @@ static int32_t valueSetInRange(const ValueSet *vs, int32_t at)
 static int32_t valueSetValue(delta_state *d, ValueSet *vs, int8_t stream,
                              int32_t at, int32_t *failed)
 {
-    int32_t base = d->vars->fence_base;
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     Cursor *c = &vs->cursors[stream];
     int32_t restarted = 0;
 
@@ -306,7 +306,7 @@ static int32_t valueSetValue(delta_state *d, ValueSet *vs, int8_t stream,
         if (got != 0) {
             c->right = got;
             c->left_value = c->at_left;
-            if (c->right != d->stack->spine_r) {
+            if (c->right != EVV_AT(delta_stack *, d->stack)->spine_r) {
                 c->right_value = v;
                 c->rise = v - c->at_left;
             } else {

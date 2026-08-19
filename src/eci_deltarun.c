@@ -30,7 +30,7 @@
 #define VARS_1000(v)  (*(uint8_t *)((char *)(v) + 0x1000))
 
 /* What the owner keeps that says the spine moved. */
-#define OWNER_MOVED(d) (*(int32_t *)((d)->owner + 0x1b8))
+#define OWNER_MOVED(d) (*(int32_t *)(EVV_AT(uint8_t *, (d)->owner) + 0x1b8))
 
 /* What the last C helper answered with, when it means the machine cannot be
    trusted to still hold a spine: never ran, or ran and failed. */
@@ -43,26 +43,26 @@ extern int32_t vdltinit(delta_state *d, int32_t initStatements);
 /* One block, wiped, and the one field that does not start at nought. */
 void ccode_new(delta_state *d)
 {
-    d->vars = (delta_vars *)malloc(VARS_BYTES);
-    memset(d->vars, 0, VARS_BYTES);
+    d->vars = EVV_REF((delta_vars *)malloc(VARS_BYTES));
+    memset(EVV_AT(delta_vars *, d->vars), 0, VARS_BYTES);
     ccode_misc_new(d);
 }
 
 /* Wiped again before it goes back, so nothing of the run is left in it. */
 void ccode_delete(delta_state *d)
 {
-    if (!d || !d->vars)
+    if (!d || !EVV_AT(delta_vars *, d->vars))
         return;
 
-    memset(d->vars, 0, VARS_BYTES);
-    free(d->vars);
-    d->vars = 0;
+    memset(EVV_AT(delta_vars *, d->vars), 0, VARS_BYTES);
+    free(EVV_AT(delta_vars *, d->vars));
+    d->vars = EVV_REF(0);
 }
 
 /* Back to the start of a run. */
 int32_t vinitrun(delta_state *d)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t     i;
 
     v->fence_count = 0;
@@ -71,14 +71,14 @@ int32_t vinitrun(delta_state *d)
        field carries a mark. The index uses the statement count itself as
        the value meaning nothing, which is why it goes one past the end. */
     for (i = 0; i < d->nstmts; i++) {
-        d->fence_chars[i] = 0;
-        d->fence_index[i] = d->nstmts;
-        d->fence_marks[i] = 0;
+        EVV_AT(uint8_t *, d->fence_chars)[i] = 0;
+        EVV_AT(uint8_t *, d->fence_index)[i] = d->nstmts;
+        EVV_AT(uint8_t *, d->fence_marks)[i] = 0;
     }
-    d->fence_marks[d->nstmts] = 0;
+    EVV_AT(uint8_t *, d->fence_marks)[d->nstmts] = 0;
 
-    *(int32_t *)(SPINE_L_HOLDER(d) + 4) = d->stack->spine_l;
-    *(int32_t *)(SPINE_R_HOLDER(d) + 4) = d->stack->spine_r;
+    *(int32_t *)(SPINE_L_HOLDER(d) + 4) = EVV_AT(delta_stack *, d->stack)->spine_l;
+    *(int32_t *)(SPINE_R_HOLDER(d) + 4) = EVV_AT(delta_stack *, d->stack)->spine_r;
 
     VARS_FF0(v) = 0;
     VARS_1000(v) = 0;
@@ -90,18 +90,18 @@ int32_t vinitrun(delta_state *d)
     if (v->return_code == NEVER_RAN || v->return_code == FAILED) {
         if (!vdltinit(d, 1))
             return 0;
-        *(int32_t *)(SPINE_L_HOLDER(d) + 4) = d->stack->spine_l;
-        *(int32_t *)(SPINE_R_HOLDER(d) + 4) = d->stack->spine_r;
+        *(int32_t *)(SPINE_L_HOLDER(d) + 4) = EVV_AT(delta_stack *, d->stack)->spine_l;
+        *(int32_t *)(SPINE_R_HOLDER(d) + 4) = EVV_AT(delta_stack *, d->stack)->spine_r;
     }
 
     OWNER_MOVED(d) = 0;
 
     for (i = 0; i < d->ncompound; i++) {
-        unsigned char *at = d->compound[i].at;
+        unsigned char *at = EVV_AT(delta_compound *, d->compound)[i].at;
 
-        *(int16_t *)at = (int16_t)d->compound[i].init;
+        *(int16_t *)at = (int16_t)EVV_AT(delta_compound *, d->compound)[i].init;
         *(int16_t *)(at + 2) |= (int16_t)-1;
-        memset(at + 4, 0, (size_t)d->compound[i].bytes);
+        memset(at + 4, 0, (size_t)EVV_AT(delta_compound *, d->compound)[i].bytes);
     }
 
     return 1;

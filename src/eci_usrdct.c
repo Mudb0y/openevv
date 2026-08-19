@@ -38,7 +38,7 @@ typedef struct DeltaLang DeltaLang;
 #define DL_STREAM(l)    (*(int8_t *)((char *)(l) + 0x3c))
 
 /* Which side of the machine wants to hear that the spine moved. */
-#define OWNER_MOVED(d)  (*(int32_t *)((d)->owner + 0x1b8))
+#define OWNER_MOVED(d)  (*(int32_t *)(EVV_AT(uint8_t *, (d)->owner) + 0x1b8))
 
 /* What comes back. Nought is the only good answer; the rest say what went
    wrong, and the holder hands its own out in place of asking a volume. */

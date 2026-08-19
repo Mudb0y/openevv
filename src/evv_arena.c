@@ -98,12 +98,24 @@ static head *next_block(head *b)
     return (head *)p;
 }
 
+/* How much to take when nobody said. The pages are not touched until they are
+   used, so asking for a lot costs nothing but address space, and the whole
+   point of the region is that it has to sit at an address a 32-bit value can
+   name, which is not somewhere to be short of room. */
+#define ARENA_DEFAULT (256u * 1024u * 1024u)
+
 void *evv_arena_alloc(size_t n)
 {
     size_t want = ROUND(n) + ALIGN;
     head *b;
 
-    if (evv_arena_base == 0 || n == 0)
+    if (n == 0)
+        return 0;
+
+    /* Opened on the first allocation rather than by whoever starts the engine,
+       so that nothing can allocate before it exists. The first allocation is
+       on the thread that sets the engine up, before it starts any other. */
+    if (evv_arena_base == 0 && !evv_arena_open(ARENA_DEFAULT))
         return 0;
 
     for (b = first; b != 0; b = next_block(b)) {
@@ -185,42 +197,15 @@ void *evv_arena_realloc(void *p, size_t n)
     return out;
 }
 
-/* ---- one rule's frame ------------------------------------------------- */
+/* ---- a thread's stack ------------------------------------------------- */
 
-/* A rule hands the address of its own frame to the machine, so the frame
-   cannot be on the thread's stack, which is nowhere near low enough. They
-   nest strictly, so a stack of its own inside the arena is all that is
-   wanted. */
-
-#define FRAME_STACK (1024u * 1024u)
-
-static __thread unsigned char *fs_base, *fs_top, *fs_end;
-
-void *evv_frame_push(size_t n)
+void *evv_arena_stack(size_t n)
 {
-    unsigned char *p;
+    unsigned char *p = evv_arena_alloc(n + 4096);
 
-    if (fs_base == 0) {
-        fs_base = evv_arena_alloc(FRAME_STACK);
-        if (fs_base == 0)
-            return 0;
-        fs_top = fs_base;
-        fs_end = fs_base + FRAME_STACK;
-    }
-
-    n = ROUND(n);
-    if (fs_top + n > fs_end)
+    if (p == 0)
         return 0;
-
-    p = fs_top;
-    fs_top += n;
-    return p;
-}
-
-void evv_frame_pop(void *p)
-{
-    if (p != 0)
-        fs_top = (unsigned char *)p;
+    return (void *)(((uintptr_t)p + 4095) & ~(uintptr_t)4095);
 }
 
 int32_t evv_ref_checked(const void *p)
@@ -229,13 +214,14 @@ int32_t evv_ref_checked(const void *p)
 
     if (p == 0)
         return 0;
-    if (v < (uintptr_t)evv_arena_base
-        || v >= (uintptr_t)evv_arena_base + evv_arena_size) {
+    if (v >= 0x80000000u) {
         /* Truncating this would hand the machine an address that is not the
-           one asked for, and the fault is in whoever allocated it outside the
-           arena rather than here. */
-        fprintf(stderr, "evv: %p is not in the arena and cannot be a value\n",
-                p);
+           one asked for. Everything the machine can hold a pointer to is meant
+           to be low: the heap and the thread stacks come from the arena, and
+           the language's own tables are in the program, which is linked below
+           two gigabytes for exactly this reason. Something that got here came
+           from neither. */
+        fprintf(stderr, "evv: %p is too high to be a value\n", p);
         abort();
     }
     return (int32_t)(uint32_t)v;

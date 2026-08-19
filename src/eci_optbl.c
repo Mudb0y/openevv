@@ -47,7 +47,7 @@ int ins_tokens(delta_state *d, int8_t f, const uint8_t *str, uint8_t n,
     if (n == 1) {
         /* Nothing to put in. Take out whatever is between the registers,
            unless they are already each other's neighbour. */
-        if ((NODE(d->lpta.node)[d->vars->fence_base + f] & LINK_MASK)
+        if ((NODE(d->lpta.node)[EVV_AT(delta_vars *, d->vars)->fence_base + f] & LINK_MASK)
                 != d->rpta.node
          || (NODE(d->rpta.node)[OWN_WORDS + f] & LINK_MASK) != d->lpta.node)
             vdel_2pt(d, f, d->lpta.node, d->rpta.node);

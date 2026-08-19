@@ -20,6 +20,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* A pointer the machine holds, as it holds it. A field of this type is
+   thirty-two bits wide whatever the host is, which is what keeps the block
+   layouts the compiled rules address from moving. */
+typedef int32_t evv_ref;
+
 #if defined(EVV_ARENA) && EVV_ARENA
 
 /* The region, and how far it reaches. Set once, before anything is
@@ -47,11 +52,13 @@ void  evv_arena_free(void *p);
 #define realloc(p, n)   evv_arena_realloc(p, n)
 #define free(p)         evv_arena_free(p)
 
-/* A frame for one rule, and giving it back. These come from the arena and not
-   from the thread's stack, because a rule hands the address of its own frame
-   to the machine and the stack is nowhere near low enough. */
-void *evv_frame_push(size_t n);
-void  evv_frame_pop(void *p);
+/* A block a thread can run its stack on. A rule keeps its frame on the stack
+   and hands the machine the address of it, so a thread that runs rules needs
+   its whole stack inside the arena; taking it from here is what makes that so,
+   and means no rule has to be written differently. Page-aligned, because that
+   is what pthread_attr_setstack wants, and never freed: the alignment slack in
+   front of it is not a block boundary. */
+void *evv_arena_stack(size_t n);
 
 /* Turning a pointer into a value the machine can hold. Anything outside the
    arena cannot be named in 32 bits and is a fault in whoever allocated it,
@@ -70,6 +77,7 @@ int32_t evv_ref_checked(const void *p);
 
 #define evv_arena_alloc(n)  malloc(n)
 #define evv_arena_free(p)   free(p)
+#define evv_arena_stack(n)  ((void *)0)
 
 #endif
 

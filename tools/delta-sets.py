@@ -50,44 +50,47 @@ void link_new(delta_state *d)
 {
     d->fence_room = %d;
 
-    d->fence_chars_base = d->fence_chars = malloc(%d);
+    d->fence_chars = EVV_REF(malloc(%d));
+    d->fence_chars_base = d->fence_chars;
     if (d->fence_chars == 0) { delta_delete(d); return; }
-    d->fence_index_base = d->fence_index = malloc(%d);
+    d->fence_index = EVV_REF(malloc(%d));
+    d->fence_index_base = d->fence_index;
     if (d->fence_index == 0) { delta_delete(d); return; }
-    d->fence_marks_base = d->fence_marks = malloc(%d);
+    d->fence_marks = EVV_REF(malloc(%d));
+    d->fence_marks_base = d->fence_marks;
     if (d->fence_marks == 0) { delta_delete(d); return; }
 
     d->nstmts = %d;
     d->lang_a = %d;
     d->lang_b = %d;
-    d->lfnames = lfnames;
+    d->lfnames = EVV_REF(lfnames);
     d->nlfnames = %d;
     d->nsets = %d;
-    d->dictfile = dictfile;
+    d->dictfile = EVV_REF(dictfile);
     d->nactions = %d;
 
-    d->sets = malloc(%d);
+    d->sets = EVV_REF(malloc(%d));
     if (d->sets == 0) { delta_delete(d); return; }
-    memcpy(d->sets, set_table, sizeof set_table);
+    memcpy(EVV_AT(uint8_t *, d->sets), set_table, sizeof set_table);
 
-    d->act_table = malloc(%d);
+    d->act_table = EVV_REF(malloc(%d));
     if (d->act_table == 0) { delta_delete(d); return; }
-    memcpy(d->act_table, act_table, sizeof act_table);
+    memcpy(EVV_AT(uint8_t *, d->act_table), act_table, sizeof act_table);
 }
 
 void link_delete(delta_state *d)
 {
     if (d == 0)
         return;
-    free(d->fence_index_base);
+    free(EVV_AT(uint8_t *, d->fence_index_base));
     d->fence_index_base = 0;
-    free(d->fence_chars_base);
+    free(EVV_AT(uint8_t *, d->fence_chars_base));
     d->fence_chars_base = 0;
-    free(d->fence_marks_base);
+    free(EVV_AT(uint8_t *, d->fence_marks_base));
     d->fence_marks_base = 0;
-    free(d->sets);
+    free(EVV_AT(uint8_t *, d->sets));
     d->sets = 0;
-    free(d->act_table);
+    free(EVV_AT(uint8_t *, d->act_table));
     d->act_table = 0;
 }
 """

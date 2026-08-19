@@ -18961,67 +18961,70 @@ static const char dictfile[] = "ecienus.ddl";
    over as they are. */
 void set_dict_new(delta_state *d)
 {
-    d->set_store = setent_all;
+    d->set_store = EVV_REF(setent_all);
 }
 
 void set_dict_delete(delta_state *d)
 {
     if (d != 0)
-        d->set_store = 0;
+        d->set_store = EVV_REF(0);
 }
 
 void act_dict_new(delta_state *d)
 {
-    d->act_store = actent_all;
+    d->act_store = EVV_REF(actent_all);
 }
 
 void act_dict_delete(delta_state *d)
 {
     if (d != 0)
-        d->act_store = 0;
+        d->act_store = EVV_REF(0);
 }
 
 void link_new(delta_state *d)
 {
     d->fence_room = 25;
 
-    d->fence_chars_base = d->fence_chars = malloc(10);
+    d->fence_chars = EVV_REF(malloc(10));
+    d->fence_chars_base = d->fence_chars;
     if (d->fence_chars == 0) { delta_delete(d); return; }
-    d->fence_index_base = d->fence_index = malloc(10);
+    d->fence_index = EVV_REF(malloc(10));
+    d->fence_index_base = d->fence_index;
     if (d->fence_index == 0) { delta_delete(d); return; }
-    d->fence_marks_base = d->fence_marks = malloc(11);
+    d->fence_marks = EVV_REF(malloc(11));
+    d->fence_marks_base = d->fence_marks;
     if (d->fence_marks == 0) { delta_delete(d); return; }
 
     d->nstmts = 10;
     d->lang_a = 1;
     d->lang_b = 2;
-    d->lfnames = lfnames;
+    d->lfnames = EVV_REF(lfnames);
     d->nlfnames = 13;
     d->nsets = 511;
-    d->dictfile = dictfile;
+    d->dictfile = EVV_REF(dictfile);
     d->nactions = 28;
 
-    d->sets = malloc(20664);
-    if (d->sets == 0) { delta_delete(d); return; }
-    memcpy(d->sets, set_table, sizeof set_table);
+    d->sets = EVV_REF(malloc(20664));
+    if (EVV_AT(uint8_t *, d->sets) == 0) { delta_delete(d); return; }
+    memcpy(EVV_AT(uint8_t *, d->sets), set_table, sizeof set_table);
 
-    d->act_table = malloc(1160);
-    if (d->act_table == 0) { delta_delete(d); return; }
-    memcpy(d->act_table, act_table, sizeof act_table);
+    d->act_table = EVV_REF(malloc(1160));
+    if (EVV_AT(uint8_t *, d->act_table) == 0) { delta_delete(d); return; }
+    memcpy(EVV_AT(uint8_t *, d->act_table), act_table, sizeof act_table);
 }
 
 void link_delete(delta_state *d)
 {
     if (d == 0)
         return;
-    free(d->fence_index_base);
-    d->fence_index_base = 0;
-    free(d->fence_chars_base);
-    d->fence_chars_base = 0;
-    free(d->fence_marks_base);
-    d->fence_marks_base = 0;
-    free(d->sets);
-    d->sets = 0;
-    free(d->act_table);
-    d->act_table = 0;
+    free(EVV_AT(uint8_t *, d->fence_index_base));
+    d->fence_index_base = EVV_REF(0);
+    free(EVV_AT(uint8_t *, d->fence_chars_base));
+    d->fence_chars_base = EVV_REF(0);
+    free(EVV_AT(uint8_t *, d->fence_marks_base));
+    d->fence_marks_base = EVV_REF(0);
+    free(EVV_AT(uint8_t *, d->sets));
+    d->sets = EVV_REF(0);
+    free(EVV_AT(uint8_t *, d->act_table));
+    d->act_table = EVV_REF(0);
 }

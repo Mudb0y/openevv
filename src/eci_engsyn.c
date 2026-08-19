@@ -25,7 +25,7 @@
 
 
 /* What the block the machine keeps for ECI holds for this layer. */
-#define ELOQ(d)          ((unsigned char *)(d)->eloqc)
+#define ELOQ(d)          EVV_AT(unsigned char *, (d)->eloqc)
 #define ELOQ_STARTED(d)  (*(int32_t *)(ELOQ(d) + 0x04))
 #define ELOQ_ENDED(d)    (*(int32_t *)(ELOQ(d) + 0x08))
 #define ELOQ_FLUSHING(d) (*(int32_t *)(ELOQ(d) + 0x0c))

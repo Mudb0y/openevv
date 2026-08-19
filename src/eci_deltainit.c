@@ -30,8 +30,8 @@
 #define NAMES_BYTES 0x18
 
 /* Which of the physical files the logical table starts from. */
-#define LOGIO_KIND(d, n) (*(uint8_t *)((char *)(d)->logio + (n)))
-#define LOGIO_ROOM(d)    ((char *)(d)->logio + 0x80)
+#define LOGIO_KIND(d, n) (*(uint8_t *)(EVV_AT(char *, (d)->logio) + (n)))
+#define LOGIO_ROOM(d)    (EVV_AT(char *, (d)->logio) + 0x80)
 
 extern void    errorIgnore(void);
 extern void    throwDeltaErrorNow(delta_state *d);
@@ -57,27 +57,27 @@ int32_t init_new(delta_state *d)
 {
     int32_t rc = 0;
 
-    d->owner = (uint8_t *)malloc(OWNER_BYTES);
-    if (!d->owner)
+    d->owner = EVV_REF((uint8_t *)malloc(OWNER_BYTES));
+    if (!EVV_AT(uint8_t *, d->owner))
         return -2;
-    memset(d->owner, 0, OWNER_BYTES);
+    memset(EVV_AT(uint8_t *, d->owner), 0, OWNER_BYTES);
 
-    OWNER_NAMES(d->owner) = (const char **)malloc(NAMES_BYTES);
-    if (!OWNER_NAMES(d->owner))
+    OWNER_NAMES(EVV_AT(uint8_t *, d->owner)) = (const char **)malloc(NAMES_BYTES);
+    if (!OWNER_NAMES(EVV_AT(uint8_t *, d->owner)))
         return -2;
 
-    OWNER_NAMES(d->owner)[0] = "STATEMENT";
-    OWNER_NAMES(d->owner)[1] = "TEST";
-    OWNER_NAMES(d->owner)[2] = "NULL";
-    OWNER_NAMES(d->owner)[3] = "LOOP";
-    OWNER_NAMES(d->owner)[4] = "COMMAND";
-    OWNER_NAMES(d->owner)[5] = "";
+    OWNER_NAMES(EVV_AT(uint8_t *, d->owner))[0] = "STATEMENT";
+    OWNER_NAMES(EVV_AT(uint8_t *, d->owner))[1] = "TEST";
+    OWNER_NAMES(EVV_AT(uint8_t *, d->owner))[2] = "NULL";
+    OWNER_NAMES(EVV_AT(uint8_t *, d->owner))[3] = "LOOP";
+    OWNER_NAMES(EVV_AT(uint8_t *, d->owner))[4] = "COMMAND";
+    OWNER_NAMES(EVV_AT(uint8_t *, d->owner))[5] = "";
 
-    OWNER_W(d->owner, 0x04) = 3;
-    OWNER_W(d->owner, 0x10) = 2;
-    OWNER_B(d->owner, 0x1b0) = 5;
-    OWNER_W(d->owner, 0x1dc) = 1;
-    *(const char **)((char *)d->owner + 0x1ec) = "";
+    OWNER_W(EVV_AT(uint8_t *, d->owner), 0x04) = 3;
+    OWNER_W(EVV_AT(uint8_t *, d->owner), 0x10) = 2;
+    OWNER_B(EVV_AT(uint8_t *, d->owner), 0x1b0) = 5;
+    OWNER_W(EVV_AT(uint8_t *, d->owner), 0x1dc) = 1;
+    *(const char **)((char *)EVV_AT(uint8_t *, d->owner) + 0x1ec) = "";
 
     return rc;
 }
@@ -88,14 +88,14 @@ void init_delete(delta_state *d)
     if (!d)
         return;
 
-    if (OWNER_NAMES(d->owner)) {
-        free((void *)OWNER_NAMES(d->owner));
-        OWNER_NAMES(d->owner) = 0;
+    if (OWNER_NAMES(EVV_AT(uint8_t *, d->owner))) {
+        free((void *)OWNER_NAMES(EVV_AT(uint8_t *, d->owner)));
+        OWNER_NAMES(EVV_AT(uint8_t *, d->owner)) = 0;
     }
 
-    memset(d->owner, 0, OWNER_BYTES);
-    free(d->owner);
-    d->owner = 0;
+    memset(EVV_AT(uint8_t *, d->owner), 0, OWNER_BYTES);
+    free(EVV_AT(uint8_t *, d->owner));
+    d->owner = EVV_REF(0);
 }
 
 /* The command layer's way out is the program's way out. In a library that is
@@ -109,7 +109,7 @@ void vcmdend(delta_state *d, int32_t code)
 /* Everything the machine needs before it can be told to do anything. */
 int32_t vcmdinit(delta_state *d, int32_t argc, char **argv)
 {
-    uint8_t *owner = d->owner;
+    uint8_t *owner = EVV_AT(uint8_t *, d->owner);
     int32_t  i;
 
     (void)argc;
@@ -121,10 +121,10 @@ int32_t vcmdinit(delta_state *d, int32_t argc, char **argv)
     OWNER_W(owner, 0x1d0) = 0;
     OWNER_W(owner, 0x1cc) = 0x36b0;
 
-    d->vars->relink = 0;
-    d->vars->ctx_both = 1;
+    EVV_AT(delta_vars *, d->vars)->relink = 0;
+    EVV_AT(delta_vars *, d->vars)->ctx_both = 1;
     /* The fenced fields start after the six a sync node keeps for itself. */
-    d->vars->fence_base = d->nstmts + 6;
+    EVV_AT(delta_vars *, d->vars)->fence_base = d->nstmts + 6;
 
     if (!logicalIOInit(d, d->nlfnames + OWNER_W(owner, 0x1b4),
                        (void *)errorIgnore))
@@ -132,7 +132,7 @@ int32_t vcmdinit(delta_state *d, int32_t argc, char **argv)
 
     /* The language's own streams, after whatever the runtime declared. */
     for (i = builtInLogicalFiles(d); i < d->nlfnames; i++) {
-        if (vfdef_lf(d, d->lfnames[i]) == -1)
+        if (vfdef_lf(d, EVV_AT(const char *const *, d->lfnames)[i]) == -1)
             return 0;
     }
 

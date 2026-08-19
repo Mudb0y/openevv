@@ -93,7 +93,7 @@ int32_t cleanLiteral(char *s, char open, char close)
    are still being built, which is why it is a pass of its own. */
 void vlinkinit(delta_state *d)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int16_t     i;
 
     for (i = 0; i < LINK_N(v); i++) {
@@ -132,7 +132,7 @@ void vlinkinit(delta_state *d)
    means the one that is running. */
 void *vardesc(delta_state *d, uint8_t hi, uint8_t lo, void *frame)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t     code = (hi << 8) | lo;
     void       *base;
 
@@ -143,7 +143,7 @@ void *vardesc(delta_state *d, uint8_t hi, uint8_t lo, void *frame)
         frame = (void *)(intptr_t)v->running;
 
     if (EVV_REF(frame) == v->running)
-        base = *(void **)(v->back + 4);
+        base = *(void **)(EVV_AT(uint8_t *, v->back) + 4);
     else
         base = vonstack(d, EVV_REF(frame));
 

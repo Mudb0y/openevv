@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <limits.h>
 #include "evv_port.h"
+#include "evv_arena.h"
 
 /* Some libraries only define this when a feature test macro asks for it,
    and a stack smaller than a page is not worth setting anyway. */
@@ -277,8 +278,20 @@ evv_task *evv_task_start(void (*entry)(void *), void *arg, int stack_bytes)
     s->arg = arg;
 
     pthread_attr_init(&attr);
-    if (stack_bytes >= PTHREAD_STACK_MIN)
-        pthread_attr_setstacksize(&attr, (size_t)stack_bytes);
+    if (stack_bytes < PTHREAD_STACK_MIN)
+        stack_bytes = PTHREAD_STACK_MIN;
+    {
+        /* A rule keeps its frame on the stack and hands the machine the
+           address of it, so where a build holds addresses in 32 bits the whole
+           stack has to sit somewhere those can reach. evv_arena_stack answers
+           nothing on a build that does not, and the system picks as usual. */
+        void *low = evv_arena_stack((size_t)stack_bytes);
+
+        if (low != 0)
+            pthread_attr_setstack(&attr, low, (size_t)stack_bytes);
+        else
+            pthread_attr_setstacksize(&attr, (size_t)stack_bytes);
+    }
     /* Nothing joins these, so let the system reclaim them. */
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 

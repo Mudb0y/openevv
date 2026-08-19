@@ -279,8 +279,8 @@ int vrd_tvar(delta_state *d, int32_t f, const delta_operand *v)
         c = read_token(d, st, f, buf);
 
         if (c == 0 || checkInterrupt(d)) {
-            d->owner[0x14] = 0;
-            memset(d->owner + 0x1a8, 0, 4);
+            EVV_AT(uint8_t *, d->owner)[0x14] = 0;
+            memset(EVV_AT(uint8_t *, d->owner) + 0x1a8, 0, 4);
             return 1;
         }
         if (c == 10) {
@@ -416,7 +416,7 @@ int rdtokverr(delta_state *d, int32_t f, uint8_t st, const char *buf)
    under it. */
 void *vonstack(delta_state *d, int32_t ctx)
 {
-    void **p = (void **)d->vars->back;
+    void **p = (void **)EVV_AT(uint8_t *, EVV_AT(delta_vars *, d->vars)->back);
 
     while (p) {
         void **act = (void **)p[1];
@@ -444,12 +444,12 @@ void *varloc(delta_state *d, uint8_t hi, uint8_t lo, int32_t ctx)
     void *act;
 
     if (ref & 0x8000)
-        return *(void *const *)((uint8_t *)d->vars + 0x11e4 + 4 * idx);
+        return *(void *const *)((uint8_t *)EVV_AT(delta_vars *, d->vars) + 0x11e4 + 4 * idx);
 
     if (ctx == 0)
-        ctx = d->vars->running;
-    if (ctx == d->vars->running)
-        act = ((void *const *)d->vars->back)[1];
+        ctx = EVV_AT(delta_vars *, d->vars)->running;
+    if (ctx == EVV_AT(delta_vars *, d->vars)->running)
+        act = ((void *const *)EVV_AT(uint8_t *, EVV_AT(delta_vars *, d->vars)->back))[1];
     else
         act = vonstack(d, ctx);
     if (act == 0)
@@ -474,8 +474,8 @@ int vrd_nvar(delta_state *d, int32_t f, const delta_operand *v)
         c = getnum(d, f, buf);
 
         if (c == 0) {
-            d->owner[0x14] = 0;
-            memset(d->owner + 0x1a8, 0, 4);
+            EVV_AT(uint8_t *, d->owner)[0x14] = 0;
+            memset(EVV_AT(uint8_t *, d->owner) + 0x1a8, 0, 4);
             again = 1;
             if (var_rderr(d, f, buf))
                 return 1;
@@ -541,9 +541,9 @@ int vrd_delta(delta_state *d, int32_t f, uint8_t st)
     v.kind = STMTYP((int8_t)st);
     v.flag = fd->flag;
 
-    d->stack->top -= d->stack->size_b8;
-    block = (delta_frame *)d->stack->top;
-    d->stack->limit -= d->stack->size_b8;
+    EVV_AT(delta_stack *, d->stack)->top -= EVV_AT(delta_stack *, d->stack)->size_b8;
+    block = (delta_frame *)EVV_AT(uint8_t *, EVV_AT(delta_stack *, d->stack)->top);
+    EVV_AT(delta_stack *, d->stack)->limit -= EVV_AT(delta_stack *, d->stack)->size_b8;
     block->kind = 5;
     block->value = (int32_t)getDeltaStackVBot(d);
     setDeltaStackVBot(d, block);
@@ -556,8 +556,8 @@ int vrd_delta(delta_state *d, int32_t f, uint8_t st)
         if (checkInterrupt(d))
             return 1;
         if (c == 0) {
-            d->owner[0x14] = 0;
-            memset(d->owner + 0x1a8, 0, 4);
+            EVV_AT(uint8_t *, d->owner)[0x14] = 0;
+            memset(EVV_AT(uint8_t *, d->owner) + 0x1a8, 0, 4);
             return 1;
         }
 
@@ -680,11 +680,11 @@ uint8_t svgetu(delta_state *d)
    original's own behaviour and worth knowing before a target trusts it. */
 char *svgets(delta_state *d)
 {
-    char *buf = d->stack->save_name;
+    char *buf = EVV_AT(delta_stack *, d->stack)->save_name;
     int i;
 
     for (i = 0;; i++) {
-        if (i >= (int)sizeof d->stack->save_name)
+        if (i >= (int)sizeof EVV_AT(delta_stack *, d->stack)->save_name)
             svgetimp(d, 1);
         if (delta_save_read(d, buf + i, 1) != 1)
             svgeterr(d, 4);
@@ -752,12 +752,12 @@ void svputlptrs(delta_state *d, int32_t node, int8_t sep)
     int wrote = 0;
     int i;
 
-    if (d->vars->back == 0)
+    if (EVV_AT(uint8_t *, EVV_AT(delta_vars *, d->vars)->back) == 0)
         return;
-    act = ((void *const *)d->vars->back)[1];
+    act = ((void *const *)EVV_AT(uint8_t *, EVV_AT(delta_vars *, d->vars)->back))[1];
     if (act == 0)
         return;
-    desc = (const delta_actdesc *)d->vars->running;
+    desc = (const delta_actdesc *)EVV_AT(delta_vars *, d->vars)->running;
     if (desc == 0)
         return;
 
@@ -785,7 +785,7 @@ void svputlptrs(delta_state *d, int32_t node, int8_t sep)
 int32_t findsync(delta_state *d, int32_t n, int8_t dir)
 {
     int32_t want = n * 4;
-    int32_t s = d->stack->spine_l;
+    int32_t s = EVV_AT(delta_stack *, d->stack)->spine_l;
 
     while (s != 0) {
         if ((*(const int32_t *)(size_t)s & ~3) == want)
@@ -808,7 +808,7 @@ int32_t findsync(delta_state *d, int32_t n, int8_t dir)
 int vsvdelta(delta_state *d, uint8_t stream)
 {
     (void)stream;
-    if (d->stack->sync_size == 0)
+    if (EVV_AT(delta_stack *, d->stack)->sync_size == 0)
         return 0;
     return 0;
 }

@@ -10,7 +10,7 @@
 
 int32_t delta_save_read(delta_state *d, void *buf, int32_t n)
 {
-    FILE *f = (FILE *)d->stack->save_file;
+    FILE *f = (FILE *)EVV_AT(void *, EVV_AT(delta_stack *, d->stack)->save_file);
 
     if (f == 0)
         return 0;
@@ -19,7 +19,7 @@ int32_t delta_save_read(delta_state *d, void *buf, int32_t n)
 
 int32_t delta_save_write(delta_state *d, const void *buf, int32_t n)
 {
-    FILE *f = (FILE *)d->stack->save_file;
+    FILE *f = (FILE *)EVV_AT(void *, EVV_AT(delta_stack *, d->stack)->save_file);
 
     if (f == 0)
         return 0;

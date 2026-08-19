@@ -31,7 +31,7 @@ extern void    logio_delete(delta_state *d);
 /* Nothing was thrown after all. */
 void catchDeltaError(delta_state *d)
 {
-    d->vars->error_thrown = 0;
+    EVV_AT(delta_vars *, d->vars)->error_thrown = 0;
 }
 
 /* Up through the layers, stopping at the first complaint. The C helpers are
@@ -78,12 +78,12 @@ void runtime_delete(delta_state *d)
     logio_delete(d);
     eloqc_delete(d);
 
-    d->owner = 0;
-    d->vars = 0;
-    d->stack = 0;
+    d->owner = EVV_REF(0);
+    d->vars = EVV_REF(0);
+    d->stack = EVV_REF(0);
     *(int32_t *)((char *)d + 0x70) = 0;
-    d->logio = 0;
-    d->eloqc = 0;
+    d->logio = EVV_REF(0);
+    d->eloqc = EVV_REF(0);
 }
 
 /* Every global back to what it started as. The plain ones go to nought; a
@@ -96,19 +96,19 @@ void initGlobalVars(delta_state *d)
     /* Each index holds its list twice, so every variable is done twice.
        That is the original's doing and it costs nothing. */
     for (i = 0; i < d->nword; i++)
-        *d->word[i] = 0;
+        *EVV_AT(int32_t **, d->word)[i] = 0;
 
     for (i = 0; i < d->ncompound; i++) {
-        unsigned char *at = d->compound[i].at;
+        unsigned char *at = EVV_AT(delta_compound *, d->compound)[i].at;
 
-        *(int16_t *)at = (int16_t)d->compound[i].init;
+        *(int16_t *)at = (int16_t)EVV_AT(delta_compound *, d->compound)[i].init;
         *(int16_t *)(at + 2) |= (int16_t)-1;
-        memset(at + 4, 0, (size_t)d->compound[i].bytes);
+        memset(at + 4, 0, (size_t)EVV_AT(delta_compound *, d->compound)[i].bytes);
     }
 
     for (i = 0; i < d->nlong; i++)
-        *d->lng[i] = 0;
+        *EVV_AT(int32_t **, d->lng)[i] = 0;
 
     for (i = 0; i < d->nshort; i++)
-        *d->shrt[i] = 0;
+        *EVV_AT(int16_t **, d->shrt)[i] = 0;
 }

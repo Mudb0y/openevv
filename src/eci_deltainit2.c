@@ -15,7 +15,7 @@
 
 /* The block the machine keeps for ECI, and the flag in it that says the
    parameter streams have already been made. */
-#define ELOQ(d)        ((unsigned char *)(d)->eloqc)
+#define ELOQ(d)        EVV_AT(unsigned char *, (d)->eloqc)
 #define ELOQ_STREAMS(d) (*(int32_t *)(ELOQ(d) + 0x94))
 
 /* A token carries its value as an int16 two bytes in, and says what kind
@@ -82,21 +82,21 @@ int32_t init_user_dicts(delta_state *d, void *a, void *b, void *c)
    as the field numbers themselves followed by a negative. */
 void clearnonseqIndex(delta_state *d)
 {
-    d->stack->nsq_fields[0] = FIELD_LIST_END;
+    EVV_AT(int8_t *, EVV_AT(delta_stack *, d->stack)->nsq_fields)[0] = FIELD_LIST_END;
 }
 
 void setnonseqIndex(delta_state *d, int8_t field)
 {
     int32_t i = 0;
 
-    while (d->stack->nsq_fields[i] != FIELD_LIST_END) {
-        if (d->stack->nsq_fields[i] == field)
+    while (EVV_AT(int8_t *, EVV_AT(delta_stack *, d->stack)->nsq_fields)[i] != FIELD_LIST_END) {
+        if (EVV_AT(int8_t *, EVV_AT(delta_stack *, d->stack)->nsq_fields)[i] == field)
             return;
         i++;
     }
 
-    d->stack->nsq_fields[i] = field;
-    d->stack->nsq_fields[i + 1] = FIELD_LIST_END;
+    EVV_AT(int8_t *, EVV_AT(delta_stack *, d->stack)->nsq_fields)[i] = field;
+    EVV_AT(int8_t *, EVV_AT(delta_stack *, d->stack)->nsq_fields)[i + 1] = FIELD_LIST_END;
 }
 
 /* Say which statement types may run out of order. Everything is cleared
@@ -109,7 +109,7 @@ int32_t setNonSequential(delta_state *d, const void *count_tok, ...)
     int32_t      i, left;
 
     for (i = 0; i < (int32_t)d->nstmts; i++)
-        d->vars->nsq_marks[i] = 0;
+        EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks)[i] = 0;
     clearnonseqIndex(d);
 
     left = TOKEN_VALUE(count_tok);
@@ -130,7 +130,7 @@ int32_t setNonSequential(delta_state *d, const void *count_tok, ...)
             stm = TOKEN_KIND(one);
 
         if (stm >= 0 && stm < (int32_t)d->nstmts) {
-            d->vars->nsq_marks[stm] = 1;
+            EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks)[stm] = 1;
             setnonseqIndex(d, (int8_t)stm);
         }
 

@@ -27,7 +27,7 @@
 #define STACK_604(s)    (*(int32_t *)((char *)(s) + 0x604))
 
 /* What the owner keeps that says the spine moved. */
-#define OWNER_MOVED(d) (*(int32_t *)((d)->owner + 0x1b8))
+#define OWNER_MOVED(d) (*(int32_t *)(EVV_AT(uint8_t *, (d)->owner) + 0x1b8))
 
 /* One node's field, by statement type. */
 #define FIELD(n, f)  (((int32_t *)(intptr_t)(n))[(f)])
@@ -42,29 +42,29 @@ void delta_lib_delete(delta_state *d);
 /* One block, wiped, and the handful that start at something else. */
 int32_t delta_lib_new(delta_state *d)
 {
-    d->stack = (delta_stack *)malloc(STACK_BYTES);
-    if (!d->stack)
+    d->stack = EVV_REF((delta_stack *)malloc(STACK_BYTES));
+    if (!EVV_AT(delta_stack *, d->stack))
         return -2;
 
-    memset(d->stack, 0, STACK_BYTES);
+    memset(EVV_AT(delta_stack *, d->stack), 0, STACK_BYTES);
 
-    STACK_DASHES(d->stack) = "---";
-    STACK_E0(d->stack) = 1;
-    STACK_1D0(d->stack) = -1;
-    STACK_1D4(d->stack) = -1;
-    STACK_604(d->stack) = 0;
+    STACK_DASHES(EVV_AT(delta_stack *, d->stack)) = "---";
+    STACK_E0(EVV_AT(delta_stack *, d->stack)) = 1;
+    STACK_1D0(EVV_AT(delta_stack *, d->stack)) = -1;
+    STACK_1D4(EVV_AT(delta_stack *, d->stack)) = -1;
+    STACK_604(EVV_AT(delta_stack *, d->stack)) = 0;
 
     return 0;
 }
 
 void delta_lib_delete(delta_state *d)
 {
-    if (!d || !d->stack)
+    if (!d || !EVV_AT(delta_stack *, d->stack))
         return;
 
-    memset(d->stack, 0, STACK_BYTES);
-    free(d->stack);
-    d->stack = 0;
+    memset(EVV_AT(delta_stack *, d->stack), 0, STACK_BYTES);
+    free(EVV_AT(delta_stack *, d->stack));
+    d->stack = EVV_REF(0);
 }
 
 /* One byte per statement type in each of two small tables: which fields are
@@ -74,29 +74,29 @@ int32_t vdelinit(delta_state *d)
 {
     int32_t i;
 
-    d->vars->nsq_marks = (int8_t *)malloc((size_t)d->nstmts);
-    d->stack->nsq_fields = (int8_t *)malloc((size_t)d->nstmts);
+    EVV_AT(delta_vars *, d->vars)->nsq_marks = EVV_REF((int8_t *)malloc((size_t)d->nstmts));
+    EVV_AT(delta_stack *, d->stack)->nsq_fields = EVV_REF((int8_t *)malloc((size_t)d->nstmts));
 
-    if (!d->vars->nsq_marks || !d->stack->nsq_fields)
+    if (!EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks) || !EVV_AT(int8_t *, EVV_AT(delta_stack *, d->stack)->nsq_fields))
         return 0;
 
     for (i = 0; i < d->nstmts; i++)
-        d->vars->nsq_marks[i] = 0;
+        EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks)[i] = 0;
 
-    d->stack->nsq_fields[0] = -1;
+    EVV_AT(int8_t *, EVV_AT(delta_stack *, d->stack)->nsq_fields)[0] = -1;
     return 1;
 }
 
 void vdelCleanup(delta_state *d)
 {
-    if (d->stack->nsq_fields) {
-        free((void *)d->stack->nsq_fields);
-        d->stack->nsq_fields = 0;
+    if (EVV_AT(int8_t *, EVV_AT(delta_stack *, d->stack)->nsq_fields)) {
+        free((void *)EVV_AT(int8_t *, EVV_AT(delta_stack *, d->stack)->nsq_fields));
+        EVV_AT(delta_stack *, d->stack)->nsq_fields = EVV_REF(0);
     }
 
-    if (d->vars->nsq_marks) {
-        free((void *)d->vars->nsq_marks);
-        d->vars->nsq_marks = 0;
+    if (EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks)) {
+        free((void *)EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks));
+        EVV_AT(delta_vars *, d->vars)->nsq_marks = EVV_REF(0);
     }
 }
 
@@ -105,7 +105,7 @@ void vdelCleanup(delta_state *d)
    is only deleted. Answers false if any of that failed. */
 int32_t vmerge(delta_state *d, int32_t left, int32_t right)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t     keep;
     int32_t     drop;
     int32_t     joined = 0;
@@ -118,8 +118,8 @@ int32_t vmerge(delta_state *d, int32_t left, int32_t right)
 
     /* The spine's own ends are never the one dropped, and neither is the
        left one while the machine is relinking a non-sequential node. */
-    if (right == d->stack->spine_l
-     || right == d->stack->spine_r
+    if (right == EVV_AT(delta_stack *, d->stack)->spine_l
+     || right == EVV_AT(delta_stack *, d->stack)->spine_r
      || (v->relink != 0 && NONSEQ((const delta_node *)(intptr_t)left))) {
         keep = left;
         drop = right;

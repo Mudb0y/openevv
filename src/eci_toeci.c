@@ -30,7 +30,7 @@ typedef struct {
     int32_t      io_done;      /* +0xac */
 } Eloqc;
 
-#define ELOQC(d) ((Eloqc *)(d)->eloqc)
+#define ELOQC(d) EVV_AT(Eloqc *, (d)->eloqc)
 
 /* The Delta debugger's window. The original decides here whether to put its
    own output on screen; nothing in this library ever wants that. */
@@ -41,7 +41,7 @@ static int showDialogs(void)
 
 int32_t ecilink_new(delta_state *d)
 {
-    if (d == 0 || d->eloqc == 0)
+    if (d == 0 || EVV_AT(void *, d->eloqc) == 0)
         return 0;
     eciLinkClasses(&ELOQC(d)->link_class, &ELOQC(d)->dialog_class);
     return 0;
@@ -57,10 +57,10 @@ int32_t eloqc_new(delta_state *d)
 {
     if (d == 0)
         return 0;
-    d->eloqc = malloc(sizeof(Eloqc));
-    if (d->eloqc == 0)
+    d->eloqc = EVV_REF(malloc(sizeof(Eloqc)));
+    if (EVV_AT(void *, d->eloqc) == 0)
         return -2;
-    memset(d->eloqc, 0, sizeof(Eloqc));
+    memset(EVV_AT(void *, d->eloqc), 0, sizeof(Eloqc));
     ecilink_new(d);
     ELOQC(d)->unknown_98 = -1;
     return 0;
@@ -68,12 +68,12 @@ int32_t eloqc_new(delta_state *d)
 
 void eloqc_delete(delta_state *d)
 {
-    if (d == 0 || d->eloqc == 0)
+    if (d == 0 || EVV_AT(void *, d->eloqc) == 0)
         return;
     ecilink_delete(d);
-    memset(d->eloqc, 0, sizeof(Eloqc));
-    free(d->eloqc);
-    d->eloqc = 0;
+    memset(EVV_AT(void *, d->eloqc), 0, sizeof(Eloqc));
+    free(EVV_AT(void *, d->eloqc));
+    d->eloqc = EVV_REF(0);
 }
 
 /* The machine asks this between statements so that a caller can stop it. */
@@ -163,17 +163,17 @@ after:
             ok = 0;
             goto mark;
         }
-        if (d->vars->nsq_marks != 0) {
+        if (EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks) != 0) {
             int8_t i;
 
             for (i = 0; i < 2; i++)
-                ((int8_t *)d->vars->nsq_marks)[i] = 1;
+                ((int8_t *)EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks))[i] = 1;
         }
-        d->vars->ctx_both = 0;
-        if (d->vars->unknown_1170 == 0)
+        EVV_AT(delta_vars *, d->vars)->ctx_both = 0;
+        if (EVV_AT(delta_vars *, d->vars)->unknown_1170 == 0)
             ok = 0;
         else
-            d->vars->relink = 1;
+            EVV_AT(delta_vars *, d->vars)->relink = 1;
     }
 
 mark:

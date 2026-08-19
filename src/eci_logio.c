@@ -86,7 +86,7 @@ typedef struct {
     void        *error_cb;   /* +0xc0 */
 } LogIO;
 
-#define LOGIO(d)  ((LogIO *)(d)->logio)
+#define LOGIO(d)  EVV_AT(LogIO *, (d)->logio)
 #define LF(d, n)  (&LOGIO(d)->files[(int)(int8_t)(n)])
 
 /* ---- the physical file classes ---------------------------------------- */
@@ -379,7 +379,7 @@ int32_t logio_new(delta_state *d)
     if (d == 0)
         return 0;
     g = malloc(sizeof *g);
-    d->logio = g;
+    d->logio = EVV_REF(g);
     if (g == 0)
         return -2;
     memset(g, 0, sizeof *g);
@@ -405,11 +405,11 @@ void *logicalNullClass(delta_state *d)
 
 void logio_delete(delta_state *d)
 {
-    if (d == 0 || d->logio == 0)
+    if (d == 0 || EVV_AT(void *, d->logio) == 0)
         return;
-    memset(d->logio, 0, sizeof(LogIO));
-    free(d->logio);
-    d->logio = 0;
+    memset(EVV_AT(void *, d->logio), 0, sizeof(LogIO));
+    free(EVV_AT(void *, d->logio));
+    d->logio = EVV_REF(0);
 }
 
 int32_t checkInterrupt(delta_state *d)

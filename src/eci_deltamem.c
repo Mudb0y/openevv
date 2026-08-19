@@ -28,7 +28,7 @@
    time; the rest are fixed. */
 int32_t vmeminit(delta_state *d)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     int32_t      fenced = d->fence_room;
 
     s->size_a8 = (((fenced - 1) & ~1) | 1) + 1;
@@ -44,13 +44,13 @@ int32_t vmeminit(delta_state *d)
         return 0;
 
     /* An unwind with nothing to unwind to lands at the top of the stack. */
-    d->vars->back = s->top;
+    EVV_AT(delta_vars *, d->vars)->back = EVV_REF(EVV_AT(uint8_t *, s->top));
 
     s->unknown_9c = 0;
     s->unknown_98 = 0;
 
-    s->names = (uint8_t *)malloc(NAME_STACK_BYTES);
-    if (!s->names)
+    s->names = EVV_REF((uint8_t *)malloc(NAME_STACK_BYTES));
+    if (!EVV_AT(uint8_t *, s->names))
         return 0;
     s->names_depth = -1;
 
@@ -61,11 +61,11 @@ int32_t vmeminit(delta_state *d)
 /* The name stack is the only thing here that was taken from the C heap. */
 void vnstackCleanup(delta_state *d)
 {
-    delta_stack *s = d->stack;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
 
-    if (s->names) {
-        free(s->names);
-        s->names = 0;
+    if (EVV_AT(uint8_t *, s->names)) {
+        free(EVV_AT(uint8_t *, s->names));
+        s->names = EVV_REF(0);
     }
 }
 
@@ -77,8 +77,8 @@ void vnstackCleanup(delta_state *d)
    well; a restart that only wants the spine back leaves it out. */
 int32_t vdltinit(delta_state *d, int32_t initStatements)
 {
-    delta_stack *s = d->stack;
-    delta_vars  *v = d->vars;
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+    delta_vars  *v = EVV_AT(delta_vars *, d->vars);
     int8_t       i;
 
     /* One sync node holds two words a statement type, plus a fixed six. */

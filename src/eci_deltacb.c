@@ -16,7 +16,7 @@
 #include "delta.h"
 #include "evv_arena.h"
 
-#define ELOQ(d)      ((unsigned char *)(d)->eloqc)
+#define ELOQ(d)      EVV_AT(unsigned char *, (d)->eloqc)
 #define ELOQ_CB(d, off) (*(void **)(ELOQ(d) + (off)))
 
 /* Not a callback: the flag that says phoneme indices are wanted at all. */

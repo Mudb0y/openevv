@@ -65,3 +65,37 @@ missing: $(OBJECTS)
 
 clean:
 	@rm -rf $(BUILD)
+
+# The same engine built sixty-four bit, which needs the arena: the machine
+# keeps addresses in 32-bit values, so everything one can point at has to live
+# somewhere a 32-bit value can name.
+#
+# This is expected to fail until that work is done, and failing is the point:
+# each thing it says is one more piece of the machine that assumed a pointer
+# and a value were the same size.
+CC64      := gcc
+BUILD64   := ../build/native64
+#
+# -no-pie is not a preference. It puts the program at four megabytes rather
+# than wherever the loader fancies, which is what lets the language's own
+# tables be named in a value without being copied anywhere first.
+CFLAGS64  := -O1 -std=gnu99 -I$(SRC) -DEVV_ARENA=1 -no-pie \
+             -Werror=int-conversion \
+             -Werror=incompatible-pointer-types -Wno-implicit-function-declaration
+OBJECTS64 := $(patsubst $(SRC)/%.c,$(BUILD64)/%.o,$(SOURCES))
+
+.PHONY: speak64
+speak64: $(BUILD64)/speak
+
+$(BUILD64)/speak: speak.c $(BUILD64)/libevv.a
+	@$(CC64) $(CFLAGS64) speak.c $(BUILD64)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+$(BUILD64)/%.o: $(SRC)/%.c
+	@mkdir -p $(BUILD64)
+	@$(CC64) $(CFLAGS64) -c $< -o $@
+
+$(BUILD64)/libevv.a: $(OBJECTS64)
+	@rm -f $@
+	@ar rcs $@ $(OBJECTS64)
+	@echo "built $@ from $(words $(OBJECTS64)) objects"

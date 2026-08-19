@@ -59,7 +59,7 @@ static int32_t scomp(const uint8_t *want, const uint8_t *at)
 static int32_t extract(delta_state *d, int32_t l, int32_t r, uint8_t field,
                        uint8_t *out, int32_t room, int32_t width)
 {
-    delta_vars *v = d->vars;
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t     f = v->fence_base + field;
     void       *(*get)(void *);
     int32_t     most = room / width;
@@ -72,7 +72,7 @@ static int32_t extract(delta_state *d, int32_t l, int32_t r, uint8_t field,
 
     get = (void *(*)(void *))vstmtbl[field].get[0];
 
-    while (l != d->stack->spine_r && l != r && n < most) {
+    while (l != EVV_AT(delta_stack *, d->stack)->spine_r && l != r && n < most) {
         int32_t at = ((int32_t *)(intptr_t)l)[f] & ~3;
 
         if (at != 0 && (*(int32_t *)(intptr_t)at & 2)) {

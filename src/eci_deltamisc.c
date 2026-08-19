@@ -18,11 +18,11 @@
 #include "delta.h"
 
 /* What the owner keeps about the command line. */
-#define OWNER_ARGC(d)   (*(int32_t *)((d)->owner + 0x1d4))
-#define OWNER_ARGV(d)   (*(char ***)((d)->owner + 0x1d8))
+#define OWNER_ARGC(d)   (*(int32_t *)(EVV_AT(uint8_t *, (d)->owner) + 0x1d4))
+#define OWNER_ARGV(d)   (*(char ***)(EVV_AT(uint8_t *, (d)->owner) + 0x1d8))
 
 /* Where the logical file table keeps the error callback. */
-#define LOGIO_ERRFN(d)  (*(void **)((char *)(d)->logio + 0xc0))
+#define LOGIO_ERRFN(d)  (*(void **)(EVV_AT(char *, (d)->logio) + 0xc0))
 
 /* One word the variable block clears before a run. */
 #define VARS_1128(d)    (*(int32_t *)((char *)(d)->vars + 0x1128))
@@ -36,7 +36,7 @@ extern int32_t vinitrun(delta_state *d);
    actually runs, so it starts as the value nothing returns. */
 void ccode_misc_new(delta_state *d)
 {
-    d->vars->return_code = (uint8_t)-1;
+    EVV_AT(delta_vars *, d->vars)->return_code = (uint8_t)-1;
 }
 
 void ccode_misc_delete(void)
@@ -101,7 +101,7 @@ void vsetsc(delta_state *d, int32_t fromStart, int32_t unused,
     if (fromStart)
         at = 3 + idx;
     else
-        at = d->vars->fence_base + idx;
+        at = EVV_AT(delta_vars *, d->vars)->fence_base + idx;
 
     table[at] = (table[at] & 3) | bits;
 }
@@ -158,9 +158,9 @@ static int32_t dictinit(delta_state *d, void *entry, int32_t isAction,
 
     /* Where the entries themselves live: one store per set, one per action. */
     if (isAction)
-        *(const void **)(rec + 4) = d->act_store[index];
+        *(const void **)(rec + 4) = EVV_AT(const uint8_t *const *, d->act_store)[index];
     else
-        *(const void **)(rec + 4) = d->set_store[index];
+        *(const void **)(rec + 4) = EVV_AT(const uint8_t *const *, d->set_store)[index];
 
     return 1;
 }
@@ -176,12 +176,12 @@ int32_t vdictinit(delta_state *d)
         return 1;
 
     for (i = 0; i < d->nsets; i++) {
-        if (!dictinit(d, d->sets + i * 0x24, 0, i))
+        if (!dictinit(d, EVV_AT(uint8_t *, d->sets) + i * 0x24, 0, i))
             return 0;
     }
 
     for (i = 0; i < d->nactions; i++) {
-        if (!dictinit(d, d->act_table + i * 0x28, 1, i))
+        if (!dictinit(d, EVV_AT(uint8_t *, d->act_table) + i * 0x28, 1, i))
             return 0;
     }
 
