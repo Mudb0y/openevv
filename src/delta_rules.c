@@ -775,14 +775,59 @@ static void delta_rule_report(void)
                 delta_rule_calls, delta_rule_steps);
 }
 
-int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
-                       int nargs)
+/* The machine itself, kept apart from what runs a rule so that a rule written
+   as C does not pay for a frame and an interpreter it will never use. The
+   thread this runs on has sixty-four kilobytes, and the rules nest deeply
+   enough that paying twice runs out of it. */
+static int32_t run_bytecode(void *state, const delta_rule *r,
+                            const int32_t *args, int nargs)
 {
     unsigned char frame[DELTA_RULE_FRAME_MAX];
-    const delta_rule *volatile was;
     volatile int depth = 0;
     interp st;
     int i;
+
+    memset(frame, 0, sizeof(frame));
+    memset(&st, 0, sizeof(st));
+    st.base = frame + r->frame;
+    st.state = state;
+    st.code = delta_rule_code + r->offset;
+    st.pc = 0;
+
+    for (i = 0; i < nargs && i < r->params; i++)
+        memcpy(st.base + r->pbase + 4 * i, &args[i], 4);
+
+    while (!st.done) {
+        const uint8_t *p = st.code + st.pc;
+
+        /* The one entry that is not a call the interpreter can make on the
+           rule's behalf: a landing place has to be planted in this frame,
+           not in the runtime's. */
+        if (*p == OP_CALL && (int)get16(p + 1) == delta_rule_setjmp) {
+            int32_t buf = (st.argn > 0) ? st.arg[st.argn - 1] : 0;
+
+            st.pc = (int32_t)(p + 5 - st.code);
+            /* Landing here again puts the stack pointer back where it was,
+               so the argument area goes back with it. */
+            depth = st.argn;
+            st.reg[0] = setjmp(*(jmp_buf *)(intptr_t)buf);
+            st.argn = depth;
+            continue;
+        }
+        step(&st);
+        delta_rule_steps++;
+    }
+
+    return st.answer;
+}
+
+int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
+                       int nargs)
+{
+    const delta_rule *was;
+    const delta_rule_c *w;
+    int n = (int)(r - delta_rules);
+    int32_t answer;
 
     if (delta_rule_trace < 0) {
         const char *e = getenv("DELTA_RULE_TRACE");
@@ -808,68 +853,32 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
         fflush(stderr);
     }
 
-    memset(frame, 0, sizeof(frame));
-    memset(&st, 0, sizeof(st));
-    st.base = frame + r->frame;
-    st.state = state;
-    st.code = delta_rule_code + r->offset;
-    st.pc = 0;
-
-    for (i = 0; i < nargs && i < r->params; i++)
-        memcpy(st.base + r->pbase + 4 * i, &args[i], 4);
-
     was = delta_rule_here;
     delta_rule_here = r;
     if (&delta_trace_caller != 0)
         delta_trace_caller = r->object;
 
-    /* A rule written as C runs as C, but only from here, where everything a
+    /* A rule written as C runs as C, and only from here, where everything a
        run says about itself has already been said. The two are then
        interchangeable, and a run with one and a run with the other say the
        same thing or the translation is wrong. */
-    {
-        const delta_rule_c *w;
-        int n = (int)(r - delta_rules);
-
-        for (w = delta_rule_native; w->fn != 0; w++) {
-            if (w->rule != n)
-                continue;
-            st.answer = w->fn(state, args, nargs);
-            st.done = 1;
+    answer = 0;
+    for (w = delta_rule_native; w->fn != 0; w++)
+        if (w->rule == n)
             break;
-        }
-    }
-
-    while (!st.done) {
-        const uint8_t *p = st.code + st.pc;
-
-        /* The one entry that is not a call the interpreter can make on the
-           rule's behalf: a landing place has to be planted in this frame,
-           not in the runtime's. */
-        if (*p == OP_CALL && (int)get16(p + 1) == delta_rule_setjmp) {
-            int32_t buf = (st.argn > 0) ? st.arg[st.argn - 1] : 0;
-
-            st.pc = (int32_t)(p + 5 - st.code);
-            /* Landing here again puts the stack pointer back where it was,
-               so the argument area goes back with it. */
-            depth = st.argn;
-            st.reg[0] = setjmp(*(jmp_buf *)(intptr_t)buf);
-            st.argn = depth;
-            continue;
-        }
-        step(&st);
-        delta_rule_steps++;
-    }
+    if (w->fn != 0)
+        answer = w->fn(state, args, nargs);
+    else
+        answer = run_bytecode(state, r, args, nargs);
 
     delta_rule_here = was;
     if (&delta_trace_caller != 0)
         delta_trace_caller = was ? was->object : 0;
     if (delta_rule_trace) {
-        fprintf(stderr, "# %s left with %08x\n", r->name,
-                (unsigned)st.answer);
+        fprintf(stderr, "# %s left with %08x\n", r->name, (unsigned)answer);
         fflush(stderr);
     }
-    return st.answer;
+    return answer;
 }
 
 const delta_rule *delta_find_rule(const char *name)

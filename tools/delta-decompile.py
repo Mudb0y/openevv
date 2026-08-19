@@ -29,6 +29,7 @@ behind it.
 
 usage: delta-decompile.py                 the hundred smallest with a body
        delta-decompile.py <count>         the smallest that many
+       delta-decompile.py all             every rule there is
        delta-decompile.py <rule>...       the ones named
 """
 
@@ -430,8 +431,19 @@ def smallest(n):
     return [name for _l, name in out[:n]]
 
 
+def every():
+    """Every rule there is, the compiler's own accessors included. Those have
+    no body of their own -- they fetch or store one thing -- but they are
+    rules all the same, and while any is left as bytecode the interpreter has
+    to stay."""
+    c, rules = all_rules()
+    return [name for name, _o, _s, _l in rules]
+
+
 def main():
-    if len(sys.argv) > 1 and not sys.argv[1].isdigit():
+    if len(sys.argv) > 1 and sys.argv[1] == 'all':
+        names = every()
+    elif len(sys.argv) > 1 and not sys.argv[1].isdigit():
         names = sys.argv[1:]
     else:
         names = smallest(int(sys.argv[1]) if len(sys.argv) > 1 else 100)
