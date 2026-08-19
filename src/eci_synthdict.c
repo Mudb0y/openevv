@@ -74,7 +74,9 @@
 #define ROM_TO_ECI        0x78
 
 #define ENGCALL __attribute__((stdcall))
-#define VT_AT(o, off) (*(void **)(*(char **)(o) + (off)))
+/* A slot of an object's table of virtual functions, by the byte it sat at
+   in the original. A slot is a pointer, not four bytes. */
+#define VT_AT(o, off) (((void **)*(void ***)(o))[(off) / 4])
 
 typedef ENGCALL void *(*EngNewDict)(void *engine);
 typedef ENGCALL void (*EngSetDict)(void *engine, void *dict);

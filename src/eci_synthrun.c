@@ -134,7 +134,7 @@ extern THIS int32_t sy_semWait(void *s)
 /* The engine's own table, reached by byte offset because only a handful of
    its slots are named here and the rest are the original's. */
 #define ENG_CALL(t, off) \
-    (*(void **)(*(char **)ST_ENGINE(t) + (off)))
+    (((void **)*(void ***)ST_ENGINE(t))[(off) / 4])
 
 /* Done with a message: one fewer thing outstanding. Everything that finishes
    normally ends here, and everything that gives up early does not. */

@@ -56,7 +56,7 @@ typedef void (*SynthCallback)(int32_t, int32_t *, void *);
 typedef ENGCALL int32_t (*EngCommand)(void *engine, const char *line);
 
 #define ENG_CALL(t, off) \
-    (*(void **)(*(char **)ST_ENGINE(t) + (off)))
+    (((void **)*(void ***)ST_ENGINE(t))[(off) / 4])
 
 extern THIS void stb_postRomanizerError(SynthThread *t, int32_t which)
     MANGLED("?postRomanizerError@SynthThread@@AAEXH@Z");

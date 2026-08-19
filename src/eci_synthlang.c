@@ -50,7 +50,7 @@ typedef ENGCALL void (*EngSetWordStart)(void *engine, IndexCallback cb,
                                         void *param);
 
 #define ENG_CALL(t, off) \
-    (*(void **)(*(char **)ST_ENGINE(t) + (off)))
+    (((void **)*(void ***)ST_ENGINE(t))[(off) / 4])
 
 /* The three words of sample format the outside world hands in sit a little
    way into whatever it handed in. */

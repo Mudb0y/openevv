@@ -74,7 +74,7 @@
 
 #define ENGCALL __attribute__((stdcall))
 #define ENG_CALL(t, off) \
-    (*(void **)(*(char **)ST_ENGINE(t) + (off)))
+    (((void **)*(void ***)ST_ENGINE(t))[(off) / 4])
 
 typedef ENGCALL int32_t (*EngFetchPhonemes)(void *engine, char *out,
                                             int32_t room, int32_t *got);

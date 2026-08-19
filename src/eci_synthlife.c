@@ -49,7 +49,10 @@
 #define ENG_VOICE_CB       0xa0
 
 #define ENGCALL __attribute__((stdcall))
-#define ENG_CALL_ON(e, off) (*(void **)(*(char **)(e) + (off)))
+/* The engine's table of virtual functions, by the byte a slot sat at in
+   the original. A slot is a pointer, not four bytes, so the number is
+   divided rather than added. */
+#define ENG_CALL_ON(e, off) (((void **)*(void ***)(e))[(off) / 4])
 
 typedef void (*IndexCallback)(int32_t, void *);
 typedef void (*UserCallback)(void *);

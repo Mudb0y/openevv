@@ -60,7 +60,7 @@
 
 #define ENGCALL __attribute__((stdcall))
 #define ENG_CALL(t, off) \
-    (*(void **)(*(char **)ST_ENGINE(t) + (off)))
+    (((void **)*(void ***)ST_ENGINE(t))[(off) / 4])
 
 typedef void (*IndexCallback)(int32_t, void *);
 typedef void (*UserCallback)(void *);
