@@ -30,6 +30,14 @@ typedef struct EngineList {
     IniFileReader ini;
 } EngineList;
 
+/* What the list holds in a slot, as much of it as the list itself knows: a
+   table of its own to be deleted through, and the callback flag the list
+   fills in. The engine's record and the phoneme table both start this way. */
+typedef struct ListData {
+    const void *vt;
+    int32_t     callbacks;
+} ListData;
+
 typedef struct EngineArray {
     EngineList    base;
     IniFileReader ini;   /* the array's own, not the list's */

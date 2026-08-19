@@ -20,8 +20,14 @@
 
 #if defined(EVV_ARENA) && EVV_ARENA
 
+#include <pthread.h>
 #include <sys/mman.h>
 #include <unistd.h>
+
+/* One lock over the whole arena. The engine allocates from three threads at
+   once, and the ordinary allocator this stands in for is thread-safe; a
+   first-fit walk that two threads are in at the same time is not. */
+static pthread_mutex_t arena_lock = PTHREAD_MUTEX_INITIALIZER;
 
 unsigned char *evv_arena_base;
 size_t         evv_arena_size;
@@ -154,7 +160,7 @@ static head *next_block(head *b)
    name, which is not somewhere to be short of room. */
 #define ARENA_DEFAULT (256u * 1024u * 1024u)
 
-void *evv_arena_alloc(size_t n)
+static void *arena_alloc(size_t n)
 {
     size_t want = ROUND(n) + ALIGN;
     head *b;
@@ -188,7 +194,7 @@ void *evv_arena_alloc(size_t n)
     return 0;
 }
 
-void evv_arena_free(void *p)
+static void arena_free(void *p)
 {
     head *b, *w;
 
@@ -225,6 +231,23 @@ char *evv_arena_strdup(const char *s)
     return p;
 }
 
+void *evv_arena_alloc(size_t n)
+{
+    void *p;
+
+    pthread_mutex_lock(&arena_lock);
+    p = arena_alloc(n);
+    pthread_mutex_unlock(&arena_lock);
+    return p;
+}
+
+void evv_arena_free(void *p)
+{
+    pthread_mutex_lock(&arena_lock);
+    arena_free(p);
+    pthread_mutex_unlock(&arena_lock);
+}
+
 void *evv_arena_calloc(size_t n, size_t m)
 {
     size_t want = n * m;
@@ -251,17 +274,20 @@ void *evv_arena_realloc(void *p, size_t n)
         return 0;
     }
 
+    pthread_mutex_lock(&arena_lock);
     b = (head *)((unsigned char *)p - ALIGN);
     check(b);
     had = b->size - ALIGN;
-    if (had >= ROUND(n))
+    if (had >= ROUND(n)) {
+        pthread_mutex_unlock(&arena_lock);
         return p;
-
-    out = evv_arena_alloc(n);
-    if (out == 0)
-        return 0;
-    memcpy(out, p, had);
-    evv_arena_free(p);
+    }
+    out = arena_alloc(n);
+    if (out != 0) {
+        memcpy(out, p, had);
+        arena_free(p);
+    }
+    pthread_mutex_unlock(&arena_lock);
     return out;
 }
 

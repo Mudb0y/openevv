@@ -231,7 +231,7 @@ THIS int32_t eng_setCallbackFnFlag(EngineList *el, const void *lang,
         flag = CALLBACK_DEFAULT;
     }
 
-    *(int32_t *)((char *)data + 4) = flag;
+    ((ListData *)data)->callbacks = flag;
     return 1;
 }
 
