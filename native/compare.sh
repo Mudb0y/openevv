@@ -3,14 +3,17 @@
 # Run one set of sentences through the engine built for this machine and
 # through IBM's own under Wine, and say whether the audio agrees.
 #
-# This is the differential test's other half. That one proves our code
-# behaves like the original when linked beside it; this one proves the same
-# code, built for a different operating system and a different C library
-# and threaded with pthreads, still produces the same samples.
+# This is what proves the port: the same sentences, through code built for a
+# different operating system and a different C library and threaded with
+# pthreads, coming out as the same samples.
 #
-# A case that times out is retried once on its own and then reported as
-# hung, for the same reason as next door: the reference hangs now and again
-# on an index mark, and calling that a difference has cost false alarms.
+# It is not a promise to sound like Eloquence forever -- the language data is
+# meant to be worked on -- but until a change is made deliberately, a sample
+# that moved is a bug, and this is what says so.
+#
+# A case that times out is retried once on its own and then reported as hung:
+# the reference hangs now and again on an index mark, and calling that a
+# difference has cost false alarms.
 #
 # usage: compare.sh <cases-file> [mode-letters] [text-pattern]
 

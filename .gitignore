@@ -12,13 +12,6 @@ src/delta_rules_enus.c
 src/delta_rules_enus.ren
 src/delta_rules_enus.syms
 src/delta_rules_shim.c
-src/delta_rules_ref.c
-src/delta_rules_trace.c
-src/rules/
-src/trace/
-src/delta_rules_trace_prim.c
-src/prim/
-src/trace_prim/
 src/delta_link_enus.c
 src/delta_consts_enus.c
 src/delta_rules_c.c

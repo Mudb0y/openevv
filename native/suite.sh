@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 #
-# The same comparisons the differential build runs, with the engine
-# built for this machine standing where our Windows build stands next door.
+# Every case spoken twice, once by the engine built for this machine and once
+# by IBM's own under Wine, and the samples compared.
 # Answers non-zero if anything differed or hung.
 #
 # usage: suite.sh [name ...]     with no names, runs all but long
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-cases=$here/../oracle/cases
+cases=$here/../cases
 
 TEXT='^speak: (voice )?param|^speak: index'
 DICT='^speak: (voice )?param|^speak: index|^speak: (new|set|get|load|delete)Dict'

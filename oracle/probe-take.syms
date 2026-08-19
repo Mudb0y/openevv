@@ -1,5 +1,0 @@
-_evv_output_speech ?output_speech@@YAXPAXJ@Z
-_evv_getEngine ?getEngine@EngineArray@@QAEPAVEngineWrapper@@QBVLangIdentifier@@@Z
-_evv_getEngineData ?getEngineData@EngineArray@@QAEPAVEngineData@@QBVLangIdentifier@@@Z
-_evv_filterText ?filterText@FilterManager@@QAEPADPBDJ@Z
-_evv_romAddText ?addText@RomanizerManager@@QAEHPBDHH@Z

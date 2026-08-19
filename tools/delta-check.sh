@@ -18,8 +18,8 @@ trap 'rm -rf "$work"' EXIT
 
 [ $# -gt 0 ] || { echo "check: name some rules" >&2; exit 2; }
 
-cat "$here/oracle/cases/plain.txt" "$here/oracle/cases/utf8.txt" \
-    "$here/oracle/cases/anno.txt" > "$work/text"
+cat "$here/cases/plain.txt" "$here/cases/utf8.txt" \
+    "$here/cases/anno.txt" > "$work/text"
 
 speak() {
     rm -f "$here/build/native/speak"

@@ -1,15 +1,14 @@
-# The engine built for the machine it is running on, rather than linked
-# beside the original under Wine.
+# The engine, built for the machine it is running on.
 #
-# Thirty-two bit, and it has to be: the machine keeps every value in an
-# int32 and puts host addresses in some of them, so a sixty-four bit build
-# needs the arena work before it can be anything but a crash.
+# `make speak' builds a driver against the archive and `suite.sh' sets what
+# comes out against IBM's own binary under Wine, case for case. Nothing is
+# borrowed: `make missing' answers nothing, and it is worth re-running
+# whenever a source is added, since a name that reappears there is a call
+# that has quietly gone back to the original.
 #
-# It speaks. `make speak' builds a driver against the archive and
-# `suite.sh' sets what comes out against IBM's own binary under Wine, case
-# for case. Nothing is borrowed any more: `make missing' answers nothing,
-# and it is worth re-running whenever a source is added, since a name that
-# reappears there is a call that has quietly gone back to the original.
+# Two builds, and both have to speak. `speak' is thirty-two bit and `speak64'
+# is not; the second is the one that matters, and the first is kept because a
+# difference between them is a layout mistake caught early.
 
 SRC   := ../src
 BUILD := ../build/native
@@ -17,17 +16,10 @@ CC    := i686-unknown-linux-gnu-gcc
 NM    := i686-unknown-linux-gnu-nm
 CFLAGS := -O2 -std=gnu99 -w -I$(SRC)
 
-# Everything of ours except the two that belong to another target: the
-# Windows porting layer, and the traced copy of the rules the differential
-# build uses to follow the original step for step.
-SOURCES := $(filter-out $(SRC)/port_win32.c $(SRC)/delta_rules_trace.c \
-                        $(SRC)/delta_rules_trace_prim.c $(SRC)/delta_rules_ref.c, \
-             $(wildcard $(SRC)/*.c))
+# Everything of ours except the Windows porting layer, which belongs to the
+# reference build next door.
+SOURCES := $(filter-out $(SRC)/port_win32.c,$(wildcard $(SRC)/*.c))
 
-# Three files belong to this target alone. port_files.c answers what the
-# differential build gets from the platform it is linked beside, and
-# eci_env_defaults.c and eci_statics.c hold blocks that build still reads
-# out of the original's own object.
 OBJECTS := $(patsubst $(SRC)/%.c,$(BUILD)/%.o,$(SOURCES))
 
 .PHONY: all missing clean speak
@@ -66,13 +58,9 @@ missing: $(OBJECTS)
 clean:
 	@rm -rf $(BUILD)
 
-# The same engine built sixty-four bit, which needs the arena: the machine
-# keeps addresses in 32-bit values, so everything one can point at has to live
+# The same engine built sixty-four bit. It needs the arena: the machine keeps
+# addresses in 32-bit values, so everything one can point at has to live
 # somewhere a 32-bit value can name.
-#
-# This is expected to fail until that work is done, and failing is the point:
-# each thing it says is one more piece of the machine that assumed a pointer
-# and a value were the same size.
 CC64      := gcc
 BUILD64   := ../build/native64
 #
