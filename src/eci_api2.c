@@ -8,14 +8,11 @@
 #include <string.h>
 #include <stdint.h>
 #include "evv_abi.h"
+#include "eci_instance.h"
 
 #define STD  __attribute__((stdcall))
 
 /* Only the last field is read from here: how the constructor went. */
-typedef struct {
-    uint8_t pad_00[0xe0];
-    int32_t error;   /* +0xe0 */
-} ECIinstance;
 
 extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
 extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
@@ -140,7 +137,7 @@ STD int32_t api_new(void **out, int32_t lang)
 
     if (out == 0)
         return rc;
-    raw = cpp_new(0xe4);
+    raw = cpp_new(sizeof(ECIinstance));
     *out = raw ? (void *)ei_ctor_lang(raw, lang) : 0;
     if (*out == 0)
         return ECI_FAILED;
@@ -474,7 +471,6 @@ STD int32_t api_register_voice(void *self, int32_t a, void *b, void *c)
 {
     return ei_reg_voice(self, a, c, b);
 }
-
 
 ALIAS_N("_eciRegisterVoice2@16", "api_register_voice", 16);
 ALIAS_N("_eciNew2@8", "api_new", 8);

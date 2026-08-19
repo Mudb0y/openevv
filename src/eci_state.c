@@ -21,17 +21,11 @@
 #include "evv_abi.h"
 #include "evv_arena.h"
 #include "eci_synththread.h"
+#include "eci_instance.h"
 
 #define STD  __attribute__((stdcall))
 
 /* How ECI names a language: a packed number and the same thing as text. */
-
-typedef struct {
-    int32_t param[20];      /* +0x00 */
-    int32_t spr;            /* +0x50, the engine is in phoneme mode */
-    LangIdentifier *lang;   /* +0x54 */
-    uint8_t mutex[0x20];    /* +0x58, opaque; only the two calls below */
-} ECIstate;
 
 /* What the engine wrapper offers, at the two places used here. Its methods
    are virtual and take their object as an ordinary first argument. */

@@ -18,6 +18,19 @@
 #ifndef EVV_PORT_H
 #define EVV_PORT_H
 
+/* The block every call into the runtime layer takes. Two of its slots carry
+   what the call is about: sometimes a number the layer invented, sometimes
+   the address of the caller's own object, which is why they have to be wide
+   enough for one. Both sides of the call used to describe this separately,
+   one with pointers and one with ints, which is the same block only while a
+   pointer is four bytes. */
+struct ral_req {
+    unsigned char pad_00[0x0c];
+    void         *a;
+    void         *b;
+};
+
+
 /* Waiting without a limit. */
 #define EVV_FOREVER  (-1)
 

@@ -14,26 +14,7 @@
 #include <stdint.h>
 #include "evv_abi.h"
 #include "eci_synththread.h"
-
-/* The parameters, as eci_state.c lays them out. */
-typedef struct {
-    int32_t param[20];      /* +0x00 */
-    int32_t spr;            /* +0x50 */
-    LangIdentifier *lang;   /* +0x54 */
-    uint8_t mutex[0x0c];    /* +0x58 */
-} ECIstate;
-
-/* What text passes through on the way in. Two words of it are read here and
-   the whole of it lives in eci_textfilter.c. */
-typedef struct { void *thread; void *state; } TextFilter;
-
-typedef struct {
-    SynthThread *thread;       /* +0x00 */
-    ETIappMessageQueue queue;  /* +0x04, the messages coming back */
-    ECIstate  state;           /* +0x74 */
-    TextFilter filter;         /* +0xd8 */
-    int32_t   error;           /* +0xe0, how the last thing went */
-} ECIinstance;
+#include "eci_instance.h"
 
 /* A thread is thrown away through the first slot of its table, with one
    meaning also give back the memory. */

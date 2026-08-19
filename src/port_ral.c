@@ -55,11 +55,6 @@ void elgTraceLog(int level, const char *fmt, ...)
    So identity is sometimes a number this layer invents and sometimes an
    address the caller already had. Both are just keys, and the table below is
    keyed by the value itself either way. */
-struct ral_req {
-    unsigned char pad_00[0x0c];
-    int           a;
-    int           b;
-};
 
 #define RAL_MAX 1024
 
@@ -68,12 +63,12 @@ struct ral_req {
 #define RAL_SEM    1
 #define RAL_EVENT  2
 
-static int      ral_key[RAL_MAX];
+static uintptr_t ral_key[RAL_MAX];
 static void    *ral_obj[RAL_MAX];
 static int      ral_kind[RAL_MAX];
 static unsigned ral_owner[RAL_MAX];
 static int    ral_depth[RAL_MAX];
-static int    ral_next = 1;
+static uintptr_t ral_next = 1;
 static int    ral_trace;
 
 static void ral_init(void) __attribute__((constructor));
@@ -82,11 +77,12 @@ static void ral_init(void)
     ral_trace = getenv("RAL_TRACE") != NULL;
 }
 
-static void ral_say(const char *what, int key, int rc)
+static void ral_say(const char *what, uintptr_t key, int rc)
 {
     if (ral_trace)
-        fprintf(stderr, "ral: %6lu %-28s key=%08x rc=%d thread=%lx\n",
-                (unsigned long)evv_ticks_ms(), what, key, rc,
+        fprintf(stderr, "ral: %6lu %-28s key=%08lx rc=%d thread=%lx\n",
+                (unsigned long)evv_ticks_ms(), what,
+                (unsigned long)key, rc,
                 (unsigned long)evv_task_self());
 }
 
@@ -98,7 +94,7 @@ static void ral_free(void *h, int kind)
         evv_sem_destroy((evv_sem *)h);
 }
 
-static int ral_slot(int key)
+static int ral_slot(uintptr_t key)
 {
     int i;
 
@@ -108,7 +104,7 @@ static int ral_slot(int key)
     return -1;
 }
 
-static int ral_bind(int key, void *h, int kind)
+static int ral_bind(uintptr_t key, void *h, int kind)
 {
     int i;
 
@@ -142,7 +138,7 @@ static void *ral_find(struct ral_req *r, int *slot)
 
     if (r == NULL)
         return NULL;
-    i = ral_slot(r->a);
+    i = ral_slot((uintptr_t)r->a);
     if (i < 0)
         return NULL;
     if (slot != NULL)
@@ -157,7 +153,7 @@ static void *ral_find(struct ral_req *r, int *slot)
    it will name the semaphore by out of the slot it passed in empty. */
 static int ral_sem_create(struct ral_req *r, int max)
 {
-    int key;
+    uintptr_t key;
     int rc;
 
     if (r == NULL)
@@ -166,7 +162,7 @@ static int ral_sem_create(struct ral_req *r, int max)
     key = ++ral_next;
     rc = ral_bind(key, evv_sem_create(r->b ? 1 : 0, max), RAL_SEM);
     if (rc == 0)
-        r->a = key;
+        r->a = (void *)key;
     ral_say("ralSemaphoreCreate", key, rc);
     return rc;
 }
@@ -188,8 +184,9 @@ int ralEventCreate(struct ral_req *r)
 
     if (r == NULL)
         return 10041;
-    rc = ral_bind(r->b, evv_event_create(r->a ? 1 : 0), RAL_EVENT);
-    ral_say("ralEventCreate", r->b, rc);
+    rc = ral_bind((uintptr_t)r->b, evv_event_create(r->a ? 1 : 0),
+                  RAL_EVENT);
+    ral_say("ralEventCreate", (uintptr_t)r->b, rc);
     return rc;
 }
 
@@ -201,8 +198,8 @@ int ralRecMutexSemaphoreCreate(struct ral_req *r)
 
     if (r == NULL)
         return 10041;
-    rc = ral_bind(r->a, evv_sem_create(1, 1), RAL_SEM);
-    ral_say("ralRecMutexSemaphoreCreate", r->a, rc);
+    rc = ral_bind((uintptr_t)r->a, evv_sem_create(1, 1), RAL_SEM);
+    ral_say("ralRecMutexSemaphoreCreate", (uintptr_t)r->a, rc);
     return rc;
 }
 
@@ -212,14 +209,14 @@ static int ral_drop(struct ral_req *r, const char *what)
     void *h = ral_find(r, &i);
 
     if (h == NULL) {
-        ral_say(what, r ? r->a : 0, 10041);
+        ral_say(what, r ? (uintptr_t)r->a : 0, 10041);
         return 10041;
     }
     ral_free(h, ral_kind[i]);
     ral_key[i] = 0;
     ral_obj[i] = NULL;
     ral_kind[i] = 0;
-    ral_say(what, r->a, 0);
+    ral_say(what, (uintptr_t)r->a, 0);
     return 0;
 }
 
@@ -247,7 +244,7 @@ static int ral_post(struct ral_req *r, const char *what)
 {
     void *h = ral_find(r, NULL);
 
-    ral_say(what, r ? r->a : 0, h == NULL ? 10041 : 0);
+    ral_say(what, r ? (uintptr_t)r->a : 0, h == NULL ? 10041 : 0);
     if (h == NULL)
         return 10041;
     evv_sem_post((evv_sem *)h, 1);
@@ -290,11 +287,11 @@ static int ral_wait(struct ral_req *r, const char *what, int got, int lost)
     void *h = ral_find(r, NULL);
     int w;
 
-    ral_say(what, r ? r->a : 0, -1);
+    ral_say(what, r ? (uintptr_t)r->a : 0, -1);
     if (h == NULL)
         return lost;
     w = ral_wait_any(h, EVV_FOREVER);
-    ral_say(what, r->a, w == EVV_WAIT_OK ? got : lost);
+    ral_say(what, (uintptr_t)r->a, w == EVV_WAIT_OK ? got : lost);
     return w == EVV_WAIT_OK ? got : lost;
 }
 
@@ -322,7 +319,7 @@ int ralRecMutexSemaphoreTest(struct ral_req *r)
     void *h = ral_find(r, &i);
     unsigned me = evv_task_self();
 
-    ral_say("ralRecMutexSemaphoreTest", r ? r->a : 0, h == NULL ? 0 : -1);
+    ral_say("ralRecMutexSemaphoreTest", r ? (uintptr_t)r->a : 0, h == NULL ? 0 : -1);
     if (h == NULL)
         return 0;
 
@@ -344,7 +341,7 @@ int ralRecMutexSemaphoreSignal(struct ral_req *r)
     int i = -1;
     void *h = ral_find(r, &i);
 
-    ral_say("ralRecMutexSemaphoreSignal", r ? r->a : 0, h == NULL ? 10041 : 0);
+    ral_say("ralRecMutexSemaphoreSignal", r ? (uintptr_t)r->a : 0, h == NULL ? 10041 : 0);
     if (h == NULL)
         return 10041;
 
@@ -361,7 +358,7 @@ static int ral_event_set(struct ral_req *r, int how, const char *what)
 {
     void *h = ral_find(r, NULL);
 
-    ral_say(what, r ? r->a : 0, h == NULL ? 10041 : 0);
+    ral_say(what, r ? (uintptr_t)r->a : 0, h == NULL ? 10041 : 0);
     if (h == NULL)
         return 10041;
     if (how > 0)

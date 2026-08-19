@@ -20,13 +20,7 @@
 #include <stdint.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
-
-/* The request block the layer takes, with the two slots that matter. */
-struct ral_req {
-    unsigned char pad_00[0x0c];
-    void         *a;
-    void         *b;
-};
+#include "evv_port.h"
 
 /* What waiting on the layer's recursive mutex answers when it worked. */
 #define RAL_GOT  0x2739
