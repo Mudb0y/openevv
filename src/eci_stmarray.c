@@ -24,9 +24,6 @@
 #include "delta.h"
 #include "klatt_lang.h"
 
-/* One stream, and how many bytes of it there are. */
-#define STREAM_BYTES 0x18
-
 /* A moment too big for sixteen bits is written as this, then in full. */
 #define ESCAPE 0xffff
 
@@ -42,6 +39,12 @@ typedef struct StreamArray {
     uint32_t written;     /* +0x10, the last moment written */
     uint32_t read;        /* +0x14, the last moment read back */
 } StreamArray;
+
+/* One element, and the room the count in front of an array needs. The
+   count has to be a whole element's worth so that what follows it is
+   aligned as an element wants to be. */
+#define STREAM_BYTES ((int32_t)sizeof(StreamArray))
+#define STREAM_HEAD  ((int32_t)sizeof(StreamArray))
 
 typedef struct StreamArrayList {
     StreamArray *streams; /* +0x00 */
@@ -98,7 +101,7 @@ THIS void sa_dtor(StreamArray *s)
 THIS void *sa_destroy(StreamArray *s, int32_t how)
 {
     if (how & 2) {
-        int32_t  n = *((int32_t *)s - 1);
+        int32_t  n = *(int32_t *)((char *)s - STREAM_HEAD);
         int32_t  stride = STREAM_BYTES;
         char    *at = (char *)s + stride * n;
 
@@ -108,8 +111,8 @@ THIS void *sa_destroy(StreamArray *s, int32_t how)
         }
 
         if (how & 1)
-            cpp_delete((int32_t *)s - 1);
-        return (int32_t *)s - 1;
+            cpp_delete((char *)s - STREAM_HEAD);
+        return (char *)s - STREAM_HEAD;
     }
 
     sa_dtor(s);
@@ -201,7 +204,7 @@ THIS void sa_deleteSegment(StreamArray *s, delta_state_fwd *d, uint32_t a,
 THIS int32_t sal_build(StreamArrayList *l, void *d, int16_t count)
 {
     int32_t  n = count;
-    int32_t *room = (int32_t *)cpp_new((uint32_t)(n * STREAM_BYTES + 4));
+    char *room = cpp_new((uint32_t)(n * STREAM_BYTES + STREAM_HEAD));
 
     (void)d;
 
@@ -209,15 +212,15 @@ THIS int32_t sal_build(StreamArrayList *l, void *d, int16_t count)
         StreamArray *at;
         int32_t      left = n;
 
-        *room = n;
-        at = (StreamArray *)(room + 1);
+        *(int32_t *)room = n;
+        at = (StreamArray *)(room + STREAM_HEAD);
         while (--left >= 0) {
             tvq_ctor(at->queue, QUEUE_ROOM);
             at->name = 0;
             at->written = 0;
             at = (StreamArray *)((char *)at + STREAM_BYTES);
         }
-        l->streams = (StreamArray *)(room + 1);
+        l->streams = (StreamArray *)(room + STREAM_HEAD);
     } else {
         l->streams = 0;
     }
