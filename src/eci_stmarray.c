@@ -23,18 +23,14 @@
 #include "evv_abi.h"
 #include "delta.h"
 #include "klatt_lang.h"
+#include "eci_tvqueue.h"
 
 /* A moment too big for sixteen bits is written as this, then in full. */
 #define ESCAPE 0xffff
 
-typedef struct TimeValuePair {
-    uint16_t when;   /* +0x00 */
-    int16_t  value;  /* +0x02 */
-} TimeValuePair;
-
 /* A stream is a queue with a name and a memory of where it got to. */
 typedef struct StreamArray {
-    uint8_t  queue[0xc];  /* +0x00, the queue's own */
+    TimeValueQueue queue;  /* +0x00, the queue's own */
     char    *name;        /* +0x0c */
     uint32_t written;     /* +0x10, the last moment written */
     uint32_t read;        /* +0x14, the last moment read back */
@@ -92,7 +88,7 @@ THIS void sa_dtor(StreamArray *s)
         cpp_delete(s->name);
         s->name = 0;
     }
-    tvq_dtor(s->queue);
+    tvq_dtor(&s->queue);
 }
 
 /* The compiler's array-aware deleting destructor: bit one says this is an
@@ -147,15 +143,15 @@ THIS int32_t sa_appendValue(StreamArray *s, uint32_t when, int16_t value)
     p.value = value;
 
     if (gap < ESCAPE) {
-        p.when = (uint16_t)gap;
-        ok = tvq_push(s->queue, p);
+        p.time = (uint16_t)gap;
+        ok = tvq_push(&s->queue, p);
     } else {
-        p.when = ESCAPE;
-        ok = tvq_push(s->queue, p);
+        p.time = ESCAPE;
+        ok = tvq_push(&s->queue, p);
         if (ok) {
-            p.when = (uint16_t)(when >> 16);
+            p.time = (uint16_t)(when >> 16);
             p.value = (int16_t)(when & 0xffff);
-            ok = tvq_push(s->queue, p);
+            ok = tvq_push(&s->queue, p);
         }
     }
 
@@ -168,19 +164,19 @@ THIS int32_t sa_fetchNext(StreamArray *s, uint32_t *when, int32_t *value)
 {
     TimeValuePair p;
 
-    if (tvq_isEmpty(s->queue))
+    if (tvq_isEmpty(&s->queue))
         return 0;
 
-    tvq_pop(s->queue, &p);
+    tvq_pop(&s->queue, &p);
     *value = p.value;
 
-    if (p.when == ESCAPE) {
-        if (tvq_isEmpty(s->queue))
+    if (p.time == ESCAPE) {
+        if (tvq_isEmpty(&s->queue))
             return 0;
-        tvq_pop(s->queue, &p);
-        *when = ((uint32_t)p.when << 16) | (uint16_t)p.value;
+        tvq_pop(&s->queue, &p);
+        *when = ((uint32_t)p.time << 16) | (uint16_t)p.value;
     } else {
-        *when = p.when + s->read;
+        *when = p.time + s->read;
     }
 
     s->read = *when;
@@ -215,7 +211,7 @@ THIS int32_t sal_build(StreamArrayList *l, void *d, int16_t count)
         *(int32_t *)room = n;
         at = (StreamArray *)(room + STREAM_HEAD);
         while (--left >= 0) {
-            tvq_ctor(at->queue, QUEUE_ROOM);
+            tvq_ctor(&at->queue, QUEUE_ROOM);
             at->name = 0;
             at->written = 0;
             at = (StreamArray *)((char *)at + STREAM_BYTES);
@@ -270,7 +266,7 @@ THIS void sal_clear(StreamArrayList *l, void *d, int16_t which)
 {
     StreamArray *s = &l->streams[which];
 
-    tvq_reset(s->queue);
+    tvq_reset(&s->queue);
     s->written = GEN_ZERO((delta_state_fwd *)d);
     s->read = 0;
 }
@@ -282,7 +278,7 @@ THIS void sal_clearAll(StreamArrayList *l, void *d)
     for (i = 0; i < l->count; i++) {
         StreamArray *s = &l->streams[i];
 
-        tvq_reset(s->queue);
+        tvq_reset(&s->queue);
         s->written = GEN_ZERO((delta_state_fwd *)d);
         s->read = 0;
     }

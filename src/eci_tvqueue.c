@@ -19,20 +19,7 @@
 #include <stdint.h>
 #include "evv_abi.h"
 #include "evv_arena.h"
-
-typedef struct {
-    int16_t time;
-    int16_t value;
-} TimeValuePair;
-
-typedef struct {
-    TimeValuePair *buf;   /* +0x00 */
-    uint16_t       room;  /* +0x04, how many it holds */
-    uint16_t       head;  /* +0x06 */
-    uint16_t       tail;  /* +0x08 */
-    uint16_t       want;  /* +0x0a, the size it was asked for */
-} TimeValueQueue;
-
+#include "eci_tvqueue.h"
 
 THIS uint16_t tvq_size(TimeValueQueue *q)
 {
@@ -207,7 +194,6 @@ THIS TimeValuePair *tvq_getElements(TimeValueQueue *q, int32_t *n)
     *n = have;
     return out;
 }
-
 
 ALIAS("??0TimeValueQueue@@QAE@G@Z", "tvq_ctor");
 ALIAS("??1TimeValueQueue@@QAE@XZ", "tvq_dtor");
