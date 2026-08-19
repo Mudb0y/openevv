@@ -33,7 +33,11 @@ $(BUILD)/speak: speak.c $(BUILD)/libevv.a
 	@$(CC) $(CFLAGS) speak.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
-$(BUILD)/%.o: $(SRC)/%.c
+# Every header, because a struct that changed shape and an object that was not
+# rebuilt is a link that succeeds and an engine that writes over itself.
+HEADERS := $(wildcard $(SRC)/*.h)
+
+$(BUILD)/%.o: $(SRC)/%.c $(HEADERS)
 	@mkdir -p $(BUILD)
 	@$(CC) $(CFLAGS) -c $< -o $@
 
@@ -79,7 +83,7 @@ $(BUILD64)/speak: speak.c $(BUILD64)/libevv.a
 	@$(CC64) $(CFLAGS64) speak.c $(BUILD64)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
-$(BUILD64)/%.o: $(SRC)/%.c
+$(BUILD64)/%.o: $(SRC)/%.c $(HEADERS)
 	@mkdir -p $(BUILD64)
 	@$(CC64) $(CFLAGS64) -c $< -o $@
 

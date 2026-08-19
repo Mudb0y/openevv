@@ -112,11 +112,6 @@ typedef struct {
    field naming the dictionary in play is reached from here. */
 #define ED_ACTIVE(d) (*(void **)((char *)(d) + 0x14))
 
-/* The three scratch pointers, by what they hold. */
-#define ST_LASTLOOKUP(t) ST_PTR(t, 0x3a0)
-#define ST_LASTKEY(t)    ST_PTR(t, 0x3a4)
-#define ST_LASTVALUE(t)  ST_PTR(t, 0x3a8)
-
 extern THIS void lang_setString(LangIdentifier *l)
     MANGLED("?setString@LangIdentifier@@AAEXXZ");
 extern THIS void *ea_getEngine(void *a, const LangIdentifier *l)
@@ -129,8 +124,8 @@ extern THIS void *rz_getRom(void *r, uint32_t language)
 /* Name a language by its number, the way every one of these begins. */
 static void std_name(LangIdentifier *l, int32_t language)
 {
-    l->id = (uint32_t)language;
-    l->id = (uint32_t)language;
+    l->packed = (uint32_t)language;
+    l->packed = (uint32_t)language;
     lang_setString(l);
 }
 

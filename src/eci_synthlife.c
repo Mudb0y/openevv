@@ -73,18 +73,13 @@ static const char CMD_NORMALISE[] = "`nor";
 static const char CMD_CONCATENATIVE[] = "`esp2";
 
 /* Sub-objects of SynthThread that are built and taken apart here. */
-#define ST_ENGINELIST(t) ST_AT(t, 0x08c)   /* the EngineArray's own base */
-#define ST_INIFILE(t)    ST_AT(t, 0x12c)
-#define ST_LANG(t)       ((LangIdentifier *)ST_AT(t, 0x2e0))
-#define ST_IDXMEM(t)     ST_AT(t, 0x334)   /* IndexManager: memory then a lock */
-#define ST_IDXLOCK(t)    ST_AT(t, 0x358)
+#define ST_ENGINELIST(t) (&(t)->engines.base)
+#define ST_INIFILE(t)    (&(t)->engines.ini)
+#define ST_LANG(t)       (&(t)->lang)
+#define ST_IDXMEM(t)     (&(t)->indexmgr)
+#define ST_IDXLOCK(t)    ((void *)(t)->indexmgr.lock)
 /* Three blocks the thread hands out and takes back, and the complaint the
    layer above reads once it has the object. */
-#define ST_SPARE0(t)     ST_PTR(t, 0x3a0)
-#define ST_SPARE1(t)     ST_PTR(t, 0x3a4)
-#define ST_SPARE2(t)     ST_PTR(t, 0x3a8)
-#define ST_STATUS(t)     ST_I32(t, 0x3bc)
-#define ST_STOPPED(t)    ST_I32(t, 0x3c8)
 
 /* How big each of the things the constructor makes is. */
 #define SIZE_ROMANIZER   0x278
@@ -313,9 +308,9 @@ static void stl_build(SynthThread *t, void *app, void *state)
     ST_ENGERR(t) = 0;
     ST_ROMERR(t) = 0;
     ST_SILENT(t) = 0;
-    ST_SPARE0(t) = 0;
-    ST_SPARE1(t) = 0;
-    ST_SPARE2(t) = 0;
+    ST_LASTLOOKUP(t) = 0;
+    ST_LASTKEY(t) = 0;
+    ST_LASTVALUE(t) = 0;
     ST_BLOCKER(t) = 0;
     ST_FLAGS(t) = 0;
     ST_STATUS(t) = 0;
@@ -337,7 +332,7 @@ static void stl_build(SynthThread *t, void *app, void *state)
     ST_CONCAT(t) = p ? cm_ctor(p, t) : 0;
 
     p = cpp_new(SIZE_MARKQUEUE);
-    ST_PTR(t, 0x3b4) = p ? eq_ctor(p, MARKQUEUE_ROOM) : 0;
+    ST_MARKS(t) = p ? eq_ctor(p, MARKQUEUE_ROOM) : 0;
     if (!ST_MARKS(t))
         ST_STATUS(t) = ERR_FAILED;
 
@@ -380,8 +375,8 @@ THIS SynthThread *stl_ctor(SynthThread *t, void *app, void *state)
     stl_build(t, app, state);
     /* The language record is zeroed and named by hand here rather than
        constructed, which comes to the same thing. */
-    ST_LANG(t)->id = 0;
-    ST_LANG(t)->id = 0;
+    ST_LANG(t)->packed = 0;
+    ST_LANG(t)->packed = 0;
     lang_setString(ST_LANG(t));
     stl_takeShared(t);
     return t;
@@ -399,8 +394,8 @@ THIS SynthThread *stl_ctorWithLanguage(SynthThread *t, void *app, void *state,
 
     th_start(t, RAL_THREAD_PRIORITY_NORMAL);
 
-    want.id = language;
-    want.id = language;
+    want.packed = language;
+    want.packed = language;
     lang_setString(&want);
     memcpy(ST_LANG(t), &want, sizeof want);
 
@@ -428,7 +423,7 @@ THIS int32_t stl_initialize(SynthThread *t, LangIdentifier *want)
 
     ea_removeEngine(ST_ENGINES(t), ST_LANG(t));
     ST_ENGINE(t) = 0;
-    ST_LANG(t)->id = 0;
+    ST_LANG(t)->packed = 0;
     lang_setString(ST_LANG(t));
 
     if (ST_ROMAN(t))
@@ -453,8 +448,8 @@ THIS int32_t stl_initialize(SynthThread *t, LangIdentifier *want)
     }
 
     if (ST_CONCAT(t)
-        && cm_engineSupports(ST_CONCAT(t), (want->id & 0xff0000) >> 16,
-                              want->id & 0xff)) {
+        && cm_engineSupports(ST_CONCAT(t), (want->packed & 0xff0000) >> 16,
+                              want->packed & 0xff)) {
         EngSetVoice setVoice = (EngSetVoice)ENG_CALL_ON(engine, ENG_VOICE_CB);
         EngSetUser setSPR = (EngSetUser)ENG_CALL_ON(engine, ENG_SPR_CB);
 
@@ -494,13 +489,13 @@ THIS int32_t stl_initialize(SynthThread *t, LangIdentifier *want)
     ST_ENGINE(t) = engine;
     stw_isOldEngine(t);
 
-    ST_LANG(t)->id = want->id;
+    ST_LANG(t)->packed = want->packed;
     lang_setString(ST_LANG(t));
-    es_paramFromEngine(ST_STATE(t), ECI_PARAM_LANGUAGE, (int32_t)want->id);
+    es_paramFromEngine(ST_STATE(t), ECI_PARAM_LANGUAGE, (int32_t)want->packed);
 
-    if (rz_setParam(ST_ROMAN(t), ROM_LANGUAGE, (int32_t)want->id) == -1)
+    if (rz_setParam(ST_ROMAN(t), ROM_LANGUAGE, (int32_t)want->packed) == -1)
         rc = ERR_ROM_LANG;
-    if (cm_setParam(ST_CONCAT(t), CAT_LANGUAGE, (int32_t)want->id, 1) == -1) {
+    if (cm_setParam(ST_CONCAT(t), CAT_LANGUAGE, (int32_t)want->packed, 1) == -1) {
         rc = ERR_CAT_LANG;
         return rc;
     }
@@ -648,9 +643,9 @@ THIS void stl_dtor(SynthThread *t)
         cpp_delete(ST_BLOCKER(t));
         ST_BLOCKER(t) = 0;
     }
-    if (ST_SPARE0(t)) { cpp_delete(ST_SPARE0(t)); ST_SPARE0(t) = 0; }
-    if (ST_SPARE1(t)) { cpp_delete(ST_SPARE1(t)); ST_SPARE1(t) = 0; }
-    if (ST_SPARE2(t)) { cpp_delete(ST_SPARE2(t)); ST_SPARE2(t) = 0; }
+    if (ST_LASTLOOKUP(t)) { cpp_delete(ST_LASTLOOKUP(t)); ST_LASTLOOKUP(t) = 0; }
+    if (ST_LASTKEY(t)) { cpp_delete(ST_LASTKEY(t)); ST_LASTKEY(t) = 0; }
+    if (ST_LASTVALUE(t)) { cpp_delete(ST_LASTVALUE(t)); ST_LASTVALUE(t) = 0; }
 
     if (ST_ROMAN(t)) {
         rz_dtor(ST_ROMAN(t));

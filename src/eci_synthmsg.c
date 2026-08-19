@@ -791,7 +791,7 @@ THIS int32_t st_changeLanguage(SynthThread *t, LangIdentifier *lang)
         msg_ctor(&m->base, MSG_CHANGE_LANGUAGE);
         m->base.vt = &vt_changeLanguage;
         m->thread = t;
-        m->lang.id = lang->id;
+        m->lang.packed = lang->packed;
         lang_setString(&m->lang);
         m->seq = seq;
         rc = postAndCommit(t, &m->base, seq, 1, 0);

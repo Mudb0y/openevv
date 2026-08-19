@@ -390,7 +390,7 @@ THIS void stb_postIndexToUser(SynthThread *t, int32_t id)
         /* The mark carries the engine's own number for the phoneme; what
            goes to the caller is the name it goes under. */
         ix->payload = ph_getPhoneme(st_phonemes,
-                                    (LangIdentifier *)ST_AT(t, 0x2e0),
+                                    &t->lang,
                                     ix->payload);
         if (ix->payload && LISTENING(t))
             aq_postUser(ST_APP(t), APP_PHONEME_INDEX, ix->payload);
@@ -503,7 +503,7 @@ THIS void stb_torrentPhonemeCallback(SynthThread *t, int32_t phoneme)
     if (!wanted)
         return;
 
-    name = ph_getPhoneme(st_phonemes, (LangIdentifier *)ST_AT(t, 0x2e0),
+    name = ph_getPhoneme(st_phonemes, &t->lang,
                          phoneme);
     if (!phoneme)
         return;
