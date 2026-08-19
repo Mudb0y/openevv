@@ -195,10 +195,10 @@ struct SynthThread {
 #define STF_ROMANIZING  0x200  /* index marks go through the romanizer */
 #define STF_WORD_STARTS 0x001  /* the plainer of the two word reports */
 
-/* The application queue's count of what it has been told about, and the flag
-   saying whether anyone is listening. */
-#define APP_POSTED(a)   (*(int32_t *)((char *)(a) + 0x58))
-#define APP_LISTENING(a) (*(int32_t *)((char *)(a) + 0x4c))
+/* The application queue's count of what it has been told about, and whether
+   anyone is listening, which is whether a callback has been registered. */
+#define APP_POSTED(a)    (((ETIappMessageQueue *)(a))->posted)
+#define APP_LISTENING(a) (((ETIappMessageQueue *)(a))->cb != 0)
 
 extern THIS int32_t sy_mutexWait(void *m, int32_t ms)
     MANGLED("?wait@Mutex@@QAEHJ@Z");
