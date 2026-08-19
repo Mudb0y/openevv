@@ -17,7 +17,8 @@
 # <word>' says which two words it belongs between.
 #
 # What a word says belongs to its action rather than to the word, so two words
-# sharing an action say the same thing and changing one changes both.
+# sharing an action say the same thing. Give one of them something else to say
+# and it is moved onto an action of its own, and building says so.
 #
 # The order is the one the engine searches in, which is by the language's own
 # character codes rather than by letter, so the vowels come first. A word put

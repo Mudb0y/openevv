@@ -20,9 +20,12 @@ different actions, so which of the two the search lands on decides what is
 said, and keeping the order keeps the answer. Where the entries then lie in
 the store is not observable and is not kept.
 
-What a word says is a property of its action and not of the word, so two words
-on the same action say the same thing and changing one changes both. Building
-refuses a file where two such words disagree rather than pick one.
+What a word says is a property of its action and not of the word. Two words on
+the same action therefore say the same thing, and a word given something else
+to say is moved onto an action of its own rather than being refused; whichever
+of them still wants what the action already says keeps it. The same happens
+when a pronunciation cannot be changed where it stands. Both are changes in
+what the dictionary means, so both are reported.
 
 An entry with nothing after its action says nothing this can read faithfully:
 either its rule chooses between two records depending on what follows the
@@ -72,7 +75,8 @@ HEADER = """\
 # <word>' says which two words it belongs between.
 #
 # What a word says belongs to its action rather than to the word, so two words
-# sharing an action say the same thing and changing one changes both.
+# sharing an action say the same thing. Give one of them something else to say
+# and it is moved onto an action of its own, and building says so.
 #
 # The order is the one the engine searches in, which is by the language's own
 # character codes rather than by letter, so the vowels come first. A word put
@@ -216,19 +220,70 @@ def lay_down(want, alpha):
     return out, starts
 
 
-def wanted_records(d, alpha):
-    """What each action of one dictionary is to say, and a complaint for every
-    pair of words that disagree about it."""
-    said, trouble = {}, []
-    for word, _l, _r, act, text in d['entries']:
-        if text is None or act is None:
+def mint(arms, used, codes, model, why):
+    """An action of this word's own: a spare arm of the rule if one is going,
+    and otherwise an arm added to it."""
+    act = arms.spare(used)
+    if act is not None:
+        try:
+            arms.rewrite(act, bytes(codes))
+            used.add(act)
+            return act
+        except ValueError:
+            # It looked spare but cannot be written; do not offer it again.
+            used.add(act)
+    if model is None:
+        raise ValueError('%s has no arm to copy the shape of' % why)
+    act = arms.add_arm(model, bytes(codes))
+    used.add(act)
+    return act
+
+
+def work_out(d, alpha, laid):
+    """What has to happen to one dictionary's pronunciations.
+
+    An action belongs to every word that dispatches on it, so the first word
+    to state one keeps the action and the others, if they want something else,
+    are given actions of their own rather than being refused. That is a change
+    in what the dictionary means and it is reported, not done quietly.
+    """
+    groups = {}
+    for i, (_w, _l, _r, act, _t) in enumerate(d['entries']):
+        if act is not None:
+            groups.setdefault(act, []).append(i)
+
+    change, split = [], []
+    for act, idxs in groups.items():
+        now = laid.get(act)
+        now = tuple(now) if now is not None else None
+
+        texts = []
+        for i in idxs:
+            text = d['entries'][i][4]
+            if text is None:
+                continue
+            codes = tuple(unsay(text, d['kind'], alpha))
+            for seen, where in texts:
+                if seen == codes:
+                    where.append(i)
+                    break
+            else:
+                texts.append((codes, [i]))
+
+        if not texts:
             continue
-        codes = unsay(text, d['kind'], alpha)
-        if act in said and said[act][0] != codes:
-            trouble.append((act, said[act][1], word))
-        else:
-            said[act] = (codes, word)
-    return {a: c for a, (c, _w) in said.items()}, trouble
+        # Whichever wants what the action already says keeps it, so that a
+        # word nobody asked to change is not moved off it.
+        for n, (codes, _where) in enumerate(texts):
+            if codes == now:
+                texts.insert(0, texts.pop(n))
+                break
+        first, rest = texts[0], texts[1:]
+        if first[0] != now:
+            change.append((act, first[0], first[1]))
+        for codes, where in rest:
+            split.append((act, codes, where))
+    return change, split
 
 
 def build():
@@ -253,98 +308,80 @@ def build():
     if bad:
         return 1
 
-    # Words being added come first: each needs an action of its own before
-    # anything can be laid down, and giving it one may grow its rule.
     rules = lex.rules()
-    added = 0
-    minted = {}
+    added = changed = split_off = 0
+    touched = False
+
     for d in want:
-        fresh = [e for e in d['entries'] if e[3] is None]
-        if not fresh:
+        fresh = [i for i, e in enumerate(d['entries']) if e[3] is None]
+        change, split = work_out(d, alpha, laid[d['name']])
+        if not fresh and not change and not split:
             continue
-        if any(text is None for _w, _l, _r, _a, text in fresh):
+
+        if any(d['entries'][i][4] is None for i in fresh):
             print('%s: a new word has to say something' % d['name'],
                   file=sys.stderr)
             bad = 1
             continue
+
         arms = arms_mod.Arms(rules, d['name'])
         if not arms.ok:
-            print('%s lays its records down a way this cannot write, so %d '
-                  'new word(s) in it were refused' % (d['name'], len(fresh)),
+            print('%s lays its records down a way this cannot write, so the '
+                  '%d change(s) asked of it were refused'
+                  % (d['name'], len(fresh) + len(change) + len(split)),
                   file=sys.stderr)
             bad = 1
             continue
+
         used = set(e[3] for e in d['entries'] if e[3] is not None)
-        model = min(arms.records()) if arms.records() else None
-        for i, e in enumerate(d['entries']):
-            if e[3] is not None:
-                continue
-            codes = unsay(e[4], d['kind'], alpha)
-            try:
-                act = arms.spare(used)
-                if act is not None:
+        fits = [a for a, r in arms.records().items() if r.cont is not None]
+        model = min(fits) if fits else None
+        touched = True
+
+        def point(where, act):
+            for i in where:
+                e = d['entries'][i]
+                d['entries'][i] = (e[0], e[1], e[2], act, e[4])
+
+        try:
+            # What one word wants and another on the same action does not.
+            for act, codes, where in split:
+                new = mint(arms, used, codes, model, d['name'])
+                point(where, new)
+                split_off += 1
+                print('%s: %s now has an action of its own, %d, because it '
+                      'says something other than the words it shared %d with'
+                      % (d['name'], d['entries'][where[0]][0], new, act))
+
+            # What the action itself is to say.
+            for act, codes, where in change:
+                try:
                     arms.rewrite(act, bytes(codes))
-                elif model is None:
-                    raise ValueError('%s has no arm to copy the shape of'
-                                     % d['name'])
-                else:
-                    act = arms.add_arm(model, bytes(codes))
-            except ValueError as why:
-                print(why, file=sys.stderr)
-                bad = 1
-                break
-            used.add(act)
-            minted.setdefault(d['name'], set()).add(act)
-            d['entries'][i] = (e[0], e[1], e[2], act, e[4])
-            added += 1
+                    changed += 1
+                except ValueError as why:
+                    new = mint(arms, used, codes, model, d['name'])
+                    point(where, new)
+                    split_off += 1
+                    print('%s: %s now has an action of its own, %d, because '
+                          '%s' % (d['name'], d['entries'][where[0]][0], new,
+                                  str(why).split(': ', 1)[-1]))
+
+            # Words being added.
+            for i in fresh:
+                codes = unsay(d['entries'][i][4], d['kind'], alpha)
+                new = mint(arms, used, codes, model, d['name'])
+                point([i], new)
+                added += 1
+        except ValueError as why:
+            print(why, file=sys.stderr)
+            bad = 1
+            continue
+
     if bad:
         return 1
 
-    if added:
+    if touched:
         rename(want)
-
-    # The pronunciations of words already there.
-    changed = 0
-    for d in want:
-        recs, trouble = wanted_records(d, alpha)
-        if trouble:
-            for act, first, second in trouble:
-                print('%s action %d: %s and %s disagree about what it says'
-                      % (d['name'], act, first, second), file=sys.stderr)
-            bad = 1
-            continue
-
-        now = laid[d['name']]
-        # An action minted a moment ago already says what it was told to.
-        fresh = minted.get(d['name'], set())
-        edits = {a: c for a, c in recs.items()
-                 if a not in fresh and now.get(a) != c}
-        if not edits:
-            continue
-
-        arms = arms_mod.Arms(rules, d['name'])
-        if not arms.ok:
-            print('%s lays its records down a way this cannot write, so %d '
-                  'changed pronunciation(s) in it were refused'
-                  % (d['name'], len(edits)), file=sys.stderr)
-            bad = 1
-            continue
-        for act, codes in sorted(edits.items()):
-            if act not in now:
-                print('%s action %d had no record to change'
-                      % (d['name'], act), file=sys.stderr)
-                bad = 1
-                continue
-            try:
-                arms.rewrite(act, bytes(codes))
-            except ValueError as why:
-                print(why, file=sys.stderr)
-                bad = 1
-                continue
-            changed += 1
-    if bad:
-        return 1
-
     if rules.touched:
         rules.save()
 
@@ -362,10 +399,10 @@ def build():
                             for s, d in zip(starts, want)))
     open(SETS_C, 'w').write(text)
 
-    print('%d dictionaries, %d entries, %d bytes of store, %d pronunciation(s) '
-          'rewritten, %d word(s) added'
+    print('%d dictionaries, %d entries, %d bytes of store, %d rewritten, '
+          '%d added, %d split off'
           % (len(want), sum(len(d['entries']) for d in want), len(out),
-             changed, added))
+             changed, added, split_off))
     return compare()
 
 
@@ -413,22 +450,21 @@ def compare():
 
 
 def rename(want):
-    """Write the action numbers just handed out back into the file, so that a
-    word added once is not added again the next time it is built."""
-    numbers = {}
-    for d in want:
-        for word, _l, _r, act, _t in d['entries']:
-            numbers.setdefault(d['name'], {})[word] = act
-
-    out, where = [], None
+    """Write the action numbers back into the file. A word given one, whether
+    because it was being added or because it was split off from an action it
+    shared, keeps it rather than being given another next time."""
+    out, which, entry = [], -1, 0
     for line in open(DICT_FILE):
         if line.startswith('dictionary '):
-            where = line.split()[1]
-        elif line.startswith('  ') and where:
+            which += 1
+            entry = 0
+        elif line.startswith('  ') and which >= 0:
             f = line[2:].rstrip('\n').split(' ')
-            if len(f) > 3 and f[3] == 'new':
-                f[3] = str(numbers[where][f[0]])
+            act = want[which]['entries'][entry][3]
+            if f[3] != str(act):
+                f[3] = str(act)
                 line = '  ' + ' '.join(f) + '\n'
+            entry += 1
         out.append(line)
     open(DICT_FILE, 'w').writelines(out)
 
