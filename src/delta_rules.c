@@ -403,34 +403,43 @@ static void operand_skip(interp *st, const uint8_t **pp)
 
 /* ---- the runtime ----------------------------------------------------- */
 
-typedef int32_t (*I0)(void);
-typedef int32_t (*I1)(int32_t);
-typedef int32_t (*I2)(int32_t, int32_t);
-typedef int32_t (*I3)(int32_t, int32_t, int32_t);
-typedef int32_t (*I4)(int32_t, int32_t, int32_t, int32_t);
-typedef int32_t (*I5)(int32_t, int32_t, int32_t, int32_t, int32_t);
-typedef int32_t (*I6)(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
-typedef int32_t (*I7)(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t,
-                      int32_t);
-typedef int32_t (*I8)(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t,
-                      int32_t, int32_t);
-typedef int32_t (*I9)(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t,
-                      int32_t, int32_t, int32_t);
-typedef int32_t (*I10)(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t,
-                       int32_t, int32_t, int32_t, int32_t);
-typedef int32_t (*I11)(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t,
-                       int32_t, int32_t, int32_t, int32_t, int32_t);
-typedef int32_t (*I12)(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t,
-                       int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
-typedef int32_t (*IN)(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t,
-                      int32_t, int32_t, int32_t, int32_t, int32_t, int32_t,
-                      int32_t, int32_t, int32_t, int32_t, int32_t, int32_t,
-                      int32_t, int32_t, int32_t, int32_t, int32_t, int32_t,
-                      int32_t);
+/* What a rule pushes is a value, and a value is thirty-two bits. Some of the
+   entries it calls declare a pointer where the rule pushed one, so every
+   argument is widened on the way in: an entry that wants a value takes the
+   low half back and an entry that wants a pointer gets the whole of it. The
+   two are the same thing only where a pointer is four bytes. */
+typedef uintptr_t evv_word;
+#define W(x) ((evv_word)(uint32_t)(x))
 
-#define A a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], \
-          a[10], a[11], a[12], a[13], a[14], a[15], a[16], a[17], a[18], \
-          a[19], a[20], a[21], a[22], a[23], a[24]
+typedef evv_word (*I0)(void);
+typedef evv_word (*I1)(evv_word);
+typedef evv_word (*I2)(evv_word, evv_word);
+typedef evv_word (*I3)(evv_word, evv_word, evv_word);
+typedef evv_word (*I4)(evv_word, evv_word, evv_word, evv_word);
+typedef evv_word (*I5)(evv_word, evv_word, evv_word, evv_word, evv_word);
+typedef evv_word (*I6)(evv_word, evv_word, evv_word, evv_word, evv_word, evv_word);
+typedef evv_word (*I7)(evv_word, evv_word, evv_word, evv_word, evv_word, evv_word,
+                      evv_word);
+typedef evv_word (*I8)(evv_word, evv_word, evv_word, evv_word, evv_word, evv_word,
+                      evv_word, evv_word);
+typedef evv_word (*I9)(evv_word, evv_word, evv_word, evv_word, evv_word, evv_word,
+                      evv_word, evv_word, evv_word);
+typedef evv_word (*I10)(evv_word, evv_word, evv_word, evv_word, evv_word, evv_word,
+                       evv_word, evv_word, evv_word, evv_word);
+typedef evv_word (*I11)(evv_word, evv_word, evv_word, evv_word, evv_word, evv_word,
+                       evv_word, evv_word, evv_word, evv_word, evv_word);
+typedef evv_word (*I12)(evv_word, evv_word, evv_word, evv_word, evv_word, evv_word,
+                       evv_word, evv_word, evv_word, evv_word, evv_word, evv_word);
+typedef evv_word (*IN)(evv_word, evv_word, evv_word, evv_word, evv_word, evv_word,
+                      evv_word, evv_word, evv_word, evv_word, evv_word, evv_word,
+                      evv_word, evv_word, evv_word, evv_word, evv_word, evv_word,
+                      evv_word, evv_word, evv_word, evv_word, evv_word, evv_word,
+                      evv_word);
+
+#define A W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), \
+          W(a[7]), W(a[8]), W(a[9]), W(a[10]), W(a[11]), W(a[12]), \
+          W(a[13]), W(a[14]), W(a[15]), W(a[16]), W(a[17]), W(a[18]), \
+          W(a[19]), W(a[20]), W(a[21]), W(a[22]), W(a[23]), W(a[24])
 
 /* Calling with more arguments than the entry declares is what the original
    never has to do; here the number is only known at run time, so the common
@@ -440,22 +449,22 @@ static int32_t call_entry(delta_rule_fn fn, const int32_t *a, int n)
 {
     switch (n) {
     case 0:  return ((I0)fn)();
-    case 1:  return ((I1)fn)(a[0]);
-    case 2:  return ((I2)fn)(a[0], a[1]);
-    case 3:  return ((I3)fn)(a[0], a[1], a[2]);
-    case 4:  return ((I4)fn)(a[0], a[1], a[2], a[3]);
-    case 5:  return ((I5)fn)(a[0], a[1], a[2], a[3], a[4]);
-    case 6:  return ((I6)fn)(a[0], a[1], a[2], a[3], a[4], a[5]);
-    case 7:  return ((I7)fn)(a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
-    case 8:  return ((I8)fn)(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]);
-    case 9:  return ((I9)fn)(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7],
-                             a[8]);
-    case 10: return ((I10)fn)(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7],
-                              a[8], a[9]);
-    case 11: return ((I11)fn)(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7],
-                              a[8], a[9], a[10]);
-    case 12: return ((I12)fn)(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7],
-                              a[8], a[9], a[10], a[11]);
+    case 1:  return ((I1)fn)(W(a[0]));
+    case 2:  return ((I2)fn)(W(a[0]), W(a[1]));
+    case 3:  return ((I3)fn)(W(a[0]), W(a[1]), W(a[2]));
+    case 4:  return ((I4)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]));
+    case 5:  return ((I5)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]));
+    case 6:  return ((I6)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]));
+    case 7:  return ((I7)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]));
+    case 8:  return ((I8)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), W(a[7]));
+    case 9:  return ((I9)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), W(a[7]),
+                             W(a[8]));
+    case 10: return ((I10)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), W(a[7]),
+                              W(a[8]), W(a[9]));
+    case 11: return ((I11)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), W(a[7]),
+                              W(a[8]), W(a[9]), W(a[10]));
+    case 12: return ((I12)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), W(a[7]),
+                              W(a[8]), W(a[9]), W(a[10]), W(a[11]));
     default: return ((IN)fn)(A);
     }
 }
