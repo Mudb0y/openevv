@@ -279,8 +279,8 @@ int vrd_tvar(delta_state *d, int32_t f, const delta_operand *v)
         c = read_token(d, st, f, buf);
 
         if (c == 0 || checkInterrupt(d)) {
-            EVV_AT(uint8_t *, d->owner)[0x14] = 0;
-            memset(EVV_AT(uint8_t *, d->owner) + 0x1a8, 0, 4);
+            EVV_AT(delta_owner *, d->owner)->unknown_14 = 0;
+            EVV_AT(delta_owner *, d->owner)->unknown_1a8 = 0;
             return 1;
         }
         if (c == 10) {
@@ -474,8 +474,8 @@ int vrd_nvar(delta_state *d, int32_t f, const delta_operand *v)
         c = getnum(d, f, buf);
 
         if (c == 0) {
-            EVV_AT(uint8_t *, d->owner)[0x14] = 0;
-            memset(EVV_AT(uint8_t *, d->owner) + 0x1a8, 0, 4);
+            EVV_AT(delta_owner *, d->owner)->unknown_14 = 0;
+            EVV_AT(delta_owner *, d->owner)->unknown_1a8 = 0;
             again = 1;
             if (var_rderr(d, f, buf))
                 return 1;
@@ -556,8 +556,8 @@ int vrd_delta(delta_state *d, int32_t f, uint8_t st)
         if (checkInterrupt(d))
             return 1;
         if (c == 0) {
-            EVV_AT(uint8_t *, d->owner)[0x14] = 0;
-            memset(EVV_AT(uint8_t *, d->owner) + 0x1a8, 0, 4);
+            EVV_AT(delta_owner *, d->owner)->unknown_14 = 0;
+            EVV_AT(delta_owner *, d->owner)->unknown_1a8 = 0;
             return 1;
         }
 

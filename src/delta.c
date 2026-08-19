@@ -1928,7 +1928,7 @@ int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f)
 
     if (left != 0 && (*(int32_t *)(intptr_t)left & 2) != 0
         && right != 0 && (*(int32_t *)(intptr_t)right & 2) != 0) {
-        *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
+        EVV_AT(delta_owner *, d->owner)->changed = 1;
         *(int32_t *)(intptr_t)(t + (base + f) * 4) |= 1;
 
         CLRONESTM((delta_node *)(intptr_t)t);
@@ -1945,7 +1945,7 @@ int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f)
         *(int32_t *)(intptr_t)(t + 0xc + f * 4) =
             (*(int32_t *)(intptr_t)(t + 0xc + f * 4) & 3) | l;
     } else if (right != 0 && (*(int32_t *)(intptr_t)right & 2) != 0) {
-        *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
+        EVV_AT(delta_owner *, d->owner)->changed = 1;
         *(int32_t *)(intptr_t)(t + (base + f) * 4) |= 1;
 
         CLRONESTM((delta_node *)(intptr_t)t);
@@ -1961,7 +1961,7 @@ int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f)
         *(int32_t *)(intptr_t)(t + 0xc + f * 4) =
             (*(int32_t *)(intptr_t)(t + 0xc + f * 4) & 3) | left;
     } else if (left != 0 && (*(int32_t *)(intptr_t)left & 2) != 0) {
-        *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
+        EVV_AT(delta_owner *, d->owner)->changed = 1;
         *(int32_t *)(intptr_t)(t + (base + f) * 4) |= 1;
 
         CLRONESTM((delta_node *)(intptr_t)t);
@@ -2391,7 +2391,7 @@ int vmark(delta_state *d, uint8_t st, uint8_t fld, int32_t t, int32_t stop,
         t = *(int32_t *)(intptr_t)(next + 4) & ~3;
     }
 
-    *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
+    EVV_AT(delta_owner *, d->owner)->changed = 1;
     return 1;
 }
 
@@ -2668,7 +2668,7 @@ int mashtoks(delta_state *d, uint8_t f, int32_t t)
     vadd(d, &b, &a);
     vinitflds(d, f, a.ptr, b.ptr);
 
-    *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
+    EVV_AT(delta_owner *, d->owner)->changed = 1;
 
     nx = *(int32_t *)(intptr_t)(r + 4) & ~3;
 
@@ -2743,7 +2743,7 @@ void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r)
     if (EVV_AT(int8_t *, v->nsq_marks)[f] != 0)
         SETALLNSQ(s);
 
-    *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
+    EVV_AT(delta_owner *, d->owner)->changed = 1;
 
     if (l != 0 && (*(int32_t *)(intptr_t)l & 2) != 0) {
         left = l;
@@ -2996,7 +2996,7 @@ int fdeldel(delta_state *d, int32_t from, int32_t to, int32_t arg)
        ignores it. */
     (void)arg;
 
-    *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
+    EVV_AT(delta_owner *, d->owner)->changed = 1;
 
     if (from != 0 && (*(int32_t *)(intptr_t)from & 2) != 0)
         before = *(int32_t *)(intptr_t)(from + 0xc + fd * 4) & ~3;
@@ -3088,7 +3088,7 @@ int vdel_1pt(delta_state *d, uint8_t f, int32_t t, int32_t arg)
 {
     delta_stack *s = EVV_AT(delta_stack *, d->stack);
 
-    *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
+    EVV_AT(delta_owner *, d->owner)->changed = 1;
 
     s->del_field = (int8_t)f;
     s->del_to = t;
@@ -3120,7 +3120,7 @@ int vdel_2pt(delta_state *d, uint8_t f, int32_t l, int32_t r)
     s->del_to = VLSYNC((const delta_node *)(intptr_t)s->del_right,
                        s->del_field);
 
-    *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
+    EVV_AT(delta_owner *, d->owner)->changed = 1;
 
     if (s->del_right == s->del_from) {
         int32_t p = *(int32_t *)(intptr_t)
@@ -3145,7 +3145,7 @@ int vins_tok(delta_state *d, uint8_t f, int32_t l, int32_t r,
     int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     int32_t t;
 
-    *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
+    EVV_AT(delta_owner *, d->owner)->changed = 1;
 
     if ((*(int32_t *)(intptr_t)(l + (base + f) * 4) & ~3) != r
         || (*(int32_t *)(intptr_t)(r + 0xc + f * 4) & ~3) != l)
@@ -3169,7 +3169,7 @@ int vins_tok(delta_state *d, uint8_t f, int32_t l, int32_t r,
     else
         vinitflds(d, f, (char *)(intptr_t)t + 8, v->ptr);
 
-    *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CHANGED) = 1;
+    EVV_AT(delta_owner *, d->owner)->changed = 1;
     EVV_AT(delta_vars *, d->vars)->unknown_1170 = 0;
     return 1;
 }
@@ -3879,7 +3879,7 @@ int vretproc(delta_state *d, int32_t tag)
     v->unknown_11e8 = 0;
 
     if (exhausted) {
-        *(int32_t *)(EVV_AT(uint8_t *, d->owner) + DELTA_OWNER_CODE) = 0xea;
+        EVV_AT(delta_owner *, d->owner)->code = 0xea;
         r = deltaErrorThrown(d) ? 1 : 0;
     } else if (deltaErrorThrown(d)) {
         forceErrorBacktrack(d);

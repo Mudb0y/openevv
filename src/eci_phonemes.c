@@ -27,9 +27,11 @@
 #define RECORD_BYTES 0x30
 #define NAME_BYTES   4
 
-/* How the line is written. */
+/* How the line is written. The last eight are four-byte fields of the record,
+   so they are read as int and not as long: the two are the same width only
+   where a long is four bytes. */
 #define PHONEME_LINE \
-    "%d %d %d %d %hd %hd %hd %ld %ld %ld %ld %ld %ld %ld %ld"
+    "%d %d %d %d %hd %hd %hd %d %d %d %d %d %d %d %d"
 #define PHONEME_KEY "Phoneme%u"
 
 /* The reader is built on the stack, so its size has to be right. */
@@ -174,10 +176,10 @@ THIS PhonemeData *ph_dataCtor(PhonemeData *p, const void *lang)
                &name[0], &name[1], &name[2], &name[3],
                (short *)(rec + 0x04), (short *)(rec + 0x06),
                (short *)(rec + 0x08),
-               (long *)(rec + 0x10), (long *)(rec + 0x14),
-               (long *)(rec + 0x18), (long *)(rec + 0x1c),
-               (long *)(rec + 0x20), (long *)(rec + 0x24),
-               (long *)(rec + 0x28), (long *)(rec + 0x2c));
+               (int32_t *)(rec + 0x10), (int32_t *)(rec + 0x14),
+               (int32_t *)(rec + 0x18), (int32_t *)(rec + 0x1c),
+               (int32_t *)(rec + 0x20), (int32_t *)(rec + 0x24),
+               (int32_t *)(rec + 0x28), (int32_t *)(rec + 0x2c));
 
         /* The name goes in as four single bytes, whatever was read. */
         for (i = 0; i < NAME_BYTES; i++)
@@ -227,29 +229,33 @@ THIS void *ph_listDataDestroy(void *p, int32_t freeIt)
 /* One table per language the settings declare. A language whose table
    cannot be built, or cannot be stored, is dropped rather than kept
    half-made. */
+/* A Phonemes is an EngineList with a table hung off each language, so
+   what has to be allocated for one is what an EngineList is. */
+const uint32_t ph_bytes = sizeof(EngineList);
+
 THIS void *ph_ctor(void *self)
 {
-    uint8_t lang[0x14];
+    LangIdentifier lang;
 
     eng_ctor(self);
-    sti_langCtor(lang);
+    sti_langCtor(&lang);
 
-    if (!eng_getFirstLanguage(self, lang))
+    if (!eng_getFirstLanguage(self, &lang))
         return self;
 
     for (;;) {
         void *room = cpp_new(sizeof(PhonemeData));
-        void *one = room ? ph_dataCtor((PhonemeData *)room, lang) : 0;
+        void *one = room ? ph_dataCtor((PhonemeData *)room, &lang) : 0;
 
         if (!one)
             return self;
 
-        if (!eng_setData(self, lang, one)) {
+        if (!eng_setData(self, &lang, one)) {
             DELETE_ITSELF(one);
             return self;
         }
 
-        if (!eng_getNextLanguage(self, lang))
+        if (!eng_getNextLanguage(self, &lang))
             return self;
     }
 }

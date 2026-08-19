@@ -21,13 +21,9 @@
 #include "delta.h"
 
 /* The owner block, and the two words in it this file sets. */
-#define OWNER_BYTES     0x214
-#define OWNER_NAMES(o)  (*(const char ***)(o))
-#define OWNER_W(o, n)   (*(int32_t *)((char *)(o) + (n)))
-#define OWNER_B(o, n)   (*(int8_t *)((char *)(o) + (n)))
 
 /* How many names the table holds, and how much room they take. */
-#define NAMES_BYTES 0x18
+#define NAMES 6
 
 /* Which of the physical files the logical table starts from. */
 #define LOGIO_KIND(d, n) (*(uint8_t *)(EVV_AT(char *, (d)->logio) + (n)))
@@ -57,27 +53,29 @@ int32_t init_new(delta_state *d)
 {
     int32_t rc = 0;
 
-    d->owner = EVV_REF((uint8_t *)malloc(OWNER_BYTES));
-    if (!EVV_AT(uint8_t *, d->owner))
+    delta_owner *o = malloc(sizeof *o);
+
+    d->owner = EVV_REF(o);
+    if (!o)
         return -2;
-    memset(EVV_AT(uint8_t *, d->owner), 0, OWNER_BYTES);
+    memset(o, 0, sizeof *o);
 
-    OWNER_NAMES(EVV_AT(uint8_t *, d->owner)) = (const char **)malloc(NAMES_BYTES);
-    if (!OWNER_NAMES(EVV_AT(uint8_t *, d->owner)))
+    o->names = malloc(NAMES * sizeof *o->names);
+    if (!o->names)
         return -2;
 
-    OWNER_NAMES(EVV_AT(uint8_t *, d->owner))[0] = "STATEMENT";
-    OWNER_NAMES(EVV_AT(uint8_t *, d->owner))[1] = "TEST";
-    OWNER_NAMES(EVV_AT(uint8_t *, d->owner))[2] = "NULL";
-    OWNER_NAMES(EVV_AT(uint8_t *, d->owner))[3] = "LOOP";
-    OWNER_NAMES(EVV_AT(uint8_t *, d->owner))[4] = "COMMAND";
-    OWNER_NAMES(EVV_AT(uint8_t *, d->owner))[5] = "";
+    o->names[0] = "STATEMENT";
+    o->names[1] = "TEST";
+    o->names[2] = "NULL";
+    o->names[3] = "LOOP";
+    o->names[4] = "COMMAND";
+    o->names[5] = "";
 
-    OWNER_W(EVV_AT(uint8_t *, d->owner), 0x04) = 3;
-    OWNER_W(EVV_AT(uint8_t *, d->owner), 0x10) = 2;
-    OWNER_B(EVV_AT(uint8_t *, d->owner), 0x1b0) = 5;
-    OWNER_W(EVV_AT(uint8_t *, d->owner), 0x1dc) = 1;
-    *(const char **)((char *)EVV_AT(uint8_t *, d->owner) + 0x1ec) = "";
+    o->unknown_04 = 3;
+    o->unknown_10 = 2;
+    o->unknown_1b0 = 5;
+    o->unknown_1dc = 1;
+    o->unknown_1ec = "";
 
     return rc;
 }
@@ -88,13 +86,15 @@ void init_delete(delta_state *d)
     if (!d)
         return;
 
-    if (OWNER_NAMES(EVV_AT(uint8_t *, d->owner))) {
-        free((void *)OWNER_NAMES(EVV_AT(uint8_t *, d->owner)));
-        OWNER_NAMES(EVV_AT(uint8_t *, d->owner)) = 0;
+    delta_owner *o = EVV_AT(delta_owner *, d->owner);
+
+    if (o->names) {
+        free((void *)o->names);
+        o->names = 0;
     }
 
-    memset(EVV_AT(uint8_t *, d->owner), 0, OWNER_BYTES);
-    free(EVV_AT(uint8_t *, d->owner));
+    memset(o, 0, sizeof *o);
+    free(o);
     d->owner = EVV_REF(0);
 }
 
@@ -109,8 +109,8 @@ void vcmdend(delta_state *d, int32_t code)
 /* Everything the machine needs before it can be told to do anything. */
 int32_t vcmdinit(delta_state *d, int32_t argc, char **argv)
 {
-    uint8_t *owner = EVV_AT(uint8_t *, d->owner);
-    int32_t  i;
+    delta_owner *owner = EVV_AT(delta_owner *, d->owner);
+    int32_t      i;
 
     (void)argc;
     (void)argv;
@@ -118,15 +118,15 @@ int32_t vcmdinit(delta_state *d, int32_t argc, char **argv)
     if (!dtSetErrorCallback(d, (void *)embedErrorCallback))
         return 0;
 
-    OWNER_W(owner, 0x1d0) = 0;
-    OWNER_W(owner, 0x1cc) = 0x36b0;
+    owner->unknown_1d0 = 0;
+    owner->unknown_1cc = 0x36b0;
 
     EVV_AT(delta_vars *, d->vars)->relink = 0;
     EVV_AT(delta_vars *, d->vars)->ctx_both = 1;
     /* The fenced fields start after the six a sync node keeps for itself. */
     EVV_AT(delta_vars *, d->vars)->fence_base = d->nstmts + 6;
 
-    if (!logicalIOInit(d, d->nlfnames + OWNER_W(owner, 0x1b4),
+    if (!logicalIOInit(d, d->nlfnames + owner->unknown_1b4,
                        (void *)errorIgnore))
         return 0;
 

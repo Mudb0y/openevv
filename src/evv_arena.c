@@ -37,13 +37,58 @@ static const uintptr_t candidates[] = {
 #define ROUND(n)    (((n) + (ALIGN - 1)) & ~(size_t)(ALIGN - 1))
 
 /* One block: how big it is and whether it is in use. The size is of the whole
-   block, header included, so walking is a matter of adding it. */
+   block, header included, so walking is a matter of adding it.
+
+   The mark is not decoration. Everything the engine allocates comes from
+   here, and a write that runs past the end of one block lands on the header
+   of the next; without a mark the first anyone hears of it is the allocator
+   walking a chain of zeros and never coming back. With one, the walk says
+   which block was trodden on, which is the block after whoever overran. */
+#define HEAD_MARK 0x45565641u   /* EVVA */
+
 typedef struct {
+    uint32_t mark;
     uint32_t size;
     uint32_t used;
+    uint32_t whence;   /* who asked for it, so a block that was overrun can
+                          say which allocation ran over it */
 } head;
 
 static head *first;
+
+static void bad_block(const head *b, const char *what)
+{
+    const head *w = first;
+
+    fprintf(stderr, "evv: arena block at %p %s"
+            " (mark=%08x size=%u used=%u)\n",
+            (const void *)b, what, b->mark, b->size, b->used);
+
+    /* Whoever wrote past its end is the block in front, so name it: its size
+       is usually enough to say which allocation it was. */
+    while (w != 0 && w->mark == HEAD_MARK && w->size >= ALIGN) {
+        const head *n = (const head *)((const unsigned char *)w + w->size);
+
+        if (n == b) {
+            fprintf(stderr, "evv: the block in front is at %p, %u bytes,"
+                    " %s, asked for from %08x\n", (const void *)w, w->size,
+                    w->used ? "in use" : "free", w->whence);
+            break;
+        }
+        if (n >= b)
+            break;
+        w = n;
+    }
+    abort();
+}
+
+static void check(const head *b)
+{
+    if (b->mark != HEAD_MARK)
+        bad_block(b, "has lost its mark");
+    if (b->size < ALIGN || (b->size & (ALIGN - 1)) != 0)
+        bad_block(b, "has an impossible size");
+}
 
 int evv_arena_open(size_t bytes)
 {
@@ -76,6 +121,7 @@ int evv_arena_open(size_t bytes)
        nought goes on meaning nothing, which is what every test for an empty
        value in the machine assumes. */
     first = (head *)(evv_arena_base + ALIGN);
+    first->mark = HEAD_MARK;
     first->size = (uint32_t)(evv_arena_size - ALIGN);
     first->used = 0;
     return 1;
@@ -92,8 +138,10 @@ void evv_arena_close(void)
 
 static head *next_block(head *b)
 {
-    unsigned char *p = (unsigned char *)b + b->size;
+    unsigned char *p;
 
+    check(b);
+    p = (unsigned char *)b + b->size;
     if (p >= evv_arena_base + evv_arena_size)
         return 0;
     return (head *)p;
@@ -127,11 +175,13 @@ void *evv_arena_alloc(size_t n)
 
         if (b->size >= want + ALIGN * 2) {
             rest = (head *)((unsigned char *)b + want);
+            rest->mark = HEAD_MARK;
             rest->size = (uint32_t)(b->size - want);
             rest->used = 0;
             b->size = (uint32_t)want;
         }
         b->used = 1;
+        b->whence = (uint32_t)(uintptr_t)__builtin_return_address(1);
         return (unsigned char *)b + ALIGN;
     }
     return 0;
@@ -145,6 +195,7 @@ void evv_arena_free(void *p)
         return;
 
     b = (head *)((unsigned char *)p - ALIGN);
+    check(b);
     b->used = 0;
 
     /* Join what is free, from the front, so that the big pieces the heap
@@ -200,6 +251,7 @@ void *evv_arena_realloc(void *p, size_t n)
     }
 
     b = (head *)((unsigned char *)p - ALIGN);
+    check(b);
     had = b->size - ALIGN;
     if (had >= ROUND(n))
         return p;

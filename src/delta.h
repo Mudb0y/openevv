@@ -931,10 +931,28 @@ int setdlookup(delta_state *d, int32_t from, int32_t to, void *set,
                int32_t arg);
 int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f);
 
-/* Where the runtime tells its owner the spine moved, and where it leaves a
-   code when a rule returns with the backtracking stack not empty. */
-#define DELTA_OWNER_CHANGED 0x1b8
-#define DELTA_OWNER_CODE    0x1a4
+/* The block the runtime reports to. It belongs to whoever embedded the
+   machine, and only a handful of its fields are ever touched from here; the
+   offsets they sat at in the original are against each one, because that is
+   what they were read off. Nothing compiled from a rule reaches into it -- a
+   rule tells the runtime and the runtime tells the owner -- so the fields may
+   sit where the compiler puts them. */
+typedef struct {
+    const char **names;      /* 0x000, what each kind of activation is called */
+    int32_t      unknown_04; /* 0x004, set to three and never read from here */
+    int32_t      unknown_10; /* 0x010, set to two */
+    int8_t       unknown_14; /* 0x014, cleared by the save layer */
+    int32_t      code;       /* 0x1a4, left when a rule returns with the
+                                backtracking stack not empty */
+    int32_t      unknown_1a8; /* 0x1a8, cleared by the save layer */
+    int8_t       unknown_1b0; /* 0x1b0, set to five */
+    int32_t      changed;    /* 0x1b8, bumped whenever the spine moved */
+    int32_t      unknown_1cc; /* 0x1cc, set to a constant nothing reads */
+    int32_t      unknown_1d0; /* 0x1d0, cleared */
+    int32_t      unknown_1b4; /* 0x1b4, how many streams the runtime declared */
+    int32_t      unknown_1dc; /* 0x1dc, set to one */
+    const char  *unknown_1ec; /* 0x1ec, an empty name */
+} delta_owner;
 
 
 /* Bumped whenever the spine is relinked, so anything holding a position knows

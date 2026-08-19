@@ -87,8 +87,8 @@ static const char CMD_CONCATENATIVE[] = "`esp2";
 #define SIZE_MARKQUEUE   0x14
 #define MARKQUEUE_ROOM   0x200
 #define SIZE_FILTERS     0x144
-#define SIZE_SOUNDMGR    0x6c
-#define SIZE_PHONEMES    0x12c
+extern const uint32_t sm_bytes;
+extern const uint32_t ph_bytes;
 #define INDEX_BLOCK      8
 
 extern int32_t RAL_THREAD_PRIORITY_NORMAL MANGLED("_RAL_THREAD_PRIORITY_NORMAL");
@@ -351,13 +351,13 @@ static void stl_takeShared(SynthThread *t)
     sy_mutexWait(st_protectInitialization, -1);
 
     if (!st_soundManager) {
-        p = cpp_new(SIZE_SOUNDMGR);
+        p = cpp_new(sm_bytes);
         st_soundManager = p ? sm_ctor(p) : 0;
         if (!st_soundManager)
             ST_STATUS(t) = ERR_FAILED;
     }
     if (!st_phonemes) {
-        p = cpp_new(SIZE_PHONEMES);
+        p = cpp_new(ph_bytes);
         st_phonemes = p ? ph_ctor(p) : 0;
         if (!st_phonemes)
             ST_STATUS(t) = ERR_FAILED;

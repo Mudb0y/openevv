@@ -21,36 +21,13 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "eci_timer.h"
 
 typedef struct ETIThread ETIThread;
 typedef struct ETImessage ETImessage;
 typedef struct ETImessageQueueThread ETImessageQueueThread;
 
 /* The thread this derives from, only as far as its size. */
-#define ETITHREAD_BYTES 0x20
-
-/* One timer: where to post, what to post, how often, and how far through
-   the current round it is. */
-typedef struct TimerThreadTimer {
-    ETImessageQueueThread *queue;   /* +0x00 */
-    ETImessage            *message; /* +0x04 */
-    uint32_t               period;  /* +0x08 */
-    uint32_t               sofar;   /* +0x0c */
-    uint32_t               index;   /* +0x10, where it sits in the array */
-} TimerThreadTimer;
-
-#define TIMER_BYTES 0x14
-
-typedef struct TimerThread {
-    unsigned char      base[ETITHREAD_BYTES];  /* +0x00, an ETIThread */
-    unsigned char      guard[0x0c];            /* +0x20, over the list */
-    unsigned char      oneAtATime[0x0c];       /* +0x2c, over set and kill */
-    unsigned char      wake[0x0c];             /* +0x38, ends the sleep */
-    uint32_t           elapsed;                /* +0x44 */
-    uint32_t           count;                  /* +0x48 */
-    uint32_t           capacity;               /* +0x4c */
-    TimerThreadTimer **timers;                 /* +0x50 */
-} TimerThread;
 
 /* A message is counted, and the two slots that do it. */
 #define MSG_ADDREF   0x04
@@ -247,7 +224,7 @@ THIS TimerThreadTimer *tt_setTimer(TimerThread *t,
 
     ((MsgRefFn)MSG_SLOT(message, MSG_ADDREF))(message);
 
-    room = cpp_new(TIMER_BYTES);
+    room = cpp_new(sizeof(TimerThreadTimer));
     timer = room ? tt_timerCtor(room, queue, message, period,
                                 t->elapsed % period, t->count)
                  : 0;

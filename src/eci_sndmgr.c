@@ -17,6 +17,7 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "eci_timer.h"
 
 /* What a caller describes a format with. The name doubles as the device
    number when it is one, which is why it is a string. */
@@ -49,8 +50,12 @@ typedef struct SoundManager {
     AudioFormat **formats;      /* +0x0c */
     uint32_t    count;          /* +0x10 */
     uint32_t    capacity;       /* +0x14 */
-    uint8_t     timer[0x40];    /* +0x18, a TimerThread */
+    TimerThread timer;
 } SoundManager;
+
+/* What a caller has to allocate for one. Only this file knows what is
+   in it, so only this file can say. */
+const uint32_t sm_bytes = sizeof(SoundManager);
 
 /* What asking for a format can answer. */
 #define FORMAT_OK          0
@@ -183,7 +188,7 @@ THIS SoundManager *sm_ctor(SoundManager *m)
     m->formats = 0;
     m->count = 0;
     m->capacity = 0;
-    tt_ctor(m->timer);
+    tt_ctor(&m->timer);
     return m;
 }
 
@@ -194,7 +199,7 @@ THIS void sm_dtor(SoundManager *m)
         cpp_delete(m->formats);
         m->formats = 0;
     }
-    tt_dtor(m->timer);
+    tt_dtor(&m->timer);
     sy_mutexDtor(m);
 }
 
@@ -265,7 +270,7 @@ THIS int32_t sm_requestAudioFormat(SoundManager *m, ECIaudioFormat *want,
     {
         AudioFormat *a = cpp_new(AUDIO_FORMAT_BYTES);
 
-        *out = a ? sm_formatCtor(a, m->count, want, m->timer) : 0;
+        *out = a ? sm_formatCtor(a, m->count, want, &m->timer) : 0;
     }
 
     if (!*out) {

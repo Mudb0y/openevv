@@ -33,7 +33,6 @@ typedef struct EngineData {
     int32_t     unused_14;
 } EngineData;
 
-#define ENGINE_DATA_BYTES 0x18
 
 /* Which kind of object the factory is asked for. */
 #define OBJ_ENGINE 2
@@ -166,7 +165,7 @@ THIS EngineData *ea_getEngineData(EngineArray *a, const void *lang)
         const char *name = ea_getLibraryName(a, lang);
 
         if (name != 0) {
-            void *p = cpp_new(ENGINE_DATA_BYTES);
+            void *p = cpp_new(sizeof(EngineData));
 
             d = p ? ed_ctor(p, name) : 0;
             cpp_delete((void *)name);
