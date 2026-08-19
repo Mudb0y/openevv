@@ -3820,13 +3820,13 @@ int ventproc(delta_state *d, delta_actrec *rec, uint8_t *index,
     s->limit -= s->size_a8;
 
     slot[0] = 7;
-    *(delta_actrec **)(slot + 4) = rec;
+    *(evv_ref *)(slot + 4) = EVV_REF(rec);
 
-    *(uint8_t **)(slot + 0xc) = EVV_AT(uint8_t *, d->fence_chars);
+    *(evv_ref *)(slot + 0xc) = d->fence_chars;
     d->fence_chars = EVV_REF(chars);
-    *(uint8_t **)(slot + 8) = EVV_AT(uint8_t *, d->fence_index);
+    *(evv_ref *)(slot + 8) = d->fence_index;
     d->fence_index = EVV_REF(index);
-    *(uint8_t **)(slot + 0x10) = EVV_AT(uint8_t *, d->fence_marks);
+    *(evv_ref *)(slot + 0x10) = d->fence_marks;
     d->fence_marks = EVV_REF(marks);
 
     v->back = EVV_REF(EVV_AT(uint8_t *, s->top));
@@ -3856,12 +3856,12 @@ int vretproc(delta_state *d, int32_t tag)
         exhausted = 1;
 
     frame = popDeltaStackFrame(d, EVV_AT(uint8_t *, v->back));
-    rec = *(delta_actrec **)(frame + 4);
+    rec = EVV_AT(delta_actrec *, *(evv_ref *)(frame + 4));
 
     frame = EVV_AT(uint8_t *, s->top);
-    d->fence_chars = EVV_REF(*(uint8_t **)(frame + 0xc));
-    d->fence_index = EVV_REF(*(uint8_t **)(frame + 8));
-    d->fence_marks = EVV_REF(*(uint8_t **)(frame + 0x10));
+    d->fence_chars = *(evv_ref *)(frame + 0xc);
+    d->fence_index = *(evv_ref *)(frame + 8);
+    d->fence_marks = *(evv_ref *)(frame + 0x10);
 
     v->running = rec->unknown_00;
     memcpy(&v->loop_tag, rec->tags, 8);
