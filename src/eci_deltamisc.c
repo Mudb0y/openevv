@@ -158,9 +158,11 @@ static int32_t dictinit(delta_state *d, void *entry, int32_t isAction,
 
     /* Where the entries themselves live: one store per set, one per action. */
     if (isAction)
-        *(const void **)(rec + 4) = EVV_AT(const uint8_t *const *, d->act_store)[index];
+        *(evv_ref *)(rec + 4) =
+            EVV_REF(EVV_AT(const uint8_t *const *, d->act_store)[index]);
     else
-        *(const void **)(rec + 4) = EVV_AT(const uint8_t *const *, d->set_store)[index];
+        *(evv_ref *)(rec + 4) =
+            EVV_REF(EVV_AT(const uint8_t *const *, d->set_store)[index]);
 
     return 1;
 }

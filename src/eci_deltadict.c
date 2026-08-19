@@ -22,8 +22,11 @@
 #include <string.h>
 #include "delta.h"
 
-/* What a set or an action entry keeps. */
-#define E_STORE(e)   (*(const uint8_t **)((const char *)(e) + 0x04))
+/* What a set or an action entry keeps. The record is the language's own data
+   and is the shape the language wrote it, so the store it names is four bytes
+   whatever the host is. */
+#define E_STORE(e)   EVV_AT(const uint8_t *, \
+                            *(const evv_ref *)((const char *)(e) + 0x04))
 #define E_STMT(e)    (*(const uint8_t *)((const char *)(e) + 0x08))
 #define E_ACTN(e)    (*(const int32_t *)((const char *)(e) + 0x0c))
 #define E_SETN(e)    (*(const int32_t *)((const char *)(e) + 0x10))
