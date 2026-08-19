@@ -1,0 +1,348 @@
+#!/usr/bin/env python3
+"""The language's dictionaries as a file a person can edit, and back again.
+
+`dump' writes lang/enus.dict out of the tables and the rules.
+`build' reads that file and lays both back down: the entries, the index in
+front of each dictionary, where each dictionary begins, the count in each
+table entry, and -- where a pronunciation has been changed -- a record of its
+own in the constant blob with the rule's switch pointed at it.
+
+The file is in the order the engine searches, which is by the language's own
+character codes and not by letter, because that order is the one thing about
+the layout that is observable. Six dictionaries hold the same word twice with
+different actions, so which of the two the search lands on decides what is
+said, and keeping the order keeps the answer. Where the entries then lie in
+the store is not observable and is not kept.
+
+What a word says is a property of its action and not of the word, so two words
+on the same action say the same thing and changing one changes both. Building
+refuses a file where two such words disagree rather than pick one.
+
+An entry with nothing after its action says nothing this can read faithfully:
+either its rule chooses between two records depending on what follows the
+word, or it lays the word down in pieces, as the currencies do. Those are left
+alone rather than half-reported.
+
+Building checks itself: it reads its own work back and holds every word, value
+and pronunciation against what was there before.
+"""
+
+import collections
+import importlib
+import os
+import struct
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SETS_C = os.path.join(ROOT, 'src', 'delta_sets_enus.c')
+DICT_FILE = os.path.join(ROOT, 'lang', 'enus.dict')
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+lex = importlib.import_module('delta-lexicon')
+arms_mod = importlib.import_module('delta-arms')
+
+ENTRY_BYTES = 0x28
+VALUE_BYTES = 4
+SOUND_STMT = 2
+CHAR_STMT = 1
+
+HEADER = """\
+# The language's dictionaries. Written by tools/delta-dict.py from the tables
+# and the rules, and read back by it to lay them down again.
+#
+# One section per dictionary, and inside it one entry per line, indented: the
+# word, then the two counts the rule steps the spine by, then the action
+# number it dispatches on, then what it says.
+#
+# What it says is written in ETI's phone letters where the section says sound,
+# spaced one phone apart, and in the language's own characters where it says
+# characters. A phone or a character that no name picks out on its own is
+# written as a hash and its number. An entry with nothing after its action
+# lays no record down, or lays one down a way this cannot yet read.
+#
+# What a word says belongs to its action rather than to the word, so two words
+# sharing an action say the same thing and changing one changes both.
+#
+# The order is the one the engine searches in, which is by the language's own
+# character codes rather than by letter, so the vowels come first. A word put
+# in the wrong place will not be found; building says so rather than laying
+# down a dictionary that cannot be read.
+#
+# A word is written as its characters. A character the alphabet does not
+# spell as one ordinary letter is written in brackets, by name where that
+# name belongs to one code alone and by number where two codes share it.
+"""
+
+
+def bytes_as_c(data, per_line=16):
+    lines = []
+    for i in range(0, len(data), per_line):
+        lines.append('    ' + ','.join(str(b) for b in data[i:i + per_line]))
+    return ',\n'.join(lines)
+
+
+def collated(keys):
+    return list(keys) == sorted(keys)
+
+
+def say(codes, kind, alpha):
+    if kind == SOUND_STMT:
+        table = alpha.get(SOUND_STMT, [])
+        return lex.sound_text(codes, table, lex.unique_names(table))
+    table = alpha.get(CHAR_STMT, [])
+    return lex.word(codes, table, lex.unique_names(table))
+
+
+def unsay(text, kind, alpha):
+    if kind == SOUND_STMT:
+        table = alpha.get(SOUND_STMT, [])
+        return lex.sound_codes(text, lex.unique_names(table))
+    table = alpha.get(CHAR_STMT, [])
+    return lex.codes_of(text, table, lex.unique_names(table))
+
+
+def read_tables():
+    """Everything both halves need: the dictionaries, the alphabets, and what
+    each action lays down."""
+    alpha, act_table, store, dicts = lex.dictionaries()
+    laid, kind = {}, {}
+    for d in dicts:
+        recs = lex.actions(d['name'])
+        laid[d['name']] = recs
+        kind[d['name']] = lex.choose(list(recs.values()), alpha)
+    return alpha, act_table, store, dicts, laid, kind
+
+
+def dump():
+    alpha, act_table, store, dicts, laid, kind = read_tables()
+
+    lines = [HEADER]
+    loose = []
+    for d in dicts:
+        name = d['name']
+        table = alpha.get(d['stmt'], [])
+        once = lex.unique_names(table)
+        recs, k = laid[name], kind[name]
+
+        lines.append('dictionary %s statement %d width %d records %s'
+                     % (name, d['stmt'], d['width'],
+                        'sound' if k == SOUND_STMT else 'characters'))
+        for _off, key, value in d['entries']:
+            act = struct.unpack_from('<H', value, 2)[0]
+            text = say(recs[act], k, alpha) if act in recs else ''
+            lines.append('  %s %d %d %d%s'
+                         % (lex.word(key, table, once), value[0], value[1],
+                            act, (' says ' + text) if text else ''))
+        lines.append('')
+
+        if not collated([k2 for _o, k2, _v in d['entries']]):
+            loose.append(name)
+
+    os.makedirs(os.path.dirname(DICT_FILE), exist_ok=True)
+    with open(DICT_FILE, 'w') as f:
+        f.write('\n'.join(lines))
+
+    print('%d dictionaries, %d entries, %d with a pronunciation, written to %s'
+          % (len(dicts), sum(d['count'] for d in dicts),
+             sum(1 for d in dicts for _o, _k, v in d['entries']
+                 if struct.unpack_from('<H', v, 2)[0] in laid[d['name']]),
+             os.path.relpath(DICT_FILE, ROOT)))
+    if loose:
+        print('not in the engine\'s own order: %s' % ', '.join(loose))
+    return 0
+
+
+def read_file():
+    dicts = []
+    for line in open(DICT_FILE):
+        line = line.rstrip('\n')
+        if not line.strip() or line.startswith('#'):
+            continue
+        if line.startswith('dictionary '):
+            f = line.split()
+            dicts.append({'name': f[1], 'stmt': int(f[3]), 'width': int(f[5]),
+                          'kind': SOUND_STMT if f[7] == 'sound' else CHAR_STMT,
+                          'entries': []})
+            continue
+        f = line[2:].split(' ')
+        word, left, right, action = f[0], int(f[1]), int(f[2]), int(f[3])
+        text = ' '.join(f[5:]) if len(f) > 4 and f[4] == 'says' else None
+        dicts[-1]['entries'].append((word, left, right, action, text))
+    return dicts
+
+
+def lay_down(want, alpha):
+    """The store, and where each dictionary starts in it."""
+    out = bytearray()
+    starts = []
+
+    for d in want:
+        letters = alpha.get(d['stmt'], [])
+        once = lex.unique_names(letters)
+        entries = [(lex.codes_of(w, letters, once), l, r, a)
+                   for w, l, r, a, _t in d['entries']]
+
+        base = len(out)
+        starts.append(base)
+        out.extend(b'\0' * (2 * len(entries)))
+
+        for slot, (key, left, right, action) in enumerate(entries):
+            where = len(out) - base - 2 * len(entries)
+            # The index holds an offset in two signed bytes, so a dictionary
+            # grown past that would wrap and be searched in the wrong place.
+            if where > 0x7fff:
+                raise ValueError('%s has outgrown its index at entry %d'
+                                 % (d['name'], slot))
+            struct.pack_into('<h', out, base + 2 * slot, where)
+            out.extend(key)
+            out.append(0)
+            out.extend((left, right))
+            out.extend(struct.pack('<H', action))
+
+    return out, starts
+
+
+def wanted_records(d, alpha):
+    """What each action of one dictionary is to say, and a complaint for every
+    pair of words that disagree about it."""
+    said, trouble = {}, []
+    for word, _l, _r, act, text in d['entries']:
+        if text is None:
+            continue
+        codes = unsay(text, d['kind'], alpha)
+        if act in said and said[act][0] != codes:
+            trouble.append((act, said[act][1], word))
+        else:
+            said[act] = (codes, word)
+    return {a: c for a, (c, _w) in said.items()}, trouble
+
+
+def build():
+    alpha, act_table, store, was, laid, kind = read_tables()
+    want = read_file()
+
+    if [d['name'] for d in was] != [d['name'] for d in want]:
+        print('the file names different dictionaries than the tables do',
+              file=sys.stderr)
+        return 1
+
+    bad = 0
+    for d in want:
+        letters = alpha.get(d['stmt'], [])
+        once = lex.unique_names(letters)
+        keys = [lex.codes_of(w, letters, once) for w, _l, _r, _a, _t in
+                d['entries']]
+        if not collated(keys):
+            print('%s is not in the order the engine searches, and words in '
+                  'it would not be found' % d['name'], file=sys.stderr)
+            bad = 1
+    if bad:
+        return 1
+
+    # The pronunciations first, because they are the part that can be refused.
+    rules = lex.rules()
+    changed = 0
+    for d in want:
+        recs, trouble = wanted_records(d, alpha)
+        if trouble:
+            for act, first, second in trouble:
+                print('%s action %d: %s and %s disagree about what it says'
+                      % (d['name'], act, first, second), file=sys.stderr)
+            bad = 1
+            continue
+
+        now = laid[d['name']]
+        edits = {a: c for a, c in recs.items() if now.get(a) != c}
+        if not edits:
+            continue
+
+        arms = arms_mod.Arms(rules, d['name'])
+        if not arms.ok:
+            print('%s lays its records down a way this cannot write, so %d '
+                  'changed pronunciation(s) in it were refused'
+                  % (d['name'], len(edits)), file=sys.stderr)
+            bad = 1
+            continue
+        for act, codes in sorted(edits.items()):
+            if act not in now:
+                print('%s action %d had no record to change'
+                      % (d['name'], act), file=sys.stderr)
+                bad = 1
+                continue
+            try:
+                arms.rewrite(act, bytes(codes))
+            except ValueError as why:
+                print(why, file=sys.stderr)
+                bad = 1
+                continue
+            changed += 1
+    if bad:
+        return 1
+
+    if rules.touched:
+        rules.save()
+
+    out, starts = lay_down(want, alpha)
+    table = bytearray(act_table)
+    for i, d in enumerate(want):
+        struct.pack_into('<i', table, i * ENTRY_BYTES + 0x0c, len(d['entries']))
+
+    text = open(SETS_C).read()
+    text = splice(text, 'act_table[]', bytes_as_c(table))
+    text = splice(text, 'actent_store[]', bytes_as_c(out))
+    text = splice(text, 'actent_all[]',
+                  '\n'.join('    actent_store + %d,   /* %s_actentries */'
+                            % (s, d['name'])
+                            for s, d in zip(starts, want)))
+    open(SETS_C, 'w').write(text)
+
+    print('%d dictionaries, %d entries, %d bytes of store, %d pronunciation(s) '
+          'rewritten' % (len(want), sum(len(d['entries']) for d in want),
+                         len(out), changed))
+    return compare(was, laid)
+
+
+def compare(was, laid):
+    """Read it all back and hold it against what it said before. The store is
+    laid out afresh, so the bytes are not the same bytes; what has to be the
+    same is every dictionary's words and values in order, and every action's
+    record except the ones deliberately changed."""
+    _alpha, _table, _store, now, now_laid, _kind = read_tables()
+    if len(now) != len(was):
+        print('the tables now hold %d dictionaries, not %d'
+              % (len(now), len(was)), file=sys.stderr)
+        return 1
+
+    bad = 0
+    for a, b in zip(was, now):
+        before = [(tuple(k), bytes(v)) for _o, k, v in a['entries']]
+        after = [(tuple(k), bytes(v)) for _o, k, v in b['entries']]
+        if a['name'] != b['name'] or before != after:
+            bad += 1
+            print('%s reads back differently' % a['name'], file=sys.stderr)
+
+    want = {d['name']: dict(wanted_records(d, _alpha)[0]) for d in read_file()}
+    for name, recs in now_laid.items():
+        for act, codes in recs.items():
+            asked = want.get(name, {}).get(act)
+            if asked is not None and asked != codes:
+                bad += 1
+                print('%s action %d says something other than it was told to'
+                      % (name, act), file=sys.stderr)
+
+    if bad:
+        return 1
+    print('reads back word for word, value for value and sound for sound')
+    return 0
+
+
+def splice(text, name, body):
+    at = text.index(name)
+    open_at = text.index('{', at)
+    close_at = text.index('\n};', open_at)
+    return text[:open_at + 1] + '\n' + body + text[close_at:]
+
+
+if __name__ == '__main__':
+    mode = sys.argv[1] if len(sys.argv) > 1 else 'dump'
+    sys.exit(dump() if mode == 'dump' else build())

@@ -385,7 +385,14 @@ def write_consts(e, where, out_c):
                 "\n"
                 "   Everything the rules name by address: the language's\n"
                 "   string constants and the compiler's own, as they lie in\n"
-                "   the object each was compiled into. */\n"
+                "   the object each was compiled into.\n"
+                "\n"
+                "   A pronunciation changed in lang/enus.dict is appended\n"
+                "   here by tools/delta-dict.py, which gives the edited\n"
+                "   action a record of its own rather than writing over the\n"
+                "   one it had, since several actions can name the same\n"
+                "   bytes. Running this lifter again puts IBM's own back\n"
+                "   and loses those edits. */\n"
                 "\n#include <stdint.h>\n")
         for store in sorted(seen):
             data = seen[store]
@@ -405,7 +412,14 @@ def write_c(e, where, out_c, out_h, out_syms, stores, names):
                 "\n"
                 "   The language's rules as bytecode, with the constants,\n"
                 "   the string addresses and the runtime entry points they\n"
-                "   name pulled out beside them. */\n\n")
+                "   name pulled out beside them.\n"
+                "\n"
+                "   A pronunciation changed in lang/enus.dict is written\n"
+                "   back here by tools/delta-dict.py: the pools grow, and\n"
+                "   the edited action gets a block of its own at the end of\n"
+                "   its rule with the switch pointed at it. Running this\n"
+                "   lifter again puts IBM's own back and loses those\n"
+                "   edits. */\n\n")
         f.write('#include "delta_rules.h"\n\n')
 
         f.write("const uint8_t delta_rule_code[] = {\n")

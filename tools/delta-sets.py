@@ -196,7 +196,14 @@ def main():
                 "   actions: what each one is, and what is in it. The\n"
                 "   contents are bytes and nothing else, so they are here\n"
                 "   as they were; the machine is handed a copy of the two\n"
-                "   tables rather than these, because it writes to them. */\n"
+                "   tables rather than these, because it writes to them.\n"
+                "\n"
+                "   The three dictionary arrays below -- act_table,\n"
+                "   actent_store and actent_all -- are laid down again by\n"
+                "   tools/delta-dict.py out of lang/enus.dict, which is\n"
+                "   where a word is added or an entry changed. Running\n"
+                "   this lifter again puts IBM's own back and loses\n"
+                "   whatever that file said. */\n"
                 "\n#include <stdlib.h>\n#include <string.h>\n"
                 "\n#include \"delta.h\"\n")
 
