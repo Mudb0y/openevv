@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include "delta.h"
 #include "klatt_state.h"
+#include "klatt_lang.h"
 
 /* How many parameters a frame carries. */
 #define FRAME_PARMS 0x3e
@@ -43,13 +44,13 @@ typedef struct ValueSet {
 } ValueSet;
 
 /* What the array generator hangs off the machine. */
-#define GEN(d)       EVV_AT(unsigned char *, ((delta_state *)(d))->dlang)
-#define GEN_SET(d)      (*(ValueSet **)(GEN(d) + 0x00))
-#define GEN_AT(d)       (*(int32_t *)(GEN(d) + 0x04))
-#define GEN_KLATT(d)    (*(void **)(GEN(d) + 0x20))
-#define GEN_END(d)      (*(int32_t *)(GEN(d) + 0x44))
-#define GEN_STARTED(d)  (*(int32_t *)(GEN(d) + 0x48))
-#define GEN_LIMIT(d)    (*(int32_t *)(GEN(d) + 0x4c))
+#define GEN(d)       EVV_AT(DeltaLang *, ((delta_state *)(d))->dlang)
+#define GEN_SET(d)      (*(ValueSet **)&GEN(d)->set_a)
+#define GEN_AT(d)       (GEN(d)->at)
+#define GEN_KLATT(d)    (GEN(d)->klatt)
+#define GEN_END(d)      (GEN(d)->spoken)
+#define GEN_STARTED(d)  (GEN(d)->marked)
+#define GEN_LIMIT(d)    (GEN(d)->queued)
 
 extern int32_t streamArrayCount(delta_state *d);
 extern int32_t arrayStreamLastOffset(delta_state *d, int32_t stream);

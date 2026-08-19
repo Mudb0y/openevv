@@ -22,6 +22,7 @@
 #include "eci_synththread.h"
 #include "evv_abi.h"
 #include "delta.h"
+#include "klatt_lang.h"
 
 /* One stream, and how many bytes of it there are. */
 #define STREAM_BYTES 0x18
@@ -50,9 +51,9 @@ typedef struct StreamArrayList {
 
 /* Where the list hangs off the machine, and the moment a cleared stream
    starts counting from. */
-#define GEN(d)       EVV_AT(unsigned char *, ((delta_state *)(d))->dlang)
-#define GEN_LIST(d)  (*(StreamArrayList **)(GEN(d) + 0x24))
-#define GEN_ZERO(d)  (*(uint32_t *)(GEN(d) + 0x28))
+#define GEN(d)       EVV_AT(DeltaLang *, ((delta_state *)(d))->dlang)
+#define GEN_LIST(d)  (*(StreamArrayList **)&GEN(d)->list)
+#define GEN_ZERO(d)  (GEN(d)->zero)
 
 extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
 extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");

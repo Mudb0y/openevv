@@ -22,6 +22,7 @@
 #include "delta.h"
 #include "klatt_state.h"
 #include "evv_arena.h"
+#include "klatt_lang.h"
 
 /* How many parameters a frame carries, and the one that means "no stream". */
 #define FRAME_PARMS 0x3e
@@ -60,9 +61,9 @@ typedef struct ValueSet {
 } ValueSet;
 
 /* What the generator hangs off the machine. */
-#define GEN(d)       EVV_AT(unsigned char *, ((delta_state *)(d))->dlang)
-#define GEN_SET(d)   (*(ValueSet **)(GEN(d) + 0x2c))
-#define GEN_KLATT(d) (*(void **)(GEN(d) + 0x20))
+#define GEN(d)       EVV_AT(DeltaLang *, ((delta_state *)(d))->dlang)
+#define GEN_SET(d)   (*(ValueSet **)&GEN(d)->set_b)
+#define GEN_KLATT(d) (GEN(d)->klatt)
 
 /* Which field of the caller's map says where a parameter comes from, and
    where the map keeps the field the walk follows. */
