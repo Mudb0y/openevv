@@ -213,12 +213,12 @@ THIS int sm_ensureArraySize(SoundManager *m)
         return 1;
 
     bigger = m->count * 2;
-    grown = cpp_new(bigger * 4);
+    grown = cpp_new(bigger * (uint32_t)sizeof *m->formats);
     if (!grown)
         return 0;
 
     if (m->formats) {
-        memcpy(grown, m->formats, m->capacity * 4);
+        memcpy(grown, m->formats, m->capacity * sizeof *m->formats);
         cpp_delete(m->formats);
     }
     m->formats = grown;

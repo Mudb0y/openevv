@@ -55,7 +55,7 @@ THIS ETIqueue *eq_ctor(ETIqueue *q, uint32_t capacity)
     q->head     = 0;
     q->tail     = 0;
 
-    q->array = (void **)cpp_new(capacity * 4);
+    q->array = cpp_new(capacity * (uint32_t)sizeof *q->array);
     if (!q->array)
         q->capacity = 0;
     return q;
@@ -168,12 +168,14 @@ THIS int32_t eq_doubleArraySize(ETIqueue *q)
         return 0;
 
     bigger = q->capacity * 2;
-    fresh  = (void **)cpp_new(bigger * 4);
+    fresh  = cpp_new(bigger * (uint32_t)sizeof *q->array);
     if (!fresh)
         return 0;
 
-    memcpy(fresh, q->array + q->head, (q->capacity - q->head) * 4);
-    memcpy(fresh + (q->capacity - q->head), q->array, q->head * 4);
+    memcpy(fresh, q->array + q->head,
+           (q->capacity - q->head) * sizeof *q->array);
+    memcpy(fresh + (q->capacity - q->head), q->array,
+           q->head * sizeof *q->array);
 
     old = q->array;
     cpp_delete(old);

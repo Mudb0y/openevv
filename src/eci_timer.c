@@ -196,12 +196,12 @@ THIS int tt_ensureArraySize(TimerThread *t)
         return 1;
 
     bigger = t->count * 2;
-    grown = cpp_new(bigger * 4);
+    grown = cpp_new(bigger * (uint32_t)sizeof *t->timers);
     if (!grown)
         return 0;
 
     if (t->timers) {
-        memcpy(grown, t->timers, t->capacity * 4);
+        memcpy(grown, t->timers, t->capacity * sizeof *t->timers);
         cpp_delete(t->timers);
     }
     t->timers = grown;
