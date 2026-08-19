@@ -263,7 +263,7 @@ int open_output(delta_state *d, int32_t which)
 int vrd_tvar(delta_state *d, int32_t f, const delta_operand *v)
 {
     char buf[40];
-    uint8_t st = ((const unsigned char *)v)[4];
+    uint8_t st = (uint8_t)v->kind;
     const delta_fielddesc *fd = &vstmtbl[st].fields[0];
     const char *const *names = (const char *const *)fd->values;
     void *where = 0;
