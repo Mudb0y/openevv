@@ -392,10 +392,19 @@ def write(names):
         text.append('    for (i = 0; i < nargs && i < %d; i++)\n' % params)
         text.append('        memcpy(base + %d + 4 * i, &args[i], 4);\n\n'
                     % pbase)
-        text.append('\n'.join(join_calls(c, structure(fold(body)))))
+        named, saw = name_globals(join_calls(c, structure(fold(body))))
+        USED.update(saw)
+        text.append('\n'.join(named))
         text.append('\n    evv_frame_pop(frame);\n    return r0;\n}\n\n')
         done.append(name)
 
+    if USED:
+        where = {v: k for k, v in layout().items()}
+        text.insert(1, '/* Where each global the rules touch lands in the'
+                    ' state. */\n%s\n\n'
+                    % '\n'.join('#define DG_%-6s %5d' % (v, where[v])
+                                for v in sorted(USED,
+                                                key=lambda x: where[x])))
     text.append('const delta_rule_c delta_rule_native[] = {\n')
     for name in done:
         text.append('    { %d, evv_%s },\n' % (index_of(name), name))
@@ -532,6 +541,86 @@ def _loop(body):
 
 
 WRAPPED = [0]
+NAMED = [0]
+USED = set()
+LAYOUT = {}
+
+
+def layout():
+    """Where each of the language's global variables lands in the state.
+
+    delta_new walks the declaration list once, aligning and numbering as it
+    goes, and this walks it the same way. The proof that it walks it right is
+    that the last variable ends exactly on the state's declared size, with
+    nothing over and nothing short.
+    """
+    if LAYOUT:
+        return LAYOUT
+    text = open(os.path.join(ROOT, 'src', 'delta_globals_enus.c')).read()
+    kinds = re.findall(r'DG_(WORD|LONG|SHORT|COMPOUND)', text)
+    sizes = [int(b) for _a, b in
+             re.findall(r'\{\s*(\d+),\s*(\d+)\s*\}',
+                        text[text.index('delta_compounds[]'):])]
+
+    def up(n, a):
+        return (n + a - 1) & ~(a - 1)
+
+    at = 0xb0
+    n = {'WORD': 0, 'LONG': 0, 'SHORT': 0, 'COMPOUND': 0}
+    for k in kinds:
+        if k in ('WORD', 'LONG'):
+            at = up(at, 4)
+            LAYOUT[at + 4] = '%s%d' % ('w' if k == 'WORD' else 'l', n[k])
+            at += 8
+        elif k == 'SHORT':
+            at = up(at, 2)
+            LAYOUT[at + 2] = 's%d' % n[k]
+            at += 4
+        else:
+            at = up(at, 2)
+            LAYOUT[at] = 'c%d' % n[k]
+            at += 4 + up(sizes[n[k]] if n[k] < len(sizes) else 0, 2)
+        n[k] += 1
+    return LAYOUT
+
+
+REACH = re.compile(r'\(\*\((u?int(?:8|16|32)_t) \*\)'
+                   r'\(\(unsigned char \*\)\(intptr_t\)\((r\d)\)'
+                   r' \+ (\d+)\)\)')
+
+
+def name_globals(body):
+    """Reaches through the state written as the variables they are.
+
+    Only through a register that was loaded with the state and never loaded
+    with anything else, so that a name is put on a reach only where the thing
+    reached through is known to be the state.
+    """
+    holds = set()
+    other = set()
+    for line in body:
+        m = re.match(r'\s*(r\d) = (.*);$', line)
+        if not m:
+            continue
+        (holds if m.group(2) == '(FIELD(0))' else other).add(m.group(1))
+    holds -= other
+    if not holds:
+        return body, set()
+    where = layout()
+    seen = set()
+
+    def sub(m):
+        t, reg, off = m.group(1), m.group(2), int(m.group(3))
+        if reg not in holds or off not in where:
+            return m.group(0)
+        seen.add(where[off])
+        NAMED[0] += 1
+        return 'GLOBAL(%s, %s, %s)' % (t, reg, where[off])
+
+    return [REACH.sub(sub, l) for l in body], seen
+
+
+
 SIMPLE = {}
 
 
@@ -790,6 +879,7 @@ def main():
     done, refused = write(names)
     print('calls joined to their arguments: %d' % JOINED[0])
     print('wrappers inlined to the primitive they stand for: %d' % WRAPPED[0])
+    print('reaches through the state named as the variable they are: %d over %d variables' % (NAMED[0], len(USED)))
     print('branches turned into an if: %d, loops closed: %d'
           % (STRUCTURED[0], LOOPED[0]))
     print('landing places folded: %d, entries folded: %d'

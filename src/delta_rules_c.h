@@ -161,6 +161,15 @@ enum {
 /* How a decompiled rule writes a call. The arguments are already on that
    stack, which is why they are not named here: what a call says is which
    entry it is and how many of them it takes. */
+/* A global variable of the language, reached through the state pointer a
+   rule is holding. delta_new lays the variables out in the tail of the state
+   in declaration order and numbers each kind as it goes, and these are those
+   numbers: w for a word, l for a long, s for a short, c for a compound. Two
+   rules touching the same variable now say the same thing rather than two
+   different byte offsets, and the offsets themselves are worked out the same
+   way delta_new works them out, which is what makes the names true. */
+#define GLOBAL(t, p, v) (*(t *)((unsigned char *)(intptr_t)(p) + DG_##v))
+
 /* An inlined wrapper: the primitive it stood for, with the numbers it had
    baked in and the caller's values in the places it read them from. The site's
    own pushes stay above it untouched, because a call does not pop them. */
