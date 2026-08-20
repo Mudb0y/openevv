@@ -229,18 +229,19 @@ def emit(rule):
                 dst = ops[0]
             was = v(dst, width, True)
             body.append('    ' + rule.put(dst[0], dst[1],
-                                          'delta_rule_alu(&fl, %d, %s, %s)'
-                                          % (n, a, was), width, dst[2]))
+                                          'ALU(%s, %s, %s)'
+                                          % (census.ALUK[n], a, was),
+                                          width, dst[2]))
             pending = None
         elif op == 'cmp':
             n = census.CMPK.index(shape[1])
             width = {'l': 4, 'w': 2, 'b': 1}[shape[1][-1]]
-            body.append('    delta_rule_cmp(&fl, %d, %s, %s);'
-                        % (n, v(ops[0], width, True),
+            body.append('    CMP(%s, %s, %s);'
+                        % (census.CMPK[n], v(ops[0], width, True),
                            v(ops[1], width, True)))
         elif op == 'branch':
-            body.append('    if (delta_condition(&fl, %d)) goto L%d;'
-                        % (census.COND.index(shape[1]), targets[0]))
+            body.append('    if (IF(%s)) goto L%d;'
+                        % (shape[1], targets[0]))
         elif op == 'jump':
             body.append('    goto L%d;' % targets[0])
             pending = None
@@ -253,10 +254,14 @@ def emit(rule):
         elif op == 'popn':
             body.append('    DROP(%d);' % vals[0])
         elif op == 'popreg':
-            body.append('    if (argn > 0) { argn--; if (argn < %d) %s }'
-                        % (MAXARG,
-                           rule.reg_write(rule.raw(rule.start + off + 1),
-                                          'arg[argn]')))
+            code = rule.raw(rule.start + off + 1)
+            if code >> 4 == 0:
+                body.append('    POP(r%d);' % (code & 7))
+            else:
+                # A pop into part of a register keeps the rest of it, which
+                # is more than one statement, so it stays written out.
+                body.append('    if (argn > 0) { argn--; if (argn < %d) %s }'
+                            % (MAXARG, rule.reg_write(code, 'arg[argn]')))
         elif op == 'call':
             if shape[1] == 'setjmp3':
                 # The one call the interpreter makes for itself: a rule plants
@@ -281,8 +286,7 @@ def emit(rule):
         elif op == 'setcc':
             body.append('    ' + rule.reg_write(
                 0x20 | (rule.raw(last) & 0x0f),
-                'delta_condition(&fl, %d) ? 1 : 0'
-                % census.COND.index(shape[1])))
+                'IF(%s) ? 1 : 0' % shape[1]))
         elif op == 'mul':
             width = 2 if shape[1] == 'imulw' else 4
             body.append('    ' + rule.reg_write(

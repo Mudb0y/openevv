@@ -40,6 +40,61 @@ extern const delta_rule_c delta_rule_native[];
 int32_t delta_rule_called(int which, const int32_t *stack, int argn,
                           int want);
 
+/* What a rule tests, works out and asks, under the names the
+   machine's own operations carry. A rule reads better saying which
+   comparison it made than saying that it made comparison four. */
+enum {
+    DELTA_IF_e = 0,
+    DELTA_IF_ne = 1,
+    DELTA_IF_a = 2,
+    DELTA_IF_ae = 3,
+    DELTA_IF_b = 4,
+    DELTA_IF_be = 5,
+    DELTA_IF_g = 6,
+    DELTA_IF_ge = 7,
+    DELTA_IF_l = 8,
+    DELTA_IF_le = 9,
+    DELTA_IF_s = 10,
+    DELTA_IF_ns = 11,
+};
+
+enum {
+    DELTA_CMP_testl = 0,
+    DELTA_CMP_testw = 1,
+    DELTA_CMP_testb = 2,
+    DELTA_CMP_cmpl = 3,
+    DELTA_CMP_cmpw = 4,
+    DELTA_CMP_cmpb = 5,
+};
+
+enum {
+    DELTA_ALU_addl = 0,
+    DELTA_ALU_addw = 1,
+    DELTA_ALU_subl = 2,
+    DELTA_ALU_subw = 3,
+    DELTA_ALU_andl = 4,
+    DELTA_ALU_andw = 5,
+    DELTA_ALU_orl = 6,
+    DELTA_ALU_orw = 7,
+    DELTA_ALU_incl = 8,
+    DELTA_ALU_incw = 9,
+    DELTA_ALU_decl = 10,
+    DELTA_ALU_decw = 11,
+    DELTA_ALU_shll = 12,
+    DELTA_ALU_shlw = 13,
+    DELTA_ALU_sarl = 14,
+    DELTA_ALU_sarw = 15,
+    DELTA_ALU_negl = 16,
+    DELTA_ALU_negw = 17,
+    DELTA_ALU_sbbl = 18,
+    DELTA_ALU_imull = 19,
+    DELTA_ALU_imulw = 20,
+};
+
+#define IF(cond)      delta_condition(&fl, DELTA_IF_##cond)
+#define CMP(k, a, b)  delta_rule_cmp(&fl, DELTA_CMP_##k, (a), (b))
+#define ALU(k, a, b)  delta_rule_alu(&fl, DELTA_ALU_##k, (a), (b))
+
 /* Where a rule keeps its own working memory, and where the machine keeps
    what every rule shares. A rule names a place in either by the offset the
    language's compiler gave it, so these say which of the two is meant and
@@ -57,6 +112,11 @@ int32_t delta_rule_called(int which, const int32_t *stack, int argn,
    there, so these are what stands between a rule and every call it makes;
    written out in full they were a fifth of the decompiled C. */
 #define DELTA_RULE_ARGS 64
+
+/* Taking one back off. The machine pops an argument into a register after a
+   call, which is how it reads what the call left behind. */
+#define POP(r)  do { if (argn > 0) { argn--; \
+                     if (argn < DELTA_RULE_ARGS) (r) = arg[argn]; } } while (0)
 
 #define ARG(x)  do { if (argn < DELTA_RULE_ARGS) arg[argn] = (int32_t)(x); \
                      argn++; } while (0)
