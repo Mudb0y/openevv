@@ -1,0 +1,128 @@
+# Builds both binaries on every push, checks that the engine still says the
+# same thing, and cuts a release with the Windows exes when a tag is pushed.
+#
+# What it cannot do is compare against IBM's binary: that wants the SDK, which
+# is not in the tree and is not ours to put in a runner. So the check here is
+# test/hash.sh, which speaks one fixed sentence and holds the samples against a
+# hash in the tree. It does not prove the engine right -- test/suite.sh does
+# that, on a machine with the SDK -- it proves it unchanged.
+
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: make -j"$(nproc)"
+
+      - name: Check the samples
+        run: test/hash.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: evv-linux-x86_64
+          path: build/evv
+          if-no-files-found: error
+
+  # Cross-compiled here rather than on a Windows runner, because this is the
+  # same toolchain the tree is developed with and it takes a minute.
+  windows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get the mingw toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64
+
+      - name: Build
+        run: make -j"$(nproc)" win
+
+      - name: Say what came out
+        run: |
+          ls -l build/evv.exe build/evvspeak.exe
+          # The image has to sit low and stay there, or the engine cannot name
+          # its own tables in a Delta value. Worth failing the build over.
+          x86_64-w64-mingw32-objdump -p build/evvspeak.exe | grep -i imagebase
+          x86_64-w64-mingw32-objdump -p build/evvspeak.exe \
+            | grep -i dllcharacteristics
+          x86_64-w64-mingw32-objdump -p build/evvspeak.exe \
+            | grep -qi 'ImageBase.*0*400000'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openevv-windows-x86_64
+          path: |
+            build/evv.exe
+            build/evvspeak.exe
+          if-no-files-found: error
+
+  # The one thing the cross build cannot answer: whether it runs on Windows.
+  windows-check:
+    needs: windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: openevv-windows-x86_64
+
+      - name: Speak, and check the samples
+        shell: pwsh
+        run: |
+          .\evv.exe -o out.wav "The quick brown fox jumps over the lazy dog."
+          $have = (Get-FileHash out.wav -Algorithm SHA256).Hash.ToLower()
+          $want = (Get-Content test/samples.sha256).Split(' ')[0]
+          "on Windows: $have"
+          "wanted:     $want"
+          if ($have -ne $want) { throw "the samples have moved on Windows" }
+
+  release:
+    needs: [linux, windows, windows-check]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: openevv-windows-x86_64
+          path: win
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: evv-linux-x86_64
+          path: linux
+
+      - name: Make the archives
+        run: |
+          cp README.md LICENSE NOTICE win/
+          (cd win && zip -q -r ../openevv-${GITHUB_REF_NAME}-windows-x86_64.zip .)
+          chmod +x linux/evv
+          cp README.md LICENSE NOTICE linux/
+          tar -C linux -czf openevv-${GITHUB_REF_NAME}-linux-x86_64.tar.gz .
+          ls -l openevv-*
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "openevv $GITHUB_REF_NAME" \
+            --notes-file .github/release-notes.md \
+            openevv-*-windows-x86_64.zip \
+            openevv-*-linux-x86_64.tar.gz

@@ -10,6 +10,13 @@ set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 cases=$here/cases
 
+# Wine starts its debugger when something faults, which on a desktop is a dialog
+# box and a process left sitting in front of whoever is at the machine. This
+# runs Wine hundreds of times and the reference does fault now and again, so the
+# debugger is turned off in this prefix first. Wine still says what faulted.
+wine reg add "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\AeDebug" \
+    /v Debugger /t REG_SZ /d "" /f >/dev/null 2>&1
+
 TEXT='^speak: (voice )?param|^speak: index'
 DICT='^speak: (voice )?param|^speak: index|^speak: (new|set|get|load|delete)Dict'
 
