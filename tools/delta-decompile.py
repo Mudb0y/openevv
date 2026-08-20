@@ -392,7 +392,7 @@ def write(names):
         text.append('    for (i = 0; i < nargs && i < %d; i++)\n' % params)
         text.append('        memcpy(base + %d + 4 * i, &args[i], 4);\n\n'
                     % pbase)
-        text.append('\n'.join(structure(fold(body))))
+        text.append('\n'.join(join_calls(structure(fold(body)))))
         text.append('\n    evv_frame_pop(frame);\n    return r0;\n}\n\n')
         done.append(name)
 
@@ -529,6 +529,44 @@ def _loop(body):
         out.extend(body[i + 1:])
         return out
     return None
+
+
+CALL_RE = re.compile(r'^(\s*)r0 = CALL\((\w+), (\d+)\);$')
+ARG_RE = re.compile(r'^\s*ARG\((.*)\);$')
+
+JOINED = [0]
+
+
+def join_calls(body):
+    """A call and the pushes that feed it, on one line.
+
+    Only where every one of them is on the lines immediately above, so that
+    what is joined is what was already together; a push the compiler put
+    somewhere else stays where it is.
+    """
+    out = []
+    i = 0
+    while i < len(body):
+        m = CALL_RE.match(body[i])
+        if m:
+            pad, who, want = m.group(1), m.group(2), int(m.group(3))
+            args = []
+            k = i - 1
+            while len(args) < want and k >= 0 and ARG_RE.match(body[k]):
+                args.append(ARG_RE.match(body[k]).group(1))
+                k -= 1
+            if want and len(args) == want and len(out) >= want:
+                del out[len(out) - want:]
+                args.reverse()
+                out.append('%sr0 = (%s, CALL(%s, %d));'
+                           % (pad, ', '.join('ARG(%s)' % a for a in args),
+                              who, want))
+                JOINED[0] += 1
+                i += 1
+                continue
+        out.append(body[i])
+        i += 1
+    return out
 
 
 def _whole(region):
@@ -675,6 +713,7 @@ def main():
         names = smallest(int(sys.argv[1]) if len(sys.argv) > 1 else 100)
 
     done, refused = write(names)
+    print('calls joined to their arguments: %d' % JOINED[0])
     print('branches turned into an if: %d, loops closed: %d'
           % (STRUCTURED[0], LOOPED[0]))
     print('landing places folded: %d, entries folded: %d'

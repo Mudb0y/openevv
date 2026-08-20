@@ -118,8 +118,13 @@ enum {
 #define POP(r)  do { if (argn > 0) { argn--; \
                      if (argn < DELTA_RULE_ARGS) (r) = arg[argn]; } } while (0)
 
-#define ARG(x)  do { if (argn < DELTA_RULE_ARGS) arg[argn] = (int32_t)(x); \
-                     argn++; } while (0)
+/* An expression rather than a statement, so that the pushes a call needs can
+   sit inside the call itself. They stay in the order the machine made them,
+   which is the reverse of the order the entry takes them: the last thing
+   pushed is the first argument. */
+#define ARG(x)  (((argn < DELTA_RULE_ARGS) \
+                  ? (void)(arg[argn] = (int32_t)(x)) : (void)0), \
+                 (void)argn++)
 #define DROP(n) do { argn -= (n); if (argn < 0) argn = 0; } while (0)
 
 /* What every rule does before its own work, in the two pieces the compiler
