@@ -15,6 +15,35 @@
         config.allowUnsupportedSystem = true;
       };
     in {
+      # `nix build' and `nix run'. The ordinary make, which wants a C
+      # compiler and nothing else, so this is the plain stdenv and no inputs.
+      packages.${system}.default = pkgs.stdenv.mkDerivation {
+        name = "openevv";
+        src = self;
+
+        # -no-pie is in the Makefile, where it belongs: the machine keeps host
+        # addresses in thirty-two bit values, so the program has to sit low
+        # enough for one to name it. Nothing here has to switch nixpkgs' PIE
+        # hardening off -- this platform does not turn it on, and mkDerivation
+        # will not accept the flag. On one that does, it would need
+        # hardeningDisable = [ "pie" ].
+        enableParallelBuilding = true;
+        makeFlags = [ "PREFIX=${placeholder "out"}" ];
+
+        # No meta.license. What this may be licensed as is not settled: the
+        # engine is ours and the language data under lang is IBM's.
+        meta = {
+          description = "IBM Embedded ViaVoice rebuilt as portable C";
+          mainProgram = "evv";
+          platforms = [ system ];
+        };
+      };
+
+      apps.${system}.default = {
+        type = "app";
+        program = "${self.packages.${system}.default}/bin/evv";
+      };
+
       devShells.${system}.default = pkgs.mkShell {
         packages = [
           # Reads and links IBM's 32-bit COFF objects, and runs the reference

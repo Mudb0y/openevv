@@ -34,6 +34,11 @@ The same two, thirty-two bit. That build is a check rather than a target: a
 difference between the word sizes is a layout mistake, and this is what makes
 one show up early. It needs a thirty-two bit compiler, which is `CC32`.
 
+On a Nix machine `nix build` makes the same binary at `result/bin/evv`, and
+`nix run . -- -o hello.wav "text"` runs it without installing anything.
+`nix develop` is the shell the rest of this assumes: the thirty-two bit
+compiler, Wine and Python on the path.
+
 `make install` copies the binary to `/usr/local/bin/evv`, or wherever `PREFIX`
 and `DESTDIR` say. There is nothing else to install: it reads no file of its own
 at run time and wants no library but the C one, libm and pthreads. `make clean`
