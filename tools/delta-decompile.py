@@ -392,7 +392,8 @@ def write(names):
         text.append('    for (i = 0; i < nargs && i < %d; i++)\n' % params)
         text.append('        memcpy(base + %d + 4 * i, &args[i], 4);\n\n'
                     % pbase)
-        named, saw = name_globals(join_calls(c, structure(fold(body))))
+        named, saw = name_globals(
+            join_pops(drop_dead(join_calls(c, structure(fold(body))))))
         USED.update(saw)
         text.append('\n'.join(named))
         text.append('\n    evv_frame_pop(frame);\n    return r0;\n}\n\n')
@@ -582,6 +583,69 @@ def layout():
             at += 4 + up(sizes[n[k]] if n[k] < len(sizes) else 0, 2)
         n[k] += 1
     return LAYOUT
+
+
+POP_RE = re.compile(r'^(\s*)POP\((r\d)\);$')
+POPPED = [0]
+DROPPED = [0]
+
+# What may sit on the right of a load without the load being worth keeping.
+# Anything here either sets a flag or moves the argument stack, and taking it
+# out would take that with it.
+DIRTY = ('ALU(', 'CMP(', 'IF(', 'CALL(', 'CALLW(', 'ARG(', 'POP(',
+         'ENTER(', 'LANDING(', '=')
+
+
+def join_pops(body):
+    """Several pops in a row into one, the way the machine let go of them."""
+    out = []
+    i = 0
+    while i < len(body):
+        m = POP_RE.match(body[i])
+        if not m:
+            out.append(body[i])
+            i += 1
+            continue
+        j = i
+        while j < len(body) and body[j] == body[i]:
+            j += 1
+        POPPED[0] += j - i - 1
+        out.append('%sPOP(%s, %d);' % (m.group(1), m.group(2), j - i))
+        i = j
+    return out
+
+
+def drop_dead(body):
+    """Loads into r0 that nothing reads.
+
+    The compiler loaded a value into the accumulator and then pushed the same
+    value, or loaded one and immediately loaded another over it. The load is
+    only worth keeping if something can see it, so the walk forward stops at
+    anything that reads r0, at anything that leaves straight-line code, and at
+    a call, because a call can go back to a landing and what is read there is
+    not known from here.
+    """
+    dead = set()
+    for i, line in enumerate(body):
+        m = re.match(r'^\s*r0 = \((.*)\);$', line)
+        if not m or any(d in m.group(1) for d in DIRTY):
+            continue
+        for j in range(i + 1, len(body)):
+            l = body[j]
+            t = l.strip()
+            if (t.startswith('goto ') or t.startswith('if (')
+                    or t.endswith('{') or t.endswith('}') or t.endswith(':;')
+                    or t.startswith('LANDING') or t.startswith('ENTER')
+                    or 'CALL' in l):
+                break
+            w = re.match(r'^\s*r0 = ', l)
+            if 'r0' in (l[l.index('=') + 1:] if w else l):
+                break
+            if w:
+                dead.add(i)
+                DROPPED[0] += 1
+                break
+    return [l for i, l in enumerate(body) if i not in dead]
 
 
 REACH = re.compile(r'\(\*\((u?int(?:8|16|32)_t) \*\)'
@@ -880,6 +944,8 @@ def main():
     print('calls joined to their arguments: %d' % JOINED[0])
     print('wrappers inlined to the primitive they stand for: %d' % WRAPPED[0])
     print('reaches through the state named as the variable they are: %d over %d variables' % (NAMED[0], len(USED)))
+    print('pops joined: %d, loads into r0 that nothing reads: %d'
+          % (POPPED[0], DROPPED[0]))
     print('branches turned into an if: %d, loops closed: %d'
           % (STRUCTURED[0], LOOPED[0]))
     print('landing places folded: %d, entries folded: %d'

@@ -116,8 +116,13 @@ enum {
 
 /* Taking one back off. The machine pops an argument into a register after a
    call, which is how it reads what the call left behind. */
-#define POP(r)  do { if (argn > 0) { argn--; \
-                     if (argn < DELTA_RULE_ARGS) (r) = arg[argn]; } } while (0)
+/* The count is there because the machine let go of several at once and a
+   decoder can only see that as one pop after another. Only the last of them
+   is kept, which is what popping into the same register means. */
+#define POP(r, n)  do { int k_ = (n); \
+                        while (k_-- > 0) { if (argn > 0) { argn--; \
+                            if (argn < DELTA_RULE_ARGS) (r) = arg[argn]; } } \
+                   } while (0)
 
 /* An expression rather than a statement, so that the pushes a call needs can
    sit inside the call itself. They stay in the order the machine made them,
