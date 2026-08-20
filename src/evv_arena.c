@@ -53,13 +53,20 @@ static void arena_drop(void) { pthread_mutex_unlock(&arena_lock); }
 unsigned char *evv_arena_base;
 size_t         evv_arena_size;
 
-/* Where to try. Below two gigabytes so that a reference stays positive when
-   it is read back out of a signed slot, and clear of where a program and its
-   heap usually land. */
-static const uintptr_t candidates[] = {
-    0x10000000u, 0x20000000u, 0x30000000u, 0x40000000u,
-    0x50000000u, 0x60000000u, 0x08000000u
-};
+/* Where to try. Below two gigabytes, so that a reference stays positive when it
+   is read back out of a signed slot, and clear of where a program and its heap
+   usually land.
+
+   The ask is exact and the walk is wide, and both were learned the hard way.
+   Asking for an address and taking whatever the system felt like giving could
+   land the region above two gigabytes, where a value cannot name it. Asking at
+   only seven places meant a machine with something at all seven -- a CI runner,
+   and a real Windows rather than Wine -- got no arena, and then a null pointer
+   with no explanation. The walk starts above where a program's own heap grows
+   and runs to just under two gigabytes. */
+#define ARENA_FIRST 0x10000000u
+#define ARENA_LAST  0x78000000u
+#define ARENA_STEP  0x01000000u
 
 #define ALIGN       16
 #define ROUND(n)    (((n) + (ALIGN - 1)) & ~(size_t)(ALIGN - 1))
@@ -118,48 +125,81 @@ static void check(const head *b)
         bad_block(b, "has an impossible size");
 }
 
+/* One try, at exactly the address asked for. Answers the region or nothing:
+   somewhere else is no use, since the whole point of the address is that a
+   thirty-two bit value can name it. */
+static void *arena_map(uintptr_t at, size_t bytes)
+{
+#if defined(_WIN32)
+    /* Committed rather than only reserved, which charges the commit but still
+       costs no memory until a page is touched. A base that is not free fails
+       rather than moving, which is what is wanted. */
+    return VirtualAlloc((void *)at, bytes, MEM_RESERVE | MEM_COMMIT,
+                        PAGE_READWRITE);
+#else
+    void *got;
+
+#ifdef MAP_FIXED_NOREPLACE
+    /* Linux 4.17 and later: this address or nothing, and nothing rather than
+       somebody else's mapping. */
+    got = mmap((void *)at, bytes, PROT_READ | PROT_WRITE,
+               MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE, -1, 0);
+    if (got != MAP_FAILED) {
+        if ((uintptr_t)got == at)
+            return got;
+        /* An older kernel took the flag as a hint. Give it back. */
+        munmap(got, bytes);
+    }
+#endif
+    got = mmap((void *)at, bytes, PROT_READ | PROT_WRITE,
+               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (got == MAP_FAILED)
+        return 0;
+    if ((uintptr_t)got + bytes < 0x80000000u)
+        return got;
+    munmap(got, bytes);
+    return 0;
+#endif
+}
+
 int evv_arena_open(size_t bytes)
 {
-    size_t i;
+    size_t want;
 
     if (evv_arena_base != 0)
         return 1;
 
-    bytes = ROUND(bytes);
-    for (i = 0; i < sizeof candidates / sizeof candidates[0]; i++) {
-#if defined(_WIN32)
-        /* Committed rather than only reserved, which charges the commit but
-           still costs no memory until a page is touched. */
-        void *at = VirtualAlloc((void *)candidates[i], bytes,
-                                MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    /* Less room is worse than plenty and better than nothing, so a machine
+       whose low addresses are too crowded for the whole region is offered
+       halves rather than refused. */
+    for (want = ROUND(bytes); want >= (32u * 1024u * 1024u); want /= 2) {
+        uintptr_t at;
 
-        if (at == 0)
-            continue;
-#else
-        void *at = mmap((void *)candidates[i], bytes,
-                        PROT_READ | PROT_WRITE,
-                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        for (at = ARENA_FIRST; at <= ARENA_LAST; at += ARENA_STEP) {
+            void *got;
 
-        if (at == MAP_FAILED)
-            continue;
-#endif
-        if ((uintptr_t)at + bytes < 0x80000000u) {
-            evv_arena_base = at;
-            evv_arena_size = bytes;
+            if (at + want > 0x80000000u)
+                break;
+            got = arena_map(at, want);
+            if (got == 0)
+                continue;
+            evv_arena_base = got;
+            evv_arena_size = want;
             break;
         }
-        /* The system put it out of reach of a 32-bit value; no use. Asking at
-           a fixed address, both of these answer there or nowhere, so this is
-           the belt to that braces. */
-#if defined(_WIN32)
-        VirtualFree(at, 0, MEM_RELEASE);
-#else
-        munmap(at, bytes);
-#endif
+        if (evv_arena_base != 0)
+            break;
     }
 
-    if (evv_arena_base == 0)
-        return 0;
+    if (evv_arena_base == 0) {
+        /* There is nothing sensible to answer. Everything the engine allocates
+           comes from this region, so without it the next thing to happen is a
+           null pointer with no explanation, which is exactly how this was
+           found. Say it instead. */
+        fprintf(stderr, "evv: nowhere below two gigabytes to put the arena;"
+                " the engine cannot run on this machine\n");
+        abort();
+    }
 
     /* The first eight bytes are never handed out, so that a reference of
        nought goes on meaning nothing, which is what every test for an empty

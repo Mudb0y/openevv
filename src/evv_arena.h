@@ -32,8 +32,9 @@ typedef int32_t evv_ref;
 extern unsigned char *evv_arena_base;
 extern size_t         evv_arena_size;
 
-/* Take the region and give it back. Answers zero if the system will not put
-   it anywhere a 32-bit value can name. */
+/* Take the region and give it back. It says so and stops if the system will
+   not put it anywhere a 32-bit value can name, since nothing sensible can be
+   answered to that. */
 int  evv_arena_open(size_t bytes);
 void evv_arena_close(void);
 
