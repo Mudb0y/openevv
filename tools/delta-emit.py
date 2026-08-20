@@ -581,7 +581,11 @@ def defining_objects(where):
 def main():
     argv = [a for a in sys.argv[1:] if not a.startswith("--")]
     where = argv[0] if argv else os.path.join(ROOT, "analysis", "enus")
-    out = os.path.join(ROOT, "src")
+    # Where the lifted C goes. Reading a language other than the one the
+    # engine is built from is for comparison, so it writes beside its objects
+    # rather than into src, where it would stand on the English build.
+    out = argv[1] if len(argv) > 1 else os.path.join(ROOT, "src")
+    os.makedirs(out, exist_ok=True)
 
     # One pass to learn how many arguments each entry takes, since a call
     # reached by a path that did not write them cannot say for itself.
