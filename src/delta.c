@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include <setjmp.h>
+#include "evv_land.h"
 
 #include "delta.h"
 #include "evv_arena.h"
@@ -835,7 +835,7 @@ void bspush_ca_scan_boa(delta_state *d, int16_t tag)
 void forceErrorBacktrack(delta_state *d)
 {
     throwDeltaErrorNow(d);
-    longjmp(*(jmp_buf *)EVV_AT(void *, EVV_AT(delta_vars *, d->vars)->err_jmp), 1);
+    EVV_LAND_JUMP(EVV_AT(void *, EVV_AT(delta_vars *, d->vars)->err_jmp), 1);
 }
 
 void push_ptr_init(delta_state *d, delta_loc *p)

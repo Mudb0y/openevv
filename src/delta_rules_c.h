@@ -10,6 +10,8 @@
 
 #include <stdint.h>
 
+#include "evv_land.h"
+
 /* The four flags the machine keeps. A rule written as C keeps them the same
    way, and works them with the same code, or a comparison after an operation
    would part company with the original over what it says. */
@@ -149,7 +151,7 @@ enum {
 #define LANDING(jb) \
     do { r0 = SLOT(jb); ARG(0); ARG(SLOT(jb)); \
          { int32_t buf = (argn > 0) ? arg[argn - 1] : 0; int depth = argn; \
-           r0 = setjmp(*(jmp_buf *)(intptr_t)buf); \
+           r0 = EVV_LAND_SAVE((intptr_t)buf); \
            argn = depth; } \
          CMP(testl, r0, r0); } while (0)
 

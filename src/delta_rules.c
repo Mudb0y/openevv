@@ -26,6 +26,7 @@
 
 #include "delta_rules.h"
 #include "delta_rules_c.h"
+#include "evv_land.h"
 #include "evv_arena.h"
 
 enum {
@@ -75,10 +76,6 @@ extern int delta_rule_trace;
    compiled in can be seen there, because the others were renamed along with
    the definitions they reach. */
 static const delta_rule *delta_rule_here;
-
-/* Told to the trace so that it can pass over the calls a run of the
-   original cannot see. Nothing outside a trace build defines it. */
-extern const char *delta_trace_caller __attribute__((weak));
 
 typedef struct {
     int32_t        reg[NREG];
@@ -841,7 +838,7 @@ static int32_t run_bytecode(void *state, const delta_rule *r,
             /* Landing here again puts the stack pointer back where it was,
                so the argument area goes back with it. */
             depth = st.argn;
-            st.reg[0] = setjmp(*(jmp_buf *)(intptr_t)buf);
+            st.reg[0] = EVV_LAND_SAVE((intptr_t)buf);
             st.argn = depth;
             continue;
         }
@@ -893,8 +890,6 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
 
     was = delta_rule_here;
     delta_rule_here = r;
-    if (&delta_trace_caller != 0)
-        delta_trace_caller = r->object;
 
     /* A rule written as C runs as C, and only from here, where everything a
        run says about itself has already been said. The two are then
@@ -929,8 +924,6 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
                        : run_bytecode(state, r, args, nargs);
 
     delta_rule_here = was;
-    if (&delta_trace_caller != 0)
-        delta_trace_caller = was ? was->object : 0;
     if (delta_rule_trace) {
         fprintf(stderr, "# %s left with %08x\n", r->name, (unsigned)answer);
         fflush(stderr);

@@ -267,7 +267,7 @@ def emit(rule):
                 # backtrack would land in the wrong function.
                 body.append('    { int32_t buf = (argn > 0) ? arg[argn - 1]'
                             ' : 0; int depth = argn;')
-                body.append('      r0 = setjmp(*(jmp_buf *)(intptr_t)buf);')
+                body.append('      r0 = EVV_LAND_SAVE((intptr_t)buf);')
                 body.append('      argn = depth; }')
             else:
                 body.append('    r0 = CALL(%s, %d);' % (shape[1], vals[0]))
@@ -338,7 +338,6 @@ HEAD = """\
    delta_rule_native names the ones written down; the interpreter looks there
    first and runs a rule from here when it finds one. */
 
-#include <setjmp.h>
 #include <string.h>
 
 #include "delta_rules.h"
@@ -990,7 +989,7 @@ def _landing(body, i):
             '    ARG(SLOT(%s));' % jb]
     if body[i + 1:i + 3] != want:
         return None
-    if 'setjmp' not in body[i + 4]:
+    if 'EVV_LAND_SAVE' not in body[i + 4]:
         return None
     if body[i + 6] != '    CMP(testl, r0, r0);':
         return None
