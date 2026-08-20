@@ -392,7 +392,7 @@ def write(names):
         text.append('    for (i = 0; i < nargs && i < %d; i++)\n' % params)
         text.append('        memcpy(base + %d + 4 * i, &args[i], 4);\n\n'
                     % pbase)
-        text.append('\n'.join(body))
+        text.append('\n'.join(fold(body)))
         text.append('\n    evv_frame_pop(frame);\n    return r0;\n}\n\n')
         done.append(name)
 
@@ -453,6 +453,78 @@ def every():
     return [name for name, _o, _s, _l in rules]
 
 
+
+# The envelope every rule carries, folded back into the two things it is.
+#
+# Both are matched line for line and only where nothing can be jumped into the
+# middle of them, so what the compiler sees is unchanged: the macros in
+# delta_rules_c.h expand to exactly the lines taken away. A rule whose
+# envelope the original scheduled differently keeps it written out.
+FOLDED = [0, 0]
+
+
+def fold(body):
+    """The landing place and the entry, as one line each."""
+    out = []
+    i = 0
+    while i < len(body):
+        n = _landing(body, i) or _enter(body, i)
+        if n:
+            out.append(n[0])
+            i += n[1]
+            continue
+        out.append(body[i])
+        i += 1
+    return out
+
+
+def _slot(line, want):
+    m = re.match(r'^    %s$' % want, line)
+    return m.groups() if m else None
+
+
+def _landing(body, i):
+    if i + 6 >= len(body):
+        return None
+    a = _slot(body[i], r'r0 = \(SLOT\((-?\d+)\)\);')
+    if not a:
+        return None
+    jb = a[0]
+    want = ['    ARG(0);',
+            '    ARG(SLOT(%s));' % jb]
+    if body[i + 1:i + 3] != want:
+        return None
+    if 'setjmp' not in body[i + 4]:
+        return None
+    if body[i + 6] != '    CMP(testl, r0, r0);':
+        return None
+    FOLDED[0] += 1
+    return ('    LANDING(%s);' % jb, 7)
+
+
+def _enter(body, i):
+    if i + 14 > len(body):
+        return None
+    slots = []
+    at = i
+    for _ in range(5):
+        a = _slot(body[at], r'r0 = \(SLOT\((-?\d+)\)\);')
+        if not a:
+            return None
+        if body[at + 1] != '    ARG(SLOT(%s));' % a[0]:
+            return None
+        slots.append(a[0])
+        at += 2
+    tail = ['    ARG(FIELD(0));',
+            '    r0 = CALL(ventproc, 6);',
+            '    DROP(6);',
+            '    CMP(testl, r0, r0);']
+    if body[at:at + 4] != tail:
+        return None
+    FOLDED[1] += 1
+    return ('    ENTER(%s);' % ', '.join(slots), 14)
+
+
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == 'all':
         names = every()
@@ -462,6 +534,8 @@ def main():
         names = smallest(int(sys.argv[1]) if len(sys.argv) > 1 else 100)
 
     done, refused = write(names)
+    print('landing places folded: %d, entries folded: %d'
+          % (FOLDED[0], FOLDED[1]))
     print('%d of %d rules written to %s'
           % (len(done), len(names), os.path.relpath(OUT_C, ROOT)))
     if refused:

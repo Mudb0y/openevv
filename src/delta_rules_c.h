@@ -122,6 +122,36 @@ enum {
                      argn++; } while (0)
 #define DROP(n) do { argn -= (n); if (argn < 0) argn = 0; } while (0)
 
+/* What every rule does before its own work, in the two pieces the compiler
+   emitted it as.
+
+   LANDING plants the place a thrown error comes back to. ENTER tells the
+   machine the rule has been entered and hands it the record to save what a
+   backtrack must put back, the three fence arrays the rule is about to stand
+   on, and that landing place. Both leave the answer in r0 with the flags set
+   from it, so the line after either is the rule's own test of whether it may
+   go on.
+
+   The arguments are named in the order they are pushed, which is the reverse
+   of the order ventproc takes them: the last thing pushed is the first
+   argument. */
+#define LANDING(jb) \
+    do { r0 = SLOT(jb); ARG(0); ARG(SLOT(jb)); \
+         { int32_t buf = (argn > 0) ? arg[argn - 1] : 0; int depth = argn; \
+           r0 = setjmp(*(jmp_buf *)(intptr_t)buf); \
+           argn = depth; } \
+         CMP(testl, r0, r0); } while (0)
+
+#define ENTER(jb, marks, chars, index, rec) \
+    do { r0 = SLOT(jb);    ARG(SLOT(jb)); \
+         r0 = SLOT(marks); ARG(SLOT(marks)); \
+         r0 = SLOT(chars); ARG(SLOT(chars)); \
+         r0 = SLOT(index); ARG(SLOT(index)); \
+         r0 = SLOT(rec);   ARG(SLOT(rec)); \
+         ARG(FIELD(0)); \
+         r0 = CALL(ventproc, 6); DROP(6); \
+         CMP(testl, r0, r0); } while (0)
+
 /* How a decompiled rule writes a call. The arguments are already on that
    stack, which is why they are not named here: what a call says is which
    entry it is and how many of them it takes. */
