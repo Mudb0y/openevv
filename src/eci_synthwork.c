@@ -224,6 +224,7 @@ extern THIS int32_t sy_eventUnsignal(void *e)
 extern THIS int32_t sy_semRelease(void *s, int32_t n)
     MANGLED("?release@Semaphore@@QAEHJ@Z");
 
+extern const uint32_t pcm_cvt_bytes;
 extern THIS void *pcm_cvt_ctor(void *c) MANGLED("??0AudioConverter@@QAE@XZ");
 extern THIS void pcm_cvt_dtor(void *c) MANGLED("??1AudioConverter@@QAE@XZ");
 extern THIS int32_t pcm_cvt_setSource(void *c, WaveFormat *f)
@@ -558,7 +559,7 @@ THIS int32_t stw_checkLanguage(SynthThread *t, LangIdentifier *want)
     LangIdentifier *probe;
     uint8_t tried = 0;
 
-    probe = (LangIdentifier *)cpp_new(0x14);
+    probe = (LangIdentifier *)cpp_new(sizeof(LangIdentifier));
     if (probe) {
         probe->packed = 0;
         probe->packed = ((uint32_t)family << 16) | ((uint32_t)variant << 8)
@@ -621,7 +622,7 @@ THIS int32_t stw_createAudioConverter(SynthThread *t, SampleFormat *fmt)
         }
     } else {
         if (!ST_CONVERTER(t)) {
-            void *c = cpp_new(0x64);
+            void *c = cpp_new(pcm_cvt_bytes);
 
             ST_CONVERTER(t) = c ? pcm_cvt_ctor(c) : 0;
         }

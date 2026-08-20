@@ -6,15 +6,21 @@
 # whenever a source is added, since a name that reappears there is a call
 # that has quietly gone back to the original.
 #
-# Two builds, and both have to speak. `speak' is thirty-two bit and `speak64'
-# is not; the second is the one that matters, and the first is kept because a
-# difference between them is a layout mistake caught early.
+# Two builds, and both speak the same samples. `speak64' is the one that
+# matters; `speak' is thirty-two bit and is kept because a difference between
+# them is a layout mistake caught early, and it costs a minute to build.
+# `suite.sh' runs the cases through `speak'; setting EVV_NATIVE to the other
+# binary runs the same cases through that one instead.
 
 SRC   := ../src
 BUILD := ../build/native
 CC    := i686-unknown-linux-gnu-gcc
 NM    := i686-unknown-linux-gnu-nm
-CFLAGS := -O2 -std=gnu99 -w -I$(SRC)
+# The same two errors as the sixty-four bit build below, since a
+# narrowed field assigned from a pointer is wrong on either. The rest
+# of the warnings stay off: this is transcribed code and it is loud.
+CFLAGS := -O2 -std=gnu99 -w -I$(SRC) \
+          -Werror=int-conversion -Werror=incompatible-pointer-types
 
 # Everything of ours except the Windows porting layer, which belongs to the
 # reference build next door.
@@ -22,8 +28,26 @@ SOURCES := $(filter-out $(SRC)/port_win32.c,$(wildcard $(SRC)/*.c))
 
 OBJECTS := $(patsubst $(SRC)/%.c,$(BUILD)/%.o,$(SOURCES))
 
+# The same engine built sixty-four bit. It needs the arena: the machine keeps
+# addresses in 32-bit values, so everything one can point at has to live
+# somewhere a 32-bit value can name.
+CC64      := gcc
+BUILD64   := ../build/native64
+#
+# -no-pie is not a preference. It puts the program at four megabytes rather
+# than wherever the loader fancies, which is what lets the language's own
+# tables be named in a value without being copied anywhere first.
+# A narrowed field assigned from a pointer, or the other way about, is the
+# whole of what went wrong in this port; it is an error here rather than a
+# warning nobody reads.
+CFLAGS64  := -O2 -std=gnu99 -I$(SRC) -DEVV_ARENA=1 -no-pie \
+             -Werror=int-conversion \
+             -Werror=incompatible-pointer-types -Wno-implicit-function-declaration
+OBJECTS64 := $(patsubst $(SRC)/%.c,$(BUILD64)/%.o,$(SOURCES))
+
+
 .PHONY: all missing clean speak
-all: $(BUILD)/libevv.a
+all: $(BUILD64)/libevv.a $(BUILD)/libevv.a
 
 # The engine driven on this machine. Nothing is linked beside it, so what
 # comes out is ours from end to end.
@@ -62,20 +86,6 @@ missing: $(OBJECTS)
 clean:
 	@rm -rf $(BUILD)
 
-# The same engine built sixty-four bit. It needs the arena: the machine keeps
-# addresses in 32-bit values, so everything one can point at has to live
-# somewhere a 32-bit value can name.
-CC64      := gcc
-BUILD64   := ../build/native64
-#
-# -no-pie is not a preference. It puts the program at four megabytes rather
-# than wherever the loader fancies, which is what lets the language's own
-# tables be named in a value without being copied anywhere first.
-CFLAGS64  := -O1 -std=gnu99 -I$(SRC) -DEVV_ARENA=1 -no-pie \
-             -Werror=int-conversion \
-             -Werror=incompatible-pointer-types -Wno-implicit-function-declaration
-OBJECTS64 := $(patsubst $(SRC)/%.c,$(BUILD64)/%.o,$(SOURCES))
-
 .PHONY: speak64
 speak64: $(BUILD64)/speak
 
@@ -88,6 +98,9 @@ $(BUILD64)/%.o: $(SRC)/%.c $(HEADERS)
 	@$(CC64) $(CFLAGS64) -c $< -o $@
 
 $(BUILD64)/libevv.a: $(OBJECTS64)
+	@for o in $(BUILD64)/*.o; do \
+	   case " $(OBJECTS64) " in *" $$o "*) ;; *) rm -f "$$o" ;; esac; \
+	 done
 	@rm -f $@
 	@ar rcs $@ $(OBJECTS64)
 	@echo "built $@ from $(words $(OBJECTS64)) objects"

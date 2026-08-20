@@ -115,7 +115,11 @@ THIS int32_t pcm_setup(SoundOutput *o, char *a, int32_t *b, int32_t *c,
 
 /* ---- turning one sample format into another ------------------------- */
 
-typedef struct AudioConverter { uint8_t opaque[0x40]; } AudioConverter;
+/* Nothing here looks inside one; only its size matters, and that comes from
+   what the original allocates for it. */
+typedef struct AudioConverter { uint8_t opaque[0x64]; } AudioConverter;
+
+const uint32_t pcm_cvt_bytes = sizeof(AudioConverter);
 
 THIS void *pcm_cvt_ctor(AudioConverter *c)
 {
