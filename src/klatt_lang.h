@@ -11,6 +11,7 @@
 #define KLATT_LANG_H
 
 #include <stdint.h>
+#include "eci_index.h"
 
 typedef struct SynthDevice SynthDevice;
 typedef struct DeltaLang DeltaLang;
@@ -25,7 +26,7 @@ struct SynthDevice {
     void      *dur_cb;        /* +0x08 */
     void      *dur_data;      /* +0x0c */
     char      *filename;      /* +0x10 */
-    uint8_t    queue[0x10];   /* +0x14 */
+    IndexQueue queue;         /* +0x14 */
     int32_t    sleepcycle;    /* +0x24 */
     int32_t    playing;       /* +0x28 */
     int32_t    open;          /* +0x2c */

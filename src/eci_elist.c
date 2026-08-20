@@ -22,15 +22,10 @@
 #include <stdint.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "eci_index.h"
 
 extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
 extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
-
-/* One index mark and what it is waiting for. */
-typedef struct IndexPair {
-    int32_t  index;
-    uint32_t lead;
-} IndexPair;
 
 /* A link: the pair, then the next link. */
 typedef struct Link {
@@ -281,7 +276,6 @@ const void *vtbl_ecollectiter[7] = {
     (void *)purecall, (void *)purecall, (void *)purecall, (void *)purecall,
     (void *)purecall, (void *)purecall, (void *)purecall
 };
-
 
 /* The two lists built on this one differ from it in exactly two places:
    what they call empty, and what they do when they are deleted. Everything

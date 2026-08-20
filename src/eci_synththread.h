@@ -16,9 +16,8 @@
 #include <stdint.h>
 #include "evv_abi.h"
 #include "eci_objects.h"
+#include "eci_index.h"
 #include "eci_engine.h"
-
-
 
 typedef struct ETImessage ETImessage;
 typedef struct SynthThread SynthThread;
@@ -54,16 +53,6 @@ typedef struct {
     THIS int32_t (*peekHead)(MarkQueue *self, void **item);
 } MarkQueueVtbl;
 struct MarkQueue { const MarkQueueVtbl *vt; };
-
-
-/* Index marks waiting to be handed out, and how much sound stands in front
-   of all of them together. */
-typedef struct IndexQueue {
-    const void *vt;
-    void       *head;
-    void       *tail;
-    uint32_t    total;      /* every lead in the queue added up */
-} IndexQueue;
 
 /* The allocator the index manager is: how big one index is, where they
    start, and a lock. Nothing reads what lies between. */

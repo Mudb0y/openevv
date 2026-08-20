@@ -18,12 +18,7 @@
 #include <stdint.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
-
-/* One mark and what it is still waiting for. */
-typedef struct IndexPair {
-    int32_t  index;
-    uint32_t lead;
-} IndexPair;
+#include "eci_index.h"
 
 /* The list, plus the running total the queue adds on the end. */
 

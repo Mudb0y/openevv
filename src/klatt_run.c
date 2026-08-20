@@ -40,7 +40,7 @@ typedef delta_state DeltaThis;
 #define SD_DUR_CB(v)      ((v)->dur_cb)
 #define SD_DUR_DATA(v)    ((v)->dur_data)
 #define SD_FILENAME(v)    ((v)->filename)
-#define SD_QUEUE(v)       ((void *)(v)->queue)
+#define SD_QUEUE(v)       ((void *)&(v)->queue)
 #define SD_PLAYING(v)     ((v)->playing)
 #define SD_INTERRUPTED(v) ((v)->interrupted)
 #define SD_LAZY_WRITE(v)  ((v)->lazy_write)
