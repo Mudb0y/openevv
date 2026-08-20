@@ -35,6 +35,7 @@ usage: delta-decompile.py                 the hundred smallest with a body
 
 import importlib
 import os
+import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -125,9 +126,9 @@ class Rule:
         if kind == 'sym':
             return '(int32_t)(intptr_t)delta_rule_sym[%d]' % val
         if kind == 'slotaddr':
-            return '(int32_t)(intptr_t)(base + %d)' % val
+            return 'SLOT(%d)' % val
         if kind == 'state':
-            return '(int32_t)(intptr_t)((unsigned char *)state + %d)' % val
+            return 'FIELD(%d)' % val
         if kind == 'slot':
             return self.at('base + %d' % val, width, signed)
         if kind == 'statefld':
@@ -147,6 +148,12 @@ class Rule:
         t = {1: 'int8_t', 2: 'int16_t', 4: 'int32_t'}[width]
         if not signed:
             t = 'u' + t
+        m = re.match(r'^base \+ (-?\d+)$', where)
+        if m:
+            return '(int32_t)AT(%s, %s)' % (t, m.group(1))
+        m = re.match(r'^\(unsigned char \*\)state \+ (-?\d+)$', where)
+        if m:
+            return '(int32_t)FLD(%s, %s)' % (t, m.group(1))
         return '(int32_t)(*(%s *)(%s))' % (t, where)
 
     def put(self, kind, val, what, width=4, where=None):
@@ -160,10 +167,9 @@ class Rule:
         """Where a value is put, as something assignable."""
         t = {1: 'int8_t', 2: 'int16_t', 4: 'int32_t'}[width]
         if kind == 'slot':
-            return '(*(%s *)(base + %d))' % (t, val), width
+            return 'AT(%s, %d)' % (t, val), width
         if kind == 'statefld':
-            return ('(*(%s *)((unsigned char *)state + %d))' % (t, val),
-                    width)
+            return 'FLD(%s, %d)' % (t, val), width
         if kind.startswith('ind('):
             inner, disp = val
             return ('(*(%s *)((unsigned char *)(intptr_t)(%s) + %d))'
@@ -239,14 +245,13 @@ def emit(rule):
             body.append('    goto L%d;' % targets[0])
             pending = None
         elif op == 'push':
-            body.append('    if (argn < %d) arg[argn] = %s;'
-                        ' argn++;' % (MAXARG, v(ops[0])))
+            body.append('    ARG(%s);' % v(ops[0]))
         elif op == 'setarg':
             body.append('    if (argn - 1 - %d >= 0 && argn - 1 - %d < %d)'
                         ' arg[argn - 1 - %d] = %s;'
                         % (vals[0], vals[0], MAXARG, vals[0], v(ops[0])))
         elif op == 'popn':
-            body.append('    argn -= %d; if (argn < 0) argn = 0;' % vals[0])
+            body.append('    DROP(%d);' % vals[0])
         elif op == 'popreg':
             body.append('    if (argn > 0) { argn--; if (argn < %d) %s }'
                         % (MAXARG,

@@ -40,8 +40,30 @@ extern const delta_rule_c delta_rule_native[];
 int32_t delta_rule_called(int which, const int32_t *stack, int argn,
                           int want);
 
-/* How a decompiled rule writes one. The arguments are already on the rule's
-   own stack, which is why they are not named here: what a call says is which
+/* Where a rule keeps its own working memory, and where the machine keeps
+   what every rule shares. A rule names a place in either by the offset the
+   language's compiler gave it, so these say which of the two is meant and
+   leave the number alone.
+
+   AT and FLD are the value in a place; SLOT and FIELD are the place itself,
+   as something a rule can hand to a call. */
+#define SLOT(n)      ((int32_t)(intptr_t)(base + (n)))
+#define FIELD(n)     ((int32_t)(intptr_t)((unsigned char *)state + (n)))
+#define AT(t, n)     (*(t *)(base + (n)))
+#define FLD(t, n)    (*(t *)((unsigned char *)state + (n)))
+
+/* A rule's own argument stack, and the two things it does with it. The
+   machine pushes what a call is to be given and the call takes them from
+   there, so these are what stands between a rule and every call it makes;
+   written out in full they were a fifth of the decompiled C. */
+#define DELTA_RULE_ARGS 64
+
+#define ARG(x)  do { if (argn < DELTA_RULE_ARGS) arg[argn] = (int32_t)(x); \
+                     argn++; } while (0)
+#define DROP(n) do { argn -= (n); if (argn < 0) argn = 0; } while (0)
+
+/* How a decompiled rule writes a call. The arguments are already on that
+   stack, which is why they are not named here: what a call says is which
    entry it is and how many of them it takes. */
 #define CALL(entry, want) \
     delta_rule_called(DELTA_ENTRY_##entry, (int32_t *)arg, argn, (want))
