@@ -266,7 +266,7 @@ def variant_sizes(o):
 def main():
     where = os.path.join(ROOT, "analysis", "enus")
     obj = os.path.join(where, "link.obj")
-    out = os.path.join(ROOT, "src", "delta_link_enus.c")
+    out = os.path.join(ROOT, "lang", "enus", "delta_link_enus.c")
 
     o = Coff(obj)
     sec, base = o.at("_vstmtbl")

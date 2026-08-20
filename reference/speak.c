@@ -1,9 +1,10 @@
-/* Drive the whole engine and write what it says to a wave file.
+/* Drive IBM's own engine and write what it says to a wave file.
 
-   This links IBM's own objects and calls the published ECI interface, so
-   what comes out is the engine speaking exactly as it always did. It exists
-   for two reasons: to prove the engine can be driven at all outside its
-   DLL, and to give the synthesizer something real to be fed. */
+   This links IBM's objects and calls the published ECI interface, so what
+   comes out is the engine speaking exactly as it always did. That is what
+   makes it the reference: test/suite.sh speaks every case through this and
+   through cli/probe.c, which prints the same lines, and a case passes only
+   when the samples and the lines both agree. */
 
 #include <windows.h>
 #include <stdio.h>

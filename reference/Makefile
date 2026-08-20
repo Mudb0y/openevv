@@ -3,13 +3,13 @@
 #
 # This is all that is left of the differential harness. That harness stood our
 # objects beside IBM's and compared them call for call, which is how the port
-# was made; it is finished -- nothing is borrowed and `make missing' next door
+# was made; it is finished -- nothing is borrowed and `make missing' at the top
 # answers nothing -- and keeping it alive would have meant every object in the
 # engine holding the shape a thirty-two bit compiler gave it in 1999. It is in
 # the history, at the last commit where it built.
 #
 # What is left is the reference binary, which constrains nothing: it is IBM's
-# code, linked as IBM linked it, run under Wine. `native/suite.sh' speaks each
+# code, linked as IBM linked it, run under Wine. `test/suite.sh' speaks each
 # case through it and through ours and compares the samples.
 #
 # Two things the Microsoft toolchain did for it have to be done by hand. Its
@@ -21,7 +21,7 @@
 CC      := i686-w64-mingw32-gcc
 OBJCOPY := i686-w64-mingw32-objcopy
 ENUS    := ../analysis/enus
-BUILD   := ../build
+BUILD   := ../build/reference
 
 .PHONY: all clean
 all: $(BUILD)/speak.exe

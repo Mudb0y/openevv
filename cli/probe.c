@@ -1,12 +1,15 @@
-/* Drive the engine on the machine this is built for and write what it says
-   to a wave file.
+/* Drive the engine on the machine this is built for, write what it says to a
+   wave file, and print what it answered on the way.
 
-   The differential build's driver next door calls the published ECI names,
-   because it is linked beside IBM's objects and those are the names they
-   answer to. Nothing here is linked beside anything: our own names are the
-   only names there are, so this calls them directly. What comes out should
-   be the same audio for the same sentence, and that is the whole point of
-   it -- it is the first thing in the tree that speaks without Wine. */
+   This is what the tests drive. Every line it prints is a line test/suite.sh
+   can hold against the same line from IBM's own binary, which is why it says
+   so much and why cli/evv.c exists instead for anyone who only wants the
+   audio. Both write the same samples.
+
+   reference/speak.c drives IBM's engine and prints the same lines. It calls
+   the published ECI names, because it is linked beside IBM's objects and
+   those are the names they answer to; nothing here is linked beside anything,
+   so this calls our own directly. */
 
 #include <stdint.h>
 #include <stdio.h>

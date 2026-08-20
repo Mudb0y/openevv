@@ -9,11 +9,15 @@ missing and which are only the C library's."""
 import re
 import sys
 
-# Answered by the C library, the compiler's own runtime, or pthreads.
+# Answered by the C library, the compiler's own runtime, pthreads or the
+# linker. mmap and munmap arrived with the arena, which only the sixty-four
+# bit build compiles, and _TLS_MODULE_BASE_ came with its thread-local model.
 SYSTEM = re.compile(
-    r"^(__|_GLOBAL_OFFSET_TABLE_$|pthread_|std(in|out|err)$|"
+    r"^(__|_GLOBAL_OFFSET_TABLE_$|_TLS_MODULE_BASE_$|pthread_|"
+    r"std(in|out|err)$|"
     r"(mem|str|stp|f|is|to)[a-z]*$|"
-    r"malloc$|calloc$|realloc$|free$|exit$|atexit$|abort$|qsort$|"
+    r"mmap$|munmap$|malloc$|calloc$|realloc$|free$|exit$|atexit$|"
+    r"abort$|qsort$|"
     r"printf$|sprintf$|snprintf$|vsnprintf$|vsprintf$|puts$|putchar$|"
     r"getc$|putc$|ungetc$|rewind$|remove$|rename$|setvbuf$|perror$|"
     r"time$|clock$|clock_gettime$|nanosleep$|getenv$|system$|"

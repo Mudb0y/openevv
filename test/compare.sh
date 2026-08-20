@@ -29,15 +29,15 @@ case $cases in /*) ;; *) cases=$PWD/$cases ;; esac
 mode=${2:-}
 pattern=${3:-}
 
-[ -x "$BUILD/speak.exe" ]      || { echo "compare: no reference binary" >&2; exit 2; }
+[ -x "$BUILD/reference/speak.exe" ] || { echo "compare: no reference binary" >&2; exit 2; }
 # Which of ours to run. Both builds have to say the same thing, so either
 # can be set against the reference; EVV_NATIVE names the other one.
-OURS=${EVV_NATIVE:-$BUILD/native/speak}
-[ -x "$OURS" ]                || { echo "compare: no native binary" >&2; exit 2; }
+OURS=${EVV_NATIVE:-$BUILD/probe}
+[ -x "$OURS" ] || { echo "compare: no native binary" >&2; exit 2; }
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-cp "$BUILD"/*.exe "$work/" 2>/dev/null
+cp "$BUILD"/reference/*.exe "$work/" 2>/dev/null
 cd "$work"
 
 # One case through one binary. Answers 0 when it produced a file, 1 when it

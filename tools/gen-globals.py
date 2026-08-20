@@ -6,7 +6,7 @@ because the compiler unrolled the loops that lay the variables out. What
 they lay out is a list: one entry per variable, four kinds of entry. This
 reads the stores back, works out what the list was, and writes it as data.
 
-Usage: gen-globals.py analysis/enus/glob.obj src/delta_globals_enus.c
+Usage: gen-globals.py analysis/enus/glob.obj lang/enus/delta_globals_enus.c
 """
 
 import collections

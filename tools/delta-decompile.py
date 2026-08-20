@@ -40,7 +40,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_C = os.environ.get('EVV_OUT_C',
-                       os.path.join(ROOT, 'src', 'delta_rules_c.c'))
+                       os.path.join(ROOT, 'lang', 'enus', 'delta_rules_c.c'))
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 census = importlib.import_module('delta-census')

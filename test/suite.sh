@@ -8,7 +8,7 @@
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-cases=$here/../cases
+cases=$here/cases
 
 TEXT='^speak: (voice )?param|^speak: index'
 DICT='^speak: (voice )?param|^speak: index|^speak: (new|set|get|load|delete)Dict'

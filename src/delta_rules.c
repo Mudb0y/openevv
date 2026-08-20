@@ -853,11 +853,17 @@ static int32_t run_bytecode(void *state, const delta_rule *r,
     return st.answer;
 }
 
+/* The rules written as C, read out by rule number. Built on the first call,
+   because how many rules there are is the language module's to say. */
+static delta_rule_cfn *by_number;
+static int             by_number_done;
+
 int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
                        int nargs)
 {
     const delta_rule *was;
     const delta_rule_c *w;
+    delta_rule_cfn     fn;
     int n = (int)(r - delta_rules);
     int32_t answer;
 
@@ -893,15 +899,34 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
     /* A rule written as C runs as C, and only from here, where everything a
        run says about itself has already been said. The two are then
        interchangeable, and a run with one and a run with the other say the
-       same thing or the translation is wrong. */
-    answer = 0;
-    for (w = delta_rule_native; w->fn != 0; w++)
-        if (w->rule == n)
-            break;
-    if (w->fn != 0)
-        answer = w->fn(state, args, nargs);
-    else
-        answer = run_bytecode(state, r, args, nargs);
+       same thing or the translation is wrong.
+
+       Which rules are written as C is settled at link time, so the table is
+       read into an index by rule number once. Scanning it instead cost every
+       call a walk over the whole of it. */
+    if (!by_number_done) {
+        const delta_rule_c *t;
+
+        by_number = calloc((size_t)delta_rule_count, sizeof(*by_number));
+        if (by_number != 0)
+            for (t = delta_rule_native; t->fn != 0; t++)
+                if (t->rule >= 0 && t->rule < delta_rule_count)
+                    by_number[t->rule] = t->fn;
+        by_number_done = 1;
+    }
+
+    if (by_number != 0)
+        fn = (n >= 0 && n < delta_rule_count) ? by_number[n] : 0;
+    else {
+        /* Nothing to build the index in. The walk is what it did before and
+           it still answers. */
+        for (w = delta_rule_native; w->fn != 0; w++)
+            if (w->rule == n)
+                break;
+        fn = w->fn;
+    }
+    answer = (fn != 0) ? fn(state, args, nargs)
+                       : run_bytecode(state, r, args, nargs);
 
     delta_rule_here = was;
     if (&delta_trace_caller != 0)

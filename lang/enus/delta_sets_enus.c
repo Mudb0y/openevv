@@ -8,7 +8,7 @@
 
    The three dictionary arrays below -- act_table,
    actent_store and actent_all -- are laid down again by
-   tools/delta-dict.py out of lang/enus.dict, which is
+   tools/delta-dict.py out of lang/enus/enus.dict, which is
    where a word is added or an entry changed. Running
    this lifter again puts IBM's own back and loses
    whatever that file said. */

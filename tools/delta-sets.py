@@ -183,7 +183,7 @@ def store(o, tag, suffix, func, out, name):
 
 def main():
     where = os.path.join(ROOT, "analysis", "enus")
-    out_c = os.path.join(ROOT, "src", "delta_sets_enus.c")
+    out_c = os.path.join(ROOT, "lang", "enus", "delta_sets_enus.c")
 
     link = dlk.Coff(os.path.join(where, "link.obj"))
     sets = dlk.Coff(os.path.join(where, "setentry.obj"))
@@ -203,7 +203,7 @@ def main():
                 "\n"
                 "   The three dictionary arrays below -- act_table,\n"
                 "   actent_store and actent_all -- are laid down again by\n"
-                "   tools/delta-dict.py out of lang/enus.dict, which is\n"
+                "   tools/delta-dict.py out of lang/enus/enus.dict, which is\n"
                 "   where a word is added or an entry changed. Running\n"
                 "   this lifter again puts IBM's own back and loses\n"
                 "   whatever that file said. */\n"

@@ -387,7 +387,7 @@ def write_consts(e, where, out_c):
                 "   string constants and the compiler's own, as they lie in\n"
                 "   the object each was compiled into.\n"
                 "\n"
-                "   A pronunciation changed in lang/enus.dict is appended\n"
+                "   A pronunciation changed in lang/enus/enus.dict is appended\n"
                 "   here by tools/delta-dict.py, which gives the edited\n"
                 "   action a record of its own rather than writing over the\n"
                 "   one it had, since several actions can name the same\n"
@@ -414,7 +414,7 @@ def write_c(e, where, out_c, out_h, out_syms, stores, names):
                 "   the string addresses and the runtime entry points they\n"
                 "   name pulled out beside them.\n"
                 "\n"
-                "   A pronunciation changed in lang/enus.dict is written\n"
+                "   A pronunciation changed in lang/enus/enus.dict is written\n"
                 "   back here by tools/delta-dict.py: the pools grow, and\n"
                 "   the edited action gets a block of its own at the end of\n"
                 "   its rule with the switch pointed at it. Running this\n"
@@ -592,8 +592,8 @@ def main():
     where = argv[0] if argv else os.path.join(ROOT, "analysis", "enus")
     # Where the lifted C goes. Reading a language other than the one the
     # engine is built from is for comparison, so it writes beside its objects
-    # rather than into src, where it would stand on the English build.
-    out = argv[1] if len(argv) > 1 else os.path.join(ROOT, "src")
+    # rather than into lang/enus, where it would stand on the English build.
+    out = argv[1] if len(argv) > 1 else os.path.join(ROOT, "lang", "enus")
     os.makedirs(out, exist_ok=True)
 
     # One pass to learn how many arguments each entry takes, since a call

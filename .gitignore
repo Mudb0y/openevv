@@ -1,3 +1,5 @@
+# Extracted from IBM's SDK by tools/extract.sh and tools/extract-langs.sh.
+# The lifted C in lang/ is in the tree, so nothing here is needed to build.
 analysis/
 build/
 .wine/
@@ -5,13 +7,7 @@ result
 result-*
 __pycache__/
 
-# Lifted from the language's own objects by tools/delta-emit.py, and
-# regenerated whenever the lifter changes.
-src/delta_rules.h
-src/delta_rules_enus.c
-src/delta_rules_enus.ren
-src/delta_rules_enus.syms
-src/delta_rules_shim.c
-src/delta_link_enus.c
-src/delta_consts_enus.c
-src/delta_rules_c.c
+# Thirteen megabytes written out of the transcription beside it by
+# tools/delta-decompile.py, and rewritten whole by every change to that tool.
+# `make rules' makes it.
+lang/enus/delta_rules_c.c

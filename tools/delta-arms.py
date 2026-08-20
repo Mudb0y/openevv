@@ -70,8 +70,8 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RULES_C = os.path.join(ROOT, 'src', 'delta_rules_enus.c')
-CONSTS_C = os.path.join(ROOT, 'src', 'delta_consts_enus.c')
+RULES_C = os.path.join(ROOT, 'lang', 'enus', 'delta_rules_enus.c')
+CONSTS_C = os.path.join(ROOT, 'lang', 'enus', 'delta_consts_enus.c')
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 census = importlib.import_module('delta-census')

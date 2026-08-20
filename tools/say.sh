@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# Speak some text with the engine as lang/enus.dict currently has it, so that
-# a change to a word can be heard rather than read about. Lays the tables and
-# the rules down from the file, builds the engine for this machine, and writes
-# a wave file.
+# Speak some text with the engine as lang/enus/enus.dict currently has it, so
+# that a change to a word can be heard rather than read about. Lays the tables
+# and the rules down from the file, builds the engine, speaks, and plays what
+# came out if this machine has anything to play it with.
 #
 # usage: say.sh <text>...
 #        say.sh -f <file>
@@ -32,10 +32,20 @@ echo "say: laying the dictionaries down"
 python3 "$here/tools/delta-dict.py" build >/dev/null || exit 1
 
 echo "say: building the engine"
-make -C "$here/native" speak >/dev/null || exit 1
+make -C "$here" >/dev/null || exit 1
 
 rm -f "$out"
-"$here/build/native/speak" "@$work/text" "$out" >/dev/null 2>&1
-
+"$here/build/evv" -f "$work/text" -o "$out" || exit 1
 [ -s "$out" ] || { echo "say: the engine produced nothing" >&2; exit 1; }
-echo "say: $out"
+
+# A player is asked for as a client and nothing is reconfigured, so the
+# machine's own speech is untouched whatever happens here.
+for player in pw-play paplay aplay; do
+    if command -v "$player" >/dev/null 2>&1; then
+        echo "say: $out, through $player"
+        "$player" "$out" >/dev/null 2>&1
+        exit 0
+    fi
+done
+
+echo "say: $out, and nothing here to play it with"

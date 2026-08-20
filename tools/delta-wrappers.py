@@ -31,7 +31,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 census = importlib.import_module('delta-census')
 lexicon = importlib.import_module('delta-lexicon')
 
-LINK_C = os.path.join(ROOT, 'src', 'delta_link_enus.c')
+LINK_C = os.path.join(ROOT, 'lang', 'enus', 'delta_link_enus.c')
 
 
 def decode(code, blobs, start, length):

@@ -17,15 +17,16 @@
     in {
       devShells.${system}.default = pkgs.mkShell {
         packages = [
-          # Reads and links IBM's 32-bit COFF objects; the oracle runs as a PE
-          # binary under Wine because the objects are MSVC-mangled and x86-only.
+          # Reads and links IBM's 32-bit COFF objects, and runs the reference
+          # binary, which is a PE under Wine because those objects are
+          # MSVC-mangled and x86-only.
           pkgs.pkgsCross.mingw32.buildPackages.gcc
           pkgs.pkgsCross.mingw32.buildPackages.binutils
           pkgs.wine
 
-          # The first native target. Thirty-two bit, because the machine
-          # keeps its values in an int32 and puts host addresses in them,
-          # so sixty-four bit needs the arena work first.
+          # The thirty-two bit build, which is a check rather than a target:
+          # a difference between the word sizes is a layout mistake, and this
+          # is what makes one show up early.
           pkgs.pkgsCross.gnu32.buildPackages.gcc
           pkgs.pkgsCross.gnu32.buildPackages.binutils
 
@@ -43,8 +44,8 @@
           # substitute a native build of it.
           export MINGW_LDFLAGS="-L${pkgs.pkgsCross.mingw32.windows.mcfgthreads.outPath}/lib"
           export WINEPREFIX="$PWD/.wine"
-          # Nothing in this project plays audio; keep Wine away from the
-          # sound devices entirely.
+          # Nothing under Wine plays audio here; keep it away from the sound
+          # devices entirely.
           export WINEDLLOVERRIDES="winealsa.drv=d;winepulse.drv=d;wineoss.drv=d"
           export WINEDEBUG=-all
         '';
