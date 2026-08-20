@@ -1,0 +1,62 @@
+Two different things are in this repository and only one of them is ours to
+license.
+
+Ours
+----
+
+The engine in `src`, the two front ends in `cli`, the tools in `tools`, the
+tests in `test`, the reference build in `reference` and the documents in `docs`
+are our own work: C written against IBM's objects and checked against them,
+line by line, by the audio coming out. That is what the MIT licence in LICENSE
+covers.
+
+IBM's
+-----
+
+Everything in `lang/enus` is transcribed out of IBM's Embedded ViaVoice
+objects. The rules as bytecode, the constants they read, the statement and
+field tables, the lookup sets, the variable declarations, the voice presets and
+the dictionary, and where the engine's arithmetic depends on the exact bytes
+they are the exact bytes. The rule names in `lang/enus/delta_rules.h` and
+`lang/enus/delta_rules_shim.c` are IBM's names, because they are the names its
+own compiler left in the objects.
+
+That data is IBM's work, not ours. The MIT licence does not cover it and we are
+in no position to license it to anyone. The SDK it was read out of says as much
+itself, in `doc/wxp/readme.txt`:
+
+    Licensed Materials - Property of IBM
+    (C) Copyright IBM Corp. 1999, 2004  All Rights Reserved.
+
+It is in the tree because the engine cannot speak without it, and because a
+build that first needed a 110 megabyte SDK from 2004 is a build almost nobody
+would ever run. That is a deliberate choice about being useful, not a claim
+about ownership.
+
+If you mean to do more with this than read it and run it, the rights in that
+data are yours to sort out with whoever holds them, and who that is today is
+not simple. IBM published these objects. The engine underneath them was
+Eloquence, by Eloquent Technology, which passed to SpeechWorks, then ScanSoft,
+then Nuance, whose text-to-speech rights went to Cerence in the 2019 spinoff
+and are now the subject of Cerence Inc. v. Microsoft Corporation and Nuance
+Communications, Inc., D. Del. 1:25-cv-00553, filed 6 May 2025. None of this is
+legal advice.
+
+Where it came from
+------------------
+
+IBM's Embedded ViaVoice 4.3 SDK for Windows, which IBM still serves at
+
+    https://public.dhe.ibm.com/software/pervasive/tools/viavoice/sdk/evvWXP.exe
+
+`docs/building.md` says what to do with it, and every tool that reads it is in
+`tools`, so anything in `lang/enus` can be produced again from IBM's own file
+rather than taken on trust.
+
+Names
+-----
+
+IBM, ViaVoice and Embedded ViaVoice are trademarks of International Business
+Machines Corporation. Eloquence is a trademark of its respective owner. This
+project is not affiliated with, endorsed by or supported by IBM, Cerence,
+Nuance, Microsoft or Apple.

@@ -49,8 +49,10 @@ Nothing here may reconfigure, restart or kill PipeWire, and nothing may write
 speech-dispatcher configuration. `tools/say.sh` plays as an ordinary client,
 which is the only way anything in this project touches sound.
 
-There is no licence yet and that decision is Stas's. Do not add a LICENSE file
-or licence headers, and do not push anything anywhere.
+Our own code is MIT, in LICENSE. `lang/enus` is IBM's data and is not ours to
+license: never put a licence header on anything in there, and never write
+anything that implies the MIT licence reaches it. NOTICE is the file that says
+whose is whose, and it is the one to keep true.
 
 ## Habits
 

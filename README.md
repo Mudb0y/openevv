@@ -43,12 +43,16 @@ does.
 `docs/status.md` is what works, what does not, and what has not been started.
 `docs/tree.md` says what every directory is for.
 
-## Provenance
+## Licence and provenance
 
-The engine is a reimplementation: our own C, written against IBM's objects and
-checked against them. The language data under `lang` is a different thing. It
-is transcribed out of IBM's Embedded ViaVoice objects, byte for byte where the
-engine's arithmetic depends on it, and it is IBM's work rather than ours.
+Our own work -- the engine, the two front ends, the tools, the tests and the
+documents -- is under the MIT licence in LICENSE.
+
+The language data under `lang/enus` is not ours. It is transcribed out of IBM's
+Embedded ViaVoice objects, byte for byte where the engine's arithmetic depends
+on it, and it is IBM's work. The MIT licence does not cover it and we are in no
+position to license it to anyone. NOTICE says what it is, whose it is, and who
+the rights in it may belong to today.
 
 Nothing else of IBM's is here. The objects the port was read out of, and the
 headers and symbol tables it was read with, are not in the tree and are not
