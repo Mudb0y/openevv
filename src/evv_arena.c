@@ -201,6 +201,10 @@ int evv_arena_open(size_t bytes)
         abort();
     }
 
+    if (getenv("EVV_ARENA_TRACE") != 0)
+        fprintf(stderr, "evv: arena at %p, %lu bytes\n",
+                (void *)evv_arena_base, (unsigned long)evv_arena_size);
+
     /* The first eight bytes are never handed out, so that a reference of
        nought goes on meaning nothing, which is what every test for an empty
        value in the machine assumes. */
@@ -224,13 +228,24 @@ void evv_arena_close(void)
     first = 0;
 }
 
+/* Whether something came out of here at all. */
+static int in_arena(const void *p)
+{
+    const unsigned char *c = p;
+
+    return c >= evv_arena_base && c < evv_arena_base + evv_arena_size;
+}
+
 static head *next_block(head *b)
 {
     unsigned char *p;
 
     check(b);
     p = (unsigned char *)b + b->size;
-    if (p >= evv_arena_base + evv_arena_size)
+    /* The whole header, not just its first byte: a block ending within
+       sizeof(head) of the end would otherwise be read past the region, which
+       is a fault rather than an answer. */
+    if (p + sizeof(head) > evv_arena_base + evv_arena_size)
         return 0;
     return (head *)p;
 }
@@ -239,9 +254,20 @@ static head *next_block(head *b)
    used, so asking for a lot costs nothing but address space, and the whole
    point of the region is that it has to sit at an address a 32-bit value can
    name, which is not somewhere to be short of room. */
+#ifndef ARENA_DEFAULT
 #define ARENA_DEFAULT (256u * 1024u * 1024u)
+#endif
 
-static void *arena_alloc(size_t n)
+/* Who asked, as a number, for a block that is overrun to be able to name the
+   allocation in front of it.
+ *
+   Taken from the caller rather than worked out here. It used to be
+   __builtin_return_address(1), which GCC's own manual says may have
+   unpredictable effects including a crash, and it did: with one compiler's
+   inlining the frame above was walkable and with another's it was not, so the
+   engine built by Ubuntu's gcc faulted inside the allocator on the first
+   sentence while the same source built here was fine. */
+static void *arena_alloc(size_t n, uint32_t whence)
 {
     size_t want = ROUND(n) + ALIGN;
     head *b;
@@ -269,7 +295,7 @@ static void *arena_alloc(size_t n)
             b->size = (uint32_t)want;
         }
         b->used = 1;
-        b->whence = (uint32_t)(uintptr_t)__builtin_return_address(1);
+        b->whence = whence;
         return (unsigned char *)b + ALIGN;
     }
     return 0;
@@ -281,6 +307,14 @@ static void arena_free(void *p)
 
     if (p == 0)
         return;
+
+    /* Reading the header of something that came from somewhere else is how a
+       wild pointer turns into a fault with nothing said. Say it. */
+    if (!in_arena(p)) {
+        fprintf(stderr, "evv: %p was given back to the arena and did not come"
+                " from it\n", p);
+        abort();
+    }
 
     b = (head *)((unsigned char *)p - ALIGN);
     check(b);
@@ -314,10 +348,11 @@ char *evv_arena_strdup(const char *s)
 
 void *evv_arena_alloc(size_t n)
 {
+    uint32_t whence = (uint32_t)(uintptr_t)__builtin_return_address(0);
     void *p;
 
     arena_take();
-    p = arena_alloc(n);
+    p = arena_alloc(n, whence);
     arena_drop();
     return p;
 }
@@ -356,6 +391,11 @@ void *evv_arena_realloc(void *p, size_t n)
     }
 
     arena_take();
+    if (!in_arena(p)) {
+        fprintf(stderr, "evv: %p was handed to the arena to grow and did not"
+                " come from it\n", p);
+        abort();
+    }
     b = (head *)((unsigned char *)p - ALIGN);
     check(b);
     had = b->size - ALIGN;
@@ -363,7 +403,7 @@ void *evv_arena_realloc(void *p, size_t n)
         arena_drop();
         return p;
     }
-    out = arena_alloc(n);
+    out = arena_alloc(n, (uint32_t)(uintptr_t)__builtin_return_address(0));
     if (out != 0) {
         memcpy(out, p, had);
         arena_free(p);
