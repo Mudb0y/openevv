@@ -39,7 +39,8 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT_C = os.path.join(ROOT, 'src', 'delta_rules_c.c')
+OUT_C = os.environ.get('EVV_OUT_C',
+                       os.path.join(ROOT, 'src', 'delta_rules_c.c'))
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 census = importlib.import_module('delta-census')
@@ -390,8 +391,10 @@ def write(names):
         text.append('    for (i = 0; i < nargs && i < %d; i++)\n' % params)
         text.append('        memcpy(base + %d + 4 * i, &args[i], 4);\n\n'
                     % pbase)
+        # Taking the dead loads out first brings more calls up against
+        # their arguments, which is why the joining goes last.
         named, saw = name_globals(
-            join_pops(drop_dead(join_calls(c, structure(fold(body))))))
+            join_calls(c, join_pops(drop_dead(structure(fold(body))))))
         named = name_alternatives(name_params(named, pbase, params))
         USED.update(saw)
         text.append('\n'.join(named))
@@ -422,8 +425,7 @@ SHAPES = {}
 def c_rule_shape(name):
     if not SHAPES:
         import re
-        text = open(os.path.join(ROOT, 'src',
-                                 'delta_rules_enus.c')).read()
+        text = open(census.RULES_C).read()
         for m in re.finditer(r'\{\s*"([^"]*)",\s*"[^"]*",\s*-?\d+,\s*-?\d+,'
                              r'\s*(-?\d+),\s*(-?\d+),\s*(-?\d+)\s*\}',
                              census.span(text, 'delta_rules[]')):
@@ -558,7 +560,10 @@ def layout():
     """
     if LAYOUT:
         return LAYOUT
-    text = open(os.path.join(ROOT, 'src', 'delta_globals_enus.c')).read()
+    path = os.path.join(census.LANG_DIR, 'delta_globals_enus.c')
+    if not os.path.exists(path):
+        return LAYOUT
+    text = open(path).read()
     kinds = re.findall(r'DG_(WORD|LONG|SHORT|COMPOUND)', text)
     sizes = [int(b) for _a, b in
              re.findall(r'\{\s*(\d+),\s*(\d+)\s*\}',

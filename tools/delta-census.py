@@ -26,8 +26,13 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RULES_C = os.path.join(ROOT, 'src', 'delta_rules_enus.c')
-CONSTS_C = os.path.join(ROOT, 'src', 'delta_consts_enus.c')
+# Which language's transcription to read. English lives in src because it is
+# the one the engine is built from; the rest are lifted alongside it, and
+# pointing the tools at one of those is how the machine model gets held
+# against a language it was not worked out on.
+LANG_DIR = os.environ.get('EVV_LANG_DIR', os.path.join(ROOT, 'src'))
+RULES_C = os.path.join(LANG_DIR, 'delta_rules_enus.c')
+CONSTS_C = os.path.join(LANG_DIR, 'delta_consts_enus.c')
 
 OPS = ['call', 'jump', 'branch', 'cmp', 'alu2', 'alu1', 'load',
        'store', 'switch', 'map', 'return', 'scale', 'addk', 'mul',
