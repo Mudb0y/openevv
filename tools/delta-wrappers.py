@@ -13,11 +13,12 @@ primitive with its arguments says what the rule does. This decodes them, and
 says how many do not fit the shape, because a wrapper that does something else
 is a wrapper that cannot be inlined.
 
-What it does not yet do is read the strings. A wrapper that inserts a record
-names its content by symbol, and those are not ASCII: they are sequences of
-codes in the statement's own value alphabet, which tools/delta-lexicon.py
-knows how to spell. Until they are joined up, a record's content shows as the
-symbol number it is.
+The strings are read where they can be. A record's content is not ASCII: it is
+one code per character in the alphabet its statement type declares, which is
+the value-name table of that statement's first field, and delta-lexicon.py
+already spells it. Wherever a call takes a statement, a length and a symbol in
+that order, the symbol is spelled; elsewhere it keeps its number, because
+guessing which alphabet a number means would put words in the language's mouth.
 """
 
 import collections
@@ -28,6 +29,9 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 census = importlib.import_module('delta-census')
+lexicon = importlib.import_module('delta-lexicon')
+
+LINK_C = os.path.join(ROOT, 'src', 'delta_link_enus.c')
 
 
 def decode(code, blobs, start, length):
@@ -69,6 +73,33 @@ def decode(code, blobs, start, length):
     return calls, None
 
 
+def spell(code, blobs, alpha, once, calls):
+    """A record's content as the language wrote it.
+
+    A statement, a length and a symbol together say where the bytes are and
+    which alphabet reads them, so that is the shape looked for. Anything else
+    keeps its number.
+    """
+    for _who, args in calls:
+        for i in range(len(args) - 2):
+            stmt, ln, sym = args[i], args[i + 1], args[i + 2]
+            if not isinstance(stmt, int) or not isinstance(ln, int):
+                continue
+            if not isinstance(sym, str) or not sym.startswith('sym'):
+                continue
+            if stmt not in alpha or ln <= 0:
+                continue
+            val = int(sym[3:])
+            if val >= len(code.syms):
+                continue
+            blob, at = code.syms[val]
+            body = blobs.get(blob, b'')[at:at + ln]
+            if len(body) == ln:
+                args[i + 2] = '"%s"' % lexicon.word(body, alpha[stmt],
+                                                    once[stmt])
+    return calls
+
+
 def text_of(code, blobs, val):
     """A string constant as the language wrote it, where it is one."""
     if val >= len(code.syms):
@@ -85,9 +116,12 @@ def text_of(code, blobs, val):
 def main():
     code, rules = census.load()
     blobs = census.carve_blobs(open(census.CONSTS_C).read())
+    alpha = lexicon.alphabets(open(LINK_C).read())
+    once = {k: lexicon.unique_names(v) for k, v in alpha.items()}
     families = collections.Counter()
     refused = collections.Counter()
     good = 0
+    spelled = 0
     show = []
     interesting = []
 
@@ -99,12 +133,14 @@ def main():
             refused[why] += 1
             continue
         good += 1
+        what = spell(code, blobs, alpha, once, what)
+        said = any(isinstance(a, str) and a.startswith('"')
+                   for _w, args in what for a in args)
+        if said:
+            spelled += 1
         for who, _args in what:
             families[who] += 1
-        # A spread rather than the first fourteen alphabetically, which are
-        # all one family and say nothing about the rest.
-        if len(what) > 1 or any(isinstance(a, str) and a.startswith('"')
-                                for _w, args in what for a in args):
+        if said:
             interesting.append((name, what))
 
     print('wrapper rules: %d, of which one primitive with numbers: %d'
@@ -113,13 +149,14 @@ def main():
         for why, n in refused.most_common():
             print('  %4d %s' % (n, why))
 
+    print('carrying a word of the language: %d' % spelled)
+
     print('\nthe primitives they stand for, most used first:')
     for who, n in families.most_common(20):
         print('  %-22s %4d wrappers' % (who, n))
 
-    print('\nthe ones that carry a word of the language, and the compound'
-          ' ones:')
-    for name, calls in interesting[:16]:
+    print('\nas they read, taking every fortieth so the spread shows:')
+    for name, calls in interesting[::max(1, len(interesting) // 16)][:16]:
         said = '; '.join('%s(%s)' % (who, ', '.join(str(a) for a in args))
                          for who, args in calls)
         print('  %-34s %s' % (name, said))
