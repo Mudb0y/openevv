@@ -392,7 +392,7 @@ def write(names):
         text.append('    for (i = 0; i < nargs && i < %d; i++)\n' % params)
         text.append('        memcpy(base + %d + 4 * i, &args[i], 4);\n\n'
                     % pbase)
-        text.append('\n'.join(fold(body)))
+        text.append('\n'.join(structure(fold(body))))
         text.append('\n    evv_frame_pop(frame);\n    return r0;\n}\n\n')
         done.append(name)
 
@@ -452,6 +452,103 @@ def every():
     c, rules = all_rules()
     return [name for name, _o, _s, _l in rules]
 
+
+
+
+# The other half of a condition, so that a branch which skips a region can be
+# turned round into an if which enters it. Every pair below is an exact
+# complement of the other in delta_condition, which is what makes the turn
+# safe rather than merely plausible.
+OPPOSITE = {'e': 'ne', 'ne': 'e', 'a': 'be', 'be': 'a', 'ae': 'b', 'b': 'ae',
+            'g': 'le', 'le': 'g', 'ge': 'l', 'l': 'ge', 's': 'ns', 'ns': 's'}
+
+LABEL_RE = re.compile(r'^\s*L(\d+):;$')
+BRANCH_RE = re.compile(r'^(\s*)if \(IF\((\w+)\)\) goto L(\d+);$')
+JUMP_RE = re.compile(r'goto L(\d+);')
+
+STRUCTURED = [0]
+
+
+def structure(body):
+    """Branches that skip a region, written as the if they are.
+
+    A branch forward to a label, over a region nothing else can jump into, is
+    an if around that region under the opposite condition. Nothing else is
+    touched: a backward branch is a loop and a region with another way in is
+    not a region, and both keep the goto they had.
+
+    Innermost first, so that what comes out nests.
+    """
+    while True:
+        cut = _once(body)
+        if cut is None:
+            return body
+        body = cut
+        STRUCTURED[0] += 1
+
+
+def _whole(region):
+    """Whether a run of lines opens and closes every block it mentions."""
+    depth = 0
+    for line in region:
+        depth += line.count('{') - line.count('}')
+        if depth < 0:
+            return False
+    return depth == 0
+
+
+def _once(body):
+    at = {}
+    for i, line in enumerate(body):
+        m = LABEL_RE.match(line)
+        if m:
+            at[int(m.group(1))] = i
+
+    goes = {}
+    for i, line in enumerate(body):
+        for m in JUMP_RE.finditer(line):
+            goes.setdefault(int(m.group(1)), []).append(i)
+
+    best = None
+    for i, line in enumerate(body):
+        m = BRANCH_RE.match(line)
+        if not m:
+            continue
+        pad, cond, tgt = m.group(1), m.group(2), int(m.group(3))
+        if cond not in OPPOSITE:
+            continue
+        j = at.get(tgt)
+        if j is None or j <= i + 1:
+            continue
+        inside = [k for k, where in at.items() if i < where < j]
+        if any(any(not (i < f < j) for f in goes.get(k, ()))
+               for k in inside):
+            continue
+        # The region has to be a region. A branch whose target lies outside
+        # the block the branch is in would otherwise take the block's own
+        # closing brace with it, which balances and compiles and means
+        # something else entirely.
+        if not _whole(body[i + 1:j]):
+            continue
+        if best is None or j - i < best[1] - best[0]:
+            best = (i, j, pad, cond, tgt)
+    if best is None:
+        return None
+
+    i, j, pad, cond, tgt = best
+    out = body[:i]
+    out.append('%sif (IF(%s)) {' % (pad, OPPOSITE[cond]))
+    out.extend('    ' + line if line.strip() else line
+               for line in body[i + 1:j])
+    out.append('%s}' % pad)
+    out.extend(body[j:])
+
+    # The label the branch used may have no one left who needs it.
+    if len(goes.get(tgt, ())) == 1:
+        k = next(n for n, line in enumerate(out) if LABEL_RE.match(line)
+                 and int(LABEL_RE.match(line).group(1)) == tgt)
+        del out[k]
+    return out
 
 
 # The envelope every rule carries, folded back into the two things it is.
@@ -534,6 +631,7 @@ def main():
         names = smallest(int(sys.argv[1]) if len(sys.argv) > 1 else 100)
 
     done, refused = write(names)
+    print('branches turned into an if: %d' % STRUCTURED[0])
     print('landing places folded: %d, entries folded: %d'
           % (FOLDED[0], FOLDED[1]))
     print('%d of %d rules written to %s'
