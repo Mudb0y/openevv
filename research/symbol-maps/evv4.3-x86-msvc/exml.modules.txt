@@ -1,3 +1,0 @@
-E:/build/embedded/obj/product/share/nt/x86/waveio/xmll.obj
-E:/build/embedded/obj/product/share/nt/x86/waveio/xmlp.obj
-E:/build/embedded/obj/product/share/nt/x86/waveio/xmli.obj

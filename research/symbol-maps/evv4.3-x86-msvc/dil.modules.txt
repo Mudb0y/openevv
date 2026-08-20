@@ -1,3 +1,0 @@
-E:/build/embedded/obj/product/eal/ealapi/nt/x86/waveio/mixmain.obj
-E:/build/embedded/obj/product/eal/ealapi/nt/x86/waveio/wavevol.obj
-E:/build/embedded/obj/product/eal/ealapi/nt/x86/waveio/dilmain.obj

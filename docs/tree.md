@@ -52,17 +52,17 @@ checks that need no Wine.
 `reference` builds IBM's own binary from IBM's own objects, under Wine. It is
 all that is left of the differential harness that made the port.
 
-`research` is the material the port was made from: IBM's headers for four API
-generations, symbol maps for 199 objects, voice presets and the phoneme
-alphabet, sample code from the SDK, and the source tree listing.
-
 `docs` is this.
 
 ## Not in the tree
 
 `analysis` holds the objects extracted from IBM's SDK by `tools/extract.sh`,
 and the eight other languages lifted by `tools/extract-langs.sh`. It is the
-input to every tool and none of it is needed to build.
+input to every lifter and none of it is needed to build. The reference material
+the port was read with -- IBM's headers for four API generations, symbol maps
+for 199 objects, the phoneme alphabet, the SDK's sample code and the original
+source tree listing -- was in the tree as `research` until 20 August 2026 and
+is in git history at that commit.
 
 `build` is output: `evv` and `probe` with their objects under `obj`, the
 thirty-two bit pair with theirs under `obj32`, and `reference/speak.exe` with

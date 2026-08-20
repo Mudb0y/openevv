@@ -34,8 +34,7 @@ builds without the SDK.
 front that reports what it answered at every step, which is what `test` sets
 against IBM's binary case for case. `tools` holds the lifters, the decompiler
 and the analysers. `reference` builds IBM's own binary under Wine, which is
-what the tests compare against. `research` is the material the port was made
-from: headers, symbol maps and samples.
+what the tests compare against.
 
 ## Documentation
 
@@ -49,6 +48,8 @@ does.
 The engine is a reimplementation: our own C, written against IBM's objects and
 checked against them. The language data under `lang` is a different thing. It
 is transcribed out of IBM's Embedded ViaVoice objects, byte for byte where the
-engine's arithmetic depends on it, and it is IBM's work rather than ours. So is
-the material under `research`, which is IBM's headers, symbol tables and sample
-code, kept because the port was made from it.
+engine's arithmetic depends on it, and it is IBM's work rather than ours.
+
+Nothing else of IBM's is here. The objects the port was read out of, and the
+headers and symbol tables it was read with, are not in the tree and are not
+needed to build.

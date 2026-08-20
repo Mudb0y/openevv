@@ -1,8 +1,0 @@
-E:/build/embedded/obj/product/share/nt/x86/waveio/edu_api.obj
-E:/build/embedded/obj/product/share/nt/x86/waveio/eseimage.obj
-E:/build/embedded/obj/product/voc/nt/x86/waveio/quotedstring.obj
-E:/build/embedded/obj/product/voc/nt/x86/waveio/adwphones.obj
-E:/build/embedded/obj/product/voc/nt/x86/waveio/phones.obj
-E:/build/embedded/obj/product/voc/d/nt/x86/waveio/voc.obj
-E:/build/embedded/obj/product/voc/nt/x86/waveio/version.obj
-E:/build/embedded/obj/product/voc/nt/x86/waveio/dpool.obj

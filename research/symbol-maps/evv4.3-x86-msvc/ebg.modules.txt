@@ -1,4 +1,0 @@
-E:/build/embedded/obj/product/share/nt/x86/waveio/logadd.obj
-E:/build/embedded/obj/product/share/nt/x86/waveio/letteroutputs.obj
-E:/build/embedded/obj/product/share/nt/x86/waveio/bsfgenapi.obj
-E:/build/embedded/obj/product/share/nt/x86/waveio/bsfgen.obj

@@ -1,1 +1,0 @@
-E:/build/embedded/obj/product/share/nt/x86/waveio/bsfgenapistub.obj
