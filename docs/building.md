@@ -90,6 +90,55 @@ volume. Those numbers are the engine's own; `-r` makes them a person's instead,
 so speed is words per minute and pitch is hertz. `-l` prints what each voice is
 set to, in whichever units are in force.
 
+## Getting IBM's objects
+
+None of this is needed to build. It is needed for two things: the comparison
+tests, which speak every case through IBM's own binary as well as ours, and the
+lifters, which is how the language data in `lang` was made and how another
+language would be.
+
+Everything comes out of IBM's Embedded ViaVoice 4.3 SDK for Windows, which IBM
+still serves from its public download host:
+
+    https://public.dhe.ibm.com/software/pervasive/tools/viavoice/sdk/evvWXP.exe
+
+114,984,719 bytes, dated 30 November 2004, sha256
+47182a6b16bd8a5335944a1a03058ce52cba83b03de9da700e97fea68be0c29f. Despite the
+.exe it is an ordinary Microsoft cabinet, so it unpacks on any machine, with
+`nix shell nixpkgs#p7zip` first if that is how the machine gets its tools:
+
+    7z x evvWXP.exe
+
+That gives `evv4.3/wxp`, with the libraries, the headers, IBM's documentation
+and its own sample applications under it. What the tools here read is the
+static libraries in `evv4.3/wxp/lib/NT/X86/COMMON`. `ecienus.lib` is US English
+and is the one this engine was made from; `eciengb`, `ecidede`, `ecieses`,
+`eciesus`, `ecifrfr`, `ecifrca`, `eciitit` and `ecijajp` are the other eight
+formant languages, and a `C`-suffixed library beside one of them is the
+concatenative build of that language, which uses recorded speech rather than
+the synthesiser and is not what any of this reads.
+
+Point `EVV_LIBDIR` at that directory and run the extractors:
+
+    EVV_LIBDIR=/somewhere/evv4.3/wxp/lib/NT/X86/COMMON tools/extract.sh
+    EVV_LIBDIR=/somewhere/evv4.3/wxp/lib/NT/X86/COMMON tools/extract-langs.sh
+
+`extract.sh` fills `analysis/enus` with the 207 objects of the English module,
+which is what `make -C reference` links and what every lifter reads. It also
+writes `analysis/obj` and `analysis/delta-ibm`, which carry the same objects
+with IBM's symbols renamed out of the way; that was for standing our code
+beside IBM's in one binary, and that harness is retired.
+
+`extract-langs.sh` puts each of the other eight languages in `analysis/<tag>`,
+which is for comparison rather than for building. Both extractors want
+`llvm-ar`, `llvm-objdump` and the mingw `objcopy`, so both run inside `nix
+develop`.
+
+IBM's public host carries more than the SDK: the AIX packages of the same
+engine, whose headers are how the interface across four generations was read,
+and the Pocket PC runtimes, are under `/software/` beside it. None of it is
+needed here.
+
 ## Testing
 
     make probe
@@ -98,8 +147,8 @@ set to, in whichever units are in force.
 
 The suite speaks each case through our engine and through IBM's and compares
 the samples. It needs Wine, and it needs IBM's objects in `analysis/enus`,
-which `tools/extract.sh` puts there out of the SDK. Building the reference
-binary writes it to `build/reference/speak.exe`.
+which `tools/extract.sh` puts there out of the SDK above. Building the
+reference binary writes it to `build/reference/speak.exe`.
 
 Six categories run by default: plain text, UTF-8, annotations, annotations with
 the annotation input type on, real-world text with the parameters read back in a

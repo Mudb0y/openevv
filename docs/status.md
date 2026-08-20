@@ -63,7 +63,8 @@ do arithmetic as well as calling keep their names.
 ## Known limits
 
 The test suite needs Wine and IBM's objects, because it compares against IBM's
-binary. Without them there is no automatic check that the audio is right, only
+binary. Both are obtainable: `docs/building.md` says where IBM's SDK still is.
+Without them there is no automatic check that the audio is right, only
 `tools/say.sh` to listen with and `tools/delta-check.sh` to hold the two forms
 of a rule against each other.
 
