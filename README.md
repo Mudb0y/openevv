@@ -12,10 +12,16 @@ Wine.
     make
     ./build/evv -o hello.wav "Hello from Eloquence."
 
-That wants a C compiler and about half a minute. Nothing plays audio yet, so
-the engine writes a wave file; to hear it at once, pipe it into a player:
+That wants a C compiler and about half a minute. On Linux nothing plays the
+audio yet, so the engine writes a wave file; pipe it into a player to hear it at
+once:
 
     ./build/evv "Hello from Eloquence." | aplay -q -
+
+On Windows there is a speak window. Take `evvspeak.exe` from the latest release,
+type something, pick one of the eight voices, and hear it; `evv.exe` beside it
+is the same engine on the command line. One file each, nothing to install, and
+`make win` builds both from here with mingw.
 
 `./build/evv -h` says what the options are, and `./build/evv -l` says what each
 of the eight voices is set to.
@@ -30,11 +36,11 @@ link tables, the voice presets and the dictionary. This is the part lifted out
 of IBM's objects rather than written, and it is in the tree so that the engine
 builds without the SDK.
 
-`cli/evv.c` is the command above. `cli/probe.c` is the same engine behind a
-front that reports what it answered at every step, which is what `test` sets
-against IBM's binary case for case. `tools` holds the lifters, the decompiler
-and the analysers. `reference` builds IBM's own binary under Wine, which is
-what the tests compare against.
+`cli/evv.c` is the command above and `win/speak.c` is the speak window.
+`cli/probe.c` is the same engine behind a front that reports what it answered at
+every step, which is what `test` sets against IBM's binary case for case.
+`tools` holds the lifters, the decompiler and the analysers. `reference` builds
+IBM's own binary under Wine, which is what the tests compare against.
 
 ## Documentation
 

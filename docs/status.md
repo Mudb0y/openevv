@@ -9,9 +9,11 @@ come out byte for byte identical to IBM's own binary: plain text, UTF-8,
 annotations, annotations with the annotation input type on, real-world text with
 the parameters read back in a person's units, and the user dictionary.
 
-That holds in all four configurations the tree can build: thirty-two and
-sixty-four bit, each with the rules run as bytecode and with the same rules run
-as the C they decompile to.
+That holds in all four configurations the tree can build for this machine --
+thirty-two and sixty-four bit, each with the rules run as bytecode and with the
+same rules run as the C they decompile to -- and in the Windows build as well,
+which is a fifth: `build/probe.exe` under Wine matches IBM's binary over the
+same 81 cases.
 
 Nothing is borrowed at build time. `make missing` answers nothing, which is the
 check that no call has quietly gone back to IBM's objects. The language data is
@@ -25,12 +27,16 @@ down and heard.
 All nine languages in the SDK lift and decompile: US and British English, both
 Spanishes, both Frenches, German, Italian and Japanese. Only English is built.
 
+It builds and speaks on Windows, sixty-four bit, as one static file. The speak
+window plays what it makes through waveOut; `win/speak.c` is that, and it is the
+only front end that plays anything.
+
 ## Not done
 
-Live audio. The engine hands its samples to the caller, and `build/evv` writes
-them as a wave file or down a pipe; nothing sends them to a sound card as they
-are made. Deliberately left until last, because it is mostly straightforward
-and the decompiling mattered more.
+Live audio on Linux. The engine hands its samples to the caller, and
+`build/evv` writes them as a wave file or down a pipe; nothing sends them to a
+sound card as they are made. Windows got there first because waveOut is forty
+lines; PipeWire is next and is a thin sink on top of the same buffer.
 
 The compiler. The rules are readable C, but there is no way to write a new rule
 except by writing that C. This is the next piece of work and the gate to adding

@@ -90,6 +90,34 @@ volume. Those numbers are the engine's own; `-r` makes them a person's instead,
 so speed is words per minute and pitch is hertz. `-l` prints what each voice is
 set to, in whichever units are in force.
 
+## Windows
+
+    make win
+
+That cross-compiles two binaries with mingw: `build/evvspeak.exe`, the speak
+window, and `build/evv.exe`, the same console driver as on this machine. Both
+are static, so each is one file that wants nothing installed, and both are
+sixty-four bit. `make win-probe` builds the test driver as `build/probe.exe`,
+which `EVV_NATIVE=$PWD/build/probe.exe test/suite.sh` will run against IBM's
+binary case for case, under the same Wine.
+
+The speak window is the only front end anywhere in this tree that plays what it
+makes. It types into a multiline box, picks one of the eight voices, takes the
+rate in words a minute and the pitch in hertz, saves a wave file if asked, and
+plays through waveOut, which every Windows since 1995 has. Control and Enter
+speaks, Escape stops, and Escape again closes. Everything in it is a control
+Windows ships, so a screen reader reads it without being told anything.
+`evvspeak.exe /say "some text"` speaks at once and is how the sound gets tested
+without a mouse.
+
+Three things about the Windows build are not preferences. The image is linked
+at four megabytes with ASLR and high-entropy addresses off, because the
+language's tables live in the image and a Delta value cannot name an address
+above four gigabytes -- mingw would otherwise put a sixty-four bit image at five
+and a half. `src/port_win32.c` stands in for `src/port_posix.c`, which is the
+whole of the platform layer. And the arena takes its region from VirtualAlloc at
+the same fixed addresses mmap gets on Linux.
+
 ## Getting IBM's objects
 
 None of this is needed to build. It is needed for two things: the comparison
@@ -166,6 +194,14 @@ first, so a change to the language data can be heard.
 `tools/delta-check.sh` is the other check. It holds named rules written as C
 against the same rules left as bytecode, by tracing every call both ways and
 comparing the traces line for line.
+
+`test/hash.sh` is the check that needs nothing at all: it speaks one fixed
+sentence and holds the samples against a hash in `test/samples.sha256`. That
+does not prove the engine right -- only IBM's binary can -- but it proves it
+unchanged, which is what catches a careless edit, and it is what the workflow in
+`.github` runs on every push. The samples do not depend on the compiler: gcc 15
+and clang 21 agree byte for byte, which is what an engine with no floating point
+in it should do.
 
 ## The sixty-four bit build
 

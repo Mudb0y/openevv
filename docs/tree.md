@@ -13,10 +13,12 @@ The names are IBM's, and they are kept that way on purpose. A file named for
 the object it came from can be checked against that object; renaming them would
 look tidier and cost real verification.
 
-Two files there are not from an object. `src/delta_rules_none.c` is the empty
+Three things there are not from an object. `src/delta_rules_none.c` is the empty
 table of rules-written-as-C that an ordinary build links instead of the thirteen
-megabytes, and `src/port_win32.c` is the Windows porting layer, which only the
-reference build compiles.
+megabytes. `src/port_win32.c` is the Win32 platform layer, which the Windows
+build and the reference build both use and the Linux build does not.
+`src/evv_land.c` is the landing place a backtrack jumps to, which is ours
+because the C library's does not fit what the engine does with it.
 
 `lang/enus` is US English. `delta_rules_enus.c` is the rules as bytecode,
 `delta_consts_enus.c` the constant blobs they read, `delta_link_enus.c` the
@@ -27,12 +29,17 @@ interpreter needs of all that, `eci_ini_enus.c` the voice presets, and
 `enus.dict` the dictionary in a form a person can edit. All of it is transcribed
 from IBM's objects.
 
-`cli` holds the two front ends. `evv.c` is the command a person runs: options,
-a wave file or a pipe, and nothing printed that was not asked for. `probe.c` is
-the one the tests drive, which prints what the engine answered at every step.
-`reference/speak.c` is a third, driving IBM's engine through the published ECI
-names, and it is separate because those are different names for the same calls
-and joining them would mean a conditional around every one.
+`cli` holds the two console front ends. `evv.c` is the command a person runs:
+options, a wave file or a pipe, and nothing printed that was not asked for.
+`probe.c` is the one the tests drive, which prints what the engine answered at
+every step. `reference/speak.c` is a third, driving IBM's engine through the
+published ECI names, and it is separate because those are different names for
+the same calls and joining them would mean a conditional around every one.
+
+`win` is the speak window: `speak.c`, and `speak.rc` which is the dialog and its
+keys. It is the only front end that plays what the engine makes, through
+waveOut, and it is Windows-only for the same reason it exists -- that is the
+platform someone can be handed one file for.
 
 `test` holds `suite.sh`, which runs the categories of cases through both
 engines, `compare.sh`, which does one category, and `cases`, the text itself.
@@ -51,6 +58,9 @@ checks that need no Wine.
 
 `reference` builds IBM's own binary from IBM's own objects, under Wine. It is
 all that is left of the differential harness that made the port.
+
+`.github` holds the workflow that builds both binaries on every push and cuts a
+release with the Windows exes when a tag is pushed.
 
 `docs` is this.
 
