@@ -620,9 +620,12 @@ def drop_dead(body):
     The compiler loaded a value into the accumulator and then pushed the same
     value, or loaded one and immediately loaded another over it. The load is
     only worth keeping if something can see it, so the walk forward stops at
-    anything that reads r0, at anything that leaves straight-line code, and at
-    a call, because a call can go back to a landing and what is read there is
-    not known from here.
+    anything that reads r0 and at anything that leaves straight-line code.
+
+    A call in between is not a reason to keep it. A call can go back to a
+    landing, but a landing is a setjmp and the first thing it does on the way
+    back is put setjmp's answer in r0, so what the load left there cannot be
+    read on that path either.
     """
     dead = set()
     for i, line in enumerate(body):
@@ -634,8 +637,7 @@ def drop_dead(body):
             t = l.strip()
             if (t.startswith('goto ') or t.startswith('if (')
                     or t.endswith('{') or t.endswith('}') or t.endswith(':;')
-                    or t.startswith('LANDING') or t.startswith('ENTER')
-                    or 'CALL' in l):
+                    or t.startswith('LANDING') or t.startswith('ENTER')):
                 break
             w = re.match(r'^\s*r0 = ', l)
             if 'r0' in (l[l.index('=') + 1:] if w else l):
