@@ -166,6 +166,24 @@ enum {
 /* How a decompiled rule writes a call. The arguments are already on that
    stack, which is why they are not named here: what a call says is which
    entry it is and how many of them it takes. */
+/* Part of a register. The machine had a sixteen-bit half and two eight-bit
+   quarters of each of its registers, and a rule reads and writes them as
+   freely as the whole. Spelling the masks out at every one of them buried the
+   line the mask was on; these say which part, and the shifts stay here where
+   they can be read once. Written this way rather than by pointing at the
+   bytes, so that the port does not quietly depend on which end they are
+   stored from. */
+#define LOW(r)      ((int32_t)((uint32_t)(r) & 0xffffu))
+#define BYTE0(r)    ((int32_t)((uint32_t)(r) & 0xffu))
+#define BYTE1(r)    ((int32_t)(((uint32_t)(r) >> 8) & 0xffu))
+
+#define SETLOW(r, x)   ((r) = (int32_t)(((uint32_t)(r) & 0xffff0000u) \
+                                        | ((uint32_t)(x) & 0xffffu)))
+#define SETBYTE0(r, x) ((r) = (int32_t)(((uint32_t)(r) & 0xffffff00u) \
+                                        | ((uint32_t)(x) & 0xffu)))
+#define SETBYTE1(r, x) ((r) = (int32_t)(((uint32_t)(r) & 0xffff00ffu) \
+                                        | (((uint32_t)(x) & 0xffu) << 8)))
+
 /* A global variable of the language, reached through the state pointer a
    rule is holding. delta_new lays the variables out in the tail of the state
    in declaration order and numbers each kind as it goes, and these are those

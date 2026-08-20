@@ -99,21 +99,18 @@ class Rule:
     def reg_read(self, code):
         n = code & 7
         return {0: 'r%d' % n,
-                1: '(int32_t)((uint32_t)r%d & 0xffffu)' % n,
-                2: '(int32_t)((uint32_t)r%d & 0xffu)' % n,
-                3: '(int32_t)(((uint32_t)r%d >> 8) & 0xffu)' % n,
+                1: 'LOW(r%d)' % n,
+                2: 'BYTE0(r%d)' % n,
+                3: 'BYTE1(r%d)' % n,
                 }.get(code >> 4, 'r%d' % n)
 
     def reg_write(self, code, what):
         n = code & 7
         return {
             0: 'r%d = (%s);' % (n, what),
-            1: ('r%d = (int32_t)(((uint32_t)r%d & 0xffff0000u)'
-                ' | ((uint32_t)(%s) & 0xffffu));' % (n, n, what)),
-            2: ('r%d = (int32_t)(((uint32_t)r%d & 0xffffff00u)'
-                ' | ((uint32_t)(%s) & 0xffu));' % (n, n, what)),
-            3: ('r%d = (int32_t)(((uint32_t)r%d & 0xffff00ffu)'
-                ' | (((uint32_t)(%s) & 0xffu) << 8));' % (n, n, what)),
+            1: 'SETLOW(r%d, %s);' % (n, what),
+            2: 'SETBYTE0(r%d, %s);' % (n, what),
+            3: 'SETBYTE1(r%d, %s);' % (n, what),
         }.get(code >> 4, 'r%d = (%s);' % (n, what))
 
     def value(self, kind, val, width=4, signed=True, where=None):
@@ -396,7 +393,9 @@ def write(names):
             join_pops(drop_dead(join_calls(c, structure(fold(body))))))
         USED.update(saw)
         text.append('\n'.join(named))
-        text.append('\n    evv_frame_pop(frame);\n    return r0;\n}\n\n')
+        tail = ('' if named and named[-1].strip().endswith('return out; }')
+                else '\n    evv_frame_pop(frame);\n    return r0;')
+        text.append('%s\n}\n\n' % tail)
         done.append(name)
 
     if USED:
