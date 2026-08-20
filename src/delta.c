@@ -2366,17 +2366,29 @@ int setd_lookup(delta_state *d, int32_t arg, int16_t set)
 
    The original parks the address of its own field argument in the stack
    block, which is the caller's frame and so stays valid for as long as the
-   caller needs it. A local copy is the closest C gets; it holds the same
-   byte and dies at the same point in the call, but not afterwards. */
+   caller needs it. A copy is the closest C gets: it holds the same byte and
+   dies at the same point in the call, but not afterwards.
+
+   The copy is in the frame stack rather than a local, because the machine is
+   handed its address as a value. A local would be on the C stack, and a C
+   stack is somewhere a 32-bit value can name only if the host put it there --
+   true of the process's first thread, and not true of a thread the system
+   placed where it liked, which is every thread on Windows and now every thread
+   here. The frame stack is in the arena and nests with the call, so it holds
+   the byte for exactly as long as the argument would have. */
 int vmark(delta_state *d, uint8_t st, uint8_t fld, int32_t t, int32_t stop,
           const void *value)
 {
     delta_stack *s = EVV_AT(delta_stack *, d->stack);
     int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     const delta_stmt *e = &vstmtbl[st];
+    uint8_t *kept = evv_frame_push(sizeof fld);
+
+    if (kept != 0)
+        *kept = fld;
 
     s->mark_kind = -1;
-    s->mark_fld = EVV_REF(&fld);
+    s->mark_fld = EVV_REF(kept != 0 ? kept : &fld);
     s->mark_flag = 0;
 
     while (t != s->spine_r && t != stop) {
@@ -2392,6 +2404,8 @@ int vmark(delta_state *d, uint8_t st, uint8_t fld, int32_t t, int32_t stop,
     }
 
     EVV_AT(delta_owner *, d->owner)->changed = 1;
+    if (kept != 0)
+        evv_frame_pop(kept);
     return 1;
 }
 

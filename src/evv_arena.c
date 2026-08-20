@@ -291,17 +291,6 @@ void *evv_arena_realloc(void *p, size_t n)
     return out;
 }
 
-/* ---- a thread's stack ------------------------------------------------- */
-
-void *evv_arena_stack(size_t n)
-{
-    unsigned char *p = evv_arena_alloc(n + 4096);
-
-    if (p == 0)
-        return 0;
-    return (void *)(((uintptr_t)p + 4095) & ~(uintptr_t)4095);
-}
-
 int32_t evv_ref_checked(const void *p)
 {
     uintptr_t v = (uintptr_t)p;

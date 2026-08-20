@@ -54,12 +54,6 @@ void  evv_arena_free(void *p);
 char *evv_arena_strdup(const char *s);
 #define strdup(s)       evv_arena_strdup(s)
 
-/* A block a thread can run its stack on. Page-aligned, because that is what
-   pthread_attr_setstack wants, and never freed: the alignment slack in front
-   of it is not a block boundary. */
-void *evv_arena_stack(size_t n);
-
-
 /* Turning a pointer into a value the machine can hold. Anything outside the
    arena cannot be named in 32 bits and is a fault in whoever allocated it,
    not something to truncate quietly. */
@@ -77,7 +71,6 @@ int32_t evv_ref_checked(const void *p);
 
 #define evv_arena_alloc(n)  malloc(n)
 #define evv_arena_free(p)   free(p)
-#define evv_arena_stack(n)  ((void *)0)
 
 #endif
 

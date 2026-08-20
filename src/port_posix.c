@@ -280,18 +280,14 @@ evv_task *evv_task_start(void (*entry)(void *), void *arg, int stack_bytes)
     pthread_attr_init(&attr);
     if (stack_bytes < PTHREAD_STACK_MIN)
         stack_bytes = PTHREAD_STACK_MIN;
-    {
-        /* A rule keeps its frame on the stack and hands the machine the
-           address of it, so where a build holds addresses in 32 bits the whole
-           stack has to sit somewhere those can reach. evv_arena_stack answers
-           nothing on a build that does not, and the system picks as usual. */
-        void *low = evv_arena_stack((size_t)stack_bytes);
-
-        if (low != 0)
-            pthread_attr_setstack(&attr, low, (size_t)stack_bytes);
-        else
-            pthread_attr_setstacksize(&attr, (size_t)stack_bytes);
-    }
+    /* The system puts the stack where it likes, which is usually far above
+       what a 32-bit value can name. That is allowed to be true: nothing the
+       machine holds a pointer to lives on a C stack any more -- a rule's frame
+       comes from evv_frame_push and the one field address the runtime parks
+       comes from there too. It is deliberately not placed low, because Windows
+       will not let a stack be placed at all, and a platform difference here is
+       a bug this suite could not see. */
+    pthread_attr_setstacksize(&attr, (size_t)stack_bytes);
     /* Nothing joins these, so let the system reclaim them. */
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
