@@ -467,6 +467,7 @@ BRANCH_RE = re.compile(r'^(\s*)if \(IF\((\w+)\)\) goto L(\d+);$')
 JUMP_RE = re.compile(r'goto L(\d+);')
 
 STRUCTURED = [0]
+LOOPED = [0]
 
 
 def structure(body):
@@ -482,9 +483,52 @@ def structure(body):
     while True:
         cut = _once(body)
         if cut is None:
-            return body
+            cut = _loop(body)
+            if cut is None:
+                return body
+            LOOPED[0] += 1
+        else:
+            STRUCTURED[0] += 1
         body = cut
-        STRUCTURED[0] += 1
+
+
+def _loop(body):
+    """A branch back to a label above it, written as the do-while it is.
+
+    The label is the top of the loop and the branch is its test. It only works
+    where nothing else jumps to that label -- another way in is another loop
+    -- and where what lies between is a whole region.
+    """
+    at = {}
+    for i, line in enumerate(body):
+        m = LABEL_RE.match(line)
+        if m:
+            at[int(m.group(1))] = i
+
+    goes = {}
+    for i, line in enumerate(body):
+        for m in JUMP_RE.finditer(line):
+            goes.setdefault(int(m.group(1)), []).append(i)
+
+    for i, line in enumerate(body):
+        m = BRANCH_RE.match(line)
+        if not m:
+            continue
+        pad, cond, tgt = m.group(1), m.group(2), int(m.group(3))
+        j = at.get(tgt)
+        if j is None or j >= i:
+            continue
+        if goes.get(tgt, ()) != [i]:
+            continue
+        if not _whole(body[j + 1:i]):
+            continue
+        out = body[:j]
+        out.append('%sdo {' % pad)
+        out.extend('    ' + l if l.strip() else l for l in body[j + 1:i])
+        out.append('%s} while (IF(%s));' % (pad, cond))
+        out.extend(body[i + 1:])
+        return out
+    return None
 
 
 def _whole(region):
@@ -631,7 +675,8 @@ def main():
         names = smallest(int(sys.argv[1]) if len(sys.argv) > 1 else 100)
 
     done, refused = write(names)
-    print('branches turned into an if: %d' % STRUCTURED[0])
+    print('branches turned into an if: %d, loops closed: %d'
+          % (STRUCTURED[0], LOOPED[0]))
     print('landing places folded: %d, entries folded: %d'
           % (FOLDED[0], FOLDED[1]))
     print('%d of %d rules written to %s'
