@@ -253,7 +253,6 @@ def emit(rule):
                            rule.reg_write(rule.raw(rule.start + off + 1),
                                           'arg[argn]')))
         elif op == 'call':
-            which = rule.c.entries.index(shape[1])
             if shape[1] == 'setjmp3':
                 # The one call the interpreter makes for itself: a rule plants
                 # its landing place here rather than in the runtime, or a
@@ -263,8 +262,7 @@ def emit(rule):
                 body.append('      r0 = setjmp(*(jmp_buf *)(intptr_t)buf);')
                 body.append('      argn = depth; }')
             else:
-                body.append('    r0 = delta_rule_called(%d, (int32_t *)arg,'
-                            ' argn, %d);' % (which, vals[0]))
+                body.append('    r0 = CALL(%s, %d);' % (shape[1], vals[0]))
             pending = None
         elif op == 'addk':
             k = rule.c.imm[vals[0]]

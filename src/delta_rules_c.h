@@ -40,4 +40,10 @@ extern const delta_rule_c delta_rule_native[];
 int32_t delta_rule_called(int which, const int32_t *stack, int argn,
                           int want);
 
+/* How a decompiled rule writes one. The arguments are already on the rule's
+   own stack, which is why they are not named here: what a call says is which
+   entry it is and how many of them it takes. */
+#define CALL(entry, want) \
+    delta_rule_called(DELTA_ENTRY_##entry, (int32_t *)arg, argn, (want))
+
 #endif

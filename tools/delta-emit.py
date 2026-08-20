@@ -509,8 +509,17 @@ def write_c(e, where, out_c, out_h, out_syms, stores, names):
                 "extern const void *const  delta_rule_sym[];\n"
                 "extern const delta_rule   delta_rules[];\n"
                 "extern const int          delta_rule_count;\n"
-                "extern const int          delta_rule_setjmp;\n\n"
-                "/* The largest frame any rule asks for, base and arguments\n"
+                "extern const int          delta_rule_setjmp;\n\n")
+
+        f.write("/* Every entry a rule can call. A call in the decompiled C\n"
+                "   names the entry it was written against rather than the\n"
+                "   index this table happens to give it. */\n"
+                "enum {\n")
+        for i, nm in enumerate(e.entry.items):
+            f.write("    DELTA_ENTRY_%s = %d,\n" % (nm, i))
+        f.write("};\n\n")
+
+        f.write("/* The largest frame any rule asks for, base and arguments\n"
                 "   included, so one buffer serves them all. */\n"
                 "#define DELTA_RULE_FRAME_MAX %d\n\n"
                 "int32_t delta_run_rule(void *state, const delta_rule *r,\n"
