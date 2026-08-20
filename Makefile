@@ -130,9 +130,10 @@ missing: $(OBJECTS)
 	@python3 tools/missing.py $(BUILD)/syms.txt
 
 clean:
-	@rm -rf $(OBJDIR) $(OBJDIR32) $(BUILD)/evv $(BUILD)/probe \
+	@rm -rf $(OBJDIR) $(OBJDIR32) $(OBJDIRWIN) $(BUILD)/evv $(BUILD)/probe \
 	        $(BUILD)/evv32 $(BUILD)/probe32 \
-	        $(BUILD)/libevv.a $(BUILD)/libevv32.a $(BUILD)/syms.txt
+	        $(BUILD)/libevv.a $(BUILD)/libevv32.a $(BUILD)/libevv-win.a \
+	        $(BUILD)/evv.exe $(BUILD)/evvspeak.exe $(BUILD)/syms.txt
 
 # Where `make install' puts it. There is nothing else to install: one binary,
 # which reads no file of its own at run time and wants no library but the C
@@ -174,3 +175,77 @@ $(BUILD)/libevv32.a: $(OBJECTS32)
 	@rm -f $@
 	@ar rcs $@ $(OBJECTS32)
 	@echo "built $@ from $(words $(OBJECTS32)) objects"
+
+# The same engine for Windows, cross-compiled, as one file with no DLL beside
+# it. `make win' builds both fronts: evv.exe, the same console driver as on
+# this machine, and evvspeak.exe, the speak window, which is the one to hand
+# somebody who wants to hear it.
+#
+# The Win32 porting layer stands in for the POSIX one. src/port_win32.c was
+# written for the reference build and answers the same twelve calls, so nothing
+# else in the engine knows the difference.
+CCWIN      ?= x86_64-w64-mingw32-gcc
+WINDRES    ?= x86_64-w64-mingw32-windres
+OBJDIRWIN  := $(BUILD)/objwin
+
+# The Windows answer to -no-pie, and it is load-bearing three times over.
+# mingw puts a sixty-four bit image at 0x140000000, which is higher than a
+# Delta value can name; dynamicbase would move it anywhere; high-entropy
+# address space would move it anywhere above four gigabytes. The language's own
+# tables live in the image, so all three have to be settled or the engine looks
+# for its rules where they are not.
+WINBASE    := -Wl,--image-base,0x400000 \
+              -Wl,--disable-dynamicbase \
+              -Wl,--disable-high-entropy-va
+
+CFLAGSWIN  := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) -DEVV_ARENA=1 \
+              $(CFLAGS)
+# Static, so what ships is one file. MINGW64_LDFLAGS is where the cross gcc's
+# thread runtime is; the flake sets it, since nothing puts it on the link path
+# outside a real cross stdenv.
+LDFLAGSWIN := -static $(WINBASE) $(MINGW64_LDFLAGS)
+
+SOURCESWIN := $(filter-out $(SRC)/port_posix.c $(STUB),$(wildcard $(SRC)/*.c)) \
+              $(filter-out $(GENERATED),$(sort $(wildcard $(LANG)/*.c))) \
+              $(RULESRC)
+OBJECTSWIN := $(patsubst %.c,$(OBJDIRWIN)/%.o,$(notdir $(SOURCESWIN)))
+
+.PHONY: win win-probe
+win: $(BUILD)/evv.exe $(BUILD)/evvspeak.exe
+
+# The probe, for Windows, which is how a fault there gets localised: it says
+# what the engine answered at every step, so the last line it prints is where
+# to look.
+win-probe: $(BUILD)/probe.exe
+
+$(BUILD)/probe.exe: cli/probe.c $(BUILD)/libevv-win.a
+	@$(CCWIN) $(CFLAGSWIN) cli/probe.c $(BUILD)/libevv-win.a $(LDFLAGSWIN) -o $@
+	@echo "built $@"
+
+$(BUILD)/evv.exe: cli/evv.c $(BUILD)/libevv-win.a
+	@$(CCWIN) $(CFLAGSWIN) cli/evv.c $(BUILD)/libevv-win.a $(LDFLAGSWIN) -o $@
+	@echo "built $@"
+
+# -mwindows because a speak window with a console behind it looks like a
+# mistake. winmm is the sound: waveOut is all this needs and every Windows
+# since 1995 has it.
+$(BUILD)/evvspeak.exe: win/speak.c $(OBJDIRWIN)/speak.res $(BUILD)/libevv-win.a
+	@$(CCWIN) $(CFLAGSWIN) -mwindows win/speak.c $(OBJDIRWIN)/speak.res \
+	   $(BUILD)/libevv-win.a $(LDFLAGSWIN) -lwinmm -lcomdlg32 -o $@
+	@echo "built $@"
+
+$(OBJDIRWIN)/speak.res: win/speak.rc win/speak.h
+	@mkdir -p $(OBJDIRWIN)
+	@$(WINDRES) -I win win/speak.rc -O coff -o $@
+
+$(OBJDIRWIN)/%.o: %.c $(HEADERS)
+	@mkdir -p $(OBJDIRWIN)
+	@$(CCWIN) $(CFLAGSWIN) -c $< -o $@
+
+$(BUILD)/libevv-win.a: $(OBJECTSWIN)
+	@for o in $(OBJDIRWIN)/*.o; do \
+	   case " $(OBJECTSWIN) " in *" $$o "*) ;; *) rm -f "$$o" ;; esac; \
+	 done
+	@rm -f $@
+	@ar rcs $@ $(OBJECTSWIN)
+	@echo "built $@ from $(words $(OBJECTSWIN)) objects"

@@ -20,14 +20,35 @@
 
 #if defined(EVV_ARENA) && EVV_ARENA
 
+/* One lock over the whole arena. The engine allocates from three threads at
+   once, and the ordinary allocator this stands in for is thread-safe; a
+   first-fit walk that two threads are in at the same time is not.
+
+   Both locks are ones that can be initialised where they are declared. The
+   first allocation is what opens the arena, so a lock needing a call before
+   its first use would need that call from somewhere earlier than any of
+   this. */
+#if defined(_WIN32)
+
+#include <windows.h>
+
+static SRWLOCK arena_lock = SRWLOCK_INIT;
+
+static void arena_take(void) { AcquireSRWLockExclusive(&arena_lock); }
+static void arena_drop(void) { ReleaseSRWLockExclusive(&arena_lock); }
+
+#else
+
 #include <pthread.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
-/* One lock over the whole arena. The engine allocates from three threads at
-   once, and the ordinary allocator this stands in for is thread-safe; a
-   first-fit walk that two threads are in at the same time is not. */
 static pthread_mutex_t arena_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static void arena_take(void) { pthread_mutex_lock(&arena_lock); }
+static void arena_drop(void) { pthread_mutex_unlock(&arena_lock); }
+
+#endif
 
 unsigned char *evv_arena_base;
 size_t         evv_arena_size;
@@ -106,19 +127,35 @@ int evv_arena_open(size_t bytes)
 
     bytes = ROUND(bytes);
     for (i = 0; i < sizeof candidates / sizeof candidates[0]; i++) {
+#if defined(_WIN32)
+        /* Committed rather than only reserved, which charges the commit but
+           still costs no memory until a page is touched. */
+        void *at = VirtualAlloc((void *)candidates[i], bytes,
+                                MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+
+        if (at == 0)
+            continue;
+#else
         void *at = mmap((void *)candidates[i], bytes,
                         PROT_READ | PROT_WRITE,
                         MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
         if (at == MAP_FAILED)
             continue;
+#endif
         if ((uintptr_t)at + bytes < 0x80000000u) {
             evv_arena_base = at;
             evv_arena_size = bytes;
             break;
         }
-        /* The system put it out of reach of a 32-bit value; no use. */
+        /* The system put it out of reach of a 32-bit value; no use. Asking at
+           a fixed address, both of these answer there or nowhere, so this is
+           the belt to that braces. */
+#if defined(_WIN32)
+        VirtualFree(at, 0, MEM_RELEASE);
+#else
         munmap(at, bytes);
+#endif
     }
 
     if (evv_arena_base == 0)
@@ -137,7 +174,11 @@ int evv_arena_open(size_t bytes)
 void evv_arena_close(void)
 {
     if (evv_arena_base != 0)
+#if defined(_WIN32)
+        VirtualFree(evv_arena_base, 0, MEM_RELEASE);
+#else
         munmap(evv_arena_base, evv_arena_size);
+#endif
     evv_arena_base = 0;
     evv_arena_size = 0;
     first = 0;
@@ -235,17 +276,17 @@ void *evv_arena_alloc(size_t n)
 {
     void *p;
 
-    pthread_mutex_lock(&arena_lock);
+    arena_take();
     p = arena_alloc(n);
-    pthread_mutex_unlock(&arena_lock);
+    arena_drop();
     return p;
 }
 
 void evv_arena_free(void *p)
 {
-    pthread_mutex_lock(&arena_lock);
+    arena_take();
     arena_free(p);
-    pthread_mutex_unlock(&arena_lock);
+    arena_drop();
 }
 
 void *evv_arena_calloc(size_t n, size_t m)
@@ -274,12 +315,12 @@ void *evv_arena_realloc(void *p, size_t n)
         return 0;
     }
 
-    pthread_mutex_lock(&arena_lock);
+    arena_take();
     b = (head *)((unsigned char *)p - ALIGN);
     check(b);
     had = b->size - ALIGN;
     if (had >= ROUND(n)) {
-        pthread_mutex_unlock(&arena_lock);
+        arena_drop();
         return p;
     }
     out = arena_alloc(n);
@@ -287,7 +328,7 @@ void *evv_arena_realloc(void *p, size_t n)
         memcpy(out, p, had);
         arena_free(p);
     }
-    pthread_mutex_unlock(&arena_lock);
+    arena_drop();
     return out;
 }
 

@@ -8,12 +8,19 @@
  * one of theirs by it.
  *
  * A native build has no IBM objects in it, so none of that applies, and it
- * could not be made to apply anyway: ELF holds those names happily enough
- * in a symbol table, but the assembler will not accept a question mark or
- * an at sign in a call operand, so a mangled name can be defined and never
- * called. Natively, then, every function simply keeps its own name, ALIAS
- * emits nothing, and MANGLED asks for the name as written -- which is what
- * makes a missing one show up in the link as something readable.
+ * could not be made to apply anyway: a symbol table holds those names happily
+ * enough, but no assembler will accept a question mark or an at sign in a call
+ * operand, so a mangled name can be defined and never called. Natively, then,
+ * every function simply keeps its own name, ALIAS emits nothing, and MANGLED
+ * asks for the name as written -- which is what makes a missing one show up in
+ * the link as something readable.
+ *
+ * Which build is which is said outright, with EVV_IBM_NAMES, rather than read
+ * off the target. It used to be read off _WIN32, on the reasoning that only
+ * the differential build was ever built for Windows; that stopped being true
+ * the day the engine itself was built for Windows, and the first thing the
+ * native Windows build did was ask the assembler for `?eciIni@QBDB'.
+ * reference/Makefile is the only place that defines it.
  *
  * The two calling conventions stay as they are on both targets. They are
  * i386 conventions, not Windows ones, and gcc honours them either side; a
@@ -27,7 +34,7 @@
 #define THIS    __attribute__((thiscall))
 #define STDCALL __attribute__((stdcall))
 
-#if defined(_WIN32)
+#if defined(EVV_IBM_NAMES)
 
 #define MANGLED(name) __asm__("\"" name "\"")
 

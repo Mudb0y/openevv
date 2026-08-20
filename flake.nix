@@ -30,8 +30,9 @@
         enableParallelBuilding = true;
         makeFlags = [ "PREFIX=${placeholder "out"}" ];
 
-        # No meta.license. What this may be licensed as is not settled: the
-        # engine is ours and the language data under lang is IBM's.
+        # No meta.license, deliberately. Our own work is MIT, but the language
+        # data under lang is IBM's, so the thing this derivation builds is not
+        # MIT as a whole. NOTICE says which is which.
         meta = {
           description = "IBM Embedded ViaVoice rebuilt as portable C";
           mainProgram = "evv";
@@ -51,7 +52,17 @@
           # MSVC-mangled and x86-only.
           pkgs.pkgsCross.mingw32.buildPackages.gcc
           pkgs.pkgsCross.mingw32.buildPackages.binutils
-          pkgs.wine
+
+          # Builds the Windows release: the same engine with src/port_win32.c
+          # standing in for the POSIX layer, linked static so what ships is one
+          # file.
+          pkgs.pkgsCross.mingwW64.buildPackages.gcc
+          pkgs.pkgsCross.mingwW64.buildPackages.binutils
+
+          # Wow64, because there are now two kinds of PE to run: the 32-bit
+          # reference the tests compare against, and our own 64-bit build.
+          # The 32-bit-only wine answers "Bad EXE format" to the second.
+          pkgs.wineWow64Packages.stable
 
           # The thirty-two bit build, which is a check rather than a target:
           # a difference between the word sizes is a layout mistake, and this
@@ -72,6 +83,7 @@
           # rather than as a package because nixpkgs splicing would otherwise
           # substitute a native build of it.
           export MINGW_LDFLAGS="-L${pkgs.pkgsCross.mingw32.windows.mcfgthreads.outPath}/lib"
+          export MINGW64_LDFLAGS="-L${pkgs.pkgsCross.mingwW64.windows.mcfgthreads.outPath}/lib"
           export WINEPREFIX="$PWD/.wine"
           # Nothing under Wine plays audio here; keep it away from the sound
           # devices entirely.

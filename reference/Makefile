@@ -31,15 +31,15 @@ all: $(BUILD)/speak.exe
 $(BUILD)/ral_shim.obj: ../src/port_ral.c ../src/port_win32.c ../src/evv_port.h
 	@mkdir -p $(BUILD)
 	@printf '_uni_strlen ?UniStrlen@@YAIPBG@Z\n_uni_strstr ?UniStrstr@@YAPAGPBG0@Z\n' > $(BUILD)/uni.syms
-	@$(CC) -O2 -std=gnu99 -w -I../src -c ../src/port_ral.c -o $(BUILD)/ral_shim.tmp.o
-	@$(CC) -O2 -std=gnu99 -w -I../src -c ../src/port_win32.c -o $(BUILD)/port.tmp.o
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src -c ../src/port_ral.c -o $(BUILD)/ral_shim.tmp.o
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src -c ../src/port_win32.c -o $(BUILD)/port.tmp.o
 	@i686-w64-mingw32-ld -r $(BUILD)/ral_shim.tmp.o $(BUILD)/port.tmp.o \
 	  -o $(BUILD)/ral_both.tmp.o
 	@$(OBJCOPY) --redefine-syms=$(BUILD)/uni.syms $(BUILD)/ral_both.tmp.o $@
 
 $(BUILD)/ctors.obj: ../src/port_ctors.c
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w -I../src -c $< -o $@
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src -c $< -o $@
 
 $(BUILD)/eci.obj: $(ENUS)/eci.obj
 	@mkdir -p $(BUILD)
@@ -48,7 +48,7 @@ $(BUILD)/eci.obj: $(ENUS)/eci.obj
 
 $(BUILD)/speak.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(BUILD)/eci.obj
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w -I../src speak.c $(BUILD)/ral_shim.obj \
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src speak.c $(BUILD)/ral_shim.obj \
 	  $(BUILD)/ctors.obj $(BUILD)/eci.obj \
 	  $(filter-out $(ENUS)/eci.obj,$(wildcard $(ENUS)/*.obj)) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \

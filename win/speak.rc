@@ -1,0 +1,52 @@
+/* The window, as a dialog resource.
+ *
+ * A dialog rather than a window of our own because Windows then does the
+ * keyboard itself: tab between the controls, the mnemonics under Alt, the
+ * default button on Enter. All the controls are the ones Windows ships, so a
+ * screen reader knows them without being told anything, and each label sits
+ * immediately before the control it names, which is how a screen reader works
+ * out which is which.
+ */
+
+#include <windows.h>
+#include "speak.h"
+
+IDD_SPEAK DIALOGEX 0, 0, 316, 214
+STYLE DS_SETFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "openevv Speak Window"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Text to speak:", -1, 7, 7, 100, 8
+    EDITTEXT        IDC_TEXT, 7, 18, 302, 96,
+                    ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL |
+                    WS_TABSTOP
+
+    LTEXT           "&Voice:", -1, 7, 124, 30, 8
+    COMBOBOX        IDC_VOICE, 40, 122, 110, 80,
+                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT           "&Rate, words a minute:", -1, 7, 142, 90, 8
+    EDITTEXT        IDC_RATE, 100, 140, 40, 12, ES_NUMBER | WS_TABSTOP
+
+    LTEXT           "&Pitch, hertz:", -1, 160, 142, 50, 8
+    EDITTEXT        IDC_PITCH, 213, 140, 40, 12, ES_NUMBER | WS_TABSTOP
+
+    LTEXT           "Vo&lume:", -1, 7, 160, 40, 8
+    EDITTEXT        IDC_VOLUME, 100, 158, 40, 12, ES_NUMBER | WS_TABSTOP
+
+    DEFPUSHBUTTON   "&Speak", IDC_SPEAK, 7, 180, 60, 14
+    PUSHBUTTON      "S&top", IDC_STOP, 73, 180, 60, 14
+    PUSHBUTTON      "Save &WAV...", IDC_SAVE, 139, 180, 70, 14
+    PUSHBUTTON      "Close", IDCANCEL, 249, 180, 60, 14
+
+    LTEXT           "", IDC_STATUS, 7, 200, 302, 9
+END
+
+/* Escape stops the speech rather than closing the window, because that is what
+   Escape does in every talking program. It closes it when nothing is being
+   said. Control and Enter speaks, since Enter itself belongs to the text box. */
+IDA_SPEAK ACCELERATORS
+BEGIN
+    VK_RETURN, IDC_SPEAK, VIRTKEY, CONTROL
+    VK_ESCAPE, IDC_STOP,  VIRTKEY
+END

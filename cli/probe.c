@@ -16,6 +16,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 
 #include "evv_abi.h"
 
@@ -144,11 +147,15 @@ static void write_wav(const char *path, unsigned long rate)
 
 static void nap(long ms)
 {
+#if defined(_WIN32)
+    Sleep((unsigned long)(ms < 0 ? 0 : ms));
+#else
     struct timespec t;
 
     t.tv_sec = ms / 1000;
     t.tv_nsec = (ms % 1000) * 1000000L;
     nanosleep(&t, NULL);
+#endif
 }
 
 /* A case may hold bytes the command line cannot carry unchanged: Wine

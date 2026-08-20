@@ -34,6 +34,11 @@ pattern=${3:-}
 # can be set against the reference; EVV_NATIVE names the other one.
 OURS=${EVV_NATIVE:-$BUILD/probe}
 [ -x "$OURS" ] || { echo "compare: no native binary" >&2; exit 2; }
+# Ours may be the Windows build now, which runs the way the reference does.
+case $OURS in
+*.exe) OURS_RUN="wine $OURS" ;;
+*)     OURS_RUN="$OURS" ;;
+esac
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
@@ -48,7 +53,7 @@ one_run() {
     if [ "$who" = ref ]; then
         timeout "$LIMIT" wine ./speak.exe @case.txt "$out" $mode > "$out.txt" 2>/dev/null
     else
-        timeout "$LIMIT" "$OURS" @case.txt "$out" $mode > "$out.txt" 2>/dev/null
+        timeout "$LIMIT" $OURS_RUN @case.txt "$out" $mode > "$out.txt" 2>/dev/null
     fi
     [ -s "$out" ]
 }
