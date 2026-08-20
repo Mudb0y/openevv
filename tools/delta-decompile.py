@@ -392,7 +392,7 @@ def write(names):
                     % pbase)
         named, saw = name_globals(
             join_pops(drop_dead(join_calls(c, structure(fold(body))))))
-        named = name_params(named, pbase, params)
+        named = name_alternatives(name_params(named, pbase, params))
         USED.update(saw)
         text.append('\n'.join(named))
         tail = ('' if named and named[-1].strip().endswith('return out; }')
@@ -584,6 +584,54 @@ def layout():
             at += 4 + up(sizes[n[k]] if n[k] < len(sizes) else 0, 2)
         n[k] += 1
     return LAYOUT
+
+
+ALTED = [0]
+
+
+def name_alternatives(body):
+    """The arms of a backtracking dispatch, under the alternatives they are.
+
+    Every switch in a rule dispatches on what backtrack_function answered,
+    which is the machine asking which alternative to try next. So an arm is
+    not an arbitrary place to jump to: it is one of the rule's alternatives,
+    in the order the language wrote them, and the label says so.
+
+    Only where a label is the target of exactly one case in the whole rule.
+    A label two cases share, or one something else jumps to as well, is not
+    one alternative and keeps its number.
+    """
+    cases = {}
+    clash = set()
+    n = 0
+    for line in body:
+        if line.strip().startswith('switch ('):
+            n += 1
+            continue
+        m = re.match(r'\s*case (-?\d+): goto (L\d+);$', line)
+        if not m:
+            continue
+        tgt = m.group(2)
+        if tgt in cases:
+            clash.add(tgt)
+        cases[tgt] = 'alt%d_%s' % (n, m.group(1))
+    for t in clash:
+        del cases[t]
+    if not cases:
+        return body
+    taken = {}
+    for tgt, new in cases.items():
+        taken.setdefault(new, []).append(tgt)
+    for new, tgts in taken.items():
+        if len(tgts) > 1:
+            for t in tgts:
+                del cases[t]
+    if not cases:
+        return body
+    ALTED[0] += len(cases)
+    pat = re.compile(r'\b(%s)\b' % '|'.join(sorted(cases, key=len,
+                                                    reverse=True)))
+    return [pat.sub(lambda m: cases[m.group(1)], l) for l in body]
 
 
 PARAMED = [0]
@@ -980,6 +1028,7 @@ def main():
     print('calls joined to their arguments: %d' % JOINED[0])
     print('wrappers inlined to the primitive they stand for: %d' % WRAPPED[0])
     print('reaches through the state named as the variable they are: %d over %d variables' % (NAMED[0], len(USED)))
+    print('arms named as the alternative they are: %d' % ALTED[0])
     print('reaches into the frame named as the argument they are: %d'
           % PARAMED[0])
     print('pops joined: %d, loads into r0 that nothing reads: %d'
