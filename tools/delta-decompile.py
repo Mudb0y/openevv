@@ -371,6 +371,7 @@ def write(names):
         text.append('    unsigned char *frame = evv_frame_push('
                     'DELTA_RULE_FRAME_MAX);\n')
         text.append('    unsigned char *base = frame + %d;\n' % frame)
+        text.append('    unsigned char *param = base + %d;\n' % pbase)
         text.append('    int32_t arg[%d];\n' % MAXARG)
         # A landing from a backtrack comes back into the middle of the
         # function, and anything the compiler had chosen to keep in a machine
@@ -391,6 +392,7 @@ def write(names):
                     % pbase)
         named, saw = name_globals(
             join_pops(drop_dead(join_calls(c, structure(fold(body))))))
+        named = name_params(named, pbase, params)
         USED.update(saw)
         text.append('\n'.join(named))
         tail = ('' if named and named[-1].strip().endswith('return out; }')
@@ -582,6 +584,39 @@ def layout():
             at += 4 + up(sizes[n[k]] if n[k] < len(sizes) else 0, 2)
         n[k] += 1
     return LAYOUT
+
+
+PARAMED = [0]
+AT_RE = re.compile(r'AT\((u?int(?:8|16|32)_t), (-?\d+)\)')
+SLOT_RE = re.compile(r'SLOT\((-?\d+)\)')
+
+
+def name_params(body, pbase, params):
+    """The arguments a rule was called with, under their numbers.
+
+    The frame holds them at the bottom, one word each, in the order they were
+    handed over. Everything else in the frame is the rule's own working room
+    and keeps its offset, because nothing so far says what any of it is for.
+    """
+    if params <= 0:
+        return body
+    top = pbase + 4 * params
+
+    def at(m):
+        off = int(m.group(2))
+        if not (pbase <= off < top) or (off - pbase) % 4:
+            return m.group(0)
+        PARAMED[0] += 1
+        return 'PARAM(%s, %d)' % (m.group(1), (off - pbase) // 4)
+
+    def slot(m):
+        off = int(m.group(1))
+        if not (pbase <= off < top) or (off - pbase) % 4:
+            return m.group(0)
+        PARAMED[0] += 1
+        return 'PARAMAT(%d)' % ((off - pbase) // 4)
+
+    return [SLOT_RE.sub(slot, AT_RE.sub(at, l)) for l in body]
 
 
 POP_RE = re.compile(r'^(\s*)POP\((r\d)\);$')
@@ -945,6 +980,8 @@ def main():
     print('calls joined to their arguments: %d' % JOINED[0])
     print('wrappers inlined to the primitive they stand for: %d' % WRAPPED[0])
     print('reaches through the state named as the variable they are: %d over %d variables' % (NAMED[0], len(USED)))
+    print('reaches into the frame named as the argument they are: %d'
+          % PARAMED[0])
     print('pops joined: %d, loads into r0 that nothing reads: %d'
           % (POPPED[0], DROPPED[0]))
     print('branches turned into an if: %d, loops closed: %d'

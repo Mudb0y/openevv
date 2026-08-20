@@ -166,6 +166,13 @@ enum {
 /* How a decompiled rule writes a call. The arguments are already on that
    stack, which is why they are not named here: what a call says is which
    entry it is and how many of them it takes. */
+/* One of the arguments the rule was called with. They sit at the bottom of
+   the frame, one word each, in the order they were handed over, and a rule
+   reads them as often as anything else it has. Which offset that is depends
+   on the rule, so the rule works it out once and these count from there. */
+#define PARAM(t, k)  (*(t *)(param + 4 * (k)))
+#define PARAMAT(k)   ((int32_t)(intptr_t)(param + 4 * (k)))
+
 /* Part of a register. The machine had a sixteen-bit half and two eight-bit
    quarters of each of its registers, and a rule reads and writes them as
    freely as the whole. Spelling the masks out at every one of them buried the
