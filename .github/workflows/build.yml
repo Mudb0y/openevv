@@ -98,24 +98,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Under dist, and not under win or linux: those are directories in the
+      # tree, and downloading into one put the speak window's own sources in
+      # the zip.
       - uses: actions/download-artifact@v4
         with:
           name: openevv-windows-x86_64
-          path: win
+          path: dist/windows
 
       - uses: actions/download-artifact@v4
         with:
           name: evv-linux-x86_64
-          path: linux
+          path: dist/linux
 
       - name: Make the archives
         run: |
-          cp README.md LICENSE NOTICE win/
-          (cd win && zip -q -r ../openevv-${GITHUB_REF_NAME}-windows-x86_64.zip .)
-          chmod +x linux/evv
-          cp README.md LICENSE NOTICE linux/
-          tar -C linux -czf openevv-${GITHUB_REF_NAME}-linux-x86_64.tar.gz .
-          ls -l openevv-*
+          cp README.md LICENSE NOTICE dist/windows/
+          (cd dist/windows \
+             && zip -q -r ../../openevv-${GITHUB_REF_NAME}-windows-x86_64.zip .)
+          chmod +x dist/linux/evv
+          cp README.md LICENSE NOTICE dist/linux/
+          tar -C dist/linux -czf \
+              openevv-${GITHUB_REF_NAME}-linux-x86_64.tar.gz .
+          echo "what is going out:"
+          unzip -l openevv-${GITHUB_REF_NAME}-windows-x86_64.zip
+          tar -tzf openevv-${GITHUB_REF_NAME}-linux-x86_64.tar.gz
 
       - name: Release
         env:
