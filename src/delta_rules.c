@@ -778,6 +778,25 @@ int32_t delta_rule_called(int which, const int32_t *stack, int argn, int want)
     return call_entry(delta_rule_entry[which], a, want);
 }
 
+/* A primitive called with the arguments written out, rather than with
+   whatever is on the argument stack. An inlined wrapper needs this: the site's
+   own pushes must stay untouched, because nothing pops them and the call after
+   this one reads down through them. Arguments here are in the order the entry
+   takes them, not the order a machine would have pushed them. */
+int32_t delta_rule_direct(int which, const int32_t *a, int n)
+{
+    if (delta_rule_trace > 1) {
+        int j;
+
+        fprintf(stderr, "  %s(", delta_rule_entry_name[which]);
+        for (j = 0; j < n && j < MAXARG; j++)
+            fprintf(stderr, "%s%08x", j ? ", " : "", (unsigned)a[j]);
+        fprintf(stderr, ")\n");
+        fflush(stderr);
+    }
+    return call_entry(delta_rule_entry[which], a, n);
+}
+
 static void delta_rule_report(void)
 {
     if (delta_rule_trace > 0)

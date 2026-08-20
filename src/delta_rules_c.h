@@ -37,6 +37,7 @@ extern const delta_rule_c delta_rule_native[];
 /* The call a rule makes, whichever way it is being run. Both go through here
    so that what a run says it did is the same either way, which is what a rule
    written as C is held against. */
+int32_t delta_rule_direct(int which, const int32_t *a, int n);
 int32_t delta_rule_called(int which, const int32_t *stack, int argn,
                           int want);
 
@@ -160,6 +161,15 @@ enum {
 /* How a decompiled rule writes a call. The arguments are already on that
    stack, which is why they are not named here: what a call says is which
    entry it is and how many of them it takes. */
+/* An inlined wrapper: the primitive it stood for, with the numbers it had
+   baked in and the caller's values in the places it read them from. The site's
+   own pushes stay above it untouched, because a call does not pop them. */
+#define CALLW(entry, ...) \
+    delta_rule_direct(DELTA_ENTRY_##entry, \
+                      (const int32_t[]){__VA_ARGS__}, \
+                      (int)(sizeof (const int32_t[]){__VA_ARGS__} \
+                            / sizeof(int32_t)))
+
 #define CALL(entry, want) \
     delta_rule_called(DELTA_ENTRY_##entry, (int32_t *)arg, argn, (want))
 

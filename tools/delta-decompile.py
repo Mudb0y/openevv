@@ -392,7 +392,7 @@ def write(names):
         text.append('    for (i = 0; i < nargs && i < %d; i++)\n' % params)
         text.append('        memcpy(base + %d + 4 * i, &args[i], 4);\n\n'
                     % pbase)
-        text.append('\n'.join(join_calls(structure(fold(body)))))
+        text.append('\n'.join(join_calls(c, structure(fold(body)))))
         text.append('\n    evv_frame_pop(frame);\n    return r0;\n}\n\n')
         done.append(name)
 
@@ -531,13 +531,86 @@ def _loop(body):
     return None
 
 
+WRAPPED = [0]
+SIMPLE = {}
+
+
+def wrappers():
+    """The wrapper rules, each as the primitive it stands for.
+
+    Two rules in three are not rules. They live in glob.obj, they call one
+    runtime primitive with a few numbers baked in, and their name spells the
+    numbers -- ZZbspush_ca__1 is bspush_ca with sixty-two. A call to one says
+    nothing; the primitive with its numbers says what the rule does.
+
+    Only the plain ones are taken: one call, nothing but numbers, words and
+    the caller's own arguments pushed for it, and as many pushes as the call
+    wants. A wrapper that computes something, or calls twice, keeps its name.
+    """
+    if SIMPLE:
+        return SIMPLE
+    c, rules = all_rules()
+    for name, _obj, start, length in rules:
+        if not name.startswith('ZZ'):
+            continue
+        try:
+            insns = c.decode(start, length)
+        except Exception:
+            continue
+        pushes, calls, bad = [], [], False
+        for off in sorted(insns):
+            shape, vals, ops, _t, _sz = insns[off]
+            if shape[0] == 'push':
+                pushes.append(ops[0][:2])
+            elif shape[0] == 'call':
+                calls.append((shape[1], vals[0]))
+            elif shape[0] not in ('return', 'popn', 'popreg', 'load', 'store',
+                                  'cmp', 'setarg'):
+                bad = True
+        if bad or len(calls) != 1 or len(pushes) != calls[0][1]:
+            continue
+        if any(k not in ('imm', 'slot', 'sym') for k, _v in pushes):
+            continue
+        SIMPLE[name] = (calls[0][0], pushes)
+    return SIMPLE
+
+
+def inlined(c, who, args):
+    """One call site written as the primitive the wrapper stood for.
+
+    The site's arguments arrive in the order they were pushed, so the last of
+    them is the primitive's first. The wrapper's own pushes read the same way,
+    which is why both are turned round here and the result reads as a call.
+    """
+    table = wrappers()
+    if who not in table:
+        return None
+    prim, pushes = table[who]
+    slots = [v for k, v in pushes if k == 'slot']
+    if not slots or (max(slots) - 8) // 4 + 1 != len(args):
+        return None
+    out = []
+    for kind, val in pushes:
+        if kind == 'imm':
+            v = c.imm[val]
+            out.append('%d' % (v - 0x100000000 if v >= 0x80000000 else v))
+        elif kind == 'sym':
+            out.append('(int32_t)(intptr_t)delta_rule_sym[%d]' % val)
+        else:
+            out.append(args[len(args) - 1 - (val - 8) // 4])
+    out.reverse()
+    WRAPPED[0] += 1
+    return '%s, CALLW(%s, %s)' % (', '.join('ARG(%s)' % a for a in args),
+                                  prim, ', '.join(out))
+
+
 CALL_RE = re.compile(r'^(\s*)r0 = CALL\((\w+), (\d+)\);$')
 ARG_RE = re.compile(r'^\s*ARG\((.*)\);$')
 
 JOINED = [0]
 
 
-def join_calls(body):
+def join_calls(code, body):
     """A call and the pushes that feed it, on one line.
 
     Only where every one of them is on the lines immediately above, so that
@@ -558,9 +631,11 @@ def join_calls(body):
             if want and len(args) == want and len(out) >= want:
                 del out[len(out) - want:]
                 args.reverse()
-                out.append('%sr0 = (%s, CALL(%s, %d));'
-                           % (pad, ', '.join('ARG(%s)' % a for a in args),
-                              who, want))
+                said = inlined(code, who, args) if who.startswith('ZZ') else None
+                if said is None:
+                    said = '%s, CALL(%s, %d)' % (
+                        ', '.join('ARG(%s)' % a for a in args), who, want)
+                out.append('%sr0 = (%s);' % (pad, said))
                 JOINED[0] += 1
                 i += 1
                 continue
@@ -714,6 +789,7 @@ def main():
 
     done, refused = write(names)
     print('calls joined to their arguments: %d' % JOINED[0])
+    print('wrappers inlined to the primitive they stand for: %d' % WRAPPED[0])
     print('branches turned into an if: %d, loops closed: %d'
           % (STRUCTURED[0], LOOPED[0]))
     print('landing places folded: %d, entries folded: %d'
