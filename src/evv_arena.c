@@ -267,9 +267,157 @@ static head *next_block(head *b)
    inlining the frame above was walkable and with another's it was not, so the
    engine built by Ubuntu's gcc faulted inside the allocator on the first
    sentence while the same source built here was fine. */
+/* ---- the guard ---------------------------------------------------------
+ *
+ * Off unless asked for: build with -DEVV_ARENA_GUARD=1. What it is for is one
+ * kind of fault, which has now been found four times in this engine and will
+ * be found again: a structure that IBM's code allocated by a constant byte
+ * count, or that our port measures with sizeof, being written past its end
+ * because something else believes it is longer. Everything the engine
+ * allocates comes from here, so a write past one block lands on the next
+ * block's header, and the first anyone hears of it is the allocator walking a
+ * size that cannot be right -- twenty engine instances later, nowhere near
+ * whoever did it.
+ *
+ * So: remember what each block was asked for, fill the rest of its payload
+ * with a byte nobody would write, and check every used block on every call in
+ * or out. Then the report names the block, what it was asked for, the
+ * allocation that asked, how far past the end the write went, and what the
+ * bytes there are -- which is the part that says whether it was one store or a
+ * run, and how long a run.
+ *
+ * Three things about it are deliberate, and each was learned by getting it
+ * wrong.
+ *
+ * What was asked for is kept beside the arena and not in the header. Widening
+ * the header moves every payload and changes the alignment of everything, and
+ * then the program being debugged is not the program that faults.
+ *
+ * Every block gets slack even when the request is already a multiple of the
+ * alignment, or an aligned request has no poison window at all and its
+ * overrun goes straight onto the next header, which is the very thing this
+ * exists to avoid.
+ *
+ * Growing a block in place has to say so. evv_arena_realloc answers the same
+ * pointer whenever the payload it already has is big enough, and a payload is
+ * often bigger than what was asked for, so without a fresh note the caller
+ * writes legitimately into what the guard still believes is poison. That
+ * reads exactly like a bug and is not one.
+ */
+#if defined(EVV_ARENA_GUARD) && EVV_ARENA_GUARD
+
+#define GUARD_SLOTS  65536u
+#define GUARD_BYTE   0xa5
+#define GUARD_SLACK  64
+
+static struct {
+    const void *at;
+    uint32_t    asked;
+    uint32_t    whence;
+} guard[GUARD_SLOTS];
+
+static size_t guard_at(const void *p)
+{
+    size_t h = (size_t)(((uintptr_t)p >> 4) & (GUARD_SLOTS - 1));
+    size_t i;
+
+    for (i = 0; i < GUARD_SLOTS; i++) {
+        size_t k = (h + i) & (GUARD_SLOTS - 1);
+
+        if (guard[k].at == 0 || guard[k].at == p)
+            return k;
+    }
+    fprintf(stderr, "evv: the arena guard has run out of room\n");
+    abort();
+}
+
+static void guard_took(head *b, void *p, size_t n)
+{
+    unsigned char *from = (unsigned char *)p + n;
+    unsigned char *to = (unsigned char *)b + b->size;
+    size_t k = guard_at(p);
+
+    guard[k].at = p;
+    guard[k].asked = (uint32_t)n;
+    guard[k].whence = b->whence;
+    if (to > from)
+        memset(from, GUARD_BYTE, (size_t)(to - from));
+}
+
+/* A block given back stops being watched, and this is not a nicety. The arena
+   joins what is free and hands the same address out again for something else,
+   often something bigger; a note left behind says that block is 144 bytes when
+   it is now twenty thousand, and then every legitimate write into it is
+   reported as an overrun. That cost an hour of chasing the wrong memcpy. */
+static void guard_gave_back(void *p)
+{
+    size_t k = guard_at(p);
+
+    if (guard[k].at == p)
+        guard[k].at = 0;
+}
+
+static void guard_check(const char *doing)
+{
+    head *b;
+    int n = 0;
+
+    for (b = first; b != 0; b = next_block(b), n++) {
+        unsigned char *p = (unsigned char *)b + ALIGN;
+        unsigned char *to = (unsigned char *)b + b->size;
+        size_t k, i, asked;
+
+        if (!b->used)
+            continue;
+        k = guard_at(p);
+        if (guard[k].at != p)
+            continue;
+        asked = guard[k].asked;
+        for (i = asked; p + i < to; i++) {
+            if (p[i] == GUARD_BYTE)
+                continue;
+            fprintf(stderr, "evv: while %s, block %d at %p, asked for %u"
+                    " from %08x, was written at %u with %02x\n",
+                    doing, n, (void *)p, (unsigned)asked, guard[k].whence,
+                    (unsigned)i, p[i]);
+            fprintf(stderr, "evv: from the end of what it asked for:");
+            for (i = asked; p + i < to && i < asked + 64; i++)
+                fprintf(stderr, " %02x", p[i]);
+            fprintf(stderr, "\n");
+            /* Whether anything else believes it owns what was written. A
+               second block over the same address is the allocator handing out
+               what it had already given away, which is a different fault
+               entirely from somebody writing past their own end. */
+            {
+                head *w;
+                int m = 0;
+
+                for (w = first; w != 0; w = next_block(w), m++) {
+                    unsigned char *q = (unsigned char *)w + ALIGN;
+
+                    if (w == b || !w->used)
+                        continue;
+                    if (p + i >= q && p + i < (unsigned char *)w + w->size)
+                        fprintf(stderr, "evv: block %d at %p, %u bytes from"
+                                " %08x, covers that address as well\n",
+                                m, (void *)q, w->size, w->whence);
+                }
+            }
+            abort();
+        }
+    }
+}
+
+#else
+#define guard_took(b, p, n)  ((void)0)
+#define guard_gave_back(p)   ((void)0)
+#define guard_check(doing)   ((void)0)
+#define GUARD_SLACK          0
+#endif
+
 static void *arena_alloc(size_t n, uint32_t whence)
 {
-    size_t want = ROUND(n) + ALIGN;
+    size_t want = ROUND(n) + ALIGN + GUARD_SLACK;
     head *b;
 
     if (n == 0)
@@ -296,6 +444,7 @@ static void *arena_alloc(size_t n, uint32_t whence)
         }
         b->used = 1;
         b->whence = whence;
+        guard_took(b, (unsigned char *)b + ALIGN, n);
         return (unsigned char *)b + ALIGN;
     }
     return 0;
@@ -319,6 +468,7 @@ static void arena_free(void *p)
     b = (head *)((unsigned char *)p - ALIGN);
     check(b);
     b->used = 0;
+    guard_gave_back(p);
 
     /* Join what is free, from the front, so that the big pieces the heap
        gives back can be handed out again. */
@@ -352,6 +502,7 @@ void *evv_arena_alloc(size_t n)
     void *p;
 
     arena_take();
+    guard_check("taking a block");
     p = arena_alloc(n, whence);
     arena_drop();
     return p;
@@ -360,6 +511,7 @@ void *evv_arena_alloc(size_t n)
 void evv_arena_free(void *p)
 {
     arena_take();
+    guard_check("giving a block back");
     arena_free(p);
     arena_drop();
 }
@@ -391,6 +543,7 @@ void *evv_arena_realloc(void *p, size_t n)
     }
 
     arena_take();
+    guard_check("growing a block");
     if (!in_arena(p)) {
         fprintf(stderr, "evv: %p was handed to the arena to grow and did not"
                 " come from it\n", p);
@@ -400,6 +553,9 @@ void *evv_arena_realloc(void *p, size_t n)
     check(b);
     had = b->size - ALIGN;
     if (had >= ROUND(n)) {
+        /* The same block, and now used further into its payload than the
+           guard was told: say so, or a legitimate write reads as an overrun. */
+        guard_took(b, p, n);
         arena_drop();
         return p;
     }

@@ -69,8 +69,8 @@ which alternative they are whichever of the two ways the compiler wrote the
 dispatch, register halves say which half, a test of the flags is the comparison
 the machine made -- a call's answer against nought, a length against a limit, a
 bit against a mask -- rather than a flag set and a flag read, letting go of a
-call's arguments says that and not that a scratch register was written, a jump at
-the return is a return, 2,391 loops are loops, a jump out of one says it is
+call's arguments says that and not that a scratch register was written, a jump
+at the return is a return, 2,391 loops are loops, a jump out of one says it is
 leaving it, the two places a rule ends say whether it has matched or given up,
 and the machine's dead leavings are gone.
 
@@ -121,8 +121,15 @@ being a different depth than the compiled code expected; and addresses in the
 arena, which differ because a rule written as C takes a smaller frame on
 purpose.
 
-One thing that check turned up is a fault of ours, and is not fixed. Tracing at
-the level that prints every call costs twenty times what the synthesis does, and
+Making and throwing away engine instances leaks a few megabytes each. After
+about sixty the engine still runs and still answers, and says nothing: it has
+quietly run out of the arena. `make instances` is what shows it -- every round
+owes the same samples and after sixty-two they stop coming. What an instance
+owns and does not give back has not been chased down.
+
+One thing the trace check turned up is a fault of ours, and is not fixed.
+Tracing at the level that prints every call costs twenty times what the
+synthesis does, and
 feeding the synthesis that slowly faults part way through a run of several
 sentences, with less audio written than there should be. Any one sentence is
 fine. Nothing but a trace makes the engine that slow, so it is not in the way of

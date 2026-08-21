@@ -18,12 +18,16 @@
 #include "delta.h"
 #include "delta_rules_c.h"
 
-/* What the owner keeps about the command line. */
-#define OWNER_ARGC(d)   (*(int32_t *)(EVV_AT(uint8_t *, (d)->owner) + 0x1d4))
-#define OWNER_ARGV(d)   (*(char ***)(EVV_AT(uint8_t *, (d)->owner) + 0x1d8))
+/* What the owner keeps about the command line. Named fields and not the
+   offsets they sat at: the owner block is ours, laid out by the compiler, and
+   the two the original had here are 468 and 472 bytes in while the whole block
+   is 64. Writing there wrote over whatever the arena had handed out next,
+   which is how a run of engine instances corrupted the arena at about the
+   twentieth. See the note on delta_owner in delta.h. */
+#define OWNER_ARGC(d)   (EVV_AT(delta_owner *, (d)->owner)->argc)
+#define OWNER_ARGV(d)   (EVV_AT(delta_owner *, (d)->owner)->argv)
 
-/* Where the logical file table keeps the error callback. */
-#define LOGIO_ERRFN(d)  (*(void **)(EVV_AT(char *, (d)->logio) + 0xc0))
+extern int32_t logicalIOSetErrorCallback(delta_state *d, void *fn);
 
 /* One word the variable block clears before a run. */
 #define VARS_1128(d)    (*(int32_t *)((char *)(d)->vars + 0x1128))
@@ -75,15 +79,12 @@ int32_t etiwinMainDLL(delta_state *d, int32_t argc, char **argv)
 
 /* ---- dterror -------------------------------------------------------- */
 
-/* One callback and no replacing it: a second caller is refused rather than
-   taking the first one's place. */
+/* Asked of the file table rather than reached into: the field sat at 0xc0 in
+   the original and sits at 368 here, so writing at 0xc0 set nothing and trod
+   on a physical file instead. */
 int32_t dtSetErrorCallback(delta_state *d, void *fn)
 {
-    if (LOGIO_ERRFN(d) != 0)
-        return 0;
-
-    LOGIO_ERRFN(d) = fn;
-    return 1;
+    return logicalIOSetErrorCallback(d, fn);
 }
 
 /* ---- ctxt ----------------------------------------------------------- */

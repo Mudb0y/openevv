@@ -87,6 +87,20 @@ typedef struct {
 } LogIO;
 
 #define LOGIO(d)  EVV_AT(LogIO *, (d)->logio)
+
+/* One callback and no replacing it: a second caller is refused rather than
+   taking the first one's place. It is set from here rather than by whoever
+   asks, because the field is where this file's compiler put it and not where
+   the original had it. */
+int32_t logicalIOSetErrorCallback(delta_state *d, void *fn)
+{
+    LogIO *g = LOGIO(d);
+
+    if (g == 0 || g->error_cb != 0)
+        return 0;
+    g->error_cb = fn;
+    return 1;
+}
 #define LF(d, n)  (&LOGIO(d)->files[(int)(int8_t)(n)])
 
 /* ---- the physical file classes ---------------------------------------- */

@@ -32,7 +32,7 @@
 #define VARS_1000(v)  (*(uint8_t *)((char *)(v) + 0x1000))
 
 /* What the owner keeps that says the spine moved. */
-#define OWNER_MOVED(d) (*(int32_t *)(EVV_AT(uint8_t *, (d)->owner) + 0x1b8))
+#define OWNER_MOVED(d) (EVV_AT(delta_owner *, (d)->owner)->changed)
 
 /* What the last C helper answered with, when it means the machine cannot be
    trusted to still hold a spine: never ran, or ran and failed. */

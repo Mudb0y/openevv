@@ -27,7 +27,7 @@
 #define STACK_604(s)    (*(int32_t *)((char *)(s) + 0x604))
 
 /* What the owner keeps that says the spine moved. */
-#define OWNER_MOVED(d) (*(int32_t *)(EVV_AT(uint8_t *, (d)->owner) + 0x1b8))
+#define OWNER_MOVED(d) (EVV_AT(delta_owner *, (d)->owner)->changed)
 
 /* One node's field, by statement type. */
 #define FIELD(n, f)  (((int32_t *)(intptr_t)(n))[(f)])
