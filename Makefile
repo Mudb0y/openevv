@@ -138,7 +138,8 @@ clean:
 	        $(BUILD)/evv32 $(BUILD)/probe32 \
 	        $(BUILD)/libevv.a $(BUILD)/libevv32.a $(BUILD)/libevv-win.a \
 	        $(BUILD)/evv.exe $(BUILD)/evvspeak.exe $(BUILD)/eci.dll \
-	        $(BUILD)/eci.ini $(BUILD)/dlltest.exe $(BUILD)/syms.txt
+	        $(BUILD)/eci.ini $(BUILD)/dlltest.exe $(BUILD)/syms.txt \
+	        $(BUILD)/openevv-*.nvda-addon
 
 # Where `make install' puts it. There is nothing else to install: one binary,
 # which reads no file of its own at run time and wants no library but the C
@@ -315,3 +316,18 @@ $(BUILD)/libevv-win32.a: $(OBJECTSWIN32)
 	@rm -f $@
 	@$(ARWIN32) rcs $@ $(OBJECTSWIN32)
 	@echo "built $@ from $(words $(OBJECTSWIN32)) objects"
+
+# The NVDA add-on: the engine as a synthesiser for the screen reader, loaded
+# into its own process. Both libraries go in, because a reader is one bitness
+# or the other and the one that loads in process has to match, so `make nvda'
+# wants both builds. nvda/build.py does the packing and refuses to pack a
+# library that does not export something the driver calls.
+.PHONY: nvda nvda-test
+nvda: win win32
+	@python3 nvda/build.py
+
+# The part of the driver that can be checked anywhere: a speech sequence in and
+# the calls it becomes out, with NVDA stood in for. Wants neither Windows, nor
+# the libraries, nor sound.
+nvda-test:
+	@python3 nvda/test/sequence.py

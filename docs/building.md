@@ -187,6 +187,56 @@ not implement, and `eciGeneratePhonemes` and the dictionary find, lookup and
 update calls, which exist inside the engine with no public wrapper yet. A
 caller asking for one of those gets nothing rather than something wrong.
 
+### The NVDA add-on
+
+    make nvda
+
+That builds both libraries and packs `build/openevv-<version>.nvda-addon`,
+which is the engine as a synthesiser for NVDA. `nvda` is the whole of it:
+`addon/synthDrivers/openevv.py` is what the reader talks to, and
+`_openevv.py` beside it is the library, the thread that owns it and the audio.
+
+It loads the engine into the reader's own process, which is why both libraries
+are in the archive and the driver picks one by the bitness of the Python it
+finds itself in. The other kind of add-on -- davidacm's IBMTTS driver -- hosts
+the engine in a thirty-two bit `rundll32` of its own and talks to it over a
+pipe, so it always wants `eci32.dll`; this one wants whichever matches.
+
+Three things in it are decisions rather than detail. Every call into the
+library happens on one thread, including stopping, because the calls that
+queue work are not written to be entered twice at once. Prosody inside a
+sentence is said as a `` `vb ``, `` `vs `` or `` `vv `` annotation in the text
+rather than by setting a parameter, because a parameter applies to everything
+queued behind it and an annotation applies where it sits. And samples are held
+back until an index mark arrives and then handed over with the mark attached,
+which puts a mark on the sample it belongs to instead of a buffer later; the
+engine flushes a short buffer of its own just before reporting a mark, which is
+what makes that line up exactly.
+
+    make nvda-test
+
+That is the check that needs nothing: a speech sequence in, the calls it
+becomes out, with NVDA's own modules stood in for. It will not tell you how it
+sounds, but it catches a misspelled annotation, an index left inside a stretch
+of text, and a rate that maps to the wrong number. `nvda/build.py` adds one
+more before it packs anything: every entry point the driver names is looked up
+in both libraries' export tables, and a name that is not there stops the build.
+That matters because ctypes resolves a name when it is used rather than when
+the library is loaded, so the failure it prevents is speech quietly not
+happening inside a screen reader.
+
+Installing it is the ordinary way -- NVDA's add-on store, "Install from
+external source" -- and it appears as "Eloquence (openevv)" in the synthesiser
+list.
+
+One known limit, and it is the engine's rather than the add-on's. Making and
+throwing away engine instances corrupts the arena at around the twentieth, so
+the add-on makes one instance and keeps it for as long as the driver lives.
+`dlang_new` in `src/klatt_run.c` allocates blocks that are then written past
+their ends, which is the same family as the three fixed here; the reproducer is
+a program that calls `eciNewEx` and `eciDelete` in a loop about twenty-five
+times.
+
 ## Getting IBM's objects
 
 None of this is needed to build. It is needed for two things: the comparison
