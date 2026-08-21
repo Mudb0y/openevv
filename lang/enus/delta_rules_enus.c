@@ -111093,6 +111093,8 @@ const void *const delta_rule_sym[] = {
     evv_glob_data_3 + 1340,
 };
 
+const int delta_rule_sym_count = 6718;
+
 const delta_rule delta_rules[] = {
     { "register_eng_phones", "e_intfac.obj", 0, 14566, 268, 8, 3 },
     { "set_eng_global_constants", "e_vars.obj", 14566, 212, 196, 8, 1 },

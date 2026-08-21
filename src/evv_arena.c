@@ -420,11 +420,10 @@ int32_t evv_ref_checked(const void *p)
         return 0;
     if (v >= 0x80000000u) {
         /* Truncating this would hand the machine an address that is not the
-           one asked for. Everything the machine can hold a pointer to is meant
-           to be low: the heap and the thread stacks come from the arena, and
-           the language's own tables are in the program, which is linked below
-           two gigabytes for exactly this reason. Something that got here came
-           from neither. */
+           one asked for. Everything the machine can hold a pointer to comes
+           out of the arena: the heap, and the language's own data, which
+           src/delta_low.c copies out of the program at startup. Something that
+           got here came from neither. */
         fprintf(stderr, "evv: %p is too high to be a value\n", p);
         abort();
     }

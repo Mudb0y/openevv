@@ -55,9 +55,11 @@ void  evv_arena_free(void *p);
 char *evv_arena_strdup(const char *s);
 #define strdup(s)       evv_arena_strdup(s)
 
-/* Turning a pointer into a value the machine can hold. Anything outside the
-   arena cannot be named in 32 bits and is a fault in whoever allocated it,
-   not something to truncate quietly. */
+/* Turning a pointer into a value the machine can hold. Everything the machine
+   can hold a pointer to comes out of the arena: the heap, the frames, and the
+   language's own data, which src/delta_low.c copies out of the program at
+   startup for exactly this reason. Anything else cannot be named in 32 bits
+   and is a fault in whoever allocated it, not something to truncate. */
 int32_t evv_ref_checked(const void *p);
 
 #define EVV_REF(p)      evv_ref_checked(p)

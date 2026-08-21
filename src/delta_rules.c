@@ -342,7 +342,7 @@ static int32_t operand_read(interp *st, const uint8_t **pp, int w, int sext)
         *pp = p + 3;
         return v;
     case K_SYM:
-        v = EVV_REF(delta_rule_sym[get16(p + 1)]);
+        v = delta_sym_ref[get16(p + 1)];
         *pp = p + 3;
         return v;
     case K_SLOTADDR:

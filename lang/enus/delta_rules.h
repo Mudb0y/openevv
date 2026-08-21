@@ -7,6 +7,14 @@
 
 typedef void (*delta_rule_fn)(void);
 
+/* One store of bytes the rules name by address. */
+typedef struct {
+    uint8_t *at;
+    uint32_t bytes;
+} delta_store;
+
+extern const delta_store  delta_const_store[];
+
 typedef struct {
     const char *name;
     const char *object;   /* which one it was compiled in */
@@ -23,6 +31,7 @@ extern const uint8_t      delta_rule_map[];
 extern const delta_rule_fn delta_rule_entry[];
 extern const char *const delta_rule_entry_name[];
 extern const void *const  delta_rule_sym[];
+extern const int          delta_rule_sym_count;
 extern const delta_rule   delta_rules[];
 extern const int          delta_rule_count;
 extern const int          delta_rule_setjmp;

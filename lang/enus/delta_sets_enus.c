@@ -17,6 +17,7 @@
 #include <string.h>
 
 #include "delta.h"
+#include "delta_rules_c.h"
 
 /* What each set is: how many entries, how wide, and
    where in its blob to start. */
@@ -18961,7 +18962,8 @@ static const char dictfile[] = "ecienus.ddl";
    over as they are. */
 void set_dict_new(delta_state *d)
 {
-    d->set_store = EVV_REF(setent_all);
+    delta_low_region(setent_store, sizeof setent_store);
+    d->set_store = EVV_REF(delta_low_copy(setent_all, sizeof setent_all));
 }
 
 void set_dict_delete(delta_state *d)
@@ -18972,7 +18974,8 @@ void set_dict_delete(delta_state *d)
 
 void act_dict_new(delta_state *d)
 {
-    d->act_store = EVV_REF(actent_all);
+    delta_low_region(actent_store, sizeof actent_store);
+    d->act_store = EVV_REF(delta_low_copy(actent_all, sizeof actent_all));
 }
 
 void act_dict_delete(delta_state *d)
@@ -18998,10 +19001,10 @@ void link_new(delta_state *d)
     d->nstmts = 10;
     d->lang_a = 1;
     d->lang_b = 2;
-    d->lfnames = EVV_REF(lfnames);
+    d->lfnames = EVV_REF(delta_low_copy(lfnames, sizeof lfnames));
     d->nlfnames = 13;
     d->nsets = 511;
-    d->dictfile = EVV_REF(dictfile);
+    d->dictfile = EVV_REF(delta_low_copy(dictfile, sizeof dictfile));
     d->nactions = 28;
 
     d->sets = EVV_REF(malloc(20664));

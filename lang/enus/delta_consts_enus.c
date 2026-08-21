@@ -13,6 +13,8 @@
 
 #include <stdint.h>
 
+#include "delta_rules.h"
+
 uint8_t evv_ea_ga_data_3[233] = {
     44,25,36,0,32,25,7,44,4,0,0,0,44,22,14,4,
     48,4,36,20,36,1,28,25,1,46,8,28,14,28,14,36,
@@ -3263,4 +3265,91 @@ uint8_t evv_ut_struc_data_3[15] = {
 
 uint8_t evv_ut_util_data_3[2] = {
     76,80,
+};
+
+/* Where each store is and how big, so that startup can
+   copy them somewhere a value can name. src/delta_syms.c is
+   the only reader: the machine holds addresses of these, and
+   an address in the program is not one a value can hold
+   unless the program was linked low, which a shared library
+   cannot be. sizeof rather than a number, so that a record
+   appended by tools/delta-dict.py is counted without this
+   table being touched. */
+const delta_store delta_const_store[] = {
+    { evv_ea_ga_data_3, sizeof evv_ea_ga_data_3 },
+    { evv_ea_gcat_data_3, sizeof evv_ea_gcat_data_3 },
+    { evv_ea_homog_data_3, sizeof evv_ea_homog_data_3 },
+    { evv_ea_morph_data_3, sizeof evv_ea_morph_data_3 },
+    { evv_ea_pname_data_3, sizeof evv_ea_pname_data_3 },
+    { evv_ea_roots_data_3, sizeof evv_ea_roots_data_3 },
+    { evv_ea_text_data_3, sizeof evv_ea_text_data_3 },
+    { evv_ea_words_data_3, sizeof evv_ea_words_data_3 },
+    { evv_es_cdur_data_3, sizeof evv_es_cdur_data_3 },
+    { evv_es_inton_bss_3, sizeof evv_es_inton_bss_3 },
+    { evv_es_inton_data_4, sizeof evv_es_inton_data_4 },
+    { evv_et_cmpnd_data_3, sizeof evv_et_cmpnd_data_3 },
+    { evv_et_gcat_data_3, sizeof evv_et_gcat_data_3 },
+    { evv_et_inton_data_3, sizeof evv_et_inton_data_3 },
+    { evv_et_norm_data_3, sizeof evv_et_norm_data_3 },
+    { evv_et_numbr_data_3, sizeof evv_et_numbr_data_3 },
+    { evv_et_phnol_data_3, sizeof evv_et_phnol_data_3 },
+    { evv_et_phone_data_3, sizeof evv_et_phone_data_3 },
+    { evv_et_phrs_data_3, sizeof evv_et_phrs_data_3 },
+    { evv_et_prfx_data_3, sizeof evv_et_prfx_data_3 },
+    { evv_et_sffx_data_3, sizeof evv_et_sffx_data_3 },
+    { evv_et_spr1_bss_13, sizeof evv_et_spr1_bss_13 },
+    { evv_et_spr1_data_10, sizeof evv_et_spr1_data_10 },
+    { evv_et_spr1_data_11, sizeof evv_et_spr1_data_11 },
+    { evv_et_spr1_data_12, sizeof evv_et_spr1_data_12 },
+    { evv_et_spr1_data_14, sizeof evv_et_spr1_data_14 },
+    { evv_et_spr1_data_15, sizeof evv_et_spr1_data_15 },
+    { evv_et_spr1_data_3, sizeof evv_et_spr1_data_3 },
+    { evv_et_spr1_data_7, sizeof evv_et_spr1_data_7 },
+    { evv_et_spr1_data_8, sizeof evv_et_spr1_data_8 },
+    { evv_et_spr1_data_9, sizeof evv_et_spr1_data_9 },
+    { evv_et_strss_data_3, sizeof evv_et_strss_data_3 },
+    { evv_et_syll_data_3, sizeof evv_et_syll_data_3 },
+    { evv_glob_bss_4, sizeof evv_glob_bss_4 },
+    { evv_glob_data_3, sizeof evv_glob_data_3 },
+    { evv_u_intfac_data_3, sizeof evv_u_intfac_data_3 },
+    { evv_u_vars_data_3, sizeof evv_u_vars_data_3 },
+    { evv_ut_anno_data_3, sizeof evv_ut_anno_data_3 },
+    { evv_ut_gcat_bss_5, sizeof evv_ut_gcat_bss_5 },
+    { evv_ut_gcat_data_10, sizeof evv_ut_gcat_data_10 },
+    { evv_ut_gcat_data_4, sizeof evv_ut_gcat_data_4 },
+    { evv_ut_inton_data_3, sizeof evv_ut_inton_data_3 },
+    { evv_ut_norm_data_3, sizeof evv_ut_norm_data_3 },
+    { evv_ut_spr_bss_6, sizeof evv_ut_spr_bss_6 },
+    { evv_ut_spr_data_10, sizeof evv_ut_spr_data_10 },
+    { evv_ut_spr_data_11, sizeof evv_ut_spr_data_11 },
+    { evv_ut_spr_data_12, sizeof evv_ut_spr_data_12 },
+    { evv_ut_spr_data_13, sizeof evv_ut_spr_data_13 },
+    { evv_ut_spr_data_19, sizeof evv_ut_spr_data_19 },
+    { evv_ut_spr_data_20, sizeof evv_ut_spr_data_20 },
+    { evv_ut_spr_data_21, sizeof evv_ut_spr_data_21 },
+    { evv_ut_spr_data_23, sizeof evv_ut_spr_data_23 },
+    { evv_ut_spr_data_25, sizeof evv_ut_spr_data_25 },
+    { evv_ut_spr_data_26, sizeof evv_ut_spr_data_26 },
+    { evv_ut_spr_data_28, sizeof evv_ut_spr_data_28 },
+    { evv_ut_spr_data_30, sizeof evv_ut_spr_data_30 },
+    { evv_ut_spr_data_35, sizeof evv_ut_spr_data_35 },
+    { evv_ut_spr_data_38, sizeof evv_ut_spr_data_38 },
+    { evv_ut_spr_data_39, sizeof evv_ut_spr_data_39 },
+    { evv_ut_spr_data_42, sizeof evv_ut_spr_data_42 },
+    { evv_ut_spr_data_43, sizeof evv_ut_spr_data_43 },
+    { evv_ut_spr_data_44, sizeof evv_ut_spr_data_44 },
+    { evv_ut_spr_data_45, sizeof evv_ut_spr_data_45 },
+    { evv_ut_spr_data_46, sizeof evv_ut_spr_data_46 },
+    { evv_ut_spr_data_47, sizeof evv_ut_spr_data_47 },
+    { evv_ut_spr_data_5, sizeof evv_ut_spr_data_5 },
+    { evv_ut_spr_data_50, sizeof evv_ut_spr_data_50 },
+    { evv_ut_spr_data_51, sizeof evv_ut_spr_data_51 },
+    { evv_ut_spr_data_52, sizeof evv_ut_spr_data_52 },
+    { evv_ut_spr_data_53, sizeof evv_ut_spr_data_53 },
+    { evv_ut_spr_data_55, sizeof evv_ut_spr_data_55 },
+    { evv_ut_spr_data_56, sizeof evv_ut_spr_data_56 },
+    { evv_ut_spr_data_9, sizeof evv_ut_spr_data_9 },
+    { evv_ut_struc_data_3, sizeof evv_ut_struc_data_3 },
+    { evv_ut_util_data_3, sizeof evv_ut_util_data_3 },
+    { 0, 0 },
 };

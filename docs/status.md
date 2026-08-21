@@ -78,10 +78,12 @@ The reference binary hangs now and again on an index mark. `test/compare.sh`
 retries a case once on its own before reporting it as hung, because calling that
 a difference cost false alarms.
 
-The sixty-four bit build maps a region low in memory and is built `-no-pie`.
-Both are required by the Delta machine keeping addresses in thirty-two bit
-values, not preferences, and a port to a machine that can do neither would need
-a different answer.
+The sixty-four bit build maps a region low in memory, because the Delta machine
+keeps addresses in thirty-two bit values and everything it can point at has to
+be nameable in one. The program itself may be loaded anywhere: the language's
+data is copied into that region at startup rather than named where it lies. A
+machine that cannot map anything below two gigabytes would need a different
+answer, and would say so rather than misbehave.
 
 If the audio sounds wrong to you, it is not a fault in the port: our output is
 identical to IBM's. Changing it is a deliberate change to the language data, and

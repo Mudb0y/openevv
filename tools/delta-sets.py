@@ -22,11 +22,13 @@ TAIL = r"""
 
    The two tables are copied rather than handed over, because the machine
    writes to them, and it is given room for more than the language declares,
-   which is what the original allocates. The stores themselves are handed
-   over as they are. */
+   which is what the original allocates. The stores are copied where a value
+   can name them first: see src/delta_low.c for why an address in the program
+   will not do. */
 void set_dict_new(delta_state *d)
 {
-    d->set_store = setent_all;
+    delta_low_region(setent_store, sizeof setent_store);
+    d->set_store = EVV_REF(delta_low_copy(setent_all, sizeof setent_all));
 }
 
 void set_dict_delete(delta_state *d)
@@ -37,7 +39,8 @@ void set_dict_delete(delta_state *d)
 
 void act_dict_new(delta_state *d)
 {
-    d->act_store = actent_all;
+    delta_low_region(actent_store, sizeof actent_store);
+    d->act_store = EVV_REF(delta_low_copy(actent_all, sizeof actent_all));
 }
 
 void act_dict_delete(delta_state *d)
@@ -63,10 +66,10 @@ void link_new(delta_state *d)
     d->nstmts = %d;
     d->lang_a = %d;
     d->lang_b = %d;
-    d->lfnames = EVV_REF(lfnames);
+    d->lfnames = EVV_REF(delta_low_copy(lfnames, sizeof lfnames));
     d->nlfnames = %d;
     d->nsets = %d;
-    d->dictfile = EVV_REF(dictfile);
+    d->dictfile = EVV_REF(delta_low_copy(dictfile, sizeof dictfile));
     d->nactions = %d;
 
     d->sets = EVV_REF(malloc(%d));

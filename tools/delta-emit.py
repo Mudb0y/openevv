@@ -393,7 +393,8 @@ def write_consts(e, where, out_c):
                 "   one it had, since several actions can name the same\n"
                 "   bytes. Running this lifter again puts IBM's own back\n"
                 "   and loses those edits. */\n"
-                "\n#include <stdint.h>\n")
+                "\n#include <stdint.h>\n"
+                "\n#include \"delta_rules.h\"\n")
         for store in sorted(seen):
             data = seen[store]
             f.write("\nuint8_t %s[%d] = {\n" % (store, len(data)))
@@ -401,6 +402,20 @@ def write_consts(e, where, out_c):
                 f.write("    " + ",".join("%d" % b for b in data[i:i + 16])
                         + ",\n")
             f.write("};\n")
+    with open(out_c, "a") as f:
+        f.write("\n/* Where each store is and how big, so that startup can\n"
+                "   copy them somewhere a value can name. src/delta_syms.c is\n"
+                "   the only reader: the machine holds addresses of these, and\n"
+                "   an address in the program is not one a value can hold\n"
+                "   unless the program was linked low, which a shared library\n"
+                "   cannot be. sizeof rather than a number, so that a record\n"
+                "   appended by tools/delta-dict.py is counted without this\n"
+                "   table being touched. */\n")
+        f.write("const delta_store delta_const_store[] = {\n")
+        for store in sorted(seen):
+            f.write("    { %s, sizeof %s },\n" % (store, store))
+        f.write("    { 0, 0 },\n};\n")
+
     return sorted(seen), names
 
 
@@ -473,6 +488,7 @@ def write_c(e, where, out_c, out_h, out_syms, stores, names):
         for name in names:
             f.write("    %s,\n" % name)
         f.write("};\n\n")
+        f.write("const int delta_rule_sym_count = %d;\n\n" % len(names))
 
         f.write("const delta_rule delta_rules[] = {\n")
         for name, off, length, frame, pbase, params in e.rules:
@@ -492,6 +508,12 @@ def write_c(e, where, out_c, out_h, out_syms, stores, names):
                 "#ifndef DELTA_RULES_H\n#define DELTA_RULES_H\n\n"
                 "#include <stdint.h>\n\n"
                 "typedef void (*delta_rule_fn)(void);\n\n"
+                "/* One store of bytes the rules name by address. */\n"
+                "typedef struct {\n"
+                "    uint8_t *at;\n"
+                "    uint32_t bytes;\n"
+                "} delta_store;\n\n"
+                "extern const delta_store  delta_const_store[];\n\n"
                 "typedef struct {\n"
                 "    const char *name;\n"
                 "    const char *object;   /* which one it was compiled in */\n"
@@ -507,6 +529,7 @@ def write_c(e, where, out_c, out_h, out_syms, stores, names):
                 "extern const delta_rule_fn delta_rule_entry[];\n"
                 "extern const char *const delta_rule_entry_name[];\n"
                 "extern const void *const  delta_rule_sym[];\n"
+                "extern const int          delta_rule_sym_count;\n"
                 "extern const delta_rule   delta_rules[];\n"
                 "extern const int          delta_rule_count;\n"
                 "extern const int          delta_rule_setjmp;\n\n")

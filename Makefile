@@ -68,15 +68,17 @@ WARN := -w -Wno-implicit-function-declaration \
 
 # The machine this code was written for keeps addresses in thirty-two bit
 # values, so on a wider host everything it can point at has to live somewhere
-# such a value can still name: src/evv_arena.c maps that region low in memory,
-# and -no-pie puts the program's own tables at four megabytes rather than
-# wherever the loader fancies. Both are load-bearing, not preferences, and
-# neither is wanted when the host is thirty-two bit already.
+# such a value can still name: src/evv_arena.c maps that region low in memory
+# and everything the machine holds comes out of it, including the language's
+# own data, which src/delta_low.c copies out of the program at startup. That
+# copy is what lets the program itself be loaded anywhere -- there is no
+# -no-pie here any more, and there does not need to be. None of it is wanted
+# when the host is thirty-two bit already.
 POINTER := $(shell echo __SIZEOF_POINTER__ | $(CC) -E -P - 2>/dev/null | tail -1)
 ifeq ($(POINTER),4)
 LOW :=
 else
-LOW := -DEVV_ARENA=1 -no-pie
+LOW := -DEVV_ARENA=1
 endif
 
 OPT        ?= -O2
@@ -188,22 +190,12 @@ CCWIN      ?= x86_64-w64-mingw32-gcc
 WINDRES    ?= x86_64-w64-mingw32-windres
 OBJDIRWIN  := $(BUILD)/objwin
 
-# The Windows answer to -no-pie, and it is load-bearing three times over.
-# mingw puts a sixty-four bit image at 0x140000000, which is higher than a
-# Delta value can name; dynamicbase would move it anywhere; high-entropy
-# address space would move it anywhere above four gigabytes. The language's own
-# tables live in the image, so all three have to be settled or the engine looks
-# for its rules where they are not.
-WINBASE    := -Wl,--image-base,0x400000 \
-              -Wl,--disable-dynamicbase \
-              -Wl,--disable-high-entropy-va
-
 CFLAGSWIN  := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) -DEVV_ARENA=1 \
               $(CFLAGS)
 # Static, so what ships is one file. MINGW64_LDFLAGS is where the cross gcc's
 # thread runtime is; the flake sets it, since nothing puts it on the link path
 # outside a real cross stdenv.
-LDFLAGSWIN := -static $(WINBASE) $(MINGW64_LDFLAGS)
+LDFLAGSWIN := -static $(MINGW64_LDFLAGS)
 
 SOURCESWIN := $(filter-out $(SRC)/port_posix.c $(STUB),$(wildcard $(SRC)/*.c)) \
               $(filter-out $(GENERATED),$(sort $(wildcard $(LANG)/*.c))) \

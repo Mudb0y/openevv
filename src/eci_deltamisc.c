@@ -16,6 +16,7 @@
 
 #include <stdint.h>
 #include "delta.h"
+#include "delta_rules_c.h"
 
 /* What the owner keeps about the command line. */
 #define OWNER_ARGC(d)   (*(int32_t *)(EVV_AT(uint8_t *, (d)->owner) + 0x1d4))
@@ -159,10 +160,12 @@ static int32_t dictinit(delta_state *d, void *entry, int32_t isAction,
     /* Where the entries themselves live: one store per set, one per action. */
     if (isAction)
         *(evv_ref *)(rec + 4) =
-            EVV_REF(EVV_AT(const uint8_t *const *, d->act_store)[index]);
+            EVV_REF(delta_low_at(EVV_AT(const uint8_t *const *,
+                                        d->act_store)[index]));
     else
         *(evv_ref *)(rec + 4) =
-            EVV_REF(EVV_AT(const uint8_t *const *, d->set_store)[index]);
+            EVV_REF(delta_low_at(EVV_AT(const uint8_t *const *,
+                                        d->set_store)[index]));
 
     return 1;
 }

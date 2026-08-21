@@ -122,7 +122,7 @@ class Rule:
             v = self.c.imm[val]
             return '%d' % (v - 0x100000000 if v >= 0x80000000 else v)
         if kind == 'sym':
-            return '(int32_t)(intptr_t)delta_rule_sym[%d]' % val
+            return 'delta_sym_ref[%d]' % val
         if kind == 'slotaddr':
             return 'SLOT(%d)' % val
         if kind == 'state':
@@ -836,7 +836,7 @@ def inlined(c, who, args):
             v = c.imm[val]
             out.append('%d' % (v - 0x100000000 if v >= 0x80000000 else v))
         elif kind == 'sym':
-            out.append('(int32_t)(intptr_t)delta_rule_sym[%d]' % val)
+            out.append('delta_sym_ref[%d]' % val)
         else:
             out.append(args[len(args) - 1 - (val - 8) // 4])
     out.reverse()

@@ -19,6 +19,9 @@ megabytes. `src/port_win32.c` is the Win32 platform layer, which the Windows
 build and the reference build both use and the Linux build does not.
 `src/evv_land.c` is the landing place a backtrack jumps to, which is ours
 because the C library's does not fit what the engine does with it.
+`src/delta_low.c` copies the language's own data out of the program into the
+arena, which is what lets the program be loaded anywhere -- and therefore what
+lets it be a shared library.
 
 `lang/enus` is US English. `delta_rules_enus.c` is the rules as bytecode,
 `delta_consts_enus.c` the constant blobs they read, `delta_link_enus.c` the

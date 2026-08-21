@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "delta.h"
+#include "delta_rules_c.h"
 
 extern int32_t runtime_new(delta_state *d);
 extern void    runtime_delete(delta_state *d);
@@ -33,6 +34,10 @@ delta_state *delta_new(void)
     int32_t      at, i;
     int32_t      nword = 0, nlong = 0, nshort = 0, ncompound = 0;
     int32_t      w = 0, l = 0, s = 0, c = 0;
+
+    /* The constants go where a value can name them before anything
+       can name one. */
+    delta_syms_bind();
 
     d = malloc(DELTA_STATE_BYTES);
     if (d == 0)

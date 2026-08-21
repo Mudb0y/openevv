@@ -110,13 +110,11 @@ Windows ships, so a screen reader reads it without being told anything.
 `evvspeak.exe /say "some text"` speaks at once and is how the sound gets tested
 without a mouse.
 
-Three things about the Windows build are not preferences. The image is linked
-at four megabytes with ASLR and high-entropy addresses off, because the
-language's tables live in the image and a Delta value cannot name an address
-above four gigabytes -- mingw would otherwise put a sixty-four bit image at five
-and a half. `src/port_win32.c` stands in for `src/port_posix.c`, which is the
-whole of the platform layer. And the arena takes its region from VirtualAlloc at
-the same fixed addresses mmap gets on Linux.
+Two things about the Windows build are worth knowing. `src/port_win32.c` stands
+in for `src/port_posix.c`, which is the whole of the platform layer. And the
+arena takes its region from VirtualAlloc at the same low addresses mmap gets on
+Linux. The image itself is an ordinary PE at whatever base mingw chooses, with
+ASLR on: nothing needs it low any more.
 
 ## Getting IBM's objects
 
@@ -207,10 +205,19 @@ in it should do.
 
 The Delta machine keeps addresses in thirty-two bit values, so on a wider host
 everything it can point at has to live somewhere such a value can still name.
-`src/evv_arena.c` maps a region low in memory for that, and `-no-pie` puts the
-program's own tables at four megabytes rather than wherever the loader fancies.
-Both are load-bearing, not preferences. The Makefile asks the compiler how wide
-a pointer is and leaves both out when the host is thirty-two bit already.
+`src/evv_arena.c` maps a region low in memory and everything the machine holds
+comes out of it. That includes the language's own data: the rules name their
+constants by address, and the set and action tables hand over an address per
+entry, so `src/delta_low.c` copies those stores out of the program at startup
+and translates an address into its copy at the few places where one becomes a
+value. A pointer from anywhere else says so and stops.
+
+Which is why there is no `-no-pie` and no fixed image base any more. The
+program can be loaded wherever the loader fancies, ASLR and all, which is what
+makes a shared library possible: a library does not get to choose where it
+goes. The Makefile asks the compiler how wide a pointer is and leaves the arena
+out altogether when the host is thirty-two bit, where a pointer is a value
+already.
 
 `-Werror=int-conversion` and `-Werror=incompatible-pointer-types` are on for
 both builds. A narrowed field assigned from a pointer, or the other way about,

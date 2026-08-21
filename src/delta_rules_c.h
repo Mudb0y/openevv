@@ -8,6 +8,7 @@
 #ifndef DELTA_RULES_C_H
 #define DELTA_RULES_C_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "evv_land.h"
@@ -40,6 +41,24 @@ extern const delta_rule_c delta_rule_native[];
    so that what a run says it did is the same either way, which is what a rule
    written as C is held against. */
 int32_t delta_rule_direct(int which, const int32_t *a, int n);
+
+/* The language's constants, as values rather than as addresses in the program.
+   delta_syms_bind copies the stores into the arena and fills this in; a rule
+   naming a constant reads it here, whichever way the rule is being run. See
+   src/delta_syms.c for why the addresses in the program will not do. */
+extern const int32_t *delta_sym_ref;
+void delta_syms_bind(void);
+
+/* A copy, in the arena, of something that lives in the program. The
+   language's link tables hand the machine the addresses of arrays
+   which are in the program, where a value cannot name them. */
+void *delta_low_copy(const void *what, size_t bytes);
+
+/* A store of the language's bytes, copied out of the program once, and the
+   translation of an address in one into the address of its copy. Every place
+   an address in the program becomes a value goes through this. */
+void  delta_low_region(const void *at, size_t bytes);
+void *delta_low_at(const void *p);
 int32_t delta_rule_called(int which, const int32_t *stack, int argn,
                           int want);
 
