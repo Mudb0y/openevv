@@ -405,7 +405,7 @@ def write(names):
         # which is where anything that has to follow the machine's own control
         # flow has to look: the alternatives a dispatch chain names, and which
         # comparison a test of the flags is reading.
-        flat = answer_tests(tail_returns(fold(body)))
+        flat = direct_tests(tail_returns(fold(body)))
         alts = dispatch_names(flat)
         # Taking the dead loads out first brings more calls up against
         # their arguments, which is why the joining goes last.
@@ -497,8 +497,7 @@ OPPOSITE = {'e': 'ne', 'ne': 'e', 'a': 'be', 'be': 'a', 'ae': 'b', 'b': 'ae',
 FLIP = {'==': '!=', '!=': '==', '<': '>=', '>=': '<', '<=': '>', '>': '<='}
 
 LABEL_RE = re.compile(r'^\s*L(\d+):;$')
-COND = r'IF\(\w+\)|r\d (?:==|!=|<=|>=|<|>) 0'
-BRANCH_RE = re.compile(r'^(\s*)if \((%s)\) goto L(\d+);$' % COND)
+BRANCH_RE = re.compile(r'^(\s*)if \((.*)\) goto L(\d+);$')
 GOTO_RE = re.compile(r'^(\s*)goto L(\d+);$')
 JUMP_RE = re.compile(r'goto L(\d+);')
 
@@ -510,10 +509,35 @@ def opposite(cond):
     if m:
         was = m.group(1)
         return 'IF(%s)' % OPPOSITE[was] if was in OPPOSITE else None
-    m = re.match(r'^(r\d) (==|!=|<=|>=|<|>) 0$', cond)
-    if m:
-        return '%s %s 0' % (m.group(1), FLIP[m.group(2)])
-    return None
+    # A comparison is turned round by turning its operator round, which needs
+    # the one that compares the two sides rather than any inside them.
+    depth = 0
+    found = None
+    i = 0
+    while i < len(cond):
+        ch = cond[i]
+        if ch in '([':
+            depth += 1
+        elif ch in ')]':
+            depth -= 1
+        elif depth == 0:
+            for op in ('==', '!=', '<=', '>='):
+                if cond.startswith(op, i):
+                    if found:
+                        return None
+                    found = (i, op)
+                    i += 1
+                    break
+            else:
+                if ch in '<>':
+                    if found:
+                        return None
+                    found = (i, ch)
+        i += 1
+    if not found:
+        return None
+    at, op = found
+    return cond[:at] + FLIP[op] + cond[at + len(op):]
 
 
 STRUCTURED = [0]
@@ -1059,24 +1083,42 @@ def _enter(body, i):
     return ('    ENTER(%s);' % ', '.join(slots), 14)
 
 
-# What a condition says when the flags were set by testing a register against
-# itself, which is how the machine looks at what a call answered. zf is then
-# whether that register was nought and sf whether it was negative, with cf and
-# of both clear, so every condition the machine has is a comparison of the
-# register with nought. Two are not comparisons at all -- above-or-equal is
-# always true and below never is -- and those are left alone rather than
-# written as a constant.
-SELF_TEST = {
-    'e': '%s == 0', 'ne': '%s != 0',
-    'a': '%s != 0', 'be': '%s == 0',
-    'g': '%s > 0', 'ge': '%s >= 0',
-    'l': '%s < 0', 'le': '%s <= 0',
-    's': '%s < 0', 'ns': '%s >= 0',
+# Each of the machine's comparisons: whether it subtracts or ands, and how
+# wide it works. Anything narrower than the whole is masked to that width
+# first, which is why the width has to be carried about.
+CMP_KIND = {'testl': ('test', 4), 'testw': ('test', 2), 'testb': ('test', 1),
+            'cmpl': ('cmp', 4), 'cmpw': ('cmp', 2), 'cmpb': ('cmp', 1)}
+
+# What a condition says after a comparison. The machine takes the first operand
+# from the second, so the second is the one on the left of what comes out, and
+# whether the comparison is signed is which flags the condition reads rather
+# than anything about the operands. The sign flag on its own is not a
+# comparison at all -- it is the sign of a difference that may have overflowed
+# -- so a condition that reads it alone is left as it was. None do.
+CMP_SAYS = {
+    'e': ('%s == %s', True), 'ne': ('%s != %s', True),
+    'l': ('%s < %s', True), 'ge': ('%s >= %s', True),
+    'le': ('%s <= %s', True), 'g': ('%s > %s', True),
+    'b': ('%s < %s', False), 'ae': ('%s >= %s', False),
+    'be': ('%s <= %s', False), 'a': ('%s > %s', False),
 }
 
-SELF_RE = re.compile(r'^CMP\(testl, (r\d), \1\);$')
+# And after an and, where the carry and the overflow are both clear, so every
+# condition is that value against nought. Above-or-equal is then always true
+# and below never is; those two are left alone rather than written as a
+# constant, which would read worse than the flag did.
+TEST_SAYS = {
+    'e': '%s == 0', 'be': '%s == 0', 'ne': '%s != 0', 'a': '%s != 0',
+    's': '%s < 0', 'l': '%s < 0', 'ns': '%s >= 0', 'ge': '%s >= 0',
+    'g': '%s > 0', 'le': '%s <= 0',
+}
+
+CMP_RE = re.compile(r'^CMP\((\w+), (.*)\);$')
 ENVELOPE_RE = re.compile(r'^(?:LANDING|ENTER)\(')
 READS_RE = re.compile(r'IF\((\w+)\)')
+
+# What an operand reads that something else could write.
+READS_MEM = re.compile(r'\bAT\(|\bFLD\(|\bPARAM\(|\bGLOBAL\(|\*\(')
 
 # The machine's four flags, and which of them each thing touches. Most
 # operations write all four, and the exceptions are what make this worth
@@ -1150,15 +1192,132 @@ def _flow(body):
     return succ
 
 
-def answer_tests(body):
-    """What a call answered, tested as the comparison it is.
+def _operands(text):
+    """The two operands of a comparison, split at the comma between them and
+    not at any comma inside either of them."""
+    depth = 0
+    for i, ch in enumerate(text):
+        if ch in '([':
+            depth += 1
+        elif ch in ')]':
+            depth -= 1
+        elif ch == ',' and depth == 0:
+            return text[:i], text[i + 1:].lstrip()
+    return None, None
 
-    The machine has no way to ask whether a call answered nought except to set
-    its flags from the answer and then read one of them, and two lines in nine
-    are that. Here the flags are a variable like any other, so the test can say
-    what it tests -- but only where every reader of a flag is reached by
-    nothing but the same self-test on a register nothing has written since.
-    Where anything else can reach a reader, the flags stay.
+
+NATURAL = (
+    (re.compile(r'^(AT|FLD)\((u?int(?:8|16|32)_t),'), 2),
+    (re.compile(r'^GLOBAL\((u?int(?:8|16|32)_t),'), 2),
+    (re.compile(r'^PARAM\((u?int(?:8|16|32)_t),'), 2),
+    (re.compile(r'^\(\*\((u?int(?:8|16|32)_t) \*\)'), 1),
+    (re.compile(r'^(LOW)\(r\d\)$'), 0),
+    (re.compile(r'^(BYTE[01])\(r\d\)$'), 0),
+)
+
+
+def _natural(expr):
+    """What an operand already is, as a width and whether it is signed. Every
+    operand the writer emits is an int32_t, but most of them got there by
+    widening something narrower, and one that was widened the way the machine
+    would have widened it needs nothing said about it."""
+    while expr.startswith('(int32_t)'):
+        expr = expr[len('(int32_t)'):]
+    if re.match(r'^-?\d+$', expr):
+        return 4, True, expr
+    for pat, group in NATURAL:
+        m = pat.match(expr)
+        if not m:
+            continue
+        what = m.group(group) if group else m.group(1)
+        if what == 'LOW':
+            return 2, False, expr
+        if what.startswith('BYTE'):
+            return 1, False, expr
+        return (int(what.strip('u').replace('int', '').replace('_t', '')) // 8,
+                not what.startswith('u'), expr)
+    return 4, True, expr
+
+
+def _at_width(expr, w, signed):
+    """One operand, said at the width the machine compared it at.
+
+    The machine masks both operands to that width before it compares them, so
+    an operand wider than the comparison has to be cut down to it here. One
+    that is already the width, and already signed or unsigned the same way, is
+    left as it is -- and a cast to a word around it can go, because casting to
+    a word and then to a half is the same as casting to the half.
+    """
+    t = ('' if signed else 'u') + {1: 'int8_t', 2: 'int16_t',
+                                   4: 'int32_t'}[w]
+    was, wsigned, bare = _natural(expr)
+    if re.match(r'^-?\d+$', bare):
+        v = int(bare)
+        lo, hi = ((-(1 << (8 * w - 1)), 1 << (8 * w - 1)) if signed
+                  else (0, 1 << (8 * w)))
+        return bare if lo <= v < hi else '(%s)%s' % (t, bare)
+    if was == w and wsigned == signed:
+        return bare
+    if w == 4 and signed and was <= 4:
+        # Nothing to say: the operand is already the whole of what the machine
+        # compared, however it came to be.
+        return expr
+    return '(%s)(%s)' % (t, bare)
+
+
+def _said(what, cond):
+    """What a condition says about a comparison, as C. None where it cannot be
+    said, which leaves the flags where they were."""
+    kind, w, a, b = what
+    if kind == 'test':
+        if cond not in TEST_SAYS:
+            return None
+        if a == b:
+            v = _at_width(a, w, True)
+        elif w != 4:
+            v = '(int%d_t)((%s) & (%s))' % (w * 8, a, b)
+        else:
+            # Parenthesised, because C binds an and looser than a comparison
+            # and would read this as anding with the answer.
+            v = '((%s) & (%s))' % (a, b)
+        return TEST_SAYS[cond] % v
+    if cond not in CMP_SAYS:
+        return None
+    form, signed = CMP_SAYS[cond]
+    return form % (_at_width(b, w, signed), _at_width(a, w, signed))
+
+
+def _kills(line, what):
+    """Whether a line could have moved either operand out from under a
+    comparison that has already been made. A register it writes, or a store
+    where the operand reads memory -- and a call can store anywhere."""
+    _kind, _w, a, b = what
+    both = a + ' ' + b
+    for reg in set(re.findall(r'\br\d\b', both)):
+        if _writes(line, reg):
+            return True
+    if READS_MEM.search(both):
+        if 'CALL(' in line or 'memcpy' in line or 'memset' in line:
+            return True
+        m = re.match(r'^\s*(.*?) =[^=]', line)
+        if m and READS_MEM.search(m.group(1)):
+            return True
+    return False
+
+
+def direct_tests(body):
+    """Every test of the flags, written as the comparison the machine made.
+
+    The machine has no way to ask a question except to set its flags and then
+    read one of them, and a quarter of the lines in a rule were that. Here the
+    flags are a variable like any other, so a test can say what it tests: what
+    a call answered against nought, a length against a limit, a bit against a
+    mask.
+
+    It is done only where every reader of a flag is reached by one comparison
+    and nothing has moved either of its operands since. Where anything else can
+    reach a reader, or a call has been made that could have stored over what
+    was compared, the flags stay and the comparison stays with them.
 
     Each of the four flags is followed on its own, because the operations do
     not all write all four: increment and decrement keep the carry they were
@@ -1166,14 +1325,15 @@ def answer_tests(body):
     says nothing at all. A comparison taken away because nothing read its zero
     flag would otherwise take with it a carry that something still read.
     """
-    if not any(SELF_RE.match(l.strip()) for l in body):
+    if not any(CMP_RE.match(l.strip()) or ENVELOPE_RE.match(l.strip())
+               for l in body):
         return body
 
     succ = _flow(body)
     n = len(body)
 
     # Every line that leaves a flag saying something new: which flags it
-    # writes, and what they then say -- the register a self-test looked at, or
+    # writes, and what they then say -- a comparison of two operands, or
     # nothing, where they mean whatever the operation left behind. The
     # envelope's own test is a real one, but its line cannot be taken away
     # because the macro is what carries it.
@@ -1181,15 +1341,17 @@ def answer_tests(body):
     hidden = {}
     for i, line in enumerate(body):
         t = line.strip()
-        m = SELF_RE.match(t)
-        if m:
-            gen[i] = (ALL_FLAGS, m.group(1), True)
-            continue
         if ENVELOPE_RE.match(t):
-            gen[i] = (ALL_FLAGS, 'r0', False)
+            gen[i] = (ALL_FLAGS, ('test', 4, 'r0', 'r0'), False)
             continue
-        m = re.search(r'\bCMP\((\w+),', t)
+        m = CMP_RE.match(t)
         if m:
+            k = CMP_KIND.get(m.group(1))
+            a, b = _operands(m.group(2)) if k else (None, None)
+            gen[i] = ((ALL_FLAGS, (k[0], k[1], a, b), True) if k and a
+                      else (ALL_FLAGS, None, False))
+            continue
+        if 'CMP(' in t:
             gen[i] = (ALL_FLAGS, None, False)
             continue
         m = re.search(r'\bALU\((\w+),', t)
@@ -1202,12 +1364,12 @@ def answer_tests(body):
 
     def through(i, coming):
         """What each flag says after a line, given what it said before it."""
-        bits, reg, _keep = gen.get(i, (frozenset(), None, False))
-        made = frozenset([(i, reg)])
+        bits, what, _keep = gen.get(i, (frozenset(), None, False))
+        made = frozenset([(i, what)])
         line = body[i]
         return tuple(made if b in bits else
-                     frozenset((d, None) if r and _writes(line, r) else (d, r)
-                               for d, r in was)
+                     frozenset((d, None) if w and _kills(line, w) else (d, w)
+                               for d, w in was)
                      for b, was in zip(FLAGS, coming))
 
     # What reaches each line, grown until it stops growing. Every line is
@@ -1246,22 +1408,22 @@ def answer_tests(body):
             for c in conds:
                 want.update(COND_FLAGS.get(c, ALL_FLAGS))
             came = reaching(i, want)
-            regs = set(r for _d, r in came)
-            if (came and len(regs) == 1 and None not in regs
-                    and all(c in SELF_TEST for c in conds)):
-                reg = regs.pop()
-                for c in conds:
-                    said[i] = said[i].replace('IF(%s)' % c, SELF_TEST[c] % reg)
+            whats = set(w for _d, w in came)
+            one = list(whats)[0] if len(whats) == 1 else None
+            says = ([_said(one, c) for c in conds] if one else [])
+            if came and one and all(says):
+                for c, how in zip(conds, says):
+                    said[i] = said[i].replace('IF(%s)' % c, how)
                     TESTED[0] += 1
             else:
-                needed.update(d for d, _r in came)
+                needed.update(d for d, _w in came)
         if i in hidden:
-            needed.update(d for d, _r in reaching(i, hidden[i]))
+            needed.update(d for d, _w in reaching(i, hidden[i]))
 
     keep = []
     for i, line in enumerate(said):
-        bits, reg, deletable = gen.get(i, (None, None, False))
-        if deletable and reg and i not in needed:
+        _bits, what, deletable = gen.get(i, (None, None, False))
+        if deletable and what and i not in needed:
             TESTED[1] += 1
             continue
         keep.append(line)
@@ -1588,8 +1750,8 @@ def main():
           ' chain of decrements' % (ALTED[0], ALTED[1]))
     print('reaches into the frame named as the argument they are: %d'
           % PARAMED[0])
-    print('answers tested as a comparison: %d, comparisons of the flags no'
-          ' longer needed: %d' % (TESTED[0], TESTED[1]))
+    print('tests of the flags written as the comparison they are: %d,'
+          ' comparisons no longer needed: %d' % (TESTED[0], TESTED[1]))
     print('pops into a register nothing reads, said as letting go: %d'
           % DROPPED_POPS[0])
     print('jumps at the return, written as the return: %d' % RETURNED[0])

@@ -66,21 +66,26 @@ concretely: calls sit with their arguments, wrapper rules say which primitive
 they stand for, state reaches say which language variable they touch, frame
 reaches say which argument they are, the arms of a backtracking dispatch say
 which alternative they are whichever of the two ways the compiler wrote the
-dispatch, register halves say which half, a test of what a call answered is a
-comparison of the answer with nought rather than a flag set and a flag read,
-letting go of a call's arguments says that and not that a scratch register was
-written, a jump at the return is a return, 2,391 loops are loops, a jump out of
-one says it is leaving it, the two places a rule ends say whether it has matched
-or given up, and the machine's dead leavings are gone.
+dispatch, register halves say which half, a test of the flags is the comparison
+the machine made -- a call's answer against nought, a length against a limit, a
+bit against a mask -- rather than a flag set and a flag read, letting go of a
+call's arguments says that and not that a scratch register was written, a jump at
+the return is a return, 2,391 loops are loops, a jump out of one says it is
+leaving it, the two places a rule ends say whether it has matched or given up,
+and the machine's dead leavings are gone.
 
 What is left in them: 59,295 gotos, of which 26,668 are the arms of a
 backtracking dispatch and are right as they are, and 4,254 more say plainly that
 the rule has matched or has given up. Most of the rest are the same thing
 without a name, because that is what the language is: a pattern matcher whose
-every failure jumps to a shared tail. 3,364 conditions still read the flags and
-2,057 comparisons still set them, which is what is left once the answer of a
-call is compared directly: those are the ones an arithmetic operation set rather
-than a test.
+every failure jumps to a shared tail.
+
+Of the flags, 49 comparisons and 1,054 conditions are left out of the 24,140 and
+27,013 there were. The comparisons are the ones with a label between them and
+the condition that reads them, where something else can arrive with other flags.
+The conditions are mostly reading what an arithmetic operation left rather than
+what a comparison did -- the decrement in a dispatch, whose zero flag says the
+answer was one -- and those are the next ones that could go.
 
 `tools/delta-shape.py` says what more structuring could reach, and the answer is
 bounded. Of the 106,072 edges between the 53,439 basic blocks, 6,004 jump back
