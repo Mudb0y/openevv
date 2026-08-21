@@ -161,6 +161,16 @@ says `openevv` and gets treated accordingly. NVDA's own reader also raises
 rather than loading a file with no version information at all, so without the
 resource that driver would refuse us before it ever called anything.
 
+One caveat about mixing toolchains, learned by tripping over it. The libraries
+in a release are built by one mingw and tested with harnesses built by the same
+one. A caller built by a *different* mingw, with a different thread runtime --
+nixpkgs' uses mcfgthreads where Debian's uses winpthreads -- can fault on the
+crossing, and one direction of that pairing does. It does not matter for the
+callers that exist: Python's ctypes and a screen reader's host DLL are MSVC
+built, with no mingw runtime in them at all, and CI checks both of those
+crossings on Windows itself. But do not conclude from a fault in a hand-mixed
+pair that the shipped library is broken; check a matched pair first.
+
 Two ways to check it, and both are worth having. `make win-dlltest` builds
 `build/dlltest.exe`, which links against nothing, loads `eci.dll` by name, asks
 for each entry point by name and speaks; `test/hash.sh build/dlltest.exe` then

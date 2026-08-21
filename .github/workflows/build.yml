@@ -133,8 +133,42 @@ jobs:
           "wanted:         $want"
           if ($have -ne $want) { throw "the 32-bit library says something else" }
 
+  # The thirty-two bit library's real caller is not one of our own binaries: it
+  # is a host DLL built with MSVC, loading us across a toolchain boundary. A
+  # thirty-two bit Python is the closest thing a runner has to that -- MSVC
+  # built, no mingw runtime anywhere in it -- and ctypes is how the add-ons
+  # call in anyway.
+  windows-check-32:
+    needs: windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: openevv-windows-x86_64
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: x86
+
+      - name: Speak through the thirty-two bit library, from a 32-bit Python
+        shell: pwsh
+        run: |
+          python -c "import struct, sys; print('python is', struct.calcsize('P') * 8, 'bit')"
+          New-Item -ItemType Directory -Force -Path p32 | Out-Null
+          Copy-Item eci32.dll p32\eci.dll
+          Copy-Item eci.ini p32\
+          python test/dll.py p32\eci.dll from32py.wav "The quick brown fox jumps over the lazy dog."
+          $have = (Get-FileHash from32py.wav -Algorithm SHA256).Hash.ToLower()
+          $want = (Get-Content test/samples.sha256).Split(' ')[0]
+          "from a 32-bit ctypes: $have"
+          "wanted:               $want"
+          if ($have -ne $want) { throw "the 32-bit library says something else through ctypes" }
+
   release:
-    needs: [linux, windows, windows-check]
+    needs: [linux, windows, windows-check, windows-check-32]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
