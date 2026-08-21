@@ -150,6 +150,7 @@ class Engine:
 		self._held = bytearray()
 		self._pendingIndexes = []
 		self._discarding = False
+		self._produced = 0
 		self.player = None
 		self.voiceNames = {}
 		self.version = ""
@@ -242,6 +243,11 @@ class Engine:
 	# ---- the calls themselves, all on this thread --------------------
 
 	def addText(self, text):
+		# A false answer here means the engine refused the call, and that is all
+		# it means. Text the engine simply had no room for is answered as
+		# success, deliberately and as IBM's own build did, so this cannot
+		# report a dropped stretch. What can is the count of samples in
+		# synthesize.
 		if not self._dll.eciAddText(self._instance, text):
 			log.debugWarning("openevv: the engine refused a stretch of text")
 
@@ -260,6 +266,7 @@ class Engine:
 		"""
 		self._held = bytearray()
 		self._pendingIndexes = []
+		self._produced = 0
 		if not self._dll.eciSynthesize(self._instance):
 			log.error("openevv: the engine refused to speak")
 			self._finish()
@@ -273,6 +280,14 @@ class Engine:
 			self._held = bytearray()
 			self._pendingIndexes = []
 			return
+
+		if self._produced == 0:
+			# The engine answers success for text it had no room for, so an
+			# utterance that produced nothing is the only sign that something
+			# was dropped. Silence with nothing said about it is the one
+			# failure a screen reader cannot be diagnosed from.
+			log.warning("openevv: the engine took the text and made no audio;"
+			            " something was dropped and it does not say so")
 
 		self._flush(last=True)
 		self._finish()
@@ -445,6 +460,7 @@ class Engine:
 			if self._discarding:
 				return DATA_PROCESSED
 			if message == MSG_WAVEFORM:
+				self._produced += param
 				self._held.extend(bytes(self._buffer)[: param * 2])
 				if len(self._held) >= FEED_AT:
 					self._flush()

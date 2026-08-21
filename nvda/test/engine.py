@@ -346,6 +346,23 @@ def main():
     check("once no longer cancelled the next utterance plays and reports again",
           ([len(a) for a, _ in player.fed], marks, idled), ([128], [7, None], 1))
 
+    # ---- an utterance the engine took and made nothing of ------------------
+    #
+    # The engine answers success for text it had no room for, deliberately and
+    # as IBM's own build did, so a dropped stretch cannot be seen in a return
+    # code. Silence that says nothing is the one failure a screen reader cannot
+    # be diagnosed from, so the driver has to notice it.
+
+    del sequence.LOGGED["warning"][:]
+    utterance([])
+    check("an utterance that produced no audio at all is complained about",
+          len(sequence.LOGGED["warning"]), 1)
+
+    del sequence.LOGGED["warning"][:]
+    utterance([lambda: waveform(16)])
+    check("and one that produced some is not",
+          sequence.LOGGED["warning"], [])
+
     # ---- shutting down, which is what switching synthesiser away does -----
     #
     # Nothing below was checked at all until the add-on raised here in NVDA:

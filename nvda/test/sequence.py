@@ -151,12 +151,21 @@ class VoiceInfo:
 
 
 def _install_stubs():
+    # Recording rather than discarding, so a check can assert that the driver
+    # said something when it should have.
+    said = {"warning": [], "error": [], "debugWarning": []}
     log = types.SimpleNamespace(
         debug=lambda *a, **k: None,
-        debugWarning=lambda *a, **k: None,
-        error=lambda *a, **k: sys.stderr.write("driver logged an error: %s\n" % (a,)),
         info=lambda *a, **k: None,
+        debugWarning=lambda *a, **k: said["debugWarning"].append(a[0] if a else ""),
+        warning=lambda *a, **k: said["warning"].append(a[0] if a else ""),
+        error=lambda *a, **k: (
+            said["error"].append(a[0] if a else ""),
+            sys.stderr.write("driver logged an error: %s\n" % (a,)),
+        ),
     )
+    LOGGED.clear()
+    LOGGED.update(said)
 
     def module(name, **contents):
         m = types.ModuleType(name)
@@ -276,6 +285,9 @@ def driver():
 # ---- the checks ------------------------------------------------------------
 
 FAILED = []
+
+#: What the driver logged, filled in by the stubs so checks can read it.
+LOGGED = {}
 
 
 def check(what, got, want):
