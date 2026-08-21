@@ -52,14 +52,18 @@ jobs:
 
       - name: Say what came out
         run: |
-          ls -l build/evv.exe build/evvspeak.exe
-          # The image has to sit low and stay there, or the engine cannot name
-          # its own tables in a Delta value. Worth failing the build over.
+          ls -l build/evv.exe build/evvspeak.exe build/eci.dll build/eci32.dll
+          # Where the image lands stopped mattering when the language's data
+          # stopped being named where it lies, so this only reports it now.
+          # What is worth failing over is that the exports are plain names,
+          # since a caller asks for them by name.
           x86_64-w64-mingw32-objdump -p build/evvspeak.exe | grep -i imagebase
-          x86_64-w64-mingw32-objdump -p build/evvspeak.exe \
-            | grep -i dllcharacteristics
-          x86_64-w64-mingw32-objdump -p build/evvspeak.exe \
-            | grep -qi 'ImageBase.*0*400000'
+          for dll in build/eci.dll build/eci32.dll; do
+            n=$(x86_64-w64-mingw32-objdump -p "$dll" \
+                  | grep -cE '\beci[A-Za-z]+@[0-9]+' || true)
+            echo "$dll: $n decorated exports"
+            test "$n" = 0
+          done
 
       - uses: actions/upload-artifact@v4
         with:
