@@ -25,7 +25,10 @@ is the same engine on the command line. One file each, nothing to install, and
 
 `eci.dll` is in the release too: the same engine exporting the names IBM
 published, so a program written against IBM's library can load ours instead --
-a screen reader add-on, for instance.
+a screen reader add-on, for instance. It ships in both bitnesses, in folders
+that say which is which: an add-on that loads the engine into the reader's own
+process wants the reader's bitness, and the most used one hosts the engine in a
+thirty-two bit process of its own whatever the reader is.
 
 `./build/evv -h` says what the options are, and `./build/evv -l` says what each
 of the eight voices is set to.

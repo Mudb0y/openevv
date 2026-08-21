@@ -1,0 +1,44 @@
+/* What the library says about itself.
+ *
+ * Not decoration. A screen reader driver reads ProductName out of here to
+ * decide which engine it is talking to: if it sees IBMECI it turns on
+ * IBMTTS-specific text fixes, a different pause style and a 22 kHz sample
+ * rate. This is the Eloquence engine at 11 kHz, so it says what it is and
+ * that driver treats it accordingly. It also raises rather than loading a
+ * file with no version information at all, which is the other reason this
+ * exists.
+ *
+ * The Translation block is what makes the rest readable: without a codepage
+ * a reader looking for ProductName is told there is none.
+ */
+
+#include <windows.h>
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION    0,3,0,0
+PRODUCTVERSION 0,3,0,0
+FILEFLAGSMASK  0x3fL
+FILEFLAGS      0x0L
+FILEOS         VOS__WINDOWS32
+FILETYPE       VFT_DLL
+FILESUBTYPE    VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName",      "openevv"
+            VALUE "FileDescription",  "IBM Embedded ViaVoice rebuilt as portable C"
+            VALUE "FileVersion",      "0.3.0.0"
+            VALUE "InternalName",     "eci"
+            VALUE "LegalCopyright",   "MIT for the engine; the language data is IBM's"
+            VALUE "OriginalFilename", "eci.dll"
+            VALUE "ProductName",      "openevv"
+            VALUE "ProductVersion",   "0.3.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

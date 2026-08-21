@@ -41,13 +41,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get the mingw toolchain
+      - name: Get the mingw toolchains
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64
+          sudo apt-get install -y gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64 \
+                                  gcc-mingw-w64-i686 binutils-mingw-w64-i686
 
       - name: Build
-        run: make -j"$(nproc)" win win-dlltest
+        run: make -j"$(nproc)" win win-dlltest win32
 
       - name: Say what came out
         run: |
@@ -67,8 +68,10 @@ jobs:
             build/evv.exe
             build/evvspeak.exe
             build/eci.dll
+            build/eci32.dll
             build/eci.ini
             build/dlltest.exe
+            build/dlltest32.exe
           if-no-files-found: error
 
   # The one thing the cross build cannot answer: whether it runs on Windows.
@@ -110,6 +113,26 @@ jobs:
           "wanted:      $want"
           if ($havep -ne $want) { throw "the library says something else through ctypes" }
 
+      # The thirty-two bit library, which is what the most used driver loads --
+      # it hosts the engine in a 32-bit process of its own whatever bitness the
+      # reader is. Checked from C, because a sixty-four bit Python cannot load
+      # a thirty-two bit library at all.
+      - name: Speak through the thirty-two bit library
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path t32 | Out-Null
+          Copy-Item eci32.dll t32\eci.dll
+          Copy-Item dlltest32.exe t32\
+          Copy-Item eci.ini t32\
+          Push-Location t32
+          .\dlltest32.exe -o from32.wav "The quick brown fox jumps over the lazy dog."
+          $have = (Get-FileHash from32.wav -Algorithm SHA256).Hash.ToLower()
+          Pop-Location
+          $want = (Get-Content test/samples.sha256).Split(' ')[0]
+          "thirty-two bit: $have"
+          "wanted:         $want"
+          if ($have -ne $want) { throw "the 32-bit library says something else" }
+
   release:
     needs: [linux, windows, windows-check]
     if: startsWith(github.ref, 'refs/tags/v')
@@ -134,8 +157,16 @@ jobs:
 
       - name: Make the archives
         run: |
-          # dlltest.exe is a check, not something to ship.
-          rm -f dist/windows/dlltest.exe
+          # The harnesses are checks, not something to ship.
+          rm -f dist/windows/dlltest.exe dist/windows/dlltest32.exe
+          # Two libraries with the same name cannot sit in one directory, and
+          # dropping the wrong one in is the mistake to design out: each gets a
+          # folder saying which it is, with the ini it wants beside it.
+          mkdir -p dist/windows/eci-x86_64 dist/windows/eci-x86
+          mv dist/windows/eci.dll dist/windows/eci-x86_64/eci.dll
+          mv dist/windows/eci32.dll dist/windows/eci-x86/eci.dll
+          cp dist/windows/eci.ini dist/windows/eci-x86_64/
+          mv dist/windows/eci.ini dist/windows/eci-x86/
           cp README.md LICENSE NOTICE dist/windows/
           (cd dist/windows \
              && zip -q -r ../../openevv-${GITHUB_REF_NAME}-windows-x86_64.zip .)

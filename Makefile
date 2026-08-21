@@ -132,7 +132,9 @@ missing: $(OBJECTS)
 	@python3 tools/missing.py $(BUILD)/syms.txt
 
 clean:
-	@rm -rf $(OBJDIR) $(OBJDIR32) $(OBJDIRWIN) $(BUILD)/evv $(BUILD)/probe \
+	@rm -rf $(OBJDIR) $(OBJDIR32) $(OBJDIRWIN) $(OBJDIRWIN32) \
+	        $(BUILD)/eci32.dll $(BUILD)/dlltest32.exe \
+	        $(BUILD)/libevv-win32.a $(BUILD)/evv $(BUILD)/probe \
 	        $(BUILD)/evv32 $(BUILD)/probe32 \
 	        $(BUILD)/libevv.a $(BUILD)/libevv32.a $(BUILD)/libevv-win.a \
 	        $(BUILD)/evv.exe $(BUILD)/evvspeak.exe $(BUILD)/eci.dll \
@@ -189,6 +191,7 @@ $(BUILD)/libevv32.a: $(OBJECTS32)
 # else in the engine knows the difference.
 CCWIN      ?= x86_64-w64-mingw32-gcc
 WINDRES    ?= x86_64-w64-mingw32-windres
+ARWIN      ?= x86_64-w64-mingw32-ar
 OBJDIRWIN  := $(BUILD)/objwin
 
 CFLAGSWIN  := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) -DEVV_ARENA=1 \
@@ -234,11 +237,15 @@ $(BUILD)/evvspeak.exe: win/speak.c $(OBJDIRWIN)/speak.res $(BUILD)/libevv-win.a
 #
 # eci.ini goes beside it because add-ons look for one and patch a path inside
 # it. Nothing here reads it: the engine carries its own settings in the image.
-$(BUILD)/eci.dll: win/eci_api.c $(BUILD)/libevv-win.a
-	@$(CCWIN) $(CFLAGSWIN) -shared win/eci_api.c $(BUILD)/libevv-win.a \
-	   $(LDFLAGSWIN) -o $@
+$(BUILD)/eci.dll: win/eci_api.c $(OBJDIRWIN)/eci.res $(BUILD)/libevv-win.a
+	@$(CCWIN) $(CFLAGSWIN) -shared win/eci_api.c $(OBJDIRWIN)/eci.res \
+	   $(BUILD)/libevv-win.a $(LDFLAGSWIN) -o $@
 	@cp win/eci.ini $(BUILD)/eci.ini
 	@echo "built $@"
+
+$(OBJDIRWIN)/eci.res: win/eci.rc
+	@mkdir -p $(OBJDIRWIN)
+	@$(WINDRES) -I win win/eci.rc -O coff -o $@
 
 # Speaks through the library rather than against the engine, by name, the way
 # an add-on does. `test/hash.sh build/dlltest.exe' then holds what comes out of
@@ -246,7 +253,7 @@ $(BUILD)/eci.dll: win/eci_api.c $(BUILD)/libevv-win.a
 win-dlltest: $(BUILD)/dlltest.exe
 
 $(BUILD)/dlltest.exe: test/dll.c $(BUILD)/eci.dll
-	@$(CCWIN) $(CFLAGSWIN) test/dll.c -static -o $@
+	@$(CCWIN) $(CFLAGSWIN) test/dll.c -static -lversion -o $@
 	@echo "built $@"
 
 $(OBJDIRWIN)/speak.res: win/speak.rc win/speak.h
@@ -262,5 +269,49 @@ $(BUILD)/libevv-win.a: $(OBJECTSWIN)
 	   case " $(OBJECTSWIN) " in *" $$o "*) ;; *) rm -f "$$o" ;; esac; \
 	 done
 	@rm -f $@
-	@ar rcs $@ $(OBJECTSWIN)
+	@$(ARWIN) rcs $@ $(OBJECTSWIN)
 	@echo "built $@ from $(words $(OBJECTSWIN)) objects"
+
+# The same library thirty-two bit, which is what a screen reader driver that
+# hosts the engine in its own 32-bit process loads -- and the most used one
+# does exactly that, through rundll32 from SysWOW64, whatever bitness the
+# reader itself is. Nothing here needs the arena: on thirty-two bits a pointer
+# is a value already.
+#
+# --kill-at because stdcall decorates a name with @N on x86 and a caller asking
+# by name wants it plain. On x86-64 there is no decoration to strip.
+CCWIN32     ?= i686-w64-mingw32-gcc
+WINDRES32   ?= i686-w64-mingw32-windres
+ARWIN32     ?= i686-w64-mingw32-ar
+OBJDIRWIN32 := $(BUILD)/objwin32
+CFLAGSWIN32 := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) $(CFLAGS)
+LDFLAGSWIN32 := -static -Wl,--kill-at $(MINGW_LDFLAGS)
+OBJECTSWIN32 := $(patsubst %.c,$(OBJDIRWIN32)/%.o,$(notdir $(SOURCESWIN)))
+
+.PHONY: win32
+win32: $(BUILD)/eci32.dll $(BUILD)/dlltest32.exe
+
+$(BUILD)/eci32.dll: win/eci_api.c $(OBJDIRWIN32)/eci.res $(BUILD)/libevv-win32.a
+	@$(CCWIN32) $(CFLAGSWIN32) -shared win/eci_api.c $(OBJDIRWIN32)/eci.res \
+	   $(BUILD)/libevv-win32.a $(LDFLAGSWIN32) -o $@
+	@echo "built $@"
+
+$(BUILD)/dlltest32.exe: test/dll.c $(BUILD)/eci32.dll
+	@$(CCWIN32) $(CFLAGSWIN32) test/dll.c -static -lversion -o $@
+	@echo "built $@"
+
+$(OBJDIRWIN32)/eci.res: win/eci.rc
+	@mkdir -p $(OBJDIRWIN32)
+	@$(WINDRES32) -I win win/eci.rc -O coff -o $@
+
+$(OBJDIRWIN32)/%.o: %.c $(HEADERS)
+	@mkdir -p $(OBJDIRWIN32)
+	@$(CCWIN32) $(CFLAGSWIN32) -c $< -o $@
+
+$(BUILD)/libevv-win32.a: $(OBJECTSWIN32)
+	@for o in $(OBJDIRWIN32)/*.o; do \
+	   case " $(OBJECTSWIN32) " in *" $$o "*) ;; *) rm -f "$$o" ;; esac; \
+	 done
+	@rm -f $@
+	@$(ARWIN32) rcs $@ $(OBJECTSWIN32)
+	@echo "built $@ from $(words $(OBJECTSWIN32)) objects"

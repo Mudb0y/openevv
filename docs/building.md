@@ -136,13 +136,41 @@ None of the calling convention trouble that a thirty-two bit build would bring
 applies: on x86-64 `__stdcall` and `__cdecl` are the same thing, a stdcall name
 carries no `@N` to strip, and a stdcall callback is callable as anything.
 
+`make win32` builds the same library thirty-two bit, as `build/eci32.dll`, and
+that one is not optional. The most used screen reader driver --
+davidacm/NVDA-IBMTTS-Driver -- does not load the engine into the reader's own
+process at all: it launches `rundll32.exe` from `SysWOW64` and hosts the engine
+there, talking to it over a named pipe, so the library it loads is thirty-two
+bit whatever the reader is. The other kind of add-on loads it in process and
+therefore wants the bitness the reader has. Both are shipped, in folders that
+say which is which, because dropping the wrong one in is the mistake to design
+out.
+
+Thirty-two bit is the easier build of the two: a pointer is a value there, so
+there is no arena at all. It does want `--kill-at`, because stdcall decorates a
+name with `@N` on x86 and a caller asking by name wants it plain, and it is
+where a wrong signature shows up -- the argument size is part of the decorated
+name, so a declaration that does not match the engine fails to link. Three of
+mine did not, and the sixty-four bit linker had accepted them silently.
+
+`win/eci.rc` gives both libraries a version resource, which is not decoration
+either. That driver reads `ProductName` out of it to decide which engine it is
+talking to: `IBMECI` turns on IBMTTS-specific text fixes, a different pause
+style and a 22 kHz sample rate. This is the Eloquence engine at 11 kHz, so it
+says `openevv` and gets treated accordingly. NVDA's own reader also raises
+rather than loading a file with no version information at all, so without the
+resource that driver would refuse us before it ever called anything.
+
 Two ways to check it, and both are worth having. `make win-dlltest` builds
 `build/dlltest.exe`, which links against nothing, loads `eci.dll` by name, asks
 for each entry point by name and speaks; `test/hash.sh build/dlltest.exe` then
 holds what comes out of the library against what comes out of everything else.
 `test/dll.py` does the same through ctypes, which is a different question --
 ctypes has its own ideas about handles, and a handle is sixty-four bits -- and
-CI runs it on Windows itself.
+CI runs it on Windows itself. `make win32` builds `build/dlltest32.exe` for the
+thirty-two bit library; that one is checked from C, since a sixty-four bit
+Python cannot load a thirty-two bit library at all. Both harnesses also read
+the version resource and fail if it is missing.
 
 What the library does not export: the filter interface, which the engine does
 not implement, and `eciGeneratePhonemes` and the dictionary find, lookup and

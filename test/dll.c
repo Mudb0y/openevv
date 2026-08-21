@@ -87,6 +87,38 @@ static int write_wav(const char *path)
     return 1;
 }
 
+/* What the library says about itself, which is not decoration: the most used
+   screen reader driver reads ProductName out of the version resource to decide
+   which engine it is talking to, and NVDA's own reader raises rather than
+   loading a file that has no version information at all. So the harness says
+   what it finds, and finding nothing is a failure like any other. */
+static int say_product(const char *path)
+{
+    unsigned long room = GetFileVersionInfoSizeA(path, 0);
+    void         *info;
+    void         *value = 0;
+    unsigned int  bytes = 0;
+
+    if (room == 0) {
+        fprintf(stderr, "dlltest: %s has no version information; a driver that"
+                " reads it will refuse to load this\n", path);
+        return 0;
+    }
+    info = malloc(room);
+    if (info == 0 || !GetFileVersionInfoA(path, 0, room, info)) {
+        fprintf(stderr, "dlltest: cannot read %s's version information\n", path);
+        return 0;
+    }
+    if (!VerQueryValueA(info, "\\StringFileInfo\\040904b0\\ProductName",
+                        &value, &bytes) || bytes == 0) {
+        fprintf(stderr, "dlltest: %s names no product\n", path);
+        return 0;
+    }
+    printf("dlltest: %s says it is %s\n", path, (const char *)value);
+    free(info);
+    return 1;
+}
+
 #define GET(name) \
     do { \
         name = (void *)GetProcAddress(dll, #name); \
@@ -124,6 +156,9 @@ int main(int argc, char **argv)
         else
             text = argv[i];
     }
+
+    if (!say_product("eci.dll"))
+        return 1;
 
     dll = LoadLibraryA("eci.dll");
     if (dll == 0) {

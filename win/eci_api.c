@@ -80,12 +80,12 @@ int      STDCALL vc_registerVoice(OldInst *h, int32_t voice, void *data,
 int      STDCALL vc_unregisterVoice(OldInst *h, int32_t voice, void *attrib,
                                     void **data);
 void     STDCALL eo_clearErrors(OldInst *h);
-int      STDCALL es_errorMessage(OldInst *h, void *out);
+void     STDCALL es_errorMessage(OldInst *h, void *out);
 int32_t  STDCALL es_progStatus(OldInst *h);
 int      STDCALL es_isBeingReentered(OldInst *h);
 int      STDCALL es_requestLicense(OldInst *h);
-int      STDCALL es_startLogging(int32_t what);
-int      STDCALL es_stopLogging(void);
+void     STDCALL es_startLogging(int32_t what);
+void     STDCALL es_stopLogging(int32_t what);
 int      STDCALL es_getLog(void *out);
 int      STDCALL es_getIntLog(int32_t which, int32_t *out);
 int      STDCALL es_dialogBox(OldInst *h, void *parent, int32_t which,
@@ -192,12 +192,12 @@ API int eciUnregisterVoice(void *h, int voice, void *attrib, void **data)
 }
 
 API void eciClearErrors(void *h) { eo_clearErrors(h); }
-API int  eciErrorMessage(void *h, void *out) { return es_errorMessage(h, out); }
+API void eciErrorMessage(void *h, void *out) { es_errorMessage(h, out); }
 API int  eciProgStatus(void *h) { return es_progStatus(h); }
 API int  eciIsBeingReentered(void *h) { return es_isBeingReentered(h); }
 API int  eciRequestLicense(void *h) { return es_requestLicense(h); }
-API int  eciStartLogging(int what) { return es_startLogging(what); }
-API int  eciStopLogging(void) { return es_stopLogging(); }
+API void eciStartLogging(int what) { es_startLogging(what); }
+API void eciStopLogging(int what) { es_stopLogging(what); }
 API int  eciGetLog(void *out) { return es_getLog(out); }
 API int  eciGetIntLog(int which, int *out) { return es_getIntLog(which, (int32_t *)out); }
 

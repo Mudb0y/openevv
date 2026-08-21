@@ -33,10 +33,15 @@ only front end that plays anything.
 
 And it builds as `eci.dll`, exporting the fifty-two names IBM published, so a
 program written against IBM's library -- a screen reader add-on, most likely --
-can load ours instead. Checked two ways on Windows itself: by name from C, and
-through ctypes as an add-on does. What is not exported is the filter interface,
-which the engine does not implement, and the dictionary find, lookup and update
-calls, which have no public wrapper yet.
+can load ours instead. Both bitnesses: sixty-four bit for an add-on that
+loads the engine into the reader's own process, thirty-two bit for the most
+used driver, which hosts the engine in a 32-bit process of its own whatever
+the reader is. Checked on Windows itself: by name from C for both, and through
+ctypes for the sixty-four bit one, as an add-on does.
+
+What is not exported is the filter interface, which the engine does not
+implement, and the dictionary find, lookup and update calls, which have no
+public wrapper yet.
 
 ## Not done
 
