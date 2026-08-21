@@ -261,8 +261,27 @@ Without Wine there is no automatic check that the audio is right.
 first, so a change to the language data can be heard.
 
 `tools/delta-check.sh` is the other check. It holds named rules written as C
-against the same rules left as bytecode, by tracing every call both ways and
-comparing the traces line for line.
+against the same rules left as bytecode: it speaks the seven plain cases twice,
+once each way, with the engine saying which rule it is entering and with what,
+and the two accounts have to be identical. That is finer than the audio, because
+a rule can go wrong in a way that changes what runs and not what is heard.
+
+Four things about it are deliberate, and the comment at the top of the script
+says why at length. The text is seven sentences, because tracing costs more than
+the synthesis and over the whole case set the run is cut short in a different
+place each time. `DELTA_RULE_TRACE` is 1 rather than higher, because above a
+hundred thousand the interpreter also prints every call with its arguments,
+which cannot be compared yet: it prints its own stores, which a rule written as
+C makes for itself, and the two disagree about how many arguments a call takes.
+The rules are written out with `EVV_FAITHFUL` set, which leaves a wrapper rule
+as a call to that rule rather than writing out the primitive it stood for, since
+an inlined wrapper is never entered and so cannot appear in a trace at all.
+And addresses in the arena are masked, because a rule written as C takes a
+smaller frame on purpose and the two land in different places.
+
+The check deletes the generated C when it finishes, so the next build writes the
+ordinary form again rather than finding the faithful one sitting there newer
+than everything it is made from.
 
 `test/hash.sh` is the check that needs nothing at all: it speaks one fixed
 sentence and holds the samples against a hash in `test/samples.sha256`. That

@@ -61,15 +61,23 @@ build knows only `lang/enus`.
 
 ## Partly done
 
-The rules read as rules, to eleven passes of the decompiler. What that means
+The rules read as rules, to fourteen passes of the decompiler. What that means
 concretely: calls sit with their arguments, wrapper rules say which primitive
 they stand for, state reaches say which language variable they touch, frame
-reaches say which argument they are, switch arms say which alternative they are,
-register halves say which half, and the machine's dead leavings are gone.
+reaches say which argument they are, the arms of a backtracking dispatch say
+which alternative they are whichever of the two ways the compiler wrote the
+dispatch, register halves say which half, a test of what a call answered is a
+comparison of the answer with nought rather than a flag set and a flag read,
+letting go of a call's arguments says that and not that a scratch register was
+written, a jump at the return is a return, and the machine's dead leavings are
+gone.
 
-What is left in them: 63,739 gotos, of which 22,389 are the backtracking
-dispatch and are correct as gotos. The rest are branches that could not be
-structured without changing meaning.
+What is left in them: 62,360 gotos, of which 26,668 are the arms of a
+backtracking dispatch and are correct as gotos. The rest are branches that
+could not be structured without changing meaning. 3,364 conditions still read
+the flags and 2,057 comparisons still set them, which is what is left once the
+answer of a call is compared directly: those are the ones an arithmetic
+operation set rather than a test.
 
 Three things in the rules cannot be recovered and are not going to be. The
 global variables' names are gone: they are known only by kind and number,
@@ -85,6 +93,16 @@ binary. Both are obtainable: `docs/building.md` says where IBM's SDK still is.
 Without them there is no automatic check that the audio is right, only
 `tools/say.sh` to listen with and `tools/delta-check.sh` to hold the two forms
 of a rule against each other.
+
+That last one compares which rules were entered and with what, and not yet every
+call with its arguments, which would be the better check. Two things stand in
+the way and both are the harness rather than the rules: the interpreter prints
+the stores it makes, which a rule written as C makes for itself and cannot
+print, and a call is written with two counts -- how many the entry takes and how
+deep the stack should be -- where the interpreter passes the first and the
+decompiler emits the second. Nothing reads past what it wants, so it changes
+nothing that is heard, but until the decompiler emits the first the printed
+argument lists cannot be held against each other.
 
 The reference binary hangs now and again on an index mark. `test/compare.sh`
 retries a case once on its own before reporting it as hung, because calling that

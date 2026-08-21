@@ -20,12 +20,15 @@ the operations that set them came out of the interpreter into delta_rule_alu,
 delta_rule_cmp and delta_condition, which both it and this call, so neither
 can drift from the other over what a comparison afterwards will say.
 
-Proving it: the interpreter prints every call it makes with its arguments when
-DELTA_RULE_TRACE is set high enough. A rule compiled from here calls through
-the same helper and prints the same way, so a run with the rule as bytecode
-and a run with it as C either produce the same trace or the translation is
-wrong. tools/delta-check.sh does that; both suites are the coarser check
-behind it.
+Proving it: the engine says which rule it is entering and with what when
+DELTA_RULE_TRACE is set, and a rule compiled from here is entered through the
+same function and says the same. So the same text spoken twice, once with a
+rule compiled and once without, either names the same rules in the same order
+with the same arguments or the translation is wrong. tools/delta-check.sh does
+that, with EVV_FAITHFUL set so that a wrapper is left as the call it was; the
+comment at the top of it says what else that comparison needs and what would
+make it finer. Both suites are the coarser check behind it, and the only one
+for the inlining itself.
 
 usage: delta-decompile.py                 the hundred smallest with a body
        delta-decompile.py <count>         the smallest that many
@@ -44,6 +47,14 @@ OUT_C = os.environ.get('EVV_OUT_C',
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 census = importlib.import_module('delta-census')
+
+# Inlining a wrapper says what a rule does, and costs the only check that is
+# finer than the audio. A wrapper written out no longer calls the wrapper rule,
+# so what a run says it did differs from what the interpreter says, and
+# tools/delta-check.sh has nothing to compare. Setting EVV_FAITHFUL leaves the
+# wrappers as calls, which is the form that check is built from; nothing else
+# here changes what a run says it did.
+FAITHFUL = bool(os.environ.get('EVV_FAITHFUL'))
 
 # What the interpreter keeps, and what a rule compiled from here keeps too.
 MAXARG = 64
@@ -310,8 +321,7 @@ def emit(rule):
             body.append('        r0 = (int32_t)(num / by);')
             body.append('        r2 = (int32_t)(num % by); } }')
         elif op == 'return':
-            body.append('    { int32_t out = %s; evv_frame_pop(frame);'
-                        ' return out; }' % v(ops[0]))
+            body.append('    RETURN(%s);' % v(ops[0]))
             pending = None
         elif op == 'switch':
             body.append('    switch (%s) {' % v(ops[0]))
@@ -390,15 +400,21 @@ def write(names):
         text.append('    for (i = 0; i < nargs && i < %d; i++)\n' % params)
         text.append('        memcpy(base + %d + 4 * i, &args[i], 4);\n\n'
                     % pbase)
+        # The rule while it is still one straight line of code with labels,
+        # which is where anything that has to follow the machine's own control
+        # flow has to look: the alternatives a dispatch chain names, and which
+        # comparison a test of the flags is reading.
+        flat = answer_tests(tail_returns(fold(body)))
+        alts = dispatch_names(flat)
         # Taking the dead loads out first brings more calls up against
         # their arguments, which is why the joining goes last.
         named, saw = name_globals(
-            join_calls(c, join_pops(drop_dead(structure(fold(body))))))
-        named = name_alternatives(name_params(named, pbase, params))
+            join_calls(c, drop_pops(join_pops(drop_dead(structure(flat))))))
+        named = name_alternatives(name_params(named, pbase, params), alts)
         USED.update(saw)
         text.append('\n'.join(named))
-        tail = ('' if named and named[-1].strip().endswith('return out; }')
-                else '\n    evv_frame_pop(frame);\n    return r0;')
+        tail = ('' if named and named[-1].strip().startswith('RETURN(')
+                else '\n    RETURN(r0);')
         text.append('%s\n}\n\n' % tail)
         done.append(name)
 
@@ -474,9 +490,27 @@ def every():
 OPPOSITE = {'e': 'ne', 'ne': 'e', 'a': 'be', 'be': 'a', 'ae': 'b', 'b': 'ae',
             'g': 'le', 'le': 'g', 'ge': 'l', 'l': 'ge', 's': 'ns', 'ns': 's'}
 
+# And the same for a condition that has already been written as a comparison.
+FLIP = {'==': '!=', '!=': '==', '<': '>=', '>=': '<', '<=': '>', '>': '<='}
+
 LABEL_RE = re.compile(r'^\s*L(\d+):;$')
-BRANCH_RE = re.compile(r'^(\s*)if \(IF\((\w+)\)\) goto L(\d+);$')
+COND = r'IF\(\w+\)|r\d (?:==|!=|<=|>=|<|>) 0'
+BRANCH_RE = re.compile(r'^(\s*)if \((%s)\) goto L(\d+);$' % COND)
 JUMP_RE = re.compile(r'goto L(\d+);')
+
+
+def opposite(cond):
+    """The other half of a condition, however it is written. None where there
+    is no way to say it, which is a branch that keeps the goto it had."""
+    m = re.match(r'^IF\((\w+)\)$', cond)
+    if m:
+        was = m.group(1)
+        return 'IF(%s)' % OPPOSITE[was] if was in OPPOSITE else None
+    m = re.match(r'^(r\d) (==|!=|<=|>=|<|>) 0$', cond)
+    if m:
+        return '%s %s 0' % (m.group(1), FLIP[m.group(2)])
+    return None
+
 
 STRUCTURED = [0]
 LOOPED = [0]
@@ -537,7 +571,7 @@ def _loop(body):
         out = body[:j]
         out.append('%sdo {' % pad)
         out.extend('    ' + l if l.strip() else l for l in body[j + 1:i])
-        out.append('%s} while (IF(%s));' % (pad, cond))
+        out.append('%s} while (%s);' % (pad, cond))
         out.extend(body[i + 1:])
         return out
     return None
@@ -588,54 +622,6 @@ def layout():
             at += 4 + up(sizes[n[k]] if n[k] < len(sizes) else 0, 2)
         n[k] += 1
     return LAYOUT
-
-
-ALTED = [0]
-
-
-def name_alternatives(body):
-    """The arms of a backtracking dispatch, under the alternatives they are.
-
-    Every switch in a rule dispatches on what backtrack_function answered,
-    which is the machine asking which alternative to try next. So an arm is
-    not an arbitrary place to jump to: it is one of the rule's alternatives,
-    in the order the language wrote them, and the label says so.
-
-    Only where a label is the target of exactly one case in the whole rule.
-    A label two cases share, or one something else jumps to as well, is not
-    one alternative and keeps its number.
-    """
-    cases = {}
-    clash = set()
-    n = 0
-    for line in body:
-        if line.strip().startswith('switch ('):
-            n += 1
-            continue
-        m = re.match(r'\s*case (-?\d+): goto (L\d+);$', line)
-        if not m:
-            continue
-        tgt = m.group(2)
-        if tgt in cases:
-            clash.add(tgt)
-        cases[tgt] = 'alt%d_%s' % (n, m.group(1))
-    for t in clash:
-        del cases[t]
-    if not cases:
-        return body
-    taken = {}
-    for tgt, new in cases.items():
-        taken.setdefault(new, []).append(tgt)
-    for new, tgts in taken.items():
-        if len(tgts) > 1:
-            for t in tgts:
-                del cases[t]
-    if not cases:
-        return body
-    ALTED[0] += len(cases)
-    pat = re.compile(r'\b(%s)\b' % '|'.join(sorted(cases, key=len,
-                                                    reverse=True)))
-    return [pat.sub(lambda m: cases[m.group(1)], l) for l in body]
 
 
 PARAMED = [0]
@@ -872,7 +858,8 @@ def join_calls(code, body):
             if want and len(args) == want and len(out) >= want:
                 del out[len(out) - want:]
                 args.reverse()
-                said = inlined(code, who, args) if who.startswith('ZZ') else None
+                said = (inlined(code, who, args)
+                        if who.startswith('ZZ') and not FAITHFUL else None)
                 if said is None:
                     said = '%s, CALL(%s, %d)' % (
                         ', '.join('ARG(%s)' % a for a in args), who, want)
@@ -913,7 +900,7 @@ def _once(body):
         if not m:
             continue
         pad, cond, tgt = m.group(1), m.group(2), int(m.group(3))
-        if cond not in OPPOSITE:
+        if opposite(cond) is None:
             continue
         j = at.get(tgt)
         if j is None or j <= i + 1:
@@ -935,7 +922,7 @@ def _once(body):
 
     i, j, pad, cond, tgt = best
     out = body[:i]
-    out.append('%sif (IF(%s)) {' % (pad, OPPOSITE[cond]))
+    out.append('%sif (%s) {' % (pad, opposite(cond)))
     out.extend('    ' + line if line.strip() else line
                for line in body[i + 1:j])
     out.append('%s}' % pad)
@@ -1020,6 +1007,390 @@ def _enter(body, i):
     return ('    ENTER(%s);' % ', '.join(slots), 14)
 
 
+# What a condition says when the flags were set by testing a register against
+# itself, which is how the machine looks at what a call answered. zf is then
+# whether that register was nought and sf whether it was negative, with cf and
+# of both clear, so every condition the machine has is a comparison of the
+# register with nought. Two are not comparisons at all -- above-or-equal is
+# always true and below never is -- and those are left alone rather than
+# written as a constant.
+SELF_TEST = {
+    'e': '%s == 0', 'ne': '%s != 0',
+    'a': '%s != 0', 'be': '%s == 0',
+    'g': '%s > 0', 'ge': '%s >= 0',
+    'l': '%s < 0', 'le': '%s <= 0',
+    's': '%s < 0', 'ns': '%s >= 0',
+}
+
+SELF_RE = re.compile(r'^CMP\(testl, (r\d), \1\);$')
+ENVELOPE_RE = re.compile(r'^(?:LANDING|ENTER)\(')
+READS_RE = re.compile(r'IF\((\w+)\)')
+
+# The machine's four flags, and which of them each thing touches. Most
+# operations write all four, and the exceptions are what make this worth
+# writing down: an increment or a decrement keeps the carry it was given, a
+# shift leaves the carry and the overflow alone, and a multiply says nothing.
+FLAGS = ('zf', 'sf', 'cf', 'of')
+ALL_FLAGS = frozenset(FLAGS)
+WRITES_FLAGS = {
+    'incl': frozenset(('zf', 'sf', 'of')),
+    'incw': frozenset(('zf', 'sf', 'of')),
+    'decl': frozenset(('zf', 'sf', 'of')),
+    'decw': frozenset(('zf', 'sf', 'of')),
+    'shll': frozenset(('zf', 'sf')),
+    'shlw': frozenset(('zf', 'sf')),
+    'sarl': frozenset(('zf', 'sf')),
+    'sarw': frozenset(('zf', 'sf')),
+    'imull': frozenset(),
+    'imulw': frozenset(),
+}
+
+# And the one operation that reads a flag rather than only writing it.
+READS_FLAGS = {'sbbl': frozenset(('cf',))}
+
+# What each condition looks at, so that a comparison is only kept for the
+# flags something actually asks about.
+COND_FLAGS = {
+    'e': ('zf',), 'ne': ('zf',),
+    'a': ('cf', 'zf'), 'ae': ('cf',), 'b': ('cf',), 'be': ('cf', 'zf'),
+    'g': ('zf', 'sf', 'of'), 'ge': ('sf', 'of'),
+    'l': ('sf', 'of'), 'le': ('zf', 'sf', 'of'),
+    's': ('sf',), 'ns': ('sf',),
+}
+
+TESTED = [0, 0]
+
+
+def _writes(line, reg):
+    """Whether a line puts something in a register. Every way the writer has
+    of doing that is here; a way missed would let a comparison be written
+    against a value that had moved on."""
+    return bool(re.search(r'\b%s\b\s*=[^=]' % reg, line)
+                or re.search(r'SET(?:LOW|BYTE0|BYTE1)\(%s\b' % reg, line)
+                or re.search(r'POP\(%s\b' % reg, line))
+
+
+def _flow(body):
+    """Where each line can go next. Straight on unless it says otherwise, and
+    both ways at a branch or an arm."""
+    at = {}
+    for i, line in enumerate(body):
+        m = LABEL_RE.match(line)
+        if m:
+            at[m.group(1)] = i
+    n = len(body)
+    succ = []
+    for i, line in enumerate(body):
+        t = line.strip()
+        on = [i + 1] if i + 1 < n else []
+        m = re.match(r'^(?:if \(.*\)|case -?\d+:) goto L(\d+);$', t)
+        if m:
+            succ.append(on + [at[m.group(1)]])
+            continue
+        m = re.match(r'^goto L(\d+);$', t)
+        if m:
+            succ.append([at[m.group(1)]])
+            continue
+        if t.startswith('RETURN('):
+            succ.append([])
+            continue
+        succ.append(on)
+    return succ
+
+
+def answer_tests(body):
+    """What a call answered, tested as the comparison it is.
+
+    The machine has no way to ask whether a call answered nought except to set
+    its flags from the answer and then read one of them, and two lines in nine
+    are that. Here the flags are a variable like any other, so the test can say
+    what it tests -- but only where every reader of a flag is reached by
+    nothing but the same self-test on a register nothing has written since.
+    Where anything else can reach a reader, the flags stay.
+
+    Each of the four flags is followed on its own, because the operations do
+    not all write all four: increment and decrement keep the carry they were
+    given, the shifts leave the carry and the overflow alone, and a multiply
+    says nothing at all. A comparison taken away because nothing read its zero
+    flag would otherwise take with it a carry that something still read.
+    """
+    if not any(SELF_RE.match(l.strip()) for l in body):
+        return body
+
+    succ = _flow(body)
+    n = len(body)
+
+    # Every line that leaves a flag saying something new: which flags it
+    # writes, and what they then say -- the register a self-test looked at, or
+    # nothing, where they mean whatever the operation left behind. The
+    # envelope's own test is a real one, but its line cannot be taken away
+    # because the macro is what carries it.
+    gen = {}
+    hidden = {}
+    for i, line in enumerate(body):
+        t = line.strip()
+        m = SELF_RE.match(t)
+        if m:
+            gen[i] = (ALL_FLAGS, m.group(1), True)
+            continue
+        if ENVELOPE_RE.match(t):
+            gen[i] = (ALL_FLAGS, 'r0', False)
+            continue
+        m = re.search(r'\bCMP\((\w+),', t)
+        if m:
+            gen[i] = (ALL_FLAGS, None, False)
+            continue
+        m = re.search(r'\bALU\((\w+),', t)
+        if m:
+            gen[i] = (WRITES_FLAGS.get(m.group(1), ALL_FLAGS), None, False)
+            if m.group(1) in READS_FLAGS:
+                hidden[i] = READS_FLAGS[m.group(1)]
+
+    empty = (frozenset(),) * len(FLAGS)
+
+    def through(i, coming):
+        """What each flag says after a line, given what it said before it."""
+        bits, reg, _keep = gen.get(i, (frozenset(), None, False))
+        made = frozenset([(i, reg)])
+        line = body[i]
+        return tuple(made if b in bits else
+                     frozenset((d, None) if r and _writes(line, r) else (d, r)
+                               for d, r in was)
+                     for b, was in zip(FLAGS, coming))
+
+    # What reaches each line, grown until it stops growing. Every line is
+    # looked at once whether or not anything reaches it, or a rule whose first
+    # line happens not to touch the flags is never walked at all: nothing
+    # would reach the first comparison, so nothing would carry it forward and
+    # every comparison would look unread. A line nothing reaches keeps
+    # nothing, which is a refusal rather than a licence.
+    state = [empty for _ in range(n)]
+    work = list(range(n - 1, -1, -1))
+    queued = set(range(n))
+    while work:
+        i = work.pop()
+        queued.discard(i)
+        now = through(i, state[i])
+        for j in succ[i]:
+            fresh = tuple(a | b for a, b in zip(state[j], now))
+            if fresh != state[j]:
+                state[j] = fresh
+                if j not in queued:
+                    queued.add(j)
+                    work.append(j)
+
+    def reaching(i, flags):
+        out = set()
+        for b in flags:
+            out |= state[i][FLAGS.index(b)]
+        return out
+
+    needed = set()
+    said = list(body)
+    for i, line in enumerate(body):
+        conds = READS_RE.findall(line)
+        if conds:
+            want = set()
+            for c in conds:
+                want.update(COND_FLAGS.get(c, ALL_FLAGS))
+            came = reaching(i, want)
+            regs = set(r for _d, r in came)
+            if (came and len(regs) == 1 and None not in regs
+                    and all(c in SELF_TEST for c in conds)):
+                reg = regs.pop()
+                for c in conds:
+                    said[i] = said[i].replace('IF(%s)' % c, SELF_TEST[c] % reg)
+                    TESTED[0] += 1
+            else:
+                needed.update(d for d, _r in came)
+        if i in hidden:
+            needed.update(d for d, _r in reaching(i, hidden[i]))
+
+    keep = []
+    for i, line in enumerate(said):
+        bits, reg, deletable = gen.get(i, (None, None, False))
+        if deletable and reg and i not in needed:
+            TESTED[1] += 1
+            continue
+        keep.append(line)
+    return keep
+
+
+RETURNED = [0]
+
+
+def tail_returns(body):
+    """A jump at the return, written as the return itself.
+
+    The compiler put a rule's one way out at the bottom and jumped to it from
+    everywhere, so a rule ends by saying where it is going rather than what it
+    answers. The label stays where something falls into it and goes where
+    nothing does any more.
+    """
+    at = {}
+    for i, line in enumerate(body):
+        m = LABEL_RE.match(line)
+        if m:
+            at[m.group(1)] = i
+    ret = {}
+    for lab, i in at.items():
+        if i + 1 < len(body) and body[i + 1].strip().startswith('RETURN('):
+            ret[lab] = body[i + 1].strip()
+    if not ret:
+        return body
+
+    out = []
+    for line in body:
+        m = re.match(r'^(\s*)goto L(\d+);$', line)
+        if m and m.group(2) in ret:
+            out.append('%s%s' % (m.group(1), ret[m.group(2)]))
+            RETURNED[0] += 1
+        else:
+            out.append(line)
+
+    live = set()
+    for line in out:
+        live.update(JUMP_RE.findall(line))
+
+    def gone(line):
+        m = LABEL_RE.match(line)
+        return m is not None and m.group(1) not in live
+
+    return [l for l in out if not gone(l)]
+
+
+DROPPED_POPS = [0]
+POPREG_RE = re.compile(r'POP\((r\d)(?:, (\d+))?\);')
+
+
+def drop_pops(body):
+    """A pop into a register nothing reads, as the letting go it is.
+
+    A rule pushes what a call is to take and moves the stack back afterwards,
+    and the machine's way of moving it back is to pop into a register. Where
+    the rule never looks at that register anywhere, nothing was read back and
+    the line says only that the arguments are gone, which is what DROP says.
+    """
+    read = set()
+    for line in body:
+        rest = POPREG_RE.sub('', line)
+        for m in re.finditer(r'\br\d\b', rest):
+            if rest[m.end():m.end() + 3] == ' = ':
+                continue
+            read.add(m.group(0))
+
+    def one(m):
+        if m.group(1) in read:
+            return m.group(0)
+        DROPPED_POPS[0] += 1
+        return 'DROP(%s);' % (m.group(2) or '1')
+
+    return [POPREG_RE.sub(one, l) for l in body]
+
+
+ALTED = [0, 0]
+
+
+def _chain(body, i):
+    """The arms of a dispatch the compiler wrote as a chain of decrements.
+
+    With few alternatives to choose between it did not build a jump table: it
+    took one off the answer and jumped if that left nought, took another off
+    and jumped again. So the place jumped to after the first decrement is the
+    rule's first alternative, which is the one a jump table reaches through
+    case nought -- a table is preceded by the same decrement, to bring an
+    answer of one down to the first arm of the table. Both are counted from
+    nought here so that both say the same thing.
+    """
+    arms = []
+    k = 0
+    n = len(body)
+    while i < n:
+        t = body[i].strip()
+        if t.startswith('switch ('):
+            return None, i
+        if (t.startswith('POP(') or t.startswith('DROP(')
+                or t.startswith('ARG(')):
+            i += 1
+            continue
+        m = re.match(r'^(r\d) = \(ALU\(dec[lw], 0, \1\)\);$', t)
+        if m:
+            k += 1
+            i += 1
+            continue
+        m = re.match(r'^if \((?:IF\(e\)|r\d == 0)\) goto (L\d+);$', t)
+        if m and k:
+            arms.append((k - 1, m.group(1)))
+            i += 1
+            continue
+        break
+    return (arms or None), i
+
+
+def dispatch_names(body):
+    """Every arm of a rule's backtracking dispatch, under the alternative it
+    is.
+
+    A rule asks backtrack_function which alternative to try next and then goes
+    to it, and its compiler wrote that two ways: a jump table where there were
+    several arms, and a chain of decrements of the answer where there were few.
+    Both are the same question and both are the order the language wrote the
+    alternatives in, so both are named the same way.
+
+    A place two arms claim, or one that two names would land on, keeps its
+    number: that is not one alternative.
+    """
+    claimed = {}
+    kind = {}
+    site = 0
+    i = 0
+    n = len(body)
+    while i < n:
+        t = body[i].strip()
+        if t.startswith('switch ('):
+            site += 1
+            j = i + 1
+            while j < n:
+                m = re.match(r'^case (-?\d+): goto (L\d+);$', body[j].strip())
+                if not m:
+                    break
+                new = 'alt%d_%s' % (site, m.group(1))
+                claimed.setdefault(m.group(2), set()).add(new)
+                kind[new] = 0
+                j += 1
+            i = j
+            continue
+        if 'backtrack_function' in t:
+            arms, j = _chain(body, i + 1)
+            if arms:
+                site += 1
+                for k, tgt in arms:
+                    new = 'alt%d_%d' % (site, k)
+                    claimed.setdefault(tgt, set()).add(new)
+                    kind[new] = 1
+                i = j
+                continue
+        i += 1
+
+    names = {t: list(s)[0] for t, s in claimed.items() if len(s) == 1}
+    taken = {}
+    for t, new in names.items():
+        taken.setdefault(new, []).append(t)
+    names = {t: new for t, new in names.items() if len(taken[new]) == 1}
+    for new in names.values():
+        ALTED[kind[new]] += 1
+    return names
+
+
+def name_alternatives(body, names):
+    """The names worked out before the rule was structured, put on."""
+    if not names:
+        return body
+    pat = re.compile(r'\b(%s)\b' % '|'.join(sorted(names, key=len,
+                                                   reverse=True)))
+    return [pat.sub(lambda m: names[m.group(1)], l) for l in body]
+
+
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == 'all':
         names = every()
@@ -1032,9 +1403,15 @@ def main():
     print('calls joined to their arguments: %d' % JOINED[0])
     print('wrappers inlined to the primitive they stand for: %d' % WRAPPED[0])
     print('reaches through the state named as the variable they are: %d over %d variables' % (NAMED[0], len(USED)))
-    print('arms named as the alternative they are: %d' % ALTED[0])
+    print('arms named as the alternative they are: %d in a table, %d in a'
+          ' chain of decrements' % (ALTED[0], ALTED[1]))
     print('reaches into the frame named as the argument they are: %d'
           % PARAMED[0])
+    print('answers tested as a comparison: %d, comparisons of the flags no'
+          ' longer needed: %d' % (TESTED[0], TESTED[1]))
+    print('pops into a register nothing reads, said as letting go: %d'
+          % DROPPED_POPS[0])
+    print('jumps at the return, written as the return: %d' % RETURNED[0])
     print('pops joined: %d, loads into r0 that nothing reads: %d'
           % (POPPED[0], DROPPED[0]))
     print('branches turned into an if: %d, loops closed: %d'

@@ -184,6 +184,12 @@ enum {
          r0 = CALL(ventproc, 6); DROP(6); \
          CMP(testl, r0, r0); } while (0)
 
+/* Leaving the rule with an answer. The frame was taken from the arena and
+   has to go back before the answer does, so every way out says this rather
+   than saying return. */
+#define RETURN(x) \
+    do { int32_t out_ = (x); evv_frame_pop(frame); return out_; } while (0)
+
 /* How a decompiled rule writes a call. The arguments are already on that
    stack, which is why they are not named here: what a call says is which
    entry it is and how many of them it takes. */
