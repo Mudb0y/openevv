@@ -214,13 +214,29 @@ buffer of its own just before reporting a mark, which is what makes that line
 up exactly.
 
 And nothing ever interrupts the engine, which wants explaining because it is
-not what the interface says to do. Both of the ways offered for cutting an
-utterance short fault: answering `eciDataAbort` from the callback, and calling
-`eciStop` while synthesis is running. The first dies on a null indirect call in
-`vinitloc_new` in `src/delta.c`, the second on a null read of its own. Neither
-is hypothetical -- the abort is what crashed NVDA the first time the add-on was
-asked for silence, and both are still there after the owner-offset fix in
-042fd99, so they are a separate fault and not a symptom of that one.
+not what the interface says to do.
+
+Both of the ways the interface offers for cutting an utterance short used to
+fault. Answering `eciDataAbort` from the callback died on a null indirect call
+in `vinitloc_new`, which is what crashed NVDA the first time the add-on was
+asked for silence; calling `eciStop` while synthesis was running died on a null
+read of its own. e0cb1f8 fixed that, and the fix is confirmed on three
+platforms: `make interrupt` faults without it and passes with it on Linux, and
+the same test cross-compiled faults on turn one without it and survives twelve
+turns with it both under Wine and on a real Windows machine. For the stop door
+the before-and-after is a rate rather than a certainty, because it is a race:
+without the guard 12 of 12 runs faulted under Wine and 11 of 12 on real
+Windows, and with it 0 of 12 on real Windows -- but still 8 of 12 under Wine,
+whose scheduling evidently exposes something the real one does not reach.
+
+That is why the add-on still does not interrupt, and the reason has changed
+rather than gone away. Interrupting no longer crashes; it goes mute. From the
+second interruption onwards the engine accepts text, answers no error, and
+produces nothing at all, for ever. `make interrupt` shows it plainly: turn one
+says 19,371 samples and every turn after it says nought. So the interrupt path
+is still not something a screen reader can be built on, and would not be even
+if the silence were fixed tomorrow -- see below for what the traced evidence
+says about leaving the engine alone instead.
 
 So the add-on stops by throwing the samples away: the callback goes on
 answering `eciDataProcessed` and simply drops what it is handed, the utterance
@@ -239,9 +255,13 @@ remarks across 520 different rules -- that diagnostic is ordinary background
 noise, which is why `tools/delta-check.sh` filters it out -- and *none at all*
 on `callInternalSynthesizer`, `callSynthesizeArray`, `sendArrayParameters` or
 `stopSynthesizing`. All 1,085 dispatches of the synthesiser rule ended the way
-an uninterrupted one does. A real abort puts a bad depth on exactly those
-rules, so their silence here is the thing worth checking if this ever has to be
+an uninterrupted one does. A real abort put a bad depth on exactly those rules,
+so their silence here is the thing worth checking if this ever has to be
 revisited. It is not a routine check: tracing that run writes 269 MB.
+
+That differential is also what found the fault. Ten interruptions with those
+rules untouched said the damage was not in interrupting but in the stop call
+itself, which is what narrowed e0cb1f8 down to one guard.
 
     make nvda-test
 
