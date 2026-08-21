@@ -87,7 +87,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) $(LOW) $(CFLAGS)
 OBJDIR  := $(BUILD)/obj
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32
+.PHONY: all probe rules missing install clean evv32 probe32 instances
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv.a
@@ -98,6 +98,15 @@ probe: $(BUILD)/probe
 
 $(BUILD)/probe: cli/probe.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) cli/probe.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# An instance made and thrown away over and over, which the suite never does:
+# it speaks a great deal through one. A fault in what an instance owns and
+# gives back shows here and nowhere else.
+instances: $(BUILD)/instances
+
+$(BUILD)/instances: test/instances.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/instances.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 $(OBJDIR)/%.o: %.c $(HEADERS)
@@ -326,8 +335,12 @@ $(BUILD)/libevv-win32.a: $(OBJECTSWIN32)
 nvda: win win32
 	@python3 nvda/build.py
 
-# The part of the driver that can be checked anywhere: a speech sequence in and
-# the calls it becomes out, with NVDA stood in for. Wants neither Windows, nor
-# the libraries, nor sound.
+# The two checks that want neither Windows, nor the libraries, nor sound.
+# sequence.py is a speech sequence in and the calls it becomes out, with NVDA
+# stood in for. engine.py goes further down: it runs the engine layer itself
+# against a library and a player that are stood in for, which is what catches a
+# fault in code the first check never enters -- the add-on shipped once with a
+# name error in exactly that gap.
 nvda-test:
 	@python3 nvda/test/sequence.py
+	@python3 nvda/test/engine.py

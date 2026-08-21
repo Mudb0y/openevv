@@ -269,7 +269,7 @@ class Engine(threading.Thread):
 		self._finishThread()
 
 	def _start(self):
-		path = _libraryPath()
+		path = libraryPath()
 		if not os.path.isfile(path):
 			raise OpenEvvError("openevv: there is no library at %s" % path)
 
@@ -347,11 +347,11 @@ class Engine(threading.Thread):
 
 		room = ctypes.create_string_buffer(64)
 		dll.eciVersion(room)
-		self.version = room.value.decode("mbcs", "replace")
+		self.version = room.value.decode("latin-1").strip()
 
 		for number in range(VOICE_FIRST, VOICE_LAST + 1):
 			dll.eciGetVoiceName(handle, number, room)
-			name = room.value.decode("mbcs", "replace").strip()
+			name = room.value.decode("latin-1").strip()
 			self.voiceNames[number] = name or ("Voice %d" % number)
 
 		self._readVoiceParams()
