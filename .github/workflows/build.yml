@@ -71,6 +71,11 @@ jobs:
       # The add-on is built here because it wants both libraries, and this is
       # the only job that has them. A tag names itself; anything else is named
       # after the commit, so a downloaded artifact says what it came from.
+      #
+      # It is uploaded as a build artifact and deliberately left out of
+      # releases: it is not stable enough to hand anyone yet. The release job
+      # throws it away rather than this job not making it, so that a build to
+      # try is always there.
       - name: Pack the NVDA add-on
         run: |
           case "$GITHUB_REF" in
@@ -212,9 +217,10 @@ jobs:
         run: |
           # The harnesses are checks, not something to ship.
           rm -f dist/windows/dlltest.exe dist/windows/dlltest32.exe
-          # The add-on goes out as itself rather than inside the zip: it is one
-          # file that a screen reader installs, and burying it would hide that.
-          mv dist/windows/openevv-*.nvda-addon .
+          # The add-on is not released yet. It is still built and uploaded as a
+          # build artifact, which is how it gets tried, but it is thrown away
+          # here so it neither goes out as a file nor ends up inside the zip.
+          rm -f dist/windows/openevv-*.nvda-addon
           # Two libraries with the same name cannot sit in one directory, and
           # dropping the wrong one in is the mistake to design out: each gets a
           # folder saying which it is, with the ini it wants beside it.
@@ -242,5 +248,4 @@ jobs:
             --title "openevv $GITHUB_REF_NAME" \
             --notes-file .github/release-notes.md \
             openevv-*-windows-x86_64.zip \
-            openevv-*-linux-x86_64.tar.gz \
-            openevv-*.nvda-addon
+            openevv-*-linux-x86_64.tar.gz

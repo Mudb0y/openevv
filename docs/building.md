@@ -306,6 +306,14 @@ Installing it is the ordinary way -- NVDA's add-on store, "Install from
 external source" -- and it appears as "Eloquence (openevv)" in the synthesiser
 list.
 
+It is not in a release, on purpose, and that is not an oversight to be tidied
+up. It is not stable enough to hand anyone yet: three faults have already
+shipped from here to one VM, and none of them was visible to the checks that
+run on the build host. The workflow still builds it and uploads it as a build
+artifact, which is how a version to try is got, and the release job throws it
+away. Putting it back in a release is a decision to be made when it has been
+lived with, not when the checks pass.
+
 One known limit, and it is the engine's rather than the add-on's. The engine
 leaks a few megabytes per instance, so a caller that makes and throws away
 enough of them runs the arena out and is then answered without complaint and
