@@ -278,6 +278,9 @@ def driver():
     import synthDrivers._openevv as engine_module
     import synthDrivers.openevv as driver_module
 
+    global _openevv
+    _openevv = engine_module
+
     engine_module.Engine = FakeEngine
     return driver_module.SynthDriver()
 
@@ -405,6 +408,54 @@ def main():
         sorted(d.availableVoices),
         [str(n) for n in range(1, 9)],
     )
+
+    # ---- the settings, which reach the engine as posted calls -------------
+
+    d._engine.calls = []
+    d.pitch = 30
+    d.volume = 40
+    d.inflection = 55
+    d.headSize = 60
+    d.roughness = 5
+    d.breathiness = 15
+    check(
+        "each setting posts one call, with the engine's own number for it",
+        d._engine.calls,
+        [
+            ("setVoiceParam", _openevv.VOICE_PITCH, 30),
+            ("setVoiceParam", _openevv.VOICE_VOLUME, 40),
+            ("setVoiceParam", _openevv.VOICE_FLUCTUATION, 55),
+            ("setVoiceParam", _openevv.VOICE_HEAD_SIZE, 60),
+            ("setVoiceParam", _openevv.VOICE_ROUGHNESS, 5),
+            ("setVoiceParam", _openevv.VOICE_BREATHINESS, 15),
+        ],
+    )
+
+    d._engine.calls = []
+    d.voice = "4"
+    check("choosing a voice copies that preset over the one in force",
+          d._engine.calls, [("copyVoice", 4)])
+    check("and the driver remembers which it is", d.voice, "4")
+
+    d._engine.calls = []
+    d.voice = "99"
+    check("a voice the engine does not have is refused rather than passed on",
+          (d._engine.calls, d.voice), ([], "4"))
+
+    d._engine.calls = []
+    d.abbreviations = True
+    check("expanding abbreviations turns the dictionary on, which is nought",
+          d._engine.calls, [("setParam", _openevv.PARAM_DICTIONARY, 0)])
+    d._engine.calls = []
+    d.abbreviations = False
+    check("and off again is one", d._engine.calls,
+          [("setParam", _openevv.PARAM_DICTIONARY, 1)])
+
+    d._engine.calls = []
+    d.pause(True)
+    d.cancel()
+    check("pausing and cancelling go straight through",
+          d._engine.calls, [("pause", True), ("cancel",)])
 
     if FAILED:
         print("\nsequence: %d of the checks failed" % len(FAILED))

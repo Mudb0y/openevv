@@ -346,6 +346,18 @@ def main():
     check("once no longer cancelled the next utterance plays and reports again",
           ([len(a) for a, _ in player.fed], marks, idled), ([128], [7, None], 1))
 
+    # ---- pausing, which must not reach the engine at all -------------------
+    #
+    # Pausing is the player's business. Telling the engine would be another
+    # interrupt, and interrupting is what the whole design avoids.
+
+    before = len(dll.calls)
+    engine.pause(True)
+    engine.pause(False)
+    check("pausing is passed to the player", player.paused, [True, False])
+    check("and the engine is told nothing about it",
+          dll.calls[before:], [])
+
     # ---- an utterance the engine took and made nothing of ------------------
     #
     # The engine answers success for text it had no room for, deliberately and
