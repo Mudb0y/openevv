@@ -61,7 +61,7 @@ build knows only `lang/enus`.
 
 ## Partly done
 
-The rules read as rules, to fourteen passes of the decompiler. What that means
+The rules read as rules, to sixteen passes of the decompiler. What that means
 concretely: calls sit with their arguments, wrapper rules say which primitive
 they stand for, state reaches say which language variable they touch, frame
 reaches say which argument they are, the arms of a backtracking dispatch say
@@ -69,15 +69,29 @@ which alternative they are whichever of the two ways the compiler wrote the
 dispatch, register halves say which half, a test of what a call answered is a
 comparison of the answer with nought rather than a flag set and a flag read,
 letting go of a call's arguments says that and not that a scratch register was
-written, a jump at the return is a return, and the machine's dead leavings are
-gone.
+written, a jump at the return is a return, 2,391 loops are loops, a jump out of
+one says it is leaving it, the two places a rule ends say whether it has matched
+or given up, and the machine's dead leavings are gone.
 
-What is left in them: 62,360 gotos, of which 26,668 are the arms of a
-backtracking dispatch and are correct as gotos. The rest are branches that
-could not be structured without changing meaning. 3,364 conditions still read
-the flags and 2,057 comparisons still set them, which is what is left once the
-answer of a call is compared directly: those are the ones an arithmetic
-operation set rather than a test.
+What is left in them: 59,295 gotos, of which 26,668 are the arms of a
+backtracking dispatch and are right as they are, and 4,254 more say plainly that
+the rule has matched or has given up. Most of the rest are the same thing
+without a name, because that is what the language is: a pattern matcher whose
+every failure jumps to a shared tail. 3,364 conditions still read the flags and
+2,057 comparisons still set them, which is what is left once the answer of a
+call is compared directly: those are the ones an arithmetic operation set rather
+than a test.
+
+`tools/delta-shape.py` says what more structuring could reach, and the answer is
+bounded. Of the 106,072 edges between the 53,439 basic blocks, 6,004 jump back
+to a block that does not stand on every path to them, which is the definition of
+flow that no arrangement of loops and conditionals can say. 610 of the 1,042
+rules have at least one, 191 have ten or more, and the worst is `hebrew_ph_Q`
+with 129 in 186 blocks. Saying those in a structured language means copying the
+code the jump lands on, or adding a variable to dispatch on; the first costs the
+correspondence between the C and the bytecode, which is what makes the C
+checkable, and the second buries the dispatch the rules already have under an
+invented one.
 
 Three things in the rules cannot be recovered and are not going to be. The
 global variables' names are gone: they are known only by kind and number,

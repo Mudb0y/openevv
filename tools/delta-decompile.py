@@ -36,6 +36,7 @@ usage: delta-decompile.py                 the hundred smallest with a body
        delta-decompile.py <rule>...       the ones named
 """
 
+import collections
 import importlib
 import os
 import re
@@ -409,8 +410,10 @@ def write(names):
         # Taking the dead loads out first brings more calls up against
         # their arguments, which is why the joining goes last.
         named, saw = name_globals(
-            join_calls(c, drop_pops(join_pops(drop_dead(structure(flat))))))
-        named = name_alternatives(name_params(named, pbase, params), alts)
+            join_calls(c, drop_pops(join_pops(drop_dead(
+                leave_loops(structure(flat)))))))
+        named = name_tails(
+            name_alternatives(name_params(named, pbase, params), alts))
         USED.update(saw)
         text.append('\n'.join(named))
         tail = ('' if named and named[-1].strip().startswith('RETURN(')
@@ -496,6 +499,7 @@ FLIP = {'==': '!=', '!=': '==', '<': '>=', '>=': '<', '<=': '>', '>': '<='}
 LABEL_RE = re.compile(r'^\s*L(\d+):;$')
 COND = r'IF\(\w+\)|r\d (?:==|!=|<=|>=|<|>) 0'
 BRANCH_RE = re.compile(r'^(\s*)if \((%s)\) goto L(\d+);$' % COND)
+GOTO_RE = re.compile(r'^(\s*)goto L(\d+);$')
 JUMP_RE = re.compile(r'goto L(\d+);')
 
 
@@ -516,34 +520,73 @@ STRUCTURED = [0]
 LOOPED = [0]
 
 
+def tails_of(body):
+    """The labels where a rule ends: the one it goes to when it gives up and
+    the one it goes to when it has matched. Everything jumps to them, so they
+    are the two places a reader looks for, and they stay where they can be
+    found."""
+    out = set()
+    for i, line in enumerate(body):
+        m = LABEL_RE.match(line)
+        if not m:
+            continue
+        for k in range(i + 1, min(i + 8, len(body))):
+            t = body[k].strip()
+            if 'succeed,' in t or 'vretproc,' in t:
+                out.add(int(m.group(1)))
+                break
+            if t.startswith('RETURN(') or LABEL_RE.match(body[k]):
+                break
+    return out
+
+
 def structure(body):
-    """Branches that skip a region, written as the if they are.
+    """Branches that skip a region, written as the if they are, and branches
+    back over one, written as the loop.
 
-    A branch forward to a label, over a region nothing else can jump into, is
-    an if around that region under the opposite condition. Nothing else is
-    touched: a backward branch is a loop and a region with another way in is
-    not a region, and both keep the goto they had.
+    A branch forward to a label is an if around what it skips, under the
+    opposite condition. A branch back to a label above it is a do-while around
+    what lies between, and an unconditional jump back is the same thing with
+    nothing to test.
 
-    Innermost first, so that what comes out nests.
+    All three ask that what they enclose is a whole region -- that it opens and
+    closes every block it mentions. Beyond that a loop asks nothing at all, and
+    an if asks only that the region does not hold one of the two places the rule
+    ends. Whether anything else jumps into a region does not otherwise matter,
+    because C lets a goto enter a block and means by it exactly what the flat
+    code meant: the rest of the block, and then whatever follows it. The label
+    inside says so, and a reader who sees one knows there is another way in.
+
+    Loops go first, and innermost first, so that what comes out nests. The order
+    is not a preference: a branch out of a loop turned into an if straddles the
+    loop's own test, and then the loop can never close.
     """
+    tails = tails_of(body)
     while True:
-        cut = _once(body)
+        cut = _loop(body)
         if cut is None:
-            cut = _loop(body)
+            cut = _once(body, tails)
             if cut is None:
                 return body
-            LOOPED[0] += 1
-        else:
             STRUCTURED[0] += 1
+        else:
+            LOOPED[0] += 1
         body = cut
 
 
 def _loop(body):
     """A branch back to a label above it, written as the do-while it is.
 
-    The label is the top of the loop and the branch is its test. It only works
-    where nothing else jumps to that label -- another way in is another loop
-    -- and where what lies between is a whole region.
+    The label is the top of the loop and the branch is its test, so the lines
+    between them are the loop's body and the branch is what repeats it. All it
+    takes is that what lies between is a whole region: nothing else has to be
+    true of it.
+
+    The label stays where it is, inside the loop. It used to be taken away,
+    which meant refusing every loop anything else jumped to -- and that was
+    most of them, which is why 343 loops closed where the machine has 7,757.
+    A goto at the top of a do is the same place as before it, so nothing that
+    jumped there needs to know.
     """
     at = {}
     for i, line in enumerate(body):
@@ -551,30 +594,33 @@ def _loop(body):
         if m:
             at[int(m.group(1))] = i
 
-    goes = {}
-    for i, line in enumerate(body):
-        for m in JUMP_RE.finditer(line):
-            goes.setdefault(int(m.group(1)), []).append(i)
-
+    best = None
     for i, line in enumerate(body):
         m = BRANCH_RE.match(line)
+        cond = m.group(2) if m else None
         if not m:
-            continue
-        pad, cond, tgt = m.group(1), m.group(2), int(m.group(3))
+            m = GOTO_RE.match(line)
+            if not m:
+                continue
+        pad, tgt = m.group(1), int(m.group(len(m.groups())))
         j = at.get(tgt)
         if j is None or j >= i:
             continue
-        if goes.get(tgt, ()) != [i]:
-            continue
         if not _whole(body[j + 1:i]):
             continue
-        out = body[:j]
-        out.append('%sdo {' % pad)
-        out.extend('    ' + l if l.strip() else l for l in body[j + 1:i])
-        out.append('%s} while (%s);' % (pad, cond))
-        out.extend(body[i + 1:])
-        return out
-    return None
+        if best is None or i - j < best[0] - best[1]:
+            best = (i, j, pad, cond)
+    if best is None:
+        return None
+
+    i, j, pad, cond = best
+    out = body[:j]
+    out.append('%sdo {' % pad if cond else '%sfor (;;) {' % pad)
+    out.append(body[j])
+    out.extend('    ' + l if l.strip() else l for l in body[j + 1:i])
+    out.append('%s} while (%s);' % (pad, cond) if cond else '%s}' % pad)
+    out.extend(body[i + 1:])
+    return out
 
 
 WRAPPED = [0]
@@ -882,7 +928,7 @@ def _whole(region):
     return depth == 0
 
 
-def _once(body):
+def _once(body, tails):
     at = {}
     for i, line in enumerate(body):
         m = LABEL_RE.match(line)
@@ -905,7 +951,13 @@ def _once(body):
         j = at.get(tgt)
         if j is None or j <= i + 1:
             continue
-        inside = [k for k, where in at.items() if i < where < j]
+        # A region may hold a label something outside jumps to: C lets a goto
+        # enter a block and means by it what the flat code meant, and the label
+        # is there to say so. The exception is the two places a rule ends. Those
+        # are what everything jumps to, and folding one inside a conditional
+        # puts the place a rule gives up three levels in from where a reader
+        # looks for it.
+        inside = [k for k, where in at.items() if i < where < j and k in tails]
         if any(any(not (i < f < j) for f in goes.get(k, ()))
                for k in inside):
             continue
@@ -1259,6 +1311,84 @@ def tail_returns(body):
     return [l for l in out if not gone(l)]
 
 
+LEFT = [0, 0]
+
+
+def _loop_spans(body):
+    """Where each loop opens and closes, innermost last, with the label at its
+    top and the label just past its end. Depth is counted in braces rather than
+    in indentation, because a line can open and close its own."""
+    spans = []
+    open_at = []
+    depth = 0
+    for i, line in enumerate(body):
+        t = line.strip()
+        before = depth
+        depth += line.count('{') - line.count('}')
+        if t == 'do {' or t == 'for (;;) {':
+            open_at.append(('do' if t.startswith('do') else 'for', before, i))
+        elif open_at and depth == open_at[-1][1] and line.count('}'):
+            kind, was, start = open_at.pop()
+            top = None
+            m = (LABEL_RE.match(body[start + 1])
+                 if start + 1 < len(body) else None)
+            if m:
+                top = int(m.group(1))
+            follow = None
+            for k in range(i + 1, len(body)):
+                if not body[k].strip():
+                    continue
+                m = LABEL_RE.match(body[k])
+                if m:
+                    follow = int(m.group(1))
+                break
+            spans.append((start, i, kind, top, follow))
+    return spans
+
+
+def leave_loops(body):
+    """A jump out of a loop said as leaving it, and a jump to the top of one
+    said as going round again.
+
+    Only for the loop a line is actually inside, and only where the place
+    jumped to is the one the loop leaves to, or its own top: a break lands
+    after the loop and nowhere else, so a jump anywhere further on stays the
+    jump it was.
+
+    Going round again is said only in a loop with nothing to test. In a
+    do-while, C's continue goes to the test rather than to the top, which is
+    not what a jump to the top meant.
+    """
+    inner = {}
+    for start, end, kind, top, follow in _loop_spans(body):
+        for k in range(start + 1, end):
+            inner.setdefault(k, (kind, top, follow))
+
+    out = list(body)
+    for k, (kind, top, follow) in inner.items():
+        m = BRANCH_RE.match(out[k]) or GOTO_RE.match(out[k])
+        if not m:
+            continue
+        tgt = int(m.group(len(m.groups())))
+        cond = m.group(2) if m.re is BRANCH_RE else None
+        if tgt == follow:
+            what, which = 'break', 0
+        elif tgt == top and kind == 'for':
+            what, which = 'continue', 1
+        else:
+            continue
+        out[k] = ('%sif (%s) %s;' % (m.group(1), cond, what) if cond
+                  else '%s%s;' % (m.group(1), what))
+        LEFT[which] += 1
+
+    live = set()
+    for line in out:
+        live.update(int(x) for x in JUMP_RE.findall(line))
+    return [l for l in out
+            if not (LABEL_RE.match(l) and int(LABEL_RE.match(l).group(1))
+                    not in live)]
+
+
 DROPPED_POPS = [0]
 POPREG_RE = re.compile(r'POP\((r\d)(?:, (\d+))?\);')
 
@@ -1391,6 +1521,57 @@ def name_alternatives(body, names):
     return [pat.sub(lambda m: names[m.group(1)], l) for l in body]
 
 
+TAILED = [0, 0]
+
+
+def name_tails(body):
+    """The two places a rule ends, under what they are.
+
+    A rule that has matched calls succeed and answers nought; a rule that has
+    not calls vretproc with 94 and answers that. Both sit at the bottom and
+    everything jumps to them, which is why most of a rule's gotos are neither
+    a loop nor a conditional: they are the language saying this attempt is over.
+    Named, they say it.
+
+    A label the dispatch has already claimed keeps that name, because which
+    alternative a place is says more than what it does.
+    """
+    at = {}
+    for i, line in enumerate(body):
+        m = LABEL_RE.match(line)
+        if m:
+            at[m.group(1)] = i
+
+    found = {}
+    for lab, i in at.items():
+        for k in range(i + 1, min(i + 8, len(body))):
+            t = body[k].strip()
+            if 'succeed,' in t:
+                found[lab] = 'matched'
+                break
+            if 'vretproc,' in t:
+                found[lab] = 'failed'
+                break
+            if t.startswith('RETURN(') or LABEL_RE.match(body[k]):
+                break
+    if not found:
+        return body
+
+    n = collections.Counter(found.values())
+    seen = collections.Counter()
+    names = {}
+    for lab in sorted(found, key=lambda x: at[x]):
+        what = found[lab]
+        seen[what] += 1
+        names['L' + lab] = (what if n[what] == 1
+                            else '%s%d' % (what, seen[what]))
+        TAILED[0 if what == 'failed' else 1] += 1
+
+    pat = re.compile(r'\b(%s)\b' % '|'.join(sorted(names, key=len,
+                                                   reverse=True)))
+    return [pat.sub(lambda m: names[m.group(1)], l) for l in body]
+
+
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == 'all':
         names = every()
@@ -1416,6 +1597,10 @@ def main():
           % (POPPED[0], DROPPED[0]))
     print('branches turned into an if: %d, loops closed: %d'
           % (STRUCTURED[0], LOOPED[0]))
+    print('jumps out of a loop said as leaving it: %d, jumps to the top said'
+          ' as going round again: %d' % (LEFT[0], LEFT[1]))
+    print('tails named: %d where the rule gives up, %d where it has matched'
+          % (TAILED[0], TAILED[1]))
     print('landing places folded: %d, entries folded: %d'
           % (FOLDED[0], FOLDED[1]))
     print('%d of %d rules written to %s'
