@@ -5,13 +5,20 @@
 # annotations; everything here is about getting that text through the library
 # and the samples back out in the right order.
 #
-# Three things about it are deliberate and are the parts to leave alone.
+# Four things about it are deliberate and are the parts to leave alone.
 #
 # The engine is called from one thread and one only. The library keeps its own
 # synthesis thread and hands work to it, and the calls that queue work are not
 # written to be entered from two threads at once. So every call goes through a
-# queue to the thread made here, including stopping, which is why cancelling
-# posts a stop rather than making one.
+# queue to the thread made here.
+#
+# Nothing ever interrupts the engine. Both of the ways the interface offers to
+# do it -- answering eciDataAbort from the callback, and calling eciStop while
+# synthesis is running -- fault this engine, dereferencing a null in
+# vinitloc_new. That is not a hazard this works around out of caution: it is
+# what crashed NVDA the first time the add-on was asked for silence. Cancelling
+# therefore stops the player and throws the samples away while the utterance
+# finishes synthesising into nothing. See cancel for what that costs.
 #
 # Samples are held back until an index mark arrives, and then handed to the
 # player with a callback attached. The engine flushes a short buffer of its own
@@ -43,12 +50,6 @@ FRAME = 2048
 #: How much audio to gather before handing any to the player, in bytes. Small
 #: enough that speech starts promptly, large enough not to feed in dribbles.
 FEED_AT = FRAME * 2
-
-#: An index of our own, put after the last of the caller's, so the callback
-#: knows when an utterance's audio has all arrived. The engine carries an
-#: index in a 32-bit slot and NVDA's own indices are small, so a large one
-#: cannot collide.
-END_MARK = 0x7FFFFFFF
 
 # What the callback is told.
 MSG_WAVEFORM = 0
@@ -138,7 +139,7 @@ class Engine(threading.Thread):
 		self._callback = _CALLBACK(self._message)
 		self._held = bytearray()
 		self._pendingIndexes = []
-		self._stopping = False
+		self._discarding = False
 		self.player = None
 		self.voiceNames = {}
 		self.version = ""
@@ -170,17 +171,31 @@ class Engine(threading.Thread):
 	def cancel(self):
 		"""Stop now, and throw away what has not been spoken.
 
-		The order matters. Marking the abort first means the callback gives up
-		at its next crossing; stopping the player unblocks it if it is waiting
-		for room; draining the queue drops utterances that have not started.
-		Only then is a stop posted, so that the library's own call happens on
-		the thread that owns it.
+		Nothing here tells the engine anything, and that is the whole design.
+		Both of the ways the interface offers to interrupt an utterance fault
+		this engine: answering eciDataAbort from the callback, and calling
+		eciStop while synthesis is running. Either one dies dereferencing a
+		null in vinitloc_new, which is how the add-on crashed NVDA the first
+		time it was asked for silence.
+
+		So the samples are thrown away instead. The callback goes on answering
+		normally and simply drops what it is handed, the utterance finishes
+		synthesising into nothing, and the engine's state is never touched.
+		What that costs is the synthesis time of the audio nobody will hear,
+		and synthesis runs some eighty times faster than speech: throwing away
+		eleven seconds of a sentence measures at about a seventh of a second.
+
+		Stopping the player is what actually silences it, and it also unblocks
+		the callback if it is waiting for room. Draining the queue drops the
+		utterances that have not started yet.
 		"""
-		self._stopping = True
+		self._discarding = True
 		if self.player is not None:
 			self.player.stop()
 		self._drain()
-		self._work.put([(self._doStop, ())])
+		# Cleared on the engine's own thread, so it happens after the utterance
+		# being discarded has finished and before the next one starts.
+		self._work.put([(self._resume, ())])
 
 	def pause(self, switch):
 		if self.player is not None:
@@ -209,12 +224,32 @@ class Engine(threading.Thread):
 			log.debugWarning("openevv: the engine refused an index mark")
 
 	def synthesize(self):
+		"""Speak what has been added, and do not come back until it is done.
+
+		eciSynthesize only starts the utterance; eciSynchronize is what drives
+		it and returns once the last buffer has been handed over. Blocking here
+		is wanted: it is what makes the end of an utterance a fact rather than
+		something to be inferred from a mark, and the callback's own blocking in
+		the player is what paces it.
+		"""
 		self._held = bytearray()
 		self._pendingIndexes = []
-		self.index(END_MARK)
 		if not self._dll.eciSynthesize(self._handle):
 			log.error("openevv: the engine refused to speak")
 			self._finish()
+			return
+
+		self._dll.eciSynchronize(self._handle)
+
+		if self._discarding:
+			# Cancelled part way. Nothing to hand over and nothing to report:
+			# whoever cancelled is not waiting to be told it finished.
+			self._held = bytearray()
+			self._pendingIndexes = []
+			return
+
+		self._flush(last=True)
+		self._finish()
 
 	def setParam(self, which, value):
 		return self._dll.eciSetParam(self._handle, which, value)
@@ -237,11 +272,10 @@ class Engine(threading.Thread):
 		for which in VOICE_RANGE:
 			self.voiceParams[which] = self.getVoiceParam(which)
 
-	def _doStop(self):
-		self._dll.eciStop(self._handle)
+	def _resume(self):
 		self._held = bytearray()
 		self._pendingIndexes = []
-		self._stopping = False
+		self._discarding = False
 
 	# ---- the thread --------------------------------------------------
 
@@ -314,8 +348,7 @@ class Engine(threading.Thread):
 		dll.eciAddText.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
 		dll.eciInsertIndex.argtypes = [ctypes.c_void_p, ctypes.c_int]
 		dll.eciSynthesize.argtypes = [ctypes.c_void_p]
-		dll.eciStop.argtypes = [ctypes.c_void_p]
-		dll.eciSpeaking.argtypes = [ctypes.c_void_p]
+		dll.eciSynchronize.argtypes = [ctypes.c_void_p]
 		dll.eciVersion.argtypes = [ctypes.c_char_p]
 
 		# Asked with no room, which answers how many there are, and again with
@@ -374,26 +407,30 @@ class Engine(threading.Thread):
 	# ---- the engine's callback ---------------------------------------
 
 	def _message(self, handle, message, param, data):
+		"""What the engine hands over, and what becomes of it.
+
+		The answer is always eciDataProcessed, even when the samples are being
+		thrown away. eciDataAbort is what the interface offers for refusing the
+		rest of an utterance and it faults this engine, so it is never used --
+		see cancel. Nothing here changes any engine state, which is what makes
+		interrupting safe.
+		"""
 		try:
-			if self._stopping:
-				return DATA_ABORT
+			if self._discarding:
+				return DATA_PROCESSED
 			if message == MSG_WAVEFORM:
 				self._held.extend(bytes(self._buffer)[: param * 2])
 				if len(self._held) >= FEED_AT:
 					self._flush()
 			elif message == MSG_INDEX:
-				if param == END_MARK:
-					self._flush(last=True)
-					self._finish()
-				else:
-					# The audio in hand is what runs up to this mark, so it
-					# goes now with the mark hung off the end of it.
-					self._pendingIndexes.append(int(param))
-					self._flush()
-			return DATA_ABORT if self._stopping else DATA_PROCESSED
+				# The audio in hand is what runs up to this mark, so it goes
+				# now with the mark hung off the end of it.
+				self._pendingIndexes.append(int(param))
+				self._flush()
+			return DATA_PROCESSED
 		except Exception:  # noqa: BLE001
 			log.error("openevv: the engine's callback failed", exc_info=True)
-			return DATA_NOT_PROCESSED
+			return DATA_PROCESSED
 
 	def _flush(self, last=False):
 		if self._held:

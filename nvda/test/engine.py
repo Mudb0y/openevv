@@ -22,6 +22,7 @@ usage: engine.py
 
 import os
 import sys
+import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ADDON = os.path.join(os.path.dirname(HERE), "addon")
@@ -134,6 +135,9 @@ class FakeDll:
             was = self.params.get(args[1], 0)
             self.params[args[1]] = args[2]
             return was
+        if name == "eciSynchronize":
+            hook = getattr(self, "answer_synchronize", None)
+            return hook(*args) if hook else 1
         if name == "eciDelete":
             return 0
         return 1
@@ -250,72 +254,97 @@ def main():
     def index(n):
         return dll.callback(HANDLE, mod.MSG_INDEX, n, None)
 
+    # eciSynchronize is what drives the utterance, so a real one would produce
+    # every buffer before it returned. Here it is the hook the buffers are fed
+    # through, so that the callback runs while synthesize is inside it, exactly
+    # as it does against the real library.
+    pending = []
+
+    def synchronize(*args):
+        for fn in pending:
+            fn()
+        del pending[:]
+        return 1
+
+    dll.answer_synchronize = synchronize
+
     engine.synthesize()
-    check("synthesising puts an end mark in after the caller's text",
-          dll.named("eciInsertIndex")[-1][2], mod.END_MARK)
+    check("synthesising starts the utterance and then waits for it",
+          [c[0] for c in dll.calls if c[0] in ("eciSynthesize", "eciSynchronize")],
+          ["eciSynthesize", "eciSynchronize"])
+    check("and says it is done once, having had nothing to play", marks, [None])
+    check("no mark of its own is inserted; the end is a fact, not a mark",
+          dll.named("eciInsertIndex"), [])
 
-    player.fed = []
-    marks.clear()
+    # ---- a whole utterance, driven the way the real library drives one ----
 
-    # Less than the feed threshold, so nothing should go yet.
-    answer = waveform(100)
-    check("a short buffer is held rather than dribbled to the player",
-          (len(player.fed), answer), (0, mod.DATA_PROCESSED))
+    def utterance(steps):
+        """Run one synthesize whose buffers and marks are `steps`."""
+        player.fed = []
+        marks.clear()
+        was = player.idled
+        pending[:] = steps
+        engine.synthesize()
+        return player.idled - was
 
-    # A mark now: what is held is the audio in front of it, so it goes with
-    # the mark hung off the end of it.
-    index(42)
-    check("a mark sends the audio in front of it, and only that",
-          [len(a) for a, _ in player.fed], [200])
-    check("and the mark is reported against that audio", marks, [42])
+    idled = utterance([lambda: waveform(100), lambda: index(42),
+                       lambda: waveform(70)])
+    check("a short buffer is held until there is a reason to send it",
+          [len(a) for a, _ in player.fed], [200, 140])
+    check("a mark goes with the audio in front of it, and it is reported",
+          marks, [42, None])
+    check("the utterance waits for its audio before saying it is done", idled, 1)
 
-    # Enough to cross the threshold on its own.
-    marks.clear()
-    player.fed = []
-    waveform(mod.FRAME)
-    check("a buffer past the threshold goes without waiting for a mark",
-          [len(a) for a, _ in player.fed], [mod.FRAME * 2])
-    check("with no mark attached to it", marks, [])
+    idled = utterance([lambda: waveform(mod.FRAME), lambda: waveform(10)])
+    check("a buffer past the threshold goes at once",
+          [len(a) for a, _ in player.fed], [mod.FRAME * 2, 20])
+    check("with no mark on it, and done at the end", marks, [None])
 
-    # Two marks with nothing between them: the second has no audio in front of
-    # it, so it has to be reported anyway rather than waiting for ever.
-    marks.clear()
-    player.fed = []
-    waveform(50)
-    index(1)
-    index(2)
-    check("two marks in a row both report", marks, [1, 2])
+    utterance([lambda: waveform(50), lambda: index(1), lambda: index(2)])
+    check("two marks in a row both report", marks, [1, 2, None])
     check("and only the audio that existed was sent",
           [len(a) for a, _ in player.fed], [100])
 
-    # The end mark finishes the utterance: whatever is left goes, the player is
-    # waited for, and done is said last.
-    marks.clear()
-    player.fed = []
-    was = player.idled
-    waveform(70)
-    index(mod.END_MARK)
-    check("the end mark sends what is left", [len(a) for a, _ in player.fed], [140])
-    check("waits for the audio to finish", player.idled - was, 1)
-    check("and says it is done, by reporting nothing", marks, [None])
-
-    # An utterance ending exactly on a mark leaves nothing in hand, and must
-    # still wait before saying it is done.
-    marks.clear()
-    player.fed = []
-    was = player.idled
-    waveform(30)
-    index(9)
-    index(mod.END_MARK)
-    check("an utterance ending on a mark still waits before saying done",
-          player.idled - was, 1)
+    idled = utterance([lambda: waveform(30), lambda: index(9)])
+    check("an utterance ending on a mark still waits before saying done", idled, 1)
     check("and reports the mark before the done", marks, [9, None])
 
-    # Cancelling: the callback gives up at its next crossing.
+    # ---- cancelling, which is what crashed NVDA when it was done properly --
+
+    # cancel() is the one method meant to be called from another thread, and it
+    # posts the resume to the engine's own thread. That thread is really running
+    # here, so the wait below is not politeness: without it the resume lands in
+    # the middle of the checks.
+    stopped = player.stopped
     engine.cancel()
-    check("cancelling stops the player", player.stopped, 1)
-    check("and the callback then refuses to take more",
-          waveform(100), mod.DATA_ABORT)
+    check("cancelling stops the player", player.stopped - stopped, 1)
+    check("eciStop is never called, at any point", dll.named("eciStop"), [])
+
+    for _ in range(200):
+        if not engine._discarding:
+            break
+        time.sleep(0.01)
+    check("and it clears itself on the engine's thread, not the caller's",
+          engine._discarding, False)
+
+    # Now the discarding itself, with the flag set directly so that the engine's
+    # thread has nothing queued and cannot race these checks.
+    engine._discarding = True
+    player.fed = []
+    marks.clear()
+    check("the callback keeps answering normally rather than aborting",
+          waveform(100), mod.DATA_PROCESSED)
+    check("but nothing reaches the player", player.fed, [])
+
+    pending[:] = [lambda: waveform(200), lambda: index(5), lambda: waveform(200)]
+    engine.synthesize()
+    check("an utterance synthesised while cancelled plays nothing", player.fed, [])
+    check("and reports no marks, nor claims to have finished", marks, [])
+
+    engine._discarding = False
+    idled = utterance([lambda: waveform(64), lambda: index(7)])
+    check("once no longer cancelled the next utterance plays and reports again",
+          ([len(a) for a, _ in player.fed], marks, idled), ([128], [7, None], 1))
 
     if FAILED:
         print("\nengine: %d of the checks failed" % len(FAILED))

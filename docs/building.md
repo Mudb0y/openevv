@@ -202,16 +202,35 @@ finds itself in. The other kind of add-on -- davidacm's IBMTTS driver -- hosts
 the engine in a thirty-two bit `rundll32` of its own and talks to it over a
 pipe, so it always wants `eci32.dll`; this one wants whichever matches.
 
-Three things in it are decisions rather than detail. Every call into the
-library happens on one thread, including stopping, because the calls that
-queue work are not written to be entered twice at once. Prosody inside a
-sentence is said as a `` `vb ``, `` `vs `` or `` `vv `` annotation in the text
-rather than by setting a parameter, because a parameter applies to everything
-queued behind it and an annotation applies where it sits. And samples are held
-back until an index mark arrives and then handed over with the mark attached,
-which puts a mark on the sample it belongs to instead of a buffer later; the
-engine flushes a short buffer of its own just before reporting a mark, which is
-what makes that line up exactly.
+Four things in it are decisions rather than detail. Every call into the library
+happens on one thread, because the calls that queue work are not written to be
+entered twice at once. Prosody inside a sentence is said as a `` `vb ``,
+`` `vs `` or `` `vv `` annotation in the text rather than by setting a
+parameter, because a parameter applies to everything queued behind it and an
+annotation applies where it sits. Samples are held back until an index mark
+arrives and then handed over with the mark attached, which puts a mark on the
+sample it belongs to instead of a buffer later; the engine flushes a short
+buffer of its own just before reporting a mark, which is what makes that line
+up exactly.
+
+And nothing ever interrupts the engine, which wants explaining because it is
+not what the interface says to do. Both of the ways offered for cutting an
+utterance short fault: answering `eciDataAbort` from the callback, and calling
+`eciStop` while synthesis is running. The first dies on a null indirect call in
+`vinitloc_new` in `src/delta.c`, the second on a null read of its own. Neither
+is hypothetical -- the abort is what crashed NVDA the first time the add-on was
+asked for silence, and both are still there after the owner-offset fix in
+042fd99, so they are a separate fault and not a symptom of that one.
+
+So the add-on stops by throwing the samples away: the callback goes on
+answering `eciDataProcessed` and simply drops what it is handed, the utterance
+finishes synthesising into nothing, and no engine state is touched. Stopping
+NVDA's wave player is what actually silences it. What that costs is the
+synthesis time of audio nobody hears, and synthesis runs some eighty times
+faster than speech, so throwing away eleven seconds of a sentence measures at
+about a seventh of a second under Wine. The next utterance is byte-identical to
+one spoken with no interruption at all, which is what says the engine was left
+alone.
 
     make nvda-test
 
@@ -229,13 +248,11 @@ Installing it is the ordinary way -- NVDA's add-on store, "Install from
 external source" -- and it appears as "Eloquence (openevv)" in the synthesiser
 list.
 
-One known limit, and it is the engine's rather than the add-on's. Making and
-throwing away engine instances corrupts the arena at around the twentieth, so
-the add-on makes one instance and keeps it for as long as the driver lives.
-`dlang_new` in `src/klatt_run.c` allocates blocks that are then written past
-their ends, which is the same family as the three fixed here; the reproducer is
-a program that calls `eciNewEx` and `eciDelete` in a loop about twenty-five
-times.
+One known limit, and it is the engine's rather than the add-on's. The engine
+leaks a few megabytes per instance, so a caller that makes and throws away
+enough of them runs the arena out and is then answered without complaint and
+without audio. `make instances` is what shows it. The add-on makes one instance
+and keeps it for as long as the driver lives, so it does not meet this.
 
 ## Getting IBM's objects
 
