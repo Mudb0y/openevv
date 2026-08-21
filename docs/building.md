@@ -234,15 +234,42 @@ alone.
 
     make nvda-test
 
-That is the check that needs nothing: a speech sequence in, the calls it
-becomes out, with NVDA's own modules stood in for. It will not tell you how it
-sounds, but it catches a misspelled annotation, an index left inside a stretch
-of text, and a rate that maps to the wrong number. `nvda/build.py` adds one
-more before it packs anything: every entry point the driver names is looked up
-in both libraries' export tables, and a name that is not there stops the build.
-That matters because ctypes resolves a name when it is used rather than when
-the library is loaded, so the failure it prevents is speech quietly not
-happening inside a screen reader.
+Two checks that need nothing: no Windows, no library, no sound.
+`nvda/test/sequence.py` is a speech sequence in and the calls it becomes out,
+with NVDA's own modules stood in for, and it catches a misspelled annotation, an
+index left inside a stretch of text, and a rate that maps to the wrong number.
+`nvda/test/engine.py` goes a layer down and runs the engine layer itself against
+a library and a wave player that are stood in for, which is what reaches
+`_start`, the ctypes prototypes, the callback and the shutdown.
+
+`nvda/build.py` adds one more before it packs anything: every entry point the
+driver names is looked up in both libraries' export tables, and a name that is
+not there stops the build. That matters because ctypes resolves a name when it
+is used rather than when the library is loaded, so the failure it prevents is
+speech quietly not happening inside a screen reader.
+
+    python nvda/test/windows.py [addon directory]
+
+That one runs on Windows, against the real library, with only NVDA stood in for,
+and it is where the add-on's faults have actually been found. It wants a Python
+on the target machine and the add-on's own directory; with no argument it drives
+the installed one under the roaming profile. It speaks the same fixed sentence
+the rest of `test` uses and holds it to the same 38,423 samples, checks that a
+mark lands where it should, interrupts ten times over on one instance and
+requires the utterance after each to come out unchanged, and then shuts down.
+
+Three faults have shipped in this add-on and every one of them was invisible to
+the checks that ran on the build host. A renamed function with one call site
+left behind, which only `_start` reached. A crash on being asked for silence,
+which needed the real engine. And a shutdown that raised while NVDA was
+switching synthesiser away, because `Engine` subclassed `threading.Thread` and
+kept the engine's instance handle in `self._handle` -- which is the name Python
+3.13's own `Thread` keeps its thread handle in, so joining the thread looked up
+`join` on an ECI handle. `Engine` holds a thread now rather than being one, and
+`engine.py` checks outright that no attribute of it collides with one of
+`Thread`'s, because on this host that fault does not even raise: Python 3.14's
+`join` returns early for a thread that has already stopped, so only the
+structural check sees it.
 
 Installing it is the ordinary way -- NVDA's add-on store, "Install from
 external source" -- and it appears as "Eloquence (openevv)" in the synthesiser

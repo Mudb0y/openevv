@@ -346,6 +346,35 @@ def main():
     check("once no longer cancelled the next utterance plays and reports again",
           ([len(a) for a, _ in player.fed], marks, idled), ([128], [7, None], 1))
 
+    # ---- shutting down, which is what switching synthesiser away does -----
+    #
+    # Nothing below was checked at all until the add-on raised here in NVDA:
+    # Engine used to subclass threading.Thread and keep the ECI handle in
+    # _handle, which is the name Python 3.13's Thread keeps its own handle in.
+    # Joining the thread therefore looked up join on an integer.
+
+    try:
+        engine.close()
+        print("ok   closing down does not raise")
+    except Exception as e:  # noqa: BLE001
+        print("FAIL closing down raised %s: %s" % (type(e).__name__, e))
+        FAILED.append("close")
+
+    check("the thread has stopped", engine.alive(), False)
+    check("the instance was given back", dll.named("eciDelete") != [], True)
+    check("and the player was closed", player.closed, 1)
+
+    # A Thread subclass shares Thread's namespace, so this holds the engine to
+    # not using any name the standard library's Thread does.
+    import threading
+
+    theirs = set(dir(threading.Thread))
+    ours = set(vars(mod.Engine)) | set(vars(engine))
+    shared = sorted(
+        n for n in ours & theirs if not (n.startswith("__") and n.endswith("__"))
+    )
+    check("no attribute of the engine collides with one of Thread's", shared, [])
+
     if FAILED:
         print("\nengine: %d of the checks failed" % len(FAILED))
         return 1

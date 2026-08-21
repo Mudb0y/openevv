@@ -54,7 +54,10 @@ with annotations in it. `_openevv.py` beside it is everything below that: the
 library through ctypes, the one thread that is allowed to call into it, and the
 audio. `manifest.ini.in` is what NVDA reads to identify the add-on, with the
 version filled in at packing time, `build.py` does the packing, and
-`test/sequence.py` checks the driver's half without NVDA, Windows or sound.
+`test` holds the three checks: `sequence.py` for the driver's half, `engine.py`
+for the engine layer against a library stood in for, and `windows.py`, which
+wants a real Windows and the real library and is where the faults have been
+found.
 
 `test` holds `suite.sh`, which runs the categories of cases through both
 engines, `compare.sh`, which does one category, and `cases`, the text itself.

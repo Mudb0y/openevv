@@ -124,16 +124,26 @@ class OpenEvvError(Exception):
 	pass
 
 
-class Engine(threading.Thread):
-	"""The thread that owns the library. Nothing else calls into it."""
+class Engine:
+	"""Owns the library, and the one thread allowed to call into it.
+
+	It holds a thread rather than being one. Subclassing threading.Thread shares
+	its namespace, and Python 3.13 keeps the thread's own handle in _handle --
+	which is what this called the engine's instance handle, so joining the thread
+	looked up join on an ECI handle and the add-on raised while NVDA was
+	switching synthesiser away from it. Holding a thread cannot collide with
+	anything the standard library adds later.
+	"""
 
 	def __init__(self, onIndex):
-		super().__init__(name="openevv.engine", daemon=True)
+		self._thread = threading.Thread(
+			target=self._run, name="openevv.engine", daemon=True
+		)
 		self._onIndex = onIndex
 		self._work = queue.Queue()
 		self._ready = threading.Event()
 		self._failure = None
-		self._handle = None
+		self._instance = None
 		self._dll = None
 		self._buffer = (ctypes.c_short * FRAME)()
 		self._callback = _CALLBACK(self._message)
@@ -151,15 +161,31 @@ class Engine(threading.Thread):
 	# ---- what the driver asks of it ----------------------------------
 
 	def open(self):
-		self.start()
+		self._thread.start()
 		self._ready.wait()
 		if self._failure is not None:
 			raise self._failure
 
+	def alive(self):
+		return self._thread.is_alive()
+
 	def close(self):
+		"""Shut down, and do not leave the audio device held if it will not.
+
+		The player is closed only once the thread is known to have stopped. It
+		is the thread that feeds the player, so closing it out from under one
+		still running is how a screen reader ends up with a synthesiser that
+		will not speak after this one has been switched away.
+		"""
 		self.cancel()
 		self._work.put(None)
-		self.join(timeout=5)
+		self._thread.join(timeout=5)
+
+		if self._thread.is_alive():
+			log.error("openevv: the engine's thread would not stop; leaving the"
+			          " player open rather than closing it under one still running")
+			return
+
 		if self.player is not None:
 			self.player.close()
 			self.player = None
@@ -216,11 +242,11 @@ class Engine(threading.Thread):
 	# ---- the calls themselves, all on this thread --------------------
 
 	def addText(self, text):
-		if not self._dll.eciAddText(self._handle, text):
+		if not self._dll.eciAddText(self._instance, text):
 			log.debugWarning("openevv: the engine refused a stretch of text")
 
 	def index(self, n):
-		if not self._dll.eciInsertIndex(self._handle, n):
+		if not self._dll.eciInsertIndex(self._instance, n):
 			log.debugWarning("openevv: the engine refused an index mark")
 
 	def synthesize(self):
@@ -234,12 +260,12 @@ class Engine(threading.Thread):
 		"""
 		self._held = bytearray()
 		self._pendingIndexes = []
-		if not self._dll.eciSynthesize(self._handle):
+		if not self._dll.eciSynthesize(self._instance):
 			log.error("openevv: the engine refused to speak")
 			self._finish()
 			return
 
-		self._dll.eciSynchronize(self._handle)
+		self._dll.eciSynchronize(self._instance)
 
 		if self._discarding:
 			# Cancelled part way. Nothing to hand over and nothing to report:
@@ -252,19 +278,19 @@ class Engine(threading.Thread):
 		self._finish()
 
 	def setParam(self, which, value):
-		return self._dll.eciSetParam(self._handle, which, value)
+		return self._dll.eciSetParam(self._instance, which, value)
 
 	def getVoiceParam(self, which):
-		return self._dll.eciGetVoiceParam(self._handle, 0, which)
+		return self._dll.eciGetVoiceParam(self._instance, 0, which)
 
 	def setVoiceParam(self, which, value):
 		lo, hi = VOICE_RANGE[which]
 		value = max(lo, min(int(value), hi))
-		self._dll.eciSetVoiceParam(self._handle, 0, which, value)
+		self._dll.eciSetVoiceParam(self._instance, 0, which, value)
 		self.voiceParams[which] = value
 
 	def copyVoice(self, number):
-		if not self._dll.eciCopyVoice(self._handle, number, 0):
+		if not self._dll.eciCopyVoice(self._instance, number, 0):
 			log.debugWarning("openevv: the engine refused voice %d" % number)
 		self._readVoiceParams()
 
@@ -279,7 +305,7 @@ class Engine(threading.Thread):
 
 	# ---- the thread --------------------------------------------------
 
-	def run(self):
+	def _run(self):
 		try:
 			self._start()
 		except Exception as e:  # noqa: BLE001
@@ -366,7 +392,7 @@ class Engine(threading.Thread):
 			raise OpenEvvError("openevv: the library would not make an instance")
 
 		self._dll = dll
-		self._handle = handle
+		self._instance = handle
 
 		dll.eciRegisterCallback(handle, self._callback, None)
 		if not dll.eciSetOutputBuffer(handle, FRAME, self._buffer):
@@ -398,11 +424,11 @@ class Engine(threading.Thread):
 
 	def _finishThread(self):
 		try:
-			if self._handle is not None:
-				self._dll.eciDelete(self._handle)
+			if self._instance is not None:
+				self._dll.eciDelete(self._instance)
 		except Exception:  # noqa: BLE001
 			log.error("openevv: the engine would not shut down", exc_info=True)
-		self._handle = None
+		self._instance = None
 
 	# ---- the engine's callback ---------------------------------------
 
