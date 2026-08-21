@@ -232,6 +232,17 @@ about a seventh of a second under Wine. The next utterance is byte-identical to
 one spoken with no interruption at all, which is what says the engine was left
 alone.
 
+There is a second piece of evidence for that, taken with `DELTA_RULE_TRACE`
+set so the interpreter reports an argument area whose depth is not what the
+compiled code expected. Ten interruptions on one instance produce 154,253 such
+remarks across 520 different rules -- that diagnostic is ordinary background
+noise, which is why `tools/delta-check.sh` filters it out -- and *none at all*
+on `callInternalSynthesizer`, `callSynthesizeArray`, `sendArrayParameters` or
+`stopSynthesizing`. All 1,085 dispatches of the synthesiser rule ended the way
+an uninterrupted one does. A real abort puts a bad depth on exactly those
+rules, so their silence here is the thing worth checking if this ever has to be
+revisited. It is not a routine check: tracing that run writes 269 MB.
+
     make nvda-test
 
 Two checks that need nothing: no Windows, no library, no sound.
