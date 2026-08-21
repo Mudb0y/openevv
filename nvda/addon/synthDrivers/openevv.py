@@ -111,6 +111,10 @@ class SynthDriver(SynthDriver):
 		batch = []
 		text = []
 		spelling = False
+		#: Whether anything in this sequence is meant to make a sound. A
+		#: sequence of nothing but commands is silent because it should be, and
+		#: the engine layer is told so rather than complaining about it.
+		words = False
 
 		def flush():
 			if text:
@@ -120,7 +124,9 @@ class SynthDriver(SynthDriver):
 
 		for item in speechSequence:
 			if isinstance(item, str):
-				text.append(self._processText(item))
+				said = self._processText(item)
+				words = words or said.strip() != ""
+				text.append(said)
 			elif isinstance(item, IndexCommand):
 				# An index has to sit between stretches of text rather than
 				# inside one, so what has been gathered goes first.
@@ -131,7 +137,12 @@ class SynthDriver(SynthDriver):
 				# open at the end of the sequence is closed once and spelling
 				# already closed is not closed again.
 				spelling = item.state
-				text.append("`ts1 " if item.state else "`ts0 ")
+				# On its own, not on the end of a stretch of text. An
+				# annotation with nothing after it in the same call does not
+				# take effect, which is how spelling used to leak out of one
+				# utterance and into every one after it.
+				flush()
+				batch.append((engine.addText, (b"`ts1 " if item.state else b"`ts0 ",)))
 			elif isinstance(item, BreakCommand):
 				text.append(" `p%d " % self._breakToPause(item.time))
 			elif isinstance(item, PitchCommand):
@@ -147,10 +158,10 @@ class SynthDriver(SynthDriver):
 			else:
 				log.error("openevv: unknown speech: %s" % item)
 
-		if spelling:
-			text.append("`ts0 ")
 		flush()
-		batch.append((engine.synthesize, ()))
+		if spelling:
+			batch.append((engine.addText, (b"`ts0 ",)))
+		batch.append((engine.synthesize, (words,)))
 		engine.post(batch)
 
 	def _processText(self, text):

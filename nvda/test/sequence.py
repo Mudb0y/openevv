@@ -313,7 +313,7 @@ def main():
     check(
         "one plain string is one stretch of text and a synthesise",
         spoken(d, ["Hello."]),
-        [("addText", b"Hello."), ("synthesize",)],
+        [("addText", b"Hello."), ("synthesize", True)],
     )
 
     check(
@@ -323,58 +323,82 @@ def main():
             ("addText", b"One."),
             ("index", 7),
             ("addText", b"Two."),
-            ("synthesize",),
+            ("synthesize", True),
         ],
     )
 
     check(
         "an index at the end still comes before the synthesise",
         spoken(d, ["Only.", IndexCommand(3)]),
-        [("addText", b"Only."), ("index", 3), ("synthesize",)],
+        [("addText", b"Only."), ("index", 3), ("synthesize", True)],
     )
 
+    # Each annotation goes in a call of its own. An annotation on the end of a
+    # stretch of text does not take effect, which is how spelling used to leak
+    # into every utterance after the one that asked for it.
+    spelled = [
+        ("addText", b"`ts1 "),
+        ("addText", b"abc"),
+        ("addText", b"`ts0 "),
+        ("synthesize", True),
+    ]
     check(
-        "character mode is turned on and off again in the text",
+        "character mode is turned on and off in calls of their own",
         spoken(d, [CharacterModeCommand(True), "abc", CharacterModeCommand(False)]),
-        [("addText", "`ts1 abc`ts0 ".encode()), ("synthesize",)],
+        spelled,
     )
 
     check(
-        "character mode left on is closed anyway",
+        "character mode left on is closed anyway, and alone",
         spoken(d, [CharacterModeCommand(True), "abc"]),
-        [("addText", "`ts1 abc`ts0 ".encode()), ("synthesize",)],
+        spelled,
+    )
+
+    check(
+        "and nothing is closed that was never opened",
+        spoken(d, ["abc"]),
+        [("addText", b"abc"), ("synthesize", True)],
+    )
+
+    # A sequence of nothing but commands is silent because it should be, and
+    # the engine layer is told so rather than complaining that it made no
+    # sound.
+    check(
+        "a sequence with no words in it says so",
+        spoken(d, [CharacterModeCommand(True), CharacterModeCommand(False)]),
+        [("addText", b"`ts1 "), ("addText", b"`ts0 "), ("synthesize", False)],
     )
 
     check(
         "pitch, rate and volume become annotations in the text",
         spoken(d, [PitchCommand(20), "low", VolumeCommand(30), "quiet"]),
-        [("addText", "`vb20 low`vv30 quiet".encode()), ("synthesize",)],
+        [("addText", "`vb20 low`vv30 quiet".encode()), ("synthesize", True)],
     )
 
     check(
         "a backtick in ordinary text cannot start an annotation",
         spoken(d, ["a `vs10 b"]),
-        [("addText", b"a  vs10 b"), ("synthesize",)],
+        [("addText", b"a  vs10 b"), ("synthesize", True)],
     )
 
     d.voiceTags = True
     check(
         "unless the reader has asked for tags to go through",
         spoken(d, ["a `vs10 b"]),
-        [("addText", b"a `vs10 b"), ("synthesize",)],
+        [("addText", b"a `vs10 b"), ("synthesize", True)],
     )
     d.voiceTags = False
 
     check(
         "text goes in as UTF-8",
         spoken(d, ["café"]),
-        [("addText", "café".encode("utf-8")), ("synthesize",)],
+        [("addText", "café".encode("utf-8")), ("synthesize", True)],
     )
 
     check(
         "a language change is dropped, there being one language",
         spoken(d, [LangChangeCommand("de_DE"), "Hallo."]),
-        [("addText", b"Hallo."), ("synthesize",)],
+        [("addText", b"Hallo."), ("synthesize", True)],
     )
 
     # A break is scaled by the rate, so it is checked at a known rate.
@@ -384,13 +408,13 @@ def main():
     check(
         "a break becomes a pause annotation between the words",
         calls,
-        [("addText", b"one `p100 two"), ("synthesize",)],
+        [("addText", b"one `p100 two"), ("synthesize", True)],
     )
 
     check(
         "a break of nothing is still a well formed annotation",
         spoken(d, ["one", BreakCommand(0), "two"]),
-        [("addText", b"one `p0 two"), ("synthesize",)],
+        [("addText", b"one `p0 two"), ("synthesize", True)],
     )
 
     # The rate mapping, at both ends and in the middle.

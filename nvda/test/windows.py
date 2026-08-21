@@ -188,6 +188,122 @@ def main():
     check("ten interruptions leave the next utterance exactly as it should be",
           totals, {KNOWN_SAMPLES})
 
+    # ---- rapid fire, which is what arrowing through a list is --------------
+    #
+    # Both of the faults this checks were reported from use and neither was
+    # visible to anything here before. Arrowing was slow because every
+    # cancelled utterance was still synthesised in full, and text the engine
+    # has been given cannot be taken back -- eciClearInput only empties the
+    # manual queue, which this mode never fills -- so the decision has to be
+    # made before an utterance is submitted at all.
+
+    ROW = (b"2026-08-21  22:24    1,924,675  openevv-0.12.nvda-addon"
+           b"  and a rather long trailing description of the row")
+
+    def batch(*texts, words=True):
+        """One utterance, as the driver builds one. `words` is what the driver
+        passes: whether there was anything in it meant to make a sound."""
+        return ([(engine.addText, (t,)) for t in texts]
+                + [(engine.synthesize, (words,))])
+
+    player.chunks = []
+    engine.post(batch(ROW))
+    engine._work.join()
+    one = player.samples()
+
+    # Cancel drops what is queued, so twenty presses in a row only ever run the
+    # last -- that was true before any of this and is not what the check is
+    # for. What is checked is the case cancel cannot catch: a batch already
+    # taken off the queue when silence is asked for. It must not be submitted,
+    # because text the engine has been given cannot be taken back.
+    engine._discarding = True
+    player.chunks = []
+    engine.post(batch(ROW))
+    engine._work.join()
+    check("an utterance cancelled before it was submitted is not synthesised",
+          player.samples(), 0)
+
+    # And nothing of it is left behind to come out with the next one, which is
+    # what submitting it and then abandoning it would do.
+    engine._discarding = False
+    player.chunks = []
+    engine.post(batch(b"abc"))
+    engine._work.join()
+    small = player.samples()
+    check("and leaves nothing behind for the next one to speak",
+          small < one / 4, True)
+    note("the row is %d samples, the one after the dropped one %d" % (one, small))
+
+    # ---- and spelling does not leak out of one utterance into the next -----
+    #
+    # An annotation on the end of a stretch of text is not acted on -- it is
+    # spoken, faithfully, as IBM's own build does -- so the closing `ts0 has to
+    # go in a call of its own. Relying on the trailing form left the engine
+    # spelling everything out afterwards.
+
+    engine.cancel()
+    engine._work.join()
+
+    plain = None
+    for what, texts in (
+        ("plain", (b"abc",)),
+        ("spelled", (b"`ts1 ", b"abc", b"`ts0 ")),
+        ("plain again", (b"abc",)),
+    ):
+        player.chunks = []
+        engine.post(batch(*texts))
+        engine._work.join()
+        got = player.samples()
+        if what == "plain":
+            plain = got
+            spelledLonger = None
+        elif what == "spelled":
+            spelledLonger = got > plain
+            check("spelling out makes more audio than not", spelledLonger, True)
+        else:
+            check("and the utterance after it is plain again", got, plain)
+
+    # The engine fact the driver is built on, checked outright: an annotation on
+    # the end of a stretch of text is not acted on. It is spoken instead --
+    # faithfully, as IBM's own build does -- which is why the closing `ts0 goes
+    # in a call of its own. If this ever stops being true the driver could be
+    # simpler; while it is true, relying on the trailing form leaves the engine
+    # spelling everything out afterwards.
+    player.chunks = []
+    engine.post(batch(b"`ts1 abc`ts0 "))
+    engine._work.join()
+    trailing = player.samples()
+    player.chunks = []
+    engine.post(batch(b"abc"))
+    engine._work.join()
+    check("a trailing annotation is not acted on, so spelling would leak",
+          player.samples() != plain, True)
+    note("the trailing form gave %d, and the utterance after it %d rather than"
+         " %d" % (trailing, player.samples(), plain))
+
+    # Put it back to plain before going on. Nothing but an annotation, so it
+    # makes no sound and says so, which is what stops it being complained about.
+    engine.post(batch(b"`ts0 ", words=False))
+    engine._work.join()
+
+    # The same with the spelled one cancelled part way, and with rapid fire
+    # mixing the two, which is how it was found.
+    engine.cancel()
+    engine.post(batch(b"`ts1 ", b"abc", b"`ts0 "))
+    engine.cancel()
+    for i in range(10):
+        engine.cancel()
+        engine.post(batch(b"`ts1 ", b"x", b"`ts0 "))
+        engine.cancel()
+        engine.post(batch(b"item %d" % i))
+    engine.cancel()
+    engine._work.join()
+    player.chunks = []
+    engine.post(batch(b"abc"))
+    engine._work.join()
+    check("nor after ten cancelled ones with spelling mixed in",
+          player.samples(), plain)
+
     # ---- and shutting down, which is what switching synthesiser away does --
 
     try:

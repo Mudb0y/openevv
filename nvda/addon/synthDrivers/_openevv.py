@@ -12,13 +12,20 @@
 # written to be entered from two threads at once. So every call goes through a
 # queue to the thread made here.
 #
-# Nothing ever interrupts the engine. Both of the ways the interface offers to
-# do it -- answering eciDataAbort from the callback, and calling eciStop while
-# synthesis is running -- fault this engine, dereferencing a null in
-# vinitloc_new. That is not a hazard this works around out of caution: it is
-# what crashed NVDA the first time the add-on was asked for silence. Cancelling
-# therefore stops the player and throws the samples away while the utterance
-# finishes synthesising into nothing. See cancel for what that costs.
+# Nothing ever interrupts the engine. Cancelling stops the player and throws
+# the samples away while the utterance finishes synthesising into nothing. See
+# cancel for what that costs, which is real: it is why arrowing quickly through
+# a list waits about half a second on a long row.
+#
+# Answering eciDataAbort from the callback is the interface's own way to do
+# better, and it used to crash the engine and then leave it mute. Both of those
+# are fixed. It still does not work from here: with this drive loop -- eciSynthesize
+# then eciSynchronize -- answering abort kills the process on real Windows, with
+# or without an eciSpeaking poll afterwards, while test/interrupt.c does
+# twenty-five turns cleanly on the same machine. What that test does differently
+# is drive with eciSynchronizeSynth after polling eciSpeaking. So dropping this
+# is a change to how an utterance is driven and not a flag, and it wants
+# measuring: the cost above is worth about 490 ms a keystroke.
 #
 # Samples are held back until an index mark arrives, and then handed to the
 # player with a callback attached. The engine flushes a short buffer of its own
@@ -91,6 +98,11 @@ VOICE_RANGE = {
 	VOICE_SPEED: (0, 250),
 	VOICE_VOLUME: (0, 100),
 }
+
+# What is on the queue: an utterance, which is dropped if silence has been
+# asked for since it was put there, or a control step, which is not.
+SPEECH = 0
+CONTROL = 1
 
 #: The eight voices the engine ships. It is asked for their names rather than
 #: told them; this is only how many to ask about.
@@ -193,7 +205,7 @@ class Engine:
 
 	def post(self, batch):
 		"""Run these calls on the engine's thread, in this order."""
-		self._work.put(batch)
+		self._work.put((SPEECH, batch))
 
 	def cancel(self):
 		"""Stop now, and throw away what has not been spoken.
@@ -222,7 +234,7 @@ class Engine:
 		self._drain()
 		# Cleared on the engine's own thread, so it happens after the utterance
 		# being discarded has finished and before the next one starts.
-		self._work.put([(self._resume, ())])
+		self._work.put((CONTROL, [(self._resume, ())]))
 
 	def pause(self, switch):
 		if self.player is not None:
@@ -255,7 +267,7 @@ class Engine:
 		if not self._dll.eciInsertIndex(self._instance, n):
 			log.debugWarning("openevv: the engine refused an index mark")
 
-	def synthesize(self):
+	def synthesize(self, expectAudio=True):
 		"""Speak what has been added, and do not come back until it is done.
 
 		eciSynthesize only starts the utterance; eciSynchronize is what drives
@@ -267,6 +279,7 @@ class Engine:
 		self._held = bytearray()
 		self._pendingIndexes = []
 		self._produced = 0
+
 		if not self._dll.eciSynthesize(self._instance):
 			log.error("openevv: the engine refused to speak")
 			self._finish()
@@ -281,11 +294,15 @@ class Engine:
 			self._pendingIndexes = []
 			return
 
-		if self._produced == 0:
+		if expectAudio and self._produced == 0:
 			# The engine answers success for text it had no room for, so an
 			# utterance that produced nothing is the only sign that something
 			# was dropped. Silence with nothing said about it is the one
 			# failure a screen reader cannot be diagnosed from.
+			#
+			# Only where there was something to say, though. An utterance of
+			# nothing but annotations -- a spelling mode turned off and no words
+			# with it -- is silent because it should be.
 			log.warning("openevv: the engine took the text and made no audio;"
 			            " something was dropped and it does not say so")
 
@@ -330,10 +347,19 @@ class Engine:
 		self._ready.set()
 
 		while True:
-			batch = self._work.get()
-			if batch is None:
+			item = self._work.get()
+			if item is None:
 				self._work.task_done()
 				break
+			kind, batch = item
+			if kind == SPEECH and self._discarding:
+				# Asked for silence before any of this was submitted. Text the
+				# engine has been given cannot be taken back -- eciClearInput
+				# only empties the manual queue, which this mode never fills --
+				# so an utterance is either submitted whole or not at all. Not
+				# at all is free, and under rapid arrowing it is most of them.
+				self._work.task_done()
+				continue
 			try:
 				for fn, args in batch:
 					fn(*args)
