@@ -13,6 +13,7 @@ usage: dll.py <eci.dll> <out.wav> <text>
 
 import ctypes
 import hashlib
+import os
 import struct
 import sys
 import time
@@ -21,7 +22,10 @@ FRAME = 2048
 
 
 def main(path, out, text):
-    dll = ctypes.WinDLL(path)
+    # An absolute path, because since Python 3.8 ctypes does not look in the
+    # working directory for a bare name. The add-on passes an absolute path for
+    # the same reason, so this is what it does as well.
+    dll = ctypes.WinDLL(os.path.abspath(path))
 
     # Everything that takes or answers a handle has to say so, or ctypes
     # truncates it to an int and the engine is handed half an address.
