@@ -135,7 +135,8 @@ clean:
 	@rm -rf $(OBJDIR) $(OBJDIR32) $(OBJDIRWIN) $(BUILD)/evv $(BUILD)/probe \
 	        $(BUILD)/evv32 $(BUILD)/probe32 \
 	        $(BUILD)/libevv.a $(BUILD)/libevv32.a $(BUILD)/libevv-win.a \
-	        $(BUILD)/evv.exe $(BUILD)/evvspeak.exe $(BUILD)/syms.txt
+	        $(BUILD)/evv.exe $(BUILD)/evvspeak.exe $(BUILD)/eci.dll \
+	        $(BUILD)/eci.ini $(BUILD)/dlltest.exe $(BUILD)/syms.txt
 
 # Where `make install' puts it. There is nothing else to install: one binary,
 # which reads no file of its own at run time and wants no library but the C
@@ -202,8 +203,8 @@ SOURCESWIN := $(filter-out $(SRC)/port_posix.c $(STUB),$(wildcard $(SRC)/*.c)) \
               $(RULESRC)
 OBJECTSWIN := $(patsubst %.c,$(OBJDIRWIN)/%.o,$(notdir $(SOURCESWIN)))
 
-.PHONY: win win-probe
-win: $(BUILD)/evv.exe $(BUILD)/evvspeak.exe
+.PHONY: win win-probe win-dlltest
+win: $(BUILD)/evv.exe $(BUILD)/evvspeak.exe $(BUILD)/eci.dll
 
 # The probe, for Windows, which is how a fault there gets localised: it says
 # what the engine answered at every step, so the last line it prints is where
@@ -224,6 +225,28 @@ $(BUILD)/evv.exe: cli/evv.c $(BUILD)/libevv-win.a
 $(BUILD)/evvspeak.exe: win/speak.c $(OBJDIRWIN)/speak.res $(BUILD)/libevv-win.a
 	@$(CCWIN) $(CFLAGSWIN) -mwindows win/speak.c $(OBJDIRWIN)/speak.res \
 	   $(BUILD)/libevv-win.a $(LDFLAGSWIN) -lwinmm -lcomdlg32 -o $@
+	@echo "built $@"
+
+# The engine as a library, under the names IBM published, so that a program
+# written against IBM's eci.dll -- a screen reader add-on, most likely -- can
+# load ours instead. win/eci_api.c is the whole of the difference: fifty-two
+# wrappers and an entry point.
+#
+# eci.ini goes beside it because add-ons look for one and patch a path inside
+# it. Nothing here reads it: the engine carries its own settings in the image.
+$(BUILD)/eci.dll: win/eci_api.c $(BUILD)/libevv-win.a
+	@$(CCWIN) $(CFLAGSWIN) -shared win/eci_api.c $(BUILD)/libevv-win.a \
+	   $(LDFLAGSWIN) -o $@
+	@cp win/eci.ini $(BUILD)/eci.ini
+	@echo "built $@"
+
+# Speaks through the library rather than against the engine, by name, the way
+# an add-on does. `test/hash.sh build/dlltest.exe' then holds what comes out of
+# eci.dll against what comes out of everything else.
+win-dlltest: $(BUILD)/dlltest.exe
+
+$(BUILD)/dlltest.exe: test/dll.c $(BUILD)/eci.dll
+	@$(CCWIN) $(CFLAGSWIN) test/dll.c -static -o $@
 	@echo "built $@"
 
 $(OBJDIRWIN)/speak.res: win/speak.rc win/speak.h

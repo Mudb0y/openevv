@@ -1,3 +1,8 @@
+`eci.dll` exports the names IBM published, so a program written against IBM's
+library -- a screen reader add-on, for instance -- can load ours instead. It is
+sixty-four bit, wants nothing but the system's own DLLs, and `eci.ini` goes
+beside it because add-ons look for one.
+
 `evvspeak.exe` is the speak window: type something, pick one of the eight
 voices, set the rate in words a minute, and hear it. `evv.exe` is the same
 engine on the command line. Both are one file, sixty-four bit, and want nothing

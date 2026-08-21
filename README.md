@@ -23,6 +23,10 @@ type something, pick one of the eight voices, and hear it; `evv.exe` beside it
 is the same engine on the command line. One file each, nothing to install, and
 `make win` builds both from here with mingw.
 
+`eci.dll` is in the release too: the same engine exporting the names IBM
+published, so a program written against IBM's library can load ours instead --
+a screen reader add-on, for instance.
+
 `./build/evv -h` says what the options are, and `./build/evv -l` says what each
 of the eight voices is set to.
 

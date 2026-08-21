@@ -47,7 +47,7 @@ jobs:
           sudo apt-get install -y gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64
 
       - name: Build
-        run: make -j"$(nproc)" win
+        run: make -j"$(nproc)" win win-dlltest
 
       - name: Say what came out
         run: |
@@ -66,6 +66,9 @@ jobs:
           path: |
             build/evv.exe
             build/evvspeak.exe
+            build/eci.dll
+            build/eci.ini
+            build/dlltest.exe
           if-no-files-found: error
 
   # The one thing the cross build cannot answer: whether it runs on Windows.
@@ -88,6 +91,24 @@ jobs:
           "on Windows: $have"
           "wanted:     $want"
           if ($have -ne $want) { throw "the samples have moved on Windows" }
+
+      # The library is what an add-on loads, so it is checked the way an add-on
+      # loads it: by name, through ctypes, in a sixty-four bit process, on
+      # Windows itself. The C harness checks the same crossing without ctypes'
+      # opinions in the way.
+      - name: Speak through the library, from C and from ctypes
+        shell: pwsh
+        run: |
+          .\dlltest.exe -o fromc.wav "The quick brown fox jumps over the lazy dog."
+          $want = (Get-Content test/samples.sha256).Split(' ')[0]
+          $havec = (Get-FileHash fromc.wav -Algorithm SHA256).Hash.ToLower()
+          "from C:      $havec"
+          if ($havec -ne $want) { throw "the library says something else than the engine" }
+          python test/dll.py eci.dll fromctypes.wav "The quick brown fox jumps over the lazy dog."
+          $havep = (Get-FileHash fromctypes.wav -Algorithm SHA256).Hash.ToLower()
+          "from ctypes: $havep"
+          "wanted:      $want"
+          if ($havep -ne $want) { throw "the library says something else through ctypes" }
 
   release:
     needs: [linux, windows, windows-check]
@@ -113,6 +134,8 @@ jobs:
 
       - name: Make the archives
         run: |
+          # dlltest.exe is a check, not something to ship.
+          rm -f dist/windows/dlltest.exe
           cp README.md LICENSE NOTICE dist/windows/
           (cd dist/windows \
              && zip -q -r ../../openevv-${GITHUB_REF_NAME}-windows-x86_64.zip .)

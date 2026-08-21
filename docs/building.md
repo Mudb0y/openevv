@@ -116,6 +116,39 @@ arena takes its region from VirtualAlloc at the same low addresses mmap gets on
 Linux. The image itself is an ordinary PE at whatever base mingw chooses, with
 ASLR on: nothing needs it low any more.
 
+### The library
+
+`make win` also builds `build/eci.dll`, which is the same engine with the names
+IBM published on the outside: `eciNew`, `eciAddText`, `eciSynthesize` and the
+rest, fifty-two of them, exported under those spellings from a sixty-four bit
+library that wants nothing but the system's own DLLs. `win/eci_api.c` is the
+whole of it, one wrapper per name.
+
+The point of it is that a program written against IBM's `eci.dll` can load ours
+instead. That program is usually a screen reader add-on: NVDA is a sixty-four
+bit process now, and the add-on most people have loads the library with ctypes'
+`windll`, calls seventeen of these, and hands in a callback made with
+`WINFUNCTYPE`. `build/eci.ini` is copied out beside the library because add-ons
+look for one and rewrite a path inside it; nothing here reads it, since the
+engine carries its own settings in the image.
+
+None of the calling convention trouble that a thirty-two bit build would bring
+applies: on x86-64 `__stdcall` and `__cdecl` are the same thing, a stdcall name
+carries no `@N` to strip, and a stdcall callback is callable as anything.
+
+Two ways to check it, and both are worth having. `make win-dlltest` builds
+`build/dlltest.exe`, which links against nothing, loads `eci.dll` by name, asks
+for each entry point by name and speaks; `test/hash.sh build/dlltest.exe` then
+holds what comes out of the library against what comes out of everything else.
+`test/dll.py` does the same through ctypes, which is a different question --
+ctypes has its own ideas about handles, and a handle is sixty-four bits -- and
+CI runs it on Windows itself.
+
+What the library does not export: the filter interface, which the engine does
+not implement, and `eciGeneratePhonemes` and the dictionary find, lookup and
+update calls, which exist inside the engine with no public wrapper yet. A
+caller asking for one of those gets nothing rather than something wrong.
+
 ## Getting IBM's objects
 
 None of this is needed to build. It is needed for two things: the comparison

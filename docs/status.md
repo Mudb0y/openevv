@@ -31,6 +31,13 @@ It builds and speaks on Windows, sixty-four bit, as one static file. The speak
 window plays what it makes through waveOut; `win/speak.c` is that, and it is the
 only front end that plays anything.
 
+And it builds as `eci.dll`, exporting the fifty-two names IBM published, so a
+program written against IBM's library -- a screen reader add-on, most likely --
+can load ours instead. Checked two ways on Windows itself: by name from C, and
+through ctypes as an add-on does. What is not exported is the filter interface,
+which the engine does not implement, and the dictionary find, lookup and update
+calls, which have no public wrapper yet.
+
 ## Not done
 
 Live audio on Linux. The engine hands its samples to the caller, and

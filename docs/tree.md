@@ -39,13 +39,19 @@ every step. `reference/speak.c` is a third, driving IBM's engine through the
 published ECI names, and it is separate because those are different names for
 the same calls and joining them would mean a conditional around every one.
 
-`win` is the speak window: `speak.c`, and `speak.rc` which is the dialog and its
-keys. It is the only front end that plays what the engine makes, through
-waveOut, and it is Windows-only for the same reason it exists -- that is the
-platform someone can be handed one file for.
+`win` is the Windows front, and it holds two different things. `speak.c` with
+`speak.rc` is the speak window: the only front end that plays what the engine
+makes, through waveOut, and Windows-only for the same reason it exists -- that
+is the platform someone can be handed one file for. `eci_api.c` is the library:
+the engine exported under the names IBM published, so that a program expecting
+IBM's `eci.dll` can load ours instead. `eci.ini` is a stub that goes beside the
+library because add-ons look for one and rewrite a path in it.
 
 `test` holds `suite.sh`, which runs the categories of cases through both
 engines, `compare.sh`, which does one category, and `cases`, the text itself.
+`hash.sh` and `samples.sha256` are the check that needs neither Wine nor IBM.
+`dll.c` and `dll.py` speak through the library the way something else would,
+once from C and once through ctypes.
 
 `tools` holds three kinds of thing. The lifters turn IBM's objects into the C
 in `lang`: `extract.sh` and `extract-langs.sh` unpack the SDK, `delta-lift.py`
