@@ -121,6 +121,15 @@ being a different depth than the compiled code expected; and addresses in the
 arena, which differ because a rule written as C takes a smaller frame on
 purpose.
 
+Interrupting from another thread is not fully closed. `eciStop` called from a
+second thread while `eciSynthesize` runs used to fault every time; with the
+guard it faults in none of twelve runs on real Windows and in eight of twelve
+under Wine, with the address moving between runs. That is a race rather than a
+certainty, so it is the one place where a caller doing what IBM's interface
+offers is still not safe. Answering `eciDataAbort` from the callback -- the same
+call reached from inside -- is clean on Linux, under Wine and on Windows, twelve
+turns each.
+
 Interrupting an utterance and then speaking again on the same instance leaves
 the engine quiet. It accepts the text, reports no error, answers that it is not
 speaking, and says nothing, from the second interruption onwards. The text
