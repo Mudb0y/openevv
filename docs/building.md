@@ -261,23 +261,25 @@ Without Wine there is no automatic check that the audio is right.
 first, so a change to the language data can be heard.
 
 `tools/delta-check.sh` is the other check. It holds named rules written as C
-against the same rules left as bytecode: it speaks the seven plain cases twice,
-once each way, with the engine saying which rule it is entering and with what,
-and the two accounts have to be identical. That is finer than the audio, because
-a rule can go wrong in a way that changes what runs and not what is heard.
+against the same rules left as bytecode: it speaks each of the seven plain cases
+twice, once each way, with the engine saying which rule it is entering and every
+call it makes, arguments and all, and the two accounts have to be identical.
+That is finer than the audio, because a rule can go wrong in a way that changes
+what runs and not what is heard.
 
 Four things about it are deliberate, and the comment at the top of the script
-says why at length. The text is seven sentences, because tracing costs more than
-the synthesis and over the whole case set the run is cut short in a different
-place each time. `DELTA_RULE_TRACE` is 1 rather than higher, because above a
-hundred thousand the interpreter also prints every call with its arguments,
-which cannot be compared yet: it prints its own stores, which a rule written as
-C makes for itself, and the two disagree about how many arguments a call takes.
-The rules are written out with `EVV_FAITHFUL` set, which leaves a wrapper rule
-as a call to that rule rather than writing out the primitive it stood for, since
-an inlined wrapper is never entered and so cannot appear in a trace at all.
-And addresses in the arena are masked, because a rule written as C takes a
-smaller frame on purpose and the two land in different places.
+says why at length. One sentence at a time in its own run, because tracing costs
+twenty times what the synthesis does and seven of them in one run faults part
+way with less audio written; the wave files are compared first for that reason.
+The stores are left out, because the interpreter prints the ones it makes and a
+rule written as C makes its own. So is the interpreter's remark about the
+argument area being a different depth than the compiled code expected, which is
+about the compiled code rather than either form of it. The rules are written out
+with `EVV_FAITHFUL` set, which leaves a wrapper rule as a call to that rule
+rather than writing out the primitive it stood for, since an inlined wrapper is
+never entered and so cannot appear in a trace at all. And addresses in the arena
+are masked, because a rule written as C takes a smaller frame on purpose and the
+two land in different places.
 
 The check deletes the generated C when it finishes, so the next build writes the
 ordinary form again rather than finding the faithful one sitting there newer

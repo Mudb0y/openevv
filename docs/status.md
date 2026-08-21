@@ -1,6 +1,6 @@
 # What works and what does not
 
-Last measured 20 August 2026.
+Last measured 21 August 2026.
 
 ## Works
 
@@ -94,15 +94,20 @@ Without them there is no automatic check that the audio is right, only
 `tools/say.sh` to listen with and `tools/delta-check.sh` to hold the two forms
 of a rule against each other.
 
-That last one compares which rules were entered and with what, and not yet every
-call with its arguments, which would be the better check. Two things stand in
-the way and both are the harness rather than the rules: the interpreter prints
-the stores it makes, which a rule written as C makes for itself and cannot
-print, and a call is written with two counts -- how many the entry takes and how
-deep the stack should be -- where the interpreter passes the first and the
-decompiler emits the second. Nothing reads past what it wants, so it changes
-nothing that is heard, but until the decompiler emits the first the printed
-argument lists cannot be held against each other.
+That last one compares every rule entered and every call made, with their
+arguments, over the seven plain cases taken one at a time. Three kinds of line
+are left out and all three are the interpreter's alone: the stores it makes,
+which a rule written as C makes for itself; its remark about the argument area
+being a different depth than the compiled code expected; and addresses in the
+arena, which differ because a rule written as C takes a smaller frame on
+purpose.
+
+One thing that check turned up is a fault of ours, and is not fixed. Tracing at
+the level that prints every call costs twenty times what the synthesis does, and
+feeding the synthesis that slowly faults part way through a run of several
+sentences, with less audio written than there should be. Any one sentence is
+fine. Nothing but a trace makes the engine that slow, so it is not in the way of
+anything, but it is a fault and this is where it is written down.
 
 The reference binary hangs now and again on an index mark. `test/compare.sh`
 retries a case once on its own before reporting it as hung, because calling that
