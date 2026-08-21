@@ -579,7 +579,7 @@ THIS int32_t stl_stop(SynthThread *t)
             rc = ERR_ENGINE;
     }
 
-    *(int32_t *)((char *)ST_INDEXQ(t) + 0x0c) = 0;
+    ST_INDEXQ(t)->total = 0;
     el_listReset(ST_INDEXQ(t));
     eq_reset(ST_MARKS(t));
 
@@ -597,10 +597,14 @@ THIS int32_t stl_stop(SynthThread *t)
     stm_qtResume(t);
     rz_resume(ST_ROMAN(t));
 
-    /* The application queue forgets what it was told about too, or the next
-       run would be numbered from where the last one stopped. */
+    /* The application queue forgets what it was told about too, and what it
+       has collected with it, or the next run would be numbered from where the
+       last one stopped. Both, or the two drift: a stale count of what was
+       collected that happens to equal the fresh count of what was posted
+       reads as nothing outstanding, and the queue delivers none of what is
+       sitting in it. */
     APP_POSTED(ST_APP(t)) = 0;
-    *(int32_t *)((char *)ST_APP(t) + 0x5c) = 0;
+    APP_SEEN(ST_APP(t)) = 0;
     stm_pauseMessageQueue(ST_APP(t), 0);
     app->vt->resume(app);
     return rc;

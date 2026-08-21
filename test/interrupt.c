@@ -10,12 +10,19 @@
  * that never called in, and it is what a screen reader met when someone
  * interrupted speech.
  *
- * What it checks is that the engine survives being interrupted over and over
- * on one instance. It prints what each utterance said rather than asserting
- * it, because of a second fault that is still open: after the second
- * interruption the engine goes quiet, accepting text and answering no error
- * and saying nothing. When that is fixed this should assert that every
- * follow-up utterance is worth the same as the first.
+ * It also used to go quiet from the second interruption onwards, accepting
+ * text and answering no error and saying nothing. The stop put back the
+ * application queue's count of what it had posted and not its count of what
+ * had been collected, so the two drifted; a stale collected count that
+ * happened to equal the fresh posted count read as nothing outstanding, and
+ * the queue handed over none of the samples sitting in it. Only the
+ * sixty-four bit builds had it, because the field was being reached by the
+ * byte it sat at when a pointer was four bytes.
+ *
+ * So this asserts what it used to only print: every follow-up utterance is
+ * worth exactly what the first whole one was. A follow-up worth nothing is
+ * the silence back, and one worth anything else is the interrupt leaving
+ * something else behind.
  *
  * usage: interrupt [turns]        default 12
  */
@@ -97,6 +104,7 @@ int main(int argc, char **argv)
     int turns = argc > 1 ? atoi(argv[1]) : 12;
     uint32_t langs[32];
     int n = 32, t;
+    long whole;
     OldInst *h;
     const char *lots = "The quick brown fox jumps over the lazy dog, and then"
         " says a great deal more so that there is plenty to interrupt before"
@@ -116,21 +124,32 @@ int main(int argc, char **argv)
         return 1;
 
     /* One clean utterance first, so what a whole one is worth is known. */
-    printf("whole:    %ld\n", say(h, "The quick brown fox.", 0));
+    whole = say(h, "The quick brown fox.", 0);
+    printf("whole:    %ld\n", whole);
     fflush(stdout);
+    if (whole <= 0) {
+        printf("interrupt: the first utterance said nothing\n");
+        return 1;
+    }
 
     for (t = 1; t <= turns; t++) {
         long cut = say(h, lots, 3);
-
+        long after;
 
         printf("turn %2d: aborted after %ld, ", t, cut);
         fflush(stdout);
-        printf("then said %ld\n", say(h, "The quick brown fox.", 0));
+        after = say(h, "The quick brown fox.", 0);
+        printf("then said %ld\n", after);
         fflush(stdout);
+        if (after != whole) {
+            printf("interrupt: turn %d owed %ld and got %ld\n",
+                   t, whole, after);
+            return 1;
+        }
     }
 
     es_delete(h);
     evv_port_finish();
-    printf("interrupt: %d turns, the engine still runs\n", turns);
+    printf("interrupt: %d turns, every follow-up worth %ld\n", turns, whole);
     return 0;
 }

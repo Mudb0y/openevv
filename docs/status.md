@@ -130,14 +130,60 @@ offers is still not safe. Answering `eciDataAbort` from the callback -- the same
 call reached from inside -- is clean on Linux, under Wine and on Windows, twelve
 turns each.
 
-Interrupting an utterance and then speaking again on the same instance leaves
-the engine quiet. It accepts the text, reports no error, answers that it is not
-speaking, and says nothing, from the second interruption onwards. The text
-reaches `api_add_text`, which answers that it took it, and never reaches the
-machine: a working utterance hands the machine twenty-eight pieces and a silent
-one six, stopping exactly where the working one starts sending the voice.
-`make interrupt` shows it and prints what each utterance said. The fault that
-used to come with it -- a crash rather than silence -- is fixed.
+Interrupting an utterance and then speaking again on the same instance used to
+leave the engine quiet from the second interruption onwards, accepting the text,
+reporting no error, answering that it was not speaking, and saying nothing. That
+is fixed. `make interrupt` is the check and it now asserts what it used to only
+print: twelve turns, every follow-up utterance worth exactly what the first
+whole one was.
+
+It was never on the interrupt path. The application queue keeps two counts, one
+of everything it has been told about and one of everything the application has
+collected, and it takes them being equal to mean there is nothing outstanding.
+The stop put the first back to nought and left the second where it was, so the
+two drifted; when the stale one happened to equal the fresh one, the queue
+believed it had caught up and handed over none of the samples already sitting in
+it. The text had arrived and the samples had been made. They were made and then
+not collected.
+
+Only the sixty-four bit builds had it, which is why the suite never saw it: the
+stop reached that second count by the byte it sat at when a pointer was four
+bytes, and at sixty-four bits that byte is inside the queue's own send lock. The
+same build thirty-two bit runs the check clean without the fix. That is the
+third time an unconverted byte offset has cost a fault, so the offsets that
+reach a block by number rather than by name were swept afterwards; what the
+sweep found is below.
+
+The sweep, and the two things left in it. Eighteen blocks in the engine are
+still reached by the byte a field sat at. Most are safe and stay that way for a
+reason: a block the machine can see has the same layout in both bitnesses by
+design, because everything in it that points is a four-byte `evv_ref` rather
+than a pointer, so a number into one of those means the same thing either way.
+What is not safe is reading such a field as a pointer, or reaching into a block
+whose layout is ours and has grown. Two of the eighteen do one of those.
+
+`src/eci_deltalib.c` writes the machine's "undefined reads back as this" field
+as a `const char **`, and what it writes is the address of `"---"` in the
+program. Both halves are wrong at sixty-four bits: the field is a four-byte
+reference into the arena, so an eight-byte write spills past it, and an address
+in the program is the one thing the machine may never be given. Going through
+the raw offset is exactly what slips it past `evv_ref_checked`, which exists to
+refuse this and never gets the chance. The reader, in `src/eci_access.c`, takes
+it as a reference and translates it, so at sixty-four bits it translates
+rubbish; at thirty-two the two agree by accident, because a reference and a
+pointer are the same four bytes there. Nothing asks for it in the 81 cases, so
+this is latent rather than live, and it wants the string copied into the arena
+by `delta_low_copy` and kept as a reference.
+
+`src/eci_pcm16.c` and `src/eci_soundfmt.c` reach a sound file's block by
+offsets that overlap once a pointer is eight bytes: the format at 0x0c runs
+over the rate at 0x10, the stream at 0x18 over how it was opened at 0x1c, and
+the index function at 0x20 over its parameter at 0x24. That block is ours, not
+the machine's, so it should be a struct. It is dormant for a plain reason:
+nothing in these builds ever opens a sound file. `port_ral.c` says there are no
+audio devices, which sends the engine down the buffer path, and the callers
+write their own files out of that buffer. It becomes live the day anything
+asks the engine to write a file itself.
 
 Making and throwing away engine instances leaks a few megabytes each. After
 about sixty the engine still runs and still answers, and says nothing: it has
