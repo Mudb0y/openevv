@@ -121,14 +121,86 @@ being a different depth than the compiled code expected; and addresses in the
 arena, which differ because a rule written as C takes a smaller frame on
 purpose.
 
-Interrupting from another thread is not fully closed. `eciStop` called from a
-second thread while `eciSynthesize` runs used to fault every time; with the
-guard it faults in none of twelve runs on real Windows and in eight of twelve
-under Wine, with the address moving between runs. That is a race rather than a
-certainty, so it is the one place where a caller doing what IBM's interface
-offers is still not safe. Answering `eciDataAbort` from the callback -- the same
-call reached from inside -- is clean on Linux, under Wine and on Windows, twelve
-turns each.
+Interrupting from another thread has not been re-measured since the silence was
+fixed, and the numbers that used to stand here cannot be trusted. `eciStop`
+called from a second thread while `eciSynthesize` runs used to fault every
+time; with the busy guard it was none of twelve on real Windows and eight of
+twelve under Wine. Both of those were measured before the queue-count fix, and
+that fix changed what a stop leaves behind, so whether the stop door is still a
+race is an open question rather than a known one. Answering `eciDataAbort` from
+the callback is clean: `make interrupt` holds twelve turns on Linux and
+twenty-five under Wine and on real Windows.
+
+Two lessons were bought expensively on the way and are worth more than the
+numbers were. A library held open cannot be replaced, and a screen reader holds
+its own: an evening of "the abort door faults on Windows" turned out to be an
+add-on loading an `eci.dll` from its installed directory that had been locked
+open since before the fix, so every measurement was against the engine that
+still had the bug. Anything experimental gets its own staged copy of the
+library. And a fault with an empty stderr and 0xC0000005 says only that nothing
+in the engine complained; it does not say what happened, and it is not evidence
+for whichever mechanism looks like it.
+
+A hazard was found while chasing that, and it is real on its own terms even
+though it explained nothing that was reported. A landing place jumped to from a
+thread that never planted it used to jump to nought. The engine backtracks to a
+place a rule planted, named by the address of the rule's frame; the frames are
+in the arena, which every thread shares, and the machine keeps the one it means
+to return to in its own state, where whoever stops the engine can reach it. So
+the name travels between threads although the landing place cannot: the table of
+places is one per thread, on the stated assumption that two threads cannot share
+a name, which the arena makes false. The lookup then made a place rather than
+refusing, the new place was all noughts, and the jump loaded nought as the stack
+pointer and went to nought.
+
+The lookup now refuses, so the same mistake is a sentence rather than a fault
+with nothing in it. `make landing` is the check: it plants a landing and lands
+on it, then jumps to that name from another thread, and answers non-zero if the
+guard does not fire. Against the committed code that test is a bare
+segmentation fault. This does not make stopping from another thread correct --
+it makes it say what is wrong, on every platform, at the moment it happens.
+Doing it properly means the stop asking the engine's own thread to unwind
+rather than unwinding it from outside, and that is not done. Nothing observed
+so far needs it: five drive loops on Linux -- polling, `eciSynchronize`,
+synthesis on a worker thread, the same with the cancelling thread polling, and
+`eciStop` from a second thread -- all run clean, and so does the add-on's own
+loop once it is loading a current library.
+
+One narrow window is left in the guard and is not closed. A place is marked as
+planted before the save writes into it, so another thread jumping in between
+the two would find a planted but empty place and fault as it did before. Closing
+that means marking after the save returns, which is awkward across a call that
+returns twice and across the thirty-two bit `setjmp` path. The window only
+exists while a cross-thread jump is already happening, which is the mistake
+being diagnosed.
+
+What cancelling costs, measured through the add-on on real Windows rather than
+in the engine, which is what makes it a number a person feels. The clock runs
+from asking for silence to the first samples of the next utterance, five rounds
+each, against a current library.
+
+Cancelling costs about 350 ms on a long file-manager row and about 175 ms on a
+filename, and it costs that by all three routes: letting the utterance finish
+and throwing its samples away, answering `eciDataAbort`, and calling `eciStop`
+from the cancelling thread. The three are within a few milliseconds of each
+other, with `eciStop` slightly the worst. A cold start on an idle engine is
+128 ms for the row and 34 ms for the filename, which is what lets the cancel's
+own cost be separated out at all.
+
+So the abort door being open does not help the latency, and the earlier claim
+here that what remained was the add-on removing its workaround was an inference
+from the door opening rather than a measurement. It is withdrawn. Answering
+`eciDataAbort` stops the engine handing over more buffers; it does not stop it
+finishing the utterance, and neither does `eciStop`. What is left is a question
+about the engine: it completes work it has been told to abandon, and nothing the
+published interface offers avoids that.
+
+One thing in those numbers is not understood and no cause should be read into
+them yet. On the filename the cancel costs about 175 ms while synthesising the
+whole utterance takes about 80 ms, so the cost is not simply the work left to
+do: something of the order of a hundred milliseconds does not scale with the
+text at all. Whether that is the engine or the add-on is being measured by
+timing a cancel with nothing in flight.
 
 Interrupting an utterance and then speaking again on the same instance used to
 leave the engine quiet from the second interruption onwards, accepting the text,
@@ -154,7 +226,7 @@ third time an unconverted byte offset has cost a fault, so the offsets that
 reach a block by number rather than by name were swept afterwards; what the
 sweep found is below.
 
-The sweep, and the two things left in it. Eighteen blocks in the engine are
+The sweep, one fixed and one left. Eighteen blocks in the engine are
 still reached by the byte a field sat at. Most are safe and stay that way for a
 reason: a block the machine can see has the same layout in both bitnesses by
 design, because everything in it that points is a four-byte `evv_ref` rather
@@ -164,26 +236,43 @@ whose layout is ours and has grown. Two of the eighteen do one of those.
 
 `src/eci_deltalib.c` writes the machine's "undefined reads back as this" field
 as a `const char **`, and what it writes is the address of `"---"` in the
-program. Both halves are wrong at sixty-four bits: the field is a four-byte
+program -- or it did, and this one is fixed. Both halves were wrong at
+sixty-four bits: the field is a four-byte
 reference into the arena, so an eight-byte write spills past it, and an address
 in the program is the one thing the machine may never be given. Going through
 the raw offset is exactly what slips it past `evv_ref_checked`, which exists to
 refuse this and never gets the chance. The reader, in `src/eci_access.c`, takes
 it as a reference and translates it, so at sixty-four bits it translates
-rubbish; at thirty-two the two agree by accident, because a reference and a
+rubbish; at thirty-two the two agreed by accident, because a reference and a
 pointer are the same four bytes there. Nothing asks for it in the 81 cases, so
-this is latent rather than live, and it wants the string copied into the arena
-by `delta_low_copy` and kept as a reference.
+it was latent rather than live -- but reading that field back and using it as a
+string faults, which is a measurement and not an argument. The string is now
+copied into the arena by `delta_low_copy` and the field holds a reference to
+the copy, which reads back as "---".
 
 `src/eci_pcm16.c` and `src/eci_soundfmt.c` reach a sound file's block by
 offsets that overlap once a pointer is eight bytes: the format at 0x0c runs
 over the rate at 0x10, the stream at 0x18 over how it was opened at 0x1c, and
 the index function at 0x20 over its parameter at 0x24. That block is ours, not
-the machine's, so it should be a struct. It is dormant for a plain reason:
-nothing in these builds ever opens a sound file. `port_ral.c` says there are no
-audio devices, which sends the engine down the buffer path, and the callers
-write their own files out of that buffer. It becomes live the day anything
-asks the engine to write a file itself.
+the machine's, so it should be a struct -- and `src/eci_soundfile.c` already
+declares that struct and already has the right idiom for the format table,
+`FMT_SLOT`, which reads a slot as the byte offset divided by four. Three things
+say the layer is unreachable rather than merely unused, so this is left alone
+and written down instead. `ST_SOUND(t)` is nought, measured by printing it: every
+sender in the engine is guarded by it, so nothing in the sound thread runs.
+`ealAudioSoundFormat` is `int32_t[16]`, sixteen words of nought, and it
+registers first and is therefore the default format, so nothing could be called
+through it. And `constructSoundFile` and `soundFileFormat` have no callers
+anywhere in the tree. Since nothing can observe that code, nothing can check a
+change to it either, which is the reason for leaving it: a fix there would be
+mechanically right and unverified. Two things to know when it is wired up.
+`FMT_SLOT` itself is wrong -- `(*(void ***)(f))[(off) / 4]` has one
+dereference too many for a table that is the array, so it would index off the
+format's name -- and the six offsets `eci_soundfile.c` names all land on the
+right function when read as slots, which is what says the layout is determined
+rather than guessed. It becomes live the day anything asks the engine to write
+a file itself, or the day Linux audio is wired through this layer rather than
+through the buffer.
 
 Making and throwing away engine instances leaks a few megabytes each. After
 about sixty the engine still runs and still answers, and says nothing: it has

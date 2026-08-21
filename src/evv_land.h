@@ -43,13 +43,16 @@
 
 #endif
 
-/* The landing place that answers to this address, made if there is not one. */
+/* The landing place that answers to this address, made if there is not one.
+   The second is the same lookup for the jump, and it refuses a name this
+   thread never planted rather than handing back noughts to jump to. */
 void *evv_land_place(uintptr_t name);
+void *evv_land_planted(uintptr_t name);
 
 int  evv_land_save(void *place) __attribute__((returns_twice));
 void evv_land_jump(void *place, int value) __attribute__((noreturn));
 
 #define EVV_LAND_SAVE(p)     evv_land_save(evv_land_place((uintptr_t)(p)))
-#define EVV_LAND_JUMP(p, v)  evv_land_jump(evv_land_place((uintptr_t)(p)), (v))
+#define EVV_LAND_JUMP(p, v)  evv_land_jump(evv_land_planted((uintptr_t)(p)), (v))
 
 #endif

@@ -87,7 +87,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) $(LOW) $(CFLAGS)
 OBJDIR  := $(BUILD)/obj
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt
+.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv.a
@@ -115,6 +115,16 @@ interrupt: $(BUILD)/interrupt
 
 $(BUILD)/interrupt: test/interrupt.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/interrupt.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# A backtrack landed on from a thread that never planted it, which is how
+# stopping the engine from another thread used to fault with nothing in the
+# fault to say so. It is meant to be killed by the guard, so it answers
+# non-zero when the guard does not fire.
+landing: $(BUILD)/landing
+
+$(BUILD)/landing: test/landing.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/landing.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 $(OBJDIR)/%.o: %.c $(HEADERS)

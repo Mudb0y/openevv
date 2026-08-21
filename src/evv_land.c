@@ -33,30 +33,67 @@
 typedef struct land_entry {
     uintptr_t          name;
     struct land_entry *next;
+    int                planted;   /* this thread has saved into it */
     unsigned long long saved[EVV_LAND_WORDS];
 } land_entry;
 
 static __thread land_entry *land_tab[LAND_BUCKETS];
 
-void *evv_land_place(uintptr_t name)
+static land_entry *found(uintptr_t name)
 {
     unsigned h = (unsigned)((name >> 4) & (LAND_BUCKETS - 1));
     land_entry *e;
 
     for (e = land_tab[h]; e != 0; e = e->next)
         if (e->name == name)
-            return e->saved;
+            return e;
+    return 0;
+}
 
-    /* Not the arena: the machine never holds one of these as a value, and it
-       must go on existing after the frame that planted it has gone. */
-    e = (land_entry *)calloc(1, sizeof *e);
+/* Planting one: the place this thread will come back to, made if there is not
+   one yet. */
+void *evv_land_place(uintptr_t name)
+{
+    unsigned h = (unsigned)((name >> 4) & (LAND_BUCKETS - 1));
+    land_entry *e = found(name);
+
     if (e == 0) {
-        fprintf(stderr, "evv: no room for a landing place\n");
+        /* Not the arena: the machine never holds one of these as a value, and
+           it must go on existing after the frame that planted it has gone. */
+        e = (land_entry *)calloc(1, sizeof *e);
+        if (e == 0) {
+            fprintf(stderr, "evv: no room for a landing place\n");
+            abort();
+        }
+        e->name = name;
+        e->next = land_tab[h];
+        land_tab[h] = e;
+    }
+    e->planted = 1;
+    return e->saved;
+}
+
+/* Landing on one. A name this thread has never planted is not a landing place
+   at all, and the table above would hand back a block of noughts: the jump
+   would then load nought as the stack pointer and go to nought, which is a
+   fault with nothing in it to say where it came from.
+
+   It happens when the name outlives the thread that planted it. The name is
+   the address of a rule's frame and the frame is in the arena, which every
+   thread shares, so a name does travel between threads even though a landing
+   place cannot -- the machine keeps the one it means to return to in its own
+   state, where whoever stops the engine can reach it. Saying so is the whole
+   point of this: the caller has asked the machine to backtrack on a thread
+   that was never in the rule. */
+void *evv_land_planted(uintptr_t name)
+{
+    land_entry *e = found(name);
+
+    if (e == 0 || !e->planted) {
+        fprintf(stderr, "evv: landing 0x%lx was never planted on this thread,"
+                " so there is nowhere to jump to\n", (unsigned long)name);
         abort();
     }
-    e->name = name;
-    e->next = land_tab[h];
-    land_tab[h] = e;
     return e->saved;
 }
 
