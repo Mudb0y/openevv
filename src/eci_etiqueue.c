@@ -33,6 +33,11 @@ typedef struct ETIqueueVtbl ETIqueueVtbl;
 
 extern const ETIqueueVtbl vtbl_etiqueue;
 
+/* How much room one takes here. IBM's is 0x14 bytes because a vtable
+   pointer and an array pointer were four apiece; on a wider host it is more,
+   and whoever makes one has to ask rather than assume. */
+const uint32_t eq_bytes = sizeof(ETIqueue);
+
 extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
 extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
 

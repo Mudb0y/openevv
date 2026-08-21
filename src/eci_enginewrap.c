@@ -28,6 +28,10 @@ typedef struct EngineWrapper {
     int32_t     aborting; /* +0x10 */
 } EngineWrapper;
 
+/* How much room one takes here, for whoever makes one. IBM's is 0x14 bytes
+   because the vtable pointer and the machine pointer were four apiece. */
+const uint32_t ew_bytes = sizeof(EngineWrapper);
+
 /* The answer that means the engine has stopped and will not start again. */
 #define ENGINE_STOPPED 1
 

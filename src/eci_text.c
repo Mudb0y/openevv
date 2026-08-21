@@ -47,7 +47,11 @@ typedef struct QueueElement {
     struct QueueElement *next;  /* +0xa0 */
 } QueueElement;
 
-#define QE_BYTES 0xa4
+/* The offsets above are the original's, and are what an element can be
+   checked against; they are not what one costs here. IBM's element is 0xa4
+   bytes because a pointer was four of them, and on a wider host this struct
+   is twelve bytes longer. Allocating the original's count wrote the tail of
+   the voice array and the whole of the link past the end of the block. */
 
 /* The tables of voices, laid out by family, dialect, rate and voice. */
 #define CV_FAMILY_BYTES  0x1e18
@@ -434,7 +438,7 @@ void et_processAnnotations(void *concat, int32_t *voice, int32_t *env,
 QueueElement *et_createTextElement(OldInst *h, const char *text, int32_t len,
                                    int32_t annotate)
 {
-    QueueElement *e = calloc(1, QE_BYTES);
+    QueueElement *e = calloc(1, sizeof *e);
 
     if (!e)
         return 0;
@@ -460,7 +464,7 @@ QueueElement *et_createTextElement(OldInst *h, const char *text, int32_t len,
 /* An index mark, likewise. */
 QueueElement *et_createIndexElement(OldInst *h, int32_t n)
 {
-    QueueElement *e = calloc(1, QE_BYTES);
+    QueueElement *e = calloc(1, sizeof *e);
 
     if (!e)
         return 0;
