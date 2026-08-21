@@ -87,7 +87,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) $(LOW) $(CFLAGS)
 OBJDIR  := $(BUILD)/obj
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32 instances
+.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv.a
@@ -107,6 +107,14 @@ instances: $(BUILD)/instances
 
 $(BUILD)/instances: test/instances.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/instances.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# An utterance interrupted and another asked for, on one instance, over and
+# over. The suite never interrupts anything.
+interrupt: $(BUILD)/interrupt
+
+$(BUILD)/interrupt: test/interrupt.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/interrupt.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 $(OBJDIR)/%.o: %.c $(HEADERS)

@@ -121,6 +121,15 @@ being a different depth than the compiled code expected; and addresses in the
 arena, which differ because a rule written as C takes a smaller frame on
 purpose.
 
+Interrupting an utterance and then speaking again on the same instance leaves
+the engine quiet. It accepts the text, reports no error, answers that it is not
+speaking, and says nothing, from the second interruption onwards. The text
+reaches `api_add_text`, which answers that it took it, and never reaches the
+machine: a working utterance hands the machine twenty-eight pieces and a silent
+one six, stopping exactly where the working one starts sending the voice.
+`make interrupt` shows it and prints what each utterance said. The fault that
+used to come with it -- a crash rather than silence -- is fixed.
+
 Making and throwing away engine instances leaks a few megabytes each. After
 about sixty the engine still runs and still answers, and says nothing: it has
 quietly run out of the arena. `make instances` is what shows it -- every round
