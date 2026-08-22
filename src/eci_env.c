@@ -106,15 +106,16 @@ const int32_t ev_realWorldVoiceParamRange[8][2] = {
 
 /* ---- what the machine will actually do ------------------------------ */
 
-/* Whether a language may be asked for at all. Only one is built in, and the
-   comparison against it is settled when the object is compiled; the arms for
-   the other four are kept because the original keeps them. */
-#define LANGUAGE_BUILT_IN 0x10000
+/* Whether a language may be asked for at all. In the original the
+   comparison is settled when the object is compiled -- 0x10000 in the
+   English module, 0x40000 in the German one -- because a library was one
+   language. Here it is every language linked in, asked in turn; the arms
+   for the four that group dialects together are kept because the original
+   keeps them. */
+#include "delta_lang.h"
 
-int ev_checklang(int32_t want)
+static int checkone(int32_t have, int32_t want)
 {
-    int32_t have = LANGUAGE_BUILT_IN;
-
     switch (have) {
     case 0x60000:
         return want == 0x60000 || want == 0x60100 || want == 0x60800;
@@ -129,6 +130,16 @@ int ev_checklang(int32_t want)
     default:
         return want == have;
     }
+}
+
+int ev_checklang(int32_t want)
+{
+    int i;
+
+    for (i = 0; delta_languages[i] != 0; i++)
+        if (checkone(delta_languages[i]->id, want))
+            return 1;
+    return 0;
 }
 
 /* Whether the device will give us a rate. The four it knows about each have

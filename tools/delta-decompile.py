@@ -39,11 +39,16 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT_C = os.environ.get('EVV_OUT_C',
-                       os.path.join(ROOT, 'lang', 'enus', 'delta_rules_c.c'))
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 census = importlib.import_module('delta-census')
+
+# Beside the language it was read from, unless told otherwise. Writing it
+# anywhere else puts one language's rules where another language's build
+# will pick them up.
+OUT_C = os.environ.get(
+    'EVV_OUT_C',
+    os.path.join(census.LANG_DIR, 'delta_rules_c_%s.c' % census.LANG_TAG))
 
 # What the interpreter keeps, and what a rule compiled from here keeps too.
 MAXARG = 64
@@ -340,7 +345,7 @@ HEAD = """\
 
 #include <string.h>
 
-#include "delta_rules.h"
+#include "delta_rules_%s.h"
 #include "delta_rules_c.h"
 #include "evv_arena.h"
 
@@ -349,7 +354,7 @@ HEAD = """\
 
 def write(names):
     done, refused = [], []
-    text = [HEAD]
+    text = [HEAD % census.LANG_TAG]
 
     for name in names:
         try:
@@ -409,7 +414,10 @@ def write(names):
                     % '\n'.join('#define DG_%-6s %5d' % (v, where[v])
                                 for v in sorted(USED,
                                                 key=lambda x: where[x])))
-    text.append('const delta_rule_c delta_rule_native[] = {\n')
+    # The table carries the language, as every other name a module defines
+    # does, because a program may have several in it.
+    text.append('const delta_rule_c %s_delta_rule_native[] = {\n'
+                % census.LANG_TAG)
     for name in done:
         text.append('    { %d, evv_%s },\n' % (index_of(name), name))
     text.append('    { -1, 0 },\n};\n')
@@ -559,7 +567,8 @@ def layout():
     """
     if LAYOUT:
         return LAYOUT
-    path = os.path.join(census.LANG_DIR, 'delta_globals_enus.c')
+    path = os.path.join(census.LANG_DIR,
+                        'delta_globals_%s.c' % census.LANG_TAG)
     if not os.path.exists(path):
         return LAYOUT
     text = open(path).read()

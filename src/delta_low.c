@@ -25,17 +25,26 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "delta_rules.h"
+#include "delta.h"
 #include "delta_rules_c.h"
 #include "evv_arena.h"
 
-const int32_t *delta_sym_ref;
+/* As in delta_rules.c: the language's own tables, reached through the one
+   in force. delta_sym_ref is a macro too, in delta_rules_c.h, and reaches
+   a slot the language module owns rather than one of ours. */
+#define L                      (delta_lang_now())
+#define delta_const_store      (L->const_store)
+#define delta_rule_sym         (L->rule_sym)
+#define delta_rule_sym_count   (L->rule_sym_count)
 
 #define ROUND16(n) (((n) + 15u) & ~15u)
 
-/* Seventy-five stores of constants, two of dictionary entries, and room for
-   another language to want a few more. */
-#define REGIONS 128
+/* One entry per store of bytes a language names by address, and a program
+   may have several languages in it, each with its own: English has
+   seventy-five and German ninety, plus two of dictionary entries apiece. A
+   language is registered the first time one of its machines is made, so a
+   program that never speaks the second one never spends its share. */
+#define REGIONS 512
 
 static struct {
     const unsigned char *at;

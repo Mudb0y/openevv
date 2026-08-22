@@ -41,9 +41,17 @@ extern void    getEngsynErrorRange(delta_state *d, int32_t *from, int32_t *to);
 extern int32_t etiwinMainDLL(delta_state *d, int32_t argc, char **argv);
 
 extern int32_t initializeIO(delta_state *d);
-extern int32_t DeltaProc_start(delta_state *d);
-extern int32_t DeltaProc_end(delta_state *d);
-extern int32_t DeltaProc_flush(delta_state *d);
+
+/* The five the engine drives a machine through are rules, and every
+   language has its own, so they are reached through the machine's rather
+   than linked to by name. The call sites read as they did. */
+#define DeltaProc_start(d)              (delta_lang_of(d)->proc_start(d))
+#define DeltaProc_end(d)                (delta_lang_of(d)->proc_end(d))
+#define DeltaProc_flush(d)              (delta_lang_of(d)->proc_flush(d))
+#define DeltaProc_process_sentences(d)  \
+    (delta_lang_of(d)->proc_process_sentences(d))
+#define DeltaProc_process_remaining(d)  \
+    (delta_lang_of(d)->proc_process_remaining(d))
 extern void    vcmdend(delta_state *d, int32_t how);
 extern void    setInterrupt(delta_state *d, int32_t on);
 extern void    throwDeltaErrorNow(delta_state *d);
@@ -92,8 +100,6 @@ extern int32_t synthDevicePlaying(delta_state *d);
 extern int32_t holdSynthDevice(delta_state *d, int32_t on);
 extern int32_t setSynthToNamedFile(delta_state *d, const char *name);
 extern int32_t setSynthToCallback(delta_state *d, void *fn, void *param);
-extern int32_t DeltaProc_process_sentences(delta_state *d);
-extern int32_t DeltaProc_process_remaining(delta_state *d);
 extern int32_t deltaErrorThrown(delta_state *d);
 extern THIS int32_t ds_save(void *s, int32_t volume, const char *name)
     MANGLED("?save@DictionarySet@@QAEHW4DictVolume@@PBD@Z");

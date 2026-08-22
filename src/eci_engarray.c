@@ -52,12 +52,16 @@ typedef STDCALL int32_t (*EngineFn)(void *self);
 typedef THIS void *(*DeleteFn)(void *self, int32_t freeIt);
 #define DELETE_ITSELF(p) ((*(DeleteFn *)(*(void ***)(p)))((p), 1))
 
-/* What the ini calls the two version strings, and the only language this
-   build answers a library name for. */
+/* What the ini calls the two version strings. */
 #define KEY_CORPORA       "Corpora"
 #define KEY_CONCATENATIVE "Concatenative"
-#define LIBRARY_NAME      "Static Engine ENU"
-#define LIBRARY_LANG      0x10000
+
+/* What this build calls the engine linked into it, per language. The
+   original spells one name and one number into getLibraryName -- "Static
+   Engine ENU" and 0x10000 in the English module, "Static Engine DEU" and
+   0x40000 in the German one -- because a library was one language. Here
+   there may be several, so the answer is looked up. */
+#include "delta_lang.h"
 
 /* What a slot reports about its callbacks when nothing says otherwise. */
 #define CALLBACK_DEFAULT 0x3f
@@ -143,16 +147,19 @@ THIS void *ed_deleteItself(EngineData *e, int32_t freeIt)
    simply dropped, which is what the original does. */
 THIS const char *ea_getLibraryName(EngineArray *a, const void *lang)
 {
-    char *p = cpp_new((uint32_t)strlen(LIBRARY_NAME) + 1);
+    const delta_language *l = delta_lang_by_id(LANG_PACKED(lang));
+    char *p;
 
     (void)a;
+    if (l == 0)
+        return 0;
+
+    p = cpp_new((uint32_t)strlen(l->library_name) + 1);
     if (p == 0)
         return 0;
 
-    strcpy(p, LIBRARY_NAME);
-    if (LANG_PACKED(lang) == LIBRARY_LANG)
-        return p;
-    return 0;
+    strcpy(p, l->library_name);
+    return p;
 }
 
 /* Ask the list; if it has nothing, build one and give it to the list to
@@ -166,6 +173,12 @@ THIS EngineData *ea_getEngineData(EngineArray *a, const void *lang)
 
         if (name != 0) {
             void *p = cpp_new(sizeof(EngineData));
+            /* Everything the engine builds under here -- the machine, the
+               tables it is handed, the rules that start it -- belongs to
+               one language, and this is the only place that knows which
+               before there is a machine to ask. */
+            const delta_language *was =
+                delta_lang_set(delta_lang_by_id(LANG_PACKED(lang)));
 
             d = p ? ed_ctor(p, name) : 0;
             cpp_delete((void *)name);
@@ -174,6 +187,7 @@ THIS EngineData *ea_getEngineData(EngineArray *a, const void *lang)
                 DELETE_ITSELF(d);
                 d = 0;
             }
+            delta_lang_set(was);
         }
     }
 

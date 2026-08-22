@@ -132,6 +132,27 @@ extern const void *vtbl_enginewrapper[];
     } while (0)
 
 
+/* Which language the wrapper is speaking, for as long as a method runs.
+ *
+ * The machine knows: it was made for one language and remembers which. The
+ * primitives underneath do not all get told -- several are handed nothing
+ * but the value they are working on -- so the language is set here, at the
+ * boundary between the ECI layer and the machine, and every table read
+ * below finds the right one.
+ *
+ * It goes back on the way out however the method leaves, which is what the
+ * cleanup is for: some of these return from the middle. A method that never
+ * touches the machine does not have one. */
+static void lang_put_back(const delta_language *const *was)
+{
+    delta_lang_set(*was);
+}
+
+#define SPEAKING(e) \
+    const delta_language *was_lang_                                     \
+        __attribute__((cleanup(lang_put_back)))                         \
+        = delta_lang_set(delta_lang_of((e)->machine))
+
 /* ---- the object itself ---------------------------------------------- */
 
 THIS EngineWrapper *ew_ctor(EngineWrapper *e)
@@ -192,6 +213,8 @@ STDCALL uint32_t ew_release(EngineWrapper *e)
 
 STDCALL int32_t ew_start(EngineWrapper *e)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynStart(e->machine));
@@ -200,6 +223,8 @@ STDCALL int32_t ew_start(EngineWrapper *e)
 
 STDCALL int32_t ew_end(EngineWrapper *e)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynEnd(e->machine));
@@ -208,6 +233,8 @@ STDCALL int32_t ew_end(EngineWrapper *e)
 
 STDCALL int32_t ew_restart(EngineWrapper *e)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynRestart(e->machine));
@@ -216,6 +243,8 @@ STDCALL int32_t ew_restart(EngineWrapper *e)
 
 STDCALL int32_t ew_processSentences(EngineWrapper *e, const char *text)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynProcessSentences(e->machine, text));
@@ -224,6 +253,8 @@ STDCALL int32_t ew_processSentences(EngineWrapper *e, const char *text)
 
 STDCALL int32_t ew_processRemaining(EngineWrapper *e, const char *text)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynProcessRemaining(e->machine, text));
@@ -232,6 +263,8 @@ STDCALL int32_t ew_processRemaining(EngineWrapper *e, const char *text)
 
 STDCALL int32_t ew_getLastError(EngineWrapper *e, int32_t *from, int32_t *code)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynGetLastError(e->machine, from, code));
@@ -241,6 +274,8 @@ STDCALL int32_t ew_getLastError(EngineWrapper *e, int32_t *from, int32_t *code)
 STDCALL int32_t ew_readPhonemes(EngineWrapper *e, char *buf, int32_t room,
                                 int32_t *got)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynReadPhonemes(e->machine, buf, room, got));
@@ -250,6 +285,8 @@ STDCALL int32_t ew_readPhonemes(EngineWrapper *e, char *buf, int32_t room,
 STDCALL int32_t ew_readConSprs(EngineWrapper *e, char *buf, int32_t room,
                                int32_t *got)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynReadConSprs(e->machine, buf, room, got));
@@ -259,6 +296,8 @@ STDCALL int32_t ew_readConSprs(EngineWrapper *e, char *buf, int32_t room,
 STDCALL int32_t ew_readErrorMessage(EngineWrapper *e, char *buf, int32_t room,
                                     int32_t *got)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynReadErrorMessage(e->machine, buf, room, got));
@@ -267,6 +306,8 @@ STDCALL int32_t ew_readErrorMessage(EngineWrapper *e, char *buf, int32_t room,
 
 STDCALL int32_t ew_clearInput(EngineWrapper *e)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynClearInput(e->machine));
@@ -275,6 +316,8 @@ STDCALL int32_t ew_clearInput(EngineWrapper *e)
 
 STDCALL int32_t ew_setAbort(EngineWrapper *e)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynSetAbort(e->machine));
@@ -283,6 +326,8 @@ STDCALL int32_t ew_setAbort(EngineWrapper *e)
 
 STDCALL int32_t ew_outputPlaying(EngineWrapper *e)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynOutputPlaying(e->machine));
@@ -291,6 +336,8 @@ STDCALL int32_t ew_outputPlaying(EngineWrapper *e)
 
 STDCALL int32_t ew_pause(EngineWrapper *e, int32_t on)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynPause(e->machine, on));
@@ -302,6 +349,8 @@ STDCALL int32_t ew_pause(EngineWrapper *e, int32_t on)
    along with everything else. */
 STDCALL int32_t ew_flush(EngineWrapper *e, int32_t stop)
 {
+    SPEAKING(e);
+
     e->stopped  = 0;
     e->aborting = stop != 0;
     return es_engsynFlush(e->machine, stop);
@@ -312,6 +361,8 @@ STDCALL int32_t ew_flush(EngineWrapper *e, int32_t stop)
    way. */
 STDCALL int32_t ew_close(EngineWrapper *e)
 {
+    SPEAKING(e);
+
     int32_t rc = 0;
 
     rc = es_engsynClose(e->machine);
@@ -327,6 +378,8 @@ STDCALL int32_t ew_close(EngineWrapper *e)
 
 STDCALL int32_t ew_setSynthToNamedFile(EngineWrapper *e, const char *name)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynSetSynthToNamedFile(e->machine, name));
@@ -335,6 +388,8 @@ STDCALL int32_t ew_setSynthToNamedFile(EngineWrapper *e, const char *name)
 
 STDCALL int32_t ew_setSynthToCallback(EngineWrapper *e, void *fn, void *param)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynSetSynthToCallback(e->machine, fn, param));
@@ -343,6 +398,8 @@ STDCALL int32_t ew_setSynthToCallback(EngineWrapper *e, void *fn, void *param)
 
 STDCALL int32_t ew_insertSynthesisIndex(EngineWrapper *e, int32_t index)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynInsertSynthesisIndex(e->machine, index));
@@ -352,6 +409,8 @@ STDCALL int32_t ew_insertSynthesisIndex(EngineWrapper *e, int32_t index)
 STDCALL int32_t ew_insertDelayedSynthesisIndex(EngineWrapper *e,
                                                int32_t index, uint32_t after)
 {
+    SPEAKING(e);
+
     int32_t rc;
 
     GUARDED(e, es_engsynInsertDelayedSynthesisIndex(e->machine, index, after));
@@ -362,18 +421,24 @@ STDCALL int32_t ew_insertDelayedSynthesisIndex(EngineWrapper *e,
    guard: a stopped engine is not told about a new callback. */
 STDCALL void ew_wantPhonemeIndices(EngineWrapper *e, int32_t on)
 {
+    SPEAKING(e);
+
     if (!e->stopped)
         es_engsynWantPhonemeIndices(e->machine, on);
 }
 
 STDCALL void ew_setDurationCallback(EngineWrapper *e, void *fn, void *param)
 {
+    SPEAKING(e);
+
     if (!e->stopped)
         es_engsynSetDurationCallback(e->machine, fn, param);
 }
 
 STDCALL void ew_registerWordCallback(EngineWrapper *e, void *fn, void *param)
 {
+    SPEAKING(e);
+
     if (!e->stopped)
         es_engsynRegisterWordCallback(e->machine, fn, param);
 }
@@ -381,6 +446,8 @@ STDCALL void ew_registerWordCallback(EngineWrapper *e, void *fn, void *param)
 STDCALL void ew_registerWordIndexCallback(EngineWrapper *e, void *fn,
                                           void *param)
 {
+    SPEAKING(e);
+
     if (!e->stopped)
         es_engsynRegisterWordIndexCallback(e->machine, fn, param);
 }
@@ -388,12 +455,16 @@ STDCALL void ew_registerWordIndexCallback(EngineWrapper *e, void *fn,
 STDCALL void ew_registerUserIndexCallback(EngineWrapper *e, void *fn,
                                           void *param)
 {
+    SPEAKING(e);
+
     if (!e->stopped)
         es_engsynRegisterUserIndexCallback(e->machine, fn, param);
 }
 
 STDCALL void ew_registerIndexCallback(EngineWrapper *e, void *fn, void *param)
 {
+    SPEAKING(e);
+
     if (!e->stopped)
         es_engsynRegisterIndexCallback(e->machine, fn, param);
 }
@@ -401,18 +472,24 @@ STDCALL void ew_registerIndexCallback(EngineWrapper *e, void *fn, void *param)
 STDCALL void ew_registerPhonemeCallback(EngineWrapper *e, void *fn,
                                         void *param)
 {
+    SPEAKING(e);
+
     if (!e->stopped)
         es_engsynRegisterPhonemeCallback(e->machine, fn, param);
 }
 
 STDCALL void ew_registerAnnoCallback(EngineWrapper *e, void *fn, void *param)
 {
+    SPEAKING(e);
+
     if (!e->stopped)
         es_engsynRegisterAnnoCallback(e->machine, fn, param);
 }
 
 STDCALL void ew_registerVoiceCallback(EngineWrapper *e, void *fn, void *param)
 {
+    SPEAKING(e);
+
     if (!e->stopped)
         es_engsynRegisterVoiceCallback(e->machine, fn, param);
 }
@@ -420,6 +497,8 @@ STDCALL void ew_registerVoiceCallback(EngineWrapper *e, void *fn, void *param)
 STDCALL void ew_registerEnhancedSPRCallback(EngineWrapper *e, void *fn,
                                             void *param)
 {
+    SPEAKING(e);
+
     if (!e->stopped)
         es_engsynRegisterEnhancedSPRCallback(e->machine, fn, param);
 }
@@ -432,16 +511,22 @@ STDCALL void ew_registerEnhancedSPRCallback(EngineWrapper *e, void *fn,
    dictionary alone, and none of them is guarded. */
 STDCALL void *ew_newDict(EngineWrapper *e)
 {
+    SPEAKING(e);
+
     return es_engsynNewDict(e->machine);
 }
 
 STDCALL void *ew_getDict(EngineWrapper *e)
 {
+    SPEAKING(e);
+
     return es_engsynGetDict(e->machine);
 }
 
 STDCALL int32_t ew_setDict(EngineWrapper *e, void *set)
 {
+    SPEAKING(e);
+
     return es_engsynSetDict(e->machine, set);
 }
 
@@ -454,6 +539,8 @@ STDCALL int32_t ew_deleteDict(EngineWrapper *e, void *set)
 STDCALL int32_t ew_loadDict(EngineWrapper *e, void *set, int32_t volume,
                             const char *name)
 {
+    SPEAKING(e);
+
     return es_engsynLoadDict(e->machine, set, volume, name);
 }
 

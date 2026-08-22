@@ -1,0 +1,7 @@
+Hallo. Hier spricht der Eloquence Sprachsynthesizer.
+Dr. Schmidt zahlte 1.234,56 Euro am 3. Mai 2026 um 19:45 Uhr.
+Der schnelle braune Fuchs springt ueber den faulen Hund; z.B. www.beispiel.de/pfad?q=1
+Test 1 2 3, ABC XYZ, Bindestrich-Woerter und GROSSBUCHSTABEN.
+Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
+Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
+Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.

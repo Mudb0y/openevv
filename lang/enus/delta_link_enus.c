@@ -790,8 +790,9 @@ static void (*const pt9[])(void *, const void *) = { p_vfp0057 };
 static const uint8_t d9[] = { 0, 0 };
 
 /* Not const: the runtime writes two of the words in
-   each entry. */
-delta_stmt vstmtbl[] = {
+   each entry. The name carries the language, because a program
+   may have more than one module in it. */
+delta_stmt enus_vstmtbl[] = {
     { s2, f0, gt0, pt0, 0, d0,
       0, 0, 1, 2, 0, 0, 0, { 39, 39 }, 0, 0, 1, 0 },
     { s226, f1, gt1, pt1, n1, d1,
@@ -819,10 +820,10 @@ delta_stmt vstmtbl[] = {
    The language sets them when it starts, and a table
    without them lays down a statement with no variant in
    it at all. */
-void viasizes(void)
+void enus_viasizes(void)
 {
-    vstmtbl[1].stride = 3;
-    vstmtbl[1].varlen = 3;
-    vstmtbl[2].stride = 8;
-    vstmtbl[2].varlen = 8;
+    enus_vstmtbl[1].stride = 3;
+    enus_vstmtbl[1].varlen = 3;
+    enus_vstmtbl[2].stride = 8;
+    enus_vstmtbl[2].varlen = 8;
 }

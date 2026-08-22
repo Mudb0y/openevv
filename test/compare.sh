@@ -29,20 +29,49 @@ case $cases in /*) ;; *) cases=$PWD/$cases ;; esac
 mode=${2:-}
 pattern=${3:-}
 
-[ -x "$BUILD/reference/speak.exe" ] || { echo "compare: no reference binary" >&2; exit 2; }
+# Both engines here may be Windows binaries. On Windows they run themselves;
+# anywhere else they want Wine in front of them. The reference always is one,
+# since it is IBM's own code built as IBM built it.
+case $(uname -s 2>/dev/null) in
+MINGW*|MSYS*|CYGWIN*) PE= ;;
+*)                    PE=wine ;;
+esac
+
+# Which language is being compared. A build takes one language, and so does
+# the reference built from that language's objects, so the two have to be
+# named together or an English engine gets held against a German oracle and
+# every case differs for no reason worth reading. English keeps the plain
+# names because that is what everything already asks for.
+LANG_TAG=${EVV_LANG:-enus}
+case $LANG_TAG in
+enus) SUF= ;;
+*)    SUF=-$LANG_TAG ;;
+esac
+
+# And which language to ask the engine for, since a build may have more than
+# one in it. These are IBM's own numbers, the ones its ini names each
+# language section for; a language added to the tree adds a line here.
+case $LANG_TAG in
+enus) : ${EVV_LANGUAGE:=0x10000} ;;
+dede) : ${EVV_LANGUAGE:=0x40000} ;;
+esac
+export EVV_LANGUAGE
+
+REFDIR=${EVV_REFERENCE_DIR:-$BUILD/reference$SUF}
+[ -x "$REFDIR/speak.exe" ] || { echo "compare: no reference binary" >&2; exit 2; }
 # Which of ours to run. Both builds have to say the same thing, so either
 # can be set against the reference; EVV_NATIVE names the other one.
-OURS=${EVV_NATIVE:-$BUILD/probe}
+OURS=${EVV_NATIVE:-$BUILD/probe$SUF}
 [ -x "$OURS" ] || { echo "compare: no native binary" >&2; exit 2; }
 # Ours may be the Windows build now, which runs the way the reference does.
 case $OURS in
-*.exe) OURS_RUN="wine $OURS" ;;
+*.exe) OURS_RUN="$PE $OURS" ;;
 *)     OURS_RUN="$OURS" ;;
 esac
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-cp "$BUILD"/reference/*.exe "$work/" 2>/dev/null
+cp "$REFDIR"/*.exe "$work/" 2>/dev/null
 cd "$work"
 
 # One case through one binary. Answers 0 when it produced a file, 1 when it
@@ -51,7 +80,7 @@ one_run() {
     local who=$1 out=$2
     rm -f "$out"
     if [ "$who" = ref ]; then
-        timeout "$LIMIT" wine ./speak.exe @case.txt "$out" $mode > "$out.txt" 2>/dev/null
+        timeout "$LIMIT" $PE ./speak.exe @case.txt "$out" $mode > "$out.txt" 2>/dev/null
     else
         timeout "$LIMIT" $OURS_RUN @case.txt "$out" $mode > "$out.txt" 2>/dev/null
     fi

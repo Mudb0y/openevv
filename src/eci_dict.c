@@ -18,12 +18,22 @@
 #include <stdint.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "evv_arena.h"
 #include "eci_old.h"
 
 /* The dictionary in force for one language and dialect. Families run from
-   one to eighteen and dialects are nought or one. */
+   one to eighteen and dialects are nought or one.
+
+   A slot is four bytes, as it is in the instance the original lays out, so
+   what goes in it is a value and not a host pointer. Written as one, an
+   eight-byte store on a sixty-four bit host reaches over the slot beside it:
+   putting German's dictionary in family four, dialect nought writes across
+   family three, dialect one, and the loop below reads that one first and
+   hands the engine half a pointer. English never showed it -- family one is
+   the first slot the loop looks at, so the slot its store reaches into is
+   one nothing ever reads. */
 #define ACTIVE_DICT(h, family, dialect) \
-    (*(void **)((char *)(h) + 0x60c + (family) * 8 + (dialect) * 4))
+    (*(evv_ref *)((char *)(h) + 0x60c + (family) * 8 + (dialect) * 4))
 #define DICT_FAMILIES   0x12
 #define DICT_DIALECTS   2
 
@@ -82,7 +92,7 @@ int32_t ed_add_active_dict(OldInst *h, void *dict)
     int32_t rc = api_get_dict_language(OI_NEW(h), dict, &lang);
 
     if (rc >= 0)
-        ACTIVE_DICT(h, (lang & 0xff0000) >> 16, lang & 0xff) = dict;
+        ACTIVE_DICT(h, (lang & 0xff0000) >> 16, lang & 0xff) = EVV_REF(dict);
     return rc;
 }
 
@@ -96,7 +106,7 @@ int32_t ed_delete_active_dict(OldInst *h, void *dict)
         int family = (lang & 0xff0000) >> 16;
         int dialect = lang & 0xff;
 
-        if (ACTIVE_DICT(h, family, dialect) == dict)
+        if (EVV_AT(void *, ACTIVE_DICT(h, family, dialect)) == dict)
             ACTIVE_DICT(h, family, dialect) = 0;
     }
     return rc;
@@ -110,7 +120,7 @@ int32_t ed_deactivate_all_dicts(OldInst *h)
 
     for (family = 1; family <= DICT_FAMILIES; family++)
         for (dialect = 0; dialect < DICT_DIALECTS; dialect++) {
-            void *dict = ACTIVE_DICT(h, family, dialect);
+            void *dict = EVV_AT(void *, ACTIVE_DICT(h, family, dialect));
 
             if (dict)
                 api_deactivate_dict(OI_NEW(h), dict);

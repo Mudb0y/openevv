@@ -25,9 +25,11 @@
 #include "evv_abi.h"
 #include "eci_engine.h"
 
-/* Where the blob is and how long it is. Both are built into the engine. */
-extern const char eciIni[] MANGLED("?eciIni@@3QBDB");
-extern const int32_t      eciIniSize MANGLED("?eciIniSize@@3HB");
+/* Where the blob is and how long it is. Every language module carries one,
+   and src/delta_lang.c joins them into the single file this reads: the
+   original's own shape, a section per language, which is what the language
+   walk in eci_getlangs.c answers out of. */
+#include "delta_lang.h"
 
 extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
 extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
@@ -69,8 +71,8 @@ THIS void ini_dtor(IniFileReader *r)
 
 THIS int32_t ini_readFileIntoMemory(IniFileReader *r)
 {
-    r->text = eciIni;
-    r->size = eciIniSize;
+    r->text = delta_lang_ini();
+    r->size = delta_lang_ini_size();
     return 1;
 }
 

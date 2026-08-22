@@ -32,8 +32,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # against a language it was not worked out on.
 LANG_DIR = os.environ.get('EVV_LANG_DIR',
                            os.path.join(ROOT, 'lang', 'enus'))
-RULES_C = os.path.join(LANG_DIR, 'delta_rules_enus.c')
-CONSTS_C = os.path.join(LANG_DIR, 'delta_consts_enus.c')
+# The files are named for their language, and the directory is named for it
+# too, so which language this is comes from the directory.
+LANG_TAG = os.path.basename(LANG_DIR.rstrip('/\\'))
+RULES_C = os.path.join(LANG_DIR, 'delta_rules_%s.c' % LANG_TAG)
+CONSTS_C = os.path.join(LANG_DIR, 'delta_consts_%s.c' % LANG_TAG)
 
 OPS = ['call', 'jump', 'branch', 'cmp', 'alu2', 'alu1', 'load',
        'store', 'switch', 'map', 'return', 'scale', 'addk', 'mul',

@@ -6,7 +6,13 @@
 
 #include "evv_arena.h"
 
-/* The Delta machine's working state: one allocation of 0x1088 bytes.
+/* The Delta machine's working state: one allocation, named fields first and
+ * then a cell for every global the language declares.
+ *
+ * How big it is therefore depends on which language the machine is for --
+ * English runs to 0x1088 and German to 0x10b4 -- so the struct below stops
+ * where the named fields do, at DG_BASE, and the cells are the rest of an
+ * allocation whose size the language states. Nothing takes sizeof this.
  *
  * Named fields are ones a decoded primitive touches. As with the synthesizer,
  * the pad arrays are sized by the distance between offsets we do know, so
@@ -14,7 +20,7 @@
  * offsetof assertions in delta.c hold every field where it belongs.
  */
 
-#define DELTA_STATE_BYTES 0x1088
+#include "delta_lang.h"
 
 /* Where the runtime is looking: a node, which field it is following, how far
    past that node in the field's own units, and flags. Bit 0 says the position
@@ -261,17 +267,17 @@ typedef struct {
 /* What a compound variable needs beyond its kind: what its first word is
    set to when the machine is reset, and how many bytes follow it. The
    whole cell is that plus the four bytes in front. */
-typedef struct {
+typedef struct delta_compound_decl {
     int32_t init;
     int32_t bytes;
 } delta_compound_decl;
 
 /* The language's variable list, in the order it declared them, and the
-   compound ones' extra description in the same order. Generated. */
-extern const int8_t  delta_globals[];
-extern const int32_t delta_globals_n;
-extern const delta_compound_decl delta_compounds[];
-extern const int32_t delta_compounds_n;
+   compound ones' extra description in the same order. Generated, and read
+   through whichever language this thread is speaking -- see delta_lang.h. */
+#define delta_globals    (delta_lang_now()->globals)
+#define delta_globals_n  (delta_lang_now()->globals_n)
+#define delta_compounds  (delta_lang_now()->compounds)
 
 /* One entry of the compound index the machine builds. */
 typedef struct {
@@ -347,7 +353,7 @@ struct delta_state {
     int16_t      nsets;           /* 0x00a6 */
     evv_ref     dictfile;        /* 0x00a8 */
     int16_t      nactions;        /* 0x00ac */
-    uint8_t      pad_00ae[DELTA_STATE_BYTES - 0xae];
+    uint8_t      pad_00ae[DG_BASE - 0xae];
 };
 
 /* What the rules load their pointer registers from. Only the second word is
@@ -406,7 +412,7 @@ typedef struct {
 
    A statement type doubles as a field index into a spine node, so the same
    number indexes both this table and the node's sync array. */
-typedef struct {
+typedef struct delta_stmt {
     const char            *name;      /* +0x00 */
     const delta_fielddesc *fields;    /* +0x04 */
     void *(*const         *get)(void *);  /* +0x08, one reader per field */
@@ -433,22 +439,12 @@ typedef struct {
 } delta_stmt;
 
 /* Not const: the runtime marks a type when it has a statement
-   worth starting from, and clears that again on a reinit. */
-extern delta_stmt vstmtbl[];
+   worth starting from, and clears that again on a reinit. It belongs to a
+   language, so it is reached through the one this thread is speaking; every
+   site that reads it is a primitive running on a machine, and the language
+   is set around anything that runs one. */
+#define vstmtbl (delta_lang_now()->stmtbl)
 
-/* The language telling the runtime how big one variant of a
-   statement type is, which the table alone does not say. */
-void viasizes(void);
-
-/* What the language hands the machine on the way in, and takes back on the
-   way out: the lookup sets, the dictionary's actions, and the little
-   arrays it fences characters with. */
-void set_dict_new(delta_state *d);
-void set_dict_delete(delta_state *d);
-void act_dict_new(delta_state *d);
-void act_dict_delete(delta_state *d);
-void link_new(delta_state *d);
-void link_delete(delta_state *d);
 void delta_delete(delta_state *d);
 
 /* A node on the spine: the linked structure the rules walk over. Its links
