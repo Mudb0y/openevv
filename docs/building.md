@@ -2,14 +2,14 @@
 
 ## What you need
 
-A C compiler. That is the whole of it for an ordinary build: the language data
-is in the tree, so there is no IBM SDK to find and nothing is downloaded.
+A C compiler and Python 3. The language data is in the tree, so there is no IBM
+SDK to find and nothing is downloaded; Python is wanted because an ordinary
+build now writes the rules out as C first, which is what `RULES` below is about.
+`make RULES=bytecode` needs the C compiler alone.
 
-Three things are wanted only for particular jobs. Python 3 writes the rules out
-as C, which `make RULES=c` asks for and an ordinary build does not. A
-thirty-two bit compiler builds the thirty-two bit engine. Wine and IBM's own
-objects run the comparison tests, which is the only automatic check that the
-audio is right.
+Two more things are wanted only for particular jobs. A thirty-two bit compiler
+builds the thirty-two bit engine. Wine and IBM's own objects run the comparison
+tests, which is the only automatic check that the audio is right.
 
 On this machine all of those come from the flake, and `nix develop` puts them
 on the path.
@@ -19,7 +19,17 @@ on the path.
     make
 
 That builds `build/libevv.a` and `build/evv`, which speaks. From nothing, that
-is about half a minute on one core and under twenty seconds with `make -j8`.
+is about a quarter of an hour: seven minutes for Python to write the rules out
+as C and about as long again to compile the thirteen megabytes of it. Once that
+file exists it is not written again unless the decompiler or the bytecode
+changes.
+
+    make RULES=bytecode
+
+That is the small, quick build -- half a minute on one core, under twenty
+seconds with `make -j8`, and a C compiler is all it wants. It speaks the same
+samples and it is the one to use while working on anything but the rules. What
+it costs is speed, which the next section puts numbers to.
 
     make probe
 
@@ -63,16 +73,37 @@ interpreter for them. They also exist as C: `tools/delta-decompile.py` writes
 all 3,377 of them out of that same bytecode into `lang/enus/delta_rules_c.c`,
 and the interpreter prefers a rule written as C wherever it finds one.
 
-Both speak the same samples, so an ordinary build links an empty table and runs
-every rule as bytecode. The C is thirteen megabytes in one file, which is seven
-minutes of compiler and Python to write it first, and it is asked for by name:
+Both speak the same samples. That is not a hope: `test/suite.sh` holds each form
+against IBM's binary over all 81 cases, and the two forms are set against each
+other call by call by `tools/delta-check.sh`. So which one is linked is a trade
+of build time and size against speed, and nothing else.
+
+C is the default, because the speed is the part a person waiting for speech
+feels. Measured on one machine, the same long sentence, bytecode against C: the
+whole utterance synthesises in 138 ms against 63; the wait before the first
+samples of an utterance is 38 ms against 12; and interrupting an utterance and
+asking for another costs 124 ms against 39. That last one matters most and is
+the least obvious: the engine cannot abandon an utterance it has been told to
+stop -- see the interrupting section of `docs/status.md` for why not -- so what
+a cancel costs is whatever is left of the work, and compiled rules do that
+leftover work in a third of the time.
+
+What it costs is the build. The C is thirteen megabytes in one file: seven
+minutes of Python to write and about as long to compile, where the bytecode
+build wants half a minute and no Python at all. The binaries are some four
+times the size -- `build/probe` is 15.6 MB against 3.7 -- because that is what a
+machine's worth of lifted code looks like written out as C, with nothing kept in
+a register because a backtrack may land in the middle of any of it.
+
+    make RULES=bytecode
+
+is therefore the one to build while working on anything but the rules, and
 
     make RULES=c
 
-That is the form to build when the decompiler itself is what is being worked
-on, since it is the C that a change to it changes. `make rules` writes the file
-without building anything. It is not kept in the tree, because every change to
-the decompiler rewrites the whole of it.
+says the default out loud, which is worth doing in a script. `make rules` writes
+the file without building anything. It is not kept in the tree, because every
+change to the decompiler rewrites the whole of it.
 
 ## Running
 

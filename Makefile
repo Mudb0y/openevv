@@ -28,12 +28,25 @@ NM  ?= nm
 
 # Which rules the interpreter finds already written as C.
 #
-# `bytecode' links an empty table, so every rule runs as bytecode. `c' links
-# the thirteen megabytes tools/delta-decompile.py writes out of that same
-# bytecode, which the interpreter then prefers for every rule it has. Both
-# speak the same samples; the difference is seven minutes of compiler and
-# Python to write the file first. See docs/building.md.
-RULES ?= bytecode
+# `c' links the thirteen megabytes tools/delta-decompile.py writes out of the
+# bytecode, and the interpreter prefers that C for every rule it has one for.
+# `bytecode' links an empty table instead, so every rule is interpreted.
+#
+# Both speak the same samples -- that is what test/suite.sh holds them to, over
+# all 81 cases in both forms -- so this is a trade of build for speed and
+# nothing else. C is the default because the speed is what a person waiting for
+# speech feels: the same utterance synthesises in rather less than half the
+# time, and interrupting one and asking for another costs a third of what it
+# costs interpreted, since the engine cannot abandon an utterance and has to
+# finish the one it was told to stop.
+#
+# What it costs. Writing the file needs Python and about seven minutes, and
+# compiling it another seven, where the bytecode build wants only a C compiler
+# and half a minute. The binaries are some four times the size, because
+# thirteen megabytes of C is what a machine's worth of lifted code looks like
+# written out. `RULES=bytecode' is the small, quick build and is the one to use
+# while working on anything but the rules. See docs/building.md.
+RULES ?= c
 
 GENERATED := $(LANG)/delta_rules_c.c
 STUB      := $(SRC)/delta_rules_none.c

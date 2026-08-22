@@ -12,9 +12,12 @@ Wine.
     make
     ./build/evv -o hello.wav "Hello from Eloquence."
 
-That wants a C compiler and about half a minute. On Linux nothing plays the
-audio yet, so the engine writes a wave file; pipe it into a player to hear it at
-once:
+That wants a C compiler, Python, and about a quarter of an hour, most of it
+compiling the rules. `make RULES=bytecode` is the same engine in half a minute
+with no Python, saying the same samples; it runs the rules interpreted rather
+than compiled, which costs rather more than half the speed. On Linux nothing
+plays the audio yet, so the engine writes a wave file; pipe it into a player to
+hear it at once:
 
     ./build/evv "Hello from Eloquence." | aplay -q -
 

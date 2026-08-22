@@ -13,10 +13,11 @@ samples. Run it from inside `nix develop`, or Wine is not on the path, both
 sides produce no file, and every case reports a difference that is not real.
 
 Six builds have to pass, not one: `probe`, `probe32` and `probe.exe`, each with
-`RULES=bytecode` and `RULES=c`. Bytecode is the default, so a change to the
-decompiler is not being tested at all unless `RULES=c` is what was built. The
-Windows one is `EVV_NATIVE=$PWD/build/probe.exe test/suite.sh`, which runs it
-under the same Wine as the reference.
+`RULES=bytecode` and `RULES=c`. C is the default as of 22 August 2026, so it is
+the interpreter that goes untested unless `RULES=bytecode` is what was built --
+the opposite of the trap this warned about before. The Windows one is
+`EVV_NATIVE=$PWD/build/probe.exe test/suite.sh`, which runs it under the same
+Wine as the reference.
 
 `test/hash.sh` is the quick one, and the only check that wants neither Wine nor
 IBM's objects. It proves the samples unchanged, not right.

@@ -17,8 +17,10 @@ same 81 cases.
 
 Nothing is borrowed at build time. `make missing` answers nothing, which is the
 check that no call has quietly gone back to IBM's objects. The language data is
-all transcribed and in the tree, so an ordinary build needs a C compiler and
-nothing else.
+all transcribed and in the tree, so a build needs a C compiler and Python and
+nothing else -- Python because the default build writes the rules out as C
+first. `make RULES=bytecode` wants the compiler alone and is half a minute
+rather than a quarter of an hour.
 
 Dictionaries can be edited. `tools/delta-dict.py` writes `lang/enus/enus.dict`
 out of the tables and reads it back in, so a pronunciation can be changed, laid
@@ -191,16 +193,45 @@ So the abort door being open does not help the latency, and the earlier claim
 here that what remained was the add-on removing its workaround was an inference
 from the door opening rather than a measurement. It is withdrawn. Answering
 `eciDataAbort` stops the engine handing over more buffers; it does not stop it
-finishing the utterance, and neither does `eciStop`. What is left is a question
-about the engine: it completes work it has been told to abandon, and nothing the
-published interface offers avoids that.
+finishing the utterance, and neither does `eciStop`.
 
-One thing in those numbers is not understood and no cause should be read into
-them yet. On the filename the cancel costs about 175 ms while synthesising the
-whole utterance takes about 80 ms, so the cost is not simply the work left to
-do: something of the order of a hundred milliseconds does not scale with the
-text at all. Whether that is the engine or the add-on is being measured by
-timing a cancel with nothing in flight.
+**The engine cannot abandon an utterance it has been told to stop, and that is
+settled rather than open.** All of a cancel is `stm_qtSuspend` waiting for the
+synthesis thread to finish the message it is on: 71 ms of 71 for a long row,
+where re-initialising the language globals is 0.3 ms and suspending the queues
+is nought. The machine is never told to stop -- `ELOQ_BUSY` is set every time
+that branch is reached, so `throwDeltaErrorNow` is never called -- and the walk
+does exactly the work that was left: a row is 298,745 rule entries, 97,382
+before the first buffer and 201,411 after the stop, and the two add up. The
+cooperative interrupt that is raised is honoured 123 times in the sample
+generators and is worth about 20 ms of that.
+
+Six ways of making it give up were tried and all fail, and the reason is one
+thing rather than six. The best of them had the decompiler emit, just after each
+rule is entered, a jump to that rule's own give-up tail -- the one that calls
+`vretproc` and puts back everything the rule's record holds -- in all 459 rules
+that have such a tail. It faults in `vdef_proj` under `vrange_2pt` under
+`mark_s`, from a rule that ran *after* the one that gave up. **The rules build a
+shared structure as they go and later rules assume the earlier ones finished it**,
+so abandoning any rule part way leaves that structure half built and nothing
+validates it. There is no safe abandonment point anywhere in the machine, and
+the only safe stop is to let the unit of work finish -- which is what
+`stm_qtSuspend` already does. Making the machine interruptible would mean the
+rules checking their own inputs, which is the language and not a patch.
+
+What that leaves is doing the leftover work faster, which is why the rules are
+now compiled by default. Measured on Linux, bytecode against `RULES=c`: the row
+synthesises in 138 ms against 63, the wait before the first samples is 38 ms
+against 12, and cancel-and-speak is 124 ms against 39. So the cancel cost falls
+from about 86 ms to about 27, and a filename from 22 ms to 8. Nothing was
+written to achieve that; it is the same rules, compiled.
+
+One thing in the Windows numbers was not the engine. On the filename the cancel
+there cost about 175 ms while synthesising the whole utterance took about 80,
+which looked like a fixed cost that did not scale with the text. On Linux the
+whole stop for a filename is 6.7 ms against 71 ms for a row, which scales as it
+should, so whatever that fixed part is sits above the engine, in the add-on or
+its player.
 
 Interrupting an utterance and then speaking again on the same instance used to
 leave the engine quiet from the second interruption onwards, accepting the text,
