@@ -53,8 +53,17 @@ STUB      := $(SRC)/delta_rules_none.c
 
 ifeq ($(RULES),bytecode)
 RULESRC := $(STUB)
+TRIM    :=
 else ifeq ($(RULES),c)
 RULESRC := $(GENERATED)
+# Where every rule is written as C, nothing reads the bytecode, and it is a
+# megabyte and a half -- the largest single thing in the library after the
+# rules themselves. `EVV_NO_BYTECODE' compiles the interpreter out, which is
+# what leaves the array unreferenced; the section flags are what let the
+# linker actually drop it. A rule that turns out not to have been written as C
+# then says so by name and stops, rather than reading an array that is gone.
+TRIM    := -DEVV_NO_BYTECODE -ffunction-sections -fdata-sections \
+           -Wl,--gc-sections
 else
 $(error RULES is bytecode or c, not $(RULES))
 endif
@@ -95,9 +104,10 @@ LOW := -DEVV_ARENA=1
 endif
 
 OPT        ?= -O2
-ALL_CFLAGS := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) $(LOW) $(CFLAGS)
+ALL_CFLAGS := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) $(LOW) $(TRIM) \
+              $(CFLAGS)
 
-OBJDIR  := $(BUILD)/obj
+OBJDIR  := $(BUILD)/obj-$(RULES)
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
 .PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing
@@ -172,7 +182,8 @@ missing: $(OBJECTS)
 	@python3 tools/missing.py $(BUILD)/syms.txt
 
 clean:
-	@rm -rf $(OBJDIR) $(OBJDIR32) $(OBJDIRWIN) $(OBJDIRWIN32) \
+	@rm -rf $(BUILD)/obj-* $(BUILD)/obj32-* $(BUILD)/objwin-* \
+	        $(BUILD)/objwin32-* \
 	        $(BUILD)/eci32.dll $(BUILD)/dlltest32.exe \
 	        $(BUILD)/libevv-win32.a $(BUILD)/evv $(BUILD)/probe \
 	        $(BUILD)/evv32 $(BUILD)/probe32 \
@@ -195,8 +206,9 @@ install: $(BUILD)/evv
 # flake provides; elsewhere it is usually the host compiler with -m32, which
 # CC32 can be set to whole: `make evv32 CC32="gcc -m32"'.
 CC32      ?= i686-unknown-linux-gnu-gcc
-OBJDIR32  := $(BUILD)/obj32
-CFLAGS32  := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) $(CFLAGS)
+OBJDIR32  := $(BUILD)/obj32-$(RULES)
+CFLAGS32  := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) $(TRIM) \
+             $(CFLAGS)
 OBJECTS32 := $(patsubst %.c,$(OBJDIR32)/%.o,$(notdir $(SOURCES)))
 
 evv32: $(BUILD)/evv32
@@ -233,10 +245,10 @@ $(BUILD)/libevv32.a: $(OBJECTS32)
 CCWIN      ?= x86_64-w64-mingw32-gcc
 WINDRES    ?= x86_64-w64-mingw32-windres
 ARWIN      ?= x86_64-w64-mingw32-ar
-OBJDIRWIN  := $(BUILD)/objwin
+OBJDIRWIN  := $(BUILD)/objwin-$(RULES)
 
 CFLAGSWIN  := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) -DEVV_ARENA=1 \
-              $(CFLAGS)
+              $(TRIM) $(CFLAGS)
 # Static, so what ships is one file. MINGW64_LDFLAGS is where the cross gcc's
 # thread runtime is; the flake sets it, since nothing puts it on the link path
 # outside a real cross stdenv.
@@ -324,8 +336,8 @@ $(BUILD)/libevv-win.a: $(OBJECTSWIN)
 CCWIN32     ?= i686-w64-mingw32-gcc
 WINDRES32   ?= i686-w64-mingw32-windres
 ARWIN32     ?= i686-w64-mingw32-ar
-OBJDIRWIN32 := $(BUILD)/objwin32
-CFLAGSWIN32 := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) $(CFLAGS)
+OBJDIRWIN32 := $(BUILD)/objwin32-$(RULES)
+CFLAGSWIN32 := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) $(TRIM) $(CFLAGS)
 LDFLAGSWIN32 := -static -Wl,--kill-at $(MINGW_LDFLAGS)
 OBJECTSWIN32 := $(patsubst %.c,$(OBJDIRWIN32)/%.o,$(notdir $(SOURCESWIN)))
 

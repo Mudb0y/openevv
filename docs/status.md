@@ -1,6 +1,6 @@
 # What works and what does not
 
-Last measured 21 August 2026.
+Last measured 22 August 2026.
 
 ## Works
 
@@ -176,18 +176,20 @@ returns twice and across the thirty-two bit `setjmp` path. The window only
 exists while a cross-thread jump is already happening, which is the mistake
 being diagnosed.
 
-What cancelling costs, measured through the add-on on real Windows rather than
-in the engine, which is what makes it a number a person feels. The clock runs
-from asking for silence to the first samples of the next utterance, five rounds
-each, against a current library.
+What cancelling costs, measured in the engine. Every figure here is from
+`build/probe` on Linux with no player in the picture at all; the numbers taken
+through the add-on on Windows have been withdrawn by the session that took them,
+because the fake player in that harness paced a buffer by sleeping for its
+duration and a cancel did not reliably interrupt the sleep, so most of a buffer
+was being counted as engine time. What that harness said about *relative*
+improvement was measured the same way on both sides and is probably sound; its
+absolute numbers are not, and none of them are quoted here.
 
-Cancelling costs about 350 ms on a long file-manager row and about 175 ms on a
-filename, and it costs that by all three routes: letting the utterance finish
+Cancelling costs the same by all three routes -- letting the utterance finish
 and throwing its samples away, answering `eciDataAbort`, and calling `eciStop`
-from the cancelling thread. The three are within a few milliseconds of each
-other, with `eciStop` slightly the worst. A cold start on an idle engine is
-128 ms for the row and 34 ms for the filename, which is what lets the cancel's
-own cost be separated out at all.
+from the cancelling thread -- because all three wait for the same thing. That
+was measured on Windows too and is a comparison rather than an absolute, so it
+survives the withdrawal above.
 
 So the abort door being open does not help the latency, and the earlier claim
 here that what remained was the add-on removing its workaround was an inference
@@ -226,12 +228,15 @@ against 12, and cancel-and-speak is 124 ms against 39. So the cancel cost falls
 from about 86 ms to about 27, and a filename from 22 ms to 8. Nothing was
 written to achieve that; it is the same rules, compiled.
 
-One thing in the Windows numbers was not the engine. On the filename the cancel
-there cost about 175 ms while synthesising the whole utterance took about 80,
-which looked like a fixed cost that did not scale with the text. On Linux the
-whole stop for a filename is 6.7 ms against 71 ms for a row, which scales as it
-should, so whatever that fixed part is sits above the engine, in the add-on or
-its player.
+A trap in the interface, found while chasing a residual that turned out not to
+be the engine's at all, and worth knowing on its own terms. A caller answering
+`eciDataNotProcessed` -- "I did not take these samples" -- costs a flat thirty
+milliseconds per buffer: `eo_tell` in `src/eci_old.c` maps it to `BRIDGE_ABORT`,
+which is `APP_AGAIN`, and `aq_synchronize` answers that with `th_sleep(30, 0)`
+before offering the same buffer again. That is right for a player whose buffer
+is genuinely full and ruinous for a caller that is discarding, and nothing in
+the interface warns of it. A caller that means "throw this away" must answer
+`eciDataProcessed`. This is IBM's behaviour and is not being changed.
 
 Interrupting an utterance and then speaking again on the same instance used to
 leave the engine quiet from the second interruption onwards, accepting the text,

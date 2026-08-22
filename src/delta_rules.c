@@ -805,6 +805,8 @@ static void delta_rule_report(void)
    as C does not pay for a frame and an interpreter it will never use. The
    thread this runs on has sixty-four kilobytes, and the rules nest deeply
    enough that paying twice runs out of it. */
+#ifndef EVV_NO_BYTECODE
+
 static int32_t run_bytecode(void *state, const delta_rule *r,
                             const int32_t *args, int nargs)
 {
@@ -849,6 +851,24 @@ static int32_t run_bytecode(void *state, const delta_rule *r,
     evv_frame_pop(frame);
     return st.answer;
 }
+
+#else
+
+/* A build where every rule is written as C carries no bytecode: the megabyte
+   and a half of it is the largest single thing in the library and nothing
+   would read it. So a rule that turns out not to have been written as C is a
+   fault in the build rather than something to fall back from, and it says so
+   by name rather than reading an array that is not there. */
+static int32_t run_bytecode(void *state, const delta_rule *r,
+                            const int32_t *args, int nargs)
+{
+    (void)state; (void)args; (void)nargs;
+    fprintf(stderr, "evv: %s was not written as C and this build has no"
+            " bytecode to run it as\n", r->name);
+    abort();
+}
+
+#endif
 
 /* The rules written as C, read out by rule number. Built on the first call,
    because how many rules there are is the language module's to say. */
