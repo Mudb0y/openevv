@@ -37,6 +37,67 @@ On a Nix machine `nix build` makes the same binary at `result/bin/evv`, and `nix
 
 `RULES` chooses which form of the language's rules gets linked, and is explained next.
 
+## The rules as text
+
+`lang/enus/rules` holds all 3,377 rules as text, one file to an object, written
+by `tools/delta-notation.py`. This is the form to read a rule in, and it is
+meant to become the form to *change* one in.
+
+    rule eng_ph_Z_dur from es_cdur.obj
+    shape frame 196 argbase 8 params 1
+    label L0 was _eng_ph_Z_dur
+      alu andl imm 0 slot -4
+      push slotaddr -104
+      call setjmp3 arity 2 depth 2
+      cmp testl reg r0 reg r0
+      load movl state 0 into r6
+      branch jne to L1
+
+One operation to a line, the verb first, and an operand is one or two words --
+so a line can be read straight through with nothing to keep track of. Nothing
+is carried by indentation and nothing needs punctuation counted. Registers are
+the machine's eight, `r0` to `r7`, with `w`, `b` or `h` for how much of one is
+meant. Blocks are numbered; `was ...` on the label line is what the block was
+called in IBM's object, which is only useful while rules are still being lifted
+and is ignored when the text is read.
+
+It is one to one with what the machine does, which is the point: it holds
+registers, the argument stack and the backtracking as they are rather than
+tidying them into loops and conditionals. The readable C that
+`delta-decompile.py` writes is the other form, for reading rather than for
+round-tripping, and inverting that exactly would be hard.
+
+    make notation
+
+writes the text out of IBM's objects again, and
+
+    make notation-check
+
+holds what is in the tree against those objects rule by rule: each is emitted
+twice, once from the text and once from a fresh lift, and the bytecode has to
+match. That is what says which rules have been changed on purpose -- an unedited
+rule matches and an edited one is named, which is what somebody changing a rule
+needs to be told.
+
+    make notation-prove
+
+is the stronger check and the one to believe. It emits every rule out of the
+text into one stream and holds that against `delta_rule_code` as it stands in
+`lang/enus/delta_rules_enus.c` -- the bytecode the engine actually runs. The
+pools the rules draw on, the constants and strings and entry points and tag
+maps, are shared across the whole language and numbered in the order the rules
+are taken, so reproducing the stream byte for byte says the text carries every
+rule, in order, with nothing added and nothing left out. A rule-by-rule
+comparison cannot say that. All 1,496,807 bytes match.
+
+Both want IBM's objects, so they are in the same class as the suite:
+obtainable, and not needed to build.
+
+The bytecode the engine runs is still `lang/enus/delta_rules_enus.c` and is
+still what a build compiles, so the text is a second copy rather than the
+source. What is left to change that is the constant stores, which are lifted
+out of the objects' data by the same tool and are not in this text.
+
 ## The rules, twice
 
 The language's rules exist in the tree as bytecode, and the engine has an interpreter for them. They also exist as C: `tools/delta-decompile.py` writes all 3,377 of them out of that same bytecode into `lang/enus/delta_rules_c_enus.c`, and the interpreter prefers a rule written as C wherever it finds one. It writes beside whichever language it was pointed at, so `make LANG=lang/dede rules` writes German into `lang/dede`.

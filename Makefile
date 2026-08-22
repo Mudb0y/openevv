@@ -246,6 +246,27 @@ $(BUILD)/libevv$(SUF).a: $(OBJECTS) $(RULESTAMP)
 	@ar rcs $@ $(OBJECTS)
 	@echo "built $@ from $(words $(OBJECTS)) objects"
 
+# The rules as text that can be read and edited, in lang/enus/rules. Written
+# out of IBM's objects once; `notation-check' holds what is in the tree against
+# those objects again, emitting the bytecode from each and comparing, so it says
+# both that the text is still faithful and, once a rule has been changed on
+# purpose, which rules those are. It wants the objects, so it is in the same
+# class as the suite: obtainable, and not needed to build.
+.PHONY: notation notation-check notation-prove
+notation:
+	@python3 tools/delta-notation.py tree
+
+notation-check:
+	@python3 tools/delta-notation.py verify
+
+# The stronger of the two, and the one to believe: every rule emitted out of
+# the text into one stream, held against the bytecode the engine actually runs.
+# The pools are shared and numbered in the order the rules are taken, so
+# matching the whole stream says the text carries every rule, in order, with
+# nothing added and nothing lost -- which a rule-by-rule comparison cannot.
+notation-prove:
+	@python3 tools/delta-notation.py prove
+
 # The rules as C. Thirteen megabytes written out of the bytecode beside it,
 # so it is made here rather than kept in the tree, where every change to the
 # decompiler would rewrite the whole of it.

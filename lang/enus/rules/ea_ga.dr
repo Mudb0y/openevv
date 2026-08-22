@@ -1,0 +1,267 @@
+# The rules of ea_ga.obj, written by tools/delta-notation.py.
+# One operation to a line. See docs/building.md.
+
+rule GAroots from ea_ga.obj
+shape frame 232 argbase 116 params 3
+label L0 was _GAroots
+  load movl imm 0 into r6
+  load movl slotaddr -32 into r0
+  push imm 0
+  push slotaddr -32
+  store movb imm 2 slot 92
+  store movb imm 5 slot 104
+  store movl imm 0 slot 100
+  store movl imm 0 slot 96
+  store movl imm 0 slot 88
+  store movl imm 0 slot 84
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r7
+  popreg r1
+  popreg r1
+  branch jne to L45
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr 32 into r0
+  push slotaddr 32
+  load movl slotaddr 44 into r0
+  push slotaddr 44
+  load movl slotaddr 56 into r0
+  push slotaddr 56
+  load movl slotaddr -124 into r0
+  push slotaddr -124
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L45
+  push param 2
+  load movl slotaddr 68 into r0
+  push slotaddr 68
+  push param 1
+  load movl slotaddr 76 into r0
+  push slotaddr 76
+  push state 0
+  call ZZget_parm_ptr2 arity 5 depth 5
+  push state 0
+  load movl slotaddr 76 into r3
+  call ZZfenceZZstring468 arity 1 depth 6
+  push state 0
+  call ZZstarttest37 arity 1 depth 7
+  load movl slotaddr 68 into r0
+  push slotaddr 68
+  load movl slotaddr 76 into r0
+  push slotaddr 76
+  push state 0
+  call lpta_rpta_loadp arity 3 depth 10
+  push imm 0
+  push imm 0
+  push imm 2
+  push state 0
+  call actd_lookup arity 4 depth 14
+  popn 14
+  cmp testl reg r0 reg r0
+  branch jne to L45
+label L1 was $X38$99604
+  push reg r7
+  call ZZstarttest40 arity 1 depth 1
+  cmp cmpw imm 1 ind reg r7 2562
+  popreg r1
+  branch je to L46
+label L2 was $X40$99608
+  push reg r7
+  call actd_goto arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L9
+label L3 was $X1$99611
+  load movl sym string_2 into r6
+label L4 was at_0xca
+  store movb imm 3 slot 104
+label L5 was at_0xce
+  load movl slotaddr 68 into r0
+  push slotaddr 68
+  push reg r3
+  push reg r7
+  call lpta_rpta_loadp arity 3 depth 3
+  popn 3
+  cmp cmpw imm 0 slot 100
+  branch je to L6
+  load movzwl slot 100 into r0
+  jump to L7
+label L6 was at_0xe9
+  load movl slot 96 into r0
+  cmp testl reg r0 reg r0
+  branch je to L8
+label L7 was at_0xf0
+  store movl reg r0 ind reg r7 2568
+label L8 was at_0xf6
+  push slot 88
+  push reg r6
+  push slot 104
+  push slot 92
+  push reg r7
+  call insert_2pt_s arity 5 depth 5
+  popn 5
+  cmp testl reg r0 reg r0
+  branch je to L46
+label L9 was at_0x111
+  load movl slotaddr 84 into r0
+  push slotaddr 84
+  push reg r7
+  call backtrack_function arity 2 depth 2
+  alu decl none reg r0
+  cmp cmpl imm 40 reg r0
+  popreg r1
+  popreg r1
+  branch ja to L45
+  switch reg r0 to L3 L10 L11 L12 L13 L14 L15 L16 L17 L18 L19 L20 L21 L22 L23 L24 L25 L26 L27 L28 L29 L30 L31 L32 L33 L34 L35 L36 L37 L38 L39 L40 L41 L42 L43 L44 L45 L1 L46 L2 L46
+label L10 was $X2$99613
+  load movl sym string_3 into r6
+  store movl imm 12 slot 100
+  jump to L5
+label L11 was $X3$99614
+  store movb imm 4 slot 104
+  load movl sym string_4 into r6
+  jump to L5
+label L12 was $X4$99615
+  store movb imm 8 slot 104
+  load movl sym string_5 into r6
+  store movl imm 2001 slot 100
+  jump to L5
+label L13 was $X5$99616
+  store movb imm 4 slot 104
+  load movl sym string_6 into r6
+  jump to L5
+label L14 was $X6$99617
+  load movl sym string_7 into r6
+  jump to L5
+label L15 was $X7$99618
+  store movb imm 6 slot 104
+  load movl sym string_8 into r6
+  jump to L5
+label L16 was $X8$99619
+  store movb imm 9 slot 104
+  load movl sym string_9 into r6
+  jump to L5
+label L17 was $X9$99620
+  load movl sym string_10 into r6
+  jump to L5
+label L18 was $X10$99621
+  store movb imm 6 slot 104
+  load movl sym string_11 into r6
+  jump to L5
+label L19 was $X11$99622
+  store movb imm 6 slot 104
+  load movl sym string_12 into r6
+  jump to L5
+label L20 was $X12$99623
+  store movb imm 10 slot 104
+  load movl sym ZZstring420 into r6
+  jump to L5
+label L21 was $X13$99624
+  store movb imm 6 slot 104
+  load movl sym string_14 into r6
+  jump to L5
+label L22 was $X14$99625
+  store movb imm 9 slot 104
+  load movl sym string_15 into r6
+  jump to L5
+label L23 was $X15$99626
+  store movb imm 6 slot 104
+  load movl sym string_16 into r6
+  jump to L5
+label L24 was $X16$99627
+  store movb imm 2 slot 104
+  load movl sym string_17 into r6
+  jump to L5
+label L25 was $X17$99628
+  store movb imm 6 slot 104
+  load movl sym string_18 into r6
+  jump to L5
+label L26 was $X18$99629
+  load movl sym string_19 into r6
+  jump to L4
+label L27 was $X19$99630
+  store movb imm 10 slot 104
+  load movl sym ZZstring466 into r6
+  jump to L5
+label L28 was $X20$99631
+  store movb imm 12 slot 104
+  load movl sym ZZstring467 into r6
+  jump to L5
+label L29 was $X21$99632
+  store movb imm 8 slot 104
+  load movl sym ZZstring465 into r6
+  jump to L5
+label L30 was $X22$99633
+  load movl sym string_23 into r6
+  jump to L5
+label L31 was $X23$99634
+  load movl sym string_24 into r6
+  jump to L4
+label L32 was $X24$99635
+  load movl sym string_25 into r6
+  store movl imm 21 slot 100
+  jump to L5
+label L33 was $X25$99636
+  load movl sym string_26 into r6
+  jump to L5
+label L34 was $X26$99637
+  load movl sym string_27 into r6
+  jump to L5
+label L35 was $X27$99638
+  load movl sym string_28 into r6
+  jump to L5
+label L36 was $X28$99639
+  store movb imm 6 slot 104
+  load movl sym string_29 into r6
+  jump to L5
+label L37 was $X29$99640
+  store movb imm 6 slot 104
+  load movl sym string_30 into r6
+  jump to L5
+label L38 was $X30$99641
+  store movb imm 7 slot 104
+  load movl sym string_31 into r6
+  jump to L5
+label L39 was $X31$99642
+  load movl sym string_32 into r6
+  jump to L5
+label L40 was $X32$99643
+  store movb imm 6 slot 104
+  load movl sym string_33 into r6
+  jump to L5
+label L41 was $X33$99644
+  store movb imm 6 slot 104
+  load movl sym string_34 into r6
+  jump to L5
+label L42 was $X34$99645
+  store movb imm 7 slot 104
+  load movl sym string_35 into r6
+  jump to L5
+label L43 was $X35$99646
+  store movb imm 4 slot 104
+  load movl sym string_36 into r6
+  jump to L5
+label L44 was $X36$99647
+  load movl sym string_37 into r6
+  jump to L5
+label L45 was $fail_clean$99589
+  push imm 94
+  push reg r7
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L47
+label L46 was $L99607
+  push reg r7
+  call succeed arity 1 depth 1
+  popreg r1
+  load movl imm 0 into r0
+label L47 was at_0x30f
+  return reg r0
+label L48 was $L99720
+end
+

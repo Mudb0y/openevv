@@ -1,0 +1,379 @@
+# The rules of e_vars.obj, written by tools/delta-notation.py.
+# One operation to a line. See docs/building.md.
+
+rule set_eng_global_constants from e_vars.obj
+shape frame 196 argbase 8 params 1
+label L0 was _set_eng_global_constants
+  alu andl imm 0 slot -4
+  load movl slotaddr -104 into r0
+  push imm 0
+  push slotaddr -104
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -104 into r0
+  push slotaddr -104
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -196 into r0
+  push slotaddr -196
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch je to L2
+label L1 was at_0x46
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L3
+label L2 was at_0x55
+  push reg r6
+  call ZZfence_null arity 1 depth 1
+  alu andw imm 0 ind reg r6 2334
+  push reg r6
+  store movw imm 1 ind reg r6 2346
+  store movw imm 1 ind reg r6 4130
+  store movw imm 2 ind reg r6 4134
+  call succeed arity 1 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 0 into r0
+label L3 was at_0x88
+  return reg r0
+end
+
+rule init_eng_vars from e_vars.obj
+shape frame 196 argbase 8 params 1
+label L0 was _init_eng_vars
+  load movl imm 0 into r7
+  load movl slotaddr -104 into r0
+  push imm 0
+  push slotaddr -104
+  store movl imm 0 slot -4
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -104 into r0
+  push slotaddr -104
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -196 into r0
+  push slotaddr -196
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch je to L2
+label L1 was at_0x47
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L3
+label L2 was at_0x56
+  push reg r6
+  call ZZfence_null arity 1 depth 1
+  load movw ind reg r6 3374 into r0w
+  store movw reg r0w ind reg r6 3370
+  load movw ind reg r6 2334 into r0w
+  push reg r6
+  store movw reg r7w ind reg r6 3602
+  store movw reg r7w ind reg r6 3606
+  store movw reg r7w ind reg r6 2562
+  store movw reg r0w ind reg r6 2330
+  call succeed arity 1 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 0 into r0
+label L3 was at_0x97
+  return reg r0
+end
+
+rule reset_eng_sent_vars from e_vars.obj
+shape frame 196 argbase 8 params 1
+label L0 was _reset_eng_sent_vars
+  alu andl imm 0 slot -4
+  load movl slotaddr -104 into r0
+  push imm 0
+  push slotaddr -104
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -104 into r0
+  push slotaddr -104
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -196 into r0
+  push slotaddr -196
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch je to L2
+label L1 was at_0x46
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L3
+label L2 was at_0x55
+  push reg r6
+  call ZZfence_null arity 1 depth 1
+  push reg r6
+  call succeed arity 1 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 0 into r0
+label L3 was at_0x65
+  return reg r0
+end
+
+rule init_eng_morph_vars from e_vars.obj
+shape frame 196 argbase 8 params 1
+label L0 was _init_eng_morph_vars
+  load movl imm 0 into r7
+  load movl slotaddr -104 into r0
+  push imm 0
+  push slotaddr -104
+  store movl imm 0 slot -4
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -104 into r0
+  push slotaddr -104
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -196 into r0
+  push slotaddr -196
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch je to L2
+label L1 was at_0x47
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L3
+label L2 was at_0x56
+  push reg r6
+  call ZZfence_null arity 1 depth 1
+  push reg r6
+  store movw reg r7w ind reg r6 2546
+  store movw reg r7w ind reg r6 4106
+  store movw imm 1 ind reg r6 2550
+  store movw imm 1 ind reg r6 4074
+  store movw reg r7w ind reg r6 2590
+  store movw reg r7w ind reg r6 4082
+  store movw reg r7w ind reg r6 4078
+  store movw imm 1 ind reg r6 4086
+  store movw reg r7w ind reg r6 4126
+  call succeed arity 1 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 0 into r0
+label L3 was at_0xab
+  return reg r0
+end
+
+rule init_eng_symbolic_vars from e_vars.obj
+shape frame 196 argbase 8 params 1
+label L0 was _init_eng_symbolic_vars
+  load movl imm 0 into r3
+  load movl slotaddr -104 into r0
+  push imm 0
+  push slotaddr -104
+  store movl imm 0 slot -4
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L10
+  load movl slotaddr -104 into r0
+  push slotaddr -104
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -196 into r0
+  push slotaddr -196
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L10
+  push state 0
+  call ZZfence_null arity 1 depth 1
+  push state 0
+  call ZZstarttest1 arity 1 depth 2
+  push state 0
+  call init_eng_morph_vars arity 1 depth 3
+  popn 3
+  load movl imm 4 into r7
+label L1 was $X1$99599
+  push reg r6
+  call ZZstarttest2 arity 1 depth 1
+  push reg r6
+  call ZZbspush_ca__3 arity 1 depth 2
+  push reg r6
+  call ZZlpta_load_vvg__setscan_0090r__4 arity 1 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L5
+  push imm 3
+label L2 was at_0x87
+  push reg r7
+  push reg r7
+  push reg r6
+  call testFldeq arity 4 depth 4
+  popn 4
+  cmp testl reg r0 reg r0
+  branch jne to L5
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L5
+label L3 was $X4$99604
+  store movw imm 1 ind reg r6 4090
+label L4 was $X5$99609
+  push reg r6
+  store movw reg r3w ind reg r6 2582
+  store movw reg r3w ind reg r6 2574
+  store movw reg r3w ind reg r6 4110
+  store movl reg r3 ind reg r6 2568
+  store movw reg r3w ind reg r6 4114
+  store movw reg r3w ind reg r6 4146
+  call ZZstarttest6 arity 1 depth 1
+  push reg r6
+  call ZZlpta_load_vvg__setscan_0090r__4 arity 1 depth 2
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch jne to L7
+  push imm 1
+  push reg r7
+  push reg r7
+  push reg r6
+  call testFldeq arity 4 depth 4
+  popn 4
+  cmp testl reg r0 reg r0
+  branch jne to L5
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch je to L11
+label L5 was at_0x105
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  push reg r6
+  call backtrack_function arity 2 depth 2
+  alu decl none reg r0
+  cmp cmpl imm 7 reg r0
+  popreg r1
+  popreg r1
+  branch ja to L10
+  switch reg r0 to L1 L8 L6 L3 L4 L7 L13 L9
+label L6 was $X3$99605
+  push reg r6
+  call ZZlpta_load_vvg__setscan_0090r__4 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L5
+  push reg r7
+  jump to L2
+label L7 was $X6$99612
+  push reg r6
+  call ZZstarttest8 arity 1 depth 1
+  push reg r6
+  call ZZlpta_load_vvg__setscan_0090r__4 arity 1 depth 2
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch jne to L9
+  push imm 2
+  push reg r7
+  push reg r7
+  push reg r6
+  call testFldeq arity 4 depth 4
+  popn 4
+  cmp testl reg r0 reg r0
+  branch jne to L5
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L5
+  load movw ind reg r6 3382 into r0w
+  jump to L12
+label L8 was $X2$99610
+  store movw reg r3w ind reg r6 4090
+  jump to L4
+label L9 was $X8$99617
+  store movw reg r3w ind reg r6 4138
+  jump to L13
+label L10 was at_0x17b
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L14
+label L11 was at_0x18a
+  load movw ind reg r6 3378 into r0w
+label L12 was at_0x191
+  store movw reg r0w ind reg r6 4138
+label L13 was $X7$99615
+  push reg r6
+  call succeed arity 1 depth 1
+  popreg r1
+  load movl imm 0 into r0
+label L14 was at_0x1a1
+  return reg r0
+label L15 was $L99687
+end
+

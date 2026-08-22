@@ -19,10 +19,12 @@ restructures into loops and conditionals for a person to read, and inverting it
 exactly would be hard. Reading and round-tripping are different jobs, so they
 have different forms.
 
-usage: delta-notation.py write <object> [> file]
-       delta-notation.py read  <file>
-       delta-notation.py check <object> [...]
+usage: delta-notation.py write  <object> [> file]
+       delta-notation.py read   <file>
+       delta-notation.py check  <object> [...]
        delta-notation.py check-all
+       delta-notation.py tree            write lang/enus/rules
+       delta-notation.py verify          the tree against IBM's objects
 """
 
 import importlib.util
@@ -44,6 +46,41 @@ dl = load("delta_lift", "tools/delta-lift.py")
 de = load("delta_emit", "tools/delta-emit.py")
 
 OBJECTS = os.path.join(ROOT, "analysis", "enus")
+
+# ---- registers ----------------------------------------------------------
+#
+# The machine has eight, and the lifter still calls them by the x86 names the
+# compiler used. Here they are numbered, with a letter for how much of one is
+# meant: bare for all of it, `w' for the low half, `b' and `h' for the two
+# bytes of that half. The reader turns them back into the names the emitter
+# encodes, so nothing downstream has to know about this.
+
+REG_FULL = ("eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi")
+REG_TEXT = {}
+for _i, _n in enumerate(REG_FULL):
+    REG_TEXT[_n] = "r%d" % _i
+for _n, _i in (("ax", 0), ("cx", 1), ("dx", 2), ("bx", 3),
+               ("sp", 4), ("bp", 5), ("si", 6), ("di", 7)):
+    REG_TEXT[_n] = "r%dw" % _i
+for _n, _i in (("al", 0), ("cl", 1), ("dl", 2), ("bl", 3)):
+    REG_TEXT[_n] = "r%db" % _i
+for _n, _i in (("ah", 0), ("ch", 1), ("dh", 2), ("bh", 3)):
+    REG_TEXT[_n] = "r%dh" % _i
+REG_BACK = {v: "%" + k for k, v in REG_TEXT.items()}
+
+
+def put_reg(name):
+    n = str(name).lstrip("%")
+    if n not in REG_TEXT:
+        raise ValueError("no written form for the register %r" % (name,))
+    return REG_TEXT[n]
+
+
+def get_reg(text):
+    if text not in REG_BACK:
+        raise ValueError("no register called %r" % (text,))
+    return REG_BACK[text]
+
 
 # ---- operands -----------------------------------------------------------
 #
@@ -72,11 +109,13 @@ def put_operand(o, out):
         return
     kind = o[0]
     if kind == "loaded":
-        out.extend(("reg", str(o[3])))
+        out.extend(("reg", put_reg(o[3])))
     elif kind == "indirect":
         out.append("ind")
         put_operand(o[1], out)
         out.append(str(o[2]))
+    elif kind == "reg":
+        out.extend(("reg", put_reg(o[1])))
     elif kind in TWO_WORD:
         out.extend((kind, str(o[1])))
     else:
@@ -91,6 +130,8 @@ def get_operand(w):
     if kind == "ind":
         inner = get_operand(w)
         return ("indirect", inner, int(w.pop(0)))
+    if kind == "reg":
+        return ("reg", get_reg(w.pop(0)))
     if kind in NAMED:
         return (kind, w.pop(0))
     if kind in NUMBERED:
@@ -124,7 +165,7 @@ def put_op(op, out, name_of):
     elif k == "popn":
         out.append(str(op[1]))
     elif k == "popreg":
-        out.append(str(op[1]))
+        out.append(put_reg(op[1]))
     elif k == "jump":
         out.extend(("to", name_of(op[1])))
     elif k == "branch":
@@ -136,7 +177,7 @@ def put_op(op, out, name_of):
     elif k == "load":
         out.append(str(op[1]))
         put_operand(op[2], out)
-        out.extend(("into", str(op[3])))
+        out.extend(("into", put_reg(op[3])))
     elif k == "store":
         out.append(str(op[1]))
         put_operand(op[2], out)
@@ -148,28 +189,28 @@ def put_op(op, out, name_of):
     elif k == "map":
         out.append(str(op[1]))
         put_operand(op[2], out)
-        out.extend(("into", str(op[3])))
+        out.extend(("into", put_reg(op[3])))
     elif k == "addk":
         out.append(str(op[1]))
         put_operand(op[2], out)
-        out.extend(("into", str(op[3])))
+        out.extend(("into", put_reg(op[3])))
     elif k == "scale":
         out.append(str(op[1]))
         put_operand(op[2], out)
         put_operand(op[3], out)
-        out.extend((str(op[4]), "into", str(op[5])))
+        out.extend((str(op[4]), "into", put_reg(op[5])))
     elif k == "mul":
         out.append(str(op[1]))
         put_operand(op[2], out)
         put_operand(op[3], out)
-        out.extend(("into", str(op[4])))
+        out.extend(("into", put_reg(op[4])))
     elif k == "div":
         out.append(str(op[1]))
         put_operand(op[2], out)
     elif k == "widen":
         out.append(str(op[1]))
     elif k == "setcc":
-        out.extend((str(op[1]), str(op[2])))
+        out.extend((str(op[1]), put_reg(op[2])))
     else:
         raise ValueError("operation %r has no written form" % (k,))
 
@@ -195,7 +236,7 @@ def get_op(w):
     if k == "popn":
         return ("popn", int(w.pop(0)))
     if k == "popreg":
-        return ("popreg", w.pop(0))
+        return ("popreg", get_reg(w.pop(0)))
     if k == "jump":
         word(w, "to")
         return ("jump", w.pop(0))
@@ -212,7 +253,7 @@ def get_op(w):
         kind = w.pop(0)
         a = get_operand(w)
         word(w, "into")
-        return ("load", kind, a, w.pop(0))
+        return ("load", kind, a, get_reg(w.pop(0)))
     if k == "store":
         kind = w.pop(0)
         a = get_operand(w)
@@ -228,32 +269,32 @@ def get_op(w):
         table = w.pop(0)
         a = get_operand(w)
         word(w, "into")
-        return ("map", table, a, w.pop(0))
+        return ("map", table, a, get_reg(w.pop(0)))
     if k == "addk":
         imm = int(w.pop(0))
         a = get_operand(w)
         word(w, "into")
-        return ("addk", imm, a, w.pop(0))
+        return ("addk", imm, a, get_reg(w.pop(0)))
     if k == "scale":
         imm = int(w.pop(0))
         a = get_operand(w)
         b = get_operand(w)
         n = int(w.pop(0))
         word(w, "into")
-        return ("scale", imm, a, b, n, w.pop(0))
+        return ("scale", imm, a, b, n, get_reg(w.pop(0)))
     if k == "mul":
         kind = w.pop(0)
         a = get_operand(w)
         b = get_operand(w)
         word(w, "into")
-        return ("mul", kind, a, b, w.pop(0))
+        return ("mul", kind, a, b, get_reg(w.pop(0)))
     if k == "div":
         kind = w.pop(0)
         return ("div", kind, get_operand(w))
     if k == "widen":
         return ("widen", w.pop(0))
     if k == "setcc":
-        return ("setcc", w.pop(0), w.pop(0))
+        return ("setcc", w.pop(0), get_reg(w.pop(0)))
     raise ValueError("no operation called %r" % (k,))
 
 
@@ -314,17 +355,24 @@ def write_rule(name, obj, d, tables, out):
         if label in at and at[label] != addr:
             raise ValueError("two blocks both called %s" % label)
         at[label] = addr
-    named = {addr: label for label, addr, _b in d.blocks}
+    # Blocks are numbered rather than named after the address they had in
+    # IBM's object. What the address was is kept on the line, because while
+    # rules are still being lifted it is the only way back to the
+    # disassembly; once the text is the source and nothing is lifted any
+    # more, the reader already ignores it and it can go.
+    numbered = {}
+    for i, (label, addr, _b) in enumerate(d.blocks):
+        numbered[addr] = "L%d" % i
 
     def name_of(text):
         addr = d.resolve(text)
-        if addr not in named:
+        if addr not in numbered:
             raise ValueError("branch to %r, which is not the start of a block"
                              % (text,))
-        return named[addr]
+        return numbered[addr]
 
-    for label, _addr, block in d.blocks:
-        out.append("label %s" % label)
+    for label, addr, block in d.blocks:
+        out.append("label %s was %s" % (numbered[addr], label))
         for op in block:
             words = []
             put_op(op, words, name_of)
@@ -378,6 +426,60 @@ def emit_one(name, d, obj, tables):
     e = de.Emitter()
     e.rule(name, d, tables, obj)
     return bytes(e.code)
+
+
+def arities():
+    """How many arguments each entry takes, learned from every call site.
+
+    The real pipeline does this pass before it lifts anything, and hands the
+    answer to the lifter: a call reached by a path that did not write its
+    arguments cannot say for itself how many it takes. Lifting without it gives
+    a different -- and wrong -- answer for some rules, so anything meaning to
+    reproduce what the engine runs has to do it too.
+    """
+    seen = {}
+    for obj in sorted(f for f in os.listdir(OBJECTS) if f.endswith(".obj")):
+        for name, items in dl.read_functions(os.path.join(OBJECTS, obj)):
+            if not dl.is_rule(items):
+                continue
+            data, tables = dl.find_data(items)
+            d = dl.Decoder(name, items, data, tables).run()
+            for _l, _s, block in d.blocks:
+                for op in block:
+                    if op[0] == "call" and op[2]:
+                        seen.setdefault(op[1], {})
+                        seen[op[1]][op[2]] = seen[op[1]].get(op[2], 0) + 1
+    return dict((k, max(v.items(), key=lambda kv: kv[1])[0])
+                for k, v in seen.items())
+
+
+def thunks(known):
+    """The helper thunks the compiler generated beside the rules, in glob.obj.
+
+    Not rules by the lifter's test, but the same kind of thing and the
+    interpreter runs them the same way, so the text has to hold them too or it
+    is only two thirds of what the engine runs.
+    """
+    path = os.path.join(OBJECTS, "glob.obj")
+    if not os.path.exists(path):
+        return [], {}
+    got = []
+    tables = None
+    for name, items in dl.read_functions(path):
+        if not name.startswith("ZZ"):
+            continue
+        data, tabs = dl.find_data(items)
+        d = dl.Decoder(name, items, data, tabs, known).run()
+        if d.holes:
+            continue
+        # A thunk passes its caller's arguments through, and the ones it never
+        # reads are still there to be passed on, so a call site that says more
+        # than the thunk reads is the one that is right.
+        d.params = max(d.params, known.get(name, 0))
+        if tables is None:
+            tables = de.raw_bytes(path)
+        got.append((name, d))
+    return got, (tables or {})
 
 
 def lift(path, known=None):
@@ -434,6 +536,172 @@ def check(obj):
     return not (differed or unwritten)
 
 
+TREE = os.path.join(ROOT, "lang", "enus", "rules")
+SHIPPED = os.path.join(ROOT, "lang", "enus", "delta_rules_enus.c")
+
+
+def shipped_bytecode():
+    """The bytecode the engine actually runs, out of the tree."""
+    import re as _re
+    s = open(SHIPPED).read()
+    m = _re.search(r"const uint8_t delta_rule_code\[\] = \{(.*?)\};", s,
+                   _re.S)
+    if m is None:
+        raise ValueError("no delta_rule_code in %s" % SHIPPED)
+    return bytes(int(x) for x in m.group(1).replace("\n", "").split(",")
+                 if x.strip())
+
+
+def all_rules(known):
+    """Every rule the engine runs, in the order the emitter takes them: each
+    object's rules in the order of the objects, then glob.obj's thunks."""
+    for obj in objects_with_rules():
+        got, tables = lift(os.path.join(OBJECTS, obj), known)
+        for name, d in got:
+            yield name, d, obj, tables
+    got, tables = thunks(known)
+    for name, d in got:
+        yield name, d, "glob.obj", tables
+
+
+def prove():
+    """Emit every rule out of the text and hold the whole stream against the
+    bytecode in the tree.
+
+    This is the check that matters. The pools -- constants, strings, entry
+    points, tag maps -- are shared across the whole language and numbered in
+    the order the rules are taken, so reproducing the stream byte for byte says
+    the text carries not just each rule but every rule, in order, with nothing
+    added and nothing left out. A per-rule comparison cannot say that.
+    """
+    known = arities()
+    print("entries whose arity was learned: %d" % len(known))
+
+    want = shipped_bytecode()
+    from_text = de.Emitter()
+    from_lift = de.Emitter()
+    n = 0
+
+    for name, d, obj, tables in all_rules(known):
+        lines = []
+        write_rule(name, obj, d, tables, lines)
+        back, back_tables = read_rules(lines)
+        if len(back) != 1:
+            print("    %s read back as %d rules" % (name, len(back)))
+            return False
+        from_lift.rule(name, d, tables, obj)
+        from_text.rule(name, back[0][1], back_tables, obj)
+        n += 1
+
+    text = bytes(from_text.code)
+    lift_ = bytes(from_lift.code)
+    print("rules taken: %d" % n)
+    print("from the text: %d bytes, from a fresh lift: %d, in the tree: %d"
+          % (len(text), len(lift_), len(want)))
+
+    ok = True
+    if text != lift_:
+        print("the text and a fresh lift do not agree")
+        ok = False
+    if text != want:
+        print("the text does not reproduce the bytecode in the tree")
+        for i in range(min(len(text), len(want))):
+            if text[i] != want[i]:
+                print("  first difference at byte %d" % i)
+                break
+        ok = False
+    if ok:
+        print("the text reproduces the engine's bytecode byte for byte")
+    return ok
+
+
+
+def objects_with_rules():
+    for obj in sorted(f for f in os.listdir(OBJECTS) if f.endswith(".obj")):
+        path = os.path.join(OBJECTS, obj)
+        if any(dl.is_rule(i) for _n, i in dl.read_functions(path)):
+            yield obj
+
+
+def to_tree():
+    """Write every object's rules into the tree, one file to an object.
+
+    One file an object because that is the grain the rules already have: the
+    table records which object a rule came from, and the sources in src are
+    named after theirs for the same reason -- a file that can be held against
+    the thing it came from can be checked against it.
+    """
+    os.makedirs(TREE, exist_ok=True)
+    known = arities()
+    rules = 0
+    per_object = {}
+
+    for name, d, obj, tables in all_rules(known):
+        per_object.setdefault(obj, []).append((name, d, tables))
+
+    for obj in sorted(per_object):
+        out = ["# The rules of %s, written by tools/delta-notation.py." % obj,
+               "# One operation to a line. See docs/building.md.",
+               ""]
+        for name, d, tables in per_object[obj]:
+            write_rule(name, obj, d, tables, out)
+            out.append("")
+        where = os.path.join(TREE, obj[:-4] + ".dr")
+        open(where, "w").write("\n".join(out) + "\n")
+        rules += len(per_object[obj])
+        print("%-16s %4d rules" % (obj, len(per_object[obj])))
+    print("%d rules in %s" % (rules, os.path.relpath(TREE, ROOT)))
+    return True
+
+
+def verify():
+    """Hold the text in the tree against IBM's objects.
+
+    Every rule is emitted twice, once from the text and once from a fresh lift
+    of the object it names, and the bytecode has to match byte for byte. That
+    is what says the text in the tree is still what IBM's code does -- and,
+    once a rule has been deliberately changed, which rules those are: an
+    unedited rule matches and an edited one is named.
+    """
+    ok = True
+    total = same = 0
+    known = arities()
+    lifted_by_object = {}
+    tables_by_object = {}
+    for name, d, obj, tables in all_rules(known):
+        lifted_by_object.setdefault(obj, {})[name] = d
+        tables_by_object[obj] = tables
+
+    for obj in sorted(lifted_by_object):
+        where = os.path.join(TREE, obj[:-4] + ".dr")
+        if not os.path.exists(where):
+            print("%-16s no text in the tree" % obj)
+            ok = False
+            continue
+        written, wtables = read_rules(open(where))
+        by_name = lifted_by_object[obj]
+        ltables = tables_by_object[obj]
+        for name, d2, o in written:
+            total += 1
+            if name not in by_name:
+                print("    %s: in the tree and not in %s" % (name, obj))
+                ok = False
+                continue
+            want = emit_one(name, by_name[name], o, ltables)
+            got = emit_one(name, d2, o, wtables)
+            if want == got:
+                same += 1
+            else:
+                print("    %s: differs from %s" % (name, obj))
+                ok = False
+        for name in by_name:
+            if not any(n == name for n, _d, _o in written):
+                print("    %s: in %s and not in the tree" % (name, obj))
+                ok = False
+    print("%d rules in the tree, %d the same as IBM's objects" % (total, same))
+    return ok
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__.strip())
@@ -460,6 +728,15 @@ def main():
         for obj in sys.argv[2:]:
             ok = check(obj) and ok
         return 0 if ok else 1
+
+    if what == "prove":
+        return 0 if prove() else 1
+
+    if what == "tree":
+        return 0 if to_tree() else 1
+
+    if what == "verify":
+        return 0 if verify() else 1
 
     if what == "check-all":
         ok = True

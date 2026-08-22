@@ -1,0 +1,579 @@
+# The rules of ea_words.obj, written by tools/delta-notation.py.
+# One operation to a line. See docs/building.md.
+
+rule eng_words from ea_words.obj
+shape frame 232 argbase 116 params 3
+label L0 was _eng_words
+  load movl imm 0 into r6
+  load movl slotaddr -32 into r0
+  push imm 0
+  push slotaddr -32
+  store movb imm 2 slot 92
+  store movb imm 5 slot 104
+  store movl imm 0 slot 100
+  store movl imm 0 slot 96
+  store movl imm 0 slot 88
+  store movl imm 0 slot 84
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r3
+  popreg r1
+  popreg r1
+  branch jne to L139
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr 32 into r0
+  push slotaddr 32
+  load movl slotaddr 44 into r0
+  push slotaddr 44
+  load movl slotaddr 56 into r0
+  push slotaddr 56
+  load movl slotaddr -124 into r0
+  push slotaddr -124
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L139
+  push param 2
+  load movl slotaddr 76 into r0
+  push slotaddr 76
+  push param 1
+  load movl slotaddr 68 into r0
+  push slotaddr 68
+  push state 0
+  call ZZget_parm_ptr2 arity 5 depth 5
+  push state 0
+  call ZZfence_null arity 1 depth 6
+  push state 0
+  call ZZstarttest118 arity 1 depth 7
+  load movl slotaddr 76 into r0
+  push slotaddr 76
+  load movl slotaddr 68 into r0
+  push slotaddr 68
+  push state 0
+  call lpta_rpta_loadp arity 3 depth 10
+  push imm 0
+  push imm 0
+  push imm 27
+  push state 0
+  call actd_lookup arity 4 depth 14
+  popn 14
+  cmp testl reg r0 reg r0
+  load movl imm 210 into r7
+  branch jne to L139
+label L1 was $X119$99678
+  push reg r3
+  call ZZstarttest121 arity 1 depth 1
+  cmp cmpw imm 1 ind reg r3 2562
+  popreg r1
+  branch je to L140
+label L2 was $X121$99682
+  push reg r3
+  call actd_goto arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L9
+label L3 was $X1$99685
+  load movl sym string_1 into r6
+label L4 was at_0xcd
+  store movb imm 4 slot 104
+label L5 was at_0xd1
+  load movl slotaddr 76 into r0
+  push slotaddr 76
+  load movl slotaddr 68 into r0
+  push slotaddr 68
+  push reg r3
+  call lpta_rpta_loadp arity 3 depth 3
+  popn 3
+  cmp cmpw imm 0 slot 100
+  branch je to L6
+  load movzwl slot 100 into r0
+  jump to L7
+label L6 was at_0xef
+  load movl slot 96 into r0
+  cmp testl reg r0 reg r0
+  branch je to L8
+label L7 was at_0xf6
+  store movl reg r0 ind reg r3 2568
+label L8 was at_0xfc
+  push slot 88
+  push reg r6
+  push slot 104
+  push slot 92
+  push reg r3
+  call insert_2pt_s arity 5 depth 5
+  popn 5
+  cmp testl reg r0 reg r0
+  branch je to L140
+label L9 was at_0x117
+  load movl slotaddr 84 into r0
+  push slotaddr 84
+  push reg r3
+  call backtrack_function arity 2 depth 2
+  alu decl none reg r0
+  cmp cmpl imm 121 reg r0
+  popreg r1
+  popreg r1
+  branch ja to L139
+  switch reg r0 to L3 L10 L11 L12 L13 L14 L15 L16 L17 L18 L19 L20 L21 L22 L23 L24 L25 L26 L27 L28 L29 L30 L31 L32 L33 L34 L35 L36 L37 L38 L39 L40 L41 L42 L43 L44 L45 L46 L47 L48 L49 L50 L51 L52 L53 L54 L55 L56 L57 L58 L59 L60 L61 L62 L63 L64 L65 L66 L67 L68 L69 L70 L71 L72 L73 L74 L75 L76 L77 L78 L80 L81 L82 L83 L84 L85 L86 L87 L88 L89 L90 L91 L92 L93 L94 L95 L96 L97 L98 L99 L100 L101 L102 L105 L106 L108 L109 L110 L111 L114 L115 L116 L117 L118 L119 L120 L122 L123 L126 L127 L128 L129 L130 L133 L136 L137 L138 L139 L1 L140 L2 L140
+label L10 was $X2$99687
+  store movb imm 6 slot 104
+  load movl sym string_2 into r6
+  jump to L107
+label L11 was $X3$99688
+  load movl sym string_3 into r6
+  jump to L4
+label L12 was $X4$99689
+  store movb imm 6 slot 104
+  load movl sym string_4 into r6
+  jump to L5
+label L13 was $X5$99690
+  store movb imm 6 slot 104
+  load movl sym string_5 into r6
+  jump to L5
+label L14 was $X6$99691
+  store movb imm 7 slot 104
+  load movl sym string_6 into r6
+  jump to L113
+label L15 was $X7$99692
+  load movl sym string_7 into r6
+  jump to L5
+label L16 was $X8$99693
+  load movl sym string_8 into r6
+  jump to L4
+label L17 was $X9$99694
+  load movl sym string_9 into r6
+  jump to L4
+label L18 was $X10$99695
+  store movb imm 9 slot 104
+  load movl sym string_10 into r6
+  jump to L132
+label L19 was $X11$99696
+  store movb imm 6 slot 104
+  load movl sym string_11 into r6
+  jump to L5
+label L20 was $X12$99697
+  load movl sym string_12 into r6
+  jump to L103
+label L21 was $X13$99698
+  load movl sym string_13 into r6
+  jump to L4
+label L22 was $X14$99699
+  store movb imm 6 slot 104
+  load movl sym string_14 into r6
+  jump to L5
+label L23 was $X15$99700
+  store movb imm 6 slot 104
+  load movl sym string_15 into r6
+  jump to L5
+label L24 was $X16$99701
+  store movb imm 6 slot 104
+  load movl sym string_16 into r6
+  jump to L125
+label L25 was $X17$99702
+  store movb imm 1 slot 104
+  load movl sym ZZstring460 into r6
+  jump to L5
+label L26 was $X18$99703
+  store movb imm 3 slot 104
+  load movl sym string_18 into r6
+  jump to L5
+label L27 was $X19$99704
+  load movl sym string_19 into r6
+  jump to L4
+label L28 was $X20$99705
+  store movb imm 1 slot 104
+  load movl sym ZZstring464 into r6
+  jump to L5
+label L29 was $X21$99706
+  load movl sym string_21 into r6
+  jump to L5
+label L30 was $X22$99707
+  store movb imm 3 slot 104
+  load movl sym string_22 into r6
+  jump to L5
+label L31 was $X23$99708
+  load movl sym string_23 into r6
+  jump to L5
+label L32 was $X24$99709
+  load movl sym string_24 into r6
+  jump to L4
+label L33 was $X25$99710
+  store movb imm 8 slot 104
+  load movl sym string_25 into r6
+  jump to L5
+label L34 was $X26$99711
+  store movb imm 8 slot 104
+  load movl sym string_26 into r6
+  jump to L125
+label L35 was $X27$99712
+  load movl sym string_27 into r6
+  jump to L79
+label L36 was $X28$99713
+  store movb imm 6 slot 104
+  load movl sym string_28 into r6
+  jump to L5
+label L37 was $X29$99714
+  store movb imm 7 slot 104
+  load movl sym string_29 into r6
+  jump to L5
+label L38 was $X30$99715
+  store movb imm 6 slot 104
+  load movl sym string_30 into r6
+  jump to L5
+label L39 was $X31$99716
+  store movb imm 3 slot 104
+  load movl sym ZZstring518 into r6
+  jump to L5
+label L40 was $X32$99717
+  store movb imm 3 slot 104
+  load movl sym string_32 into r6
+  jump to L5
+label L41 was $X33$99718
+  load movl sym string_33 into r6
+  store movl imm 11 slot 100
+  jump to L5
+label L42 was $X34$99719
+  store movb imm 8 slot 104
+  load movl sym string_34 into r6
+  jump to L107
+label L43 was $X35$99720
+  load movl sym string_35 into r6
+  jump to L4
+label L44 was $X36$99721
+  store movb imm 10 slot 104
+  load movl sym string_36 into r6
+  store movl imm 20102 slot 100
+  jump to L5
+label L45 was $X37$99722
+  store movb imm 2 slot 104
+  load movl sym ZZstring463 into r6
+  jump to L5
+label L46 was $X38$99723
+  load movl sym string_38 into r6
+  jump to L134
+label L47 was $X39$99724
+  load movl sym string_39 into r6
+  jump to L131
+label L48 was $X40$99725
+  load movl sym string_40 into r6
+  jump to L124
+label L49 was $X41$99726
+  load movl sym string_41 into r6
+  jump to L104
+label L50 was $X42$99727
+  store movb imm 6 slot 104
+  load movl sym string_42 into r6
+  jump to L104
+label L51 was $X43$99728
+  store movb imm 7 slot 104
+  load movl sym string_43 into r6
+  jump to L79
+label L52 was $X44$99729
+  load movl sym string_44 into r6
+  jump to L5
+label L53 was $X45$99730
+  load movl sym string_45 into r6
+  jump to L5
+label L54 was $X46$99731
+  store movb imm 3 slot 104
+  load movl sym string_46 into r6
+  jump to L5
+label L55 was $X47$99732
+  store movb imm 3 slot 104
+  load movl sym string_47 into r6
+  jump to L5
+label L56 was $X48$99733
+  load movl sym ZZstring233 into r6
+  jump to L4
+label L57 was $X49$99734
+  load movl sym string_49 into r6
+  jump to L4
+label L58 was $X50$99735
+  load movl sym string_50 into r6
+  jump to L121
+label L59 was $X51$99736
+  store movb imm 3 slot 104
+  load movl sym string_51 into r6
+  jump to L5
+label L60 was $X52$99737
+  store movb imm 7 slot 104
+  load movl sym string_52 into r6
+  jump to L5
+label L61 was $X53$99738
+  store movb imm 7 slot 104
+  load movl sym string_53 into r6
+  jump to L5
+label L62 was $X54$99739
+  store movb imm 10 slot 104
+  load movl sym string_54 into r6
+  store movl imm 2001 slot 100
+  jump to L5
+label L63 was $X55$99740
+  store movb imm 2 slot 104
+  load movl sym ZZstring250 into r6
+  jump to L5
+label L64 was $X56$99741
+  store movb imm 6 slot 104
+  load movl sym string_56 into r6
+  jump to L5
+label L65 was $X57$99742
+  store movb imm 8 slot 104
+  load movl sym string_57 into r6
+  store movl imm 101 slot 100
+  jump to L5
+label L66 was $X58$99743
+  load movl sym string_58 into r6
+  jump to L5
+label L67 was $X59$99744
+  store movb imm 13 slot 104
+  load movl sym string_59 into r6
+  jump to L5
+label L68 was $X60$99745
+  store movb imm 6 slot 104
+  load movl sym string_60 into r6
+  jump to L5
+label L69 was $X61$99746
+  load movl sym string_61 into r6
+  jump to L104
+label L70 was $X62$99747
+  load movl sym string_62 into r6
+  jump to L4
+label L71 was $X63$99748
+  store movb imm 3 slot 104
+  load movl sym string_63 into r6
+  jump to L5
+label L72 was $X64$99749
+  store movb imm 3 slot 104
+  load movl sym ZZstring203 into r6
+  jump to L5
+label L73 was $X65$99750
+  load movl sym string_65 into r6
+  jump to L5
+label L74 was $X66$99751
+  store movb imm 8 slot 104
+  load movl sym ZZstring293 into r6
+  jump to L125
+label L75 was $X67$99752
+  store movb imm 3 slot 104
+  load movl sym string_67 into r6
+  jump to L5
+label L76 was $X68$99753
+  load movl sym string_68 into r6
+  jump to L4
+label L77 was $X69$99754
+  store movb imm 7 slot 104
+  load movl sym string_69 into r6
+  jump to L79
+label L78 was $X70$99755
+  store movb imm 8 slot 104
+  load movl sym string_70 into r6
+label L79 was at_0x49f
+  store movl imm 10 slot 100
+  jump to L5
+label L80 was $X71$99756
+  load movl sym string_71 into r6
+  jump to L5
+label L81 was $X72$99757
+  load movl sym string_72 into r6
+  jump to L5
+label L82 was $X73$99758
+  load movl sym string_73 into r6
+  jump to L4
+label L83 was $X74$99759
+  store movb imm 8 slot 104
+  load movl sym string_74 into r6
+  jump to L135
+label L84 was $X75$99760
+  store movb imm 9 slot 104
+  load movl sym string_75 into r6
+  jump to L125
+label L85 was $X76$99761
+  load movl sym string_76 into r6
+  jump to L121
+label L86 was $X77$99762
+  load movl sym ZZstring526 into r6
+  jump to L112
+label L87 was $X78$99763
+  store movb imm 7 slot 104
+  load movl sym string_78 into r6
+  jump to L121
+label L88 was $X79$99764
+  load movl sym string_79 into r6
+  jump to L121
+label L89 was $X80$99765
+  store movb imm 10 slot 104
+  load movl sym string_80 into r6
+  jump to L132
+label L90 was $X81$99766
+  store movb imm 7 slot 104
+  load movl sym string_81 into r6
+  jump to L135
+label L91 was $X82$99767
+  load movl sym string_82 into r6
+  jump to L121
+label L92 was $X83$99768
+  load movl sym string_83 into r6
+  jump to L121
+label L93 was $X84$99769
+  load movl sym string_84 into r6
+  jump to L121
+label L94 was $X85$99770
+  store movb imm 8 slot 104
+  load movl sym string_85 into r6
+  jump to L135
+label L95 was $X86$99771
+  load movl sym string_86 into r6
+  jump to L124
+label L96 was $X87$99772
+  load movl sym string_87 into r6
+  jump to L5
+label L97 was $X88$99773
+  store movb imm 2 slot 104
+  load movl sym string_88 into r6
+  jump to L5
+label L98 was $X89$99774
+  store movb imm 3 slot 104
+  load movl sym ZZstring35 into r6
+  jump to L5
+label L99 was $X90$99775
+  load movl sym string_90 into r6
+  jump to L121
+label L100 was $X91$99776
+  store movb imm 3 slot 104
+  load movl sym string_91 into r6
+  jump to L5
+label L101 was $X92$99777
+  load movl sym string_92 into r6
+  jump to L104
+label L102 was $X93$99778
+  load movl sym string_93 into r6
+label L103 was at_0x5ad
+  store movb imm 4 slot 104
+label L104 was at_0x5b1
+  store movl imm 1 slot 100
+  jump to L5
+label L105 was $X94$99779
+  store movb imm 7 slot 104
+  load movl sym string_94 into r6
+  jump to L135
+label L106 was $X95$99780
+  store movb imm 7 slot 104
+  load movl sym string_95 into r6
+label L107 was at_0x5d4
+  store movl imm 102 slot 100
+  jump to L5
+label L108 was $X96$99781
+  store movb imm 8 slot 104
+  load movl sym string_96 into r6
+  jump to L135
+label L109 was $X97$99782
+  store movb imm 9 slot 104
+  load movl sym string_97 into r6
+  jump to L125
+label L110 was $X98$99783
+  load movl sym string_98 into r6
+  jump to L121
+label L111 was $X99$99784
+  load movl sym ZZstring354 into r6
+label L112 was at_0x605
+  store movb imm 6 slot 104
+label L113 was at_0x609
+  store movl imm 12 slot 100
+  jump to L5
+label L114 was $X100$99785
+  load movl sym string_100 into r6
+  jump to L121
+label L115 was $X101$99786
+  store movb imm 10 slot 104
+  load movl sym string_101 into r6
+  jump to L132
+label L116 was $X102$99787
+  store movb imm 7 slot 104
+  load movl sym string_102 into r6
+  jump to L135
+label L117 was $X103$99788
+  load movl sym string_103 into r6
+  jump to L121
+label L118 was $X104$99789
+  load movl sym string_104 into r6
+  jump to L121
+label L119 was $X105$99790
+  store movb imm 9 slot 104
+  load movl sym string_105 into r6
+  jump to L132
+label L120 was $X106$99791
+  load movl sym string_106 into r6
+label L121 was at_0x656
+  store movl imm 21 slot 100
+  jump to L5
+label L122 was $X107$99792
+  store movb imm 8 slot 104
+  load movl sym string_107 into r6
+  jump to L135
+label L123 was $X108$99793
+  load movl sym string_108 into r6
+label L124 was at_0x672
+  store movb imm 7 slot 104
+label L125 was at_0x676
+  store movl imm 201 slot 100
+  jump to L5
+label L126 was $X109$99794
+  store movb imm 7 slot 104
+  load movl sym string_109 into r6
+  jump to L135
+label L127 was $X110$99795
+  store movb imm 2 slot 104
+  load movl sym string_110 into r6
+  jump to L5
+label L128 was $X111$99796
+  load movl sym string_111 into r6
+  jump to L4
+label L129 was $X112$99797
+  store movb imm 9 slot 104
+  load movl sym string_112 into r6
+  jump to L132
+label L130 was $X113$99798
+  load movl sym string_113 into r6
+label L131 was at_0x6b5
+  store movb imm 8 slot 104
+label L132 was at_0x6b9
+  store movl imm 2010 slot 100
+  jump to L5
+label L133 was $X114$99799
+  load movl sym string_114 into r6
+label L134 was at_0x6ca
+  store movb imm 6 slot 104
+label L135 was at_0x6ce
+  store movl reg r7 slot 100
+  jump to L5
+label L136 was $X115$99800
+  store movb imm 3 slot 104
+  load movl sym string_115 into r6
+  jump to L5
+label L137 was $X116$99801
+  store movb imm 3 slot 104
+  load movl sym string_116 into r6
+  jump to L5
+label L138 was $X117$99802
+  load movl sym string_117 into r6
+  jump to L4
+label L139 was $fail_clean$99663
+  push imm 94
+  push reg r3
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L141
+label L140 was $L99681
+  push reg r3
+  call succeed arity 1 depth 1
+  popreg r1
+  load movl imm 0 into r0
+label L141 was at_0x714
+  return reg r0
+label L142 was $L99969
+end
+
