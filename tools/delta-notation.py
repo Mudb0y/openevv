@@ -1,0 +1,479 @@
+#!/usr/bin/env python3
+"""The rules as text that can be read, edited and compiled back.
+
+The rules reach us as compiled x86 in IBM's objects. `delta-lift.py` turns one
+into blocks of operations over operands, and `delta-emit.py` turns those into
+the bytecode the engine runs. That middle form is the thing worth writing down:
+it is one to one with what the machine does, so it can be written out and read
+back without loss, and once it is in the tree the rules can be edited and the
+objects are no longer needed to rebuild them.
+
+This is that form as text, both ways. `write' lifts an object and prints it;
+`read' parses it back; `check' does both and holds the bytecode emitted from
+each against the other, byte for byte, which is the whole proof. Nothing here
+is allowed to be clever: a line means one operation and the parse is the
+inverse of the print.
+
+What the text is not is the readable C that `delta-decompile.py` writes. That
+restructures into loops and conditionals for a person to read, and inverting it
+exactly would be hard. Reading and round-tripping are different jobs, so they
+have different forms.
+
+usage: delta-notation.py write <object> [> file]
+       delta-notation.py read  <file>
+       delta-notation.py check <object> [...]
+       delta-notation.py check-all
+"""
+
+import importlib.util
+import os
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def load(name, path):
+    spec = importlib.util.spec_from_file_location(name,
+                                                  os.path.join(ROOT, path))
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+dl = load("delta_lift", "tools/delta-lift.py")
+de = load("delta_emit", "tools/delta-emit.py")
+
+OBJECTS = os.path.join(ROOT, "analysis", "enus")
+
+# ---- operands -----------------------------------------------------------
+#
+# An operand is one or two words, never more, so a line can be read left to
+# right and each operand taken as it comes. Which it is says how many words
+# it has, so nothing needs punctuation to tell them apart.
+#
+# `loaded' is written as the register it is, because that is all the emitter
+# takes from it: what the notation has to preserve is the bytecode, and a
+# form that says more than the bytecode records would be a form with
+# something in it nobody reads.
+
+ONE_WORD = ("none",)
+# Two words, whose second is a number.
+NUMBERED = ("imm", "param", "paramaddr", "slot", "slotaddr",
+            "state", "statefld")
+# Two words, whose second is a name: a register, or a constant the object
+# named rather than numbered.
+NAMED = ("sym", "reg")
+TWO_WORD = NUMBERED + NAMED
+
+
+def put_operand(o, out):
+    if o is None:
+        out.append("none")
+        return
+    kind = o[0]
+    if kind == "loaded":
+        out.extend(("reg", str(o[3])))
+    elif kind == "indirect":
+        out.append("ind")
+        put_operand(o[1], out)
+        out.append(str(o[2]))
+    elif kind in TWO_WORD:
+        out.extend((kind, str(o[1])))
+    else:
+        raise ValueError("operand %r has no written form" % (o,))
+
+
+def get_operand(w):
+    """Take one operand off the front of a list of words."""
+    kind = w.pop(0)
+    if kind == "none":
+        return None
+    if kind == "ind":
+        inner = get_operand(w)
+        return ("indirect", inner, int(w.pop(0)))
+    if kind in NAMED:
+        return (kind, w.pop(0))
+    if kind in NUMBERED:
+        return (kind, int(w.pop(0)))
+    raise ValueError("no operand called %r" % (kind,))
+
+
+# ---- operations ---------------------------------------------------------
+#
+# Each entry says how to write one operation and how to read it back. The two
+# are kept side by side deliberately: an operation whose print and parse
+# disagree is the one fault this file can have, and putting them in one place
+# is the cheapest way to see it.
+#
+# A word that is a plain number is written as one; anything the emitter looks
+# up in a table -- a comparison kind, a condition, a register -- is written
+# under the name the lifter gave it, so the text says what the machine does
+# rather than which slot of which table it came from.
+
+
+def put_op(op, out, name_of):
+    k = op[0]
+    out.append(k)
+    if k == "call":
+        out.extend((str(op[1]), "arity", str(op[2]), "depth", str(op[3])))
+    elif k in ("push", "return"):
+        put_operand(op[1], out)
+    elif k == "setarg":
+        out.append(str(op[1]))
+        put_operand(op[2], out)
+    elif k == "popn":
+        out.append(str(op[1]))
+    elif k == "popreg":
+        out.append(str(op[1]))
+    elif k == "jump":
+        out.extend(("to", name_of(op[1])))
+    elif k == "branch":
+        out.extend((str(op[1]), "to", name_of(op[2])))
+    elif k in ("cmp", "alu"):
+        out.append(str(op[1]))
+        put_operand(op[2], out)
+        put_operand(op[3], out)
+    elif k == "load":
+        out.append(str(op[1]))
+        put_operand(op[2], out)
+        out.extend(("into", str(op[3])))
+    elif k == "store":
+        out.append(str(op[1]))
+        put_operand(op[2], out)
+        put_operand(op[3], out)
+    elif k == "switch":
+        put_operand(op[2], out)
+        out.append("to")
+        out.extend(name_of(t) for t in op[1])
+    elif k == "map":
+        out.append(str(op[1]))
+        put_operand(op[2], out)
+        out.extend(("into", str(op[3])))
+    elif k == "addk":
+        out.append(str(op[1]))
+        put_operand(op[2], out)
+        out.extend(("into", str(op[3])))
+    elif k == "scale":
+        out.append(str(op[1]))
+        put_operand(op[2], out)
+        put_operand(op[3], out)
+        out.extend((str(op[4]), "into", str(op[5])))
+    elif k == "mul":
+        out.append(str(op[1]))
+        put_operand(op[2], out)
+        put_operand(op[3], out)
+        out.extend(("into", str(op[4])))
+    elif k == "div":
+        out.append(str(op[1]))
+        put_operand(op[2], out)
+    elif k == "widen":
+        out.append(str(op[1]))
+    elif k == "setcc":
+        out.extend((str(op[1]), str(op[2])))
+    else:
+        raise ValueError("operation %r has no written form" % (k,))
+
+
+def word(w, expect):
+    got = w.pop(0)
+    if got != expect:
+        raise ValueError("expected %r and found %r" % (expect, got))
+
+
+def get_op(w):
+    k = w.pop(0)
+    if k == "call":
+        entry = w.pop(0)
+        word(w, "arity"); arity = int(w.pop(0))
+        word(w, "depth"); depth = int(w.pop(0))
+        return ("call", entry, arity, depth)
+    if k in ("push", "return"):
+        return (k, get_operand(w))
+    if k == "setarg":
+        n = int(w.pop(0))
+        return ("setarg", n, get_operand(w))
+    if k == "popn":
+        return ("popn", int(w.pop(0)))
+    if k == "popreg":
+        return ("popreg", w.pop(0))
+    if k == "jump":
+        word(w, "to")
+        return ("jump", w.pop(0))
+    if k == "branch":
+        cond = w.pop(0)
+        word(w, "to")
+        return ("branch", cond, w.pop(0))
+    if k in ("cmp", "alu"):
+        kind = w.pop(0)
+        a = get_operand(w)
+        b = get_operand(w)
+        return (k, kind, a, b)
+    if k == "load":
+        kind = w.pop(0)
+        a = get_operand(w)
+        word(w, "into")
+        return ("load", kind, a, w.pop(0))
+    if k == "store":
+        kind = w.pop(0)
+        a = get_operand(w)
+        b = get_operand(w)
+        return ("store", kind, a, b)
+    if k == "switch":
+        a = get_operand(w)
+        word(w, "to")
+        targets = list(w)
+        del w[:]
+        return ("switch", targets, a)
+    if k == "map":
+        table = w.pop(0)
+        a = get_operand(w)
+        word(w, "into")
+        return ("map", table, a, w.pop(0))
+    if k == "addk":
+        imm = int(w.pop(0))
+        a = get_operand(w)
+        word(w, "into")
+        return ("addk", imm, a, w.pop(0))
+    if k == "scale":
+        imm = int(w.pop(0))
+        a = get_operand(w)
+        b = get_operand(w)
+        n = int(w.pop(0))
+        word(w, "into")
+        return ("scale", imm, a, b, n, w.pop(0))
+    if k == "mul":
+        kind = w.pop(0)
+        a = get_operand(w)
+        b = get_operand(w)
+        word(w, "into")
+        return ("mul", kind, a, b, w.pop(0))
+    if k == "div":
+        kind = w.pop(0)
+        return ("div", kind, get_operand(w))
+    if k == "widen":
+        return ("widen", w.pop(0))
+    if k == "setcc":
+        return ("setcc", w.pop(0), w.pop(0))
+    raise ValueError("no operation called %r" % (k,))
+
+
+# ---- a rule, written and read -------------------------------------------
+
+
+class Written:
+    """A rule read back out of the text, in the shape the emitter wants.
+
+    The emitter asks a rule for its blocks, the three numbers of its shape,
+    and where a label is. It never asks anything else, which is why this is
+    eight lines rather than the lifter's several hundred.
+    """
+
+    def __init__(self, name, obj, frame, pbase, params):
+        self.name = name
+        self.obj = obj
+        self.frame = frame
+        self.pbase = pbase
+        self.params = params
+        self.blocks = []
+        self.holes = 0
+        self._at = {}
+
+    def block(self, label):
+        at = len(self.blocks) + 1
+        self._at[label] = at
+        self.blocks.append((label, at, []))
+        return self.blocks[-1][2]
+
+    def resolve(self, text):
+        return self._at.get(text)
+
+
+def write_rule(name, obj, d, tables, out):
+    """One rule as lines. The tables a MAP reads come with it, since the whole
+    point is that the object is not needed again."""
+    out.append("rule %s from %s" % (name, obj))
+    out.append("shape frame %d argbase %d params %d"
+               % (d.frame, d.pbase, d.params))
+
+    wanted = []
+    for _l, _a, block in d.blocks:
+        for op in block:
+            if op[0] == "map" and op[1] not in wanted:
+                wanted.append(op[1])
+    for t in wanted:
+        body = tables.get(t)
+        if body is None:
+            raise ValueError("no bytes for the %s table" % t)
+        out.append("table %s %s" % (t, " ".join("%02x" % b for b in body)))
+
+    # A branch says which block it lands on, under that block's own name. The
+    # lifter's own target text is the nearest label and a count forward from
+    # it, which is how the compiler wrote it and not a name the text can use.
+    at = {}
+    for label, addr, _b in d.blocks:
+        if label in at and at[label] != addr:
+            raise ValueError("two blocks both called %s" % label)
+        at[label] = addr
+    named = {addr: label for label, addr, _b in d.blocks}
+
+    def name_of(text):
+        addr = d.resolve(text)
+        if addr not in named:
+            raise ValueError("branch to %r, which is not the start of a block"
+                             % (text,))
+        return named[addr]
+
+    for label, _addr, block in d.blocks:
+        out.append("label %s" % label)
+        for op in block:
+            words = []
+            put_op(op, words, name_of)
+            out.append("  " + " ".join(words))
+    out.append("end")
+
+
+def read_rules(lines):
+    """Every rule in a run of lines, and the tables they carry."""
+    out = []
+    cur = None
+    body = None
+    tables = {}
+
+    for raw in lines:
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        w = line.split()
+        head = w[0]
+
+        if head == "rule":
+            cur = {"name": w[1], "obj": w[3]}
+            body = None
+        elif head == "shape":
+            cur["frame"] = int(w[2])
+            cur["pbase"] = int(w[4])
+            cur["params"] = int(w[6])
+            cur["d"] = Written(cur["name"], cur["obj"], cur["frame"],
+                               cur["pbase"], cur["params"])
+        elif head == "table":
+            tables[w[1]] = bytes(int(x, 16) for x in w[2:])
+        elif head == "label":
+            body = cur["d"].block(w[1])
+        elif head == "end":
+            out.append((cur["name"], cur["d"], cur["obj"]))
+            cur = None
+        else:
+            if body is None:
+                raise ValueError("an operation before any label: %r" % line)
+            body.append(get_op(w))
+    return out, tables
+
+
+# ---- the proof ----------------------------------------------------------
+
+
+def emit_one(name, d, obj, tables):
+    """The bytecode of one rule, from a pool of its own so that two runs of
+    the same rule can be held against each other."""
+    e = de.Emitter()
+    e.rule(name, d, tables, obj)
+    return bytes(e.code)
+
+
+def lift(path, known=None):
+    """Every rule in an object, lifted, with the object's raw tables."""
+    got = []
+    tables = None
+    for name, items in dl.read_functions(path):
+        if not dl.is_rule(items):
+            continue
+        data, tabs = dl.find_data(items)
+        d = dl.Decoder(name, items, data, tabs, known).run() if known \
+            else dl.Decoder(name, items, data, tabs).run()
+        if d.holes:
+            continue
+        if tables is None:
+            tables = de.raw_bytes(path)
+        got.append((name, d))
+    return got, (tables or {})
+
+
+def check(obj):
+    path = os.path.join(OBJECTS, obj)
+    rules, tables = lift(path)
+    same = 0
+    differed = []
+    unwritten = []
+
+    for name, d in rules:
+        lines = []
+        try:
+            write_rule(name, obj, d, tables, lines)
+        except ValueError as why:
+            unwritten.append((name, str(why)))
+            continue
+        back, back_tables = read_rules(lines)
+        if len(back) != 1:
+            differed.append((name, "read back as %d rules" % len(back)))
+            continue
+        _n, d2, _o = back[0]
+        want = emit_one(name, d, obj, tables)
+        got = emit_one(name, d2, obj, back_tables)
+        if want == got:
+            same += 1
+        else:
+            differed.append((name, "%d bytes against %d"
+                             % (len(want), len(got))))
+
+    print("%-16s %3d rules, %3d round-tripped byte for byte" %
+          (obj, len(rules), same))
+    for name, why in unwritten:
+        print("    no written form: %s -- %s" % (name, why))
+    for name, why in differed:
+        print("    differed: %s -- %s" % (name, why))
+    return not (differed or unwritten)
+
+
+def main():
+    if len(sys.argv) < 2:
+        print(__doc__.strip())
+        return 2
+    what = sys.argv[1]
+
+    if what == "write":
+        obj = sys.argv[2]
+        rules, tables = lift(os.path.join(OBJECTS, obj))
+        out = []
+        for name, d in rules:
+            write_rule(name, obj, d, tables, out)
+            out.append("")
+        print("\n".join(out))
+        return 0
+
+    if what == "read":
+        rules, _t = read_rules(open(sys.argv[2]))
+        print("%d rules read" % len(rules))
+        return 0
+
+    if what == "check":
+        ok = True
+        for obj in sys.argv[2:]:
+            ok = check(obj) and ok
+        return 0 if ok else 1
+
+    if what == "check-all":
+        ok = True
+        for obj in sorted(f for f in os.listdir(OBJECTS)
+                          if f.endswith(".obj")):
+            path = os.path.join(OBJECTS, obj)
+            if not any(dl.is_rule(i) for _n, i in dl.read_functions(path)):
+                continue
+            ok = check(obj) and ok
+        return 0 if ok else 1
+
+    print(__doc__.strip())
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())
