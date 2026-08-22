@@ -442,8 +442,20 @@ class Decoder:
         if mnem in ("pushl", "push"):
             # A push and an immediate pop is how the compiler writes a small
             # constant into a register.
+            #
+            # Unless something jumps at the pop. A switch arm that wants a
+            # different constant in the same register is written as its own
+            # push and a jump to the pop of the arm below it, so the pop is a
+            # landing place and folding the pair away takes it out from under
+            # the jump: the arm that jumped then arrives past it and the
+            # register keeps whatever it happened to hold. That was one wrong
+            # fricative amplitude in the German /r/, and nothing else in
+            # eighty-one cases of English, which is how long it went unseen.
+            # Both halves are kept where that happens; the push and the popreg
+            # do between them what the fold would have done in one.
             if i < len(it) and it[i][2] in ("popl", "pop") \
-                    and it[i][3].startswith("%") and ops.startswith("$"):
+                    and it[i][3].startswith("%") and ops.startswith("$") \
+                    and it[i][0] not in self.targets and it[i][1] is None:
                 v = ("imm", int(ops.lstrip("$"), 0))
                 self.put(it[i][3], v)
                 self.emit(("load", "movl", v, it[i][3]))

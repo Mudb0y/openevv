@@ -20,7 +20,11 @@ AT(rpta, 0x0050);
 AT(vars, 0x0068);
 AT(stack, 0x006c);
 
-typedef char delta_state_is_0x1088[sizeof(delta_state) == DELTA_STATE_BYTES ? 1 : -1];
+/* The named fields stop where the language's own cells start. How far the
+   cells run is the language's to say and is not a number this file can
+   know, so what is held here is the boundary rather than the whole. */
+typedef char delta_state_ends_at_the_cells[sizeof(delta_state) == DG_BASE
+                                           ? 1 : -1];
 typedef char delta_pta_is_16[sizeof(delta_pta) == 16 ? 1 : -1];
 typedef char delta_tpos_is_16[sizeof(delta_tpos) == 16 ? 1 : -1];
 /* The language's own description of itself. Nothing compiled from a rule
@@ -4438,6 +4442,30 @@ int forall_adv_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
         return 1;
 
     v->scan_rev = 0;
+
+    if (!vscanadv(d, 1, 0))
+        return 0;
+
+    clearDeltaStackBack(d);
+    EVV_AT(delta_stack *, d->stack)->unknown_9c = 0;
+    v->testing = 1;
+    d->unknown_3c = bound;
+    tok->value = v->scan_ptr;
+    return 2;
+}
+
+/* The same rightwards. The original's two are the same function but for the
+   direction it sets, and nothing in English ever calls this one; German
+   does, which is how it came to be written. */
+int forall_adv_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
+                 uint8_t f, delta_token *tok)
+{
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
+
+    if (!for_loop_preamble(d, tag, loop, f, tok))
+        return 1;
+
+    v->scan_rev = 1;
 
     if (!vscanadv(d, 1, 0))
         return 0;

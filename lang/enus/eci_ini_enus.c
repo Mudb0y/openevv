@@ -4,15 +4,15 @@
  * of 0xff on the end. Lines are separated by a nought rather than a newline,
  * which is why the reader in eci_iniread.c stops on either.
  *
- * Lifted byte for byte out of the original rather than retyped, because the
- * reader's arithmetic depends on the exact separators.
+ * Lifted byte for byte out of the original by tools/lift-ini.py rather than
+ * retyped, because the reader's arithmetic depends on the exact separators.
  */
 
 #include <stdint.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
 
-const char eciIni[3145] = {
+const char enus_eciIni[3145] = {
     91, 76, 97, 110, 103, 117, 97, 103, 101, 73, 110, 100, 101, 112, 101, 110,
     100, 101, 110, 116, 93, 0, 68, 101, 115, 99, 95, 70, 105, 108, 116, 101,
     114, 48, 61, 73, 66, 77, 32, 83, 83, 77, 76, 32, 70, 105, 108, 116,
@@ -212,7 +212,13 @@ const char eciIni[3145] = {
     72, 122, 95, 49, 95, 48, 0, 255, 0,
 };
 
-const int32_t eciIniSize = 3145;
+const int32_t enus_eciIniSize = 3145;
 
-ALIAS("?eciIni@@3QBDB", "eciIni");
-ALIAS("?eciIniSize@@3HB", "eciIniSize");
+/* Which language this build has in it, and what the engine
+   array calls the copy linked into the image. The original
+   spells both into getLibraryName, which answers with the
+   name only when it is asked about this language; here they
+   are data, so that src/eci_engarray.c is the same code
+   whichever language is built beside it. */
+const int32_t enus_eci_library_lang = 0x10000;
+const char enus_eci_library_name[] = "Static Engine ENU";

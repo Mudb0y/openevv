@@ -24,8 +24,15 @@ text="The quick brown fox jumps over the lazy dog."
 out=$(mktemp) || exit 1
 trap 'rm -f "$out"' EXIT
 
+# A Windows binary runs itself on Windows and wants Wine in front of it
+# anywhere else.
+case $(uname -s 2>/dev/null) in
+MINGW*|MSYS*|CYGWIN*) PE= ;;
+*)                    PE=wine ;;
+esac
+
 case $bin in
-*.exe) wine "$bin" -o "$out" "$text" >/dev/null 2>&1 ;;
+*.exe) $PE "$bin" -o "$out" "$text" >/dev/null 2>&1 ;;
 *)     "$bin" -o "$out" "$text" >/dev/null 2>&1 ;;
 esac
 

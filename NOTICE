@@ -13,13 +13,17 @@ covers.
 IBM's
 -----
 
-Everything in `lang/enus` is transcribed out of IBM's Embedded ViaVoice
-objects. The rules as bytecode, the constants they read, the statement and
-field tables, the lookup sets, the variable declarations, the voice presets and
-the dictionary, and where the engine's arithmetic depends on the exact bytes
-they are the exact bytes. The rule names in `lang/enus/delta_rules.h` and
-`lang/enus/delta_rules_shim.c` are IBM's names, because they are the names its
-own compiler left in the objects.
+Everything under `lang` is transcribed out of IBM's Embedded ViaVoice objects:
+`lang/enus` is US English and `lang/dede` is German, and any language added
+later will be the same. The rules as bytecode, the constants they read, the
+statement and field tables, the lookup sets, the variable declarations, the
+settings the engine carries in its own image, the voice presets and the
+dictionary, and where the engine's arithmetic depends on the exact bytes they
+are the exact bytes. The rule names in each directory's
+`delta_rules_<lang>.h` and `delta_rules_shim_<lang>.c` are IBM's names,
+because they are the names its own compiler left in the objects. The
+language in front of each is ours, and is there so that two languages can be
+linked into one program.
 
 That data is IBM's work, not ours. The MIT licence does not cover it and we are
 in no position to license it to anyone. The SDK it was read out of says as much
@@ -50,7 +54,7 @@ IBM's Embedded ViaVoice 4.3 SDK for Windows, which IBM still serves at
     https://public.dhe.ibm.com/software/pervasive/tools/viavoice/sdk/evvWXP.exe
 
 `docs/building.md` says what to do with it, and every tool that reads it is in
-`tools`, so anything in `lang/enus` can be produced again from IBM's own file
+`tools`, so anything under `lang` can be produced again from IBM's own file
 rather than taken on trust.
 
 Names

@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "evv_abi.h"
+#include "delta_lang.h"
 #include "speak.h"
 
 typedef struct OldInst OldInst;
@@ -29,7 +30,12 @@ enum ECIMessage { eciWaveformBuffer, eciPhonemeBuffer, eciIndexReply };
 enum ECICallbackReturn { eciDataNotProcessed, eciDataProcessed, eciDataAbort };
 
 /* The engine's parameters, and a voice's. Only the few this needs. */
-enum { P_REAL_WORLD_UNITS = 8 };
+enum { P_REAL_WORLD_UNITS = 8, P_LANGUAGE = 9 };
+
+/* How many languages the window will offer. A build has one or two today;
+   the API's own answer is a count and a list, so this is only the size of
+   the array they are read into. */
+#define LANGS_MAX 32
 enum { V_GENDER, V_HEAD_SIZE, V_PITCH, V_FLUCTUATION, V_ROUGHNESS,
        V_BREATHINESS, V_SPEED, V_VOLUME, V_COUNT };
 
@@ -64,7 +70,11 @@ static HWND     dlg;
 static char    *opening;      /* what the command line put in the box */
 static int      say_at_once;  /* and whether it asked for it to be spoken */
 static OldInst *engine;
-static int      voices[9][V_COUNT];   /* what each preset is set to, read once */
+static uint32_t langs[LANGS_MAX];     /* what this build has in it */
+static int      nlangs;
+static int      lang_now;             /* which of them is being spoken */
+static const char *wanted;            /* what the command line asked for */
+static int      voices[9][V_COUNT];   /* the language's eight presets */
 
 static short    frame[FRAME];         /* what the engine fills */
 static HWAVEOUT wave;
@@ -361,6 +371,74 @@ static void show_voice(int v)
     SetDlgItemInt(dlg, IDC_VOLUME, (UINT)voices[v][V_VOLUME], FALSE);
 }
 
+/* What to call one in the list. The language module says: `enus' is what
+   the tree calls it, 0x10000 is IBM's number for it, and the name is the
+   third thing, which is there for exactly this. A language the engine has
+   but this build did not link -- which cannot happen, but the lookup can
+   answer nothing -- is offered under its number. */
+static const char *language_name(uint32_t id, char *room, size_t n)
+{
+    const delta_language *l = delta_lang_by_id((int32_t)id);
+
+    if (l != 0 && l->name != 0)
+        return l->name;
+    _snprintf(room, n, "0x%lx", (unsigned long)id);
+    room[n - 1] = 0;
+    return room;
+}
+
+/* Which one `/lang something' meant: its tag, its name or its number, so
+   that `/lang dede', `/lang German' and `/lang 0x40000' all work. Answers
+   -1 for a language this build does not have, and the window then opens in
+   whichever the engine picked. */
+static int language_asked_for(const char *want)
+{
+    int i;
+
+    if (want == 0 || *want == 0)
+        return -1;
+
+    for (i = 0; i < nlangs; i++) {
+        const delta_language *l = delta_lang_by_id((int32_t)langs[i]);
+        char                  num[16];
+
+        _snprintf(num, sizeof num, "0x%lx", (unsigned long)langs[i]);
+        if (_stricmp(want, num) == 0
+            || (l != 0 && l->tag != 0 && _stricmp(want, l->tag) == 0)
+            || (l != 0 && l->name != 0 && _stricmp(want, l->name) == 0))
+            return i;
+    }
+    return -1;
+}
+
+/* The eight voices belong to the language, so they are read again whenever
+   it changes: each language has its own presets and they are not the same
+   numbers. */
+static void read_voices(void)
+{
+    int v, i;
+
+    for (v = 1; v <= 8; v++)
+        for (i = 0; i < V_COUNT; i++)
+            voices[v][i] = vc_getVoiceParam(engine, v, i);
+}
+
+/* Speak in another of the languages this build has. The engine takes a
+   language change on the instance it already has -- it is an engine change
+   underneath, which is the original's own arrangement -- so nothing here has
+   to be taken down and put back up. */
+static void set_language(int which)
+{
+    if (which < 0 || which >= nlangs || engine == 0)
+        return;
+
+    ev_setParam(engine, P_LANGUAGE, (int32_t)langs[which]);
+    lang_now = which;
+    read_voices();
+    show_voice((int)SendDlgItemMessage(dlg, IDC_VOICE,
+                                       CB_GETCURSEL, 0, 0) + 1);
+}
+
 static INT_PTR CALLBACK on_dialog(HWND w, UINT msg, WPARAM wp, LPARAM lp)
 {
     switch (msg) {
@@ -378,6 +456,22 @@ static INT_PTR CALLBACK on_dialog(HWND w, UINT msg, WPARAM wp, LPARAM lp)
             }
         }
         SendDlgItemMessage(w, IDC_VOICE, CB_SETCURSEL, 0, 0);
+        {
+            int i;
+
+            for (i = 0; i < nlangs; i++) {
+                char room[32];
+
+                SendDlgItemMessageA(w, IDC_LANG, CB_ADDSTRING, 0,
+                                    (LPARAM)language_name(langs[i], room,
+                                                          sizeof room));
+            }
+            SendDlgItemMessage(w, IDC_LANG, CB_SETCURSEL, lang_now, 0);
+            /* Left there but not to be argued with when there is only the
+               one: a list of one is a choice nobody has. */
+            if (nlangs < 2)
+                EnableWindow(GetDlgItem(w, IDC_LANG), FALSE);
+        }
         show_voice(1);
         SetDlgItemTextA(w, IDC_TEXT, (opening != 0 && *opening != 0)
                         ? opening
@@ -405,6 +499,24 @@ static INT_PTR CALLBACK on_dialog(HWND w, UINT msg, WPARAM wp, LPARAM lp)
             if (HIWORD(wp) == CBN_SELCHANGE)
                 show_voice((int)SendDlgItemMessage(w, IDC_VOICE,
                                                    CB_GETCURSEL, 0, 0) + 1);
+            return TRUE;
+        case IDC_LANG:
+            /* Not while something is being said: the engine is spoken to
+               from one thread, and the worker is the one holding it. */
+            if (HIWORD(wp) == CBN_SELCHANGE) {
+                int which = (int)SendDlgItemMessage(w, IDC_LANG,
+                                                    CB_GETCURSEL, 0, 0);
+
+                if (speaking) {
+                    SendDlgItemMessage(w, IDC_LANG, CB_SETCURSEL, lang_now, 0);
+                    status("not while it is speaking");
+                } else if (which != lang_now) {
+                    char room[32];
+
+                    set_language(which);
+                    status(language_name(langs[lang_now], room, sizeof room));
+                }
+            }
             return TRUE;
         case IDCANCEL:
             PostMessage(w, WM_CLOSE, 0, 0);
@@ -443,28 +555,35 @@ static INT_PTR CALLBACK on_dialog(HWND w, UINT msg, WPARAM wp, LPARAM lp)
 
 static int engine_start(void)
 {
-    uint32_t langs[32];
-    int      n = 32;
-    int      v, i;
+    int n = LANGS_MAX;
 
     evv_port_start();
     evvRunStaticInitialisers();
 
     if (eo_getAvailableLanguages(langs, &n) || n < 1)
         return 0;
-    engine = eo_new();
+    nlangs = n;
+
+    /* The one asked for on the command line, if this build has it, and
+       otherwise whichever the engine picks, which is the first one linked
+       in. */
+    lang_now = language_asked_for(wanted);
+    if (lang_now >= 0)
+        engine = eo_newEx((int32_t)langs[lang_now]);
+    else
+        engine = eo_new();
     if (engine == 0)
-        engine = eo_newEx(langs[0]);
+        engine = eo_newEx((int32_t)langs[0]);
     if (engine == 0)
         return 0;
+    if (lang_now < 0)
+        lang_now = 0;
 
     /* A person's units, so the numbers in the window are words a minute and
        hertz rather than the engine's own scale. */
     ev_setParam(engine, P_REAL_WORLD_UNITS, 1);
 
-    for (v = 1; v <= 8; v++)
-        for (i = 0; i < V_COUNT; i++)
-            voices[v][i] = vc_getVoiceParam(engine, v, i);
+    read_voices();
 
     eo_registerCallback(engine, (void *)on_message, 0);
     return ev_setOutputBuffer(engine, FRAME, frame) != 0;
@@ -480,8 +599,29 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
 
     /* Anything on the command line starts in the text box, and /say asks for
        it to be spoken as soon as the window is up. That is how the sound is
-       tested without a mouse. */
+       tested without a mouse, and `/lang dede /say ...' is how that is done
+       in a build's other language. */
     opening = cmd;
+    /* The whole line may have been handed over as one quoted argument, so
+       what is in front of the first word comes off before it is read. */
+    while (opening != 0 && (*opening == ' ' || *opening == '"'))
+        opening++;
+    if (opening != 0 && strncmp(opening, "/lang", 5) == 0) {
+        char *at = opening + 5;
+        char *end;
+
+        while (*at == ' ' || *at == '"')
+            at++;
+        end = at;
+        while (*end != 0 && *end != ' ' && *end != '"')
+            end++;
+        if (*end != 0)
+            *end++ = 0;
+        wanted = at;
+        opening = end;
+        while (*opening == ' ')
+            opening++;
+    }
     if (opening != 0 && strncmp(opening, "/say", 4) == 0) {
         say_at_once = 1;
         opening += 4;

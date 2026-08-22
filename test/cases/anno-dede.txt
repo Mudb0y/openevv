@@ -1,0 +1,20 @@
+Normale Sprache `vs50 jetzt viel langsamer als zuvor.
+Lautstaerke `vv30 leiser, dann `vv90 wieder lauter.
+Tonhoehe `vb20 tief und `vb80 hoch in einem Satz.
+Stimme `v2 zwei, `v5 fuenf, und `v1 zurueck zu eins.
+Eine Pause `0 kurz und `4 lang zwischen Woertern.
+Rauheit `vr40 und Behauchtheit `vf60 geaendert.
+Ein woertlicher \`Backtick soll als Text gesprochen werden.
+Tempo mit Namen `vsfast und dann wieder `vsslow.
+Kopfgroesse `vh30 dann `vh70 in derselben Zeile.
+Geschlecht `vg1 und `vg0 im Wechsel.
+Vor `ui"Marke eins" und nach der Indexmarke.
+Ton `aud"beep" Markierung mitten in einer Zeile.
+`vs40 Eine Annotation gleich ganz am Anfang.
+Eine Zeile, die mit einer Annotation endet `vs60
+Fehlerhaft `vzz und `q und `v999 alle in einer Zeile.
+Zwei `vs30`vv40 Annotationen ohne etwas dazwischen.
+`ui"a"`ui"b" zwei Marken ohne etwas dazwischen.
+Eine nicht beendete `ui"Marke, die nie schliesst
+Gemischt `v3 Stimme `vs70 Tempo `vv50 Lautstaerke zusammen.
+Tabulator	und Zeilenumbruch mit `vb40 einer Aenderung.

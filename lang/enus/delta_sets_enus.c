@@ -18960,31 +18960,31 @@ static const char dictfile[] = "ecienus.ddl";
    writes to them, and it is given room for more than the language declares,
    which is what the original allocates. The stores themselves are handed
    over as they are. */
-void set_dict_new(delta_state *d)
+void enus_set_dict_new(delta_state *d)
 {
     delta_low_region(setent_store, sizeof setent_store);
     d->set_store = EVV_REF(delta_low_copy(setent_all, sizeof setent_all));
 }
 
-void set_dict_delete(delta_state *d)
+void enus_set_dict_delete(delta_state *d)
 {
     if (d != 0)
         d->set_store = EVV_REF(0);
 }
 
-void act_dict_new(delta_state *d)
+void enus_act_dict_new(delta_state *d)
 {
     delta_low_region(actent_store, sizeof actent_store);
     d->act_store = EVV_REF(delta_low_copy(actent_all, sizeof actent_all));
 }
 
-void act_dict_delete(delta_state *d)
+void enus_act_dict_delete(delta_state *d)
 {
     if (d != 0)
         d->act_store = EVV_REF(0);
 }
 
-void link_new(delta_state *d)
+void enus_link_new(delta_state *d)
 {
     d->fence_room = 25;
 
@@ -19016,7 +19016,7 @@ void link_new(delta_state *d)
     memcpy(EVV_AT(uint8_t *, d->act_table), act_table, sizeof act_table);
 }
 
-void link_delete(delta_state *d)
+void enus_link_delete(delta_state *d)
 {
     if (d == 0)
         return;

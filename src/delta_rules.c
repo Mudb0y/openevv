@@ -24,10 +24,28 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "delta_rules.h"
+#include "delta.h"
 #include "delta_rules_c.h"
 #include "evv_land.h"
 #include "evv_arena.h"
+
+/* Every table below belongs to a language, and which language is what the
+   machine says. delta_run_rule sets it from the machine it was handed and
+   puts back what was there, so everything under it -- the interpreter, a
+   rule written as C, and every primitive either calls -- reads the right
+   one without being told. Written as names rather than as reaches so that
+   the interpreter reads as it did when there was only ever one language. */
+#define L                      (delta_lang_now())
+#define delta_rules            (L->rules)
+#define delta_rule_count       (L->rule_count)
+#define delta_rule_code        (L->rule_code)
+#define delta_rule_imm         (L->rule_imm)
+#define delta_rule_map         (L->rule_map)
+#define delta_rule_entry       (L->rule_entry)
+#define delta_rule_entry_name  (L->rule_entry_name)
+#define delta_rule_setjmp      (L->rule_setjmp)
+#define delta_rule_native      (L->rule_native)
+#define DELTA_RULE_FRAME_MAX   (L->frame_max)
 
 enum {
     OP_CALL, OP_JUMP, OP_BRANCH, OP_CMP, OP_ALU2, OP_ALU1, OP_LOAD,
@@ -871,9 +889,9 @@ static int32_t run_bytecode(void *state, const delta_rule *r,
 #endif
 
 /* The rules written as C, read out by rule number. Built on the first call,
-   because how many rules there are is the language module's to say. */
-static delta_rule_cfn *by_number;
-static int             by_number_done;
+   because how many rules there are is the language module's to say, and
+   kept by the language rather than here, because there may be more than one
+   and each has its own. */
 
 int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
                        int nargs)
@@ -881,8 +899,18 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
     const delta_rule *was;
     const delta_rule_c *w;
     delta_rule_cfn     fn;
-    int n = (int)(r - delta_rules);
+    delta_rule_cfn    *by_number;
     int32_t answer;
+    int n;
+
+    /* Which language, before anything reads a table. The machine says: it
+       was made by one language and remembers which, and a rule of another
+       cannot reach it, because nothing hands one over. What was in force
+       goes back at the end, since a rule may be run from inside a callback
+       of a machine speaking something else. */
+    const delta_language *was_lang = delta_lang_set(delta_lang_of(state));
+
+    n = (int)(r - delta_rules);
 
     if (delta_rule_trace < 0) {
         const char *e = getenv("DELTA_RULE_TRACE");
@@ -919,7 +947,7 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
        Which rules are written as C is settled at link time, so the table is
        read into an index by rule number once. Scanning it instead cost every
        call a walk over the whole of it. */
-    if (!by_number_done) {
+    if (*L->rule_native_by_number == 0) {
         const delta_rule_c *t;
 
         by_number = calloc((size_t)delta_rule_count, sizeof(*by_number));
@@ -927,8 +955,12 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
             for (t = delta_rule_native; t->fn != 0; t++)
                 if (t->rule >= 0 && t->rule < delta_rule_count)
                     by_number[t->rule] = t->fn;
-        by_number_done = 1;
+        /* A language with none of its rules written as C gets an index of
+           nulls, which is what says it has been looked at. The walk below
+           is what answers if there was no room for one. */
+        *L->rule_native_by_number = by_number;
     }
+    by_number = *L->rule_native_by_number;
 
     if (by_number != 0)
         fn = (n >= 0 && n < delta_rule_count) ? by_number[n] : 0;
@@ -948,6 +980,7 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
         fprintf(stderr, "# %s left with %08x\n", r->name, (unsigned)answer);
         fflush(stderr);
     }
+    delta_lang_set(was_lang);
     return answer;
 }
 

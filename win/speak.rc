@@ -25,6 +25,13 @@ BEGIN
     COMBOBOX        IDC_VOICE, 40, 122, 110, 80,
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
+    /* Only worth choosing when the build has more than one language in it;
+       with one it is filled with that one and left disabled, rather than
+       hidden, so that the window is the same shape either way. */
+    LTEXT           "L&anguage:", -1, 160, 124, 40, 8
+    COMBOBOX        IDC_LANG, 205, 122, 104, 80,
+                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
     LTEXT           "&Rate, words a minute:", -1, 7, 142, 90, 8
     EDITTEXT        IDC_RATE, 100, 140, 40, 12, ES_NUMBER | WS_TABSTOP
 

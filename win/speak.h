@@ -5,6 +5,7 @@
 
 #define IDC_TEXT    1000
 #define IDC_VOICE   1001
+#define IDC_LANG    1009
 #define IDC_RATE    1002
 #define IDC_PITCH   1003
 #define IDC_VOLUME  1004

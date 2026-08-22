@@ -96,9 +96,9 @@ class SynthDriver(SynthDriver):
 		self._rateBoost = False
 		self._abbreviations = False
 		self._voiceTags = False
-		self._voice = str(_openevv.VOICE_FIRST)
 		self._engine = _openevv.Engine(self._onIndexReached)
 		self._engine.open()
+		self._voice = self._voiceId(self._engine.language, _openevv.VOICE_FIRST)
 		log.debug("openevv: engine version %s" % self._engine.version)
 
 	def terminate(self):
@@ -111,6 +111,9 @@ class SynthDriver(SynthDriver):
 		batch = []
 		text = []
 		spelling = False
+		#: Which language the text being built is in, since a sequence may
+		#: change it more than once and each change is against the last.
+		speaking = self._engine.language
 		#: Whether anything in this sequence is meant to make a sound. A
 		#: sequence of nothing but commands is silent because it should be, and
 		#: the engine layer is told so rather than complaining about it.
@@ -152,9 +155,23 @@ class SynthDriver(SynthDriver):
 			elif isinstance(item, VolumeCommand):
 				text.append("`vv%d " % self._volumeToParam(item.newValue))
 			elif isinstance(item, LangChangeCommand):
-				# US English is the only language in the library, so there is
-				# nothing to switch to and nothing to say about it.
-				pass
+				# A document saying part of itself is in another language.
+				# Where the library has that language it is switched to, in
+				# the order the sequence asks for it, so a German quotation
+				# in an English page is read as German rather than as
+				# English with German spelling.
+				#
+				# The switch has to be flushed first: it is a call and not an
+				# annotation, so text already handed over would otherwise be
+				# spoken in the language that came after it. The preset is
+				# copied again because a language change replaces all eight
+				# of its settings.
+				language = self._languageFor(item.lang)
+				if language is not None and language != speaking:
+					flush()
+					batch.append((engine.setLanguage, (language,)))
+					batch.append((engine.copyVoice, (self._presetNow(),)))
+					speaking = language
 			else:
 				log.error("openevv: unknown speech: %s" % item)
 
@@ -289,28 +306,108 @@ class SynthDriver(SynthDriver):
 		self._voiceTags = enable
 
 	def _get_availableVoices(self):
+		"""One voice per language and preset.
+
+		A library may have several languages in it, and each has eight
+		presets of its own, so what the reader is offered is the pairs: the
+		language is what a document's own language is matched against and
+		the preset is what it sounds like. A build with one language in it
+		offers the eight it always did, under the same identifiers as
+		before, so nothing a reader had chosen is lost.
+		"""
 		voices = OrderedDict()
-		for number, name in self._engine.voiceNames.items():
-			voices[str(number)] = VoiceInfo(str(number), name, "en_US")
+		for language in self._engine.languages:
+			names = self._engine.voiceNamesFor(language)
+			for number, name in names.items():
+				voices[self._voiceId(language, number)] = VoiceInfo(
+					self._voiceId(language, number),
+					"%s - %s" % (_openevv.nameOf(language), name),
+					_openevv.localeOf(language),
+				)
 		return voices
+
+	def _languageFor(self, locale):
+		"""Which of the library's languages a document's locale means.
+
+		A document says `de' or `de_DE' or `de-AT'; the library has one
+		German. So the whole locale is tried first, and then just the
+		language part of it, and anything the library does not have answers
+		nothing, which leaves the voice where it was.
+		"""
+		if not locale:
+			return None
+		want = str(locale).replace("-", "_")
+		short = want.split("_")[0].lower()
+		loose = None
+		for language in self._engine.languages:
+			have = _openevv.localeOf(language)
+			if have is None:
+				continue
+			if have.lower() == want.lower():
+				return language
+			if loose is None and have.split("_")[0].lower() == short:
+				loose = language
+		return loose
+
+	def _presetNow(self):
+		"""Which of the eight the reader has chosen, whatever language it was
+		chosen in. A language change keeps the preset and changes what it
+		sounds like, which is what a person expects of a voice."""
+		try:
+			return self._splitVoiceId(self._voice)[1]
+		except (TypeError, ValueError):
+			return _openevv.VOICE_FIRST
+
+	def _voiceId(self, language, number):
+		"""What a voice is called.
+
+		Where the library has one language the name is the preset's number
+		and nothing else, which is what it has always been and what a
+		reader's saved choice holds. Where it has several the language goes
+		in front, because the same eight numbers mean eight different
+		voices in each.
+		"""
+		if len(self._engine.languages) < 2:
+			return str(number)
+		return "%d:%d" % (language, number)
+
+	def _splitVoiceId(self, value):
+		"""(language, preset) for a voice, however it is written. A bare
+		number is the language in force, which is what a configuration
+		written before there was more than one holds."""
+		text = str(value)
+		if ":" in text:
+			language, number = text.split(":", 1)
+			return int(language), int(number)
+		return self._engine.language, int(text)
 
 	def _get_voice(self):
 		return self._voice
 
 	def _set_voice(self, value):
-		if value not in self._engine.voiceNames and value not in (
-			str(n) for n in self._engine.voiceNames
-		):
+		try:
+			language, number = self._splitVoiceId(value)
+		except ValueError:
 			return
-		self._voice = str(value)
+		if language not in self._engine.languages:
+			return
+		if number not in self._engine.voiceNamesFor(language):
+			return
+
+		self._voice = self._voiceId(language, number)
 		# Copying a preset over the voice in force replaces every one of its
 		# eight settings, so whatever the reader had chosen is gone; NVDA sets
 		# rate, pitch and the rest again after a voice change, which is what
-		# puts them back.
-		self._engine.post([(self._engine.copyVoice, (int(value),))])
+		# puts them back. A language change does the same thing for the same
+		# reason, which is why the preset is copied after it and not before.
+		batch = []
+		if language != self._engine.language:
+			batch.append((self._engine.setLanguage, (language,)))
+		batch.append((self._engine.copyVoice, (number,)))
+		self._engine.post(batch)
 
 	def _get_language(self):
-		return "en_US"
+		return _openevv.localeOf(self._engine.language)
 
 	def _post(self, which, value):
 		self._engine.post([(self._engine.setVoiceParam, (which, value))])

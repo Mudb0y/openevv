@@ -54,7 +54,7 @@ int32_t vmeminit(delta_state *d)
         return 0;
     s->names_depth = -1;
 
-    viasizes();
+    delta_lang_of(d)->sizes();
     return 1;
 }
 

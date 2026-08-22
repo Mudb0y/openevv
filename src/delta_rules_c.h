@@ -12,6 +12,7 @@
 #include <stdint.h>
 
 #include "evv_land.h"
+#include "delta_lang.h"
 
 /* The four flags the machine keeps. A rule written as C keeps them the same
    way, and works them with the same code, or a comparison after an operation
@@ -28,14 +29,10 @@ int     delta_condition(const delta_flags *f, int cond);
    once it has said what it is about to run, so a rule can be swapped between
    the two without anything that calls it knowing, and the two can be set
    against each other by speaking the same text twice. */
-typedef int32_t (*delta_rule_cfn)(void *state, const int32_t *args, int nargs);
-
-typedef struct {
+typedef struct delta_rule_c {
     int            rule;
     delta_rule_cfn fn;
 } delta_rule_c;
-
-extern const delta_rule_c delta_rule_native[];
 
 /* The call a rule makes, whichever way it is being run. Both go through here
    so that what a run says it did is the same either way, which is what a rule
@@ -46,7 +43,8 @@ int32_t delta_rule_direct(int which, const int32_t *a, int n);
    delta_syms_bind copies the stores into the arena and fills this in; a rule
    naming a constant reads it here, whichever way the rule is being run. See
    src/delta_syms.c for why the addresses in the program will not do. */
-extern const int32_t *delta_sym_ref;
+/* Whichever language's, bound once the arena exists. */
+#define delta_sym_ref (*delta_lang_now()->sym_ref)
 void delta_syms_bind(void);
 
 /* A copy, in the arena, of something that lives in the program. The
