@@ -26,7 +26,7 @@ A change made for German is not finished until the English suite has been run ag
 
 A marker case that differs once and not again is IBM's binary being unsteady, not a change in ours. Run it again, and if in doubt hash both sides over several runs -- it is the reference that varies.
 
-Samples are only comparable across processes. The engine does not say a sentence in the same samples twice running on one instance: the same 38,423 samples come out under a different hash each time. Every harness here speaks its case in a process of its own, which is why they can compare bytes at all; a check that speaks twice and compares has to compare lengths, as `nvda/test/windows.py` does.
+The engine's second utterance is not its first, and that is faithful rather than random. Saying the same sentence twice on one instance gives 38,423 samples both times and 30,495 of them differ: the machine's state has moved on. It is entirely deterministic -- three processes give the same first utterance and the same second one, to the hash -- and IBM's own engine does it too, to the same 30,495 samples, with ours matching its second utterance byte for byte. So bytes are comparable, including a second utterance, as long as both sides have spoken the same history. What is not comparable is a second utterance against a first. `probe` and the reference both take a `t` in their mode argument, which says the same text twice and writes the second beside the first; that is what settled this.
 
 ## What not to tidy
 

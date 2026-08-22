@@ -283,6 +283,39 @@ int main(int argc, char **argv)
     write_wav(out, 11025);
     printf("speak: wrote %s\n", out);
 
+    /* A t says the same thing again on the same instance and writes it
+       beside the first, which is the only way to ask whether the engine
+       repeats itself. Ours does not; the question is whether IBM's does,
+       because every case the suite compares is the first utterance of a
+       fresh process and a second one has never been held against anything. */
+    if (argc > 3 && strchr(argv[3], 't')) {
+        char again[1024];
+        size_t first = nsamples;
+
+        snprintf(again, sizeof again, "%s.again.wav", out);
+        nsamples = 0;
+        if (!eciAddText(h, text) || !eciSynthesize(h))
+            printf("speak: the second utterance was refused\n");
+        else {
+            /* Pumped the same way the first one is: asking whether it is
+               still speaking is what drains the queue, and synchronizeSynth
+               does nothing here. Driving the two differently is what made
+               the first attempt at this say the engine had gone silent. */
+            int i;
+
+            for (i = 0; i < 3000 && eciSpeaking(h); i++)
+                Sleep(10);
+            printf("speak: %lu samples the second time\n",
+                   (unsigned long)nsamples);
+            if (nsamples != 0) {
+                write_wav(again, 11025);
+                printf("speak: wrote %s\n", again);
+            }
+        }
+        printf("speak: first %lu, second %lu\n",
+               (unsigned long)first, (unsigned long)nsamples);
+    }
+
     eciDelete(h);
     return 0;
 }

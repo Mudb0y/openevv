@@ -297,6 +297,36 @@ int main(int argc, char **argv)
     }
 
     eo_synchronizeSynth(h);
+    /* A t says the same thing again on the same instance and writes it beside
+       the first, which is what the reference's own t does, so the two can be
+       held against each other. Every case the suite compares is the first
+       utterance of a fresh process; this is how a second one gets compared. */
+    if (argc > 3 && strchr(argv[3], 't')) {
+        size_t first = nsamples;
+        char again[1024];
+        int i;
+
+        snprintf(again, sizeof again, "%s.again.wav", out);
+        write_wav(out, 11025);
+        printf("speak: %lu samples to %s\n", (unsigned long)nsamples, out);
+
+        nsamples = 0;
+        if (!et_addText(h, text) || !et_synthesize(h)) {
+            printf("speak: the second utterance was refused\n");
+        } else {
+            for (i = 0; i < 3000 && eo_speaking(h); i++)
+                nap(10);
+            write_wav(again, 11025);
+            printf("speak: %lu samples to %s\n",
+                   (unsigned long)nsamples, again);
+        }
+        printf("speak: first %lu, second %lu\n",
+               (unsigned long)first, (unsigned long)nsamples);
+        es_delete(h);
+        evv_port_finish();
+        return 0;
+    }
+
     es_delete(h);
     evv_port_finish();
 

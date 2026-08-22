@@ -253,8 +253,14 @@ static void *evv_trampoline(void *p)
     free(s);
     entry(arg);
     /* The frame stack this thread took for the rules it ran. Nothing else will
-       give it back, and an instance is a thread. */
+       give it back, and an instance is a thread.
+
+       Not in the reference shim: that is this porting layer under IBM's own
+       engine, which keeps its frames its own way and never asks ours for one,
+       and it links none of evv_arena.c to answer with. */
+#ifndef EVV_IBM_NAMES
     evv_frame_done();
+#endif
     return NULL;
 }
 

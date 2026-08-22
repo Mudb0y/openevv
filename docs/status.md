@@ -76,6 +76,13 @@ Three things in the rules cannot be recovered and are not going to be. The globa
 
 ## Known limits
 
+The suite compares one utterance per process, and until 22 August 2026 that was the only utterance anything had ever compared. It is no longer: `probe` and the reference both take a `t` in their mode argument, which says the same text a second time on the same instance and writes it beside the first.
+
+What that found is worth knowing before reading any byte comparison here. The second utterance is not the first -- 38,423 samples both times, 30,495 of them different -- because the machine's state has moved on. That is faithful: IBM's own engine differs across its two utterances to the same 30,495 samples, and ours matches IBM's *second* utterance byte for byte as well as its first. And it is deterministic: three processes give the same first utterance and the same second one, to the hash.
+
+So samples are comparable, a second utterance included, as long as both sides have spoken the same history; what cannot be compared is a second utterance against a first. An earlier note here said the engine produced a different hash each time, which was wrong -- the difference is between the first utterance and the second, not between one run and the next.
+
+
 The test suite needs IBM's objects, because it compares against IBM's binary, and on anything but Windows it needs Wine to run that binary. Both are obtainable: `docs/building.md` says where IBM's SDK still is. Without them there is no automatic check that the audio is right, only `tools/say.sh` to listen with and `tools/delta-check.sh` to hold the two forms of a rule against each other.
 
 That last one compares every rule entered and every call made, with their arguments, over the seven plain cases taken one at a time. Three kinds of line are left out and all three are the interpreter's alone: the stores it makes, which a rule written as C makes for itself; its remark about the argument area being a different depth than the compiled code expected; and addresses in the arena, which differ because a rule written as C takes a smaller frame on purpose.
