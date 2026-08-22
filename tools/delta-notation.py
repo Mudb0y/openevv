@@ -45,6 +45,41 @@ de = load("delta_emit", "tools/delta-emit.py")
 
 OBJECTS = os.path.join(ROOT, "analysis", "enus")
 
+# ---- registers ----------------------------------------------------------
+#
+# The machine has eight, and the lifter still calls them by the x86 names the
+# compiler used. Here they are numbered, with a letter for how much of one is
+# meant: bare for all of it, `w' for the low half, `b' and `h' for the two
+# bytes of that half. The reader turns them back into the names the emitter
+# encodes, so nothing downstream has to know about this.
+
+REG_FULL = ("eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi")
+REG_TEXT = {}
+for _i, _n in enumerate(REG_FULL):
+    REG_TEXT[_n] = "r%d" % _i
+for _n, _i in (("ax", 0), ("cx", 1), ("dx", 2), ("bx", 3),
+               ("sp", 4), ("bp", 5), ("si", 6), ("di", 7)):
+    REG_TEXT[_n] = "r%dw" % _i
+for _n, _i in (("al", 0), ("cl", 1), ("dl", 2), ("bl", 3)):
+    REG_TEXT[_n] = "r%db" % _i
+for _n, _i in (("ah", 0), ("ch", 1), ("dh", 2), ("bh", 3)):
+    REG_TEXT[_n] = "r%dh" % _i
+REG_BACK = {v: "%" + k for k, v in REG_TEXT.items()}
+
+
+def put_reg(name):
+    n = str(name).lstrip("%")
+    if n not in REG_TEXT:
+        raise ValueError("no written form for the register %r" % (name,))
+    return REG_TEXT[n]
+
+
+def get_reg(text):
+    if text not in REG_BACK:
+        raise ValueError("no register called %r" % (text,))
+    return REG_BACK[text]
+
+
 # ---- operands -----------------------------------------------------------
 #
 # An operand is one or two words, never more, so a line can be read left to
@@ -72,11 +107,13 @@ def put_operand(o, out):
         return
     kind = o[0]
     if kind == "loaded":
-        out.extend(("reg", str(o[3])))
+        out.extend(("reg", put_reg(o[3])))
     elif kind == "indirect":
         out.append("ind")
         put_operand(o[1], out)
         out.append(str(o[2]))
+    elif kind == "reg":
+        out.extend(("reg", put_reg(o[1])))
     elif kind in TWO_WORD:
         out.extend((kind, str(o[1])))
     else:
@@ -91,6 +128,8 @@ def get_operand(w):
     if kind == "ind":
         inner = get_operand(w)
         return ("indirect", inner, int(w.pop(0)))
+    if kind == "reg":
+        return ("reg", get_reg(w.pop(0)))
     if kind in NAMED:
         return (kind, w.pop(0))
     if kind in NUMBERED:
@@ -124,7 +163,7 @@ def put_op(op, out, name_of):
     elif k == "popn":
         out.append(str(op[1]))
     elif k == "popreg":
-        out.append(str(op[1]))
+        out.append(put_reg(op[1]))
     elif k == "jump":
         out.extend(("to", name_of(op[1])))
     elif k == "branch":
@@ -136,7 +175,7 @@ def put_op(op, out, name_of):
     elif k == "load":
         out.append(str(op[1]))
         put_operand(op[2], out)
-        out.extend(("into", str(op[3])))
+        out.extend(("into", put_reg(op[3])))
     elif k == "store":
         out.append(str(op[1]))
         put_operand(op[2], out)
@@ -148,28 +187,28 @@ def put_op(op, out, name_of):
     elif k == "map":
         out.append(str(op[1]))
         put_operand(op[2], out)
-        out.extend(("into", str(op[3])))
+        out.extend(("into", put_reg(op[3])))
     elif k == "addk":
         out.append(str(op[1]))
         put_operand(op[2], out)
-        out.extend(("into", str(op[3])))
+        out.extend(("into", put_reg(op[3])))
     elif k == "scale":
         out.append(str(op[1]))
         put_operand(op[2], out)
         put_operand(op[3], out)
-        out.extend((str(op[4]), "into", str(op[5])))
+        out.extend((str(op[4]), "into", put_reg(op[5])))
     elif k == "mul":
         out.append(str(op[1]))
         put_operand(op[2], out)
         put_operand(op[3], out)
-        out.extend(("into", str(op[4])))
+        out.extend(("into", put_reg(op[4])))
     elif k == "div":
         out.append(str(op[1]))
         put_operand(op[2], out)
     elif k == "widen":
         out.append(str(op[1]))
     elif k == "setcc":
-        out.extend((str(op[1]), str(op[2])))
+        out.extend((str(op[1]), put_reg(op[2])))
     else:
         raise ValueError("operation %r has no written form" % (k,))
 
@@ -195,7 +234,7 @@ def get_op(w):
     if k == "popn":
         return ("popn", int(w.pop(0)))
     if k == "popreg":
-        return ("popreg", w.pop(0))
+        return ("popreg", get_reg(w.pop(0)))
     if k == "jump":
         word(w, "to")
         return ("jump", w.pop(0))
@@ -212,7 +251,7 @@ def get_op(w):
         kind = w.pop(0)
         a = get_operand(w)
         word(w, "into")
-        return ("load", kind, a, w.pop(0))
+        return ("load", kind, a, get_reg(w.pop(0)))
     if k == "store":
         kind = w.pop(0)
         a = get_operand(w)
@@ -228,32 +267,32 @@ def get_op(w):
         table = w.pop(0)
         a = get_operand(w)
         word(w, "into")
-        return ("map", table, a, w.pop(0))
+        return ("map", table, a, get_reg(w.pop(0)))
     if k == "addk":
         imm = int(w.pop(0))
         a = get_operand(w)
         word(w, "into")
-        return ("addk", imm, a, w.pop(0))
+        return ("addk", imm, a, get_reg(w.pop(0)))
     if k == "scale":
         imm = int(w.pop(0))
         a = get_operand(w)
         b = get_operand(w)
         n = int(w.pop(0))
         word(w, "into")
-        return ("scale", imm, a, b, n, w.pop(0))
+        return ("scale", imm, a, b, n, get_reg(w.pop(0)))
     if k == "mul":
         kind = w.pop(0)
         a = get_operand(w)
         b = get_operand(w)
         word(w, "into")
-        return ("mul", kind, a, b, w.pop(0))
+        return ("mul", kind, a, b, get_reg(w.pop(0)))
     if k == "div":
         kind = w.pop(0)
         return ("div", kind, get_operand(w))
     if k == "widen":
         return ("widen", w.pop(0))
     if k == "setcc":
-        return ("setcc", w.pop(0), w.pop(0))
+        return ("setcc", w.pop(0), get_reg(w.pop(0)))
     raise ValueError("no operation called %r" % (k,))
 
 
@@ -314,17 +353,24 @@ def write_rule(name, obj, d, tables, out):
         if label in at and at[label] != addr:
             raise ValueError("two blocks both called %s" % label)
         at[label] = addr
-    named = {addr: label for label, addr, _b in d.blocks}
+    # Blocks are numbered rather than named after the address they had in
+    # IBM's object. What the address was is kept on the line, because while
+    # rules are still being lifted it is the only way back to the
+    # disassembly; once the text is the source and nothing is lifted any
+    # more, the reader already ignores it and it can go.
+    numbered = {}
+    for i, (label, addr, _b) in enumerate(d.blocks):
+        numbered[addr] = "L%d" % i
 
     def name_of(text):
         addr = d.resolve(text)
-        if addr not in named:
+        if addr not in numbered:
             raise ValueError("branch to %r, which is not the start of a block"
                              % (text,))
-        return named[addr]
+        return numbered[addr]
 
-    for label, _addr, block in d.blocks:
-        out.append("label %s" % label)
+    for label, addr, block in d.blocks:
+        out.append("label %s was %s" % (numbered[addr], label))
         for op in block:
             words = []
             put_op(op, words, name_of)
