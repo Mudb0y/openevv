@@ -479,9 +479,26 @@ int32_t STDCALL ev_setParam(OldInst *h, int32_t which, int32_t value)
         v = (value == 1) ? 0 : 1;
 
     if (which == ENV_RATE) {
-        if (ev_setOutputToDevice(inst, value, OI_ENV(inst)[13],
-                                 OI_ENV(inst)[14], OI_ENV(inst)[15],
-                                 OI_ENV(inst)[16]))
+        /* Wherever the samples are going now, they have to go on going
+           there. Rebuilding as a device regardless is what this did before,
+           and for a caller that had registered a buffer with
+           eciSetOutputBuffer that was quietly fatal: ev_setOutputToDevice
+           hands the engine a null buffer on its way past WHERE_SAMPLES and
+           forgets the caller's, so the instance went on saying it was at the
+           new rate and never answered another sample. Nothing failed and
+           eciGetParam read back correctly, which is what made it hard to
+           see. ev_sendChangedEnvironment has always chosen on OI_WHERE; this
+           is the same choice. */
+        int made = 1;
+
+        if (OI_WHERE(inst) == WHERE_DEVICE)
+            made = ev_setOutputToDevice(inst, value, OI_ENV(inst)[13],
+                                        OI_ENV(inst)[14], OI_ENV(inst)[15],
+                                        OI_ENV(inst)[16]);
+        else if (OI_WHERE(inst) == WHERE_SAMPLES)
+            made = ev_setOutputToSampleCallback(inst, value);
+
+        if (made)
             OI_ENV(inst)[which] = value;
         else
             old = -1;
