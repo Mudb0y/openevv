@@ -12,20 +12,30 @@
 # written to be entered from two threads at once. So every call goes through a
 # queue to the thread made here.
 #
-# Nothing ever interrupts the engine. Cancelling stops the player and throws
-# the samples away while the utterance finishes synthesising into nothing. See
-# cancel for what that costs, which is real: it is why arrowing quickly through
-# a list waits about half a second on a long row.
+# Nothing ever interrupts the engine, and that is not a workaround waiting to be
+# replaced by something better. Cancelling stops the player and throws the
+# samples away while the utterance finishes synthesising into nothing.
 #
-# Answering eciDataAbort from the callback is the interface's own way to do
-# better, and it used to crash the engine and then leave it mute. Both of those
-# are fixed. It still does not work from here: with this drive loop -- eciSynthesize
-# then eciSynchronize -- answering abort kills the process on real Windows, with
-# or without an eciSpeaking poll afterwards, while test/interrupt.c does
-# twenty-five turns cleanly on the same machine. What that test does differently
-# is drive with eciSynchronizeSynth after polling eciSpeaking. So dropping this
-# is a change to how an utterance is driven and not a flag, and it wants
-# measuring: the cost above is worth about 490 ms a keystroke.
+# There is no cheaper way, and this was settled by measurement rather than
+# argument. All three routes the interface offers cost the same: on real
+# Windows, the wall clock from asking for silence to the first samples of the
+# next utterance is 477 ms letting it finish, 478 ms answering eciDataAbort from
+# the callback, and 488 ms calling eciStop from the cancelling thread. A cold
+# start on an idle engine is 128 ms and a cancel with nothing in flight costs
+# under a millisecond, so the whole of the difference is the utterance already
+# being spoken, and answering the abort stops the engine handing over buffers
+# without stopping it finishing the work.
+#
+# The reason is in the machine rather than the interface, and docs/status.md has
+# it: the language's rules build a shared structure as they go and later rules
+# assume the earlier ones finished it, so there is no point at which a rule can
+# be abandoned safely. Letting the unit of work finish is the only safe stop.
+# Six attempts at making the engine abandon one are recorded there, including
+# one that gave 459 rules their own give-up tail and still faulted.
+#
+# So the cost is the engine's and not this file's. What reduces it is making the
+# engine faster: building the language's rules as C rather than interpreting the
+# bytecode cuts it by about two thirds.
 #
 # Samples are held back until an index mark arrives, and then handed to the
 # player with a callback attached. The engine flushes a short buffer of its own
