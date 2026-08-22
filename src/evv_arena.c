@@ -586,6 +586,73 @@ int32_t evv_ref_checked(const void *p)
     return (int32_t)(uint32_t)v;
 }
 
+/* ---- what is still held ------------------------------------------------
+ *
+ * Everything the engine allocates comes from here, so anything an instance
+ * keeps after it has been deleted is a used block still on this list. Grouped
+ * by the allocation that asked and the size it got, a leak is the group whose
+ * count goes up by the same amount every time an instance is made and thrown
+ * away -- which is what tells the two apart from the blocks the process holds
+ * for its own life and rightly never gives back.
+ *
+ * `whence' is the low thirty-two bits of a return address. To turn one into a
+ * line, build without position independence -- `make CFLAGS=-no-pie' -- and
+ * hand it to addr2line; the engine has run that way and still does.
+ */
+void evv_arena_outstanding(const char *when)
+{
+    enum { GROUPS = 256 };
+    struct { uint32_t whence, size; long n; } g[GROUPS];
+    int used = 0, i, j;
+    unsigned long blocks = 0, bytes = 0;
+    head *b;
+
+    for (b = first; b != 0; b = next_block(b)) {
+        if (!b->used)
+            continue;
+        blocks++;
+        bytes += b->size;
+        for (i = 0; i < used; i++)
+            if (g[i].whence == b->whence && g[i].size == b->size)
+                break;
+        if (i < used) {
+            g[i].n++;
+        } else if (used < GROUPS) {
+            g[used].whence = b->whence;
+            g[used].size = b->size;
+            g[used].n = 1;
+            used++;
+        }
+    }
+
+    fprintf(stderr, "[arena] %s: %lu blocks, %lu bytes\n", when, blocks, bytes);
+
+    /* The heaviest groups first, since a leak of any size worth finding is
+       near the top of that list. */
+    for (j = 0; j < 20 && j < used; j++) {
+        int top = -1;
+        long most = -1;
+
+        for (i = 0; i < used; i++)
+            if (g[i].n >= 0 && (long)g[i].n * g[i].size > most) {
+                most = (long)g[i].n * g[i].size;
+                top = i;
+            }
+        if (top < 0)
+            break;
+        fprintf(stderr, "[arena]   %6ld x %8u from %08x = %ld bytes\n",
+                g[top].n, g[top].size, g[top].whence, most);
+        g[top].n = -1;
+    }
+}
+
+#else
+
+void evv_arena_outstanding(const char *when)
+{
+    fprintf(stderr, "[arena] %s: this build has no arena\n", when);
+}
+
 #endif
 
 /* ---- one rule's frame ------------------------------------------------- */
@@ -595,6 +662,27 @@ int32_t evv_ref_checked(const void *p)
 #define FRAME_ROUND(n) (((n) + (FRAME_ALIGN - 1)) & ~(size_t)(FRAME_ALIGN - 1))
 
 static __thread unsigned char *fs_base, *fs_top, *fs_end;
+
+/* A thread's frame stack, given back when the thread is done with it.
+ *
+ * Four megabytes, taken on the first rule the thread runs and kept for as long
+ * as the thread lives, which is right: the frames nest strictly and the stack is
+ * reused. What was wrong was that nothing gave it back. Every engine instance
+ * starts a synthesis thread, so every instance made and thrown away kept four
+ * megabytes of the arena, and the arena is 256 by default -- which is why the
+ * engine went quiet on the 63rd instance and reported nothing.
+ *
+ * Safe here and only here: the thread body has returned, so no rule of that
+ * thread is running and nothing holds a frame. */
+void evv_frame_done(void)
+{
+    if (fs_base != 0) {
+        evv_arena_free(fs_base);
+        fs_base = 0;
+        fs_top = 0;
+        fs_end = 0;
+    }
+}
 
 void *evv_frame_push(size_t n)
 {

@@ -252,6 +252,9 @@ static void *evv_trampoline(void *p)
 
     free(s);
     entry(arg);
+    /* The frame stack this thread took for the rules it ran. Nothing else will
+       give it back, and an instance is a thread. */
+    evv_frame_done();
     return NULL;
 }
 

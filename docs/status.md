@@ -310,13 +310,34 @@ rather than guessed. It becomes live the day anything asks the engine to write
 a file itself, or the day Linux audio is wired through this layer rather than
 through the buffer.
 
-Making and throwing away engine instances leaks a few megabytes each. `make
-instances` shows it: every round speaks the same sentence and so owes the same
-samples, and on round 63 the engine answers with none. It still runs and still
-reports no error -- it has quietly run out of the arena, which is the region
-below two gigabytes that everything the machine can hold a pointer to comes out
-of. What an instance owns and does not give back has not been chased down, and
-that is the open part.
+Making and throwing away engine instances used to leak four megabytes each, and
+the engine went quiet on the 63rd: it had run out of the arena, the region below
+two gigabytes that everything the machine can hold a pointer to comes out of.
+That is fixed, and `make instances 200` now runs two hundred rounds all owing
+the same samples where it used to stop at 63.
+
+It was the frame stack. A rule hands the machine the address of its own frame,
+so frames cannot be ordinary locals and come from a four megabyte stack the
+thread takes on the first rule it runs -- kept for the life of the thread, which
+is right, since the frames nest strictly and the stack is reused. What was wrong
+is that nothing gave it back. Every instance starts a synthesis thread, so every
+instance kept four megabytes, and 256 divided by four is 62. Both trampolines in
+the porting layer now call `evv_frame_done` once the thread body has returned,
+which is the one moment it is certainly safe: no rule of that thread is running
+and nothing holds a frame.
+
+`evv_arena_outstanding` is what found it and is now in the tree. It walks the
+arena and reports what is still held, grouped by the allocation that asked and
+the size it got, heaviest first. A leak is the group that grows by the same
+amount with every instance: this one was one block of 4,194,320 bytes per
+instance, against everything else standing still, which named it in a single
+run. `whence` is the low thirty-two bits of a return address; build with
+`make CFLAGS=-no-pie` to turn one into a line with addr2line.
+
+What is left is two blocks of thirty-two bytes per instance from one allocation
+site, which the same report shows and nobody has chased. Sixty-four bytes an
+instance moves the ceiling from sixty-two instances to about four million, so it
+is a real leak that no caller will meet.
 
 The number is 63 in both forms of the rules, which says the leak is in the
 engine rather than in either rule table. What differed until 22 August 2026 was
