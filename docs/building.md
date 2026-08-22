@@ -576,6 +576,15 @@ engine, whose headers are how the interface across four generations was read,
 and the Pocket PC runtimes, are under `/software/` beside it. None of it is
 needed here.
 
+Mainline ViaVoice is a different product line and not a wider language set.
+Embedded ViaVoice is the small-footprint, fixed-point build and comes as static
+object libraries, which is the only reason any of this was possible. The desktop
+engine is mainline and floating point, and ships runtime data files rather than
+objects -- so its seventeen languages, Danish and Finnish and Korean among them,
+are not waiting to be lifted. There is nothing compiled to read, and the
+synthesiser underneath them is not the one in `klatt_*.c`. The nine in the EVV
+4.3 SDK are the reachable set.
+
 ## Testing
 
     make probe
