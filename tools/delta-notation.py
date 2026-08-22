@@ -813,6 +813,258 @@ def verify():
     return ok
 
 
+# ---- the upper layer ----------------------------------------------------
+#
+# What a rule stands for, rather than what the machine does to arrive at it.
+# It covers the wrappers, which are 2,335 of the 3,377 rules and are each one
+# primitive with its arguments baked in -- the name already spells them, so
+# this only says out loud what `ZZtest_string_s_2_1_ZZstring480' is spelling.
+#
+# It does not try to cover the 1,042 real rules. Those are programs: a median
+# of 28 calls over 15 blocks, 1,058 distinct shapes between them, and only 12%
+# fitting even a loose template of tests and ordinary actions. For those the
+# readable form is the C the decompiler writes, and the naming it already does
+# is the win.
+#
+# A wrapper that does not fit is left in the lower form and said so. Two of the
+# 2,335 do not: they clean up in a way the idiom does not describe, and
+# stretching the upper form to hold two rules would be the wrong trade.
+
+UPPER = os.path.join(TREE, "wrappers.up")
+
+
+def upper_of(name, d):
+    """A wrapper as what it stands for, or None if it is not one.
+
+    The shape, which every one of them has: a single block, then for each call
+    a run of pushes whose last is the state, then the call, then one cleanup
+    for the lot and the answer. Anything else is not a wrapper.
+    """
+    if len(d.blocks) != 1 or d.frame != 0 or d.pbase != 8:
+        return None
+    ops = d.blocks[0][2]
+    if not ops or ops[-1] != ("return", ("reg", "%eax")):
+        return None
+
+    calls = []
+    pending = []
+    held = None          # a widened argument waiting to be pushed
+    i = 0
+    while i < len(ops) - 1:
+        k = ops[i][0]
+        if k == "load":
+            # A byte or a half word widened before it is handed over. Only
+            # ever into r0, and only ever pushed next but one at the latest.
+            kind, src, into = ops[i][1], ops[i][2], ops[i][3]
+            if into != "%eax" or src[0] != "param" or held is not None:
+                return None
+            if kind == "movzbl":
+                held = ("widened", src[1], "byte")
+            elif kind == "movzwl":
+                held = ("widened", src[1], "half")
+            elif kind == "movl":
+                held = ("widened", src[1], "word")
+            else:
+                return None
+        elif k == "push":
+            if ops[i][1] == ("reg", "%eax") and held is not None:
+                pending.append(held)
+                held = None
+            else:
+                pending.append(ops[i][1])
+        elif k == "call":
+            entry, arity, depth = ops[i][1], ops[i][2], ops[i][3]
+            if len(pending) != arity or arity < 1:
+                return None
+            # The state is pushed last, so it is the first argument.
+            if pending[-1] != ("param", 0):
+                return None
+            calls.append((entry, list(reversed(pending[:-1]))))
+            pending = []
+        elif k in ("popn", "popreg"):
+            break
+        else:
+            return None
+        i += 1
+
+    if not calls or pending or held is not None:
+        return None
+
+    total = sum(1 + len(a) for _e, a in calls)
+    cleanup = ops[i:-1]
+    base = ([("popreg", "%ecx"), ("popreg", "%ecx")] if total == 2
+            else [("popn", total)])
+    truth = [("alu", "negl", None, ("reg", "%eax")),
+             ("alu", "sbbl", ("reg", "%eax"), ("reg", "%eax")),
+             ("alu", "negl", None, ("reg", "%eax"))]
+    if cleanup == base:
+        return calls, False
+    if cleanup == base + truth:
+        return calls, True
+    return None
+
+
+def upper_operand(o):
+    kind = o[0]
+    if kind == "imm":
+        return str(o[1])
+    if kind == "sym":
+        return o[1]
+    if kind == "param":
+        return "arg %d" % o[1]
+    if kind == "widened":
+        return "arg %d as %s" % (o[1], o[2])
+    return None
+
+
+def upper_lines(name, d, calls, truth):
+    out = ["wrapper %s takes %d%s"
+           % (name, d.params, " answering truth" if truth else "")]
+    for entry, args in calls:
+        words = [entry]
+        for a in args:
+            w = upper_operand(a)
+            if w is None:
+                return None
+            words.append(w)
+        out.append("  " + " ".join(words))
+    return out
+
+
+def upper_read(lines):
+    """The upper form back as (name, params, calls)."""
+    got = []
+    cur = None
+    for raw in lines:
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        w = line.split()
+        if w[0] == "wrapper":
+            if cur:
+                got.append(cur)
+            cur = (w[1], int(w[3]), [], "truth" in w)
+        else:
+            entry = w.pop(0)
+            args = []
+            while w:
+                if w[0] == "arg":
+                    w.pop(0)
+                    n = int(w.pop(0))
+                    if w and w[0] == "as":
+                        w.pop(0)
+                        args.append(("widened", n, w.pop(0)))
+                    else:
+                        args.append(("param", n))
+                else:
+                    t = w.pop(0)
+                    try:
+                        args.append(("imm", int(t)))
+                    except ValueError:
+                        args.append(("sym", t))
+            cur[2].append((entry, args))
+    if cur:
+        got.append(cur)
+    return got
+
+
+def upper_compile(name, params, calls, truth=False):
+    """The upper form down into the lower one: the same ops, in the same order,
+    with the idioms the compiler used -- the state pushed last so that it is
+    the first argument, the depth running on across the calls, and one cleanup
+    for all of them."""
+    d = Written(name, "glob.obj", 0, 8, params)
+    body = d.block("L0")
+    depth = 0
+    kinds = {"byte": "movzbl", "half": "movzwl", "word": "movl"}
+    for entry, args in calls:
+        for a in reversed(args):
+            if a[0] == "widened":
+                body.append(("load", kinds[a[2]], ("param", a[1]), "%eax"))
+                body.append(("push", ("reg", "%eax")))
+            else:
+                body.append(("push", a))
+        body.append(("push", ("param", 0)))
+        depth += 1 + len(args)
+        body.append(("call", entry, 1 + len(args), depth))
+    if depth == 2:
+        body.append(("popreg", "%ecx"))
+        body.append(("popreg", "%ecx"))
+    else:
+        body.append(("popn", depth))
+    if truth:
+        body.append(("alu", "negl", None, ("reg", "%eax")))
+        body.append(("alu", "sbbl", ("reg", "%eax"), ("reg", "%eax")))
+        body.append(("alu", "negl", None, ("reg", "%eax")))
+    body.append(("return", ("reg", "%eax")))
+    return d
+
+
+def write_upper():
+    lifted, tables = read_rules(open(os.path.join(TREE, "glob.dr")))
+    out = ["# The wrappers, as the primitive each stands for. Written by",
+           "# tools/delta-notation.py. Every one takes the machine's state as",
+           "# its first argument, so that is not written; `arg n' is the",
+           "# wrapper's own nth.",
+           ""]
+    done = left = unfaithful = 0
+    for name, d, _obj in lifted:
+        fit = upper_of(name, d)
+        lines = upper_lines(name, d, fit[0], fit[1]) if fit else None
+        if lines is None:
+            left += 1
+            continue
+        # Only write what can be compiled back to the same bytecode. Some
+        # wrappers widen an argument, and the compiler put that load where it
+        # suited it rather than always in one place; where this cannot
+        # reproduce the placement, the upper form would be a re-description
+        # that is not the rule, so the rule stays in the lower form.
+        made = upper_compile(name, d.params, fit[0], fit[1])
+        if emit_one(name, made, "glob.obj", tables) != \
+           emit_one(name, d, "glob.obj", tables):
+            unfaithful += 1
+            left += 1
+            continue
+        out.extend(lines)
+        done += 1
+    open(UPPER, "w").write("\n".join(out) + "\n")
+    print("%d wrappers written to %s, %d left in the lower form"
+          % (done, os.path.relpath(UPPER, ROOT), left))
+    print("  of those left, %d because this could not reproduce them exactly"
+          % unfaithful)
+    return True
+
+
+def upper_prove():
+    """Compile every wrapper's upper form down and hold it against the lower
+    form in the tree -- the same operations in the same order, and the same
+    bytecode. Byte-identity is the point: this is a re-expression of a rule
+    that already exists, so anything but identical is a difference nobody
+    asked for."""
+    lifted, tables = read_rules(open(os.path.join(TREE, "glob.dr")))
+    have = dict((n, d) for n, d, _o in lifted)
+    same = 0
+    differed = []
+    for name, params, calls, truth in upper_read(open(UPPER)):
+        if name not in have:
+            differed.append((name, "not in the lower form"))
+            continue
+        made = upper_compile(name, params, calls, truth)
+        want = emit_one(name, have[name], "glob.obj", tables)
+        got = emit_one(name, made, "glob.obj", tables)
+        if got == want:
+            same += 1
+        else:
+            differed.append((name, "%d bytes against %d" % (len(got), len(want))))
+    print("%d wrappers compiled from what they stand for, byte for byte the"
+          " same as the lower form" % same)
+    for name, why in differed[:10]:
+        print("    %s: %s" % (name, why))
+    if len(differed) > 10:
+        print("    and %d more" % (len(differed) - 10))
+    return not differed
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__.strip())
@@ -839,6 +1091,12 @@ def main():
         for obj in sys.argv[2:]:
             ok = check(obj) and ok
         return 0 if ok else 1
+
+    if what == "upper":
+        return 0 if write_upper() else 1
+
+    if what == "upper-prove":
+        return 0 if upper_prove() else 1
 
     if what == "symbols":
         return 0 if write_symbols() else 1

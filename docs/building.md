@@ -141,6 +141,56 @@ addresses, written by `make notation-symbols`.
 So the rules can be rebuilt from text a person can read and change, and IBM's
 objects are wanted for the comparison suite and for nothing else.
 
+## What a rule stands for
+
+`lang/enus/rules/wrappers.up` is the beginning of the upper layer: a rule as
+what it means rather than as what the machine does to arrive at it.
+
+    wrapper ZZbspush_ca__12 takes 1
+      bspush_ca 12
+    wrapper ZZget_parm_ptr2 takes 5
+      get_parm arg 1 arg 2 -6
+      get_parm arg 3 arg 4 -6
+    wrapper ZZlprp_load__insert_2pt_i_7_2_ZZstring2 takes 3 answering truth
+      lpta_rpta_loadp arg 1 arg 2
+      insert_2pt_i 7 2 ZZstring2 0
+
+Every one takes the machine's state as its first argument, so that is not
+written; `arg n` is the wrapper's own nth, `as byte` or `as half` widens one
+before it is handed over, and `answering truth` is the three operations that
+turn whatever came back into nought or one. The name of a wrapper already
+spells its arguments -- `ZZtest_string_s_2_1_ZZstring480` -- so this only says
+out loud what the name is spelling.
+
+    make upper
+    make upper-prove
+
+`upper` writes it and `upper-prove` checks it: each is compiled back down and
+the bytecode has to match the lower form byte for byte. 1,954 of the 2,335
+wrappers are there and all 1,954 match.
+
+**It writes only what it can reproduce exactly.** 381 wrappers are left in the
+lower form, of which 371 do not fit the shape at all and ten do fit but widen
+an argument, and the original compiler put that load where it suited it rather
+than always in one place. Where this cannot reproduce the placement, an upper
+form would be a description that is not the rule, so the rule stays as it is.
+That is the whole discipline of the thing: byte-identity is not a nicety here,
+it is what makes a re-description of an existing rule worth having.
+
+What is deliberately not attempted is the 1,042 real rules. Those are programs:
+a median of 28 calls over 15 blocks, 1,058 distinct shapes between them, and
+only 12% fitting even a loose template of tests and ordinary actions. Only 4%
+merely test and assign. For those the readable form is the C
+`delta-decompile.py` writes, and the naming it already does -- which primitive a
+wrapper stands for, which variable a reach touches, which alternative an arm is
+-- is the win. A declarative form would not fit them and pretending otherwise
+would cost the exactness that makes any of this checkable.
+
+The other use of an upper layer is the one that has nothing to be identical to:
+writing rules that do not exist yet, which is what Polish needs. There the check
+is the suite and an ear, not a byte comparison, so the constraint above does not
+bind.
+
 ## The rules, twice
 
 The language's rules exist in the tree as bytecode, and the engine has an

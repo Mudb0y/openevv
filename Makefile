@@ -207,6 +207,18 @@ notation-regenerate:
 notation-symbols:
 	@python3 tools/delta-notation.py symbols
 
+# The upper layer, so far as it goes: the wrappers as the primitive each
+# stands for, rather than as the pushes and the call. `upper' writes only what
+# it can compile back to the same bytecode, so anything it cannot reproduce
+# exactly stays in the lower form rather than becoming a description that is
+# not the rule. `upper-prove' checks the lot again.
+.PHONY: upper upper-prove
+upper:
+	@python3 tools/delta-notation.py upper
+
+upper-prove:
+	@python3 tools/delta-notation.py upper-prove
+
 # The rules as C. Thirteen megabytes written out of the bytecode beside it,
 # so it is made here rather than kept in the tree, where every change to the
 # decompiler would rewrite the whole of it.
