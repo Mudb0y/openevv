@@ -227,10 +227,20 @@ def _install_stubs():
 
 
 class FakeEngine:
+    #: Which languages this one has in it. A check that wants more than one
+    #: sets it before making the driver.
+    languages = [0x10000]
+
     def __init__(self, onIndex):
         self.onIndex = onIndex
         self.calls = []
-        self.voiceNames = {n: "Voice %d" % n for n in range(1, 9)}
+        self.languages = list(FakeEngine.languages)
+        self.language = self.languages[0]
+        self.voiceNamesByLanguage = {
+            language: {n: "Voice %d" % n for n in range(1, 9)}
+            for language in self.languages
+        }
+        self.voiceNames = self.voiceNamesByLanguage[self.language]
         self.voiceParams = {0: 0, 1: 50, 2: 65, 3: 30, 4: 0, 5: 0, 6: 50, 7: 92}
         self.version = "test"
         self.player = None
@@ -243,7 +253,15 @@ class FakeEngine:
 
     def post(self, batch):
         for fn, args in batch:
-            self.calls.append((fn.__name__ if hasattr(fn, "__name__") else str(fn),) + args)
+            name = fn.__name__ if hasattr(fn, "__name__") else str(fn)
+            self.calls.append((name,) + args)
+            # Recording is enough for every call but this one: the driver
+            # reads the language back to decide whether the next thing it
+            # is asked for needs a change at all, so the one piece of state
+            # it depends on is kept here as well.
+            if name == "setLanguage":
+                self.language = args[0]
+                self.voiceNames = self.voiceNamesByLanguage[args[0]]
 
     def cancel(self):
         self.calls.append(("cancel",))
@@ -269,6 +287,12 @@ class FakeEngine:
 
     def copyVoice(self, number):
         pass
+
+    def setLanguage(self, language):
+        pass
+
+    def voiceNamesFor(self, language):
+        return self.voiceNamesByLanguage.get(language, self.voiceNames)
 
 
 def driver():
@@ -480,6 +504,86 @@ def main():
     d.cancel()
     check("pausing and cancelling go straight through",
           d._engine.calls, [("pause", True), ("cancel",)])
+
+    # ---- and the same driver over a library with two languages in it ----
+    #
+    # Everything above is a build with one language, which is what the driver
+    # has always had and what these checks were written against. What follows
+    # is the other shape: the same driver, told the library has German too.
+    FakeEngine.languages = [0x10000, 0x40000]
+    try:
+        d = driver()
+
+        voices = d.availableVoices
+        check("every language and preset is offered as a voice",
+              len(voices), 16)
+        check("and each says which language it is",
+              [voices["65536:1"].language, voices["262144:1"].language],
+              ["en_US", "de_DE"])
+        check("under a name with the language in it",
+              voices["262144:3"].name, "German - Voice 3")
+        check("the driver starts in the first language",
+              (d.voice, d.language), ("65536:1", "en_US"))
+
+        d._engine.calls = []
+        d.voice = "262144:5"
+        check("choosing a voice of another language changes both",
+              d._engine.calls,
+              [("setLanguage", 0x40000), ("copyVoice", 5)])
+
+        d._engine.calls = []
+        d.voice = "262144:2"
+        check("and staying in that language changes only the preset",
+              d._engine.calls, [("copyVoice", 2)])
+
+        check("a voice of a language the library has not is refused",
+              (d.voice, spoken(d, [])) and d.voice, "262144:2")
+        d.voice = "196608:1"
+        check("and leaves the one in force alone", d.voice, "262144:2")
+
+        # The engine is stood in for, so its language does not really move;
+        # what is being checked is what the driver asks for and in what
+        # order, which is what a document with two languages in it needs.
+        d._engine.language = 0x10000
+        check(
+            "a language change in a sequence switches and copies the preset",
+            spoken(d, ["This is ", LangChangeCommand("de_DE"), "Hallo."]),
+            [
+                ("addText", b"This is "),
+                ("setLanguage", 0x40000),
+                ("copyVoice", 2),
+                ("addText", b"Hallo."),
+                ("synthesize", True),
+            ],
+        )
+
+        d._engine.language = 0x10000
+        check(
+            "a change to the language already being spoken is dropped",
+            spoken(d, [LangChangeCommand("en_US"), "Hello."]),
+            [("addText", b"Hello."), ("synthesize", True)],
+        )
+
+        d._engine.language = 0x10000
+        check(
+            "a bare language matches the dialect the library has",
+            spoken(d, [LangChangeCommand("de"), "Hallo."]),
+            [
+                ("setLanguage", 0x40000),
+                ("copyVoice", 2),
+                ("addText", b"Hallo."),
+                ("synthesize", True),
+            ],
+        )
+
+        d._engine.language = 0x10000
+        check(
+            "a language the library has not leaves the voice where it was",
+            spoken(d, [LangChangeCommand("fr_FR"), "Bonjour."]),
+            [("addText", b"Bonjour."), ("synthesize", True)],
+        )
+    finally:
+        FakeEngine.languages = [0x10000]
 
     if FAILED:
         print("\nsequence: %d of the checks failed" % len(FAILED))

@@ -263,13 +263,15 @@ def variant_sizes(o):
     return out
 
 
-def main():
-    # Which module, and where to put what comes out. Defaults to English so
-    # that running it by hand still does what it always did.
-    lang = sys.argv[1] if len(sys.argv) > 1 else "enus"
-    where = os.path.join(ROOT, "analysis", lang)
+def main(argv=()):
+    # One language to a library, so the directory the objects were unpacked
+    # into is what says which language this is, and the written file is
+    # named for it. With no arguments it is US English, as it always was.
+    tag = argv[0] if argv else "enus"
+    where = argv[1] if len(argv) > 1 else os.path.join(ROOT, "analysis", tag)
     obj = os.path.join(where, "link.obj")
-    out = os.path.join(ROOT, "lang", lang, "delta_link_" + lang + ".c")
+    out = os.path.join(ROOT, "lang", tag, "delta_link_%s.c" % tag)
+    os.makedirs(os.path.dirname(out), exist_ok=True)
 
     o = Coff(obj)
     sec, base = o.at("_vstmtbl")
@@ -452,8 +454,9 @@ def main():
                         % (i, blob(e["variants"][0], e["variants"][1], n)))
 
         f.write("\n/* Not const: the runtime writes two of the words in\n"
-        "   each entry. */\n"
-        "delta_stmt vstmtbl[] = {\n")
+        "   each entry. The name carries the language, because a program\n"
+        "   may have more than one module in it. */\n"
+        "delta_stmt %s_vstmtbl[] = {\n" % tag)
         for i, e in enumerate(stmts):
             f.write("    { %s, f%d, gt%d, pt%d, %s, d%d,\n"
                     "      %d, %d, %d, %d, %d, %d, %d, { %d, %d }, %d, 0,"
@@ -472,10 +475,10 @@ def main():
                 "   The language sets them when it starts, and a table\n"
                 "   without them lays down a statement with no variant in\n"
                 "   it at all. */\n"
-                "void viasizes(void)\n{\n")
+                "void %s_viasizes(void)\n{\n" % tag)
         for i, off, v in writes:
-            f.write("    vstmtbl[%d].%s = %d;\n"
-                    % (i, FIELD_AT.get(off, "unknown_%02x" % off), v))
+            f.write("    %s_vstmtbl[%d].%s = %d;\n"
+                    % (tag, i, FIELD_AT.get(off, "unknown_%02x" % off), v))
         f.write("}\n")
 
     print("statement types: %d" % len(stmts))
@@ -489,4 +492,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

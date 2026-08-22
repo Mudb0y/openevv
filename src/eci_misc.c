@@ -112,6 +112,11 @@ int32_t STDCALL eo_getParam(OldInst *h, int32_t which)
     return v;
 }
 
+/* Which language a new instance starts in. The original writes the number
+   straight in here, because a library was one language; here it is the
+   first one linked in, which is the one the build calls its default. */
+#include "delta_lang.h"
+
 /* The same, but of the defaults a new instance would start from. A language
    of nought means none has been chosen, and the answer is the one built
    in. */
@@ -126,7 +131,7 @@ int32_t STDCALL es_getDefaultParam(int32_t which)
     if (which == ENV_DICTIONARY)
         v = es_flipDictionary(v);
     if (v == 0 && which == ENV_LANGUAGE)
-        return 0x10000;
+        return delta_languages[0]->id;
     return v;
 }
 

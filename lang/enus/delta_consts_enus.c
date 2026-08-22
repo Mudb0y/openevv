@@ -13,9 +13,9 @@
 
 #include <stdint.h>
 
-#include "delta_rules.h"
+#include "delta_rules_enus.h"
 
-uint8_t evv_ea_ga_data_3[233] = {
+uint8_t enus_evv_ea_ga_data_3[233] = {
     44,25,36,0,32,25,7,44,4,0,0,0,44,22,14,4,
     48,4,36,20,36,1,28,25,1,46,8,28,14,28,14,36,
     25,0,0,0,7,44,20,24,32,3,0,0,7,41,21,12,
@@ -33,7 +33,7 @@ uint8_t evv_ea_ga_data_3[233] = {
     27,46,8,28,13,28,1,24,36,
 };
 
-uint8_t evv_ea_gcat_data_3[869] = {
+uint8_t enus_evv_ea_gcat_data_3[869] = {
     36,1,50,4,36,8,47,0,30,21,4,0,48,25,1,28,
     33,4,0,0,48,25,24,31,3,28,0,0,32,20,0,0,
     32,21,3,0,31,21,28,1,43,3,28,0,31,21,28,27,
@@ -91,7 +91,7 @@ uint8_t evv_ea_gcat_data_3[869] = {
     12,1,5,25,2,
 };
 
-uint8_t evv_ea_homog_data_3[1404] = {
+uint8_t enus_evv_ea_homog_data_3[1404] = {
     36,1,26,45,14,0,0,0,36,1,26,45,13,0,0,0,
     36,25,49,3,2,16,26,0,72,2,16,26,32,25,28,0,
     36,25,49,0,36,21,32,25,34,14,28,0,32,21,36,25,
@@ -182,7 +182,7 @@ uint8_t evv_ea_homog_data_3[1404] = {
     31,25,12,0,26,36,24,14,31,25,11,13,
 };
 
-uint8_t evv_ea_morph_data_3[802] = {
+uint8_t enus_evv_ea_morph_data_3[802] = {
     24,47,0,0,32,20,1,28,32,21,3,24,28,0,0,0,
     32,22,8,25,47,0,0,0,32,21,4,28,44,24,7,0,
     44,24,18,0,32,14,4,24,47,0,0,0,48,3,28,47,
@@ -236,7 +236,7 @@ uint8_t evv_ea_morph_data_3[802] = {
     3,2,
 };
 
-uint8_t evv_ea_pname_data_3[20625] = {
+uint8_t enus_evv_ea_pname_data_3[20625] = {
     30,24,33,21,36,1,50,3,32,1,3,45,25,0,0,0,
     32,1,3,45,25,36,13,28,13,0,0,0,44,1,3,45,
     25,36,0,0,32,1,33,17,44,21,0,0,30,1,24,36,
@@ -1529,7 +1529,7 @@ uint8_t evv_ea_pname_data_3[20625] = {
     7,
 };
 
-uint8_t evv_ea_roots_data_3[7895] = {
+uint8_t enus_evv_ea_roots_data_3[7895] = {
     32,1,36,25,47,21,28,0,30,1,25,28,32,1,36,24,
     29,17,33,21,28,0,0,0,36,1,14,37,3,0,0,0,
     36,1,14,37,3,33,4,28,30,7,0,0,34,7,21,41,
@@ -2026,7 +2026,7 @@ uint8_t evv_ea_roots_data_3[7895] = {
     27,31,24,27,46,25,11,
 };
 
-uint8_t evv_ea_text_data_3[6999] = {
+uint8_t enus_evv_ea_text_data_3[6999] = {
     1,12,12,4,5,21,26,0,1,21,13,4,24,24,1,21,
     72,14,24,1,21,18,0,0,1,21,13,4,24,24,1,21,
     72,22,2,25,2,26,1,0,1,19,1,25,18,1,0,0,
@@ -2467,7 +2467,7 @@ uint8_t evv_ea_text_data_3[6999] = {
     20,11,1,11,28,2,72,
 };
 
-uint8_t evv_ea_words_data_3[776] = {
+uint8_t enus_evv_ea_words_data_3[776] = {
     36,1,35,11,32,7,26,45,24,36,0,0,36,8,31,21,
     36,8,31,21,14,4,0,0,48,25,20,47,14,4,0,0,
     36,25,48,22,14,49,3,0,48,25,24,49,4,0,0,0,
@@ -2519,20 +2519,20 @@ uint8_t evv_ea_words_data_3[776] = {
     26,31,36,0,26,33,21,47,
 };
 
-uint8_t evv_es_cdur_data_3[2] = {
+uint8_t enus_evv_es_cdur_data_3[2] = {
     14,52,
 };
 
-uint8_t evv_es_inton_bss_3[4] = {
+uint8_t enus_evv_es_inton_bss_3[4] = {
     0,0,0,0,
 };
 
-uint8_t evv_es_inton_data_4[28] = {
+uint8_t enus_evv_es_inton_data_4[28] = {
     130,82,130,83,0,0,0,1,0,0,0,0,0,1,0,0,
     128,34,128,48,130,93,0,0,128,79,130,93,
 };
 
-uint8_t evv_et_cmpnd_data_3[333] = {
+uint8_t enus_evv_et_cmpnd_data_3[333] = {
     25,26,2,22,63,0,0,0,12,19,1,25,25,0,0,0,
     25,26,30,19,2,0,0,0,14,4,19,13,30,2,1,24,
     63,4,19,13,1,16,2,1,13,0,0,0,19,2,1,13,
@@ -2556,7 +2556,7 @@ uint8_t evv_et_cmpnd_data_3[333] = {
     19,1,25,0,21,2,29,0,72,26,3,20,2,
 };
 
-uint8_t evv_et_gcat_data_3[435] = {
+uint8_t enus_evv_et_gcat_data_3[435] = {
     30,16,26,0,13,19,4,14,2,25,2,0,25,12,3,0,
     30,14,3,0,2,31,3,0,2,24,4,14,2,11,0,0,
     24,2,26,14,1,0,0,0,5,22,4,21,21,4,22,5,
@@ -2587,7 +2587,7 @@ uint8_t evv_et_gcat_data_3[435] = {
     4,24,22,
 };
 
-uint8_t evv_et_inton_data_3[1040] = {
+uint8_t enus_evv_et_inton_data_3[1040] = {
     13,4,21,73,26,0,0,0,21,2,1,24,18,4,4,19,
     20,2,0,0,21,26,4,0,4,26,72,0,2,20,1,0,
     14,4,24,72,1,28,16,3,19,2,0,0,23,5,3,26,
@@ -2655,7 +2655,7 @@ uint8_t evv_et_inton_data_3[1040] = {
     72,26,4,0,19,32,12,0,21,2,2,11,128,90,129,78,
 };
 
-uint8_t evv_et_norm_data_3[505] = {
+uint8_t enus_evv_et_norm_data_3[505] = {
     159,0,0,0,30,30,0,0,26,16,19,0,25,26,19,0,
     18,18,0,0,14,14,0,0,14,19,0,0,22,20,0,0,
     31,26,0,0,25,26,16,15,4,22,2,24,1,26,0,0,
@@ -2690,7 +2690,7 @@ uint8_t evv_et_norm_data_3[505] = {
     30,2,25,0,14,1,19,25,2,
 };
 
-uint8_t evv_et_numbr_data_3[795] = {
+uint8_t enus_evv_et_numbr_data_3[795] = {
     34,41,0,0,35,35,0,0,35,8,41,0,26,16,4,5,
     25,1,21,13,3,19,19,3,4,21,0,0,11,21,0,0,
     72,20,3,19,19,3,4,21,72,11,3,19,19,3,4,21,
@@ -2743,12 +2743,12 @@ uint8_t evv_et_numbr_data_3[795] = {
     22,4,28,2,24,72,175,177,179,180,178,
 };
 
-uint8_t evv_et_phnol_data_3[26] = {
+uint8_t enus_evv_et_phnol_data_3[26] = {
     2,19,11,0,29,2,0,0,21,1,24,26,19,1,24,2,
     1,21,73,0,4,5,24,0,15,2,
 };
 
-uint8_t evv_et_phone_data_3[624] = {
+uint8_t enus_evv_et_phone_data_3[624] = {
     11,26,0,0,16,36,0,0,26,3,27,2,4,3,25,0,
     7,14,0,0,1,2,25,0,1,31,0,0,24,2,1,0,
     7,24,28,30,8,28,0,0,17,26,0,0,17,36,0,0,
@@ -2790,7 +2790,7 @@ uint8_t evv_et_phone_data_3[624] = {
     19,3,26,30,25,16,0,0,12,12,0,0,0,3,0,4,
 };
 
-uint8_t evv_et_phrs_data_3[288] = {
+uint8_t enus_evv_et_phrs_data_3[288] = {
     30,19,19,1,2,24,0,0,24,2,1,19,19,30,0,0,
     30,21,1,20,21,2,28,72,30,4,24,18,12,3,26,30,
     18,24,4,30,72,28,2,21,72,14,4,72,30,26,3,25,
@@ -2811,7 +2811,7 @@ uint8_t evv_et_phrs_data_3[288] = {
     25,3,21,12,2,72,28,16,2,21,0,0,0,2,0,1,
 };
 
-uint8_t evv_et_prfx_data_3[356] = {
+uint8_t enus_evv_et_prfx_data_3[356] = {
     14,3,26,31,20,1,12,0,4,73,0,0,21,4,21,0,
     13,2,24,0,26,24,4,0,1,5,13,3,4,0,0,0,
     12,1,24,13,3,4,0,0,12,16,2,20,4,0,0,0,
@@ -2837,7 +2837,7 @@ uint8_t evv_et_prfx_data_3[356] = {
     128,110,0,0,
 };
 
-uint8_t evv_et_sffx_data_3[252] = {
+uint8_t enus_evv_et_sffx_data_3[252] = {
     3,5,16,0,4,28,0,0,3,24,1,0,21,4,3,0,
     199,19,2,0,24,2,2,0,26,2,20,0,19,5,14,0,
     2,19,11,1,16,25,3,0,2,20,4,25,13,24,1,28,
@@ -2856,47 +2856,47 @@ uint8_t evv_et_sffx_data_3[252] = {
     26,26,2,5,16,12,1,0,128,110,0,3,
 };
 
-uint8_t evv_et_spr1_bss_13[1] = {
+uint8_t enus_evv_et_spr1_bss_13[1] = {
     0,
 };
 
-uint8_t evv_et_spr1_data_10[2] = {
+uint8_t enus_evv_et_spr1_data_10[2] = {
     87,0,
 };
 
-uint8_t evv_et_spr1_data_11[2] = {
+uint8_t enus_evv_et_spr1_data_11[2] = {
     79,0,
 };
 
-uint8_t evv_et_spr1_data_12[2] = {
+uint8_t enus_evv_et_spr1_data_12[2] = {
     78,0,
 };
 
-uint8_t evv_et_spr1_data_14[2] = {
+uint8_t enus_evv_et_spr1_data_14[2] = {
     77,0,
 };
 
-uint8_t evv_et_spr1_data_15[2] = {
+uint8_t enus_evv_et_spr1_data_15[2] = {
     104,0,
 };
 
-uint8_t evv_et_spr1_data_3[10] = {
+uint8_t enus_evv_et_spr1_data_3[10] = {
     44,26,0,0,44,27,0,0,48,26,
 };
 
-uint8_t evv_et_spr1_data_7[2] = {
+uint8_t enus_evv_et_spr1_data_7[2] = {
     67,0,
 };
 
-uint8_t evv_et_spr1_data_8[2] = {
+uint8_t enus_evv_et_spr1_data_8[2] = {
     74,0,
 };
 
-uint8_t evv_et_spr1_data_9[2] = {
+uint8_t enus_evv_et_spr1_data_9[2] = {
     89,0,
 };
 
-uint8_t evv_et_strss_data_3[722] = {
+uint8_t enus_evv_et_strss_data_3[722] = {
     19,4,27,2,1,17,0,0,4,17,0,0,19,2,5,0,
     2,21,3,0,16,22,1,24,15,4,0,0,12,3,14,0,
     13,21,2,0,26,21,2,3,30,21,4,20,20,25,1,0,
@@ -2945,15 +2945,15 @@ uint8_t evv_et_strss_data_3[722] = {
     0,5,
 };
 
-uint8_t evv_et_syll_data_3[2] = {
+uint8_t enus_evv_et_syll_data_3[2] = {
     14,24,
 };
 
-uint8_t evv_glob_bss_4[6] = {
+uint8_t enus_evv_glob_bss_4[6] = {
     0,0,0,0,0,0,
 };
 
-uint8_t evv_glob_data_3[2054] = {
+uint8_t enus_evv_glob_data_3[2054] = {
     0,1,0,0,0,1,2,3,4,5,6,7,8,9,0,0,
     0,2,1,0,1,11,0,0,1,11,19,2,1,14,26,2,
     24,0,0,0,1,15,2,0,1,19,0,0,1,19,1,11,
@@ -3085,7 +3085,7 @@ uint8_t evv_glob_data_3[2054] = {
     48,24,96,97,98,99,
 };
 
-uint8_t evv_u_intfac_data_3[106] = {
+uint8_t enus_evv_u_intfac_data_3[106] = {
     48,4,3,12,2,0,0,0,47,16,3,25,72,3,25,72,
     1,72,26,2,25,26,65,0,45,2,2,13,46,16,2,19,
     19,2,30,0,46,1,21,13,30,0,0,0,36,24,1,21,
@@ -3095,12 +3095,12 @@ uint8_t evv_u_intfac_data_3[106] = {
     130,215,130,216,130,217,130,212,130,213,
 };
 
-uint8_t evv_u_vars_data_3[22] = {
+uint8_t enus_evv_u_vars_data_3[22] = {
     128,214,0,0,128,215,0,0,129,100,129,101,0,1,2,3,
     4,5,6,7,8,9,
 };
 
-uint8_t evv_ut_anno_data_3[146] = {
+uint8_t enus_evv_ut_anno_data_3[146] = {
     129,182,0,0,129,186,0,0,16,31,0,0,193,180,10,129,
     186,0,0,0,193,180,10,193,180,10,129,186,193,180,10,0,
     16,3,0,0,20,2,13,0,29,16,3,0,29,19,4,0,
@@ -3113,23 +3113,23 @@ uint8_t evv_ut_anno_data_3[146] = {
     0,4,
 };
 
-uint8_t evv_ut_gcat_bss_5[1] = {
+uint8_t enus_evv_ut_gcat_bss_5[1] = {
     0,
 };
 
-uint8_t evv_ut_gcat_data_10[3] = {
+uint8_t enus_evv_ut_gcat_data_10[3] = {
     32,32,0,
 };
 
-uint8_t evv_ut_gcat_data_4[2] = {
+uint8_t enus_evv_ut_gcat_data_4[2] = {
     32,0,
 };
 
-uint8_t evv_ut_inton_data_3[13] = {
+uint8_t enus_evv_ut_inton_data_3[13] = {
     129,86,0,0,1,2,3,4,5,6,7,8,9,
 };
 
-uint8_t evv_ut_norm_data_3[98] = {
+uint8_t enus_evv_ut_norm_data_3[98] = {
     88,88,0,0,70,71,0,0,65,65,65,166,174,173,0,0,
     72,22,2,24,72,0,0,0,199,76,54,72,169,170,83,82,
     94,95,192,85,162,164,0,0,72,76,53,72,13,4,26,72,
@@ -3139,131 +3139,131 @@ uint8_t evv_ut_norm_data_3[98] = {
     140,150,
 };
 
-uint8_t evv_ut_spr_bss_6[1] = {
+uint8_t enus_evv_ut_spr_bss_6[1] = {
     0,
 };
 
-uint8_t evv_ut_spr_data_10[4] = {
+uint8_t enus_evv_ut_spr_data_10[4] = {
     96,52,32,0,
 };
 
-uint8_t evv_ut_spr_data_11[4] = {
+uint8_t enus_evv_ut_spr_data_11[4] = {
     96,51,32,0,
 };
 
-uint8_t evv_ut_spr_data_12[4] = {
+uint8_t enus_evv_ut_spr_data_12[4] = {
     96,50,32,0,
 };
 
-uint8_t evv_ut_spr_data_13[5] = {
+uint8_t enus_evv_ut_spr_data_13[5] = {
     96,48,48,32,0,
 };
 
-uint8_t evv_ut_spr_data_19[2] = {
+uint8_t enus_evv_ut_spr_data_19[2] = {
     41,0,
 };
 
-uint8_t evv_ut_spr_data_20[2] = {
+uint8_t enus_evv_ut_spr_data_20[2] = {
     44,0,
 };
 
-uint8_t evv_ut_spr_data_21[2] = {
+uint8_t enus_evv_ut_spr_data_21[2] = {
     40,0,
 };
 
-uint8_t evv_ut_spr_data_23[2] = {
+uint8_t enus_evv_ut_spr_data_23[2] = {
     46,0,
 };
 
-uint8_t evv_ut_spr_data_25[3] = {
+uint8_t enus_evv_ut_spr_data_25[3] = {
     40,112,0,
 };
 
-uint8_t evv_ut_spr_data_26[2] = {
+uint8_t enus_evv_ut_spr_data_26[2] = {
     104,0,
 };
 
-uint8_t evv_ut_spr_data_28[3] = {
+uint8_t enus_evv_ut_spr_data_28[3] = {
     44,116,0,
 };
 
-uint8_t evv_ut_spr_data_30[2] = {
+uint8_t enus_evv_ut_spr_data_30[2] = {
     99,0,
 };
 
-uint8_t evv_ut_spr_data_35[3] = {
+uint8_t enus_evv_ut_spr_data_35[3] = {
     44,98,0,
 };
 
-uint8_t evv_ut_spr_data_38[2] = {
+uint8_t enus_evv_ut_spr_data_38[2] = {
     93,0,
 };
 
-uint8_t evv_ut_spr_data_39[3] = {
+uint8_t enus_evv_ut_spr_data_39[3] = {
     96,91,0,
 };
 
-uint8_t evv_ut_spr_data_42[10] = {
+uint8_t enus_evv_ut_spr_data_42[10] = {
     40,48,44,48,41,32,37,32,37,0,
 };
 
-uint8_t evv_ut_spr_data_43[2] = {
+uint8_t enus_evv_ut_spr_data_43[2] = {
     125,0,
 };
 
-uint8_t evv_ut_spr_data_44[3] = {
+uint8_t enus_evv_ut_spr_data_44[3] = {
     41,32,0,
 };
 
-uint8_t evv_ut_spr_data_45[4] = {
+uint8_t enus_evv_ut_spr_data_45[4] = {
     35,40,112,0,
 };
 
-uint8_t evv_ut_spr_data_46[2] = {
+uint8_t enus_evv_ut_spr_data_46[2] = {
     36,0,
 };
 
-uint8_t evv_ut_spr_data_47[2] = {
+uint8_t enus_evv_ut_spr_data_47[2] = {
     123,0,
 };
 
-uint8_t evv_ut_spr_data_5[2] = {
+uint8_t enus_evv_ut_spr_data_5[2] = {
     32,0,
 };
 
-uint8_t evv_ut_spr_data_50[2] = {
+uint8_t enus_evv_ut_spr_data_50[2] = {
     62,0,
 };
 
-uint8_t evv_ut_spr_data_51[3] = {
+uint8_t enus_evv_ut_spr_data_51[3] = {
     93,32,0,
 };
 
-uint8_t evv_ut_spr_data_52[3] = {
+uint8_t enus_evv_ut_spr_data_52[3] = {
     32,91,0,
 };
 
-uint8_t evv_ut_spr_data_53[2] = {
+uint8_t enus_evv_ut_spr_data_53[2] = {
     60,0,
 };
 
-uint8_t evv_ut_spr_data_55[3] = {
+uint8_t enus_evv_ut_spr_data_55[3] = {
     32,37,0,
 };
 
-uint8_t evv_ut_spr_data_56[3] = {
+uint8_t enus_evv_ut_spr_data_56[3] = {
     101,32,0,
 };
 
-uint8_t evv_ut_spr_data_9[2] = {
+uint8_t enus_evv_ut_spr_data_9[2] = {
     96,0,
 };
 
-uint8_t evv_ut_struc_data_3[15] = {
+uint8_t enus_evv_ut_struc_data_3[15] = {
     2,3,4,6,7,8,9,0,2,3,4,6,7,8,9,
 };
 
-uint8_t evv_ut_util_data_3[2] = {
+uint8_t enus_evv_ut_util_data_3[2] = {
     76,80,
 };
 
@@ -3275,81 +3275,81 @@ uint8_t evv_ut_util_data_3[2] = {
    cannot be. sizeof rather than a number, so that a record
    appended by tools/delta-dict.py is counted without this
    table being touched. */
-const delta_store delta_const_store[] = {
-    { evv_ea_ga_data_3, sizeof evv_ea_ga_data_3 },
-    { evv_ea_gcat_data_3, sizeof evv_ea_gcat_data_3 },
-    { evv_ea_homog_data_3, sizeof evv_ea_homog_data_3 },
-    { evv_ea_morph_data_3, sizeof evv_ea_morph_data_3 },
-    { evv_ea_pname_data_3, sizeof evv_ea_pname_data_3 },
-    { evv_ea_roots_data_3, sizeof evv_ea_roots_data_3 },
-    { evv_ea_text_data_3, sizeof evv_ea_text_data_3 },
-    { evv_ea_words_data_3, sizeof evv_ea_words_data_3 },
-    { evv_es_cdur_data_3, sizeof evv_es_cdur_data_3 },
-    { evv_es_inton_bss_3, sizeof evv_es_inton_bss_3 },
-    { evv_es_inton_data_4, sizeof evv_es_inton_data_4 },
-    { evv_et_cmpnd_data_3, sizeof evv_et_cmpnd_data_3 },
-    { evv_et_gcat_data_3, sizeof evv_et_gcat_data_3 },
-    { evv_et_inton_data_3, sizeof evv_et_inton_data_3 },
-    { evv_et_norm_data_3, sizeof evv_et_norm_data_3 },
-    { evv_et_numbr_data_3, sizeof evv_et_numbr_data_3 },
-    { evv_et_phnol_data_3, sizeof evv_et_phnol_data_3 },
-    { evv_et_phone_data_3, sizeof evv_et_phone_data_3 },
-    { evv_et_phrs_data_3, sizeof evv_et_phrs_data_3 },
-    { evv_et_prfx_data_3, sizeof evv_et_prfx_data_3 },
-    { evv_et_sffx_data_3, sizeof evv_et_sffx_data_3 },
-    { evv_et_spr1_bss_13, sizeof evv_et_spr1_bss_13 },
-    { evv_et_spr1_data_10, sizeof evv_et_spr1_data_10 },
-    { evv_et_spr1_data_11, sizeof evv_et_spr1_data_11 },
-    { evv_et_spr1_data_12, sizeof evv_et_spr1_data_12 },
-    { evv_et_spr1_data_14, sizeof evv_et_spr1_data_14 },
-    { evv_et_spr1_data_15, sizeof evv_et_spr1_data_15 },
-    { evv_et_spr1_data_3, sizeof evv_et_spr1_data_3 },
-    { evv_et_spr1_data_7, sizeof evv_et_spr1_data_7 },
-    { evv_et_spr1_data_8, sizeof evv_et_spr1_data_8 },
-    { evv_et_spr1_data_9, sizeof evv_et_spr1_data_9 },
-    { evv_et_strss_data_3, sizeof evv_et_strss_data_3 },
-    { evv_et_syll_data_3, sizeof evv_et_syll_data_3 },
-    { evv_glob_bss_4, sizeof evv_glob_bss_4 },
-    { evv_glob_data_3, sizeof evv_glob_data_3 },
-    { evv_u_intfac_data_3, sizeof evv_u_intfac_data_3 },
-    { evv_u_vars_data_3, sizeof evv_u_vars_data_3 },
-    { evv_ut_anno_data_3, sizeof evv_ut_anno_data_3 },
-    { evv_ut_gcat_bss_5, sizeof evv_ut_gcat_bss_5 },
-    { evv_ut_gcat_data_10, sizeof evv_ut_gcat_data_10 },
-    { evv_ut_gcat_data_4, sizeof evv_ut_gcat_data_4 },
-    { evv_ut_inton_data_3, sizeof evv_ut_inton_data_3 },
-    { evv_ut_norm_data_3, sizeof evv_ut_norm_data_3 },
-    { evv_ut_spr_bss_6, sizeof evv_ut_spr_bss_6 },
-    { evv_ut_spr_data_10, sizeof evv_ut_spr_data_10 },
-    { evv_ut_spr_data_11, sizeof evv_ut_spr_data_11 },
-    { evv_ut_spr_data_12, sizeof evv_ut_spr_data_12 },
-    { evv_ut_spr_data_13, sizeof evv_ut_spr_data_13 },
-    { evv_ut_spr_data_19, sizeof evv_ut_spr_data_19 },
-    { evv_ut_spr_data_20, sizeof evv_ut_spr_data_20 },
-    { evv_ut_spr_data_21, sizeof evv_ut_spr_data_21 },
-    { evv_ut_spr_data_23, sizeof evv_ut_spr_data_23 },
-    { evv_ut_spr_data_25, sizeof evv_ut_spr_data_25 },
-    { evv_ut_spr_data_26, sizeof evv_ut_spr_data_26 },
-    { evv_ut_spr_data_28, sizeof evv_ut_spr_data_28 },
-    { evv_ut_spr_data_30, sizeof evv_ut_spr_data_30 },
-    { evv_ut_spr_data_35, sizeof evv_ut_spr_data_35 },
-    { evv_ut_spr_data_38, sizeof evv_ut_spr_data_38 },
-    { evv_ut_spr_data_39, sizeof evv_ut_spr_data_39 },
-    { evv_ut_spr_data_42, sizeof evv_ut_spr_data_42 },
-    { evv_ut_spr_data_43, sizeof evv_ut_spr_data_43 },
-    { evv_ut_spr_data_44, sizeof evv_ut_spr_data_44 },
-    { evv_ut_spr_data_45, sizeof evv_ut_spr_data_45 },
-    { evv_ut_spr_data_46, sizeof evv_ut_spr_data_46 },
-    { evv_ut_spr_data_47, sizeof evv_ut_spr_data_47 },
-    { evv_ut_spr_data_5, sizeof evv_ut_spr_data_5 },
-    { evv_ut_spr_data_50, sizeof evv_ut_spr_data_50 },
-    { evv_ut_spr_data_51, sizeof evv_ut_spr_data_51 },
-    { evv_ut_spr_data_52, sizeof evv_ut_spr_data_52 },
-    { evv_ut_spr_data_53, sizeof evv_ut_spr_data_53 },
-    { evv_ut_spr_data_55, sizeof evv_ut_spr_data_55 },
-    { evv_ut_spr_data_56, sizeof evv_ut_spr_data_56 },
-    { evv_ut_spr_data_9, sizeof evv_ut_spr_data_9 },
-    { evv_ut_struc_data_3, sizeof evv_ut_struc_data_3 },
-    { evv_ut_util_data_3, sizeof evv_ut_util_data_3 },
+const delta_store enus_delta_const_store[] = {
+    { enus_evv_ea_ga_data_3, sizeof enus_evv_ea_ga_data_3 },
+    { enus_evv_ea_gcat_data_3, sizeof enus_evv_ea_gcat_data_3 },
+    { enus_evv_ea_homog_data_3, sizeof enus_evv_ea_homog_data_3 },
+    { enus_evv_ea_morph_data_3, sizeof enus_evv_ea_morph_data_3 },
+    { enus_evv_ea_pname_data_3, sizeof enus_evv_ea_pname_data_3 },
+    { enus_evv_ea_roots_data_3, sizeof enus_evv_ea_roots_data_3 },
+    { enus_evv_ea_text_data_3, sizeof enus_evv_ea_text_data_3 },
+    { enus_evv_ea_words_data_3, sizeof enus_evv_ea_words_data_3 },
+    { enus_evv_es_cdur_data_3, sizeof enus_evv_es_cdur_data_3 },
+    { enus_evv_es_inton_bss_3, sizeof enus_evv_es_inton_bss_3 },
+    { enus_evv_es_inton_data_4, sizeof enus_evv_es_inton_data_4 },
+    { enus_evv_et_cmpnd_data_3, sizeof enus_evv_et_cmpnd_data_3 },
+    { enus_evv_et_gcat_data_3, sizeof enus_evv_et_gcat_data_3 },
+    { enus_evv_et_inton_data_3, sizeof enus_evv_et_inton_data_3 },
+    { enus_evv_et_norm_data_3, sizeof enus_evv_et_norm_data_3 },
+    { enus_evv_et_numbr_data_3, sizeof enus_evv_et_numbr_data_3 },
+    { enus_evv_et_phnol_data_3, sizeof enus_evv_et_phnol_data_3 },
+    { enus_evv_et_phone_data_3, sizeof enus_evv_et_phone_data_3 },
+    { enus_evv_et_phrs_data_3, sizeof enus_evv_et_phrs_data_3 },
+    { enus_evv_et_prfx_data_3, sizeof enus_evv_et_prfx_data_3 },
+    { enus_evv_et_sffx_data_3, sizeof enus_evv_et_sffx_data_3 },
+    { enus_evv_et_spr1_bss_13, sizeof enus_evv_et_spr1_bss_13 },
+    { enus_evv_et_spr1_data_10, sizeof enus_evv_et_spr1_data_10 },
+    { enus_evv_et_spr1_data_11, sizeof enus_evv_et_spr1_data_11 },
+    { enus_evv_et_spr1_data_12, sizeof enus_evv_et_spr1_data_12 },
+    { enus_evv_et_spr1_data_14, sizeof enus_evv_et_spr1_data_14 },
+    { enus_evv_et_spr1_data_15, sizeof enus_evv_et_spr1_data_15 },
+    { enus_evv_et_spr1_data_3, sizeof enus_evv_et_spr1_data_3 },
+    { enus_evv_et_spr1_data_7, sizeof enus_evv_et_spr1_data_7 },
+    { enus_evv_et_spr1_data_8, sizeof enus_evv_et_spr1_data_8 },
+    { enus_evv_et_spr1_data_9, sizeof enus_evv_et_spr1_data_9 },
+    { enus_evv_et_strss_data_3, sizeof enus_evv_et_strss_data_3 },
+    { enus_evv_et_syll_data_3, sizeof enus_evv_et_syll_data_3 },
+    { enus_evv_glob_bss_4, sizeof enus_evv_glob_bss_4 },
+    { enus_evv_glob_data_3, sizeof enus_evv_glob_data_3 },
+    { enus_evv_u_intfac_data_3, sizeof enus_evv_u_intfac_data_3 },
+    { enus_evv_u_vars_data_3, sizeof enus_evv_u_vars_data_3 },
+    { enus_evv_ut_anno_data_3, sizeof enus_evv_ut_anno_data_3 },
+    { enus_evv_ut_gcat_bss_5, sizeof enus_evv_ut_gcat_bss_5 },
+    { enus_evv_ut_gcat_data_10, sizeof enus_evv_ut_gcat_data_10 },
+    { enus_evv_ut_gcat_data_4, sizeof enus_evv_ut_gcat_data_4 },
+    { enus_evv_ut_inton_data_3, sizeof enus_evv_ut_inton_data_3 },
+    { enus_evv_ut_norm_data_3, sizeof enus_evv_ut_norm_data_3 },
+    { enus_evv_ut_spr_bss_6, sizeof enus_evv_ut_spr_bss_6 },
+    { enus_evv_ut_spr_data_10, sizeof enus_evv_ut_spr_data_10 },
+    { enus_evv_ut_spr_data_11, sizeof enus_evv_ut_spr_data_11 },
+    { enus_evv_ut_spr_data_12, sizeof enus_evv_ut_spr_data_12 },
+    { enus_evv_ut_spr_data_13, sizeof enus_evv_ut_spr_data_13 },
+    { enus_evv_ut_spr_data_19, sizeof enus_evv_ut_spr_data_19 },
+    { enus_evv_ut_spr_data_20, sizeof enus_evv_ut_spr_data_20 },
+    { enus_evv_ut_spr_data_21, sizeof enus_evv_ut_spr_data_21 },
+    { enus_evv_ut_spr_data_23, sizeof enus_evv_ut_spr_data_23 },
+    { enus_evv_ut_spr_data_25, sizeof enus_evv_ut_spr_data_25 },
+    { enus_evv_ut_spr_data_26, sizeof enus_evv_ut_spr_data_26 },
+    { enus_evv_ut_spr_data_28, sizeof enus_evv_ut_spr_data_28 },
+    { enus_evv_ut_spr_data_30, sizeof enus_evv_ut_spr_data_30 },
+    { enus_evv_ut_spr_data_35, sizeof enus_evv_ut_spr_data_35 },
+    { enus_evv_ut_spr_data_38, sizeof enus_evv_ut_spr_data_38 },
+    { enus_evv_ut_spr_data_39, sizeof enus_evv_ut_spr_data_39 },
+    { enus_evv_ut_spr_data_42, sizeof enus_evv_ut_spr_data_42 },
+    { enus_evv_ut_spr_data_43, sizeof enus_evv_ut_spr_data_43 },
+    { enus_evv_ut_spr_data_44, sizeof enus_evv_ut_spr_data_44 },
+    { enus_evv_ut_spr_data_45, sizeof enus_evv_ut_spr_data_45 },
+    { enus_evv_ut_spr_data_46, sizeof enus_evv_ut_spr_data_46 },
+    { enus_evv_ut_spr_data_47, sizeof enus_evv_ut_spr_data_47 },
+    { enus_evv_ut_spr_data_5, sizeof enus_evv_ut_spr_data_5 },
+    { enus_evv_ut_spr_data_50, sizeof enus_evv_ut_spr_data_50 },
+    { enus_evv_ut_spr_data_51, sizeof enus_evv_ut_spr_data_51 },
+    { enus_evv_ut_spr_data_52, sizeof enus_evv_ut_spr_data_52 },
+    { enus_evv_ut_spr_data_53, sizeof enus_evv_ut_spr_data_53 },
+    { enus_evv_ut_spr_data_55, sizeof enus_evv_ut_spr_data_55 },
+    { enus_evv_ut_spr_data_56, sizeof enus_evv_ut_spr_data_56 },
+    { enus_evv_ut_spr_data_9, sizeof enus_evv_ut_spr_data_9 },
+    { enus_evv_ut_struc_data_3, sizeof enus_evv_ut_struc_data_3 },
+    { enus_evv_ut_util_data_3, sizeof enus_evv_ut_util_data_3 },
     { 0, 0 },
 };

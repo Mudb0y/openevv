@@ -537,17 +537,22 @@ def check(obj):
 
 
 TREE = os.path.join(ROOT, "lang", "enus", "rules")
-SHIPPED = os.path.join(ROOT, "lang", "enus", "delta_rules_enus.c")
+# Which language this speaks for. Only English has notation so far; the tables
+# carry the language's name since two of them can be linked into one program,
+# so the name is wanted in three places and is written down once.
+TAG = "enus"
+SHIPPED = os.path.join(ROOT, "lang", TAG, "delta_rules_%s.c" % TAG)
+SHIPPED_H = os.path.join(ROOT, "lang", TAG, "delta_rules_%s.h" % TAG)
 
 
 def shipped_bytecode():
     """The bytecode the engine actually runs, out of the tree."""
     import re as _re
     s = open(SHIPPED).read()
-    m = _re.search(r"const uint8_t delta_rule_code\[\] = \{(.*?)\};", s,
-                   _re.S)
+    m = _re.search(r"const uint8_t %s_delta_rule_code\[\] = \{(.*?)\};" % TAG,
+                   s, _re.S)
     if m is None:
-        raise ValueError("no delta_rule_code in %s" % SHIPPED)
+        raise ValueError("no %s_delta_rule_code in %s" % (TAG, SHIPPED))
     return bytes(int(x) for x in m.group(1).replace("\n", "").split(",")
                  if x.strip())
 
@@ -585,7 +590,7 @@ def write_symbols():
         e.origin[name] = obj
     with tempfile.TemporaryDirectory() as tmp:
         stores, names = de.write_consts(e, OBJECTS,
-                                        os.path.join(tmp, "consts.c"))
+                                        os.path.join(tmp, "consts.c"), TAG)
     out = ["# Where each address the rules name falls: which store of the",
            "# language's own bytes, and how far into it. Written by",
            "# tools/delta-notation.py out of IBM's objects. The bytes",
@@ -647,16 +652,14 @@ def regenerate():
 
     with tempfile.TemporaryDirectory() as tmp:
         out_c = os.path.join(tmp, "delta_rules_enus.c")
-        out_h = os.path.join(tmp, "delta_rules.h")
-        de.write_c(e, None, out_c, out_h, None, stores, names)
+        out_h = os.path.join(tmp, "delta_rules_%s.h" % TAG)
+        de.write_c(e, None, out_c, out_h, None, stores, names, TAG)
         got = open(out_c, "rb").read()
         got_h = open(out_h, "rb").read()
 
     ok = True
-    for what, made, have in (("delta_rules_enus.c", got, SHIPPED),
-                             ("delta_rules.h", got_h,
-                              os.path.join(ROOT, "lang", "enus",
-                                           "delta_rules.h"))):
+    for what, made, have in (("delta_rules_%s.c" % TAG, got, SHIPPED),
+                             ("delta_rules_%s.h" % TAG, got_h, SHIPPED_H)):
         want = open(have, "rb").read()
         if made == want:
             print("%-22s %d bytes, the same as the tree's" % (what, len(made)))
@@ -704,18 +707,39 @@ def prove():
         from_text.rule(name, back[0][1], back_tables, obj)
         n += 1
 
+    # And the text as it stands in the tree, which is what gets built from.
+    # Everything above re-lifts and writes the text afresh, so it tests the
+    # writer and the reader and says nothing about whether what is stored is
+    # still current. That is exactly how a stale tree slipped past this once.
+    from_tree = de.Emitter()
+    files = sorted(f for f in os.listdir(TREE) if f.endswith(".dr"))
+    files = ([f for f in files if f != "glob.dr"]
+             + [f for f in files if f == "glob.dr"])
+    for f in files:
+        rules, tables = read_rules(open(os.path.join(TREE, f)))
+        for name, d, obj in rules:
+            from_tree.rule(name, d, tables, obj)
+            from_tree.origin[name] = obj
+
     text = bytes(from_text.code)
     lift_ = bytes(from_lift.code)
+    tree = bytes(from_tree.code)
     print("rules taken: %d" % n)
-    print("from the text: %d bytes, from a fresh lift: %d, in the tree: %d"
-          % (len(text), len(lift_), len(want)))
+    print("written afresh: %d, from a fresh lift: %d, from the tree: %d,"
+          " what the engine runs: %d"
+          % (len(text), len(lift_), len(tree), len(want)))
 
     ok = True
     if text != lift_:
         print("the text and a fresh lift do not agree")
         ok = False
+    if tree != want:
+        print("the text in the tree is stale and does not reproduce the"
+              " bytecode the engine runs; write it again with"
+              " make notation")
+        ok = False
     if text != want:
-        print("the text does not reproduce the bytecode in the tree")
+        print("a text written afresh does not reproduce the bytecode")
         for i in range(min(len(text), len(want))):
             if text[i] != want[i]:
                 print("  first difference at byte %d" % i)

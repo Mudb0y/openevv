@@ -6425,8 +6425,9 @@ label L213 was $X107$100936
   load movswl slot 14 into r0
   scale 0 reg r0 reg r0 8 into r0
   alu shll imm 3 reg r0
-  load movl imm 100 into r1
+  push imm 100
 label L214 was at_0x198d
+  popreg r1
   jump to L216
 label L215 was $X108$100940
   push reg r6

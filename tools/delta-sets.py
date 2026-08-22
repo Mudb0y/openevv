@@ -25,31 +25,31 @@ TAIL = r"""
    which is what the original allocates. The stores are copied where a value
    can name them first: see src/delta_low.c for why an address in the program
    will not do. */
-void set_dict_new(delta_state *d)
+void %%(tag)s_set_dict_new(delta_state *d)
 {
     delta_low_region(setent_store, sizeof setent_store);
     d->set_store = EVV_REF(delta_low_copy(setent_all, sizeof setent_all));
 }
 
-void set_dict_delete(delta_state *d)
+void %%(tag)s_set_dict_delete(delta_state *d)
 {
     if (d != 0)
         d->set_store = 0;
 }
 
-void act_dict_new(delta_state *d)
+void %%(tag)s_act_dict_new(delta_state *d)
 {
     delta_low_region(actent_store, sizeof actent_store);
     d->act_store = EVV_REF(delta_low_copy(actent_all, sizeof actent_all));
 }
 
-void act_dict_delete(delta_state *d)
+void %%(tag)s_act_dict_delete(delta_state *d)
 {
     if (d != 0)
         d->act_store = 0;
 }
 
-void link_new(delta_state *d)
+void %%(tag)s_link_new(delta_state *d)
 {
     d->fence_room = %d;
 
@@ -81,7 +81,7 @@ void link_new(delta_state *d)
     memcpy(EVV_AT(uint8_t *, d->act_table), act_table, sizeof act_table);
 }
 
-void link_delete(delta_state *d)
+void %%(tag)s_link_delete(delta_state *d)
 {
     if (d == 0)
         return;
@@ -184,12 +184,13 @@ def store(o, tag, suffix, func, out, name):
     return order, len(data)
 
 
-def main():
-    # Which module, and where to put what comes out. Defaults to English so
-    # that running it by hand still does what it always did.
-    lang = sys.argv[1] if len(sys.argv) > 1 else "enus"
-    where = os.path.join(ROOT, "analysis", lang)
-    out_c = os.path.join(ROOT, "lang", lang, "delta_sets_" + lang + ".c")
+def main(argv=()):
+    # As in delta-link.py: the objects' directory names the language, and
+    # the written file is named for it. No arguments means US English.
+    tag = argv[0] if argv else "enus"
+    where = argv[1] if len(argv) > 1 else os.path.join(ROOT, "analysis", tag)
+    out_c = os.path.join(ROOT, "lang", tag, "delta_sets_%s.c" % tag)
+    os.makedirs(os.path.dirname(out_c), exist_ok=True)
 
     link = dlk.Coff(os.path.join(where, "link.obj"))
     sets = dlk.Coff(os.path.join(where, "setentry.obj"))
@@ -250,8 +251,11 @@ def main():
         f.write("};\n\nstatic const char dictfile[] = %s;\n"
                 % dlk.c_string(dict_name))
 
-        f.write(TAIL % (0x19, 10, 10, 11, 10, 1, 2, len(names), nsets, nacts,
-                        0x50b8, 0x488))
+        # The names in the tail carry the language, because a program may
+        # have more than one module in it; the numbers above are put in
+        # first, so this is a second pass rather than another placeholder.
+        f.write((TAIL % (0x19, 10, 10, 11, 10, 1, 2, len(names), nsets, nacts,
+                         0x50b8, 0x488)) % {"tag": tag})
 
     print("sets: %d, %d bytes of entries" % (len(set_order), set_bytes))
     print("actions: %d, %d bytes of entries" % (len(act_order), act_bytes))
@@ -261,4 +265,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

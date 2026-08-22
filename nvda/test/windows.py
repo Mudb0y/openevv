@@ -144,6 +144,9 @@ def main():
 
     check("all eight voices have names", len(engine.voiceNames), 8)
     check("the voice's settings were read", len(engine.voiceParams), 8)
+    note("languages: %s"
+         % ", ".join("0x%x (%s)" % (l, mod.nameOf(l))
+                     for l in engine.languages))
 
     # ---- one whole utterance, held to the number every other harness uses --
 
@@ -152,7 +155,48 @@ def main():
     check("the fixed sentence comes to what it always has",
           player.samples(), KNOWN_SAMPLES)
     check("and it said it had finished", marks, [None])
-    note("sha256 of the samples: %s" % player.digest())
+    known = player.digest()
+    note("sha256 of the samples: %s" % known)
+
+    # ---- every language the library has, and none of them moved ----------
+    #
+    # A library may have more than one language in it, and a language change
+    # is an engine change underneath: what has to be true is that speaking a
+    # language after switching to it gives what that language gives, however
+    # many others have been spoken in between. Anything less means a change
+    # left something of the language before it behind, which would be heard
+    # as an accent rather than as a fault.
+    #
+    # Lengths rather than hashes, as everywhere else here. The engine does
+    # not say a sentence in the same samples twice running on one instance --
+    # the same 38,423 samples come out under three different hashes -- so the
+    # length is what can be held to across utterances.
+    if len(engine.languages) > 1:
+        passes = []
+        for _ in range(2):
+            said = {}
+            for language in engine.languages:
+                engine.setLanguage(language)
+                if not passes:
+                    check("speaking %s reads its own presets"
+                          % mod.nameOf(language), len(engine.voiceNames), 8)
+                player.chunks = []
+                del marks[:]
+                engine.addText(KNOWN_SENTENCE.encode("utf-8"))
+                engine.synthesize()
+                said[language] = player.samples()
+            passes.append(said)
+
+        note("what each language made of the fixed sentence: %s"
+             % ", ".join("%s %d samples" % (mod.nameOf(l), passes[0][l])
+                         for l in engine.languages))
+        check("each language says the sentence at its own length",
+              len(set(passes[0].values())), len(engine.languages))
+        check("the first of them says it in what it took on its own",
+              passes[0][engine.languages[0]], KNOWN_SAMPLES)
+        check("and going round them all again gives every one back",
+              passes[1], passes[0])
+        engine.setLanguage(engine.languages[0])
 
     # ---- an index mark lands where it should ------------------------------
 

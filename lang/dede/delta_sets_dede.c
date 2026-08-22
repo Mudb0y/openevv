@@ -9427,31 +9427,31 @@ static const char dictfile[] = "ecidede.ddl";
    which is what the original allocates. The stores are copied where a value
    can name them first: see src/delta_low.c for why an address in the program
    will not do. */
-void set_dict_new(delta_state *d)
+void dede_set_dict_new(delta_state *d)
 {
     delta_low_region(setent_store, sizeof setent_store);
     d->set_store = EVV_REF(delta_low_copy(setent_all, sizeof setent_all));
 }
 
-void set_dict_delete(delta_state *d)
+void dede_set_dict_delete(delta_state *d)
 {
     if (d != 0)
         d->set_store = 0;
 }
 
-void act_dict_new(delta_state *d)
+void dede_act_dict_new(delta_state *d)
 {
     delta_low_region(actent_store, sizeof actent_store);
     d->act_store = EVV_REF(delta_low_copy(actent_all, sizeof actent_all));
 }
 
-void act_dict_delete(delta_state *d)
+void dede_act_dict_delete(delta_state *d)
 {
     if (d != 0)
         d->act_store = 0;
 }
 
-void link_new(delta_state *d)
+void dede_link_new(delta_state *d)
 {
     d->fence_room = 25;
 
@@ -9483,7 +9483,7 @@ void link_new(delta_state *d)
     memcpy(EVV_AT(uint8_t *, d->act_table), act_table, sizeof act_table);
 }
 
-void link_delete(delta_state *d)
+void dede_link_delete(delta_state *d)
 {
     if (d == 0)
         return;

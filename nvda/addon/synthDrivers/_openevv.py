@@ -119,6 +119,50 @@ CONTROL = 1
 VOICE_FIRST = 1
 VOICE_LAST = 8
 
+#: What locale each of IBM's languages is, since the library answers with the
+#: number and the reader wants a locale. The number is a family in the third
+#: byte and a dialect in the low one -- 0x10000 is US English and 0x10001
+#: British -- and these are the nine the SDK has. A library built with
+#: something not here is still usable: it is offered under its number and the
+#: reader is told no locale, which loses the language of a voice and nothing
+#: else.
+LOCALES = {
+	0x10000: "en_US",
+	0x10001: "en_GB",
+	0x20000: "es_ES",
+	0x20001: "es_MX",
+	0x30000: "fr_FR",
+	0x30001: "fr_CA",
+	0x40000: "de_DE",
+	0x50000: "it_IT",
+	0x80000: "ja_JP",
+}
+
+#: And what to call it in a list of voices. NVDA shows the voice's name, so
+#: the language has to be in it: there are eight presets per language and
+#: their names repeat.
+LANGUAGE_NAMES = {
+	0x10000: "US English",
+	0x10001: "British English",
+	0x20000: "Castilian Spanish",
+	0x20001: "Latin American Spanish",
+	0x30000: "French",
+	0x30001: "Canadian French",
+	0x40000: "German",
+	0x50000: "Italian",
+	0x80000: "Japanese",
+}
+
+
+def localeOf(language):
+	"""The locale a language is, or None where it is not one we know."""
+	return LOCALES.get(language)
+
+
+def nameOf(language):
+	"""What to call a language in front of a person."""
+	return LANGUAGE_NAMES.get(language, "0x%x" % language)
+
 _CALLBACK = ctypes.WINFUNCTYPE(
 	ctypes.c_int,
 	ctypes.c_void_p,
@@ -175,6 +219,11 @@ class Engine:
 		self._produced = 0
 		self.player = None
 		self.voiceNames = {}
+		#: Every language the library has, and the one in force.
+		self.languages = []
+		self.language = None
+		#: The eight presets of each language, read once on the way in.
+		self.voiceNamesByLanguage = {}
 		self.version = ""
 		#: What each of the eight settings of the voice in force is, kept here
 		#: so that the driver can answer a settings dialog without calling
@@ -336,6 +385,41 @@ class Engine:
 			log.debugWarning("openevv: the engine refused voice %d" % number)
 		self._readVoiceParams()
 
+	def setLanguage(self, language):
+		"""Speak another of the languages the library has.
+
+		The engine takes this on the instance it already has -- underneath it
+		is an engine change, which is the original's own arrangement -- so
+		nothing is torn down. The eight presets belong to the language and are
+		read again, because they are not the same numbers, and the caller has
+		to put back whatever it had chosen: a language change is a voice
+		change as well.
+		"""
+		if language == self.language or language not in self.languages:
+			return False
+		self.setParam(PARAM_LANGUAGE, language)
+		self.language = language
+		self._readVoiceNames()
+		self._readVoiceParams()
+		return True
+
+	def voiceNamesFor(self, language):
+		"""The eight presets of one language, whichever is in force."""
+		return self.voiceNamesByLanguage.get(language, self.voiceNames)
+
+	def _readVoiceNames(self):
+		self.voiceNames = self._voiceNames()
+		self.voiceNamesByLanguage[self.language] = self.voiceNames
+
+	def _voiceNames(self):
+		room = ctypes.create_string_buffer(64)
+		names = {}
+		for number in range(VOICE_FIRST, VOICE_LAST + 1):
+			self._dll.eciGetVoiceName(self._instance, number, room)
+			name = room.value.decode("latin-1").strip()
+			names[number] = name or ("Voice %d" % number)
+		return names
+
 	def _readVoiceParams(self):
 		for which in VOICE_RANGE:
 			self.voiceParams[which] = self.getVoiceParam(which)
@@ -459,10 +543,21 @@ class Engine:
 		dll.eciVersion(room)
 		self.version = room.value.decode("latin-1").strip()
 
-		for number in range(VOICE_FIRST, VOICE_LAST + 1):
-			dll.eciGetVoiceName(handle, number, room)
-			name = room.value.decode("latin-1").strip()
-			self.voiceNames[number] = name or ("Voice %d" % number)
+		self.languages = [languages[i] for i in range(count.value)]
+		self.language = self.languages[0]
+
+		# Every language's presets, read now rather than when one is asked
+		# for: the reader wants the whole list of voices before it has
+		# chosen any of them, and reading a language's presets means being
+		# in that language. Going through them here costs one pass on the
+		# way in and nothing afterwards.
+		for language in self.languages:
+			if language != self.language:
+				dll.eciSetParam(handle, PARAM_LANGUAGE, language)
+			self.voiceNamesByLanguage[language] = self._voiceNames()
+		if len(self.languages) > 1:
+			dll.eciSetParam(handle, PARAM_LANGUAGE, self.language)
+		self.voiceNames = self.voiceNamesByLanguage[self.language]
 
 		self._readVoiceParams()
 

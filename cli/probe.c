@@ -213,7 +213,18 @@ int main(int argc, char **argv)
         for (i = 0; i < n && i < 32; i++)
             printf("speak:   language 0x%x\n", langs[i]);
 
-        h = eo_new();
+        /* A build may have more than one language in it, and the
+           tests want to drive each of them through the same binary.
+           EVV_LANGUAGE names which, as the number the API uses; with
+           nothing set the engine picks, which is the first one linked. */
+        {
+            const char *want = getenv("EVV_LANGUAGE");
+
+            if (want != NULL && *want != 0)
+                h = eo_newEx((uint32_t)strtoul(want, NULL, 0));
+            else
+                h = eo_new();
+        }
         if (h == NULL && n > 0)
             h = eo_newEx(langs[0]);
         if (h == NULL)
