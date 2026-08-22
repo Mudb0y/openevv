@@ -17,22 +17,45 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Both forms of the rules are built and both are held to the same hash. Which
+  # one is the default has changed once and could change again, so each job says
+  # which it wants rather than taking it: whichever way the default points, the
+  # other form is the one that would quietly rot, and the compiled rules are
+  # checked against the interpreter by tools/delta-check.sh -- so if the
+  # interpreter moves, the thing the C is held against has moved.
   linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build
-        run: make -j"$(nproc)"
+      - name: Build, with the rules as C
+        run: make -j"$(nproc)" RULES=c
 
       - name: Check the samples
         run: test/hash.sh
+
+      - name: Check the add-on's own two
+        run: make nvda-test
 
       - uses: actions/upload-artifact@v4
         with:
           name: evv-linux-x86_64
           path: build/evv
           if-no-files-found: error
+
+  # The quick one: no Python, no thirteen megabytes of generated C, half a
+  # minute. It proves the interpreter still says what it has always said, and it
+  # is what a fresh clone with nothing but a C compiler gets.
+  linux-bytecode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build, with the rules as bytecode
+        run: make -j"$(nproc)" RULES=bytecode
+
+      - name: Check the samples
+        run: test/hash.sh
 
   # Cross-compiled here rather than on a Windows runner, because this is the
   # same toolchain the tree is developed with and it takes a minute.
@@ -65,6 +88,22 @@ jobs:
             test "$n" = 0
           done
 
+      # The add-on is built here because it wants both libraries, and this is
+      # the only job that has them. A tag names itself; anything else is named
+      # after the commit, so a downloaded artifact says what it came from.
+      #
+      # It is uploaded as a build artifact and deliberately left out of
+      # releases: it is not stable enough to hand anyone yet. The release job
+      # throws it away rather than this job not making it, so that a build to
+      # try is always there.
+      - name: Pack the NVDA add-on
+        run: |
+          case "$GITHUB_REF" in
+          refs/tags/v*) version=${GITHUB_REF_NAME#v} ;;
+          *)            version=0.0+${GITHUB_SHA::8} ;;
+          esac
+          python3 nvda/build.py --version "$version"
+
       - uses: actions/upload-artifact@v4
         with:
           name: openevv-windows-x86_64
@@ -76,6 +115,7 @@ jobs:
             build/eci.ini
             build/dlltest.exe
             build/dlltest32.exe
+            build/openevv-*.nvda-addon
           if-no-files-found: error
 
   # The one thing the cross build cannot answer: whether it runs on Windows.
@@ -172,7 +212,7 @@ jobs:
           if ($have -ne $want) { throw "the 32-bit library says something else through ctypes" }
 
   release:
-    needs: [linux, windows, windows-check, windows-check-32]
+    needs: [linux, linux-bytecode, windows, windows-check, windows-check-32]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -197,6 +237,10 @@ jobs:
         run: |
           # The harnesses are checks, not something to ship.
           rm -f dist/windows/dlltest.exe dist/windows/dlltest32.exe
+          # The add-on is not released yet. It is still built and uploaded as a
+          # build artifact, which is how it gets tried, but it is thrown away
+          # here so it neither goes out as a file nor ends up inside the zip.
+          rm -f dist/windows/openevv-*.nvda-addon
           # Two libraries with the same name cannot sit in one directory, and
           # dropping the wrong one in is the mistake to design out: each gets a
           # folder saying which it is, with the ini it wants beside it.

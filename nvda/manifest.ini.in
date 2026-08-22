@@ -1,0 +1,9 @@
+name = openevv
+summary = "Eloquence (openevv)"
+description = """IBM's Embedded ViaVoice speech engine, rebuilt from its 1999 objects as C, as a synthesiser for NVDA. The engine is loaded into NVDA's own process; nothing else needs installing and no engine of IBM's has to be found on the machine."""
+author = "Stanislaw Przedzinkowski <stasprzecinek@gmail.com>"
+url = https://github.com/Mudb0y/openevv
+version = @VERSION@
+minimumNVDAVersion = 2019.3.0
+lastTestedNVDAVersion = @TESTED@
+updateChannel = None

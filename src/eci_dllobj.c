@@ -28,7 +28,7 @@ typedef STDCALL uint32_t (*AddRefFn)(void *self);
 
 /* The engine facade, which is in eci_enginewrap.c. Only its size is
    wanted here, to ask for the room before constructing one. */
-#define ENGINE_WRAPPER_BYTES 0x14
+extern const uint32_t ew_bytes;
 
 typedef struct RequestLicense {
     const void *vt;
@@ -61,7 +61,7 @@ int getObject(int32_t kind, void **out)
 
     if (kind == OBJ_ENGINE_A || kind == OBJ_ENGINE_B) {
         if (rl_licenseGranted(&licence)) {
-            void *p = cpp_new(ENGINE_WRAPPER_BYTES);
+            void *p = cpp_new(ew_bytes);
 
             *out = p ? ew_ctor(p) : 0;
             if (*out != 0)

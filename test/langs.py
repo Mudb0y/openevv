@@ -9,7 +9,11 @@ same library produces speaking that language on its own.
 
 Byte for byte, because that is the standard everything else here is held
 to: a language that sounds nearly right beside another one is exactly the
-failure this is looking for.
+failure this is looking for. What each language is held against is a
+process of its own, and it has to be: the engine does not say a sentence in
+the same samples twice running on one instance -- the same 38,423 samples
+come out under a different hash each time -- so the only utterance whose
+samples can be compared is the first one an instance speaks.
 
 It is the check that needs neither Wine nor IBM's objects, like
 test/hash.sh, and unlike test/hash.sh it says nothing about whether the

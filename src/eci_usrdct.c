@@ -38,7 +38,7 @@
 #define DL_STREAM(l)    ((l)->stream)
 
 /* Which side of the machine wants to hear that the spine moved. */
-#define OWNER_MOVED(d)  (*(int32_t *)(EVV_AT(uint8_t *, (d)->owner) + 0x1b8))
+#define OWNER_MOVED(d) (EVV_AT(delta_owner *, (d)->owner)->changed)
 
 /* What comes back. Nought is the only good answer; the rest say what went
    wrong, and the holder hands its own out in place of asking a volume. */

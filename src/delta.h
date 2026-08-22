@@ -949,6 +949,8 @@ typedef struct {
     int32_t      unknown_1d0; /* 0x1d0, cleared */
     int32_t      unknown_1b4; /* 0x1b4, how many streams the runtime declared */
     int32_t      unknown_1dc; /* 0x1dc, set to one */
+    int32_t      argc;       /* 0x1d4, what the owner was started with */
+    char       **argv;       /* 0x1d8 */
     const char  *unknown_1ec; /* 0x1ec, an empty name */
 } delta_owner;
 

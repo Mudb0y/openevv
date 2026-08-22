@@ -20,12 +20,15 @@ the operations that set them came out of the interpreter into delta_rule_alu,
 delta_rule_cmp and delta_condition, which both it and this call, so neither
 can drift from the other over what a comparison afterwards will say.
 
-Proving it: the interpreter prints every call it makes with its arguments when
-DELTA_RULE_TRACE is set high enough. A rule compiled from here calls through
-the same helper and prints the same way, so a run with the rule as bytecode
-and a run with it as C either produce the same trace or the translation is
-wrong. tools/delta-check.sh does that; both suites are the coarser check
-behind it.
+Proving it: the engine says which rule it is entering and with what when
+DELTA_RULE_TRACE is set, and a rule compiled from here is entered through the
+same function and says the same. So the same text spoken twice, once with a
+rule compiled and once without, either names the same rules in the same order
+with the same arguments or the translation is wrong. tools/delta-check.sh does
+that, with EVV_FAITHFUL set so that a wrapper is left as the call it was; the
+comment at the top of it says what else that comparison needs and what would
+make it finer. Both suites are the coarser check behind it, and the only one
+for the inlining itself.
 
 usage: delta-decompile.py                 the hundred smallest with a body
        delta-decompile.py <count>         the smallest that many
@@ -33,6 +36,7 @@ usage: delta-decompile.py                 the hundred smallest with a body
        delta-decompile.py <rule>...       the ones named
 """
 
+import collections
 import importlib
 import os
 import re
@@ -49,6 +53,14 @@ census = importlib.import_module('delta-census')
 OUT_C = os.environ.get(
     'EVV_OUT_C',
     os.path.join(census.LANG_DIR, 'delta_rules_c_%s.c' % census.LANG_TAG))
+
+# Inlining a wrapper says what a rule does, and costs the only check that is
+# finer than the audio. A wrapper written out no longer calls the wrapper rule,
+# so what a run says it did differs from what the interpreter says, and
+# tools/delta-check.sh has nothing to compare. Setting EVV_FAITHFUL leaves the
+# wrappers as calls, which is the form that check is built from; nothing else
+# here changes what a run says it did.
+FAITHFUL = bool(os.environ.get('EVV_FAITHFUL'))
 
 # What the interpreter keeps, and what a rule compiled from here keeps too.
 MAXARG = 64
@@ -315,8 +327,7 @@ def emit(rule):
             body.append('        r0 = (int32_t)(num / by);')
             body.append('        r2 = (int32_t)(num % by); } }')
         elif op == 'return':
-            body.append('    { int32_t out = %s; evv_frame_pop(frame);'
-                        ' return out; }' % v(ops[0]))
+            body.append('    RETURN(%s);' % v(ops[0]))
             pending = None
         elif op == 'switch':
             body.append('    switch (%s) {' % v(ops[0]))
@@ -389,21 +400,34 @@ def write(names):
                     ' r4 = 0, r5 = 0, r6 = 0, r7 = 0;\n')
         text.append('    delta_flags fl;\n')
         text.append('    int i;\n\n')
+        # The arena can run out, and then there is no frame. The interpreter
+        # answers nought here rather than writing through the nought it was
+        # given, and a rule written as C has to do the same or an engine that
+        # would have gone quiet falls over instead.
+        text.append('    if (frame == 0)\n        return 0;\n\n')
         text.append('    memset(frame, 0, DELTA_RULE_FRAME_MAX);\n')
         text.append('    memset(arg, 0, sizeof arg);\n')
         text.append('    memset(&fl, 0, sizeof fl);\n')
         text.append('    for (i = 0; i < nargs && i < %d; i++)\n' % params)
         text.append('        memcpy(base + %d + 4 * i, &args[i], 4);\n\n'
                     % pbase)
+        # The rule while it is still one straight line of code with labels,
+        # which is where anything that has to follow the machine's own control
+        # flow has to look: the alternatives a dispatch chain names, and which
+        # comparison a test of the flags is reading.
+        flat = direct_tests(tail_returns(fold(body)))
+        alts = dispatch_names(flat)
         # Taking the dead loads out first brings more calls up against
         # their arguments, which is why the joining goes last.
         named, saw = name_globals(
-            join_calls(c, join_pops(drop_dead(structure(fold(body))))))
-        named = name_alternatives(name_params(named, pbase, params))
+            join_calls(c, drop_pops(join_pops(drop_dead(
+                leave_loops(structure(flat)))))))
+        named = name_tails(
+            name_alternatives(name_params(named, pbase, params), alts))
         USED.update(saw)
         text.append('\n'.join(named))
-        tail = ('' if named and named[-1].strip().endswith('return out; }')
-                else '\n    evv_frame_pop(frame);\n    return r0;')
+        tail = ('' if named and named[-1].strip().startswith('RETURN(')
+                else '\n    RETURN(r0);')
         text.append('%s\n}\n\n' % tail)
         done.append(name)
 
@@ -482,42 +506,124 @@ def every():
 OPPOSITE = {'e': 'ne', 'ne': 'e', 'a': 'be', 'be': 'a', 'ae': 'b', 'b': 'ae',
             'g': 'le', 'le': 'g', 'ge': 'l', 'l': 'ge', 's': 'ns', 'ns': 's'}
 
+# And the same for a condition that has already been written as a comparison.
+FLIP = {'==': '!=', '!=': '==', '<': '>=', '>=': '<', '<=': '>', '>': '<='}
+
 LABEL_RE = re.compile(r'^\s*L(\d+):;$')
-BRANCH_RE = re.compile(r'^(\s*)if \(IF\((\w+)\)\) goto L(\d+);$')
+BRANCH_RE = re.compile(r'^(\s*)if \((.*)\) goto L(\d+);$')
+GOTO_RE = re.compile(r'^(\s*)goto L(\d+);$')
 JUMP_RE = re.compile(r'goto L(\d+);')
+
+
+def opposite(cond):
+    """The other half of a condition, however it is written. None where there
+    is no way to say it, which is a branch that keeps the goto it had."""
+    m = re.match(r'^IF\((\w+)\)$', cond)
+    if m:
+        was = m.group(1)
+        return 'IF(%s)' % OPPOSITE[was] if was in OPPOSITE else None
+    # A comparison is turned round by turning its operator round, which needs
+    # the one that compares the two sides rather than any inside them.
+    depth = 0
+    found = None
+    i = 0
+    while i < len(cond):
+        ch = cond[i]
+        if ch in '([':
+            depth += 1
+        elif ch in ')]':
+            depth -= 1
+        elif depth == 0:
+            for op in ('==', '!=', '<=', '>='):
+                if cond.startswith(op, i):
+                    if found:
+                        return None
+                    found = (i, op)
+                    i += 1
+                    break
+            else:
+                if ch in '<>':
+                    if found:
+                        return None
+                    found = (i, ch)
+        i += 1
+    if not found:
+        return None
+    at, op = found
+    return cond[:at] + FLIP[op] + cond[at + len(op):]
+
 
 STRUCTURED = [0]
 LOOPED = [0]
 
 
+def tails_of(body):
+    """The labels where a rule ends: the one it goes to when it gives up and
+    the one it goes to when it has matched. Everything jumps to them, so they
+    are the two places a reader looks for, and they stay where they can be
+    found."""
+    out = set()
+    for i, line in enumerate(body):
+        m = LABEL_RE.match(line)
+        if not m:
+            continue
+        for k in range(i + 1, min(i + 8, len(body))):
+            t = body[k].strip()
+            if 'succeed,' in t or 'vretproc,' in t:
+                out.add(int(m.group(1)))
+                break
+            if t.startswith('RETURN(') or LABEL_RE.match(body[k]):
+                break
+    return out
+
+
 def structure(body):
-    """Branches that skip a region, written as the if they are.
+    """Branches that skip a region, written as the if they are, and branches
+    back over one, written as the loop.
 
-    A branch forward to a label, over a region nothing else can jump into, is
-    an if around that region under the opposite condition. Nothing else is
-    touched: a backward branch is a loop and a region with another way in is
-    not a region, and both keep the goto they had.
+    A branch forward to a label is an if around what it skips, under the
+    opposite condition. A branch back to a label above it is a do-while around
+    what lies between, and an unconditional jump back is the same thing with
+    nothing to test.
 
-    Innermost first, so that what comes out nests.
+    All three ask that what they enclose is a whole region -- that it opens and
+    closes every block it mentions. Beyond that a loop asks nothing at all, and
+    an if asks only that the region does not hold one of the two places the rule
+    ends. Whether anything else jumps into a region does not otherwise matter,
+    because C lets a goto enter a block and means by it exactly what the flat
+    code meant: the rest of the block, and then whatever follows it. The label
+    inside says so, and a reader who sees one knows there is another way in.
+
+    Loops go first, and innermost first, so that what comes out nests. The order
+    is not a preference: a branch out of a loop turned into an if straddles the
+    loop's own test, and then the loop can never close.
     """
+    tails = tails_of(body)
     while True:
-        cut = _once(body)
+        cut = _loop(body)
         if cut is None:
-            cut = _loop(body)
+            cut = _once(body, tails)
             if cut is None:
                 return body
-            LOOPED[0] += 1
-        else:
             STRUCTURED[0] += 1
+        else:
+            LOOPED[0] += 1
         body = cut
 
 
 def _loop(body):
     """A branch back to a label above it, written as the do-while it is.
 
-    The label is the top of the loop and the branch is its test. It only works
-    where nothing else jumps to that label -- another way in is another loop
-    -- and where what lies between is a whole region.
+    The label is the top of the loop and the branch is its test, so the lines
+    between them are the loop's body and the branch is what repeats it. All it
+    takes is that what lies between is a whole region: nothing else has to be
+    true of it.
+
+    The label stays where it is, inside the loop. It used to be taken away,
+    which meant refusing every loop anything else jumped to -- and that was
+    most of them, which is why 343 loops closed where the machine has 7,757.
+    A goto at the top of a do is the same place as before it, so nothing that
+    jumped there needs to know.
     """
     at = {}
     for i, line in enumerate(body):
@@ -525,30 +631,33 @@ def _loop(body):
         if m:
             at[int(m.group(1))] = i
 
-    goes = {}
-    for i, line in enumerate(body):
-        for m in JUMP_RE.finditer(line):
-            goes.setdefault(int(m.group(1)), []).append(i)
-
+    best = None
     for i, line in enumerate(body):
         m = BRANCH_RE.match(line)
+        cond = m.group(2) if m else None
         if not m:
-            continue
-        pad, cond, tgt = m.group(1), m.group(2), int(m.group(3))
+            m = GOTO_RE.match(line)
+            if not m:
+                continue
+        pad, tgt = m.group(1), int(m.group(len(m.groups())))
         j = at.get(tgt)
         if j is None or j >= i:
             continue
-        if goes.get(tgt, ()) != [i]:
-            continue
         if not _whole(body[j + 1:i]):
             continue
-        out = body[:j]
-        out.append('%sdo {' % pad)
-        out.extend('    ' + l if l.strip() else l for l in body[j + 1:i])
-        out.append('%s} while (IF(%s));' % (pad, cond))
-        out.extend(body[i + 1:])
-        return out
-    return None
+        if best is None or i - j < best[0] - best[1]:
+            best = (i, j, pad, cond)
+    if best is None:
+        return None
+
+    i, j, pad, cond = best
+    out = body[:j]
+    out.append('%sdo {' % pad if cond else '%sfor (;;) {' % pad)
+    out.append(body[j])
+    out.extend('    ' + l if l.strip() else l for l in body[j + 1:i])
+    out.append('%s} while (%s);' % (pad, cond) if cond else '%s}' % pad)
+    out.extend(body[i + 1:])
+    return out
 
 
 WRAPPED = [0]
@@ -597,54 +706,6 @@ def layout():
             at += 4 + up(sizes[n[k]] if n[k] < len(sizes) else 0, 2)
         n[k] += 1
     return LAYOUT
-
-
-ALTED = [0]
-
-
-def name_alternatives(body):
-    """The arms of a backtracking dispatch, under the alternatives they are.
-
-    Every switch in a rule dispatches on what backtrack_function answered,
-    which is the machine asking which alternative to try next. So an arm is
-    not an arbitrary place to jump to: it is one of the rule's alternatives,
-    in the order the language wrote them, and the label says so.
-
-    Only where a label is the target of exactly one case in the whole rule.
-    A label two cases share, or one something else jumps to as well, is not
-    one alternative and keeps its number.
-    """
-    cases = {}
-    clash = set()
-    n = 0
-    for line in body:
-        if line.strip().startswith('switch ('):
-            n += 1
-            continue
-        m = re.match(r'\s*case (-?\d+): goto (L\d+);$', line)
-        if not m:
-            continue
-        tgt = m.group(2)
-        if tgt in cases:
-            clash.add(tgt)
-        cases[tgt] = 'alt%d_%s' % (n, m.group(1))
-    for t in clash:
-        del cases[t]
-    if not cases:
-        return body
-    taken = {}
-    for tgt, new in cases.items():
-        taken.setdefault(new, []).append(tgt)
-    for new, tgts in taken.items():
-        if len(tgts) > 1:
-            for t in tgts:
-                del cases[t]
-    if not cases:
-        return body
-    ALTED[0] += len(cases)
-    pat = re.compile(r'\b(%s)\b' % '|'.join(sorted(cases, key=len,
-                                                    reverse=True)))
-    return [pat.sub(lambda m: cases[m.group(1)], l) for l in body]
 
 
 PARAMED = [0]
@@ -881,7 +942,8 @@ def join_calls(code, body):
             if want and len(args) == want and len(out) >= want:
                 del out[len(out) - want:]
                 args.reverse()
-                said = inlined(code, who, args) if who.startswith('ZZ') else None
+                said = (inlined(code, who, args)
+                        if who.startswith('ZZ') and not FAITHFUL else None)
                 if said is None:
                     said = '%s, CALL(%s, %d)' % (
                         ', '.join('ARG(%s)' % a for a in args), who, want)
@@ -904,7 +966,7 @@ def _whole(region):
     return depth == 0
 
 
-def _once(body):
+def _once(body, tails):
     at = {}
     for i, line in enumerate(body):
         m = LABEL_RE.match(line)
@@ -922,12 +984,18 @@ def _once(body):
         if not m:
             continue
         pad, cond, tgt = m.group(1), m.group(2), int(m.group(3))
-        if cond not in OPPOSITE:
+        if opposite(cond) is None:
             continue
         j = at.get(tgt)
         if j is None or j <= i + 1:
             continue
-        inside = [k for k, where in at.items() if i < where < j]
+        # A region may hold a label something outside jumps to: C lets a goto
+        # enter a block and means by it what the flat code meant, and the label
+        # is there to say so. The exception is the two places a rule ends. Those
+        # are what everything jumps to, and folding one inside a conditional
+        # puts the place a rule gives up three levels in from where a reader
+        # looks for it.
+        inside = [k for k, where in at.items() if i < where < j and k in tails]
         if any(any(not (i < f < j) for f in goes.get(k, ()))
                for k in inside):
             continue
@@ -944,7 +1012,7 @@ def _once(body):
 
     i, j, pad, cond, tgt = best
     out = body[:i]
-    out.append('%sif (IF(%s)) {' % (pad, OPPOSITE[cond]))
+    out.append('%sif (%s) {' % (pad, opposite(cond)))
     out.extend('    ' + line if line.strip() else line
                for line in body[i + 1:j])
     out.append('%s}' % pad)
@@ -1029,6 +1097,657 @@ def _enter(body, i):
     return ('    ENTER(%s);' % ', '.join(slots), 14)
 
 
+# Each of the machine's comparisons: whether it subtracts or ands, and how
+# wide it works. Anything narrower than the whole is masked to that width
+# first, which is why the width has to be carried about.
+CMP_KIND = {'testl': ('test', 4), 'testw': ('test', 2), 'testb': ('test', 1),
+            'cmpl': ('cmp', 4), 'cmpw': ('cmp', 2), 'cmpb': ('cmp', 1)}
+
+# What a condition says after a comparison. The machine takes the first operand
+# from the second, so the second is the one on the left of what comes out, and
+# whether the comparison is signed is which flags the condition reads rather
+# than anything about the operands. The sign flag on its own is not a
+# comparison at all -- it is the sign of a difference that may have overflowed
+# -- so a condition that reads it alone is left as it was. None do.
+CMP_SAYS = {
+    'e': ('%s == %s', True), 'ne': ('%s != %s', True),
+    'l': ('%s < %s', True), 'ge': ('%s >= %s', True),
+    'le': ('%s <= %s', True), 'g': ('%s > %s', True),
+    'b': ('%s < %s', False), 'ae': ('%s >= %s', False),
+    'be': ('%s <= %s', False), 'a': ('%s > %s', False),
+}
+
+# And after an and, where the carry and the overflow are both clear, so every
+# condition is that value against nought. Above-or-equal is then always true
+# and below never is; those two are left alone rather than written as a
+# constant, which would read worse than the flag did.
+TEST_SAYS = {
+    'e': '%s == 0', 'be': '%s == 0', 'ne': '%s != 0', 'a': '%s != 0',
+    's': '%s < 0', 'l': '%s < 0', 'ns': '%s >= 0', 'ge': '%s >= 0',
+    'g': '%s > 0', 'le': '%s <= 0',
+}
+
+CMP_RE = re.compile(r'^CMP\((\w+), (.*)\);$')
+ENVELOPE_RE = re.compile(r'^(?:LANDING|ENTER)\(')
+READS_RE = re.compile(r'IF\((\w+)\)')
+
+# What an operand reads that something else could write.
+READS_MEM = re.compile(r'\bAT\(|\bFLD\(|\bPARAM\(|\bGLOBAL\(|\*\(')
+
+# The machine's four flags, and which of them each thing touches. Most
+# operations write all four, and the exceptions are what make this worth
+# writing down: an increment or a decrement keeps the carry it was given, a
+# shift leaves the carry and the overflow alone, and a multiply says nothing.
+FLAGS = ('zf', 'sf', 'cf', 'of')
+ALL_FLAGS = frozenset(FLAGS)
+WRITES_FLAGS = {
+    'incl': frozenset(('zf', 'sf', 'of')),
+    'incw': frozenset(('zf', 'sf', 'of')),
+    'decl': frozenset(('zf', 'sf', 'of')),
+    'decw': frozenset(('zf', 'sf', 'of')),
+    'shll': frozenset(('zf', 'sf')),
+    'shlw': frozenset(('zf', 'sf')),
+    'sarl': frozenset(('zf', 'sf')),
+    'sarw': frozenset(('zf', 'sf')),
+    'imull': frozenset(),
+    'imulw': frozenset(),
+}
+
+# And the one operation that reads a flag rather than only writing it.
+READS_FLAGS = {'sbbl': frozenset(('cf',))}
+
+# What each condition looks at, so that a comparison is only kept for the
+# flags something actually asks about.
+COND_FLAGS = {
+    'e': ('zf',), 'ne': ('zf',),
+    'a': ('cf', 'zf'), 'ae': ('cf',), 'b': ('cf',), 'be': ('cf', 'zf'),
+    'g': ('zf', 'sf', 'of'), 'ge': ('sf', 'of'),
+    'l': ('sf', 'of'), 'le': ('zf', 'sf', 'of'),
+    's': ('sf',), 'ns': ('sf',),
+}
+
+TESTED = [0, 0]
+
+
+def _writes(line, reg):
+    """Whether a line puts something in a register. Every way the writer has
+    of doing that is here; a way missed would let a comparison be written
+    against a value that had moved on."""
+    return bool(re.search(r'\b%s\b\s*=[^=]' % reg, line)
+                or re.search(r'SET(?:LOW|BYTE0|BYTE1)\(%s\b' % reg, line)
+                or re.search(r'POP\(%s\b' % reg, line))
+
+
+def _flow(body):
+    """Where each line can go next. Straight on unless it says otherwise, and
+    both ways at a branch or an arm."""
+    at = {}
+    for i, line in enumerate(body):
+        m = LABEL_RE.match(line)
+        if m:
+            at[m.group(1)] = i
+    n = len(body)
+    succ = []
+    for i, line in enumerate(body):
+        t = line.strip()
+        on = [i + 1] if i + 1 < n else []
+        m = re.match(r'^(?:if \(.*\)|case -?\d+:) goto L(\d+);$', t)
+        if m:
+            succ.append(on + [at[m.group(1)]])
+            continue
+        m = re.match(r'^goto L(\d+);$', t)
+        if m:
+            succ.append([at[m.group(1)]])
+            continue
+        if t.startswith('RETURN('):
+            succ.append([])
+            continue
+        succ.append(on)
+    return succ
+
+
+def _operands(text):
+    """The two operands of a comparison, split at the comma between them and
+    not at any comma inside either of them."""
+    depth = 0
+    for i, ch in enumerate(text):
+        if ch in '([':
+            depth += 1
+        elif ch in ')]':
+            depth -= 1
+        elif ch == ',' and depth == 0:
+            return text[:i], text[i + 1:].lstrip()
+    return None, None
+
+
+NATURAL = (
+    (re.compile(r'^(AT|FLD)\((u?int(?:8|16|32)_t),'), 2),
+    (re.compile(r'^GLOBAL\((u?int(?:8|16|32)_t),'), 2),
+    (re.compile(r'^PARAM\((u?int(?:8|16|32)_t),'), 2),
+    (re.compile(r'^\(\*\((u?int(?:8|16|32)_t) \*\)'), 1),
+    (re.compile(r'^(LOW)\(r\d\)$'), 0),
+    (re.compile(r'^(BYTE[01])\(r\d\)$'), 0),
+)
+
+
+def _natural(expr):
+    """What an operand already is, as a width and whether it is signed. Every
+    operand the writer emits is an int32_t, but most of them got there by
+    widening something narrower, and one that was widened the way the machine
+    would have widened it needs nothing said about it."""
+    while expr.startswith('(int32_t)'):
+        expr = expr[len('(int32_t)'):]
+    if re.match(r'^-?\d+$', expr):
+        return 4, True, expr
+    for pat, group in NATURAL:
+        m = pat.match(expr)
+        if not m:
+            continue
+        what = m.group(group) if group else m.group(1)
+        if what == 'LOW':
+            return 2, False, expr
+        if what.startswith('BYTE'):
+            return 1, False, expr
+        return (int(what.strip('u').replace('int', '').replace('_t', '')) // 8,
+                not what.startswith('u'), expr)
+    return 4, True, expr
+
+
+def _at_width(expr, w, signed):
+    """One operand, said at the width the machine compared it at.
+
+    The machine masks both operands to that width before it compares them, so
+    an operand wider than the comparison has to be cut down to it here. One
+    that is already the width, and already signed or unsigned the same way, is
+    left as it is -- and a cast to a word around it can go, because casting to
+    a word and then to a half is the same as casting to the half.
+    """
+    t = ('' if signed else 'u') + {1: 'int8_t', 2: 'int16_t',
+                                   4: 'int32_t'}[w]
+    was, wsigned, bare = _natural(expr)
+    if re.match(r'^-?\d+$', bare):
+        v = int(bare)
+        lo, hi = ((-(1 << (8 * w - 1)), 1 << (8 * w - 1)) if signed
+                  else (0, 1 << (8 * w)))
+        return bare if lo <= v < hi else '(%s)%s' % (t, bare)
+    if was == w and wsigned == signed:
+        return bare
+    if w == 4 and signed and was <= 4:
+        # Nothing to say: the operand is already the whole of what the machine
+        # compared, however it came to be.
+        return expr
+    return '(%s)(%s)' % (t, bare)
+
+
+def _said(what, cond):
+    """What a condition says about a comparison, as C. None where it cannot be
+    said, which leaves the flags where they were."""
+    kind, w, a, b = what
+    if kind == 'test':
+        if cond not in TEST_SAYS:
+            return None
+        if a == b:
+            v = _at_width(a, w, True)
+        elif w != 4:
+            v = '(int%d_t)((%s) & (%s))' % (w * 8, a, b)
+        else:
+            # Parenthesised, because C binds an and looser than a comparison
+            # and would read this as anding with the answer.
+            v = '((%s) & (%s))' % (a, b)
+        return TEST_SAYS[cond] % v
+    if cond not in CMP_SAYS:
+        return None
+    form, signed = CMP_SAYS[cond]
+    return form % (_at_width(b, w, signed), _at_width(a, w, signed))
+
+
+def _kills(line, what):
+    """Whether a line could have moved either operand out from under a
+    comparison that has already been made. A register it writes, or a store
+    where the operand reads memory -- and a call can store anywhere."""
+    _kind, _w, a, b = what
+    both = a + ' ' + b
+    for reg in set(re.findall(r'\br\d\b', both)):
+        if _writes(line, reg):
+            return True
+    if READS_MEM.search(both):
+        if 'CALL(' in line or 'memcpy' in line or 'memset' in line:
+            return True
+        m = re.match(r'^\s*(.*?) =[^=]', line)
+        if m and READS_MEM.search(m.group(1)):
+            return True
+    return False
+
+
+def direct_tests(body):
+    """Every test of the flags, written as the comparison the machine made.
+
+    The machine has no way to ask a question except to set its flags and then
+    read one of them, and a quarter of the lines in a rule were that. Here the
+    flags are a variable like any other, so a test can say what it tests: what
+    a call answered against nought, a length against a limit, a bit against a
+    mask.
+
+    It is done only where every reader of a flag is reached by one comparison
+    and nothing has moved either of its operands since. Where anything else can
+    reach a reader, or a call has been made that could have stored over what
+    was compared, the flags stay and the comparison stays with them.
+
+    Each of the four flags is followed on its own, because the operations do
+    not all write all four: increment and decrement keep the carry they were
+    given, the shifts leave the carry and the overflow alone, and a multiply
+    says nothing at all. A comparison taken away because nothing read its zero
+    flag would otherwise take with it a carry that something still read.
+    """
+    if not any(CMP_RE.match(l.strip()) or ENVELOPE_RE.match(l.strip())
+               for l in body):
+        return body
+
+    succ = _flow(body)
+    n = len(body)
+
+    # Every line that leaves a flag saying something new: which flags it
+    # writes, and what they then say -- a comparison of two operands, or
+    # nothing, where they mean whatever the operation left behind. The
+    # envelope's own test is a real one, but its line cannot be taken away
+    # because the macro is what carries it.
+    gen = {}
+    hidden = {}
+    for i, line in enumerate(body):
+        t = line.strip()
+        if ENVELOPE_RE.match(t):
+            gen[i] = (ALL_FLAGS, ('test', 4, 'r0', 'r0'), False)
+            continue
+        m = CMP_RE.match(t)
+        if m:
+            k = CMP_KIND.get(m.group(1))
+            a, b = _operands(m.group(2)) if k else (None, None)
+            gen[i] = ((ALL_FLAGS, (k[0], k[1], a, b), True) if k and a
+                      else (ALL_FLAGS, None, False))
+            continue
+        if 'CMP(' in t:
+            gen[i] = (ALL_FLAGS, None, False)
+            continue
+        m = re.search(r'\bALU\((\w+),', t)
+        if m:
+            gen[i] = (WRITES_FLAGS.get(m.group(1), ALL_FLAGS), None, False)
+            if m.group(1) in READS_FLAGS:
+                hidden[i] = READS_FLAGS[m.group(1)]
+
+    empty = (frozenset(),) * len(FLAGS)
+
+    def through(i, coming):
+        """What each flag says after a line, given what it said before it."""
+        bits, what, _keep = gen.get(i, (frozenset(), None, False))
+        made = frozenset([(i, what)])
+        line = body[i]
+        return tuple(made if b in bits else
+                     frozenset((d, None) if w and _kills(line, w) else (d, w)
+                               for d, w in was)
+                     for b, was in zip(FLAGS, coming))
+
+    # What reaches each line, grown until it stops growing. Every line is
+    # looked at once whether or not anything reaches it, or a rule whose first
+    # line happens not to touch the flags is never walked at all: nothing
+    # would reach the first comparison, so nothing would carry it forward and
+    # every comparison would look unread. A line nothing reaches keeps
+    # nothing, which is a refusal rather than a licence.
+    state = [empty for _ in range(n)]
+    work = list(range(n - 1, -1, -1))
+    queued = set(range(n))
+    while work:
+        i = work.pop()
+        queued.discard(i)
+        now = through(i, state[i])
+        for j in succ[i]:
+            fresh = tuple(a | b for a, b in zip(state[j], now))
+            if fresh != state[j]:
+                state[j] = fresh
+                if j not in queued:
+                    queued.add(j)
+                    work.append(j)
+
+    def reaching(i, flags):
+        out = set()
+        for b in flags:
+            out |= state[i][FLAGS.index(b)]
+        return out
+
+    needed = set()
+    said = list(body)
+    for i, line in enumerate(body):
+        conds = READS_RE.findall(line)
+        if conds:
+            want = set()
+            for c in conds:
+                want.update(COND_FLAGS.get(c, ALL_FLAGS))
+            came = reaching(i, want)
+            whats = set(w for _d, w in came)
+            one = list(whats)[0] if len(whats) == 1 else None
+            says = ([_said(one, c) for c in conds] if one else [])
+            if came and one and all(says):
+                for c, how in zip(conds, says):
+                    said[i] = said[i].replace('IF(%s)' % c, how)
+                    TESTED[0] += 1
+            else:
+                needed.update(d for d, _w in came)
+        if i in hidden:
+            needed.update(d for d, _w in reaching(i, hidden[i]))
+
+    keep = []
+    for i, line in enumerate(said):
+        _bits, what, deletable = gen.get(i, (None, None, False))
+        if deletable and what and i not in needed:
+            TESTED[1] += 1
+            continue
+        keep.append(line)
+    return keep
+
+
+RETURNED = [0]
+
+
+def tail_returns(body):
+    """A jump at the return, written as the return itself.
+
+    The compiler put a rule's one way out at the bottom and jumped to it from
+    everywhere, so a rule ends by saying where it is going rather than what it
+    answers. The label stays where something falls into it and goes where
+    nothing does any more.
+    """
+    at = {}
+    for i, line in enumerate(body):
+        m = LABEL_RE.match(line)
+        if m:
+            at[m.group(1)] = i
+    ret = {}
+    for lab, i in at.items():
+        if i + 1 < len(body) and body[i + 1].strip().startswith('RETURN('):
+            ret[lab] = body[i + 1].strip()
+    if not ret:
+        return body
+
+    out = []
+    for line in body:
+        m = re.match(r'^(\s*)goto L(\d+);$', line)
+        if m and m.group(2) in ret:
+            out.append('%s%s' % (m.group(1), ret[m.group(2)]))
+            RETURNED[0] += 1
+        else:
+            out.append(line)
+
+    live = set()
+    for line in out:
+        live.update(JUMP_RE.findall(line))
+
+    def gone(line):
+        m = LABEL_RE.match(line)
+        return m is not None and m.group(1) not in live
+
+    return [l for l in out if not gone(l)]
+
+
+LEFT = [0, 0]
+
+
+def _loop_spans(body):
+    """Where each loop opens and closes, innermost last, with the label at its
+    top and the label just past its end. Depth is counted in braces rather than
+    in indentation, because a line can open and close its own."""
+    spans = []
+    open_at = []
+    depth = 0
+    for i, line in enumerate(body):
+        t = line.strip()
+        before = depth
+        depth += line.count('{') - line.count('}')
+        if t == 'do {' or t == 'for (;;) {':
+            open_at.append(('do' if t.startswith('do') else 'for', before, i))
+        elif open_at and depth == open_at[-1][1] and line.count('}'):
+            kind, was, start = open_at.pop()
+            top = None
+            m = (LABEL_RE.match(body[start + 1])
+                 if start + 1 < len(body) else None)
+            if m:
+                top = int(m.group(1))
+            follow = None
+            for k in range(i + 1, len(body)):
+                if not body[k].strip():
+                    continue
+                m = LABEL_RE.match(body[k])
+                if m:
+                    follow = int(m.group(1))
+                break
+            spans.append((start, i, kind, top, follow))
+    return spans
+
+
+def leave_loops(body):
+    """A jump out of a loop said as leaving it, and a jump to the top of one
+    said as going round again.
+
+    Only for the loop a line is actually inside, and only where the place
+    jumped to is the one the loop leaves to, or its own top: a break lands
+    after the loop and nowhere else, so a jump anywhere further on stays the
+    jump it was.
+
+    Going round again is said only in a loop with nothing to test. In a
+    do-while, C's continue goes to the test rather than to the top, which is
+    not what a jump to the top meant.
+    """
+    inner = {}
+    for start, end, kind, top, follow in _loop_spans(body):
+        for k in range(start + 1, end):
+            inner.setdefault(k, (kind, top, follow))
+
+    out = list(body)
+    for k, (kind, top, follow) in inner.items():
+        m = BRANCH_RE.match(out[k]) or GOTO_RE.match(out[k])
+        if not m:
+            continue
+        tgt = int(m.group(len(m.groups())))
+        cond = m.group(2) if m.re is BRANCH_RE else None
+        if tgt == follow:
+            what, which = 'break', 0
+        elif tgt == top and kind == 'for':
+            what, which = 'continue', 1
+        else:
+            continue
+        out[k] = ('%sif (%s) %s;' % (m.group(1), cond, what) if cond
+                  else '%s%s;' % (m.group(1), what))
+        LEFT[which] += 1
+
+    live = set()
+    for line in out:
+        live.update(int(x) for x in JUMP_RE.findall(line))
+    return [l for l in out
+            if not (LABEL_RE.match(l) and int(LABEL_RE.match(l).group(1))
+                    not in live)]
+
+
+DROPPED_POPS = [0]
+POPREG_RE = re.compile(r'POP\((r\d)(?:, (\d+))?\);')
+
+
+def drop_pops(body):
+    """A pop into a register nothing reads, as the letting go it is.
+
+    A rule pushes what a call is to take and moves the stack back afterwards,
+    and the machine's way of moving it back is to pop into a register. Where
+    the rule never looks at that register anywhere, nothing was read back and
+    the line says only that the arguments are gone, which is what DROP says.
+    """
+    read = set()
+    for line in body:
+        rest = POPREG_RE.sub('', line)
+        for m in re.finditer(r'\br\d\b', rest):
+            if rest[m.end():m.end() + 3] == ' = ':
+                continue
+            read.add(m.group(0))
+
+    def one(m):
+        if m.group(1) in read:
+            return m.group(0)
+        DROPPED_POPS[0] += 1
+        return 'DROP(%s);' % (m.group(2) or '1')
+
+    return [POPREG_RE.sub(one, l) for l in body]
+
+
+ALTED = [0, 0]
+
+
+def _chain(body, i):
+    """The arms of a dispatch the compiler wrote as a chain of decrements.
+
+    With few alternatives to choose between it did not build a jump table: it
+    took one off the answer and jumped if that left nought, took another off
+    and jumped again. So the place jumped to after the first decrement is the
+    rule's first alternative, which is the one a jump table reaches through
+    case nought -- a table is preceded by the same decrement, to bring an
+    answer of one down to the first arm of the table. Both are counted from
+    nought here so that both say the same thing.
+    """
+    arms = []
+    k = 0
+    n = len(body)
+    while i < n:
+        t = body[i].strip()
+        if t.startswith('switch ('):
+            return None, i
+        if (t.startswith('POP(') or t.startswith('DROP(')
+                or t.startswith('ARG(')):
+            i += 1
+            continue
+        m = re.match(r'^(r\d) = \(ALU\(dec[lw], 0, \1\)\);$', t)
+        if m:
+            k += 1
+            i += 1
+            continue
+        m = re.match(r'^if \((?:IF\(e\)|r\d == 0)\) goto (L\d+);$', t)
+        if m and k:
+            arms.append((k - 1, m.group(1)))
+            i += 1
+            continue
+        break
+    return (arms or None), i
+
+
+def dispatch_names(body):
+    """Every arm of a rule's backtracking dispatch, under the alternative it
+    is.
+
+    A rule asks backtrack_function which alternative to try next and then goes
+    to it, and its compiler wrote that two ways: a jump table where there were
+    several arms, and a chain of decrements of the answer where there were few.
+    Both are the same question and both are the order the language wrote the
+    alternatives in, so both are named the same way.
+
+    A place two arms claim, or one that two names would land on, keeps its
+    number: that is not one alternative.
+    """
+    claimed = {}
+    kind = {}
+    site = 0
+    i = 0
+    n = len(body)
+    while i < n:
+        t = body[i].strip()
+        if t.startswith('switch ('):
+            site += 1
+            j = i + 1
+            while j < n:
+                m = re.match(r'^case (-?\d+): goto (L\d+);$', body[j].strip())
+                if not m:
+                    break
+                new = 'alt%d_%s' % (site, m.group(1))
+                claimed.setdefault(m.group(2), set()).add(new)
+                kind[new] = 0
+                j += 1
+            i = j
+            continue
+        if 'backtrack_function' in t:
+            arms, j = _chain(body, i + 1)
+            if arms:
+                site += 1
+                for k, tgt in arms:
+                    new = 'alt%d_%d' % (site, k)
+                    claimed.setdefault(tgt, set()).add(new)
+                    kind[new] = 1
+                i = j
+                continue
+        i += 1
+
+    names = {t: list(s)[0] for t, s in claimed.items() if len(s) == 1}
+    taken = {}
+    for t, new in names.items():
+        taken.setdefault(new, []).append(t)
+    names = {t: new for t, new in names.items() if len(taken[new]) == 1}
+    for new in names.values():
+        ALTED[kind[new]] += 1
+    return names
+
+
+def name_alternatives(body, names):
+    """The names worked out before the rule was structured, put on."""
+    if not names:
+        return body
+    pat = re.compile(r'\b(%s)\b' % '|'.join(sorted(names, key=len,
+                                                   reverse=True)))
+    return [pat.sub(lambda m: names[m.group(1)], l) for l in body]
+
+
+TAILED = [0, 0]
+
+
+def name_tails(body):
+    """The two places a rule ends, under what they are.
+
+    A rule that has matched calls succeed and answers nought; a rule that has
+    not calls vretproc with 94 and answers that. Both sit at the bottom and
+    everything jumps to them, which is why most of a rule's gotos are neither
+    a loop nor a conditional: they are the language saying this attempt is over.
+    Named, they say it.
+
+    A label the dispatch has already claimed keeps that name, because which
+    alternative a place is says more than what it does.
+    """
+    at = {}
+    for i, line in enumerate(body):
+        m = LABEL_RE.match(line)
+        if m:
+            at[m.group(1)] = i
+
+    found = {}
+    for lab, i in at.items():
+        for k in range(i + 1, min(i + 8, len(body))):
+            t = body[k].strip()
+            if 'succeed,' in t:
+                found[lab] = 'matched'
+                break
+            if 'vretproc,' in t:
+                found[lab] = 'failed'
+                break
+            if t.startswith('RETURN(') or LABEL_RE.match(body[k]):
+                break
+    if not found:
+        return body
+
+    n = collections.Counter(found.values())
+    seen = collections.Counter()
+    names = {}
+    for lab in sorted(found, key=lambda x: at[x]):
+        what = found[lab]
+        seen[what] += 1
+        names['L' + lab] = (what if n[what] == 1
+                            else '%s%d' % (what, seen[what]))
+        TAILED[0 if what == 'failed' else 1] += 1
+
+    pat = re.compile(r'\b(%s)\b' % '|'.join(sorted(names, key=len,
+                                                   reverse=True)))
+    return [pat.sub(lambda m: names[m.group(1)], l) for l in body]
+
+
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == 'all':
         names = every()
@@ -1041,13 +1760,23 @@ def main():
     print('calls joined to their arguments: %d' % JOINED[0])
     print('wrappers inlined to the primitive they stand for: %d' % WRAPPED[0])
     print('reaches through the state named as the variable they are: %d over %d variables' % (NAMED[0], len(USED)))
-    print('arms named as the alternative they are: %d' % ALTED[0])
+    print('arms named as the alternative they are: %d in a table, %d in a'
+          ' chain of decrements' % (ALTED[0], ALTED[1]))
     print('reaches into the frame named as the argument they are: %d'
           % PARAMED[0])
+    print('tests of the flags written as the comparison they are: %d,'
+          ' comparisons no longer needed: %d' % (TESTED[0], TESTED[1]))
+    print('pops into a register nothing reads, said as letting go: %d'
+          % DROPPED_POPS[0])
+    print('jumps at the return, written as the return: %d' % RETURNED[0])
     print('pops joined: %d, loads into r0 that nothing reads: %d'
           % (POPPED[0], DROPPED[0]))
     print('branches turned into an if: %d, loops closed: %d'
           % (STRUCTURED[0], LOOPED[0]))
+    print('jumps out of a loop said as leaving it: %d, jumps to the top said'
+          ' as going round again: %d' % (LEFT[0], LEFT[1]))
+    print('tails named: %d where the rule gives up, %d where it has matched'
+          % (TAILED[0], TAILED[1]))
     print('landing places folded: %d, entries folded: %d'
           % (FOLDED[0], FOLDED[1]))
     print('%d of %d rules written to %s'

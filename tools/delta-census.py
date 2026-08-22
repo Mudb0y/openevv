@@ -162,8 +162,14 @@ class Code:
             return (op, sub, a, b), (), ops, [], q3 + trail
 
         if op == 'call':
+            # Two counts follow the entry: how many arguments it takes, and
+            # how deep the argument area should be here. The first is what the
+            # entry gets -- constant for 3,495 of the 3,500 entries called,
+            # which is what says it is the arity -- and the second grows
+            # through a rule, because a call does not pop what it was given.
             which = self.u16(q)
-            return ('call', self.entries[which]), (self.code[q + 3],), ops, [], q + 4
+            return (('call', self.entries[which]),
+                    (self.code[q + 2], self.code[q + 3]), ops, [], q + 4)
         if op == 'jump':
             return ('jump',), (), ops, [self.s16(q)], q + 2
         if op == 'branch':
@@ -400,7 +406,7 @@ def dump(want):
             line = ' '.join(str(part) for part in shape)
             notes = []
             if shape[0] == 'call':
-                notes.append('%d args' % vals[0])
+                notes.append('%d args, %d in the area' % (vals[0], vals[1]))
             # A symbol and an immediate are what a lexicon is written in, so
             # they are resolved; the rest is left as it lies.
             for part, val, _where in ops:

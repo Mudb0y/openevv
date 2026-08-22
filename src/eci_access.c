@@ -19,7 +19,7 @@
 #include "delta.h"
 
 /* Which side of the machine wants to hear that the spine moved. */
-#define OWNER_MOVED(d) (*(int32_t *)(EVV_AT(uint8_t *, (d)->owner) + 0x1b8))
+#define OWNER_MOVED(d) (EVV_AT(delta_owner *, (d)->owner)->changed)
 
 /* A spine position is carried as an int32, so reaching a node's words means
    casting one back. The first three words are the node's own; the sync

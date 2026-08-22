@@ -83,7 +83,14 @@ int32_t evv_ref_checked(const void *p);
    process's own and nothing can move its stack somewhere a value could name.
    They nest strictly, so a stack of them is all that is wanted, and it comes
    from the same place as everything else. */
+/* What the arena is still holding, grouped by the allocation that asked, most
+   bytes first. A leak is a group that grows with every instance made and
+   thrown away. */
+void evv_arena_outstanding(const char *when);
+
 void *evv_frame_push(size_t n);
 void  evv_frame_pop(void *p);
+/* Called by whatever runs a thread, once its body has returned. */
+void  evv_frame_done(void);
 
 #endif

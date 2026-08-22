@@ -15,19 +15,28 @@
 #include <stdlib.h>
 #include <string.h>
 #include "delta.h"
+#include "delta_rules_c.h"
 
 /* How big the stack block is. */
 #define STACK_BYTES 0x664
 
-/* The five fields in it that do not start at nought. */
-#define STACK_DASHES(s) (*(const char **)((char *)(s) + 0x0dc))
+/* Two of the fields that do not start at nought have no name in the struct
+   and are still reached by the byte they sit at. That is safe in this block,
+   and safe because of how it is built: everything in it that points is a
+   four-byte reference rather than a pointer, so the block has the same layout
+   whatever a pointer is worth. */
 #define STACK_E0(s)     (*(int32_t *)((char *)(s) + 0x0e0))
-#define STACK_1D0(s)    (*(int32_t *)((char *)(s) + 0x1d0))
-#define STACK_1D4(s)    (*(int32_t *)((char *)(s) + 0x1d4))
 #define STACK_604(s)    (*(int32_t *)((char *)(s) + 0x604))
 
+/* What a value named "undefined" reads back as. The machine is handed this as
+   a value, so it has to name somewhere in the arena; the string itself is in
+   the program, which no value can reach, so what is kept is a copy made low.
+   Writing the program's own address here is what this did before, and going
+   through a byte offset is what let it past evv_ref_checked. */
+static const char UNDEFINED_TEXT[] = "---";
+
 /* What the owner keeps that says the spine moved. */
-#define OWNER_MOVED(d) (*(int32_t *)(EVV_AT(uint8_t *, (d)->owner) + 0x1b8))
+#define OWNER_MOVED(d) (EVV_AT(delta_owner *, (d)->owner)->changed)
 
 /* One node's field, by statement type. */
 #define FIELD(n, f)  (((int32_t *)(intptr_t)(n))[(f)])
@@ -42,17 +51,21 @@ void delta_lib_delete(delta_state *d);
 /* One block, wiped, and the handful that start at something else. */
 int32_t delta_lib_new(delta_state *d)
 {
+    delta_stack *s;
+
     d->stack = EVV_REF((delta_stack *)malloc(STACK_BYTES));
     if (!EVV_AT(delta_stack *, d->stack))
         return -2;
 
-    memset(EVV_AT(delta_stack *, d->stack), 0, STACK_BYTES);
+    s = EVV_AT(delta_stack *, d->stack);
+    memset(s, 0, STACK_BYTES);
 
-    STACK_DASHES(EVV_AT(delta_stack *, d->stack)) = "---";
-    STACK_E0(EVV_AT(delta_stack *, d->stack)) = 1;
-    STACK_1D0(EVV_AT(delta_stack *, d->stack)) = -1;
-    STACK_1D4(EVV_AT(delta_stack *, d->stack)) = -1;
-    STACK_604(EVV_AT(delta_stack *, d->stack)) = 0;
+    s->undefined_text = EVV_REF(delta_low_copy(UNDEFINED_TEXT,
+                                               sizeof UNDEFINED_TEXT));
+    STACK_E0(s) = 1;
+    s->left_stamp = -1;
+    s->left_next = -1;
+    STACK_604(s) = 0;
 
     return 0;
 }

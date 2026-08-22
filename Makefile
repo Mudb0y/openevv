@@ -57,12 +57,25 @@ NM  ?= nm
 
 # Which rules the interpreter finds already written as C.
 #
-# `bytecode' links an empty table, so every rule runs as bytecode. `c' links
-# the thirteen megabytes tools/delta-decompile.py writes out of that same
-# bytecode, which the interpreter then prefers for every rule it has. Both
-# speak the same samples; the difference is seven minutes of compiler and
-# Python to write the file first. See docs/building.md.
-RULES ?= bytecode
+# `c' links the thirteen megabytes tools/delta-decompile.py writes out of the
+# bytecode, and the interpreter prefers that C for every rule it has one for.
+# `bytecode' links an empty table instead, so every rule is interpreted.
+#
+# Both speak the same samples -- that is what test/suite.sh holds them to, over
+# all 81 cases in both forms -- so this is a trade of build for speed and
+# nothing else. C is the default because the speed is what a person waiting for
+# speech feels: the same utterance synthesises in rather less than half the
+# time, and interrupting one and asking for another costs a third of what it
+# costs interpreted, since the engine cannot abandon an utterance and has to
+# finish the one it was told to stop.
+#
+# What it costs. Writing the file needs Python and about seven minutes, and
+# compiling it another seven, where the bytecode build wants only a C compiler
+# and half a minute. The binaries are some four times the size, because
+# thirteen megabytes of C is what a machine's worth of lifted code looks like
+# written out. `RULES=bytecode' is the small, quick build and is the one to use
+# while working on anything but the rules. See docs/building.md.
+RULES ?= c
 
 # Each language has both forms of its rules beside it: the empty table that
 # leaves every rule as bytecode, and the C the decompiler writes. One of the
@@ -70,10 +83,32 @@ RULES ?= bytecode
 GENERATED := $(foreach l,$(LANGS),$(l)/delta_rules_c_$(notdir $(l)).c)
 STUBS     := $(foreach l,$(LANGS),$(l)/delta_rules_none_$(notdir $(l)).c)
 
+# What the last build was: which form the rules are in, and which languages
+# are in it. Neither can be asked of an object or an archive afterwards. The
+# objects sit in a tree per answer, so a changed answer gives them somewhere
+# new to go, but the archives and the things a person is handed keep their
+# names -- `build/evv', `build/eci.dll', because that is what a caller looks
+# for -- and would otherwise be left standing, newer than everything they were
+# built from. This is written only when the answer is different, so it forces
+# those then and never otherwise.
+RULESTAMP := $(BUILD)/build.stamp
+$(shell mkdir -p $(BUILD); \
+        [ "$$(cat $(RULESTAMP) 2>/dev/null)" = "$(RULES) $(TAGS)" ] \
+        || printf %s "$(RULES) $(TAGS)" > $(RULESTAMP))
+
 ifeq ($(RULES),bytecode)
 RULESRC := $(STUBS)
+TRIM    :=
 else ifeq ($(RULES),c)
 RULESRC := $(GENERATED)
+# Where every rule is written as C, nothing reads the bytecode, and it is a
+# megabyte and a half -- the largest single thing in the library after the
+# rules themselves. `EVV_NO_BYTECODE' compiles the interpreter out, which is
+# what leaves the array unreferenced; the section flags are what let the
+# linker actually drop it. A rule that turns out not to have been written as C
+# then says so by name and stops, rather than reading an array that is gone.
+TRIM    := -DEVV_NO_BYTECODE -ffunction-sections -fdata-sections \
+           -Wl,--gc-sections
 else
 $(error RULES is bytecode or c, not $(RULES))
 endif
@@ -145,19 +180,21 @@ endif
 
 OPT        ?= -O2
 INCS       := -I$(SRC) $(addprefix -I,$(LANGS))
-ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(CFLAGS)
+ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) \
+              $(CFLAGS)
 
-# One directory per set of languages, because a build of one language and a
-# build of another give their objects the same names: a stale one from the
-# other build is newer than the source that should replace it, so it would
-# be linked without being rebuilt.
-OBJDIR  := $(BUILD)/obj/$(subst $(space),-,$(TAGS))
+# One directory per build, where a build is which form the rules are in and
+# which languages are in it. Neither can be asked of an object afterwards,
+# and either changing gives the same file a different meaning: a stale one
+# from the other build is newer than the source that should replace it, so
+# it would be linked without being rebuilt.
+OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32
+.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing
 all: $(BUILD)/evv
 
-$(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(BUILD)/langs.stamp
+$(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
 	@$(CC) $(ALL_CFLAGS) cli/evv.c $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
 	@echo "built $@"
 
@@ -167,6 +204,33 @@ $(BUILD)/probe$(SUF): cli/probe.c $(BUILD)/libevv$(SUF).a
 	@$(CC) $(ALL_CFLAGS) cli/probe.c $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
 	@echo "built $@"
 
+# An instance made and thrown away over and over, which the suite never does:
+# it speaks a great deal through one. A fault in what an instance owns and
+# gives back shows here and nowhere else.
+instances: $(BUILD)/instances
+
+$(BUILD)/instances: test/instances.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/instances.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# An utterance interrupted and another asked for, on one instance, over and
+# over. The suite never interrupts anything.
+interrupt: $(BUILD)/interrupt
+
+$(BUILD)/interrupt: test/interrupt.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/interrupt.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# A backtrack landed on from a thread that never planted it, which is how
+# stopping the engine from another thread used to fault with nothing in the
+# fault to say so. It is meant to be killed by the guard, so it answers
+# non-zero when the guard does not fire.
+landing: $(BUILD)/landing
+
+$(BUILD)/landing: test/landing.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/landing.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
 $(OBJDIR)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJDIR)
 	@$(CC) $(ALL_CFLAGS) -c $< -o $@
@@ -174,7 +238,7 @@ $(OBJDIR)/%.o: %.c $(HEADERS)
 # A source that gets renamed leaves its object behind, and a stale one is a
 # duplicate definition waiting to happen, so they go before the archive is
 # built rather than at the next link. Switching RULES leaves one the same way.
-$(BUILD)/libevv$(SUF).a: $(OBJECTS)
+$(BUILD)/libevv$(SUF).a: $(OBJECTS) $(RULESTAMP)
 	@for o in $(OBJDIR)/*.o; do \
 	   case " $(OBJECTS) " in *" $$o "*) ;; *) rm -f "$$o" ;; esac; \
 	 done
@@ -186,21 +250,6 @@ $(BUILD)/libevv$(SUF).a: $(OBJECTS)
 # so it is made here rather than kept in the tree, where every change to the
 # decompiler would rewrite the whole of it.
 rules: $(GENERATED)
-
-# Which languages the last build had in it. The things a person is handed --
-# evv, the speak window, eci.dll -- keep their plain names whatever is in
-# them, because that is what a caller looks for, so switching languages would
-# otherwise leave yesterday's binary sitting there looking newer than
-# everything it was built from. This is rewritten only when the answer
-# changes, so what depends on it rebuilds then and not otherwise.
-.PHONY: FORCE
-FORCE:
-
-$(BUILD)/langs.stamp: FORCE
-	@mkdir -p $(BUILD)
-	@echo "$(TAGS)" > $@.new
-	@cmp -s $@.new $@ || mv -f $@.new $@
-	@rm -f $@.new
 
 # One rule per language rather than a pattern, because the name has the
 # language in it twice -- once in the directory and once in the file -- and a
@@ -222,14 +271,16 @@ missing: $(OBJECTS)
 	@python3 tools/missing.py $(BUILD)/syms.txt
 
 clean:
-	@rm -rf $(OBJDIR) $(OBJDIR32) $(OBJDIRWIN) $(OBJDIRWIN32) \
+	@rm -rf $(BUILD)/obj-* $(BUILD)/obj32-* $(BUILD)/objwin-* \
+	        $(BUILD)/objwin32-* \
 	        $(BUILD)/eci32.dll $(BUILD)/dlltest32.exe \
 	        $(BUILD)/libevv-win32$(SUF).a $(BUILD)/evv $(BUILD)/probe$(SUF) \
 	        $(BUILD)/evv32 $(BUILD)/probe32$(SUF) \
 	        $(BUILD)/libevv$(SUF).a $(BUILD)/libevv32$(SUF).a \
 	        $(BUILD)/libevv-win$(SUF).a \
 	        $(BUILD)/evv.exe $(BUILD)/evvspeak.exe $(BUILD)/eci.dll \
-	        $(BUILD)/eci.ini $(BUILD)/dlltest.exe $(BUILD)/syms.txt
+	        $(BUILD)/eci.ini $(BUILD)/dlltest.exe $(BUILD)/syms.txt \
+	        $(BUILD)/openevv-*.nvda-addon
 
 # Where `make install' puts it. There is nothing else to install: one binary,
 # which reads no file of its own at run time and wants no library but the C
@@ -245,14 +296,15 @@ install: $(BUILD)/evv
 # flake provides; elsewhere it is usually the host compiler with -m32, which
 # CC32 can be set to whole: `make evv32 CC32="gcc -m32"'.
 CC32      ?= i686-unknown-linux-gnu-gcc
-OBJDIR32  := $(BUILD)/obj32/$(subst $(space),-,$(TAGS))
-CFLAGS32  := $(OPT) -std=gnu99 $(INCS) $(WARN) $(CFLAGS)
+OBJDIR32  := $(BUILD)/obj32-$(RULES)/$(subst $(space),-,$(TAGS))
+CFLAGS32  := $(OPT) -std=gnu99 $(INCS) $(WARN) $(TRIM) \
+             $(CFLAGS)
 OBJECTS32 := $(patsubst %.c,$(OBJDIR32)/%.o,$(notdir $(SOURCES)))
 
 evv32: $(BUILD)/evv32
 probe32: $(BUILD)/probe32$(SUF)
 
-$(BUILD)/evv32: cli/evv.c $(BUILD)/libevv32$(SUF).a $(BUILD)/langs.stamp
+$(BUILD)/evv32: cli/evv.c $(BUILD)/libevv32$(SUF).a $(RULESTAMP)
 	@$(CC32) $(CFLAGS32) cli/evv.c $(BUILD)/libevv32$(SUF).a -lpthread -lm -o $@
 	@echo "built $@"
 
@@ -264,7 +316,7 @@ $(OBJDIR32)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJDIR32)
 	@$(CC32) $(CFLAGS32) -c $< -o $@
 
-$(BUILD)/libevv32$(SUF).a: $(OBJECTS32)
+$(BUILD)/libevv32$(SUF).a: $(OBJECTS32) $(RULESTAMP)
 	@for o in $(OBJDIR32)/*.o; do \
 	   case " $(OBJECTS32) " in *" $$o "*) ;; *) rm -f "$$o" ;; esac; \
 	 done
@@ -283,10 +335,10 @@ $(BUILD)/libevv32$(SUF).a: $(OBJECTS32)
 CCWIN      ?= x86_64-w64-mingw32-gcc
 WINDRES    ?= x86_64-w64-mingw32-windres
 ARWIN      ?= x86_64-w64-mingw32-ar
-OBJDIRWIN  := $(BUILD)/objwin/$(subst $(space),-,$(TAGS))
+OBJDIRWIN  := $(BUILD)/objwin-$(RULES)/$(subst $(space),-,$(TAGS))
 
 CFLAGSWIN  := $(OPT) -std=gnu99 $(INCS) $(WARN) -DEVV_ARENA=1 \
-              $(CFLAGS)
+              $(TRIM) $(CFLAGS)
 # Static, so what ships is one file. MINGW64_LDFLAGS is where the cross gcc's
 # thread runtime is; the flake sets it, since nothing puts it on the link path
 # outside a real cross stdenv.
@@ -310,14 +362,14 @@ $(BUILD)/probe$(SUF).exe: cli/probe.c $(BUILD)/libevv-win$(SUF).a
 	@$(CCWIN) $(CFLAGSWIN) cli/probe.c $(BUILD)/libevv-win$(SUF).a $(LDFLAGSWIN) -o $@
 	@echo "built $@"
 
-$(BUILD)/evv.exe: cli/evv.c $(BUILD)/libevv-win$(SUF).a $(BUILD)/langs.stamp
+$(BUILD)/evv.exe: cli/evv.c $(BUILD)/libevv-win$(SUF).a $(RULESTAMP)
 	@$(CCWIN) $(CFLAGSWIN) cli/evv.c $(BUILD)/libevv-win$(SUF).a $(LDFLAGSWIN) -o $@
 	@echo "built $@"
 
 # -mwindows because a speak window with a console behind it looks like a
 # mistake. winmm is the sound: waveOut is all this needs and every Windows
 # since 1995 has it.
-$(BUILD)/evvspeak.exe: win/speak.c $(OBJDIRWIN)/speak.res $(BUILD)/libevv-win$(SUF).a $(BUILD)/langs.stamp
+$(BUILD)/evvspeak.exe: win/speak.c $(OBJDIRWIN)/speak.res $(BUILD)/libevv-win$(SUF).a $(RULESTAMP)
 	@$(CCWIN) $(CFLAGSWIN) -mwindows win/speak.c $(OBJDIRWIN)/speak.res \
 	   $(BUILD)/libevv-win$(SUF).a $(LDFLAGSWIN) -lwinmm -lcomdlg32 -o $@
 	@echo "built $@"
@@ -329,7 +381,7 @@ $(BUILD)/evvspeak.exe: win/speak.c $(OBJDIRWIN)/speak.res $(BUILD)/libevv-win$(S
 #
 # eci.ini goes beside it because add-ons look for one and patch a path inside
 # it. Nothing here reads it: the engine carries its own settings in the image.
-$(BUILD)/eci.dll: win/eci_api.c $(OBJDIRWIN)/eci.res $(BUILD)/libevv-win$(SUF).a $(BUILD)/langs.stamp
+$(BUILD)/eci.dll: win/eci_api.c $(OBJDIRWIN)/eci.res $(BUILD)/libevv-win$(SUF).a $(RULESTAMP)
 	@$(CCWIN) $(CFLAGSWIN) -shared win/eci_api.c $(OBJDIRWIN)/eci.res \
 	   $(BUILD)/libevv-win$(SUF).a $(LDFLAGSWIN) -o $@
 	@cp win/eci.ini $(BUILD)/eci.ini
@@ -344,7 +396,7 @@ $(OBJDIRWIN)/eci.res: win/eci.rc
 # eci.dll against what comes out of everything else.
 win-dlltest: $(BUILD)/dlltest.exe
 
-$(BUILD)/dlltest.exe: test/dll.c $(BUILD)/eci.dll $(BUILD)/langs.stamp
+$(BUILD)/dlltest.exe: test/dll.c $(BUILD)/eci.dll $(RULESTAMP)
 	@$(CCWIN) $(CFLAGSWIN) test/dll.c -static -lversion -o $@
 	@echo "built $@"
 
@@ -356,7 +408,7 @@ $(OBJDIRWIN)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJDIRWIN)
 	@$(CCWIN) $(CFLAGSWIN) -c $< -o $@
 
-$(BUILD)/libevv-win$(SUF).a: $(OBJECTSWIN)
+$(BUILD)/libevv-win$(SUF).a: $(OBJECTSWIN) $(RULESTAMP)
 	@for o in $(OBJDIRWIN)/*.o; do \
 	   case " $(OBJECTSWIN) " in *" $$o "*) ;; *) rm -f "$$o" ;; esac; \
 	 done
@@ -375,20 +427,20 @@ $(BUILD)/libevv-win$(SUF).a: $(OBJECTSWIN)
 CCWIN32     ?= i686-w64-mingw32-gcc
 WINDRES32   ?= i686-w64-mingw32-windres
 ARWIN32     ?= i686-w64-mingw32-ar
-OBJDIRWIN32 := $(BUILD)/objwin32/$(subst $(space),-,$(TAGS))
-CFLAGSWIN32 := $(OPT) -std=gnu99 $(INCS) $(WARN) $(CFLAGS)
+OBJDIRWIN32 := $(BUILD)/objwin32-$(RULES)/$(subst $(space),-,$(TAGS))
+CFLAGSWIN32 := $(OPT) -std=gnu99 $(INCS) $(WARN) $(TRIM) $(CFLAGS)
 LDFLAGSWIN32 := -static -Wl,--kill-at $(MINGW_LDFLAGS)
 OBJECTSWIN32 := $(patsubst %.c,$(OBJDIRWIN32)/%.o,$(notdir $(SOURCESWIN)))
 
 .PHONY: win32
 win32: $(BUILD)/eci32.dll $(BUILD)/dlltest32.exe
 
-$(BUILD)/eci32.dll: win/eci_api.c $(OBJDIRWIN32)/eci.res $(BUILD)/libevv-win32$(SUF).a $(BUILD)/langs.stamp
+$(BUILD)/eci32.dll: win/eci_api.c $(OBJDIRWIN32)/eci.res $(BUILD)/libevv-win32$(SUF).a $(RULESTAMP)
 	@$(CCWIN32) $(CFLAGSWIN32) -shared win/eci_api.c $(OBJDIRWIN32)/eci.res \
 	   $(BUILD)/libevv-win32$(SUF).a $(LDFLAGSWIN32) -o $@
 	@echo "built $@"
 
-$(BUILD)/dlltest32.exe: test/dll.c $(BUILD)/eci32.dll $(BUILD)/langs.stamp
+$(BUILD)/dlltest32.exe: test/dll.c $(BUILD)/eci32.dll $(RULESTAMP)
 	@$(CCWIN32) $(CFLAGSWIN32) test/dll.c -static -lversion -o $@
 	@echo "built $@"
 
@@ -400,10 +452,29 @@ $(OBJDIRWIN32)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJDIRWIN32)
 	@$(CCWIN32) $(CFLAGSWIN32) -c $< -o $@
 
-$(BUILD)/libevv-win32$(SUF).a: $(OBJECTSWIN32)
+$(BUILD)/libevv-win32$(SUF).a: $(OBJECTSWIN32) $(RULESTAMP)
 	@for o in $(OBJDIRWIN32)/*.o; do \
 	   case " $(OBJECTSWIN32) " in *" $$o "*) ;; *) rm -f "$$o" ;; esac; \
 	 done
 	@rm -f $@
 	@$(ARWIN32) rcs $@ $(OBJECTSWIN32)
 	@echo "built $@ from $(words $(OBJECTSWIN32)) objects"
+
+# The NVDA add-on: the engine as a synthesiser for the screen reader, loaded
+# into its own process. Both libraries go in, because a reader is one bitness
+# or the other and the one that loads in process has to match, so `make nvda'
+# wants both builds. nvda/build.py does the packing and refuses to pack a
+# library that does not export something the driver calls.
+.PHONY: nvda nvda-test
+nvda: win win32
+	@python3 nvda/build.py
+
+# The two checks that want neither Windows, nor the libraries, nor sound.
+# sequence.py is a speech sequence in and the calls it becomes out, with NVDA
+# stood in for. engine.py goes further down: it runs the engine layer itself
+# against a library and a player that are stood in for, which is what catches a
+# fault in code the first check never enters -- the add-on shipped once with a
+# name error in exactly that gap.
+nvda-test:
+	@python3 nvda/test/sequence.py
+	@python3 nvda/test/engine.py

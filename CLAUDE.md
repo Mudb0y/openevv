@@ -6,7 +6,7 @@ IBM's Embedded ViaVoice text-to-speech engine, taken out of its 1999 Windows obj
 
 Nothing works until `test/suite.sh` says so. It speaks each case through our engine and through IBM's binary under Wine and passes only on identical samples. Run it from inside `nix develop`, or Wine is not on the path, both sides produce no file, and every case reports a difference that is not real.
 
-Six builds have to pass, not one: `probe`, `probe32` and `probe.exe`, each with `RULES=bytecode` and `RULES=c`. Bytecode is the default, so a change to the decompiler is not being tested at all unless `RULES=c` is what was built. The Windows one is `EVV_NATIVE=$PWD/build/probe.exe test/suite.sh`, which runs it under the same Wine as the reference.
+Six builds have to pass, not one: `probe`, `probe32` and `probe.exe`, each with `RULES=bytecode` and `RULES=c`. C is the default as of 22 August 2026, so it is the interpreter that goes untested unless `RULES=bytecode` is what was built -- the opposite of the trap this warned about before. The Windows one is `EVV_NATIVE=$PWD/build/probe.exe test/suite.sh`, which runs it under the same Wine as the reference.
 
 `test/hash.sh` is the quick one, and the only check that wants neither Wine nor IBM's objects. It proves the samples unchanged, not right.
 
@@ -25,6 +25,8 @@ A build with two languages in it proves something a build with one cannot: that 
 A change made for German is not finished until the English suite has been run again. The two share every line of `src` and every tool in `tools`: the dictionary table German crashed on had been wrong on sixty-four bits all along, and the lift that German needed changed two places in the English bytecode as well.
 
 A marker case that differs once and not again is IBM's binary being unsteady, not a change in ours. Run it again, and if in doubt hash both sides over several runs -- it is the reference that varies.
+
+Samples are only comparable across processes. The engine does not say a sentence in the same samples twice running on one instance: the same 38,423 samples come out under a different hash each time. Every harness here speaks its case in a process of its own, which is why they can compare bytes at all; a check that speaks twice and compares has to compare lengths, as `nvda/test/windows.py` does.
 
 ## What not to tidy
 
