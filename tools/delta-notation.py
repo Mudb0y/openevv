@@ -19,10 +19,12 @@ restructures into loops and conditionals for a person to read, and inverting it
 exactly would be hard. Reading and round-tripping are different jobs, so they
 have different forms.
 
-usage: delta-notation.py write <object> [> file]
-       delta-notation.py read  <file>
-       delta-notation.py check <object> [...]
+usage: delta-notation.py write  <object> [> file]
+       delta-notation.py read   <file>
+       delta-notation.py check  <object> [...]
        delta-notation.py check-all
+       delta-notation.py tree            write lang/enus/rules
+       delta-notation.py verify          the tree against IBM's objects
 """
 
 import importlib.util
@@ -480,6 +482,83 @@ def check(obj):
     return not (differed or unwritten)
 
 
+TREE = os.path.join(ROOT, "lang", "enus", "rules")
+
+
+def objects_with_rules():
+    for obj in sorted(f for f in os.listdir(OBJECTS) if f.endswith(".obj")):
+        path = os.path.join(OBJECTS, obj)
+        if any(dl.is_rule(i) for _n, i in dl.read_functions(path)):
+            yield obj
+
+
+def to_tree():
+    """Write every object's rules into the tree, one file to an object.
+
+    One file an object because that is the grain the rules already have: the
+    table records which object a rule came from, and the sources in src are
+    named after theirs for the same reason -- a file that can be held against
+    the thing it came from can be checked against it.
+    """
+    os.makedirs(TREE, exist_ok=True)
+    rules = 0
+    for obj in objects_with_rules():
+        got, tables = lift(os.path.join(OBJECTS, obj))
+        out = ["# The rules of %s, written by tools/delta-notation.py." % obj,
+               "# One operation to a line. See docs/building.md.",
+               ""]
+        for name, d in got:
+            write_rule(name, obj, d, tables, out)
+            out.append("")
+        where = os.path.join(TREE, obj[:-4] + ".dr")
+        open(where, "w").write("\n".join(out) + "\n")
+        rules += len(got)
+        print("%-16s %3d rules" % (obj, len(got)))
+    print("%d rules in %s" % (rules, os.path.relpath(TREE, ROOT)))
+    return True
+
+
+def verify():
+    """Hold the text in the tree against IBM's objects.
+
+    Every rule is emitted twice, once from the text and once from a fresh lift
+    of the object it names, and the bytecode has to match byte for byte. That
+    is what says the text in the tree is still what IBM's code does -- and,
+    once a rule has been deliberately changed, which rules those are: an
+    unedited rule matches and an edited one is named.
+    """
+    ok = True
+    total = same = 0
+    for obj in objects_with_rules():
+        where = os.path.join(TREE, obj[:-4] + ".dr")
+        if not os.path.exists(where):
+            print("%-16s no text in the tree" % obj)
+            ok = False
+            continue
+        written, wtables = read_rules(open(where))
+        lifted, ltables = lift(os.path.join(OBJECTS, obj))
+        by_name = dict((n, d) for n, d in lifted)
+        for name, d2, o in written:
+            total += 1
+            if name not in by_name:
+                print("    %s: in the tree and not in %s" % (name, obj))
+                ok = False
+                continue
+            want = emit_one(name, by_name[name], o, ltables)
+            got = emit_one(name, d2, o, wtables)
+            if want == got:
+                same += 1
+            else:
+                print("    %s: differs from %s" % (name, obj))
+                ok = False
+        for name in by_name:
+            if not any(n == name for n, _d, _o in written):
+                print("    %s: in %s and not in the tree" % (name, obj))
+                ok = False
+    print("%d rules in the tree, %d the same as IBM's objects" % (total, same))
+    return ok
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__.strip())
@@ -506,6 +585,12 @@ def main():
         for obj in sys.argv[2:]:
             ok = check(obj) and ok
         return 0 if ok else 1
+
+    if what == "tree":
+        return 0 if to_tree() else 1
+
+    if what == "verify":
+        return 0 if verify() else 1
 
     if what == "check-all":
         ok = True

@@ -1,0 +1,1456 @@
+# The rules of ea_cmpnd.obj, written by tools/delta-notation.py.
+# One operation to a line. See docs/building.md.
+
+rule noun_cmpnd1 from ea_cmpnd.obj
+shape frame 232 argbase 8 params 6
+table $L101112 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f 20 21 22 23 24 25 26 27 28 27 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27 28 27
+label L0 was _noun_cmpnd1
+  load movl imm 0 into r7
+  load movl slotaddr -140 into r0
+  push imm 0
+  push slotaddr -140
+  store movl imm 0 slot -8
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L45
+  load movl slotaddr -140 into r0
+  push slotaddr -140
+  load movl slotaddr -76 into r0
+  push slotaddr -76
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -232 into r0
+  push slotaddr -232
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L45
+  push param 4
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  push param 3
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push param 2
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  push param 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  push state 0
+  call ZZget_parm_ptr4 arity 9 depth 9
+  push param 5
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  push state 0
+  call ZZget_parmINT arity 3 depth 12
+  push state 0
+  call ZZfence_null arity 1 depth 13
+  push state 0
+  call ZZstarttest38 arity 1 depth 14
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  push state 0
+  call lpta_rpta_loadp arity 3 depth 17
+  popn 17
+  push imm 0
+  push imm 0
+  push imm 0
+  push state 0
+  call actd_lookup arity 4 depth 4
+  popn 4
+  cmp testl reg r0 reg r0
+  branch jne to L45
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl state 288 into r7
+  push state 288
+  push state 0
+  call copyvar arity 3 depth 3
+  load movl state 296 into r3
+  jump to L3
+label L1 was at_0xcf
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call backtrack_function arity 2 depth 5
+  alu decl none reg r0
+  cmp cmpl imm 114 reg r0
+  popreg r1
+  popreg r1
+  branch ja to L45
+  map $L101112 reg r0 into r0
+  switch reg r0 to L7 L8 L9 L10 L11 L12 L13 L14 L15 L16 L17 L18 L19 L20 L21 L22 L23 L24 L25 L26 L27 L28 L29 L30 L31 L32 L33 L34 L35 L36 L37 L38 L39 L40 L41 L42 L43 L45 L2 L4 L5
+label L2 was $L99783
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r7
+  push reg r6
+  call copyvar arity 3 depth 6
+label L3 was at_0xfe
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  push reg r3
+  push reg r6
+  call copyvar arity 3 depth 6
+  push reg r6
+  call actd_goto arity 1 depth 7
+  popn 7
+  cmp testl reg r0 reg r0
+  branch jne to L1
+label L4 was $X40$99584
+  store movw imm 1 slot -2
+label L5 was $X41$99594
+  push reg r6
+  call succeed arity 1 depth 4
+  load movw slot -2 into r0w
+  popreg r1
+  load movl param 5 into r1
+  store movw reg r0w ind reg r1 2
+  load movl imm 0 into r0
+label L6 was at_0x130
+  popreg r7
+  popreg r6
+  popreg r3
+  return reg r0
+label L7 was $X1$99592
+  push reg r6
+  call ZZstarttest41 arity 1 depth 4
+  push imm 0
+  jump to L44
+label L8 was $X2$99596
+  push reg r6
+  call ZZstarttest44 arity 1 depth 4
+  push imm 1
+  jump to L44
+label L9 was $X3$99600
+  push reg r6
+  call ZZstarttest46 arity 1 depth 4
+  push imm 2
+  jump to L44
+label L10 was $X4$99604
+  push reg r6
+  call ZZstarttest48 arity 1 depth 4
+  push imm 3
+  jump to L44
+label L11 was $X5$99608
+  push reg r6
+  call ZZstarttest50 arity 1 depth 4
+  push imm 4
+  jump to L44
+label L12 was $X6$99612
+  push reg r6
+  call ZZstarttest52 arity 1 depth 4
+  push imm 5
+  jump to L44
+label L13 was $X7$99616
+  push reg r6
+  call ZZstarttest54 arity 1 depth 4
+  push imm 6
+  jump to L44
+label L14 was $X8$99620
+  push reg r6
+  call ZZstarttest56 arity 1 depth 4
+  push imm 7
+  jump to L44
+label L15 was $X9$99624
+  push reg r6
+  call ZZstarttest58 arity 1 depth 4
+  push imm 8
+  jump to L44
+label L16 was $X10$99628
+  push reg r6
+  call ZZstarttest60 arity 1 depth 4
+  push imm 9
+  jump to L44
+label L17 was $X11$99632
+  push reg r6
+  call ZZstarttest62 arity 1 depth 4
+  push imm 10
+  jump to L44
+label L18 was $X12$99636
+  push reg r6
+  call ZZstarttest64 arity 1 depth 4
+  push imm 11
+  jump to L44
+label L19 was $X13$99640
+  push reg r6
+  call ZZstarttest66 arity 1 depth 4
+  push imm 12
+  jump to L44
+label L20 was $X14$99644
+  push reg r6
+  call ZZstarttest68 arity 1 depth 4
+  push imm 13
+  jump to L44
+label L21 was $X15$99648
+  push reg r6
+  call ZZstarttest70 arity 1 depth 4
+  push imm 14
+  jump to L44
+label L22 was $X16$99652
+  push reg r6
+  call ZZstarttest72 arity 1 depth 4
+  push imm 15
+  jump to L44
+label L23 was $X17$99656
+  push reg r6
+  call ZZstarttest74 arity 1 depth 4
+  push imm 16
+  jump to L44
+label L24 was $X18$99660
+  push reg r6
+  call ZZstarttest76 arity 1 depth 4
+  push imm 17
+  jump to L44
+label L25 was $X19$99664
+  push reg r6
+  call ZZstarttest78 arity 1 depth 4
+  push imm 18
+  jump to L44
+label L26 was $X20$99668
+  push reg r6
+  call ZZstarttest80 arity 1 depth 4
+  push imm 19
+  jump to L44
+label L27 was $X21$99672
+  push reg r6
+  call ZZstarttest82 arity 1 depth 4
+  push imm 20
+  jump to L44
+label L28 was $X22$99676
+  push reg r6
+  call ZZstarttest84 arity 1 depth 4
+  push imm 21
+  jump to L44
+label L29 was $X23$99680
+  push reg r6
+  call ZZstarttest86 arity 1 depth 4
+  push imm 22
+  jump to L44
+label L30 was $X24$99684
+  push reg r6
+  call ZZstarttest88 arity 1 depth 4
+  push imm 23
+  jump to L44
+label L31 was $X25$99688
+  push reg r6
+  call ZZstarttest90 arity 1 depth 4
+  push imm 24
+  jump to L44
+label L32 was $X26$99692
+  push reg r6
+  call ZZstarttest92 arity 1 depth 4
+  push imm 25
+  jump to L44
+label L33 was $X27$99696
+  push reg r6
+  call ZZstarttest94 arity 1 depth 4
+  push imm 26
+  jump to L44
+label L34 was $X28$99700
+  push reg r6
+  call ZZstarttest96 arity 1 depth 4
+  push imm 27
+  jump to L44
+label L35 was $X29$99704
+  push reg r6
+  call ZZstarttest98 arity 1 depth 4
+  push imm 28
+  jump to L44
+label L36 was $X30$99708
+  push reg r6
+  call ZZstarttest100 arity 1 depth 4
+  push imm 29
+  jump to L44
+label L37 was $X31$99712
+  push reg r6
+  call ZZstarttest102 arity 1 depth 4
+  push imm 30
+  jump to L44
+label L38 was $X32$99716
+  push reg r6
+  call ZZstarttest104 arity 1 depth 4
+  push imm 31
+  jump to L44
+label L39 was $X33$99720
+  push reg r6
+  call ZZstarttest106 arity 1 depth 4
+  push imm 32
+  jump to L44
+label L40 was $X34$99724
+  push reg r6
+  call ZZstarttest108 arity 1 depth 4
+  push imm 33
+  jump to L44
+label L41 was $X35$99728
+  push reg r6
+  call ZZstarttest110 arity 1 depth 4
+  push imm 34
+  jump to L44
+label L42 was $X36$99732
+  push reg r6
+  call ZZstarttest112 arity 1 depth 4
+  push imm 35
+  jump to L44
+label L43 was $X37$99736
+  push reg r6
+  call ZZstarttest114 arity 1 depth 4
+  push imm 36
+label L44 was at_0x2ed
+  push reg r6
+  call ZZlprp_load_vvg__setd0014_0015 arity 2 depth 6
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L5
+  jump to L4
+label L45 was $fail_clean$99564
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L6
+label L46 was $L101116
+label L47 was $L101112
+end
+
+rule noun_cmpnd2 from ea_cmpnd.obj
+shape frame 232 argbase 8 params 6
+label L0 was _noun_cmpnd2
+  load movl imm 0 into r7
+  load movl slotaddr -140 into r0
+  push imm 0
+  push slotaddr -140
+  store movl imm 0 slot -8
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L191
+  load movl slotaddr -140 into r0
+  push slotaddr -140
+  load movl slotaddr -76 into r0
+  push slotaddr -76
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -232 into r0
+  push slotaddr -232
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L191
+  push param 4
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  push param 3
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push param 2
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  push param 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  push state 0
+  call ZZget_parm_ptr4 arity 9 depth 9
+  push param 5
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  push state 0
+  call ZZget_parmINT arity 3 depth 12
+  push state 0
+  call ZZfence_null arity 1 depth 13
+  push state 0
+  call ZZstarttest153 arity 1 depth 14
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  push state 0
+  call lpta_rpta_loadp arity 3 depth 17
+  popn 17
+  push imm 0
+  push imm 0
+  push imm 1
+  push state 0
+  call actd_lookup arity 4 depth 4
+  popn 4
+  cmp testl reg r0 reg r0
+  branch jne to L191
+  load movl slotaddr -16 into r1
+  push slotaddr -16
+  load movl state 288 into r0
+  push state 288
+  push state 0
+  call copyvar arity 3 depth 3
+  load movl slotaddr -24 into r1
+  push slotaddr -24
+  load movl state 296 into r0
+  push state 296
+  push state 0
+  call copyvar arity 3 depth 6
+  push state 0
+  call actd_goto arity 1 depth 7
+  popn 7
+  cmp testl reg r0 reg r0
+  branch je to L52
+  load movl imm 45 into r7
+  load movl imm 191 into r3
+label L1 was at_0xf2
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call backtrack_function arity 2 depth 2
+  alu decl none reg r0
+  cmp cmpl imm 503 reg r0
+  popreg r1
+  popreg r1
+  branch ja to L191
+  switch reg r0 to L2 L5 L6 L7 L8 L9 L10 L11 L12 L13 L14 L56 L15 L16 L17 L19 L20 L21 L23 L58 L59 L60 L61 L62 L63 L64 L65 L66 L67 L68 L69 L70 L71 L72 L73 L74 L75 L76 L77 L78 L79 L80 L81 L82 L83 L84 L85 L86 L87 L88 L89 L90 L91 L92 L93 L94 L95 L96 L97 L98 L99 L100 L101 L102 L103 L104 L105 L106 L107 L108 L109 L24 L110 L111 L112 L113 L114 L115 L116 L117 L118 L119 L120 L121 L122 L123 L124 L125 L126 L127 L128 L129 L130 L131 L132 L133 L134 L135 L136 L137 L138 L139 L140 L141 L142 L143 L144 L145 L146 L147 L148 L149 L150 L151 L152 L153 L154 L155 L156 L157 L158 L159 L160 L161 L162 L163 L164 L165 L166 L167 L168 L169 L26 L170 L171 L172 L173 L174 L175 L176 L177 L178 L179 L180 L181 L182 L183 L184 L185 L186 L187 L188 L191 L55 L52 L53 L27 L52 L52 L52 L53 L28 L52 L52 L53 L29 L52 L31 L52 L53 L32 L52 L52 L53 L49 L52 L52 L53 L33 L52 L52 L53 L34 L52 L52 L53 L35 L52 L52 L53 L36 L52 L52 L53 L37 L52 L52 L53 L38 L52 L52 L53 L52 L53 L39 L52 L52 L53 L40 L52 L37 L52 L53 L41 L52 L52 L53 L42 L52 L52 L53 L43 L52 L44 L52 L53 L45 L52 L46 L52 L53 L47 L52 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L48 L52 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L49 L52 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52 L53 L52
+label L2 was $X1$99912
+  push reg r6
+  call ZZstarttest156 arity 1 depth 1
+  push imm 157
+label L3 was at_0x11c
+  push reg r6
+  call bspush_ca arity 2 depth 3
+  push imm 37
+label L4 was at_0x124
+  push reg r6
+  call ZZlprp_load_vvg__setd0014_0015 arity 2 depth 5
+  popn 5
+  jump to L51
+label L5 was $X2$99919
+  push reg r6
+  call ZZstarttest161 arity 1 depth 1
+  push imm 162
+  jump to L3
+label L6 was $X3$99926
+  push reg r6
+  call ZZstarttest165 arity 1 depth 1
+  push imm 166
+  jump to L3
+label L7 was $X4$99935
+  push reg r6
+  call ZZstarttest170 arity 1 depth 1
+  push imm 171
+  jump to L3
+label L8 was $X5$99942
+  push reg r6
+  call ZZstarttest174 arity 1 depth 1
+  push imm 175
+  push reg r6
+  call bspush_ca arity 2 depth 3
+  push imm 43
+  jump to L4
+label L9 was $X6$99949
+  push reg r6
+  call ZZstarttest178 arity 1 depth 1
+  push imm 179
+  jump to L18
+label L10 was $X7$99956
+  push reg r6
+  call ZZstarttest182 arity 1 depth 1
+  push imm 183
+  jump to L18
+label L11 was $X8$99963
+  push reg r6
+  call ZZstarttest186 arity 1 depth 1
+  push imm 187
+  jump to L18
+label L12 was $X9$99970
+  push reg r6
+  call ZZstarttest190 arity 1 depth 1
+  push reg r3
+  jump to L18
+label L13 was $X10$99977
+  push reg r6
+  call ZZstarttest194 arity 1 depth 1
+  push imm 195
+  jump to L18
+label L14 was $X11$99984
+  push reg r6
+  call ZZstarttest198 arity 1 depth 1
+  push imm 199
+  jump to L18
+label L15 was $X13$99995
+  push reg r6
+  call ZZstarttest204 arity 1 depth 1
+  push imm 205
+  jump to L18
+label L16 was $X14$100002
+  push reg r6
+  call ZZstarttest208 arity 1 depth 1
+  push imm 209
+  jump to L18
+label L17 was $X15$100011
+  push reg r6
+  call ZZstarttest213 arity 1 depth 1
+  push imm 214
+label L18 was at_0x1dd
+  push reg r6
+  call bspush_ca arity 2 depth 3
+  push reg r7
+  jump to L4
+label L19 was $X16$100018
+  push reg r6
+  call ZZstarttest217 arity 1 depth 1
+  push imm 218
+  jump to L22
+label L20 was $X17$100025
+  push reg r6
+  call ZZstarttest221 arity 1 depth 1
+  push imm 222
+  jump to L22
+label L21 was $X18$100034
+  push reg r6
+  call ZZstarttest226 arity 1 depth 1
+  push imm 227
+label L22 was at_0x20e
+  push reg r6
+  call bspush_ca arity 2 depth 3
+  push imm 41
+  jump to L4
+label L23 was $X19$100043
+  push reg r6
+  call ZZstarttest231 arity 1 depth 1
+  push imm 232
+  push reg r6
+  call bspush_ca arity 2 depth 3
+  push imm 57
+  jump to L4
+label L24 was $X72$100258
+  push imm 339
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 340
+  push reg r6
+  call bspush_ca arity 2 depth 4
+  push imm 41
+label L25 was at_0x24b
+  push reg r6
+  call ZZlprp_load_vvg__setd0014_0015 arity 2 depth 6
+  popn 6
+  jump to L51
+label L26 was $X133$100505
+  push imm 463
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 464
+  push reg r6
+  call bspush_ca arity 2 depth 4
+  push imm 172
+  jump to L25
+label L27 was $X157$99914
+  push imm 38
+  jump to L50
+label L28 was $X162$99921
+  push imm 39
+  jump to L50
+label L29 was $X166$99928
+  push imm 168
+  push reg r6
+  call bspush_ca arity 2 depth 2
+  push imm 40
+label L30 was at_0x291
+  push reg r6
+  call ZZlprp_load_vvg__setd0014_0015 arity 2 depth 4
+  popn 4
+  jump to L51
+label L31 was $X168$99930
+  push imm 41
+  jump to L50
+label L32 was $X171$99937
+  push imm 42
+  jump to L50
+label L33 was $X179$99951
+  push imm 46
+  jump to L50
+label L34 was $X183$99958
+  push imm 47
+  jump to L50
+label L35 was $X187$99965
+  push imm 48
+  jump to L50
+label L36 was $X191$99972
+  push imm 49
+  jump to L50
+label L37 was $X195$99979
+  push imm 50
+  jump to L50
+label L38 was $X199$99986
+  push imm 51
+  jump to L50
+label L39 was $X205$99997
+  push imm 52
+  jump to L50
+label L40 was $X209$100004
+  push imm 211
+  push reg r6
+  call bspush_ca arity 2 depth 2
+  push imm 43
+  jump to L30
+label L41 was $X214$100013
+  push imm 53
+  jump to L50
+label L42 was $X218$100020
+  push imm 54
+  jump to L50
+label L43 was $X222$100027
+  push imm 224
+  push reg r6
+  call bspush_ca arity 2 depth 2
+  push imm 51
+  jump to L30
+label L44 was $X224$100029
+  push imm 55
+  jump to L50
+label L45 was $X227$100036
+  push imm 229
+  push reg r6
+  call bspush_ca arity 2 depth 2
+  push imm 54
+  jump to L30
+label L46 was $X229$100038
+  push imm 56
+  jump to L50
+label L47 was $X232$100045
+  push imm 58
+  jump to L50
+label L48 was $X340$100260
+  push imm 111
+  jump to L50
+label L49 was $X464$100507
+  push imm 44
+label L50 was at_0x307
+  push reg r6
+  call ZZlprp_load_vvg__setd0014_0015 arity 2 depth 2
+  popreg r1
+  popreg r1
+label L51 was at_0x30f
+  cmp testl reg r0 reg r0
+  branch jne to L1
+label L52 was $X155$99904
+  store movw imm 1 slot -2
+label L53 was $X156$99917
+  push reg r6
+  call succeed arity 1 depth 1
+  load movw slot -2 into r0w
+  popreg r1
+  load movl param 5 into r1
+  store movw reg r0w ind reg r1 2
+  load movl imm 0 into r0
+label L54 was at_0x331
+  return reg r0
+label L55 was $L100746
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  addk 288 reg r6 into r0
+  push reg r0
+  push reg r6
+  call copyvar arity 3 depth 3
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  addk 296 reg r6 into r0
+  push reg r0
+  push reg r6
+  call copyvar arity 3 depth 6
+  push reg r6
+  call actd_goto arity 1 depth 7
+  popn 7
+  jump to L51
+label L56 was $X12$99991
+  push reg r6
+  call ZZstarttest202 arity 1 depth 1
+  push imm 51
+label L57 was at_0x36b
+  push reg r6
+  call ZZlprp_load_vvg__setd0014_0015 arity 2 depth 3
+  popn 3
+  jump to L190
+label L58 was $X20$100050
+  push reg r6
+  call ZZstarttest235 arity 1 depth 1
+  push imm 59
+  jump to L57
+label L59 was $X21$100054
+  push reg r6
+  call ZZstarttest237 arity 1 depth 1
+  push imm 60
+  jump to L57
+label L60 was $X22$100058
+  push reg r6
+  call ZZstarttest239 arity 1 depth 1
+  push imm 61
+  jump to L57
+label L61 was $X23$100062
+  push reg r6
+  call ZZstarttest241 arity 1 depth 1
+  push imm 62
+  jump to L57
+label L62 was $X24$100066
+  push reg r6
+  call ZZstarttest243 arity 1 depth 1
+  push imm 63
+  jump to L57
+label L63 was $X25$100070
+  push reg r6
+  call ZZstarttest245 arity 1 depth 1
+  push imm 64
+  jump to L57
+label L64 was $X26$100074
+  push reg r6
+  call ZZstarttest247 arity 1 depth 1
+  push imm 65
+  jump to L57
+label L65 was $X27$100078
+  push reg r6
+  call ZZstarttest249 arity 1 depth 1
+  push imm 66
+  jump to L57
+label L66 was $X28$100082
+  push reg r6
+  call ZZstarttest251 arity 1 depth 1
+  push imm 67
+  jump to L57
+label L67 was $X29$100086
+  push reg r6
+  call ZZstarttest253 arity 1 depth 1
+  push imm 68
+  jump to L57
+label L68 was $X30$100090
+  push reg r6
+  call ZZstarttest255 arity 1 depth 1
+  push imm 69
+  jump to L57
+label L69 was $X31$100094
+  push reg r6
+  call ZZstarttest257 arity 1 depth 1
+  push imm 70
+  jump to L57
+label L70 was $X32$100098
+  push reg r6
+  call ZZstarttest259 arity 1 depth 1
+  push imm 71
+  jump to L57
+label L71 was $X33$100102
+  push reg r6
+  call ZZstarttest261 arity 1 depth 1
+  push imm 72
+  jump to L57
+label L72 was $X34$100106
+  push reg r6
+  call ZZstarttest263 arity 1 depth 1
+  push imm 73
+  jump to L57
+label L73 was $X35$100110
+  push reg r6
+  call ZZstarttest265 arity 1 depth 1
+  push imm 74
+  jump to L57
+label L74 was $X36$100114
+  push imm 267
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 75
+  jump to L189
+label L75 was $X37$100118
+  push reg r6
+  call ZZstarttest269 arity 1 depth 1
+  push imm 76
+  jump to L57
+label L76 was $X38$100122
+  push reg r6
+  call ZZstarttest271 arity 1 depth 1
+  push imm 77
+  jump to L57
+label L77 was $X39$100126
+  push reg r6
+  call ZZstarttest273 arity 1 depth 1
+  push imm 78
+  jump to L57
+label L78 was $X40$100130
+  push reg r6
+  call ZZstarttest275 arity 1 depth 1
+  push imm 79
+  jump to L57
+label L79 was $X41$100134
+  push imm 277
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 80
+  jump to L189
+label L80 was $X42$100138
+  push reg r6
+  call ZZstarttest279 arity 1 depth 1
+  push imm 81
+  jump to L57
+label L81 was $X43$100142
+  push imm 281
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 82
+  jump to L189
+label L82 was $X44$100146
+  push reg r6
+  call ZZstarttest283 arity 1 depth 1
+  push imm 83
+  jump to L57
+label L83 was $X45$100150
+  push imm 285
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 84
+  jump to L189
+label L84 was $X46$100154
+  push imm 287
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 85
+  jump to L189
+label L85 was $X47$100158
+  push imm 289
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 86
+  jump to L189
+label L86 was $X48$100162
+  push reg r6
+  call ZZstarttest291 arity 1 depth 1
+  push imm 87
+  jump to L57
+label L87 was $X49$100166
+  push imm 293
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 88
+  jump to L189
+label L88 was $X50$100170
+  push imm 295
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 89
+  jump to L189
+label L89 was $X51$100174
+  push reg r6
+  call ZZstarttest297 arity 1 depth 1
+  push imm 90
+  jump to L57
+label L90 was $X52$100178
+  push reg r6
+  call ZZstarttest299 arity 1 depth 1
+  push imm 91
+  jump to L57
+label L91 was $X53$100182
+  push imm 301
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 92
+  jump to L189
+label L92 was $X54$100186
+  push imm 303
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 93
+  jump to L189
+label L93 was $X55$100190
+  push imm 305
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 94
+  jump to L189
+label L94 was $X56$100194
+  push reg r6
+  call ZZstarttest307 arity 1 depth 1
+  push imm 95
+  jump to L57
+label L95 was $X57$100198
+  push reg r6
+  call ZZstarttest309 arity 1 depth 1
+  push imm 96
+  jump to L57
+label L96 was $X58$100202
+  push imm 311
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 97
+  jump to L189
+label L97 was $X59$100206
+  push reg r6
+  call ZZstarttest313 arity 1 depth 1
+  push imm 98
+  jump to L57
+label L98 was $X60$100210
+  push imm 315
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 99
+  jump to L189
+label L99 was $X61$100214
+  push reg r6
+  call ZZstarttest317 arity 1 depth 1
+  push imm 100
+  jump to L57
+label L100 was $X62$100218
+  push reg r6
+  call ZZstarttest319 arity 1 depth 1
+  push imm 101
+  jump to L57
+label L101 was $X63$100222
+  push imm 321
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 102
+  jump to L189
+label L102 was $X64$100226
+  push reg r6
+  call ZZstarttest323 arity 1 depth 1
+  push imm 103
+  jump to L57
+label L103 was $X65$100230
+  push imm 325
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 104
+  jump to L189
+label L104 was $X66$100234
+  push imm 327
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 105
+  jump to L189
+label L105 was $X67$100238
+  push reg r6
+  call ZZstarttest329 arity 1 depth 1
+  push imm 106
+  jump to L57
+label L106 was $X68$100242
+  push imm 331
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 107
+  jump to L189
+label L107 was $X69$100246
+  push imm 333
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 108
+  jump to L189
+label L108 was $X70$100250
+  push imm 335
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 109
+  jump to L189
+label L109 was $X71$100254
+  push imm 337
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 110
+  jump to L189
+label L110 was $X73$100265
+  push imm 343
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 112
+  jump to L189
+label L111 was $X74$100269
+  push imm 345
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 113
+  jump to L189
+label L112 was $X75$100273
+  push imm 347
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 114
+  jump to L189
+label L113 was $X76$100277
+  push imm 349
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 115
+  jump to L189
+label L114 was $X77$100281
+  push imm 351
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 116
+  jump to L189
+label L115 was $X78$100285
+  push imm 353
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 117
+  jump to L189
+label L116 was $X79$100289
+  push imm 355
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 118
+  jump to L189
+label L117 was $X80$100293
+  push imm 357
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 119
+  jump to L189
+label L118 was $X81$100297
+  push imm 359
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 120
+  jump to L189
+label L119 was $X82$100301
+  push imm 361
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 121
+  jump to L189
+label L120 was $X83$100305
+  push imm 363
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 122
+  jump to L189
+label L121 was $X84$100309
+  push imm 365
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 123
+  jump to L189
+label L122 was $X85$100313
+  push imm 367
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 124
+  jump to L189
+label L123 was $X86$100317
+  push imm 369
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 125
+  jump to L189
+label L124 was $X87$100321
+  push imm 371
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 126
+  jump to L189
+label L125 was $X88$100325
+  push imm 373
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 127
+  jump to L189
+label L126 was $X89$100329
+  push imm 375
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 128
+  jump to L189
+label L127 was $X90$100333
+  push imm 377
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 129
+  jump to L189
+label L128 was $X91$100337
+  push imm 379
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 130
+  jump to L189
+label L129 was $X92$100341
+  push imm 381
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 131
+  jump to L189
+label L130 was $X93$100345
+  push imm 383
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 132
+  jump to L189
+label L131 was $X94$100349
+  push imm 385
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 133
+  jump to L189
+label L132 was $X95$100353
+  push imm 387
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 134
+  jump to L189
+label L133 was $X96$100357
+  push imm 389
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 135
+  jump to L189
+label L134 was $X97$100361
+  push imm 391
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 136
+  jump to L189
+label L135 was $X98$100365
+  push imm 393
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 137
+  jump to L189
+label L136 was $X99$100369
+  push imm 395
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 138
+  jump to L189
+label L137 was $X100$100373
+  push imm 397
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 139
+  jump to L189
+label L138 was $X101$100377
+  push imm 399
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 140
+  jump to L189
+label L139 was $X102$100381
+  push imm 401
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 141
+  jump to L189
+label L140 was $X103$100385
+  push imm 403
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 142
+  jump to L189
+label L141 was $X104$100389
+  push imm 405
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 143
+  jump to L189
+label L142 was $X105$100393
+  push imm 407
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 144
+  jump to L189
+label L143 was $X106$100397
+  push imm 409
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 145
+  jump to L189
+label L144 was $X107$100401
+  push imm 411
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 146
+  jump to L189
+label L145 was $X108$100405
+  push imm 413
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 147
+  jump to L189
+label L146 was $X109$100409
+  push imm 415
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 148
+  jump to L189
+label L147 was $X110$100413
+  push imm 417
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 149
+  jump to L189
+label L148 was $X111$100417
+  push imm 419
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 150
+  jump to L189
+label L149 was $X112$100421
+  push imm 421
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 151
+  jump to L189
+label L150 was $X113$100425
+  push imm 423
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 152
+  jump to L189
+label L151 was $X114$100429
+  push imm 425
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 153
+  jump to L189
+label L152 was $X115$100433
+  push imm 427
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 154
+  jump to L189
+label L153 was $X116$100437
+  push imm 429
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 155
+  jump to L189
+label L154 was $X117$100441
+  push imm 431
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 156
+  jump to L189
+label L155 was $X118$100445
+  push imm 433
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 157
+  jump to L189
+label L156 was $X119$100449
+  push imm 435
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 158
+  jump to L189
+label L157 was $X120$100453
+  push imm 437
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 159
+  jump to L189
+label L158 was $X121$100457
+  push imm 439
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 160
+  jump to L189
+label L159 was $X122$100461
+  push imm 441
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 161
+  jump to L189
+label L160 was $X123$100465
+  push imm 443
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 162
+  jump to L189
+label L161 was $X124$100469
+  push imm 445
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 163
+  jump to L189
+label L162 was $X125$100473
+  push imm 447
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 164
+  jump to L189
+label L163 was $X126$100477
+  push imm 449
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 165
+  jump to L189
+label L164 was $X127$100481
+  push imm 451
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 166
+  jump to L189
+label L165 was $X128$100485
+  push imm 453
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 167
+  jump to L189
+label L166 was $X129$100489
+  push imm 455
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 168
+  jump to L189
+label L167 was $X130$100493
+  push imm 457
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 169
+  jump to L189
+label L168 was $X131$100497
+  push imm 459
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 170
+  jump to L189
+label L169 was $X132$100501
+  push imm 461
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 171
+  jump to L189
+label L170 was $X134$100512
+  push imm 467
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 173
+  jump to L189
+label L171 was $X135$100516
+  push imm 469
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 174
+  jump to L189
+label L172 was $X136$100520
+  push imm 471
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 175
+  jump to L189
+label L173 was $X137$100524
+  push imm 473
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 176
+  jump to L189
+label L174 was $X138$100528
+  push imm 475
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 177
+  jump to L189
+label L175 was $X139$100532
+  push imm 477
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 178
+  jump to L189
+label L176 was $X140$100536
+  push imm 479
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 179
+  jump to L189
+label L177 was $X141$100540
+  push imm 481
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 180
+  jump to L189
+label L178 was $X142$100544
+  push imm 483
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 181
+  jump to L189
+label L179 was $X143$100548
+  push imm 485
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 182
+  jump to L189
+label L180 was $X144$100552
+  push imm 487
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 183
+  jump to L189
+label L181 was $X145$100556
+  push imm 489
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 184
+  jump to L189
+label L182 was $X146$100560
+  push imm 491
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 185
+  jump to L189
+label L183 was $X147$100564
+  push imm 493
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 186
+  jump to L189
+label L184 was $X148$100568
+  push imm 495
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 187
+  jump to L189
+label L185 was $X149$100572
+  push imm 497
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 188
+  jump to L189
+label L186 was $X150$100576
+  push imm 499
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 189
+  jump to L189
+label L187 was $X151$100580
+  push imm 501
+  push reg r6
+  call starttest arity 2 depth 2
+  push imm 190
+  jump to L189
+label L188 was $X152$100584
+  push imm 503
+  push reg r6
+  call starttest arity 2 depth 2
+  push reg r3
+label L189 was at_0xc8d
+  push reg r6
+  call ZZlprp_load_vvg__setd0014_0015 arity 2 depth 4
+  popn 4
+label L190 was at_0xc96
+  cmp testl reg r0 reg r0
+  branch jne to L53
+  jump to L52
+label L191 was $fail_clean$99886
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L54
+label L192 was $L101176
+end
+

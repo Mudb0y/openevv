@@ -66,6 +66,55 @@ builds after everything else, so it can override.
 `RULES` chooses which form of the language's rules gets linked, and is
 explained next.
 
+## The rules as text
+
+`lang/enus/rules` holds all 1,042 rules as text, one file to an object, written
+by `tools/delta-notation.py`. This is the form to read a rule in, and it is
+meant to become the form to *change* one in.
+
+    rule eng_ph_Z_dur from es_cdur.obj
+    shape frame 196 argbase 8 params 1
+    label L0 was _eng_ph_Z_dur
+      alu andl imm 0 slot -4
+      push slotaddr -104
+      call setjmp3 arity 2 depth 2
+      cmp testl reg r0 reg r0
+      load movl state 0 into r6
+      branch jne to L1
+
+One operation to a line, the verb first, and an operand is one or two words --
+so a line can be read straight through with nothing to keep track of. Nothing
+is carried by indentation and nothing needs punctuation counted. Registers are
+the machine's eight, `r0` to `r7`, with `w`, `b` or `h` for how much of one is
+meant. Blocks are numbered; `was ...` on the label line is what the block was
+called in IBM's object, which is only useful while rules are still being lifted
+and is ignored when the text is read.
+
+It is one to one with what the machine does, which is the point: it holds
+registers, the argument stack and the backtracking as they are rather than
+tidying them into loops and conditionals. The readable C that
+`delta-decompile.py` writes is the other form, for reading rather than for
+round-tripping, and inverting that exactly would be hard.
+
+    make notation
+
+writes the text out of IBM's objects again, and
+
+    make notation-check
+
+holds what is in the tree against those objects: every rule is emitted twice,
+once from the text and once from a fresh lift, and the bytecode has to match
+byte for byte. All 1,042 do. That check is what says the text is faithful, and
+once a rule has been changed on purpose it is what says which rules those are --
+an unedited rule matches and an edited one is named. It wants IBM's objects, so
+it is in the same class as the suite: obtainable, and not needed to build.
+
+The bytecode the engine runs is still `lang/enus/delta_rules_enus.c` and is
+still what a build compiles. Making the build write that out of this text
+instead of out of the objects is the next piece of work; the pieces that would
+have to come with it are the constant stores and the 2,335 generated wrappers,
+which are synthesised from the language's own tables rather than lifted.
+
 ## The rules, twice
 
 The language's rules exist in the tree as bytecode, and the engine has an
