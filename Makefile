@@ -51,6 +51,15 @@ RULES ?= c
 GENERATED := $(LANG)/delta_rules_c.c
 STUB      := $(SRC)/delta_rules_none.c
 
+# Which choice the archives were last built for. The objects sit in a tree per
+# choice, so make cannot tell from them that the choice has changed and would
+# leave the other one's archive standing. This is touched only when the answer
+# is different, so it forces the link then and never otherwise.
+RULESTAMP := $(BUILD)/rules.stamp
+$(shell mkdir -p $(BUILD); \
+        [ "$$(cat $(RULESTAMP) 2>/dev/null)" = "$(RULES)" ] \
+        || printf %s "$(RULES)" > $(RULESTAMP))
+
 ifeq ($(RULES),bytecode)
 RULESRC := $(STUB)
 TRIM    :=
@@ -157,7 +166,7 @@ $(OBJDIR)/%.o: %.c $(HEADERS)
 # A source that gets renamed leaves its object behind, and a stale one is a
 # duplicate definition waiting to happen, so they go before the archive is
 # built rather than at the next link. Switching RULES leaves one the same way.
-$(BUILD)/libevv.a: $(OBJECTS)
+$(BUILD)/libevv.a: $(OBJECTS) $(RULESTAMP)
 	@for o in $(OBJDIR)/*.o; do \
 	   case " $(OBJECTS) " in *" $$o "*) ;; *) rm -f "$$o" ;; esac; \
 	 done
@@ -226,7 +235,7 @@ $(OBJDIR32)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJDIR32)
 	@$(CC32) $(CFLAGS32) -c $< -o $@
 
-$(BUILD)/libevv32.a: $(OBJECTS32)
+$(BUILD)/libevv32.a: $(OBJECTS32) $(RULESTAMP)
 	@for o in $(OBJDIR32)/*.o; do \
 	   case " $(OBJECTS32) " in *" $$o "*) ;; *) rm -f "$$o" ;; esac; \
 	 done
@@ -317,7 +326,7 @@ $(OBJDIRWIN)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJDIRWIN)
 	@$(CCWIN) $(CFLAGSWIN) -c $< -o $@
 
-$(BUILD)/libevv-win.a: $(OBJECTSWIN)
+$(BUILD)/libevv-win.a: $(OBJECTSWIN) $(RULESTAMP)
 	@for o in $(OBJDIRWIN)/*.o; do \
 	   case " $(OBJECTSWIN) " in *" $$o "*) ;; *) rm -f "$$o" ;; esac; \
 	 done
@@ -361,7 +370,7 @@ $(OBJDIRWIN32)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJDIRWIN32)
 	@$(CCWIN32) $(CFLAGSWIN32) -c $< -o $@
 
-$(BUILD)/libevv-win32.a: $(OBJECTSWIN32)
+$(BUILD)/libevv-win32.a: $(OBJECTSWIN32) $(RULESTAMP)
 	@for o in $(OBJDIRWIN32)/*.o; do \
 	   case " $(OBJECTSWIN32) " in *" $$o "*) ;; *) rm -f "$$o" ;; esac; \
 	 done

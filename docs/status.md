@@ -310,11 +310,28 @@ rather than guessed. It becomes live the day anything asks the engine to write
 a file itself, or the day Linux audio is wired through this layer rather than
 through the buffer.
 
-Making and throwing away engine instances leaks a few megabytes each. After
-about sixty the engine still runs and still answers, and says nothing: it has
-quietly run out of the arena. `make instances` is what shows it -- every round
-owes the same samples and after sixty-two they stop coming. What an instance
-owns and does not give back has not been chased down.
+Making and throwing away engine instances leaks a few megabytes each. `make
+instances` shows it: every round speaks the same sentence and so owes the same
+samples, and on round 63 the engine answers with none. It still runs and still
+reports no error -- it has quietly run out of the arena, which is the region
+below two gigabytes that everything the machine can hold a pointer to comes out
+of. What an instance owns and does not give back has not been chased down, and
+that is the open part.
+
+The number is 63 in both forms of the rules, which says the leak is in the
+engine rather than in either rule table. What differed until 22 August 2026 was
+what happened at that point: the interpreter answers nought and the engine goes
+quiet, because `run_bytecode` checks whether it got a frame, while a rule
+written as C went straight to `memset` on the nought it had been handed and
+faulted. So exhausting the arena crashed the compiled build and merely silenced
+the interpreted one. The decompiler now emits the same check the interpreter
+has, and both answer nought.
+
+That is worth knowing beyond this one fault: the two rule forms are held
+against each other over the 81 cases and by `tools/delta-check.sh`, and neither
+of those speaks through more than one instance, so a difference that only shows
+when something runs out was invisible to both. `make instances` is the only
+check that makes a second instance at all.
 
 One thing the trace check turned up is a fault of ours, and is not fixed.
 Tracing at the level that prints every call costs twenty times what the

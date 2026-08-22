@@ -395,6 +395,11 @@ def write(names):
                     ' r4 = 0, r5 = 0, r6 = 0, r7 = 0;\n')
         text.append('    delta_flags fl;\n')
         text.append('    int i;\n\n')
+        # The arena can run out, and then there is no frame. The interpreter
+        # answers nought here rather than writing through the nought it was
+        # given, and a rule written as C has to do the same or an engine that
+        # would have gone quiet falls over instead.
+        text.append('    if (frame == 0)\n        return 0;\n\n')
         text.append('    memset(frame, 0, DELTA_RULE_FRAME_MAX);\n')
         text.append('    memset(arg, 0, sizeof arg);\n')
         text.append('    memset(&fl, 0, sizeof fl);\n')
