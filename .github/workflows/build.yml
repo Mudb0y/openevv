@@ -17,13 +17,19 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Both forms of the rules are built and both are held to the same hash. Which
+  # one is the default has changed once and could change again, so each job says
+  # which it wants rather than taking it: whichever way the default points, the
+  # other form is the one that would quietly rot, and the compiled rules are
+  # checked against the interpreter by tools/delta-check.sh -- so if the
+  # interpreter moves, the thing the C is held against has moved.
   linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build
-        run: make -j"$(nproc)"
+      - name: Build, with the rules as C
+        run: make -j"$(nproc)" RULES=c
 
       - name: Check the samples
         run: test/hash.sh
@@ -36,6 +42,20 @@ jobs:
           name: evv-linux-x86_64
           path: build/evv
           if-no-files-found: error
+
+  # The quick one: no Python, no thirteen megabytes of generated C, half a
+  # minute. It proves the interpreter still says what it has always said, and it
+  # is what a fresh clone with nothing but a C compiler gets.
+  linux-bytecode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build, with the rules as bytecode
+        run: make -j"$(nproc)" RULES=bytecode
+
+      - name: Check the samples
+        run: test/hash.sh
 
   # Cross-compiled here rather than on a Windows runner, because this is the
   # same toolchain the tree is developed with and it takes a minute.
@@ -192,7 +212,7 @@ jobs:
           if ($have -ne $want) { throw "the 32-bit library says something else through ctypes" }
 
   release:
-    needs: [linux, windows, windows-check, windows-check-32]
+    needs: [linux, linux-bytecode, windows, windows-check, windows-check-32]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
