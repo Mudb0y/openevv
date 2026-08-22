@@ -180,7 +180,7 @@ $(BUILD)/libevv.a: $(OBJECTS) $(RULESTAMP)
 # both that the text is still faithful and, once a rule has been changed on
 # purpose, which rules those are. It wants the objects, so it is in the same
 # class as the suite: obtainable, and not needed to build.
-.PHONY: notation notation-check notation-prove
+.PHONY: notation notation-check notation-prove notation-regenerate notation-symbols
 notation:
 	@python3 tools/delta-notation.py tree
 
@@ -194,6 +194,18 @@ notation-check:
 # nothing added and nothing lost -- which a rule-by-rule comparison cannot.
 notation-prove:
 	@python3 tools/delta-notation.py prove
+
+# The rules rebuilt out of the text alone, opening no object, and the result
+# held against the two generated files in the tree. This is the one that says
+# the text is the source rather than a second copy: what it writes has to be
+# what is already there, byte for byte.
+notation-regenerate:
+	@python3 tools/delta-notation.py regenerate
+
+# Where each address the rules name falls. Written out of the objects once,
+# because it is the last thing the emitter wanted them for.
+notation-symbols:
+	@python3 tools/delta-notation.py symbols
 
 # The rules as C. Thirteen megabytes written out of the bytecode beside it,
 # so it is made here rather than kept in the tree, where every change to the
