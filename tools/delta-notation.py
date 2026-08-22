@@ -428,6 +428,60 @@ def emit_one(name, d, obj, tables):
     return bytes(e.code)
 
 
+def arities():
+    """How many arguments each entry takes, learned from every call site.
+
+    The real pipeline does this pass before it lifts anything, and hands the
+    answer to the lifter: a call reached by a path that did not write its
+    arguments cannot say for itself how many it takes. Lifting without it gives
+    a different -- and wrong -- answer for some rules, so anything meaning to
+    reproduce what the engine runs has to do it too.
+    """
+    seen = {}
+    for obj in sorted(f for f in os.listdir(OBJECTS) if f.endswith(".obj")):
+        for name, items in dl.read_functions(os.path.join(OBJECTS, obj)):
+            if not dl.is_rule(items):
+                continue
+            data, tables = dl.find_data(items)
+            d = dl.Decoder(name, items, data, tables).run()
+            for _l, _s, block in d.blocks:
+                for op in block:
+                    if op[0] == "call" and op[2]:
+                        seen.setdefault(op[1], {})
+                        seen[op[1]][op[2]] = seen[op[1]].get(op[2], 0) + 1
+    return dict((k, max(v.items(), key=lambda kv: kv[1])[0])
+                for k, v in seen.items())
+
+
+def thunks(known):
+    """The helper thunks the compiler generated beside the rules, in glob.obj.
+
+    Not rules by the lifter's test, but the same kind of thing and the
+    interpreter runs them the same way, so the text has to hold them too or it
+    is only two thirds of what the engine runs.
+    """
+    path = os.path.join(OBJECTS, "glob.obj")
+    if not os.path.exists(path):
+        return [], {}
+    got = []
+    tables = None
+    for name, items in dl.read_functions(path):
+        if not name.startswith("ZZ"):
+            continue
+        data, tabs = dl.find_data(items)
+        d = dl.Decoder(name, items, data, tabs, known).run()
+        if d.holes:
+            continue
+        # A thunk passes its caller's arguments through, and the ones it never
+        # reads are still there to be passed on, so a call site that says more
+        # than the thunk reads is the one that is right.
+        d.params = max(d.params, known.get(name, 0))
+        if tables is None:
+            tables = de.raw_bytes(path)
+        got.append((name, d))
+    return got, (tables or {})
+
+
 def lift(path, known=None):
     """Every rule in an object, lifted, with the object's raw tables."""
     got = []
@@ -483,6 +537,83 @@ def check(obj):
 
 
 TREE = os.path.join(ROOT, "lang", "enus", "rules")
+SHIPPED = os.path.join(ROOT, "lang", "enus", "delta_rules_enus.c")
+
+
+def shipped_bytecode():
+    """The bytecode the engine actually runs, out of the tree."""
+    import re as _re
+    s = open(SHIPPED).read()
+    m = _re.search(r"const uint8_t delta_rule_code\[\] = \{(.*?)\};", s,
+                   _re.S)
+    if m is None:
+        raise ValueError("no delta_rule_code in %s" % SHIPPED)
+    return bytes(int(x) for x in m.group(1).replace("\n", "").split(",")
+                 if x.strip())
+
+
+def all_rules(known):
+    """Every rule the engine runs, in the order the emitter takes them: each
+    object's rules in the order of the objects, then glob.obj's thunks."""
+    for obj in objects_with_rules():
+        got, tables = lift(os.path.join(OBJECTS, obj), known)
+        for name, d in got:
+            yield name, d, obj, tables
+    got, tables = thunks(known)
+    for name, d in got:
+        yield name, d, "glob.obj", tables
+
+
+def prove():
+    """Emit every rule out of the text and hold the whole stream against the
+    bytecode in the tree.
+
+    This is the check that matters. The pools -- constants, strings, entry
+    points, tag maps -- are shared across the whole language and numbered in
+    the order the rules are taken, so reproducing the stream byte for byte says
+    the text carries not just each rule but every rule, in order, with nothing
+    added and nothing left out. A per-rule comparison cannot say that.
+    """
+    known = arities()
+    print("entries whose arity was learned: %d" % len(known))
+
+    want = shipped_bytecode()
+    from_text = de.Emitter()
+    from_lift = de.Emitter()
+    n = 0
+
+    for name, d, obj, tables in all_rules(known):
+        lines = []
+        write_rule(name, obj, d, tables, lines)
+        back, back_tables = read_rules(lines)
+        if len(back) != 1:
+            print("    %s read back as %d rules" % (name, len(back)))
+            return False
+        from_lift.rule(name, d, tables, obj)
+        from_text.rule(name, back[0][1], back_tables, obj)
+        n += 1
+
+    text = bytes(from_text.code)
+    lift_ = bytes(from_lift.code)
+    print("rules taken: %d" % n)
+    print("from the text: %d bytes, from a fresh lift: %d, in the tree: %d"
+          % (len(text), len(lift_), len(want)))
+
+    ok = True
+    if text != lift_:
+        print("the text and a fresh lift do not agree")
+        ok = False
+    if text != want:
+        print("the text does not reproduce the bytecode in the tree")
+        for i in range(min(len(text), len(want))):
+            if text[i] != want[i]:
+                print("  first difference at byte %d" % i)
+                break
+        ok = False
+    if ok:
+        print("the text reproduces the engine's bytecode byte for byte")
+    return ok
+
 
 
 def objects_with_rules():
@@ -501,19 +632,24 @@ def to_tree():
     the thing it came from can be checked against it.
     """
     os.makedirs(TREE, exist_ok=True)
+    known = arities()
     rules = 0
-    for obj in objects_with_rules():
-        got, tables = lift(os.path.join(OBJECTS, obj))
+    per_object = {}
+
+    for name, d, obj, tables in all_rules(known):
+        per_object.setdefault(obj, []).append((name, d, tables))
+
+    for obj in sorted(per_object):
         out = ["# The rules of %s, written by tools/delta-notation.py." % obj,
                "# One operation to a line. See docs/building.md.",
                ""]
-        for name, d in got:
+        for name, d, tables in per_object[obj]:
             write_rule(name, obj, d, tables, out)
             out.append("")
         where = os.path.join(TREE, obj[:-4] + ".dr")
         open(where, "w").write("\n".join(out) + "\n")
-        rules += len(got)
-        print("%-16s %3d rules" % (obj, len(got)))
+        rules += len(per_object[obj])
+        print("%-16s %4d rules" % (obj, len(per_object[obj])))
     print("%d rules in %s" % (rules, os.path.relpath(TREE, ROOT)))
     return True
 
@@ -529,15 +665,22 @@ def verify():
     """
     ok = True
     total = same = 0
-    for obj in objects_with_rules():
+    known = arities()
+    lifted_by_object = {}
+    tables_by_object = {}
+    for name, d, obj, tables in all_rules(known):
+        lifted_by_object.setdefault(obj, {})[name] = d
+        tables_by_object[obj] = tables
+
+    for obj in sorted(lifted_by_object):
         where = os.path.join(TREE, obj[:-4] + ".dr")
         if not os.path.exists(where):
             print("%-16s no text in the tree" % obj)
             ok = False
             continue
         written, wtables = read_rules(open(where))
-        lifted, ltables = lift(os.path.join(OBJECTS, obj))
-        by_name = dict((n, d) for n, d in lifted)
+        by_name = lifted_by_object[obj]
+        ltables = tables_by_object[obj]
         for name, d2, o in written:
             total += 1
             if name not in by_name:
@@ -585,6 +728,9 @@ def main():
         for obj in sys.argv[2:]:
             ok = check(obj) and ok
         return 0 if ok else 1
+
+    if what == "prove":
+        return 0 if prove() else 1
 
     if what == "tree":
         return 0 if to_tree() else 1

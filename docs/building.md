@@ -68,7 +68,7 @@ explained next.
 
 ## The rules as text
 
-`lang/enus/rules` holds all 1,042 rules as text, one file to an object, written
+`lang/enus/rules` holds all 3,377 rules as text, one file to an object, written
 by `tools/delta-notation.py`. This is the form to read a rule in, and it is
 meant to become the form to *change* one in.
 
@@ -102,18 +102,30 @@ writes the text out of IBM's objects again, and
 
     make notation-check
 
-holds what is in the tree against those objects: every rule is emitted twice,
-once from the text and once from a fresh lift, and the bytecode has to match
-byte for byte. All 1,042 do. That check is what says the text is faithful, and
-once a rule has been changed on purpose it is what says which rules those are --
-an unedited rule matches and an edited one is named. It wants IBM's objects, so
-it is in the same class as the suite: obtainable, and not needed to build.
+holds what is in the tree against those objects rule by rule: each is emitted
+twice, once from the text and once from a fresh lift, and the bytecode has to
+match. That is what says which rules have been changed on purpose -- an unedited
+rule matches and an edited one is named, which is what somebody changing a rule
+needs to be told.
+
+    make notation-prove
+
+is the stronger check and the one to believe. It emits every rule out of the
+text into one stream and holds that against `delta_rule_code` as it stands in
+`lang/enus/delta_rules_enus.c` -- the bytecode the engine actually runs. The
+pools the rules draw on, the constants and strings and entry points and tag
+maps, are shared across the whole language and numbered in the order the rules
+are taken, so reproducing the stream byte for byte says the text carries every
+rule, in order, with nothing added and nothing left out. A rule-by-rule
+comparison cannot say that. All 1,496,807 bytes match.
+
+Both want IBM's objects, so they are in the same class as the suite:
+obtainable, and not needed to build.
 
 The bytecode the engine runs is still `lang/enus/delta_rules_enus.c` and is
-still what a build compiles. Making the build write that out of this text
-instead of out of the objects is the next piece of work; the pieces that would
-have to come with it are the constant stores and the 2,335 generated wrappers,
-which are synthesised from the language's own tables rather than lifted.
+still what a build compiles, so the text is a second copy rather than the
+source. What is left to change that is the constant stores, which are lifted
+out of the objects' data by the same tool and are not in this text.
 
 ## The rules, twice
 
