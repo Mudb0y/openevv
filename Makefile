@@ -19,6 +19,11 @@
 # added, since a name that reappears there is a call that has quietly gone
 # back to the original.
 
+# Said rather than left to the order of the file, because a rule that has to
+# sit above `all' -- the language list is one -- would otherwise be what a bare
+# `make' builds.
+.DEFAULT_GOAL := all
+
 SRC   := src
 # Which languages get built in. As many as are named: every module names its
 # own tables after itself, and the engine reaches whichever is in force
