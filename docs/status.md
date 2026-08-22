@@ -26,8 +26,18 @@ Dictionaries can be edited. `tools/delta-dict.py` writes `lang/enus/enus.dict`
 out of the tables and reads it back in, so a pronunciation can be changed, laid
 down and heard.
 
-All nine languages in the SDK lift and decompile: US and British English, both
-Spanishes, both Frenches, German, Italian and Japanese. Only English is built.
+Two languages build and speak: US English and British English. `make
+EVVLANG=engb` is the second one, and `tools/lift-lang.sh` is what writes a
+language out of IBM's objects -- the rules, the sets, the statement table, the
+variable area and the settings, which carry each language's own eight voices and
+its own phoneme durations.
+
+All nine lift their *rules* cleanly, which is the part that was expected to be
+hard. What stops the other seven is smaller and is measured: four of them --
+both Spanishes, French of France, Italian -- disagree with the model of the
+variable area by exactly two bytes at a compound variable, and three of them --
+German, Canadian French, Japanese -- generate but do not link, wanting one, nine
+and three names respectively. `docs/building.md` has the detail and the names.
 
 It builds and speaks on Windows, sixty-four bit, as one static file. The speak
 window plays what it makes through waveOut; `win/speak.c` is that, and it is the
@@ -58,8 +68,10 @@ a language.
 
 Polish, which is the reason the compiler matters. Nothing started.
 
-Anything but English at build time. The other eight lift and decompile, but the
-build knows only `lang/enus`.
+Seven of the nine languages at build time. Two build and speak; the rules of
+all nine lift. What is left is a two-byte disagreement about the variable area
+in four of them and a handful of missing primitives, rules and callbacks in the
+other three -- see `docs/building.md`.
 
 ## Partly done
 

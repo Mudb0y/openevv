@@ -57,7 +57,11 @@ typedef THIS void *(*DeleteFn)(void *self, int32_t freeIt);
 #define KEY_CORPORA       "Corpora"
 #define KEY_CONCATENATIVE "Concatenative"
 #define LIBRARY_NAME      "Static Engine ENU"
-#define LIBRARY_LANG      0x10000
+
+/* Which language this build is. Not a constant here: it is whichever module
+   lang/ holds, and the module says so itself -- tools/gen-ini.py takes it out
+   of the section heading in the settings and writes it beside them. */
+extern const int32_t evvLibraryLang;
 
 /* What a slot reports about its callbacks when nothing says otherwise. */
 #define CALLBACK_DEFAULT 0x3f
@@ -150,7 +154,7 @@ THIS const char *ea_getLibraryName(EngineArray *a, const void *lang)
         return 0;
 
     strcpy(p, LIBRARY_NAME);
-    if (LANG_PACKED(lang) == LIBRARY_LANG)
+    if (LANG_PACKED(lang) == evvLibraryLang)
         return p;
     return 0;
 }

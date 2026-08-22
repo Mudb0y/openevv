@@ -66,6 +66,57 @@ builds after everything else, so it can override.
 `RULES` chooses which form of the language's rules gets linked, and is
 explained next.
 
+## Languages other than English
+
+There are nine language modules in the SDK, and `lang/` holds one directory
+each for those that have been lifted. The build takes one:
+
+    make EVVLANG=engb
+
+`EVVLANG` names the directory under `lang`, and English is the default. It is
+not called `LANG` because that is what a shell calls the locale: an ordinary
+`LANG=en_GB.UTF-8` in the environment would otherwise send the build looking
+for a language module of that name. The object trees and the archives are keyed
+on the language as well as on `RULES`, so switching either cannot leave the
+other one's objects behind.
+
+    tools/lift-lang.sh dede
+
+writes a language out of IBM's objects in `analysis/dede`: the rules and the
+constants they name, the lookup sets and the dictionary's actions, the statement
+table, where the language's own variables sit, and the settings it runs on --
+which include its own eight voices and its own phoneme durations, since each
+module carries them. A language already in `lang/` is left alone unless
+`--force` is given, because lifting one again puts IBM's own dictionary tables
+back and loses every pronunciation added through `tools/delta-dict.py`.
+
+**Where each language stands.** English and British English build and speak.
+The other seven do not yet, and what stops each of them is measured rather than
+guessed:
+
+Four -- both Spanishes, French of France and Italian -- diverge from the
+model of the variable area that `tools/gen-globals.py` checks, each by exactly
+two bytes at a compound variable. The model matches the engine's own arithmetic
+in `eci_deltaglob.c`, `at += 4 + ALIGN_UP(bytes, 2)`, so it is the object that
+disagrees and not the port; something about a compound is not yet understood.
+Until it is, those four cannot be lifted at all.
+
+Three -- German, Canadian French and Japanese -- lift and generate but do not
+link, and `make missing EVVLANG=dede` says what each wants. German wants one
+runtime primitive, `forall_adv_r`. Japanese wants three, of which two are
+callbacks the engine does not offer, `userIndexCallback` and
+`wordIndexCallback`. Canadian French wants nine, and most of those are rules by
+their names rather than primitives -- `fren_ph_z`, `do_canfren_r_glide` -- which
+means the lifter is not finding rules that module has.
+
+Japanese also loses one rule to a hole the lifter cannot resolve, so it would be
+one rule short even once it links.
+
+None of these is large. They are listed here because a number is worth more
+than an estimate, and because anybody adding a language should know that the
+work is in the primitives and the variable area rather than in the rules, which
+lift cleanly for all nine.
+
 ## The rules as text
 
 `lang/enus/rules` holds all 3,377 rules as text, one file to an object, written

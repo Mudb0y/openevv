@@ -264,9 +264,12 @@ def variant_sizes(o):
 
 
 def main():
-    where = os.path.join(ROOT, "analysis", "enus")
+    # Which module, and where to put what comes out. Defaults to English so
+    # that running it by hand still does what it always did.
+    lang = sys.argv[1] if len(sys.argv) > 1 else "enus"
+    where = os.path.join(ROOT, "analysis", lang)
     obj = os.path.join(where, "link.obj")
-    out = os.path.join(ROOT, "lang", "enus", "delta_link_enus.c")
+    out = os.path.join(ROOT, "lang", lang, "delta_link_" + lang + ".c")
 
     o = Coff(obj)
     sec, base = o.at("_vstmtbl")

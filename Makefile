@@ -20,7 +20,18 @@
 # back to the original.
 
 SRC   := src
-LANG  := lang/enus
+
+# Which language module is built in. One directory a language under lang,
+# named after it, and the build takes one: the rules, the sets and the
+# statement table are the language's own and two of them cannot be linked at
+# once. `make EVVLANG=dede' builds German.
+#
+# Assigned rather than defaulted, because LANG is also what a shell calls the
+# locale: a makefile assignment beats the environment, and without one an
+# ordinary LANG=en_GB.UTF-8 would send the build looking for a language module
+# called en_GB.UTF-8.
+EVVLANG ?= enus
+LANG  := lang/$(EVVLANG)
 BUILD := build
 
 CC  ?= cc
@@ -51,14 +62,14 @@ RULES ?= c
 GENERATED := $(LANG)/delta_rules_c.c
 STUB      := $(SRC)/delta_rules_none.c
 
-# Which choice the archives were last built for. The objects sit in a tree per
+# Which language and which choice of rules the archives were last built for. The objects sit in a tree per
 # choice, so make cannot tell from them that the choice has changed and would
 # leave the other one's archive standing. This is touched only when the answer
 # is different, so it forces the link then and never otherwise.
 RULESTAMP := $(BUILD)/rules.stamp
 $(shell mkdir -p $(BUILD); \
-        [ "$$(cat $(RULESTAMP) 2>/dev/null)" = "$(RULES)" ] \
-        || printf %s "$(RULES)" > $(RULESTAMP))
+        [ "$$(cat $(RULESTAMP) 2>/dev/null)" = "$(EVVLANG) $(RULES)" ] \
+        || printf %s "$(EVVLANG) $(RULES)" > $(RULESTAMP))
 
 ifeq ($(RULES),bytecode)
 RULESRC := $(STUB)
@@ -116,7 +127,7 @@ OPT        ?= -O2
 ALL_CFLAGS := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) $(LOW) $(TRIM) \
               $(CFLAGS)
 
-OBJDIR  := $(BUILD)/obj-$(RULES)
+OBJDIR  := $(BUILD)/obj-$(EVVLANG)-$(RULES)
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
 .PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing
@@ -260,7 +271,7 @@ install: $(BUILD)/evv
 # flake provides; elsewhere it is usually the host compiler with -m32, which
 # CC32 can be set to whole: `make evv32 CC32="gcc -m32"'.
 CC32      ?= i686-unknown-linux-gnu-gcc
-OBJDIR32  := $(BUILD)/obj32-$(RULES)
+OBJDIR32  := $(BUILD)/obj32-$(EVVLANG)-$(RULES)
 CFLAGS32  := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) $(TRIM) \
              $(CFLAGS)
 OBJECTS32 := $(patsubst %.c,$(OBJDIR32)/%.o,$(notdir $(SOURCES)))
@@ -299,7 +310,7 @@ $(BUILD)/libevv32.a: $(OBJECTS32) $(RULESTAMP)
 CCWIN      ?= x86_64-w64-mingw32-gcc
 WINDRES    ?= x86_64-w64-mingw32-windres
 ARWIN      ?= x86_64-w64-mingw32-ar
-OBJDIRWIN  := $(BUILD)/objwin-$(RULES)
+OBJDIRWIN  := $(BUILD)/objwin-$(EVVLANG)-$(RULES)
 
 CFLAGSWIN  := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) -DEVV_ARENA=1 \
               $(TRIM) $(CFLAGS)
@@ -390,7 +401,7 @@ $(BUILD)/libevv-win.a: $(OBJECTSWIN) $(RULESTAMP)
 CCWIN32     ?= i686-w64-mingw32-gcc
 WINDRES32   ?= i686-w64-mingw32-windres
 ARWIN32     ?= i686-w64-mingw32-ar
-OBJDIRWIN32 := $(BUILD)/objwin32-$(RULES)
+OBJDIRWIN32 := $(BUILD)/objwin32-$(EVVLANG)-$(RULES)
 CFLAGSWIN32 := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) $(TRIM) $(CFLAGS)
 LDFLAGSWIN32 := -static -Wl,--kill-at $(MINGW_LDFLAGS)
 OBJECTSWIN32 := $(patsubst %.c,$(OBJDIRWIN32)/%.o,$(notdir $(SOURCESWIN)))

@@ -699,11 +699,16 @@ def main():
     if failed:
         print("rules not emitted: %s" % dict(failed))
 
+    # The file names carry the language, and the language is a property of the
+    # module being read rather than of wherever the output is put: reading
+    # analysis/dede writes delta_rules_dede.c whatever the directory is called.
+    lang = os.path.basename(os.path.normpath(where))
     stores, names = write_consts(e, where,
-                                 os.path.join(out, "delta_consts_enus.c"))
+                                 os.path.join(out,
+                                              "delta_consts_%s.c" % lang))
     print("stores of named bytes: %d" % len(stores))
     n = write_c(e, where,
-                os.path.join(out, "delta_rules_enus.c"),
+                os.path.join(out, "delta_rules_%s.c" % lang),
                 os.path.join(out, "delta_rules.h"),
                 None, stores, names)
     print("addresses the rules name: %d" % n)

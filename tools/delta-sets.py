@@ -185,8 +185,11 @@ def store(o, tag, suffix, func, out, name):
 
 
 def main():
-    where = os.path.join(ROOT, "analysis", "enus")
-    out_c = os.path.join(ROOT, "lang", "enus", "delta_sets_enus.c")
+    # Which module, and where to put what comes out. Defaults to English so
+    # that running it by hand still does what it always did.
+    lang = sys.argv[1] if len(sys.argv) > 1 else "enus"
+    where = os.path.join(ROOT, "analysis", lang)
+    out_c = os.path.join(ROOT, "lang", lang, "delta_sets_" + lang + ".c")
 
     link = dlk.Coff(os.path.join(where, "link.obj"))
     sets = dlk.Coff(os.path.join(where, "setentry.obj"))
@@ -211,7 +214,8 @@ def main():
                 "   this lifter again puts IBM's own back and loses\n"
                 "   whatever that file said. */\n"
                 "\n#include <stdlib.h>\n#include <string.h>\n"
-                "\n#include \"delta.h\"\n")
+                "\n#include \"delta.h\"\n"
+                "#include \"delta_rules_c.h\"\n")
 
         f.write("\n/* What each set is: how many entries, how wide, and\n"
                 "   where in its blob to start. */\n"
