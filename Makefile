@@ -200,7 +200,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing
+.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -228,6 +228,16 @@ interrupt: $(BUILD)/interrupt
 
 $(BUILD)/interrupt: test/interrupt.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/interrupt.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# The sample rate changed on an instance that speaks into a buffer, which the
+# suite cannot see: the probe registers a buffer but never asks for another
+# rate, and IBM's engine goes silent there too, so both sides agreed.
+rate: $(BUILD)/rate
+	@$(BUILD)/rate
+
+$(BUILD)/rate: test/rate.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/rate.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # A backtrack landed on from a thread that never planted it, which is how

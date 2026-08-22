@@ -57,6 +57,9 @@ jobs:
       - name: Check the samples
         run: test/hash.sh
 
+      - name: Check a rate change keeps the caller's buffer
+        run: make RULES=bytecode rate
+
   # Cross-compiled here rather than on a Windows runner, because this is the
   # same toolchain the tree is developed with and it takes a minute.
   windows:
