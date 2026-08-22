@@ -93,10 +93,24 @@ comparison cannot say that. All 1,496,807 bytes match.
 Both want IBM's objects, so they are in the same class as the suite:
 obtainable, and not needed to build.
 
-The bytecode the engine runs is still `lang/enus/delta_rules_enus.c` and is
-still what a build compiles, so the text is a second copy rather than the
-source. What is left to change that is the constant stores, which are lifted
-out of the objects' data by the same tool and are not in this text.
+    make notation-regenerate
+
+is the one that says the text is the source rather than a second copy. It reads
+`lang/enus/rules`, opens no object at all, and writes what the engine compiles
+-- `delta_rules_enus.c` and `delta_rules.h` -- into a directory of its own, then
+holds both against the files in the tree. Both match byte for byte: 4,932,041
+bytes and 168,178.
+
+What made that possible was one small table. A rule names a constant by a
+symbol; the bytes behind it are a whole data section of the object it was
+compiled into, and what the rule gets is an offset into that section. The bytes
+were already in the tree, in `delta_consts_enus.c`. The mapping -- which store
+and how far in -- was not, and it was the last thing the emitter needed the
+objects for. It is now `lang/enus/rules/symbols`: 75 stores and 6,718
+addresses, written by `make notation-symbols`.
+
+So the rules can be rebuilt from text a person can read and change, and IBM's
+objects are wanted for the comparison suite and for nothing else.
 
 ## The rules, twice
 

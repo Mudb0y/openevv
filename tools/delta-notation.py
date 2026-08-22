@@ -564,6 +564,117 @@ def all_rules(known):
         yield name, d, "glob.obj", tables
 
 
+SYMBOLS = os.path.join(TREE, "symbols")
+
+
+def write_symbols():
+    """Where each address the rules name falls, so the objects are not needed.
+
+    A rule names a constant by a symbol; the bytes behind it are a whole data
+    section of the object it was compiled into, and what the rule gets is an
+    offset into that section. The bytes are already in the tree, in
+    delta_consts_enus.c. What was not in the tree was the mapping -- which
+    store, and how far in -- and it is the last thing the emitter needed the
+    objects for. 75 stores and 6,718 addresses, so it is small.
+    """
+    import tempfile
+    known = arities()
+    e = de.Emitter()
+    for name, d, obj, tables in all_rules(known):
+        e.rule(name, d, tables, obj)
+        e.origin[name] = obj
+    with tempfile.TemporaryDirectory() as tmp:
+        stores, names = de.write_consts(e, OBJECTS,
+                                        os.path.join(tmp, "consts.c"))
+    out = ["# Where each address the rules name falls: which store of the",
+           "# language's own bytes, and how far into it. Written by",
+           "# tools/delta-notation.py out of IBM's objects. The bytes",
+           "# themselves are in delta_consts_enus.c.",
+           ""]
+    for st in stores:
+        out.append("store %s" % st)
+    for nm in names:
+        store, _plus, off = nm.split()
+        out.append("at %s %s" % (store, off))
+    open(SYMBOLS, "w").write("\n".join(out) + "\n")
+    print("%d stores and %d addresses in %s"
+          % (len(stores), len(names), os.path.relpath(SYMBOLS, ROOT)))
+    return True
+
+
+def read_symbols():
+    stores = []
+    names = []
+    for line in open(SYMBOLS):
+        w = line.split()
+        if not w or w[0].startswith("#"):
+            continue
+        if w[0] == "store":
+            stores.append(w[1])
+        elif w[0] == "at":
+            names.append("%s + %s" % (w[1], w[2]))
+    return stores, names
+
+
+def regenerate():
+    """Write the engine's bytecode file out of the text, and see whether it is
+    the one in the tree.
+
+    This is the whole point of the exercise: if it matches, the rules can be
+    rebuilt from text a person can edit, and IBM's objects are wanted for the
+    comparison suite and nothing else.
+    """
+    import tempfile
+    e = de.Emitter()
+    n = 0
+    # In the order the emitter takes them, which is what the shared pools are
+    # numbered by: every object's rules in the order of the objects, and
+    # glob.obj's thunks last. Nothing here opens an object.
+    files = sorted(f for f in os.listdir(TREE) if f.endswith(".dr"))
+    files = ([f for f in files if f != "glob.dr"]
+             + [f for f in files if f == "glob.dr"])
+    for f in files:
+        rules, tables = read_rules(open(os.path.join(TREE, f)))
+        for name, d, obj in rules:
+            e.rule(name, d, tables, obj)
+            e.origin[name] = obj
+            n += 1
+    print("rules read out of %s: %d (no object opened)"
+          % (os.path.relpath(TREE, ROOT), n))
+
+    stores, names = read_symbols()
+    print("stores %d, addresses %d" % (len(stores), len(names)))
+
+    with tempfile.TemporaryDirectory() as tmp:
+        out_c = os.path.join(tmp, "delta_rules_enus.c")
+        out_h = os.path.join(tmp, "delta_rules.h")
+        de.write_c(e, None, out_c, out_h, None, stores, names)
+        got = open(out_c, "rb").read()
+        got_h = open(out_h, "rb").read()
+
+    ok = True
+    for what, made, have in (("delta_rules_enus.c", got, SHIPPED),
+                             ("delta_rules.h", got_h,
+                              os.path.join(ROOT, "lang", "enus",
+                                           "delta_rules.h"))):
+        want = open(have, "rb").read()
+        if made == want:
+            print("%-22s %d bytes, the same as the tree's" % (what, len(made)))
+        else:
+            print("%-22s differs: %d bytes against %d"
+                  % (what, len(made), len(want)))
+            a = made.split(b"\n")
+            b = want.split(b"\n")
+            for i in range(min(len(a), len(b))):
+                if a[i] != b[i]:
+                    print("  first line that differs is %d" % (i + 1))
+                    print("  made: %s" % a[i][:100])
+                    print("  tree: %s" % b[i][:100])
+                    break
+            ok = False
+    return ok
+
+
 def prove():
     """Emit every rule out of the text and hold the whole stream against the
     bytecode in the tree.
@@ -728,6 +839,12 @@ def main():
         for obj in sys.argv[2:]:
             ok = check(obj) and ok
         return 0 if ok else 1
+
+    if what == "symbols":
+        return 0 if write_symbols() else 1
+
+    if what == "regenerate":
+        return 0 if regenerate() else 1
 
     if what == "prove":
         return 0 if prove() else 1
