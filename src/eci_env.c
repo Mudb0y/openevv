@@ -547,9 +547,18 @@ int32_t STDCALL ev_setParam(OldInst *h, int32_t which, int32_t value)
         n[3] = OI_ENV(inst)[16];
         n[which - ENV_ENV_FIRST] = value;
 
+        /* These four describe a device and go into the same audio format the
+           rate does, so rebuilding regardless lost a registered buffer here
+           too -- and here there is nothing to weigh against it, since the
+           sample form is built from the rate alone and never reads them. So
+           where the samples are not going to a device the number is recorded
+           and nothing is rebuilt. */
         old = -1;
-        if (ev_setOutputToDevice(inst, OI_RATE(inst), n[0], n[1], n[2],
-                                 n[3])) {
+        if (OI_WHERE(inst) != WHERE_DEVICE) {
+            OI_ENV(inst)[which] = value;
+            old = 0;
+        } else if (ev_setOutputToDevice(inst, OI_RATE(inst), n[0], n[1],
+                                        n[2], n[3])) {
             OI_ENV(inst)[which] = value;
             old = 0;
         }

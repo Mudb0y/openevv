@@ -22,6 +22,11 @@
  * 22 kHz is asked for but not held to that: it answers 11 kHz's sample count
  * at half the duration, which is a separate fault and not this one.
  *
+ * Then the four numbers that describe a device, environment parameters 13 to
+ * 16, each set to the value it already holds. They go into the same audio
+ * format as the rate and lost the buffer the same way. They say nothing about
+ * where a buffer's samples come from, so the count must not move either.
+ *
  * The rates are asked for in a run that comes back to where it was --
  * 11, 8, 11, 8, 22, 11 -- because setting the rate back was as broken as
  * changing it, and so was setting it to the value it already had.
@@ -43,8 +48,10 @@
 
 enum { FRAME = 1024 };
 
-/* eciSampleRate, and the three rates it takes. */
-enum { PARAM_RATE = 5 };
+/* eciSampleRate, and the four numbers that describe a device. Those four
+   have no names in the published interface; they are the block size and the
+   millisecond figures the audio format is built from. */
+enum { PARAM_RATE = 5, DEVICE_FIRST = 13, DEVICE_LAST = 16 };
 
 typedef struct OldInst OldInst;
 
@@ -181,6 +188,32 @@ int main(void)
         at[want] = got;
     }
 
+    /* The device numbers. eo_getParam answers what is in force and each is
+       set straight back, so nothing about the sound is being asked to
+       change -- only whether asking at all costs the buffer. */
+    for (r = DEVICE_FIRST; r <= DEVICE_LAST; r++) {
+        int32_t was = eo_getParam(h, r);
+        long    got;
+
+        if (ev_setParam(h, r, was) < 0) {
+            printf("rate: it refused parameter %d at its own value %d\n",
+                   r, (int)was);
+            return 1;
+        }
+
+        got = say_once(h);
+        if (got <= 0) {
+            printf("rate: silent after parameter %d -- the buffer was lost\n",
+                   r);
+            return 1;
+        }
+        if (got != at[1]) {
+            printf("rate: %ld samples after parameter %d where 11 kHz said"
+                   " %ld\n", got, r, at[1]);
+            return 1;
+        }
+    }
+
     if (at[0] == at[1]) {
         printf("rate: 8 kHz and 11 kHz both said %ld samples, so the rate"
                " went no further than the environment\n", at[0]);
@@ -189,7 +222,8 @@ int main(void)
 
     es_delete(h);
     evv_port_finish();
-    printf("rate: %d changes, %ld samples at 8 kHz and %ld at 11 kHz\n",
-           rounds, at[0], at[1]);
+    printf("rate: %d changes and %d device numbers, %ld samples at 8 kHz"
+           " and %ld at 11 kHz\n", rounds,
+           DEVICE_LAST - DEVICE_FIRST + 1, at[0], at[1]);
     return 0;
 }
