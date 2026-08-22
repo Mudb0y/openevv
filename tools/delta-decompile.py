@@ -347,10 +347,65 @@ HEAD = """\
 """
 
 
-def write(names):
-    done, refused = [], []
-    text = [HEAD]
+def rule_text(name, rule, row, body):
+    """One rule as C, ready to be written into whichever file it belongs to."""
+    out = []
+    _n, _o, _s, _l = row
+    frame, pbase, params = c_rule_shape(name)
+    out.append('/* %s, from %s */\n' % (name, rule.obj))
+    out.append('int32_t evv_%s(void *state, const int32_t *args,'
+               ' int nargs)\n{\n' % name)
+    # The frame is not an ordinary local. A rule hands the machine the
+    # address of it, and where a value is 32 bits and an address is not,
+    # the only stack that can be named in one is the arena's.
+    out.append('    unsigned char *frame = evv_frame_push('
+               'DELTA_RULE_FRAME_MAX);\n')
+    out.append('    unsigned char *base = frame + %d;\n' % frame)
+    out.append('    unsigned char *param = base + %d;\n' % pbase)
+    out.append('    int32_t arg[%d];\n' % MAXARG)
+    # A landing from a backtrack comes back into the middle of the
+    # function, and anything the compiler had chosen to keep in a machine
+    # register would come back stale. The interpreter is safe because
+    # everything it needs lives in a block whose address has escaped; here
+    # the frame and the argument area are addressed, and the rest is said
+    # to be volatile so that it is not kept anywhere else.
+    out.append('    volatile int argn = 0;\n')
+    out.append('    volatile int32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0,'
+               ' r4 = 0, r5 = 0, r6 = 0, r7 = 0;\n')
+    out.append('    delta_flags fl;\n')
+    out.append('    int i;\n\n')
+    out.append('    memset(frame, 0, DELTA_RULE_FRAME_MAX);\n')
+    out.append('    memset(arg, 0, sizeof arg);\n')
+    out.append('    memset(&fl, 0, sizeof fl);\n')
+    out.append('    for (i = 0; i < nargs && i < %d; i++)\n' % params)
+    out.append('        memcpy(base + %d + 4 * i, &args[i], 4);\n\n' % pbase)
+    # Taking the dead loads out first brings more calls up against
+    # their arguments, which is why the joining goes last.
+    named, saw = name_globals(
+        join_calls(rule.c, join_pops(drop_dead(structure(fold(body))))))
+    named = name_alternatives(name_params(named, pbase, params))
+    USED.update(saw)
+    out.append('\n'.join(named))
+    tail = ('' if named and named[-1].strip().endswith('return out; }')
+            else '\n    evv_frame_pop(frame);\n    return r0;')
+    out.append('%s\n}\n\n' % tail)
+    return out
 
+
+def globals_text():
+    """Where each global the rules reach through lands in the state."""
+    if not USED:
+        return ''
+    where = {v: k for k, v in layout().items()}
+    return ('/* Where each global the rules touch lands in the state. */\n'
+            '%s\n\n'
+            % '\n'.join('#define DG_%-6s %5d' % (v, where[v])
+                        for v in sorted(USED, key=lambda x: where[x])))
+
+
+def load_all(names):
+    """Decompile every rule that can be, and say which could not."""
+    kept, refused = [], []
     for name in names:
         try:
             c, index, row, insns = load(name)
@@ -359,66 +414,107 @@ def write(names):
         except Unhandled as why:
             refused.append((name, str(why)))
             continue
+        kept.append((name, rule, row, body))
+    return kept, refused
 
-        _n, _o, _s, _l = row
-        frame, pbase, params = c_rule_shape(name)
-        text.append('/* %s, from %s */\n' % (name, rule.obj))
-        text.append('static int32_t evv_%s(void *state, const int32_t *args,'
-                    ' int nargs)\n{\n' % name)
-        # The frame is not an ordinary local. A rule hands the machine the
-        # address of it, and where a value is 32 bits and an address is not,
-        # the only stack that can be named in one is the arena's.
-        text.append('    unsigned char *frame = evv_frame_push('
-                    'DELTA_RULE_FRAME_MAX);\n')
-        text.append('    unsigned char *base = frame + %d;\n' % frame)
-        text.append('    unsigned char *param = base + %d;\n' % pbase)
-        text.append('    int32_t arg[%d];\n' % MAXARG)
-        # A landing from a backtrack comes back into the middle of the
-        # function, and anything the compiler had chosen to keep in a machine
-        # register would come back stale. The interpreter is safe because
-        # everything it needs lives in a block whose address has escaped; here
-        # the frame and the argument area are addressed, and the rest is said
-        # to be volatile so that it is not kept anywhere else.
-        text.append('    volatile int argn = 0;\n')
-        text.append('    volatile int32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0,'
-                    ' r4 = 0, r5 = 0, r6 = 0, r7 = 0;\n')
-        text.append('    delta_flags fl;\n')
-        text.append('    int i;\n\n')
-        text.append('    memset(frame, 0, DELTA_RULE_FRAME_MAX);\n')
-        text.append('    memset(arg, 0, sizeof arg);\n')
-        text.append('    memset(&fl, 0, sizeof fl);\n')
-        text.append('    for (i = 0; i < nargs && i < %d; i++)\n' % params)
-        text.append('        memcpy(base + %d + 4 * i, &args[i], 4);\n\n'
-                    % pbase)
-        # Taking the dead loads out first brings more calls up against
-        # their arguments, which is why the joining goes last.
-        named, saw = name_globals(
-            join_calls(c, join_pops(drop_dead(structure(fold(body))))))
-        named = name_alternatives(name_params(named, pbase, params))
-        USED.update(saw)
-        text.append('\n'.join(named))
-        tail = ('' if named and named[-1].strip().endswith('return out; }')
-                else '\n    evv_frame_pop(frame);\n    return r0;')
-        text.append('%s\n}\n\n' % tail)
+
+def write(names):
+    kept, refused = load_all(names)
+    text = [HEAD]
+    done = []
+    for name, rule, row, body in kept:
+        text.extend(rule_text(name, rule, row, body))
         done.append(name)
-
-    if USED:
-        where = {v: k for k, v in layout().items()}
-        text.insert(1, '/* Where each global the rules touch lands in the'
-                    ' state. */\n%s\n\n'
-                    % '\n'.join('#define DG_%-6s %5d' % (v, where[v])
-                                for v in sorted(USED,
-                                                key=lambda x: where[x])))
+    text.insert(1, globals_text())
     text.append('const delta_rule_c delta_rule_native[] = {\n')
     for name in done:
         text.append('    { %d, evv_%s },\n' % (index_of(name), name))
     text.append('    { -1, 0 },\n};\n')
-
     open(OUT_C, 'w').write(''.join(text))
+    clear_parts(0)
     return done, refused
 
 
 SHAPES = {}
+
+
+def part_path(number):
+    """Where the *number*th piece of the rules goes."""
+    root, ext = os.path.splitext(OUT_C)
+    return '%s_%02d%s' % (root, number, ext)
+
+
+def clear_parts(first):
+    """Remove pieces left behind by a run that made more of them.
+
+    One left over would still be compiled, and would define its rules a
+    second time.
+    """
+    number = first
+    while os.path.exists(part_path(number)):
+        os.remove(part_path(number))
+        number += 1
+
+
+def write_parts(names, parts):
+    """The rules as C, spread over *parts* files instead of one.
+
+    All of them in one file is thirteen megabytes, and a thirty-two bit
+    compiler runs out of address space on that -- at -O1 as much as at -O2 --
+    so the rules cannot be compiled at all for a thirty-two bit host. Split,
+    each piece is small enough for one, and a build with several cores gets
+    to compile them at the same time as each other.
+
+    The rules are linkable rather than static here, because the table that
+    names them is in another file. That file is the one the Makefile already
+    knows about, and it carries the globals and a declaration for each rule
+    as well.
+    """
+    kept, refused = load_all(names)
+    done, written = [], []
+
+    # Written out first, so that they can be shared out by how big they are
+    # rather than by how many there are. The rules are nothing like the same
+    # size -- dividing them evenly by count put a quarter of the whole
+    # thirteen megabytes into one file, which is the thing this is here to
+    # avoid.
+    emitted = [(name, ''.join(rule_text(name, rule, row, body)))
+               for name, rule, row, body in kept]
+    target = max(1, sum(len(t) for _, t in emitted) // parts)
+    # Every piece needs the offsets, because every piece has rules that reach
+    # through them. USED is complete by now, all the rules having been
+    # written out above, so the same block goes at the head of each.
+    globals_block = globals_text()
+
+    text, size, number = [HEAD, globals_block], 0, 0
+    for name, chunk in emitted:
+        # A rule is never split across files, so one enormous rule makes its
+        # own file large; what matters is that the others are not piled on
+        # top of it.
+        if size and size + len(chunk) > target:
+            open(part_path(number), 'w').write(''.join(text))
+            written.append(part_path(number))
+            number += 1
+            text, size = [HEAD, globals_block], 0
+        text.append(chunk)
+        size += len(chunk)
+        done.append(name)
+    if size:
+        open(part_path(number), 'w').write(''.join(text))
+        written.append(part_path(number))
+
+    head = [HEAD, globals_block]
+    for name in done:
+        head.append('int32_t evv_%s(void *state, const int32_t *args,'
+                    ' int nargs);\n' % name)
+    head.append('\nconst delta_rule_c delta_rule_native[] = {\n')
+    for name in done:
+        head.append('    { %d, evv_%s },\n' % (index_of(name), name))
+    head.append('    { -1, 0 },\n};\n')
+    open(OUT_C, 'w').write(''.join(head))
+
+    clear_parts(len(written))
+    return done, refused, written
 
 
 def c_rule_shape(name):
@@ -1021,6 +1117,18 @@ def _enter(body, i):
 
 
 def main():
+    # How many files to spread the rules over. One is what this always did;
+    # more is what lets a thirty-two bit compiler cope with them at all, and
+    # what lets a build with several cores compile them at once.
+    parts = 1
+    argv = list(sys.argv[1:])
+    for i, a in enumerate(argv):
+        if a.startswith('--parts='):
+            parts = max(1, int(a.split('=', 1)[1]))
+            del argv[i]
+            break
+    sys.argv[1:] = argv
+
     if len(sys.argv) > 1 and sys.argv[1] == 'all':
         names = every()
     elif len(sys.argv) > 1 and not sys.argv[1].isdigit():
@@ -1028,7 +1136,11 @@ def main():
     else:
         names = smallest(int(sys.argv[1]) if len(sys.argv) > 1 else 100)
 
-    done, refused = write(names)
+    if parts > 1:
+        done, refused, written = write_parts(names, parts)
+    else:
+        done, refused = write(names)
+        written = []
     print('calls joined to their arguments: %d' % JOINED[0])
     print('wrappers inlined to the primitive they stand for: %d' % WRAPPED[0])
     print('reaches through the state named as the variable they are: %d over %d variables' % (NAMED[0], len(USED)))
@@ -1041,8 +1153,13 @@ def main():
           % (STRUCTURED[0], LOOPED[0]))
     print('landing places folded: %d, entries folded: %d'
           % (FOLDED[0], FOLDED[1]))
-    print('%d of %d rules written to %s'
-          % (len(done), len(names), os.path.relpath(OUT_C, ROOT)))
+    if written:
+        print('%d of %d rules written to %s and %d files beside it'
+              % (len(done), len(names), os.path.relpath(OUT_C, ROOT),
+                 len(written)))
+    else:
+        print('%d of %d rules written to %s'
+              % (len(done), len(names), os.path.relpath(OUT_C, ROOT)))
     if refused:
         seen = {}
         for name, why in refused:

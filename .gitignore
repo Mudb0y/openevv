@@ -9,5 +9,6 @@ __pycache__/
 
 # Thirteen megabytes written out of the transcription beside it by
 # tools/delta-decompile.py, and rewritten whole by every change to that tool.
-# `make rules' makes it.
+# `make rules' makes it, spread over the numbered pieces beside it.
 lang/enus/delta_rules_c.c
+lang/enus/delta_rules_c_*.c

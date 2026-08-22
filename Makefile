@@ -36,12 +36,19 @@ NM  ?= nm
 RULES ?= bytecode
 
 GENERATED := $(LANG)/delta_rules_c.c
+# The rules are written out over several files rather than one. All of them
+# together are thirteen megabytes, and a thirty-two bit compiler runs out of
+# address space on a single file that size, so RULES=c could not be built
+# thirty-two bit at all. Split, each piece is small enough for one, and a
+# make -j compiles them at the same time as each other.
+RULE_PARTS ?= 16
+GENERATED_PARTS := $(wildcard $(LANG)/delta_rules_c_*.c)
 STUB      := $(SRC)/delta_rules_none.c
 
 ifeq ($(RULES),bytecode)
 RULESRC := $(STUB)
 else ifeq ($(RULES),c)
-RULESRC := $(GENERATED)
+RULESRC := $(GENERATED) $(GENERATED_PARTS)
 else
 $(error RULES is bytecode or c, not $(RULES))
 endif
@@ -50,7 +57,8 @@ endif
 # porting layer and belongs to the reference build; the two rule tables are
 # chosen between above rather than both linked.
 SOURCES := $(filter-out $(SRC)/port_win32.c $(STUB),$(wildcard $(SRC)/*.c)) \
-           $(filter-out $(GENERATED),$(sort $(wildcard $(LANG)/*.c))) \
+           $(filter-out $(GENERATED) $(GENERATED_PARTS),\
+                        $(sort $(wildcard $(LANG)/*.c))) \
            $(RULESRC)
 
 # Every header, because a struct that changed shape and an object that was
@@ -87,7 +95,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) $(LOW) $(CFLAGS)
 OBJDIR  := $(BUILD)/obj
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32
+.PHONY: all probe rules missing install clean distclean evv32 probe32
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv.a
@@ -122,7 +130,7 @@ rules: $(GENERATED)
 
 $(GENERATED): $(LANG)/delta_rules_enus.c $(LANG)/delta_consts_enus.c \
               tools/delta-decompile.py tools/delta-census.py
-	@python3 tools/delta-decompile.py all
+	@python3 tools/delta-decompile.py all --parts=$(RULE_PARTS)
 
 # What our code asks for and nothing of ours answers. The C library's own
 # names are dropped, since those come from the system; what is left is the
@@ -130,6 +138,12 @@ $(GENERATED): $(LANG)/delta_rules_enus.c $(LANG)/delta_consts_enus.c \
 missing: $(OBJECTS)
 	@$(NM) $(OBJECTS) > $(BUILD)/syms.txt
 	@python3 tools/missing.py $(BUILD)/syms.txt
+
+# The pieces the rules were written out over go too. A later run that made
+# fewer of them would otherwise leave the extra ones to be compiled, and they
+# would define their rules a second time.
+distclean: clean
+	@rm -f $(GENERATED) $(LANG)/delta_rules_c_*.c
 
 clean:
 	@rm -rf $(OBJDIR) $(OBJDIR32) $(OBJDIRWIN) $(OBJDIRWIN32) \
@@ -202,7 +216,8 @@ CFLAGSWIN  := $(OPT) -std=gnu99 -I$(SRC) -I$(LANG) $(WARN) -DEVV_ARENA=1 \
 LDFLAGSWIN := -static $(MINGW64_LDFLAGS)
 
 SOURCESWIN := $(filter-out $(SRC)/port_posix.c $(STUB),$(wildcard $(SRC)/*.c)) \
-              $(filter-out $(GENERATED),$(sort $(wildcard $(LANG)/*.c))) \
+              $(filter-out $(GENERATED) $(GENERATED_PARTS),\
+                           $(sort $(wildcard $(LANG)/*.c))) \
               $(RULESRC)
 OBJECTSWIN := $(patsubst %.c,$(OBJDIRWIN)/%.o,$(notdir $(SOURCESWIN)))
 
