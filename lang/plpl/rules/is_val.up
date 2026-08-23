@@ -1,0 +1,25 @@
+# The first rule written for Polish rather than lifted for Italian: the locus
+# of the alveolo-palatals, the series Polish has and Italian has not.
+#
+# What it says is what a value rule says: the formant targets a consonant is
+# spoken with, each one twice because the transition into it and the one out of
+# it are separate numbers. The names come from lang/plpl/plpl.globals, which is
+# where what we have worked the language out to mean is written down.
+#
+# The numbers are a starting point and not an answer. Polish ś and ź sit
+# between Italian's palatal, whose second formant is 1800, and its dentals at
+# 1700, with a third formant higher than either because the tongue is further
+# forward: 2000 and 2700 is the first guess, and the ear settles it.
+
+rule pol_alveolopalatal_Fv takes 1 from is_val.obj
+  call ZZfence_null
+  set f1_in to 300
+  set f1_out to 300
+  set f2_in to 2000
+  set f2_out to 2000
+  set f3_in to 2700
+  set f3_out to 2700
+  set f4_in to 3500
+  set f4_out to 3500
+  match
+end

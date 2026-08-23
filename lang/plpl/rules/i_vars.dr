@@ -1,0 +1,171 @@
+# The rules of i_vars.obj, written by tools/delta-notation.py.
+# One operation to a line. See docs/building.md.
+
+rule set_ital_global_constants from i_vars.obj
+shape frame 196 argbase 8 params 1
+label L0 was _set_ital_global_constants
+  alu andl imm 0 slot -4
+  load movl slotaddr -104 into r0
+  push imm 0
+  push slotaddr -104
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -104 into r0
+  push slotaddr -104
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -196 into r0
+  push slotaddr -196
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch je to L2
+label L1 was at_0x46
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L3
+label L2 was at_0x55
+  push reg r6
+  call ZZfence_null arity 1 depth 1
+  push reg r6
+  store movw imm 1 ind reg r6 1506
+  store movw imm 12 ind reg r6 3922
+  store movw imm 13 ind reg r6 3926
+  store movw imm 5 ind reg r6 3930
+  call succeed arity 1 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 0 into r0
+label L3 was at_0x89
+  return reg r0
+end
+
+rule init_ital_vars from i_vars.obj
+shape frame 196 argbase 8 params 1
+label L0 was _init_ital_vars
+  alu andl imm 0 slot -4
+  load movl slotaddr -104 into r0
+  push imm 0
+  push slotaddr -104
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -104 into r0
+  push slotaddr -104
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -196 into r0
+  push slotaddr -196
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch je to L2
+label L1 was at_0x47
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L3
+label L2 was at_0x56
+  push reg r6
+  call ZZfence_null arity 1 depth 1
+  load movw ind reg r6 3230 into r0w
+  push reg r6
+  store movw reg r0w ind reg r6 3210
+  call ZZnpush_s_1 arity 1 depth 2
+  addk 1880 reg r6 into r7
+  push reg r7
+  push reg r6
+  store movw imm 2 ind reg r6 1882
+  call npop arity 2 depth 4
+  push reg r6
+  call ZZnpush_s_1 arity 1 depth 5
+  push reg r7
+  push reg r6
+  store movw imm 3 ind reg r6 1882
+  call npop arity 2 depth 7
+  push reg r6
+  call ZZnpush_s_1 arity 1 depth 8
+  push reg r7
+  push reg r6
+  store movw imm 4 ind reg r6 1882
+  call npop arity 2 depth 10
+  push reg r6
+  call succeed arity 1 depth 11
+  popn 11
+  load movl imm 0 into r0
+label L3 was at_0xbd
+  return reg r0
+end
+
+rule reset_ital_sent_vars from i_vars.obj
+shape frame 196 argbase 8 params 1
+label L0 was _reset_ital_sent_vars
+  alu andl imm 0 slot -4
+  load movl slotaddr -104 into r0
+  push imm 0
+  push slotaddr -104
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -104 into r0
+  push slotaddr -104
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -196 into r0
+  push slotaddr -196
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch je to L2
+label L1 was at_0x46
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L3
+label L2 was at_0x55
+  push reg r6
+  call ZZfence_null arity 1 depth 1
+  push reg r6
+  call succeed arity 1 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 0 into r0
+label L3 was at_0x65
+  return reg r0
+end
+

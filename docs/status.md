@@ -28,9 +28,7 @@ What is not exported is the filter interface, which the engine does not implemen
 
 Live audio on Linux. The engine hands its samples to the caller, and `build/evv` writes them as a wave file or down a pipe; nothing sends them to a sound card as they are made. Windows got there first because waveOut is forty lines; PipeWire is next and is a thin sink on top of the same buffer.
 
-Polish, which is what all of it is for. Nothing started, and nothing is now in the way of starting: a language module is five text files and a table, and every one of those forms is in the tree and proved.
-
-The formants are the part no text form helps with. Polish needs sounds English has not -- the alveolo-palatals, the nasal vowels, a trilled r -- and Klatt is a formant synthesiser, so those are new targets and durations tuned by ear.
+Polish, which is what all of it is for. It is started: `lang/plpl` is the ninth language in the tree, it builds, it speaks, and it is Italian. The section below says what that means and what is left.
 
 Japanese, which is the one language still not built. Everything else in the SDK now is.
 
@@ -170,13 +168,29 @@ A rule of ours can also name bytes of its own, which is what a text rule needs a
 
 What is left in the compiler is the ergonomics rather than the reach. Every operation the machine has can be written, the rare ones through a line of the lower notation; what a person writing several hundred Polish rules would want on top of that is the language's own idioms said shorter -- an alternative as a block rather than a place and a plant, and a run of context tests as a run of tests.
 
+## Polish
+
+`lang/plpl` exists and speaks. As it stands it is Italian under a Polish name -- made by copying `lang/itit`'s five text forms and its rules and renaming them -- and that is the chassis rather than a placeholder: from here every change has something audible on both sides of it. `NOTICE` says the licence consequence, which is that all of it is IBM's Italian data until it has been replaced.
+
+It was built from the text forms and nothing else. No object is opened after the template's rules are written out, which is what those forms were for. It speaks the same samples as Italian, to the hash, on the same sentence; it holds up in one binary beside the other eight, each of the nine still saying exactly what it says alone; and English's 81 cases and samples are untouched.
+
+Italian is the template on phonetics rather than convenience. Its stress is predominantly penultimate as Polish's is almost always penultimate, its five vowels have no reduction, and its consonants carry the affricates ts and dz, tʃ and dʒ, the palatal nasal that is exactly Polish ń, and a trilled r. Spanish has half of that. What no module has is the alveolo-palatal series ś ź ć dź and the vowel y; the nasal vowels can be read out of French and /x/ out of Spanish, since all eight are text now.
+
+Polish is family seventeen, `0x110000`. The family is not free: three tables are indexed by it and hold eighteen, IBM used six, and four more -- 6, 10, 11 and 16 -- are families its own `rz_isRomExist` says have a romanizer, so an instance of one is refused outright when the romanizer is absent. Family sixteen was tried first and `eciNewEx` answered -21.
+
+The first rule written for Polish rather than lifted for Italian is in `lang/plpl/rules/is_val.up`: the formant targets of the alveolo-palatals, written in the upper form against names now carried in `plpl.globals`, where ten of the machine's variables are labelled as the formant targets a consonant is spoken with. Nothing calls it yet, and the module says exactly what it said before it went in.
+
+`make EVVLANG=lang/plpl census` says how much of the module is still Italian: 1,749 rules of 1,750 character for character, the settings two lines apart, the variables named. What it prevents is Italian phonology coming out of something labelled Polish without anyone noticing.
+
+What is left is the language: the alphabet and the letter-to-sound rules, the nine sounds Italian has not, stress, normalisation, and the dictionary. There is no oracle for any of it -- IBM never made a Polish module -- so the ear is the judge, and a hash beside each verdict is what will keep an approved sound from moving afterwards.
+
 ## A language module as text
 
 Everything a language module holds now has a form a person can write, and each form regenerates the file the build compiles, byte for byte, for all eight languages.
 
-The rules are `lang/<tag>/rules`, in the two forms `docs/building.md` describes. The words are `<tag>.dict`. The four beside them are `<tag>.globals` for the variables the machine declares, `<tag>.settings` for the settings the engine carries in its image, `<tag>.statements` for the statement table it is parameterised by, and `<tag>.sets` for the lookup sets and the dictionary's actions. `make tables-check` writes the C out of each of the four and holds it against the tree: 32 of 32 match, and it wants neither Wine nor IBM's objects.
+The rules are `lang/<tag>/rules`, in the two forms `docs/building.md` describes. The words are `<tag>.dict`. The five beside them are `<tag>.globals` for the variables the machine declares, `<tag>.settings` for the settings the engine carries in its image, `<tag>.statements` for the statement table it is parameterised by, `<tag>.sets` for the lookup sets and the dictionary's actions, and `<tag>.consts` for the bytes the rules name by address. `make tables-check` writes the C out of each and holds it against the tree: 45 of 45 across nine languages, and it wants neither Wine nor IBM's objects.
 
-Each of the four has one writer, shared by the lifter that reads IBM's objects and the reader that reads the text, so the two cannot drift into formatting differently. And nothing in a text is stated twice: the variables are runs of kinds and where each lands is walked from them exactly as `delta_new` walks it, the statement table's readers and writers are an offset and a width whose names follow the order of the fields, and the settings' language number is the section that names it.
+Each of the five has one writer, shared by the lifter that reads IBM's objects and the reader that reads the text, so the two cannot drift into formatting differently. And nothing in a text is stated twice: the variables are runs of kinds and where each lands is walked from them exactly as `delta_new` walks it, the statement table's readers and writers are an offset and a width whose names follow the order of the fields, and the settings' language number is the section that names it.
 
 Two measurements worth keeping. Every one of the eight languages declares ten statement types, with 57 fields in Italian and both Spanishes, 58 in the two Englishes, 61 in German, 63 in Canadian French and 65 in French. And the sets are where the size of a language sits: English declares 511 of them and 28 dictionary actions over 274 kilobytes of entries, where Italian declares 153 and 13 over 77.
 

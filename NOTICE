@@ -17,7 +17,17 @@ Everything under `lang` is transcribed out of IBM's Embedded ViaVoice objects:
 `lang/enus` is US English, `lang/dede` is German, `lang/engb` is British
 English, `lang/eses` and `lang/esus` are the two Spanishes, `lang/frfr` and
 `lang/frca` the two Frenches and `lang/itit` is Italian, and any language added
-later will be the same. The rules as bytecode, the constants they read, the
+later will be the same.
+
+`lang/plpl` says Polish and is Italian. It was made by copying `lang/itit`'s
+text forms and renaming them, because a language IBM never shipped has to start
+from one it did, and every rule and every table in it is IBM's Italian data
+until it has been replaced by something written here. Nothing about the
+directory being called Polish makes any of it ours. `make EVVLANG=lang/plpl
+census` is what says how much of it is still Italian, and while that answers
+anything at all the answer above governs it.
+
+The rules as bytecode, the constants they read, the
 statement and field tables, the lookup sets, the variable declarations, the
 settings the engine carries in its own image, the voice presets and the
 dictionary, and where the engine's arithmetic depends on the exact bytes they

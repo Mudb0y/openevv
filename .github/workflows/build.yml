@@ -87,7 +87,7 @@ jobs:
       # byte for byte. Wants no objects and no Wine, and takes seconds.
       - name: Check the tables beside the rules
         run: |
-          make LANGS="$(printf 'lang/%s ' enus dede engb eses esus frfr frca itit)" \
+          make LANGS="$(printf 'lang/%s ' enus dede engb eses esus frfr frca itit plpl)" \
                tables-check
 
       # Every language module builds and speaks, which wants neither Wine nor
@@ -112,10 +112,10 @@ jobs:
       - name: Speak every language out of one binary
         run: |
           set -eu
-          all=$(printf 'lang/%s ' enus dede engb eses esus frfr frca itit)
+          all=$(printf 'lang/%s ' enus dede engb eses esus frfr frca itit plpl)
           make -j"$(nproc)" probe RULES=bytecode LANGS="$all"
-          b=build/probe-enus-dede-engb-eses-esus-frfr-frca-itit
-          for id in 0x10000 0x10001 0x20000 0x20001 0x30000 0x30001 0x40000 0x50000; do
+          b=build/probe-enus-dede-engb-eses-esus-frfr-frca-itit-plpl
+          for id in 0x10000 0x10001 0x20000 0x20001 0x30000 0x30001 0x40000 0x50000 0x110000; do
             EVV_LANGUAGE=$id "$b" "The quick brown fox." "/tmp/one-$id.wav"
             test -s "/tmp/one-$id.wav"
           done

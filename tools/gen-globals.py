@@ -18,6 +18,7 @@ usage: gen-globals.py <glob.obj> <out.c>    lift and write the C
        gen-globals.py dump <tag>            write the text out of the objects
        gen-globals.py regenerate <tag>       the C from the text against the tree
        gen-globals.py write <tag>            the C from the text, for real
+       gen-globals.py where <tag> <offset>.. which variable sits at a byte
 """
 
 import os
@@ -281,13 +282,31 @@ HEAD = """# The machine's global variables, as %(tag)s declares them.
 # the machine and what its number is. A compound says what it holds: the kind
 # of item and how many.
 #
+# A `name\' line gives one of them a name of ours: the kind, then which one of
+# that kind it is counting from nought, then what to call it. IBM\'s own names
+# are gone -- the only record of the list is a disassembly that carries kinds
+# and not names -- so these are what the language is worked out to mean, and a
+# rule written in the upper form can then say `set f1_locus to 1000\' rather
+# than naming a byte offset. Nothing here is required, and a name that is
+# wrong is a wrong name rather than a wrong build.
+#
 # Written by tools/gen-globals.py. Where each variable lands and how big a
 # machine of this language is are not in here -- they follow from the kinds,
 # by the same walk delta_new does.
 """
 
 
+def kept_names(path):
+    """The `name\' lines already in a text, so that writing it again keeps
+    them. They are worked out by hand and nothing can put them back."""
+    if not os.path.exists(path):
+        return []
+    return [line.rstrip("\n") for line in open(path)
+            if line.split()[:1] == ["name"]]
+
+
 def write_text(cells, path, tag):
+    names = kept_names(path)
     out = [HEAD % {"tag": tag}]
     run = None
     for _a, kind, extra in cells:
@@ -304,21 +323,39 @@ def write_text(cells, path, tag):
             run = (TEXT_KIND[kind], 1)
     if run:
         out.append("%s %d" % run)
+    if names:
+        out.append("")
+        out.append("# What we have worked out the language means by some of"
+                   " them.")
+        out += names
     open(path, "w").write("\n".join(out) + "\n")
     return len(out) - 1
 
 
-def read_text(path):
+def read_text(path, want_names=False):
     """The declaration back as the cells the writer takes, with the layout
-    walked again from the kinds alone."""
+    walked again from the kinds alone.
+
+    Asked for the names as well, it answers what each named variable is: where
+    it sits and how wide it is, by the same walk. A name is against a kind and
+    a number within that kind, which is how the machine itself numbers them.
+    """
     kinds = []
+    named = []
     for n, raw in enumerate(open(path), 1):
         line = raw.split("#")[0].strip()
         if not line:
             continue
         w = line.split()
         where = "%s line %d" % (os.path.basename(path), n)
-        if w[0] == "compound":
+        if w[0] == "name":
+            if len(w) != 4:
+                raise SystemExit("%s: a name says the kind, which one and"
+                                 " what to call it" % where)
+            if w[1] not in BACK_KIND:
+                raise SystemExit("%s: no kind called %r" % (where, w[1]))
+            named.append((BACK_KIND[w[1]], int(w[2]), w[3]))
+        elif w[0] == "compound":
             if len(w) != 3:
                 raise SystemExit("%s: a compound says what it holds" % where)
             kinds.append(("C", (int(w[1]), int(w[2]))))
@@ -338,7 +375,39 @@ def read_text(path):
         at = (at + want - 1) & ~(want - 1)
         cells.append((at, kind, extra))
         at += size[kind] if kind != "C" else 4 + ((extra[1] + 1) & ~1)
-    return cells, at
+    if not want_names:
+        return cells, at
+
+    # Which cell each name means: the nth of its kind, counted in the order
+    # the language declares them, which is the order delta_new numbers them.
+    # A cell begins with the two bytes that say what kind it is and holds its
+    # value after them: two bytes in for a short, which keeps its value where
+    # a compiled location keeps its field, and four for a word or a long,
+    # which keep it where one keeps its value. A rule names the value, so
+    # that is what a name answers.
+    seen = {}
+    width = {"W": 4, "L": 4, "S": 2, "C": 4}
+    value_at = {"W": 4, "L": 4, "S": 2, "C": 0}
+    where_of = {}
+    for a, kind, _extra in cells:
+        n = seen.get(kind, 0)
+        seen[kind] = n + 1
+        where_of[(kind, n)] = a
+    out = {}
+    for kind, n, name in named:
+        if (kind, n) not in where_of:
+            raise SystemExit("this language has no %s number %d to call %r"
+                             % (TEXT_KIND.get(kind, kind), n, name))
+        out[name] = (where_of[(kind, n)] + value_at[kind], width[kind])
+    return cells, at, out
+
+
+def names_of(tag):
+    """What this language calls the variables somebody has named."""
+    path = text_path(tag)
+    if not os.path.exists(path):
+        return {}
+    return read_text(path, want_names=True)[2]
 
 
 def text_path(tag):
@@ -386,7 +455,43 @@ def regenerate(tag, write=False):
     return False
 
 
+def where(tag, offsets):
+    """Which variable each byte offset is, as the kind and the number within
+    it that a `name\' line uses. A rule names a variable by the offset, so
+    this is how one is worked back to something that can be named."""
+    cells, _end = read_text(text_path(tag))
+    size = {"W": 8, "L": 8, "S": 4}
+    seen = {}
+    spans = []
+    for a, kind, extra in cells:
+        n = seen.get(kind, 0)
+        seen[kind] = n + 1
+        wide = size[kind] if kind != "C" else 4 + ((extra[1] + 1) & ~1)
+        spans.append((a, a + wide, kind, n, extra))
+    named = names_of(tag)
+    by_off = dict((off, nm) for nm, (off, _w) in named.items())
+    for text in offsets:
+        off = int(text, 0)
+        for a, end, kind, n, extra in spans:
+            if a <= off < end:
+                # A cell begins with the two bytes that say what kind it is,
+                # so the value a rule writes is two bytes in. That is where a
+                # rule names it, which is why this takes an offset inside a
+                # cell rather than the cell's own start.
+                print("%5d is %s number %d, %d bytes into it%s%s"
+                      % (off, TEXT_KIND.get(kind, "compound"), n, off - a,
+                         " (it holds %d of kind %d)" % (extra[1], extra[0])
+                         if kind == "C" else "",
+                         ", called %s" % by_off[off] if off in by_off else ""))
+                break
+        else:
+            print("%5d is past the end of the variables" % off)
+    return True
+
+
 if __name__ == "__main__":
+    if len(sys.argv) > 3 and sys.argv[1] == "where":
+        sys.exit(0 if where(sys.argv[2], sys.argv[3:]) else 1)
     if len(sys.argv) == 3 and sys.argv[1] == "dump":
         sys.exit(0 if dump(sys.argv[2]) else 1)
     if len(sys.argv) == 3 and sys.argv[1] == "regenerate":

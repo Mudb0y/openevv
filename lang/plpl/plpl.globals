@@ -1,0 +1,125 @@
+# The machine's global variables, as plpl declares them.
+#
+# One line to a kind and how many in a row, in the order the language declares
+# them, which is the order that decides both where each lands in the tail of
+# the machine and what its number is. A compound says what it holds: the kind
+# of item and how many.
+#
+# Written by tools/gen-globals.py. Where each variable lands and how big a
+# machine of this language is are not in here -- they follow from the kinds,
+# by the same walk delta_new does.
+
+word 20
+short 1
+word 5
+short 7
+word 10
+short 30
+word 3
+short 2
+word 1
+short 2
+word 33
+short 2
+compound 1 7
+compound 1 7
+compound 1 7
+compound 7 2
+compound 9 2
+compound 0 2
+short 42
+long 11
+short 5
+word 3
+short 3
+compound 1 7
+short 11
+word 1
+short 4
+word 3
+short 1
+word 1
+short 110
+compound 5 10
+compound 5 10
+compound 5 10
+short 39
+word 1
+short 3
+long 1
+short 34
+long 1
+short 5
+long 1
+compound 4 14
+compound 6 32
+compound 4 14
+long 1
+short 1
+compound 1 7
+short 1
+long 1
+short 3
+word 1
+short 5
+long 1
+short 10
+word 6
+short 2
+long 1
+short 27
+long 1
+short 81
+word 1
+long 2
+word 1
+short 6
+compound 6 32
+compound 6 32
+compound 6 32
+short 2
+word 1
+short 4
+word 4
+short 1
+long 1
+short 1
+word 1
+short 26
+long 3
+word 1
+short 2
+compound 5 10
+compound 4 14
+compound 4 14
+short 3
+long 1
+short 98
+long 11
+short 2
+word 1
+short 12
+compound 4 14
+short 2
+word 1
+long 1
+word 1
+
+# What we have worked out the language means by some of them.
+#
+# Ten consecutive shorts hold the formant targets a consonant is spoken with:
+# each formant twice, once for the transition into it and once for the one out.
+# Read off Italian's own value rules, where the trill sets f1 to 450 and its f2
+# to 1250, the labials f2 to 850, the dentals and velars to 1700 and the
+# palatals to 1800 -- which is where a labial's low second formant and a
+# palatal's high one are supposed to be, so the reading is the language's own.
+name short 421 f1_in
+name short 422 f1_out
+name short 423 f2_in
+name short 424 f2_out
+name short 425 f3_in
+name short 426 f3_out
+name short 427 f4_in
+name short 428 f4_out
+name short 429 f5_in
+name short 430 f5_out

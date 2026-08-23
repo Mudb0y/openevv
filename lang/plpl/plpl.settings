@@ -1,0 +1,71 @@
+# The engine's settings for plpl, as text.
+#
+# One line to a record, which in the blob is a run of bytes with a
+# nought after it. A newline inside a record is `\n' and a
+# backslash is doubled; the three bytes the blob ends with are the
+# writer's and are not in here. Under the section that names the
+# language -- the family and the dialect, which is where the number
+# comes from -- are the eight voice presets and every phoneme the
+# language declares.
+#
+# Written by tools/lift-ini.py.
+
+library Static Engine POL
+
+[LanguageIndependent]
+Desc_Filter0=IBM SSML Filter
+Path_Filter0=ecissml.dll
+Path_Cat31=ecictts.dll
+LogPath=\\release
+LogLevel=4
+\n\n\n\n[17.0]
+Path=eciplpl.syn
+Concatenative=1.0
+CallbackFlag=0x0000003f
+Version=6.0
+Voice1=0 50 65 30 0 0 50 92
+Voice2=1 50 81 30 0 50 50 95
+Voice3=1 22 93 35 0 0 50 95
+Voice4=0 89 52 43 0 0 50 93
+Voice5=0 50 69 34 0 0 70 92
+Voice6=1 56 89 35 0 40 70 95
+Voice7=1 45 68 30 3 40 50 90
+Voice8=0 30 61 44 18 20 50 89
+Phoneme0=67 0 0 0 0 0 0 75 125 128 100 130 130 0 200
+Phoneme1=68 0 0 0 0 0 0 50 100 128 75 130 130 255 125
+Phoneme2=69 0 0 0 0 0 0 50 100 128 75 130 175 0 125
+Phoneme3=71 0 0 0 0 0 0 50 100 128 75 130 130 0 0
+Phoneme4=74 0 0 0 0 0 0 75 125 128 100 130 130 0 200
+Phoneme5=76 0 0 0 0 0 0 75 150 128 50 130 130 255 0
+Phoneme6=78 0 0 0 0 0 0 50 100 128 75 130 130 0 0
+Phoneme7=82 0 0 0 0 0 0 75 100 128 100 130 130 0 200
+Phoneme8=83 0 0 0 0 0 0 75 125 128 100 130 130 0 200
+Phoneme9=84 0 0 0 0 0 0 50 100 128 75 130 130 255 125
+Phoneme10=90 0 0 0 0 0 0 75 125 128 100 130 130 0 200
+Phoneme11=97 0 0 0 0 0 0 100 125 128 200 150 130 150 150
+Phoneme12=98 0 0 0 0 0 0 0 100 128 0 0 0 0 200
+Phoneme13=99 0 0 0 0 0 0 125 75 128 150 150 130 150 100
+Phoneme14=100 0 0 0 0 0 0 75 150 128 50 130 130 255 0
+Phoneme15=101 0 0 0 0 0 0 50 100 128 75 130 175 0 255
+Phoneme16=102 0 0 0 0 0 0 10 100 128 25 130 0 0 200
+Phoneme17=103 0 0 0 0 0 0 50 100 128 75 130 130 0 0
+Phoneme18=105 0 0 0 0 0 0 25 150 128 50 130 130 0 255
+Phoneme19=107 0 0 0 0 0 0 50 100 128 75 130 130 0 0
+Phoneme20=108 0 0 0 0 0 0 75 150 128 50 130 130 255 0
+Phoneme21=109 0 0 0 0 0 0 0 100 128 0 0 0 0 200
+Phoneme22=110 0 0 0 0 0 0 75 150 128 50 130 130 255 0
+Phoneme23=111 0 0 0 0 0 0 25 0 130 130 60 60 0 255
+Phoneme24=112 0 0 0 0 0 0 0 100 128 0 0 0 0 200
+Phoneme25=114 0 0 0 0 0 0 75 150 128 50 130 130 255 0
+Phoneme26=115 0 0 0 0 0 0 50 100 128 75 130 130 150 0
+Phoneme27=116 0 0 0 0 0 0 75 150 128 50 130 130 255 0
+Phoneme28=117 0 0 0 0 0 0 25 0 130 90 60 60 0 255
+Phoneme29=118 0 0 0 0 0 0 10 100 128 25 130 0 0 200
+Phoneme30=119 0 0 0 0 0 0 25 0 130 90 60 60 0 255
+Phoneme31=121 0 0 0 0 0 0 25 150 128 50 130 130 0 255
+Phoneme32=122 0 0 0 0 0 0 50 100 128 75 130 130 150 0
+Phoneme33=164 0 0 0 0 0 0 0 170 128 0 0 0 0 0
+Voice1Dataset5.0.11025=0 50 60 30 0 0 55 92 Voices\\it_it\\1at11KHz_1_0
+Voice2Dataset5.0.11025=1 50 81 30 0 50 50 95 Voices\\it_it\\2at11KHz_1_0
+Voice1Dataset5.0.22050=0 50 60 40 0 0 50 92 Voices\\it_it\\1at22KHz_1_0
+Voice2Dataset5.0.22050=1 50 81 30 0 50 50 95 Voices\\it_it\\2at22KHz_1_0

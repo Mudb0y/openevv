@@ -63,6 +63,7 @@ def load(name, path):
 
 
 dlo = load("delta_lower", "tools/delta-lower.py")
+dgl = load("gen_globals", "tools/gen-globals.py")
 
 
 # ---- the frame ----------------------------------------------------------
@@ -171,13 +172,19 @@ def kind_of(where, w):
 
 
 class Rule:
-    def __init__(self, name, obj, params, where):
+    def __init__(self, name, obj, params, where, named=None):
         self.name = name
         self.obj = obj
         self.params = params
         self.where = where
         self.locals = {}        # name -> (offset from the frame's bottom,
         self.variables = {}     #          width, signed)
+        # What the language calls its own variables, out of <tag>.globals.
+        # IBM's names are gone, so these are what we have worked the language
+        # out to mean, and a rule may use one wherever it could name an
+        # offset.
+        for nm, (off, width) in (named or {}).items():
+            self.variables[nm] = (off, width, False)
         self.wrappers = False
         self.at = FIXED
         self.body = []
@@ -201,7 +208,7 @@ class Rule:
         return self.at
 
 
-def parse(path):
+def parse(path, named=None):
     """Every rule in one file. A block ends at `end', so nothing depends on
     indentation and no line has to be read together with another."""
     words = lines_of(path)
@@ -215,7 +222,7 @@ def parse(path):
         if len(w) < 4 or w[2] != "takes":
             fault(where, "a rule says `rule <name> takes <n>'")
         r = Rule(w[1], w[5] if len(w) > 5 and w[4] == "from" else obj,
-                 number(where, w[3]), where)
+                 number(where, w[3]), where, named)
         i += 1
         i = declarations(words, i, r)
         r.body, i = statements(words, i, r, "end")
@@ -679,10 +686,15 @@ class Compiler:
         return self.d
 
 
-def compile_file(path):
-    """Every rule in one file, in the shape the emitter takes."""
+def compile_file(path, lang=None):
+    """Every rule in one file, in the shape the emitter takes.
+
+    Told which language, it lets a rule use the names that language gives its
+    own variables; without one, a variable is named by its offset as before.
+    """
+    named = dgl.names_of(lang) if lang else {}
     out = []
-    for r in parse(path):
+    for r in parse(path, named):
         out.append((r.name, Compiler(r).rule(), r.obj))
     return out
 
@@ -696,9 +708,12 @@ def main():
         return 2
     what = sys.argv[1]
     ok = True
+    # Which language, so that a rule may use the names that language gives its
+    # own variables. It is the same variable the rest of the pipeline reads.
+    lang = os.environ.get("EVV_NOTATION_LANG")
     for path in sys.argv[2:]:
         try:
-            rules = compile_file(path)
+            rules = compile_file(path, lang)
         except Trouble as e:
             print("upper: %s" % e)
             ok = False

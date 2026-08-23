@@ -387,9 +387,9 @@ constants:
 	@python3 tools/delta-consts.py $(TAGS)
 
 # The tables beside the rules, as text: the variables the language declares,
-# the settings it carries, the statement table and the lookup sets. Each has a
-# text form in lang/<tag> and one writer for the C, so what a lifter writes and
-# what the text writes cannot drift.
+# the settings it carries, the statement table, the lookup sets and the bytes
+# the rules name by address. Each has a text form in lang/<tag> and one writer
+# for the C, so what a lifter writes and what the text writes cannot drift.
 #
 # `tables-dump' writes the four texts. Three of them read IBM's objects; the
 # sets read the C in the tree instead, on purpose, because the dictionary's
@@ -400,13 +400,16 @@ constants:
 # holds it against the tree, byte for byte. That is the one to believe, and it
 # wants no objects. `tables-write' does it for real, which is how a language
 # that was authored rather than lifted gets built.
+TEMPLATE ?= itit
+
 .PHONY: tables-dump tables-check tables-write
 tables-dump:
 	@for t in $(TAGS); do \
 	    python3 tools/gen-globals.py dump $$t && \
 	    python3 tools/lift-ini.py dump $$t && \
 	    python3 tools/delta-link.py dump $$t && \
-	    python3 tools/delta-sets.py dump $$t || exit 1; \
+	    python3 tools/delta-sets.py dump $$t && \
+	    python3 tools/delta-consts.py dump $$t || exit 1; \
 	done
 
 tables-check:
@@ -414,15 +417,25 @@ tables-check:
 	    python3 tools/gen-globals.py regenerate $$t && \
 	    python3 tools/lift-ini.py regenerate $$t && \
 	    python3 tools/delta-link.py regenerate $$t && \
-	    python3 tools/delta-sets.py regenerate $$t || exit 1; \
+	    python3 tools/delta-sets.py regenerate $$t && \
+	    python3 tools/delta-consts.py regenerate $$t || exit 1; \
 	done
+
+# How much of a module is still the module it was copied from. A language IBM
+# never shipped starts as one it did and becomes itself a rule at a time, and
+# what this answers is how far that has got: TEMPLATE says which to hold it
+# against. It reads the text forms only.
+.PHONY: census
+census:
+	@python3 tools/lang-census.py $(firstword $(TAGS)) $(TEMPLATE)
 
 tables-write:
 	@for t in $(TAGS); do \
 	    python3 tools/gen-globals.py write $$t && \
 	    python3 tools/lift-ini.py write $$t && \
 	    python3 tools/delta-link.py write $$t && \
-	    python3 tools/delta-sets.py write $$t || exit 1; \
+	    python3 tools/delta-sets.py write $$t && \
+	    python3 tools/delta-consts.py write $$t || exit 1; \
 	done
 
 # The rules as C. Thirteen megabytes written out of the bytecode beside it,

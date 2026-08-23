@@ -56,6 +56,11 @@ de = load("delta_emit", "tools/delta-emit.py")
 LANG = os.environ.get("EVV_NOTATION_LANG", "enus")
 OBJECTS = os.path.join(ROOT, "analysis", LANG)
 
+# The emitter names every table after the language, and it has to be told
+# which: a table named for English in Italian's module is how one language's
+# rules end up under another's name.
+de.TAG[0] = LANG
+
 # The lower notation itself -- the registers, the operands, the operations and
 # a rule as its blocks -- is in tools/delta-lower.py, because the compiler in
 # tools/delta-upper.py writes the same form from above and a second copy of
@@ -189,6 +194,11 @@ TREE = os.path.join(ROOT, "lang", LANG, "rules")
 TAG = LANG
 SHIPPED = os.path.join(ROOT, "lang", TAG, "delta_rules_%s.c" % TAG)
 SHIPPED_H = os.path.join(ROOT, "lang", TAG, "delta_rules_%s.h" % TAG)
+# Each rule under its own name, standing in for the compiled one. It is the
+# emitter's to write and follows from the same rule list, so it belongs
+# wherever that list is built rather than only in the lifter.
+SHIPPED_SHIM = os.path.join(ROOT, "lang", TAG,
+                            "delta_rules_shim_%s.c" % TAG)
 
 
 def shipped_bytecode():
@@ -337,7 +347,7 @@ def text_rules(upper=True):
         if os.path.exists(low):
             rules, tables = read_rules(open(low))
         if upper and os.path.exists(up):
-            written = du.compile_file(up)
+            written = du.compile_file(up, LANG)
             by_name = dict((r[0], r) for r in written)
             rules = [by_name.pop(name, (name, d, obj))
                      for name, d, obj in rules]
@@ -393,21 +403,27 @@ def regenerate(write=False, upper=None):
 
     if write:
         de.write_c(e, None, SHIPPED, SHIPPED_H, None, stores, names, TAG)
-        for what in (SHIPPED, SHIPPED_H):
-            print("%-22s %d bytes, written"
+        de.write_shims(e, SHIPPED_SHIM, None)
+        for what in (SHIPPED, SHIPPED_H, SHIPPED_SHIM):
+            print("%-26s %d bytes, written"
                   % (os.path.basename(what), os.path.getsize(what)))
         return True
 
     with tempfile.TemporaryDirectory() as tmp:
         out_c = os.path.join(tmp, "delta_rules_enus.c")
         out_h = os.path.join(tmp, "delta_rules_%s.h" % TAG)
+        out_shim = os.path.join(tmp, "shim.c")
         de.write_c(e, None, out_c, out_h, None, stores, names, TAG)
+        de.write_shims(e, out_shim, None)
         got = open(out_c, "rb").read()
         got_h = open(out_h, "rb").read()
+        got_shim = open(out_shim, "rb").read()
 
     ok = True
     for what, made, have in (("delta_rules_%s.c" % TAG, got, SHIPPED),
-                             ("delta_rules_%s.h" % TAG, got_h, SHIPPED_H)):
+                             ("delta_rules_%s.h" % TAG, got_h, SHIPPED_H),
+                             ("delta_rules_shim_%s.c" % TAG, got_shim,
+                              SHIPPED_SHIM)):
         want = open(have, "rb").read()
         if made == want:
             print("%-22s %d bytes, the same as the tree's" % (what, len(made)))

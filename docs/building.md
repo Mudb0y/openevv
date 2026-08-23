@@ -237,19 +237,20 @@ Nothing in the tree names the constant, so what every build proves is the path -
 
 ## The tables beside the rules
 
-A language module is the rules and four other things: the variables the machine declares for it, the settings it carries in its own image, the statement table the machine is parameterised by, and the lookup sets its dictionary lives in. All four were generated out of IBM's objects and said so at the top. All four have a text form now, beside the dictionary that already had one:
+A language module is the rules and five other things: the variables the machine declares for it, the settings it carries in its own image, the statement table the machine is parameterised by, the lookup sets its dictionary lives in, and the bytes its rules name by address. All five were generated out of IBM's objects and said so at the top. All five have a text form now, beside the dictionary that already had one:
 
     lang/enus/enus.globals      the variables, 106 lines
     lang/enus/enus.settings     the settings, 83
     lang/enus/enus.statements   the statement table, 905
     lang/enus/enus.sets         the sets and the dictionary actions, 9,750
+    lang/enus/enus.consts       the bytes the rules name, 445
     lang/enus/enus.dict         the words, which tools/delta-dict.py already wrote
 
     make tables-dump      writes the four
     make tables-check     the C from each, held against the tree
     make tables-write     the C from each, for real
 
-`tables-check` is the one to believe and it wants no objects: it writes each generated file out of its text into a directory of its own and holds it against what is in the tree, byte for byte. All four match for all eight languages, which is 32 of 32.
+`tables-check` is the one to believe and it wants no objects: it writes each generated file out of its text into a directory of its own and holds it against what is in the tree, byte for byte. All five match for all nine languages, which is 45 of 45.
 
 Each of the four keeps one writer, and the tool that lifts is the tool that writes. That is the whole discipline: a lifter that reads objects and a reader that reads text hand the same model to the same emitter, so what the text says and what a lift says cannot come out differently formatted, and the round trip is exact rather than approximately right.
 
@@ -262,6 +263,90 @@ The statement table is the same shape in every language and that is a measuremen
 One thing this found and fixed. `tools/delta-sets.py` had not been able to write the file it generates for some time: the copy in the tree had been brought to the arena's forms during the sixty-four bit work -- `EVV_REF(0)` where the tool still wrote `0` -- and the tool's own comment about the stores had gone stale with it, saying they are copied when what is copied is the table of pointers and the stores are handed over as they lie. English's file had the newer forms and the other seven the older ones. The tool now writes what English's says and the other seven have been brought into line: ten lines each, no data touched, and every one of the eight then regenerates byte for byte.
 
 So a language IBM never shipped is now five text files and a table. The rules in `rules/`, the four above, the words in `<tag>.dict`, and `tools/gen-lang.py` for the one table the engine knows a language by.
+
+## Adding a language
+
+`lang/plpl` is the ninth language in the tree and the first IBM never shipped.
+As it stands it is Italian: made by copying `lang/itit`'s text forms and
+renaming them, so it speaks Italian under a Polish name. That is not a
+placeholder, it is the chassis -- everything after this is a change with
+something audible on both sides of it -- and `NOTICE` says what the licence
+consequence is, which is that all of it is IBM's Italian until it has been
+replaced.
+
+Italian is the template for reasons rather than convenience. Its stress is
+predominantly penultimate and Polish's is almost always penultimate. Its five
+vowels have no reduction. Its consonants have the affricates ts and dz, tʃ and
+dʒ, the palatal nasal that is exactly Polish ń, and a trilled r -- which is the
+hardest part of Polish and the part Spanish only half has. And it is the
+smallest of the European modules, 1,749 rules against English's 3,377.
+
+What making one takes, in the order it was done:
+
+    EVV_NOTATION_LANG=itit make notation notation-symbols   the template's rules as text
+    cp the five text forms and rules/, with the tag renamed
+    a section naming the language, and a library name
+    "plpl": "Polish" in tools/gen-lang.py, then run it
+    make LANGS="lang/enus lang/plpl" tables-write             the C from the texts
+    EVV_NOTATION_LANG=plpl python3 tools/delta-notation.py rewrite
+
+and then it builds and speaks like any other. No object is opened at any point
+after the first line, which is the whole reason the text forms exist.
+
+### The number a language is
+
+A language is a family and a dialect packed into a word, and the family is not
+free. Three tables are indexed by it and all three hold eighteen: the standard
+voices in `src/eci_voicetable.c`, the dictionary in force in `src/eci_dict.c`
+and the romanizers in `src/eci_romanizer.c`. IBM used families one to five and
+eight. And four more are spoken for: `rz_isRomExist` says families 6, 10, 11
+and 16 have a romanizer, so an instance of one of those is refused outright
+when the romanizer is not there -- which is what happened when Polish was first
+given family sixteen, and `eciNewEx` answered -21 and nothing else. Polish is
+family seventeen, `0x110000`, which is clear of all of it with eighteen left
+spare.
+
+### What the language means by its variables
+
+IBM's names for the machine's variables are gone: the only record is a
+disassembly that carries kinds and not names. So a rule that sets a formant
+says `global half 2926` and nothing tells you what that is. `<tag>.globals` can
+now say:
+
+    name short 423 f2_in
+
+and a rule written in the upper form says `set f2_in to 2000`, which compiles
+to that same offset. `python3 tools/gen-globals.py where plpl 2926` is how one
+is worked out from the other: it answers `short number 423, 2 bytes into it`,
+two bytes being where a short cell keeps its value.
+
+The ten that are named in `lang/plpl/plpl.globals` are the formant targets a
+consonant is spoken with, each formant twice because the transition into it and
+the one out of it are separate numbers. They were read off Italian's own value
+rules: the trill sets the first to 450 and the second to 1250, the labials set
+the second to 850, the dentals and velars to 1700 and the palatals to 1800 --
+which is where a labial's low second formant and a palatal's high one belong,
+so the reading is the language's own rather than a guess.
+
+`lang/plpl/rules/is_val.up` is the first rule written for Polish rather than
+lifted for Italian, and all it does is say what the alveolo-palatals -- the
+series Polish has and Italian has not -- are spoken with. Nothing calls it yet.
+Its numbers are a starting point: ś and ź sit between Italian's palatal and its
+dentals with a higher third formant, and the ear settles the rest.
+
+### Keeping the chassis honest
+
+    make EVVLANG=lang/plpl census
+
+says how much of the module is still the template's, rule by rule and table by
+table, out of the text forms alone. It reads 99% Italian today: 1,749 rules of
+1,750 character for character Italian's, one ours, the settings two lines apart
+and the variables named. The number falls as the work is done, and what it is
+there for is the failure it prevents -- Italian phonology coming out of
+something labelled Polish without anyone noticing.
+
+`TEMPLATE` says what to hold it against, and `lang-census.py <tag> <template>
+rules` lists every rule with which of the three it is.
 
 ## The rules, twice
 

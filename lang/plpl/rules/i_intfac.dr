@@ -1,0 +1,2147 @@
+# The rules of i_intfac.obj, written by tools/delta-notation.py.
+# One operation to a line. See docs/building.md.
+
+rule register_ital_phones from i_intfac.obj
+shape frame 268 argbase 8 params 3
+label L0 was _register_ital_phones
+  load movl imm 0 into r6
+  load movl slotaddr -176 into r0
+  push imm 0
+  push slotaddr -176
+  store movl imm 0 slot -76
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r7
+  popreg r1
+  popreg r1
+  branch jne to L35
+  load movl slotaddr -176 into r0
+  push slotaddr -176
+  load movl slotaddr -112 into r0
+  push slotaddr -112
+  load movl slotaddr -100 into r0
+  push slotaddr -100
+  load movl slotaddr -88 into r0
+  push slotaddr -88
+  load movl slotaddr -268 into r0
+  push slotaddr -268
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L35
+  push param 1
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push state 0
+  call ZZget_parmINT arity 3 depth 3
+  push param 2
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  push state 0
+  call ZZget_parmINT arity 3 depth 6
+  load movl imm -4 into r0
+  push state 0
+  store movw imm 0 slot -2
+  store movw imm 65532 slot -4
+  store movw imm 0 slot -50
+  store movw imm 65532 slot -52
+  store movw imm 0 slot -38
+  store movw imm 65532 slot -40
+  store movw imm 0 slot -18
+  store movw imm 65532 slot -20
+  store movw imm 0 slot -46
+  store movw imm 65532 slot -48
+  store movw imm 0 slot -26
+  store movw imm 65532 slot -28
+  store movw imm 0 slot -54
+  store movw imm 65532 slot -56
+  store movw imm 0 slot -34
+  store movw imm 65532 slot -36
+  store movw imm 0 slot -62
+  store movw imm 65532 slot -64
+  store movw imm 0 slot -42
+  store movw imm 65532 slot -44
+  store movw imm 0 slot -58
+  store movw imm 65532 slot -60
+  store movw imm 0 slot -6
+  store movw imm 65532 slot -8
+  store movw imm 0 slot -10
+  store movw imm 65532 slot -12
+  store movw imm 0 slot -14
+  store movw imm 65532 slot -16
+  store movw imm 0 slot -22
+  store movw imm 65532 slot -24
+  store movw imm 0 slot -30
+  store movw imm 65532 slot -32
+  call ZZfence_null arity 1 depth 7
+  push state 0
+  store movw imm 0 slot -2
+  call ZZstarttest1 arity 1 depth 8
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl imm 130 into r3
+  load movl slotaddr -64 into r0
+  store movw imm 67 slot -50
+  store movw imm 0 slot -38
+  store movw imm 0 slot -18
+  store movw imm 0 slot -46
+  store movw imm 0 slot -26
+  store movw imm 0 slot -54
+  store movw imm 0 slot -34
+  store movw imm 75 slot -62
+  store movw imm 125 slot -42
+  store movw imm 128 slot -58
+  store movw imm 100 slot -6
+  store movw imm 130 slot -10
+  store movw imm 130 slot -14
+  store movw imm 0 slot -22
+  store movw imm 200 slot -30
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push state 0
+  call registerPhoneme arity 19 depth 27
+  popn 27
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L1 was $X1$90682
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest2 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 68 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw imm 50 slot -62
+  store movw imm 100 slot -34
+  store movw imm 128 slot -54
+  store movw imm 75 slot -26
+  store movw reg r3w slot -46
+  store movw reg r3w slot -18
+  store movw imm 255 slot -38
+  store movw imm 125 slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L2 was $X2$90702
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest3 arity 1 depth 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 69 slot -50
+  store movw reg r6w slot -38
+  store movw reg r6w slot -18
+  store movw reg r6w slot -46
+  store movw reg r6w slot -26
+  store movw reg r6w slot -54
+  store movw reg r6w slot -34
+  store movw imm 50 slot -62
+  store movw imm 100 slot -42
+  store movw imm 128 slot -58
+  store movw imm 75 slot -6
+  store movw reg r3w slot -10
+  store movw imm 175 slot -14
+  store movw reg r6w slot -22
+  store movw imm 125 slot -30
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L3 was $X3$90722
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest4 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 71 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw imm 50 slot -62
+  store movw imm 100 slot -34
+  store movw imm 128 slot -54
+  store movw imm 75 slot -26
+  store movw reg r3w slot -46
+  store movw reg r3w slot -18
+  store movw reg r6w slot -38
+  store movw reg r6w slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L4 was $X4$90742
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest5 arity 1 depth 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 74 slot -50
+  store movw reg r6w slot -38
+  store movw reg r6w slot -18
+  store movw reg r6w slot -46
+  store movw reg r6w slot -26
+  store movw reg r6w slot -54
+  store movw reg r6w slot -34
+  store movw imm 75 slot -62
+  store movw imm 125 slot -42
+  store movw imm 128 slot -58
+  store movw imm 100 slot -6
+  store movw reg r3w slot -10
+  store movw reg r3w slot -14
+  store movw reg r6w slot -22
+  store movw imm 200 slot -30
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L5 was $X5$90762
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest6 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 76 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw imm 75 slot -62
+  store movw imm 150 slot -34
+  store movw imm 128 slot -54
+  store movw imm 50 slot -26
+  store movw reg r3w slot -46
+  store movw reg r3w slot -18
+  store movw imm 255 slot -38
+  store movw reg r6w slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L6 was $X6$90782
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest7 arity 1 depth 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 78 slot -50
+  store movw reg r6w slot -38
+  store movw reg r6w slot -18
+  store movw reg r6w slot -46
+  store movw reg r6w slot -26
+  store movw reg r6w slot -54
+  store movw reg r6w slot -34
+  store movw imm 50 slot -62
+  store movw imm 100 slot -42
+  store movw imm 128 slot -58
+  store movw imm 75 slot -6
+  store movw reg r3w slot -10
+  store movw reg r3w slot -14
+  store movw reg r6w slot -22
+  store movw reg r6w slot -30
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L7 was $X7$90802
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest8 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 82 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw imm 75 slot -62
+  store movw imm 100 slot -34
+  store movw imm 128 slot -54
+  store movw imm 100 slot -26
+  store movw reg r3w slot -46
+  store movw reg r3w slot -18
+  store movw reg r6w slot -38
+  store movw imm 200 slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L8 was $X8$90822
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest9 arity 1 depth 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 83 slot -50
+  store movw reg r6w slot -38
+  store movw reg r6w slot -18
+  store movw reg r6w slot -46
+  store movw reg r6w slot -26
+  store movw reg r6w slot -54
+  store movw reg r6w slot -34
+  store movw imm 75 slot -62
+  store movw imm 125 slot -42
+  store movw imm 128 slot -58
+  store movw imm 100 slot -6
+  store movw reg r3w slot -10
+  store movw reg r3w slot -14
+  store movw reg r6w slot -22
+  store movw imm 200 slot -30
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L9 was $X9$90842
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest10 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 84 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw imm 50 slot -62
+  store movw imm 100 slot -34
+  store movw imm 128 slot -54
+  store movw imm 75 slot -26
+  store movw reg r3w slot -46
+  store movw reg r3w slot -18
+  store movw imm 255 slot -38
+  store movw imm 125 slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L10 was $X10$90862
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest11 arity 1 depth 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 90 slot -50
+  store movw reg r6w slot -38
+  store movw reg r6w slot -18
+  store movw reg r6w slot -46
+  store movw reg r6w slot -26
+  store movw reg r6w slot -54
+  store movw reg r6w slot -34
+  store movw imm 75 slot -62
+  store movw imm 125 slot -42
+  store movw imm 128 slot -58
+  store movw imm 100 slot -6
+  store movw reg r3w slot -10
+  store movw reg r3w slot -14
+  store movw reg r6w slot -22
+  store movw imm 200 slot -30
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L11 was $X11$90882
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest12 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 97 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw imm 100 slot -62
+  store movw imm 125 slot -34
+  store movw imm 128 slot -54
+  store movw imm 200 slot -26
+  store movw imm 150 slot -46
+  store movw reg r3w slot -18
+  store movw imm 150 slot -38
+  store movw imm 150 slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L12 was $X12$90902
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest13 arity 1 depth 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 98 slot -50
+  store movw reg r6w slot -38
+  store movw reg r6w slot -18
+  store movw reg r6w slot -46
+  store movw reg r6w slot -26
+  store movw reg r6w slot -54
+  store movw reg r6w slot -34
+  store movw reg r6w slot -62
+  store movw imm 100 slot -42
+  store movw imm 128 slot -58
+  store movw reg r6w slot -6
+  store movw reg r6w slot -10
+  store movw reg r6w slot -14
+  store movw reg r6w slot -22
+  store movw imm 200 slot -30
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L13 was $X13$90922
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest14 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 99 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw imm 125 slot -62
+  store movw imm 75 slot -34
+  store movw imm 128 slot -54
+  store movw imm 150 slot -26
+  store movw imm 150 slot -46
+  store movw reg r3w slot -18
+  store movw imm 150 slot -38
+  store movw imm 100 slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L14 was $X14$90942
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest15 arity 1 depth 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 100 slot -50
+  store movw reg r6w slot -38
+  store movw reg r6w slot -18
+  store movw reg r6w slot -46
+  store movw reg r6w slot -26
+  store movw reg r6w slot -54
+  store movw reg r6w slot -34
+  store movw imm 75 slot -62
+  store movw imm 150 slot -42
+  store movw imm 128 slot -58
+  store movw imm 50 slot -6
+  store movw reg r3w slot -10
+  store movw reg r3w slot -14
+  store movw imm 255 slot -22
+  store movw reg r6w slot -30
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L15 was $X15$90962
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest16 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 101 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw imm 50 slot -62
+  store movw imm 100 slot -34
+  store movw imm 128 slot -54
+  store movw imm 75 slot -26
+  store movw reg r3w slot -46
+  store movw imm 175 slot -18
+  store movw reg r6w slot -38
+  store movw imm 255 slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L16 was $X16$90982
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest17 arity 1 depth 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 102 slot -50
+  store movw reg r6w slot -38
+  store movw reg r6w slot -18
+  store movw reg r6w slot -46
+  store movw reg r6w slot -26
+  store movw reg r6w slot -54
+  store movw reg r6w slot -34
+  store movw imm 10 slot -62
+  store movw imm 100 slot -42
+  store movw imm 128 slot -58
+  store movw imm 25 slot -6
+  store movw reg r3w slot -10
+  store movw reg r6w slot -14
+  store movw reg r6w slot -22
+  store movw imm 200 slot -30
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L17 was $X17$91002
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest18 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 103 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw imm 50 slot -62
+  store movw imm 100 slot -34
+  store movw imm 128 slot -54
+  store movw imm 75 slot -26
+  store movw reg r3w slot -46
+  store movw reg r3w slot -18
+  store movw reg r6w slot -38
+  store movw reg r6w slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L18 was $X18$91022
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest19 arity 1 depth 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 105 slot -50
+  store movw reg r6w slot -38
+  store movw reg r6w slot -18
+  store movw reg r6w slot -46
+  store movw reg r6w slot -26
+  store movw reg r6w slot -54
+  store movw reg r6w slot -34
+  store movw imm 25 slot -62
+  store movw imm 150 slot -42
+  store movw imm 128 slot -58
+  store movw imm 50 slot -6
+  store movw reg r3w slot -10
+  store movw reg r3w slot -14
+  store movw reg r6w slot -22
+  store movw imm 255 slot -30
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L19 was $X19$91042
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest20 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 107 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw imm 50 slot -62
+  store movw imm 100 slot -34
+  store movw imm 128 slot -54
+  store movw imm 75 slot -26
+  store movw reg r3w slot -46
+  store movw reg r3w slot -18
+  store movw reg r6w slot -38
+  store movw reg r6w slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L20 was $X20$91062
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest21 arity 1 depth 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 108 slot -50
+  store movw reg r6w slot -38
+  store movw reg r6w slot -18
+  store movw reg r6w slot -46
+  store movw reg r6w slot -26
+  store movw reg r6w slot -54
+  store movw reg r6w slot -34
+  store movw imm 75 slot -62
+  store movw imm 150 slot -42
+  store movw imm 128 slot -58
+  store movw imm 50 slot -6
+  store movw reg r3w slot -10
+  store movw reg r3w slot -14
+  store movw imm 255 slot -22
+  store movw reg r6w slot -30
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L21 was $X21$91082
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest22 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 109 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw reg r6w slot -62
+  store movw imm 100 slot -34
+  store movw imm 128 slot -54
+  store movw reg r6w slot -26
+  store movw reg r6w slot -46
+  store movw reg r6w slot -18
+  store movw reg r6w slot -38
+  store movw imm 200 slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L22 was $X22$91102
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest23 arity 1 depth 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 110 slot -50
+  store movw reg r6w slot -38
+  store movw reg r6w slot -18
+  store movw reg r6w slot -46
+  store movw reg r6w slot -26
+  store movw reg r6w slot -54
+  store movw reg r6w slot -34
+  store movw imm 75 slot -62
+  store movw imm 150 slot -42
+  store movw imm 128 slot -58
+  store movw imm 50 slot -6
+  store movw reg r3w slot -10
+  store movw reg r3w slot -14
+  store movw imm 255 slot -22
+  store movw reg r6w slot -30
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L23 was $X23$91122
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest24 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 111 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw imm 25 slot -62
+  store movw reg r6w slot -34
+  store movw reg r3w slot -54
+  store movw reg r3w slot -26
+  store movw imm 60 slot -46
+  store movw imm 60 slot -18
+  store movw reg r6w slot -38
+  store movw imm 255 slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L24 was $X24$91142
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest25 arity 1 depth 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 112 slot -50
+  store movw reg r6w slot -38
+  store movw reg r6w slot -18
+  store movw reg r6w slot -46
+  store movw reg r6w slot -26
+  store movw reg r6w slot -54
+  store movw reg r6w slot -34
+  store movw reg r6w slot -62
+  store movw imm 100 slot -42
+  store movw imm 128 slot -58
+  store movw reg r6w slot -6
+  store movw reg r6w slot -10
+  store movw reg r6w slot -14
+  store movw reg r6w slot -22
+  store movw imm 200 slot -30
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L25 was $X25$91162
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest26 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 114 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw imm 75 slot -62
+  store movw imm 150 slot -34
+  store movw imm 128 slot -54
+  store movw imm 50 slot -26
+  store movw reg r3w slot -46
+  store movw reg r3w slot -18
+  store movw imm 255 slot -38
+  store movw reg r6w slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L26 was $X26$91182
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest27 arity 1 depth 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 115 slot -50
+  store movw reg r6w slot -38
+  store movw reg r6w slot -18
+  store movw reg r6w slot -46
+  store movw reg r6w slot -26
+  store movw reg r6w slot -54
+  store movw reg r6w slot -34
+  store movw imm 50 slot -62
+  store movw imm 100 slot -42
+  store movw imm 128 slot -58
+  store movw imm 75 slot -6
+  store movw reg r3w slot -10
+  store movw reg r3w slot -14
+  store movw imm 150 slot -22
+  store movw reg r6w slot -30
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L27 was $X27$91202
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest28 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 116 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw imm 75 slot -62
+  store movw imm 150 slot -34
+  store movw imm 128 slot -54
+  store movw imm 50 slot -26
+  store movw reg r3w slot -46
+  store movw reg r3w slot -18
+  store movw imm 255 slot -38
+  store movw reg r6w slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L28 was $X28$91222
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest29 arity 1 depth 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 117 slot -50
+  store movw reg r6w slot -38
+  store movw reg r6w slot -18
+  store movw reg r6w slot -46
+  store movw reg r6w slot -26
+  store movw reg r6w slot -54
+  store movw reg r6w slot -34
+  store movw imm 25 slot -62
+  store movw reg r6w slot -42
+  store movw reg r3w slot -58
+  store movw imm 90 slot -6
+  store movw imm 60 slot -10
+  store movw imm 60 slot -14
+  store movw reg r6w slot -22
+  store movw imm 255 slot -30
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L29 was $X29$91242
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest30 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 118 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw imm 10 slot -62
+  store movw imm 100 slot -34
+  store movw imm 128 slot -54
+  store movw imm 25 slot -26
+  store movw reg r3w slot -46
+  store movw reg r6w slot -18
+  store movw reg r6w slot -38
+  store movw imm 200 slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L30 was $X30$91262
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest31 arity 1 depth 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 119 slot -50
+  store movw reg r6w slot -38
+  store movw reg r6w slot -18
+  store movw reg r6w slot -46
+  store movw reg r6w slot -26
+  store movw reg r6w slot -54
+  store movw reg r6w slot -34
+  store movw imm 25 slot -62
+  store movw reg r6w slot -42
+  store movw reg r3w slot -58
+  store movw imm 90 slot -6
+  store movw imm 60 slot -10
+  store movw imm 60 slot -14
+  store movw reg r6w slot -22
+  store movw imm 255 slot -30
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L31 was $X31$91282
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest32 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 121 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw imm 25 slot -62
+  store movw imm 150 slot -34
+  store movw imm 128 slot -54
+  store movw imm 50 slot -26
+  store movw reg r3w slot -46
+  store movw reg r3w slot -18
+  store movw reg r6w slot -38
+  store movw imm 255 slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L32 was $X32$91302
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest33 arity 1 depth 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 122 slot -50
+  store movw reg r6w slot -38
+  store movw reg r6w slot -18
+  store movw reg r6w slot -46
+  store movw reg r6w slot -26
+  store movw reg r6w slot -54
+  store movw reg r6w slot -34
+  store movw imm 50 slot -62
+  store movw imm 100 slot -42
+  store movw imm 128 slot -58
+  store movw imm 75 slot -6
+  store movw reg r3w slot -10
+  store movw reg r3w slot -14
+  store movw imm 150 slot -22
+  store movw reg r6w slot -30
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch jne to L34
+label L33 was $X33$91322
+  alu incw none slot -2
+  push reg r7
+  call ZZstarttest34 arity 1 depth 1
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -72 into r0
+  push slotaddr -72
+  push reg r7
+  store movw imm 164 slot -30
+  store movw reg r6w slot -22
+  store movw reg r6w slot -14
+  store movw reg r6w slot -10
+  store movw reg r6w slot -6
+  store movw reg r6w slot -58
+  store movw reg r6w slot -42
+  store movw reg r6w slot -62
+  store movw imm 170 slot -34
+  store movw imm 128 slot -54
+  store movw reg r6w slot -26
+  store movw reg r6w slot -46
+  store movw reg r6w slot -18
+  store movw reg r6w slot -38
+  store movw reg r6w slot -50
+  call registerPhoneme arity 19 depth 20
+  popn 20
+  cmp testl reg r0 reg r0
+  branch je to L36
+label L34 was at_0x17a4
+  load movl slotaddr -76 into r0
+  push slotaddr -76
+  push reg r7
+  call backtrack_function arity 2 depth 2
+  alu decl none reg r0
+  cmp cmpl imm 33 reg r0
+  popreg r1
+  popreg r1
+  branch ja to L35
+  switch reg r0 to L1 L2 L3 L4 L5 L6 L7 L8 L9 L10 L11 L12 L13 L14 L15 L16 L17 L18 L19 L20 L21 L22 L23 L24 L25 L26 L27 L28 L29 L30 L31 L32 L33 L36
+label L35 was at_0x17bd
+  push imm 94
+  push reg r7
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L37
+label L36 was $X34$91342
+  alu incw none slot -2
+  push reg r7
+  call succeed arity 1 depth 1
+  popreg r1
+  load movl imm 0 into r0
+label L37 was at_0x17d9
+  return reg r0
+label L38 was $L91457
+end
+
