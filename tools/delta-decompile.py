@@ -296,6 +296,32 @@ def emit(rule):
                 '(int32_t)(%s + (%d))' % (v(ops[0]),
                                           k - 0x100000000 if k >= 0x80000000
                                           else k)))
+        elif op == 'ftol':
+            # The little floating point the Frenches have. Worked out in long
+            # double because that is the x87 register the original computes in,
+            # and with the constant 0.4 the narrower type truncates
+            # differently: see the comment on OP_FTOL in src/delta_rules.c.
+            # Built up in parentheses rather than as one flat expression,
+            # so it is worked out in the order the machine works it out in.
+            # Written flat, C's precedence would read a + b * k as a + (b * k)
+            # where the stack does (a + b) * k, and nothing in these two
+            # languages happens to need the difference -- which is exactly the
+            # kind of luck not to depend on.
+            expr = None
+            for step in shape[1]:
+                if step[0] in (0, 1):
+                    term = '(long double)(int32_t)(%s)' % v(ops[step[1]])
+                else:
+                    bits = ((rule.c.imm[step[2]] & 0xffffffff) << 32) \
+                           | (rule.c.imm[step[1]] & 0xffffffff)
+                    term = 'EVV_DBL(0x%016xULL)' % bits
+                if expr is None:
+                    expr = term
+                else:
+                    expr = '(%s %s %s)' % (expr, '*' if step[0] == 2 else '+',
+                                           term)
+            body.append('    ' + rule.reg_write(
+                rule.raw(last), '(int32_t)(%s)' % expr))
         elif op == 'widen':
             body.append('    r2 = r0 >> 31;')
         elif op == 'setcc':

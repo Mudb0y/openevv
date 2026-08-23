@@ -45,7 +45,12 @@ def load(name, path):
 dl = load("delta_lift", "tools/delta-lift.py")
 de = load("delta_emit", "tools/delta-emit.py")
 
-OBJECTS = os.path.join(ROOT, "analysis", "enus")
+# Which language this reads. English is the only one with a notation tree, but
+# the reader and writer are the machine's rather than English's, so a rule from
+# another module can be round-tripped to check that a form covers it -- which is
+# how the floating-point form was checked, since no English rule has any.
+LANG = os.environ.get("EVV_NOTATION_LANG", "enus")
+OBJECTS = os.path.join(ROOT, "analysis", LANG)
 
 # ---- registers ----------------------------------------------------------
 #
@@ -207,6 +212,19 @@ def put_op(op, out, name_of):
     elif k == "div":
         out.append(str(op[1]))
         put_operand(op[2], out)
+    elif k == "ftol":
+        # from <a> [times <bits>] [plusk <bits>] [plus <a>] ... into <reg>
+        for step in op[1]:
+            if step[0] == "ld":
+                out.append("from")
+                put_operand(step[1], out)
+            elif step[0] == "addi":
+                out.append("plus")
+                put_operand(step[1], out)
+            else:
+                out.extend(("times" if step[0] == "mulk" else "plusk",
+                            "0x%016x" % step[1]))
+        out.extend(("into", put_reg(op[2])))
     elif k == "widen":
         out.append(str(op[1]))
     elif k == "setcc":
@@ -291,6 +309,21 @@ def get_op(w):
     if k == "div":
         kind = w.pop(0)
         return ("div", kind, get_operand(w))
+    if k == "ftol":
+        steps = []
+        while w and w[0] != "into":
+            how = w.pop(0)
+            if how == "from":
+                steps.append(("ld", get_operand(w)))
+            elif how == "plus":
+                steps.append(("addi", get_operand(w)))
+            elif how in ("times", "plusk"):
+                steps.append(("mulk" if how == "times" else "addk",
+                              int(w.pop(0), 16)))
+            else:
+                raise ValueError("no floating step called %r" % (how,))
+        word(w, "into")
+        return ("ftol", tuple(steps), get_reg(w.pop(0)))
     if k == "widen":
         return ("widen", w.pop(0))
     if k == "setcc":
@@ -536,11 +569,11 @@ def check(obj):
     return not (differed or unwritten)
 
 
-TREE = os.path.join(ROOT, "lang", "enus", "rules")
-# Which language this speaks for. Only English has notation so far; the tables
-# carry the language's name since two of them can be linked into one program,
-# so the name is wanted in three places and is written down once.
-TAG = "enus"
+TREE = os.path.join(ROOT, "lang", LANG, "rules")
+# Which language this speaks for. Only English has a notation tree so far; the
+# tables carry the language's name since two of them can be linked into one
+# program, so the name is wanted in three places and is written down once.
+TAG = LANG
 SHIPPED = os.path.join(ROOT, "lang", TAG, "delta_rules_%s.c" % TAG)
 SHIPPED_H = os.path.join(ROOT, "lang", TAG, "delta_rules_%s.h" % TAG)
 

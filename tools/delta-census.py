@@ -40,7 +40,8 @@ CONSTS_C = os.path.join(LANG_DIR, 'delta_consts_%s.c' % LANG_TAG)
 
 OPS = ['call', 'jump', 'branch', 'cmp', 'alu2', 'alu1', 'load',
        'store', 'switch', 'map', 'return', 'scale', 'addk', 'mul',
-       'div', 'widen', 'setcc', 'push', 'setarg', 'popn', 'popreg']
+       'div', 'widen', 'setcc', 'push', 'setarg', 'popn', 'popreg',
+       'ftol']
 
 KINDS = ['none', 'imm', 'sym', 'slot', 'slotaddr', 'state', 'statefld',
          'reg', 'ind']
@@ -223,6 +224,25 @@ class Code:
         if op == 'setarg':
             a, _av, q2 = one(q + 1)
             return ('setarg', a), (self.code[q],), ops, [], q2
+        if op == 'ftol':
+            # A little floating point: a count, then that many steps, then the
+            # register the truncated answer goes in. A step is a kind byte and
+            # then either an operand to read an integer through or the two
+            # halves of a double constant in the ordinary constant pool.
+            n = self.code[q]
+            q2 = q + 1
+            steps = []
+            for _ in range(n):
+                what = self.code[q2]
+                q2 += 1
+                if what in (0, 1):
+                    _nm, _v, q2 = one(q2)
+                    steps.append((what, len(ops) - 1))
+                else:
+                    steps.append((what, self.u16(q2), self.u16(q2 + 2)))
+                    q2 += 4
+            return ('ftol', tuple(steps)), (self.code[q2],), ops, [], q2 + 1
+
         if op in ('popn', 'popreg'):
             return (op,), (self.code[q],), ops, [], q + 1
 

@@ -50,7 +50,8 @@
 enum {
     OP_CALL, OP_JUMP, OP_BRANCH, OP_CMP, OP_ALU2, OP_ALU1, OP_LOAD,
     OP_STORE, OP_SWITCH, OP_MAP, OP_RETURN, OP_SCALE, OP_ADDK, OP_MUL,
-    OP_DIV, OP_WIDEN, OP_SETCC, OP_PUSH, OP_SETARG, OP_POPN, OP_POPREG
+    OP_DIV, OP_WIDEN, OP_SETCC, OP_PUSH, OP_SETARG, OP_POPN, OP_POPREG,
+    OP_FTOL
 };
 
 /* The argument area is kept as it was rather than worked out per call. The
@@ -701,6 +702,55 @@ static void step(interp *st)
         scale = *p++;
         code = *p++;
         reg_write(st, code, disp + base + index * scale);
+        break;
+    }
+
+    /* A little floating point, which only the Frenches use: two rules in
+       France's module and eight in Canada's. An integer is pushed, a double
+       constant or another integer is combined into it, and the result is
+       truncated towards zero into a register -- which is what __ftol2 does.
+
+       It is worked out in long double because that is the x87 register the
+       original computes in, and the difference is not academic: with the
+       constant 0.4, an input of 5 and an addend of -3, sixty-four bit
+       arithmetic keeps 2.0 exactly and truncates to -1, where the eighty-bit
+       register keeps 2.000000000000000111 and truncates to 0. Two of two
+       point nine million combinations differ, and this is them. A host whose
+       long double is no wider than double would take the first answer. */
+    case OP_FTOL: {
+        long double acc = 0;
+        unsigned char steps = *p++;
+        unsigned char code;
+        unsigned char i;
+
+        for (i = 0; i < steps; i++) {
+            unsigned char what = *p++;
+            union { uint64_t bits; double d; } k;
+
+            switch (what) {
+            case 0:
+                acc = (long double)operand_read(st, &p, 4, 1);
+                break;
+            case 1:
+                acc += (long double)operand_read(st, &p, 4, 1);
+                break;
+            case 2:
+            case 3:
+                k.bits = (uint32_t)delta_rule_imm[get16(p)];
+                p += 2;
+                k.bits |= (uint64_t)(uint32_t)delta_rule_imm[get16(p)] << 32;
+                p += 2;
+                if (what == 2)
+                    acc *= (long double)k.d;
+                else
+                    acc += (long double)k.d;
+                break;
+            default:
+                break;
+            }
+        }
+        code = *p++;
+        reg_write(st, code, (int32_t)acc);
         break;
     }
 

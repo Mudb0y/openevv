@@ -57,6 +57,19 @@ void *delta_low_copy(const void *what, size_t bytes);
    an address in the program becomes a value goes through this. */
 void  delta_low_region(const void *at, size_t bytes);
 void *delta_low_at(const void *p);
+
+/* A double written as its bits, which is how the compiler named the constants
+   the Frenches multiply and add by, so the value is had exactly rather than
+   through a decimal that may not read back the same. */
+static inline long double evv_dbl(unsigned long long bits)
+{
+    union { unsigned long long b; double d; } u;
+
+    u.b = bits;
+    return (long double)u.d;
+}
+#define EVV_DBL(bits) evv_dbl(bits)
+
 int32_t delta_rule_called(int which, const int32_t *stack, int argn,
                           int want);
 

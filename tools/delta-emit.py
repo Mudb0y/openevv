@@ -48,7 +48,7 @@ spec.loader.exec_module(dlk)
 OPS = [
     "CALL", "JUMP", "BRANCH", "CMP", "ALU2", "ALU1", "LOAD", "STORE",
     "SWITCH", "MAP", "RETURN", "SCALE", "ADDK", "MUL", "DIV", "WIDEN",
-    "SETCC", "PUSH", "SETARG", "POPN", "POPREG",
+    "SETCC", "PUSH", "SETARG", "POPN", "POPREG", "FTOL",
 ]
 OP = {name: i for i, name in enumerate(OPS)}
 
@@ -57,6 +57,10 @@ OP = {name: i for i, name in enumerate(OPS)}
 KINDS = ["NONE", "IMM", "SYM", "SLOT", "SLOTADDR", "STATE", "STATEFLD",
          "REG", "IND"]
 K = {name: i for i, name in enumerate(KINDS)}
+
+# The steps of one floating-point expression: an integer pushed, then a
+# constant or another integer combined into it. Nothing else appears.
+FSTEP = {"ld": 0, "addi": 1, "mulk": 2, "addk": 3}
 
 # The conditions the rules branch on, and the widths and kinds of the
 # operations that set the flags they read.
@@ -313,6 +317,22 @@ class Emitter:
                     self.u8(OP["DIV"])
                     self.u8(1 if op[1] == "idivl" else 0)
                     self.operand(op[2], d.pbase)
+                elif kind == "ftol":
+                    # A little floating point, which only the Frenches have.
+                    # The double constants go in the ordinary constant pool as
+                    # two halves, so nothing new has to be carried beside the
+                    # rules to hold them.
+                    self.u8(OP["FTOL"])
+                    self.u8(len(op[1]))
+                    for step in op[1]:
+                        self.u8(FSTEP[step[0]])
+                        if step[0] in ("ld", "addi"):
+                            self.operand(step[1], d.pbase)
+                        else:
+                            self.u16(self.imm.add(step[1] & 0xffffffff))
+                            self.u16(self.imm.add((step[1] >> 32)
+                                                  & 0xffffffff))
+                    self.u8(reg_code(op[2]))
                 elif kind == "widen":
                     self.u8(OP["WIDEN"])
                     self.u8(1 if op[1] == "cltd" else 0)
