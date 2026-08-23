@@ -89,6 +89,19 @@ ifeq ($(TAG),jajp)
 SHIM := $(BUILD)/jajp_shim.obj
 endif
 
+# The Japanese driver, which is how the target for a romanizer was found: what
+# IBM's own engine does with Japanese script, and which way of asking makes it
+# do it. `make TAG=jajp jptry' builds it beside the reference.
+.PHONY: jptry
+jptry: $(BUILD)/jptry.exe
+
+$(BUILD)/jptry.exe: jptry.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(WORK)/.stamp
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src jptry.c \
+	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/jptry.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/jptry.err >&2 || true; exit $$s
+
 $(BUILD)/jajp_shim.obj: jajp_shim.c
 	@mkdir -p $(BUILD)
 	@$(CC) -O2 -std=gnu99 -w -I../src -c $< -o $@

@@ -113,6 +113,25 @@ IBM's 18,293 for the same text, and the difference is the romanisation.
 Everything else about the language -- rules, globals, sets, settings -- is
 already right.
 
+**And the target is observable now, which it was not.** IBM's Japanese does
+speak Japanese script, and what decides whether it does is how the instance was
+made: `eciNew()` gives nothing for Shift-JIS kana, and `eciNewEx(0x80000)` --
+the only language there is -- gives 13,266 samples. That is why
+`reference/speak.c`, which tries `eciNew` first, produced nothing and looked for
+a while like an engine that could not do it. Setting the codeset parameter
+afterwards is refused; the language given at creation is what carries it.
+`make -C reference TAG=jajp jptry` builds the driver that settled it, and the
+head of `reference/jptry.c` has the table. Romaji gives 18,293 samples and kana
+13,266, so the romanizer is not passing letters through, and that difference is
+what anything transcribed has to reproduce.
+
+Measured properly, the transcription is about 163 KB of x86 across thirty
+objects once the engine objects already ported and the dictionary lifted as data
+are taken out. That is a Japanese morphological analyser: phrase tables, a path
+search, number reading, intonation phrases, unknown-word handling, penalties.
+The dictionary beside it is 2.67 MB in 1,723 blobs and lifts in one command with
+tools/lift-rom.py, which is written and proved.
+
 The subsystem is sixteen objects and about half a megabyte: `rominstance`,
 `rommanager`, `rominstparam`, `romreg` and `romedll_link` are the framework,
 `jpnrom`, `jpnutil`, `kanastr`, `PCRoman2BG` and the three `MakeReadable*` the
