@@ -37,7 +37,13 @@ FRAME = 2048
 # asking -- it is the samples not moving that matters, not what they say.
 SAY = {
     0x10000: "The quick brown fox jumps over the lazy dog.",
+    0x10001: "The quick brown fox jumps over the lazy dog.",
+    0x20000: "El rapido zorro marron salta sobre el perro perezoso.",
+    0x20001: "El rapido zorro marron salta sobre el perro perezoso.",
+    0x30000: "Le rapide renard brun saute par-dessus le chien paresseux.",
+    0x30001: "Le rapide renard brun saute par-dessus le chien paresseux.",
     0x40000: "Der schnelle braune Fuchs springt ueber den faulen Hund.",
+    0x50000: "La rapida volpe marrone salta sopra il cane pigro.",
 }
 FALLBACK = SAY[0x10000]
 
