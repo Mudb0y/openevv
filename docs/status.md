@@ -84,15 +84,45 @@ Not done for any of the five: no dictionary a person can edit, and no thirty-two
 
 ## Japanese
 
-Japanese is the one language that is not built, and the reason is not that it does not lift. It does: 477 rules, its settings, and the language number 0x80000. `tools/lift-ini.py` had to learn a second shape of the question first, because Japanese is the only module with more than one dialect in a family -- family eight, dialects nought, four and eight, all three the same library -- so it compares the family and the dialect separately where the other eight compare the whole packed word at once.
+Japanese lifts -- 477 rules, its settings, and the language number 0x80000 --
+and one thing stands between that and a language that speaks: the romanizer.
 
-Two things stop it, and the first is the serious one.
+**It has an oracle now, which it did not before.** A reference built from
+`analysis/jajp` would not link: it wanted `getFullPathName`, which every other
+module's `libmain.obj` defines and Japanese's does not, and `ralStrNicmp` and
+`_chkstk`, which are in none of the nine. So there was nothing to hold a
+Japanese build against. All three are now supplied, and it matters where each
+one came from. `ralStrNicmp` went into `src/port_ral.c` beside `ralStrIcmp`,
+which already takes a length first with nought meaning the whole string, and is
+the same call shape -- the runtime abstraction layer has always been ours on
+both sides of the comparison, so that is the existing boundary and not a new
+one. The other two are in `reference/jajp_shim.c` and are linked for that one
+module only: a path to files this port never reads, and the stack-frame helper
+Microsoft's compiler calls instead of subtracting from the stack pointer. IBM's
+Japanese binary now speaks, and the English and German references are unchanged
+-- English still matches over all 81.
 
-**There is no oracle.** A reference built from `analysis/jajp` does not link: it wants `getFullPathName`, which is defined in every other module's objects and not in Japanese's, and `ralStrNicmp` and `_chkstk`, which are in none of them. So the SDK's Japanese object set is incomplete, and the method this whole port rests on -- speak every case through IBM's own binary and require identical samples -- has nothing to run. An oracle could be completed by hand, since `_chkstk` is a stack probe and `ralStrNicmp` is a case-insensitive compare, but then it is an oracle we wrote part of, and what it certifies is a question rather than an answer.
+**What is left is the romanisation module**, which is what `jpnrom.dll` is in
+stock Eloquence. `rz_isRomExist` in `src/eci_romanizer.c` says family 8 dialect
+0 has one, which is Japanese, and `rz_getRomanizerInst` always answers that
+there is none because loading one is Win32 `LoadLibrary` work that was
+deliberately left on the far side of the porting boundary. So
+`rz_setActiveLanguage` returns -1, setting the language fails, and no instance
+is made. Take that one line out and Japanese speaks: 13,486 samples, against
+IBM's 18,293 for the same text, and the difference is the romanisation.
+Everything else about the language -- rules, globals, sets, settings -- is
+already right.
 
-**And our engine will not make an instance for it.** Its two missing primitives are written -- `userIndexCallback` and `wordIndexCallback`, each a slot in the block the layers above share, quiet because our interface has no way to put a function there -- and `make missing` answers nothing, but `eo_newInstance` still refuses. Its lookup sets come out as one set of two bytes against Spanish's hundred and four, which is either a language that keeps its knowledge somewhere else or a lifter that is not finding it, and that is not yet known which.
+The subsystem is sixteen objects and about half a megabyte: `rominstance`,
+`rommanager`, `rominstparam`, `romreg` and `romedll_link` are the framework,
+`jpnrom`, `jpnutil`, `kanastr`, `PCRoman2BG` and the three `MakeReadable*` the
+Japanese half, and `skana0`, `skana1`, `stakankana0` and `jpnsdict` the tables
+and dictionary. `romedll_link` is what makes the reference romanise despite
+loading no DLL: in a static build it stands in for the library.
 
-`lang/jajp` is deliberately not in the tree: a language module that cannot make an instance would break any build that named it.
+`lang/jajp` is deliberately not in the tree until it can make an instance, since
+a module that cannot would break any build that named it. It lifts again in one
+pass from the tools.
 
 ## What the lifting cost, across all nine
 

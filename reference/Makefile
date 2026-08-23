@@ -82,10 +82,21 @@ $(BUILD)/ctors.obj: ../src/port_ctors.c
 	@mkdir -p $(BUILD)
 	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src -c $< -o $@
 
-$(BUILD)/speak.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(WORK)/.stamp
+# Japanese's objects want two names their own set does not carry, so that one
+# module gets an extra object. Every other module defines one of them itself.
+SHIM :=
+ifeq ($(TAG),jajp)
+SHIM := $(BUILD)/jajp_shim.obj
+endif
+
+$(BUILD)/jajp_shim.obj: jajp_shim.c
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=gnu99 -w -I../src -c $< -o $@
+
+$(BUILD)/speak.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(WORK)/.stamp
 	@mkdir -p $(BUILD)
 	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src speak.c $(BUILD)/ral_shim.obj \
-	  $(BUILD)/ctors.obj $(wildcard $(WORK)/*.obj) \
+	  $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
 

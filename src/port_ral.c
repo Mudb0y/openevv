@@ -503,6 +503,16 @@ int ralStrIcmp(int n, const char *a, const char *b)
     return icmp(a, b, n, n > 0);
 }
 
+/* The counted form, under its own name. IBM's own RAL has both, and Japanese's
+   readable-Japanese converter is the only caller of this one: it compares a
+   phone name against a table of five-byte entries with nought for the length,
+   which is what ralStrIcmp already takes nought to mean. The same code under
+   the second name, as it is in the original. */
+int ralStrNicmp(int n, const char *a, const char *b)
+{
+    return ralStrIcmp(n, a, b);
+}
+
 /* The audio device layer.
 
    Everything here reports the way a C function reports an error, zero
