@@ -104371,6 +104371,7 @@ extern uint8_t enus_evv_ut_spr_data_56[];
 extern uint8_t enus_evv_ut_spr_data_9[];
 extern uint8_t enus_evv_ut_struc_data_3[];
 extern uint8_t enus_evv_ut_util_data_3[];
+extern uint8_t enus_evv_authored_data[];
 
 const void *const enus_delta_rule_sym[] = {
     enus_evv_ea_ga_data_3 + 0,

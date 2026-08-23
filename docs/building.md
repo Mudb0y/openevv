@@ -162,6 +162,79 @@ writing rules that do not exist yet, which is what Polish needs. There the check
 is the suite and an ear, not a byte comparison, so the constraint above does not
 bind.
 
+## Writing a rule
+
+`lang/enus/rules/*.up` beside the `.dr` files is the form to write a rule in. It is the same rule: every call is the same entry with the same arguments in the same order, because a form that reworded what a rule calls would be describing the rule rather than being it. What it takes over is the machine.
+
+That is where the length of the lower form goes. Of the 322,890 operations in English's 1,042 real rules, 97,071 are pushes, 60,947 calls and 43,893 pops -- two thirds of every rule is the argument stack being written out by hand -- and another 53,000 are a comparison setting the flags on one line and a branch reading them on the next. None of it says anything about a language. `eng_ph_F_dur` is 49 lines of the lower notation and this is all of it:
+
+    rule eng_ph_F_dur takes 1 from es_cdur.obj
+      call ZZfence_null
+      set global half 2226 to 20
+      set global half 3150 to 5
+      match
+    end
+
+The 43 lines that went are the landing place, the `ventproc` entry, the `vretproc` tail with its 94, the pushes, the pops, the register that carries the answer and the return.
+
+A line is a verb and then its words, one operation to a line, and a block ends at a bare `end`, so nothing depends on indentation and no line has to be read together with another. `tools/delta-upper.py lower <file>` prints what a file compiles to, which is the way to read what the compiler did.
+
+What a rule can say. `local <name>` gives it a word of its frame and `local <name> bytes <n>` gives it more; `variable <name> <width> <offset>` names a state variable so the body can call it something. `call <entry> <values>...` makes a call and leaves the answer in `answer`. `set <place> to <value>`, and `add`, `subtract`, `and`, `or`, `shift left`, `shift right`, `increment`, `decrement` and `negate` for the arithmetic. `if <test>` with `else` and `end`, and `while <test>` with `leave` and `again`. `match` and `give up` are the two ways out, `answer <value>` for a rule that leaves something else, and `raw` takes a line of the lower notation for the operations too rare to have a word here -- the nine rules that read a table, the little floating point the Frenches have, and anything else.
+
+A value is one or two words: a number, `arg <n>`, a local by name, `addr <name>` for where a local is, `global <width> <offset>`, `sym <name>`, `answer`, `state`, or `unwind`. A test is two values with a comparison between them -- `is`, `is not`, `is less than`, `is at least`, `is more than`, `is at most`, and `is below`, `is above`, `is not below`, `is not above` for the unsigned ones -- or a value on its own, which means it is not nothing.
+
+Two things about it are the machine's and are easy to get wrong. `arg 1` is the first argument after the state, because the state is every rule's first argument and `takes 3` counts it: a rule that says `takes 3` has `arg 1` and `arg 2`. And a local the machine is handed the address of has to be as big as the machine writes -- `get_parm` fills in a compiled location, which is eight bytes, so it wants `local word bytes 8` and a four-byte local would take the next one with it. Nothing in the compiler knows how much any entry writes.
+
+### The frame, and the places a rule backtracks to
+
+A rule hands the machine five places in its own frame and the machine writes to all five, so their sizes are not ours: the record `ventproc` saves is 92 bytes, the landing place is 64, and the three fence arrays are 12 each, which is a byte per statement type and ten is all English declares. Those five sit together as one block of 192 bytes, the locals above it, and the last word of the frame is the count `backtrack_function` is handed. All 1,042 of IBM's rules lay that block out the same way -- the record, then the landing 64 bytes in, then the three arrays at 156, 168 and 180 -- and what varies is only where the block sits and which of two arrays it hands over first, 532 rules one way and 510 the other, which says that pair is scratch either way. `eng_ph_F_dur` above comes out with the frame IBM gave it, 196 bytes with the landing at -104 and the record at -196, from a rule that says nothing about any of it.
+
+The backtracking is the other half. A rule plants a choice point carrying a small number and later asks `backtrack_function` what number came back; the answer says where to carry on, and -1, which is what the rule's own marker answers, says it has run out of alternatives. So `plant test <place>` plants one -- `plant choice <place>`, `plant scan <place>` and `with boa` on the end are the other kinds -- `place <name>` says where one carries on, `go to <place>` is a jump to one, and `backtrack` asks. `matched` and `gave_up` are places every rule has, so a plant may name either. The numbers are the compiler's business, which is the point: `has_lex_prefix` has six of them across two alternatives and a shared tail, and a wrong one there is a mispronunciation nobody would find by reading.
+
+A rule re-expressed from one of IBM's needs its numbers rather than ours, and they are not always ours to choose: `high_tone` plants 1, 2 and 4 and dispatches on 3 as well. `plant test <place> as <n>` states the number and `place <name> on <n>` binds a place to one that nothing in the rule plants. The chain the compiler writes then steps from 1 to the highest of them, which is how the answer is read -- a decrement leaves nothing when the answer was the number of decrements so far -- and a number with nowhere to go costs the decrement and no branch.
+
+`through wrappers` in a rule's declarations makes a plant call the wrapper rule of that name -- `ZZstarttest2` rather than `starttest 2`. That is only for a rule re-expressed from IBM's own: a wrapper is a rule, so a run says it was entered, and a rule that skipped it would do the same work and say something different.
+
+### Whether it is the same rule
+
+    make upper-check
+
+is what says so, and there is no byte comparison in it. There was never going to be: our compiler would have to make the same register choices and put the instructions in the same order as IBM's, which is a study of their compiler rather than of this engine, and it would forbid us writing anything they never wrote. `eng_ph_F_dur` says it in one line -- theirs pushes the state register, does the two stores and then calls `succeed`, and anything straightforward does the stores and then the push.
+
+So the standard is what the engine can observe. With tracing on it says every rule it enters and every call it makes with its arguments, and that is what the audio is made of. `upper-check.sh` speaks each case through a build carrying the authored rules and through one carrying IBM's, and those have to match, and the audio besides.
+
+Four rules are in the tree that way, chosen for their shapes rather than their size. `eng_ph_F_dur` is a body with no alternatives in it. `has_lex_prefix` is two alternatives, a tail they share and a dispatch through six planted places. `high_tone` carries a value from one alternative into a test they share, and has a gap in its planted numbers -- IBM's compiler planted 1, 2 and 4 and dispatches on 3 as well -- so its numbers are stated rather than allocated and one place is bound to a number nothing plants. `clear_delta` is the loop: the language's loops are backtracking loops, where the body is reached by the machine answering an alternative rather than by falling into it, so a place inside a `while` is what says one. All four come out the same, call for call, over 7,986,891 lines of trace.
+
+What no rule in the tree exercises is `else`, `leave`, `again` and the unsigned comparisons, because nothing IBM wrote has that shape: those compile and can be read, and the first Polish rule is where they will run. Nothing in the machine is beyond the form -- what has no word here has `raw` -- but a statement proved through the engine and a statement merely compiled are not the same thing, and this says which is which.
+
+The sentences are the suite's seven plain ones and `test/cases/upper.txt`, which is this harness's own; `EVV_UPPER_CASES` names another list, which is how the workflow runs the short one. The seven were not enough, and why is worth more than the fix. `has_lex_prefix` takes one alternative when the word carries the prefix "re" and another when it does not, and not one of the seven has such a word: with its action number changed from 351 to 352 on purpose, all seven still passed. The way to know a case reaches the rule is to trace one sentence and look for the value -- `ZZlprp_load__setd(..., 0000015f)` comes up 28 times in "The rewritten prefix was remade and reopened" and never in the seven.
+
+Three things are left out of the comparison and all three are the harness. The interpreter prints every store it makes, and an authored rule may keep a value somewhere else -- `has_lex_prefix` keeps in a local what IBM's kept on the argument stack -- so the stores are held against each other and reported rather than required. It remarks when the depth a call carries disagrees with the area's, which is IBM's compiler batching its pops and ours not. And addresses in the arena are masked, because a frame with different locals in it lands somewhere else.
+
+The audio is the third comparison and it is not the weakest of them. A rule whose whole effect is to write a variable is invisible to a trace of calls, and that is not hypothetical: setting `eng_ph_F_dur`'s duration to 21 where IBM sets 20 passes the trace on every sentence and changes the sound of the second. Sabotage a rule and see which check answers, and if none of them does, the cases do not reach it.
+
+    make authored
+
+is how an authored rule gets into a build: it writes `delta_rules_enus.c` and `delta_rules_enus.h` out of the text with the upper form included, which is what `upper-check.sh` does before it builds. An ordinary build compiles what is in the tree, and what is in the tree is IBM's rules -- `make notation-regenerate` reads the lower form alone, so a rule written afresh does not turn that check red for as long as it exists.
+
+### Bytes of our own
+
+A rule that tests text names the bytes it tests against by address, and until there was a compiler every one of those came out of IBM's objects with the rule that named it. `lang/<tag>/rules/constants` is where one of ours goes:
+
+    bytes lex_prefix_re 18 02
+
+`make constants` writes it into `delta_authored_<tag>.c`, which is the one file in a language module that no lifter writes, and records where it falls in `rules/symbols`. A rule then says `sym lex_prefix_re` and nothing else has to know. Startup copies that store into the arena beside the lifted ones, because the machine holds addresses in thirty-two bit values and an address in the program is not one of those; `src/delta_low.c` is where both lists are walked. A new store is named in the generated rules file as well, so `make notation-rewrite` goes with it.
+
+The bytes are bytes. A string a rule holds against the text being read is not ASCII: it is one code per character in the alphabet the statement type declares, which `tools/delta-lexicon.py` prints for a language. `text <name> "..."` is there for the ones that really are ASCII.
+
+`rules/symbols` names an address by the object that compiled it and the symbol it had there, which is what a rule holds; a constant of ours belongs to the language rather than to an object and is recorded against none, so any rule may name it. That file used to be a list in order, which was only right as long as no rule was ever added or written afresh -- a rule naming a constant nothing had named before would have been handed an index past the end of the table and read whatever lay after it. It says so now instead.
+
+What proves the naming, as against the linking, is a rule reading our copy of bytes IBM also has. `lex_prefix_re` is IBM's own two-byte prefix as `ZZstring278` holds it: the codes 24 and 2, which in the alphabet statement type 1 declares spell "re", and `tools/delta-lexicon.py` is what says so. A `has_lex_prefix` that calls `test_string_s 1 2 sym lex_prefix_re` where IBM's calls the wrapper for `ZZstring278` therefore has to sound exactly the same, and `tools/upper-check.sh -sound` is how that is asked: the audio is the standard and the trace is reported instead of required, since the wrapper is a rule and a run of IBM's says it was entered. On 23 August 2026 all nine sentences came out identical to the sample, with the traces 18 to 87 lines apart out of between 505,443 and 1,386,180 -- the wrapper being entered and answering, at each of the sites where it is called, and nothing else.
+
+How far apart is said with the running count of rules entered masked off, which is what that harness does. A trace one entry short differs in the count on every line after it, so the raw figure is the length of the trace rather than the size of the difference: the same sentences read as 178,356 to 475,222 lines apart before the mask went in, which is a hundredth of the truth about them.
+
+Nothing in the tree names the constant, so what every build proves is the path -- the store compiled, registered and copied into the arena -- and the measurement above is what proved the name.
+
 ## The rules, twice
 
 The language's rules exist in the tree as bytecode, and the engine has an interpreter for them. They also exist as C: `tools/delta-decompile.py` writes all 3,377 of them out of that same bytecode into `lang/enus/delta_rules_c_enus.c`, and the interpreter prefers a rule written as C wherever it finds one. It writes beside whichever language it was pointed at, so `make LANG=lang/dede rules` writes German into `lang/dede`.

@@ -32,6 +32,8 @@ extern void itit_act_dict_delete(delta_state *d);
 
 extern const delta_rule_c itit_delta_rule_native[];
 
+extern const delta_store itit_delta_authored_store[];
+
 /* The two slots the runtime fills in for this language: the symbol table,
    once delta_syms_bind has copied the stores into the arena, and the index
    of whichever rules are written as C. Not const, unlike everything else
@@ -99,6 +101,7 @@ delta_language delta_lang_itit = {
     &itit_delta_native_index,
 
     itit_delta_const_store,
+    itit_delta_authored_store,
     &itit_delta_sym_ref,
 
     itit_vstmtbl,

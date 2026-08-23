@@ -1,0 +1,10 @@
+# eng_ph_F_dur written as what it does rather than as what the machine does to
+# arrive at it, to hold a compiled rule against the one IBM compiled. The
+# lower form of it is in es_cdur.dr, which this stands in for.
+
+rule eng_ph_F_dur takes 1 from es_cdur.obj
+  call ZZfence_null
+  set global half 2226 to 20
+  set global half 3150 to 5
+  match
+end

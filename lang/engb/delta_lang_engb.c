@@ -32,6 +32,8 @@ extern void engb_act_dict_delete(delta_state *d);
 
 extern const delta_rule_c engb_delta_rule_native[];
 
+extern const delta_store engb_delta_authored_store[];
+
 /* The two slots the runtime fills in for this language: the symbol table,
    once delta_syms_bind has copied the stores into the arena, and the index
    of whichever rules are written as C. Not const, unlike everything else
@@ -99,6 +101,7 @@ delta_language delta_lang_engb = {
     &engb_delta_native_index,
 
     engb_delta_const_store,
+    engb_delta_authored_store,
     &engb_delta_sym_ref,
 
     engb_vstmtbl,

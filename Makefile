@@ -307,7 +307,9 @@ $(BUILD)/libevv$(SUF).a: $(OBJECTS) $(RULESTAMP)
 # both that the text is still faithful and, once a rule has been changed on
 # purpose, which rules those are. It wants the objects, so it is in the same
 # class as the suite: obtainable, and not needed to build.
-.PHONY: notation notation-check notation-prove notation-regenerate notation-symbols
+.PHONY: notation notation-check notation-prove notation-regenerate \
+        notation-symbols notation-rewrite upper upper-prove upper-check \
+        authored constants
 notation:
 	@python3 tools/delta-notation.py tree
 
@@ -333,6 +335,45 @@ notation-regenerate:
 # because it is the last thing the emitter wanted them for.
 notation-symbols:
 	@python3 tools/delta-notation.py symbols
+
+# The two generated files written for real rather than compared, out of the
+# lifted text alone. Wanted when something other than a rule changes what they
+# hold -- a constant of ours adds a store, and the store is named in there.
+notation-rewrite:
+	@python3 tools/delta-notation.py rewrite
+
+# What a rule stands for, and what a rule does.
+#
+# `upper' and `upper-prove' are the wrappers as the primitive each stands for:
+# written out of the lower form and compiled back, where the bytecode has to
+# match byte for byte. `authored' is the other upper form, the real rules in
+# lang/<tag>/rules/*.up, compiled into the two generated files a build
+# compiles -- which is how one gets into a build at all, since an ordinary
+# build reads what is in the tree.
+#
+# `upper-check' is the one that says whether an authored rule is the rule it
+# stands in for. There is no byte comparison to be had: our compiler would
+# have to make the same choices IBM's did. So it speaks the seven plain cases
+# through a build carrying the authored rules and through one carrying IBM's,
+# and holds every rule entered and every call made with its arguments against
+# each other, and the audio besides. It wants no objects and no Wine.
+upper:
+	@python3 tools/delta-notation.py upper
+
+upper-prove:
+	@python3 tools/delta-notation.py upper-prove
+
+upper-check:
+	@bash tools/upper-check.sh
+
+authored:
+	@python3 tools/delta-notation.py authored
+
+# Bytes a rule of ours names by address, out of lang/<tag>/rules/constants
+# into the one file in a language module that no lifter writes. Run
+# `notation-rewrite' after it: a new store is named in the generated file too.
+constants:
+	@python3 tools/delta-consts.py $(TAGS)
 
 # The rules as C. Thirteen megabytes written out of the bytecode beside it,
 # so it is made here rather than kept in the tree, where every change to the

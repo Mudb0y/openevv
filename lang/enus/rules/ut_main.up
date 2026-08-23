@@ -1,0 +1,25 @@
+# clear_delta written as what it does. The lower form of it is in ut_main.dr,
+# which this stands in for; tools/upper-check.sh holds the two against each
+# other, call for call, through the engine.
+#
+# It is here for the loop. The language's loops are backtracking loops -- the
+# body is reached by the machine answering an alternative rather than by
+# falling into it -- so a place inside a `while' is what says one, and this is
+# the only rule in the tree that proves that shape against IBM's own.
+
+rule clear_delta takes 1 from ut_main.obj
+  through wrappers
+
+  call ZZfence_null
+  plant test again as 1
+  call delete_2_more
+  call ZZlprp_load_vvg0001_0094
+  call ZZdelete_2pt1
+  while answer is not 0
+    backtrack
+    place again
+    call ZZlprp_load_vvg0001_0094
+    call ZZdelete_2pt1
+  end
+  match
+end

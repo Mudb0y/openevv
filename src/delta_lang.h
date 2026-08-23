@@ -91,6 +91,10 @@ typedef struct delta_language {
     /* the bytes the rules name by address, and the same as values once
        delta_syms_bind has copied them into the arena */
     const delta_store  *const_store;
+    /* And the ones a rule of ours names rather than a rule of IBM's. Kept
+       apart because the lifted list is generated out of the objects and
+       anything added to it there would be lost the next time that ran. */
+    const delta_store  *authored_store;
     const int32_t     **sym_ref;
 
     /* the statement table, and the fixing-up the language does to it */

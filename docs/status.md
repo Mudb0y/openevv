@@ -28,9 +28,9 @@ What is not exported is the filter interface, which the engine does not implemen
 
 Live audio on Linux. The engine hands its samples to the caller, and `build/evv` writes them as a wave file or down a pipe; nothing sends them to a sound card as they are made. Windows got there first because waveOut is forty lines; PipeWire is next and is a thin sink on top of the same buffer.
 
-The compiler. The rules are readable C, but there is no way to write a new rule except by writing that C. This is the next piece of work and the gate to adding a language.
+Everything in a language module that is not a rule. The rules can be written now -- see below -- but the statement table, the lookup sets and dictionary actions, the variable declarations and the settings blob are all generated out of IBM's objects and say so at the top of each. A language IBM never shipped needs every one of them authored, so each needs a text form and something to write it. The statement table's readers and writers are an offset and a width each, so they follow from a declaration; the sets are the big one at 19,000 lines.
 
-Polish, which is the reason the compiler matters. Nothing started.
+Polish, which is what all of it is for. Nothing started.
 
 Japanese, which is the one language still not built. Everything else in the SDK now is.
 
@@ -155,6 +155,20 @@ one signed number that should not have been signed, and a little floating point
 nobody expected a fixed-point engine to contain. The sections above say which
 was which. What is left is Japanese, and what is left of Japanese is an oracle
 rather than a lift.
+
+## The compiler
+
+A rule can be written now, and two of English's own have been written that way to prove it.
+
+`lang/enus/rules/*.up` is a rule as what it does: every call the same entry with the same arguments in the same order, and the machine's own bookkeeping -- the argument stack, the flags, where in the frame a local sits, the landing place, the entry, the two tails and the numbered dispatch a rule backtracks through -- left to `tools/delta-upper.py`. That is where the length goes: two thirds of every rule in the lower notation is the argument stack written out by hand. `eng_ph_F_dur` is 49 lines of it and 5 of the upper form, and comes out with the frame IBM gave it.
+
+The standard it is held to is not byte-identity, and that is a decision rather than a shortfall. Matching IBM's bytes would mean making the same register choices and emitting the instructions in the same order as its compiler, which is a study of that compiler rather than of this engine, and it would forbid writing anything IBM never wrote. What is required instead is that the engine cannot tell the difference: `make upper-check` speaks the seven plain cases through a build carrying the authored rules and through one carrying IBM's, and holds every rule entered and every call made with its arguments against each other, and the audio besides. `eng_ph_F_dur` and `has_lex_prefix` -- the second being two alternatives, a tail they share and a dispatch through six planted places -- come out the same over 6,811,159 lines of trace.
+
+The audio in that comparison is not the weak half of it. A rule whose whole effect is to write a variable makes no call that shows it: setting `eng_ph_F_dur`'s duration to 21 where IBM sets 20 passes the trace on every sentence and changes the sound of the second.
+
+A rule of ours can also name bytes of its own, which is what a text rule needs and what nothing but IBM's objects could supply before. `lang/<tag>/rules/constants` holds them, `make constants` lays them down in the one file in a language module that no lifter writes, and startup copies that store into the arena beside the lifted ones. `docs/building.md` says how the naming was proved as against the linking.
+
+What is left in the compiler is the ergonomics rather than the reach. Every operation the machine has can be written, the rare ones through a line of the lower notation; what a person writing several hundred Polish rules would want on top of that is the language's own idioms said shorter -- an alternative as a block rather than a place and a plant, and a run of context tests as a run of tests.
 
 ## Partly done
 

@@ -34,6 +34,7 @@
    a slot the language module owns rather than one of ours. */
 #define L                      (delta_lang_now())
 #define delta_const_store      (L->const_store)
+#define delta_authored_store   (L->authored_store)
 #define delta_rule_sym         (L->rule_sym)
 #define delta_rule_sym_count   (L->rule_sym_count)
 
@@ -163,6 +164,8 @@ void delta_syms_bind(void)
         return;
 
     for (s = delta_const_store; s->at != 0; s++)
+        delta_low_region(s->at, s->bytes);
+    for (s = delta_authored_store; s->at != 0; s++)
         delta_low_region(s->at, s->bytes);
 
     ref = low_alloc((size_t)delta_rule_sym_count * sizeof *ref,

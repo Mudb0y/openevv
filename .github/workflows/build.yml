@@ -66,6 +66,15 @@ jobs:
       - name: Check a stop from another thread leaves the engine whole
         run: make RULES=bytecode stopthread
 
+      # The rules written in the upper form, held against the ones IBM
+      # compiled: every rule entered and every call made with its arguments,
+      # over a build carrying each. It wants neither Wine nor IBM's objects.
+      # Only this harness's own sentences here rather than those and the
+      # suite's seven, because tracing costs twenty times what the synthesis
+      # does and these are the ones that reach the rules being checked.
+      - name: Check the rules written as what they do
+        run: EVV_UPPER_CASES=test/cases/upper.txt bash tools/upper-check.sh
+
       # Every language module builds and speaks, which wants neither Wine nor
       # IBM's objects: only the comparison against IBM does. So a module that
       # stops linking, or an engine change that suits one language and not

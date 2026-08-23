@@ -1,0 +1,56 @@
+# has_lex_prefix written as what it does. The lower form of it is in
+# et_prfx.dr, which this stands in for; tools/upper-check.sh holds the two
+# against each other, call for call, through the engine.
+#
+# It is here because of its shape rather than its size: two alternatives, a
+# tail they share, and a dispatch through six planted places, which is what
+# most of the language's real rules are made of.
+
+rule has_lex_prefix takes 3 from et_prfx.obj
+  through wrappers
+  local word bytes 8
+  local scan bytes 8
+  local chosen
+
+  call ZZget_parm_ptr2 addr word arg 1 addr scan arg 2
+  call ZZfence_null
+  plant test first
+  if global half 4078 is 1
+    match
+  end
+
+place first
+  plant test second
+  call ZZlpta_load__setscan_r__1 addr word
+  if answer is not 0
+    go to second
+  end
+  call ZZtest_string_s_1_2_ZZstring278
+  if answer is not 0
+    go to second
+  end
+  plant test done
+  plant choice cleanup with boa
+  set chosen to 351
+
+place try
+  call ZZlprp_load__setd addr word addr scan chosen
+  if answer is 0
+    set unwind to 1
+  end
+  backtrack
+
+place second
+  plant test done
+  plant choice cleanup with boa
+  set chosen to 350
+  go to try
+
+place cleanup
+  call bspop_boa
+  give up
+
+place done
+  set global half 4078 to 1
+  match
+end

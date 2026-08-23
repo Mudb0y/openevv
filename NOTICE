@@ -23,9 +23,16 @@ settings the engine carries in its own image, the voice presets and the
 dictionary, and where the engine's arithmetic depends on the exact bytes they
 are the exact bytes. The rule names in each directory's
 `delta_rules_<lang>.h` and `delta_rules_shim_<lang>.c` are IBM's names,
-because they are the names its own compiler left in the objects. The
-language in front of each is ours, and is there so that two languages can be
-linked into one program.
+because they are the names its own compiler left in the objects.
+
+The same rules are in `lang/<lang>/rules` as text: one operation to a line in
+`.dr` files, what each wrapper stands for in `wrappers.up`, and a few of them
+written again as what they do in the `.up` files beside. Those are
+transcriptions of IBM's rules rather than anything said about them, so they are
+IBM's too, and so is anything of IBM's copied byte for byte into
+`rules/constants`. The tools that write and read all of it are in `tools` and
+are ours. The language in front of every name is ours as well, and is there so
+that two languages can be linked into one program.
 
 That data is IBM's work, not ours. The MIT licence does not cover it and we are
 in no position to license it to anyone. The SDK it was read out of says as much

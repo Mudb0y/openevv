@@ -1,0 +1,33 @@
+# high_tone written as what it does. The lower form of it is in u_integ.dr,
+# which this stands in for; tools/upper-check.sh holds the two against each
+# other, call for call, through the engine.
+#
+# It is here for two things nothing else in the tree exercises. It carries a
+# value from one alternative into a test they share, which is what a local is
+# for. And its planted numbers have a gap in them -- IBM's compiler planted 1,
+# 2 and 4 and dispatches on 3 as well -- so the numbers are stated rather than
+# allocated, and one place is bound to a number nothing plants.
+
+rule high_tone takes 1 from u_integ.obj
+  through wrappers
+  local want half
+
+  call ZZfence_null
+  plant test matched as 1
+  plant choice second as 2
+  set want to global half 3374
+  go to test
+
+place second
+  set want to global half 3386
+
+place test
+  if want is not global half 3370
+    backtrack
+  end
+
+place hit on 3
+  plant test matched as 4
+  call eng_high_tone
+  match
+end

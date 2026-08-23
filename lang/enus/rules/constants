@@ -1,0 +1,13 @@
+# Bytes a rule of ours names by address, laid down by tools/delta-consts.py
+# into delta_authored_enus.c and recorded in rules/symbols. See the top of
+# that tool for what the bytes are: not ASCII, but one code per character in
+# the alphabet the statement type declares.
+#
+# This one is IBM's own two-byte prefix "re" as ZZstring278 holds it, copied
+# so that every build compiles a store of ours, registers it in the arena
+# beside the lifted ones and copies it in. Nothing names it: what it proves is
+# the path, on every build and in every configuration the suite runs. What
+# proves the naming is in docs/building.md, which says how to hold a rule that
+# reads this against the same rule reading IBM's copy.
+
+bytes lex_prefix_re 18 02
