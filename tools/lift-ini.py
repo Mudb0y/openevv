@@ -100,14 +100,26 @@ def section_data(obj, want):
 
 
 def library(obj):
-    """The name and the language number getLibraryName answers for."""
+    """The name, and every language number getLibraryName answers for.
+
+    Eight of the nine modules ask the one question: is the whole packed word
+    this. Japanese asks two, because it is the only one with more than one
+    dialect in a family -- family eight, dialects nought, four and eight, all
+    three the same library. So the answer is a set, and one entry is the
+    ordinary case rather than a special one."""
     text = subprocess.run(["llvm-objdump", "-d", "--no-show-raw-insn",
                            "--disassemble-symbols=" + LIBNAME, obj],
                           check=True, capture_output=True, text=True).stdout
-    found = re.findall(r"cmpl\s+\$(0x[0-9a-f]+), \(%eax\)", text)
-    if len(found) != 1:
-        raise SystemExit("lift-ini: getLibraryName does not compare once")
-    packed = int(found[0], 16)
+    whole = re.findall(r"cmpl\s+\$(0x[0-9a-f]+), \(%eax\)", text)
+    if len(whole) == 1:
+        packed = {int(whole[0], 16)}
+    else:
+        family = re.findall(r"cmpl\s+\$(0x[0-9a-f]+), %eax", text)
+        dialects = re.findall(r"cmpb\s+\$(0x[0-9a-f]+), -0x10\(%ebp\)", text)
+        if len(family) != 1 or not dialects:
+            raise SystemExit("lift-ini: getLibraryName asks a question this"
+                             " does not know how to read")
+        packed = {(int(family[0], 16) << 16) | int(d, 16) for d in dialects}
 
     raw = open(obj, "rb").read()
     at = raw.find(LIBNAME_PREFIX)
@@ -151,9 +163,11 @@ def main(argv):
     # the sections name, or one of the two was read wrong.
     name, packed = library(obj)
     declared = language_of(blob)
-    if packed != declared:
-        raise SystemExit("lift-ini: the code says 0x%x and the sections 0x%x"
-                         % (packed, declared))
+    if declared not in packed:
+        raise SystemExit("lift-ini: the code answers for %s and the sections"
+                         " name 0x%x"
+                         % (", ".join("0x%x" % p for p in sorted(packed)),
+                            declared))
 
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w") as f:
@@ -187,11 +201,11 @@ def main(argv):
                 "   are data, so that src/eci_engarray.c is the same code\n"
                 "   whichever language is built beside it. */\n")
         f.write("const int32_t %s_eci_library_lang = 0x%x;\n"
-                % (tag, packed))
+                % (tag, declared))
         f.write('const char %s_eci_library_name[] = "%s";\n' % (tag, name))
 
     print("%s: %d bytes, language 0x%x, %s"
-          % (tag, size, packed, name))
+          % (tag, size, declared, name))
     print("written to %s" % os.path.relpath(out, ROOT))
     return 0
 
