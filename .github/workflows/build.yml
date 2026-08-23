@@ -66,6 +66,36 @@ jobs:
       - name: Check a stop from another thread leaves the engine whole
         run: make RULES=bytecode stopthread
 
+      # Every language module builds and speaks, which wants neither Wine nor
+      # IBM's objects: only the comparison against IBM does. So a module that
+      # stops linking, or an engine change that suits one language and not
+      # another, is caught here rather than on somebody's machine. Samples are
+      # required: a build that links and says nothing would otherwise pass.
+      - name: Build and speak every language
+        run: |
+          set -eu
+          for l in lang/*/; do
+            t=$(basename "$l")
+            make -j"$(nproc)" probe LANG="lang/$t" RULES=bytecode
+            p=build/probe
+            [ "$t" = enus ] || p="build/probe-$t"
+            "$p" "The quick brown fox jumps over the lazy dog." "/tmp/$t.wav"
+            test -s "/tmp/$t.wav"
+          done
+
+      # And all of them in one binary, each still speaking: this is what says
+      # nothing in the engine has quietly stayed global.
+      - name: Speak every language out of one binary
+        run: |
+          set -eu
+          all=$(printf 'lang/%s ' enus dede engb eses esus frfr frca itit)
+          make -j"$(nproc)" probe RULES=bytecode LANGS="$all"
+          b=build/probe-enus-dede-engb-eses-esus-frfr-frca-itit
+          for id in 0x10000 0x10001 0x20000 0x20001 0x30000 0x30001 0x40000 0x50000; do
+            EVV_LANGUAGE=$id "$b" "The quick brown fox." "/tmp/one-$id.wav"
+            test -s "/tmp/one-$id.wav"
+          done
+
   # Cross-compiled here rather than on a Windows runner, because this is the
   # same toolchain the tree is developed with and it takes a minute.
   windows:
