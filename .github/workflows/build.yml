@@ -75,6 +75,14 @@ jobs:
       - name: Check the rules written as what they do
         run: EVV_UPPER_CASES=test/cases/upper.txt bash tools/upper-check.sh
 
+      # The four texts a language module is made of besides its rules, each
+      # written back out as the C the build compiles and held against the tree
+      # byte for byte. Wants no objects and no Wine, and takes seconds.
+      - name: Check the tables beside the rules
+        run: |
+          make LANGS="$(printf 'lang/%s ' enus dede engb eses esus frfr frca itit)" \
+               tables-check
+
       # Every language module builds and speaks, which wants neither Wine nor
       # IBM's objects: only the comparison against IBM does. So a module that
       # stops linking, or an engine change that suits one language and not

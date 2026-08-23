@@ -9118,9 +9118,8 @@ static const char dictfile[] = "ecifrca.ddl";
 
    The two tables are copied rather than handed over, because the machine
    writes to them, and it is given room for more than the language declares,
-   which is what the original allocates. The stores are copied where a value
-   can name them first: see src/delta_low.c for why an address in the program
-   will not do. */
+   which is what the original allocates. The stores themselves are handed
+   over as they are. */
 void frca_set_dict_new(delta_state *d)
 {
     delta_low_region(setent_store, sizeof setent_store);
@@ -9130,7 +9129,7 @@ void frca_set_dict_new(delta_state *d)
 void frca_set_dict_delete(delta_state *d)
 {
     if (d != 0)
-        d->set_store = 0;
+        d->set_store = EVV_REF(0);
 }
 
 void frca_act_dict_new(delta_state *d)
@@ -9142,7 +9141,7 @@ void frca_act_dict_new(delta_state *d)
 void frca_act_dict_delete(delta_state *d)
 {
     if (d != 0)
-        d->act_store = 0;
+        d->act_store = EVV_REF(0);
 }
 
 void frca_link_new(delta_state *d)
@@ -9169,11 +9168,11 @@ void frca_link_new(delta_state *d)
     d->nactions = 12;
 
     d->sets = EVV_REF(malloc(20664));
-    if (d->sets == 0) { delta_delete(d); return; }
+    if (EVV_AT(uint8_t *, d->sets) == 0) { delta_delete(d); return; }
     memcpy(EVV_AT(uint8_t *, d->sets), set_table, sizeof set_table);
 
     d->act_table = EVV_REF(malloc(1160));
-    if (d->act_table == 0) { delta_delete(d); return; }
+    if (EVV_AT(uint8_t *, d->act_table) == 0) { delta_delete(d); return; }
     memcpy(EVV_AT(uint8_t *, d->act_table), act_table, sizeof act_table);
 }
 
@@ -9182,13 +9181,13 @@ void frca_link_delete(delta_state *d)
     if (d == 0)
         return;
     free(EVV_AT(uint8_t *, d->fence_index_base));
-    d->fence_index_base = 0;
+    d->fence_index_base = EVV_REF(0);
     free(EVV_AT(uint8_t *, d->fence_chars_base));
-    d->fence_chars_base = 0;
+    d->fence_chars_base = EVV_REF(0);
     free(EVV_AT(uint8_t *, d->fence_marks_base));
-    d->fence_marks_base = 0;
+    d->fence_marks_base = EVV_REF(0);
     free(EVV_AT(uint8_t *, d->sets));
-    d->sets = 0;
+    d->sets = EVV_REF(0);
     free(EVV_AT(uint8_t *, d->act_table));
-    d->act_table = 0;
+    d->act_table = EVV_REF(0);
 }

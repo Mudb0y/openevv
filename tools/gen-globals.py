@@ -1,12 +1,23 @@
 #!/usr/bin/env python3
-"""Lift the machine's global variable list out of glob.obj.
+"""The machine's global variable list: lifted out of glob.obj, or written.
 
 delta_new is six and a half thousand instructions of straight-line stores
 because the compiler unrolled the loops that lay the variables out. What
 they lay out is a list: one entry per variable, four kinds of entry. This
 reads the stores back, works out what the list was, and writes it as data.
 
-Usage: gen-globals.py analysis/enus/glob.obj lang/enus/delta_globals_enus.c
+It also writes that list as text and reads it back, which is what a language
+IBM never shipped needs: `lang/<tag>/<tag>.globals' is the declaration and
+`regenerate' says whether the C written from it is the C in the tree, byte for
+byte. Only the kinds are in the text. Where each variable lands and how big a
+machine of the language is are worked out from them by the same walk the
+engine does, so there is one source for the layout rather than two that can
+disagree.
+
+usage: gen-globals.py <glob.obj> <out.c>    lift and write the C
+       gen-globals.py dump <tag>            write the text out of the objects
+       gen-globals.py regenerate <tag>       the C from the text against the tree
+       gen-globals.py write <tag>            the C from the text, for real
 """
 
 import os
@@ -14,6 +25,8 @@ import collections
 import re
 import subprocess
 import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 INSN = re.compile(r"^\s+([0-9a-f]+):\s+(\S+)\s*(.*)$")
 WIDTH = {"movl": 4, "movw": 2, "movb": 1}
@@ -250,7 +263,139 @@ def emit(cells, end, out, lang):
           % (len(cells), kept["W"], kept["L"], kept["S"], kept["C"], end))
 
 
+# ---- the same list as text ---------------------------------------------
+#
+# One line a kind, with how many of them in a row, because a language declares
+# its variables in runs: English's 794 come out as a couple of hundred lines
+# rather than 794. A compound is a line of its own, since each carries what it
+# holds. Nothing here says where a variable lands: that is the walk's answer
+# and the walk is above.
+
+TEXT_KIND = {"W": "word", "L": "long", "S": "short"}
+BACK_KIND = dict((v, k) for k, v in TEXT_KIND.items())
+
+HEAD = """# The machine's global variables, as %(tag)s declares them.
+#
+# One line to a kind and how many in a row, in the order the language declares
+# them, which is the order that decides both where each lands in the tail of
+# the machine and what its number is. A compound says what it holds: the kind
+# of item and how many.
+#
+# Written by tools/gen-globals.py. Where each variable lands and how big a
+# machine of this language is are not in here -- they follow from the kinds,
+# by the same walk delta_new does.
+"""
+
+
+def write_text(cells, path, tag):
+    out = [HEAD % {"tag": tag}]
+    run = None
+    for _a, kind, extra in cells:
+        if kind == "C":
+            if run:
+                out.append("%s %d" % run)
+                run = None
+            out.append("compound %d %d" % extra)
+        elif run and run[0] == TEXT_KIND[kind]:
+            run = (run[0], run[1] + 1)
+        else:
+            if run:
+                out.append("%s %d" % run)
+            run = (TEXT_KIND[kind], 1)
+    if run:
+        out.append("%s %d" % run)
+    open(path, "w").write("\n".join(out) + "\n")
+    return len(out) - 1
+
+
+def read_text(path):
+    """The declaration back as the cells the writer takes, with the layout
+    walked again from the kinds alone."""
+    kinds = []
+    for n, raw in enumerate(open(path), 1):
+        line = raw.split("#")[0].strip()
+        if not line:
+            continue
+        w = line.split()
+        where = "%s line %d" % (os.path.basename(path), n)
+        if w[0] == "compound":
+            if len(w) != 3:
+                raise SystemExit("%s: a compound says what it holds" % where)
+            kinds.append(("C", (int(w[1]), int(w[2]))))
+        elif w[0] in BACK_KIND:
+            if len(w) != 2:
+                raise SystemExit("%s: say how many in the run" % where)
+            kinds += [(BACK_KIND[w[0]], None)] * int(w[1])
+        else:
+            raise SystemExit("%s: no kind called %r" % (where, w[0]))
+
+    size = {"W": 8, "L": 8, "S": 4}
+    align = {"W": 4, "L": 4, "S": 2, "C": 2}
+    cells = []
+    at = DG_BASE
+    for kind, extra in kinds:
+        want = 4 if kind == "C" and extra[0] == 6 else align[kind]
+        at = (at + want - 1) & ~(want - 1)
+        cells.append((at, kind, extra))
+        at += size[kind] if kind != "C" else 4 + ((extra[1] + 1) & ~1)
+    return cells, at
+
+
+def text_path(tag):
+    return os.path.join(ROOT, "lang", tag, "%s.globals" % tag)
+
+
+def out_path(tag):
+    return os.path.join(ROOT, "lang", tag, "delta_globals_%s.c" % tag)
+
+
+def dump(tag):
+    obj = os.path.join(ROOT, "analysis", tag, "glob.obj")
+    cells, _end = lift(replay(obj))
+    n = write_text(cells, text_path(tag), tag)
+    print("%d variables as %d lines in %s"
+          % (len(cells), n, os.path.relpath(text_path(tag), ROOT)))
+    return True
+
+
+def regenerate(tag, write=False):
+    import tempfile
+    cells, end = read_text(text_path(tag))
+    if write:
+        emit(cells, end, out_path(tag), tag)
+        print("%s written" % os.path.relpath(out_path(tag), ROOT))
+        return True
+    with tempfile.TemporaryDirectory() as tmp:
+        made = os.path.join(tmp, "globals.c")
+        emit(cells, end, made, tag)
+        got = open(made, "rb").read()
+    want = open(out_path(tag), "rb").read()
+    if got == want:
+        print("%s: %d bytes, the same as the tree's"
+              % (os.path.basename(out_path(tag)), len(got)))
+        return True
+    print("%s differs: %d bytes against %d"
+          % (os.path.basename(out_path(tag)), len(got), len(want)))
+    a, b = got.split(b"\n"), want.split(b"\n")
+    for i in range(min(len(a), len(b))):
+        if a[i] != b[i]:
+            print("  first line that differs is %d" % (i + 1))
+            print("  made: %s" % a[i][:70])
+            print("  tree: %s" % b[i][:70])
+            break
+    return False
+
+
 if __name__ == "__main__":
+    if len(sys.argv) == 3 and sys.argv[1] == "dump":
+        sys.exit(0 if dump(sys.argv[2]) else 1)
+    if len(sys.argv) == 3 and sys.argv[1] == "regenerate":
+        sys.exit(0 if regenerate(sys.argv[2]) else 1)
+    if len(sys.argv) == 3 and sys.argv[1] == "write":
+        sys.exit(0 if regenerate(sys.argv[2], write=True) else 1)
+    if len(sys.argv) != 3:
+        print(__doc__.strip())
+        sys.exit(2)
     obj, out = sys.argv[1], sys.argv[2]
     # analysis/<tag>/glob.obj, so the directory holding the object is the tag.
     tag = os.path.basename(os.path.dirname(os.path.abspath(obj)))

@@ -375,6 +375,45 @@ authored:
 constants:
 	@python3 tools/delta-consts.py $(TAGS)
 
+# The tables beside the rules, as text: the variables the language declares,
+# the settings it carries, the statement table and the lookup sets. Each has a
+# text form in lang/<tag> and one writer for the C, so what a lifter writes and
+# what the text writes cannot drift.
+#
+# `tables-dump' writes the four texts. Three of them read IBM's objects; the
+# sets read the C in the tree instead, on purpose, because the dictionary's
+# arrays in that file are laid down by tools/delta-dict.py out of the words and
+# IBM's objects hold what the dictionary said before anything was added.
+#
+# `tables-check' writes the C from each text into a directory of its own and
+# holds it against the tree, byte for byte. That is the one to believe, and it
+# wants no objects. `tables-write' does it for real, which is how a language
+# that was authored rather than lifted gets built.
+.PHONY: tables-dump tables-check tables-write
+tables-dump:
+	@for t in $(TAGS); do \
+	    python3 tools/gen-globals.py dump $$t && \
+	    python3 tools/lift-ini.py dump $$t && \
+	    python3 tools/delta-link.py dump $$t && \
+	    python3 tools/delta-sets.py dump $$t || exit 1; \
+	done
+
+tables-check:
+	@for t in $(TAGS); do \
+	    python3 tools/gen-globals.py regenerate $$t && \
+	    python3 tools/lift-ini.py regenerate $$t && \
+	    python3 tools/delta-link.py regenerate $$t && \
+	    python3 tools/delta-sets.py regenerate $$t || exit 1; \
+	done
+
+tables-write:
+	@for t in $(TAGS); do \
+	    python3 tools/gen-globals.py write $$t && \
+	    python3 tools/lift-ini.py write $$t && \
+	    python3 tools/delta-link.py write $$t && \
+	    python3 tools/delta-sets.py write $$t || exit 1; \
+	done
+
 # The rules as C. Thirteen megabytes written out of the bytecode beside it,
 # so it is made here rather than kept in the tree, where every change to the
 # decompiler would rewrite the whole of it.

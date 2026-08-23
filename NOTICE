@@ -25,6 +25,11 @@ are the exact bytes. The rule names in each directory's
 `delta_rules_<lang>.h` and `delta_rules_shim_<lang>.c` are IBM's names,
 because they are the names its own compiler left in the objects.
 
+Everything else in a module has a text form beside it now -- `<lang>.globals`,
+`<lang>.settings`, `<lang>.statements`, `<lang>.sets` and `<lang>.dict` -- and
+each of those is that same data written another way rather than anything of
+ours, so they are IBM's on the same terms as the C they regenerate.
+
 The same rules are in `lang/<lang>/rules` as text: one operation to a line in
 `.dr` files, what each wrapper stands for in `wrappers.up`, and a few of them
 written again as what they do in the `.up` files beside. Those are

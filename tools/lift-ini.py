@@ -15,7 +15,10 @@ the caller asks for no language in particular. Under it are the eight voice
 presets and every phoneme the language declares, which src/eci_phonemes.c
 reads at startup.
 
-usage: lift-ini.py <tag> [objdir]
+usage: lift-ini.py <tag> [objdir]        lift the blob and write the C
+       lift-ini.py dump <tag> [objdir]   write the text out of the objects
+       lift-ini.py regenerate <tag>      the C from the text against the tree
+       lift-ini.py write <tag>           the C from the text, for real
 """
 
 import os
@@ -170,6 +173,16 @@ def main(argv):
                             declared))
 
     os.makedirs(os.path.dirname(out), exist_ok=True)
+    emit(tag, blob, declared, name, out)
+
+    print("%s: %d bytes, language 0x%x, %s"
+          % (tag, size, declared, name))
+    print("written to %s" % os.path.relpath(out, ROOT))
+    return 0
+
+
+def emit(tag, blob, declared, name, out):
+    size = len(blob)
     with open(out, "w") as f:
         f.write("/* The engine's settings, built into the image.\n"
                 " *\n"
@@ -204,11 +217,152 @@ def main(argv):
                 % (tag, declared))
         f.write('const char %s_eci_library_name[] = "%s";\n' % (tag, name))
 
-    print("%s: %d bytes, language 0x%x, %s"
-          % (tag, size, declared, name))
-    print("written to %s" % os.path.relpath(out, ROOT))
-    return 0
+
+
+# ---- the same settings as text -----------------------------------------
+#
+# The blob is lines of text with a nought between them rather than a newline,
+# so as text it is one line to a record. Three bytes in it are not text and
+# each has a form of its own: a newline inside a record is written `\\n\',
+# because IBM puts two of them in front of the section that names the
+# language and the reader's arithmetic depends on them being there; a
+# backslash is doubled, since the voice datasets hold Windows paths; and the
+# nought, 0xff, nought the blob ends with is not in the text at all, because
+# every one of the nine ends that way and the writer puts it back.
+#
+# The language number is not in the text either. The section that names it is,
+# and the number is that section read as a family and a dialect, which is one
+# source rather than two that can disagree.
+
+TERMINATOR = b"\x00\xff\x00"
+
+
+def text_path(tag):
+    return os.path.join(ROOT, "lang", tag, "%s.settings" % tag)
+
+
+def out_path(tag):
+    return os.path.join(ROOT, "lang", tag, "eci_ini_%s.c" % tag)
+
+
+def escape(rec):
+    return (rec.decode("latin-1").replace("\\", "\\\\")
+            .replace("\n", "\\n"))
+
+
+def unescape(line):
+    out = bytearray()
+    i = 0
+    while i < len(line):
+        c = line[i]
+        if c == "\\" and i + 1 < len(line):
+            nxt = line[i + 1]
+            if nxt == "n":
+                out.append(0x0a)
+            elif nxt == "\\":
+                out.append(0x5c)
+            else:
+                raise SystemExit("lift-ini: \\%s is not an escape" % nxt)
+            i += 2
+            continue
+        out.append(ord(c) & 0xff)
+        i += 1
+    return bytes(out)
+
+
+def write_text(tag, blob, name, path):
+    if not blob.endswith(TERMINATOR):
+        raise SystemExit("lift-ini: the blob does not end the way one does")
+    out = ["# The engine's settings for %s, as text." % tag,
+           "#",
+           "# One line to a record, which in the blob is a run of bytes with a",
+           "# nought after it. A newline inside a record is `\\n\' and a",
+           "# backslash is doubled; the three bytes the blob ends with are the",
+           "# writer's and are not in here. Under the section that names the",
+           "# language -- the family and the dialect, which is where the number",
+           "# comes from -- are the eight voice presets and every phoneme the",
+           "# language declares.",
+           "#",
+           "# Written by tools/lift-ini.py.",
+           "",
+           "library %s" % name,
+           ""]
+    for rec in blob[:-3].split(b"\x00"):
+        out.append(escape(rec))
+    open(path, "w").write("\n".join(out) + "\n")
+    return len(blob[:-3].split(b"\x00"))
+
+
+def read_text(path):
+    """The blob and the library name back out of the text."""
+    name = None
+    recs = []
+    started = False
+    for raw in open(path):
+        line = raw.rstrip("\n")
+        if not started:
+            if line.startswith("#") or not line.strip():
+                continue
+            if line.startswith("library "):
+                name = line[len("library "):]
+                started = True
+                continue
+            started = True
+        if not started or not line:
+            continue
+        recs.append(unescape(line))
+    if name is None:
+        raise SystemExit("lift-ini: the text does not say the library name")
+    return b"\x00".join(recs) + TERMINATOR, name
+
+
+def dump(tag, where=None):
+    where = where or os.path.join(ROOT, "analysis", tag)
+    obj = os.path.join(where, "engarray.obj")
+    data, at, syms = section_data(obj, INI)
+    size = int.from_bytes(data[syms[SIZE][1]:syms[SIZE][1] + 4], "little")
+    blob = data[:size]
+    name, _packed = library(obj)
+    n = write_text(tag, blob, name, text_path(tag))
+    print("%d records and %d bytes in %s"
+          % (n, size, os.path.relpath(text_path(tag), ROOT)))
+    return True
+
+
+def regenerate(tag, write=False):
+    import tempfile
+    blob, name = read_text(text_path(tag))
+    declared = language_of(blob)
+    if write:
+        emit(tag, blob, declared, name, out_path(tag))
+        print("%s written" % os.path.relpath(out_path(tag), ROOT))
+        return True
+    with tempfile.TemporaryDirectory() as tmp:
+        made = os.path.join(tmp, "ini.c")
+        emit(tag, blob, declared, name, made)
+        got = open(made, "rb").read()
+    want = open(out_path(tag), "rb").read()
+    if got == want:
+        print("%s: %d bytes, the same as the tree's, language 0x%x"
+              % (os.path.basename(out_path(tag)), len(got), declared))
+        return True
+    print("%s differs: %d bytes against %d"
+          % (os.path.basename(out_path(tag)), len(got), len(want)))
+    a, b = got.split(b"\n"), want.split(b"\n")
+    for i in range(min(len(a), len(b))):
+        if a[i] != b[i]:
+            print("  first line that differs is %d" % (i + 1))
+            print("  made: %s" % a[i][:70])
+            print("  tree: %s" % b[i][:70])
+            break
+    return False
 
 
 if __name__ == "__main__":
+    if len(sys.argv) >= 3 and sys.argv[1] == "dump":
+        sys.exit(0 if dump(*sys.argv[2:]) else 1)
+    if len(sys.argv) == 3 and sys.argv[1] == "regenerate":
+        sys.exit(0 if regenerate(sys.argv[2]) else 1)
+    if len(sys.argv) == 3 and sys.argv[1] == "write":
+        sys.exit(0 if regenerate(sys.argv[2], write=True) else 1)
     sys.exit(main(sys.argv[1:]))

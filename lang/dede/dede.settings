@@ -1,0 +1,87 @@
+# The engine's settings for dede, as text.
+#
+# One line to a record, which in the blob is a run of bytes with a
+# nought after it. A newline inside a record is `\n' and a
+# backslash is doubled; the three bytes the blob ends with are the
+# writer's and are not in here. Under the section that names the
+# language -- the family and the dialect, which is where the number
+# comes from -- are the eight voice presets and every phoneme the
+# language declares.
+#
+# Written by tools/lift-ini.py.
+
+library Static Engine DEU
+
+[LanguageIndependent]
+Desc_Filter0=IBM SSML Filter
+Path_Filter0=ecissml.dll
+Path_Cat31=ecictts.dll
+LogPath=\\release
+LogLevel=4
+\n\n\n\n[4.0]
+Path=ecidede.syn
+Concatenative=1.0
+CallbackFlag=0x0000003f
+Version=6.0
+Voice1=0 50 65 30 0 0 50 92
+Voice2=1 50 81 30 0 50 50 95
+Voice3=1 22 93 35 0 0 50 95
+Voice4=0 89 52 43 0 0 50 93
+Voice5=0 50 69 34 0 0 70 92
+Voice6=1 56 89 35 0 40 70 95
+Voice7=1 45 68 30 3 40 50 90
+Voice8=0 30 61 44 18 20 50 89
+Phoneme0=64 0 0 0 0 0 0 10 50 128 75 130 0 0 0
+Phoneme1=65 0 0 0 0 0 0 100 125 128 200 150 130 150 150
+Phoneme2=67 0 0 0 0 0 0 75 125 128 100 130 130 0 200
+Phoneme3=69 0 0 0 0 0 0 50 100 128 75 130 175 0 125
+Phoneme4=71 0 0 0 0 0 0 50 100 128 75 130 130 0 0
+Phoneme5=73 0 0 0 0 0 0 50 100 128 50 130 175 0 125
+Phoneme6=74 0 0 0 0 0 0 75 125 128 100 130 130 0 200
+Phoneme7=79 0 0 0 0 0 0 25 0 130 150 60 60 0 255
+Phoneme8=80 0 0 0 0 0 0 0 100 128 0 0 0 0 200
+Phoneme9=82 0 0 0 0 0 0 50 75 128 100 150 130 0 200
+Phoneme10=83 0 0 0 0 0 0 75 125 128 100 130 130 0 200
+Phoneme11=84 0 0 0 0 0 0 75 150 128 50 130 130 255 0
+Phoneme12=85 0 0 0 0 0 0 25 0 130 90 60 60 0 255
+Phoneme13=89 0 0 0 0 0 0 25 0 130 90 60 60 0 255
+Phoneme14=90 0 0 0 0 0 0 75 125 128 100 130 130 0 200
+Phoneme15=97 0 0 0 0 0 0 100 125 128 200 150 130 150 150
+Phoneme16=98 0 0 0 0 0 0 0 100 128 0 0 0 0 200
+Phoneme17=100 0 0 0 0 0 0 75 150 128 50 130 130 255 0
+Phoneme18=101 0 0 0 0 0 0 50 100 128 75 130 175 0 255
+Phoneme19=102 0 0 0 0 0 0 10 100 128 25 130 0 0 200
+Phoneme20=103 0 0 0 0 0 0 50 100 128 75 130 130 0 0
+Phoneme21=104 0 0 0 0 0 0 50 100 128 75 130 130 0 0
+Phoneme22=105 0 0 0 0 0 0 25 150 128 50 130 130 0 255
+Phoneme23=106 0 0 0 0 0 0 25 150 128 50 130 130 0 255
+Phoneme24=107 0 0 0 0 0 0 50 100 128 75 130 130 0 0
+Phoneme25=108 0 0 0 0 0 0 75 150 128 50 130 130 255 0
+Phoneme26=109 0 0 0 0 0 0 0 100 128 0 0 0 0 200
+Phoneme27=110 0 0 0 0 0 0 75 150 128 50 130 130 255 0
+Phoneme28=111 0 0 0 0 0 0 25 0 130 130 60 60 0 255
+Phoneme29=112 0 0 0 0 0 0 0 100 128 0 0 0 0 200
+Phoneme30=114 0 0 0 0 0 0 25 150 128 50 130 130 0 255
+Phoneme31=115 0 0 0 0 0 0 50 100 128 75 130 130 150 0
+Phoneme32=116 0 0 0 0 0 0 75 150 128 50 130 130 255 0
+Phoneme33=117 0 0 0 0 0 0 25 0 130 90 60 60 0 255
+Phoneme34=118 0 0 0 0 0 0 10 100 128 25 130 0 0 200
+Phoneme35=119 0 0 0 0 0 0 25 0 130 90 60 60 0 255
+Phoneme36=120 0 0 0 0 0 0 50 100 128 75 130 130 0 0
+Phoneme37=121 0 0 0 0 0 0 25 0 130 90 60 60 0 255
+Phoneme38=122 0 0 0 0 0 0 50 100 128 75 130 130 150 0
+Phoneme39=164 0 0 0 0 0 0 0 170 128 0 0 0 0 0
+Phoneme40=69 58 0 0 0 0 0 50 100 128 75 130 175 0 125
+Phoneme41=79 69 0 0 0 0 0 25 0 130 150 60 60 0 255
+Phoneme42=111 101 0 0 0 0 0 25 0 130 150 60 60 0 255
+Phoneme43=97 106 0 0 0 0 0 100 125 128 200 150 130 150 150
+Phoneme44=111 106 0 0 0 0 0 25 0 130 150 60 60 0 255
+Phoneme45=97 119 0 0 0 0 0 125 75 128 150 150 130 150 100
+Phoneme46=69 126 0 0 0 0 0 50 100 128 75 130 175 0 125
+Phoneme47=97 126 0 0 0 0 0 75 150 128 100 130 175 200 125
+Phoneme48=111 126 0 0 0 0 0 25 0 130 130 60 60 0 255
+Phoneme49=111 101 126 0 0 0 0 25 0 130 130 60 60 0 255
+Voice1Dataset4.0.11025=0 50 63 30 0 0 53 92 Voices\\de_de\\1at11KHz_1_0
+Voice2Dataset4.0.11025=1 50 81 30 0 50 50 95 Voices\\de_de\\2at11KHz_1_0
+Voice1Dataset4.0.22050=0 50 60 40 0 0 50 92 Voices\\de_de\\1at22KHz_1_0
+Voice2Dataset4.0.22050=1 50 81 30 0 50 50 95 Voices\\de_de\\2at22KHz_1_0

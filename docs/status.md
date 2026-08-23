@@ -28,9 +28,9 @@ What is not exported is the filter interface, which the engine does not implemen
 
 Live audio on Linux. The engine hands its samples to the caller, and `build/evv` writes them as a wave file or down a pipe; nothing sends them to a sound card as they are made. Windows got there first because waveOut is forty lines; PipeWire is next and is a thin sink on top of the same buffer.
 
-Everything in a language module that is not a rule. The rules can be written now -- see below -- but the statement table, the lookup sets and dictionary actions, the variable declarations and the settings blob are all generated out of IBM's objects and say so at the top of each. A language IBM never shipped needs every one of them authored, so each needs a text form and something to write it. The statement table's readers and writers are an offset and a width each, so they follow from a declaration; the sets are the big one at 19,000 lines.
+Polish, which is what all of it is for. Nothing started, and nothing is now in the way of starting: a language module is five text files and a table, and every one of those forms is in the tree and proved.
 
-Polish, which is what all of it is for. Nothing started.
+The formants are the part no text form helps with. Polish needs sounds English has not -- the alveolo-palatals, the nasal vowels, a trilled r -- and Klatt is a formant synthesiser, so those are new targets and durations tuned by ear.
 
 Japanese, which is the one language still not built. Everything else in the SDK now is.
 
@@ -169,6 +169,20 @@ The audio in that comparison is not the weak half of it. A rule whose whole effe
 A rule of ours can also name bytes of its own, which is what a text rule needs and what nothing but IBM's objects could supply before. `lang/<tag>/rules/constants` holds them, `make constants` lays them down in the one file in a language module that no lifter writes, and startup copies that store into the arena beside the lifted ones. `docs/building.md` says how the naming was proved as against the linking.
 
 What is left in the compiler is the ergonomics rather than the reach. Every operation the machine has can be written, the rare ones through a line of the lower notation; what a person writing several hundred Polish rules would want on top of that is the language's own idioms said shorter -- an alternative as a block rather than a place and a plant, and a run of context tests as a run of tests.
+
+## A language module as text
+
+Everything a language module holds now has a form a person can write, and each form regenerates the file the build compiles, byte for byte, for all eight languages.
+
+The rules are `lang/<tag>/rules`, in the two forms `docs/building.md` describes. The words are `<tag>.dict`. The four beside them are `<tag>.globals` for the variables the machine declares, `<tag>.settings` for the settings the engine carries in its image, `<tag>.statements` for the statement table it is parameterised by, and `<tag>.sets` for the lookup sets and the dictionary's actions. `make tables-check` writes the C out of each of the four and holds it against the tree: 32 of 32 match, and it wants neither Wine nor IBM's objects.
+
+Each of the four has one writer, shared by the lifter that reads IBM's objects and the reader that reads the text, so the two cannot drift into formatting differently. And nothing in a text is stated twice: the variables are runs of kinds and where each lands is walked from them exactly as `delta_new` walks it, the statement table's readers and writers are an offset and a width whose names follow the order of the fields, and the settings' language number is the section that names it.
+
+Two measurements worth keeping. Every one of the eight languages declares ten statement types, with 57 fields in Italian and both Spanishes, 58 in the two Englishes, 61 in German, 63 in Canadian French and 65 in French. And the sets are where the size of a language sits: English declares 511 of them and 28 dictionary actions over 274 kilobytes of entries, where Italian declares 153 and 13 over 77.
+
+The sets' text is written out of the C in the tree rather than out of IBM's objects, and that is deliberate: the dictionary's arrays in that file are laid down by `tools/delta-dict.py` out of the words, so the objects hold what the dictionary said before anything was added. Writing the text from the tree means the text carries the words as they stand.
+
+That work also found that `tools/delta-sets.py` had not been able to write the file it generates for some time. The copy in the tree had been brought to the arena's forms during the sixty-four bit port and the tool had not, and its comment about the stores had gone stale with it. English's file had the newer forms and the other seven the older; the tool now writes English's and the seven have been brought into line, ten lines each with no data touched.
 
 ## Partly done
 

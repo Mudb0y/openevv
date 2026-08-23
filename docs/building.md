@@ -235,6 +235,34 @@ How far apart is said with the running count of rules entered masked off, which 
 
 Nothing in the tree names the constant, so what every build proves is the path -- the store compiled, registered and copied into the arena -- and the measurement above is what proved the name.
 
+## The tables beside the rules
+
+A language module is the rules and four other things: the variables the machine declares for it, the settings it carries in its own image, the statement table the machine is parameterised by, and the lookup sets its dictionary lives in. All four were generated out of IBM's objects and said so at the top. All four have a text form now, beside the dictionary that already had one:
+
+    lang/enus/enus.globals      the variables, 106 lines
+    lang/enus/enus.settings     the settings, 83
+    lang/enus/enus.statements   the statement table, 905
+    lang/enus/enus.sets         the sets and the dictionary actions, 9,750
+    lang/enus/enus.dict         the words, which tools/delta-dict.py already wrote
+
+    make tables-dump      writes the four
+    make tables-check     the C from each, held against the tree
+    make tables-write     the C from each, for real
+
+`tables-check` is the one to believe and it wants no objects: it writes each generated file out of its text into a directory of its own and holds it against what is in the tree, byte for byte. All four match for all eight languages, which is 32 of 32.
+
+Each of the four keeps one writer, and the tool that lifts is the tool that writes. That is the whole discipline: a lifter that reads objects and a reader that reads text hand the same model to the same emitter, so what the text says and what a lift says cannot come out differently formatted, and the round trip is exact rather than approximately right.
+
+What is deliberately not in the text is anything that follows from what is. The variables are a run of kinds -- `word 20`, `short 2`, `compound 1 5` -- and where each one lands and how big a machine of the language is are worked out from them by the same walk `delta_new` does, so English's 794 variables are 95 lines and the state size is derived rather than declared. The statement table's readers and writers are an offset and a width each, and their names follow the order the fields are in, exactly as the original's compiler numbered them: `vfg0000` upwards, one per field, no two fields sharing one across all 58 of English's. The settings' language number is the section that names it read as a family and a dialect. Nothing in any of the four is stated twice.
+
+Two things about the sets are worth knowing before touching them. Its text is lifted from the C in the tree and not from IBM's objects, on purpose: the dictionary's three arrays in that file are laid down by `tools/delta-dict.py` out of the words, so the objects hold what the dictionary said before anything was ever added to it. Running the sets lifter over that file is the one thing this repository tells you not to do, and this is why. And its numbers are the language: English declares 511 sets and 28 dictionary actions in 274 kilobytes of entries where Italian declares 153 and 13 in 77.
+
+The statement table is the same shape in every language and that is a measurement rather than an assumption: ten types each, with 57 fields in Italian and both Spanishes, 58 in the two Englishes, 61 in German, 63 in Canadian French and 65 in French.
+
+One thing this found and fixed. `tools/delta-sets.py` had not been able to write the file it generates for some time: the copy in the tree had been brought to the arena's forms during the sixty-four bit work -- `EVV_REF(0)` where the tool still wrote `0` -- and the tool's own comment about the stores had gone stale with it, saying they are copied when what is copied is the table of pointers and the stores are handed over as they lie. English's file had the newer forms and the other seven the older ones. The tool now writes what English's says and the other seven have been brought into line: ten lines each, no data touched, and every one of the eight then regenerates byte for byte.
+
+So a language IBM never shipped is now five text files and a table. The rules in `rules/`, the four above, the words in `<tag>.dict`, and `tools/gen-lang.py` for the one table the engine knows a language by.
+
 ## The rules, twice
 
 The language's rules exist in the tree as bytecode, and the engine has an interpreter for them. They also exist as C: `tools/delta-decompile.py` writes all 3,377 of them out of that same bytecode into `lang/enus/delta_rules_c_enus.c`, and the interpreter prefers a rule written as C wherever it finds one. It writes beside whichever language it was pointed at, so `make LANG=lang/dede rules` writes German into `lang/dede`.

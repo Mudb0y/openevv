@@ -1,0 +1,904 @@
+# The statement table dede declares, as text.
+#
+# Ten types, each naming itself, the fields it has, where each field sits in a
+# record, how a fresh record starts, and the names a field's values may be
+# written as. The machine is parameterised by this rather than owning it.
+#
+# `numbers' is the four words in an entry nobody has named yet, in the order
+# they sit: 0x18, 0x1c, 0x38, 0x3c. `at start' is what the language writes into
+# the table when it starts, which is the one thing in there that is not in the
+# file. A field's `where' is the offset its reader adds, then the offset and
+# the width its writer copies with, and a width of nought is a field with no
+# writer.
+#
+# A field's value names are one to a line, in order, because they are what the
+# alphabets are made of and one of English's is a space and another a
+# backslash: those two are written `\s' and `\\', and a line saying `hole'
+# is an entry the table leaves empty rather than a name.
+#
+# Written by tools/delta-link.py.
+
+
+statement char_count
+  length 2
+  stride 0
+  varlen 0
+  whole 0
+  marks 39 39 0 0
+  numbers 0 0 1 0
+  fresh 00 00
+  field name
+    where 0 0 2
+    what -4 1 0
+    format %d
+    end
+end
+
+statement inp
+  length 5
+  stride 0
+  varlen 0
+  whole 1
+  marks 124 124 0 0
+  numbers 0 0 1 0
+  at start stride 3
+  at start varlen 3
+  fresh 00 00 00 00 01
+  variants 00 00 00 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 02 01 01 02 01 01 02 01 01 02 01 01 02 01
+  variants 01 01 01 02 01 01 02 01 01 02 01 01 02 01 01 02 01 01 02 01 01 02 01 01 02 01 01 02 01 01 02 01
+  variants 01 02 01 01 02 01 01 02 01 01 02 01 01 02 01 01 02 01 01 02 01 01 02 01 01 02 01 01 03 01 01 02
+  variants 02 01 02 02 01 02 02 01 02 02 01 02 02 01 02 02 01 02 02 01 02 02 01 02 02 01 02 02 01 02 02 01
+  variants 02 02 01 02 02 01 02 02 01 02 02 01 02 02 01 02 02 01 02 02 01 02 02 01 02 02 01 03 02 01 02 00
+  variants 02 00 00 02 00 00 02 00 00 02 00 00 02 00 00 02 00 00 02 00 00 02 00 00 02 00 00 02 00 00 00 00
+  variants 00 04 00 00 04 00 00 04 00 00 04 00 00 04 00 00 04 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00
+  variants 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  variants 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  variants 00 00 00 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 02 01 01 02 01 01 02 01 01 02 01 01 02 01
+  variants 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 02 01 01 02 01 01 02 01 01 02 01 01 02 01 01 01
+  variants 01 01 01 01 01 01 01 01 01 01 01 01 01 01 02 01 01 02 01 01 02 01 01 02 01 01 02 01 01 01 01 01
+  variants 01 01 01 02 01 01 02 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 02 01 01 02 01 01 02 01
+  variants 01 02 01 01 02 01 01 01 01 01 02 01 01 01 01 01 02 01 01 01 01 01 02 01 01 01 01 01 02 01 01 01
+  variants 01 01 02 01 01 01 01 02 02 01 02 01 01 02 02 01 02 01 01 02 02 01 02 01 01 02 02 01 02 01 01 02
+  variants 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  variants 00 00 00 00 00 00 00 00 00 00 00 00 00 00 03 00 00 03 00 00 03 00 00 00 00 00 00 00 00 00 00 00
+  variants 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  variants 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  variants 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  field name
+    where 3 3 1
+    what -1 1 0
+    format %d
+    value GAP
+    value a
+    value e
+    value i
+    value o
+    value u
+    value A
+    value E
+    value I
+    value O
+    value U
+    value b
+    value c
+    value d
+    value f
+    value g
+    value h
+    value j
+    value k
+    value l
+    value m
+    value n
+    value p
+    value q
+    value r
+    value s
+    value t
+    value v
+    value w
+    value x
+    value y
+    value z
+    value B
+    value C
+    value D
+    value F
+    value G
+    value H
+    value J
+    value K
+    value L
+    value M
+    value N
+    value P
+    value Q
+    value R
+    value S
+    value T
+    value V
+    value W
+    value X
+    value Y
+    value Z
+    value 0
+    value 1
+    value 2
+    value 3
+    value 4
+    value 5
+    value 6
+    value 7
+    value 8
+    value 9
+    value -
+    value ,
+    value .
+    value ?
+    value :
+    value ;
+    value !
+    value (
+    value )
+    value \s
+    value '
+    value #
+    value _
+    value `
+    value ~
+    value *
+    value @
+    value [
+    value ]
+    value {
+    value }
+    value `
+    value $
+    value +
+    value %
+    value /
+    value =
+    value ^
+    value &
+    value |
+    value \\
+    value <
+    value >
+    value "
+    value à
+    value è
+    value ì
+    value ò
+    value ù
+    value À
+    value È
+    value Ì
+    value Ò
+    value Ù
+    value á
+    value é
+    value í
+    value ó
+    value ú
+    value Á
+    value É
+    value Í
+    value Ó
+    value Ú
+    value â
+    value ê
+    value î
+    value ô
+    value û
+    value Â
+    value Ê
+    value Î
+    value Ô
+    value Û
+    value ã
+    value õ
+    value Ã
+    value Õ
+    value ä
+    value ë
+    value ï
+    value ö
+    value ü
+    value Ä
+    value Ë
+    value Ï
+    value Ö
+    value Ü
+    value å
+    value Å
+    value æ
+    value Æ
+    value 
+    value 
+    value ø
+    value Ø
+    value ý
+    value Ý
+    value ç
+    value Ç
+    value ñ
+    value Ñ
+    value ð
+    value Ð
+    value 
+    value 
+    value ß
+    value þ
+    value Þ
+    value 
+    value ¢
+    value £
+    value ¥
+    value 
+    value 
+    value 
+    value ¡
+    value ¿
+    value «
+    value »
+    value 
+    value 
+    value ¼
+    value ½
+    value ¾
+    value ÷
+    value ×
+    value ±
+    value °
+    value ·
+    value ¹
+    value ²
+    value ³
+    value ª
+    value º
+    value 
+    value ¨
+    value ´
+    value ¸
+    value 
+    value 
+    value 
+    value 
+    value  
+    value ¤
+    value ¦
+    value §
+    value ©
+    value ¬
+    value ­
+    value ®
+    value ¯
+    value µ
+    value ¶
+    end
+  field letcase
+    where 0 0 1
+    what -1 0 0
+    format %d
+    value undefined
+    value lower
+    value upper
+    end
+  field afterslash
+    where 4 4 1
+    what -1 0 0
+    format %d
+    value yes
+    value ~yes
+    end
+  field character_type
+    where 1 1 1
+    what -1 0 0
+    format %d
+    value undefined
+    value letter
+    value digit
+    value fraction
+    value punct
+    end
+  field letter_type
+    where 2 2 1
+    what -1 0 0
+    format %d
+    value undefined
+    value vow
+    value con
+    value glid
+    value acute_acc
+    end
+end
+
+statement phone
+  length 20
+  stride 0
+  varlen 0
+  whole 1
+  marks 39 39 0 0
+  numbers 0 0 1 0
+  at start stride 11
+  at start varlen 11
+  fresh 00 01 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  variants 00 01 01 00 00 00 00 00 00 00 00 02 01 01 01 01 00 00 00 00 00 00 02 00 01 01 01 00 00 00 00 00
+  variants 00 02 01 01 01 02 00 00 00 00 00 00 02 00 01 01 02 00 00 00 00 00 00 02 01 01 01 05 00 00 00 00
+  variants 00 00 02 00 01 01 05 00 00 00 00 00 00 02 01 01 02 01 00 00 00 00 00 00 02 00 01 02 01 00 00 00
+  variants 00 00 00 02 01 01 02 02 00 00 00 00 00 00 02 00 01 02 02 00 00 00 00 00 00 02 01 01 02 03 00 00
+  variants 00 00 00 00 02 01 01 02 03 00 00 00 00 00 00 02 01 01 02 04 00 00 00 00 00 00 02 01 01 02 05 00
+  variants 00 00 00 00 00 02 00 01 00 00 00 00 00 00 00 00 02 01 01 03 01 00 00 00 00 00 00 02 01 01 03 02
+  variants 00 00 00 00 00 00 02 01 01 03 03 00 00 00 00 00 00 02 00 01 03 03 00 00 00 00 00 00 02 01 01 00
+  variants 00 00 00 00 00 00 00 02 00 01 05 01 00 00 00 00 00 00 02 00 01 05 02 00 00 00 00 00 00 02 00 01
+  variants 05 05 00 00 00 00 00 00 02 00 00 04 02 00 00 00 00 00 00 02 00 00 06 00 00 00 00 00 00 00 02 00
+  variants 00 06 04 00 00 00 00 00 00 02 00 00 06 01 00 00 00 00 00 00 01 00 00 00 00 01 01 02 01 01 02 01
+  variants 00 00 00 00 01 01 02 02 02 02 01 00 00 00 00 02 01 02 01 01 02 01 00 00 00 00 02 01 02 02 02 02
+  variants 01 00 00 00 00 02 01 02 02 01 02 01 00 00 00 00 03 02 02 02 01 02 01 00 00 00 00 03 02 02 02 02
+  variants 02 01 00 00 00 00 01 03 01 01 01 02 01 00 00 00 00 01 03 01 02 02 02 01 00 00 00 00 02 03 01 01
+  variants 01 02 01 00 00 00 00 02 03 01 02 02 02 01 00 00 00 00 01 01 01 01 01 02 01 00 00 00 00 01 01 01
+  variants 02 02 02 01 00 00 00 00 02 01 01 01 01 02 01 00 00 00 00 02 01 01 02 02 02 01 00 00 00 00 02 02
+  variants 02 02 02 02 01 00 00 00 00 03 00 00 00 00 00 01 00 00 00 00 03 00 00 00 00 00 01 00 00 00 00 02
+  variants 00 00 00 00 00 01 00 00 00 00 03 02 02 02 01 01 01 00 00 00 00 02 01 02 02 01 01 01 00 00 00 00
+  variants 02 03 01 01 01 01 01 00 00 00 00 02 03 01 01 01 01 00 01 01 00 00 00 00 00 00 00 00 00 00 00 00
+  field name
+    where 11 11 1
+    what -1 1 0
+    format %d
+    value GAP
+    value p
+    value b
+    value t
+    value d
+    value k
+    value g
+    value f
+    value v
+    value s
+    value z
+    value S
+    value Z
+    value X
+    value x
+    value r
+    value P
+    value T
+    value C
+    value J
+    value h
+    value m
+    value n
+    value G
+    value l
+    value R
+    value j
+    value w
+    value i
+    value I
+    value e
+    value E
+    value E:
+    value a
+    value A
+    value u
+    value U
+    value o
+    value O
+    value y
+    value Y
+    value oe
+    value OE
+    value @
+    value aj
+    value aw
+    value oj
+    value a~
+    value E~
+    value o~
+    value oe~
+    value #
+    end
+  field class
+    where 0 0 1
+    what -1 0 0
+    format %d
+    value undefined
+    value vow
+    value con
+    end
+  field voicing
+    where 1 1 1
+    what -1 0 0
+    format %d
+    value voic
+    value ~voic
+    end
+  field sonority
+    where 2 2 1
+    what -1 0 0
+    format %d
+    value son
+    value ~son
+    end
+  field manner_of_artic
+    where 3 3 1
+    what -1 0 0
+    format %d
+    value undefined
+    value stop
+    value fric
+    value affr
+    value liq
+    value nas
+    value glid
+    value AP
+    value VC
+    end
+  field place_of_artic
+    where 4 4 1
+    what -1 0 0
+    format %d
+    value undefined
+    value lab
+    value dent
+    value alvpal
+    value pal
+    value vel
+    end
+  field height
+    where 5 5 1
+    what -1 0 0
+    format %d
+    value undefined
+    value high
+    value mid
+    value low
+    end
+  field backness
+    where 6 6 1
+    what -1 0 0
+    format %d
+    value undefined
+    value front
+    value cent
+    value back
+    end
+  field rounding
+    where 7 7 1
+    what -1 0 0
+    format %d
+    value undefined
+    value rounded
+    value unrounded
+    end
+  field tenseness
+    where 8 8 1
+    what -1 0 0
+    format %d
+    value undefined
+    value tense
+    value lax
+    end
+  field length
+    where 9 9 1
+    what -1 0 0
+    format %d
+    value undefined
+    value long
+    value short
+    end
+  field nasality
+    where 10 10 1
+    what -1 0 0
+    format %d
+    value undefined
+    value nasalized
+    value oral
+    end
+  field stress
+    where 12 12 2
+    what -4 0 0
+    format %d
+    end
+  field transition
+    where 14 14 1
+    what -1 0 0
+    format %d
+    value undefined
+    value asp
+    value tvoic
+    value glott
+    end
+  field diaph_ghost
+    where 15 15 1
+    what -1 0 0
+    format %d
+    value undefined
+    value +P
+    value +T
+    value +C
+    value +J
+    value +oj
+    value +aw
+    value +aj
+    end
+  field after
+    where 16 16 1
+    what -1 0 0
+    format %d
+    value undefined
+    value h
+    value glot
+    end
+  field duration
+    where 18 18 2
+    what -4 0 0
+    format %d
+    end
+end
+
+statement morph
+  length 3
+  stride 0
+  varlen 0
+  whole 0
+  marks 39 39 0 0
+  numbers 0 0 1 0
+  fresh 00 00 00
+  field name
+    where 0 0 1
+    what -1 1 0
+    format %d
+    value GAP
+    value part
+    value pre
+    value root
+    value suf
+    value infl
+    end
+  field stress_type
+    where 1 1 1
+    what -1 0 0
+    format %d
+    value undefined
+    value str
+    value var
+    value zu
+    end
+  field root_type
+    where 2 2 1
+    what -1 0 0
+    format %d
+    value undefined
+    value particle
+    end
+end
+
+statement word
+  length 16
+  stride 0
+  varlen 0
+  whole 0
+  marks 39 39 0 0
+  numbers 0 0 1 0
+  fresh 00 00 00 00 00 00 00 01 00 00 01 00 00 00 00 00
+  field name
+    where 0 0 2
+    what -4 1 0
+    format %d
+    end
+  field category
+    where 2 2 1
+    what -1 0 0
+    format %d
+    value undef
+    value adj
+    value adv
+    value adjadv
+    value adj_prep
+    value adj_verb
+    value aux
+    value conj
+    value coord_verb
+    value daword
+    value dem
+    value det
+    value det_pro
+    value inf
+    value noun
+    value noun_adj
+    value noun_adj_adv
+    value noun_adv
+    value noun_prep
+    value postpos
+    value prep
+    value pre_post
+    value pro
+    value pro2
+    value subord_prep
+    value verb
+    value verb_adj_adv
+    value wh
+    end
+  field subcat
+    where 3 3 1
+    what -1 0 0
+    format %d
+    value non
+    value alle
+    value be
+    value coord
+    value deacc
+    value def
+    value denom
+    value einander
+    value hav
+    value indef
+    value mehr
+    value modal
+    value motion
+    value neg
+    value num
+    value obj
+    value paar
+    value pos
+    value pres_part
+    value so
+    value subj
+    value subj_obj
+    value subord
+    value viel
+    value welch
+    value wie
+    value zu
+    value zu_inf
+    end
+  field stress_level
+    where 4 4 2
+    what -4 0 0
+    format %d
+    end
+  field acc_valu
+    where 6 6 1
+    what -1 0 0
+    format %d
+    value h
+    value l
+    value lsh
+    value lhs
+    value hsl
+    value hls
+    value undefined
+    end
+  field d_step
+    where 7 7 1
+    what -1 0 0
+    format %d
+    value ~down
+    value down
+    end
+  field annot
+    where 8 8 1
+    what -1 0 0
+    format %d
+    value none
+    value str
+    value acc
+    value str_acc
+    end
+  field numwrd
+    where 10 10 2
+    what -4 0 0
+    format %d
+    end
+  field brk_priority
+    where 12 12 2
+    what -4 0 0
+    format %d
+    end
+  field reproc
+    where 14 14 1
+    what -1 0 0
+    format %d
+    value no
+    value case
+    end
+end
+
+statement inton_phr
+  length 10
+  stride 0
+  varlen 0
+  whole 0
+  marks 39 39 0 0
+  numbers 0 0 1 0
+  fresh 00 00 00 00 00 00 00 00 00 00
+  field name
+    where 0 0 2
+    what -4 1 0
+    format %d
+    end
+  field type
+    where 2 2 1
+    what -1 0 0
+    format %d
+    value .
+    value ,
+    value ;
+    value ?
+    value ??
+    value !
+    value !!
+    value alt?
+    value wh?
+    end
+  field nuc_tone
+    where 3 3 1
+    what -1 0 0
+    format %d
+    value H
+    value L
+    value LSH
+    value LHS
+    value HSL
+    value HLS
+    value smH
+    value none
+    value noneZero
+    end
+  field phr_tone
+    where 4 4 1
+    what -1 0 0
+    format %d
+    value l
+    value h
+    end
+  field bound_tone
+    where 5 5 1
+    what -1 0 0
+    format %d
+    value lb
+    value hb
+    end
+  field bk_index
+    where 6 6 2
+    what -4 0 0
+    format %d
+    end
+  field wind_size
+    where 8 8 2
+    what -4 0 0
+    format %d
+    end
+end
+
+statement klatt
+  length 36
+  stride 0
+  varlen 0
+  whole 0
+  marks 39 39 0 0
+  numbers 0 0 1 0
+  fresh 00 00 64 00 64 00 11 2b 00 00 32 00 00 00 00 00 ca 00 00 00 1e 00 00 00 a5 04 00 00 f1 d8 f1 d8
+  fresh f1 d8 f1 d8
+  field name
+    where 0 0 2
+    what -4 1 0
+    format %d
+    end
+  field gain_fac
+    where 2 2 2
+    what -4 0 0
+    format %d
+    end
+  field stretch_fac
+    where 4 4 2
+    what -4 0 0
+    format %d
+    end
+  field sr
+    where 6 6 2
+    what -4 0 0
+    format %d
+    end
+  field vocal_tract
+    where 8 8 2
+    what -4 0 0
+    format %d
+    end
+  field hed_size
+    where 10 10 2
+    what -4 0 0
+    format %d
+    end
+  field breathi
+    where 12 12 2
+    what -4 0 0
+    format %d
+    end
+  field diplo
+    where 14 14 2
+    what -4 0 0
+    format %d
+    end
+  field PSgain
+    where 16 16 4
+    what -3 0 0
+    format %ld
+    end
+  field Rangeval
+    where 20 20 2
+    what -4 0 0
+    format %d
+    end
+  field Midline
+    where 24 24 4
+    what -3 0 0
+    format %ld
+    end
+  field BDeclnLevel
+    where 28 28 2
+    what -4 0 0
+    format %d
+    end
+  field BDeclnScale
+    where 30 30 2
+    what -4 0 0
+    format %d
+    end
+  field ADeclnLevel
+    where 32 32 2
+    what -4 0 0
+    format %d
+    end
+  field ADeclnScale
+    where 34 34 2
+    what -4 0 0
+    format %d
+    end
+end
+
+statement syllable
+  length 2
+  stride 0
+  varlen 0
+  whole 0
+  marks 39 39 0 0
+  numbers 0 0 1 0
+  fresh 00 00
+  field name
+    where 0 0 2
+    what -4 1 0
+    format %d
+    end
+end
+
+statement F0
+  length 2
+  stride 0
+  varlen 0
+  whole 0
+  marks 39 39 0 0
+  numbers 0 0 1 0
+  fresh 00 00
+  field name
+    where 0 0 2
+    what -4 1 0
+    format %d
+    end
+end
+
+statement Ms
+  length 2
+  stride 0
+  varlen 0
+  whole 0
+  marks 39 39 1 0
+  numbers 0 0 1 0
+  fresh 00 00
+  field name
+    where 0 0 2
+    what -4 1 0
+    format %d
+    end
+end

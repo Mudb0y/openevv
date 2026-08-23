@@ -1,0 +1,106 @@
+# The machine's global variables, as engb declares them.
+#
+# One line to a kind and how many in a row, in the order the language declares
+# them, which is the order that decides both where each lands in the tail of
+# the machine and what its number is. A compound says what it holds: the kind
+# of item and how many.
+#
+# Written by tools/gen-globals.py. Where each variable lands and how big a
+# machine of this language is are not in here -- they follow from the kinds,
+# by the same walk delta_new does.
+
+word 20
+short 2
+word 5
+short 7
+word 10
+short 30
+word 3
+short 2
+word 1
+short 2
+word 45
+short 2
+compound 1 5
+compound 1 5
+compound 1 5
+compound 7 2
+compound 9 2
+compound 0 2
+short 42
+long 11
+short 5
+word 3
+short 3
+compound 1 5
+short 11
+word 1
+short 4
+word 3
+short 1
+word 1
+short 89
+long 1
+short 24
+compound 5 10
+compound 5 10
+compound 5 10
+short 39
+word 1
+short 3
+long 1
+short 37
+long 1
+short 5
+long 1
+compound 4 16
+compound 6 32
+compound 4 16
+long 1
+short 1
+compound 1 5
+short 1
+long 1
+short 3
+word 1
+short 5
+long 1
+short 10
+word 6
+short 2
+long 1
+short 27
+long 1
+short 81
+word 1
+long 2
+word 1
+short 6
+compound 6 32
+compound 6 32
+compound 6 32
+short 2
+word 1
+short 4
+word 4
+short 1
+long 1
+short 1
+word 1
+short 26
+long 3
+word 1
+short 2
+compound 5 10
+compound 4 16
+compound 4 16
+short 3
+long 1
+short 98
+long 11
+short 20
+word 4
+short 13
+word 1
+long 1
+word 1
