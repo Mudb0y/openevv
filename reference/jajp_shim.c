@@ -11,13 +11,21 @@
  * held to. That is the whole reason this file exists.
  */
 
-/* Where a language's files would be, which the original builds a path with
-   before registering one. Nothing in this port reads a file of the language's:
-   every byte is in the image. So there is no path to give, and the
-   registration that asks goes down its own not-found road. */
+/* Where the library was loaded from. IBM's own is one line -- it answers a
+   global that DllMain fills in -- and that global is a 260-byte buffer in the
+   bss, so in a static build with no DllMain it answers a pointer to an empty
+   string rather than nothing at all. Every other module's reference gets
+   exactly that, because it links IBM's libmain.obj and there is no DllMain
+   there either. So this answers the same: an empty path, not a null one.
+
+   Returning nought instead, which is what this did first, is not the same
+   thing and is the sort of difference that makes an oracle worth less than no
+   oracle. */
+static const char evv_no_path[260];
+
 const char *evv_getFullPathName(void)
 {
-    return 0;
+    return evv_no_path;
 }
 __asm__(".globl \"?getFullPathName@@YAPBDXZ\"\n"
         ".set \"?getFullPathName@@YAPBDXZ\", _evv_getFullPathName\n");
