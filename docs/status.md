@@ -38,7 +38,7 @@ Anything but English, German and British English at build time. The other six li
 
 German builds and speaks, and speaks IBM's samples. `make LANG=lang/dede probe` and the reference beside it are in `docs/building.md`, and `EVV_LANG=dede test/suite.sh` runs the same six categories over 80 cases of its own. On 22 August 2026 all 80 came out byte for byte identical to IBM's German binary.
 
-That is the sixty-four bit Windows build, running on Windows against a reference built from `analysis/dede`, with the rules run as bytecode and with the same rules run as the C they decompile to; and both on its own and linked beside English in one binary, where each language still matches its own oracle over its own cases. Nothing has been built from `lang/dede` for Linux or thirty-two bit.
+That was the sixty-four bit Windows build, running on Windows against a reference built from `analysis/dede`, with the rules run as bytecode and with the same rules run as the C they decompile to; and both on its own and linked beside English in one binary, where each language still matches its own oracle over its own cases. Linux followed on 23 August 2026, again in both rule forms, on its own and in a binary with English and British English in it -- all 80 each time. Nothing has been built from `lang/dede` for thirty-two bit.
 
 Two things had to be fixed to get there, and both were ours rather than the language's.
 
