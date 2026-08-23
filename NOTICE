@@ -14,8 +14,10 @@ IBM's
 -----
 
 Everything under `lang` is transcribed out of IBM's Embedded ViaVoice objects:
-`lang/enus` is US English, `lang/dede` is German and `lang/engb` is British
-English, and any language added later will be the same. The rules as bytecode, the constants they read, the
+`lang/enus` is US English, `lang/dede` is German, `lang/engb` is British
+English, `lang/eses` and `lang/esus` are the two Spanishes, `lang/frfr` and
+`lang/frca` the two Frenches and `lang/itit` is Italian, and any language added
+later will be the same. The rules as bytecode, the constants they read, the
 statement and field tables, the lookup sets, the variable declarations, the
 settings the engine carries in its own image, the voice presets and the
 dictionary, and where the engine's arithmetic depends on the exact bytes they

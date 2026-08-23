@@ -12,9 +12,9 @@ Nothing is borrowed at build time. `make missing` answers nothing, which is the 
 
 Dictionaries can be edited. `tools/delta-dict.py` writes `lang/enus/enus.dict` out of the tables and reads it back in, so a pronunciation can be changed, laid down and heard.
 
-All nine languages in the SDK lift and decompile: US and British English, both Spanishes, both Frenches, German, Italian and Japanese. English is the one that is finished. German and British English both build, speak and match IBM over the cases there are for them, and the sections below say in which configurations.
+All nine languages in the SDK lift and decompile: US and British English, both Spanishes, both Frenches, German, Italian and Japanese. Eight of the nine build, speak and match IBM byte for byte over the cases there are for them -- everything but Japanese, which has no oracle to be held against and is the subject of a section of its own. English is the one that is finished in the fuller sense of having a dictionary a person can edit.
 
-A build takes as many languages as it is given. `make LANGS="lang/enus lang/dede lang/engb"` puts all three in one binary: `eciGetAvailableLanguages` answers with all of them, a caller picks one the way IBM's interface always allowed, and each is held against its own oracle out of the same binary. What made that possible is in `src/delta_lang.h` -- every module names its own tables after itself, because IBM gave them the same names in every language, and the engine reaches whichever is in force rather than linking to one by name.
+A build takes as many languages as it is given. `make LANGS="lang/enus lang/dede lang/engb lang/eses lang/frfr"` puts all five in one binary, and any other set the same way: `eciGetAvailableLanguages` answers with all of them, a caller picks one the way IBM's interface always allowed, and each is held against its own oracle out of the same binary. What made that possible is in `src/delta_lang.h` -- every module names its own tables after itself, because IBM gave them the same names in every language, and the engine reaches whichever is in force rather than linking to one by name.
 
 That worked on Windows before it worked here. Any build with two languages in it died on Linux, in `sscanf` under `loadStandardConcatenativeVoice`, for a reason that had nothing to do with which two: joining the modules' settings blobs put one section straight behind another with no blank line between them, and `ini_getString` decides a key is absent by reading the byte where its search stopped rather than by where it stopped. With another section behind it, a key that is not there came back holding the next section's first value -- a dataset path where eight numbers were being read. The defect is IBM's, in their own `analysis/enus/win_iniread.obj`, and cannot fire in their engine: their `readFileIntoMemory` hands over one embedded blob for one language, whose sections are a blank line apart. Two sections butted together is a shape their data never has. `src/delta_lang.c` now writes that blank line and `src/eci_iniread.c` decides absence by where the search stopped; `make inikeys` is the check, and it needs neither Wine nor IBM's objects.
 
@@ -32,7 +32,7 @@ The compiler. The rules are readable C, but there is no way to write a new rule 
 
 Polish, which is the reason the compiler matters. Nothing started.
 
-Anything but English, German and British English at build time. The other six lift and decompile, but nothing has been built from them. The three that are built all pass the same six builds now, so a language being new is no longer a reason to expect less of it.
+Japanese, which is the one language still not built. Everything else in the SDK now is.
 
 ## German
 
@@ -64,15 +64,46 @@ It matched on the first run, with no fix needed anywhere -- the lift, the mechan
 
 Not done for British English: no dictionary a person can edit, and no `long` cases of its own.
 
-## The other six languages
+## The Spanishes, the Frenches and Italian
 
-All nine lift their rules cleanly, which was the part expected to be hard. What stops the rest is smaller, and was measured on 22 August 2026 rather than estimated.
+All five lifted and matched IBM byte for byte on 23 August 2026, over 81 cases each: `EVV_LANG=eses`, `esus`, `itit`, `frfr` and `frca`, each against a reference built from its own objects. Their language numbers are 0x20000 and 0x20001, 0x50000, and 0x30000 and 0x30001, and `test/compare.sh` knows them all.
 
-Four of them cannot be lifted at all yet: both Spanishes, French of France and Italian each disagree with the model of the variable area in `tools/gen-globals.py` by exactly two bytes, at a compound variable. The model matches the engine's own arithmetic in `eci_deltaglob.c` -- `at += 4 + ALIGN_UP(bytes, 2)` -- so it is the object that disagrees and not the port, and something about a compound is not yet understood. Rounding the payload to four instead fixes those four and breaks the five that pass, so it is not the rounding.
+Four things had to be fixed to get there, and every one of them was ours rather than the languages'.
 
-Three lift and generate but do not link, and `make missing` names what each wants. German wanted one, `forall_adv_r`, and has it. Japanese wants three, two of which are callbacks the engine does not offer -- `userIndexCallback` and `wordIndexCallback` -- and loses one rule besides to a hole the lifter cannot resolve. Canadian French wants nine, and most of those are rules by their names rather than primitives -- `fren_ph_z`, `do_canfren_r_glide` -- which says the lifter is not finding rules that module has.
+**A compound variable of the seventh kind sits on a four-byte boundary.** The two Spanishes, French of France and Italian could not be lifted at all: the model of the variable area came out two bytes short at one compound. It was not the payload rounding, which had been the standing guess and which breaks the languages that already worked. It is alignment -- a compound whose first word is 6 holds four-byte items and is laid four-aligned, and every other kind two-aligned. Across all nine modules every one of the thirty-six is four-aligned and no other kind's are. The rule lives in two places that have to agree, `tools/gen-globals.py` for the lifter's model and `src/eci_deltaglob.c` for the area the engine really builds, and fixing only the first left the engine reading a variable's kind out of the middle of the cell before it. What says it is this rather than merely sufficient: every one of the eight built modules regenerates its variable area byte for byte from the objects, the three that were committed before this included.
 
-British English has been lifted again under the mechanism above and is finished; the section on it says what that came to.
+**A jump names a place in its rule, and the place was being read as a signed number.** So it wrapped at 32,767. English's longest rule is 30,929 bytes -- within six per cent of that and never over it, which is why three languages never showed it. French of France has a rule of 33,075 bytes and Canadian French one of 34,154, and both jumped somewhere negative and took the machine apart, by way of a rule finding its own activation record above the live frames. Nothing about the bytecode changed: the emitter always wrote a position from the start of the rule, which cannot be negative, and only the reading of it was wrong. The emitter now refuses a rule too long to name a place in rather than writing one that cannot be read.
+
+**Two machine primitives no English rule reaches.** `lpta_loadi` loads an immediate into the left accessor, asking the statement table for the kind instead of reading it off a location; all five wanted it. `insert_rv` inserts a rule's variable over a range taken to the right, and only Canadian French wants it -- it is `insert_2ptv` with a different range call, whose answer means the opposite way round.
+
+**A little floating point, which is the surprise.** Two rules in France's module and eight in Canada's use the x87 stack: an integer pushed, multiplied or added to by a double constant or another integer, and truncated. Nothing else in nine languages does, which is what one would expect of a fixed-point engine. It is worked out in `long double` because that is the register the original computes in, and the difference is not academic: with the constant 0.4, an input of 5 and an addend of -3, sixty-four bit arithmetic keeps 2.0 exactly and truncates to -1 where the eighty-bit register keeps 2.000000000000000111 and truncates to 0. Two of two point nine million combinations differ and that is them.
+
+One thing about the case files is worth knowing. The engine is a single-byte engine, so the `utf8` cases really test that both sides mangle multi-byte input the same way rather than that either handles it. For Spanish that is not merely mangled: an o-acute directly before an n crashes IBM's engine and ours identically, at the same fault address, so `razón` cannot be compared at all and the case file avoids it. The same text in Latin-1 speaks perfectly.
+
+Not done for any of the five: no dictionary a person can edit, and no thirty-two bit or Windows build.
+
+## Japanese
+
+Japanese is the one language that is not built, and the reason is not that it does not lift. It does: 477 rules, its settings, and the language number 0x80000. `tools/lift-ini.py` had to learn a second shape of the question first, because Japanese is the only module with more than one dialect in a family -- family eight, dialects nought, four and eight, all three the same library -- so it compares the family and the dialect separately where the other eight compare the whole packed word at once.
+
+Two things stop it, and the first is the serious one.
+
+**There is no oracle.** A reference built from `analysis/jajp` does not link: it wants `getFullPathName`, which is defined in every other module's objects and not in Japanese's, and `ralStrNicmp` and `_chkstk`, which are in none of them. So the SDK's Japanese object set is incomplete, and the method this whole port rests on -- speak every case through IBM's own binary and require identical samples -- has nothing to run. An oracle could be completed by hand, since `_chkstk` is a stack probe and `ralStrNicmp` is a case-insensitive compare, but then it is an oracle we wrote part of, and what it certifies is a question rather than an answer.
+
+**And our engine will not make an instance for it.** Its two missing primitives are written -- `userIndexCallback` and `wordIndexCallback`, each a slot in the block the layers above share, quiet because our interface has no way to put a function there -- and `make missing` answers nothing, but `eo_newInstance` still refuses. Its lookup sets come out as one set of two bytes against Spanish's hundred and four, which is either a language that keeps its knowledge somewhere else or a lifter that is not finding it, and that is not yet known which.
+
+`lang/jajp` is deliberately not in the tree: a language module that cannot make an instance would break any build that named it.
+
+## What the lifting cost, across all nine
+
+All nine lift their rules cleanly, which was the part expected to be hard, and
+the holes that remained were smaller than the headline suggested. Every one of
+them turned out to be a gap in our machine rather than something not understood
+about the language: two primitives no English rule reaches, one alignment rule,
+one signed number that should not have been signed, and a little floating point
+nobody expected a fixed-point engine to contain. The sections above say which
+was which. What is left is Japanese, and what is left of Japanese is an oracle
+rather than a lift.
 
 ## Partly done
 

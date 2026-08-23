@@ -217,7 +217,11 @@ A binary with several languages in it is driven the same way, with `EVV_NATIVE` 
 
 `compare.sh` sets `EVV_LANGUAGE` from the language it was asked for, and the probe asks the engine for that one rather than whichever is first. Those are IBM's own numbers, the ones its ini names each language section for; a language added to the tree adds a line to that table.
 
-German and British English both pass the cases there are for them, on their own and in one binary with English -- all three together, each against its own oracle. `docs/status.md` says in which configurations, and what is not covered.
+Eight of the SDK's nine languages pass the cases there are for them, each against a reference built from its own objects: US and British English, German, both Spanishes, both Frenches and Italian. `docs/status.md` says in which configurations, and why Japanese is the ninth.
+
+The language numbers `compare.sh` knows are IBM's own: 0x10000 and 0x10001 for the two Englishes, 0x20000 and 0x20001 for the Spanishes, 0x30000 and 0x30001 for the Frenches, 0x40000 for German, 0x50000 for Italian. A language added to the tree adds a line to that table.
+
+One thing about the `utf8` cases is worth knowing before reading too much into them. The engine takes one byte at a time, so what those cases really check is that both sides mangle multi-byte text the same way, not that either handles it. For Spanish that is not merely mangled: an o-acute directly before an n faults IBM's engine and ours identically, so `razón` in UTF-8 cannot be compared and the Spanish case files avoid the sequence. The same word in Latin-1 speaks perfectly, which is the answer for a caller that wants accents.
 
 Everything a language module holds is named for that module, and the build takes whatever `.c` and `.h` files are in one. A file left behind by an earlier lift, or copied in from another language, would otherwise be compiled in without a word, which is how `lang/dede` carried an unprefixed rule shim into every German binary for a day: its names collided with nothing, so the linker had nothing to say. The build now refuses a module holding a file that is not named for it, and says which file.
 

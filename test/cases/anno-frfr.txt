@@ -1,0 +1,20 @@
+Parole normale `vs50 maintenant bien plus lente qu avant.
+Volume `vv30 plus bas, puis `vv90 plus haut de nouveau.
+Hauteur `vb20 grave et `vb80 aigue dans une seule phrase.
+Voix `v2 deux, `v5 cinq, et `v1 de retour a un.
+Une pause `0 courte et `4 longue entre les mots.
+Rugosite `vr40 et souffle `vf60 modifies.
+Un accent grave \`litteral doit se lire comme du texte.
+Vitesse par nom `vsfast et ensuite `vsslow de nouveau.
+Taille de la tete `vh30 puis `vh70 dans la meme ligne.
+Genre `vg1 et `vg0 qui alternent.
+Avant `ui"marque un" et apres la marque.
+Marqueur audio `aud"bip" au milieu d une ligne.
+`vs40 Une annotation tout au debut de la ligne.
+Se terminant par une annotation tout a la fin `vs60
+Mal formees `vzz et `q et `v999 toutes sur une ligne.
+Deux `vs30`vv40 annotations sans rien entre elles.
+`ui"a"`ui"b" deux marques sans rien entre elles.
+Une marque `ui"non fermee qui ne se termine jamais ici
+Melange `v3 voix `vs70 vitesse `vv50 volume ensemble.
+Tabulation	et retour a la ligne avec `vb40 un changement.

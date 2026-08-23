@@ -55,6 +55,11 @@ case $LANG_TAG in
 enus) : ${EVV_LANGUAGE:=0x10000} ;;
 dede) : ${EVV_LANGUAGE:=0x40000} ;;
 engb) : ${EVV_LANGUAGE:=0x10001} ;;
+eses) : ${EVV_LANGUAGE:=0x20000} ;;
+esus) : ${EVV_LANGUAGE:=0x20001} ;;
+itit) : ${EVV_LANGUAGE:=0x50000} ;;
+frfr) : ${EVV_LANGUAGE:=0x30000} ;;
+frca) : ${EVV_LANGUAGE:=0x30001} ;;
 esac
 export EVV_LANGUAGE
 

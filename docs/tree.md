@@ -14,7 +14,9 @@ Every name a module defines carries the language -- `enus_vstmtbl`, `dede_vstmtb
 
 `lang/dede` is German, the same files under the same names with `dede` for `enus`. It is the second language lifted and the first to be built beside English: `make LANGS="lang/enus lang/dede"` puts both in one binary, and the caller chooses between them the way IBM's own interface always allowed. `docs/status.md` says how far German gets.
 
-`lang/engb` is British English, again the same files with `engb` for `enus`. It is family one dialect one where US English is family one dialect nought, so it is the first pair of dialects of one family the language mechanism has carried, and `make LANGS="lang/enus lang/dede lang/engb"` puts all three in one binary.
+`lang/engb` is British English, again the same files with `engb` for `enus`. It is family one dialect one where US English is family one dialect nought, so it is the first pair of dialects of one family the language mechanism has carried.
+
+`lang/eses` and `lang/esus` are the two Spanishes, `lang/frfr` and `lang/frca` the two Frenches, and `lang/itit` Italian, all of them the same files under the same names. That is eight of the SDK's nine; Japanese is the one not here, and `docs/status.md` says why. A build takes any set of them: `make LANGS="lang/enus lang/dede lang/engb"` puts three in one binary and a longer list puts more.
 
 Everything in a language module is named for that module, and the build compiles whatever `.c` files a module holds. So a file that is not named for its module is either left over from an earlier lift or in the wrong place, and the build refuses it by name rather than compiling it in silently.
 
