@@ -214,7 +214,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate inikeys
+.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate inikeys stopthread
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -262,6 +262,17 @@ landing: $(BUILD)/landing
 
 $(BUILD)/landing: test/landing.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/landing.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# A stop from a thread that is not the one speaking, which is what a screen
+# reader does and what test/interrupt.c does not: it aborts from the callback,
+# on the engine's own thread. This one crosses a thread and requires the
+# interrupted utterance to come out short, so a stop that did nothing fails.
+stopthread: $(BUILD)/stopthread
+	@$(BUILD)/stopthread
+
+$(BUILD)/stopthread: test/stopthread.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/stopthread.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # A key that is not in a section, which neither suite can see: the reader
@@ -427,8 +438,18 @@ SOURCESWIN := $(filter-out $(SRC)/port_posix.c,$(wildcard $(SRC)/*.c)) \
               $(RULESRC) $(LANGLIST)
 OBJECTSWIN := $(patsubst %.c,$(OBJDIRWIN)/%.o,$(notdir $(SOURCESWIN)))
 
-.PHONY: win win-probe win-dlltest
+.PHONY: win win-probe win-dlltest win-stopthread
 win: $(BUILD)/evv.exe $(BUILD)/evvspeak.exe $(BUILD)/eci.dll
+
+# The cross-thread stop, for Windows, because that is where it used to fault:
+# eight of twelve turns under Wine against none on real Windows, before the
+# busy guard. A native Linux run cannot answer for either.
+win-stopthread: $(BUILD)/stopthread$(SUF).exe
+	@wine $(BUILD)/stopthread$(SUF).exe
+
+$(BUILD)/stopthread$(SUF).exe: test/stopthread.c $(BUILD)/libevv-win$(SUF).a
+	@$(CCWIN) $(CFLAGSWIN) test/stopthread.c $(BUILD)/libevv-win$(SUF).a $(LDFLAGSWIN) -o $@
+	@echo "built $@"
 
 # The probe, for Windows, which is how a fault there gets localised: it says
 # what the engine answered at every step, so the last line it prints is where
