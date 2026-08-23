@@ -84,6 +84,8 @@ Not done for any of the five: no dictionary a person can edit, and no thirty-two
 
 ## Japanese
 
+`docs/japanese.md` is the whole of it, written for somebody picking this up who was not the person who found it: what is done, what is left with its sizes, the oracle and why it can be trusted, the target and how to observe it, the decisions already taken, and the traps. What follows here is the short version.
+
 Japanese lifts -- 477 rules, its settings, and the language number 0x80000 --
 and one thing stands between that and a language that speaks: the romanizer.
 
