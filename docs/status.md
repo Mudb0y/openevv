@@ -12,9 +12,9 @@ Nothing is borrowed at build time. `make missing` answers nothing, which is the 
 
 Dictionaries can be edited. `tools/delta-dict.py` writes `lang/enus/enus.dict` out of the tables and reads it back in, so a pronunciation can be changed, laid down and heard.
 
-All nine languages in the SDK lift and decompile: US and British English, both Spanishes, both Frenches, German, Italian and Japanese. English is the one that is finished; German builds, speaks and matches IBM over the cases there are for it, and the section below says in which configurations.
+All nine languages in the SDK lift and decompile: US and British English, both Spanishes, both Frenches, German, Italian and Japanese. English is the one that is finished. German and British English both build, speak and match IBM over the cases there are for them, and the sections below say in which configurations.
 
-A build takes as many languages as it is given. `make LANGS="lang/enus lang/dede"` puts both in one binary: `eciGetAvailableLanguages` answers with both, a caller picks one the way IBM's interface always allowed, and each is held against its own oracle out of the same binary. What made that possible is in `src/delta_lang.h` -- every module names its own tables after itself, because IBM gave them the same names in every language, and the engine reaches whichever is in force rather than linking to one by name.
+A build takes as many languages as it is given. `make LANGS="lang/enus lang/dede lang/engb"` puts all three in one binary: `eciGetAvailableLanguages` answers with all of them, a caller picks one the way IBM's interface always allowed, and each is held against its own oracle out of the same binary. What made that possible is in `src/delta_lang.h` -- every module names its own tables after itself, because IBM gave them the same names in every language, and the engine reaches whichever is in force rather than linking to one by name.
 
 It builds and speaks on Windows, sixty-four bit, as one static file. The speak window plays what it makes through waveOut; `win/speak.c` is that, and it is the only front end that plays anything.
 
@@ -30,7 +30,7 @@ The compiler. The rules are readable C, but there is no way to write a new rule 
 
 Polish, which is the reason the compiler matters. Nothing started.
 
-Anything but English and German at build time. The other seven lift and decompile, but nothing has been built from them.
+Anything but English, German and British English at build time. The other six lift and decompile, but nothing has been built from them.
 
 ## German
 
@@ -52,7 +52,17 @@ The NVDA add-on follows. Where the library it loads has more than one language i
 
 Not done for German: no dictionary in a form a person can edit, since `tools/delta-dict.py` has only been run for English; no `long` cases; and no Linux or thirty-two bit build.
 
-## The other seven languages
+## British English
+
+British English builds and speaks, and speaks IBM's samples. `make LANG=lang/engb probe` builds it and `EVV_LANG=engb test/suite.sh` runs the same six categories over 81 cases of its own, against a reference built from `analysis/engb` -- `make -C reference TAG=engb BUILD=../build/reference-engb`. On 23 August 2026 all 81 came out byte for byte identical to IBM's British binary.
+
+It is family one dialect one where US English is family one dialect nought, which is the first pair of dialects in one family the language mechanism has carried; `test/compare.sh` knows it as `0x10001`. That is the thing British English proves which German could not: nothing keys off the family alone.
+
+It matched on the first run, with no fix needed anywhere -- the lift, the mechanism and the tools were all already right. What it did find was the multi-language crash above, and only because two dialects of one family was the pair being tried at the time; English and German turned out to crash identically.
+
+Not done for British English: no dictionary a person can edit, no `long` cases of its own, and no thirty-two bit or Windows build.
+
+## The other six languages
 
 All nine lift their rules cleanly, which was the part expected to be hard. What stops the rest is smaller, and was measured on 22 August 2026 rather than estimated.
 
@@ -60,7 +70,7 @@ Four of them cannot be lifted at all yet: both Spanishes, French of France and I
 
 Three lift and generate but do not link, and `make missing` names what each wants. German wanted one, `forall_adv_r`, and has it. Japanese wants three, two of which are callbacks the engine does not offer -- `userIndexCallback` and `wordIndexCallback` -- and loses one rule besides to a hole the lifter cannot resolve. Canadian French wants nine, and most of those are rules by their names rather than primitives -- `fren_ph_z`, `do_canfren_r_glide` -- which says the lifter is not finding rules that module has.
 
-British English was built and spoken once, under a language mechanism that has since been replaced by the one above; it wants lifting again under this one before that can be said again.
+British English has been lifted again under the mechanism above and is finished; the section on it says what that came to.
 
 ## Partly done
 
