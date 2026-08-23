@@ -7,6 +7,7 @@
 
 #include "delta.h"
 #include "evv_arena.h"
+#include "eci_eloqc.h"
 
 #define AT(field, offset) \
     typedef char field##_at_##offset[offsetof(delta_state, field) == offset ? 1 : -1]
@@ -3687,6 +3688,73 @@ int mark_v(delta_state *d, uint8_t f, uint8_t fld, delta_loc *loc,
     return 0;
 }
 
+/* The two index notifications Japanese asks for, and nothing else does. Each
+   is a slot in the block the layers above share: if a function has been put
+   there it is called with whatever was left beside it, and if not there is
+   nothing to do. Our public interface has no way to put one there, so both are
+   quiet -- which is what the original does for a caller that registered
+   neither, rather than something we have decided. Written because Japanese's
+   rules name them and a language cannot be built without them. */
+int32_t wordIndexCallback(delta_state *d, const delta_loc *loc)
+{
+    void *fn = ELOQ_CB(d, 0x1c);
+
+    if (fn != 0)
+        ((void (*)(int32_t, void *))fn)((int32_t)loc->field,
+                                        ELOQ_CB(d, 0x20));
+    return 0;
+}
+
+int32_t userIndexCallback(delta_state *d)
+{
+    void *fn = ELOQ_CB(d, 0x24);
+
+    if (fn != 0)
+        ((void (*)(void *))fn)(ELOQ_CB(d, 0x28));
+    return 0;
+}
+
+/* The same as insert_2ptv, over a range taken to the right rather than between
+   two points. Only Canadian French reaches it, and vrange_r answers the other
+   way round from vrange_2pt: nought is the failure there, so the test reads
+   inverted beside its neighbour and is right. */
+int insert_rv(delta_state *d, uint8_t f, delta_loc *loc, uint8_t dup)
+{
+    delta_operand a;
+    delta_operand b;
+
+    if (!vrange_r(d, &d->lpta, &d->rpta, (int8_t)f, dup))
+        forceErrorBacktrack(d);
+
+    if (loc->kind < 0 && loc->kind != STMTYP((int8_t)f)) {
+        a.kind = STMTYP((int8_t)f);
+
+        switch (a.kind) {
+        case DK_UBYTE:  a.ptr = &EVV_AT(delta_vars *, d->vars)->scratch_b; break;
+        case DK_LONG:   a.ptr = &EVV_AT(delta_vars *, d->vars)->scratch_l; break;
+        case DK_SHORT2:
+        case DK_SHORT:  a.ptr = &EVV_AT(delta_vars *, d->vars)->scratch_s; break;
+        default:        forceErrorBacktrack(d); break;
+        }
+
+        a.flag = vstmtbl[f].fields[0].flag;
+
+        vinitloc_new(d, &b, loc);
+        vassign(d, &a, &b);
+
+        if (!vins_tok(d, f, d->lpta.node, d->rpta.node, &a))
+            forceErrorBacktrack(d);
+    } else {
+        vinitloc_new(d, &b, loc);
+
+        if (!vins_tok(d, f, d->lpta.node, d->rpta.node, &b))
+            forceErrorBacktrack(d);
+    }
+
+    reset_field(loc);
+    return 0;
+}
+
 /* Insert a rule's variable as a statement in the range. A value of a kind the
    statement does not use is converted through a scratch cell first. */
 int insert_2ptv(delta_state *d, uint8_t f, delta_loc *loc, uint8_t mode)
@@ -4083,6 +4151,28 @@ void lpta_loadv(delta_state *d, uint8_t f, const delta_loc *loc)
         d->lpta.offset = loc->field;
     else
         forceErrorBacktrack(d);
+}
+
+/* The same as lpta_loadv, but the value comes as an immediate rather than out
+   of a location, so the kind has to be asked of the statement table instead of
+   read off the location. No English rule reaches it, which is why it was
+   missing until the Spanishes, the Frenches and Italian were lifted and every
+   one of them wanted it. Unlike lpta_loadv it does not fault on a kind it does
+   not handle: the original leaves the offset alone and returns, and that is
+   kept. */
+void lpta_loadi(delta_state *d, uint8_t f, int32_t v)
+{
+    d->lpta.flags = 2;
+    d->lpta.field = (int8_t)f;
+
+    switch (STMTYP(d->lpta.field)) {
+    case -4:
+    case -3:
+        d->lpta.offset = (int16_t)v;
+        break;
+    default:
+        break;
+    }
 }
 
 /* Set a timing variable. The two names are the same code in the original. */

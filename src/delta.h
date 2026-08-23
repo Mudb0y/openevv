@@ -663,6 +663,9 @@ int  vrange_r(delta_state *d, delta_tpos *p, delta_tpos *out, int8_t f,
               uint8_t dup);
 int  vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
                 uint8_t mode);
+int  insert_rv(delta_state *d, uint8_t f, delta_loc *loc, uint8_t dup);
+int32_t wordIndexCallback(delta_state *d, const delta_loc *loc);
+int32_t userIndexCallback(delta_state *d);
 void insert_l(delta_state *d, int8_t f, uint8_t n, const uint8_t *str,
               uint8_t dup);
 void insert_r(delta_state *d, int8_t f, uint8_t n, const uint8_t *str,
@@ -701,6 +704,7 @@ void rpta_movel(delta_state *d, uint8_t f);
 int  lpta_tstmovel(delta_state *d, uint8_t f);
 void rpta_storep(delta_state *d, delta_loc *loc);
 void lpta_loadv(delta_state *d, uint8_t f, const delta_loc *loc);
+void lpta_loadi(delta_state *d, uint8_t f, int32_t v);
 void settvar_i(delta_state *d, delta_loc *loc, int32_t v);
 void settvar_s(delta_state *d, delta_loc *loc, int32_t v);
 int  vnegative(delta_state *d, const delta_operand *v);
