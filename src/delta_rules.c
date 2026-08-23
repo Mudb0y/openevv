@@ -892,6 +892,7 @@ static int32_t run_bytecode(void *state, const delta_rule *r,
 {
     unsigned char *frame = evv_frame_push(DELTA_RULE_FRAME_MAX);
     volatile int depth = 0;
+    volatile int planted = 0;
     interp st;
     int i;
 
@@ -922,12 +923,18 @@ static int32_t run_bytecode(void *state, const delta_rule *r,
             depth = st.argn;
             st.reg[0] = EVV_LAND_SAVE((intptr_t)buf);
             st.argn = depth;
+            planted = 1;
             continue;
         }
         step(&st);
         delta_rule_steps++;
     }
 
+    /* The frame goes back for the next rule to have, so any landing planted
+       in it stops being one. */
+    if (planted)
+        evv_land_forget((uintptr_t)frame,
+                        (uintptr_t)frame + DELTA_RULE_FRAME_MAX);
     evv_frame_pop(frame);
     return st.answer;
 }

@@ -73,6 +73,29 @@ void *evv_land_place(uintptr_t name)
     return e->saved;
 }
 
+/* Forget every landing planted in a run of addresses, which is what a rule's
+   frame going back on the frame stack means. The names are frame addresses and
+   the same ones come round again, so a landing left marked planted after its
+   frame has gone is a landing into a C frame that has already returned: the
+   jump restores a dead stack pointer and carries on in it.
+
+   No fault is known to have come of it. It was found while chasing one that
+   turned out to be a signed jump target, and the theory was wrong about that;
+   this is closed on its own account, because a landing that outlives its frame
+   is a hole whether or not anything has fallen in. */
+void evv_land_forget(uintptr_t lo, uintptr_t hi)
+{
+    int h;
+
+    for (h = 0; h < LAND_BUCKETS; h++) {
+        land_entry *e;
+
+        for (e = land_tab[h]; e != 0; e = e->next)
+            if (e->name >= lo && e->name < hi)
+                e->planted = 0;
+    }
+}
+
 /* Landing on one. A name this thread has never planted is not a landing place
    at all, and the table above would hand back a block of noughts: the jump
    would then load nought as the stack pointer and go to nought, which is a

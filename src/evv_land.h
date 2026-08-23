@@ -48,6 +48,7 @@
    thread never planted rather than handing back noughts to jump to. */
 void *evv_land_place(uintptr_t name);
 void *evv_land_planted(uintptr_t name);
+void  evv_land_forget(uintptr_t lo, uintptr_t hi);
 
 int  evv_land_save(void *place) __attribute__((returns_twice));
 void evv_land_jump(void *place, int value) __attribute__((noreturn));
