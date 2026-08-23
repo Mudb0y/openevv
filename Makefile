@@ -214,7 +214,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate inikeys stopthread
+.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate voices inikeys stopthread
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -252,6 +252,17 @@ rate: $(BUILD)/rate
 
 $(BUILD)/rate: test/rate.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/rate.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# The eight voices the caller may edit, which the suite is blind to: nothing it
+# runs asks an instance about voice nine, so the loop that copies the language's
+# own eight into them can be turned off and all 81 cases still match. That
+# happened by accident once. This is what catches it.
+voices: $(BUILD)/voices
+	@$(BUILD)/voices
+
+$(BUILD)/voices: test/voices.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/voices.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # A backtrack landed on from a thread that never planted it, which is how

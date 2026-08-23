@@ -198,6 +198,9 @@ Three things in the rules cannot be recovered and are not going to be. The globa
 
 ## Known limits
 
+The suite is blind to the eight voices the caller may edit, and that was found by accident rather than by looking. Nothing it runs asks an instance about voice nine, so the loop that copies the language's own eight into them can be turned off and all 81 English cases, all 80 German and the samples hash still pass. A stale script in `/tmp`, left there on 17 August by a session doing the sabotage check, made exactly that edit on 23 August -- Python imported it under a standard module's name and ran it -- and nothing in the tree noticed. `make voices` is the answer and it runs in CI; `docs/building.md` says what it holds an instance to and which three sabotages it catches.
+
+
 The suite compares one utterance per process, and until 22 August 2026 that was the only utterance anything had ever compared. It is no longer: `probe` and the reference both take a `t` in their mode argument, which says the same text a second time on the same instance and writes it beside the first.
 
 What that found is worth knowing before reading any byte comparison here. The second utterance is not the first -- 38,423 samples both times, 30,495 of them different -- because the machine's state has moved on. That is faithful: IBM's own engine differs across its two utterances to the same 30,495 samples, and ours matches IBM's *second* utterance byte for byte as well as its first. And it is deterministic: three processes give the same first utterance and the same second one, to the hash.

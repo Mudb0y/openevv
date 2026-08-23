@@ -63,6 +63,13 @@ jobs:
       - name: Check a key that is not in a section reads as absent
         run: make RULES=bytecode inikeys
 
+      # The eight voices the caller may edit on an instance just made. The
+      # suite is blind to them: the loop that fills them can be turned off
+      # entirely and all 81 cases still match IBM's binary, which is how a
+      # stale script in /tmp got that edit past everything once.
+      - name: Check the voices the caller may edit
+        run: make RULES=bytecode voices
+
       - name: Check a stop from another thread leaves the engine whole
         run: make RULES=bytecode stopthread
 
