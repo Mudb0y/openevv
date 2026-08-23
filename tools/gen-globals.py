@@ -169,7 +169,17 @@ def lift(image):
     align = {"W": 4, "L": 4, "S": 2, "C": 2}
     at = DG_BASE
     for a, kind, extra in cells:
-        at = (at + align[kind] - 1) & ~(align[kind] - 1)
+        # A compound of the seventh kind holds four-byte items and is laid on
+        # a four-byte boundary; every other kind wants two. This is the only
+        # thing about a compound that is not the same for all of them, and
+        # four languages could not be lifted at all until it was found: their
+        # layout came out two bytes short at the first such compound that
+        # landed on an odd pair of bytes. Across all nine modules every one of
+        # the thirty-six is four-aligned and no other kind's are, and the five
+        # that lifted before this reproduce their committed data byte for
+        # byte, which is what says it is this and not the payload rounding.
+        want = 4 if kind == "C" and extra[0] == 6 else align[kind]
+        at = (at + want - 1) & ~(want - 1)
         if at != a:
             raise SystemExit("layout diverges at 0x%x, expected 0x%x" % (a, at))
         at += size[kind] if kind != "C" else 4 + ((extra[1] + 1) & ~1)
@@ -187,9 +197,11 @@ def lift(image):
     return cells, at
 
 
-def emit(cells, end, out):
-    # One language to a module, and the directory says which.
-    lang = os.path.basename(os.path.dirname(os.path.abspath(out)))
+def emit(cells, end, out, lang):
+    # One language to a module, and the objects it was read from say which --
+    # not the directory being written to, which used to name it and quietly
+    # renamed every symbol when the output went anywhere but lang/<tag>. That
+    # is the same trap delta-emit.py was fixed for.
     names = {"W": "DG_WORD", "L": "DG_LONG", "S": "DG_SHORT",
              "C": "DG_COMPOUND"}
     kinds = [names[k] for _, k, _ in cells]
@@ -240,4 +252,6 @@ def emit(cells, end, out):
 
 if __name__ == "__main__":
     obj, out = sys.argv[1], sys.argv[2]
-    emit(*lift(replay(obj)), out=out)
+    # analysis/<tag>/glob.obj, so the directory holding the object is the tag.
+    tag = os.path.basename(os.path.dirname(os.path.abspath(obj)))
+    emit(*lift(replay(obj)), out=out, lang=tag)

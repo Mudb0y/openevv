@@ -129,7 +129,14 @@ delta_state *delta_new(void)
             break;
 
         case DG_COMPOUND:
-            at   = ALIGN_UP(at, 2);
+            /* A compound whose first word is 6 holds four-byte items and goes
+               on a four-byte boundary; the rest want two. The lifter's model
+               of this area in tools/gen-globals.py has the same rule and
+               checks it against the object cell by cell, so the two have to
+               agree or every offset from the first such compound onwards is
+               two bytes out -- which is what four languages did, reading a
+               variable's kind out of the middle of the cell before it. */
+            at   = ALIGN_UP(at, delta_compounds[c].init == 6 ? 4 : 2);
             cell = (unsigned char *)d + at;
             EVV_AT(delta_compound *, d->compound)[c].at    = cell;
             EVV_AT(delta_compound *, d->compound)[c].init  = delta_compounds[c].init;
