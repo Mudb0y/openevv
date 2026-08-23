@@ -138,6 +138,20 @@ SOURCES := $(filter-out $(SRC)/port_win32.c,$(wildcard $(SRC)/*.c)) \
 # not rebuilt is a link that succeeds and an engine that writes over itself.
 HEADERS := $(wildcard $(SRC)/*.h) $(foreach l,$(LANGS),$(wildcard $(l)/*.h))
 
+# Everything a language module holds is named for that module, and the
+# wildcards above take whatever is there. So a file left behind by an earlier
+# lift, or copied in from another language, is compiled into the build without
+# a word -- which is how lang/dede carried an unprefixed rule shim into every
+# German binary for a day. Its names did not collide with anything, so the
+# linker had nothing to say; the name of the file is the only thing that told.
+STRAYS := $(strip $(foreach l,$(LANGS), \
+            $(filter-out %_$(notdir $(l)).c %_$(notdir $(l)).h, \
+              $(wildcard $(l)/*.c) $(wildcard $(l)/*.h))))
+ifneq ($(STRAYS),)
+$(error these are in a language module but are not named for it, so they are \
+        either left over or in the wrong place: $(STRAYS))
+endif
+
 vpath %.c $(SRC) $(LANGS) $(BUILD)
 
 # One line per language, and one call per language to fill in the numbers
