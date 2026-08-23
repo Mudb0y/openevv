@@ -217,7 +217,9 @@ A binary with several languages in it is driven the same way, with `EVV_NATIVE` 
 
 `compare.sh` sets `EVV_LANGUAGE` from the language it was asked for, and the probe asks the engine for that one rather than whichever is first. Those are IBM's own numbers, the ones its ini names each language section for; a language added to the tree adds a line to that table.
 
-German passes the cases there are for it, both on its own and beside English in one binary. `docs/status.md` says in which configurations, and what is not covered.
+German and British English both pass the cases there are for them, on their own and in one binary with English -- all three together, each against its own oracle. `docs/status.md` says in which configurations, and what is not covered.
+
+Everything a language module holds is named for that module, and the build takes whatever `.c` and `.h` files are in one. A file left behind by an earlier lift, or copied in from another language, would otherwise be compiled in without a word, which is how `lang/dede` carried an unprefixed rule shim into every German binary for a day: its names collided with nothing, so the linker had nothing to say. The build now refuses a module holding a file that is not named for it, and says which file.
 
 ## Running
 
@@ -480,6 +482,8 @@ Then speak one short word through each and hold the dumps against each other. Th
 What it is proving is that nothing in the engine has quietly stayed global. Two things keep a language in force, and either alone is enough: every method of the engine wrapper sets it from its own machine, and `delta_run_rule` sets it again from the machine it was handed. Breaking one changes nothing, which is what redundancy means; breaking both makes a German machine read English tables and the process falls over, which is how the path is known to be live.
 
 `make rate` is the check for the output path a rate change goes through. It registers a buffer, asks for 11 kHz, 8 kHz, 11 kHz, 8 kHz, 22 kHz and 11 kHz in that order, speaks a sentence after each, and fails if any of them comes back with no samples, if the rate reads back as something else, or if 8 kHz and 11 kHz answer the same number of samples -- which would mean the rate was written into the environment and handed to nobody. It exists because the suite cannot see any of that: `cli/probe.c` registers a buffer but never asks for another rate, and IBM's engine loses the buffer there as well, so both sides agreed and all 81 cases passed while an instance went permanently silent. It needs neither Wine nor IBM's objects, so it runs in CI.
+
+`make inikeys` is the check for the settings reader, and for the same class of thing as `make rate`: a fault neither suite can reach. It asks a reader for a key that is not in the section it names, over a blob written by hand with its sections deliberately butted together, and over the blob the build itself carries. An absent key has to come back as nothing; it used to come back holding the next section's first value, which killed every build with two languages in it on Linux. It also holds every dataset key this build carries to the shape the voice table reads -- eight numbers and then whatever else -- so it grows teeth as languages are added without being rewritten. It needs neither Wine nor IBM's objects, so it runs in CI.
 
 `test/hash.sh` is the check that needs nothing at all: it speaks one fixed sentence and holds the samples against a hash in `test/samples.sha256`. That does not prove the engine right -- only IBM's binary can -- but it proves it unchanged, which is what catches a careless edit, and it is what the workflow in `.github` runs on every push. The samples do not depend on the compiler: gcc 15 and clang 21 agree byte for byte, which is what an engine with no floating point in it should do.
 

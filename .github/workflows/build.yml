@@ -60,6 +60,9 @@ jobs:
       - name: Check a rate change keeps the caller's buffer
         run: make RULES=bytecode rate
 
+      - name: Check a key that is not in a section reads as absent
+        run: make RULES=bytecode inikeys
+
   # Cross-compiled here rather than on a Windows runner, because this is the
   # same toolchain the tree is developed with and it takes a minute.
   windows:

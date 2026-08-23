@@ -214,7 +214,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate
+.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate inikeys
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -262,6 +262,17 @@ landing: $(BUILD)/landing
 
 $(BUILD)/landing: test/landing.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/landing.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# A key that is not in a section, which neither suite can see: the reader
+# decided a key was absent by reading the byte where its search stopped, so
+# with another section behind it the key came back holding the next section's
+# first value, and a two-language build died on it.
+inikeys: $(BUILD)/inikeys
+	@$(BUILD)/inikeys
+
+$(BUILD)/inikeys: test/inikeys.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/inikeys.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 $(OBJDIR)/%.o: %.c $(HEADERS)

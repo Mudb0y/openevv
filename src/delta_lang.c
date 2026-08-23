@@ -160,7 +160,7 @@ static void ini_build(void)
     bind();
 
     for (i = 0; delta_languages[i] != 0; i++)
-        room += delta_languages[i]->ini_size;
+        room += delta_languages[i]->ini_size + 2;
 
     ini_all = malloc((size_t)room);
     if (ini_all == 0)
@@ -170,6 +170,16 @@ static void ini_build(void)
         const char *b = delta_languages[i]->ini;
         int32_t     n = body_of(b, delta_languages[i]->ini_size);
         int32_t     from = (i == 0) ? 0 : first_language_section(b, n);
+
+        /* A blank line before the bracket, which is how one section is
+           separated from the next inside a module's own blob. The reader's
+           end-of-section walk stops on it and the key lookup takes stopping
+           there to mean the key is absent; butted straight together it stops
+           on the bracket instead. */
+        if (i != 0) {
+            ini_all[at++] = '\n';
+            ini_all[at++] = '\n';
+        }
 
         memcpy(ini_all + at, b + from, (size_t)(n - from));
         at += n - from;

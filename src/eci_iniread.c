@@ -268,6 +268,7 @@ THIS char *ini_getString(IniFileReader *r, const char *section,
     char   *answer = 0;
     char   *header;
     int32_t body;
+    int32_t end;
     int32_t stop;
     int32_t n;
 
@@ -293,9 +294,15 @@ THIS char *ini_getString(IniFileReader *r, const char *section,
     body = r->at + (int32_t)strlen(section) + 2;
     if (!ini_goEndSection(r))
         return 0;
+    end = r->at;
 
-    r->at = ini_stringSearch(r, key, body, r->at);
-    if (AT(r, r->at) == 0 || AT(r, r->at) == '\n'
+    /* Where the search stopped is what says whether the key was there: it
+       answers its own limit when it fails, and steps a little past it. The
+       byte at that place only tells on a failure that landed on the end of a
+       line or of the blob, so a key absent from a section with another
+       section behind it came back with the next section's first value. */
+    r->at = ini_stringSearch(r, key, body, end);
+    if (r->at >= end || AT(r, r->at) == 0 || AT(r, r->at) == '\n'
         || AT(r, r->at) == INI_END)
         return 0;
 
