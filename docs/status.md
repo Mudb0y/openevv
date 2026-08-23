@@ -32,13 +32,13 @@ The compiler. The rules are readable C, but there is no way to write a new rule 
 
 Polish, which is the reason the compiler matters. Nothing started.
 
-Anything but English, German and British English at build time. The other six lift and decompile, but nothing has been built from them.
+Anything but English, German and British English at build time. The other six lift and decompile, but nothing has been built from them. The three that are built all pass the same six builds now, so a language being new is no longer a reason to expect less of it.
 
 ## German
 
 German builds and speaks, and speaks IBM's samples. `make LANG=lang/dede probe` and the reference beside it are in `docs/building.md`, and `EVV_LANG=dede test/suite.sh` runs the same six categories over 80 cases of its own. On 22 August 2026 all 80 came out byte for byte identical to IBM's German binary.
 
-That was the sixty-four bit Windows build, running on Windows against a reference built from `analysis/dede`, with the rules run as bytecode and with the same rules run as the C they decompile to; and both on its own and linked beside English in one binary, where each language still matches its own oracle over its own cases. Linux followed on 23 August 2026, again in both rule forms, on its own and in a binary with English and British English in it -- all 80 each time. Nothing has been built from `lang/dede` for thirty-two bit.
+That was the sixty-four bit Windows build, running on Windows against a reference built from `analysis/dede`, with the rules run as bytecode and with the same rules run as the C they decompile to; and both on its own and linked beside English in one binary, where each language still matches its own oracle over its own cases. Linux followed on 23 August 2026, again in both rule forms, on its own and in a binary with English and British English in it, and thirty-two bit the same day in both rule forms -- all 80 every time. So German now passes everywhere English does.
 
 Two things had to be fixed to get there, and both were ours rather than the language's.
 
@@ -52,17 +52,17 @@ What is left is not German's. Two of the cases with markers in them -- an audio 
 
 The NVDA add-on follows. Where the library it loads has more than one language in it, every language's eight presets are offered as voices of their own -- "German - Voice 3" -- each saying which language it is, so the reader matches a document's language to one of them; and a `LangChangeCommand` in a speech sequence switches the engine mid-utterance, so a German quotation in an English page is read as German. A library with one language in it offers what it always did, under the same names, so nothing a reader had chosen is lost.
 
-Not done for German: no dictionary in a form a person can edit, since `tools/delta-dict.py` has only been run for English; no `long` cases; and no Linux or thirty-two bit build.
+Not done for German: no dictionary in a form a person can edit, since `tools/delta-dict.py` has only been run for English, and no `long` cases.
 
 ## British English
 
-British English builds and speaks, and speaks IBM's samples. `make LANG=lang/engb probe` builds it and `EVV_LANG=engb test/suite.sh` runs the same six categories over 81 cases of its own, against a reference built from `analysis/engb` -- `make -C reference TAG=engb BUILD=../build/reference-engb`. On 23 August 2026 all 81 came out byte for byte identical to IBM's British binary.
+British English builds and speaks, and speaks IBM's samples. `make LANG=lang/engb probe` builds it and `EVV_LANG=engb test/suite.sh` runs the same six categories over 81 cases of its own, against a reference built from `analysis/engb` -- `make -C reference TAG=engb BUILD=../build/reference-engb`. On 23 August 2026 all 81 came out byte for byte identical to IBM's British binary, in all six builds -- sixty-four bit, thirty-two bit and Windows, each with the rules as bytecode and as the C they decompile to -- and again out of a binary with English and German in it.
 
 It is family one dialect one where US English is family one dialect nought, which is the first pair of dialects in one family the language mechanism has carried; `test/compare.sh` knows it as `0x10001`. That is the thing British English proves which German could not: nothing keys off the family alone.
 
 It matched on the first run, with no fix needed anywhere -- the lift, the mechanism and the tools were all already right. What it did find was the multi-language crash above, and only because two dialects of one family was the pair being tried at the time; English and German turned out to crash identically.
 
-Not done for British English: no dictionary a person can edit, no `long` cases of its own, and no thirty-two bit or Windows build.
+Not done for British English: no dictionary a person can edit, and no `long` cases of its own.
 
 ## The other six languages
 
