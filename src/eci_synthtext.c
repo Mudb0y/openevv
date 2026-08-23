@@ -25,6 +25,7 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "delta_lang.h"
 #include "evv_arena.h"
 
 #define APP_CONCATENATIVE  0xc
@@ -141,6 +142,16 @@ static const struct { uint32_t cp; uint8_t byte; } WESTERN[] = {
     { 0x0153, 0x9c }, { 0x017e, 0x9e }, { 0x0178, 0x9f },
 };
 
+/* Which language this thread is speaking, or nothing if it is not saying yet.
+   Not delta_lang_now: the text path runs before a language is in force and
+   that accessor refuses then, as it should. */
+static const delta_language *langOf(SynthThread *t)
+{
+    if (t == 0 || ST_ENGINE_ID(t) == 0)
+        return 0;
+    return delta_lang_by_id((int32_t)ST_ENGINE_ID(t));
+}
+
 /* Say whether the voice in play is concatenative, but only when the answer
    has changed since the last time anyone was told. */
 static void reportConcatenative(SynthThread *t)
@@ -244,7 +255,8 @@ static void utf8ToWide(const char *text, uint32_t len, uint16_t *out)
    Answers whether the text really was UTF-8. It it was not, the caller's own
    bytes are put in the buffer untouched instead, because text that is not
    what it claimed to be is better said wrongly than not at all. */
-static int utf8ToWestern(const char *text, uint32_t len, char *out)
+static int utf8ToWestern(const char *text, uint32_t len, char *out,
+                         const delta_language *l)
 {
     uint32_t i;
     char *o = out;
@@ -297,10 +309,29 @@ static int utf8ToWestern(const char *text, uint32_t len, char *out)
         }
         i += (uint32_t)want - 1;
 
-        for (m = 0; m < sizeof WESTERN / sizeof WESTERN[0]; m++) {
-            if (WESTERN[m].cp == (uint32_t)cp) {
-                cp = WESTERN[m].byte;
-                break;
+        /* The language in force first, since a character it names is its
+           own business and its answer is the one its alphabet agrees with.
+           Then the Western set, and then the low byte, which is what the
+           original does and is nothing for a letter in neither. */
+        {
+            int done = 0;
+
+            if (l != 0 && l->codepoints != 0) {
+                for (m = 0; m < (uint32_t)l->codepoints_n; m++) {
+                    if (l->codepoints[m].cp == (uint32_t)cp) {
+                        cp = l->codepoints[m].byte;
+                        done = 1;
+                        break;
+                    }
+                }
+            }
+            if (!done) {
+                for (m = 0; m < sizeof WESTERN / sizeof WESTERN[0]; m++) {
+                    if (WESTERN[m].cp == (uint32_t)cp) {
+                        cp = WESTERN[m].byte;
+                        break;
+                    }
+                }
             }
         }
         *o++ = (char)cp;
@@ -354,7 +385,7 @@ static void recodeForSSML(SynthThread *t, const char *text, uint32_t len,
                 continue;
             *mbcs_out = out;
             memset(out, 0, len + 1);
-            utf8ToWestern(text, len, out);
+            utf8ToWestern(text, len, out, langOf(t));
         }
     }
 }
@@ -391,6 +422,45 @@ THIS void addTextRun(SynthThread *t, char *text, uint32_t len, int32_t seq,
     }
 
     recodeForSSML(t, text, len, &mbcs_out, &mapped_out);
+
+    /* And the way in for a language whose letters are not in the byte set
+       this engine was built around.
+     *
+     * IBM's takes the caller's bytes as characters on this path: the code set
+     * only ever mattered under the SSML filter, which recodes above, and for
+     * the languages with a romanizer, which convert their own. Every letter of
+     * the nine it shipped is in the Western byte set, so nothing else needed
+     * saying. A language of ours can have letters that are not, and then a
+     * caller writing UTF-8 -- which is every caller now -- would hand over two
+     * bytes the machine reads as two characters.
+     *
+     * So a language that declares characters of its own gets its text
+     * converted here, and one that declares none is left exactly as it was.
+     * The nine IBM shipped declare none, which is what makes this safe rather
+     * than merely careful: their behaviour cannot change, and the suite says
+     * so. Text that is not UTF-8 after all is left alone by the converter
+     * itself. */
+    {
+        const delta_language *l = langOf(t);
+
+        if (mbcs_out == 0 && mapped_out == 0
+            && l != 0 && l->codepoints_n > 0) {
+            char *out = (char *)cpp_new(len + 1);
+
+            if (out != 0) {
+                memset(out, 0, len + 1);
+                if (utf8ToWestern(text, len, out, l)) {
+                    /* Only the buffer changes hands. What is outstanding is
+                       counted in characters further down, out of whatever
+                       the filters answer, and the count it was given was
+                       taken before any of this. */
+                    mbcs_out = out;
+                } else {
+                    cpp_delete(out);
+                }
+            }
+        }
+    }
 
     if (wide_out)
         source = wide_out;

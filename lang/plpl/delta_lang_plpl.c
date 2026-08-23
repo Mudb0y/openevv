@@ -34,6 +34,9 @@ extern const delta_rule_c plpl_delta_rule_native[];
 
 extern const delta_store plpl_delta_authored_store[];
 
+extern const delta_codepoint plpl_delta_codepoints[];
+extern const int32_t plpl_delta_codepoints_n;
+
 /* The two slots the runtime fills in for this language: the symbol table,
    once delta_syms_bind has copied the stores into the arena, and the index
    of whichever rules are written as C. Not const, unlike everything else
@@ -102,6 +105,8 @@ delta_language delta_lang_plpl = {
 
     plpl_delta_const_store,
     plpl_delta_authored_store,
+    plpl_delta_codepoints,
+    0,                   /* how many of those */
     &plpl_delta_sym_ref,
 
     plpl_vstmtbl,
@@ -138,6 +143,7 @@ void delta_lang_bind_plpl(void)
     l->rule_count     = plpl_delta_rule_count;
     l->rule_setjmp    = plpl_delta_rule_setjmp;
     l->globals_n      = plpl_delta_globals_n;
+    l->codepoints_n   = plpl_delta_codepoints_n;
     l->ini            = plpl_eciIni;
     l->ini_size       = plpl_eciIniSize;
 }

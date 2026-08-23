@@ -386,21 +386,46 @@ Polish's letters have no names yet.
 
 ### How a character gets in
 
-The open question is not the alphabet but the encoding. The machine sees single
-bytes, and a caller's code points are turned into single bytes on the way in by
-a table in `src/eci_synthtext.c` that covers Windows Western and says of
-everything else that it "keeps its own low byte, which is what the original does
-whether or not that means anything". Polish's letters have nowhere to go in that
-table, so a caller sending UTF-8 today gets the low byte of the code point,
-which is nothing.
+A caller writes code points and the machine reads single bytes, and between
+them IBM's engine does almost nothing: the code set only ever mattered under
+the SSML filter, which recodes, and for the four families with a romanizer,
+which convert their own. On the ordinary path the caller's bytes are the
+characters. That was enough for the nine languages IBM shipped, because every
+letter any of them has is in the Windows Western byte set. It is not enough for
+a language whose letters are not, and a caller writing UTF-8 -- which is every
+caller now -- would hand over two bytes the machine reads as two characters.
+That is what `Zażółć gęślą jaźń` did: 120,714 samples, a minute of symbol names.
 
-There are three ways out and they should be chosen deliberately. The bytes can be
-fed to the engine directly, which is what the measurements above do and is no use
-to a real caller. The Western table can gain the Polish code points, which is
-language data in the engine and would serve every language equally badly. Or the
-conversion can be driven by the language's own alphabet, which is the one that
-belongs where the data is -- the alphabet already holds each character's text --
-and is the recommendation. None of it is written yet.
+So a language can say what its own characters arrive as, and
+`lang/<tag>/<tag>.codepoints` is where:
+
+    0105 82   # a with ogonek
+    0107 83   # c with acute
+
+    make EVVLANG=lang/plpl codepoints
+
+writes that into `delta_codepoints_<tag>.c`, and the language carries it in
+`delta_language` beside everything else it knows. `tools/lang-codepoints.py`
+refuses a byte the language's alphabet does not name, since a character
+arriving as a byte nothing names would simply be something else.
+
+`addTextRun` in `src/eci_synthtext.c` then converts the text on the way in --
+and this is a deliberate divergence from IBM's engine, the fourth in the tree.
+What makes it safe rather than merely careful is the guard: the conversion runs
+only for a language that declares characters of its own, and the nine IBM
+shipped declare none, so their behaviour cannot change. The suite says so
+rather than the argument: English's 81 cases, German's 80 and the samples hash
+are all untouched by it, on sixty-four bits and on thirty-two.
+
+What it buys, measured on the same pangram: 16,819 samples where there were
+120,714, and `kąt` written as UTF-8 comes out byte for byte identical to `kąt`
+written in the module's own bytes, which is what says the conversion is exact
+rather than approximately right.
+
+Text that is not UTF-8 after all is left alone, because the converter answers
+whether it was and the caller's own bytes are used when it was not. So a caller
+that sends the module's bytes directly still works, which is what the
+measurements above were taken with before any of this existed.
 
 ### Reading what a language decided
 

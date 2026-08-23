@@ -320,7 +320,7 @@ $(BUILD)/libevv$(SUF).a: $(OBJECTS) $(RULESTAMP)
 # class as the suite: obtainable, and not needed to build.
 .PHONY: notation notation-check notation-prove notation-regenerate \
         notation-symbols notation-rewrite upper upper-prove upper-check \
-        authored constants
+        authored constants codepoints
 notation:
 	@python3 tools/delta-notation.py tree
 
@@ -385,6 +385,14 @@ authored:
 # `notation-rewrite' after it: a new store is named in the generated file too.
 constants:
 	@python3 tools/delta-consts.py $(TAGS)
+
+# What each of a language's own characters arrives as: the code point a caller
+# writes and the byte its alphabet knows it by. Authored like the constants
+# rather than lifted, since the nine IBM shipped need none -- every letter they
+# have is in the byte set the engine was built around, and a language of ours
+# can have letters that are not.
+codepoints:
+	@python3 tools/lang-codepoints.py $(TAGS)
 
 # The tables beside the rules, as text: the variables the language declares,
 # the settings it carries, the statement table, the lookup sets and the bytes

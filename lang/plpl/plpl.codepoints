@@ -1,0 +1,22 @@
+# What each of Polish's own characters arrives as: the code point a caller
+# writes, and the byte its alphabet knows that character by. The bytes are the
+# ones lang-alphabet.py put the letters at, which were free in the alphabet
+# Italian brought; tools/lang-alphabet.py show plpl says what each one is now.
+
+0105 82   # a with ogonek
+0107 83   # c with acute
+0119 84   # e with ogonek
+0142 86   # l with stroke
+0144 87   # n with acute
+015b 88   # s with acute
+017a 89   # z with acute
+017c 8b   # z with dot above
+
+0104 8d   # and the capitals
+0106 8e
+0118 8f
+0141 90
+0143 91
+015a 92
+0179 9b
+017b 9e

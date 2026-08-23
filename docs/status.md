@@ -188,7 +188,13 @@ The sixteen Polish letters went in at byte values the alphabet did not claim -- 
 
 Measured rather than assumed: before, a Polish letter cost about thirteen thousand samples wherever it stood, because the engine had no name for the byte and read it as a symbol -- eight of them alone came to 103,356 samples. After, `kąt` is 10,648 samples where `kat` is 8,107, and the two traces share their first 14,336 rule entries. A Polish letter on its own is still silent, because a lone letter is spoken by its name and Polish's letters have no names yet.
 
-What is left is the rest of the language: the letters' own names, the nine sounds Italian has not, stress, normalisation, and the dictionary. And the way in: the machine sees single bytes and the table that turns a caller's code points into them has nowhere to put Polish, so the choice of how a Polish character arrives is open and `docs/building.md` sets out the three ways with a recommendation.
+And Polish text arrives now. A caller writes code points and the machine reads single bytes, and IBM's engine does almost nothing between them: the code set only mattered under the SSML filter and for the four families with a romanizer, so on the ordinary path the caller's bytes are the characters. That was enough for the nine languages IBM shipped, every letter of which is in the Windows Western byte set, and not enough for one whose letters are not. `lang/<tag>/<tag>.codepoints` says what each of a language's own characters arrives as, `make codepoints` writes it into the module, and `addTextRun` converts on the way in.
+
+That is a deliberate divergence, the fourth in the tree, and the guard is what makes it safe rather than merely careful: the conversion runs only for a language that declares characters of its own, and the nine IBM shipped declare none. What says so is not the argument but the suite -- English's 81 cases, German's 80 and the samples hash, on sixty-four bits and on thirty-two, all untouched.
+
+Measured on the same pangram: `Zażółć gęślą jaźń` is 16,819 samples where it was 120,714, and `kąt` written as UTF-8 comes out byte for byte identical to `kąt` written in the module's own bytes, which is what says the conversion is exact rather than close.
+
+What is left is the rest of the language: the letters' own names, the nine sounds Italian has not, stress, normalisation, and the dictionary.
 
 There is no oracle for any of it -- IBM never made a Polish module -- so the ear is the judge, and a hash beside each verdict is what will keep an approved sound from moving afterwards. The tool that would let the ear be spared the structural part is `build/probe ... p`, which asks for phonemes instead of sound; it is one flag away from working and `docs/building.md` says which.
 

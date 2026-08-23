@@ -46,6 +46,17 @@ typedef void (*delta_rule_fn)(void);
 /* And one rule of the language written as C rather than left as bytecode. */
 typedef int32_t (*delta_rule_cfn)(void *state, const int32_t *args, int nargs);
 
+/* One character of the language's alphabet as a caller writes it: the code
+   point it arrives as, and the byte the machine knows it by. IBM's engine has
+   no such table -- it turns a code point into a single byte through one
+   Windows Western list and keeps the low byte of anything else, which is
+   nothing for a letter outside that set. A language IBM never shipped needs
+   somewhere to say what its own letters arrive as, and this is it. */
+typedef struct {
+    uint32_t cp;
+    uint8_t  byte;
+} delta_codepoint;
+
 /* One store of bytes the rules name by address. */
 typedef struct {
     uint8_t *at;
@@ -95,6 +106,12 @@ typedef struct delta_language {
        apart because the lifted list is generated out of the objects and
        anything added to it there would be lost the next time that ran. */
     const delta_store  *authored_store;
+
+    /* What each of its own characters arrives as, for the text on the way
+       in. Empty for the languages IBM shipped: theirs are all in the
+       Western set already. */
+    const delta_codepoint *codepoints;
+    int32_t                codepoints_n;
     const int32_t     **sym_ref;
 
     /* the statement table, and the fixing-up the language does to it */

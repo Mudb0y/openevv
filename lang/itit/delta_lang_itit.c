@@ -34,6 +34,9 @@ extern const delta_rule_c itit_delta_rule_native[];
 
 extern const delta_store itit_delta_authored_store[];
 
+extern const delta_codepoint itit_delta_codepoints[];
+extern const int32_t itit_delta_codepoints_n;
+
 /* The two slots the runtime fills in for this language: the symbol table,
    once delta_syms_bind has copied the stores into the arena, and the index
    of whichever rules are written as C. Not const, unlike everything else
@@ -102,6 +105,8 @@ delta_language delta_lang_itit = {
 
     itit_delta_const_store,
     itit_delta_authored_store,
+    itit_delta_codepoints,
+    0,                   /* how many of those */
     &itit_delta_sym_ref,
 
     itit_vstmtbl,
@@ -138,6 +143,7 @@ void delta_lang_bind_itit(void)
     l->rule_count     = itit_delta_rule_count;
     l->rule_setjmp    = itit_delta_rule_setjmp;
     l->globals_n      = itit_delta_globals_n;
+    l->codepoints_n   = itit_delta_codepoints_n;
     l->ini            = itit_eciIni;
     l->ini_size       = itit_eciIniSize;
 }
