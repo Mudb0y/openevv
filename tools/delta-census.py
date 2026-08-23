@@ -171,10 +171,10 @@ class Code:
             return (('call', self.entries[which]),
                     (self.code[q + 2], self.code[q + 3]), ops, [], q + 4)
         if op == 'jump':
-            return ('jump',), (), ops, [self.s16(q)], q + 2
+            return ('jump',), (), ops, [self.u16(q)], q + 2
         if op == 'branch':
             return (('branch', COND[self.code[q]]), (), ops,
-                    [self.s16(q + 1)], q + 3)
+                    [self.u16(q + 1)], q + 3)
         if op == 'cmp':
             return two(CMPK)
         if op == 'alu2':
@@ -195,7 +195,7 @@ class Code:
             a, _av, q2 = one(q)
             n = self.u16(q2)
             q2 += 2
-            targets = [self.s16(q2 + 2 * i) for i in range(n)]
+            targets = [self.u16(q2 + 2 * i) for i in range(n)]
             return ('switch', a), (n,), ops, targets, q2 + 2 * n
         if op == 'map':
             a, _av, q2 = one(q + 2)

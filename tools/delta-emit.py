@@ -326,7 +326,13 @@ class Emitter:
         for at, addr in fixups:
             if addr not in labels:
                 raise ValueError("jump to 0x%x, which is nowhere" % (addr or 0))
-            self.patch16(at, labels[addr] - start)
+            where = labels[addr] - start
+            if where > 0xffff:
+                raise SystemExit(
+                    "delta-emit: rule %s is %d bytes, and a jump names a "
+                    "place in it as sixteen bits, so it cannot reach %d"
+                    % (d.name, len(self.code) - start, where))
+            self.patch16(at, where)
 
         self.rules.append((name, start, len(self.code) - start,
                            d.frame, d.pbase, d.params))

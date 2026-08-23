@@ -300,6 +300,18 @@ static int32_t get16s(const uint8_t *p)
     return (int32_t)(int16_t)get16(p);
 }
 
+/* Where a jump goes: an offset from the start of the rule, so never negative.
+   Read as signed it wrapped at 32,767, and English's longest rule is 30,929
+   bytes -- within six per cent of that and never over it, which is why this
+   held for three languages. French of France has a rule of 33,075 bytes and
+   Canadian French one of 34,154, and both jumped to a negative place and took
+   the machine apart. Nothing about the bytecode changes: the emitter always
+   wrote a position, and only the reading of it was wrong. */
+static int32_t get16to(const uint8_t *p)
+{
+    return (int32_t)get16(p);
+}
+
 static int32_t operand_read(interp *st, const uint8_t **pp, int w, int sext);
 
 /* An operand's address, for the ones that name a place rather than a
@@ -551,12 +563,12 @@ static void step(interp *st)
     }
 
     case OP_JUMP:
-        st->pc = get16s(p);
+        st->pc = get16to(p);
         return;
 
     case OP_BRANCH: {
         int cond = *p++;
-        int32_t to = get16s(p);
+        int32_t to = get16to(p);
 
         p += 2;
         if (delta_condition(&st->fl, cond)) {
@@ -652,7 +664,7 @@ static void step(interp *st)
 
         p += 2;
         if (idx >= 0 && idx < (int32_t)n) {
-            st->pc = get16s(p + 2 * idx);
+            st->pc = get16to(p + 2 * idx);
             return;
         }
         p += 2 * n;
