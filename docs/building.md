@@ -98,8 +98,8 @@ obtainable, and not needed to build.
 is the one that says the text is the source rather than a second copy. It reads
 `lang/enus/rules`, opens no object at all, and writes what the engine compiles
 -- `delta_rules_enus.c` and `delta_rules.h` -- into a directory of its own, then
-holds both against the files in the tree. Both match byte for byte: 4,932,041
-bytes and 168,178.
+holds both against the files in the tree. Both match byte for byte: 4,999,473
+bytes and 168,881, measured on 23 August 2026.
 
 What made that possible was one small table. A rule names a constant by a
 symbol; the bytes behind it are a whole data section of the object it was
