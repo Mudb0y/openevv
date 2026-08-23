@@ -1,10 +1,10 @@
 # What works and what does not
 
-Last measured 22 August 2026.
+Last measured 23 August 2026.
 
 ## Works
 
-The engine speaks, and it speaks IBM's samples. All 81 cases in six categories come out byte for byte identical to IBM's own binary: plain text, UTF-8, annotations, annotations with the annotation input type on, real-world text with the parameters read back in a person's units, and the user dictionary.
+The engine speaks, and it speaks IBM's samples. All 81 cases in six categories come out byte for byte identical to IBM's own binary: plain text, UTF-8, annotations, annotations with the annotation input type on, real-world text with the parameters read back in a person's units, and the user dictionary. That is English; eight of the SDK's nine languages do the same over the cases there are for each, and the sections below say which.
 
 That holds in all four configurations the tree can build for this machine -- thirty-two and sixty-four bit, each with the rules run as bytecode and with the same rules run as the C they decompile to -- and in the Windows build as well, which is a fifth: `build/probe.exe` matches IBM's binary over the same 81 cases, under Wine on Linux and on Windows itself, where the scripts run both binaries without Wine in front of them.
 
