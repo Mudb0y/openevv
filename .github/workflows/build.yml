@@ -63,6 +63,9 @@ jobs:
       - name: Check a key that is not in a section reads as absent
         run: make RULES=bytecode inikeys
 
+      - name: Check a stop from another thread leaves the engine whole
+        run: make RULES=bytecode stopthread
+
   # Cross-compiled here rather than on a Windows runner, because this is the
   # same toolchain the tree is developed with and it takes a minute.
   windows:
