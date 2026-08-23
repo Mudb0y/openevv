@@ -19,6 +19,7 @@ usage: lang-census.py <tag> <template>          the counts
        lang-census.py <tag> <template> rules    every rule, one to a line
 """
 
+import difflib
 import os
 import sys
 
@@ -114,13 +115,21 @@ def census(tag, template, listing=False):
         elif a[kind] == b[kind]:
             print("  %-11s still the template's" % kind)
         else:
+            # A real difference and not a positional one: inserting sixteen
+            # lines in the middle of a table would otherwise read as every
+            # line after them having changed, which is how a small edit comes
+            # to look like a rewrite.
             mine_lines = a[kind].split("\n")
             their_lines = b[kind].split("\n")
-            moved = sum(1 for i in range(min(len(mine_lines), len(their_lines)))
-                        if mine_lines[i] != their_lines[i])
-            moved += abs(len(mine_lines) - len(their_lines))
-            print("  %-11s %d lines of %d differ"
-                  % (kind, moved, len(mine_lines)))
+            added = gone = 0
+            for tag_, i1, i2, j1, j2 in difflib.SequenceMatcher(
+                    None, their_lines, mine_lines).get_opcodes():
+                if tag_ in ("insert", "replace"):
+                    added += j2 - j1
+                if tag_ in ("delete", "replace"):
+                    gone += i2 - i1
+            print("  %-11s %d lines of %d are ours, %d of the template's gone"
+                  % (kind, added, len(mine_lines), gone))
     return True
 
 

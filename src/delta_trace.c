@@ -215,7 +215,29 @@ void print_var(delta_state *d, ...)     { (void)d; }
 void print_stream(delta_state *d, ...)  { (void)d; }
 void vprt_var(delta_state *d, ...)      { (void)d; }
 void vprt_strm(delta_state *d, ...)     { (void)d; }
-void disptok(delta_state *d, ...)       { (void)d; }
+
+/* One field of one token, under the name the language gives that value.
+   IBM's own was its debugger's display and this port left it empty, which
+   left every phoneme the engine reports nameless -- so nothing could read
+   what a language had decided a word was made of. It is the statement table
+   that knows: a field declares the names its values may take, and
+   field_value in eci_access.c already turns one into the other for the
+   dictionary's sake.
+
+   The pointer arrives four bytes into the token, which is how the original's
+   caller hands it over; field_value counts eight from the token itself. */
+void disptok(delta_state *d, const void *at, int32_t stream, int32_t field,
+             char *out)
+{
+    extern char *field_value(int8_t f, void *tok, int32_t fld);
+
+    *out = 0;
+    if (at == 0 || stream < 0 || stream >= (int32_t)d->nstmts)
+        return;
+    if (field < 0 || field >= vstmtbl[stream].nfields)
+        return;
+    strcpy(out, field_value((int8_t)stream, (char *)at - 4, field));
+}
 
 /* Spell a token so that it can be shown: the printable characters as they
    are, everything else as an escape. Only a report ever asks, so it leaves

@@ -48,6 +48,8 @@ int      STDCALL et_addText(OldInst *h, const char *text);
 int      STDCALL et_synthesize(OldInst *h);
 int      STDCALL et_insertIndex(OldInst *h, int32_t n);
 int      STDCALL ev_setOutputBuffer(OldInst *h, int32_t n, void *buf);
+int             ev_setOutputToPhonemeCallback(OldInst *h, int32_t n,
+                                              void *buf);
 int32_t  STDCALL ev_setParam(OldInst *h, int32_t which, int32_t value);
 int32_t  STDCALL eo_getParam(OldInst *h, int32_t which);
 int32_t  STDCALL vc_getVoiceParam(OldInst *h, int32_t voice, int32_t which);
@@ -70,6 +72,11 @@ void evv_port_finish(void);
 
 static short  frame[FRAME];
 static short *samples;
+/* Where the engine puts the phonemes it places when it is asked for those
+   rather than samples: each is a name packed into a word and a length in
+   milliseconds. */
+static int32_t phonemes[2048];
+static int     phonemes_wanted;
 static size_t nsamples;
 static size_t cap;
 
@@ -94,7 +101,22 @@ static enum ECICallbackReturn STDCALL on_message(OldInst *h,
     (void)h;
     (void)data;
 
-    if (msg == eciWaveformBuffer)
+    if (msg == eciPhonemeBuffer) {
+        long i;
+
+        /* A name is four characters packed into a word and is not
+           nul-terminated when all four are used, so it is printed by
+           length rather than as a string. */
+        for (i = 0; i < param; i++) {
+            const char *nm = (const char *)&phonemes[i * 2];
+            int j;
+
+            printf("speak: phoneme ");
+            for (j = 0; j < 4 && nm[j] != 0; j++)
+                putchar(nm[j]);
+            printf(" %d ms\n", (int)phonemes[i * 2 + 1]);
+        }
+    } else if (msg == eciWaveformBuffer)
         keep(frame, (size_t)param);
     else if (msg == eciIndexReply)
         printf("speak: index %ld\n", param);
@@ -239,6 +261,34 @@ int main(int argc, char **argv)
     if (!ev_setOutputBuffer(h, FRAME, frame)) {
         printf("speak: setOutputBuffer refused\n");
         return 1;
+    }
+
+    /* A p asks for phonemes instead of sound: what the language decided the
+       words are made of, under the names its own statement table gives them.
+       Nothing is written to the wave file in that mode.
+     *
+     * It does not report anything yet, and what is missing is written down
+     * rather than guessed at. The engine places its phonemes -- placePhoneme
+     * in src/eci_deltacb.c is reached, five times for one short word -- and
+     * returns at once because ELOQ_WANT_PHONEMES is nought. Registering the
+     * buffer sets the thread state, parameter four sets the flag through
+     * setPhonemeIndiciesRun, and something puts it back before the utterance:
+     * es_setCurrentState sends espr0 when the state says the engine is not in
+     * phoneme mode, and the text path sends the same on a fresh utterance.
+     * disptok, which spells a token and was an empty stub, is written now, so
+     * the names will be there when the flag stays. */
+    if (argc > 3 && strchr(argv[3], 'p')) {
+        if (!ev_setOutputToPhonemeCallback(h, (int32_t)(sizeof phonemes
+                                                        / sizeof phonemes[0]),
+                                           phonemes)) {
+            printf("speak: it would not report phonemes\n");
+            return 1;
+        }
+        /* And the parameter that says the caller wants to be told: without
+           it the engine places its phonemes and reports none of them. */
+        if (ev_setParam(h, 4, 1) < 0)
+            printf("speak: it would not report phoneme indices\n");
+        phonemes_wanted = 1;
     }
 
     if (argc > 3 && strchr(argv[3], 'a')) {

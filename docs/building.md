@@ -334,6 +334,92 @@ series Polish has and Italian has not -- are spoken with. Nothing calls it yet.
 Its numbers are a starting point: ś and ź sit between Italian's palatal and its
 dentals with a higher third formant, and the ear settles the rest.
 
+### The alphabet, and what each letter says
+
+A language's alphabet is the value names of the input statement's first field:
+207 of them for Italian, from `GAP` and the five vowels through the consonants,
+the digits, the punctuation and the accented Latin-1 characters. And beside it,
+in the same statement, the `variants` bytes are one record of five bytes for
+every one of those names, in the same order -- 1,040 bytes for 208 -- holding
+what case the character is, whether it is a letter or a digit or punctuation,
+whether it is a vowel or a consonant or a glide, whether it carries an accent,
+and the phoneme it says on its own.
+
+That last field is letter-to-sound at its simplest, and it is data. `a` says a,
+`b` says b, `y` is a glide that says y, `ó` carries an accent and says nothing
+of its own because the rules decide it. A capital says nothing either: `B` and
+`A` both have GAP where `C` and `N` have C and N, which is the table having been
+filled by matching a phoneme's name to a character's, so the rules take a
+capital down to its own lower case before they ask.
+
+    python3 tools/lang-alphabet.py show plpl          every character
+    python3 tools/lang-alphabet.py show plpl a e y    only the ones named
+    python3 tools/lang-alphabet.py add plpl 82 case=lower type=letter \
+                                   letter=vow accent='~yes' phoneme=a
+
+reads and writes it by name, because a five-byte record read by eye in a hex
+blob is how a letter quietly becomes a digit.
+
+`add` puts a character at a byte value the alphabet does not claim yet and
+appends its record, rather than reusing a code: the dictionaries are keyed by
+these codes, so moving one moves every word that used it. Nineteen byte values
+between 0x20 and 0xff are claimed by no name in Italian's alphabet, and Polish
+needs sixteen.
+
+Those sixteen are in now, each starting from the nearest phoneme the module
+already has: `ł` says w, which is what Polish ł is; `ń` says N, which is the
+palatal nasal Italian spells gn and is exactly Polish ń; `ć` says C, `ś` says S,
+`ź` and `ż` say Z, `ą` says a and `ę` says e until the nasal vowels are read out
+of French. `ó` needed nothing, being already in the alphabet. The capitals say
+GAP as every other capital does.
+
+What that changed, measured rather than assumed. Before it, a Polish letter cost
+about thirteen thousand samples wherever it appeared, because the engine had no
+name for the byte and read it as a symbol -- eight of them alone came to 103,356
+samples, a second each. After it, `kąt` is 10,648 samples where `kat` is 8,107,
+and the two share the first 14,336 rule entries of their traces, which is what
+says ą is being handled as the vowel it now is rather than as an interruption.
+
+A Polish letter *alone* is still silent, and that is the next thing rather than a
+fault: a lone letter is spoken by its name -- Italian says esse for s -- and
+Polish's letters have no names yet.
+
+### How a character gets in
+
+The open question is not the alphabet but the encoding. The machine sees single
+bytes, and a caller's code points are turned into single bytes on the way in by
+a table in `src/eci_synthtext.c` that covers Windows Western and says of
+everything else that it "keeps its own low byte, which is what the original does
+whether or not that means anything". Polish's letters have nowhere to go in that
+table, so a caller sending UTF-8 today gets the low byte of the code point,
+which is nothing.
+
+There are three ways out and they should be chosen deliberately. The bytes can be
+fed to the engine directly, which is what the measurements above do and is no use
+to a real caller. The Western table can gain the Polish code points, which is
+language data in the engine and would serve every language equally badly. Or the
+conversion can be driven by the language's own alphabet, which is the one that
+belongs where the data is -- the alphabet already holds each character's text --
+and is the recommendation. None of it is written yet.
+
+### Reading what a language decided
+
+`build/probe <text> <file> p` asks for phonemes instead of sound: what the
+language decided the words are made of, under the names its own statement table
+gives them. It is the tool the whole of Polish wants, since it says what
+letter-to-sound answered without anybody listening.
+
+It does not report anything yet, and where it stops is written down rather than
+guessed at. The engine places its phonemes -- `placePhoneme` in
+`src/eci_deltacb.c` is reached, five times for one short word -- and returns at
+once because `ELOQ_WANT_PHONEMES` is nought. Registering a phoneme buffer sets
+the thread's state, parameter four sets the flag through
+`setPhonemeIndiciesRun`, and something puts it back before the utterance:
+`es_setCurrentState` sends `espr0` when the state says the engine is not in
+phoneme mode, and the text path sends the same on a fresh utterance. `disptok`,
+which spells a token and was an empty stub in this port, is written now -- so
+the names will be there the moment the flag stays on.
+
 ### Keeping the chassis honest
 
     make EVVLANG=lang/plpl census

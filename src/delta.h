@@ -856,7 +856,11 @@ void print_var(delta_state *d, ...);
 void print_stream(delta_state *d, ...);
 void vprt_var(delta_state *d, ...);
 void vprt_strm(delta_state *d, ...);
-void disptok(delta_state *d, ...);
+/* Spell one field of one token as the language names it, which is what the
+   phoneme callback reports and what a person reads a token by. The pointer is
+   the token four bytes in, as the original's own caller hands it over. */
+void disptok(delta_state *d, const void *at, int32_t stream, int32_t field,
+             char *out);
 void lithex(const char *in, char *out, int32_t max);
 int8_t getbksl(delta_state *d, int32_t f);
 void readErrorReport(delta_state *d, ...);

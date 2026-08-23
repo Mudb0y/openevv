@@ -182,7 +182,15 @@ The first rule written for Polish rather than lifted for Italian is in `lang/plp
 
 `make EVVLANG=lang/plpl census` says how much of the module is still Italian: 1,749 rules of 1,750 character for character, the settings two lines apart, the variables named. What it prevents is Italian phonology coming out of something labelled Polish without anyone noticing.
 
-What is left is the language: the alphabet and the letter-to-sound rules, the nine sounds Italian has not, stress, normalisation, and the dictionary. There is no oracle for any of it -- IBM never made a Polish module -- so the ear is the judge, and a hash beside each verdict is what will keep an approved sound from moving afterwards.
+Polish's own letters are in it. A language's alphabet is the value names of the input statement's first field, and beside it in the same statement is a record of five bytes for each of those names: the character's case, whether it is a letter, whether it is a vowel, whether it carries an accent, and the phoneme it says on its own. That last is letter-to-sound at its simplest and it is data rather than code, which `tools/lang-alphabet.py` now reads and writes by name.
+
+The sixteen Polish letters went in at byte values the alphabet did not claim -- nineteen were free and sixteen were wanted -- rather than by reusing a code, since the dictionaries are keyed by code and moving one moves every word that used it. Each starts from the nearest phoneme the module has: ł says w, which is what Polish ł is, ń says the palatal nasal Italian spells gn and Polish spells ń, ć says C, ś says S, ź and ż say Z, ą says a and ę says e until the nasal vowels are read out of French. ó was already there.
+
+Measured rather than assumed: before, a Polish letter cost about thirteen thousand samples wherever it stood, because the engine had no name for the byte and read it as a symbol -- eight of them alone came to 103,356 samples. After, `kąt` is 10,648 samples where `kat` is 8,107, and the two traces share their first 14,336 rule entries. A Polish letter on its own is still silent, because a lone letter is spoken by its name and Polish's letters have no names yet.
+
+What is left is the rest of the language: the letters' own names, the nine sounds Italian has not, stress, normalisation, and the dictionary. And the way in: the machine sees single bytes and the table that turns a caller's code points into them has nowhere to put Polish, so the choice of how a Polish character arrives is open and `docs/building.md` sets out the three ways with a recommendation.
+
+There is no oracle for any of it -- IBM never made a Polish module -- so the ear is the judge, and a hash beside each verdict is what will keep an approved sound from moving afterwards. The tool that would let the ear be spared the structural part is `build/probe ... p`, which asks for phonemes instead of sound; it is one flag away from working and `docs/building.md` says which.
 
 ## A language module as text
 
