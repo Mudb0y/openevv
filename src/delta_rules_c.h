@@ -1,8 +1,8 @@
 /* Rules written as C rather than left as bytecode, and what they need of the
    machine they were written for.
  *
- * This is not generated. delta_rules.h is, and anything put there is lost the
- * next time the lifter runs.
+ * This is not generated. Each module's delta_rules_<lang>.h is, and anything
+ * put there is lost the next time the lifter runs.
  */
 
 #ifndef DELTA_RULES_C_H
