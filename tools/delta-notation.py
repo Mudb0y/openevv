@@ -24,6 +24,7 @@ have different forms.
 usage: delta-notation.py write  <object> [> file]
        delta-notation.py rewrite         the two generated files, lifted only
        delta-notation.py authored        the same with the upper form in
+       delta-notation.py authored-check  and that held against the tree
        delta-notation.py read   <file>
        delta-notation.py check  <object> [...]
        delta-notation.py check-all
@@ -894,6 +895,9 @@ def main():
 
     if what == "authored":
         return 0 if regenerate(write=True) else 1
+
+    if what == "authored-check":
+        return 0 if regenerate(upper=True) else 1
 
     if what == "rewrite":
         return 0 if regenerate(write=True, upper=False) else 1

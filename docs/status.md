@@ -194,7 +194,13 @@ That is a deliberate divergence, the fourth in the tree, and the guard is what m
 
 Measured on the same pangram: `Zażółć gęślą jaźń` is 16,819 samples where it was 120,714, and `kąt` written as UTF-8 comes out byte for byte identical to `kąt` written in the module's own bytes, which is what says the conversion is exact rather than close.
 
-What is left is the rest of the language: the letters' own names, the nine sounds Italian has not, stress, normalisation, and the dictionary.
+The first change to how Polish sounds is in as well, and what it proves is worth more than what it does. Polish speaks sz, ż, cz and dż as retroflexes, further back than the palato-alveolars Italian spells with sc and gi, and a retroflex is a low third formant. `pol_retroflex_Fv` in `lang/plpl/rules/is_val.up` says that -- f3 down from Italian's 2400 to 2200, f2 from 1800 to 1700 -- and the two calls inside `ital_ph_S` and `ital_ph_Z` in Polish's own copy of the rules point at it. `sciarpa` spoken by Italian and by Polish is the same word at the same length, 10,197 samples each, with 17,448 of its 20,438 bytes identical: exactly one sound moved. That is the whole path from an authored rule to the samples, proved.
+
+What it does not do is change a Polish word, and that is the next piece of work. `sciarpa` reaches that locus three times and `szafa` not once, because Polish spells its retroflexes as digraphs -- sz, cz, rz, dz, dź, dż -- where Italian's letter-to-sound knows sc, gi, gn and gl. A Polish word comes out today as the letters it is spelled with, one at a time. The phonemes are in the module and the letters are in the alphabet; what is missing is the rules that say two letters make one sound, and those are rules to write.
+
+`tools/lang-phonemes.py` is the map for that: every phoneme as the statements name it, the settings declare it and a rule speaks it, with the place each one is spoken at. Italian declares 35, gives 21 a rule, and `ital_pal_Fv` serves four of them -- which is the sort of thing to know before moving any of it.
+
+What is left after that is the letters' own names, the sounds Italian has not, stress, normalisation, and the dictionary.
 
 There is no oracle for any of it -- IBM never made a Polish module -- so the ear is the judge, and a hash beside each verdict is what will keep an approved sound from moving afterwards. The tool that would let the ear be spared the structural part is `build/probe ... p`, which asks for phonemes instead of sound; it is one flag away from working and `docs/building.md` says which.
 

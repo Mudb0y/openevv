@@ -8609,7 +8609,7 @@ label L0 was _ital_ph_S
   store movw imm 300 statefld 2918
   call ZZstarttest1 arity 1 depth 2
   push state 0
-  call ital_pal_Fv arity 1 depth 3
+  call pol_retroflex_Fv arity 1 depth 3
   popn 3
 label L1 was at_0x6c
   push reg r6
@@ -8738,7 +8738,7 @@ label L0 was _ital_ph_Z
   store movw imm 300 statefld 2918
   call ZZstarttest1 arity 1 depth 2
   push state 0
-  call ital_pal_Fv arity 1 depth 3
+  call pol_retroflex_Fv arity 1 depth 3
   popn 3
 label L1 was at_0x6c
   push reg r6

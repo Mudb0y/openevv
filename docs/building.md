@@ -215,7 +215,7 @@ The audio is the third comparison and it is not the weakest of them. A rule whos
 
     make authored
 
-is how an authored rule gets into a build: it writes `delta_rules_enus.c` and `delta_rules_enus.h` out of the text with the upper form included, which is what `upper-check.sh` does before it builds. An ordinary build compiles what is in the tree, and what is in the tree is IBM's rules -- `make notation-regenerate` reads the lower form alone, so a rule written afresh does not turn that check red for as long as it exists.
+is how an authored rule gets into a build: it writes `delta_rules_enus.c` and `delta_rules_enus.h` out of the text with the upper form included, which is what `upper-check.sh` does before it builds. An ordinary build compiles what is in the tree, and what is in the tree is IBM's rules -- `make notation-regenerate` reads the lower form alone, so a rule written afresh does not turn that check red for as long as it exists. Once a module has been written with `authored`, as Polish has, the check for it is `authored-check`, which is the same comparison with the upper form in.
 
 ### Bytes of our own
 
@@ -444,6 +444,57 @@ the thread's state, parameter four sets the flag through
 phoneme mode, and the text path sends the same on a fresh utterance. `disptok`,
 which spells a token and was an empty stub in this port, is written now -- so
 the names will be there the moment the flag stays on.
+
+### What a phoneme is made of
+
+A phoneme is in three places at once and none of them alone says what it is.
+Its name is a value of the phone statement's first field, which is the list the
+rules index by. Its numbers are a `Phoneme` line in the settings: four bytes of
+name and eleven values, which is what a caller handing the engine phonemes
+rather than text is read against. And what it sounds like is a rule named for
+it -- `ital_ph_S` -- which sets its source parameters and then calls one locus
+rule, `ital_pal_Fv` and its kin, where the formant targets are.
+
+    python3 tools/lang-phonemes.py plpl
+
+puts the three beside each other. Italian declares 35 in the statements, 34 in
+the settings and gives 21 a rule of their own; the vowels and a few consonants
+have none, being spoken by other machinery. It also says which place each one is
+spoken at, which is the thing to know before changing any of it: `ital_pal_Fv`
+is called by `ital_ph_S` and `ital_ph_Z` and also by `ital_ph_t` and
+`ital_ph_d`, so moving that rule moves four phonemes and moving the call inside
+two of them moves two.
+
+`registerPhoneme` takes nineteen arguments and all eighteen after the machine
+are addresses of the rule's own locals -- places the engine keeps that
+phoneme's numbers, not the numbers themselves. There are 34 of those calls for
+34 phonemes, in the order the settings declare them.
+
+### Changing a sound
+
+Polish speaks sz, ż, cz and dż as retroflexes, further back than the
+palato-alveolars Italian spells with sc and gi, and the signature of a retroflex
+is a low third formant. `lang/plpl/rules/is_val.up` is that, written in the
+upper form against the names in `plpl.globals`: `pol_retroflex_Fv` brings f3
+down from Italian's 2400 to 2200 and f2 from 1800 to 1700, and the two calls
+inside `ital_ph_S` and `ital_ph_Z` in Polish's own copy of `is_val.dr` point at
+it. Two lines of the lower notation changed and one rule written.
+
+What that proves, and what it does not. It proves the whole sound path from an
+authored rule to the samples: `sciarpa` spoken by Italian and by Polish is the
+same word at the same length -- 10,197 samples each -- with 17,448 of its 20,438
+bytes identical, so exactly one sound in it moved and nothing else did. That is
+the formant path end to end, and it is the first change to how Polish sounds
+rather than to what it accepts.
+
+It does not make a Polish word sound different, and the reason is the next piece
+of work. `sciarpa` reaches that locus three times; `szafa` reaches it not once.
+Polish spells its retroflexes as digraphs -- sz, cz, rz, dz, dź, dż -- and
+Italian's letter-to-sound knows sc, gi, gn and gl. So a Polish word today comes
+out as the letters it is spelled with, one at a time: `szafa` is s and z and a
+and f and a. The phonemes are in the module and the letters are in the alphabet;
+what is missing is the rules that say two letters make one sound, and those are
+rules to write rather than data to fill in.
 
 ### Keeping the chassis honest
 

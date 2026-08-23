@@ -1,25 +1,37 @@
-# The first rule written for Polish rather than lifted for Italian: the locus
-# of the alveolo-palatals, the series Polish has and Italian has not.
+# The places Polish speaks at that Italian does not, written for Polish rather
+# than lifted for Italian. A locus rule says where the formants go; the rule
+# for a phoneme sets its source and then calls one of these.
 #
-# What it says is what a value rule says: the formant targets a consonant is
-# spoken with, each one twice because the transition into it and the one out of
-# it are separate numbers. The names come from lang/plpl/plpl.globals, which is
-# where what we have worked the language out to mean is written down.
-#
-# The numbers are a starting point and not an answer. Polish ś and ź sit
-# between Italian's palatal, whose second formant is 1800, and its dentals at
-# 1700, with a third formant higher than either because the tongue is further
-# forward: 2000 and 2700 is the first guess, and the ear settles it.
+# The numbers are a starting point and the ear settles them. What they are
+# read off is Italian's own: its palatal locus is f2 1800 and f3 2400, its
+# dentals 1700 and 2600, and a labial's low second formant 850 -- so the
+# language's own numbers say what scale these are on.
 
+# Polish sz, ż, cz and dż are retroflex, articulated further back than the
+# palato-alveolars Italian spells with sc and gi. The signature of a retroflex
+# is a low third formant, so f3 comes down from Italian's 2400 to 2200 and f2
+# from 1800 to 1700. Nothing here touches the first formant: the rule for the
+# phoneme sets that before it asks for a place.
+rule pol_retroflex_Fv takes 1 from is_val.obj
+  call ZZfence_null
+  set f2_in to 1700
+  set f2_out to 1700
+  set f3_in to 2200
+  set f3_out to 2200
+  match
+end
+
+# And the alveolo-palatals -- ś, ź, ć, dź -- which are further forward than
+# either, with a third formant higher than the palatal's rather than lower.
+# Nothing calls this yet: the letters that want it are still spoken as the
+# retroflexes, because a distinct sound needs a phoneme of its own and Polish
+# has not been given one. What it is here for is that the number is written
+# down where the next person can find it.
 rule pol_alveolopalatal_Fv takes 1 from is_val.obj
   call ZZfence_null
-  set f1_in to 300
-  set f1_out to 300
   set f2_in to 2000
   set f2_out to 2000
   set f3_in to 2700
   set f3_out to 2700
-  set f4_in to 3500
-  set f4_out to 3500
   match
 end
