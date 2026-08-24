@@ -401,8 +401,11 @@ rule apply_pol_letter_rules takes 3 from it_phone.obj
 
   call test_string_s 1 1 sym pol_letter_aogonek
   if answer is 0
+    # a with an ogonek is a nasal vowel of its own, on a code of its own: the
+    # open o's rule speaks it, and pol_nasal_if_aogonek in is_sival.up is what
+    # makes that one nasal and the plain o not.
     call lpta_rpta_loadp addr left addr right
-    call insert_2pt_s 2 2 sym pol_ph_on 0
+    call insert_2pt_s 2 1 sym pol_ph_aogonek 0
     if answer is 0
       go to said
     end
@@ -410,8 +413,12 @@ rule apply_pol_letter_rules takes 3 from it_phone.obj
   call ZZlpta_load__setscan_r__1 addr left
   call test_string_s 1 1 sym pol_letter_eogonek
   if answer is 0
-    call lpta_rpta_loadp addr left addr right
-    call insert_2pt_s 2 2 sym pol_ph_en 0
+    # e with an ogonek is a nasal vowel of its own now, on the close-mid o's
+    # code, which nothing else produces. What made it possible is that
+    # nasalize_vow writes one global to nasalise a vowel next to a nasal
+    # consonant, and stanital_ph_o writes the same one without needing the
+    # consonant.
+    call ZZlprp_load__insert_2pt_s_2_1_ZZstring153 addr left addr right
     if answer is 0
       go to said
     end

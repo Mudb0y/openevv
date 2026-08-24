@@ -3677,11 +3677,14 @@ label L0 was _stanital_ph_o
   push state 0
   call ZZfence_null arity 1 depth 3
   push state 0
-  store movw imm 470 statefld 2918
-  store movw imm 900 statefld 2926
-  store movw imm 900 statefld 2930
-  store movw imm 2500 statefld 2934
-  store movw imm 2500 statefld 2938
+  store movw imm 550 statefld 2918
+  store movw imm 1900 statefld 2926
+  store movw imm 1900 statefld 2930
+  store movw imm 2600 statefld 2934
+  store movw imm 2600 statefld 2938
+  load movw ind reg r6 2634 into r0w
+  alu addw imm 150 reg r0w
+  store movw reg r0w ind reg r6 2726
   store movw imm 3500 statefld 2942
   store movw imm 3900 statefld 2950
   call ZZstarttest1 arity 1 depth 4
@@ -4578,6 +4581,9 @@ label L0 was _stanital_ph_c
   store movw imm 1000 statefld 2930
   store movw imm 2450 statefld 2934
   store movw imm 2450 statefld 2938
+  push state 0
+  call pol_nasal_if_aogonek arity 1 depth 1
+  popn 1
   store movw imm 3500 statefld 2942
   store movw imm 3900 statefld 2950
   call ZZstarttest1 arity 1 depth 4
@@ -5705,12 +5711,31 @@ label L9 was at_0x144
   cmp testl reg r0 reg r0
   popreg r1
   popreg r1
-  branch jne to L10
+  branch jne to L201
   push reg r6
   call ZZtest_string_s_2_1_ZZstring123 arity 1 depth 1
   cmp testl reg r0 reg r0
   popreg r1
   branch je to L11
+label L201 was pol_aogonek
+  push reg r6
+  call ZZstarttest3 arity 1 depth 1
+  push reg r6
+  call ZZlpta_load_vvg__setscan_0103r__2 arity 1 depth 2
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch jne to L10
+  push reg r6
+  call pol_test_aogonek arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L10
+  push reg r6
+  call ZZstarttest15 arity 1 depth 1
+  push reg r6
+  call stanital_ph_c arity 1 depth 2
+  jump to L19
 label L10 was at_0x161
   push reg r6
   call ZZstarttest3 arity 1 depth 1

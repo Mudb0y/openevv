@@ -28,6 +28,13 @@ quietly becomes a lateral, so `set' writes them by name.
 usage: lang-phonemes.py <tag>            every phoneme
        lang-phonemes.py <tag> <name>...  only the ones named
        lang-phonemes.py set <tag> <phoneme> <field>=<value>...
+       lang-phonemes.py add <tag> <name> <field>=<value>...
+
+`add' puts a phoneme on the end, which is the only place one can go: the codes
+below it are what every rule and every dictionary entry already say. It is the
+last resort rather than the first -- a code that has never existed is invisible
+to every rule that asks what its neighbours are, so retaking one the language
+cannot reach is the better move where there is one to retake.
 """
 
 import os
@@ -107,9 +114,66 @@ def statement(tag, want="phone"):
             var += bytes(int(x, 16) for x in w[1:])
 
     record = [f for f in fields if f not in ("name", "afterslash")][:stride or 0]
+    at = next(i for i, l in enumerate(lines) if l == "statement %s" % want)
     return {"path": p, "lines": lines, "names": names, "values": values,
             "fields": fields, "record": record, "stride": stride,
-            "variants": bytes(var), "var_at": var_at}
+            "variants": bytes(var), "var_at": var_at, "at": at}
+
+
+def add_phoneme(tag, name, args):
+    """One more phoneme, on the end of the statement's names and of its
+    records. Everything below keeps the code it had, which is what makes this
+    safe to do at all."""
+    st = statement(tag)
+    if name in st["names"]:
+        raise SystemExit("lang-phonemes: %s already has %r, as code %d"
+                         % (tag, name, st["names"].index(name)))
+    stride = st["stride"]
+    if len(st["variants"]) != len(st["names"]) * stride:
+        raise SystemExit("lang-phonemes: %d names and %d bytes of records is"
+                         " not one record each"
+                         % (len(st["names"]), len(st["variants"])))
+    rec = bytearray(stride)
+    for a in args:
+        if "=" not in a:
+            raise SystemExit("lang-phonemes: %r is not field=value" % a)
+        k, v = a.split("=", 1)
+        if k not in st["record"]:
+            raise SystemExit("lang-phonemes: a record has no %r; it has %s"
+                             % (k, ", ".join(st["record"])))
+        table = st["values"].get(k, [])
+        if v not in table:
+            raise SystemExit("lang-phonemes: %s has no value called %r; it has"
+                             " %s" % (k, v, ", ".join(table)))
+        rec[st["record"].index(k)] = table.index(v)
+
+    lines = st["lines"]
+    # The name goes after the last value of the *name* field, which is not the
+    # last value line in the statement: every field has its own list and they
+    # follow one another. Putting it after the last of them all adds a value to
+    # whatever field comes last instead, which is a silent way to break a
+    # record's meaning.
+    first = next(i for i, l in enumerate(lines)
+                 if l.strip() == "field name" and i > st["at"])
+    stop = next(i for i in range(first + 1, len(lines))
+                if lines[i].startswith("  field "))
+    at_name = max(i for i in range(first, stop)
+                  if lines[i].startswith("    value"))
+    # The records go back first and the name after, because every index here
+    # was taken from the file as it was: the name's line sits above the
+    # records, so writing the records cannot move it, where writing the name
+    # first would move every record line by one.
+    var = bytearray(st["variants"]) + rec
+    out = ["  variants " + " ".join("%02x" % b for b in var[i:i + 32])
+           for i in range(0, len(var), 32)]
+    lines[min(st["var_at"]):max(st["var_at"]) + 1] = out
+    lines.insert(at_name + 1, "    value %s" % name)
+    open(st["path"], "w").write("\n".join(lines))
+    print("%s: %s is code %d now, %s"
+          % (tag, name, len(st["names"]),
+             ", ".join("%s %s" % (f, st["values"][f][rec[i]])
+                       for i, f in enumerate(st["record"]))))
+    return True
 
 
 def set_record(tag, phoneme, args):
@@ -235,6 +299,11 @@ def show(tag, want):
 
 
 def main(argv):
+    if argv[:1] == ["add"]:
+        if len(argv) < 4:
+            print(__doc__.strip())
+            return 2
+        return 0 if add_phoneme(argv[1], argv[2], argv[3:]) else 1
     if argv[:1] == ["set"]:
         if len(argv) < 4:
             print(__doc__.strip())

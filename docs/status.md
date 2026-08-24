@@ -284,6 +284,16 @@ The eight capitals of Polish's own letters were silent, which no test here had c
 
 They arrive as their own lowercase instead: eight lines in `lang/plpl/plpl.codepoints`. That is right for every sound and wrong only for anything that would want to know a letter was capital, which nothing in the module does yet. The proper fix is the eight arms, and the reason it was not done that way is written above the lines.
 
+And Polish has its nasal vowels, which no module had.
+
+What made them possible is that the engine already nasalises: `nasalize_vow` in us_filtr.dr nasalises a vowel standing next to a nasal consonant, and it does it by writing **one** global -- a frequency taken from another and raised by 150. So a nasal vowel is a vowel whose own rule writes that global without waiting for a consonant to follow. Two wrong guesses came first and both are worth recording. The parameter the nasal consonants set and the vowels never touch does nothing at all when a vowel sets it -- the audio came back byte for byte identical, and a deliberate sabotage of the same block proved the block runs. And marking a vowel's record as manner "nas" does change the sound, but it makes every rule that asks treat it as a consonant, which sounded nasal and piercing at once.
+
+ę cost no new phoneme code. Every Polish o is the open ɔ, so the close-mid o had nothing producing it, exactly as the close-mid e had nothing producing it before y took it: `stanital_ph_o` now carries ɛ's formants and the nasalisation, and the value and duration chains already had arms for it.
+
+ą had nothing left to take, so it is the first genuinely new phoneme in the module, code 35, added by `tools/lang-phonemes.py add`. Rather than copy five hundred lines of the open o's rule, its arm in `stanital_vals` calls that rule, and two small rules of ours decide the rest: one answers whether the phone about to be spoken is ą, and the other writes the nasalisation if it is. So the plain ɔ and the nasal ɔ share every line of their machinery and differ in one global. kąt and kot are the same phonemes in the same order and different sounds, which is what says it fires.
+
+What that cost is worth knowing before the next new code: a code that has never existed is invisible to every rule that asks what its neighbours are, and what saves it here is that the syllabifier and the stress rules read the phone's *record* rather than its code, and the record says vowel.
+
 What is left after this: Polish's own words, of which the module now has none -- the one-letter prepositions w and z are letter names rather than /v/ and /z/, since a lone letter is spelled before any word dictionary is consulted -- the numbers, the nasal vowels, currently a vowel plus an n, which is what Polish does before a stop and not elsewhere, /x/ for ch and h, which no module has, stress, which is Italian's penultimate rule and near but not the same, and prosody, which is Italian's outright.
 
 ## A language module as text

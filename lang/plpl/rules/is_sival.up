@@ -1,0 +1,38 @@
+# The nasal vowels.
+#
+# Polish has two, ą and ę, and no module has either. What makes them possible
+# without inventing any synthesis is nasalize_vow in us_filtr.dr: the engine
+# already nasalises a vowel that stands next to a nasal consonant, and it does
+# it by writing one global -- a frequency taken from another and raised by 150.
+# So a nasal vowel is a vowel whose own rule writes that global without waiting
+# for a consonant to follow.
+#
+# ę is the close-mid o's code, which nothing produces any more since every
+# Polish o is the open one; its rule carries ɛ's formants and the nasalisation.
+# ą had no code to take, so it has one of its own, and rather than copy five
+# hundred lines of the open o's rule it uses that rule and these two decide
+# whether to nasalise.
+
+# Whether the phone about to be spoken is the one ą lays down. The scan is
+# already at it where this is called from, which is the same place the value
+# chain tests every other phoneme.
+rule pol_test_aogonek takes 1 from is_sival.obj
+  bare
+  call test_string_s 2 1 sym pol_ph_aogonek
+end
+
+# And the nasalisation itself, which the open o's rule now asks for. It sets
+# the scan for itself, since the rule it is called from has not set it yet.
+rule pol_nasal_if_aogonek takes 1 from is_sival.obj
+  bare
+  call ZZlpta_load_vvg__setscan_0103r__2
+  call test_string_s 2 1 sym pol_ph_aogonek
+  if answer is not 0
+    answer 0
+  end
+  raw load movl state 0 into r6
+  raw load movw ind reg r6 2634 into r0w
+  raw alu addw imm 150 reg r0w
+  raw store movw reg r0w ind reg r6 2726
+  answer 0
+end

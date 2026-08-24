@@ -129,3 +129,7 @@ bytes pol_num_mlns     c7 48 14 03 13 03 04 15 1e         # millions, which is r
 bytes pol_num_mld      c7 48 14 03 13 03 01 18 0d         # a billion, 9 characters
 bytes pol_num_mlds     c7 48 14 03 13 03 01 18 0d 1e      # billions, two to four again, 10 characters
 bytes pol_num_and      c7 48                              # where Italian says e, 2 characters
+
+# The phone ą lays down, which is a code of its own rather than a retaken one:
+# there was nothing left to retake.
+bytes pol_ph_aogonek     23             # the nasal open o, code 35
