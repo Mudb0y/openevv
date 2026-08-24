@@ -1085,11 +1085,11 @@ label L0 was _stanital_ph_e
   push state 0
   call ZZfence_null arity 1 depth 3
   push state 0
-  store movw imm 400 statefld 2918
-  store movw imm 1600 statefld 2926
-  store movw imm 1600 statefld 2930
-  store movw imm 2500 statefld 2934
-  store movw imm 2500 statefld 2938
+  store movw imm 350 statefld 2918
+  store movw imm 1800 statefld 2926
+  store movw imm 1800 statefld 2930
+  store movw imm 2600 statefld 2934
+  store movw imm 2600 statefld 2938
   call ZZstarttest1 arity 1 depth 4
   push state 0
   call ZZlpta_load_vvg__setscan_0103l__2 arity 1 depth 5
