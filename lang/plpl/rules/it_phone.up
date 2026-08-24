@@ -472,3 +472,58 @@ place said
   put cell right value into arg 2 at 4
   answer 0
 end
+
+# Polish g is always a g. Italian's is not: it reads gn as the palatal nasal
+# and gi as an affricate, so gniazdo came out with no g at all -- and Polish
+# reads gn as two letters, g and then a softened n.
+rule apply_pol_g_rules takes 3 from it_phone.obj
+  local left bytes 8
+  local right bytes 8
+  call ZZget_parm_ptr2 addr left arg 1 addr right arg 2
+  call ZZfence_null
+  call ZZfenceZZstring140
+  call ZZlprp_load__insert_2pt_s_2_1_ZZstring188 addr left addr right  # a g
+  if answer is not 0
+    give up
+  end
+  call succeed
+  put cell right value into arg 2 at 4
+  answer 0
+end
+
+# And Polish n softens before an i the way s, z, c and dz do: konie is konje
+# and not kon-ye. Everything else about the letter is Italian's, including the
+# assimilation to the velar nasal before a k or a g, which Polish wants too --
+# bank is bank with the same nasal Italian gives banca.
+rule apply_pol_n_rules takes 3 from it_phone.obj
+  local left bytes 8
+  local right bytes 8
+  call ZZget_parm_ptr2 addr left arg 1 addr right arg 2
+  call ZZfence_null
+  call ZZfenceZZstring140
+  plant test plain
+  call ZZlpta_load__setscan_nof_r__1 addr right
+  if answer is 0
+    call ZZtest_string_s_1_1_ZZstring140          # i?
+    if answer is 0
+      call ZZtestFldeq1_4_1                       # and a vowel after it?
+      if answer is 0
+        call savescptr 1 addr right
+      end
+      call ZZlprp_load__insert_2pt_s_2_1_ZZstring79 addr left addr right  # ń
+      if answer is 0
+        go to said
+      end
+    end
+  end
+  backtrack
+place plain
+  call ZZlprp_load__insert_2pt_s_2_1_ZZstring77 addr left addr right  # a plain n
+  if answer is not 0
+    backtrack
+  end
+place said
+  call succeed
+  put cell right value into arg 2 at 4
+  answer 0
+end

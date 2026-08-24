@@ -8867,7 +8867,7 @@ label L69 was at_0x7f9
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_g_rules arity 3 depth 4
+  call apply_pol_g_rules arity 3 depth 4
   jump to L12
 label L70 was at_0x812
   push reg r6
@@ -8927,7 +8927,7 @@ label L75 was at_0x88f
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_n_rules arity 3 depth 4
+  call apply_pol_n_rules arity 3 depth 4
   jump to L12
 label L76 was at_0x8a8
   push reg r6
