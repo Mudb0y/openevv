@@ -185,6 +185,40 @@ A value is one or two words: a number, `arg <n>`, a local by name, `addr <name>`
 
 Two things about it are the machine's and are easy to get wrong. `arg 1` is the first argument after the state, because the state is every rule's first argument and `takes 3` counts it: a rule that says `takes 3` has `arg 1` and `arg 2`. And a local the machine is handed the address of has to be as big as the machine writes -- `get_parm` fills in a compiled location, which is eight bytes, so it wants `local word bytes 8` and a four-byte local would take the next one with it. Nothing in the compiler knows how much any entry writes.
 
+### A phoneme, and the record that says what it is
+
+A phoneme is in three places and `tools/lang-phonemes.py <tag>` prints all three
+beside each other: its name is a value of the phone statement's first field,
+which is the list the rules index by; its numbers are a `Phoneme` line in the
+settings, four bytes of name and eleven values, read when a caller sends
+phonemes rather than text; and what it sounds like is a rule named for it which
+sets its source parameters and calls one locus rule, where the formant targets
+are.
+
+Beside those it carries a record, in the `variants` bytes of its own statement
+exactly as a letter does in the input statement's. The statement says how long
+one is -- `at start stride` -- and the fields it covers are its own, after the
+name and less `afterslash` where it has one. For the phone statement that is
+eight: class, voicing, sonority, manner of articulation, place of articulation,
+and the three a vowel wants. Those are not decoration. `place_of_artic` runs
+lab, alv, pal, vel and ret, and it is where a language says that its sz is
+retroflex and its s is not.
+
+    lang-phonemes.py set plpl L manner_of_artic=fric place_of_artic=ret
+
+writes one by name, which is the point: read eight bytes by eye and a fricative
+quietly becomes a lateral.
+
+What that is for is adding a sound, and the answer there is usually not to add
+one. A phoneme code is tested by name in some five hundred places in a module --
+every locus rule asks what its neighbours are, every vowel rule asks which
+consonant follows it, the durations and the syllabifier ask too -- and a code
+that has never existed is invisible to all of them, so its neighbours are
+coarticulated as if it were absent and its durations come from nowhere. A code
+that already exists has an arm in every one of those chains. Polish needed two
+sounds Italian has not got and took over two Italian has that no Polish word can
+reach, which cost two records, four call names and one rule.
+
 ### The frame, and the places a rule backtracks to
 
 A rule hands the machine five places in its own frame and the machine writes to all five, so their sizes are not ours: the record `ventproc` saves is 92 bytes, the landing place is 64, and the three fence arrays are 12 each, which is a byte per statement type and ten is all English declares. Those five sit together as one block of 192 bytes, the locals above it, and the last word of the frame is the count `backtrack_function` is handed. All 1,042 of IBM's rules lay that block out the same way -- the record, then the landing 64 bytes in, then the three arrays at 156, 168 and 180 -- and what varies is only where the block sits and which of two arrays it hands over first, 532 rules one way and 510 the other, which says that pair is scratch either way. `eng_ph_F_dur` above comes out with the frame IBM gave it, 196 bytes with the landing at -104 and the record at -196, from a rule that says nothing about any of it.
