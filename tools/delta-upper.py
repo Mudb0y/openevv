@@ -89,6 +89,8 @@ FIXED = INDEX + INDEX_SIZE                    # declares
 GAVE_UP = 94
 
 WIDTH = {"word": 4, "half": 2, "byte": 1}
+# The three parts of a cell, where each sits in it and how wide it is.
+CELL = {"kind": (0, 2, True), "field": (2, 2, True), "value": (4, 4, False)}
 MOVE = {4: "movl", 2: "movw", 1: "movb"}
 WIDEN = {(2, False): "movzwl", (2, True): "movswl",
          (1, False): "movzbl", (1, True): "movsbl"}
@@ -186,6 +188,12 @@ class Rule:
         for nm, (off, width) in (named or {}).items():
             self.variables[nm] = (off, width, False)
         self.wrappers = False
+        # A rule of the shape the language's own wrappers have: it is entered
+        # and it answers, and that is all. It plants no landing place, saves
+        # no record and commits nothing, because a wrapper stands inside
+        # somebody else's rule and the choice points around it are theirs.
+        self.bare = False
+        self.sizes = {}
         self.at = FIXED
         self.body = []
 
@@ -197,14 +205,19 @@ class Rule:
         if name in self.locals or name in self.variables:
             fault(where, "there is already something called %r" % name)
         self.locals[name] = (self.at, width, signed)
+        self.sizes[name] = size
         self.at += (size + 3) & ~3
 
     def frame(self):
         """The whole frame: the machine's places, the locals, and the count
-        backtrack_function is handed, which is always the last word."""
-        return self.at + 4
+        backtrack_function is handed, which is always the last word. A bare
+        rule has none of the first and does not backtrack, so it has neither
+        the block nor the count."""
+        return self.at if self.bare else self.at + 4
 
     def unwind(self):
+        if self.bare:
+            fault(self.where, "%s is bare, so it does not backtrack" % self.name)
         return self.at
 
 
@@ -249,6 +262,8 @@ def declarations(words, i, r):
             elif w:
                 width, signed = kind_of(where, w)
                 size = width
+            if w:
+                fault(where, "%r is left over" % " ".join(w))
             r.add_local(where, name, size, width, signed)
         elif head == "variable":
             w = list(w[1:])
@@ -257,6 +272,11 @@ def declarations(words, i, r):
             r.variables[name] = (number(where, w.pop(0)), width, signed)
         elif head == "through" and w[1:] == ["wrappers"]:
             r.wrappers = True
+        elif head == "bare":
+            if r.locals:
+                fault(where, "say `bare' before the locals: it moves them")
+            r.bare = True
+            r.at = 0
         else:
             return i
         i += 1
@@ -354,6 +374,24 @@ class Compiler:
             if name not in self.r.locals:
                 fault(where, "%r is not a local of this rule" % name)
             return ("slotaddr", self.slot(self.r.locals[name][0])), 4, False
+        if head == "cell":
+            # A cell is what the machine writes where a rule hands it the
+            # address of a local: a kind, a field and a value. Which of the
+            # three a rule means has to be said, since the name on its own
+            # is the first word, and that is the kind.
+            name = w.pop(0) if w else ""
+            if name not in self.r.locals:
+                fault(where, "%r is not a local of this rule" % name)
+            if self.r.sizes.get(name, 4) < 8:
+                fault(where, "%r is %d bytes and a cell is eight"
+                      % (name, self.r.sizes.get(name, 4)))
+            part = w.pop(0) if w else ""
+            if part not in CELL:
+                fault(where, "a cell has a kind, a field and a value, and"
+                      " nothing called %r" % part)
+            off, width, signed = CELL[part]
+            at, _cw, _cs = self.r.locals[name]
+            return ("slot", self.slot(at + off)), width, signed
         if head == "sym":
             return ("sym", w.pop(0)), 4, False
         if head == "global":
@@ -505,6 +543,30 @@ class Compiler:
             table = ALU_WORD if width == 4 else ALU_HALF
             self.op("alu", table[head], None, place)
 
+        elif head == "put":
+            # Writing through a pointer, which is how a rule answers
+            # something to whatever called it. The machine cannot store from
+            # one place in memory to another, so both ends go through a
+            # register, and neither of them is the one the answer is in: a
+            # rule commonly puts back what it has just been told.
+            src, sw, ssigned = self.value(where, w)
+            if not w or w.pop(0) != "into":
+                fault(where, "a put says `put <value> into <value> at <n>'")
+            ptr, pw, _ps = self.value(where, w)
+            if pw != 4:
+                fault(where, "a pointer is a whole word")
+            off = 0
+            if w[:1] == ["at"]:
+                del w[:1]
+                off = number(where, w.pop(0))
+            if sw < 4:
+                self.op("load", WIDEN[(sw, ssigned)], src, "%ecx")
+            else:
+                self.op("load", "movl", src, "%ecx")
+            self.op("load", "movl", ptr, "%edi")
+            self.op("store", "movl", ("reg", "%ecx"),
+                    ("indirect", ("reg", "%edi"), off))
+
         elif head == "place":
             name = w.pop(0)
             if name in ("enter",) + OURS:
@@ -534,9 +596,13 @@ class Compiler:
             self.backtrack(where)
 
         elif head == "match":
+            if self.r.bare:
+                fault(where, "a bare rule answers rather than matching")
             self.op("jump", "matched")
 
         elif head == "give" and w[:1] == ["up"]:
+            if self.r.bare:
+                fault(where, "a bare rule answers rather than giving up")
             self.op("jump", "gave_up")
 
         elif head == "leave":
@@ -573,6 +639,9 @@ class Compiler:
         self.wanted.setdefault(name, where)
 
     def plant(self, where, w):
+        if self.r.bare:
+            fault(where, "a bare rule plants nothing: the choice points"
+                  " around it are its caller's")
         kind = w.pop(0)
         name = w.pop(0)
         if w[:2] == ["with", "boa"]:
@@ -611,6 +680,32 @@ class Compiler:
         self.dispatches = True
         self.op("jump", "dispatch")
 
+    def bare_rule(self):
+        """A rule of the shape the language's own wrappers have.
+
+        There is no entry and there are no tails: the body runs and the rule
+        answers. That is what a rule standing where a wrapper stands has to
+        be -- the caller planted the choice points around the call and a
+        `succeed' of ours would commit them, which reads later as a machine
+        whose stack says something that is not so.
+        """
+        r = self.r
+        self.start("enter")
+        self.block(r.body)
+        # Falling off the end answers what the last call answered, which is
+        # what every one of IBM's own wrappers does.
+        if not self.ended():
+            self.op("return", ("reg", "%eax"))
+        missing = [n for n in self.wanted
+                   if n not in self.places and n not in OURS]
+        if missing:
+            fault(self.wanted[missing[0]],
+                  "there is no place called %r" % missing[0])
+        for n in self.wanted:
+            if n in OURS:
+                fault(self.wanted[n], "%s is bare, so it has no %r" % (r.name, n))
+        return self.d
+
     def dispatch(self):
         """Which place each planted number carries on at.
 
@@ -637,6 +732,8 @@ class Compiler:
 
     def rule(self):
         r = self.r
+        if r.bare:
+            return self.bare_rule()
         self.start("enter")
         # The count backtrack_function is handed starts at nothing, and an
         # `and' with nothing is how the original writes that.
