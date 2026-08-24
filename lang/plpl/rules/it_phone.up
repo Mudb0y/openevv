@@ -1,0 +1,397 @@
+# What a letter says, where Polish and Italian disagree about it.
+#
+# Italian's own rule for a letter is the one lifted from its objects and it is
+# long: apply_ital_s_rules is 557 lines and forty alternatives, and every one
+# of them is about Italian spelling. None of it can be reached from Polish
+# text, which spells nothing the way Italian does, so a Polish letter gets a
+# rule of its own rather than an edit of Italian's, and the dispatcher in
+# it_phone.dr is pointed at it.
+#
+# The shape is Italian's, because it is the machine's. A letter rule is handed
+# two pointers, the two ends of the run of letters it is being asked about,
+# and it puts phonemes between them: lpta and rpta are those two ends and
+# insert_2pt_s fills the range with a string of phoneme codes. A rule that
+# wants to say two letters make one sound moves the right-hand end past the
+# second letter first, which is what savescptr does -- it puts where the scan
+# has got to into the cell -- and then answers that position to its caller
+# through the second pointer, so the next letter to be read is the one after
+# the digraph.
+#
+# The codes are the phone statement's own alphabet, which
+# tools/lang-phonemes.py prints: S is the postalveolar Italian spells sc,
+# lowered to a retroflex for Polish in is_val.up.
+
+# Polish sz is one sound, and it is not an s. The letter on its own is simpler
+# than Italian's, which voices an s between vowels where Polish keeps it
+# voiceless, so the plain arm is one insert and no test.
+rule apply_pol_s_rules takes 3 from it_phone.obj
+  local left bytes 8
+  local right bytes 8
+  call ZZget_parm_ptr2 addr left arg 1 addr right arg 2
+  call ZZfence_null
+  call ZZfenceZZstring140
+  plant test plain
+  # The scan starts at the far end of the letter and reads the one after it,
+  # and it stops at the fence, so a word ending in s before one beginning
+  # with z is two words and not a digraph.
+  call ZZlpta_load__setscan_nof_r__1 addr right
+  if answer is 0
+    call ZZtest_string_s_1_1_ZZstring148          # z?
+    if answer is 0
+      call savescptr 1 addr right
+      call ZZlprp_load__insert_2pt_s_2_1_ZZstring25 addr left addr right  # the retroflex
+      if answer is 0
+        go to said
+      end
+    end
+  end
+  backtrack
+place plain
+  call ZZlprp_load__insert_2pt_s_2_1_ZZstring9 addr left addr right  # a plain s
+  if answer is not 0
+    backtrack
+  end
+place said
+  call succeed
+  # Where the letters this rule spoke end, which is one letter further on
+  # than the caller asked about when it was a digraph.
+  put cell right value into arg 2 at 4
+  answer 0
+end
+
+# Polish c is not Italian's. On its own it is the affricate Italian spells z,
+# and before z it is the retroflex one. Before h it stays a k, which is what
+# Italian does with ch and is as near as this inventory comes to the Polish
+# sound: there is no velar fricative among the phonemes, so chleb is kleb.
+# Before i it is the alveolo-palatal affricate, which is the same phoneme as
+# cz here until Polish has one of its own, and the i is left to be spoken --
+# right in cisza, an extra vowel in ciasto, and a dictionary word rather than
+# a rule is what tells those apart.
+rule apply_pol_c_rules takes 3 from it_phone.obj
+  local left bytes 8
+  local right bytes 8
+  call ZZget_parm_ptr2 addr left arg 1 addr right arg 2
+  call ZZfence_null
+  call ZZfenceZZstring140
+  plant test aitch
+  call ZZlpta_load__setscan_nof_r__1 addr right
+  if answer is 0
+    call ZZtest_string_s_1_1_ZZstring148          # z?
+    if answer is 0
+      call savescptr 1 addr right
+      call ZZlprp_load__insert_2pt_s_2_1_ZZstring53 addr left addr right  # the retroflex affricate
+      if answer is 0
+        go to said
+      end
+    end
+  end
+  backtrack
+place aitch
+  plant test soft
+  call ZZlpta_load__setscan_nof_r__1 addr right
+  if answer is 0
+    call ZZtest_string_s_1_1_ZZstring68           # h?
+    if answer is 0
+      call savescptr 2 addr right
+      call ZZlprp_load__insert_2pt_s_2_1_ZZstring176 addr left addr right  # a k
+      if answer is 0
+        go to said
+      end
+    end
+  end
+  backtrack
+place soft
+  plant test plain
+  call ZZlpta_load__setscan_nof_r__1 addr right
+  if answer is 0
+    call ZZtest_string_s_1_1_ZZstring140          # i?
+    if answer is 0
+      # The i is not consumed: only the c is spoken here.
+      call ZZlprp_load__insert_2pt_s_2_1_ZZstring53 addr left addr right  # the retroflex affricate
+      if answer is 0
+        go to said
+      end
+    end
+  end
+  backtrack
+place plain
+  call ZZlprp_load__insert_2pt_s_2_1_ZZstring68 addr left addr right  # ts
+  if answer is not 0
+    backtrack
+  end
+place said
+  call succeed
+  put cell right value into arg 2 at 4
+  answer 0
+end
+
+# Polish rz is the voiced retroflex, which is one sound and not an r. The
+# words where it really is an r and then a z -- marznie, and the others where
+# the two letters meet across a seam in the word -- are the dictionary's to
+# say, not this rule's.
+rule apply_pol_r_rules takes 3 from it_phone.obj
+  local left bytes 8
+  local right bytes 8
+  call ZZget_parm_ptr2 addr left arg 1 addr right arg 2
+  call ZZfence_null
+  call ZZfenceZZstring140
+  plant test plain
+  call ZZlpta_load__setscan_nof_r__1 addr right
+  if answer is 0
+    call ZZtest_string_s_1_1_ZZstring148          # z?
+    if answer is 0
+      call savescptr 1 addr right
+      call ZZlprp_load__insert_2pt_s_2_1_ZZstring18 addr left addr right  # the voiced retroflex
+      if answer is 0
+        go to said
+      end
+    end
+  end
+  backtrack
+place plain
+  call ZZlprp_load__insert_2pt_s_2_1_ZZstring96 addr left addr right  # an r
+  if answer is not 0
+    backtrack
+  end
+place said
+  call succeed
+  put cell right value into arg 2 at 4
+  answer 0
+end
+
+# Polish d makes three digraphs: dz is the voiced affricate Italian spells z
+# in zona, and dz with a dot or an acute over the z is the voiced retroflex
+# affricate, which is Italian's gi. The acute one is really further forward
+# than the dotted one -- dziecko against dżem -- and both are spoken as the
+# retroflex here, because a distinct sound wants a phoneme of its own and
+# Polish has not been given one. pol_alveolopalatal_Fv in is_val.up is where
+# that starts when it is.
+rule apply_pol_d_rules takes 3 from it_phone.obj
+  local left bytes 8
+  local right bytes 8
+  call ZZget_parm_ptr2 addr left arg 1 addr right arg 2
+  call ZZfence_null
+  call ZZfenceZZstring140
+  plant test dotted
+  call ZZlpta_load__setscan_nof_r__1 addr right
+  if answer is 0
+    call ZZtest_string_s_1_1_ZZstring148          # z?
+    if answer is 0
+      call savescptr 1 addr right
+      call ZZlprp_load__insert_2pt_s_2_1_ZZstring61 addr left addr right  # dz
+      if answer is 0
+        go to said
+      end
+    end
+  end
+  backtrack
+place dotted
+  plant test acute
+  call ZZlpta_load__setscan_nof_r__1 addr right
+  if answer is 0
+    call test_string_s 1 1 sym pol_letter_zdot
+    if answer is 0
+      call savescptr 2 addr right
+      call ZZlprp_load__insert_2pt_s_2_1_ZZstring39 addr left addr right  # the voiced retroflex affricate
+      if answer is 0
+        go to said
+      end
+    end
+  end
+  backtrack
+place acute
+  plant test plain
+  call ZZlpta_load__setscan_nof_r__1 addr right
+  if answer is 0
+    call test_string_s 1 1 sym pol_letter_zacute
+    if answer is 0
+      call savescptr 3 addr right
+      call ZZlprp_load__insert_2pt_s_2_1_ZZstring39 addr left addr right  # the voiced retroflex affricate
+      if answer is 0
+        go to said
+      end
+    end
+  end
+  backtrack
+place plain
+  call ZZlprp_load__insert_2pt_s_2_1_ZZstring140 addr left addr right  # a d
+  if answer is not 0
+    backtrack
+  end
+place said
+  call succeed
+  put cell right value into arg 2 at 4
+  answer 0
+end
+
+# Polish z on its own is a z, where Italian's is one of the two affricates.
+# Every digraph that ends in a z has consumed it before this rule is reached,
+# so there is nothing here to test for: what is left is the letter itself.
+# What is missing is the devoicing at the end of a word -- raz is ras -- and
+# that is phonology across a word rather than a letter reading its neighbour.
+rule apply_pol_z_rules takes 3 from it_phone.obj
+  local left bytes 8
+  local right bytes 8
+  call ZZget_parm_ptr2 addr left arg 1 addr right arg 2
+  call ZZfence_null
+  call ZZfenceZZstring140
+  call ZZlprp_load__insert_2pt_s_2_1_ZZstring210 addr left addr right  # a z
+  if answer is not 0
+    give up
+  end
+  call succeed
+  put cell right value into arg 2 at 4
+  answer 0
+end
+
+# The eight letters Italian has not got.
+#
+# A letter reaches its rule through a chain of alternatives in
+# generate_ital_diaphons, one for each letter: the chain sets the scan at the
+# letter, asks whether it is this letter, and calls that letter's rule. A
+# letter Italian never had has no link in that chain, and adding one means
+# renumbering the tags the whole rule backtracks through -- so instead the
+# link for q, which Polish does not use, is pointed at these two: this one
+# says whether the letter is one of ours, and the one below speaks it.
+#
+# The first of them is bare, which is the shape the language's own wrappers
+# have: entered, and it answers. A rule standing where a wrapper stands must
+# not be a rule of the ordinary shape, because the choice points around the
+# call are its caller's and a `succeed' of ours would commit them. That reads
+# later as a machine whose stack says something that is not so -- a word with
+# no vowel in it crashed in the durations, several rules further on.
+#
+# The scan is left where the chain put it. A test of one character that fails
+# does not move it -- test_string_s peeks, compares, and only advances when
+# the compare held -- so eight of them in a row is eight questions about the
+# same letter.
+rule pol_test_own_letters takes 1 from it_phone.obj
+  bare
+  call test_string_s 1 1 sym pol_letter_aogonek
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 1 1 sym pol_letter_cacute
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 1 1 sym pol_letter_eogonek
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 1 1 sym pol_letter_lstroke
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 1 1 sym pol_letter_nacute
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 1 1 sym pol_letter_sacute
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 1 1 sym pol_letter_zacute
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 1 1 sym pol_letter_zdot
+  if answer is 0
+    answer 0
+  end
+  answer 1
+end
+
+# And what each of them says. The scan is set from the left-hand pointer, the
+# way the chain itself sets it, because that is the letter being asked about:
+# the two pointers are the ends of the run and a scan rightwards from the left
+# one reads the letter between them.
+#
+# Every arm inserts between the same two points, so the letter is spoken and
+# nothing else moves. Two of them insert two phonemes rather than one.
+rule apply_pol_letter_rules takes 3 from it_phone.obj
+  local left bytes 8
+  local right bytes 8
+  call ZZget_parm_ptr2 addr left arg 1 addr right arg 2
+  call ZZfence_null
+  call ZZfenceZZstring140
+
+  call ZZlpta_load__setscan_r__1 addr left
+  if answer is not 0
+    give up
+  end
+
+  call test_string_s 1 1 sym pol_letter_aogonek
+  if answer is 0
+    call lpta_rpta_loadp addr left addr right
+    call insert_2pt_s 2 2 sym pol_ph_on 0
+    if answer is 0
+      go to said
+    end
+  end
+  call ZZlpta_load__setscan_r__1 addr left
+  call test_string_s 1 1 sym pol_letter_eogonek
+  if answer is 0
+    call lpta_rpta_loadp addr left addr right
+    call insert_2pt_s 2 2 sym pol_ph_en 0
+    if answer is 0
+      go to said
+    end
+  end
+  call ZZlpta_load__setscan_r__1 addr left
+  call test_string_s 1 1 sym pol_letter_lstroke
+  if answer is 0
+    call ZZlprp_load__insert_2pt_s_2_1_ZZstring132 addr left addr right  # the glide
+    if answer is 0
+      go to said
+    end
+  end
+  call ZZlpta_load__setscan_r__1 addr left
+  call test_string_s 1 1 sym pol_letter_nacute
+  if answer is 0
+    call ZZlprp_load__insert_2pt_s_2_1_ZZstring79 addr left addr right  # the palatal nasal
+    if answer is 0
+      go to said
+    end
+  end
+  call ZZlpta_load__setscan_r__1 addr left
+  call test_string_s 1 1 sym pol_letter_sacute
+  if answer is 0
+    call ZZlprp_load__insert_2pt_s_2_1_ZZstring25 addr left addr right  # the retroflex
+    if answer is 0
+      go to said
+    end
+  end
+  call ZZlpta_load__setscan_r__1 addr left
+  call test_string_s 1 1 sym pol_letter_cacute
+  if answer is 0
+    call ZZlprp_load__insert_2pt_s_2_1_ZZstring53 addr left addr right  # the retroflex affricate
+    if answer is 0
+      go to said
+    end
+  end
+  # z with an acute and z with a dot are one sound apart in Polish and the
+  # same sound here, for the same reason the digraphs are: there is no
+  # alveolo-palatal in this inventory yet.
+  call ZZlpta_load__setscan_r__1 addr left
+  call test_string_s 1 1 sym pol_letter_zacute
+  if answer is 0
+    call ZZlprp_load__insert_2pt_s_2_1_ZZstring18 addr left addr right  # the voiced retroflex
+    if answer is 0
+      go to said
+    end
+  end
+  call ZZlpta_load__setscan_r__1 addr left
+  call test_string_s 1 1 sym pol_letter_zdot
+  if answer is 0
+    call ZZlprp_load__insert_2pt_s_2_1_ZZstring18 addr left addr right  # the voiced retroflex
+    if answer is 0
+      go to said
+    end
+  end
+  give up
+place said
+  call succeed
+  put cell right value into arg 2 at 4
+  answer 0
+end

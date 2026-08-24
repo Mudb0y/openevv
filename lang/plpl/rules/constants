@@ -1,0 +1,25 @@
+# Bytes a rule of Polish's names by address, which no lifter writes: these are
+# ours. A string a rule holds against the text is one code per character in
+# the alphabet the statement type declares, not ASCII, and
+# tools/lang-alphabet.py show plpl is what says which code is which letter.
+# The phonemes are the phone statement's own alphabet, which
+# tools/lang-phonemes.py prints.
+
+# The eight letters Italian has not got, by the codes the alphabet gives them.
+bytes pol_letter_aogonek  cf      # a with an ogonek
+bytes pol_letter_cacute   d0      # c with an acute
+bytes pol_letter_eogonek  d1      # e with an ogonek
+bytes pol_letter_lstroke  d2      # l with a stroke
+bytes pol_letter_nacute   d3      # n with an acute
+bytes pol_letter_sacute   d4      # s with an acute
+bytes pol_letter_zacute   d5      # z with an acute
+bytes pol_letter_zdot     d6      # z with a dot above
+
+# What the two ogoneks say. They are nasal vowels, which this inventory has
+# not got: they are spoken as the vowel and then an n, which is what Polish
+# itself does before a stop and near enough elsewhere until there is a nasal
+# vowel to use. The other six letters say one phoneme each and the module
+# already has a wrapper that lays each of those down, so they name nothing
+# here.
+bytes pol_ph_on           21 12   # the open o, then n
+bytes pol_ph_en           1d 12   # the open e, then n

@@ -8633,7 +8633,7 @@ label L44 was $X52$90820
   cmp testl reg r0 reg r0
   branch jne to L45
   push reg r6
-  call ZZtest_string_s_1_1_ZZstring107 arity 1 depth 1
+  call pol_test_own_letters arity 1 depth 1
   cmp testl reg r0 reg r0
   popreg r1
   branch je to L77
@@ -8837,7 +8837,7 @@ label L66 was at_0x7ae
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_c_rules arity 3 depth 4
+  call apply_pol_c_rules arity 3 depth 4
   jump to L12
 label L67 was at_0x7c7
   push reg r6
@@ -8847,7 +8847,7 @@ label L67 was at_0x7c7
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_d_rules arity 3 depth 4
+  call apply_pol_d_rules arity 3 depth 4
   jump to L12
 label L68 was at_0x7e0
   push reg r6
@@ -8947,7 +8947,7 @@ label L77 was at_0x8c1
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_q_rules arity 3 depth 4
+  call apply_pol_letter_rules arity 3 depth 4
   jump to L12
 label L78 was at_0x8da
   push reg r6
@@ -8957,7 +8957,7 @@ label L78 was at_0x8da
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_r_rules arity 3 depth 4
+  call apply_pol_r_rules arity 3 depth 4
   jump to L12
 label L79 was at_0x8f3
   push reg r6
@@ -8967,7 +8967,7 @@ label L79 was at_0x8f3
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_s_rules arity 3 depth 4
+  call apply_pol_s_rules arity 3 depth 4
   jump to L12
 label L80 was at_0x90c
   push reg r6
@@ -9098,7 +9098,7 @@ label L85 was $X72$90886
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_z_rules arity 3 depth 5
+  call apply_pol_z_rules arity 3 depth 5
   jump to L56
 label L86 was at_0xa56
   push imm 94

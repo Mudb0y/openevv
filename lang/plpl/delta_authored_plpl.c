@@ -13,6 +13,30 @@
 
 #include "delta_lang.h"
 
+uint8_t plpl_evv_authored_data[] = {
+    /* pol_letter_aogonek, 1 bytes at 0 */
+    207,
+    /* pol_letter_cacute, 1 bytes at 1 */
+    208,
+    /* pol_letter_eogonek, 1 bytes at 2 */
+    209,
+    /* pol_letter_lstroke, 1 bytes at 3 */
+    210,
+    /* pol_letter_nacute, 1 bytes at 4 */
+    211,
+    /* pol_letter_sacute, 1 bytes at 5 */
+    212,
+    /* pol_letter_zacute, 1 bytes at 6 */
+    213,
+    /* pol_letter_zdot, 1 bytes at 7 */
+    214,
+    /* pol_ph_on, 2 bytes at 8 */
+    33,18,
+    /* pol_ph_en, 2 bytes at 10 */
+    29,18,
+};
+
 const delta_store plpl_delta_authored_store[] = {
+    { plpl_evv_authored_data, sizeof plpl_evv_authored_data },
     { 0, 0 },
 };

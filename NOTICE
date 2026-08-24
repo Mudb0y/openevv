@@ -49,6 +49,16 @@ IBM's too, and so is anything of IBM's copied byte for byte into
 are ours. The language in front of every name is ours as well, and is there so
 that two languages can be linked into one program.
 
+A rule written for a language rather than transcribed out of an object is ours,
+and `lang/plpl/rules/is_val.up` and `lang/plpl/rules/it_phone.up` are that:
+the formant targets of sounds Italian has not got, and the letter-to-sound
+rules for Polish's digraphs and for its own letters. What those rules name is
+still IBM's -- a phoneme number, a statement type and the code the alphabet
+gives a character are its numbering, and a byte in `lang/plpl/rules/constants`
+that stands for one of those stands for a number of its -- but what the rules
+say with them was written here. That does not soften the paragraph above:
+everything else in that module is IBM's Italian until it has been replaced.
+
 That data is IBM's work, not ours. The MIT licence does not cover it and we are
 in no position to license it to anyone. The SDK it was read out of says as much
 itself, in `doc/wxp/readme.txt`:
