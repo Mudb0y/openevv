@@ -26,6 +26,7 @@
 #include "eci_synththread.h"
 #include "evv_abi.h"
 #include "eci_engine.h"
+#include "delta_lang.h"
 
 typedef struct RomInstance RomInstance;
 typedef struct SynthThread SynthThread;
@@ -310,15 +311,48 @@ THIS void rz_removeUnused(RomanizerManager *m, int32_t *lang)
 
 /* ---- the one byte-for-byte conversion that is not a romanizer -------- */
 
+/* Whether a byte is one the language in force claims as its own.
+
+   A language IBM never shipped may have letters outside the byte set this
+   table was made for, and it says which in `lang/<tag>/<tag>.codepoints'.
+   The eight IBM did ship claim none, so this answers no for every one of
+   them and the table decides as it always did. */
+static int ownByte(SynthThread *t, uint8_t c)
+{
+    const delta_language *l;
+    int32_t i;
+
+    if (t == 0 || ST_ENGINE_ID(t) == 0)
+        return 0;
+    l = delta_lang_by_id((int32_t)ST_ENGINE_ID(t));
+    if (l == 0 || l->codepoints == 0)
+        return 0;
+    for (i = 0; i < l->codepoints_n; i++)
+        if (l->codepoints[i].byte == c)
+            return 1;
+    return 0;
+}
+
 /* With no corpus loaded, every byte is mapped through one table. With a
-   corpus the text is left alone, because the corpus has already had it. */
+   corpus the text is left alone, because the corpus has already had it.
+ *
+ * A letter of a language's own is left alone as well, which the original
+ * does not do because it had no such language. The table turns most of
+ * 0x80 to 0x9f into a space -- undefined in the Western set it was made
+ * for -- and those are the byte values a new language's letters are free to
+ * take, so without this a Polish word arrives as several one-letter ones.
+ * Nothing IBM shipped has a letter of its own, so nothing IBM shipped
+ * reaches this. */
 THIS void rz_convertText(RomanizerManager *m, uint8_t *text)
 {
-    if (ST_CORPORA_AT(RM_THREAD(m)))
+    SynthThread *t = RM_THREAD(m);
+
+    if (ST_CORPORA_AT(t))
         return;
 
     for (; *text; text++)
-        *text = ConversionTable[*text];
+        if (!ownByte(t, *text))
+            *text = ConversionTable[*text];
 }
 
 /* What a character that means something to the engine is replaced with.
