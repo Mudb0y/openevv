@@ -493,3 +493,61 @@ rule pol_insert_6 takes 4 from glob.obj
   raw alu negl none reg r0
   raw return reg r0
 end
+
+# The lengths the millions and the billions want.
+
+rule pol_insert_l_2 takes 2 from glob.obj
+  bare
+  raw push imm 0
+  raw push param 1
+  raw push imm 2
+  raw push imm 1
+  raw push param 0
+  raw call insert_l arity 5 depth 5
+  raw popn 5
+  raw return reg r0
+end
+rule pol_insert_l_8 takes 2 from glob.obj
+  bare
+  raw push imm 0
+  raw push param 1
+  raw push imm 8
+  raw push imm 1
+  raw push param 0
+  raw call insert_l arity 5 depth 5
+  raw popn 5
+  raw return reg r0
+end
+rule pol_insert_l_10 takes 2 from glob.obj
+  bare
+  raw push imm 0
+  raw push param 1
+  raw push imm 10
+  raw push imm 1
+  raw push param 0
+  raw call insert_l arity 5 depth 5
+  raw popn 5
+  raw return reg r0
+end
+
+# Two characters, for the places where Italian says a word Polish does
+# not: a million is milion and not jeden milion.
+
+rule pol_insert_2 takes 4 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push param 3
+  raw push imm 2
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end

@@ -121,3 +121,11 @@ bytes pol_num_100      19 1a 04                       # sto, 3 characters
 bytes pol_num_100j     c7 19 02 1a                    # the joined hundreds, after two to nine, 4 characters
 bytes pol_num_1000     1a 1e 19 03 cf 0c              # tysiąc, 6 characters
 bytes pol_num_1000j    c7 48 1a 1e 19 03 cf 0c 02     # a space and tysiące, for two thousand and up, 9 characters
+
+# The millions and the billions, and the and between them that Polish
+# does not say.
+bytes pol_num_mln      c7 48 14 03 13 03 04 15            # a million, 8 characters
+bytes pol_num_mlns     c7 48 14 03 13 03 04 15 1e         # millions, which is right for two to four, 9 characters
+bytes pol_num_mld      c7 48 14 03 13 03 01 18 0d         # a billion, 9 characters
+bytes pol_num_mlds     c7 48 14 03 13 03 01 18 0d 1e      # billions, two to four again, 10 characters
+bytes pol_num_and      c7 48                              # where Italian says e, 2 characters

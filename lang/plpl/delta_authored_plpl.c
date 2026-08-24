@@ -165,6 +165,16 @@ uint8_t plpl_evv_authored_data[] = {
     26,30,25,3,207,12,
     /* pol_num_1000j, 9 bytes at 361 */
     199,72,26,30,25,3,207,12,2,
+    /* pol_num_mln, 8 bytes at 370 */
+    199,72,20,3,19,3,4,21,
+    /* pol_num_mlns, 9 bytes at 378 */
+    199,72,20,3,19,3,4,21,30,
+    /* pol_num_mld, 9 bytes at 387 */
+    199,72,20,3,19,3,1,24,13,
+    /* pol_num_mlds, 10 bytes at 396 */
+    199,72,20,3,19,3,1,24,13,30,
+    /* pol_num_and, 2 bytes at 406 */
+    199,72,
 };
 
 const delta_store plpl_delta_authored_store[] = {
