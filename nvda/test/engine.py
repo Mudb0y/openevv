@@ -205,6 +205,137 @@ def engine_module(dll, player_box, library_there=True):
     return mod
 
 
+def stall_checks():
+    """A player that stops taking audio must not silence the synthesiser.
+
+    Blocking in the player is the design: a full one is what keeps the engine
+    from running ahead of the speech. But there is one thread, the player has
+    no timeout, and a player that has stopped draining is indistinguishable
+    from a full one -- so it holds that thread, and every utterance behind it,
+    with nothing said and nothing written down.
+    """
+    import threading
+    import time
+
+    class DeadPlayer:
+        """Drains until told not to, and then never again."""
+
+        def __init__(self, **kwargs):
+            self.made = kwargs
+            self.lock = threading.Condition()
+            self.queued = []
+            self.dead = False
+            self.stopped = 0
+            self.closed = 0
+            self.paused = []
+            threading.Thread(target=self._drain, daemon=True).start()
+
+        def _drain(self):
+            while True:
+                with self.lock:
+                    if self.queued and not self.dead:
+                        _, onDone = self.queued.pop(0)
+                        self.lock.notify_all()
+                    else:
+                        onDone = None
+                if onDone:
+                    onDone()
+                time.sleep(0.002)
+
+        def feed(self, data, size=None, onDone=None):
+            with self.lock:
+                while len(self.queued) >= 3:
+                    self.lock.wait(timeout=30)
+                self.queued.append((bytes(data), onDone))
+
+        def idle(self):
+            with self.lock:
+                while self.queued:
+                    self.lock.wait(timeout=30)
+
+        def stop(self):
+            with self.lock:
+                self.queued = []
+                self.dead = False
+                self.stopped += 1
+                self.lock.notify_all()
+
+        def pause(self, switch):
+            self.paused.append(switch)
+
+        def close(self):
+            self.closed += 1
+
+        def sync(self):
+            pass
+
+    dll = FakeDll()
+    players = []
+    mod = engine_module(dll, players)
+    import nvwave
+
+    nvwave.WavePlayer = lambda **kw: players.append(DeadPlayer(**kw)) or players[-1]
+    mod.nvwave = nvwave
+    # The same logic on a shorter fuse, so the check is quick.
+    mod.STUCK_AFTER = 1.0
+    mod.WATCH_EVERY = 0.2
+
+    def synchronize(handle):
+        for _ in range(30):
+            dll.callback(handle, mod.MSG_WAVEFORM, 1024, None)
+        return 1
+
+    dll.answer_synchronize = synchronize
+
+    done = []
+    engine = mod.Engine(lambda index: done.append(index))
+    engine.open()
+    player = players[0]
+
+    def utterance():
+        return [(engine.addText, (b"x",)), (engine.synthesize, (True,))]
+
+    engine.post(utterance())
+    time.sleep(0.8)
+    check("speech reaches the player to begin with", done.count(None), 1)
+
+    del done[:]
+    with player.lock:
+        player.dead = True
+    for _ in range(4):
+        engine.post(utterance())
+    time.sleep(0.8)
+    check("a player that stops draining holds the thread and the queue",
+          (done.count(None), engine._work.qsize() > 0), (0, True))
+
+    time.sleep(2.5)
+    check("the stall is broken rather than waited out", player.stopped >= 1, True)
+    check("and whatever waited on the utterance is told it finished",
+          done.count(None) >= 1, True)
+    check("and the utterances behind it are not left queued",
+          engine._work.qsize(), 0)
+
+    del done[:]
+    engine.post(utterance())
+    time.sleep(1.2)
+    check("speech works again without the reader having to interrupt",
+          done.count(None), 1)
+
+    # A pause is meant to stop the player draining, so it is not a stall and
+    # must not be broken: doing so would resume speech the reader paused.
+    del done[:]
+    engine.pause(True)
+    with player.lock:
+        player.dead = True
+    before = player.stopped
+    engine.post(utterance())
+    time.sleep(2.5)
+    check("but a pause the reader asked for is left alone",
+          (player.stopped, done.count(None)), (before, 0))
+    engine.pause(False)
+    engine.cancel()
+
+
 def main():
     dll = FakeDll()
     players = []
@@ -392,6 +523,8 @@ def main():
     check("the thread has stopped", engine.alive(), False)
     check("the instance was given back", dll.named("eciDelete") != [], True)
     check("and the player was closed", player.closed, 1)
+
+    stall_checks()
 
     # A Thread subclass shares Thread's namespace, so this holds the engine to
     # not using any name the standard library's Thread does.
