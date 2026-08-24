@@ -8609,7 +8609,7 @@ label L0 was _ital_ph_S
   store movw imm 300 statefld 2918
   call ZZstarttest1 arity 1 depth 2
   push state 0
-  call pol_retroflex_Fv arity 1 depth 3
+  call pol_sibilant_Fv arity 1 depth 3
   popn 3
 label L1 was at_0x6c
   push reg r6
@@ -8738,7 +8738,7 @@ label L0 was _ital_ph_Z
   store movw imm 300 statefld 2918
   call ZZstarttest1 arity 1 depth 2
   push state 0
-  call pol_retroflex_Fv arity 1 depth 3
+  call pol_sibilant_Fv arity 1 depth 3
   popn 3
 label L1 was at_0x6c
   push reg r6
@@ -13837,7 +13837,7 @@ label L25 was $X34$90698
   push reg r6
   call ZZstarttest37 arity 1 depth 1
   push reg r6
-  call ital_ph_L arity 1 depth 2
+  call ital_ph_S arity 1 depth 2
   jump to L1
 label L26 was $X36$90702
   push reg r6
@@ -13875,7 +13875,7 @@ label L27 was $X38$90706
   push reg r6
   call ZZstarttest41 arity 1 depth 1
   push reg r6
-  call ital_ph_R arity 1 depth 2
+  call ital_ph_Z arity 1 depth 2
   jump to L1
 label L28 was $X40$90710
   push reg r6

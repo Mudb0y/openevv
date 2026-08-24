@@ -34,6 +34,10 @@ uint8_t plpl_evv_authored_data[] = {
     33,18,
     /* pol_ph_en, 2 bytes at 10 */
     29,18,
+    /* pol_ph_tsz, 2 bytes at 12 */
+    4,24,
+    /* pol_ph_dzz, 2 bytes at 14 */
+    3,22,
 };
 
 const delta_store plpl_delta_authored_store[] = {

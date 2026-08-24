@@ -23,3 +23,11 @@ bytes pol_letter_zdot     d6      # z with a dot above
 # here.
 bytes pol_ph_on           21 12   # the open o, then n
 bytes pol_ph_en           1d 12   # the open e, then n
+
+# The hard affricates, cz and dż. Polish's soft ć and dź are Italian's own C
+# and J, which its phonology already breaks into a stop and the palatal
+# fricative; the hard pair has no code of its own left, so a letter rule lays
+# down the stop and the retroflex fricative itself, which is the same two
+# sounds in the same order.
+bytes pol_ph_tsz          04 18   # t, then the hard sz
+bytes pol_ph_dzz          03 16   # d, then the hard ż

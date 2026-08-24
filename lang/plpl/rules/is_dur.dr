@@ -7832,7 +7832,7 @@ label L40 was at_0x533
   push reg r6
   call ZZstarttest25 arity 1 depth 1
   push reg r6
-  call ital_ph_L_dur arity 1 depth 2
+  call ital_ph_S_dur arity 1 depth 2
   jump to L4
 label L41 was at_0x544
   push reg r6
@@ -7844,7 +7844,7 @@ label L42 was at_0x555
   push reg r6
   call ZZstarttest29 arity 1 depth 1
   push reg r6
-  call ital_ph_R_dur arity 1 depth 2
+  call ital_ph_Z_dur arity 1 depth 2
   jump to L4
 label L43 was at_0x566
   push reg r6

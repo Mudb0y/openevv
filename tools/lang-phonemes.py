@@ -17,8 +17,17 @@ whether it has numbers, whether it has a rule, and which place that rule speaks
 it at. What it is for is adding one, which means having somewhere to copy from
 and knowing what a copy has to cover.
 
+A phoneme also carries a record saying what kind of sound it is, in the same
+place a letter's does: the `variants' bytes of its own statement, one record
+per name, and the statement says how long one is. For the phone statement they
+are its own fields -- class, voicing, sonority, manner, place, and the three a
+vowel wants -- so `place' is where a language says that its sz is retroflex and
+its s is not. Reading those by eye and writing them by hand is how a fricative
+quietly becomes a lateral, so `set' writes them by name.
+
 usage: lang-phonemes.py <tag>            every phoneme
        lang-phonemes.py <tag> <name>...  only the ones named
+       lang-phonemes.py set <tag> <phoneme> <field>=<value>...
 """
 
 import os
@@ -49,6 +58,107 @@ def inventory(tag):
             t = line[len("    value"):].rstrip("\n")
             out.append(t[1:] if t.startswith(" ") else t)
     return out
+
+
+def statement(tag, want="phone"):
+    """One statement as its lines, its value names, its field order, the
+    stride of one variant record and where the records are written.
+
+    The record covers the fields after the name, less `afterslash' where the
+    statement has one, and there are as many of them as the stride says. That
+    is not stated anywhere: it is what makes the arithmetic come out for all
+    nine languages, whose strides run from three to eight.
+    """
+    p = os.path.join(ROOT, "lang", tag, "%s.statements" % tag)
+    lines = open(p).read().split("\n")
+    inside = False
+    field = None
+    fields = []
+    values = {}
+    names = []
+    stride = None
+    var = bytearray()
+    var_at = []
+
+    for i, line in enumerate(lines):
+        if line == "statement %s" % want:
+            inside = True
+            continue
+        if not inside:
+            continue
+        if line.startswith("statement ") or line == "end":
+            break
+        w = line.split()
+        if line.startswith("  field "):
+            field = w[1]
+            fields.append(field)
+            values.setdefault(field, [])
+        elif line.startswith("    value") and field:
+            t = line[len("    value"):]
+            t = t[1:] if t.startswith(" ") else t
+            t = t.replace("\\s", " ").replace("\\\\", "\\")
+            values[field].append(t)
+            if field == "name":
+                names.append(t)
+        elif w[:3] == ["at", "start", "stride"]:
+            stride = int(w[3])
+        elif w[:1] == ["variants"]:
+            var_at.append(i)
+            var += bytes(int(x, 16) for x in w[1:])
+
+    record = [f for f in fields if f not in ("name", "afterslash")][:stride or 0]
+    return {"path": p, "lines": lines, "names": names, "values": values,
+            "fields": fields, "record": record, "stride": stride,
+            "variants": bytes(var), "var_at": var_at}
+
+
+def set_record(tag, phoneme, args):
+    """Change named fields of one phoneme's record, and write the file back
+    with everything else exactly as it came."""
+    st = statement(tag)
+    if phoneme not in st["names"]:
+        raise SystemExit("lang-phonemes: %s has no phoneme called %r"
+                         % (tag, phoneme))
+    code = st["names"].index(phoneme)
+    stride = st["stride"]
+    if len(st["record"]) != stride:
+        raise SystemExit("lang-phonemes: the statement says a record is %d"
+                         " bytes and names %d fields for it"
+                         % (stride, len(st["record"])))
+    at = code * stride
+    if at + stride > len(st["variants"]):
+        raise SystemExit("lang-phonemes: %s has no record" % phoneme)
+    rec = bytearray(st["variants"][at:at + stride])
+
+    for a in args:
+        if "=" not in a:
+            raise SystemExit("lang-phonemes: %r is not field=value" % a)
+        k, v = a.split("=", 1)
+        if k not in st["record"]:
+            raise SystemExit("lang-phonemes: a record has no %r; it has %s"
+                             % (k, ", ".join(st["record"])))
+        table = st["values"].get(k, [])
+        if v not in table:
+            raise SystemExit("lang-phonemes: %s has no value called %r; it"
+                             " has %s" % (k, v, ", ".join(table)))
+        rec[st["record"].index(k)] = table.index(v)
+
+    var = bytearray(st["variants"])
+    was = bytes(var[at:at + stride])
+    var[at:at + stride] = rec
+    if bytes(var[at:at + stride]) == was:
+        print("%s: %s already says that" % (tag, phoneme))
+        return True
+
+    out = ["  variants " + " ".join("%02x" % b for b in var[i:i + 32])
+           for i in range(0, len(var), 32)]
+    lines = st["lines"]
+    lines[min(st["var_at"]):max(st["var_at"]) + 1] = out
+    open(st["path"], "w").write("\n".join(lines))
+    print("%s: %s is now %s" % (tag, phoneme, ", ".join(
+        "%s %s" % (f, st["values"][f][rec[i]])
+        for i, f in enumerate(st["record"]))))
+    return True
 
 
 def declared(tag):
@@ -125,6 +235,11 @@ def show(tag, want):
 
 
 def main(argv):
+    if argv[:1] == ["set"]:
+        if len(argv) < 4:
+            print(__doc__.strip())
+            return 2
+        return 0 if set_record(argv[1], argv[2], argv[3:]) else 1
     if not argv:
         print(__doc__.strip())
         return 2
