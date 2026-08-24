@@ -12,11 +12,19 @@
 017a 89   # z with acute
 017c 8b   # z with dot above
 
-0104 8d   # and the capitals
-0106 8e
-0118 8f
-0141 90
-0143 91
-015a 92
-0179 9b
-017b 9e
+# And the capitals, which arrive as their own lowercase. Nothing in the module
+# lowercases them: convert_to_lowercase is a chain of 62 arms, one per letter it
+# knows, and each arm plants the tag of the next, so adding eight means
+# renumbering the chain. Until that is done a capital of Polish's own would
+# reach the letter rules unconverted and be silent -- Żaba said aba, and ŁÓDŹ,
+# being nothing but silent letters, crashed. Arriving lowercase is right for
+# every sound and wrong only for anything that would want to know a letter was
+# capital, which nothing here does yet.
+0104 82   # A with ogonek, as a with ogonek
+0106 83   # C with acute
+0118 84   # E with ogonek
+0141 86   # L with stroke
+0143 87   # N with acute
+015a 88   # S with acute
+0179 89   # Z with acute
+017b 8b   # Z with dot above

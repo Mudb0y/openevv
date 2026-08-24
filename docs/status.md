@@ -280,6 +280,10 @@ Three faults on the way, all the same lesson: a word's length is stated in more 
 
 What is still Italian in the numbers: two, three and four hundred, which Polish makes irregularly -- dwieście, trzysta, czterysta -- where five hundred through nine hundred are regular and come out right, so 200 says dwaset; the plurals, since tysiąc is tysiące for two to four and tysięcy above, and this always says tysiące; the leading digit of two billion; and ordinals, dates, times, money and Roman numerals, which are each their own rule, so 1. is still primo.
 
+The eight capitals of Polish's own letters were silent, which no test here had caught because every Polish word in them started with a letter Italian has. Żaba said aba, Śnieg said śnieg without the ś, and ŁÓDŹ -- nothing but silent letters -- crashed, the way a word with nothing to say always does. The letter chain dispatches on a character code and never saw them, because `convert_to_lowercase` has no arm for them: it is 62 arms, one per letter it knows, and each arm plants the tag of the next, so adding eight means renumbering the chain rather than appending to a table.
+
+They arrive as their own lowercase instead: eight lines in `lang/plpl/plpl.codepoints`. That is right for every sound and wrong only for anything that would want to know a letter was capital, which nothing in the module does yet. The proper fix is the eight arms, and the reason it was not done that way is written above the lines.
+
 What is left after this: Polish's own words, of which the module now has none -- the one-letter prepositions w and z are letter names rather than /v/ and /z/, since a lone letter is spelled before any word dictionary is consulted -- the numbers, the nasal vowels, currently a vowel plus an n, which is what Polish does before a stop and not elsewhere, /x/ for ch and h, which no module has, stress, which is Italian's penultimate rule and near but not the same, and prosody, which is Italian's outright.
 
 ## A language module as text
