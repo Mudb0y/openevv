@@ -527,3 +527,96 @@ place said
   put cell right value into arg 2 at 4
   answer 0
 end
+
+# The vowels Italian reads its own way.
+#
+# Italian has seven vowels and Polish six, and the two it has spare are exactly
+# the two Polish does not want: the close-mid e and the close-mid o. Polish e
+# is always the open one, ɛ, and Polish o always the open ɔ, where Italian
+# chooses between the pair by stress and syllable shape. So Polish's letter e
+# and letter o are one insert each and no tests, and that leaves Italian's
+# close-mid e with nothing producing it -- which is where Polish's y goes,
+# since y is a sound no module has.
+
+# Polish e is ɛ wherever it stands.
+rule apply_pol_e_rules takes 3 from it_phone.obj
+  local left bytes 8
+  local right bytes 8
+  call ZZget_parm_ptr2 addr left arg 1 addr right arg 2
+  call ZZfence_null
+  call ZZfenceZZstring140
+  call ZZlprp_load__insert_2pt_s_2_1_ZZstring139 addr left addr right  # ɛ
+  if answer is not 0
+    give up
+  end
+  call succeed
+  put cell right value into arg 2 at 4
+  answer 0
+end
+
+# Polish o is ɔ, and o with an acute is u: mój is muj and sól is sul. Italian
+# sends both letters to the same rule, so this one asks which it has.
+rule apply_pol_o_rules takes 3 from it_phone.obj
+  local left bytes 8
+  local right bytes 8
+  call ZZget_parm_ptr2 addr left arg 1 addr right arg 2
+  call ZZfence_null
+  call ZZfenceZZstring140
+  plant test plain
+  call ZZlpta_load__setscan_r__1 addr left
+  if answer is 0
+    call ZZtest_string_s_1_1_ZZstring20           # o with an acute?
+    if answer is 0
+      call ZZlprp_load__insert_2pt_s_2_1_ZZstring148 addr left addr right  # u
+      if answer is 0
+        go to said
+      end
+    end
+  end
+  backtrack
+place plain
+  call ZZlprp_load__insert_2pt_s_2_1_ZZstring154 addr left addr right  # ɔ
+  if answer is not 0
+    backtrack
+  end
+place said
+  call succeed
+  put cell right value into arg 2 at 4
+  answer 0
+end
+
+# Polish y is ɨ, a sound between i and u that no module has, and being spoken
+# as an i costs a minimal pair: być is not bić. It takes over the close-mid e
+# that the rule above has just left with nothing producing it, and
+# stanital_ph_e in is_sival.dr carries its formants.
+rule apply_pol_y_rules takes 3 from it_phone.obj
+  local left bytes 8
+  local right bytes 8
+  call ZZget_parm_ptr2 addr left arg 1 addr right arg 2
+  call ZZfence_null
+  call ZZfenceZZstring140
+  call ZZlprp_load__insert_2pt_s_2_1_ZZstring138 addr left addr right  # ɨ
+  if answer is not 0
+    give up
+  end
+  call succeed
+  put cell right value into arg 2 at 4
+  answer 0
+end
+
+# And Polish j is the glide, where Italian's is an affricate: mój was ending in
+# a dż.
+rule apply_pol_j_rules takes 3 from it_phone.obj
+  local left bytes 8
+  local right bytes 8
+  call ZZget_parm_ptr2 addr left arg 1 addr right arg 2
+  call ZZfence_null
+  call ZZfenceZZstring140
+  call ZZlprp_load__insert_2pt_s_2_1_ZZstring123 addr left addr right  # the glide
+  if answer is not 0
+    give up
+  end
+  call succeed
+  put cell right value into arg 2 at 4
+  answer 0
+end

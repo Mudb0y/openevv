@@ -1,0 +1,59 @@
+# Italian closes a mid vowel where Polish leaves it open.
+#
+# make_ital_phon_adjustments has three arms that put one phoneme in place of
+# another. The first turns an n before a k into the velar nasal, which Polish
+# wants and which is why bank is bank. The other two close a mid vowel: ɛ
+# becomes e and ɔ becomes o, by a context Italian's orthography needs and
+# Polish's does not have -- Polish e is ɛ wherever it stands and Polish o is ɔ.
+#
+# So those two arms now put back the vowel they were given. Doing it that way
+# rather than by cutting the arm out keeps the machine's bookkeeping exactly as
+# it was: the same insert of the same length happens at the same point, and
+# nothing downstream can tell that anything was skipped.
+#
+# Each is IBM's own wrapper with one symbol changed, written as raw lower
+# notation so that nothing else about them can differ from it. Both are bare,
+# which is the shape a wrapper has: they stand inside somebody else's rule and
+# the choice points around them are that rule's.
+#
+# This is also what frees the close-mid e for Polish's y. With the letter e
+# spoken as ɛ and this arm no longer closing it, nothing produces e but the
+# rule for y.
+
+rule pol_keep_open_e takes 1 from glob.obj
+  bare
+  raw load movl state 0 into r6
+  raw load movl state 840 into r0
+  raw push state 840
+  raw load movl state 832 into r0
+  raw push state 832
+  raw push state 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push sym ZZstring139
+  raw push imm 1
+  raw push imm 2
+  raw push state 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw return reg r0
+end
+
+rule pol_keep_open_o takes 1 from glob.obj
+  bare
+  raw load movl state 0 into r6
+  raw load movl state 840 into r0
+  raw push state 840
+  raw load movl state 832 into r0
+  raw push state 832
+  raw push state 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push sym ZZstring154
+  raw push imm 1
+  raw push imm 2
+  raw push state 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw return reg r0
+end

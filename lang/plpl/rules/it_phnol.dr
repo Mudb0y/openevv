@@ -224,7 +224,7 @@ label L9 was $X5$90650
   popreg r1
   branch jne to L8
   push reg r6
-  call ZZ_lprp_load_vvg_0103_0104__insert_2pt_s_2_1_ZZstring138 arity 1 depth 1
+  call pol_keep_open_e arity 1 depth 1
   jump to L6
 label L10 was $X6$90654
   push reg r6
@@ -253,7 +253,7 @@ label L11 was $X8$90664
   popreg r1
   branch jne to L8
   push reg r6
-  call ZZ_lprp_load_vvg_0103_0104__insert_2pt_s_2_1_ZZstring153 arity 1 depth 1
+  call pol_keep_open_o arity 1 depth 1
   jump to L6
 label L12 was at_0x284
   push imm 94

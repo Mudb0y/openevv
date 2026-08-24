@@ -8496,7 +8496,7 @@ label L32 was $X24$90732
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_e_rules arity 3 depth 4
+  call apply_pol_e_rules arity 3 depth 4
   jump to L12
 label L33 was $X33$90763
   push reg r6
@@ -8719,7 +8719,7 @@ label L52 was $X49$90810
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_o_rules arity 3 depth 4
+  call apply_pol_o_rules arity 3 depth 4
   jump to L12
 label L53 was $X63$90858
   push reg r6
@@ -8887,7 +8887,7 @@ label L71 was at_0x82b
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_j_rules arity 3 depth 4
+  call apply_pol_j_rules arity 3 depth 4
   jump to L12
 label L72 was at_0x844
   push reg r6
@@ -9073,7 +9073,7 @@ label L84 was $X70$90879
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_y_rules arity 3 depth 4
+  call apply_pol_y_rules arity 3 depth 4
   jump to L12
 label L85 was $X72$90886
   push reg r6
