@@ -1,8 +1,8 @@
 /* Speak some text with the engine built for this machine.
  *
  * This is the command a person runs. It writes a wave file, or writes the
- * wave to standard output so it can be piped into a player, because nothing
- * in the engine sends samples to a sound card yet.
+ * wave to standard output so it can be piped into a player, because this
+ * front end does not send samples to a sound card itself.
  *
  * The driver the tests drive is cli/probe.c, not this. That one prints what
  * the engine answered at every step so those answers can be set against

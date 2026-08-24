@@ -29,7 +29,18 @@ The same two, thirty-two bit. That build is a check rather than a target: a diff
 
 On a Nix machine `nix build` makes the same binary at `result/bin/evv`, and `nix run . -- -o hello.wav "text"` runs it without installing anything. `nix develop` is the shell the rest of this assumes: the thirty-two bit compiler, Wine and Python on the path.
 
-`make install` copies the binary to `/usr/local/bin/evv`, or wherever `PREFIX` and `DESTDIR` say. There is nothing else to install: it reads no file of its own at run time and wants no library but the C one, libm and pthreads. `make clean` takes the objects and the binaries away and leaves the generated C alone.
+`make install` copies the command to `/usr/local/bin/evv`, or wherever
+`PREFIX` and `DESTDIR` say. The command reads no run-time data of its own.
+`make clean` takes the objects and binaries away and leaves generated C alone.
+
+`make speechd` builds the Linux Speech Dispatcher output module. It additionally
+needs Speech Dispatcher's development headers, its module helper library, and
+`pkg-config`. `make speechd-test` drives one built language through the module
+protocol, while `make speechd-test-all` builds all eight and tests language
+selection as well. Configuration and manual listening checks are in
+`docs/speech-dispatcher.md`. `make speechd-install` installs the optional
+module and configuration; `SPEECHD_MODULEDIR`, `SPEECHD_CONFDIR`, `PREFIX`,
+and `DESTDIR` make its layout packageable.
 
 ## The variables
 

@@ -1,6 +1,6 @@
 # What works and what does not
 
-Last measured 23 August 2026.
+Last measured 24 August 2026.
 
 ## Works
 
@@ -20,13 +20,24 @@ That worked on Windows before it worked here. Any build with two languages in it
 
 It builds and speaks on Windows, sixty-four bit, as one static file. The speak window plays what it makes through waveOut; `win/speak.c` is that, and it is the only front end that plays anything.
 
+On Linux, `make speechd` builds a native Speech Dispatcher output module. It
+streams PCM to the server, advertises every built language and its eight voice
+presets, and implements the ordinary speech settings, spelling, characters,
+keys, index marks, stop and pause. Punctuation uses Speech Dispatcher's
+server-side symbol preprocessing. Its direct protocol suite passes with all
+eight languages in one process, and Speech Dispatcher 0.12.1 discovers the
+module and lists all 64 voices. Audible punctuation, playback, and screen-reader
+behavior still require the manual checks in `docs/speech-dispatcher.md`.
+
 And it builds as `eci.dll`, exporting the fifty-two names IBM published, so a program written against IBM's library -- a screen reader add-on, most likely -- can load ours instead. Both bitnesses: sixty-four bit for an add-on that loads the engine into the reader's own process, thirty-two bit for the most used driver, which hosts the engine in a 32-bit process of its own whatever the reader is. Checked on Windows itself: by name from C for both, and through ctypes for the sixty-four bit one, as an add-on does.
 
 What is not exported is the filter interface, which the engine does not implement, and the dictionary find, lookup and update calls, which have no public wrapper yet.
 
 ## Not done
 
-Live audio on Linux. The engine hands its samples to the caller, and `build/evv` writes them as a wave file or down a pipe; nothing sends them to a sound card as they are made. Windows got there first because waveOut is forty lines; PipeWire is next and is a thin sink on top of the same buffer.
+Direct live audio in `build/evv` on Linux. The command still writes a wave file
+or a pipe; live playback is available through Speech Dispatcher rather than a
+PipeWire-specific CLI sink.
 
 The compiler. The rules are readable C, but there is no way to write a new rule except by writing that C. This is the next piece of work and the gate to adding a language.
 
