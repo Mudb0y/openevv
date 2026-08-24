@@ -299,3 +299,197 @@ rule pol_insert_14 takes 4 from glob.obj
   raw alu negl none reg r0
   raw return reg r0
 end
+
+# And the lengths the tens want. A tens word carries a trailing
+# space, which is what keeps dwadzieścia trzy two words where Italian
+# writes ventitré as one.
+
+rule pol_insert_13 takes 4 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push param 3
+  raw push imm 13
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+rule pol_insert_15 takes 4 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push param 3
+  raw push imm 15
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+rule pol_insert_17 takes 4 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push param 3
+  raw push imm 17
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+
+# jeden, with the word baked in, for the arms that name their word rather than
+# passing it.
+rule pol_say_1 takes 3 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push sym pol_num_1
+  raw push imm 5
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+
+# And the two the compound units want: jeden after a tens word is five
+# characters where Italian's uno is three, and trzy is four where tré is
+# three.
+
+rule pol_insert_4 takes 4 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push param 3
+  raw push imm 4
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+rule pol_insert_5 takes 4 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push param 3
+  raw push imm 5
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+
+# Italian gives a number a gender ending -- un becomes uno or una -- and
+# appends two characters to do it. Polish gives none, and jeden with two
+# characters after it was coming out jedeno, so the call that adds them now
+# reaches this instead: a rule that answers yes and does nothing. Bare, because
+# it stands where a rule of IBM's stood inside somebody else's choice points.
+rule pol_no_gender takes 2 from glob.obj
+  bare
+  answer 0
+end
+
+# The joined forms go in through insert_l rather than the two-point
+# insert, so they want wrappers of that shape at our lengths.
+
+rule pol_insert_l_4 takes 2 from glob.obj
+  bare
+  raw push imm 0
+  raw push param 1
+  raw push imm 4
+  raw push imm 1
+  raw push param 0
+  raw call insert_l arity 5 depth 5
+  raw popn 5
+  raw return reg r0
+end
+rule pol_insert_l_9 takes 2 from glob.obj
+  bare
+  raw push imm 0
+  raw push param 1
+  raw push imm 9
+  raw push imm 1
+  raw push param 0
+  raw call insert_l arity 5 depth 5
+  raw popn 5
+  raw return reg r0
+end
+
+rule pol_insert_3 takes 4 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push param 3
+  raw push imm 3
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+rule pol_insert_6 takes 4 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push param 3
+  raw push imm 6
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end

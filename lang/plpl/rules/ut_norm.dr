@@ -733,7 +733,7 @@ label L6 was $X2$93460
   load movl slotaddr -20 into r0
   push slotaddr -20
   push reg r6
-  call assign_gender_to_ital_number arity 2 depth 3
+  call pol_no_gender arity 2 depth 3
   popn 3
 label L7 was $X8$93464
   push reg r6

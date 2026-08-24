@@ -101,3 +101,23 @@ bytes pol_num_16     19 1f 02 19 15 01 d4 0c 03 02                # szesnaście,
 bytes pol_num_17     19 03 02 0d 02 14 15 01 d4 0c 03 02          # siedemnaście, 12 characters
 bytes pol_num_18     04 19 03 02 14 15 01 d4 0c 03 02             # osiemnaście, 11 characters
 bytes pol_num_19     0d 1f 03 02 1c 03 d1 1a 15 01 d4 0c 03 02    # dziewiętnaście, 14 characters
+
+# The tens, each with a trailing space.
+bytes pol_num_20     0d 1c 01 0d 1f 03 02 d4 0c 03 01 48                # dwadzieścia and a space, 12 characters
+bytes pol_num_30     1a 18 1f 1e 0d 1f 03 02 d4 0c 03 48                # trzydzieści and a space, 12 characters
+bytes pol_num_40     0c 1f 1a 02 18 0d 1f 03 02 d4 0c 03 48             # czterdzieści and a space, 13 characters
+bytes pol_num_50     16 03 d1 d0 0d 1f 03 02 19 03 cf 1a 48             # pięćdziesiąt and a space, 13 characters
+bytes pol_num_60     19 1f 02 d4 d0 0d 1f 03 02 19 03 cf 1a 48          # sześćdziesiąt and a space, 14 characters
+bytes pol_num_70     19 03 02 0d 02 14 0d 1f 03 02 19 03 cf 1a 48       # siedemdziesiąt and a space, 15 characters
+bytes pol_num_80     04 19 03 02 14 0d 1f 03 02 19 03 cf 1a 48          # osiemdziesiąt and a space, 14 characters
+bytes pol_num_90     0d 1f 03 02 1c 03 d1 d0 0d 1f 03 02 19 03 cf 1a 48 # dziewięćdziesiąt and a space, 17 characters
+
+# One, which Italian says four ways and Polish one.
+bytes pol_num_1      11 02 0d 02 15                                     # jeden, 5 characters
+
+# A hundred and a thousand. The joined forms keep the mark Italian puts
+# in front of them, since that is the machine's and not the language's.
+bytes pol_num_100      19 1a 04                       # sto, 3 characters
+bytes pol_num_100j     c7 19 02 1a                    # the joined hundreds, after two to nine, 4 characters
+bytes pol_num_1000     1a 1e 19 03 cf 0c              # tysiąc, 6 characters
+bytes pol_num_1000j    c7 48 1a 1e 19 03 cf 0c 02     # a space and tysiące, for two thousand and up, 9 characters
