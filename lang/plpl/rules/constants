@@ -44,3 +44,34 @@ bytes pol_name_nacute     02 d3         # eń
 bytes pol_name_sacute     02 d4         # eś
 bytes pol_name_zacute     1f 03 02 1a   # ziet
 bytes pol_name_zdot       d6 02 1a      # żet
+
+# And the Polish name of every letter of the Latin alphabet, for the same
+# reason: a lone letter is spoken by its name, and every one of these was
+# Italian's. a was ah, which sounds right only because h is silent, and w
+# was doppia vi.
+bytes pol_name_a         01             # a
+bytes pol_name_b         0b 02          # be
+bytes pol_name_c         0c 02          # ce
+bytes pol_name_d         0d 02          # de
+bytes pol_name_e         02             # e
+bytes pol_name_f         02 0e          # ef
+bytes pol_name_g         0f 03 02       # gie
+bytes pol_name_h         10 01          # ha
+bytes pol_name_i         03             # i
+bytes pol_name_j         11 04 1a       # jot
+bytes pol_name_k         12 01          # ka
+bytes pol_name_l         02 13          # el
+bytes pol_name_m         02 14          # em
+bytes pol_name_n         02 15          # en
+bytes pol_name_o         04             # o
+bytes pol_name_p         16 02          # pe
+bytes pol_name_q         12 05          # ku
+bytes pol_name_r         02 18          # er
+bytes pol_name_s         02 19          # es
+bytes pol_name_t         1a 02          # te
+bytes pol_name_u         05             # u
+bytes pol_name_v         0e 01 1c       # faw
+bytes pol_name_w         1c 05          # wu
+bytes pol_name_x         03 12 19       # iks
+bytes pol_name_y         03 0f 18 02 12 # igrek
+bytes pol_name_z         1f 02 1a       # zet

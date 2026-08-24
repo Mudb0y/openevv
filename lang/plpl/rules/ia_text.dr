@@ -1089,11 +1089,11 @@ label L3 was at_0x122
   push reg r6
   call backtrack_function arity 2 depth 2
   alu decl none reg r0
-  cmp cmpl imm 210 reg r0
+  cmp cmpl imm 236 reg r0
   popreg r1
   popreg r1
   branch ja to L19
-  switch reg r0 to L4 L5 L7 L8 L9 L10 L11 L12 L13 L14 L15 L21 L22 L23 L24 L25 L26 L27 L28 L29 L30 L31 L32 L33 L34 L35 L36 L37 L38 L39 L40 L42 L43 L44 L126 L45 L46 L47 L48 L49 L50 L51 L52 L53 L54 L55 L56 L57 L58 L59 L60 L94 L62 L63 L64 L73 L74 L75 L76 L77 L78 L79 L80 L81 L82 L83 L84 L85 L86 L87 L114 L88 L89 L90 L91 L92 L93 L103 L118 L124 L105 L107 L94 L181 L95 L96 L97 L124 L124 L98 L99 L100 L101 L102 L103 L104 L105 L106 L107 L108 L109 L110 L111 L112 L113 L114 L115 L116 L117 L118 L119 L120 L121 L122 L123 L124 L125 L126 L127 L128 L129 L130 L131 L132 L133 L134 L135 L136 L137 L138 L139 L140 L141 L142 L143 L144 L145 L146 L147 L148 L149 L150 L151 L152 L153 L154 L155 L156 L157 L158 L159 L160 L161 L162 L163 L164 L165 L166 L167 L168 L169 L170 L171 L172 L19 L1 L70 L175 L176 L177 L178 L181 L180 L179 L71 L70 L70 L19 L70 L19 L70 L19 L70 L19 L70 L19 L70 L19 L70 L19 L70 L19 L70 L19 L70 L19 L70 L19 L70 L61 L70 L65 L70 L66 L70 L183 L184 L185 L186 L187 L188
+  switch reg r0 to L4 L5 L7 L8 L9 L10 L11 L12 L13 L14 L15 L21 L22 L23 L24 L25 L26 L27 L28 L29 L30 L31 L32 L33 L34 L35 L36 L37 L38 L39 L40 L42 L43 L44 L126 L45 L46 L47 L48 L49 L50 L51 L52 L53 L54 L55 L56 L57 L58 L59 L60 L94 L62 L63 L64 L73 L74 L75 L76 L77 L78 L79 L80 L81 L82 L83 L84 L85 L86 L87 L114 L88 L89 L90 L91 L92 L93 L103 L118 L124 L105 L107 L94 L181 L95 L96 L97 L124 L124 L98 L99 L100 L101 L102 L103 L104 L105 L106 L107 L108 L109 L110 L111 L112 L113 L114 L115 L116 L117 L118 L119 L120 L121 L122 L123 L124 L125 L126 L127 L128 L129 L130 L131 L132 L133 L134 L135 L136 L137 L138 L139 L140 L141 L142 L143 L144 L145 L146 L147 L148 L149 L150 L151 L152 L153 L154 L155 L156 L157 L158 L159 L160 L161 L162 L163 L164 L165 L166 L167 L168 L169 L170 L171 L172 L19 L1 L70 L175 L176 L177 L178 L181 L180 L179 L71 L70 L70 L19 L70 L19 L70 L19 L70 L19 L70 L19 L70 L19 L70 L19 L70 L19 L70 L19 L70 L19 L70 L19 L70 L61 L70 L65 L70 L66 L70 L183 L184 L185 L186 L187 L188 L189 L190 L191 L192 L193 L194 L195 L196 L197 L198 L199 L200 L201 L202 L203 L204 L205 L206 L207 L208 L209 L210 L211 L212 L213 L214
 label L4 was $X1$91375
   load movl sym ZZstring152 into r7
   jump to L173
@@ -2002,6 +2002,110 @@ label L187 was pol_name_zacute
 label L188 was pol_name_zdot
   load movl imm 259 into r2
   load movl sym pol_name_zdot into r7
+  jump to L174
+label L189 was pol_name_a
+  load movl imm 257 into r2
+  load movl sym pol_name_a into r7
+  jump to L174
+label L190 was pol_name_b
+  load movl imm 258 into r2
+  load movl sym pol_name_b into r7
+  jump to L174
+label L191 was pol_name_c
+  load movl imm 258 into r2
+  load movl sym pol_name_c into r7
+  jump to L174
+label L192 was pol_name_d
+  load movl imm 258 into r2
+  load movl sym pol_name_d into r7
+  jump to L174
+label L193 was pol_name_e
+  load movl imm 257 into r2
+  load movl sym pol_name_e into r7
+  jump to L174
+label L194 was pol_name_f
+  load movl imm 258 into r2
+  load movl sym pol_name_f into r7
+  jump to L174
+label L195 was pol_name_g
+  load movl imm 259 into r2
+  load movl sym pol_name_g into r7
+  jump to L174
+label L196 was pol_name_h
+  load movl imm 258 into r2
+  load movl sym pol_name_h into r7
+  jump to L174
+label L197 was pol_name_i
+  load movl imm 257 into r2
+  load movl sym pol_name_i into r7
+  jump to L174
+label L198 was pol_name_j
+  load movl imm 259 into r2
+  load movl sym pol_name_j into r7
+  jump to L174
+label L199 was pol_name_k
+  load movl imm 258 into r2
+  load movl sym pol_name_k into r7
+  jump to L174
+label L200 was pol_name_l
+  load movl imm 258 into r2
+  load movl sym pol_name_l into r7
+  jump to L174
+label L201 was pol_name_m
+  load movl imm 258 into r2
+  load movl sym pol_name_m into r7
+  jump to L174
+label L202 was pol_name_n
+  load movl imm 258 into r2
+  load movl sym pol_name_n into r7
+  jump to L174
+label L203 was pol_name_o
+  load movl imm 257 into r2
+  load movl sym pol_name_o into r7
+  jump to L174
+label L204 was pol_name_p
+  load movl imm 258 into r2
+  load movl sym pol_name_p into r7
+  jump to L174
+label L205 was pol_name_q
+  load movl imm 258 into r2
+  load movl sym pol_name_q into r7
+  jump to L174
+label L206 was pol_name_r
+  load movl imm 258 into r2
+  load movl sym pol_name_r into r7
+  jump to L174
+label L207 was pol_name_s
+  load movl imm 258 into r2
+  load movl sym pol_name_s into r7
+  jump to L174
+label L208 was pol_name_t
+  load movl imm 258 into r2
+  load movl sym pol_name_t into r7
+  jump to L174
+label L209 was pol_name_u
+  load movl imm 257 into r2
+  load movl sym pol_name_u into r7
+  jump to L174
+label L210 was pol_name_v
+  load movl imm 259 into r2
+  load movl sym pol_name_v into r7
+  jump to L174
+label L211 was pol_name_w
+  load movl imm 258 into r2
+  load movl sym pol_name_w into r7
+  jump to L174
+label L212 was pol_name_x
+  load movl imm 259 into r2
+  load movl sym pol_name_x into r7
+  jump to L174
+label L213 was pol_name_y
+  load movl imm 261 into r2
+  load movl sym pol_name_y into r7
+  jump to L174
+label L214 was pol_name_z
+  load movl imm 259 into r2
+  load movl sym pol_name_z into r7
   jump to L174
 end
 

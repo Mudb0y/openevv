@@ -260,7 +260,17 @@ The entries themselves are the dictionary's: six lines in `lang/plpl/plpl.dict` 
 
 Doing it that way rather than letting the tool mint the arms was not a preference. `delta-dict.py` can mint one -- it did, and read its own work back -- but the arm it writes names its record by an address in the program, and since the engine stopped needing to be loaded low, an address the arena does not know is a crash. So the tool's write path and the arena scheme have not met, and until they do an arm belongs in the rules text, where `rules/constants` puts the bytes somewhere the arena is told about. That is one of the two things left in the dictionary tooling; the other is that nothing can yet remove an entry, which is what emptying Italian's abbreviations will want.
 
-What is left after this: the words -- dom is still domenica, out of the 89 abbreviations Italian brought, and the 51 English loanwords in ital_words are Italian's borrowings and not Polish's -- the nasal vowels, currently a vowel plus an n, which is what Polish does before a stop and not elsewhere, /x/ for ch and h, which no module has, stress, which is Italian's penultimate rule and near but not the same, and prosody, which is Italian's outright.
+Then the whole Latin alphabet got Polish names, and Italian's words went.
+
+The two go together and the first forced the second. Twenty-six arms of the same three lines, so a is a rather than ah -- which sounds right today only because h is silent and will stop sounding right the moment /x/ exists -- be, ce, de, ef, gie, ha, jot, ka, el, em, en, pe, ku, er, es, te, faw, wu, iks, igrek and zet. Then c came out as tɕɨ, because the name ce is an Italian function word saying tʃe, and the name was being read as a word rather than as letters. So the letter names cannot be right while Italian's words are in the module.
+
+`lang/plpl/plpl.dict` is the source the tables are laid down from, so removing an entry needs no feature at all: a line dropped from the text is an entry the build does not lay down. Eleven of the thirteen dictionaries are empty now -- 630 entries of Italian function words, roots, abbreviations, tokens, loanwords, clitics and homograph rules -- and what that fixed is more than the names: dom is d ɔ m and not domenica, co is ts ɔ, ok is ɔ k.
+
+One of the twelve cannot be empty and that is worth knowing before emptying anything else. With `prod_prefixes` empty, procent and protokol crash in the durations while produkt and prosty do not, which is the walk-from-nowhere the lone letters used to hit. Keeping its 61 entries costs nothing measurable -- co and coraz still say ts ɔ -- and they are the Latin and Greek prefixes Polish borrowed as well: auto, anti, inter, mono, post, pre, pro, super, tele, trans. So they stay, and the fault they hide is written down here rather than guarded against.
+
+What that leaves audibly wrong in this area: numbers. 123 is centoventitré and 10 is dieci, because the number rules spell a digit into Italian words in the rules rather than in the dictionary, and emptying ital_numbers did not touch them.
+
+What is left after this: Polish's own words, of which the module now has none -- the one-letter prepositions w and z are letter names rather than /v/ and /z/, since a lone letter is spelled before any word dictionary is consulted -- the numbers, the nasal vowels, currently a vowel plus an n, which is what Polish does before a stop and not elsewhere, /x/ for ch and h, which no module has, stress, which is Italian's penultimate rule and near but not the same, and prosody, which is Italian's outright.
 
 ## A language module as text
 

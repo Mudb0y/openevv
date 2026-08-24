@@ -50,6 +50,58 @@ uint8_t plpl_evv_authored_data[] = {
     31,3,2,26,
     /* pol_name_zdot, 3 bytes at 29 */
     214,2,26,
+    /* pol_name_a, 1 bytes at 32 */
+    1,
+    /* pol_name_b, 2 bytes at 33 */
+    11,2,
+    /* pol_name_c, 2 bytes at 35 */
+    12,2,
+    /* pol_name_d, 2 bytes at 37 */
+    13,2,
+    /* pol_name_e, 1 bytes at 39 */
+    2,
+    /* pol_name_f, 2 bytes at 40 */
+    2,14,
+    /* pol_name_g, 3 bytes at 42 */
+    15,3,2,
+    /* pol_name_h, 2 bytes at 45 */
+    16,1,
+    /* pol_name_i, 1 bytes at 47 */
+    3,
+    /* pol_name_j, 3 bytes at 48 */
+    17,4,26,
+    /* pol_name_k, 2 bytes at 51 */
+    18,1,
+    /* pol_name_l, 2 bytes at 53 */
+    2,19,
+    /* pol_name_m, 2 bytes at 55 */
+    2,20,
+    /* pol_name_n, 2 bytes at 57 */
+    2,21,
+    /* pol_name_o, 1 bytes at 59 */
+    4,
+    /* pol_name_p, 2 bytes at 60 */
+    22,2,
+    /* pol_name_q, 2 bytes at 62 */
+    18,5,
+    /* pol_name_r, 2 bytes at 64 */
+    2,24,
+    /* pol_name_s, 2 bytes at 66 */
+    2,25,
+    /* pol_name_t, 2 bytes at 68 */
+    26,2,
+    /* pol_name_u, 1 bytes at 70 */
+    5,
+    /* pol_name_v, 3 bytes at 71 */
+    14,1,28,
+    /* pol_name_w, 2 bytes at 74 */
+    28,5,
+    /* pol_name_x, 3 bytes at 76 */
+    3,18,25,
+    /* pol_name_y, 5 bytes at 79 */
+    3,15,24,2,18,
+    /* pol_name_z, 3 bytes at 84 */
+    31,2,26,
 };
 
 const delta_store plpl_delta_authored_store[] = {
