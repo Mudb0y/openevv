@@ -252,7 +252,15 @@ Taking a vowel over needed one thing the sibilants did not. `make_ital_phon_adju
 
 So teraz is t ɛ r a z, kolano is k ɔ l a n ɔ, okno is ɔ k n ɔ, dobry is d ɔ b r ɨ, mówię is m u v j ɛ n, and bank still has its velar nasal. The census reads 98% Italian: 1,742 rules of 1,767 character for character, 7 changed and 18 ours alone.
 
-What is left after this: the letters' own names and the dictionary -- which is also what fixes the lone-consonant crash -- the nasal vowels, currently a vowel plus an n, which is what Polish does before a stop and not elsewhere, /x/ for ch and h, which no module has, stress, which is Italian's penultimate rule and near but not the same, and prosody, which is Italian's outright.
+And the letters have their own names, which is what the lone-consonant crash was. A lone letter is spoken by spelling its name out as characters and reading that back as a word, and `ital_char_name` is the dispatch that does it: 205 arms behind a bound test, so Polish's letters at codes 207 to 222 fell off the end of it and the word was left with nothing to say.
+
+Six of them needed a name -- ć, ł, ń, ś, ź and ż, since a lone vowel says the phoneme in its own alphabet record and ą and ę were already speaking -- and 118 of that rule's arms are three lines: the statement type and the count packed into one register, the characters in another, and a jump to the block that inserts them. So six arms of the same three lines went in, the bound went from 204 to 210, and the switch lists 211. cie, eł, eń, eś, ziet and żet, every one of them spelled with letters that already speak, and each spelled name reads back through the letter rules -- the ż inside żet is a letter in a word rather than a lone one, so nothing recurses.
+
+The entries themselves are the dictionary's: six lines in `lang/plpl/plpl.dict` with the action numbers those arms answer to, laid down by `delta-dict.py build` and then dumped back into `plpl.sets` so the text carries them and `make tables-write` cannot lose them.
+
+Doing it that way rather than letting the tool mint the arms was not a preference. `delta-dict.py` can mint one -- it did, and read its own work back -- but the arm it writes names its record by an address in the program, and since the engine stopped needing to be loaded low, an address the arena does not know is a crash. So the tool's write path and the arena scheme have not met, and until they do an arm belongs in the rules text, where `rules/constants` puts the bytes somewhere the arena is told about. That is one of the two things left in the dictionary tooling; the other is that nothing can yet remove an entry, which is what emptying Italian's abbreviations will want.
+
+What is left after this: the words -- dom is still domenica, out of the 89 abbreviations Italian brought, and the 51 English loanwords in ital_words are Italian's borrowings and not Polish's -- the nasal vowels, currently a vowel plus an n, which is what Polish does before a stop and not elsewhere, /x/ for ch and h, which no module has, stress, which is Italian's penultimate rule and near but not the same, and prosody, which is Italian's outright.
 
 ## A language module as text
 

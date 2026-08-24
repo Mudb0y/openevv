@@ -783,6 +783,12 @@ dictionary ital_char_name statement 1 width 0 records characters
   [µ] 255 255 104 says mu
   [¶] 255 255 105 says paragrafo
 
+  [#208] 255 255 206
+  [#210] 255 255 207
+  [#211] 255 255 208
+  [#212] 255 255 209
+  [#213] 255 255 210
+  [#214] 255 255 211
 dictionary ital_tok_dict statement 1 width 0 records characters
   e/o 255 255 5 says eh[ ]oh
   ok 255 255 11 says okei

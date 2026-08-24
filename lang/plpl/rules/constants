@@ -31,3 +31,16 @@ bytes pol_ph_en           1d 12   # the open e, then n
 # sounds in the same order.
 bytes pol_ph_tsz          04 18   # t, then the hard sz
 bytes pol_ph_dzz          03 16   # d, then the hard ż
+
+# The names of the six letters Polish has that Italian has not, as characters
+# rather than sounds: a lone letter is spoken by spelling its name out and
+# reading that back as a word, which is what ital_char_name does for every
+# letter Italian has. The codes are the input alphabet's, so ż inside żet is
+# the same 0xd6 the text arrives as, and every one of these names is spelled
+# with letters that already speak.
+bytes pol_name_cacute     0c 03 02      # cie
+bytes pol_name_lstroke    02 d2         # eł
+bytes pol_name_nacute     02 d3         # eń
+bytes pol_name_sacute     02 d4         # eś
+bytes pol_name_zacute     1f 03 02 1a   # ziet
+bytes pol_name_zdot       d6 02 1a      # żet
