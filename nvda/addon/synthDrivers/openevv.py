@@ -12,6 +12,7 @@
 # IBM's byte for byte, so this is the path with evidence behind it.
 
 import os
+import re
 from collections import OrderedDict
 
 from autoSettingsUtils.driverSetting import BooleanDriverSetting, NumericDriverSetting
@@ -52,6 +53,41 @@ RATE_BOOST = 1.6
 #: depends on the speaking rate, since a pause is counted in something closer
 #: to syllables. Measured at these five rates and interpolated between them.
 BREAK_FACTORS = {10: 1, 43: 2, 60: 3, 75: 4, 85: 5}
+
+#: How far an unpunctuated stretch may run before it is ended at whitespace.
+#:
+#: The engine cannot be interrupted -- both of the ways the interface offers
+#: fault it, which the engine layer beside this file explains -- so asking for
+#: silence means waiting for the utterance in flight to finish synthesising
+#: into nothing. That is cheap for a line of a list and is not cheap for a
+#: chat message of several thousand characters: measured on this engine, one
+#: such message costs 0.83 s, and 560 characters of Arabic, which is spelled
+#: out character by character, cost 1.44 s. A reader arrowing down a list
+#: every 200 ms has every item that lands inside that wait dropped, which is
+#: speech going silent for several objects and then catching up.
+#:
+#: Sentence ends are the usual boundary because the engine already pauses
+#: there: one measured message was 252,010 samples whole and the same 252,010
+#: samples in six pieces. This larger fallback is for a stretch with no
+#: sentence end, such as the 560-character Arabic case above.
+PIECE_CAP = 500
+
+#: Where a piece may end: after a run of whitespace, so nothing is split
+#: inside a word and no annotation is separated from what it applies to.
+_BOUNDARY = re.compile(r"(\s+)")
+
+#: Closing marks which may follow sentence-final punctuation.
+_CLOSERS = "\"')]}\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}\N{RIGHT DOUBLE QUOTATION MARK}\N{RIGHT SINGLE QUOTATION MARK}"
+
+
+def _endsSentence(text):
+	"""Whether a word ends a sentence rather than a dotted number."""
+	tail = text.rstrip(_CLOSERS)
+	if not tail:
+		return False
+	if tail.endswith(("?", "!", "\N{HORIZONTAL ELLIPSIS}", "\N{IDEOGRAPHIC FULL STOP}", "\N{FULLWIDTH EXCLAMATION MARK}", "\N{FULLWIDTH QUESTION MARK}")):
+		return True
+	return tail.endswith(".") and len(tail) > 1 and not tail[-2].isdigit()
 
 
 class SynthDriver(SynthDriver):
@@ -108,9 +144,17 @@ class SynthDriver(SynthDriver):
 
 	def speak(self, speechSequence: SpeechSequence):
 		engine = self._engine
+		#: The pieces to hand over, in order. Nearly every utterance a screen
+		#: reader says is one piece; a long one is several, so that asking for
+		#: silence waits out a piece and not the whole of it.
+		pieces = []
 		batch = []
 		text = []
 		spelling = False
+		#: Prosody annotations which have not yet been restored to the reader's
+		#: configured value. An opening and its restore have to stay in one queue
+		#: item, or a cancel between them leaks the change into later speech.
+		prosody = set()
 		#: Which language the text being built is in, since a sequence may
 		#: change it more than once and each change is against the last.
 		speaking = self._engine.language
@@ -119,17 +163,54 @@ class SynthDriver(SynthDriver):
 		#: the engine layer is told so rather than complaining about it.
 		words = False
 
+		#: What this piece has to say, and how much has gathered in it. A piece
+		#: is what a cancel waits for, so it is closed at the first boundary
+		#: past the limit rather than at the limit exactly.
+		saying = False
+		gathered = 0
+		sentence = False
+
 		def flush():
 			if text:
 				joined = "".join(text).encode("utf-8", "replace")
 				batch.append((engine.addText, (joined,)))
 				del text[:]
 
+		def endPiece():
+			"""Close the piece being gathered, if it has anything in it."""
+			nonlocal batch, saying, gathered
+			flush()
+			if batch:
+				pieces.append((batch, saying))
+				batch = []
+			saying = False
+			gathered = 0
+
+		def mayEndPiece():
+			# Voice tags are arbitrary annotations supplied inside the text; when
+			# enabled their state cannot be inferred here, so retain the old single
+			# queue item just as for a command whose state is visibly open.
+			return not spelling and not prosody and not self._voiceTags
+
 		for item in speechSequence:
 			if isinstance(item, str):
 				said = self._processText(item)
 				words = words or said.strip() != ""
-				text.append(said)
+				# Sentence ends are free boundaries because the engine already pauses
+				# there. Whitespace after the much larger cap bounds a sentence which
+				# has no end of its own.
+				for part in _BOUNDARY.split(said):
+					if not part:
+						continue
+					text.append(part)
+					gathered += len(part)
+					if part.strip():
+						saying = True
+						sentence = _endsSentence(part)
+					else:
+						if mayEndPiece() and (sentence or gathered >= PIECE_CAP):
+							endPiece()
+						sentence = False
 			elif isinstance(item, IndexCommand):
 				# An index has to sit between stretches of text rather than
 				# inside one, so what has been gathered goes first.
@@ -149,10 +230,22 @@ class SynthDriver(SynthDriver):
 			elif isinstance(item, BreakCommand):
 				text.append(" `p%d " % self._breakToPause(item.time))
 			elif isinstance(item, PitchCommand):
+				if item.isDefault:
+					prosody.discard(PitchCommand)
+				else:
+					prosody.add(PitchCommand)
 				text.append("`vb%d " % self._pitchToParam(item.newValue))
 			elif isinstance(item, RateCommand):
+				if item.isDefault:
+					prosody.discard(RateCommand)
+				else:
+					prosody.add(RateCommand)
 				text.append("`vs%d " % self._rateToParam(item.newValue))
 			elif isinstance(item, VolumeCommand):
+				if item.isDefault:
+					prosody.discard(VolumeCommand)
+				else:
+					prosody.add(VolumeCommand)
 				text.append("`vv%d " % self._volumeToParam(item.newValue))
 			elif isinstance(item, LangChangeCommand):
 				# A document saying part of itself is in another language.
@@ -178,8 +271,16 @@ class SynthDriver(SynthDriver):
 		flush()
 		if spelling:
 			batch.append((engine.addText, (b"`ts0 ",)))
-		batch.append((engine.synthesize, (words,)))
-		engine.post(batch)
+		if batch or not pieces:
+			pieces.append((batch, saying or not pieces and words))
+
+		# One queue item per piece, so that a cancel drops the pieces that
+		# have not started rather than having to wait for them. Only the last
+		# reports the utterance finished.
+		for position, (piece, expectAudio) in enumerate(pieces):
+			last = position == len(pieces) - 1
+			piece.append((engine.synthesize if last else engine.synthesizePart, (expectAudio,)))
+			engine.post(piece)
 
 	def _processText(self, text):
 		if not self._voiceTags:

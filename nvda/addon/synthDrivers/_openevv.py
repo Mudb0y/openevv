@@ -382,14 +382,31 @@ class Engine:
 		if not self._dll.eciInsertIndex(self._instance, n):
 			log.debugWarning("openevv: the engine refused an index mark")
 
+	def synthesizePart(self, expectAudio=True):
+		"""Speak a piece of an utterance that is not the end of it.
+
+		The audio goes to the player as it always does; what does not happen is
+		waiting for the player to run dry and saying the utterance finished,
+		because it has not.
+		"""
+		self._speak(expectAudio, last=False)
+
 	def synthesize(self, expectAudio=True):
-		"""Speak what has been added, and do not come back until it is done.
+		"""Speak what has been added, and do not come back until it is done."""
+		self._speak(expectAudio, last=True)
+
+	def _speak(self, expectAudio, last):
+		"""Hand what has been added to the engine and wait it out.
 
 		eciSynthesize only starts the utterance; eciSynchronize is what drives
 		it and returns once the last buffer has been handed over. Blocking here
 		is wanted: it is what makes the end of an utterance a fact rather than
 		something to be inferred from a mark, and the callback's own blocking in
 		the player is what paces it.
+
+		Waiting it out is also what a cancel costs, since the engine cannot be
+		interrupted, which is why the driver hands long text over in pieces:
+		the wait is then one piece and not the whole message.
 		"""
 		self._held = bytearray()
 		self._pendingIndexes = []
@@ -398,7 +415,8 @@ class Engine:
 
 		if not self._dll.eciSynthesize(self._instance):
 			log.error("openevv: the engine refused to speak")
-			self._finish()
+			if last:
+				self._finish()
 			return
 
 		self._dll.eciSynchronize(self._instance)
@@ -422,8 +440,12 @@ class Engine:
 			log.warning("openevv: the engine took the text and made no audio;"
 			            " something was dropped and it does not say so")
 
-		self._flush(last=True)
-		self._finish()
+		# Every piece hands over what it gathered, or its tail is thrown away
+		# by the next one; only the last waits for the player to run dry and
+		# says the utterance is over.
+		self._flush(last=last)
+		if last:
+			self._finish()
 
 	def setParam(self, which, value):
 		return self._dll.eciSetParam(self._instance, which, value)
