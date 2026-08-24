@@ -12,6 +12,7 @@
 # IBM's byte for byte, so this is the path with evidence behind it.
 
 import os
+import re
 from collections import OrderedDict
 
 from autoSettingsUtils.driverSetting import BooleanDriverSetting, NumericDriverSetting
@@ -52,6 +53,29 @@ RATE_BOOST = 1.6
 #: depends on the speaking rate, since a pause is counted in something closer
 #: to syllables. Measured at these five rates and interpolated between them.
 BREAK_FACTORS = {10: 1, 43: 2, 60: 3, 75: 4, 85: 5}
+
+#: How much text to hand the engine in one piece, in characters.
+#:
+#: The engine cannot be interrupted -- both of the ways the interface offers
+#: fault it, which the engine layer beside this file explains -- so asking for
+#: silence means waiting for the utterance in flight to finish synthesising
+#: into nothing. That is cheap for a line of a list and is not cheap for a
+#: chat message of several thousand characters: measured on this engine, one
+#: such message costs 0.83 s and a message of Arabic, which is spelled out
+#: character by character, costs 1.44 s. A reader arrowing down a list every
+#: 200 ms is dropped for every one of the items that lands inside that wait,
+#: which is the silence for a few objects and then a catch-up.
+#:
+#: Handing the text over in pieces makes that wait one piece long. It costs
+#: nothing in throughput -- the same message measures 1.41-1.45 s whole or in
+#: sixteen pieces -- because the work is the same work, only handed over in
+#: more calls. At this size the worst piece measured 0.18 s, which is inside
+#: one keypress of a fast reader.
+CHUNK = 80
+
+#: Where a piece may end: after a run of whitespace, so nothing is split
+#: inside a word and no annotation is separated from what it applies to.
+_BOUNDARY = re.compile(r"(\s+)")
 
 
 class SynthDriver(SynthDriver):
@@ -108,6 +132,10 @@ class SynthDriver(SynthDriver):
 
 	def speak(self, speechSequence: SpeechSequence):
 		engine = self._engine
+		#: The pieces to hand over, in order. Nearly every utterance a screen
+		#: reader says is one piece; a long one is several, so that asking for
+		#: silence waits out a piece and not the whole of it.
+		pieces = []
 		batch = []
 		text = []
 		spelling = False
@@ -119,17 +147,44 @@ class SynthDriver(SynthDriver):
 		#: the engine layer is told so rather than complaining about it.
 		words = False
 
+		#: What this piece has to say, and how much has gathered in it. The
+		#: piece is what a cancel waits for, so it is closed at the first
+		#: boundary past the limit rather than at the limit exactly.
+		saying = False
+		gathered = 0
+
 		def flush():
 			if text:
 				joined = "".join(text).encode("utf-8", "replace")
 				batch.append((engine.addText, (joined,)))
 				del text[:]
 
+		def endPiece():
+			"""Close the piece being gathered, if it has anything in it."""
+			nonlocal batch, saying, gathered
+			flush()
+			if batch:
+				batch.append((engine.synthesizePart, (saying,)))
+				pieces.append(batch)
+				batch = []
+			saying = False
+			gathered = 0
+
 		for item in speechSequence:
 			if isinstance(item, str):
 				said = self._processText(item)
 				words = words or said.strip() != ""
-				text.append(said)
+				# Broken at whitespace so a piece never ends inside a word,
+				# and only where enough has gathered to be worth a piece.
+				for part in _BOUNDARY.split(said):
+					if not part:
+						continue
+					text.append(part)
+					gathered += len(part)
+					if part.strip():
+						saying = True
+					elif gathered >= CHUNK:
+						endPiece()
 			elif isinstance(item, IndexCommand):
 				# An index has to sit between stretches of text rather than
 				# inside one, so what has been gathered goes first.
@@ -178,8 +233,15 @@ class SynthDriver(SynthDriver):
 		flush()
 		if spelling:
 			batch.append((engine.addText, (b"`ts0 ",)))
-		batch.append((engine.synthesize, (words,)))
-		engine.post(batch)
+		# The last piece is the one that says the utterance finished, so it is
+		# always sent even where it carries nothing but the end of spelling.
+		batch.append((engine.synthesize, (saying or not pieces and words,)))
+		pieces.append(batch)
+
+		# One queue item per piece, so that a cancel drops the pieces that
+		# have not started rather than having to wait for them.
+		for piece in pieces:
+			engine.post(piece)
 
 	def _processText(self, text):
 		if not self._voiceTags:
