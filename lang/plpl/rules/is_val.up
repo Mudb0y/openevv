@@ -9,15 +9,22 @@
 
 # Polish sz, ż, cz and dż are retroflex, articulated further back than the
 # palato-alveolars Italian spells with sc and gi. The signature of a retroflex
-# is a low third formant, so f3 comes down from Italian's 2400 to 2200 and f2
-# from 1800 to 1700. Nothing here touches the first formant: the rule for the
-# phoneme sets that before it asks for a place.
+# is a low third formant, so f3 sits below the soft series' and f2 below it
+# too. Nothing here touches the first formant: the rule for the phoneme sets
+# that before it asks for a place.
+#
+# The numbers are the ear's, not a textbook's. Three settings were built and
+# listened to on the same five words -- 1700 and 2200, 1600 and 1900, 1800 and
+# 2500 -- and the last was the one that sounded like Polish. Which says the
+# first two were too far back for this synthesiser rather than too far back for
+# the language: Italian's own palatal locus is 1800 and 2400, and what came out
+# best is a hair above it.
 rule pol_retroflex_Fv takes 1 from is_val.obj
   call ZZfence_null
-  set f2_in to 1700
-  set f2_out to 1700
-  set f3_in to 2200
-  set f3_out to 2200
+  set f2_in to 1800
+  set f2_out to 1800
+  set f3_in to 2500
+  set f3_out to 2500
   match
 end
 
