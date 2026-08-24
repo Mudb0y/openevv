@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """The language's dictionaries as a file a person can edit, and back again.
 
-`dump' writes lang/enus/enus.dict out of the tables and the rules.
+Which language is `EVV_LANG_DIR', the same variable the decompiler and the
+census read, and English without one.
+
+`dump' writes lang/<tag>/<tag>.dict out of the tables and the rules.
 `build' reads that file and lays both back down: the entries, the index in
 front of each dictionary, where each dictionary begins, the count in each
 table entry, and -- where a pronunciation has been changed -- a record of its
@@ -47,8 +50,13 @@ import struct
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SETS_C = os.path.join(ROOT, 'lang', 'enus', 'delta_sets_enus.c')
-DICT_FILE = os.path.join(ROOT, 'lang', 'enus', 'enus.dict')
+# Which language. EVV_LANG_DIR is the same variable the decompiler and the
+# census read, and English without one, so nothing that used to work needs
+# saying differently.
+LANG_DIR = os.environ.get('EVV_LANG_DIR', os.path.join(ROOT, 'lang', 'enus'))
+TAG = os.path.basename(os.path.normpath(LANG_DIR))
+SETS_C = os.path.join(LANG_DIR, 'delta_sets_%s.c' % TAG)
+DICT_FILE = os.path.join(LANG_DIR, '%s.dict' % TAG)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 lex = importlib.import_module('delta-lexicon')

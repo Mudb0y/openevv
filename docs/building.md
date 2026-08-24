@@ -280,7 +280,7 @@ A language module is the rules and five other things: the variables the machine 
     lang/enus/enus.statements   the statement table, 905
     lang/enus/enus.sets         the sets and the dictionary actions, 9,750
     lang/enus/enus.consts       the bytes the rules name, 445
-    lang/enus/enus.dict         the words, which tools/delta-dict.py already wrote
+    lang/<tag>/<tag>.dict       the words, which tools/delta-dict.py writes
 
     make tables-dump      writes the four
     make tables-check     the C from each, held against the tree
@@ -291,6 +291,16 @@ A language module is the rules and five other things: the variables the machine 
 Each of the four keeps one writer, and the tool that lifts is the tool that writes. That is the whole discipline: a lifter that reads objects and a reader that reads text hand the same model to the same emitter, so what the text says and what a lift says cannot come out differently formatted, and the round trip is exact rather than approximately right.
 
 What is deliberately not in the text is anything that follows from what is. The variables are a run of kinds -- `word 20`, `short 2`, `compound 1 5` -- and where each one lands and how big a machine of the language is are worked out from them by the same walk `delta_new` does, so English's 794 variables are 95 lines and the state size is derived rather than declared. The statement table's readers and writers are an offset and a width each, and their names follow the order the fields are in, exactly as the original's compiler numbered them: `vfg0000` upwards, one per field, no two fields sharing one across all 58 of English's. The settings' language number is the section that names it read as a family and a dialect. Nothing in any of the four is stated twice.
+
+The dictionaries read for any language now, not only English. `EVV_LANG_DIR`
+points `tools/delta-dict.py` and the two tools it leans on at one module, the
+same way it points the decompiler, so
+
+    EVV_LANG_DIR=lang/plpl python3 tools/delta-dict.py dump
+
+writes `lang/plpl/plpl.dict`. Italian declares 13 dictionaries with 892 entries
+where English declares 28 with 5,945, and the shapes are the same: words to
+action numbers, and what an action says in an arm of a rule.
 
 Two things about the sets are worth knowing before touching them. Its text is lifted from the C in the tree and not from IBM's objects, on purpose: the dictionary's three arrays in that file are laid down by `tools/delta-dict.py` out of the words, so the objects hold what the dictionary said before anything was ever added to it. Running the sets lifter over that file is the one thing this repository tells you not to do, and this is why. And its numbers are the language: English declares 511 sets and 28 dictionary actions in 274 kilobytes of entries where Italian declares 153 and 13 in 77.
 

@@ -9,6 +9,9 @@ field, which the statement table already carries.
 
 Named with a dictionary it prints that one, otherwise a line per dictionary
 saying how many entries it holds and showing the first few.
+
+Which language is `EVV_LANG_DIR', as everywhere else, and English without
+one.
 """
 
 import importlib
@@ -18,9 +21,14 @@ import struct
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SETS_C = os.path.join(ROOT, 'lang', 'enus', 'delta_sets_enus.c')
-LINK_C = os.path.join(ROOT, 'lang', 'enus', 'delta_link_enus.c')
-CONSTS_C = os.path.join(ROOT, 'lang', 'enus', 'delta_consts_enus.c')
+# Which language. EVV_LANG_DIR is the same variable the decompiler and the
+# census read, and English without one, so nothing that used to work needs
+# saying differently.
+LANG_DIR = os.environ.get('EVV_LANG_DIR', os.path.join(ROOT, 'lang', 'enus'))
+TAG = os.path.basename(os.path.normpath(LANG_DIR))
+SETS_C = os.path.join(LANG_DIR, 'delta_sets_%s.c' % TAG)
+LINK_C = os.path.join(LANG_DIR, 'delta_link_%s.c' % TAG)
+CONSTS_C = os.path.join(LANG_DIR, 'delta_consts_%s.c' % TAG)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 census = importlib.import_module('delta-census')

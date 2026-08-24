@@ -100,7 +100,13 @@ def carve_rules(text):
 
 def carve_blobs(text):
     out = {}
-    for m in re.finditer(r'uint8_t (evv_[A-Za-z0-9_]*)\[\d+\]\s*=\s*\{', text):
+    # The language goes in front of every name in a module, so that two of
+    # them can be linked into one program, and what the rules name a blob by is
+    # that whole name. Written without the prefix once, and a blob named
+    # `enus_evv_...' then matched nothing at all: the pronunciations went out
+    # of tools/delta-dict.py's reach and stayed there for two days.
+    for m in re.finditer(r'uint8_t ([A-Za-z0-9_]*evv_[A-Za-z0-9_]*)'
+                         r'\[\d+\]\s*=\s*\{', text):
         name = m.group(1)
         close_at = text.index('\n};', m.end())
         body = text[m.end():close_at].replace('\n', '')

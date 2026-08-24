@@ -70,8 +70,13 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RULES_C = os.path.join(ROOT, 'lang', 'enus', 'delta_rules_enus.c')
-CONSTS_C = os.path.join(ROOT, 'lang', 'enus', 'delta_consts_enus.c')
+# Which language. EVV_LANG_DIR is the same variable the decompiler and the
+# census read, and English without one, so nothing that used to work needs
+# saying differently.
+LANG_DIR = os.environ.get('EVV_LANG_DIR', os.path.join(ROOT, 'lang', 'enus'))
+TAG = os.path.basename(os.path.normpath(LANG_DIR))
+RULES_C = os.path.join(LANG_DIR, 'delta_rules_%s.c' % TAG)
+CONSTS_C = os.path.join(LANG_DIR, 'delta_consts_%s.c' % TAG)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 census = importlib.import_module('delta-census')
