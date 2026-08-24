@@ -29,16 +29,21 @@ rule pol_retroflex_Fv takes 1 from is_val.obj
 end
 
 # And the soft series -- ś, ź, ć, dź -- which is further forward than either,
-# with a third formant higher than the palatal's rather than lower. This is
+# with a third formant higher than the palatal's rather than lower. These
+# numbers went to the ear the same way the hard pair's did: 2000 and 2700, 2100
+# and 3000, 2200 and 3200, on the same five words with the hard pair held
+# still, and the highest of the three was the one that sounded like Polish. It
+# is seven hundred hertz clear of the hard series, which is what keeps kasza
+# and Kasia apart. This is
 # what Italian's own S and Z ask for now: their record says palatal and that is
 # what the soft series is, so the two of them serve it as they stand.
 # pol_sibilant_Fv below is what chooses between the two places.
 rule pol_alveolopalatal_Fv takes 1 from is_val.obj
   call ZZfence_null
-  set f2_in to 2000
-  set f2_out to 2000
-  set f3_in to 2700
-  set f3_out to 2700
+  set f2_in to 2200
+  set f2_out to 2200
+  set f3_in to 3200
+  set f3_out to 3200
   match
 end
 
