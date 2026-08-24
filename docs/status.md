@@ -52,6 +52,10 @@ What is left is not German's. Two of the cases with markers in them -- an audio 
 
 The NVDA add-on follows. Where the library it loads has more than one language in it, every language's eight presets are offered as voices of their own -- "German - Voice 3" -- each saying which language it is, so the reader matches a document's language to one of them; and a `LangChangeCommand` in a speech sequence switches the engine mid-utterance, so a German quotation in an English page is read as German. A library with one language in it offers what it always did, under the same names, so nothing a reader had chosen is lost.
 
+The add-on no longer goes silent when the player stops taking audio. Blocking in NVDA's wave player is how the add-on paces synthesis -- a full player is what keeps the engine from running ahead of the speech -- but the engine is spoken to from one thread, the player has no timeout, and a player that has stopped draining looks exactly like a full one. So it held that thread, and every utterance queued behind it, saying nothing and writing nothing down; speech came back only when something else asked for silence and stopped the player as a side effect, which to the reader looks like speech returning when they leave the window. A watchdog now breaks a wait longer than five seconds where no pause was asked for, says so in the log, abandons that utterance and reports it finished, so nothing is left waiting on a mark that is never coming. A pause the reader asked for is left alone, since a paused player is meant not to drain.
+
+Settings are queued as control steps rather than as speech. Anything queued as speech is thrown away by a cancel that overtakes it, which is right for an utterance and wrong for a setting: every keystroke cancels, so a rate or a voice chosen at the wrong moment simply did not happen, with the dialog still showing what had been asked for.
+
 Not done for German: no dictionary in a form a person can edit, since `tools/delta-dict.py` has only been run for English, and no `long` cases.
 
 ## British English

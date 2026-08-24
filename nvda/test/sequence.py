@@ -244,6 +244,8 @@ class FakeEngine:
         self.voiceParams = {0: 0, 1: 50, 2: 65, 3: 30, 4: 0, 5: 0, 6: 50, 7: 92}
         self.version = "test"
         self.player = None
+        #: Whether each batch arrived as speech or as a setting.
+        self.kinds = []
 
     def open(self):
         pass
@@ -262,6 +264,13 @@ class FakeEngine:
             if name == "setLanguage":
                 self.language = args[0]
                 self.voiceNames = self.voiceNamesByLanguage[args[0]]
+
+    def control(self, batch):
+        # A control step runs the same way as speech here; what the driver is
+        # being held to is that it sends settings as control and utterances as
+        # speech, which the check below reads off self.kinds.
+        self.kinds.append(("control", len(batch)))
+        self.post(batch)
 
     def cancel(self):
         self.calls.append(("cancel",))
@@ -504,6 +513,28 @@ def main():
     d.cancel()
     check("pausing and cancelling go straight through",
           d._engine.calls, [("pause", True), ("cancel",)])
+
+    # Every setting goes as a control step and not as speech. Sent as speech
+    # it is dropped by any cancel that overtakes it, and since every keystroke
+    # cancels, a rate or a voice chosen at the wrong moment silently did not
+    # happen -- with the dialog still showing what was asked for.
+    d._engine.kinds = []
+    d.rate = 60
+    d.pitch = 40
+    d.volume = 80
+    d.inflection = 55
+    d.headSize = 45
+    d.roughness = 10
+    d.breathiness = 20
+    d.abbreviations = True
+    d.voice = "3"
+    check("every setting is sent as a control step, never as speech",
+          [kind for kind, _ in d._engine.kinds],
+          ["control"] * 9)
+
+    d._engine.kinds = []
+    d.speak(["a sentence"])
+    check("and an utterance still goes as speech", d._engine.kinds, [])
 
     # ---- and the same driver over a library with two languages in it ----
     #
