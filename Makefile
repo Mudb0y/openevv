@@ -214,7 +214,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate inikeys stopthread
+.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate dict inikeys stopthread
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -252,6 +252,17 @@ rate: $(BUILD)/rate
 
 $(BUILD)/rate: test/rate.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/rate.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# A dictionary read in from a file, which nothing else here does: probe.c
+# makes one and puts it in force but never loads one, and the reference
+# answered the same refusal from the same stub, so both sides agreed while
+# eciLoadDict did nothing at all.
+dict: $(BUILD)/dict
+	@cd $(BUILD) && ./dict
+
+$(BUILD)/dict: test/dict.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/dict.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # A backtrack landed on from a thread that never planted it, which is how

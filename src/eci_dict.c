@@ -10,8 +10,9 @@
    so the family-nought slot is never touched by anything here and the queue
    has it to itself.
 
-   Loading a dictionary from a file and saving one to a file were published
-   and never written; both answer that they could not.
+   Loading a dictionary from a file and saving one to a file go through to
+   the volume calls the newer interface has, which the layer below has always
+   implemented.
 
    Names are prefixed and the aliases at the foot carry the real ones. */
 
@@ -67,6 +68,12 @@ extern int32_t STDCALL api_get_active_dict(void *h2, int32_t lang,
 extern int32_t STDCALL api_get_dict_language(void *h2, void *dict,
                                              int32_t *lang)
     MANGLED("_eciGetDictLanguage2@12");
+extern int32_t STDCALL api_load_dict_volume(void *h2, void *dict,
+                                            int32_t volume, const char *name)
+    MANGLED("_eciLoadDictVolume2@16");
+extern int32_t STDCALL api_save_dict_volume(void *h2, void *dict,
+                                            int32_t volume, const char *name)
+    MANGLED("_eciSaveDictVolume2@16");
 extern int32_t STDCALL eo_getParam(OldInst *h, int32_t which)
     MANGLED("_eciGetParam@8");
 
@@ -212,26 +219,59 @@ int STDCALL ed_deleteDict(OldInst *h, void *dict)
     return 0;
 }
 
-/* Reading a dictionary from a file and writing one to a file were published
-   and never written. */
+/* Read a dictionary in from a file, or write one out.
+
+   These two were published and left unwritten, answering that they could not
+   whatever they were handed -- so a caller with a file of pronunciations had
+   no way in at all, since the per-entry calls are not exported by the older
+   interface either. The work itself was never missing: eciLoadDictVolume and
+   eciSaveDictVolume on the newer interface reach the engine's own volume
+   loader, and the user dictionary underneath them reads and writes the file
+   format already. All that was absent is the crossing between the two, which
+   is what these are.
+
+   The volume is the caller's `kind', unchanged: the numbering is the same on
+   both sides, and the layer below is what decides which of them it has.
+
+   Everything queued is spoken and waited for first, for the reason ed_newDict
+   gives -- a dictionary changes how words are said, so anything already on
+   its way has to come out under the rules it was queued under. And an engine
+   in the middle of speaking is refused rather than made to wait, which is
+   what every other entry point here does. */
+static int ed_volume(OldInst *h, void *dict, int32_t kind, const char *name,
+                     int saving)
+{
+    OldInst *inst = h;
+    int32_t rc;
+
+    if (!h || !dict || !name)
+        return DICT_NOT_SUPPORTED;
+
+    if (api_check_synth(OI_NEW(inst)) == SYNTH_BUSY) {
+        OI_REFUSED(inst) = 0x2000;
+        OI_REFUSEDALL(inst) |= 0x2000;
+        return DICT_NOT_SUPPORTED;
+    }
+
+    ev_sendParameters(inst);
+    api_synthesize(OI_NEW(inst));
+    api_synchronize(OI_NEW(inst));
+
+    rc = saving ? api_save_dict_volume(OI_NEW(inst), dict, kind, name)
+                : api_load_dict_volume(OI_NEW(inst), dict, kind, name);
+    return ed_rc_to_ECIDictError(rc);
+}
+
 int STDCALL ed_loadDict(OldInst *h, void *dict, int32_t kind,
                           const char *name)
 {
-    (void)h;
-    (void)dict;
-    (void)kind;
-    (void)name;
-    return DICT_NOT_SUPPORTED;
+    return ed_volume(h, dict, kind, name, 0);
 }
 
 int STDCALL ed_saveDict(OldInst *h, void *dict, int32_t kind,
                           const char *name)
 {
-    (void)h;
-    (void)dict;
-    (void)kind;
-    (void)name;
-    return DICT_NOT_SUPPORTED;
+    return ed_volume(h, dict, kind, name, 1);
 }
 
 ALIAS("?rc_to_ECIDictError@@YA?AW4ECIDictError@@J@Z",
