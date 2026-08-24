@@ -1,0 +1,301 @@
+# The words Polish counts with.
+#
+# Italian's number rules are 26 of them over nine thousand lines and they cover
+# dates, times, money, Roman numerals, ordinals and fractions as well as
+# counting. What is being replaced here is only the words: each arm of a
+# counting rule calls a wrapper whose name carries the word and its length, so a
+# Polish word is a wrapper of ours and one call name changed in the arm. The
+# structure -- which arm fires for which digit, how the digits are grouped --
+# is Italian's and stays, because grouping into hundreds and thousands is the
+# same in both languages.
+#
+# Each of these is IBM's own wrapper with the symbol and the length changed,
+# written as raw lower notation inside a bare rule so that nothing else about
+# them can differ from it.
+
+# dwa
+rule pol_say_2 takes 3 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push sym pol_num_2
+  raw push imm 3
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+
+# trzy
+rule pol_say_3 takes 3 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push sym pol_num_3
+  raw push imm 4
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+
+# cztery
+rule pol_say_4 takes 3 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push sym pol_num_4
+  raw push imm 6
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+
+# pięć
+rule pol_say_5 takes 3 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push sym pol_num_5
+  raw push imm 4
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+
+# sześć
+rule pol_say_6 takes 3 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push sym pol_num_6
+  raw push imm 5
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+
+# siedem
+rule pol_say_7 takes 3 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push sym pol_num_7
+  raw push imm 6
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+
+# osiem
+rule pol_say_8 takes 3 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push sym pol_num_8
+  raw push imm 5
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+
+# dziewięć
+rule pol_say_9 takes 3 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push sym pol_num_9
+  raw push imm 8
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+
+# 8 characters of the input statement, with the characters passed in. IBM
+# compiled one of these for every length its own words needed; these are the
+# lengths Polish's words need.
+rule pol_insert_8 takes 4 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push param 3
+  raw push imm 8
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+# 9 characters of the input statement, with the characters passed in. IBM
+# compiled one of these for every length its own words needed; these are the
+# lengths Polish's words need.
+rule pol_insert_9 takes 4 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push param 3
+  raw push imm 9
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+# 10 characters of the input statement, with the characters passed in. IBM
+# compiled one of these for every length its own words needed; these are the
+# lengths Polish's words need.
+rule pol_insert_10 takes 4 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push param 3
+  raw push imm 10
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+# 11 characters of the input statement, with the characters passed in. IBM
+# compiled one of these for every length its own words needed; these are the
+# lengths Polish's words need.
+rule pol_insert_11 takes 4 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push param 3
+  raw push imm 11
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+# 12 characters of the input statement, with the characters passed in. IBM
+# compiled one of these for every length its own words needed; these are the
+# lengths Polish's words need.
+rule pol_insert_12 takes 4 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push param 3
+  raw push imm 12
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+# 14 characters of the input statement, with the characters passed in. IBM
+# compiled one of these for every length its own words needed; these are the
+# lengths Polish's words need.
+rule pol_insert_14 takes 4 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push param 3
+  raw push imm 14
+  raw push imm 1
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end

@@ -75,3 +75,29 @@ bytes pol_name_w         1c 05          # wu
 bytes pol_name_x         03 12 19       # iks
 bytes pol_name_y         03 0f 18 02 12 # igrek
 bytes pol_name_z         1f 02 1a       # zet
+
+# The Polish number words. Italian's are in the wrappers its own arms
+# call, one wrapper to a word with the word and its length baked into the
+# name, so a word of Polish's is a wrapper of ours and one call name
+# changed in the arm. zero is not here: Polish says zero too, with the
+# same four characters.
+bytes pol_num_2      0d 1c 01                   # dwa, 3 characters
+bytes pol_num_3      1a 18 1f 1e                # trzy, 4 characters
+bytes pol_num_4      0c 1f 1a 02 18 1e          # cztery, 6 characters
+bytes pol_num_5      16 03 d1 d0                # pięć, 4 characters
+bytes pol_num_6      19 1f 02 d4 d0             # sześć, 5 characters
+bytes pol_num_7      19 03 02 0d 02 14          # siedem, 6 characters
+bytes pol_num_8      04 19 03 02 14             # osiem, 5 characters
+bytes pol_num_9      0d 1f 03 02 1c 03 d1 d0    # dziewięć, 8 characters
+
+# The teens.
+bytes pol_num_10     0d 1f 03 02 19 03 d1 d0                      # dziesięć, 8 characters
+bytes pol_num_11     11 02 0d 02 15 01 d4 0c 03 02                # jedenaście, 10 characters
+bytes pol_num_12     0d 1c 01 15 01 d4 0c 03 02                   # dwanaście, 9 characters
+bytes pol_num_13     1a 18 1f 1e 15 01 d4 0c 03 02                # trzynaście, 10 characters
+bytes pol_num_14     0c 1f 1a 02 18 15 01 d4 0c 03 02             # czternaście, 11 characters
+bytes pol_num_15     16 03 d1 1a 15 01 d4 0c 03 02                # piętnaście, 10 characters
+bytes pol_num_16     19 1f 02 19 15 01 d4 0c 03 02                # szesnaście, 10 characters
+bytes pol_num_17     19 03 02 0d 02 14 15 01 d4 0c 03 02          # siedemnaście, 12 characters
+bytes pol_num_18     04 19 03 02 14 15 01 d4 0c 03 02             # osiemnaście, 11 characters
+bytes pol_num_19     0d 1f 03 02 1c 03 d1 1a 15 01 d4 0c 03 02    # dziewiętnaście, 14 characters

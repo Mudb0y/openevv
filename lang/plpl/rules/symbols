@@ -1411,6 +1411,10 @@ at glob.obj ZZstring130 plpl_evv_glob_data_3 372
 # And the constants of our own, out of rules/constants by tools/delta-consts.py.
 
 # And the constants of our own, out of rules/constants by tools/delta-consts.py.
+
+# And the constants of our own, out of rules/constants by tools/delta-consts.py.
+
+# And the constants of our own, out of rules/constants by tools/delta-consts.py.
 store plpl_evv_authored_data
 at * pol_letter_aogonek plpl_evv_authored_data 0
 at * pol_letter_cacute plpl_evv_authored_data 1
@@ -1456,3 +1460,21 @@ at * pol_name_w plpl_evv_authored_data 74
 at * pol_name_x plpl_evv_authored_data 76
 at * pol_name_y plpl_evv_authored_data 79
 at * pol_name_z plpl_evv_authored_data 84
+at * pol_num_2 plpl_evv_authored_data 87
+at * pol_num_3 plpl_evv_authored_data 90
+at * pol_num_4 plpl_evv_authored_data 94
+at * pol_num_5 plpl_evv_authored_data 100
+at * pol_num_6 plpl_evv_authored_data 104
+at * pol_num_7 plpl_evv_authored_data 109
+at * pol_num_8 plpl_evv_authored_data 115
+at * pol_num_9 plpl_evv_authored_data 120
+at * pol_num_10 plpl_evv_authored_data 128
+at * pol_num_11 plpl_evv_authored_data 136
+at * pol_num_12 plpl_evv_authored_data 146
+at * pol_num_13 plpl_evv_authored_data 155
+at * pol_num_14 plpl_evv_authored_data 165
+at * pol_num_15 plpl_evv_authored_data 176
+at * pol_num_16 plpl_evv_authored_data 186
+at * pol_num_17 plpl_evv_authored_data 196
+at * pol_num_18 plpl_evv_authored_data 208
+at * pol_num_19 plpl_evv_authored_data 219

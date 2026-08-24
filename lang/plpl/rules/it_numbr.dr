@@ -771,7 +771,7 @@ label L0 was _convert_ital_teens
   cmp testl reg r0 reg r0
   branch je to L13
 label L1 was at_0xd4
-  load movl sym string_123 into r7
+  load movl sym pol_num_10 into r7
 label L2 was $L92837
   push reg r7
   load movl slotaddr -8 into r0
@@ -779,7 +779,7 @@ label L2 was $L92837
   load movl slotaddr -16 into r0
   push slotaddr -16
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_5 arity 4 depth 4
+  call pol_insert_8 arity 4 depth 4
   popn 4
   cmp testl reg r0 reg r0
   branch je to L15
@@ -808,13 +808,13 @@ label L3 was $X1$92744
   cmp testl reg r0 reg r0
   popreg r1
   branch jne to L4
-  push sym string_124
+  push sym pol_num_11
   load movl slotaddr -8 into r0
   push slotaddr -8
   load movl slotaddr -16 into r0
   push slotaddr -16
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_6 arity 4 depth 4
+  call pol_insert_10 arity 4 depth 4
   popn 4
   cmp testl reg r0 reg r0
   branch je to L15
@@ -833,13 +833,13 @@ label L4 was $X6$92764
   cmp testl reg r0 reg r0
   popreg r1
   branch jne to L5
-  push sym string_125
+  push sym pol_num_12
   load movl slotaddr -8 into r0
   push slotaddr -8
   load movl slotaddr -16 into r0
   push slotaddr -16
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_6 arity 4 depth 4
+  call pol_insert_9 arity 4 depth 4
   popn 4
   cmp testl reg r0 reg r0
   branch je to L15
@@ -858,13 +858,13 @@ label L5 was $X7$92771
   cmp testl reg r0 reg r0
   popreg r1
   branch jne to L6
-  push sym string_126
+  push sym pol_num_13
   load movl slotaddr -8 into r0
   push slotaddr -8
   load movl slotaddr -16 into r0
   push slotaddr -16
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_7 arity 4 depth 4
+  call pol_insert_10 arity 4 depth 4
   popn 4
   cmp testl reg r0 reg r0
   branch je to L15
@@ -883,13 +883,13 @@ label L6 was $X8$92778
   cmp testl reg r0 reg r0
   popreg r1
   branch jne to L7
-  push sym string_127
+  push sym pol_num_14
   load movl slotaddr -8 into r0
   push slotaddr -8
   load movl slotaddr -16 into r0
   push slotaddr -16
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_11 arity 4 depth 4
+  call pol_insert_11 arity 4 depth 4
   popn 4
   cmp testl reg r0 reg r0
   branch je to L15
@@ -908,13 +908,13 @@ label L7 was $X9$92785
   cmp testl reg r0 reg r0
   popreg r1
   branch jne to L8
-  push sym string_128
+  push sym pol_num_15
   load movl slotaddr -8 into r0
   push slotaddr -8
   load movl slotaddr -16 into r0
   push slotaddr -16
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_8 arity 4 depth 4
+  call pol_insert_10 arity 4 depth 4
   popn 4
   cmp testl reg r0 reg r0
   branch je to L15
@@ -933,13 +933,13 @@ label L8 was $X10$92792
   cmp testl reg r0 reg r0
   popreg r1
   branch jne to L9
-  push sym string_129
+  push sym pol_num_16
   load movl slotaddr -8 into r0
   push slotaddr -8
   load movl slotaddr -16 into r0
   push slotaddr -16
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_6 arity 4 depth 4
+  call pol_insert_10 arity 4 depth 4
   popn 4
   cmp testl reg r0 reg r0
   branch je to L15
@@ -958,13 +958,13 @@ label L9 was $X11$92799
   cmp testl reg r0 reg r0
   popreg r1
   branch jne to L10
-  push sym string_130
+  push sym pol_num_17
   load movl slotaddr -8 into r0
   push slotaddr -8
   load movl slotaddr -16 into r0
   push slotaddr -16
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_11 arity 4 depth 4
+  call pol_insert_12 arity 4 depth 4
   popn 4
   cmp testl reg r0 reg r0
   branch je to L15
@@ -983,13 +983,13 @@ label L10 was $X12$92806
   cmp testl reg r0 reg r0
   popreg r1
   branch jne to L11
-  push sym string_131
+  push sym pol_num_18
   load movl slotaddr -8 into r0
   push slotaddr -8
   load movl slotaddr -16 into r0
   push slotaddr -16
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_8 arity 4 depth 4
+  call pol_insert_11 arity 4 depth 4
   popn 4
   cmp testl reg r0 reg r0
   branch je to L15
@@ -1008,13 +1008,13 @@ label L11 was $X13$92813
   cmp testl reg r0 reg r0
   popreg r1
   branch jne to L15
-  push sym string_132
+  push sym pol_num_19
   load movl slotaddr -8 into r0
   push slotaddr -8
   load movl slotaddr -16 into r0
   push slotaddr -16
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_10 arity 4 depth 4
+  call pol_insert_14 arity 4 depth 4
   popn 4
   jump to L15
 label L12 was at_0x346
@@ -2759,7 +2759,7 @@ label L4 was at_0xd0
   load movl slotaddr -8 into r0
   push slotaddr -8
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_3_ZZstring43 arity 3 depth 3
+  call pol_say_2 arity 3 depth 3
   popn 3
   cmp testl reg r0 reg r0
   branch je to L24
@@ -2783,7 +2783,7 @@ label L5 was at_0x10b
   load movl slotaddr -8 into r0
   push slotaddr -8
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_3_ZZstring133 arity 3 depth 3
+  call pol_say_3 arity 3 depth 3
   popn 3
   cmp testl reg r0 reg r0
   branch je to L24
@@ -2807,7 +2807,7 @@ label L6 was at_0x146
   load movl slotaddr -8 into r0
   push slotaddr -8
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_7_ZZstring112 arity 3 depth 3
+  call pol_say_4 arity 3 depth 3
   popn 3
   cmp testl reg r0 reg r0
   branch je to L24
@@ -2831,7 +2831,7 @@ label L7 was at_0x181
   load movl slotaddr -8 into r0
   push slotaddr -8
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_6_ZZstring27 arity 3 depth 3
+  call pol_say_5 arity 3 depth 3
   popn 3
   cmp testl reg r0 reg r0
   branch je to L24
@@ -2855,7 +2855,7 @@ label L8 was at_0x1bc
   load movl slotaddr -8 into r0
   push slotaddr -8
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_3_ZZstring127 arity 3 depth 3
+  call pol_say_6 arity 3 depth 3
   popn 3
   cmp testl reg r0 reg r0
   branch je to L24
@@ -2879,7 +2879,7 @@ label L9 was at_0x1f7
   load movl slotaddr -8 into r0
   push slotaddr -8
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_5_ZZstring126 arity 3 depth 3
+  call pol_say_7 arity 3 depth 3
   popn 3
   cmp testl reg r0 reg r0
   branch je to L24
@@ -2903,7 +2903,7 @@ label L10 was at_0x232
   load movl slotaddr -8 into r0
   push slotaddr -8
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_4_ZZstring168 arity 3 depth 3
+  call pol_say_8 arity 3 depth 3
   popn 3
   cmp testl reg r0 reg r0
   branch je to L24
@@ -2927,7 +2927,7 @@ label L11 was at_0x26d
   load movl slotaddr -8 into r0
   push slotaddr -8
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_4_ZZstring101 arity 3 depth 3
+  call pol_say_9 arity 3 depth 3
   popn 3
   jump to L24
 label L12 was at_0x2ad
