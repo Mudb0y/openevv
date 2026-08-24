@@ -52,6 +52,8 @@ What is left is not German's. Two of the cases with markers in them -- an audio 
 
 The NVDA add-on follows. Where the library it loads has more than one language in it, every language's eight presets are offered as voices of their own -- "German - Voice 3" -- each saying which language it is, so the reader matches a document's language to one of them; and a `LangChangeCommand` in a speech sequence switches the engine mid-utterance, so a German quotation in an English page is read as German. A library with one language in it offers what it always did, under the same names, so nothing a reader had chosen is lost.
 
+Settings are queued as control steps rather than as speech. Anything queued as speech is thrown away by a cancel that overtakes it, which is right for an utterance and wrong for a setting: every keystroke cancels, so a rate or a voice chosen at the wrong moment simply did not happen, with the dialog still showing what had been asked for.
+
 Not done for German: no dictionary in a form a person can edit, since `tools/delta-dict.py` has only been run for English, and no `long` cases.
 
 ## British English

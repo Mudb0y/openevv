@@ -205,6 +205,33 @@ def engine_module(dll, player_box, library_there=True):
     return mod
 
 
+def control_checks():
+    """A setting is not speech and is not thrown away with it."""
+    dll = FakeDll()
+    players = []
+    mod = engine_module(dll, players)
+
+    engine = mod.Engine(lambda index: None)
+    engine.open()
+
+    engine.post([(engine.addText, (b"spoken",))])
+    engine.control([(engine.setParam, (mod.PARAM_DICTIONARY, 0))])
+    engine.post([(engine.addText, (b"also spoken",))])
+    engine._drain()
+
+    left = []
+    while True:
+        try:
+            left.append(engine._work.get_nowait())
+        except Exception:  # noqa: BLE001
+            break
+    check("draining for silence drops the utterances",
+          [k for k, _ in left if k == mod.SPEECH], [])
+    check("and keeps the settings",
+          len([k for k, _ in left if k == mod.CONTROL]), 1)
+    engine.close()
+
+
 def main():
     dll = FakeDll()
     players = []
@@ -392,6 +419,8 @@ def main():
     check("the thread has stopped", engine.alive(), False)
     check("the instance was given back", dll.named("eciDelete") != [], True)
     check("and the player was closed", player.closed, 1)
+
+    control_checks()
 
     # A Thread subclass shares Thread's namespace, so this holds the engine to
     # not using any name the standard library's Thread does.

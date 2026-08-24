@@ -266,6 +266,16 @@ class Engine:
 		"""Run these calls on the engine's thread, in this order."""
 		self._work.put((SPEECH, batch))
 
+	def control(self, batch):
+		"""The same, for something that is not speech.
+
+		A setting is asked for once and has to arrive. Queued as speech it is
+		thrown away by any cancel that overtakes it -- and since every
+		keystroke cancels, a voice or a rate chosen at the wrong moment simply
+		did not happen, with the dialog still showing what was asked for.
+		"""
+		self._work.put((CONTROL, batch))
+
 	def cancel(self):
 		"""Stop now, and throw away what has not been spoken.
 
@@ -300,16 +310,23 @@ class Engine:
 			self.player.pause(switch)
 
 	def _drain(self):
+		"""Drop the utterances that have not started, and only those.
+
+		A control step is not speech and is not silenced: it is put back in the
+		order it was in, along with the closing sentinel, which is not ours to
+		drop either.
+		"""
+		keep = []
 		while True:
 			try:
 				item = self._work.get_nowait()
 			except queue.Empty:
-				return
+				break
 			self._work.task_done()
-			if item is None:
-				# Closing down: put it back, it is not ours to drop.
-				self._work.put(None)
-				return
+			if item is None or item[0] == CONTROL:
+				keep.append(item)
+		for item in keep:
+			self._work.put(item)
 
 	# ---- the calls themselves, all on this thread --------------------
 

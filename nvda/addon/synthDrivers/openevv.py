@@ -295,7 +295,7 @@ class SynthDriver(SynthDriver):
 		self._abbreviations = enable
 		# Nought turns the abbreviation dictionary on, which is the engine's
 		# own sense of the setting and not a mistake here.
-		self._engine.post(
+		self._engine.control(
 			[(self._engine.setParam, (_openevv.PARAM_DICTIONARY, 0 if enable else 1))],
 		)
 
@@ -404,10 +404,14 @@ class SynthDriver(SynthDriver):
 		if language != self._engine.language:
 			batch.append((self._engine.setLanguage, (language,)))
 		batch.append((self._engine.copyVoice, (number,)))
-		self._engine.post(batch)
+		self._engine.control(batch)
 
 	def _get_language(self):
 		return _openevv.localeOf(self._engine.language)
 
 	def _post(self, which, value):
-		self._engine.post([(self._engine.setVoiceParam, (which, value))])
+		# As a control step, not as speech: a setting asked for while speech is
+		# being cancelled -- which every keystroke does -- would otherwise be
+		# thrown away with the utterances, and the reader's choice would not
+		# take.
+		self._engine.control([(self._engine.setVoiceParam, (which, value))])
