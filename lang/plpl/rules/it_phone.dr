@@ -8827,7 +8827,7 @@ label L65 was at_0x795
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_b_rules arity 3 depth 4
+  call apply_pol_b_rules arity 3 depth 4
   jump to L12
 label L66 was at_0x7ae
   push reg r6
@@ -9025,7 +9025,7 @@ label L82 was $X66$90865
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_w_rules arity 3 depth 4
+  call apply_pol_w_rules arity 3 depth 4
   jump to L12
 label L83 was $X68$90872
   push reg r6

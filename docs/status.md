@@ -294,6 +294,12 @@ What made them possible is that the engine already nasalises: `nasalize_vow` in 
 
 What that cost is worth knowing before the next new code: a code that has never existed is invisible to every rule that asks what its neighbours are, and what saves it here is that the syllabifier and the stress rules read the phone's *record* rather than its code, and the record says vowel.
 
+And Polish devoices at the end of a word, which is the rule that was making every second word sound foreign: raz is ras, chleb is chlep, róg is ruk, rów is ruf, kod is kot, mąż is mąsz, lekarz is lekasz, wódz is wóts and Łódź is Łuć. Nine consonants do it -- b, d, g, w, z, ż, ź, rz, dz and dź -- and razem, ludzi, woda, dobry and ryba keep their voice, since the rule is about the end of a word and not about the letter.
+
+`pol_word_ends_here` is the whole of it and it took three wrong tests to write. The scan can always be set, so a scan that fails is not the signal. `advance_tok` succeeds there too. And `testFldeq` answers "no" both when what follows is a letter and when nothing follows at all, so one test of it cannot tell the end of a word from the middle: raz before a space devoiced and raz at the end of everything did not. What works is both halves together -- the scan failing, or what follows being none of the four things a letter's record can say it is.
+
+Two process notes, because both cost a build each. `make authored` was being run with its output silenced, so when the compiler refused the file -- a place named in one rule and defined in another -- three builds in a row were the same binary and the change looked like it had done nothing. And an edit that lands in the wrong arm of the right rule is invisible until the word that distinguishes them: the word-end test went into the dzi arm rather than the dź one, where it would have turned ludzi into lutsi.
+
 What is left after this: Polish's own words, of which the module now has none -- the one-letter prepositions w and z are letter names rather than /v/ and /z/, since a lone letter is spelled before any word dictionary is consulted -- the numbers, the nasal vowels, currently a vowel plus an n, which is what Polish does before a stop and not elsewhere, /x/ for ch and h, which no module has, stress, which is Italian's penultimate rule and near but not the same, and prosody, which is Italian's outright.
 
 ## A language module as text
