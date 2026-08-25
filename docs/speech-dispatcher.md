@@ -77,7 +77,8 @@ Dispatcher's next internal index mark, and index-mark events. Punctuation and
 symbol names use Speech Dispatcher's language-aware server-side symbol
 preprocessing; OpenEVV does not ship IBM's optional punctuation filter.
 UTF-8 input is converted to the Latin-1 input used by the eight current OpenEVV
-languages; characters outside that set become `?`.
+languages. Left and right curly apostrophes are normalized to ASCII apostrophes;
+other characters outside Latin-1 become `?`.
 
 SSML support is deliberately small: `<mark name="...">` produces index
 events, `<break>` inserts a pause, the five predefined XML entities are

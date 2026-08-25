@@ -156,7 +156,8 @@ def main():
         )
 
         print("speechd: plain speech", flush=True)
-        text = "The quick brown fox jumps over the lazy dog."
+        text = "OpenEVV’s quick brown fox jumps over the lazy dog."
+        direct_text = "OpenEVV's quick brown fox jumps over the lazy dog."
         audio, metadata, marks, event = module.speak(text)
         assert event == "702 END"
         assert marks == []
@@ -170,12 +171,13 @@ def main():
         )
         direct = subprocess.check_output([
             directBinary,
-            "-v", "1", "-o", "-", text,
+            "-v", "1", "-o", "-", direct_text,
         ])
         assert direct[:4] == b"RIFF"
         assert audio == direct[44:], (
-            "plain Speech Dispatcher text does not match direct synthesis; "
-            f"control annotations may have been spoken ({len(audio)} versus "
+            "plain Speech Dispatcher text does not match normalized direct "
+            "synthesis; Unicode punctuation or control annotations may have "
+            f"been spoken incorrectly ({len(audio)} versus "
             f"{len(direct) - 44} PCM bytes)"
         )
 

@@ -449,6 +449,11 @@ static char *utf8_to_latin1(const char *text)
             codepoint = 0x100;
             length = 1;
         }
+        /* These are punctuation, not language characters. Preserve their
+         * ordinary typographic meaning in contractions and quotations rather
+         * than turning them into a spoken question mark. */
+        if (codepoint == 0x2018 || codepoint == 0x2019)
+            codepoint = '\'';
         {
             char output = codepoint <= 0xff ? (char)codepoint : '?';
 
