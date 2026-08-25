@@ -8877,7 +8877,7 @@ label L70 was at_0x812
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_h_rules arity 3 depth 4
+  call apply_pol_h_rules arity 3 depth 4
   jump to L12
 label L71 was at_0x82b
   push reg r6

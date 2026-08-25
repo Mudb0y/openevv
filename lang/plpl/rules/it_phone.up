@@ -81,9 +81,8 @@ place said
 end
 
 # Polish c is not Italian's. On its own it is the affricate Italian spells z,
-# and before z it is the retroflex one. Before h it stays a k, which is what
-# Italian does with ch and is as near as this inventory comes to the Polish
-# sound: there is no velar fricative among the phonemes, so chleb is kleb.
+# and before z it is the retroflex one. Before h it is /x/, which is a phoneme
+# of Polish's own now -- chleb was kleb until it was.
 # Before i it is the alveolo-palatal affricate, which is the same phoneme as
 # cz here until Polish has one of its own, and the i is left to be spoken --
 # right in cisza, an extra vowel in ciasto, and a dictionary word rather than
@@ -115,7 +114,8 @@ place aitch
     call ZZtest_string_s_1_1_ZZstring68           # h?
     if answer is 0
       call savescptr 2 addr right
-      call ZZlprp_load__insert_2pt_s_2_1_ZZstring176 addr left addr right  # a k
+      call lpta_rpta_loadp addr left addr right
+      call insert_2pt_s 2 1 sym pol_ph_x 0
       if answer is 0
         go to said
       end
@@ -834,6 +834,24 @@ place plain
     backtrack
   end
 place said
+  call succeed
+  put cell right value into arg 2 at 4
+  answer 0
+end
+
+# And h on its own, which Italian leaves silent and Polish says as the same
+# /x/: herbata, hałas, ha.
+rule apply_pol_h_rules takes 3 from it_phone.obj
+  local left bytes 8
+  local right bytes 8
+  call ZZget_parm_ptr2 addr left arg 1 addr right arg 2
+  call ZZfence_null
+  call ZZfenceZZstring140
+  call lpta_rpta_loadp addr left addr right
+  call insert_2pt_s 2 1 sym pol_ph_x 0
+  if answer is not 0
+    give up
+  end
   call succeed
   put cell right value into arg 2 at 4
   answer 0

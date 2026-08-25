@@ -410,6 +410,7 @@ statement phone
   variants 02 01 01 01 04 03 03 01 02 00 00 05 02 03 03 01 02 00 00 05 00 03 03 01 01 00 00 08 05 00 00 00
   variants 01 00 00 08 05 01 00 00 01 00 00 08 05 01 00 01 01 00 00 08 05 02 01 01 01 00 00 08 05 00 02 00
   variants 01 00 00 08 05 01 02 00 01 00 00 08 05 01 02 01 00 01 01 08 05 03 03 01 01 00 00 08 05 01 02 01
+  variants 02 01 01 01 03 03 03 01
   field name
     where 8 8 1
     what -1 1 0
@@ -449,6 +450,7 @@ statement phone
     value o
     value c
     value #
+    value x
     value A
     end
   field class

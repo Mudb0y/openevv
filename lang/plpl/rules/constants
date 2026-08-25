@@ -144,3 +144,6 @@ bytes pol_letter_f        0e
 bytes pol_letter_s        19
 bytes pol_letter_c        0c
 bytes pol_letter_h        10
+
+# The phone ch and h lay down: /x/, code 36.
+bytes pol_ph_x            24

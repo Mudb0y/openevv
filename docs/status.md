@@ -302,6 +302,10 @@ It also devoices in front of a voiceless consonant, which is the commoner of the
 
 Two process notes, because both cost a build each. `make authored` was being run with its output silenced, so when the compiler refused the file -- a place named in one rule and defined in another -- three builds in a row were the same binary and the change looked like it had done nothing. And an edit that lands in the wrong arm of the right rule is invisible until the word that distinguishes them: the word-end test went into the dzi arm rather than the dź one, where it would have turned ludzi into lutsi.
 
+And ch and h say /x/, where ch was a k and h was silent: chleb, herbata, hałas, chcę, mucha, duch.
+
+/x/ is the module's second new phoneme, code 36, and it needed no rule of its own. It is a voiceless fricative, which is what Italian's own S rule makes, differing only in where it is spoken -- so the arm added to `ital_con_vals` hands it to that rule, and `pol_sibilant_Fv` gained a third answer: the velar place, which is Italian's own, the one k and g are spoken at. So the hard sibilant, the soft one and /x/ share every line of their machinery and differ in which locus they ask for. The duration chain needed nothing: /x/ falls through it without a crash, which is worth saying because a new code falling off a chain is what used to crash a lone letter.
+
 What is left after this: Polish's own words, of which the module now has none -- the one-letter prepositions w and z are letter names rather than /v/ and /z/, since a lone letter is spelled before any word dictionary is consulted -- the numbers, the nasal vowels, currently a vowel plus an n, which is what Polish does before a stop and not elsewhere, /x/ for ch and h, which no module has, stress, which is Italian's penultimate rule and near but not the same, and prosody, which is Italian's outright.
 
 ## A language module as text

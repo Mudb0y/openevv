@@ -13524,16 +13524,35 @@ label L9 was $X1$90633
   cmp testl reg r0 reg r0
   popreg r1
   popreg r1
-  branch jne to L10
+  branch jne to L210
   push reg r6
   call ZZtest_string_s_2_1_ZZstring5 arity 1 depth 1
   cmp testl reg r0 reg r0
   popreg r1
-  branch jne to L10
+  branch jne to L210
   push reg r6
   call ZZstarttest5 arity 1 depth 1
   push reg r6
   call ital_ph_b arity 1 depth 2
+  jump to L1
+label L210 was pol_x
+  push reg r6
+  call ZZstarttest6 arity 1 depth 1
+  push reg r6
+  call ZZlpta_load_vvg__setscan_0103r__2 arity 1 depth 2
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch jne to L10
+  push reg r6
+  call pol_test_x arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L10
+  push reg r6
+  call ZZstarttest6 arity 1 depth 1
+  push reg r6
+  call ital_ph_S arity 1 depth 2
   jump to L1
 label L10 was $X4$90638
   push reg r6

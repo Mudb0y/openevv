@@ -87,6 +87,25 @@ rule pol_sibilant_Fv takes 1 from is_val.obj
       match
     end
   end
+  # /x/ goes through the same fricative rule and wants the velar place, which
+  # is Italian's own -- it is where k and g are spoken.
+  call ZZlpta_load_vvg__setscan_0103r__2
+  if answer is 0
+    call pol_test_x
+    if answer is 0
+      call ital_velar_Fv
+      match
+    end
+  end
   call pol_alveolopalatal_Fv
   match
+end
+
+# Whether the phone about to be spoken is Polish's /x/, the sound ch and h
+# stand for. It has a code of its own -- there was nothing left to retake --
+# and Italian's voiceless fricative rule speaks it, because that is what it is:
+# the same manner as its sz and s, at a different place.
+rule pol_test_x takes 1 from is_val.obj
+  bare
+  call test_string_s 2 1 sym pol_ph_x
 end
