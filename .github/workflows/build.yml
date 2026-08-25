@@ -51,6 +51,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get the Speech Dispatcher module headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libspeechd-dev
+
       - name: Build, with the rules as bytecode
         run: make -j"$(nproc)" RULES=bytecode
 
@@ -65,6 +70,9 @@ jobs:
 
       - name: Check a stop from another thread leaves the engine whole
         run: make RULES=bytecode stopthread
+
+      - name: Check the Speech Dispatcher module with every language
+        run: make -j"$(nproc)" RULES=bytecode speechd-test-all
 
       # Every language module builds and speaks, which wants neither Wine nor
       # IBM's objects: only the comparison against IBM does. So a module that

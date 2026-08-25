@@ -7,9 +7,14 @@ It speaks, and it speaks IBM's own samples: the audio is byte for byte identical
     make
     ./build/evv -o hello.wav "Hello from Eloquence."
 
-That wants a C compiler, Python, and about a quarter of an hour, most of it compiling the rules. `make RULES=bytecode` is the same engine in half a minute with no Python, saying the same samples; it runs the rules interpreted rather than compiled, which costs rather more than half the speed. On Linux nothing plays the audio yet, so the engine writes a wave file; pipe it into a player to hear it at once:
+That wants a C compiler, Python, and about a quarter of an hour, most of it compiling the rules. `make RULES=bytecode` is the same engine in half a minute with no Python, saying the same samples; it runs the rules interpreted rather than compiled, which costs rather more than half the speed. On Linux the command writes a wave file; pipe it into a player to hear it at once:
 
     ./build/evv "Hello from Eloquence." | aplay -q -
+
+For live desktop and screen-reader speech, `make speechd` builds the native
+Speech Dispatcher output module. It streams through Speech Dispatcher's audio
+backend, supports all languages compiled into the engine, and is documented in
+`docs/speech-dispatcher.md`.
 
 On Windows there is a speak window. Take `evvspeak.exe` from the latest release, type something, pick one of the eight voices, and hear it; `evv.exe` beside it is the same engine on the command line. One file each, nothing to install, and `make win` builds both from here with mingw.
 
@@ -30,6 +35,7 @@ On Windows there is a speak window. Take `evvspeak.exe` from the latest release,
 `docs/building.md` is what you need, what to build, and what each variable does.
 `docs/status.md` is what works, what does not, and what has not been started.
 `docs/tree.md` says what every directory is for.
+`docs/speech-dispatcher.md` builds, configures, and tests Linux live speech.
 
 ## Licence and provenance
 

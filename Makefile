@@ -214,7 +214,9 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate inikeys stopthread
+.PHONY: all probe rules missing install clean evv32 probe32 instances \
+        interrupt landing rate inikeys stopthread speechd speechd-install \
+        speechd-test speechd-test-all
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -285,6 +287,31 @@ inikeys: $(BUILD)/inikeys
 $(BUILD)/inikeys: test/inikeys.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/inikeys.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
+
+# A native Speech Dispatcher output module. The small compatibility header in
+# speechd/ supplies the public audio type which spd_module_main.h includes but
+# Speech Dispatcher 0.12 does not install under that name. Audio itself goes
+# back to the server; this executable does not open an ALSA/Pulse/PipeWire
+# device and therefore needs only the out-of-tree module helper library.
+SPEECHD_CFLAGS ?= $(shell pkg-config --cflags speech-dispatcher 2>/dev/null)
+SPEECHD_LIBS   ?= -lspeechd_module
+
+speechd: $(BUILD)/sd_openevv$(SUF)
+
+$(BUILD)/sd_openevv$(SUF): speechd/openevv.c speechd/spd_audio.h \
+                           $(BUILD)/libevv$(SUF).a $(RULESTAMP)
+	@$(CC) $(ALL_CFLAGS) -Ispeechd $(SPEECHD_CFLAGS) speechd/openevv.c \
+	   $(BUILD)/libevv$(SUF).a $(SPEECHD_LIBS) -lpthread -lm -o $@
+	@echo "built $@"
+
+speechd-test: $(BUILD)/sd_openevv$(SUF) $(BUILD)/evv
+	@OPENEVV_EXPECT_LANGUAGES=$(words $(LANGS)) \
+	   python3 test/speechd.py $(BUILD)/sd_openevv$(SUF) speechd/openevv.conf
+
+speechd-test-all:
+	@$(MAKE) RULES=$(RULES) \
+	   LANGS="lang/enus lang/dede lang/engb lang/eses lang/esus lang/frfr lang/frca lang/itit" \
+	   speechd-test
 
 $(OBJDIR)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJDIR)
@@ -365,20 +392,31 @@ clean:
 	        $(BUILD)/libevv-win32$(SUF).a $(BUILD)/evv $(BUILD)/probe$(SUF) \
 	        $(BUILD)/evv32 $(BUILD)/probe32$(SUF) \
 	        $(BUILD)/libevv$(SUF).a $(BUILD)/libevv32$(SUF).a \
+	        $(BUILD)/sd_openevv* \
 	        $(BUILD)/libevv-win$(SUF).a \
 	        $(BUILD)/evv.exe $(BUILD)/evvspeak.exe $(BUILD)/eci.dll \
 	        $(BUILD)/eci.ini $(BUILD)/dlltest.exe $(BUILD)/syms.txt \
 	        $(BUILD)/openevv-*.nvda-addon
 
-# Where `make install' puts it. There is nothing else to install: one binary,
-# which reads no file of its own at run time and wants no library but the C
-# one, libm and pthreads.
+# Where `make install' puts the command. It reads no file of its own at run
+# time and wants no library but the C one, libm and pthreads. The optional
+# Speech Dispatcher integration has its own target and paths so packagers can
+# place it where their Speech Dispatcher build expects modules.
 PREFIX  ?= /usr/local
+SPEECHD_MODULEDIR ?= $(PREFIX)/libexec/speech-dispatcher-modules
+SPEECHD_CONFDIR   ?= $(PREFIX)/etc/speech-dispatcher/modules
 
 install: $(BUILD)/evv
 	@mkdir -p $(DESTDIR)$(PREFIX)/bin
 	@cp $(BUILD)/evv $(DESTDIR)$(PREFIX)/bin/evv
 	@echo "installed $(DESTDIR)$(PREFIX)/bin/evv"
+
+speechd-install: $(BUILD)/sd_openevv$(SUF)
+	@mkdir -p $(DESTDIR)$(SPEECHD_MODULEDIR) $(DESTDIR)$(SPEECHD_CONFDIR)
+	@cp $(BUILD)/sd_openevv$(SUF) $(DESTDIR)$(SPEECHD_MODULEDIR)/sd_openevv
+	@cp speechd/openevv.conf $(DESTDIR)$(SPEECHD_CONFDIR)/openevv.conf
+	@echo "installed $(DESTDIR)$(SPEECHD_MODULEDIR)/sd_openevv"
+	@echo "installed $(DESTDIR)$(SPEECHD_CONFDIR)/openevv.conf"
 
 # The same engine thirty-two bit. On this machine the compiler is the one the
 # flake provides; elsewhere it is usually the host compiler with -m32, which

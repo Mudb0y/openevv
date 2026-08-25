@@ -43,16 +43,18 @@
    may have several languages in it, each with its own: English has
    seventy-five and German ninety, plus two of dictionary entries apiece. A
    language is registered the first time one of its machines is made, so a
-   program that never speaks the second one never spends its share. */
-#define REGIONS 512
-
-static struct {
+   program that never speaks the second one never spends its share. The tree
+   has more than five hundred stores across all eight languages, so the
+   registry grows with the languages a process actually opens. */
+typedef struct {
     const unsigned char *at;
     size_t               bytes;
     unsigned char       *copy;
-} region[REGIONS];
+} LowRegion;
 
-static int regions;
+static LowRegion *region;
+static size_t regions;
+static size_t regionRoom;
 
 static void *low_alloc(size_t bytes, const char *what)
 {
@@ -72,7 +74,7 @@ static void *low_alloc(size_t bytes, const char *what)
 void delta_low_region(const void *at, size_t bytes)
 {
     const unsigned char *c = at;
-    int i;
+    size_t i;
 
     if (at == 0 || bytes == 0)
         return;
@@ -81,10 +83,17 @@ void delta_low_region(const void *at, size_t bytes)
         if (region[i].at == c && region[i].bytes == bytes)
             return;
 
-    if (regions >= REGIONS) {
-        fprintf(stderr, "evv: more stores of language data than there is room"
-                " to copy\n");
-        abort();
+    if (regions == regionRoom) {
+        size_t newRoom = regionRoom ? regionRoom * 2 : 128;
+        LowRegion *grown = realloc(region, newRoom * sizeof(*region));
+
+        if (grown == 0) {
+            fprintf(stderr, "evv: no room to remember the language data"
+                    " copied into the arena\n");
+            abort();
+        }
+        region = grown;
+        regionRoom = newRoom;
     }
 
     region[regions].at = c;
@@ -103,7 +112,7 @@ void delta_low_region(const void *at, size_t bytes)
 void *delta_low_at(const void *p)
 {
     const unsigned char *c = p;
-    int i;
+    size_t i;
 
     if (p == 0)
         return 0;
