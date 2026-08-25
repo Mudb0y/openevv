@@ -1229,7 +1229,7 @@ enum {
     DELTA_ENTRY_apply_ital_x_rules = 1178,
     DELTA_ENTRY_apply_pol_y_rules = 1179,
     DELTA_ENTRY_apply_pol_z_rules = 1180,
-    DELTA_ENTRY_pol_word_ends_here = 1181,
+    DELTA_ENTRY_pol_devoices_here = 1181,
     DELTA_ENTRY_ZZlprp_load__insert_2pt_s_2_1_ZZstring18 = 1182,
     DELTA_ENTRY_delete_1pt = 1183,
     DELTA_ENTRY_adjust_prev_phr_pause = 1184,

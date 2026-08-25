@@ -170,7 +170,7 @@ rule apply_pol_r_rules takes 3 from it_phone.obj
     call ZZtest_string_s_1_1_ZZstring148          # z?
     if answer is 0
       call savescptr 1 addr right
-      call pol_word_ends_here addr right
+      call pol_devoices_here addr right
       if answer is 0
         call ZZlprp_load__insert_2pt_s_2_1_ZZstring113 addr left addr right  # sz, devoiced
         if answer is 0
@@ -240,7 +240,7 @@ place hard
     call ZZtest_string_s_1_1_ZZstring148          # z?
     if answer is 0
       call savescptr 3 addr right
-      call pol_word_ends_here addr right
+      call pol_devoices_here addr right
       if answer is 0
         call ZZlprp_load__insert_2pt_s_2_1_ZZstring68 addr left addr right  # ts, devoiced
         if answer is 0
@@ -261,7 +261,7 @@ place dotted
     call test_string_s 1 1 sym pol_letter_zdot
     if answer is 0
       call savescptr 2 addr right
-      call pol_word_ends_here addr right
+      call pol_devoices_here addr right
       if answer is 0
         call lpta_rpta_loadp addr left addr right
         call insert_2pt_s 2 2 sym pol_ph_tsz 0
@@ -284,7 +284,7 @@ place acute
     call test_string_s 1 1 sym pol_letter_zacute
     if answer is 0
       call savescptr 3 addr right
-      call pol_word_ends_here addr right
+      call pol_devoices_here addr right
       if answer is 0
         call ZZlprp_load__insert_2pt_s_2_1_ZZstring53 addr left addr right  # ć, devoiced
         if answer is 0
@@ -300,7 +300,7 @@ place acute
   backtrack
 place ending
   plant test plain
-  call pol_word_ends_here addr right
+  call pol_devoices_here addr right
   if answer is 0
     call ZZlprp_load__insert_2pt_s_2_1_ZZstring160 addr left addr right  # a t
     if answer is 0
@@ -355,7 +355,7 @@ place ending
   # scan that reads the next letter stops at the fence, so a scan that fails
   # is a letter with nothing after it in its own word, which is the test.
   plant test plain
-  call pol_word_ends_here addr right
+  call pol_devoices_here addr right
   if answer is 0
     call ZZlprp_load__insert_2pt_s_2_1_ZZstring9 addr left addr right  # an s
     if answer is 0
@@ -512,7 +512,7 @@ rule apply_pol_letter_rules takes 3 from it_phone.obj
   call ZZlpta_load__setscan_r__1 addr left
   call test_string_s 1 1 sym pol_letter_zacute
   if answer is 0
-    call pol_word_ends_here addr right
+    call pol_devoices_here addr right
     if answer is 0
       call ZZlprp_load__insert_2pt_s_2_1_ZZstring25 addr left addr right  # ś, devoiced
       if answer is 0
@@ -527,7 +527,7 @@ rule apply_pol_letter_rules takes 3 from it_phone.obj
   call ZZlpta_load__setscan_r__1 addr left
   call test_string_s 1 1 sym pol_letter_zdot
   if answer is 0
-    call pol_word_ends_here addr right
+    call pol_devoices_here addr right
     if answer is 0
       call ZZlprp_load__insert_2pt_s_2_1_ZZstring113 addr left addr right  # sz, devoiced
       if answer is 0
@@ -556,7 +556,7 @@ rule apply_pol_g_rules takes 3 from it_phone.obj
   call ZZfence_null
   call ZZfenceZZstring140
   plant test plain
-  call pol_word_ends_here addr right
+  call pol_devoices_here addr right
   if answer is 0
     call ZZlprp_load__insert_2pt_s_2_1_ZZstring176 addr left addr right  # a k
     if answer is 0
@@ -705,22 +705,64 @@ rule apply_pol_j_rules takes 3 from it_phone.obj
   answer 0
 end
 
-# Whether a letter is the last one of its word.
+# Whether a voiced consonant here comes out voiceless.
 #
-# Polish devoices a voiced consonant there -- raz is ras, chleb is chlep, Łódź
-# is Łuć -- and every letter that can be devoiced asks this the same way, so it
-# is written once.
+# Two reasons it does. Polish devoices at the end of a word -- raz is ras, chleb
+# is chlep, Łódź is Łuć -- and it devoices in front of a voiceless consonant,
+# which is the commoner of the two: wtorek is ftorek, wódka is wutka, wszystko
+# is fszystko, kredka is kretka. Every letter that can be devoiced asks this,
+# so it is written once and called from all of them.
 #
-# What makes it two questions rather than one: the scan can always be set, and
-# testFldeq answers "no" both when what follows is a letter and when nothing
-# follows at all. So a word ends here if the scan cannot be set, or if what
-# follows is none of the four things a letter can be. That second half is what
-# catches raz before a space and raz before a full stop; the first is what
+# What makes the end of a word two questions rather than one: the scan can
+# always be set, and testFldeq answers "no" both when what follows is a letter
+# and when nothing follows at all. So the word ends here if the scan cannot be
+# set, or if what follows is none of the four things a letter can be. That
+# second half catches raz before a space and before a full stop; the first
 # catches raz at the end of everything.
-rule pol_word_ends_here takes 2 from it_phone.obj
+#
+# The letters in front of which a voiced consonant devoices are p, t, k, f, s,
+# c, h and the two soft ones. sz and cz need no test of their own, since a
+# test of s and of c has already matched by the time the digraph matters.
+rule pol_devoices_here takes 2 from it_phone.obj
   bare
   call ZZlpta_load__setscan_nof_r__1 arg 1
   if answer is not 0
+    answer 0
+  end
+  call test_string_s 1 1 sym pol_letter_p
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 1 1 sym pol_letter_t
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 1 1 sym pol_letter_k
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 1 1 sym pol_letter_f
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 1 1 sym pol_letter_s
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 1 1 sym pol_letter_c
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 1 1 sym pol_letter_h
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 1 1 sym pol_letter_sacute
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 1 1 sym pol_letter_cacute
+  if answer is 0
     answer 0
   end
   call testFldeq 1 4 1
@@ -750,7 +792,7 @@ rule apply_pol_b_rules takes 3 from it_phone.obj
   call ZZfence_null
   call ZZfenceZZstring140
   plant test plain
-  call pol_word_ends_here addr right
+  call pol_devoices_here addr right
   if answer is 0
     call ZZlprp_load__insert_2pt_s_2_1_ZZstring88 addr left addr right  # a p
     if answer is 0
@@ -778,7 +820,7 @@ rule apply_pol_w_rules takes 3 from it_phone.obj
   call ZZfence_null
   call ZZfenceZZstring140
   plant test plain
-  call pol_word_ends_here addr right
+  call pol_devoices_here addr right
   if answer is 0
     call ZZlprp_load__insert_2pt_s_2_1_ZZstring205 addr left addr right  # an f
     if answer is 0

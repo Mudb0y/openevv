@@ -3006,7 +3006,7 @@ int32_t plpl_apply_pol_j_rules(int32_t a0, int32_t a1, int32_t a2)
                           &plpl_delta_rules[286], a, 3);
 }
 
-int32_t plpl_pol_word_ends_here(int32_t a0, int32_t a1)
+int32_t plpl_pol_devoices_here(int32_t a0, int32_t a1)
 {
     int32_t a[2];
 

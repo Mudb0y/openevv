@@ -1425,6 +1425,8 @@ at glob.obj ZZstring130 plpl_evv_glob_data_3 372
 # And the constants of our own, out of rules/constants by tools/delta-consts.py.
 
 # And the constants of our own, out of rules/constants by tools/delta-consts.py.
+
+# And the constants of our own, out of rules/constants by tools/delta-consts.py.
 store plpl_evv_authored_data
 at * pol_letter_aogonek plpl_evv_authored_data 0
 at * pol_letter_cacute plpl_evv_authored_data 1
@@ -1507,3 +1509,10 @@ at * pol_num_mld plpl_evv_authored_data 387
 at * pol_num_mlds plpl_evv_authored_data 396
 at * pol_num_and plpl_evv_authored_data 406
 at * pol_ph_aogonek plpl_evv_authored_data 408
+at * pol_letter_p plpl_evv_authored_data 409
+at * pol_letter_t plpl_evv_authored_data 410
+at * pol_letter_k plpl_evv_authored_data 411
+at * pol_letter_f plpl_evv_authored_data 412
+at * pol_letter_s plpl_evv_authored_data 413
+at * pol_letter_c plpl_evv_authored_data 414
+at * pol_letter_h plpl_evv_authored_data 415

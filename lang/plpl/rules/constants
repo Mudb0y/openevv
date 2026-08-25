@@ -133,3 +133,14 @@ bytes pol_num_and      c7 48                              # where Italian says e
 # The phone ą lays down, which is a code of its own rather than a retaken one:
 # there was nothing left to retake.
 bytes pol_ph_aogonek     23             # the nasal open o, code 35
+
+# The letters that make a voiced consonant in front of them voiceless: p, t, k,
+# f, s, c, h and the two soft ones. sz and cz need no entry of their own, since
+# they start with s and c.
+bytes pol_letter_p        16
+bytes pol_letter_t        1a
+bytes pol_letter_k        12
+bytes pol_letter_f        0e
+bytes pol_letter_s        19
+bytes pol_letter_c        0c
+bytes pol_letter_h        10
