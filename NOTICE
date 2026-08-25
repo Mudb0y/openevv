@@ -91,6 +91,16 @@ IBM's Embedded ViaVoice 4.3 SDK for Windows, which IBM still serves at
 `tools`, so anything under `lang` can be produced again from IBM's own file
 rather than taken on trust.
 
+Measured against
+----------------
+
+The Polish intonation numbers in `docs/status.md` were measured from FLEURS
+(https://huggingface.co/datasets/google/fleurs), read speech published by
+Google under CC BY 4.0, of which the Polish, US English and Italian
+development sets were used. Neither its audio nor its text is in this
+repository; what is here is the numbers derived from it and `tools/pitch.py`,
+which derived them.
+
 Names
 -----
 
