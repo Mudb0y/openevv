@@ -53,6 +53,7 @@ import os
 import queue
 import sys
 import threading
+import time
 
 import config
 import nvwave
@@ -67,6 +68,25 @@ FRAME = 2048
 #: How much audio to gather before handing any to the player, in bytes. Small
 #: enough that speech starts promptly, large enough not to feed in dribbles.
 FEED_AT = FRAME * 2
+
+#: How long the engine's thread may sit inside the player before that is taken
+#: as a stall rather than as back pressure.
+#:
+#: Blocking in the player is the design and not a fault: a full player is what
+#: stops the engine running ahead of the speech. But there is one thread and
+#: the player has no timeout, so a player that stops draining blocks it for
+#: ever -- and with it every utterance queued behind, with nothing said to the
+#: reader and nothing written down. Speech then stays stopped until something
+#: else asks for silence and stops the player as a side effect.
+#:
+#: Longer than any buffer can honestly take to play, so back pressure never
+#: trips it: the player holds a few hundred milliseconds and this is five
+#: seconds.
+STUCK_AFTER = 5.0
+
+#: How often to look. Cheap enough to leave running and short enough that a
+#: reader notices a recovery rather than a silence.
+WATCH_EVERY = 0.5
 
 # What the callback is told.
 MSG_WAVEFORM = 0
@@ -217,6 +237,16 @@ class Engine:
 		self._pendingIndexes = []
 		self._discarding = False
 		self._produced = 0
+		#: When the engine's thread went into the player and what for, or None
+		#: when it is not in there. Written by that thread and read by the
+		#: watchdog; a stale read costs one more look round the loop.
+		self._blockedSince = None
+		self._blockedIn = ""
+		#: Whether the reader asked for the pause. A paused player does not
+		#: drain and blocking on one is meant, so the watchdog leaves it alone.
+		self._paused = False
+		self._watchdog = None
+		self._stopWatching = threading.Event()
 		self.player = None
 		self.voiceNames = {}
 		#: Every language the library has, and the one in force.
@@ -237,6 +267,10 @@ class Engine:
 		self._ready.wait()
 		if self._failure is not None:
 			raise self._failure
+		self._watchdog = threading.Thread(
+			target=self._watch, name="openevv.watchdog", daemon=True
+		)
+		self._watchdog.start()
 
 	def alive(self):
 		return self._thread.is_alive()
@@ -249,6 +283,7 @@ class Engine:
 		still running is how a screen reader ends up with a synthesiser that
 		will not speak after this one has been switched away.
 		"""
+		self._stopWatching.set()
 		self.cancel()
 		self._work.put(None)
 		self._thread.join(timeout=5)
@@ -296,6 +331,7 @@ class Engine:
 		self._work.put((CONTROL, [(self._resume, ())]))
 
 	def pause(self, switch):
+		self._paused = switch
 		if self.player is not None:
 			self.player.pause(switch)
 
@@ -428,6 +464,53 @@ class Engine:
 		self._held = bytearray()
 		self._pendingIndexes = []
 		self._discarding = False
+
+	# ---- the watchdog ------------------------------------------------
+
+	def _enteringPlayer(self, what):
+		self._blockedIn = what
+		self._blockedSince = time.monotonic()
+
+	def _leftPlayer(self):
+		self._blockedSince = None
+
+	def _watch(self):
+		"""Break a stall in the player, and say that there was one.
+
+		The engine's thread blocks in the player on purpose and usually for a
+		fraction of a second. What it cannot do is tell a full player from one
+		that has stopped taking audio, and there is no timeout to find out
+		with, so a player in the second state holds the only thread there is
+		and every utterance queued behind it. To the reader that is silence
+		with nothing in the log, lasting until something else asks for silence
+		and stops the player as a side effect.
+
+		Stopping the player is what unblocks it, which is what cancelling
+		already does, so the recovery here is the one the reader would
+		otherwise have to find. Having abandoned the utterance, whatever was
+		waiting on it is told it finished, or it waits for ever.
+		"""
+		while not self._stopWatching.wait(WATCH_EVERY):
+			since = self._blockedSince
+			# A pause is meant to stop the player draining, so blocking on one
+			# is not a stall. Nor is a wait that has not gone on long enough.
+			if since is None or self._paused:
+				continue
+			waited = time.monotonic() - since
+			if waited < STUCK_AFTER:
+				continue
+			log.error("openevv: the engine's thread has been in the player's %s"
+			          " for %.1f seconds with no pause asked for; abandoning the"
+			          " utterance so speech can go on"
+			          % (self._blockedIn, waited))
+			self._blockedSince = None
+			try:
+				self.cancel()
+			except Exception:  # noqa: BLE001
+				log.error("openevv: the stall would not clear", exc_info=True)
+			# Nobody asked for this silence, so nobody is resetting on the far
+			# side of it: say the utterance finished.
+			self._finish()
 
 	# ---- the thread --------------------------------------------------
 
@@ -611,6 +694,7 @@ class Engine:
 			del self._held[:]
 			marks = self._pendingIndexes
 			self._pendingIndexes = []
+			self._enteringPlayer("feed")
 			try:
 				if marks:
 					self.player.feed(audio, onDone=lambda m=marks: self._report(m))
@@ -619,6 +703,8 @@ class Engine:
 			except Exception:  # noqa: BLE001
 				log.error("openevv: a buffer would not play", exc_info=True)
 				self._report(marks)
+			finally:
+				self._leftPlayer()
 		else:
 			# A mark with no audio in front of it still has to be reported, or
 			# whatever is waiting on it waits for ever.
@@ -629,10 +715,13 @@ class Engine:
 		# nothing in hand, and saying it is finished before the last buffer has
 		# played cuts the next one in over it.
 		if last:
+			self._enteringPlayer("idle")
 			try:
 				self.player.idle()
 			except Exception:  # noqa: BLE001
 				log.debugWarning("openevv: the player would not go idle", exc_info=True)
+			finally:
+				self._leftPlayer()
 
 	def _reportIndexes(self):
 		marks = self._pendingIndexes

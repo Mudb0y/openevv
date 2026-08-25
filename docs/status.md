@@ -50,6 +50,8 @@ What is left is not German's. Two of the cases with markers in them -- an audio 
 
 The NVDA add-on follows. Where the library it loads has more than one language in it, every language's eight presets are offered as voices of their own -- "German - Voice 3" -- each saying which language it is, so the reader matches a document's language to one of them; and a `LangChangeCommand` in a speech sequence switches the engine mid-utterance, so a German quotation in an English page is read as German. A library with one language in it offers what it always did, under the same names, so nothing a reader had chosen is lost.
 
+A watchdog breaks a stall in the wave player. Blocking in the player is how the add-on paces synthesis -- a full player is what keeps the engine from running ahead of the speech -- but the engine is spoken to from one thread, the player has no timeout, and a player that has stopped draining looks exactly like a full one. So it held that thread, and every utterance queued behind it, saying nothing and writing nothing down; speech came back only when something else asked for silence and stopped the player as a side effect. A wait longer than five seconds where no pause was asked for is now logged, the utterance abandoned and reported finished so nothing is left waiting on a mark that is never coming. A pause the reader asked for is left alone, since a paused player is meant not to drain.
+
 Not done for German: no dictionary in a form a person can edit, since `tools/delta-dict.py` has only been run for English, and no `long` cases.
 
 ## British English
