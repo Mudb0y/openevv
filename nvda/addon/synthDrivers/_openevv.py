@@ -237,6 +237,9 @@ class Engine:
 		self._pendingIndexes = []
 		self._discarding = False
 		self._produced = 0
+		#: Whether the utterance in flight has already been reported
+		#: finished. Nothing is in flight to begin with.
+		self._finished = True
 		#: When the engine's thread went into the player and what for, or None
 		#: when it is not in there. Written by that thread and read by the
 		#: watchdog; a stale read costs one more look round the loop.
@@ -391,6 +394,7 @@ class Engine:
 		self._held = bytearray()
 		self._pendingIndexes = []
 		self._produced = 0
+		self._finished = False
 
 		if not self._dll.eciSynthesize(self._instance):
 			log.error("openevv: the engine refused to speak")
@@ -750,4 +754,17 @@ class Engine:
 			self._onIndex(mark)
 
 	def _finish(self):
+		"""Say the utterance is over, once, whoever gets there first.
+
+		Two threads can be the one to say it. Where the watchdog breaks a
+		stall inside the last player.idle(), it abandons the utterance and
+		reports it finished -- and the engine's thread then comes out of
+		the player anyway, past the point where it checks whether it was
+		cancelled, and reports it finished as well. Two reports of one
+		utterance leave NVDA's speech manager a step ahead of itself, so
+		the second is dropped here rather than at either caller.
+		"""
+		if self._finished:
+			return
+		self._finished = True
 		self._onIndex(None)

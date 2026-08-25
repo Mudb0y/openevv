@@ -363,6 +363,83 @@ def stall_checks():
     engine.cancel()
 
 
+def idle_stall_checks():
+    """One utterance is reported finished once, whichever thread gets there.
+
+    A stall in the last player.idle() is not the same as one in feed(). The
+    watchdog abandons the utterance and reports it finished, and the engine's
+    thread then comes out of the player anyway -- past the point where it
+    checks whether it was cancelled -- and reports it finished as well. Two
+    reports of one utterance leave NVDA's speech manager a step ahead of
+    itself: it takes the second for the end of the utterance after this one.
+    """
+    import threading
+    import time
+
+    class IdleStaller:
+        """Takes everything it is fed and never runs dry until it is stopped."""
+
+        def __init__(self, **kwargs):
+            self.made = kwargs
+            self.gate = threading.Event()
+            self.stopped = 0
+            self.closed = 0
+            self.fed = 0
+
+        def feed(self, data, size=None, onDone=None):
+            self.fed += 1
+            if onDone:
+                onDone()
+
+        def idle(self):
+            self.gate.wait(timeout=30)
+            self.gate.clear()
+
+        def stop(self):
+            self.stopped += 1
+            self.gate.set()
+
+        def pause(self, switch):
+            pass
+
+        def close(self):
+            self.closed += 1
+
+        def sync(self):
+            pass
+
+    dll = FakeDll()
+    players = []
+    mod = engine_module(dll, players)
+    import nvwave
+
+    nvwave.WavePlayer = lambda **kw: players.append(IdleStaller(**kw)) or players[-1]
+    mod.nvwave = nvwave
+    # The same logic on a shorter fuse, so the check is quick.
+    mod.STUCK_AFTER = 1.0
+    mod.WATCH_EVERY = 0.2
+
+    def synchronize(handle):
+        for _ in range(4):
+            dll.callback(handle, mod.MSG_WAVEFORM, 1024, None)
+        return 1
+
+    dll.answer_synchronize = synchronize
+
+    done = []
+    engine = mod.Engine(lambda index: done.append(index))
+    engine.open()
+
+    engine.post([(engine.addText, (b"one sentence",)),
+                 (engine.synthesize, (True,))])
+    time.sleep(2.5)
+    check("a stall in the last idle is broken as well", players[0].stopped >= 1,
+          True)
+    check("and one utterance is reported finished once, not twice",
+          done.count(None), 1)
+    engine.close()
+
+
 def main():
     dll = FakeDll()
     players = []
@@ -553,6 +630,7 @@ def main():
 
     control_checks()
     stall_checks()
+    idle_stall_checks()
 
     # A Thread subclass shares Thread's namespace, so this holds the engine to
     # not using any name the standard library's Thread does.
