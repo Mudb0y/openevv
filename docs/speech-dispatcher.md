@@ -64,9 +64,9 @@ type; and exact voices such as `-y enus-elderly-male`. For a multilingual
 build, try `-l en-US`, `de-DE`, `en-GB`, `es-ES`, `es-MX`, `fr-FR`, `fr-CA`,
 and `it-IT`, including accented text. Listen to text containing symbols under
 each `-m` mode: the direct protocol test cannot cover the server-side symbol
-preprocessing. Finally, test rapid interruption and language changes in the
-actual screen reader, because that test also cannot establish audible latency,
-playback routing, or application behavior.
+names or translations. Finally, test rapid interruption and language changes
+in the actual screen reader, because that test also cannot establish audible
+latency, playback routing, or application behavior.
 
 ## Supported behavior and limits
 
@@ -75,7 +75,10 @@ Speech Dispatcher rate, pitch, pitch range, volume, voice type, exact voice,
 language, spelling, character, key, sound-icon fallback, stop, pause at Speech
 Dispatcher's next internal index mark, and index-mark events. Punctuation and
 symbol names use Speech Dispatcher's language-aware server-side symbol
-preprocessing; OpenEVV does not ship IBM's optional punctuation filter.
+preprocessing. When the server inserts a symbol name and changes the module's
+punctuation mode to `none`, the module suppresses the retained non-prosodic
+symbol so names such as `dash-` and `left paren(` are not spoken twice. It
+preserves sentence punctuation for pauses and apostrophes inside words.
 UTF-8 input is converted to the Latin-1 input used by the eight current OpenEVV
 languages. Left and right curly apostrophes are normalized to ASCII apostrophes;
 other characters outside Latin-1 become `?`.

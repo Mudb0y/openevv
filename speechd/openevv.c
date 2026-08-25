@@ -476,7 +476,56 @@ static int latin1_uppercase(unsigned char value)
         || (value >= 0xd8 && value <= 0xde);
 }
 
-static int add_text_with_capitals(const char *text)
+static int latin1_word_character(unsigned char value)
+{
+    return (value >= '0' && value <= '9')
+        || (value >= 'A' && value <= 'Z')
+        || (value >= 'a' && value <= 'z')
+        || value == 0xaa || value == 0xb5 || value == 0xba
+        || (value >= 0xc0 && value <= 0xd6)
+        || (value >= 0xd8 && value <= 0xf6)
+        || (value >= 0xf8);
+}
+
+static int latin1_symbol(unsigned char value)
+{
+    return (value >= '!' && value <= '/')
+        || (value >= ':' && value <= '@')
+        || (value >= '[' && value <= '`')
+        || (value >= '{' && value <= '~')
+        || (value >= 0xa1 && value <= 0xa9)
+        || (value >= 0xab && value <= 0xb4)
+        || (value >= 0xb6 && value <= 0xb9)
+        || (value >= 0xbb && value <= 0xbf)
+        || value == 0xd7 || value == 0xf7;
+}
+
+/* With server-side symbol preprocessing, Speech Dispatcher inserts the
+ * localized name but retains some punctuation for prosody, then asks the
+ * module for punctuation mode none. OpenEVV ordinarily voices many of those
+ * retained symbols, so discard non-prosodic symbols without damaging sentence
+ * pauses or apostrophes inside words. */
+static void suppress_spoken_punctuation(char *text)
+{
+    unsigned char *at = (unsigned char *)text;
+
+    while (*at) {
+        unsigned char value = *at;
+
+        if (value == '\'' && at > (unsigned char *)text
+            && latin1_word_character(at[-1])
+            && latin1_word_character(at[1])) {
+            at++;
+            continue;
+        }
+        if (value != ',' && value != '.' && value != ';' && value != ':'
+            && value != '?' && value != '!' && latin1_symbol(value))
+            *at = ' ';
+        at++;
+    }
+}
+
+static int add_text_with_capitals(const char *text, int suppressPunctuation)
 {
     char *converted = utf8_to_latin1(text);
     char *segment;
@@ -485,6 +534,8 @@ static int add_text_with_capitals(const char *text)
 
     if (!converted)
         return -1;
+    if (suppressPunctuation)
+        suppress_spoken_punctuation(converted);
     segment = converted;
     for (at = converted; *at && result == 0; at++) {
         char letter[2];
@@ -513,13 +564,13 @@ static int add_text_with_capitals(const char *text)
     return result;
 }
 
-static int flush_text(TextBuffer *buffer)
+static int flush_text(TextBuffer *buffer, int suppressPunctuation)
 {
     int result;
 
     if (!buffer->length)
         return 0;
-    result = add_text_with_capitals(buffer->data);
+    result = add_text_with_capitals(buffer->data, suppressPunctuation);
     buffer->length = 0;
     if (buffer->data)
         buffer->data[0] = 0;
@@ -612,7 +663,7 @@ static int contains_tag(const char *text, const char *name)
     return 0;
 }
 
-static int queue_ssml(const char *data)
+static int queue_ssml(const char *data, int suppressPunctuation)
 {
     TextBuffer text = { 0 };
     const char *at = data;
@@ -634,7 +685,7 @@ static int queue_ssml(const char *data)
                                                   &nameLength);
 
                 if (name) {
-                    result = flush_text(&text);
+                    result = flush_text(&text, suppressPunctuation);
                     if (result == 0)
                         result = add_mark(name, nameLength);
                 }
@@ -661,7 +712,7 @@ static int queue_ssml(const char *data)
         }
     }
     if (result == 0)
-        result = flush_text(&text);
+        result = flush_text(&text, suppressPunctuation);
     free(text.data);
     return result;
 }
@@ -698,6 +749,7 @@ static int queue_message(const char *data, SPDMessageType messageType)
     char *prepared = NULL;
     const char *message = data;
     int textMode = TEXT_MODE_DEFAULT;
+    int suppressPunctuation;
     int result;
 
     if (messageType == SPD_MSGTYPE_SOUND_ICON) {
@@ -718,6 +770,8 @@ static int queue_message(const char *data, SPDMessageType messageType)
     if (settings.spelling == SPD_SPELL_ON)
         textMode = messageType == SPD_MSGTYPE_TEXT
                  ? TEXT_MODE_ALPHA_SPELL : TEXT_MODE_ALL_SPELL;
+    suppressPunctuation = messageType == SPD_MSGTYPE_TEXT
+                       && settings.punctuation == SPD_PUNCT_NONE;
     if (!message || (messageType == SPD_MSGTYPE_SOUND_ICON && !pendingIcon)
         || ev_setParam(engine, PARAM_TEXT_MODE, textMode) < 0) {
         free(prepared);
@@ -727,9 +781,9 @@ static int queue_message(const char *data, SPDMessageType messageType)
     if (contains_tag(message, "speak")
         || contains_tag(message, "mark")
         || contains_tag(message, "break"))
-        result = queue_ssml(message);
+        result = queue_ssml(message, suppressPunctuation);
     else
-        result = add_text_with_capitals(message);
+        result = add_text_with_capitals(message, suppressPunctuation);
     free(prepared);
     return result;
 }

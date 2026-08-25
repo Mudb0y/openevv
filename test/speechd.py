@@ -212,7 +212,20 @@ def main():
         # sends text to this module, so direct protocol audio cannot prove the
         # audible difference between punctuation modes.
         module.set(punctuation_mode="none")
-
+        plainNames, _, _, plainEvent = module.speak(
+            "<speak>dash  and left paren </speak>"
+        )
+        retainedSymbols, _, _, retainedEvent = module.speak(
+            "<speak>dash- and left paren(</speak>"
+        )
+        assert plainEvent == "702 END" and retainedEvent == "702 END"
+        # Consecutive synthesis can vary slightly in trailing silence, so PCM
+        # equality is too strict. Speaking the retained symbols nearly doubles
+        # this sample; allow 25 percent timing variation around the named form.
+        assert len(retainedSymbols) < len(plainNames) * 5 // 4, (
+            "punctuation retained by Speech Dispatcher was spoken after its "
+            f"inserted name ({len(retainedSymbols)} versus {len(plainNames)})"
+        )
         print("speechd: available languages", flush=True)
         samples = {
             "de-DE": "Grüße aus Köln.",
@@ -299,6 +312,8 @@ def main():
         module.set(cap_let_recogn="none")
         plainAudio, _, _, event = module.speak("A", command="CHAR")
         assert event == "702 END" and plainAudio != upperAudio
+        punctuationAudio, _, _, event = module.speak("-", command="CHAR")
+        assert event == "702 END" and punctuationAudio
 
         print("speechd: sound icon fallback", flush=True)
         audio, _, _, event = module.speak("dialog-warning", command="SOUND_ICON")

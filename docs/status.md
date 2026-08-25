@@ -24,10 +24,12 @@ On Linux, `make speechd` builds a native Speech Dispatcher output module. It
 streams PCM to the server, advertises every built language and its eight voice
 presets, and implements the ordinary speech settings, spelling, characters,
 keys, index marks, stop and pause. Punctuation uses Speech Dispatcher's
-server-side symbol preprocessing. Its direct protocol suite passes with all
-eight languages in one process, and Speech Dispatcher 0.12.1 discovers the
-module and lists all 64 voices. Audible punctuation, playback, and screen-reader
-behavior still require the manual checks in `docs/speech-dispatcher.md`.
+server-side symbol preprocessing; retained symbols are suppressed after their
+localized names so they are not spoken twice. Its direct protocol suite passes
+with all eight languages in one process, and Speech Dispatcher 0.12.1 discovers
+the module and lists all 64 voices. Audible punctuation, playback, and
+screen-reader behavior still require the manual checks in
+`docs/speech-dispatcher.md`.
 
 And it builds as `eci.dll`, exporting the fifty-two names IBM published, so a program written against IBM's library -- a screen reader add-on, most likely -- can load ours instead. Both bitnesses: sixty-four bit for an add-on that loads the engine into the reader's own process, thirty-two bit for the most used driver, which hosts the engine in a 32-bit process of its own whatever the reader is. Checked on Windows itself: by name from C for both, and through ctypes for the sixty-four bit one, as an add-on does.
 
