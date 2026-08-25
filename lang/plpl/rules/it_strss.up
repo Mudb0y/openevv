@@ -1,0 +1,41 @@
+rule pol_primary_stress takes 3 from it_strss.obj
+  local left bytes 8
+  local right bytes 8
+  local count
+  local togo
+  call ZZget_parm_ptr2 addr left arg 1 addr right arg 2
+  call ZZfence_null
+  # How many syllables there are, by walking to the end of the word.
+  call ZZlpta_load__setscan_r__7 addr left
+  if answer is not 0
+    give up
+  end
+  set count to 0
+  while 1
+    increment count
+    call advance_tok
+    if answer is not 0
+      leave
+    end
+  end
+  # And then again from the start, stopping one short of the last, which is
+  # where Polish stress is and where it always is.
+  call ZZlpta_load__setscan_r__7 addr left
+  if answer is not 0
+    give up
+  end
+  set togo to count
+  subtract 2 from togo
+  while togo is more than 0
+    call advance_tok
+    decrement togo
+  end
+  call savescptr 1 addr left
+  call advance_tok
+  if answer is 0
+    call savescptr 2 addr right
+    call ZZlprp_load__insert_2pt_i_7_2_ZZstring3 addr left addr right
+    match
+  end
+  give up
+end

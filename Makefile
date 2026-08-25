@@ -380,6 +380,11 @@ upper-check:
 authored:
 	@python3 tools/delta-notation.py authored
 
+# And that held against the tree, which is the check for a module written with
+# `authored' rather than lifted. EVV_NOTATION_LANG says which one.
+authored-check:
+	@python3 tools/delta-notation.py authored-check
+
 # Bytes a rule of ours names by address, out of lang/<tag>/rules/constants
 # into the one file in a language module that no lifter writes. Run
 # `notation-rewrite' after it: a new store is named in the generated file too.

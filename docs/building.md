@@ -164,6 +164,8 @@ bind.
 
 ## Writing a rule
 
+One trap in the decompiler before any of this. `delta-decompile.py` with no arguments writes the hundred smallest rules, and it writes them to the same file `all` writes to -- so reading its usage by running it truncates the language's rules-as-C from every rule to a hundred. That file is gitignored, so nothing says so, and the next default build links it and aborts on the first rule that is missing: `init_platform was not written as C and this build has no bytecode to run it as`. The answer is `delta-decompile.py all` again, and the lesson is to read the usage in the file.
+
 `lang/enus/rules/*.up` beside the `.dr` files is the form to write a rule in. It is the same rule: every call is the same entry with the same arguments in the same order, because a form that reworded what a rule calls would be describing the rule rather than being it. What it takes over is the machine.
 
 That is where the length of the lower form goes. Of the 322,890 operations in English's 1,042 real rules, 97,071 are pushes, 60,947 calls and 43,893 pops -- two thirds of every rule is the argument stack being written out by hand -- and another 53,000 are a comparison setting the flags on one line and a branch reading them on the next. None of it says anything about a language. `eng_ph_F_dur` is 49 lines of the lower notation and this is all of it:

@@ -1280,7 +1280,7 @@ enum {
     DELTA_ENTRY_assign_root_stress = 1229,
     DELTA_ENTRY_ZZlprp_load__insert_2pt_i_7_2_ZZstring3 = 1230,
     DELTA_ENTRY_ZZlprp_load__insert_2pt_i_7_2_ZZstring2 = 1231,
-    DELTA_ENTRY_assign_primary_stress = 1232,
+    DELTA_ENTRY_pol_primary_stress = 1232,
     DELTA_ENTRY_ZZtestFldeq2_4_3 = 1233,
     DELTA_ENTRY_ZZtestFldeq2_4_6 = 1234,
     DELTA_ENTRY_ZZtestFldeq2_4_7 = 1235,

@@ -964,8 +964,8 @@ label L0 was _ital_nucl_high_low_star_tone
   store movw imm 75 slot -22
   store movw imm 0 slot -10
   store movw imm 90 slot -6
-  store movw imm 60 slot -2
-  store movw imm 60 slot -14
+  store movw imm 45 slot -2
+  store movw imm 45 slot -14
   call ZZstarttest1 arity 1 depth 2
   load movw statefld 578 into r0w
   cmp cmpw statefld 498 reg r0w
@@ -3151,7 +3151,7 @@ label L13 was $X15$91648
   store movw imm 110 slot -2
   jump to L24
 label L14 was at_0x282
-  store movw imm 60 slot -6
+  store movw imm 45 slot -6
   jump to L2
 label L15 was $X8$91640
   store movw imm 55 slot -6
@@ -3203,7 +3203,7 @@ label L19 was $X21$91658
   popreg r1
   popreg r1
   branch jne to L21
-  store movw imm 60 slot -2
+  store movw imm 45 slot -2
   jump to L24
 label L20 was $X22$91660
   push reg r6
@@ -3213,10 +3213,10 @@ label L20 was $X22$91660
   popreg r1
   branch jne to L22
 label L21 was $X23$91662
-  store movw imm 65 slot -2
+  store movw imm 50 slot -2
   jump to L24
 label L22 was $X25$91668
-  store movw imm 65 slot -2
+  store movw imm 50 slot -2
   jump to L24
 label L23 was at_0x34e
   store movw imm 80 slot -2

@@ -2637,7 +2637,7 @@ label L6 was at_0xfb
   addk 864 reg r6 into r0
   push reg r0
   push reg r6
-  call assign_primary_stress arity 3 depth 4
+  call pol_primary_stress arity 3 depth 4
   popn 4
 label L7 was at_0x118
   push reg r6
