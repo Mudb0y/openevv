@@ -336,6 +336,8 @@ Two things learned on the way are worth more than the fix. A rule cannot answer 
 
 And prominence in this engine is pitch and not length. In szesnastym the syllable stym runs a quarter of a second where na runs a seventh of one, which reads as stress and is not: stym has four phonemes and na has two. With the stress mark removed altogether the lengths do not move at all and the pitch goes flat. A duration is not evidence about stress, and an amplitude envelope is no use either -- a formant synthesiser barely dips between syllables, so the syllable detector that works on a corpus of people found one syllable in nazywam.
 
+By ear it is still not right, which the measurements do not say and are not able to. Three things are known to be left, in the order they are worth trying. The syllabifier is still Italian's, so a rule that correctly asks for the penultimate syllable can still be handed the wrong count: `create_ital_syllables` knows nothing of Polish consonant clusters, and szesnastym, poniedziałek and dziewczyna are exactly the shapes where it would differ. Secondary stress was not touched at all -- `assign_secondary_stress` still calls Italian's locator, with Italian's lexical exceptions inside it. And the accents are still too few and too shallow against the corpus, 2.9 a second at 1.75 semitones where a Pole has 4.1 at 2.3, with no declination across the phrase at all.
+
 The end of a Polish statement was also taken a semitone deeper than the corpus figure, by ear. Matching a person's terminal fall exactly left it sounding unfinished, which is a limit on the whole method worth stating: the numbers say where to aim and what has moved, and they do not say when it is right.
 
 ## A language module as text
