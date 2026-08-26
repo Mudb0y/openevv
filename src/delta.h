@@ -580,6 +580,15 @@ int32_t vgen_frame(delta_state *d);
 int32_t vgen_time(delta_state *d);
 int32_t vgen_params(delta_state *d);
 int32_t vgen_copy(delta_state *d);
+void gendef_framedur(delta_state *d, delta_loc *loc);
+void gendef_timestm(delta_state *d, uint8_t when);
+void gendef_params(delta_state *d, uint8_t count, uint8_t n,
+                   const uint8_t *str);
+void gencur_framedur(delta_state *d, delta_loc *loc);
+void gencur_timestm(delta_state *d, uint8_t when);
+void gencur_params(delta_state *d, uint8_t count, uint8_t n,
+                   const uint8_t *str);
+int32_t gen_copy(delta_state *d);
 void vsub(delta_state *d, const delta_operand *a, const delta_operand *b);
 void vmult(delta_state *d, const delta_operand *a, const delta_operand *b);
 void vdiv(delta_state *d, const delta_operand *a, const delta_operand *b);
@@ -830,6 +839,12 @@ void ncompare_s(delta_state *d, uint8_t c);
 int  forall_to_test(delta_state *d, delta_loc *a, delta_loc *b);
 int  mark_i(delta_state *d, uint8_t st, uint8_t fld, const void *v,
             uint8_t mode);
+int  mark_l(delta_state *d, uint8_t st, uint8_t fld, const void *v,
+            uint8_t mode);
+int  mark_lng(delta_state *d, uint8_t st, uint8_t fld, const void *v,
+              uint8_t mode);
+void SETCTXL(delta_state *d, int32_t *table, uint8_t idx, int32_t bits);
+void SETCTXR(delta_state *d, int32_t *table, uint8_t idx, int32_t bits);
 int  vctxt_tv(delta_state *d, delta_tpos *p);
 int  testeq_tvars(delta_state *d, delta_loc *a, delta_loc *b);
 int  testneq_tvars(delta_state *d, delta_loc *a, delta_loc *b);

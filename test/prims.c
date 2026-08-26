@@ -84,6 +84,19 @@ extern int project_sync(delta_state *d, int32_t l, int8_t f, int32_t r,
 extern const char *first_fieldval(delta_state *d, int8_t stm, int32_t fld,
                                   const char *want);
 extern const char *next_fieldval(delta_state *d);
+extern void gendef_framedur(delta_state *d, delta_loc *loc);
+extern void gendef_timestm(delta_state *d, uint8_t when);
+extern void gendef_params(delta_state *d, uint8_t count, uint8_t n,
+                          const uint8_t *str);
+extern void gencur_framedur(delta_state *d, delta_loc *loc);
+extern void gencur_timestm(delta_state *d, uint8_t when);
+extern void gencur_params(delta_state *d, uint8_t count, uint8_t n,
+                          const uint8_t *str);
+extern int32_t gen_copy(delta_state *d);
+extern void SETCTXL(delta_state *d, int32_t *table, uint8_t idx,
+                    int32_t bits);
+extern void SETCTXR(delta_state *d, int32_t *table, uint8_t idx,
+                    int32_t bits);
 extern int unique_value(delta_state *d, int8_t f, int32_t fld,
                         const char *s, const char **out_name,
                         void **out_value);
@@ -1006,6 +1019,68 @@ int main(void)
         printf("%-16s -> %d\n", "gen.copy", (int)vgen_copy(d));
         show_gencell(&vars->gen_now, "now", 2);
         show_gencell(&vars->gen_done, "done", 2);
+
+        /* And the same three parts said the way a rule says them, where
+           which cell is filled is not read off the statement but written
+           into the name: gendef fills the one being collected and gencur the
+           one already finished. The frame arrives as a long here rather than
+           a short, so the value is the whole of what the location holds. */
+        {
+            delta_loc *loc = calloc(1, sizeof *loc);
+
+            if (loc == NULL)
+                return 1;
+
+            loc->kind = DK_LONG;
+            loc->field = 0;
+            loc->value = 0x1357;
+
+            gendef_timestm(d, 11);
+            gendef_params(d, 12, 3, params);
+            gendef_framedur(d, loc);
+            show_gencell(&vars->gen_now, "now", 3);
+
+            loc->kind = DK_LONG;
+            loc->value = 0x2468;
+            gencur_timestm(d, 13);
+            gencur_params(d, 14, 2, params);
+            gencur_framedur(d, loc);
+            show_gencell(&vars->gen_done, "done", 3);
+
+            printf("%-16s -> %d\n", "gen.copy2", (int)gen_copy(d));
+            show_gencell(&vars->gen_now, "now", 4);
+            show_gencell(&vars->gen_done, "done", 4);
+        }
+
+        /* Where a context begins and where it ends. The table is the
+           harness's own rather than a node's, because what is being compared
+           is what the call writes into it: the bottom two bits of the entry
+           are kept and the rest replaced, and which entry depends on which
+           of the two names was used. */
+        {
+            int32_t *table = calloc(64, sizeof *table);
+            int i, k;
+
+            if (table == NULL)
+                return 1;
+
+            for (k = 0; k < 2; k++) {
+                for (i = 0; i < 64; i++)
+                    table[i] = 0x30 + i;
+
+                for (i = 0; i < 4; i++) {
+                    if (k == 0)
+                        SETCTXL(d, table, (uint8_t)i, 0x100 << i);
+                    else
+                        SETCTXR(d, table, (uint8_t)i, 0x100 << i);
+                }
+
+                printf("%-16s %d ->", "setctx", k);
+                for (i = 0; i < 28; i++)
+                    printf(" %x", (unsigned)table[i]);
+                printf("\n");
+            }
+        }
     }
 
     /* Putting tokens on the spine, in each of the four widths a string can

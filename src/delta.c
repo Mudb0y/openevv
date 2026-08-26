@@ -910,6 +910,97 @@ int32_t vgen_copy(delta_state *d)
     return 0;
 }
 
+/* The same three parts again, said the way a rule says them.
+ *
+ * Where the vgen_ calls read the generate statement and work out which cell
+ * to fill, these are told outright: the `gendef' three fill the cell being
+ * collected and the `gencur' three the one already finished. Otherwise they
+ * are the same three parts -- a frame assigned from a location, a moment
+ * taken as a byte, and a run of parameter bytes copied into the cell's own
+ * buffer -- and each sets its own bit as it arrives.
+ *
+ * The frame comes in as a long here rather than a short, which is the only
+ * difference in what is written. */
+static void gen_framedur(delta_state *d, delta_gencell *cell, delta_loc *loc)
+{
+    delta_operand dst;
+    delta_operand src;
+
+    dst.ptr = &cell->value;
+    dst.kind = DK_LONG;
+    dst.flag = 0;
+
+    vinitloc_new(d, &src, loc);
+    vassign(d, &dst, &src);
+
+    cell->flags |= 1;
+    reset_field(loc);
+}
+
+static void gen_timestm(delta_gencell *cell, uint8_t when)
+{
+    cell->time = when;
+    cell->flags |= 2;
+}
+
+static void gen_params(delta_gencell *cell, uint8_t count, uint8_t n,
+                       const uint8_t *str)
+{
+    int32_t i;
+
+    cell->nparams = count;
+
+    if ((cell->flags & 4) == 0)
+        cell->params = EVV_REF(dynaBufNew(n));
+
+    dynaBufReset(EVV_AT(DynaBuf *, cell->params));
+
+    for (i = 1; i <= (int32_t)n; i++) {
+        dynaBufAddChar(EVV_AT(DynaBuf *, cell->params), (char)*str, 0);
+        str++;
+    }
+
+    cell->flags |= 4;
+}
+
+void gendef_framedur(delta_state *d, delta_loc *loc)
+{
+    gen_framedur(d, &EVV_AT(delta_vars *, d->vars)->gen_now, loc);
+}
+
+void gendef_timestm(delta_state *d, uint8_t when)
+{
+    gen_timestm(&EVV_AT(delta_vars *, d->vars)->gen_now, when);
+}
+
+void gendef_params(delta_state *d, uint8_t count, uint8_t n,
+                   const uint8_t *str)
+{
+    gen_params(&EVV_AT(delta_vars *, d->vars)->gen_now, count, n, str);
+}
+
+void gencur_framedur(delta_state *d, delta_loc *loc)
+{
+    gen_framedur(d, &EVV_AT(delta_vars *, d->vars)->gen_done, loc);
+}
+
+void gencur_timestm(delta_state *d, uint8_t when)
+{
+    gen_timestm(&EVV_AT(delta_vars *, d->vars)->gen_done, when);
+}
+
+void gencur_params(delta_state *d, uint8_t count, uint8_t n,
+                   const uint8_t *str)
+{
+    gen_params(&EVV_AT(delta_vars *, d->vars)->gen_done, count, n, str);
+}
+
+/* And the name a rule calls the copy by. */
+int32_t gen_copy(delta_state *d)
+{
+    return vgen_copy(d);
+}
+
 /* The other three arithmetic operations, in the same shape as vadd: the left
    operand says which width the answer is written in, the right is widened or
    narrowed to meet it, and any other pair of types is left alone. They are
@@ -5332,6 +5423,46 @@ int mark_i(delta_state *d, uint8_t st, uint8_t fld, const void *v,
         vmark(d, st, fld, d->lpta.node, d->rpta.node, &v);
 
     return 0;
+}
+
+/* The same mark in the other two widths. Each refuses a field whose kind is
+   not the one it is named for, and no rule in the nine languages IBM shipped
+   names either -- their fields are bytes and short2s. */
+int mark_l(delta_state *d, uint8_t st, uint8_t fld, const void *v,
+           uint8_t mode)
+{
+    if (vrange_2pt(d, &d->lpta, &d->rpta, (int8_t)st, mode))
+        return 1;
+
+    if (vstmtbl[st].fields[fld].kind == DK_SHORT)
+        vmark(d, st, fld, d->lpta.node, d->rpta.node, &v);
+
+    return 0;
+}
+
+int mark_lng(delta_state *d, uint8_t st, uint8_t fld, const void *v,
+             uint8_t mode)
+{
+    if (vrange_2pt(d, &d->lpta, &d->rpta, (int8_t)st, mode))
+        return 1;
+
+    if (vstmtbl[st].fields[fld].kind == DK_LONG)
+        vmark(d, st, fld, d->lpta.node, d->rpta.node, &v);
+
+    return 0;
+}
+
+/* Where a context begins and where it ends, which is one call into the
+   context table with the direction said as a number. The two differ in that
+   number and in nothing else. */
+void SETCTXL(delta_state *d, int32_t *table, uint8_t idx, int32_t bits)
+{
+    vsetsc(d, 1, 1, table, idx, bits);
+}
+
+void SETCTXR(delta_state *d, int32_t *table, uint8_t idx, int32_t bits)
+{
+    vsetsc(d, 0, 1, table, idx, bits);
 }
 
 /* Can a timing pointer take a context? One already flagged can, and
