@@ -52,8 +52,9 @@ class BreakCommand(_Command):
 
 
 class _Prosody(_Command):
-    def __init__(self, newValue):
+    def __init__(self, newValue, isDefault=False):
         self.newValue = newValue
+        self.isDefault = isDefault
 
 
 class PitchCommand(_Prosody):
@@ -280,6 +281,9 @@ class FakeEngine:
 
     # The names the driver posts. They are never run; posting records them.
     def addText(self, text):
+        pass
+
+    def synthesizePart(self, expectAudio=True):
         pass
 
     def index(self, n):
@@ -534,6 +538,84 @@ def main():
     d._engine.kinds = []
     d.speak(["a sentence"])
     check("and an utterance still goes as speech", d._engine.kinds, [])
+
+    # ---- long text is handed over in pieces ----------------------------
+    #
+    # The engine cannot be interrupted, so asking for silence means waiting
+    # out the utterance in flight. Whole, a long chat message costs the best
+    # part of a second and a half on this engine, and every item a reader
+    # arrows onto inside that wait says nothing at all. In pieces the wait is
+    # one piece.
+
+    d._engine.calls = []
+    d.speak(["Richard Loyie, I told him, Sent at 12:32"])
+    check("a line of a list is one piece, as it always was",
+          [name for name, *_ in d._engine.calls], ["addText", "synthesize"])
+
+    long_text = "Hello everyone, TableEx 3.2.0 is here. " * 8
+    d._engine.calls = []
+    d.speak([long_text])
+    names = [name for name, *_ in d._engine.calls]
+    check("a long message is handed over in more than one piece",
+          names.count("synthesize") + names.count("synthesizePart") > 1, True)
+    check("every piece but the last is a part", names.count("synthesize"), 1)
+    check("and the last one is the whole utterance's end", names[-1], "synthesize")
+
+    said = b"".join(
+        args[0] for name, *args in d._engine.calls if name == "addText"
+    )
+    check("the split changes no word of the text",
+          said.decode("utf-8").split(), long_text.split())
+
+    # Splitting inside a word would have the engine speak two fragments.
+    # Boundaries therefore carry their following whitespace with them.
+    parts = [args[0] for name, *args in d._engine.calls if name == "addText"]
+    check("no piece begins or ends inside a word",
+          [p for p in parts if p[:1].isalnum() and p[-1:].isalnum()], [])
+
+    check("a version number is not mistaken for the end of a sentence",
+          [p for p in parts if p.rstrip().endswith(b"3.2.0")], [])
+
+    # Sentence ends cost no extra silence: the engine already ends its clause
+    # there. A stretch without one is allowed to grow much larger before the
+    # whitespace fallback keeps it bounded.
+    no_sentence = "word " * 120
+    d._engine.calls = []
+    d.speak([no_sentence])
+    no_sentence_parts = [
+        args[0] for name, *args in d._engine.calls if name == "addText"
+    ]
+    check("an unpunctuated stretch falls back to whitespace past the cap",
+          len(no_sentence_parts) > 1, True)
+    check("and it is not cut at the old eighty-character limit",
+          len(no_sentence_parts[0]) > 80, True)
+
+    # A cancel drops whole queue items. A spelling or prosody restore must
+    # therefore remain in the same item as the command that opened it.
+    d._engine.calls = []
+    d.speak([
+        CharacterModeCommand(True),
+        "spelled words. " * 60,
+        CharacterModeCommand(False),
+    ])
+    check("spelling kept open refuses every boundary",
+          [name for name, *_ in d._engine.calls].count("synthesizePart"), 0)
+
+    d._engine.calls = []
+    d.speak([
+        PitchCommand(80),
+        "raised words. " * 60,
+        PitchCommand(50, isDefault=True),
+    ])
+    check("prosody kept open refuses every boundary",
+          [name for name, *_ in d._engine.calls].count("synthesizePart"), 0)
+
+    # A sequence of nothing but commands still has to reach the engine, or
+    # whatever waits on it waits for ever.
+    d._engine.calls = []
+    d.speak([IndexCommand(9)])
+    check("an utterance of nothing but an index still ends in a synthesize",
+          [name for name, *_ in d._engine.calls][-1], "synthesize")
 
     # ---- and the same driver over a library with two languages in it ----
     #
