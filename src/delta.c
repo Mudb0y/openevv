@@ -666,6 +666,15 @@ void SETONESTM(delta_node *t)     { t->link |= 1; }
 void SETALLNSQ(delta_node *t)     { t->link |= 2; }
 void SETNONSEQ(delta_node *t)     { t->flags8 |= 2; }
 void CLRONESTM(delta_node *t)     { t->link &= ~1; }
+
+/* Two more of the same, and one that answers what a statement type is
+   called. CLRNONSEQ clears the bit its neighbours set; TVFLDS hands back
+   what it was given, which is what the original does -- the fields of a
+   timing statement start where the statement does, where an ordinary one's
+   start eight bytes in. */
+void CLRNONSEQ(delta_node *t)     { t->flags8 &= ~2; }
+void *TVFLDS(void *p)             { return p; }
+const char *streamName(int8_t st) { return vstmtbl[st].name; }
 void CLRALLNSQ(delta_node *t)     { t->link &= ~2; }
 
 void bsclear(delta_state *d)

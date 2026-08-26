@@ -15,6 +15,7 @@
  */
 
 #include <stdint.h>
+#include <stdlib.h>
 #include "delta.h"
 #include "delta_rules_c.h"
 
@@ -46,6 +47,54 @@ void ccode_misc_new(delta_state *d)
 
 void ccode_misc_delete(void)
 {
+}
+
+/* The command language's own operations, which this engine never runs.
+ *
+ * Delta is two languages in one object: the rules, which is what a voice is
+ * written in, and a command script that drives the machine from outside. The
+ * engine is the library case, where the commands come through the ECI
+ * interface instead, so every one of these is empty in the original -- not
+ * stubbed by us, empty where IBM compiled it, which is why they take no
+ * arguments here. A body that reads none cannot say how many its callers
+ * push, and cdecl does not mind; a rule of ours that calls one with more
+ * will need the declaration widened, and that is the moment to look at the
+ * object again.
+ *
+ * The two that are not empty are the two ways a script stops, and both of
+ * them end the process. That is the original's doing and it is worth knowing
+ * before anything calls one: in a library the process is the host's, so
+ * halting a script would take the caller's program down with it. The same is
+ * true of vcmdend above, and is said there too.
+ */
+void noop1(delta_state *d)       { (void)d; }
+void code_end(delta_state *d)    { (void)d; }
+void goto_1(delta_state *d)      { (void)d; }
+void c_code(delta_state *d)      { (void)d; }
+void call(delta_state *d)        { (void)d; }
+void call2(delta_state *d)       { (void)d; }
+void execcmd(delta_state *d)     { (void)d; }
+void startcmd(delta_state *d)    { (void)d; }
+void startstmt(delta_state *d)   { (void)d; }
+void startstmt_e(delta_state *d) { (void)d; }
+void startstmt_l(delta_state *d) { (void)d; }
+void tag(delta_state *d)         { (void)d; }
+void tag_e(delta_state *d)       { (void)d; }
+void tag_l(delta_state *d)       { (void)d; }
+void nullines(delta_state *d)    { (void)d; }
+void nullines_l(delta_state *d)  { (void)d; }
+void fail(delta_state *d)        { (void)d; }
+
+void halt(delta_state *d)
+{
+    (void)d;
+    exit(0);
+}
+
+void abort_1(delta_state *d)
+{
+    (void)d;
+    exit(5);
 }
 
 /* Starting the machine when it is a library rather than a program. The

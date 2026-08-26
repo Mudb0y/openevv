@@ -106,6 +106,9 @@ extern int forto_adv_over_r(delta_state *d, int16_t tag, int16_t loop,
 extern int for_cont_from(delta_state *d, int16_t tag, int16_t loop,
                          int32_t unused, delta_loc *dst,
                          const delta_loc *src);
+extern void CLRNONSEQ(delta_node *t);
+extern void *TVFLDS(void *p);
+extern const char *streamName(int8_t st);
 extern void SETCTXL(delta_state *d, int32_t *table, uint8_t idx,
                     int32_t bits);
 extern void SETCTXR(delta_state *d, int32_t *table, uint8_t idx,
@@ -921,6 +924,33 @@ int main(void)
                         printf(" %c", ch);
                 printf("\n");
             }
+        }
+
+        /* What each statement type is called, which is the language's own
+           word for it and therefore the plainest content in this file. */
+        printf("%-16s ->", "names");
+        for (i = 0; i < 10; i++)
+            printf(" %s", streamName((int8_t)i));
+        printf("\n");
+
+        /* The two accessors beside it: one clears a bit in a node and the
+           other hands back what it was given. The node used is the token
+           the rules left, and what is printed is its three own words before
+           and after -- content, since a node's flags are not addresses. */
+        {
+            delta_node *t = (delta_node *)(intptr_t)tok->value;
+
+            /* The link word is a pointer with two flag bits at the bottom,
+               so only the bits are printed: the rest is one process's own
+               address and would differ for that reason alone. */
+            printf("%-16s -> %08x %d %08x", "clrnonseq",
+                   (unsigned)t->flags0, (int)(t->link & 3),
+                   (unsigned)t->flags8);
+            CLRNONSEQ(t);
+            printf(" then %08x %d %08x  tvflds %d\n",
+                   (unsigned)t->flags0, (int)(t->link & 3),
+                   (unsigned)t->flags8,
+                   (int)((char *)TVFLDS(t) - (char *)t));
         }
 
         printf("%-16s ->", "nfields");
