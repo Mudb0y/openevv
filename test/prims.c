@@ -93,6 +93,19 @@ extern void gencur_timestm(delta_state *d, uint8_t when);
 extern void gencur_params(delta_state *d, uint8_t count, uint8_t n,
                           const uint8_t *str);
 extern int32_t gen_copy(delta_state *d);
+extern int forall_adv_over_l(delta_state *d, int16_t tag, int16_t loop,
+                             int16_t bound, uint8_t f, delta_token *tok);
+extern int forall_adv_upto_l(delta_state *d, int16_t tag, int16_t loop,
+                             int16_t bound, uint8_t f, delta_token *tok);
+extern int forto_adv_over_l(delta_state *d, int16_t tag, int16_t loop,
+                            int16_t bound, uint8_t f, delta_token *tok,
+                            const delta_token *end);
+extern int forto_adv_over_r(delta_state *d, int16_t tag, int16_t loop,
+                            int16_t bound, uint8_t f, delta_token *tok,
+                            const delta_token *end);
+extern int for_cont_from(delta_state *d, int16_t tag, int16_t loop,
+                         int32_t unused, delta_loc *dst,
+                         const delta_loc *src);
 extern void SETCTXL(delta_state *d, int32_t *table, uint8_t idx,
                     int32_t bits);
 extern void SETCTXR(delta_state *d, int32_t *table, uint8_t idx,
@@ -959,6 +972,84 @@ int main(void)
            a harness that cannot get past the fault can settle. The guards
            are transcribed and read, and what they call was ported long ago
            and is exercised by every case in the suite. */
+    }
+
+    /* The four walks over a run of tokens, and the second name the machine
+       has for continuing one. What is compared is what each answered and
+       what it left the scan holding; where a loop leaves its token is a
+       position, so it is said as a landmark. The spine here is two nodes,
+       so a walk has little room; three of the four start and the fourth
+       does not, and both engines say the same about each.
+
+       What is not shown here is the difference between stopping at the far
+       end and stepping over it: on a spine this short the second look finds
+       what the first did, so putting one spelling's body under the other's
+       name changes nothing. Running these after the inserts would give a
+       longer spine, and there one of them does not come back at all -- so
+       the harness asks them on the short one, and the mirror they are of a
+       ported pair is two lines wide. */
+    {
+        const delta_token *tok = (const delta_token *)((const char *)d + 748);
+        delta_stack *s = EVV_AT(delta_stack *, d->stack);
+        delta_token *out = calloc(1, sizeof *out);
+        delta_token *end = calloc(1, sizeof *end);
+        int32_t where[3];
+        int k;
+
+        if (out == NULL || end == NULL)
+            return 1;
+
+        where[0] = tok->value;
+        where[1] = s->spine_l;
+        where[2] = s->spine_r;
+        end->value = s->spine_r;
+
+        for (k = 0; k < 4; k++) {
+            int rc;
+
+            /* The token is where the loop starts as well as where it
+               reports back, so it has to name a position for the walk to
+               begin at all. */
+            out->value = tok->value;
+            lpta_loadp(d, tok);
+            if (setscan_l(d, 1)) {
+                printf("%-16s %d -> no scan\n", "loop", k);
+                continue;
+            }
+
+            switch (k) {
+            case 0: rc = forall_adv_over_l(d, 3, 4, 5, 1, out); break;
+            case 1: rc = forall_adv_upto_l(d, 3, 4, 5, 1, out); break;
+            case 2: rc = forto_adv_over_l(d, 3, 4, 5, 1, out, end); break;
+            default: rc = forto_adv_over_r(d, 3, 4, 5, 1, out, end); break;
+            }
+
+            printf("%-16s %d -> %d  scan %d %d  tok %s  tags %d %d\n",
+                   "loop", k, rc, (int)vars->scan_field, (int)vars->scan_rev,
+                   landmark(out->value, where), (int)vars->loop_tag,
+                   (int)vars->test_tag);
+        }
+
+        /* And the two names for continuing from a value, which are the same
+           bytes in the original. */
+        {
+            delta_loc *dst = calloc(1, sizeof *dst);
+            delta_loc *src = calloc(1, sizeof *src);
+
+            if (dst == NULL || src == NULL)
+                return 1;
+
+            dst->kind = DK_LONG;
+            dst->field = -1;
+            dst->value = 0;
+            src->kind = DK_LONG;
+            src->field = -1;
+            src->value = 0x9876;
+
+            printf("%-16s -> %d %d %d\n", "cont_from",
+                   for_cont_from(d, 7, 8, 0, dst, src),
+                   (int)dst->value, (int)vars->loop_tag);
+        }
     }
 
     /* Collecting a frame. The three parts arrive one at a time and each

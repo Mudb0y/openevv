@@ -1963,6 +1963,14 @@ int forall_cont_from(delta_state *d, int16_t tag, int16_t loop,
     return 2;
 }
 
+/* And the same body under a second name, which is what the original has:
+   for_cont_from and forall_cont_from are the same bytes. */
+int for_cont_from(delta_state *d, int16_t tag, int16_t loop, int32_t unused,
+                  delta_loc *dst, const delta_loc *src)
+{
+    return forall_cont_from(d, tag, loop, unused, dst, src);
+}
+
 /* A context record naming what is being tried, then a copy of where the scan
    had got to. Anything that may have to be unwound pushes this pair. */
 static void push_ca_and_scan(delta_state *d, int16_t tag)
@@ -6683,6 +6691,117 @@ int forall_adv_upto_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
     d->unknown_3c = bound;
     tok->value = v->scan_ptr;
     return 2;
+}
+
+/* The same four walks leftwards rather than rightwards.
+ *
+ * A loop over a run of tokens comes in four spellings: whether it stops at
+ * the far end or steps over it, and which way it walks. This tree had the
+ * two that walk right and one of the two that walk to a marker, because
+ * those are the ones the nine languages IBM shipped use; these are their
+ * mirrors, and the mirror is two lines -- which way the scan is told it is
+ * going, and which of a node's two link words the peek reads.
+ */
+static int forall_adv_leftwards(delta_state *d, int16_t tag, int16_t loop,
+                                int16_t bound, uint8_t f, delta_token *tok,
+                                int twice)
+{
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
+    int32_t nx;
+
+    if (!for_loop_preamble(d, tag, loop, f, tok))
+        return 1;
+
+    v->scan_rev = 0;
+
+    vscanadvUptoToken(d, 0);
+
+    nx = scan_back(d);
+    if (nx == 0)
+        return 0;
+    if ((*(const int32_t *)(intptr_t)nx & 2) != 0)
+        return 0;
+
+    if (!vscanadv(d, 1, 0))
+        return 0;
+
+    if (twice) {
+        vscanadvUptoToken(d, 0);
+
+        nx = scan_back(d);
+        if (nx == 0)
+            return 0;
+        if ((*(const int32_t *)(intptr_t)nx & 2) != 0)
+            return 0;
+    }
+
+    clearDeltaStackBack(d);
+    EVV_AT(delta_stack *, d->stack)->unknown_9c = 0;
+    v->testing = 1;
+    d->unknown_3c = bound;
+    tok->value = v->scan_ptr;
+    return 2;
+}
+
+int forall_adv_over_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
+                      uint8_t f, delta_token *tok)
+{
+    return forall_adv_leftwards(d, tag, loop, bound, f, tok, 0);
+}
+
+int forall_adv_upto_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
+                      uint8_t f, delta_token *tok)
+{
+    return forall_adv_leftwards(d, tag, loop, bound, f, tok, 1);
+}
+
+/* And the two that step over the far end while walking to a marker, which
+   is forto_adv_upto_l without its second look. */
+static int forto_adv_over(delta_state *d, int16_t tag, int16_t loop,
+                          int16_t bound, uint8_t f, delta_token *tok,
+                          const delta_token *end, int rev)
+{
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
+    int32_t nx;
+
+    if (!for_loop_preamble(d, tag, loop, f, tok))
+        return 1;
+
+    v->scan_rev = (uint8_t)rev;
+
+    vscanadvUptoTokenOrMarker(d, end->value, 0);
+    if (v->scan_ptr == end->value)
+        return 0;
+
+    nx = rev ? scan_here(d) : scan_back(d);
+    if (nx == 0)
+        return 0;
+    if ((*(const int32_t *)(intptr_t)nx & 2) != 0)
+        return 0;
+
+    if (!vscanadv(d, 1, 0))
+        return 0;
+    if (v->scan_ptr == end->value)
+        return 0;
+
+    clearDeltaStackBack(d);
+    EVV_AT(delta_stack *, d->stack)->unknown_9c = 0;
+    v->testing = 1;
+    d->unknown_3c = bound;
+    tok->value = v->scan_ptr;
+    return 2;
+}
+
+int forto_adv_over_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
+                     uint8_t f, delta_token *tok, const delta_token *end)
+{
+    return forto_adv_over(d, tag, loop, bound, f, tok, end, 0);
+}
+
+int forto_adv_over_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
+                     uint8_t f, delta_token *tok, const delta_token *end)
+{
+    return forto_adv_over(d, tag, loop, bound, f, tok, end, 1);
 }
 
 /* Insert a statement of a given type carrying a variable's value. A

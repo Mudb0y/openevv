@@ -912,6 +912,18 @@ int  forall_adv_over_r(delta_state *d, int16_t tag, int16_t loop,
                        int16_t bound, uint8_t f, delta_token *tok);
 int  forall_adv_upto_r(delta_state *d, int16_t tag, int16_t loop,
                        int16_t bound, uint8_t f, delta_token *tok);
+int  forall_adv_over_l(delta_state *d, int16_t tag, int16_t loop,
+                       int16_t bound, uint8_t f, delta_token *tok);
+int  forall_adv_upto_l(delta_state *d, int16_t tag, int16_t loop,
+                       int16_t bound, uint8_t f, delta_token *tok);
+int  forto_adv_over_l(delta_state *d, int16_t tag, int16_t loop,
+                      int16_t bound, uint8_t f, delta_token *tok,
+                      const delta_token *end);
+int  forto_adv_over_r(delta_state *d, int16_t tag, int16_t loop,
+                      int16_t bound, uint8_t f, delta_token *tok,
+                      const delta_token *end);
+int  for_cont_from(delta_state *d, int16_t tag, int16_t loop, int32_t unused,
+                   delta_loc *dst, const delta_loc *src);
 void insert_lv(delta_state *d, uint8_t st, delta_loc *loc, uint8_t mode);
 int  vtstctx_tv(delta_state *d, delta_tpos *p, int32_t back);
 int  lpta_tstctxtl(delta_state *d, uint8_t f);
