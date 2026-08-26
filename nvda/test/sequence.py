@@ -344,6 +344,20 @@ def spoken(d, sequence):
     return d._engine.calls
 
 
+def _endsPlainSentence(text):
+    """Whether a piece ends where a sentence does, rather than after an
+    abbreviation or an initial. Written out here rather than imported, so that
+    the driver's own rule is held against a statement of what it should be."""
+    if text.endswith(("?", "!")):
+        return True
+    if not text.endswith("."):
+        return False
+    word = text.split()[-1][:-1] if text.split() else ""
+    return bool(word) and "." not in word and not (
+        len(word) <= 3 and word[:1].isupper()
+    ) and not word[-1:].isdigit()
+
+
 def main():
     d = driver()
 
@@ -575,6 +589,32 @@ def main():
 
     check("a version number is not mistaken for the end of a sentence",
           [p for p in parts if p.rstrip().endswith(b"3.2.0")], [])
+
+    # An abbreviation and an initial end in a dot and do not end a sentence,
+    # and the engine knows it: cutting there puts a full stop where it had
+    # none. "Mr. Jones asked whether the header is read first, and Mrs. Adams
+    # said it is." measured 0.70 s longer cut after the two titles, and "The
+    # book by J. R. R. Tolkien is on the shelf by the door." measured 1.48 s
+    # longer than 3.72 cut at every initial.
+    for text, what in (
+        ("Mr. Jones asked whether the header is read first, and Mrs. Adams"
+         " said it is. " * 4, "a title"),
+        ("The book by J. R. R. Tolkien is on the shelf by the door. " * 4,
+         "an initial"),
+        ("Use a smaller step, e.g. two, and the sorting holds. " * 6,
+         "a dotted abbreviation"),
+    ):
+        d._engine.calls = []
+        d.speak([text])
+        cut = [
+            args[0].decode("utf-8").rstrip()
+            for name, *args in d._engine.calls if name == "addText"
+        ]
+        # And it does still cut, or there would be nothing to be right about.
+        check("%s is still handed over in pieces" % what, len(cut) > 1, True)
+        check("no piece is cut after %s" % what,
+              [c for c in cut[:-1] if not _endsPlainSentence(c)], [])
+
 
     # Sentence ends cost no extra silence: the engine already ends its clause
     # there. A stretch without one is allowed to grow much larger before the

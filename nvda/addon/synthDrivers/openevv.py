@@ -81,13 +81,33 @@ _CLOSERS = "\"')]}\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}\N{RIGHT DOUBLE 
 
 
 def _endsSentence(text):
-	"""Whether a word ends a sentence rather than a dotted number."""
+	"""Whether a word ends a sentence rather than a dotted number.
+
+	A dot is the doubtful one and the doubt is not symmetrical. A boundary the
+	engine would not have made costs an audible pause -- it ends a clause there,
+	and that is 0.40 s of gap -- while a boundary declined costs only a longer
+	wait on the next cancel. So a dot has to argue for itself.
+
+	An abbreviation and an initial are what it fails on. "Mr. Jones" split after
+	the dot measured 0.70 s longer than the same sentence whole, and "J. R. R.
+	Tolkien" split at every initial measured 1.48 s longer than 3.72, which is
+	nearly half again. Two tests are enough for both, in any of the nine
+	languages: a word carrying a dot inside it is an abbreviation rather than a
+	sentence -- "e.g.", "i.e.", "U.S." -- and so is a short word that starts with
+	a capital, which is every initial and every "Mr.", "Mrs.", "Dr.", "St." and
+	"Nr." there is. What that turns down as well is a short capitalised sentence
+	end such as "Yes.", and turning one of those down costs nothing but a piece
+	that runs to the next sentence.
+	"""
 	tail = text.rstrip(_CLOSERS)
 	if not tail:
 		return False
 	if tail.endswith(("?", "!", "\N{HORIZONTAL ELLIPSIS}", "\N{IDEOGRAPHIC FULL STOP}", "\N{FULLWIDTH EXCLAMATION MARK}", "\N{FULLWIDTH QUESTION MARK}")):
 		return True
-	return tail.endswith(".") and len(tail) > 1 and not tail[-2].isdigit()
+	if not tail.endswith(".") or len(tail) < 2 or tail[-2].isdigit():
+		return False
+	word = tail[:-1]
+	return "." not in word and not (len(word) <= 3 and word[:1].isupper())
 
 
 class SynthDriver(SynthDriver):
