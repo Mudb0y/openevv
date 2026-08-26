@@ -564,6 +564,11 @@ void SETNONSEQ(delta_node *t);
 void CLRONESTM(delta_node *t);
 void CLRALLNSQ(delta_node *t);
 void CLRNONSEQ(delta_node *t);
+int  visnonseq(delta_state *d, uint8_t f, int32_t l, int32_t r);
+int  vmergable(delta_state *d, int32_t l, int32_t r);
+int  insert_2pt(delta_state *d, uint8_t f, uint8_t n, const uint8_t *str,
+                uint8_t mode);
+int32_t merge(delta_state *d);
 void *TVFLDS(void *p);
 const char *streamName(int8_t st);
 void noop1(delta_state *d);

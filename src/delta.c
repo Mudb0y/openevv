@@ -673,6 +673,52 @@ void CLRONESTM(delta_node *t)     { t->link &= ~1; }
    timing statement start where the statement does, where an ordinary one's
    start eight bytes in. */
 void CLRNONSEQ(delta_node *t)     { t->flags8 &= ~2; }
+
+/* Whether the run between two nodes is anything but a plain sequence.
+ *
+ * It is, if some field other than the one being worked in has a mark at both
+ * ends and the left one's mark does not lead straight to the right one --
+ * which means something else is threaded through the run and an insert has
+ * to be told so. */
+int visnonseq(delta_state *d, uint8_t f, int32_t l, int32_t r)
+{
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
+    int8_t  i;
+
+    for (i = 0; i < d->nstmts; i++) {
+        if (i == (int8_t)f)
+            continue;
+        if ((*(const int32_t *)(intptr_t)(l + (base + i) * 4) & 1) == 0)
+            continue;
+        if ((*(const int32_t *)(intptr_t)(r + (base + i) * 4) & 1) == 0)
+            continue;
+        if (VRSYNC(d, (const int32_t *)(intptr_t)l, i) == r)
+            continue;
+
+        return 1;
+    }
+
+    return 0;
+}
+
+/* Whether two marks may be joined. Anything may when the machine is not
+   looking both ways, and a mark may always be joined with itself; what may
+   not is the pair that are the two ends of the spine, in either order,
+   since joining those would leave nothing to hold. */
+int vmergable(delta_state *d, int32_t l, int32_t r)
+{
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+
+    if (EVV_AT(delta_vars *, d->vars)->ctx_both == 0 || l == r)
+        return 1;
+
+    if (l == s->spine_l && r == s->spine_r)
+        return 0;
+    if (l == s->spine_r && r == s->spine_l)
+        return 0;
+
+    return 1;
+}
 void *TVFLDS(void *p)             { return p; }
 const char *streamName(int8_t st) { return vstmtbl[st].name; }
 void CLRALLNSQ(delta_node *t)     { t->link &= ~2; }
@@ -4469,6 +4515,40 @@ int insert_2pt_s(delta_state *d, uint8_t f, uint8_t n, const uint8_t *str,
 
     ins_tokens_s(d, f, str, n, 0);
     return 0;
+}
+
+/* The insert a rule writes when the string is bytes and the range may have
+   something else threaded through it: what visnonseq answers is handed to
+   the language's own inserter, which is what tells it to keep whatever is
+   there rather than lay the tokens down flat. */
+int insert_2pt(delta_state *d, uint8_t f, uint8_t n, const uint8_t *str,
+               uint8_t mode)
+{
+    int32_t arg;
+
+    if (vrange_2pt(d, &d->lpta, &d->rpta, (int8_t)f, mode))
+        return 1;
+
+    arg = visnonseq(d, f, d->lpta.node, d->rpta.node);
+
+    if (!ins_tokens(d, (int8_t)f, str, n, arg))
+        return 0xf5;
+
+    return 0;
+}
+
+/* Join the marks the two registers name. Both have to be marks, and the
+   pair has to be one the machine allows; either way it is a fault rather
+   than an answer, so the rule backtracks. */
+int32_t merge(delta_state *d)
+{
+    if (!vsync_tv(d, &d->lpta) || !vsync_tv(d, &d->rpta))
+        forceErrorBacktrack(d);
+
+    if (!vmergable(d, d->lpta.node, d->rpta.node))
+        forceErrorBacktrack(d);
+
+    return vmerge(d, d->lpta.node, d->rpta.node);
 }
 
 int insert_2pt_l(delta_state *d, uint8_t f, uint8_t n, const uint8_t *str,

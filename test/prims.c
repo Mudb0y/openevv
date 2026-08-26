@@ -109,6 +109,10 @@ extern int for_cont_from(delta_state *d, int16_t tag, int16_t loop,
 extern void CLRNONSEQ(delta_node *t);
 extern void *TVFLDS(void *p);
 extern const char *streamName(int8_t st);
+extern int visnonseq(delta_state *d, uint8_t f, int32_t l, int32_t r);
+extern int vmergable(delta_state *d, int32_t l, int32_t r);
+extern int insert_2pt(delta_state *d, uint8_t f, uint8_t n,
+                      const uint8_t *str, uint8_t mode);
 extern void SETCTXL(delta_state *d, int32_t *table, uint8_t idx,
                     int32_t bits);
 extern void SETCTXR(delta_state *d, int32_t *table, uint8_t idx,
@@ -928,6 +932,38 @@ int main(void)
 
         /* What each statement type is called, which is the language's own
            word for it and therefore the plainest content in this file. */
+        /* Whether a run is a plain sequence, and whether two marks may be
+           joined. Both answer yes or no over the positions the harness has,
+           and the second is asked about every pair of them because the pair
+           it refuses is the spine's own two ends. merge itself is not asked:
+           it backtracks on a refusal, and a backtrack wants a rule under it
+           that this harness does not have. */
+        {
+            int32_t both = vars->ctx_both;
+            int k;
+
+            /* Twice: once as the machine stands, and once with it looking
+               both ways, which is the only state in which two marks are
+               ever refused. */
+            for (k = 0; k < 2; k++) {
+                vars->ctx_both = k;
+
+                for (i = 0; i < 3; i++)
+                    for (j = 0; j < 3; j++) {
+                        int f;
+
+                        printf("%-16s %d %d %d ->", "nonseq", k, i, j);
+                        for (f = 0; f < 3; f++)
+                            printf(" %d", visnonseq(d, (uint8_t)f, where[i],
+                                                    where[j]));
+                        printf("  mergable %d\n",
+                               vmergable(d, where[i], where[j]));
+                    }
+            }
+
+            vars->ctx_both = both;
+        }
+
         printf("%-16s ->", "names");
         for (i = 0; i < 10; i++)
             printf(" %s", streamName((int8_t)i));
