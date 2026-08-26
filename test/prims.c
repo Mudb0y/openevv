@@ -11,9 +11,10 @@
  * is compiled twice: once against our engine, and once against IBM's own
  * objects, which define these under plain C names. Both print the same lines
  * for the same table of cases, and `test/prims.sh' diffs them. What is being
- * compared is the byte pattern the call leaves behind, eight bytes of it, so
- * that a primitive writing four bytes where the original wrote two is a
- * difference rather than a coincidence.
+ * compared is what the call leaves behind -- eight bytes of an operand,
+ * sixteen of each pointer register, the records it pushed -- so that a
+ * primitive writing four bytes where the original wrote two is a difference
+ * rather than a coincidence.
  *
  * Two families of case are left out because both engines fault on them
  * identically and the fault is the answer: a division by nought, which the
@@ -22,6 +23,26 @@
  *
  * vadd is in the table although it was ported long ago. It is the control:
  * if it differed, the harness would be what is wrong.
+ *
+ * The machine these are called on is a real one with a sentence in it, and
+ * both sides build it the same way: delta_new, the command layer, the
+ * streams, the language's own start rule, the text handed to the link and
+ * read in. Every one of those is IBM's name and is in its objects too, which
+ * is what lets one file drive both, and every step of it answers the same on
+ * the two sides -- which is what says they are the same machine rather than
+ * two similar ones. The variable block, the owner, the stack and the name
+ * stack are the engine's own throughout.
+ *
+ * What is on that spine is compared without being decoded. A record holds one
+ * code per character of the alphabet its statement type declares, and the
+ * alphabet is the language's, so rather than spell it out the harness offers
+ * every code to the string test and prints the ones that match. Two machines
+ * holding the same sentence answer with the same codes, and nothing here has
+ * to know what a code means.
+ *
+ * Where a call answers with a position rather than a number, what is printed
+ * is which landmark it came back as. An address is one process's own; which
+ * of the places the harness knows it is comes out the same in both.
  */
 
 #include <stdint.h>
@@ -30,15 +51,63 @@
 #include <string.h>
 
 #include "delta.h"
+#include "eci_eloqc.h"
 
 /* The one place the two builds are not the same source. A language's tables
    are plain globals in IBM's build, linked in and reachable with no setup at
    all; in ours a build may carry several languages and every table is reached
    through whichever is in force, so ours has to say which before a primitive
-   that asks the statement table is called. The machine itself is bare memory
-   on both sides. */
+   that asks the statement table is called. Everything else in this file is
+   the same source on both sides. */
 #ifdef EVV_PRIMS_OURS
 #include "delta_lang.h"
+#endif
+
+/* What every front end calls before anything else: the static initialisers
+   Microsoft's runtime used to walk. IBM's objects want them and so does
+   ours. */
+void evvRunStaticInitialisers(void);
+
+/* The stream and context calls. Nothing in access.obj is declared in a
+   header on either side -- its callers say extern where they use it, which
+   is what the engine's own files do -- so the harness says it here. */
+extern int32_t num_fields_in_stream(int8_t st);
+extern int32_t left_context(delta_state *d, int8_t f, int32_t at);
+extern int32_t right_context(delta_state *d, int8_t f, int32_t at);
+extern int allow_left_ctxt(delta_state *d, int32_t at, int8_t f,
+                           int32_t stop);
+extern int allow_right_ctxt(delta_state *d, int32_t at, int8_t f,
+                            int32_t stop);
+extern int project_sync(delta_state *d, int32_t l, int8_t f, int32_t r,
+                        int32_t back);
+extern int divide_time(delta_state *d, uint8_t f, int32_t t, int16_t off);
+
+/* The machine, built the way the engine builds one, and the three calls the
+   engine makes before it can be spoken to. All of them are IBM's own names
+   and are in its objects too, which is what lets one file drive both. */
+extern delta_state *delta_new(void);
+extern int32_t etiwinMainDLL(delta_state *d, int32_t argc, char **argv);
+extern int32_t initializeIO(delta_state *d);
+
+/* Three of the language's rules, called by name. Ours carry the language in
+   front of them, because a build may have several languages in it and they
+   would otherwise collide; IBM's build has one language and no prefix. A
+   rule takes the machine as a plain word, which on this side goes through
+   the arena reference rather than a cast. */
+#ifdef EVV_PRIMS_OURS
+extern int32_t enus_DeltaProc_start(int32_t d);
+extern int32_t enus_reset_sent_vars(int32_t d);
+extern int32_t enus_get_tok(int32_t d);
+#define PROC_START(d)       enus_DeltaProc_start(EVV_REF(d))
+#define RESET_SENT_VARS(d)  enus_reset_sent_vars(EVV_REF(d))
+#define GET_TOK(d)          enus_get_tok(EVV_REF(d))
+#else
+extern int32_t DeltaProc_start(delta_state *d);
+extern int32_t reset_sent_vars(delta_state *d);
+extern int32_t get_tok(delta_state *d);
+#define PROC_START(d)       DeltaProc_start(d)
+#define RESET_SENT_VARS(d)  reset_sent_vars(d)
+#define GET_TOK(d)          get_tok(d)
 #endif
 
 /* Two operand cells, filled with a pattern that is not a plausible answer so
@@ -110,6 +179,21 @@ static void show_ptas(delta_state *d, const char *op, uint8_t left, uint8_t f,
 }
 
 
+/* Which of the places the harness knows a position came back as. An address
+   is one process's own; which landmark it is is the same in both. */
+static const char *landmark(int32_t p, const int32_t *where)
+{
+    if (p == 0)
+        return "none";
+    if (p == where[0])
+        return "token";
+    if (p == where[1])
+        return "left";
+    if (p == where[2])
+        return "right";
+    return "other";
+}
+
 static void operands(delta_operand *a, delta_operand *b, int16_t ka,
                      int16_t kb)
 {
@@ -163,14 +247,11 @@ static void binary(delta_state *d, const char *name,
 
 int main(void)
 {
-    /* Room for the named fields and a language's cells behind them; nothing
-       here runs a rule, so nought in all of it is a machine that answers. */
-    delta_state *d = calloc(1, 0x2000);
-    delta_vars *vars = calloc(1, 0x1400);
+    delta_state *d;
+    delta_vars  *vars;
     int i, j, x;
 
-    if (d == NULL || vars == NULL)
-        return 1;
+    evvRunStaticInitialisers();
 
 #ifdef EVV_PRIMS_OURS
     {
@@ -188,6 +269,40 @@ int main(void)
         delta_lang_set(l);
     }
 #endif
+
+    d = delta_new();
+    if (d == NULL) {
+        fprintf(stderr, "prims: the machine would not build\n");
+        return 2;
+    }
+    vars = EVV_AT(delta_vars *, d->vars);
+
+    /* And a sentence in it. The engine puts text in by starting the command
+       layer, opening the streams, running the language's start rule, handing
+       the text to the link and then letting the rules read it; the last of
+       those is get_tok, and stopping there is what leaves a spine with the
+       words on it and no synthesis done. Every step is the same call on both
+       sides, which is what makes the two machines comparable rather than
+       merely similar.
+
+       What is printed is what each step answered. A step that answered
+       differently would mean the machines had already parted company, and
+       every case after it would be reporting that rather than the primitive
+       under test. */
+    {
+        /* One step to a statement. Which order a compiler evaluates the
+           arguments of a call in is its own business, and these have to
+           happen in this order or there is no link to hand the text to. */
+        int32_t a1 = etiwinMainDLL(d, 0, 0);
+        int32_t a2 = initializeIO(d);
+        int32_t a3 = PROC_START(d);
+        int32_t a4 = eciLinkDataFromECI(ELOQ_MAINLINK(d), "ab cd. ");
+        int32_t a5 = RESET_SENT_VARS(d);
+        int32_t a6 = GET_TOK(d);
+
+        printf("%-16s -> %d %d %d %d %d %d\n", "setup",
+               (int)a1, (int)a2, (int)a3, (int)a4, (int)a5, (int)a6);
+    }
 
     binary(d, "vadd", vadd, 0);
     binary(d, "vsub", vsub, 0);
@@ -222,13 +337,7 @@ int main(void)
        room for IBM's offsets so that their write lands somewhere harmless. */
     {
         static const int8_t COMPARED[] = { -2, -1, 0, 1, 2 };
-        void *owner = calloc(1, 0x400);
         int n;
-
-        if (owner == NULL)
-            return 1;
-        d->vars = EVV_REF(vars);
-        d->owner = EVV_REF(owner);
 
         for (n = 0; n < 5; n++) {
             int c = COMPARED[n];
@@ -350,14 +459,22 @@ int main(void)
     {
         static const int32_t NV[] = { 0, 1, -1, 255, 256, 32767, -32768,
                                       65535, 70000, -70000 };
-        delta_stack *st = calloc(1, 0x1000);
-        uint8_t *names = calloc(1, 256);
+        delta_stack *st = EVV_AT(delta_stack *, d->stack);
+        int8_t was = st->names_depth;
+        uint8_t *names;
         int x, y, k;
 
-        if (st == NULL || names == NULL)
-            return 1;
-        st->names = EVV_REF(names);
-        d->stack = EVV_REF(st);
+        /* A machine that has never run a rule has no name stack yet -- it is
+           taken when the first rule needs one -- so the harness gives it the
+           one it would have had. Both sides do it the same way. */
+        if (st->names == 0) {
+            uint8_t *block = calloc(1, 256);
+
+            if (block == NULL)
+                return 1;
+            st->names = EVV_REF(block);
+        }
+        names = EVV_AT(uint8_t *, st->names);
 
         for (k = 0; k < 4; k++)
             for (x = 0; x < (int)(sizeof NV / sizeof NV[0]); x++)
@@ -393,6 +510,113 @@ int main(void)
         vars->unknown_11e8 = 0;
         printf("%-16s      -> %d %d\n", "back_nboa", back_nboa(d),
                (int)vars->unknown_11e8);
+
+        st->names_depth = was;
+    }
+
+    /* The spine, and what is on it.
+     *
+     * A rule reaches the token it is working on through the machine's own
+     * cell at 748 -- that is what the wrapper the lifted rules call does,
+     * `lpta_loadp' with the state plus 748 -- so the harness does the same
+     * and is positioned where a rule would be. Both sides use the number,
+     * because both machines are laid out the same way.
+     *
+     * What is on the spine cannot be read as text: a record holds one code
+     * per character in the alphabet its statement type declares, and the
+     * alphabet is the language's. So rather than decode it, every code is
+     * offered to the string test and the ones that match are printed. Two
+     * machines that hold the same sentence answer with the same codes, and
+     * nothing here has to know what the codes mean.
+     *
+     * This is the foundation the spine-walking primitives will stand on
+     * rather than a test of one: every call in it is ported already. What it
+     * proves is that the two machines are the same machine. */
+    {
+        const delta_token *tok = (const delta_token *)((const char *)d + 748);
+        int f, k, c;
+
+        for (f = 0; f < 3; f++) {
+            lpta_loadp(d, tok);
+            printf("%-16s %d -> %d\n", "setscan_l", f,
+                   setscan_l(d, (uint8_t)f));
+        }
+
+        for (k = 0; k < 10; k++) {
+            printf("%-16s %2d ->", "matches", k);
+            for (c = 0; c < 256; c++) {
+                uint8_t code = (uint8_t)c;
+
+                lpta_loadp(d, tok);
+                if (setscan_l(d, 1))
+                    continue;
+                if (test_string_s(d, (uint8_t)k, 1, &code) == 0)
+                    printf(" %d", c);
+            }
+            printf("\n");
+        }
+
+        /* And the same sweep through the two wide forms, which is what
+           proves them. A code is spelled across two bytes or four, sign
+           first, so the same character reached by a different route has to
+           answer the same way -- and a code the record does not hold has to
+           be refused by all three alike. The high half is swept as well as
+           the low, since that is the half a single byte cannot reach. */
+        for (k = 0; k < 10; k++) {
+            printf("%-16s %2d ->", "matches.l", k);
+            for (c = 0; c < 512; c++) {
+                uint8_t pair[2];
+
+                pair[0] = (uint8_t)(c >> 8);
+                pair[1] = (uint8_t)c;
+                lpta_loadp(d, tok);
+                if (setscan_l(d, 1))
+                    continue;
+                if (test_string_l(d, (uint8_t)k, 2, pair) == 0)
+                    printf(" %d", c);
+            }
+            printf("\n");
+        }
+
+        for (k = 0; k < 10; k++) {
+            printf("%-16s %2d ->", "matches.lng", k);
+            for (c = 0; c < 512; c++) {
+                uint8_t quad[4];
+
+                quad[0] = 0;
+                quad[1] = 0;
+                quad[2] = (uint8_t)(c >> 8);
+                quad[3] = (uint8_t)c;
+                lpta_loadp(d, tok);
+                if (setscan_l(d, 1))
+                    continue;
+                if (test_string_lng(d, (uint8_t)k, 4, quad) == 0)
+                    printf(" %d", c);
+            }
+            printf("\n");
+        }
+
+        /* A negative code, which is the sign bit rather than a large one, and
+           a two-token string, which is what makes the loop run twice. */
+        for (k = 0; k < 10; k++) {
+            uint8_t neg[2];
+            uint8_t two[4];
+            int r1, r2;
+
+            neg[0] = 0x80;
+            neg[1] = 65;
+            lpta_loadp(d, tok);
+            r1 = setscan_l(d, 1) ? -1 : test_string_l(d, (uint8_t)k, 2, neg);
+
+            two[0] = 0;
+            two[1] = 65;
+            two[2] = 0;
+            two[3] = 66;
+            lpta_loadp(d, tok);
+            r2 = setscan_l(d, 1) ? -1 : test_string_l(d, (uint8_t)k, 4, two);
+
+            printf("%-16s %2d -> %d %d\n", "wide.odds", k, r1, r2);
+        }
     }
 
     /* The type check is the one call here that reads the machine, and all it
@@ -416,6 +640,128 @@ int main(void)
                            (int)vcompareTypeCheck(d, &a, &b));
                 }
         }
+    }
+
+    /* The two that hold the scan where it stands, which are the last cases
+       here because they are the only ones that leave the machine somewhere
+       else: each pushes two records on the backtracking stack and one of them
+       holds the scan. What is compared is the answer, what the scan was left
+       holding, how far the stack moved -- a difference, since the addresses
+       themselves are each process's own -- and the fence marks. */
+    {
+        const delta_token *tok = (const delta_token *)((const char *)d + 748);
+        delta_stack *s = EVV_AT(delta_stack *, d->stack);
+        static const uint8_t CHARS[3] = { 0, 1, 2 };
+        int t;
+
+        for (t = 0; t < 6; t++) {
+            int32_t before = s->top;
+            int rc, i;
+
+            lpta_loadp(d, tok);
+            if (setscan_l(d, 1)) {
+                printf("%-16s %d -> no scan\n", "held", t);
+                continue;
+            }
+
+            switch (t) {
+            case 0:  rc = test_time(d, 0);                    break;
+            case 1:  rc = test_time(d, 4242);                 break;
+            case 2:  rc = test_time(d, -1);                   break;
+            case 3:  rc = test_fence(d, 7, 0, 0);             break;
+            case 4:  rc = test_fence(d, 8, 1, CHARS);         break;
+            default: rc = test_fence(d, 9, 3, CHARS);         break;
+            }
+
+            {
+                /* The two records the call left: the scan's own, and the
+                   context record above it carrying the tag. Their kinds and
+                   the tag are content rather than addresses, so they compare;
+                   the scan bytes beside them do not, and are left alone. */
+                const uint8_t *low = EVV_AT(const uint8_t *, s->top);
+                const delta_frame *scan = (const delta_frame *)low;
+                const delta_frame *ca =
+                    (const delta_frame *)(low + s->size_b0);
+
+                printf("%-16s %d -> %d  scan %d %d %d  stack %d"
+                       "  recs %d %d %d  marks",
+                       "held", t, rc, (int)vars->scan_field,
+                       (int)vars->scan_rev, (int)vars->scan_held,
+                       (int)(before - s->top),
+                       (int)scan->kind, (int)ca->kind, (int)ca->value);
+            }
+            for (i = 0; i < 12; i++)
+                printf(" %d",
+                       (int)EVV_AT(const uint8_t *, d->fence_marks)[i]);
+            printf("\n");
+        }
+    }
+
+    /* The stream and context calls, which are what a text rule reaches the
+       spine through. Three of them answer with a position rather than a
+       number, and a position is one process's address and not the other's,
+       so what is printed is which landmark it came back as: the node asked
+       about, one of the spine's two ends, or nothing. That is content, and
+       it compares. */
+    {
+        const delta_token *tok = (const delta_token *)((const char *)d + 748);
+        delta_stack *s = EVV_AT(delta_stack *, d->stack);
+        int32_t where[3];
+        int i, j, f;
+
+        where[0] = tok->value;
+        where[1] = s->spine_l;
+        where[2] = s->spine_r;
+
+        printf("%-16s ->", "nfields");
+        for (i = 0; i < 10; i++)
+            printf(" %d", (int)num_fields_in_stream((int8_t)i));
+        printf("\n");
+
+        /* Only the token, and only two fields. Two things are worth saying
+           plainly about how far this reaches. Asking the spine's ends about
+           a field they do not carry walks off the end of what is there, on
+           both sides alike, so the harness does not ask. And at the token
+           every field carries its mark, so both context calls answer with
+           the node they were given and the walk under them is not reached:
+           putting sync_to_right where sync_to_left belongs changes nothing
+           here, which was checked rather than assumed.
+
+           What that wants is a spine with statements on it, and get_tok
+           leaves two nodes rather than a sentence. Running the pipeline
+           through to the end would give one, and needs an output for the
+           samples to go to; that is the next piece of this harness rather
+           than something it does now. */
+        for (f = 0; f < 2; f++) {
+            int32_t l = left_context(d, (int8_t)f, where[0]);
+            int32_t r = right_context(d, (int8_t)f, where[0]);
+
+            printf("%-16s %d -> %s %s\n", "context", f,
+                   landmark(l, where), landmark(r, where));
+        }
+
+        for (j = 0; j < 3; j++)
+            for (f = 0; f < 2; f++)
+                printf("%-16s %d %d -> %d %d\n", "allow", j, f,
+                       allow_left_ctxt(d, where[0], (int8_t)f, where[j]),
+                       allow_right_ctxt(d, where[0], (int8_t)f, where[j]));
+
+        /* init_stream is not here. It tears a stream down and builds it
+           again, which on a machine with a sentence in it leaves nothing
+           for the next call to stand on -- both engines fall over the same
+           way, and a case that only shows they crash alike is not worth
+           the harness carrying it. Its body is two lines and is checked by
+           reading. */
+
+        /* Neither is project_sync nor divide_time, for a reason worth
+           writing down. Each of them is a guard and then a call into the
+           machine -- vproj_l, vproj_r, vsplit_time -- and the only positions
+           this harness has to offer are the ones the sentence left. IBM's
+           own vsplit_time faults on those where ours answers, so the two
+           cannot be compared there; which of them is right is not something
+           a harness that cannot get past the fault can settle. The guards
+           are transcribed and read, and what they call was ported long ago
+           and is exercised by every case in the suite. */
     }
 
     return 0;

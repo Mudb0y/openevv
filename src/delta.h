@@ -484,6 +484,8 @@ int  testgt(delta_state *d);
 int  testge(delta_state *d);
 int  testlt(delta_state *d);
 int  testle(delta_state *d);
+int  test_time(delta_state *d, int16_t tag);
+int  test_fence(delta_state *d, int16_t tag, uint8_t n, const uint8_t *chars);
 int  test_eof(delta_state *d, int32_t lf);
 int  test_hasval(delta_state *d);
 
@@ -584,6 +586,10 @@ int  get_parm(delta_state *d, delta_loc *out, delta_loc *loc, int16_t kind);
 int  test_synch(delta_state *d, int16_t tag, uint8_t n, const uint8_t *list);
 int  test_string_i(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str);
 int  test_string_s(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str);
+int  test_string_l(delta_state *d, uint8_t st, uint8_t n,
+                   const uint8_t *str);
+int  test_string_lng(delta_state *d, uint8_t st, uint8_t n,
+                     const uint8_t *str);
 int32_t ctxlook(delta_state *d, int32_t t, uint8_t f, int32_t right);
 
 int vnormalize(delta_state *d, delta_tpos *p);

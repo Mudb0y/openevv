@@ -189,6 +189,106 @@ int32_t sync_to_right(delta_state *d, int8_t f, int32_t at)
     return VRSYNC(d, NODE(at), f);
 }
 
+/* How many fields a statement type declares. The table says; this is the
+   name the outside asks by. */
+int32_t num_fields_in_stream(int8_t st)
+{
+    return vstmtbl[st].nfields;
+}
+
+/* Where a context begins, either side. A node that already carries the
+   field is its own context; otherwise it is the mark next to it. The two
+   differ in nothing but which way they look. */
+int32_t left_context(delta_state *d, int8_t f, int32_t at)
+{
+    if ((NODE(at)[EVV_AT(delta_vars *, d->vars)->fence_base + f] & 1) != 0)
+        return at;
+    return sync_to_left(d, f, at);
+}
+
+int32_t right_context(delta_state *d, int8_t f, int32_t at)
+{
+    if ((NODE(at)[EVV_AT(delta_vars *, d->vars)->fence_base + f] & 1) != 0)
+        return at;
+    return sync_to_right(d, f, at);
+}
+
+/* Whether a context may be taken from here to there: every step of the way
+   has to be a mark in the field, and the walk stops when it arrives. A node
+   that does not carry the field at all is allowed, since there is no context
+   to be wrong about.
+
+   The two are one body in the original as well as here. Reading the right
+   one expecting the mirror of the left is the mistake to guard against: it
+   follows the same word of the node as the left one does, and this is not a
+   transcription slip but what its own code says. */
+static int allow_ctxt(delta_state *d, int32_t at, int8_t f, int32_t stop)
+{
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
+
+    if (at == stop)
+        return 1;
+    if ((NODE(at)[base + f] & 1) == 0)
+        return 1;
+
+    for (;;) {
+        int32_t next;
+
+        if (at == stop)
+            return 1;
+
+        next = NODE(at)[base + f] & LINK_MASK;
+        if (next == 0)
+            return 0;
+        if ((*NODE(next) & IS_SYNC) == 0)
+            return 0;
+
+        at = next;
+    }
+}
+
+int allow_left_ctxt(delta_state *d, int32_t at, int8_t f, int32_t stop)
+{
+    return allow_ctxt(d, at, f, stop);
+}
+
+int allow_right_ctxt(delta_state *d, int32_t at, int8_t f, int32_t stop)
+{
+    return allow_ctxt(d, at, f, stop);
+}
+
+/* Two the outside asks for as yes or no where the machine answers with a
+   number. */
+int init_stream(delta_state *d, int8_t f)
+{
+    return vinit_stm(d, f) != 0;
+}
+
+int divide_time(delta_state *d, uint8_t f, int32_t t, int16_t off)
+{
+    return vsplit_time(d, f, t, off) != 0;
+}
+
+/* Carry a mark from one node to another, leftwards or rightwards as asked.
+   Neither end may be nothing. */
+int project_sync(delta_state *d, int32_t l, int8_t f, int32_t r, int32_t back)
+{
+    if (l == 0 || r == 0)
+        return 0;
+
+    if (back) {
+        if (!vproj_l(d, (delta_node *)(intptr_t)l, (delta_node *)(intptr_t)r,
+                     (uint8_t)f))
+            return 0;
+    } else {
+        if (!vproj_r(d, (delta_node *)(intptr_t)l, (delta_node *)(intptr_t)r,
+                     (uint8_t)f))
+            return 0;
+    }
+
+    return 1;
+}
+
 /* Whether a sync mark stands at this field of a node. The language's
    fields do not start at zero in a node's words; the machine says where
    they do. */

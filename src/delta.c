@@ -202,6 +202,138 @@ int testle(delta_state *d)
     return EVV_AT(delta_vars *, d->vars)->compared_equal == 1;
 }
 
+/* A timing mark on the spine, and the record a rule leaves so a backtrack
+ * can put the scan back.
+ *
+ * The mark test is asked of a copy of the left register rather than of the
+ * register, so a rule that asks does not move. What follows walks the scan
+ * forward until it reaches the position the register names, comparing the
+ * two as it goes; a comparison that comes out unequal advances and asks
+ * again, and a comparison that will not be made at all is a failure.
+ *
+ * When it arrives, two records go on the stack: the tag the rule is testing
+ * against, and the scan's own eight bytes, so that a backtrack restores where
+ * the scan had got to. The last line arms the fence for the register's own
+ * field, which is what keeps the scan inside the run the rule is looking at.
+ */
+int test_time(delta_state *d, int16_t tag)
+{
+    delta_vars  *v = EVV_AT(delta_vars *, d->vars);
+    delta_stack *s;
+    delta_frame *slot;
+    delta_tpos   p;
+
+    memcpy(&p, &d->lpta, sizeof p);
+    if (vtsttmark_tv(d, &p, 0))
+        return 1;
+
+    d->rpta.flags = 1;
+    d->rpta.node = v->scan_ptr;
+
+    for (;;) {
+        if (vcomp_pta(d, &d->lpta, &d->rpta))
+            return 1;
+        if (v->compared_equal == 0)
+            break;
+        if (!vscanadv(d, 0, 1))
+            return 1;
+        d->rpta.node = v->scan_ptr;
+    }
+
+    s = EVV_AT(delta_stack *, d->stack);
+
+    slot = bs_push(s, s->ca_size);
+    slot->kind = 3;
+    slot->value = tag;
+
+    slot = bs_push(s, s->size_b0);
+    slot->kind = 1;
+    memcpy((uint8_t *)slot + 4, &v->scan_ptr, 8);
+
+    EVV_AT(uint8_t *, d->fence_marks)
+        [EVV_AT(uint8_t *, d->fence_index)[(uint8_t)d->lpta.field]] = 1;
+
+    return 0;
+}
+
+/* Walk the scan forward until every field asked about is fenced where it
+ * stands, and then hold it there.
+ *
+ * With no characters named it is every field the language declares except
+ * the one the scan is walking, and only those the fence table does not
+ * already carry; with characters named it is those, and the scan's own field
+ * is not exempt. Either way a field that is not fenced at the scan's position
+ * advances the scan and starts the sweep again, because moving may unfence
+ * one that was fenced a moment ago. A scan that will not advance is a
+ * failure.
+ *
+ * The two records left behind are test_time's, and what the tail does with
+ * them is where the two forms part: with no characters the scan is simply
+ * held, and with characters each of their fences is armed instead.
+ */
+int test_fence(delta_state *d, int16_t tag, uint8_t n, const uint8_t *chars)
+{
+    delta_vars  *v = EVV_AT(delta_vars *, d->vars);
+    delta_stack *s;
+    delta_frame *slot;
+    int32_t settled = 0;
+    int8_t  i;
+
+    if (n == 0) {
+        while (settled == 0) {
+            settled = 1;
+            for (i = 0; i < d->nstmts && settled != 0; i++) {
+                if (i == (int8_t)v->scan_field)
+                    continue;
+                if (EVV_AT(uint8_t *, d->fence_index)[i] != d->nstmts)
+                    continue;
+                if (FENCED(d, EVV_AT(const int32_t *, v->scan_ptr), i))
+                    continue;
+
+                settled = 0;
+                if (!vscanadv(d, 0, 1))
+                    return 1;
+            }
+        }
+    } else {
+        while (settled == 0) {
+            settled = 1;
+            for (i = 0; i < n && settled != 0; i++) {
+                if (EVV_AT(uint8_t *, d->fence_index)[chars[i]] != d->nstmts)
+                    continue;
+                if (FENCED(d, EVV_AT(const int32_t *, v->scan_ptr),
+                           (int8_t)chars[i]))
+                    continue;
+
+                settled = 0;
+                if (!vscanadv(d, 0, 1))
+                    return 1;
+            }
+        }
+    }
+
+    s = EVV_AT(delta_stack *, d->stack);
+
+    slot = bs_push(s, s->ca_size);
+    slot->kind = 3;
+    slot->value = tag;
+
+    slot = bs_push(s, s->size_b0);
+    slot->kind = 1;
+    memcpy((uint8_t *)slot + 4, &v->scan_ptr, 8);
+
+    if (n == 0) {
+        v->scan_held = 1;
+        return 0;
+    }
+
+    for (i = 0; i < n; i++)
+        EVV_AT(uint8_t *, d->fence_marks)
+            [EVV_AT(uint8_t *, d->fence_index)[chars[i]]] = 1;
+
+    return 0;
+}
+
 /* Whether a logical file has run out. */
 int test_eof(delta_state *d, int32_t lf)
 {
@@ -1825,6 +1957,103 @@ int test_string_s(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
             if (!vscanadv(d, 1, 1))
                 return 1;
         }
+    }
+
+    return 0;
+}
+
+/* The same test where a token in the string is wider than a byte.
+ *
+ * A record holds one code per character of the alphabet its statement type
+ * declares, and an alphabet larger than 256 does not fit in a byte, so the
+ * string a rule carries spells each code across two bytes or four. The top
+ * bit of the first byte is the sign and the rest is the value, most
+ * significant part first, which is the one place in the machine where a
+ * number is not laid down the way the host lays one down.
+ *
+ * Neither is called by any rule in the nine languages IBM shipped, all of
+ * whose alphabets fit in a byte. A language of ours with a larger one would
+ * want them, and so would a rule comparing against a field that is not a
+ * character at all.
+ *
+ * Everything else is test_string_s: peek at the scan, skip a sync, compare
+ * the code against what the record holds, and advance. */
+int test_string_l(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
+{
+    const delta_stmt *e = &vstmtbl[st];
+    const uint8_t *p = str;
+    const uint8_t *end = str + n;
+    int16_t value = 0;
+    delta_operand a, b;
+
+    a.kind = DK_SHORT;
+    a.ptr = &value;
+    a.flag = e->fields[0].flag;
+    b.kind = e->fields[0].kind;
+    b.flag = e->fields[0].flag;
+
+    while (p < end) {
+        int32_t node = scan_peek(d);
+
+        if (node == 0)
+            return 1;
+
+        if ((*(int32_t *)(intptr_t)node & 2) == 0) {
+            value = (int16_t)(((p[0] & 0x7f) << 8) | p[1]);
+            if ((p[0] & 0x80) != 0)
+                value = (int16_t)(value * -1);
+            p += 2;
+
+            b.ptr = e->get[0](TFLDS((void *)(intptr_t)node));
+            vcompare(d, &a, &b);
+            if (EVV_AT(delta_vars *, d->vars)->compared_equal != 0)
+                return 1;
+        }
+
+        if (!vscanadv(d, 1, 1))
+            return 1;
+    }
+
+    return 0;
+}
+
+int test_string_lng(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
+{
+    const delta_stmt *e = &vstmtbl[st];
+    const uint8_t *p = str;
+    const uint8_t *end = str + n;
+    int32_t value = 0;
+    delta_operand a, b;
+
+    a.kind = DK_LONG;
+    a.ptr = &value;
+    a.flag = e->fields[0].flag;
+    b.kind = e->fields[0].kind;
+    b.flag = e->fields[0].flag;
+
+    while (p < end) {
+        int32_t node = scan_peek(d);
+
+        if (node == 0)
+            return 1;
+
+        if ((*(int32_t *)(intptr_t)node & 2) == 0) {
+            value = (int32_t)(((uint32_t)(p[0] & 0x7f) << 24)
+                              | ((uint32_t)p[1] << 16)
+                              | ((uint32_t)p[2] << 8)
+                              | (uint32_t)p[3]);
+            if ((p[0] & 0x80) != 0)
+                value = value * -1;
+            p += 4;
+
+            b.ptr = e->get[0](TFLDS((void *)(intptr_t)node));
+            vcompare(d, &a, &b);
+            if (EVV_AT(delta_vars *, d->vars)->compared_equal != 0)
+                return 1;
+        }
+
+        if (!vscanadv(d, 1, 1))
+            return 1;
     }
 
     return 0;
