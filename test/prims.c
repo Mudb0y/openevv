@@ -930,5 +930,106 @@ int main(void)
            and is exercised by every case in the suite. */
     }
 
+    /* Putting tokens on the spine, in each of the four widths a string can
+       be written in. These come last of everything, because unlike the rest
+       they change what is there: each inserts between the token the rules
+       left and the spine's right end, and the sweep after it says what the
+       position holds now. The four widths spell the same kind of code
+       differently, so what lands is the test of the decode.
+
+       Only that one pair of positions is used. With both registers on the
+       same node the insert is refused -- an answer, and the same one on both
+       sides -- and with the right register at the spine's left end both
+       engines fall over, which is a shape the harness has no business
+       asking for. */
+    {
+        const delta_token *tok = (const delta_token *)((const char *)d + 748);
+        delta_stack *s = EVV_AT(delta_stack *, d->stack);
+        delta_token from, to;
+        uint8_t first = 0;
+        int v;
+
+        from.unknown_00 = 0;
+        to.unknown_00 = 0;
+
+        for (v = 0; v < 5; v++) {
+            uint8_t buf[4];
+            int rc, c;
+
+            from.value = tok->value;
+            to.value = v == 4 ? tok->value : s->spine_r;
+            lpta_loadp(d, &from);
+            rpta_loadp(d, &to);
+
+            switch (v) {
+            case 0:
+                buf[0] = 7;
+                rc = insert_2pt_s(d, 1, 1, buf, 0);
+                break;
+            case 1:
+                buf[0] = 0;
+                buf[1] = 8;
+                rc = insert_2pt_i(d, 1, 2, buf, 0);
+                break;
+            case 2:
+                buf[0] = 0;
+                buf[1] = 9;
+                rc = insert_2pt_l(d, 1, 2, buf, 0);
+                break;
+            case 3:
+                buf[0] = 0;
+                buf[1] = 0;
+                buf[2] = 0;
+                buf[3] = 10;
+                rc = insert_2pt_lng(d, 1, 4, buf, 0);
+                break;
+            default:
+                /* Both registers on one node: refused. */
+                buf[0] = 0;
+                buf[1] = 11;
+                rc = insert_2pt_l(d, 1, 2, buf, 0);
+                break;
+            }
+
+            /* What each call answered, and then what the spine holds where
+               the harness can see: the code at the position the rules left,
+               and the code after it. Where the inserted tokens land is not
+               among those -- sweeping one, two and three deep from that
+               position never finds them, so they go somewhere further along
+               that this harness cannot reach without a walk it does not have.
+               What is compared here is therefore the answer and the spine
+               either side of it, which is enough to catch an entry point
+               that refuses where the original accepts. The decode under all
+               four widths is one body, and the suite exercises two of its
+               four arms on every sentence it speaks. */
+            printf("%-16s %d -> %d  first", "insert", v, rc);
+            for (c = 0; c < 256; c++) {
+                uint8_t code = (uint8_t)c;
+
+                lpta_loadp(d, tok);
+                if (setscan_l(d, 1))
+                    continue;
+                if (test_string_s(d, 1, 1, &code) == 0) {
+                    printf(" %d", c);
+                    first = (uint8_t)c;
+                }
+            }
+
+            printf("  then");
+            for (c = 0; c < 256; c++) {
+                uint8_t pair[2];
+
+                pair[0] = first;
+                pair[1] = (uint8_t)c;
+                lpta_loadp(d, tok);
+                if (setscan_l(d, 1))
+                    continue;
+                if (test_string_s(d, 1, 2, pair) == 0)
+                    printf(" %d", c);
+            }
+            printf("\n");
+        }
+    }
+
     return 0;
 }

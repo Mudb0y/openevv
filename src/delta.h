@@ -686,6 +686,10 @@ int  ins_tokens_s(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
                   int32_t arg);
 int  ins_tokens_i(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
                   int32_t arg);
+int  ins_tokens_l(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
+                  int32_t arg);
+int  ins_tokens_lng(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
+                    int32_t arg);
 int32_t vsplit_time(delta_state *d, uint8_t f, int32_t t, int32_t off);
 int  vsync_tv(delta_state *d, delta_tpos *p);
 int  vtmark_tv(delta_state *d, delta_tpos *p, uint8_t back);
@@ -706,6 +710,10 @@ void insert_r(delta_state *d, int8_t f, uint8_t n, const uint8_t *str,
               uint8_t dup);
 int  insert_2pt_s(delta_state *d, uint8_t f, uint8_t n, const uint8_t *str,
                   uint8_t mode);
+int  insert_2pt_l(delta_state *d, uint8_t f, uint8_t n, const uint8_t *str,
+                  uint8_t mode);
+int  insert_2pt_lng(delta_state *d, uint8_t f, uint8_t n, const uint8_t *str,
+                    uint8_t mode);
 int  insert_2pt_i(delta_state *d, uint8_t f, uint8_t n, const uint8_t *str,
                   uint8_t mode);
 int  delete_2pt(delta_state *d, uint8_t f, uint8_t mode);

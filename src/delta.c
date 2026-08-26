@@ -3783,7 +3783,7 @@ int vinit_stm(delta_state *d, int8_t f)
    between each pair. Both spellings share everything but how they read a
    value; a string of nothing is a plain delete. */
 static int ins_tokens_run(delta_state *d, uint8_t f, const uint8_t *str,
-                          uint8_t n, int32_t arg, int wide)
+                          uint8_t n, int32_t arg, int16_t kind)
 {
     delta_operand a;
     delta_operand b;
@@ -3810,24 +3810,40 @@ static int ins_tokens_run(delta_state *d, uint8_t f, const uint8_t *str,
 
     end = str + n;
 
-    if (wide) {
-        b.kind = DK_SHORT2;
-        b.ptr = &shrt;
-    } else {
-        b.kind = DK_UBYTE;
-        b.ptr = &ch;
+    /* Which cell the string is decoded into, and therefore how much of the
+       string one token takes: a byte, two bytes or four, the wide ones sign
+       first. The four entry points below differ in nothing else. */
+    b.kind = kind;
+    switch (kind) {
+    case DK_LONG:   b.ptr = &lng; break;
+    case DK_UBYTE:  b.ptr = &ch; break;
+    default:        b.ptr = &shrt; break;
     }
     b.flag = vstmtbl[f].fields[0].flag;
 
     while (str < end) {
-        if (wide) {
+        switch (kind) {
+        case DK_UBYTE:
+            ch = *str;
+            str++;
+            break;
+
+        case DK_LONG:
+            lng = (int32_t)(((uint32_t)(str[0] & 0x7f) << 24)
+                            | ((uint32_t)str[1] << 16)
+                            | ((uint32_t)str[2] << 8)
+                            | (uint32_t)str[3]);
+            if ((str[0] & 0x80) != 0)
+                lng = -lng;
+            str += 4;
+            break;
+
+        default:
             shrt = (int16_t)(((str[0] & 0x7f) << 8) | str[1]);
             if ((str[0] & 0x80) != 0)
                 shrt = (int16_t)(-shrt);
             str += 2;
-        } else {
-            ch = *str;
-            str++;
+            break;
         }
 
         if (a.kind != b.kind)
@@ -3852,13 +3868,28 @@ static int ins_tokens_run(delta_state *d, uint8_t f, const uint8_t *str,
 int ins_tokens_s(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
                  int32_t arg)
 {
-    return ins_tokens_run(d, f, str, n, arg, 0);
+    return ins_tokens_run(d, f, str, n, arg, DK_UBYTE);
 }
 
 int ins_tokens_i(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
                  int32_t arg)
 {
-    return ins_tokens_run(d, f, str, n, arg, 1);
+    return ins_tokens_run(d, f, str, n, arg, DK_SHORT2);
+}
+
+/* The other two widths. No rule in the nine languages IBM shipped names a
+   string in either of them, which is why they were missing; a language whose
+   alphabet does not fit in a byte would want them. */
+int ins_tokens_l(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
+                 int32_t arg)
+{
+    return ins_tokens_run(d, f, str, n, arg, DK_SHORT);
+}
+
+int ins_tokens_lng(delta_state *d, uint8_t f, const uint8_t *str, uint8_t n,
+                   int32_t arg)
+{
+    return ins_tokens_run(d, f, str, n, arg, DK_LONG);
 }
 
 /* Split a run of time in two at a given offset, on whichever side of the
@@ -4188,6 +4219,26 @@ int insert_2pt_s(delta_state *d, uint8_t f, uint8_t n, const uint8_t *str,
         return 1;
 
     ins_tokens_s(d, f, str, n, 0);
+    return 0;
+}
+
+int insert_2pt_l(delta_state *d, uint8_t f, uint8_t n, const uint8_t *str,
+                 uint8_t mode)
+{
+    if (vrange_2pt(d, &d->lpta, &d->rpta, (int8_t)f, mode))
+        return 1;
+
+    ins_tokens_l(d, f, str, n, 0);
+    return 0;
+}
+
+int insert_2pt_lng(delta_state *d, uint8_t f, uint8_t n, const uint8_t *str,
+                   uint8_t mode)
+{
+    if (vrange_2pt(d, &d->lpta, &d->rpta, (int8_t)f, mode))
+        return 1;
+
+    ins_tokens_lng(d, f, str, n, 0);
     return 0;
 }
 
