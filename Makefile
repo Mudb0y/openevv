@@ -214,7 +214,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate voices inikeys stopthread pieces
+.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate voices inikeys stopthread pieces prims
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -306,6 +306,18 @@ inikeys: $(BUILD)/inikeys
 
 $(BUILD)/inikeys: test/inikeys.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/inikeys.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# A machine primitive no rule calls, held against IBM's own. The suite cannot
+# see one of these: a call nothing makes cannot be reached by speaking a
+# sentence, which is why the primitives the shipped languages never use were
+# missing in the first place. `test/prims.sh' builds this and the same file
+# against IBM's objects and diffs the two.
+prims: $(BUILD)/prims
+	@$(BUILD)/prims > /dev/null && echo "built and ran $(BUILD)/prims"
+
+$(BUILD)/prims: test/prims.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) -DEVV_PRIMS_OURS test/prims.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 $(OBJDIR)/%.o: %.c $(HEADERS)

@@ -118,6 +118,44 @@ void bspush_ca(delta_state *d, int16_t tag)
     slot->value = tag;
 }
 
+/* Clearing back to the mark and pushing a context record in one, which is
+   what starttest does the long way round. */
+void bsclr_pushca(delta_state *d, int16_t tag)
+{
+    delta_stack *s;
+    delta_frame *slot;
+
+    clearDeltaStackBack(d);
+
+    s = EVV_AT(delta_stack *, d->stack);
+    slot = bs_push(s, s->ca_size);
+    slot->kind = 0;
+    slot->value = tag;
+}
+
+/* Where the variable bottom was, kept on the stack so that a backtrack can
+   put it back. The record carries the old bottom and becomes the new one. */
+void bspush_vbot(delta_state *d)
+{
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+    delta_frame *slot = bs_push(s, s->size_b8);
+
+    slot->kind = 5;
+    slot->value = EVV_REF(getDeltaStackVBot(d));
+    setDeltaStackVBot(d, slot);
+}
+
+/* And taking it off again: the bottom goes back to what the record says
+   before the record itself is dropped. */
+void bspop_vbot(delta_state *d)
+{
+    const delta_frame *slot =
+        EVV_AT(const delta_frame *, EVV_AT(delta_stack *, d->stack)->top);
+
+    setDeltaStackVBot(d, EVV_AT(void *, slot->value));
+    popDeltaStackTop(d);
+}
+
 /* The two markers a rule leaves where an alternative begins. */
 void bspush_boa(delta_state *d)
 {
@@ -137,6 +175,50 @@ int testeq(delta_state *d)
 int testneq(delta_state *d)
 {
     return EVV_AT(delta_vars *, d->vars)->compared_equal == 0;
+}
+
+/* The four orderings, read off the same byte the last comparison left. They
+   answer the way every test here answers: nought when the test held and one
+   when it did not, which is what the caller backtracks on. The `if_' forms
+   compare first and then read; these only read, and no rule in the languages
+   IBM shipped calls one, which is why they arrive now. */
+int testgt(delta_state *d)
+{
+    return EVV_AT(delta_vars *, d->vars)->compared_equal != 1;
+}
+
+int testge(delta_state *d)
+{
+    return EVV_AT(delta_vars *, d->vars)->compared_equal == -1;
+}
+
+int testlt(delta_state *d)
+{
+    return EVV_AT(delta_vars *, d->vars)->compared_equal != -1;
+}
+
+int testle(delta_state *d)
+{
+    return EVV_AT(delta_vars *, d->vars)->compared_equal == 1;
+}
+
+/* Whether a logical file has run out. */
+int test_eof(delta_state *d, int32_t lf)
+{
+    return vf_eof(d, lf) == 0;
+}
+
+/* This one tests nothing. It clears the two fields in the owner block that
+   the save layer clears and reports that the test did not hold, whatever was
+   asked; the answer to "has a value" is arrived at elsewhere. Kept because a
+   rule may call it and because what it writes is observable. */
+int test_hasval(delta_state *d)
+{
+    delta_owner *o = EVV_AT(delta_owner *, d->owner);
+
+    o->unknown_1a8 = 0;
+    o->unknown_14 = 0;
+    return 1;
 }
 
 AT(fence_chars, 0x0084);
@@ -552,6 +634,122 @@ void vadd(delta_state *d, const delta_operand *a, const delta_operand *b)
         else if (b->kind == DK_SHORT2)
             *(int16_t *)a->ptr =
                 (int16_t)(*(int16_t *)a->ptr + *(int16_t *)b->ptr);
+    }
+}
+
+/* The other three arithmetic operations, in the same shape as vadd: the left
+   operand says which width the answer is written in, the right is widened or
+   narrowed to meet it, and any other pair of types is left alone. They are
+   here after the rest of the machine because no rule in the nine languages
+   IBM shipped calls one; a rule of ours that does arithmetic wants them. */
+void vsub(delta_state *d, const delta_operand *a, const delta_operand *b)
+{
+    (void)d;
+
+    if (a->kind == DK_LONG) {
+        if (b->kind == DK_LONG)
+            *(int32_t *)a->ptr = *(int32_t *)a->ptr - *(int32_t *)b->ptr;
+        else if (b->kind == DK_SHORT2)
+            *(int32_t *)a->ptr = *(int32_t *)a->ptr - *(int16_t *)b->ptr;
+    } else if (a->kind == DK_SHORT2) {
+        if (b->kind == DK_LONG)
+            *(int16_t *)a->ptr =
+                (int16_t)(*(int16_t *)a->ptr - *(int32_t *)b->ptr);
+        else if (b->kind == DK_SHORT2)
+            *(int16_t *)a->ptr =
+                (int16_t)(*(int16_t *)a->ptr - *(int16_t *)b->ptr);
+    }
+}
+
+void vmult(delta_state *d, const delta_operand *a, const delta_operand *b)
+{
+    (void)d;
+
+    if (a->kind == DK_LONG) {
+        if (b->kind == DK_LONG)
+            *(int32_t *)a->ptr = *(int32_t *)a->ptr * *(int32_t *)b->ptr;
+        else if (b->kind == DK_SHORT2)
+            *(int32_t *)a->ptr = *(int16_t *)b->ptr * *(int32_t *)a->ptr;
+    } else if (a->kind == DK_SHORT2) {
+        if (b->kind == DK_LONG)
+            *(int16_t *)a->ptr =
+                (int16_t)(*(int16_t *)a->ptr * *(int32_t *)b->ptr);
+        else if (b->kind == DK_SHORT2)
+            *(int16_t *)a->ptr =
+                (int16_t)(*(int16_t *)a->ptr * *(int16_t *)b->ptr);
+    }
+}
+
+/* Where a division by nought goes. The original's is empty -- it announces
+   nothing, stops nothing, and the division that follows it faults exactly as
+   it would have without the call. It is kept because it is the one place a
+   port could decide otherwise, and because vdiv calls it by name. */
+void divzero(delta_state *d)
+{
+    (void)d;
+}
+
+void vdiv(delta_state *d, const delta_operand *a, const delta_operand *b)
+{
+    if (a->kind == DK_LONG) {
+        if (b->kind == DK_LONG) {
+            if (*(int32_t *)b->ptr == 0)
+                divzero(d);
+            *(int32_t *)a->ptr = *(int32_t *)a->ptr / *(int32_t *)b->ptr;
+        } else if (b->kind == DK_SHORT2) {
+            if (*(int16_t *)b->ptr == 0)
+                divzero(d);
+            *(int32_t *)a->ptr = *(int32_t *)a->ptr / *(int16_t *)b->ptr;
+        }
+    } else if (a->kind == DK_SHORT2) {
+        if (b->kind == DK_LONG) {
+            if (*(int32_t *)b->ptr == 0)
+                divzero(d);
+            *(int16_t *)a->ptr =
+                (int16_t)(*(int16_t *)a->ptr / *(int32_t *)b->ptr);
+        } else if (b->kind == DK_SHORT2) {
+            if (*(int16_t *)b->ptr == 0)
+                divzero(d);
+            *(int16_t *)a->ptr =
+                (int16_t)(*(int16_t *)a->ptr / *(int16_t *)b->ptr);
+        }
+    }
+}
+
+/* Negation is a multiplication by minus one in the original, which matters
+   only at the one value where the two differ: the short case computes in
+   thirty-two bits and keeps the low sixteen, so -32768 comes back as itself
+   rather than saturating. */
+void vnegate(delta_state *d, const delta_operand *a)
+{
+    (void)d;
+
+    if (a->kind == DK_LONG)
+        *(int32_t *)a->ptr = *(int32_t *)a->ptr * -1;
+    else if (a->kind == DK_SHORT2)
+        *(int16_t *)a->ptr = (int16_t)((int32_t)*(int16_t *)a->ptr * -1);
+}
+
+/* Whether two operands may be compared at all. The negative kinds have to
+   match, except that the two integer widths are interchangeable with each
+   other; a kind that is not negative is a statement type, and all that is
+   asked of it is that the language declares it. The right operand is not
+   looked at in that last case, which is the original's doing. */
+int32_t vcompareTypeCheck(delta_state *d, const delta_operand *a,
+                          const delta_operand *b)
+{
+    switch (a->kind) {
+    case DK_UBYTE:
+        return b->kind == DK_UBYTE;
+    case DK_SHORT:
+        return b->kind == DK_SHORT;
+    case DK_LONG:
+    case DK_SHORT2:
+        return b->kind >= DK_SHORT2 && b->kind <= DK_LONG;
+    case DK_SYNC:
+        return b->kind == DK_SYNC;
+    default:
+        return a->kind >= 0 && a->kind < d->nstmts;
     }
 }
 
@@ -2083,6 +2281,14 @@ void lpta_mover(delta_state *d, uint8_t f)
     d->lpta.node = EVV_REF(vmover(d, (int32_t *)(intptr_t)d->lpta.node, f));
 }
 
+void rpta_mover(delta_state *d, uint8_t f)
+{
+    if (!vmove_tv(d, &d->rpta))
+        forceErrorBacktrack(d);
+
+    d->rpta.node = EVV_REF(vmover(d, (int32_t *)(intptr_t)d->rpta.node, f));
+}
+
 /* The same rightward walk, but as a test: it only moves if the position was
    already on a timing mark. */
 int lpta_tstmover(delta_state *d, uint8_t f)
@@ -2091,6 +2297,27 @@ int lpta_tstmover(delta_state *d, uint8_t f)
         return 1;
 
     d->lpta.node = EVV_REF(vmover(d, (int32_t *)(intptr_t)d->lpta.node, f));
+    return 0;
+}
+
+/* The right register's two, where the third argument of the mark test says
+   which register is being asked about rather than which way it walks: the
+   left pair pass nought and these pass one. */
+int rpta_tstmover(delta_state *d, uint8_t f)
+{
+    if (vtsttmark_tv(d, &d->rpta, 1) != 0)
+        return 1;
+
+    d->rpta.node = EVV_REF(vmover(d, (int32_t *)(intptr_t)d->rpta.node, f));
+    return 0;
+}
+
+int rpta_tstmovel(delta_state *d, uint8_t f)
+{
+    if (vtsttmark_tv(d, &d->rpta, 1) != 0)
+        return 1;
+
+    d->rpta.node = EVV_REF(vmovel((delta_node *)(intptr_t)d->rpta.node, f));
     return 0;
 }
 
@@ -3982,6 +4209,42 @@ int succeed(delta_state *d)
 /* Put a small integer into a rule's variable. A variable of one of the sized
    kinds takes it directly; one the language declares goes through vassign.
    A kind below those is a fault and backtracks. */
+/* The same as move_i with the value taken whole: what it writes into a
+   location the language declared is a long rather than a short, and the
+   value it puts into the two kinds it handles outright is not narrowed on
+   the way. */
+void move_lng(delta_state *d, delta_loc *loc, int32_t value)
+{
+    delta_operand a;
+    delta_operand b;
+
+    if (EVV_AT(delta_vars *, d->vars)->testing)
+        save_var(d, loc);
+
+    if (loc->kind == DK_SYNC || loc->kind == DK_LONG) {
+        loc->value = value;
+        return;
+    }
+
+    if (loc->kind == DK_SHORT2) {
+        loc->field = (int16_t)value;
+        return;
+    }
+
+    if (loc->kind < 0) {
+        forceErrorBacktrack(d);
+        return;
+    }
+
+    a.kind = DK_LONG;
+    a.ptr = &value;
+    a.flag = 0;
+
+    vinitloc_new(d, &b, loc);
+    vassign(d, &b, &a);
+    reset_field(loc);
+}
+
 void move_i(delta_state *d, delta_loc *loc, int16_t value)
 {
     delta_operand a;
@@ -4038,6 +4301,45 @@ void npush_lng(delta_state *d, int32_t v)
     op.kind = DK_LONG;
     op.flag = 0;
     vnspush(d, &op);
+}
+
+/* The fourth width. The name stack carries the type beside the value, so
+   these four differ in nothing but which type they say. */
+void npush_l(delta_state *d, int32_t x)
+{
+    delta_operand v;
+
+    v.ptr = &x;
+    v.kind = DK_SHORT;
+    v.flag = 0;
+    vnspush(d, &v);
+}
+
+/* Take the top two off the name stack and compare them, the later push
+   being the left operand. */
+void ncompare(delta_state *d)
+{
+    delta_operand a;
+    delta_operand b;
+
+    vnspop(d, &a);
+    vnspop(d, &b);
+    vcompare(d, &a, &b);
+}
+
+/* Backtrack, and backtrack out of an alternative. The first says only that
+   it happened; the second leaves a word behind that the rule's return
+   clears. */
+int back(delta_state *d)
+{
+    (void)d;
+    return 1;
+}
+
+int back_nboa(delta_state *d)
+{
+    EVV_AT(delta_vars *, d->vars)->unknown_11e8 = 1;
+    return 1;
 }
 
 /* And push a variable, which leaves its field unselected afterwards. */
@@ -4175,6 +4477,103 @@ void lpta_loadi(delta_state *d, uint8_t f, int32_t v)
     }
 }
 
+/* The right register's twin of it, and of the two loads beside it. Three
+   things about these are the original's and are kept.
+ *
+ * Each asks the statement table about the *left* register's field and not its
+ * own -- 0x44 where 0x54 was meant -- which is a slip in the original that
+ * cannot show: both arms of the switch write the same thing, so all the wrong
+ * question can do is decide whether the offset is written at all.
+ *
+ * The long forms take the immediate whole where the short ones narrow it to
+ * sixteen bits first, and neither faults on a kind it does not handle.
+ *
+ * No rule in the nine languages IBM shipped calls any of these, which is why
+ * they were missing; a rule of ours that walks rightwards wants them. */
+void rpta_loadi(delta_state *d, uint8_t f, int32_t v)
+{
+    d->rpta.flags = 2;
+    d->rpta.field = (int8_t)f;
+
+    switch (STMTYP(d->lpta.field)) {
+    case -4:
+    case -3:
+        d->rpta.offset = (int16_t)v;
+        break;
+    default:
+        break;
+    }
+}
+
+void lpta_loadlng(delta_state *d, uint8_t f, int32_t v)
+{
+    d->lpta.flags = 2;
+    d->lpta.field = (int8_t)f;
+
+    switch (STMTYP(d->lpta.field)) {
+    case -4:
+    case -3:
+        d->lpta.offset = v;
+        break;
+    default:
+        break;
+    }
+}
+
+void rpta_loadl(delta_state *d, uint8_t f, int32_t v)
+{
+    d->rpta.flags = 2;
+    d->rpta.field = (int8_t)f;
+
+    switch (STMTYP(d->lpta.field)) {
+    case -4:
+    case -3:
+        d->rpta.offset = v;
+        break;
+    default:
+        break;
+    }
+}
+
+void rpta_loadv(delta_state *d, uint8_t f, const delta_loc *loc)
+{
+    d->rpta.flags = 2;
+    d->rpta.field = (int8_t)f;
+
+    if (loc->kind == DK_LONG)
+        d->rpta.offset = loc->value;
+    else if (loc->kind == DK_SHORT2)
+        d->rpta.offset = loc->field;
+    else
+        forceErrorBacktrack(d);
+}
+
+/* Where a register is told to sit: at the left end of a run, or the right.
+   Nothing is read and nothing moves -- the flag is what a later move reads. */
+void lpta_leftmost(delta_state *d, uint8_t f)
+{
+    d->lpta.flags = 6;
+    d->lpta.field = (int8_t)f;
+}
+
+void rpta_leftmost(delta_state *d, uint8_t f)
+{
+    d->rpta.flags = 6;
+    d->rpta.field = (int8_t)f;
+}
+
+void lpta_rightmost(delta_state *d, uint8_t f)
+{
+    d->lpta.flags = 0xa;
+    d->lpta.field = (int8_t)f;
+}
+
+void rpta_rightmost(delta_state *d, uint8_t f)
+{
+    d->rpta.flags = 0xa;
+    d->rpta.field = (int8_t)f;
+}
+
 /* Set a timing variable. The two names are the same code in the original. */
 void settvar_i(delta_state *d, delta_loc *loc, int32_t v)
 {
@@ -4190,6 +4589,69 @@ void settvar_s(delta_state *d, delta_loc *loc, int32_t v)
         save_var(d, loc);
 
     vinitflds(d, (uint8_t)*(const int8_t *)loc, &loc->value, &v);
+}
+
+/* And two more names for it. The original compiles the same body into four
+   entry points -- one per width a rule may name the value in -- and none of
+   them looks at the width, so all four are this. */
+void settvar_l(delta_state *d, delta_loc *loc, int32_t v)
+{
+    if (EVV_AT(delta_vars *, d->vars)->testing)
+        save_var(d, loc);
+
+    vinitflds(d, (uint8_t)*(const int8_t *)loc, &loc->value, &v);
+}
+
+void settvar_lng(delta_state *d, delta_loc *loc, int32_t v)
+{
+    if (EVV_AT(delta_vars *, d->vars)->testing)
+        save_var(d, loc);
+
+    vinitflds(d, (uint8_t)*(const int8_t *)loc, &loc->value, &v);
+}
+
+/* The same again where the value comes out of another location rather than
+   as a constant: the source is opened as an operand and what it points at is
+   what goes in. The source's field is reset afterwards and the target's is
+   not, which is the original's doing. */
+void settvar_v(delta_state *d, delta_loc *loc, delta_loc *src)
+{
+    delta_operand v;
+
+    if (EVV_AT(delta_vars *, d->vars)->testing)
+        save_var(d, loc);
+
+    vinitloc_new(d, &v, src);
+    vinitflds(d, (uint8_t)*(const int8_t *)loc, &loc->value, v.ptr);
+    reset_field(src);
+}
+
+/* What the machine calls when an assignment was allowed and when it was
+   refused. They are the same: put the field back and say nothing. */
+void assok(delta_state *d, delta_loc *loc)
+{
+    (void)d;
+    reset_field(loc);
+}
+
+void noass(delta_state *d, delta_loc *loc)
+{
+    (void)d;
+    reset_field(loc);
+}
+
+/* Two that do nothing at all. Their bodies read no argument, so how many a
+   rule passes cannot be recovered from the original; the state is given
+   because every other primitive takes it, and the convention lets a caller
+   push more than is read. */
+void chkvars(delta_state *d)
+{
+    (void)d;
+}
+
+void chkokass(delta_state *d)
+{
+    (void)d;
 }
 
 /* Is a number negative? Only the two number kinds can be; anything else
@@ -4369,6 +4831,12 @@ int testeq_tvars(delta_state *d, delta_loc *a, delta_loc *b)
     return testeq(d);
 }
 
+int testneq_tvars(delta_state *d, delta_loc *a, delta_loc *b)
+{
+    compare_tvars(d, a, b);
+    return testneq(d);
+}
+
 /* A variable against a constant: push both and run the ordinary test. */
 int if_testeq_v_i(delta_state *d, delta_loc *loc, int32_t x)
 {
@@ -4403,6 +4871,58 @@ int if_testge_v_i(delta_state *d, delta_loc *loc, int32_t x)
     npush_v(d, loc);
     npush_i(d, x);
     return if_testge(d);
+}
+
+int if_testle_v_i(delta_state *d, delta_loc *loc, int32_t x)
+{
+    npush_v(d, loc);
+    npush_i(d, x);
+    return if_testle(d);
+}
+
+/* The same six with the constant taken whole rather than narrowed to sixteen
+   bits, which is the only thing that distinguishes them. No rule in the
+   languages IBM shipped names a constant that needs the width. */
+int if_testeq_v_lng(delta_state *d, delta_loc *loc, int32_t x)
+{
+    npush_v(d, loc);
+    npush_lng(d, x);
+    return if_testeq(d);
+}
+
+int if_testneq_v_lng(delta_state *d, delta_loc *loc, int32_t x)
+{
+    npush_v(d, loc);
+    npush_lng(d, x);
+    return if_testneq(d);
+}
+
+int if_testlt_v_lng(delta_state *d, delta_loc *loc, int32_t x)
+{
+    npush_v(d, loc);
+    npush_lng(d, x);
+    return if_testlt(d);
+}
+
+int if_testgt_v_lng(delta_state *d, delta_loc *loc, int32_t x)
+{
+    npush_v(d, loc);
+    npush_lng(d, x);
+    return if_testgt(d);
+}
+
+int if_testge_v_lng(delta_state *d, delta_loc *loc, int32_t x)
+{
+    npush_v(d, loc);
+    npush_lng(d, x);
+    return if_testge(d);
+}
+
+int if_testle_v_lng(delta_state *d, delta_loc *loc, int32_t x)
+{
+    npush_v(d, loc);
+    npush_lng(d, x);
+    return if_testle(d);
 }
 
 /* Give a run of statements their default projections, one per letter of the
@@ -5631,29 +6151,42 @@ int vtstctx_tv(delta_state *d, delta_tpos *p, int32_t back)
 
    The two directions hand the settling step and the lookup opposite
    answers, which is why one argument is the other's complement. */
-static int lpta_tstctxt(delta_state *d, uint8_t f, int32_t back)
+static int pta_tstctxt(delta_state *d, delta_pta *p, uint8_t f, int32_t back)
 {
     const int32_t *node;
 
-    if (vtstctx_tv(d, &d->lpta, back))
+    if (vtstctx_tv(d, p, back))
         return 1;
 
-    node = (const int32_t *)(intptr_t)d->lpta.node;
+    node = (const int32_t *)(intptr_t)p->node;
     if (node[EVV_AT(delta_vars *, d->vars)->fence_base + f] & 1)
         return 0;
 
-    d->lpta.node = vgetsc(d, back ? 0 : 1, 1, d->lpta.node, f);
+    p->node = vgetsc(d, back ? 0 : 1, 1, p->node, f);
     return 0;
 }
 
 int lpta_tstctxtl(delta_state *d, uint8_t f)
 {
-    return lpta_tstctxt(d, f, 0);
+    return pta_tstctxt(d, &d->lpta, f, 0);
 }
 
 int lpta_tstctxtr(delta_state *d, uint8_t f)
 {
-    return lpta_tstctxt(d, f, 1);
+    return pta_tstctxt(d, &d->lpta, f, 1);
+}
+
+/* And the right register's two. In the original these are four functions
+   with one body each, the register being the only thing that differs; the
+   direction argument is the same in both pairs. */
+int rpta_tstctxtl(delta_state *d, uint8_t f)
+{
+    return pta_tstctxt(d, &d->rpta, f, 0);
+}
+
+int rpta_tstctxtr(delta_state *d, uint8_t f)
+{
+    return pta_tstctxt(d, &d->rpta, f, 1);
 }
 
 /* The logarithm table read at a sixteenth of a step, straight when the

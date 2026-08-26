@@ -172,7 +172,17 @@ The audio in that comparison is not the weak half of it. A rule whose whole effe
 
 A rule of ours can also name bytes of its own, which is what a text rule needs and what nothing but IBM's objects could supply before. `lang/<tag>/rules/constants` holds them, `make constants` lays them down in the one file in a language module that no lifter writes, and startup copies that store into the arena beside the lifted ones. `docs/building.md` says how the naming was proved as against the linking.
 
-What is left in the compiler is the ergonomics rather than the reach. Every operation the machine has can be written, the rare ones through a line of the lower notation; what a person writing several hundred Polish rules would want on top of that is the language's own idioms said shorter -- an alternative as a block rather than a place and a plant, and a run of context tests as a run of tests.
+What is left in the compiler is the ergonomics rather than the reach. Every operation can be named, the rare ones through a line of the lower notation; what a person writing several hundred Polish rules would want on top of that is the language's own idioms said shorter -- an alternative as a block rather than a place and a plant, and a run of context tests as a run of tests. Naming an operation is not the same as the engine having it, which is the section below.
+
+## The machine's own reach
+
+The Delta machine is in this tree only as far as the nine languages IBM shipped ever reached into it. Its seventeen objects define 444 names; 138 of them had no answer here, not because they were hard but because no rule calls them, so the link never asked and nothing was ever missing. A rule of ours can ask, and then it is missing.
+
+Forty-eight of the 138 are now written, and they are the ones a rule being authored is likeliest to want: every arithmetic operation beyond addition, the four bare orderings, the right pointer register's half of the loads and the two ends of a run for both registers, six fused test-and-branch forms taking a long rather than a short, and all of `assign` and all of `stack`. `docs/remaining.md` has the list, object by object, together with the ninety that are left.
+
+They are proved rather than argued for. `test/prims.sh` compiles one table of cases twice -- against our engine, and against IBM's own objects, which define these under plain C names -- and diffs the bytes each call leaves behind: 51,943 calls, identical. That is the differential harness put back for the one thing the suite cannot do, since a call no sentence reaches cannot be checked by speaking. What it cannot reach is anything that walks the spine, which wants a machine with text in it on both sides; those are checked by reading.
+
+Two things reading turned up. The immediate loads into the right pointer register ask the statement table about the *left* register's field, which is a slip in the original that cannot show, and is kept. And all four `settvar` entry points are the same body: none looks at the width its name announces.
 
 ## Polish
 

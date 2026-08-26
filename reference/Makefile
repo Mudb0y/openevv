@@ -150,8 +150,27 @@ $(BUILD)/speak-tap.exe: speak.c tap.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/taplink.err >&2 || true; exit $$s
 	@echo "built $@"
 
+# IBM's machine primitives called one at a time, which is the only way to
+# reach the ones no rule calls. The same file is built against our engine by
+# the top-level `make prims', and test/prims.sh diffs what the two print.
+# It links the whole set as speak.exe does, because these objects are objects
+# and not a library: every name one of them wants has to be answered whether
+# this harness reaches it or not.
+.PHONY: prims
+prims: $(BUILD)/prims.exe
+
+$(BUILD)/prims.exe: ../test/prims.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
+                    $(SHIM) $(WORK)/.stamp
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=gnu99 -w -I../src ../test/prims.c \
+	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/prims.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/prims.err >&2 || true; exit $$s
+	@echo "built $@"
+
 clean:
 	@rm -rf $(WORK) $(TAPDIR)
 	@rm -f $(BUILD)/speak.exe $(BUILD)/speak-tap.exe $(BUILD)/ral_shim.obj \
 	       $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/*.tmp.o \
+	       $(BUILD)/prims.exe $(BUILD)/prims.err \
 	       $(BUILD)/uni.syms $(BUILD)/link.err $(BUILD)/taplink.err

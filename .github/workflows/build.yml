@@ -73,6 +73,14 @@ jobs:
       - name: Check a stop from another thread leaves the engine whole
         run: make RULES=bytecode stopthread
 
+      # Half of test/prims.sh. The comparison against IBM's own objects wants
+      # Wine and the SDK and cannot run here, but our side of it exercises
+      # every machine primitive no rule calls -- fifty thousand calls that
+      # nothing else in the tree makes -- so a crash or a link that has lost
+      # one shows up.
+      - name: Run our side of the machine primitives
+        run: make RULES=bytecode prims
+
       # The rules written in the upper form, held against the ones IBM
       # compiled: every rule entered and every call made with its arguments,
       # over a build carrying each. It wants neither Wine nor IBM's objects.
