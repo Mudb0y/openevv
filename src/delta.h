@@ -64,6 +64,32 @@ typedef struct {
 } delta_actrec;
 
 
+/* An operand as the machine keeps one, rather than as a caller builds one.
+   The difference is the pointer: a delta_operand holds the host's, and one
+   of these holds what fits in a value, because these live inside the
+   machine's own blocks where every word is four bytes whatever the host is. */
+typedef struct {
+    evv_ref ptr;     /* +0x00 */
+    int16_t kind;    /* +0x04 */
+    int8_t  flag;    /* +0x06 */
+    int8_t  pad_07;
+} delta_operand_at;
+
+/* What a generate statement collects before anything is written out: the
+   frame it is to lay down, the moment it covers, and the parameters that go
+   with it. Each of the three sets its own bit as it arrives, and nothing is
+   generated until all three have; the second cell is the copy vgen_copy
+   makes so that the next generate can start filling the first again. */
+typedef struct {
+    int32_t value;     /* +0x00, the frame */
+    uint8_t time;      /* +0x04 */
+    uint8_t nparams;   /* +0x05, how many parameter bytes there are */
+    uint8_t pad_06[2];
+    evv_ref params;    /* +0x08, a dynamic buffer holding them */
+    uint8_t flags;     /* +0x0c, 1 the frame, 2 the time, 4 the parameters */
+    uint8_t pad_0d[3];
+} delta_gencell;
+
 /* What seqscan is handed and fills in: which way to walk, where to start,
    how far it got, and whether anything along the way was not a lone
    sequential statement. */
@@ -203,7 +229,11 @@ typedef struct {
     int32_t   error_thrown;    /* 0x0fa8 */
     evv_ref   err_jmp;         /* 0x0fac, where a thrown error lands */
     uint8_t   return_code;     /* 0x0fb0, what a C helper answered with */
-    uint8_t   pad_0fb1[0xf];
+    uint8_t   pad_0fb1[3];
+    /* The generate statement being read, whose first byte says which of the
+       three parts of a frame this one carries. */
+    evv_ref   gen_stmt;        /* 0x0fb4 */
+    uint8_t   pad_0fb8[8];
     int32_t   loop_tag;        /* 0x0fc0, what a forall is iterating */
     int32_t   test_tag;        /* 0x0fc4, what the running test is matching */
     uint8_t   pad_0fc8[4];
@@ -221,14 +251,25 @@ typedef struct {
     evv_ref   back;            /* 0x0fdc, where an unwind returns to */
     int8_t    compared_equal;  /* 0x0fe0 */
     int8_t    fence_count;     /* 0x0fe1, how many characters are fenced */
-    uint8_t   pad_0fe2[0x1006 - 0xfe2];
+    uint8_t   pad_0fe2[2];
+    /* The frame being collected, and the copy of it that is written out. */
+    delta_gencell gen_now;     /* 0x0fe4 */
+    delta_gencell gen_done;    /* 0x0ff4 */
+    uint8_t   gen_len;         /* 0x1004, how many parameter bytes to take */
+    uint8_t   gen_nparams;     /* 0x1005, and how many the statement says */
     /* Scratch the runtime builds a value in when it has to convert one. */
     uint8_t   scratch_b;       /* 0x1006 */
     uint8_t   pad_1007[0x100c - 0x1007];
     int32_t   scratch_l;       /* 0x100c */
     uint8_t   pad_1010[0x1022 - 0x1010];
     int16_t   scratch_s;       /* 0x1022 */
-    uint8_t   pad_1024[0x1120 - 0x1024];
+    uint8_t   pad_1024[0x1030 - 0x1024];
+    evv_ref   gen_at;          /* 0x1030, where the parameter bytes are read
+                                  from, stepped a byte at a time */
+    uint8_t   pad_1034[0x106c - 0x1034];
+    delta_operand_at gen_src;  /* 0x106c, what a frame is assigned from */
+    delta_operand_at gen_dst;  /* 0x1074, and the cell it goes into */
+    uint8_t   pad_107c[0x1120 - 0x107c];
     int32_t   ctx_both;        /* 0x1120, look both ways for a context */
     int32_t   relink;          /* 0x1124, keep the spine order consistent */
     uint8_t   pad_1128[0x116c - 0x1128];
@@ -535,6 +576,10 @@ int  emptyDeltaStack(delta_state *d);
 void *popDeltaStackFrame(delta_state *d, uint8_t *to);
 void vnspush(delta_state *d, const delta_operand *v);
 void vadd(delta_state *d, const delta_operand *a, const delta_operand *b);
+int32_t vgen_frame(delta_state *d);
+int32_t vgen_time(delta_state *d);
+int32_t vgen_params(delta_state *d);
+int32_t vgen_copy(delta_state *d);
 void vsub(delta_state *d, const delta_operand *a, const delta_operand *b);
 void vmult(delta_state *d, const delta_operand *a, const delta_operand *b);
 void vdiv(delta_state *d, const delta_operand *a, const delta_operand *b);

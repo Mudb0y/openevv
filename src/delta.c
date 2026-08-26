@@ -364,6 +364,13 @@ AT_VARS(ctx_both, 0x1120);
 AT_VARS(relink, 0x1124);
 AT_VARS(nsq_marks, 0x116c);
 AT_VARS(fence_base, 0x1174);
+AT_VARS(gen_stmt, 0x0fb4);
+AT_VARS(gen_now, 0x0fe4);
+AT_VARS(gen_done, 0x0ff4);
+AT_VARS(gen_len, 0x1004);
+AT_VARS(gen_at, 0x1030);
+AT_VARS(gen_src, 0x106c);
+AT_VARS(gen_dst, 0x1074);
 
 /* A context record and a saved scan position together, which is what a rule
    pushes when it is about to try a match it may need to unwind. */
@@ -767,6 +774,140 @@ void vadd(delta_state *d, const delta_operand *a, const delta_operand *b)
             *(int16_t *)a->ptr =
                 (int16_t)(*(int16_t *)a->ptr + *(int16_t *)b->ptr);
     }
+}
+
+/* Collecting a frame.
+ *
+ * A generate statement comes in three parts -- the frame, the moment it
+ * covers, and the parameters that go with it -- and the machine reads them
+ * one at a time, each call putting its part into the cell and setting its
+ * own bit. The statement's first byte says which part it is, and the byte
+ * decides which of the two cells is written: its own marker means the one
+ * being filled, anything else means the one already finished. That is the
+ * original's arrangement and it is what lets a rule generate one frame while
+ * the last is still being written out.
+ *
+ * None of the four is called by any rule in the nine languages IBM shipped,
+ * which is why they were missing. A language's acoustic rules are what would
+ * want them.
+ */
+
+/* Which cell this part belongs in. */
+static delta_gencell *gen_cell(delta_state *d, uint8_t marker)
+{
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
+
+    if (*EVV_AT(const uint8_t *, v->gen_stmt) == marker)
+        return &v->gen_now;
+    return &v->gen_done;
+}
+
+int32_t vgen_frame(delta_state *d)
+{
+    delta_vars    *v = EVV_AT(delta_vars *, d->vars);
+    delta_gencell *cell = gen_cell(d, 0xc3);
+    delta_operand  dst;
+    delta_operand  src;
+
+    v->gen_dst.ptr = EVV_REF(&cell->value);
+    v->gen_dst.kind = DK_SHORT2;
+    v->gen_dst.flag = 0;
+
+    dst.ptr = EVV_AT(void *, v->gen_dst.ptr);
+    dst.kind = v->gen_dst.kind;
+    dst.flag = v->gen_dst.flag;
+
+    src.ptr = EVV_AT(void *, v->gen_src.ptr);
+    src.kind = v->gen_src.kind;
+    src.flag = v->gen_src.flag;
+
+    vassign(d, &dst, &src);
+
+    cell->flags |= 1;
+    return 0;
+}
+
+int32_t vgen_time(delta_state *d)
+{
+    delta_vars    *v = EVV_AT(delta_vars *, d->vars);
+    delta_gencell *cell = gen_cell(d, 0xc4);
+
+    cell->time = v->gen_len;
+    cell->flags |= 2;
+    return 0;
+}
+
+/* The parameters are copied a byte at a time out of the statement into a
+   buffer the cell keeps, which is made the first time round and reset every
+   time after. The count is the statement's, and the bytes come from where
+   the read has got to, which this steps as it goes. */
+int32_t vgen_params(delta_state *d)
+{
+    delta_vars    *v = EVV_AT(delta_vars *, d->vars);
+    delta_gencell *cell = gen_cell(d, 0xc5);
+    int32_t        i;
+
+    cell->nparams = v->gen_len;
+
+    if ((cell->flags & 4) == 0)
+        cell->params = EVV_REF(dynaBufNew(v->gen_nparams));
+
+    dynaBufReset(EVV_AT(DynaBuf *, cell->params));
+
+    for (i = 1; i <= (int32_t)v->gen_nparams; i++) {
+        char c = *EVV_AT(const char *, v->gen_at);
+
+        v->gen_at = EVV_REF(EVV_AT(const char *, v->gen_at) + 1);
+        dynaBufAddChar(EVV_AT(DynaBuf *, cell->params), c, 0);
+    }
+
+    cell->flags |= 4;
+    return 0;
+}
+
+/* And moving the finished frame across, which is refused unless all three
+   parts have arrived. The buffer is copied character by character rather
+   than by taking the other cell's, so the two go on owning their own. */
+int32_t vgen_copy(delta_state *d)
+{
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
+    int32_t     i;
+
+    if ((v->gen_now.flags & 1) == 0)
+        return 0xf5;
+    if ((v->gen_now.flags & 2) == 0)
+        return 0xf5;
+    if ((v->gen_now.flags & 4) == 0)
+        return 0xf5;
+
+    v->gen_done.value = v->gen_now.value;
+    v->gen_done.time = v->gen_now.time;
+    v->gen_done.nparams = v->gen_now.nparams;
+
+    v->gen_len = (uint8_t)dynaBufLength(EVV_AT(DynaBuf *, v->gen_now.params));
+
+    /* Where the buffer would be made if it had none. It never is: the
+       original tests `!flags & 4' where it means `!(flags & 4)', and the
+       first of those is nought or one and never has the bit set, so the
+       compiler folded the whole branch away. The reset below therefore runs
+       on whatever the cell already holds -- which on a first call is
+       nothing. Nothing reaches this: no rule in the nine languages calls
+       vgen_copy at all. Written the way the original runs rather than the
+       way it reads, with the branch left here in words so that the next
+       person to read both does not think this an oversight. */
+
+    dynaBufReset(EVV_AT(DynaBuf *, v->gen_done.params));
+
+    for (i = 0; i < (int32_t)v->gen_len; i++)
+        dynaBufAddChar(EVV_AT(DynaBuf *, v->gen_done.params),
+                       dynaBufChar(EVV_AT(DynaBuf *, v->gen_now.params), i),
+                       0);
+
+    v->gen_done.flags |= 1;
+    v->gen_done.flags |= 2;
+    v->gen_done.flags |= 4;
+
+    return 0;
 }
 
 /* The other three arithmetic operations, in the same shape as vadd: the left

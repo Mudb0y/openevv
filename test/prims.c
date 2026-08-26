@@ -52,6 +52,7 @@
 
 #include "delta.h"
 #include "eci_eloqc.h"
+#include "eci_io.h"
 
 /* The one place the two builds are not the same source. A language's tables
    are plain globals in IBM's build, linked in and reachable with no setup at
@@ -200,6 +201,23 @@ static const char *landmark(int32_t p, const int32_t *where)
     if (p == where[2])
         return "right";
     return "other";
+}
+
+/* One of the two cells a generate fills, said in what it holds rather than
+   where it is: the buffer is a pointer and its length and characters are
+   not. */
+static void show_gencell(const delta_gencell *c, const char *which, int round)
+{
+    uint32_t n = c->params != 0
+                 ? dynaBufLength(EVV_AT(const DynaBuf *, c->params)) : 0;
+    uint32_t i;
+
+    printf("%-16s %d %-4s -> %d %d %d %02x  buf %u", "gencell", round, which,
+           (int)c->value, (int)c->time, (int)c->nparams, (unsigned)c->flags,
+           (unsigned)n);
+    for (i = 0; i < n && i < 16; i++)
+        printf(" %c", dynaBufChar(EVV_AT(const DynaBuf *, c->params), (int32_t)i));
+    printf("\n");
 }
 
 static void operands(delta_operand *a, delta_operand *b, int16_t ka,
@@ -928,6 +946,66 @@ int main(void)
            a harness that cannot get past the fault can settle. The guards
            are transcribed and read, and what they call was ported long ago
            and is exercised by every case in the suite. */
+    }
+
+    /* Collecting a frame. The three parts arrive one at a time and each
+       sets its own bit; which of the two cells they land in is decided by
+       the byte the generate statement starts with, so the harness sets that
+       byte and watches where the part goes. What is printed is the cell --
+       the frame, the moment, how many parameters, the flags -- and the
+       parameter buffer's length and contents, which are content rather than
+       an address and so compare.
+
+       The order matters for the copy at the end: the far cell is filled
+       first, because vgen_copy resets that cell's buffer without ever making
+       one, and on a cell that has never been filled there is nothing there
+       to reset. That is the original's own slip, transcribed as it runs;
+       src/delta.c says what it was meant to say. */
+    {
+        uint8_t *marker = calloc(1, 4);
+        uint8_t *params = calloc(1, 8);
+        int32_t *value = calloc(1, 4);
+        int round;
+
+        if (marker == NULL || params == NULL || value == NULL)
+            return 1;
+
+        params[0] = 'p';
+        params[1] = 'q';
+        params[2] = 'r';
+        *value = 0x4321;
+
+        vars->gen_stmt = EVV_REF(marker);
+        vars->gen_src.ptr = EVV_REF(value);
+        vars->gen_src.kind = DK_SHORT2;
+        vars->gen_src.flag = 0;
+        vars->gen_nparams = 3;
+
+        for (round = 0; round < 2; round++) {
+            /* Nought matches none of the three markers, so the first round
+               fills the far cell and the second the near one. */
+            vars->gen_len = (uint8_t)(round == 0 ? 5 : 6);
+
+            *marker = (uint8_t)(round == 0 ? 0 : 0xc3);
+            printf("%-16s %d frame  -> %d\n", "gen", round, (int)vgen_frame(d));
+
+            *marker = (uint8_t)(round == 0 ? 0 : 0xc4);
+            printf("%-16s %d time   -> %d\n", "gen", round, (int)vgen_time(d));
+
+            *marker = (uint8_t)(round == 0 ? 0 : 0xc5);
+            vars->gen_at = EVV_REF(params);
+            printf("%-16s %d params -> %d\n", "gen", round,
+                   (int)vgen_params(d));
+
+            show_gencell(&vars->gen_now, "now", round);
+            show_gencell(&vars->gen_done, "done", round);
+            printf("%-16s %d -> read %d\n", "gen.at", round,
+                   (int)(EVV_AT(const uint8_t *, vars->gen_at) - params));
+        }
+
+        printf("%-16s -> %d\n", "gen.copy", (int)vgen_copy(d));
+        show_gencell(&vars->gen_now, "now", 2);
+        show_gencell(&vars->gen_done, "done", 2);
     }
 
     /* Putting tokens on the spine, in each of the four widths a string can
