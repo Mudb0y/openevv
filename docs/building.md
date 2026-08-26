@@ -752,6 +752,33 @@ index left inside a stretch of text, and a rate that maps to the wrong number.
 a library and a wave player that are stood in for, which is what reaches
 `_start`, the ctypes prototypes, the callback and the shutdown.
 
+What neither of those two can reach is the sound, and the add-on now makes a
+claim about it. A long message is handed over as several utterances so that
+asking for silence waits out one piece rather than the whole of it, and a piece
+boundary is a clause end to this engine: it ends the utterance there, with the
+pause a full stop gets. So a boundary in the wrong place is heard.
+
+    make pieces
+
+is that measurement. It speaks one text whole on one instance and in named
+pieces on another, and compares the samples -- a pause the engine did not mean
+to make is samples it did not mean to produce. A boundary at a sentence end
+costs nothing: 177,837 samples whole and 177,837 in five pieces, and the same
+after a closing quotation mark. Anywhere else costs about 0.40 s each: the same
+text cut every eighty characters at whitespace is 1.12 s longer, "Mr. Jones
+asked whether the header is read first, and Mrs. Adams said it is." cut after
+the two titles is 0.70 s longer, and "The book by J. R. R. Tolkien is on the
+shelf by the door." cut at every initial is 1.48 s longer than 3.72.
+
+That asymmetry is the whole of the driver's rule. It ends a piece at a sentence
+end, makes a dot argue that it is one -- a word with a dot inside it, or a short
+word starting with a capital, is an abbreviation or an initial -- and falls back
+to whitespace only past five hundred characters, where a stretch has no
+sentence end to offer. The cases that cost are in the harness as the evidence
+for declining them, and are printed rather than held to a number, since a
+number measured here is a number about English at one speaking rate. The ones
+that must cost nothing fail the target if they ever do.
+
 `nvda/build.py` adds one more before it packs anything: every entry point the
 driver names is looked up in both libraries' export tables, and a name that is
 not there stops the build. That matters because ctypes resolves a name when it

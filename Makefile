@@ -214,7 +214,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate voices inikeys stopthread
+.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate voices inikeys stopthread pieces
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -252,6 +252,17 @@ rate: $(BUILD)/rate
 
 $(BUILD)/rate: test/rate.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/rate.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# One text spoken whole and then in pieces, which is what the add-on does with
+# a long message so that a cancel waits out a piece. The suite speaks whole
+# utterances and cannot see where a boundary may go; a boundary at a sentence
+# end costs nothing and one anywhere else costs the pause a full stop gets.
+pieces: $(BUILD)/pieces
+	@$(BUILD)/pieces
+
+$(BUILD)/pieces: test/pieces.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/pieces.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # The eight voices the caller may edit, which the suite is blind to: nothing it
