@@ -136,7 +136,17 @@ typedef struct {
     int32_t   list_fld;      /* 0x00c0, which entry of a stream list the
                                 field walk is on */
     int32_t   list_val;      /* 0x00c4, and which field of that entry */
-    uint8_t   pad_00c8[0xdc - 0xc8];
+    /* Where the walk over a field's declared value names stands. One of
+       these is set up by first_fieldval and stepped by next_fieldval, and
+       nothing else in the machine touches them. The prefix is a pointer the
+       machine holds in a value, so it has to be somewhere the arena can
+       name; that is what the crossing checks. */
+    int8_t    vals_stm;      /* 0x00c8, which statement type */
+    uint8_t   pad_00c9[3];
+    int32_t   vals_fld;      /* 0x00cc, and which of its fields */
+    evv_ref   vals_str;      /* 0x00d0, the prefix a name has to start with */
+    int32_t   vals_at;       /* 0x00d4, how far the walk has got */
+    int32_t   vals_dashes;   /* 0x00d8, set when the prefix is all dashes */
     /* What a value named "undefined" reads back as. The tables spell the
        absent value one way and whoever asks is told another. */
     evv_ref     undefined_text;  /* 0x00dc */
@@ -586,6 +596,8 @@ int  get_parm(delta_state *d, delta_loc *out, delta_loc *loc, int16_t kind);
 int  test_synch(delta_state *d, int16_t tag, uint8_t n, const uint8_t *list);
 int  test_string_i(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str);
 int  test_string_s(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str);
+int  test_string(delta_state *d, uint8_t st, uint8_t n,
+                 const uint8_t *str);
 int  test_string_l(delta_state *d, uint8_t st, uint8_t n,
                    const uint8_t *str);
 int  test_string_lng(delta_state *d, uint8_t st, uint8_t n,

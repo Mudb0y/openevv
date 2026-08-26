@@ -2059,6 +2059,114 @@ int test_string_lng(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
     return 0;
 }
 
+/* The string test that carries its own width.
+ *
+ * Here the first byte of the string is a marker saying how wide the tokens
+ * after it are: 199 a byte apiece, 202 two and 201 four, the wide ones sign
+ * first as in the two forms above. A length of nothing is not a comparison
+ * at all but a step -- the scan moves over one token and the answer is
+ * whether it could.
+ *
+ * Marker 200 is a defect, and it is worth saying out loud because it cannot
+ * be reproduced. Its head takes the two-byte cell for the operand and its
+ * body decodes four bytes into the four-byte one, so what it compares is a
+ * cell nothing has written; in the original that is whatever the stack
+ * happened to hold. Ours holds nought there. Nothing reaches it: no rule in
+ * the nine languages IBM shipped calls test_string at all, which is why it
+ * was missing from this engine, and a rule of ours would use one of the
+ * three markers that work.
+ */
+int test_string(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
+{
+    const delta_stmt *e = &vstmtbl[st];
+    const uint8_t *p = str;
+    const uint8_t *end = str + n;
+    int32_t marker;
+    int16_t v16 = 0;
+    int32_t v32 = 0;
+    delta_operand a, b;
+
+    if (n == 0)
+        return vscanadvOverToken(d, 1) ? 0 : 1;
+
+    marker = *p;
+    p++;
+
+    a.ptr = 0;
+    a.kind = 0;
+    switch (marker) {
+    case 199:
+        a.kind = DK_UBYTE;
+        break;
+    case 200:
+        a.kind = DK_SHORT;
+        a.ptr = &v16;
+        break;
+    case 201:
+        a.kind = DK_LONG;
+        a.ptr = &v32;
+        break;
+    case 202:
+        a.kind = DK_SHORT2;
+        a.ptr = &v16;
+        break;
+    default:
+        break;
+    }
+    a.flag = e->fields[0].flag;
+    b.kind = e->fields[0].kind;
+    b.flag = e->fields[0].flag;
+
+    while (p < end) {
+        int32_t node = scan_peek(d);
+
+        if (node == 0)
+            return 1;
+
+        if ((*(int32_t *)(intptr_t)node & 2) == 0) {
+            switch (marker) {
+            case 199:
+                /* The operand points into the string itself rather than at
+                   a cell, so a byte is compared where it lies. */
+                a.ptr = (void *)(intptr_t)p;
+                p++;
+                break;
+
+            case 200:
+            case 201:
+                v32 = (int32_t)(((uint32_t)(p[0] & 0x7f) << 24)
+                                | ((uint32_t)p[1] << 16)
+                                | ((uint32_t)p[2] << 8)
+                                | (uint32_t)p[3]);
+                if ((p[0] & 0x80) != 0)
+                    v32 = v32 * -1;
+                p += 4;
+                break;
+
+            case 202:
+                v16 = (int16_t)(((p[0] & 0x7f) << 8) | p[1]);
+                if ((p[0] & 0x80) != 0)
+                    v16 = (int16_t)(v16 * -1);
+                p += 2;
+                break;
+
+            default:
+                break;
+            }
+
+            b.ptr = e->get[0](TFLDS((void *)(intptr_t)node));
+            vcompare(d, &a, &b);
+            if (EVV_AT(delta_vars *, d->vars)->compared_equal != 0)
+                return 1;
+        }
+
+        if (!vscanadv(d, 1, 1))
+            return 1;
+    }
+
+    return 0;
+}
+
 /* Find the statement that governs a context. Three passes: thread every node
    that carries the field onto a chain through the context links, walk that
    chain following each node's nonsequential link until one reaches the end of

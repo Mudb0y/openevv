@@ -421,6 +421,62 @@ static int strprefix(const char *s, const char *pre)
     return 1;
 }
 
+/* Walking the names a field can take.
+ *
+ * A field whose values are named rather than numbered carries the list in
+ * its descriptor, and this is how the outside reads it: first_fieldval sets
+ * the walk up and answers the first name, next_fieldval answers each one
+ * after it, and nothing is answered when the list runs out. Where the walk
+ * stands lives in the stack block rather than in the caller's hands, so only
+ * one walk can be under way at a time -- the original's arrangement, kept.
+ *
+ * The prefix filters: a name is answered only if it starts with it. An empty
+ * prefix answers every name, which is the fast arm at the top. A prefix that
+ * is nothing but dashes is the odd one: it answers whatever the field calls
+ * its undefined value, and that is what the flag set up beside it is for.
+ */
+const char *next_fieldval(delta_state *d)
+{
+    delta_stack           *s = EVV_AT(delta_stack *, d->stack);
+    const delta_fielddesc *fd = FD(s->vals_stm, s->vals_fld);
+    const char *const     *names = (const char *const *)fd->values;
+    const char            *want = EVV_AT(const char *, s->vals_str);
+
+    s->vals_at++;
+
+    if (s->vals_at < fd->nvalues && (want == 0 || *want == 0))
+        return names[s->vals_at];
+
+    for (;;) {
+        if (s->vals_at >= fd->nvalues)
+            return 0;
+
+        if (strprefix(names[s->vals_at], want))
+            return names[s->vals_at];
+
+        if (s->vals_dashes != 0
+            && strcmp(names[s->vals_at], "undefined") == 0)
+            return names[s->vals_at];
+
+        s->vals_at++;
+    }
+}
+
+const char *first_fieldval(delta_state *d, int8_t stm, int32_t fld,
+                           const char *want)
+{
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+
+    s->vals_stm = stm;
+    s->vals_fld = fld;
+    s->vals_str = EVV_REF(want);
+    s->vals_at = -1;
+    s->vals_dashes = want != 0 ? allchrs(want, '-') : 0;
+
+    return next_fieldval(d);
+}
+
+
 /* A whole string read as a number, with nothing left over and nothing out
    of range. errno is set to something of its own first so a range failure
    left behind by somebody else does not count against this one. */
@@ -530,6 +586,165 @@ int non_unique_value(delta_state *d, int8_t f, int32_t fld, const char *s,
     }
 
     return 1;
+}
+
+/* The same question asked strictly: a name only counts if it is the only one
+ * the string could mean.
+ *
+ * Where non_unique_value takes the first name the string is a prefix of and
+ * stops, this one goes on looking and gives up the moment a second matches.
+ * Two smaller differences follow from that. The run of dashes and the
+ * ordinary prefix are not alternatives here -- the dash pass runs and then
+ * the prefix pass runs over the whole list as well, so a string that is both
+ * is two matches and therefore none. And nothing breaks out of either loop
+ * early, since finding one match is not the end of the question.
+ *
+ * The statics are the original's: what is answered is a pointer into them,
+ * so a second call overwrites what the first handed back.
+ */
+int unique_value(delta_state *d, int8_t f, int32_t fld, const char *s,
+                 const char **out_name, void **out_value)
+{
+    static int16_t lfound;
+    static int8_t  sfound;
+    static long    lval;
+    static int     ival;
+
+    const char *const *names;
+    int32_t            kind;
+    int16_t            j;
+
+    if (*s == 0)
+        return 0;
+
+    kind = FD(f, fld)->kind;
+
+    if (kind == KIND_INT) {
+        if (!legal_int(s, &ival))
+            return 0;
+        *out_name  = s;
+        *out_value = &ival;
+        return 1;
+    }
+    if (kind == KIND_LONG) {
+        if (!legal_long(s, &lval))
+            return 0;
+        *out_name  = s;
+        *out_value = &lval;
+        return 1;
+    }
+    if (kind < KIND_LONG || kind >= 0)
+        return 0;
+
+    names  = (const char *const *)FD(f, fld)->values;
+    lfound = -1;
+
+    if (allchrs(s, '-')) {
+        for (j = 0; j < FD(f, fld)->nvalues; j++)
+            if (strcmp(names[j], UNDEFINED) == 0) {
+                if (lfound != -1)
+                    return 0;
+                lfound = j;
+            }
+    }
+
+    for (j = 0; j < FD(f, fld)->nvalues; j++)
+        if (strprefix(names[j], s)) {
+            if (lfound != -1)
+                return 0;
+            lfound = j;
+        }
+
+    if (lfound == -1)
+        return 0;
+
+    *out_name = names[lfound];
+    if (strcmp(*out_name, UNDEFINED) == 0)
+        *out_name = EVV_AT(const char *,
+                           EVV_AT(delta_stack *, d->stack)->undefined_text);
+
+    if (FD(f, fld)->kind == KIND_NAMED8) {
+        sfound     = (int8_t)lfound;
+        *out_value = &sfound;
+    } else {
+        *out_value = &lfound;
+    }
+
+    return 1;
+}
+
+/* Whether a string could still become a value of this field, and whether a
+ * single character could still be the start of one.
+ *
+ * These are what something offering a person a choice asks as the text is
+ * typed: not "is this a value" but "could it yet be one". A numbered field
+ * answers by whether the text reads as a number at all, and a character by
+ * whether it is a digit or the minus sign. A named field answers by whether
+ * any of its names begins that way, with a run of dashes standing for the
+ * undefined one as everywhere else here.
+ *
+ * Neither takes the machine: the answer is in the language's own table and
+ * nothing about the spine comes into it.
+ */
+int valid_prefix(int8_t f, int32_t fld, const char *s)
+{
+    const char *const *names;
+    int32_t            kind = FD(f, fld)->kind;
+    int32_t            j;
+    int                ok = 0;
+
+    if (kind == KIND_INT)
+        return legal_int(s, 0);
+    if (kind == KIND_LONG)
+        return legal_long(s, 0);
+    if (kind < KIND_LONG || kind >= 0)
+        return 0;
+
+    names = (const char *const *)FD(f, fld)->values;
+
+    if (allchrs(s, '-')) {
+        for (j = 0; j < FD(f, fld)->nvalues; j++)
+            if (strcmp(names[j], UNDEFINED) == 0) {
+                ok = 1;
+                break;
+            }
+    }
+
+    for (j = 0; j < FD(f, fld)->nvalues; j++)
+        if (strprefix(names[j], s)) {
+            ok = 1;
+            break;
+        }
+
+    return ok;
+}
+
+int valid_prefix_char(int8_t f, int32_t fld, char c)
+{
+    const char *const *names;
+    int32_t            kind = FD(f, fld)->kind;
+    int32_t            j;
+
+    if (kind < KIND_INT)
+        return 0;
+    if (kind <= KIND_LONG)
+        return c == '-' || isdigit((unsigned char)c) ? 1 : 0;
+    if (kind >= 0)
+        return 0;
+
+    names = (const char *const *)FD(f, fld)->values;
+
+    if (c == '-') {
+        for (j = 0; j < FD(f, fld)->nvalues; j++)
+            if (strcmp(names[j], UNDEFINED) == 0)
+                return 1;
+    }
+
+    for (j = 0; j < FD(f, fld)->nvalues; j++)
+        if (names[j][0] == c)
+            return 1;
+
+    return 0;
 }
 
 

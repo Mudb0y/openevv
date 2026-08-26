@@ -80,6 +80,14 @@ extern int allow_right_ctxt(delta_state *d, int32_t at, int8_t f,
                             int32_t stop);
 extern int project_sync(delta_state *d, int32_t l, int8_t f, int32_t r,
                         int32_t back);
+extern const char *first_fieldval(delta_state *d, int8_t stm, int32_t fld,
+                                  const char *want);
+extern const char *next_fieldval(delta_state *d);
+extern int unique_value(delta_state *d, int8_t f, int32_t fld,
+                        const char *s, const char **out_name,
+                        void **out_value);
+extern int valid_prefix(int8_t f, int32_t fld, const char *s);
+extern int valid_prefix_char(int8_t f, int32_t fld, char c);
 extern int divide_time(delta_state *d, uint8_t f, int32_t t, int16_t off);
 
 /* The machine, built the way the engine builds one, and the three calls the
@@ -481,7 +489,11 @@ int main(void)
                 for (y = 0; y < (int)(sizeof NV / sizeof NV[0]); y++) {
                     int i;
 
-                    memset(names, 0xdd, 256);
+                    /* Only what is printed below. The block belongs to the
+                       machine and its size is the machine's business; the
+                       arena guard is what said so, after 256 bytes of this
+                       ran over the header of the block behind it. */
+                    memset(names, 0xdd, 16);
                     st->names_depth = -1;
                     vars->compared_equal = 0x7f;
 
@@ -594,6 +606,57 @@ int main(void)
                     printf(" %d", c);
             }
             printf("\n");
+        }
+
+        /* The form that carries its own width. Three of its four markers
+           are swept the same way as the two above -- 199 for a byte, 202 for
+           two and 201 for four -- and 200 is not, because what it compares
+           is a cell nothing wrote and in IBM's build that is whatever its
+           stack held. A length of nothing is in as well, since there the
+           call is a step over a token rather than a comparison. */
+        for (k = 0; k < 10; k++) {
+            static const int MARKERS[3] = { 199, 202, 201 };
+            int m;
+
+            for (m = 0; m < 3; m++) {
+                printf("%-16s %2d %3d ->", "marked", k, MARKERS[m]);
+                for (c = 0; c < 512; c++) {
+                    uint8_t buf[5];
+                    uint8_t len;
+
+                    buf[0] = (uint8_t)MARKERS[m];
+                    switch (MARKERS[m]) {
+                    case 199:
+                        buf[1] = (uint8_t)c;
+                        len = 2;
+                        break;
+                    case 202:
+                        buf[1] = (uint8_t)(c >> 8);
+                        buf[2] = (uint8_t)c;
+                        len = 3;
+                        break;
+                    default:
+                        buf[1] = 0;
+                        buf[2] = 0;
+                        buf[3] = (uint8_t)(c >> 8);
+                        buf[4] = (uint8_t)c;
+                        len = 5;
+                        break;
+                    }
+
+                    lpta_loadp(d, tok);
+                    if (setscan_l(d, 1))
+                        continue;
+                    if (test_string(d, (uint8_t)k, len, buf) == 0)
+                        printf(" %d", c);
+                }
+                printf("\n");
+            }
+
+            lpta_loadp(d, tok);
+            printf("%-16s %2d -> %d\n", "marked.none", k,
+                   setscan_l(d, 1) ? -1
+                                   : test_string(d, (uint8_t)k, 0, 0));
         }
 
         /* A negative code, which is the sign bit rather than a large one, and
@@ -712,6 +775,109 @@ int main(void)
         where[0] = tok->value;
         where[1] = s->spine_l;
         where[2] = s->spine_r;
+
+        /* The names a field can take, walked out in full. This one wants no
+           spine at all -- the list is in the field's own descriptor -- so it
+           is the one place here where a whole answer can be printed rather
+           than a landmark. The prefixes are the empty one, which lets every
+           name through, a letter, and a run of dashes, which is the arm that
+           answers with whatever the field calls its undefined value. */
+        {
+            static const char *WANT[4] = { "", "a", "-", "--" };
+            int w, fld;
+
+            for (fld = 0; fld < 3; fld++)
+                for (w = 0; w < 4; w++) {
+                    /* The prefix is a pointer the machine holds in a value,
+                       so it has to come from somewhere the arena can name.
+                       strdup is the arena's on our side and the C library's
+                       on IBM's, which is what one source needs. */
+                    char *want = strdup(WANT[w]);
+                    const char *name;
+                    int count = 0;
+
+                    if (want == NULL)
+                        return 1;
+
+                    printf("%-16s %d %d ->", "fieldvals", fld, w);
+                    for (name = first_fieldval(d, 1, fld, want);
+                         name != 0 && count < 40;
+                         name = next_fieldval(d)) {
+                        printf(" %s", name);
+                        count++;
+                    }
+                    printf("\n");
+                }
+
+            /* And with no prefix at all, which is not the same as an empty
+               one: the walk has nothing to compare against and the flag
+               beside it stays clear. */
+            {
+                const char *name;
+                int count = 0;
+
+                printf("%-16s ->", "fieldvals.null");
+                for (name = first_fieldval(d, 1, 0, 0);
+                     name != 0 && count < 40;
+                     name = next_fieldval(d)) {
+                    printf(" %s", name);
+                    count++;
+                }
+                printf("\n");
+            }
+        }
+
+        /* And the same list asked whether a string names one of its values
+           and only one. What comes back is the name it settled on and, where
+           the field is named rather than numbered, which index that is; both
+           are content. A string that two names begin with has to be refused,
+           which is the whole difference from the call beside it. */
+        {
+            static const char *TRY[10] = {
+                "", "a", "e", "u", "un", "und", "lo", "l", "-", "--"
+            };
+            int t, fld;
+
+            for (fld = 0; fld < 3; fld++)
+                for (t = 0; t < 10; t++) {
+                    const char *name = 0;
+                    void *value = 0;
+                    int rc;
+
+                    rc = unique_value(d, 1, fld, TRY[t], &name, &value);
+                    printf("%-16s %d %-3s -> %d", "unique", fld, TRY[t], rc);
+                    if (rc) {
+                        printf(" %s", name != 0 ? name : "(none)");
+                        if (value != 0)
+                            printf(" %d", (int)*(const int16_t *)value);
+                    }
+                    printf("\n");
+                }
+        }
+
+        /* Whether a string could yet become a value, and whether a
+           character could yet start one. Every printable character is
+           offered to the second, which is the whole of what it can be
+           asked. */
+        {
+            static const char *TRY[10] = {
+                "", "a", "e", "u", "un", "und", "lo", "l", "-", "--"
+            };
+            int t, fld, ch;
+
+            for (fld = 0; fld < 4; fld++) {
+                printf("%-16s %d ->", "prefix", fld);
+                for (t = 0; t < 10; t++)
+                    printf(" %d", valid_prefix(1, fld, TRY[t]));
+                printf("\n");
+
+                printf("%-16s %d ->", "prefix.char", fld);
+                for (ch = 32; ch < 127; ch++)
+                    if (valid_prefix_char(1, fld, (char)ch))
+                        printf(" %c", ch);
+                printf("\n");
+            }
+        }
 
         printf("%-16s ->", "nfields");
         for (i = 0; i < 10; i++)
