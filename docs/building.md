@@ -849,6 +849,8 @@ Point `EVV_LIBDIR` at that directory and run the extractors:
 
 `extract-langs.sh` puts each of the other eight languages in `analysis/<tag>`, which is for comparison rather than for building. Both extractors want `llvm-ar`, `llvm-objdump` and the mingw `objcopy`, so both run inside `nix develop`.
 
+Read those objects with `llvm-objdump -d -r --no-show-raw-insn` and not with binutils `objdump -d`. Every function is its own COMDAT `.text` section and MSVC gave local labels the same names in different sections -- `$L61863` occurs several times in one object -- so binutils takes the recurring name for a function boundary, resynchronises the instruction stream at that byte and prints plausible nonsense from there to the end of the section. In `JpnUtil::ConvertDakuten` it produced `into` and `add %al,(%eax)` where the code is a compare and a conditional jump, and nothing warned. If a function's control flow stops making sense in the middle, suspect the disassembler first. The lifters go on using binutils `objdump` and `nm` for section bytes, headers, symbols and relocations, none of which is affected; it is instruction decoding that is wrong.
+
 IBM's public host carries more than the SDK: the AIX packages of the same engine, whose headers are how the interface across four generations was read, and the Pocket PC runtimes, are under `/software/` beside it. None of it is needed here.
 
 Mainline ViaVoice is a different product line and not a wider language set.

@@ -61,6 +61,8 @@ Our own code is MIT, in LICENSE. `lang/enus` is IBM's data and is not ours to li
 
 Everything runs inside `nix develop`: outside it there is no compiler, no Python and no Wine. That Wine is wow64 and one prefix serves both kinds of PE; a prefix made by an older 32-bit-only Wine is refused outright, and the answer is to delete `.wine` and let it be made again.
 
+Read IBM's objects with `llvm-objdump -d -r --no-show-raw-insn` and never with binutils `objdump -d`. Each function is its own COMDAT `.text` section and MSVC gave local labels the same names in different sections, so binutils takes a recurring label for a function boundary, resynchronises the instruction stream at that byte, and prints plausible nonsense from there to the end of the section -- `into` and `add %al,(%eax)` where the code is really a compare and a jump. Nothing warns. If a function's control flow stops making sense in the middle, suspect the disassembler before suspecting IBM. The lifters in `tools` go on using binutils `objdump` and `nm` for sections, symbols and relocations, none of which is affected; it is instruction decoding that is wrong.
+
 `lang/enus/delta_rules_c.c` is thirteen megabytes of generated C and is not in the tree; `make rules` writes it. Seven minutes of compiler, so a change to the decompiler costs a quarter of an hour before a single case runs.
 
 Releases are tags: pushing `vN` makes the workflow build the archives and cut the release. Nothing about them is manual.
