@@ -32,6 +32,7 @@ AT_STACK(heap_first, 0x0500);
 AT_STACK(seg, 0x0504);
 AT_STACK(heap_cur, 0x0508);
 AT_STACK(seg_size, 0x0514);
+AT_STACK(walk, 0x0510);
 AT_STACK(marks, 0x051c);
 AT_STACK(free_count, 0x05e4);
 AT_STACK(free_segs, 0x05e8);
@@ -248,6 +249,66 @@ int32_t initializeDeltaStack(delta_state *d, int32_t size)
     setDeltaStackVBot(d, EVV_AT(uint8_t *, s->top));
 
     return s->seg != 0;
+}
+
+/* Walking the backtracking stack a record at a time.
+ *
+ * Every record starts with its kind, and the kind says how long it is: the
+ * fixed sizes the stack block carries for each, except a token record, whose
+ * own length word decides it -- rounded up to the odd number above it and
+ * then past the header. A kind the switch does not know costs two bytes,
+ * which is the back marker.
+ *
+ * Nothing in the engine walks the stack this way. It is the display's, the
+ * one src/delta_trace.c says why this tree does not have, and it is here for
+ * completeness rather than for a caller.
+ */
+int32_t peekDeltaStackNext(delta_state *d)
+{
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+    int32_t      at = s->walk;
+    int32_t      size;
+
+    switch (*EVV_AT(const int8_t *, at)) {
+    case 0:  size = s->ca_size; break;
+    case 1:  size = s->size_b0; break;
+    case 2:
+        size = ((((*EVV_AT(const int32_t *, at + 8) - 1) & ~1) | 1)
+                + s->size_ac + 1);
+        break;
+    case 3:  size = s->ca_size; break;
+    case 4:  size = s->boa_size; break;
+    case 5:  size = s->size_b8; break;
+    case 6:  size = s->boa_size; break;
+    case 7:  size = s->size_a8; break;
+    default: size = 2; break;
+    }
+
+    s->walk = at + size;
+    return at;
+}
+
+/* Where such a walk begins. Note what it answers with: it sets the walk to
+   the top, steps once, and hands back where the step left it rather than
+   where it started. That is the original's doing. */
+int32_t peekDeltaStackStart(delta_state *d)
+{
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+
+    s->walk = s->top;
+    peekDeltaStackNext(d);
+    return s->walk;
+}
+
+/* Give the stack's own segment back and take a fresh one of the size it was
+   built with. */
+void resetDeltaStack(delta_state *d)
+{
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+
+    freeDynaMem(s->seg);
+    s->seg = 0;
+    initializeDeltaStack(d, s->base);
 }
 
 int32_t getDeltaHeapSegNumber(delta_state *d, uint8_t *p, int32_t unit)

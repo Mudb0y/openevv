@@ -206,7 +206,8 @@ typedef struct {
     evv_ref    seg;          /* 0x0504, the segment the stack lives in */
     evv_ref    heap_cur;     /* 0x0508, where the next object comes from */
     evv_ref    vbot;         /* 0x050c, how far back an unwind may go */
-    uint8_t    pad_0510[4];
+    evv_ref    walk;         /* 0x0510, where a walk over the records has
+                                got to; only the two peek calls use it */
     int32_t    seg_size;     /* 0x0514 */
     evv_ref    base;         /* 0x0518 */
     delta_mark marks[DELTA_MARKS];  /* 0x051c */
@@ -743,6 +744,9 @@ DELTA_FASTCALL void  freeDeltaHeapObject(delta_state *d, void *p);
 /* Giving the heap and the stack back, and setting the stack up. */
 void  deltaHeapCleanup(delta_state *d);
 int32_t initializeDeltaStack(delta_state *d, int32_t size);
+int32_t peekDeltaStackStart(delta_state *d);
+int32_t peekDeltaStackNext(delta_state *d);
+void    resetDeltaStack(delta_state *d);
 void  freeDeltaHeapTo(delta_state *d, uint8_t *pos, int32_t release);
 int32_t getDeltaHeapSegNumber(delta_state *d, uint8_t *p, int32_t unit);
 int   recordDeltaHeapPos(delta_state *d);

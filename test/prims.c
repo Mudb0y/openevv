@@ -73,6 +73,8 @@ void evvRunStaticInitialisers(void);
    header on either side -- its callers say extern where they use it, which
    is what the engine's own files do -- so the harness says it here. */
 extern int32_t next_token(delta_state *d, int8_t f, int32_t at);
+extern int32_t peekDeltaStackStart(delta_state *d);
+extern int32_t peekDeltaStackNext(delta_state *d);
 extern int32_t num_fields_in_stream(int8_t st);
 extern int32_t left_context(delta_state *d, int8_t f, int32_t at);
 extern int32_t right_context(delta_state *d, int8_t f, int32_t at);
@@ -870,6 +872,46 @@ int main(void)
                        (int)EVV_AT(const uint8_t *, d->fence_marks)[i]);
             printf("\n");
         }
+
+        /* And a walk over the records those two calls just pushed, which is
+           the only thing here that reads the backtracking stack rather than
+           writing it. */
+        {
+            delta_stack *st = EVV_AT(delta_stack *, d->stack);
+            int step;
+
+            /* Start sets the walk to the top and steps once, and answers
+               where that left it rather than where it began -- the
+               original's doing, and the reason this reads the field rather
+               than the answer. The walk stops at the bottom the machine
+               says, because past that is not a record and what is there is
+               each process's own. */
+            printf("%-16s top %d start %d ->", "stackwalk",
+                   (int)*EVV_AT(const int8_t *, st->top),
+                   (int)(peekDeltaStackStart(d) - st->top));
+            for (step = 0; step < 12; step++) {
+                int32_t here = st->walk;
+                int32_t was;
+
+                int kind;
+
+                if (here == 0)
+                    break;
+
+                /* The walk stops at the first thing that is not a record
+                   kind rather than at a position, because a position past
+                   the live records is each process's own and what is
+                   written there is not a record at all. */
+                kind = (int)*EVV_AT(const int8_t *, here);
+                if (kind < 0 || kind > 8)
+                    break;
+
+                printf(" %d", kind);
+                was = peekDeltaStackNext(d);
+                printf(":%d", (int)(st->walk - was));
+            }
+            printf("\n");
+        }
     }
 
     /* The stream and context calls, which are what a text rule reaches the
@@ -1234,6 +1276,13 @@ int main(void)
                    (int)(EVV_AT(const uint8_t *, vars->gen_at) - params));
         }
 
+        /* The walk over the backtracking stack, which is the one thing here
+           that reads the records the calls above left. What is printed is
+           each record's kind and how far the walk moved -- a difference,
+           since the positions themselves are each process's own -- and the
+           two engines have to agree on both. The records are whatever the
+           cases before this left behind, which is a real stack rather than
+           one built for the occasion. */
         printf("%-16s -> %d\n", "gen.copy", (int)vgen_copy(d));
         show_gencell(&vars->gen_now, "now", 2);
         show_gencell(&vars->gen_done, "done", 2);
