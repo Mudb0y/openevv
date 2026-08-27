@@ -147,7 +147,13 @@ The thirty-five objects want only 85 names from outside themselves, and most are
 - `JpnUtil::euc2shift` and `seven2shift`, in `codeconv.obj`, 2,794 bytes
 - `getFullRomPathName`, twenty bytes in `libmain.obj`, which has the same trap in it as `getFullPathName` above
 
-`IniFileWriter` is wanted only by `romreg.obj`, which is registration rather than speech, and can be left out with it. The user-dictionary half -- `RomUserDict`, the skiplist chain, and the dictionary methods of `ConverterInterface` -- is separable and no sentence being spoken reaches it; it is deferred, and the ECI dictionary calls answer refused for Japanese until it is done. Stas agreed that on 27 August 2026.
+The skiplist chain is written and proved: `src/eci_key.c`, `eci_translation.c`, `eci_listnode.c`, `eci_skiplistnode.c`, `eci_arraylistnode.c` and `eci_skipstore.c`, held to IBM's own objects by `test/romprims.sh` over insert, search, multiSearch, remove, a full walk and a save-and-load round trip.
+
+Two things about that store are worth knowing before reading it. Its constructor calls `srand(time(0))`, so the tower over the entries differs between two runs and **a saved file is not the same file twice** -- which is why the sweep compares what the list answers rather than what it writes, and why a round trip is checked by walking the loaded list. Nothing else in this engine uses `rand`, so the seeding disturbs nothing. And the load path turns file indices back into pointers only after every node exists, because it cannot do it sooner.
+
+`RomUserDict` and the dictionary methods of `ConverterInterface` are what is left of the user-dictionary half, and they are blocked rather than deferred: `RomUserDict` calls `DictSearch::GetYoonIndex`, `SetLongWord` and `ConvertYoonDict`, so it cannot be written until `DictSearch` is. The ECI dictionary calls answer refused for Japanese until then.
+
+`IniFileWriter` is wanted only by `romreg.obj` and by English's `engreg.obj`, both registration rather than speech, and our arrangement retired registration -- there is no library to find, so there is no path to write into an ini file. Transcribing it would be a file with no caller in either half of the tree. Nine of its thirteen methods have been read and are in this session's notes; the four left are `writeToMemory`, `deleteKeyFromSection`, `deleteSection` and the rest of `writeString`.
 
 ## Decisions already taken
 

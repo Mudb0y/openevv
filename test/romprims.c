@@ -77,6 +77,35 @@ static Conv *makeConv(Param *p)
 #define TO_UCS2(c, in, out)      uc_MBCSToUCS2((c), (in), (out))
 #define TO_MBCS(c, in, out, f)   uc_UCS2ToMBCS((c), (in), (out), (f))
 
+#include "eci_key.h"
+
+#define IBM_KEY_ROOM   sizeof(Key)
+#define IBM_TRANS_ROOM sizeof(Translation)
+#define IBM_LIST_ROOM  sizeof(SkipList)
+
+#define ibm_keyCtor(self, b, n)     key_ctor((Key *)(self), (b), (n))
+#define ibm_keyDtor(self)           key_dtor((Key *)(self))
+#define ibm_keySet(self, b, n)      key_set((Key *)(self), (b), (n))
+#define ibm_keyDump(self)           key_dump((Key *)(self))
+#define ibm_transCtor(self, v, n, w, e, p) \
+    tr_ctor((Translation *)(self), (v), (n), (w), (e), (p))
+#define ibm_transDtor(self)         tr_dtor((Translation *)(self))
+#define ibm_transDump(self)         tr_dump((Translation *)(self))
+#define ibm_slCtor(self)            sl_ctor((SkipList *)(self))
+#define ibm_slDtor(self)            sl_dtor((SkipList *)(self))
+#define ibm_slInsert(self, k, t) \
+    sl_insert((SkipList *)(self), (Key *)(k), (Translation *)(t))
+#define ibm_slSearch(self, k)       sl_search((SkipList *)(self), (Key *)(k))
+#define ibm_slMultiSearch(self, k) \
+    sl_multiSearch((SkipList *)(self), (Key *)(k))
+#define ibm_slRemove(self, k)       sl_remove((SkipList *)(self), (Key *)(k))
+#define ibm_slGetFirst(self, k, t) \
+    sl_getFirst((SkipList *)(self), (Key **)(k), (Translation **)(t))
+#define ibm_slGetNext(self, k, t) \
+    sl_getNext((SkipList *)(self), (Key **)(k), (Translation **)(t))
+#define ibm_slSave(self, p)         sl_save((SkipList *)(self), (p))
+#define ibm_slLoad(self, p)         sl_load((SkipList *)(self), (p))
+
 #define DM(name) dm_##name
 #define JU(name) ju_##name
 #define STATIC_DICT_INIT() ((void)0)
@@ -243,6 +272,51 @@ extern int32_t ibm_YomiCmp(uint8_t *a, uint8_t lenA, uint8_t *b, uint8_t lenB)
 extern void ibm_TableFree(uint16_t *used, uint16_t *tail, uint16_t *freeHead,
                           void *table, uint16_t nil, uint16_t which)
     MANGLED("?TableFree@JpnUtil@@SAXPAG00PAU_LINK_TBL_T@@GG@Z");
+
+/* The stored dictionary's five classes. These are C++ objects with vtables and
+   thiscall methods, so they are declared the way the port declares IBM's
+   engine classes: the room they take up is stated here and the constructors
+   are called by their mangled names. */
+#define IBM_KEY_ROOM   0x0c
+#define IBM_TRANS_ROOM 0x20
+#define IBM_LIST_ROOM  0x20
+
+extern THIS void *ibm_keyCtor(void *self, char *bytes, int32_t len)
+    MANGLED("??0Key@@QAE@PADH@Z");
+extern THIS void ibm_keyDtor(void *self)
+    MANGLED("??1Key@@UAE@XZ");
+extern THIS void ibm_keySet(void *self, char *bytes, int32_t len)
+    MANGLED("?set@Key@@QAEXPADH@Z");
+extern THIS void ibm_keyDump(void *self)
+    MANGLED("?dump@Key@@QAEXXZ");
+extern THIS void *ibm_transCtor(void *self, const char *value, int32_t len,
+                                const char *word, const char *extra,
+                                int32_t pos)
+    MANGLED("??0Translation@@QAE@PBDH00W4ECIPartOfSpeech@@@Z");
+extern THIS void ibm_transDtor(void *self)
+    MANGLED("??1Translation@@QAE@XZ");
+extern THIS void ibm_transDump(void *self)
+    MANGLED("?dump@Translation@@QAEXXZ");
+extern THIS void *ibm_slCtor(void *self)
+    MANGLED("??0SkipList@@QAE@XZ");
+extern THIS void ibm_slDtor(void *self)
+    MANGLED("??1SkipList@@UAE@XZ");
+extern THIS int32_t ibm_slInsert(void *self, void *key, void *trans)
+    MANGLED("?insert@SkipList@@QAEHPAVKey@@PAVTranslation@@@Z");
+extern THIS void *ibm_slSearch(void *self, void *key)
+    MANGLED("?search@SkipList@@QAEPAVTranslation@@PAVKey@@@Z");
+extern THIS void *ibm_slMultiSearch(void *self, void *key)
+    MANGLED("?multiSearch@SkipList@@QAEPAVTranslation@@PAVKey@@@Z");
+extern THIS int32_t ibm_slRemove(void *self, void *key)
+    MANGLED("?remove@SkipList@@QAEHPAVKey@@@Z");
+extern THIS int32_t ibm_slGetFirst(void *self, void **key, void **trans)
+    MANGLED("?getFirst@SkipList@@QAEHPAPAVKey@@PAPAVTranslation@@@Z");
+extern THIS int32_t ibm_slGetNext(void *self, void **key, void **trans)
+    MANGLED("?getNext@SkipList@@QAEHPAPAVKey@@PAPAVTranslation@@@Z");
+extern THIS int32_t ibm_slSave(void *self, const char *path)
+    MANGLED("?save@SkipList@@QAEHPBD@Z");
+extern THIS int32_t ibm_slLoad(void *self, const char *path)
+    MANGLED("?load@SkipList@@QAEHPBD@Z");
 
 #define DM(name) ibm_##name
 #define JU(name) ibm_##name
@@ -833,6 +907,156 @@ static void sweepTableFree(void)
     }
 }
 
+/* ---- the stored dictionary -------------------------------------------- */
+
+/* What is compared and what cannot be. A skip list draws each entry's tower
+   height at random, and IBM's constructor seeds that from the clock, so the
+   towers differ between two runs of the same program and a saved file is not
+   the same file twice. What does not depend on the draw is every answer the
+   list gives: order decides those, and the towers only decide how quickly they
+   are reached. So this prints answers -- what a search found, what a walk
+   yields, what a remove said -- and never a level or a file byte. A save and a
+   load are checked by walking the loaded list and finding the same entries in
+   the same order. */
+
+/* The keys, chosen to exercise what the comparisons do: the same first bytes
+   with different lengths, so a prefix search has something to find; keys that
+   sort before and after each other; and one inserted twice, so the replace
+   path is walked. */
+static const char *const SL_KEYS[] = {
+    "\x82\xa0", "\x82\xa0\x82\xa2", "\x82\xa0\x82\xa2\x82\xa4",
+    "\x82\xa2", "\x82\xa4", "\x83\x41", "\x83\x41\x83\x43",
+    "\x93\xfa\x96\x7b", "\x93\xfa\x96\x7b\x8c\xea",
+    "ab", "abcd", "abcdef", "b", "zz", "\x82\xa0", "\x81\x40",
+    "\xfc\xfc", "m", "\x82\xf1", "\x83\x93",
+    NULL
+};
+
+static void slWalk(void *list, const char *what)
+{
+    void *key = 0;
+    void *trans = 0;
+    int   n = 0;
+    int32_t more;
+
+    printf("SL walk %s\n", what);
+    for (more = ibm_slGetFirst(list, &key, &trans); more != 0;
+         more = ibm_slGetNext(list, &key, &trans)) {
+        printf("SL  %d ", n++);
+        ibm_keyDump(key);
+        ibm_transDump(trans);
+        if (n > 200)
+            break;
+    }
+    printf("SL walked %d\n", n);
+}
+
+static void sweepSkipList(void)
+{
+    static char list[IBM_LIST_ROOM];
+    static char list2[IBM_LIST_ROOM];
+    static char key[IBM_KEY_ROOM];
+    static char trans[IBM_TRANS_ROOM];
+    const char *path = "romprims-skiplist.tmp";
+    int i;
+
+    ibm_slCtor(list);
+
+    for (i = 0; SL_KEYS[i] != NULL; i++) {
+        char what[64];
+        int32_t rc;
+
+        sprintf(what, "value-%d", i);
+        ibm_keyCtor(key, (char *)SL_KEYS[i], (int32_t)strlen(SL_KEYS[i]));
+        ibm_transCtor(trans, what, (int32_t)strlen(what), "word", "extra",
+                      i % 5);
+        rc = ibm_slInsert(list, key, trans);
+        printf("SL insert %d rc %d\n", i, (int)rc);
+        ibm_transDtor(trans);
+        ibm_keyDtor(key);
+    }
+
+    slWalk(list, "after inserting");
+
+    /* Every key that went in, and a few that did not. */
+    for (i = 0; SL_KEYS[i] != NULL; i++) {
+        void *found;
+
+        ibm_keyCtor(key, (char *)SL_KEYS[i], (int32_t)strlen(SL_KEYS[i]));
+        found = ibm_slSearch(list, key);
+        printf("SL search %d %s", i, found ? "found " : "none\n");
+        if (found)
+            ibm_transDump(found);
+        ibm_keyDtor(key);
+    }
+    {
+        static const char *const absent[] = { "q", "\x82\xa1", "zzz", NULL };
+
+        for (i = 0; absent[i] != NULL; i++) {
+            void *found;
+
+            ibm_keyCtor(key, (char *)absent[i],
+                        (int32_t)strlen(absent[i]));
+            found = ibm_slSearch(list, key);
+            printf("SL absent %d %s\n", i, found ? "found" : "none");
+            ibm_keyDtor(key);
+        }
+    }
+
+    /* Every prefix of a long key at once, which is what a Japanese lookup
+       wants: the count comes back in the four bytes before the answer. */
+    {
+        static const char *const multi[] = {
+            "\x82\xa0\x82\xa2\x82\xa4", "\x93\xfa\x96\x7b\x8c\xea",
+            "abcdef", NULL
+        };
+
+        for (i = 0; multi[i] != NULL; i++) {
+            void *out;
+
+            ibm_keyCtor(key, (char *)multi[i], (int32_t)strlen(multi[i]));
+            out = ibm_slMultiSearch(list, key);
+            if (out == 0) {
+                printf("SL multi %d none\n", i);
+            } else {
+                int32_t n = *(const int32_t *)((const char *)out - 4);
+                int32_t j;
+
+                printf("SL multi %d count %d\n", i, (int)n);
+                for (j = 0; j < n; j++) {
+                    printf("SL  multi %d %d ", i, (int)j);
+                    ibm_transDump((char *)out + j * IBM_TRANS_ROOM);
+                }
+            }
+            ibm_keyDtor(key);
+        }
+    }
+
+    /* Out again, every other one. */
+    for (i = 0; SL_KEYS[i] != NULL; i += 2) {
+        int32_t rc;
+
+        ibm_keyCtor(key, (char *)SL_KEYS[i], (int32_t)strlen(SL_KEYS[i]));
+        rc = ibm_slRemove(list, key);
+        printf("SL remove %d rc %d\n", i, (int)rc);
+        ibm_keyDtor(key);
+    }
+
+    slWalk(list, "after removing");
+
+    /* And round through a file. The file's own bytes cannot be compared --
+       the towers in it are random -- but what comes back has to be what went
+       in. */
+    printf("SL save %d\n", (int)ibm_slSave(list, path));
+    ibm_slCtor(list2);
+    printf("SL load %d\n", (int)ibm_slLoad(list2, path));
+    slWalk(list2, "after loading");
+
+    ibm_slDtor(list2);
+    ibm_slDtor(list);
+    remove(path);
+}
+
 int main(void)
 {
     Param *p;
@@ -870,6 +1094,7 @@ int main(void)
     sweepKatakana();
     sweepYomi();
     sweepTableFree();
+    sweepSkipList();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS
