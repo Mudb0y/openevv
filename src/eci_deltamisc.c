@@ -97,6 +97,14 @@ void abort_1(delta_state *d)
     exit(5);
 }
 
+/* And one more empty body, from the printing layer rather than the command
+   one. What it was for is writing a timing variable out where a person could
+   read it; src/delta_trace.c says what happened to that layer and why. */
+void prt_tvar(delta_state *d)
+{
+    (void)d;
+}
+
 /* Starting the machine when it is a library rather than a program. The
    count is one less than the caller's because the first word of a command
    line is the command; with nothing after it there is no argument vector at

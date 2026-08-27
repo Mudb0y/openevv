@@ -590,6 +590,7 @@ void nullines_l(delta_state *d);
 void fail(delta_state *d);
 void halt(delta_state *d);
 void abort_1(delta_state *d);
+void prt_tvar(delta_state *d);
 void bsclear(delta_state *d);
 void *bspop_boa(delta_state *d);
 void starttest_e(delta_state *d, int16_t tag);
