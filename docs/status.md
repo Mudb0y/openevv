@@ -1,6 +1,6 @@
 # What works and what does not
 
-Last measured 25 August 2026.
+Last measured 27 August 2026.
 
 ## Works
 
@@ -176,7 +176,7 @@ What is left in the compiler is the ergonomics rather than the reach. Every oper
 
 ## The machine's own reach
 
-The Delta machine is in this tree only as far as the nine languages IBM shipped ever reached into it. Its seventeen objects define 444 names; 138 of them had no answer here, not because they were hard but because no rule calls them, so the link never asked and nothing was ever missing. A rule of ours can ask, and then it is missing.
+The Delta machine was in this tree only as far as the nine languages IBM shipped ever reached into it. Its seventeen objects define 444 names, and 136 of those had no answer here, not because they were hard but because no rule calls them, so the link never asked and nothing was ever reported missing. A rule of ours can ask, and then it was missing. That is over.
 
 All 136 are now written, the last sixteen on 27 August 2026, so every name the seventeen objects define has an answer here and a rule of ours can ask for anything the machine has. The ones a rule being authored is likeliest to want came first: every arithmetic operation beyond addition, all of `test`, all of `assign`, all of `stack`, all of `pointer`, all of `optimize`, all of `for`, and every string test the machine has, the two that hold the scan where it stands, the context and stream calls a text rule reaches the spine through, and the walk over the names a field can take. `docs/remaining.md` has the list, object by object.
 
