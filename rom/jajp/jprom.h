@@ -80,6 +80,91 @@ extern const uint8_t *const jajp_m_pKanaTable;
 extern const uint8_t *const jajp_m_pLeadByteTable1;
 extern const uint8_t *const jajp_m_pLeadByteTable2;
 
+/* dictman.obj's tables, and how long each is. The lengths are what the
+   lifter measured, which is the distance to the next table, so an index
+   within them is one the original could have answered for. */
+extern const uint8_t *const jajp_s_aFuncWordDict;
+extern const int32_t jajp_s_aFuncWordDict_n;
+extern const uint8_t *const jajp_s_aFuncWordDictEx;
+extern const int32_t jajp_s_aFuncWordDictEx_n;
+extern const uint8_t *const jajp_s_aKakariTable;
+extern const int32_t jajp_s_aKakariTable_n;
+extern const uint8_t *const jajp_s_aPenaltyTable;
+extern const int32_t jajp_s_aPenaltyTable_n;
+extern const uint8_t *const jajp_s_aPhrVectorTable;
+extern const int32_t jajp_s_aPhrVectorTable_n;
+extern const uint8_t *const jajp_s_aAccentTable;
+extern const int32_t jajp_s_aAccentTable_n;
+extern const uint8_t *const jajp_s_aNumMDTable;
+extern const int32_t jajp_s_aNumMDTable_n;
+extern const uint8_t *const jajp_s_aNumYomiTable;
+extern const int32_t jajp_s_aNumYomiTable_n;
+extern const uint8_t *const jajp_s_aNumJMDTable;
+extern const int32_t jajp_s_aNumJMDTable_n;
+extern const uint8_t *const jajp_s_aNumJCCTable;
+extern const int32_t jajp_s_aNumJCCTable_n;
+extern const uint8_t *const jajp_s_aHash4NDict;
+extern const int32_t jajp_s_aHash4NDict_n;
+extern const uint8_t *const jajp_s_aHash4TDict;
+extern const int32_t jajp_s_aHash4TDict_n;
+extern const uint8_t *const jajp_s_aHash4KDict;
+extern const int32_t jajp_s_aHash4KDict_n;
+extern const uint8_t *const jajp_s_aHash4KNDict;
+extern const int32_t jajp_s_aHash4KNDict_n;
+extern const uint8_t *const jajp_s_aHash4KTDict;
+extern const int32_t jajp_s_aHash4KTDict_n;
+extern const uint8_t *const jajp_s_aHash4EDict;
+extern const int32_t jajp_s_aHash4EDict_n;
+extern const uint8_t *const jajp_s_aItaijiHashTable;
+extern const int32_t jajp_s_aItaijiHashTable_n;
+extern const uint8_t *const jajp_s_aItaijiTable;
+extern const int32_t jajp_s_aItaijiTable_n;
+extern const uint8_t *const jajp_s_aTGTable;
+extern const int32_t jajp_s_aTGTable_n;
+extern const uint8_t *const jajp_s_aYomiDataTable;
+extern const int32_t jajp_s_aYomiDataTable_n;
+extern const uint8_t *const jajp_s_aPhraseDataTable;
+extern const int32_t jajp_s_aPhraseDataTable_n;
+extern const uint8_t *const jajp_s_aNumberDataTable;
+extern const int32_t jajp_s_aNumberDataTable_n;
+extern const uint8_t *const jajp_s_szFromStringOfRoman2Kana;
+extern const int32_t jajp_s_szFromStringOfRoman2Kana_n;
+extern const uint8_t *const jajp_s_szToStringOfRoman2Kana;
+extern const int32_t jajp_s_szToStringOfRoman2Kana_n;
+extern const uint8_t *const jajp_s_szRemainStringOfRoman2Kana;
+extern const int32_t jajp_s_szRemainStringOfRoman2Kana_n;
+extern const uint8_t *const jajp_s_anFromPositionOfRoman2Kana;
+extern const int32_t jajp_s_anFromPositionOfRoman2Kana_n;
+extern const uint8_t *const jajp_s_anToPositionOfRoman2Kana;
+extern const int32_t jajp_s_anToPositionOfRoman2Kana_n;
+extern const uint8_t *const jajp_s_anRemainPositionOfRoman2Kana;
+extern const int32_t jajp_s_anRemainPositionOfRoman2Kana_n;
+extern const uint8_t *const jajp_s_anAccentValueOfRoman2Kana;
+extern const int32_t jajp_s_anAccentValueOfRoman2Kana_n;
+extern const uint8_t *const jajp_s_anAccentPositionOfRoman2Kana;
+extern const int32_t jajp_s_anAccentPositionOfRoman2Kana_n;
+extern const uint8_t *const jajp_s_szFromStringOfEng2Roman;
+extern const int32_t jajp_s_szFromStringOfEng2Roman_n;
+extern const uint8_t *const jajp_s_szToStringOfEng2Roman;
+extern const int32_t jajp_s_szToStringOfEng2Roman_n;
+extern const uint8_t *const jajp_s_szRemainStringOfEng2Roman;
+extern const int32_t jajp_s_szRemainStringOfEng2Roman_n;
+extern const uint8_t *const jajp_s_anFromPositionOfEng2Roman;
+extern const int32_t jajp_s_anFromPositionOfEng2Roman_n;
+extern const uint8_t *const jajp_s_anToPositionOfEng2Roman;
+extern const int32_t jajp_s_anToPositionOfEng2Roman_n;
+extern const uint8_t *const jajp_s_anRemainPositionOfEng2Roman;
+extern const int32_t jajp_s_anRemainPositionOfEng2Roman_n;
+extern const uint8_t *const jajp_s_anAccentValueOfEng2Roman;
+extern const int32_t jajp_s_anAccentValueOfEng2Roman_n;
+extern const uint8_t *const jajp_s_anAccentPositionOfEng2Roman;
+extern const int32_t jajp_s_anAccentPositionOfEng2Roman_n;
+
+/* The static dictionary's two supplement blobs, which DictMan reaches for.
+   tools/lift-rom.py writes those. */
+extern const uint8_t *const jajp_s_apszSuppD[];
+extern const uint8_t *const jajp_s_apszSuppI[];
+
 /* ---- RomInstParam ---------------------------------------------------- */
 
 /* What an instance was told to be. Every parameter the engine sets on a
@@ -160,6 +245,56 @@ int32_t           uc_MBCSToUCS2(UnicodeConverter *c, const char *in,
 int32_t           uc_UCS2ToMBCS(UnicodeConverter *c, const uint16_t *in,
                                 char **out, int32_t yenFlag);
 uint32_t          ucs2len(const uint16_t *s);
+
+/* ---- DictMan --------------------------------------------------------- */
+
+/* One substitution rule as DictMan lays it out: eight tables and a count.
+   The positions and the accent tables are read as sixteen-bit values; what a
+   row of each means is the business of whichever class reads them. */
+typedef struct DictManRules {
+    const uint8_t *from;         /* +0x00 */
+    const uint8_t *to;           /* +0x04 */
+    const uint8_t *remain;       /* +0x08 */
+    const uint8_t *fromPos;      /* +0x0c */
+    const uint8_t *toPos;        /* +0x10 */
+    const uint8_t *remainPos;    /* +0x14 */
+    const uint8_t *accentValue;  /* +0x18 */
+    const uint8_t *accentPos;    /* +0x1c */
+    uint16_t       count;        /* +0x20 */
+} DictManRules;
+
+extern DictManRules dm_EngToRomanRule;
+extern DictManRules dm_RomanToKanaRule;
+extern const uint8_t *dm_paUserDict;
+extern const uint8_t *dm_paUserDictIdx;
+
+void dm_EngRulesInit(void);
+void dm_InitSupplementDictionary(void);
+
+const uint8_t *dm_GetFuncDict(void);
+const uint8_t *dm_GetFuncDictEx(void);
+const uint8_t *dm_GetAccentAt(uint16_t i);
+uint8_t        dm_GetKakariAt(uint16_t i);
+uint8_t        dm_GetPhrVectorAt(uint16_t i);
+uint8_t        dm_GetPenaltyAt(uint16_t i);
+uint8_t        dm_GetTGAt2(uint8_t row, uint8_t col);
+const uint8_t *dm_GetTGAt(uint8_t row);
+const uint8_t *dm_GetYomiDataPtr(void);
+const uint8_t *dm_GetPhraseDataPtr(void);
+const uint8_t *dm_GetNumberDataPtr(void);
+uint8_t        dm_GetNumMDAt(uint16_t i);
+const uint8_t *dm_GetNumYomiPtrAt(uint8_t i);
+uint8_t        dm_GetNumJMDAt(uint16_t i);
+const uint8_t *dm_GetNumJMDPtr(void);
+uint8_t        dm_GetNumJCCAt(uint16_t i);
+const uint8_t *dm_GetNDictHashAt(uint16_t i, uint8_t j);
+const uint8_t *dm_GetTDictHashAt(uint16_t i);
+const uint8_t *dm_GetKDictHashAt(uint16_t i);
+uint8_t        dm_GetKNDictHashAt(uint16_t i, uint8_t j);
+uint8_t        dm_GetKTDictHashAt(uint16_t i, uint8_t j);
+const uint8_t *dm_GetEDictHashAt(uint16_t i);
+uint8_t        dm_GetItaijiHashAt(uint16_t i, uint8_t j);
+const uint8_t *dm_GetItaijiAt(uint8_t row, uint16_t i);
 
 /* ---- how much of this is written ------------------------------------ */
 
