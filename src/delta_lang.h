@@ -137,6 +137,11 @@ typedef struct delta_language {
     int32_t (*proc_flush)(struct delta_state *);
     int32_t (*proc_process_sentences)(struct delta_state *);
     int32_t (*proc_process_remaining)(struct delta_state *);
+    /* The command layer's entry. Nothing in the library path calls it --
+       etiwinMain is what does, and etiwinMainDLL is what this engine uses
+       instead -- but a language module has it and the table is where a
+       module's entries belong. */
+    int32_t (*proc_main)(struct delta_state *);
 
     /* the settings this language carries in the image */
     const char *ini;

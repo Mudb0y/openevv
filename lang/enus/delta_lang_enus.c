@@ -54,6 +54,7 @@ extern int32_t enus_DeltaProc_end(int32_t d);
 extern int32_t enus_DeltaProc_flush(int32_t d);
 extern int32_t enus_DeltaProc_process_sentences(int32_t d);
 extern int32_t enus_DeltaProc_process_remaining(int32_t d);
+extern int32_t enus_DeltaProc_main(int32_t d);
 
 static int32_t proc_start(delta_state *d)
 {
@@ -78,6 +79,11 @@ static int32_t proc_process_sentences(delta_state *d)
 static int32_t proc_process_remaining(delta_state *d)
 {
     return enus_DeltaProc_process_remaining(EVV_REF(d));
+}
+
+static int32_t proc_main(delta_state *d)
+{
+    return enus_DeltaProc_main(EVV_REF(d));
 }
 
 
@@ -128,6 +134,7 @@ delta_language delta_lang_enus = {
     proc_flush,
     proc_process_sentences,
     proc_process_remaining,
+    proc_main,
 
     0, 0,                /* the settings blob and its size */
 };

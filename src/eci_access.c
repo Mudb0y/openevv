@@ -289,6 +289,101 @@ int project_sync(delta_state *d, int32_t l, int8_t f, int32_t r, int32_t back)
     return 1;
 }
 
+/* Whether joining two marks would leave the spine sound.
+ *
+ * A mark may always be joined with itself, and the spine's own two ends may
+ * never be joined with each other. Past that it is a question asked of every
+ * field in turn, and the four cases are which of the two marks carries that
+ * field:
+ *
+ * both -- one has to link straight to the other, either way round;
+ * one of them -- whatever the other one links to has to be on the right side
+ *   of the one that carries it, which is what visleft and visright answer;
+ * neither -- the two must not be threaded past each other, which is the same
+ *   pair of questions asked the other way about.
+ *
+ * A field that fails any of those is a join that would cross something, and
+ * the answer is no.
+ */
+static int safe_mergable(delta_state *d, int32_t l, int32_t r)
+{
+    delta_stack   *s = EVV_AT(delta_stack *, d->stack);
+    int32_t        base = EVV_AT(delta_vars *, d->vars)->fence_base;
+    const int32_t *L = NODE(l);
+    const int32_t *R = NODE(r);
+    int32_t        i;
+
+    if (l == r)
+        return 1;
+
+    if (l == s->spine_l && r == s->spine_r)
+        return 0;
+    if (l == s->spine_r && r == s->spine_l)
+        return 0;
+
+    for (i = 0; i < d->nstmts; i++) {
+        int32_t a;
+        int32_t b;
+
+        if ((L[base + i] & 1) != 0 && (R[base + i] & 1) != 0) {
+            if ((L[OWN_WORDS + i] & LINK_MASK) == r)
+                continue;
+            if ((L[base + i] & LINK_MASK) == r)
+                continue;
+            return 0;
+        }
+
+        if ((L[base + i] & 1) != 0) {
+            a = R[OWN_WORDS + i] & LINK_MASK;
+            b = R[base + i] & LINK_MASK;
+
+            if (l != a && !visleft(d, a, l))
+                return 0;
+            if (l != b && !visright(d, b, l))
+                return 0;
+            continue;
+        }
+
+        if ((R[base + i] & 1) != 0) {
+            a = L[OWN_WORDS + i] & LINK_MASK;
+            b = L[base + i] & LINK_MASK;
+
+            if (r != a && !visleft(d, a, r))
+                return 0;
+            if (r != b && !visright(d, b, r))
+                return 0;
+            continue;
+        }
+
+        if (visleft(d, L[base + i] & LINK_MASK, R[OWN_WORDS + i] & LINK_MASK))
+            return 0;
+        if (visright(d, L[OWN_WORDS + i] & LINK_MASK, R[base + i] & LINK_MASK))
+            return 0;
+    }
+
+    return 1;
+}
+
+/* Carry a mark across and then join the two, which is what a rule asks for
+   when it wants one statement where there were two. The mark has to be there
+   to begin with, the carry has to take, and the join has to be sound. */
+int merge_sync(delta_state *d, int32_t l, int8_t f, int32_t r)
+{
+    if ((NODE(r)[EVV_AT(delta_vars *, d->vars)->fence_base + f] & 1) == 0)
+        return 0;
+
+    if (!project_sync(d, l, f, r, 0))
+        return 0;
+
+    if (!safe_mergable(d, l, r))
+        return 0;
+
+    if (!vmerge(d, r, l))
+        return 0;
+
+    return 1;
+}
+
 /* Whether a sync mark stands at this field of a node. The language's
    fields do not start at zero in a node's words; the machine says where
    they do. */

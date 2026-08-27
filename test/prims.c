@@ -1319,6 +1319,69 @@ int main(void)
             show_gencell(&vars->gen_done, "done", 4);
         }
 
+        /* And the whole of a generate statement written out, which is the
+           one thing in the machine that produces text rather than spine.
+           The cell is built for the occasion: the moment measured in field
+           one, a frame fifty long, and a parameter program of one statement
+           type with one of its fields. What can be compared is what it
+           answers and what it leaves in the cell -- the lines themselves go
+           to a logical file, and on a machine with two nodes on its spine
+           there is no span to walk, so the answer is the head of it and the
+           first pass rather than the frames. */
+        {
+            const delta_token *tok =
+                (const delta_token *)((const char *)d + 748);
+            delta_stack *stk = EVV_AT(delta_stack *, d->stack);
+            delta_loc *loc = calloc(1, sizeof *loc);
+            uint8_t *prog = calloc(1, 8);
+            delta_token from, to;
+
+            if (loc == NULL || prog == NULL)
+                return 1;
+
+            prog[0] = 1;
+            prog[1] = 1;
+            prog[2] = 1;
+            prog[3] = 0;
+
+            loc->kind = DK_LONG;
+            loc->field = 0;
+            loc->value = 50;
+
+            gencur_timestm(d, 1);
+            gencur_params(d, 0, 4, prog);
+            gencur_framedur(d, loc);
+
+            from.unknown_00 = 0;
+            to.unknown_00 = 0;
+            from.value = tok->value;
+            to.value = stk->spine_r;
+            lpta_loadp(d, &from);
+            rpta_loadp(d, &to);
+
+            {
+                int32_t where[3];
+                int     rc;
+
+                where[0] = tok->value;
+                where[1] = stk->spine_l;
+                where[2] = stk->spine_r;
+
+                rc = (int)vgen(d, &d->lpta, &d->rpta, &vars->gen_done, 0);
+
+                /* What the first pass settled is the observable half of it:
+                   the two marks each statement type's value is to be read
+                   between, said as landmarks. */
+                printf("%-16s -> %d  ends %s %s  reg %d %d\n", "vgen", rc,
+                       landmark(EVV_AT(const int32_t *, stk->expr_l)[1],
+                                where),
+                       landmark(EVV_AT(const int32_t *, stk->expr_r)[1],
+                                where),
+                       (int)d->lpta.field, (int)d->lpta.flags);
+            }
+            show_gencell(&vars->gen_done, "done", 5);
+        }
+
         /* Where a context begins and where it ends. The table is the
            harness's own rather than a node's, because what is being compared
            is what the call writes into it: the bottom two bits of the entry
@@ -1457,6 +1520,77 @@ int main(void)
             /* And the whole spine after each one, which is what says where
                the tokens went rather than only that the call was allowed. */
             show_spine(d, "insert", v);
+        }
+    }
+
+    /* One position becoming another everywhere the machine wrote it down.
+       The values are made up rather than real positions, because nothing in
+       the call dereferences one: it compares and replaces. So a word
+       variable and two pushed locations are given the same made-up value,
+       and what is printed is which of the three moved. The word variable is
+       the language's own, so it is put back afterwards. */
+    {
+        delta_loc *a = calloc(1, sizeof *a);
+        delta_loc *b = calloc(1, sizeof *b);
+        int32_t   *cell = EVV_AT(int32_t **, d->word)[0];
+        int32_t    held = *cell;
+
+        if (a == NULL || b == NULL)
+            return 1;
+
+        push_ptr_init(d, a);
+        push_ptr_init(d, b);
+        a->value = 0x1234;
+        b->value = 0x4321;
+        *cell = 0x1234;
+
+        set_saved_ptrs(d, 0x1234, 0x5678);
+
+        printf("%-16s -> %x %x %x  depth %d %d\n", "saved_ptrs",
+               (unsigned)a->value, (unsigned)b->value, (unsigned)*cell,
+               (int)vars->ptr_count, (int)vars->active_record);
+
+        *cell = held;
+    }
+
+    /* And the read of the backtracking stack that lays what is on it down
+       as tokens. It is last of everything because it pops what it reads and
+       relinks the spine.
+
+       Two rounds. The first asks it with the stack as the cases above left
+       it, where the record on top is the floor marker: nothing to lay, so
+       it refuses. The second builds it the stack it wants -- a bottom
+       marker, then two pushed values -- and then it lays a token for each,
+       makes a mark between them, and stops on the marker. That second round
+       is the one that reaches vins_tok and vins_sync, and the spine after
+       it is what says the tokens went where the original puts them.
+
+       What it does not say is what value went in. Reading the record one
+       byte over changes nothing printed, and neither does pushing different
+       values: the nodes it makes answer the same string tests either way.
+       That was tried rather than assumed, and it is the same blind spot the
+       wide inserts have. So the position is compared and the content is
+       not. */
+    {
+        const delta_token *tok = (const delta_token *)((const char *)d + 748);
+        delta_stack *s = EVV_AT(delta_stack *, d->stack);
+        int round;
+
+        for (round = 0; round < 2; round++) {
+            int32_t l = tok->value;
+            int32_t r = s->spine_r;
+            int     rc;
+
+            if (round == 1) {
+                bspush_vbot(d);
+                npush_s(d, 12);
+                npush_s(d, 13);
+            }
+
+            rc = ins_rdtoks(d, 1, l, r, 0);
+            printf("%-16s %d -> %d  kind %d\n", "ins_rdtoks", round, rc,
+                   (int)*EVV_AT(const int8_t *, s->top));
+            show_spine(d, "ins_rdtoks", round);
         }
     }
 

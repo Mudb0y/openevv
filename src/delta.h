@@ -146,7 +146,19 @@ typedef struct {
     uint8_t       pad_0051[0x5c - 0x51];
     evv_ref       nsq_fields;  /* 0x005c, which fields decide the flags,
                                   terminated by a negative entry */
-    uint8_t       pad_0060[0x94 - 0x60];
+    uint8_t       pad_0060[0x6c - 0x60];
+    /* Where mapsyncs numbers the syncs it walks: a table of one word per
+       sync, indexed by the number absoluteSyncNum gives, and the next
+       number to hand out. */
+    evv_ref       sync_map;    /* 0x006c */
+    int32_t       sync_next;   /* 0x0070 */
+    uint8_t       pad_0074[0x84 - 0x74];
+    /* What the context check was asked, and whether it cleared anything.
+       vredoctxt sets the first and reads the second to decide whether to
+       say the delta is correct. */
+    int32_t       ctxt_arg;    /* 0x0084 */
+    int32_t       ctxt_cleared; /* 0x0088 */
+    uint8_t       pad_008c[0x94 - 0x8c];
     int32_t       sync_size;   /* 0x0094, how big one sync node is */
     int32_t       unknown_98;  /* 0x0098, cleared when memory is set up */
     int32_t       unknown_9c;  /* 0x009c, cleared when a loop restarts */
@@ -176,7 +188,18 @@ typedef struct {
     /* What a value named "undefined" reads back as. The tables spell the
        absent value one way and whoever asks is told another. */
     evv_ref     undefined_text;  /* 0x00dc */
-    uint8_t   pad_00e0[0xfc - 0xe0];
+    /* Set when the context check has run through. */
+    int32_t   ctxt_done;     /* 0x00e0 */
+    /* Six tables vctxtinit takes for the check to work in: four of a word
+       per statement type and two of a byte. Nothing else transcribed here
+       touches them, so what each is for is not established and they are
+       named by nothing better than their order. */
+    evv_ref   ctxt_a;        /* 0x00e4 */
+    evv_ref   ctxt_b;        /* 0x00e8 */
+    evv_ref   ctxt_c;        /* 0x00ec */
+    evv_ref   ctxt_d;        /* 0x00f0 */
+    evv_ref   ctxt_e;        /* 0x00f4 */
+    evv_ref   ctxt_f;        /* 0x00f8 */
     /* What the save layer works in. It is only ever reached through the
        routines at the end of delta_trace.c, which the engine does not use;
        a target that wants to write the machine out and read it back is what
@@ -190,7 +213,16 @@ typedef struct {
     char      save_name[100];  /* 0x0150, the name last read off it; the
                                   original writes past the end of this
                                   rather than stop at it */
-    uint8_t   pad_01b4[0x1d0 - 0x1b4];
+    uint8_t   pad_01b4[0x1bc - 0x1b4];
+    /* Where val_expr2 looks when it is not asked to work a position out for
+       itself: one entry per statement type, the two ends it should measure
+       between. And three caches beside them, twelve bytes to a statement
+       type, which durcalc keeps its last answer in. */
+    evv_ref   expr_l;          /* 0x01bc */
+    evv_ref   expr_r;          /* 0x01c0 */
+    evv_ref   dur_cache_a;     /* 0x01c4 */
+    evv_ref   dur_cache_b;     /* 0x01c8 */
+    evv_ref   dur_cache_c;     /* 0x01cc */
     /* visleft remembers its last fifty answers here. The whole table is
        thrown away whenever the spine is relinked, which is what the stamp
        is for; the counts keep a hot pair from being evicted. */
@@ -486,7 +518,8 @@ typedef struct delta_stmt {
                                          a statement with */
     uint8_t                walkable;  /* +0x36, only Ms sets this */
     uint8_t                pad_37;
-    int32_t                unknown_38;
+    int32_t                gen_sel;   /* +0x38, which end a generate takes
+                                          when the two disagree */
     int32_t                unknown_3c;
 } delta_stmt;
 
@@ -627,6 +660,14 @@ int32_t vcompareTypeCheck(delta_state *d, const delta_operand *a,
                           const delta_operand *b);
 int32_t VLSYNC(const delta_node *t, int8_t i);
 int32_t VRSYNC(delta_state *d, const int32_t *t, int8_t i);
+int32_t gcql(delta_state *d, int32_t at, int8_t f, int8_t i);
+int32_t gcqr(delta_state *d, int32_t at, int8_t f, int8_t i);
+int  chksyncsflags(delta_state *d);
+int  vctxtinit(delta_state *d);
+int  vclrctxt(delta_state *d, int32_t unused);
+void mapsyncs(delta_state *d, int32_t t);
+int  vredoctxt(delta_state *d, int32_t arg);
+int32_t etiwinMain(delta_state *d, int32_t argc, char **argv);
 
 /* Two sixteen-bit halves; resetting one clears the second. */
 typedef struct {
@@ -649,6 +690,7 @@ void bspush_ca_boa(delta_state *d, int16_t tag);
 void bspush_ca_scan_boa(delta_state *d, int16_t tag);
 void forceErrorBacktrack(delta_state *d);
 void push_ptr_init(delta_state *d, delta_loc *p);
+void set_saved_ptrs(delta_state *d, int32_t was, int32_t now);
 void npush_i(delta_state *d, int32_t x);
 void npush_s(delta_state *d, int32_t x);
 void vscaninit(delta_state *d);
@@ -969,8 +1011,21 @@ int  f0_stepi(delta_state *d, const delta_loc *n, const delta_loc *f0,
    See src/delta_trace.c for what that costs and why. */
 int32_t dur2(delta_state *d, const delta_tpos *a, const delta_tpos *b,
              int8_t f, int32_t back);
+int32_t durcalc(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
+                int32_t *cache, int32_t direct);
+int32_t firstdefd(delta_state *d, int8_t f, int32_t t, uint8_t st,
+                  int32_t back);
+int32_t val_expr2(delta_state *d, delta_tpos *p, int8_t st, uint8_t fld,
+                  int32_t which, int32_t mode, int32_t *out);
+int32_t val_expr(delta_state *d, delta_tpos *p, int8_t st, uint8_t fld,
+                 int32_t which);
+void    val_expr1(delta_state *d, delta_loc *loc, uint8_t st, uint8_t fld);
 int32_t vdur(delta_state *d, const delta_tpos *a, const delta_tpos *b,
              int8_t f);
+int32_t vgen(delta_state *d, delta_tpos *l, delta_tpos *r,
+             const delta_gencell *g, int32_t lf);
+int32_t vgenerate(delta_state *d);
+void    generate(delta_state *d, int32_t lf);
 int  vdur_ass(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
               int32_t total);
 int  dur_ass(delta_state *d, int8_t f, delta_loc *field, uint8_t mode);
@@ -1108,6 +1163,7 @@ extern const int32_t delta_frequencyInST[122];
    range the caller has already opened. */
 int ins_tokens(delta_state *d, int8_t f, const uint8_t *str, uint8_t n,
                int32_t arg);
+int ins_rdtoks(delta_state *d, uint8_t f, int32_t l, int32_t r, int32_t arg);
 void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r);
 
 /* Supplied by the language, not the runtime: match the span between the two

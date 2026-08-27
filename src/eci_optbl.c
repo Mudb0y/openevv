@@ -123,3 +123,65 @@ int ins_tokens(delta_state *d, int8_t f, const uint8_t *str, uint8_t n,
     (void)arg;
     return 1;
 }
+
+/* The same thing from the backtracking stack rather than from a string. Each
+   record on the stack from the top down is one token to lay between the two
+   positions, and a fresh sync is made between one token and the next; the
+   record that marks the variable bottom is where it stops, and anything that
+   is not a token record makes it fail. Since the stack is last in first out,
+   the tokens land in the reverse of the order they were pushed.
+ *
+ * A detail of the original worth keeping: its call to vins_sync pushes five
+ * arguments where the callee reads four. IBM's own vins_sync reads 0x8
+ * through 0x14 and never touches 0x18, so the extra one is only cleaned up
+ * by the caller and never seen. This is the four-argument call.
+ */
+int ins_rdtoks(delta_state *d, uint8_t f, int32_t l, int32_t r, int32_t arg)
+{
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+    const int32_t fence = EVV_AT(delta_vars *, d->vars)->fence_base;
+    const delta_frame *rec = EVV_AT(const delta_frame *, s->top);
+    delta_operand v;
+    int laid = 0;
+
+    if (rec->kind != 5) {
+        v.kind = STMTYP((int8_t)f);
+        v.flag = vstmtbl[f].fields[0].flag;
+
+        while (rec->kind != 5) {
+            if (laid) {
+                r = EVV_REF(vins_sync(d, f, l,
+                                      NODE(l)[fence + f] & LINK_MASK));
+                if (r == 0)
+                    return 0;
+            } else {
+                laid = 1;
+            }
+
+            if (rec->kind != 2)
+                return 0;
+
+            v.ptr = (void *)((const char *)rec + s->size_ac);
+            if (!vins_tok(d, f, l, r, &v))
+                return 0;
+
+            popDeltaStackTop(d);
+            rec = EVV_AT(const delta_frame *, s->top);
+        }
+    } else if ((NODE(l)[fence + f] & LINK_MASK) != r
+            || (NODE(r)[OWN_WORDS + f] & LINK_MASK) != l) {
+        /* Nothing was pushed, so this is a delete: take out whatever lies
+           between the two unless they are already each other's neighbour. */
+        vdel_2pt(d, f, l, r);
+    }
+
+    setDeltaStackVBot(d, EVV_AT(void *, rec->value));
+    if (rec->kind != 5)
+        return 0;
+
+    popDeltaStackTop(d);
+    EVV_AT(delta_owner *, d->owner)->changed = 1;
+
+    (void)arg;
+    return 1;
+}

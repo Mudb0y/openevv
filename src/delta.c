@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
@@ -1198,6 +1199,574 @@ int32_t VRSYNC(delta_state *d, const int32_t *t, int8_t i)
     return *(int32_t *)(p + 4) & ~3;
 }
 
+/* Walk to the mark that carries a field, one link at a time.
+ *
+ * A position that already carries it is the answer; otherwise the walk
+ * follows the sync links of another field -- the one named separately --
+ * until it finds one that does. The two differ in which way they walk and
+ * in nothing else. Only vgen calls them, which is why they arrive with it.
+ */
+int32_t gcql(delta_state *d, int32_t at, int8_t f, int8_t i)
+{
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
+
+    while ((*(const int32_t *)(intptr_t)(at + (base + f) * 4) & 1) == 0)
+        at = VLSYNC((const delta_node *)(intptr_t)at, i);
+
+    return at;
+}
+
+int32_t gcqr(delta_state *d, int32_t at, int8_t f, int8_t i)
+{
+    int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
+
+    while ((*(const int32_t *)(intptr_t)(at + (base + f) * 4) & 1) == 0)
+        at = VRSYNC(d, (const int32_t *)(intptr_t)at, i);
+
+    return at;
+}
+
+/* A generate statement written out, which is the largest thing the machine
+ * does and the only one that produces text rather than spine.
+ *
+ * The collected cell carries three things: the frame, whose value is how
+ * long one step lasts; the field the moment is measured in, which arrives
+ * as the cell's time; and the parameter bytes, which are a little program.
+ * That program is a count of statement types, and for each one its number,
+ * how many of its fields follow, and those field numbers.
+ *
+ * vgen walks the span the two registers mark, one frame at a time, and
+ * writes a line for every frame: each field asked for, worked out at that
+ * moment by val_expr2, with the frame's own duration put in at whichever
+ * position of the line the cell names. A first pass over the program settles
+ * where each statement type's value is to be read from, and those two ends
+ * are kept in the stack's own arrays so that val_expr2 can find them; the
+ * answers are cached across frames whenever neither end has moved, which is
+ * what makes a long span affordable. checkInterrupt is asked between fields,
+ * so a caller who has stopped listening stops the walk.
+ *
+ * Nothing in the nine languages IBM shipped generates frames, so no rule
+ * reaches it. A language whose acoustic rules do would.
+ *
+ * Three things here are the original's and are kept rather than corrected.
+ * The buffer is not given back on the two paths that fail before the working
+ * table exists. The gap count is compared the wrong way round, so one to ten
+ * gaps give up at once and the branch meant to let ten through can never be
+ * taken, which makes the test after the loop unreachable as well. And the
+ * fourth of the five arrays is allocated and never checked.
+ */
+int32_t vgen(delta_state *d, delta_tpos *l, delta_tpos *r,
+             const delta_gencell *g, int32_t lf)
+{
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+    int32_t      base = EVV_AT(delta_vars *, d->vars)->fence_base;
+    DynaBuf     *buf;
+    int32_t     *cache;
+    const char  *p;
+    char         line[20];
+    int32_t      taken = 0, mode = 0, gaps = 0;
+    int32_t      dur, left, first;
+    int8_t       f, i, nstm, st;
+    uint8_t      total = 0, nfld, k, j;
+
+    if ((g->flags & 1) == 0)
+        return 0;
+    if ((g->flags & 2) == 0)
+        return 0;
+    if ((g->flags & 4) == 0)
+        return 0;
+
+    l->field  = (int8_t)g->time;
+    f         = l->field;
+    l->flags  = 2;
+    l->offset = 0;
+
+    buf = dynaBufNew(0x28);
+    if (buf == 0)
+        return 0;
+
+    /* Five arrays a statement type wide, made once and kept on the stack:
+       where each type's value is read from at the left and at the right,
+       and three caches durcalc works in. */
+    if (s->expr_l == 0) {
+        s->expr_l      = EVV_REF(malloc((size_t)d->nstmts * 4));
+        s->expr_r      = EVV_REF(malloc((size_t)d->nstmts * 4));
+        s->dur_cache_b = EVV_REF(malloc((size_t)d->nstmts * 12));
+        s->dur_cache_a = EVV_REF(malloc((size_t)d->nstmts * 12));
+        s->dur_cache_c = EVV_REF(malloc((size_t)d->nstmts * 12));
+
+        if (s->expr_l == 0 || s->expr_r == 0
+            || s->dur_cache_b == 0 || s->dur_cache_c == 0) {
+            if (s->expr_l != 0)
+                free(EVV_AT(void *, s->expr_l));
+            if (s->expr_r != 0)
+                free(EVV_AT(void *, s->expr_r));
+            if (s->dur_cache_b != 0)
+                free(EVV_AT(void *, s->dur_cache_b));
+            if (s->dur_cache_a != 0)
+                free(EVV_AT(void *, s->dur_cache_a));
+            if (s->dur_cache_c != 0)
+                free(EVV_AT(void *, s->dur_cache_c));
+            return 0;
+        }
+    }
+
+    for (i = 0; i < (int32_t)d->nstmts; i++) {
+        int32_t *a = EVV_AT(int32_t *, s->dur_cache_a);
+        int32_t *b = EVV_AT(int32_t *, s->dur_cache_b);
+        int32_t *c = EVV_AT(int32_t *, s->dur_cache_c);
+
+        EVV_AT(int32_t *, s->expr_r)[i] = 0;
+        EVV_AT(int32_t *, s->expr_l)[i] = 0;
+
+        b[i * 3] = b[i * 3 + 1] = a[i * 3] = a[i * 3 + 1]
+                 = c[i * 3] = c[i * 3 + 1] = s->spine_l;
+
+        c[i * 3 + 2] = 0;
+        a[i * 3 + 2] = 0;
+        b[i * 3 + 2] = 0;
+    }
+
+    /* First pass: for every statement type the program names, find the two
+       marks its value is to be read between, and count how many numbers a
+       line will hold. */
+    p    = dynaBufContents(EVV_AT(DynaBuf *, g->params));
+    nstm = (int8_t)*p++;
+
+    for (i = 0; i < nstm; i++) {
+        int32_t at, at2, next, walk;
+
+        st = (int8_t)*p++;
+
+        at = vgetsc(d, 1, 1, l->node, (uint8_t)st);
+        if (at != 0) {
+            next = ((const int32_t *)(intptr_t)at)[3 + st] & ~3;
+            while (at != 0 && next != 0
+                   && (*(const int32_t *)(intptr_t)next & 2) != 0) {
+                at   = next;
+                next = ((const int32_t *)(intptr_t)at)[3 + st] & ~3;
+            }
+        }
+
+        at2 = vgetsc(d, 0, 1, r->node, (uint8_t)st);
+        if (at2 != 0) {
+            next = ((const int32_t *)(intptr_t)at2)[base + st] & ~3;
+            while (at2 != 0 && next != 0
+                   && (*(const int32_t *)(intptr_t)next & 2) != 0) {
+                at2  = next;
+                next = ((const int32_t *)(intptr_t)at2)[base + st] & ~3;
+            }
+        }
+
+        /* Every mark between the two has to carry the field being timed. */
+        walk = at;
+        while (walk != 0) {
+            if ((((const int32_t *)(intptr_t)walk)[base + f] & 1) == 0) {
+                gaps++;
+                if (gaps <= 10) {
+                    dynaBufDelete(buf);
+                    return 0;
+                }
+            }
+
+            walk = VRSYNC(d, (const int32_t *)(intptr_t)walk, st);
+            if (walk == 0 || walk == at2)
+                break;
+        }
+
+        if (gaps == 0) {
+            EVV_AT(int32_t *, s->expr_l)[st] = gcql(d, l->node, st, f);
+            EVV_AT(int32_t *, s->expr_r)[st] = gcqr(d, l->node, st, f);
+        }
+
+        nfld = (uint8_t)*p++;
+        for (j = 0; j < nfld; j++) {
+            if (total == g->nparams)
+                total++;
+            total++;
+            p++;
+        }
+    }
+
+    if (gaps != 0) {
+        dynaBufDelete(buf);
+        return 0;
+    }
+
+    cache = malloc((size_t)(d->nstmts * 4) * total);
+    if (cache == 0) {
+        dynaBufDelete(buf);
+        return 0;
+    }
+
+    dur   = vdur(d, l, r, (uint8_t)g->time);
+    first = 1;
+
+    for (left = dur; left > 0; left -= g->value) {
+        int32_t skip = 0;
+        int32_t stop = l->node;
+
+        if (!first && mode == 3)
+            stop = (int32_t)(intptr_t)
+                   lmost(d, f, (delta_node *)(intptr_t)stop);
+
+        mode = vnormalize(d, l);
+
+        switch (mode) {
+        case 2:
+            if (l->offset > taken)
+                skip = 1;
+            break;
+
+        case 3:
+        case 4:
+            break;
+
+        default:
+            dynaBufDelete(buf);
+            free(cache);
+            return 0;
+        }
+
+        taken = left < g->value ? left : g->value;
+
+        buf  = dynaBufReset(buf);
+        p    = dynaBufContents(EVV_AT(DynaBuf *, g->params));
+        k    = 0;
+        nstm = (int8_t)*p++;
+
+        for (i = 0; i < nstm; i++) {
+            int32_t saved_l, saved_r, at, at2, found, same;
+
+            st   = (int8_t)*p++;
+            nfld = (uint8_t)*p++;
+
+            saved_l = EVV_AT(int32_t *, s->expr_l)[st];
+            saved_r = EVV_AT(int32_t *, s->expr_r)[st];
+
+            at  = l->node;
+            at2 = at;
+
+            switch (mode) {
+            case 3:
+                at2 = firstdefd(d, f, at, (uint8_t)st, 0);
+                at  = firstdefd(d, f, (int32_t)(intptr_t)
+                                lmost(d, f, (delta_node *)(intptr_t)at),
+                                (uint8_t)st, 1);
+                /* fall through */
+
+            case 4:
+                if ((((const int32_t *)(intptr_t)at)[base + st] & 1) != 0) {
+                    EVV_AT(int32_t *, s->expr_r)[st] = at2;
+                    EVV_AT(int32_t *, s->expr_l)[st] = at;
+                    break;
+                }
+                /* fall through */
+
+            case 2:
+                found = 0;
+                if (!skip) {
+                    for (;;) {
+                        if ((((const int32_t *)(intptr_t)at)[base + st] & 1)
+                                != 0) {
+                            found = at;
+                            break;
+                        }
+                        if (at == stop)
+                            break;
+                        at = VLSYNC((const delta_node *)(intptr_t)at, f);
+                    }
+                }
+
+                if (found != 0) {
+                    EVV_AT(int32_t *, s->expr_l)[st] = found;
+                    EVV_AT(int32_t *, s->expr_r)[st] =
+                        VRSYNC(d, (const int32_t *)(intptr_t)found, st);
+                }
+                break;
+
+            default:
+                dynaBufDelete(buf);
+                free(cache);
+                return 0;
+            }
+
+            /* Neither end moved since the last frame, so last frame's
+               answers still stand. */
+            same = mode == 2 && !first
+                && saved_l == EVV_AT(int32_t *, s->expr_l)[st]
+                && saved_r == EVV_AT(int32_t *, s->expr_r)[st];
+
+            for (j = 0; j < nfld; j++) {
+                int32_t sel, v;
+                uint8_t fld;
+
+                if (k == g->nparams) {
+                    sprintf(line, "%d ", taken);
+                    dynaBufAddString(buf, line, 0);
+                    k++;
+                }
+
+                sel = left == dur ? vstmtbl[g->time].gen_sel : 0;
+                fld = (uint8_t)*p++;
+
+                if (same && cache[k] != (int32_t)0x80000000) {
+                    v = cache[k];
+                } else {
+                    int32_t worked = 0;
+
+                    v = val_expr2(d, l, st, fld, sel, mode, &worked);
+                    cache[k] = worked ? (int32_t)0x80000000 : v;
+                }
+
+                if (v == (int32_t)0x80000001) {
+                    dynaBufDelete(buf);
+                    free(cache);
+                    return 0;
+                }
+
+                sprintf(line, "%d ", v);
+                dynaBufAddString(buf, line, 0);
+                k++;
+
+                if (checkInterrupt(d))
+                    break;
+            }
+
+            if (checkInterrupt(d))
+                break;
+        }
+
+        if (checkInterrupt(d))
+            break;
+
+        if (k == g->nparams) {
+            sprintf(line, "%d ", taken);
+            dynaBufAddString(buf, line, 0);
+            k++;
+        }
+
+        dynaBufAddChar(buf, '\n', 0);
+        dynaBufAddChar(buf, 0, 0);
+        vf_puts(d, lf, dynaBufContents(buf), 1);
+
+        l->flags  = 2;
+        l->offset = l->offset + g->value;
+        first     = 0;
+    }
+
+    dynaBufDelete(buf);
+    free(cache);
+    return 1;
+}
+
+/* The two names a rule calls it by, which differ only in where the count of
+   numbers a line holds comes from and in what a failure costs. Both check
+   first that the range the two registers mark is one that may be printed. */
+int32_t vgenerate(delta_state *d)
+{
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
+
+    if (!vprt_range(d, &d->lpta, &d->rpta)
+        || !vgen(d, &d->lpta, &d->rpta, &v->gen_done, v->gen_len))
+        return 0xf5;
+
+    return 0;
+}
+
+void generate(delta_state *d, int32_t lf)
+{
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
+
+    if (!vprt_range(d, &d->lpta, &d->rpta)
+        || !vgen(d, &d->lpta, &d->rpta, &v->gen_done, lf))
+        forceErrorBacktrack(d);
+}
+
+/* The check that a spine's context marks are consistent.
+ *
+ * This is the Delta debugger's, not the engine's: `vredoctxt' ends by saying
+ * "The delta is correct." on the command layer's own stream. Nothing in this
+ * engine calls any of the four, and the display they belong to is not here --
+ * src/delta_trace.c says why. They are written because the machine is being
+ * finished rather than because something wants them.
+ *
+ * vctxtinit takes the six tables the check works in, four of a word per
+ * statement type and two of a byte, and gives them all back if any one of
+ * them cannot be had. vclrctxt walks every field's chain from the spine's
+ * right-hand end and clears the pointer out of every link whose field is not
+ * marked, keeping the two flag bits and remembering that it did. mapsyncs
+ * numbers the syncs it can reach, marking each so it is not counted twice.
+ */
+int vctxtinit(delta_state *d)
+{
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+
+    if (d->nstmts == 0)
+        return 1;
+
+    s->ctxt_a = EVV_REF(malloc((size_t)d->nstmts * 4));
+    s->ctxt_b = EVV_REF(malloc((size_t)d->nstmts * 4));
+    s->ctxt_c = EVV_REF(malloc((size_t)d->nstmts * 4));
+    s->ctxt_d = EVV_REF(malloc((size_t)d->nstmts * 4));
+    s->ctxt_e = EVV_REF(malloc((size_t)d->nstmts));
+    s->ctxt_f = EVV_REF(malloc((size_t)d->nstmts));
+
+    if (s->ctxt_a != 0 && s->ctxt_b != 0 && s->ctxt_c != 0
+        && s->ctxt_d != 0 && s->ctxt_e != 0 && s->ctxt_f != 0)
+        return 1;
+
+    if (s->ctxt_a != 0)
+        free(EVV_AT(void *, s->ctxt_a));
+    if (s->ctxt_b != 0)
+        free(EVV_AT(void *, s->ctxt_b));
+    if (s->ctxt_c != 0)
+        free(EVV_AT(void *, s->ctxt_c));
+    if (s->ctxt_d != 0)
+        free(EVV_AT(void *, s->ctxt_d));
+    if (s->ctxt_e != 0)
+        free(EVV_AT(void *, s->ctxt_e));
+    if (s->ctxt_f != 0)
+        free(EVV_AT(void *, s->ctxt_f));
+
+    return 0;
+}
+
+
+/* What the check looks at before the clearing: a node whose two link words
+ * carry anything but their own two flag bits is inconsistent, and the first
+ * one found stops the walk. Asking whether the caller has interrupted is
+ * what lets a long spine be given up on; an interrupt turns the report off
+ * and the walk goes on clearing.
+ *
+ * Then the clearing itself, which is the same five bits every time: the
+ * sync bit and the mark bit out of both words, and whatever is above the
+ * bottom two out of both.
+ */
+int chksyncsflags(delta_state *d)
+{
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+    int32_t      base = EVV_AT(delta_vars *, d->vars)->fence_base;
+    int8_t       i;
+
+    for (i = 0; i < d->nstmts; i++) {
+        int32_t t = s->spine_r;
+
+        while (t != 0) {
+            int32_t *node = (int32_t *)(intptr_t)t;
+
+            if (s->ctxt_arg != 0
+                && ((node[base - 3] & 2) != 0
+                    || (node[0] & 1) != 0
+                    || (node[base - 3] & 1) != 0
+                    || (node[0] & ~3) != 0
+                    || (node[base - 3] & ~3) != 0)) {
+                if (checkInterrupt(d))
+                    s->ctxt_arg = 0;
+
+                if (s->ctxt_arg != 0) {
+                    s->ctxt_cleared = 1;
+                    return 0;
+                }
+            }
+
+            node[base - 3] &= ~2;
+            node[0] &= ~1;
+            node[base - 3] &= ~1;
+            node[0] &= 3;
+            node[base - 3] &= 3;
+
+            t = VLSYNC((const delta_node *)(intptr_t)t, i);
+        }
+    }
+
+    return 1;
+}
+int vclrctxt(delta_state *d, int32_t unused)
+{
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+    int32_t      base = EVV_AT(delta_vars *, d->vars)->fence_base;
+    int8_t       i;
+
+    (void)unused;
+
+    for (i = 0; i < d->nstmts; i++) {
+        int32_t t = s->spine_r;
+
+        while (t != 0) {
+            int8_t j;
+
+            for (j = 0; j < d->nstmts; j++) {
+                int32_t *node = (int32_t *)(intptr_t)t;
+
+                if ((node[base + j] & 1) != 0)
+                    continue;
+
+                node[3 + j] &= 3;
+                node[base + j] &= 3;
+                s->ctxt_cleared = 1;
+            }
+
+            t = VLSYNC((const delta_node *)(intptr_t)t, i);
+        }
+    }
+
+    return 1;
+}
+
+void mapsyncs(delta_state *d, int32_t t)
+{
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+    int32_t      base = EVV_AT(delta_vars *, d->vars)->fence_base;
+    int32_t      n = absoluteSyncNum(d, (uint8_t *)(intptr_t)t);
+    int8_t       i;
+
+    /* The word three before the fenced fields begin, which is what the
+       original computes; marking it is how a sync already counted is known
+       from one that is not. */
+    ((int32_t *)(intptr_t)t)[base - 3] |= 2;
+
+    EVV_AT(int16_t *, s->sync_map)[n] = (int16_t)s->sync_next;
+    s->sync_next++;
+
+    for (i = 0; i < d->nstmts; i++) {
+        int32_t next;
+
+        if ((((const int32_t *)(intptr_t)t)[base + i] & 1) == 0)
+            continue;
+
+        next = VRSYNC(d, (const int32_t *)(intptr_t)t, i);
+        if (next == 0)
+            continue;
+        if ((((const int32_t *)(intptr_t)next)[base - 3] & 2) != 0)
+            continue;
+
+        mapsyncs(d, next);
+    }
+}
+
+int vredoctxt(delta_state *d, int32_t arg)
+{
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+
+    s->ctxt_done = 0;
+    s->ctxt_cleared = 0;
+    s->ctxt_arg = arg;
+
+    chksyncsflags(d);
+
+    if (!vclrctxt(d, arg))
+        return 0;
+
+    if (arg != 0 && s->ctxt_cleared == 0)
+        vf_printf(d, *(const int8_t *)((const char *)
+                      EVV_AT(const void *, d->logio) + 4),
+                  1, "The delta is correct.\n");
+
+    s->ctxt_done = 1;
+    return 1;
+}
+
 void reset_field(delta_loc *f)
 {
     if (f->kind >= 0)
@@ -1465,6 +2034,45 @@ void push_ptr_init(delta_state *d, delta_loc *p)
     p->value = 0;
     p->kind = DK_SYNC;
     push_ptr(d, EVV_REF(p));
+}
+
+/* One position becomes another everywhere the machine has written it down.
+   Two places hold one: a word variable, which holds a position as its whole
+   value, and the pointers a rule has pushed, each of which is a location
+   whose value word is the position. The pushed ones are walked a frame at a
+   time -- from the active record up to the top, then back to the frame below
+   it, whose extent the entry under each record says -- so that a rule's own
+   pushes and its callers' are all seen.
+
+   Nothing in this tree calls it. It is the save layer's, which reads a
+   machine back from a file: every position in it is a pointer that will land
+   somewhere else next time, so each has to be told where it went. */
+void set_saved_ptrs(delta_state *d, int32_t was, int32_t now)
+{
+    delta_vars *v = EVV_AT(delta_vars *, d->vars);
+    int32_t i, at, end;
+
+    for (i = 0; i < d->nword; i++) {
+        int32_t *cell = EVV_AT(int32_t **, d->word)[i];
+
+        if (*cell == was)
+            *cell = now;
+    }
+
+    at  = v->active_record;
+    end = v->ptr_count;
+
+    while (end > 0) {
+        for (i = at; i < end; i++) {
+            delta_loc *p = EVV_AT(delta_loc *, v->ptr_stack[i]);
+
+            if (p->value == was)
+                p->value = now;
+        }
+
+        end = at - 2;
+        at  = v->ptr_stack[at - 1];
+    }
 }
 
 /* The two-byte and one-byte name pushes. Each builds an operand pointing at

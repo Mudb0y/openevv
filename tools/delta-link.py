@@ -225,7 +225,7 @@ def accessor_offset(o, name):
 
 FIELD_AT = {0x18: "unknown_18", 0x1c: "unknown_1c", 0x20: "nfields",
             0x24: "length", 0x28: "stride", 0x2c: "varlen",
-            0x30: "whole_token", 0x38: "unknown_38", 0x3c: "unknown_3c"}
+            0x30: "whole_token", 0x38: "gen_sel", 0x3c: "unknown_3c"}
 
 
 def variant_sizes(o):

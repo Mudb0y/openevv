@@ -18,7 +18,8 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-PROCS = ("start", "end", "flush", "process_sentences", "process_remaining")
+PROCS = ("start", "end", "flush", "process_sentences", "process_remaining",
+         "main")
 
 # What a language is called where a person has to choose one. The tag is what
 # the tree calls it and the number is IBM's; this is the third thing and it is
