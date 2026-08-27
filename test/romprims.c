@@ -78,6 +78,7 @@ static Conv *makeConv(Param *p)
 #define TO_MBCS(c, in, out, f)   uc_UCS2ToMBCS((c), (in), (out), (f))
 
 #define DM(name) dm_##name
+#define JU(name) ju_##name
 #define STATIC_DICT_INIT() ((void)0)
 
 #else
@@ -190,7 +191,61 @@ extern const uint8_t *ibm_paUserDictIdx
 extern void ibm_StaticDictInitialize(void)
     MANGLED("?Initialize@StaticDict@@SAXXZ");
 
+/* JpnUtil is static members too, so the same again. */
+extern int32_t ibm_IsSBCSKana(char c)
+    MANGLED("?IsSBCSKana@JpnUtil@@SAHD@Z");
+extern int32_t ibm_IsAlphaNumSym(char c)
+    MANGLED("?IsAlphaNumSym@JpnUtil@@SAHD@Z");
+extern int32_t ibm_IsNum(char c)
+    MANGLED("?IsNum@JpnUtil@@SAHD@Z");
+extern int32_t ibm_IsAlpha(char c)
+    MANGLED("?IsAlpha@JpnUtil@@SAHD@Z");
+extern int32_t ibm_IsDBCSLeadByte(char c)
+    MANGLED("?IsDBCSLeadByte@JpnUtil@@SAHD@Z");
+extern int32_t ibm_IsDBCSTrailByte(uint8_t c)
+    MANGLED("?IsDBCSTrailByte@JpnUtil@@SAHE@Z");
+extern int32_t ibm_IsValidDBCS(const char *p)
+    MANGLED("?IsValidDBCS@JpnUtil@@SAHPBD@Z");
+extern int32_t ibm_IsKatakana(const char *p)
+    MANGLED("?IsKatakana@JpnUtil@@SAHPBD@Z");
+extern int32_t ibm_IsHiragana(const char *p)
+    MANGLED("?IsHiragana@JpnUtil@@SAHPBD@Z");
+extern int32_t ibm_IsLongVowel(const char *p)
+    MANGLED("?IsLongVowel@JpnUtil@@SAHPBD@Z");
+extern int32_t ibm_IsSNLKDelim(const char *p)
+    MANGLED("?IsSNLKDelim@JpnUtil@@SAHPBD@Z");
+extern int32_t ibm_IsDBCSNum(const char *p)
+    MANGLED("?IsDBCSNum@JpnUtil@@SAHPBD@Z");
+extern int32_t ibm_IsKanjiNum(const char *p)
+    MANGLED("?IsKanjiNum@JpnUtil@@SAHPBD@Z");
+extern uint16_t ibm_MakeUshort(char *p)
+    MANGLED("?MakeUshort@JpnUtil@@SAGPAD@Z");
+extern int32_t ibm_DbCmp(const char *a, const char *b)
+    MANGLED("?DbCmp@JpnUtil@@SAHPBD0@Z");
+extern int32_t ibm_DbCmp2(const char *a, char b0, char b1)
+    MANGLED("?DbCmp2@JpnUtil@@SAHPBDDD@Z");
+extern void ibm_DbCpy(char *to, const char *from)
+    MANGLED("?DbCpy@JpnUtil@@SAXPAD0@Z");
+extern void ibm_DbSet(char *to, char b0, char b1)
+    MANGLED("?DbSet@JpnUtil@@SAXPADDD@Z");
+extern int32_t ibm_TwoChCmp(char b0, char b1, char *p)
+    MANGLED("?TwoChCmp@JpnUtil@@SAHDDPAD@Z");
+extern void ibm_TwoChCpy(char *from, char *to0, char *to1)
+    MANGLED("?TwoChCpy@JpnUtil@@SAXPAD00@Z");
+extern int32_t ibm_WriteRomajiStrBuf(uint8_t code, uint8_t *out)
+    MANGLED("?WriteRomajiStrBuf@JpnUtil@@SAHEPAE@Z");
+extern void ibm_ConvertDakuten(char *out, uint8_t kana, uint8_t mark)
+    MANGLED("?ConvertDakuten@JpnUtil@@SAXPADEE@Z");
+extern void ibm_Hiragana2Katakana(const uint8_t *in, uint8_t *out)
+    MANGLED("?Hiragana2Katakana@JpnUtil@@SAXPBEPAE@Z");
+extern int32_t ibm_YomiCmp(uint8_t *a, uint8_t lenA, uint8_t *b, uint8_t lenB)
+    MANGLED("?YomiCmp@JpnUtil@@SAHPAEE0E@Z");
+extern void ibm_TableFree(uint16_t *used, uint16_t *tail, uint16_t *freeHead,
+                          void *table, uint16_t nil, uint16_t which)
+    MANGLED("?TableFree@JpnUtil@@SAXPAG00PAU_LINK_TBL_T@@GG@Z");
+
 #define DM(name) ibm_##name
+#define JU(name) ibm_##name
 #define STATIC_DICT_INIT() ibm_StaticDictInitialize()
 
 #endif
@@ -583,6 +638,201 @@ static void sweepRules(void)
     putchar('\n');
 }
 
+/* ---- JpnUtil ---------------------------------------------------------- */
+
+/* Every byte through the six predicates that take one, as one line each. */
+static void sweepBytes(void)
+{
+    int b;
+
+    for (b = 0; b <= 0xff; b++)
+        printf("JU byte %02x %d%d%d%d%d%d\n", b,
+               JU(IsSBCSKana)((char)b) ? 1 : 0,
+               JU(IsAlphaNumSym)((char)b) ? 1 : 0,
+               JU(IsNum)((char)b) ? 1 : 0,
+               JU(IsAlpha)((char)b) ? 1 : 0,
+               JU(IsDBCSLeadByte)((char)b) ? 1 : 0,
+               JU(IsDBCSTrailByte)((uint8_t)b) ? 1 : 0);
+}
+
+/* Every two-byte character through the seven predicates that take a pointer,
+   and through MakeUshort, as one line each. Sixty-five thousand lines is the
+   whole space and there is no reason to sample it. */
+static void sweepPairs(void)
+{
+    static char pair[3];
+    long hi, lo;
+
+    for (hi = 0; hi <= 0xff; hi++)
+        for (lo = 1; lo <= 0xff; lo++) {
+            pair[0] = (char)hi;
+            pair[1] = (char)lo;
+            pair[2] = 0;
+            printf("JU pair %02lx%02lx %04x %d%d%d%d%d%d%d\n", hi, lo,
+                   (unsigned)JU(MakeUshort)(pair),
+                   JU(IsKatakana)(pair) ? 1 : 0,
+                   JU(IsHiragana)(pair) ? 1 : 0,
+                   JU(IsLongVowel)(pair) ? 1 : 0,
+                   JU(IsSNLKDelim)(pair) ? 1 : 0,
+                   JU(IsDBCSNum)(pair) ? 1 : 0,
+                   JU(IsKanjiNum)(pair) ? 1 : 0,
+                   JU(IsValidDBCS)(pair) ? 1 : 0);
+        }
+}
+
+/* The two-byte copies and comparisons, over a handful of pairs each way. */
+static void sweepTwoByte(void)
+{
+    static const char *const some[] = {
+        "\x82\xa0", "\x82\xa1", "\x83\x41", "\x81\x42", "ab", "a\x01",
+        NULL
+    };
+    int i, j;
+
+    for (i = 0; some[i] != NULL; i++)
+        for (j = 0; some[j] != NULL; j++) {
+            char to[3];
+            char c0 = 0, c1 = 0;
+
+            printf("JU db %d %d cmp %d cmp2 %d twoch %d", i, j,
+                   JU(DbCmp)(some[i], some[j]) ? 1 : 0,
+                   JU(DbCmp2)(some[i], some[j][0], some[j][1]) ? 1 : 0,
+                   JU(TwoChCmp)(some[i][0], some[i][1], (char *)some[j]) ? 1
+                                                                        : 0);
+            to[0] = 0; to[1] = 0; to[2] = 0;
+            JU(DbCpy)(to, some[j]);
+            printf(" cpy %02x%02x", (unsigned char)to[0],
+                   (unsigned char)to[1]);
+            JU(DbSet)(to, some[i][0], some[j][1]);
+            printf(" set %02x%02x", (unsigned char)to[0],
+                   (unsigned char)to[1]);
+            JU(TwoChCpy)((char *)some[i], &c0, &c1);
+            printf(" twocpy %02x%02x\n", (unsigned char)c0,
+                   (unsigned char)c1);
+        }
+}
+
+/* Every kana code into letters, four times over: into an empty buffer, into
+   one already ending in the geminate marker, into one ending in that marker
+   and an apostrophe, and into one ending in an ordinary syllable, which is
+   what the capitalising row acts on. */
+static void sweepRomaji(void)
+{
+    static const char *const before[] = { "", "Q", "Q'", "ka", "kaN", NULL };
+    int b;
+    long code;
+
+    for (b = 0; before[b] != NULL; b++)
+        for (code = 0; code <= 0xff; code++) {
+            static uint8_t out[128];
+            int32_t rc;
+
+            strcpy((char *)out, before[b]);
+            rc = JU(WriteRomajiStrBuf)((uint8_t)code, out);
+            printf("JU romaji %d %02lx %d ", b, code, (int)rc);
+            putBytes((const char *)out);
+            putchar('\n');
+        }
+}
+
+/* Every half-width kana with each of the two voicing marks. */
+static void sweepDakuten(void)
+{
+    long kana;
+    int  mark;
+
+    for (mark = 0xde; mark <= 0xdf; mark++)
+        for (kana = 0xa1; kana <= 0xdf; kana++) {
+            char out[4];
+
+            out[0] = 0; out[1] = 0; out[2] = 0; out[3] = 0;
+            JU(ConvertDakuten)(out, (uint8_t)kana, (uint8_t)mark);
+            printf("JU dakuten %02lx %02x %02x%02x\n", kana, mark,
+                   (unsigned char)out[0], (unsigned char)out[1]);
+        }
+}
+
+/* Every hiragana into katakana, one at a time and then in strings. 0x82ec is
+   left out: IsHiragana accepts it and the table has not got it, so IBM's walks
+   it for ever. rom/jajp/jpnutil.c says what ours does instead. */
+static void sweepKatakana(void)
+{
+    static const uint8_t *const strings[] = {
+        (const uint8_t *)"\x82\xb1\x82\xf1\x82\xc9\x82\xbf\x82\xcd",
+        (const uint8_t *)"a\x82\xa0" "1\x83\x41\xb1",
+        (const uint8_t *)"\x93\xfa\x96\x7b\x8c\xea",
+        (const uint8_t *)"",
+        NULL
+    };
+    long lo;
+    int  i;
+
+    for (lo = 0x9f; lo <= 0xf1; lo++) {
+        uint8_t in[3];
+        uint8_t out[16];
+
+        if (lo == 0xec)
+            continue;
+        in[0] = 0x82;
+        in[1] = (uint8_t)lo;
+        in[2] = 0;
+        memset(out, 0, sizeof out);
+        JU(Hiragana2Katakana)(in, out);
+        printf("JU h2k 82%02lx ", lo);
+        putBytes((const char *)out);
+        putchar('\n');
+    }
+
+    for (i = 0; strings[i] != NULL; i++) {
+        uint8_t out[64];
+
+        memset(out, 0, sizeof out);
+        JU(Hiragana2Katakana)(strings[i], out);
+        printf("JU h2kstr %d ", i);
+        putBytes((const char *)out);
+        putchar('\n');
+    }
+}
+
+static void sweepYomi(void)
+{
+    static uint8_t a[] = { 1, 2, 3, 4 };
+    static uint8_t b[] = { 1, 2, 3, 5 };
+    int i, j;
+
+    for (i = 0; i <= 4; i++)
+        for (j = 0; j <= 4; j++)
+            printf("JU yomi %d %d %d %d\n", i, j,
+                   (int)JU(YomiCmp)(a, (uint8_t)i, b, (uint8_t)j),
+                   (int)JU(YomiCmp)(a, (uint8_t)i, a, (uint8_t)j));
+}
+
+/* A chain of eight, unlinked one at a time, printed after each. The nil is
+   0xffff and the first two indices stand for the head and the tail. */
+static void sweepTableFree(void)
+{
+    enum { N = 8, NIL = 0xffff };
+    uint16_t table[N * 2];
+    uint16_t used = 0, tail = NIL, freeHead = NIL;
+    int i, k;
+
+    for (i = 0; i < N; i++) {
+        table[i * 2] = (uint16_t)(i == 0 ? NIL : i - 1);
+        table[i * 2 + 1] = (uint16_t)(i == N - 1 ? NIL : i + 1);
+    }
+    used = N - 1;
+
+    for (k = 0; k < N; k++) {
+        JU(TableFree)(&used, &tail, &freeHead, (void *)table, NIL,
+                      (uint16_t)k);
+        printf("JU tablefree %d used %04x tail %04x free %04x", k, used, tail,
+               freeHead);
+        for (i = 0; i < N; i++)
+            printf(" %04x/%04x", table[i * 2], table[i * 2 + 1]);
+        putchar('\n');
+    }
+}
+
 int main(void)
 {
     Param *p;
@@ -612,6 +862,14 @@ int main(void)
     sweepStrings(c);
     sweepDictMan();
     sweepRules();
+    sweepBytes();
+    sweepPairs();
+    sweepTwoByte();
+    sweepRomaji();
+    sweepDakuten();
+    sweepKatakana();
+    sweepYomi();
+    sweepTableFree();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

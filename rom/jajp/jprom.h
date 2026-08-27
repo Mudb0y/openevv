@@ -68,97 +68,13 @@ typedef struct Converter Converter;
 
 /* ---- the tables ------------------------------------------------------ */
 
-/* Lifted out of IBM's objects by tools/lift-romtables.py, which writes
-   lang/jajp/rom_tables_jajp.c. Each object's tables are one block there with
-   a pointer per table, because that is how the original had them and its own
-   code does not always stay inside the table it started in. The ones read as
-   sixteen-bit values are cast where they are used; the block is aligned so
-   that the cast is sound. */
-extern const uint8_t *const jajp_m_pAITable;
-extern const uint8_t *const jajp_m_pRTable;
-extern const uint8_t *const jajp_m_pKanaTable;
-extern const uint8_t *const jajp_m_pLeadByteTable1;
-extern const uint8_t *const jajp_m_pLeadByteTable2;
-
-/* dictman.obj's tables, and how long each is. The lengths are what the
-   lifter measured, which is the distance to the next table, so an index
-   within them is one the original could have answered for. */
-extern const uint8_t *const jajp_s_aFuncWordDict;
-extern const int32_t jajp_s_aFuncWordDict_n;
-extern const uint8_t *const jajp_s_aFuncWordDictEx;
-extern const int32_t jajp_s_aFuncWordDictEx_n;
-extern const uint8_t *const jajp_s_aKakariTable;
-extern const int32_t jajp_s_aKakariTable_n;
-extern const uint8_t *const jajp_s_aPenaltyTable;
-extern const int32_t jajp_s_aPenaltyTable_n;
-extern const uint8_t *const jajp_s_aPhrVectorTable;
-extern const int32_t jajp_s_aPhrVectorTable_n;
-extern const uint8_t *const jajp_s_aAccentTable;
-extern const int32_t jajp_s_aAccentTable_n;
-extern const uint8_t *const jajp_s_aNumMDTable;
-extern const int32_t jajp_s_aNumMDTable_n;
-extern const uint8_t *const jajp_s_aNumYomiTable;
-extern const int32_t jajp_s_aNumYomiTable_n;
-extern const uint8_t *const jajp_s_aNumJMDTable;
-extern const int32_t jajp_s_aNumJMDTable_n;
-extern const uint8_t *const jajp_s_aNumJCCTable;
-extern const int32_t jajp_s_aNumJCCTable_n;
-extern const uint8_t *const jajp_s_aHash4NDict;
-extern const int32_t jajp_s_aHash4NDict_n;
-extern const uint8_t *const jajp_s_aHash4TDict;
-extern const int32_t jajp_s_aHash4TDict_n;
-extern const uint8_t *const jajp_s_aHash4KDict;
-extern const int32_t jajp_s_aHash4KDict_n;
-extern const uint8_t *const jajp_s_aHash4KNDict;
-extern const int32_t jajp_s_aHash4KNDict_n;
-extern const uint8_t *const jajp_s_aHash4KTDict;
-extern const int32_t jajp_s_aHash4KTDict_n;
-extern const uint8_t *const jajp_s_aHash4EDict;
-extern const int32_t jajp_s_aHash4EDict_n;
-extern const uint8_t *const jajp_s_aItaijiHashTable;
-extern const int32_t jajp_s_aItaijiHashTable_n;
-extern const uint8_t *const jajp_s_aItaijiTable;
-extern const int32_t jajp_s_aItaijiTable_n;
-extern const uint8_t *const jajp_s_aTGTable;
-extern const int32_t jajp_s_aTGTable_n;
-extern const uint8_t *const jajp_s_aYomiDataTable;
-extern const int32_t jajp_s_aYomiDataTable_n;
-extern const uint8_t *const jajp_s_aPhraseDataTable;
-extern const int32_t jajp_s_aPhraseDataTable_n;
-extern const uint8_t *const jajp_s_aNumberDataTable;
-extern const int32_t jajp_s_aNumberDataTable_n;
-extern const uint8_t *const jajp_s_szFromStringOfRoman2Kana;
-extern const int32_t jajp_s_szFromStringOfRoman2Kana_n;
-extern const uint8_t *const jajp_s_szToStringOfRoman2Kana;
-extern const int32_t jajp_s_szToStringOfRoman2Kana_n;
-extern const uint8_t *const jajp_s_szRemainStringOfRoman2Kana;
-extern const int32_t jajp_s_szRemainStringOfRoman2Kana_n;
-extern const uint8_t *const jajp_s_anFromPositionOfRoman2Kana;
-extern const int32_t jajp_s_anFromPositionOfRoman2Kana_n;
-extern const uint8_t *const jajp_s_anToPositionOfRoman2Kana;
-extern const int32_t jajp_s_anToPositionOfRoman2Kana_n;
-extern const uint8_t *const jajp_s_anRemainPositionOfRoman2Kana;
-extern const int32_t jajp_s_anRemainPositionOfRoman2Kana_n;
-extern const uint8_t *const jajp_s_anAccentValueOfRoman2Kana;
-extern const int32_t jajp_s_anAccentValueOfRoman2Kana_n;
-extern const uint8_t *const jajp_s_anAccentPositionOfRoman2Kana;
-extern const int32_t jajp_s_anAccentPositionOfRoman2Kana_n;
-extern const uint8_t *const jajp_s_szFromStringOfEng2Roman;
-extern const int32_t jajp_s_szFromStringOfEng2Roman_n;
-extern const uint8_t *const jajp_s_szToStringOfEng2Roman;
-extern const int32_t jajp_s_szToStringOfEng2Roman_n;
-extern const uint8_t *const jajp_s_szRemainStringOfEng2Roman;
-extern const int32_t jajp_s_szRemainStringOfEng2Roman_n;
-extern const uint8_t *const jajp_s_anFromPositionOfEng2Roman;
-extern const int32_t jajp_s_anFromPositionOfEng2Roman_n;
-extern const uint8_t *const jajp_s_anToPositionOfEng2Roman;
-extern const int32_t jajp_s_anToPositionOfEng2Roman_n;
-extern const uint8_t *const jajp_s_anRemainPositionOfEng2Roman;
-extern const int32_t jajp_s_anRemainPositionOfEng2Roman_n;
-extern const uint8_t *const jajp_s_anAccentValueOfEng2Roman;
-extern const int32_t jajp_s_anAccentValueOfEng2Roman_n;
-extern const uint8_t *const jajp_s_anAccentPositionOfEng2Roman;
-extern const int32_t jajp_s_anAccentPositionOfEng2Roman_n;
+/* Lifted out of IBM's objects by tools/lift-romtables.py, which writes both
+   lang/jajp/rom_tables_jajp.c and the header declaring what is in it. Each
+   object's tables are one block there with a pointer per table, because that
+   is how the original had them and its own code does not always stay inside
+   the table it started in. The ones read as sixteen-bit values are cast where
+   they are used; the block is aligned so that the cast is sound. */
+#include "rom_tables_jajp.h"
 
 /* The static dictionary's two supplement blobs, which DictMan reaches for.
    tools/lift-rom.py writes those. */
@@ -295,6 +211,55 @@ uint8_t        dm_GetKTDictHashAt(uint16_t i, uint8_t j);
 const uint8_t *dm_GetEDictHashAt(uint16_t i);
 uint8_t        dm_GetItaijiHashAt(uint16_t i, uint8_t j);
 const uint8_t *dm_GetItaijiAt(uint8_t row, uint16_t i);
+
+/* ---- JpnUtil --------------------------------------------------------- */
+
+/* One entry of the chains the phrase tables keep their entries on: two
+   sixteen-bit indices, with one value standing for the end. */
+typedef struct LinkTable {
+    uint16_t prev;
+    uint16_t next;
+} LinkTable;
+
+/* The file calls, which are the C library's under IBM's own names. */
+#include <stdio.h>
+
+FILE     *ju_ttsOpen(char *name, const char *mode);
+void      ju_ttsClose(FILE *f);
+long      ju_ttsLseek(FILE *f, long to, long whence);
+long      ju_ttsRead(FILE *f, char *buf, uint32_t n);
+long      ju_ttsReadAll(FILE *f, char **out, long from, uint32_t most);
+long      ju_ttsWrite(FILE *f, const char *buf, uint32_t n);
+
+uint16_t  ju_MakeUshort(char *p);
+int32_t   ju_DbCmp(const char *a, const char *b);
+int32_t   ju_DbCmp2(const char *a, char b0, char b1);
+void      ju_DbCpy(char *to, const char *from);
+void      ju_DbSet(char *to, char b0, char b1);
+int32_t   ju_TwoChCmp(char b0, char b1, char *p);
+void      ju_TwoChCpy(char *from, char *to0, char *to1);
+
+int32_t   ju_IsSBCSKana(char c);
+int32_t   ju_IsAlphaNumSym(char c);
+int32_t   ju_IsNum(char c);
+int32_t   ju_IsAlpha(char c);
+int32_t   ju_IsDBCSLeadByte(char c);
+int32_t   ju_IsDBCSTrailByte(uint8_t c);
+int32_t   ju_IsValidDBCS(const char *p);
+int32_t   ju_IsKatakana(const char *p);
+int32_t   ju_IsHiragana(const char *p);
+int32_t   ju_IsLongVowel(const char *p);
+int32_t   ju_IsSNLKDelim(const char *p);
+int32_t   ju_IsDBCSNum(const char *p);
+int32_t   ju_IsKanjiNum(const char *p);
+
+void      ju_GetRomaji(uint8_t *out, const uint8_t *table, int16_t col);
+int32_t   ju_WriteRomajiStrBuf(uint8_t code, uint8_t *out);
+void      ju_ConvertDakuten(char *out, uint8_t kana, uint8_t mark);
+void      ju_Hiragana2Katakana(const uint8_t *in, uint8_t *out);
+int32_t   ju_YomiCmp(uint8_t *a, uint8_t lenA, uint8_t *b, uint8_t lenB);
+void      ju_TableFree(uint16_t *used, uint16_t *tail, uint16_t *freeHead,
+                       void *table, uint16_t nil, uint16_t which);
 
 /* ---- how much of this is written ------------------------------------ */
 

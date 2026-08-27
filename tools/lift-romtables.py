@@ -2,11 +2,12 @@
 """Lift the romanizer's own tables out of the two objects that are all table.
 
 What this is. Beside the static dictionary that tools/lift-rom.py takes, the
-Japanese romanizer carries two objects whose code is a handful of accessors
-over a great deal of data: dictman.obj, sixty thousand bytes of hash tables,
-penalty tables, number and reading tables and the two substitution tables that
-turn English into romaji and romaji into kana; and unicodeconvt.obj, a hundred
-and twenty-nine thousand bytes of Shift-JIS and Unicode conversion tables.
+Japanese romanizer carries three objects that are mostly table: dictman.obj,
+sixty thousand bytes of hash tables, penalty tables, number and reading tables
+and the two substitution tables that turn English into romaji and romaji into
+kana; unicodeconvt.obj, a hundred and twenty-nine thousand bytes of Shift-JIS
+and Unicode conversion tables; and jpnutil.obj, whose two thousand bytes are
+one row of kana to a name and the romaji each kana in it is spelled with.
 
 Neither has a single relocation inside its data, so both are bytes and nothing
 about their format has to be understood here. What is transcribed separately is
@@ -32,21 +33,28 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Which objects, and what the file says about each.
+# Which objects, which section of each holds the tables, and what the file
+# says about it.
 OBJECTS = [
-    ("dictman.obj",
+    ("dictman.obj", ".rdata",
      "DictMan's tables: the dictionary hashes, the penalty and phrase\n"
      " * vectors, the number and reading tables, and the substitution tables\n"
      " * that make romaji out of English and kana out of romaji."),
-    ("unicodeconvt.obj",
+    ("unicodeconvt.obj", ".rdata",
      "UnicodeConverter's tables: Shift-JIS to Unicode and back, the two\n"
      " * lead-byte tables that say which bytes begin a two-byte character,\n"
      " * and the kana and AI tables beside them."),
+    ("jpnutil.obj", ".data",
+     "JpnUtil's tables: one row of kana to a name, and the romaji each of\n"
+     " * the five in that row is spelled with. These are what turn a kana\n"
+     " * code into letters, five bytes to an entry."),
 ]
 
 # A static member of a class, as MSVC spells one: ?name@Class@@ and then the
-# type. And a plain file-static, which carries only the C underscore.
+# type. A global of no class, which is ?name@@ and the type. And a plain
+# file-static, which carries only the C underscore.
 MEMBER = re.compile(r"^\?([A-Za-z_]\w*)@(\w+)@@")
+GLOBAL = re.compile(r"^\?([A-Za-z_]\w*)@@")
 STATIC = re.compile(r"^_([A-Za-z_]\w*)$")
 
 # Names that are not tables: the compiler's string literals and its own
@@ -59,14 +67,14 @@ def run(*args):
                           check=True).stdout
 
 
-def rdata(obj):
-    """The object's main read-only data, as one block of bytes.
+def rdata(obj, section):
+    """The object's table section, as one block of bytes.
 
-    Only the section that holds the tables is wanted. Both objects have one
-    large .rdata and, in one case, a two-byte COMDAT beside it for a string
-    literal, and objdump prints both under the one name; the largest is the
-    one meant."""
-    text = run("i686-w64-mingw32-objdump", "-s", "-j", ".rdata", obj)
+    Only the section that holds the tables is wanted. An object may have
+    several sections of one name -- a two-byte COMDAT for a string literal
+    beside the large one -- and objdump prints them all under that name, so
+    the largest is the one meant."""
+    text = run("i686-w64-mingw32-objdump", "-s", "-j", section, obj)
     blocks = []
     data = bytearray()
     for line in text.splitlines():
@@ -100,7 +108,7 @@ def tables(obj):
         raw = m.group(3)
         if SKIP.match(raw):
             continue
-        name = MEMBER.match(raw) or STATIC.match(raw)
+        name = MEMBER.match(raw) or GLOBAL.match(raw) or STATIC.match(raw)
         if not name:
             continue
         out.append((name.group(1), int(m.group(1), 16)))
@@ -119,6 +127,30 @@ def emit_block(f, name, block):
             f.write("\n    ")
         f.write("%d" % b)
     f.write("\n};\n\n")
+
+
+def emit_header(out, tag, lines):
+    """The declarations for what the block above defines, so that a
+    transcription includes one file rather than repeating them."""
+    guard = "ROM_TABLES_%s_H" % tag.upper()
+    with open(out, "w") as f:
+        f.write("/* What lang/%s/rom_tables_%s.c defines.\n"
+                " *\n"
+                " * Written by tools/lift-romtables.py beside that file, so\n"
+                " * that a table cannot be declared one way and defined\n"
+                " * another. Each pointer is into its object's own block and\n"
+                " * each length is that table's, in bytes.\n"
+                " */\n\n"
+                "#ifndef %s\n#define %s\n\n#include <stdint.h>\n\n"
+                % (tag, tag, guard, guard))
+        obj = None
+        for one, name, n in lines:
+            if one != obj:
+                f.write("%s/* %s */\n" % ("" if obj is None else "\n", one))
+                obj = one
+            f.write("extern const uint8_t *const %s_%s;\n" % (tag, name))
+            f.write("extern const int32_t %s_%s_n;\n" % (tag, name))
+        f.write("\n#endif\n")
 
 
 def emit_all(where, out, tag):
@@ -143,15 +175,15 @@ def emit_all(where, out, tag):
                 " * such a read finds is what IBM's found.\n"
                 " */\n\n"
                 "#include <stdint.h>\n\n")
-        for obj, about in OBJECTS:
+        for obj, section, about in OBJECTS:
             path = os.path.join(where, obj)
             if not os.path.exists(path):
                 raise SystemExit("lift-romtables: no %s" % path)
-            data = rdata(path)
+            data = rdata(path, section)
             syms = tables(path)
             if not syms:
                 raise SystemExit("lift-romtables: %s names no tables" % obj)
-            block = os.path.splitext(obj)[0] + "_rdata"
+            block = os.path.splitext(obj)[0] + "_tables"
             f.write("/* %s\n * %s\n */\n\n" % (obj, about))
             emit_block(f, block, data)
             for i, (name, at) in enumerate(syms):
@@ -178,13 +210,14 @@ def main(argv):
     os.makedirs(outdir, exist_ok=True)
     out = os.path.join(outdir, "rom_tables_%s.c" % tag)
     lines, total = emit_all(where, out, tag)
+    emit_header(os.path.join(outdir, "rom_tables_%s.h" % tag), tag, lines)
 
     by_obj = {}
     for obj, _, n in lines:
         by_obj[obj] = by_obj.get(obj, 0) + n
     print(", ".join("%s %d bytes" % (o, n) for o, n in sorted(by_obj.items())))
     print("%d tables, %d bytes" % (len(lines), total))
-    print("written to %s" % out)
+    print("written to %s and its header" % out)
     return 0
 
 
