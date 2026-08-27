@@ -13,12 +13,16 @@
  * for processRemaining on a single sentence, and it is on the text path
  * proper.
  *
- * One finding worth keeping. getRomanizerInst loads a romanizer
- * through Win32 LoadLibrary and GetProcAddress, and getLibraryName -- in
- * IBM's own code -- returns nothing at all. So the loading half of this
- * object is platform code, and belongs on the far side of the same boundary
- * as the sound device rather than being transcribed. It is written that way
- * below.
+ * One finding worth keeping, and a correction to it. This file used to say
+ * that getRomanizerInst loads a romanizer through Win32 LoadLibrary and
+ * GetProcAddress, and that the loading half was therefore platform code to be
+ * stubbed rather than transcribed. That is not what it does. It takes the
+ * address of getRomObject, a link-time symbol that romedll_link.obj answers
+ * when the romanizer is part of the program, and the only Win32 in it is
+ * GetModuleFileNameA, asked for the directory the program was loaded from. So
+ * it is transcribed below: eci_rom.h says what a romanizer is and
+ * eci_romedll.c stands in for the linker's answer. getLibraryName is dead
+ * either way -- it returns nothing at all in IBM's own code.
  */
 
 #include <stdint.h>
@@ -27,8 +31,8 @@
 #include "evv_abi.h"
 #include "eci_engine.h"
 #include "delta_lang.h"
+#include "eci_rom.h"
 
-typedef struct RomInstance RomInstance;
 typedef struct SynthThread SynthThread;
 
 /* The manager's own record. The two arrays are eighteen language families
@@ -40,13 +44,17 @@ typedef struct RomanizerManager {
     /* Eighteen language families of two dialects each: one array of the names
        the romanizers were loaded from, one of the romanizers themselves. */
     char         *names[0x12][2];   /* +0x130 */
-    int32_t       unknown_1c0;      /* +0x1c0 */
-    RomInstance  *active;           /* +0x1c4 */
+    /* Where IBM keeps the address of getRomObject, which it fetches every
+       time it is about to ask for a romanizer. Ours keeps the maker that
+       answered for the family being asked about, which is the same thing
+       with the family said out loud. */
+    EvvRomMaker   maker;            /* +0x1c0 */
+    EvvRom       *active;           /* +0x1c4 */
     int32_t       last_flag;        /* +0x1c8 */
     int32_t       stopped;          /* +0x1cc */
     /* Indexed by a one-based family number, which is why the original's own
        two users of it disagree by eight about where it starts. */
-    RomInstance  *roms[0x12][2];    /* +0x1d0 */
+    EvvRom       *roms[0x12][2];    /* +0x1d0 */
     SynthThread  *thread;           /* +0x260 */
     int32_t       family;           /* +0x264 */
     int32_t       dialect;          /* +0x268 */
@@ -65,6 +73,7 @@ const uint32_t rm_bytes = sizeof(RomanizerManager);
 #define RM_LAST_FLAG(m)   ((m)->last_flag)
 #define RM_STOPPED(m)     ((m)->stopped)
 #define RM_ROMS(m, f, d)  ((m)->roms[(f) - 1][d])
+#define RM_MAKER(m)       ((m)->maker)
 #define RM_THREAD(m)      ((m)->thread)
 #define RM_FAMILY(m)      ((m)->family)
 #define RM_DIALECT(m)     ((m)->dialect)
@@ -74,33 +83,6 @@ const uint32_t rm_bytes = sizeof(RomanizerManager);
 
 #define RM_FAMILIES  0x12
 #define RM_DIALECTS  2
-
-/* Slots in a romanizer's own table. */
-#define ROM_DELETE          0x08
-#define ROM_ADD_TEXT        0x0c
-#define ROM_INSERT_INDEX    0x10
-#define ROM_PROCESS         0x14
-#define ROM_STOP            0x18
-#define ROM_RESUME          0x1c
-#define ROM_UNICODE_TO_MBCS 0x20
-#define ROM_SET_PARAM       0x28
-#define ROM_GET_PARAM       0x2c
-#define ROM_CLEAR_ERRORS    0x3c
-#define ROM_PROG_STATUS     0x40
-#define ROM_ERROR_MESSAGE   0x44
-#define ROM_ADD_PARAM       0x6c
-
-#define ROM_SLOT(r, off) ((*(void ***)(r))[(off) / 4])
-
-typedef int  (THIS *RomIntFn)(RomInstance *r);
-typedef int  (THIS *RomOneFn)(RomInstance *r, int32_t a);
-typedef int  (THIS *RomTwoFn)(RomInstance *r, const char *s, int32_t n);
-typedef void (THIS *RomVoidOneFn)(RomInstance *r, void *a);
-typedef int  (THIS *RomSetFn)(RomInstance *r, int32_t a, int32_t b);
-typedef int  (THIS *RomAddFn)(RomInstance *r, const char *s, int32_t a,
-                              int32_t b);
-typedef int  (THIS *RomConvFn)(RomInstance *r, const uint16_t *in,
-                               char **out, int32_t n);
 
 extern THIS void *sy_mutexCtor(void *m, int32_t recursive)
     MANGLED("??0Mutex@@QAE@H@Z");
@@ -115,6 +97,7 @@ extern THIS void stw_addTextToEngine(SynthThread *t, char *text, int32_t n)
     MANGLED("?addTextToEngine@SynthThread@@QAEXPADH@Z");
 extern THIS void stw_processRemaining(SynthThread *t)
     MANGLED("?processRemaining@SynthThread@@QAEXXZ");
+extern int32_t fileModuleDirectory(char *out, int32_t room);
 
 /* The table that maps one byte to another when no corpus is loaded. */
 
@@ -185,6 +168,7 @@ THIS void *rz_ctor(RomanizerManager *m, SynthThread *thread)
     ini_ctor(RM_INI(m));
     RM_THREAD(m) = thread;
     rz_forgetAll(m);
+    RM_MAKER(m) = 0;
     RM_OUT(m) = 0;
     RM_STOPPED(m) = 0;
     return m;
@@ -196,10 +180,10 @@ THIS void rz_dtor(RomanizerManager *m)
 
     for (f = 1; f <= RM_FAMILIES; f++)
         for (d = 0; d < RM_DIALECTS; d++) {
-            RomInstance *r = RM_ROMS(m, f, d);
+            EvvRom *r = RM_ROMS(m, f, d);
 
             if (r)
-                ((RomVoidOneFn)ROM_SLOT(r, ROM_DELETE))(r, 0);
+                r->ops->release(r);
         }
 
     if (RM_OUT(m))
@@ -217,8 +201,7 @@ THIS void rz_dtor(RomanizerManager *m)
 THIS int rz_addParam(RomanizerManager *m, const char *s, int32_t n)
 {
     if (RM_ACTIVE(m))
-        return ((RomTwoFn)ROM_SLOT(RM_ACTIVE(m), ROM_ADD_PARAM))(
-                   RM_ACTIVE(m), s, n);
+        return RM_ACTIVE(m)->ops->addParam(RM_ACTIVE(m), s, n);
 
     stw_addTextToEngine(RM_THREAD(m), (char *)s, n);
     return 1;
@@ -229,8 +212,7 @@ THIS int rz_addParam(RomanizerManager *m, const char *s, int32_t n)
 THIS int rz_insertIndex(RomanizerManager *m)
 {
     if (RM_ACTIVE(m))
-        return ((RomIntFn)ROM_SLOT(RM_ACTIVE(m), ROM_INSERT_INDEX))(
-                   RM_ACTIVE(m));
+        return RM_ACTIVE(m)->ops->insertIndex(RM_ACTIVE(m));
 
     stw_addTextToEngine(RM_THREAD(m), "`ui", 3);
     return 1;
@@ -245,7 +227,7 @@ THIS void rz_clear(RomanizerManager *m)
 THIS int rz_resume(RomanizerManager *m)
 {
     if (RM_ACTIVE(m))
-        ((RomIntFn)ROM_SLOT(RM_ACTIVE(m), ROM_RESUME))(RM_ACTIVE(m));
+        RM_ACTIVE(m)->ops->resume(RM_ACTIVE(m));
     RM_STOPPED(m) = 0;
     return 1;
 }
@@ -253,13 +235,12 @@ THIS int rz_resume(RomanizerManager *m)
 THIS int rz_stop(RomanizerManager *m)
 {
     RM_STOPPED(m) = 1;
-    if (RM_ACTIVE(m)
-        && !((RomIntFn)ROM_SLOT(RM_ACTIVE(m), ROM_STOP))(RM_ACTIVE(m)))
+    if (RM_ACTIVE(m) && !RM_ACTIVE(m)->ops->stop(RM_ACTIVE(m)))
         return 0;
     return 1;
 }
 
-THIS RomInstance *rz_getRom(RomanizerManager *m, uint32_t lang)
+THIS EvvRom *rz_getRom(RomanizerManager *m, uint32_t lang)
 {
     (void)lang;
     return RM_ACTIVE(m);
@@ -271,10 +252,10 @@ THIS void rz_romClearErrors(RomanizerManager *m)
 
     for (f = 1; f <= RM_FAMILIES; f++)
         for (d = 0; d < RM_DIALECTS; d++) {
-            RomInstance *r = RM_ROMS(m, f, d);
+            EvvRom *r = RM_ROMS(m, f, d);
 
             if (r)
-                ((RomIntFn)ROM_SLOT(r, ROM_CLEAR_ERRORS))(r);
+                r->ops->clearErrors(r);
         }
 }
 
@@ -282,14 +263,13 @@ THIS uint32_t rz_romProgStatus(RomanizerManager *m)
 {
     if (!RM_ACTIVE(m))
         return 0;
-    return ((RomIntFn)ROM_SLOT(RM_ACTIVE(m), ROM_PROG_STATUS))(RM_ACTIVE(m));
+    return RM_ACTIVE(m)->ops->progStatus(RM_ACTIVE(m));
 }
 
 THIS void rz_romErrorMessage(RomanizerManager *m, char *out)
 {
     if (RM_ACTIVE(m)) {
-        ((RomVoidOneFn)ROM_SLOT(RM_ACTIVE(m), ROM_ERROR_MESSAGE))(
-            RM_ACTIVE(m), out);
+        RM_ACTIVE(m)->ops->errorMessage(RM_ACTIVE(m), out);
         return;
     }
     strcpy(out, "No Romanizer Error");
@@ -551,8 +531,8 @@ THIS int32_t rz_processSentence(RomanizerManager *m, char **out,
     *out = 0;
 
     if (RM_ACTIVE(m)) {
-        int32_t answer = ((RomTwoFn)ROM_SLOT(RM_ACTIVE(m), ROM_PROCESS))(
-                             RM_ACTIVE(m), (const char *)out, annotated);
+        int32_t answer = RM_ACTIVE(m)->ops->processSentence(RM_ACTIVE(m), out,
+                                                            annotated);
 
         if (answer == 2) {
             n = strlen(*out);
@@ -597,8 +577,8 @@ THIS int rz_addText(RomanizerManager *m, const char *text, int32_t len,
     RM_PENDING_LEN(m) = len;
 
     if (len && RM_ACTIVE(m)) {
-        rc = ((RomAddFn)ROM_SLOT(RM_ACTIVE(m), ROM_ADD_TEXT))(
-                 RM_ACTIVE(m), RM_PENDING(m), len, flag);
+        rc = RM_ACTIVE(m)->ops->addText(RM_ACTIVE(m), RM_PENDING(m), len,
+                                        flag);
         RM_PENDING_LEN(m) = 0;
     }
 
@@ -608,26 +588,51 @@ THIS int rz_addText(RomanizerManager *m, const char *text, int32_t len,
 
 /* ---- choosing a language -------------------------------------------- */
 
-/* Loading a romanizer is Win32 work in the original -- LoadLibrary and
-   GetProcAddress against a name that its own getLibraryName never
-   produces. That belongs on the far side of the same boundary as the sound
-   device, so this reports that there is no romanizer to be had. */
-THIS RomInstance *rz_getRomanizerInst(RomanizerManager *m, uint8_t family,
-                                      uint8_t dialect)
+/* One romanizer per language, made the first time it is asked for and kept.
+ *
+ * The original makes a LangIdentifier here, fills it in from the family and
+ * dialect, asks it for its string and then frees it without using either.
+ * That is left out: it allocates and frees twenty bytes and nothing else
+ * happens.
+ *
+ * What the romanizer is told is the directory the program was loaded from,
+ * which is where IBM's own is to find its files. Ours has its data compiled
+ * in and does not need it, and it is handed over anyway because that is what
+ * the call says. */
+THIS EvvRom *rz_getRomanizerInst(RomanizerManager *m, uint8_t family,
+                                 uint8_t dialect)
 {
+    EvvRom *inst = 0;
+    char    dir[0x104];
+
     sy_mutexWait(RM_LOCK(m), -1);
+
     if (RM_ROMS(m, family, dialect)) {
-        RomInstance *r = RM_ROMS(m, family, dialect);
+        EvvRom *r = RM_ROMS(m, family, dialect);
 
         sy_mutexRelease(RM_LOCK(m));
         return r;
     }
+
+    if (!rz_isRomExist(family, dialect)) {
+        sy_mutexRelease(RM_LOCK(m));
+        return 0;
+    }
+
+    RM_MAKER(m) = evv_rom_maker(family, dialect);
+    if (RM_MAKER(m)) {
+        if (!fileModuleDirectory(dir, (int32_t)sizeof dir))
+            dir[0] = 0;
+        inst = RM_MAKER(m)(dir);
+    }
+
+    RM_ROMS(m, family, dialect) = inst;
     sy_mutexRelease(RM_LOCK(m));
-    return 0;
+    return inst;
 }
 
 THIS int rz_setActiveLanguage(RomanizerManager *m, uint8_t family,
-                              uint8_t dialect, RomInstance **out)
+                              uint8_t dialect, EvvRom **out)
 {
     if (!rz_isRomExist(family, dialect)) {
         *out = 0;
@@ -646,15 +651,14 @@ THIS int rz_setParam(RomanizerManager *m, int32_t which, int32_t value)
     int32_t rc = 0;
 
     if (RM_ACTIVE(m))
-        rc = ((RomOneFn)ROM_SLOT(RM_ACTIVE(m), ROM_GET_PARAM))(RM_ACTIVE(m),
-                                                               which);
+        rc = RM_ACTIVE(m)->ops->getParam(RM_ACTIVE(m), which);
     if (rc != value)
         stw_processRemaining(RM_THREAD(m));
 
     if (which == 2) {
         uint8_t family = (uint8_t)((value & 0xff0000) >> 16);
         uint8_t dialect = (uint8_t)(value & 0xff);
-        RomInstance *found = 0;
+        EvvRom *found = 0;
 
         rc = ((RM_FAMILY(m) & 0xff) << 16) | (RM_DIALECT(m) & 0xff);
         if (rz_setActiveLanguage(m, family, dialect, &found) != 0) {
@@ -665,15 +669,13 @@ THIS int rz_setParam(RomanizerManager *m, int32_t which, int32_t value)
         RM_DIALECT(m) = dialect;
         RM_ACTIVE(m) = found;
         if (RM_ACTIVE(m))
-            rc = ((RomSetFn)ROM_SLOT(RM_ACTIVE(m), ROM_SET_PARAM))(
-                     RM_ACTIVE(m), which, value);
+            rc = RM_ACTIVE(m)->ops->setParam(RM_ACTIVE(m), which, value);
         return rc;
     }
 
     if (which == 0) {
         if (RM_ACTIVE(m))
-            rc = ((RomSetFn)ROM_SLOT(RM_ACTIVE(m), ROM_SET_PARAM))(
-                     RM_ACTIVE(m), which, value);
+            rc = RM_ACTIVE(m)->ops->setParam(RM_ACTIVE(m), which, value);
         RM_LAST_FLAG(m) = value;
         return rc;
     }
@@ -681,8 +683,7 @@ THIS int rz_setParam(RomanizerManager *m, int32_t which, int32_t value)
     if (which == 3 || which == 14 || which == 15
         || (which >= 1000 && which <= 1003)) {
         if (RM_ACTIVE(m))
-            rc = ((RomSetFn)ROM_SLOT(RM_ACTIVE(m), ROM_SET_PARAM))(
-                     RM_ACTIVE(m), which, value);
+            rc = RM_ACTIVE(m)->ops->setParam(RM_ACTIVE(m), which, value);
     }
     return rc;
 }
@@ -692,7 +693,7 @@ THIS int rz_setParam(RomanizerManager *m, int32_t which, int32_t value)
 THIS int rz_UnicodeToMBCS(RomanizerManager *m, uint32_t lang,
                           const uint16_t *in, char **out, int32_t n)
 {
-    RomInstance *found = 0;
+    EvvRom *found = 0;
 
     if (rz_setActiveLanguage(m, (uint8_t)((lang & 0xff0000) >> 16),
                              (uint8_t)(lang & 0xff), &found) != 0)
@@ -701,14 +702,13 @@ THIS int rz_UnicodeToMBCS(RomanizerManager *m, uint32_t lang,
         return -1;
     if ((lang & 0xff00) != 0x800)
         return 0;
-    return ((RomConvFn)ROM_SLOT(found, ROM_UNICODE_TO_MBCS))(found, in, out,
-                                                             n);
+    return found->ops->UCS2ToMBCS(found, in, out, n);
 }
 
 THIS int rz_MBCSToUnicode(RomanizerManager *m, uint32_t lang,
                           const char *in, uint16_t **out)
 {
-    RomInstance *found = 0;
+    EvvRom *found = 0;
 
     if (rz_setActiveLanguage(m, (uint8_t)((lang & 0xff0000) >> 16),
                              (uint8_t)(lang & 0xff), &found) != 0)

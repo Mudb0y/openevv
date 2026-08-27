@@ -189,7 +189,20 @@ int main(int argc, char **argv)
         for (i = 0; i < n && i < 32; i++)
             printf("speak:   language 0x%x\n", langs[i]);
 
-        h = eciNew();
+        /* Which language to make the instance for. eciNew is not the same
+           as eciNewEx with the only language a module has: for Japanese it
+           answers an instance that speaks nothing at all, because the
+           language handed over at creation is what carries the codeset. So
+           the variable cli/probe.c already reads is read here too, and both
+           sides make the instance the same way. */
+        {
+            const char *want = getenv("EVV_LANGUAGE");
+
+            if (want != NULL && *want != 0)
+                h = eciNewEx((unsigned)strtoul(want, NULL, 0));
+            else
+                h = eciNew();
+        }
         if (h == NULL && n > 0)
             h = eciNewEx(langs[0]);
         if (h == NULL)

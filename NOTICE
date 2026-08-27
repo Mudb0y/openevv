@@ -4,11 +4,20 @@ license.
 Ours
 ----
 
-The engine in `src`, the two front ends in `cli`, the tools in `tools`, the
-tests in `test`, the reference build in `reference` and the documents in `docs`
-are our own work: C written against IBM's objects and checked against them,
-line by line, by the audio coming out. That is what the MIT licence in LICENSE
-covers.
+The engine in `src`, the romanizers in `rom`, the two front ends in `cli`, the
+tools in `tools`, the tests in `test`, the reference build in `reference` and
+the documents in `docs` are our own work: C written against IBM's objects and
+checked against them, line by line, by the audio coming out. That is what the
+MIT licence in LICENSE covers.
+
+`rom` is where the split between the two halves matters most, and it is why
+that directory exists at all. A language written in another script needs a
+romanizer, which in IBM's SDK is a module of code beside the language's data.
+The code is transcribed the way `src` is and is ours on the same terms; the
+dictionary and the tables it reads are IBM's data and are in `lang/<tag>` with
+the rest of that language, on the terms below. Putting the two in one
+directory would have been tidier and would have made the licence line harder
+to state truthfully.
 
 IBM's
 -----
@@ -18,6 +27,14 @@ Everything under `lang` is transcribed out of IBM's Embedded ViaVoice objects:
 English, `lang/eses` and `lang/esus` are the two Spanishes, `lang/frfr` and
 `lang/frca` the two Frenches and `lang/itit` is Italian, and any language added
 later will be the same.
+
+`lang/jajp` is Japanese and is not in the tree, because a language module that
+cannot yet make an instance would break any build that named it. What that
+directory holds when it is lifted is IBM's on exactly the terms above, and most
+of it by volume is the romanizer's own data: the static dictionary of kanji and
+their readings, the substitution tables that make romaji, and the codeset
+conversion tables. `tools/lift-rom.py` and `tools/lift-romtables.py` are what
+lift it, and both read IBM's objects rather than being typed out here.
 
 `lang/plpl` says Polish and is Italian. It was made by copying `lang/itit`'s
 text forms and renaming them, because a language IBM never shipped has to start

@@ -11,3 +11,9 @@ __pycache__/
 # tools/delta-decompile.py, and rewritten whole by every change to that tool.
 # `make rules' makes it.
 lang/*/delta_rules_c_*.c
+
+# The Japanese language module, lifted by the commands in docs/japanese.md.
+# It stays out of the tree until its romanizer can make an instance, because a
+# module that cannot would fail any build that named it -- and most of it is
+# nine megabytes of the romanizer's dictionary, written by tools/lift-rom.py.
+lang/jajp/

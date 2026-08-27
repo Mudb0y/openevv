@@ -12,7 +12,7 @@ Nothing is borrowed at build time. `make missing` answers nothing, which is the 
 
 Dictionaries can be edited. `tools/delta-dict.py` writes `lang/enus/enus.dict` out of the tables and reads it back in, so a pronunciation can be changed, laid down and heard.
 
-All nine languages in the SDK lift and decompile: US and British English, both Spanishes, both Frenches, German, Italian and Japanese. Eight of the nine build, speak and match IBM byte for byte over the cases there are for them -- everything but Japanese, which has no oracle to be held against and is the subject of a section of its own. English is the one that is finished in the fuller sense of having a dictionary a person can edit.
+All nine languages in the SDK lift and decompile: US and British English, both Spanishes, both Frenches, German, Italian and Japanese. Eight of the nine build, speak and match IBM byte for byte over the cases there are for them -- everything but Japanese, which has an oracle now and is the subject of a section of its own: the engine below its romanizer is proved against IBM's, and the romanizer itself is what is left. English is the one that is finished in the fuller sense of having a dictionary a person can edit.
 
 A build takes as many languages as it is given. `make LANGS="lang/enus lang/dede lang/engb lang/eses lang/frfr"` puts all five in one binary, and any other set the same way: `eciGetAvailableLanguages` answers with all of them, a caller picks one the way IBM's interface always allowed, and each is held against its own oracle out of the same binary. What made that possible is in `src/delta_lang.h` -- every module names its own tables after itself, because IBM gave them the same names in every language, and the engine reaches whichever is in force rather than linking to one by name.
 
@@ -88,66 +88,23 @@ Not done for any of the five: no dictionary a person can edit, and no thirty-two
 
 ## Japanese
 
-`docs/japanese.md` is the whole of it, written for somebody picking this up who was not the person who found it: what is done, what is left with its sizes, the oracle and why it can be trusted, the target and how to observe it, the decisions already taken, and the traps. What follows here is the short version.
+`docs/japanese.md` is the whole of it, written for somebody picking this up who was not the person who found it: what is done and proved, what is left with its sizes, the two harnesses, the faults they found, the oracle and why it can be trusted, the decisions already taken, and the traps. What follows here is the short version.
 
-Japanese lifts -- 477 rules, its settings, and the language number 0x80000 --
-and one thing stands between that and a language that speaks: the romanizer.
+Japanese lifts -- 477 rules, its settings, and the language number 0x80000 -- and what stands between that and a language that speaks is the romanizer, which is what `jpnrom.dll` is in stock Eloquence.
 
-**It has an oracle now, which it did not before.** A reference built from
-`analysis/jajp` would not link: it wanted `getFullPathName`, which every other
-module's `libmain.obj` defines and Japanese's does not, and `ralStrNicmp` and
-`_chkstk`, which are in none of the nine. So there was nothing to hold a
-Japanese build against. All three are now supplied, and it matters where each
-one came from. `ralStrNicmp` went into `src/port_ral.c` beside `ralStrIcmp`,
-which already takes a length first with nought meaning the whole string, and is
-the same call shape -- the runtime abstraction layer has always been ours on
-both sides of the comparison, so that is the existing boundary and not a new
-one. The other two are in `reference/jajp_shim.c` and are linked for that one
-module only: a path to files this port never reads, and the stack-frame helper
-Microsoft's compiler calls instead of subtracting from the stack pointer. IBM's
-Japanese binary now speaks, and the English and German references are unchanged
--- English still matches over all 81.
+**Everything below the romanizer is now proved right, which it was not before.** Japanese text goes through the romanizer and comes out as a phoneme string with prosody annotations in it; from there the engine that speaks the other eight speaks Japanese. `reference/romtap.c` records every call IBM's romanizer manager makes and every answer it gets, and `test/romcan.c` replays those answers as a romanizer with no Japanese in it. Our samples are then IBM's, byte for byte, over seven Japanese cases -- kana, kanji, katakana, numbers, embedded English, romaji -- and the conversation with the romanizer is identical call for call. So Japanese is a text-to-text problem now, with an exact oracle in front of it.
 
-**What is left is the romanisation module**, which is what `jpnrom.dll` is in
-stock Eloquence. `rz_isRomExist` in `src/eci_romanizer.c` says family 8 dialect
-0 has one, which is Japanese, and `rz_getRomanizerInst` always answers that
-there is none because loading one is Win32 `LoadLibrary` work that was
-deliberately left on the far side of the porting boundary. So
-`rz_setActiveLanguage` returns -1, setting the language fails, and no instance
-is made. Take that one line out and Japanese speaks: 13,486 samples, against
-IBM's 18,293 for the same text, and the difference is the romanisation.
-Everything else about the language -- rules, globals, sets, settings -- is
-already right.
+**The seam is transcribed and the vtable slots are gone.** This project used to say that finding a romanizer was Win32 `LoadLibrary` work; it is not. IBM takes the address of `getRomObject`, a link-time symbol its own `romedll_link.obj` answers, and the only Win32 in it is asking where the program was loaded from. `src/eci_rom.h` says what a romanizer is -- one struct of named functions where IBM had numbered slots -- and `src/eci_romedll.c` stands in for the linker's answer. A romanizer is a property of its language, and `rom/<tag>` is built exactly when `lang/<tag>` is, so an English build carries none of it.
 
-**And the target is observable now, which it was not.** IBM's Japanese does
-speak Japanese script, and what decides whether it does is how the instance was
-made: `eciNew()` gives nothing for Shift-JIS kana, and `eciNewEx(0x80000)` --
-the only language there is -- gives 13,266 samples. That is why
-`reference/speak.c`, which tries `eciNew` first, produced nothing and looked for
-a while like an engine that could not do it. Setting the codeset parameter
-afterwards is refused; the language given at creation is what carries it.
-`make -C reference TAG=jajp jptry` builds the driver that settled it, and the
-head of `reference/jptry.c` has the table. Romaji gives 18,293 samples and kana
-13,266, so the romanizer is not passing letters through, and that difference is
-what anything transcribed has to reproduce.
+**The data is lifted, in two commands.** `tools/lift-rom.py` takes the static dictionary: 1,723 blobs and 2,669,092 bytes. `tools/lift-romtables.py` takes `dictman.obj` and `unicodeconvt.obj`, whose code is a few accessors over a great deal of table: 46 tables and 190,414 bytes.
 
-Measured properly, the transcription is about 163 KB of x86 across thirty
-objects once the engine objects already ported and the dictionary lifted as data
-are taken out. That is a Japanese morphological analyser: phrase tables, a path
-search, number reading, intonation phrases, unknown-word handling, penalties.
-The dictionary beside it is 2.67 MB in 1,723 blobs and lifts in one command with
-tools/lift-rom.py, which is written and proved.
+**Three classes are written and held to IBM's answer.** `rom/jajp/rominstparam.c` is the parameters and errors, proved by `EVV_ROMCAN_PARAMS=real test/romcan.sh`, which hands that half of the recorded conversation to it. `rom/jajp/unicodeconvt.c` is the codeset conversion, proved by `test/romprims.sh` over 142,613 calls: every byte, every pair the converter accepts, and all 65,535 code points in the other direction, twice. `rom/jajp/rominstance.c` is the instance and its forwarding.
 
-The subsystem is sixteen objects and about half a megabyte: `rominstance`,
-`rommanager`, `rominstparam`, `romreg` and `romedll_link` are the framework,
-`jpnrom`, `jpnutil`, `kanastr`, `PCRoman2BG` and the three `MakeReadable*` the
-Japanese half, and `skana0`, `skana1`, `stakankana0` and `jpnsdict` the tables
-and dictionary. `romedll_link` is what makes the reference romanise despite
-loading no DLL: in a static build it stands in for the library.
+**Both harnesses found real faults on their first run**, which is the argument for building them before the romanizer rather than after. `getActiveSampleRate` in `src/eci_managers.c` answered nought, so the sample rate never reached a romanizer -- and no language could see that, because the romanizer is the only thing in the engine that asks. IBM's `MBCSToUCS2` loops for ever on a byte of 0x80, 0xfe or 0xff. And it looks a pair beginning 0xfd up past the end of the table it looks it up in, answering with whatever the linker put next. The last two are deliberate differences in ours and each says so where it happens.
 
-`lang/jajp` is deliberately not in the tree until it can make an instance, since
-a module that cannot would break any build that named it. It lifts again in one
-pass from the tools.
+What is left is the analyser: about 168 KB of x86 across thirty-two objects, once the two lifted as tables are taken out, or roughly twenty to thirty thousand lines of C. `DictSearch` has 64 methods, `TextAnalysis` 36, `JpnUtil` 32, `MakeReadableJP` 30, `DictMan` 26, `ConverterInterface` 24. The user-dictionary half is separable and is deferred; no sentence being spoken reaches it.
+
+`lang/jajp` is deliberately not in the tree until it can make an instance, since a module that cannot would break any build that named it, and `.gitignore` says so. It lifts again in one pass from the tools. `rom/jajp/jprom.h` defines `JPROM_INCOMPLETE` while the romanizer cannot convert anything, which makes it answer no instance at all rather than speaking something wrong.
 
 ## What the lifting cost, across all nine
 
@@ -157,8 +114,9 @@ them turned out to be a gap in our machine rather than something not understood
 about the language: two primitives no English rule reaches, one alignment rule,
 one signed number that should not have been signed, and a little floating point
 nobody expected a fixed-point engine to contain. The sections above say which
-was which. What is left is Japanese, and what is left of Japanese is an oracle
-rather than a lift.
+was which. What is left is Japanese, and what is left of Japanese is a
+transcription rather than a question: it has an oracle, the engine below its
+romanizer is proved, and the romanizer is measured.
 
 ## The compiler
 

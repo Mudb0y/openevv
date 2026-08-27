@@ -168,9 +168,58 @@ $(BUILD)/prims.exe: ../test/prims.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/prims.err >&2 || true; exit $$s
 	@echo "built $@"
 
+# The romanizer's converters called directly, which is the other half of
+# test/romprims.sh. Only Japanese has a romanizer, so this wants TAG=jajp.
+.PHONY: romprims
+romprims: $(BUILD)/romprims.exe
+
+$(BUILD)/romprims.exe: ../test/romprims.c $(BUILD)/ral_shim.obj \
+                       $(BUILD)/ctors.obj $(SHIM) $(WORK)/.stamp
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src ../test/romprims.c \
+	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) \
+	  $(wildcard $(WORK)/*.obj) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/romprims.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/romprims.err >&2 || true; exit $$s
+	@echo "built $@"
+
 clean:
 	@rm -rf $(WORK) $(TAPDIR)
 	@rm -f $(BUILD)/speak.exe $(BUILD)/speak-tap.exe $(BUILD)/ral_shim.obj \
 	       $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/*.tmp.o \
 	       $(BUILD)/prims.exe $(BUILD)/prims.err \
 	       $(BUILD)/uni.syms $(BUILD)/link.err $(BUILD)/taplink.err
+
+# The romanizer's own seam, tapped. Six of RomanizerManager's public methods
+# renamed and romtap.c standing in front of them, so that what IBM's romanizer
+# is handed and what it hands back can be written down. See the head of that
+# file. `make TAG=jajp BUILD=../build/reference-jajp romtap'.
+.PHONY: romtap
+romtap: $(BUILD)/speak-romtap.exe
+
+ROMDIR := $(BUILD)/romtap
+
+$(ROMDIR)/.stamp: $(WORK)/.stamp
+	@mkdir -p $(ROMDIR)
+	@cp $(WORK)/*.obj $(ROMDIR)/
+	@$(OBJCOPY) \
+	  --redefine-sym '?addText@RomanizerManager@@QAEHPBDHH@Z=_rmAddText_ibm' \
+	  --redefine-sym '?addParam@RomanizerManager@@QAEHPBDH@Z=_rmAddParam_ibm' \
+	  --redefine-sym '?insertIndex@RomanizerManager@@QAEHXZ=_rmInsertIndex_ibm' \
+	  --redefine-sym '?processSentence@RomanizerManager@@QAEHPAPADH@Z=_rmProcessSentence_ibm' \
+	  --redefine-sym '?processRemaining@RomanizerManager@@QAEHPAPAD@Z=_rmProcessRemaining_ibm' \
+	  --redefine-sym '?setParam@RomanizerManager@@QAEHJH@Z=_rmSetParam_ibm' \
+	  --redefine-sym '?stop@RomanizerManager@@QAEHXZ=_rmStop_ibm' \
+	  --redefine-sym '?resume@RomanizerManager@@QAEHXZ=_rmResume_ibm' \
+	  $(ROMDIR)/rommanager.obj $(ROMDIR)/r.tmp \
+	  && mv $(ROMDIR)/r.tmp $(ROMDIR)/rommanager.obj
+	@touch $@
+
+$(BUILD)/speak-romtap.exe: speak.c romtap.c $(BUILD)/ral_shim.obj \
+                           $(BUILD)/ctors.obj $(SHIM) $(ROMDIR)/.stamp
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src speak.c romtap.c \
+	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) \
+	  $(wildcard $(ROMDIR)/*.obj) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/romlink.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/romlink.err >&2 || true; exit $$s
+	@echo "built $@"

@@ -34,6 +34,29 @@
 #define SAW(name) ((void)0)
 #endif
 
+/* The four numbers the concatenation manager is told and asked for again.
+ *
+ * Everything else about that manager is an interface met rather than code
+ * transcribed, because the concatenative engine is not in this extraction.
+ * These four are not about that engine at all: they are what the synthesis
+ * thread hands the manager and reads back out of it, and one of them -- the
+ * sample rate -- is handed on to a romanizer, which is the only thing in the
+ * engine that ever asks. So an empty manager cannot answer nought here; it
+ * has to remember.
+ *
+ * They sit where IBM's setActiveLanguage puts them, which is inside the
+ * 0x2c0 bytes the thread allocates for one, and nothing but this file reads
+ * them. The three that are bytes are bytes in the original too. */
+#define CM_FAMILY(m)  (*(uint8_t *)((char *)(m) + 0x144))
+#define CM_DIALECT(m) (*(uint8_t *)((char *)(m) + 0x148))
+#define CM_VOICE(m)   (*(uint8_t *)((char *)(m) + 0x14c))
+#define CM_RATE(m)    (*(uint32_t *)((char *)(m) + 0x150))
+
+/* Which of them setParam is about. */
+#define CM_PARAM_LANGUAGE 0x02
+#define CM_PARAM_VOICE    0x10
+#define CM_PARAM_RATE     0x11
+
 /* What a filter call answers when there is no filter. */
 #define FILTER_OK          0
 #define FILTER_NOT_FOUND   1
@@ -343,6 +366,10 @@ THIS void *cm_ctor(void *m, void *thread)
 {
     SAW("ConcatenationManager ctor");
     (void)thread;
+    CM_FAMILY(m) = 0;
+    CM_DIALECT(m) = 0;
+    CM_VOICE(m) = 0;
+    CM_RATE(m) = 0;
     return m;
 }
 
@@ -368,8 +395,7 @@ THIS int cm_engineSupports(void *m, uint32_t a, uint32_t b)
 THIS uint32_t cm_getActiveSampleRate(void *m)
 {
     SAW("getActiveSampleRate");
-    (void)m;
-    return 0;
+    return CM_RATE(m);
 }
 
 THIS void cm_processStarCommand(void *m, char *s)
@@ -403,10 +429,28 @@ THIS int32_t cm_registerVoice(void *m, int32_t n, void *attrib, void *data)
     return 0;
 }
 
+/* The original works out the new set of four, calls its own
+   setActiveLanguage with all of them, and that is what writes them down.
+   With no concatenative engine to set a language on, the writing down is
+   all there is. */
 THIS int cm_setParam(void *m, int32_t which, int32_t a, int32_t b)
 {
     SAW("concat setParam");
-    (void)m; (void)which; (void)a; (void)b;
+    (void)b;
+    switch (which) {
+    case CM_PARAM_LANGUAGE:
+        CM_FAMILY(m) = (uint8_t)((a & 0xff0000) >> 16);
+        CM_DIALECT(m) = (uint8_t)(a & 0xff);
+        break;
+    case CM_PARAM_VOICE:
+        CM_VOICE(m) = (uint8_t)a;
+        break;
+    case CM_PARAM_RATE:
+        CM_RATE(m) = (uint32_t)a;
+        break;
+    default:
+        break;
+    }
     return 0;
 }
 

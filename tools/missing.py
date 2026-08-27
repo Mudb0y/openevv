@@ -20,7 +20,7 @@ SYSTEM = re.compile(
     r"abort$|qsort$|"
     r"printf$|sprintf$|snprintf$|vsnprintf$|vsprintf$|puts$|putchar$|"
     r"getc$|putc$|ungetc$|rewind$|remove$|rename$|setvbuf$|perror$|"
-    r"time$|clock$|clock_gettime$|nanosleep$|getenv$|system$|"
+    r"time$|clock$|clock_gettime$|nanosleep$|getenv$|system$|readlink$|"
     r"rand$|srand$|abs$|labs$|atoi$|atof$|pow$|floor$|ceil$|sqrt$|"
     r"longjmp$|setjmp$|_setjmp$|stat$)")
 

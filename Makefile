@@ -126,17 +126,30 @@ endif
 # this is what knows.
 LANGLIST := $(BUILD)/delta_langs_$(subst $(space),_,$(TAGS)).c
 
+# A language written in another script has a romanizer, which is code of ours
+# rather than data of IBM's and so does not live in lang/. It is built exactly
+# when its language is: rom/<tag> beside lang/<tag>. Nothing but Japanese has
+# one, and an English build carries none of it.
+ROMS := $(sort $(foreach l,$(LANGS),$(wildcard rom/$(notdir $(l))/*.c)))
+
+# And which of them is linked, said to the one file that has to know how a
+# romanizer is found. IBM answers that question with the presence of a
+# link-time symbol; a build of ours can hold several languages, so it is
+# answered by name.
+ROMDEFS := $(if $(filter jajp,$(TAGS)),-DEVV_ROM_JAJP)
+
 # The engine, plus every language beside it. port_win32.c is the Windows
 # porting layer and belongs to the reference build; the two rule tables are
 # chosen between above rather than both linked.
 SOURCES := $(filter-out $(SRC)/port_win32.c,$(wildcard $(SRC)/*.c)) \
            $(filter-out $(GENERATED) $(STUBS), \
              $(sort $(foreach l,$(LANGS),$(wildcard $(l)/*.c)))) \
-           $(RULESRC) $(LANGLIST)
+           $(ROMS) $(RULESRC) $(LANGLIST)
 
 # Every header, because a struct that changed shape and an object that was
 # not rebuilt is a link that succeeds and an engine that writes over itself.
-HEADERS := $(wildcard $(SRC)/*.h) $(foreach l,$(LANGS),$(wildcard $(l)/*.h))
+HEADERS := $(wildcard $(SRC)/*.h) $(foreach l,$(LANGS),$(wildcard $(l)/*.h)) \
+           $(foreach l,$(LANGS),$(wildcard rom/$(notdir $(l))/*.h))
 
 # Everything a language module holds is named for that module, and the
 # wildcards above take whatever is there. So a file left behind by an earlier
@@ -152,7 +165,7 @@ $(error these are in a language module but are not named for it, so they are \
         either left over or in the wrong place: $(STRAYS))
 endif
 
-vpath %.c $(SRC) $(LANGS) $(BUILD)
+vpath %.c $(SRC) $(LANGS) $(foreach l,$(LANGS),rom/$(notdir $(l))) $(BUILD)
 
 # One line per language, and one call per language to fill in the numbers
 # each module states in a file of its own.
@@ -202,8 +215,9 @@ LOW := -DEVV_ARENA=1
 endif
 
 OPT        ?= -O2
-INCS       := -I$(SRC) $(addprefix -I,$(LANGS))
-ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) \
+INCS       := -I$(SRC) $(addprefix -I,$(LANGS)) \
+              $(foreach l,$(LANGS),-Irom/$(notdir $(l)))
+ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
               $(CFLAGS)
 
 # One directory per build, where a build is which form the rules are in and
@@ -214,7 +228,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate voices inikeys stopthread pieces prims
+.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate voices inikeys stopthread pieces prims romcan romprims
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -252,6 +266,31 @@ rate: $(BUILD)/rate
 
 $(BUILD)/rate: test/rate.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/rate.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# A romanizer with no language in it, replaying what IBM's romanizer answered.
+# This is what proves that everything below the romanizer is already right for
+# a language written in another script, before a line of that romanizer exists:
+# our engine is handed IBM's own answers at the same seam and has to produce
+# the same samples. See the head of test/romcan.c. Built against whichever
+# languages LANGS names, since the point of it is Japanese:
+#
+#   make romcan LANGS=lang/jajp
+romcan: $(BUILD)/romcan$(SUF)
+
+$(BUILD)/romcan$(SUF): test/romcan.c $(BUILD)/libevv$(SUF).a
+	@$(CC) $(ALL_CFLAGS) test/romcan.c $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
+	@echo "built $@"
+
+# The romanizer's converters, ours against IBM's, one call at a time. The same
+# file is built against IBM's objects by `make -C reference TAG=jajp romprims',
+# and test/romprims.sh diffs what the two print. This is the only thing that
+# reaches a romanizer class the text path never asks for.
+romprims: $(BUILD)/romprims$(SUF)
+
+$(BUILD)/romprims$(SUF): test/romprims.c $(BUILD)/libevv$(SUF).a
+	@$(CC) $(ALL_CFLAGS) -DEVV_ROMPRIMS_OURS test/romprims.c \
+	  $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
 	@echo "built $@"
 
 # One text spoken whole and then in pieces, which is what the add-on does with
@@ -525,7 +564,7 @@ install: $(BUILD)/evv
 # CC32 can be set to whole: `make evv32 CC32="gcc -m32"'.
 CC32      ?= i686-unknown-linux-gnu-gcc
 OBJDIR32  := $(BUILD)/obj32-$(RULES)/$(subst $(space),-,$(TAGS))
-CFLAGS32  := $(OPT) -std=gnu99 $(INCS) $(WARN) $(TRIM) \
+CFLAGS32  := $(OPT) -std=gnu99 $(INCS) $(WARN) $(TRIM) $(ROMDEFS) \
              $(CFLAGS)
 OBJECTS32 := $(patsubst %.c,$(OBJDIR32)/%.o,$(notdir $(SOURCES)))
 
@@ -566,7 +605,7 @@ ARWIN      ?= x86_64-w64-mingw32-ar
 OBJDIRWIN  := $(BUILD)/objwin-$(RULES)/$(subst $(space),-,$(TAGS))
 
 CFLAGSWIN  := $(OPT) -std=gnu99 $(INCS) $(WARN) -DEVV_ARENA=1 \
-              $(TRIM) $(CFLAGS)
+              $(TRIM) $(ROMDEFS) $(CFLAGS)
 # Static, so what ships is one file. MINGW64_LDFLAGS is where the cross gcc's
 # thread runtime is; the flake sets it, since nothing puts it on the link path
 # outside a real cross stdenv.
@@ -575,7 +614,7 @@ LDFLAGSWIN := -static $(MINGW64_LDFLAGS)
 SOURCESWIN := $(filter-out $(SRC)/port_posix.c,$(wildcard $(SRC)/*.c)) \
               $(filter-out $(GENERATED) $(STUBS), \
                 $(sort $(foreach l,$(LANGS),$(wildcard $(l)/*.c)))) \
-              $(RULESRC) $(LANGLIST)
+              $(ROMS) $(RULESRC) $(LANGLIST)
 OBJECTSWIN := $(patsubst %.c,$(OBJDIRWIN)/%.o,$(notdir $(SOURCESWIN)))
 
 .PHONY: win win-probe win-dlltest win-stopthread
@@ -666,7 +705,7 @@ CCWIN32     ?= i686-w64-mingw32-gcc
 WINDRES32   ?= i686-w64-mingw32-windres
 ARWIN32     ?= i686-w64-mingw32-ar
 OBJDIRWIN32 := $(BUILD)/objwin32-$(RULES)/$(subst $(space),-,$(TAGS))
-CFLAGSWIN32 := $(OPT) -std=gnu99 $(INCS) $(WARN) $(TRIM) $(CFLAGS)
+CFLAGSWIN32 := $(OPT) -std=gnu99 $(INCS) $(WARN) $(TRIM) $(ROMDEFS) $(CFLAGS)
 LDFLAGSWIN32 := -static -Wl,--kill-at $(MINGW_LDFLAGS)
 OBJECTSWIN32 := $(patsubst %.c,$(OBJDIRWIN32)/%.o,$(notdir $(SOURCESWIN)))
 
