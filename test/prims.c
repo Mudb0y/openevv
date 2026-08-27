@@ -72,6 +72,7 @@ void evvRunStaticInitialisers(void);
 /* The stream and context calls. Nothing in access.obj is declared in a
    header on either side -- its callers say extern where they use it, which
    is what the engine's own files do -- so the harness says it here. */
+extern int32_t next_token(delta_state *d, int8_t f, int32_t at);
 extern int32_t num_fields_in_stream(int8_t st);
 extern int32_t left_context(delta_state *d, int8_t f, int32_t at);
 extern int32_t right_context(delta_state *d, int8_t f, int32_t at);
@@ -221,6 +222,62 @@ static void show_ptas(delta_state *d, const char *op, uint8_t left, uint8_t f,
 }
 
 
+/* The spine, said as what each node answers to rather than where it is.
+ *
+ * Walking it gives addresses, which are each process's own, so instead every
+ * node is asked the string test for every statement kind and every one-byte
+ * code, and the pairs that answer are printed. A node holding the same thing
+ * on both sides answers the same pairs on both sides, and the harness never
+ * has to know what a pair means. Some of them are degenerate -- a kind whose
+ * field takes anything matches every code -- and they are left in, because
+ * what is compared is the whole list rather than any one entry.
+ *
+ * The walk starts at the token the rules left rather than at the spine's own
+ * end: the two are not on the same chain, which took some finding. A node is
+ * marked L or R if it is one of the spine's ends and n otherwise, and one the
+ * scan will not settle on at all is an x.
+ */
+static void show_spine(delta_state *d, const char *what, int round)
+{
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
+    int32_t at = ((const delta_token *)((const char *)d + 748))->value;
+    int step;
+
+    printf("%-16s %-6s %d ->", "spine", what, round);
+
+    for (step = 0; at != 0 && step < 16; step++) {
+        delta_token tk;
+        int k, c;
+
+        tk.unknown_00 = 0;
+        tk.value = at;
+        lpta_loadp(d, &tk);
+
+        if (setscan_l(d, 1) != 0) {
+            printf(" x");
+        } else {
+            printf(" [%s", at == s->spine_l ? "L"
+                         : at == s->spine_r ? "R" : "n");
+            for (k = 1; k < 10; k++)
+                for (c = 0; c < 256; c++) {
+                    uint8_t code = (uint8_t)c;
+
+                    lpta_loadp(d, &tk);
+                    setscan_l(d, 1);
+                    if (test_string_s(d, (uint8_t)k, 1, &code) == 0)
+                        printf(" %d.%d", k, c);
+                }
+            printf("]");
+        }
+
+        if (at == s->spine_r)
+            break;
+        at = next_token(d, 1, at);
+    }
+
+    printf("\n");
+}
+
 /* Which of the places the harness knows a position came back as. An address
    is one process's own; which landmark it is is the same in both. */
 static const char *landmark(int32_t p, const int32_t *where)
@@ -362,6 +419,10 @@ int main(void)
         printf("%-16s -> %d %d %d %d %d %d\n", "setup",
                (int)a1, (int)a2, (int)a3, (int)a4, (int)a5, (int)a6);
     }
+
+    /* What reading the sentence in left on the spine, before anything here
+       has touched it. */
+    show_spine(d, "read", 0);
 
     binary(d, "vadd", vadd, 0);
     binary(d, "vsub", vsub, 0);
@@ -1301,17 +1362,22 @@ int main(void)
                 break;
             }
 
-            /* What each call answered, and then what the spine holds where
-               the harness can see: the code at the position the rules left,
-               and the code after it. Where the inserted tokens land is not
-               among those -- sweeping one, two and three deep from that
-               position never finds them, so they go somewhere further along
-               that this harness cannot reach without a walk it does not have.
-               What is compared here is therefore the answer and the spine
-               either side of it, which is enough to catch an entry point
-               that refuses where the original accepts. The decode under all
-               four widths is one body, and the suite exercises two of its
-               four arms on every sentence it speaks. */
+            /* What each call answered, the two readable positions at the
+               head of the spine, and then the whole spine as show_spine
+               says it.
+
+               That last one is what says where the tokens went. The four
+               widths leave the spine in four different shapes -- two
+               settleable nodes, an alternating run of eight, two the scan
+               will not settle on at all -- and both engines agree on each.
+
+               What it still does not see is the value a wide insert
+               decodes: the nodes it makes answer no string test, of either
+               width, at any statement kind, so putting the two-byte decode
+               under the four-byte name passes here. That was tried rather
+               than assumed. Those two arms are read; the two the suite
+               exercises on every sentence it speaks are the byte and the
+               short. */
             printf("%-16s %d -> %d  first", "insert", v, rc);
             for (c = 0; c < 256; c++) {
                 uint8_t code = (uint8_t)c;
@@ -1338,6 +1404,10 @@ int main(void)
                     printf(" %d", c);
             }
             printf("\n");
+
+            /* And the whole spine after each one, which is what says where
+               the tokens went rather than only that the call was allowed. */
+            show_spine(d, "insert", v);
         }
     }
 
