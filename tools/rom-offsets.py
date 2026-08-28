@@ -23,7 +23,7 @@ displacement is negative and cannot be mistaken for one. From every other object
 in the module, every offset larger than the widest thing the analyser allocates
 besides this one -- past that, a field can only be TextAnalysis's.
 
-usage: rom-offsets.py [object] [header]
+usage: rom-offsets.py [textanalysis|dictsearch]
 """
 
 import os
@@ -99,13 +99,66 @@ def regions(d):
     return [(at, at + n - 1, name) for at, n, name in r]
 
 
+def regions_ds(d):
+    """The same for DictSearch, which is mapped in part. Every unresolved span
+    is a region too, so that the tiling still holds and says what is not
+    known rather than passing over it."""
+    r = [
+        (d["DS_VTABLE"], 4, "the vtable"),
+        (d["DS_OWNER"], 4, "the owner"),
+        (d["DS_UNREAD_HEAD"], d["DS_UNREAD_HEAD_END"] - d["DS_UNREAD_HEAD"],
+         "the working store nobody has read"),
+        (d["DS_FZK"], d["DS_FZK_N"] * d["DS_FZK_SIZE"], "the function words"),
+        (d["DS_REC"], d["DS_REC_N"] * d["DS_REC_SIZE"], "the three records"),
+        (d["DS_COUNT"], 2, "the count"),
+        (d["DS_UNREAD_MID"], d["DS_UNREAD_MID_END"] - d["DS_UNREAD_MID"],
+         "the middle nobody has read"),
+        (d["DS_TANKAN"], d["DS_TANKAN_N"] * d["DS_TANKAN_SIZE"],
+         "the tankan table"),
+        (d["DS_KANA"], d["DS_KANA_END"] - d["DS_KANA"], "the kana buffers"),
+        (d["DS_WORK"], d["DS_WORK_END"] - d["DS_WORK"], "the working area"),
+        (d["DS_W_8508"], 2, "a word"),
+        (d["DS_W_850A"], 2, "a word"),
+        (d["DS_W_850C"], 2, "a word"),
+        (d["DS_W_850E"], 2, "a word"),
+        (d["DS_W_8510"], 2, "a word"),
+        (d["DS_W_8512"], 2, "a word"),
+        (d["DS_INPUTCHAR"], 4, "the input reader"),
+        (d["DS_UNREAD_TAIL"], d["DS_UNREAD_TAIL_END"] - d["DS_UNREAD_TAIL"],
+         "the tail nobody has read"),
+        (d["DS_L_8900"], 4, "a long"),
+        (d["DS_L_8904"], 4, "a long"),
+    ]
+    return [(at, at + n - 1, name) for at, n, name in r]
+
+
+# Which objects hold a class's own code -- a class may be spread over
+# several, and DictSearch is spread over four -- the header that maps it, the
+# region table, and the three names the checker needs out of that header: how
+# big the object is, the offset below which a displacement tells us nothing,
+# and the size of the widest thing that could be mistaken for it when sweeping
+# the rest of the module. That last one is None where nothing else is close.
+CLASSES = {
+    "textanalysis": (["txtanal.obj"], "txtanal.h", regions, "TA_BYTES",
+                     "TA_MARKS", "TA_PHRASEBUF_BYTES"),
+    "dictsearch": (["dictsearch.obj", "dictapi.obj", "fdictapi.obj",
+                    "kanastr.obj"], "dictsearch.h", regions_ds, "DS_BYTES",
+                   "DS_FZK", None),
+}
+
+
 def main(argv):
-    obj = argv[0] if argv else os.path.join(ROOT, "analysis", "jajp",
-                                            "txtanal.obj")
-    head = argv[1] if len(argv) > 1 else os.path.join(ROOT, "rom", "jajp",
-                                                      "txtanal.h")
+    which = argv[0] if argv else "textanalysis"
+    if which not in CLASSES:
+        print("rom-offsets: no map of %s" % which)
+        return 2
+    objnames, headname, regionsOf, sizeName, floorName, wideName = \
+        CLASSES[which]
+    where = os.path.join(ROOT, "analysis", "jajp")
+    objs = [os.path.join(where, n) for n in objnames]
+    head = os.path.join(ROOT, "rom", "jajp", headname)
     d = defines(head)
-    named = regions(d)
+    named = regionsOf(d)
 
     def offsets(path):
         found = set()
@@ -120,25 +173,27 @@ def main(argv):
     # From the class's own object, everything above the head. A stack
     # displacement is negative and the pattern above does not match one, so
     # what is left is a field of this class or of one of the six it holds.
-    seen = set(x for x in offsets(obj) if x >= d["TA_MARKS"])
+    seen = set()
+    for one in objs:
+        seen |= set(x for x in offsets(one) if x >= d[floorName])
 
     # And from every other object in the module, everything too large to be
     # anything else: the widest object the analyser allocates besides this one
     # is PhraseBuf, so an offset past that can only be a TextAnalysis field.
-    where = os.path.dirname(obj)
-    for f in sorted(os.listdir(where)):
-        if not f.endswith(".obj") or f == os.path.basename(obj):
-            continue
-        try:
-            found = offsets(os.path.join(where, f))
-        except subprocess.CalledProcessError:
-            continue
-        seen |= set(x for x in found if x > d["TA_PHRASEBUF_BYTES"])
+    if wideName is not None:
+        for f in sorted(os.listdir(where)):
+            if not f.endswith(".obj") or f in objnames:
+                continue
+            try:
+                found = offsets(os.path.join(where, f))
+            except subprocess.CalledProcessError:
+                continue
+            seen |= set(x for x in found if x > d[wideName])
 
     # An offset past the end of the object is not one of its fields. The
     # dictionary blobs are data with no code in them, and a disassembler asked
     # to read data prints operands; this is what keeps those out.
-    seen = sorted(x for x in seen if x < d["TA_BYTES"])
+    seen = sorted(x for x in seen if x < d[sizeName])
 
     inside, outside = 0, []
     for at in seen:
@@ -164,7 +219,7 @@ def main(argv):
     # This is what holds a count in place -- nothing indexes the phrase
     # buffers with a constant, so the only thing that says there are three of
     # them is that three of them reach exactly as far as the next field.
-    mine = sorted((a, b, n) for a, b, n in named if b < d["TA_BYTES"]
+    mine = sorted((a, b, n) for a, b, n in named if b < d[sizeName]
                   and not n.startswith(("InputChar", "DictSearch",
                                         "PhraseBuf")))
     at = 0
@@ -178,9 +233,9 @@ def main(argv):
                   % (name, at - first))
             bad = 1
         at = last + 1
-    if at != d["TA_BYTES"]:
+    if at != d[sizeName]:
         print("the regions run to 0x%x and the object is 0x%x"
-              % (at, d["TA_BYTES"]))
+              % (at, d[sizeName]))
         bad = 1
     if not bad:
         print("and the regions tile the whole of it")

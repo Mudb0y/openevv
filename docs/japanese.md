@@ -207,7 +207,9 @@ accounted for, and the tiling exact. Changing the buffer count from three to two
 leaves a gap of 235,984 bytes; changing the phrase count by one leaves a gap of
 328; growing the chain by one makes the phrase table overlap it.
 
-Two regions inside the map are named but not resolved: the parse's own marks
+`DictSearch` is mapped in part, in `rom/jajp/dictsearch.h`, and held by the same checker. Its 35,080 bytes are mostly working store reached by arithmetic rather than by a constant, so what is settled is what its own code proves: 726 function-word entries of 14 bytes, whose extent is the memset in `FzkParsingReverse` and whose stride and bound are in `LookupFuncWordDict`; three records of 16 bytes, which reach the count that follows exactly; thirty tankan entries of 20 bytes, from the memset in `GenerateKanaString` and the stride in `SearchTankanTable`; and the kana buffers of thirty bytes each, whose count is not settled and which are therefore bounded rather than counted. Four spans totalling most of the object are named as unresolved with their exact bounds, so the map still tiles and says plainly what is not known. Twenty-nine offsets across its four objects, all inside a named region; a count changed by one is caught as a gap or an overlap of exactly one stride.
+
+Two regions inside the map of the spine are named but not resolved: the parse's own marks
 between 0x2c and 0x5d8, cleared at the top of `TextParsing` and read at several
 widths, and a working area of 1,716 bytes that `CheckPhraseLink` takes the
 address of. Both are bounded exactly; what is in them is for whoever writes
