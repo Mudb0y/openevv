@@ -19,8 +19,11 @@
  *                       the count that follows exactly
  *   the tankan table    memset of 0x258 in GenerateKanaString and a stride of
  *                       0x14 in SearchTankanTable -- thirty entries
- *   the kana buffers    four memsets of 0x1e in GenerateKanaString, thirty
- *                       bytes apart; how many there are is not settled
+ *   the entries         Do clears 0x58c0 bytes from offset eight and then
+ *                       writes a marker into 710 entries of thirty-two, and
+ *                       710 times thirty-two is 0x58c0 to the byte
+ *   the kana buffers    four memsets of 0x1e in GenerateKanaString, and seven
+ *                       of thirty bytes reach the word after them exactly
  *
  * tools/rom-offsets.py checks it the way it checks the spine: every offset
  * IBM's own code uses on one of these has to fall inside a region named here,
@@ -41,13 +44,15 @@
 #define DS_VTABLE       0x0000
 #define DS_OWNER        0x0004   /* TextAnalysis * */
 
-/* Not resolved. Twenty-two thousand bytes of working store, reached by
-   arithmetic this reading has not pinned down. Every small offset the four
-   objects use on some base falls inside it, which is why the checker is quiet
-   about them: they may be fields of this class or of a record it walks, and
-   nothing so far tells the two apart. */
-#define DS_UNREAD_HEAD      0x0008
-#define DS_UNREAD_HEAD_END  0x58c8
+/* Settled, and by two arguments that agree. Do clears 0x58c0 bytes from
+   offset eight, which is where this ends; and the loop after it writes minus
+   one into a field at +0x1a of 710 entries of thirty-two bytes, and 710 times
+   thirty-two is 0x58c0 to the byte. This is where the candidate words for the
+   stretch of text being analysed are built. */
+#define DS_ENTRY        0x0008
+#define DS_ENTRY_N      710      /* 0x2c6, the bound in Do */
+#define DS_ENTRY_SIZE   32       /* the shift of five that indexes it */
+#define DS_ENTRY_MARK   0x1a     /* the field Do sets to minus one */
 
 /* Settled. One entry per function word the parse is carrying. */
 #define DS_FZK          0x58c8
@@ -71,16 +76,25 @@
 #define DS_TANKAN_N     30
 #define DS_TANKAN_SIZE  0x14     /* 30 times 20 is the memset exactly */
 
-/* Partly settled: buffers of thirty bytes, cleared four at a time in
-   GenerateKanaString and read as far as 0x847a. How many there are is not
-   settled, so the region is bounded rather than counted. */
+/* Settled by adjacency, the same argument the phrase buffers rest on.
+   GenerateKanaString clears four of these -- the first, the second, the
+   fourth and the sixth -- and seven of thirty bytes reach exactly the word
+   that follows them. */
 #define DS_KANA         0x83a8
+#define DS_KANA_N       7
 #define DS_KANA_SIZE    0x1e
-#define DS_KANA_END     0x84f4
 
-/* Not resolved: a byte working area GenerateWord writes into, indexed by two
+/* Settled as a scalar: GenerateKanaString clears it first thing. */
+#define DS_W_847A       0x847a   /* int16 */
+
+/* Not resolved. */
+#define DS_UNREAD_KANA      0x847c
+#define DS_UNREAD_KANA_END  0x84f4
+
+/* Not resolved: two byte areas GenerateWord writes into, each indexed by two
    things at once. */
 #define DS_WORK         0x84f4
+#define DS_WORK2        0x84fe
 #define DS_WORK_END     0x8508
 
 /* Settled as scalars, not as meanings: each is written and read as a word and
