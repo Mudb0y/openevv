@@ -169,14 +169,18 @@ $(BUILD)/prims.exe: ../test/prims.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	@echo "built $@"
 
 # The romanizer's converters called directly, which is the other half of
-# test/romprims.sh. Only Japanese has a romanizer, so this wants TAG=jajp.
+# test/romprims.sh. Only Japanese has a romanizer, so this wants TAG=jajp, and
+# it reads the maps in rom/jajp as well as the engine's own headers: the state
+# a half-written class is handed is built at IBM's own offsets, and those are
+# what say where they are.
 .PHONY: romprims
 romprims: $(BUILD)/romprims.exe
 
 $(BUILD)/romprims.exe: ../test/romprims.c $(BUILD)/ral_shim.obj \
                        $(BUILD)/ctors.obj $(SHIM) $(WORK)/.stamp
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src ../test/romprims.c \
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src -I../rom/jajp \
+	  ../test/romprims.c \
 	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) \
 	  $(wildcard $(WORK)/*.obj) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/romprims.err; \

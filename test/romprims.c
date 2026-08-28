@@ -106,6 +106,15 @@ static Conv *makeConv(Param *p)
 #define ibm_slSave(self, p)         sl_save((SkipList *)(self), (p))
 #define ibm_slLoad(self, p)         sl_load((SkipList *)(self), (p))
 
+#include "dictsearch.h"
+#include "txtanal.h"
+
+#define ibm_dsCheckCaseMarker(d, at)      ds_CheckCaseMarker((d), (at))
+#define ibm_dsCheckCnvChoon(d, c, n)      ds_CheckCnvChoon((d), (c), (n))
+#define ibm_dsGetTextBuf(d, from)         ds_GetTextBuf((d), (from))
+
+#define DS(name) ibm_ds##name
+
 #define DM(name) dm_##name
 #define JU(name) ju_##name
 #define STATIC_DICT_INIT() ((void)0)
@@ -317,6 +326,21 @@ extern THIS int32_t ibm_slSave(void *self, const char *path)
     MANGLED("?save@SkipList@@QAEHPBD@Z");
 extern THIS int32_t ibm_slLoad(void *self, const char *path)
     MANGLED("?load@SkipList@@QAEHPBD@Z");
+
+/* And the three methods of DictSearch that are written. They are thiscall
+   members over a block whose layout is IBM's on both sides, so the harness
+   pokes the same offsets either way. */
+#include "dictsearch.h"
+#include "txtanal.h"
+
+extern THIS int32_t ibm_dsCheckCaseMarker(void *d, int16_t at)
+    MANGLED("?CheckCaseMarker@DictSearch@@QAEHF@Z");
+extern THIS void ibm_dsCheckCnvChoon(void *d, uint8_t code, uint8_t *next)
+    MANGLED("?CheckCnvChoon@DictSearch@@QAEXEPAE@Z");
+extern THIS int32_t ibm_dsGetTextBuf(void *d, int16_t from)
+    MANGLED("?GetTextBuf@DictSearch@@QAEHF@Z");
+
+#define DS(name) ibm_ds##name
 
 #define DM(name) ibm_##name
 #define JU(name) ibm_##name
@@ -1057,6 +1081,110 @@ static void sweepSkipList(void)
     remove(path);
 }
 
+/* ---- the dictionary search ------------------------------------------- */
+
+/* How this one is driven. DictSearch is a third of the way through being
+   written, so there is no way to build one the way the engine does -- that
+   wants a TextAnalysis, which wants the rest of the analyser. Instead both
+   sides are handed a block of the right size with nothing in it, and the
+   harness writes the few fields the methods under test read, at IBM's own
+   offsets, which our side keeps for exactly this reason. Two sides starting
+   from bytes they were both given cannot disagree about the starting state,
+   which is the whole difficulty with a class this size.
+ *
+ * rom/jajp/dictsearch.h is where the offsets come from. */
+static char ds_block[DS_BYTES];
+static char ic_block[TA_INPUTCHAR_BYTES];
+
+static void dsPut(int32_t off, const char *bytes, int32_t n)
+{
+    memcpy(ds_block + off, bytes, (size_t)n);
+}
+
+/* One text laid into the input reader: the characters two bytes at a time,
+   what each of them is, and how many there are. */
+static void icSet(const char *text, const int32_t *kinds, int n)
+{
+    int i;
+
+    memset(ic_block, 0, sizeof ic_block);
+    for (i = 0; i < n; i++) {
+        ic_block[IC_TEXT + i * 2] = text[i * 2];
+        ic_block[IC_TEXT + i * 2 + 1] = text[i * 2 + 1];
+        *(int32_t *)(ic_block + IC_KIND + i * 4) = kinds[i];
+    }
+    *(int16_t *)(ic_block + IC_COUNT) = (int16_t)n;
+}
+
+static void sweepDictSearch(void)
+{
+    /* One character of each kind that matters, plus the case marker and a
+       long-vowel mark, so that every road through GetTextBuf is walked. */
+    static const char TEXT[] =
+        "\x93\xfa"      /* a kanji */
+        "\x82\xa0"      /* hiragana */
+        "\x81\x5b"      /* the long-vowel mark */
+        "\x82\xa2"      /* hiragana */
+        "\x81\x5b"      /* a second long-vowel mark */
+        "\x82\xf0"      /* the particle wo, which ends a run */
+        "\x83\x41"      /* katakana */
+        "\x82\xa4"      /* hiragana */
+        "\x82\xa6"      /* hiragana */
+        "\x82\xa8";     /* hiragana */
+    static const int32_t KINDS[] = { 1, 4, 9, 4, 9, 4, 8, 4, 4, 4 };
+    static const int N = 10;
+    long from;
+    long code;
+    int  i;
+
+    memset(ds_block, 0, sizeof ds_block);
+    *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
+    icSet(TEXT, KINDS, N);
+
+    for (from = 0; from < N; from++)
+        printf("DS marker %ld %d\n", from,
+               (int)DS(CheckCaseMarker)(ds_block, (int16_t)from));
+
+    for (from = 0; from < N; from++) {
+        int32_t rc;
+
+        /* The buffer is left as the last call made it, on purpose: what it
+           holds when a call answers nought is part of the answer. */
+        rc = DS(GetTextBuf)(ds_block, (int16_t)from);
+        printf("DS text %ld rc %d copied %d from %d to %d buf ", from,
+               (int)rc, (int)*(int16_t *)(ds_block + DS_COPIED),
+               (int)*(int16_t *)(ds_block + DS_FROM),
+               (int)*(int16_t *)(ds_block + DS_TO));
+        putBytes(ds_block + DS_TEXT);
+        putchar('\n');
+    }
+
+    /* And the same over a text of one character, and of none, since the
+       bounds are where this sort of walk goes wrong. */
+    for (i = 0; i <= 2; i++) {
+        icSet(TEXT, KINDS, i);
+        memset(ds_block + DS_TEXT, 0, 16);
+        printf("DS short %d rc %d copied %d\n", i,
+               (int)DS(GetTextBuf)(ds_block, 0),
+               (int)*(int16_t *)(ds_block + DS_COPIED));
+    }
+
+    /* Every pair of codes through the long-vowel conversion. The second is
+       passed by address and may be changed, so both are printed. */
+    for (code = 0; code <= 0xff; code++) {
+        long next;
+
+        for (next = 0xf0; next <= 0xff; next++) {
+            uint8_t was = (uint8_t)next;
+
+            DS(CheckCnvChoon)(ds_block, (uint8_t)code, &was);
+            if (was != (uint8_t)next)
+                printf("DS choon %02lx %02lx -> %02x\n", code, next, was);
+        }
+    }
+    printf("DS choon done\n");
+}
+
 int main(void)
 {
     Param *p;
@@ -1095,6 +1223,7 @@ int main(void)
     sweepYomi();
     sweepTableFree();
     sweepSkipList();
+    sweepDictSearch();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

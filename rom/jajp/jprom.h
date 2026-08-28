@@ -261,6 +261,17 @@ int32_t   ju_YomiCmp(uint8_t *a, uint8_t lenA, uint8_t *b, uint8_t lenB);
 void      ju_TableFree(uint16_t *used, uint16_t *tail, uint16_t *freeHead,
                        void *table, uint16_t nil, uint16_t which);
 
+/* ---- DictSearch ------------------------------------------------------ */
+
+/* The class the rest of the analyser leans on. Only three of its sixty-four
+   methods are written; rom/jajp/dictsearch.h maps the record and says which
+   parts of it are understood, and rom/jajp/dictsearch.c says why the layout
+   here is IBM's rather than ours. The block is passed as bytes because the
+   fields it holds are still being worked out. */
+int32_t ds_CheckCaseMarker(void *d, int16_t at);
+void    ds_CheckCnvChoon(void *d, uint8_t code, uint8_t *next);
+int32_t ds_GetTextBuf(void *d, int16_t from);
+
 /* ---- how much of this is written ------------------------------------ */
 
 /* While this is defined the romanizer cannot convert anything yet, and says
