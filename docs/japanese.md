@@ -165,9 +165,57 @@ Two things about that store are worth knowing before reading it. Its constructor
 
 **`rominstance.obj` is not transcribed.** Every one of its 31 methods forwards to a `RomInstParam` or a `Romanizer`, and with the vtable gone there is nothing left for it to do. `rom/jajp/rominstance.c` is that forwarding written once.
 
+## The spine
+
+`TextAnalysis` is the record everything else in the analyser reads. `Romanizer`
+allocates one in a single lump of 946,216 bytes, and `DictSearch`, `InputChar`,
+`JPath`, `PhraseBuf`, `Annotation` and `RomUserDict` all take a reference to it
+in their constructors and read its fields directly. So not one of them can be
+written -- or even constructed in a harness -- until the record is known.
+`rom/jajp/txtanal.h` is that map and `tools/rom-offsets.py` is what keeps it
+true.
+
+The head is settled outright, because the constructor and `initialize` write
+every field of it and nothing else does: a vtable, the romanizer that owns it,
+the text as it arrives, and pointers to the six objects it makes -- an
+`InputChar` of 10,168 bytes, an `Annotation` of 1,292, a `DictSearch` of 35,080,
+a `JPath` of 31,980, a `PhraseBuf` of 235,996 and a `PhraseTable` of 20, with a
+`TextNormalizer` of 20 at the very end.
+
+The tail is settled by `InitPhraseTable`, which fills in a chain of two
+sixteen-bit indices per entry and whose arithmetic says where that chain begins
+and how long it is: 707 entries, the number `ClearPhraseTable` asks for. It is
+the same shape `JpnUtil::TableFree` splices. Above it, `initialize` memsets
+exactly 0x389d8 bytes, which is 707 times 0x148 to the byte -- the phrase table
+proper, one row per chain entry.
+
+The middle came from the arithmetic in `CheckPhraseLink`, which reaches a
+candidate word as `this + 0x900 + buffer * 0x399d0 + slot * 0x158`. That is
+three buffers of 686 slots of 344 bytes, and what says three rather than two or
+four is that three of them reach exactly as far as the next named field. Nothing
+indexes those buffers with a constant, so no sweep of the object can see them;
+the arithmetic is the only evidence, and it is why the checker tests it.
+
+**What the checker does.** It takes every offset `txtanal.obj` uses on a pointer
+-- displacements and the immediates the compiler adds to form an inner base --
+and refuses any that does not fall inside a region the header names. It does the
+same across every other object in the module for offsets too large to belong to
+anything else, since nothing else the analyser allocates is that wide. And it
+holds the map's own arithmetic together: the regions have to tile the object
+from nought to 946,216 with no gap and no overlap. Forty-three offsets, all
+accounted for, and the tiling exact. Changing the buffer count from three to two
+leaves a gap of 235,984 bytes; changing the phrase count by one leaves a gap of
+328; growing the chain by one makes the phrase table overlap it.
+
+Two regions inside the map are named but not resolved: the parse's own marks
+between 0x2c and 0x5d8, cleared at the top of `TextParsing` and read at several
+widths, and a working area of 1,716 bytes that `CheckPhraseLink` takes the
+address of. Both are bounded exactly; what is in them is for whoever writes
+`TextParsing`.
+
 ## Where to go next
 
-The order that follows from the above, if it helps. `ConverterInterface` is the surface, and `Romanizer` behind it is the thing that turns text into the readable form; `InputManager` and `InputChar` are how text arrives. Then the dictionary readers, `DictMan` over the tables already lifted and `DictSearch` over the dictionary; `kanastr.obj`'s `DictSearch::GenerateKanaString` and `PCRoman2BG` are the smallest pieces near the actual conversion and the natural place to see the record format for the first time. Then the analyser and the path search -- `TextAnalysis`, `PhraseTable`, `PhraseBuf`, `JPath`, `comppenalty`, `unknown`, `kakutei` -- then the number and English reading and the normalisation, and last the output side: `IntonPhrase`, `MakeReadableJP` and the ESPR writer.
+The order that follows from the above, if it helps. The spine is mapped now, so the classes that take a `TextAnalysis&` can be written and swept: `DictSearch` over the dictionary already lifted is the largest and the one most other things wait on. `ConverterInterface` is the surface, and `Romanizer` behind it is the thing that turns text into the readable form; `InputManager` and `InputChar` are how text arrives. Then the dictionary readers, `DictMan` over the tables already lifted and `DictSearch` over the dictionary; `kanastr.obj`'s `DictSearch::GenerateKanaString` and `PCRoman2BG` are the smallest pieces near the actual conversion and the natural place to see the record format for the first time. Then the analyser and the path search -- `TextAnalysis`, `PhraseTable`, `PhraseBuf`, `JPath`, `comppenalty`, `unknown`, `kakutei` -- then the number and English reading and the normalisation, and last the output side: `IntonPhrase`, `MakeReadableJP` and the ESPR writer.
 
 Read the objects with `llvm-objdump`, for the reason `docs/building.md` gives under getting IBM's objects: binutils `objdump` misparses whole functions here and says nothing about it.
 
