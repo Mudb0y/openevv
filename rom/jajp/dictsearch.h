@@ -103,24 +103,26 @@
 #define DS_CAND_N       30
 
 /* How many candidates there are, which is what bounds the four above. */
-#define DS_W_847A       0x847a   /* int16 */
+#define DS_NCAND        0x847a   /* int16 */
 
-/* Not resolved. */
-#define DS_UNREAD_KANA      0x847c
-#define DS_UNREAD_KANA_END  0x84f4
+/* Settled: what LookupKanaDict found for one kanji, before it is spread over
+   the candidates. WriteKanaData writes at most five readings from a base of
+   nought or five, so there are ten slots; the three arrays reach exactly as
+   far as the word below them, which is what says twelve bytes and ten of
+   them. */
+#define DS_KANA         0x847c   /* uint8 [10][12], the reading itself */
+#define DS_KANA_N       10
+#define DS_KANA_SIZE    12       /* 0xc, the stride in WriteKanaData */
+#define DS_KANA_CHARS   0x84f4   /* uint8 [10], characters of text each took */
+#define DS_KANA_LEN     0x84fe   /* uint8 [10], bytes of kana each is */
 
-/* Not resolved: two byte areas GenerateWord writes into, each indexed by two
-   things at once. */
-#define DS_WORK         0x84f4
-#define DS_WORK2        0x84fe
-#define DS_WORK_END     0x8508
-
-/* Words, and what four of them are for: GetTextBuf writes how many characters
-   it copied and where in the text it started and stopped, and
-   GenerateKanaString keeps a running total in the third. */
-#define DS_W_8508       0x8508
+/* Words, and what six of them are for: GenerateWord uses the first as the
+   cursor into the entries, GetTextBuf writes how many characters it copied
+   and where in the text it started and stopped, and GenerateKanaString keeps
+   a running total and counts the hiragana runs. */
+#define DS_CURSOR       0x8508   /* int16, the next candidate entry to write */
 #define DS_COPIED       0x850a   /* int16, what GetTextBuf copied */
-#define DS_W_850C       0x850c
+#define DS_RUNS         0x850c   /* int16, hiragana runs this word */
 #define DS_TOTAL        0x850e   /* int16, characters accounted for so far */
 #define DS_FROM         0x8510   /* int16, where the lookup starts */
 #define DS_TO           0x8512   /* int16, and where it stops */
@@ -144,6 +146,83 @@
 #define IC_TEXT         0x00004  /* the characters, two bytes each */
 #define IC_KIND         0x00b1c  /* int32 [], what each character is */
 #define IC_OFFSET       0x01674  /* int16 [], where each one starts */
+#define IC_MARK         0x01c24  /* int32 [], what a candidate carries away */
 #define IC_COUNT        0x0277c  /* int16, how many there are */
+
+/* What InputChar::GetCharType answers, which is what IC_KIND holds. Read off
+   that method rather than guessed: it is the only place the numbering is
+   stated, and getting it wrong reads a katakana test as a kanji one.
+ *
+ * Nine is the default -- anything the classifier does not recognise is taken
+ * for a kanji -- and it is also what an index before the start of the text
+ * answers, so a walk that runs backwards off the beginning sees a kanji. */
+#define KIND_KATAKANA   1
+#define KIND_PUNCT      2        /* 0x8143 to 0x81ac */
+#define KIND_LATIN      3        /* full width A-Z and a-z */
+#define KIND_HIRAGANA   4
+#define KIND_DIGIT      5        /* full width, and the kanji numerals */
+#define KIND_GREEK      6
+#define KIND_ROMAN      7        /* the 0xfa40 extension */
+#define KIND_CHOON      8        /* the long vowel bar, 0x815b */
+#define KIND_KANJI      9        /* and anything unrecognised */
+#define KIND_BRACKET    10       /* 0x816d */
+#define KIND_NAKAGURO   11       /* the middle dot, 0x8145 */
+#define KIND_OTHER      12
+
+/* ---- the records the dictionary is made of --------------------------- */
+
+/* A candidate word. The Process pair build one on the stack and WriteGWDict
+   writes one into DS_ENTRY, and the two are the same thirty-two bytes -- IBM
+   calls the first _DICTENT_T and the second is what DS_ENTRY_SIZE measures. */
+#define DE_ACCENT       0x00     /* int16, which mora carries the accent */
+#define DE_KANALEN      0x02     /* uint8, bytes of reading */
+#define DE_CHARS        0x03     /* uint8, characters of text it covers */
+#define DE_HIRAGANA     0x04     /* uint8, how many of those are hiragana */
+#define DE_POS          0x05     /* uint8, the part of speech */
+#define DE_ATTR         0x06     /* uint8 */
+#define DE_ATTR2        0x07     /* uint8 */
+#define DE_KANA         0x08     /* uint8 [10], and the rest via SetLongWord */
+#define DE_AT           0x12     /* int16, where in the text it starts */
+#define DE_MARK         0x14     /* int32, copied out of IC_MARK */
+#define DE_OFFSET       0x18     /* int16, copied out of IC_OFFSET */
+#define DE_LINK         0x1a     /* int16, the field Do sets to minus one */
+#define DE_COST         0x1c     /* int32 */
+
+/* A node of the kanji trie, keyed by one byte of the reading. The entries
+   that hang off it are _DCTB_ENT, as many as the high nibble of the third
+   byte says. */
+#define DH_BYTE         0        /* uint8, the reading byte this node is */
+#define DH_CHILD        1        /* uint8, bytes to the next node down */
+#define DH_FLAGS        2        /* uint8, high nibble set if words end here,
+                                    low nibble is the sibling delta's high */
+#define DH_SIBLING      3        /* uint8, and its low */
+#define DH_ENTRY        4        /* the _DCTB_ENT list */
+
+/* One of those entries: which page of the word dictionary, where in it, and
+   the kanji themselves. */
+#define DB_COUNT        0        /* uint8, high nibble how many kanji,
+                                    low nibble the page's high bits */
+#define DB_PAGE         1        /* uint8, and its low */
+#define DB_OFFSET       2        /* int16, where in the page */
+#define DB_KANJI        4        /* the characters, two bytes each */
+
+/* And a word in that page. The kana run on from the fourth byte, as many as
+   the low nibble of the first says. */
+#define DW_HEAD         0        /* uint8, high nibble accent, low the length */
+#define DW_POS          1        /* uint8 */
+#define DW_ATTR         2        /* uint8, and 3 */
+#define DW_KANA         4
+
+/* A node of the kana dictionary, keyed by a whole two-byte character. Its
+   readings run on from the sixth byte, each a length in its own low nibble,
+   three bytes of something, then that many bytes of kana. */
+#define TH_KEY          0        /* two bytes, most significant first */
+#define TH_CHILD        2        /* uint8, bytes to the next node down */
+#define TH_FLAGS        3        /* uint8, high nibble set if readings here,
+                                    low nibble is the sibling delta's high */
+#define TH_SIBLING      4        /* uint8, and its low */
+#define TH_READING      5        /* the readings */
+#define TR_LEN          0        /* uint8, in the low nibble */
+#define TR_KANA         4
 
 #endif

@@ -76,8 +76,19 @@ typedef struct Converter Converter;
    they are used; the block is aligned so that the cast is sound. */
 #include "rom_tables_jajp.h"
 
-/* The static dictionary's two supplement blobs, which DictMan reaches for.
-   tools/lift-rom.py writes those. */
+/* The static dictionary itself, which tools/lift-rom.py writes: the words, the
+   single kanji, the two tries that index them by reading, and the two
+   supplement blobs DictMan reaches for. Each array's own count comes with it,
+   because a lookup that has walked off the end of the hash has to be able to
+   tell. */
+extern const uint8_t *const jajp_s_apszNormal[];
+extern const int32_t        jajp_s_apszNormal_n;
+extern const uint8_t *const jajp_s_apszTankan[];
+extern const int32_t        jajp_s_apszTankan_n;
+extern const uint8_t *const jajp_s_apszKana[];
+extern const int32_t        jajp_s_apszKana_n;
+extern const uint8_t *const jajp_s_apszTankanKana[];
+extern const int32_t        jajp_s_apszTankanKana_n;
 extern const uint8_t *const jajp_s_apszSuppD[];
 extern const uint8_t *const jajp_s_apszSuppI[];
 
@@ -231,7 +242,7 @@ long      ju_ttsRead(FILE *f, char *buf, uint32_t n);
 long      ju_ttsReadAll(FILE *f, char **out, long from, uint32_t most);
 long      ju_ttsWrite(FILE *f, const char *buf, uint32_t n);
 
-uint16_t  ju_MakeUshort(char *p);
+uint16_t  ju_MakeUshort(const char *p);
 int32_t   ju_DbCmp(const char *a, const char *b);
 int32_t   ju_DbCmp2(const char *a, char b0, char b1);
 void      ju_DbCpy(char *to, const char *from);
@@ -268,9 +279,35 @@ void      ju_TableFree(uint16_t *used, uint16_t *tail, uint16_t *freeHead,
    parts of it are understood, and rom/jajp/dictsearch.c says why the layout
    here is IBM's rather than ours. The block is passed as bytes because the
    fields it holds are still being worked out. */
+int32_t ds_IsOnin(uint8_t code);
+int16_t ds_GetYoonIndex(void *d, char *s);
+void    ds_SetLongWord(void *d, int16_t n, void *e, uint8_t *word);
+int32_t ds_CountHrgn(void *d, int32_t n);
+const uint8_t *ds_ReadGWDict(void *d, int16_t page, int16_t at,
+                             int16_t which);
 int32_t ds_CheckCaseMarker(void *d, int16_t at);
 void    ds_CheckCnvChoon(void *d, uint8_t code, uint8_t *next);
 int32_t ds_GetTextBuf(void *d, int16_t from);
+int16_t ds_ConvertYoonDict(void *d, int16_t base, int16_t yoon, uint8_t flag);
+void    ds_ProcessHiragana(void *d, int16_t at, void *e);
+void    ds_ProcessKatakana(void *d, int16_t at, void *e);
+int16_t ds_WriteKanaData(void *d, const uint8_t *head, int16_t chars,
+                         int16_t unused, int16_t base);
+int16_t ds_LookupKanaDict(void *d, int16_t at);
+int16_t ds_GenerateKanaString(void *d);
+int16_t ds_CompareKanji(void *d, const uint8_t *ent, int16_t which);
+int16_t ds_WriteGWDict(void *d, const uint8_t *word, int16_t which,
+                       int16_t base, int16_t at, int16_t mode);
+int16_t ds_WriteDictTableData(void *d, const uint8_t *head, int16_t which,
+                              int16_t mode, int16_t at, int16_t base);
+int16_t ds_GetDictEntry(void *d, int16_t which, int16_t at, int16_t base,
+                        const uint8_t *head, int16_t mode);
+int16_t ds_SearchTankanTable(void *d, int16_t which, int16_t at,
+                             int16_t base);
+int16_t ds_GenerateWord(void *d, int16_t at, int16_t base);
+
+/* TextAnalysis's, and here because it is in IBM's dictsearch object. */
+void    ta_AddLongWord(void *t, uint8_t *word, int16_t n);
 
 /* ---- how much of this is written ------------------------------------ */
 

@@ -75,9 +75,17 @@
 #define TA_PERBUF_N     3
 #define TA_PERBUF_SIZE  8
 
-/* Between that and the buffers. Not settled; a byte flag at 0x8fe is the only
-   thing seen in it, written by ProcessRemaining. */
+/* Between that and the buffers, and settled by DictSearch::SetLongWord and
+   TextAnalysis::AddLongWord together. A reading too long for the ten bytes a
+   candidate entry holds is put here instead and the entry keeps its number:
+   thirty of twenty-six bytes, and thirty of them reach the count that follows
+   exactly. Two bytes in front of it and one behind are unaccounted for. */
 #define TA_SPARE        0x005f0
+#define TA_LONGWORD     0x005f2
+#define TA_LONGWORD_N   30        /* 0x1e, what SetLongWord refuses to pass */
+#define TA_LONGWORD_SIZE 0x1a     /* 30 times 26 from 0x5f2 is 0x8fe */
+#define TA_LONGWORDS    0x008fe   /* uint8, how many are in use */
+#define TA_SPARE_8FF    0x008ff
 #define TA_SPARE_END    0x00900
 
 /* The three phrase buffers, which is where the candidate words for a stretch

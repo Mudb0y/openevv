@@ -126,7 +126,7 @@ long ju_ttsWrite(FILE *f, const char *buf, uint32_t n)
 /* ---- two bytes at a time -------------------------------------------- */
 
 /* A two-byte character as one number, the first byte high. */
-uint16_t ju_MakeUshort(char *p)
+uint16_t ju_MakeUshort(const char *p)
 {
     return (uint16_t)(((uint32_t)(uint8_t)p[0] << 8) + (uint8_t)p[1]);
 }
