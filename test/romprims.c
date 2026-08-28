@@ -139,6 +139,32 @@ static Conv *makeConv(Param *p)
 #define NORMAL_N ((long)jajp_s_apszNormal_n)
 #define TANKAN_N ((long)jajp_s_apszTankan_n)
 
+#define UD_DICT(u)  (*(void **)&((RomUserDict *)(u))->dict)
+
+#define ibm_udCtor(u, a)            rud_ctor((RomUserDict *)(u), (a))
+#define ibm_udMakeKey(u, i, n, o, l) \
+    rud_makeKey((RomUserDict *)(u), (i), (n), (o), (l))
+#define ibm_udMakeTransValue(u, i, a, o, r) \
+    rud_makeTransValue((RomUserDict *)(u), (i), (a), (o), (r))
+#define ibm_udTransKatakana2Yomi(u, k, o) \
+    rud_transKatakana2Yomi((RomUserDict *)(u), (k), (o))
+#define ibm_udTransKana2Yomi(u, k, o) \
+    rud_transKana2Yomi((RomUserDict *)(u), (k), (o))
+#define ibm_udMakeUserDictData(u, d, l, k, p) \
+    rud_makeUserDictData((RomUserDict *)(u), (UserDictData *)(d), (l), (k), (p))
+#define ibm_udWriteData(u, d, s, a) \
+    rud_writeData((RomUserDict *)(u), (UserDictData *)(d), (s), (a))
+#define ibm_udLookup(u, t, a, s)    rud_lookup((RomUserDict *)(u), (t), (a), (s))
+#define ibm_udUpdateDictExt(u, l, w, b, n, k, m, p) \
+    rud_updateDictExt((RomUserDict *)(u), (SkipList *)(l), (w), (b), (n), \
+                     (k), (m), (p))
+#define ibm_udLookupDictExt(u, l, w, b, n, v, m, p) \
+    rud_lookupDictExt((RomUserDict *)(u), (SkipList *)(l), (w), (b), (n), \
+                     (v), (m), (p))
+
+#define UD(name) ibm_ud##name
+#define UD_ROOM  sizeof(RomUserDict)
+
 #define DS(name) ibm_ds##name
 
 #define DM(name) dm_##name
@@ -423,6 +449,50 @@ extern const uint16_t ibm_s_nTankan MANGLED("?s_nTankan@StaticDict@@2GB");
 
 #define NORMAL_N ((long)ibm_s_nNormal)
 #define TANKAN_N ((long)ibm_s_nTankan)
+
+/* And RomUserDict, which is written whole, so ours has named fields and only
+   the harness has to know where IBM's are. */
+#define IBM_UD_ROOM 0x40
+#define UD_DICT(u)  (*(void **)((char *)(u) + 4))
+
+extern THIS void *ibm_udCtor(void *u, void *analysis)
+    MANGLED("??0RomUserDict@@QAE@PAVTextAnalysis@@@Z");
+extern THIS int32_t ibm_udMakeKey(void *u, uint8_t *in, int32_t n, char *out,
+                                  int32_t *outLen)
+    MANGLED("?makeKey@RomUserDict@@QAEHPAEJPADPAJ@Z");
+extern THIS int32_t ibm_udMakeTransValue(void *u, const char *in,
+                                         uint8_t *accent, char *out,
+                                         int16_t room)
+    MANGLED("?makeTransValue@RomUserDict@@QAEHPBDPAEPADF@Z");
+extern THIS uint8_t ibm_udTransKatakana2Yomi(void *u, char *kana,
+                                             uint8_t *out)
+    MANGLED("?transKatakana2Yomi@RomUserDict@@QAEEPADPAE@Z");
+extern THIS uint8_t ibm_udTransKana2Yomi(void *u, char *kana, uint8_t *out)
+    MANGLED("?transKana2Yomi@RomUserDict@@QAEEPADPAE@Z");
+extern THIS int32_t ibm_udMakeUserDictData(void *u, void *d, uint8_t keyLen,
+                                           char *kana, int32_t pos)
+    MANGLED("?makeUserDictData@RomUserDict@@AAEHPAUUserDictData@@E"
+            "PADW4ECIPartOfSpeech@@@Z");
+extern THIS int32_t ibm_udWriteData(void *u, void *d, int16_t slot,
+                                    int16_t at)
+    MANGLED("?writeData@RomUserDict@@QAEHPAUUserDictData@@FF@Z");
+extern THIS int16_t ibm_udLookup(void *u, uint8_t *text, int16_t at,
+                                 int16_t slot)
+    MANGLED("?lookup@RomUserDict@@QAEFPAEFF@Z");
+extern THIS int32_t ibm_udUpdateDictExt(void *u, void *list, int32_t which,
+                                        uint8_t *word, int32_t wordLen,
+                                        char *kana, int32_t kanaLen,
+                                        int32_t pos)
+    MANGLED("?updateDictExt@RomUserDict@@QAEJPAXJ0J0JW4ECIPartOfSpeech@@@Z");
+extern THIS int32_t ibm_udLookupDictExt(void *u, void *list, int32_t which,
+                                        uint8_t *word, int32_t wordLen,
+                                        void **value, int32_t *valueLen,
+                                        int32_t *pos)
+    MANGLED("?lookupDictExt@RomUserDict@@QAEJPAXJ0JPAPAXPAJPA"
+            "W4ECIPartOfSpeech@@@Z");
+
+#define UD(name) ibm_ud##name
+#define UD_ROOM  IBM_UD_ROOM
 
 #define DS(name) ibm_ds##name
 
@@ -1177,7 +1247,7 @@ static void sweepSkipList(void)
    which is the whole difficulty with a class this size.
  *
  * rom/jajp/dictsearch.h is where the offsets come from. */
-static char ds_block[DS_BYTES];
+static char ds_block[DS_ROOM];
 static char ic_block[TA_INPUTCHAR_BYTES];
 
 static void dsPut(int32_t off, const char *bytes, int32_t n)
@@ -1655,6 +1725,376 @@ static void sweepDictSearchRest(void)
     printf("DS rest done\n");
 }
 
+/* ---- the user dictionary --------------------------------------------- */
+
+/* Words a caller might teach it, as written form and reading. The reading
+   carries a caret where the accent falls, which is the interface, and the
+   list covers what each arm of the walk is for: hiragana, katakana, a long
+   vowel, a doubled consonant, a small kana, an accent at the front, at the
+   back, and none at all. */
+static const char *const UD_WORDS[][2] = {
+    { "\x93\xfa\x96\x7b", "\x83\x6a\x83\x7a\x83\x93\x5e" },
+    { "\x8c\xea",         "\x83\x53\x5e" },
+    { "\x8e\x52\x93\x63", "\x83\x84\x83\x7d\x83\x5f\x5e" },
+    { "\x93\x8c\x8b\x9e", "\x5e\x83\x67\x83\x45\x83\x4c\x83\x87\x83\x45" },
+    { "\x8b\x5a\x8f\x70", "\x83\x4d\x83\x85\x83\x63\x83\x5e\x5e" },
+    { "\x8d\x87\x90\xac", "\x83\x53\x81\x5b\x5e\x83\x5a\x83\x43" },
+    { "A",                "\x83\x47\x81\x5b\x5e" },
+    { "\xb1\xb2\xb3",     "\x83\x41\x83\x43\x83\x45\x5e" },
+    { "\x89\xb9\x90\xba", "\x83\x49\x83\x93\x83\x5a\x83\x43" },
+    /* And two written in hiragana, so that the fold into katakana that
+       transKana2Yomi does before spelling anything out is something the sweep
+       can see. Every reading above is already katakana, where that fold is a
+       no-op. */
+    { "\x82\xa0\x82\xa2", "\x82\xa0\x82\xa2\x5e\x82\xa4" },
+    { "\x8b\x9e",         "\x82\xab\x82\xe5\x82\xa4\x5e" },
+    { NULL, NULL }
+};
+
+/* And the things makeKey has to refuse or fold: white space, the full-width
+   space, half-width kana with and without a voicing mark, the two commas,
+   letters and digits, and a key of every single byte there is. */
+static const char *const UD_KEYS[] = {
+    "\x93\xfa\x96\x7b\x8c\xea",
+    "\x82\xa0\x82\xa2\x82\xa4",
+    "\x83\x41\x81\x5b\x83\x67",
+    "abcXYZ019",
+    "!\"#$%&'()*+,-./",
+    "a b",
+    "a\tb",
+    "a\nb",
+    "a\rb",
+    "\x81\x40",
+    "\x93\xfa\x81\x40\x96\x7b",
+    "\xb1\xb2\xb3\xb4\xb5",
+    "\xb6\xde\xb7\xde\xb8\xde",
+    "\xca\xdf\xcb\xdf\xcc\xdf",
+    "\xa1\xa2\xa3\xa4\xa5",
+    "\xdc\xdd\xde\xdf",
+    "\x82\xa0" "a" "\xb1",
+    "",
+    NULL
+};
+
+static void sweepUserDict(void)
+{
+    static char ud_room[0x40];
+    static char list_room[IBM_LIST_ROOM];
+    static char key_room[IBM_KEY_ROOM];
+    static char context[0x20];
+    static char contextWord[16];
+    char        keyBuf[256];
+    uint8_t     yomi[64];
+    int32_t     entRoom[0x40 / 4];
+    void       *u = ud_room;
+    long        i;
+    long        j;
+
+    /* The owner, with the two sub-objects the constructor reaches for. */
+    memset(ta_block, 0, sizeof ta_block);
+    memset(ds_block, 0, sizeof ds_block);
+    memset(ic_block, 0, sizeof ic_block);
+    *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
+    *(void **)(ta_block + TA_DICTSEARCH) = ds_block;
+    *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
+    *(void **)(ds_block + DS_OWNER) = ta_block;
+
+    memset(ud_room, 0, sizeof ud_room);
+    UD(Ctor)(u, ta_block);
+
+    /* The key, over everything that has to be folded or refused. */
+    for (i = 0; UD_KEYS[i] != NULL; i++) {
+        int32_t len = -1;
+        int32_t rc;
+
+        memset(keyBuf, 0, sizeof keyBuf);
+        rc = UD(MakeKey)(u, (uint8_t *)UD_KEYS[i],
+                         (int32_t)strlen(UD_KEYS[i]), keyBuf, &len);
+        printf("UD key %ld rc %d len %d ", i, (int)rc, (int)len);
+        putBytes(keyBuf);
+        putchar('\n');
+    }
+
+    /* And over every single byte on its own, and every byte after a kana,
+       since a voicing mark is only meaningful after one. */
+    for (i = 0; i <= 0xff; i++) {
+        char in[4];
+        int32_t len = -1;
+        int32_t rc;
+
+        in[0] = (char)i;
+        in[1] = 0;
+        memset(keyBuf, 0, sizeof keyBuf);
+        rc = UD(MakeKey)(u, (uint8_t *)in, 1, keyBuf, &len);
+        printf("UD byte %02lx rc %d len %d ", i, (int)rc, (int)len);
+        putBytes(keyBuf);
+
+        in[0] = (char)0xb1;
+        in[1] = (char)i;
+        in[2] = 0;
+        len = -1;
+        memset(keyBuf, 0, sizeof keyBuf);
+        rc = UD(MakeKey)(u, (uint8_t *)in, 2, keyBuf, &len);
+        printf(" | after kana rc %d len %d ", (int)rc, (int)len);
+        putBytes(keyBuf);
+        putchar('\n');
+    }
+
+    /* The reading: where the caret lands, and what the kana become. */
+    for (i = 0; UD_WORDS[i][0] != NULL; i++) {
+        uint8_t accent = 0xee;
+        int32_t rc;
+        uint8_t n;
+
+        memset(keyBuf, 0, sizeof keyBuf);
+        rc = UD(MakeTransValue)(u, UD_WORDS[i][1], &accent, keyBuf, 0x33);
+        printf("UD trans %ld rc %d accent %d ", i, (int)rc, (int)accent);
+        putBytes(keyBuf);
+        putchar('\n');
+
+        memset(yomi, 0, sizeof yomi);
+        n = UD(TransKatakana2Yomi)(u, keyBuf, yomi);
+        printf("UD kata %ld n %d", i, (int)n);
+        for (j = 0; j < 32; j++)
+            printf(" %02x", (unsigned)yomi[j]);
+        putchar('\n');
+
+        memset(yomi, 0, sizeof yomi);
+        n = UD(TransKana2Yomi)(u, keyBuf, yomi);
+        printf("UD kana %ld n %d", i, (int)n);
+        for (j = 0; j < 32; j++)
+            printf(" %02x", (unsigned)yomi[j]);
+        putchar('\n');
+    }
+
+    /* A caret in every position of one reading, and a reading with something
+       in it that is neither kana nor a caret. */
+    {
+        static const char *const ODD[] = {
+            "^", "^\x83\x41", "\x83\x41^", "\x83\x41^\x83\x43",
+            "\x83\x62^", "\x81\x5b^", "\x83\x83^", "\x83\x41\x83\x83^",
+            "\x83\x41" "x", "x", "\x82\xa0^", "\x82\xc1^",
+            "\x83\x41\x83\x43\x83\x45\x83\x47\x83\x49^",
+            NULL
+        };
+
+        for (i = 0; ODD[i] != NULL; i++) {
+            uint8_t accent = 0xee;
+            int32_t rc;
+
+            memset(keyBuf, 0, sizeof keyBuf);
+            rc = UD(MakeTransValue)(u, ODD[i], &accent, keyBuf, 0x33);
+            printf("UD odd %ld rc %d accent %d ", i, (int)rc, (int)accent);
+            putBytes(keyBuf);
+            putchar('\n');
+        }
+    }
+
+    /* The stored record, over every part of speech there is and two that are
+       not, and a reading too long to store. */
+    for (i = 0; UD_WORDS[i][0] != NULL; i++) {
+        long p;
+
+        for (p = -1; p <= 4; p++) {
+            uint8_t d[0x40];
+            int32_t rc;
+
+            memset(d, 0xee, sizeof d);
+            rc = UD(MakeUserDictData)(u, d, 4, (char *)UD_WORDS[i][1],
+                                      (int32_t)p);
+            printf("UD data %ld %ld rc %d", i, p, (int)rc);
+            for (j = 0; j < 0x1f; j++)
+                printf(" %02x", (unsigned)d[j]);
+            putchar('\n');
+        }
+    }
+    {
+        char longKana[128];
+        uint8_t d[0x40];
+        int32_t rc;
+
+        for (i = 0; i < 30; i++) {
+            longKana[i * 2] = (char)0x83;
+            longKana[i * 2 + 1] = (char)(0x41 + (i % 10) * 2);
+        }
+        longKana[60] = 0;
+        memset(d, 0xee, sizeof d);
+        rc = UD(MakeUserDictData)(u, d, 4, longKana, 1);
+        printf("UD long rc %d", (int)rc);
+        for (j = 0; j < 0x1f; j++)
+            printf(" %02x", (unsigned)d[j]);
+        putchar('\n');
+
+        longKana[50] = 0;
+        memset(d, 0xee, sizeof d);
+        rc = UD(MakeUserDictData)(u, d, 4, longKana, 1);
+        printf("UD long2 rc %d", (int)rc);
+        for (j = 0; j < 0x1f; j++)
+            printf(" %02x", (unsigned)d[j]);
+        putchar('\n');
+    }
+
+    /* Writing one into a candidate entry, at the bounds of the array and
+       with the long-word store both empty and full. */
+    icSetText(TEXTS[1]);
+    for (i = 0; i < 2; i++) {
+        static const int16_t SLOTS[] = { 0, 1, 709, 710, 711 };
+        int si;
+
+        for (si = 0; si < (int)(sizeof SLOTS / sizeof SLOTS[0]); si++) {
+            uint8_t d[0x40];
+            int32_t rc;
+
+            memset(ds_block, 0, sizeof ds_block);
+            memset(ta_block, 0, sizeof ta_block);
+            *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
+            *(void **)(ta_block + TA_DICTSEARCH) = ds_block;
+            *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
+            *(void **)(ds_block + DS_OWNER) = ta_block;
+            ta_block[TA_LONGWORDS] = (char)(i == 0 ? 0 : TA_LONGWORD_N);
+
+            memset(d, 0, sizeof d);
+            UD(MakeUserDictData)(u, d, 8, (char *)UD_WORDS[3][1], 1);
+            rc = UD(WriteData)(u, d, SLOTS[si], 2);
+            printf("UD write %ld %d rc %d", i, (int)SLOTS[si], (int)rc);
+            if (rc && SLOTS[si] < DS_ENTRY_N)
+                for (j = 0; j < DS_ENTRY_SIZE; j++)
+                    printf(" %02x", (unsigned)(uint8_t)
+                           ds_block[DS_ENTRY + SLOTS[si] * DS_ENTRY_SIZE + j]);
+            printf(" longs %d\n", (int)(uint8_t)ta_block[TA_LONGWORDS]);
+        }
+    }
+    (void)entRoom;
+
+    /* And the whole of it over a real dictionary: teach it every word, read
+       each back, then look a sentence up against it in both modes. */
+    ibm_slCtor(list_room);
+    UD_DICT(u) = list_room;
+
+    for (i = 0; UD_WORDS[i][0] != NULL; i++) {
+        int32_t rc = UD(UpdateDictExt)(u, list_room, 0,
+                                       (uint8_t *)UD_WORDS[i][0],
+                                       (int32_t)strlen(UD_WORDS[i][0]),
+                                       (char *)UD_WORDS[i][1],
+                                       (int32_t)strlen(UD_WORDS[i][1]), 1);
+
+        printf("UD update %ld rc %d\n", i, (int)rc);
+    }
+    /* A word too long for a key, and one with nothing storable in it. */
+    {
+        char big[64];
+
+        memset(big, 'a', 40);
+        big[40] = 0;
+        printf("UD update big rc %d\n",
+               (int)UD(UpdateDictExt)(u, list_room, 0, (uint8_t *)big, 40,
+                                      (char *)"\x83\x41", 2, 1));
+        printf("UD update space rc %d\n",
+               (int)UD(UpdateDictExt)(u, list_room, 0,
+                                      (uint8_t *)"a b", 3,
+                                      (char *)"\x83\x41", 2, 1));
+        printf("UD update badpos rc %d\n",
+               (int)UD(UpdateDictExt)(u, list_room, 0,
+                                      (uint8_t *)"\x82\xa0", 2,
+                                      (char *)"\x83\x41", 2, 9));
+    }
+
+    for (i = 0; UD_WORDS[i][0] != NULL; i++) {
+        void   *value = (void *)0x1234;
+        int32_t len = -1;
+        int32_t pos = -1;
+        int32_t rc = UD(LookupDictExt)(u, list_room, 0,
+                                       (uint8_t *)UD_WORDS[i][0],
+                                       (int32_t)strlen(UD_WORDS[i][0]),
+                                       &value, &len, &pos);
+
+        printf("UD read %ld rc %d len %d pos %d ", i, (int)rc, (int)len,
+               (int)pos);
+        putBytes(value == NULL ? NULL : (const char *)value);
+        putchar('\n');
+    }
+    printf("UD read absent rc %d\n",
+           (int)(UD(LookupDictExt)(u, list_room, 0, (uint8_t *)"\x82\xf1", 2,
+                                   (void **)&keyBuf,
+                                   (int32_t *)&entRoom[0],
+                                   (int32_t *)&entRoom[1])));
+
+    /* The lookup the analyser makes: the whole of what is left of the
+       sentence at once, in both of DictSearch's modes. */
+    memset(context, 0, sizeof context);
+    strcpy(contextWord, "\x93\xfa\x96\x7b");
+    *(char **)(context + 4) = contextWord;
+    for (i = 0; i < 2; i++) {
+        int n = icSetText(TEXTS[1]);
+        int at;
+
+        for (at = 0; at < n && at < 6; at++) {
+            int16_t rc;
+
+            memset(ds_block, 0, sizeof ds_block);
+            *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
+            *(void **)(ds_block + DS_OWNER) = ta_block;
+            memset(ta_block, 0, sizeof ta_block);
+            *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
+            *(void **)(ta_block + TA_DICTSEARCH) = ds_block;
+            *(int32_t *)(ds_block + DS_USERDICT_MODE) = (int32_t)i;
+            *(void **)(ds_block + DS_USERDICT_WORD) = context;
+            if (i == 1) {
+                /* What the context names has to be what the stored record
+                   holds: its first two bytes, which are how many characters
+                   the written form has and how many codes its reading is --
+                   not the reading itself. Setting them from the record the
+                   first word would make is what gives the mode-one arm
+                   something to match, and without a match the whole arm goes
+                   untested. */
+                uint8_t d[0x40];
+
+                memset(d, 0, sizeof d);
+                UD(MakeUserDictData)(u, d, 4, (char *)UD_WORDS[0][1], 1);
+                context[0x10] = (char)d[0];
+                context[0x11] = (char)d[1];
+            }
+
+            rc = UD(Lookup)(u, (uint8_t *)(ic_block + IC_TEXT),
+                            (int16_t)at, 0);
+            printf("UD lookup %ld %d rc %d cursor %d\n", i, at, (int)rc,
+                   (int)*(int16_t *)(ds_block + DS_CURSOR));
+            for (j = 0; j < rc && j < 8; j++)
+                putRecord("lookup", i * 1000 + at * 10 + j,
+                          (const uint8_t *)(ds_block + DS_ENTRY
+                                            + j * DS_ENTRY_SIZE),
+                          DS_ENTRY_SIZE);
+        }
+    }
+
+    /* The key-length bound, from both sides of it, and with the two kinds of
+       character that make a key of a different length from the word: a
+       two-byte character keeps its length and a half-width kana doubles. */
+    for (i = 24; i <= 34; i++) {
+        char word[80];
+        long k;
+
+        for (k = 0; k < i; k += 2) {
+            word[k] = (char)0x82;
+            word[k + 1] = (char)(0xa0 + (k / 2) % 8);
+        }
+        word[i] = 0;
+        printf("UD bound wide %ld rc %d\n", i,
+               (int)UD(UpdateDictExt)(u, list_room, 0, (uint8_t *)word,
+                                      (int32_t)i, (char *)"\x83\x41", 2, 1));
+    }
+
+    /* Not swept: a word of twenty half-width kana or more. Each of them
+       becomes two bytes, so the key is twice the length of the word, and
+       IBM's own buffer for it is about thirty-six bytes on its stack while
+       the bound it enforces lets a key reach sixty-four. Nineteen is the last
+       one that works; at twenty its own frame goes and Wine's debugger comes
+       up. Measured, not reasoned about, and ours is not swept against a side
+       that has stopped running. See rom/jajp/userdict.c. */
+
+    printf("UD done\n");
+}
+
 int main(void)
 {
     Param *p;
@@ -1695,6 +2135,7 @@ int main(void)
     sweepSkipList();
     sweepDictSearch();
     sweepDictSearchRest();
+    sweepUserDict();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

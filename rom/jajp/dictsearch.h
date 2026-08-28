@@ -37,6 +37,15 @@
 
 #define DS_BYTES        0x8908   /* 35,080, what TextAnalysis::initialize asks */
 
+/* And what ours has to ask for. Three of this record's fields hold pointers,
+   which are eight bytes here and were four in IBM's, so each of them uses the
+   four bytes after it as well -- and the last one, DS_USERDICT_WORD, is four
+   bytes from the end. Allocating a pointer's worth more is the whole of the
+   fix; the offsets stay IBM's, which is what lets the sweep build the same
+   state on both sides. See the note in docs/japanese.md on what a byte offset
+   costs when a pointer grows. */
+#define DS_ROOM         (DS_BYTES + sizeof(void *))
+
 /* ---- the head -------------------------------------------------------- */
 
 /* Settled: the constructor writes these two and the input reader at the far
@@ -134,9 +143,13 @@
 #define DS_UNREAD_TAIL      0x8518
 #define DS_UNREAD_TAIL_END  0x8900
 
-/* Settled as scalars: Do writes the first and tests it against one. */
-#define DS_L_8900       0x8900   /* int32 */
-#define DS_L_8904       0x8904   /* int32 */
+/* Settled, and by RomUserDict rather than by DictSearch's own code. The first
+   is a mode Do writes and tests against one; when it is one, a user
+   dictionary entry has to match the word the second points at before it is
+   taken. What that record is has not been read -- only that RomUserDict wants
+   two yomi codes at +0x10 and a string at +0x04 out of it. */
+#define DS_USERDICT_MODE 0x8900  /* int32 */
+#define DS_USERDICT_WORD 0x8904  /* the record it must agree with */
 
 /* ---- what InputChar holds that DictSearch reads --------------------- */
 

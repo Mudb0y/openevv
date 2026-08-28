@@ -48,6 +48,10 @@ OBJECTS = [
      "JpnUtil's tables: one row of kana to a name, and the romaji each of\n"
      " * the five in that row is spelled with. These are what turn a kana\n"
      " * code into letters, five bytes to an entry."),
+    ("userdict.obj", ".rdata",
+     "RomUserDict's one table: three bytes for each of the four parts of\n"
+     " * speech a user-dictionary entry may be given, which are the part of\n"
+     " * speech and the two attribute bytes the candidate entry carries."),
 ]
 
 # A static member of a class, as MSVC spells one: ?name@Class@@ and then the
@@ -156,6 +160,11 @@ def emit_header(out, tag, lines):
 def emit_all(where, out, tag):
     total = 0
     lines = []
+    # A constant the compiler put in more than one object comes out of each of
+    # them, and the bytes are the same either way, so the first one wins and
+    # the rest are passed over. Without this the file defines a name twice and
+    # will not compile.
+    seen = set()
     with open(out, "w") as f:
         f.write("/* The Japanese romanizer's tables.\n"
                 " *\n"
@@ -192,6 +201,9 @@ def emit_all(where, out, tag):
                     raise SystemExit(
                         "lift-romtables: %s in %s runs from %d to %d of %d"
                         % (name, obj, at, end, len(data)))
+                if name in seen:
+                    continue
+                seen.add(name)
                 f.write("const uint8_t *const %s_%s = %s + 0x%x;\n"
                         % (tag, name, block, at))
                 f.write("const int32_t %s_%s_n = %d;\n\n"

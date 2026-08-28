@@ -252,6 +252,28 @@ Translation *sl_multiSearch(SkipList *l, Key *key)
     return out;
 }
 
+/* And give back what it answered.
+ *
+ * IBM calls Translation's vector deleting destructor on the array, which is
+ * MSVC's own arrangement: the count sits in the four bytes in front of the
+ * first element and the destructor walks back to find it. multiSearch above
+ * lays the block out the same way, so this is the other half of that and the
+ * only thing that may be handed the answer. */
+void sl_freeMultiSearch(Translation *found)
+{
+    char    *block;
+    int32_t  n;
+    int32_t  i;
+
+    if (found == 0)
+        return;
+    block = (char *)found - 4;
+    n = *(int32_t *)block;
+    for (i = 0; i < n; i++)
+        tr_dtor(&found[i]);
+    cpp_delete(block);
+}
+
 /* Answers -1 when the key was there and is now gone, nought when it was not.
    The list's level comes down again if the top row is left empty. */
 int32_t sl_remove(SkipList *l, Key *key)

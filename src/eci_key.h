@@ -137,6 +137,7 @@ void         sl_dtor(SkipList *l);
 int32_t      sl_insert(SkipList *l, Key *key, Translation *t);
 Translation *sl_search(SkipList *l, Key *key);
 Translation *sl_multiSearch(SkipList *l, Key *key);
+void         sl_freeMultiSearch(Translation *found);
 int32_t      sl_remove(SkipList *l, Key *key);
 int32_t      sl_getFirst(SkipList *l, Key **key, Translation **t);
 int32_t      sl_getNext(SkipList *l, Key **key, Translation **t);

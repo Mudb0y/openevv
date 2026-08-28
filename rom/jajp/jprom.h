@@ -309,6 +309,67 @@ int16_t ds_GenerateWord(void *d, int16_t at, int16_t base);
 /* TextAnalysis's, and here because it is in IBM's dictsearch object. */
 void    ta_AddLongWord(void *t, uint8_t *word, int16_t n);
 
+/* ---- RomUserDict ----------------------------------------------------- */
+
+/* The stored dictionary's own classes, which this shares with the engine's
+   English one: the same skip list, keyed the same way. */
+#include "eci_key.h"
+
+/* What a caller taught the romanizer, as it is stored. Thirty-one bytes, and
+   the layout is IBM's because Translation keeps it as opaque bytes and
+   writeData reads it back field by field.
+ *
+ * The reading may overrun into the two bytes after it -- see
+ * rud_transKatakana2Yomi -- so nothing may be put between `kana' and `attr'. */
+typedef struct UserDictData {
+    uint8_t chars;      /* +0x00, characters of written form */
+    uint8_t kanaLen;    /* +0x01, yomi codes in the reading */
+    uint8_t kana[25];   /* +0x02, the reading itself */
+    uint8_t accent;     /* +0x1b, which mora the caret marked */
+    uint8_t attr;       /* +0x1c */
+    uint8_t attr2;      /* +0x1d */
+    uint8_t pos;        /* +0x1e, the part of speech */
+} UserDictData;
+
+/* And the class itself. Named fields rather than IBM's offsets: it is written
+   whole, and nothing outside this directory reads it. */
+typedef struct RomUserDict {
+    SkipList *dict;      /* what is in force, which the engine sets */
+    void     *analysis;  /* TextAnalysis * */
+    void     *input;     /* InputChar *, its own */
+    void     *search;    /* DictSearch *, its own */
+} RomUserDict;
+
+/* What the dictionary calls answer. These are the raw numbers IBM's own
+   methods return; src/eci_dict.c is what turns them into the older
+   interface's names, and it only distinguishes the second. */
+#define ECI_DICT_NO_ENTRY       5    /* the search found nothing */
+#define ECI_DICT_NO_MEMORY     (-2)  /* an allocation or an insert failed */
+#define ECI_DICT_ERROR         (-3)  /* the word is longer than a key may be */
+#define ECI_DICT_INVALID_ENTRY (-15) /* nothing that could be stored */
+
+/* Its one table, three bytes for each of the four parts of speech. */
+extern const uint8_t *const jajp_s_anUserDictData;
+
+RomUserDict *rud_ctor(RomUserDict *u, void *analysis);
+int32_t rud_makeKey(RomUserDict *u, uint8_t *in, int32_t n, char *out,
+                   int32_t *outLen);
+int32_t rud_makeTransValue(RomUserDict *u, const char *in, uint8_t *accent,
+                          char *out, int16_t room);
+uint8_t rud_transKatakana2Yomi(RomUserDict *u, char *kana, uint8_t *out);
+uint8_t rud_transKana2Yomi(RomUserDict *u, char *kana, uint8_t *out);
+int32_t rud_makeUserDictData(RomUserDict *u, UserDictData *d,
+                            uint8_t keyLen, char *kana, int32_t pos);
+int32_t rud_writeData(RomUserDict *u, UserDictData *d, int16_t slot,
+                     int16_t at);
+int16_t rud_lookup(RomUserDict *u, uint8_t *text, int16_t at, int16_t slot);
+int32_t rud_updateDictExt(RomUserDict *u, SkipList *list, int32_t which,
+                         uint8_t *word, int32_t wordLen, char *kana,
+                         int32_t kanaLen, int32_t pos);
+int32_t rud_lookupDictExt(RomUserDict *u, SkipList *list, int32_t which,
+                         uint8_t *word, int32_t wordLen, void **value,
+                         int32_t *valueLen, int32_t *pos);
+
 /* ---- how much of this is written ------------------------------------ */
 
 /* While this is defined the romanizer cannot convert anything yet, and says

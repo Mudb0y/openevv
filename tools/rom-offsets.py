@@ -140,8 +140,8 @@ def regions_ds(d):
         (d["DS_INPUTCHAR"], 4, "the input reader"),
         (d["DS_UNREAD_TAIL"], d["DS_UNREAD_TAIL_END"] - d["DS_UNREAD_TAIL"],
          "the tail nobody has read"),
-        (d["DS_L_8900"], 4, "a long"),
-        (d["DS_L_8904"], 4, "a long"),
+        (d["DS_USERDICT_MODE"], 4, "the user-dictionary mode"),
+        (d["DS_USERDICT_WORD"], 4, "the word it must agree with"),
     ]
     return [(at, at + n - 1, name) for at, n, name in r]
 
