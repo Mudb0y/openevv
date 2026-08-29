@@ -248,7 +248,21 @@ static Conv *makeConv(Param *p)
 #define ibm_icGetUnknownKanji(in, a, f, t) \
     ic_GetUnknownKanji((in), (a), (f), (t))
 
+#define ibm_icIsKanjiNum(in, a)      ic_IsKanjiNum((in), (a))
+#define ibm_icGetCharType(in, a)     ic_GetCharType((in), (a))
+#define ibm_icCheckNextAnnotation(in) ic_CheckNextAnnotation((in))
+#define ibm_icCheckCyuTen(in, a)     ic_CheckCyuTen((in), (a))
+#define ibm_icCheckContextForNum(in, a) ic_CheckContextForNum((in), (a))
+#define ibm_icCheckContext(in, a, p) ic_CheckContext((in), (a), (p))
+#define ibm_icConvertDakuten(in, a, c, m) \
+    ic_ConvertDakuten((in), (a), (c), (m))
+#define ibm_icProcessASCII(in, a, x, y) ic_ProcessASCII((in), (a), (x), (y))
+#define ibm_icProcessAnnotation(in, a) ic_ProcessAnnotation((in), (a))
+#define ibm_icRecoverOverflow(in, a) ic_RecoverOverflow((in), (a))
+#define ibm_icReadSentence(in)       ic_ReadSentence((in))
+
 #define IC(name) ibm_ic##name
+
 
 /* The field isAnnotationsInText answers with. Nothing writes it, so the sweep
    does; it is IBM's sixteenth byte and our own struct's named member, which
@@ -749,7 +763,33 @@ extern THIS int16_t ibm_icGetUnknownKanji(void *in, int16_t at, int32_t from,
                                           int32_t to)
     MANGLED("?GetUnknownKanji@InputChar@@QAEFFJJ@Z");
 
+extern THIS int32_t ibm_icIsKanjiNum(void *in, int32_t at)
+    MANGLED("?IsKanjiNum@InputChar@@QAEHH@Z");
+extern THIS int32_t ibm_icGetCharType(void *in, int16_t at)
+    MANGLED("?GetCharType@InputChar@@QAE?AW4CharType@@F@Z");
+extern THIS int32_t ibm_icCheckNextAnnotation(void *in)
+    MANGLED("?CheckNextAnnotation@InputChar@@QAEJXZ");
+extern THIS int16_t ibm_icCheckCyuTen(void *in, int16_t *at)
+    MANGLED("?CheckCyuTen@InputChar@@QAEFPAF@Z");
+extern THIS int16_t ibm_icCheckContextForNum(void *in, int16_t *at)
+    MANGLED("?CheckContextForNum@InputChar@@QAEFPAF@Z");
+extern THIS int16_t ibm_icCheckContext(void *in, int16_t *at, int32_t peek)
+    MANGLED("?CheckContext@InputChar@@QAEFPAFH@Z");
+extern THIS void ibm_icConvertDakuten(void *in, int16_t at, uint8_t c,
+                                      uint8_t mark)
+    MANGLED("?ConvertDakuten@InputChar@@QAEXFEE@Z");
+extern THIS int16_t ibm_icProcessASCII(void *in, int16_t at, uint8_t *c0,
+                                       uint8_t *c1)
+    MANGLED("?ProcessASCII@InputChar@@QAEFFPAE0@Z");
+extern THIS int8_t ibm_icProcessAnnotation(void *in, int16_t at)
+    MANGLED("?ProcessAnnotation@InputChar@@QAECF@Z");
+extern THIS void ibm_icRecoverOverflow(void *in, int16_t at)
+    MANGLED("?RecoverOverflow@InputChar@@QAEXF@Z");
+extern THIS int16_t ibm_icReadSentence(void *in)
+    MANGLED("?ReadSentence@InputChar@@QAEFXZ");
+
 #define IC(name) ibm_ic##name
+
 
 #define PARAM_ANNO(p) (*(int32_t *)((char *)(p) + 0x10))
 #define UD_ROOM  IBM_UD_ROOM
@@ -3292,9 +3332,9 @@ static void sweepInputChar(void)
                (int)*(int16_t *)(ic_block + IC_LENGTH));
 
         IC(SetText)(ic_block, TEXTS[i]);
-        printf("IC settext %ld pos %ld read %ld end %ld len %d\n", i,
+        printf("IC settext %ld pos %ld ended %ld end %ld len %d\n", i,
                (long)*(int32_t *)(ic_block + IC_POS),
-               (long)*(int32_t *)(ic_block + IC_READ),
+               (long)*(int32_t *)(ic_block + IC_ENDED),
                (long)*(int32_t *)(ic_block + IC_AT_END),
                (int)*(int16_t *)(ic_block + IC_LENGTH));
 
@@ -3465,6 +3505,493 @@ static void sweepInputChar(void)
     printf("IC done\n");
 }
 
+
+/* Everything the reader put in the record, after one call. The counts are
+   printed first so that a difference in how far it got is one line rather than
+   a hundred. */
+static char *anno_of;
+
+static void putSentence(const char *what, long i, long k, int rc)
+{
+    long n = (long)*(int16_t *)(ic_block + IC_COUNT);
+    long j;
+
+    printf("IC %s %ld %ld rc %d count %ld ended %ld pos %ld raw %d end %ld"
+           " more %ld pause %ld eng %ld num %ld join %ld brk %d mark ",
+           what, i, k, rc, n,
+           (long)*(int32_t *)(ic_block + IC_ENDED),
+           (long)*(int32_t *)(ic_block + IC_POS),
+           (int)*(int16_t *)(ic_block + IC_RAWPOS),
+           (long)*(int32_t *)(ic_block + IC_AT_END),
+           (long)*(int32_t *)(ic_block + IC_MORE),
+           (long)*(int32_t *)(ic_block + IC_PAUSE),
+           (long)*(int32_t *)(ic_block + IC_ENGRUN),
+           (long)*(int32_t *)(ic_block + IC_NUMRUN),
+           (long)*(int32_t *)(ic_block + IC_NUMJOIN),
+           (int)*(int16_t *)(ic_block + IC_BRACKET_AT));
+    putBytes(ic_block + IC_ENDMARK);
+    putchar('\n');
+    /* One past the count as well, because the comma the recovery walk writes
+       goes there and nothing else would ever print it. */
+    for (j = 0; j <= n && j < 70; j++)
+        printf("IC %s %ld %ld at %ld %02x%02x kind %ld off %d mark %ld\n",
+               what, i, k, j,
+               (unsigned char)ic_block[IC_TEXT + j * 2],
+               (unsigned char)ic_block[IC_TEXT + j * 2 + 1],
+               (long)*(int32_t *)(ic_block + IC_KIND + j * 4),
+               (int)*(int16_t *)(ic_block + IC_OFFSET + j * 2),
+               (long)*(int32_t *)(ic_block + IC_MARK + j * 4));
+
+    /* And whatever the reader lifted out into the annotations, which is the
+       only way the position it saved them at is observed. */
+    if (anno_of != NULL) {
+        long t;
+
+        for (t = 0; t < 6; t++) {
+            long b;
+
+            for (b = 0; b < 9; b++) {
+                printf("IC %s %ld %ld anno %ld %ld ", what, i, k, t, b);
+                putBytes(AN(GetLastAnno)(anno_of,
+                                         (int16_t)(b < 7 ? b : (b - 6) * 20),
+                                         (int32_t)t));
+                putchar('\n');
+            }
+        }
+    }
+}
+
+/* Texts for the reader: the shared ones, then ends of every kind, spaces and
+   tabs in and out of numbers and English, annotations of each shape, middle
+   dots, half-width kana with and without a voicing mark, a full-width space
+   where a break belongs, brackets, and one long enough to be cut back. */
+static const char *const IC_SENTENCES[] = {
+    "\x93\xfa\x96\x7b\x8c\xea\x81\x42\x8e\x52\x93\x63\x81\x41\x93\x8c\x8b\x9e"
+    "\x81\x48\x89\xb9\x90\xba\x81\x49",
+    "\x93\xfa\x96\x7b\x81\x44\x8e\x52\x93\x63\x81\x43\x93\x8c\x8b\x9e",
+    "1.5\x82\xcd\x8e\x52\x93\x63\x81\x42" "3,000\x89\x7e\x81\x42",
+    "\x82\xa0\x81\x40\x82\xa2\x81\x40\x82\xa4\x81\x42",
+    "abc def\x81\x42" "ghi\tjkl\n" "mno",
+    "\x93\xfa\x81\x45\x96\x7b\x81\x45\x8c\xea\x81\x42",
+    "\x93\xfa\x81\x45\x81\x45\x81\x45\x96\x7b\x81\x42",
+    "\x60p200\x93\xfa\x96\x7b\x81\x42",
+    "\x60pau\x93\xfa\x81\x42\x60" "0\x96\x7b",
+    "\x60\x93\xfa\x96\x7b\x81\x42",
+    "\xb6\xde\xb7\xde\xb8\x93\xfa\x81\x42",
+    "\xb1\xb2\xb3\xa4\xb4\xa1\xb5",
+    "\x81\x6d\x93\xfa\x96\x7b\x81\x6e\x8c\xea\x81\x42",
+    "\x82\xa0\x82\xa2\x82\xa4\n\n\x82\xa6\x82\xa8\x81\x42",
+    "\x82\xcd\x93\xfa\x96\x7b\x82\xcd\x8e\x52\x81\x42",
+    "\x81\x40\x93\xfa\x96\x7b",
+    "\x81\x41\x93\xfa\x96\x7b",
+    "\x81\x42\x93\xfa\x96\x7b",
+    ".\x93\xfa\x96\x7b",
+    ",\x93\xfa\x96\x7b",
+    "\xa4\x93\xfa\x96\x7b",
+    "\xa1\x93\xfa\x96\x7b",
+    "\x93\xfa\x96\x7b\r\n\x8c\xea\x81\x42",
+    "\x93\xfa\x96\x7b 12 \x8c\xea\x81\x42",
+    "IBM \x93\xfa\x96\x7b Corp\x81\x42",
+    "\x93\xfa",
+    "abc,def\x81\x42",
+    "\x93\xfa\x96\x7b,\x8c\xea\x81\x42",
+    "\x93\xfa\x96\x7b.\x8c\xea\x81\x42",
+    "\x82\x60\x82\x61\x82\x62\x81\x44\x82\x63\x82\x64",
+    "\x82\x50\x82\x51\r\n\x82\x52\x82\x53\x81\x42",
+    "\x82\x60\x82\x61\r\n\x82\x62\x82\x63\x81\x42",
+    "\x82\x60\x82\x61 \x82\x62\x82\x63\x81\x42",
+    "\x93\xfa\x96\x7b   \x8c\xea\x81\x42"
+};
+
+static void sweepReader(void)
+{
+    static char rom_room[16 * sizeof(void *)];
+    static char ud_room[UD_ROOM];
+    static char anno_room[ANNO_ROOM];
+    static char raw_room[4096];
+    static char work[4096];
+    long        i;
+    long        j;
+    long        k;
+
+    memset(ta_block, 0, sizeof ta_block);
+    memset(rom_room, 0, sizeof rom_room);
+    *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
+    *(void **)(ta_block + TA_OWNER) = rom_room;
+    *(void **)(ta_block + TA_ANNOTATION) = anno_room;
+    *(void **)(ta_block + TA_RAW) = raw_room;
+    *(void **)(rom_room + RM_PARAM) = the_param;
+    *(void **)(rom_room + RM_USERDICT) = ud_room;
+    UD(Ctor)(ud_room, ta_block);
+
+    /* What every one of the sixty-five thousand two-byte characters is, which
+       is the whole of the classifier and the whole of the kanji-numeral test
+       in one sweep. */
+    memset(ic_block, 0xa5, sizeof ic_block);
+    IC(Ctor)(ic_block, ta_block);
+    for (i = 0; i < 0x10000; i++) {
+        ic_block[IC_TEXT] = (char)(i >> 8);
+        ic_block[IC_TEXT + 1] = (char)i;
+        printf("IC kind %04lx %ld %ld\n", i,
+               (long)IC(GetCharType)(ic_block, 0),
+               (long)IC(IsKanjiNum)(ic_block, 0));
+    }
+    printf("IC kind before %ld\n", (long)IC(GetCharType)(ic_block, -1));
+
+    /* Every half-width kana against both voicing marks. */
+    for (i = 0xa1; i <= 0xdf; i++) {
+        for (j = 0; j < 2; j++) {
+            memset(ic_block, 0xa5, sizeof ic_block);
+            IC(Ctor)(ic_block, ta_block);
+            *(int32_t *)(ic_block + IC_POS) = 9;
+            *(int16_t *)(ic_block + IC_RAWPOS) = 7;
+            IC(ConvertDakuten)(ic_block, 1, (uint8_t)i,
+                               (uint8_t)(0xde + j));
+            printf("IC dakuten %02lx %ld %02x%02x off %d mark %ld\n", i, j,
+                   (unsigned char)ic_block[IC_TEXT + 2],
+                   (unsigned char)ic_block[IC_TEXT + 3],
+                   (int)*(int16_t *)(ic_block + IC_OFFSET + 2),
+                   (long)*(int32_t *)(ic_block + IC_MARK + 4));
+        }
+    }
+
+    /* Every single byte through the ASCII writer, at the start of a sentence
+       and inside one, which are the two roads it has. */
+    for (i = 0; i < 256; i++) {
+        for (j = 0; j < 2; j++) {
+            uint8_t c0 = (uint8_t)i;
+            uint8_t c1 = 0x5a;
+            int16_t rc;
+
+            memset(ic_block, 0xa5, sizeof ic_block);
+            IC(Ctor)(ic_block, ta_block);
+            *(int32_t *)(ic_block + IC_POS) = 5;
+            *(int16_t *)(ic_block + IC_RAWPOS) = 3;
+            rc = IC(ProcessASCII)(ic_block, (int16_t)j, &c0, &c1);
+            printf("IC ascii %02lx %ld rc %d %02x%02x off %d mark %ld end ",
+                   i, j, (int)rc,
+                   (unsigned char)ic_block[IC_TEXT + j * 2],
+                   (unsigned char)ic_block[IC_TEXT + j * 2 + 1],
+                   (int)*(int16_t *)(ic_block + IC_OFFSET + j * 2),
+                   (long)*(int32_t *)(ic_block + IC_MARK + j * 4));
+            putBytes(ic_block + IC_ENDMARK);
+            putchar('\n');
+        }
+    }
+
+    /* The two look-ahead questions, over every byte as the next one. */
+    for (i = 0; i < 256; i++) {
+        int16_t at;
+
+        memset(ic_block, 0xa5, sizeof ic_block);
+        IC(Ctor)(ic_block, ta_block);
+        memset(work, 0, sizeof work);
+        work[0] = (char)i;
+        work[1] = (char)0x20;
+        work[2] = (char)0x40;
+        work[3] = 0x60;
+        IC(SetText)(ic_block, work);
+        printf("IC next %02lx %ld\n", i,
+               (long)IC(CheckNextAnnotation)(ic_block));
+
+        memset(ic_block, 0xa5, sizeof ic_block);
+        IC(Ctor)(ic_block, ta_block);
+        memset(work, 0, sizeof work);
+        work[0] = (char)i;
+        work[1] = 0x20;
+        work[2] = 0x60;
+        IC(SetText)(ic_block, work);
+        printf("IC next2 %02lx %ld\n", i,
+               (long)IC(CheckNextAnnotation)(ic_block));
+
+        memset(ic_block, 0xa5, sizeof ic_block);
+        IC(Ctor)(ic_block, ta_block);
+        memset(work, 0, sizeof work);
+        work[0] = (char)i;
+        work[1] = (char)0x50;
+        IC(SetText)(ic_block, work);
+        *(int32_t *)(ic_block + IC_KIND) = KIND_DIGIT;
+        at = 1;
+        {
+            /* The call first and the flag afterwards, in two statements: in
+               one printf the order is the compiler's and the flag was being
+               read before the call that sets it. */
+            int rc = (int)IC(CheckContextForNum)(ic_block, &at);
+
+            printf("IC ctxnum %02lx rc %d join %ld at %d\n", i, rc,
+                   (long)*(int32_t *)(ic_block + IC_NUMJOIN), (int)at);
+        }
+    }
+
+    /* The context walk on its own, over both values of its flag and every
+       kind before it, so that the two run flags, the English promotion and the
+       look-ahead write are all reached without having to find a sentence that
+       reaches them. */
+    for (i = 0; i < 14; i++) {
+        for (j = 0; j < 2; j++) {
+            for (k = 0; k < 6; k++) {
+                static const char *const AFTER[] = {
+                    "\x93\xfa", "\x82\x50", "1", " ", "", "\r\n\x82\x60"
+                };
+                int16_t at = 1;
+                int16_t rc;
+
+                memset(ic_block, 0xa5, sizeof ic_block);
+                IC(Ctor)(ic_block, ta_block);
+                memset(work, 0, sizeof work);
+                strcpy(work, "  ");
+                strcpy(work + 2, AFTER[k]);
+                IC(SetText)(ic_block, work);
+                *(int32_t *)(ic_block + IC_POS) = 2;
+                *(int16_t *)(ic_block + IC_RAWPOS) = 5;
+                *(int32_t *)(ic_block + IC_KIND) = (int32_t)i;
+                memcpy(ic_block + IC_TEXT, "\x82\x60", 2);
+                memcpy(ic_block + IC_TEXT + 2, "\x82\x61", 2);
+                *(int32_t *)(ic_block + IC_MARK + 4) = 1;
+                rc = IC(CheckContext)(ic_block, &at, (int32_t)j);
+                printf("IC ctx %ld %ld %ld rc %d at %d kind0 %ld kind1 %ld"
+                       " kind2 %ld eng %ld num %ld brk %d next %02x%02x"
+                       " off2 %d mark2 %ld\n", i, j, k, (int)rc, (int)at,
+                       (long)*(int32_t *)(ic_block + IC_KIND),
+                       (long)*(int32_t *)(ic_block + IC_KIND + 4),
+                       (long)*(int32_t *)(ic_block + IC_KIND + 8),
+                       (long)*(int32_t *)(ic_block + IC_ENGRUN),
+                       (long)*(int32_t *)(ic_block + IC_NUMRUN),
+                       (int)*(int16_t *)(ic_block + IC_BRACKET_AT),
+                       (unsigned char)ic_block[IC_TEXT + 4],
+                       (unsigned char)ic_block[IC_TEXT + 5],
+                       (int)*(int16_t *)(ic_block + IC_OFFSET + 4),
+                       (long)*(int32_t *)(ic_block + IC_MARK + 8));
+            }
+        }
+    }
+
+    /* And at the bound itself, with and without a space before the character,
+       which is what decides whether one is given back before the sentence is
+       cut. */
+    for (i = 0; i < 2; i++) {
+        int16_t at = 0x3d;
+        int16_t rc;
+
+        memset(ic_block, 0, sizeof ic_block);
+        IC(Ctor)(ic_block, ta_block);
+        anno_of = NULL;
+        memset(raw_room, 0, sizeof raw_room);
+        memset(work, i ? ' ' : 'x', 200);
+        work[200] = 0;
+        for (k = 0; k < 64; k++) {
+            memcpy(ic_block + IC_TEXT + k * 2, "\x82\xa0", 2);
+            *(int32_t *)(ic_block + IC_KIND + k * 4) =
+                (k % 2 == 0) ? KIND_HIRAGANA : KIND_KANJI;
+            *(int32_t *)(ic_block + IC_MARK + k * 4) = (int32_t)(k * 2);
+            *(int16_t *)(ic_block + IC_OFFSET + k * 2) = (int16_t)k;
+        }
+        memset(anno_room, 0, sizeof anno_room);
+        ANNO_CTOR(anno_room, ta_block);
+        IC(SetText)(ic_block, work);
+        *(int32_t *)(ic_block + IC_POS) = 100;
+        rc = IC(CheckContext)(ic_block, &at, 0);
+        printf("IC ctxbound %ld rc %d at %d count %d pos %ld raw %d\n", i,
+               (int)rc, (int)at, (int)*(int16_t *)(ic_block + IC_COUNT),
+               (long)*(int32_t *)(ic_block + IC_POS),
+               (int)*(int16_t *)(ic_block + IC_RAWPOS));
+    }
+
+    /* And once with a closing bracket laid down, which is the only character
+       that walk remembers where it was. */
+    {
+        int16_t at = 1;
+
+        memset(ic_block, 0xa5, sizeof ic_block);
+        IC(Ctor)(ic_block, ta_block);
+        memset(work, 0, sizeof work);
+        IC(SetText)(ic_block, work);
+        memcpy(ic_block + IC_TEXT + 2, "\x81\x6e", 2);
+        printf("IC ctxbrk rc %d brk %d\n",
+               (int)IC(CheckContext)(ic_block, &at, 0),
+               (int)*(int16_t *)(ic_block + IC_BRACKET_AT));
+    }
+
+    /* Runs of middle dots of every length up to five, and the same with
+       something else after each. */
+    for (i = 0; i <= 5; i++) {
+        for (j = 0; j < 2; j++) {
+            int16_t at = (int16_t)j;
+
+            memset(ic_block, 0xa5, sizeof ic_block);
+            IC(Ctor)(ic_block, ta_block);
+            memset(work, 0, sizeof work);
+            for (k = 0; k < i; k++) {
+                work[k * 2] = (char)0x81;
+                work[k * 2 + 1] = (char)0x45;
+            }
+            work[i * 2] = (char)0x93;
+            work[i * 2 + 1] = (char)0xfa;
+            IC(SetText)(ic_block, work);
+            printf("IC cyuten %ld %ld %d\n", i, j,
+                   (int)IC(CheckCyuTen)(ic_block, &at));
+        }
+    }
+
+    /* The reader itself, over every text, called until it says the text is
+       done or ten times, whichever comes first. The raw text the annotations
+       are placed against carries its own marks in the second pass, which is
+       the only way the recovery walk reaches them. */
+    for (j = 0; j < 2; j++) {
+        for (i = 0; i < (long)(sizeof IC_SENTENCES / sizeof *IC_SENTENCES);
+             i++) {
+            memset(anno_room, 0, sizeof anno_room);
+            ANNO_CTOR(anno_room, ta_block);
+            anno_of = anno_room;
+            memset(raw_room, (int)(j ? 1 : 0), sizeof raw_room);
+            memset(work, 0, sizeof work);
+            strcpy(work, IC_SENTENCES[i]);
+            memset(ic_block, 0xa5, sizeof ic_block);
+            IC(Ctor)(ic_block, ta_block);
+            IC(SetText)(ic_block, work);
+
+            for (k = 0; k < 10; k++) {
+                int rc = (int)IC(ReadSentence)(ic_block);
+
+                putSentence(j ? "marked" : "read", i, k, rc);
+                if (*(int32_t *)(ic_block + IC_AT_END))
+                    break;
+                *(int32_t *)(ic_block + IC_RESUME) = 1;
+            }
+            printf("IC after %ld %ld ", j, i);
+            putBytes(work);
+            putchar('\n');
+        }
+    }
+
+    /* Again without ever setting the resume flag, so that every call starts a
+       sentence afresh and clears the arrays. */
+    for (i = 0; i < (long)(sizeof IC_SENTENCES / sizeof *IC_SENTENCES); i++) {
+        memset(anno_room, 0, sizeof anno_room);
+        ANNO_CTOR(anno_room, ta_block);
+        anno_of = anno_room;
+        memset(raw_room, 0, sizeof raw_room);
+        memset(work, 0, sizeof work);
+        strcpy(work, IC_SENTENCES[i]);
+        memset(ic_block, 0xa5, sizeof ic_block);
+        IC(Ctor)(ic_block, ta_block);
+        IC(SetText)(ic_block, work);
+        for (k = 0; k < 4; k++) {
+            int rc = (int)IC(ReadSentence)(ic_block);
+
+            putSentence("fresh", i, k, rc);
+            if (*(int32_t *)(ic_block + IC_AT_END))
+                break;
+        }
+    }
+
+    /* And a buffer that runs out in the middle of a sentence, with a second
+       one handed over after it, which is the only way the step back over the
+       mark the reader had already counted is reached. */
+    for (i = 0; i < (long)(sizeof IC_SENTENCES / sizeof *IC_SENTENCES); i++) {
+        static char more[4096];
+
+        memset(anno_room, 0, sizeof anno_room);
+        ANNO_CTOR(anno_room, ta_block);
+        anno_of = anno_room;
+        memset(raw_room, 0, sizeof raw_room);
+        memset(work, 0, sizeof work);
+        memcpy(work, IC_SENTENCES[i], 6);
+        memset(ic_block, 0xa5, sizeof ic_block);
+        IC(Ctor)(ic_block, ta_block);
+        IC(SetText)(ic_block, work);
+        putSentence("cut", i, 0, (int)IC(ReadSentence)(ic_block));
+        memset(more, 0, sizeof more);
+        strcpy(more, IC_SENTENCES[i]);
+        IC(SetTextAt)(ic_block, more, 6);
+        *(int32_t *)(ic_block + IC_RESUME) = 1;
+        putSentence("cut", i, 1, (int)IC(ReadSentence)(ic_block));
+    }
+
+    /* And one sentence far too long, which is the only way to the walk that
+       cuts it back. */
+    for (j = 0; j < 3; j++) {
+        memset(anno_room, 0, sizeof anno_room);
+        ANNO_CTOR(anno_room, ta_block);
+        anno_of = anno_room;
+        memset(raw_room, j == 2 ? 1 : 0, sizeof raw_room);
+        memset(work, 0, sizeof work);
+        for (k = 0; k < 90; k++) {
+            static const char *const RUN[] = {
+                "\x82\xcd", "\x93\xfa", "\x81\x41", "\x8e\x52", "\x82\xa0"
+            };
+            const char *p = j == 0 ? RUN[k % 5] : RUN[k % 2];
+
+            work[k * 2] = p[0];
+            work[k * 2 + 1] = p[1];
+        }
+        memset(ic_block, 0xa5, sizeof ic_block);
+        IC(Ctor)(ic_block, ta_block);
+        IC(SetText)(ic_block, work);
+        putSentence("long", j, 0, (int)IC(ReadSentence)(ic_block));
+    }
+
+    /* The recovery walk on its own, over a record laid out by hand, so that
+       the roads the reader does not reach are reached. */
+    for (j = 0; j < 8; j++) {
+        memset(ic_block, 0, sizeof ic_block);
+        IC(Ctor)(ic_block, ta_block);
+        memset(work, ' ', 200);
+        work[200] = 0;
+        for (k = 0; k < 64; k++) {
+            ic_block[IC_TEXT + k * 2] = (char)0x81;
+            ic_block[IC_TEXT + k * 2 + 1] = (char)(0x43 + (k % 3));
+            /* j nought has punctuation in it and so never reaches the two
+               walks before it; j one and up have none, so the hiragana walk
+               and then the topic particle are what decide. */
+            *(int32_t *)(ic_block + IC_KIND + k * 4) =
+                (j == 0)
+                    ? ((k % 4 == 0) ? KIND_HIRAGANA
+                                    : (k % 4 == 1) ? KIND_KANJI
+                                                   : (k % 4 == 2) ? KIND_PUNCT
+                                                                  : KIND_DIGIT)
+                    : ((k % 2 == 0) ? KIND_HIRAGANA : KIND_KANJI);
+            *(int32_t *)(ic_block + IC_MARK + k * 4) = (int32_t)(k * 2);
+            *(int16_t *)(ic_block + IC_OFFSET + k * 2) = (int16_t)k;
+        }
+        if (j & 1)
+            memcpy(ic_block + IC_TEXT + 8, "\x82\xcd", 2);
+        /* Four, five and six put one punctuation high up and nothing else of
+           that kind, so that each of the three things the third walk steps
+           over is the one deciding rather than one of many. */
+        if (j >= 4 && j <= 6) {
+            *(int32_t *)(ic_block + IC_KIND + 50 * 4) = KIND_PUNCT;
+            if (j == 4)
+                *(int32_t *)(ic_block + IC_KIND + 49 * 4) = KIND_DIGIT;
+            if (j == 5)
+                memcpy(ic_block + IC_TEXT + 50 * 2, "\x81\x58", 2);
+            if (j == 6)
+                memcpy(ic_block + IC_TEXT + 50 * 2, "\x81\x5b", 2);
+        }
+        /* Two leaves only one place for the first walk to find, low down, so
+           that the bracket is past it and wins. */
+        if (j == 2) {
+            for (k = 4; k < 64; k++)
+                *(int32_t *)(ic_block + IC_KIND + k * 4) = KIND_KATAKANA;
+            *(int16_t *)(ic_block + IC_BRACKET_AT) = 40;
+        }
+        memset(raw_room, (j == 3 || j == 7) ? 1 : 0, sizeof raw_room);
+        if (j == 7)
+            raw_room[9] = 2;
+        IC(SetText)(ic_block, work);
+        *(int32_t *)(ic_block + IC_POS) = 100;
+        memset(anno_room, 0, sizeof anno_room);
+        ANNO_CTOR(anno_room, ta_block);
+        anno_of = anno_room;
+        AN(Save)(anno_room, (char *)"`p100", 5, 4);
+        AN(Save)(anno_room, (char *)"`p200", 5, 12);
+        AN(Save)(anno_room, (char *)"`p300", 5, 40);
+        IC(RecoverOverflow)(ic_block, 40);
+        putSentence("recover", j, 0, 0);
+    }
+
+    printf("IC reader done\n");
+}
 int main(void)
 {
     Param *p;
@@ -3509,6 +4036,7 @@ int main(void)
     sweepUserDict();
     sweepDictionaries();
     sweepInputChar();
+    sweepReader();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

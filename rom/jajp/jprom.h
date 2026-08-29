@@ -372,6 +372,17 @@ int32_t ic_AddSnlkTable(void *in, int16_t at, const char *written,
 void   *ic_GetSnlkTableAt(void *in, int16_t at);
 void    ic_DeleteSnlkTable(void *in);
 int16_t ic_GetUnknownKanji(void *in, int16_t at, int32_t from, int32_t to);
+int32_t ic_IsKanjiNum(void *in, int32_t at);
+int32_t ic_GetCharType(void *in, int16_t at);
+int32_t ic_CheckNextAnnotation(void *in);
+int16_t ic_CheckCyuTen(void *in, int16_t *at);
+int16_t ic_CheckContextForNum(void *in, int16_t *at);
+int16_t ic_CheckContext(void *in, int16_t *at, int32_t peek);
+void    ic_ConvertDakuten(void *in, int16_t at, uint8_t c, uint8_t mark);
+int16_t ic_ProcessASCII(void *in, int16_t at, uint8_t *c0, uint8_t *c1);
+int8_t  ic_ProcessAnnotation(void *in, int16_t at);
+void    ic_RecoverOverflow(void *in, int16_t at);
+int16_t ic_ReadSentence(void *in);
 
 /* ---- Annotation ------------------------------------------------------ */
 

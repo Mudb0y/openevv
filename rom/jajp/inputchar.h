@@ -38,26 +38,34 @@
 #define IC_SCRATCH_N    694
 #define IC_KIND         0x00b1c  /* int32 [], what each character is */
 #define IC_OFFSET       0x01674  /* int16 [], where each one starts */
-#define IC_SPARE_1C20   0x01c20  /* int16 the constructor sets to minus one,
-                                    and the two bytes of pad after it */
+#define IC_RAWPOS       0x01c20  /* int16, how far into the text the caller
+                                    sent the reader has got -- IC_OFFSET is
+                                    filled from it, and the two bytes of pad
+                                    after it */
 #define IC_MARK         0x01c24  /* int32 [], what a candidate carries away */
 #define IC_COUNT        0x0277c  /* int16, how many characters there are */
 #define IC_POS          0x02780  /* int32, the byte the reader has reached */
-#define IC_READ         0x02784  /* int32, cleared whenever text is set */
+#define IC_ENDED        0x02784  /* int32, whether the sentence just read ended
+                                    on something rather than running out */
 #define IC_TEXTP        0x02788  /* const char *, the bytes themselves */
-#define IC_SPARE_278C   0x0278c  /* int32 the constructor clears */
-#define IC_SPARE_2790   0x02790  /* int32 Init clears */
-#define IC_SPARE_2794   0x02794  /* int32 Init clears */
-#define IC_UNREAD_2798  0x02798  /* int32 nothing in this half touches */
-#define IC_W_279C       0x0279c  /* int16 Init clears */
-#define IC_SPARE_279E   0x0279e  /* four bytes the constructor clears */
-#define IC_UNREAD_27A2  0x027a2  /* int16 nothing in this half touches */
-#define IC_SPARE_27A4   0x027a4  /* int32 Init clears */
+#define IC_RESUME       0x0278c  /* int32; nought means start a fresh sentence
+                                    at character nought. Nothing in this class
+                                    writes it -- TextAnalysis does */
+#define IC_ENGRUN       0x02790  /* int32, a run of letters is open */
+#define IC_NUMRUN       0x02794  /* int32, a run of digits is open */
+#define IC_NUMJOIN      0x02798  /* int32, a number carries on across the
+                                    break just found */
+#define IC_BRACKET_AT   0x0279c  /* int16, where the last closing bracket was */
+#define IC_ENDMARK      0x0279e  /* four bytes: the punctuation the sentence
+                                    ended on, as a string */
+#define IC_UNREAD_27A2  0x027a2  /* int16 nothing in the module touches */
+#define IC_PAUSE        0x027a4  /* int32, the pauses the annotations asked
+                                    for, added up */
 #define IC_AT_END       0x027a8  /* int32, what IsEndOfInput answers */
 #define IC_SNLK_TABLE   0x027ac  /* _SNLK_TABLE *, the head of the chain */
 #define IC_LENGTH       0x027b0  /* int16, characters consumed before the
                                     text now in hand, and the pad after it */
-#define IC_SPARE_27B4   0x027b4  /* int32 the constructor clears */
+#define IC_MORE         0x027b4  /* int32, the buffer ran out mid-sentence */
 
 /* Where our build keeps the three pointers, since none of them can stay where
    IBM has it once a pointer is eight bytes wide: IC_OWNER would run over the
@@ -94,7 +102,8 @@
 #define KIND_PUNCT      2        /* 0x8143 to 0x81ac */
 #define KIND_LATIN      3        /* full width A-Z and a-z */
 #define KIND_HIRAGANA   4
-#define KIND_DIGIT      5        /* full width, and the kanji numerals */
+#define KIND_DIGIT      5        /* full width, the kanji numerals, and
+                                    0x815a, which is none of those */
 #define KIND_GREEK      6
 #define KIND_ROMAN      7        /* the 0xfa40 extension */
 #define KIND_CHOON      8        /* the long vowel bar, 0x815b */
@@ -102,9 +111,14 @@
 #define KIND_BRACKET    10       /* 0x816d */
 #define KIND_NAKAGURO   11       /* the middle dot, 0x8145 */
 #define KIND_OTHER      12
-#define KIND_ENGWORD    13       /* tested by the English-word walk; nothing
-                                    in the objects read so far writes it, and
-                                    GetCharType cannot answer it */
+#define KIND_ENGWORD    13       /* tested by the English-word walk, and
+                                    ic_CheckContext is what writes it: a run
+                                    of full-width letters begun after a space
+                                    is marked as an English word rather than
+                                    left as KIND_LATIN. GetCharType cannot
+                                    answer it, and ic_CheckContextForNum uses
+                                    it as a value of its own without ever
+                                    putting it in the array */
 
 /* ---- the SNLK table -------------------------------------------------- */
 
