@@ -355,6 +355,34 @@ int16_t ds_HandleError(void *d, int16_t at, int16_t written, int16_t base,
 /* TextAnalysis's, and here because it is in IBM's dictsearch object. */
 void    ta_AddLongWord(void *t, uint8_t *word, int16_t n);
 
+/* ---- Annotation ------------------------------------------------------ */
+
+/* The marks a caller put in the text, lifted out of it and kept until the
+   output side passes the place they belonged to. A ring of 128, which is
+   IBM's number and its only bound. Named fields rather than IBM's offsets:
+   nothing outside rom/jajp/annotation.c reads them. */
+#define ANNO_N          128
+
+#include "eci_io.h"
+
+typedef struct Annotation {
+    void    *analysis;        /* TextAnalysis * */
+    int16_t  at[ANNO_N];      /* where in the text each belonged */
+    char    *text[ANNO_N];
+    int32_t  type[ANNO_N];
+    uint8_t  head;            /* the oldest still kept */
+    uint8_t  count;
+} Annotation;
+
+Annotation *an_ctor(Annotation *a, void *analysis);
+int32_t     an_GetRomHandAnnoType(Annotation *a, const char *s);
+int32_t     an_Save(Annotation *a, char *text, int16_t len, int16_t at);
+const char *an_GetLastAnno(Annotation *a, int16_t before, int32_t type);
+void        an_Remove(Annotation *a);
+void        an_RemoveAfter(Annotation *a, int16_t after);
+int32_t     an_Flush(Annotation *a, int32_t escape, DynaBuf *out,
+                     int32_t dropPause);
+
 /* ---- RomUserDict ----------------------------------------------------- */
 
 /* The stored dictionary's own classes, which this shares with the engine's

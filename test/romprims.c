@@ -193,6 +193,23 @@ static Conv *makeConv(Param *p)
     ds_HandleError((d), (a), (w), (b), (o))
 #define NUM_JMD() dm_GetNumJMDPtr()
 
+#define ibm_anCtor(a, t)             an_ctor((Annotation *)(a), (t))
+#define ibm_anGetRomHandAnnoType(a, s) \
+    an_GetRomHandAnnoType((Annotation *)(a), (s))
+#define ibm_anSave(a, t, l, w)       an_Save((Annotation *)(a), (t), (l), (w))
+#define ibm_anGetLastAnno(a, b, t)   an_GetLastAnno((Annotation *)(a), (b), (t))
+#define ibm_anRemove(a)              an_Remove((Annotation *)(a))
+#define ibm_anRemoveAfter(a, w)      an_RemoveAfter((Annotation *)(a), (w))
+#define ibm_anFlush(a, e, o, p) \
+    an_Flush((Annotation *)(a), (e), (DynaBuf *)(o), (p))
+#define ANNO_ROOM   sizeof(Annotation)
+#define AN(name)    ibm_an##name
+#define ANNO_CTOR(a, t) ibm_anCtor((a), (t))
+#define BUF_NEW(n)  dynaBufNew(n)
+#define BUF_DEL(b)  dynaBufDelete((DynaBuf *)(b))
+#define BUF_STR(b)  dynaBufContents((DynaBuf *)(b))
+#define BUF_LEN(b)  dynaBufLength((DynaBuf *)(b))
+
 #define UD_DICT(u)  (*(void **)&((RomUserDict *)(u))->dict)
 
 #define ibm_udCtor(u, a)            rud_ctor((RomUserDict *)(u), (a))
@@ -598,6 +615,39 @@ extern THIS int16_t ibm_dsHandleError(void *d, int16_t at, int16_t written,
 extern const uint8_t *ibm_dmGetNumJMDPtr(void)
     MANGLED("?GetNumJMDPtr@DictMan@@SAPAEXZ");
 #define NUM_JMD() ibm_dmGetNumJMDPtr()
+
+/* Annotation, whose record is IBM's 0x50c and ours a struct of named fields,
+   so each side builds one with its own constructor. */
+#define IBM_ANNO_ROOM 0x50c
+
+extern THIS void *ibm_anCtor(void *a, void *analysis)
+    MANGLED("??0Annotation@@QAE@AAVTextAnalysis@@@Z");
+extern THIS int32_t ibm_anGetRomHandAnnoType(void *a, const char *s)
+    MANGLED("?GetRomHandAnnoType@Annotation@@QAE?AW4RomHandleAnnoType@@PBD@Z");
+extern THIS int32_t ibm_anSave(void *a, char *text, int16_t len, int16_t at)
+    MANGLED("?Save@Annotation@@QAEHPADFF@Z");
+extern THIS const char *ibm_anGetLastAnno(void *a, int16_t before,
+                                          int32_t type)
+    MANGLED("?GetLastAnno@Annotation@@QAEPBDFW4RomHandleAnnoType@@@Z");
+extern THIS void ibm_anRemove(void *a)
+    MANGLED("?Remove@Annotation@@QAEXXZ");
+extern THIS void ibm_anRemoveAfter(void *a, int16_t after)
+    MANGLED("?Remove@Annotation@@QAEXF@Z");
+extern THIS int32_t ibm_anFlush(void *a, int32_t escape, void *out,
+                                int32_t dropPause)
+    MANGLED("?Flush@Annotation@@QAEHHPAUDynaBuf@@H@Z");
+
+extern void *ibm_dynaBufNew(uint32_t n) MANGLED("_dynaBufNew");
+extern int ibm_dynaBufDelete(void *b)   MANGLED("_dynaBufDelete");
+extern char *ibm_dynaBufContents(void *b) MANGLED("_dynaBufContents");
+extern uint32_t ibm_dynaBufLength(void *b) MANGLED("_dynaBufLength");
+#define ANNO_ROOM   IBM_ANNO_ROOM
+#define AN(name)    ibm_an##name
+#define ANNO_CTOR(a, t) ibm_anCtor((a), (t))
+#define BUF_NEW(n)  ibm_dynaBufNew(n)
+#define BUF_DEL(b)  ibm_dynaBufDelete(b)
+#define BUF_STR(b)  ibm_dynaBufContents(b)
+#define BUF_LEN(b)  ibm_dynaBufLength(b)
 
 /* IBM's two rule tables are declared for the sweep above already; the
    English rules want them as one struct rather than as its first field. */
@@ -2869,6 +2919,134 @@ static void sweepDictionaries(void)
                     putEntries("herr", which * 10 + sp, rc);
                 }
             }
+        }
+    }
+
+    /* And the annotations, which ride along with the text rather than being
+       part of it. A ring of 128, so the sweep fills it past its bound as well
+       as under: what a hundred and twenty-ninth does is IBM's answer and not
+       an opinion of mine. */
+    {
+        static const char *const ANNOS[] = {
+            "`ts h", "`ui 4242", "`g", "`i2", "`p100", "`vv692", "`0",
+            "plain", "", "`t", "`u", "`ui", "`ts", "`gg", "`ii", "`pp",
+            NULL
+        };
+        static char an_room[0x600];
+        void  *an = an_room;
+        long   k;
+        int    esc;
+        int    drop;
+
+        /* One at a time, and what each is taken for. */
+        for (k = 0; ANNOS[k] != NULL; k++) {
+            memset(an_room, 0, sizeof an_room);
+            ANNO_CTOR(an, ta_block);
+            printf("DA kind %ld %d\n", k,
+                   (int)AN(GetRomHandAnnoType)(an, ANNOS[k]));
+        }
+
+        /* Saved in order, read back, and given up from each end. */
+        for (k = 0; k <= 4; k++) {
+            long m;
+
+            memset(an_room, 0, sizeof an_room);
+            ANNO_CTOR(an, ta_block);
+            for (m = 0; ANNOS[m] != NULL; m++)
+                printf("DA save %ld %ld rc %d\n", k, m,
+                       (int)AN(Save)(an, (char *)ANNOS[m],
+                                     (int16_t)strlen(ANNOS[m]),
+                                     (int16_t)(m * 2)));
+            for (m = 0; m < 3; m++)
+                for (j = 0; j < 40; j += 7) {
+                    const char *got = AN(GetLastAnno)(an, (int16_t)j,
+                                                      (int32_t)m);
+
+                    printf("DA last %ld %ld %d ", k, m, j);
+                    putBytes(got);
+                    putchar('\n');
+                }
+            for (m = 0; m < k; m++)
+                AN(Remove)(an);
+            printf("DA after remove %ld ", k);
+            for (j = 0; j < 6; j++) {
+                const char *got = AN(GetLastAnno)(an, 99, 2);
+
+                putBytes(got);
+                putchar(' ');
+                if (got == NULL)
+                    break;
+                AN(Remove)(an);
+            }
+            putchar('\n');
+        }
+
+        /* Giving up everything past a position. */
+        for (k = 0; k <= 40; k += 4) {
+            long m;
+
+            memset(an_room, 0, sizeof an_room);
+            ANNO_CTOR(an, ta_block);
+            for (m = 0; ANNOS[m] != NULL; m++)
+                AN(Save)(an, (char *)ANNOS[m], (int16_t)strlen(ANNOS[m]),
+                         (int16_t)(m * 2));
+            AN(RemoveAfter)(an, (int16_t)k);
+            printf("DA cut %ld ", k);
+            for (m = 0; m < 20; m++) {
+                const char *got = AN(GetLastAnno)(an, 99, 2);
+
+                if (got == NULL)
+                    break;
+                putBytes(got);
+                putchar(' ');
+                AN(Remove)(an);
+            }
+            putchar('\n');
+        }
+
+        /* And written out, with each of the two flags both ways. */
+        for (esc = 0; esc < 2; esc++)
+            for (drop = 0; drop < 2; drop++) {
+                void *buf;
+                long  m;
+
+                memset(an_room, 0, sizeof an_room);
+                ANNO_CTOR(an, ta_block);
+                for (m = 0; ANNOS[m] != NULL; m++)
+                    AN(Save)(an, (char *)ANNOS[m],
+                             (int16_t)strlen(ANNOS[m]), (int16_t)(m * 2));
+                buf = BUF_NEW(4096);
+                printf("DA flush %d %d rc %d len %d ", esc, drop,
+                       (int)AN(Flush)(an, (int32_t)esc, buf, (int32_t)drop),
+                       (int)BUF_LEN(buf));
+                putBytes(BUF_STR(buf));
+                putchar('\n');
+                BUF_DEL(buf);
+            }
+
+        /* Past the ring's bound, which nothing checks. */
+        {
+            long m;
+
+            memset(an_room, 0, sizeof an_room);
+            ANNO_CTOR(an, ta_block);
+            for (m = 0; m < 140; m++) {
+                char one[16];
+
+                sprintf(one, "`u%ld", m);
+                AN(Save)(an, one, (int16_t)strlen(one), (int16_t)m);
+            }
+            printf("DA over ");
+            for (m = 0; m < 8; m++) {
+                const char *got = AN(GetLastAnno)(an, 999, 2);
+
+                if (got == NULL)
+                    break;
+                putBytes(got);
+                putchar(' ');
+                AN(Remove)(an);
+            }
+            putchar('\n');
         }
     }
 
