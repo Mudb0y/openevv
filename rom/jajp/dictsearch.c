@@ -4,7 +4,7 @@
  * the input into candidate words with readings, and everything above it
  * chooses between what it produced. IBM spreads it over seven objects --
  * dictsearch, dictapi, fdictapi, kanastr, engread, numanal and phrasetable --
- * and sixty-two methods; thirty-three of them are here.
+ * and sixty-two methods; thirty-seven of them are here.
  *
  * The count is worth stating carefully, because it was wrong for three
  * commits. Reading only the first four objects gives sixty-four symbols, but
@@ -2224,4 +2224,356 @@ int16_t ds_LookupFuncWordDict(void *d, int16_t base, int16_t at)
         }
     }
     return found;
+}
+
+/* ---- English spelling into romaji ------------------------------------ */
+
+/* This is engread.obj, and it is the one part of DictSearch that is not a
+ * dictionary at all. An English word written in the text has no entry
+ * anywhere -- a Japanese dictionary cannot hold English -- so it is spelled
+ * out by rule instead: a table of substitutions turns the letters into romaji,
+ * a second table turns the romaji into kana codes, and what falls out is a
+ * reading the rest of the analyser can use like any other.
+ *
+ * A rule is five parallel arrays with one entry each: what to match, what to
+ * put in its place, what to leave behind for the next pass to see, and two
+ * that say where the accent goes. The position arrays give each entry's start,
+ * so an entry's length is the next start less its own -- which is why every
+ * loop here reads two of them.
+ *
+ * Three characters in a rule are not literal. `!' anchors the match to the end
+ * of the word; `@' matches any consonant and remembers which; `*' marks, in
+ * the replacement, where the accent may fall.
+ */
+
+/* The consonants `@' stands for, and the end of the word, which it also
+   matches. */
+static const char ENG_CONSONANTS[] = "bcdfgjklmnpstvz#";
+
+/* What a rule may not exceed, and the sentinel in front of the word so that a
+   rule matching at the start has something to look back at. */
+#define ENG_MOST        0x1b
+#define ENG_GUARD       '%'
+
+/* Every letter uppercased, which is what a word that does not look like
+   English gets instead of the rules: spelled out letter by letter. */
+int16_t ds_EngRulesUppercase(void *d, const uint8_t *in, uint8_t *out)
+{
+    int16_t i = 0;
+    int16_t o = 0;
+
+    (void)d;
+    while (in[i] != '#') {
+        if (in[i] >= 'a' && in[i] <= 'z')
+            out[o++] = (uint8_t)(in[i] - 0x20);
+        else
+            out[o++] = in[i];
+        i++;
+    }
+    out[o++] = '#';
+    out[o++] = '#';
+    return 0;
+}
+
+/* Every letter lowercased, and a judgement on whether the word is English at
+ * all.
+ *
+ * Four things say it is not: no vowel in a word longer than three letters, no
+ * vowel at all in a short one, a capital in the middle of a word of four or
+ * fewer, and a word of one letter. Any of them answers six, which is what
+ * makes the caller spell it out instead. `y' counts as half a vowel -- enough
+ * for a short word, not enough for a long one. */
+int16_t ds_EngRulesNormalize(void *d, const uint8_t *in, uint8_t *out)
+{
+    int16_t i = 0;
+    int16_t o = 0;
+    int16_t vowel = 0;
+    int16_t midCap = 0;
+    int16_t rc = 0;
+
+    (void)d;
+    while (in[i] != '#') {
+        uint8_t c;
+
+        if (in[i] >= 'A' && in[i] <= 'Z') {
+            if (o != 0)
+                midCap = 1;
+            out[o++] = (uint8_t)(in[i] + 0x20);
+            i++;
+        } else {
+            out[o++] = in[i];
+            i++;
+        }
+        c = out[o - 1];
+        if (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u')
+            vowel = 2;
+        if (c == 'y' && vowel == 0)
+            vowel = 1;
+    }
+
+    if (o > 3 && vowel != 2)
+        rc = 6;
+    if (o <= 3 && vowel == 0)
+        rc = 6;
+    if (o <= 4 && midCap == 1)
+        rc = 6;
+    if (o == 1)
+        rc = 6;
+
+    out[o++] = '#';
+    out[o++] = '#';
+    return rc;
+}
+
+/* Run one table of substitutions over a word.
+ *
+ * The word is walked from the left, and at each position every rule is tried
+ * in turn until one matches. What the rule says to put in its place is
+ * appended to the output, what it says to leave behind is written back over
+ * the input so the next position sees it, and the walk moves on by however
+ * much the match consumed less what was left behind.
+ *
+ * The accent is carried along beside it. A rule may name a weight and a way of
+ * choosing: minus one takes the last place a vowel was seen, nought takes the
+ * place this rule's own star marked, and one carries the weight forward to the
+ * next rule instead of settling anything. The heaviest rule wins, and a tie is
+ * broken in favour of the later one only above a weight of eight.
+ *
+ * Answers nought, twenty for a word longer than the buffer, or sixteen where
+ * no rule matched at all. */
+int16_t ds_EngRulesApplyRule(void *d, const uint8_t *in, uint8_t *out,
+                             DictManRules *r, int16_t *accent)
+{
+    const int16_t *fromPos = (const int16_t *)r->fromPos;
+    const int16_t *toPos = (const int16_t *)r->toPos;
+    const int16_t *remainPos = (const int16_t *)r->remainPos;
+    const int16_t *accentValue = (const int16_t *)r->accentValue;
+    const int16_t *accentPos = (const int16_t *)r->accentPos;
+    uint8_t  buf[128];
+    uint8_t  tail[80];
+    uint8_t  capture = 0;
+    int16_t  i = 0;
+    int16_t  o = 0;
+    int16_t  tailLen = 0;
+    int16_t  len;
+    int16_t  best = 0;
+    int16_t  carry = 0;
+    int16_t  where = -1;
+    int16_t  lastVowel = -1;
+    int16_t  matched = 0;
+    int16_t  j;
+
+    (void)d;
+    buf[0] = ENG_GUARD;
+    while (in[i] != '#') {
+        buf[i + 1] = in[i];
+        i++;
+        if (i == ENG_MOST)
+            return 0x14;
+    }
+    len = (int16_t)(i + 1);
+    buf[i + 1] = '#';
+    buf[i + 2] = '#';
+
+    i = 0;
+    while (buf[i] != '#') {
+        int16_t rule;
+
+        matched = 0;
+        for (rule = 0; rule < (int16_t)r->count - 1 && !matched; rule++) {
+            int16_t flen = (int16_t)(fromPos[rule + 1] - fromPos[rule]);
+            int16_t saved = i;
+            int16_t tlen;
+            int16_t star = 0;
+            int16_t starAt = -1;
+
+            matched = 1;
+
+            /* An anchored rule matches against the end of the word rather
+               than against where the walk has got to. */
+            if (r->from[fromPos[rule]] == '!' && len > flen)
+                i = (int16_t)(len - flen + 1);
+
+            for (j = 0; j < flen; j++) {
+                uint8_t c = r->from[fromPos[rule] + j];
+
+                if (c == '@') {
+                    uint8_t k = buf[i + j];
+
+                    if (strchr(ENG_CONSONANTS, (int)k) != NULL && k != 0)
+                        capture = k;
+                    else
+                        matched = 0;
+                } else if (c != buf[i + j] && c != '!') {
+                    matched = 0;
+                }
+            }
+            i = saved;
+            if (matched != 1)
+                continue;
+
+            if (r->from[fromPos[rule]] == '!') {
+                /* The word ends here: cut it short and keep the replacement
+                   to be laid down last of all, after everything in front. */
+                len = (int16_t)(len - (flen - 2));
+                buf[len] = '#';
+                buf[len + 1] = '#';
+                tlen = (int16_t)(toPos[rule + 1] - toPos[rule]);
+                for (j = 1; j < tlen; j++)
+                    tail[tailLen++] = r->to[toPos[rule + 1] - j];
+                goto leave;
+            }
+
+            if (i - 1 <= *accent && *accent < i + flen - 1)
+                where = o;
+            i = (int16_t)(i + flen);
+
+            tlen = (int16_t)(toPos[rule + 1] - toPos[rule]);
+            for (j = 0; j < tlen; j++) {
+                uint8_t c = r->to[toPos[rule] + j];
+
+                if (c == '*') {
+                    starAt = (int16_t)(o - 1);
+                    star = 1;
+                } else {
+                    out[o++] = c;
+                }
+            }
+
+            if (accentValue[rule] != 0) {
+                /* No star of its own: the last vowel it wrote will do. */
+                if (starAt == -1)
+                    for (j = 0; j < tlen; j++) {
+                        uint8_t c = out[o - j - 1];
+
+                        if (c == 'a' || c == 'i' || c == 'u' || c == 'e'
+                            || c == 'o') {
+                            starAt = (int16_t)(o - j - 1);
+                            star = 1;
+                        }
+                    }
+
+                if (star == 1 || r->accentPos != NULL) {
+                    int16_t w = accentValue[rule];
+
+                    if (carry > w)
+                        w = carry;
+                    if (w > best || (w == best && w > 8)) {
+                        best = w;
+                        switch (accentPos[rule]) {
+                        case -1: where = lastVowel; carry = 0; break;
+                        case 0:  where = starAt;    carry = 0; break;
+                        case 1:  carry = accentValue[rule]; break;
+                        default: break;
+                        }
+                    }
+                }
+            }
+            if (starAt != -1)
+                lastVowel = starAt;
+
+        leave:
+            /* And what the rule leaves behind, written back over the input so
+               that the next position sees it. */
+            {
+                int16_t rlen = (int16_t)(remainPos[rule + 1]
+                                         - remainPos[rule]);
+
+                i = (int16_t)(i - rlen);
+                for (j = 0; j < rlen; j++) {
+                    uint8_t c = r->remain[remainPos[rule] + j];
+
+                    buf[i + j] = c == '@' ? capture : c;
+                }
+            }
+        }
+        if (matched == 0)
+            return 0x10;
+    }
+
+    for (j = 0; j < tailLen; j++)
+        out[o++] = tail[tailLen - j - 1];
+    out[o++] = '#';
+    out[o++] = '#';
+    *accent = where;
+    return 0;
+}
+
+/* An English word as the engine's own kana codes.
+ *
+ * Three passes: lowercase it and decide whether it is English at all, then the
+ * letters into romaji, then the romaji into kana. What the last pass leaves is
+ * three characters per kana -- a row, a column and an accent -- and this turns
+ * each triple into the one byte a reading is made of.
+ *
+ * The `$' in an accent position means the same as the one before it, which is
+ * substituted in place before the switch reads it; the switch has a case for
+ * `$' all the same, and it can only be reached where the previous one was a
+ * `$' as well. IBM's, and left as it is. */
+int16_t ds_EngRulesConvert(void *d, const uint8_t *in, uint8_t *out,
+                           DictManRules *eng, DictManRules *kana,
+                           int16_t *outLen, int16_t *count)
+{
+    uint8_t lower[128];
+    uint8_t roman[256];
+    uint8_t kanaBuf[256];
+    uint8_t prev = 0;
+    int16_t rc;
+    int16_t k;
+
+    *count = -1;
+
+    rc = ds_EngRulesNormalize(d, in, lower);
+    if (rc == 6)
+        rc = ds_EngRulesUppercase(d, in, lower);
+    if (rc > 0)
+        return rc;
+
+    rc = ds_EngRulesApplyRule(d, lower, roman, eng, count);
+    if (rc > 0)
+        return rc;
+    rc = ds_EngRulesApplyRule(d, roman, kanaBuf, kana, count);
+    if (rc > 0)
+        return rc;
+
+    *outLen = 0;
+    for (k = 0; kanaBuf[k] != '#'; k = (int16_t)(k + 3)) {
+        uint8_t v;
+        int32_t column;
+
+        switch (kanaBuf[k]) {
+        case '0': v = 0x00; break;
+        case '1': v = 0x50; break;
+        case '2': v = 0xa0; break;
+        case '3': v = 0xf0; break;
+        default:  return 0x10;
+        }
+
+        column = kanaBuf[k + 1] - '0';
+        if ((uint32_t)column > 9)
+            return 0x10;
+        v = (uint8_t)(v + column * 8);
+
+        if (kanaBuf[k + 2] == '$')
+            kanaBuf[k + 2] = prev;
+        switch (kanaBuf[k + 2]) {
+        case '0': break;
+        case '1': v = (uint8_t)(v + 1); break;
+        case '2': v = (uint8_t)(v + 2); break;
+        case '3': v = (uint8_t)(v + 3); break;
+        case '4': v = (uint8_t)(v + 4); break;
+        case '5': v = (uint8_t)(v + 5); break;
+        case '6': v = (uint8_t)(v + 6); break;
+        case '7': v = (uint8_t)(v + 7); break;
+        case '$': v = (uint8_t)(v + prev); break;
+        default:  return 0x10;
+        }
+        prev = kanaBuf[k + 2];
+
+        out[*outLen] = v;
+        (*outLen)++;
+    }
+
+    *count = (int16_t)(*count / 3 + 1);
+    return 0;
 }

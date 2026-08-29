@@ -168,6 +168,16 @@ static Conv *makeConv(Param *p)
     ds_LookupFuncWordDict((d), (b), (a))
 #define FUNC_DICT() dm_GetFuncDictEx()
 
+#define ibm_dsEngRulesUppercase(d, i, o) ds_EngRulesUppercase((d), (i), (o))
+#define ibm_dsEngRulesNormalize(d, i, o) ds_EngRulesNormalize((d), (i), (o))
+#define ibm_dsEngRulesApplyRule(d, i, o, r, a) \
+    ds_EngRulesApplyRule((d), (i), (o), (DictManRules *)(r), (a))
+#define ibm_dsEngRulesConvert(d, i, o, e, k, l, c) \
+    ds_EngRulesConvert((d), (i), (o), (DictManRules *)(e), \
+                       (DictManRules *)(k), (l), (c))
+#define ENG_RULES  ((void *)&dm_EngToRomanRule)
+#define KANA_RULES ((void *)&dm_RomanToKanaRule)
+
 #define UD_DICT(u)  (*(void **)&((RomUserDict *)(u))->dict)
 
 #define ibm_udCtor(u, a)            rud_ctor((RomUserDict *)(u), (a))
@@ -533,6 +543,26 @@ extern THIS int16_t ibm_dsLookupFuncWordDict(void *d, int16_t base,
 extern const uint8_t *ibm_dmGetFuncDictEx(void)
     MANGLED("?GetFuncDictEx@DictMan@@SAPAEXZ");
 #define FUNC_DICT() ibm_dmGetFuncDictEx()
+
+extern THIS int16_t ibm_dsEngRulesUppercase(void *d, const uint8_t *in,
+                                            uint8_t *out)
+    MANGLED("?EngRulesUppercase@DictSearch@@QAEFPBEPAE@Z");
+extern THIS int16_t ibm_dsEngRulesNormalize(void *d, const uint8_t *in,
+                                            uint8_t *out)
+    MANGLED("?EngRulesNormalize@DictSearch@@QAEFPBEPAE@Z");
+extern THIS int16_t ibm_dsEngRulesApplyRule(void *d, const uint8_t *in,
+                                            uint8_t *out, void *r,
+                                            int16_t *accent)
+    MANGLED("?EngRulesApplyRule@DictSearch@@QAEFPBEPAEPAU_rules@@PAF@Z");
+extern THIS int16_t ibm_dsEngRulesConvert(void *d, const uint8_t *in,
+                                          uint8_t *out, void *eng, void *kana,
+                                          int16_t *outLen, int16_t *count)
+    MANGLED("?EngRulesConvert@DictSearch@@QAEFPBEPAEPAU_rules@@2PAF3@Z");
+
+/* IBM's two rule tables are declared for the sweep above already; the
+   English rules want them as one struct rather than as its first field. */
+#define ENG_RULES  ((void *)ibm_EngToRomanRule)
+#define KANA_RULES ((void *)ibm_RomanToKanaRule)
 
 extern const uint16_t ibm_s_nNormal MANGLED("?s_nNormal@StaticDict@@2GB");
 extern const uint16_t ibm_s_nTankan MANGLED("?s_nTankan@StaticDict@@2GB");
@@ -2539,6 +2569,118 @@ static void sweepDictionaries(void)
                                                 + j * DS_ENTRY_SIZE),
                               DS_ENTRY_SIZE);
             }
+    }
+
+    /* And the English rules, which are not a dictionary at all: an English
+       word in the text has no entry anywhere, so it is spelled out by two
+       tables of substitutions instead. Every one, two and three letter word
+       there is goes through all four methods -- eighteen thousand of them,
+       which is the whole of what three letters can spell -- and a list of
+       real words after them for the shapes only a longer word has. */
+    {
+        static const char *const WORDS[] = {
+            "abandon", "abbey", "computer", "internet", "voice", "viavoice",
+            "Japan", "JAPAN", "japanese", "rhythm", "strength", "queue",
+            "yacht", "gnome", "knight", "psalm", "xylophone", "zzz",
+            "AbleCat", "aB", "A", "a", "y", "yy", "myth", "sky", "by",
+            "eye", "aeiou", "bcdfg", "e", "I", "IBM", "ibm", "aBcd",
+            /* Words chosen out of the rule tables rather than out of the
+               head. Three roads through the rules were unreachable from
+               ordinary short words, and the tables say exactly which rules
+               they need: the thirteen whose replacement carries a star, the
+               twenty anchored to the end of a word, and the eight that weigh
+               exactly eight and so decide a tie. One word per rule. */
+            "school", "president", "presume", "accuse", "bread", "create",
+            "friend", "great", "swum", "quarter", "quality", "quantity",
+            "identity",
+            "basically", "totally", "helpless", "kindness", "woman", "women",
+            "salesman", "salesmen", "carefully", "quickly", "lifelike",
+            "careful", "movement", "movements", "friendship", "handsome",
+            "childhood",
+            "criticism", "artist", "musician", "fashion", "vision", "mission",
+            "question", "nation",
+            NULL
+        };
+        long a;
+        long b;
+        long c;
+        int  w;
+
+        for (w = 0; WORDS[w] != NULL; w++) {
+            uint8_t in[64];
+            uint8_t o1[256];
+            uint8_t o2[256];
+            uint8_t o3[256];
+            int16_t acc = -1;
+            int16_t len = -1;
+            int16_t cnt = -1;
+            size_t  n = strlen(WORDS[w]);
+
+            memcpy(in, WORDS[w], n);
+            in[n] = '#';
+            in[n + 1] = '#';
+            in[n + 2] = 0;
+
+            memset(o1, 0, sizeof o1);
+            printf("DE upper %d rc %d ", w,
+                   (int)DS(EngRulesUppercase)(ds_block, in, o1));
+            putBytes((const char *)o1);
+            memset(o2, 0, sizeof o2);
+            printf(" | norm rc %d ",
+                   (int)DS(EngRulesNormalize)(ds_block, in, o2));
+            putBytes((const char *)o2);
+            memset(o3, 0, sizeof o3);
+            acc = -1;
+            printf(" | rule rc %d acc ",
+                   (int)DS(EngRulesApplyRule)(ds_block, o2, o3, ENG_RULES,
+                                              &acc));
+            printf("%d ", (int)acc);
+            putBytes((const char *)o3);
+            putchar('\n');
+
+            memset(o3, 0, sizeof o3);
+            len = -1;
+            cnt = -1;
+            printf("DE conv %d rc %d len %d cnt %d", w,
+                   (int)DS(EngRulesConvert)(ds_block, in, o3, ENG_RULES,
+                                            KANA_RULES, &len, &cnt),
+                   (int)len, (int)cnt);
+            for (j = 0; j < 24; j++)
+                printf(" %02x", (unsigned)o3[j]);
+            putchar('\n');
+        }
+
+        /* Every word of one, two and three letters. */
+        for (a = 'a'; a <= 'z'; a++)
+            for (b = 'a' - 1; b <= 'z'; b++)
+                for (c = 'a' - 1; c <= 'z'; c++) {
+                    uint8_t in[8];
+                    uint8_t out[256];
+                    int16_t len = -1;
+                    int16_t cnt = -1;
+                    int     n = 0;
+                    int     rc;
+
+                    if (b < 'a' && c >= 'a')
+                        continue;
+                    in[n++] = (uint8_t)a;
+                    if (b >= 'a')
+                        in[n++] = (uint8_t)b;
+                    if (c >= 'a')
+                        in[n++] = (uint8_t)c;
+                    in[n] = '#';
+                    in[n + 1] = '#';
+                    in[n + 2] = 0;
+
+                    memset(out, 0, sizeof out);
+                    rc = DS(EngRulesConvert)(ds_block, in, out, ENG_RULES,
+                                             KANA_RULES, &len, &cnt);
+                    printf("DE w %.*s rc %d len %d cnt %d", n, (char *)in,
+                           rc, (int)len, (int)cnt);
+                    for (j = 0; j < 16; j++)
+                        printf(" %02x", (unsigned)out[j]);
+                    putchar('\n');
+                }
     }
 
     printf("DD done\n");

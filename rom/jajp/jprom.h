@@ -276,7 +276,7 @@ void      ju_TableFree(uint16_t *used, uint16_t *tail, uint16_t *freeHead,
 
 /* ---- DictSearch ------------------------------------------------------ */
 
-/* The class the rest of the analyser leans on. Thirty-three of its sixty-two
+/* The class the rest of the analyser leans on. Thirty-seven of its sixty-two
    methods are written; rom/jajp/dictsearch.h maps the record and says which
    parts of it are understood, and rom/jajp/dictsearch.c says why the layout
    here is IBM's rather than ours. The block is passed as bytes because the
@@ -334,6 +334,13 @@ int16_t ds_SearchFuncWordDict(void *d, const uint8_t *vec, int16_t at,
                               int16_t slot, const uint8_t *dict,
                               int16_t flag);
 int16_t ds_LookupFuncWordDict(void *d, int16_t base, int16_t at);
+int16_t ds_EngRulesUppercase(void *d, const uint8_t *in, uint8_t *out);
+int16_t ds_EngRulesNormalize(void *d, const uint8_t *in, uint8_t *out);
+int16_t ds_EngRulesApplyRule(void *d, const uint8_t *in, uint8_t *out,
+                             DictManRules *r, int16_t *accent);
+int16_t ds_EngRulesConvert(void *d, const uint8_t *in, uint8_t *out,
+                           DictManRules *eng, DictManRules *kana,
+                           int16_t *outLen, int16_t *count);
 
 /* TextAnalysis's, and here because it is in IBM's dictsearch object. */
 void    ta_AddLongWord(void *t, uint8_t *word, int16_t n);
