@@ -23,7 +23,7 @@ displacement is negative and cannot be mistaken for one. From every other object
 in the module, every offset larger than the widest thing the analyser allocates
 besides this one -- past that, a field can only be TextAnalysis's.
 
-usage: rom-offsets.py [textanalysis|dictsearch]
+usage: rom-offsets.py [textanalysis|dictsearch|inputchar]
 """
 
 import os
@@ -47,14 +47,16 @@ def run(*args):
                           check=True).stdout
 
 
-def defines(path):
+def defines(paths):
+    """Every name a header gives a number to. More than one may be named: a
+    header that maps one class may include the header of another it reads."""
     out = {}
-    for line in open(path):
-        m = DEFINE.match(line)
-        if m:
-            out[m.group(1)] = int(m.group(2), 0)
+    for path in paths:
+        for line in open(path):
+            m = DEFINE.match(line)
+            if m:
+                out[m.group(1)] = int(m.group(2), 0)
     return out
-
 
 def regions(d):
     """Every named region as (first, last, name). A region is a single field,
@@ -146,6 +148,37 @@ def regions_ds(d):
     return [(at, at + n - 1, name) for at, n, name in r]
 
 
+def regions_ic(d):
+    """And for InputChar, which is mapped whole. The three arrays are the
+    record: everything else is one field or a span nobody has read."""
+    r = [
+        (d["IC_OWNER"], 4, "the analysis"),
+        (d["IC_TEXT"], d["IC_TEXT_N"] * 2, "the characters"),
+        (d["IC_SCRATCH"], d["IC_SCRATCH_N"] * 2, "the collecting scratch"),
+        (d["IC_KIND"], d["IC_TEXT_N"] * 4, "what each character is"),
+        (d["IC_OFFSET"], d["IC_TEXT_N"] * 2, "where each one starts"),
+        (d["IC_SPARE_1C20"], 4, "the word set to minus one"),
+        (d["IC_MARK"], d["IC_TEXT_N"] * 4, "what a candidate carries away"),
+        (d["IC_COUNT"], 4, "how many characters there are"),
+        (d["IC_POS"], 4, "the byte reached"),
+        (d["IC_READ"], 4, "the field cleared when text is set"),
+        (d["IC_TEXTP"], 4, "the text"),
+        (d["IC_SPARE_278C"], 4, "the word the constructor clears"),
+        (d["IC_SPARE_2790"], 4, "the first word Init clears"),
+        (d["IC_SPARE_2794"], 4, "the second"),
+        (d["IC_UNREAD_2798"], 4, "the word nobody has read"),
+        (d["IC_W_279C"], 2, "the half word Init clears"),
+        (d["IC_SPARE_279E"], 4, "the four bytes the constructor clears"),
+        (d["IC_UNREAD_27A2"], 2, "the half word nobody has read"),
+        (d["IC_SPARE_27A4"], 4, "the third word Init clears"),
+        (d["IC_AT_END"], 4, "the end flag"),
+        (d["IC_SNLK_TABLE"], 4, "the table chain"),
+        (d["IC_LENGTH"], 4, "how many characters came before"),
+        (d["IC_SPARE_27B4"], 4, "the last word the constructor clears"),
+    ]
+    return [(at, at + n - 1, name) for at, n, name in r]
+
+
 # Which objects hold a class's own code -- a class may be spread over
 # several, and DictSearch is spread over four -- the header that maps it, the
 # region table, and the three names the checker needs out of that header: how
@@ -153,12 +186,16 @@ def regions_ds(d):
 # and the size of the widest thing that could be mistaken for it when sweeping
 # the rest of the module. That last one is None where nothing else is close.
 CLASSES = {
-    "textanalysis": (["txtanal.obj"], "txtanal.h", regions, "TA_BYTES",
+    "textanalysis": (["txtanal.obj"], ["txtanal.h", "inputchar.h"],
+                     regions, "TA_BYTES",
                      "TA_MARKS", "TA_PHRASEBUF_BYTES"),
     "dictsearch": (["dictsearch.obj", "dictapi.obj", "fdictapi.obj",
                     "kanastr.obj", "engread.obj", "numanal.obj",
-                    "phrasetable.obj"], "dictsearch.h", regions_ds,
+                    "phrasetable.obj"], ["dictsearch.h", "inputchar.h"],
+                   regions_ds,
                    "DS_BYTES", "DS_FZK", None),
+    "inputchar": (["inputchar.obj"], ["inputchar.h"], regions_ic,
+                  "IC_BYTES", "IC_OWNER", None),
 }
 
 
@@ -167,12 +204,12 @@ def main(argv):
     if which not in CLASSES:
         print("rom-offsets: no map of %s" % which)
         return 2
-    objnames, headname, regionsOf, sizeName, floorName, wideName = \
+    objnames, headnames, regionsOf, sizeName, floorName, wideName = \
         CLASSES[which]
     where = os.path.join(ROOT, "analysis", "jajp")
     objs = [os.path.join(where, n) for n in objnames]
-    head = os.path.join(ROOT, "rom", "jajp", headname)
-    d = defines(head)
+    heads = [os.path.join(ROOT, "rom", "jajp", n) for n in headnames]
+    d = defines(heads)
     named = regionsOf(d)
 
     def offsets(path):

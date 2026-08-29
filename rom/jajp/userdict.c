@@ -397,9 +397,11 @@ int32_t rud_writeData(RomUserDict *u, UserDictData *d, int16_t slot,
  * entry.
  *
  * When DictSearch is in its second mode there is a context to satisfy as
- * well: the entry's first two yomi codes and its written form have to be the
- * ones that context names. Answers how many entries were written, or minus
- * one when there was no room to ask. */
+ * well. That context is a _SNLK_TABLE -- a reading the caller gave for this
+ * very stretch of text, which rom/jajp/inputchar.h is the record of -- and
+ * what has to match is how many characters its written form has, how many
+ * yomi codes its reading is, and the written form itself. Answers how many
+ * entries were written, or minus one when there was no room to ask. */
 int16_t rud_lookup(RomUserDict *u, uint8_t *text, int16_t at, int16_t slot)
 {
     Key          key;
@@ -428,9 +430,10 @@ int16_t rud_lookup(RomUserDict *u, uint8_t *text, int16_t at, int16_t slot)
         if (DS_L(u->search, DS_USERDICT_MODE) == 1) {
             uint8_t *value = (uint8_t *)found[i].value;
 
-            if (value[0] != context[0x10] || value[1] != context[0x11])
+            if (value[0] != context[SN_CHARS]
+                || value[1] != context[SN_YOMI_N])
                 continue;
-            if (strcmp(found[i].word, *(char **)(context + 4)) != 0)
+            if (strcmp(found[i].word, *(char **)(context + SN_KEY_AT)) != 0)
                 continue;
         }
         if (rud_writeData(u, (UserDictData *)found[i].value, slot, at)) {

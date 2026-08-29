@@ -140,11 +140,10 @@
 /* ---- what the sub-objects hold that this class reads ----------------- */
 
 /* Offsets into InputChar that TextAnalysis reads directly rather than through
-   a call. Its own file will name them properly; they are here because the
-   checker sees them on a different base and would otherwise flag them. */
-#define IC_SNLK_TABLE   0x027ac   /* the chain of _SNLK_TABLE entries */
-#define IC_AT_END       0x027a8   /* what IsEndOfInput answers */
-#define IC_LENGTH       0x027b0   /* int16 */
+   a call. rom/jajp/inputchar.h names the whole of that record; it is included
+   because the checker sees those offsets on a different base and would
+   otherwise flag them. */
+#include "inputchar.h"
 
 /* And into DictSearch. */
 #define DS_COUNT        0x080ac   /* int16, what SetNextPhraseBuffer reads */

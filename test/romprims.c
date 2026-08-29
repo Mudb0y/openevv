@@ -234,6 +234,26 @@ static Conv *makeConv(Param *p)
                      (v), (m), (p))
 
 #define UD(name) ibm_ud##name
+
+#define ibm_icCtor(in, t)            ic_ctor((in), (t))
+#define ibm_icInit(in)               ic_Init((in))
+#define ibm_icSetText(in, s)         ic_SetText((in), (s))
+#define ibm_icSetTextAt(in, s, a)    ic_SetTextAt((in), (s), (a))
+#define ibm_icGetNextChar(in)        ic_GetNextChar((in))
+#define ibm_icIsAnnotationsInText(in) ic_IsAnnotationsInText((in))
+#define ibm_icAddSnlkTable(in, a, w, r, f) \
+    ic_AddSnlkTable((in), (a), (w), (r), (f))
+#define ibm_icGetSnlkTableAt(in, a)  ic_GetSnlkTableAt((in), (a))
+#define ibm_icDeleteSnlkTable(in)    ic_DeleteSnlkTable((in))
+#define ibm_icGetUnknownKanji(in, a, f, t) \
+    ic_GetUnknownKanji((in), (a), (f), (t))
+
+#define IC(name) ibm_ic##name
+
+/* The field isAnnotationsInText answers with. Nothing writes it, so the sweep
+   does; it is IBM's sixteenth byte and our own struct's named member, which
+   are not the same place once a pointer is eight bytes wide. */
+#define PARAM_ANNO(p) (((RomInstParam *)(p))->inputType)
 #define UD_ROOM  sizeof(RomUserDict)
 
 #define DS(name) ibm_ds##name
@@ -702,6 +722,36 @@ extern THIS int32_t ibm_udLookupDictExt(void *u, void *list, int32_t which,
             "W4ECIPartOfSpeech@@@Z");
 
 #define UD(name) ibm_ud##name
+
+/* InputChar, whose record is IBM's on both sides, so each side is handed the
+   same block of bytes and only the three pointers in it sit elsewhere. */
+extern THIS void *ibm_icCtor(void *in, void *analysis)
+    MANGLED("??0InputChar@@QAE@AAVTextAnalysis@@@Z");
+extern THIS void ibm_icInit(void *in)
+    MANGLED("?Init@InputChar@@QAEXXZ");
+extern THIS void ibm_icSetText(void *in, const char *text)
+    MANGLED("?SetText@InputChar@@QAEXPBD@Z");
+extern THIS void ibm_icSetTextAt(void *in, const char *text, uint32_t at)
+    MANGLED("?SetText@InputChar@@QAEXPBDK@Z");
+extern THIS uint8_t ibm_icGetNextChar(void *in)
+    MANGLED("?GetNextChar@InputChar@@QAEEXZ");
+extern THIS int32_t ibm_icIsAnnotationsInText(void *in)
+    MANGLED("?IsAnnotationsInText@InputChar@@QAEHXZ");
+extern THIS int32_t ibm_icAddSnlkTable(void *in, int16_t at,
+                                       const char *written,
+                                       const char *reading, int32_t flag)
+    MANGLED("?AddSnlkTable@InputChar@@QAEHFPBD0H@Z");
+extern THIS void *ibm_icGetSnlkTableAt(void *in, int16_t at)
+    MANGLED("?GetSnlkTableAt@InputChar@@QAEPAU_SNLK_TABLE@@F@Z");
+extern THIS void ibm_icDeleteSnlkTable(void *in)
+    MANGLED("?DeleteSnlkTable@InputChar@@QAEXXZ");
+extern THIS int16_t ibm_icGetUnknownKanji(void *in, int16_t at, int32_t from,
+                                          int32_t to)
+    MANGLED("?GetUnknownKanji@InputChar@@QAEFFJJ@Z");
+
+#define IC(name) ibm_ic##name
+
+#define PARAM_ANNO(p) (*(int32_t *)((char *)(p) + 0x10))
 #define UD_ROOM  IBM_UD_ROOM
 
 #define DS(name) ibm_ds##name
@@ -1467,7 +1517,25 @@ static char ds_block[DS_ROOM];
 #else
 #define DS_SET_OWNER(blk, ta) (*(void **)((blk) + DS_OWNER) = (ta))
 #endif
-static char ic_block[TA_INPUTCHAR_BYTES];
+
+/* And the same for InputChar's chain and for one node of it. Our side parks
+   every pointer past the record it belongs to; IBM has the chain head at
+   0x27ac of the reader and a node's two at four and eight. */
+#ifdef EVV_ROMPRIMS_OURS
+#define SN_SET_KEY(n, p)      (*(char **)((char *)(n) + SN_KEY_AT) = (p))
+#define SN_KEY_OF(n)          (*(char **)((char *)(n) + SN_KEY_AT))
+#define SN_VALUE_OF(n)        (*(char **)((char *)(n) + SN_VALUE_AT))
+#define IC_SNLK_HEAD(blk)     (*(void **)((blk) + IC_SNLK_AT))
+#define SN_NEXT_OF(n)         (*(void **)((char *)(n) + SN_NEXT_AT))
+#else
+#define SN_SET_KEY(n, p)      (*(char **)((char *)(n) + 4) = (p))
+#define SN_KEY_OF(n)          (*(char **)((char *)(n) + 4))
+#define SN_VALUE_OF(n)        (*(char **)((char *)(n) + 8))
+#define IC_SNLK_HEAD(blk)     (*(void **)((blk) + IC_SNLK_TABLE))
+#define SN_NEXT_OF(n)         (*(void **)((char *)(n) + 0))
+#endif
+
+static char ic_block[IC_ROOM];
 
 static void dsPut(int32_t off, const char *bytes, int32_t n)
 {
@@ -1564,6 +1632,10 @@ static void sweepDictSearch(void)
    nearly a megabyte and only three bytes of it matter here, but the offsets
    are TextAnalysis's own and a smaller block would have to invent them. */
 static char ta_block[TA_BYTES];
+
+/* The parameter block main made, which InputChar reaches through the romanizer
+   above it. */
+static Param *the_param;
 
 /* The character classes InputChar would give this text.
  *
@@ -2037,7 +2109,7 @@ static void sweepUserDict(void)
     static char ud_room[0x40];
     static char list_room[IBM_LIST_ROOM];
     static char key_room[IBM_KEY_ROOM];
-    static char context[0x20];
+    static char context[SN_ROOM];
     static char contextWord[16];
     char        keyBuf[256];
     uint8_t     yomi[64];
@@ -2279,7 +2351,7 @@ static void sweepUserDict(void)
        sentence at once, in both of DictSearch's modes. */
     memset(context, 0, sizeof context);
     strcpy(contextWord, "\x93\xfa\x96\x7b");
-    *(char **)(context + 4) = contextWord;
+    SN_SET_KEY(context, contextWord);
     for (i = 0; i < 2; i++) {
         int n = icSetText(TEXTS[1]);
         int at;
@@ -2377,7 +2449,7 @@ static void putEntries(const char *what, long which, int n)
 
 static void sweepDictionaries(void)
 {
-    static char context[0x20];
+    static char context[SN_ROOM];
     static char contextWord[64];
     long        code;
     int         t;
@@ -2501,7 +2573,7 @@ static void sweepDictionaries(void)
     /* And the five dictionaries themselves, over real Japanese at every
        position of every text, out of context and in it. */
     memset(context, 0, sizeof context);
-    *(char **)(context + UC_WORD) = contextWord;
+    SN_SET_KEY(context, contextWord);
 
     for (t = 0; TEXTS[t] != NULL; t++) {
         int n = icSetText(TEXTS[t]);
@@ -2521,7 +2593,7 @@ static void sweepDictionaries(void)
                 contextWord[2] = ic_block[IC_TEXT + (at + 1) * 2];
                 contextWord[3] = ic_block[IC_TEXT + (at + 1) * 2 + 1];
                 contextWord[4] = 0;
-                context[UC_CHARS] = 2;
+                context[SN_CHARS] = 2;
 
                 dsFresh();
                 if (mode) {
@@ -3053,6 +3125,346 @@ static void sweepDictionaries(void)
     printf("DD done\n");
 }
 
+/* ---- InputChar --------------------------------------------------------- */
+
+/* The reader's record after a call, printed as runs of equal bytes so that ten
+   thousand of them fit on one line. The three fields IBM keeps a pointer in
+   are skipped rather than printed: on its side they hold an address and on
+   ours nothing at all, since our own three sit past the record. What is in
+   them is proved by what the calls do instead. */
+static void putReader(const char *what)
+{
+    long at = 0;
+
+    printf("IC %s", what);
+    while (at < IC_BYTES) {
+        long          first = at;
+        unsigned char v;
+
+        if (at == IC_OWNER || at == IC_TEXTP || at == IC_SNLK_TABLE) {
+            at += 4;
+            fputs(" ptr", stdout);
+            continue;
+        }
+        v = (unsigned char)ic_block[at];
+        do {
+            at++;
+        } while (at < IC_BYTES && at != IC_TEXTP && at != IC_SNLK_TABLE
+                 && (unsigned char)ic_block[at] == v);
+        printf(" %lx:%lx=%02x", first, at - first, v);
+    }
+    putchar('\n');
+}
+
+/* And one node of the chain: everything on it that is not a pointer, and then
+   what the two pointers point at. */
+static void putSnlk(const char *what, long i, void *node)
+{
+    unsigned char *n = (unsigned char *)node;
+    int            k;
+
+    printf("IC %s %ld ", what, i);
+    if (node == NULL) {
+        printf("-\n");
+        return;
+    }
+    printf("at %d trans %02x chars %d yomi %d ",
+           (int)*(int16_t *)(n + SN_AT), n[SN_TRANS],
+           (int)n[SN_CHARS], (int)n[SN_YOMI_N]);
+    for (k = 0; k < (int)n[SN_YOMI_N] && k < SN_BYTES - SN_YOMI; k++)
+        printf("%02x", n[SN_YOMI + k]);
+    putchar(' ');
+    putBytes(SN_KEY_OF(node));
+    putchar(' ');
+    putBytes(SN_VALUE_OF(node));
+    putchar('\n');
+}
+
+/* What is handed to ic_AddSnlkTable. The positions are deliberately out of
+   order: the chain is kept in the order it was given and the lookup stops as
+   soon as it has gone past what it wants, so an unsorted chain is what proves
+   that line rather than the one below it. The last six are the six ways the
+   call is refused. */
+static const struct {
+    int16_t     at;
+    const char *written;
+    const char *reading;
+    int32_t     flag;
+} SNLK[] = {
+    { 0, "\x93\xfa\x96\x7b", "\x83\x6a\x83\x7a\x83\x93\x5e",         0 },
+    { 2, "\x8c\xea",         "\x83\x53\x5e",                         1 },
+    { 5, "\x8e\x52\x93\x63", "\x83\x84\x83\x7d\x83\x5f\x5e",         0 },
+    { 1, "\x82\xa0\x82\xa2", "\x82\xa0\x82\xa2\x5e\x82\xa4",         7 },
+    { 9, "A",                "\x83\x47\x81\x5b\x5e",                 0 },
+    { 3, "\xb1\xb2\xb3",     "\x83\x41\x83\x43\x83\x45\x5e",         0 },
+    { 4, "\x20\x20",         "\x83\x41\x5e",                         0 },
+    /* Half-width kana with a voicing mark, so that the fold is walked, and a
+       byte in the middle that makeKey drops outright, which is the only shape
+       that tells the count of the key apart from the count of what the caller
+       wrote. */
+    { 10, "\xb6\xde\x01\xb7\xde", "\x83\x4b\x83\x4e\x5e",        0 },
+    { 6, "\x8b\x9e",         "\x82\xab\x82\xe5\x82\xa4\x5e",         0 },
+    { 7, "\x89\xb9\x90\xba", "abcdef",                               0 },
+    { 8, "\x93\x8c\x8b\x9e",
+         "\x5e\x83\x67\x83\x45\x83\x4c\x83\x87\x83\x45\x83\x67\x83\x45\x83\x4c"
+         "\x83\x87\x83\x45\x83\x67\x83\x45\x83\x4c\x83\x87\x83\x45\x83\x67\x83"
+         "\x45\x83\x4c\x83\x87\x83\x45",                             0 },
+    { -1, "\x8c\xea",        "\x83\x53\x5e",                         0 },
+    { 0, NULL,               "\x83\x53\x5e",                         0 },
+    { 0, "",                 "\x83\x53\x5e",                         0 },
+    { 0, "\x8c\xea",         NULL,                                   0 },
+    { 0, "\x8c\xea",         "",                                     0 },
+    { 0, "\x8c\xea",         "\x83\x53\x5e",                        -1 }
+};
+
+/* Texts for the unknown-kanji walk that the shared list has not got: all seven
+   of the marks it steps over, a mark between characters it keeps, newlines
+   between them, single bytes between double ones, and marks before a kanji. */
+static const char *const IC_TEXTS[] = {
+    "\x81\x40\x81\x41\x81\x42\x81\x48\x81\x49\x81\x43\x81\x44",
+    "\x93\xfa\x81\x40\x96\x7b\x81\x41\x8c\xea\x81\x42\x8e\x52\x81\x43\x93\x63"
+    "\x81\x44\x93\x8c\x81\x48\x8b\x9e\x81\x49\x89\xb9",
+    "\x93\xfa\x0a\x96\x7b\x0a\x0a\x8c\xea",
+    "a\x93\xfa" "b\x96\x7b" "c",
+    "\x81\x48\x81\x49\x81\x43\x81\x44\x93\xfa"
+};
+
+static void sweepInputChar(void)
+{
+    static char rom_room[16 * sizeof(void *)];
+    static char ud_room[UD_ROOM];
+    long        i;
+    long        j;
+    long        nTexts;
+    for (nTexts = 0; TEXTS[nTexts] != NULL; nTexts++)
+        ;
+
+
+    /* The chain the reader goes up and comes back down: TextAnalysis above
+       it, the romanizer above that, and hanging off the romanizer the
+       parameter block this file made at the start and a user dictionary built
+       on the same TextAnalysis. */
+    memset(ta_block, 0, sizeof ta_block);
+    memset(rom_room, 0, sizeof rom_room);
+    *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
+    *(void **)(ta_block + TA_OWNER) = rom_room;
+    *(void **)(rom_room + RM_PARAM) = the_param;
+    *(void **)(rom_room + RM_USERDICT) = ud_room;
+    UD(Ctor)(ud_room, ta_block);
+
+    /* Made, and made again over a record that is not empty, which is the only
+       way to see how much of each array the two of them actually clear. */
+    memset(ic_block, 0xa5, sizeof ic_block);
+    IC(Ctor)(ic_block, ta_block);
+    putReader("ctor");
+    memset(ic_block + IC_TEXT, 0x5a, IC_BYTES - IC_TEXT);
+    IC(Init)(ic_block);
+    putReader("init");
+
+    /* The question two objects up. Nothing in the romanizer writes the field
+       it comes from, so the sweep writes it and puts it back afterwards. */
+    {
+        int32_t was = PARAM_ANNO(the_param);
+
+        for (i = 0; i < 4; i++) {
+            PARAM_ANNO(the_param) = (int32_t)i;
+            printf("IC anno %ld %d\n", i,
+                   (int)IC(IsAnnotationsInText)(ic_block));
+        }
+        PARAM_ANNO(the_param) = was;
+    }
+
+    /* Setting text, both ways. The second counts the characters of whatever
+       was there up to where the reader had got to, so the byte it is told to
+       carry on from is swept over the whole of each text. */
+    for (i = 0; TEXTS[i] != NULL; i++) {
+        long len = (long)strlen(TEXTS[i]);
+
+        memset(ic_block, 0xa5, sizeof ic_block);
+        IC(Ctor)(ic_block, ta_block);
+
+        /* Once on a reader that has never been given text, which is the arm
+           that skips the counting altogether. */
+        *(int32_t *)(ic_block + IC_POS) = 5;
+        IC(SetTextAt)(ic_block, TEXTS[i], (uint32_t)len);
+        printf("IC settextat fresh %ld pos %ld len %d\n", i,
+               (long)*(int32_t *)(ic_block + IC_POS),
+               (int)*(int16_t *)(ic_block + IC_LENGTH));
+
+        IC(SetText)(ic_block, TEXTS[i]);
+        printf("IC settext %ld pos %ld read %ld end %ld len %d\n", i,
+               (long)*(int32_t *)(ic_block + IC_POS),
+               (long)*(int32_t *)(ic_block + IC_READ),
+               (long)*(int32_t *)(ic_block + IC_AT_END),
+               (int)*(int16_t *)(ic_block + IC_LENGTH));
+
+        for (j = 0; j <= len; j++) {
+            *(int32_t *)(ic_block + IC_POS) = (int32_t)j;
+            IC(SetTextAt)(ic_block, TEXTS[i], (uint32_t)j);
+            printf("IC settextat %ld %ld pos %ld len %d\n", i, j,
+                   (long)*(int32_t *)(ic_block + IC_POS),
+                   (int)*(int16_t *)(ic_block + IC_LENGTH));
+        }
+
+        /* And the byte the reader is on, over every byte of the text and one
+           past the end of it. */
+        printf("IC nextchar %ld ", i);
+        for (j = 0; j <= len; j++) {
+            *(int32_t *)(ic_block + IC_POS) = (int32_t)j;
+            printf("%02x", IC(GetNextChar)(ic_block));
+        }
+        putchar('\n');
+    }
+
+    /* The unknown-kanji pass, over every text and six spans of each, from two
+       starting characters. The texts are the shared ones plus five of its own,
+       since the shared list has none of the seven marks the walk steps over
+       and no newline. */
+    for (i = 0; i < nTexts + (long)(sizeof IC_TEXTS / sizeof *IC_TEXTS); i++) {
+        const char *text = i < nTexts ? TEXTS[i] : IC_TEXTS[i - nTexts];
+        long        len = (long)strlen(text);
+        long        spans[6][2];
+        long        s;
+        int         a;
+
+        spans[0][0] = 0;     spans[0][1] = len;
+        spans[1][0] = 0;     spans[1][1] = 1;
+        spans[2][0] = 1;     spans[2][1] = len;
+        spans[3][0] = 0;     spans[3][1] = 0;
+        spans[4][0] = 3;     spans[4][1] = 2;
+        spans[5][0] = 2;     spans[5][1] = len - 1;
+
+        for (a = 0; a < 2; a++) {
+            for (s = 0; s < 6; s++) {
+                int16_t rc;
+                long    n;
+
+                memset(ic_block, 0xa5, sizeof ic_block);
+                IC(Ctor)(ic_block, ta_block);
+                IC(SetText)(ic_block, text);
+                rc = IC(GetUnknownKanji)(ic_block, (int16_t)(a * 7),
+                                         (int32_t)spans[s][0],
+                                         (int32_t)spans[s][1]);
+                n = (long)*(int16_t *)(ic_block + IC_COUNT);
+                printf("IC unknown %ld %d %ld rc %d count %ld pos %ld\n", i, a,
+                       s, (int)rc, n,
+                       (long)*(int32_t *)(ic_block + IC_POS));
+                for (j = 0; j < n && j < 64; j++)
+                    printf("IC unknown %ld %d %ld at %ld %02x%02x kind %ld"
+                           " off %d mark %ld\n", i, a, s, j,
+                           (unsigned char)ic_block[IC_TEXT + j * 2],
+                           (unsigned char)ic_block[IC_TEXT + j * 2 + 1],
+                           (long)*(int32_t *)(ic_block + IC_KIND + j * 4),
+                           (int)*(int16_t *)(ic_block + IC_OFFSET + j * 2),
+                           (long)*(int32_t *)(ic_block + IC_MARK + j * 4));
+            }
+        }
+    }
+
+    /* And one text long enough to reach the guard, which is a road no sentence
+       the analyser will accept can take. It lets the six hundred and
+       ninety-fifth character through and writes it one entry past the scratch
+       it has, over the first two bytes of the kinds; both sides do it, so what
+       IC_KIND holds afterwards is the thing to watch. */
+    {
+        static char many[1500];
+        int16_t     rc;
+
+        for (j = 0; j < 700; j++) {
+            many[j * 2] = '\x93';
+            many[j * 2 + 1] = (char)(0xfa - (j & 3));
+        }
+        many[1400] = 0;
+        memset(ic_block, 0xa5, sizeof ic_block);
+        IC(Ctor)(ic_block, ta_block);
+        IC(SetText)(ic_block, many);
+        rc = IC(GetUnknownKanji)(ic_block, 0, 0, 1400);
+        printf("IC many rc %d count %d kind0 %ld pos %ld\n", (int)rc,
+               (int)*(int16_t *)(ic_block + IC_COUNT),
+               (long)*(int32_t *)(ic_block + IC_KIND),
+               (long)*(int32_t *)(ic_block + IC_POS));
+        for (j = 690; j < 700; j++)
+            printf("IC many at %ld %02x%02x off %d mark %ld\n", j,
+                   (unsigned char)ic_block[IC_TEXT + j * 2],
+                   (unsigned char)ic_block[IC_TEXT + j * 2 + 1],
+                   (int)*(int16_t *)(ic_block + IC_OFFSET + j * 2),
+                   (long)*(int32_t *)(ic_block + IC_MARK + j * 4));
+    }
+
+
+    /* The chain: everything added, then looked up at every position it could
+       be at, then thrown away and looked up again. The lookup is done with
+       three values of the count of characters already consumed, since that is
+       added to what it is asked for. */
+    memset(ic_block, 0xa5, sizeof ic_block);
+    IC(Ctor)(ic_block, ta_block);
+    for (i = 0; i < (long)(sizeof SNLK / sizeof *SNLK); i++)
+        printf("IC add %ld rc %d\n", i,
+               (int)IC(AddSnlkTable)(ic_block, SNLK[i].at, SNLK[i].written,
+                                     SNLK[i].reading, SNLK[i].flag));
+
+    /* Then the chain itself, from the head, which is the only way to see a
+       node the lookup above cannot reach -- the chain is in the order it was
+       given and the lookup stops as soon as it has gone past what it wants,
+       so a node behind a later position is never answered with. This is also
+       what says the new one went on the end rather than anywhere else. */
+    {
+        void *node = IC_SNLK_HEAD(ic_block);
+
+        for (j = 0; node != NULL && j < 32; j++) {
+            putSnlk("chain", j, node);
+            node = SN_NEXT_OF(node);
+        }
+    }
+    for (i = 0; i < 3; i++) {
+        *(int16_t *)(ic_block + IC_LENGTH) = (int16_t)(i * 2);
+        for (j = -1; j < 12; j++)
+            putSnlk("at", i * 100 + j,
+                    IC(GetSnlkTableAt)(ic_block, (int16_t)j));
+    }
+    *(int16_t *)(ic_block + IC_LENGTH) = 0;
+    IC(DeleteSnlkTable)(ic_block);
+    for (j = 0; j < 12; j++)
+        putSnlk("gone", j, IC(GetSnlkTableAt)(ic_block, (int16_t)j));
+    printf("IC head %d\n", IC(GetSnlkTableAt)(ic_block, 0) == NULL);
+
+    /* And a chain built in position order, so that the road the unsorted one
+       above never takes -- walking on past a node -- is taken too. */
+    for (i = 0; i < 6; i++)
+        (void)IC(AddSnlkTable)(ic_block, (int16_t)i, UD_WORDS[i][0],
+                               UD_WORDS[i][1], 0);
+    for (j = -1; j < 12; j++)
+        putSnlk("sorted", j, IC(GetSnlkTableAt)(ic_block, (int16_t)j));
+    IC(DeleteSnlkTable)(ic_block);
+
+    /* And readings long enough to straddle the twenty-five the count is
+       clamped to, each on a chain of its own so that the walk above cannot
+       stop short of them. Half of them end in a long-vowel bar, which is the
+       only way the count comes back at twenty-six: transKatakana2Yomi stops
+       itself at twenty-five and then writes one more for the bar. */
+    for (i = 0; i < 10; i++) {
+        char reading[128];
+        long k;
+        int  n = 0;
+
+        reading[n++] = '\x5e';
+        for (k = 0; k < 20 + i; k++) {
+            reading[n++] = '\x83';
+            reading[n++] = '\x67';
+        }
+        if (i & 1) {
+            reading[n++] = '\x81';
+            reading[n++] = '\x5b';
+        }
+        reading[n] = 0;
+        (void)IC(AddSnlkTable)(ic_block, 0, "\x93\x8c\x8b\x9e", reading, 0);
+        putSnlk("long", i, IC(GetSnlkTableAt)(ic_block, 0));
+        IC(DeleteSnlkTable)(ic_block);
+    }
+
+    printf("IC done\n");
+}
+
 int main(void)
 {
     Param *p;
@@ -3071,6 +3483,7 @@ int main(void)
         printf("romprims: no parameter block\n");
         return 1;
     }
+    the_param = p;
     c = makeConv(p);
     if (c == NULL) {
         printf("romprims: no converter\n");
@@ -3095,6 +3508,7 @@ int main(void)
     sweepDictSearchRest();
     sweepUserDict();
     sweepDictionaries();
+    sweepInputChar();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

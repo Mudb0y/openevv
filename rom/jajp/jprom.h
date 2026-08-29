@@ -355,6 +355,24 @@ int16_t ds_HandleError(void *d, int16_t at, int16_t written, int16_t base,
 /* TextAnalysis's, and here because it is in IBM's dictsearch object. */
 void    ta_AddLongWord(void *t, uint8_t *word, int16_t n);
 
+/* ---- InputChar ------------------------------------------------------- */
+
+/* The record is IBM's, so these all take a block of IC_ROOM bytes rather than
+   a struct; rom/jajp/inputchar.h is what says where anything in it sits, and
+   why it is that way round. ic_GetSnlkTableAt answers a node of the same
+   kind, which is why it is a void pointer as well. */
+void   *ic_ctor(void *in, void *analysis);
+void    ic_Init(void *in);
+void    ic_SetText(void *in, const char *text);
+void    ic_SetTextAt(void *in, const char *text, uint32_t at);
+uint8_t ic_GetNextChar(void *in);
+int32_t ic_IsAnnotationsInText(void *in);
+int32_t ic_AddSnlkTable(void *in, int16_t at, const char *written,
+                        const char *reading, int32_t flag);
+void   *ic_GetSnlkTableAt(void *in, int16_t at);
+void    ic_DeleteSnlkTable(void *in);
+int16_t ic_GetUnknownKanji(void *in, int16_t at, int32_t from, int32_t to);
+
 /* ---- Annotation ------------------------------------------------------ */
 
 /* The marks a caller put in the text, lifted out of it and kept until the

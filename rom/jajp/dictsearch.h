@@ -154,47 +154,22 @@
 #define DS_UNREAD_TAIL      0x8518
 #define DS_UNREAD_TAIL_END  0x8900
 
-/* Settled, and by RomUserDict rather than by DictSearch's own code. The first
-   is a mode Do writes and tests against one; when it is one, a user
-   dictionary entry has to match the word the second points at before it is
-   taken. What that record is has not been read -- only that RomUserDict wants
-   two yomi codes at +0x10 and a string at +0x04 out of it. */
+/* Settled. The first is a mode Do writes and tests against one; when it is
+   one, a user dictionary entry has to match the word the second points at
+   before it is taken. The record is a _SNLK_TABLE, which is a reading the
+   caller gave for a stretch of this very text: Do asks ic_GetSnlkTableAt for
+   the one at the character it has reached and puts the answer here, so the
+   two yomi codes RomUserDict wants at +0x10 are SN_CHARS and SN_YOMI_N and
+   the string at +0x04 is inside the pointers rom/jajp/inputchar.h moves. */
 #define DS_USERDICT_MODE 0x8900  /* int32 */
 #define DS_USERDICT_WORD 0x8904  /* the record it must agree with */
 
 /* ---- what InputChar holds that DictSearch reads --------------------- */
 
-/* Its own file will name these properly. They are here because whoever reads
-   DictSearch meets them at once and would otherwise have to work them out
-   again. */
-#define IC_TEXT         0x00004  /* the characters, two bytes each */
-#define IC_KIND         0x00b1c  /* int32 [], what each character is */
-#define IC_OFFSET       0x01674  /* int16 [], where each one starts */
-#define IC_MARK         0x01c24  /* int32 [], what a candidate carries away */
-#define IC_COUNT        0x0277c  /* int16, how many there are */
-
-/* What InputChar::GetCharType answers, which is what IC_KIND holds. Read off
-   that method rather than guessed: it is the only place the numbering is
-   stated, and getting it wrong reads a katakana test as a kanji one.
- *
- * Nine is the default -- anything the classifier does not recognise is taken
- * for a kanji -- and it is also what an index before the start of the text
- * answers, so a walk that runs backwards off the beginning sees a kanji. */
-#define KIND_KATAKANA   1
-#define KIND_PUNCT      2        /* 0x8143 to 0x81ac */
-#define KIND_LATIN      3        /* full width A-Z and a-z */
-#define KIND_HIRAGANA   4
-#define KIND_DIGIT      5        /* full width, and the kanji numerals */
-#define KIND_GREEK      6
-#define KIND_ROMAN      7        /* the 0xfa40 extension */
-#define KIND_CHOON      8        /* the long vowel bar, 0x815b */
-#define KIND_KANJI      9        /* and anything unrecognised */
-#define KIND_BRACKET    10       /* 0x816d */
-#define KIND_NAKAGURO   11       /* the middle dot, 0x8145 */
-#define KIND_OTHER      12
-#define KIND_ENGWORD    13       /* tested by the English-word walk; nothing
-                                    in the objects read so far writes it, and
-                                    GetCharType cannot answer it */
+/* rom/jajp/inputchar.h is the whole of that record, and the twelve kinds a
+   character can be along with it. It is included rather than copied because
+   this class reads five of its fields and every one of the kinds. */
+#include "inputchar.h"
 
 /* ---- the records the dictionary is made of --------------------------- */
 
@@ -306,10 +281,11 @@
    else. */
 #define RZ_SPELL_ENGLISH 0x68
 
-/* What the user-dictionary context names, which is all that has been read of
-   it: a written form to match and how many characters it has. */
-#define UC_WORD         4        /* char *, the written form */
-#define UC_CHARS        0x10     /* uint8, how many characters it is */
+/* What the user-dictionary context is has been read since: it is a _SNLK_TABLE,
+   and rom/jajp/inputchar.h names the whole of it. The two fields wanted here
+   are SN_KEY_AT, the written form to match, and SN_CHARS, how many characters
+   it has -- the first parked past the record in our build, because IBM has it
+   at +4 where a pointer no longer fits. */
 
 /* A node of the kana dictionary, keyed by a whole two-byte character. Its
    readings run on from the sixth byte, each a length in its own low nibble,

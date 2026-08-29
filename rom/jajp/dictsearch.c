@@ -1303,7 +1303,7 @@ int16_t ds_WriteData(void *d, const uint8_t *head, int16_t chars,
         if (base + i >= DS_ENTRY_N)
             return i;
         if (DS_INCONTEXT(d)
-            && strcmp((const char *)*(char **)(DS_CONTEXT(d) + UC_WORD),
+            && strcmp((const char *)*(char **)(DS_CONTEXT(d) + SN_KEY_AT),
                       want) != 0) {
             p += NW_KANA + (p[NW_HEAD] & 0xf);
             skipped++;
@@ -1355,7 +1355,7 @@ int16_t ds_WriteTankanData(void *d, const uint8_t *head, int16_t chars,
         if (base + i >= DS_ENTRY_N)
             return i;
         if (DS_INCONTEXT(d)
-            && strcmp((const char *)*(char **)(DS_CONTEXT(d) + UC_WORD),
+            && strcmp((const char *)*(char **)(DS_CONTEXT(d) + SN_KEY_AT),
                       want) != 0) {
             p += TR_KANA + (p[TR_LEN] & 0xf);
             skipped++;
@@ -1398,7 +1398,7 @@ int16_t ds_WriteUserData(void *d, const uint8_t *head, int16_t slot,
         return 0;
     if (DS_INCONTEXT(d)) {
         ds_written(d, want, at, (int16_t)head[UH_CHARS]);
-        if (strcmp((const char *)*(char **)(DS_CONTEXT(d) + UC_WORD),
+        if (strcmp((const char *)*(char **)(DS_CONTEXT(d) + SN_KEY_AT),
                    want) != 0)
             return 0;
     }
@@ -1503,7 +1503,7 @@ int16_t ds_LookupUserDict(void *d, const uint8_t *dict, char *text,
                 continue;
             }
 
-            if (!incontext || DS_CONTEXT(d)[UC_CHARS] == p[UH_CHARS]) {
+            if (!incontext || DS_CONTEXT(d)[SN_CHARS] == p[UH_CHARS]) {
                 if (ds_WriteUserData(d, p, slot, at) == 1) {
                     written++;
                     slot++;
@@ -1590,7 +1590,7 @@ int16_t ds_LookupEngWordDict(void *d, uint8_t *roman, int16_t slot,
             }
 
             if (n == want
-                && (!incontext || DS_CONTEXT(d)[UC_CHARS] == p[UH_CHARS])
+                && (!incontext || DS_CONTEXT(d)[SN_CHARS] == p[UH_CHARS])
                 && ds_WriteUserData(d, p, slot, at) == 1) {
                 if (mark)
                     DE_B(DS_ENTRY_AT(d, slot), DE_POS) = 0xe;
@@ -1672,7 +1672,7 @@ int16_t ds_LookupTankanDict(void *d, int16_t base, int16_t at)
     int32_t        done = 0;
 
     if (DS_INCONTEXT(d)) {
-        if (DS_CONTEXT(d)[UC_CHARS] != 1)
+        if (DS_CONTEXT(d)[SN_CHARS] != 1)
             return 0;
         incontext = 1;
     } else {
@@ -1710,7 +1710,7 @@ int16_t ds_LookupTankanDict(void *d, int16_t base, int16_t at)
             if ((p[TH_FLAGS] & 0xf0) != 0) {
                 int16_t n = 0;
 
-                if (!incontext || DS_CONTEXT(d)[UC_CHARS] == chars)
+                if (!incontext || DS_CONTEXT(d)[SN_CHARS] == chars)
                     n = ds_WriteTankanData(d, p, chars, base, at);
                 total = (int16_t)(total + n);
                 base = (int16_t)(base + n);
@@ -1846,7 +1846,7 @@ int16_t ds_LookupNormalWordDict(void *d, int16_t base, int16_t at,
                 if ((p[NH_FLAGS] & 0x80) != 0) {
                     int16_t n = 0;
 
-                    if (!incontext || DS_CONTEXT(d)[UC_CHARS] == chars)
+                    if (!incontext || DS_CONTEXT(d)[SN_CHARS] == chars)
                         n = ds_WriteData(d, p, chars, hira, base, i, at);
                     total = (int16_t)(total + n);
                     base = (int16_t)(base + n);
