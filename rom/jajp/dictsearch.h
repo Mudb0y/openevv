@@ -299,6 +299,13 @@
 #define FZ_FLAGS        0x0a     /* uint8 */
 #define FZ_OFFSET       0x0c     /* int16, the byte offset in the raw text */
 
+/* A field of Romanizer that ProcessRomanAlphabet reads through TextAnalysis,
+   and the only one of that class anything here wants: greater than nought
+   means spell an English word out letter by letter rather than reading it.
+   Romanizer is not mapped, so this is named for what it does and nothing
+   else. */
+#define RZ_SPELL_ENGLISH 0x68
+
 /* What the user-dictionary context names, which is all that has been read of
    it: a written form to match and how many characters it has. */
 #define UC_WORD         4        /* char *, the written form */

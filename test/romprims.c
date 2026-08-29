@@ -178,6 +178,21 @@ static Conv *makeConv(Param *p)
 #define ENG_RULES  ((void *)&dm_EngToRomanRule)
 #define KANA_RULES ((void *)&dm_RomanToKanaRule)
 
+#define ibm_dsSetDummySymbol(d, a, e)   ds_SetDummySymbol((d), (a), (e))
+#define ibm_dsSetDummyRomanAlphabet(d, a, e) \
+    ds_SetDummyRomanAlphabet((d), (a), (e))
+#define ibm_dsProcessRomanAlphabet(d, a, e) \
+    ds_ProcessRomanAlphabet((d), (a), (e))
+#define ibm_dsNeedKatakanaAnalysis(d, b, n) \
+    ds_NeedKatakanaAnalysis((d), (b), (n))
+#define ibm_dsCheckJrtTable(d, b, n)    ds_CheckJrtTable((d), (b), (n))
+#define ibm_dsCompareJMD(d, p, a, n)    ds_CompareJMD((d), (p), (a), (n))
+#define ibm_dsSetJCC(d, m, s)           ds_SetJCC((d), (m), (s))
+#define ibm_dsJoSuusiSearch(d, a)       ds_JoSuusiSearch((d), (a))
+#define ibm_dsHandleError(d, a, w, b, o) \
+    ds_HandleError((d), (a), (w), (b), (o))
+#define NUM_JMD() dm_GetNumJMDPtr()
+
 #define UD_DICT(u)  (*(void **)&((RomUserDict *)(u))->dict)
 
 #define ibm_udCtor(u, a)            rud_ctor((RomUserDict *)(u), (a))
@@ -558,6 +573,31 @@ extern THIS int16_t ibm_dsEngRulesConvert(void *d, const uint8_t *in,
                                           uint8_t *out, void *eng, void *kana,
                                           int16_t *outLen, int16_t *count)
     MANGLED("?EngRulesConvert@DictSearch@@QAEFPBEPAEPAU_rules@@2PAF3@Z");
+
+extern THIS void ibm_dsSetDummySymbol(void *d, int16_t at, void *e)
+    MANGLED("?SetDummySymbol@DictSearch@@QAEXFPAU_DICTENT_T@@@Z");
+extern THIS void ibm_dsSetDummyRomanAlphabet(void *d, int16_t at, void *e)
+    MANGLED("?SetDummyRomanAlphabet@DictSearch@@QAEXFPAU_DICTENT_T@@@Z");
+extern THIS void ibm_dsProcessRomanAlphabet(void *d, int16_t at, void *e)
+    MANGLED("?ProcessRomanAlphabet@DictSearch@@QAEXFPAU_DICTENT_T@@@Z");
+extern THIS int32_t ibm_dsNeedKatakanaAnalysis(void *d, int16_t base,
+                                               int16_t n)
+    MANGLED("?NeedKatakanaAnalysis@DictSearch@@QAEHFF@Z");
+extern THIS int16_t ibm_dsCheckJrtTable(void *d, int16_t base, int16_t n)
+    MANGLED("?CheckJrtTable@DictSearch@@QAEFFF@Z");
+extern THIS int16_t ibm_dsCompareJMD(void *d, uint8_t *p, int16_t at,
+                                     int16_t n)
+    MANGLED("?CompareJMD@DictSearch@@QAEFPAEFF@Z");
+extern THIS void ibm_dsSetJCC(void *d, const uint8_t *m, int16_t slot)
+    MANGLED("?SetJCC@DictSearch@@QAEXPAU_JOS_MD@@F@Z");
+extern THIS int16_t ibm_dsJoSuusiSearch(void *d, int16_t at)
+    MANGLED("?JoSuusiSearch@DictSearch@@QAEFF@Z");
+extern THIS int16_t ibm_dsHandleError(void *d, int16_t at, int16_t written,
+                                      int16_t base, char *out)
+    MANGLED("?HandleError@DictSearch@@QAEFFFFPAD@Z");
+extern const uint8_t *ibm_dmGetNumJMDPtr(void)
+    MANGLED("?GetNumJMDPtr@DictMan@@SAPAEXZ");
+#define NUM_JMD() ibm_dmGetNumJMDPtr()
 
 /* IBM's two rule tables are declared for the sweep above already; the
    English rules want them as one struct rather than as its first field. */
@@ -1550,6 +1590,12 @@ static const char *const TEXTS[] = {
     "\x81\x59\x81\x60\x81\x7d\x81\x87\x81\x95\x81\x97\x81\xa7",
     "\x82\x50\x93\xfa\x95\xbd\x8b\xcf",
     "\x82\x50\x82\x51\x82\x52\x93\xfa",
+    /* Twenty full-width letters, which is past the seventeen the English
+       fallback will take, and long enough that its reading reaches the room
+       a candidate has. */
+    "\x82\x81\x82\x82\x82\x83\x82\x84\x82\x85\x82\x86\x82\x87"
+    "\x82\x88\x82\x89\x82\x8a\x82\x8b\x82\x8c\x82\x8d\x82\x8e"
+    "\x82\x8f\x82\x90\x82\x91\x82\x92\x82\x93\x82\x94",
     /* Three kanji the variant table rewrites, so that the retry a run with
        nothing found makes -- the one that turns the table on -- is a road the
        sweep actually walks. */
@@ -2681,6 +2727,149 @@ static void sweepDictionaries(void)
                         printf(" %02x", (unsigned)out[j]);
                     putchar('\n');
                 }
+    }
+
+    /* And the fallbacks: what happens to a character no dictionary knew.
+     *
+     * These want a Romanizer as well, because one of them reads a flag out of
+     * it, so a block stands in for the one class of the analyser that is not
+     * written. Everything else is laid out as the sweeps above do it. */
+    {
+        static char rz_block[0x100];
+        int         t;
+        int         sp;
+
+        *(void **)(ta_block + TA_OWNER) = rz_block;
+
+        for (t = 0; TEXTS[t] != NULL; t++) {
+            int n = icSetText(TEXTS[t]);
+            int at;
+
+            for (at = 0; at < n; at++) {
+                long which = t * 1000L + at;
+                int32_t entRoom[DS_ENTRY_SIZE / 4];
+                uint8_t *e = (uint8_t *)entRoom;
+                char     say[8];
+                int16_t  rc;
+                int      w;
+
+                /* The two placeholders and the letter name, on their own. */
+                dsFresh();
+                *(void **)(ta_block + TA_OWNER) = rz_block;
+                memset(e, 0, DS_ENTRY_SIZE);
+                DS(SetDummySymbol)(ds_block, (int16_t)at, e);
+                putRecord("dsym", which, e, DS_ENTRY_SIZE);
+
+                memset(e, 0, DS_ENTRY_SIZE);
+                DS(SetDummyRomanAlphabet)(ds_block, (int16_t)at, e);
+                putRecord("drom", which, e, DS_ENTRY_SIZE);
+
+                /* The English rules through the analyser's own entry, with
+                   the romanizer's flag both ways round. */
+                for (sp = 0; sp < 4; sp++) {
+                    dsFresh();
+                    memset(rz_block, 0, sizeof rz_block);
+                    *(void **)(ta_block + TA_OWNER) = rz_block;
+                    *(int32_t *)(rz_block + RZ_SPELL_ENGLISH) = sp & 1;
+                    /* And with the long-word store full, which narrows the
+                       room a reading has from twenty-four bytes to eight. */
+                    ta_block[TA_LONGWORDS] = (char)(sp & 2 ? TA_LONGWORD_N : 0);
+                    memset(e, 0, DS_ENTRY_SIZE);
+                    DS(ProcessRomanAlphabet)(ds_block, (int16_t)at, e);
+                    putRecord("prom", which * 10 + sp, e, DS_ENTRY_SIZE);
+                }
+
+                /* The number counters. */
+                dsFresh();
+                *(void **)(ta_block + TA_OWNER) = rz_block;
+                rc = DS(JoSuusiSearch)(ds_block, (int16_t)at);
+                printf("DH josuusi %ld rc %d\n", which, (int)rc);
+                for (j = 0; j < rc && j < 4; j++)
+                    putRecord("jrow", which * 10 + j,
+                              (const uint8_t *)(ds_block + DS_REC
+                                                + j * DS_REC_SIZE),
+                              DS_REC_SIZE);
+                printf("DH cmp %ld %d %d %d\n", which,
+                       (int)DS(CompareJMD)(ds_block,
+                                           (uint8_t *)(ic_block + IC_TEXT
+                                                       + at * 2),
+                                           (int16_t)at, 1),
+                       (int)DS(CompareJMD)(ds_block,
+                                           (uint8_t *)(ic_block + IC_TEXT
+                                                       + at * 2),
+                                           (int16_t)at, 3),
+                       (int)DS(CompareJMD)(ds_block,
+                                           (uint8_t *)(ic_block + IC_TEXT),
+                                           (int16_t)at, 2));
+
+                /* The two that read the candidate array, over an array with
+                   something in it: the normal-word lookup fills it first. */
+                dsFresh();
+                *(void **)(ta_block + TA_OWNER) = rz_block;
+                w = (int)DS(LookupNormalWordDict)(ds_block, 0, (int16_t)at, 0);
+                printf("DH katakana %ld %d %d\n", which, w,
+                       (int)DS(NeedKatakanaAnalysis)(ds_block, 0, (int16_t)w));
+                printf("DH jrt %ld %d marks", which,
+                       (int)DS(CheckJrtTable)(ds_block, 0, (int16_t)w));
+                for (j = 0; j < 24; j++)
+                    printf(" %02x", (unsigned)(uint8_t)ta_block[TA_MARKS + j]);
+                putchar('\n');
+
+                /* The mark table over entries built by hand, because what
+                   sets a mark turns on a candidate's own part of speech and
+                   length, and no lookup produces the whole range of either.
+                   The placeholder's part of speech in particular is only ever
+                   written by ErrorDummy. */
+                {
+                    static const uint8_t POS[] = { 0, 0x75, 0x76, 0x7a, 0x7d };
+                    int pi;
+                    int ch;
+
+                    /* The two lengths vary apart from one another on
+                       purpose: tying them together lets the test on the
+                       reading shadow the test on the characters, and then
+                       neither is really swept. */
+                    for (pi = 0; pi < 5; pi++)
+                        for (ch = 0; ch <= 6; ch++) {
+                            int kl;
+
+                            for (kl = 0; kl <= 4; kl++) {
+                                uint8_t *ent;
+
+                                dsFresh();
+                                *(void **)(ta_block + TA_OWNER) = rz_block;
+                                ent = (uint8_t *)(ds_block + DS_ENTRY);
+                                ent[DE_POS] = POS[pi];
+                                ent[DE_CHARS] = (uint8_t)ch;
+                                ent[DE_KANALEN] = (uint8_t)kl;
+                                *(int16_t *)(ent + DE_AT) = (int16_t)at;
+                                printf("DH jrt2 %ld %d %d %d rc %d marks",
+                                       which, pi, ch, kl,
+                                       (int)DS(CheckJrtTable)(ds_block, 0, 1));
+                                for (j = 0; j < 16; j++)
+                                    printf(" %02x", (unsigned)(uint8_t)
+                                           ta_block[TA_MARKS + j]);
+                                putchar('\n');
+                            }
+                        }
+                }
+
+                /* And the whole of it, with the parse mark both plain and
+                   set to the value that asks for a number counter. */
+                for (sp = 0; sp < 2; sp++) {
+                    dsFresh();
+                    *(void **)(ta_block + TA_OWNER) = rz_block;
+                    ta_block[TA_MARKS + at] = (char)(sp ? 3 : 0);
+                    memset(say, 0xee, sizeof say);
+                    rc = DS(HandleError)(ds_block, (int16_t)at, 0, 0, say);
+                    printf("DH err %ld %d rc %d say %02x%02x cursor %d\n",
+                           which, sp, (int)rc, (unsigned)(uint8_t)say[0],
+                           (unsigned)(uint8_t)say[1],
+                           (int)(uint8_t)ta_block[TA_MARKS + at]);
+                    putEntries("herr", which * 10 + sp, rc);
+                }
+            }
+        }
     }
 
     printf("DD done\n");

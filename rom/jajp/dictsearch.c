@@ -4,7 +4,7 @@
  * the input into candidate words with readings, and everything above it
  * chooses between what it produced. IBM spreads it over seven objects --
  * dictsearch, dictapi, fdictapi, kanastr, engread, numanal and phrasetable --
- * and sixty-two methods; thirty-seven of them are here.
+ * and sixty-two methods; forty-six of them are here.
  *
  * The count is worth stating carefully, because it was wrong for three
  * commits. Reading only the first four objects gives sixty-four symbols, but
@@ -135,8 +135,10 @@ static const char *const YOON[] = {
 #define HIRAGANA_BASE   0x9f
 #define KATAKANA_BASE   0x40
 
-/* Where the yomi table keeps the doubled vowels the long-vowel bar becomes. */
+/* Where the yomi table keeps the doubled vowels the long-vowel bar becomes,
+   and where it keeps the name of each Roman letter, six bytes to a row. */
 #define YOMI_CHOON      0x224
+#define YOMI_LETTER     0x58
 
 /* The code that stands for a doubled consonant, which is what a small tsu
    becomes when there is nothing for it to double. */
@@ -2576,4 +2578,438 @@ int16_t ds_EngRulesConvert(void *d, const uint8_t *in, uint8_t *out,
 
     *count = (int16_t)(*count / 3 + 1);
     return 0;
+}
+
+/* ---- what happens when nothing was found ----------------------------- */
+
+/* The last of dictsearch.obj that Do does not itself need, and the answer to
+ * a question every dictionary above leaves open: what to do with a character
+ * no dictionary knew.
+ *
+ * Something has to be produced or the path search has no way through the
+ * sentence at all, so `HandleError' looks at what kind of character it is and
+ * falls back accordingly -- katakana and hiragana are spelled out by the rules
+ * that already exist, a full-width letter goes through the English rules, and
+ * anything else gets a placeholder. Then it looks for a number counter, which
+ * is a separate little dictionary of its own, and last of all it hands back
+ * the character itself where nothing readable came of any of it.
+ */
+
+/* Reaching the parse marks, which are TextAnalysis's and are what says where
+   a candidate ended. */
+#define TA_MARK_AT(t, i)   (*((uint8_t *)(t) + TA_MARKS + (i)))
+
+/* And the three records DictSearch keeps for a number counter. */
+#define DS_REC_AT(d, i)    DS_AT(d, DS_REC + (i) * DS_REC_SIZE)
+
+/* What a counter record holds, which SetJCC fills in from the number
+   dictionary and HandleError reads straight back out. */
+#define JC_ACCENT       0        /* int16 */
+#define JC_KANALEN      2        /* uint8 */
+#define JC_CHARS        3        /* uint8 */
+#define JC_KANA         6
+
+/* And what one of that dictionary's own records holds. */
+#define JM_KEY          0        /* two bytes, the first character */
+#define JM_CHARS        2        /* uint8 */
+#define JM_KANALEN      3        /* uint8 */
+#define JM_TEXT         4        /* the characters, then the reading */
+
+/* A placeholder for a character that is not a word at all.
+ *
+ * The marker of 0xff in the first kana byte is what says the reading is not
+ * real, the same as ErrorDummy's; what differs is the part of speech. */
+void ds_SetDummySymbol(void *d, int16_t at, void *e)
+{
+    uint8_t *in = DS_INPUT(d);
+
+    DE_B(e, DE_KANA) = 0xff;
+    DE_B(e, DE_CHARS) = 1;
+    DE_B(e, DE_KANALEN) = 0;
+    DE_B(e, DE_POS) = 9;
+    DE_W(e, DE_AT) = at;
+    DE_L(e, DE_MARK) = IC_MARK_AT(in, at);
+    DE_W(e, DE_OFFSET) = IC_OFFSET_AT(in, at);
+}
+
+/* A single letter as its own name -- ay, bee, see -- which is what an English
+   word gets when the rules refuse it. The yomi table carries the name of each
+   letter, six bytes to a row: how long it is and then the codes. */
+void ds_SetDummyRomanAlphabet(void *d, int16_t at, void *e)
+{
+    uint8_t       *in = DS_INPUT(d);
+    const uint8_t *yomi;
+    uint8_t        c;
+    int16_t        n;
+    int16_t        i;
+
+    c = (uint8_t)((int8_t)IC_CHAR(in, at)[1] - 0x60);
+    if (c > 0x19)
+        c = (uint8_t)(c - 0x21);
+
+    yomi = dm_GetYomiDataPtr();
+    n = (int16_t)(uint8_t)yomi[YOMI_LETTER + c * 6];
+    for (i = 1; i <= n; i++)
+        DE_B(e, DE_KANA + i - 1) = dm_GetYomiDataPtr()[YOMI_LETTER + c * 6 + i];
+
+    DE_W(e, DE_ACCENT) = 1;
+    DE_B(e, DE_KANALEN) = (uint8_t)n;
+    DE_B(e, DE_CHARS) = 1;
+    DE_B(e, DE_POS) = 0;
+    DE_B(e, DE_ATTR) = 0x18;
+    DE_B(e, DE_ATTR2) = 0;
+    DE_W(e, DE_AT) = at;
+    DE_L(e, DE_MARK) = IC_MARK_AT(in, at);
+    DE_W(e, DE_OFFSET) = IC_OFFSET_AT(in, at);
+}
+
+/* A run of full-width letters as one English word.
+ *
+ * The same run the English dictionary would have taken -- letters, stopping at
+ * a capital that follows a small one -- but read by rule rather than looked
+ * up. Anything the rules refuse, and anything too short or too long, falls
+ * back to spelling the first letter out.
+ *
+ * IBM sets the part of speech to nought in both arms of a test on whether the
+ * run ended on a marked character; the two arms are the same instruction, so
+ * only one is written here. */
+void ds_ProcessRomanAlphabet(void *d, int16_t at, void *e)
+{
+    uint8_t *in = DS_INPUT(d);
+    uint8_t *ta = DS_OWNER_OF(d);
+    uint8_t *rz = *(uint8_t **)(ta + TA_OWNER);
+    uint8_t  word[64];
+    uint8_t  kana[128];
+    int16_t  room;
+    int16_t  upper = 1;
+    int16_t  marked = 0;
+    int16_t  n = 0;
+    int16_t  len;
+    int16_t  outLen = 0;
+    int16_t  count = 0;
+    int16_t  rc;
+    int16_t  i;
+
+    if (*(int32_t *)(rz + RZ_SPELL_ENGLISH) > 0) {
+        ds_SetDummyRomanAlphabet(d, at, e);
+        return;
+    }
+
+    room = (int8_t)DS_B(ta, TA_LONGWORDS) < TA_LONGWORD_N ? 0x18 : 0x8;
+
+    for (i = at; i < IC_COUNT_AT(in); i++, n++) {
+        uint8_t c;
+
+        if (IC_KIND_AT(in, i) != KIND_LATIN
+            && IC_KIND_AT(in, i) != KIND_ENGWORD)
+            break;
+        if (n == 0x11) {
+            ds_SetDummyRomanAlphabet(d, at, e);
+            return;
+        }
+
+        c = (uint8_t)((int8_t)IC_CHAR(in, i)[1] - 0x60);
+        if (c > 0x19) {
+            c = (uint8_t)(c - 0x21);
+            word[n] = (uint8_t)(c + 'a');
+            upper = 0;
+        } else {
+            if (!upper)
+                break;
+            word[n] = (uint8_t)(c + 'A');
+            upper = 1;
+        }
+
+        if (IC_KIND_AT(in, i) == KIND_ENGWORD) {
+            n++;
+            marked = 1;
+            break;
+        }
+    }
+
+    len = n;
+    word[n++] = '#';
+    word[n++] = '#';
+    word[n++] = 0;
+
+    /* Two letters or fewer, all of one case: not worth the rules. */
+    if (n <= 5 && upper == 1) {
+        ds_SetDummyRomanAlphabet(d, at, e);
+        return;
+    }
+
+    rc = ds_EngRulesConvert(d, word, kana, &dm_EngToRomanRule,
+                            &dm_RomanToKanaRule, &outLen, &count);
+    if (rc != 0 || outLen > room) {
+        ds_SetDummyRomanAlphabet(d, at, e);
+        return;
+    }
+
+    DE_B(e, DE_KANALEN) = (uint8_t)outLen;
+    if (DE_B(e, DE_KANALEN) > 9)
+        ds_SetLongWord(d, (int16_t)DE_B(e, DE_KANALEN), e, kana);
+    else
+        for (i = 0; i < DE_B(e, DE_KANALEN); i++)
+            DE_B(e, DE_KANA + i) = kana[i];
+
+    DE_W(e, DE_ACCENT) = count;
+    DE_B(e, DE_CHARS) = (uint8_t)len;
+    DE_B(e, DE_POS) = 0;
+    DE_B(e, DE_ATTR) = 0x18;
+    DE_B(e, DE_ATTR2) = 0x40;
+    DE_W(e, DE_AT) = at;
+    DE_L(e, DE_MARK) = IC_MARK_AT(in, at);
+    DE_W(e, DE_OFFSET) = IC_OFFSET_AT(in, at);
+    (void)marked;
+}
+
+/* Whether the candidates from `base' are worth taking as katakana.
+ *
+ * One that is a noun by its phrase type, has a reading, and is not marked as
+ * guessed at is good enough to keep, and answers nought -- do not analyse.
+ * Minus one where there are no candidates at all. */
+int32_t ds_NeedKatakanaAnalysis(void *d, int16_t base, int16_t n)
+{
+    int16_t i;
+
+    if (n == 0)
+        return -1;
+    for (i = base; i < base + n; i++) {
+        uint8_t *e = DS_ENTRY_AT(d, i);
+
+        if ((dm_GetTGAt2(DE_B(e, DE_POS), 2) & 0x20) == 0)
+            continue;
+        if (DE_B(e, DE_KANALEN) == 0)
+            continue;
+        if ((DE_B(e, DE_ATTR2) & 4) != 0)
+            continue;
+        return 0;
+    }
+    return 1;
+}
+
+/* Mark where every candidate ends, and say whether they are all short.
+ *
+ * The mark is what the pass above reads to know that a character has been
+ * accounted for; a candidate that ends past the end of the text, or that is
+ * the placeholder, does not set one. Answers minus one where the array is
+ * full, one where every candidate is short, nought otherwise. */
+int16_t ds_CheckJrtTable(void *d, int16_t base, int16_t n)
+{
+    uint8_t *in = DS_INPUT(d);
+    uint8_t *ta = DS_OWNER_OF(d);
+    int32_t  allShort = 1;
+    int16_t  i;
+
+    for (i = base; i < base + n; i++) {
+        uint8_t *e = DS_ENTRY_AT(d, i);
+        int16_t  end = (int16_t)(DE_W(e, DE_AT) + DE_B(e, DE_CHARS));
+
+        if (TA_MARK_AT(ta, end) == 0
+            && end < IC_COUNT_AT(in)
+            && DE_B(e, DE_POS) != 0x75)
+            TA_MARK_AT(ta, end) = 1;
+
+        if (DE_B(e, DE_CHARS) >= 4 || DE_B(e, DE_KANALEN) >= 3)
+            allShort = 0;
+    }
+
+    if (base + n >= DS_ENTRY_N)
+        return -1;
+    return allShort ? 1 : 0;
+}
+
+/* Whether the characters at `at' are the ones this number-counter record
+   spells. */
+int16_t ds_CompareJMD(void *d, uint8_t *p, int16_t at, int16_t n)
+{
+    uint8_t *in = DS_INPUT(d);
+    int16_t  i;
+
+    for (i = 0; i < n; i++, p += 2)
+        if (ju_MakeUshort(IC_CHAR(in, at + i)) != ju_MakeUshort((char *)p))
+            return 0;
+    return 1;
+}
+
+/* Keep one counter's reading in the record array, where HandleError will read
+   it back. */
+void ds_SetJCC(void *d, const uint8_t *m, int16_t slot)
+{
+    uint8_t       *r = DS_REC_AT(d, slot);
+    const uint8_t *kana = m + JM_TEXT + m[JM_CHARS] * 2;
+    int16_t        i;
+
+    *(int16_t *)(r + JC_ACCENT) = *(const int16_t *)(m + JM_KEY);
+    r[JC_KANALEN] = m[JM_KANALEN];
+    r[JC_CHARS] = m[JM_CHARS];
+    for (i = 0; i < m[JM_KANALEN]; i++)
+        r[JC_KANA + i] = kana[i];
+}
+
+/* Every number counter that starts at `at'.
+ *
+ * The counters are a flat run of self-delimiting records in order of their
+ * first character, so the walk stops at the first one past it. The guard of
+ * 600 is IBM's own and is what keeps a corrupt record from running away. */
+int16_t ds_JoSuusiSearch(void *d, int16_t at)
+{
+    uint8_t       *in = DS_INPUT(d);
+    const uint8_t *p = dm_GetNumJMDPtr();
+    int16_t        count = 0;
+    int16_t        guard = 1;
+    uint16_t       key = ju_MakeUshort(IC_CHAR(in, at));
+
+    for (;;) {
+        uint8_t *q = (uint8_t *)p + JM_TEXT;
+        uint16_t here = ju_MakeUshort((char *)q);
+
+        if (here == key) {
+            if (ds_CompareJMD(d, q, at, (int16_t)p[JM_CHARS]) == 1) {
+                ds_SetJCC(d, p, count);
+                count++;
+            }
+        } else if (key <= here) {
+            break;
+        }
+        guard++;
+        if (guard > 0x258)
+            break;
+        p = p + JM_TEXT + p[JM_CHARS] * 2 + p[JM_KANALEN];
+    }
+    return count;
+}
+
+/* What to do with a character no dictionary knew.
+ *
+ * Whatever kind it is, something is written, because a sentence with a hole in
+ * it has no path through it at all. A katakana run is analysed unless what has
+ * already been found is good enough; a full-width letter goes through the
+ * English rules; hiragana is spelled out; the long-vowel bar is a placeholder
+ * unless a kana came before it, in which case it belongs to that and nothing
+ * is written; and anything else is a placeholder.
+ *
+ * Then the number counters, which are their own small dictionary and only
+ * looked at where the parse marks say a number ended here.
+ *
+ * Last, the character itself is handed back through `out' when nothing
+ * readable came of any of it -- which is what the caller says aloud instead.
+ *
+ * Answers how many candidates there are now, or one past that where the array
+ * filled. */
+int16_t ds_HandleError(void *d, int16_t at, int16_t written, int16_t base,
+                       char *out)
+{
+    uint8_t *in = DS_INPUT(d);
+    uint8_t *ta = DS_OWNER_OF(d);
+    uint8_t *e = DS_ENTRY_AT(d, base + written);
+    int32_t  marked = 0;
+    int32_t  allEmpty;
+    int16_t  i;
+
+    switch (IC_KIND_AT(in, at)) {
+
+    case KIND_KATAKANA:
+        if (!ds_NeedKatakanaAnalysis(d, base, written))
+            break;
+        /* Where nothing has been found yet, a mark further along the text
+           says some other candidate already covers this. */
+        if (written == 0)
+            for (i = (int16_t)(at + 1); i < IC_COUNT_AT(in); i++)
+                if (TA_MARK_AT(ta, i) != 0) {
+                    marked = 1;
+                    break;
+                }
+        if (marked == 0) {
+            ds_ProcessKatakana(d, at, e);
+            if (ds_CheckJrtTable(d, (int16_t)(base + written), 1) < 0)
+                return (int16_t)(written + 1);
+            written++;
+        }
+        break;
+
+    case KIND_LATIN:
+    case KIND_ENGWORD:
+        ds_ProcessRomanAlphabet(d, at, e);
+        if (ds_CheckJrtTable(d, (int16_t)(base + written), 1) < 0)
+            return (int16_t)(written + 1);
+        written++;
+        break;
+
+    case KIND_HIRAGANA:
+        ds_ProcessHiragana(d, at, e);
+        if (base + written + 1 >= DS_ENTRY_N)
+            return (int16_t)(written + 1);
+        written++;
+        break;
+
+    case KIND_DIGIT:
+    case KIND_KANJI:
+        break;
+
+    case KIND_CHOON:
+        /* A bar after a kana belongs to that kana and is not its own word. */
+        if (at != 0 && at > 0
+            && (IC_KIND_AT(in, at - 1) == KIND_KATAKANA
+                || IC_KIND_AT(in, at - 1) == KIND_HIRAGANA))
+            break;
+        ds_SetDummySymbol(d, at, e);
+        DE_B(e, DE_POS) = 9;
+        if (ds_CheckJrtTable(d, (int16_t)(base + written), 1) < 0)
+            return (int16_t)(written + 1);
+        written++;
+        break;
+
+    default:
+        ds_SetDummySymbol(d, at, e);
+        if (ds_CheckJrtTable(d, (int16_t)(base + written), 1) < 0)
+            return (int16_t)(written + 1);
+        written++;
+        break;
+    }
+
+    /* And the number counters, where a number ended here. */
+    if (TA_MARK_AT(ta, at) == 3) {
+        int16_t found;
+
+        e = DS_ENTRY_AT(d, written + base);
+        found = ds_JoSuusiSearch(d, at);
+        for (i = 0; i < found; i++) {
+            uint8_t *r = DS_REC_AT(d, i);
+            int16_t  j;
+
+            DE_W(e, DE_ACCENT) = *(int16_t *)(r + JC_ACCENT);
+            DE_B(e, DE_KANALEN) = r[JC_KANALEN];
+            DE_B(e, DE_CHARS) = r[JC_CHARS];
+            for (j = 0; j < 9; j++)
+                DE_B(e, DE_KANA + j) = r[JC_KANA + j];
+            DE_B(e, DE_POS) = 0x7d;
+            DE_W(e, DE_AT) = at;
+            DE_L(e, DE_MARK) = IC_MARK_AT(in, at);
+            DE_W(e, DE_OFFSET) = IC_OFFSET_AT(in, at);
+            DE_L(e, DE_COST) = 0;
+
+            if (base + written + 1 >= DS_ENTRY_N)
+                return (int16_t)(written + 1);
+            written++;
+            e = DS_ENTRY_AT(d, written + base);
+        }
+    }
+
+    TA_MARK_AT(ta, at) = 0;
+
+    allEmpty = 1;
+    for (i = base; i < base + written; i++)
+        if (DE_B(DS_ENTRY_AT(d, i), DE_KANALEN) != 0) {
+            allEmpty = 0;
+            break;
+        }
+
+    /* Nothing readable came of it: hand the character itself back, which is
+       what the caller will say aloud instead of a reading. */
+    if (allEmpty && marked == 0)
+        ju_DbCpy(out, IC_CHAR(in, at));
+    else
+        ju_DbSet(out, 0, 0);
+    return written;
 }

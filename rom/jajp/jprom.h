@@ -276,7 +276,7 @@ void      ju_TableFree(uint16_t *used, uint16_t *tail, uint16_t *freeHead,
 
 /* ---- DictSearch ------------------------------------------------------ */
 
-/* The class the rest of the analyser leans on. Thirty-seven of its sixty-two
+/* The class the rest of the analyser leans on. Forty-six of its sixty-two
    methods are written; rom/jajp/dictsearch.h maps the record and says which
    parts of it are understood, and rom/jajp/dictsearch.c says why the layout
    here is IBM's rather than ours. The block is passed as bytes because the
@@ -341,6 +341,16 @@ int16_t ds_EngRulesApplyRule(void *d, const uint8_t *in, uint8_t *out,
 int16_t ds_EngRulesConvert(void *d, const uint8_t *in, uint8_t *out,
                            DictManRules *eng, DictManRules *kana,
                            int16_t *outLen, int16_t *count);
+void    ds_SetDummySymbol(void *d, int16_t at, void *e);
+void    ds_SetDummyRomanAlphabet(void *d, int16_t at, void *e);
+void    ds_ProcessRomanAlphabet(void *d, int16_t at, void *e);
+int32_t ds_NeedKatakanaAnalysis(void *d, int16_t base, int16_t n);
+int16_t ds_CheckJrtTable(void *d, int16_t base, int16_t n);
+int16_t ds_CompareJMD(void *d, uint8_t *p, int16_t at, int16_t n);
+void    ds_SetJCC(void *d, const uint8_t *m, int16_t slot);
+int16_t ds_JoSuusiSearch(void *d, int16_t at);
+int16_t ds_HandleError(void *d, int16_t at, int16_t written, int16_t base,
+                       char *out);
 
 /* TextAnalysis's, and here because it is in IBM's dictsearch object. */
 void    ta_AddLongWord(void *t, uint8_t *word, int16_t n);
