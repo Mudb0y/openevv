@@ -2,11 +2,20 @@
  *
  * This is the class the rest of the analyser leans on: it turns a stretch of
  * the input into candidate words with readings, and everything above it
- * chooses between what it produced. IBM spreads it over four objects --
- * dictsearch, dictapi, fdictapi and kanastr -- and sixty-four methods, and
- * twenty of them are here: the whole of what it takes to turn one run of text
- * into kana, which is the closure of GenerateWord and reaches nothing outside
- * this file that is not already written.
+ * chooses between what it produced. IBM spreads it over seven objects --
+ * dictsearch, dictapi, fdictapi, kanastr, engread, numanal and phrasetable --
+ * and sixty-two methods; thirty-three of them are here.
+ *
+ * The count is worth stating carefully, because it was wrong for three
+ * commits. Reading only the first four objects gives sixty-four symbols, but
+ * two of those are one method compiled into two objects as a COMDAT, and
+ * three whole objects were missing: engread's four string-rule methods,
+ * numanal's eight number ones, and phrasetable's copy of IsOnin. So the
+ * closure of anything that reaches those looked smaller than it is, and
+ * tools/rom-offsets.py was checking this record against four objects while
+ * saying it checked the class. Both are put right. The map itself was never
+ * wrong: none of the three missing objects touches a DictSearch field, which
+ * is why the tiling held all along.
  *
  * The layout is IBM's rather than ours, which is a departure from the other
  * files in this directory. Two reasons, and both are about being able to prove

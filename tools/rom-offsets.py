@@ -156,8 +156,9 @@ CLASSES = {
     "textanalysis": (["txtanal.obj"], "txtanal.h", regions, "TA_BYTES",
                      "TA_MARKS", "TA_PHRASEBUF_BYTES"),
     "dictsearch": (["dictsearch.obj", "dictapi.obj", "fdictapi.obj",
-                    "kanastr.obj"], "dictsearch.h", regions_ds, "DS_BYTES",
-                   "DS_FZK", None),
+                    "kanastr.obj", "engread.obj", "numanal.obj",
+                    "phrasetable.obj"], "dictsearch.h", regions_ds,
+                   "DS_BYTES", "DS_FZK", None),
 }
 
 

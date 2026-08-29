@@ -276,7 +276,7 @@ void      ju_TableFree(uint16_t *used, uint16_t *tail, uint16_t *freeHead,
 
 /* ---- DictSearch ------------------------------------------------------ */
 
-/* The class the rest of the analyser leans on. Only three of its sixty-four
+/* The class the rest of the analyser leans on. Thirty-three of its sixty-two
    methods are written; rom/jajp/dictsearch.h maps the record and says which
    parts of it are understood, and rom/jajp/dictsearch.c says why the layout
    here is IBM's rather than ours. The block is passed as bytes because the
