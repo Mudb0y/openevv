@@ -268,6 +268,37 @@
 #define UH_ACCENT       3        /* uint8 */
 #define UH_TEXT         4        /* the written form, two bytes each */
 
+/* One word of the function-word dictionary. The fourth byte carries two
+   things: its top two bits are flags and the rest, less one, is which row of
+   the kakari table the word belongs to. */
+#define FW_LEN          0        /* uint8, bytes to the next, kana plus six */
+#define FW_KEY          1        /* uint8, and 0x5e ends the list */
+#define FW_ACCENT       2        /* uint8, the accent table's row, from one */
+#define FW_KAKARI       3        /* uint8, flags 0x40 and 0x80, and the row */
+#define FW_PHRVEC       4        /* uint8, the phrase vector's row, from one */
+#define FW_PENALTY      5        /* uint8, the penalty table's row, from one */
+#define FW_KANA         6        /* and the reading */
+
+/* A node of the trie over it, keyed by a whole two-byte character, with its
+   words hanging off the sixth byte. */
+#define FN_KEY          0        /* two bytes, most significant first */
+#define FN_CHILD        2        /* uint8, bytes to the next node down */
+#define FN_FLAGS        3        /* uint8, high nibble how many words, low
+                                    nibble the sibling delta's high */
+#define FN_SIBLING      4        /* uint8, and its low */
+#define FN_WORD         5        /* the words themselves */
+
+/* And what one match leaves behind in the function-word array, which is what
+   the pass above reads back. */
+#define FZ_MARK         0        /* uint8, 0xff where nothing was written */
+#define FZ_CHARS        1        /* uint8, characters of text it covers */
+#define FZ_HIRAGANA     2        /* uint8, how many of those are hiragana */
+#define FZ_KEY          4        /* int16, the word's own key byte */
+#define FZ_WORD         6        /* int16, where the word is in the blob */
+#define FZ_AT           8        /* int16, where in the text it ends */
+#define FZ_FLAGS        0x0a     /* uint8 */
+#define FZ_OFFSET       0x0c     /* int16, the byte offset in the raw text */
+
 /* What the user-dictionary context names, which is all that has been read of
    it: a written form to match and how many characters it has. */
 #define UC_WORD         4        /* char *, the written form */

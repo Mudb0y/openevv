@@ -160,6 +160,13 @@ static Conv *makeConv(Param *p)
 #define ibm_dsLookupTankanDict(d, b, a) ds_LookupTankanDict((d), (b), (a))
 #define ibm_dsLookupNormalWordDict(d, b, a, w) \
     ds_LookupNormalWordDict((d), (b), (a), (w))
+#define ibm_dsHitFuncWordDict(d, h, s, a, c, r, g, v, k, f) \
+    ds_HitFuncWordDict((d), (h), (s), (a), (c), (r), (g), (v), (k), (f))
+#define ibm_dsSearchFuncWordDict(d, v, a, s, k, f) \
+    ds_SearchFuncWordDict((d), (v), (a), (s), (k), (f))
+#define ibm_dsLookupFuncWordDict(d, b, a) \
+    ds_LookupFuncWordDict((d), (b), (a))
+#define FUNC_DICT() dm_GetFuncDictEx()
 
 #define UD_DICT(u)  (*(void **)&((RomUserDict *)(u))->dict)
 
@@ -507,6 +514,25 @@ extern THIS int16_t ibm_dsLookupTankanDict(void *d, int16_t base, int16_t at)
 extern THIS int16_t ibm_dsLookupNormalWordDict(void *d, int16_t base,
                                                int16_t at, int32_t swap)
     MANGLED("?LookupNormalWordDict@DictSearch@@QAEFFFH@Z");
+
+extern THIS int16_t ibm_dsHitFuncWordDict(void *d, const uint8_t *head,
+                                          int16_t slot, int16_t at,
+                                          int16_t count, int16_t run,
+                                          int16_t hiragana,
+                                          const uint8_t *vec,
+                                          const uint8_t *dict, int16_t flag)
+    MANGLED("?HitFuncWordDict@DictSearch@@QAEFPAU_FZK_HEAD@@FFFFFPAE1F@Z");
+extern THIS int16_t ibm_dsSearchFuncWordDict(void *d, const uint8_t *vec,
+                                             int16_t at, int16_t slot,
+                                             const uint8_t *dict,
+                                             int16_t flag)
+    MANGLED("?SearchFuncWordDict@DictSearch@@QAEFPAEFF0F@Z");
+extern THIS int16_t ibm_dsLookupFuncWordDict(void *d, int16_t base,
+                                             int16_t at)
+    MANGLED("?LookupFuncWordDict@DictSearch@@QAEFFF@Z");
+extern const uint8_t *ibm_dmGetFuncDictEx(void)
+    MANGLED("?GetFuncDictEx@DictMan@@SAPAEXZ");
+#define FUNC_DICT() ibm_dmGetFuncDictEx()
 
 extern const uint16_t ibm_s_nNormal MANGLED("?s_nNormal@StaticDict@@2GB");
 extern const uint16_t ibm_s_nTankan MANGLED("?s_nTankan@StaticDict@@2GB");
@@ -1498,6 +1524,9 @@ static const char *const TEXTS[] = {
        nothing found makes -- the one that turns the table on -- is a road the
        sweep actually walks. */
     "\x88\xaa\x89\x6f\x89\x92\x93\xfa",
+    /* A particle with a long bar after it, which is the one road through the
+       function-word search that continues a word rather than ending it. */
+    "\x93\xfa\x82\xcc\x81\x5b\x82\xcd\x81\x5b\x82\xc5\x82\xb7",
     NULL
 };
 
@@ -2408,6 +2437,110 @@ static void sweepDictionaries(void)
                 putEntries("supp", which, rc);
             }
     }
+    /* And the function words, which are a different kind of lookup: a word is
+       taken on whether the phrase before it can carry one, so the search is
+       handed a bit vector of what precedes. Every position of every text, and
+       the vector both wide open and narrowed to one bit at a time so that the
+       agreement test is swept rather than assumed. */
+    for (t = 0; TEXTS[t] != NULL; t++) {
+        int n = icSetText(TEXTS[t]);
+        int at;
+
+        for (at = 0; at < n; at++) {
+            long    which = t * 1000L + at;
+            int16_t rc;
+            int     b;
+
+            dsFresh();
+            rc = DS(LookupFuncWordDict)(ds_block, 0, (int16_t)at);
+            printf("DF word %ld rc %d\n", which, (int)rc);
+            putEntries("fword", which, rc);
+            for (j = 0; j < rc && j < 8; j++)
+                putRecord("frow", which * 100L + j,
+                          (const uint8_t *)(ds_block + DS_FZK
+                                            + j * DS_FZK_SIZE),
+                          DS_FZK_SIZE);
+
+            /* And the one bound the texts never reach on their own: the
+               function-word array is 726 rows and no sentence here fills a
+               tenth of it, so the row cursor is driven to its end by hand. */
+            {
+                static const int16_t SLOTS[] = { 0, 724, 725, 726, 727 };
+                uint8_t wide[14];
+                int     si;
+
+                for (j = 0; j < 14; j++)
+                    wide[j] = 0xff;
+                for (si = 0; si < (int)(sizeof SLOTS / sizeof SLOTS[0]); si++) {
+                    dsFresh();
+                    printf("DF hit %ld %d rc %d\n", which, (int)SLOTS[si],
+                           (int)DS(SearchFuncWordDict)(ds_block, wide,
+                                                       (int16_t)at, SLOTS[si],
+                                                       FUNC_DICT(), 0));
+                }
+            }
+
+            for (b = 0; b < 16; b++) {
+                uint8_t vec[14];
+                int     k;
+                int     fl;
+
+                for (k = 0; k < 14; k++)
+                    vec[k] = (uint8_t)(b == 0 ? 0xff
+                                       : (b <= 14 && k == b - 1 ? 0xff : 0));
+                if (b == 15)
+                    for (k = 0; k < 14; k++)
+                        vec[k] = 0x55;
+
+                for (fl = 0; fl < 3; fl++) {
+                    dsFresh();
+                    rc = DS(SearchFuncWordDict)(ds_block, vec, (int16_t)at, 0,
+                                                FUNC_DICT(), (int16_t)fl);
+                    printf("DF search %ld %d %d rc %d\n", which, b, fl,
+                           (int)rc);
+                    for (j = 0; j < rc && j < 6; j++)
+                        putRecord("srow", (which * 100L + b) * 10 + fl,
+                                  (const uint8_t *)(ds_block + DS_FZK
+                                                    + j * DS_FZK_SIZE),
+                                  DS_FZK_SIZE);
+                }
+            }
+        }
+    }
+
+    /* And over every hiragana there is, in pairs.
+     *
+     * The nineteen texts above are sentences and reach only the function
+     * words those sentences happen to use; the dictionary holds twenty
+     * thousand records and more than a thousand of them carry an accent past
+     * the end of their own reading, which is a road worth walking. Every pair
+     * of hiragana as a two-character text covers the index entirely. */
+    {
+        long a;
+        long b;
+
+        for (a = 0x9f; a <= 0xf1; a++)
+            for (b = 0x9f; b <= 0xf1; b++) {
+                char    text[8];
+                int16_t rc;
+
+                text[0] = (char)0x82;
+                text[1] = (char)a;
+                text[2] = (char)0x82;
+                text[3] = (char)b;
+                text[4] = 0;
+                icSetText(text);
+                dsFresh();
+                rc = DS(LookupFuncWordDict)(ds_block, 0, 0);
+                printf("DF pair %02lx%02lx rc %d\n", a, b, (int)rc);
+                for (j = 0; j < rc && j < 4; j++)
+                    putRecord("prow", a * 1000L + b * 10 + j,
+                              (const uint8_t *)(ds_block + DS_ENTRY
+                                                + j * DS_ENTRY_SIZE),
+                              DS_ENTRY_SIZE);
+            }
+    }
+
     printf("DD done\n");
 }
 

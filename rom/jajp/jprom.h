@@ -326,6 +326,14 @@ int32_t ds_LookupEngWordDictFromText(void *d, int16_t slot, int16_t at);
 int16_t ds_LookupTankanDict(void *d, int16_t base, int16_t at);
 int16_t ds_LookupNormalWordDict(void *d, int16_t base, int16_t at,
                                 int32_t swap);
+int16_t ds_HitFuncWordDict(void *d, const uint8_t *head, int16_t slot,
+                           int16_t at, int16_t count, int16_t run,
+                           int16_t hiragana, const uint8_t *vec,
+                           const uint8_t *dict, int16_t flag);
+int16_t ds_SearchFuncWordDict(void *d, const uint8_t *vec, int16_t at,
+                              int16_t slot, const uint8_t *dict,
+                              int16_t flag);
+int16_t ds_LookupFuncWordDict(void *d, int16_t base, int16_t at);
 
 /* TextAnalysis's, and here because it is in IBM's dictsearch object. */
 void    ta_AddLongWord(void *t, uint8_t *word, int16_t n);

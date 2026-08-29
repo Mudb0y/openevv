@@ -1902,3 +1902,317 @@ int16_t ds_LookupNormalWordDict(void *d, int16_t base, int16_t at,
         return ds_LookupNormalWordDict(d, firstBase, at, 1);
     return total;
 }
+
+/* ---- the function words ---------------------------------------------- */
+
+/* This is fdictapi.obj, and it is a different kind of lookup from the five
+ * above. A function word -- a particle, an ending, an auxiliary -- is not
+ * chosen on its spelling alone but on what it may attach to, so the dictionary
+ * carries a bit vector per word saying which kinds of phrase it can follow,
+ * and the search is handed the vector of what actually precedes it. A word is
+ * taken only where the two agree.
+ *
+ * What comes out is not a candidate entry but a row of the function-word
+ * array, one per match; `LookupFuncWordDict' is the pass that turns those into
+ * candidate entries afterwards, working out each one's part of speech by
+ * looking its four descriptive bytes up in the phrase-type table.
+ */
+
+/* Reaching a row of that array. */
+#define DS_FZK_AT(d, i)    DS_AT(d, DS_FZK + (i) * DS_FZK_SIZE)
+#define FZ_B(f, off)       (*((uint8_t *)(f) + (off)))
+#define FZ_W(f, off)       (*(int16_t *)((uint8_t *)(f) + (off)))
+
+/* The kana a phrase may not begin with: a doubled consonant, the three small
+   y-kana, and the syllabic n. A word whose flag says it starts a phrase does
+   not, if the character after it is one of these. */
+static const char *const NOT_INITIAL[] = {
+    "\x82\xc1",                 /* the small tsu */
+    "\x82\xe1", "\x82\xe3", "\x82\xe5",   /* small ya, yu, yo */
+    "\x82\xf1",                 /* n */
+    NULL
+};
+
+/* Where the hiragana begin, which is what the function dictionary's index is
+   measured from, and the first code past the end of it. */
+static const char HIRAGANA_FIRST[] = "\x82\xa0";
+#define HIRAGANA_PAST   0x82ff
+
+/* The long-vowel bar, which continues a function word rather than ending it. */
+static const char LONG_BAR[] = "\x81\x5b";
+
+/* Where the index and the records live inside the function dictionary. */
+#define FD_INDEX        0        /* one int16 per hiragana */
+#define FD_INDEX_LAST   0xa6     /* and one more for everything past them */
+#define FD_RECORDS      0xa8
+
+/* Every word of one trie node that the preceding phrase can take.
+ *
+ * The node's words are tried in turn and each against all fourteen of the bit
+ * vector's bytes; a word is taken on the first byte where its own vector and
+ * the caller's agree. What is written is a row of the function-word array
+ * rather than a candidate entry, because what a function word is worth cannot
+ * be settled until the pass above has looked its phrase type up.
+ *
+ * Answers how many rows were written. */
+int16_t ds_HitFuncWordDict(void *d, const uint8_t *head, int16_t slot,
+                           int16_t at, int16_t count, int16_t run,
+                           int16_t hiragana, const uint8_t *vec,
+                           const uint8_t *dict, int16_t flag)
+{
+    uint8_t       *in = DS_INPUT(d);
+    const uint8_t *p = head + FN_WORD;
+    uint16_t       next = ju_MakeUshort(IC_CHAR(in, at + 1));
+    int16_t        written = 0;
+    int16_t        i;
+
+    for (i = 0; i < count; i++, p += p[FW_LEN]) {
+        int16_t j;
+
+        if (p[FW_KEY] == 0x5e)
+            continue;
+
+        for (j = 0; j < 14; j++) {
+            uint8_t  mine;
+            uint8_t  theirs;
+            uint8_t *f;
+
+            if (p[FW_PHRVEC] < 1)
+                break;
+            mine = dm_GetPhrVectorAt((uint16_t)((p[FW_PHRVEC] - 1) * 14 + j));
+            theirs = vec[j];
+            if ((mine & theirs) == 0)
+                continue;
+
+            /* Where the caller asked for phrase starts only, a word that is
+               not marked as one is passed over. */
+            if (flag != 0
+                && (flag != 1 || (p[FW_KAKARI] & 0x40) == 0))
+                break;
+
+            if (slot >= DS_FZK_N)
+                return written;
+            f = DS_FZK_AT(d, slot);
+
+            FZ_B(f, FZ_CHARS) = (uint8_t)run;
+            FZ_B(f, FZ_HIRAGANA) = (uint8_t)hiragana;
+            FZ_W(f, FZ_KEY) = (int16_t)(uint16_t)p[FW_KEY];
+            FZ_W(f, FZ_WORD) = (int16_t)(p - dict);
+            FZ_W(f, FZ_AT) = at;
+            FZ_W(f, FZ_OFFSET) = IC_OFFSET_AT(in, at - run + 1);
+
+            /* Whether this word begins a phrase. It says so itself, and the
+               character after it can still say otherwise: nothing may begin
+               with a doubled consonant, a small y-kana or an n. */
+            {
+                int32_t starts = (p[FW_KAKARI] & 0x80) != 0;
+                int     k;
+
+                for (k = 0; starts && NOT_INITIAL[k] != NULL; k++)
+                    if (next == ju_MakeUshort(NOT_INITIAL[k]))
+                        starts = 0;
+                FZ_B(f, FZ_FLAGS) = (uint8_t)(starts ? 1 : 0);
+            }
+            if ((dm_GetPenaltyAt((uint16_t)((p[FW_PENALTY] - 1) * 14 + j))
+                 & theirs) != 0)
+                FZ_B(f, FZ_FLAGS) = (uint8_t)(FZ_B(f, FZ_FLAGS) | 2);
+
+            written++;
+            slot++;
+            break;
+        }
+    }
+    return written;
+}
+
+/* Walk the function-word trie from the character at `at'.
+ *
+ * The index is one entry per hiragana, so the first character picks where in
+ * the dictionary to start without any search at all; everything at or past the
+ * end of the hiragana shares the last entry. From there it is an ordinary trie
+ * walk, except that a long-vowel bar does not end a word -- the same node is
+ * asked again with the bar counted in.
+ *
+ * Answers how many rows of the function-word array were written. */
+int16_t ds_SearchFuncWordDict(void *d, const uint8_t *vec, int16_t at,
+                              int16_t slot, const uint8_t *dict, int16_t flag)
+{
+    uint8_t       *in = DS_INPUT(d);
+    int16_t        run = 1;
+    int16_t        hira = 0;
+    int16_t        written = 0;
+    uint16_t       idx;
+    uint16_t       key = ju_MakeUshort(IC_CHAR(in, at));
+    const uint8_t *p;
+    int32_t        done = 0;
+    int16_t        count = 0;
+
+    if (key < ju_MakeUshort(HIRAGANA_FIRST))
+        return written;
+
+    if (key < HIRAGANA_PAST)
+        idx = ju_MakeUshort((const char *)
+                            (dict + (key - ju_MakeUshort(HIRAGANA_FIRST) + 1)
+                             * 2));
+    else
+        idx = ju_MakeUshort((const char *)(dict + FD_INDEX_LAST));
+    if (idx == 0xffff || idx == 0)
+        return written;
+
+    p = dict + FD_RECORDS + idx;
+    if (IC_KIND_AT(in, at) == KIND_HIRAGANA)
+        hira++;
+
+    while (!done) {
+        uint16_t nodeKey = (uint16_t)((p[FN_KEY] << 8) + p[FN_KEY + 1]);
+
+        if (key == nodeKey) {
+            count = (int16_t)(p[FN_FLAGS] >> 4);
+            if (count != 0) {
+                int16_t w = ds_HitFuncWordDict(d, p, slot, at, count, run,
+                                               hira, vec, dict, flag);
+
+                slot = (int16_t)(slot + w);
+                written = (int16_t)(written + w);
+            }
+            at++;
+            key = ju_MakeUshort(IC_CHAR(in, at));
+            if (IC_KIND_AT(in, at) == KIND_HIRAGANA)
+                hira++;
+            run++;
+
+            /* A bar after it lengthens the same word rather than starting a
+               new one, so the node is asked again with the bar counted in. */
+            if (key == ju_MakeUshort(LONG_BAR) && count != 0) {
+                int16_t w = ds_HitFuncWordDict(d, p, slot, at, count, run,
+                                               hira, vec, dict, flag);
+
+                slot = (int16_t)(slot + w);
+                written = (int16_t)(written + w);
+                at++;
+                key = ju_MakeUshort(IC_CHAR(in, at));
+                if (IC_KIND_AT(in, at) == KIND_HIRAGANA)
+                    hira++;
+                run++;
+            }
+
+            if (p[FN_CHILD] == 0)
+                done = 1;
+            else
+                p += 2 + p[FN_CHILD];
+            continue;
+        }
+
+        if (key > nodeKey) {
+            uint16_t skip = (uint16_t)(((p[FN_FLAGS] & 0xf) << 8)
+                                       + p[FN_SIBLING]);
+
+            if (skip == 0)
+                done = 1;
+            else
+                p += 3 + skip;
+            continue;
+        }
+        done = 1;
+    }
+    return written;
+}
+
+/* Every function word that can start at `at', as candidate entries.
+ *
+ * The vector handed to the search is all ones, which is to say anything at
+ * all may precede: this is the pass that finds what is there rather than the
+ * one that chooses. What comes back is a row per match, and each becomes a
+ * candidate entry here -- the reading copied out, the accent read from its own
+ * table, and the part of speech worked out by describing the word in four
+ * bytes and finding the row of the phrase-type table that matches.
+ *
+ * Those four bytes are the whole of what a function word is to the path
+ * search: nothing, a fixed one, what its kakari row says about what it
+ * attaches to, and the key byte its dictionary record carries. */
+int16_t ds_LookupFuncWordDict(void *d, int16_t base, int16_t at)
+{
+    uint8_t       *in = DS_INPUT(d);
+    const uint8_t *dict = dm_GetFuncDictEx();
+    uint8_t        vec[14];
+    int16_t        found;
+    int16_t        i;
+
+    for (i = 0; i < 14; i++)
+        vec[i] = 0xff;
+    for (i = 0; i < DS_FZK_N * DS_FZK_SIZE; i++)
+        DS_B(d, DS_FZK + i) = 0;
+    for (i = 0; i < DS_FZK_N; i++) {
+        FZ_B(DS_FZK_AT(d, i), FZ_MARK) = 0xff;
+        FZ_B(DS_FZK_AT(d, i), FZ_FLAGS) = 0;
+    }
+
+    found = ds_SearchFuncWordDict(d, vec, at, 0, dict, 1);
+    if (found == 0)
+        return 0;
+
+    for (i = 0; i < found; i++) {
+        uint8_t       *e;
+        uint8_t       *f;
+        int16_t        off;
+        const uint8_t *accent;
+        uint8_t        kakari;
+        uint8_t        tg[4];
+        int16_t        j;
+
+        if (base + i >= DS_ENTRY_N)
+            return i;
+        e = DS_ENTRY_AT(d, base + i);
+        f = DS_FZK_AT(d, i);
+
+        DE_B(e, DE_CHARS) = FZ_B(f, FZ_CHARS);
+        DE_B(e, DE_HIRAGANA) = FZ_B(f, FZ_HIRAGANA);
+
+        off = FZ_W(f, FZ_WORD);
+        accent = dm_GetAccentAt((uint16_t)(dict[off + FW_ACCENT] - 1));
+        DE_W(e, DE_ACCENT) = (int16_t)(accent[2] & 0xf);
+        DE_B(e, DE_KANALEN) = (uint8_t)(dict[off + FW_LEN] - FW_KANA);
+        DE_W(e, DE_AT) = at;
+        DE_L(e, DE_MARK) = IC_MARK_AT(in, at);
+        DE_W(e, DE_OFFSET) = IC_OFFSET_AT(in, at);
+        DE_L(e, DE_COST) = 3;
+
+        kakari = dm_GetKakariAt((uint16_t)
+                                (((dict[off + FW_KAKARI] - 1) & 0x3f) * 6 + 4));
+
+        for (j = 0; j < 4; j++)
+            tg[j] = 0;
+        tg[1] = 1;
+        tg[3] = FZ_B(f, FZ_KEY);
+        switch (kakari) {
+        case 1:            tg[2] = 0x20; break;
+        case 2: case 4:    tg[2] = 0x40; break;
+        case 8:            tg[1] = (uint8_t)(tg[1] | 0x10); break;
+        default:           break;
+        }
+
+        for (j = 0x80; j < 0xb4; j++)
+            if (tg[0] == dm_GetTGAt2((uint8_t)j, 0)
+                && tg[1] == dm_GetTGAt2((uint8_t)j, 1)
+                && tg[2] == dm_GetTGAt2((uint8_t)j, 2)
+                && tg[3] == dm_GetTGAt2((uint8_t)j, 3))
+                break;
+        DE_B(e, DE_POS) = (uint8_t)j;
+
+        for (j = 0; j < DE_B(e, DE_KANALEN); j++)
+            DE_B(e, DE_KANA + j) = dict[off + FW_KANA + j];
+
+        /* An accent past the end of the reading is brought back to it, and
+           then off a mora that cannot carry one. */
+        if (DE_U(e, DE_ACCENT) > DE_B(e, DE_KANALEN)) {
+            uint8_t last;
+
+            DE_W(e, DE_ACCENT) = (int16_t)(uint16_t)DE_B(e, DE_KANALEN);
+            last = DE_B(e, DE_KANA + DE_B(e, DE_KANALEN) - 1);
+            if ((last / 8 == 0x1e || last == 0xfd || last == 0xfe)
+                && DE_B(e, DE_KANALEN) > 1)
+                DE_W(e, DE_ACCENT)--;
+        }
+    }
+    return found;
+}
