@@ -44,10 +44,11 @@
 #define DS_AT(d, off)      ((uint8_t *)(d) + (off))
 #define DS_B(d, off)       (*(uint8_t *)DS_AT(d, off))
 #define DS_W(d, off)       (*(int16_t *)DS_AT(d, off))
+#define DS_L(d, off)       (*(int32_t *)DS_AT(d, off))
 #define DS_P(d, off)       (*(void **)DS_AT(d, off))
 
 #define DS_INPUT(d)        ((uint8_t *)DS_P(d, DS_INPUTCHAR))
-#define DS_OWNER_OF(d)     ((uint8_t *)DS_P(d, DS_OWNER))
+#define DS_OWNER_OF(d)     ((uint8_t *)DS_P(d, DS_OWNER_AT))
 
 /* The four arrays with one slot per candidate, the readings themselves, and
    the readings of the one kanji being looked up. */
@@ -84,6 +85,11 @@
  * anybody working the encoding out by hand, which is a different character
  * altogether. test/romprims.sh is what caught that. */
 static const char CASE_MARKER[] = "\x82\xf0";
+
+/* And the one character that is neither a letter nor a kana but belongs to an
+   English word all the same. It sits in the Roman-numeral range, which is why
+   the walk over letters has to name it rather than test a class. */
+static const char ENG_ROMAN_MARK[] = "\xfa\x56";
 
 /* The small kana, which are the ones that do not stand alone: a small vowel or
    a small ya, yu or yo joins the sound in front of it, and a small tsu doubles
@@ -1111,4 +1117,788 @@ int16_t ds_GenerateWord(void *d, int16_t at, int16_t base)
         if (DS_TAKEN_AT(d, j) < 2)
             ds_SearchTankanTable(d, j, at, base);
     return DS_W(d, DS_CURSOR);
+}
+
+/* ---- reading the dictionaries proper --------------------------------- */
+
+/* Everything below this line is dictapi.obj: the five dictionaries a stretch
+ * of text is looked up in and the three writers that put what they find into
+ * the candidate array. They share a shape. Each walks a hash to find where in
+ * its dictionary to start, then walks a trie or a block of records from
+ * there, and hands every match to a writer that fills in a candidate entry.
+ * What differs is the dictionary: the word dictionary is a trie over whole
+ * characters, the single-kanji one another, the supplement and English ones
+ * are flat blocks of self-delimiting records.
+ *
+ * The user-dictionary context runs through all of them. When
+ * DS_USERDICT_MODE is one, the analysis is not reading the sentence but
+ * checking one particular word, and every match has to agree with what
+ * DS_USERDICT_WORD names before it is taken. */
+
+/* Reaching the context, whose own record is not mapped past two fields. */
+#define DS_CONTEXT(d)   (*(uint8_t **)DS_AT(d, DS_USERDICT_WORD))
+#define DS_INCONTEXT(d) (DS_L(d, DS_USERDICT_MODE) == 1)
+
+/* Whether a kanji is one of the variant forms the itaiji table covers. */
+int32_t ds_IsItaiji(void *d, uint16_t code)
+{
+    (void)d;
+    if (code < ju_MakeUshort((const char *)dm_GetItaijiAt(0, 0)))
+        return 0;
+    if (code > ju_MakeUshort((const char *)dm_GetItaijiAt(0, 0x3d2)))
+        return 0;
+    return 1;
+}
+
+/* The standard form of a variant kanji, or the kanji itself.
+ *
+ * The table is grouped by lead byte: the hash gives, for each of thirty-seven
+ * lead bytes, which byte it is and how many entries it has, so the search only
+ * has to look at one group. Inside the group the entries are in order, so a
+ * character smaller than the first or larger than the last is not there. */
+uint16_t ds_SwapKanji(void *d, uint16_t code)
+{
+    int32_t at = 0;
+    int32_t base = 0;
+    int32_t count = 0;
+    int32_t i;
+
+    if (code == 0)
+        return code;
+    if (!ds_IsItaiji(d, code))
+        return code;
+
+    for (at = 0; at < 0x25; at++) {
+        uint16_t lead = (uint16_t)((code & 0xff00) >> 8);
+
+        if (lead < dm_GetItaijiHashAt((uint16_t)at, 0))
+            return code;
+        if (lead == dm_GetItaijiHashAt((uint16_t)at, 0)) {
+            count = dm_GetItaijiHashAt((uint16_t)at, 1);
+            break;
+        }
+        base += dm_GetItaijiHashAt((uint16_t)at, 1);
+    }
+    if (at == 0x25)
+        return code;
+
+    if (code < ju_MakeUshort((const char *)dm_GetItaijiAt(0, (uint16_t)base)))
+        return code;
+    if (code > ju_MakeUshort((const char *)
+                             dm_GetItaijiAt(0, (uint16_t)(base + count - 1))))
+        return code;
+
+    for (i = base; i < base + count; i++) {
+        uint16_t here = ju_MakeUshort((const char *)
+                                      dm_GetItaijiAt(0, (uint16_t)i));
+
+        if (code < here)
+            return code;
+        if (code == here)
+            return ju_MakeUshort((const char *)
+                                 dm_GetItaijiAt(1, (uint16_t)i));
+    }
+    return code;
+}
+
+/* A placeholder candidate for a character no dictionary knew.
+ *
+ * The path search has to have something to choose, or a sentence with one
+ * unknown kanji in it would have no path at all. A marker of 0xff in the first
+ * kana byte is what says the reading is not real. */
+int16_t ds_ErrorDummy(void *d, int16_t slot, int16_t at)
+{
+    uint8_t *in = DS_INPUT(d);
+    uint8_t *e;
+
+    if (slot >= DS_ENTRY_N)
+        return 0;
+    e = DS_ENTRY_AT(d, slot);
+
+    DE_B(e, DE_KANA) = 0xff;
+    DE_B(e, DE_KANALEN) = 0;
+    DE_B(e, DE_CHARS) = 1;
+    DE_W(e, DE_AT) = at;
+    DE_B(e, DE_POS) = 0x75;
+    DE_L(e, DE_MARK) = IC_MARK_AT(in, at);
+    DE_L(e, DE_COST) = 0;
+    DE_W(e, DE_OFFSET) = IC_OFFSET_AT(in, at);
+    return 1;
+}
+
+/* Copy the written form of a match into a buffer, which is what the context
+   is compared against. */
+static void ds_written(void *d, char *out, int16_t at, int16_t chars)
+{
+    uint8_t *in = DS_INPUT(d);
+    int16_t  i;
+
+    for (i = 0; i < chars; i++) {
+        out[i * 2] = IC_CHAR(in, at + i)[0];
+        out[i * 2 + 1] = IC_CHAR(in, at + i)[1];
+    }
+    out[i * 2] = 0;
+}
+
+/* Every word hanging off one node of the word dictionary.
+ *
+ * A word may not end where the character after it would join it -- a small
+ * kana joins the sound before it, and a long bar after a katakana or another
+ * bar lengthens it -- so those are refused outright before anything is
+ * written. Answers how many entries were written, or how far it got when the
+ * array filled.
+ *
+ * A caution kept from IBM: the reading is copied out at its own length, which
+ * is a nibble and so may be fifteen, into the ten bytes a candidate holds. A
+ * record longer than ten writes over the position and the mark that were put
+ * in just above it. Reproduced; whether the shipped dictionary has such a
+ * record is what the sweep answers. */
+int16_t ds_WriteData(void *d, const uint8_t *head, int16_t chars,
+                     int16_t hiragana, int16_t base, int16_t last, int16_t at)
+{
+    uint8_t       *in = DS_INPUT(d);
+    char           want[256];
+    const uint8_t *p;
+    int16_t        count;
+    int16_t        skipped = 0;
+    int16_t        i;
+
+    if (last + 1 < IC_COUNT_AT(in)) {
+        int16_t y = ds_GetYoonIndex(d, IC_CHAR(in, last + 1));
+
+        if ((y >= 0 && y <= 7) || (y >= 0xa && y <= 0x11))
+            return 0;
+        if ((IC_KIND_AT(in, last) == KIND_KATAKANA
+             || IC_KIND_AT(in, last) == KIND_CHOON)
+            && IC_KIND_AT(in, last + 1) == KIND_CHOON)
+            return 0;
+    }
+
+    if (DS_INCONTEXT(d))
+        ds_written(d, want, at, chars);
+
+    p = head;
+    if ((head[NH_FLAGS] & 0x80) != 0) {
+        count = (int16_t)head[NH_COUNT];
+        p = head + NH_WORD;
+    } else {
+        count = 0;
+    }
+
+    for (i = 0; i < count; i++) {
+        uint8_t *e;
+        int16_t  j;
+
+        if (base + i >= DS_ENTRY_N)
+            return i;
+        if (DS_INCONTEXT(d)
+            && strcmp((const char *)*(char **)(DS_CONTEXT(d) + UC_WORD),
+                      want) != 0) {
+            p += NW_KANA + (p[NW_HEAD] & 0xf);
+            skipped++;
+            continue;
+        }
+
+        e = DS_ENTRY_AT(d, base + i);
+        DE_B(e, DE_CHARS) = (uint8_t)chars;
+        DE_B(e, DE_HIRAGANA) = (uint8_t)hiragana;
+        DE_W(e, DE_ACCENT) = (int16_t)(p[NW_HEAD] >> 4);
+        DE_B(e, DE_KANALEN) = (uint8_t)(p[NW_HEAD] & 0xf);
+        DE_B(e, DE_POS) = p[NW_POS];
+        DE_W(e, DE_AT) = at;
+        DE_L(e, DE_MARK) = IC_MARK_AT(in, at);
+        DE_W(e, DE_OFFSET) = IC_OFFSET_AT(in, at);
+        for (j = 0; j < 2; j++)
+            DE_B(e, DE_ATTR + j) = p[NW_ATTR + j];
+        if (DE_B(e, DE_KANALEN) == DE_B(e, DE_HIRAGANA)
+            && DE_B(e, DE_KANALEN) <= 3 && DE_B(e, DE_POS) == 0)
+            DE_B(e, DE_ATTR2) = (uint8_t)(DE_B(e, DE_ATTR2) | 0x41);
+        for (j = 0; j < DE_B(e, DE_KANALEN); j++)
+            DE_B(e, DE_KANA + j) = p[NW_KANA + j];
+        DE_L(e, DE_COST) = 1;
+
+        p += NW_KANA + DE_B(e, DE_KANALEN);
+    }
+    return (int16_t)(count - skipped);
+}
+
+/* The same for the single-kanji dictionary, whose records carry no part of
+   speech of their own worth a flag and whose cost is two rather than one. */
+int16_t ds_WriteTankanData(void *d, const uint8_t *head, int16_t chars,
+                           int16_t base, int16_t at)
+{
+    uint8_t       *in = DS_INPUT(d);
+    char           want[256];
+    const uint8_t *p = head + TH_READING;
+    int16_t        count = (int16_t)(head[TH_FLAGS] >> 4);
+    int16_t        skipped = 0;
+    int16_t        i;
+
+    if (DS_INCONTEXT(d))
+        ds_written(d, want, at, chars);
+
+    for (i = 0; i < count; i++) {
+        uint8_t *e;
+        int16_t  j;
+
+        if (base + i >= DS_ENTRY_N)
+            return i;
+        if (DS_INCONTEXT(d)
+            && strcmp((const char *)*(char **)(DS_CONTEXT(d) + UC_WORD),
+                      want) != 0) {
+            p += TR_KANA + (p[TR_LEN] & 0xf);
+            skipped++;
+            continue;
+        }
+
+        e = DS_ENTRY_AT(d, base + i);
+        DE_B(e, DE_CHARS) = (uint8_t)chars;
+        DE_W(e, DE_ACCENT) = (int16_t)(p[TR_LEN] >> 4);
+        DE_B(e, DE_KANALEN) = (uint8_t)(p[TR_LEN] & 0xf);
+        for (j = 0; j < 2; j++)
+            DE_B(e, DE_ATTR + j) = p[2 + j];
+        for (j = 0; j < DE_B(e, DE_KANALEN); j++)
+            DE_B(e, DE_KANA + j) = p[TR_KANA + j];
+        DE_B(e, DE_POS) = p[1];
+        DE_W(e, DE_AT) = at;
+        DE_L(e, DE_MARK) = IC_MARK_AT(in, at);
+        DE_W(e, DE_OFFSET) = IC_OFFSET_AT(in, at);
+        DE_L(e, DE_COST) = 2;
+
+        p += TR_KANA + DE_B(e, DE_KANALEN);
+    }
+    return (int16_t)(count - skipped);
+}
+
+/* And for the supplement and English dictionaries, whose record holds one
+   whole word rather than a trie node, so there is only ever one entry to
+   write and the reading may be long enough to want the owner's store. */
+int16_t ds_WriteUserData(void *d, const uint8_t *head, int16_t slot,
+                         int16_t at)
+{
+    uint8_t       *in = DS_INPUT(d);
+    char           want[256];
+    const uint8_t *kana;
+    uint8_t       *e;
+    int16_t        i;
+    int16_t        j;
+
+    if (slot > DS_ENTRY_N)
+        return 0;
+    if (DS_INCONTEXT(d)) {
+        ds_written(d, want, at, (int16_t)head[UH_CHARS]);
+        if (strcmp((const char *)*(char **)(DS_CONTEXT(d) + UC_WORD),
+                   want) != 0)
+            return 0;
+    }
+
+    e = DS_ENTRY_AT(d, slot);
+    kana = head + UH_TEXT + head[UH_CHARS] * 2;
+
+    DE_B(e, DE_CHARS) = head[UH_CHARS];
+    DE_W(e, DE_ACCENT) = (int16_t)(uint16_t)head[UH_ACCENT];
+    DE_B(e, DE_KANALEN) = head[UH_KANALEN];
+
+    if ((int8_t)DS_B(DS_OWNER_OF(d), TA_LONGWORDS) >= TA_LONGWORD_N
+        && DE_B(e, DE_KANALEN) > 9)
+        return 0;
+
+    if (DE_B(e, DE_KANALEN) > 9) {
+        ds_SetLongWord(d, (int16_t)DE_B(e, DE_KANALEN), e, (uint8_t *)kana);
+        i = (int16_t)DE_B(e, DE_KANALEN);
+    } else {
+        for (i = 0; i < head[UH_KANALEN]; i++)
+            DE_B(e, DE_KANA + i) = kana[i];
+    }
+
+    DE_B(e, DE_POS) = kana[i];
+    i++;
+    for (j = 0; j < 2; j++, i++)
+        DE_B(e, DE_ATTR + j) = kana[i];
+
+    DE_W(e, DE_AT) = at;
+    DE_L(e, DE_MARK) = IC_MARK_AT(in, at);
+    DE_W(e, DE_OFFSET) = IC_OFFSET_AT(in, at);
+    DE_L(e, DE_COST) = 9;
+    return 1;
+}
+
+/* Every word of the supplement dictionary that starts here.
+ *
+ * The supplement is flat rather than a trie: blocks of a thousand bytes, each
+ * a run of self-delimiting records in order, and an index that says which
+ * first character each block starts at. The walk finds the first block that
+ * could hold the word and reads forward from there. */
+int16_t ds_LookupUserDict(void *d, const uint8_t *dict, char *text,
+                          int16_t slot, const uint8_t *index, int16_t at,
+                          int16_t unused)
+{
+    int32_t  incontext = DS_INCONTEXT(d);
+    int16_t  written = 0;
+    int16_t  ti = 0;
+    uint16_t key;
+    int16_t  i = 0;
+    int16_t  found = 0;
+    int16_t  block = 0;
+    int16_t  end;
+    int16_t  b;
+    uint16_t here = 0;
+
+    (void)unused;
+    if (slot >= DS_ENTRY_N)
+        return 0;
+
+    key = ju_MakeUshort(text);
+    do {
+        here = ju_MakeUshort((const char *)(index + i * 2));
+        if (!found && here >= key) {
+            block = i;
+            found = 1;
+        }
+        i++;
+    } while (key >= here && i < 0x78);
+    if (i == 0x78)
+        block = (int16_t)(i - 1);
+    end = i;
+
+    for (b = block; b < end; b++) {
+        const uint8_t *p = dict + b * 0x3e8;
+
+        while (p[UH_LEN] != 0) {
+            int16_t        ti2 = ti;
+            const uint8_t *q = p + UH_TEXT;
+            uint16_t       recKey = ju_MakeUshort((const char *)q);
+            int16_t        n;
+
+            key = ju_MakeUshort(&text[ti2 * 2]);
+            if (key != recKey) {
+                if (key <= recKey)
+                    return written;
+                p += p[UH_LEN];
+                continue;
+            }
+
+            for (n = 0; key == recKey && n < p[UH_CHARS]; n++) {
+                q += 2;
+                recKey = ju_MakeUshort((const char *)q);
+                ti2++;
+                key = ju_MakeUshort(&text[ti2 * 2]);
+            }
+
+            if (n != p[UH_CHARS]) {
+                if (key <= recKey)
+                    return written;
+                p += p[UH_LEN];
+                continue;
+            }
+
+            if (!incontext || DS_CONTEXT(d)[UC_CHARS] == p[UH_CHARS]) {
+                if (ds_WriteUserData(d, p, slot, at) == 1) {
+                    written++;
+                    slot++;
+                }
+            }
+            p += p[UH_LEN];
+        }
+    }
+    return written;
+}
+
+/* Every word of the English dictionary that the romaji in `roman' spells.
+ *
+ * The mark argument is what says the word ran up to a character of the kind
+ * the walk above stops on, and it makes the entry carry a part of speech of
+ * its own rather than the record's. */
+int16_t ds_LookupEngWordDict(void *d, uint8_t *roman, int16_t slot,
+                             int16_t at, int16_t want, int32_t mark)
+{
+    int32_t  incontext;
+    int16_t  written = 0;
+    int16_t  ti = 0;
+    uint16_t key;
+    int16_t  i = 0;
+    int16_t  found = 0;
+    int16_t  block = 0;
+    int16_t  end;
+    int16_t  b;
+    uint16_t here = 0;
+
+    if (slot >= DS_ENTRY_N)
+        return 0;
+    incontext = DS_INCONTEXT(d);
+
+    key = ju_MakeUshort((const char *)roman);
+    do {
+        here = ju_MakeUshort((const char *)dm_GetEDictHashAt((uint16_t)(i * 2)));
+        if (!found && here >= key) {
+            block = i > 0 ? (int16_t)((uint16_t)i + (uint16_t)i - 1) : 0;
+            found = 1;
+        }
+        i++;
+    } while (key >= here && i * 2 < 0x78);
+    /* IBM tests for 0x78 here as well, and the loop above cannot reach it:
+       its own bound is i twice that. Left as it is. */
+    if (i == 0x78)
+        block = (int16_t)(i - 1);
+    end = (int16_t)(i * 2);
+
+    for (b = block; b < end; b++) {
+        const uint8_t *p = jajp_s_apszEng[(uint16_t)b];
+
+        while (p != NULL && p[UH_LEN] != 0) {
+            int16_t        ti2 = ti;
+            const uint8_t *q = p + UH_TEXT;
+            uint16_t       recKey = ju_MakeUshort((const char *)q);
+            int16_t        n;
+
+            key = ju_MakeUshort((const char *)&roman[ti2 * 2]);
+            if (key != recKey) {
+                if (key <= recKey)
+                    return written;
+                p += p[UH_LEN];
+                continue;
+            }
+
+            for (n = 0;;) {
+                if (key != recKey || n >= p[UH_CHARS])
+                    break;
+                n++;
+                if (n >= p[UH_CHARS])
+                    break;
+                q += 2;
+                recKey = ju_MakeUshort((const char *)q);
+                ti2++;
+                key = ju_MakeUshort((const char *)&roman[ti2 * 2]);
+            }
+
+            if (n != p[UH_CHARS]) {
+                if (key <= recKey)
+                    return written;
+                p += p[UH_LEN];
+                continue;
+            }
+
+            if (n == want
+                && (!incontext || DS_CONTEXT(d)[UC_CHARS] == p[UH_CHARS])
+                && ds_WriteUserData(d, p, slot, at) == 1) {
+                if (mark)
+                    DE_B(DS_ENTRY_AT(d, slot), DE_POS) = 0xe;
+                written++;
+                slot++;
+            }
+            p += p[UH_LEN];
+        }
+    }
+    return written;
+}
+
+/* The run of full-width letters starting here, as one English word.
+ *
+ * It lowercases as it goes and stops at a capital following a small letter,
+ * which is how a name written as one run comes apart into its words. Two
+ * hashes are appended, which is what the dictionary's own records end with. */
+int32_t ds_LookupEngWordDictFromText(void *d, int16_t slot, int16_t at)
+{
+    uint8_t *in = DS_INPUT(d);
+    uint8_t  roman[64];
+    int32_t  mark = 0;
+    uint8_t  upper = 1;
+    uint8_t  stop = 0;
+    int16_t  i = at;
+    int16_t  n = 0;
+
+    for (; i < IC_COUNT_AT(in) && !stop && n != 0x11; i++, n++) {
+        uint8_t c;
+
+        if (IC_KIND_AT(in, i) != KIND_LATIN
+            && IC_KIND_AT(in, i) != KIND_ENGWORD
+            && !ju_DbCmp(IC_CHAR(in, i), ENG_ROMAN_MARK))
+            break;
+
+        ju_DbCpy((char *)&roman[n * 2], IC_CHAR(in, i));
+        c = (uint8_t)((int8_t)IC_CHAR(in, i)[1] - 0x60);
+        if (c > 0x19) {
+            upper = 0;
+        } else if (!upper) {
+            stop = 1;
+            n--;
+        } else {
+            roman[n * 2 + 1] = (uint8_t)(roman[n * 2 + 1] + 0x21);
+            upper = 1;
+        }
+
+        if (IC_KIND_AT(in, i) == KIND_ENGWORD) {
+            n++;
+            mark = 1;
+            break;
+        }
+    }
+
+    roman[n * 2] = '#';
+    roman[n * 2 + 1] = '#';
+    roman[n * 2 + 2] = 0;
+    return ds_LookupEngWordDict(d, roman, slot, at, n, mark);
+}
+
+/* Every single-kanji reading for the character here.
+ *
+ * The same trie the compound dictionary uses, keyed by one character at a
+ * time, and every kanji is put through the variant table first so that a
+ * variant form finds its standard form's readings. Where nothing at all is
+ * found the character still gets a placeholder, or the path search would have
+ * no way through the sentence. */
+int16_t ds_LookupTankanDict(void *d, int16_t base, int16_t at)
+{
+    uint8_t       *in = DS_INPUT(d);
+    int32_t        incontext;
+    int16_t        i = at;
+    int16_t        chars = 1;
+    int16_t        total = 0;
+    int16_t        step = 0x100;
+    int16_t        pos = 0xff;
+    uint16_t       key;
+    const uint8_t *p;
+    int32_t        done = 0;
+
+    if (DS_INCONTEXT(d)) {
+        if (DS_CONTEXT(d)[UC_CHARS] != 1)
+            return 0;
+        incontext = 1;
+    } else {
+        incontext = 0;
+    }
+
+    if (base >= DS_ENTRY_N)
+        return 0;
+    if (IC_KIND_AT(in, i) != KIND_KANJI && IC_KIND_AT(in, i) != KIND_DIGIT)
+        return 0;
+
+    key = ds_SwapKanji(d, ju_MakeUshort(IC_CHAR(in, i)));
+    while (step != 0) {
+        uint16_t h;
+
+        step = (int16_t)(step / 2);
+        h = ju_MakeUshort((const char *)dm_GetTDictHashAt((uint16_t)pos));
+        if (key > h) {
+            if (step)
+                pos = (int16_t)(pos + step);
+            else
+                pos++;
+        } else if (step) {
+            pos = (int16_t)(pos - step);
+        }
+    }
+    if (pos >= (int16_t)jajp_s_apszTankan_n)
+        return 0;
+
+    p = jajp_s_apszTankan[(uint16_t)pos];
+    while (!done) {
+        uint16_t nodeKey = (uint16_t)((p[TH_KEY] << 8) + p[TH_KEY + 1]);
+
+        if (key == nodeKey) {
+            if ((p[TH_FLAGS] & 0xf0) != 0) {
+                int16_t n = 0;
+
+                if (!incontext || DS_CONTEXT(d)[UC_CHARS] == chars)
+                    n = ds_WriteTankanData(d, p, chars, base, at);
+                total = (int16_t)(total + n);
+                base = (int16_t)(base + n);
+            }
+            if (p[TH_CHILD] == 0) {
+                done = 1;
+                continue;
+            }
+            i++;
+            key = ds_SwapKanji(d, ju_MakeUshort(IC_CHAR(in, i)));
+            chars++;
+            p += p[TH_CHILD];
+            continue;
+        }
+        if (key > nodeKey) {
+            uint16_t skip = (uint16_t)(((p[TH_FLAGS] & 0xf) << 8)
+                                       + p[TH_SIBLING]);
+
+            if (skip == 0)
+                done = 1;
+            else
+                p += skip;
+            continue;
+        }
+        done = 1;
+    }
+
+    if (total == 0 && !DS_INCONTEXT(d))
+        total = (int16_t)(total + ds_ErrorDummy(d, base, at));
+    return total;
+}
+
+/* Every compound word of the main dictionary that starts here.
+ *
+ * The hash is over two characters rather than one, which is what makes a
+ * dictionary of this size searchable: the walk halves a range of 512 on the
+ * first character and, where that ties, on the second. Then the trie is walked
+ * one character at a time, taking every word that ends on the way down, so a
+ * two-character word and a five-character one starting in the same place both
+ * come back.
+ *
+ * Two retries follow. The hash lands on a block boundary, so a word may sit in
+ * the block before the one it points at -- hence stepping back one while
+ * anything at all matched. And where the walk went deeper than one character
+ * it is worth trying the block after, once. Last of all, a run that found
+ * nothing is tried again with the variant table on, which is the `swap'
+ * argument: a variant kanji then finds its standard form's words. */
+int16_t ds_LookupNormalWordDict(void *d, int16_t base, int16_t at,
+                                int32_t swap)
+{
+    uint8_t *in = DS_INPUT(d);
+    int16_t  firstBase = base;
+    int32_t  incontext = DS_INCONTEXT(d);
+    int16_t  chars;
+    int16_t  hira;
+    int16_t  total = 0;
+    int16_t  i = at;
+    int16_t  step = 0x200;
+    int16_t  pos = 0x1ff;
+    int16_t  saved;
+    int32_t  hit;
+    int32_t  retry;
+    int32_t  first;
+    uint16_t key;
+
+    if (base >= DS_ENTRY_N)
+        return 0;
+
+    chars = 1;
+    hira = 0;
+    key = ju_MakeUshort(IC_CHAR(in, i));
+    if (swap)
+        key = ds_SwapKanji(d, key);
+    if (IC_KIND_AT(in, i) == KIND_HIRAGANA)
+        hira++;
+
+    while (step != 0) {
+        uint16_t h;
+        uint16_t key2;
+        uint16_t h2;
+
+        step = (int16_t)(step / 2);
+        h = ju_MakeUshort((const char *)dm_GetNDictHashAt((uint16_t)pos, 0));
+        if (key < h) {
+            if (step)
+                pos = (int16_t)(pos - step);
+            continue;
+        }
+        if (key > h) {
+            if (step)
+                pos = (int16_t)(pos + step);
+            else
+                pos++;
+            continue;
+        }
+        key2 = ju_MakeUshort(IC_CHAR(in, i + 1));
+        if (swap)
+            key2 = ds_SwapKanji(d, key2);
+        h2 = ju_MakeUshort((const char *)dm_GetNDictHashAt((uint16_t)pos, 2));
+        if (key2 <= h2) {
+            if (step)
+                pos = (int16_t)(pos - step);
+        } else if (step) {
+            pos = (int16_t)(pos + step);
+        } else {
+            pos++;
+        }
+    }
+
+    hit = 0;
+    retry = 1;
+    first = 1;
+    saved = pos;
+
+    for (;;) {
+        const uint8_t *p;
+        int32_t        done = 0;
+
+        if (pos >= (int16_t)jajp_s_apszNormal_n)
+            return 0;
+        p = jajp_s_apszNormal[(uint16_t)pos];
+
+        while (!done) {
+            uint16_t nodeKey = (uint16_t)((p[NH_KEY] << 8) + p[NH_KEY + 1]);
+            uint16_t child = (uint16_t)(((p[NH_FLAGS] & 0x7f) << 4)
+                                        + p[NH_CHILD]);
+
+            if (key == nodeKey) {
+                if (first) {
+                    hit = 1;
+                    first = 0;
+                }
+                if ((p[NH_FLAGS] & 0x80) != 0) {
+                    int16_t n = 0;
+
+                    if (!incontext || DS_CONTEXT(d)[UC_CHARS] == chars)
+                        n = ds_WriteData(d, p, chars, hira, base, i, at);
+                    total = (int16_t)(total + n);
+                    base = (int16_t)(base + n);
+                }
+                if (child == 0) {
+                    done = 1;
+                    continue;
+                }
+                i++;
+                key = ju_MakeUshort(IC_CHAR(in, i));
+                if (swap)
+                    key = ds_SwapKanji(d, key);
+                if (IC_KIND_AT(in, i) == KIND_HIRAGANA)
+                    hira++;
+                chars++;
+                p += child;
+                continue;
+            }
+
+            if (key < nodeKey && first) {
+                hit = 1;
+                done = 1;
+                continue;
+            }
+            first = 0;
+            if (key <= nodeKey) {
+                done = 1;
+                continue;
+            }
+            {
+                uint16_t sib = (uint16_t)((p[NH_SIBLING] << 8)
+                                          + p[NH_SIBLING + 1]);
+
+                if (sib == 0)
+                    done = 1;
+                else
+                    p += sib;
+            }
+        }
+
+        if (pos > 0 && hit == 1) {
+            /* Something matched at the very first node, so the word may
+               begin in the block before this one. */
+            pos--;
+            hit = 0;
+            first = 1;
+        } else if (chars > 1 && retry == 1) {
+            /* And where the walk went deeper than one character, the block
+               after is worth one try. */
+            pos = (int16_t)(saved + 1);
+            retry = 0;
+        } else {
+            break;
+        }
+        chars = 1;
+        hira = 0;
+        i = at;
+        key = ju_MakeUshort(IC_CHAR(in, i));
+        if (swap)
+            key = ds_SwapKanji(d, key);
+    }
+
+    if (!incontext && total == 0 && swap == 0)
+        return ds_LookupNormalWordDict(d, firstBase, at, 1);
+    return total;
 }

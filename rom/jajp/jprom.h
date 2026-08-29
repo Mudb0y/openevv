@@ -85,6 +85,8 @@ extern const uint8_t *const jajp_s_apszNormal[];
 extern const int32_t        jajp_s_apszNormal_n;
 extern const uint8_t *const jajp_s_apszTankan[];
 extern const int32_t        jajp_s_apszTankan_n;
+extern const uint8_t *const jajp_s_apszEng[];
+extern const int32_t        jajp_s_apszEng_n;
 extern const uint8_t *const jajp_s_apszKana[];
 extern const int32_t        jajp_s_apszKana_n;
 extern const uint8_t *const jajp_s_apszTankanKana[];
@@ -305,6 +307,25 @@ int16_t ds_GetDictEntry(void *d, int16_t which, int16_t at, int16_t base,
 int16_t ds_SearchTankanTable(void *d, int16_t which, int16_t at,
                              int16_t base);
 int16_t ds_GenerateWord(void *d, int16_t at, int16_t base);
+int32_t ds_IsItaiji(void *d, uint16_t code);
+uint16_t ds_SwapKanji(void *d, uint16_t code);
+int16_t ds_ErrorDummy(void *d, int16_t slot, int16_t at);
+int16_t ds_WriteData(void *d, const uint8_t *head, int16_t chars,
+                     int16_t hiragana, int16_t base, int16_t last,
+                     int16_t at);
+int16_t ds_WriteTankanData(void *d, const uint8_t *head, int16_t chars,
+                           int16_t base, int16_t at);
+int16_t ds_WriteUserData(void *d, const uint8_t *head, int16_t slot,
+                         int16_t at);
+int16_t ds_LookupUserDict(void *d, const uint8_t *dict, char *text,
+                          int16_t slot, const uint8_t *index, int16_t at,
+                          int16_t unused);
+int16_t ds_LookupEngWordDict(void *d, uint8_t *roman, int16_t slot,
+                             int16_t at, int16_t want, int32_t mark);
+int32_t ds_LookupEngWordDictFromText(void *d, int16_t slot, int16_t at);
+int16_t ds_LookupTankanDict(void *d, int16_t base, int16_t at);
+int16_t ds_LookupNormalWordDict(void *d, int16_t base, int16_t at,
+                                int32_t swap);
 
 /* TextAnalysis's, and here because it is in IBM's dictsearch object. */
 void    ta_AddLongWord(void *t, uint8_t *word, int16_t n);

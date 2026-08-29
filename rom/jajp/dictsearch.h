@@ -39,12 +39,23 @@
 
 /* And what ours has to ask for. Three of this record's fields hold pointers,
    which are eight bytes here and were four in IBM's, so each of them uses the
-   four bytes after it as well -- and the last one, DS_USERDICT_WORD, is four
-   bytes from the end. Allocating a pointer's worth more is the whole of the
-   fix; the offsets stay IBM's, which is what lets the sweep build the same
-   state on both sides. See the note in docs/japanese.md on what a byte offset
-   costs when a pointer grows. */
-#define DS_ROOM         (DS_BYTES + sizeof(void *))
+   four bytes after it as well. Two of the three get away with it: DS_INPUTCHAR
+   has unread space behind it, and DS_USERDICT_WORD is four bytes from the end,
+   which the extra room below covers.
+ *
+ * The owner does not. It sits at offset four and the candidate array starts at
+ * offset eight, so on a sixty-four bit host the pointer's upper half and the
+ * first entry are the same bytes and each destroys the other -- writing one
+ * candidate makes the owner unreadable, which is a fault that only shows when
+ * something writes an entry and then asks the owner for anything. So ours
+ * keeps the owner past the end of IBM's record instead, at DS_OWNER_AT. The
+ * offsets IBM's own code uses are untouched, which is what matters for the
+ * map and for the sweep; only our own code knows where the owner really is,
+ * and test/romprims.c sets it through a macro so that each side writes its
+ * own place. See docs/japanese.md on what a byte offset costs when a pointer
+ * grows. */
+#define DS_ROOM         (DS_BYTES + 3 * sizeof(void *))
+#define DS_OWNER_AT     (DS_BYTES + sizeof(void *))
 
 /* ---- the head -------------------------------------------------------- */
 
@@ -181,6 +192,9 @@
 #define KIND_BRACKET    10       /* 0x816d */
 #define KIND_NAKAGURO   11       /* the middle dot, 0x8145 */
 #define KIND_OTHER      12
+#define KIND_ENGWORD    13       /* tested by the English-word walk; nothing
+                                    in the objects read so far writes it, and
+                                    GetCharType cannot answer it */
 
 /* ---- the records the dictionary is made of --------------------------- */
 
@@ -225,6 +239,39 @@
 #define DW_POS          1        /* uint8 */
 #define DW_ATTR         2        /* uint8, and 3 */
 #define DW_KANA         4
+
+/* A node of the word dictionary, keyed by a whole two-byte character. The
+   child delta is packed oddly -- seven bits shifted by four, plus a whole
+   byte -- and the flag that says words end here is the bit it shares with. */
+#define NH_KEY          0        /* two bytes, most significant first */
+#define NH_FLAGS        2        /* uint8, 0x80 set if words end here and the
+                                    low seven bits are the child delta's high */
+#define NH_CHILD        3        /* uint8, and its low */
+#define NH_SIBLING      4        /* two bytes, most significant first */
+#define NH_COUNT        6        /* uint8, how many words, when 0x80 is set */
+#define NH_WORD         7        /* and the words themselves */
+
+/* One of those words, which is the same shape as a page of the kanji
+   dictionary holds. */
+#define NW_HEAD         0        /* uint8, high nibble accent, low the length */
+#define NW_POS          1
+#define NW_ATTR         2        /* and 3 */
+#define NW_KANA         4
+
+/* A record of the supplement dictionary, and of the English one, which are
+   the same shape: a whole word in one record rather than a trie. The reading,
+   the part of speech and the two attributes follow the written form, so where
+   each of them starts depends on how long that is. */
+#define UH_LEN          0        /* uint8, bytes to the next record */
+#define UH_CHARS        1        /* uint8, characters of written form */
+#define UH_KANALEN      2        /* uint8, codes of reading */
+#define UH_ACCENT       3        /* uint8 */
+#define UH_TEXT         4        /* the written form, two bytes each */
+
+/* What the user-dictionary context names, which is all that has been read of
+   it: a written form to match and how many characters it has. */
+#define UC_WORD         4        /* char *, the written form */
+#define UC_CHARS        0x10     /* uint8, how many characters it is */
 
 /* A node of the kana dictionary, keyed by a whole two-byte character. Its
    readings run on from the sixth byte, each a length in its own low nibble,

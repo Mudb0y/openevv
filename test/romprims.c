@@ -139,6 +139,28 @@ static Conv *makeConv(Param *p)
 #define NORMAL_N ((long)jajp_s_apszNormal_n)
 #define TANKAN_N ((long)jajp_s_apszTankan_n)
 
+#define SUPP_D jajp_s_apszSuppD[0]
+#define SUPP_I jajp_s_apszSuppI[0]
+
+#define ibm_dsIsItaiji(d, c)        ds_IsItaiji((d), (c))
+#define ibm_dsSwapKanji(d, c)       ds_SwapKanji((d), (c))
+#define ibm_dsErrorDummy(d, s, a)   ds_ErrorDummy((d), (s), (a))
+#define ibm_dsWriteData(d, h, c, g, b, l, a) \
+    ds_WriteData((d), (h), (c), (g), (b), (l), (a))
+#define ibm_dsWriteTankanData(d, h, c, b, a) \
+    ds_WriteTankanData((d), (h), (c), (b), (a))
+#define ibm_dsWriteUserData(d, h, s, a) \
+    ds_WriteUserData((d), (h), (s), (a))
+#define ibm_dsLookupUserDict(d, k, t, s, x, a, u) \
+    ds_LookupUserDict((d), (k), (t), (s), (x), (a), (u))
+#define ibm_dsLookupEngWordDict(d, r, s, a, w, m) \
+    ds_LookupEngWordDict((d), (r), (s), (a), (w), (m))
+#define ibm_dsLookupEngWordDictFromText(d, s, a) \
+    ds_LookupEngWordDictFromText((d), (s), (a))
+#define ibm_dsLookupTankanDict(d, b, a) ds_LookupTankanDict((d), (b), (a))
+#define ibm_dsLookupNormalWordDict(d, b, a, w) \
+    ds_LookupNormalWordDict((d), (b), (a), (w))
+
 #define UD_DICT(u)  (*(void **)&((RomUserDict *)(u))->dict)
 
 #define ibm_udCtor(u, a)            rud_ctor((RomUserDict *)(u), (a))
@@ -444,6 +466,48 @@ extern THIS void ibm_taAddLongWord(void *t, uint8_t *word, int16_t n)
    constant, ours the count tools/lift-rom.py wrote beside the array -- so a
    lifted array of the wrong length shows up as a different number of lines
    rather than as nothing at all. */
+extern const uint8_t *const ibm_s_apszSuppD[]
+    MANGLED("?s_apszSuppD@StaticDict@@2PAPBEA");
+extern const uint8_t *const ibm_s_apszSuppI[]
+    MANGLED("?s_apszSuppI@StaticDict@@2PAPBEA");
+#define SUPP_D ibm_s_apszSuppD[0]
+#define SUPP_I ibm_s_apszSuppI[0]
+
+extern THIS int32_t ibm_dsIsItaiji(void *d, uint16_t code)
+    MANGLED("?IsItaiji@DictSearch@@QAEHG@Z");
+extern THIS uint16_t ibm_dsSwapKanji(void *d, uint16_t code)
+    MANGLED("?SwapKanji@DictSearch@@QAEGG@Z");
+extern THIS int16_t ibm_dsErrorDummy(void *d, int16_t slot, int16_t at)
+    MANGLED("?ErrorDummy@DictSearch@@QAEFFF@Z");
+extern THIS int16_t ibm_dsWriteData(void *d, const uint8_t *head,
+                                    int16_t chars, int16_t hiragana,
+                                    int16_t base, int16_t last, int16_t at)
+    MANGLED("?WriteData@DictSearch@@QAEFPAU_DICT_HEAD@@FFFFF@Z");
+extern THIS int16_t ibm_dsWriteTankanData(void *d, const uint8_t *head,
+                                          int16_t chars, int16_t base,
+                                          int16_t at)
+    MANGLED("?WriteTankanData@DictSearch@@QAEFPAU_TDICT_HEAD@@FFF@Z");
+extern THIS int16_t ibm_dsWriteUserData(void *d, const uint8_t *head,
+                                        int16_t slot, int16_t at)
+    MANGLED("?WriteUserData@DictSearch@@QAEFPAU_UDICT_HEAD@@FF@Z");
+extern THIS int16_t ibm_dsLookupUserDict(void *d, const uint8_t *dict,
+                                         char *text, int16_t slot,
+                                         const uint8_t *index, int16_t at,
+                                         int16_t unused)
+    MANGLED("?LookupUserDict@DictSearch@@QAEFPAE0F0FF@Z");
+extern THIS int16_t ibm_dsLookupEngWordDict(void *d, uint8_t *roman,
+                                            int16_t slot, int16_t at,
+                                            int16_t want, int32_t mark)
+    MANGLED("?LookupEngWordDict@DictSearch@@QAEFPAEFFFH@Z");
+extern THIS int32_t ibm_dsLookupEngWordDictFromText(void *d, int16_t slot,
+                                                    int16_t at)
+    MANGLED("?LookupEngWordDict@DictSearch@@QAEHFF@Z");
+extern THIS int16_t ibm_dsLookupTankanDict(void *d, int16_t base, int16_t at)
+    MANGLED("?LookupTankanDict@DictSearch@@QAEFFF@Z");
+extern THIS int16_t ibm_dsLookupNormalWordDict(void *d, int16_t base,
+                                               int16_t at, int32_t swap)
+    MANGLED("?LookupNormalWordDict@DictSearch@@QAEFFFH@Z");
+
 extern const uint16_t ibm_s_nNormal MANGLED("?s_nNormal@StaticDict@@2GB");
 extern const uint16_t ibm_s_nTankan MANGLED("?s_nTankan@StaticDict@@2GB");
 
@@ -1248,6 +1312,15 @@ static void sweepSkipList(void)
  *
  * rom/jajp/dictsearch.h is where the offsets come from. */
 static char ds_block[DS_ROOM];
+
+/* Where each side keeps DictSearch's owner. IBM's is four bytes at
+   DS_OWNER; ours cannot be, because a pointer is eight here and the candidate
+   array begins at the next word -- rom/jajp/dictsearch.h says why. */
+#ifdef EVV_ROMPRIMS_OURS
+#define DS_SET_OWNER(blk, ta) (*(void **)((blk) + DS_OWNER_AT) = (ta))
+#else
+#define DS_SET_OWNER(blk, ta) (*(void **)((blk) + DS_OWNER) = (ta))
+#endif
 static char ic_block[TA_INPUTCHAR_BYTES];
 
 static void dsPut(int32_t off, const char *bytes, int32_t n)
@@ -1409,8 +1482,36 @@ static const char *const TEXTS[] = {
     "\x83\x41\x83\x8a\x81\x45\x83\x58\x81\x45",
     "\x82\xab\x82\xe1\x82\xad\x82\xe5\x82\xa4\x82\xb5\x82\xe1",
     "\x83\x4c\x83\x83\x83\x93\x83\x76\x83\x74\x83\x40\x83\x43\x83\x8b",
+    /* And what the seven above never reach. The English dictionary is keyed
+       by full-width lowercase letters, so a text of half-width ASCII walks
+       past it entirely -- which is what the sabotage matrix noticed. The
+       supplement dictionary holds symbols and compounds beginning with a
+       full-width digit, and nothing else in this file has either. */
+    "\x82\x81\x82\x82\x82\x8c\x82\x85",                  /* able */
+    "\x82\x60\x82\x61\x82\x6b\x82\x64",                  /* ABLE */
+    "\x82\x60\x82\x82\x82\x8c\x82\x85\x82\x62\x82\x81\x82\x94",  /* AbleCat */
+    "\x82\x81\x82\x82\x82\x82\x82\x85\x82\x99",        /* abbey */
+    "\x81\x59\x81\x60\x81\x7d\x81\x87\x81\x95\x81\x97\x81\xa7",
+    "\x82\x50\x93\xfa\x95\xbd\x8b\xcf",
+    "\x82\x50\x82\x51\x82\x52\x93\xfa",
+    /* Three kanji the variant table rewrites, so that the retry a run with
+       nothing found makes -- the one that turns the table on -- is a road the
+       sweep actually walks. */
+    "\x88\xaa\x89\x6f\x89\x92\x93\xfa",
     NULL
 };
+
+/* A kanji followed by every small kana there is, in the order GetYoonIndex
+   numbers them. The first writer refuses a word that ends where one of these
+   would join it, and which of them count is a range with two ends; laying
+   them out like this is what puts both ends of it under the sweep. */
+static const char KANA_EDGES[] =
+    "\x93\xfa"
+    "\x82\x9f" "\x82\xa1" "\x82\xa3" "\x82\xa5" "\x82\xa7"
+    "\x82\xe1" "\x82\xe3" "\x82\xe5" "\x81\x5b" "\x82\xc1"
+    "\x83\x40" "\x83\x42" "\x83\x44" "\x83\x46" "\x83\x48"
+    "\x83\x83" "\x83\x85" "\x83\x87" "\x83\x62"
+    "\x93\xfa";
 
 /* One text laid into the input reader, split into slots the way InputChar
    would: a two-byte character to a slot, and anything else on its own. */
@@ -1556,7 +1657,7 @@ static void sweepDictSearchRest(void)
     /* The long-reading store, filled past the thirty it holds so that the
        refusal is swept too. */
     memset(ta_block, 0, sizeof ta_block);
-    *(void **)(ds_block + DS_OWNER) = ta_block;
+    DS_SET_OWNER(ds_block, ta_block);
     for (i = 0; i < 33; i++) {
         int32_t entRoom[DS_ENTRY_SIZE / 4];
         uint8_t *e = (uint8_t *)entRoom;
@@ -1634,7 +1735,7 @@ static void sweepDictSearchRest(void)
             memset(ds_block, 0, sizeof ds_block);
             memset(ta_block, 0, sizeof ta_block);
             *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
-            *(void **)(ds_block + DS_OWNER) = ta_block;
+            DS_SET_OWNER(ds_block, ta_block);
             *(int16_t *)(ds_block + DS_FROM) = (int16_t)at;
 
             printf("DS hrgn %ld", which);
@@ -1672,7 +1773,7 @@ static void sweepDictSearchRest(void)
             memset(ds_block, 0, sizeof ds_block);
             memset(ta_block, 0, sizeof ta_block);
             *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
-            *(void **)(ds_block + DS_OWNER) = ta_block;
+            DS_SET_OWNER(ds_block, ta_block);
             if (DS(GetTextBuf)(ds_block, (int16_t)at)) {
                 printf("DS kana %ld rc %d\n", which,
                        (int)DS(GenerateKanaString)(ds_block));
@@ -1709,7 +1810,7 @@ static void sweepDictSearchRest(void)
             memset(ds_block, 0, sizeof ds_block);
             memset(ta_block, 0, sizeof ta_block);
             *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
-            *(void **)(ds_block + DS_OWNER) = ta_block;
+            DS_SET_OWNER(ds_block, ta_block);
             printf("DS word %ld wrote %d\n", which,
                    (int)DS(GenerateWord)(ds_block, (int16_t)at, 0));
             for (j = 0; j < *(int16_t *)(ds_block + DS_CURSOR)
@@ -1797,7 +1898,7 @@ static void sweepUserDict(void)
     *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
     *(void **)(ta_block + TA_DICTSEARCH) = ds_block;
     *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
-    *(void **)(ds_block + DS_OWNER) = ta_block;
+    DS_SET_OWNER(ds_block, ta_block);
 
     memset(ud_room, 0, sizeof ud_room);
     UD(Ctor)(u, ta_block);
@@ -1950,7 +2051,7 @@ static void sweepUserDict(void)
             *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
             *(void **)(ta_block + TA_DICTSEARCH) = ds_block;
             *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
-            *(void **)(ds_block + DS_OWNER) = ta_block;
+            DS_SET_OWNER(ds_block, ta_block);
             ta_block[TA_LONGWORDS] = (char)(i == 0 ? 0 : TA_LONGWORD_N);
 
             memset(d, 0, sizeof d);
@@ -2033,7 +2134,7 @@ static void sweepUserDict(void)
 
             memset(ds_block, 0, sizeof ds_block);
             *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
-            *(void **)(ds_block + DS_OWNER) = ta_block;
+            DS_SET_OWNER(ds_block, ta_block);
             memset(ta_block, 0, sizeof ta_block);
             *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
             *(void **)(ta_block + TA_DICTSEARCH) = ds_block;
@@ -2095,6 +2196,221 @@ static void sweepUserDict(void)
     printf("UD done\n");
 }
 
+/* ---- the dictionaries proper ----------------------------------------- */
+
+/* One DictSearch and one owner, laid out the way the sweeps above do it. */
+static void dsFresh(void)
+{
+    memset(ds_block, 0, sizeof ds_block);
+    memset(ta_block, 0, sizeof ta_block);
+    *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
+    *(void **)(ta_block + TA_DICTSEARCH) = ds_block;
+    *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
+    DS_SET_OWNER(ds_block, ta_block);
+}
+
+/* Every candidate entry a lookup wrote, as the bytes they are. */
+static void putEntries(const char *what, long which, int n)
+{
+    int j;
+
+    for (j = 0; j < n && j < 12; j++)
+        putRecord(what, which * 100L + j,
+                  (const uint8_t *)(ds_block + DS_ENTRY + j * DS_ENTRY_SIZE),
+                  DS_ENTRY_SIZE);
+}
+
+static void sweepDictionaries(void)
+{
+    static char context[0x20];
+    static char contextWord[64];
+    long        code;
+    int         t;
+    int         j;
+
+    /* The variant table, over every value a two-byte character can have.
+       Both answers on one line, so a table read that has drifted shows up as
+       a run rather than as one line. */
+    dsFresh();
+    for (code = 0; code <= 0xffff; code++)
+        printf("DD itaiji %04lx %d %04x\n", code,
+               (int)DS(IsItaiji)(ds_block, (uint16_t)code),
+               (unsigned)DS(SwapKanji)(ds_block, (uint16_t)code));
+
+    /* The placeholder, at each end of the candidate array. */
+    icSetText(TEXTS[1]);
+    {
+        static const int16_t SLOTS[] = { 0, 1, 708, 709, 710, 711 };
+        int si;
+
+        for (si = 0; si < (int)(sizeof SLOTS / sizeof SLOTS[0]); si++) {
+            int16_t rc;
+
+            dsFresh();
+            rc = DS(ErrorDummy)(ds_block, SLOTS[si], 2);
+            printf("DD dummy %d rc %d\n", (int)SLOTS[si], (int)rc);
+            if (rc)
+                putRecord("dummy", SLOTS[si],
+                          (const uint8_t *)(ds_block + DS_ENTRY
+                                            + SLOTS[si] * DS_ENTRY_SIZE),
+                          DS_ENTRY_SIZE);
+        }
+    }
+
+    /* The three writers, over records built by hand: a word count of nought
+       to three, readings of every length a nibble can hold -- including the
+       ones longer than a candidate entry has room for -- and the long-word
+       store both empty and full. The text under them is the katakana one, so
+       that every small kana the first writer refuses on is there to be
+       found, one after another. */
+    icSetText(KANA_EDGES);
+    for (t = 0; t < 4; t++) {
+        long len;
+
+        for (len = 0; len <= 15; len++) {
+            uint8_t node[512];
+            uint8_t *w;
+            int      r;
+            int      k;
+            int16_t  rc;
+
+            memset(node, 0, sizeof node);
+            node[NH_FLAGS] = (uint8_t)(t > 0 ? 0x80 : 0x00);
+            node[NH_COUNT] = (uint8_t)t;
+            w = node + NH_WORD;
+            for (r = 0; r < t; r++) {
+                w[NW_HEAD] = (uint8_t)((r << 4) | (len & 0xf));
+                w[NW_POS] = (uint8_t)(r == 0 ? 0 : 0x40 + r);
+                w[NW_ATTR] = (uint8_t)(0x10 + r);
+                w[NW_ATTR + 1] = (uint8_t)(0x20 + r);
+                for (k = 0; k < (len & 0xf); k++)
+                    w[NW_KANA + k] = (uint8_t)(0x30 + r * 16 + k);
+                w += NW_KANA + (len & 0xf);
+            }
+            /* Over several places for the word to end, because what the
+               character after it is decides whether anything is written at
+               all -- a small kana or a long bar there refuses the lot. */
+            for (j = 0; j < 20; j++) {
+                dsFresh();
+                rc = DS(WriteData)(ds_block, node, (int16_t)(t + 1),
+                                   (int16_t)(len & 0xf), 0, (int16_t)j, 1);
+                printf("DD write %d %ld %d rc %d\n", t, len, j, (int)rc);
+                putEntries("write", (t * 100L + len) * 20 + j, rc);
+            }
+
+            /* And the same node read as a single-kanji one, whose count is a
+               nibble of the fourth byte rather than a byte of the seventh. */
+            memset(node, 0, sizeof node);
+            node[TH_FLAGS] = (uint8_t)(t << 4);
+            w = node + TH_READING;
+            for (r = 0; r < t; r++) {
+                w[TR_LEN] = (uint8_t)((r << 4) | (len & 0xf));
+                w[1] = (uint8_t)(0x50 + r);
+                w[2] = (uint8_t)(0x11 + r);
+                w[3] = (uint8_t)(0x22 + r);
+                for (k = 0; k < (len & 0xf); k++)
+                    w[TR_KANA + k] = (uint8_t)(0x60 + r * 16 + k);
+                w += TR_KANA + (len & 0xf);
+            }
+            dsFresh();
+            rc = DS(WriteTankanData)(ds_block, node, (int16_t)(t + 1), 0, 1);
+            printf("DD tankan %d %ld rc %d\n", t, len, (int)rc);
+            putEntries("tankan", t * 100L + len, rc);
+
+            /* And as a supplement record, which holds one word. */
+            memset(node, 0, sizeof node);
+            node[UH_CHARS] = (uint8_t)(t + 1);
+            node[UH_KANALEN] = (uint8_t)(len & 0xf);
+            node[UH_ACCENT] = (uint8_t)(len & 7);
+            for (k = 0; k < (t + 1) * 2; k++)
+                node[UH_TEXT + k] = (uint8_t)(0x82 + k);
+            w = node + UH_TEXT + (t + 1) * 2;
+            for (k = 0; k < (len & 0xf); k++)
+                w[k] = (uint8_t)(0x70 + k);
+            w[len & 0xf] = 0x33;
+            w[(len & 0xf) + 1] = 0x44;
+            w[(len & 0xf) + 2] = 0x55;
+            node[UH_LEN] = (uint8_t)(UH_TEXT + (t + 1) * 2 + (len & 0xf) + 3);
+
+            for (j = 0; j < 2; j++) {
+                dsFresh();
+                ta_block[TA_LONGWORDS] = (char)(j == 0 ? 0 : TA_LONGWORD_N);
+                rc = DS(WriteUserData)(ds_block, node, 0, 1);
+                printf("DD user %d %ld %d rc %d longs %d\n", t, len, j,
+                       (int)rc, (int)(uint8_t)ta_block[TA_LONGWORDS]);
+                putEntries("user", (t * 100L + len) * 10 + j, rc);
+            }
+        }
+    }
+
+    /* And the five dictionaries themselves, over real Japanese at every
+       position of every text, out of context and in it. */
+    memset(context, 0, sizeof context);
+    *(char **)(context + UC_WORD) = contextWord;
+
+    for (t = 0; TEXTS[t] != NULL; t++) {
+        int n = icSetText(TEXTS[t]);
+        int at;
+        int mode;
+
+        for (mode = 0; mode < 2; mode++)
+            for (at = 0; at < n; at++) {
+                long which = (mode * 100L + t) * 1000L + at;
+                int16_t rc;
+
+                /* In context, the word to agree with is the one that
+                   actually starts here, two characters of it, so the arm is
+                   entered rather than always refused. */
+                contextWord[0] = ic_block[IC_TEXT + at * 2];
+                contextWord[1] = ic_block[IC_TEXT + at * 2 + 1];
+                contextWord[2] = ic_block[IC_TEXT + (at + 1) * 2];
+                contextWord[3] = ic_block[IC_TEXT + (at + 1) * 2 + 1];
+                contextWord[4] = 0;
+                context[UC_CHARS] = 2;
+
+                dsFresh();
+                if (mode) {
+                    *(int32_t *)(ds_block + DS_USERDICT_MODE) = 1;
+                    *(void **)(ds_block + DS_USERDICT_WORD) = context;
+                }
+                rc = DS(LookupNormalWordDict)(ds_block, 0, (int16_t)at, 0);
+                printf("DD normal %ld rc %d\n", which, (int)rc);
+                putEntries("normal", which, rc);
+
+                dsFresh();
+                if (mode) {
+                    *(int32_t *)(ds_block + DS_USERDICT_MODE) = 1;
+                    *(void **)(ds_block + DS_USERDICT_WORD) = context;
+                }
+                rc = DS(LookupTankanDict)(ds_block, 0, (int16_t)at);
+                printf("DD tankandict %ld rc %d\n", which, (int)rc);
+                putEntries("tankandict", which, rc);
+
+                dsFresh();
+                if (mode) {
+                    *(int32_t *)(ds_block + DS_USERDICT_MODE) = 1;
+                    *(void **)(ds_block + DS_USERDICT_WORD) = context;
+                }
+                rc = (int16_t)DS(LookupEngWordDictFromText)(ds_block, 0,
+                                                            (int16_t)at);
+                printf("DD eng %ld rc %d\n", which, (int)rc);
+                putEntries("eng", which, rc);
+
+                dsFresh();
+                if (mode) {
+                    *(int32_t *)(ds_block + DS_USERDICT_MODE) = 1;
+                    *(void **)(ds_block + DS_USERDICT_WORD) = context;
+                }
+                rc = DS(LookupUserDict)(ds_block, SUPP_D,
+                                        (char *)(ic_block + IC_TEXT + at * 2),
+                                        0, SUPP_I, (int16_t)at, 0);
+                printf("DD supp %ld rc %d\n", which, (int)rc);
+                putEntries("supp", which, rc);
+            }
+    }
+    printf("DD done\n");
+}
+
 int main(void)
 {
     Param *p;
@@ -2136,6 +2452,7 @@ int main(void)
     sweepDictSearch();
     sweepDictSearchRest();
     sweepUserDict();
+    sweepDictionaries();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS
