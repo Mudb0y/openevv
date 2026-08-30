@@ -146,14 +146,11 @@
 /* ---- what InputChar reaches through ---------------------------------- */
 
 /* Two of its methods go up to TextAnalysis, on to the romanizer above it, and
- * then down again -- for the parameter block, to ask whether annotations are
- * in the text, and for the user dictionary, to turn a caller's reading into
- * the engine's codes. IBM has them at +8 and +0x18 of that object.
- *
- * Romanizer is not transcribed yet, so what its record will be is still ours
- * to choose, and these say which slot rather than which byte. On a build where
- * a pointer is four bytes wide they are IBM's own two numbers exactly. */
-#define RM_PARAM        (2 * sizeof(void *))
-#define RM_USERDICT     (6 * sizeof(void *))
+   then down again -- for the parameter block, to ask whether annotations are
+   in the text, and for the user dictionary, to turn a caller's reading into
+   the engine's codes. rom/jajp/romanizer.h is where that record is mapped, and
+   it has to be IBM's own offsets because DictSearch reads two settings out of
+   the same object. */
+#include "romanizer.h"
 
 #endif

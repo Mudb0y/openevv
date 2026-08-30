@@ -274,12 +274,12 @@
 #define FZ_FLAGS        0x0a     /* uint8 */
 #define FZ_OFFSET       0x0c     /* int16, the byte offset in the raw text */
 
-/* A field of Romanizer that ProcessRomanAlphabet reads through TextAnalysis,
-   and the only one of that class anything here wants: greater than nought
-   means spell an English word out letter by letter rather than reading it.
-   Romanizer is not mapped, so this is named for what it does and nothing
-   else. */
-#define RZ_SPELL_ENGLISH 0x68
+/* ---- what Romanizer holds that DictSearch reads ---------------------- */
+
+/* rom/jajp/romanizer.h is that record. Two settings are read out of it here:
+   whether an English word is spelled out letter by letter, and which number
+   mode is in force. */
+#include "romanizer.h"
 
 /* What the user-dictionary context is has been read since: it is a _SNLK_TABLE,
    and rom/jajp/inputchar.h names the whole of it. The two fields wanted here

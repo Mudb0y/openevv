@@ -270,6 +270,19 @@ static Conv *makeConv(Param *p)
 #define PARAM_ANNO(p) (((RomInstParam *)(p))->inputType)
 #define UD_ROOM  sizeof(RomUserDict)
 
+#define ibm_dsIsMember(d, p, t, n)   ds_IsMember((d), (p), (t), (n))
+#define ibm_dsIsZKNum(d, p)          ds_IsZKNum((d), (p))
+#define ibm_dsIsZSNum(d, p)          ds_IsZSNum((d), (p))
+#define ibm_dsIsZKeta(d, p)          ds_IsZKeta((d), (p))
+#define ibm_dsIsZSymb(d, p)          ds_IsZSymb((d), (p))
+#define ibm_dsIsCommaPosition(d, p, n) ds_IsCommaPosition((d), (p), (n))
+#define ibm_dsIsEndOfQuote(d, a)     ds_IsEndOfQuote((d), (a))
+#define ibm_dsCheckKetaOrder(d, n, c, kn, kc, k, b) \
+    ds_CheckKetaOrder((d), (n), (c), (kn), (kc), (k), (b))
+#define ibm_dsSetSuushiWord(d, s, a) ds_SetSuushiWord((d), (s), (a))
+#define ibm_dsSetDummyWord(d, s, a)  ds_SetDummyWord((d), (s), (a))
+#define ibm_dsgetPtrOfUserDict(d)    ((void *)ds_getPtrOfUserDict((d)))
+
 #define DS(name) ibm_ds##name
 
 #define DM(name) dm_##name
@@ -793,6 +806,32 @@ extern THIS int16_t ibm_icReadSentence(void *in)
 
 #define PARAM_ANNO(p) (*(int32_t *)((char *)(p) + 0x10))
 #define UD_ROOM  IBM_UD_ROOM
+
+extern THIS int16_t ibm_dsIsMember(void *d, uint8_t *p, const uint8_t *table,
+                                   int16_t n)
+    MANGLED("?IsMember@DictSearch@@QAEFPAEQAY01EF@Z");
+extern THIS int16_t ibm_dsIsZKNum(void *d, uint8_t *p)
+    MANGLED("?IsZKNum@DictSearch@@QAEFPAE@Z");
+extern THIS int16_t ibm_dsIsZSNum(void *d, uint8_t *p)
+    MANGLED("?IsZSNum@DictSearch@@QAEFPAE@Z");
+extern THIS int16_t ibm_dsIsZKeta(void *d, uint8_t *p)
+    MANGLED("?IsZKeta@DictSearch@@QAEFPAE@Z");
+extern THIS int16_t ibm_dsIsZSymb(void *d, uint8_t *p)
+    MANGLED("?IsZSymb@DictSearch@@QAEFPAE@Z");
+extern THIS int32_t ibm_dsIsCommaPosition(void *d, char *p, int32_t n)
+    MANGLED("?IsCommaPosition@DictSearch@@QAEHPADH@Z");
+extern THIS int32_t ibm_dsIsEndOfQuote(void *d, int16_t at)
+    MANGLED("?IsEndOfQuote@DictSearch@@QAEHF@Z");
+extern THIS int16_t ibm_dsCheckKetaOrder(void *d, int16_t *n, int16_t *chars,
+                                         int16_t *keepN, int16_t *keepChars,
+                                         int16_t keta, uint8_t *buf)
+    MANGLED("?CheckKetaOrder@DictSearch@@QAEFPAF000FPAE@Z");
+extern THIS int16_t ibm_dsSetSuushiWord(void *d, int16_t slot, int16_t at)
+    MANGLED("?SetSuushiWord@DictSearch@@QAEFFF@Z");
+extern THIS int16_t ibm_dsSetDummyWord(void *d, int16_t slot, int16_t at)
+    MANGLED("?SetDummyWord@DictSearch@@QAEFFF@Z");
+extern THIS void *ibm_dsgetPtrOfUserDict(void *d)
+    MANGLED("?getPtrOfUserDict@DictSearch@@QAEPAVRomUserDict@@XZ");
 
 #define DS(name) ibm_ds##name
 
@@ -1567,12 +1606,16 @@ static char ds_block[DS_ROOM];
 #define SN_VALUE_OF(n)        (*(char **)((char *)(n) + SN_VALUE_AT))
 #define IC_SNLK_HEAD(blk)     (*(void **)((blk) + IC_SNLK_AT))
 #define SN_NEXT_OF(n)         (*(void **)((char *)(n) + SN_NEXT_AT))
+#define RZ_SET_PARAM(b, p)    (*(void **)((b) + RZ_PARAM_AT) = (p))
+#define RZ_SET_USERDICT(b, p) (*(void **)((b) + RZ_USERDICT_AT) = (p))
 #else
 #define SN_SET_KEY(n, p)      (*(char **)((char *)(n) + 4) = (p))
 #define SN_KEY_OF(n)          (*(char **)((char *)(n) + 4))
 #define SN_VALUE_OF(n)        (*(char **)((char *)(n) + 8))
 #define IC_SNLK_HEAD(blk)     (*(void **)((blk) + IC_SNLK_TABLE))
 #define SN_NEXT_OF(n)         (*(void **)((char *)(n) + 0))
+#define RZ_SET_PARAM(b, p)    (*(void **)((b) + RZ_PARAM) = (p))
+#define RZ_SET_USERDICT(b, p) (*(void **)((b) + RZ_USERDICT) = (p))
 #endif
 
 static char ic_block[IC_ROOM];
@@ -3271,7 +3314,7 @@ static const char *const IC_TEXTS[] = {
 
 static void sweepInputChar(void)
 {
-    static char rom_room[16 * sizeof(void *)];
+    static char rom_room[RZ_ROOM];
     static char ud_room[UD_ROOM];
     long        i;
     long        j;
@@ -3288,8 +3331,8 @@ static void sweepInputChar(void)
     memset(rom_room, 0, sizeof rom_room);
     *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
     *(void **)(ta_block + TA_OWNER) = rom_room;
-    *(void **)(rom_room + RM_PARAM) = the_param;
-    *(void **)(rom_room + RM_USERDICT) = ud_room;
+    RZ_SET_PARAM(rom_room, the_param);
+    RZ_SET_USERDICT(rom_room, ud_room);
     UD(Ctor)(ud_room, ta_block);
 
     /* Made, and made again over a record that is not empty, which is the only
@@ -3603,9 +3646,39 @@ static const char *const IC_SENTENCES[] = {
     "\x93\xfa\x96\x7b   \x8c\xea\x81\x42"
 };
 
+/* Texts for the number reader: kanji digits with and without place words,
+   full-width digits, the counters that may follow a number, thousands marks in
+   the right places and in the wrong ones, and a place word standing alone. */
+static const char *const NUM_TEXTS[] = {
+    "\x88\xea\x93\xf1\x8e\x4f",
+    "\x88\xea\x8f\x5c",
+    "\x88\xea\x8f\x5c\x93\xf1",
+    "\x8e\x4f\x90\xe7\x8c\xdc\x95\x53",
+    "\x88\xea\x96\x9c\x93\xf1\x90\xe7",
+    "\x8f\x5c",
+    "\x95\x53",
+    "\x90\xe7",
+    "\x96\x9c",
+    "\x82\x50\x82\x51\x82\x52",
+    "\x82\x50\x81\x43\x82\x50\x82\x50\x82\x50",
+    "\x82\x50\x82\x50\x81\x43\x82\x50\x82\x50",
+    "\x82\x50\x82\x4f\x82\x4f\x89\x7e",
+    "\x88\xea\x8c\x8e",
+    "\x88\xea\x93\xfa",
+    "\x88\xea\x94\x4e",
+    "\x88\xea\x8e\x9e",
+    "\x88\xea\x95\xaa",
+    "\x88\xea\x95\x53\x93\xf1\x8f\x5c\x8e\x4f",
+    "\x82\x50\x82\x51\x82\x52\x82\x53\x82\x54\x82\x55\x82\x56"
+    "\x82\x57\x82\x58\x82\x50\x82\x51\x82\x52\x82\x53\x82\x54"
+    "\x82\x55\x82\x56\x82\x57",
+    "\x97\xe9",
+    "\x93\xfa\x96\x7b"
+};
+
 static void sweepReader(void)
 {
-    static char rom_room[16 * sizeof(void *)];
+    static char rom_room[RZ_ROOM];
     static char ud_room[UD_ROOM];
     static char anno_room[ANNO_ROOM];
     static char raw_room[4096];
@@ -3620,8 +3693,8 @@ static void sweepReader(void)
     *(void **)(ta_block + TA_OWNER) = rom_room;
     *(void **)(ta_block + TA_ANNOTATION) = anno_room;
     *(void **)(ta_block + TA_RAW) = raw_room;
-    *(void **)(rom_room + RM_PARAM) = the_param;
-    *(void **)(rom_room + RM_USERDICT) = ud_room;
+    RZ_SET_PARAM(rom_room, the_param);
+    RZ_SET_USERDICT(rom_room, ud_room);
     UD(Ctor)(ud_room, ta_block);
 
     /* What every one of the sixty-five thousand two-byte characters is, which
@@ -3992,6 +4065,303 @@ static void sweepReader(void)
 
     printf("IC reader done\n");
 }
+
+/* The number reader: the four tables it looks characters up in, the two tests
+   over a run of codes, and the two that write an entry. */
+static void sweepNumbers(void)
+{
+    static char rom_room[RZ_ROOM];
+    static char ud_room[UD_ROOM];
+    static char work[4096];
+    long        i;
+    long        j;
+    long        k;
+
+    memset(ta_block, 0, sizeof ta_block);
+    memset(rom_room, 0, sizeof rom_room);
+    *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
+    *(void **)(ta_block + TA_OWNER) = rom_room;
+    RZ_SET_PARAM(rom_room, the_param);
+    RZ_SET_USERDICT(rom_room, ud_room);
+
+    /* Every two-byte character against each of the four tables, which settles
+       all four of them and IsMember with them. */
+    memset(ds_block, 0, sizeof ds_block);
+    DS_SET_OWNER(ds_block, ta_block);
+    for (i = 0; i < 0x10000; i++) {
+        uint8_t c[2];
+
+        c[0] = (uint8_t)(i >> 8);
+        c[1] = (uint8_t)i;
+        printf("DS num %04lx %d %d %d %d\n", i,
+               (int)DS(IsZKNum)(ds_block, c), (int)DS(IsZSNum)(ds_block, c),
+               (int)DS(IsZKeta)(ds_block, c), (int)DS(IsZSymb)(ds_block, c));
+    }
+
+    /* And IsMember over a table of its own, at every length from nothing to
+       past the end of what it is given. */
+    for (i = 0; i < 12; i++) {
+        uint8_t c[2];
+
+        c[0] = 0x82;
+        c[1] = (uint8_t)(0x4f + i);
+        for (j = 0; j <= 12; j++)
+            printf("DS member %ld %ld %d\n", i, j,
+                   (int)DS(IsMember)(ds_block, c,
+                                     DM(GetNumberDataPtr)() + 0x14,
+                                     (int16_t)j));
+    }
+
+    /* The thousands-mark test over every arrangement of five codes drawn from
+       a digit, the two marks and something that is neither. */
+    for (i = 0; i < 1024; i++) {
+        char p[8];
+        long v = i;
+
+        for (j = 0; j < 5; j++) {
+            static const char PICK[] = { 9, 0x18, 0x1b, 0x11 };
+
+            p[j] = PICK[v & 3];
+            v >>= 2;
+        }
+        for (j = 0; j <= 5; j++)
+            printf("DS comma %ld %ld %d\n", i, j,
+                   (int)DS(IsCommaPosition)(ds_block, p, (int32_t)j));
+    }
+
+    /* The closing-quote test over every character, at a kind that lets it
+       through and one that does not. */
+    for (i = 0; i < 0x10000; i++) {
+        for (j = 0; j < 2; j++) {
+            memset(ic_block, 0, sizeof ic_block);
+            ic_block[IC_TEXT] = (char)(i >> 8);
+            ic_block[IC_TEXT + 1] = (char)i;
+            *(int32_t *)(ic_block + IC_KIND) = (int32_t)(j ? KIND_PUNCT
+                                                            : KIND_KANJI);
+            *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
+            if (DS(IsEndOfQuote)(ds_block, 0))
+                printf("DS quote %04lx %ld\n", i, j);
+        }
+    }
+    printf("DS quote done\n");
+
+    /* The place-order check, over every level it takes and over runs built to
+       walk each road: a run of digits, one with a small place word in it, one
+       with a large one, one with the marks in the right places and one with
+       them wrong. */
+    for (i = -1; i <= 6; i++) {
+        for (j = 0; j < 24; j++) {
+            static const uint8_t RUNS[24][8] = {
+                { 0 }, { 1 }, { 1, 2 }, { 1, 0xa }, { 1, 0xb }, { 1, 0xc },
+                { 1, 0xd }, { 1, 0xe }, { 1, 0xf }, { 1, 0xd, 2 },
+                { 1, 0xd, 2, 0xa }, { 1, 2, 3 }, { 1, 2, 3, 4 },
+                { 1, 0x18, 2, 3, 4 }, { 1, 0x1b, 2, 3, 4 },
+                { 1, 2, 0x18, 3, 4 }, { 0xa }, { 0xd },
+                { 1, 2, 3, 4, 5, 6, 7, 8 }, { 1, 0xf, 2, 0xd, 3, 0xa },
+                { 0, 0xa }, { 0, 0 }, { 1, 0x1a }, { 9, 9, 9, 9, 9, 9, 9 }
+            };
+            static const int LEN[24] = {
+                1, 1, 2, 2, 2, 2, 2, 2, 2, 3, 4, 3, 4, 5, 5, 5, 1, 1, 8, 6,
+                2, 2, 2, 7
+            };
+            uint8_t buf[24];
+            int16_t n = (int16_t)LEN[j];
+            int16_t chars = (int16_t)(LEN[j] + 1);
+            int16_t keepN = 1;
+            int16_t keepChars = 1;
+            int16_t rc;
+
+            memset(buf, 0x10, sizeof buf);
+            memcpy(buf, RUNS[j], (size_t)LEN[j]);
+            rc = DS(CheckKetaOrder)(ds_block, &n, &chars, &keepN, &keepChars,
+                                    (int16_t)i, buf);
+            printf("DS keta %ld %ld rc %d n %d chars %d keep %d %d ", i, j,
+                   (int)rc, (int)n, (int)chars, (int)keepN, (int)keepChars);
+            for (k = 0; k < 24; k++)
+                printf("%02x", buf[k]);
+            putchar('\n');
+        }
+    }
+
+    /* Texts built out of the four tables themselves: every counter after a
+       one-digit number and after a two-digit one, every place word after each
+       digit, and a run long enough to fill the buffer. Written texts alone
+       left nine of the sabotages standing, all of them in the machinery that
+       reads a counter, because the hand-written ones reached only two of the
+       nine counters there are. */
+    {
+        const uint8_t *num = DM(GetNumberDataPtr)();
+        long           g;
+
+        for (g = 0; g < 9 + 9 + 10 + 9 + 4 + 9 + 4 + 8; g++) {
+            for (j = 0; j < 6; j++) {
+                int at;
+                int n;
+
+                memset(work, 0, sizeof work);
+                if (g < 9) {
+                    memcpy(work, num + 0x00 + 1 * 2, 2);
+                    memcpy(work + 2, num + 0x3c + g * 2, 2);
+                } else if (g < 18) {
+                    memcpy(work, num + 0x00 + 1 * 2, 2);
+                    memcpy(work + 2, num + 0x28 + 0 * 2, 2);
+                    memcpy(work + 4, num + 0x00 + 2 * 2, 2);
+                    memcpy(work + 6, num + 0x3c + (g - 9) * 2, 2);
+                } else if (g < 28) {
+                    memcpy(work, num + 0x00 + (g - 18) * 2, 2);
+                    memcpy(work + 2, num + 0x28 + 4 * 2, 2);
+                } else if (g < 37) {
+                    memcpy(work, num + 0x00 + 3 * 2, 2);
+                    memcpy(work + 2, num + 0x28 + (g - 28) * 2, 2);
+                    memcpy(work + 4, num + 0x00 + 5 * 2, 2);
+                } else if (g < 41) {
+                    long q;
+
+                    for (q = 0; q < 20; q++)
+                        memcpy(work + q * 2,
+                               num + (g == 37 ? 0x00 : 0x14)
+                               + ((q + (g == 39 ? 1 : 0)) % 10) * 2, 2);
+                } else if (g < 50) {
+                    /* A digit, one of the nine counters, a place word and a
+                       digit: the only shape that reaches the arms which look
+                       at what the last counter was. */
+                    memcpy(work, num + 0x00 + 1 * 2, 2);
+                    memcpy(work + 2, num + 0x3c + (g - 41) * 2, 2);
+                    memcpy(work + 4, num + 0x28 + 4 * 2, 2);
+                    memcpy(work + 6, num + 0x00 + 2 * 2, 2);
+                } else {
+                    /* A run long enough to fill the buffer with a large place
+                       word inside it, which is what the cut-back wants, and a
+                       place word followed by two digits, which is what the
+                       step back over a digit wants. */
+                    long q;
+
+                    if (g == 50 || g == 51) {
+                        for (q = 0; q < 20; q++)
+                            memcpy(work + q * 2,
+                                   num + (q % 5 == 4
+                                          ? 0x28 + (5 + (g - 50) * 2) * 2
+                                          : 0x00 + (q % 10) * 2), 2);
+                    } else if (g < 54) {
+                        memcpy(work, num + 0x00 + 3 * 2, 2);
+                        memcpy(work + 2, num + 0x28 + (g == 52 ? 2 : 5) * 2,
+                               2);
+                        memcpy(work + 4, num + 0x00 + 9 * 2, 2);
+                        memcpy(work + 6, num + 0x00 + 5 * 2, 2);
+                        memcpy(work + 8, num + 0x00 + 7 * 2, 2);
+                    } else {
+                        /* Runs of exactly the length the buffer holds, with
+                           and without a large place word in them and with a
+                           counter at the last character, which is what the
+                           cut-back and the bound on the character count
+                           want. */
+                        long len = (g & 1) ? 9 : 16;
+                        long big = ((g - 54) / 2) % 4;
+
+                        for (q = 0; q < len; q++)
+                            memcpy(work + q * 2,
+                                   num + 0x00 + (q % 9 + 1) * 2, 2);
+                        /* A place word switches the reader into the mode
+                           that stops two characters later, so one early in
+                           the run keeps the buffer from filling. It has to be
+                           at the very end for the run to reach the length the
+                           cut-back wants. */
+                        if (big == 1)
+                            memcpy(work + 5 * 2, num + 0x28 + 4 * 2, 2);
+                        if (big == 2)
+                            memcpy(work + (len - 1) * 2,
+                                   num + 0x28 + 4 * 2, 2);
+                        if (big == 3)
+                            memcpy(work + (len - 2) * 2,
+                                   num + 0x28 + 4 * 2, 2);
+                    }
+                }
+                memset(ic_block, 0xa5, sizeof ic_block);
+                IC(Ctor)(ic_block, ta_block);
+                IC(SetText)(ic_block, work);
+                n = icSetText(work);
+                *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
+                *(uint16_t *)(rom_room + RZ_NUMBER_MODE) = (uint16_t)(j % 3);
+                *(int32_t *)(rom_room + RZ_SPELL_ENGLISH) = (int32_t)(j / 3);
+                ta_block[TA_LONGWORDS] = (char)(j & 1 ? 0x28 : 0);
+                for (at = 0; at < n && at < 22; at++) {
+                    int16_t rc;
+                    long    slot = (g == 38 && at == 0) ? DS_ENTRY_N - 1 : 0;
+
+                    memset(ds_block, 0, sizeof ds_block);
+                    *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
+                    DS_SET_OWNER(ds_block, ta_block);
+                    memset(ta_block + TA_MARKS, 0, 128);
+                    rc = DS(SetSuushiWord)(ds_block, (int16_t)slot,
+                                           (int16_t)at);
+                    printf("DS gen %ld %ld %d rc %d\n", g, j, at, (int)rc);
+                    putRecord("gen", g * 1000 + j * 100 + at,
+                              (const uint8_t *)(ds_block + DS_ENTRY
+                                                + slot * DS_ENTRY_SIZE),
+                              DS_ENTRY_SIZE);
+                    printf("DS gen %ld %ld %d marks ", g, j, at);
+                    for (k = 0; k < 32; k++)
+                        printf("%02x", (unsigned char)ta_block[TA_MARKS + k]);
+                    putchar('\n');
+                }
+            }
+        }
+    }
+
+    /* And the two writers, over texts built out of the four tables at every
+       position, in each of the number modes and with the long-reading store
+       both empty and nearly full. */
+    for (i = 0; i < (long)(sizeof NUM_TEXTS / sizeof *NUM_TEXTS); i++) {
+        for (j = 0; j < 6; j++) {
+            int n;
+            int at;
+
+            memset(ic_block, 0xa5, sizeof ic_block);
+            IC(Ctor)(ic_block, ta_block);
+            memset(work, 0, sizeof work);
+            strcpy(work, NUM_TEXTS[i]);
+            IC(SetText)(ic_block, work);
+            n = icSetText(NUM_TEXTS[i]);
+            *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
+            *(uint16_t *)(rom_room + RZ_NUMBER_MODE) = (uint16_t)(j % 3);
+            *(int32_t *)(rom_room + RZ_SPELL_ENGLISH) = (int32_t)(j / 3);
+            ta_block[TA_LONGWORDS] = (char)(j & 1 ? 0x28 : 0);
+            for (at = 0; at < n && at < 12; at++) {
+                int16_t rc;
+
+                memset(ds_block, 0, sizeof ds_block);
+                *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
+                DS_SET_OWNER(ds_block, ta_block);
+                memset(ta_block + TA_MARKS, 0, 64);
+                rc = DS(SetSuushiWord)(ds_block, 0, (int16_t)at);
+                printf("DS suushi %ld %ld %d rc %d\n", i, j, at, (int)rc);
+                putRecord("suushi", i * 100 + j * 10 + at,
+                          (const uint8_t *)(ds_block + DS_ENTRY),
+                          DS_ENTRY_SIZE);
+                printf("DS suushi %ld %ld %d marks ", i, j, at);
+                for (k = 0; k < 24; k++)
+                    printf("%02x", (unsigned char)ta_block[TA_MARKS + k]);
+                putchar('\n');
+
+                memset(ds_block, 0, sizeof ds_block);
+                *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
+                DS_SET_OWNER(ds_block, ta_block);
+                printf("DS dummy %ld %ld %d rc %d\n", i, j, at,
+                       (int)DS(SetDummyWord)(ds_block, 1, (int16_t)at));
+                putRecord("dummy", i * 100 + j * 10 + at,
+                          (const uint8_t *)(ds_block + DS_ENTRY
+                                            + DS_ENTRY_SIZE),
+                          DS_ENTRY_SIZE);
+            }
+        }
+    }
+
+    /* The user dictionary the search reaches for through the romanizer. */
+    printf("DS userdict %d\n",
+           DS(getPtrOfUserDict)(ds_block) == (void *)ud_room);
+
+    printf("DS numbers done\n");
+}
 int main(void)
 {
     Param *p;
@@ -4037,6 +4407,7 @@ int main(void)
     sweepDictionaries();
     sweepInputChar();
     sweepReader();
+    sweepNumbers();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

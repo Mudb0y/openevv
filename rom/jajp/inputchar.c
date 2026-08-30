@@ -176,7 +176,7 @@ int32_t ic_IsAnnotationsInText(void *in)
     void *rom = *(void **)((uint8_t *)analysis + TA_OWNER);
 
     return rp_isAnnotationsInText(*(RomInstParam **)((uint8_t *)rom
-                                                     + RM_PARAM));
+                                                     + RZ_PARAM_AT));
 }
 
 /* ---- the SNLK chain --------------------------------------------------- */
@@ -205,7 +205,7 @@ int32_t ic_AddSnlkTable(void *in, int16_t at, const char *written,
 
     analysis = IC_P(in, IC_OWNER_AT);
     rom = *(void **)((uint8_t *)analysis + TA_OWNER);
-    dict = *(RomUserDict **)((uint8_t *)rom + RM_USERDICT);
+    dict = *(RomUserDict **)((uint8_t *)rom + RZ_USERDICT_AT);
     if (dict == NULL)
         return -1;
 

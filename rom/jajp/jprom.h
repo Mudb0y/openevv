@@ -284,6 +284,19 @@ void      ju_TableFree(uint16_t *used, uint16_t *tail, uint16_t *freeHead,
 int32_t ds_IsOnin(uint8_t code);
 int16_t ds_GetYoonIndex(void *d, char *s);
 void    ds_SetLongWord(void *d, int16_t n, void *e, uint8_t *word);
+int16_t ds_IsMember(void *d, uint8_t *p, const uint8_t *table, int16_t n);
+int16_t ds_IsZKNum(void *d, uint8_t *p);
+int16_t ds_IsZSNum(void *d, uint8_t *p);
+int16_t ds_IsZKeta(void *d, uint8_t *p);
+int16_t ds_IsZSymb(void *d, uint8_t *p);
+int32_t ds_IsCommaPosition(void *d, char *p, int32_t n);
+int32_t ds_IsEndOfQuote(void *d, int16_t at);
+int16_t ds_CheckKetaOrder(void *d, int16_t *n, int16_t *chars,
+                          int16_t *keepN, int16_t *keepChars,
+                          int16_t keta, uint8_t *buf);
+int16_t ds_SetSuushiWord(void *d, int16_t slot, int16_t at);
+int16_t ds_SetDummyWord(void *d, int16_t slot, int16_t at);
+struct RomUserDict *ds_getPtrOfUserDict(void *d);
 int32_t ds_CountHrgn(void *d, int32_t n);
 const uint8_t *ds_ReadGWDict(void *d, int16_t page, int16_t at,
                              int16_t which);

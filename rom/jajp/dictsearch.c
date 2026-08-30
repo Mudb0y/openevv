@@ -3013,3 +3013,467 @@ int16_t ds_HandleError(void *d, int16_t at, int16_t written, int16_t base,
         ju_DbSet(out, 0, 0);
     return written;
 }
+
+/* ---- numbers ----------------------------------------------------------- */
+
+/* A run of digits is not a word any dictionary holds, so it is read by rule
+ * instead: this is that rule, and it is the last part of DictSearch that
+ * `Do` needs.
+ *
+ * A Japanese number is spoken by its places rather than by its digits -- the
+ * places are ten, hundred, thousand and then the four-digit steps man, oku and
+ * chou -- so what the reader must work out is not which digits are there but
+ * which place words go with them, and whether what is written is a number at
+ * all. Four tables in the counter data say which characters are which: the
+ * kanji digits, the full-width digits, the small places and the large ones.
+ *
+ * The codes these leave behind are not kana. They are the numbers the reading
+ * rules further down take: nought to nine for the digits, ten to twelve and
+ * nineteen upwards for the places, and 0x1a for the mark that says a place
+ * word was left out and must be spoken anyway. */
+
+/* Where each of the four tables sits in the counter data, and how many
+ * two-byte entries it has. Read off the four callers rather than guessed. */
+#define NUM_KANJI_AT    0x00     /* the kanji digits, zero to nine */
+#define NUM_KANJI_N     10
+#define NUM_FULL_AT     0x14     /* the full-width digits */
+#define NUM_FULL_N      10
+#define NUM_KETA_AT     0x28     /* ten, hundred, thousand and the rest */
+#define NUM_KETA_N      9
+#define NUM_SYMB_AT     0x3c     /* the counters that may follow a number */
+#define NUM_SYMB_N      9
+
+/* What the codes mean where they are not a digit. */
+#define NUM_MISSING     0x1a     /* a place word that was not written */
+#define NUM_SYMB_BASE   0x13     /* what a counter's index is offset by */
+#define NUM_COMMA       0x18     /* the two marks a thousands separator
+                                    makes */
+#define NUM_COMMA2      0x1b
+
+/* Which two-byte character of a table this is, or minus one. */
+int16_t ds_IsMember(void *d, uint8_t *p, const uint8_t *table, int16_t n)
+{
+    int16_t i;
+
+    (void)d;
+    for (i = 0; i < n; i++)
+        if (ju_DbCmp((const char *)p, (const char *)(table + i * 2)))
+            return i;
+    return -1;
+}
+
+int16_t ds_IsZKNum(void *d, uint8_t *p)
+{
+    return ds_IsMember(d, p, dm_GetNumberDataPtr() + NUM_KANJI_AT,
+                       NUM_KANJI_N);
+}
+
+int16_t ds_IsZSNum(void *d, uint8_t *p)
+{
+    return ds_IsMember(d, p, dm_GetNumberDataPtr() + NUM_FULL_AT, NUM_FULL_N);
+}
+
+int16_t ds_IsZKeta(void *d, uint8_t *p)
+{
+    return ds_IsMember(d, p, dm_GetNumberDataPtr() + NUM_KETA_AT, NUM_KETA_N);
+}
+
+int16_t ds_IsZSymb(void *d, uint8_t *p)
+{
+    return ds_IsMember(d, p, dm_GetNumberDataPtr() + NUM_SYMB_AT, NUM_SYMB_N);
+}
+
+/* Whether the thousands marks in a run of codes are in the wrong places.
+ *
+ * Two questions, and either one answers yes. Is there anything in the run that
+ * is neither a digit nor a mark at all; and, reading backwards, does a mark
+ * fall anywhere but every fourth place, or fail to fall there. Answers one for
+ * wrong and nought for right, so the caller reads it as "these commas do not
+ * group this number". */
+int32_t ds_IsCommaPosition(void *d, char *p, int32_t n)
+{
+    int32_t i;
+    int32_t k;
+
+    (void)d;
+    for (i = 0; i < n; i++) {
+        if (p[i] <= 9)
+            continue;
+        if (p[i] == NUM_COMMA || p[i] == NUM_COMMA2)
+            continue;
+        return 1;
+    }
+
+    for (i = n - 1, k = 1; i >= 0; i--, k++) {
+        int32_t mark = (p[i] == NUM_COMMA || p[i] == NUM_COMMA2);
+
+        if (k % 4 == 0) {
+            if (!mark)
+                return 1;
+        } else if (mark) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/* Whether the character at an index closes a quotation or a bracket. Only the
+ * second byte is looked at, the first having been settled by the kind. */
+int32_t ds_IsEndOfQuote(void *d, int16_t at)
+{
+    uint8_t *in = DS_INPUT(d);
+    uint8_t  c;
+
+    if (IC_KIND_AT(in, at) != KIND_PUNCT)
+        return 0;
+    c = (uint8_t)IC_CHAR(in, at)[1];
+    return c == 0x43 || c == 0x44 || (c >= 0x46 && c <= 0x49)
+           || c == 0x66 || c == 0x68 || c == 0x6a || c == 0x6e || c == 0x70
+           || c == 0x72 || c == 0x74 || c == 0x76 || c == 0x78 || c == 0x7a;
+}
+
+/* Whether the places already read make a number, and what to do where they do
+ * not.
+ *
+ * The digits and place words read so far are in buf. A place word out of order
+ * -- a hundred after a thousand, say -- means what is being read is not one
+ * number after all, and the counts are put back to where the last good one
+ * ended. Where the order is right but a place word was left out, the mark that
+ * says so is appended so that the reading rules speak it anyway.
+ *
+ * Answers one where the place word was appended and nought where the run was
+ * given up on. Either way the counts it was given are saved for next time. */
+int16_t ds_CheckKetaOrder(void *d, int16_t *n, int16_t *chars,
+                          int16_t *keepN, int16_t *keepChars,
+                          int16_t keta, uint8_t *buf)
+{
+    int16_t bad = 0;
+    int16_t digits = 0;
+    int16_t bigKeta = 0x63;
+    int16_t smallKeta = 0x63;
+    int16_t bigAt = -1;
+    int16_t i;
+    int16_t o;
+    int16_t rc = 0;
+    uint8_t tmp[20];
+
+    if (keta >= 0 && keta <= 5) {
+        for (i = 0; i < *n; i++)
+            if (buf[i] >= 0xd && buf[i] <= 0xf) {
+                bigKeta = buf[i];
+                bigAt = i;
+            }
+
+        if (keta <= 2) {
+            if (*n > 1) {
+                for (i = (int16_t)(bigAt + 1); i < *n; i++)
+                    if (buf[i] >= 0xa && buf[i] <= 0xc)
+                        smallKeta = buf[i];
+                if (smallKeta <= keta + 0xa) {
+                    bad = 1;
+                    *n = *keepN;
+                    *chars = *keepChars;
+                } else {
+                    for (i = (int16_t)(*n - 2); i < *n; i++)
+                        if (buf[i] <= 9)
+                            digits++;
+                    if (digits == 2) {
+                        bad = 1;
+                        buf[*n] = NUM_MISSING;
+                        (*n)++;
+                    }
+                }
+            } else if (*n == 1 && buf[0] == 0) {
+                bad = 1;
+                buf[*n] = NUM_MISSING;
+                (*n)++;
+            }
+        } else {
+            for (i = 0; i < *n; i++)
+                if (buf[i] <= 9)
+                    digits++;
+            if (bigKeta <= keta + 0xa || bigAt == *n - 1) {
+                bad = 1;
+                *n = *keepN;
+                *chars = *keepChars;
+            } else if (digits > 24 - keta * 4) {
+                bad = 1;
+                buf[*n] = NUM_MISSING;
+                (*n)++;
+            }
+        }
+    }
+
+    if (!bad) {
+        /* The thousands marks come out before the place word goes in, but only
+           where they were in the right places to begin with. */
+        if (!ds_IsCommaPosition(d, (char *)buf, *n)) {
+            o = 0;
+            for (i = 0; i < *n; i++)
+                if (buf[i] != NUM_COMMA && buf[i] != NUM_COMMA2)
+                    tmp[o++] = buf[i];
+            *n = o;
+            for (o = 0; o < *n; o++)
+                buf[o] = tmp[o];
+        }
+        rc = 1;
+        buf[*n] = (uint8_t)(keta + 0xa);
+        (*n)++;
+    }
+    *keepN = *n;
+    *keepChars = *chars;
+    return rc;
+}
+
+/* Read a run of digits and place words into one candidate entry.
+ *
+ * It walks forward from a character taking one at a time, and keeps two
+ * counts: how far it has got, and how far it had got the last time what it had
+ * was a whole number. When a character says the run is not a number after all,
+ * the second pair is what the entry is written from -- so "three thousand and"
+ * gives back the three thousand and leaves the rest.
+ *
+ * The counters that may follow a number -- the things a number counts, which
+ * is what a Japanese counter word is -- are read here too, and which of them
+ * it is decides whether the run goes on. That is what the switch over the nine
+ * of them is. The romanizer's number mode changes it: mode two, which is what
+ * an English-spelling caller gets, refuses a bare place word.
+ *
+ * Answers one where an entry was written and nought where the run was refused
+ * outright. */
+int16_t ds_SetSuushiWord(void *d, int16_t slot, int16_t at)
+{
+    uint8_t *in = DS_INPUT(d);
+    uint8_t *e;
+    uint8_t *ta;
+    uint8_t *rom;
+    uint8_t  buf[20];
+    char     pair[2];
+    uint16_t numMode = 0;
+    int16_t  most;
+    int16_t  n = 0, chars = 0;
+    int16_t  keepN = 0, keepChars = 0;
+    int16_t  backN = 0, backChars = 0;
+    int16_t  digits = 0;
+    int16_t  idx = 0, i;
+    int16_t  lastSymb = -1;
+    uint8_t  take = 1, prevTake = 0, state = 0, lastKind = 0, mode = 0x13;
+    uint8_t  again = 0;
+
+    if (slot >= DS_ENTRY_N)
+        return 0;
+
+    e = DS_ENTRY_AT(d, slot);
+    ta = DS_OWNER_OF(d);
+    rom = *(uint8_t **)(ta + TA_OWNER);
+
+    numMode = *(uint16_t *)(rom + RZ_NUMBER_MODE);
+    if (numMode == 0 && *(int32_t *)(rom + RZ_SPELL_ENGLISH) > 0)
+        numMode = 2;
+
+    /* How many codes there is room for, which is fewer once the long-reading
+       store is more than half full. */
+    most = (int8_t)ta[TA_LONGWORDS] < 0x1e ? 0x10 : 9;
+
+    memset(buf, 0x10, sizeof buf);
+
+    while (take && n < most) {
+        if (at + chars > IC_COUNT_AT(in))
+            break;
+        ju_DbCpy(pair, IC_CHAR(in, at + chars));
+        chars++;
+        prevTake = take;
+        take = 0;
+        again = 0;
+
+        idx = ds_IsZKNum(d, (uint8_t *)pair);
+        if (idx >= 0) {
+            buf[n++] = (uint8_t)idx;
+            if (lastKind != 0x11) {
+                if (mode == 0x12 && buf[n - 2] <= 9) {
+                    keepN = (int16_t)(n - 2);
+                    keepChars = (int16_t)(chars - 2);
+                } else {
+                    take = 1;
+                    keepN = n;
+                    keepChars = chars;
+                    lastKind = 0x10;
+                }
+            }
+            continue;
+        }
+
+        idx = ds_IsZSNum(d, (uint8_t *)pair);
+        if (idx >= 0) {
+            buf[n++] = (uint8_t)idx;
+            if (lastKind != 0x10 && mode != 0x12) {
+                take = 1;
+                keepN = n;
+                keepChars = chars;
+                lastKind = 0x11;
+            }
+            continue;
+        }
+
+        idx = ds_IsZKeta(d, (uint8_t *)pair);
+        if (idx >= 0) {
+            if (numMode == 2) {
+                if (chars == 1 && idx >= 0 && idx <= 8)
+                    return 0;
+                continue;
+            }
+            if (chars == 1 && idx >= 3 && idx <= 5)
+                return 0;
+
+            if ((state == 1 && (lastSymb == 0 || lastSymb == 1))
+                || state == 2) {
+                if (state == 2) {
+                    keepN = backN;
+                    keepChars = backChars;
+                }
+            } else if (buf[0] == 0) {
+                buf[n++] = NUM_MISSING;
+                keepN = n;
+                keepChars = chars;
+            } else if (ds_CheckKetaOrder(d, &n, &chars, &keepN, &keepChars,
+                                         idx, buf) == 1) {
+                take = 2;
+                mode = 0x12;
+            }
+            continue;
+        }
+
+        idx = ds_IsZSymb(d, (uint8_t *)pair);
+        if (idx < 0)
+            continue;
+
+        if (numMode != 0 && numMode != 2)
+            continue;
+
+        buf[n++] = (uint8_t)(idx + NUM_SYMB_BASE);
+        lastSymb = idx;
+
+        if (prevTake != 3) {
+            switch (idx) {
+            case 0: case 1: case 2:
+                if (numMode == 2 && idx == 2)
+                    break;
+                if (state == 1) {
+                    take = 0;
+                } else {
+                    mode = 0x13;
+                    take = 3;
+                    state = 1;
+                }
+                again = 1;
+                break;
+            case 3: case 5: case 8:
+                take = 3;
+                state = 1;
+                again = 1;
+                break;
+            case 4: case 6:
+                if (state == 1) {
+                    take = 0;
+                } else {
+                    state = 2;
+                    if (mode != 0x12) {
+                        take = 3;
+                        backN = (int16_t)(n - 1);
+                        backChars = (int16_t)(chars - 1);
+                    }
+                }
+                again = 1;
+                break;
+            case 7:
+                state = 2;
+                if (mode != 0x12) {
+                    keepN = n;
+                    keepChars = chars;
+                    backN = (int16_t)(n - 1);
+                    backChars = (int16_t)(chars - 1);
+                    take = 0;
+                }
+                again = 1;
+                break;
+            default:
+                break;
+            }
+            if (again && chars == most)
+                keepChars = chars;
+        }
+
+        if (numMode == 1) {
+            buf[n++] = (uint8_t)(idx + NUM_SYMB_BASE);
+            lastSymb = idx;
+            if (prevTake != 3) {
+                if (idx == 5 || idx == 8) {
+                    take = 3;
+                    state = 1;
+                    again = 1;
+                }
+                if (again && chars == most)
+                    keepChars = chars;
+            }
+        }
+    }
+
+    /* A run that filled the buffer is cut back to the last large place word in
+       it, so that what is written is a number rather than the first sixteen
+       codes of one. */
+    digits = 0;
+    if (n == 0x10) {
+        for (i = 0; i < 0x10; i++)
+            if (buf[i] > 0xc && buf[i] < 0x10)
+                digits = (int16_t)(i + 1);
+        if (digits != 0) {
+            keepN = digits;
+            keepChars = digits;
+        }
+    }
+
+    if (keepN > 9)
+        ds_SetLongWord(d, keepN, e, buf);
+    else
+        for (i = 0; i < keepN; i++)
+            DE_B(e, DE_KANA + i) = buf[i];
+
+    DE_B(e, DE_KANALEN) = (uint8_t)keepN;
+    DE_B(e, DE_CHARS) = (uint8_t)keepChars;
+    if (buf[keepN - 1] == NUM_MISSING)
+        DE_B(e, DE_CHARS)--;
+    DE_B(e, DE_POS) = 0x7c;
+    DE_W(e, DE_AT) = at;
+    DE_L(e, DE_MARK) = IC_MARK_AT(in, at);
+    DE_W(e, DE_OFFSET) = IC_OFFSET_AT(in, at);
+    ta[TA_MARKS + (int16_t)(keepChars + at)] = 3;
+    return 1;
+}
+
+/* The user dictionary, which the search reaches through the romanizer two
+ * objects up rather than holding itself. */
+struct RomUserDict *ds_getPtrOfUserDict(void *d)
+{
+    uint8_t *rom = *(uint8_t **)(DS_OWNER_OF(d) + TA_OWNER);
+
+    return *(struct RomUserDict **)(rom + RZ_USERDICT_AT);
+}
+
+/* A candidate that stands for a character nothing could read, so that the path
+ * search has something to step over. */
+int16_t ds_SetDummyWord(void *d, int16_t slot, int16_t at)
+{
+    uint8_t *in = DS_INPUT(d);
+    uint8_t *e = DS_ENTRY_AT(d, slot);
+
+    DE_B(e, DE_KANA) = 0xff;
+    DE_B(e, DE_CHARS) = 0;
+    DE_B(e, DE_KANALEN) = 0;
+    DE_B(e, DE_POS) = 0;
+    DE_W(e, DE_AT) = at;
+    DE_W(e, DE_OFFSET) = IC_OFFSET_AT(in, at);
+    DE_B(e, DE_ATTR) = 0;
+    DE_B(e, DE_ATTR2) = 0x41;
+    DE_L(e, DE_MARK) = IC_MARK_AT(in, at);
+    return 1;
+}
