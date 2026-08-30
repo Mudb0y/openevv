@@ -300,6 +300,78 @@ static Conv *makeConv(Param *p)
 #define JU(name) ju_##name
 #define STATIC_DICT_INIT() ((void)0)
 
+
+/* ---- the surface: ConverterInterface, InputManager, the codesets ------ */
+
+#define PARAM_SET(p, w, v)  rp_setParam((p), (w), (v))
+#define PARAM_ERRORS(p)     rp_getErrors((p))
+#define PARAM_CLEAR(p)      rp_clearErrors((p))
+#define PARAM_CODESET(p)    rp_getCodeSet((p))
+#define PARAM_OWNER(p)      (*(void **)&((RomInstParam *)(p))->owner)
+
+#define ibm_ciInitBase(c, p)              ci_initBase((c), (p))
+#define ibm_ciCloseBase(c)                ci_closeBase((c))
+#define ibm_ciUCS2ToMBCS(c, i, o, f)      ci_UCS2ToMBCS((c), (i), (o), (f))
+#define ibm_ciMBCSToUCS2(c, i, o)         ci_MBCSToUCS2((c), (i), (o))
+#define ibm_ciInsertIndex(c)              ci_insertIndex((c))
+#define ibm_ciAddParam(c, t, n)           ci_addParam((c), (t), (n))
+#define ibm_ciOutputIndexOrParam(c, o, a) ci_outputIndexOrParam((c), (o), (a))
+#define ibm_ciAddText(c, t, n, k)         ci_addText((c), (t), (n), (k))
+#define ibm_ciTrans(c, t, n, s, o) \
+    ci_trans2defaultCodeset((c), (t), (n), (s), (o))
+#define ibm_ciStop(c)                     ci_stop((c))
+#define ibm_ciResume(c)                   ci_resume((c))
+#define ibm_ciNewDict(c)                  ci_newDict((c))
+#define ibm_ciDeleteDict(c, d)            ci_deleteDict((c), (d))
+#define ibm_ciSetDict(c, d)               ci_setDict((c), (d))
+#define ibm_ciFindDictFile(c, n, o)       ci_findDictFile((c), (n), (o))
+#define ibm_ciLoadDict(c, d, w, n)        ci_loadDict((c), (d), (w), (n))
+#define ibm_ciSaveDict(c, d, w, n)        ci_saveDict((c), (d), (w), (n))
+#define ibm_ciLookupDictExt(c, d, w, b, l, v, vl, ps, s) \
+    ci_lookupDictExt((c), (d), (w), (b), (l), (v), (vl), (ps), (s))
+#define ibm_ciFindFirst(c, d, w, a, al, e, el, ps, s) \
+    ci_findFirstDictEntryExt((c), (d), (w), (a), (al), (e), (el), (ps), (s))
+#define ibm_ciFindNext(c, d, w, a, al, e, el, ps, s) \
+    ci_findNextDictEntryExt((c), (d), (w), (a), (al), (e), (el), (ps), (s))
+#define ibm_ciUpdateDictExt(c, d, w, b, l, k, kl, ps, s) \
+    ci_updateDictExt((c), (d), (w), (b), (l), (k), (kl), (ps), (s))
+#define CI(name) ibm_ci##name
+
+#define ibm_imCtor(m, p)       im_ctor((InputManager *)(m), (p))
+#define ibm_imDtor(m)          im_dtor((InputManager *)(m))
+#define ibm_imRemove(m)        im_remove((InputManager *)(m))
+#define ibm_imAddText(m, t, n, s) \
+    im_addText((InputManager *)(m), (t), (n), (s))
+#define ibm_imGetText(m, ot, on, t, n) \
+    im_getText((InputManager *)(m), (ot), (on), (t), (n))
+#define ibm_imInsertIndex(m)   im_insertIndex((InputManager *)(m))
+#define ibm_imAddParam(m, t, n) im_addParam((InputManager *)(m), (t), (n))
+#define ibm_imHasMore(m)       im_hasMoreElement((InputManager *)(m))
+#define ibm_imGetNextOffset(m) im_getNextOffset((InputManager *)(m))
+#define ibm_imGetNextData(m, o) im_getNextData((InputManager *)(m), (o))
+#define ibm_imRemoveElement(m) im_removeElement((InputManager *)(m))
+#define ibm_imGetNextElement(m) \
+    ((void *)im_getNextElement((InputManager *)(m)))
+/* What a queued element carries. Ours puts them behind a vtable pointer that
+   is eight bytes wide here; IBM's are at four and eight. */
+#define QE_AT(e)   (((RomQueueElement *)(e))->at)
+#define QE_KIND(e) (((RomQueueElement *)(e))->kind)
+#define IM(name) ibm_im##name
+#define IM_ROOM  sizeof(InputManager)
+
+/* The vtable a converter is reached through. InputManager asks it where in
+   the output the next mark belongs and resume asks it to throw away what was
+   collected, so the harness plants one of its own that counts both. Ours sits
+   past the record and IBM's at nought, which CV_SET_VT is for. */
+typedef ConverterVtbl HarnessVtbl;
+typedef Converter HarnessSelf;
+#define HARNESS_THIS
+#define CV_SET_VT(b)  (*(const void **)((b) + RZ_VTABLE_AT) = &harness_vtbl)
+#define CV_INPUT(b)   (*(void **)((b) + RZ_INPUT_AT))
+#define CV_TRANSBUF(b) (*(void **)((b) + RZ_TRANSBUF_AT))
+#define CV_UNICODE(b) (*(void **)((b) + RZ_UNICODE_AT))
+
+
 #else
 
 typedef struct Param Param;
@@ -870,6 +942,152 @@ extern THIS int16_t ibm_dsFzkParsingReverse(void *d)
 #define DM(name) ibm_##name
 #define JU(name) ibm_##name
 #define STATIC_DICT_INIT() ibm_StaticDictInitialize()
+
+
+/* ---- the surface: ConverterInterface, InputManager, the codesets ------ */
+
+extern THIS int32_t ibm_paramSetParam(Param *p, int32_t which, int32_t v)
+    MANGLED("?setParam@RomInstParam@@QAEHJH@Z");
+extern THIS uint32_t ibm_paramGetErrors(Param *p)
+    MANGLED("?getErrors@RomInstParam@@QAEKXZ");
+extern THIS void ibm_paramClearErrors(Param *p)
+    MANGLED("?clearErrors@RomInstParam@@QAEXXZ");
+extern THIS int32_t ibm_paramGetCodeSet(Param *p)
+    MANGLED("?getCodeSet@RomInstParam@@QAE?AW4ECILanguageDialect@@XZ");
+#define PARAM_SET(p, w, v)  ibm_paramSetParam((p), (w), (v))
+#define PARAM_ERRORS(p)     ibm_paramGetErrors((p))
+#define PARAM_CLEAR(p)      ibm_paramClearErrors((p))
+#define PARAM_CODESET(p)    ibm_paramGetCodeSet((p))
+#define PARAM_OWNER(p)      (*(void **)(p))
+
+extern THIS void ibm_ciInitBase(void *c, Param *p)
+    MANGLED("?initBase@ConverterInterface@@QAEXPAVRomInstParam@@@Z");
+extern THIS void ibm_ciCloseBase(void *c)
+    MANGLED("?closeBase@ConverterInterface@@QAEXXZ");
+extern THIS int32_t ibm_ciUCS2ToMBCS(void *c, const uint16_t *in, char **out,
+                                     int32_t yen)
+    MANGLED("?UCS2ToMBCS@ConverterInterface@@QAEHPBGPAPADH@Z");
+extern THIS int32_t ibm_ciMBCSToUCS2(void *c, const char *in, uint16_t **out)
+    MANGLED("?MBCSToUCS2@ConverterInterface@@QAEHPBDPAPAG@Z");
+extern THIS int32_t ibm_ciInsertIndex(void *c)
+    MANGLED("?insertIndex@ConverterInterface@@QAEHXZ");
+extern THIS int32_t ibm_ciAddParam(void *c, const char *text, int32_t len)
+    MANGLED("?addParam@ConverterInterface@@QAEHPBDH@Z");
+extern THIS int32_t ibm_ciOutputIndexOrParam(void *c, char *out, int32_t at)
+    MANGLED("?outputIndexOrParam@ConverterInterface@@QAEHPADH@Z");
+extern THIS int32_t ibm_ciAddText(void *c, const char *text, int32_t len,
+                                  int32_t inputType)
+    MANGLED("?addText@ConverterInterface@@QAEHPBDHH@Z");
+extern THIS uint32_t ibm_ciTrans(void *c, void *text, int32_t len,
+                                 int32_t codeset, const char **out)
+    MANGLED("?trans2defaultCodeset@ConverterInterface@@QAEKPAXHW4"
+            "ECILanguageDialect@@PAPAD@Z");
+extern THIS int32_t ibm_ciStop(void *c)
+    MANGLED("?stop@ConverterInterface@@QAEHXZ");
+extern THIS int32_t ibm_ciResume(void *c)
+    MANGLED("?resume@ConverterInterface@@QAEHXZ");
+extern THIS void *ibm_ciNewDict(void *c)
+    MANGLED("?newDict@ConverterInterface@@QAEPAXXZ");
+extern THIS void ibm_ciDeleteDict(void *c, void *dict)
+    MANGLED("?deleteDict@ConverterInterface@@QAEXPAX@Z");
+extern THIS void ibm_ciSetDict(void *c, void *dict)
+    MANGLED("?setDict@ConverterInterface@@QAEXPAX@Z");
+extern THIS long ibm_ciFindDictFile(void *c, const char *name, char *out)
+    MANGLED("?findDictFile@ConverterInterface@@AAEJPBDPAD@Z");
+extern THIS int32_t ibm_ciLoadDict(void *c, void *dict, int32_t which,
+                                   const char *name)
+    MANGLED("?loadDict@ConverterInterface@@QAEJPAXJPBD@Z");
+extern THIS int32_t ibm_ciSaveDict(void *c, void *dict, int32_t which,
+                                   const char *name)
+    MANGLED("?saveDict@ConverterInterface@@QAEJPAXJPBD@Z");
+extern THIS int32_t ibm_ciLookupDictExt(void *c, void *dict, int32_t which,
+                                        uint8_t *word, int32_t wordLen,
+                                        void **value, int32_t *valueLen,
+                                        int32_t *pos, int32_t codeset)
+    MANGLED("?lookupDictExt@ConverterInterface@@QAEJPAXJ0JPAPAXPAJPAW4"
+            "ECIPartOfSpeech@@W4ECILanguageDialect@@@Z");
+extern THIS int32_t ibm_ciFindFirst(void *c, void *dict, int32_t which,
+                                    void **word, int32_t *wordLen,
+                                    void **extra, int32_t *extraLen,
+                                    int32_t *pos, int32_t codeset)
+    MANGLED("?findFirstDictEntryExt@ConverterInterface@@QAEJPAXJPAPAXPAJ12PAW4"
+            "ECIPartOfSpeech@@W4ECILanguageDialect@@@Z");
+extern THIS int32_t ibm_ciFindNext(void *c, void *dict, int32_t which,
+                                   void **word, int32_t *wordLen,
+                                   void **extra, int32_t *extraLen,
+                                   int32_t *pos, int32_t codeset)
+    MANGLED("?findNextDictEntryExt@ConverterInterface@@QAEJPAXJPAPAXPAJ12PAW4"
+            "ECIPartOfSpeech@@W4ECILanguageDialect@@@Z");
+extern THIS int32_t ibm_ciUpdateDictExt(void *c, void *dict, int32_t which,
+                                        uint8_t *word, int32_t wordLen,
+                                        char *kana, int32_t kanaLen,
+                                        int32_t pos, int32_t codeset)
+    MANGLED("?updateDictExt@ConverterInterface@@QAEJPAXJ0J0JW4"
+            "ECIPartOfSpeech@@W4ECILanguageDialect@@@Z");
+#define CI(name) ibm_ci##name
+
+extern THIS void *ibm_imCtor(void *m, Param *p)
+    MANGLED("??0InputManager@@QAE@PAVRomInstParam@@@Z");
+extern THIS void ibm_imDtor(void *m)
+    MANGLED("??1InputManager@@QAE@XZ");
+extern THIS void ibm_imRemove(void *m)
+    MANGLED("?remove@InputManager@@QAEXXZ");
+extern THIS int32_t ibm_imAddText(void *m, const char *text, uint32_t len,
+                                  int32_t codeset)
+    MANGLED("?addText@InputManager@@QAEHPBDHW4ECILanguageDialect@@@Z");
+extern THIS int32_t ibm_imGetText(void *m, const char **outText,
+                                  uint32_t *outLen, const char *text,
+                                  uint32_t len)
+    MANGLED("?getText@InputManager@@QAE?AW4GetDataType@@PAPADPAKPBDK@Z");
+extern THIS int32_t ibm_imInsertIndex(void *m)
+    MANGLED("?insertIndex@InputManager@@QAEHXZ");
+extern THIS int32_t ibm_imAddParam(void *m, const char *text, int32_t len)
+    MANGLED("?addParam@InputManager@@QAEHPBDH@Z");
+extern THIS int32_t ibm_imHasMore(void *m)
+    MANGLED("?hasMoreElement@InputManager@@QAEHXZ");
+extern THIS int32_t ibm_imGetNextOffset(void *m)
+    MANGLED("?getNextOffset@InputManager@@QAEHXZ");
+extern THIS int32_t ibm_imGetNextData(void *m, const char **out)
+    MANGLED("?getNextData@InputManager@@QAEHPAPBD@Z");
+extern THIS void ibm_imRemoveElement(void *m)
+    MANGLED("?removeElement@InputManager@@QAEXXZ");
+extern THIS void *ibm_imGetNextElement(void *m)
+    MANGLED("?getNextElement@InputManager@@QAEPAVRomQueueElement@@XZ");
+#define QE_AT(e)   (*(int32_t *)((char *)(e) + 4))
+#define QE_KIND(e) (*(int32_t *)((char *)(e) + 8))
+#define IM(name) ibm_im##name
+#define IM_ROOM  0x1c
+
+extern int32_t ibm_SkipESCSeq(const char *text, long *at, int32_t *twoByte)
+    MANGLED("?SkipESCSeq@JpnUtil@@SAHPBDPAJPAH@Z");
+extern void ibm_jis2sjis(uint8_t *lead, uint8_t *trail)
+    MANGLED("?jis2sjis@JpnUtil@@SAXPAE0@Z");
+extern void ibm_han2zen(const char *text, long *at, uint8_t *lead,
+                        uint8_t *trail, int32_t kind)
+    MANGLED("?han2zen@JpnUtil@@SAXPBDPAJPAE2H@Z");
+extern long ibm_euc2shift(const char *in, long len, char *out, int32_t zen)
+    MANGLED("?euc2shift@JpnUtil@@SAJPBDJPADH@Z");
+extern long ibm_seven2shift(const char *in, long len, char *out)
+    MANGLED("?seven2shift@JpnUtil@@SAJPBDJPAD@Z");
+
+/* The vtable a converter is reached through, which IBM keeps at nought.
+   Slots four and up are never called here and have no signature yet. */
+typedef struct HarnessVtbl {
+    THIS void   *(*destroy)(void *c, int32_t freeIt);
+    void         (*processSentence)(void);
+    THIS int32_t (*getOffset)(void *c);
+    THIS void    (*ResetBuffer)(void *c);
+    void         (*isValidUserDictEntry)(void);
+    void         (*mbcs2Rom)(void);
+    void         (*rom2Mbcs)(void);
+} HarnessVtbl;
+typedef void HarnessSelf;
+#define HARNESS_THIS THIS
+#define CV_SET_VT(b)  (*(const void **)(b) = &harness_vtbl)
+#define CV_INPUT(b)   (*(void **)((b) + RZ_INPUT))
+#define CV_TRANSBUF(b) (*(void **)((b) + RZ_TRANSBUF))
+#define CV_UNICODE(b) (*(void **)((b) + RZ_UNICODE))
+
 
 #endif
 
@@ -4710,6 +4928,720 @@ static void sweepFzk(void)
 
     printf("FZ done\n");
 }
+/* ---- the surface -------------------------------------------------------- */
+
+/* What the harness's converter answers when InputManager asks where the next
+   mark belongs, and how often each of the two slots was reached. Romanizer is
+   not written, so the vtable a converter is reached through is the harness's
+   own; counting the calls is how a sabotage inside insertIndex or resume is
+   made visible. */
+static int32_t cv_offset;
+static long    cv_offsetCalls;
+static long    cv_resetCalls;
+
+static HARNESS_THIS int32_t harnessGetOffset(HarnessSelf *c)
+{
+    (void)c;
+    cv_offsetCalls++;
+    return cv_offset;
+}
+
+static HARNESS_THIS void harnessResetBuffer(HarnessSelf *c)
+{
+    (void)c;
+    cv_resetCalls++;
+}
+
+static const HarnessVtbl harness_vtbl = {
+    NULL, NULL, harnessGetOffset, harnessResetBuffer, NULL, NULL, NULL
+};
+
+/* The codesets trans2defaultCodeset knows, and three it does not. */
+static const int32_t CC_CODESETS[] = {
+    0, 0x80000, 0x80800, 0x80100, 0x80200, 0x80300, 0x80400,
+    0x80500, 0x80900, 0x1234
+};
+
+/* One text, its bytes, and how many of them there are. Held as a length
+   rather than as a string, because a codeset conversion is given a count and
+   several of the texts below have a nought in the middle. */
+typedef struct CcText {
+    const char *bytes;
+    int32_t     len;
+} CcText;
+
+/* Every byte in every context that decides a road through the two whole-text
+   conversions: on its own, in front of and behind a byte the EUC test
+   accepts, behind the single shift with and without a voicing mark after it,
+   behind an escape, and inside a two-byte run. */
+static int ccTexts(int b, CcText *out, char store[8][12])
+{
+    static const char shapes[8][12] = {
+        { 0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0x00, (char)0xa1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { (char)0xa1, 0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { (char)0x8e, 0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { (char)0x8e, 0x00, (char)0xde, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0x1b, 0x00, 'B', '0', '1', 0, 0, 0, 0, 0, 0, 0 },
+        { 0x1b, '$', 'B', 0x00, '0', 0x1b, '(', 'B', 0, 0, 0, 0 },
+        { 0x00, 0x1b, 'K', 0x00, '0', 0, 0, 0, 0, 0, 0, 0 },
+    };
+    static const int lens[8] = { 1, 2, 2, 2, 3, 5, 8, 5 };
+    static const int where[8][2] = {
+        { 0, -1 }, { 0, -1 }, { 1, -1 }, { 1, -1 },
+        { 1, -1 }, { 1, -1 }, { 3, -1 }, { 0, 3 },
+    };
+    int i;
+
+    for (i = 0; i < 8; i++) {
+        memcpy(store[i], shapes[i], 12);
+        store[i][where[i][0]] = (char)b;
+        if (where[i][1] >= 0)
+            store[i][where[i][1]] = (char)b;
+        out[i].bytes = store[i];
+        out[i].len   = lens[i];
+    }
+    return 8;
+}
+
+/* The five codeset conversions, over every input each of them has.
+ *
+ * jis2sjis and han2zen are swept over every byte there is, because both are
+ * pure arithmetic on a pair and there is no reason to sample. The two
+ * whole-text ones are swept over the eight shapes above with every byte in
+ * each, which walks every arm either of them has. */
+static void sweepCodeconv(void)
+{
+    long i;
+    long j;
+    long k;
+
+    for (i = 0; i < 256; i++)
+        for (j = 0; j < 256; j++) {
+            uint8_t lead  = (uint8_t)i;
+            uint8_t trail = (uint8_t)j;
+
+            JU(jis2sjis)(&lead, &trail);
+            printf("CC j2s %02x %02x %02x %02x\n", (unsigned)i, (unsigned)j,
+                   (unsigned)lead, (unsigned)trail);
+        }
+
+    for (i = 0; i < 256; i++)
+        for (j = 0; j < 2; j++) {
+            char    text[4];
+            long    at   = 0;
+            int32_t mode = (int32_t)j;
+            int     rc;
+
+            text[0] = (char)i;
+            text[1] = 'B';
+            text[2] = 0;
+            text[3] = 0;
+            rc = (int)JU(SkipESCSeq)(text, &at, &mode);
+            printf("CC esc %02x %ld rc %d at %ld mode %ld\n", (unsigned)i, j,
+                   rc, at, (long)mode);
+        }
+
+    /* Every half-width byte against every byte that could follow it, in the
+       Shift-JIS walk; then the EUC walk, whose own test is the one IBM wrote
+       against a sign-extended byte and which therefore never joins a mark. */
+    for (i = 0; i < 256; i++)
+        for (j = 0; j < 256; j++) {
+            char    text[4];
+            long    at    = 0;
+            uint8_t lead  = (uint8_t)i;
+            uint8_t trail = 0x5a;
+
+            text[0] = (char)j;
+            text[1] = (char)0xde;
+            text[2] = 0;
+            text[3] = 0;
+            JU(han2zen)(text, &at, &lead, &trail, 5);
+            printf("CC h2z5 %02x %02x at %ld %02x %02x\n", (unsigned)i,
+                   (unsigned)j, at, (unsigned)lead, (unsigned)trail);
+
+            at    = 0;
+            lead  = (uint8_t)i;
+            trail = 0x5a;
+            JU(han2zen)(text, &at, &lead, &trail, 4);
+            printf("CC h2z4 %02x %02x at %ld %02x %02x\n", (unsigned)i,
+                   (unsigned)j, at, (unsigned)lead, (unsigned)trail);
+        }
+
+    for (i = 0; i < 256; i++)
+        for (j = 0; j < 3; j++)
+            for (k = 0; k < 2; k++) {
+                static const char after[3] = { (char)0xde, (char)0xdf, 'A' };
+                char    text[4];
+                long    at    = 0;
+                uint8_t lead  = (uint8_t)i;
+                uint8_t trail = 0x5a;
+
+                text[0] = k ? (char)0x8e : 'Z';
+                text[1] = after[j];
+                text[2] = 0;
+                text[3] = 0;
+                JU(han2zen)(text, &at, &lead, &trail, 4);
+                printf("CC h2ze %02x %ld %ld at %ld %02x %02x\n", (unsigned)i,
+                       j, k, at, (unsigned)lead, (unsigned)trail);
+            }
+
+    for (i = 0; i < 256; i++) {
+        CcText texts[8];
+        char   store[8][12];
+        int    n = ccTexts((int)i, texts, store);
+
+        for (j = 0; j < n; j++) {
+            char out[64];
+            long got;
+
+            memset(out, 0x5a, sizeof out);
+            got = JU(euc2shift)(texts[j].bytes, texts[j].len, out, 0);
+            printf("CC euc0 %02x %ld n %ld ", (unsigned)i, j, got);
+            for (k = 0; k < got + 1 && k < 40; k++)
+                printf("%02x", (unsigned)(uint8_t)out[k]);
+            putchar('\n');
+
+            memset(out, 0x5a, sizeof out);
+            got = JU(euc2shift)(texts[j].bytes, texts[j].len, out, 1);
+            printf("CC euc1 %02x %ld n %ld ", (unsigned)i, j, got);
+            for (k = 0; k < got + 1 && k < 40; k++)
+                printf("%02x", (unsigned)(uint8_t)out[k]);
+            putchar('\n');
+
+            memset(out, 0x5a, sizeof out);
+            got = JU(seven2shift)(texts[j].bytes, texts[j].len, out);
+            printf("CC jis %02x %ld n %ld ", (unsigned)i, j, got);
+            for (k = 0; k < got + 1 && k < 40; k++)
+                printf("%02x", (unsigned)(uint8_t)out[k]);
+            putchar('\n');
+        }
+    }
+
+    printf("CC done\n");
+}
+
+/* What getText handed back, printed as bytes rather than as a pointer: the
+   two sides cannot agree about an address and both can agree about what is
+   at it. */
+static void putGot(const char *what, long a, long b, long c, long d, int rc,
+                   const char *text, uint32_t len)
+{
+    uint32_t i;
+
+    printf("%s %ld %ld %ld %ld rc %d len %lu ", what, a, b, c, d, rc,
+           (unsigned long)len);
+    if (text == NULL) {
+        printf("none");
+    } else {
+        /* One byte past the length as well, which is where the join writes
+           its nul and is the only place that nul can be seen. Every text
+           handed in here is a literal, so the byte past a caller's own text
+           is its own terminator and both sides read the same thing. */
+        for (i = 0; i < len + 1 && i < 33; i++)
+            printf("%02x", (unsigned)(uint8_t)text[i]);
+    }
+    putchar('\n');
+}
+
+/* The manager on its own: text waiting, text joined to it, and the queue.
+ *
+ * The whole matrix of what may be waiting against what has just arrived,
+ * across a codeset that agrees with the block and one that does not, which is
+ * every road through getText there is. The queue is then filled, walked and
+ * emptied twice over, so that the destructor has something to free the second
+ * time and nothing the third. */
+static void sweepInputManager(void)
+{
+    static char im_room[IM_ROOM];
+    static char cv_stub[RZ_ROOM];
+    static const char *const TEXTS[3] = { "", "abc", "\x82\xa0\x82\xa2" };
+    static const int32_t LENS[3] = { 0, 3, 4 };
+    long i;
+    long j;
+    long k;
+    long m;
+
+    /* A converter for the manager to ask where a mark belongs. Nothing but
+       the vtable in it is read, and the parameter block has to point at it
+       because that is how InputManager finds its way back up. It is the
+       block's own field rather than initBase's doing, so that this sweep
+       leans on nothing above the class it is testing. */
+    memset(cv_stub, 0, sizeof cv_stub);
+    CV_SET_VT(cv_stub);
+    PARAM_OWNER(the_param) = cv_stub;
+
+    for (i = 0; i < 3; i++)
+        for (j = 0; j < 3; j++)
+            for (k = 0; k < 2; k++)
+                for (m = 0; m < 2; m++) {
+                    const char *got  = (const char *)0x1;
+                    uint32_t    n    = 0xffffffffu;
+                    int         rc;
+
+                    PARAM_CLEAR(the_param);
+                    PARAM_SET(the_param, 2, 0x80000);
+                    memset(im_room, 0, sizeof im_room);
+                    IM(Ctor)(im_room, the_param);
+
+                    if (k)
+                        (void)IM(InsertIndex)(im_room);
+
+                    (void)IM(AddText)(im_room, TEXTS[i],
+                                      (uint32_t)LENS[i], 0x80000);
+                    PARAM_SET(the_param, 2, m ? 0x80100 : 0x80000);
+
+                    rc = (int)IM(GetText)(im_room, &got, &n, TEXTS[j],
+                                          (uint32_t)LENS[j]);
+                    putGot("IM get", i, j, k, m, rc, got, n);
+
+                    /* And again with nothing, which is what says whether the
+                       first call left anything behind. */
+                    got = (const char *)0x1;
+                    n   = 0xffffffffu;
+                    rc  = (int)IM(GetText)(im_room, &got, &n, NULL, 0);
+                    putGot("IM again", i, j, k, m, rc, got, n);
+
+                    printf("IM err %ld %ld %ld %ld %lu codeset %ld\n", i, j,
+                           k, m, (unsigned long)PARAM_ERRORS(the_param),
+                           (long)PARAM_CODESET(the_param));
+
+                    /* And a second join on the same manager, so that the
+                       buffer the first one made is there to be kept or
+                       thrown away -- which is the only way the test on how
+                       long the string in it is can be seen at all. Twice
+                       more, once shorter than the first join and once
+                       longer. */
+                    PARAM_SET(the_param, 2, 0x80000);
+                    {
+                        long r;
+
+                        for (r = 0; r < 3; r++) {
+                            static const char *const WAIT[3] = {
+                                "wxyz", "0123456789", "wxy"
+                            };
+                            static const uint32_t WAITN[3] = { 4, 10, 3 };
+
+                            (void)IM(AddText)(im_room, WAIT[r], WAITN[r],
+                                              0x80000);
+                            got = (const char *)0x1;
+                            n   = 0xffffffffu;
+                            rc  = (int)IM(GetText)(im_room, &got, &n, "0", 1u);
+                            putGot("IM rejoin", i, j, r, m, rc, got, n);
+                        }
+                    }
+
+                    IM(Dtor)(im_room);
+                }
+
+    /* The queue: marks and parameters at rising offsets, read out and taken
+       off one at a time, then thrown away wholesale. */
+    for (i = 0; i < 2; i++) {
+        static const char *const PARAMS[4] = {
+            "`vs50", "`vb-10", "", "`vv%+5"
+        };
+
+        PARAM_CLEAR(the_param);
+        memset(im_room, 0, sizeof im_room);
+        IM(Ctor)(im_room, the_param);
+        cv_offsetCalls = 0;
+
+        for (j = 0; j < 4; j++) {
+            int32_t n = (int32_t)strlen(PARAMS[j]);
+
+            cv_offset = (int32_t)(j * 7);
+            printf("IM ix %ld %ld rc %d\n", i, j,
+                   (int)IM(InsertIndex)(im_room));
+            cv_offset = (int32_t)(j * 7 + 3);
+            /* Every other one is given a length shorter than the string it
+               is given, which is the only way the nul the constructor writes
+               is visible at all. */
+            if (j & 1)
+                n = n ? n - 1 : 0;
+            printf("IM par %ld %ld rc %d\n", i, j,
+                   (int)IM(AddParam)(im_room, PARAMS[j], n));
+        }
+        printf("IM calls %ld %ld\n", i, cv_offsetCalls);
+
+        for (j = 0; j < 10; j++) {
+            const char *data = (const char *)0x1;
+            int         len;
+            int         more = (int)IM(HasMore)(im_room);
+            int         at   = (int)IM(GetNextOffset)(im_room);
+            void       *e    = IM(GetNextElement)(im_room);
+
+            len = (int)IM(GetNextData)(im_room, &data);
+            printf("IM next %ld %ld more %d at %d len %d elem %ld %ld ", i, j,
+                   more, at, len,
+                   e ? (long)QE_AT(e) : -1, e ? (long)QE_KIND(e) : -1);
+            if (data == NULL)
+                printf("none");
+            else
+                /* One past the length as well: that is where the element's
+                   constructor puts its nul, and the room it allocated is
+                   long enough to hold it. */
+                for (k = 0; k < len + 1 && k < 33; k++)
+                    printf("%02x", (unsigned)(uint8_t)data[k]);
+            putchar('\n');
+
+            if (!more)
+                break;
+            if (i)
+                IM(RemoveElement)(im_room);
+        }
+
+        /* Text left waiting, and then everything forgotten, which is what
+           says whether remove drops the text as well as the queue. */
+        (void)IM(AddText)(im_room, "abc", 3, 0x80000);
+        /* And a second helping of nothing, which is refused and must leave
+           the first alone. */
+        (void)IM(AddText)(im_room, "zz", 0, 0x80100);
+        if (i == 0)
+            IM(Remove)(im_room);
+        printf("IM left %ld more %d\n", i, (int)IM(HasMore)(im_room));
+        {
+            const char *got = (const char *)0x1;
+            uint32_t    n   = 0xffffffffu;
+            int         rc  = (int)IM(GetText)(im_room, &got, &n, NULL, 0);
+
+            putGot("IM after remove", i, 0, 0, 0, rc, got, n);
+        }
+        IM(Dtor)(im_room);
+    }
+
+    printf("IM done\n");
+}
+
+/* The converter itself: everything the engine asks a Japanese instance, over
+ * every codeset and every text the two conversions above are swept with.
+ *
+ * The block is a Romanizer's, because ConverterInterface is its base and the
+ * two share one record, and the vtable in it is the harness's. The one thing
+ * not reached is the spin in resume: it waits on a flag no second thread here
+ * ever lowers, so the sweep sets the flag clear and walks what follows it.
+ */
+static void sweepConverter(void)
+{
+    static char cv_room[RZ_ROOM];
+    static char ud_room[UD_ROOM];
+    static char list_room[IBM_LIST_ROOM];
+    const char *path = "romprims-convt.tmp";
+    long i;
+    long j;
+    long k;
+
+    /* Made, then unmade, and what the block says at each point. */
+    memset(cv_room, 0x5a, sizeof cv_room);
+    CV_SET_VT(cv_room);
+    PARAM_CLEAR(the_param);
+    CI(InitBase)(cv_room, the_param);
+    printf("CV init stop %ld busy %ld input %d trans %d uni %d owner %d"
+           " err %lu\n",
+           (long)*(int32_t *)(cv_room + RZ_STOPPED),
+           (long)*(int32_t *)(cv_room + RZ_BUSY),
+           CV_INPUT(cv_room) != NULL, CV_TRANSBUF(cv_room) != NULL,
+           CV_UNICODE(cv_room) != NULL,
+           PARAM_OWNER(the_param) == (void *)cv_room,
+           (unsigned long)PARAM_ERRORS(the_param));
+
+    /* Every codeset over every shape of text, which is what decides whether
+       anything is recoded at all and into what. */
+    for (i = 0; i < (long)(sizeof CC_CODESETS / sizeof *CC_CODESETS); i++)
+        for (j = 0; j < 256; j += 17) {
+            CcText texts[8];
+            char   store[8][12];
+            int    n = ccTexts((int)j, texts, store);
+            long   t;
+
+            for (t = 0; t < n; t++) {
+                const char *got = (const char *)0x1;
+                uint32_t    rc;
+
+                PARAM_CLEAR(the_param);
+                rc = CI(Trans)(cv_room, (void *)(uintptr_t)
+                               (const void *)texts[t].bytes,
+                               texts[t].len, CC_CODESETS[i], &got);
+                printf("CV tr %ld %ld %ld n %lu same %d ", i, j, t,
+                       (unsigned long)rc, got == texts[t].bytes);
+                if (got == (const char *)0x1)
+                    printf("untouched");
+                else if (got == NULL)
+                    printf("none");
+                else
+                    for (k = 0; k < (long)rc + 1 && k < 40; k++)
+                        printf("%02x", (unsigned)(uint8_t)got[k]);
+                printf(" err %lu\n", (unsigned long)PARAM_ERRORS(the_param));
+            }
+        }
+
+    /* Text handed over, which recodes and then leaves it with the manager;
+       what waited is read back through the manager itself. */
+    for (i = 0; i < (long)(sizeof CC_CODESETS / sizeof *CC_CODESETS); i++)
+        for (j = 0; j < 3; j++) {
+            static const char *const TEXTS[3] = { "", "abc", "\xa4\xa2\xa4\xa4" };
+            static const int32_t LENS[3] = { 0, 3, 4 };
+            const char *got = (const char *)0x1;
+            uint32_t    n   = 0xffffffffu;
+            int         rc;
+
+            PARAM_CLEAR(the_param);
+            PARAM_SET(the_param, 2, CC_CODESETS[i]);
+            IM(Remove)(CV_INPUT(cv_room));
+
+            PARAM_ANNO(the_param) = -1;
+            rc = (int)CI(AddText)(cv_room, TEXTS[j], LENS[j], (int32_t)j);
+            /* The input type as well, which addText is the only caller of
+               setInputType and therefore the only thing that writes. */
+            printf("CV add %ld %ld rc %d codeset %ld type %ld\n", i, j, rc,
+                   (long)PARAM_CODESET(the_param),
+                   (long)PARAM_ANNO(the_param));
+
+            rc = (int)IM(GetText)(CV_INPUT(cv_room), &got, &n, NULL, 0);
+            putGot("CV waited", i, j, 0, 0, rc, got, n);
+        }
+    PARAM_SET(the_param, 2, 0x80000);
+
+    /* Marks and parameters written out at a rising cut-off, which is the one
+       method that walks the queue rather than adding to it. */
+    for (i = 0; i < 6; i++) {
+        char out[512];
+
+        IM(Remove)(CV_INPUT(cv_room));
+        for (j = 0; j < 3; j++) {
+            cv_offset = (int32_t)(j * 4);
+            (void)CI(InsertIndex)(cv_room);
+            cv_offset = (int32_t)(j * 4 + 2);
+            (void)CI(AddParam)(cv_room, "`vs50", 5);
+        }
+
+        {
+            void *e = IM(GetNextElement)(CV_INPUT(cv_room));
+
+            printf("CV head %ld at %ld kind %ld\n", i,
+                   e ? (long)QE_AT(e) : -1, e ? (long)QE_KIND(e) : -1);
+        }
+
+        memset(out, 0, sizeof out);
+        strcpy(out, "head");
+        {
+            int rc = (int)CI(OutputIndexOrParam)(cv_room, out,
+                                                 (int32_t)(i * 3));
+
+            printf("CV out %ld rc %d [%s] more %d\n", i, rc, out,
+                   (int)IM(HasMore)(CV_INPUT(cv_room)));
+        }
+    }
+    IM(Remove)(CV_INPUT(cv_room));
+
+    /* And once more with nothing on the queue at all, which is the only way
+       the answer for an empty queue can be told from the answer for one that
+       still has something further along. */
+    {
+        char out[64];
+        int  rc;
+
+        memset(out, 0, sizeof out);
+        strcpy(out, "head");
+        rc = (int)CI(OutputIndexOrParam)(cv_room, out, 0);
+        printf("CV out empty rc %d [%s]\n", rc, out);
+    }
+
+    /* Stopped and started again. The flag resume waits on is clear, so what
+       is swept is the reset and the clearing after it. */
+    /* The call first and the fields after it, every time. In one printf the
+       order is the compiler's, and it read the counter before the call that
+       raises it. */
+    cv_resetCalls = 0;
+    {
+        int rc = (int)CI(Stop)(cv_room);
+
+        printf("CV stop rc %d flag %ld\n", rc,
+               (long)*(int32_t *)(cv_room + RZ_STOPPED));
+        rc = (int)CI(Resume)(cv_room);
+        printf("CV resume rc %d flag %ld resets %ld\n", rc,
+               (long)*(int32_t *)(cv_room + RZ_STOPPED), cv_resetCalls);
+    }
+
+    /* Unicode, which is a wrapper over the converter the sweep above already
+       holds to IBM's answer; what is swept here is the making of it on first
+       use and the answer when there is none. */
+    for (i = 0; i < 4; i++) {
+        static const char *const IN[4] = { "", "A", "\x82\xa0", "\x81\x40" };
+        static const uint16_t WIDE[4][3] = {
+            { 0 }, { 'A', 0 }, { 0x3042, 0 }, { 0x3042, 'z', 0 }
+        };
+        char     *mb = (char *)0x1;
+        uint16_t *uc = (uint16_t *)0x1;
+        int       rc;
+
+        PARAM_CLEAR(the_param);
+        rc = (int)CI(MBCSToUCS2)(cv_room, IN[i], &uc);
+        printf("CV to16 %ld rc %d ", i, rc);
+        if (uc == NULL)
+            printf("none");
+        else
+            for (j = 0; uc[j] != 0 && j < 8; j++)
+                printf("%04x", (unsigned)uc[j]);
+        putchar('\n');
+
+        rc = (int)CI(UCS2ToMBCS)(cv_room, WIDE[i], &mb, (int32_t)(i & 1));
+        printf("CV to8 %ld rc %d ", i, rc);
+        if (mb == NULL)
+            printf("none");
+        else
+            putBytes(mb);
+        putchar('\n');
+    }
+
+    /* The user dictionary, which is where every one of these calls ends up.
+       The store is this converter's own rather than the one DictSearch holds,
+       and setDict is what puts it in force. */
+    memset(ta_block, 0, sizeof ta_block);
+    memset(ud_room, 0, sizeof ud_room);
+    memset(ic_block, 0, sizeof ic_block);
+    memset(ds_block, 0, sizeof ds_block);
+    TA_SET(ta_block, TA_INPUTCHAR, ic_block);
+    TA_SET(ta_block, TA_DICTSEARCH, ds_block);
+    TA_SET(ta_block, TA_OWNER, cv_room);
+    DS_SET_OWNER(ds_block, ta_block);
+    UD(Ctor)(ud_room, ta_block);
+    RZ_SET_USERDICT(cv_room, ud_room);
+
+    {
+        void *made = CI(NewDict)(cv_room);
+
+        printf("CV new %d\n", made != NULL);
+        CI(SetDict)(cv_room, made);
+        printf("CV set %d\n", UD_DICT(ud_room) == made);
+
+        for (i = 0; UD_WORDS[i][0] != NULL && i < 8; i++)
+            for (j = 0; j < 2; j++) {
+                int rc = (int)CI(UpdateDictExt)(cv_room, made, 0,
+                             (uint8_t *)(uintptr_t)(const void *)
+                                 UD_WORDS[i][0],
+                             (int32_t)strlen(UD_WORDS[i][0]),
+                             (char *)(uintptr_t)(const void *)UD_WORDS[i][1],
+                             (int32_t)strlen(UD_WORDS[i][1]),
+                             (int32_t)(j + 1), j ? 0x80000 : 0x80100);
+
+                printf("CV upd %ld %ld rc %d err %lu\n", i, j, rc,
+                       (unsigned long)PARAM_ERRORS(the_param));
+            }
+
+        for (i = 0; UD_WORDS[i][0] != NULL && i < 8; i++)
+            for (j = 0; j < 2; j++) {
+                void   *value = (void *)0x1;
+                int32_t vlen  = -1;
+                int32_t pos   = -1;
+                int     rc    = (int)CI(LookupDictExt)(cv_room, made, 0,
+                             (uint8_t *)(uintptr_t)(const void *)
+                                 UD_WORDS[i][0],
+                             (int32_t)strlen(UD_WORDS[i][0]),
+                             &value, &vlen, &pos, j ? 0x80000 : 0x80100);
+
+                printf("CV look %ld %ld rc %d len %ld pos %ld ", i, j, rc,
+                       (long)vlen, (long)pos);
+                if (value == NULL || value == (void *)0x1)
+                    printf("none");
+                else
+                    for (k = 0; k < vlen && k < 40; k++)
+                        printf("%02x",
+                               (unsigned)((uint8_t *)value)[k]);
+                putchar('\n');
+            }
+
+        /* The whole store read out entry by entry, then past the end. */
+        for (i = 0; i < 12; i++) {
+            void   *word  = (void *)0x1;
+            int32_t wlen  = -1;
+            void   *extra = (void *)0x1;
+            int32_t elen  = -1;
+            int32_t pos   = -1;
+            int     rc;
+
+            if (i == 0)
+                rc = (int)CI(FindFirst)(cv_room, made, 0, &word, &wlen,
+                                        &extra, &elen, &pos, 0x80000);
+            else
+                rc = (int)CI(FindNext)(cv_room, made, 0, &word, &wlen,
+                                       &extra, &elen, &pos, 0x80000);
+
+            printf("CV walk %ld rc %d wlen %ld elen %ld pos %ld extra %d ",
+                   i, rc, (long)wlen, (long)elen, (long)pos,
+                   extra == (void *)0x1 ? 2 : extra != NULL);
+            if (word == NULL || word == (void *)0x1)
+                printf("none");
+            else
+                for (k = 0; k < wlen && k < 40; k++)
+                    printf("%02x", (unsigned)((uint8_t *)word)[k]);
+            putchar('\n');
+            if (rc != 0)
+                break;
+        }
+
+        /* Written out, read back into a store of its own, and read out again
+           so that both halves are held to the same bytes. */
+        remove(path);
+        printf("CV save rc %d\n",
+               (int)CI(SaveDict)(cv_room, made, 0, path));
+        /* And into a directory that is not there, which is the only way the
+           store's own no-file answer reaches either of these two. */
+        printf("CV save nowhere rc %d\n",
+               (int)CI(SaveDict)(cv_room, made, 0,
+                                 "romprims-no-such-dir/x.tmp"));
+        printf("CV load missing rc %d\n",
+               (int)CI(LoadDict)(cv_room, made, 0, "romprims-nowhere.tmp"));
+
+        ibm_slCtor(list_room);
+        printf("CV load rc %d\n",
+               (int)CI(LoadDict)(cv_room, list_room, 0, path));
+        for (i = 0; i < 12; i++) {
+            void   *word  = (void *)0x1;
+            int32_t wlen  = -1;
+            void   *extra = (void *)0x1;
+            int32_t elen  = -1;
+            int32_t pos   = -1;
+            int     rc;
+
+            if (i == 0)
+                rc = (int)CI(FindFirst)(cv_room, list_room, 0, &word, &wlen,
+                                        &extra, &elen, &pos, 0x80000);
+            else
+                rc = (int)CI(FindNext)(cv_room, list_room, 0, &word, &wlen,
+                                       &extra, &elen, &pos, 0x80000);
+
+            printf("CV reread %ld rc %d wlen %ld pos %ld extra %d ", i, rc,
+                   (long)wlen, (long)pos,
+                   extra == (void *)0x1 ? 2 : extra != NULL);
+            if (word == NULL || word == (void *)0x1)
+                printf("none");
+            else
+                for (k = 0; k < wlen && k < 40; k++)
+                    printf("%02x", (unsigned)((uint8_t *)word)[k]);
+            putchar('\n');
+            if (rc != 0)
+                break;
+        }
+        ibm_slDtor(list_room);
+        remove(path);
+
+        /* And thrown away, which also clears whatever was in force. */
+        CI(DeleteDict)(cv_room, made);
+        printf("CV del %d\n", UD_DICT(ud_room) == NULL);
+    }
+
+    CI(CloseBase)(cv_room);
+    printf("CV close input %d trans %d uni %d\n",
+           CV_INPUT(cv_room) != NULL, CV_TRANSBUF(cv_room) != NULL,
+           CV_UNICODE(cv_room) != NULL);
+    CI(CloseBase)(cv_room);
+    printf("CV close twice input %d trans %d uni %d\n",
+           CV_INPUT(cv_room) != NULL, CV_TRANSBUF(cv_room) != NULL,
+           CV_UNICODE(cv_room) != NULL);
+
+    printf("CV done\n");
+}
+
 int main(void)
 {
     Param *p;
@@ -4758,6 +5690,9 @@ int main(void)
     sweepNumbers();
     sweepDo();
     sweepFzk();
+    sweepCodeconv();
+    sweepInputManager();
+    sweepConverter();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

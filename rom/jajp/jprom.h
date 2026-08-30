@@ -24,6 +24,9 @@
 
 #include <stdint.h>
 #include "eci_rom.h"
+#include "evv_abi.h"
+#include "eci_objects.h"
+#include "romanizer.h"
 
 /* Operator new and delete, which is what IBM's romanizer allocates with, so
    ours does too: on a sixty-four bit host these come out of the low arena,
@@ -65,6 +68,24 @@ extern void  cpp_delete(void *p);
  * table in src/eci_rom.h -- but a transcription that calls slot two has to
  * know it means getOffset. */
 typedef struct Converter Converter;
+
+/* Those seven slots as a table. A converter block is not a struct here -- it
+   is a run of bytes at IBM's offsets, because Romanizer's record is shared
+   with classes that read it -- so the vtable pointer is parked past the
+   record with the rest of its pointers and CI_VT is how it is reached.
+   Three of the seven have not been read yet and are named without a
+   signature; nothing may call one until it has been. */
+typedef struct ConverterVtbl {
+    void   *(*destroy)(Converter *c, int32_t freeIt);
+    void    (*processSentence)(void);
+    int32_t (*getOffset)(Converter *c);
+    void    (*ResetBuffer)(Converter *c);
+    void    (*isValidUserDictEntry)(void);
+    void    (*mbcs2Rom)(void);
+    void    (*rom2Mbcs)(void);
+} ConverterVtbl;
+
+#define CI_VT(c) (*(const ConverterVtbl **)((uint8_t *)(c) + RZ_VTABLE_AT))
 
 /* ---- the tables ------------------------------------------------------ */
 
@@ -147,6 +168,7 @@ int32_t       rp_getCodeSet(RomInstParam *p);
 int32_t       rp_isDictOn(RomInstParam *p);
 int32_t       rp_isSetWantWordIndex(RomInstParam *p);
 int32_t       rp_isAnnotationsInText(RomInstParam *p);
+int32_t       rp_setInputType(RomInstParam *p, int32_t type);
 
 /* The annotation an index mark becomes, which is a string of this object's
    own in the original. */
@@ -507,6 +529,133 @@ int32_t rud_updateDictExt(RomUserDict *u, SkipList *list, int32_t which,
 int32_t rud_lookupDictExt(RomUserDict *u, SkipList *list, int32_t which,
                          uint8_t *word, int32_t wordLen, void **value,
                          int32_t *valueLen, int32_t *pos);
+
+/* ---- JpnUtil's codeset conversions ----------------------------------- */
+
+/* IBM keeps these five in a separate object from the rest of JpnUtil, so they
+   are in rom/jajp/codeconv.c rather than rom/jajp/jpnutil.c. Only the last
+   two are called from outside it; the other three are here because the sweep
+   holds them to IBM's answer one at a time. */
+int32_t ju_SkipESCSeq(const char *text, long *at, int32_t *twoByte);
+void    ju_jis2sjis(uint8_t *lead, uint8_t *trail);
+void    ju_han2zen(const char *text, long *at, uint8_t *lead, uint8_t *trail,
+                   int32_t kind);
+long    ju_euc2shift(const char *in, long len, char *out, int32_t wantZen);
+long    ju_seven2shift(const char *in, long len, char *out);
+
+/* ---- InputManager ---------------------------------------------------- */
+
+/* One thing waiting on the queue: where in the output it belonged, and what
+   it reads back as. A mark carries nothing of its own and a parameter carries
+   the text the caller wrote. The records are ours -- nothing outside
+   rom/jajp/inputmngr.c holds one -- and the shape is IBM's all the same. The
+   offsets in the comments below are IBM's, which is where the reading came
+   from; ours are wider wherever a pointer is. */
+typedef struct RomQueueElement RomQueueElement;
+
+typedef struct RomQueueElementVtbl {
+    void   *(*destroy)(RomQueueElement *e, int32_t freeIt);
+    int32_t (*getData)(RomQueueElement *e, const char **out);
+} RomQueueElementVtbl;
+
+struct RomQueueElement {
+    const RomQueueElementVtbl *vt;   /* +0x00 */
+    int32_t at;                      /* +0x04, where it belonged */
+    int32_t kind;                    /* +0x08, one for a parameter */
+};
+
+typedef struct QElementIndex {
+    RomQueueElement base;
+} QElementIndex;
+
+typedef struct QElementParam {
+    RomQueueElement base;
+    char   *text;                    /* +0x0c, its own copy */
+    int32_t len;                     /* +0x10 */
+} QElementParam;
+
+QElementParam *qp_ctor(QElementParam *p, const char *text, int32_t len,
+                       int32_t at);
+
+/* Text on its way in, and the marks and parameters that go with it. The
+   offsets are IBM's, as above. */
+typedef struct InputManager {
+    ETIqueue        *queue;    /* +0x00 */
+    RomInstParam    *param;    /* +0x04 */
+    RomQueueElement *element;  /* +0x08, the one last taken off the queue */
+    int32_t          codeset;  /* +0x0c, what the waiting text arrived in */
+    const char      *text;     /* +0x10, waiting, not copied */
+    uint32_t         len;      /* +0x14 */
+    char            *buf;      /* +0x18, where a join is put */
+} InputManager;
+
+InputManager    *im_ctor(InputManager *m, RomInstParam *param);
+void             im_dtor(InputManager *m);
+void             im_remove(InputManager *m);
+int32_t          im_addText(InputManager *m, const char *text, uint32_t len,
+                            int32_t codeset);
+int32_t          im_getText(InputManager *m, const char **outText,
+                            uint32_t *outLen, const char *text,
+                            uint32_t len);
+int32_t          im_insertIndex(InputManager *m);
+int32_t          im_addParam(InputManager *m, const char *text, int32_t len);
+int32_t          im_hasMoreElement(InputManager *m);
+RomQueueElement *im_getNextElement(InputManager *m);
+int32_t          im_getNextOffset(InputManager *m);
+int32_t          im_getNextData(InputManager *m, const char **out);
+void             im_removeElement(InputManager *m);
+
+/* The queue itself is the engine's, which src/eci_etiqueue.c has. These are
+   IBM's own methods and carry IBM's convention: on a thirty-two bit build the
+   object goes in a register rather than on the stack, so a declaration that
+   leaves THIS off links and then passes the arguments one slot out. */
+extern const uint32_t eq_bytes;
+THIS ETIqueue *eq_ctor(ETIqueue *q, uint32_t capacity);
+THIS void      eq_dtor(ETIqueue *q);
+THIS void      eq_reset(ETIqueue *q);
+THIS int32_t   eq_isEmpty(ETIqueue *q);
+THIS int32_t   eq_push(ETIqueue *q, void *p);
+THIS int32_t   eq_pop(ETIqueue *q, void **out);
+THIS int32_t   eq_peekHead(ETIqueue *q, void **out);
+
+/* ---- ConverterInterface ---------------------------------------------- */
+
+/* The base half of a Romanizer, which is where everything the engine asks
+   arrives. The block is passed as bytes because the record is IBM's;
+   rom/jajp/romanizer.h says where each field sits. */
+void     ci_initBase(void *c, RomInstParam *param);
+void     ci_closeBase(void *c);
+int32_t  ci_UCS2ToMBCS(void *c, const uint16_t *in, char **out, int32_t yen);
+int32_t  ci_MBCSToUCS2(void *c, const char *in, uint16_t **out);
+int32_t  ci_insertIndex(void *c);
+int32_t  ci_addParam(void *c, const char *text, int32_t len);
+int32_t  ci_outputIndexOrParam(void *c, char *out, int32_t at);
+int32_t  ci_addText(void *c, const char *text, int32_t len,
+                    int32_t inputType);
+uint32_t ci_trans2defaultCodeset(void *c, void *text, int32_t len,
+                                 int32_t codeset, const char **out);
+int32_t  ci_stop(void *c);
+int32_t  ci_resume(void *c);
+void    *ci_newDict(void *c);
+void     ci_deleteDict(void *c, void *dict);
+void     ci_setDict(void *c, void *dict);
+long     ci_findDictFile(void *c, const char *name, char *out);
+int32_t  ci_loadDict(void *c, void *dict, int32_t which, const char *name);
+int32_t  ci_saveDict(void *c, void *dict, int32_t which, const char *name);
+int32_t  ci_lookupDictExt(void *c, void *dict, int32_t which, uint8_t *word,
+                          int32_t wordLen, void **value, int32_t *valueLen,
+                          int32_t *pos, int32_t codeset);
+int32_t  ci_findFirstDictEntryExt(void *c, void *dict, int32_t which,
+                                  void **word, int32_t *wordLen,
+                                  void **extra, int32_t *extraLen,
+                                  int32_t *pos, int32_t codeset);
+int32_t  ci_findNextDictEntryExt(void *c, void *dict, int32_t which,
+                                 void **word, int32_t *wordLen,
+                                 void **extra, int32_t *extraLen,
+                                 int32_t *pos, int32_t codeset);
+int32_t  ci_updateDictExt(void *c, void *dict, int32_t which, uint8_t *word,
+                          int32_t wordLen, char *kana, int32_t kanaLen,
+                          int32_t pos, int32_t codeset);
 
 /* ---- how much of this is written ------------------------------------ */
 

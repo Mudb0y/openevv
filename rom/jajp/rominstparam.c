@@ -9,10 +9,13 @@
  * Two things in here are worth knowing because they look like faults and are
  * not. setParam(0) writes the text mode and getParam(0) reads the input type,
  * which is a different field: the input type is written by setInputType, which
- * is private and which nothing in the original ever calls. So getParam(0)
- * always answers nought, and isAnnotationsInText -- which reads the same field
- * -- always answers no. And setParam(4) reads its value into a local and does
- * nothing with it at all.
+ * is private and which only one caller in the original has. That caller is
+ * ConverterInterface::addText, so getParam(0) answers whatever the last text
+ * handed over was said to be, and isAnnotationsInText -- which reads the same
+ * field -- answers the same. Until convtinterface.c was written nothing here
+ * called it at all and this said so; the note is kept because the two fields
+ * still look like one and are not. And setParam(4) reads its value into a
+ * local and does nothing with it at all.
  *
  * Both matter to the manager rather than being curiosities. src/eci_romanizer.c
  * reads a parameter before it writes one and flushes what the romanizer is
@@ -199,6 +202,17 @@ int32_t rp_isSetWantWordIndex(RomInstParam *p)
 int32_t rp_isAnnotationsInText(RomInstParam *p)
 {
     return p->inputType;
+}
+
+/* The one field setParam cannot reach, and the old value back. It is private
+   in the original and only ConverterInterface::addText calls it, which is
+   what decides whether annotations are looked for in the text. */
+int32_t rp_setInputType(RomInstParam *p, int32_t type)
+{
+    int32_t was = p->inputType;
+
+    p->inputType = type;
+    return was;
 }
 
 /* ---- reading and writing a parameter -------------------------------- */

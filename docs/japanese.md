@@ -110,15 +110,24 @@ That is the engine's own phoneme notation with prosody annotations around it, no
 
 The Japanese-only object set is 116 objects. Sixteen are the Delta language data, which the ordinary lifters take. Forty-nine are the static dictionary, which `tools/lift-rom.py` takes. Sixteen are the prosody chain, of which thirteen are empty -- everything inlined away -- leaving `PCWriteESPR2` at 5,834 bytes, `PCRoman2BG` at 2,724 and `PCProsCtrl` at 308 over 1,589 bytes of table.
 
-The remaining thirty-five are the romanizer proper: about 168,000 bytes of x86 and 198,000 of data, of which the data is the three objects already lifted -- `dictman`, `unicodeconvt` and `jpnutil`, whose own data section holds the romaji spellings. Five of those objects are written. What is left is roughly twenty to thirty thousand lines of C, judged from the four to eight bytes of x86 per line of ours that three already-ported objects came out at.
+The remaining thirty-five are the romanizer proper: about 168,000 bytes of x86 and 198,000 of data, of which the data is the three objects already lifted -- `dictman`, `unicodeconvt` and `jpnutil`, whose own data section holds the romaji spellings. Fourteen of those objects are written whole: `rominstparam`, `unicodeconvt`, `dictman`, `jpnutil`, `codeconv`, `annotation`, `userdict`, `inputchar`, `inputmngr`, `convtinterface`, and the five of DictSearch's seven that hold nothing else -- `dictapi`, `fdictapi`, `kanastr`, `engread` and `numanal`. The other two are written too but hold a method apiece of `TextAnalysis` and of `PhraseTable`, which are not. What is left is roughly twenty thousand lines of C, judged from the four to eight bytes of x86 per line of ours that three already-ported objects came out at.
 
 It is a Japanese morphological analyser, not a lookup table. The classes, with how many methods each has:
 
-    DictSearch 64   TextAnalysis 36   JpnUtil 32        MakeReadableJP 30
-    DictMan 26      ConverterInterface 24                InputChar 21 (done)
-    IntonPhrase 17  Romanizer 16      PhraseTable 16     NumRead 11
-    JPath 11        InputManager 10   RomUserDict 9      PhraseBuf 9
-    TextNormalizer 4
+    DictSearch 64 (done)              TextAnalysis 36
+    JpnUtil 37 (done)                 MakeReadableJP 30
+    DictMan 26 (done)                 ConverterInterface 21 (done)
+    InputChar 21 (done)               IntonPhrase 17
+    Romanizer 16                      PhraseTable 16
+    NumRead 11                        JPath 11
+    InputManager 10 (done)            RomUserDict 9 (done)
+    PhraseBuf 9                       TextNormalizer 4
+
+The two counts that have moved since the first census are IBM's, not a
+recount of ours. `JpnUtil` has thirty-seven methods rather than thirty-two:
+five of them are in `codeconv.obj` rather than in its own object.
+`ConverterInterface` has twenty-one that exist rather than twenty-four
+declared, the other three being pure in it and Romanizer's to supply.
 
 and the objects they sit in, with their code sizes:
 
@@ -144,8 +153,9 @@ The thirty-five objects want only 85 names from outside themselves, and most are
 - the `Annotation` class, `annotation.obj`, 1,446 bytes
 - `ProsCtrl::GenerateESPR` and the ESPR writer behind it, about 6,100 bytes
 - `IniFileWriter`, `win_iniwrite`, 4,112 bytes
-- `JpnUtil::euc2shift` and `seven2shift`, in `codeconv.obj`, 2,794 bytes
 - `getFullRomPathName`, twenty bytes in `libmain.obj`, which has the same trap in it as `getFullPathName` above
+
+`JpnUtil::euc2shift` and `seven2shift` used to be on that list and are not any more: `codeconv.obj` is `rom/jajp/codeconv.c` now, all five of its functions.
 
 The skiplist chain is written and proved: `src/eci_key.c`, `eci_translation.c`, `eci_listnode.c`, `eci_skiplistnode.c`, `eci_arraylistnode.c` and `eci_skipstore.c`, held to IBM's own objects by `test/romprims.sh` over insert, search, multiSearch, remove, a full walk and a save-and-load round trip.
 
@@ -159,7 +169,33 @@ And on the way back: `lookup` hands the whole of what is left of the sentence to
 
 Two things the sweep settled that reading alone had not. The two longs at the end of `DictSearch` are a mode and a pointer: when the mode is one, a user entry is taken only if its first two bytes and its written form are the ones that pointer names. And that pointer is the last field of the record, which on a sixty-four bit host takes eight bytes where IBM had four -- so ours allocates a pointer's worth more than `TextAnalysis::initialize` asks for. `DS_ROOM` in `rom/jajp/dictsearch.h` is that, and the offsets stay IBM's.
 
-The dictionary methods of `ConverterInterface` go through `RomUserDict` and are what is left of that half; the ECI dictionary calls answer refused for Japanese until they are written.
+## The surface
+
+`rom/jajp/convtinterface.c` is all twenty-one methods of `ConverterInterface`, `rom/jajp/inputmngr.c` all ten of `InputManager` with the three queue-element classes that belong to it, and `rom/jajp/codeconv.c` the five conversions of `JpnUtil` that IBM keeps in an object of its own. Together they are everything the engine asks a Japanese instance that is not the analysis itself.
+
+What that is. Text arrives and is recoded into Shift-JIS if it did not arrive in it -- from EUC-JP or from any of the three seven-bit JIS codesets -- and then waits with the `InputManager` until something asks for it, because a caller hands over whatever it has rather than one sentence at a time. A mark or a parameter set part way through does not belong to the text as a whole but to a point in it, so those go on a queue with a note of how far into the output each belonged, and are written back out as the output passes that place. And the whole of the user dictionary passes through to `RomUserDict`, recoding the word and the reading on the way. So the ECI dictionary calls no longer answer refused for Japanese.
+
+`ConverterInterface` is the base class of `Romanizer`, so the two are one object, and `rom/jajp/romanizer.h` says so now: the eight fields from 0x00 to 0x1f are the base's and are read out of `convtinterface.obj` rather than guessed at, and the rest of the record is the partial map it always was. The evidence that the head is complete is mechanical -- every displacement on a pointer anywhere in that object is one of 0x04 through 0x1c, plus 0x20 and 0x24 which occur only on the frame pointer, where they are arguments. Six of the eight are pointers and none of them can stay where IBM put it on a sixty-four bit host, so they are parked past the record as DictSearch's and InputChar's are.
+
+Four things here are IBM's and are reproduced rather than corrected.
+
+`InputManager::getText`, given new text when older text is still waiting, puts the new text in front and the waiting text behind it, so what was said first comes out last. It is only reached when a caller adds text twice without speaking in between.
+
+`JpnUtil::han2zen`, walking EUC rather than Shift-JIS, loads the single shift as a signed byte and compares it against 0x8e as a number. A byte of 0x8e sign-extended is minus a hundred and fourteen, so the two are never equal and the whole of that arm is dead: a half-width kana coming out of EUC is widened but never has its voicing mark joined to it, which is the one thing the arm existed to do.
+
+`JpnUtil::euc2shift` reads the second byte of a two-byte character without first asking whether there is one, so a text ending on a lead byte is read one byte past its end.
+
+And `ConverterInterface::loadDict` looks the file up along the path, finds it, and then opens it by the name the caller gave rather than by the one that was found -- so a dictionary that is only on the path is located and then not opened.
+
+A hundred sabotages of the three files were tried and eighty-one move lines. One was replaced because it did not change the predicate it aimed at -- setting a flag to two where only its truth is ever read -- and the eighteen that stay quiet are these, which is the point of listing them:
+
+Three are memory rather than answers, and the arena guard sees them where the sweep cannot: the parameter text not freed, the recoded word not freed, and the old join buffer freed when it should have been kept.
+
+Four want an allocation to fail, which nothing here can make happen: the manager's queue, the converter's manager, and the two roads through the Unicode converter's first use.
+
+Eleven change nothing any road reads. The queue grows when it fills, so how deep it starts decides nothing. The text waiting is never read while its length is nought. The queue's own peek already answers nothing for an empty queue, so the manager's test in front of it is doubled. Whether the join buffer is kept or made again decides only whether an allocation happens; both roads write the same bytes, and so does a byte more allocated than anything reads. `findDictFile`'s answer is only ever tested against nought, so what size it reports does not matter. It answers minus one or a real size and never nought, so the difference between testing for nought and testing for negative does not arise. The parameter block refuses any codeset the conversion does not know, so a conversion that answers nothing cannot be reached through `addText`. The store's two failure answers cannot be reached through `loadDict` at all -- one wants the open to fail after it has already succeeded, the other an allocation. `RomUserDict` discards the reading's length, so what `updateDictExt` computes for it is never read. And the arm IBM's sign extension makes dead is dead: the sabotage that makes it live moves 819 lines, which is how a dead branch is shown to be dead rather than asserted to be.
+
+One correction to something this file used to say. `RomInstParam::setInputType` is private and was described here as having no caller at all, which is why `getParam(0)` and `isAnnotationsInText` were said always to answer nought. It has exactly one caller and it is `ConverterInterface::addText`, so both answer whatever the last text handed over was said to be. The two fields still look like one and are not, which is what that note was for.
 
 `IniFileWriter` is wanted only by `romreg.obj` and by English's `engreg.obj`, both registration rather than speech, and our arrangement retired registration -- there is no library to find, so there is no path to write into an ini file. Transcribing it would be a file with no caller in either half of the tree. Nine of its thirteen methods have been read and are in this session's notes; the four left are `writeToMemory`, `deleteKeyFromSection`, `deleteSection` and the rest of `writeString`.
 
