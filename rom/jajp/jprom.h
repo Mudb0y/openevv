@@ -297,6 +297,20 @@ int16_t ds_CheckKetaOrder(void *d, int16_t *n, int16_t *chars,
 int16_t ds_SetSuushiWord(void *d, int16_t slot, int16_t at);
 int16_t ds_SetDummyWord(void *d, int16_t slot, int16_t at);
 struct RomUserDict *ds_getPtrOfUserDict(void *d);
+int16_t ds_Do(void *d);
+
+/* ---- Romanizer ------------------------------------------------------- */
+
+/* Only the one method, which DictSearch::Do calls when an annotation stands
+   in front of the character it is about to look up. The record it works on is
+   rom/jajp/romanizer.h. */
+int32_t rz_GetParameter(void *rz, char *p);
+
+/* Two statics of DictMan naming a user dictionary loaded from a file. Nothing
+   in this port sets them, so they stay null and the walk that reads them is
+   never taken; they are here because Do tests for them. */
+extern const uint8_t *dm_s_paUserDict;
+extern const uint8_t *dm_s_paUserDictIdx;
 int32_t ds_CountHrgn(void *d, int32_t n);
 const uint8_t *ds_ReadGWDict(void *d, int16_t page, int16_t at,
                              int16_t which);

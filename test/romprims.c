@@ -283,6 +283,10 @@ static Conv *makeConv(Param *p)
 #define ibm_dsSetDummyWord(d, s, a)  ds_SetDummyWord((d), (s), (a))
 #define ibm_dsgetPtrOfUserDict(d)    ((void *)ds_getPtrOfUserDict((d)))
 
+#define ibm_dsDo(d)                  ds_Do((d))
+#define ibm_rzGetParameter(rz, p)    rz_GetParameter((rz), (p))
+#define RZ(name) ibm_rz##name
+
 #define DS(name) ibm_ds##name
 
 #define DM(name) dm_##name
@@ -832,6 +836,12 @@ extern THIS int16_t ibm_dsSetDummyWord(void *d, int16_t slot, int16_t at)
     MANGLED("?SetDummyWord@DictSearch@@QAEFFF@Z");
 extern THIS void *ibm_dsgetPtrOfUserDict(void *d)
     MANGLED("?getPtrOfUserDict@DictSearch@@QAEPAVRomUserDict@@XZ");
+
+extern THIS int16_t ibm_dsDo(void *d)
+    MANGLED("?Do@DictSearch@@QAEFXZ");
+extern THIS int32_t ibm_rzGetParameter(void *rz, char *p)
+    MANGLED("?GetParameter@Romanizer@@AAEHPAD@Z");
+#define RZ(name) ibm_rz##name
 
 #define DS(name) ibm_ds##name
 
@@ -1608,6 +1618,7 @@ static char ds_block[DS_ROOM];
 #define SN_NEXT_OF(n)         (*(void **)((char *)(n) + SN_NEXT_AT))
 #define RZ_SET_PARAM(b, p)    (*(void **)((b) + RZ_PARAM_AT) = (p))
 #define RZ_SET_USERDICT(b, p) (*(void **)((b) + RZ_USERDICT_AT) = (p))
+#define TA_SET(blk, which, p) (*(void **)((blk) + which##_AT) = (p))
 #else
 #define SN_SET_KEY(n, p)      (*(char **)((char *)(n) + 4) = (p))
 #define SN_KEY_OF(n)          (*(char **)((char *)(n) + 4))
@@ -1616,6 +1627,7 @@ static char ds_block[DS_ROOM];
 #define SN_NEXT_OF(n)         (*(void **)((char *)(n) + 0))
 #define RZ_SET_PARAM(b, p)    (*(void **)((b) + RZ_PARAM) = (p))
 #define RZ_SET_USERDICT(b, p) (*(void **)((b) + RZ_USERDICT) = (p))
+#define TA_SET(blk, which, p) (*(void **)((blk) + which) = (p))
 #endif
 
 static char ic_block[IC_ROOM];
@@ -1714,7 +1726,7 @@ static void sweepDictSearch(void)
 /* The owner, which the two Process methods and SetLongWord reach for. It is
    nearly a megabyte and only three bytes of it matter here, but the offsets
    are TextAnalysis's own and a smaller block would have to invent them. */
-static char ta_block[TA_BYTES];
+static char ta_block[TA_ROOM];
 
 /* The parameter block main made, which InputChar reaches through the romanizer
    above it. */
@@ -2205,8 +2217,8 @@ static void sweepUserDict(void)
     memset(ta_block, 0, sizeof ta_block);
     memset(ds_block, 0, sizeof ds_block);
     memset(ic_block, 0, sizeof ic_block);
-    *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
-    *(void **)(ta_block + TA_DICTSEARCH) = ds_block;
+    TA_SET(ta_block, TA_INPUTCHAR, ic_block);
+    TA_SET(ta_block, TA_DICTSEARCH, ds_block);
     *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
     DS_SET_OWNER(ds_block, ta_block);
 
@@ -2358,8 +2370,8 @@ static void sweepUserDict(void)
 
             memset(ds_block, 0, sizeof ds_block);
             memset(ta_block, 0, sizeof ta_block);
-            *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
-            *(void **)(ta_block + TA_DICTSEARCH) = ds_block;
+            TA_SET(ta_block, TA_INPUTCHAR, ic_block);
+            TA_SET(ta_block, TA_DICTSEARCH, ds_block);
             *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
             DS_SET_OWNER(ds_block, ta_block);
             ta_block[TA_LONGWORDS] = (char)(i == 0 ? 0 : TA_LONGWORD_N);
@@ -2446,8 +2458,8 @@ static void sweepUserDict(void)
             *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
             DS_SET_OWNER(ds_block, ta_block);
             memset(ta_block, 0, sizeof ta_block);
-            *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
-            *(void **)(ta_block + TA_DICTSEARCH) = ds_block;
+            TA_SET(ta_block, TA_INPUTCHAR, ic_block);
+            TA_SET(ta_block, TA_DICTSEARCH, ds_block);
             *(int32_t *)(ds_block + DS_USERDICT_MODE) = (int32_t)i;
             *(void **)(ds_block + DS_USERDICT_WORD) = context;
             if (i == 1) {
@@ -2513,8 +2525,8 @@ static void dsFresh(void)
 {
     memset(ds_block, 0, sizeof ds_block);
     memset(ta_block, 0, sizeof ta_block);
-    *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
-    *(void **)(ta_block + TA_DICTSEARCH) = ds_block;
+    TA_SET(ta_block, TA_INPUTCHAR, ic_block);
+    TA_SET(ta_block, TA_DICTSEARCH, ds_block);
     *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
     DS_SET_OWNER(ds_block, ta_block);
 }
@@ -2944,7 +2956,7 @@ static void sweepDictionaries(void)
         int         t;
         int         sp;
 
-        *(void **)(ta_block + TA_OWNER) = rz_block;
+        TA_SET(ta_block, TA_OWNER, rz_block);
 
         for (t = 0; TEXTS[t] != NULL; t++) {
             int n = icSetText(TEXTS[t]);
@@ -2960,7 +2972,7 @@ static void sweepDictionaries(void)
 
                 /* The two placeholders and the letter name, on their own. */
                 dsFresh();
-                *(void **)(ta_block + TA_OWNER) = rz_block;
+                TA_SET(ta_block, TA_OWNER, rz_block);
                 memset(e, 0, DS_ENTRY_SIZE);
                 DS(SetDummySymbol)(ds_block, (int16_t)at, e);
                 putRecord("dsym", which, e, DS_ENTRY_SIZE);
@@ -2974,7 +2986,7 @@ static void sweepDictionaries(void)
                 for (sp = 0; sp < 4; sp++) {
                     dsFresh();
                     memset(rz_block, 0, sizeof rz_block);
-                    *(void **)(ta_block + TA_OWNER) = rz_block;
+                    TA_SET(ta_block, TA_OWNER, rz_block);
                     *(int32_t *)(rz_block + RZ_SPELL_ENGLISH) = sp & 1;
                     /* And with the long-word store full, which narrows the
                        room a reading has from twenty-four bytes to eight. */
@@ -2986,7 +2998,7 @@ static void sweepDictionaries(void)
 
                 /* The number counters. */
                 dsFresh();
-                *(void **)(ta_block + TA_OWNER) = rz_block;
+                TA_SET(ta_block, TA_OWNER, rz_block);
                 rc = DS(JoSuusiSearch)(ds_block, (int16_t)at);
                 printf("DH josuusi %ld rc %d\n", which, (int)rc);
                 for (j = 0; j < rc && j < 4; j++)
@@ -3010,7 +3022,7 @@ static void sweepDictionaries(void)
                 /* The two that read the candidate array, over an array with
                    something in it: the normal-word lookup fills it first. */
                 dsFresh();
-                *(void **)(ta_block + TA_OWNER) = rz_block;
+                TA_SET(ta_block, TA_OWNER, rz_block);
                 w = (int)DS(LookupNormalWordDict)(ds_block, 0, (int16_t)at, 0);
                 printf("DH katakana %ld %d %d\n", which, w,
                        (int)DS(NeedKatakanaAnalysis)(ds_block, 0, (int16_t)w));
@@ -3042,7 +3054,7 @@ static void sweepDictionaries(void)
                                 uint8_t *ent;
 
                                 dsFresh();
-                                *(void **)(ta_block + TA_OWNER) = rz_block;
+                                TA_SET(ta_block, TA_OWNER, rz_block);
                                 ent = (uint8_t *)(ds_block + DS_ENTRY);
                                 ent[DE_POS] = POS[pi];
                                 ent[DE_CHARS] = (uint8_t)ch;
@@ -3063,7 +3075,7 @@ static void sweepDictionaries(void)
                    set to the value that asks for a number counter. */
                 for (sp = 0; sp < 2; sp++) {
                     dsFresh();
-                    *(void **)(ta_block + TA_OWNER) = rz_block;
+                    TA_SET(ta_block, TA_OWNER, rz_block);
                     ta_block[TA_MARKS + at] = (char)(sp ? 3 : 0);
                     memset(say, 0xee, sizeof say);
                     rc = DS(HandleError)(ds_block, (int16_t)at, 0, 0, say);
@@ -3329,8 +3341,8 @@ static void sweepInputChar(void)
        on the same TextAnalysis. */
     memset(ta_block, 0, sizeof ta_block);
     memset(rom_room, 0, sizeof rom_room);
-    *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
-    *(void **)(ta_block + TA_OWNER) = rom_room;
+    TA_SET(ta_block, TA_INPUTCHAR, ic_block);
+    TA_SET(ta_block, TA_OWNER, rom_room);
     RZ_SET_PARAM(rom_room, the_param);
     RZ_SET_USERDICT(rom_room, ud_room);
     UD(Ctor)(ud_room, ta_block);
@@ -3689,10 +3701,10 @@ static void sweepReader(void)
 
     memset(ta_block, 0, sizeof ta_block);
     memset(rom_room, 0, sizeof rom_room);
-    *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
-    *(void **)(ta_block + TA_OWNER) = rom_room;
-    *(void **)(ta_block + TA_ANNOTATION) = anno_room;
-    *(void **)(ta_block + TA_RAW) = raw_room;
+    TA_SET(ta_block, TA_INPUTCHAR, ic_block);
+    TA_SET(ta_block, TA_OWNER, rom_room);
+    TA_SET(ta_block, TA_ANNOTATION, anno_room);
+    TA_SET(ta_block, TA_RAW, raw_room);
     RZ_SET_PARAM(rom_room, the_param);
     RZ_SET_USERDICT(rom_room, ud_room);
     UD(Ctor)(ud_room, ta_block);
@@ -4068,6 +4080,18 @@ static void sweepReader(void)
 
 /* The number reader: the four tables it looks characters up in, the two tests
    over a run of codes, and the two that write an entry. */
+/* Every shape of voice annotation rz_GetParameter takes, and a few it does
+   not, so that each of the six roads through it is walked. */
+static const char *const RZ_ANNOS[] = {
+    "`vs50", "`vb40", "`vf30", "`vv60", "`vx10",
+    "`vs%+10", "`vs%-10", "`vb%+50", "`vb%-90", "`vf%+20", "`vv%+30",
+    "`vv%-99", "`vx%+10",
+    "`vswpm+20", "`vswpm-20", "`vbhz+50", "`vbhz-50",
+    "`vsmed", "`vbmed", "`vfmed", "`vxmed",
+    "`v1", "`v2", "`v3", "`v0", "`v01", "`v02", "`v03", "`v001",
+    "`ts1", "`ts0", "`tx1", "`t", "`v", "`vs", "`x99", "ab"
+};
+
 static void sweepNumbers(void)
 {
     static char rom_room[RZ_ROOM];
@@ -4079,8 +4103,8 @@ static void sweepNumbers(void)
 
     memset(ta_block, 0, sizeof ta_block);
     memset(rom_room, 0, sizeof rom_room);
-    *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
-    *(void **)(ta_block + TA_OWNER) = rom_room;
+    TA_SET(ta_block, TA_INPUTCHAR, ic_block);
+    TA_SET(ta_block, TA_OWNER, rom_room);
     RZ_SET_PARAM(rom_room, the_param);
     RZ_SET_USERDICT(rom_room, ud_room);
 
@@ -4280,7 +4304,7 @@ static void sweepNumbers(void)
                 IC(Ctor)(ic_block, ta_block);
                 IC(SetText)(ic_block, work);
                 n = icSetText(work);
-                *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
+                TA_SET(ta_block, TA_INPUTCHAR, ic_block);
                 *(uint16_t *)(rom_room + RZ_NUMBER_MODE) = (uint16_t)(j % 3);
                 *(int32_t *)(rom_room + RZ_SPELL_ENGLISH) = (int32_t)(j / 3);
                 ta_block[TA_LONGWORDS] = (char)(j & 1 ? 0x28 : 0);
@@ -4322,7 +4346,7 @@ static void sweepNumbers(void)
             strcpy(work, NUM_TEXTS[i]);
             IC(SetText)(ic_block, work);
             n = icSetText(NUM_TEXTS[i]);
-            *(void **)(ta_block + TA_INPUTCHAR) = ic_block;
+            TA_SET(ta_block, TA_INPUTCHAR, ic_block);
             *(uint16_t *)(rom_room + RZ_NUMBER_MODE) = (uint16_t)(j % 3);
             *(int32_t *)(rom_room + RZ_SPELL_ENGLISH) = (int32_t)(j / 3);
             ta_block[TA_LONGWORDS] = (char)(j & 1 ? 0x28 : 0);
@@ -4361,6 +4385,154 @@ static void sweepNumbers(void)
            DS(getPtrOfUserDict)(ds_block) == (void *)ud_room);
 
     printf("DS numbers done\n");
+}
+
+/* The parameter annotations, and then the whole search. */
+static void sweepDo(void)
+{
+    static char rom_room[RZ_ROOM];
+    static char ud_room[UD_ROOM];
+    static char anno_room[ANNO_ROOM];
+    static char raw_room[4096];
+    static char work[4096];
+    long        i;
+    long        j;
+    long        k;
+
+    /* Every shape of voice annotation there is, at every setting, from four
+       starting states, so that both clamps and the reset are walked. */
+    for (i = 0; i < (long)(sizeof RZ_ANNOS / sizeof *RZ_ANNOS); i++) {
+        for (j = 0; j < 4; j++) {
+            memset(rom_room, 0, sizeof rom_room);
+            RZ_SET_PARAM(rom_room, the_param);
+            *(int32_t *)(rom_room + RZ_VOICE)    = (int32_t)(j + 1);
+            *(int32_t *)(rom_room + RZ_BASELINE) = (int32_t)(j * 40);
+            *(int32_t *)(rom_room + RZ_FLUENCY)  = (int32_t)(j * 30 + 1);
+            *(int32_t *)(rom_room + RZ_SPEED)    = (int32_t)(j * 80);
+            *(int32_t *)(rom_room + RZ_VOLUME)   = (int32_t)(j * 25);
+            *(int32_t *)(rom_room + RZ_SPELL_ENGLISH) = 0;
+            {
+                /* The call first, then the fields: in one printf the order is
+                   the compiler's and the fields were being read before the
+                   call that sets them. */
+                int rc = (int)RZ(GetParameter)(rom_room,
+                                               (char *)(uintptr_t)
+                                               (const void *)RZ_ANNOS[i]);
+
+                printf("RZ %ld %ld rc %d voice %ld base %ld fluc %ld"
+                       " speed %ld vol %ld eng %ld\n", i, j, rc,
+                   (long)*(int32_t *)(rom_room + RZ_VOICE),
+                   (long)*(int32_t *)(rom_room + RZ_BASELINE),
+                   (long)*(int32_t *)(rom_room + RZ_FLUENCY),
+                   (long)*(int32_t *)(rom_room + RZ_SPEED),
+                   (long)*(int32_t *)(rom_room + RZ_VOLUME),
+                   (long)*(int32_t *)(rom_room + RZ_SPELL_ENGLISH));
+            }
+        }
+    }
+
+    /* And the search, over every text the reader is driven over, with the
+       caller's own marks absent, saying a reading follows, and saying leave
+       this alone. The parameter block is told annotations are in the text so
+       that the road from an annotation to a setting is walked, and the user
+       dictionary is taught a few words first. */
+    for (j = 0; j < 3; j++) {
+        for (i = 0; i < (long)(sizeof IC_SENTENCES / sizeof *IC_SENTENCES);
+             i++) {
+            int16_t rc;
+            long    n;
+
+            memset(ta_block, 0, sizeof ta_block);
+            memset(rom_room, 0, sizeof rom_room);
+            memset(anno_room, 0, sizeof anno_room);
+            memset(raw_room, (int)j, sizeof raw_room);
+            memset(work, 0, sizeof work);
+            strcpy(work, IC_SENTENCES[i]);
+            ANNO_CTOR(anno_room, ta_block);
+            TA_SET(ta_block, TA_INPUTCHAR, ic_block);
+            TA_SET(ta_block, TA_ANNOTATION, anno_room);
+            TA_SET(ta_block, TA_OWNER, rom_room);
+            TA_SET(ta_block, TA_RAW, raw_room);
+            TA_SET(ta_block, TA_DICTSEARCH, ds_block);
+            RZ_SET_PARAM(rom_room, the_param);
+            RZ_SET_USERDICT(rom_room, ud_room);
+            UD(Ctor)(ud_room, ta_block);
+            PARAM_ANNO(the_param) = 1;
+
+            /* A dictionary with words in it, so that the arm which asks it is
+               walked rather than stepped over. */
+            {
+                static char list_room2[IBM_LIST_ROOM];
+
+                ibm_slCtor(list_room2);
+                UD_DICT(ud_room) = list_room2;
+                for (k = 0; UD_WORDS[k][0] != NULL && k < 6; k++)
+                    (void)UD(UpdateDictExt)(ud_room, list_room2, 0,
+                                            (uint8_t *)UD_WORDS[k][0],
+                                            (int32_t)strlen(UD_WORDS[k][0]),
+                                            (char *)UD_WORDS[k][1],
+                                            (int32_t)strlen(UD_WORDS[k][1]),
+                                            1);
+            }
+
+            memset(ic_block, 0xa5, sizeof ic_block);
+            IC(Ctor)(ic_block, ta_block);
+            IC(SetText)(ic_block, work);
+            (void)IC(ReadSentence)(ic_block);
+            if (j == 1) {
+                void *node;
+
+                for (k = 0; k < 6; k++)
+                    (void)IC(AddSnlkTable)(ic_block, (int16_t)k,
+                                           UD_WORDS[k][0], UD_WORDS[k][1], 0);
+                /* Every other node has its accent left unset, which is the
+                   only state in which the search still asks the dictionaries
+                   and the two filters afterwards have anything to filter. */
+                node = IC_SNLK_HEAD(ic_block);
+                for (k = 0; node != NULL; k++) {
+                    *((unsigned char *)node + SN_TRANS) = 0xff;
+                    node = SN_NEXT_OF(node);
+                }
+            }
+
+            /* TextAnalysis is what seeds the parse marks, and it is not
+               written, so the harness does it: every character may begin a
+               word until the walk says otherwise. */
+            for (k = 0; k < 128; k++)
+                ta_block[TA_MARKS + k] = (char)(k == 0 ? 1
+                                                : (k % 7 == 3 ? 0
+                                                   : (k % 3 == 0 ? 2 : 1)));
+            memset(ds_block, 0, sizeof ds_block);
+            *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
+            DS_SET_OWNER(ds_block, ta_block);
+            /* A sentence that read as nothing is left out: Do returns a
+               local it never assigned when the loop runs no turns, and stack
+               left over from one process cannot be held against another's. */
+            if (*(int16_t *)(ic_block + IC_COUNT) == 0) {
+                printf("DO %ld %ld empty\n", j, i);
+                continue;
+            }
+            rc = DS(Do)(ds_block);
+            n = (long)*(int16_t *)(ds_block + DS_COUNT);
+            printf("DO %ld %ld rc %d count %ld\n", j, i, (int)rc, n);
+            for (k = 0; k < n && k < 60; k++)
+                putRecord("do", j * 10000 + i * 100 + k,
+                          (const uint8_t *)(ds_block + DS_ENTRY
+                                            + k * DS_ENTRY_SIZE),
+                          DS_ENTRY_SIZE);
+            for (k = 705; k < 710; k++)
+                putRecord("dotail", j * 10000 + i * 100 + k,
+                          (const uint8_t *)(ds_block + DS_ENTRY
+                                            + k * DS_ENTRY_SIZE),
+                          DS_ENTRY_SIZE);
+            printf("DO %ld %ld marks ", j, i);
+            for (k = 0; k < 40; k++)
+                printf("%02x", (unsigned char)ta_block[TA_MARKS + k]);
+            putchar('\n');
+        }
+    }
+
+    printf("DO done\n");
 }
 int main(void)
 {
@@ -4408,6 +4580,7 @@ int main(void)
     sweepInputChar();
     sweepReader();
     sweepNumbers();
+    sweepDo();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

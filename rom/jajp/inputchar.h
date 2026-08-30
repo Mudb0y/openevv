@@ -143,6 +143,14 @@
 #define SN_KEY_AT       (SN_BYTES + sizeof(void *))
 #define SN_VALUE_AT     (SN_BYTES + 2 * sizeof(void *))
 
+/* Reaching one, which DictSearch does as well as InputChar. */
+#define SN_P(n, off)    ((uint8_t *)(n) + (off))
+#define SN_B(n, off)    (*SN_P(n, off))
+#define SN_WORD(n, off) (*(int16_t *)SN_P(n, off))
+#define SN_NEXT(n)      (*(void **)SN_P(n, SN_NEXT_AT))
+#define SN_KEY(n)       (*(char **)SN_P(n, SN_KEY_AT))
+#define SN_VALUE(n)     (*(char **)SN_P(n, SN_VALUE_AT))
+
 /* ---- what InputChar reaches through ---------------------------------- */
 
 /* Two of its methods go up to TextAnalysis, on to the romanizer above it, and

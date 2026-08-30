@@ -151,4 +151,27 @@
 /* And into PhraseBuf. */
 #define PB_TAIL         0x399d8
 
+/* ---- where our build keeps the pointers ------------------------------ */
+
+/* Every one of the sub-object pointers sits four bytes from the next, so on a
+   build where a pointer is eight bytes wide no two of them can stay at IBM's
+   offsets: writing the annotation would run over the dictionary search, and
+   the raw text over the normalizer. They are parked past the record, as
+   DictSearch's, InputChar's and Romanizer's are.
+ *
+ * Nothing had noticed because the harness only ever set two or three of them
+ * at a time; setting a third overwrote the second's upper half and DictSearch
+ * followed a wild pointer on its first call. */
+#define TA_ROOM           (TA_BYTES + 10 * sizeof(void *))
+#define TA_VTABLE_AT      (TA_BYTES)
+#define TA_OWNER_AT       (TA_BYTES + 1 * sizeof(void *))
+#define TA_FORMATTED_AT   (TA_BYTES + 2 * sizeof(void *))
+#define TA_INPUTCHAR_AT   (TA_BYTES + 3 * sizeof(void *))
+#define TA_ANNOTATION_AT  (TA_BYTES + 4 * sizeof(void *))
+#define TA_DICTSEARCH_AT  (TA_BYTES + 5 * sizeof(void *))
+#define TA_JPATH_AT       (TA_BYTES + 6 * sizeof(void *))
+#define TA_PHRASEBUF_AT   (TA_BYTES + 7 * sizeof(void *))
+#define TA_PHRASETABLE_AT (TA_BYTES + 8 * sizeof(void *))
+#define TA_RAW_AT         (TA_BYTES + 9 * sizeof(void *))
+
 #endif

@@ -42,13 +42,6 @@
 #define IC_TEXTP_OF(in)     ((const char *)IC_P(in, IC_TEXTP_AT))
 #define IC_TEXTW_OF(in)     ((char *)IC_P(in, IC_TEXTP_AT))
 
-#define SN_P(n, off)        ((uint8_t *)(n) + (off))
-#define SN_B(n, off)        (*SN_P(n, off))
-#define SN_WORD(n, off)     (*(int16_t *)SN_P(n, off))
-#define SN_NEXT(n)          (*(void **)SN_P(n, SN_NEXT_AT))
-#define SN_KEY(n)           (*(char **)SN_P(n, SN_KEY_AT))
-#define SN_VALUE(n)         (*(char **)SN_P(n, SN_VALUE_AT))
-
 /* The characters this file names. Every one is read out of the object's own
    data rather than worked out from the name MSVC filed it under: two of them
    -- the repeat mark and the topic particle -- decode to something else
@@ -173,7 +166,7 @@ uint8_t ic_GetNextChar(void *in)
 int32_t ic_IsAnnotationsInText(void *in)
 {
     void *analysis = IC_P(in, IC_OWNER_AT);
-    void *rom = *(void **)((uint8_t *)analysis + TA_OWNER);
+    void *rom = *(void **)((uint8_t *)analysis + TA_OWNER_AT);
 
     return rp_isAnnotationsInText(*(RomInstParam **)((uint8_t *)rom
                                                      + RZ_PARAM_AT));
@@ -204,7 +197,7 @@ int32_t ic_AddSnlkTable(void *in, int16_t at, const char *written,
         return -1;
 
     analysis = IC_P(in, IC_OWNER_AT);
-    rom = *(void **)((uint8_t *)analysis + TA_OWNER);
+    rom = *(void **)((uint8_t *)analysis + TA_OWNER_AT);
     dict = *(RomUserDict **)((uint8_t *)rom + RZ_USERDICT_AT);
     if (dict == NULL)
         return -1;
@@ -704,7 +697,7 @@ int8_t ic_ProcessAnnotation(void *in, int16_t at)
         }
     }
 
-    anno = *(void **)((uint8_t *)IC_P(in, IC_OWNER_AT) + TA_ANNOTATION);
+    anno = *(void **)((uint8_t *)IC_P(in, IC_OWNER_AT) + TA_ANNOTATION_AT);
     return an_Save((Annotation *)anno,
                    (char *)(uintptr_t)(const void *)(IC_TEXTP_OF(in)
                                                      + IC_L(in, IC_POS) - n),
@@ -776,7 +769,7 @@ void ic_RecoverOverflow(void *in, int16_t at)
         IC_L(in, IC_POS) = IC_MARK_AT(in, IC_W(in, IC_BRACKET_AT) + 1);
     }
 
-    raw = *(const char **)((uint8_t *)IC_P(in, IC_OWNER_AT) + TA_RAW);
+    raw = *(const char **)((uint8_t *)IC_P(in, IC_OWNER_AT) + TA_RAW_AT);
     j = (int16_t)(at - 1);
     if ((uint8_t)raw[(int16_t)(IC_W(in, IC_LENGTH) + IC_OFFSET_AT(in, at - 1))]
         == 1
@@ -807,7 +800,7 @@ void ic_RecoverOverflow(void *in, int16_t at)
     }
     IC_OFFSET_AT(in, IC_W(in, IC_COUNT)) = IC_W(in, IC_RAWPOS);
 
-    anno = *(void **)((uint8_t *)IC_P(in, IC_OWNER_AT) + TA_ANNOTATION);
+    anno = *(void **)((uint8_t *)IC_P(in, IC_OWNER_AT) + TA_ANNOTATION_AT);
     an_RemoveAfter((Annotation *)anno, IC_W(in, IC_RAWPOS));
 }
 

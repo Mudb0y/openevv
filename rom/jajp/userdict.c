@@ -98,8 +98,8 @@ static const char *const NOT_ACCENTED[] = {
 RomUserDict *rud_ctor(RomUserDict *u, void *analysis)
 {
     u->analysis = analysis;
-    u->input = *(void **)((uint8_t *)analysis + TA_INPUTCHAR);
-    u->search = *(void **)((uint8_t *)analysis + TA_DICTSEARCH);
+    u->input = *(void **)((uint8_t *)analysis + TA_INPUTCHAR_AT);
+    u->search = *(void **)((uint8_t *)analysis + TA_DICTSEARCH_AT);
     u->dict = NULL;
     return u;
 }

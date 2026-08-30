@@ -187,7 +187,11 @@
 #define DE_AT           0x12     /* int16, where in the text it starts */
 #define DE_MARK         0x14     /* int32, copied out of IC_MARK */
 #define DE_OFFSET       0x18     /* int16, copied out of IC_OFFSET */
-#define DE_LINK         0x1a     /* int16, the field Do sets to minus one */
+#define DE_LINK         0x1a     /* int16; nothing read so far writes it. The
+                                    comment here used to say Do sets it to
+                                    minus one, which was a displacement read
+                                    without allowing for DS_ENTRY sitting at
+                                    eight: what Do sets is DE_AT */
 #define DE_COST         0x1c     /* int32 */
 
 /* A node of the kanji trie, keyed by one byte of the reading. The entries

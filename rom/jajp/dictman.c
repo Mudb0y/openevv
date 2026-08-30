@@ -196,3 +196,9 @@ const uint8_t *dm_GetItaijiAt(uint8_t row, uint16_t i)
 {
     return jajp_s_aItaijiTable + (uint32_t)row * 0x7a6 + (uint32_t)i * 2;
 }
+
+/* The user dictionary IBM could load from a file. Its loader is in the
+   registration half this port retired, so both stay null for ever and
+   DictSearch::Do's test for them never passes. */
+const uint8_t *dm_s_paUserDict = NULL;
+const uint8_t *dm_s_paUserDictIdx = NULL;

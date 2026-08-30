@@ -84,6 +84,7 @@
 #define IC_OFFSET_AT(in, i) (*(int16_t *)((in) + IC_OFFSET + (i) * 2))
 #define IC_MARK_AT(in, i)  (*(int32_t *)((in) + IC_MARK + (i) * 4))
 #define IC_COUNT_AT(in)    (*(int16_t *)((in) + IC_COUNT))
+#define IC_LENGTH_AT(in)   (*(int16_t *)((in) + IC_LENGTH))
 
 /* The particle wo, which marks the object of a verb. That is what the name
    means -- a case marker in the grammatical sense, not a typographic one -- and
@@ -2677,7 +2678,7 @@ void ds_ProcessRomanAlphabet(void *d, int16_t at, void *e)
 {
     uint8_t *in = DS_INPUT(d);
     uint8_t *ta = DS_OWNER_OF(d);
-    uint8_t *rz = *(uint8_t **)(ta + TA_OWNER);
+    uint8_t *rz = *(uint8_t **)(ta + TA_OWNER_AT);
     uint8_t  word[64];
     uint8_t  kana[128];
     int16_t  room;
@@ -3265,7 +3266,7 @@ int16_t ds_SetSuushiWord(void *d, int16_t slot, int16_t at)
 
     e = DS_ENTRY_AT(d, slot);
     ta = DS_OWNER_OF(d);
-    rom = *(uint8_t **)(ta + TA_OWNER);
+    rom = *(uint8_t **)(ta + TA_OWNER_AT);
 
     numMode = *(uint16_t *)(rom + RZ_NUMBER_MODE);
     if (numMode == 0 && *(int32_t *)(rom + RZ_SPELL_ENGLISH) > 0)
@@ -3454,7 +3455,7 @@ int16_t ds_SetSuushiWord(void *d, int16_t slot, int16_t at)
  * objects up rather than holding itself. */
 struct RomUserDict *ds_getPtrOfUserDict(void *d)
 {
-    uint8_t *rom = *(uint8_t **)(DS_OWNER_OF(d) + TA_OWNER);
+    uint8_t *rom = *(uint8_t **)(DS_OWNER_OF(d) + TA_OWNER_AT);
 
     return *(struct RomUserDict **)(rom + RZ_USERDICT_AT);
 }
@@ -3476,4 +3477,282 @@ int16_t ds_SetDummyWord(void *d, int16_t slot, int16_t at)
     DE_B(e, DE_ATTR2) = 0x41;
     DE_L(e, DE_MARK) = IC_MARK_AT(in, at);
     return 1;
+}
+
+/* ---- the search itself ------------------------------------------------- */
+
+/* One candidate copied over another, which the two filters below both do.
+ * Everything but the link is carried across, the reading last because how much
+ * of it there is comes from the entry being copied. */
+static void copyEntry(void *d, int16_t slot, int32_t from, int32_t to)
+{
+    uint8_t *src = DS_ENTRY_AT(d, (int16_t)(slot + from));
+    uint8_t *dst = DS_ENTRY_AT(d, (int16_t)(slot + to));
+    int32_t  i;
+
+    DE_B(dst, DE_POS)     = DE_B(src, DE_POS);
+    DE_B(dst, DE_ATTR)    = DE_B(src, DE_ATTR);
+    DE_B(dst, DE_ATTR2)   = DE_B(src, DE_ATTR2);
+    DE_W(dst, DE_AT)      = DE_W(src, DE_AT);
+    DE_L(dst, DE_MARK)    = DE_L(src, DE_MARK);
+    DE_W(dst, DE_OFFSET)  = DE_W(src, DE_OFFSET);
+    DE_L(dst, DE_COST)    = DE_L(src, DE_COST);
+    DE_B(dst, DE_CHARS)   = DE_B(src, DE_CHARS);
+    DE_B(dst, DE_KANALEN) = DE_B(src, DE_KANALEN);
+    DE_W(dst, DE_ACCENT)  = DE_W(src, DE_ACCENT);
+    for (i = 0; i < DE_B(src, DE_KANALEN); i++)
+        DE_B(dst, DE_KANA + i) = DE_B(src, DE_KANA + i);
+}
+
+/* Every way of reading the sentence, written into the candidate array.
+ *
+ * This is what the whole of the rest of DictSearch is for. It walks the text
+ * one character at a time and, at each place a parse mark says a word may
+ * begin, asks every dictionary there is: the caller's own taught words, the
+ * built-in one loaded from a file, the function words, the single kanji, the
+ * ordinary words, and the English rules. What comes back is a run of candidate
+ * entries beginning at the slot the last character finished on, and JPath
+ * afterwards picks a way through them.
+ *
+ * Three things are worth knowing before reading it.
+ *
+ * A character with no parse mark is skipped outright. The marks are written by
+ * CheckJrtTable and by SetSuushiWord as the walk goes, so the walk is deciding
+ * as it goes which characters can still start a word; a character no candidate
+ * reached is not a place a word may begin.
+ *
+ * The caller's own text can carry marks of its own, and the byte it holds at
+ * this character's place becomes the mode. One means the caller gave a reading
+ * for this stretch -- the SNLK chain -- and two means leave the stretch alone
+ * altogether. In mode one the candidates are filtered twice afterwards, first
+ * to those whose reading matches what the caller asked for and then, if more
+ * than one survives, to those the caller's own dictionary produced.
+ *
+ * And an annotation that names a parameter takes effect here rather than on
+ * the output side, because here is where the text position and the annotation
+ * position are both known.
+ *
+ * Answers how many candidates the last character produced, or a negative from
+ * the user-dictionary lookup. */
+int16_t ds_Do(void *d)
+{
+    uint8_t     *in = DS_INPUT(d);
+    uint8_t     *ta = DS_OWNER_OF(d);
+    uint8_t     *rom = *(uint8_t **)(ta + TA_OWNER_AT);
+    Annotation  *anno = *(Annotation **)(ta + TA_ANNOTATION_AT);
+    const char  *got = NULL;
+    const char  *lastGot = NULL;
+    char         want[2];
+    int16_t      slot = 0;
+    int16_t      n = 0;
+    int16_t      at;
+    int16_t      dummy = 0;
+    int16_t      rc;
+    int32_t      i;
+
+    want[0] = 0;
+    want[1] = want[0];
+
+    memset(DS_AT(d, DS_ENTRY), 0, DS_ENTRY_N * DS_ENTRY_SIZE);
+    for (i = 0; i < DS_ENTRY_N; i++)
+        DE_W(DS_ENTRY_AT(d, (int16_t)i), DE_AT) = -1;
+    DS_W(d, DS_COUNT) = 0;
+
+    for (at = 0; at < IC_COUNT_AT(in); at++, n = 0) {
+        const char   *raw;
+        RomUserDict  *udict;
+        uint8_t      *node;
+        int32_t       kind;
+        int32_t       j, k, kept;
+
+        /* An annotation standing before this character, taken once. */
+        if ((int8_t)anno->count > 0) {
+            got = an_GetLastAnno(anno, IC_OFFSET_AT(in, at), 0);
+            if (got != NULL && got != lastGot) {
+                if (rp_isAnnotationsInText(*(RomInstParam **)
+                                           (rom + RZ_PARAM_AT)))
+                    rz_GetParameter(rom,
+                                    (char *)(uintptr_t)(const void *)got);
+                lastGot = got;
+            }
+        }
+
+        /* What the caller's own text says about this character. */
+        raw = *(const char **)(ta + TA_RAW_AT);
+        DS_L(d, DS_USERDICT_MODE) =
+            (uint8_t)raw[(int16_t)(IC_LENGTH_AT(in)
+                                   + IC_OFFSET_AT(in, at))];
+        if (DS_L(d, DS_USERDICT_MODE) == 1) {
+            DS_P(d, DS_USERDICT_WORD) =
+                ic_GetSnlkTableAt(in, IC_OFFSET_AT(in, at));
+            if (DS_P(d, DS_USERDICT_WORD) == NULL)
+                DS_L(d, DS_USERDICT_MODE) = 0;
+        }
+        node = (uint8_t *)DS_P(d, DS_USERDICT_WORD);
+
+        if (ta[TA_MARKS + at] == 0 || DS_L(d, DS_USERDICT_MODE) == 2
+            || ju_DbCmp(IC_CHAR(in, at), want))
+            continue;
+
+        dummy = 0;
+        if (at == 0)
+            n = ds_SetDummyWord(d, slot, 0);
+        if (at > 0 && ds_IsEndOfQuote(d, (int16_t)(at - 1))) {
+            n = ds_SetDummyWord(d, slot, at);
+            dummy = 1;
+        }
+
+        if (DS_L(d, DS_USERDICT_MODE) == 0
+            || (DS_L(d, DS_USERDICT_MODE) == 1
+                && SN_B(node, SN_TRANS) == 0xff)) {
+            if (DS_L(d, DS_USERDICT_MODE) == 0
+                && IC_KIND_AT(in, at) == KIND_DIGIT)
+                n = (int16_t)(n + ds_SetSuushiWord(d, (int16_t)(slot + n),
+                                                   at));
+
+            udict = ds_getPtrOfUserDict(d);
+            kind = IC_KIND_AT(in, at);
+            if (*(int32_t *)(rom + RZ_SPELL_ENGLISH) == 0
+                || (kind != KIND_LATIN && kind != KIND_ENGWORD)) {
+                if (udict->dict != NULL) {
+                    rc = rud_lookup(udict, (uint8_t *)IC_CHAR(in, at), at,
+                                    (int16_t)(slot + n));
+                    if (rc < 0)
+                        return rc;
+                    n = (int16_t)(n + rc);
+                }
+                /* The dictionary loaded from a file, which this port has no
+                   way of setting: both pointers stay null. */
+                if (dm_s_paUserDict != NULL)
+                    n = (int16_t)(n + ds_LookupUserDict(d, dm_s_paUserDict,
+                                                        IC_CHAR(in, at),
+                                                        (int16_t)(slot + n),
+                                                        dm_s_paUserDictIdx,
+                                                        at,
+                                                        IC_COUNT_AT(in)));
+            }
+
+            if (DS_L(d, DS_USERDICT_MODE) == 0)
+                n = (int16_t)(n + ds_LookupFuncWordDict(d,
+                                                        (int16_t)(slot + n),
+                                                        at));
+            n = (int16_t)(n + ds_LookupTankanDict(d, (int16_t)(slot + n), at));
+            n = (int16_t)(n + ds_LookupNormalWordDict(d, (int16_t)(slot + n),
+                                                      at, 0));
+            if (*(int32_t *)(rom + RZ_SPELL_ENGLISH) == 0)
+                n = (int16_t)(n
+                              + ds_LookupEngWordDictFromText(d,
+                                                    (int16_t)(slot + n), at));
+
+            /* In mode one, keep only what the caller asked for. */
+            if (DS_L(d, DS_USERDICT_MODE) == 1) {
+                j = (at == 0 || dummy == 1) ? 1 : 0;
+                k = j;
+                kept = 0;
+                for (; j < n; j++) {
+                    uint8_t *src = DS_ENTRY_AT(d, (int16_t)(slot + j));
+
+                    if (!ju_YomiCmp(SN_P(node, SN_YOMI),
+                                    SN_B(node, SN_YOMI_N),
+                                    &DE_B(src, DE_KANA),
+                                    DE_B(src, DE_KANALEN)))
+                        continue;
+                    kept++;
+                    copyEntry(d, slot, j, k);
+                    k++;
+                }
+                DE_W(DS_ENTRY_AT(d, (int16_t)(slot + k)), DE_AT) = -1;
+                n = (int16_t)kept;
+                if (at == 0 || dummy == 1)
+                    n++;
+
+                /* And of those, the ones the caller's own dictionary made. */
+                if (n > 1) {
+                    j = (at == 0 || dummy == 1) ? 1 : 0;
+                    k = j;
+                    kept = 0;
+                    for (; j < n; j++) {
+                        uint8_t *src = DS_ENTRY_AT(d, (int16_t)(slot + j));
+
+                        if (DE_B(src, DE_POS) != 0x7e)
+                            continue;
+                        kept++;
+                        copyEntry(d, slot, j, k);
+                        k++;
+                    }
+                    if (kept > 0) {
+                        DE_W(DS_ENTRY_AT(d, (int16_t)(slot + k)),
+                             DE_AT) = -1;
+                        n = (int16_t)kept;
+                        if (at == 0 || dummy == 1)
+                            n++;
+                    } else {
+                        n = 1;
+                    }
+                }
+            }
+        }
+
+        /* Where the caller gave a reading and nothing else was found, the
+           reading itself becomes the candidate. */
+        if (DS_L(d, DS_USERDICT_MODE) == 1
+            && ((at == 0 && n == 1) || (dummy == 1 && n == 1) || n == 0)) {
+            uint8_t *e = DS_ENTRY_AT(d, (int16_t)(slot + n));
+
+            DE_B(e, DE_CHARS) = SN_B(node, SN_CHARS);
+            DE_B(e, DE_KANALEN) = SN_B(node, SN_YOMI_N);
+            if (DE_B(e, DE_KANALEN) > 9) {
+                if ((int8_t)ta[TA_LONGWORDS] >= 0x1e) {
+                    for (i = 0; i < 9; i++)
+                        DE_B(e, DE_KANA + i) = SN_B(node, SN_YOMI + i);
+                } else {
+                    ds_SetLongWord(d, DE_B(e, DE_KANALEN), e,
+                                   SN_P(node, SN_YOMI));
+                }
+            } else {
+                for (i = 0; i < DE_B(e, DE_KANALEN); i++)
+                    DE_B(e, DE_KANA + i) = SN_B(node, SN_YOMI + i);
+            }
+            DE_W(e, DE_ACCENT) = SN_B(node, SN_TRANS) != 0xff
+                                 ? SN_B(node, SN_TRANS) : 0;
+            DE_B(e, DE_ATTR) = 0x58;
+            DE_B(e, DE_ATTR2) = 1;
+            DE_B(e, DE_POS) = 0x7e;
+            DE_W(e, DE_AT) = at;
+            DE_L(e, DE_MARK) = IC_MARK_AT(in, at);
+            DE_W(e, DE_OFFSET) = IC_OFFSET_AT(in, at);
+            DE_L(e, DE_COST) = 10;
+            n++;
+            DE_W(DS_ENTRY_AT(d, (int16_t)(slot + n)), DE_AT) = -1;
+        }
+
+        rc = ds_CheckJrtTable(d, slot, n);
+        if (rc < 0) {
+            DS_W(d, DS_COUNT) = (int16_t)(slot + n);
+            return n;
+        }
+
+        /* A character the marks say is the second of a pair gets the run
+           analysed as a whole, which is what GenerateWord is for. */
+        if (DS_L(d, DS_USERDICT_MODE) == 0 && rc == 1
+            && ta[TA_MARKS + at] == 2
+            && (IC_KIND_AT(in, at) == KIND_KANJI
+                || IC_KIND_AT(in, at) == KIND_HIRAGANA
+                || IC_KIND_AT(in, at) == KIND_KATAKANA)
+            && dummy == 0) {
+            n = (int16_t)(n + ds_GenerateWord(d, at, (int16_t)(slot + n)));
+            rc = ds_CheckJrtTable(d, slot, n);
+            if (rc < 0) {
+                DS_W(d, DS_COUNT) = (int16_t)(slot + n);
+                return n;
+            }
+        }
+
+        if (DS_L(d, DS_USERDICT_MODE) == 0)
+            n = ds_HandleError(d, at, n, slot, want);
+
+        DS_W(d, DS_COUNT) = (int16_t)(slot + n);
+        slot = DS_W(d, DS_COUNT);
+    }
+    return n;
 }

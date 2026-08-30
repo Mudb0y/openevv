@@ -26,6 +26,17 @@
 #define RZ_UNREAD_MID2   0x1c
 #define RZ_NUMBER_MODE   0x34    /* uint16; two refuses a bare place word */
 #define RZ_UNREAD_MID3   0x36
+
+/* The five an annotation may set, which is what rz_GetParameter is for. The
+   letters are Eloquence's own: b is the baseline pitch, f the pitch
+   fluctuation, s the speed and v the volume, and a number on its own picks
+   one of the two voices and resets the other four to that voice's own. */
+#define RZ_VOICE         0x50    /* int32, one or two */
+#define RZ_BASELINE      0x54    /* int32 */
+#define RZ_FLUENCY       0x58    /* int32 */
+#define RZ_SPEED         0x5c    /* int32 */
+#define RZ_VOLUME        0x60    /* int32 */
+#define RZ_UNREAD_MID4   0x64
 #define RZ_SPELL_ENGLISH 0x68    /* int32; above nought spells English out */
 #define RZ_UNREAD_TAIL   0x6c
 
