@@ -298,6 +298,14 @@ int16_t ds_SetSuushiWord(void *d, int16_t slot, int16_t at);
 int16_t ds_SetDummyWord(void *d, int16_t slot, int16_t at);
 struct RomUserDict *ds_getPtrOfUserDict(void *d);
 int16_t ds_Do(void *d);
+int16_t ds_HitFuncWordReverse(void *d, const uint8_t *head, int16_t slot,
+                              uint16_t at, int16_t count, uint8_t chars,
+                              uint8_t hiragana, uint8_t *vec,
+                              const uint8_t *base);
+int16_t ds_FzkSearchUnknown(void *d, uint8_t *vec, uint16_t at, int16_t slot,
+                            const uint8_t *dict, int16_t unused);
+int16_t ds_FzkParsing(void *d, uint8_t *vec, int16_t at);
+int16_t ds_FzkParsingReverse(void *d);
 
 /* ---- Romanizer ------------------------------------------------------- */
 

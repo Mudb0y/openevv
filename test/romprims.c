@@ -287,6 +287,13 @@ static Conv *makeConv(Param *p)
 #define ibm_rzGetParameter(rz, p)    rz_GetParameter((rz), (p))
 #define RZ(name) ibm_rz##name
 
+#define ibm_dsHitFuncWordReverse(d, h, s, a, c, n, g, v, b) \
+    ds_HitFuncWordReverse((d), (h), (s), (a), (c), (n), (g), (v), (b))
+#define ibm_dsFzkSearchUnknown(d, v, a, s, t, u) \
+    ds_FzkSearchUnknown((d), (v), (a), (s), (t), (u))
+#define ibm_dsFzkParsing(d, v, a)    ds_FzkParsing((d), (v), (a))
+#define ibm_dsFzkParsingReverse(d)   ds_FzkParsingReverse((d))
+
 #define DS(name) ibm_ds##name
 
 #define DM(name) dm_##name
@@ -842,6 +849,21 @@ extern THIS int16_t ibm_dsDo(void *d)
 extern THIS int32_t ibm_rzGetParameter(void *rz, char *p)
     MANGLED("?GetParameter@Romanizer@@AAEHPAD@Z");
 #define RZ(name) ibm_rz##name
+
+extern THIS int16_t ibm_dsHitFuncWordReverse(void *d, const uint8_t *head,
+                                             int16_t slot, uint16_t at,
+                                             int16_t count, uint8_t chars,
+                                             uint8_t hiragana, uint8_t *vec,
+                                             const uint8_t *base)
+    MANGLED("?HitFuncWordReverse@DictSearch@@QAEFPAU_FZK_HEAD@@FGFEEPAE1@Z");
+extern THIS int16_t ibm_dsFzkSearchUnknown(void *d, uint8_t *vec, uint16_t at,
+                                           int16_t slot, const uint8_t *dict,
+                                           int16_t unused)
+    MANGLED("?FzkSearchUnknown@DictSearch@@QAEFPAEGF0F@Z");
+extern THIS int16_t ibm_dsFzkParsing(void *d, uint8_t *vec, int16_t at)
+    MANGLED("?FzkParsing@DictSearch@@QAEFPAEF@Z");
+extern THIS int16_t ibm_dsFzkParsingReverse(void *d)
+    MANGLED("?FzkParsingReverse@DictSearch@@QAEFXZ");
 
 #define DS(name) ibm_ds##name
 
@@ -4388,6 +4410,33 @@ static void sweepNumbers(void)
 }
 
 /* The parameter annotations, and then the whole search. */
+/* Texts for the function-word walk: runs of hiragana that are function words,
+   a kanji then a run, a character below the first hiragana, one above the last
+   the table indexes, and the small kana that stop a word beginning a phrase. */
+static const char *const FZK_TEXTS[] = {
+    "\x82\xcd\x82\xb1\x82\xea\x82\xf0\x82\xc5\x82\xb7",
+    "\x93\xfa\x96\x7b\x82\xcc\x82\xbd\x82\xdf\x82\xc9",
+    "\x82\xc5\x82\xb7\x81\x42",
+    "\x82\xc1\x82\xe1\x82\xe3\x82\xe5\x82\xf1",
+    "\x81\x40\x82\xcd\x82\xc5",
+    "\x83\x41\x83\x43\x82\xcd",
+    "\x82\xa0\x82\xa2\x82\xa4\x82\xa6\x82\xa8",
+    "\x82\xf0",
+    /* Longer runs, so that the walk goes several nodes deep into one chain
+       and takes the step that passes a node by. */
+    "\x82\xc5\x82\xcd\x82\xc8\x82\xa2\x82\xc5\x82\xb7\x82\xa9",
+    "\x82\xc9\x82\xc2\x82\xa2\x82\xc4\x82\xcd",
+    "\x82\xc6\x82\xa2\x82\xa4\x82\xb1\x82\xc6\x82\xc5\x82\xb7",
+    /* A function word before each of the five that cannot begin a phrase. */
+    "\x82\xcd\x82\xc1\x82\xbd",
+    "\x82\xcd\x82\xe1\x82\xa0",
+    "\x82\xcd\x82\xe3\x82\xa0",
+    "\x82\xcd\x82\xe5\x82\xa0",
+    "\x82\xcd\x82\xf1\x82\xa0",
+    /* And a character above every one the table indexes by name. */
+    "\x82\xfa\x82\xcd\x82\xc5"
+};
+
 static void sweepDo(void)
 {
     static char rom_room[RZ_ROOM];
@@ -4534,6 +4583,133 @@ static void sweepDo(void)
 
     printf("DO done\n");
 }
+
+/* The function words read backwards, which is the last of DictSearch. */
+static void sweepFzk(void)
+{
+    static char rom_room[RZ_ROOM];
+    static char ud_room[UD_ROOM];
+    static char work[4096];
+    long        i;
+    long        j;
+    long        k;
+
+    memset(ta_block, 0, sizeof ta_block);
+    memset(rom_room, 0, sizeof rom_room);
+    TA_SET(ta_block, TA_INPUTCHAR, ic_block);
+    TA_SET(ta_block, TA_OWNER, rom_room);
+    RZ_SET_PARAM(rom_room, the_param);
+    RZ_SET_USERDICT(rom_room, ud_room);
+
+    /* One real node of the dictionary against every vector that could select
+       it. The node has to be one the walk would actually reach and the count
+       its own: handed a made-up head the walk steps off the end of the table,
+       and what lies past it is not the same on the two sides. */
+    for (i = 0; i < (long)(sizeof FZK_TEXTS / sizeof *FZK_TEXTS); i++) {
+        const uint8_t *dict = DM(GetFuncDict)();
+        int            n = icSetText(FZK_TEXTS[i]);
+        int            at;
+
+        for (at = 0; at < n && at < 6; at++) {
+            uint16_t key = JU(MakeUshort)(ic_block + IC_TEXT + at * 2);
+            uint16_t base = JU(MakeUshort)((char *)"\x82\xa0");
+            uint16_t off;
+            const uint8_t *node;
+
+            if (key < base)
+                continue;
+            off = key < 0x82ff
+                  ? JU(MakeUshort)((char *)(dict + (key - base + 1) * 2))
+                  : JU(MakeUshort)((char *)(dict + 0xa6));
+            if (off == 0xffff || off == 0)
+                continue;
+            node = dict + 0xa8 + off;
+
+            for (j = 0; j < 18; j++) {
+                uint8_t vec[14];
+                int16_t rc;
+
+                memset(ds_block, 0, sizeof ds_block);
+                *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
+                DS_SET_OWNER(ds_block, ta_block);
+                for (k = 0; k < 14; k++)
+                    vec[k] = (uint8_t)(j == 0 ? 0xff
+                                       : (j == 1 ? 0
+                                          : (k == (long)((j - 2) / 8)
+                                             ? 0x80 >> ((j - 2) % 8) : 0)));
+                rc = DS(HitFuncWordReverse)(ds_block, node,
+                                            (int16_t)(j % 5), (uint16_t)at,
+                                            (int16_t)(node[3] >> 4),
+                                            (uint8_t)(1 + j % 3),
+                                            (uint8_t)(j % 2), vec, dict);
+                printf("FZ hit %ld %d %ld rc %d ", i, at, j, (int)rc);
+                for (k = 0; k < 8 * DS_FZK_SIZE; k++)
+                    printf("%02x", (unsigned char)ds_block[DS_FZK + k]);
+                putchar('\n');
+            }
+        }
+    }
+
+    /* The chain walk from every character of every text, with the vector
+       all-ones so that nothing is filtered out, and again with one bit. */
+    for (i = 0; i < (long)(sizeof FZK_TEXTS / sizeof *FZK_TEXTS); i++) {
+        int n = icSetText(FZK_TEXTS[i]);
+        int at;
+
+        for (at = 0; at < n && at < 10; at++) {
+            for (j = 0; j < 3; j++) {
+                uint8_t vec[14];
+                int16_t rc;
+
+                memset(ds_block, 0, sizeof ds_block);
+                *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
+                DS_SET_OWNER(ds_block, ta_block);
+                for (k = 0; k < 14; k++)
+                    vec[k] = (uint8_t)(j == 0 ? 0xff : (j == 1 ? 0 : 0x0f));
+                rc = DS(FzkSearchUnknown)(ds_block, vec, (uint16_t)at,
+                                          (int16_t)(j * 3),
+                                          DM(GetFuncDict)(), 0);
+                printf("FZ unk %ld %d %ld rc %d ", i, at, j, (int)rc);
+                for (k = 0; k < 8 * DS_FZK_SIZE; k++)
+                    printf("%02x", (unsigned char)ds_block[DS_FZK + k]);
+                putchar('\n');
+            }
+        }
+    }
+
+    /* And the two round-after-round walks, over every text. */
+    for (i = 0; i < (long)(sizeof FZK_TEXTS / sizeof *FZK_TEXTS); i++) {
+        int n = icSetText(FZK_TEXTS[i]);
+        int at;
+
+        for (at = 0; at < n && at < 6; at++) {
+            uint8_t vec[14];
+            int16_t rc;
+
+            memset(ds_block, 0, sizeof ds_block);
+            *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
+            DS_SET_OWNER(ds_block, ta_block);
+            for (k = 0; k < 14; k++)
+                vec[k] = 0xff;
+            rc = DS(FzkParsing)(ds_block, vec, (int16_t)at);
+            printf("FZ fwd %ld %d rc %d ", i, at, (int)rc);
+            for (k = 0; k < 12 * DS_FZK_SIZE; k++)
+                printf("%02x", (unsigned char)ds_block[DS_FZK + k]);
+            putchar('\n');
+        }
+
+        memset(ds_block, 0, sizeof ds_block);
+        *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
+        DS_SET_OWNER(ds_block, ta_block);
+        printf("FZ rev %ld rc %d ", i, (int)DS(FzkParsingReverse)(ds_block));
+        for (k = 0; k < 12 * DS_FZK_SIZE; k++)
+            printf("%02x", (unsigned char)ds_block[DS_FZK + k]);
+        putchar('\n');
+        (void)n;
+    }
+
+    printf("FZ done\n");
+}
 int main(void)
 {
     Param *p;
@@ -4581,6 +4757,7 @@ int main(void)
     sweepReader();
     sweepNumbers();
     sweepDo();
+    sweepFzk();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

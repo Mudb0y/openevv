@@ -3756,3 +3756,302 @@ int16_t ds_Do(void *d)
     }
     return n;
 }
+
+/* ---- the function words read backwards -------------------------------- */
+
+/* The four methods here are the other half of the function-word search, and
+ * they are the last of DictSearch.
+ *
+ * A Japanese phrase ends in a run of function words -- particles, endings,
+ * auxiliaries -- and which of them may follow which is not free: the
+ * dictionary carries a vector per word saying what kind of thing can come
+ * next, and a run is only a run where every step agrees with the one before.
+ * ds_SearchFuncWordDict walks that forwards from a place a word was found.
+ * These walk it from a character nothing was found at, which is what happens
+ * when the analyser has to guess where a phrase ends.
+ *
+ * The two Parsing methods are the same shape: seed the vector, search once,
+ * and then keep searching from the end of everything found in the last round
+ * until a round finds nothing. What each found is remembered in FZ_MARK as
+ * the index of the entry it grew out of, so the chain can be walked back.
+ * FzkParsing goes forward through the ordinary dictionary and
+ * FzkParsingReverse backwards through the one with the phrase vectors in it.
+ *
+ * Nothing in the objects read so far calls either Parsing method; they are
+ * entry points for a class above that is not written yet.
+ */
+
+#define FZ_UW(f, off)      (*(uint16_t *)((uint8_t *)(f) + (off)))
+
+/* The five characters that stop a function word beginning a phrase: the small
+ * tsu, the three small y kana and n. Read out of the object rather than
+ * decoded from the names MSVC filed them under. */
+static const char SMALL_TSU[] = "\x82\xc1";
+static const char SMALL_YA[]  = "\x82\xe1";
+static const char SMALL_YU[]  = "\x82\xe3";
+static const char SMALL_YO[]  = "\x82\xe5";
+static const char KANA_N[]    = "\x82\xf1";
+static const char HIRAGANA_A[] = "\x82\xa0";
+
+/* One dictionary node against the vector of what may follow, and a candidate
+ * function word written for every bit that agrees.
+ *
+ * The flag it leaves says whether the word may begin a phrase of its own: the
+ * dictionary's own bit says it may, and then the character after it is looked
+ * at, because none of the five that join the sound before them can start
+ * one. */
+int16_t ds_HitFuncWordReverse(void *d, const uint8_t *head, int16_t slot,
+                              uint16_t at, int16_t count, uint8_t chars,
+                              uint8_t hiragana, uint8_t *vec,
+                              const uint8_t *base)
+{
+    uint8_t       *in = DS_INPUT(d);
+    const uint8_t *p;
+    uint16_t       next;
+    int16_t        found = 0;
+    int16_t        i, k;
+
+    if (at + 1 < IC_COUNT_AT(in))
+        next = ju_MakeUshort(IC_CHAR(in, (int16_t)(at + 1)));
+    else
+        next = 0;
+
+    p = head + 5;
+    for (i = 0; i < count; i++) {
+        for (k = 0; k < 14; k++) {
+            uint8_t  key = p[1];
+            int16_t  row = (int16_t)((key - 1) / 8);
+            int16_t  mask;
+            uint8_t *f;
+
+            if (row != k)
+                continue;
+            mask = (int16_t)(0x80 >> ((key - 1) % 8));
+            if ((mask & vec[k]) == 0)
+                continue;
+
+            f = DS_FZK_AT(d, slot);
+            FZ_B(f, FZ_CHARS) = chars;
+            FZ_B(f, FZ_HIRAGANA) = hiragana;
+            FZ_W(f, FZ_KEY) = p[1];
+            FZ_W(f, FZ_WORD) = (int16_t)(p - base);
+            FZ_W(f, FZ_AT) = (int16_t)at;
+            FZ_W(f, FZ_OFFSET) =
+                IC_OFFSET_AT(in, (int16_t)(at - chars + 1));
+            if ((p[3] & 0x80)
+                && next != ju_MakeUshort(SMALL_TSU)
+                && next != ju_MakeUshort(SMALL_YA)
+                && next != ju_MakeUshort(SMALL_YU)
+                && next != ju_MakeUshort(SMALL_YO)
+                && next != ju_MakeUshort(KANA_N))
+                FZ_B(f, FZ_FLAGS) = 1;
+            else
+                FZ_B(f, FZ_FLAGS) = 0;
+            found++;
+            slot++;
+            break;
+        }
+        p = p + p[0];
+    }
+    return found;
+}
+
+/* Every function word that can begin at a character, following the chain of
+ * nodes the dictionary hangs off that character's first byte.
+ *
+ * The dictionary is indexed by the hiragana itself: a character below the
+ * first hiragana has no chain at all, and everything from the last one upward
+ * shares one. Each node holds the character it is for, how many words hang off
+ * it, and two lengths -- one to the next node for this character and one to
+ * the next character's -- so the walk is a comparison and a step. */
+int16_t ds_FzkSearchUnknown(void *d, uint8_t *vec, uint16_t at, int16_t slot,
+                            const uint8_t *dict, int16_t unused)
+{
+    uint8_t       *in = DS_INPUT(d);
+    const uint8_t *p;
+    uint16_t       key;
+    uint16_t       off;
+    int16_t        found = 0;
+    uint8_t        chars = 1;
+    uint8_t        hiragana = 0;
+    uint8_t        done = 0;
+
+    (void)unused;
+    if (slot >= DS_FZK_N)
+        return 0;
+
+    key = ju_MakeUshort(IC_CHAR(in, (int16_t)at));
+    if (IC_KIND_AT(in, (int16_t)at) == KIND_HIRAGANA)
+        hiragana++;
+
+    if (key < ju_MakeUshort(HIRAGANA_A))
+        return found;
+
+    if (key < 0x82ff)
+        off = ju_MakeUshort((const char *)(dict
+                            + (uint16_t)(key - ju_MakeUshort(HIRAGANA_A) + 1)
+                              * 2));
+    else
+        off = ju_MakeUshort((const char *)(dict + 0xa6));
+
+    if (off == 0xffff || off == 0)
+        return found;
+
+    p = dict + 0xa8 + off;
+    while (!done) {
+        uint16_t here = (uint16_t)((p[0] << 8) + p[1]);
+
+        if (key == here) {
+            int16_t n = (int16_t)(p[3] >> 4);
+
+            if (n != 0) {
+                int16_t got = ds_HitFuncWordReverse(d, p, slot, at, n, chars,
+                                                    hiragana, vec, dict);
+
+                slot = (int16_t)(slot + got);
+                found = (int16_t)(found + got);
+            }
+            if (p[2] == 0)
+                done = 1;
+            else
+                p = p + 2 + p[2];
+            at++;
+            if (at < (uint16_t)IC_COUNT_AT(in)) {
+                key = ju_MakeUshort(IC_CHAR(in, (int16_t)at));
+                if (IC_KIND_AT(in, (int16_t)at) == KIND_HIRAGANA)
+                    hiragana++;
+                chars++;
+            } else {
+                key = 0;
+            }
+        } else if (key > here) {
+            uint16_t step = (uint16_t)(((p[3] & 0xf) << 8) + p[4]);
+
+            if (step == 0)
+                done = 1;
+            else
+                p = p + 3 + step;
+        } else {
+            done = 1;
+        }
+    }
+    return found;
+}
+
+/* A run of function words from a place, round after round, until a round adds
+ * nothing. Each round starts where the last one's finds ended. */
+int16_t ds_FzkParsing(void *d, uint8_t *vec, int16_t at)
+{
+    int16_t n;
+    int16_t i, k;
+    int16_t zero = 0;
+    int16_t total = 0;
+    int16_t first;
+    int16_t last;
+    uint8_t buf[14];
+
+    for (i = 0; i < DS_FZK_N; i++) {
+        FZ_B(DS_FZK_AT(d, i), FZ_MARK) = 0xff;
+        FZ_B(DS_FZK_AT(d, i), FZ_FLAGS) = 0;
+    }
+
+    n = ds_SearchFuncWordDict(d, vec, at, total, dm_GetFuncDictEx(), zero);
+    if (n == 0)
+        return n;
+
+    total = n;
+    first = 0;
+    last = n;
+
+    for (;;) {
+        for (i = first; i < last; i++) {
+            int16_t row;
+            int16_t bit;
+
+            for (k = 0; k < 14; k++)
+                buf[k] = 0;
+            row = (int16_t)((FZ_W(DS_FZK_AT(d, i), FZ_KEY) - 1) / 8);
+            bit = (int16_t)((FZ_W(DS_FZK_AT(d, i), FZ_KEY) - 1) % 8);
+            if (row >= 14)
+                continue;
+            buf[row] = (uint8_t)(0x80 >> bit);
+            at = (int16_t)(FZ_UW(DS_FZK_AT(d, i), FZ_AT) + 1);
+            n = ds_SearchFuncWordDict(d, buf, at, total, dm_GetFuncDictEx(),
+                                      zero);
+            if (n > 0) {
+                for (k = total; k <= total + n - 1; k++)
+                    FZ_B(DS_FZK_AT(d, k), FZ_MARK) = (uint8_t)i;
+                total = (int16_t)(total + n);
+                if (total > DS_FZK_N)
+                    return total;
+            }
+        }
+        first = last;
+        last = total;
+        if (first >= last)
+            return last;
+    }
+}
+
+/* The same walk backwards through the dictionary that carries the phrase
+ * vectors, which is what the analyser uses where it has to guess. The vector
+ * is seeded from one entry of that dictionary's own table and then taken from
+ * each word found, so that every round asks what may follow what was just
+ * found. */
+int16_t ds_FzkParsingReverse(void *d)
+{
+    uint8_t *in = DS_INPUT(d);
+    uint8_t  vec[14];
+    uint8_t  key;
+    int16_t  n;
+    int16_t  i, k;
+    int16_t  at = 0;
+    int16_t  total = 0;
+    int16_t  zero = 0;
+    int16_t  first;
+    int16_t  last;
+
+    key = dm_GetFuncDict()[0xb1];
+    for (i = 0; i < 14; i++)
+        vec[i] = dm_GetPhrVectorAt((uint16_t)((key - 1) * 14 + i));
+
+    memset(DS_AT(d, DS_FZK), 0, DS_FZK_N * DS_FZK_SIZE);
+    for (i = 0; i < DS_FZK_N; i++) {
+        FZ_B(DS_FZK_AT(d, i), FZ_MARK) = 0xff;
+        FZ_B(DS_FZK_AT(d, i), FZ_FLAGS) = 0xff;
+    }
+
+    n = ds_FzkSearchUnknown(d, vec, (uint16_t)at, total, dm_GetFuncDict(),
+                            zero);
+    if (n == 0)
+        return n;
+
+    total = n;
+    first = 0;
+    last = n;
+
+    for (;;) {
+        for (i = first; i < last; i++) {
+            key = dm_GetFuncDict()[4 + FZ_W(DS_FZK_AT(d, i), FZ_WORD)];
+            for (k = 0; k < 14; k++)
+                vec[k] = dm_GetPhrVectorAt((uint16_t)((key - 1) * 14 + k));
+            at = (int16_t)(FZ_UW(DS_FZK_AT(d, i), FZ_AT) + 1);
+            if ((uint16_t)at < (uint16_t)IC_COUNT_AT(in))
+                n = ds_FzkSearchUnknown(d, vec, (uint16_t)at, total,
+                                        dm_GetFuncDict(), zero);
+            else
+                n = 0;
+            if (n != 0) {
+                for (k = total; k <= total + n - 1; k++)
+                    FZ_B(DS_FZK_AT(d, k), FZ_MARK) = (uint8_t)i;
+                total = (int16_t)(total + n);
+                if (total >= DS_FZK_N)
+                    return total;
+            }
+        }
+        first = last;
+        last = total;
+        if (first >= last)
+            return last;
+    }
+}
