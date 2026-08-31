@@ -108,6 +108,8 @@ static Conv *makeConv(Param *p)
 
 #include "dictsearch.h"
 #include "txtanal.h"
+#include "phrasebuf.h"
+#include "jpath.h"
 
 #define ibm_dsCheckCaseMarker(d, at)      ds_CheckCaseMarker((d), (at))
 #define ibm_dsCheckCnvChoon(d, c, n)      ds_CheckCnvChoon((d), (c), (n))
@@ -299,6 +301,28 @@ static Conv *makeConv(Param *p)
 #define DM(name) dm_##name
 #define JU(name) ju_##name
 #define STATIC_DICT_INIT() ((void)0)
+
+
+
+/* ---- PhraseBuf -------------------------------------------------------- */
+
+#define ibm_pbCtor(pb, ta)         pb_ctor((pb), (ta))
+#define ibm_pbCopy(pb, n)          pb_Copy((pb), (n))
+#define ibm_pbModifyPos(pb, o, p)  pb_ModifyPos((pb), (o), (p))
+#define ibm_pbIsBunsetsuEnd(pb, s) pb_IsBunsetsuEnd((pb), (s))
+#define ibm_pbIsSokuonTankanVerb(pb, s) pb_IsSokuonTankanVerb((pb), (s))
+#define ibm_pbGetSpecialPhraseType(pb, w) pb_GetSpecialPhraseType((pb), (w))
+#define ibm_pbChkTTELink(pb, k, f) pb_ChkTTELink((pb), (k), (f))
+#define ibm_pbSetJrt(pb, p, w, a, b) pb_SetJrt((pb), (p), (w), (a), (b))
+#define ibm_pbSetPhrasePart(pb, p, n, f, k, o) \
+    pb_SetPhrasePart((pb), (p), (n), (f), (k), (o))
+#define ibm_pbSetPhraseBuffer(pb, o) pb_SetPhraseBuffer((pb), (o))
+#define PB(name) ibm_pb##name
+
+/* Where each side keeps PhraseBuf's four pointers and JPath's three. Ours are
+   parked past their records; IBM's are at the offsets the maps name. */
+#define PB_SET(blk, which, p) (*(void **)((blk) + which##_AT) = (p))
+#define JP_SET(blk, which, p) (*(void **)((blk) + which##_AT) = (p))
 
 
 /* ---- the surface: ConverterInterface, InputManager, the codesets ------ */
@@ -585,6 +609,8 @@ extern THIS int32_t ibm_slLoad(void *self, const char *path)
    pokes the same offsets either way. */
 #include "dictsearch.h"
 #include "txtanal.h"
+#include "phrasebuf.h"
+#include "jpath.h"
 
 extern THIS int32_t ibm_dsCheckCaseMarker(void *d, int16_t at)
     MANGLED("?CheckCaseMarker@DictSearch@@QAEHF@Z");
@@ -942,6 +968,39 @@ extern THIS int16_t ibm_dsFzkParsingReverse(void *d)
 #define DM(name) ibm_##name
 #define JU(name) ibm_##name
 #define STATIC_DICT_INIT() ibm_StaticDictInitialize()
+
+
+
+/* ---- PhraseBuf -------------------------------------------------------- */
+
+extern THIS void *ibm_pbCtor(void *pb, void *ta)
+    MANGLED("??0PhraseBuf@@QAE@AAVTextAnalysis@@@Z");
+extern THIS void ibm_pbCopy(void *pb, int16_t which)
+    MANGLED("?Copy@PhraseBuf@@QAEXF@Z");
+extern THIS void ibm_pbModifyPos(void *pb, uint8_t *out, uint8_t pos)
+    MANGLED("?ModifyPos@PhraseBuf@@QAEXPAEE@Z");
+extern THIS int32_t ibm_pbIsBunsetsuEnd(void *pb, const uint8_t *sub)
+    MANGLED("?IsBunsetsuEnd@PhraseBuf@@QAEHPAU_J_SUB_T@@@Z");
+extern THIS int32_t ibm_pbIsSokuonTankanVerb(void *pb, const uint8_t *sub)
+    MANGLED("?IsSokuonTankanVerb@PhraseBuf@@QAEHPAU_J_SUB_T@@@Z");
+extern THIS int16_t ibm_pbGetSpecialPhraseType(void *pb, const uint8_t *w)
+    MANGLED("?GetSpecialPhraseType@PhraseBuf@@QAEFPAU_W_PHRASE_T@@@Z");
+extern THIS int16_t ibm_pbChkTTELink(void *pb, int32_t sokuon,
+                                     const uint8_t *f)
+    MANGLED("?ChkTTELink@PhraseBuf@@QAEFHPAU_P_FZK_T@@@Z");
+extern THIS void ibm_pbSetJrt(void *pb, const uint8_t *path, uint8_t *w,
+                              int16_t *outKana, int16_t *outAccent)
+    MANGLED("?SetJrt@PhraseBuf@@QAEXPAU_J_PATH_T@@PAU_W_PHRASE_T@@PAF2@Z");
+extern THIS int16_t ibm_pbSetPhrasePart(void *pb, const uint8_t *path,
+                                        int16_t n, int16_t fzk,
+                                        int32_t sokuon, uint8_t *out)
+    MANGLED("?SetPhrasePart@PhraseBuf@@QAEFPAU_J_PATH_T@@FFHQAU_W_PHRASE_T@@@Z");
+extern THIS int16_t ibm_pbSetPhraseBuffer(void *pb, uint8_t *out)
+    MANGLED("?SetPhraseBuffer@PhraseBuf@@QAEFPAU_W_PHRASE_T@@@Z");
+#define PB(name) ibm_pb##name
+
+#define PB_SET(blk, which, p) (*(void **)((blk) + which) = (p))
+#define JP_SET(blk, which, p) (*(void **)((blk) + which) = (p))
 
 
 /* ---- the surface: ConverterInterface, InputManager, the codesets ------ */
@@ -1855,6 +1914,7 @@ static char ds_block[DS_ROOM];
 #define SN_KEY_OF(n)          (*(char **)((char *)(n) + SN_KEY_AT))
 #define SN_VALUE_OF(n)        (*(char **)((char *)(n) + SN_VALUE_AT))
 #define IC_SNLK_HEAD(blk)     (*(void **)((blk) + IC_SNLK_AT))
+#define IC_TEXTP_SET(blk, p)  (*(const char **)((blk) + IC_TEXTP_AT) = (p))
 #define SN_NEXT_OF(n)         (*(void **)((char *)(n) + SN_NEXT_AT))
 #define RZ_SET_PARAM(b, p)    (*(void **)((b) + RZ_PARAM_AT) = (p))
 #define RZ_SET_USERDICT(b, p) (*(void **)((b) + RZ_USERDICT_AT) = (p))
@@ -1864,6 +1924,7 @@ static char ds_block[DS_ROOM];
 #define SN_KEY_OF(n)          (*(char **)((char *)(n) + 4))
 #define SN_VALUE_OF(n)        (*(char **)((char *)(n) + 8))
 #define IC_SNLK_HEAD(blk)     (*(void **)((blk) + IC_SNLK_TABLE))
+#define IC_TEXTP_SET(blk, p)  (*(const char **)((blk) + IC_TEXTP) = (p))
 #define SN_NEXT_OF(n)         (*(void **)((char *)(n) + 0))
 #define RZ_SET_PARAM(b, p)    (*(void **)((b) + RZ_PARAM) = (p))
 #define RZ_SET_USERDICT(b, p) (*(void **)((b) + RZ_USERDICT) = (p))
@@ -5642,6 +5703,392 @@ static void sweepConverter(void)
     printf("CV done\n");
 }
 
+/* ---- the phrase buffer ------------------------------------------------ */
+
+/* How this one is driven. PhraseBuf reads three records it does not own -- a
+ * path and a sub-word out of JPath, and a function word out of DictSearch --
+ * and writes a fourth into the caller's buffer. None of the three is made by
+ * anything written yet, so the harness builds all of them by hand at IBM's
+ * own offsets, which both sides keep for exactly this reason.
+ *
+ * What is swept. Every part of speech through the two that only look at one,
+ * every phrase head through the vector builder, a path of one word and of
+ * several through the two that fill a phrase, and the whole of
+ * SetPhraseBuffer over a set of paths with function words hung off them. The
+ * phrase is printed whole after every call that writes one, so a field set
+ * wrongly shows even where no answer changes.
+ */
+static char pb_room[PB_ROOM];
+static char jp_room[JP_ROOM];
+static char wp_room[8 * PB_SLOT_SIZE];
+
+/* Where in the function-word dictionary a word of an odd length sits.
+   The chain's total steps by that, so it lands on every value rather
+   than every other one, which is what the bound on it needs. */
+static long pb_odd = -1;
+
+/* The reader's text, which IsSokuonTankanVerb indexes with a sub-word's own
+   mark. It is the harness's, so both sides read the same bytes. */
+static char PB_TEXT[16];
+
+/* The first verb of PhraseBuf's own table, put where the sweep's sub-words
+   point, so that the compare matches for one place and not for the others.
+   Taken from the table rather than written out, so the two sides cannot
+   disagree about it. */
+static void pbMakeText(void)
+{
+    /* The first two bytes are the first verb of PhraseBuf's own table, so
+       that the compare matches for one place in this text and not for the
+       others. They are written out rather than read from the table because
+       that table is a file-static of IBM's object and does not link; the
+       bytes are the third entry of it, and the third rather than the first
+       because the first is at offset nought whatever stride the walk uses,
+       so a sabotage of that stride would not show. The sweep proves the pair
+       is really in the table: a wrong one would make both sides answer no
+       everywhere and every sabotage of the compare would go quiet. */
+    memcpy(PB_TEXT, "\x8e\xa1", 2);
+    memcpy(PB_TEXT + 2, "\x8c\xa9\x8d\x73\x82\xa2\x82\xa4", 8);
+    PB_TEXT[10] = 0;
+}
+
+/* One sub-word laid into JPath, and the entry index that names it. */
+static void jpSub(int s, int e, int at, int32_t mark, int accent,
+                  int kanalen, int chars, int hiragana, int pos, int attr,
+                  int offset, const uint8_t *kana)
+{
+    uint8_t *sub = JP_SUB_AT(jp_room, s);
+    int      i;
+
+    memset(sub, 0, JP_SUB_SIZE);
+    *(int16_t *)(sub + JS_ENTRY)  = (int16_t)e;
+    *(int16_t *)(sub + JS_AT)     = (int16_t)at;
+    *(int32_t *)(sub + JS_MARK)   = mark;
+    *(int16_t *)(sub + JS_ACCENT) = (int16_t)accent;
+    sub[JS_KANALEN]  = (uint8_t)kanalen;
+    sub[JS_CHARS]    = (uint8_t)chars;
+    sub[JS_HIRAGANA] = (uint8_t)hiragana;
+    sub[JS_POS]      = (uint8_t)pos;
+    sub[JS_ATTR]     = (uint8_t)attr;
+    *(int16_t *)(sub + JS_OFFSET) = (int16_t)offset;
+    for (i = 0; i < JS_KANA_N; i++)
+        sub[JS_KANA + i] = kana ? kana[i] : (uint8_t)(0x40 + i);
+    JP_INDEX_OF(jp_room, e) = (int16_t)s;
+}
+
+/* And one path over a run of entry indices. */
+static void jpPath(int p, int spare, const int *ents, int n)
+{
+    uint8_t *path = JP_PATH_AT(jp_room, p);
+    int      i;
+
+    memset(path, 0, JP_PATH_SIZE);
+    path[JPT_COUNT] = (uint8_t)n;
+    path[JPT_SPARE] = (uint8_t)spare;
+    for (i = 0; i < n && i < JPT_AT_N; i++)
+        path[JPT_AT + i] = (uint8_t)ents[i];
+}
+
+/* One function word in the dictionary search's own table. */
+static void dsFzk(int i, int link, int kanalen, int moras, int code, int at,
+                  int accent, int flags, int offset)
+{
+    uint8_t *f = (uint8_t *)ds_block + DS_FZK + i * DS_FZK_SIZE;
+
+    memset(f, 0, DS_FZK_SIZE);
+    f[PF_LINK]    = (uint8_t)link;
+    f[PF_KANALEN] = (uint8_t)kanalen;
+    f[PF_MORAS]   = (uint8_t)moras;
+    f[PF_CODE]    = (uint8_t)code;
+    *(int16_t *)(f + PF_AT)     = (int16_t)at;
+    *(int16_t *)(f + PF_ACCENT) = (int16_t)accent;
+    f[PF_FLAGS]   = (uint8_t)flags;
+    *(int16_t *)(f + PF_OFFSET) = (int16_t)offset;
+}
+
+/* A phrase printed whole, which is the only way a field written wrongly by a
+   method that answers nothing is seen at all. */
+static void putPhrase(const char *what, long a, long b, const uint8_t *w)
+{
+    int i;
+
+    printf("%s %ld %ld ", what, a, b);
+    for (i = 0; i < PB_SLOT_SIZE; i++)
+        printf("%02x", (unsigned)w[i]);
+    putchar('\n');
+}
+
+/* Everything the three records need, laid out the same on both sides. */
+static void pbSetUp(void)
+{
+    memset(ta_block, 0, sizeof ta_block);
+    memset(ic_block, 0, sizeof ic_block);
+    memset(ds_block, 0, sizeof ds_block);
+    memset(jp_room, 0, sizeof jp_room);
+    memset(pb_room, 0, sizeof pb_room);
+
+    TA_SET(ta_block, TA_INPUTCHAR, ic_block);
+    TA_SET(ta_block, TA_DICTSEARCH, ds_block);
+    TA_SET(ta_block, TA_JPATH, jp_room);
+    IC_TEXTP_SET(ic_block, PB_TEXT);
+    DS_SET_OWNER(ds_block, ta_block);
+    JP_SET(jp_room, JP_OWNER, ta_block);
+    JP_SET(jp_room, JP_SEARCH, ds_block);
+    PB(Ctor)(pb_room, ta_block);
+}
+
+static void sweepPhraseBuf(void)
+{
+    static const uint8_t KANA[JS_KANA_N] = {
+        0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49
+    };
+    long i;
+    long j;
+
+    pbMakeText();
+    pbSetUp();
+
+    /* Every part of speech through the vector builder and the two tests that
+       read nothing but a table row. */
+    for (i = 0; i < 256; i++) {
+        uint8_t pos[16];
+        uint8_t sub[JP_SUB_SIZE];
+        int     k;
+
+        memset(pos, 0xa5, sizeof pos);
+        PB(ModifyPos)(pb_room, pos, (uint8_t)i);
+        printf("PB pos %ld ", i);
+        for (k = 0; k < 14; k++)
+            printf("%02x", (unsigned)pos[k]);
+        putchar('\n');
+
+        memset(sub, 0, sizeof sub);
+        sub[JS_POS] = (uint8_t)i;
+        printf("PB end %ld %d\n", i, (int)PB(IsBunsetsuEnd)(pb_room, sub));
+    }
+
+    /* The single-kanji verb test, over every text the two bytes could be.
+       The reader's text is the harness's own, so both sides read the same
+       bytes at the same place. */
+    {
+        for (i = 0; i < 8; i += 2)
+            for (j = 0; j < 3; j++) {
+                uint8_t sub[JP_SUB_SIZE];
+
+                memset(sub, 0, sizeof sub);
+                sub[JS_CHARS]    = (uint8_t)(j == 1 ? 2 : 1);
+                sub[JS_HIRAGANA] = (uint8_t)(j == 2 ? 1 : 0);
+                *(int32_t *)(sub + JS_MARK) = (int32_t)i;
+                printf("PB verb %ld %ld %d\n", i, j,
+                       (int)PB(IsSokuonTankanVerb)(pb_room, sub));
+            }
+    }
+
+    /* The phrase kind, over every part of speech and every shape of phrase
+       that decides it. */
+    for (i = 0; i < 256; i++)
+        for (j = 0; j < 4; j++) {
+            uint8_t w[PB_SLOT_SIZE];
+
+            memset(w, 0, sizeof w);
+            w[WP_TYPE]  = 7;
+            w[WP_WORDS] = (uint8_t)(j & 1 ? 1 : 2);
+            *(uint16_t *)(w + WP_MORAS) = (uint16_t)(j & 2 ? 1 : 4);
+            w[WP_ACCENT] = (uint8_t)(j & 2 ? 1 : 4);
+            w[WP_WORD + WW_POS] = (uint8_t)i;
+            printf("PB kind %ld %ld %d\n", i, j,
+                   (int)PB(GetSpecialPhraseType)(pb_room, w));
+        }
+
+    /* The one pair the analysis refuses. The dictionary is searched for a
+       word two codes long, and for the one word whose two codes are the pair
+       that is refused, so that both answers of every test are reached; the
+       search is over the same table on both sides, so what it finds cannot
+       differ. */
+    {
+        const uint8_t *dict = DM(GetFuncDictEx)();
+        long           two  = -1;
+        long           hit  = -1;
+        long           at;
+
+        for (at = 0; at < 20000; at++) {
+            if (pb_odd < 0 && dict[at] == 7)
+                pb_odd = at;
+            if (dict[at] != 8)
+                continue;
+            if (two < 0)
+                two = at;
+            if (dict[at + 6] == 0xfd && dict[at + 7] == 0x23) {
+                hit = at;
+                break;
+            }
+        }
+        printf("PB tte found %ld %ld %ld\n", two, hit, pb_odd);
+
+        for (i = 0; i < 256; i++)
+            for (j = 0; j < 8; j++) {
+                uint8_t f[PB_SLOT_SIZE];
+                long    where = (j & 4) ? hit : ((j & 2) ? two : 0);
+
+                if (where < 0)
+                    where = 0;
+                memset(f, 0, sizeof f);
+                f[WF_CODE]    = (uint8_t)i;
+                f[WF_KANALEN] = (uint8_t)(j & 1 ? 2 : 3);
+                *(int16_t *)(f + WF_AT) = (int16_t)where;
+                printf("PB tte %ld %ld %d\n", i, j,
+                       (int)PB(ChkTTELink)(pb_room, (int32_t)(j & 1), f));
+            }
+    }
+
+    /* Every part of speech through the one that fills a word, which is what
+       reaches the three stand-ins a phrase head is written as. */
+    for (i = 0; i < 256; i++) {
+        static const int ONE[1] = { 5 };
+        uint8_t *w = (uint8_t *)wp_room;
+        int16_t  a = -1;
+        int16_t  b = -1;
+
+        pbSetUp();
+        jpSub(0, 5, 3, 4, 7, 5, 2, 1, (int)i, 0x11, 9, KANA);
+        jpPath(0, 2, ONE, 1);
+        JP_S16(jp_room, JP_PATH_COUNT) = 1;
+        memset(wp_room, 0, sizeof wp_room);
+        w[WP_TYPE] = 7;
+        PB(SetJrt)(pb_room, JP_PATH_AT(jp_room, 0), w, &a, &b);
+        printf("PB jrtpos %ld kana %d accent %d\n", i, (int)a, (int)b);
+        putPhrase("PB jrtposw", i, 0, w);
+    }
+
+    /* And with no paths at all, which is the one road out of it that writes
+       nothing. */
+    {
+        static const int ONE[1] = { 5 };
+        uint8_t *w = (uint8_t *)wp_room;
+        int16_t  a = -1;
+        int16_t  b = -1;
+
+        pbSetUp();
+        jpSub(0, 5, 3, 4, 7, 5, 2, 1, 1, 0x11, 9, KANA);
+        jpPath(0, 2, ONE, 1);
+        JP_S16(jp_room, JP_PATH_COUNT) = 0;
+        memset(wp_room, 0, sizeof wp_room);
+        PB(SetJrt)(pb_room, JP_PATH_AT(jp_room, 0), w, &a, &b);
+        printf("PB jrtnone kana %d accent %d\n", (int)a, (int)b);
+        putPhrase("PB jrtnonew", 0, 0, w);
+    }
+
+    /* A path of one word and of three, through the two that fill a phrase.
+       The sub-words differ in every field the phrase carries, so a field
+       taken from the wrong place shows. */
+    for (i = 0; i < 4; i++) {
+        static const int ENTS[3] = { 5, 9, 2 };
+        uint8_t *w = (uint8_t *)wp_room;
+        int16_t  a = -1;
+        int16_t  b = -1;
+        int      n = (int)(i % 3) + 1;
+
+        pbSetUp();
+        jpSub(0, 5, 3, 4, 7, 5, 2, 1, (int)(i * 37 + 1), 0x11, 9, KANA);
+        jpSub(1, 9, 6, 8, 2, 12, 3, 0, (int)(i * 53 + 2), 0x22, 4, KANA);
+        jpSub(2, 2, 1, 2, 5, 1, 1, 1, (int)(i * 71 + 3), 0x44, 6, KANA);
+        jpPath(0, (int)(i + 1), ENTS, n);
+        JP_S16(jp_room, JP_PATH_COUNT) = 1;
+
+        memset(wp_room, 0, sizeof wp_room);
+        PB(SetJrt)(pb_room, JP_PATH_AT(jp_room, 0), w, &a, &b);
+        printf("PB jrt %ld kana %d accent %d\n", i, (int)a, (int)b);
+        putPhrase("PB jrtw", i, 0, w);
+    }
+
+    /* And the whole of it: paths with a chain of function words hung off
+       each, over the two roads out of SetPhrasePart and the bound on how long
+       a chain may get. */
+    for (i = 0; i < 24; i++) {
+        static const int ENTS[2] = { 5, 9 };
+        int16_t rc;
+        int     k;
+
+        pbSetUp();
+        /* The reader says the text is already used up, which is what keeps
+           SetPhraseBuffer out of DictSearch::FzkParsing. That method wants a
+           parse state neither side can be handed by hand -- driven over a
+           built-up one both engines walk off their own tables -- so the road
+           through it is left to the day TextAnalysis can make one. */
+        *(int16_t *)(ic_block + IC_COUNT) = 0;
+        /* The two words differ in every field the buffer reads, and one
+           of them has no reading at all, which is the case the road out
+           of the bottom refuses. */
+        jpSub(0, 5, 3, 4, (int)(i % 7 == 2 ? 5 : 7),
+              (int)(i % 4 ? 5 : 0), (int)(i % 8 == 2 ? 0 : 2), 1,
+              (int)(i * 11 + 1), 0x11, 9, KANA);
+        jpSub(1, 9, 6, 8, (int)(i % 5 == 4 ? 1 : 2),
+              (int)(i % 5 == 4 ? 1 : 12), 3, (int)(i % 5 == 4 ? 1 : 0),
+              (int)(i * 7 + 2), 0x22, 4, KANA);
+        /* Two words on the first path, so that the road out of the bottom
+           looks at a different entry from the one at the head. */
+        jpPath(0, (int)(i % 5) + 1, ENTS, 2);
+        jpPath(1, (int)(i % 3) + 4, ENTS, (int)(i % 2) + 1);
+        JP_S16(jp_room, JP_PATH_COUNT) = 2;
+
+        /* A chain of three, and for the last two cases one long enough to be
+           refused -- by its length for one and by the moras it comes to for
+           the other. The flags differ down the chain so that a word which may
+           not start one is stepped over. */
+        {
+            int n = (i >= 4) ? 20 : 3;
+
+            for (k = 0; k < n; k++)
+                dsFzk(k, k + 1 < n ? k + 1 : -1,
+                      (int)(i == 5 ? 9 : i + 1), 2, 0x49 + k,
+                      /* Where the word is looked up decides how many moras
+                         the chain comes to, and a long one is what makes the
+                         moras bound fire before the count bound does. */
+                      (i % 6 == 3) ? 50 : ((i % 6 == 1) ? pb_odd : 0), k,
+                      (k % 3 == 2) ? 0x02 : 0x03, k);
+        }
+
+        memset(wp_room, 0, sizeof wp_room);
+        rc = PB(SetPhrasePart)(pb_room, JP_PATH_AT(jp_room, 0), 0,
+                               (int16_t)(i % 4), (int32_t)(i & 1),
+                               (uint8_t *)wp_room);
+        printf("PB part %ld rc %d\n", i, (int)rc);
+        /* And once with the buffer already full, which is the one road out
+           of it that writes nothing at all. */
+        printf("PB part full %ld rc %d\n", i,
+               (int)PB(SetPhrasePart)(pb_room, JP_PATH_AT(jp_room, 0),
+                                      PB_SLOT_N, (int16_t)(i % 4),
+                                      (int32_t)(i & 1), (uint8_t *)wp_room));
+        for (k = 0; k < 3; k++)
+            putPhrase("PB partw", i, k, WP_SLOT(wp_room, k));
+
+        memset(wp_room, 0, sizeof wp_room);
+        rc = PB(SetPhraseBuffer)(pb_room, (uint8_t *)wp_room);
+        printf("PB buf %ld rc %d\n", i, (int)rc);
+        for (k = 0; k < 3; k++)
+            putPhrase("PB bufw", i, k, WP_SLOT(wp_room, k));
+    }
+
+    /* And the copy, which is the one method that touches the buffer itself. */
+    for (i = 0; i < 3; i++) {
+        int k;
+
+        pbSetUp();
+        memset(ta_block + TA_BUFFERS + i * TA_BUFFER_SIZE,
+               (int)(0x30 + i), TA_BUFFER_SIZE);
+        PB(Copy)(pb_room, (int16_t)i);
+        printf("PB copy %ld ", i);
+        for (k = 0; k < 16; k++)
+            printf("%02x", (unsigned)(uint8_t)pb_room[PB_BUFFER + k]);
+        /* And the last bytes of it, which is the only place a copy one byte
+           short of the whole shows. */
+        for (k = PB_BUFFER_SIZE - 8; k < PB_BUFFER_SIZE; k++)
+            printf("%02x", (unsigned)(uint8_t)pb_room[PB_BUFFER + k]);
+        putchar('\n');
+    }
+
+    printf("PB done\n");
+}
+
 int main(void)
 {
     Param *p;
@@ -5693,6 +6140,7 @@ int main(void)
     sweepCodeconv();
     sweepInputManager();
     sweepConverter();
+    sweepPhraseBuf();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

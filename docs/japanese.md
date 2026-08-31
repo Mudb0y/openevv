@@ -110,7 +110,7 @@ That is the engine's own phoneme notation with prosody annotations around it, no
 
 The Japanese-only object set is 116 objects. Sixteen are the Delta language data, which the ordinary lifters take. Forty-nine are the static dictionary, which `tools/lift-rom.py` takes. Sixteen are the prosody chain, of which thirteen are empty -- everything inlined away -- leaving `PCWriteESPR2` at 5,834 bytes, `PCRoman2BG` at 2,724 and `PCProsCtrl` at 308 over 1,589 bytes of table.
 
-The remaining thirty-five are the romanizer proper: about 168,000 bytes of x86 and 198,000 of data, of which the data is the three objects already lifted -- `dictman`, `unicodeconvt` and `jpnutil`, whose own data section holds the romaji spellings. Fourteen of those objects are written whole: `rominstparam`, `unicodeconvt`, `dictman`, `jpnutil`, `codeconv`, `annotation`, `userdict`, `inputchar`, `inputmngr`, `convtinterface`, and the five of DictSearch's seven that hold nothing else -- `dictapi`, `fdictapi`, `kanastr`, `engread` and `numanal`. The other two are written too but hold a method apiece of `TextAnalysis` and of `PhraseTable`, which are not. What is left is roughly twenty thousand lines of C, judged from the four to eight bytes of x86 per line of ours that three already-ported objects came out at.
+The remaining thirty-five are the romanizer proper: about 168,000 bytes of x86 and 198,000 of data, of which the data is the three objects already lifted -- `dictman`, `unicodeconvt` and `jpnutil`, whose own data section holds the romaji spellings. Fifteen of those objects are written whole: `rominstparam`, `unicodeconvt`, `dictman`, `jpnutil`, `codeconv`, `annotation`, `userdict`, `inputchar`, `inputmngr`, `convtinterface`, `phrasebuf`, and the five of DictSearch's seven that hold nothing else -- `dictapi`, `fdictapi`, `kanastr`, `engread` and `numanal`. The other two are written too but hold a method apiece of `TextAnalysis` and of `PhraseTable`, which are not. What is left is roughly twenty thousand lines of C, judged from the four to eight bytes of x86 per line of ours that three already-ported objects came out at.
 
 It is a Japanese morphological analyser, not a lookup table. The classes, with how many methods each has:
 
@@ -121,7 +121,7 @@ It is a Japanese morphological analyser, not a lookup table. The classes, with h
     Romanizer 16                      PhraseTable 16
     NumRead 11                        JPath 11
     InputManager 10 (done)            RomUserDict 9 (done)
-    PhraseBuf 9                       TextNormalizer 4
+    PhraseBuf 9 (done)                TextNormalizer 4
 
 The two counts that have moved since the first census are IBM's, not a
 recount of ours. `JpnUtil` has thirty-seven methods rather than thirty-two:
@@ -168,6 +168,18 @@ What it does. A caller gives it a word as it is written and a reading in kana wi
 And on the way back: `lookup` hands the whole of what is left of the sentence to `SkipList::multiSearch`, which answers with what matched each prefix of it at once, so a one-character word and a five-character one starting in the same place both come back in one call. Each becomes a candidate entry through `writeData`, written at IBM's own offsets so that it is indistinguishable from what the built-in dictionary produced.
 
 Two things the sweep settled that reading alone had not. The two longs at the end of `DictSearch` are a mode and a pointer: when the mode is one, a user entry is taken only if its first two bytes and its written form are the ones that pointer names. And that pointer is the last field of the record, which on a sixty-four bit host takes eight bytes where IBM had four -- so ours allocates a pointer's worth more than `TextAnalysis::initialize` asks for. `DS_ROOM` in `rom/jajp/dictsearch.h` is that, and the offsets stay IBM's.
+
+## The phrase buffer
+
+`rom/jajp/phrasebuf.c` is all nine methods of `PhraseBuf`, which is where the path search's answers become phrases. A phrase here is an accent phrase rather than a word -- a content word and whatever function words hang off it -- and one slot of the buffer holds the words that make it up, their readings, where the accent falls, how many moras it runs to and what kind of phrase it is. There are 686 slots of 344 bytes, which is one of `TextAnalysis`'s own three buffers to the byte, and `Copy` is what fills this one from one of those.
+
+It was the right unit because it closes: everything it calls outside itself -- two of `DictMan`'s accessors and one method of `DictSearch` -- was already written. `JPath` was read at the same time and is not written yet, because `JrtJrtCheck` alone is a thousand lines and the two together would have been too much for one commit.
+
+Three records came out of the reading and `rom/jajp/phrasebuf.h` and `rom/jajp/jpath.h` are the maps. A path is a count and up to twelve entry indices; a sub-word is one of `DictSearch`'s candidate entries copied out with the fields a phrase wants; and a phrase is eight bytes of head, up to eighteen words of eighteen bytes, and the function words after them at ten bytes each. `tools/rom-offsets.py` grew a case for each of the two objects and both tile exactly.
+
+Two of those readings were wrong at first and the sweep found both. The cost of a phrase comes from the first word on the path and not the last, in both of the roads that write one -- read from the road that has a sub-word already in hand, the last is the obvious answer and it is not IBM's. And the test that refuses a one-word path reads how many characters the word covers, not how long its reading is; the two are adjacent bytes of the same record. Neither would have shown without fixtures where the two differ, which is the same lesson the sweep has taught before about varying a hand-built record's fields independently.
+
+Sixty-one sabotages, fifty-seven of which move lines. The four that do not are these. Two are facts about IBM's own table rather than holes: no part of speech in it reaches the third of `IsBunsetsuEnd`'s tests with the bit that test looks for, over all 256 of them, and the phrase kind `GetSpecialPhraseType` works out is the one already there in every phrase the sweep reaches. One is a limit of the fixtures: the bound on how many moras a chain of function words may come to never fires before the bound on how many words it may have, because the function words in IBM's dictionary are short. And one is a deliberate consequence of what the harness can build: `SetPhraseBuffer` asks `DictSearch::FzkParsing` for the function words that may follow a phrase, and that method wants a parse state neither side can be handed by hand -- driven over a made-up one both engines walk off their own tables -- so the sweep tells the reader the text is used up and the road through it waits for `TextAnalysis`.
 
 ## The surface
 
@@ -428,13 +440,13 @@ What is left, and in what order, with the method counts taken from `nm` across t
 
 `TextAnalysis` is the spine and is thirty-six methods over four objects -- `txtanal`, `unknown`, `kakutei` and `comppenalty` -- which is why `tools/rom-offsets.py` had to map its record before anything else could be written at all. That map is already true and checked, so the work is the code rather than the reading.
 
-Then the path search, which is what picks one reading of a sentence out of all the ways `DictSearch` says it could be read: `JPath` eleven methods, `PhraseTable` sixteen and `PhraseBuf` nine. Then `NumRead` eleven and `TextNormalizer` four.
+Then the rest of the path search, which is what picks one reading of a sentence out of all the ways `DictSearch` says it could be read: `JPath` eleven methods and `PhraseTable` sixteen. `PhraseBuf`'s nine are written. Then `NumRead` eleven and `TextNormalizer` four.
 
 And last the output side, which is the biggest single piece left: `MakeReadableJP` thirty-three methods over three objects, `IntonPhrase` seventeen, and the ESPR writer -- `PCWriteESPR2` eleven, `PCProsCtrl` three, `PCRoman2BG` two. That is what turns a chosen reading into the phoneme string at the top of this file, and until it exists nothing can be heard.
 
 Two objects on the list will not be transcribed at all. `romreg.obj` is registration, which this port retired, and `romedll_link.obj` is the link-time symbol `src/eci_romedll.c` already stands in for.
 
-About a hundred and sixty methods, then, and none of them blocked on anything unwritten except in the order above.
+About a hundred and fifty methods, then, and none of them blocked on anything unwritten except in the order above.
 
 Read the objects with `llvm-objdump`, for the reason `docs/building.md` gives under getting IBM's objects: binutils `objdump` misparses whole functions here and says nothing about it.
 

@@ -79,6 +79,29 @@
 #define DS_FZK_N        726      /* 0x2d6, the bound in LookupFuncWordDict */
 #define DS_FZK_SIZE     14       /* 0xe; 726 times 14 is the memset exactly */
 
+/* And what is in one, which PhraseBuf::SetPhrasePart is what says: it walks
+   the chain by PF_LINK, copies five of these fields into the phrase it is
+   building, and reads PF_FLAGS to decide whether the word may start a chain
+   at all and whether it costs an extra three moras. */
+#define PF_LINK         0x00     /* int8, the next word in the chain, or
+                                    negative where the chain ends */
+#define PF_KANALEN      0x01     /* uint8, codes of reading */
+#define PF_MORAS        0x02     /* uint8 */
+#define PF_UNREAD_03    0x03     /* uint8 */
+#define PF_CODE         0x04     /* uint8 */
+#define PF_UNREAD_05    0x05     /* uint8 */
+#define PF_AT           0x06     /* int16, into the function-word dictionary */
+#define PF_ACCENT       0x08     /* int16 */
+#define PF_FLAGS        0x0a     /* uint8; bit nought says the word may end a
+                                    phrase, bit one that it is two moras */
+#define PF_UNREAD_0B    0x0b     /* uint8 */
+#define PF_OFFSET       0x0c     /* int16 */
+
+#define DS_FZK_P(d, i, off) \
+    ((uint8_t *)(d) + DS_FZK + (i) * DS_FZK_SIZE + (off))
+#define DS_FZK_B(d, i, off)   (*DS_FZK_P((d), (i), (off)))
+#define DS_FZK_S16(d, i, off) (*(int16_t *)DS_FZK_P((d), (i), (off)))
+
 /* Settled: indexed with a shift of four, and three of them reach the count. */
 #define DS_REC          0x807c
 #define DS_REC_N        3

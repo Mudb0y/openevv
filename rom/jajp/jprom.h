@@ -657,6 +657,24 @@ int32_t  ci_updateDictExt(void *c, void *dict, int32_t which, uint8_t *word,
                           int32_t wordLen, char *kana, int32_t kanaLen,
                           int32_t pos, int32_t codeset);
 
+/* ---- PhraseBuf -------------------------------------------------------- */
+
+/* Where the path search's answers become phrases. The block is passed as
+   bytes because the record is IBM's; rom/jajp/phrasebuf.h is the map, and
+   rom/jajp/jpath.h is the map of the two records it reads out of JPath. */
+void   *pb_ctor(void *pb, void *analysis);
+void    pb_Copy(void *pb, int16_t which);
+void    pb_ModifyPos(void *pb, uint8_t *out, uint8_t pos);
+int32_t pb_IsBunsetsuEnd(void *pb, const uint8_t *sub);
+int32_t pb_IsSokuonTankanVerb(void *pb, const uint8_t *sub);
+int16_t pb_GetSpecialPhraseType(void *pb, const uint8_t *w);
+int16_t pb_ChkTTELink(void *pb, int32_t sokuon, const uint8_t *f);
+void    pb_SetJrt(void *pb, const uint8_t *path, uint8_t *w,
+                  int16_t *outKana, int16_t *outAccent);
+int16_t pb_SetPhrasePart(void *pb, const uint8_t *path, int16_t n,
+                         int16_t fzk, int32_t sokuon, uint8_t *out);
+int16_t pb_SetPhraseBuffer(void *pb, uint8_t *out);
+
 /* ---- how much of this is written ------------------------------------ */
 
 /* While this is defined the romanizer cannot convert anything yet, and says

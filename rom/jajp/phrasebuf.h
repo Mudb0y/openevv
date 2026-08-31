@@ -88,18 +88,27 @@
 #define WP_FZK          0x0c0
 #define WP_FZK_SIZE     0x00a
 
-#define WF_CODE         0x00      /* uint8; the top bit marks the first */
-#define WF_ACCENT       0x02      /* int16 */
-#define WF_KANALEN      0x04      /* uint8 */
-#define WF_AT           0x06      /* int16 */
-#define WF_OFFSET       0x08      /* int16 */
+/* Where each of these comes from is SetPhrasePart, and what WF_AT means is
+   ChkTTELink, which is the only other reader: it uses it as an index into the
+   function-word dictionary. The two agreeing is what settles the record --
+   read from SetPhrasePart alone the second field would have been put at six,
+   which is where its source sits in DictSearch's own table rather than where
+   it lands here. */
+#define WF_CODE         0x00      /* uint8, from the table's own +4; the top
+                                     bit marks the first of a run */
+#define WF_AT           0x02      /* int16, from +6, into the dictionary */
+#define WF_KANALEN      0x04      /* uint8, from +1 */
+#define WF_ACCENT       0x06      /* int16, from +8 */
+#define WF_OFFSET       0x08      /* int16, from +0x0c */
 
 /* Reaching into it. */
 #define PB_P(pb, off)   ((uint8_t *)(pb) + (off))
 #define PB_S16(pb, off) (*(int16_t *)PB_P((pb), (off)))
 
-#define WP_AT(base, i)  ((uint8_t *)(base) + (i) * PB_SLOT_SIZE)
-#define WW_AT(w, i)     ((uint8_t *)(w) + WP_WORD + (i) * WP_WORD_SIZE)
-#define WF_AT(w, i)     ((uint8_t *)(w) + WP_FZK + (i) * WP_FZK_SIZE)
+/* The accessors are _SLOT rather than _AT because WF_AT is a field of the
+   record and a function-like macro of the same name would shadow it. */
+#define WP_SLOT(base, i) ((uint8_t *)(base) + (i) * PB_SLOT_SIZE)
+#define WW_SLOT(w, i)    ((uint8_t *)(w) + WP_WORD + (i) * WP_WORD_SIZE)
+#define WF_SLOT(w, i)    ((uint8_t *)(w) + WP_FZK + (i) * WP_FZK_SIZE)
 
 #endif

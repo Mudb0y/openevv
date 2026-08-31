@@ -52,6 +52,10 @@ OBJECTS = [
      "RomUserDict's one table: three bytes for each of the four parts of\n"
      " * speech a user-dictionary entry may be given, which are the part of\n"
      " * speech and the two attribute bytes the candidate entry carries."),
+    ("phrasebuf.obj", ".rdata",
+     "PhraseBuf's one table: three hundred and eighty two-byte verbs, each\n"
+     " * with a nought after it so that strcmp can be used, which are the\n"
+     " * single-kanji verbs a doubled consonant may attach to."),
 ]
 
 # A static member of a class, as MSVC spells one: ?name@Class@@ and then the
