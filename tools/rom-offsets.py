@@ -23,7 +23,7 @@ displacement is negative and cannot be mistaken for one. From every other object
 in the module, every offset larger than the widest thing the analyser allocates
 besides this one -- past that, a field can only be TextAnalysis's.
 
-usage: rom-offsets.py [textanalysis|dictsearch|inputchar]
+usage: rom-offsets.py [textanalysis|dictsearch|inputchar|jpath|phrasebuf]
 """
 
 import os
@@ -179,6 +179,37 @@ def regions_ic(d):
     return [(at, at + n - 1, name) for at, n, name in r]
 
 
+def regions_jp(d):
+    """And for JPath, which is mapped whole but for one span. The three arrays
+    are almost the whole of it and their counts agree with each other and with
+    DictSearch's own."""
+    r = [
+        (d["JP_VTABLE"], 4, "the vtable"),
+        (d["JP_OWNER"], 4, "the owner"),
+        (d["JP_PATH"], d["JP_PATH_N"] * d["JP_PATH_SIZE"], "the paths"),
+        (d["JP_SUB"], d["JP_SUB_N"] * d["JP_SUB_SIZE"], "the sub-words"),
+        (d["JP_PATH_COUNT"], 2, "how many paths"),
+        (d["JP_UNREAD_7486"], d["JP_UNREAD_N"], "the span nobody has read"),
+        (d["JP_INDEX"], d["JP_INDEX_N"] * 2, "entry to sub-word"),
+        (d["JP_SEARCH"], 4, "the dictionary search"),
+    ]
+    return [(at, at + n - 1, name) for at, n, name in r]
+
+
+def regions_pb(d):
+    """And for PhraseBuf, which is almost all buffer: one copy of one of the
+    owner's three, and four fields around it."""
+    r = [
+        (d["PB_VTABLE"], 4, "the vtable"),
+        (d["PB_OWNER"], 4, "the owner"),
+        (d["PB_BUFFER"], d["PB_BUFFER_SIZE"], "the working copy"),
+        (d["PB_TAIL"], 4, "the four bytes nobody has read"),
+        (d["PB_SEARCH"], 4, "the dictionary search"),
+        (d["PB_JPATH"], 4, "the path search"),
+    ]
+    return [(at, at + n - 1, name) for at, n, name in r]
+
+
 # Which objects hold a class's own code -- a class may be spread over
 # several, and DictSearch is spread over four -- the header that maps it, the
 # region table, and the three names the checker needs out of that header: how
@@ -196,6 +227,10 @@ CLASSES = {
                    "DS_BYTES", "DS_FZK", None),
     "inputchar": (["inputchar.obj"], ["inputchar.h"], regions_ic,
                   "IC_BYTES", "IC_OWNER", None),
+    "jpath": (["jpath.obj"], ["jpath.h"], regions_jp,
+              "JP_BYTES", "JP_PATH", None),
+    "phrasebuf": (["phrasebuf.obj"], ["phrasebuf.h"], regions_pb,
+                  "PB_BYTES", "PB_BUFFER", None),
 }
 
 
