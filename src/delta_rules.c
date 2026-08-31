@@ -1172,6 +1172,7 @@ static int32_t run_bytecode(void *state, const delta_rule *r,
 {
     unsigned char *frame = evv_frame_push(DELTA_RULE_FRAME_MAX);
     volatile int depth = 0;
+    volatile int at = 0;
     volatile int planted = 0;
     interp st;
     int i;
@@ -1199,10 +1200,16 @@ static int32_t run_bytecode(void *state, const delta_rule *r,
 
             st.pc = (int32_t)(p + 5 - st.code);
             /* Landing here again puts the stack pointer back where it was,
-               so the argument area goes back with it. */
+               but not what the interpreter had written into its own frame
+               since: by then the rule has run on and both the argument area
+               and the place it had reached belong to wherever the backtrack
+               came from. A landing is a return to just after this call with
+               nothing else moved, so both go back by hand. */
             depth = st.argn;
+            at = st.pc;
             st.reg[0] = EVV_LAND_SAVE((intptr_t)buf);
             st.argn = depth;
+            st.pc = at;
             planted = 1;
             continue;
         }

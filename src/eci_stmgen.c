@@ -287,7 +287,7 @@ static int32_t valueSetValue(delta_state *d, ValueSet *vs, int8_t stream,
             }
 
             {
-                int32_t m = EVV_REF(vmovel(
+                int32_t m = EVV_REF(vmovel(d,
                         (delta_node *)(intptr_t)c->left, (uint8_t)stream));
                 int32_t held = FIELD(m, OWN_WORDS + stream) & LINK_MASK;
 

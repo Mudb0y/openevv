@@ -694,7 +694,7 @@ void set_saved_ptrs(delta_state *d, int32_t was, int32_t now);
 void npush_i(delta_state *d, int32_t x);
 void npush_s(delta_state *d, int32_t x);
 void vscaninit(delta_state *d);
-delta_node *vmovel(delta_node *t, uint8_t f);
+delta_node *vmovel(delta_state *d, delta_node *t, uint8_t f);
 int32_t *vmover(delta_state *d, int32_t *t, uint8_t f);
 void INSSPINEL(delta_state *d, delta_node *n, delta_node *t);
 void INSSPINER(delta_state *d, delta_node *n, delta_node *t);

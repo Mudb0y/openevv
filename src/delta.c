@@ -39,6 +39,32 @@ typedef char delta_stmt_is_0x40[sizeof(delta_stmt) == 0x40 ? 1 : -1];
 typedef char delta_fielddesc_is_0x18[sizeof(delta_fielddesc) == 0x18 ? 1 : -1];
 #endif
 
+/* A walk that is not going to finish.
+ *
+ * Most of what is below walks the delta: it steps from one node to the next
+ * along a link and stops when the chain ends or when it reaches what it was
+ * told to look for. That is sound while the links go somewhere. Links that
+ * have come round on themselves take the walk round with them, and the engine
+ * stops answering instead of saying anything -- which, in something a screen
+ * reader has loaded into itself, is worse than a fault, because a fault at
+ * least ends.
+ *
+ * The machine keeps no count of its nodes to hold a walk against, so this is
+ * a ceiling and not a measure. What a walk over a delta that is whole costs
+ * was measured rather than reasoned about, over every case in the suite and
+ * over the strings the NVDA driver keeps a list of because they kill the
+ * original: the deepest was EVV_MEASURED. The ceiling is far above that and
+ * far below what a person would sit through, and reaching it is treated the
+ * way the machine treats everything else it is asked to do and cannot -- the
+ * rule backtracks, and the utterance goes rather than the process.
+ *
+ * No text reaches it. It is here for a delta that is already wrong.
+ */
+#define EVV_WALK_MAX  200000
+
+#define EVV_WALK(n)        int32_t n = EVV_WALK_MAX
+#define EVV_WALKED(d, n)   do { if (--(n) < 0) forceErrorBacktrack(d); } while (0)
+
 /* How long a language-declared record is. Two of the callers can arrive with
    a negative kind, which the original indexes the table with regardless, so
    this goes through a byte offset rather than letting the compiler decide it
@@ -231,7 +257,11 @@ int test_time(delta_state *d, int16_t tag)
     d->rpta.flags = 1;
     d->rpta.node = v->scan_ptr;
 
+    EVV_WALK(w);
+
     for (;;) {
+        EVV_WALKED(d, w);
+
         if (vcomp_pta(d, &d->lpta, &d->rpta))
             return 1;
         if (v->compared_equal == 0)
@@ -279,9 +309,11 @@ int test_fence(delta_state *d, int16_t tag, uint8_t n, const uint8_t *chars)
     delta_frame *slot;
     int32_t settled = 0;
     int8_t  i;
+    EVV_WALK(w);
 
     if (n == 0) {
         while (settled == 0) {
+            EVV_WALKED(d, w);
             settled = 1;
             for (i = 0; i < d->nstmts && settled != 0; i++) {
                 if (i == (int8_t)v->scan_field)
@@ -298,7 +330,9 @@ int test_fence(delta_state *d, int16_t tag, uint8_t n, const uint8_t *chars)
         }
     } else {
         while (settled == 0) {
+            EVV_WALKED(d, w);
             settled = 1;
+
             for (i = 0; i < n && settled != 0; i++) {
                 if (EVV_AT(uint8_t *, d->fence_index)[chars[i]] != d->nstmts)
                     continue;
@@ -474,8 +508,12 @@ int32_t vback(delta_state *d, int32_t depth)
         return flag;
     }
 
+    EVV_WALK(w);
+
     for (;;) {
         slot = (delta_frame *)EVV_AT(uint8_t *, EVV_AT(delta_stack *, d->stack)->top);
+
+        EVV_WALKED(d, w);
 
         switch ((int32_t)slot->kind) {
         case 0:
@@ -1341,8 +1379,11 @@ int32_t vgen(delta_state *d, delta_tpos *l, delta_tpos *r,
         at = vgetsc(d, 1, 1, l->node, (uint8_t)st);
         if (at != 0) {
             next = ((const int32_t *)(intptr_t)at)[3 + st] & ~3;
+            EVV_WALK(wl);
+
             while (at != 0 && next != 0
                    && (*(const int32_t *)(intptr_t)next & 2) != 0) {
+                EVV_WALKED(d, wl);
                 at   = next;
                 next = ((const int32_t *)(intptr_t)at)[3 + st] & ~3;
             }
@@ -1351,8 +1392,11 @@ int32_t vgen(delta_state *d, delta_tpos *l, delta_tpos *r,
         at2 = vgetsc(d, 0, 1, r->node, (uint8_t)st);
         if (at2 != 0) {
             next = ((const int32_t *)(intptr_t)at2)[base + st] & ~3;
+            EVV_WALK(wr);
+
             while (at2 != 0 && next != 0
                    && (*(const int32_t *)(intptr_t)next & 2) != 0) {
+                EVV_WALKED(d, wr);
                 at2  = next;
                 next = ((const int32_t *)(intptr_t)at2)[base + st] & ~3;
             }
@@ -1360,7 +1404,11 @@ int32_t vgen(delta_state *d, delta_tpos *l, delta_tpos *r,
 
         /* Every mark between the two has to carry the field being timed. */
         walk = at;
+        EVV_WALK(ww);
+
         while (walk != 0) {
+            EVV_WALKED(d, ww);
+
             if ((((const int32_t *)(intptr_t)walk)[base + f] & 1) == 0) {
                 gaps++;
                 if (gaps <= 10) {
@@ -1466,7 +1514,11 @@ int32_t vgen(delta_state *d, delta_tpos *l, delta_tpos *r,
             case 2:
                 found = 0;
                 if (!skip) {
+                    EVV_WALK(wf);
+
                     for (;;) {
+                        EVV_WALKED(d, wf);
+
                         if ((((const int32_t *)(intptr_t)at)[base + st] & 1)
                                 != 0) {
                             found = at;
@@ -2108,10 +2160,14 @@ void vscaninit(delta_state *d)
 }
 
 /* Follow a field's sync chain leftward as far as it keeps landing on syncs. */
-delta_node *vmovel(delta_node *t, uint8_t f)
+delta_node *vmovel(delta_state *d, delta_node *t, uint8_t f)
 {
+    EVV_WALK(w);
+
     for (;;) {
         int32_t next = t->syncs[f] & ~3;
+
+        EVV_WALKED(d, w);
 
         if (next == 0)
             return t;
@@ -2124,8 +2180,12 @@ delta_node *vmovel(delta_node *t, uint8_t f)
 /* The same walk rightward, where the field's link is past the sync array. */
 int32_t *vmover(delta_state *d, int32_t *t, uint8_t f)
 {
+    EVV_WALK(w);
+
     for (;;) {
         int32_t next = t[EVV_AT(delta_vars *, d->vars)->fence_base + f] & ~3;
+
+        EVV_WALKED(d, w);
 
         if (next == 0)
             return t;
@@ -2189,9 +2249,13 @@ delta_node *lmost(delta_state *d, int8_t f, delta_node *t)
        English types does. */
     int32_t keep = 0;
 
+    EVV_WALK(w);
+
     (void)d;
 
     for (;;) {
+        EVV_WALKED(d, w);
+
         if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
             t = (delta_node *)(intptr_t)next;
             next = *(int32_t *)((char *)t + 0xc + f * 4) & ~3;
@@ -2221,8 +2285,11 @@ int32_t *rmost(delta_state *d, int8_t f, int32_t *t)
     int16_t kind = e->fields[0].kind;
     int32_t next = t[EVV_AT(delta_vars *, d->vars)->fence_base + f] & ~3;
     int32_t keep = 0;
+    EVV_WALK(w);
 
     for (;;) {
+        EVV_WALKED(d, w);
+
         if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
             t = (int32_t *)(intptr_t)next;
             next = t[EVV_AT(delta_vars *, d->vars)->fence_base + f] & ~3;
@@ -2297,7 +2364,11 @@ int npush_fld(delta_state *d, uint8_t st, uint8_t fld)
     if (p == 0)
         return 1;
 
+    EVV_WALK(w);
+
     while (*(int32_t *)(intptr_t)p & 2) {
+        EVV_WALKED(d, w);
+
         if (v->scan_rev == 0)
             p = *(int32_t *)((char *)(intptr_t)p
                              + 0xc + v->scan_field * 4) & ~3;
@@ -2317,7 +2388,11 @@ int npush_fld(delta_state *d, uint8_t st, uint8_t fld)
    sequential. Which way it steps is the caller's choice. */
 int32_t *ctxspine(delta_state *d, int32_t *t, uint8_t f, int32_t back)
 {
+    EVV_WALK(w);
+
     for (;;) {
+        EVV_WALKED(d, w);
+
         if ((t[EVV_AT(delta_vars *, d->vars)->fence_base + f] & 1) != 0
             && !NONSEQ((const delta_node *)t))
             return t;
@@ -2437,8 +2512,11 @@ int testFldeq(delta_state *d, uint8_t st, uint8_t fld, uint8_t val)
     delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t p = v->scan_ptr;
     const uint8_t *q;
+    EVV_WALK(w);
 
     for (;;) {
+        EVV_WALKED(d, w);
+
         if (v->scan_rev == 0)
             p = *(int32_t *)((char *)(intptr_t)p
                              + 0xc + v->scan_field * 4) & ~3;
@@ -2486,9 +2564,12 @@ int vscanadvOverToken(delta_state *d, int32_t usefence)
     delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t cur = v->scan_ptr;
     int32_t field = v->scan_field;
+    EVV_WALK(w);
 
     for (;;) {
         int32_t next, i;
+
+        EVV_WALKED(d, w);
 
         if (cur == 0)
             return 0;
@@ -2525,9 +2606,12 @@ int vscanadvUptoTokenOrMarker(delta_state *d, int32_t target, int32_t usefence)
     delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t cur = v->scan_ptr;
     int32_t field = v->scan_field;
+    EVV_WALK(w);
 
     for (;;) {
         int32_t next, i;
+
+        EVV_WALKED(d, w);
 
         if (cur == 0)
             return 0;
@@ -2564,6 +2648,7 @@ void seqscan(delta_state *d, delta_seqctl *c)
     uint8_t fields[104];
     uint8_t n = 0;
     uint8_t i;
+    EVV_WALK(w);
 
     c->cur = c->start;
 
@@ -2577,6 +2662,8 @@ void seqscan(delta_state *d, delta_seqctl *c)
             fields[n++] = i;
 
     for (;;) {
+        EVV_WALKED(d, w);
+
         for (i = 0; i < n; i++)
             if ((*(int32_t *)(intptr_t)(t + (base + fields[i]) * 4) & 1) != 0)
                 return;
@@ -2728,7 +2815,10 @@ int test_synch(delta_state *d, int16_t tag, uint8_t n, const uint8_t *list)
     int32_t ok = 0;
     int32_t i;
 
+    EVV_WALK(w);
+
     while (ok == 0) {
+        EVV_WALKED(d, w);
         ok = 1;
         for (i = 0; i < n && ok != 0; i++) {
             if ((*(int32_t *)(intptr_t)
@@ -3091,9 +3181,16 @@ int32_t ctxlook(delta_state *d, int32_t t, uint8_t f, int32_t right)
     int32_t result = 0;
     uint8_t i;
 
+    EVV_WALK(w1);
+
     while (depth > 0) {
+        EVV_WALK(w0);
+
+        EVV_WALKED(d, w1);
+
         while (cur != 0
                && (*(int32_t *)(intptr_t)(cur + (base + f) * 4) & 1) != 0) {
+            EVV_WALKED(d, w0);
             marked = cur;
             cur = *clink(d, cur) & ~3;
         }
@@ -3139,11 +3236,19 @@ int32_t ctxlook(delta_state *d, int32_t t, uint8_t f, int32_t right)
     limit = right ? EVV_AT(delta_stack *, d->stack)->spine_r : EVV_AT(delta_stack *, d->stack)->spine_l;
     result = 0;
 
+    EVV_WALK(w2);
+
     while (depth > 1) {
+        EVV_WALK(w3);
+
+        EVV_WALKED(d, w2);
         cur = first;
 
         while (cur != 0) {
             delta_node *n = (delta_node *)(intptr_t)cur;
+
+            EVV_WALKED(d, w3);
+
             int32_t nx;
             int32_t sync;
             int32_t from;
@@ -3181,8 +3286,12 @@ int32_t ctxlook(delta_state *d, int32_t t, uint8_t f, int32_t right)
     }
 
     cur = first;
+    EVV_WALK(w4);
+
     while (cur != 0) {
         delta_node *n = (delta_node *)(intptr_t)cur;
+
+        EVV_WALKED(d, w4);
 
         if (result == 0 && (n->flags8 & 1) == 0)
             result = cur;
@@ -3240,6 +3349,7 @@ int vnormalize(delta_state *d, delta_tpos *p)
     int32_t value = 0;
     uint8_t went_right;
     uint8_t adjusted;
+    EVV_WALK(w);
 
     e = &vstmtbl[f];
     get = e->get[0];
@@ -3249,6 +3359,8 @@ int vnormalize(delta_state *d, delta_tpos *p)
         next = *(int32_t *)(intptr_t)(node + 0xc + f * 4) & ~3;
 
         while (node != EVV_AT(delta_stack *, d->stack)->spine_l) {
+            EVV_WALKED(d, w);
+
             if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
                 node = next;
                 next = *(int32_t *)(intptr_t)(node + 0xc + f * 4) & ~3;
@@ -3269,6 +3381,8 @@ int vnormalize(delta_state *d, delta_tpos *p)
         next = *(int32_t *)(intptr_t)(node + (base + f) * 4) & ~3;
 
         while (node != EVV_AT(delta_stack *, d->stack)->spine_r) {
+            EVV_WALKED(d, w);
+
             if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
                 node = next;
                 next = *(int32_t *)(intptr_t)(node + (base + f) * 4) & ~3;
@@ -3494,7 +3608,11 @@ int test_ptr(delta_state *d)
     if ((d->lpta.flags & 2) != 0)
         vnormalize(d, &d->lpta);
 
+    EVV_WALK(w);
+
     for (;;) {
+        EVV_WALKED(d, w);
+
         if (EVV_AT(delta_vars *, d->vars)->scan_ptr == d->lpta.node)
             return 0;
         if (!vscanadv(d, 0, 1))
@@ -3507,15 +3625,15 @@ int test_ptr(delta_state *d)
    backtracked rather than left half moved. */
 void lpta_movel(delta_state *d, uint8_t f)
 {
-    if (!vmove_tv(d, &d->lpta))
+    if (!vmove_tv(d, &d->lpta) || d->lpta.node == 0)
         forceErrorBacktrack(d);
 
-    d->lpta.node = EVV_REF(vmovel((delta_node *)(intptr_t)d->lpta.node, f));
+    d->lpta.node = EVV_REF(vmovel(d, (delta_node *)(intptr_t)d->lpta.node, f));
 }
 
 void lpta_mover(delta_state *d, uint8_t f)
 {
-    if (!vmove_tv(d, &d->lpta))
+    if (!vmove_tv(d, &d->lpta) || d->lpta.node == 0)
         forceErrorBacktrack(d);
 
     d->lpta.node = EVV_REF(vmover(d, (int32_t *)(intptr_t)d->lpta.node, f));
@@ -3523,7 +3641,7 @@ void lpta_mover(delta_state *d, uint8_t f)
 
 void rpta_mover(delta_state *d, uint8_t f)
 {
-    if (!vmove_tv(d, &d->rpta))
+    if (!vmove_tv(d, &d->rpta) || d->rpta.node == 0)
         forceErrorBacktrack(d);
 
     d->rpta.node = EVV_REF(vmover(d, (int32_t *)(intptr_t)d->rpta.node, f));
@@ -3533,7 +3651,7 @@ void rpta_mover(delta_state *d, uint8_t f)
    already on a timing mark. */
 int lpta_tstmover(delta_state *d, uint8_t f)
 {
-    if (vtsttmark_tv(d, &d->lpta, 0) != 0)
+    if (vtsttmark_tv(d, &d->lpta, 0) != 0 || d->lpta.node == 0)
         return 1;
 
     d->lpta.node = EVV_REF(vmover(d, (int32_t *)(intptr_t)d->lpta.node, f));
@@ -3545,7 +3663,7 @@ int lpta_tstmover(delta_state *d, uint8_t f)
    left pair pass nought and these pass one. */
 int rpta_tstmover(delta_state *d, uint8_t f)
 {
-    if (vtsttmark_tv(d, &d->rpta, 1) != 0)
+    if (vtsttmark_tv(d, &d->rpta, 1) != 0 || d->rpta.node == 0)
         return 1;
 
     d->rpta.node = EVV_REF(vmover(d, (int32_t *)(intptr_t)d->rpta.node, f));
@@ -3554,10 +3672,10 @@ int rpta_tstmover(delta_state *d, uint8_t f)
 
 int rpta_tstmovel(delta_state *d, uint8_t f)
 {
-    if (vtsttmark_tv(d, &d->rpta, 1) != 0)
+    if (vtsttmark_tv(d, &d->rpta, 1) != 0 || d->rpta.node == 0)
         return 1;
 
-    d->rpta.node = EVV_REF(vmovel((delta_node *)(intptr_t)d->rpta.node, f));
+    d->rpta.node = EVV_REF(vmovel(d, (delta_node *)(intptr_t)d->rpta.node, f));
     return 0;
 }
 
@@ -3702,10 +3820,16 @@ int vdef_proj(delta_state *d, int32_t t, uint8_t f)
     int32_t l;
     int32_t r;
 
+    if (t == 0)
+        return 0;
+
     if ((*(int32_t *)(intptr_t)(t + (EVV_AT(delta_vars *, d->vars)->fence_base + f) * 4) & 1) != 0)
         return 1;
 
     l = vgetsc(d, 1, 1, t, f);
+
+    if (l == 0)
+        return 0;
 
     if (EVV_AT(delta_vars *, d->vars)->ctx_both != 0)
         r = vgetsc(d, 0, 1, t, f);
@@ -3863,8 +3987,12 @@ int vmark(delta_state *d, uint8_t st, uint8_t fld, int32_t t, int32_t stop,
     s->mark_fld = EVV_REF(kept != 0 ? kept : &fld);
     s->mark_flag = 0;
 
+    EVV_WALK(w);
+
     while (t != s->spine_r && t != stop) {
         int32_t next = *(int32_t *)(intptr_t)(t + (base + st) * 4) & ~3;
+
+        EVV_WALKED(d, w);
 
         if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
             t = next;
@@ -3946,7 +4074,11 @@ int visleft(delta_state *d, int32_t a, int32_t b)
         }
 
         p = ((const delta_node *)(intptr_t)b)->link & ~3;
+        EVV_WALK(w1);
+
         for (i = 0; ; i++) {
+            EVV_WALKED(d, w1);
+
             if (p == 0) {
                 s->left_ans[slot] = 0;
                 return 0;
@@ -3983,7 +4115,10 @@ int visleft(delta_state *d, int32_t a, int32_t b)
         p = vgetsc(d, 1, 1, b, (uint8_t)fld);
     }
 
+    EVV_WALK(w2);
+
     while (p != a) {
+        EVV_WALKED(d, w2);
         p = *(int32_t *)(intptr_t)(p + 0xc + fld * 4) & ~3;
         if (p == 0) {
             if (slot >= 0)
@@ -4264,7 +4399,11 @@ void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r)
             if (EVV_AT(int8_t *, v->nsq_marks)[f] != 0) {
                 nonseq = 1;
             } else {
+                EVV_WALK(w1);
+
                 while (p != right) {
+                    EVV_WALKED(d, w1);
+
                     if (!ONESTM((const delta_node *)(intptr_t)p)
                         && !ALLNSQ((const delta_node *)(intptr_t)p)) {
                         nonseq = 1;
@@ -4281,7 +4420,10 @@ void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r)
                     return NULL;
             } else {
                 p = *rlink(d, left) & ~3;
+                EVV_WALK(w2);
+
                 while (p != right) {
+                    EVV_WALKED(d, w2);
                     SETNONSEQ((delta_node *)(intptr_t)p);
                     if (v->ctx_both != 0
                         && !ONESTM((const delta_node *)(intptr_t)p)
@@ -4323,6 +4465,9 @@ int chkdelnonseq(delta_state *d, int32_t t, uint8_t f)
     delta_seqctl *ctl;
     int32_t kind;
     int32_t p;
+    EVV_WALK(wl);
+    EVV_WALK(wr);
+    EVV_WALK(wm);
 
 #define CARRIES(node, fld) \
     ((*(int32_t *)(intptr_t)((node) + (base + (fld)) * 4) & 1) != 0)
@@ -4331,12 +4476,19 @@ int chkdelnonseq(delta_state *d, int32_t t, uint8_t f)
         return 1;
 
     l = ((const delta_node *)(intptr_t)t)->link & ~3;
-    while (NONSEQ((const delta_node *)(intptr_t)l))
+    while (l != 0 && NONSEQ((const delta_node *)(intptr_t)l)) {
+        EVV_WALKED(d, wl);
         l = ((const delta_node *)(intptr_t)l)->link & ~3;
+    }
 
     r = *rlink(d, t) & ~3;
-    while (NONSEQ((const delta_node *)(intptr_t)r))
+    while (r != 0 && NONSEQ((const delta_node *)(intptr_t)r)) {
+        EVV_WALKED(d, wr);
         r = *rlink(d, r) & ~3;
+    }
+
+    if (l == 0 || r == 0)
+        forceErrorBacktrack(d);
 
     for (i = (int32_t)d->nstmts - 1; i >= (int32_t)f; i--) {
         if (CARRIES(t, i)) {
@@ -4444,6 +4596,7 @@ int chkdelnonseq(delta_state *d, int32_t t, uint8_t f)
     p = ctl->start;
 
     for (;;) {
+        EVV_WALKED(d, wm);
         SETNONSEQ((delta_node *)(intptr_t)p);
 
         if (v->ctx_both != 0
@@ -4491,7 +4644,11 @@ int fdeldel(delta_state *d, int32_t from, int32_t to, int32_t arg)
 
     p = from;
 
+    EVV_WALK(w);
+
     for (;;) {
+        EVV_WALKED(d, w);
+
         if (p == 0)
             return 0;
 
@@ -5735,20 +5892,20 @@ void proj_def(delta_state *d, uint8_t f)
 /* Move the right pointer one statement leftwards. */
 void rpta_movel(delta_state *d, uint8_t f)
 {
-    if (!vmove_tv(d, &d->rpta))
+    if (!vmove_tv(d, &d->rpta) || d->rpta.node == 0)
         forceErrorBacktrack(d);
 
-    d->rpta.node = EVV_REF(vmovel((delta_node *)(intptr_t)d->rpta.node, f));
+    d->rpta.node = EVV_REF(vmovel(d, (delta_node *)(intptr_t)d->rpta.node, f));
 }
 
 /* The same for the left pointer, but asking first rather than faulting: a
    mark in the way is an answer, not an error. */
 int lpta_tstmovel(delta_state *d, uint8_t f)
 {
-    if (vtsttmark_tv(d, &d->lpta, 0))
+    if (vtsttmark_tv(d, &d->lpta, 0) || d->lpta.node == 0)
         return 1;
 
-    d->lpta.node = EVV_REF(vmovel((delta_node *)(intptr_t)d->lpta.node, f));
+    d->lpta.node = EVV_REF(vmovel(d, (delta_node *)(intptr_t)d->lpta.node, f));
     return 0;
 }
 
@@ -6310,7 +6467,7 @@ static void pta_ctxt(delta_state *d, delta_tpos *p, uint8_t f, int32_t back)
 {
     const int32_t *node;
 
-    if (!vctxt_tv(d, p))
+    if (!vctxt_tv(d, p) || p->node == 0)
         forceErrorBacktrack(d);
 
     node = (const int32_t *)(intptr_t)p->node;
@@ -6550,7 +6707,10 @@ int savetok(delta_state *d, delta_loc *loc)
         return 1;
     }
 
+    EVV_WALK(w);
+
     while (t != 0 && (*(const int32_t *)(intptr_t)t & 2)) {
+        EVV_WALKED(d, w);
         t = ((const int32_t *)(intptr_t)t)[3 + v->scan_field] & -4;
         if (t == 0) {
             reset_field(loc);
@@ -6720,7 +6880,11 @@ int ctxt_clstr(delta_state *d, int32_t t, int8_t f)
     int32_t a = vgetsc(d, 1, 1, t, f);
     int32_t b = vgetsc(d, 0, 1, t, f);
 
+    EVV_WALK(w);
+
     while (a != b) {
+        EVV_WALKED(d, w);
+
         if (a != 0 && (*(const int32_t *)(intptr_t)a & 2)) {
             a = ((const int32_t *)(intptr_t)a)[EVV_AT(delta_vars *, d->vars)->fence_base + f] & -4;
             continue;
@@ -7073,9 +7237,12 @@ int conj_merge(delta_state *d, delta_token *tok)
     delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t start = tok->value;
     int32_t node = start;
+    EVV_WALK(w);
 
     if (visleft(d, v->scan_ptr, start)) {
         while (node != v->scan_ptr) {
+            EVV_WALKED(d, w);
+
             if (node == 0 || !(*(const int32_t *)(intptr_t)node & 2))
                 return 1;
             node = ((const int32_t *)(intptr_t)node)[3 + v->scan_field] & -4;
@@ -7087,6 +7254,8 @@ int conj_merge(delta_state *d, delta_token *tok)
 
     if (visright(d, v->scan_ptr, start)) {
         while (node != v->scan_ptr) {
+            EVV_WALKED(d, w);
+
             if (node == 0 || !(*(const int32_t *)(intptr_t)node & 2))
                 return 1;
             node = ((const int32_t *)(intptr_t)node)
@@ -7291,9 +7460,12 @@ int vscanadvUptoToken(delta_state *d, int32_t usefence)
     delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t cur = v->scan_ptr;
     int32_t field = v->scan_field;
+    EVV_WALK(w);
 
     for (;;) {
         int32_t next, i;
+
+        EVV_WALKED(d, w);
 
         if (cur == 0)
             return 0;
@@ -7631,7 +7803,7 @@ static int pta_tstctxt(delta_state *d, delta_pta *p, uint8_t f, int32_t back)
 {
     const int32_t *node;
 
-    if (vtstctx_tv(d, p, back))
+    if (vtstctx_tv(d, p, back) || p->node == 0)
         return 1;
 
     node = (const int32_t *)(intptr_t)p->node;
@@ -7755,7 +7927,11 @@ int32_t dur2(delta_state *d, const delta_tpos *a, const delta_tpos *b,
         && !ctxt_clstr(d, b->node, f))
         return (int32_t)0x80000001u;
 
+    EVV_WALK(w);
+
     while (from != to && from != 0) {
+        EVV_WALKED(d, w);
+
         if (*(const int32_t *)(intptr_t)from & 2) {
             from = ((const int32_t *)(intptr_t)from)[fb] & -4;
             continue;
@@ -7835,7 +8011,11 @@ int vdur_ass(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
         bias = 0;
 
     p = a->node;
+    EVV_WALK(w);
+
     while (p != b->node) {
+        EVV_WALKED(d, w);
+
         if (p != 0 && (*(const int32_t *)(intptr_t)p & 2)) {
             p = ((const int32_t *)(intptr_t)p)[EVV_AT(delta_vars *, d->vars)->fence_base + f] & -4;
             continue;
