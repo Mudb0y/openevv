@@ -16,6 +16,8 @@
 #include <time.h>
 #if defined(_WIN32)
 #include <windows.h>
+#include <fcntl.h>
+#include <io.h>
 #endif
 #include <unistd.h>
 
@@ -214,6 +216,8 @@ static void usage(FILE *f)
 "  -V N      volume\n"
 "  -r        take every number above in a person's units instead of the\n"
 "            engine's: words per minute for speed, hertz for pitch\n"
+"  -L ID     speak in the language with that number; -L list names the\n"
+"            ones this build has and stops\n"
 "  -l        say what each voice is set to, and stop\n"
 "  -h        this\n"
 "\n"
@@ -223,7 +227,7 @@ static void usage(FILE *f)
 
 int main(int argc, char **argv)
 {
-    const char *out = NULL, *from = NULL;
+    const char *out = NULL, *from = NULL, *lang = NULL;
     int         voice = 0, real = 0, list = 0;
     int         set[V_COUNT];
     char       *text;
@@ -231,10 +235,23 @@ int main(int argc, char **argv)
     FILE       *f;
     int         i;
 
+#if defined(_WIN32)
+    /* Windows fuehrt die Kanaele im TEXTMODUS, und der ist fuer eine Welle
+       toedlich: beim Schreiben wird aus jedem 0x0A ein 0x0D 0x0A, beim Lesen
+       umgekehrt, und ein 0x1A gilt als Dateiende. Ein `-o -' lieferte damit
+       eine Welle, in der die Sprache zwar noch zu erkennen ist, aber unter
+       lautem Rauschen verschwindet -- ein Satz wuchs um genau so viele Bytes,
+       wie er 0x0A enthielt. Unix kennt den Unterschied nicht, weshalb es dort
+       seit je stimmte. Auch die Eingabe muss binaer sein: der Text kommt in
+       EINEM Byte je Zeichen, und ein 0x1A darin duerfte nicht abschneiden. */
+    _setmode(_fileno(stdout), _O_BINARY);
+    _setmode(_fileno(stdin), _O_BINARY);
+#endif
+
     for (i = 0; i < V_COUNT; i++)
         set[i] = -1;
 
-    while ((i = getopt(argc, argv, "o:f:v:s:p:V:rlh")) != -1) {
+    while ((i = getopt(argc, argv, "o:f:v:s:p:V:L:rlh")) != -1) {
         switch (i) {
         case 'o': out = optarg; break;
         case 'f': from = optarg; break;
@@ -243,6 +260,7 @@ int main(int argc, char **argv)
         case 'p': set[V_PITCH] = atoi(optarg); break;
         case 'V': set[V_VOLUME] = atoi(optarg); break;
         case 'r': real = 1; break;
+        case 'L': lang = optarg; break;
         case 'l': list = 1; break;
         case 'h': usage(stdout); return 0;
         default:  usage(stderr); return 2;
@@ -304,12 +322,32 @@ int main(int argc, char **argv)
     {
         uint32_t langs[32];
         int      n = 32;
+        int      k;
 
         if (eo_getAvailableLanguages(langs, &n) || n < 1)
             die("the engine has no language in it");
-        h = eo_new();
-        if (h == NULL)
-            h = eo_newEx(langs[0]);
+
+        /* A build may hold more than one language, and which one speaks is
+           otherwise whichever was linked first. -L names it by the number
+           the API uses; -L list says what this build has. */
+        if (lang != NULL && strcmp(lang, "list") == 0) {
+            for (k = 0; k < n; k++)
+                printf("0x%x\n", (unsigned)langs[k]);
+            return 0;
+        }
+        if (lang != NULL) {
+            uint32_t want = (uint32_t)strtoul(lang, NULL, 0);
+
+            for (k = 0; k < n && langs[k] != want; k++)
+                ;
+            if (k == n)
+                die("this build has no such language");
+            h = eo_newEx(want);
+        } else {
+            h = eo_new();
+            if (h == NULL)
+                h = eo_newEx(langs[0]);
+        }
         if (h == NULL)
             die("the engine would not build an instance");
     }
