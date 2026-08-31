@@ -16,9 +16,43 @@ static inline int32_t mul32(int32_t a, int32_t b)
 /* Both vector multiplies want (coef * x) >> 15 but must not overflow 32 bits,
    so they pre-shift x by however much its magnitude demands and take the rest
    out of the final shift. The staged form drops low bits that a wider multiply
-   would keep, so it cannot be folded back into a single expression. */
+   would keep, so it cannot be folded back into a single expression.
+ *
+ * How far to pre-shift is a question about x alone -- which of five ranges its
+ * magnitude falls in -- and the answer is always
+ *
+ *     mul32(coef, x >> pre) >> (15 - pre)
+ *
+ * with pre one of 0, 4, 8, 12 and 15. Written as five comparisons it was a
+ * chain of unpredictable branches on every multiply, and every sample of every
+ * resonator goes through one: pole_filter alone was a seventh of the whole
+ * engine's instructions. Written as the position of the topmost bit that is
+ * not a copy of the sign it is a count, a load and two shifts.
+ *
+ * The two are the same answer, not nearly the same, and that was checked
+ * rather than argued: sixteen coefficients -- both signs, every magnitude,
+ * the extremes and the boundaries -- against all 4,294,967,296 values of x,
+ * identical throughout. Which matters more here than the speed, because the
+ * whole engine is held to IBM's samples byte for byte. */
+static const unsigned char fx_pre[8] = { 15, 12, 8, 4, 0, 0, 0, 0 };
+
 static inline int32_t fxmul_scaled(int32_t coef, int32_t x)
 {
+#if defined(__GNUC__)
+    /* The first of the five ranges is much the commonest, so it keeps a test
+       of its own: one compare that predicts, against a count that is always
+       paid. What is left goes the branchless way. */
+    if ((uint32_t)(x + 0xffff) <= 0x1fffeu)
+        return mul32(coef, x) >> 15;
+    {
+        /* |x|, without a branch and without overflowing on the most negative
+           value. Nought cannot reach here. */
+        uint32_t s = (uint32_t)(x >> 31);
+        int      pre = fx_pre[__builtin_clz(((uint32_t)x ^ s) - s) >> 2];
+
+        return mul32(coef, x >> pre) >> (15 - pre);
+    }
+#else
     int32_t c = coef;
 
     if (x > 0) {
@@ -42,6 +76,7 @@ static inline int32_t fxmul_scaled(int32_t coef, int32_t x)
     if ((uint32_t)x > 0xf0000000u)
         return mul32(c, x >> 12) >> 3;
     return mul32(c, x >> 15);
+#endif
 }
 
 void     clr_vector(int32_t *v, int32_t n);

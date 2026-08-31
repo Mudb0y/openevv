@@ -1242,11 +1242,47 @@ static int32_t run_bytecode(void *state, const delta_rule *r,
    kept by the language rather than here, because there may be more than one
    and each has its own. */
 
+/* Which rules are written as C, read into an index by rule number. Settled at
+   link time, so this happens once a language; scanning the table instead cost
+   every call a walk over the whole of it. Out of line because the check that
+   it has been done is on the path every rule entry takes and the doing of it
+   is not. */
+static delta_rule_cfn *delta_native_index(const delta_language *lang)
+{
+    delta_rule_cfn *by_number;
+    const delta_rule_c *const *p;
+    const delta_rule_c *t;
+
+    by_number = calloc((size_t)lang->rule_count, sizeof(*by_number));
+    if (by_number != 0)
+        for (p = lang->rule_native; *p != 0; p++)
+            for (t = *p; t->fn != 0; t++)
+                if (t->rule >= 0 && t->rule < lang->rule_count)
+                    by_number[t->rule] = t->fn;
+    /* A language with none of its rules written as C gets an index of nulls,
+       which is what says it has been looked at. The walk below is what
+       answers if there was no room for one. */
+    *lang->rule_native_by_number = by_number;
+    return by_number;
+}
+
+/* And what answers when there was no room for an index. */
+static delta_rule_cfn delta_native_walk(const delta_language *lang, int n)
+{
+    const delta_rule_c *const *p;
+    const delta_rule_c *w;
+
+    for (p = lang->rule_native; *p != 0; p++)
+        for (w = *p; w->fn != 0; w++)
+            if (w->rule == n)
+                return w->fn;
+    return 0;
+}
+
 int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
                        int nargs)
 {
     const delta_rule *was;
-    const delta_rule_c *w;
     delta_rule_cfn     fn;
     delta_rule_cfn    *by_number;
     int32_t answer;
@@ -1256,10 +1292,22 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
        was made by one language and remembers which, and a rule of another
        cannot reach it, because nothing hands one over. What was in force
        goes back at the end, since a rule may be run from inside a callback
-       of a machine speaking something else. */
-    const delta_language *was_lang = delta_lang_set(delta_lang_of(state));
+       of a machine speaking something else.
 
-    n = (int)(r - delta_rules);
+       Read once and held. Every name below is a reach through the language in
+       force, and the language in force is a thread-local; asking eight times
+       for the same answer was most of what this function cost, on a path
+       every one of a run's two and a half million rule entries takes. And
+       setting it is a write to that thread-local, which is worth not making
+       when what is there is already right -- which, between two rules of one
+       module, it always is. */
+    const delta_language *lang = delta_lang_of(state);
+    const delta_language *was_lang = delta_lang_now();
+
+    if (was_lang != lang)
+        delta_lang_set(lang);
+
+    n = (int)(r - lang->rules);
 
     if (delta_rule_trace < 0) {
         const char *e = getenv("DELTA_RULE_TRACE");
@@ -1296,38 +1344,14 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
        Which rules are written as C is settled at link time, so the table is
        read into an index by rule number once. Scanning it instead cost every
        call a walk over the whole of it. */
-    if (*L->rule_native_by_number == 0) {
-        const delta_rule_c *const *p;
-        const delta_rule_c *t;
-
-        by_number = calloc((size_t)delta_rule_count, sizeof(*by_number));
-        if (by_number != 0)
-            for (p = delta_rule_native; *p != 0; p++)
-                for (t = *p; t->fn != 0; t++)
-                    if (t->rule >= 0 && t->rule < delta_rule_count)
-                        by_number[t->rule] = t->fn;
-        /* A language with none of its rules written as C gets an index of
-           nulls, which is what says it has been looked at. The walk below
-           is what answers if there was no room for one. */
-        *L->rule_native_by_number = by_number;
-    }
-    by_number = *L->rule_native_by_number;
+    by_number = *lang->rule_native_by_number;
+    if (by_number == 0)
+        by_number = delta_native_index(lang);
 
     if (by_number != 0)
-        fn = (n >= 0 && n < delta_rule_count) ? by_number[n] : 0;
-    else {
-        /* Nothing to build the index in. The walk is what it did before and
-           it still answers. */
-        const delta_rule_c *const *p;
-
-        fn = 0;
-        for (p = delta_rule_native; *p != 0 && fn == 0; p++)
-            for (w = *p; w->fn != 0; w++)
-                if (w->rule == n) {
-                    fn = w->fn;
-                    break;
-                }
-    }
+        fn = (n >= 0 && n < lang->rule_count) ? by_number[n] : 0;
+    else
+        fn = delta_native_walk(lang, n);
     answer = (fn != 0) ? fn(state, args, nargs)
                        : run_bytecode(state, r, args, nargs);
 
@@ -1336,7 +1360,8 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
         fprintf(stderr, "# %s left with %08x\n", r->name, (unsigned)answer);
         fflush(stderr);
     }
-    delta_lang_set(was_lang);
+    if (was_lang != lang)
+        delta_lang_set(was_lang);
     return answer;
 }
 
