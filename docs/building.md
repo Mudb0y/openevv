@@ -12,7 +12,7 @@ On this machine all of those come from the flake, and `nix develop` puts them on
 
     make
 
-That builds `build/libevv.a` and `build/evv`, which speaks. From nothing, that is about a quarter of an hour: seven minutes for Python to write the rules out as C and about as long again to compile the thirteen megabytes of it. Once that file exists it is not written again unless the decompiler or the bytecode changes.
+That builds `build/libevv.a` and `build/evv`, which speaks. From nothing, that is about two and a half minutes: a little over two for Python to write the rules out as C and about fifteen seconds to compile the thirteen megabytes of it across twenty-four cores. Once those files exist they are not written again unless the decompiler or the bytecode changes.
 
     make RULES=bytecode
 
@@ -560,13 +560,15 @@ rules` lists every rule with which of the three it is.
 
 ## The rules, twice
 
-The language's rules exist in the tree as bytecode, and the engine has an interpreter for them. They also exist as C: `tools/delta-decompile.py` writes all 3,377 of them out of that same bytecode into `lang/enus/delta_rules_c_enus.c`, and the interpreter prefers a rule written as C wherever it finds one. It writes beside whichever language it was pointed at, so `make LANG=lang/dede rules` writes German into `lang/dede`.
+The language's rules exist in the tree as bytecode, and the engine has an interpreter for them. They also exist as C: `tools/delta-decompile.py` writes all 3,377 of them out of that same bytecode into `lang/enus/delta_rules_c00_enus.c` and thirty-one more beside it, and the interpreter prefers a rule written as C wherever it finds one. It writes beside whichever language it was pointed at, so `make LANG=lang/dede rules` writes German into `lang/dede`.
+
+Thirty-two files rather than one because a translation unit cannot be compiled on more than one core, and thirteen megabytes of it is seven minutes. The decompiler deals the rules out by size so the files finish together; each carries its own piece of the table of rules-written-as-C and the first gathers the pieces, which is what lets every rule stay `static` and keeps one language's names from meeting another's. `PARTS` in the Makefile and `EVV_RULE_PARTS` in the decompiler have to agree, because the build names the files it expects rather than looking for whatever is there -- and the recipe deletes the old ones first, so lowering the number does not leave yesterday's files to be compiled in beside today's.
 
 Both speak the same samples. That is not a hope: `test/suite.sh` holds each form against IBM's binary over all 81 cases, and the two forms are set against each other call by call by `tools/delta-check.sh`. So which one is linked is a trade of build time and size against speed, and nothing else.
 
 C is the default, because the speed is the part a person waiting for speech feels. Measured on one machine, the same long sentence, bytecode against C: the whole utterance synthesises in 138 ms against 63; the wait before the first samples of an utterance is 38 ms against 12; and interrupting an utterance and asking for another costs 124 ms against 39. That last one matters most and is the least obvious: the engine cannot abandon an utterance it has been told to stop -- see the interrupting section of `docs/status.md` for why not -- so what a cancel costs is whatever is left of the work, and compiled rules do that leftover work in a third of the time.
 
-What it costs is the build. The C is thirteen megabytes in one file: seven minutes of Python to write and about as long to compile, where the bytecode build wants half a minute and no Python at all. The binaries are some four times the size -- `build/probe` is 15.6 MB against 3.7 -- because that is what a machine's worth of lifted code looks like written out as C, with nothing kept in a register because a backtrack may land in the middle of any of it.
+What it costs is the build. The C is thirteen megabytes: a little over two minutes of Python to write and about fifteen seconds to compile over twenty-four cores, where the bytecode build wants half a minute and no Python at all. The binaries are about twice the size -- `build/probe` is 7.1 MB against 3.7 -- because that is what a machine's worth of lifted code looks like written out as C.
 
     make RULES=bytecode
 

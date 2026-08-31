@@ -63,7 +63,7 @@ Everything runs inside `nix develop`: outside it there is no compiler, no Python
 
 Read IBM's objects with `llvm-objdump -d -r --no-show-raw-insn` and never with binutils `objdump -d`. Each function is its own COMDAT `.text` section and MSVC gave local labels the same names in different sections, so binutils takes a recurring label for a function boundary, resynchronises the instruction stream at that byte, and prints plausible nonsense from there to the end of the section -- `into` and `add %al,(%eax)` where the code is really a compare and a jump. Nothing warns. If a function's control flow stops making sense in the middle, suspect the disassembler before suspecting IBM. The lifters in `tools` go on using binutils `objdump` and `nm` for sections, symbols and relocations, none of which is affected; it is instruction decoding that is wrong.
 
-`lang/enus/delta_rules_c.c` is thirteen megabytes of generated C and is not in the tree; `make rules` writes it. Seven minutes of compiler, so a change to the decompiler costs a quarter of an hour before a single case runs.
+The rules as C are thirteen megabytes of generated C in `lang/<tag>/delta_rules_cNN_<tag>.c` and are not in the tree; `make rules` writes them. Two minutes of Python and about fifteen seconds of compiler on twenty-four cores, where the one file this used to be was seven minutes that could not be shared out. `PARTS` in the Makefile and `EVV_RULE_PARTS` in the decompiler have to say the same number, since the build names the files it expects rather than taking whatever is there.
 
 Releases are tags: pushing `vN` makes the workflow build the archives and cut the release. Nothing about them is manual.
 

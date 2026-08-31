@@ -462,17 +462,31 @@ def write(names):
         # to be volatile so that it is not kept anywhere else.
         #
         # A rule that plants no landing is never come back into, so nothing
-        # about it can be stale and the registers are ordinary locals. That is
-        # every wrapper -- two thirds of the rules by count -- and volatile
-        # costs each of them a store and a load an operation.
-        if plants_landing(named):
-            text.append('    volatile int argn = 0;\n')
-            text.append('    volatile int32_t r0 = 0, r1 = 0, r2 = 0,'
-                        ' r3 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0;\n')
-        else:
-            text.append('    int argn = 0;\n')
-            text.append('    int32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0,'
-                        ' r4 = 0, r5 = 0, r6 = 0, r7 = 0;\n')
+        # about it can be stale. That is every wrapper. Of the ones that do
+        # plant a landing, stale_registers says which registers a throw could
+        # leave holding the wrong thing, and it is usually none of them: the
+        # code at a landing puts back what it is about to read, because IBM's
+        # own compiler had the same problem with setjmp and answered it the
+        # same way.
+        #
+        # The argument depth is never one of them. The landing puts it back
+        # from a local written before the save and never after, which is the
+        # one thing C promises comes through a landing unharmed.
+        bad = stale_registers(flat) if plants_landing(flat) else set()
+        # And every register, which is what this used to do and what the
+        # claim above is held against: write the rules both ways, land on a
+        # landing place on purpose and see whether the two ever differ.
+        # docs/status.md says how that was done and what it answered.
+        if os.environ.get('EVV_STALE_ALL') and plants_landing(flat):
+            bad = set(range(8))
+        keep = [r for r in range(8) if r not in bad]
+        text.append('    int argn = 0;\n')
+        if keep:
+            text.append('    int32_t %s;\n'
+                        % ', '.join('r%d = 0' % r for r in keep))
+        if bad:
+            text.append('    volatile int32_t %s;\n'
+                        % ', '.join('r%d = 0' % r for r in sorted(bad)))
         text.append('    delta_flags fl;\n')
         text.append('    int i;\n\n')
         # The arena can run out, and then there is no frame. The interpreter
@@ -550,6 +564,110 @@ def plants_landing(body):
     front of us. Either spelling counts: fold() writes LANDING where the whole
     of it is in one place and leaves the save itself where it is not."""
     return any('LANDING(' in l or 'EVV_LAND_SAVE' in l for l in body)
+
+
+REG_RE = re.compile(r'\br([0-7])\b')
+DEF_RE = re.compile(r'^\s*r([0-7]) = ')
+POP_RE = re.compile(r'^\s*POP\(r[0-7]')
+FLAT_LABEL = re.compile(r'^\s*(L\d+):;\s*$')
+FLAT_GOTO = re.compile(r'^\s*goto (L\d+);\s*$')
+FLAT_BRANCH = re.compile(r'^\s*if \((.*)\) goto (L\d+);\s*$')
+
+STALE = [0, 0]
+
+
+def _defuse(line):
+    """What one line of the flat form writes and what it reads."""
+    if 'LANDING(' in line or 'EVV_LAND_SAVE' in line:
+        # What the save reads it reads before it, not after; what it leaves
+        # behind is its answer in r0, and the argument depth, which the line
+        # after it puts back.
+        return {0}, set()
+    if 'ENTER(' in line:
+        return {0}, set()
+    if POP_RE.match(line):
+        # Not a write to be counted on. The machine takes nothing off an
+        # empty argument area, and then the register keeps what it had.
+        return set(), set()
+    m = DEF_RE.match(line)
+    if m:
+        # SETLOW and the two byte writers keep the rest of the register, so
+        # they do not match here and count as a read, which is right.
+        return {int(m.group(1))}, {int(x)
+                                   for x in REG_RE.findall(line[m.end():])}
+    return set(), {int(x) for x in REG_RE.findall(line)}
+
+
+def stale_registers(flat):
+    """Which registers a backtrack could leave holding something stale.
+
+    A landing place is come back into from a rule that threw, and only some of
+    what the machine was holding comes back with it: the C compiler may have
+    put a register anywhere, and the save puts back only what the two calling
+    conventions agree belongs to the callee. So a register the rule writes
+    after planting the landing, and reads after coming back to it without
+    writing it first, has to be somewhere the save cannot lose -- which is
+    what volatile is for.
+
+    A register that is only ever written before the landing is not one of
+    those: it holds the same thing on the way back as it did going in, and C
+    says so of any local that is not written between the two.
+
+    What is asked here is the ordinary question of which registers are live
+    where the save returns to, over the rule as flat code with labels. It is
+    asked of every path out of the landing rather than only the one a throw
+    takes, because which of the two the test after the landing chooses is not
+    worth working out: 877 of the 1,042 rules need no register kept either
+    way, and only thirteen need two.
+    """
+    at = {}
+    for i, line in enumerate(flat):
+        m = FLAT_LABEL.match(line)
+        if m:
+            at[m.group(1)] = i
+
+    n = len(flat)
+    succ = [[] for _ in range(n)]
+    for i, line in enumerate(flat):
+        m = FLAT_GOTO.match(line)
+        if m:
+            succ[i] = [at[m.group(1)]]
+            continue
+        m = FLAT_BRANCH.match(line)
+        if m:
+            succ[i] = ([i + 1] if i + 1 < n else []) + [at[m.group(2)]]
+            continue
+        if line.strip().startswith('RETURN('):
+            continue
+        if i + 1 < n:
+            succ[i] = [i + 1]
+
+    df = [None] * n
+    us = [None] * n
+    for i, line in enumerate(flat):
+        df[i], us[i] = _defuse(line)
+
+    live = [set() for _ in range(n)]
+    moved = True
+    while moved:
+        moved = False
+        for i in range(n - 1, -1, -1):
+            out = set()
+            for k in succ[i]:
+                out |= live[k]
+            was = us[i] | (out - df[i])
+            if was != live[i]:
+                live[i] = was
+                moved = True
+
+    bad = set()
+    for i, line in enumerate(flat):
+        if 'LANDING(' in line or 'EVV_LAND_SAVE' in line:
+            bad |= live[i]
+    if bad:
+        STALE[0] += 1
+        STALE[1] += len(bad)
+    return bad
 
 
 def share_out(bodies):
@@ -1896,6 +2014,8 @@ def main():
           % (TAILED[0], TAILED[1]))
     print('landing places folded: %d, entries folded: %d'
           % (FOLDED[0], FOLDED[1]))
+    print('rules where a throw could leave a register stale: %d, registers'
+          ' kept for them: %d' % (STALE[0], STALE[1]))
     print('%d of %d rules written to %s, over %d files'
           % (len(done), len(names),
              os.path.relpath(part_path(0), ROOT).replace('c00_', 'cNN_'),
