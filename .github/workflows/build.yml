@@ -2,10 +2,12 @@
 # same thing, and cuts a release with the Windows exes when a tag is pushed.
 #
 # What it cannot do is compare against IBM's binary: that wants the SDK, which
-# is not in the tree and is not ours to put in a runner. So the check here is
+# is not in the tree and is not ours to put in a runner. So the checks here are
 # test/hash.sh, which speaks one fixed sentence and holds the samples against a
-# hash in the tree. It does not prove the engine right -- test/suite.sh does
-# that, on a machine with the SDK -- it proves it unchanged.
+# hash in the tree, and `make crashers`, which speaks the text IBM's engine
+# cannot survive and asks only that ours answers. Neither proves the engine
+# right -- test/suite.sh does that, on a machine with the SDK -- the first
+# proves it unchanged and the second proves it still there.
 
 name: build
 
@@ -34,6 +36,9 @@ jobs:
       - name: Check the samples
         run: test/hash.sh
 
+      - name: Check the words the original cannot say
+        run: make crashers
+
       - name: Check the add-on's own two
         run: make nvda-test
 
@@ -56,6 +61,9 @@ jobs:
 
       - name: Check the samples
         run: test/hash.sh
+
+      - name: Check the words the original cannot say
+        run: make crashers
 
       - name: Check a rate change keeps the caller's buffer
         run: make RULES=bytecode rate

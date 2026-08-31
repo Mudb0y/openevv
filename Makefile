@@ -558,6 +558,13 @@ missing: $(OBJECTS)
 	@$(NM) $(OBJECTS) > $(BUILD)/syms.txt
 	@python3 tools/missing.py $(BUILD)/syms.txt
 
+# The words IBM's engine cannot say. It wants neither Wine nor the objects,
+# because there is nothing to hold ours against: the original takes a page
+# fault on every one of them. What this says is that ours still answers.
+.PHONY: crashers
+crashers: $(BUILD)/evv
+	@test/crashers.sh $(BUILD)/evv
+
 clean:
 	@rm -rf $(BUILD)/obj-* $(BUILD)/obj32-* $(BUILD)/objwin-* \
 	        $(BUILD)/objwin32-* \

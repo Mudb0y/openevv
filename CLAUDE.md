@@ -8,7 +8,9 @@ Nothing works until `test/suite.sh` says so. It speaks each case through our eng
 
 Six builds have to pass, not one: `probe`, `probe32` and `probe.exe`, each with `RULES=bytecode` and `RULES=c`. C is the default as of 22 August 2026, so it is the interpreter that goes untested unless `RULES=bytecode` is what was built -- the opposite of the trap this warned about before. The Windows one is `EVV_NATIVE=$PWD/build/probe.exe test/suite.sh`, which runs it under the same Wine as the reference.
 
-`test/hash.sh` is the quick one, and the only check that wants neither Wine nor IBM's objects. It proves the samples unchanged, not right.
+`test/hash.sh` is the quick one. It proves the samples unchanged, not right.
+
+`make crashers` is the other that wants neither Wine nor IBM's objects. It speaks the text in `test/cases/crashers.txt`, which is text IBM's engine dies on and ours used to die on with it, and it fails if the engine faulted on one or would not finish. It is not part of the differential suite and cannot be: the reference produces no audio for any of those strings, so there is nothing to compare. `tools/crash-search.py` is what found them and is how to find more.
 
 The library has its own two: `test/dll.c` loads `eci.dll` by name and speaks, and `test/dll.py` does it through ctypes. `make win32` builds the thirty-two bit library, which is where a wrong signature shows up -- stdcall carries the argument size in the decorated name on x86, so a declaration that disagrees with the engine fails to link there and links silently on x86-64.
 
