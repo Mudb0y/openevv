@@ -1075,6 +1075,25 @@ int32_t delta_direct_8(int which, int32_t a0, int32_t a1, int32_t a2, int32_t a3
     return (int32_t)((I8)delta_rule_entry[which])(W(a0), W(a1), W(a2), W(a3), W(a4), W(a5), W(a6), W(a7));
 }
 
+#ifdef EVV_ARG_CHECK
+/* A rule pushing past the argument area the decompiler said it needs. Said
+   once per rule, because one such rule says it a great many times. */
+void evv_arg_over(const char *who, int argn, int room)
+{
+    static const char *said[64];
+    static int n;
+    int i;
+
+    for (i = 0; i < n; i++)
+        if (said[i] == who)
+            return;
+    if (n < 64)
+        said[n++] = who;
+    fprintf(stderr, "argument area: %s wants %d, has %d\n", who, argn + 1,
+            room);
+}
+#endif
+
 /* A running count of what the interpreter has been asked to do, for
    finding out where a run stops rather than for the port itself. */
 long delta_rule_calls;

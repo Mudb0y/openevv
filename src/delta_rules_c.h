@@ -137,8 +137,13 @@ enum {
 /* A rule's own argument stack, and the two things it does with it. The
    machine pushes what a call is to be given and the call takes them from
    there, so these are what stands between a rule and every call it makes;
-   written out in full they were a fifth of the decompiled C. */
-#define DELTA_RULE_ARGS 64
+   written out in full they were a fifth of the decompiled C.
+
+   How deep it goes is the rule's own, worked out by the decompiler and said
+   in the size of the array itself, so the guards below follow it without
+   being told. The interpreter gives every rule 64 words because it has one
+   piece of code for all of them; here the median rule wants four. */
+#define DELTA_RULE_ARGS ((int)(sizeof arg / sizeof arg[0]))
 
 /* Taking one back off. The machine pops an argument into a register after a
    call, which is how it reads what the call left behind. */
@@ -154,9 +159,18 @@ enum {
    sit inside the call itself. They stay in the order the machine made them,
    which is the reverse of the order the entry takes them: the last thing
    pushed is the first argument. */
+#ifdef EVV_ARG_CHECK
+void evv_arg_over(const char *who, int argn, int room);
+#define ARG(x)  ((argn >= DELTA_RULE_ARGS \
+                  ? evv_arg_over(__func__, argn, DELTA_RULE_ARGS) : (void)0), \
+                 ((argn < DELTA_RULE_ARGS) \
+                  ? (void)(arg[argn] = (int32_t)(x)) : (void)0), \
+                 (void)argn++)
+#else
 #define ARG(x)  (((argn < DELTA_RULE_ARGS) \
                   ? (void)(arg[argn] = (int32_t)(x)) : (void)0), \
                  (void)argn++)
+#endif
 #define DROP(n) do { argn -= (n); if (argn < 0) argn = 0; } while (0)
 
 /* What every rule does before its own work, in the two pieces the compiler

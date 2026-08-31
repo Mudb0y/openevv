@@ -453,7 +453,7 @@ def write(names):
                     'DELTA_RULE_FRAME_MAX);\n')
         text.append('    unsigned char *base = frame + %d;\n' % frame)
         text.append('    unsigned char *param = base + %d;\n' % pbase)
-        text.append('    int32_t arg[%d];\n' % MAXARG)
+        text.append('    int32_t arg[%d];\n' % argument_depth(flat))
         # A landing from a backtrack comes back into the middle of the
         # function, and anything the compiler had chosen to keep in a machine
         # register would come back stale. The interpreter is safe because
@@ -572,6 +572,66 @@ POP_RE = re.compile(r'^\s*POP\(r[0-7]')
 FLAT_LABEL = re.compile(r'^\s*(L\d+):;\s*$')
 FLAT_GOTO = re.compile(r'^\s*goto (L\d+);\s*$')
 FLAT_BRANCH = re.compile(r'^\s*if \((.*)\) goto (L\d+);\s*$')
+FLAT_CASE = re.compile(r'^\s*case \d+: goto (L\d+);\s*$')
+FLAT_SWITCH = re.compile(r'^\s*switch \(.*\) \{\s*$')
+FLAT_CLOSE = re.compile(r'^\s*\}\s*$')
+
+
+def flat_cfg(flat):
+    """Where each line of the flat form can go next, or None if there is a
+    line here this cannot read.
+
+    Five shapes carry flow and they are all of them: a label, a jump, a jump
+    on a condition, the return, and the switch a backtracking dispatch is
+    written as -- which is a block of arms that each jump, so the switch goes
+    to every one of them and each of those goes to its own label. Anything
+    else in such a block, a default among them, is not a shape this has seen
+    and the answer is to say so rather than to leave an edge out: an edge
+    left out is a path an analysis never looks down."""
+    at = {}
+    for i, line in enumerate(flat):
+        m = FLAT_LABEL.match(line)
+        if m:
+            at[m.group(1)] = i
+
+    n = len(flat)
+    succ = [[] for _ in range(n)]
+    i = 0
+    while i < n:
+        line = flat[i]
+        m = FLAT_GOTO.match(line)
+        if m:
+            succ[i] = [at[m.group(1)]]
+            i += 1
+            continue
+        m = FLAT_BRANCH.match(line)
+        if m:
+            succ[i] = ([i + 1] if i + 1 < n else []) + [at[m.group(2)]]
+            i += 1
+            continue
+        if FLAT_SWITCH.match(line):
+            k = i + 1
+            arms = []
+            while k < n and not FLAT_CLOSE.match(flat[k]):
+                m = FLAT_CASE.match(flat[k])
+                if not m:
+                    return None
+                arms.append(k)
+                succ[k] = [at[m.group(1)]]
+                k += 1
+            if k >= n:
+                return None
+            succ[i] = arms
+            succ[k] = [k + 1] if k + 1 < n else []
+            i = k + 1
+            continue
+        if line.strip().startswith('RETURN('):
+            i += 1
+            continue
+        if i + 1 < n:
+            succ[i] = [i + 1]
+        i += 1
+    return succ
 
 STALE = [0, 0]
 
@@ -620,28 +680,11 @@ def stale_registers(flat):
     worth working out: 877 of the 1,042 rules need no register kept either
     way, and only thirteen need two.
     """
-    at = {}
-    for i, line in enumerate(flat):
-        m = FLAT_LABEL.match(line)
-        if m:
-            at[m.group(1)] = i
+    succ = flat_cfg(flat)
+    if succ is None:
+        return set(range(8))
 
     n = len(flat)
-    succ = [[] for _ in range(n)]
-    for i, line in enumerate(flat):
-        m = FLAT_GOTO.match(line)
-        if m:
-            succ[i] = [at[m.group(1)]]
-            continue
-        m = FLAT_BRANCH.match(line)
-        if m:
-            succ[i] = ([i + 1] if i + 1 < n else []) + [at[m.group(2)]]
-            continue
-        if line.strip().startswith('RETURN('):
-            continue
-        if i + 1 < n:
-            succ[i] = [i + 1]
-
     df = [None] * n
     us = [None] * n
     for i, line in enumerate(flat):
@@ -668,6 +711,90 @@ def stale_registers(flat):
         STALE[0] += 1
         STALE[1] += len(bad)
     return bad
+
+
+ARG_ONE = re.compile(r'^\s*ARG\(.*\);\s*$')
+DROP_N = re.compile(r'^\s*DROP\((\d+)\);\s*$')
+POP_ONE = re.compile(r'^\s*POP\(r[0-7]\);\s*$')
+
+DEEP = [0, 0]
+
+
+def _depth_effect(line):
+    """How far above the depth on entry a line reaches, and what it leaves the
+    depth at, or None where this cannot read the line at all."""
+    if ARG_ONE.match(line):
+        return 1, 1
+    m = DROP_N.match(line)
+    if m:
+        return 0, -int(m.group(1))
+    if POP_ONE.match(line):
+        return 0, -1
+    if 'LANDING(' in line:
+        return 2, 2
+    # The same thing where fold() could not put it in one place: the two
+    # pushes are on the first of its three lines and nothing else moves.
+    if 'int32_t buf' in line:
+        return 2, 2
+    if 'EVV_LAND_SAVE' in line or 'argn = depth' in line:
+        return 0, 0
+    if 'ENTER(' in line:
+        return 6, 0
+    if 'ARG(' in line or 'POP(' in line or 'DROP(' in line or 'argn' in line:
+        return None
+    return 0, 0
+
+
+def argument_depth(flat):
+    """How deep this rule's argument area ever gets.
+
+    The machine keeps one area per rule and the interpreter gives every rule
+    the same 64 words of it, because it has one piece of code for all of them.
+    Here the rule is in front of us, and 3,225 of the 3,377 never get past
+    nine: writing out 64 words and clearing them cost every rule a quarter of
+    a kilobyte of stack and a `rep stosq', on a thread that has sixty-four
+    kilobytes in all and rules that nest deeply.
+
+    What comes back is a bound rather than a guess, and 64 wherever there is
+    any doubt -- a line this cannot read, a loop that pushes more than it lets
+    go, anything at all that reaches the interpreter's own number. Sixty-four
+    is what the code did before, so falling back to it changes nothing.
+    """
+    succ = flat_cfg(flat)
+    if succ is None:
+        return MAXARG
+
+    n = len(flat)
+    eff = []
+    for line in flat:
+        e = _depth_effect(line)
+        if e is None:
+            return MAXARG
+        eff.append(e)
+
+    into = [None] * n
+    into[0] = 0
+    peak = 0
+    work = [0]
+    while work:
+        i = work.pop()
+        v = into[i]
+        p, ch = eff[i]
+        peak = max(peak, v + p)
+        if peak >= MAXARG:
+            return MAXARG
+        out = v + ch
+        out = 0 if out < 0 else out
+        if out >= MAXARG:
+            return MAXARG
+        for k in succ[i]:
+            if into[k] is None or out > into[k]:
+                into[k] = out
+                work.append(k)
+    peak = max(1, min(peak, MAXARG))
+    DEEP[0] += 1
+    DEEP[1] += peak
+    return peak
 
 
 def share_out(bodies):
@@ -2016,6 +2143,8 @@ def main():
           % (FOLDED[0], FOLDED[1]))
     print('rules where a throw could leave a register stale: %d, registers'
           ' kept for them: %d' % (STALE[0], STALE[1]))
+    print('rules whose argument area could be bounded: %d, words of it'
+          ' between them: %d' % (DEEP[0], DEEP[1]))
     print('%d of %d rules written to %s, over %d files'
           % (len(done), len(names),
              os.path.relpath(part_path(0), ROOT).replace('c00_', 'cNN_'),
