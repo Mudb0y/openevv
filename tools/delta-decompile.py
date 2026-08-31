@@ -436,6 +436,21 @@ def write(names):
             name_alternatives(name_params(named, pbase, params), alts))
         USED.update(saw)
 
+        plants = plants_landing(flat)
+        bad = stale_registers(flat) if plants else set()
+
+        # Whether this rule needs a frame out of the arena at all. It does
+        # if it hands the machine the address of anything in one -- a value
+        # is thirty-two bits, so such an address can only be the arena's --
+        # or if it has working memory below its arguments, or if a backtrack
+        # can land in it. None of that is true of a wrapper, and a wrapper is
+        # 2,335 of the 3,377: those keep their few words on the stack like
+        # any other C function, which is two calls and a clear a rule.
+        loose = (frame == 0 and not plants
+                 and not any('SLOT(' in l or 'PARAMAT(' in l for l in named))
+        if loose:
+            named = [l.replace('RETURN(', 'LEAVE(') for l in named]
+
         text = []
         text.append('/* %s, from %s */\n' % (name, rule.obj))
         text.append('static int32_t evv_%s(void *state, const int32_t *args,'
@@ -449,10 +464,18 @@ def write(names):
         # is filed under and frames of one size put a rule at a given depth
         # back where it was. What is cleared below is the rule's own, which
         # is a different question.
-        text.append('    unsigned char *frame = evv_frame_push('
-                    'DELTA_RULE_FRAME_MAX);\n')
-        text.append('    unsigned char *base = frame + %d;\n' % frame)
-        text.append('    unsigned char *param = base + %d;\n' % pbase)
+        room = frame + pbase + 4 * params
+        if loose:
+            # Words rather than bytes so that a four-byte read of it is
+            # aligned; nothing in a rule reads its frame wider than that.
+            text.append('    int32_t own[%d];\n' % ((room + 3) // 4))
+            text.append('    unsigned char *base = (unsigned char *)own;\n')
+            text.append('    unsigned char *param = base + %d;\n' % pbase)
+        else:
+            text.append('    unsigned char *frame = evv_frame_push('
+                        'DELTA_RULE_FRAME_MAX);\n')
+            text.append('    unsigned char *base = frame + %d;\n' % frame)
+            text.append('    unsigned char *param = base + %d;\n' % pbase)
         text.append('    int32_t arg[%d];\n' % argument_depth(flat))
         # A landing from a backtrack comes back into the middle of the
         # function, and anything the compiler had chosen to keep in a machine
@@ -472,12 +495,11 @@ def write(names):
         # The argument depth is never one of them. The landing puts it back
         # from a local written before the save and never after, which is the
         # one thing C promises comes through a landing unharmed.
-        bad = stale_registers(flat) if plants_landing(flat) else set()
         # And every register, which is what this used to do and what the
         # claim above is held against: write the rules both ways, land on a
         # landing place on purpose and see whether the two ever differ.
         # docs/status.md says how that was done and what it answered.
-        if os.environ.get('EVV_STALE_ALL') and plants_landing(flat):
+        if os.environ.get('EVV_STALE_ALL') and plants:
             bad = set(range(8))
         keep = [r for r in range(8) if r not in bad]
         text.append('    int argn = 0;\n')
@@ -493,22 +515,24 @@ def write(names):
         # answers nought here rather than writing through the nought it was
         # given, and a rule written as C has to do the same or an engine that
         # would have gone quiet falls over instead.
-        text.append('    if (frame == 0)\n        return 0;\n\n')
+        if not loose:
+            text.append('    if (frame == 0)\n        return 0;\n\n')
         # Only as much of the frame as this rule has. The interpreter clears
         # the largest any rule asks for, since it has one piece of code for
         # all of them; here the shape is known, and the number below is the
         # same one delta-emit.py takes the largest of. A rule reaching past it
         # would be reaching outside its own frame either way.
-        text.append('    memset(frame, 0, %d);\n'
-                    % (frame + pbase + 4 * params))
+        text.append('    memset(%s, 0, %d);\n'
+                    % ('own' if loose else 'frame', room))
         text.append('    memset(arg, 0, sizeof arg);\n')
         text.append('    memset(&fl, 0, sizeof fl);\n')
         text.append('    for (i = 0; i < nargs && i < %d; i++)\n' % params)
         text.append('        memcpy(base + %d + 4 * i, &args[i], 4);\n\n'
                     % pbase)
         text.append('\n'.join(named))
-        tail = ('' if named and named[-1].strip().startswith('RETURN(')
-                else '\n    RETURN(r0);')
+        out = 'LEAVE' if loose else 'RETURN'
+        tail = ('' if named and named[-1].strip().startswith(out + '(')
+                else '\n    %s(r0);' % out)
         text.append('%s\n}\n\n' % tail)
         bodies.append((name, ''.join(text)))
         done.append(name)

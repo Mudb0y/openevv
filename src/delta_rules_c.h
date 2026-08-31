@@ -205,9 +205,18 @@ void evv_arg_over(const char *who, int argn, int room);
 
 /* Leaving the rule with an answer. The frame was taken from the arena and
    has to go back before the answer does, so every way out says this rather
-   than saying return. */
+   than saying return.
+
+   LEAVE is the same for a rule that took no frame from the arena. A rule
+   needs one because it hands the machine the address of something in it, and
+   an address the machine can hold is thirty-two bits, so it can only be the
+   arena's; a rule that hands over no such address -- which is every wrapper,
+   2,335 of the 3,377 -- keeps its few words of working memory on the stack
+   like any other C function and has nothing to give back. */
 #define RETURN(x) \
     do { int32_t out_ = (x); evv_frame_pop(frame); return out_; } while (0)
+
+#define LEAVE(x)  return (x)
 
 /* How a decompiled rule writes a call. The arguments are already on that
    stack, which is why they are not named here: what a call says is which
