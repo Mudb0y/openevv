@@ -11,6 +11,11 @@
 
 #include "delta_rules_c.h"
 
-const delta_rule_c esus_delta_rule_native[] = {
+static const delta_rule_c none[] = {
     { -1, 0 },
+};
+
+const delta_rule_c *const esus_delta_rule_native[] = {
+    none,
+    0,
 };

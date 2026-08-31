@@ -30,7 +30,7 @@ extern void plpl_set_dict_delete(delta_state *d);
 extern void plpl_act_dict_new(delta_state *d);
 extern void plpl_act_dict_delete(delta_state *d);
 
-extern const delta_rule_c plpl_delta_rule_native[];
+extern const delta_rule_c *const plpl_delta_rule_native[];
 
 extern const delta_store plpl_delta_authored_store[];
 
@@ -96,9 +96,19 @@ delta_language delta_lang_plpl = {
     "Polish",
     0, 0, 0,             /* id, library name, how big a machine is */
 
+    /* The bytecode, the constants it names and the tables it jumps
+       through. Nothing but the interpreter ever reads them, so a build with
+       every rule written as C says nought here rather than naming them --
+       which is what lets the linker drop the megabyte and a half they come
+       to. The rule table below stays: it carries the names and the shapes,
+       which both forms want. */
+#ifdef EVV_NO_BYTECODE
+    0, 0, 0,
+#else
     plpl_delta_rule_code,
     plpl_delta_rule_imm,
     plpl_delta_rule_map,
+#endif
     plpl_delta_rule_entry,
     plpl_delta_rule_entry_name,
     plpl_delta_rule_sym,

@@ -30,7 +30,7 @@ extern void itit_set_dict_delete(delta_state *d);
 extern void itit_act_dict_new(delta_state *d);
 extern void itit_act_dict_delete(delta_state *d);
 
-extern const delta_rule_c itit_delta_rule_native[];
+extern const delta_rule_c *const itit_delta_rule_native[];
 
 extern const delta_store itit_delta_authored_store[];
 
@@ -96,9 +96,19 @@ delta_language delta_lang_itit = {
     "Italian",
     0, 0, 0,             /* id, library name, how big a machine is */
 
+    /* The bytecode, the constants it names and the tables it jumps
+       through. Nothing but the interpreter ever reads them, so a build with
+       every rule written as C says nought here rather than naming them --
+       which is what lets the linker drop the megabyte and a half they come
+       to. The rule table below stays: it carries the names and the shapes,
+       which both forms want. */
+#ifdef EVV_NO_BYTECODE
+    0, 0, 0,
+#else
     itit_delta_rule_code,
     itit_delta_rule_imm,
     itit_delta_rule_map,
+#endif
     itit_delta_rule_entry,
     itit_delta_rule_entry_name,
     itit_delta_rule_sym,

@@ -89,8 +89,22 @@ RULES ?= c
 # Each language has both forms of its rules beside it: the empty table that
 # leaves every rule as bytecode, and the C the decompiler writes. One of the
 # two is linked per language, never both.
-GENERATED := $(foreach l,$(LANGS),$(l)/delta_rules_c_$(notdir $(l)).c)
+#
+# The C comes in PARTS files rather than one. Thirteen megabytes in a single
+# translation unit is seven minutes of compiler that cannot be shared out, and
+# it is the same work in about a minute over this many. The decompiler must be
+# told the same number, since what is named here is what the build expects to
+# find; it deals the rules out by size so the files finish together.
+PARTS  ?= 32
+PARTNS := $(shell seq -w 0 $$(($(PARTS) - 1)))
+GENERATED := $(foreach l,$(LANGS), \
+               $(foreach n,$(PARTNS),$(l)/delta_rules_c$(n)_$(notdir $(l)).c))
 STUBS     := $(foreach l,$(LANGS),$(l)/delta_rules_none_$(notdir $(l)).c)
+
+# And every one of them, whatever PARTS says now, so that lowering the number
+# does not leave yesterday's files to be compiled in beside today's. The
+# wildcard below takes whatever a language directory holds.
+STALE := $(foreach l,$(LANGS),$(wildcard $(l)/delta_rules_c[0-9][0-9]_$(notdir $(l)).c))
 
 # What the last build was: which form the rules are in, and which languages
 # are in it. Neither can be asked of an object or an archive afterwards. The
@@ -142,7 +156,7 @@ ROMDEFS := $(if $(filter jajp,$(TAGS)),-DEVV_ROM_JAJP)
 # porting layer and belongs to the reference build; the two rule tables are
 # chosen between above rather than both linked.
 SOURCES := $(filter-out $(SRC)/port_win32.c,$(wildcard $(SRC)/*.c)) \
-           $(filter-out $(GENERATED) $(STUBS), \
+           $(filter-out $(STALE) $(GENERATED) $(STUBS), \
              $(sort $(foreach l,$(LANGS),$(wildcard $(l)/*.c)))) \
            $(ROMS) $(RULESRC) $(LANGLIST)
 
@@ -523,10 +537,17 @@ rules: $(GENERATED)
 # pattern rule may only have the one stem. EVV_LANG_DIR is how the decompiler
 # is told which language to read; without it, `make LANG=lang/dede rules'
 # would write English out into lang/dede.
+#
+# One run writes all PARTS files of a language, so they are named as a group:
+# make asks for the recipe once and gets the lot, rather than once per file.
 define rules_for
-$(1)/delta_rules_c_$(notdir $(1)).c: tools/delta-decompile.py \
+$(foreach n,$(PARTNS),$(1)/delta_rules_c$(n)_$(notdir $(1)).c) &: \
+                                     tools/delta-decompile.py \
                                      tools/delta-census.py
-	@EVV_LANG_DIR=$(1) python3 tools/delta-decompile.py all
+	@rm -f $(1)/delta_rules_c[0-9][0-9]_$(notdir $(1)).c \
+	       $(1)/delta_rules_c_$(notdir $(1)).c
+	@EVV_LANG_DIR=$(1) EVV_RULE_PARTS=$(PARTS) \
+	  python3 tools/delta-decompile.py all
 endef
 $(foreach l,$(LANGS),$(eval $(call rules_for,$(l))))
 

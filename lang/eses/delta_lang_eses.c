@@ -30,7 +30,7 @@ extern void eses_set_dict_delete(delta_state *d);
 extern void eses_act_dict_new(delta_state *d);
 extern void eses_act_dict_delete(delta_state *d);
 
-extern const delta_rule_c eses_delta_rule_native[];
+extern const delta_rule_c *const eses_delta_rule_native[];
 
 extern const delta_store eses_delta_authored_store[];
 
@@ -96,9 +96,19 @@ delta_language delta_lang_eses = {
     "Castilian Spanish",
     0, 0, 0,             /* id, library name, how big a machine is */
 
+    /* The bytecode, the constants it names and the tables it jumps
+       through. Nothing but the interpreter ever reads them, so a build with
+       every rule written as C says nought here rather than naming them --
+       which is what lets the linker drop the megabyte and a half they come
+       to. The rule table below stays: it carries the names and the shapes,
+       which both forms want. */
+#ifdef EVV_NO_BYTECODE
+    0, 0, 0,
+#else
     eses_delta_rule_code,
     eses_delta_rule_imm,
     eses_delta_rule_map,
+#endif
     eses_delta_rule_entry,
     eses_delta_rule_entry_name,
     eses_delta_rule_sym,

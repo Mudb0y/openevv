@@ -9,7 +9,9 @@ __pycache__/
 
 # Thirteen megabytes written out of the transcription beside it by
 # tools/delta-decompile.py, and rewritten whole by every change to that tool.
-# `make rules' makes it.
+# `make rules' makes them. Numbered because one translation unit that size
+# cannot be compiled on more than one core.
+lang/*/delta_rules_c[0-9][0-9]_*.c
 lang/*/delta_rules_c_*.c
 
 # The Japanese language module, lifted by the commands in docs/japanese.md.

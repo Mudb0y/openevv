@@ -96,7 +96,12 @@ typedef struct delta_language {
     int32_t              rule_count;
     int32_t              rule_setjmp;
     int32_t              frame_max;
-    const struct delta_rule_c *rule_native;   /* the ones written as C */
+    /* The ones written as C, in as many pieces as the decompiler wrote
+       files, ending in a null. The pieces are only there because thirteen
+       megabytes in one translation unit cannot be compiled on more than one
+       core; nothing reads them as pieces, since delta_run_rule walks the lot
+       once into an index by rule number. */
+    const struct delta_rule_c *const *rule_native;
     delta_rule_cfn           **rule_native_by_number;
 
     /* the bytes the rules name by address, and the same as values once
@@ -158,9 +163,35 @@ void delta_lang_bind_all(void);
 const delta_language *delta_lang_by_id(int32_t id);
 
 /* The one this thread is speaking. Setting answers what was there, so a
-   caller puts it back. */
-const delta_language *delta_lang_now(void);
-const delta_language *delta_lang_set(const delta_language *l);
+   caller puts it back.
+
+   Per thread because two instances speaking two languages have a thread each,
+   and set-and-put-back because a thread may drive one machine from inside
+   another's callback. Inline because every reach for a table of the language
+   comes through here -- the statement table, the globals, the rules -- and a
+   call into another file for a thread-local read was four per cent of a run.
+
+   Nothing may read a table without a language in force. Every path that runs
+   the machine sets one, so an empty one here is a path nobody thought about
+   rather than something to guess at. Guessing would speak the wrong language
+   and sound almost right, which is the worst way for this to fail. */
+extern __thread const delta_language *delta_lang_current;
+void delta_lang_none(void);
+
+static inline const delta_language *delta_lang_now(void)
+{
+    if (delta_lang_current == 0)
+        delta_lang_none();
+    return delta_lang_current;
+}
+
+static inline const delta_language *delta_lang_set(const delta_language *l)
+{
+    const delta_language *was = delta_lang_current;
+
+    delta_lang_current = l;
+    return was;
+}
 
 /* Which language made a machine. Kept in a word in front of the allocation:
    the state is IBM's layout from its first byte and the rules address it

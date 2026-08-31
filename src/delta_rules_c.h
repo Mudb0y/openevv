@@ -14,16 +14,10 @@
 #include "evv_land.h"
 #include "delta_lang.h"
 
-/* The four flags the machine keeps. A rule written as C keeps them the same
-   way, and works them with the same code, or a comparison after an operation
-   would part company with the original over what it says. */
-typedef struct {
-    int zf, sf, cf, of;
-} delta_flags;
-
-int32_t delta_rule_alu(delta_flags *f, int kind, int32_t a, int32_t b);
-void    delta_rule_cmp(delta_flags *f, int kind, int32_t a, int32_t b);
-int     delta_condition(const delta_flags *f, int cond);
+/* The four flags the machine keeps, and the operations that set them. A rule
+   written as C works them with the interpreter's own code, or a comparison
+   after an operation would part company with it over what it says. */
+#include "delta_flags.h"
 
 /* One rule written as C, and the table of them. The interpreter looks there
    once it has said what it is about to run, so a rule can be swapped between
@@ -238,16 +232,67 @@ enum {
    way delta_new works them out, which is what makes the names true. */
 #define GLOBAL(t, p, v) (*(t *)((unsigned char *)(intptr_t)(p) + DG_##v))
 
-/* An inlined wrapper: the primitive it stood for, with the numbers it had
-   baked in and the caller's values in the places it read them from. The site's
-   own pushes stay above it untouched, because a call does not pop them. */
+/* Both are the arity said out loud, because the arity is known where the
+   call is written and working it out again at run time was a fifth of a run.
+   src/delta_rules.c has one small function per arity and says why.
+
+   CALL is a call the machine made: the arguments are on its argument area and
+   the entry takes them the other way round from the order they were pushed.
+   CALLW is a wrapper written out where it stood: its arguments are named
+   here, in the order the entry takes them, and the site's own pushes stay
+   above them untouched, because a call does not pop what it was given. */
+#define EVV_ARITY(a1,a2,a3,a4,a5,a6,a7,a8,N,...) N
+#define EVV_COUNT(...)  EVV_ARITY(__VA_ARGS__, 8, 7, 6, 5, 4, 3, 2, 1)
+#define EVV_JOIN_(a, b) a##b
+#define EVV_JOIN(a, b)  EVV_JOIN_(a, b)
+
 #define CALLW(entry, ...) \
-    delta_rule_direct(DELTA_ENTRY_##entry, \
-                      (const int32_t[]){__VA_ARGS__}, \
-                      (int)(sizeof (const int32_t[]){__VA_ARGS__} \
-                            / sizeof(int32_t)))
+    EVV_JOIN(delta_direct_, EVV_COUNT(__VA_ARGS__)) \
+        (DELTA_ENTRY_##entry, __VA_ARGS__)
 
 #define CALL(entry, want) \
-    delta_rule_called(DELTA_ENTRY_##entry, (int32_t *)arg, argn, (want))
+    EVV_JOIN(delta_call_, want)(DELTA_ENTRY_##entry, (int32_t *)arg, argn)
+
+int32_t delta_call_0(int which, const int32_t *stack, int argn);
+int32_t delta_call_1(int which, const int32_t *stack, int argn);
+int32_t delta_call_2(int which, const int32_t *stack, int argn);
+int32_t delta_call_3(int which, const int32_t *stack, int argn);
+int32_t delta_call_4(int which, const int32_t *stack, int argn);
+int32_t delta_call_5(int which, const int32_t *stack, int argn);
+int32_t delta_call_6(int which, const int32_t *stack, int argn);
+int32_t delta_call_7(int which, const int32_t *stack, int argn);
+int32_t delta_call_8(int which, const int32_t *stack, int argn);
+int32_t delta_call_9(int which, const int32_t *stack, int argn);
+int32_t delta_call_10(int which, const int32_t *stack, int argn);
+int32_t delta_call_11(int which, const int32_t *stack, int argn);
+int32_t delta_call_12(int which, const int32_t *stack, int argn);
+int32_t delta_call_13(int which, const int32_t *stack, int argn);
+int32_t delta_call_14(int which, const int32_t *stack, int argn);
+int32_t delta_call_15(int which, const int32_t *stack, int argn);
+int32_t delta_call_16(int which, const int32_t *stack, int argn);
+int32_t delta_call_17(int which, const int32_t *stack, int argn);
+int32_t delta_call_18(int which, const int32_t *stack, int argn);
+int32_t delta_call_19(int which, const int32_t *stack, int argn);
+int32_t delta_call_20(int which, const int32_t *stack, int argn);
+int32_t delta_call_21(int which, const int32_t *stack, int argn);
+int32_t delta_call_22(int which, const int32_t *stack, int argn);
+int32_t delta_call_23(int which, const int32_t *stack, int argn);
+int32_t delta_call_24(int which, const int32_t *stack, int argn);
+int32_t delta_call_25(int which, const int32_t *stack, int argn);
+
+int32_t delta_direct_1(int which, int32_t a0);
+int32_t delta_direct_2(int which, int32_t a0, int32_t a1);
+int32_t delta_direct_3(int which, int32_t a0, int32_t a1, int32_t a2);
+int32_t delta_direct_4(int which, int32_t a0, int32_t a1, int32_t a2,
+                       int32_t a3);
+int32_t delta_direct_5(int which, int32_t a0, int32_t a1, int32_t a2,
+                       int32_t a3, int32_t a4);
+int32_t delta_direct_6(int which, int32_t a0, int32_t a1, int32_t a2,
+                       int32_t a3, int32_t a4, int32_t a5);
+int32_t delta_direct_7(int which, int32_t a0, int32_t a1, int32_t a2,
+                       int32_t a3, int32_t a4, int32_t a5, int32_t a6);
+int32_t delta_direct_8(int which, int32_t a0, int32_t a1, int32_t a2,
+                       int32_t a3, int32_t a4, int32_t a5, int32_t a6,
+                       int32_t a7);
 
 #endif

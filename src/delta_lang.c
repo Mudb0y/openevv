@@ -32,34 +32,19 @@ static void bind(void)
     }
 }
 
-/* What this thread is speaking. Per thread because two instances speaking
-   two languages have a thread each, and set-and-put-back because a thread
-   may drive one machine from inside another's callback. */
-static __thread const delta_language *lang_now;
+/* What this thread is speaking. The reading and the setting are inline in
+   the header, since every reach for a table of the language goes through
+   them; the header says why, and says which paths set one. */
+__thread const delta_language *delta_lang_current = 0;
 
-/* Nothing may read a table without a language in force. Every path that
-   runs the machine sets one -- delta_run_rule from the machine it was
-   handed, delta_new and delta_delete from the machine they are making or
-   taking down, and the engine array around building an engine -- so an
-   empty one here is a path nobody thought about rather than something to
-   guess at. Guessing would speak the wrong language and sound almost
-   right, which is the worst way for this to fail. */
-const delta_language *delta_lang_now(void)
+/* The half that cannot be inline, and it never comes back: every path that
+   runs the machine sets a language first, so nothing in force here is a
+   language to guess at, it is a path nobody thought about. */
+void delta_lang_none(void)
 {
-    if (lang_now == 0) {
-        fprintf(stderr, "evv: a table of the language was read with no"
-                " language in force\n");
-        abort();
-    }
-    return lang_now;
-}
-
-const delta_language *delta_lang_set(const delta_language *l)
-{
-    const delta_language *was = lang_now;
-
-    lang_now = l;
-    return was;
+    fprintf(stderr, "evv: a table of the language was read with no"
+            " language in force\n");
+    abort();
 }
 
 const delta_language *delta_lang_by_id(int32_t id)
