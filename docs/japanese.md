@@ -17,7 +17,7 @@ So Japanese is now a text-to-text problem with an exact oracle. For any input, t
     python3 tools/lift-rom.py analysis/jajp lang/jajp
     python3 tools/lift-romtables.py analysis/jajp lang/jajp
 
-The first is the static dictionary: 1,723 blobs, 2,669,092 bytes, and seven pointer arrays whose lengths match the symbol counts exactly. The second takes the three objects that are mostly table -- `dictman.obj`, `unicodeconvt.obj` and `jpnutil.obj`, whose own data section holds the romaji every kana is spelled with -- and answers 113 tables, 192,706 bytes. It writes a header beside the C declaring what is in it, so a table cannot be declared one way and defined another. Each object comes out as one block with a pointer per table rather than an array each, and that matters -- see the note on the lead-byte tables below.
+The first is the static dictionary: 1,723 blobs, 2,669,092 bytes, and seven pointer arrays whose lengths match the symbol counts exactly. The second takes the five objects that carry tables -- `dictman.obj`, `unicodeconvt.obj` and `jpnutil.obj`, whose own data section holds the romaji every kana is spelled with, and the one table apiece of `userdict.obj` and `phrasebuf.obj` -- and answers 115 tables, 193,858 bytes. It writes a header beside the C declaring what is in it, so a table cannot be declared one way and defined another. Each object comes out as one block with a pointer per table rather than an array each, and that matters -- see the note on the lead-byte tables below.
 
 **Five files are written and proved.** `rom/jajp/rominstparam.c` is the parameter block and the errors, held to IBM's own behaviour by `EVV_ROMCAN_PARAMS=real test/romcan.sh`, which hands the parameter half of the recorded conversation to it and fails if a single answer differs. `rom/jajp/rominstance.c` is the instance the manager holds and the forwarding it does. The other three are held to IBM's by `test/romprims.sh`, which sweeps every input there is and answers 231,327 identical calls a side: `unicodeconvt.c` is the codeset conversion, `dictman.c` is the twenty-six accessors over the sixty thousand bytes of table its object holds, and `jpnutil.c` is the thirty-two small things everything else asks -- what a byte is, what a two-byte character is, kana into letters, a voicing mark, hiragana into katakana.
 
@@ -434,19 +434,33 @@ address of. Both are bounded exactly; what is in them is for whoever writes
 
 ## Where to go next
 
-What is left, and in what order, with the method counts taken from `nm` across the whole directory rather than from a reading.
+What is left, and in what order. The counts below are entry points as `nm` reports them across the whole directory, so they include constructors and destructors; the method counts in the census above are smaller for that reason and the two are not in disagreement.
 
-`Romanizer` is next: fifteen methods left of sixteen in `jpnrom.obj`, the sixteenth being the one `DictSearch` needed and already has. It is the thing that drives all of the above -- `processSentence`, `ResetBuffer`, `getOffset` and the two conversions between the caller's bytes and the readable form -- so writing it is what turns a pile of proved classes into a romanizer that answers. It cannot be finished alone, because `processSentence` reaches straight into `TextAnalysis`.
+**169 entry points, in ten classes.** `TextAnalysis` 37, `MakeReadableJP` 32, `Romanizer` 18 of which one is written, `PhraseTable` 17, `IntonPhrase` 17, `ProsCtrl` 16, `JPath` 12, `NumRead` 11, `TextNormalizer` 6, `MakeReadableLangInt` 3.
 
-`TextAnalysis` is the spine and is thirty-six methods over four objects -- `txtanal`, `unknown`, `kakutei` and `comppenalty` -- which is why `tools/rom-offsets.py` had to map its record before anything else could be written at all. That map is already true and checked, so the work is the code rather than the reading.
+The order comes from a graph rather than from reading. Pooling what the unwritten classes call makes the remainder look inseparable; asking of each class which other *unwritten* class it calls gives six that call none at all -- `IntonPhrase`, `JPath`, `MakeReadableJP`, `NumRead`, `PhraseBuf` and `ProsCtrl`. `PhraseBuf` is written. So:
 
-Then the rest of the path search, which is what picks one reading of a sentence out of all the ways `DictSearch` says it could be read: `JPath` eleven methods and `PhraseTable` sixteen. `PhraseBuf`'s nine are written. Then `NumRead` eleven and `TextNormalizer` four.
+The five remaining leaves can be taken in any order and each closes on code already here. `JPath` is the smallest at twelve and its record is already mapped and checked, so only the code is left; `MakeReadableJP` is the largest at thirty-two and is the one that produces the phoneme string.
 
-And last the output side, which is the biggest single piece left: `MakeReadableJP` thirty-three methods over three objects, `IntonPhrase` seventeen, and the ESPR writer -- `PCWriteESPR2` eleven, `PCProsCtrl` three, `PCRoman2BG` two. That is what turns a chosen reading into the phoneme string at the top of this file, and until it exists nothing can be heard.
+Then `TextNormalizer`, which wants `MakeReadableJP`.
+
+Then `TextAnalysis` and `PhraseTable` **together**, because they are mutually recursive -- `TextAnalysis` calls `PhraseTable::initialize` and `SetPhraseTable`, and `PhraseTable` calls `TextAnalysis::CopyJrtPart`. That is 54 entry points in one unit and the largest single piece of work left. `TextAnalysis` is the spine: 946,216 bytes of record that every other class indexes into, which is why `tools/rom-offsets.py` had to map it before anything at all could be written. The map is true and checked, so the work is the code rather than the reading.
+
+`Romanizer` is **last**, not next, which is the opposite of what this file used to say. It drives everything -- `processSentence`, `ResetBuffer`, `getOffset` and the two conversions between the caller's bytes and the readable form -- and `processSentence` reaches straight into `TextAnalysis`, `TextNormalizer`, `IntonPhrase` and `ProsCtrl`, so it cannot be finished until all four are.
 
 Two objects on the list will not be transcribed at all. `romreg.obj` is registration, which this port retired, and `romedll_link.obj` is the link-time symbol `src/eci_romedll.c` already stands in for.
 
-About a hundred and fifty methods, then, and none of them blocked on anything unwritten except in the order above.
+**Nothing is audible until nearly all of it exists**, and that is worth knowing before starting. The phoneme string the engine speaks is made by `MakeReadableJP` and the ESPR writer, and `Romanizer` is what drives the chain into them. Every unit before that is held to IBM's own objects byte for byte and heard by nobody.
+
+## What finishing it means, besides the transcription
+
+Three things, none of them large, and all of them gated on the romanizer working.
+
+`JPROM_INCOMPLETE` comes out of `rom/jajp/jprom.h`. While it is defined `rom/jajp/rominstance.c` refuses to make an instance at all, which is what stops a half-written romanizer speaking something wrong; that file is its only reader. Take it out when `Romanizer` works and not before.
+
+`lang/jajp` stops being gitignored. It is kept out of the tree only because a module that cannot make an instance would break any build that named it, and `.gitignore` says so.
+
+And the real check becomes `EVV_LANG=jajp test/suite.sh` against a reference built from Japanese objects, which is the shape German already has. The cases are there: `test/cases/plain-jajp.txt` and `test/cases/utf8-jajp.txt`, seven apiece, which `test/romcan.sh` uses today to prove the engine below the seam by replaying IBM's answers. When the romanizer answers for itself, the same cases become the test of the whole of it, and `test/langs.py` should carry Japanese beside the other languages.
 
 Read the objects with `llvm-objdump`, for the reason `docs/building.md` gives under getting IBM's objects: binutils `objdump` misparses whole functions here and says nothing about it.
 
