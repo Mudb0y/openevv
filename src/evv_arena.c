@@ -155,10 +155,15 @@ static void *arena_map(uintptr_t at, size_t bytes)
                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (got == MAP_FAILED)
         return 0;
+#if defined(EVV_ARENA_RELATIVE) && EVV_ARENA_RELATIVE
+    /* Any address will do: a reference is a distance from the base. */
+    return got;
+#else
     if ((uintptr_t)got + bytes < 0x80000000u)
         return got;
     munmap(got, bytes);
     return 0;
+#endif
 #endif
 }
 
@@ -175,6 +180,20 @@ int evv_arena_open(size_t bytes)
     for (want = ROUND(bytes); want >= (32u * 1024u * 1024u); want /= 2) {
         uintptr_t at;
 
+#if defined(EVV_ARENA_RELATIVE) && EVV_ARENA_RELATIVE
+        /* Nothing to walk: the region may go where the system likes, so long
+           as it is no larger than a reference can reach into. */
+        {
+            void *got = arena_map(0, want);
+
+            if (got != 0) {
+                evv_arena_base = got;
+                evv_arena_size = want;
+                break;
+            }
+            continue;
+        }
+#endif
         for (at = ARENA_FIRST; at <= ARENA_LAST; at += ARENA_STEP) {
             void *got;
 
@@ -196,8 +215,13 @@ int evv_arena_open(size_t bytes)
            comes from this region, so without it the next thing to happen is a
            null pointer with no explanation, which is exactly how this was
            found. Say it instead. */
+#if defined(EVV_ARENA_RELATIVE) && EVV_ARENA_RELATIVE
+        fprintf(stderr, "evv: no room for the arena;"
+                " the engine cannot run on this machine\n");
+#else
         fprintf(stderr, "evv: nowhere below two gigabytes to put the arena;"
                 " the engine cannot run on this machine\n");
+#endif
         abort();
     }
 
@@ -574,6 +598,24 @@ int32_t evv_ref_checked(const void *p)
 
     if (p == 0)
         return 0;
+
+#if defined(EVV_ARENA_RELATIVE) && EVV_ARENA_RELATIVE
+    {
+        /* Counted from the base, so what has to fit is the distance into the
+           region, not the address. Anything outside it is the same fault as
+           before -- something that was not allocated here -- and says so
+           rather than quietly becoming a distance into somebody else's
+           memory. */
+        ptrdiff_t off = (const unsigned char *)p - evv_arena_base;
+
+        if (off < 0 || (size_t)off >= evv_arena_size) {
+            fprintf(stderr, "evv: %p is not in the arena (%p, %lu bytes)\n",
+                    p, (void *)evv_arena_base, (unsigned long)evv_arena_size);
+            abort();
+        }
+        return (int32_t)off;
+    }
+#else
     if (v >= 0x80000000u) {
         /* Truncating this would hand the machine an address that is not the
            one asked for. Everything the machine can hold a pointer to comes
@@ -584,6 +626,7 @@ int32_t evv_ref_checked(const void *p)
         abort();
     }
     return (int32_t)(uint32_t)v;
+#endif
 }
 
 /* ---- what is still held ------------------------------------------------
@@ -711,3 +754,17 @@ void evv_frame_pop(void *p)
         fs_top = (unsigned char *)p;
 }
 
+/* Die zwei Primitiven, deren Signatur die Bibliothek stellt und keine Quelle
+   des Projekts -- deshalb von Hand und nicht aus tools/evv-wrapgen.py. */
+int32_t evvw_memcpy(int32_t a0, int32_t a1, int32_t a2)
+{
+    memcpy(EVV_AT(void *, a0), EVV_AT(const void *, a1),
+           (size_t)(uint32_t)a2);
+    return a0;
+}
+
+int32_t evvw_memset(int32_t a0, int32_t a1, int32_t a2)
+{
+    memset(EVV_AT(void *, a0), (int)a1, (size_t)(uint32_t)a2);
+    return a0;
+}

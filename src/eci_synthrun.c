@@ -169,7 +169,7 @@ static void toldConcatNamed(SynthThread *t, uint32_t which, int32_t name)
     stw_processRemaining(t);
     if (ST_CONCAT(t)) {
         cm_setTorrentParam1(ST_CONCAT(t), which, name);
-        free((void *)name);
+        free(EVV_AT(void *, name));
     }
     finished(t);
 }

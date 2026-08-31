@@ -10,6 +10,8 @@
 #include "evv_arena.h"
 #include "eci_eloqc.h"
 
+
+
 #define AT(field, offset) \
     typedef char field##_at_##offset[offsetof(delta_state, field) == offset ? 1 : -1]
 #define AT_VARS(field, offset) \
@@ -497,7 +499,7 @@ int32_t vback(delta_state *d, int32_t depth)
             size = (((slot->length - 1) & ~1) | 1) + EVV_AT(delta_stack *, d->stack)->size_ac + 1;
             EVV_AT(delta_stack *, d->stack)->limit += size;
             EVV_AT(delta_stack *, d->stack)->top   += size;
-            memcpy((void *)(intptr_t)slot->value,
+            memcpy(EVV_AT(void *, slot->value),
                    (char *)slot + EVV_AT(delta_stack *, d->stack)->size_ac,
                    (size_t)slot->length);
             break;
@@ -522,7 +524,7 @@ int32_t vback(delta_state *d, int32_t depth)
             size = EVV_AT(delta_stack *, d->stack)->size_b8;
             EVV_AT(delta_stack *, d->stack)->limit += size;
             EVV_AT(delta_stack *, d->stack)->top   += size;
-            setDeltaStackVBot(d, (void *)(intptr_t)slot->value);
+            setDeltaStackVBot(d, EVV_AT(void *, slot->value));
             break;
 
         case 6:
@@ -689,11 +691,11 @@ int visnonseq(delta_state *d, uint8_t f, int32_t l, int32_t r)
     for (i = 0; i < d->nstmts; i++) {
         if (i == (int8_t)f)
             continue;
-        if ((*(const int32_t *)(intptr_t)(l + (base + i) * 4) & 1) == 0)
+        if ((*EVV_AT(const int32_t *, (l + (base + i) * 4)) & 1) == 0)
             continue;
-        if ((*(const int32_t *)(intptr_t)(r + (base + i) * 4) & 1) == 0)
+        if ((*EVV_AT(const int32_t *, (r + (base + i) * 4)) & 1) == 0)
             continue;
-        if (VRSYNC(d, (const int32_t *)(intptr_t)l, i) == r)
+        if (VRSYNC(d, EVV_AT(const int32_t *, l), i) == r)
             continue;
 
         return 1;
@@ -758,12 +760,12 @@ void UNSETFENCE(delta_state *d, int32_t *table, int8_t idx)
 /* And the rules fence through whatever the left pointer register holds. */
 void addfence(delta_state *d, int8_t idx)
 {
-    SETFENCE(d, (int32_t *)d->lpta.node, idx);
+    SETFENCE(d, EVV_AT(int32_t *, d->lpta.node), idx);
 }
 
 void remfence(delta_state *d, int8_t idx)
 {
-    UNSETFENCE(d, (int32_t *)d->lpta.node, idx);
+    UNSETFENCE(d, EVV_AT(int32_t *, d->lpta.node), idx);
 }
 
 int32_t deltaErrorThrown(delta_state *d)
@@ -1181,9 +1183,9 @@ int32_t VLSYNC(const delta_node *t, int8_t i)
 
     if (p == 0)
         return p;
-    if ((*(int32_t *)p & 2) != 0)
+    if ((*EVV_AT(int32_t *, p) & 2) != 0)
         return p;
-    return *(int32_t *)p & ~3;
+    return *EVV_AT(int32_t *, p) & ~3;
 }
 
 /* The right sync link, reached through the fence base rather than a fixed
@@ -1194,9 +1196,9 @@ int32_t VRSYNC(delta_state *d, const int32_t *t, int8_t i)
 
     if (p == 0)
         return p;
-    if ((*(int32_t *)p & 2) != 0)
+    if ((*EVV_AT(int32_t *, p) & 2) != 0)
         return p;
-    return *(int32_t *)(p + 4) & ~3;
+    return *EVV_AT(int32_t *, (p + 4)) & ~3;
 }
 
 /* Walk to the mark that carries a field, one link at a time.
@@ -1210,8 +1212,8 @@ int32_t gcql(delta_state *d, int32_t at, int8_t f, int8_t i)
 {
     int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
 
-    while ((*(const int32_t *)(intptr_t)(at + (base + f) * 4) & 1) == 0)
-        at = VLSYNC((const delta_node *)(intptr_t)at, i);
+    while ((*EVV_AT(const int32_t *, (at + (base + f) * 4)) & 1) == 0)
+        at = VLSYNC(EVV_AT(const delta_node *, at), i);
 
     return at;
 }
@@ -1220,8 +1222,8 @@ int32_t gcqr(delta_state *d, int32_t at, int8_t f, int8_t i)
 {
     int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
 
-    while ((*(const int32_t *)(intptr_t)(at + (base + f) * 4) & 1) == 0)
-        at = VRSYNC(d, (const int32_t *)(intptr_t)at, i);
+    while ((*EVV_AT(const int32_t *, (at + (base + f) * 4)) & 1) == 0)
+        at = VRSYNC(d, EVV_AT(const int32_t *, at), i);
 
     return at;
 }
@@ -1340,28 +1342,28 @@ int32_t vgen(delta_state *d, delta_tpos *l, delta_tpos *r,
 
         at = vgetsc(d, 1, 1, l->node, (uint8_t)st);
         if (at != 0) {
-            next = ((const int32_t *)(intptr_t)at)[3 + st] & ~3;
+            next = (EVV_AT(const int32_t *, at))[3 + st] & ~3;
             while (at != 0 && next != 0
-                   && (*(const int32_t *)(intptr_t)next & 2) != 0) {
+                   && (*EVV_AT(const int32_t *, next) & 2) != 0) {
                 at   = next;
-                next = ((const int32_t *)(intptr_t)at)[3 + st] & ~3;
+                next = (EVV_AT(const int32_t *, at))[3 + st] & ~3;
             }
         }
 
         at2 = vgetsc(d, 0, 1, r->node, (uint8_t)st);
         if (at2 != 0) {
-            next = ((const int32_t *)(intptr_t)at2)[base + st] & ~3;
+            next = (EVV_AT(const int32_t *, at2))[base + st] & ~3;
             while (at2 != 0 && next != 0
-                   && (*(const int32_t *)(intptr_t)next & 2) != 0) {
+                   && (*EVV_AT(const int32_t *, next) & 2) != 0) {
                 at2  = next;
-                next = ((const int32_t *)(intptr_t)at2)[base + st] & ~3;
+                next = (EVV_AT(const int32_t *, at2))[base + st] & ~3;
             }
         }
 
         /* Every mark between the two has to carry the field being timed. */
         walk = at;
         while (walk != 0) {
-            if ((((const int32_t *)(intptr_t)walk)[base + f] & 1) == 0) {
+            if (((EVV_AT(const int32_t *, walk))[base + f] & 1) == 0) {
                 gaps++;
                 if (gaps <= 10) {
                     dynaBufDelete(buf);
@@ -1369,7 +1371,7 @@ int32_t vgen(delta_state *d, delta_tpos *l, delta_tpos *r,
                 }
             }
 
-            walk = VRSYNC(d, (const int32_t *)(intptr_t)walk, st);
+            walk = VRSYNC(d, EVV_AT(const int32_t *, walk), st);
             if (walk == 0 || walk == at2)
                 break;
         }
@@ -1407,8 +1409,7 @@ int32_t vgen(delta_state *d, delta_tpos *l, delta_tpos *r,
         int32_t stop = l->node;
 
         if (!first && mode == 3)
-            stop = (int32_t)(intptr_t)
-                   lmost(d, f, (delta_node *)(intptr_t)stop);
+            stop = EVV_REF(lmost(d, f, EVV_AT(delta_node *, stop)));
 
         mode = vnormalize(d, l);
 
@@ -1450,13 +1451,13 @@ int32_t vgen(delta_state *d, delta_tpos *l, delta_tpos *r,
             switch (mode) {
             case 3:
                 at2 = firstdefd(d, f, at, (uint8_t)st, 0);
-                at  = firstdefd(d, f, (int32_t)(intptr_t)
-                                lmost(d, f, (delta_node *)(intptr_t)at),
+                at  = firstdefd(d, f,
+                                EVV_REF(lmost(d, f, EVV_AT(delta_node *, at))),
                                 (uint8_t)st, 1);
                 /* fall through */
 
             case 4:
-                if ((((const int32_t *)(intptr_t)at)[base + st] & 1) != 0) {
+                if (((EVV_AT(const int32_t *, at))[base + st] & 1) != 0) {
                     EVV_AT(int32_t *, s->expr_r)[st] = at2;
                     EVV_AT(int32_t *, s->expr_l)[st] = at;
                     break;
@@ -1467,21 +1468,21 @@ int32_t vgen(delta_state *d, delta_tpos *l, delta_tpos *r,
                 found = 0;
                 if (!skip) {
                     for (;;) {
-                        if ((((const int32_t *)(intptr_t)at)[base + st] & 1)
+                        if (((EVV_AT(const int32_t *, at))[base + st] & 1)
                                 != 0) {
                             found = at;
                             break;
                         }
                         if (at == stop)
                             break;
-                        at = VLSYNC((const delta_node *)(intptr_t)at, f);
+                        at = VLSYNC(EVV_AT(const delta_node *, at), f);
                     }
                 }
 
                 if (found != 0) {
                     EVV_AT(int32_t *, s->expr_l)[st] = found;
                     EVV_AT(int32_t *, s->expr_r)[st] =
-                        VRSYNC(d, (const int32_t *)(intptr_t)found, st);
+                        VRSYNC(d, EVV_AT(const int32_t *, found), st);
                 }
                 break;
 
@@ -1653,7 +1654,7 @@ int chksyncsflags(delta_state *d)
         int32_t t = s->spine_r;
 
         while (t != 0) {
-            int32_t *node = (int32_t *)(intptr_t)t;
+            int32_t *node = EVV_AT(int32_t *, t);
 
             if (s->ctxt_arg != 0
                 && ((node[base - 3] & 2) != 0
@@ -1676,7 +1677,7 @@ int chksyncsflags(delta_state *d)
             node[0] &= 3;
             node[base - 3] &= 3;
 
-            t = VLSYNC((const delta_node *)(intptr_t)t, i);
+            t = VLSYNC(EVV_AT(const delta_node *, t), i);
         }
     }
 
@@ -1697,7 +1698,7 @@ int vclrctxt(delta_state *d, int32_t unused)
             int8_t j;
 
             for (j = 0; j < d->nstmts; j++) {
-                int32_t *node = (int32_t *)(intptr_t)t;
+                int32_t *node = EVV_AT(int32_t *, t);
 
                 if ((node[base + j] & 1) != 0)
                     continue;
@@ -1707,7 +1708,7 @@ int vclrctxt(delta_state *d, int32_t unused)
                 s->ctxt_cleared = 1;
             }
 
-            t = VLSYNC((const delta_node *)(intptr_t)t, i);
+            t = VLSYNC(EVV_AT(const delta_node *, t), i);
         }
     }
 
@@ -1718,13 +1719,13 @@ void mapsyncs(delta_state *d, int32_t t)
 {
     delta_stack *s = EVV_AT(delta_stack *, d->stack);
     int32_t      base = EVV_AT(delta_vars *, d->vars)->fence_base;
-    int32_t      n = absoluteSyncNum(d, (uint8_t *)(intptr_t)t);
+    int32_t      n = absoluteSyncNum(d, EVV_AT(uint8_t *, t));
     int8_t       i;
 
     /* The word three before the fenced fields begin, which is what the
        original computes; marking it is how a sync already counted is known
        from one that is not. */
-    ((int32_t *)(intptr_t)t)[base - 3] |= 2;
+    (EVV_AT(int32_t *, t))[base - 3] |= 2;
 
     EVV_AT(int16_t *, s->sync_map)[n] = (int16_t)s->sync_next;
     s->sync_next++;
@@ -1732,13 +1733,13 @@ void mapsyncs(delta_state *d, int32_t t)
     for (i = 0; i < d->nstmts; i++) {
         int32_t next;
 
-        if ((((const int32_t *)(intptr_t)t)[base + i] & 1) == 0)
+        if (((EVV_AT(const int32_t *, t))[base + i] & 1) == 0)
             continue;
 
-        next = VRSYNC(d, (const int32_t *)(intptr_t)t, i);
+        next = VRSYNC(d, EVV_AT(const int32_t *, t), i);
         if (next == 0)
             continue;
-        if ((((const int32_t *)(intptr_t)next)[base - 3] & 2) != 0)
+        if (((EVV_AT(const int32_t *, next))[base - 3] & 2) != 0)
             continue;
 
         mapsyncs(d, next);
@@ -1880,8 +1881,8 @@ void DELSPINE(delta_state *d, delta_node *t)
     int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     int32_t next = t->link & ~3;
     int32_t prev = *(int32_t *)((char *)t + base * 4 - 8) & ~3;
-    int32_t *back = (int32_t *)((char *)(intptr_t)next + base * 4 - 8);
-    int32_t *fwd = (int32_t *)((char *)(intptr_t)prev + 4);
+    int32_t *back = (int32_t *)(EVV_AT(char *, next) + base * 4 - 8);
+    int32_t *fwd = (int32_t *)(EVV_AT(char *, prev) + 4);
 
     *back = (*back & 3) | prev;
     *fwd = (*fwd & 3) | next;
@@ -1901,13 +1902,13 @@ static int scan_fenced(delta_state *d, int32_t cur, int32_t field,
         for (; i < v->fence_count; i++) {
             uint8_t ch = EVV_AT(uint8_t *, d->fence_chars)[i];
 
-            if ((*(int32_t *)(intptr_t)(cur + (v->fence_base + ch) * 4) & 1)
+            if ((*EVV_AT(int32_t *, (cur + (v->fence_base + ch) * 4)) & 1)
                 != 0) {
                 *at = i;
                 return 1;
             }
 
-            if (FENCED(d, (const int32_t *)(intptr_t)cur,
+            if (FENCED(d, EVV_AT(const int32_t *, cur),
                        (int8_t)EVV_AT(uint8_t *, d->fence_chars)[i])
                 && field != EVV_AT(uint8_t *, d->fence_chars)[i]
                 && EVV_AT(uint8_t *, d->fence_marks)[i] == 0) {
@@ -1929,9 +1930,8 @@ static int32_t scan_step(delta_state *d, int32_t cur, int32_t field)
     delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     if (v->scan_rev != 0)
-        return *(int32_t *)(intptr_t)
-            (cur + (v->fence_base + field) * 4) & ~3;
-    return *(int32_t *)(intptr_t)(cur + 0xc + field * 4) & ~3;
+        return *EVV_AT(int32_t *, (cur + (v->fence_base + field) * 4)) & ~3;
+    return *EVV_AT(int32_t *, (cur + 0xc + field * 4)) & ~3;
 }
 
 /* Move the scan on by one node in whichever direction is set, refusing to
@@ -1957,13 +1957,13 @@ int vscanadv(delta_state *d, int32_t step, int32_t usefence)
 
     /* A node that is not itself a sync needs one more step, and only if the
        caller asked to keep going. */
-    if ((*(int32_t *)(intptr_t)next & 2) == 0) {
+    if ((*EVV_AT(int32_t *, next) & 2) == 0) {
         if (step == 0)
             return 0;
         if (v->scan_rev != 0)
-            next = *(int32_t *)(intptr_t)(next + 4) & ~3;
+            next = *EVV_AT(int32_t *, (next + 4)) & ~3;
         else
-            next = *(int32_t *)(intptr_t)next & ~3;
+            next = *EVV_AT(int32_t *, next) & ~3;
     }
 
     v->scan_ptr = next;
@@ -1982,14 +1982,14 @@ int vscanadv(delta_state *d, int32_t step, int32_t usefence)
    its left and right sync arrays. The first is the right-hand spine link. */
 static int32_t *clink(delta_state *d, int32_t p)
 {
-    return (int32_t *)((char *)(intptr_t)p + EVV_AT(delta_vars *, d->vars)->fence_base * 4 - 4);
+    return (int32_t *)(EVV_AT(char *, p) + EVV_AT(delta_vars *, d->vars)->fence_base * 4 - 4);
 }
 
 /* The right-hand spine link has no fixed offset: it sits one word before the
    sync array's end, so how many fields the language declares decides where. */
 static int32_t *rlink(delta_state *d, int32_t p)
 {
-    return (int32_t *)((char *)(intptr_t)p + EVV_AT(delta_vars *, d->vars)->fence_base * 4 - 8);
+    return (int32_t *)(EVV_AT(char *, p) + EVV_AT(delta_vars *, d->vars)->fence_base * 4 - 8);
 }
 
 /* Present so the caller need not know whether deletion is deferred; on this
@@ -2115,9 +2115,9 @@ delta_node *vmovel(delta_node *t, uint8_t f)
 
         if (next == 0)
             return t;
-        if ((*(int32_t *)(intptr_t)next & 2) == 0)
+        if ((*EVV_AT(int32_t *, next) & 2) == 0)
             return t;
-        t = (delta_node *)(intptr_t)next;
+        t = EVV_AT(delta_node *, next);
     }
 }
 
@@ -2129,9 +2129,9 @@ int32_t *vmover(delta_state *d, int32_t *t, uint8_t f)
 
         if (next == 0)
             return t;
-        if ((*(int32_t *)(intptr_t)next & 2) == 0)
+        if ((*EVV_AT(int32_t *, next) & 2) == 0)
             return t;
-        t = (int32_t *)(intptr_t)next;
+        t = EVV_AT(int32_t *, next);
     }
 }
 
@@ -2163,8 +2163,8 @@ void INSSPINER(delta_state *d, delta_node *n, delta_node *t)
     r = rlink(d, EVV_REF(n));
     *r = (*r & 3) | old;
 
-    ((delta_node *)(intptr_t)old)->link =
-        (((delta_node *)(intptr_t)old)->link & 3) | EVV_REF(n);
+    (EVV_AT(delta_node *, old))->link =
+        ((EVV_AT(delta_node *, old))->link & 3) | EVV_REF(n);
 
     r = rlink(d, EVV_REF(t));
     *r = (*r & 3) | EVV_REF(n);
@@ -2192,23 +2192,23 @@ delta_node *lmost(delta_state *d, int8_t f, delta_node *t)
     (void)d;
 
     for (;;) {
-        if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
-            t = (delta_node *)(intptr_t)next;
+        if (next != 0 && (*EVV_AT(int32_t *, next) & 2) != 0) {
+            t = EVV_AT(delta_node *, next);
             next = *(int32_t *)((char *)t + 0xc + f * 4) & ~3;
             continue;
         }
 
         if (kind == DK_SHORT2)
             keep = next != 0 && walkable != 0
-                && *(int16_t *)get(TFLDS((void *)(intptr_t)next)) == 0;
+                && *(int16_t *)get(TFLDS(EVV_AT(void *, next))) == 0;
         else if (kind == DK_LONG)
             keep = next != 0 && walkable != 0
-                && *(int32_t *)get(TFLDS((void *)(intptr_t)next)) == 0;
+                && *(int32_t *)get(TFLDS(EVV_AT(void *, next))) == 0;
 
         if (!keep)
             return t;
 
-        next = *(int32_t *)(intptr_t)next & ~3;
+        next = *EVV_AT(int32_t *, next) & ~3;
     }
 }
 
@@ -2223,23 +2223,23 @@ int32_t *rmost(delta_state *d, int8_t f, int32_t *t)
     int32_t keep = 0;
 
     for (;;) {
-        if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
-            t = (int32_t *)(intptr_t)next;
+        if (next != 0 && (*EVV_AT(int32_t *, next) & 2) != 0) {
+            t = EVV_AT(int32_t *, next);
             next = t[EVV_AT(delta_vars *, d->vars)->fence_base + f] & ~3;
             continue;
         }
 
         if (kind == DK_SHORT2)
             keep = next != 0 && walkable != 0
-                && *(int16_t *)get(TFLDS((void *)(intptr_t)next)) == 0;
+                && *(int16_t *)get(TFLDS(EVV_AT(void *, next))) == 0;
         else if (kind == DK_LONG)
             keep = next != 0 && walkable != 0
-                && *(int32_t *)get(TFLDS((void *)(intptr_t)next)) == 0;
+                && *(int32_t *)get(TFLDS(EVV_AT(void *, next))) == 0;
 
         if (!keep)
             return t;
 
-        next = *(int32_t *)((char *)(intptr_t)next + 4) & ~3;
+        next = *(int32_t *)(EVV_AT(char *, next) + 4) & ~3;
     }
 }
 
@@ -2288,27 +2288,27 @@ int npush_fld(delta_state *d, uint8_t st, uint8_t fld)
     out.flag = e->fields[fld].flag;
 
     if (v->scan_rev == 0)
-        p = *(int32_t *)((char *)(intptr_t)v->scan_ptr
+        p = *(int32_t *)(EVV_AT(char *, v->scan_ptr)
                          + 0xc + v->scan_field * 4) & ~3;
     else
-        p = *(int32_t *)((char *)(intptr_t)v->scan_ptr
+        p = *(int32_t *)(EVV_AT(char *, v->scan_ptr)
                          + (v->fence_base + v->scan_field) * 4) & ~3;
 
     if (p == 0)
         return 1;
 
-    while (*(int32_t *)(intptr_t)p & 2) {
+    while (*EVV_AT(int32_t *, p) & 2) {
         if (v->scan_rev == 0)
-            p = *(int32_t *)((char *)(intptr_t)p
+            p = *(int32_t *)(EVV_AT(char *, p)
                              + 0xc + v->scan_field * 4) & ~3;
         else
-            p = *(int32_t *)((char *)(intptr_t)p
+            p = *(int32_t *)(EVV_AT(char *, p)
                              + (v->fence_base + v->scan_field) * 4) & ~3;
         if (p == 0)
             return 1;
     }
 
-    out.ptr = e->get[fld](TFLDS((void *)(intptr_t)p));
+    out.ptr = e->get[fld](TFLDS(EVV_AT(void *, p)));
     vnspush(d, &out);
     return 0;
 }
@@ -2323,10 +2323,9 @@ int32_t *ctxspine(delta_state *d, int32_t *t, uint8_t f, int32_t back)
             return t;
 
         if (back != 0)
-            t = (int32_t *)(intptr_t)(*(int32_t *)((char *)t + 4) & ~3);
+            t = EVV_AT(int32_t *, (*(int32_t *)((char *)t + 4) & ~3));
         else
-            t = (int32_t *)(intptr_t)
-                (*(int32_t *)((char *)t + EVV_AT(delta_vars *, d->vars)->fence_base * 4 - 8) & ~3);
+            t = EVV_AT(int32_t *, (*(int32_t *)((char *)t + EVV_AT(delta_vars *, d->vars)->fence_base * 4 - 8) & ~3));
     }
 }
 
@@ -2382,13 +2381,13 @@ void vinitloc_new(delta_state *d, delta_operand *out, const delta_loc *loc)
         out->kind = loc->kind;
         switch (out->kind) {
         case DK_LONG:
-            out->ptr = (char *)(intptr_t)loc + 4;
+            out->ptr = (char *)loc + 4;
             break;
         case DK_SHORT2:
-            out->ptr = (char *)(intptr_t)loc + 2;
+            out->ptr = (char *)loc + 2;
             break;
         case DK_SYNC:
-            out->ptr = (char *)(intptr_t)loc + 4;
+            out->ptr = (char *)loc + 4;
             break;
         default:
             break;
@@ -2399,7 +2398,7 @@ void vinitloc_new(delta_state *d, delta_operand *out, const delta_loc *loc)
 
     if (loc->field == -1) {
         out->kind = loc->kind;
-        out->ptr = (char *)(intptr_t)loc + 4;
+        out->ptr = (char *)loc + 4;
         out->flag = 0;
         return;
     }
@@ -2408,7 +2407,7 @@ void vinitloc_new(delta_state *d, delta_operand *out, const delta_loc *loc)
         const delta_stmt *e = &vstmtbl[loc->kind];
         int32_t f = loc->field;
 
-        out->ptr = e->get[f]((char *)(intptr_t)loc + 4);
+        out->ptr = e->get[f]((char *)loc + 4);
         out->kind = e->fields[f].kind;
         out->flag = e->fields[f].flag;
     }
@@ -2440,19 +2439,19 @@ int testFldeq(delta_state *d, uint8_t st, uint8_t fld, uint8_t val)
 
     for (;;) {
         if (v->scan_rev == 0)
-            p = *(int32_t *)((char *)(intptr_t)p
+            p = *(int32_t *)(EVV_AT(char *, p)
                              + 0xc + v->scan_field * 4) & ~3;
         else
-            p = *(int32_t *)((char *)(intptr_t)p
+            p = *(int32_t *)(EVV_AT(char *, p)
                              + (v->fence_base + v->scan_field) * 4) & ~3;
 
         if (p == 0)
             return 1;
-        if ((*(int32_t *)(intptr_t)p & 2) == 0)
+        if ((*EVV_AT(int32_t *, p) & 2) == 0)
             break;
     }
 
-    q = vstmtbl[st].get[fld](TFLDS((void *)(intptr_t)p));
+    q = vstmtbl[st].get[fld](TFLDS(EVV_AT(void *, p)));
     return *q == val ? 0 : 1;
 }
 
@@ -2505,15 +2504,15 @@ int vscanadvOverToken(delta_state *d, int32_t usefence)
         for (; i < v->fence_count; i++)
             EVV_AT(uint8_t *, d->fence_marks)[i] = 0;
 
-        if ((*(int32_t *)(intptr_t)next & 2) != 0) {
+        if ((*EVV_AT(int32_t *, next) & 2) != 0) {
             cur = next;
             continue;
         }
 
         if (v->scan_rev != 0)
-            v->scan_ptr = *(int32_t *)(intptr_t)(next + 4) & ~3;
+            v->scan_ptr = *EVV_AT(int32_t *, (next + 4)) & ~3;
         else
-            v->scan_ptr = *(int32_t *)(intptr_t)next & ~3;
+            v->scan_ptr = *EVV_AT(int32_t *, next) & ~3;
         return 1;
     }
 }
@@ -2538,7 +2537,7 @@ int vscanadvUptoTokenOrMarker(delta_state *d, int32_t target, int32_t usefence)
         next = scan_step(d, cur, field);
         if (next == 0)
             return 0;
-        if ((*(int32_t *)(intptr_t)next & 2) == 0)
+        if ((*EVV_AT(int32_t *, next) & 2) == 0)
             return 1;
 
         cur = next;
@@ -2568,29 +2567,29 @@ void seqscan(delta_state *d, delta_seqctl *c)
     c->cur = c->start;
 
     if (back)
-        peer = *(int32_t *)(intptr_t)(t + 4) & ~3;
+        peer = *EVV_AT(int32_t *, (t + 4)) & ~3;
     else
-        peer = *(int32_t *)(intptr_t)(t + base * 4 - 8) & ~3;
+        peer = *EVV_AT(int32_t *, (t + base * 4 - 8)) & ~3;
 
     for (i = 0; i < d->nstmts; i++)
-        if ((*(int32_t *)(intptr_t)(peer + (base + i) * 4) & 1) != 0)
+        if ((*EVV_AT(int32_t *, (peer + (base + i) * 4)) & 1) != 0)
             fields[n++] = i;
 
     for (;;) {
         for (i = 0; i < n; i++)
-            if ((*(int32_t *)(intptr_t)(t + (base + fields[i]) * 4) & 1) != 0)
+            if ((*EVV_AT(int32_t *, (t + (base + fields[i]) * 4)) & 1) != 0)
                 return;
 
-        if (!ONESTM((const delta_node *)(intptr_t)t)
-            || !ALLNSQ((const delta_node *)(intptr_t)t))
+        if (!ONESTM(EVV_AT(const delta_node *, t))
+            || !ALLNSQ(EVV_AT(const delta_node *, t)))
             c->flag = 1;
 
         c->cur = t;
 
         if (back)
-            t = *(int32_t *)(intptr_t)(t + base * 4 - 8) & ~3;
+            t = *EVV_AT(int32_t *, (t + base * 4 - 8)) & ~3;
         else
-            t = *(int32_t *)(intptr_t)(t + 4) & ~3;
+            t = *EVV_AT(int32_t *, (t + 4)) & ~3;
     }
 }
 
@@ -2622,7 +2621,7 @@ int forall_cont_from(delta_state *d, int16_t tag, int16_t loop,
     EVV_AT(delta_stack *, d->stack)->unknown_9c = 0;
 
     reset_field(dst);
-    reset_field((delta_loc *)(intptr_t)src);
+    reset_field((delta_loc *)src);
     return 2;
 }
 
@@ -2731,8 +2730,7 @@ int test_synch(delta_state *d, int16_t tag, uint8_t n, const uint8_t *list)
     while (ok == 0) {
         ok = 1;
         for (i = 0; i < n && ok != 0; i++) {
-            if ((*(int32_t *)(intptr_t)
-                 (v->scan_ptr + (v->fence_base + list[i]) * 4) & 1) != 0)
+            if ((*EVV_AT(int32_t *, (v->scan_ptr + (v->fence_base + list[i]) * 4)) & 1) != 0)
                 continue;
 
             ok = 0;
@@ -2756,10 +2754,8 @@ static int32_t scan_peek(delta_state *d)
     delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
     if (v->scan_rev != 0)
-        return *(int32_t *)(intptr_t)
-            (v->scan_ptr + (v->fence_base + v->scan_field) * 4) & ~3;
-    return *(int32_t *)(intptr_t)
-        (v->scan_ptr + 0xc + v->scan_field * 4) & ~3;
+        return *EVV_AT(int32_t *, (v->scan_ptr + (v->fence_base + v->scan_field) * 4)) & ~3;
+    return *EVV_AT(int32_t *, (v->scan_ptr + 0xc + v->scan_field * 4)) & ~3;
 }
 
 /* Match a run of statements against a string of sixteen-bit values, each
@@ -2784,13 +2780,13 @@ int test_string_i(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
         if (node == 0)
             return 1;
 
-        if ((*(int32_t *)(intptr_t)node & 2) == 0) {
+        if ((*EVV_AT(int32_t *, node) & 2) == 0) {
             want = (int16_t)(((p[0] & 0x7f) << 8) | p[1]);
             if ((p[0] & 0x80) != 0)
                 want = (int16_t)(-want);
             p += 2;
 
-            b.ptr = e->get[0](TFLDS((void *)(intptr_t)node));
+            b.ptr = e->get[0](TFLDS(EVV_AT(void *, node)));
             vcompare(d, &a, &b);
             if (EVV_AT(delta_vars *, d->vars)->compared_equal != 0)
                 return 1;
@@ -2819,9 +2815,9 @@ int test_string_s(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
             if (node == 0)
                 return 1;
 
-            if ((*(int32_t *)(intptr_t)node & 2) == 0) {
+            if ((*EVV_AT(int32_t *, node) & 2) == 0) {
                 if (*(const uint8_t *)
-                    e->get[0](TFLDS((void *)(intptr_t)node)) != *p)
+                    e->get[0](TFLDS(EVV_AT(void *, node))) != *p)
                     return 1;
                 p++;
             }
@@ -2847,11 +2843,11 @@ int test_string_s(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
             if (node == 0)
                 return 1;
 
-            if ((*(int32_t *)(intptr_t)node & 2) == 0) {
-                a.ptr = (void *)(intptr_t)p;
+            if ((*EVV_AT(int32_t *, node) & 2) == 0) {
+                a.ptr = (void *)p;
                 p++;
 
-                b.ptr = e->get[0](TFLDS((void *)(intptr_t)node));
+                b.ptr = e->get[0](TFLDS(EVV_AT(void *, node)));
                 vcompare(d, &a, &b);
                 if (EVV_AT(delta_vars *, d->vars)->compared_equal != 0)
                     return 1;
@@ -2901,13 +2897,13 @@ int test_string_l(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
         if (node == 0)
             return 1;
 
-        if ((*(int32_t *)(intptr_t)node & 2) == 0) {
+        if ((*EVV_AT(int32_t *, node) & 2) == 0) {
             value = (int16_t)(((p[0] & 0x7f) << 8) | p[1]);
             if ((p[0] & 0x80) != 0)
                 value = (int16_t)(value * -1);
             p += 2;
 
-            b.ptr = e->get[0](TFLDS((void *)(intptr_t)node));
+            b.ptr = e->get[0](TFLDS(EVV_AT(void *, node)));
             vcompare(d, &a, &b);
             if (EVV_AT(delta_vars *, d->vars)->compared_equal != 0)
                 return 1;
@@ -2940,7 +2936,7 @@ int test_string_lng(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
         if (node == 0)
             return 1;
 
-        if ((*(int32_t *)(intptr_t)node & 2) == 0) {
+        if ((*EVV_AT(int32_t *, node) & 2) == 0) {
             value = (int32_t)(((uint32_t)(p[0] & 0x7f) << 24)
                               | ((uint32_t)p[1] << 16)
                               | ((uint32_t)p[2] << 8)
@@ -2949,7 +2945,7 @@ int test_string_lng(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
                 value = value * -1;
             p += 4;
 
-            b.ptr = e->get[0](TFLDS((void *)(intptr_t)node));
+            b.ptr = e->get[0](TFLDS(EVV_AT(void *, node)));
             vcompare(d, &a, &b);
             if (EVV_AT(delta_vars *, d->vars)->compared_equal != 0)
                 return 1;
@@ -3026,12 +3022,12 @@ int test_string(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
         if (node == 0)
             return 1;
 
-        if ((*(int32_t *)(intptr_t)node & 2) == 0) {
+        if ((*EVV_AT(int32_t *, node) & 2) == 0) {
             switch (marker) {
             case 199:
                 /* The operand points into the string itself rather than at
                    a cell, so a byte is compared where it lies. */
-                a.ptr = (void *)(intptr_t)p;
+                a.ptr = (void *)p;
                 p++;
                 break;
 
@@ -3057,7 +3053,7 @@ int test_string(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
                 break;
             }
 
-            b.ptr = e->get[0](TFLDS((void *)(intptr_t)node));
+            b.ptr = e->get[0](TFLDS(EVV_AT(void *, node)));
             vcompare(d, &a, &b);
             if (EVV_AT(delta_vars *, d->vars)->compared_equal != 0)
                 return 1;
@@ -3093,7 +3089,7 @@ int32_t ctxlook(delta_state *d, int32_t t, uint8_t f, int32_t right)
 
     while (depth > 0) {
         while (cur != 0
-               && (*(int32_t *)(intptr_t)(cur + (base + f) * 4) & 1) != 0) {
+               && (*EVV_AT(int32_t *, (cur + (base + f) * 4)) & 1) != 0) {
             marked = cur;
             cur = *clink(d, cur) & ~3;
         }
@@ -3104,13 +3100,13 @@ int32_t ctxlook(delta_state *d, int32_t t, uint8_t f, int32_t right)
         for (i = 0; i < d->nstmts; i++) {
             int32_t sync;
 
-            if ((*(int32_t *)(intptr_t)(cur + (base + i) * 4) & 1) == 0)
+            if ((*EVV_AT(int32_t *, (cur + (base + i) * 4)) & 1) == 0)
                 continue;
 
             if (right)
-                sync = VLSYNC((const delta_node *)(intptr_t)cur, (int8_t)i);
+                sync = VLSYNC(EVV_AT(const delta_node *, cur), (int8_t)i);
             else
-                sync = VRSYNC(d, (const int32_t *)(intptr_t)cur, (int8_t)i);
+                sync = VRSYNC(d, EVV_AT(const int32_t *, cur), (int8_t)i);
 
             if (sync == 0)
                 continue;
@@ -3143,7 +3139,7 @@ int32_t ctxlook(delta_state *d, int32_t t, uint8_t f, int32_t right)
         cur = first;
 
         while (cur != 0) {
-            delta_node *n = (delta_node *)(intptr_t)cur;
+            delta_node *n = EVV_AT(delta_node *, cur);
             int32_t nx;
             int32_t sync;
             int32_t from;
@@ -3159,9 +3155,9 @@ int32_t ctxlook(delta_state *d, int32_t t, uint8_t f, int32_t right)
             from = nx ? nx : cur;
 
             if (right)
-                sync = VRSYNC(d, (const int32_t *)(intptr_t)from, (int8_t)f);
+                sync = VRSYNC(d, EVV_AT(const int32_t *, from), (int8_t)f);
             else
-                sync = VLSYNC((const delta_node *)(intptr_t)from, (int8_t)f);
+                sync = VLSYNC(EVV_AT(const delta_node *, from), (int8_t)f);
 
             if (sync == limit) {
                 depth = 1;
@@ -3182,7 +3178,7 @@ int32_t ctxlook(delta_state *d, int32_t t, uint8_t f, int32_t right)
 
     cur = first;
     while (cur != 0) {
-        delta_node *n = (delta_node *)(intptr_t)cur;
+        delta_node *n = EVV_AT(delta_node *, cur);
 
         if (result == 0 && (n->flags8 & 1) == 0)
             result = cur;
@@ -3210,9 +3206,9 @@ static int32_t tfield(const delta_stmt *e, void *(*get)(void *), int32_t node,
     int32_t value = previous;
 
     if (kind == DK_LONG) {
-        value = *(int32_t *)get(TFLDS((void *)(intptr_t)node));
+        value = *(int32_t *)get(TFLDS(EVV_AT(void *, node)));
     } else if (kind == DK_SHORT2) {
-        value = *(int16_t *)get(TFLDS((void *)(intptr_t)node));
+        value = *(int16_t *)get(TFLDS(EVV_AT(void *, node)));
         if (value == (int32_t)0xffff8001)
             value = (int32_t)0x80000001;
     }
@@ -3246,12 +3242,12 @@ int vnormalize(delta_state *d, delta_tpos *p)
 
     if (off < 0) {
         went_right = 0;
-        next = *(int32_t *)(intptr_t)(node + 0xc + f * 4) & ~3;
+        next = *EVV_AT(int32_t *, (node + 0xc + f * 4)) & ~3;
 
         while (node != EVV_AT(delta_stack *, d->stack)->spine_l) {
-            if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
+            if (next != 0 && (*EVV_AT(int32_t *, next) & 2) != 0) {
                 node = next;
-                next = *(int32_t *)(intptr_t)(node + 0xc + f * 4) & ~3;
+                next = *EVV_AT(int32_t *, (node + 0xc + f * 4)) & ~3;
                 continue;
             }
 
@@ -3262,16 +3258,16 @@ int vnormalize(delta_state *d, delta_tpos *p)
                 break;
 
             off += value;
-            next = *(int32_t *)(intptr_t)next & ~3;
+            next = *EVV_AT(int32_t *, next) & ~3;
         }
     } else {
         went_right = 1;
-        next = *(int32_t *)(intptr_t)(node + (base + f) * 4) & ~3;
+        next = *EVV_AT(int32_t *, (node + (base + f) * 4)) & ~3;
 
         while (node != EVV_AT(delta_stack *, d->stack)->spine_r) {
-            if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
+            if (next != 0 && (*EVV_AT(int32_t *, next) & 2) != 0) {
                 node = next;
-                next = *(int32_t *)(intptr_t)(node + (base + f) * 4) & ~3;
+                next = *EVV_AT(int32_t *, (node + (base + f) * 4)) & ~3;
                 continue;
             }
 
@@ -3282,18 +3278,18 @@ int vnormalize(delta_state *d, delta_tpos *p)
                 break;
 
             off -= value;
-            next = *(int32_t *)(intptr_t)(next + 4) & ~3;
+            next = *EVV_AT(int32_t *, (next + 4)) & ~3;
         }
     }
 
     if ((p->flags & 4) != 0) {
         if (off < 0) {
-            next = *(int32_t *)(intptr_t)(node + 0xc + f * 4) & ~3;
-            if (next == 0 || (*(int32_t *)(intptr_t)next & 2) == 0)
-                node = *(int32_t *)(intptr_t)next & ~3;
+            next = *EVV_AT(int32_t *, (node + 0xc + f * 4)) & ~3;
+            if (next == 0 || (*EVV_AT(int32_t *, next) & 2) == 0)
+                node = *EVV_AT(int32_t *, next) & ~3;
         } else if (off == 0) {
             node = EVV_REF(lmost(d, f,
-                                            (delta_node *)(intptr_t)node));
+                                            EVV_AT(delta_node *, node)));
         }
         off = 0;
         went_right = 0;
@@ -3301,12 +3297,12 @@ int vnormalize(delta_state *d, delta_tpos *p)
         adjusted = 1;
     } else if ((p->flags & 8) != 0) {
         if (off > 0) {
-            next = *(int32_t *)(intptr_t)(node + (base + f) * 4) & ~3;
-            if (next == 0 || (*(int32_t *)(intptr_t)next & 2) == 0)
-                node = *(int32_t *)(intptr_t)(next + 4) & ~3;
+            next = *EVV_AT(int32_t *, (node + (base + f) * 4)) & ~3;
+            if (next == 0 || (*EVV_AT(int32_t *, next) & 2) == 0)
+                node = *EVV_AT(int32_t *, (next + 4)) & ~3;
         } else if (off == 0) {
             node = EVV_REF(rmost(d, f,
-                                            (int32_t *)(intptr_t)node));
+                                            EVV_AT(int32_t *, node)));
         }
         off = 0;
         went_right = 1;
@@ -3330,23 +3326,23 @@ int vnormalize(delta_state *d, delta_tpos *p)
     /* Look the other way from the one it travelled: an exact position is at
        the start of a run only if what precedes it holds nothing. */
     if (went_right)
-        next = *(int32_t *)(intptr_t)(node + 0xc + f * 4) & ~3;
+        next = *EVV_AT(int32_t *, (node + 0xc + f * 4)) & ~3;
     else
-        next = *(int32_t *)(intptr_t)(node + (base + f) * 4) & ~3;
+        next = *EVV_AT(int32_t *, (node + (base + f) * 4)) & ~3;
 
     if (e->fields[0].kind == DK_LONG) {
-        if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0)
+        if (next != 0 && (*EVV_AT(int32_t *, next) & 2) != 0)
             return 3;
         if (next == 0)
             return 4;
-        if (*(int32_t *)get(TFLDS((void *)(intptr_t)next)) == 0)
+        if (*(int32_t *)get(TFLDS(EVV_AT(void *, next))) == 0)
             return 3;
     } else if (e->fields[0].kind == DK_SHORT2) {
-        if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0)
+        if (next != 0 && (*EVV_AT(int32_t *, next) & 2) != 0)
             return 3;
         if (next == 0)
             return 4;
-        if (*(int16_t *)get(TFLDS((void *)(intptr_t)next)) == 0)
+        if (*(int16_t *)get(TFLDS(EVV_AT(void *, next))) == 0)
             return 3;
     }
 
@@ -3366,66 +3362,66 @@ int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f)
     int32_t l = left;
     int32_t r = right;
 
-    if ((*(int32_t *)(intptr_t)(t + (base + f) * 4) & 1) != 0)
+    if ((*EVV_AT(int32_t *, (t + (base + f) * 4)) & 1) != 0)
         return 1;
 
-    if (left != 0 && (*(int32_t *)(intptr_t)left & 2) != 0
-        && right != 0 && (*(int32_t *)(intptr_t)right & 2) != 0) {
+    if (left != 0 && (*EVV_AT(int32_t *, left) & 2) != 0
+        && right != 0 && (*EVV_AT(int32_t *, right) & 2) != 0) {
         EVV_AT(delta_owner *, d->owner)->changed = 1;
-        *(int32_t *)(intptr_t)(t + (base + f) * 4) |= 1;
+        *EVV_AT(int32_t *, (t + (base + f) * 4)) |= 1;
 
-        CLRONESTM((delta_node *)(intptr_t)t);
-        if (ALLNSQ((const delta_node *)(intptr_t)t)
+        CLRONESTM(EVV_AT(delta_node *, t));
+        if (ALLNSQ(EVV_AT(const delta_node *, t))
             && EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks)[f] == 0)
-            CLRALLNSQ((delta_node *)(intptr_t)t);
+            CLRALLNSQ(EVV_AT(delta_node *, t));
 
-        *(int32_t *)(intptr_t)(l + (base + f) * 4) =
-            (*(int32_t *)(intptr_t)(l + (base + f) * 4) & 3) | t;
-        *(int32_t *)(intptr_t)(r + 0xc + f * 4) =
-            (*(int32_t *)(intptr_t)(r + 0xc + f * 4) & 3) | t;
-        *(int32_t *)(intptr_t)(t + (base + f) * 4) =
-            (*(int32_t *)(intptr_t)(t + (base + f) * 4) & 3) | r;
-        *(int32_t *)(intptr_t)(t + 0xc + f * 4) =
-            (*(int32_t *)(intptr_t)(t + 0xc + f * 4) & 3) | l;
-    } else if (right != 0 && (*(int32_t *)(intptr_t)right & 2) != 0) {
+        *EVV_AT(int32_t *, (l + (base + f) * 4)) =
+            (*EVV_AT(int32_t *, (l + (base + f) * 4)) & 3) | t;
+        *EVV_AT(int32_t *, (r + 0xc + f * 4)) =
+            (*EVV_AT(int32_t *, (r + 0xc + f * 4)) & 3) | t;
+        *EVV_AT(int32_t *, (t + (base + f) * 4)) =
+            (*EVV_AT(int32_t *, (t + (base + f) * 4)) & 3) | r;
+        *EVV_AT(int32_t *, (t + 0xc + f * 4)) =
+            (*EVV_AT(int32_t *, (t + 0xc + f * 4)) & 3) | l;
+    } else if (right != 0 && (*EVV_AT(int32_t *, right) & 2) != 0) {
         EVV_AT(delta_owner *, d->owner)->changed = 1;
-        *(int32_t *)(intptr_t)(t + (base + f) * 4) |= 1;
+        *EVV_AT(int32_t *, (t + (base + f) * 4)) |= 1;
 
-        CLRONESTM((delta_node *)(intptr_t)t);
-        if (ALLNSQ((const delta_node *)(intptr_t)t)
+        CLRONESTM(EVV_AT(delta_node *, t));
+        if (ALLNSQ(EVV_AT(const delta_node *, t))
             && EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks)[f] == 0)
-            CLRALLNSQ((delta_node *)(intptr_t)t);
+            CLRALLNSQ(EVV_AT(delta_node *, t));
 
-        ((delta_node *)(intptr_t)left)->link = t;
-        *(int32_t *)(intptr_t)(t + (base + f) * 4) =
-            (*(int32_t *)(intptr_t)(t + (base + f) * 4) & 3) | right;
-        *(int32_t *)(intptr_t)(r + 0xc + f * 4) =
-            (*(int32_t *)(intptr_t)(r + 0xc + f * 4) & 3) | t;
-        *(int32_t *)(intptr_t)(t + 0xc + f * 4) =
-            (*(int32_t *)(intptr_t)(t + 0xc + f * 4) & 3) | left;
-    } else if (left != 0 && (*(int32_t *)(intptr_t)left & 2) != 0) {
+        (EVV_AT(delta_node *, left))->link = t;
+        *EVV_AT(int32_t *, (t + (base + f) * 4)) =
+            (*EVV_AT(int32_t *, (t + (base + f) * 4)) & 3) | right;
+        *EVV_AT(int32_t *, (r + 0xc + f * 4)) =
+            (*EVV_AT(int32_t *, (r + 0xc + f * 4)) & 3) | t;
+        *EVV_AT(int32_t *, (t + 0xc + f * 4)) =
+            (*EVV_AT(int32_t *, (t + 0xc + f * 4)) & 3) | left;
+    } else if (left != 0 && (*EVV_AT(int32_t *, left) & 2) != 0) {
         EVV_AT(delta_owner *, d->owner)->changed = 1;
-        *(int32_t *)(intptr_t)(t + (base + f) * 4) |= 1;
+        *EVV_AT(int32_t *, (t + (base + f) * 4)) |= 1;
 
-        CLRONESTM((delta_node *)(intptr_t)t);
-        if (ALLNSQ((const delta_node *)(intptr_t)t)
+        CLRONESTM(EVV_AT(delta_node *, t));
+        if (ALLNSQ(EVV_AT(const delta_node *, t))
             && EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks)[f] == 0)
-            CLRALLNSQ((delta_node *)(intptr_t)t);
+            CLRALLNSQ(EVV_AT(delta_node *, t));
 
-        *(int32_t *)(intptr_t)(l + (base + f) * 4) =
-            (*(int32_t *)(intptr_t)(l + (base + f) * 4) & 3) | t;
-        *(int32_t *)(intptr_t)(t + (base + f) * 4) =
-            (*(int32_t *)(intptr_t)(t + (base + f) * 4) & 3) | right;
-        *(int32_t *)(intptr_t)right = t;
-        *(int32_t *)(intptr_t)(t + 0xc + f * 4) =
-            (*(int32_t *)(intptr_t)(t + 0xc + f * 4) & 3) | left;
+        *EVV_AT(int32_t *, (l + (base + f) * 4)) =
+            (*EVV_AT(int32_t *, (l + (base + f) * 4)) & 3) | t;
+        *EVV_AT(int32_t *, (t + (base + f) * 4)) =
+            (*EVV_AT(int32_t *, (t + (base + f) * 4)) & 3) | right;
+        *EVV_AT(int32_t *, right) = t;
+        *EVV_AT(int32_t *, (t + 0xc + f * 4)) =
+            (*EVV_AT(int32_t *, (t + 0xc + f * 4)) & 3) | left;
     } else {
         return 0;
     }
 
-    if (NONSEQ((const delta_node *)(intptr_t)t) && EVV_AT(delta_vars *, d->vars)->relink != 0) {
-        DELSPINE(d, (delta_node *)(intptr_t)t);
-        INSSPINEL(d, (delta_node *)(intptr_t)t, (delta_node *)(intptr_t)r);
+    if (NONSEQ(EVV_AT(const delta_node *, t)) && EVV_AT(delta_vars *, d->vars)->relink != 0) {
+        DELSPINE(d, EVV_AT(delta_node *, t));
+        INSSPINEL(d, EVV_AT(delta_node *, t), EVV_AT(delta_node *, r));
     }
 
     return 1;
@@ -3475,9 +3471,9 @@ int vtsttmark_tv(delta_state *d, delta_tpos *p, uint8_t back)
             return 1;
         if (r == 3) {
             if (back == 0)
-                p->node = EVV_REF(rmost(d, p->field, (int32_t *)(intptr_t)p->node));
+                p->node = EVV_REF(rmost(d, p->field, EVV_AT(int32_t *, p->node)));
             else
-                p->node = EVV_REF(lmost(d, p->field, (delta_node *)(intptr_t)p->node));
+                p->node = EVV_REF(lmost(d, p->field, EVV_AT(delta_node *, p->node)));
         }
     }
 
@@ -3510,7 +3506,7 @@ void lpta_movel(delta_state *d, uint8_t f)
     if (!vmove_tv(d, &d->lpta))
         forceErrorBacktrack(d);
 
-    d->lpta.node = EVV_REF(vmovel((delta_node *)(intptr_t)d->lpta.node, f));
+    d->lpta.node = EVV_REF(vmovel(EVV_AT(delta_node *, d->lpta.node), f));
 }
 
 void lpta_mover(delta_state *d, uint8_t f)
@@ -3518,7 +3514,7 @@ void lpta_mover(delta_state *d, uint8_t f)
     if (!vmove_tv(d, &d->lpta))
         forceErrorBacktrack(d);
 
-    d->lpta.node = EVV_REF(vmover(d, (int32_t *)(intptr_t)d->lpta.node, f));
+    d->lpta.node = EVV_REF(vmover(d, EVV_AT(int32_t *, d->lpta.node), f));
 }
 
 void rpta_mover(delta_state *d, uint8_t f)
@@ -3526,7 +3522,7 @@ void rpta_mover(delta_state *d, uint8_t f)
     if (!vmove_tv(d, &d->rpta))
         forceErrorBacktrack(d);
 
-    d->rpta.node = EVV_REF(vmover(d, (int32_t *)(intptr_t)d->rpta.node, f));
+    d->rpta.node = EVV_REF(vmover(d, EVV_AT(int32_t *, d->rpta.node), f));
 }
 
 /* The same rightward walk, but as a test: it only moves if the position was
@@ -3536,7 +3532,7 @@ int lpta_tstmover(delta_state *d, uint8_t f)
     if (vtsttmark_tv(d, &d->lpta, 0) != 0)
         return 1;
 
-    d->lpta.node = EVV_REF(vmover(d, (int32_t *)(intptr_t)d->lpta.node, f));
+    d->lpta.node = EVV_REF(vmover(d, EVV_AT(int32_t *, d->lpta.node), f));
     return 0;
 }
 
@@ -3548,7 +3544,7 @@ int rpta_tstmover(delta_state *d, uint8_t f)
     if (vtsttmark_tv(d, &d->rpta, 1) != 0)
         return 1;
 
-    d->rpta.node = EVV_REF(vmover(d, (int32_t *)(intptr_t)d->rpta.node, f));
+    d->rpta.node = EVV_REF(vmover(d, EVV_AT(int32_t *, d->rpta.node), f));
     return 0;
 }
 
@@ -3557,7 +3553,7 @@ int rpta_tstmovel(delta_state *d, uint8_t f)
     if (vtsttmark_tv(d, &d->rpta, 1) != 0)
         return 1;
 
-    d->rpta.node = EVV_REF(vmovel((delta_node *)(intptr_t)d->rpta.node, f));
+    d->rpta.node = EVV_REF(vmovel(EVV_AT(delta_node *, d->rpta.node), f));
     return 0;
 }
 
@@ -3572,7 +3568,7 @@ static int setscan(delta_state *d, uint8_t f, uint8_t rev, uint8_t held)
         return 1;
 
     if (d->lpta.node == 0
-        || (*(int32_t *)(intptr_t)(d->lpta.node + (v->fence_base + f) * 4)
+        || (*EVV_AT(int32_t *, (d->lpta.node + (v->fence_base + f) * 4))
             & 1) == 0)
         return 1;
 
@@ -3595,17 +3591,17 @@ int32_t vgetsc(delta_state *d, int32_t back, int32_t ctx, int32_t t, uint8_t f)
 {
     if (ctx != 0) {
         if (EVV_AT(delta_vars *, d->vars)->relink != 0
-            && !NONSEQ((const delta_node *)(intptr_t)t)
+            && !NONSEQ(EVV_AT(const delta_node *, t))
             && EVV_AT(int8_t *, EVV_AT(delta_vars *, d->vars)->nsq_marks)[f] == 0)
-            return EVV_REF(ctxspine(d, (int32_t *)(intptr_t)t, f, back));
+            return EVV_REF(ctxspine(d, EVV_AT(int32_t *, t), f, back));
 
         return ctxlook(d, t, f, back);
     }
 
     if (back != 0)
-        return *(int32_t *)(intptr_t)(t + 0xc + f * 4) & ~3;
+        return *EVV_AT(int32_t *, (t + 0xc + f * 4)) & ~3;
 
-    return *(int32_t *)(intptr_t)(t + (EVV_AT(delta_vars *, d->vars)->fence_base + f) * 4) & ~3;
+    return *EVV_AT(int32_t *, (t + (EVV_AT(delta_vars *, d->vars)->fence_base + f) * 4)) & ~3;
 }
 
 /* Whether a position sits on a timing point. Like vtsttmark_tv, but a
@@ -3625,9 +3621,9 @@ int vtimept_tv(delta_state *d, delta_tpos *p, uint8_t back)
 
     if (r == 3) {
         if (back == 0)
-            p->node = EVV_REF(rmost(d, p->field, (int32_t *)(intptr_t)p->node));
+            p->node = EVV_REF(rmost(d, p->field, EVV_AT(int32_t *, p->node)));
         else
-            p->node = EVV_REF(lmost(d, p->field, (delta_node *)(intptr_t)p->node));
+            p->node = EVV_REF(lmost(d, p->field, EVV_AT(delta_node *, p->node)));
         p->flags = 1;
         return 1;
     }
@@ -3658,7 +3654,7 @@ int for_loop_preamble(delta_state *d, int32_t tag, int32_t loop, int32_t f,
         return 0;
 
     if (d->lpta.node == 0
-        || (*(int32_t *)(intptr_t)(d->lpta.node + (v->fence_base + f) * 4)
+        || (*EVV_AT(int32_t *, (d->lpta.node + (v->fence_base + f) * 4))
             & 1) == 0)
         return 0;
 
@@ -3676,13 +3672,13 @@ int dupsync(delta_state *d, int32_t t, int32_t src, uint8_t back)
     uint8_t i;
 
     for (i = 0; i < d->nstmts; i++) {
-        int32_t here = *(int32_t *)(intptr_t)(src + (bs + i) * 4);
+        int32_t here = *EVV_AT(int32_t *, (src + (bs + i) * 4));
 
         if ((here & 1) == 0)
             continue;
 
         if (back != 0) {
-            int32_t l = *(int32_t *)(intptr_t)(src + 0xc + i * 4) & ~3;
+            int32_t l = *EVV_AT(int32_t *, (src + 0xc + i * 4)) & ~3;
 
             if (!vproject(d, t, l, src, i))
                 return 0;
@@ -3702,7 +3698,7 @@ int vdef_proj(delta_state *d, int32_t t, uint8_t f)
     int32_t l;
     int32_t r;
 
-    if ((*(int32_t *)(intptr_t)(t + (EVV_AT(delta_vars *, d->vars)->fence_base + f) * 4) & 1) != 0)
+    if ((*EVV_AT(int32_t *, (t + (EVV_AT(delta_vars *, d->vars)->fence_base + f) * 4)) & 1) != 0)
         return 1;
 
     l = vgetsc(d, 1, 1, t, f);
@@ -3710,7 +3706,7 @@ int vdef_proj(delta_state *d, int32_t t, uint8_t f)
     if (EVV_AT(delta_vars *, d->vars)->ctx_both != 0)
         r = vgetsc(d, 0, 1, t, f);
     else
-        r = VRSYNC(d, (const int32_t *)(intptr_t)l, (int8_t)f);
+        r = VRSYNC(d, EVV_AT(const int32_t *, l), (int8_t)f);
 
     return vproject(d, t, l, r, f);
 }
@@ -3725,10 +3721,10 @@ int vprt_range(delta_state *d, delta_tpos *a, delta_tpos *b)
         return 0;
 
     if ((a->flags & 2) != 0 && a->offset > 0)
-        a->node = VRSYNC(d, (const int32_t *)(intptr_t)a->node, a->field);
+        a->node = VRSYNC(d, EVV_AT(const int32_t *, a->node), a->field);
 
     if ((b->flags & 2) != 0 && b->offset < 0)
-        b->node = VLSYNC((const delta_node *)(intptr_t)b->node, b->field);
+        b->node = VLSYNC(EVV_AT(const delta_node *, b->node), b->field);
 
     return 1;
 }
@@ -3763,8 +3759,7 @@ static int32_t scan_here(delta_state *d)
 {
     delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
-    return *(int32_t *)(intptr_t)
-        (v->scan_ptr + (v->fence_base + v->scan_field) * 4) & ~3;
+    return *EVV_AT(int32_t *, (v->scan_ptr + (v->fence_base + v->scan_field) * 4)) & ~3;
 }
 
 /* One step of a forto that must stop before a named token. It checks twice,
@@ -3788,7 +3783,7 @@ int forto_adv_upto_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
     nx = scan_here(d);
     if (nx == 0)
         return 0;
-    if ((*(int32_t *)(intptr_t)nx & 2) != 0)
+    if ((*EVV_AT(int32_t *, nx) & 2) != 0)
         return 0;
 
     if (!vscanadv(d, 1, 0))
@@ -3803,7 +3798,7 @@ int forto_adv_upto_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
     nx = scan_here(d);
     if (nx == 0)
         return 0;
-    if ((*(int32_t *)(intptr_t)nx & 2) != 0)
+    if ((*EVV_AT(int32_t *, nx) & 2) != 0)
         return 0;
 
     clearDeltaStackBack(d);
@@ -3864,15 +3859,15 @@ int vmark(delta_state *d, uint8_t st, uint8_t fld, int32_t t, int32_t stop,
     s->mark_flag = 0;
 
     while (t != s->spine_r && t != stop) {
-        int32_t next = *(int32_t *)(intptr_t)(t + (base + st) * 4) & ~3;
+        int32_t next = *EVV_AT(int32_t *, (t + (base + st) * 4)) & ~3;
 
-        if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
+        if (next != 0 && (*EVV_AT(int32_t *, next) & 2) != 0) {
             t = next;
             continue;
         }
 
-        e->put[fld](TFLDS((void *)(intptr_t)next), value);
-        t = *(int32_t *)(intptr_t)(next + 4) & ~3;
+        e->put[fld](TFLDS(EVV_AT(void *, next)), value);
+        t = *EVV_AT(int32_t *, (next + 4)) & ~3;
     }
 
     EVV_AT(delta_owner *, d->owner)->changed = 1;
@@ -3903,8 +3898,8 @@ int visleft(delta_state *d, int32_t a, int32_t b)
         return 0;
 
     if (EVV_AT(delta_vars *, d->vars)->relink != 0
-        && !NONSEQ((const delta_node *)(intptr_t)a)
-        && !NONSEQ((const delta_node *)(intptr_t)b)) {
+        && !NONSEQ(EVV_AT(const delta_node *, a))
+        && !NONSEQ(EVV_AT(const delta_node *, b))) {
         if (s->left_stamp == spine_changed) {
             for (i = 0; i < 50; i++) {
                 if (s->left_a[i] != a || s->left_b[i] != b)
@@ -3945,7 +3940,7 @@ int visleft(delta_state *d, int32_t a, int32_t b)
             s->left_stamp = spine_changed;
         }
 
-        p = ((const delta_node *)(intptr_t)b)->link & ~3;
+        p = (EVV_AT(const delta_node *, b))->link & ~3;
         for (i = 0; ; i++) {
             if (p == 0) {
                 s->left_ans[slot] = 0;
@@ -3955,15 +3950,15 @@ int visleft(delta_state *d, int32_t a, int32_t b)
                 s->left_ans[slot] = 1;
                 return 1;
             }
-            p = ((const delta_node *)(intptr_t)p)->link & ~3;
+            p = (EVV_AT(const delta_node *, p))->link & ~3;
         }
     }
 
     for (j = (int8_t)(d->nstmts - 1); j >= 0; j--) {
-        if ((*(int32_t *)(intptr_t)(a + (base + j) * 4) & 1) == 0)
+        if ((*EVV_AT(int32_t *, (a + (base + j) * 4)) & 1) == 0)
             continue;
 
-        if ((*(int32_t *)(intptr_t)(b + (base + j) * 4) & 1) != 0) {
+        if ((*EVV_AT(int32_t *, (b + (base + j) * 4)) & 1) != 0) {
             fld = j;
             break;
         }
@@ -3972,7 +3967,7 @@ int visleft(delta_state *d, int32_t a, int32_t b)
     }
 
     if (fld != -10) {
-        p = VLSYNC((const delta_node *)(intptr_t)b, fld);
+        p = VLSYNC(EVV_AT(const delta_node *, b), fld);
         if (p == 0) {
             if (slot >= 0)
                 s->left_ans[slot] = 0;
@@ -3984,15 +3979,15 @@ int visleft(delta_state *d, int32_t a, int32_t b)
     }
 
     while (p != a) {
-        p = *(int32_t *)(intptr_t)(p + 0xc + fld * 4) & ~3;
+        p = *EVV_AT(int32_t *, (p + 0xc + fld * 4)) & ~3;
         if (p == 0) {
             if (slot >= 0)
                 s->left_ans[slot] = 0;
             return 0;
         }
 
-        if ((*(int32_t *)(intptr_t)p & 2) == 0)
-            p = *(int32_t *)(intptr_t)p & ~3;
+        if ((*EVV_AT(int32_t *, p) & 2) == 0)
+            p = *EVV_AT(int32_t *, p) & ~3;
     }
 
     if (slot >= 0)
@@ -4053,20 +4048,17 @@ int vcomp_pta(delta_state *d, delta_tpos *a, delta_tpos *b)
     }
 
     if (r == 3) {
-        int32_t lm = EVV_REF(lmost(d, loose->field, (delta_node *)(intptr_t)loose->node));
-        int32_t rm = EVV_REF(rmost(d, loose->field, (int32_t *)(intptr_t)loose->node));
+        int32_t lm = EVV_REF(lmost(d, loose->field, EVV_AT(delta_node *, loose->node)));
+        int32_t rm = EVV_REF(rmost(d, loose->field, EVV_AT(int32_t *, loose->node)));
         int32_t lo;
         int32_t hi;
 
-        if ((*(int32_t *)(intptr_t)
-             (other + (v->fence_base + loose->field) * 4) & 1) != 0) {
+        if ((*EVV_AT(int32_t *, (other + (v->fence_base + loose->field) * 4)) & 1) != 0) {
             hi = other;
             lo = hi;
         } else {
-            lo = *(int32_t *)(intptr_t)
-                (other + 0xc + loose->field * 4) & ~3;
-            hi = *(int32_t *)(intptr_t)
-                (other + (v->fence_base + loose->field) * 4) & ~3;
+            lo = *EVV_AT(int32_t *, (other + 0xc + loose->field * 4)) & ~3;
+            hi = *EVV_AT(int32_t *, (other + (v->fence_base + loose->field) * 4)) & ~3;
         }
 
         if ((lo == lm || visleft(d, lm, lo))
@@ -4129,15 +4121,15 @@ void delsync(delta_state *d, void *p)
 int mashtoks(delta_state *d, uint8_t f, int32_t t)
 {
     int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
-    int32_t l = *(int32_t *)(intptr_t)(t + 0xc + f * 4) & ~3;
-    int32_t r = *(int32_t *)(intptr_t)(t + (base + f) * 4) & ~3;
+    int32_t l = *EVV_AT(int32_t *, (t + 0xc + f * 4)) & ~3;
+    int32_t r = *EVV_AT(int32_t *, (t + (base + f) * 4)) & ~3;
     const delta_stmt *e = &vstmtbl[f];
     delta_operand a;
     delta_operand b;
     int32_t nx;
 
-    if ((l != 0 && (*(int32_t *)(intptr_t)l & 2) != 0)
-        || (r != 0 && (*(int32_t *)(intptr_t)r & 2) != 0))
+    if ((l != 0 && (*EVV_AT(int32_t *, l) & 2) != 0)
+        || (r != 0 && (*EVV_AT(int32_t *, r) & 2) != 0))
         return 1;
 
     b.kind = STMTYP((int8_t)f);
@@ -4145,8 +4137,8 @@ int mashtoks(delta_state *d, uint8_t f, int32_t t)
     b.flag = e->fields[0].flag;
     a.flag = b.flag;
 
-    a.ptr = e->get[0](TFLDS((void *)(intptr_t)l));
-    b.ptr = e->get[0](TFLDS((void *)(intptr_t)r));
+    a.ptr = e->get[0](TFLDS(EVV_AT(void *, l)));
+    b.ptr = e->get[0](TFLDS(EVV_AT(void *, r)));
 
     if (e->walkable == 0)
         return 0;
@@ -4156,14 +4148,14 @@ int mashtoks(delta_state *d, uint8_t f, int32_t t)
 
     EVV_AT(delta_owner *, d->owner)->changed = 1;
 
-    nx = *(int32_t *)(intptr_t)(r + 4) & ~3;
+    nx = *EVV_AT(int32_t *, (r + 4)) & ~3;
 
-    *(int32_t *)(intptr_t)(t + (base + f) * 4) =
-        (*(int32_t *)(intptr_t)(t + (base + f) * 4) & 3) | nx;
-    *(int32_t *)(intptr_t)(nx + 0xc + f * 4) =
-        (*(int32_t *)(intptr_t)(nx + 0xc + f * 4) & 3) | t;
+    *EVV_AT(int32_t *, (t + (base + f) * 4)) =
+        (*EVV_AT(int32_t *, (t + (base + f) * 4)) & 3) | nx;
+    *EVV_AT(int32_t *, (nx + 0xc + f * 4)) =
+        (*EVV_AT(int32_t *, (nx + 0xc + f * 4)) & 3) | t;
 
-    cacheDeletedDeltaObject(d, (void *)(intptr_t)r);
+    cacheDeletedDeltaObject(d, EVV_AT(void *, r));
     return 1;
 }
 
@@ -4176,15 +4168,14 @@ int vchkseqbad(delta_state *d, int32_t t, uint8_t f, const char *what)
     int32_t marked = 0;
     uint8_t i;
 
-    if (!ONESTM((const delta_node *)(intptr_t)t)
-        && !ALLNSQ((const delta_node *)(intptr_t)t)) {
-        vseqbad(d, (void *)(intptr_t)t, (void *)(intptr_t)(int32_t)f, what);
+    if (!ONESTM(EVV_AT(const delta_node *, t))
+        && !ALLNSQ(EVV_AT(const delta_node *, t))) {
+        vseqbad(d, EVV_AT(void *, t), EVV_AT(void *, (int32_t)f), what);
         return 0;
     }
 
     for (i = 0; i < d->nstmts; i++) {
-        if ((*(int32_t *)(intptr_t)
-             (t + (EVV_AT(delta_vars *, d->vars)->fence_base + i) * 4) & 1) == 0)
+        if ((*EVV_AT(int32_t *, (t + (EVV_AT(delta_vars *, d->vars)->fence_base + i) * 4)) & 1) == 0)
             continue;
 
         present++;
@@ -4193,7 +4184,7 @@ int vchkseqbad(delta_state *d, int32_t t, uint8_t f, const char *what)
     }
 
     if (marked < present && present > 1) {
-        vseqbad(d, (void *)(intptr_t)t, (void *)(intptr_t)(int32_t)f, what);
+        vseqbad(d, EVV_AT(void *, t), EVV_AT(void *, (int32_t)f), what);
         return 0;
     }
 
@@ -4223,37 +4214,36 @@ void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r)
         return NULL;
 
     sv = EVV_REF(s);
-
-    *(int32_t *)(intptr_t)(sv + (base + f) * 4) |= 1;
+    *EVV_AT(int32_t *, (sv + (base + f) * 4)) |= 1;
 
     if (EVV_AT(int8_t *, v->nsq_marks)[f] != 0)
         SETALLNSQ(s);
 
     EVV_AT(delta_owner *, d->owner)->changed = 1;
 
-    if (l != 0 && (*(int32_t *)(intptr_t)l & 2) != 0) {
+    if (l != 0 && (*EVV_AT(int32_t *, l) & 2) != 0) {
         left = l;
-        *(int32_t *)(intptr_t)(left + (base + f) * 4) =
-            (*(int32_t *)(intptr_t)(left + (base + f) * 4) & 3) | sv;
+        *EVV_AT(int32_t *, (left + (base + f) * 4)) =
+            (*EVV_AT(int32_t *, (left + (base + f) * 4)) & 3) | sv;
     } else {
-        left = *(int32_t *)(intptr_t)l & ~3;
-        ((delta_node *)(intptr_t)l)->link = sv;
+        left = *EVV_AT(int32_t *, l) & ~3;
+        (EVV_AT(delta_node *, l))->link = sv;
     }
 
-    *(int32_t *)(intptr_t)(sv + 0xc + f * 4) =
-        (*(int32_t *)(intptr_t)(sv + 0xc + f * 4) & 3) | l;
+    *EVV_AT(int32_t *, (sv + 0xc + f * 4)) =
+        (*EVV_AT(int32_t *, (sv + 0xc + f * 4)) & 3) | l;
 
-    if (r != 0 && (*(int32_t *)(intptr_t)r & 2) != 0) {
+    if (r != 0 && (*EVV_AT(int32_t *, r) & 2) != 0) {
         right = r;
-        *(int32_t *)(intptr_t)(right + 0xc + f * 4) =
-            (*(int32_t *)(intptr_t)(right + 0xc + f * 4) & 3) | sv;
+        *EVV_AT(int32_t *, (right + 0xc + f * 4)) =
+            (*EVV_AT(int32_t *, (right + 0xc + f * 4)) & 3) | sv;
     } else {
-        right = *(int32_t *)(intptr_t)(r + 4) & ~3;
-        *(int32_t *)(intptr_t)r = sv;
+        right = *EVV_AT(int32_t *, (r + 4)) & ~3;
+        *EVV_AT(int32_t *, r) = sv;
     }
 
-    *(int32_t *)(intptr_t)(sv + (base + f) * 4) =
-        (*(int32_t *)(intptr_t)(sv + (base + f) * 4) & 3) | r;
+    *EVV_AT(int32_t *, (sv + (base + f) * 4)) =
+        (*EVV_AT(int32_t *, (sv + (base + f) * 4)) & 3) | r;
 
     if (v->relink != 0) {
         p = *rlink(d, left) & ~3;
@@ -4265,8 +4255,8 @@ void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r)
                 nonseq = 1;
             } else {
                 while (p != right) {
-                    if (!ONESTM((const delta_node *)(intptr_t)p)
-                        && !ALLNSQ((const delta_node *)(intptr_t)p)) {
+                    if (!ONESTM(EVV_AT(const delta_node *, p))
+                        && !ALLNSQ(EVV_AT(const delta_node *, p))) {
                         nonseq = 1;
                         break;
                     }
@@ -4282,9 +4272,9 @@ void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r)
             } else {
                 p = *rlink(d, left) & ~3;
                 while (p != right) {
-                    SETNONSEQ((delta_node *)(intptr_t)p);
+                    SETNONSEQ(EVV_AT(delta_node *, p));
                     if (v->ctx_both != 0
-                        && !ONESTM((const delta_node *)(intptr_t)p)
+                        && !ONESTM(EVV_AT(const delta_node *, p))
                         && !vchkseqbad(d, p, f, "i1"))
                         return NULL;
                     p = *rlink(d, p) & ~3;
@@ -4292,7 +4282,7 @@ void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r)
             }
         }
 
-        INSSPINER(d, s, (delta_node *)(intptr_t)left);
+        INSSPINER(d, s, EVV_AT(delta_node *, left));
     }
 
     v->unknown_1170 = 0;
@@ -4325,17 +4315,17 @@ int chkdelnonseq(delta_state *d, int32_t t, uint8_t f)
     int32_t p;
 
 #define CARRIES(node, fld) \
-    ((*(int32_t *)(intptr_t)((node) + (base + (fld)) * 4) & 1) != 0)
+    ((*EVV_AT(int32_t *, ((node) + (base + (fld)) * 4)) & 1) != 0)
 
     if (v->relink == 0)
         return 1;
 
-    l = ((const delta_node *)(intptr_t)t)->link & ~3;
-    while (NONSEQ((const delta_node *)(intptr_t)l))
-        l = ((const delta_node *)(intptr_t)l)->link & ~3;
+    l = (EVV_AT(const delta_node *, t))->link & ~3;
+    while (NONSEQ(EVV_AT(const delta_node *, l)))
+        l = (EVV_AT(const delta_node *, l))->link & ~3;
 
     r = *rlink(d, t) & ~3;
-    while (NONSEQ((const delta_node *)(intptr_t)r))
+    while (NONSEQ(EVV_AT(const delta_node *, r)))
         r = *rlink(d, r) & ~3;
 
     for (i = (int32_t)d->nstmts - 1; i >= (int32_t)f; i--) {
@@ -4386,8 +4376,8 @@ int chkdelnonseq(delta_state *d, int32_t t, uint8_t f)
         s->runs[0].kind = 0;
         s->runs[0].cur = t;
         s->runs[0].start = t;
-        s->runs[0].flag = (!ALLNSQ((const delta_node *)(intptr_t)t)
-                           && !ONESTM((const delta_node *)(intptr_t)t));
+        s->runs[0].flag = (!ALLNSQ(EVV_AT(const delta_node *, t))
+                           && !ONESTM(EVV_AT(const delta_node *, t)));
 
         if (nright != 0) {
             s->runs[1].start = l;
@@ -4444,10 +4434,10 @@ int chkdelnonseq(delta_state *d, int32_t t, uint8_t f)
     p = ctl->start;
 
     for (;;) {
-        SETNONSEQ((delta_node *)(intptr_t)p);
+        SETNONSEQ(EVV_AT(delta_node *, p));
 
         if (v->ctx_both != 0
-            && !ONESTM((const delta_node *)(intptr_t)p)
+            && !ONESTM(EVV_AT(const delta_node *, p))
             && !vchkseqbad(d, p, f, "d8"))
             return 0;
 
@@ -4457,7 +4447,7 @@ int chkdelnonseq(delta_state *d, int32_t t, uint8_t f)
         if (kind >= 0)
             p = *rlink(d, p) & ~3;
         else
-            p = ((const delta_node *)(intptr_t)p)->link & ~3;
+            p = (EVV_AT(const delta_node *, p))->link & ~3;
     }
 }
 
@@ -4484,10 +4474,10 @@ int fdeldel(delta_state *d, int32_t from, int32_t to, int32_t arg)
 
     EVV_AT(delta_owner *, d->owner)->changed = 1;
 
-    if (from != 0 && (*(int32_t *)(intptr_t)from & 2) != 0)
-        before = *(int32_t *)(intptr_t)(from + 0xc + fd * 4) & ~3;
+    if (from != 0 && (*EVV_AT(int32_t *, from) & 2) != 0)
+        before = *EVV_AT(int32_t *, (from + 0xc + fd * 4)) & ~3;
     else
-        before = *(int32_t *)(intptr_t)from & ~3;
+        before = *EVV_AT(int32_t *, from) & ~3;
 
     p = from;
 
@@ -4495,29 +4485,29 @@ int fdeldel(delta_state *d, int32_t from, int32_t to, int32_t arg)
         if (p == 0)
             return 0;
 
-        if ((*(int32_t *)(intptr_t)p & 2) != 0) {
+        if ((*EVV_AT(int32_t *, p) & 2) != 0) {
             int32_t t = p;
             int32_t nonseq;
 
-            next = *(int32_t *)(intptr_t)(t + (base + fd) * 4) & ~3;
-            nonseq = ONESTM((const delta_node *)(intptr_t)t) ? 0 : 1;
+            next = *EVV_AT(int32_t *, (t + (base + fd) * 4)) & ~3;
+            nonseq = ONESTM(EVV_AT(const delta_node *, t)) ? 0 : 1;
 
             /* The immediate is 0xfffffffe, so this clears bit zero. */
-            *(int32_t *)(intptr_t)(t + (base + fd) * 4) &= ~1;
-            *(int32_t *)(intptr_t)(t + 0xc + fd * 4) &= 3;
-            *(int32_t *)(intptr_t)(t + (base + fd) * 4) &= 3;
+            *EVV_AT(int32_t *, (t + (base + fd) * 4)) &= ~1;
+            *EVV_AT(int32_t *, (t + 0xc + fd * 4)) &= 3;
+            *EVV_AT(int32_t *, (t + (base + fd) * 4)) &= 3;
 
             if (nonseq == 0) {
                 if (v->relink != 0)
-                    DELSPINE(d, (delta_node *)(intptr_t)t);
-                delsync(d, (void *)(intptr_t)t);
+                    DELSPINE(d, EVV_AT(delta_node *, t));
+                delsync(d, EVV_AT(void *, t));
             } else {
-                vnsqflags(d, (int32_t *)(intptr_t)t);
+                vnsqflags(d, EVV_AT(int32_t *, t));
                 chkdelnonseq(d, t, (uint8_t)fd);
             }
         } else {
-            next = *(int32_t *)(intptr_t)(p + 4) & ~3;
-            cacheDeletedDeltaObject(d, (void *)(intptr_t)p);
+            next = *EVV_AT(int32_t *, (p + 4)) & ~3;
+            cacheDeletedDeltaObject(d, EVV_AT(void *, p));
         }
 
         if (p == to)
@@ -4526,20 +4516,20 @@ int fdeldel(delta_state *d, int32_t from, int32_t to, int32_t arg)
         p = next;
     }
 
-    if (before != 0 && (*(int32_t *)(intptr_t)before & 2) != 0) {
-        *(int32_t *)(intptr_t)(before + (base + fd) * 4) =
-            (*(int32_t *)(intptr_t)(before + (base + fd) * 4) & 3) | next;
+    if (before != 0 && (*EVV_AT(int32_t *, before) & 2) != 0) {
+        *EVV_AT(int32_t *, (before + (base + fd) * 4)) =
+            (*EVV_AT(int32_t *, (before + (base + fd) * 4)) & 3) | next;
     } else {
-        if (next == 0 || (*(int32_t *)(intptr_t)next & 2) == 0)
+        if (next == 0 || (*EVV_AT(int32_t *, next) & 2) == 0)
             return 0;
-        ((delta_node *)(intptr_t)before)->link = next;
+        (EVV_AT(delta_node *, before))->link = next;
     }
 
-    if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
-        *(int32_t *)(intptr_t)(next + 0xc + fd * 4) =
-            (*(int32_t *)(intptr_t)(next + 0xc + fd * 4) & 3) | before;
+    if (next != 0 && (*EVV_AT(int32_t *, next) & 2) != 0) {
+        *EVV_AT(int32_t *, (next + 0xc + fd * 4)) =
+            (*EVV_AT(int32_t *, (next + 0xc + fd * 4)) & 3) | before;
     } else {
-        *(int32_t *)(intptr_t)next = before;
+        *EVV_AT(int32_t *, next) = before;
     }
 
     flushDeletedDeltaObjects(d);
@@ -4557,10 +4547,8 @@ void fdel(delta_state *d, int32_t whole, int32_t arg)
     if (whole != 0) {
         fdeldel(d, s->del_from, s->del_to, arg);
     } else {
-        int32_t from = *(int32_t *)(intptr_t)
-            (s->del_left + (EVV_AT(delta_vars *, d->vars)->fence_base + fd) * 4) & ~3;
-        int32_t to = *(int32_t *)(intptr_t)
-            (s->del_right + 0xc + fd * 4) & ~3;
+        int32_t from = *EVV_AT(int32_t *, (s->del_left + (EVV_AT(delta_vars *, d->vars)->fence_base + fd) * 4)) & ~3;
+        int32_t to = *EVV_AT(int32_t *, (s->del_right + 0xc + fd * 4)) & ~3;
 
         fdeldel(d, from, to, arg);
     }
@@ -4579,11 +4567,10 @@ int vdel_1pt(delta_state *d, uint8_t f, int32_t t, int32_t arg)
     s->del_field = (int8_t)f;
     s->del_to = t;
     s->del_from = t;
-    s->del_left = VLSYNC((const delta_node *)(intptr_t)t, s->del_field);
-    s->del_right = VRSYNC(d, (const int32_t *)(intptr_t)t, s->del_field);
+    s->del_left = VLSYNC(EVV_AT(const delta_node *, t), s->del_field);
+    s->del_right = VRSYNC(d, EVV_AT(const int32_t *, t), s->del_field);
 
-    if ((*(int32_t *)(intptr_t)
-         (t + (EVV_AT(delta_vars *, d->vars)->fence_base + f) * 4) & 1) == 0)
+    if ((*EVV_AT(int32_t *, (t + (EVV_AT(delta_vars *, d->vars)->fence_base + f) * 4)) & 1) == 0)
         return 1;
 
     mashtoks(d, f, t);
@@ -4601,18 +4588,17 @@ int vdel_2pt(delta_state *d, uint8_t f, int32_t l, int32_t r)
     s->del_field = (int8_t)f;
     s->del_left = l;
     s->del_right = r;
-    s->del_from = VRSYNC(d, (const int32_t *)(intptr_t)s->del_left,
+    s->del_from = VRSYNC(d, EVV_AT(const int32_t *, s->del_left),
                          s->del_field);
-    s->del_to = VLSYNC((const delta_node *)(intptr_t)s->del_right,
+    s->del_to = VLSYNC(EVV_AT(const delta_node *, s->del_right),
                        s->del_field);
 
     EVV_AT(delta_owner *, d->owner)->changed = 1;
 
     if (s->del_right == s->del_from) {
-        int32_t p = *(int32_t *)(intptr_t)
-            (s->del_left + (EVV_AT(delta_vars *, d->vars)->fence_base + s->del_field) * 4) & ~3;
+        int32_t p = *EVV_AT(int32_t *, (s->del_left + (EVV_AT(delta_vars *, d->vars)->fence_base + s->del_field) * 4)) & ~3;
 
-        if (p == 0 || (*(int32_t *)(intptr_t)p & 2) == 0)
+        if (p == 0 || (*EVV_AT(int32_t *, p) & 2) == 0)
             fdeldel(d, p, p, 0);
     } else {
         fdel(d, 0, 0);
@@ -4633,27 +4619,27 @@ int vins_tok(delta_state *d, uint8_t f, int32_t l, int32_t r,
 
     EVV_AT(delta_owner *, d->owner)->changed = 1;
 
-    if ((*(int32_t *)(intptr_t)(l + (base + f) * 4) & ~3) != r
-        || (*(int32_t *)(intptr_t)(r + 0xc + f * 4) & ~3) != l)
+    if ((*EVV_AT(int32_t *, (l + (base + f) * 4)) & ~3) != r
+        || (*EVV_AT(int32_t *, (r + 0xc + f * 4)) & ~3) != l)
         vdel_2pt(d, f, l, r);
 
     t = EVV_REF(alloc_tok(d, &vstmtbl[f]));
     if (t == 0)
         return 0;
 
-    *(int32_t *)(intptr_t)(l + (base + f) * 4) =
-        (*(int32_t *)(intptr_t)(l + (base + f) * 4) & 3) | t;
-    *(int32_t *)(intptr_t)(r + 0xc + f * 4) =
-        (*(int32_t *)(intptr_t)(r + 0xc + f * 4) & 3) | t;
+    *EVV_AT(int32_t *, (l + (base + f) * 4)) =
+        (*EVV_AT(int32_t *, (l + (base + f) * 4)) & 3) | t;
+    *EVV_AT(int32_t *, (r + 0xc + f * 4)) =
+        (*EVV_AT(int32_t *, (r + 0xc + f * 4)) & 3) | t;
 
-    ((delta_node *)(intptr_t)t)->link = r;
-    *(int32_t *)(intptr_t)t = l;
+    (EVV_AT(delta_node *, t))->link = r;
+    *EVV_AT(int32_t *, t) = l;
 
     if (v->kind >= 0)
-        memcpy(TFLDS((void *)(intptr_t)t), v->ptr,
+        memcpy(TFLDS(EVV_AT(void *, t)), v->ptr,
                (size_t)vstmtbl[f].length);
     else
-        vinitflds(d, f, (char *)(intptr_t)t + 8, v->ptr);
+        vinitflds(d, f, EVV_AT(char *, t) + 8, v->ptr);
 
     EVV_AT(delta_owner *, d->owner)->changed = 1;
     EVV_AT(delta_vars *, d->vars)->unknown_1170 = 0;
@@ -4674,7 +4660,7 @@ int vinit_stm(delta_state *d, int8_t f)
 
     v.kind = e->fields[0].kind;
     v.flag = e->fields[0].flag;
-    v.ptr = e->get[0]((void *)(intptr_t)e->deflt);
+    v.ptr = e->get[0]((void *)e->deflt);
 
     if (!vins_tok(d, (uint8_t)f, s->spine_l, s->spine_r, &v))
         return 0;
@@ -4757,7 +4743,7 @@ static int ins_tokens_run(delta_state *d, uint8_t f, const uint8_t *str,
 
         if (str < end) {
             d->lpta.node = EVV_REF(vins_sync(d, f,
-                *(int32_t *)(intptr_t)(d->rpta.node + 0xc + f * 4) & ~3,
+                *EVV_AT(int32_t *, (d->rpta.node + 0xc + f * 4)) & ~3,
                 d->rpta.node));
             (void)arg;
             if (d->lpta.node == 0)
@@ -4813,16 +4799,16 @@ int32_t vsplit_time(delta_state *d, uint8_t f, int32_t t, int32_t off)
     delta_operand v;
 
     if (off < 0) {
-        neighbour = *(int32_t *)(intptr_t)(t + 0xc + f * 4) & ~3;
+        neighbour = *EVV_AT(int32_t *, (t + 0xc + f * 4)) & ~3;
         keep = (neighbour != 0
-                && (*(int32_t *)(intptr_t)neighbour & 2) != 0) ? 0 : neighbour;
+                && (*EVV_AT(int32_t *, neighbour) & 2) != 0) ? 0 : neighbour;
         r = t;
         l = EVV_REF(vins_sync(d, f, neighbour, t));
         t = l;
     } else {
-        neighbour = *(int32_t *)(intptr_t)(t + (base + f) * 4) & ~3;
+        neighbour = *EVV_AT(int32_t *, (t + (base + f) * 4)) & ~3;
         keep = (neighbour != 0
-                && (*(int32_t *)(intptr_t)neighbour & 2) != 0) ? 0 : neighbour;
+                && (*EVV_AT(int32_t *, neighbour) & 2) != 0) ? 0 : neighbour;
         l = t;
         r = EVV_REF(vins_sync(d, f, t, neighbour));
         t = r;
@@ -4832,15 +4818,15 @@ int32_t vsplit_time(delta_state *d, uint8_t f, int32_t t, int32_t off)
         return 0;
 
     if (keep != 0) {
-        void *p = TFLDS((void *)(intptr_t)keep);
+        void *p = TFLDS(EVV_AT(void *, keep));
 
         if (e->fields[0].kind == DK_LONG) {
             wide = *(int32_t *)e->get[0](p) - abs(off);
-            vinitflds(d, f, TFLDS((void *)(intptr_t)keep), &wide);
+            vinitflds(d, f, TFLDS(EVV_AT(void *, keep)), &wide);
         } else if (e->fields[0].kind == DK_SHORT2) {
             wide = *(int16_t *)e->get[0](p) - abs(off);
             narrow = (int16_t)wide;
-            vinitflds(d, f, TFLDS((void *)(intptr_t)keep), &narrow);
+            vinitflds(d, f, TFLDS(EVV_AT(void *, keep)), &narrow);
         }
     }
 
@@ -4902,9 +4888,9 @@ int vtmark_tv(delta_state *d, delta_tpos *p, uint8_t back)
         p->node = vsplit_time(d, p->field, p->node, off);
     } else if (r == 3) {
         if (back == 0)
-            p->node = EVV_REF(rmost(d, p->field, (int32_t *)(intptr_t)p->node));
+            p->node = EVV_REF(rmost(d, p->field, EVV_AT(int32_t *, p->node)));
         else
-            p->node = EVV_REF(lmost(d, p->field, (delta_node *)(intptr_t)p->node));
+            p->node = EVV_REF(lmost(d, p->field, EVV_AT(delta_node *, p->node)));
     }
 
     p->flags = 1;
@@ -4945,7 +4931,7 @@ int vrange_l(delta_state *d, delta_tpos *p, delta_tpos *out, int8_t f,
         return 0;
 
     out->node = EVV_REF(vins_sync(d, (uint8_t)f,
-        *(int32_t *)(intptr_t)(p->node + 0xc + f * 4) & ~3, p->node));
+        *EVV_AT(int32_t *, (p->node + 0xc + f * 4)) & ~3, p->node));
 
     if (out->node == 0)
         return 0;
@@ -4970,8 +4956,7 @@ int vrange_r(delta_state *d, delta_tpos *p, delta_tpos *out, int8_t f,
         return 0;
 
     out->node = EVV_REF(vins_sync(d, (uint8_t)f, p->node,
-        *(int32_t *)(intptr_t)
-        (p->node + (EVV_AT(delta_vars *, d->vars)->fence_base + f) * 4) & ~3));
+        *EVV_AT(int32_t *, (p->node + (EVV_AT(delta_vars *, d->vars)->fence_base + f) * 4)) & ~3));
 
     if (out->node == 0)
         return 0;
@@ -5040,8 +5025,7 @@ int vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
         return 0;
     }
 
-    if ((*(int32_t *)(intptr_t)
-         (a->node + (base + a->field) * 4) & 1) != 0
+    if ((*EVV_AT(int32_t *, (a->node + (base + a->field) * 4)) & 1) != 0
         && a->offset == 0)
         r = 3;
     else
@@ -5052,8 +5036,7 @@ int vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
 
         a->node = vsplit_time(d, (uint8_t)a->field, a->node, off);
         b->node = EVV_REF(vins_sync(d, (uint8_t)a->field, a->node,
-            *(int32_t *)(intptr_t)
-            (a->node + (base + a->field) * 4) & ~3));
+            *EVV_AT(int32_t *, (a->node + (base + a->field) * 4)) & ~3));
 
         if (b->node == 0)
             return 1;
@@ -5062,10 +5045,10 @@ int vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
             b->node = a->node;
 
             if (mode == 0xcd || mode == 0xce)
-                a->node = EVV_REF(lmost(d, a->field, (delta_node *)(intptr_t)a->node));
+                a->node = EVV_REF(lmost(d, a->field, EVV_AT(delta_node *, a->node)));
 
             if (mode == 0xcd || mode == 0xcf)
-                b->node = EVV_REF(rmost(d, a->field, (int32_t *)(intptr_t)b->node));
+                b->node = EVV_REF(rmost(d, a->field, EVV_AT(int32_t *, b->node)));
 
             /* Two different ends is already a range; the same one falls
                through to have a sync put in beside it. */
@@ -5080,8 +5063,7 @@ int vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
 
             b->node = a->node;
             a->node = EVV_REF(vins_sync(d, (uint8_t)a->field,
-                *(int32_t *)(intptr_t)
-                (a->node + 0xc + a->field * 4) & ~3, a->node));
+                *EVV_AT(int32_t *, (a->node + 0xc + a->field * 4)) & ~3, a->node));
 
             if (a->node == 0)
                 return 1;
@@ -5091,8 +5073,7 @@ int vrange_2pt(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
 
             b->node = EVV_REF(vins_sync(d, (uint8_t)a->field,
                 a->node,
-                *(int32_t *)(intptr_t)
-                (a->node + (base + a->field) * 4) & ~3));
+                *EVV_AT(int32_t *, (a->node + (base + a->field) * 4)) & ~3));
 
             if (b->node == 0)
                 return 1;
@@ -5364,28 +5345,27 @@ void deltaReinit(delta_state *d, int32_t full)
     int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
     uint8_t i;
 
-    CLRONESTM((delta_node *)(intptr_t)s->spine_l);
-    CLRONESTM((delta_node *)(intptr_t)s->spine_r);
+    CLRONESTM(EVV_AT(delta_node *, s->spine_l));
+    CLRONESTM(EVV_AT(delta_node *, s->spine_r));
 
     for (i = 0; i < d->nstmts; i++) {
-        ((delta_stmt *)(uintptr_t)vstmtbl)[i].unknown_1c = 0;
+        ((delta_stmt *)vstmtbl)[i].unknown_1c = 0;
+        *EVV_AT(int32_t *, (s->spine_l + (base + i) * 4)) |= 1;
+        *EVV_AT(int32_t *, (s->spine_r + (base + i) * 4)) |= 1;
 
-        *(int32_t *)(intptr_t)(s->spine_l + (base + i) * 4) |= 1;
-        *(int32_t *)(intptr_t)(s->spine_r + (base + i) * 4) |= 1;
-
-        *(int32_t *)(intptr_t)(s->spine_l + (base + i) * 4) =
-            (*(int32_t *)(intptr_t)(s->spine_l + (base + i) * 4) & 3)
+        *EVV_AT(int32_t *, (s->spine_l + (base + i) * 4)) =
+            (*EVV_AT(int32_t *, (s->spine_l + (base + i) * 4)) & 3)
             | s->spine_r;
-        *(int32_t *)(intptr_t)(s->spine_r + 0xc + i * 4) =
-            (*(int32_t *)(intptr_t)(s->spine_r + 0xc + i * 4) & 3)
+        *EVV_AT(int32_t *, (s->spine_r + 0xc + i * 4)) =
+            (*EVV_AT(int32_t *, (s->spine_r + 0xc + i * 4)) & 3)
             | s->spine_l;
 
         if (full != 0)
             vinit_stm(d, (int8_t)i);
     }
 
-    SETSPINER(d, (int32_t *)(intptr_t)s->spine_l, s->spine_r);
-    SETSPINEL((delta_node *)(intptr_t)s->spine_r, s->spine_l);
+    SETSPINER(d, EVV_AT(int32_t *, s->spine_l), s->spine_r);
+    SETSPINEL(EVV_AT(delta_node *, s->spine_r), s->spine_l);
 }
 
 /* Start a delta off. With no list every field is initialised; with a list as
@@ -5401,7 +5381,7 @@ void initdelta(delta_state *d, uint8_t n, const uint8_t *list)
                 forceErrorBacktrack(d);
         }
     } else if (n == d->nstmts) {
-        freeDeltaHeapTo(d, (uint8_t *)(intptr_t)EVV_AT(delta_stack *, d->stack)->spine_r, 0);
+        freeDeltaHeapTo(d, EVV_AT(uint8_t *, EVV_AT(delta_stack *, d->stack)->spine_r), 0);
         deltaReinit(d, 1);
     } else {
         for (i = 0; i < n; i++) {
@@ -5738,7 +5718,7 @@ void rpta_movel(delta_state *d, uint8_t f)
     if (!vmove_tv(d, &d->rpta))
         forceErrorBacktrack(d);
 
-    d->rpta.node = EVV_REF(vmovel((delta_node *)(intptr_t)d->rpta.node, f));
+    d->rpta.node = EVV_REF(vmovel(EVV_AT(delta_node *, d->rpta.node), f));
 }
 
 /* The same for the left pointer, but asking first rather than faulting: a
@@ -5748,7 +5728,7 @@ int lpta_tstmovel(delta_state *d, uint8_t f)
     if (vtsttmark_tv(d, &d->lpta, 0))
         return 1;
 
-    d->lpta.node = EVV_REF(vmovel((delta_node *)(intptr_t)d->lpta.node, f));
+    d->lpta.node = EVV_REF(vmovel(EVV_AT(delta_node *, d->lpta.node), f));
     return 0;
 }
 
@@ -6017,11 +5997,13 @@ void compare_tvars(delta_state *d, delta_loc *a, delta_loc *b)
 static int compare_two(delta_state *d)
 {
     delta_operand a, b;
+    int r;
 
     vnspop(d, &a);
     vnspop(d, &b);
     vcompare(d, &a, &b);
-    return EVV_AT(delta_vars *, d->vars)->compared_equal;
+    r = EVV_AT(delta_vars *, d->vars)->compared_equal;
+    return r;
 }
 
 int if_testeq(delta_state *d)
@@ -6116,9 +6098,16 @@ int forall_to_test(delta_state *d, delta_loc *a, delta_loc *b)
     return 2;
 }
 
+/* The value comes in as a slot and its ADDRESS is what vmark is handed: the
+   four bytes of the argument itself are the value, which is what the original
+   does and why the parameter is a word and not a pointer to one. Declaring it
+   a pointer would have the wrapper turn the slot into an address first, and
+   the low half of THAT is what would then be written -- right only where the
+   arena happens to start on a 64K boundary, which is where it starts on some
+   hosts and not on others. */
 /* Mark a field across the range the two pointers span. Only a short field
    can carry a mark, and a range the pointers cannot span is a refusal. */
-int mark_i(delta_state *d, uint8_t st, uint8_t fld, const void *v,
+int mark_i(delta_state *d, uint8_t st, uint8_t fld, int32_t v,
            uint8_t mode)
 {
     if (vrange_2pt(d, &d->lpta, &d->rpta, (int8_t)st, mode))
@@ -6133,7 +6122,7 @@ int mark_i(delta_state *d, uint8_t st, uint8_t fld, const void *v,
 /* The same mark in the other two widths. Each refuses a field whose kind is
    not the one it is named for, and no rule in the nine languages IBM shipped
    names either -- their fields are bytes and short2s. */
-int mark_l(delta_state *d, uint8_t st, uint8_t fld, const void *v,
+int mark_l(delta_state *d, uint8_t st, uint8_t fld, int32_t v,
            uint8_t mode)
 {
     if (vrange_2pt(d, &d->lpta, &d->rpta, (int8_t)st, mode))
@@ -6145,7 +6134,7 @@ int mark_l(delta_state *d, uint8_t st, uint8_t fld, const void *v,
     return 0;
 }
 
-int mark_lng(delta_state *d, uint8_t st, uint8_t fld, const void *v,
+int mark_lng(delta_state *d, uint8_t st, uint8_t fld, int32_t v,
              uint8_t mode)
 {
     if (vrange_2pt(d, &d->lpta, &d->rpta, (int8_t)st, mode))
@@ -6313,7 +6302,7 @@ static void pta_ctxt(delta_state *d, delta_tpos *p, uint8_t f, int32_t back)
     if (!vctxt_tv(d, p))
         forceErrorBacktrack(d);
 
-    node = (const int32_t *)(intptr_t)p->node;
+    node = EVV_AT(const int32_t *, p->node);
     if (node[EVV_AT(delta_vars *, d->vars)->fence_base + f] & 1)
         return;
 
@@ -6544,14 +6533,14 @@ int savetok(delta_state *d, delta_loc *loc)
     delta_operand dst, src;
     int32_t t;
 
-    t = ((const int32_t *)(intptr_t)v->scan_ptr)[3 + v->scan_field] & -4;
+    t = (EVV_AT(const int32_t *, v->scan_ptr))[3 + v->scan_field] & -4;
     if (t == 0) {
         reset_field(loc);
         return 1;
     }
 
-    while (t != 0 && (*(const int32_t *)(intptr_t)t & 2)) {
-        t = ((const int32_t *)(intptr_t)t)[3 + v->scan_field] & -4;
+    while (t != 0 && (*EVV_AT(const int32_t *, t) & 2)) {
+        t = (EVV_AT(const int32_t *, t))[3 + v->scan_field] & -4;
         if (t == 0) {
             reset_field(loc);
             return 1;
@@ -6561,7 +6550,7 @@ int savetok(delta_state *d, delta_loc *loc)
     vinitloc_new(d, &dst, loc);
 
     src.kind = v->scan_field;
-    src.ptr = TFLDS((void *)(intptr_t)t);
+    src.ptr = TFLDS(EVV_AT(void *, t));
     src.flag = 0;
 
     if (v->testing)
@@ -6721,20 +6710,20 @@ int ctxt_clstr(delta_state *d, int32_t t, int8_t f)
     int32_t b = vgetsc(d, 0, 1, t, f);
 
     while (a != b) {
-        if (a != 0 && (*(const int32_t *)(intptr_t)a & 2)) {
-            a = ((const int32_t *)(intptr_t)a)[EVV_AT(delta_vars *, d->vars)->fence_base + f] & -4;
+        if (a != 0 && (*EVV_AT(const int32_t *, a) & 2)) {
+            a = (EVV_AT(const int32_t *, a))[EVV_AT(delta_vars *, d->vars)->fence_base + f] & -4;
             continue;
         }
 
         if (vstmtbl[f].fields[0].kind == DK_LONG) {
-            if (*(const int32_t *)get(TFLDS((void *)(intptr_t)a)) != 0)
+            if (*(const int32_t *)get(TFLDS(EVV_AT(void *, a))) != 0)
                 return 0;
         } else if (vstmtbl[f].fields[0].kind == DK_SHORT2) {
-            if (*(const int16_t *)get(TFLDS((void *)(intptr_t)a)) != 0)
+            if (*(const int16_t *)get(TFLDS(EVV_AT(void *, a))) != 0)
                 return 0;
         }
 
-        a = ((const int32_t *)(intptr_t)a)[1] & -4;
+        a = (EVV_AT(const int32_t *, a))[1] & -4;
     }
 
     return 1;
@@ -6750,7 +6739,7 @@ int chstream(delta_state *d, int16_t v, uint8_t f)
     uint8_t *ctx;
     uint8_t *pos;
 
-    while (!(((const int32_t *)(intptr_t)va->scan_ptr)[va->fence_base + f]
+    while (!((EVV_AT(const int32_t *, va->scan_ptr))[va->fence_base + f]
              & 1)) {
         if (!vscanadv(d, 0, 1))
             return 1;
@@ -6940,7 +6929,6 @@ void project_rl(delta_state *d, delta_node *t, int32_t unused_10,
 
     (void)unused_10;
     (void)unused_14;
-
     tw[fb] |= 1;
     CLRONESTM(t);
 
@@ -7002,12 +6990,12 @@ int actd_lookup(delta_state *d, int16_t n, delta_token *outl,
             continue;
 
         while (steps < count) {
-            if (node != 0 && (*(const int32_t *)(intptr_t)node & 2)) {
-                node = ((const int32_t *)(intptr_t)node)
+            if (node != 0 && (*EVV_AT(const int32_t *, node) & 2)) {
+                node = (EVV_AT(const int32_t *, node))
                     [v->fence_base + entry[8]] & -4;
                 continue;
             }
-            node = ((const int32_t *)(intptr_t)node)[1] & -4;
+            node = (EVV_AT(const int32_t *, node))[1] & -4;
             steps++;
         }
 
@@ -7048,17 +7036,17 @@ int vproj_r(delta_state *d, delta_node *t, delta_node *at, uint8_t f)
 
     /* A marker stands in for itself; anything else hands on to what follows
        it. The original reads through a null here rather than stopping. */
-    if (next != 0 && (*(const int32_t *)(intptr_t)next & 2))
+    if (next != 0 && (*EVV_AT(const int32_t *, next) & 2))
         after = next;
     else
-        after = ((const int32_t *)(intptr_t)next)[1] & -4;
+        after = (EVV_AT(const int32_t *, next))[1] & -4;
 
     project_rl(d, t, EVV_REF(at), after, at,
-               (delta_node *)(intptr_t)next, f);
+               EVV_AT(delta_node *, next), f);
 
     if (NONSEQ(t) && v->relink != 0) {
         DELSPINE(d, t);
-        INSSPINEL(d, t, (delta_node *)(intptr_t)after);
+        INSSPINEL(d, t, EVV_AT(delta_node *, after));
     }
 
     return 1;
@@ -7076,9 +7064,9 @@ int conj_merge(delta_state *d, delta_token *tok)
 
     if (visleft(d, v->scan_ptr, start)) {
         while (node != v->scan_ptr) {
-            if (node == 0 || !(*(const int32_t *)(intptr_t)node & 2))
+            if (node == 0 || !(*EVV_AT(const int32_t *, node) & 2))
                 return 1;
-            node = ((const int32_t *)(intptr_t)node)[3 + v->scan_field] & -4;
+            node = (EVV_AT(const int32_t *, node))[3 + v->scan_field] & -4;
         }
         if (v->scan_rev == 0)
             tok->value = v->scan_ptr;
@@ -7087,9 +7075,9 @@ int conj_merge(delta_state *d, delta_token *tok)
 
     if (visright(d, v->scan_ptr, start)) {
         while (node != v->scan_ptr) {
-            if (node == 0 || !(*(const int32_t *)(intptr_t)node & 2))
+            if (node == 0 || !(*EVV_AT(const int32_t *, node) & 2))
                 return 1;
-            node = ((const int32_t *)(intptr_t)node)
+            node = (EVV_AT(const int32_t *, node))
                 [v->fence_base + v->scan_field] & -4;
         }
         if (v->scan_rev == 1)
@@ -7130,17 +7118,17 @@ int vproj_l(delta_state *d, delta_node *t, delta_node *at, uint8_t f)
     /* A marker stands in for itself; anything else hands back to what comes
        before it. The original reads through a null here rather than
        stopping. */
-    if (prev != 0 && (*(const int32_t *)(intptr_t)prev & 2))
+    if (prev != 0 && (*EVV_AT(const int32_t *, prev) & 2))
         before = prev;
     else
-        before = *(const int32_t *)(intptr_t)prev & -4;
+        before = *EVV_AT(const int32_t *, prev) & -4;
 
     project_rl(d, t, before, EVV_REF(at),
-               (delta_node *)(intptr_t)prev, at, f);
+               EVV_AT(delta_node *, prev), at, f);
 
     if (NONSEQ(t) && v->relink != 0) {
         DELSPINE(d, t);
-        INSSPINER(d, t, (delta_node *)(intptr_t)before);
+        INSSPINER(d, t, EVV_AT(delta_node *, before));
     }
 
     return 1;
@@ -7151,8 +7139,8 @@ int vproj_l(delta_state *d, delta_node *t, delta_node *at, uint8_t f)
 void proj_r(delta_state *d, uint8_t f)
 {
     if (!vsync_tv(d, &d->lpta)
-        || !vproj_r(d, (delta_node *)(intptr_t)d->rpta.node,
-                    (delta_node *)(intptr_t)d->lpta.node, f))
+        || !vproj_r(d, EVV_AT(delta_node *, d->rpta.node),
+                    EVV_AT(delta_node *, d->lpta.node), f))
         forceErrorBacktrack(d);
 }
 
@@ -7161,8 +7149,8 @@ void proj_r(delta_state *d, uint8_t f)
 void proj_l(delta_state *d, uint8_t f)
 {
     if (!vsync_tv(d, &d->rpta)
-        || !vproj_l(d, (delta_node *)(intptr_t)d->rpta.node,
-                    (delta_node *)(intptr_t)d->lpta.node, f))
+        || !vproj_l(d, EVV_AT(delta_node *, d->rpta.node),
+                    EVV_AT(delta_node *, d->lpta.node), f))
         forceErrorBacktrack(d);
 }
 
@@ -7171,8 +7159,7 @@ static int32_t scan_back(delta_state *d)
 {
     delta_vars *v = EVV_AT(delta_vars *, d->vars);
 
-    return *(int32_t *)(intptr_t)
-        (v->scan_ptr + (3 + v->scan_field) * 4) & ~3;
+    return *EVV_AT(int32_t *, (v->scan_ptr + (3 + v->scan_field) * 4)) & ~3;
 }
 
 /* The mirror of forto_adv_upto_r. Two statements have to lie between the
@@ -7196,7 +7183,7 @@ int forto_adv_upto_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
     nx = scan_back(d);
     if (nx == 0)
         return 0;
-    if ((*(const int32_t *)(intptr_t)nx & 2) != 0)
+    if ((*EVV_AT(const int32_t *, nx) & 2) != 0)
         return 0;
 
     if (!vscanadv(d, 1, 0))
@@ -7211,7 +7198,7 @@ int forto_adv_upto_l(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
     nx = scan_back(d);
     if (nx == 0)
         return 0;
-    if ((*(const int32_t *)(intptr_t)nx & 2) != 0)
+    if ((*EVV_AT(const int32_t *, nx) & 2) != 0)
         return 0;
 
     clearDeltaStackBack(d);
@@ -7304,7 +7291,7 @@ int vscanadvUptoToken(delta_state *d, int32_t usefence)
         next = scan_step(d, cur, field);
         if (next == 0)
             return 0;
-        if ((*(int32_t *)(intptr_t)next & 2) == 0)
+        if ((*EVV_AT(int32_t *, next) & 2) == 0)
             return 1;
 
         cur = next;
@@ -7337,7 +7324,7 @@ int forall_adv_over_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
     nx = scan_here(d);
     if (nx == 0)
         return 0;
-    if ((*(const int32_t *)(intptr_t)nx & 2) != 0)
+    if ((*EVV_AT(const int32_t *, nx) & 2) != 0)
         return 0;
 
     if (!vscanadv(d, 1, 0))
@@ -7368,7 +7355,7 @@ int forall_adv_upto_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
     nx = scan_here(d);
     if (nx == 0)
         return 0;
-    if ((*(const int32_t *)(intptr_t)nx & 2) != 0)
+    if ((*EVV_AT(const int32_t *, nx) & 2) != 0)
         return 0;
 
     if (!vscanadv(d, 1, 0))
@@ -7379,7 +7366,7 @@ int forall_adv_upto_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
     nx = scan_here(d);
     if (nx == 0)
         return 0;
-    if ((*(const int32_t *)(intptr_t)nx & 2) != 0)
+    if ((*EVV_AT(const int32_t *, nx) & 2) != 0)
         return 0;
 
     clearDeltaStackBack(d);
@@ -7416,7 +7403,7 @@ static int forall_adv_leftwards(delta_state *d, int16_t tag, int16_t loop,
     nx = scan_back(d);
     if (nx == 0)
         return 0;
-    if ((*(const int32_t *)(intptr_t)nx & 2) != 0)
+    if ((*EVV_AT(const int32_t *, nx) & 2) != 0)
         return 0;
 
     if (!vscanadv(d, 1, 0))
@@ -7428,7 +7415,7 @@ static int forall_adv_leftwards(delta_state *d, int16_t tag, int16_t loop,
         nx = scan_back(d);
         if (nx == 0)
             return 0;
-        if ((*(const int32_t *)(intptr_t)nx & 2) != 0)
+        if ((*EVV_AT(const int32_t *, nx) & 2) != 0)
             return 0;
     }
 
@@ -7473,7 +7460,7 @@ static int forto_adv_over(delta_state *d, int16_t tag, int16_t loop,
     nx = rev ? scan_here(d) : scan_back(d);
     if (nx == 0)
         return 0;
-    if ((*(const int32_t *)(intptr_t)nx & 2) != 0)
+    if ((*EVV_AT(const int32_t *, nx) & 2) != 0)
         return 0;
 
     if (!vscanadv(d, 1, 0))
@@ -7580,13 +7567,13 @@ int vtstctx_tv(delta_state *d, delta_tpos *p, int32_t back)
         void *(*get)(void *) = vstmtbl[p->field].get[0];
         int32_t val = 0;
 
-        p->node = ((const int32_t *)(intptr_t)p->node)
+        p->node = (EVV_AT(const int32_t *, p->node))
             [EVV_AT(delta_vars *, d->vars)->fence_base + p->field] & -4;
 
         if (vstmtbl[p->field].fields[0].kind == DK_LONG) {
-            val = *(const int32_t *)get(TFLDS((void *)(intptr_t)p->node));
+            val = *(const int32_t *)get(TFLDS(EVV_AT(void *, p->node)));
         } else if (vstmtbl[p->field].fields[0].kind == DK_SHORT2) {
-            val = *(const int16_t *)get(TFLDS((void *)(intptr_t)p->node));
+            val = *(const int16_t *)get(TFLDS(EVV_AT(void *, p->node)));
             if (val == -0x7fff)
                 val = (int32_t)0x80000001u;
         }
@@ -7594,7 +7581,7 @@ int vtstctx_tv(delta_state *d, delta_tpos *p, int32_t back)
         if (val != (int32_t)0x80000001u)
             p->offset -= val;
 
-        p->node = ((const int32_t *)(intptr_t)p->node)[1] & -4;
+        p->node = (EVV_AT(const int32_t *, p->node))[1] & -4;
         return 0;
     }
 
@@ -7602,12 +7589,12 @@ int vtstctx_tv(delta_state *d, delta_tpos *p, int32_t back)
         void *(*get)(void *) = vstmtbl[p->field].get[0];
         int32_t val = 0;
 
-        p->node = ((const int32_t *)(intptr_t)p->node)[3 + p->field] & -4;
+        p->node = (EVV_AT(const int32_t *, p->node))[3 + p->field] & -4;
 
         if (vstmtbl[p->field].fields[0].kind == DK_LONG) {
-            val = *(const int32_t *)get(TFLDS((void *)(intptr_t)p->node));
+            val = *(const int32_t *)get(TFLDS(EVV_AT(void *, p->node)));
         } else if (vstmtbl[p->field].fields[0].kind == DK_SHORT2) {
-            val = *(const int16_t *)get(TFLDS((void *)(intptr_t)p->node));
+            val = *(const int16_t *)get(TFLDS(EVV_AT(void *, p->node)));
             if (val == -0x7fff)
                 val = (int32_t)0x80000001u;
         }
@@ -7615,7 +7602,7 @@ int vtstctx_tv(delta_state *d, delta_tpos *p, int32_t back)
         if (val != (int32_t)0x80000001u)
             p->offset += val;
 
-        p->node = *(const int32_t *)(intptr_t)p->node & -4;
+        p->node = *EVV_AT(const int32_t *, p->node) & -4;
     }
 
     return 0;
@@ -7634,7 +7621,7 @@ static int pta_tstctxt(delta_state *d, delta_pta *p, uint8_t f, int32_t back)
     if (vtstctx_tv(d, p, back))
         return 1;
 
-    node = (const int32_t *)(intptr_t)p->node;
+    node = EVV_AT(const int32_t *, p->node);
     if (node[EVV_AT(delta_vars *, d->vars)->fence_base + f] & 1)
         return 0;
 
@@ -7747,17 +7734,17 @@ int32_t dur2(delta_state *d, const delta_tpos *a, const delta_tpos *b,
         to = a->node;
     }
 
-    if (!(((const int32_t *)(intptr_t)a->node)[fb] & 1)
+    if (!((EVV_AT(const int32_t *, a->node))[fb] & 1)
         && !ctxt_clstr(d, a->node, f))
         return (int32_t)0x80000001u;
 
-    if (!(((const int32_t *)(intptr_t)b->node)[fb] & 1)
+    if (!((EVV_AT(const int32_t *, b->node))[fb] & 1)
         && !ctxt_clstr(d, b->node, f))
         return (int32_t)0x80000001u;
 
     while (from != to && from != 0) {
-        if (*(const int32_t *)(intptr_t)from & 2) {
-            from = ((const int32_t *)(intptr_t)from)[fb] & -4;
+        if (*EVV_AT(const int32_t *, from) & 2) {
+            from = (EVV_AT(const int32_t *, from))[fb] & -4;
             continue;
         }
 
@@ -7765,13 +7752,13 @@ int32_t dur2(delta_state *d, const delta_tpos *a, const delta_tpos *b,
 
         if (vstmtbl[f].fields[0].kind == DK_LONG) {
             total += *(const int32_t *)
-                vstmtbl[f].get[0](TFLDS((void *)(intptr_t)from));
+                vstmtbl[f].get[0](TFLDS(EVV_AT(void *, from)));
         } else if (vstmtbl[f].fields[0].kind == DK_SHORT2) {
             total += *(const int16_t *)
-                vstmtbl[f].get[0](TFLDS((void *)(intptr_t)from));
+                vstmtbl[f].get[0](TFLDS(EVV_AT(void *, from)));
         }
 
-        from = ((const int32_t *)(intptr_t)from)[1] & -4;
+        from = (EVV_AT(const int32_t *, from))[1] & -4;
     }
 
     if (to == a->node) {
@@ -7836,30 +7823,30 @@ int vdur_ass(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
 
     p = a->node;
     while (p != b->node) {
-        if (p != 0 && (*(const int32_t *)(intptr_t)p & 2)) {
-            p = ((const int32_t *)(intptr_t)p)[EVV_AT(delta_vars *, d->vars)->fence_base + f] & -4;
+        if (p != 0 && (*EVV_AT(const int32_t *, p) & 2)) {
+            p = (EVV_AT(const int32_t *, p))[EVV_AT(delta_vars *, d->vars)->fence_base + f] & -4;
             continue;
         }
 
         if (e->fields[0].kind == DK_LONG) {
             int32_t was = *(const int32_t *)
-                e->get[0](TFLDS((void *)(intptr_t)p));
+                e->get[0](TFLDS(EVV_AT(void *, p)));
 
             total = (int32_t)((uint32_t)was * (uint32_t)factor
                               + (uint32_t)bias) / 1000;
-            vinitflds(d, (uint8_t)f, TFLDS((void *)(intptr_t)p), &total);
+            vinitflds(d, (uint8_t)f, TFLDS(EVV_AT(void *, p)), &total);
         } else {
             int32_t was = *(const int16_t *)
-                e->get[0](TFLDS((void *)(intptr_t)p));
+                e->get[0](TFLDS(EVV_AT(void *, p)));
             int16_t share;
 
             total = (int32_t)((uint32_t)was * (uint32_t)factor
                               + (uint32_t)bias) / 1000;
             share = (int16_t)total;
-            vinitflds(d, (uint8_t)f, TFLDS((void *)(intptr_t)p), &share);
+            vinitflds(d, (uint8_t)f, TFLDS(EVV_AT(void *, p)), &share);
         }
 
-        p = ((const int32_t *)(intptr_t)p)[1] & -4;
+        p = (EVV_AT(const int32_t *, p))[1] & -4;
     }
 
     return 0;
@@ -7921,4 +7908,736 @@ void dur_expr(delta_state *d, uint8_t f, delta_loc *field)
     vassign(d, &dst, &src);
 
     reset_field(field);
+}
+
+/* Generated by tools/evv-wrapgen.py. Do not edit.
+ *
+ * One wrapper for each primitive the interpreter calls through call_entry,
+ * turning the slot values it hands over back into the pointers the primitive
+ * declares. Only a relative arena needs them: with an absolute one a slot
+ * value IS the address and EVV_AT is the identity.
+ */
+
+int32_t evvw_actd_goto(int32_t a0)
+{
+    return (int32_t)actd_goto(EVV_AT(delta_state *, a0));
+}
+
+int32_t evvw_actd_lookup(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
+{
+    return (int32_t)actd_lookup(EVV_AT(delta_state *, a0), (int16_t)a1, EVV_AT(delta_token *, a2), EVV_AT(delta_token *, a3));
+}
+
+int32_t evvw_addfence(int32_t a0, int32_t a1)
+{
+    addfence(EVV_AT(delta_state *, a0), (int8_t)a1);
+    return 0;
+}
+
+int32_t evvw_advance_strm(int32_t a0)
+{
+    return (int32_t)advance_strm(EVV_AT(delta_state *, a0));
+}
+
+int32_t evvw_advance_tok(int32_t a0)
+{
+    return (int32_t)advance_tok(EVV_AT(delta_state *, a0));
+}
+
+int32_t evvw_bsclear(int32_t a0)
+{
+    bsclear(EVV_AT(delta_state *, a0));
+    return 0;
+}
+
+int32_t evvw_bspop_boa(int32_t a0)
+{
+    return (int32_t)EVV_REF(bspop_boa(EVV_AT(delta_state *, a0)));
+}
+
+int32_t evvw_bspush_boa(int32_t a0)
+{
+    bspush_boa(EVV_AT(delta_state *, a0));
+    return 0;
+}
+
+int32_t evvw_bspush_ca(int32_t a0, int32_t a1)
+{
+    bspush_ca(EVV_AT(delta_state *, a0), (int16_t)a1);
+    return 0;
+}
+
+int32_t evvw_bspush_ca_boa(int32_t a0, int32_t a1)
+{
+    bspush_ca_boa(EVV_AT(delta_state *, a0), (int16_t)a1);
+    return 0;
+}
+
+int32_t evvw_bspush_ca_scan(int32_t a0, int32_t a1)
+{
+    bspush_ca_scan(EVV_AT(delta_state *, a0), (int16_t)a1);
+    return 0;
+}
+
+int32_t evvw_bspush_ca_scan_boa(int32_t a0, int32_t a1)
+{
+    bspush_ca_scan_boa(EVV_AT(delta_state *, a0), (int16_t)a1);
+    return 0;
+}
+
+int32_t evvw_bspush_nboa(int32_t a0)
+{
+    bspush_nboa(EVV_AT(delta_state *, a0));
+    return 0;
+}
+
+int32_t evvw_c_assvar(int32_t a0, int32_t a1)
+{
+    c_assvar(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1));
+    return 0;
+}
+
+int32_t evvw_calcETI2WPM(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)calcETI2WPM(EVV_AT(delta_state *, a0), EVV_AT(const delta_loc *, a1), EVV_AT(delta_loc *, a2));
+}
+
+int32_t evvw_calcHZ2ETI(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)calcHZ2ETI(EVV_AT(delta_state *, a0), EVV_AT(const delta_loc *, a1), EVV_AT(delta_loc *, a2));
+}
+
+int32_t evvw_calcHZ2ST(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)calcHZ2ST(EVV_AT(delta_state *, a0), EVV_AT(const delta_loc *, a1), EVV_AT(delta_loc *, a2));
+}
+
+int32_t evvw_calcIntoni(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4)
+{
+    return (int32_t)calcIntoni(EVV_AT(delta_state *, a0), EVV_AT(const delta_loc *, a1), EVV_AT(const delta_loc *, a2), EVV_AT(const delta_loc *, a3), EVV_AT(delta_loc *, a4));
+}
+
+int32_t evvw_calcMidline(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)calcMidline(EVV_AT(delta_state *, a0), EVV_AT(const delta_loc *, a1), EVV_AT(delta_loc *, a2));
+}
+
+int32_t evvw_calcST2HZ(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)calcST2HZ(EVV_AT(delta_state *, a0), EVV_AT(const delta_loc *, a1), EVV_AT(delta_loc *, a2));
+}
+
+int32_t evvw_calcSpeedFactori(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)calcSpeedFactori(EVV_AT(delta_state *, a0), EVV_AT(const delta_loc *, a1), EVV_AT(delta_loc *, a2));
+}
+
+int32_t evvw_calcWPM2ETI(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)calcWPM2ETI(EVV_AT(delta_state *, a0), EVV_AT(const delta_loc *, a1), EVV_AT(delta_loc *, a2));
+}
+
+int32_t evvw_chstream(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)chstream(EVV_AT(delta_state *, a0), (int16_t)a1, (uint8_t)a2);
+}
+
+int32_t evvw_compare_ptas(int32_t a0)
+{
+    return (int32_t)compare_ptas(EVV_AT(delta_state *, a0));
+}
+
+int32_t evvw_conj_merge(int32_t a0, int32_t a1)
+{
+    return (int32_t)conj_merge(EVV_AT(delta_state *, a0), EVV_AT(delta_token *, a1));
+}
+
+int32_t evvw_copyvar(int32_t a0, int32_t a1, int32_t a2)
+{
+    copyvar(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1), EVV_AT(delta_loc *, a2));
+    return 0;
+}
+
+int32_t evvw_delete_1pt(int32_t a0, int32_t a1)
+{
+    delete_1pt(EVV_AT(delta_state *, a0), (uint8_t)a1);
+    return 0;
+}
+
+int32_t evvw_delete_2pt(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)delete_2pt(EVV_AT(delta_state *, a0), (uint8_t)a1, (uint8_t)a2);
+}
+
+int32_t evvw_dur_ass(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
+{
+    return (int32_t)dur_ass(EVV_AT(delta_state *, a0), (int8_t)a1, EVV_AT(delta_loc *, a2), (uint8_t)a3);
+}
+
+int32_t evvw_dur_expr(int32_t a0, int32_t a1, int32_t a2)
+{
+    dur_expr(EVV_AT(delta_state *, a0), (uint8_t)a1, EVV_AT(delta_loc *, a2));
+    return 0;
+}
+
+int32_t evvw_f0_stepi(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5)
+{
+    return (int32_t)f0_stepi(EVV_AT(delta_state *, a0), EVV_AT(const delta_loc *, a1), EVV_AT(const delta_loc *, a2), EVV_AT(const delta_loc *, a3), EVV_AT(const delta_loc *, a4), EVV_AT(delta_loc *, a5));
+}
+
+int32_t evvw_fence(int32_t a0, int32_t a1, int32_t a2)
+{
+    fence(EVV_AT(delta_state *, a0), (int8_t)a1, EVV_AT(const uint8_t *, a2));
+    return 0;
+}
+
+int32_t evvw_for_adv(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5)
+{
+    return (int32_t)for_adv(EVV_AT(delta_state *, a0), (int16_t)a1, (int16_t)a2, EVV_AT(delta_loc *, a3), EVV_AT(delta_loc *, a4), EVV_AT(delta_loc *, a5));
+}
+
+int32_t evvw_for_test(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
+{
+    return (int32_t)for_test(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1), EVV_AT(delta_loc *, a2), EVV_AT(delta_loc *, a3));
+}
+
+int32_t evvw_forall_adv_l(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5)
+{
+    return (int32_t)forall_adv_l(EVV_AT(delta_state *, a0), (int16_t)a1, (int16_t)a2, (int16_t)a3, (uint8_t)a4, EVV_AT(delta_token *, a5));
+}
+
+int32_t evvw_forall_adv_over_r(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5)
+{
+    return (int32_t)forall_adv_over_r(EVV_AT(delta_state *, a0), (int16_t)a1, (int16_t)a2, (int16_t)a3, (uint8_t)a4, EVV_AT(delta_token *, a5));
+}
+
+int32_t evvw_forall_adv_upto_r(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5)
+{
+    return (int32_t)forall_adv_upto_r(EVV_AT(delta_state *, a0), (int16_t)a1, (int16_t)a2, (int16_t)a3, (uint8_t)a4, EVV_AT(delta_token *, a5));
+}
+
+int32_t evvw_forall_cont_from(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5)
+{
+    return (int32_t)forall_cont_from(EVV_AT(delta_state *, a0), (int16_t)a1, (int16_t)a2, a3, EVV_AT(delta_loc *, a4), EVV_AT(const delta_loc *, a5));
+}
+
+int32_t evvw_forall_to_test(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)forall_to_test(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1), EVV_AT(delta_loc *, a2));
+}
+
+int32_t evvw_forto_adv_l(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6)
+{
+    return (int32_t)forto_adv_l(EVV_AT(delta_state *, a0), (int16_t)a1, (int16_t)a2, (int16_t)a3, (uint8_t)a4, EVV_AT(delta_token *, a5), EVV_AT(const delta_token *, a6));
+}
+
+int32_t evvw_forto_adv_r(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6)
+{
+    return (int32_t)forto_adv_r(EVV_AT(delta_state *, a0), (int16_t)a1, (int16_t)a2, (int16_t)a3, (uint8_t)a4, EVV_AT(delta_token *, a5), EVV_AT(const delta_token *, a6));
+}
+
+int32_t evvw_forto_adv_upto_l(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6)
+{
+    return (int32_t)forto_adv_upto_l(EVV_AT(delta_state *, a0), (int16_t)a1, (int16_t)a2, (int16_t)a3, (uint8_t)a4, EVV_AT(delta_token *, a5), EVV_AT(const delta_token *, a6));
+}
+
+int32_t evvw_forto_adv_upto_r(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6)
+{
+    return (int32_t)forto_adv_upto_r(EVV_AT(delta_state *, a0), (int16_t)a1, (int16_t)a2, (int16_t)a3, (uint8_t)a4, EVV_AT(delta_token *, a5), EVV_AT(const delta_token *, a6));
+}
+
+int32_t evvw_get_parm(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
+{
+    return (int32_t)get_parm(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1), EVV_AT(delta_loc *, a2), (int16_t)a3);
+}
+
+int32_t evvw_if_testeq(int32_t a0)
+{
+    return (int32_t)if_testeq(EVV_AT(delta_state *, a0));
+}
+
+int32_t evvw_if_testeq_v_i(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)if_testeq_v_i(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1), a2);
+}
+
+int32_t evvw_if_testge(int32_t a0)
+{
+    return (int32_t)if_testge(EVV_AT(delta_state *, a0));
+}
+
+int32_t evvw_if_testge_v_i(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)if_testge_v_i(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1), a2);
+}
+
+int32_t evvw_if_testgt(int32_t a0)
+{
+    return (int32_t)if_testgt(EVV_AT(delta_state *, a0));
+}
+
+int32_t evvw_if_testgt_v_i(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)if_testgt_v_i(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1), a2);
+}
+
+int32_t evvw_if_testle(int32_t a0)
+{
+    return (int32_t)if_testle(EVV_AT(delta_state *, a0));
+}
+
+int32_t evvw_if_testlt(int32_t a0)
+{
+    return (int32_t)if_testlt(EVV_AT(delta_state *, a0));
+}
+
+int32_t evvw_if_testlt_v_i(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)if_testlt_v_i(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1), a2);
+}
+
+int32_t evvw_if_testneq(int32_t a0)
+{
+    return (int32_t)if_testneq(EVV_AT(delta_state *, a0));
+}
+
+int32_t evvw_if_testneq_v_i(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)if_testneq_v_i(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1), a2);
+}
+
+int32_t evvw_initdelta(int32_t a0, int32_t a1, int32_t a2)
+{
+    initdelta(EVV_AT(delta_state *, a0), (uint8_t)a1, EVV_AT(const uint8_t *, a2));
+    return 0;
+}
+
+int32_t evvw_insert_2pt_i(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4)
+{
+    return (int32_t)insert_2pt_i(EVV_AT(delta_state *, a0), (uint8_t)a1, (uint8_t)a2, EVV_AT(const uint8_t *, a3), (uint8_t)a4);
+}
+
+int32_t evvw_insert_2pt_s(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4)
+{
+    return (int32_t)insert_2pt_s(EVV_AT(delta_state *, a0), (uint8_t)a1, (uint8_t)a2, EVV_AT(const uint8_t *, a3), (uint8_t)a4);
+}
+
+int32_t evvw_insert_2ptv(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
+{
+    return (int32_t)insert_2ptv(EVV_AT(delta_state *, a0), (uint8_t)a1, EVV_AT(delta_loc *, a2), (uint8_t)a3);
+}
+
+int32_t evvw_insert_l(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4)
+{
+    insert_l(EVV_AT(delta_state *, a0), (int8_t)a1, (uint8_t)a2, EVV_AT(const uint8_t *, a3), (uint8_t)a4);
+    return 0;
+}
+
+int32_t evvw_insert_lv(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
+{
+    insert_lv(EVV_AT(delta_state *, a0), (uint8_t)a1, EVV_AT(delta_loc *, a2), (uint8_t)a3);
+    return 0;
+}
+
+int32_t evvw_insert_r(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4)
+{
+    insert_r(EVV_AT(delta_state *, a0), (int8_t)a1, (uint8_t)a2, EVV_AT(const uint8_t *, a3), (uint8_t)a4);
+    return 0;
+}
+
+int32_t evvw_lpta_ctxtl(int32_t a0, int32_t a1)
+{
+    lpta_ctxtl(EVV_AT(delta_state *, a0), (uint8_t)a1);
+    return 0;
+}
+
+int32_t evvw_lpta_ctxtr(int32_t a0, int32_t a1)
+{
+    lpta_ctxtr(EVV_AT(delta_state *, a0), (uint8_t)a1);
+    return 0;
+}
+
+int32_t evvw_lpta_loadp(int32_t a0, int32_t a1)
+{
+    lpta_loadp(EVV_AT(delta_state *, a0), EVV_AT(const delta_token *, a1));
+    return 0;
+}
+
+int32_t evvw_lpta_loadpn(int32_t a0, int32_t a1)
+{
+    lpta_loadpn(EVV_AT(delta_state *, a0), EVV_AT(const delta_token *, a1));
+    return 0;
+}
+
+int32_t evvw_lpta_loadv(int32_t a0, int32_t a1, int32_t a2)
+{
+    lpta_loadv(EVV_AT(delta_state *, a0), (uint8_t)a1, EVV_AT(const delta_loc *, a2));
+    return 0;
+}
+
+int32_t evvw_lpta_movel(int32_t a0, int32_t a1)
+{
+    lpta_movel(EVV_AT(delta_state *, a0), (uint8_t)a1);
+    return 0;
+}
+
+int32_t evvw_lpta_mover(int32_t a0, int32_t a1)
+{
+    lpta_mover(EVV_AT(delta_state *, a0), (uint8_t)a1);
+    return 0;
+}
+
+int32_t evvw_lpta_rpta_loadp(int32_t a0, int32_t a1, int32_t a2)
+{
+    lpta_rpta_loadp(EVV_AT(delta_state *, a0), EVV_AT(const delta_token *, a1), EVV_AT(const delta_token *, a2));
+    return 0;
+}
+
+int32_t evvw_lpta_storep(int32_t a0, int32_t a1)
+{
+    lpta_storep(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1));
+    return 0;
+}
+
+int32_t evvw_lpta_tstctxtl(int32_t a0, int32_t a1)
+{
+    return (int32_t)lpta_tstctxtl(EVV_AT(delta_state *, a0), (uint8_t)a1);
+}
+
+int32_t evvw_lpta_tstctxtr(int32_t a0, int32_t a1)
+{
+    return (int32_t)lpta_tstctxtr(EVV_AT(delta_state *, a0), (uint8_t)a1);
+}
+
+int32_t evvw_lpta_tstmovel(int32_t a0, int32_t a1)
+{
+    return (int32_t)lpta_tstmovel(EVV_AT(delta_state *, a0), (uint8_t)a1);
+}
+
+int32_t evvw_lpta_tstmover(int32_t a0, int32_t a1)
+{
+    return (int32_t)lpta_tstmover(EVV_AT(delta_state *, a0), (uint8_t)a1);
+}
+
+int32_t evvw_mark_i(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4)
+{
+    return (int32_t)mark_i(EVV_AT(delta_state *, a0), (uint8_t)a1, (uint8_t)a2, a3, (uint8_t)a4);
+}
+
+int32_t evvw_mark_s(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4)
+{
+    return (int32_t)mark_s(EVV_AT(delta_state *, a0), (uint8_t)a1, (uint8_t)a2, (uint8_t)a3, (uint8_t)a4);
+}
+
+int32_t evvw_mark_v(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4)
+{
+    return (int32_t)mark_v(EVV_AT(delta_state *, a0), (uint8_t)a1, (uint8_t)a2, EVV_AT(delta_loc *, a3), (uint8_t)a4);
+}
+
+int32_t evvw_modulate_pwindi(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
+{
+    return (int32_t)modulate_pwindi(EVV_AT(delta_state *, a0), EVV_AT(const delta_loc *, a1), EVV_AT(delta_loc *, a2), EVV_AT(delta_loc *, a3));
+}
+
+int32_t evvw_modulo(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
+{
+    return (int32_t)modulo(EVV_AT(delta_state *, a0), EVV_AT(const delta_loc *, a1), EVV_AT(const delta_loc *, a2), EVV_AT(delta_loc *, a3));
+}
+
+int32_t evvw_move_i(int32_t a0, int32_t a1, int32_t a2)
+{
+    move_i(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1), (int16_t)a2);
+    return 0;
+}
+
+int32_t evvw_ncompare_s(int32_t a0, int32_t a1)
+{
+    ncompare_s(EVV_AT(delta_state *, a0), (uint8_t)a1);
+    return 0;
+}
+
+int32_t evvw_npop(int32_t a0, int32_t a1)
+{
+    npop(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1));
+    return 0;
+}
+
+int32_t evvw_npush_fld(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)npush_fld(EVV_AT(delta_state *, a0), (uint8_t)a1, (uint8_t)a2);
+}
+
+int32_t evvw_npush_i(int32_t a0, int32_t a1)
+{
+    npush_i(EVV_AT(delta_state *, a0), a1);
+    return 0;
+}
+
+int32_t evvw_npush_lng(int32_t a0, int32_t a1)
+{
+    npush_lng(EVV_AT(delta_state *, a0), a1);
+    return 0;
+}
+
+int32_t evvw_npush_s(int32_t a0, int32_t a1)
+{
+    npush_s(EVV_AT(delta_state *, a0), a1);
+    return 0;
+}
+
+int32_t evvw_npush_v(int32_t a0, int32_t a1)
+{
+    npush_v(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1));
+    return 0;
+}
+
+int32_t evvw_npush_vf(int32_t a0, int32_t a1)
+{
+    npush_vf(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1));
+    return 0;
+}
+
+int32_t evvw_pause(int32_t a0)
+{
+    pause(EVV_AT(delta_state *, a0));
+    return 0;
+}
+
+int32_t evvw_proj_def(int32_t a0, int32_t a1)
+{
+    proj_def(EVV_AT(delta_state *, a0), (uint8_t)a1);
+    return 0;
+}
+
+int32_t evvw_proj_def_mult(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
+{
+    proj_def_mult(EVV_AT(delta_state *, a0), (uint8_t)a1, EVV_AT(const uint8_t *, a2), EVV_AT(const delta_token *, a3));
+    return 0;
+}
+
+int32_t evvw_proj_l(int32_t a0, int32_t a1)
+{
+    proj_l(EVV_AT(delta_state *, a0), (uint8_t)a1);
+    return 0;
+}
+
+int32_t evvw_proj_r(int32_t a0, int32_t a1)
+{
+    proj_r(EVV_AT(delta_state *, a0), (uint8_t)a1);
+    return 0;
+}
+
+int32_t evvw_push_ptr_init(int32_t a0, int32_t a1)
+{
+    push_ptr_init(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1));
+    return 0;
+}
+
+int32_t evvw_remfence(int32_t a0, int32_t a1)
+{
+    remfence(EVV_AT(delta_state *, a0), (int8_t)a1);
+    return 0;
+}
+
+int32_t evvw_rpta_ctxtl(int32_t a0, int32_t a1)
+{
+    rpta_ctxtl(EVV_AT(delta_state *, a0), (uint8_t)a1);
+    return 0;
+}
+
+int32_t evvw_rpta_ctxtr(int32_t a0, int32_t a1)
+{
+    rpta_ctxtr(EVV_AT(delta_state *, a0), (uint8_t)a1);
+    return 0;
+}
+
+int32_t evvw_rpta_loadp(int32_t a0, int32_t a1)
+{
+    rpta_loadp(EVV_AT(delta_state *, a0), EVV_AT(const delta_token *, a1));
+    return 0;
+}
+
+int32_t evvw_rpta_loadpn(int32_t a0, int32_t a1)
+{
+    rpta_loadpn(EVV_AT(delta_state *, a0), EVV_AT(const delta_token *, a1));
+    return 0;
+}
+
+int32_t evvw_rpta_movel(int32_t a0, int32_t a1)
+{
+    rpta_movel(EVV_AT(delta_state *, a0), (uint8_t)a1);
+    return 0;
+}
+
+int32_t evvw_rpta_storep(int32_t a0, int32_t a1)
+{
+    rpta_storep(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1));
+    return 0;
+}
+
+int32_t evvw_savescptr(int32_t a0, int32_t a1, int32_t a2)
+{
+    savescptr(EVV_AT(delta_state *, a0), (int16_t)a1, EVV_AT(delta_loc *, a2));
+    return 0;
+}
+
+int32_t evvw_savetok(int32_t a0, int32_t a1)
+{
+    return (int32_t)savetok(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1));
+}
+
+int32_t evvw_setd_lookup(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)setd_lookup(EVV_AT(delta_state *, a0), a1, (int16_t)a2);
+}
+
+int32_t evvw_setscan_l(int32_t a0, int32_t a1)
+{
+    return (int32_t)setscan_l(EVV_AT(delta_state *, a0), (uint8_t)a1);
+}
+
+int32_t evvw_setscan_nof_l(int32_t a0, int32_t a1)
+{
+    return (int32_t)setscan_nof_l(EVV_AT(delta_state *, a0), (uint8_t)a1);
+}
+
+int32_t evvw_setscan_nof_r(int32_t a0, int32_t a1)
+{
+    return (int32_t)setscan_nof_r(EVV_AT(delta_state *, a0), (uint8_t)a1);
+}
+
+int32_t evvw_setscan_r(int32_t a0, int32_t a1)
+{
+    return (int32_t)setscan_r(EVV_AT(delta_state *, a0), (uint8_t)a1);
+}
+
+int32_t evvw_settvar_i(int32_t a0, int32_t a1, int32_t a2)
+{
+    settvar_i(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1), a2);
+    return 0;
+}
+
+int32_t evvw_settvar_s(int32_t a0, int32_t a1, int32_t a2)
+{
+    settvar_s(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1), a2);
+    return 0;
+}
+
+int32_t evvw_startloop(int32_t a0, int32_t a1)
+{
+    startloop(EVV_AT(delta_state *, a0), (int16_t)a1);
+    return 0;
+}
+
+int32_t evvw_starttest(int32_t a0, int32_t a1)
+{
+    starttest(EVV_AT(delta_state *, a0), (int16_t)a1);
+    return 0;
+}
+
+int32_t evvw_starttest_e(int32_t a0, int32_t a1)
+{
+    starttest_e(EVV_AT(delta_state *, a0), (int16_t)a1);
+    return 0;
+}
+
+int32_t evvw_starttest_l(int32_t a0, int32_t a1)
+{
+    starttest_l(EVV_AT(delta_state *, a0), (int16_t)a1);
+    return 0;
+}
+
+int32_t evvw_succeed(int32_t a0)
+{
+    return (int32_t)succeed(EVV_AT(delta_state *, a0));
+}
+
+int32_t evvw_testFldeq(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
+{
+    return (int32_t)testFldeq(EVV_AT(delta_state *, a0), (uint8_t)a1, (uint8_t)a2, (uint8_t)a3);
+}
+
+int32_t evvw_test_ptr(int32_t a0)
+{
+    return (int32_t)test_ptr(EVV_AT(delta_state *, a0));
+}
+
+int32_t evvw_test_string_i(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
+{
+    return (int32_t)test_string_i(EVV_AT(delta_state *, a0), (uint8_t)a1, (uint8_t)a2, EVV_AT(const uint8_t *, a3));
+}
+
+int32_t evvw_test_string_s(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
+{
+    return (int32_t)test_string_s(EVV_AT(delta_state *, a0), (uint8_t)a1, (uint8_t)a2, EVV_AT(const uint8_t *, a3));
+}
+
+int32_t evvw_test_synch(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
+{
+    return (int32_t)test_synch(EVV_AT(delta_state *, a0), (int16_t)a1, (uint8_t)a2, EVV_AT(const uint8_t *, a3));
+}
+
+int32_t evvw_testeq(int32_t a0)
+{
+    return (int32_t)testeq(EVV_AT(delta_state *, a0));
+}
+
+int32_t evvw_testeq_tvars(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)testeq_tvars(EVV_AT(delta_state *, a0), EVV_AT(delta_loc *, a1), EVV_AT(delta_loc *, a2));
+}
+
+int32_t evvw_testneq(int32_t a0)
+{
+    return (int32_t)testneq(EVV_AT(delta_state *, a0));
+}
+
+int32_t evvw_ventproc(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5)
+{
+    return (int32_t)ventproc(EVV_AT(delta_state *, a0), EVV_AT(delta_actrec *, a1), EVV_AT(uint8_t *, a2), EVV_AT(uint8_t *, a3), EVV_AT(uint8_t *, a4), EVV_AT(void *, a5));
+}
+
+int32_t evvw_vretproc(int32_t a0, int32_t a1)
+{
+    return (int32_t)vretproc(EVV_AT(delta_state *, a0), a1);
+}
+
+int32_t evvw_while_iterate(int32_t a0, int32_t a1, int32_t a2)
+{
+    return (int32_t)while_iterate(EVV_AT(delta_state *, a0), (int16_t)a1, (int16_t)a2);
+}
+
+/* Nachgereicht: diese drei ruft nur die Tabelle einer Sprache, die nicht
+   Englisch ist, und die Liste, aus der die Umhuellungen entstanden, war die
+   englische. Ohne sie bekommt die Primitive einen Slotwert, wo sie einen
+   Zeiger erwartet. */
+
+int32_t evvw_forall_adv_r(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7, int32_t a8, int32_t a9, int32_t a10, int32_t a11, int32_t a12, int32_t a13, int32_t a14, int32_t a15, int32_t a16, int32_t a17, int32_t a18, int32_t a19, int32_t a20, int32_t a21, int32_t a22, int32_t a23, int32_t a24)
+{
+    (void)a6; (void)a7; (void)a8; (void)a9; (void)a10; (void)a11; (void)a12;
+    (void)a13; (void)a14; (void)a15; (void)a16; (void)a17; (void)a18;
+    (void)a19; (void)a20; (void)a21; (void)a22; (void)a23; (void)a24;
+    return (int32_t)forall_adv_r(EVV_AT(delta_state *, a0), (int16_t)a1,
+                                 (int16_t)a2, (int16_t)a3, (uint8_t)a4,
+                                 EVV_AT(delta_token *, a5));
+}
+
+int32_t evvw_insert_rv(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7, int32_t a8, int32_t a9, int32_t a10, int32_t a11, int32_t a12, int32_t a13, int32_t a14, int32_t a15, int32_t a16, int32_t a17, int32_t a18, int32_t a19, int32_t a20, int32_t a21, int32_t a22, int32_t a23, int32_t a24)
+{
+    (void)a4; (void)a5; (void)a6; (void)a7; (void)a8; (void)a9; (void)a10;
+    (void)a11; (void)a12; (void)a13; (void)a14; (void)a15; (void)a16;
+    (void)a17; (void)a18; (void)a19; (void)a20; (void)a21; (void)a22;
+    (void)a23; (void)a24;
+    return (int32_t)insert_rv(EVV_AT(delta_state *, a0), (uint8_t)a1,
+                              EVV_AT(delta_loc *, a2), (uint8_t)a3);
+}
+
+int32_t evvw_lpta_loadi(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7, int32_t a8, int32_t a9, int32_t a10, int32_t a11, int32_t a12, int32_t a13, int32_t a14, int32_t a15, int32_t a16, int32_t a17, int32_t a18, int32_t a19, int32_t a20, int32_t a21, int32_t a22, int32_t a23, int32_t a24)
+{
+    (void)a3; (void)a4; (void)a5; (void)a6; (void)a7; (void)a8; (void)a9;
+    (void)a10; (void)a11; (void)a12; (void)a13; (void)a14; (void)a15;
+    (void)a16; (void)a17; (void)a18; (void)a19; (void)a20; (void)a21;
+    (void)a22; (void)a23; (void)a24;
+    lpta_loadi(EVV_AT(delta_state *, a0), (uint8_t)a1, a2);
+    return 0;
 }

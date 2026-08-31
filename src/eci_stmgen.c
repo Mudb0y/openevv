@@ -33,7 +33,7 @@
 
 /* A node's own words, before the fields start. */
 #define OWN_WORDS 3
-#define FIELD(n, f)  (((int32_t *)(intptr_t)(n))[(f)])
+#define FIELD(n, f)  ((EVV_AT(int32_t *, (n)))[(f)])
 #define LINK_MASK    (~3)
 #define FENCED       1
 #define SPACER       2
@@ -93,7 +93,7 @@ static int32_t integerValue(int32_t node, int8_t field)
         return 0;
 
     p = ((void *(*)(void *))vstmtbl[field].get[0])(
-            TFLDS((void *)(intptr_t)node));
+            TFLDS(EVV_AT(void *, node)));
 
     return kind == -4 ? *(int16_t *)p : *(int32_t *)p;
 }
@@ -110,11 +110,11 @@ int32_t timeDuration(delta_state *d, int32_t from, int32_t to, int8_t field)
         if (p == EVV_AT(delta_stack *, d->stack)->spine_r)
             return 0;
 
-        if (p != 0 && (*(int32_t *)(intptr_t)p & SPACER)) {
+        if (p != 0 && (*EVV_AT(int32_t *, p) & SPACER)) {
             p = FIELD(p, EVV_AT(delta_vars *, d->vars)->fence_base + field) & LINK_MASK;
         } else {
             total += integerValue(p, field);
-            p = *(int32_t *)(intptr_t)(p + 4) & LINK_MASK;
+            p = *EVV_AT(int32_t *, (p + 4)) & LINK_MASK;
         }
     }
 
@@ -139,7 +139,7 @@ static int32_t moveRightOverSpaces(delta_state *d, int32_t node, int8_t field,
             break;
 
         next = FIELD(p, base + field) & LINK_MASK;
-        if (next != 0 && (*(int32_t *)(intptr_t)next & SPACER)) {
+        if (next != 0 && (*EVV_AT(int32_t *, next) & SPACER)) {
             p = next;
             if (FIELD(p, base + valField) & FENCED)
                 found = p;
@@ -179,7 +179,7 @@ static int32_t moveRightOverVal(delta_state *d, int32_t node, int8_t field,
 
         next = FIELD(p, base + field) & LINK_MASK;
 
-        if (next != 0 && (*(int32_t *)(intptr_t)next & SPACER)) {
+        if (next != 0 && (*EVV_AT(int32_t *, next) & SPACER)) {
             if (FIELD(p, base + valField) & FENCED)
                 found = p;
 
@@ -202,7 +202,7 @@ static int32_t moveRightOverVal(delta_state *d, int32_t node, int8_t field,
                 break;
             }
             *out = v;
-            p = *(int32_t *)(intptr_t)(next + 4) & LINK_MASK;
+            p = *EVV_AT(int32_t *, (next + 4)) & LINK_MASK;
             found = p;
         }
     }
@@ -278,7 +278,7 @@ static int32_t valueSetValue(delta_state *d, ValueSet *vs, int8_t stream,
                    does and count backwards to it. */
                 c->left = vgetsc(d, 1, 1, vs->start, (uint8_t)stream);
                 while (!(FIELD(c->left, base + vs->field) & FENCED))
-                    c->left = VLSYNC((const delta_node *)(intptr_t)c->left,
+                    c->left = VLSYNC(EVV_AT(const delta_node *, c->left),
                                      stream);
                 c->left_at = -timeDuration(d, c->left, vs->start, vs->field);
             } else {
@@ -288,7 +288,7 @@ static int32_t valueSetValue(delta_state *d, ValueSet *vs, int8_t stream,
 
             {
                 int32_t m = EVV_REF(vmovel(
-                        (delta_node *)(intptr_t)c->left, (uint8_t)stream));
+                        EVV_AT(delta_node *, c->left), (uint8_t)stream));
                 int32_t held = FIELD(m, OWN_WORDS + stream) & LINK_MASK;
 
                 c->at_left = held ? integerValue(held, stream) : 0;

@@ -60,10 +60,51 @@ char *evv_arena_strdup(const char *s);
    language's own data, which src/delta_low.c copies out of the program at
    startup for exactly this reason. Anything else cannot be named in 32 bits
    and is a fault in whoever allocated it, not something to truncate. */
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define EVV_INLINE inline
+#elif defined(__GNUC__)
+#define EVV_INLINE __inline__
+#else
+#define EVV_INLINE
+#endif
+
 int32_t evv_ref_checked(const void *p);
 
 #define EVV_REF(p)      evv_ref_checked(p)
+
+#if defined(EVV_ARENA_RELATIVE) && EVV_ARENA_RELATIVE
+
+/* A reference counted from the base of the arena rather than from nought.
+ *
+ * The absolute form needs the region itself to lie below two gigabytes, and
+ * there are machines that will not put it there: macOS on arm64 keeps the
+ * whole low four gigabytes as __PAGEZERO, and a build that shrinks it is
+ * killed on sight, signed or not. Nothing in the machine's slots wants an
+ * absolute address, though -- only that thirty-two bits can name every place
+ * a pointer may point. Counting from the base asks those bits to carry a
+ * distance instead, so what must fit under two gigabytes is the SIZE of the
+ * arena, not its address, and the region may sit wherever the system puts it.
+ *
+ * A reference of nought goes on meaning nothing, because the first eight
+ * bytes of the arena are never handed out (evv_arena_open): no live object
+ * carries offset nought, so every test the machine makes for an empty value
+ * keeps its meaning. */
+/* A function and not a macro body, because the test and the value would
+   otherwise each evaluate the reference: a site that passes va_arg(ap,
+   int32_t) would then take one argument to decide and the NEXT one to use,
+   and walk the list at twice the speed. setNonSequential does exactly that. */
+static EVV_INLINE void *evv_at_(int32_t r)
+{
+    return r ? (void *)(evv_arena_base + (uint32_t)r) : (void *)0;
+}
+
+#define EVV_AT(t, r)    ((t)evv_at_(r))
+
+#else
+
 #define EVV_AT(t, r)    ((t)(void *)(uintptr_t)(uint32_t)(r))
+
+#endif
 
 #else
 

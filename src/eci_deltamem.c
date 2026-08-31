@@ -93,12 +93,12 @@ int32_t vdltinit(delta_state *d, int32_t initStatements)
     if (!recordDeltaHeapPos(d))
         return 0;
 
-    CLRONESTM((delta_node *)(intptr_t)s->spine_l);
-    CLRONESTM((delta_node *)(intptr_t)s->spine_r);
+    CLRONESTM(EVV_AT(delta_node *, s->spine_l));
+    CLRONESTM(EVV_AT(delta_node *, s->spine_r));
 
     for (i = 0; i < (int8_t)d->nstmts; i++) {
-        int32_t *left  = (int32_t *)(intptr_t)s->spine_l;
-        int32_t *right = (int32_t *)(intptr_t)s->spine_r;
+        int32_t *left  = EVV_AT(int32_t *, s->spine_l);
+        int32_t *right = EVV_AT(int32_t *, s->spine_r);
         int32_t  f     = v->fence_base + i;
 
         /* Mark both ends of the field, then join them: the left end points
@@ -113,8 +113,8 @@ int32_t vdltinit(delta_state *d, int32_t initStatements)
             return 0;
     }
 
-    SETSPINER(d, (int32_t *)(intptr_t)s->spine_l, s->spine_r);
-    SETSPINEL((delta_node *)(intptr_t)s->spine_r, s->spine_l);
+    SETSPINER(d, EVV_AT(int32_t *, s->spine_l), s->spine_r);
+    SETSPINEL(EVV_AT(delta_node *, s->spine_r), s->spine_l);
     vscaninit(d);
     v->unknown_1170 = 1;
     return 1;

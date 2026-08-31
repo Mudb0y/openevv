@@ -32,7 +32,7 @@
 extern int32_t logicalIOSetErrorCallback(delta_state *d, void *fn);
 
 /* One word the variable block clears before a run. */
-#define VARS_1128(d)    (*(int32_t *)((char *)(d)->vars + 0x1128))
+#define VARS_1128(d)    (*(int32_t *)(EVV_AT(char *, (d)->vars) + 0x1128))
 
 extern int32_t vcmdinit(delta_state *d, int32_t argc, char **argv);
 extern int32_t vinitrun(delta_state *d);
@@ -353,14 +353,14 @@ int32_t firstdefd(delta_state *d, int8_t f, int32_t t, uint8_t st,
     for (;;) {
         int32_t undefined = 0;
 
-        if (at != 0 && (*(const int32_t *)(intptr_t)at & 2) != 0) {
-            if ((((const int32_t *)(intptr_t)at)[base + st] & 1) != 0)
+        if (at != 0 && (*EVV_AT(const int32_t *, at) & 2) != 0) {
+            if (((EVV_AT(const int32_t *, at))[base + st] & 1) != 0)
                 return at;
 
             if (back)
-                at = ((const int32_t *)(intptr_t)at)[base + f] & ~3;
+                at = (EVV_AT(const int32_t *, at))[base + f] & ~3;
             else
-                at = ((const int32_t *)(intptr_t)at)[3 + f] & ~3;
+                at = (EVV_AT(const int32_t *, at))[3 + f] & ~3;
 
             continue;
         }
@@ -368,13 +368,13 @@ int32_t firstdefd(delta_state *d, int8_t f, int32_t t, uint8_t st,
         switch (e->fields[0].kind) {
         case DK_LONG:
             undefined = at != 0 && walkable
-                        && *(const int32_t *)get(TFLDS((void *)(intptr_t)at))
+                        && *(const int32_t *)get(TFLDS(EVV_AT(void *, at)))
                            == 0;
             break;
 
         case DK_SHORT2:
             undefined = at != 0 && walkable
-                        && *(const int16_t *)get(TFLDS((void *)(intptr_t)at))
+                        && *(const int16_t *)get(TFLDS(EVV_AT(void *, at)))
                            == 0;
             break;
 
@@ -386,9 +386,9 @@ int32_t firstdefd(delta_state *d, int8_t f, int32_t t, uint8_t st,
             return t;
 
         if (back)
-            at = *(const int32_t *)(intptr_t)(at + 4) & ~3;
+            at = *EVV_AT(const int32_t *, (at + 4)) & ~3;
         else
-            at = *(const int32_t *)(intptr_t)at & ~3;
+            at = *EVV_AT(const int32_t *, at) & ~3;
     }
 }
 
@@ -449,16 +449,16 @@ int32_t val_expr2(delta_state *d, delta_tpos *p, int8_t st, uint8_t fld,
 
         case 2:
             if (p->offset < 0) {
-                int32_t t = ((const int32_t *)(intptr_t)p->node)[3 + f] & ~3;
+                int32_t t = (EVV_AT(const int32_t *, p->node))[3 + f] & ~3;
 
-                l = gcql(d, *(const int32_t *)(intptr_t)t & ~3, st, f);
+                l = gcql(d, *EVV_AT(const int32_t *, t) & ~3, st, f);
                 r = gcqr(d, p->node, st, f);
             } else {
                 int32_t t =
-                    ((const int32_t *)(intptr_t)p->node)[base + f] & ~3;
+                    (EVV_AT(const int32_t *, p->node))[base + f] & ~3;
 
                 l = gcql(d, p->node, st, f);
-                r = gcqr(d, ((const int32_t *)(intptr_t)t)[1] & ~3, st, f);
+                r = gcqr(d, (EVV_AT(const int32_t *, t))[1] & ~3, st, f);
             }
             break;
 
@@ -470,11 +470,11 @@ int32_t val_expr2(delta_state *d, delta_tpos *p, int8_t st, uint8_t fld,
         case 3:
             {
                 int32_t rr = firstdefd(d, f,
-                    (int32_t)(intptr_t)rmost(d, f,
-                        (int32_t *)(intptr_t)p->node), st, 0);
+                    EVV_REF(rmost(d, f,
+                        EVV_AT(int32_t *, p->node))), st, 0);
                 int32_t ll = firstdefd(d, f,
-                    (int32_t)(intptr_t)lmost(d, f,
-                        (delta_node *)(intptr_t)p->node), st, 1);
+                    EVV_REF(lmost(d, f,
+                        EVV_AT(delta_node *, p->node))), st, 1);
 
                 l = gcql(d, ll, st, f);
                 r = gcqr(d, rr, st, f);
@@ -497,16 +497,16 @@ int32_t val_expr2(delta_state *d, delta_tpos *p, int8_t st, uint8_t fld,
 
         if (at == 0)
             continue;
-        if ((*(const int32_t *)(intptr_t)at & 2) == 0)
+        if ((*EVV_AT(const int32_t *, at) & 2) == 0)
             continue;
 
-        at = ((const int32_t *)(intptr_t)at)[base + st] & ~3;
+        at = (EVV_AT(const int32_t *, at))[base + st] & ~3;
 
         v = 0;
         if (e->fields[fld].kind == DK_LONG) {
-            v = *(const int32_t *)get(TFLDS((void *)(intptr_t)at));
+            v = *(const int32_t *)get(TFLDS(EVV_AT(void *, at)));
         } else if (e->fields[fld].kind == DK_SHORT2) {
-            v = *(const int16_t *)get(TFLDS((void *)(intptr_t)at));
+            v = *(const int16_t *)get(TFLDS(EVV_AT(void *, at)));
             if (v == -32767)
                 v = (int32_t)0x80000001;
         }
@@ -516,7 +516,7 @@ int32_t val_expr2(delta_state *d, delta_tpos *p, int8_t st, uint8_t fld,
         else if (lval != v)
             return (int32_t)0x80000001;
 
-        at = ((const int32_t *)(intptr_t)at)[1] & ~3;
+        at = (EVV_AT(const int32_t *, at))[1] & ~3;
     }
 
     if (lval != (int32_t)0x80000001)
@@ -531,21 +531,21 @@ int32_t val_expr2(delta_state *d, delta_tpos *p, int8_t st, uint8_t fld,
 
     /* The statement at the left end, and what the field says there. */
     at = l;
-    while (at != 0 && (*(const int32_t *)(intptr_t)at & 2) != 0)
-        at = ((const int32_t *)(intptr_t)at)[3 + st] & ~3;
+    while (at != 0 && (*EVV_AT(const int32_t *, at) & 2) != 0)
+        at = (EVV_AT(const int32_t *, at))[3 + st] & ~3;
 
     if (at != 0) {
-        int32_t t = ((const int32_t *)(intptr_t)at)[1] & ~3;
+        int32_t t = (EVV_AT(const int32_t *, at))[1] & ~3;
 
-        if ((((const int32_t *)(intptr_t)t)[base + f] & 1) != 0)
+        if (((EVV_AT(const int32_t *, t))[base + f] & 1) != 0)
             lpos.node = t;
         else
             lpos.node = vgetsc(d, 0, 1, t, (uint8_t)f);
 
         if (e->fields[fld].kind == DK_LONG) {
-            lval = *(const int32_t *)get(TFLDS((void *)(intptr_t)at));
+            lval = *(const int32_t *)get(TFLDS(EVV_AT(void *, at)));
         } else if (e->fields[fld].kind == DK_SHORT2) {
-            lval = *(const int16_t *)get(TFLDS((void *)(intptr_t)at));
+            lval = *(const int16_t *)get(TFLDS(EVV_AT(void *, at)));
             if (lval == -32767)
                 lval = (int32_t)0x80000001;
         }
@@ -553,21 +553,21 @@ int32_t val_expr2(delta_state *d, delta_tpos *p, int8_t st, uint8_t fld,
 
     /* And the statement at the right end. */
     at2 = r;
-    while (at2 != 0 && (*(const int32_t *)(intptr_t)at2 & 2) != 0)
-        at2 = ((const int32_t *)(intptr_t)at2)[base + st] & ~3;
+    while (at2 != 0 && (*EVV_AT(const int32_t *, at2) & 2) != 0)
+        at2 = (EVV_AT(const int32_t *, at2))[base + st] & ~3;
 
     if (at2 != 0) {
-        int32_t t = *(const int32_t *)(intptr_t)at2 & ~3;
+        int32_t t = *EVV_AT(const int32_t *, at2) & ~3;
 
-        if ((((const int32_t *)(intptr_t)t)[base + f] & 1) != 0)
+        if (((EVV_AT(const int32_t *, t))[base + f] & 1) != 0)
             rpos.node = t;
         else
             rpos.node = vgetsc(d, 1, 1, t, (uint8_t)f);
 
         if (e->fields[fld].kind == DK_LONG) {
-            rval = *(const int32_t *)get(TFLDS((void *)(intptr_t)at2));
+            rval = *(const int32_t *)get(TFLDS(EVV_AT(void *, at2)));
         } else if (e->fields[fld].kind == DK_SHORT2) {
-            rval = *(const int16_t *)get(TFLDS((void *)(intptr_t)at2));
+            rval = *(const int16_t *)get(TFLDS(EVV_AT(void *, at2)));
             if (rval == -32767)
                 rval = (int32_t)0x80000001;
         }
