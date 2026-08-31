@@ -78,12 +78,12 @@ NM  ?= nm
 # costs interpreted, since the engine cannot abandon an utterance and has to
 # finish the one it was told to stop.
 #
-# What it costs. Writing the file needs Python and about seven minutes, and
-# compiling it another seven, where the bytecode build wants only a C compiler
-# and half a minute. The binaries are some four times the size, because
-# thirteen megabytes of C is what a machine's worth of lifted code looks like
-# written out. `RULES=bytecode' is the small, quick build and is the one to use
-# while working on anything but the rules. See docs/building.md.
+# What it costs. Writing the files needs Python and about two minutes, and
+# compiling them fifteen seconds over twenty-four cores, where the bytecode
+# build wants only a C compiler and half a minute. `RULES=bytecode' is the
+# quick build, and it is also the second opinion: tools/delta-check.sh holds
+# the two forms against each other call for call, which is the only check
+# finer than the audio. See docs/building.md.
 RULES ?= c
 
 # Each language has both forms of its rules beside it: the empty table that
