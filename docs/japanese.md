@@ -422,7 +422,19 @@ address of. Both are bounded exactly; what is in them is for whoever writes
 
 ## Where to go next
 
-The order that follows from the above, if it helps. `GenerateWord`'s closure is done and so is `RomUserDict`, so the record formats are known and the sweep pattern for a class over IBM's own state is established twice over. The rest of `DictSearch` is forty-four methods over the same records, and `Do`, `TextParsing` and the function-word half are the next coherent unit in it. `Annotation` and `InputChar` are both done, so the input the whole of the above reads is made by our own code now. `ConverterInterface` is the surface -- its dictionary methods are the last of the user-dictionary half and are short, since `RomUserDict` does the work -- and `Romanizer` behind it is the thing that turns text into the readable form; `InputManager` is how text arrives. Then the analyser and the path search -- `TextAnalysis`, `PhraseTable`, `PhraseBuf`, `JPath`, `comppenalty`, `unknown`, `kakutei` -- then the number and English reading and the normalisation, and last the output side: `IntonPhrase`, `MakeReadableJP` and the ESPR writer.
+What is left, and in what order, with the method counts taken from `nm` across the whole directory rather than from a reading.
+
+`Romanizer` is next: fifteen methods left of sixteen in `jpnrom.obj`, the sixteenth being the one `DictSearch` needed and already has. It is the thing that drives all of the above -- `processSentence`, `ResetBuffer`, `getOffset` and the two conversions between the caller's bytes and the readable form -- so writing it is what turns a pile of proved classes into a romanizer that answers. It cannot be finished alone, because `processSentence` reaches straight into `TextAnalysis`.
+
+`TextAnalysis` is the spine and is thirty-six methods over four objects -- `txtanal`, `unknown`, `kakutei` and `comppenalty` -- which is why `tools/rom-offsets.py` had to map its record before anything else could be written at all. That map is already true and checked, so the work is the code rather than the reading.
+
+Then the path search, which is what picks one reading of a sentence out of all the ways `DictSearch` says it could be read: `JPath` eleven methods, `PhraseTable` sixteen and `PhraseBuf` nine. Then `NumRead` eleven and `TextNormalizer` four.
+
+And last the output side, which is the biggest single piece left: `MakeReadableJP` thirty-three methods over three objects, `IntonPhrase` seventeen, and the ESPR writer -- `PCWriteESPR2` eleven, `PCProsCtrl` three, `PCRoman2BG` two. That is what turns a chosen reading into the phoneme string at the top of this file, and until it exists nothing can be heard.
+
+Two objects on the list will not be transcribed at all. `romreg.obj` is registration, which this port retired, and `romedll_link.obj` is the link-time symbol `src/eci_romedll.c` already stands in for.
+
+About a hundred and sixty methods, then, and none of them blocked on anything unwritten except in the order above.
 
 Read the objects with `llvm-objdump`, for the reason `docs/building.md` gives under getting IBM's objects: binutils `objdump` misparses whole functions here and says nothing about it.
 
