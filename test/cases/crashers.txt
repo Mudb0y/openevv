@@ -10,10 +10,14 @@
 # that kills the engine, tries every one-letter change to it, keeps whatever
 # kills it too, and does the same to those. Three seeds -- the word this
 # started from and two misspellings of Wednesday -- became 230 after one round
-# and 10,751 after two. All three are letters, so none of those ten thousand
-# carries an apostrophe or a colon and none of them reaches the guards that
-# such text reaches; a sweep of 145,295 strings over those shapes found 142
-# more, and one round outward from them brought this to 20,399.
+# and 10,751 after two.
+#
+# A corpus grown that way covers the shapes it was grown from and nothing
+# else, and taking each guard out on its own is what says so. Those three
+# seeds are letters, so a sweep of 145,295 strings carrying apostrophes and
+# clock times was wanted for the guards such text reaches: 142 more, and
+# 20,399 after a round. One guard was still moving no case after that, so its
+# own family was seeded and grown as well, which is the last 127.
 #
 # Do not read this file aloud through a synthesiser that has not been fixed.
 ''edhesday
@@ -288,8 +292,11 @@
 'swenhesday
 'tedhesday
 'tenhesday
+'tttzsche
+'ttzsche
 'twedhesday
 'twenhesday
+'tzsche
 'udhesday
 'uedhesday
 'uenhesday
@@ -6909,8 +6916,11 @@ bswedhesday
 bswenhesday
 btedhesday
 btenhesday
+btttzsche
+bttzsche
 btwedhesday
 btwenhesday
+btzsche
 budhesday
 buedhesday
 buenhesday
@@ -7305,8 +7315,11 @@ cswedhesday
 cswenhesday
 ctedhesday
 ctenhesday
+ctttzsche
+cttzsche
 ctwedhesday
 ctwenhesday
+ctzsche
 cudhesday
 cuedhesday
 cuenhesday
@@ -7701,8 +7714,11 @@ dswedhesday
 dswenhesday
 dtedhesday
 dtenhesday
+dtttzsche
+dttzsche
 dtwedhesday
 dtwenhesday
+dtzsche
 dudhesday
 duedhesday
 duenhesday
@@ -8523,8 +8539,11 @@ fswedhesday
 fswenhesday
 ftedhesday
 ftenhesday
+ftttzsche
+fttzsche
 ftwedhesday
 ftwenhesday
+ftzsche
 fudhesday
 fuedhesday
 fuenhesday
@@ -8924,8 +8943,11 @@ gswedhesday
 gswenhesday
 gtedhesday
 gtenhesday
+gtttzsche
+gttzsche
 gtwedhesday
 gtwenhesday
+gtzsche
 gudhesday
 guedhesday
 guenhesday
@@ -9322,8 +9344,11 @@ hswedhesday
 hswenhesday
 htedhesday
 htenhesday
+htttzsche
+httzsche
 htwedhesday
 htwenhesday
+htzsche
 hudhesday
 huedhesday
 huenhesday
@@ -10120,8 +10145,11 @@ jswedhesday
 jswenhesday
 jtedhesday
 jtenhesday
+jtttzsche
+jttzsche
 jtwedhesday
 jtwenhesday
+jtzsche
 judhesday
 juedhesday
 juenhesday
@@ -10516,8 +10544,11 @@ kswedhesday
 kswenhesday
 ktedhesday
 ktenhesday
+ktttzsche
+kttzsche
 ktwedhesday
 ktwenhesday
+ktzsche
 kudhesday
 kuedhesday
 kuenhesday
@@ -10912,8 +10943,11 @@ lswedhesday
 lswenhesday
 ltedhesday
 ltenhesday
+ltttzsche
+lttzsche
 ltwedhesday
 ltwenhesday
+ltzsche
 ludhesday
 luedhesday
 luenhesday
@@ -11307,8 +11341,11 @@ mswedhesday
 mswenhesday
 mtedhesday
 mtenhesday
+mtttzsche
+mttzsche
 mtwedhesday
 mtwenhesday
+mtzsche
 mudhesday
 muedhesday
 muenhesday
@@ -11701,8 +11738,11 @@ nswedhesday
 nswenhesday
 ntedhesday
 ntenhesday
+ntttzsche
+nttzsche
 ntwedhesday
 ntwenhesday
+ntzsche
 nudhesday
 nuedhesday
 nuenhesday
@@ -12497,8 +12537,11 @@ pswedhesday
 pswenhesday
 ptedhesday
 ptenhesday
+ptttzsche
+pttzsche
 ptwedhesday
 ptwenhesday
+ptzsche
 pudhesday
 puedhesday
 puenhesday
@@ -12893,8 +12936,11 @@ qswedhesday
 qswenhesday
 qtedhesday
 qtenhesday
+qtttzsche
+qttzsche
 qtwedhesday
 qtwenhesday
+qtzsche
 qudhesday
 quedhesday
 quenhesday
@@ -13278,8 +13324,11 @@ rswedhesday
 rswenhesday
 rtedhesday
 rtenhesday
+rtttzsche
+rttzsche
 rtwedhesday
 rtwenhesday
+rtzsche
 rudhesday
 ruedhesday
 ruenhesday
@@ -13674,8 +13723,11 @@ sswedhesday
 sswenhesday
 stedhesday
 stenhesday
+stttzsche
+sttzsche
 stwedhesday
 stwenhesday
+stzsche
 sudhesday
 suedhesday
 suenhesday
@@ -13804,6 +13856,8 @@ szwedhesday
 szwenhesday
 t'edhesday
 t'enhesday
+t'ttzsche
+t'tzsche
 t'wedhesday
 t'wenhesday
 t0:21:21st
@@ -13956,14 +14010,20 @@ tawedhesday
 tawenhesday
 tbedhesday
 tbenhesday
+tbttzsche
+tbtzsche
 tbwedhesday
 tbwenhesday
 tcedhesday
 tcenhesday
+tcttzsche
+tctzsche
 tcwedhesday
 tcwenhesday
 tdedhesday
 tdenhesday
+tdttzsche
+tdtzsche
 tdwedhesday
 tdwenhesday
 te'dhesday
@@ -14010,14 +14070,20 @@ teynhesday
 tezhesday
 tfedhesday
 tfenhesday
+tfttzsche
+tftzsche
 tfwedhesday
 tfwenhesday
 tgedhesday
 tgenhesday
+tgttzsche
+tgtzsche
 tgwedhesday
 tgwenhesday
 thedhesday
 thenhesday
+thttzsche
+thtzsche
 thwedhesday
 thwenhesday
 tidhesday
@@ -14028,22 +14094,32 @@ tiwedhesday
 tiwenhesday
 tjedhesday
 tjenhesday
+tjttzsche
+tjtzsche
 tjwedhesday
 tjwenhesday
 tkedhesday
 tkenhesday
+tkttzsche
+tktzsche
 tkwedhesday
 tkwenhesday
 tledhesday
 tlenhesday
+tlttzsche
+tltzsche
 tlwedhesday
 tlwenhesday
 tmedhesday
 tmenhesday
+tmttzsche
+tmtzsche
 tmwedhesday
 tmwenhesday
 tnedhesday
 tnenhesday
+tnttzsche
+tntzsche
 tnwedhesday
 tnwenhesday
 todhesday
@@ -14054,24 +14130,57 @@ towedhesday
 towenhesday
 tpedhesday
 tpenhesday
+tpttzsche
+tptzsche
 tpwedhesday
 tpwenhesday
 tqedhesday
 tqenhesday
+tqttzsche
+tqtzsche
 tqwedhesday
 tqwenhesday
 tredhesday
 trenhesday
+trttzsche
+trtzsche
 trwedhesday
 trwenhesday
 tsedhesday
 tsenhesday
+tsttzsche
+tstzsche
 tswedhesday
 tswenhesday
+tt'tzsche
+ttbtzsche
+ttctzsche
+ttdtzsche
 ttedhesday
 ttenhesday
+ttftzsche
+ttgtzsche
+tthtzsche
+ttjtzsche
+ttktzsche
+ttltzsche
+ttmtzsche
+ttntzsche
+ttptzsche
+ttqtzsche
+ttrtzsche
+ttstzsche
+ttttzsche
+tttzsche
+tttzsche'
+ttvtzsche
 ttwedhesday
 ttwenhesday
+ttwtzsche
+ttxtzsche
+ttzsche
+ttzsche'
+ttztzsche
 tudhesday
 tuedhesday
 tuenhesday
@@ -14080,6 +14189,8 @@ tuwedhesday
 tuwenhesday
 tvedhesday
 tvenhesday
+tvttzsche
+tvtzsche
 tvwedhesday
 tvwenhesday
 tw'edhesday
@@ -14168,6 +14279,8 @@ twsedhesday
 twsenhesday
 twtedhesday
 twtenhesday
+twttzsche
+twtzsche
 twudhesday
 twuedhesday
 twuenhesday
@@ -14186,6 +14299,8 @@ twzedhesday
 twzenhesday
 txedhesday
 txenhesday
+txttzsche
+txtzsche
 txwedhesday
 txwenhesday
 tydhesday
@@ -14196,6 +14311,10 @@ tywedhesday
 tywenhesday
 tzedhesday
 tzenhesday
+tzsche
+tzsche'
+tzttzsche
+tztzsche
 tzwedhesday
 tzwenhesday
 u'dhesday
@@ -15324,8 +15443,11 @@ vswedhesday
 vswenhesday
 vtedhesday
 vtenhesday
+vtttzsche
+vttzsche
 vtwedhesday
 vtwenhesday
+vtzsche
 vudhesday
 vuedhesday
 vuenhesday
@@ -18537,6 +18659,8 @@ wtsedhesday
 wtsenhesday
 wttedhesday
 wttenhesday
+wtttzsche
+wttzsche
 wtudhesday
 wtuedhesday
 wtuenhesday
@@ -18553,6 +18677,7 @@ wtyenhesday
 wtynhesday
 wtzedhesday
 wtzenhesday
+wtzsche
 wu'dhesday
 wu'edhesday
 wu'enhesday
@@ -19489,8 +19614,11 @@ xswedhesday
 xswenhesday
 xtedhesday
 xtenhesday
+xtttzsche
+xttzsche
 xtwedhesday
 xtwenhesday
+xtzsche
 xudhesday
 xuedhesday
 xuenhesday
@@ -20287,8 +20415,11 @@ zswedhesday
 zswenhesday
 ztedhesday
 ztenhesday
+ztttzsche
+zttzsche
 ztwedhesday
 ztwenhesday
+ztzsche
 zudhesday
 zuedhesday
 zuenhesday
