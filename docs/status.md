@@ -360,7 +360,7 @@ That work also found that `tools/delta-sets.py` had not been able to write the f
 
 ## Words the engine could not say
 
-Eloquence dies on certain text and always has. The NVDA driver that loads IBM's engine carries a table of regular expressions whose only job is to rewrite those words before the engine sees them, because otherwise the screen reader goes down with it. Ours died on every one of them and in the same place, which is what a faithful port does; under Wine the reference takes an unhandled page fault on a read of address 0x48 or of address 8, and ours reads the same address.
+Eloquence dies on certain text and always has. The NVDA driver that loads IBM's engine -- `davidacm/NVDA-IBMTTS-Driver`, which is GPL-2.0 -- carries a table of regular expressions whose only job is to rewrite those words before the engine sees them, because otherwise the screen reader goes down with it. Ours died on every one of them and in the same place, which is what a faithful port does; under Wine the reference takes an unhandled page fault on a read of address 0x48 or of address 8, and ours reads the same address.
 
 They are all one fault. The Delta machine dereferences a node reference of nought.
 
@@ -391,6 +391,8 @@ A corpus grown that way covers the shapes it was grown from and nothing else, wh
 The third search closed the last gap. At 20,399 one guard was still moving no case, `vdef_proj` asked to project a statement that is nowhere, so the family known to reach it was seeded and grown a round of its own: 127 more strings, a corpus of 20,526, and that guard now at 127. What is left unreached is the seven that are somebody else's direction or somebody else's register, and nothing found so far tells them apart from unreachable.
 
 Two things that search taught. The first is that random text does not find these: 24,000 random letter strings and the whole 123,382-word SCOWL list both come back clean, and so do 400,000 single-letter misspellings of common words. What kills the engine is a small number of specific shapes, and you reach them by growing outward from one rather than by throwing text at it. The second is that the families the NVDA driver's table describes are real and its list is not complete: expanding those patterns gives 864 strings, of which 267 kill an engine with no guards in it, and all 864 survive one with them -- but the search above found ten thousand more that the table does not cover.
+
+Nothing from that table is in this tree. Every string in `test/cases/crashers.txt` was grown by `tools/crash-search.py` from seeds of our own against a build of our own, and the driver is named here because it is where the knowledge that these families exist came from, which is a fact about IBM's engine rather than anything of theirs. That is also why `NOTICE` says nothing about it: there is no third-party data here for it to govern.
 
 ## Partly done
 
