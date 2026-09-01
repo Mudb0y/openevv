@@ -59,8 +59,26 @@ import config
 import nvwave
 from logHandler import log
 
-#: The formant voice runs at this rate and nothing changes it.
+#: What the formant voice runs at unless it is asked for something else.
+#: Eleven thousand and twenty five is what Eloquence has always sounded like,
+#: and it stays the default for that reason and no other.
 SAMPLE_RATE = 11025
+
+#: The rates the library will synthesise at: the setting the engine takes and
+#: the rate in hertz it comes to. IBM shipped the first two and numbered the
+#: next two; the rest are this port's, and what they buy is the top of the
+#: spectrum -- above eleven thousand the sibilants and the aspiration have
+#: somewhere to go, and the fold-back that eleven thousand puts into the
+#: consonant band is gone. Ordered by rate rather than by number so a reader
+#: is offered them in the order a person thinks of them.
+SAMPLE_RATES = (
+	(0, 8000),
+	(1, 11025),
+	(3, 16000),
+	(2, 22050),
+	(4, 32000),
+	(5, 44100),
+)
 
 #: How many samples the library is given room for in one go.
 FRAME = 2048
@@ -102,6 +120,7 @@ DATA_ABORT = 2
 PARAM_SYNTH_MODE = 0
 PARAM_INPUT_TYPE = 1
 PARAM_DICTIONARY = 3
+PARAM_SAMPLE_RATE = 5
 PARAM_REAL_WORLD = 8
 PARAM_LANGUAGE = 9
 
@@ -251,6 +270,9 @@ class Engine:
 		self._watchdog = None
 		self._stopWatching = threading.Event()
 		self.player = None
+		#: What the engine is running at, and therefore what the player is
+		#: built for. The two are moved together and never separately.
+		self.sampleRate = SAMPLE_RATE
 		self.voiceNames = {}
 		#: Every language the library has, and the one in force.
 		self.languages = []
@@ -449,6 +471,70 @@ class Engine:
 
 	def setParam(self, which, value):
 		return self._dll.eciSetParam(self._instance, which, value)
+
+	def _newPlayer(self, hz):
+		return nvwave.WavePlayer(
+			channels=1,
+			samplesPerSec=hz,
+			bitsPerSample=16,
+			outputDevice=config.conf["audio"]["outputDevice"],
+		)
+
+	def setSampleRate(self, hz):
+		"""Run the synthesiser at another rate, and move the player with it.
+
+		Queued through control() so that it lands on this thread between
+		utterances rather than inside one, which is also what makes the swap
+		below safe: nothing is being fed while it happens.
+
+		The player is the delicate half. It is a screen reader's only voice,
+		and a rate change that leaves it closed leaves the machine silent. So
+		the new one is built before the old one is let go of, and anything
+		that will not work puts the rate back and says so rather than leaving
+		the two disagreeing -- an engine at one rate feeding a player at
+		another is not a failure that reports itself, it is speech at the
+		wrong speed.
+		"""
+		if hz == self.sampleRate:
+			return True
+
+		setting = None
+		wasSetting = None
+		for number, rate in SAMPLE_RATES:
+			if rate == hz:
+				setting = number
+			if rate == self.sampleRate:
+				wasSetting = number
+		if setting is None:
+			log.error("openevv: %r is not one of the rates offered" % (hz,))
+			return False
+
+		# eciSetParam answers with what the setting was, and refuses with a
+		# negative. Nought is a rate, so a plain truth test would read eight
+		# thousand as a failure.
+		if self.setParam(PARAM_SAMPLE_RATE, setting) < 0:
+			log.error("openevv: the library refused sample rate %d" % hz)
+			return False
+
+		try:
+			player = self._newPlayer(hz)
+		except Exception:
+			log.error("openevv: no player at %d hertz, staying at %d"
+			          % (hz, self.sampleRate), exc_info=True)
+			if wasSetting is not None:
+				self.setParam(PARAM_SAMPLE_RATE, wasSetting)
+			return False
+
+		old = self.player
+		self.player = player
+		self.sampleRate = hz
+		if old is not None:
+			try:
+				old.close()
+			except Exception:
+				log.debugWarning("openevv: the old player would not close",
+				                 exc_info=True)
+		return True
 
 	def getVoiceParam(self, which):
 		return self._dll.eciGetVoiceParam(self._instance, 0, which)
@@ -687,12 +773,7 @@ class Engine:
 
 		self._readVoiceParams()
 
-		self.player = nvwave.WavePlayer(
-			channels=1,
-			samplesPerSec=SAMPLE_RATE,
-			bitsPerSample=16,
-			outputDevice=config.conf["audio"]["outputDevice"],
-		)
+		self.player = self._newPlayer(self.sampleRate)
 
 	def _finishThread(self):
 		try:

@@ -259,10 +259,32 @@ int errorKlattIgnore(void)
     return 0;
 }
 
+/* Hand the synthesiser the two resonator tables for a rate that is not one
+   of IBM's two. This is the hook IBM's own code leaves open rather than
+   something bolted on: KlattSetConstParms names eight thousand and eleven
+   thousand and twenty five and, at anything else, leaves these two pointers
+   exactly as it found them. On a fresh handle that means null and the first
+   formant lookup faults, which is the whole of what stopped another rate
+   working. Set them before the parameters and they survive it.
+
+   Nothing is copied. The caller owns the tables and has to outlive the
+   handle, which the language record does. */
+void KlattSetRateTables(void *handle, const int16_t *ex, const int16_t *co)
+{
+    klatt_state *k = handle;
+
+    if (!verifyKlattHandle(handle))
+        return;
+
+    k->ex_table = ex;
+    k->co_table = co;
+}
+
 /* The parameter block arrives by value and goes into the state wholesale, then
    a handful of fields are copied out of it into working positions. Anything
    other than 8000 or 11025 leaves the excitation and cosine table pointers
-   exactly as they were, which for a fresh handle means null. */
+   exactly as they were, which is how KlattSetRateTables above gets a word in;
+   on a handle nobody has told, it means null. */
 void KlattSetConstParms(void *handle, KlattConstParms parms)
 {
     klatt_state *k = handle;

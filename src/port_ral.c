@@ -552,7 +552,12 @@ int ealQueryDevCaps(int dev, int type, int *bits, unsigned char *caps)
     if (bits != NULL)
         *bits = 16;
     if (caps != NULL) {
-        unsigned rates = 0x1 | 0x10 | 0x100 | 0x10000;
+        /* A bit to a rate, in the order ev_rateHz numbers them: IBM's four
+           and then the three this port added. Nothing here opens a device,
+           so what this really says is which rates the engine can be built
+           to synthesise at, and that is all of them. */
+        unsigned rates = 0x1 | 0x10 | 0x100 | 0x10000
+                       | 0x100000 | 0x1000000;
 
         memset(caps, 0, 0x18);
         memcpy(caps + EAL_CAPS_RATES, &rates, sizeof(rates));

@@ -32,6 +32,19 @@ typedef struct EngineWrapper {
    because the vtable pointer and the machine pointer were four apiece. */
 const uint32_t ew_bytes = sizeof(EngineWrapper);
 
+/* The machine behind a wrapper.
+
+   Everything else reaches the engine through the forty-three slots of its
+   table, which is IBM's and has no room in it for a forty-fourth. This is
+   for what the port needs to say to the machine and IBM never did -- the
+   sample rate the synthesiser is to run at -- and it is a plain accessor on
+   our own struct rather than anything of IBM's. Answers nought for a
+   wrapper whose machine could not be made. */
+delta_state *ew_machine(void *engine)
+{
+    return engine ? ((EngineWrapper *)engine)->machine : 0;
+}
+
 /* The answer that means the engine has stopped and will not start again. */
 #define ENGINE_STOPPED 1
 

@@ -242,7 +242,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate voices inikeys stopthread pieces prims romcan romprims
+.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims romcan romprims
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -280,6 +280,16 @@ rate: $(BUILD)/rate
 
 $(BUILD)/rate: test/rate.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/rate.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# The rates IBM never shipped: that the built resonator tables are IBM's own
+# formulae, held against IBM's own arrays, and that every rate speaks for the
+# same length of time. EVV_RATES_REPORT=1 prints what each one said.
+rates: $(BUILD)/rates
+	@$(BUILD)/rates
+
+$(BUILD)/rates: test/rates.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/rates.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # A romanizer with no language in it, replaying what IBM's romanizer answered.

@@ -68,6 +68,13 @@ jobs:
       - name: Check a rate change keeps the caller's buffer
         run: make RULES=bytecode rate
 
+      # The rates IBM never shipped. Two claims at once: that the resonator
+      # tables built for them are the same formulae IBM's own four are, held
+      # against IBM's own arrays entry by entry, and that every rate speaks
+      # for the same length of time as eleven thousand and twenty five.
+      - name: Check the rates IBM never shipped
+        run: make RULES=bytecode rates
+
       - name: Check a key that is not in a section reads as absent
         run: make RULES=bytecode inikeys
 

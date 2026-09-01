@@ -18,6 +18,8 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "klatt_rates.h"
+#include "delta.h"
 
 #define APP_INDEX_LOST     0x06
 #define APP_SPEAKING_DONE  0x07
@@ -43,7 +45,6 @@
    into. */
 static const char CMD_RATE_8000[] = "`esr0";
 static const char CMD_RATE_11025[] = "`esr1";
-static const char CMD_RATE_OTHER[] = "`esr2";
 
 /* Slots of the engine's table, by byte offset. All stdcall, all with the
    engine pushed like any other argument. */
@@ -162,6 +163,9 @@ extern THIS int32_t rz_processRemaining(void *r, char **out)
     MANGLED("?processRemaining@RomanizerManager@@QAEHPAPAD@Z");
 extern THIS void rz_romClearErrors(void *r)
     MANGLED("?romClearErrors@RomanizerManager@@QAEXXZ");
+
+extern int setNativeSampleRate(delta_state *d, int32_t hz);
+extern delta_state *ew_machine(void *engine);
 
 extern THIS char *fm_filterText(void *m, const char *text, int32_t engine)
     MANGLED("?filterText@FilterManager@@QAEPADPBDJ@Z");
@@ -590,12 +594,29 @@ THIS int32_t stw_checkLanguage(SynthThread *t, LangIdentifier *want)
     return engine != 0;
 }
 
-/* Put the engine into whichever rate it can actually work at, and stand a
-   converter between it and the caller if the two do not agree.
+/* Put the engine into the rate the caller asked for, and stand a converter
+   between it and the caller if it cannot be given it.
 
-   The engine has two rates of its own. Eight and sixteen thousand it does
-   itself; anything else it does at eleven thousand and something and lets
-   the converter make up the difference. */
+   IBM's plan was two rates and a converter: eight and eleven thousand and
+   twenty five synthesised, sixteen and twenty-two thousand those two doubled
+   by an AudioConverter. That converter is the one object of the sound layer
+   this port never transcribed -- src/eci_pcm.c says why -- so the doubling
+   never happened and a caller asking for twenty-two thousand was handed the
+   eleven thousand stream under a twenty-two thousand label, which is the
+   same speech at half the duration.
+
+   The synthesiser will now run at any rate it can be built resonator tables
+   for, so there is nothing left to convert: every rate is its own native
+   one. The converter branch below is kept for a rate outside those bounds,
+   which is the only way the two can still disagree.
+
+   The engine is told a rate its rules can name, and that is deliberate. The
+   annotation the rules parse takes nought or one and nothing else, and the
+   rules branch on which -- us_filtr tests for eight thousand, where the
+   compensation for a table running past Nyquist lives. So eight thousand
+   goes as itself and every other rate goes as eleven thousand and twenty
+   five, which is the branch that suits it, and setNativeSampleRate puts the
+   real number in front of the synthesiser under it. */
 THIS int32_t stw_createAudioConverter(SynthThread *t, SampleFormat *fmt)
 {
     int32_t wanted = fmt->rate;
@@ -605,11 +626,12 @@ THIS int32_t stw_createAudioConverter(SynthThread *t, SampleFormat *fmt)
     EngCommand command;
     const char *line;
 
-    switch (fmt->rate) {
-    case RATE_8000:  native = RATE_8000; break;
-    case RATE_16000: native = RATE_8000; break;
-    default:         native = RATE_11025; break;
-    }
+    if (wanted >= KLATT_RATE_MIN && wanted <= KLATT_RATE_MAX)
+        native = wanted;
+    else if (wanted == RATE_16000)
+        native = RATE_8000;
+    else
+        native = RATE_11025;
 
     if (native == wanted) {
         /* Nothing to convert, so anything already standing in the way is
@@ -644,12 +666,20 @@ THIS int32_t stw_createAudioConverter(SynthThread *t, SampleFormat *fmt)
 
     if (rc == OK) {
         ST_DIRECT(t) = 1;
-        line = native == RATE_8000 ? CMD_RATE_8000
-             : native == RATE_11025 ? CMD_RATE_11025
-             : CMD_RATE_OTHER;
+        line = native == RATE_8000 ? CMD_RATE_8000 : CMD_RATE_11025;
         command = (EngCommand)ENG_CALL(t, ENG_COMMAND);
         rc = command(ST_ENGINE(t), line);
         ST_DIRECT(t) = 0;
+
+        /* Nought puts the rules back in charge, which is what eight thousand
+           and eleven thousand and twenty five want: they are the two the
+           rules can name, and letting them name it keeps that path exactly
+           IBM's. */
+        if (rc == OK)
+            setNativeSampleRate(ew_machine(ST_ENGINE(t)),
+                                (native == RATE_8000 || native == RATE_11025)
+                                ? 0 : native);
+
         if (rc == OK) {
             SampleFormat *kept = ST_FORMAT(t);
 

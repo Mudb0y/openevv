@@ -36,7 +36,7 @@ enum ECICallbackReturn {
 };
 
 /* The engine's own parameters, and a voice's. Only the few this needs. */
-enum { P_REAL_WORLD_UNITS = 8 };
+enum { P_SAMPLE_RATE = 5, P_REAL_WORLD_UNITS = 8 };
 enum { V_GENDER, V_HEAD_SIZE, V_PITCH, V_FLUCTUATION, V_ROUGHNESS,
        V_BREATHINESS, V_SPEED, V_VOLUME, V_COUNT };
 
@@ -61,15 +61,22 @@ void     STDCALL eo_synchronizeSynth(OldInst *h);
 int      STDCALL eo_speaking(OldInst *h);
 int      STDCALL eo_getAvailableLanguages(uint32_t *out, int *count);
 
+/* What a sample rate setting comes to in hertz. One definition, in
+   src/eci_env.c, so the wave header cannot disagree with the engine. */
+int32_t  ev_rateHz(int32_t rate);
+
 void evvRunStaticInitialisers(void);
 void evv_port_start(void);
 void evv_port_finish(void);
 
-/* The formant voice runs at eleven thousand and twenty-five samples a second
-   and nothing here changes that. The engine's sample rate parameter belongs
-   to the concatenative voices, which this extraction does not have. */
+/* What the engine runs at unless -R says otherwise. Eleven thousand and
+   twenty five is what Eloquence has always sounded like and is what the
+   samples in test/samples.sha256 are. */
 #define RATE  11025
 #define FRAME 2048
+
+/* What -R settled on, and what goes into the wave header. */
+static unsigned long rate = RATE;
 
 static short  frame[FRAME];
 static short *samples;
@@ -133,8 +140,8 @@ static void write_wav(FILE *f)
     put32(f, 16);
     put16(f, 1);
     put16(f, 1);
-    put32(f, RATE);
-    put32(f, RATE * 2);
+    put32(f, rate);
+    put32(f, rate * 2);
     put16(f, 2);
     put16(f, 16);
     fwrite("data", 1, 4, f);
@@ -212,6 +219,8 @@ static void usage(FILE *f)
 "  -s N      speed\n"
 "  -p N      pitch\n"
 "  -V N      volume\n"
+"  -R N      sample rate: 0 to 5 for 8000, 11025, 22050, 16000, 32000 or\n"
+"            44100 hertz, or the rate itself in hertz from 8000 to 44100\n"
 "  -r        take every number above in a person's units instead of the\n"
 "            engine's: words per minute for speed, hertz for pitch\n"
 "  -l        say what each voice is set to, and stop\n"
@@ -224,7 +233,7 @@ static void usage(FILE *f)
 int main(int argc, char **argv)
 {
     const char *out = NULL, *from = NULL;
-    int         voice = 0, real = 0, list = 0;
+    int         voice = 0, real = 0, list = 0, want_rate = -1;
     int         set[V_COUNT];
     char       *text;
     OldInst    *h;
@@ -234,7 +243,7 @@ int main(int argc, char **argv)
     for (i = 0; i < V_COUNT; i++)
         set[i] = -1;
 
-    while ((i = getopt(argc, argv, "o:f:v:s:p:V:rlh")) != -1) {
+    while ((i = getopt(argc, argv, "o:f:v:s:p:V:R:rlh")) != -1) {
         switch (i) {
         case 'o': out = optarg; break;
         case 'f': from = optarg; break;
@@ -242,6 +251,7 @@ int main(int argc, char **argv)
         case 's': set[V_SPEED] = atoi(optarg); break;
         case 'p': set[V_PITCH] = atoi(optarg); break;
         case 'V': set[V_VOLUME] = atoi(optarg); break;
+        case 'R': want_rate = atoi(optarg); break;
         case 'r': real = 1; break;
         case 'l': list = 1; break;
         case 'h': usage(stdout); return 0;
@@ -351,6 +361,17 @@ int main(int argc, char **argv)
     eo_registerCallback(h, (void *)on_message, NULL);
     if (!ev_setOutputBuffer(h, FRAME, frame))
         die("the engine refused a sample buffer");
+
+    /* And the rate after the buffer, because setting it rebuilds whatever
+       the samples are going to and there has to be something to rebuild. */
+    if (want_rate >= 0) {
+        if (ev_setParam(h, P_SAMPLE_RATE, want_rate) < 0) {
+            fprintf(stderr, "evv: the engine refused sample rate %d\n",
+                    want_rate);
+            return 1;
+        }
+        rate = (unsigned long)ev_rateHz(want_rate);
+    }
 
     if (!et_addText(h, text))
         die("the engine refused the text");

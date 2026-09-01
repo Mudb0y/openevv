@@ -25,6 +25,7 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "klatt_state.h"
+#include "klatt_rates.h"
 #include "evv_abi.h"
 #include "evv_arena.h"
 #include "delta.h"
@@ -69,6 +70,10 @@ typedef delta_state DeltaThis;
 #define DL_MARKED(l)      ((l)->marked)
 #define DL_QUEUED(l)      ((l)->queued)
 #define DL_RATE(l)        ((l)->rate)
+#define DL_NATIVE_RATE(l) ((l)->native_rate)
+#define DL_BUILT_RATE(l)  ((l)->built_rate)
+#define DL_BUILT_EX(l)    ((l)->built_ex)
+#define DL_BUILT_CO(l)    ((l)->built_co)
 #define DL_BYTES          sizeof(DeltaLang)
 
 /* What the language record keeps of the last utterance: the synthesiser's
@@ -393,6 +398,11 @@ void dlang_delete(DeltaThis *d)
         free(DL_BUF_4(lang));
         DL_BUF_4(lang) = 0;
     }
+    free(DL_BUILT_EX(lang));
+    free(DL_BUILT_CO(lang));
+    DL_BUILT_EX(lang) = 0;
+    DL_BUILT_CO(lang) = 0;
+    DL_BUILT_RATE(lang) = 0;
 
     memset(lang, 0, DL_BYTES);
     free(lang);
@@ -768,6 +778,75 @@ int ourKlattCallback(void *user, KlattSamples *s)
     return 1;
 }
 
+/* ---- a rate the language cannot name --------------------------------- */
+
+/* What the caller asked the synthesiser to run at, in hertz.
+
+   Nought puts it back to whatever the language's own rules say, which is
+   IBM's engine exactly. Anything else stands in front of them from the next
+   utterance on. The rate is not sent to the synthesiser here: it is read at
+   the top of every utterance, so a change lands on a boundary rather than in
+   the middle of one, and an instance that is speaking finishes what it is
+   saying at the rate it started at. */
+int setNativeSampleRate(DeltaThis *d, int32_t hz)
+{
+    DeltaLang *lang;
+
+    if (!d || !DT_LANG(d))
+        return 0;
+    if (hz != 0 && (hz < KLATT_RATE_MIN || hz > KLATT_RATE_MAX))
+        return 0;
+
+    lang = DT_LANG(d);
+    DL_NATIVE_RATE(lang) = hz;
+    return 1;
+}
+
+/* Put the two resonator tables for this rate in front of the synthesiser.
+
+   IBM's two rates keep IBM's own arrays -- KlattSetConstParms reaches for
+   them by name and they are never rebuilt, so the rates that have to stay
+   byte for byte identical do not depend on our rounding. Any other rate gets
+   a pair built once and kept in the language record until the rate moves
+   again, which is where they can be owned without a lock: one record to an
+   instance, read only by the thread that is speaking.
+
+   Answers zero when there is no room, which the caller turns into silence
+   rather than the null lookup it used to be. */
+static int ensureRateTables(DeltaLang *lang, int32_t rate)
+{
+    if (rate == 8000 || rate == 11025)
+        return 1;
+
+    if (DL_BUILT_RATE(lang) != rate || !DL_BUILT_EX(lang)) {
+        if (!DL_BUILT_EX(lang) || !DL_BUILT_CO(lang)) {
+            /* Both or neither, so a second try does not leak whichever of
+               the two the first one got. */
+            free(DL_BUILT_EX(lang));
+            free(DL_BUILT_CO(lang));
+            DL_BUILT_EX(lang) = malloc(KLATT_EX_COUNT * sizeof(int16_t));
+            DL_BUILT_CO(lang) = malloc(KLATT_CO_COUNT * sizeof(int16_t));
+            if (!DL_BUILT_EX(lang) || !DL_BUILT_CO(lang)) {
+                free(DL_BUILT_EX(lang));
+                free(DL_BUILT_CO(lang));
+                DL_BUILT_EX(lang) = 0;
+                DL_BUILT_CO(lang) = 0;
+                DL_BUILT_RATE(lang) = 0;
+                return 0;
+            }
+        }
+        if (!klatt_buildRateTables(rate, DL_BUILT_EX(lang),
+                                   DL_BUILT_CO(lang))) {
+            DL_BUILT_RATE(lang) = 0;
+            return 0;
+        }
+        DL_BUILT_RATE(lang) = rate;
+    }
+
+    KlattSetRateTables(DL_KLATT(lang), DL_BUILT_EX(lang), DL_BUILT_CO(lang));
+    return 1;
+}
+
 /* ---- one utterance ---------------------------------------------------- */
 
 /* Turn a stretch of parameters into sound.
@@ -859,6 +938,13 @@ int synthesize(DeltaThis *d, void *buf, int32_t isArray, int32_t *streamA,
     cp.unknown_14 = 1;
     cp.error_fn = (klatt_error_fn)errorKlattIgnore;
 
+    /* The caller's rate stands in for the rules' where there is one. Only
+       where the rules named a rate at all: a nought here means leave it
+       alone, and overriding that would start an utterance the language never
+       asked to start. */
+    if (rate && DL_NATIVE_RATE(lang))
+        rate = DL_NATIVE_RATE(lang);
+
     if (rate) {
         cp.sample_rate = rate;
         DL_RATE(lang) = rate;
@@ -919,6 +1005,14 @@ int synthesize(DeltaThis *d, void *buf, int32_t isArray, int32_t *streamA,
     }
 
     if (changed) {
+        /* Before the parameters, not after: KlattSetConstParms leaves these
+           two pointers alone at a rate it does not know by name, which is
+           the only reason a rate it does not know can work at all. */
+        if (!ensureRateTables(lang, cp.sample_rate)) {
+            SD_PLAYING(dev) = 0;
+            SD_INTERRUPTED(dev) = 0;
+            return 0;
+        }
         KlattSetConstParms(DL_KLATT(lang), cp);
         SD_OPEN(dev) = 0;
     }

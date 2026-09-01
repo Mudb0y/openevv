@@ -71,6 +71,26 @@ struct DeltaLang {
     int32_t      marked;          /* +0x48 */
     int32_t      queued;          /* +0x4c */
     int32_t      rate;            /* +0x50 */
+
+    /* Ours, and past the end of the record IBM's objects read by offset, so
+       nothing of theirs can see it.
+
+       The rate a rule can name is a sixteen bit cell -- callSynthesizeArray
+       reads it as one -- which is why the caller's rate arrives here instead
+       of going through the language. Eleven thousand fits in that cell and
+       forty-four thousand one hundred does not, and teaching nine language
+       modules a wider one would be nine lifts to redo for a number the rules
+       never do arithmetic on.
+
+       So the rules go on saying eight thousand or eleven thousand and twenty
+       five, and go on branching on which -- us_filtr tests for eight, which
+       is where the compensation for a table that runs past Nyquist lives --
+       and synthesize puts the real rate in front of the synthesiser at the
+       last moment. Nought means the rules decide, which is IBM's engine. */
+    int32_t      native_rate;
+    int32_t      built_rate;      /* what the two tables below were built for */
+    int16_t     *built_ex;
+    int16_t     *built_co;
 };
 
 #endif

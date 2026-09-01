@@ -638,6 +638,11 @@ With no `-o` it writes the wave to standard output, unless that is a terminal, i
 
 `-v` picks one of the eight voices, `-s` the speed, `-p` the pitch and `-V` the volume. Those numbers are the engine's own; `-r` makes them a person's instead, so speed is words per minute and pitch is hertz. `-l` prints what each voice is set to, in whichever units are in force.
 
+`-R` is the sample rate, which is not the speed: it is what the synthesiser runs at. Nought to five are 8,000, 11,025, 22,050, 16,000, 32,000 and 44,100 hertz, in the order IBM numbered the first four and this port the rest, and anything from 8,000 to 44,100 is taken as the rate itself in hertz, so `-R 37800` is a rate nobody numbered. The default is 11,025, which is what Eloquence sounds like. `docs/status.md` says what the higher ones change, where they get worse, and why 44,100 is the ceiling. `tools/rate-compare.py` reads several of the resulting wave files and says it in numbers:
+
+    for r in 1 2 4 5; do ./build/evv -R $r -o rate$r.wav "She sells sea shells."; done
+    tools/rate-compare.py rate1.wav rate2.wav rate4.wav rate5.wav
+
 ## Windows
 
     make win
@@ -686,6 +691,14 @@ are in the archive and the driver picks one by the bitness of the Python it
 finds itself in. The other kind of add-on -- davidacm's IBMTTS driver -- hosts
 the engine in a thirty-two bit `rundll32` of its own and talks to it over a
 pipe, so it always wants `eci32.dll`; this one wants whichever matches.
+
+One setting in it is worth naming because it reads as two things at once. The
+list called sample rate is what the synthesiser runs at, not how fast it
+speaks -- NVDA already calls the speed the rate. It offers the seven the
+library will build tables for, defaults to 11,025 hertz, and moves the audio
+player with the engine or moves neither: an engine at one rate feeding a
+player made for another is speech at the wrong speed, and neither half of that
+reports anything wrong.
 
 Four things in it are decisions rather than detail. Every call into the library
 happens on one thread, because the calls that queue work are not written to be
@@ -923,6 +936,12 @@ Then speak one short word through each and hold the dumps against each other. Th
 What it is proving is that nothing in the engine has quietly stayed global. Two things keep a language in force, and either alone is enough: every method of the engine wrapper sets it from its own machine, and `delta_run_rule` sets it again from the machine it was handed. Breaking one changes nothing, which is what redundancy means; breaking both makes a German machine read English tables and the process falls over, which is how the path is known to be live.
 
 `make rate` is the check for the output path a rate change goes through. It registers a buffer, asks for 11 kHz, 8 kHz, 11 kHz, 8 kHz, 22 kHz and 11 kHz in that order, speaks a sentence after each, and fails if any of them comes back with no samples, if the rate reads back as something else, or if 8 kHz and 11 kHz answer the same number of samples -- which would mean the rate was written into the environment and handed to nobody. It exists because the suite cannot see any of that: `cli/probe.c` registers a buffer but never asks for another rate, and IBM's engine loses the buffer there as well, so both sides agreed and all 81 cases passed while an instance went permanently silent. It needs neither Wine nor IBM's objects, so it runs in CI.
+
+`make rates` is the check for the rates IBM never shipped, and it is about a different question from `make rate` beside it. It has two halves. The first is that the resonator tables built for a new rate are the same two formulae IBM's own four are -- the excitation table is the exponential of minus pi times the bandwidth over the rate and the cosine table is the cosine of two pi times the frequency over the rate, both in fifteen-bit fixed point and both indexed by hertz from ten -- and it proves it by building the tables for IBM's own two rates and holding them against IBM's own arrays entry by entry. Every one of the 3,991 excitation entries matches at both rates and every cosine entry matches at 11 kHz; two cosine entries differ at 8 kHz, at 3,992 and 4,008 hertz, where IBM stored the saturated value and the formula comes to 32,767.35 and rounds one short of it. Those two are pinned rather than tolerated, so a third mismatch, or one anywhere else, fails. The engine never uses what this builds at those two rates -- `KlattSetConstParms` reaches for the static arrays by name -- which is exactly why the check has to be made here explicitly.
+
+The second half speaks at 8, 11.025, 16, 22.05, 32 and 44.1 kHz and at 37,800 hertz, which is not a number anyone gave a meaning to and is there because a rate can be given in hertz. Each has to speak, each has to be within one per cent of the duration 11.025 kHz took, and 8 and 11.025 have to answer exactly the sample counts they have always answered. `EVV_RATES_REPORT=1 make rates` prints what each one said. It needs neither Wine nor IBM's objects, so it runs in CI. Sabotaging the override -- the one line in `synthesize` that puts the caller's rate in front of the rules' -- makes 22 kHz answer 38,423 samples where it owes 76,846, which is how the harness is known to see the path it claims to.
+
+It speaks two sentences at each rate, and that is not padding. The fox sentence the length half uses does not provoke the runaway `docs/status.md` describes at all -- one hertz past the boundary it comes out at a peak of 4,880 like any other rate -- while "Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE." comes out at full scale. A harness that spoke only the first would have reported the engine sound at every rate up to ninety-six thousand. The second sentence is held to a slew bound rather than a loudness one, because real speech is normalised and goes near full scale exactly as a wrapped runaway does; what separates them is that a waveform sampled well above its own bandwidth cannot swing its whole amplitude between one sample and the next. At 44.1 kHz the largest step is 713 against a peak of 5,696, and one hertz past the boundary it is 65,154 against 32,740. Eight thousand is exempt and the head of `test/rates.c` says why.
 
 `make inikeys` is the check for the settings reader, and for the same class of thing as `make rate`: a fault neither suite can reach. It asks a reader for a key that is not in the section it names, over a blob written by hand with its sections deliberately butted together, and over the blob the build itself carries. An absent key has to come back as nothing; it used to come back holding the next section's first value, which killed every build with two languages in it on Linux. It also holds every dataset key this build carries to the shape the voice table reads -- eight numbers and then whatever else -- so it grows teeth as languages are added without being rewritten. It needs neither Wine nor IBM's objects, so it runs in CI.
 

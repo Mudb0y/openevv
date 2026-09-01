@@ -19,6 +19,7 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "klatt_rates.h"
 
 /* Answers this layer gives back. */
 #define OK               0
@@ -368,9 +369,11 @@ THIS int32_t stf_registerSampleBuffer(SynthThread *t, int16_t *buf,
     if (fmt->rate == 0)
         fmt->rate = RATE_11025;
 
+    /* The rate arrives here in hertz, already turned from the caller's
+       setting into a number by ev_rateHz, so the test is whether the
+       synthesiser can be built for it rather than which of three it is. */
     if (fmt->layout != LAYOUT_PCM || fmt->width != WIDTH_16
-        || (fmt->rate != RATE_8000 && fmt->rate != RATE_11025
-            && fmt->rate != RATE_22050)) {
+        || fmt->rate < KLATT_RATE_MIN || fmt->rate > KLATT_RATE_MAX) {
         rc = ERR_BAD_FORMAT;
         goto done;
     }

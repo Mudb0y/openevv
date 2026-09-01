@@ -15,7 +15,12 @@ import os
 import re
 from collections import OrderedDict
 
-from autoSettingsUtils.driverSetting import BooleanDriverSetting, NumericDriverSetting
+from autoSettingsUtils.driverSetting import (
+	BooleanDriverSetting,
+	DriverSetting,
+	NumericDriverSetting,
+)
+from autoSettingsUtils.utils import StringParameterInfo
 from logHandler import log
 from speech.commands import (
 	BreakCommand,
@@ -131,6 +136,8 @@ class SynthDriver(SynthDriver):
 		BooleanDriverSetting("abbreviations", _("Expand a&bbreviations"), False),
 		# Translators: Label for a setting in voice settings dialog.
 		BooleanDriverSetting("voiceTags", _("Allow backquote voice &tags"), False),
+		# Translators: Label for a setting in voice settings dialog.
+		DriverSetting("samplerate", _("Sa&mple rate"), False),
 	)
 
 	supportedCommands = {
@@ -425,6 +432,43 @@ class SynthDriver(SynthDriver):
 
 	def _set_voiceTags(self, enable):
 		self._voiceTags = enable
+
+	def _get_availableSamplerates(self):
+		"""What the synthesiser can be run at.
+
+		Not the speaking rate, which NVDA already calls the rate: this is the
+		sample rate, and what it changes is the top of the spectrum rather
+		than the speed. Eleven thousand and twenty five is Eloquence as it has
+		always sounded and is the default; above it the sibilants and the
+		aspiration have somewhere to go, and below it there is nothing to gain
+		but the eight thousand IBM shipped for the telephone.
+		"""
+		return OrderedDict(
+			(
+				str(hz),
+				StringParameterInfo(
+					str(hz),
+					# Translators: A sample rate, shown in kilohertz.
+					_("%.3g kHz") % (hz / 1000.0),
+				),
+			)
+			for _number, hz in _openevv.SAMPLE_RATES
+		)
+
+	def _get_samplerate(self):
+		return str(self._engine.sampleRate)
+
+	def _set_samplerate(self, value):
+		# Through the queue like every other setting, so it lands between
+		# utterances: the player is replaced along with the rate and swapping
+		# one out from under audio being fed to it is how a reader ends up
+		# with no voice.
+		try:
+			hz = int(value)
+		except (TypeError, ValueError):
+			log.error("openevv: %r is not a sample rate" % (value,))
+			return
+		self._engine.control([(self._engine.setSampleRate, (hz,))])
 
 	def _get_availableVoices(self):
 		"""One voice per language and preset.

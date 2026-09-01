@@ -74,6 +74,14 @@ class _Setting:
         self.id = args[0] if args else None
 
 
+class _ParameterInfo:
+    """What NVDA offers as one choice of a setting that is a list."""
+
+    def __init__(self, id, displayName=None):
+        self.id = id
+        self.displayName = displayName if displayName is not None else id
+
+
 class _Notifier:
     def __init__(self):
         self.seen = []
@@ -186,6 +194,7 @@ def _install_stubs():
         BooleanDriverSetting=_Setting,
         NumericDriverSetting=_Setting,
     )
+    module("autoSettingsUtils.utils", StringParameterInfo=_ParameterInfo)
 
     module("speech")
     module(

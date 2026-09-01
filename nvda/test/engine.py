@@ -232,6 +232,80 @@ def control_checks():
     engine.close()
 
 
+def samplerate_checks():
+    """Changing the rate has to move the player with it, or not at all.
+
+    An engine at one rate feeding a player built for another is speech at the
+    wrong speed, and nothing reports it: both halves are working. So the two
+    are only ever moved together, and anything that will not work leaves both
+    where they were rather than one of them.
+    """
+    dll = FakeDll()
+    players = []
+    mod = engine_module(dll, players)
+
+    engine = mod.Engine(lambda index: None)
+    engine.open()
+
+    first = players[-1]
+    check("the player starts at the rate the engine does",
+          first.made["samplesPerSec"], mod.SAMPLE_RATE)
+
+    check("a rate the library has not is refused",
+          engine.setSampleRate(9000), False)
+    check("and leaves the engine where it was",
+          engine.sampleRate, mod.SAMPLE_RATE)
+    check("and does not build a player for it", len(players), 1)
+
+    check("asking for the rate already in force does nothing",
+          engine.setSampleRate(mod.SAMPLE_RATE), True)
+    check("and builds no player either", len(players), 1)
+
+    check("a rate the library has is taken", engine.setSampleRate(22050), True)
+    check("the engine is told which", dll.params.get(mod.PARAM_SAMPLE_RATE), 2)
+    check("a player is built for it", players[-1].made["samplesPerSec"], 22050)
+    check("the old one is closed", first.closed, 1)
+    check("and the engine says what it is running at", engine.sampleRate, 22050)
+
+    # Nought is a rate, so a setter that tested the answer for truth rather
+    # than for a negative would read eight thousand as a refusal.
+    check("eight thousand is a rate and not a failure",
+          engine.setSampleRate(8000), True)
+    check("even though its setting is nought",
+          dll.params.get(mod.PARAM_SAMPLE_RATE), 0)
+
+    engine.close()
+
+    # And a player that cannot be built at all: the rate must go back, or the
+    # engine speaks at one rate into a player made for another.
+    dll = FakeDll()
+    players = []
+    mod = engine_module(dll, players)
+    engine = mod.Engine(lambda index: None)
+    engine.open()
+
+    import nvwave
+
+    made = []
+
+    def refuse(**kwargs):
+        made.append(kwargs)
+        raise OSError("no such device")
+
+    working = nvwave.WavePlayer
+    nvwave.WavePlayer = refuse
+    try:
+        check("a rate whose player will not build is refused",
+              engine.setSampleRate(44100), False)
+    finally:
+        nvwave.WavePlayer = working
+    check("and the engine is put back to the rate it was at",
+          dll.params.get(mod.PARAM_SAMPLE_RATE), 1)
+    check("and goes on saying so", engine.sampleRate, mod.SAMPLE_RATE)
+    check("and still has a player", engine.player is not None, True)
+    engine.close()
+
+
 def stall_checks():
     """A player that stops taking audio must not silence the synthesiser.
 
@@ -629,6 +703,7 @@ def main():
     check("and the player was closed", player.closed, 1)
 
     control_checks()
+    samplerate_checks()
     stall_checks()
     idle_stall_checks()
 

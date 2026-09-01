@@ -19,6 +19,7 @@
 #include "eci_synththread.h"
 #include "evv_abi.h"
 #include "eci_old.h"
+#include "klatt_rates.h"
 
 /* Where the samples are going. */
 #define WHERE_DEVICE    0
@@ -80,13 +81,22 @@ extern int32_t g_DefaultEnvironment[] MANGLED("_g_DefaultEnvironment");
 
 extern int32_t setECIerror(int32_t rc, OldInst *h);
 
+int32_t ev_rateHz(int32_t rate);
+
 /* ---- how much of each setting the caller may ask for ---------------- */
 
 /* Read out of the original's own table. A pair to a setting: the least it
-   will take and the most. */
+   will take and the most.
+
+   One entry is not IBM's. The sample rate ran to two, which is what made
+   IBM's own sixteen thousand unreachable -- it numbered the rate three and
+   then would not take a three. It runs to the highest rate the synthesiser
+   will now be built tables for, so that both the numbered rates and a rate
+   given in hertz get past this test; ev_rateHz is what refuses the numbers
+   in between. */
 const int32_t ev_paramRange[0x12][2] = {
     { 0, 1 }, { 0, 1 }, { 0, 3 }, { 0, 1 },
-    { 0, 100 }, { 0, 2 }, { 0, 100 }, { 0, 1 },
+    { 0, 100 }, { 0, KLATT_RATE_MAX }, { 0, 100 }, { 0, 1 },
     { 0, 1 }, { 0, 0x7fffffff }, { 0, 1 }, { 0, 1 },
     { 0, 1 }, { 2, 0x7fffffff }, { 220, 0x7fffffff }, { 0, 0x7fffffff },
     { 220, 0x7fffffff }, { 0, 0 },
@@ -142,21 +152,35 @@ int ev_checklang(int32_t want)
     return 0;
 }
 
-/* Whether the device will give us a rate. The four it knows about each have
-   a bit in the word the device answers with. */
+/* Whether the device will give us a rate. The four IBM numbered each have a
+   bit in the word the device answers with, and the two added after them
+   have a bit each in the same word.
+
+   A rate given in hertz rather than by number is not asked about: nothing
+   here plays it, and the device this consults is the porting layer's, which
+   answers for whatever it can open. So the question for those is only
+   whether the synthesiser can be built tables for it, and ev_rateHz has
+   already said yes by returning a rate at all. */
 int ev_sampleRateSupported(int32_t rate)
 {
     int32_t caps[6];
     int32_t room = 0x10;
 
+    if (ev_rateHz(rate) == 0)
+        return 0;
+    if (rate > 5)
+        return 1;
+
     if (ealQueryDevCaps(0, 1, &room, caps) != 0)
         return 0;
 
     switch (rate) {
-    case 0:  return (caps[5] & 0x00001) != 0;
-    case 1:  return (caps[5] & 0x00010) != 0;
-    case 2:  return (caps[5] & 0x00100) != 0;
-    case 3:  return (caps[5] & 0x10000) != 0;
+    case 0:  return (caps[5] & 0x00000001) != 0;
+    case 1:  return (caps[5] & 0x00000010) != 0;
+    case 2:  return (caps[5] & 0x00000100) != 0;
+    case 3:  return (caps[5] & 0x00010000) != 0;
+    case 4:  return (caps[5] & 0x00100000) != 0;
+    case 5:  return (caps[5] & 0x01000000) != 0;
     default: return 0;
     }
 }
@@ -173,27 +197,41 @@ typedef struct AudioFormat {
     int32_t  a, b, c, d;    /* +0x10 */
 } AudioFormat;
 
-/* The four rates the device form knows, and the three the sample form does.
-   Out of range leaves nought, which the layer beneath refuses. */
-static int32_t ev_deviceHz(int32_t rate)
+/* What the sample rate setting means, in hertz.
+
+   IBM numbered four rates and shipped two. The first four numbers keep the
+   meanings IBM gave them and always will; two more are added after them for
+   the rates the synthesiser can now be run at, and beyond those a value that
+   is already a plausible rate in hertz is taken as one, so that trying a
+   rate nobody thought worth a number of its own needs no rebuild.
+
+   The gap between six and eight thousand is refused rather than guessed at:
+   a caller that passes a small number means a code, and a code we have not
+   got is an error and not a rate. Forty-eight thousand is not offered, and
+   klatt_rates.h says why -- the synthesiser runs away above forty-four and
+   a half thousand.
+
+   Two divergences from IBM sit here. The device form knew sixteen thousand
+   and the sample form did not, so a buffer could not have it; both forms
+   answer the same table now. And IBM's twenty-two and sixteen thousand were
+   the other two doubled by a converter that this port has never had, so what
+   a caller got was the undoubled stream under the doubled label -- the same
+   speech at half the duration. They are synthesised at their own rate now.
+   docs/status.md says so under the deliberate divergences. */
+int32_t ev_rateHz(int32_t rate)
 {
     switch (rate) {
     case 0:  return 8000;
     case 1:  return 11025;
     case 2:  return 22050;
     case 3:  return 16000;
-    default: return 0;
+    case 4:  return 32000;
+    case 5:  return 44100;
+    default: break;
     }
-}
-
-static int32_t ev_callbackHz(int32_t rate)
-{
-    switch (rate) {
-    case 0:  return 8000;
-    case 1:  return 11025;
-    case 2:  return 22050;
-    default: return 0;
-    }
+    if (rate >= KLATT_RATE_MIN && rate <= KLATT_RATE_MAX)
+        return rate;
+    return 0;
 }
 
 /* Send the samples to the device. Whatever they were going to before has to
@@ -202,6 +240,14 @@ int ev_setOutputToDevice(OldInst *h, int32_t rate, int32_t a, int32_t b,
                          int32_t c, int32_t d)
 {
     AudioFormat fmt;
+
+    /* A setting that names no rate is refused here rather than sent down as
+       a nought, because a nought is not an error further down: the format
+       layer reads it as "the caller did not say" and fills in eleven
+       thousand and twenty five. So without this a rate nobody has is not
+       refused, it is granted as the default. */
+    if (ev_rateHz(rate) == 0)
+        return 0;
 
     if (OI_WHERE(h) == WHERE_SAMPLES) {
         if (setECIerror(api_register_samples(OI_NEW(h), 0, 0, 0), h))
@@ -220,7 +266,7 @@ int ev_setOutputToDevice(OldInst *h, int32_t rate, int32_t a, int32_t b,
     fmt.b = b;
     fmt.c = c;
     fmt.d = d;
-    fmt.hz = ev_deviceHz(rate);
+    fmt.hz = ev_rateHz(rate);
     fmt.flags = 0;
 
     if (setECIerror(api_new_audio_format(OI_NEW(h), &fmt), h))
@@ -234,6 +280,9 @@ int ev_setOutputToSampleCallback(OldInst *h, int32_t rate)
 {
     AudioFormat fmt;
 
+    if (ev_rateHz(rate) == 0)
+        return 0;
+
     if (OI_WHERE(h) == WHERE_DEVICE) {
         if (setECIerror(api_delete_audio_format(OI_NEW(h)), h))
             return 0;
@@ -244,7 +293,7 @@ int ev_setOutputToSampleCallback(OldInst *h, int32_t rate)
 
     memset(&fmt, 0, 0x0c);
     fmt.kind = 0;
-    fmt.hz = ev_callbackHz(rate);
+    fmt.hz = ev_rateHz(rate);
     fmt.flags = 0;
 
     /* The room is counted in samples here and in bytes underneath. */
@@ -416,11 +465,26 @@ int ev_sendParameters(OldInst *h)
 /* ---- the entry point ------------------------------------------------ */
 
 /* One entry in the concatenative table, or nought if that voice is not in
-   it at this rate. */
+   it at this rate.
+
+   The table has three rate slots to a dialect, because the concatenative
+   synthesiser had datasets at three rates and loadStandardConcatenativeVoice
+   fills exactly those. A fourth rate indexes past the dialect and into the
+   next one, which IBM's own numbering could already reach -- it called
+   sixteen thousand rate three -- and which a rate given in hertz would run
+   off the end of the table altogether. There is no dataset at a rate the
+   table has no slot for, so the answer is no entry rather than a further
+   slot's worth of somebody else's bytes. */
+#define CV_RATES 3
+
 static char *ev_concatVoice(OldInst *h, int family, int dialect, int32_t rate)
 {
-    char *p = (char *)OI_CONCAT(h);
+    char *p;
 
+    if (rate < 0 || rate >= CV_RATES)
+        return 0;
+
+    p = (char *)OI_CONCAT(h);
     p += (family - 1) * CV_FAMILY_BYTES;
     p += dialect * CV_DIALECT_BYTES;
     p += rate * CV_RATE_BYTES;
@@ -518,18 +582,16 @@ int32_t STDCALL ev_setParam(OldInst *h, int32_t which, int32_t value)
         int family = (int8_t)((OI_LANG(inst) & 0xff0000) >> 16);
         int dialect = (int8_t)(OI_LANG(inst) & 0xff);
         int32_t rate = OI_RATE(inst);
+        char *was = ev_concatVoice(inst, family, dialect, rate);
+        char *entry = ev_concatVoice(inst, family, dialect, value);
         int useConcat = 1;
 
-        if (*(int32_t *)(ev_concatVoice(inst, family, dialect, rate)
-                         + CV_PRESENT) == 0
-            && *(int32_t *)(ev_concatVoice(inst, family, dialect, value)
-                            + CV_PRESENT) == 0)
+        if ((!was || *(int32_t *)(was + CV_PRESENT) == 0)
+            && (!entry || *(int32_t *)(entry + CV_PRESENT) == 0))
             useConcat = 0;
 
         if (useConcat) {
-            char *entry = ev_concatVoice(inst, family, dialect, value);
-
-            if (*(int32_t *)(entry + CV_PRESENT) != 0)
+            if (entry && *(int32_t *)(entry + CV_PRESENT) != 0)
                 memcpy(OI_VOICE(inst), entry + SV_FIRST, VOICE_WORDS * 4);
             else
                 memcpy(OI_VOICE(inst),

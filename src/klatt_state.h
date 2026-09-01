@@ -162,6 +162,7 @@ void     KlattSetOutputSamplesOption(void *handle, int32_t option);
 void     klattSetVolumeMultiplier(void *handle, int32_t volume);
 int      errorKlattIgnore(void);
 void     KlattSetConstParms(void *handle, KlattConstParms parms);
+void     KlattSetRateTables(void *handle, const int16_t *ex, const int16_t *co);
 int      KlattSynth(void *handle, const int32_t *parms);
 
 #endif
