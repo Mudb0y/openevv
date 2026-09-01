@@ -15,6 +15,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
@@ -82,6 +83,11 @@ extern int32_t g_DefaultEnvironment[] MANGLED("_g_DefaultEnvironment");
 extern int32_t setECIerror(int32_t rc, OldInst *h);
 
 int32_t ev_rateHz(int32_t rate);
+int32_t ev_engineHz(int32_t hz);
+
+/* Whether the setting is one of the numbered rates rather than a rate given
+   in hertz. */
+static int ev_rateIsCoded(int32_t rate);
 
 /* ---- how much of each setting the caller may ask for ---------------- */
 
@@ -152,9 +158,8 @@ int ev_checklang(int32_t want)
     return 0;
 }
 
-/* Whether the device will give us a rate. The four IBM numbered each have a
-   bit in the word the device answers with, and the two added after them
-   have a bit each in the same word.
+/* Whether the device will give us a rate. The six the caller is offered by
+   number each have a bit in the word the device answers with.
 
    A rate given in hertz rather than by number is not asked about: nothing
    here plays it, and the device this consults is the porting layer's, which
@@ -168,7 +173,7 @@ int ev_sampleRateSupported(int32_t rate)
 
     if (ev_rateHz(rate) == 0)
         return 0;
-    if (rate > 5)
+    if (!ev_rateIsCoded(rate))
         return 1;
 
     if (ealQueryDevCaps(0, 1, &room, caps) != 0)
@@ -181,7 +186,10 @@ int ev_sampleRateSupported(int32_t rate)
     case 3:  return (caps[5] & 0x00010000) != 0;
     case 4:  return (caps[5] & 0x00100000) != 0;
     case 5:  return (caps[5] & 0x01000000) != 0;
-    default: return 0;
+    /* The four that ask for a rate outright rather than by its number are
+       not the device's business: nothing here plays them, and whether they
+       can be made is a question the tables have already answered. */
+    default: return 1;
     }
 }
 
@@ -197,41 +205,104 @@ typedef struct AudioFormat {
     int32_t  a, b, c, d;    /* +0x10 */
 } AudioFormat;
 
-/* What the sample rate setting means, in hertz.
+/* What the sample rate setting means, and how the engine is to produce it.
+ *
+ * IBM numbered four rates and shipped two. The first four numbers keep the
+ * rates IBM gave them and always will. What they no longer mean is that the
+ * engine runs at them.
+ *
+ * Every rate above eleven thousand and twenty five is reached by running the
+ * engine at one of its own two and repeating each sample, rather than by
+ * synthesising at the higher rate. The synthesiser will do either -- it can
+ * be built resonator tables for any rate, and src/klatt_rates.c is that --
+ * but they do not sound the same and holding is the one worth having.
+ * Synthesising higher widens the noise the frication and aspiration are made
+ * of, because that generator produces one value per output sample, so the
+ * sibilants go thin and hissy. Holding touches none of it: the speech is bit
+ * for bit the speech Eloquence has always made, and what fills the new band
+ * is a mirror of it rather than new noise. That mirror is what a bandlimited
+ * resampler exists to remove, and keeping it is the sound old hardware made.
+ *
+ * So the rule is the rate itself and there is nothing else to carry: an
+ * output rate that is a whole multiple of one of the engine's two, twice or
+ * more, is held from that one, and anything else is synthesised outright.
+ * Both halves are wanted -- 37,800 hertz has no base to be held from and is
+ * synthesised -- and which one applies can be read off the number.
+ *
+ * EVV_UPSAMPLE=none turns the holding off and synthesises everything at its
+ * own rate, which is how the two are compared without a rebuild. The other
+ * values of it choose between ways of filling the gap and src/eci_pcm.c
+ * describes them.
+ *
+ * Two of these are fixes to IBM rather than additions. The device form knew
+ * sixteen thousand and the sample form did not, so a buffer could not have
+ * it; both forms answer the same table now. And IBM's twenty-two and sixteen
+ * thousand were meant to be exactly this -- the other two doubled by an
+ * AudioConverter -- and the object that was to do it is the one this port
+ * never transcribed, so what a caller got was the undoubled stream under the
+ * doubled label, the same speech at half the duration. That is what these
+ * now do, some twenty-seven years later.
+ */
 
-   IBM numbered four rates and shipped two. The first four numbers keep the
-   meanings IBM gave them and always will; two more are added after them for
-   the rates the synthesiser can now be run at, and beyond those a value that
-   is already a plausible rate in hertz is taken as one, so that trying a
-   rate nobody thought worth a number of its own needs no rebuild.
+/* The rates the settings name. IBM's four keep IBM's numbers. */
+static const int32_t ev_rateByCode[] = {
+    8000, 11025, 22050, 16000, 32000, 44100,
+};
 
-   The gap between six and eight thousand is refused rather than guessed at:
-   a caller that passes a small number means a code, and a code we have not
-   got is an error and not a rate. Forty-eight thousand is not offered, and
-   klatt_rates.h says why -- the synthesiser runs away above forty-four and
-   a half thousand.
+#define EV_RATE_CODES ((int32_t)(sizeof ev_rateByCode / sizeof ev_rateByCode[0]))
 
-   Two divergences from IBM sit here. The device form knew sixteen thousand
-   and the sample form did not, so a buffer could not have it; both forms
-   answer the same table now. And IBM's twenty-two and sixteen thousand were
-   the other two doubled by a converter that this port has never had, so what
-   a caller got was the undoubled stream under the doubled label -- the same
-   speech at half the duration. They are synthesised at their own rate now.
-   docs/status.md says so under the deliberate divergences. */
+/* The two the engine synthesises at, and the only two a rule can name. */
+#define EV_BASE_LOW   8000
+#define EV_BASE_HIGH  11025
+
+static int ev_rateIsCoded(int32_t rate)
+{
+    return rate >= 0 && rate < EV_RATE_CODES;
+}
+
+/* What the caller is told the rate is, and what goes in a wave header. */
 int32_t ev_rateHz(int32_t rate)
 {
-    switch (rate) {
-    case 0:  return 8000;
-    case 1:  return 11025;
-    case 2:  return 22050;
-    case 3:  return 16000;
-    case 4:  return 32000;
-    case 5:  return 44100;
-    default: break;
-    }
+    if (ev_rateIsCoded(rate))
+        return ev_rateByCode[rate];
     if (rate >= KLATT_RATE_MIN && rate <= KLATT_RATE_MAX)
         return rate;
     return 0;
+}
+
+/* Whether the holding is wanted at all. Read once: an engine that changed
+   its mind halfway through would be comparing two things at once. */
+static int ev_holding(void)
+{
+    static int decided;
+    static int on = 1;
+
+    if (!decided) {
+        const char *say = getenv("EVV_UPSAMPLE");
+
+        decided = 1;
+        if (say != 0 && strcmp(say, "none") == 0)
+            on = 0;
+    }
+    return on;
+}
+
+/* And what the engine is to run at to produce a rate. The same number in
+   equals the same number out, whichever way the caller asked for it, which
+   is what lets the layer below work this out for itself rather than being
+   told. Nought where the rate is not one the engine can make at all. */
+int32_t ev_engineHz(int32_t hz)
+{
+    if (hz < KLATT_RATE_MIN || hz > KLATT_RATE_MAX)
+        return 0;
+
+    if (ev_holding()) {
+        if (hz >= EV_BASE_HIGH * 2 && (hz % EV_BASE_HIGH) == 0)
+            return EV_BASE_HIGH;
+        if (hz >= EV_BASE_LOW * 2 && (hz % EV_BASE_LOW) == 0)
+            return EV_BASE_LOW;
+    }
+    return hz;
 }
 
 /* Send the samples to the device. Whatever they were going to before has to

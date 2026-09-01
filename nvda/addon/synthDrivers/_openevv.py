@@ -64,13 +64,19 @@ from logHandler import log
 #: and it stays the default for that reason and no other.
 SAMPLE_RATE = 11025
 
-#: The rates the library will synthesise at: the setting the engine takes and
-#: the rate in hertz it comes to. IBM shipped the first two and numbered the
-#: next two; the rest are this port's, and what they buy is the top of the
-#: spectrum -- above eleven thousand the sibilants and the aspiration have
-#: somewhere to go, and the fold-back that eleven thousand puts into the
-#: consonant band is gone. Ordered by rate rather than by number so a reader
-#: is offered them in the order a person thinks of them.
+#: The rates the library offers: the setting the engine takes and the rate in
+#: hertz it comes to. IBM shipped the first two and numbered the next two;
+#: the last two are this port's.
+#:
+#: Above eleven thousand the engine still runs at eight or eleven thousand
+#: and each sample is repeated, which is what a screen reader wants: the
+#: speech is bit for bit the speech Eloquence has always made, and what fills
+#: the new band is a mirror of it. Synthesising at the higher rate outright
+#: is possible and sounds worse -- the frication comes from a generator that
+#: makes one value per output sample, so the sibilants go thin -- and the
+#: library will still do it for anyone who asks by hertz rather than by
+#: number. Ordered by rate rather than by number so a reader is offered them
+#: in the order a person thinks of them.
 SAMPLE_RATES = (
 	(0, 8000),
 	(1, 11025),

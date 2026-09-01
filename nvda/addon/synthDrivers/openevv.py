@@ -437,11 +437,16 @@ class SynthDriver(SynthDriver):
 		"""What the synthesiser can be run at.
 
 		Not the speaking rate, which NVDA already calls the rate: this is the
-		sample rate, and what it changes is the top of the spectrum rather
-		than the speed. Eleven thousand and twenty five is Eloquence as it has
-		always sounded and is the default; above it the sibilants and the
-		aspiration have somewhere to go, and below it there is nothing to gain
-		but the eight thousand IBM shipped for the telephone.
+		sample rate. Eleven thousand and twenty five is what Eloquence has
+		always sounded like and is the default; below it there is nothing to
+		gain but the eight thousand IBM shipped for the telephone.
+
+		Above it the engine still runs at eight or eleven thousand and each
+		sample is repeated, so the speech is unchanged and what a higher rate
+		buys is that the audio device is handed something it wants without
+		resampling it. It also sounds brighter, because repeating rather than
+		interpolating leaves a mirror of the speech above the old ceiling
+		where a resampler would have removed it.
 		"""
 		return OrderedDict(
 			(

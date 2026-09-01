@@ -166,6 +166,7 @@ extern THIS void rz_romClearErrors(void *r)
 
 extern int setNativeSampleRate(delta_state *d, int32_t hz);
 extern delta_state *ew_machine(void *engine);
+extern int32_t ev_engineHz(int32_t rate);
 
 extern THIS char *fm_filterText(void *m, const char *text, int32_t engine)
     MANGLED("?filterText@FilterManager@@QAEPADPBDJ@Z");
@@ -594,21 +595,22 @@ THIS int32_t stw_checkLanguage(SynthThread *t, LangIdentifier *want)
     return engine != 0;
 }
 
-/* Put the engine into the rate the caller asked for, and stand a converter
-   between it and the caller if it cannot be given it.
+/* Put the engine into a rate it can work at, and stand a converter between
+   it and the caller where the two differ.
 
    IBM's plan was two rates and a converter: eight and eleven thousand and
    twenty five synthesised, sixteen and twenty-two thousand those two doubled
-   by an AudioConverter. That converter is the one object of the sound layer
-   this port never transcribed -- src/eci_pcm.c says why -- so the doubling
-   never happened and a caller asking for twenty-two thousand was handed the
-   eleven thousand stream under a twenty-two thousand label, which is the
-   same speech at half the duration.
+   by an AudioConverter. That converter was the one object of the sound layer
+   this port never transcribed, so the doubling never happened and a caller
+   asking for twenty-two thousand was handed the eleven thousand stream under
+   a twenty-two thousand label. It exists now, in src/eci_pcm.c, and IBM's
+   plan is what runs.
 
-   The synthesiser will now run at any rate it can be built resonator tables
-   for, so there is nothing left to convert: every rate is its own native
-   one. The converter branch below is kept for a rate outside those bounds,
-   which is the only way the two can still disagree.
+   The synthesiser will also run at any rate it can be built resonator tables
+   for, which is what the format asks for when the rate arrived as a number
+   of hertz rather than as one of the settings. Then there is nothing to
+   convert. ev_engineHz is what decides between the two, so the decision sits
+   in one table beside the rates themselves rather than being made twice.
 
    The engine is told a rate its rules can name, and that is deliberate. The
    annotation the rules parse takes nought or one and nothing else, and the
@@ -616,7 +618,7 @@ THIS int32_t stw_checkLanguage(SynthThread *t, LangIdentifier *want)
    compensation for a table running past Nyquist lives. So eight thousand
    goes as itself and every other rate goes as eleven thousand and twenty
    five, which is the branch that suits it, and setNativeSampleRate puts the
-   real number in front of the synthesiser under it. */
+   real number in front of the synthesiser under it where the two differ. */
 THIS int32_t stw_createAudioConverter(SynthThread *t, SampleFormat *fmt)
 {
     int32_t wanted = fmt->rate;
@@ -626,12 +628,11 @@ THIS int32_t stw_createAudioConverter(SynthThread *t, SampleFormat *fmt)
     EngCommand command;
     const char *line;
 
-    if (wanted >= KLATT_RATE_MIN && wanted <= KLATT_RATE_MAX)
-        native = wanted;
-    else if (wanted == RATE_16000)
-        native = RATE_8000;
-    else
-        native = RATE_11025;
+    /* The format carries the rate in hertz, so the engine's own rate is
+       asked for by that rather than by the setting the caller used. */
+    native = ev_engineHz(wanted);
+    if (native == 0)
+        return ERR_BAD_RATE;
 
     if (native == wanted) {
         /* Nothing to convert, so anything already standing in the way is

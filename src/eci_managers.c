@@ -19,6 +19,7 @@
    Names are prefixed and the aliases at the foot carry the real ones. */
 
 #include <stdint.h>
+#include <string.h>
 #include <stdio.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
@@ -51,6 +52,23 @@
 #define CM_DIALECT(m) (*(uint8_t *)((char *)(m) + 0x148))
 #define CM_VOICE(m)   (*(uint8_t *)((char *)(m) + 0x14c))
 #define CM_RATE(m)    (*(uint32_t *)((char *)(m) + 0x150))
+
+/* And a fifth, which is not one of those four and is read by somebody else:
+   the synthesis thread's sample callback asks the manager whether what it is
+   about to hand on still needs converting. IBM's concatenative engine can
+   produce audio already at the caller's rate, and says so here.
+
+   Ours never can, because in this extraction every sample comes from the
+   formant synthesiser at the engine's own rate. So it is one, always, and
+   the converter in src/eci_pcm.c is what raises it. It was left unset before
+   there was a converter to skip, which mattered not at all while there was
+   none and would have decided the question on whatever malloc last had at
+   that address the moment there was. */
+#define CM_RAW(m)     (*(uint8_t *)((char *)(m) + 0x2ac))
+
+/* How much the thread allocates for one, so that the whole of it can be put
+   in a known state rather than the handful of fields named here. */
+#define CM_BYTES      0x2c0
 
 /* Which of them setParam is about. */
 #define CM_PARAM_LANGUAGE 0x02
@@ -366,10 +384,15 @@ THIS void *cm_ctor(void *m, void *thread)
 {
     SAW("ConcatenationManager ctor");
     (void)thread;
+    /* All of it, not just the fields below: this block is malloc'd and read
+       by offset, so anything named later that nobody thought to clear here
+       would start as whatever was in that memory. */
+    memset(m, 0, CM_BYTES);
     CM_FAMILY(m) = 0;
     CM_DIALECT(m) = 0;
     CM_VOICE(m) = 0;
     CM_RATE(m) = 0;
+    CM_RAW(m) = 1;
     return m;
 }
 
