@@ -911,11 +911,11 @@ int  if_testge(delta_state *d);
 void npop(delta_state *d, delta_loc *loc);
 void ncompare_s(delta_state *d, uint8_t c);
 int  forall_to_test(delta_state *d, delta_loc *a, delta_loc *b);
-int  mark_i(delta_state *d, uint8_t st, uint8_t fld, const void *v,
+int  mark_i(delta_state *d, uint8_t st, uint8_t fld, int32_t v,
             uint8_t mode);
-int  mark_l(delta_state *d, uint8_t st, uint8_t fld, const void *v,
+int  mark_l(delta_state *d, uint8_t st, uint8_t fld, int32_t v,
             uint8_t mode);
-int  mark_lng(delta_state *d, uint8_t st, uint8_t fld, const void *v,
+int  mark_lng(delta_state *d, uint8_t st, uint8_t fld, int32_t v,
               uint8_t mode);
 void SETCTXL(delta_state *d, int32_t *table, uint8_t idx, int32_t bits);
 void SETCTXR(delta_state *d, int32_t *table, uint8_t idx, int32_t bits);

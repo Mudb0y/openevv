@@ -630,7 +630,11 @@ def write_shims(e, out_c, out_ren):
                 "   two languages share most of these and a program may have\n"
                 "   both in it. What a run reports is the name without it,\n"
                 "   which is what the rule table holds. */\n\n")
-        f.write('#include "delta_rules_%s.h"\n\n' % TAG[0])
+        f.write('#include "delta_rules_%s.h"\n' % TAG[0])
+        # Der erste Parameter jeder Regel IST die Maschine, und die kommt als
+        # Slotwert an: EVV_AT macht daraus wieder einen Zeiger. Ohne die
+        # Arena ist das derselbe Cast wie zuvor.
+        f.write('#include "evv_arena.h"\n\n')
         for i, (name, _off, _len, _fr, _pb, params) in enumerate(e.rules):
             n = max(params, 1)
             args = ", ".join("int32_t a%d" % j for j in range(n))
@@ -638,7 +642,7 @@ def write_shims(e, out_c, out_ren):
             f.write("    int32_t a[%d];\n\n" % n)
             for j in range(n):
                 f.write("    a[%d] = a%d;\n" % (j, j))
-            f.write("    return delta_run_rule((void *)(intptr_t)a0,\n"
+            f.write("    return delta_run_rule(EVV_AT(void *, a0),\n"
                     "                          &%s[%d], a, %d);\n}\n\n"
                     % (N("delta_rules"), i, n))
     return len(e.rules)

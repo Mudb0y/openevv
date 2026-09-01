@@ -109,9 +109,18 @@ void *delta_low_at(const void *p)
     if (p == 0)
         return 0;
 
+    /* Strictly inside first, and only then one past the end. The two passes
+       are not the same as one: where the linker lays two stores back to back
+       -- ld64 does, GNU ld does not -- the first byte of the later store is
+       also one past the end of the earlier one, and a single pass hands back
+       the tail of the wrong copy. */
     for (i = 0; i < regions; i++)
-        if (c >= region[i].at && c <= region[i].at + region[i].bytes)
+        if (c >= region[i].at && c < region[i].at + region[i].bytes)
             return region[i].copy + (c - region[i].at);
+
+    for (i = 0; i < regions; i++)
+        if (c == region[i].at + region[i].bytes)
+            return region[i].copy + region[i].bytes;
 
     fprintf(stderr, "evv: %p is in the program and in none of the stores"
             " copied out of it\n", p);

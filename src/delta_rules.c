@@ -179,7 +179,7 @@ static unsigned char *operand_place(interp *st, const uint8_t **pp)
         const uint8_t *q = p;
         int32_t inner = operand_read(st, &q, 4, 0);
 
-        at = (unsigned char *)(intptr_t)inner + get16s(q);
+        at = EVV_AT(unsigned char *, inner) + get16s(q);
         p = q + 2;
         break;
     }
@@ -279,8 +279,24 @@ static void operand_skip(interp *st, const uint8_t **pp)
    argument is widened on the way in: an entry that wants a value takes the
    low half back and an entry that wants a pointer gets the whole of it. The
    two are the same thing only where a pointer is four bytes. */
+#if defined(EVV_ARENA_RELATIVE) && EVV_ARENA_RELATIVE
+/* With a relative arena an argument is a slot and nothing else: the wrapper
+   at the other end turns the ones that are references back into pointers. So
+   the word passed is the slot's own width, and caller and callee agree on it.
+
+   Machine-width words would not agree. Where an argument goes on the stack --
+   from the ninth onwards on arm64 -- Apple's convention gives it its natural
+   size, so a callee reading int32_t takes four bytes where a caller writing
+   eight put them. The ninth argument still arrives; the tenth is then read
+   from the upper half of the ninth and comes out zero. AArch64 elsewhere and
+   x86-64 pad every stack slot to eight bytes, which is why this only ever
+   shows on a Mac. */
+typedef int32_t evv_word;
+#define W(x) ((evv_word)(x))
+#else
 typedef uintptr_t evv_word;
 #define W(x) ((evv_word)(uint32_t)(x))
+#endif
 
 typedef evv_word (*I0)(void);
 typedef evv_word (*I1)(evv_word);
@@ -316,28 +332,26 @@ typedef evv_word (*IN)(evv_word, evv_word, evv_word, evv_word, evv_word, evv_wor
    never has to do; here the number is only known at run time, so the common
    arities are called exactly and the rare long ones go through one wide
    signature. Every entry is cdecl, so the extra words are simply not read. */
-static int32_t call_entry(delta_rule_fn fn, const int32_t *a, int n)
+static int32_t call_entry(delta_rule_fn fn, const int32_t *args, int n)
 {
-    switch (n) {
-    case 0:  return ((I0)fn)();
-    case 1:  return ((I1)fn)(W(a[0]));
-    case 2:  return ((I2)fn)(W(a[0]), W(a[1]));
-    case 3:  return ((I3)fn)(W(a[0]), W(a[1]), W(a[2]));
-    case 4:  return ((I4)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]));
-    case 5:  return ((I5)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]));
-    case 6:  return ((I6)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]));
-    case 7:  return ((I7)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]));
-    case 8:  return ((I8)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), W(a[7]));
-    case 9:  return ((I9)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), W(a[7]),
-                             W(a[8]));
-    case 10: return ((I10)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), W(a[7]),
-                              W(a[8]), W(a[9]));
-    case 11: return ((I11)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), W(a[7]),
-                              W(a[8]), W(a[9]), W(a[10]));
-    case 12: return ((I12)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), W(a[7]),
-                              W(a[8]), W(a[9]), W(a[10]), W(a[11]));
-    default: return ((IN)fn)(A);
-    }
+    /* One arity for every entry, always. The interpreter knows how many
+       arguments a primitive wants, but the prototype it is called through has
+       to match what the callee declares -- and the wrapper of a variadic
+       primitive declares more than any one site passes. Calling I4 into a
+       ten-parameter wrapper leaves the rest to be read from wherever the
+       platform keeps them: unused registers on x86-64, and the caller's own
+       stack frame on arm64, where the garbage then reaches a va_arg loop.
+
+       So the surplus is passed explicitly, and it is zero -- which is what
+       those loops stop on anyway. */
+    int32_t b[25];
+    const int32_t *a = b;
+    int i;
+
+    for (i = 0; i < 25; i++)
+        b[i] = (i < n) ? args[i] : 0;
+
+    return ((IN)fn)(A);
 }
 
 /* ---- the loop -------------------------------------------------------- */
@@ -497,8 +511,17 @@ static void step(interp *st)
         if (at != 0)
             memcpy(at, &v, (size_t)w);
         if (delta_rule_trace > 1)
+            /* Als Offset, nicht als Adresse: sonst laesst sich die Spur
+               eines relativen Baus mit der eines absoluten nicht
+               vergleichen, weil die Arena anderswo liegt. */
             fprintf(stderr, "# store %d at %08x = %08x\n", w,
-                    (unsigned)(size_t)at, (unsigned)v);
+#if defined(EVV_ARENA_RELATIVE) && EVV_ARENA_RELATIVE
+                    (unsigned)(at != 0 ? (size_t)((unsigned char *)at
+                                                  - evv_arena_base) : 0),
+#else
+                    (unsigned)(size_t)at,
+#endif
+                    (unsigned)v);
         break;
     }
 

@@ -9,6 +9,7 @@
    both in it. What a run reports is the name without it,
    which is what the rule table holds. */
 
+#include "evv_arena.h"
 #include "delta_rules_itit.h"
 
 int32_t itit_register_ital_phones(int32_t a0, int32_t a1, int32_t a2)
@@ -18,7 +19,7 @@ int32_t itit_register_ital_phones(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[0], a, 3);
 }
 
@@ -27,7 +28,7 @@ int32_t itit_set_ital_global_constants(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1], a, 1);
 }
 
@@ -36,7 +37,7 @@ int32_t itit_init_ital_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[2], a, 1);
 }
 
@@ -45,7 +46,7 @@ int32_t itit_reset_ital_sent_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[3], a, 1);
 }
 
@@ -58,7 +59,7 @@ int32_t itit_ital_funct_words(int32_t a0, int32_t a1, int32_t a2, int32_t a3, in
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[4], a, 5);
 }
 
@@ -69,7 +70,7 @@ int32_t itit_proclitics(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[5], a, 3);
 }
 
@@ -80,7 +81,7 @@ int32_t itit_prod_prefixes(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[6], a, 3);
 }
 
@@ -91,7 +92,7 @@ int32_t itit_assign_enclitic_pronun(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[7], a, 3);
 }
 
@@ -102,7 +103,7 @@ int32_t itit_ital_numbers(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[8], a, 3);
 }
 
@@ -113,7 +114,7 @@ int32_t itit_ital_roots(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[9], a, 3);
 }
 
@@ -124,7 +125,7 @@ int32_t itit_ital_abbr(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[10], a, 3);
 }
 
@@ -135,7 +136,7 @@ int32_t itit_ital_char_name(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[11], a, 3);
 }
 
@@ -146,7 +147,7 @@ int32_t itit_ital_tok_dict(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[12], a, 3);
 }
 
@@ -157,7 +158,7 @@ int32_t itit_ital_words(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[13], a, 3);
 }
 
@@ -170,7 +171,7 @@ int32_t itit_assign_homogr_stress(int32_t a0, int32_t a1, int32_t a2, int32_t a3
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[14], a, 5);
 }
 
@@ -179,7 +180,7 @@ int32_t itit_ital_ph_y_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[15], a, 1);
 }
 
@@ -188,7 +189,7 @@ int32_t itit_ital_ph_w_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[16], a, 1);
 }
 
@@ -197,7 +198,7 @@ int32_t itit_ital_glid_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[17], a, 1);
 }
 
@@ -206,7 +207,7 @@ int32_t itit_ital_ph_l_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[18], a, 1);
 }
 
@@ -215,7 +216,7 @@ int32_t itit_ital_ph_L_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[19], a, 1);
 }
 
@@ -224,7 +225,7 @@ int32_t itit_ital_ph_r_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[20], a, 1);
 }
 
@@ -233,7 +234,7 @@ int32_t itit_ital_ph_R_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[21], a, 1);
 }
 
@@ -242,7 +243,7 @@ int32_t itit_ital_ph_p_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[22], a, 1);
 }
 
@@ -251,7 +252,7 @@ int32_t itit_ital_ph_t_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[23], a, 1);
 }
 
@@ -260,7 +261,7 @@ int32_t itit_ital_ph_k_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[24], a, 1);
 }
 
@@ -269,7 +270,7 @@ int32_t itit_ital_ph_b_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[25], a, 1);
 }
 
@@ -278,7 +279,7 @@ int32_t itit_ital_ph_d_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[26], a, 1);
 }
 
@@ -287,7 +288,7 @@ int32_t itit_ital_ph_g_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[27], a, 1);
 }
 
@@ -296,7 +297,7 @@ int32_t itit_ital_ph_F_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[28], a, 1);
 }
 
@@ -305,7 +306,7 @@ int32_t itit_ital_ph_D_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[29], a, 1);
 }
 
@@ -314,7 +315,7 @@ int32_t itit_ital_ph_f_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[30], a, 1);
 }
 
@@ -323,7 +324,7 @@ int32_t itit_ital_ph_T_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[31], a, 1);
 }
 
@@ -332,7 +333,7 @@ int32_t itit_ital_ph_v_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[32], a, 1);
 }
 
@@ -341,7 +342,7 @@ int32_t itit_ital_ph_s_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[33], a, 1);
 }
 
@@ -350,7 +351,7 @@ int32_t itit_ital_ph_z_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[34], a, 1);
 }
 
@@ -359,7 +360,7 @@ int32_t itit_ital_ph_S_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[35], a, 1);
 }
 
@@ -368,7 +369,7 @@ int32_t itit_ital_ph_Z_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[36], a, 1);
 }
 
@@ -377,7 +378,7 @@ int32_t itit_ital_ph_N_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[37], a, 1);
 }
 
@@ -386,7 +387,7 @@ int32_t itit_ital_ph_m_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[38], a, 1);
 }
 
@@ -395,7 +396,7 @@ int32_t itit_ital_ph_G_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[39], a, 1);
 }
 
@@ -404,7 +405,7 @@ int32_t itit_ital_ph_n_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[40], a, 1);
 }
 
@@ -415,7 +416,7 @@ int32_t itit_ital_cons_durs(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[41], a, 3);
 }
 
@@ -425,7 +426,7 @@ int32_t itit_clash_tone_alert(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[42], a, 2);
 }
 
@@ -434,7 +435,7 @@ int32_t itit_ital_low_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[43], a, 1);
 }
 
@@ -443,7 +444,7 @@ int32_t itit_ital_low_star_high_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[44], a, 1);
 }
 
@@ -452,7 +453,7 @@ int32_t itit_ital_high_low_star_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[45], a, 1);
 }
 
@@ -461,7 +462,7 @@ int32_t itit_ital_nucl_high_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[46], a, 1);
 }
 
@@ -470,7 +471,7 @@ int32_t itit_ital_nucl_low_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[47], a, 1);
 }
 
@@ -479,7 +480,7 @@ int32_t itit_ital_nucl_low_high_star_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[48], a, 1);
 }
 
@@ -488,7 +489,7 @@ int32_t itit_ital_nucl_high_star_low_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[49], a, 1);
 }
 
@@ -497,7 +498,7 @@ int32_t itit_ital_nucl_high_low_star_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[50], a, 1);
 }
 
@@ -506,7 +507,7 @@ int32_t itit_ital_nucl_low_star_high_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[51], a, 1);
 }
 
@@ -515,7 +516,7 @@ int32_t itit_ital_postnucl_high_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[52], a, 1);
 }
 
@@ -525,7 +526,7 @@ int32_t itit_set_first_postnuc_value(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[53], a, 2);
 }
 
@@ -535,7 +536,7 @@ int32_t itit_ital_boundary_tone(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[54], a, 2);
 }
 
@@ -544,7 +545,7 @@ int32_t itit_ital_position_t_ptrs(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[55], a, 1);
 }
 
@@ -553,7 +554,7 @@ int32_t itit_ital_phr_initial_F0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[56], a, 1);
 }
 
@@ -562,7 +563,7 @@ int32_t itit_ital_prenucl_f0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[57], a, 1);
 }
 
@@ -571,7 +572,7 @@ int32_t itit_ital_high_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[58], a, 1);
 }
 
@@ -580,7 +581,7 @@ int32_t itit_ital_low_high_star_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[59], a, 1);
 }
 
@@ -589,7 +590,7 @@ int32_t itit_ital_high_star_low_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[60], a, 1);
 }
 
@@ -598,7 +599,7 @@ int32_t itit_ital_first_postnucl_accent(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[61], a, 1);
 }
 
@@ -607,7 +608,7 @@ int32_t itit_ital_phrase_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[62], a, 1);
 }
 
@@ -616,7 +617,7 @@ int32_t itit_ital_postnucl_f0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[63], a, 1);
 }
 
@@ -625,7 +626,7 @@ int32_t itit_find_ital_nucleus(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[64], a, 1);
 }
 
@@ -636,7 +637,7 @@ int32_t itit_assign_stanital_start_dur(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[65], a, 3);
 }
 
@@ -648,7 +649,7 @@ int32_t itit_ital_context_adjust(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[66], a, 4);
 }
 
@@ -660,7 +661,7 @@ int32_t itit_syllable_sequence_adjust(int32_t a0, int32_t a1, int32_t a2, int32_
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[67], a, 4);
 }
 
@@ -669,7 +670,7 @@ int32_t itit_phrase_final_adjust(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[68], a, 1);
 }
 
@@ -680,7 +681,7 @@ int32_t itit_syll_phone_adjust(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[69], a, 3);
 }
 
@@ -691,7 +692,7 @@ int32_t itit_word_syll_adjust(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[70], a, 3);
 }
 
@@ -700,7 +701,7 @@ int32_t itit_get_stanital_non_vowels(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[71], a, 1);
 }
 
@@ -709,7 +710,7 @@ int32_t itit_assign_ital_nuc_durs(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[72], a, 1);
 }
 
@@ -718,7 +719,7 @@ int32_t itit_get_stanital_nuc_AV(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[73], a, 1);
 }
 
@@ -727,7 +728,7 @@ int32_t itit_stanital_ph_i(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[74], a, 1);
 }
 
@@ -736,7 +737,7 @@ int32_t itit_stanital_ph_e(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[75], a, 1);
 }
 
@@ -745,7 +746,7 @@ int32_t itit_stanital_ph_E(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[76], a, 1);
 }
 
@@ -754,7 +755,7 @@ int32_t itit_stanital_ph_a(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[77], a, 1);
 }
 
@@ -763,7 +764,7 @@ int32_t itit_stanital_ph_u(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[78], a, 1);
 }
 
@@ -772,7 +773,7 @@ int32_t itit_stanital_ph_o(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[79], a, 1);
 }
 
@@ -781,7 +782,7 @@ int32_t itit_stanital_ph_c(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[80], a, 1);
 }
 
@@ -790,7 +791,7 @@ int32_t itit_stanital_ph_y(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[81], a, 1);
 }
 
@@ -799,7 +800,7 @@ int32_t itit_stanital_ph_w(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[82], a, 1);
 }
 
@@ -808,7 +809,7 @@ int32_t itit_stanital_vals(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[83], a, 1);
 }
 
@@ -817,7 +818,7 @@ int32_t itit_ital_trans_features(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[84], a, 1);
 }
 
@@ -827,7 +828,7 @@ int32_t itit_get_ital_vow_trans_dur(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[85], a, 2);
 }
 
@@ -837,7 +838,7 @@ int32_t itit_get_ital_high_pal_trans_dur(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[86], a, 2);
 }
 
@@ -847,7 +848,7 @@ int32_t itit_get_ital_nas_trans_dur(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[87], a, 2);
 }
 
@@ -857,7 +858,7 @@ int32_t itit_get_ital_trill_trans_dur(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[88], a, 2);
 }
 
@@ -867,7 +868,7 @@ int32_t itit_get_ital_stop_trans_dur(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[89], a, 2);
 }
 
@@ -877,7 +878,7 @@ int32_t itit_get_ital_fric_trans_dur(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[90], a, 2);
 }
 
@@ -887,7 +888,7 @@ int32_t itit_get_ital_son_trans_dur(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[91], a, 2);
 }
 
@@ -897,7 +898,7 @@ int32_t itit_get_ital_trans_dur(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[92], a, 2);
 }
 
@@ -906,7 +907,7 @@ int32_t itit_ital_ph_l(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[93], a, 1);
 }
 
@@ -915,7 +916,7 @@ int32_t itit_add_TL_to_trill(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[94], a, 1);
 }
 
@@ -924,7 +925,7 @@ int32_t itit_ital_labial_Fv(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[95], a, 1);
 }
 
@@ -933,7 +934,7 @@ int32_t itit_ital_dental_Fv(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[96], a, 1);
 }
 
@@ -942,7 +943,7 @@ int32_t itit_ital_trill_Fv(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[97], a, 1);
 }
 
@@ -951,7 +952,7 @@ int32_t itit_ital_pal_Fv(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[98], a, 1);
 }
 
@@ -960,7 +961,7 @@ int32_t itit_ital_high_pal_Fv(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[99], a, 1);
 }
 
@@ -969,7 +970,7 @@ int32_t itit_ital_velar_Fv(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[100], a, 1);
 }
 
@@ -978,7 +979,7 @@ int32_t itit_do_ital_voice_bar(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[101], a, 1);
 }
 
@@ -987,7 +988,7 @@ int32_t itit_ital_ph_p(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[102], a, 1);
 }
 
@@ -996,7 +997,7 @@ int32_t itit_ital_ph_b(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[103], a, 1);
 }
 
@@ -1005,7 +1006,7 @@ int32_t itit_ital_ph_t(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[104], a, 1);
 }
 
@@ -1014,7 +1015,7 @@ int32_t itit_ital_ph_d(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[105], a, 1);
 }
 
@@ -1023,7 +1024,7 @@ int32_t itit_ital_ph_k(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[106], a, 1);
 }
 
@@ -1032,7 +1033,7 @@ int32_t itit_ital_ph_g(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[107], a, 1);
 }
 
@@ -1041,7 +1042,7 @@ int32_t itit_ital_ph_f(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[108], a, 1);
 }
 
@@ -1050,7 +1051,7 @@ int32_t itit_ital_ph_v(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[109], a, 1);
 }
 
@@ -1059,7 +1060,7 @@ int32_t itit_ital_ph_s(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[110], a, 1);
 }
 
@@ -1068,7 +1069,7 @@ int32_t itit_ital_ph_z(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[111], a, 1);
 }
 
@@ -1077,7 +1078,7 @@ int32_t itit_ital_ph_S(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[112], a, 1);
 }
 
@@ -1086,7 +1087,7 @@ int32_t itit_ital_ph_Z(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[113], a, 1);
 }
 
@@ -1095,7 +1096,7 @@ int32_t itit_ital_ph_m(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[114], a, 1);
 }
 
@@ -1104,7 +1105,7 @@ int32_t itit_ital_ph_N(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[115], a, 1);
 }
 
@@ -1113,7 +1114,7 @@ int32_t itit_ital_ph_G(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[116], a, 1);
 }
 
@@ -1122,7 +1123,7 @@ int32_t itit_ital_ph_L(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[117], a, 1);
 }
 
@@ -1131,7 +1132,7 @@ int32_t itit_ital_ph_r(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[118], a, 1);
 }
 
@@ -1140,7 +1141,7 @@ int32_t itit_ital_ph_R(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[119], a, 1);
 }
 
@@ -1149,7 +1150,7 @@ int32_t itit_ital_ph_y(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[120], a, 1);
 }
 
@@ -1158,7 +1159,7 @@ int32_t itit_ital_ph_w(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[121], a, 1);
 }
 
@@ -1167,7 +1168,7 @@ int32_t itit_ital_ph_n(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[122], a, 1);
 }
 
@@ -1176,7 +1177,7 @@ int32_t itit_ital_con_vals(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[123], a, 1);
 }
 
@@ -1187,7 +1188,7 @@ int32_t itit_is_ital_clsd_class(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[124], a, 3);
 }
 
@@ -1198,7 +1199,7 @@ int32_t itit_is_ital_fraction(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[125], a, 3);
 }
 
@@ -1210,7 +1211,7 @@ int32_t itit_is_unambig_nounadj(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[126], a, 4);
 }
 
@@ -1221,7 +1222,7 @@ int32_t itit_is_verb_in_common_set(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[127], a, 3);
 }
 
@@ -1232,7 +1233,7 @@ int32_t itit_is_verb_in_ambiguous_set(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[128], a, 3);
 }
 
@@ -1243,7 +1244,7 @@ int32_t itit_is_ital_adverb(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[129], a, 3);
 }
 
@@ -1254,7 +1255,7 @@ int32_t itit_is_ambiguous_adv(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[130], a, 3);
 }
 
@@ -1266,7 +1267,7 @@ int32_t itit_is_ital_nounadj(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[131], a, 4);
 }
 
@@ -1277,7 +1278,7 @@ int32_t itit_mark_ital_subcategory(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[132], a, 3);
 }
 
@@ -1288,7 +1289,7 @@ int32_t itit_adv_vs_nounadj(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[133], a, 3);
 }
 
@@ -1299,7 +1300,7 @@ int32_t itit_adv_vs_verb(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[134], a, 3);
 }
 
@@ -1312,7 +1313,7 @@ int32_t itit_disambig_inf(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[135], a, 5);
 }
 
@@ -1325,7 +1326,7 @@ int32_t itit_noun_vs_subord(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int3
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[136], a, 5);
 }
 
@@ -1336,7 +1337,7 @@ int32_t itit_disambig_pastpart(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[137], a, 3);
 }
 
@@ -1351,7 +1352,7 @@ int32_t itit_adv_vs_noun_vs_prep(int32_t a0, int32_t a1, int32_t a2, int32_t a3,
     a[4] = a4;
     a[5] = a5;
     a[6] = a6;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[138], a, 7);
 }
 
@@ -1362,7 +1363,7 @@ int32_t itit_handle_era(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[139], a, 3);
 }
 
@@ -1379,7 +1380,7 @@ int32_t itit_disambig_undef_word(int32_t a0, int32_t a1, int32_t a2, int32_t a3,
     a[6] = a6;
     a[7] = a7;
     a[8] = a8;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[140], a, 9);
 }
 
@@ -1394,7 +1395,7 @@ int32_t itit_det_vs_pro(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t 
     a[4] = a4;
     a[5] = a5;
     a[6] = a6;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[141], a, 7);
 }
 
@@ -1409,7 +1410,7 @@ int32_t itit_prep_vs_nounadj(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int
     a[4] = a4;
     a[5] = a5;
     a[6] = a6;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[142], a, 7);
 }
 
@@ -1420,7 +1421,7 @@ int32_t itit_handle_dei(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[143], a, 3);
 }
 
@@ -1431,7 +1432,7 @@ int32_t itit_prep_vs_verb(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[144], a, 3);
 }
 
@@ -1442,7 +1443,7 @@ int32_t itit_handle_dopo(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[145], a, 3);
 }
 
@@ -1455,7 +1456,7 @@ int32_t itit_handle_sei(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t 
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[146], a, 5);
 }
 
@@ -1466,7 +1467,7 @@ int32_t itit_handle_loro(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[147], a, 3);
 }
 
@@ -1477,7 +1478,7 @@ int32_t itit_handle_anche(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[148], a, 3);
 }
 
@@ -1492,7 +1493,7 @@ int32_t itit_handle_se(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a
     a[4] = a4;
     a[5] = a5;
     a[6] = a6;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[149], a, 7);
 }
 
@@ -1503,7 +1504,7 @@ int32_t itit_test_adj_vs_inf(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[150], a, 3);
 }
 
@@ -1514,7 +1515,7 @@ int32_t itit_test_perdono(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[151], a, 3);
 }
 
@@ -1525,7 +1526,7 @@ int32_t itit_is_ital_determ(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[152], a, 3);
 }
 
@@ -1536,7 +1537,7 @@ int32_t itit_is_ital_verb(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[153], a, 3);
 }
 
@@ -1547,7 +1548,7 @@ int32_t itit_disambig_ital_content_word(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[154], a, 3);
 }
 
@@ -1558,7 +1559,7 @@ int32_t itit_disambig_ital_functword(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[155], a, 3);
 }
 
@@ -1571,7 +1572,7 @@ int32_t itit_mark_ital_content_word(int32_t a0, int32_t a1, int32_t a2, int32_t 
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[156], a, 5);
 }
 
@@ -1583,7 +1584,7 @@ int32_t itit_handle_destressed_verbs(int32_t a0, int32_t a1, int32_t a2, int32_t
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[157], a, 4);
 }
 
@@ -1595,7 +1596,7 @@ int32_t itit_ital_specific_word_cases(int32_t a0, int32_t a1, int32_t a2, int32_
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[158], a, 4);
 }
 
@@ -1608,7 +1609,7 @@ int32_t itit_adjust_ital_accents(int32_t a0, int32_t a1, int32_t a2, int32_t a3,
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[159], a, 5);
 }
 
@@ -1617,7 +1618,7 @@ int32_t itit_adjust_ital_inton(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[160], a, 1);
 }
 
@@ -1628,7 +1629,7 @@ int32_t itit_adjust_ital_word_stress(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[161], a, 3);
 }
 
@@ -1640,7 +1641,7 @@ int32_t itit_get_ital_nuclear_accent(int32_t a0, int32_t a1, int32_t a2, int32_t
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[162], a, 4);
 }
 
@@ -1651,7 +1652,7 @@ int32_t itit_strip_ital_proclitics(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[163], a, 3);
 }
 
@@ -1662,7 +1663,7 @@ int32_t itit_one_ital_syllable(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[164], a, 3);
 }
 
@@ -1674,7 +1675,7 @@ int32_t itit_strip_enclitics(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[165], a, 4);
 }
 
@@ -1685,7 +1686,7 @@ int32_t itit_ital_numwords(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[166], a, 3);
 }
 
@@ -1696,7 +1697,7 @@ int32_t itit_ital_roots_dict_lookup(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[167], a, 3);
 }
 
@@ -1709,7 +1710,7 @@ int32_t itit_enclitics(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[168], a, 5);
 }
 
@@ -1722,7 +1723,7 @@ int32_t itit_break_into_ital_morphs(int32_t a0, int32_t a1, int32_t a2, int32_t 
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[169], a, 5);
 }
 
@@ -1733,7 +1734,7 @@ int32_t itit_normalize_ital_letters(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[170], a, 3);
 }
 
@@ -1745,7 +1746,7 @@ int32_t itit_find_ital_proclitic(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[171], a, 4);
 }
 
@@ -1757,7 +1758,7 @@ int32_t itit_convert_ital_apost_to_accent(int32_t a0, int32_t a1, int32_t a2, in
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[172], a, 4);
 }
 
@@ -1767,7 +1768,7 @@ int32_t itit_ital_legal_final_cons(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[173], a, 2);
 }
 
@@ -1778,7 +1779,7 @@ int32_t itit_determine_ital_gender(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[174], a, 3);
 }
 
@@ -1788,7 +1789,7 @@ int32_t itit_preceding_ital_sing(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[175], a, 2);
 }
 
@@ -1801,7 +1802,7 @@ int32_t itit_ital_hyphen_between_nums(int32_t a0, int32_t a1, int32_t a2, int32_
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[176], a, 5);
 }
 
@@ -1812,7 +1813,7 @@ int32_t itit_ital_acrotest(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[177], a, 3);
 }
 
@@ -1823,7 +1824,7 @@ int32_t itit_add_ital_num_infl(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[178], a, 3);
 }
 
@@ -1834,7 +1835,7 @@ int32_t itit_add_ital_currency_units(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[179], a, 3);
 }
 
@@ -1845,7 +1846,7 @@ int32_t itit_add_ital_subunits(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[180], a, 3);
 }
 
@@ -1856,7 +1857,7 @@ int32_t itit_test_for_ital_ordinal(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[181], a, 3);
 }
 
@@ -1867,7 +1868,7 @@ int32_t itit_add_ital_gender_to_ordinal(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[182], a, 3);
 }
 
@@ -1877,7 +1878,7 @@ int32_t itit_delete_medial_digits(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[183], a, 2);
 }
 
@@ -1887,7 +1888,7 @@ int32_t itit_delete_stem_final_vowel(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[184], a, 2);
 }
 
@@ -1898,7 +1899,7 @@ int32_t itit_convert_ital_teens(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[185], a, 3);
 }
 
@@ -1909,7 +1910,7 @@ int32_t itit_convert_ital_fraction(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[186], a, 3);
 }
 
@@ -1920,7 +1921,7 @@ int32_t itit_insert_ital_number_one(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[187], a, 3);
 }
 
@@ -1930,7 +1931,7 @@ int32_t itit_assign_gender_to_ital_number(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[188], a, 2);
 }
 
@@ -1941,7 +1942,7 @@ int32_t itit_assign_gend_to_ital_roman_num(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[189], a, 3);
 }
 
@@ -1952,7 +1953,7 @@ int32_t itit_convert_ital_ordinal(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[190], a, 3);
 }
 
@@ -1963,7 +1964,7 @@ int32_t itit_convert_ital_single_digit(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[191], a, 3);
 }
 
@@ -1974,7 +1975,7 @@ int32_t itit_convert_roman_num_to_ordinal(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[192], a, 3);
 }
 
@@ -1985,7 +1986,7 @@ int32_t itit_convert_ital_double(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[193], a, 3);
 }
 
@@ -1996,7 +1997,7 @@ int32_t itit_convert_ital_roman_num(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[194], a, 3);
 }
 
@@ -2007,7 +2008,7 @@ int32_t itit_convert_ital_time(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[195], a, 3);
 }
 
@@ -2020,7 +2021,7 @@ int32_t itit_convert_ital_monetary_exp(int32_t a0, int32_t a1, int32_t a2, int32
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[196], a, 5);
 }
 
@@ -2031,7 +2032,7 @@ int32_t itit_convert_ital_hundreds(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[197], a, 3);
 }
 
@@ -2042,7 +2043,7 @@ int32_t itit_convert_ital_thousands(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[198], a, 3);
 }
 
@@ -2053,7 +2054,7 @@ int32_t itit_convert_ital_millions(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[199], a, 3);
 }
 
@@ -2064,7 +2065,7 @@ int32_t itit_convert_ital_billions(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[200], a, 3);
 }
 
@@ -2075,7 +2076,7 @@ int32_t itit_add_ital_point_digits(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[201], a, 3);
 }
 
@@ -2086,7 +2087,7 @@ int32_t itit_ital_monetary_exp(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[202], a, 3);
 }
 
@@ -2097,7 +2098,7 @@ int32_t itit_convert_ital_date(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[203], a, 3);
 }
 
@@ -2108,7 +2109,7 @@ int32_t itit_convert_ital_digits_to_words(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[204], a, 3);
 }
 
@@ -2119,7 +2120,7 @@ int32_t itit_make_ital_phon_adjustments(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[205], a, 3);
 }
 
@@ -2129,7 +2130,7 @@ int32_t itit_insert_clitic_vowel(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[206], a, 2);
 }
 
@@ -2140,7 +2141,7 @@ int32_t itit_apply_ital_phnol_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[207], a, 3);
 }
 
@@ -2150,7 +2151,7 @@ int32_t itit_del_ital_extra_syncs(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[208], a, 2);
 }
 
@@ -2161,7 +2162,7 @@ int32_t itit_apply_ital_b_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[209], a, 3);
 }
 
@@ -2172,7 +2173,7 @@ int32_t itit_apply_ital_c_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[210], a, 3);
 }
 
@@ -2183,7 +2184,7 @@ int32_t itit_apply_ital_d_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[211], a, 3);
 }
 
@@ -2194,7 +2195,7 @@ int32_t itit_apply_ital_f_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[212], a, 3);
 }
 
@@ -2205,7 +2206,7 @@ int32_t itit_apply_ital_g_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[213], a, 3);
 }
 
@@ -2216,7 +2217,7 @@ int32_t itit_apply_ital_h_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[214], a, 3);
 }
 
@@ -2227,7 +2228,7 @@ int32_t itit_apply_ital_j_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[215], a, 3);
 }
 
@@ -2238,7 +2239,7 @@ int32_t itit_apply_ital_k_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[216], a, 3);
 }
 
@@ -2249,7 +2250,7 @@ int32_t itit_apply_ital_l_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[217], a, 3);
 }
 
@@ -2260,7 +2261,7 @@ int32_t itit_apply_ital_m_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[218], a, 3);
 }
 
@@ -2271,7 +2272,7 @@ int32_t itit_apply_ital_n_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[219], a, 3);
 }
 
@@ -2282,7 +2283,7 @@ int32_t itit_apply_ital_p_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[220], a, 3);
 }
 
@@ -2293,7 +2294,7 @@ int32_t itit_apply_ital_q_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[221], a, 3);
 }
 
@@ -2304,7 +2305,7 @@ int32_t itit_apply_ital_r_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[222], a, 3);
 }
 
@@ -2315,7 +2316,7 @@ int32_t itit_apply_ital_s_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[223], a, 3);
 }
 
@@ -2326,7 +2327,7 @@ int32_t itit_apply_ital_t_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[224], a, 3);
 }
 
@@ -2337,7 +2338,7 @@ int32_t itit_apply_ital_v_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[225], a, 3);
 }
 
@@ -2348,7 +2349,7 @@ int32_t itit_apply_ital_w_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[226], a, 3);
 }
 
@@ -2359,7 +2360,7 @@ int32_t itit_apply_ital_x_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[227], a, 3);
 }
 
@@ -2370,7 +2371,7 @@ int32_t itit_apply_ital_y_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[228], a, 3);
 }
 
@@ -2381,7 +2382,7 @@ int32_t itit_apply_ital_z_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[229], a, 3);
 }
 
@@ -2392,7 +2393,7 @@ int32_t itit_apply_ital_a_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[230], a, 3);
 }
 
@@ -2403,7 +2404,7 @@ int32_t itit_apply_ital_i_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[231], a, 3);
 }
 
@@ -2414,7 +2415,7 @@ int32_t itit_apply_ital_u_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[232], a, 3);
 }
 
@@ -2427,7 +2428,7 @@ int32_t itit_assign_homogr_E_e(int32_t a0, int32_t a1, int32_t a2, int32_t a3, i
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[233], a, 5);
 }
 
@@ -2440,7 +2441,7 @@ int32_t itit_assign_homogr_c_o(int32_t a0, int32_t a1, int32_t a2, int32_t a3, i
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[234], a, 5);
 }
 
@@ -2451,7 +2452,7 @@ int32_t itit_apply_ital_e_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[235], a, 3);
 }
 
@@ -2462,7 +2463,7 @@ int32_t itit_apply_ital_o_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[236], a, 3);
 }
 
@@ -2471,7 +2472,7 @@ int32_t itit_generate_ital_diaphons(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[237], a, 1);
 }
 
@@ -2484,7 +2485,7 @@ int32_t itit_molto_words(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[238], a, 5);
 }
 
@@ -2495,7 +2496,7 @@ int32_t itit_ital_tag_phrase(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[239], a, 3);
 }
 
@@ -2506,7 +2507,7 @@ int32_t itit_ital_vocative_phrase(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[240], a, 3);
 }
 
@@ -2518,7 +2519,7 @@ int32_t itit_ital_said_phrase(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[241], a, 4);
 }
 
@@ -2530,7 +2531,7 @@ int32_t itit_find_ital_obligatory_phrase(int32_t a0, int32_t a1, int32_t a2, int
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[242], a, 4);
 }
 
@@ -2544,7 +2545,7 @@ int32_t itit_coord_conj(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t 
     a[3] = a3;
     a[4] = a4;
     a[5] = a5;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[243], a, 6);
 }
 
@@ -2560,7 +2561,7 @@ int32_t itit_subord_conj(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t
     a[5] = a5;
     a[6] = a6;
     a[7] = a7;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[244], a, 8);
 }
 
@@ -2572,7 +2573,7 @@ int32_t itit_verb_phrase(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[245], a, 4);
 }
 
@@ -2583,7 +2584,7 @@ int32_t itit_come_pure(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[246], a, 3);
 }
 
@@ -2599,7 +2600,7 @@ int32_t itit_ital_day_date(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32
     a[5] = a5;
     a[6] = a6;
     a[7] = a7;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[247], a, 8);
 }
 
@@ -2610,7 +2611,7 @@ int32_t itit_ital_continuation_phrase(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[248], a, 3);
 }
 
@@ -2621,7 +2622,7 @@ int32_t itit_isit_ital_Alt(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[249], a, 3);
 }
 
@@ -2631,7 +2632,7 @@ int32_t itit_ital_non_phrasal_comma(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[250], a, 2);
 }
 
@@ -2642,7 +2643,7 @@ int32_t itit_ital_post_comma_phrase(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[251], a, 3);
 }
 
@@ -2654,7 +2655,7 @@ int32_t itit_find_ital_potential_phrase(int32_t a0, int32_t a1, int32_t a2, int3
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[252], a, 4);
 }
 
@@ -2665,7 +2666,7 @@ int32_t itit_apply_ital_comma_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[253], a, 3);
 }
 
@@ -2676,7 +2677,7 @@ int32_t itit_is_not_prfxable(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[254], a, 3);
 }
 
@@ -2686,7 +2687,7 @@ int32_t itit_ital_legal_initial_cons(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[255], a, 2);
 }
 
@@ -2699,7 +2700,7 @@ int32_t itit_strip_ital_prefixes(int32_t a0, int32_t a1, int32_t a2, int32_t a3,
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[256], a, 5);
 }
 
@@ -2708,7 +2709,7 @@ int32_t itit_break_into_stanital_phones(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[257], a, 1);
 }
 
@@ -2719,7 +2720,7 @@ int32_t itit_print_ital_SPR(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[258], a, 3);
 }
 
@@ -2730,7 +2731,7 @@ int32_t itit_insert_ital_spr_phone(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[259], a, 3);
 }
 
@@ -2741,7 +2742,7 @@ int32_t itit_print_ital_espr_phone(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[260], a, 3);
 }
 
@@ -2754,7 +2755,7 @@ int32_t itit_antepenult_stress(int32_t a0, int32_t a1, int32_t a2, int32_t a3, i
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[261], a, 5);
 }
 
@@ -2763,7 +2764,7 @@ int32_t itit_number_stress(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[262], a, 1);
 }
 
@@ -2776,7 +2777,7 @@ int32_t itit_assign_root_stress(int32_t a0, int32_t a1, int32_t a2, int32_t a3, 
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[263], a, 5);
 }
 
@@ -2787,7 +2788,7 @@ int32_t itit_assign_primary_stress(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[264], a, 3);
 }
 
@@ -2798,7 +2799,7 @@ int32_t itit_assign_secondary_stress(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[265], a, 3);
 }
 
@@ -2807,7 +2808,7 @@ int32_t itit_assign_ital_stress(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[266], a, 1);
 }
 
@@ -2818,7 +2819,7 @@ int32_t itit_assign_ital_syll_init_con(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[267], a, 3);
 }
 
@@ -2830,7 +2831,7 @@ int32_t itit_estimate_ital_nsylls(int32_t a0, int32_t a1, int32_t a2, int32_t a3
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[268], a, 4);
 }
 
@@ -2839,7 +2840,7 @@ int32_t itit_create_ital_syllables(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[269], a, 1);
 }
 
@@ -2848,7 +2849,7 @@ int32_t itit_ital_symbolic_rules(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[270], a, 1);
 }
 
@@ -2859,7 +2860,7 @@ int32_t itit_tok_dict(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[271], a, 3);
 }
 
@@ -2871,7 +2872,7 @@ int32_t itit_find_proclitic(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[272], a, 4);
 }
 
@@ -2882,7 +2883,7 @@ int32_t itit_char_name(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[273], a, 3);
 }
 
@@ -2893,7 +2894,7 @@ int32_t itit_abbr(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[274], a, 3);
 }
 
@@ -2904,7 +2905,7 @@ int32_t itit_normalize_letters(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[275], a, 3);
 }
 
@@ -2915,7 +2916,7 @@ int32_t itit_monetary_exp(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[276], a, 3);
 }
 
@@ -2926,7 +2927,7 @@ int32_t itit_acrotest(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[277], a, 3);
 }
 
@@ -2937,7 +2938,7 @@ int32_t itit_convert_lang_digits_to_words(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[278], a, 3);
 }
 
@@ -2948,7 +2949,7 @@ int32_t itit_convert_single_digit(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[279], a, 3);
 }
 
@@ -2959,7 +2960,7 @@ int32_t itit_convert_double(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[280], a, 3);
 }
 
@@ -2970,7 +2971,7 @@ int32_t itit_convert_hundreds(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[281], a, 3);
 }
 
@@ -2981,7 +2982,7 @@ int32_t itit_convert_thousands(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[282], a, 3);
 }
 
@@ -2992,7 +2993,7 @@ int32_t itit_convert_millions(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[283], a, 3);
 }
 
@@ -3003,7 +3004,7 @@ int32_t itit_convert_billions(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[284], a, 3);
 }
 
@@ -3016,7 +3017,7 @@ int32_t itit_convert_monetary_exp(int32_t a0, int32_t a1, int32_t a2, int32_t a3
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[285], a, 5);
 }
 
@@ -3027,7 +3028,7 @@ int32_t itit_convert_roman_num(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[286], a, 3);
 }
 
@@ -3040,7 +3041,7 @@ int32_t itit_lang_hyphen_between_nums(int32_t a0, int32_t a1, int32_t a2, int32_
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[287], a, 5);
 }
 
@@ -3051,7 +3052,7 @@ int32_t itit_insert_spr_phone(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[288], a, 3);
 }
 
@@ -3062,7 +3063,7 @@ int32_t itit_lang_specific_SPR(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[289], a, 3);
 }
 
@@ -3073,7 +3074,7 @@ int32_t itit_print_lang_espr_phone(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[290], a, 3);
 }
 
@@ -3086,7 +3087,7 @@ int32_t itit_strip_clitics(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[291], a, 5);
 }
 
@@ -3099,7 +3100,7 @@ int32_t itit_gramm_cat_dict_lookup(int32_t a0, int32_t a1, int32_t a2, int32_t a
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[292], a, 5);
 }
 
@@ -3112,7 +3113,7 @@ int32_t itit_mark_function_word(int32_t a0, int32_t a1, int32_t a2, int32_t a3, 
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[293], a, 5);
 }
 
@@ -3125,7 +3126,7 @@ int32_t itit_mark_content_word(int32_t a0, int32_t a1, int32_t a2, int32_t a3, i
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[294], a, 5);
 }
 
@@ -3136,7 +3137,7 @@ int32_t itit_disambiguate_functword(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[295], a, 3);
 }
 
@@ -3148,7 +3149,7 @@ int32_t itit_disambiguate_content_word(int32_t a0, int32_t a1, int32_t a2, int32
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[296], a, 4);
 }
 
@@ -3160,7 +3161,7 @@ int32_t itit_mark_subcategory(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[297], a, 4);
 }
 
@@ -3170,7 +3171,7 @@ int32_t itit_lang_non_phrasal_comma(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[298], a, 2);
 }
 
@@ -3182,7 +3183,7 @@ int32_t itit_find_lang_obligatory_phrase(int32_t a0, int32_t a1, int32_t a2, int
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[299], a, 4);
 }
 
@@ -3194,7 +3195,7 @@ int32_t itit_find_lang_potential_phrase(int32_t a0, int32_t a1, int32_t a2, int3
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[300], a, 4);
 }
 
@@ -3205,7 +3206,7 @@ int32_t itit_apply_lang_comma_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[301], a, 3);
 }
 
@@ -3217,7 +3218,7 @@ int32_t itit_get_lang_nuclear_accent(int32_t a0, int32_t a1, int32_t a2, int32_t
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[302], a, 4);
 }
 
@@ -3228,7 +3229,7 @@ int32_t itit_isitWH(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[303], a, 3);
 }
 
@@ -3239,7 +3240,7 @@ int32_t itit_isitAlt(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[304], a, 3);
 }
 
@@ -3252,7 +3253,7 @@ int32_t itit_adjust_lg_specific_accents(int32_t a0, int32_t a1, int32_t a2, int3
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[305], a, 5);
 }
 
@@ -3264,7 +3265,7 @@ int32_t itit_estimate_lang_nsylls(int32_t a0, int32_t a1, int32_t a2, int32_t a3
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[306], a, 4);
 }
 
@@ -3273,7 +3274,7 @@ int32_t itit_symbolic_rules(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[307], a, 1);
 }
 
@@ -3284,7 +3285,7 @@ int32_t itit_lang_phrase_level_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[308], a, 3);
 }
 
@@ -3293,7 +3294,7 @@ int32_t itit_get_nuc_AV(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[309], a, 1);
 }
 
@@ -3302,7 +3303,7 @@ int32_t itit_con_vals(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[310], a, 1);
 }
 
@@ -3311,7 +3312,7 @@ int32_t itit_nucleus_vals(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[311], a, 1);
 }
 
@@ -3320,7 +3321,7 @@ int32_t itit_find_nucleus(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[312], a, 1);
 }
 
@@ -3331,7 +3332,7 @@ int32_t itit_assign_cons_durs(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[313], a, 3);
 }
 
@@ -3340,7 +3341,7 @@ int32_t itit_assign_nuc_durs(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[314], a, 1);
 }
 
@@ -3350,7 +3351,7 @@ int32_t itit_get_trans_dur(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[315], a, 2);
 }
 
@@ -3359,7 +3360,7 @@ int32_t itit_which_get_non_vowels(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[316], a, 1);
 }
 
@@ -3368,7 +3369,7 @@ int32_t itit_prenucl_f0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[317], a, 1);
 }
 
@@ -3377,7 +3378,7 @@ int32_t itit_high_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[318], a, 1);
 }
 
@@ -3386,7 +3387,7 @@ int32_t itit_low_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[319], a, 1);
 }
 
@@ -3395,7 +3396,7 @@ int32_t itit_low_high_star_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[320], a, 1);
 }
 
@@ -3404,7 +3405,7 @@ int32_t itit_low_star_high_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[321], a, 1);
 }
 
@@ -3413,7 +3414,7 @@ int32_t itit_high_low_star_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[322], a, 1);
 }
 
@@ -3422,7 +3423,7 @@ int32_t itit_high_star_low_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[323], a, 1);
 }
 
@@ -3431,7 +3432,7 @@ int32_t itit_postnucl_f0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[324], a, 1);
 }
 
@@ -3440,7 +3441,7 @@ int32_t itit_phr_initial_F0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[325], a, 1);
 }
 
@@ -3449,7 +3450,7 @@ int32_t itit_position_t_ptrs(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[326], a, 1);
 }
 
@@ -3458,7 +3459,7 @@ int32_t itit_nucl_high_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[327], a, 1);
 }
 
@@ -3467,7 +3468,7 @@ int32_t itit_nucl_low_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[328], a, 1);
 }
 
@@ -3476,7 +3477,7 @@ int32_t itit_nucl_low_high_star_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[329], a, 1);
 }
 
@@ -3485,7 +3486,7 @@ int32_t itit_nucl_high_low_star_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[330], a, 1);
 }
 
@@ -3494,7 +3495,7 @@ int32_t itit_nucl_high_star_low_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[331], a, 1);
 }
 
@@ -3503,7 +3504,7 @@ int32_t itit_nucl_low_star_high_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[332], a, 1);
 }
 
@@ -3512,7 +3513,7 @@ int32_t itit_phrase_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[333], a, 1);
 }
 
@@ -3521,7 +3522,7 @@ int32_t itit_boundary_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[334], a, 1);
 }
 
@@ -3530,7 +3531,7 @@ int32_t itit_init_lang_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[335], a, 1);
 }
 
@@ -3539,7 +3540,7 @@ int32_t itit_reset_lang_sent_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[336], a, 1);
 }
 
@@ -3548,7 +3549,7 @@ int32_t itit_set_lang_global_constants(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[337], a, 1);
 }
 
@@ -3557,7 +3558,7 @@ int32_t itit_init_platform(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[338], a, 1);
 }
 
@@ -3566,7 +3567,7 @@ int32_t itit_read_end(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[339], a, 1);
 }
 
@@ -3575,7 +3576,7 @@ int32_t itit_close_platform(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[340], a, 1);
 }
 
@@ -3584,7 +3585,7 @@ int32_t itit_print_prompt(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[341], a, 1);
 }
 
@@ -3595,7 +3596,7 @@ int32_t itit_PhonemeIndex(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[342], a, 3);
 }
 
@@ -3604,7 +3605,7 @@ int32_t itit_register_SAPI_voices(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[343], a, 1);
 }
 
@@ -3615,7 +3616,7 @@ int32_t itit_setup_lang_reg(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[344], a, 3);
 }
 
@@ -3628,7 +3629,7 @@ int32_t itit_register_voices(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[345], a, 5);
 }
 
@@ -3637,7 +3638,7 @@ int32_t itit_DeltaProc_flush(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[346], a, 1);
 }
 
@@ -3646,7 +3647,7 @@ int32_t itit_DeltaProc_registerLanguages(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[347], a, 1);
 }
 
@@ -3655,7 +3656,7 @@ int32_t itit_init_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[348], a, 1);
 }
 
@@ -3664,7 +3665,7 @@ int32_t itit_init_symbolic_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[349], a, 1);
 }
 
@@ -3673,7 +3674,7 @@ int32_t itit_set_torrent_voice_param_constants(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[350], a, 1);
 }
 
@@ -3682,7 +3683,7 @@ int32_t itit_increment_output_file_number(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[351], a, 1);
 }
 
@@ -3691,7 +3692,7 @@ int32_t itit_init_tm_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[352], a, 1);
 }
 
@@ -3700,7 +3701,7 @@ int32_t itit_init_word_ptrs(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[353], a, 1);
 }
 
@@ -3709,7 +3710,7 @@ int32_t itit_init_current_word_ptrs(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[354], a, 1);
 }
 
@@ -3718,7 +3719,7 @@ int32_t itit_set_syll_stream_word_ptrs(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[355], a, 1);
 }
 
@@ -3727,7 +3728,7 @@ int32_t itit_init_phr_feature_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[356], a, 1);
 }
 
@@ -3736,7 +3737,7 @@ int32_t itit_init_syll_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[357], a, 1);
 }
 
@@ -3745,7 +3746,7 @@ int32_t itit_reset_sent_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[358], a, 1);
 }
 
@@ -3754,7 +3755,7 @@ int32_t itit_set_voice_param_constants(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[359], a, 1);
 }
 
@@ -3763,7 +3764,7 @@ int32_t itit_init_phrase_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[360], a, 1);
 }
 
@@ -3772,7 +3773,7 @@ int32_t itit_set_global_constants(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[361], a, 1);
 }
 
@@ -3781,7 +3782,7 @@ int32_t itit_init_word_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[362], a, 1);
 }
 
@@ -3791,7 +3792,7 @@ int32_t itit_get_pause_trans_dur(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[363], a, 2);
 }
 
@@ -3802,7 +3803,7 @@ int32_t itit_apply_speed_anno(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[364], a, 3);
 }
 
@@ -3811,7 +3812,7 @@ int32_t itit_scale_word_final_trans(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[365], a, 1);
 }
 
@@ -3820,7 +3821,7 @@ int32_t itit_assign_phone_durs(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[366], a, 1);
 }
 
@@ -3831,7 +3832,7 @@ int32_t itit_setdur(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[367], a, 3);
 }
 
@@ -3842,7 +3843,7 @@ int32_t itit_apply_min_durs(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[368], a, 3);
 }
 
@@ -3853,7 +3854,7 @@ int32_t itit_delete_voice_change_pause(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[369], a, 3);
 }
 
@@ -3863,7 +3864,7 @@ int32_t itit_stretch_focus(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[370], a, 2);
 }
 
@@ -3872,7 +3873,7 @@ int32_t itit_set_syll_offset_vals(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[371], a, 1);
 }
 
@@ -3883,7 +3884,7 @@ int32_t itit_set_end_of_pause_trans(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[372], a, 3);
 }
 
@@ -3896,7 +3897,7 @@ int32_t itit_insert_dur(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t 
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[373], a, 5);
 }
 
@@ -3905,7 +3906,7 @@ int32_t itit_insert_burst_dur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[374], a, 1);
 }
 
@@ -3914,7 +3915,7 @@ int32_t itit_find_acoustic_nuc(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[375], a, 1);
 }
 
@@ -3923,7 +3924,7 @@ int32_t itit_distribute_nucdur(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[376], a, 1);
 }
 
@@ -3932,7 +3933,7 @@ int32_t itit_insert_pause_durs(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[377], a, 1);
 }
 
@@ -3941,7 +3942,7 @@ int32_t itit_insert_transitions(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[378], a, 1);
 }
 
@@ -3950,7 +3951,7 @@ int32_t itit_generate_durations(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[379], a, 1);
 }
 
@@ -3961,7 +3962,7 @@ int32_t itit_size_filter(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[380], a, 3);
 }
 
@@ -3972,7 +3973,7 @@ int32_t itit_filter_by_range(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[381], a, 3);
 }
 
@@ -3983,7 +3984,7 @@ int32_t itit_eightkHz_filter(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[382], a, 3);
 }
 
@@ -3992,7 +3993,7 @@ int32_t itit_set_word_default_acoustic_vals(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[383], a, 1);
 }
 
@@ -4001,7 +4002,7 @@ int32_t itit_adjust_AH_AF_for_TLv_w(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[384], a, 1);
 }
 
@@ -4010,7 +4011,7 @@ int32_t itit_modify_breathiness_for_femV(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[385], a, 1);
 }
 
@@ -4019,7 +4020,7 @@ int32_t itit_nasalize_vow(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[386], a, 1);
 }
 
@@ -4028,7 +4029,7 @@ int32_t itit_adjust_AV_for_fem_voice(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[387], a, 1);
 }
 
@@ -4039,7 +4040,7 @@ int32_t itit_run_filters(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[388], a, 3);
 }
 
@@ -4048,7 +4049,7 @@ int32_t itit_extend_vals(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[389], a, 1);
 }
 
@@ -4061,7 +4062,7 @@ int32_t itit_addStreamArraySsVal(int32_t a0, int32_t a1, int32_t a2, int32_t a3,
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[390], a, 5);
 }
 
@@ -4075,7 +4076,7 @@ int32_t itit_addStreamArrayPtVal(int32_t a0, int32_t a1, int32_t a2, int32_t a3,
     a[3] = a3;
     a[4] = a4;
     a[5] = a5;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[391], a, 6);
 }
 
@@ -4089,7 +4090,7 @@ int32_t itit_doAV(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, in
     a[3] = a3;
     a[4] = a4;
     a[5] = a5;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[392], a, 6);
 }
 
@@ -4103,7 +4104,7 @@ int32_t itit_doFNP(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, i
     a[3] = a3;
     a[4] = a4;
     a[5] = a5;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[393], a, 6);
 }
 
@@ -4117,7 +4118,7 @@ int32_t itit_doFNZ(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, i
     a[3] = a3;
     a[4] = a4;
     a[5] = a5;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[394], a, 6);
 }
 
@@ -4131,7 +4132,7 @@ int32_t itit_doAF(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, in
     a[3] = a3;
     a[4] = a4;
     a[5] = a5;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[395], a, 6);
 }
 
@@ -4140,7 +4141,7 @@ int32_t itit_modulate_noise(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[396], a, 1);
 }
 
@@ -4150,7 +4151,7 @@ int32_t itit_modulate_burst(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[397], a, 2);
 }
 
@@ -4159,7 +4160,7 @@ int32_t itit_modulate_nas_AV(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[398], a, 1);
 }
 
@@ -4174,7 +4175,7 @@ int32_t itit_add_filtered_val(int32_t a0, int32_t a1, int32_t a2, int32_t a3, in
     a[4] = a4;
     a[5] = a5;
     a[6] = a6;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[399], a, 7);
 }
 
@@ -4183,7 +4184,7 @@ int32_t itit_insert_acoustic_vals(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[400], a, 1);
 }
 
@@ -4192,7 +4193,7 @@ int32_t itit_init_nuclwrd_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[401], a, 1);
 }
 
@@ -4201,7 +4202,7 @@ int32_t itit_init_word_inton_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[402], a, 1);
 }
 
@@ -4210,7 +4211,7 @@ int32_t itit_init_syll_inton_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[403], a, 1);
 }
 
@@ -4219,7 +4220,7 @@ int32_t itit_is_target_syll(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[404], a, 1);
 }
 
@@ -4228,7 +4229,7 @@ int32_t itit_realize_prenucl_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[405], a, 1);
 }
 
@@ -4238,7 +4239,7 @@ int32_t itit_modulate_pwind(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[406], a, 2);
 }
 
@@ -4251,7 +4252,7 @@ int32_t itit_set_f0_range_ptrs(int32_t a0, int32_t a1, int32_t a2, int32_t a3, i
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[407], a, 5);
 }
 
@@ -4261,7 +4262,7 @@ int32_t itit_shift_tone(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[408], a, 2);
 }
 
@@ -4272,7 +4273,7 @@ int32_t itit_valid_f0_posn(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[409], a, 3);
 }
 
@@ -4281,7 +4282,7 @@ int32_t itit_first_postnucl_accent(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[410], a, 1);
 }
 
@@ -4290,7 +4291,7 @@ int32_t itit_find_most_stressed_syll(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[411], a, 1);
 }
 
@@ -4299,7 +4300,7 @@ int32_t itit_set_f0_wind_and_base(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[412], a, 1);
 }
 
@@ -4313,7 +4314,7 @@ int32_t itit_f0_step(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4,
     a[3] = a3;
     a[4] = a4;
     a[5] = a5;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[413], a, 6);
 }
 
@@ -4322,7 +4323,7 @@ int32_t itit_init_voice_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[414], a, 1);
 }
 
@@ -4331,7 +4332,7 @@ int32_t itit_nucl_f0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[415], a, 1);
 }
 
@@ -4343,7 +4344,7 @@ int32_t itit_insert_f0(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[416], a, 4);
 }
 
@@ -4352,7 +4353,7 @@ int32_t itit_add_f0_for_new_voice(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[417], a, 1);
 }
 
@@ -4361,7 +4362,7 @@ int32_t itit_add_f0_for_next_voice(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[418], a, 1);
 }
 
@@ -4370,7 +4371,7 @@ int32_t itit_insert_target_t3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[419], a, 1);
 }
 
@@ -4379,7 +4380,7 @@ int32_t itit_insert_preset_phrase_tone(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[420], a, 1);
 }
 
@@ -4388,7 +4389,7 @@ int32_t itit_insert_phrase_final_tones(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[421], a, 1);
 }
 
@@ -4397,7 +4398,7 @@ int32_t itit_init_phrase_inton_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[422], a, 1);
 }
 
@@ -4406,7 +4407,7 @@ int32_t itit_generate_intonation(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[423], a, 1);
 }
 
@@ -4421,7 +4422,7 @@ int32_t itit_synthesizeRange(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int
     a[4] = a4;
     a[5] = a5;
     a[6] = a6;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[424], a, 7);
 }
 
@@ -4430,7 +4431,7 @@ int32_t itit_set_num_formants(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[425], a, 1);
 }
 
@@ -4439,7 +4440,7 @@ int32_t itit_set_klattparms(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[426], a, 1);
 }
 
@@ -4451,7 +4452,7 @@ int32_t itit_doF(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[427], a, 4);
 }
 
@@ -4460,7 +4461,7 @@ int32_t itit_set_seg_default_acoustic_vals(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[428], a, 1);
 }
 
@@ -4471,7 +4472,7 @@ int32_t itit_final_voiced_release(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[429], a, 3);
 }
 
@@ -4480,7 +4481,7 @@ int32_t itit_do_FTZ_FTP(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[430], a, 1);
 }
 
@@ -4489,7 +4490,7 @@ int32_t itit_do_release(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[431], a, 1);
 }
 
@@ -4498,7 +4499,7 @@ int32_t itit_do_pt_voicing(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[432], a, 1);
 }
 
@@ -4507,7 +4508,7 @@ int32_t itit_do_voice_bar(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[433], a, 1);
 }
 
@@ -4527,7 +4528,7 @@ int32_t itit_do_fric_amps(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_
     a[9] = a9;
     a[10] = a10;
     a[11] = a11;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[434], a, 12);
 }
 
@@ -4536,7 +4537,7 @@ int32_t itit_do_son_amps(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[435], a, 1);
 }
 
@@ -4545,7 +4546,7 @@ int32_t itit_do_non_son_amps(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[436], a, 1);
 }
 
@@ -4554,7 +4555,7 @@ int32_t itit_set_phone_offset_vals(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[437], a, 1);
 }
 
@@ -4563,7 +4564,7 @@ int32_t itit_init_syll_acoustic_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[438], a, 1);
 }
 
@@ -4572,7 +4573,7 @@ int32_t itit_insert_syll_level_vals(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[439], a, 1);
 }
 
@@ -4581,7 +4582,7 @@ int32_t itit_assign_acoustic_vals(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[440], a, 1);
 }
 
@@ -4594,7 +4595,7 @@ int32_t itit_define_all_params_for_silence(int32_t a0, int32_t a1, int32_t a2, i
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[441], a, 5);
 }
 
@@ -4604,7 +4605,7 @@ int32_t itit_handle_pause(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[442], a, 2);
 }
 
@@ -4613,7 +4614,7 @@ int32_t itit_generate_acoustic_vals(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[443], a, 1);
 }
 
@@ -4623,7 +4624,7 @@ int32_t itit_print_F_trans(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[444], a, 2);
 }
 
@@ -4638,7 +4639,7 @@ int32_t itit_callInternalSynthesizer(int32_t a0, int32_t a1, int32_t a2, int32_t
     a[4] = a4;
     a[5] = a5;
     a[6] = a6;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[445], a, 7);
 }
 
@@ -4647,7 +4648,7 @@ int32_t itit_print_streamarrays_from_delta(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[446], a, 1);
 }
 
@@ -4658,7 +4659,7 @@ int32_t itit_emphasis_anno(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[447], a, 3);
 }
 
@@ -4670,7 +4671,7 @@ int32_t itit_phr_final_anno(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[448], a, 4);
 }
 
@@ -4684,7 +4685,7 @@ int32_t itit_apply_concat_voice_change(int32_t a0, int32_t a1, int32_t a2, int32
     a[3] = a3;
     a[4] = a4;
     a[5] = a5;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[449], a, 6);
 }
 
@@ -4702,7 +4703,7 @@ int32_t itit_get_formant_voice_vals(int32_t a0, int32_t a1, int32_t a2, int32_t 
     a[7] = a7;
     a[8] = a8;
     a[9] = a9;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[450], a, 10);
 }
 
@@ -4716,7 +4717,7 @@ int32_t itit_get_torrent_voice_vals(int32_t a0, int32_t a1, int32_t a2, int32_t 
     a[3] = a3;
     a[4] = a4;
     a[5] = a5;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[451], a, 6);
 }
 
@@ -4726,7 +4727,7 @@ int32_t itit_apply_vocal_tract_val(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[452], a, 2);
 }
 
@@ -4736,7 +4737,7 @@ int32_t itit_apply_head_size_val(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[453], a, 2);
 }
 
@@ -4746,7 +4747,7 @@ int32_t itit_apply_pitch_baseline_val(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[454], a, 2);
 }
 
@@ -4756,7 +4757,7 @@ int32_t itit_apply_pitch_fluct_val(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[455], a, 2);
 }
 
@@ -4766,7 +4767,7 @@ int32_t itit_apply_roughness_val(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[456], a, 2);
 }
 
@@ -4776,7 +4777,7 @@ int32_t itit_apply_breathiness_val(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[457], a, 2);
 }
 
@@ -4786,7 +4787,7 @@ int32_t itit_apply_volume_val(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[458], a, 2);
 }
 
@@ -4796,7 +4797,7 @@ int32_t itit_apply_speed_val(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[459], a, 2);
 }
 
@@ -4807,7 +4808,7 @@ int32_t itit_insert_voice_change_pause(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[460], a, 3);
 }
 
@@ -4817,7 +4818,7 @@ int32_t itit_legal_end_of_anno(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[461], a, 2);
 }
 
@@ -4828,7 +4829,7 @@ int32_t itit_spell_out_anno(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[462], a, 3);
 }
 
@@ -4840,7 +4841,7 @@ int32_t itit_pause_anno(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[463], a, 4);
 }
 
@@ -4852,7 +4853,7 @@ int32_t itit_prestored_voice_anno(int32_t a0, int32_t a1, int32_t a2, int32_t a3
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[464], a, 4);
 }
 
@@ -4864,7 +4865,7 @@ int32_t itit_vocal_tract_anno(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[465], a, 4);
 }
 
@@ -4876,7 +4877,7 @@ int32_t itit_voice_feature_anno(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[466], a, 4);
 }
 
@@ -4888,7 +4889,7 @@ int32_t itit_wpm_anno(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[467], a, 4);
 }
 
@@ -4900,7 +4901,7 @@ int32_t itit_environment_anno(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[468], a, 4);
 }
 
@@ -4912,7 +4913,7 @@ int32_t itit_spellout_mode_anno(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[469], a, 4);
 }
 
@@ -4924,7 +4925,7 @@ int32_t itit_year_mode_anno(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[470], a, 4);
 }
 
@@ -4936,7 +4937,7 @@ int32_t itit_phr_prediction_anno(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[471], a, 4);
 }
 
@@ -4948,7 +4949,7 @@ int32_t itit_word_accent_anno(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[472], a, 4);
 }
 
@@ -4960,7 +4961,7 @@ int32_t itit_dict_anno(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[473], a, 4);
 }
 
@@ -4972,7 +4973,7 @@ int32_t itit_voice_anno(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[474], a, 4);
 }
 
@@ -4984,7 +4985,7 @@ int32_t itit_textnorm_anno(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[475], a, 4);
 }
 
@@ -4995,7 +4996,7 @@ int32_t itit_process_annotation(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[476], a, 3);
 }
 
@@ -5007,7 +5008,7 @@ int32_t itit_user_dict_error(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[477], a, 4);
 }
 
@@ -5018,7 +5019,7 @@ int32_t itit_isLegalWord(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[478], a, 3);
 }
 
@@ -5029,7 +5030,7 @@ int32_t itit_user_abbr_dict(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[479], a, 3);
 }
 
@@ -5040,7 +5041,7 @@ int32_t itit_internal_dict_lookup(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[480], a, 3);
 }
 
@@ -5051,7 +5052,7 @@ int32_t itit_insert_userdict_root(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[481], a, 3);
 }
 
@@ -5062,7 +5063,7 @@ int32_t itit_user_rootdict(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[482], a, 3);
 }
 
@@ -5073,7 +5074,7 @@ int32_t itit_print_interword_chars(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[483], a, 3);
 }
 
@@ -5082,7 +5083,7 @@ int32_t itit_init_gcat_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[484], a, 1);
 }
 
@@ -5091,7 +5092,7 @@ int32_t itit_reset_gcat_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[485], a, 1);
 }
 
@@ -5102,7 +5103,7 @@ int32_t itit_print_normalized_inp(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[486], a, 3);
 }
 
@@ -5111,7 +5112,7 @@ int32_t itit_phrase_level_printouts(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[487], a, 1);
 }
 
@@ -5120,7 +5121,7 @@ int32_t itit_mark_word_categories(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[488], a, 1);
 }
 
@@ -5129,7 +5130,7 @@ int32_t itit_count_normalized_inp(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[489], a, 1);
 }
 
@@ -5140,7 +5141,7 @@ int32_t itit_count_unnormalized_inp(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[490], a, 3);
 }
 
@@ -5154,7 +5155,7 @@ int32_t itit_single_chars_forced_syn(int32_t a0, int32_t a1, int32_t a2, int32_t
     a[3] = a3;
     a[4] = a4;
     a[5] = a5;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[491], a, 6);
 }
 
@@ -5164,7 +5165,7 @@ int32_t itit_no_readin(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[492], a, 2);
 }
 
@@ -5173,7 +5174,7 @@ int32_t itit_insert_char_count(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[493], a, 1);
 }
 
@@ -5182,7 +5183,7 @@ int32_t itit_gettok(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[494], a, 1);
 }
 
@@ -5192,7 +5193,7 @@ int32_t itit_count_input(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[495], a, 2);
 }
 
@@ -5202,7 +5203,7 @@ int32_t itit_forced_synthesis(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[496], a, 2);
 }
 
@@ -5211,7 +5212,7 @@ int32_t itit_get_tok(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[497], a, 1);
 }
 
@@ -5220,7 +5221,7 @@ int32_t itit_get_input(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[498], a, 1);
 }
 
@@ -5231,7 +5232,7 @@ int32_t itit_delimit_sentence(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[499], a, 3);
 }
 
@@ -5241,7 +5242,7 @@ int32_t itit_delimit_major_phrase(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[500], a, 2);
 }
 
@@ -5250,7 +5251,7 @@ int32_t itit_handle_non_phrasal_commas(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[501], a, 1);
 }
 
@@ -5261,7 +5262,7 @@ int32_t itit_post_comma_phrase(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[502], a, 3);
 }
 
@@ -5273,7 +5274,7 @@ int32_t itit_mark_potential_phrase_breaks(int32_t a0, int32_t a1, int32_t a2, in
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[503], a, 4);
 }
 
@@ -5285,7 +5286,7 @@ int32_t itit_num_tokens_in_range(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[504], a, 4);
 }
 
@@ -5297,7 +5298,7 @@ int32_t itit_set_min_token_vals(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[505], a, 4);
 }
 
@@ -5308,7 +5309,7 @@ int32_t itit_period_phrase(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[506], a, 3);
 }
 
@@ -5317,7 +5318,7 @@ int32_t itit_assign_wh_quest_features(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[507], a, 1);
 }
 
@@ -5326,7 +5327,7 @@ int32_t itit_assign_alt_quest_features(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[508], a, 1);
 }
 
@@ -5335,7 +5336,7 @@ int32_t itit_semicolon_phrase(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[509], a, 1);
 }
 
@@ -5344,7 +5345,7 @@ int32_t itit_set_window_size(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[510], a, 1);
 }
 
@@ -5353,7 +5354,7 @@ int32_t itit_assign_sent_final_features(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[511], a, 1);
 }
 
@@ -5363,7 +5364,7 @@ int32_t itit_assign_currPhr_vals(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[512], a, 2);
 }
 
@@ -5372,7 +5373,7 @@ int32_t itit_assign_phr_final_anno_features(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[513], a, 1);
 }
 
@@ -5383,7 +5384,7 @@ int32_t itit_adjust_word_stress(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[514], a, 3);
 }
 
@@ -5396,7 +5397,7 @@ int32_t itit_mark_nuclear_accent(int32_t a0, int32_t a1, int32_t a2, int32_t a3,
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[515], a, 5);
 }
 
@@ -5409,7 +5410,7 @@ int32_t itit_adjust_accents(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int3
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[516], a, 5);
 }
 
@@ -5420,7 +5421,7 @@ int32_t itit_insert_phrase_pause(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[517], a, 3);
 }
 
@@ -5431,7 +5432,7 @@ int32_t itit_assign_unpuncted_phr_vals(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[518], a, 3);
 }
 
@@ -5442,7 +5443,7 @@ int32_t itit_adjust_prev_phr_pause(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[519], a, 3);
 }
 
@@ -5452,7 +5453,7 @@ int32_t itit_set_phrase_defaults(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[520], a, 2);
 }
 
@@ -5461,7 +5462,7 @@ int32_t itit_reset_phrase_vars(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[521], a, 1);
 }
 
@@ -5471,7 +5472,7 @@ int32_t itit_precedes_end_quote(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[522], a, 2);
 }
 
@@ -5481,7 +5482,7 @@ int32_t itit_follows_end_quote(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[523], a, 2);
 }
 
@@ -5492,7 +5493,7 @@ int32_t itit_set_said_phr_vals(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[524], a, 3);
 }
 
@@ -5501,7 +5502,7 @@ int32_t itit_comma_phrase(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[525], a, 1);
 }
 
@@ -5510,7 +5511,7 @@ int32_t itit_assign_default_quest_features(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[526], a, 1);
 }
 
@@ -5520,7 +5521,7 @@ int32_t itit_exclam_phrase(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[527], a, 2);
 }
 
@@ -5533,7 +5534,7 @@ int32_t itit_get_nuclear_accent(int32_t a0, int32_t a1, int32_t a2, int32_t a3, 
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[528], a, 5);
 }
 
@@ -5546,7 +5547,7 @@ int32_t itit_insert_phrase(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[529], a, 5);
 }
 
@@ -5557,7 +5558,7 @@ int32_t itit_insert_unpuncted_phrase(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[530], a, 3);
 }
 
@@ -5568,7 +5569,7 @@ int32_t itit_insert_comma_phrase(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[531], a, 3);
 }
 
@@ -5579,7 +5580,7 @@ int32_t itit_comma_at_end_quote(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[532], a, 3);
 }
 
@@ -5591,7 +5592,7 @@ int32_t itit_said_phrase(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[533], a, 4);
 }
 
@@ -5603,7 +5604,7 @@ int32_t itit_insert_unpuncted_phrases(int32_t a0, int32_t a1, int32_t a2, int32_
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[534], a, 4);
 }
 
@@ -5614,7 +5615,7 @@ int32_t itit_question_phrase(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[535], a, 3);
 }
 
@@ -5625,7 +5626,7 @@ int32_t itit_adjust_words_in_phrase(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[536], a, 3);
 }
 
@@ -5636,7 +5637,7 @@ int32_t itit_find_unpuncted_phrases(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[537], a, 3);
 }
 
@@ -5647,7 +5648,7 @@ int32_t itit_assign_major_phr_features(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[538], a, 3);
 }
 
@@ -5656,7 +5657,7 @@ int32_t itit_apply_comma_phr_rules(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[539], a, 1);
 }
 
@@ -5667,7 +5668,7 @@ int32_t itit_insert_major_phrase(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[540], a, 3);
 }
 
@@ -5678,7 +5679,7 @@ int32_t itit_build_phrases(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[541], a, 3);
 }
 
@@ -5687,7 +5688,7 @@ int32_t itit_DeltaProc_main(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[542], a, 1);
 }
 
@@ -5696,7 +5697,7 @@ int32_t itit_DeltaProc_start(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[543], a, 1);
 }
 
@@ -5705,7 +5706,7 @@ int32_t itit_run_text_module(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[544], a, 1);
 }
 
@@ -5719,7 +5720,7 @@ int32_t itit_get_indices(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t
     a[3] = a3;
     a[4] = a4;
     a[5] = a5;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[545], a, 6);
 }
 
@@ -5728,7 +5729,7 @@ int32_t itit_printouts(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[546], a, 1);
 }
 
@@ -5737,7 +5738,7 @@ int32_t itit_delete_2_more(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[547], a, 1);
 }
 
@@ -5746,7 +5747,7 @@ int32_t itit_DeltaProc_end(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[548], a, 1);
 }
 
@@ -5755,7 +5756,7 @@ int32_t itit_DeltaProc_getInputCharCount(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[549], a, 1);
 }
 
@@ -5765,7 +5766,7 @@ int32_t itit_text_index(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[550], a, 2);
 }
 
@@ -5774,7 +5775,7 @@ int32_t itit_init_delta(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[551], a, 1);
 }
 
@@ -5783,7 +5784,7 @@ int32_t itit_clear_delta(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[552], a, 1);
 }
 
@@ -5792,7 +5793,7 @@ int32_t itit_no_words_in_delta(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[553], a, 1);
 }
 
@@ -5801,7 +5802,7 @@ int32_t itit_run_speech_module(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[554], a, 1);
 }
 
@@ -5810,7 +5811,7 @@ int32_t itit_apply_rules(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[555], a, 1);
 }
 
@@ -5820,7 +5821,7 @@ int32_t itit_process_input(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[556], a, 2);
 }
 
@@ -5829,7 +5830,7 @@ int32_t itit_DeltaProc_process_remaining(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[557], a, 1);
 }
 
@@ -5838,7 +5839,7 @@ int32_t itit_DeltaProc_process_sentences(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[558], a, 1);
 }
 
@@ -5848,7 +5849,7 @@ int32_t itit_reset_token_vars(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[559], a, 2);
 }
 
@@ -5859,7 +5860,7 @@ int32_t itit_init_ptr_end_reproc_string(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[560], a, 3);
 }
 
@@ -5869,7 +5870,7 @@ int32_t itit_merge_adjacent_spaces(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[561], a, 2);
 }
 
@@ -5880,7 +5881,7 @@ int32_t itit_space(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[562], a, 3);
 }
 
@@ -5891,7 +5892,7 @@ int32_t itit_tok_dict_entry(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[563], a, 3);
 }
 
@@ -5900,7 +5901,7 @@ int32_t itit_set_letter_name_wordcats(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[564], a, 1);
 }
 
@@ -5911,7 +5912,7 @@ int32_t itit_adjust_numbers(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[565], a, 3);
 }
 
@@ -5921,7 +5922,7 @@ int32_t itit_end_of_word(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[566], a, 2);
 }
 
@@ -5931,7 +5932,7 @@ int32_t itit_beg_of_word(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[567], a, 2);
 }
 
@@ -5941,7 +5942,7 @@ int32_t itit_end_of_sentence(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[568], a, 2);
 }
 
@@ -5951,7 +5952,7 @@ int32_t itit_potential_sent_end(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[569], a, 2);
 }
 
@@ -5962,7 +5963,7 @@ int32_t itit_project_word_boundary_sync(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[570], a, 3);
 }
 
@@ -5973,7 +5974,7 @@ int32_t itit_create_final_sync(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[571], a, 3);
 }
 
@@ -5983,7 +5984,7 @@ int32_t itit_divide_char_count_token(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[572], a, 2);
 }
 
@@ -5993,7 +5994,7 @@ int32_t itit_build_phrase_final_structure(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[573], a, 2);
 }
 
@@ -6004,7 +6005,7 @@ int32_t itit_insert_non_phrase_pause(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[574], a, 3);
 }
 
@@ -6014,7 +6015,7 @@ int32_t itit_separate_tokens(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[575], a, 2);
 }
 
@@ -6026,7 +6027,7 @@ int32_t itit_process_trailing_period(int32_t a0, int32_t a1, int32_t a2, int32_t
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[576], a, 4);
 }
 
@@ -6037,7 +6038,7 @@ int32_t itit_process_final_apostrophe(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[577], a, 3);
 }
 
@@ -6047,7 +6048,7 @@ int32_t itit_skip_delimiters(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[578], a, 2);
 }
 
@@ -6057,7 +6058,7 @@ int32_t itit_skip_punct_and_delimiters(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[579], a, 2);
 }
 
@@ -6068,7 +6069,7 @@ int32_t itit_process_final_parenthetical(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[580], a, 3);
 }
 
@@ -6079,7 +6080,7 @@ int32_t itit_reset_left_endptr(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[581], a, 3);
 }
 
@@ -6091,7 +6092,7 @@ int32_t itit_find_next_token(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[582], a, 4);
 }
 
@@ -6103,7 +6104,7 @@ int32_t itit_find_next_word(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[583], a, 4);
 }
 
@@ -6115,7 +6116,7 @@ int32_t itit_find_previous_word(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[584], a, 4);
 }
 
@@ -6127,7 +6128,7 @@ int32_t itit_find_prev_word_optional_comma(int32_t a0, int32_t a1, int32_t a2, i
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[585], a, 4);
 }
 
@@ -6138,7 +6139,7 @@ int32_t itit_precedes_number(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[586], a, 3);
 }
 
@@ -6148,7 +6149,7 @@ int32_t itit_abbr_before_num(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[587], a, 2);
 }
 
@@ -6161,7 +6162,7 @@ int32_t itit_single_chars_count_inp(int32_t a0, int32_t a1, int32_t a2, int32_t 
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[588], a, 5);
 }
 
@@ -6171,7 +6172,7 @@ int32_t itit_ambig_abbr(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[589], a, 2);
 }
 
@@ -6181,7 +6182,7 @@ int32_t itit_delete_comma_sync(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[590], a, 2);
 }
 
@@ -6192,7 +6193,7 @@ int32_t itit_in_quotes(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[591], a, 3);
 }
 
@@ -6202,7 +6203,7 @@ int32_t itit_is_hyphenated_word(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[592], a, 2);
 }
 
@@ -6213,7 +6214,7 @@ int32_t itit_followed_by_hyphen(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[593], a, 3);
 }
 
@@ -6224,7 +6225,7 @@ int32_t itit_between_proper_names(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[594], a, 3);
 }
 
@@ -6235,7 +6236,7 @@ int32_t itit_mark_uppercase(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[595], a, 3);
 }
 
@@ -6246,7 +6247,7 @@ int32_t itit_mark_non_letter(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[596], a, 3);
 }
 
@@ -6256,7 +6257,7 @@ int32_t itit_inside_orig_inp_token(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[597], a, 2);
 }
 
@@ -6267,7 +6268,7 @@ int32_t itit_convert_to_lowercase(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[598], a, 3);
 }
 
@@ -6277,7 +6278,7 @@ int32_t itit_tok_lookup(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[599], a, 2);
 }
 
@@ -6289,7 +6290,7 @@ int32_t itit_process_proclitic(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[600], a, 4);
 }
 
@@ -6301,7 +6302,7 @@ int32_t itit_abbreviation(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[601], a, 4);
 }
 
@@ -6312,7 +6313,7 @@ int32_t itit_longdash(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[602], a, 3);
 }
 
@@ -6322,7 +6323,7 @@ int32_t itit_three_letter_extension(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[603], a, 2);
 }
 
@@ -6332,7 +6333,7 @@ int32_t itit_end_of_token(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[604], a, 2);
 }
 
@@ -6342,7 +6343,7 @@ int32_t itit_create_sentence(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[605], a, 2);
 }
 
@@ -6353,7 +6354,7 @@ int32_t itit_single_chars(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[606], a, 3);
 }
 
@@ -6364,7 +6365,7 @@ int32_t itit_lowercase_and_normalize(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[607], a, 3);
 }
 
@@ -6375,7 +6376,7 @@ int32_t itit_single_letter(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[608], a, 3);
 }
 
@@ -6386,7 +6387,7 @@ int32_t itit_punctuation(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[609], a, 3);
 }
 
@@ -6397,7 +6398,7 @@ int32_t itit_parenthesis(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[610], a, 3);
 }
 
@@ -6408,7 +6409,7 @@ int32_t itit_ellipsis(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[611], a, 3);
 }
 
@@ -6419,7 +6420,7 @@ int32_t itit_shortdash(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[612], a, 3);
 }
 
@@ -6430,7 +6431,7 @@ int32_t itit_hyphen_between_nums(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[613], a, 3);
 }
 
@@ -6441,7 +6442,7 @@ int32_t itit_slash(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[614], a, 3);
 }
 
@@ -6452,7 +6453,7 @@ int32_t itit_quote_mark(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[615], a, 3);
 }
 
@@ -6463,7 +6464,7 @@ int32_t itit_span_inverted_punct(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[616], a, 3);
 }
 
@@ -6474,7 +6475,7 @@ int32_t itit_bracket(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[617], a, 3);
 }
 
@@ -6485,7 +6486,7 @@ int32_t itit_misc_chars(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[618], a, 3);
 }
 
@@ -6495,7 +6496,7 @@ int32_t itit_handle_end_of_delta(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[619], a, 2);
 }
 
@@ -6506,7 +6507,7 @@ int32_t itit_apostrophe(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[620], a, 3);
 }
 
@@ -6517,7 +6518,7 @@ int32_t itit_spell_out_sequence(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[621], a, 3);
 }
 
@@ -6528,7 +6529,7 @@ int32_t itit_spell_out_alphanum(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[622], a, 3);
 }
 
@@ -6539,7 +6540,7 @@ int32_t itit_single_chars_token(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[623], a, 3);
 }
 
@@ -6550,7 +6551,7 @@ int32_t itit_single_chars_to_punct(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[624], a, 3);
 }
 
@@ -6561,7 +6562,7 @@ int32_t itit_afterslash_char(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[625], a, 3);
 }
 
@@ -6572,7 +6573,7 @@ int32_t itit_interpret_single_char_modes(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[626], a, 3);
 }
 
@@ -6583,7 +6584,7 @@ int32_t itit_acronym(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[627], a, 3);
 }
 
@@ -6594,7 +6595,7 @@ int32_t itit_hyphen(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[628], a, 3);
 }
 
@@ -6605,7 +6606,7 @@ int32_t itit_spell_out_token(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[629], a, 3);
 }
 
@@ -6616,7 +6617,7 @@ int32_t itit_backquote(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[630], a, 3);
 }
 
@@ -6627,7 +6628,7 @@ int32_t itit_letter_sequence(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[631], a, 3);
 }
 
@@ -6638,7 +6639,7 @@ int32_t itit_normalize_text(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[632], a, 3);
 }
 
@@ -6649,7 +6650,7 @@ int32_t itit_convert_digits_to_words(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[633], a, 3);
 }
 
@@ -6660,7 +6661,7 @@ int32_t itit_count_digits(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[634], a, 3);
 }
 
@@ -6671,7 +6672,7 @@ int32_t itit_get_number_info(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[635], a, 3);
 }
 
@@ -6682,7 +6683,7 @@ int32_t itit_spell_out_large_num(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[636], a, 3);
 }
 
@@ -6692,7 +6693,7 @@ int32_t itit_reset_enum_ptr(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[637], a, 2);
 }
 
@@ -6703,7 +6704,7 @@ int32_t itit_convert_1_or_2_digits(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[638], a, 3);
 }
 
@@ -6714,7 +6715,7 @@ int32_t itit_convert_roman_nums(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[639], a, 3);
 }
 
@@ -6725,7 +6726,7 @@ int32_t itit_convert_numbers(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[640], a, 3);
 }
 
@@ -6736,7 +6737,7 @@ int32_t itit_convert_digits(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[641], a, 3);
 }
 
@@ -6747,7 +6748,7 @@ int32_t itit_print_after_word_chars(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[642], a, 3);
 }
 
@@ -6757,7 +6758,7 @@ int32_t itit_print_word_stress(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[643], a, 2);
 }
 
@@ -6768,7 +6769,7 @@ int32_t itit_delete_invalid_SPR(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[644], a, 3);
 }
 
@@ -6780,7 +6781,7 @@ int32_t itit_find_pair_of_single_quotes(int32_t a0, int32_t a1, int32_t a2, int3
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[645], a, 4);
 }
 
@@ -6794,7 +6795,7 @@ int32_t itit_mark_spr_syll_vals(int32_t a0, int32_t a1, int32_t a2, int32_t a3, 
     a[3] = a3;
     a[4] = a4;
     a[5] = a5;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[646], a, 6);
 }
 
@@ -6805,7 +6806,7 @@ int32_t itit_assign_user_stress(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[647], a, 3);
 }
 
@@ -6816,7 +6817,7 @@ int32_t itit_print_f0_vals(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[648], a, 3);
 }
 
@@ -6826,7 +6827,7 @@ int32_t itit_print_syll(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[649], a, 2);
 }
 
@@ -6838,7 +6839,7 @@ int32_t itit_handle_trans_dur(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[650], a, 4);
 }
 
@@ -6849,7 +6850,7 @@ int32_t itit_print_indices(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[651], a, 3);
 }
 
@@ -6858,7 +6859,7 @@ int32_t itit_print_separator(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[652], a, 1);
 }
 
@@ -6869,7 +6870,7 @@ int32_t itit_print_between_word_chars(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[653], a, 3);
 }
 
@@ -6881,7 +6882,7 @@ int32_t itit_handle_SPR(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[654], a, 4);
 }
 
@@ -6893,7 +6894,7 @@ int32_t itit_print_phone(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[655], a, 4);
 }
 
@@ -6903,7 +6904,7 @@ int32_t itit_print_all_indices(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[656], a, 2);
 }
 
@@ -6912,7 +6913,7 @@ int32_t itit_print_spr(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[657], a, 1);
 }
 
@@ -6922,7 +6923,7 @@ int32_t itit_print_pause(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[658], a, 2);
 }
 
@@ -6931,7 +6932,7 @@ int32_t itit_sent_init_espr(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[659], a, 1);
 }
 
@@ -6942,7 +6943,7 @@ int32_t itit_print_word(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[660], a, 3);
 }
 
@@ -6953,7 +6954,7 @@ int32_t itit_print_enhanced_SPR(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[661], a, 3);
 }
 
@@ -6964,7 +6965,7 @@ int32_t itit_word_level_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[662], a, 3);
 }
 
@@ -6974,7 +6975,7 @@ int32_t itit_reset_word_vals(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[663], a, 2);
 }
 
@@ -6983,7 +6984,7 @@ int32_t itit_init_word(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[664], a, 1);
 }
 
@@ -6994,7 +6995,7 @@ int32_t itit_copy_stress_to_phones(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[665], a, 3);
 }
 
@@ -7006,7 +7007,7 @@ int32_t itit_estimate_nsylls(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[666], a, 4);
 }
 
@@ -7017,7 +7018,7 @@ int32_t itit_phrase_level_rules(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[667], a, 3);
 }
 
@@ -7028,7 +7029,7 @@ int32_t itit_insert_word(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[668], a, 3);
 }
 
@@ -7039,7 +7040,7 @@ int32_t itit_build_words(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[669], a, 3);
 }
 
@@ -7050,7 +7051,7 @@ int32_t itit_token_to_number(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[670], a, 3);
 }
 
@@ -7061,7 +7062,7 @@ int32_t itit_token_to_digit(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[671], a, 3);
 }
 
@@ -7072,7 +7073,7 @@ int32_t itit_absval(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[672], a, 3);
 }
 
@@ -7084,7 +7085,7 @@ int32_t itit_find_last_syll(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[673], a, 4);
 }
 
@@ -7097,7 +7098,7 @@ int32_t itit_get_numRootSylls(int32_t a0, int32_t a1, int32_t a2, int32_t a3, in
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[674], a, 5);
 }
 
@@ -7109,7 +7110,7 @@ int32_t itit_mark_syll_stress(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[675], a, 4);
 }
 
@@ -7121,7 +7122,7 @@ int32_t itit_insert_stress(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[676], a, 4);
 }
 
@@ -7132,7 +7133,7 @@ int32_t itit_insert_penult_stress(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[677], a, 3);
 }
 
@@ -7143,7 +7144,7 @@ int32_t itit_insert_final_stress(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[678], a, 3);
 }
 
@@ -7154,7 +7155,7 @@ int32_t itit_insert_initial_stress(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[679], a, 3);
 }
 
@@ -7165,7 +7166,7 @@ int32_t itit_insert_root_final_stress(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[680], a, 3);
 }
 
@@ -7176,7 +7177,7 @@ int32_t itit_insert_zero_sylls(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[681], a, 3);
 }
 
@@ -7187,7 +7188,7 @@ int32_t itit_test_stress_annot(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[682], a, 3);
 }
 
@@ -7198,7 +7199,7 @@ int32_t itit_mark_word_stress(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[683], a, 3);
 }
 
@@ -7209,7 +7210,7 @@ int32_t itit_demote_word(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[684], a, 3);
 }
 
@@ -7220,7 +7221,7 @@ int32_t itit_promote_word(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[685], a, 3);
 }
 
@@ -7230,7 +7231,7 @@ int32_t itit_insert_space(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[686], a, 2);
 }
 
@@ -7241,7 +7242,7 @@ int32_t itit_delete_inp_from_left(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[687], a, 3);
 }
 
@@ -7252,7 +7253,7 @@ int32_t itit_delete_inp_from_right(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[688], a, 3);
 }
 
@@ -7263,7 +7264,7 @@ int32_t itit_delete_phone_from_left(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[689], a, 3);
 }
 
@@ -7274,7 +7275,7 @@ int32_t itit_delete_phone_from_right(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[690], a, 3);
 }
 
@@ -7285,7 +7286,7 @@ int32_t itit_delete_morph_from_left(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[691], a, 3);
 }
 
@@ -7296,7 +7297,7 @@ int32_t itit_delete_morph_from_right(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[692], a, 3);
 }
 
@@ -7307,7 +7308,7 @@ int32_t itit_delete_syll_from_left(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[693], a, 3);
 }
 
@@ -7318,7 +7319,7 @@ int32_t itit_delete_syll_from_right(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[694], a, 3);
 }
 
@@ -7330,7 +7331,7 @@ int32_t itit_modulus(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[695], a, 4);
 }
 
@@ -7343,7 +7344,7 @@ int32_t itit_copy_string(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[696], a, 5);
 }
 
@@ -7356,7 +7357,7 @@ int32_t itit_same_inp(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[697], a, 5);
 }
 
@@ -7368,7 +7369,7 @@ int32_t itit_num_words_in_range(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[698], a, 4);
 }
 
@@ -7379,7 +7380,7 @@ int32_t itit_mark_word_str_annot(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[699], a, 3);
 }
 
@@ -7389,7 +7390,7 @@ int32_t itit_is_proper_name(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[700], a, 2);
 }
 
@@ -7400,7 +7401,7 @@ int32_t itit_is_in_parentheses(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[701], a, 3);
 }
 
@@ -7412,7 +7413,7 @@ int32_t itit_count_sylls(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[702], a, 4);
 }
 
@@ -7424,7 +7425,7 @@ int32_t itit_count_cumulative_chars(int32_t a0, int32_t a1, int32_t a2, int32_t 
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[703], a, 4);
 }
 
@@ -7436,7 +7437,7 @@ int32_t itit_reset_endptr(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[704], a, 4);
 }
 
@@ -7448,7 +7449,7 @@ int32_t itit_in_syllable(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[705], a, 4);
 }
 
@@ -7458,7 +7459,7 @@ int32_t itit_is_spr(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[706], a, 2);
 }
 
@@ -7468,7 +7469,7 @@ int32_t itit_first_root_vow(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[707], a, 2);
 }
 
@@ -7480,7 +7481,7 @@ int32_t itit_string_to_short(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[708], a, 4);
 }
 
@@ -7492,7 +7493,7 @@ int32_t itit_string_to_number(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[709], a, 4);
 }
 
@@ -7503,7 +7504,7 @@ int32_t itit_strip_last_digit(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[710], a, 3);
 }
 
@@ -7515,7 +7516,7 @@ int32_t itit_count_chars(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[711], a, 4);
 }
 
@@ -7524,7 +7525,7 @@ int32_t itit_ZZbspush_ca__1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[712], a, 1);
 }
 
@@ -7533,7 +7534,7 @@ int32_t itit_ZZbspush_ca__10(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[713], a, 1);
 }
 
@@ -7542,7 +7543,7 @@ int32_t itit_ZZbspush_ca__11(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[714], a, 1);
 }
 
@@ -7551,7 +7552,7 @@ int32_t itit_ZZbspush_ca__12(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[715], a, 1);
 }
 
@@ -7560,7 +7561,7 @@ int32_t itit_ZZbspush_ca__13(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[716], a, 1);
 }
 
@@ -7569,7 +7570,7 @@ int32_t itit_ZZbspush_ca__14(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[717], a, 1);
 }
 
@@ -7578,7 +7579,7 @@ int32_t itit_ZZbspush_ca__18(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[718], a, 1);
 }
 
@@ -7587,7 +7588,7 @@ int32_t itit_ZZbspush_ca__2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[719], a, 1);
 }
 
@@ -7596,7 +7597,7 @@ int32_t itit_ZZbspush_ca__20(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[720], a, 1);
 }
 
@@ -7605,7 +7606,7 @@ int32_t itit_ZZbspush_ca__29(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[721], a, 1);
 }
 
@@ -7614,7 +7615,7 @@ int32_t itit_ZZbspush_ca__3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[722], a, 1);
 }
 
@@ -7623,7 +7624,7 @@ int32_t itit_ZZbspush_ca__4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[723], a, 1);
 }
 
@@ -7632,7 +7633,7 @@ int32_t itit_ZZbspush_ca__42(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[724], a, 1);
 }
 
@@ -7641,7 +7642,7 @@ int32_t itit_ZZbspush_ca__5(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[725], a, 1);
 }
 
@@ -7650,7 +7651,7 @@ int32_t itit_ZZbspush_ca__6(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[726], a, 1);
 }
 
@@ -7659,7 +7660,7 @@ int32_t itit_ZZbspush_ca__7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[727], a, 1);
 }
 
@@ -7668,7 +7669,7 @@ int32_t itit_ZZbspush_ca__8(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[728], a, 1);
 }
 
@@ -7677,7 +7678,7 @@ int32_t itit_ZZbspush_ca__9(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[729], a, 1);
 }
 
@@ -7686,7 +7687,7 @@ int32_t itit_ZZbspush_ca_boa__11(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[730], a, 1);
 }
 
@@ -7695,7 +7696,7 @@ int32_t itit_ZZbspush_ca_boa__12(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[731], a, 1);
 }
 
@@ -7704,7 +7705,7 @@ int32_t itit_ZZbspush_ca_boa__15(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[732], a, 1);
 }
 
@@ -7713,7 +7714,7 @@ int32_t itit_ZZbspush_ca_boa__2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[733], a, 1);
 }
 
@@ -7722,7 +7723,7 @@ int32_t itit_ZZbspush_ca_boa__3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[734], a, 1);
 }
 
@@ -7731,7 +7732,7 @@ int32_t itit_ZZbspush_ca_boa__4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[735], a, 1);
 }
 
@@ -7740,7 +7741,7 @@ int32_t itit_ZZbspush_ca_boa__5(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[736], a, 1);
 }
 
@@ -7749,7 +7750,7 @@ int32_t itit_ZZbspush_ca_boa__6(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[737], a, 1);
 }
 
@@ -7758,7 +7759,7 @@ int32_t itit_ZZbspush_ca_boa__7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[738], a, 1);
 }
 
@@ -7767,7 +7768,7 @@ int32_t itit_ZZbspush_ca_boa__8(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[739], a, 1);
 }
 
@@ -7776,7 +7777,7 @@ int32_t itit_ZZbspush_ca_scan__1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[740], a, 1);
 }
 
@@ -7785,7 +7786,7 @@ int32_t itit_ZZbspush_ca_scan__10(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[741], a, 1);
 }
 
@@ -7794,7 +7795,7 @@ int32_t itit_ZZbspush_ca_scan__107(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[742], a, 1);
 }
 
@@ -7803,7 +7804,7 @@ int32_t itit_ZZbspush_ca_scan__11(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[743], a, 1);
 }
 
@@ -7812,7 +7813,7 @@ int32_t itit_ZZbspush_ca_scan__12(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[744], a, 1);
 }
 
@@ -7821,7 +7822,7 @@ int32_t itit_ZZbspush_ca_scan__13(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[745], a, 1);
 }
 
@@ -7830,7 +7831,7 @@ int32_t itit_ZZbspush_ca_scan__14(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[746], a, 1);
 }
 
@@ -7839,7 +7840,7 @@ int32_t itit_ZZbspush_ca_scan__15(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[747], a, 1);
 }
 
@@ -7848,7 +7849,7 @@ int32_t itit_ZZbspush_ca_scan__16(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[748], a, 1);
 }
 
@@ -7857,7 +7858,7 @@ int32_t itit_ZZbspush_ca_scan__17(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[749], a, 1);
 }
 
@@ -7866,7 +7867,7 @@ int32_t itit_ZZbspush_ca_scan__18(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[750], a, 1);
 }
 
@@ -7875,7 +7876,7 @@ int32_t itit_ZZbspush_ca_scan__19(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[751], a, 1);
 }
 
@@ -7884,7 +7885,7 @@ int32_t itit_ZZbspush_ca_scan__2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[752], a, 1);
 }
 
@@ -7893,7 +7894,7 @@ int32_t itit_ZZbspush_ca_scan__20(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[753], a, 1);
 }
 
@@ -7902,7 +7903,7 @@ int32_t itit_ZZbspush_ca_scan__21(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[754], a, 1);
 }
 
@@ -7911,7 +7912,7 @@ int32_t itit_ZZbspush_ca_scan__22(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[755], a, 1);
 }
 
@@ -7920,7 +7921,7 @@ int32_t itit_ZZbspush_ca_scan__23(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[756], a, 1);
 }
 
@@ -7929,7 +7930,7 @@ int32_t itit_ZZbspush_ca_scan__24(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[757], a, 1);
 }
 
@@ -7938,7 +7939,7 @@ int32_t itit_ZZbspush_ca_scan__25(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[758], a, 1);
 }
 
@@ -7947,7 +7948,7 @@ int32_t itit_ZZbspush_ca_scan__26(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[759], a, 1);
 }
 
@@ -7956,7 +7957,7 @@ int32_t itit_ZZbspush_ca_scan__27(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[760], a, 1);
 }
 
@@ -7965,7 +7966,7 @@ int32_t itit_ZZbspush_ca_scan__28(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[761], a, 1);
 }
 
@@ -7974,7 +7975,7 @@ int32_t itit_ZZbspush_ca_scan__29(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[762], a, 1);
 }
 
@@ -7983,7 +7984,7 @@ int32_t itit_ZZbspush_ca_scan__3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[763], a, 1);
 }
 
@@ -7992,7 +7993,7 @@ int32_t itit_ZZbspush_ca_scan__30(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[764], a, 1);
 }
 
@@ -8001,7 +8002,7 @@ int32_t itit_ZZbspush_ca_scan__31(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[765], a, 1);
 }
 
@@ -8010,7 +8011,7 @@ int32_t itit_ZZbspush_ca_scan__32(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[766], a, 1);
 }
 
@@ -8019,7 +8020,7 @@ int32_t itit_ZZbspush_ca_scan__33(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[767], a, 1);
 }
 
@@ -8028,7 +8029,7 @@ int32_t itit_ZZbspush_ca_scan__34(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[768], a, 1);
 }
 
@@ -8037,7 +8038,7 @@ int32_t itit_ZZbspush_ca_scan__35(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[769], a, 1);
 }
 
@@ -8046,7 +8047,7 @@ int32_t itit_ZZbspush_ca_scan__36(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[770], a, 1);
 }
 
@@ -8055,7 +8056,7 @@ int32_t itit_ZZbspush_ca_scan__37(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[771], a, 1);
 }
 
@@ -8064,7 +8065,7 @@ int32_t itit_ZZbspush_ca_scan__38(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[772], a, 1);
 }
 
@@ -8073,7 +8074,7 @@ int32_t itit_ZZbspush_ca_scan__39(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[773], a, 1);
 }
 
@@ -8082,7 +8083,7 @@ int32_t itit_ZZbspush_ca_scan__4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[774], a, 1);
 }
 
@@ -8091,7 +8092,7 @@ int32_t itit_ZZbspush_ca_scan__40(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[775], a, 1);
 }
 
@@ -8100,7 +8101,7 @@ int32_t itit_ZZbspush_ca_scan__41(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[776], a, 1);
 }
 
@@ -8109,7 +8110,7 @@ int32_t itit_ZZbspush_ca_scan__42(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[777], a, 1);
 }
 
@@ -8118,7 +8119,7 @@ int32_t itit_ZZbspush_ca_scan__43(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[778], a, 1);
 }
 
@@ -8127,7 +8128,7 @@ int32_t itit_ZZbspush_ca_scan__44(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[779], a, 1);
 }
 
@@ -8136,7 +8137,7 @@ int32_t itit_ZZbspush_ca_scan__45(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[780], a, 1);
 }
 
@@ -8145,7 +8146,7 @@ int32_t itit_ZZbspush_ca_scan__46(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[781], a, 1);
 }
 
@@ -8154,7 +8155,7 @@ int32_t itit_ZZbspush_ca_scan__47(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[782], a, 1);
 }
 
@@ -8163,7 +8164,7 @@ int32_t itit_ZZbspush_ca_scan__48(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[783], a, 1);
 }
 
@@ -8172,7 +8173,7 @@ int32_t itit_ZZbspush_ca_scan__49(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[784], a, 1);
 }
 
@@ -8181,7 +8182,7 @@ int32_t itit_ZZbspush_ca_scan__5(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[785], a, 1);
 }
 
@@ -8190,7 +8191,7 @@ int32_t itit_ZZbspush_ca_scan__50(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[786], a, 1);
 }
 
@@ -8199,7 +8200,7 @@ int32_t itit_ZZbspush_ca_scan__51(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[787], a, 1);
 }
 
@@ -8208,7 +8209,7 @@ int32_t itit_ZZbspush_ca_scan__52(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[788], a, 1);
 }
 
@@ -8217,7 +8218,7 @@ int32_t itit_ZZbspush_ca_scan__53(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[789], a, 1);
 }
 
@@ -8226,7 +8227,7 @@ int32_t itit_ZZbspush_ca_scan__54(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[790], a, 1);
 }
 
@@ -8235,7 +8236,7 @@ int32_t itit_ZZbspush_ca_scan__55(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[791], a, 1);
 }
 
@@ -8244,7 +8245,7 @@ int32_t itit_ZZbspush_ca_scan__56(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[792], a, 1);
 }
 
@@ -8253,7 +8254,7 @@ int32_t itit_ZZbspush_ca_scan__57(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[793], a, 1);
 }
 
@@ -8262,7 +8263,7 @@ int32_t itit_ZZbspush_ca_scan__58(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[794], a, 1);
 }
 
@@ -8271,7 +8272,7 @@ int32_t itit_ZZbspush_ca_scan__59(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[795], a, 1);
 }
 
@@ -8280,7 +8281,7 @@ int32_t itit_ZZbspush_ca_scan__6(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[796], a, 1);
 }
 
@@ -8289,7 +8290,7 @@ int32_t itit_ZZbspush_ca_scan__60(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[797], a, 1);
 }
 
@@ -8298,7 +8299,7 @@ int32_t itit_ZZbspush_ca_scan__61(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[798], a, 1);
 }
 
@@ -8307,7 +8308,7 @@ int32_t itit_ZZbspush_ca_scan__62(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[799], a, 1);
 }
 
@@ -8316,7 +8317,7 @@ int32_t itit_ZZbspush_ca_scan__63(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[800], a, 1);
 }
 
@@ -8325,7 +8326,7 @@ int32_t itit_ZZbspush_ca_scan__64(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[801], a, 1);
 }
 
@@ -8334,7 +8335,7 @@ int32_t itit_ZZbspush_ca_scan__65(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[802], a, 1);
 }
 
@@ -8343,7 +8344,7 @@ int32_t itit_ZZbspush_ca_scan__66(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[803], a, 1);
 }
 
@@ -8352,7 +8353,7 @@ int32_t itit_ZZbspush_ca_scan__67(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[804], a, 1);
 }
 
@@ -8361,7 +8362,7 @@ int32_t itit_ZZbspush_ca_scan__68(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[805], a, 1);
 }
 
@@ -8370,7 +8371,7 @@ int32_t itit_ZZbspush_ca_scan__69(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[806], a, 1);
 }
 
@@ -8379,7 +8380,7 @@ int32_t itit_ZZbspush_ca_scan__7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[807], a, 1);
 }
 
@@ -8388,7 +8389,7 @@ int32_t itit_ZZbspush_ca_scan__70(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[808], a, 1);
 }
 
@@ -8397,7 +8398,7 @@ int32_t itit_ZZbspush_ca_scan__71(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[809], a, 1);
 }
 
@@ -8406,7 +8407,7 @@ int32_t itit_ZZbspush_ca_scan__72(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[810], a, 1);
 }
 
@@ -8415,7 +8416,7 @@ int32_t itit_ZZbspush_ca_scan__73(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[811], a, 1);
 }
 
@@ -8424,7 +8425,7 @@ int32_t itit_ZZbspush_ca_scan__74(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[812], a, 1);
 }
 
@@ -8433,7 +8434,7 @@ int32_t itit_ZZbspush_ca_scan__75(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[813], a, 1);
 }
 
@@ -8442,7 +8443,7 @@ int32_t itit_ZZbspush_ca_scan__76(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[814], a, 1);
 }
 
@@ -8451,7 +8452,7 @@ int32_t itit_ZZbspush_ca_scan__78(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[815], a, 1);
 }
 
@@ -8460,7 +8461,7 @@ int32_t itit_ZZbspush_ca_scan__79(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[816], a, 1);
 }
 
@@ -8469,7 +8470,7 @@ int32_t itit_ZZbspush_ca_scan__8(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[817], a, 1);
 }
 
@@ -8478,7 +8479,7 @@ int32_t itit_ZZbspush_ca_scan__80(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[818], a, 1);
 }
 
@@ -8487,7 +8488,7 @@ int32_t itit_ZZbspush_ca_scan__81(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[819], a, 1);
 }
 
@@ -8496,7 +8497,7 @@ int32_t itit_ZZbspush_ca_scan__83(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[820], a, 1);
 }
 
@@ -8505,7 +8506,7 @@ int32_t itit_ZZbspush_ca_scan__85(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[821], a, 1);
 }
 
@@ -8514,7 +8515,7 @@ int32_t itit_ZZbspush_ca_scan__86(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[822], a, 1);
 }
 
@@ -8523,7 +8524,7 @@ int32_t itit_ZZbspush_ca_scan__88(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[823], a, 1);
 }
 
@@ -8532,7 +8533,7 @@ int32_t itit_ZZbspush_ca_scan__89(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[824], a, 1);
 }
 
@@ -8541,7 +8542,7 @@ int32_t itit_ZZbspush_ca_scan__9(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[825], a, 1);
 }
 
@@ -8550,7 +8551,7 @@ int32_t itit_ZZbspush_ca_scan__90(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[826], a, 1);
 }
 
@@ -8559,7 +8560,7 @@ int32_t itit_ZZbspush_ca_scan__91(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[827], a, 1);
 }
 
@@ -8568,7 +8569,7 @@ int32_t itit_ZZbspush_ca_scan__92(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[828], a, 1);
 }
 
@@ -8577,7 +8578,7 @@ int32_t itit_ZZbspush_ca_scan__94(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[829], a, 1);
 }
 
@@ -8586,7 +8587,7 @@ int32_t itit_ZZbspush_ca_scan__95(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[830], a, 1);
 }
 
@@ -8595,7 +8596,7 @@ int32_t itit_ZZbspush_ca_scan_boa__10(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[831], a, 1);
 }
 
@@ -8604,7 +8605,7 @@ int32_t itit_ZZbspush_ca_scan_boa__11(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[832], a, 1);
 }
 
@@ -8613,7 +8614,7 @@ int32_t itit_ZZbspush_ca_scan_boa__12(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[833], a, 1);
 }
 
@@ -8622,7 +8623,7 @@ int32_t itit_ZZbspush_ca_scan_boa__13(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[834], a, 1);
 }
 
@@ -8631,7 +8632,7 @@ int32_t itit_ZZbspush_ca_scan_boa__14(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[835], a, 1);
 }
 
@@ -8640,7 +8641,7 @@ int32_t itit_ZZbspush_ca_scan_boa__15(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[836], a, 1);
 }
 
@@ -8649,7 +8650,7 @@ int32_t itit_ZZbspush_ca_scan_boa__16(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[837], a, 1);
 }
 
@@ -8658,7 +8659,7 @@ int32_t itit_ZZbspush_ca_scan_boa__17(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[838], a, 1);
 }
 
@@ -8667,7 +8668,7 @@ int32_t itit_ZZbspush_ca_scan_boa__18(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[839], a, 1);
 }
 
@@ -8676,7 +8677,7 @@ int32_t itit_ZZbspush_ca_scan_boa__2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[840], a, 1);
 }
 
@@ -8685,7 +8686,7 @@ int32_t itit_ZZbspush_ca_scan_boa__20(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[841], a, 1);
 }
 
@@ -8694,7 +8695,7 @@ int32_t itit_ZZbspush_ca_scan_boa__22(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[842], a, 1);
 }
 
@@ -8703,7 +8704,7 @@ int32_t itit_ZZbspush_ca_scan_boa__23(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[843], a, 1);
 }
 
@@ -8712,7 +8713,7 @@ int32_t itit_ZZbspush_ca_scan_boa__24(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[844], a, 1);
 }
 
@@ -8721,7 +8722,7 @@ int32_t itit_ZZbspush_ca_scan_boa__25(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[845], a, 1);
 }
 
@@ -8730,7 +8731,7 @@ int32_t itit_ZZbspush_ca_scan_boa__26(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[846], a, 1);
 }
 
@@ -8739,7 +8740,7 @@ int32_t itit_ZZbspush_ca_scan_boa__27(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[847], a, 1);
 }
 
@@ -8748,7 +8749,7 @@ int32_t itit_ZZbspush_ca_scan_boa__28(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[848], a, 1);
 }
 
@@ -8757,7 +8758,7 @@ int32_t itit_ZZbspush_ca_scan_boa__3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[849], a, 1);
 }
 
@@ -8766,7 +8767,7 @@ int32_t itit_ZZbspush_ca_scan_boa__31(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[850], a, 1);
 }
 
@@ -8775,7 +8776,7 @@ int32_t itit_ZZbspush_ca_scan_boa__32(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[851], a, 1);
 }
 
@@ -8784,7 +8785,7 @@ int32_t itit_ZZbspush_ca_scan_boa__4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[852], a, 1);
 }
 
@@ -8793,7 +8794,7 @@ int32_t itit_ZZbspush_ca_scan_boa__40(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[853], a, 1);
 }
 
@@ -8802,7 +8803,7 @@ int32_t itit_ZZbspush_ca_scan_boa__49(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[854], a, 1);
 }
 
@@ -8811,7 +8812,7 @@ int32_t itit_ZZbspush_ca_scan_boa__5(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[855], a, 1);
 }
 
@@ -8820,7 +8821,7 @@ int32_t itit_ZZbspush_ca_scan_boa__58(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[856], a, 1);
 }
 
@@ -8829,7 +8830,7 @@ int32_t itit_ZZbspush_ca_scan_boa__6(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[857], a, 1);
 }
 
@@ -8838,7 +8839,7 @@ int32_t itit_ZZbspush_ca_scan_boa__7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[858], a, 1);
 }
 
@@ -8847,7 +8848,7 @@ int32_t itit_ZZbspush_ca_scan_boa__8(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[859], a, 1);
 }
 
@@ -8856,7 +8857,7 @@ int32_t itit_ZZbspush_ca_scan_boa__9(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[860], a, 1);
 }
 
@@ -8865,7 +8866,7 @@ int32_t itit_ZZdelete_1pt2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[861], a, 1);
 }
 
@@ -8874,7 +8875,7 @@ int32_t itit_ZZdelete_2pt0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[862], a, 1);
 }
 
@@ -8883,7 +8884,7 @@ int32_t itit_ZZdelete_2pt1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[863], a, 1);
 }
 
@@ -8892,7 +8893,7 @@ int32_t itit_ZZdelete_2pt2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[864], a, 1);
 }
 
@@ -8901,7 +8902,7 @@ int32_t itit_ZZdelete_2pt3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[865], a, 1);
 }
 
@@ -8910,7 +8911,7 @@ int32_t itit_ZZdelete_2pt7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[866], a, 1);
 }
 
@@ -8919,7 +8920,7 @@ int32_t itit_ZZfenceZZstring1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[867], a, 1);
 }
 
@@ -8928,7 +8929,7 @@ int32_t itit_ZZfenceZZstring140(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[868], a, 1);
 }
 
@@ -8937,7 +8938,7 @@ int32_t itit_ZZfenceZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[869], a, 1);
 }
 
@@ -8946,7 +8947,7 @@ int32_t itit_ZZfenceZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[870], a, 1);
 }
 
@@ -8955,7 +8956,7 @@ int32_t itit_ZZfenceZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[871], a, 1);
 }
 
@@ -8964,7 +8965,7 @@ int32_t itit_ZZfence_null(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[872], a, 1);
 }
 
@@ -8976,7 +8977,7 @@ int32_t itit_ZZforall_cont_from1_2(int32_t a0, int32_t a1, int32_t a2, int32_t a
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[873], a, 4);
 }
 
@@ -8988,7 +8989,7 @@ int32_t itit_ZZforall_cont_from2_3(int32_t a0, int32_t a1, int32_t a2, int32_t a
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[874], a, 4);
 }
 
@@ -9001,7 +9002,7 @@ int32_t itit_ZZforto_adv_r__1__2(int32_t a0, int32_t a1, int32_t a2, int32_t a3,
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[875], a, 5);
 }
 
@@ -9014,7 +9015,7 @@ int32_t itit_ZZforto_adv_r__2__3(int32_t a0, int32_t a1, int32_t a2, int32_t a3,
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[876], a, 5);
 }
 
@@ -9027,7 +9028,7 @@ int32_t itit_ZZforto_adv_upto_r__1__2(int32_t a0, int32_t a1, int32_t a2, int32_
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[877], a, 5);
 }
 
@@ -9040,7 +9041,7 @@ int32_t itit_ZZforto_adv_upto_r__2__3(int32_t a0, int32_t a1, int32_t a2, int32_
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[878], a, 5);
 }
 
@@ -9053,7 +9054,7 @@ int32_t itit_ZZforto_adv_upto_r__3__4(int32_t a0, int32_t a1, int32_t a2, int32_
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[879], a, 5);
 }
 
@@ -9066,7 +9067,7 @@ int32_t itit_ZZforto_adv_upto_r__5__6(int32_t a0, int32_t a1, int32_t a2, int32_
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[880], a, 5);
 }
 
@@ -9079,7 +9080,7 @@ int32_t itit_ZZforto_adv_upto_r__7__8(int32_t a0, int32_t a1, int32_t a2, int32_
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[881], a, 5);
 }
 
@@ -9090,7 +9091,7 @@ int32_t itit_ZZget_parmINT(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[882], a, 3);
 }
 
@@ -9101,7 +9102,7 @@ int32_t itit_ZZget_parmLONG(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[883], a, 3);
 }
 
@@ -9112,7 +9113,7 @@ int32_t itit_ZZget_parmPTR(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[884], a, 3);
 }
 
@@ -9125,7 +9126,7 @@ int32_t itit_ZZget_parm_ptr2(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[885], a, 5);
 }
 
@@ -9140,7 +9141,7 @@ int32_t itit_ZZget_parm_ptr3(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int
     a[4] = a4;
     a[5] = a5;
     a[6] = a6;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[886], a, 7);
 }
 
@@ -9157,7 +9158,7 @@ int32_t itit_ZZget_parm_ptr4(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int
     a[6] = a6;
     a[7] = a7;
     a[8] = a8;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[887], a, 9);
 }
 
@@ -9166,7 +9167,7 @@ int32_t itit_ZZinitdelta10_ZZstring4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[888], a, 1);
 }
 
@@ -9175,7 +9176,7 @@ int32_t itit_ZZinsert_2pt_s_1_1_ZZstring202(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[889], a, 1);
 }
 
@@ -9184,7 +9185,7 @@ int32_t itit_ZZinsert_2pt_i_9_0_205_null_str(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[890], a, 1);
 }
 
@@ -9194,7 +9195,7 @@ int32_t itit_ZZinsert_2ptv0(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[891], a, 2);
 }
 
@@ -9204,7 +9205,7 @@ int32_t itit_ZZinsert_2ptv2(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[892], a, 2);
 }
 
@@ -9214,7 +9215,7 @@ int32_t itit_ZZinsert_2ptv7(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[893], a, 2);
 }
 
@@ -9224,7 +9225,7 @@ int32_t itit_ZZinsert_2ptv9(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[894], a, 2);
 }
 
@@ -9233,7 +9234,7 @@ int32_t itit_ZZinsert_l_1_1_ZZstring83(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[895], a, 1);
 }
 
@@ -9242,7 +9243,7 @@ int32_t itit_ZZinsert_l_1_2_ZZstring84(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[896], a, 1);
 }
 
@@ -9251,7 +9252,7 @@ int32_t itit_ZZinsert_l_1_2_ZZstring85(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[897], a, 1);
 }
 
@@ -9260,7 +9261,7 @@ int32_t itit_ZZinsert_l_1_2_ZZstring86(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[898], a, 1);
 }
 
@@ -9269,7 +9270,7 @@ int32_t itit_ZZinsert_l_1_2_ZZstring87(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[899], a, 1);
 }
 
@@ -9278,7 +9279,7 @@ int32_t itit_ZZinsert_l_2_1_ZZstring83(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[900], a, 1);
 }
 
@@ -9287,7 +9288,7 @@ int32_t itit_ZZinsert_l_9_1_ZZstring95(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[901], a, 1);
 }
 
@@ -9296,7 +9297,7 @@ int32_t itit_ZZinsert_r_1_1_ZZstring83(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[902], a, 1);
 }
 
@@ -9305,7 +9306,7 @@ int32_t itit_ZZinsert_r_1_2_ZZstring86(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[903], a, 1);
 }
 
@@ -9314,7 +9315,7 @@ int32_t itit_ZZinsert_r_1_2_ZZstring87(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[904], a, 1);
 }
 
@@ -9323,7 +9324,7 @@ int32_t itit_ZZinsert_r_2_1_ZZstring83(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[905], a, 1);
 }
 
@@ -9333,7 +9334,7 @@ int32_t itit_ZZinsert_l_1_10(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[906], a, 2);
 }
 
@@ -9343,7 +9344,7 @@ int32_t itit_ZZinsert_l_1_11(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[907], a, 2);
 }
 
@@ -9353,7 +9354,7 @@ int32_t itit_ZZinsert_l_1_2(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[908], a, 2);
 }
 
@@ -9363,7 +9364,7 @@ int32_t itit_ZZinsert_l_1_3(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[909], a, 2);
 }
 
@@ -9373,7 +9374,7 @@ int32_t itit_ZZinsert_l_1_4(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[910], a, 2);
 }
 
@@ -9383,7 +9384,7 @@ int32_t itit_ZZinsert_l_1_5(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[911], a, 2);
 }
 
@@ -9393,7 +9394,7 @@ int32_t itit_ZZinsert_l_1_6(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[912], a, 2);
 }
 
@@ -9403,7 +9404,7 @@ int32_t itit_ZZinsert_l_1_9(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[913], a, 2);
 }
 
@@ -9413,7 +9414,7 @@ int32_t itit_ZZinsert_r_1_2(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[914], a, 2);
 }
 
@@ -9423,7 +9424,7 @@ int32_t itit_ZZinsert_r_1_3(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[915], a, 2);
 }
 
@@ -9433,7 +9434,7 @@ int32_t itit_ZZinsert_r_1_4(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[916], a, 2);
 }
 
@@ -9444,7 +9445,7 @@ int32_t itit_ZZlprp_load__insert_2pt_i_7_2_ZZstring2(int32_t a0, int32_t a1, int
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[917], a, 3);
 }
 
@@ -9455,7 +9456,7 @@ int32_t itit_ZZlprp_load__insert_2pt_i_7_2_ZZstring3(int32_t a0, int32_t a1, int
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[918], a, 3);
 }
 
@@ -9466,7 +9467,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring103(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[919], a, 3);
 }
 
@@ -9477,7 +9478,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring107(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[920], a, 3);
 }
 
@@ -9488,7 +9489,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring113(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[921], a, 3);
 }
 
@@ -9499,7 +9500,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring123(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[922], a, 3);
 }
 
@@ -9510,7 +9511,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring13(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[923], a, 3);
 }
 
@@ -9521,7 +9522,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring132(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[924], a, 3);
 }
 
@@ -9532,7 +9533,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring135(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[925], a, 3);
 }
 
@@ -9543,7 +9544,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring138(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[926], a, 3);
 }
 
@@ -9554,7 +9555,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring139(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[927], a, 3);
 }
 
@@ -9565,7 +9566,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring14(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[928], a, 3);
 }
 
@@ -9576,7 +9577,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring140(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[929], a, 3);
 }
 
@@ -9587,7 +9588,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring147(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[930], a, 3);
 }
 
@@ -9598,7 +9599,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring148(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[931], a, 3);
 }
 
@@ -9609,7 +9610,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring15(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[932], a, 3);
 }
 
@@ -9620,7 +9621,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring16(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[933], a, 3);
 }
 
@@ -9631,7 +9632,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring160(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[934], a, 3);
 }
 
@@ -9642,7 +9643,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring17(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[935], a, 3);
 }
 
@@ -9653,7 +9654,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring176(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[936], a, 3);
 }
 
@@ -9664,7 +9665,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring18(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[937], a, 3);
 }
 
@@ -9675,7 +9676,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring180(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[938], a, 3);
 }
 
@@ -9686,7 +9687,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring182(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[939], a, 3);
 }
 
@@ -9697,7 +9698,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring183(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[940], a, 3);
 }
 
@@ -9708,7 +9709,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring184(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[941], a, 3);
 }
 
@@ -9719,7 +9720,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring185(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[942], a, 3);
 }
 
@@ -9730,7 +9731,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring186(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[943], a, 3);
 }
 
@@ -9741,7 +9742,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring187(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[944], a, 3);
 }
 
@@ -9752,7 +9753,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring189(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[945], a, 3);
 }
 
@@ -9763,7 +9764,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring190(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[946], a, 3);
 }
 
@@ -9774,7 +9775,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring191(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[947], a, 3);
 }
 
@@ -9785,7 +9786,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring194(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[948], a, 3);
 }
 
@@ -9796,7 +9797,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring20(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[949], a, 3);
 }
 
@@ -9807,7 +9808,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring202(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[950], a, 3);
 }
 
@@ -9818,7 +9819,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring21(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[951], a, 3);
 }
 
@@ -9829,7 +9830,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring212(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[952], a, 3);
 }
 
@@ -9840,7 +9841,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring213(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[953], a, 3);
 }
 
@@ -9851,7 +9852,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring214(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[954], a, 3);
 }
 
@@ -9862,7 +9863,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring22(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[955], a, 3);
 }
 
@@ -9873,7 +9874,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring23(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[956], a, 3);
 }
 
@@ -9884,7 +9885,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring24(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[957], a, 3);
 }
 
@@ -9895,7 +9896,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring25(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[958], a, 3);
 }
 
@@ -9906,7 +9907,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring29(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[959], a, 3);
 }
 
@@ -9917,7 +9918,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring30(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[960], a, 3);
 }
 
@@ -9928,7 +9929,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring31(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[961], a, 3);
 }
 
@@ -9939,7 +9940,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring32(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[962], a, 3);
 }
 
@@ -9950,7 +9951,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring39(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[963], a, 3);
 }
 
@@ -9961,7 +9962,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring48(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[964], a, 3);
 }
 
@@ -9972,7 +9973,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring49(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[965], a, 3);
 }
 
@@ -9983,7 +9984,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring5(int32_t a0, int32_t a1, int
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[966], a, 3);
 }
 
@@ -9994,7 +9995,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring50(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[967], a, 3);
 }
 
@@ -10005,7 +10006,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring51(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[968], a, 3);
 }
 
@@ -10016,7 +10017,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring52(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[969], a, 3);
 }
 
@@ -10027,7 +10028,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring53(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[970], a, 3);
 }
 
@@ -10038,7 +10039,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring56(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[971], a, 3);
 }
 
@@ -10049,7 +10050,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring57(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[972], a, 3);
 }
 
@@ -10060,7 +10061,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring58(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[973], a, 3);
 }
 
@@ -10071,7 +10072,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring59(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[974], a, 3);
 }
 
@@ -10082,7 +10083,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring60(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[975], a, 3);
 }
 
@@ -10093,7 +10094,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring61(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[976], a, 3);
 }
 
@@ -10104,7 +10105,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring64(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[977], a, 3);
 }
 
@@ -10115,7 +10116,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring65(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[978], a, 3);
 }
 
@@ -10126,7 +10127,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring66(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[979], a, 3);
 }
 
@@ -10137,7 +10138,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring67(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[980], a, 3);
 }
 
@@ -10148,7 +10149,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring68(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[981], a, 3);
 }
 
@@ -10159,7 +10160,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring73(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[982], a, 3);
 }
 
@@ -10170,7 +10171,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring77(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[983], a, 3);
 }
 
@@ -10181,7 +10182,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring79(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[984], a, 3);
 }
 
@@ -10192,7 +10193,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring88(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[985], a, 3);
 }
 
@@ -10203,7 +10204,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring92(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[986], a, 3);
 }
 
@@ -10214,7 +10215,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_1_ZZstring96(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[987], a, 3);
 }
 
@@ -10225,7 +10226,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_2_ZZstring128(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[988], a, 3);
 }
 
@@ -10236,7 +10237,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_3_ZZstring127(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[989], a, 3);
 }
 
@@ -10247,7 +10248,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_3_ZZstring133(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[990], a, 3);
 }
 
@@ -10258,7 +10259,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_3_ZZstring43(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[991], a, 3);
 }
 
@@ -10269,7 +10270,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_3_ZZstring99(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[992], a, 3);
 }
 
@@ -10280,7 +10281,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_4_ZZstring101(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[993], a, 3);
 }
 
@@ -10291,7 +10292,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_4_ZZstring152(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[994], a, 3);
 }
 
@@ -10302,7 +10303,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_4_ZZstring168(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[995], a, 3);
 }
 
@@ -10313,7 +10314,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_5_ZZstring126(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[996], a, 3);
 }
 
@@ -10324,7 +10325,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_6_ZZstring125(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[997], a, 3);
 }
 
@@ -10335,7 +10336,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_6_ZZstring27(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[998], a, 3);
 }
 
@@ -10346,7 +10347,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_7_ZZstring112(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[999], a, 3);
 }
 
@@ -10357,7 +10358,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring103(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1000], a, 3);
 }
 
@@ -10368,7 +10369,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring107(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1001], a, 3);
 }
 
@@ -10379,7 +10380,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring113(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1002], a, 3);
 }
 
@@ -10390,7 +10391,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring123(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1003], a, 3);
 }
 
@@ -10401,7 +10402,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring132(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1004], a, 3);
 }
 
@@ -10412,7 +10413,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring135(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1005], a, 3);
 }
 
@@ -10423,7 +10424,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring138(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1006], a, 3);
 }
 
@@ -10434,7 +10435,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring139(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1007], a, 3);
 }
 
@@ -10445,7 +10446,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring140(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1008], a, 3);
 }
 
@@ -10456,7 +10457,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring147(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1009], a, 3);
 }
 
@@ -10467,7 +10468,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring148(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1010], a, 3);
 }
 
@@ -10478,7 +10479,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring153(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1011], a, 3);
 }
 
@@ -10489,7 +10490,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring154(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1012], a, 3);
 }
 
@@ -10500,7 +10501,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring160(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1013], a, 3);
 }
 
@@ -10511,7 +10512,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring176(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1014], a, 3);
 }
 
@@ -10522,7 +10523,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring18(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1015], a, 3);
 }
 
@@ -10533,7 +10534,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring188(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1016], a, 3);
 }
 
@@ -10544,7 +10545,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring198(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1017], a, 3);
 }
 
@@ -10555,7 +10556,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring205(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1018], a, 3);
 }
 
@@ -10566,7 +10567,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring210(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1019], a, 3);
 }
 
@@ -10577,7 +10578,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring25(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1020], a, 3);
 }
 
@@ -10588,7 +10589,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring39(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1021], a, 3);
 }
 
@@ -10599,7 +10600,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring5(int32_t a0, int32_t a1, int
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1022], a, 3);
 }
 
@@ -10610,7 +10611,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring53(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1023], a, 3);
 }
 
@@ -10621,7 +10622,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring61(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1024], a, 3);
 }
 
@@ -10632,7 +10633,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring68(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1025], a, 3);
 }
 
@@ -10643,7 +10644,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring73(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1026], a, 3);
 }
 
@@ -10654,7 +10655,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring77(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1027], a, 3);
 }
 
@@ -10665,7 +10666,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring79(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1028], a, 3);
 }
 
@@ -10676,7 +10677,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring88(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1029], a, 3);
 }
 
@@ -10687,7 +10688,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring9(int32_t a0, int32_t a1, int
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1030], a, 3);
 }
 
@@ -10698,7 +10699,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring92(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1031], a, 3);
 }
 
@@ -10709,7 +10710,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_1_ZZstring96(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1032], a, 3);
 }
 
@@ -10720,7 +10721,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_2_ZZstring116(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1033], a, 3);
 }
 
@@ -10731,7 +10732,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_2_ZZstring142(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1034], a, 3);
 }
 
@@ -10742,7 +10743,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_2_ZZstring143(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1035], a, 3);
 }
 
@@ -10753,7 +10754,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_2_ZZstring146(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1036], a, 3);
 }
 
@@ -10764,7 +10765,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_2_ZZstring161(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1037], a, 3);
 }
 
@@ -10775,7 +10776,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_2_ZZstring163(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1038], a, 3);
 }
 
@@ -10786,7 +10787,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_2_ZZstring55(int32_t a0, int32_t a1, in
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1039], a, 3);
 }
 
@@ -10797,7 +10798,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_3_1_ZZstring140(int32_t a0, int32_t a1, i
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1040], a, 3);
 }
 
@@ -10809,7 +10810,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_10(int32_t a0, int32_t a1, int32_t a2, 
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1041], a, 4);
 }
 
@@ -10821,7 +10822,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_11(int32_t a0, int32_t a1, int32_t a2, 
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1042], a, 4);
 }
 
@@ -10833,7 +10834,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_3(int32_t a0, int32_t a1, int32_t a2, i
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1043], a, 4);
 }
 
@@ -10845,7 +10846,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_4(int32_t a0, int32_t a1, int32_t a2, i
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1044], a, 4);
 }
 
@@ -10857,7 +10858,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_5(int32_t a0, int32_t a1, int32_t a2, i
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1045], a, 4);
 }
 
@@ -10869,7 +10870,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_6(int32_t a0, int32_t a1, int32_t a2, i
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1046], a, 4);
 }
 
@@ -10881,7 +10882,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_7(int32_t a0, int32_t a1, int32_t a2, i
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1047], a, 4);
 }
 
@@ -10893,7 +10894,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_1_8(int32_t a0, int32_t a1, int32_t a2, i
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1048], a, 4);
 }
 
@@ -10905,7 +10906,7 @@ int32_t itit_ZZlprp_load__insert_2pt_s_2_2(int32_t a0, int32_t a1, int32_t a2, i
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1049], a, 4);
 }
 
@@ -10916,7 +10917,7 @@ int32_t itit_ZZlprp_load__mark_s2_12_0(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1050], a, 3);
 }
 
@@ -10927,7 +10928,7 @@ int32_t itit_ZZlprp_load__mark_s4_1_10(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1051], a, 3);
 }
 
@@ -10938,7 +10939,7 @@ int32_t itit_ZZlprp_load__mark_s4_1_13(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1052], a, 3);
 }
 
@@ -10949,7 +10950,7 @@ int32_t itit_ZZlprp_load__mark_s4_1_17(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1053], a, 3);
 }
 
@@ -10960,7 +10961,7 @@ int32_t itit_ZZlprp_load__mark_s4_1_18(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1054], a, 3);
 }
 
@@ -10971,7 +10972,7 @@ int32_t itit_ZZlprp_load__mark_s4_1_21(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1055], a, 3);
 }
 
@@ -10982,7 +10983,7 @@ int32_t itit_ZZlprp_load__mark_s4_1_3(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1056], a, 3);
 }
 
@@ -10993,7 +10994,7 @@ int32_t itit_ZZlprp_load__mark_s4_1_7(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1057], a, 3);
 }
 
@@ -11004,7 +11005,7 @@ int32_t itit_ZZlprp_load__mark_s4_1_8(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1058], a, 3);
 }
 
@@ -11016,7 +11017,7 @@ int32_t itit_ZZlprp_load__setd(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1059], a, 4);
 }
 
@@ -11025,7 +11026,7 @@ int32_t itit_ZZlprp_load_vvg0001_0083(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1060], a, 1);
 }
 
@@ -11034,7 +11035,7 @@ int32_t itit_ZZlprp_load_vvg0001_0091(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1061], a, 1);
 }
 
@@ -11043,7 +11044,7 @@ int32_t itit_ZZlprp_load_vvg0014_0015(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1062], a, 1);
 }
 
@@ -11052,7 +11053,7 @@ int32_t itit_ZZlprp_load_vvg0018_0019(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1063], a, 1);
 }
 
@@ -11061,7 +11062,7 @@ int32_t itit_ZZlprp_load_vvg0035_0104(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1064], a, 1);
 }
 
@@ -11070,7 +11071,7 @@ int32_t itit_ZZlprp_load_vvg0036_0038(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1065], a, 1);
 }
 
@@ -11079,7 +11080,7 @@ int32_t itit_ZZlprp_load_vvg0037_0038(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1066], a, 1);
 }
 
@@ -11088,7 +11089,7 @@ int32_t itit_ZZlprp_load_vvg0037_0103(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1067], a, 1);
 }
 
@@ -11097,7 +11098,7 @@ int32_t itit_ZZlprp_load_vvg0084_0085(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1068], a, 1);
 }
 
@@ -11106,7 +11107,7 @@ int32_t itit_ZZlprp_load_vvg0103_0104(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1069], a, 1);
 }
 
@@ -11115,7 +11116,7 @@ int32_t itit_ZZlprp_load_vvg0104_0106(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1070], a, 1);
 }
 
@@ -11124,7 +11125,7 @@ int32_t itit_ZZlprp_load_vvg0555_0103(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1071], a, 1);
 }
 
@@ -11133,7 +11134,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_2_ZZstring163(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1072], a, 1);
 }
 
@@ -11142,7 +11143,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_2_ZZstring19(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1073], a, 1);
 }
 
@@ -11151,7 +11152,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_3_ZZstring124(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1074], a, 1);
 }
 
@@ -11160,7 +11161,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_3_ZZstring43(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1075], a, 1);
 }
 
@@ -11169,7 +11170,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_4_ZZstring93(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1076], a, 1);
 }
 
@@ -11178,7 +11179,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_6_ZZstring125(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1077], a, 1);
 }
 
@@ -11187,7 +11188,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_1_ZZstring135(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1078], a, 1);
 }
 
@@ -11196,7 +11197,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_1_ZZstring138(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1079], a, 1);
 }
 
@@ -11205,7 +11206,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_1_ZZstring139(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1080], a, 1);
 }
 
@@ -11214,7 +11215,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_1_ZZstring147(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1081], a, 1);
 }
 
@@ -11223,7 +11224,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_1_ZZstring153(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1082], a, 1);
 }
 
@@ -11232,7 +11233,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_1_ZZstring154(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1083], a, 1);
 }
 
@@ -11241,7 +11242,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_2_ZZstring10(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1084], a, 1);
 }
 
@@ -11250,7 +11251,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_2_ZZstring108(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1085], a, 1);
 }
 
@@ -11259,7 +11260,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_2_ZZstring136(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1086], a, 1);
 }
 
@@ -11268,7 +11269,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_2_ZZstring145(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1087], a, 1);
 }
 
@@ -11277,7 +11278,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_2_ZZstring150(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1088], a, 1);
 }
 
@@ -11286,7 +11287,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_2_ZZstring169(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1089], a, 1);
 }
 
@@ -11295,7 +11296,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_2_ZZstring199(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1090], a, 1);
 }
 
@@ -11304,7 +11305,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_2_ZZstring55(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1091], a, 1);
 }
 
@@ -11313,7 +11314,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_2_ZZstring74(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1092], a, 1);
 }
 
@@ -11322,7 +11323,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_2_ZZstring78(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1093], a, 1);
 }
 
@@ -11331,7 +11332,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_3_ZZstring151(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1094], a, 1);
 }
 
@@ -11340,7 +11341,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4_ZZstring117(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1095], a, 1);
 }
 
@@ -11349,7 +11350,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4_ZZstring118(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1096], a, 1);
 }
 
@@ -11358,7 +11359,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4_ZZstring119(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1097], a, 1);
 }
 
@@ -11367,7 +11368,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4_ZZstring120(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1098], a, 1);
 }
 
@@ -11376,7 +11377,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4_ZZstring121(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1099], a, 1);
 }
 
@@ -11385,7 +11386,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4_ZZstring178(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1100], a, 1);
 }
 
@@ -11394,7 +11395,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_5_ZZstring11(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1101], a, 1);
 }
 
@@ -11403,7 +11404,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_3_1_ZZstring160(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1102], a, 1);
 }
 
@@ -11412,7 +11413,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_3_1_ZZstring5(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1103], a, 1);
 }
 
@@ -11421,7 +11422,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_3_1_ZZstring88(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1104], a, 1);
 }
 
@@ -11430,7 +11431,7 @@ int32_t itit_ZZ_lprp_load_vvg_0103_0104__insert_2pt_s_2_1_ZZstring138(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1105], a, 1);
 }
 
@@ -11439,7 +11440,7 @@ int32_t itit_ZZ_lprp_load_vvg_0103_0104__insert_2pt_s_2_1_ZZstring153(int32_t a0
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1106], a, 1);
 }
 
@@ -11448,7 +11449,7 @@ int32_t itit_ZZ_lprp_load_vvg_0103_0104__insert_2pt_s_2_1_ZZstring92(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1107], a, 1);
 }
 
@@ -11458,7 +11459,7 @@ int32_t itit_ZZ_lprp_load_vvg_0001_0002__insert_2pt_s_1_17(int32_t a0, int32_t a
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1108], a, 2);
 }
 
@@ -11468,7 +11469,7 @@ int32_t itit_ZZ_lprp_load_vvg_0001_0002__insert_2pt_s_1_5(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1109], a, 2);
 }
 
@@ -11478,7 +11479,7 @@ int32_t itit_ZZ_lprp_load_vvg_0001_0002__insert_2pt_s_1_6(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1110], a, 2);
 }
 
@@ -11488,7 +11489,7 @@ int32_t itit_ZZ_lprp_load_vvg_0001_0002__insert_2pt_s_1_7(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1111], a, 2);
 }
 
@@ -11498,7 +11499,7 @@ int32_t itit_ZZ_lprp_load_vvg_0001_0002__insert_2pt_s_1_8(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1112], a, 2);
 }
 
@@ -11508,7 +11509,7 @@ int32_t itit_ZZ_lprp_load_vvg_0001_0002__insert_2pt_s_1_9(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1113], a, 2);
 }
 
@@ -11518,7 +11519,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_10(int32_t a0, int32_t a
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1114], a, 2);
 }
 
@@ -11528,7 +11529,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_12(int32_t a0, int32_t a
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1115], a, 2);
 }
 
@@ -11538,7 +11539,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_14(int32_t a0, int32_t a
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1116], a, 2);
 }
 
@@ -11548,7 +11549,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_17(int32_t a0, int32_t a
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1117], a, 2);
 }
 
@@ -11558,7 +11559,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_19(int32_t a0, int32_t a
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1118], a, 2);
 }
 
@@ -11568,7 +11569,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_2(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1119], a, 2);
 }
 
@@ -11578,7 +11579,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_20(int32_t a0, int32_t a
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1120], a, 2);
 }
 
@@ -11588,7 +11589,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_21(int32_t a0, int32_t a
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1121], a, 2);
 }
 
@@ -11598,7 +11599,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_3(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1122], a, 2);
 }
 
@@ -11608,7 +11609,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_4(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1123], a, 2);
 }
 
@@ -11618,7 +11619,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_5(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1124], a, 2);
 }
 
@@ -11628,7 +11629,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_6(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1125], a, 2);
 }
 
@@ -11638,7 +11639,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_7(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1126], a, 2);
 }
 
@@ -11648,7 +11649,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_8(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1127], a, 2);
 }
 
@@ -11658,7 +11659,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_1_9(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1128], a, 2);
 }
 
@@ -11668,7 +11669,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_2(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1129], a, 2);
 }
 
@@ -11678,7 +11679,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_3(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1130], a, 2);
 }
 
@@ -11688,7 +11689,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1131], a, 2);
 }
 
@@ -11698,7 +11699,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_5(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1132], a, 2);
 }
 
@@ -11708,7 +11709,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_6(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1133], a, 2);
 }
 
@@ -11718,7 +11719,7 @@ int32_t itit_ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_7(int32_t a0, int32_t a1
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1134], a, 2);
 }
 
@@ -11728,7 +11729,7 @@ int32_t itit_ZZlprp_load_vvg__setd0087_0088(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1135], a, 2);
 }
 
@@ -11738,7 +11739,7 @@ int32_t itit_ZZlprp_load_vvg__setd0107_0108(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1136], a, 2);
 }
 
@@ -11749,7 +11750,7 @@ int32_t itit_ZZlprp_loadpn(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1137], a, 3);
 }
 
@@ -11760,7 +11761,7 @@ int32_t itit_ZZlprp_loadpn__comp(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1138], a, 3);
 }
 
@@ -11769,7 +11770,7 @@ int32_t itit_ZZlptarpta_loadpn__comp_vvg0033_0081(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1139], a, 1);
 }
 
@@ -11778,7 +11779,7 @@ int32_t itit_ZZlptarpta_loadpn__comp_vvg0035_0074(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1140], a, 1);
 }
 
@@ -11787,7 +11788,7 @@ int32_t itit_ZZlptarpta_loadpn__comp_vvg0073_0021(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1141], a, 1);
 }
 
@@ -11796,7 +11797,7 @@ int32_t itit_ZZlptarpta_loadpn__comp_vvg0073_0360(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1142], a, 1);
 }
 
@@ -11805,7 +11806,7 @@ int32_t itit_ZZlptarpta_loadpn__comp_vvg0075_0360(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1143], a, 1);
 }
 
@@ -11814,7 +11815,7 @@ int32_t itit_ZZlptarpta_loadpn__comp_vvg0103_0035(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1144], a, 1);
 }
 
@@ -11823,7 +11824,7 @@ int32_t itit_ZZlptarpta_loadpn__comp_vvg0204_0360(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1145], a, 1);
 }
 
@@ -11832,7 +11833,7 @@ int32_t itit_ZZlptarpta_loadpn__comp_vvg0205_0360(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1146], a, 1);
 }
 
@@ -11842,7 +11843,7 @@ int32_t itit_ZZlpta_load__setscan_l__0(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1147], a, 2);
 }
 
@@ -11852,7 +11853,7 @@ int32_t itit_ZZlpta_load__setscan_l__1(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1148], a, 2);
 }
 
@@ -11862,7 +11863,7 @@ int32_t itit_ZZlpta_load__setscan_l__2(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1149], a, 2);
 }
 
@@ -11872,7 +11873,7 @@ int32_t itit_ZZlpta_load__setscan_l__3(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1150], a, 2);
 }
 
@@ -11882,7 +11883,7 @@ int32_t itit_ZZlpta_load__setscan_l__4(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1151], a, 2);
 }
 
@@ -11892,7 +11893,7 @@ int32_t itit_ZZlpta_load__setscan_l__5(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1152], a, 2);
 }
 
@@ -11902,7 +11903,7 @@ int32_t itit_ZZlpta_load__setscan_l__7(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1153], a, 2);
 }
 
@@ -11912,7 +11913,7 @@ int32_t itit_ZZlpta_load__setscan_nof_l__1(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1154], a, 2);
 }
 
@@ -11922,7 +11923,7 @@ int32_t itit_ZZlpta_load__setscan_nof_l__4(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1155], a, 2);
 }
 
@@ -11932,7 +11933,7 @@ int32_t itit_ZZlpta_load__setscan_nof_r__1(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1156], a, 2);
 }
 
@@ -11942,7 +11943,7 @@ int32_t itit_ZZlpta_load__setscan_nof_r__4(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1157], a, 2);
 }
 
@@ -11952,7 +11953,7 @@ int32_t itit_ZZlpta_load__setscan_r__0(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1158], a, 2);
 }
 
@@ -11962,7 +11963,7 @@ int32_t itit_ZZlpta_load__setscan_r__1(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1159], a, 2);
 }
 
@@ -11972,7 +11973,7 @@ int32_t itit_ZZlpta_load__setscan_r__2(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1160], a, 2);
 }
 
@@ -11982,7 +11983,7 @@ int32_t itit_ZZlpta_load__setscan_r__3(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1161], a, 2);
 }
 
@@ -11992,7 +11993,7 @@ int32_t itit_ZZlpta_load__setscan_r__4(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1162], a, 2);
 }
 
@@ -12002,7 +12003,7 @@ int32_t itit_ZZlpta_load__setscan_r__5(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1163], a, 2);
 }
 
@@ -12012,7 +12013,7 @@ int32_t itit_ZZlpta_load__setscan_r__7(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1164], a, 2);
 }
 
@@ -12022,7 +12023,7 @@ int32_t itit_ZZlpta_load__setscan_r__9(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1165], a, 2);
 }
 
@@ -12033,7 +12034,7 @@ int32_t itit_ZZlpta_load_move_storepr_1(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1166], a, 3);
 }
 
@@ -12044,7 +12045,7 @@ int32_t itit_ZZlpta_load_move_storepr_2(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1167], a, 3);
 }
 
@@ -12055,7 +12056,7 @@ int32_t itit_ZZlpta_load_move_storepr_4(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1168], a, 3);
 }
 
@@ -12066,7 +12067,7 @@ int32_t itit_ZZlpta_load_move_storepr_7(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1169], a, 3);
 }
 
@@ -12075,7 +12076,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0001r__1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1170], a, 1);
 }
 
@@ -12084,7 +12085,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0014l__1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1171], a, 1);
 }
 
@@ -12093,7 +12094,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0015r__1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1172], a, 1);
 }
 
@@ -12102,7 +12103,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0021r__4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1173], a, 1);
 }
 
@@ -12111,7 +12112,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0021r__7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1174], a, 1);
 }
 
@@ -12120,7 +12121,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0022r__4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1175], a, 1);
 }
 
@@ -12129,7 +12130,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0033l__7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1176], a, 1);
 }
 
@@ -12138,7 +12139,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0033r__2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1177], a, 1);
 }
 
@@ -12147,7 +12148,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0033r__7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1178], a, 1);
 }
 
@@ -12156,7 +12157,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0035l__2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1179], a, 1);
 }
 
@@ -12165,7 +12166,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0035r__2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1180], a, 1);
 }
 
@@ -12174,7 +12175,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0036l__2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1181], a, 1);
 }
 
@@ -12183,7 +12184,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0036r__2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1182], a, 1);
 }
 
@@ -12192,7 +12193,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0087r__4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1183], a, 1);
 }
 
@@ -12201,7 +12202,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0088l__1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1184], a, 1);
 }
 
@@ -12210,7 +12211,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0091l__1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1185], a, 1);
 }
 
@@ -12219,7 +12220,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0095r__5(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1186], a, 1);
 }
 
@@ -12228,7 +12229,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0103l__2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1187], a, 1);
 }
 
@@ -12237,7 +12238,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0103l__5(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1188], a, 1);
 }
 
@@ -12246,7 +12247,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0103r__2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1189], a, 1);
 }
 
@@ -12255,7 +12256,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0104l__2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1190], a, 1);
 }
 
@@ -12264,7 +12265,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0104r__2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1191], a, 1);
 }
 
@@ -12273,7 +12274,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0106r__2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1192], a, 1);
 }
 
@@ -12282,7 +12283,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0107r__1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1193], a, 1);
 }
 
@@ -12291,7 +12292,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0113r__4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1194], a, 1);
 }
 
@@ -12300,7 +12301,7 @@ int32_t itit_ZZlpta_load_vvg__setscan_0207r__1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1195], a, 1);
 }
 
@@ -12309,7 +12310,7 @@ int32_t itit_ZZlpta_loadp_vvg0091(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1196], a, 1);
 }
 
@@ -12318,7 +12319,7 @@ int32_t itit_ZZlpta_loadp_vvg0103(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1197], a, 1);
 }
 
@@ -12327,7 +12328,7 @@ int32_t itit_ZZlpta_loadp_vvg0104(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1198], a, 1);
 }
 
@@ -12336,7 +12337,7 @@ int32_t itit_ZZlpta_loadp_vvg0106(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1199], a, 1);
 }
 
@@ -12345,7 +12346,7 @@ int32_t itit_ZZlpta_loadpn_vvg0000(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1200], a, 1);
 }
 
@@ -12354,7 +12355,7 @@ int32_t itit_ZZlpta_loadpn_vvg0024(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1201], a, 1);
 }
 
@@ -12363,7 +12364,7 @@ int32_t itit_ZZlpta_loadpn_vvg0081(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1202], a, 1);
 }
 
@@ -12372,7 +12373,7 @@ int32_t itit_ZZlpta_loadpn_vvg0087(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1203], a, 1);
 }
 
@@ -12381,7 +12382,7 @@ int32_t itit_ZZlpta_loadpn_vvg0088(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1204], a, 1);
 }
 
@@ -12390,7 +12391,7 @@ int32_t itit_ZZlpta_loadpn_vvg0092(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1205], a, 1);
 }
 
@@ -12399,7 +12400,7 @@ int32_t itit_ZZlpta_loadpn_vvg0093(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1206], a, 1);
 }
 
@@ -12408,7 +12409,7 @@ int32_t itit_ZZlpta_loadpn_vvg0094(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1207], a, 1);
 }
 
@@ -12417,7 +12418,7 @@ int32_t itit_ZZlpta_loadpn_vvg0104(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1208], a, 1);
 }
 
@@ -12426,7 +12427,7 @@ int32_t itit_ZZlpta_movel_4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1209], a, 1);
 }
 
@@ -12435,7 +12436,7 @@ int32_t itit_ZZlpta_mover_2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1210], a, 1);
 }
 
@@ -12444,7 +12445,7 @@ int32_t itit_ZZlpta_mover_4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1211], a, 1);
 }
 
@@ -12453,7 +12454,7 @@ int32_t itit_ZZlpta_mover_7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1212], a, 1);
 }
 
@@ -12463,7 +12464,7 @@ int32_t itit_ZZlpta_loadp__test_ptr(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1213], a, 2);
 }
 
@@ -12472,7 +12473,7 @@ int32_t itit_ZZmark_s4_2_1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1214], a, 1);
 }
 
@@ -12481,7 +12482,7 @@ int32_t itit_ZZmark_s4_2_12(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1215], a, 1);
 }
 
@@ -12490,7 +12491,7 @@ int32_t itit_ZZmark_s4_2_16(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1216], a, 1);
 }
 
@@ -12499,7 +12500,7 @@ int32_t itit_ZZmark_s4_2_2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1217], a, 1);
 }
 
@@ -12508,7 +12509,7 @@ int32_t itit_ZZmark_s4_2_4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1218], a, 1);
 }
 
@@ -12518,7 +12519,7 @@ int32_t itit_ZZmark_v2_9(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1219], a, 2);
 }
 
@@ -12527,7 +12528,7 @@ int32_t itit_ZZnpush_fld2_9(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1220], a, 1);
 }
 
@@ -12536,7 +12537,7 @@ int32_t itit_ZZnpush_fld4_3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1221], a, 1);
 }
 
@@ -12545,7 +12546,7 @@ int32_t itit_ZZnpush_fld7_0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1222], a, 1);
 }
 
@@ -12554,7 +12555,7 @@ int32_t itit_ZZnpush_i_0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1223], a, 1);
 }
 
@@ -12563,7 +12564,7 @@ int32_t itit_ZZnpush_i_1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1224], a, 1);
 }
 
@@ -12572,7 +12573,7 @@ int32_t itit_ZZnpush_i_2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1225], a, 1);
 }
 
@@ -12581,7 +12582,7 @@ int32_t itit_ZZnpush_s_0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1226], a, 1);
 }
 
@@ -12590,7 +12591,7 @@ int32_t itit_ZZnpush_s_1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1227], a, 1);
 }
 
@@ -12599,7 +12600,7 @@ int32_t itit_ZZnpush_s_10(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1228], a, 1);
 }
 
@@ -12608,7 +12609,7 @@ int32_t itit_ZZnpush_s_16(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1229], a, 1);
 }
 
@@ -12617,7 +12618,7 @@ int32_t itit_ZZnpush_s_17(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1230], a, 1);
 }
 
@@ -12626,7 +12627,7 @@ int32_t itit_ZZnpush_s_18(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1231], a, 1);
 }
 
@@ -12635,7 +12636,7 @@ int32_t itit_ZZnpush_s_2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1232], a, 1);
 }
 
@@ -12644,7 +12645,7 @@ int32_t itit_ZZnpush_s_22(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1233], a, 1);
 }
 
@@ -12653,7 +12654,7 @@ int32_t itit_ZZnpush_s_3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1234], a, 1);
 }
 
@@ -12662,7 +12663,7 @@ int32_t itit_ZZnpush_s_5(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1235], a, 1);
 }
 
@@ -12671,7 +12672,7 @@ int32_t itit_ZZnpush_s_6(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1236], a, 1);
 }
 
@@ -12680,7 +12681,7 @@ int32_t itit_ZZnpush_s_7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1237], a, 1);
 }
 
@@ -12689,7 +12690,7 @@ int32_t itit_ZZnpush_s_8(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1238], a, 1);
 }
 
@@ -12698,7 +12699,7 @@ int32_t itit_ZZnpush_s_9(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1239], a, 1);
 }
 
@@ -12709,7 +12710,7 @@ int32_t itit_ZZpush_ptr_init2(int32_t a0, int32_t a1, int32_t a2)
     a[0] = a0;
     a[1] = a1;
     a[2] = a2;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1240], a, 3);
 }
 
@@ -12721,7 +12722,7 @@ int32_t itit_ZZpush_ptr_init3(int32_t a0, int32_t a1, int32_t a2, int32_t a3)
     a[1] = a1;
     a[2] = a2;
     a[3] = a3;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1241], a, 4);
 }
 
@@ -12734,7 +12735,7 @@ int32_t itit_ZZpush_ptr_init4(int32_t a0, int32_t a1, int32_t a2, int32_t a3, in
     a[2] = a2;
     a[3] = a3;
     a[4] = a4;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1242], a, 5);
 }
 
@@ -12744,7 +12745,7 @@ int32_t itit_ZZsavescptr10(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1243], a, 2);
 }
 
@@ -12754,7 +12755,7 @@ int32_t itit_ZZsavescptr11(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1244], a, 2);
 }
 
@@ -12764,7 +12765,7 @@ int32_t itit_ZZsavescptr12(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1245], a, 2);
 }
 
@@ -12774,7 +12775,7 @@ int32_t itit_ZZsavescptr13(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1246], a, 2);
 }
 
@@ -12784,7 +12785,7 @@ int32_t itit_ZZsavescptr14(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1247], a, 2);
 }
 
@@ -12794,7 +12795,7 @@ int32_t itit_ZZsavescptr15(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1248], a, 2);
 }
 
@@ -12804,7 +12805,7 @@ int32_t itit_ZZsavescptr16(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1249], a, 2);
 }
 
@@ -12814,7 +12815,7 @@ int32_t itit_ZZsavescptr17(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1250], a, 2);
 }
 
@@ -12824,7 +12825,7 @@ int32_t itit_ZZsavescptr18(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1251], a, 2);
 }
 
@@ -12834,7 +12835,7 @@ int32_t itit_ZZsavescptr19(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1252], a, 2);
 }
 
@@ -12844,7 +12845,7 @@ int32_t itit_ZZsavescptr2(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1253], a, 2);
 }
 
@@ -12854,7 +12855,7 @@ int32_t itit_ZZsavescptr20(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1254], a, 2);
 }
 
@@ -12864,7 +12865,7 @@ int32_t itit_ZZsavescptr21(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1255], a, 2);
 }
 
@@ -12874,7 +12875,7 @@ int32_t itit_ZZsavescptr22(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1256], a, 2);
 }
 
@@ -12884,7 +12885,7 @@ int32_t itit_ZZsavescptr23(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1257], a, 2);
 }
 
@@ -12894,7 +12895,7 @@ int32_t itit_ZZsavescptr24(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1258], a, 2);
 }
 
@@ -12904,7 +12905,7 @@ int32_t itit_ZZsavescptr25(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1259], a, 2);
 }
 
@@ -12914,7 +12915,7 @@ int32_t itit_ZZsavescptr26(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1260], a, 2);
 }
 
@@ -12924,7 +12925,7 @@ int32_t itit_ZZsavescptr27(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1261], a, 2);
 }
 
@@ -12934,7 +12935,7 @@ int32_t itit_ZZsavescptr28(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1262], a, 2);
 }
 
@@ -12944,7 +12945,7 @@ int32_t itit_ZZsavescptr3(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1263], a, 2);
 }
 
@@ -12954,7 +12955,7 @@ int32_t itit_ZZsavescptr30(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1264], a, 2);
 }
 
@@ -12964,7 +12965,7 @@ int32_t itit_ZZsavescptr31(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1265], a, 2);
 }
 
@@ -12974,7 +12975,7 @@ int32_t itit_ZZsavescptr33(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1266], a, 2);
 }
 
@@ -12984,7 +12985,7 @@ int32_t itit_ZZsavescptr34(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1267], a, 2);
 }
 
@@ -12994,7 +12995,7 @@ int32_t itit_ZZsavescptr37(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1268], a, 2);
 }
 
@@ -13004,7 +13005,7 @@ int32_t itit_ZZsavescptr38(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1269], a, 2);
 }
 
@@ -13014,7 +13015,7 @@ int32_t itit_ZZsavescptr4(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1270], a, 2);
 }
 
@@ -13024,7 +13025,7 @@ int32_t itit_ZZsavescptr44(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1271], a, 2);
 }
 
@@ -13034,7 +13035,7 @@ int32_t itit_ZZsavescptr46(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1272], a, 2);
 }
 
@@ -13044,7 +13045,7 @@ int32_t itit_ZZsavescptr48(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1273], a, 2);
 }
 
@@ -13054,7 +13055,7 @@ int32_t itit_ZZsavescptr5(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1274], a, 2);
 }
 
@@ -13064,7 +13065,7 @@ int32_t itit_ZZsavescptr51(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1275], a, 2);
 }
 
@@ -13074,7 +13075,7 @@ int32_t itit_ZZsavescptr52(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1276], a, 2);
 }
 
@@ -13084,7 +13085,7 @@ int32_t itit_ZZsavescptr53(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1277], a, 2);
 }
 
@@ -13094,7 +13095,7 @@ int32_t itit_ZZsavescptr6(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1278], a, 2);
 }
 
@@ -13104,7 +13105,7 @@ int32_t itit_ZZsavescptr7(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1279], a, 2);
 }
 
@@ -13114,7 +13115,7 @@ int32_t itit_ZZsavescptr8(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1280], a, 2);
 }
 
@@ -13124,7 +13125,7 @@ int32_t itit_ZZsavescptr9(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1281], a, 2);
 }
 
@@ -13133,7 +13134,7 @@ int32_t itit_ZZsetscan_l__4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1282], a, 1);
 }
 
@@ -13142,7 +13143,7 @@ int32_t itit_ZZsetscan_l__5(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1283], a, 1);
 }
 
@@ -13151,7 +13152,7 @@ int32_t itit_ZZsetscan_r__4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1284], a, 1);
 }
 
@@ -13160,7 +13161,7 @@ int32_t itit_ZZstartloop1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1285], a, 1);
 }
 
@@ -13169,7 +13170,7 @@ int32_t itit_ZZstartloop2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1286], a, 1);
 }
 
@@ -13178,7 +13179,7 @@ int32_t itit_ZZstartloop3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1287], a, 1);
 }
 
@@ -13187,7 +13188,7 @@ int32_t itit_ZZstartloop5(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1288], a, 1);
 }
 
@@ -13196,7 +13197,7 @@ int32_t itit_ZZstartloop7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1289], a, 1);
 }
 
@@ -13205,7 +13206,7 @@ int32_t itit_ZZstartloop9(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1290], a, 1);
 }
 
@@ -13214,7 +13215,7 @@ int32_t itit_ZZstarttest1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1291], a, 1);
 }
 
@@ -13223,7 +13224,7 @@ int32_t itit_ZZstarttest10(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1292], a, 1);
 }
 
@@ -13232,7 +13233,7 @@ int32_t itit_ZZstarttest101(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1293], a, 1);
 }
 
@@ -13241,7 +13242,7 @@ int32_t itit_ZZstarttest103(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1294], a, 1);
 }
 
@@ -13250,7 +13251,7 @@ int32_t itit_ZZstarttest108(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1295], a, 1);
 }
 
@@ -13259,7 +13260,7 @@ int32_t itit_ZZstarttest109(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1296], a, 1);
 }
 
@@ -13268,7 +13269,7 @@ int32_t itit_ZZstarttest11(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1297], a, 1);
 }
 
@@ -13277,7 +13278,7 @@ int32_t itit_ZZstarttest12(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1298], a, 1);
 }
 
@@ -13286,7 +13287,7 @@ int32_t itit_ZZstarttest13(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1299], a, 1);
 }
 
@@ -13295,7 +13296,7 @@ int32_t itit_ZZstarttest14(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1300], a, 1);
 }
 
@@ -13304,7 +13305,7 @@ int32_t itit_ZZstarttest15(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1301], a, 1);
 }
 
@@ -13313,7 +13314,7 @@ int32_t itit_ZZstarttest16(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1302], a, 1);
 }
 
@@ -13322,7 +13323,7 @@ int32_t itit_ZZstarttest17(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1303], a, 1);
 }
 
@@ -13331,7 +13332,7 @@ int32_t itit_ZZstarttest18(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1304], a, 1);
 }
 
@@ -13340,7 +13341,7 @@ int32_t itit_ZZstarttest19(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1305], a, 1);
 }
 
@@ -13349,7 +13350,7 @@ int32_t itit_ZZstarttest2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1306], a, 1);
 }
 
@@ -13358,7 +13359,7 @@ int32_t itit_ZZstarttest20(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1307], a, 1);
 }
 
@@ -13367,7 +13368,7 @@ int32_t itit_ZZstarttest21(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1308], a, 1);
 }
 
@@ -13376,7 +13377,7 @@ int32_t itit_ZZstarttest22(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1309], a, 1);
 }
 
@@ -13385,7 +13386,7 @@ int32_t itit_ZZstarttest23(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1310], a, 1);
 }
 
@@ -13394,7 +13395,7 @@ int32_t itit_ZZstarttest24(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1311], a, 1);
 }
 
@@ -13403,7 +13404,7 @@ int32_t itit_ZZstarttest25(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1312], a, 1);
 }
 
@@ -13412,7 +13413,7 @@ int32_t itit_ZZstarttest26(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1313], a, 1);
 }
 
@@ -13421,7 +13422,7 @@ int32_t itit_ZZstarttest27(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1314], a, 1);
 }
 
@@ -13430,7 +13431,7 @@ int32_t itit_ZZstarttest28(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1315], a, 1);
 }
 
@@ -13439,7 +13440,7 @@ int32_t itit_ZZstarttest29(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1316], a, 1);
 }
 
@@ -13448,7 +13449,7 @@ int32_t itit_ZZstarttest3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1317], a, 1);
 }
 
@@ -13457,7 +13458,7 @@ int32_t itit_ZZstarttest30(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1318], a, 1);
 }
 
@@ -13466,7 +13467,7 @@ int32_t itit_ZZstarttest31(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1319], a, 1);
 }
 
@@ -13475,7 +13476,7 @@ int32_t itit_ZZstarttest32(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1320], a, 1);
 }
 
@@ -13484,7 +13485,7 @@ int32_t itit_ZZstarttest33(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1321], a, 1);
 }
 
@@ -13493,7 +13494,7 @@ int32_t itit_ZZstarttest34(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1322], a, 1);
 }
 
@@ -13502,7 +13503,7 @@ int32_t itit_ZZstarttest35(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1323], a, 1);
 }
 
@@ -13511,7 +13512,7 @@ int32_t itit_ZZstarttest36(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1324], a, 1);
 }
 
@@ -13520,7 +13521,7 @@ int32_t itit_ZZstarttest37(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1325], a, 1);
 }
 
@@ -13529,7 +13530,7 @@ int32_t itit_ZZstarttest38(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1326], a, 1);
 }
 
@@ -13538,7 +13539,7 @@ int32_t itit_ZZstarttest39(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1327], a, 1);
 }
 
@@ -13547,7 +13548,7 @@ int32_t itit_ZZstarttest4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1328], a, 1);
 }
 
@@ -13556,7 +13557,7 @@ int32_t itit_ZZstarttest40(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1329], a, 1);
 }
 
@@ -13565,7 +13566,7 @@ int32_t itit_ZZstarttest41(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1330], a, 1);
 }
 
@@ -13574,7 +13575,7 @@ int32_t itit_ZZstarttest42(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1331], a, 1);
 }
 
@@ -13583,7 +13584,7 @@ int32_t itit_ZZstarttest43(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1332], a, 1);
 }
 
@@ -13592,7 +13593,7 @@ int32_t itit_ZZstarttest44(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1333], a, 1);
 }
 
@@ -13601,7 +13602,7 @@ int32_t itit_ZZstarttest45(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1334], a, 1);
 }
 
@@ -13610,7 +13611,7 @@ int32_t itit_ZZstarttest46(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1335], a, 1);
 }
 
@@ -13619,7 +13620,7 @@ int32_t itit_ZZstarttest47(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1336], a, 1);
 }
 
@@ -13628,7 +13629,7 @@ int32_t itit_ZZstarttest48(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1337], a, 1);
 }
 
@@ -13637,7 +13638,7 @@ int32_t itit_ZZstarttest49(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1338], a, 1);
 }
 
@@ -13646,7 +13647,7 @@ int32_t itit_ZZstarttest5(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1339], a, 1);
 }
 
@@ -13655,7 +13656,7 @@ int32_t itit_ZZstarttest50(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1340], a, 1);
 }
 
@@ -13664,7 +13665,7 @@ int32_t itit_ZZstarttest51(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1341], a, 1);
 }
 
@@ -13673,7 +13674,7 @@ int32_t itit_ZZstarttest52(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1342], a, 1);
 }
 
@@ -13682,7 +13683,7 @@ int32_t itit_ZZstarttest53(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1343], a, 1);
 }
 
@@ -13691,7 +13692,7 @@ int32_t itit_ZZstarttest54(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1344], a, 1);
 }
 
@@ -13700,7 +13701,7 @@ int32_t itit_ZZstarttest55(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1345], a, 1);
 }
 
@@ -13709,7 +13710,7 @@ int32_t itit_ZZstarttest56(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1346], a, 1);
 }
 
@@ -13718,7 +13719,7 @@ int32_t itit_ZZstarttest57(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1347], a, 1);
 }
 
@@ -13727,7 +13728,7 @@ int32_t itit_ZZstarttest58(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1348], a, 1);
 }
 
@@ -13736,7 +13737,7 @@ int32_t itit_ZZstarttest59(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1349], a, 1);
 }
 
@@ -13745,7 +13746,7 @@ int32_t itit_ZZstarttest6(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1350], a, 1);
 }
 
@@ -13754,7 +13755,7 @@ int32_t itit_ZZstarttest60(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1351], a, 1);
 }
 
@@ -13763,7 +13764,7 @@ int32_t itit_ZZstarttest61(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1352], a, 1);
 }
 
@@ -13772,7 +13773,7 @@ int32_t itit_ZZstarttest62(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1353], a, 1);
 }
 
@@ -13781,7 +13782,7 @@ int32_t itit_ZZstarttest63(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1354], a, 1);
 }
 
@@ -13790,7 +13791,7 @@ int32_t itit_ZZstarttest64(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1355], a, 1);
 }
 
@@ -13799,7 +13800,7 @@ int32_t itit_ZZstarttest66(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1356], a, 1);
 }
 
@@ -13808,7 +13809,7 @@ int32_t itit_ZZstarttest67(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1357], a, 1);
 }
 
@@ -13817,7 +13818,7 @@ int32_t itit_ZZstarttest68(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1358], a, 1);
 }
 
@@ -13826,7 +13827,7 @@ int32_t itit_ZZstarttest69(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1359], a, 1);
 }
 
@@ -13835,7 +13836,7 @@ int32_t itit_ZZstarttest7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1360], a, 1);
 }
 
@@ -13844,7 +13845,7 @@ int32_t itit_ZZstarttest70(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1361], a, 1);
 }
 
@@ -13853,7 +13854,7 @@ int32_t itit_ZZstarttest71(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1362], a, 1);
 }
 
@@ -13862,7 +13863,7 @@ int32_t itit_ZZstarttest72(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1363], a, 1);
 }
 
@@ -13871,7 +13872,7 @@ int32_t itit_ZZstarttest73(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1364], a, 1);
 }
 
@@ -13880,7 +13881,7 @@ int32_t itit_ZZstarttest75(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1365], a, 1);
 }
 
@@ -13889,7 +13890,7 @@ int32_t itit_ZZstarttest76(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1366], a, 1);
 }
 
@@ -13898,7 +13899,7 @@ int32_t itit_ZZstarttest77(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1367], a, 1);
 }
 
@@ -13907,7 +13908,7 @@ int32_t itit_ZZstarttest78(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1368], a, 1);
 }
 
@@ -13916,7 +13917,7 @@ int32_t itit_ZZstarttest8(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1369], a, 1);
 }
 
@@ -13925,7 +13926,7 @@ int32_t itit_ZZstarttest80(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1370], a, 1);
 }
 
@@ -13934,7 +13935,7 @@ int32_t itit_ZZstarttest81(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1371], a, 1);
 }
 
@@ -13943,7 +13944,7 @@ int32_t itit_ZZstarttest82(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1372], a, 1);
 }
 
@@ -13952,7 +13953,7 @@ int32_t itit_ZZstarttest84(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1373], a, 1);
 }
 
@@ -13961,7 +13962,7 @@ int32_t itit_ZZstarttest85(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1374], a, 1);
 }
 
@@ -13970,7 +13971,7 @@ int32_t itit_ZZstarttest87(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1375], a, 1);
 }
 
@@ -13979,7 +13980,7 @@ int32_t itit_ZZstarttest88(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1376], a, 1);
 }
 
@@ -13988,7 +13989,7 @@ int32_t itit_ZZstarttest89(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1377], a, 1);
 }
 
@@ -13997,7 +13998,7 @@ int32_t itit_ZZstarttest9(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1378], a, 1);
 }
 
@@ -14006,7 +14007,7 @@ int32_t itit_ZZstarttest90(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1379], a, 1);
 }
 
@@ -14015,7 +14016,7 @@ int32_t itit_ZZstarttest91(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1380], a, 1);
 }
 
@@ -14024,7 +14025,7 @@ int32_t itit_ZZstarttest92(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1381], a, 1);
 }
 
@@ -14033,7 +14034,7 @@ int32_t itit_ZZstarttest93(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1382], a, 1);
 }
 
@@ -14042,7 +14043,7 @@ int32_t itit_ZZstarttest94(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1383], a, 1);
 }
 
@@ -14051,7 +14052,7 @@ int32_t itit_ZZstarttest98(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1384], a, 1);
 }
 
@@ -14060,7 +14061,7 @@ int32_t itit_ZZtestFldeq1_0_3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1385], a, 1);
 }
 
@@ -14069,7 +14070,7 @@ int32_t itit_ZZtestFldeq1_0_72(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1386], a, 1);
 }
 
@@ -14078,7 +14079,7 @@ int32_t itit_ZZtestFldeq1_0_73(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1387], a, 1);
 }
 
@@ -14087,7 +14088,7 @@ int32_t itit_ZZtestFldeq1_1_2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1388], a, 1);
 }
 
@@ -14096,7 +14097,7 @@ int32_t itit_ZZtestFldeq1_3_1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1389], a, 1);
 }
 
@@ -14105,7 +14106,7 @@ int32_t itit_ZZtestFldeq1_3_2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1390], a, 1);
 }
 
@@ -14114,7 +14115,7 @@ int32_t itit_ZZtestFldeq1_3_4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1391], a, 1);
 }
 
@@ -14123,7 +14124,7 @@ int32_t itit_ZZtestFldeq1_4_1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1392], a, 1);
 }
 
@@ -14132,7 +14133,7 @@ int32_t itit_ZZtestFldeq1_4_2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1393], a, 1);
 }
 
@@ -14141,7 +14142,7 @@ int32_t itit_ZZtestFldeq1_5_0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1394], a, 1);
 }
 
@@ -14150,7 +14151,7 @@ int32_t itit_ZZtestFldeq2_0_17(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1395], a, 1);
 }
 
@@ -14159,7 +14160,7 @@ int32_t itit_ZZtestFldeq2_0_18(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1396], a, 1);
 }
 
@@ -14168,7 +14169,7 @@ int32_t itit_ZZtestFldeq2_0_2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1397], a, 1);
 }
 
@@ -14177,7 +14178,7 @@ int32_t itit_ZZtestFldeq2_0_21(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1398], a, 1);
 }
 
@@ -14186,7 +14187,7 @@ int32_t itit_ZZtestFldeq2_0_22(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1399], a, 1);
 }
 
@@ -14195,7 +14196,7 @@ int32_t itit_ZZtestFldeq2_0_23(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1400], a, 1);
 }
 
@@ -14204,7 +14205,7 @@ int32_t itit_ZZtestFldeq2_0_24(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1401], a, 1);
 }
 
@@ -14213,7 +14214,7 @@ int32_t itit_ZZtestFldeq2_0_25(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1402], a, 1);
 }
 
@@ -14222,7 +14223,7 @@ int32_t itit_ZZtestFldeq2_0_26(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1403], a, 1);
 }
 
@@ -14231,7 +14232,7 @@ int32_t itit_ZZtestFldeq2_0_27(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1404], a, 1);
 }
 
@@ -14240,7 +14241,7 @@ int32_t itit_ZZtestFldeq2_0_30(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1405], a, 1);
 }
 
@@ -14249,7 +14250,7 @@ int32_t itit_ZZtestFldeq2_0_31(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1406], a, 1);
 }
 
@@ -14258,7 +14259,7 @@ int32_t itit_ZZtestFldeq2_0_34(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1407], a, 1);
 }
 
@@ -14267,7 +14268,7 @@ int32_t itit_ZZtestFldeq2_0_4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1408], a, 1);
 }
 
@@ -14276,7 +14277,7 @@ int32_t itit_ZZtestFldeq2_0_5(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1409], a, 1);
 }
 
@@ -14285,7 +14286,7 @@ int32_t itit_ZZtestFldeq2_10_1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1410], a, 1);
 }
 
@@ -14294,7 +14295,7 @@ int32_t itit_ZZtestFldeq2_10_2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1411], a, 1);
 }
 
@@ -14303,7 +14304,7 @@ int32_t itit_ZZtestFldeq2_12_0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1412], a, 1);
 }
 
@@ -14312,7 +14313,7 @@ int32_t itit_ZZtestFldeq2_1_1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1413], a, 1);
 }
 
@@ -14321,7 +14322,7 @@ int32_t itit_ZZtestFldeq2_1_2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1414], a, 1);
 }
 
@@ -14330,7 +14331,7 @@ int32_t itit_ZZtestFldeq2_2_0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1415], a, 1);
 }
 
@@ -14339,7 +14340,7 @@ int32_t itit_ZZtestFldeq2_3_0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1416], a, 1);
 }
 
@@ -14348,7 +14349,7 @@ int32_t itit_ZZtestFldeq2_4_0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1417], a, 1);
 }
 
@@ -14357,7 +14358,7 @@ int32_t itit_ZZtestFldeq2_4_1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1418], a, 1);
 }
 
@@ -14366,7 +14367,7 @@ int32_t itit_ZZtestFldeq2_4_3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1419], a, 1);
 }
 
@@ -14375,7 +14376,7 @@ int32_t itit_ZZtestFldeq2_4_4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1420], a, 1);
 }
 
@@ -14384,7 +14385,7 @@ int32_t itit_ZZtestFldeq2_4_5(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1421], a, 1);
 }
 
@@ -14393,7 +14394,7 @@ int32_t itit_ZZtestFldeq2_4_6(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1422], a, 1);
 }
 
@@ -14402,7 +14403,7 @@ int32_t itit_ZZtestFldeq2_4_7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1423], a, 1);
 }
 
@@ -14411,7 +14412,7 @@ int32_t itit_ZZtestFldeq2_4_9(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1424], a, 1);
 }
 
@@ -14420,7 +14421,7 @@ int32_t itit_ZZtestFldeq2_5_0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1425], a, 1);
 }
 
@@ -14429,7 +14430,7 @@ int32_t itit_ZZtestFldeq2_5_1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1426], a, 1);
 }
 
@@ -14438,7 +14439,7 @@ int32_t itit_ZZtestFldeq2_5_2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1427], a, 1);
 }
 
@@ -14447,7 +14448,7 @@ int32_t itit_ZZtestFldeq2_5_3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1428], a, 1);
 }
 
@@ -14456,7 +14457,7 @@ int32_t itit_ZZtestFldeq2_5_4(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1429], a, 1);
 }
 
@@ -14465,7 +14466,7 @@ int32_t itit_ZZtestFldeq2_6_0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1430], a, 1);
 }
 
@@ -14474,7 +14475,7 @@ int32_t itit_ZZtestFldeq2_6_2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1431], a, 1);
 }
 
@@ -14483,7 +14484,7 @@ int32_t itit_ZZtestFldeq2_7_0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1432], a, 1);
 }
 
@@ -14492,7 +14493,7 @@ int32_t itit_ZZtestFldeq2_7_1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1433], a, 1);
 }
 
@@ -14501,7 +14502,7 @@ int32_t itit_ZZtestFldeq2_7_2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1434], a, 1);
 }
 
@@ -14510,7 +14511,7 @@ int32_t itit_ZZtestFldeq3_0_1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1435], a, 1);
 }
 
@@ -14519,7 +14520,7 @@ int32_t itit_ZZtestFldeq3_0_2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1436], a, 1);
 }
 
@@ -14528,7 +14529,7 @@ int32_t itit_ZZtestFldeq3_0_3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1437], a, 1);
 }
 
@@ -14537,7 +14538,7 @@ int32_t itit_ZZtestFldeq4_1_0(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1438], a, 1);
 }
 
@@ -14546,7 +14547,7 @@ int32_t itit_ZZtestFldeq4_1_10(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1439], a, 1);
 }
 
@@ -14555,7 +14556,7 @@ int32_t itit_ZZtestFldeq4_1_13(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1440], a, 1);
 }
 
@@ -14564,7 +14565,7 @@ int32_t itit_ZZtestFldeq4_1_16(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1441], a, 1);
 }
 
@@ -14573,7 +14574,7 @@ int32_t itit_ZZtestFldeq4_1_17(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1442], a, 1);
 }
 
@@ -14582,7 +14583,7 @@ int32_t itit_ZZtestFldeq4_1_18(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1443], a, 1);
 }
 
@@ -14591,7 +14592,7 @@ int32_t itit_ZZtestFldeq4_1_21(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1444], a, 1);
 }
 
@@ -14600,7 +14601,7 @@ int32_t itit_ZZtestFldeq4_1_22(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1445], a, 1);
 }
 
@@ -14609,7 +14610,7 @@ int32_t itit_ZZtestFldeq4_1_6(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1446], a, 1);
 }
 
@@ -14618,7 +14619,7 @@ int32_t itit_ZZtestFldeq4_1_7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1447], a, 1);
 }
 
@@ -14627,7 +14628,7 @@ int32_t itit_ZZtestFldeq4_1_8(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1448], a, 1);
 }
 
@@ -14636,7 +14637,7 @@ int32_t itit_ZZtestFldeq4_1_9(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1449], a, 1);
 }
 
@@ -14645,7 +14646,7 @@ int32_t itit_ZZtestFldeq4_2_1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1450], a, 1);
 }
 
@@ -14654,7 +14655,7 @@ int32_t itit_ZZtestFldeq4_2_10(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1451], a, 1);
 }
 
@@ -14663,7 +14664,7 @@ int32_t itit_ZZtestFldeq4_2_12(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1452], a, 1);
 }
 
@@ -14672,7 +14673,7 @@ int32_t itit_ZZtestFldeq4_2_13(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1453], a, 1);
 }
 
@@ -14681,7 +14682,7 @@ int32_t itit_ZZtestFldeq4_2_2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1454], a, 1);
 }
 
@@ -14690,7 +14691,7 @@ int32_t itit_ZZtestFldeq4_2_5(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1455], a, 1);
 }
 
@@ -14699,7 +14700,7 @@ int32_t itit_ZZtestFldeq4_2_7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1456], a, 1);
 }
 
@@ -14708,7 +14709,7 @@ int32_t itit_ZZtestFldeq4_6_1(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1457], a, 1);
 }
 
@@ -14717,7 +14718,7 @@ int32_t itit_ZZtestFldeq4_6_3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1458], a, 1);
 }
 
@@ -14726,7 +14727,7 @@ int32_t itit_ZZtestFldeq5_1_3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1459], a, 1);
 }
 
@@ -14735,7 +14736,7 @@ int32_t itit_ZZtestFldeq5_2_6(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1460], a, 1);
 }
 
@@ -14744,7 +14745,7 @@ int32_t itit_ZZtestFldeq5_2_7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1461], a, 1);
 }
 
@@ -14753,7 +14754,7 @@ int32_t itit_ZZtest_string_i_7_2_ZZstring2(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1462], a, 1);
 }
 
@@ -14762,7 +14763,7 @@ int32_t itit_ZZtest_string_i_7_2_ZZstring3(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1463], a, 1);
 }
 
@@ -14771,7 +14772,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring103(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1464], a, 1);
 }
 
@@ -14780,7 +14781,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring107(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1465], a, 1);
 }
 
@@ -14789,7 +14790,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring113(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1466], a, 1);
 }
 
@@ -14798,7 +14799,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring123(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1467], a, 1);
 }
 
@@ -14807,7 +14808,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring13(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1468], a, 1);
 }
 
@@ -14816,7 +14817,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring132(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1469], a, 1);
 }
 
@@ -14825,7 +14826,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring135(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1470], a, 1);
 }
 
@@ -14834,7 +14835,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring138(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1471], a, 1);
 }
 
@@ -14843,7 +14844,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring139(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1472], a, 1);
 }
 
@@ -14852,7 +14853,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring14(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1473], a, 1);
 }
 
@@ -14861,7 +14862,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring140(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1474], a, 1);
 }
 
@@ -14870,7 +14871,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring147(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1475], a, 1);
 }
 
@@ -14879,7 +14880,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring148(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1476], a, 1);
 }
 
@@ -14888,7 +14889,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring15(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1477], a, 1);
 }
 
@@ -14897,7 +14898,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring153(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1478], a, 1);
 }
 
@@ -14906,7 +14907,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring154(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1479], a, 1);
 }
 
@@ -14915,7 +14916,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring155(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1480], a, 1);
 }
 
@@ -14924,7 +14925,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring156(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1481], a, 1);
 }
 
@@ -14933,7 +14934,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring157(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1482], a, 1);
 }
 
@@ -14942,7 +14943,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring158(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1483], a, 1);
 }
 
@@ -14951,7 +14952,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring159(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1484], a, 1);
 }
 
@@ -14960,7 +14961,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring16(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1485], a, 1);
 }
 
@@ -14969,7 +14970,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1486], a, 1);
 }
 
@@ -14978,7 +14979,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring17(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1487], a, 1);
 }
 
@@ -14987,7 +14988,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring170(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1488], a, 1);
 }
 
@@ -14996,7 +14997,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring171(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1489], a, 1);
 }
 
@@ -15005,7 +15006,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring172(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1490], a, 1);
 }
 
@@ -15014,7 +15015,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring173(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1491], a, 1);
 }
 
@@ -15023,7 +15024,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring174(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1492], a, 1);
 }
 
@@ -15032,7 +15033,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring175(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1493], a, 1);
 }
 
@@ -15041,7 +15042,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1494], a, 1);
 }
 
@@ -15050,7 +15051,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring179(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1495], a, 1);
 }
 
@@ -15059,7 +15060,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring18(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1496], a, 1);
 }
 
@@ -15068,7 +15069,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring180(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1497], a, 1);
 }
 
@@ -15077,7 +15078,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring182(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1498], a, 1);
 }
 
@@ -15086,7 +15087,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring183(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1499], a, 1);
 }
 
@@ -15095,7 +15096,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring184(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1500], a, 1);
 }
 
@@ -15104,7 +15105,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring185(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1501], a, 1);
 }
 
@@ -15113,7 +15114,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring186(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1502], a, 1);
 }
 
@@ -15122,7 +15123,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring187(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1503], a, 1);
 }
 
@@ -15131,7 +15132,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring188(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1504], a, 1);
 }
 
@@ -15140,7 +15141,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring189(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1505], a, 1);
 }
 
@@ -15149,7 +15150,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring190(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1506], a, 1);
 }
 
@@ -15158,7 +15159,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring191(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1507], a, 1);
 }
 
@@ -15167,7 +15168,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring192(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1508], a, 1);
 }
 
@@ -15176,7 +15177,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring193(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1509], a, 1);
 }
 
@@ -15185,7 +15186,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring194(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1510], a, 1);
 }
 
@@ -15194,7 +15195,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring195(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1511], a, 1);
 }
 
@@ -15203,7 +15204,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring196(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1512], a, 1);
 }
 
@@ -15212,7 +15213,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring197(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1513], a, 1);
 }
 
@@ -15221,7 +15222,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1514], a, 1);
 }
 
@@ -15230,7 +15231,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring20(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1515], a, 1);
 }
 
@@ -15239,7 +15240,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring200(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1516], a, 1);
 }
 
@@ -15248,7 +15249,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring201(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1517], a, 1);
 }
 
@@ -15257,7 +15258,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring202(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1518], a, 1);
 }
 
@@ -15266,7 +15267,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring203(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1519], a, 1);
 }
 
@@ -15275,7 +15276,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring204(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1520], a, 1);
 }
 
@@ -15284,7 +15285,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring205(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1521], a, 1);
 }
 
@@ -15293,7 +15294,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring206(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1522], a, 1);
 }
 
@@ -15302,7 +15303,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring207(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1523], a, 1);
 }
 
@@ -15311,7 +15312,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring208(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1524], a, 1);
 }
 
@@ -15320,7 +15321,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring209(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1525], a, 1);
 }
 
@@ -15329,7 +15330,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring21(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1526], a, 1);
 }
 
@@ -15338,7 +15339,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring210(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1527], a, 1);
 }
 
@@ -15347,7 +15348,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring211(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1528], a, 1);
 }
 
@@ -15356,7 +15357,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring212(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1529], a, 1);
 }
 
@@ -15365,7 +15366,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring213(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1530], a, 1);
 }
 
@@ -15374,7 +15375,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring214(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1531], a, 1);
 }
 
@@ -15383,7 +15384,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring22(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1532], a, 1);
 }
 
@@ -15392,7 +15393,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring23(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1533], a, 1);
 }
 
@@ -15401,7 +15402,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring24(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1534], a, 1);
 }
 
@@ -15410,7 +15411,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring25(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1535], a, 1);
 }
 
@@ -15419,7 +15420,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring29(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1536], a, 1);
 }
 
@@ -15428,7 +15429,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring30(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1537], a, 1);
 }
 
@@ -15437,7 +15438,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring31(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1538], a, 1);
 }
 
@@ -15446,7 +15447,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring32(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1539], a, 1);
 }
 
@@ -15455,7 +15456,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring39(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1540], a, 1);
 }
 
@@ -15464,7 +15465,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring48(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1541], a, 1);
 }
 
@@ -15473,7 +15474,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring49(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1542], a, 1);
 }
 
@@ -15482,7 +15483,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring5(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1543], a, 1);
 }
 
@@ -15491,7 +15492,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring50(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1544], a, 1);
 }
 
@@ -15500,7 +15501,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring51(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1545], a, 1);
 }
 
@@ -15509,7 +15510,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring52(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1546], a, 1);
 }
 
@@ -15518,7 +15519,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring53(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1547], a, 1);
 }
 
@@ -15527,7 +15528,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring56(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1548], a, 1);
 }
 
@@ -15536,7 +15537,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring57(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1549], a, 1);
 }
 
@@ -15545,7 +15546,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring58(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1550], a, 1);
 }
 
@@ -15554,7 +15555,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring59(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1551], a, 1);
 }
 
@@ -15563,7 +15564,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring60(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1552], a, 1);
 }
 
@@ -15572,7 +15573,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring61(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1553], a, 1);
 }
 
@@ -15581,7 +15582,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring64(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1554], a, 1);
 }
 
@@ -15590,7 +15591,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring65(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1555], a, 1);
 }
 
@@ -15599,7 +15600,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring66(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1556], a, 1);
 }
 
@@ -15608,7 +15609,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring67(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1557], a, 1);
 }
 
@@ -15617,7 +15618,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring68(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1558], a, 1);
 }
 
@@ -15626,7 +15627,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring69(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1559], a, 1);
 }
 
@@ -15635,7 +15636,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring70(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1560], a, 1);
 }
 
@@ -15644,7 +15645,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring71(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1561], a, 1);
 }
 
@@ -15653,7 +15654,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring72(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1562], a, 1);
 }
 
@@ -15662,7 +15663,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring73(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1563], a, 1);
 }
 
@@ -15671,7 +15672,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring75(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1564], a, 1);
 }
 
@@ -15680,7 +15681,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring76(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1565], a, 1);
 }
 
@@ -15689,7 +15690,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring77(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1566], a, 1);
 }
 
@@ -15698,7 +15699,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring79(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1567], a, 1);
 }
 
@@ -15707,7 +15708,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring88(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1568], a, 1);
 }
 
@@ -15716,7 +15717,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring9(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1569], a, 1);
 }
 
@@ -15725,7 +15726,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring92(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1570], a, 1);
 }
 
@@ -15734,7 +15735,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring95(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1571], a, 1);
 }
 
@@ -15743,7 +15744,7 @@ int32_t itit_ZZtest_string_s_1_1_ZZstring96(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1572], a, 1);
 }
 
@@ -15752,7 +15753,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring102(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1573], a, 1);
 }
 
@@ -15761,7 +15762,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring114(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1574], a, 1);
 }
 
@@ -15770,7 +15771,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring122(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1575], a, 1);
 }
 
@@ -15779,7 +15780,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring128(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1576], a, 1);
 }
 
@@ -15788,7 +15789,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring129(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1577], a, 1);
 }
 
@@ -15797,7 +15798,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring131(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1578], a, 1);
 }
 
@@ -15806,7 +15807,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring134(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1579], a, 1);
 }
 
@@ -15815,7 +15816,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring137(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1580], a, 1);
 }
 
@@ -15824,7 +15825,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring141(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1581], a, 1);
 }
 
@@ -15833,7 +15834,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring142(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1582], a, 1);
 }
 
@@ -15842,7 +15843,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring143(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1583], a, 1);
 }
 
@@ -15851,7 +15852,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring145(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1584], a, 1);
 }
 
@@ -15860,7 +15861,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring164(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1585], a, 1);
 }
 
@@ -15869,7 +15870,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring166(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1586], a, 1);
 }
 
@@ -15878,7 +15879,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring167(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1587], a, 1);
 }
 
@@ -15887,7 +15888,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring177(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1588], a, 1);
 }
 
@@ -15896,7 +15897,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring181(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1589], a, 1);
 }
 
@@ -15905,7 +15906,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring19(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1590], a, 1);
 }
 
@@ -15914,7 +15915,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring40(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1591], a, 1);
 }
 
@@ -15923,7 +15924,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring41(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1592], a, 1);
 }
 
@@ -15932,7 +15933,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring42(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1593], a, 1);
 }
 
@@ -15941,7 +15942,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring6(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1594], a, 1);
 }
 
@@ -15950,7 +15951,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring62(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1595], a, 1);
 }
 
@@ -15959,7 +15960,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring8(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1596], a, 1);
 }
 
@@ -15968,7 +15969,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring80(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1597], a, 1);
 }
 
@@ -15977,7 +15978,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring82(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1598], a, 1);
 }
 
@@ -15986,7 +15987,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring89(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1599], a, 1);
 }
 
@@ -15995,7 +15996,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring90(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1600], a, 1);
 }
 
@@ -16004,7 +16005,7 @@ int32_t itit_ZZtest_string_s_1_2_ZZstring97(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1601], a, 1);
 }
 
@@ -16013,7 +16014,7 @@ int32_t itit_ZZtest_string_s_1_3_ZZstring100(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1602], a, 1);
 }
 
@@ -16022,7 +16023,7 @@ int32_t itit_ZZtest_string_s_1_3_ZZstring105(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1603], a, 1);
 }
 
@@ -16031,7 +16032,7 @@ int32_t itit_ZZtest_string_s_1_3_ZZstring106(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1604], a, 1);
 }
 
@@ -16040,7 +16041,7 @@ int32_t itit_ZZtest_string_s_1_3_ZZstring124(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1605], a, 1);
 }
 
@@ -16049,7 +16050,7 @@ int32_t itit_ZZtest_string_s_1_3_ZZstring127(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1606], a, 1);
 }
 
@@ -16058,7 +16059,7 @@ int32_t itit_ZZtest_string_s_1_3_ZZstring144(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1607], a, 1);
 }
 
@@ -16067,7 +16068,7 @@ int32_t itit_ZZtest_string_s_1_3_ZZstring162(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1608], a, 1);
 }
 
@@ -16076,7 +16077,7 @@ int32_t itit_ZZtest_string_s_1_3_ZZstring26(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1609], a, 1);
 }
 
@@ -16085,7 +16086,7 @@ int32_t itit_ZZtest_string_s_1_3_ZZstring63(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1610], a, 1);
 }
 
@@ -16094,7 +16095,7 @@ int32_t itit_ZZtest_string_s_1_3_ZZstring7(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1611], a, 1);
 }
 
@@ -16103,7 +16104,7 @@ int32_t itit_ZZtest_string_s_1_3_ZZstring81(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1612], a, 1);
 }
 
@@ -16112,7 +16113,7 @@ int32_t itit_ZZtest_string_s_1_3_ZZstring91(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1613], a, 1);
 }
 
@@ -16121,7 +16122,7 @@ int32_t itit_ZZtest_string_s_1_3_ZZstring98(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1614], a, 1);
 }
 
@@ -16130,7 +16131,7 @@ int32_t itit_ZZtest_string_s_1_3_ZZstring99(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1615], a, 1);
 }
 
@@ -16139,7 +16140,7 @@ int32_t itit_ZZtest_string_s_1_4_ZZstring115(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1616], a, 1);
 }
 
@@ -16148,7 +16149,7 @@ int32_t itit_ZZtest_string_s_1_4_ZZstring149(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1617], a, 1);
 }
 
@@ -16157,7 +16158,7 @@ int32_t itit_ZZtest_string_s_1_4_ZZstring165(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1618], a, 1);
 }
 
@@ -16166,7 +16167,7 @@ int32_t itit_ZZtest_string_s_1_4_ZZstring28(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1619], a, 1);
 }
 
@@ -16175,7 +16176,7 @@ int32_t itit_ZZtest_string_s_1_4_ZZstring54(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1620], a, 1);
 }
 
@@ -16184,7 +16185,7 @@ int32_t itit_ZZtest_string_s_1_4_ZZstring93(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1621], a, 1);
 }
 
@@ -16193,7 +16194,7 @@ int32_t itit_ZZtest_string_s_1_4_ZZstring94(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1622], a, 1);
 }
 
@@ -16202,7 +16203,7 @@ int32_t itit_ZZtest_string_s_1_5_ZZstring104(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1623], a, 1);
 }
 
@@ -16211,7 +16212,7 @@ int32_t itit_ZZtest_string_s_1_5_ZZstring130(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1624], a, 1);
 }
 
@@ -16220,7 +16221,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring103(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1625], a, 1);
 }
 
@@ -16229,7 +16230,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring107(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1626], a, 1);
 }
 
@@ -16238,7 +16239,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring113(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1627], a, 1);
 }
 
@@ -16247,7 +16248,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring123(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1628], a, 1);
 }
 
@@ -16256,7 +16257,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring132(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1629], a, 1);
 }
 
@@ -16265,7 +16266,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring135(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1630], a, 1);
 }
 
@@ -16274,7 +16275,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring138(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1631], a, 1);
 }
 
@@ -16283,7 +16284,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring139(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1632], a, 1);
 }
 
@@ -16292,7 +16293,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring140(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1633], a, 1);
 }
 
@@ -16301,7 +16302,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring147(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1634], a, 1);
 }
 
@@ -16310,7 +16311,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring148(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1635], a, 1);
 }
 
@@ -16319,7 +16320,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring153(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1636], a, 1);
 }
 
@@ -16328,7 +16329,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring154(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1637], a, 1);
 }
 
@@ -16337,7 +16338,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring155(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1638], a, 1);
 }
 
@@ -16346,7 +16347,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1639], a, 1);
 }
 
@@ -16355,7 +16356,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1640], a, 1);
 }
 
@@ -16364,7 +16365,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring18(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1641], a, 1);
 }
 
@@ -16373,7 +16374,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring188(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1642], a, 1);
 }
 
@@ -16382,7 +16383,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1643], a, 1);
 }
 
@@ -16391,7 +16392,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring205(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1644], a, 1);
 }
 
@@ -16400,7 +16401,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring210(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1645], a, 1);
 }
 
@@ -16409,7 +16410,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring25(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1646], a, 1);
 }
 
@@ -16418,7 +16419,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring39(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1647], a, 1);
 }
 
@@ -16427,7 +16428,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring5(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1648], a, 1);
 }
 
@@ -16436,7 +16437,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring53(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1649], a, 1);
 }
 
@@ -16445,7 +16446,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring61(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1650], a, 1);
 }
 
@@ -16454,7 +16455,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring68(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1651], a, 1);
 }
 
@@ -16463,7 +16464,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring73(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1652], a, 1);
 }
 
@@ -16472,7 +16473,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring77(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1653], a, 1);
 }
 
@@ -16481,7 +16482,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring79(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1654], a, 1);
 }
 
@@ -16490,7 +16491,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring88(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1655], a, 1);
 }
 
@@ -16499,7 +16500,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring9(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1656], a, 1);
 }
 
@@ -16508,7 +16509,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring92(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1657], a, 1);
 }
 
@@ -16517,7 +16518,7 @@ int32_t itit_ZZtest_string_s_2_1_ZZstring96(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1658], a, 1);
 }
 
@@ -16526,7 +16527,7 @@ int32_t itit_ZZtest_string_s_2_2_ZZstring146(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1659], a, 1);
 }
 
@@ -16535,7 +16536,7 @@ int32_t itit_ZZtest_string_s_2_2_ZZstring161(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1660], a, 1);
 }
 
@@ -16545,7 +16546,7 @@ int32_t itit_ZZtest_string_s_1_1(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1661], a, 2);
 }
 
@@ -16555,7 +16556,7 @@ int32_t itit_ZZtest_string_s_1_2(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1662], a, 2);
 }
 
@@ -16565,7 +16566,7 @@ int32_t itit_ZZtest_string_s_1_3(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1663], a, 2);
 }
 
@@ -16575,7 +16576,7 @@ int32_t itit_ZZtest_string_s_1_4(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1664], a, 2);
 }
 
@@ -16585,7 +16586,7 @@ int32_t itit_ZZtest_string_s_1_5(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1665], a, 2);
 }
 
@@ -16595,7 +16596,7 @@ int32_t itit_ZZtest_string_s_1_6(int32_t a0, int32_t a1)
 
     a[0] = a0;
     a[1] = a1;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1666], a, 2);
 }
 
@@ -16604,7 +16605,7 @@ int32_t itit_ZZtest_synch10_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1667], a, 1);
 }
 
@@ -16613,7 +16614,7 @@ int32_t itit_ZZtest_synch10_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1668], a, 1);
 }
 
@@ -16622,7 +16623,7 @@ int32_t itit_ZZtest_synch10_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1669], a, 1);
 }
 
@@ -16631,7 +16632,7 @@ int32_t itit_ZZtest_synch11_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1670], a, 1);
 }
 
@@ -16640,7 +16641,7 @@ int32_t itit_ZZtest_synch11_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1671], a, 1);
 }
 
@@ -16649,7 +16650,7 @@ int32_t itit_ZZtest_synch12_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1672], a, 1);
 }
 
@@ -16658,7 +16659,7 @@ int32_t itit_ZZtest_synch12_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1673], a, 1);
 }
 
@@ -16667,7 +16668,7 @@ int32_t itit_ZZtest_synch13_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1674], a, 1);
 }
 
@@ -16676,7 +16677,7 @@ int32_t itit_ZZtest_synch13_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1675], a, 1);
 }
 
@@ -16685,7 +16686,7 @@ int32_t itit_ZZtest_synch14_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1676], a, 1);
 }
 
@@ -16694,7 +16695,7 @@ int32_t itit_ZZtest_synch14_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1677], a, 1);
 }
 
@@ -16703,7 +16704,7 @@ int32_t itit_ZZtest_synch15_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1678], a, 1);
 }
 
@@ -16712,7 +16713,7 @@ int32_t itit_ZZtest_synch15_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1679], a, 1);
 }
 
@@ -16721,7 +16722,7 @@ int32_t itit_ZZtest_synch16_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1680], a, 1);
 }
 
@@ -16730,7 +16731,7 @@ int32_t itit_ZZtest_synch175_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1681], a, 1);
 }
 
@@ -16739,7 +16740,7 @@ int32_t itit_ZZtest_synch18_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1682], a, 1);
 }
 
@@ -16748,7 +16749,7 @@ int32_t itit_ZZtest_synch18_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1683], a, 1);
 }
 
@@ -16757,7 +16758,7 @@ int32_t itit_ZZtest_synch18_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1684], a, 1);
 }
 
@@ -16766,7 +16767,7 @@ int32_t itit_ZZtest_synch19_ZZstring140(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1685], a, 1);
 }
 
@@ -16775,7 +16776,7 @@ int32_t itit_ZZtest_synch19_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1686], a, 1);
 }
 
@@ -16784,7 +16785,7 @@ int32_t itit_ZZtest_synch20_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1687], a, 1);
 }
 
@@ -16793,7 +16794,7 @@ int32_t itit_ZZtest_synch21_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1688], a, 1);
 }
 
@@ -16802,7 +16803,7 @@ int32_t itit_ZZtest_synch21_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1689], a, 1);
 }
 
@@ -16811,7 +16812,7 @@ int32_t itit_ZZtest_synch21_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1690], a, 1);
 }
 
@@ -16820,7 +16821,7 @@ int32_t itit_ZZtest_synch22_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1691], a, 1);
 }
 
@@ -16829,7 +16830,7 @@ int32_t itit_ZZtest_synch23_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1692], a, 1);
 }
 
@@ -16838,7 +16839,7 @@ int32_t itit_ZZtest_synch23_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1693], a, 1);
 }
 
@@ -16847,7 +16848,7 @@ int32_t itit_ZZtest_synch23_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1694], a, 1);
 }
 
@@ -16856,7 +16857,7 @@ int32_t itit_ZZtest_synch24_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1695], a, 1);
 }
 
@@ -16865,7 +16866,7 @@ int32_t itit_ZZtest_synch25_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1696], a, 1);
 }
 
@@ -16874,7 +16875,7 @@ int32_t itit_ZZtest_synch26_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1697], a, 1);
 }
 
@@ -16883,7 +16884,7 @@ int32_t itit_ZZtest_synch26_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1698], a, 1);
 }
 
@@ -16892,7 +16893,7 @@ int32_t itit_ZZtest_synch27_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1699], a, 1);
 }
 
@@ -16901,7 +16902,7 @@ int32_t itit_ZZtest_synch28_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1700], a, 1);
 }
 
@@ -16910,7 +16911,7 @@ int32_t itit_ZZtest_synch28_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1701], a, 1);
 }
 
@@ -16919,7 +16920,7 @@ int32_t itit_ZZtest_synch29_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1702], a, 1);
 }
 
@@ -16928,7 +16929,7 @@ int32_t itit_ZZtest_synch2_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1703], a, 1);
 }
 
@@ -16937,7 +16938,7 @@ int32_t itit_ZZtest_synch2_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1704], a, 1);
 }
 
@@ -16946,7 +16947,7 @@ int32_t itit_ZZtest_synch30_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1705], a, 1);
 }
 
@@ -16955,7 +16956,7 @@ int32_t itit_ZZtest_synch31_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1706], a, 1);
 }
 
@@ -16964,7 +16965,7 @@ int32_t itit_ZZtest_synch32_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1707], a, 1);
 }
 
@@ -16973,7 +16974,7 @@ int32_t itit_ZZtest_synch33_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1708], a, 1);
 }
 
@@ -16982,7 +16983,7 @@ int32_t itit_ZZtest_synch34_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1709], a, 1);
 }
 
@@ -16991,7 +16992,7 @@ int32_t itit_ZZtest_synch35_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1710], a, 1);
 }
 
@@ -17000,7 +17001,7 @@ int32_t itit_ZZtest_synch39_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1711], a, 1);
 }
 
@@ -17009,7 +17010,7 @@ int32_t itit_ZZtest_synch39_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1712], a, 1);
 }
 
@@ -17018,7 +17019,7 @@ int32_t itit_ZZtest_synch3_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1713], a, 1);
 }
 
@@ -17027,7 +17028,7 @@ int32_t itit_ZZtest_synch3_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1714], a, 1);
 }
 
@@ -17036,7 +17037,7 @@ int32_t itit_ZZtest_synch3_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1715], a, 1);
 }
 
@@ -17045,7 +17046,7 @@ int32_t itit_ZZtest_synch40_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1716], a, 1);
 }
 
@@ -17054,7 +17055,7 @@ int32_t itit_ZZtest_synch41_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1717], a, 1);
 }
 
@@ -17063,7 +17064,7 @@ int32_t itit_ZZtest_synch43_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1718], a, 1);
 }
 
@@ -17072,7 +17073,7 @@ int32_t itit_ZZtest_synch45_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1719], a, 1);
 }
 
@@ -17081,7 +17082,7 @@ int32_t itit_ZZtest_synch48_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1720], a, 1);
 }
 
@@ -17090,7 +17091,7 @@ int32_t itit_ZZtest_synch4_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1721], a, 1);
 }
 
@@ -17099,7 +17100,7 @@ int32_t itit_ZZtest_synch4_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1722], a, 1);
 }
 
@@ -17108,7 +17109,7 @@ int32_t itit_ZZtest_synch51_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1723], a, 1);
 }
 
@@ -17117,7 +17118,7 @@ int32_t itit_ZZtest_synch52_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1724], a, 1);
 }
 
@@ -17126,7 +17127,7 @@ int32_t itit_ZZtest_synch56_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1725], a, 1);
 }
 
@@ -17135,7 +17136,7 @@ int32_t itit_ZZtest_synch59_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1726], a, 1);
 }
 
@@ -17144,7 +17145,7 @@ int32_t itit_ZZtest_synch5_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1727], a, 1);
 }
 
@@ -17153,7 +17154,7 @@ int32_t itit_ZZtest_synch5_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1728], a, 1);
 }
 
@@ -17162,7 +17163,7 @@ int32_t itit_ZZtest_synch60_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1729], a, 1);
 }
 
@@ -17171,7 +17172,7 @@ int32_t itit_ZZtest_synch63_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1730], a, 1);
 }
 
@@ -17180,7 +17181,7 @@ int32_t itit_ZZtest_synch66_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1731], a, 1);
 }
 
@@ -17189,7 +17190,7 @@ int32_t itit_ZZtest_synch67_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1732], a, 1);
 }
 
@@ -17198,7 +17199,7 @@ int32_t itit_ZZtest_synch69_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1733], a, 1);
 }
 
@@ -17207,7 +17208,7 @@ int32_t itit_ZZtest_synch6_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1734], a, 1);
 }
 
@@ -17216,7 +17217,7 @@ int32_t itit_ZZtest_synch6_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1735], a, 1);
 }
 
@@ -17225,7 +17226,7 @@ int32_t itit_ZZtest_synch70_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1736], a, 1);
 }
 
@@ -17234,7 +17235,7 @@ int32_t itit_ZZtest_synch79_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1737], a, 1);
 }
 
@@ -17243,7 +17244,7 @@ int32_t itit_ZZtest_synch7_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1738], a, 1);
 }
 
@@ -17252,7 +17253,7 @@ int32_t itit_ZZtest_synch7_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1739], a, 1);
 }
 
@@ -17261,7 +17262,7 @@ int32_t itit_ZZtest_synch7_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1740], a, 1);
 }
 
@@ -17270,7 +17271,7 @@ int32_t itit_ZZtest_synch81_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1741], a, 1);
 }
 
@@ -17279,7 +17280,7 @@ int32_t itit_ZZtest_synch8_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1742], a, 1);
 }
 
@@ -17288,7 +17289,7 @@ int32_t itit_ZZtest_synch8_ZZstring176(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1743], a, 1);
 }
 
@@ -17297,7 +17298,7 @@ int32_t itit_ZZtest_synch8_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1744], a, 1);
 }
 
@@ -17306,7 +17307,7 @@ int32_t itit_ZZtest_synch9_ZZstring160(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1745], a, 1);
 }
 
@@ -17315,7 +17316,7 @@ int32_t itit_ZZtest_synch9_ZZstring198(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1746], a, 1);
 }
 
@@ -17324,7 +17325,7 @@ int32_t itit_ZZthree_advance_tok(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1747], a, 1);
 }
 
@@ -17333,7 +17334,7 @@ int32_t itit_ZZtwo_advance_tok(int32_t a0)
     int32_t a[1];
 
     a[0] = a0;
-    return delta_run_rule((void *)(intptr_t)a0,
+    return delta_run_rule(EVV_AT(void *, a0),
                           &itit_delta_rules[1748], a, 1);
 }
 

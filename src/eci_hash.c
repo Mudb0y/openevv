@@ -276,7 +276,7 @@ int32_t hashInsertInt(void *table, int32_t key, void *value)
     if (!e)
         return 0;
 
-    e->key = (void *)(intptr_t)key;
+    e->key = EVV_AT(void *, key);
     e->value = value;
     e->next = was;
     h->at[i] = e;
@@ -343,7 +343,7 @@ void *hashMoveInt(void *table, int32_t oldKey, int32_t newKey)
         return 0;
 
     to = intHashFunction(h, (uint32_t)newKey);
-    e->key = (void *)(intptr_t)newKey;
+    e->key = EVV_AT(void *, newKey);
 
     if (to != from) {
         if (prev)

@@ -69,22 +69,22 @@ static int32_t extract(delta_state *d, int32_t l, int32_t r, uint8_t field,
     int32_t     n = 0;
 
     /* Both ends have to be fenced on this field or there is no run. */
-    if (!(((int32_t *)(intptr_t)l)[f] & 1)
-     || !(((int32_t *)(intptr_t)r)[f] & 1))
+    if (!((EVV_AT(int32_t *, l))[f] & 1)
+     || !((EVV_AT(int32_t *, r))[f] & 1))
         return 0;
 
     get = (void *(*)(void *))vstmtbl[field].get[0];
 
     while (l != EVV_AT(delta_stack *, d->stack)->spine_r && l != r && n < most) {
-        int32_t at = ((int32_t *)(intptr_t)l)[f] & ~3;
+        int32_t at = (EVV_AT(int32_t *, l))[f] & ~3;
 
-        if (at != 0 && (*(int32_t *)(intptr_t)at & 2)) {
+        if (at != 0 && (*EVV_AT(int32_t *, at) & 2)) {
             /* Nothing of its own here; step over it. */
             l = at;
         } else {
-            memcpy(out, get(TFLDS((void *)(intptr_t)at)), (size_t)width);
+            memcpy(out, get(TFLDS(EVV_AT(void *, at))), (size_t)width);
             out += width;
-            l = *(int32_t *)(intptr_t)(at + 4) & ~3;
+            l = *EVV_AT(int32_t *, (at + 4)) & ~3;
         }
         n++;
     }
