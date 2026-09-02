@@ -141,4 +141,13 @@ int32_t    sls_stackSize(SSMLLangStack *s);
 char *stripspaces(char *s, int32_t *len);
 char *getAttributeValue(const char **atts, const char *name);
 
+/* Text narrowed so the scanner can read it, and widened again. */
+int32_t Mbcs2Sbcs(char *in, char *out);
+int32_t Sbcs2Mbcs(char *in, char *out);
+int32_t getCharByteCount(const uint8_t *s);
+
+/* A pronunciation given in IPA, turned into the engine's own spelling. */
+int32_t IPAToSPR(uint8_t *utf8, uint32_t bytes, char *spr, uint32_t *room,
+                 int32_t lang);
+
 #endif

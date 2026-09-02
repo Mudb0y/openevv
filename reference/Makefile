@@ -102,6 +102,21 @@ $(BUILD)/jptry.exe: jptry.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(W
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/jptry.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/jptry.err >&2 || true; exit $$s
 
+# What IBM's own SSML reader turns a document into, which is the oracle the
+# SSML transcription was written against. See the head of ssmltry.c: the
+# filter is in these objects and nothing in them registers it, so this does.
+.PHONY: ssmltry
+ssmltry: $(BUILD)/ssmltry.exe
+
+$(BUILD)/ssmltry.exe: ssmltry.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
+                      $(SHIM) $(WORK)/.stamp
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src ssmltry.c \
+	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/ssmltry.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/ssmltry.err >&2 || true; exit $$s
+	@echo "built $@"
+
 $(BUILD)/jajp_shim.obj: jajp_shim.c
 	@mkdir -p $(BUILD)
 	@$(CC) -O2 -std=gnu99 -w -I../src -c $< -o $@
