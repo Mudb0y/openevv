@@ -68,15 +68,15 @@ SAMPLE_RATE = 11025
 #: hertz it comes to. IBM shipped the first two and numbered the next two;
 #: the last two are this port's.
 #:
-#: Above eleven thousand the engine still runs at eight or eleven thousand
-#: and each sample is repeated, which is what a screen reader wants: the
-#: speech is bit for bit the speech Eloquence has always made, and what fills
-#: the new band is a mirror of it. Synthesising at the higher rate outright
-#: is possible and sounds worse -- the frication comes from a generator that
-#: makes one value per output sample, so the sibilants go thin -- and the
-#: library will still do it for anyone who asks by hertz rather than by
-#: number. Ordered by rate rather than by number so a reader is offered them
-#: in the order a person thinks of them.
+#: Above eleven thousand the engine still runs at eleven thousand and twenty
+#: five and the samples are taken over, so choosing a higher rate never
+#: changes which voice it is: the speech is bit for bit the speech Eloquence
+#: has always made, and what fills the new band is a mirror of it.
+#: Synthesising at the higher rate outright is possible and sounds worse --
+#: the frication comes from a generator that makes one value per output
+#: sample, so the sibilants go thin -- and is behind EVV_UPSAMPLE=none rather
+#: than in this list. Ordered by rate rather than by number so a reader is
+#: offered them in the order a person thinks of them.
 SAMPLE_RATES = (
 	(0, 8000),
 	(1, 11025),
@@ -84,6 +84,7 @@ SAMPLE_RATES = (
 	(2, 22050),
 	(4, 32000),
 	(5, 44100),
+	(6, 48000),
 )
 
 #: How many samples the library is given room for in one go.

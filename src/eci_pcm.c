@@ -149,10 +149,18 @@ THIS int32_t pcm_setup(SoundOutput *o, char *a, int32_t *b, int32_t *c,
  *           mirror by roughly twice what holding does and is where to go if
  *           holding turns out too bright
  *
- * Only a whole-number ratio is accepted. Every rate the interface offers a
- * held form of is an exact multiple of one of the engine's own two, so a
- * fractional one would mean somebody had asked for something this cannot
- * honestly do, and refusing is better than resampling badly and silently.
+ * Those three are about a whole-number ratio. Where the ratio is not whole
+ * the nearest input sample is taken and the setting does not apply, because
+ * the repeats are already uneven and there is no one gap to fill.
+ *
+ * A whole-number ratio repeats each sample the same number of times. Where
+ * the ratio is not whole, each output sample takes the input sample nearest
+ * it in time, which is the same idea carried on: no interpolation, no
+ * filtering, and every value that comes out is a value the engine put in.
+ * What it costs is that the repeats are uneven -- at forty-eight thousand
+ * from eleven thousand and twenty five each sample lands four or five times
+ * -- so the timing wobbles by up to half an input sample. The position is
+ * carried between runs, so the unevenness never restarts at a boundary.
  */
 
 #include <stdlib.h>
@@ -180,7 +188,9 @@ typedef struct {
 typedef struct AudioConverter {
     int32_t   from;         /* the engine's rate */
     int32_t   to;           /* the caller's */
-    int32_t   times;        /* to over from, a whole number */
+    int32_t   times;        /* to over from where that is whole, else nought */
+    int32_t   at;           /* where the fractional walk has got to, in units
+                               of one input sample over `to' */
     int32_t   method;
     int32_t   last;         /* the sample before this run, for linear */
     int       have_last;
@@ -243,11 +253,12 @@ THIS int32_t pcm_cvt_setDest(AudioConverter *c, void *fmt)
 {
     int32_t to = (int32_t)((WaveFormat *)fmt)->rate;
 
-    if (c->from <= 0 || to < c->from || (to % c->from) != 0)
+    if (c->from <= 0 || to < c->from)
         return -1;
 
     c->to = to;
-    c->times = to / c->from;
+    c->times = (to % c->from) == 0 ? to / c->from : 0;
+    c->at = 0;
     c->have_last = 0;
     return 0;
 }
@@ -278,6 +289,38 @@ THIS int32_t pcm_cvt_convert(AudioConverter *c, SDATA in, SDATA **out)
     uint32_t i;
     int32_t  j, times = c->times;
     int32_t *put;
+
+    if (times == 0 && src != 0 && c->to > c->from) {
+        /* The nearest input sample to each output one, walked with the
+           position carried over from the run before. */
+        uint32_t made = 0;
+        int32_t  at = c->at;
+
+        want = 0;
+        while ((uint32_t)(at / c->to) < n) {
+            want++;
+            at += c->from;
+        }
+        if (!cvt_room(c, want))
+            return -1;
+
+        at = c->at;
+        put = c->room;
+        while ((uint32_t)(at / c->to) < n) {
+            put[made++] = src[at / c->to];
+            at += c->from;
+        }
+        c->at = at - (int32_t)n * c->to;
+
+        if (n > 0) {
+            c->last = src[n - 1];
+            c->have_last = 1;
+        }
+        c->out.at = c->room;
+        c->out.bytes = made << 2;
+        *out = &c->out;
+        return 0;
+    }
 
     if (times <= 1 || src == 0) {
         /* Nothing to do, and saying so by handing back what came in keeps

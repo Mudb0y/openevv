@@ -21,6 +21,8 @@
 #include "evv_abi.h"
 #include "klatt_rates.h"
 
+extern int32_t ev_engineHz(int32_t hz);
+
 /* Answers this layer gives back. */
 #define OK               0
 #define ERR_BAD_ARG    (-3)
@@ -370,10 +372,11 @@ THIS int32_t stf_registerSampleBuffer(SynthThread *t, int16_t *buf,
         fmt->rate = RATE_11025;
 
     /* The rate arrives here in hertz, already turned from the caller's
-       setting into a number by ev_rateHz, so the test is whether the
-       synthesiser can be built for it rather than which of three it is. */
+       setting into a number by ev_rateHz, so the test is whether the engine
+       can produce it at all -- by running at it or by being held up to it --
+       rather than which of three it is. */
     if (fmt->layout != LAYOUT_PCM || fmt->width != WIDTH_16
-        || fmt->rate < KLATT_RATE_MIN || fmt->rate > KLATT_RATE_MAX) {
+        || ev_engineHz(fmt->rate) == 0) {
         rc = ERR_BAD_FORMAT;
         goto done;
     }

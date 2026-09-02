@@ -58,10 +58,16 @@
    boundary. It is not run down further than that, and docs/status.md says
    so.
 
-   So the ceiling is 44,100 -- the highest rate anyone asks for, four hundred
-   hertz below the boundary, and clean over every text measured. test/rates.c
-   holds the peak sample of every rate to a bound, so this cannot be crossed
-   again without something saying so. */
+   So the ceiling on what the synthesiser is asked to run at is 44,100 --
+   four hundred hertz below the boundary and clean over every text measured.
+   test/rates.c holds the slew of every synthesised rate to a bound, so this
+   cannot be crossed again without something saying so.
+
+   It is a ceiling on the engine and not on the caller. A rate reached by
+   repeating samples never asks the synthesiser for anything above eleven
+   thousand and twenty five, so the rate a caller may have goes higher --
+   EV_RATE_MAX_HZ in src/eci_env.c is that one, and 48,000 is above this
+   line for exactly that reason. */
 #define KLATT_RATE_MIN   8000
 #define KLATT_RATE_MAX   44100
 

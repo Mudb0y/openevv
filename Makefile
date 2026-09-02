@@ -287,6 +287,7 @@ $(BUILD)/rate: test/rate.c $(BUILD)/libevv.a
 # same length of time. EVV_RATES_REPORT=1 prints what each one said.
 rates: $(BUILD)/rates
 	@$(BUILD)/rates
+	@EVV_UPSAMPLE=none $(BUILD)/rates
 
 $(BUILD)/rates: test/rates.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/rates.c $(BUILD)/libevv.a -lpthread -lm -o $@

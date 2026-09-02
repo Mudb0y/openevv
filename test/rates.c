@@ -50,10 +50,14 @@ enum { FRAME = 4096 };
 
 enum { PARAM_RATE = 5 };
 
-/* Room for the longest run and for the two the held ones are held against.
-   The test sentence is 55,696 samples at eight thousand and 76,582 at eleven
-   thousand, and four times the larger is the most any rate here produces. */
-enum { ROOM = 320000 };
+/* The highest rate a caller may ask for. src/eci_env.c owns this; it is
+   named again here so the refusals below stay in step with it. */
+enum { EV_RATE_MAX_HZ = 48000 };
+
+/* Room for the longest run and for the one the held ones are held against.
+   The test sentence is 76,582 samples at eleven thousand and twenty five,
+   and forty-eight thousand is the most any rate here asks for. */
+enum { ROOM = 400000 };
 enum { BASE_ROOM = 100000 };
 
 typedef struct OldInst OldInst;
@@ -87,6 +91,15 @@ extern const int16_t klatt_CO11[4992];
 
 static short frame[FRAME];
 static int   report;
+
+/* Whether this run is the ordinary one or the comparison. The same binary is
+   run twice -- see the rates target in the Makefile -- because the two paths
+   have different claims to make and both would otherwise rot: with the
+   holding on, every rate above eleven thousand is the engine's own samples
+   taken over, and with it off every one of them is synthesised outright with
+   tables built from IBM's formulae. Neither run exercises the other's code
+   at all. */
+static int   holding = 1;
 
 /* What one run said, and how it behaved while saying it. */
 static short kept[ROOM];
@@ -331,32 +344,43 @@ static int verdict(int32_t hz)
    cent is far tighter than the distance between any two rates here. */
 #define TOLERANCE_PCT  1
 
-/* Each setting, the rate it comes to, and which of the engine's own two it
-   is held from -- nought where the engine synthesises it outright. */
+/* Each setting, the rate it comes to, and the rate it is taken from -- nought
+   where the engine synthesises it outright. */
 struct want {
     int32_t set;
     int32_t hz;
     int32_t from;
-    int32_t times;
 };
 
 static const struct want WANTED[] = {
-    { 0, 8000,  0,     1 },
-    { 1, 11025, 0,     1 },
-    { 3, 16000, 8000,  2 },
-    { 2, 22050, 11025, 2 },
-    { 4, 32000, 8000,  4 },
-    { 5, 44100, 11025, 4 },
-    /* Not a number anyone gave a meaning to, and no whole multiple of either
-       base, so this is the one that still exercises synthesis at a rate IBM
-       never shipped. */
-    { 37800, 37800, 0, 1 },
+    { 0, 8000,  0 },
+    { 1, 11025, 0 },
+    { 3, 16000, 11025 },
+    { 2, 22050, 11025 },
+    { 4, 32000, 11025 },
+    { 5, 44100, 11025 },
+    { 6, 48000, 11025 },
+    /* Not a number anyone gave a meaning to, asked for as a rate in hertz.
+       Taken over like the rest with the holding on, and synthesised with
+       built tables with it off. */
+    { 24000, 24000, 11025 },
 };
 
 #define WANTED_COUNT ((int)(sizeof WANTED / sizeof WANTED[0]))
 
-/* Numbers that are neither a rate we know nor a plausible rate in hertz. */
-static const int32_t REFUSED[] = { 6, 7, 100, 7999, KLATT_RATE_MAX + 1, -1 };
+/* Numbers that name no rate the engine will make.
+ *
+ * The three in the middle are the gap between the engine's own two, and they
+ * are refused rather than synthesised: the language compensates for a cosine
+ * table running past Nyquist only at eight thousand, so a rate just above it
+ * is made without the compensation it needs and the output wraps. Measured
+ * at 8,500 and 9,000, on the edge at 9,500 and 10,000, clean from about
+ * 10,500. All of the gap is refused rather than the part that misbehaves,
+ * because the boundary is a matter of degree and a rate nobody can name a
+ * reason for is not worth the doubt. */
+static const int32_t REFUSED[] = {
+    7, 100, 7999, 8500, 9000, 10500, EV_RATE_MAX_HZ + 1, -1,
+};
 
 #define REFUSED_COUNT ((int)(sizeof REFUSED / sizeof REFUSED[0]))
 
@@ -371,6 +395,11 @@ int main(void)
 {
     int r;
 
+    {
+        const char *say = getenv("EVV_UPSAMPLE");
+
+        holding = !(say != 0 && strcmp(say, "none") == 0);
+    }
     report = getenv("EVV_RATES_REPORT") != 0;
 
     if (!checkTables())
@@ -417,16 +446,16 @@ int main(void)
        So a numbered rate the device has no bit for would be refused there
        and nowhere else, which nothing else here would notice. */
     for (r = 0; r < WANTED_COUNT; r++) {
-        if (WANTED[r].set > 5)
-            continue;
+        if (WANTED[r].set >= KLATT_RATE_MIN)
+            continue;   /* a rate in hertz, not one of the numbered ones */
         if (es_setDefaultParam(PARAM_RATE, WANTED[r].set) < 0) {
             printf("rates: the default environment refused rate %d\n",
                    (int)WANTED[r].set);
             return 1;
         }
     }
-    if (es_setDefaultParam(PARAM_RATE, 6) >= 0) {
-        printf("rates: the default environment took 6, which is not a rate\n");
+    if (es_setDefaultParam(PARAM_RATE, 7) >= 0) {
+        printf("rates: the default environment took 7, which is not a rate\n");
         return 1;
     }
     es_setDefaultParam(PARAM_RATE, 1);
@@ -434,8 +463,21 @@ int main(void)
     for (r = 0; r < WANTED_COUNT; r++) {
         int32_t set = WANTED[r].set;
         int32_t hz = WANTED[r].hz;
+        int32_t from = holding ? WANTED[r].from : 0;
         long    got, owed, slack;
         int32_t back = -1;
+
+        /* Synthesised outright, the engine has a ceiling the held rates do
+           not, so with the holding off the highest rate is not merely worse
+           but impossible, and has to be refused rather than attempted. */
+        if (!holding && hz > KLATT_RATE_MAX) {
+            if (run_at(set, &back) != -2) {
+                printf("rates: with no holding it took %d hertz, which it "
+                       "cannot synthesise\n", (int)hz);
+                return 1;
+            }
+            continue;
+        }
 
         got = run_at(set, &back);
         if (got == -2) {
@@ -459,7 +501,7 @@ int main(void)
             printf("rates: %6d hertz  %8ld samples  %8.1f ms  peak %6ld  "
                    "largest step %6ld%s\n", (int)hz, got,
                    1000.0 * (double)got / (double)hz, peak_seen, step_seen,
-                   WANTED[r].times > 1 ? "  held" : "");
+                   from != 0 ? "  taken over" : "");
 
         /* Only where the engine synthesised the rate outright. A held rate
            steps exactly as its base does -- repeating a sample leaves the
@@ -468,17 +510,13 @@ int main(void)
            deliberately not bandlimited. What covers a held rate is the
            stronger check further down: if it is the base's samples exactly
            and the base passed, there is nothing left to ask. */
-        if (WANTED[r].times == 1 && !verdict(hz))
+        if (from == 0 && !verdict(hz))
             return 1;
 
-        if (hz == 8000) {
-            if (got != SAID_AT_8000) {
-                printf("rates: %ld samples at 8 kHz where it always said "
-                       "%d\n", got, SAID_AT_8000);
-                return 1;
-            }
-            memcpy(base8, kept, (size_t)got * sizeof(short));
-            base8_n = got;
+        if (hz == 8000 && got != SAID_AT_8000) {
+            printf("rates: %ld samples at 8 kHz where it always said %d\n",
+                   got, SAID_AT_8000);
+            return 1;
         }
         if (hz == 11025) {
             if (got != SAID_AT_11025) {
@@ -490,42 +528,54 @@ int main(void)
             base11_n = got;
         }
 
-        /* The strong one. A held rate is the engine's own samples and
-           nothing else, each repeated a whole number of times, so this is
-           byte for byte rather than a matter of how close two spectra are.
-           Breaking the copy loop by one sample fails it at once. */
-        if (WANTED[r].times > 1) {
-            const short *base = WANTED[r].from == 8000 ? base8 : base11;
-            long baseN = WANTED[r].from == 8000 ? base8_n : base11_n;
-            long times = WANTED[r].times;
-            long i, j, wrong = 0;
+        /* The strong one. Every sample of a rate taken from another is a
+           sample the engine produced, and which one is settled outright:
+           the sample nearest that moment in time. So this is byte for byte
+           rather than a matter of how close two spectra are, and it covers
+           both the whole ratios, where it comes to each sample repeated the
+           same number of times, and the uneven ones. Breaking the copy for a
+           single sample fails it and names the sample. */
+        if (from != 0) {
+            long baseN = base11_n;
+            long owedN;
+            long k, wrong = 0;
 
             if (baseN <= 0) {
                 printf("rates: nothing to hold %d hertz against\n", (int)hz);
                 return 1;
             }
-            if (got != baseN * times) {
-                printf("rates: %ld samples at %d hertz where holding %ld of "
-                       "%d owes %ld\n", got, (int)hz, baseN,
-                       (int)WANTED[r].from, baseN * times);
+            /* However many output samples have an input sample under them. */
+            owedN = (long)(((long long)baseN * hz + from - 1) / from);
+            if (got != owedN) {
+                printf("rates: %ld samples at %d hertz where taking %ld of "
+                       "%d owes %ld\n", got, (int)hz, baseN, (int)from,
+                       owedN);
                 return 1;
             }
-            for (i = 0; i < baseN && wrong == 0; i++)
-                for (j = 0; j < times; j++)
-                    if (kept[i * times + j] != base[i]) {
-                        wrong = i * times + j + 1;
-                        break;
-                    }
+            for (k = 0; k < got; k++) {
+                long at = (long)(((long long)k * from) / hz);
+
+                if (at >= baseN)
+                    at = baseN - 1;
+                if (kept[k] != base11[at]) {
+                    wrong = k + 1;
+                    break;
+                }
+            }
             if (wrong) {
-                printf("rates: %d hertz is not %d held: sample %ld is %d "
-                       "where the engine said %d\n", (int)hz,
-                       (int)WANTED[r].from, wrong - 1,
-                       (int)kept[wrong - 1], (int)base[(wrong - 1) / times]);
+                long at = (long)(((long long)(wrong - 1) * from) / hz);
+
+                printf("rates: %d hertz is not %d taken over: sample %ld is "
+                       "%d where the engine said %d\n", (int)hz,
+                       (int)from, wrong - 1,
+                       (int)kept[wrong - 1], (int)base11[at]);
                 return 1;
             }
             if (report)
-                printf("rates: %6d hertz  every one of %ld samples repeated "
-                       "%ld times exactly\n", (int)hz, baseN, times);
+                printf("rates: %6d hertz  every one of %ld samples is the "
+                       "engine's, %s\n", (int)hz, got,
+                       (hz % from) == 0
+                       ? "each repeated evenly" : "each taken as the nearest");
             continue;
         }
 
@@ -544,8 +594,13 @@ int main(void)
     }
 
     evv_port_finish();
-    printf("rates: the tables are IBM's formulae, the held rates are the "
-           "engine's own samples repeated, and all %d speak to length\n",
-           WANTED_COUNT);
+    if (holding)
+        printf("rates: the tables are IBM's formulae, every rate above "
+               "eleven thousand is the engine's own samples taken over, and "
+               "all %d speak to length\n", WANTED_COUNT);
+    else
+        printf("rates: with no holding, every rate the engine can synthesise "
+               "does so from tables built out of IBM's formulae, and the one "
+               "it cannot is refused\n");
     return 0;
 }

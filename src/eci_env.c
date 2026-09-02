@@ -40,6 +40,12 @@
 #define ENV_ENV_FIRST   13
 #define ENV_ENV_LAST    16
 
+/* The highest rate a caller may ask for, which is not the highest the
+   synthesiser will run at. Every rate above eleven thousand and twenty five
+   is reached by repeating samples, so the engine stays at one of its own two
+   and KLATT_RATE_MAX, which is a bound on the engine, never comes into it. */
+#define EV_RATE_MAX_HZ  48000
+
 /* The environment and the voice both travel by value, which is how the
    original's callers push them. */
 typedef struct Environment { int32_t w[0x12]; } Environment;
@@ -96,13 +102,12 @@ static int ev_rateIsCoded(int32_t rate);
 
    One entry is not IBM's. The sample rate ran to two, which is what made
    IBM's own sixteen thousand unreachable -- it numbered the rate three and
-   then would not take a three. It runs to the highest rate the synthesiser
-   will now be built tables for, so that both the numbered rates and a rate
-   given in hertz get past this test; ev_rateHz is what refuses the numbers
-   in between. */
+   then would not take a three. It runs to the highest rate a caller may ask
+   for, so that both the numbered rates and a rate given in hertz get past
+   this test; ev_rateHz is what refuses the numbers in between. */
 const int32_t ev_paramRange[0x12][2] = {
     { 0, 1 }, { 0, 1 }, { 0, 3 }, { 0, 1 },
-    { 0, 100 }, { 0, KLATT_RATE_MAX }, { 0, 100 }, { 0, 1 },
+    { 0, 100 }, { 0, EV_RATE_MAX_HZ }, { 0, 100 }, { 0, 1 },
     { 0, 1 }, { 0, 0x7fffffff }, { 0, 1 }, { 0, 1 },
     { 0, 1 }, { 2, 0x7fffffff }, { 220, 0x7fffffff }, { 0, 0x7fffffff },
     { 220, 0x7fffffff }, { 0, 0 },
@@ -223,11 +228,14 @@ typedef struct AudioFormat {
  * is a mirror of it rather than new noise. That mirror is what a bandlimited
  * resampler exists to remove, and keeping it is the sound old hardware made.
  *
- * So the rule is the rate itself and there is nothing else to carry: an
- * output rate that is a whole multiple of one of the engine's two, twice or
- * more, is held from that one, and anything else is synthesised outright.
- * Both halves are wanted -- 37,800 hertz has no base to be held from and is
- * synthesised -- and which one applies can be read off the number.
+ * So the rule is the rate itself and there is nothing else to carry: above
+ * eleven thousand and twenty five the engine runs at eleven thousand and
+ * twenty five and the samples are repeated, and at or below it the engine
+ * runs at the rate asked for. Twenty-two and forty-four thousand are whole
+ * multiples and every sample is repeated the same number of times; sixteen,
+ * thirty-two and forty-eight are not, and each output sample takes the input
+ * sample nearest it in time, which is the same idea with uneven repeats and
+ * still no interpolation and no filtering.
  *
  * EVV_UPSAMPLE=none turns the holding off and synthesises everything at its
  * own rate, which is how the two are compared without a rebuild. The other
@@ -246,14 +254,32 @@ typedef struct AudioFormat {
 
 /* The rates the settings name. IBM's four keep IBM's numbers. */
 static const int32_t ev_rateByCode[] = {
-    8000, 11025, 22050, 16000, 32000, 44100,
+    8000, 11025, 22050, 16000, 32000, 44100, 48000,
 };
+
 
 #define EV_RATE_CODES ((int32_t)(sizeof ev_rateByCode / sizeof ev_rateByCode[0]))
 
-/* The two the engine synthesises at, and the only two a rule can name. */
-#define EV_BASE_LOW   8000
+/* The engine's better voice, and the one every rate above it is taken from.
+
+   The engine has two, and eight thousand is the narrower: its cosine table
+   runs past its own Nyquist, so formants above four thousand fold back down
+   into the speech, and it is the telephone voice rather than a quieter
+   version of the other one. Forty-eight thousand held from it was tried --
+   six copies of every sample, exactly -- and it is that voice at forty-eight
+   thousand rather than a better one: the band from three to five and a half
+   thousand comes out six decibels louder than eleven thousand puts it, and
+   the envelope is nearly fourteen decibels away.
+
+   So everything above eleven thousand and twenty five is taken from eleven
+   thousand and twenty five, and asking for a higher rate never changes which
+   voice it is. Measured against it, sixteen, thirty-two and forty-eight
+   thousand all land within a couple of decibels across the speech band. */
 #define EV_BASE_HIGH  11025
+
+/* And the narrower one, which is still a rate a caller may ask for by name
+   even though nothing is taken from it. */
+#define EV_BASE_LOW   8000
 
 static int ev_rateIsCoded(int32_t rate)
 {
@@ -265,7 +291,7 @@ int32_t ev_rateHz(int32_t rate)
 {
     if (ev_rateIsCoded(rate))
         return ev_rateByCode[rate];
-    if (rate >= KLATT_RATE_MIN && rate <= KLATT_RATE_MAX)
+    if (rate >= KLATT_RATE_MIN && rate <= EV_RATE_MAX_HZ)
         return rate;
     return 0;
 }
@@ -293,16 +319,31 @@ static int ev_holding(void)
    told. Nought where the rate is not one the engine can make at all. */
 int32_t ev_engineHz(int32_t hz)
 {
-    if (hz < KLATT_RATE_MIN || hz > KLATT_RATE_MAX)
+    if (hz < KLATT_RATE_MIN || hz > EV_RATE_MAX_HZ)
         return 0;
 
-    if (ev_holding()) {
-        if (hz >= EV_BASE_HIGH * 2 && (hz % EV_BASE_HIGH) == 0)
+    /* The engine's own two, which it synthesises with IBM's own tables. */
+    if (hz == EV_BASE_LOW || hz == EV_BASE_HIGH)
+        return hz;
+
+    if (hz > EV_BASE_HIGH) {
+        if (ev_holding())
             return EV_BASE_HIGH;
-        if (hz >= EV_BASE_LOW * 2 && (hz % EV_BASE_LOW) == 0)
-            return EV_BASE_LOW;
+        /* Synthesised outright, which is the comparison rather than the
+           default, and there is a rate above which the engine cannot be
+           trusted to do it. Refusing beats running away: forty-eight
+           thousand with the holding turned off lands here. */
+        return hz <= KLATT_RATE_MAX ? hz : 0;
     }
-    return hz;
+
+    /* Between the two, and there is nothing good to do with it. The language
+       branches on eight thousand -- us_filtr is where the compensation for a
+       cosine table running past Nyquist lives -- and takes the other path
+       for everything else, so a rate in the gap is synthesised without the
+       compensation its own table needs. Measured: at 8,500 and 9,000 the
+       output wraps, at 9,500 and 10,000 it is on the edge, and from about
+       10,500 up it is clean again. Refused rather than half-offered. */
+    return 0;
 }
 
 /* Send the samples to the device. Whatever they were going to before has to
