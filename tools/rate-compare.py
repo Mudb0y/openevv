@@ -196,6 +196,34 @@ def envelope_at(spec, hz):
     return spec[-1][1]
 
 
+def mirror(spec, nyquist, top):
+    """What sits above a rate's own Nyquist, held against its own reflection.
+
+    Raising a rate can only repeat what the source already carried: a
+    component at g hertz comes back at Fs minus g, so the band above Nyquist
+    is the band below it reflected, and how far down says which resampler
+    left it there. Reading the difference at a run of frequencies gives that
+    resampler's stopband as a curve, which is a fingerprint: holding barely
+    falls, a curve through four samples falls steeply, a windowed sinc puts
+    the whole thing sixty decibels down.
+
+    It is deliberately not a verdict. The reflection is loudest where the
+    speech is quietest and quietest where the speech is loud, so a sloping
+    difference is what a plain resampler gives and says nothing on its own.
+    What the curve is for is putting one recording beside another: two files
+    made the same way have the same curve, and a recording whose curve fits
+    none of them was not made that way.
+    """
+    rows = []
+    hz = nyquist * 1.05
+    while hz < min(top, nyquist * 1.95):
+        here = envelope_at(spec, hz)
+        there = envelope_at(spec, 2.0 * nyquist - hz)
+        rows.append((hz, db(here, there) if there > 0 else float("-inf")))
+        hz += nyquist * 0.1
+    return rows
+
+
 def main(argv):
     if len(argv) < 2:
         print(__doc__.strip())
@@ -237,6 +265,31 @@ def main(argv):
         print("  bands, against the energy below %.0f hertz" % OLD_NYQUIST)
         for part in parts:
             print("    " + part)
+
+    # And whether the top of each is a mirror of its own speech band, which
+    # is what says the energy up there came from resampling rather than from
+    # something else the audio passed through.
+    for r in rows:
+        if r["rate"] <= 11025:
+            continue
+        told = mirror(r["spec"], OLD_NYQUIST, r["rate"] / 2.0)
+        if not told:
+            continue
+        levels = [d for _, d in told if d != float("-inf")]
+        if not levels:
+            continue
+        print("")
+        print("%s above %.0f hertz, against its own reflection:"
+              % (r["path"], OLD_NYQUIST))
+        for hz, d in told:
+            print("  %5.0f hertz: %6.1f dB" % (hz, d))
+        # A reflection cannot be louder than what it reflects, so anything at
+        # or above nought is content the source never had.
+        louder = [hz for hz, d in told if d > -1.0]
+        if louder:
+            print("  louder than its own reflection at %s hertz, so something"
+                  " up there did not come from the speech below it"
+                  % ", ".join("%.0f" % hz for hz in louder))
 
     if len(rows) < 2:
         return 0
