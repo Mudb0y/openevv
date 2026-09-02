@@ -23,35 +23,55 @@
 #define CVT_CUBIC   3
 #define CVT_SINC    4
 
-/* The windowed sinc: how many samples each side of the position it reaches,
-   how finely the curve it reads from is drawn, where it stops passing the
-   band through, and how hard the window is.
+/* The windowed sinc, and the two numbers worth arguing about.
  *
- * Twenty-four each side is enough for the images to be gone rather than
- * merely quieter, which is the difference between this and the curve. The
- * cutoff is a fraction of the input's own Nyquist and matches what soxr uses
- * at its medium setting: taking the filter right up to Nyquist would leave
- * no room for it to fall, so the last ninth of the band is where it does.
- * The window is a Kaiser and eight is the shape that puts the stopband about
- * eighty decibels down for this many taps. */
-#define SINC_HALF    24
-#define SINC_PHASES  128
-#define SINC_CUTOFF  0.91
-#define SINC_BETA    8.0
-#define SINC_TABLE   (2 * SINC_HALF * SINC_PHASES + 1)
+ * How far up the band it passes, as a fraction of the input's own Nyquist,
+ * and how many samples it reaches over. The two trade against each other:
+ * taking the filter closer to Nyquist leaves it less room to fall, so it
+ * needs more samples to fall as steeply, and a Kaiser window of this shape
+ * puts the stopband roughly 2.285 times the transition times the taps, in
+ * radians, below the passband.
+ *
+ * The first choice here was 0.91 over 48 samples, copied from what soxr uses
+ * at its medium setting, and it was wrong for this engine. At eleven
+ * thousand and twenty five, 0.91 of Nyquist is 5,016 hertz, and Eloquence
+ * has real speech above that -- measured, the band from 5,016 to 5,512
+ * carries 27 decibels less than the band below it, which is quiet but is
+ * not nothing. Cutting there threw away 12.4 decibels of it, and that was
+ * heard: the voice came out duller than it should be.
+ *
+ * So 0.98 over 192 samples. Measured on the same sentence, that band now
+ * comes through 1.1 decibels under where the engine put it, against 12.4
+ * before, and the images are still 83 decibels down. Pushing further costs
+ * more than it returns: 0.99 over 256 gains another half a decibel of speech
+ * and gives up fifteen of stopband. Ninety-six samples of delay is under
+ * nine milliseconds at the engine's rate.
+ *
+ * EVV_SINC_CUTOFF and EVV_SINC_TAPS move both, because where exactly to put
+ * them is a matter for a listener and not for this file. */
+#define SINC_CUTOFF   0.98
+#define SINC_TAPS     192
+#define SINC_PHASES   128
+#define SINC_BETA     8.0
+
+/* As far as either may be pushed. The taps decide how much is allocated for
+   the filter and how far behind the input it runs, and two hundred and
+   fifty-six of them is nine milliseconds at the engine's rate, which is as
+   much delay as is worth having for this. */
+#define SINC_TAPS_MAX 256
 
 /* How far back the interpolating ways look, and therefore how many samples
    of the run before have to be kept. The sinc is the deepest. */
-#define CVT_HISTORY (2 * SINC_HALF)
+#define CVT_HISTORY   SINC_TAPS_MAX
 
-/* How far behind the input each way runs, in input samples. Looking only
+/* How far behind the input a resampler runs, in input samples. Looking only
    backwards is what lets a run join the one before it with no seam and
    nothing held back at the end; the price is a constant delay, and this is
-   it. Two tenths of a millisecond for the curve and two milliseconds for
-   the sinc, at the engine's own rate. */
-#define CVT_DELAY(m) ((m) == CVT_LINEAR ? 1 \
-                    : (m) == CVT_CUBIC  ? 2 \
-                    : (m) == CVT_SINC   ? SINC_HALF : 0)
+   it. Two tenths of a millisecond for the curve, and half the taps for the
+   sinc, which is under six milliseconds at the engine's rate.
+
+   It is asked of the resampler rather than worked out from the method,
+   because the sinc's answer depends on how many taps it was given. */
 
 typedef struct PcmResampler {
     int32_t from;
@@ -62,16 +82,22 @@ typedef struct PcmResampler {
     /* The last few samples of the run before. */
     int32_t history[CVT_HISTORY];
     /* The windowed sinc, drawn once when the rate is settled and read with a
-       straight line between its points. Kept here rather than shared so that
-       two instances on two threads cannot race to draw it. */
-    int     drawn;
-    double  sinc[SINC_TABLE];
+       straight line between its points. Owned here rather than shared so
+       that two instances on two threads cannot race to draw it, and
+       allocated rather than inline because how big it is depends on how many
+       taps it was asked for. pcm_resample_end gives it back. */
+    int32_t half;            /* taps each side of the position */
+    double *sinc;            /* 2 * half * SINC_PHASES + 1 of them */
 } PcmResampler;
 
-void     pcm_resample_start(PcmResampler *r, int32_t from, int32_t to,
+/* Answers zero where the filter could not be made, which is out of room and
+   nothing else. */
+int      pcm_resample_start(PcmResampler *r, int32_t from, int32_t to,
                             int32_t method);
+void     pcm_resample_end(PcmResampler *r);
 uint32_t pcm_resample_count(const PcmResampler *r, uint32_t n);
 uint32_t pcm_resample(PcmResampler *r, const int32_t *src, uint32_t n,
                       int32_t *out);
+int32_t  pcm_resample_delay(const PcmResampler *r);
 
 #endif

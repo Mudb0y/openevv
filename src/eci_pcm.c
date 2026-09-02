@@ -142,11 +142,14 @@ THIS int32_t pcm_setup(SoundOutput *o, char *a, int32_t *b, int32_t *c,
  *           quick mode. It suppresses the mirror by some nine decibels over
  *           holding, which is a rate change rather than an effect, and it is
  *           well short of removing it.
- *   sinc    a windowed sinc across forty-eight of them, which is what a
- *           resampler actually is and is the default. The images are gone
- *           rather than quieter -- some fifty decibels below where the curve
- *           leaves them -- and the band below the cutoff comes through flat
- *           instead of drooping at the top.
+ *   sinc    a windowed sinc across a hundred and ninety-two of them,
+ *           which is what a resampler actually is and is the default. The
+ *           images are gone rather than quieter -- some fifty decibels below
+ *           where the curve leaves them -- and the passband comes through
+ *           flat instead of drooping at the top. Where it stops passing and
+ *           how many samples it takes to stop are in eci_pcm.h with the
+ *           argument for the particular numbers, and EVV_SINC_CUTOFF and
+ *           EVV_SINC_TAPS move them.
  *
  * The sinc is the default because the curve was not enough. Held against
  * Apple's driver, which does its own resampling out of an eci.dylib that
@@ -216,14 +219,68 @@ static double cvt_i0(double x)
    In units of one input sample throughout, which is what makes it the same
    filter whatever the ratio: raising a rate needs the images of the input
    removed, and where those images begin is a property of the input alone. */
-static void cvt_draw(PcmResampler *r)
+/* How far up the band to pass and over how many samples, read once. Both are
+   experiment knobs rather than settings: an engine that changed its mind
+   halfway through an utterance would be comparing two things at once. */
+static double cvt_cutoff(void)
 {
-    double edge = cvt_i0(SINC_BETA);
-    int    i;
+    static int    decided;
+    static double cutoff = SINC_CUTOFF;
 
-    for (i = 0; i < SINC_TABLE; i++) {
-        double t = (double)(i - SINC_HALF * SINC_PHASES) / (double)SINC_PHASES;
-        double x = t / (double)SINC_HALF;
+    if (!decided) {
+        const char *say = getenv("EVV_SINC_CUTOFF");
+
+        decided = 1;
+        if (say != 0) {
+            double v = atof(say);
+
+            /* Below a half there is no point and above one there is no
+               meaning: a filter cannot pass what the input never carried. */
+            if (v >= 0.5 && v <= 1.0)
+                cutoff = v;
+        }
+    }
+    return cutoff;
+}
+
+static int32_t cvt_taps(void)
+{
+    static int     decided;
+    static int32_t taps = SINC_TAPS;
+
+    if (!decided) {
+        const char *say = getenv("EVV_SINC_TAPS");
+
+        decided = 1;
+        if (say != 0) {
+            int32_t v = (int32_t)atoi(say);
+
+            /* Even, because the window sits between the two middle samples,
+               and enough of them to be a filter at all. */
+            if (v >= 8 && v <= SINC_TAPS_MAX)
+                taps = v & ~1;
+        }
+    }
+    return taps;
+}
+
+/* Answers zero when there is no room for the filter. */
+static int cvt_draw(PcmResampler *r)
+{
+    double  cutoff = cvt_cutoff();
+    double  edge = cvt_i0(SINC_BETA);
+    int32_t half = cvt_taps() / 2;
+    int32_t count = 2 * half * SINC_PHASES + 1;
+    int32_t i;
+
+    r->sinc = malloc((size_t)count * sizeof(double));
+    if (r->sinc == 0)
+        return 0;
+    r->half = half;
+
+    for (i = 0; i < count; i++) {
+        double t = (double)(i - half * SINC_PHASES) / (double)SINC_PHASES;
+        double x = t / (double)half;
         double w, v;
 
         if (x < -1.0 || x > 1.0) {
@@ -233,40 +290,63 @@ static void cvt_draw(PcmResampler *r)
         w = cvt_i0(SINC_BETA * sqrt(1.0 - x * x)) / edge;
 
         if (t == 0.0) {
-            v = SINC_CUTOFF;
+            v = cutoff;
         } else {
-            double a = 3.14159265358979323846 * SINC_CUTOFF * t;
+            double a = 3.14159265358979323846 * cutoff * t;
 
-            v = SINC_CUTOFF * sin(a) / a;
+            v = cutoff * sin(a) / a;
         }
         r->sinc[i] = v * w;
     }
-    r->drawn = 1;
+    return 1;
 }
 
 /* One coefficient, by a straight line between the two points either side. */
 static double cvt_weight(const PcmResampler *r, double t)
 {
-    double at = (t + (double)SINC_HALF) * (double)SINC_PHASES;
+    double at = (t + (double)r->half) * (double)SINC_PHASES;
+    double top = (double)(2 * r->half * SINC_PHASES);
     int    i;
     double f;
 
-    if (at <= 0.0 || at >= (double)(SINC_TABLE - 1))
+    if (at <= 0.0 || at >= top)
         return 0.0;
     i = (int)at;
     f = at - (double)i;
     return r->sinc[i] + (r->sinc[i + 1] - r->sinc[i]) * f;
 }
 
-void pcm_resample_start(PcmResampler *r, int32_t from, int32_t to,
-                        int32_t method)
+int pcm_resample_start(PcmResampler *r, int32_t from, int32_t to,
+                       int32_t method)
 {
+    /* Nothing is given back here: what arrives is taken as uninitialised,
+       because that is what it usually is, and reading a pointer out of a
+       struct nobody has cleared to decide whether to free it is how a stack
+       variable becomes a crash. Whoever starts one ends it. */
     memset(r, 0, sizeof *r);
     r->from = from;
     r->to = to;
     r->method = method;
     if (method == CVT_SINC)
-        cvt_draw(r);
+        return cvt_draw(r);
+    return 1;
+}
+
+void pcm_resample_end(PcmResampler *r)
+{
+    free(r->sinc);
+    r->sinc = 0;
+    r->half = 0;
+}
+
+int32_t pcm_resample_delay(const PcmResampler *r)
+{
+    switch (r->method) {
+    case CVT_LINEAR: return 1;
+    case CVT_CUBIC:  return 2;
+    case CVT_SINC:   return r->half;
+    default:         return 0;
+    }
 }
 
 /* How many output samples a run of n input ones comes to. Every output
@@ -351,8 +431,8 @@ uint32_t pcm_resample(PcmResampler *r, const int32_t *src, uint32_t n,
             double acc = 0.0, weight = 0.0;
             int32_t j;
 
-            for (j = -2 * SINC_HALF + 1; j <= 0; j++) {
-                double w = cvt_weight(r, (double)(j + SINC_HALF) - f);
+            for (j = -2 * r->half + 1; j <= 0; j++) {
+                double w = cvt_weight(r, (double)(j + r->half) - f);
 
                 acc += w * (double)cvt_tap(r, src, n, i + j);
                 weight += w;
@@ -448,6 +528,7 @@ THIS void *pcm_cvt_ctor(AudioConverter *c)
 
 THIS void pcm_cvt_dtor(AudioConverter *c)
 {
+    pcm_resample_end(&c->walk);
     free(c->room);
     c->room = 0;
     c->samples = 0;
@@ -466,8 +547,14 @@ THIS int32_t pcm_cvt_setDest(AudioConverter *c, void *fmt)
     if (c->walk.from <= 0 || to < c->walk.from)
         return -1;
 
-    pcm_resample_start(&c->walk, c->walk.from, to, cvt_method());
-    return 0;
+    {
+        /* A second format on the same converter, so whatever the first one
+           drew is given back before the next is. */
+        int32_t from = c->walk.from;
+
+        pcm_resample_end(&c->walk);
+        return pcm_resample_start(&c->walk, from, to, cvt_method()) ? 0 : -1;
+    }
 }
 
 /* Enough room for n samples, kept between runs so a steady stream of them

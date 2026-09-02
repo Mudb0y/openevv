@@ -299,7 +299,7 @@ static int unitChecks(void)
             PcmResampler r;
             uint32_t n = 1000, whole, made, at;
             uint32_t i;
-            int32_t delay = CVT_DELAY(METHODS[m].method);
+            int32_t delay;
 
             /* A held level, then a straight line, so both properties are in
                the one run and the join between them is exercised too.
@@ -317,7 +317,12 @@ static int unitChecks(void)
                 unit_in[i] = i < n / 2 ? 1000
                                        : 1000 + (int32_t)(i - n / 2) * 60;
 
-            pcm_resample_start(&r, from, to, METHODS[m].method);
+            if (!pcm_resample_start(&r, from, to, METHODS[m].method)) {
+                printf("rates: no room for the %s filter\n",
+                       METHODS[m].name);
+                return 0;
+            }
+            delay = pcm_resample_delay(&r);
             whole = pcm_resample_count(&r, n);
             if (whole > sizeof unit_whole / sizeof unit_whole[0]) {
                 printf("rates: no room to drive the resampler\n");
@@ -388,10 +393,16 @@ static int unitChecks(void)
                 }
             }
 
+            pcm_resample_end(&r);
+
             /* And the same run in pieces, which has to come out the same.
                Uneven pieces on purpose: a way that only joined up on a round
                number of samples would pass on even ones. */
-            pcm_resample_start(&r, from, to, METHODS[m].method);
+            if (!pcm_resample_start(&r, from, to, METHODS[m].method)) {
+                printf("rates: no room for the %s filter\n",
+                       METHODS[m].name);
+                return 0;
+            }
             at = 0;
             made = 0;
             {
@@ -421,8 +432,10 @@ static int unitChecks(void)
                            "%d in pieces and %d whole\n", METHODS[m].name,
                            (int)from, (int)to, i, (int)unit_piece[i],
                            (int)unit_whole[i]);
+                    pcm_resample_end(&r);
                     return 0;
                 }
+            pcm_resample_end(&r);
         }
     }
 
@@ -798,7 +811,8 @@ int main(void)
                    sample through untouched would not be filtering. What
                    stands for it is the arithmetic driven directly above. */
                 long times = hz / from;
-                long delay = CVT_DELAY(method);
+                long delay = method == CVT_LINEAR ? 1
+                           : method == CVT_CUBIC ? 2 : 0;
 
                 for (k = delay; k < baseN && wrong == 0; k++) {
                     long j = k * times;
