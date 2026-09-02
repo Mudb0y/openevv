@@ -267,7 +267,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok romcan romprims
+.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -433,6 +433,15 @@ xmltok: $(BUILD)/xmltok
 
 $(BUILD)/xmltok: test/xmltok.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) -DEVV_XMLTOK_OURS test/xmltok.c $(BUILD)/libevv.a -lpthread -lm -o $@
+
+# And the whole reader through the published filter interface, which is what
+# `test/ssml.sh' holds against IBM's own. The document goes in as text and the
+# engine's annotations come out as text, so a difference names itself.
+ssml: $(BUILD)/ssml
+	@$(BUILD)/ssml > /dev/null && echo "built and ran $(BUILD)/ssml"
+
+$(BUILD)/ssml: test/ssml.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) -DEVV_SSML_OURS test/ssml.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 $(OBJDIR)/%.o: %.c $(HEADERS)

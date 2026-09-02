@@ -297,3 +297,219 @@ int32_t enableFilter(void *p, int32_t lang, const char *text, char **out)
 
     return any;
 }
+
+/* ---- what a caller reaches all of this through ----------------------- */
+
+/* The eight published calls about filters. Six of them are one line over
+   the newer interface underneath; two are not.
+ *
+ * Registering and unregistering go straight to the manager rather than
+ * through that interface, because there is nothing in the newer one to go
+ * through: the pair was never given a `2' form. And making one waits for
+ * the engine to fall quiet first, since loading a filter while a sentence
+ * is being spoken would change the text underneath it.
+ *
+ * `eciActivateFilter' answers a refusal over a filter it has just turned
+ * on, which is the original's: the manager's answer is always the
+ * refusal, and anything but nought is reported as one. See
+ * `fm_activateById' in src/eci_filtermanager.c. */
+
+extern int ev_sendParameters(OldInst *h);
+extern STDCALL int32_t api_check_synth(void *h2)
+    MANGLED("_eciCheckSynthesizing2@4");
+extern STDCALL int32_t api_synthesize(void *h2) MANGLED("_eciSynthesize2@4");
+extern STDCALL int32_t api_synchronize(void *h2)
+    MANGLED("_eciSynchronize2@4");
+extern STDCALL int32_t api_activate_filter(void *h2, int32_t id)
+    MANGLED("_eciActivateFilter2@8");
+extern STDCALL int32_t api_deactivate_filter(void *h2, int32_t id)
+    MANGLED("_eciDeactivateFilter2@8");
+extern STDCALL int32_t api_delete_filter(void *h2, void *filter)
+    MANGLED("_eciDeleteFilter2@8");
+extern STDCALL int32_t api_new_filter(void *h2, int32_t lang, int32_t id,
+                                      void **out)
+    MANGLED("_eciNewFilter2@16");
+extern STDCALL int32_t api_update_filter(void *h2, void *filter, void *a,
+                                         int32_t b, void *c, int32_t d,
+                                         int32_t e)
+    MANGLED("_eciUpdateFilter2@28");
+extern STDCALL int32_t eo_getParam(OldInst *h, int32_t which)
+    MANGLED("_eciGetParam@8");
+extern THIS int fm_registerFilter(void *m, void *attrib, uint32_t id,
+                                  void *entry, int8_t autoload);
+extern THIS int fm_unregisterFilter(void *m, void *attrib, uint32_t id);
+
+/* What the flat calls answer when there is no instance, and the one that
+   says the engine was busy. */
+#define ECI_FILTER_REFUSED   6
+#define ECI_FILTER_NO_HANDLE 4
+#define ECI_BUSY_SPEAKING    3
+#define ECI_CONVERSION_REFUSED 3
+#define ECI_FILTER_NO_ROOM     2
+
+/* Which parameter says the language, and what it means to ask for the one
+   in force rather than a particular one. */
+#define ECI_PARAM_LANGUAGE   9
+#define FILTER_ANY_LANGUAGE  1
+
+/* And the bit the instance sets to say it refused because it was busy. */
+#define REFUSED_WHILE_BUSY   0x2000
+
+int32_t STDCALL es_registerFilter(OldInst *h, uint32_t id, void *entry,
+                                 void *attrib, int32_t autoload)
+{
+    if (!h)
+        return ECI_FILTER_REFUSED;
+
+    return fm_registerFilter(OI_FILTERMGR(h), attrib, id, entry,
+                             autoload != 0);
+}
+
+int32_t STDCALL es_unregisterFilter(OldInst *h, uint32_t id, void *attrib)
+{
+    if (!h)
+        return ECI_FILTER_REFUSED;
+
+    return fm_unregisterFilter(OI_FILTERMGR(h), attrib, id);
+}
+
+/* Turning one on and throwing away what happened, which is what the older
+   call did: it answers nought whatever the manager said. */
+int32_t STDCALL es_setFilter(OldInst *h, int32_t id)
+{
+    if (!h)
+        return ECI_FILTER_NO_HANDLE;
+
+    api_activate_filter(OI_NEW(h), id);
+    return 0;
+}
+
+int32_t STDCALL es_activateFilter(OldInst *h, int32_t id)
+{
+    if (!h)
+        return ECI_FILTER_REFUSED;
+
+    if (api_activate_filter(OI_NEW(h), id) != 0)
+        return ECI_FILTER_REFUSED;
+    return 0;
+}
+
+int32_t STDCALL es_deactivateFilter(OldInst *h, int32_t id)
+{
+    if (!h)
+        return ECI_FILTER_REFUSED;
+
+    if (api_deactivate_filter(OI_NEW(h), id) != 0)
+        return ECI_FILTER_REFUSED;
+    return 0;
+}
+
+int32_t STDCALL es_deleteFilter(OldInst *h, void *filter)
+{
+    if (!h)
+        return 0;
+
+    api_delete_filter(OI_NEW(h), filter);
+    return 0;
+}
+
+/* One is a filter's handle rather than a number, so a caller keeps what
+   comes back. A language of one means whatever is in force.
+ *
+ * Everything queued is spoken out first. A filter loaded halfway through a
+ * sentence would be asked to filter the rest of it and not the start,
+ * so the call refuses while the engine is speaking and only then waits. */
+void *STDCALL es_newFilter(OldInst *h, int32_t id, int32_t language)
+{
+    void   *filter = 0;
+    int32_t rc = -1;
+    int32_t lang;
+
+    if (!h)
+        return 0;
+
+    if (api_check_synth(OI_NEW(h)) == ECI_BUSY_SPEAKING) {
+        OI_REFUSED(h) = REFUSED_WHILE_BUSY;
+        OI_REFUSEDALL(h) |= REFUSED_WHILE_BUSY;
+        return 0;
+    }
+
+    ev_sendParameters(h);
+    api_synthesize(OI_NEW(h));
+    api_synchronize(OI_NEW(h));
+
+    if (language == FILTER_ANY_LANGUAGE)
+        lang = 0;
+    else
+        lang = eo_getParam(h, ECI_PARAM_LANGUAGE);
+
+    if (lang >= 0)
+        rc = api_new_filter(OI_NEW(h), lang, id, &filter);
+
+    return rc < 0 ? 0 : filter;
+}
+
+/* Two strings handed to a filter, whatever it makes of them. Each may be
+   UTF-16, so each is converted first and the copy freed afterwards --
+   except where the converter handed back what it was given, which is how
+   it says a string was already in the language's own code set.
+ *
+ * What comes back is nought whether the filter accepted them or not: the
+ * answer is worked out, stored, and then thrown away for a nought. That is
+ * the original's. */
+int32_t STDCALL es_updateFilter(OldInst *h, void *filter, const char *a,
+                                const char *b)
+{
+    char   *ca = 0;
+    char   *cb = 0;
+    int32_t na = 0;
+    int32_t nb = 0;
+    int32_t lang;
+
+    if (!h || !filter)
+        return ECI_FILTER_NO_HANDLE;
+
+    lang = eo_getParam(h, ECI_PARAM_LANGUAGE);
+
+    if (UnicodeConverter(h, (const uint16_t *)a, &ca, 1))
+        return ECI_CONVERSION_REFUSED;
+
+    if (a != ca) {
+        char *copy = cpp_new((uint32_t)strlen(ca) + 1);
+
+        if (copy == 0)
+            return ECI_FILTER_NO_ROOM;
+        strcpy(copy, ca);
+        ca = copy;
+    } else {
+        ca = (char *)a;
+    }
+
+    cb = (char *)b;
+    if (UnicodeConverter(h, (const uint16_t *)b, &cb, 1)) {
+        if (a != ca)
+            cpp_delete(ca);
+        return ECI_CONVERSION_REFUSED;
+    }
+
+    if (ca != 0)
+        na = (int32_t)strlen(ca);
+    if (cb != 0)
+        nb = (int32_t)strlen(cb);
+
+    api_update_filter(OI_NEW(h), filter, ca, na, cb, nb, lang);
+
+    if (a != ca)
+        cpp_delete(ca);
+
+    return 0;
+}
+
+ALIAS_N("_eciRegisterFilter@20", "es_registerFilter", 20);
+ALIAS_N("_eciUnregisterFilter@12", "es_unregisterFilter", 12);
+ALIAS_N("_eciSetFilter@8", "es_setFilter", 8);
+ALIAS_N("_eciActivateFilter@8", "es_activateFilter", 8);
+ALIAS_N("_eciDeactivateFilter@8", "es_deactivateFilter", 8);
+ALIAS_N("_eciDeleteFilter@8", "es_deleteFilter", 8);
+ALIAS_N("_eciNewFilter@12", "es_newFilter", 12);
+ALIAS_N("_eciUpdateFilter@16", "es_updateFilter", 16);

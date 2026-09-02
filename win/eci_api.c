@@ -17,10 +17,10 @@
  * carries no @N to strip, and a callback made as stdcall is callable as
  * anything. So these are plain functions, exported under plain names.
  *
- * What is not here: the filter interface, which the engine does not implement,
- * and eciGeneratePhonemes and the dictionary find, lookup and update calls,
- * which exist inside the engine but have no public wrapper in our tree yet. A
- * caller asking for one of those gets nothing rather than something wrong.
+ * What is not here: eciGeneratePhonemes and the dictionary find, lookup and
+ * update calls, which exist inside the engine but have no public wrapper in
+ * our tree yet. A caller asking for one of those gets nothing rather than
+ * something wrong.
  */
 
 #include <stdint.h>
@@ -38,6 +38,16 @@ int      STDCALL es_delete(OldInst *h);
 int      STDCALL es_reset(OldInst *h);
 void     STDCALL eo_version(char *out);
 int      STDCALL es_testPhrase(OldInst *h);
+int32_t  STDCALL es_registerFilter(OldInst *h, uint32_t id, void *entry,
+                                   void *attrib, int32_t autoload);
+int32_t  STDCALL es_unregisterFilter(OldInst *h, uint32_t id, void *attrib);
+void    *STDCALL es_newFilter(OldInst *h, int32_t id, int32_t language);
+int32_t  STDCALL es_deleteFilter(OldInst *h, void *filter);
+int32_t  STDCALL es_activateFilter(OldInst *h, int32_t id);
+int32_t  STDCALL es_deactivateFilter(OldInst *h, int32_t id);
+int32_t  STDCALL es_setFilter(OldInst *h, int32_t id);
+int32_t  STDCALL es_updateFilter(OldInst *h, void *filter, const char *a,
+                                 const char *b);
 int      STDCALL es_speakText(const void *text, int32_t annotations);
 int      STDCALL es_speakTextEx(const void *text, int32_t annotations,
                                 int32_t language);
@@ -209,6 +219,53 @@ API int eciDialogBox(void *h, void *parent, int which, void *a, void *b)
 API int eciGetFilteredText(void *h, const void *text, void *out, int room)
 {
     return es_getFilteredText(h, text, out, room);
+}
+
+/* ---- filters ---------------------------------------------------------- */
+
+/* Registering is what turns the SSML reader on: the engine carries it but
+   never loads it by itself, so a caller hands in the entry point and gets
+   a filter it can activate. src/eci_filtermanager.c is the whole of why. */
+
+API int eciRegisterFilter(void *h, unsigned int id, void *entry, void *attrib,
+                          int autoload)
+{
+    return es_registerFilter(h, id, entry, attrib, autoload);
+}
+
+API int eciUnregisterFilter(void *h, unsigned int id, void *attrib)
+{
+    return es_unregisterFilter(h, id, attrib);
+}
+
+API void *eciNewFilter(void *h, int id, int global)
+{
+    return es_newFilter(h, id, global);
+}
+
+API int eciDeleteFilter(void *h, void *filter)
+{
+    return es_deleteFilter(h, filter);
+}
+
+API int eciActivateFilter(void *h, int id)
+{
+    return es_activateFilter(h, id);
+}
+
+API int eciDeactivateFilter(void *h, int id)
+{
+    return es_deactivateFilter(h, id);
+}
+
+API int eciSetFilter(void *h, int id)
+{
+    return es_setFilter(h, id);
+}
+
+API int eciUpdateFilter(void *h, void *filter, const char *a, const char *b)
+{
+    return es_updateFilter(h, filter, a, b);
 }
 
 /* ---- coming and going ------------------------------------------------ */

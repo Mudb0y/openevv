@@ -58,7 +58,7 @@ extern THIS const char *ini_getNextSection(IniFileReader *r)
 extern THIS char *ini_getString(IniFileReader *r, const char *section,
                                 const char *key)
     MANGLED("?getString@IniFileReader@@QAEPBDPBD0@Z");
-extern THIS void li_setPackedInt(void *l)
+extern THIS void lidnt_setPackedInt(void *l)
     MANGLED("?setPackedInt@LangIdentifier@@AAEXXZ");
 
 THIS int32_t eng_getFirstLanguage(EngineList *el, void *lang);
@@ -88,7 +88,7 @@ static int32_t eng_nameToLang(const char *section, void *lang)
     *(int32_t *)lang = 0;
     strncpy(LANG_TEXT(lang), name, LANG_TEXT_ROOM);
     *((char *)lang + 0x10) = 0;
-    li_setPackedInt(lang);
+    lidnt_setPackedInt(lang);
 
     cpp_delete(name);
     return 1;

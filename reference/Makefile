@@ -211,6 +211,20 @@ $(BUILD)/xmltok.exe: ../test/xmltok.c $(BUILD)/ral_shim.obj \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/xmltok.err >&2 || true; exit $$s
 	@echo "built $@"
 
+# And the whole reader, driven through IBM's own published filter interface,
+# for test/ssml.sh. Same file the top-level `make ssml' compiles.
+.PHONY: ssml
+ssml: $(BUILD)/ssml.exe
+
+$(BUILD)/ssml.exe: ../test/ssml.c $(BUILD)/ral_shim.obj \
+                   $(BUILD)/ctors.obj $(SHIM) $(WORK)/.stamp
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src ../test/ssml.c \
+	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/ssml.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/ssml.err >&2 || true; exit $$s
+	@echo "built $@"
+
 # The romanizer's converters called directly, which is the other half of
 # test/romprims.sh. Only Japanese has a romanizer, so this wants TAG=jajp, and
 # it reads the maps in rom/jajp as well as the engine's own headers: the state
@@ -237,6 +251,7 @@ clean:
 	       $(BUILD)/prims.exe $(BUILD)/prims.err \
 	       $(BUILD)/ipa.exe $(BUILD)/ipa.err \
 	       $(BUILD)/xmltok.exe $(BUILD)/xmltok.err \
+	       $(BUILD)/ssml.exe $(BUILD)/ssml.err \
 	       $(BUILD)/uni.syms $(BUILD)/link.err $(BUILD)/taplink.err
 
 # The romanizer's own seam, tapped. Six of RomanizerManager's public methods

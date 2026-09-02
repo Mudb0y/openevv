@@ -89,7 +89,10 @@ extern const uint32_t rm_bytes;
 #define SIZE_CONCAT      0x2c0
 extern const uint32_t eq_bytes;
 #define MARKQUEUE_ROOM   0x200
-#define SIZE_FILTERS     0x144
+/* The filter manager is a struct of ours now, so its size is asked for
+   rather than named: it holds pointers and a settings reader, both of
+   which are wider on a wider host. */
+extern const uint32_t fm_bytes;
 extern const uint32_t sm_bytes;
 extern const uint32_t ph_bytes;
 #define INDEX_BLOCK      8
@@ -339,7 +342,7 @@ static void stl_build(SynthThread *t, void *app, void *state)
     if (!ST_MARKS(t))
         ST_STATUS(t) = ERR_FAILED;
 
-    p = cpp_new(SIZE_FILTERS);
+    p = cpp_new(fm_bytes);
     ST_FILTERS(t) = p ? fm_ctor(p, t) : 0;
     if (!ST_FILTERS(t))
         ST_STATUS(t) = ERR_FAILED;

@@ -85,7 +85,7 @@ extern THIS int32_t sy_mutexWait(void *m, int32_t ms)
 extern THIS int32_t sy_mutexRelease(void *m)
     MANGLED("?release@Mutex@@QAEHXZ");
 
-extern THIS void li_setPackedInt(LangIdentifier *l)
+extern THIS void lidnt_setPackedInt(LangIdentifier *l)
     MANGLED("?setPackedInt@LangIdentifier@@AAEXXZ");
 
 /* The reader keeps its own buffer, so the object is bigger than anything
@@ -119,7 +119,7 @@ THIS LangIdentifier *lang_ctor(LangIdentifier *l, const char *s)
     l->packed = 0;
     strncpy(l->text, s, sizeof l->text);
     l->pad_10[0] = 0;
-    li_setPackedInt(l);
+    lidnt_setPackedInt(l);
     return l;
 }
 

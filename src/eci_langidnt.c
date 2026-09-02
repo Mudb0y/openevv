@@ -27,7 +27,7 @@ int32_t isUnicodeCodeSet(int32_t a, int32_t b)
     return (a & b) > 0;
 }
 
-THIS void li_setPackedInt(void *l)
+THIS void lidnt_setPackedInt(void *l)
 {
     const char *s = LANG_TEXT(l);
     uint8_t major = 0;
@@ -53,7 +53,7 @@ THIS void li_setPackedInt(void *l)
    where the text beside it comes from in the first place. Both halves are
    taken as bytes, so a language numbered above two hundred and fifty-five
    comes back wrong -- the same limit the packing has. */
-THIS void li_setString(void *l)
+THIS void lidnt_setString(void *l)
 {
     int32_t packed = LANG_PACKED(l);
 
@@ -62,5 +62,5 @@ THIS void li_setString(void *l)
             (unsigned)(packed & 0xff));
 }
 
-ALIAS("?setPackedInt@LangIdentifier@@AAEXXZ", "li_setPackedInt");
-ALIAS("?setString@LangIdentifier@@AAEXXZ", "li_setString");
+ALIAS("?setPackedInt@LangIdentifier@@AAEXXZ", "lidnt_setPackedInt");
+ALIAS("?setString@LangIdentifier@@AAEXXZ", "lidnt_setString");

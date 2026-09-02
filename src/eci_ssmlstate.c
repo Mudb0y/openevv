@@ -617,6 +617,7 @@ THIS void ss_ctor(SSMLState *s)
     s->lang = 0;
     s->audio = 0;
     s->emphasis = 0;
+    s->env = 0;
     s->voices = 0;
 
     s->tmpBuffer = malloc((size_t)s->tmpRoom);
