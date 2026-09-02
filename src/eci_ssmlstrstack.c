@@ -28,7 +28,7 @@ THIS void sss_ctor(SSMLStrStack *s)
 {
     s->count = 0;
     s->slots = SSML_STACK_SLOTS;
-    s->items = malloc((size_t)s->slots * 4);
+    s->items = malloc((size_t)s->slots * sizeof *s->items);
 }
 
 THIS void sss_dtor(SSMLStrStack *s)
@@ -76,7 +76,7 @@ THIS void sss_push(SSMLStrStack *s, char *v)
     char *copy;
 
     if (s->count == s->slots) {
-        char  **items = malloc((size_t)s->slots * 4 * 2);
+        char  **items = malloc((size_t)s->slots * 2 * sizeof *items);
         int32_t i;
 
         for (i = 0; i < s->slots; i++)

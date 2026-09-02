@@ -267,7 +267,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa romcan romprims
+.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok romcan romprims
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -421,6 +421,18 @@ ipa: $(BUILD)/ipa
 
 $(BUILD)/ipa: test/ipa.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) -DEVV_IPA_OURS test/ipa.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# The XML scanner, held against IBM's own. What has to be right about it is
+# the token stream, and neither the suite nor the audio can see that: a
+# document tokenised differently may still sound the same. `test/xmltok.sh'
+# builds this and the same file against IBM's objects and diffs the handler
+# calls.
+xmltok: $(BUILD)/xmltok
+	@$(BUILD)/xmltok > /dev/null && echo "built and ran $(BUILD)/xmltok"
+
+$(BUILD)/xmltok: test/xmltok.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) -DEVV_XMLTOK_OURS test/xmltok.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 $(OBJDIR)/%.o: %.c $(HEADERS)

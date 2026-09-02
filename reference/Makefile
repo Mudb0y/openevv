@@ -198,6 +198,19 @@ $(BUILD)/ipa.exe: ../test/ipa.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/ipa.err >&2 || true; exit $$s
 	@echo "built $@"
 
+# And the XML scanner out of the same objects, for test/xmltok.sh.
+.PHONY: xmltok
+xmltok: $(BUILD)/xmltok.exe
+
+$(BUILD)/xmltok.exe: ../test/xmltok.c $(BUILD)/ral_shim.obj \
+                     $(BUILD)/ctors.obj $(SHIM) $(WORK)/.stamp
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src ../test/xmltok.c \
+	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/xmltok.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/xmltok.err >&2 || true; exit $$s
+	@echo "built $@"
+
 # The romanizer's converters called directly, which is the other half of
 # test/romprims.sh. Only Japanese has a romanizer, so this wants TAG=jajp, and
 # it reads the maps in rom/jajp as well as the engine's own headers: the state
@@ -223,6 +236,7 @@ clean:
 	       $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/*.tmp.o \
 	       $(BUILD)/prims.exe $(BUILD)/prims.err \
 	       $(BUILD)/ipa.exe $(BUILD)/ipa.err \
+	       $(BUILD)/xmltok.exe $(BUILD)/xmltok.err \
 	       $(BUILD)/uni.syms $(BUILD)/link.err $(BUILD)/taplink.err
 
 # The romanizer's own seam, tapped. Six of RomanizerManager's public methods
