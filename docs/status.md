@@ -456,9 +456,9 @@ Apple ships ETI Eloquence as the voice behind VoiceOver, in `eci.dylib` inside `
 
 A sustained vowel, in 500 Hz bands from nought to 5.5 kHz, dB relative to each file's own strongest band, ours against theirs: 0.00/0.00, -4.15/-3.89, -9.31/-9.16, -28.06/-27.90, -19.32/-19.30, -19.24/-19.26, -25.32/-25.32, -21.64/-21.67, -35.75/-35.80, -52.55/-52.50, -58.65/-58.54. Agreement to a tenth of a decibel.
 
-And four sentences chosen for sibilants, plosives and transitions, in 250 Hz bands over the same span: the worst disagreement anywhere is 0.76 dB, at 4,750 to 5,000 Hz.
+And four sentences chosen for sibilants, plosives and transitions, in 250 Hz bands over the same span: through 3,250 to 4,250 Hz, where the engine's response is flat, the two agree to within **0.07 dB**. The largest disagreement anywhere is 0.76 dB, and it sits at 4,750 to 5,000.
 
-Where that worst band sits is itself the reassuring part, and worth saying so nobody reads it as a warning. Through 3,250 to 4,250 Hz, where the engine's response is flat, the two agree to within 0.07 dB. The disagreement only appears once the rolloff begins -- the level falls 5.4 dB across 4,250 to 5,000 -- and on a slope that steep a difference of a few tens of hertz in where the fall starts reads as most of a decibel. The concerning shape would have been the largest gap sitting in the middle of the spectrum where the response is level; this is the opposite of that.
+Which is the benign place for it, and worth saying so the bound is not read as the result. The level falls 5.4 dB across 4,250 to 5,000, and on a slope that steep a difference of a few tens of hertz in where the fall begins reads as most of a decibel. So the disagreement tracks the derivative and not the level: it is near nothing wherever the response is flat and appears only on the rolloff. The concerning shape would have been that same figure in the middle of the spectrum where the response is level, which is a different fault entirely.
 
 That is a stronger statement than `test/suite.sh` can make. The suite holds us against the very objects we were transcribed from, so it proves the transcription and not the model. This holds us against a different implementation, on a different architecture, compiled by a different vendor from a different source tree.
 
