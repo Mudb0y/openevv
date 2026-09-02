@@ -1,0 +1,2540 @@
+# The rules of ut_numbr.obj, written by tools/delta-notation.py.
+# One operation to a line. See docs/building.md.
+
+rule convert_digits_to_words from ut_numbr.obj
+shape frame 212 argbase 8 params 3
+label L0 was _convert_digits_to_words
+  alu andl imm 0 slot -12
+  load movl slotaddr -120 into r0
+  push imm 0
+  push slotaddr -120
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L2
+  load movl slotaddr -120 into r0
+  push slotaddr -120
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -212 into r0
+  push slotaddr -212
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L2
+  load movl param 2 into r7
+  push reg r7
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push param 1
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  push state 0
+  call ZZget_parm_ptr2 arity 5 depth 5
+  push state 0
+  call ZZfence_null arity 1 depth 6
+  push state 0
+  call ZZstarttest1 arity 1 depth 7
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  push state 0
+  call ZZlpta_load__setscan_r__1 arity 2 depth 9
+  popn 9
+  cmp testl reg r0 reg r0
+  branch jne to L2
+  push state 0
+  call ZZtestFldeq1_3_2 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L1
+  push state 0
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch je to L3
+label L1 was at_0x93
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r6
+  call backtrack_function arity 2 depth 2
+  alu decl none reg r0
+  popreg r1
+  popreg r1
+  branch je to L2
+  alu decl none reg r0
+  branch je to L4
+  alu decl none reg r0
+  branch je to L5
+  alu decl none reg r0
+  branch je to L6
+  alu decl none reg r0
+  branch je to L6
+label L2 was at_0xae
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L7
+label L3 was at_0xbd
+  load movw ind reg r6 1510 into r0w
+  push reg r6
+  store movw reg r0w ind reg r6 1482
+  call ZZstarttest2 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  push reg r6
+  call convert_lang_digits_to_words arity 3 depth 4
+  popn 4
+label L4 was at_0xe2
+  push reg r6
+  call ZZstarttest3 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  push reg r6
+  call hyphen_between_nums arity 3 depth 4
+  popn 4
+  cmp testl reg r0 reg r0
+  branch je to L6
+label L5 was at_0xfd
+  push reg r6
+  call ZZstarttest4 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call separate_tokens arity 2 depth 3
+  popn 3
+label L6 was at_0x110
+  push reg r6
+  call succeed arity 1 depth 1
+  load movl slot -4 into r0
+  store movl reg r0 ind reg r7 4
+  popreg r1
+  load movl imm 0 into r0
+label L7 was at_0x11f
+  return reg r0
+end
+
+rule count_eng_digits from ut_numbr.obj
+shape frame 220 argbase 8 params 3
+label L0 was _count_eng_digits
+  alu andl imm 0 slot -4
+  load movl slotaddr -128 into r0
+  push imm 0
+  push slotaddr -128
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L13
+  load movl slotaddr -128 into r0
+  push slotaddr -128
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -220 into r0
+  push slotaddr -220
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L13
+  load movl param 2 into r3
+  push reg r3
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push param 1
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  push state 0
+  call ZZget_parm_ptr2 arity 5 depth 5
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  push state 0
+  call push_ptr_init arity 2 depth 7
+  push state 0
+  call ZZfence_null arity 1 depth 8
+  push state 0
+  call ZZstartloop1 arity 1 depth 9
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push state 0
+  call copyvar arity 3 depth 12
+  load movl imm 0 into r7
+  popn 12
+  alu incl none reg r7
+label L1 was $X9$90828
+  push reg r6
+  call ZZbspush_ca__3 arity 1 depth 1
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L5
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L5
+label L2 was $X4$90833
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  push reg r6
+  call ZZsavescptr4 arity 2 depth 2
+  popreg r1
+  popreg r1
+label L3 was $X2$90835
+  push reg r6
+  call ZZstarttest5 arity 1 depth 1
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L6
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring145 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L6
+  push reg r6
+  call ZZstarttest5 arity 1 depth 1
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L6
+  push reg r6
+  call ZZtestFldeq1_3_2 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L5
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L5
+  push reg r6
+  call ZZtestFldeq1_3_2 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L5
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L5
+  push reg r6
+  call ZZtestFldeq1_3_2 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L5
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L5
+  push reg r6
+  call ZZbspush_ca_scan_boa__6 arity 1 depth 1
+label L4 was at_0x14e
+  push reg r6
+  call ZZtestFldeq1_3_2 arity 1 depth 2
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch jne to L5
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L5
+  store movl reg r7 slot -4
+label L5 was at_0x168
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  push reg r6
+  call backtrack_function arity 2 depth 2
+  alu decl none reg r0
+  cmp cmpl imm 8 reg r0
+  popreg r1
+  popreg r1
+  branch ja to L13
+  switch reg r0 to L12 L3 L10 L2 L6 L7 L8 L11 L1
+label L6 was $X5$90838
+  push reg r6
+  call ZZstarttest7 arity 1 depth 1
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L8
+  push reg r6
+  call ZZbspush_ca_scan_boa__8 arity 1 depth 1
+  jump to L4
+label L7 was $X6$90850
+  push reg r6
+  call bspop_boa arity 1 depth 1
+  jump to L9
+label L8 was $X7$90854
+  addk 1724 reg r6 into r0
+  push reg r0
+  push reg r6
+  call c_assvar arity 2 depth 2
+  alu incw none ind reg r6 1726
+  popreg r1
+label L9 was at_0x1bd
+  popreg r1
+label L10 was $X3$90851
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r7
+  push imm 9
+  push imm 2
+  push reg r7
+  push reg r6
+  call forall_adv_over_r arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L5
+  jump to L12
+label L11 was $X8$90857
+  push reg r6
+  call bspop_boa arity 1 depth 1
+  popreg r1
+label L12 was $X1$90858
+  push reg r6
+  call succeed arity 1 depth 1
+  load movl slot -8 into r0
+  store movl reg r0 ind reg r3 4
+  popreg r1
+  load movl imm 0 into r0
+  jump to L14
+label L13 was at_0x1ef
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+label L14 was at_0x1fc
+  return reg r0
+label L15 was $L91592
+end
+
+rule get_number_info from ut_numbr.obj
+shape frame 212 argbase 8 params 3
+label L0 was _get_number_info
+  alu andl imm 0 slot -12
+  load movl slotaddr -120 into r0
+  push imm 0
+  push slotaddr -120
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -120 into r0
+  push slotaddr -120
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -212 into r0
+  push slotaddr -212
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch je to L2
+label L1 was at_0x47
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L3
+label L2 was at_0x56
+  load movl param 2 into r7
+  push reg r7
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push param 1
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  push reg r6
+  call ZZget_parm_ptr2 arity 5 depth 5
+  push reg r6
+  call ZZfence_null arity 1 depth 6
+  push reg r6
+  call succeed arity 1 depth 7
+  load movl slot -4 into r0
+  popn 7
+  store movl reg r0 ind reg r7 4
+  load movl imm 0 into r0
+label L3 was at_0x82
+  return reg r0
+end
+
+rule spell_out_large_num from ut_numbr.obj
+shape frame 212 argbase 8 params 3
+label L0 was _spell_out_large_num
+  alu andl imm 0 slot -12
+  load movl slotaddr -120 into r0
+  push imm 0
+  push slotaddr -120
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L3
+  load movl slotaddr -120 into r0
+  push slotaddr -120
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -212 into r0
+  push slotaddr -212
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L3
+  load movl param 2 into r7
+  push reg r7
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push param 1
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  push state 0
+  call ZZget_parm_ptr2 arity 5 depth 5
+  push state 0
+  call ZZfence_null arity 1 depth 6
+  push state 0
+  call ZZstarttest1 arity 1 depth 7
+  load movw statefld 3258 into r0w
+  popn 7
+  cmp cmpw statefld 3222 reg r0w
+  branch je to L6
+  push state 0
+  call ZZstarttest2 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push state 0
+  call ZZlpta_load__setscan_r__1 arity 2 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L5
+label L1 was at_0x9e
+  push reg r6
+  call ZZbspush_ca_scan__3 arity 1 depth 1
+  push reg r6
+  call ZZtestFldeq1_3_1 arity 1 depth 2
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch jne to L2
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch je to L1
+label L2 was at_0xbb
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r6
+  call backtrack_function arity 2 depth 2
+  alu decl none reg r0
+  popreg r1
+  popreg r1
+  branch je to L6
+  alu decl none reg r0
+  branch je to L5
+  alu decl none reg r0
+  branch je to L4
+  alu decl none reg r0
+  branch je to L1
+  alu decl none reg r0
+  branch je to L6
+label L3 was at_0xd6
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L7
+label L4 was at_0xe5
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZsavescptr3 arity 2 depth 2
+  popreg r1
+  popreg r1
+label L5 was at_0xf1
+  push reg r6
+  call ZZstarttest5 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  push reg r6
+  call spell_out_alphanum arity 3 depth 4
+  popn 4
+label L6 was at_0x108
+  push reg r6
+  call succeed arity 1 depth 1
+  load movl slot -4 into r0
+  store movl reg r0 ind reg r7 4
+  popreg r1
+  load movl imm 0 into r0
+label L7 was at_0x117
+  return reg r0
+end
+
+rule reset_enum_ptr from ut_numbr.obj
+shape frame 204 argbase 8 params 2
+label L0 was _reset_enum_ptr
+  alu andl imm 0 slot -4
+  load movl slotaddr -112 into r0
+  push imm 0
+  push slotaddr -112
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -112 into r0
+  push slotaddr -112
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -204 into r0
+  push slotaddr -204
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch je to L2
+label L1 was at_0x47
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L3
+label L2 was at_0x56
+  load movl param 1 into r7
+  push reg r7
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r6
+  call ZZget_parmPTR arity 3 depth 3
+  push reg r6
+  call ZZfence_null arity 1 depth 4
+  push reg r6
+  call succeed arity 1 depth 5
+  load movl slot -8 into r0
+  popn 5
+  store movl reg r0 ind reg r7 4
+  load movl imm 0 into r0
+label L3 was at_0x7b
+  return reg r0
+end
+
+rule convert_1_or_2_digits from ut_numbr.obj
+shape frame 212 argbase 8 params 3
+label L0 was _convert_1_or_2_digits
+  alu andl imm 0 slot -20
+  load movl slotaddr -120 into r0
+  push imm 0
+  push slotaddr -120
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -120 into r0
+  push slotaddr -120
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -212 into r0
+  push slotaddr -212
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch je to L2
+label L1 was at_0x47
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L6
+label L2 was at_0x59
+  load movl param 2 into r7
+  push reg r7
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push param 1
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call ZZget_parm_ptr2 arity 5 depth 5
+  push reg r6
+  call ZZfence_null arity 1 depth 6
+  push reg r6
+  call ZZstarttest1 arity 1 depth 7
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 9
+  popn 9
+  cmp testl reg r0 reg r0
+  branch jne to L3
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_loadp__test_ptr arity 2 depth 2
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch je to L4
+label L3 was at_0xa6
+  push reg r6
+  call ZZstarttest3 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call convert_double arity 3 depth 4
+  jump to L5
+label L4 was at_0xbc
+  push reg r6
+  call ZZstarttest2 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call char_name arity 3 depth 4
+label L5 was at_0xd0
+  popn 4
+  push reg r6
+  call succeed arity 1 depth 1
+  load movl slot -4 into r0
+  store movl reg r0 ind reg r7 4
+  popreg r1
+  load movl imm 0 into r0
+label L6 was at_0xe2
+  return reg r0
+end
+
+rule convert_roman_nums from ut_numbr.obj
+shape frame 248 argbase 8 params 3
+label L0 was _convert_roman_nums
+  load movl imm 0 into r7
+  load movl slotaddr -156 into r0
+  push imm 0
+  push slotaddr -156
+  store movl imm 0 slot -56
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L64
+  load movl slotaddr -156 into r0
+  push slotaddr -156
+  load movl slotaddr -92 into r0
+  push slotaddr -92
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -80 into r0
+  push slotaddr -80
+  load movl slotaddr -248 into r0
+  push slotaddr -248
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L64
+  push param 2
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  push param 1
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push state 0
+  call ZZget_parm_ptr2 arity 5 depth 5
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push state 0
+  call push_ptr_init arity 2 depth 7
+  push state 0
+  store movw imm 0 slot -10
+  store movw imm 65532 slot -12
+  load movl imm 0 into r3w
+  store movw imm 0 slot -46
+  store movw imm 65532 slot -48
+  store movw imm 0 slot -50
+  store movw imm 65532 slot -52
+  call ZZfence_null arity 1 depth 8
+  push state 0
+  store movw imm 0 slot -26
+  store movw imm 0 slot -14
+  store movw imm 0 slot -18
+  store movw imm 0 slot -22
+  call ZZstarttest1 arity 1 depth 9
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push state 0
+  call ZZlpta_load__setscan_r__1 arity 2 depth 11
+  popn 11
+  cmp testl reg r0 reg r0
+  branch jne to L64
+  push state 0
+  call bspush_boa arity 1 depth 1
+label L1 was at_0xcc
+  popreg r1
+label L2 was $X10$91142
+  push reg r6
+  call ZZbspush_ca_scan__2 arity 1 depth 1
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring80 arity 1 depth 2
+  jump to L5
+label L3 was at_0xdb
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  push reg r6
+  call backtrack_function arity 2 depth 4
+  alu decl none reg r0
+  cmp cmpl imm 103 reg r0
+  popreg r1
+  popreg r1
+  branch ja to L64
+  switch reg r0 to L64 L4 L12 L6 L7 L8 L9 L10 L13 L2 L15 L14 L17 L16 L19 L18 L20 L28 L33 L21 L29 L30 L22 L23 L24 L26 L25 L33 L27 L31 L34 L42 L47 L35 L43 L44 L36 L37 L38 L40 L39 L47 L41 L45 L48 L56 L60 L49 L57 L58 L50 L51 L52 L54 L53 L60 L55 L59 L61 L62 L64 L107 L67 L68 L74 L69 L70 L75 L102 L104 L104 L76 L100 L104 L77 L98 L104 L78 L96 L104 L79 L94 L104 L80 L92 L104 L81 L90 L104 L82 L88 L104 L83 L86 L104 L84 L104 L105 L66 L66 L106 L66 L66 L107
+label L4 was $X2$91146
+  push reg r6
+  call ZZbspush_ca_scan__4 arity 1 depth 3
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring37 arity 1 depth 4
+label L5 was at_0x104
+  popreg r1
+  jump to L11
+label L6 was $X4$91148
+  push reg r6
+  call ZZbspush_ca_scan__5 arity 1 depth 3
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring20 arity 1 depth 4
+  jump to L5
+label L7 was $X5$91150
+  push reg r6
+  call ZZbspush_ca_scan__6 arity 1 depth 3
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring69 arity 1 depth 4
+  jump to L5
+label L8 was $X6$91152
+  push reg r6
+  call ZZbspush_ca_scan__7 arity 1 depth 3
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring108 arity 1 depth 4
+  jump to L5
+label L9 was $X7$91154
+  push reg r6
+  call ZZbspush_ca_scan__8 arity 1 depth 3
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring106 arity 1 depth 4
+  jump to L5
+label L10 was $X8$91156
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring109 arity 1 depth 3
+label L11 was at_0x145
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L3
+label L12 was $X3$91145
+  push reg r6
+  call ZZbspush_ca_scan__9 arity 1 depth 3
+  jump to L1
+label L13 was $X9$91158
+  push reg r6
+  call bspush_nboa arity 1 depth 3
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  push reg r6
+  call ZZlpta_loadp__test_ptr arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L3
+  load movl slot -32 into r0
+  push reg r6
+  store movl reg r0 slot -4
+  call ZZstarttest11 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L15
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring80 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L15
+label L14 was $X12$91165
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZsavescptr12 arity 2 depth 4
+  alu incw none slot -26
+  popreg r1
+  popreg r1
+label L15 was $X11$91163
+  push reg r6
+  call ZZstarttest13 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L17
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring80 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L17
+label L16 was $X14$91171
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZsavescptr14 arity 2 depth 4
+  alu incw none slot -26
+  popreg r1
+  popreg r1
+label L17 was $X13$91169
+  push reg r6
+  call ZZstarttest15 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L19
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring80 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L19
+label L18 was $X16$91177
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZsavescptr16 arity 2 depth 4
+  alu incw none slot -26
+  popreg r1
+  popreg r1
+label L19 was $X15$91175
+  push reg r6
+  call ZZstarttest17 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L20
+  push sym string_14
+  push reg r6
+  call ZZtest_string_s_1_2 arity 2 depth 4
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch je to L28
+label L20 was $X17$91181
+  push reg r6
+  call ZZstarttest20 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L21
+  push sym string_15
+  push reg r6
+  call ZZtest_string_s_1_2 arity 2 depth 4
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch je to L29
+label L21 was $X20$91188
+  push reg r6
+  call ZZstarttest22 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L30
+  push reg r6
+  call ZZbspush_ca_scan__23 arity 1 depth 3
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring37 arity 1 depth 4
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch jne to L3
+label L22 was $X23$91196
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring20 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L3
+label L23 was $X24$91198
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZsavescptr24 arity 2 depth 4
+  alu incw none slot -14
+  push reg r6
+  call ZZstarttest25 arity 1 depth 5
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_l__1 arity 2 depth 7
+  popn 5
+  cmp testl reg r0 reg r0
+  branch jne to L24
+  push reg r6
+  call advance_tok arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L24
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring37 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L24
+  alu addw imm 5 slot -14
+label L24 was $X25$91202
+  push reg r6
+  call ZZstarttest26 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L26
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring20 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L26
+label L25 was $X27$91209
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZsavescptr27 arity 2 depth 4
+  alu incw none slot -14
+  popreg r1
+  popreg r1
+label L26 was $X26$91207
+  push reg r6
+  call ZZstarttest28 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L33
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring20 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L33
+label L27 was $X29$91215
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZsavescptr29 arity 2 depth 4
+  alu incw none slot -14
+  jump to L32
+label L28 was $X18$91183
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZsavescptr18 arity 2 depth 4
+  alu addw imm 9 slot -14
+  jump to L32
+label L29 was $X21$91190
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZsavescptr21 arity 2 depth 4
+  alu addw imm 4 slot -14
+  jump to L32
+label L30 was $X22$91194
+  push reg r6
+  call ZZstarttest19 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L33
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring37 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L33
+label L31 was $X30$91220
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZsavescptr30 arity 2 depth 4
+  alu addw imm 5 slot -14
+label L32 was at_0x39b
+  popreg r1
+  popreg r1
+label L33 was $X19$91185
+  push reg r6
+  call ZZstarttest31 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L34
+  push sym string_16
+  push reg r6
+  call ZZtest_string_s_1_2 arity 2 depth 4
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch je to L42
+label L34 was $X31$91224
+  push reg r6
+  call ZZstarttest34 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L35
+  push sym string_17
+  push reg r6
+  call ZZtest_string_s_1_2 arity 2 depth 4
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch je to L43
+label L35 was $X34$91231
+  push reg r6
+  call ZZstarttest36 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L44
+  push reg r6
+  call ZZbspush_ca_scan__37 arity 1 depth 3
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring69 arity 1 depth 4
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch jne to L3
+label L36 was $X37$91239
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring108 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L3
+label L37 was $X38$91241
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZsavescptr38 arity 2 depth 4
+  alu incw none slot -18
+  push reg r6
+  call ZZstarttest39 arity 1 depth 5
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_l__1 arity 2 depth 7
+  popn 5
+  cmp testl reg r0 reg r0
+  branch jne to L38
+  push reg r6
+  call advance_tok arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L38
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring69 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L38
+  alu addw imm 5 slot -18
+label L38 was $X39$91245
+  push reg r6
+  call ZZstarttest40 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L40
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring108 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L40
+label L39 was $X41$91252
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push imm 41
+  push reg r6
+  call savescptr arity 3 depth 5
+  popn 3
+  alu incw none slot -18
+label L40 was $X40$91250
+  push reg r6
+  call ZZstarttest42 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L47
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring108 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L47
+label L41 was $X43$91258
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push imm 43
+  push reg r6
+  call savescptr arity 3 depth 5
+  popn 3
+  alu incw none slot -18
+  jump to L47
+label L42 was $X32$91226
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZsavescptr32 arity 2 depth 4
+  alu addw imm 9 slot -18
+  jump to L46
+label L43 was $X35$91233
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZsavescptr35 arity 2 depth 4
+  alu addw imm 4 slot -18
+  jump to L46
+label L44 was $X36$91237
+  push reg r6
+  call ZZstarttest33 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L47
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring69 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L47
+label L45 was $X44$91263
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZsavescptr44 arity 2 depth 4
+  alu addw imm 5 slot -18
+label L46 was at_0x534
+  popreg r1
+  popreg r1
+label L47 was $X33$91228
+  push reg r6
+  call ZZstarttest45 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L48
+  push reg r6
+  call ZZtest_string_s_1_2_ZZstring111 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch je to L56
+label L48 was $X45$91267
+  push reg r6
+  call ZZstarttest48 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L49
+  push reg r6
+  call ZZtest_string_s_1_2_ZZstring110 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch je to L57
+label L49 was $X48$91274
+  push reg r6
+  call ZZstarttest50 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L58
+  push reg r6
+  call ZZbspush_ca_scan__51 arity 1 depth 3
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring106 arity 1 depth 4
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch jne to L3
+label L50 was $X51$91282
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring109 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L3
+label L51 was $X52$91284
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push imm 52
+  push reg r6
+  call savescptr arity 3 depth 5
+  alu incw none slot -22
+  push reg r6
+  call ZZstarttest53 arity 1 depth 6
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_l__1 arity 2 depth 8
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L52
+  push reg r6
+  call advance_tok arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L52
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring106 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L52
+  alu addw imm 5 slot -22
+label L52 was $X53$91288
+  push reg r6
+  call ZZstarttest54 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L54
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring109 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L54
+label L53 was $X55$91295
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push imm 55
+  push reg r6
+  call savescptr arity 3 depth 5
+  popn 3
+  alu incw none slot -22
+label L54 was $X54$91293
+  push reg r6
+  call ZZstarttest56 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L60
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring109 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L60
+label L55 was $X57$91301
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push imm 57
+  push reg r6
+  call savescptr arity 3 depth 5
+  popn 3
+  alu incw none slot -22
+  jump to L60
+label L56 was $X46$91269
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push imm 46
+  push reg r6
+  call savescptr arity 3 depth 5
+  popn 3
+  alu addw imm 9 slot -22
+  jump to L60
+label L57 was $X49$91276
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push imm 49
+  push reg r6
+  call savescptr arity 3 depth 5
+  popn 3
+  alu addw imm 4 slot -22
+  jump to L60
+label L58 was $X50$91280
+  push reg r6
+  call ZZstarttest47 arity 1 depth 3
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L60
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring106 arity 1 depth 3
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L60
+label L59 was $X58$91306
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push imm 58
+  push reg r6
+  call savescptr arity 3 depth 5
+  popn 3
+  alu addw imm 5 slot -22
+label L60 was $X47$91271
+  push reg r6
+  call ZZstarttest59 arity 1 depth 3
+  push imm 60
+  push reg r6
+  call bspush_ca arity 2 depth 5
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call ZZlprp_loadpn__comp arity 3 depth 8
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L3
+  push reg r6
+  call testneq arity 1 depth 3
+  popreg r1
+  cmp testl reg r0 reg r0
+  jump to L63
+label L61 was $X59$91318
+  addk 1508 reg r6 into r0
+  push reg r0
+  addk 1480 reg r6 into r0
+  push reg r0
+  push reg r6
+  call copyvar arity 3 depth 5
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call lpta_rpta_loadp arity 3 depth 8
+  push reg r6
+  call ZZdelete_2pt1 arity 1 depth 9
+  popn 7
+  cmp testl reg r0 reg r0
+  branch jne to L3
+  push imm 62
+  push reg r6
+  call startloop arity 2 depth 4
+  push reg r7
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r6
+  call move_i arity 3 depth 7
+  push imm 1
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  push reg r6
+  call move_i arity 3 depth 10
+  push imm 3
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  push reg r6
+  call move_i arity 3 depth 13
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r6
+  call for_test arity 4 depth 17
+  popn 15
+  cmp testl reg r0 reg r0
+  branch jne to L3
+  jump to L67
+label L62 was $X60$91313
+  cmp cmpw reg r7w slot -26
+  branch jne to L3
+  cmp cmpw reg r7w slot -14
+  branch jne to L3
+  cmp cmpw reg r7w slot -18
+  branch jne to L3
+  cmp cmpw reg r7w slot -22
+label L63 was at_0x7aa
+  branch jne to L3
+label L64 was $fail_clean$91126
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+label L65 was at_0x7bd
+  return reg r0
+label L66 was $X103$91444
+  load movl slotaddr -48 into r0
+  push slotaddr -48
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push imm 63
+  push imm 62
+  push reg r6
+  call for_adv arity 6 depth 8
+  popn 6
+  cmp testl reg r0 reg r0
+  branch je to L107
+label L67 was $X63$91331
+  push reg r6
+  call ZZstarttest64 arity 1 depth 3
+  cmp cmpw reg r7w slot -10
+  popreg r1
+  branch je to L73
+label L68 was $X64$91333
+  push reg r6
+  call ZZstarttest66 arity 1 depth 3
+  cmp cmpw imm 1 slot -10
+  popreg r1
+  branch je to L72
+label L69 was $X66$91336
+  push reg r6
+  call ZZstarttest67 arity 1 depth 3
+  cmp cmpw imm 2 slot -10
+  popreg r1
+  branch je to L71
+label L70 was $X67$91338
+  push reg r6
+  call ZZstarttest65 arity 1 depth 3
+  cmp cmpw imm 3 slot -10
+  popreg r1
+  branch jne to L74
+  load movw slot -26 into r3w
+  jump to L74
+label L71 was at_0x820
+  load movw slot -14 into r3w
+  jump to L74
+label L72 was at_0x826
+  load movw slot -18 into r3w
+  jump to L74
+label L73 was at_0x82c
+  load movw slot -22 into r3w
+label L74 was $X65$91334
+  push reg r6
+  call ZZstarttest68 arity 1 depth 3
+  cmp cmpw reg r7w reg r3w
+  popreg r1
+  branch je to L101
+label L75 was $X68$91341
+  push reg r6
+  call ZZstarttest72 arity 1 depth 3
+  cmp cmpw imm 1 reg r3w
+  popreg r1
+  branch je to L99
+label L76 was $X72$91351
+  push reg r6
+  call ZZstarttest75 arity 1 depth 3
+  cmp cmpw imm 2 reg r3w
+  popreg r1
+  branch je to L97
+label L77 was $X75$91360
+  push reg r6
+  call ZZstarttest78 arity 1 depth 3
+  cmp cmpw imm 3 reg r3w
+  popreg r1
+  branch je to L95
+label L78 was $X78$91369
+  push imm 81
+  push reg r6
+  call starttest arity 2 depth 4
+  cmp cmpw imm 4 reg r3w
+  popreg r1
+  popreg r1
+  branch je to L93
+label L79 was $X81$91378
+  push reg r6
+  call ZZstarttest84 arity 1 depth 3
+  cmp cmpw imm 5 reg r3w
+  popreg r1
+  branch je to L91
+label L80 was $X84$91387
+  push reg r6
+  call ZZstarttest87 arity 1 depth 3
+  cmp cmpw imm 6 reg r3w
+  popreg r1
+  branch je to L89
+label L81 was $X87$91396
+  push imm 90
+  push reg r6
+  call starttest arity 2 depth 4
+  cmp cmpw imm 7 reg r3w
+  popreg r1
+  popreg r1
+  branch je to L87
+label L82 was $X90$91405
+  push imm 93
+  push reg r6
+  call starttest arity 2 depth 4
+  cmp cmpw imm 8 reg r3w
+  popreg r1
+  popreg r1
+  branch je to L85
+label L83 was $X93$91414
+  push reg r6
+  call ZZstarttest71 arity 1 depth 3
+  cmp cmpw imm 9 reg r3w
+  popreg r1
+  branch jne to L104
+  push imm 96
+  push reg r6
+  call starttest_l arity 2 depth 4
+  cmp cmpw reg r7w slot -10
+  popreg r1
+  popreg r1
+  branch jne to L84
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call ZZlprp_load__insert_2pt_s_1_1_ZZstring143 arity 3 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L104
+label L84 was $X96$91424
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call lpta_loadp arity 2 depth 4
+  push sym string_38
+  jump to L103
+label L85 was at_0x91b
+  push imm 94
+  push reg r6
+  call starttest_l arity 2 depth 4
+  cmp cmpw reg r7w slot -10
+  popreg r1
+  popreg r1
+  branch jne to L86
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call ZZlprp_load__insert_2pt_s_1_1_ZZstring142 arity 3 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L104
+label L86 was $X94$91416
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call lpta_loadp arity 2 depth 4
+  push sym string_36
+  jump to L103
+label L87 was at_0x958
+  push imm 91
+  push reg r6
+  call starttest_l arity 2 depth 4
+  cmp cmpw reg r7w slot -10
+  popreg r1
+  popreg r1
+  branch jne to L88
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call ZZlprp_load__insert_2pt_s_1_1_ZZstring141 arity 3 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L104
+label L88 was $X91$91407
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call lpta_loadp arity 2 depth 4
+  push sym string_34
+  jump to L103
+label L89 was at_0x995
+  push reg r6
+  call ZZstarttest88 arity 1 depth 3
+  cmp cmpw reg r7w slot -10
+  popreg r1
+  branch jne to L90
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call ZZlprp_load__insert_2pt_s_1_1_ZZstring139 arity 3 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L104
+label L90 was $X88$91398
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call lpta_loadp arity 2 depth 4
+  push sym string_32
+  jump to L103
+label L91 was at_0x9cf
+  push reg r6
+  call ZZstarttest85 arity 1 depth 3
+  cmp cmpw reg r7w slot -10
+  popreg r1
+  branch jne to L92
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call ZZlprp_load__insert_2pt_s_1_1_ZZstring138 arity 3 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L104
+label L92 was $X85$91389
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call lpta_loadp arity 2 depth 4
+  push sym string_30
+  jump to L103
+label L93 was at_0xa09
+  push reg r6
+  call ZZstarttest82 arity 1 depth 3
+  cmp cmpw reg r7w slot -10
+  popreg r1
+  branch jne to L94
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call ZZlprp_load__insert_2pt_s_1_1_ZZstring137 arity 3 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L104
+label L94 was $X82$91380
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call lpta_loadp arity 2 depth 4
+  push sym string_28
+  jump to L103
+label L95 was at_0xa43
+  push imm 79
+  push reg r6
+  call starttest_l arity 2 depth 4
+  cmp cmpw reg r7w slot -10
+  popreg r1
+  popreg r1
+  branch jne to L96
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call ZZlprp_load__insert_2pt_s_1_1_ZZstring136 arity 3 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L104
+label L96 was $X79$91371
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call lpta_loadp arity 2 depth 4
+  push sym string_26
+  jump to L103
+label L97 was at_0xa80
+  push reg r6
+  call ZZstarttest76 arity 1 depth 3
+  cmp cmpw reg r7w slot -10
+  popreg r1
+  branch jne to L98
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call ZZlprp_load__insert_2pt_s_1_1_ZZstring135 arity 3 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L104
+label L98 was $X76$91362
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call lpta_loadp arity 2 depth 4
+  push sym string_24
+  jump to L103
+label L99 was at_0xab7
+  push reg r6
+  call ZZstarttest73 arity 1 depth 3
+  cmp cmpw reg r7w slot -10
+  popreg r1
+  branch jne to L100
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call ZZlprp_load__insert_2pt_s_1_1_ZZstring134 arity 3 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L104
+label L100 was $X73$91353
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call lpta_loadp arity 2 depth 4
+  push sym string_22
+  jump to L103
+label L101 was at_0xaea
+  push imm 69
+  push reg r6
+  call starttest_l arity 2 depth 4
+  cmp cmpw reg r7w slot -10
+  popreg r1
+  popreg r1
+  branch jne to L102
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call ZZlprp_load__insert_2pt_s_1_1_ZZstring132 arity 3 depth 5
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L104
+label L102 was $X69$91343
+  load movl slotaddr -36 into r0
+  push slotaddr -36
+  push reg r6
+  call lpta_loadp arity 2 depth 4
+  push sym string_21
+label L103 was at_0xb1e
+  push reg r6
+  call ZZinsert_r_1_2 arity 2 depth 6
+  popn 4
+label L104 was $X70$91349
+  push imm 98
+  push reg r6
+  call starttest arity 2 depth 4
+  cmp cmpw reg r7w slot -10
+  popreg r1
+  popreg r1
+  branch je to L109
+label L105 was $X98$91431
+  push imm 101
+  push reg r6
+  call starttest arity 2 depth 4
+  cmp cmpw imm 1 slot -10
+  popreg r1
+  popreg r1
+  branch je to L108
+label L106 was $X101$91438
+  push imm 100
+  push reg r6
+  call starttest arity 2 depth 4
+  cmp cmpw imm 2 slot -10
+  popreg r1
+  popreg r1
+  branch jne to L66
+  push imm 103
+  push reg r6
+  call starttest_e arity 2 depth 4
+  cmp cmpw reg r7w slot -26
+  popreg r1
+  popreg r1
+  branch jne to L66
+label L107 was $L91435
+  push reg r6
+  call succeed arity 1 depth 3
+  popreg r1
+  load movl imm 0 into r0
+  jump to L65
+label L108 was at_0xb7f
+  push imm 102
+  push reg r6
+  call starttest_e arity 2 depth 4
+  popreg r1
+  popreg r1
+  jump to L110
+label L109 was at_0xb8b
+  push imm 99
+  push reg r6
+  call starttest_e arity 2 depth 4
+  cmp cmpw reg r7w slot -18
+  popreg r1
+  popreg r1
+  branch jne to L66
+label L110 was at_0xb9f
+  cmp cmpw reg r7w slot -14
+  branch jne to L66
+  cmp cmpw reg r7w slot -26
+  branch je to L107
+  jump to L66
+label L111 was $L91642
+end
+
+rule count_digits from ut_numbr.obj
+shape frame 224 argbase 8 params 3
+label L0 was _count_digits
+  load movl imm 0 into r3
+  load movl slotaddr -132 into r0
+  push imm 0
+  push slotaddr -132
+  store movl imm 0 slot -4
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L33
+  load movl slotaddr -132 into r0
+  push slotaddr -132
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -224 into r0
+  push slotaddr -224
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L33
+  push param 2
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push param 1
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  push state 0
+  call ZZget_parm_ptr2 arity 5 depth 5
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  push state 0
+  store movw imm 0 slot -14
+  store movw imm 65532 slot -16
+  call push_ptr_init arity 2 depth 7
+  push state 0
+  call ZZfence_null arity 1 depth 8
+  push state 0
+  store movw imm 0 statefld 1738
+  store movw imm 0 statefld 1730
+  store movw imm 0 statefld 1726
+  call ZZstarttest1 arity 1 depth 9
+  push state 0
+  call ZZbspush_ca__2 arity 1 depth 10
+  load movw statefld 3226 into r0w
+  load movl imm 0 into r7
+  popn 10
+  alu incl none reg r7
+label L1 was at_0xb2
+  cmp cmpw ind reg r6 3222 reg r0w
+label L2 was at_0xb9
+  branch jne to L32
+label L3 was $X3$90694
+  push reg r6
+  call ZZstarttest5 arity 1 depth 1
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  push reg r6
+  call count_eng_digits arity 3 depth 4
+  popn 4
+label L4 was $X5$90702
+  load movw ind reg r6 1726 into r0w
+  push reg r6
+  store movw reg r0w ind reg r6 1730
+  call ZZstarttest23 arity 1 depth 1
+  cmp cmpw reg r7w ind reg r6 1726
+  popreg r1
+  branch jne to L5
+  push reg r6
+  call ZZstarttest23 arity 1 depth 1
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r6
+  call ZZlpta_load__setscan_l__1 arity 2 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L5
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring134 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L5
+  load movw ind reg r6 1246 into r0w
+  store movw reg r0w ind reg r6 1738
+label L5 was $X23$90770
+  push reg r6
+  call succeed arity 1 depth 1
+  load movl slot -8 into r0
+  popreg r1
+  load movl param 2 into r1
+  store movl reg r0 ind reg r1 4
+  load movl imm 0 into r0
+label L6 was at_0x136
+  return reg r0
+label L7 was at_0x13b
+  switch reg r0 to L8 L9 L3 L10 L4 L4 L11 L19 L31 L4 L14 L18 L13 L15 L21 L16 L22 L26 L23 L17 L34 L12 L5
+label L8 was $X1$90704
+  push reg r6
+  call ZZstarttest6 arity 1 depth 1
+  push reg r6
+  call ZZbspush_ca_boa__7 arity 1 depth 2
+  push reg r6
+  call ZZbspush_ca__8 arity 1 depth 3
+  load movw ind reg r6 3226 into r0w
+  popn 3
+  jump to L20
+label L9 was $X2$90695
+  push reg r6
+  call ZZbspush_ca__4 arity 1 depth 1
+  load movw ind reg r6 3246 into r0w
+  popreg r1
+  jump to L1
+label L10 was $X4$90697
+  load movw ind reg r6 3230 into r0w
+  cmp cmpw ind reg r6 3222 reg r0w
+  branch jne to L32
+  load movw ind reg r6 2194 into r0w
+  cmp cmpw ind reg r6 2174 reg r0w
+  jump to L2
+label L11 was $X7$90709
+  push reg r6
+  call bspop_boa arity 1 depth 1
+  push imm 10
+  push reg r6
+  store movw reg r3w ind reg r6 1746
+  call startloop arity 2 depth 3
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r6
+  call copyvar arity 3 depth 6
+  popn 6
+label L12 was $X22$90712
+  push reg r6
+  call ZZbspush_ca__12 arity 1 depth 1
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L32
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L32
+label L13 was $X13$90716
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  push reg r6
+  call ZZsavescptr13 arity 2 depth 2
+  popreg r1
+  popreg r1
+label L14 was $X11$90718
+  push reg r6
+  call ZZstarttest14 arity 1 depth 1
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L15
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring146 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L15
+  push reg r6
+  call ZZstarttest14 arity 1 depth 1
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L27
+label L15 was $X14$90721
+  push reg r6
+  call ZZstarttest16 arity 1 depth 1
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L16
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring153 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L16
+  push reg r6
+  call ZZstarttest16 arity 1 depth 1
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L25
+label L16 was $X16$90738
+  push reg r6
+  call ZZstarttest20 arity 1 depth 1
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r6
+  call ZZlpta_load__setscan_r__1 arity 2 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L24
+label L17 was $X20$90761
+  addk 1724 reg r6 into r0
+  push reg r0
+  push reg r6
+  call c_assvar arity 2 depth 2
+  alu incw none ind reg r6 1726
+  popreg r1
+  popreg r1
+label L18 was $X12$90735
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r7
+  push imm 22
+  push imm 11
+  push imm 10
+  push reg r6
+  call forall_adv_over_r arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch je to L4
+  jump to L32
+label L19 was $X8$90707
+  load movw ind reg r6 3246 into r0w
+label L20 was at_0x2cc
+  cmp cmpw ind reg r6 3222 reg r0w
+  jump to L30
+label L21 was $X15$90733
+  push reg r6
+  call bspop_boa arity 1 depth 1
+  push reg r7
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call move_i arity 3 depth 4
+  popn 4
+  jump to L18
+label L22 was $X17$90752
+  push reg r6
+  call bspop_boa arity 1 depth 1
+  push reg r6
+  call ZZstarttest19 arity 1 depth 2
+  cmp cmpw reg r7w slot -14
+  popreg r1
+  popreg r1
+  branch je to L4
+label L23 was $X19$90754
+  load movl slotaddr -24 into r0
+  push slotaddr -24
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push reg r6
+  call ZZlprp_load__insert_2pt_s_1_1_ZZstring146 arity 3 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L32
+  push reg r7
+  addk 1744 reg r6 into r0
+  push reg r0
+  push reg r6
+  call move_i arity 3 depth 3
+  popn 3
+  jump to L18
+label L24 was at_0x335
+  push reg r6
+  call ZZbspush_ca_scan_boa__21 arity 1 depth 1
+  jump to L28
+label L25 was at_0x340
+  push reg r6
+  call ZZtestFldeq1_3_2 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L32
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L32
+  push reg r6
+  call ZZtestFldeq1_3_2 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L32
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L32
+  push reg r6
+  call ZZtestFldeq1_3_2 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L32
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L32
+  push reg r6
+  call ZZbspush_ca_scan_boa__17 arity 1 depth 1
+  push reg r6
+  call ZZbspush_ca_scan__18 arity 1 depth 2
+  push reg r6
+  call ZZtest_string_s_1_1_ZZstring146 arity 1 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch jne to L32
+label L26 was $X18$90749
+  push reg r6
+  call ZZtestFldeq1_3_2 arity 1 depth 1
+  jump to L29
+label L27 was at_0x3bb
+  push reg r6
+  call ZZtestFldeq1_3_2 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L32
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L32
+  push reg r6
+  call ZZtestFldeq1_3_2 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L32
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L32
+  push reg r6
+  call ZZtestFldeq1_3_2 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L32
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L32
+  push reg r6
+  call ZZbspush_ca_scan_boa__15 arity 1 depth 1
+label L28 was at_0x403
+  push reg r6
+  call ZZtestFldeq1_3_2 arity 1 depth 2
+  popreg r1
+label L29 was at_0x40a
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L32
+  push reg r6
+  call advance_tok arity 1 depth 1
+  popreg r1
+  cmp testl reg r0 reg r0
+label L30 was at_0x418
+  branch jne to L32
+label L31 was $X9$90706
+  store movl reg r7 slot -4
+label L32 was at_0x41d
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  push reg r6
+  call backtrack_function arity 2 depth 2
+  alu decl none reg r0
+  cmp cmpl imm 22 reg r0
+  popreg r1
+  popreg r1
+  branch jbe to L7
+label L33 was at_0x433
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L6
+label L34 was $X21$90764
+  push reg r6
+  call bspop_boa arity 1 depth 1
+  popreg r1
+  jump to L4
+label L35 was $L91685
+end
+
+rule convert_numbers from ut_numbr.obj
+shape frame 212 argbase 8 params 3
+label L0 was _convert_numbers
+  alu andl imm 0 slot -20
+  load movl slotaddr -120 into r0
+  push imm 0
+  push slotaddr -120
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -120 into r0
+  push slotaddr -120
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -212 into r0
+  push slotaddr -212
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch je to L2
+label L1 was at_0x47
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L12
+label L2 was at_0x59
+  load movl param 2 into r7
+  push reg r7
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push param 1
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call ZZget_parm_ptr2 arity 5 depth 5
+  push reg r6
+  call ZZfence_null arity 1 depth 6
+  push reg r6
+  call ZZstarttest1 arity 1 depth 7
+  popn 7
+  cmp cmpw imm 1 ind reg r6 1726
+  push reg r6
+  branch je to L9
+  call ZZstarttest4 arity 1 depth 1
+  cmp cmpw imm 2 ind reg r6 1726
+  popreg r1
+  push reg r6
+  branch je to L8
+  call ZZstarttest6 arity 1 depth 1
+  cmp cmpw imm 3 ind reg r6 1726
+  popreg r1
+  push reg r6
+  branch je to L7
+  call ZZstarttest8 arity 1 depth 1
+  cmp cmpw imm 7 ind reg r6 1726
+  popreg r1
+  push reg r6
+  branch jl to L6
+  call ZZstarttest10 arity 1 depth 1
+  cmp cmpw imm 10 ind reg r6 1726
+  popreg r1
+  push reg r6
+  branch jl to L4
+  call ZZstarttest12 arity 1 depth 1
+  cmp cmpw imm 13 ind reg r6 1726
+  popreg r1
+  push reg r6
+  branch jl to L3
+  call ZZstarttest3 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call spell_out_large_num arity 3 depth 4
+  jump to L10
+label L3 was at_0x101
+  call ZZstarttest13 arity 1 depth 1
+  load movw ind reg r6 3230 into r0w
+  cmp cmpw ind reg r6 3222 reg r0w
+  popreg r1
+  branch jne to L11
+  push reg r6
+  call ZZstarttest14 arity 1 depth 1
+  jump to L5
+label L4 was at_0x11f
+  call ZZstarttest11 arity 1 depth 1
+label L5 was at_0x124
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call convert_millions arity 3 depth 4
+  jump to L10
+label L6 was at_0x134
+  call ZZstarttest9 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call convert_thousands arity 3 depth 4
+  jump to L10
+label L7 was at_0x149
+  call ZZstarttest7 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call convert_hundreds arity 3 depth 4
+  jump to L10
+label L8 was at_0x15e
+  call ZZstarttest5 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call convert_double arity 3 depth 4
+  jump to L10
+label L9 was at_0x173
+  call ZZstarttest2 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call convert_single_digit arity 3 depth 4
+label L10 was at_0x186
+  popn 4
+label L11 was at_0x189
+  push reg r6
+  call succeed arity 1 depth 1
+  load movl slot -4 into r0
+  store movl reg r0 ind reg r7 4
+  popreg r1
+  load movl imm 0 into r0
+label L12 was at_0x198
+  return reg r0
+end
+
+rule convert_digits from ut_numbr.obj
+shape frame 212 argbase 8 params 3
+label L0 was _convert_digits
+  alu andl imm 0 slot -20
+  load movl slotaddr -120 into r0
+  push imm 0
+  push slotaddr -120
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -120 into r0
+  push slotaddr -120
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -212 into r0
+  push slotaddr -212
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch je to L2
+label L1 was at_0x47
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L3
+label L2 was at_0x56
+  load movl param 2 into r7
+  push reg r7
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push param 1
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call ZZget_parm_ptr2 arity 5 depth 5
+  push reg r6
+  call ZZfence_null arity 1 depth 6
+  push reg r6
+  call ZZstarttest1 arity 1 depth 7
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call count_digits arity 3 depth 10
+  push reg r6
+  call ZZstarttest2 arity 1 depth 11
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call get_number_info arity 3 depth 14
+  push reg r6
+  call ZZstarttest3 arity 1 depth 15
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call convert_numbers arity 3 depth 18
+  popn 18
+  push reg r6
+  call ZZstarttest4 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push reg r6
+  call reset_enum_ptr arity 2 depth 3
+  push reg r6
+  call succeed arity 1 depth 4
+  load movl slot -4 into r0
+  popn 4
+  store movl reg r0 ind reg r7 4
+  load movl imm 0 into r0
+label L3 was at_0xd1
+  return reg r0
+end
+

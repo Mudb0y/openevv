@@ -39,9 +39,12 @@ On a Nix machine `nix build` makes the same binary at `result/bin/evv`, and `nix
 
 ## The rules as text
 
-`lang/enus/rules` holds all 3,377 rules as text, one file to an object, written
-by `tools/delta-notation.py`. This is the form to read a rule in, and it is
-meant to become the form to *change* one in.
+`lang/<tag>/rules` holds a language's rules as text, one file to an object,
+written by `tools/delta-notation.py`. Every module in the tree has one --
+21,075 rules over the nine, from English's 3,377 down to Italian's 1,749 --
+and `EVV_NOTATION_LANG` says which language every target below reads, English
+by default. This is the form to read a rule in, and it is meant to become the
+form to *change* one in.
 
     rule eng_ph_Z_dur from es_cdur.obj
     shape frame 196 argbase 8 params 1
@@ -83,12 +86,18 @@ needs to be told.
 
 is the stronger check and the one to believe. It emits every rule out of the
 text into one stream and holds that against `delta_rule_code` as it stands in
-`lang/enus/delta_rules_enus.c` -- the bytecode the engine actually runs. The
+`lang/<tag>/delta_rules_<tag>.c` -- the bytecode the engine actually runs. The
 pools the rules draw on, the constants and strings and entry points and tag
 maps, are shared across the whole language and numbered in the order the rules
 are taken, so reproducing the stream byte for byte says the text carries every
 rule, in order, with nothing added and nothing left out. A rule-by-rule
-comparison cannot say that. All 1,496,807 bytes match.
+comparison cannot say that. It matches for all eight lifted languages:
+English's 1,496,807 bytes, British English's 1,466,417, German's 1,168,990,
+Canadian French's 1,107,281, French's 1,083,599, Spain's Spanish 744,858,
+American Spanish's 742,075 and Italian's 709,771, measured on 2 September
+2026. Polish is the one it cannot be run on, because its rules are written
+rather than lifted and there are no Polish objects to lift against;
+`make authored-check` is what stands in its place.
 
 Both want IBM's objects, so they are in the same class as the suite:
 obtainable, and not needed to build.
@@ -96,18 +105,27 @@ obtainable, and not needed to build.
     make notation-regenerate
 
 is the one that says the text is the source rather than a second copy. It reads
-`lang/enus/rules`, opens no object at all, and writes what the engine compiles
--- `delta_rules_enus.c` and `delta_rules.h` -- into a directory of its own, then
-holds both against the files in the tree. Both match byte for byte: 4,999,473
-bytes and 168,881, measured on 23 August 2026.
+`lang/<tag>/rules`, opens no object at all, and writes the three files a build
+compiles -- `delta_rules_<tag>.c`, `delta_rules_<tag>.h` and
+`delta_rules_shim_<tag>.c` -- into a directory of its own, then holds all
+three against the files in the tree. For English they match byte for byte at
+4,999,514, 168,881 and 709,414 bytes, and all three match for each of the
+other seven lifted languages too. Polish is checked by `make authored-check`
+instead, which is this same comparison with the rules written in the upper
+form taken in; `notation-regenerate` leaves those out on purpose, so on Polish
+it would report the Italian module Polish was copied from. It takes about two
+seconds a language, which is worth knowing: this is the cheap half of the
+pipeline, and the two minutes an ordinary build spends on Python is the rules
+being decompiled into readable C, not this.
 
 What made that possible was one small table. A rule names a constant by a
 symbol; the bytes behind it are a whole data section of the object it was
 compiled into, and what the rule gets is an offset into that section. The bytes
-were already in the tree, in `delta_consts_enus.c`. The mapping -- which store
+were already in the tree, in `delta_consts_<tag>.c`. The mapping -- which store
 and how far in -- was not, and it was the last thing the emitter needed the
-objects for. It is now `lang/enus/rules/symbols`: 75 stores and 6,718
-addresses, written by `make notation-symbols`.
+objects for. It is now `lang/<tag>/rules/symbols`, written by
+`make notation-symbols`: 76 stores and 6,719 addresses for English, and
+between 63 and 90 stores for each of the others.
 
 So the rules can be rebuilt from text a person can read and change, and IBM's
 objects are wanted for the comparison suite and for nothing else.

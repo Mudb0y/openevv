@@ -251,7 +251,7 @@ def write_symbols():
     out = ["# Where each address the rules name falls: which store of the",
            "# language's own bytes, and how far into it. Written by",
            "# tools/delta-notation.py out of IBM's objects. The bytes",
-           "# themselves are in delta_consts_enus.c.",
+           "# themselves are in delta_consts_%s.c." % TAG,
            "#",
            "# An address is named by the object that compiled it and the",
            "# symbol it had there, because that pair is what a rule holds and",

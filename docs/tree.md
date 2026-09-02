@@ -14,7 +14,7 @@ Five things there are not from an object. `src/delta_lang.h` and `src/delta_lang
 
 Every one of those generated files has a text form beside it now, and each regenerates its own file byte for byte: `enus.globals` is the variables, `enus.settings` the settings the engine carries, `enus.statements` the statement table, `enus.sets` the lookup sets and the dictionary's actions, `enus.consts` the bytes the rules name by address, and `enus.dict` the words. `enus.globals` can also name a variable, which is how a rule written in the upper form says `set f2_in to 2000` where IBM's own names are gone. `make tables-check` is what holds the four against the tree, and `docs/building.md` says what each says and what is deliberately left out of it.
 
-`lang/enus/rules` is the rules as text: one `.dr` file to an object in the lower notation, `wrappers.up` as what each wrapper stands for, a `.up` file beside a `.dr` for a rule written in the upper form rather than lifted, `symbols` saying where each address a rule names falls, and `constants` for the bytes of ours. `docs/building.md` says what each form is for.
+`lang/<tag>/rules` is the rules as text: one `.dr` file to an object in the lower notation, `wrappers.up` as what each wrapper stands for, a `.up` file beside a `.dr` for a rule written in the upper form rather than lifted, `symbols` saying where each address a rule names falls, and `constants` for the bytes of ours. Every module in the tree has one. `docs/building.md` says what each form is for.
 
 Every name a module defines carries the language -- `enus_vstmtbl`, `dede_vstmtbl` -- because IBM gave them the same names in every language and a program may have several modules in it.
 

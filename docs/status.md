@@ -1,6 +1,6 @@
 # What works and what does not
 
-Last measured 27 August 2026.
+Last measured 2 September 2026.
 
 ## Works
 
@@ -9,6 +9,8 @@ The engine speaks, and it speaks IBM's samples. All 81 cases in six categories c
 That holds in all four configurations the tree can build for this machine -- thirty-two and sixty-four bit, each with the rules run as bytecode and with the same rules run as the C they decompile to -- and in the Windows build as well, which is a fifth: `build/probe.exe` matches IBM's binary over the same 81 cases, under Wine on Linux and on Windows itself, where the scripts run both binaries without Wine in front of them.
 
 Nothing is borrowed at build time. `make missing` answers nothing, which is the check that no call has quietly gone back to IBM's objects. The language data is all transcribed and in the tree, so a build needs a C compiler and Python and nothing else -- Python because the default build writes the rules out as C first. `make RULES=bytecode` wants the compiler alone and is half a minute rather than a quarter of an hour.
+
+Every language's rules are text a person can read and change. `lang/<tag>/rules` holds them one file to an object, 21,075 rules over the nine modules, and `make notation-prove` emits each language's whole stream out of that text and holds it against the bytecode the engine runs: all eight lifted languages reproduce it byte for byte, from English's 1,496,807 bytes down to Italian's 709,771, measured on 2 September 2026. `make notation-regenerate` is the same claim without opening an object at all, and it takes two seconds a language. Polish's rules are written rather than lifted, so `make authored-check` stands in place of both.
 
 Dictionaries can be edited. `tools/delta-dict.py` writes `lang/enus/enus.dict` out of the tables and reads it back in, so a pronunciation can be changed, laid down and heard.
 

@@ -1,0 +1,513 @@
+# The rules of ft_morph.obj, written by tools/delta-notation.py.
+# One operation to a line. See docs/building.md.
+
+rule insert_dict_root from ft_morph.obj
+shape frame 220 argbase 8 params 3
+label L0 was _insert_dict_root
+  alu andl imm 0 slot -12
+  load movl slotaddr -128 into r0
+  push imm 0
+  push slotaddr -128
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -128 into r0
+  push slotaddr -128
+  load movl slotaddr -64 into r0
+  push slotaddr -64
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -52 into r0
+  push slotaddr -52
+  load movl slotaddr -220 into r0
+  push slotaddr -220
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L1
+  push param 2
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  push param 1
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  push state 0
+  call ZZget_parm_ptr2 arity 5 depth 5
+  push imm 1
+  load movl slotaddr -4 into r0
+  push imm 0
+  push slotaddr -4
+  call memset arity 3 depth 8
+  alu orw imm -1 slot -6
+  push state 0
+  store movw imm 3 slot -8
+  call ZZfence_null arity 1 depth 9
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  push state 0
+  call lpta_rpta_loadp arity 3 depth 12
+  push imm 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push state 0
+  call settvar_s arity 3 depth 15
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push state 0
+  call ZZinsert_2ptv3 arity 2 depth 17
+  popn 17
+  cmp testl reg r0 reg r0
+  branch je to L2
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push state 0
+  call backtrack_function arity 2 depth 2
+  popreg r1
+  popreg r1
+label L1 was at_0xb3
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L3
+label L2 was at_0xc2
+  push reg r6
+  store movw imm 1 ind reg r6 2530
+  call succeed arity 1 depth 1
+  popreg r1
+  load movl imm 0 into r0
+label L3 was at_0xd4
+  return reg r0
+end
+
+rule fren_words_dict_lookup from ft_morph.obj
+shape frame 212 argbase 8 params 3
+label L0 was _fren_words_dict_lookup
+  alu andl imm 0 slot -20
+  load movl slotaddr -120 into r0
+  push imm 0
+  push slotaddr -120
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -120 into r0
+  push slotaddr -120
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -212 into r0
+  push slotaddr -212
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L1
+  push param 2
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push param 1
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push state 0
+  call ZZget_parm_ptr2 arity 5 depth 5
+  push state 0
+  call ZZfence_null arity 1 depth 6
+  push state 0
+  call ZZstarttest1 arity 1 depth 7
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push state 0
+  call user_rootdict arity 3 depth 10
+  popn 10
+  cmp testl reg r0 reg r0
+  push state 0
+  branch je to L3
+  call ZZstarttest3 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push state 0
+  call fren_words arity 3 depth 4
+  popn 4
+  cmp testl reg r0 reg r0
+  branch je to L2
+  push state 0
+  call ZZstarttest4 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push state 0
+  call fren_homog_words arity 3 depth 4
+  popn 4
+  cmp testl reg r0 reg r0
+  branch je to L2
+  push state 0
+  call ZZstarttest5 arity 1 depth 1
+  load movw statefld 2310 into r0w
+  cmp cmpw statefld 2278 reg r0w
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push state 0
+  call canfren_words arity 3 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L2
+label L1 was at_0xe9
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L5
+label L2 was at_0xf8
+  push reg r6
+  call ZZstarttest6 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call insert_dict_root arity 3 depth 4
+  push reg r6
+  call succeed arity 1 depth 5
+  popn 5
+  jump to L4
+label L3 was at_0x117
+  call succeed arity 1 depth 1
+  popreg r1
+label L4 was at_0x11d
+  load movl imm 0 into r0
+label L5 was at_0x11f
+  return reg r0
+end
+
+rule fren_roots_dict_lookup from ft_morph.obj
+shape frame 212 argbase 8 params 3
+label L0 was _fren_roots_dict_lookup
+  alu andl imm 0 slot -20
+  load movl slotaddr -120 into r0
+  push imm 0
+  push slotaddr -120
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -120 into r0
+  push slotaddr -120
+  load movl slotaddr -56 into r0
+  push slotaddr -56
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  load movl slotaddr -44 into r0
+  push slotaddr -44
+  load movl slotaddr -212 into r0
+  push slotaddr -212
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L1
+  push param 2
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  push param 1
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push state 0
+  call ZZget_parm_ptr2 arity 5 depth 5
+  push state 0
+  call ZZfence_null arity 1 depth 6
+  push state 0
+  call ZZstarttest1 arity 1 depth 7
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push state 0
+  call user_rootdict arity 3 depth 10
+  popn 10
+  cmp testl reg r0 reg r0
+  push state 0
+  branch je to L3
+  call ZZstarttest3 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push state 0
+  call fren_roots arity 3 depth 4
+  popn 4
+  cmp testl reg r0 reg r0
+  branch je to L2
+  push state 0
+  call ZZstarttest4 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push state 0
+  call fren_homog_roots arity 3 depth 4
+  popn 4
+  cmp testl reg r0 reg r0
+  branch je to L2
+  push state 0
+  call ZZstarttest5 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push state 0
+  call fren_digit arity 3 depth 4
+  popn 4
+  cmp testl reg r0 reg r0
+  branch je to L2
+  push state 0
+  call ZZstarttest6 arity 1 depth 1
+  load movw statefld 2310 into r0w
+  cmp cmpw statefld 2278 reg r0w
+  popreg r1
+  branch jne to L1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push state 0
+  call canfren_roots arity 3 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L2
+label L1 was at_0x104
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L5
+label L2 was at_0x113
+  push reg r6
+  call ZZstarttest7 arity 1 depth 1
+  load movl slotaddr -8 into r0
+  push slotaddr -8
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  push reg r6
+  call insert_dict_root arity 3 depth 4
+  push reg r6
+  call succeed arity 1 depth 5
+  popn 5
+  jump to L4
+label L3 was at_0x132
+  call succeed arity 1 depth 1
+  popreg r1
+label L4 was at_0x138
+  load movl imm 0 into r0
+label L5 was at_0x13a
+  return reg r0
+end
+
+rule break_into_morphs from ft_morph.obj
+shape frame 196 argbase 8 params 1
+label L0 was _break_into_morphs
+  alu andl imm 0 slot -4
+  load movl slotaddr -104 into r0
+  push imm 0
+  push slotaddr -104
+  call setjmp3 arity 2 depth 2
+  cmp testl reg r0 reg r0
+  load movl state 0 into r6
+  popreg r1
+  popreg r1
+  branch jne to L9
+  load movl slotaddr -104 into r0
+  push slotaddr -104
+  load movl slotaddr -40 into r0
+  push slotaddr -40
+  load movl slotaddr -28 into r0
+  push slotaddr -28
+  load movl slotaddr -16 into r0
+  push slotaddr -16
+  load movl slotaddr -196 into r0
+  push slotaddr -196
+  push state 0
+  call ventproc arity 6 depth 6
+  popn 6
+  cmp testl reg r0 reg r0
+  branch jne to L9
+  push state 0
+  call ZZfence_null arity 1 depth 1
+  push state 0
+  call ZZfenceZZstring215 arity 1 depth 2
+  push state 0
+  call ZZstarttest1 arity 1 depth 3
+  popn 3
+  cmp cmpw imm 1 statefld 2498
+  branch je to L11
+label L1 was $X1$94592
+  push reg r6
+  call ZZstarttest3 arity 1 depth 1
+  addk 864 reg r6 into r0
+  push reg r0
+  push reg r6
+  call lpta_loadp arity 2 depth 3
+  push imm 3
+  push reg r6
+  call setscan_r arity 2 depth 5
+  popn 5
+  cmp testl reg r0 reg r0
+  branch jne to L3
+  push reg r6
+  call ZZtestFldeq3_0_1 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L2
+  push reg r6
+  call advance_tok arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch je to L10
+label L2 was at_0xad
+  load movl slotaddr -4 into r0
+  push slotaddr -4
+  push reg r6
+  call backtrack_function arity 2 depth 2
+  alu decl none reg r0
+  cmp cmpl imm 7 reg r0
+  popreg r1
+  popreg r1
+  branch ja to L9
+  switch reg r0 to L1 L11 L3 L4 L5 L6 L7 L8
+label L3 was $X3$94596
+  push reg r6
+  call ZZstarttest4 arity 1 depth 1
+  addk 872 reg r6 into r0
+  push reg r0
+  addk 864 reg r6 into r0
+  push reg r0
+  push reg r6
+  call fren_words_dict_lookup arity 3 depth 4
+  popn 4
+  cmp testl reg r0 reg r0
+  branch je to L11
+label L4 was $X4$94603
+  push reg r6
+  call ZZstarttest5 arity 1 depth 1
+  addk 872 reg r6 into r0
+  push reg r0
+  addk 864 reg r6 into r0
+  push reg r0
+  push reg r6
+  call fren_roots_dict_lookup arity 3 depth 4
+  popn 4
+  cmp testl reg r0 reg r0
+  branch je to L11
+label L5 was $X5$94607
+  push reg r6
+  call ZZstarttest6 arity 1 depth 1
+  push reg r6
+  call strip_s arity 1 depth 2
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch jne to L6
+  push reg r6
+  call ZZstarttest6 arity 1 depth 1
+  addk 872 reg r6 into r0
+  push reg r0
+  addk 864 reg r6 into r0
+  push reg r0
+  push reg r6
+  call fren_roots_dict_lookup arity 3 depth 4
+  popn 4
+  cmp testl reg r0 reg r0
+  branch je to L11
+label L6 was $X6$94609
+  push reg r6
+  call ZZstarttest7 arity 1 depth 1
+  push reg r6
+  call strip_ment arity 1 depth 2
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch jne to L7
+  push reg r6
+  call ZZstarttest7 arity 1 depth 1
+  addk 872 reg r6 into r0
+  push reg r0
+  addk 864 reg r6 into r0
+  push reg r0
+  push reg r6
+  call fren_roots_dict_lookup arity 3 depth 4
+  popn 4
+  cmp testl reg r0 reg r0
+  branch je to L11
+label L7 was $X7$94614
+  push reg r6
+  call ZZstarttest8 arity 1 depth 1
+  push reg r6
+  call strip_ieme arity 1 depth 2
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch jne to L8
+  push reg r6
+  call ZZstarttest8 arity 1 depth 1
+  push reg r6
+  call fren_ordinal_phone_rules arity 1 depth 2
+  cmp testl reg r0 reg r0
+  popreg r1
+  popreg r1
+  branch je to L11
+label L8 was $X8$94619
+  push reg r6
+  call ZZ_lprp_load_vvg_0107_0108__insert_2pt_s_3_1_ZZstring4 arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L2
+  jump to L11
+label L9 was at_0x1b3
+  push imm 94
+  push reg r6
+  call vretproc arity 2 depth 2
+  popreg r1
+  popreg r1
+  load movl imm 94 into r0
+  jump to L12
+label L10 was at_0x1c2
+  load movw ind reg r6 1342 into r0w
+  store movw reg r0w ind reg r6 2530
+label L11 was $X2$94593
+  push reg r6
+  call succeed arity 1 depth 1
+  popreg r1
+  load movl imm 0 into r0
+label L12 was at_0x1d9
+  return reg r0
+label L13 was $L94820
+end
+
