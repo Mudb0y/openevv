@@ -441,12 +441,10 @@ class SynthDriver(SynthDriver):
 		always sounded like and is the default; below it there is nothing to
 		gain but the eight thousand IBM shipped for the telephone.
 
-		Above it the engine still runs at eight or eleven thousand and each
-		sample is repeated, so the speech is unchanged and what a higher rate
-		buys is that the audio device is handed something it wants without
-		resampling it. It also sounds brighter, because repeating rather than
-		interpolating leaves a mirror of the speech above the old ceiling
-		where a resampler would have removed it.
+		Above it the engine still runs at eleven thousand and twenty five and
+		the rate is raised from there, so the voice is the same one at every
+		setting and what a higher rate buys is an audio device handed
+		something it wants without resampling it again on the way out.
 		"""
 		return OrderedDict(
 			(

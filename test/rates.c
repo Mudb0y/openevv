@@ -45,6 +45,7 @@
 
 #include "evv_abi.h"
 #include "klatt_rates.h"
+#include "eci_pcm.h"
 
 enum { FRAME = 4096 };
 
@@ -92,14 +93,20 @@ extern const int16_t klatt_CO11[4992];
 static short frame[FRAME];
 static int   report;
 
-/* Whether this run is the ordinary one or the comparison. The same binary is
-   run twice -- see the rates target in the Makefile -- because the two paths
-   have different claims to make and both would otherwise rot: with the
-   holding on, every rate above eleven thousand is the engine's own samples
-   taken over, and with it off every one of them is synthesised outright with
-   tables built from IBM's formulae. Neither run exercises the other's code
-   at all. */
-static int   holding = 1;
+/* Which way this run is going about it, because the claims that can be made
+   differ and each path would otherwise rot. The same binary is run three
+   times -- see the rates target in the Makefile.
+ *
+ * The default curves through four samples, so what comes out is not what
+ * went in and the strongest thing that can be said is that a whole ratio
+ * lands exactly on the engine's own samples where the two grids meet.
+ * EVV_UPSAMPLE=hold interpolates nothing, so every sample is the engine's
+ * and that is checked to the byte. EVV_UPSAMPLE=none synthesises at the
+ * rate instead, which is a different half of the engine again. No one run
+ * enters another's code. */
+static int   method = CVT_CUBIC;
+static int   synthesising;
+static const char *method_name = "cubic";
 
 /* What one run said, and how it behaved while saying it. */
 static short kept[ROOM];
@@ -236,6 +243,179 @@ static int checkTables(void)
             return 0;
         }
     }
+    return 1;
+}
+
+/* ---- the resampler on its own ---------------------------------------- */
+
+/* Driving the arithmetic directly, with no engine behind it.
+ *
+ * Three properties, and the third is the one that matters most because
+ * nothing measured on the audio would catch it. A run split into blocks has
+ * to come out identical to the same run handed over whole -- the engine
+ * hands its samples over a few dozen at a time, so every utterance is
+ * hundreds of separate calls, and an interpolating way that did not carry
+ * its tail across would put a seam at every one of them. Seams at forty
+ * hertz would be a buzz under the speech, and the spectra would barely move.
+ *
+ * The other two say the arithmetic is a rate change and not an effect: a
+ * held level has to come out at that level, and a straight line has to come
+ * out straight wherever the way is one that can follow a line at all. The
+ * second of those is what pins the shape of the curve rather than merely
+ * where it starts -- moving one of the four points a curve is drawn through
+ * leaves it passing through the same places on the grid, so nothing about
+ * the grid would notice, and following a slope is what does.
+ */
+static int32_t unit_in[4096];
+static int32_t unit_whole[16384];
+static int32_t unit_piece[16384];
+
+static const struct { int32_t method; const char *name; } METHODS[] = {
+    { CVT_HOLD,   "hold" },
+    { CVT_ZEROS,  "zeros" },
+    { CVT_LINEAR, "linear" },
+    { CVT_CUBIC,  "cubic" },
+};
+
+#define METHOD_COUNT ((int)(sizeof METHODS / sizeof METHODS[0]))
+
+static const struct { int32_t from; int32_t to; } RATIOS[] = {
+    { 11025, 22050 },   /* a whole one */
+    { 11025, 44100 },   /* and a wider whole one */
+    { 11025, 16000 },   /* and the uneven ones */
+    { 11025, 48000 },
+};
+
+#define RATIO_COUNT ((int)(sizeof RATIOS / sizeof RATIOS[0]))
+
+static int unitChecks(void)
+{
+    int m, q;
+
+    for (m = 0; m < METHOD_COUNT; m++) {
+        for (q = 0; q < RATIO_COUNT; q++) {
+            int32_t from = RATIOS[q].from, to = RATIOS[q].to;
+            PcmResampler r;
+            uint32_t n = 1000, whole, made, at;
+            uint32_t i;
+            int32_t delay = CVT_DELAY(METHODS[m].method);
+
+            /* A held level, then a straight line, so both properties are in
+               the one run and the join between them is exercised too.
+
+               The line is steep on purpose. A curve drawn through the wrong
+               four points still passes through the right places where the
+               grids meet, and still holds a level, so the only thing that
+               catches it is how far it strays between them -- and that is in
+               proportion to the slope. At three a sample the worst stray is
+               a fifth of a count and invisible; at sixty it is nearly four,
+               which is well past what rounding explains. Sixty a sample over
+               half the run stays inside sixteen bits, which the clamp would
+               otherwise hide. */
+            for (i = 0; i < n; i++)
+                unit_in[i] = i < n / 2 ? 1000
+                                       : 1000 + (int32_t)(i - n / 2) * 60;
+
+            pcm_resample_start(&r, from, to, METHODS[m].method);
+            whole = pcm_resample_count(&r, n);
+            if (whole > sizeof unit_whole / sizeof unit_whole[0]) {
+                printf("rates: no room to drive the resampler\n");
+                return 0;
+            }
+            made = pcm_resample(&r, unit_in, n, unit_whole);
+            if (made != whole) {
+                printf("rates: %s at %d to %d made %u samples where it said "
+                       "it would make %u\n", METHODS[m].name, (int)from,
+                       (int)to, made, whole);
+                return 0;
+            }
+
+            /* A level in has to be that level out, once the delay has been
+               walked past. Zeros is not asked: putting silence between the
+               samples is the whole of what it does. */
+            if (METHODS[m].method != CVT_ZEROS) {
+                uint32_t settled = (uint32_t)((int64_t)(delay + 2) * to / from);
+
+                for (i = settled; i < (uint32_t)((int64_t)(n / 2) * to / from);
+                     i++)
+                    if (unit_whole[i] != 1000) {
+                        printf("rates: %s at %d to %d turned a held level of "
+                               "1000 into %d at sample %u\n",
+                               METHODS[m].name, (int)from, (int)to,
+                               (int)unit_whole[i], i);
+                        return 0;
+                    }
+            }
+
+            /* And a slope in has to be that slope out, for the two ways
+               that can follow one. Where the walk is at p input samples, the
+               line is at 1000 plus three for every sample past the halfway
+               point, less however far behind this way runs. */
+            if (METHODS[m].method == CVT_LINEAR
+                || METHODS[m].method == CVT_CUBIC) {
+                uint32_t first = (uint32_t)(((int64_t)(n / 2) + delay + 2)
+                                            * to / from);
+
+                for (i = first; i < whole; i++) {
+                    double p = (double)((int64_t)i * from) / (double)to;
+                    double owed = 1000.0
+                                + (p - (double)delay - (double)(n / 2)) * 60.0;
+                    double off = (double)unit_whole[i] - owed;
+
+                    if (off < 0)
+                        off = -off;
+                    if (off > 1.0) {
+                        printf("rates: %s at %d to %d does not follow a "
+                               "slope: sample %u is %d where the line is at "
+                               "%.2f\n", METHODS[m].name, (int)from, (int)to,
+                               i, (int)unit_whole[i], owed);
+                        return 0;
+                    }
+                }
+            }
+
+            /* And the same run in pieces, which has to come out the same.
+               Uneven pieces on purpose: a way that only joined up on a round
+               number of samples would pass on even ones. */
+            pcm_resample_start(&r, from, to, METHODS[m].method);
+            at = 0;
+            made = 0;
+            {
+                uint32_t sizes[6] = { 37, 200, 1, 111, 400, 251 };
+                int      k = 0;
+
+                while (at < n) {
+                    uint32_t take = sizes[k % 6];
+
+                    if (take > n - at)
+                        take = n - at;
+                    made += pcm_resample(&r, unit_in + at, take,
+                                         unit_piece + made);
+                    at += take;
+                    k++;
+                }
+            }
+            if (made != whole) {
+                printf("rates: %s at %d to %d made %u samples in pieces "
+                       "where it made %u whole\n", METHODS[m].name,
+                       (int)from, (int)to, made, whole);
+                return 0;
+            }
+            for (i = 0; i < made; i++)
+                if (unit_piece[i] != unit_whole[i]) {
+                    printf("rates: %s at %d to %d has a seam: sample %u is "
+                           "%d in pieces and %d whole\n", METHODS[m].name,
+                           (int)from, (int)to, i, (int)unit_piece[i],
+                           (int)unit_whole[i]);
+                    return 0;
+                }
+        }
+    }
+
+    if (report)
+        printf("rates: the resampler holds a level, follows a slope, and "
+               "over %d ways and %d ratios comes out the same in pieces as "
+               "whole\n", METHOD_COUNT, RATIO_COUNT);
     return 1;
 }
 
@@ -398,11 +578,23 @@ int main(void)
     {
         const char *say = getenv("EVV_UPSAMPLE");
 
-        holding = !(say != 0 && strcmp(say, "none") == 0);
+        if (say != 0) {
+            method_name = say;
+            if (strcmp(say, "none") == 0)
+                synthesising = 1;
+            else if (strcmp(say, "hold") == 0)
+                method = CVT_HOLD;
+            else if (strcmp(say, "zeros") == 0)
+                method = CVT_ZEROS;
+            else if (strcmp(say, "linear") == 0)
+                method = CVT_LINEAR;
+        }
     }
     report = getenv("EVV_RATES_REPORT") != 0;
 
     if (!checkTables())
+        return 1;
+    if (!unitChecks())
         return 1;
 
     evv_port_start();
@@ -463,14 +655,14 @@ int main(void)
     for (r = 0; r < WANTED_COUNT; r++) {
         int32_t set = WANTED[r].set;
         int32_t hz = WANTED[r].hz;
-        int32_t from = holding ? WANTED[r].from : 0;
+        int32_t from = synthesising ? 0 : WANTED[r].from;
         long    got, owed, slack;
         int32_t back = -1;
 
         /* Synthesised outright, the engine has a ceiling the held rates do
            not, so with the holding off the highest rate is not merely worse
            but impossible, and has to be refused rather than attempted. */
-        if (!holding && hz > KLATT_RATE_MAX) {
+        if (synthesising && hz > KLATT_RATE_MAX) {
             if (run_at(set, &back) != -2) {
                 printf("rates: with no holding it took %d hertz, which it "
                        "cannot synthesise\n", (int)hz);
@@ -552,30 +744,64 @@ int main(void)
                        owedN);
                 return 1;
             }
-            for (k = 0; k < got; k++) {
-                long at = (long)(((long long)k * from) / hz);
+            if (method == CVT_HOLD) {
+                /* Nothing is interpolated, so every sample is the engine's
+                   and which one is settled: the one whose turn it still is.
+                   Byte for byte, which is what says this rate is Eloquence
+                   rather than an approximation of it. */
+                for (k = 0; k < got; k++) {
+                    long at = (long)(((long long)k * from) / hz);
 
-                if (at >= baseN)
-                    at = baseN - 1;
-                if (kept[k] != base11[at]) {
-                    wrong = k + 1;
-                    break;
+                    if (at >= baseN)
+                        at = baseN - 1;
+                    if (kept[k] != base11[at]) {
+                        wrong = k + 1;
+                        break;
+                    }
+                }
+                if (wrong) {
+                    long at = (long)(((long long)(wrong - 1) * from) / hz);
+
+                    printf("rates: %d hertz is not %d held: sample %ld is %d "
+                           "where the engine said %d\n", (int)hz, (int)from,
+                           wrong - 1, (int)kept[wrong - 1], (int)base11[at]);
+                    return 1;
+                }
+            } else if ((hz % from) == 0) {
+                /* A curve does not hand back what it was given, but where
+                   the two grids meet it passes through the point, so every
+                   output sample that lands on an input one has to be that
+                   input sample exactly -- offset by however far behind the
+                   way in force runs. That is still byte for byte, on one
+                   sample in every few. */
+                long times = hz / from;
+                long delay = CVT_DELAY(method);
+
+                for (k = delay; k < baseN && wrong == 0; k++) {
+                    long j = k * times;
+
+                    if (j >= got)
+                        break;
+                    if (kept[j] != base11[k - delay])
+                        wrong = j + 1;
+                }
+                if (wrong) {
+                    printf("rates: %d hertz does not meet %d on the grid: "
+                           "sample %ld is %d where the engine said %d\n",
+                           (int)hz, (int)from, wrong - 1,
+                           (int)kept[wrong - 1],
+                           (int)base11[(wrong - 1) / (hz / from) - delay]);
+                    return 1;
                 }
             }
-            if (wrong) {
-                long at = (long)(((long long)(wrong - 1) * from) / hz);
 
-                printf("rates: %d hertz is not %d taken over: sample %ld is "
-                       "%d where the engine said %d\n", (int)hz,
-                       (int)from, wrong - 1,
-                       (int)kept[wrong - 1], (int)base11[at]);
-                return 1;
-            }
             if (report)
-                printf("rates: %6d hertz  every one of %ld samples is the "
-                       "engine's, %s\n", (int)hz, got,
-                       (hz % from) == 0
-                       ? "each repeated evenly" : "each taken as the nearest");
+                printf("rates: %6d hertz  %s\n", (int)hz,
+                       method == CVT_HOLD
+                       ? "every sample is the engine's own"
+                       : (hz % from) == 0
+                       ? "every sample where the grids meet is the engine's own"
+                       : "an uneven ratio, so the resampler's own checks stand");
             continue;
         }
 
@@ -594,13 +820,17 @@ int main(void)
     }
 
     evv_port_finish();
-    if (holding)
-        printf("rates: the tables are IBM's formulae, every rate above "
-               "eleven thousand is the engine's own samples taken over, and "
-               "all %d speak to length\n", WANTED_COUNT);
-    else
-        printf("rates: with no holding, every rate the engine can synthesise "
+    if (synthesising)
+        printf("rates: synthesised outright, every rate the engine can make "
                "does so from tables built out of IBM's formulae, and the one "
                "it cannot is refused\n");
+    else
+        printf("rates: the tables are IBM's formulae, %s, and all %d rates "
+               "speak to length\n",
+               method == CVT_HOLD
+               ? "every rate above eleven thousand is the engine's own "
+                 "samples to the byte"
+               : "every whole ratio meets the engine's own samples on the "
+                 "grid", WANTED_COUNT);
     return 0;
 }

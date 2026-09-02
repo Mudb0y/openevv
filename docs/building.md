@@ -640,11 +640,11 @@ With no `-o` it writes the wave to standard output, unless that is a terminal, i
 
 `-R` is the sample rate, which is not the speed. Nought to six are 8,000, 11,025, 22,050, 16,000, 32,000, 44,100 and 48,000 hertz, in the order IBM numbered the first four and this port the rest. The default is 11,025.
 
-Above 11,025 the engine goes on running at 11,025 and its samples are taken over, which is what keeps the voice sounding like Eloquence; `docs/status.md` says why that is better than synthesising at the higher rate and what it does to the spectrum. A number of 8,000 or more is that rate in hertz, taken over the same way, so `-R 24000` is a rate nobody numbered; `EVV_UPSAMPLE=none` synthesises instead, so the two can be compared. `tools/rate-compare.py` reads the resulting wave files and says it in numbers:
+Above 11,025 the engine goes on running at 11,025 and the rate is raised from there, so the voice is the same one at every setting; `docs/status.md` says why that is better than synthesising at the higher rate and what it does to the spectrum. A number of 8,000 or more is that rate in hertz, raised the same way, so `-R 24000` is a rate nobody numbered. `EVV_UPSAMPLE` says how the raising is done -- `cubic` by default, or `hold`, `zeros` or `linear` -- and `none` synthesises at the rate instead, so the two halves can be compared. `tools/rate-compare.py` reads the resulting wave files and says it in numbers:
 
     ./build/evv -R 1 -o held11.wav "She sells sea shells."
     ./build/evv -R 2 -o held22.wav "She sells sea shells."
-    EVV_UPSAMPLE=none ./build/evv -R 2 -o native22.wav "She sells sea shells."
+    EVV_UPSAMPLE=hold ./build/evv -R 2 -o held22.wav "She sells sea shells."
     tools/rate-compare.py held11.wav held22.wav native22.wav
 
 ## Windows
@@ -945,11 +945,17 @@ What it is proving is that nothing in the engine has quietly stayed global. Two 
 
 The first is the claim the built resonator tables rest on: that IBM's four are the two formulae they look like -- the excitation table is the exponential of minus pi times the bandwidth over the rate and the cosine table is the cosine of two pi times the frequency over the rate, both in fifteen-bit fixed point and both indexed by hertz from ten. It builds the tables for IBM's own two rates and holds them against IBM's own arrays entry by entry. Every one of the 3,991 excitation entries matches at both rates and every cosine entry matches at 11.025 kHz; two cosine entries differ at 8 kHz, at 3,992 and 4,008 hertz, where IBM stored the saturated value and the formula comes to 32,767.35. Those two are pinned rather than tolerated, so a third mismatch fails. The engine never uses what this builds at those two rates, which is exactly why the check has to be made here.
 
-The second is the strongest thing in the file, and it is stronger than any comparison of spectra: every sample of a rate taken over from another has to be a sample the engine produced, and which one is settled outright -- the one nearest that moment in time. That is byte for byte, so it says that 22,050 is Eloquence rather than an approximation of it, and it covers the whole ratios and the uneven ones in one loop. It is checked across instances rather than within one, because the engine's second utterance is not its first while a fresh instance says the same thing every time. Breaking the copy for one sample out of 153,164 fails it and names the sample.
+The second is what says the rate change is a rate change and not an effect, and it drives the resampler directly rather than measuring the audio it produces. Three properties, over every way of raising the rate and both whole and uneven ratios: a held level comes out at that level, a straight line comes out straight, and a run split into uneven pieces comes out identical to the same run handed over whole.
+
+That third one is the one nothing else would catch. The engine hands its samples over a few dozen at a time, so an utterance is hundreds of separate calls; a way that did not carry its tail across would put a seam at every one, which is a buzz under the speech that would barely move a spectrum. Stopping the tail being carried fails it at sample 74 of the first ratio tried.
+
+The slope is steep on purpose, and that was learned from a sabotage that got through. A curve drawn through the wrong four samples still passes through the right places where the grids meet and still holds a level, so only how far it strays between them catches it -- and that is in proportion to the slope. At three a sample the worst stray is a fifth of a count; at sixty it is nearly four, and the shifted tap is caught.
+
+Beside it the engine-level claim, which depends on the way in force: under `hold` nothing is interpolated so every sample is the engine's own, byte for byte; under the default every output sample that lands on an input one, which is every second at 22,050 and every fourth at 44,100, has to be that sample exactly, since a curve passes through the points it is drawn through. Checked across instances rather than within one, because the engine's second utterance is not its first while a fresh instance says the same thing every time.
 
 The third is that every rate speaks, for the same length of time, and at a level that is speech. `EVV_RATES_REPORT=1 make rates` prints what each one said. It needs neither Wine nor IBM's objects, so it runs in CI.
 
-The target runs the harness twice, once as it ships and once with `EVV_UPSAMPLE=none`, because the two paths have entirely different claims to make and neither run enters the other's code. The second is what keeps the built resonator tables honest, since with the holding on nothing uses them.
+The target runs the harness three times: as it ships, with `EVV_UPSAMPLE=hold`, and with `EVV_UPSAMPLE=none`. The three have different claims to make and no one of them enters another's code. The last is what keeps the built resonator tables honest, since with the rate raised afterwards nothing uses them.
 
 The level check is a slew bound rather than a loudness one, because real speech is normalised and reaches full scale exactly as a runaway does once it has been wrapped into sixteen bits; what separates them is that a waveform sampled well above its own bandwidth cannot swing its whole amplitude between one sample and the next. It is asked only of the rates the engine synthesises outright. A held rate steps exactly as its base does -- repeating a sample leaves the jumps between them where they were -- so the rule says nothing about one that is deliberately not bandlimited, and the byte-for-byte check is what covers it instead. `docs/status.md` describes the runaway this catches.
 

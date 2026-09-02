@@ -69,14 +69,16 @@ SAMPLE_RATE = 11025
 #: the last two are this port's.
 #:
 #: Above eleven thousand the engine still runs at eleven thousand and twenty
-#: five and the samples are taken over, so choosing a higher rate never
-#: changes which voice it is: the speech is bit for bit the speech Eloquence
-#: has always made, and what fills the new band is a mirror of it.
+#: five and the rate is raised from there, so choosing a higher rate never
+#: changes which voice it is. What it buys a reader is an audio device handed
+#: something it wants without resampling it again on the way out.
+#:
 #: Synthesising at the higher rate outright is possible and sounds worse --
 #: the frication comes from a generator that makes one value per output
 #: sample, so the sibilants go thin -- and is behind EVV_UPSAMPLE=none rather
-#: than in this list. Ordered by rate rather than by number so a reader is
-#: offered them in the order a person thinks of them.
+#: than in this list, along with the ways of raising the rate that keep the
+#: mirror of the speech a resampler removes. Ordered by rate rather than by
+#: number so a reader is offered them in the order a person thinks of them.
 SAMPLE_RATES = (
 	(0, 8000),
 	(1, 11025),

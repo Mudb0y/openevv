@@ -115,7 +115,7 @@ THIS int32_t pcm_setup(SoundOutput *o, char *a, int32_t *b, int32_t *c,
 
 /* ---- turning one sample format into another ------------------------- */
 
-/* Raising the rate by repeating samples, and deliberately not filtering.
+/* Raising the rate, four ways, none of them the engine's business.
  *
  * This is the one object of IBM's sound layer the port never transcribed,
  * and it is the reason a caller asking for twenty-two thousand used to be
@@ -123,52 +123,49 @@ THIS int32_t pcm_setup(SoundOutput *o, char *a, int32_t *b, int32_t *c,
  * same speech at half the duration. It is ours rather than a transcription,
  * for the reason the head of this file gives about the rest of the layer.
  *
- * What it does is the point rather than an approximation of something
- * better. The engine can be run at twenty-two thousand outright, and that
- * was tried first: it sounds wrong, because the frication and aspiration
- * come out of a noise generator that produces one value per output sample,
- * so their bandwidth is whatever the rate is and the sibilants go thin and
- * hissy. Repeating samples touches none of that. The speech is bit for bit
- * the speech Eloquence has always made, and what fills the new band is a
- * mirror of it rather than new noise.
+ * The engine runs at eleven thousand and twenty five and this decides what
+ * the samples in between are. Which way is a matter for a listener, so there
+ * are four and EVV_UPSAMPLE picks:
  *
- * That mirror is what a bandlimited resampler exists to remove, and here it
- * is kept. Doubling by holding leaves the top of the original band three
- * decibels down and puts the mirrored copy between about four decibels below
- * the speech just above the old Nyquist and a null at the old sample rate.
- * It is the sound old hardware made, and it is what this was asked for.
+ *   hold    the sample before, repeated until the next one is due. Keeps the
+ *           mirror of the speech that a resampler exists to remove, which is
+ *           what old hardware did and what some ears want. Every value that
+ *           comes out is a value the engine put in, so what a caller gets at
+ *           twenty-two thousand is Eloquence to the byte.
+ *   zeros   the sample, then silence until the next is due. The mirror at
+ *           full strength with no droop at the top of the band: brighter and
+ *           harder still, and quieter, since only one sample in so many
+ *           carries anything.
+ *   linear  a straight line between one sample and the next. Suppresses the
+ *           mirror by roughly twice what holding does.
+ *   cubic   a curve through four of them, which is what libsoxr calls its
+ *           quick mode and is the default here. It suppresses the mirror far
+ *           enough that the result is a rate change rather than an effect,
+ *           and it is short of what a windowed sinc would do, which is why
+ *           it stays lively rather than sounding filtered.
  *
- * Three ways of filling the gap, chosen by EVV_UPSAMPLE, because which one
- * sounds best is a question for a listener and not for this file:
+ * Cubic rather than libsoxr itself because the engine has no dependency but
+ * the C library and gains none here: this ships inside a DLL a screen reader
+ * loads and inside builds for platforms nobody has put soxr on. It is the
+ * same interpolation soxr's quick mode is documented as, not the same code,
+ * so it is an equivalent and not a match to the byte.
  *
- *   hold    repeat each sample, which is the default and the brief
- *   zeros   one sample then silence, which keeps the mirror at full strength
- *           with no droop at the top of the band, and is brighter and harder
- *           still -- and quieter, since only one sample in N carries anything
- *   linear  slide between one sample and the next, which suppresses the
- *           mirror by roughly twice what holding does and is where to go if
- *           holding turns out too bright
+ * Both interpolating ways look only backwards, at samples already handed
+ * over, so a run joins the one before it with no seam and nothing is held
+ * back at the end. What that costs is a constant delay of one input sample
+ * for linear and two for cubic -- under two tenths of a millisecond -- which
+ * is why the history below is three samples deep.
  *
- * Those three are about a whole-number ratio. Where the ratio is not whole
- * the nearest input sample is taken and the setting does not apply, because
- * the repeats are already uneven and there is no one gap to fill.
- *
- * A whole-number ratio repeats each sample the same number of times. Where
- * the ratio is not whole, each output sample takes the input sample nearest
- * it in time, which is the same idea carried on: no interpolation, no
- * filtering, and every value that comes out is a value the engine put in.
- * What it costs is that the repeats are uneven -- at forty-eight thousand
- * from eleven thousand and twenty five each sample lands four or five times
- * -- so the timing wobbles by up to half an input sample. The position is
- * carried between runs, so the unevenness never restarts at a boundary.
+ * The ratio need not be whole. Position is counted in units of one input
+ * sample over the output rate, so twenty-two and forty-four thousand come to
+ * an even number of copies and sixteen, twenty-four, thirty-two and
+ * forty-eight thousand come to an uneven one, by the same arithmetic.
  */
 
 #include <stdlib.h>
 #include <string.h>
 
-#define CVT_HOLD    0
-#define CVT_ZEROS   1
-#define CVT_LINEAR  2
+#include "eci_pcm.h"
 
 /* What the layer above hands down, and what comes back. */
 typedef struct { void *at; uint32_t bytes; } SDATA;
@@ -185,18 +182,125 @@ typedef struct {
     uint16_t extra;
 } WaveFormat;
 
+void pcm_resample_start(PcmResampler *r, int32_t from, int32_t to,
+                        int32_t method)
+{
+    memset(r, 0, sizeof *r);
+    r->from = from;
+    r->to = to;
+    r->method = method;
+}
+
+/* How many output samples a run of n input ones comes to. Every output
+   position whose input index falls inside the run, and no more, so nothing
+   is held back and the count over a whole utterance is exact. */
+uint32_t pcm_resample_count(const PcmResampler *r, uint32_t n)
+{
+    int64_t span = (int64_t)n * r->to - r->at;
+
+    if (span <= 0)
+        return 0;
+    return (uint32_t)((span + r->from - 1) / r->from);
+}
+
+/* The samples handed over lie at 0 and up; the three before them are the
+   tail of the run before. */
+static int32_t cvt_tap(const PcmResampler *r, const int32_t *src, uint32_t n,
+                       int32_t i)
+{
+    if (i < 0)
+        return r->history[CVT_HISTORY + i];
+    if ((uint32_t)i >= n)
+        return src[n - 1];
+    return src[i];
+}
+
+/* Sixteen bits is where these are going, and a curve through four points can
+   overshoot the points. Left to itself that wraps rather than clips, which
+   is a click and not a loud sample. */
+static int32_t cvt_clamp(double v)
+{
+    if (v >= 32767.0)
+        return 32767;
+    if (v <= -32768.0)
+        return -32768;
+    return (int32_t)(v < 0 ? -(double)(long)(-v + 0.5) : (double)(long)(v + 0.5));
+}
+
+uint32_t pcm_resample(PcmResampler *r, const int32_t *src, uint32_t n,
+                      int32_t *out)
+{
+    uint32_t made = 0;
+    int32_t  at = r->at;
+    int32_t  last_i = -1;
+
+    while ((int64_t)at < (int64_t)n * r->to) {
+        int32_t i = at / r->to;
+        int32_t rem = at - i * r->to;
+        double  f = (double)rem / (double)r->to;
+
+        switch (r->method) {
+        case CVT_ZEROS:
+            out[made] = (i == last_i) ? 0 : cvt_tap(r, src, n, i);
+            break;
+
+        case CVT_LINEAR: {
+            double a = (double)cvt_tap(r, src, n, i - 1);
+            double b = (double)cvt_tap(r, src, n, i);
+
+            out[made] = cvt_clamp(a + (b - a) * f);
+            break;
+        }
+
+        case CVT_CUBIC: {
+            /* Catmull-Rom through four, curving between the middle two. */
+            double p0 = (double)cvt_tap(r, src, n, i - 3);
+            double p1 = (double)cvt_tap(r, src, n, i - 2);
+            double p2 = (double)cvt_tap(r, src, n, i - 1);
+            double p3 = (double)cvt_tap(r, src, n, i);
+
+            out[made] = cvt_clamp(
+                p1 + 0.5 * f * ((p2 - p0)
+                    + f * ((2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3)
+                        + f * (3.0 * (p1 - p2) + p3 - p0))));
+            break;
+        }
+
+        default:
+            out[made] = cvt_tap(r, src, n, i);
+            break;
+        }
+
+        last_i = i;
+        made++;
+        at += r->from;
+    }
+
+    /* Rebase the walk on the run that follows, and keep its tail. */
+    r->at = at - (int32_t)((int64_t)n * r->to);
+    {
+        /* The last three samples of what has been handed over so far, which
+           is some of this run and, where this run was shorter than three,
+           the tail of the one before. Counted signed: a run longer than the
+           history is the ordinary case and the arithmetic below must not
+           depend on the branch above it to stay in range. */
+        int32_t k;
+
+        for (k = 0; k < CVT_HISTORY; k++) {
+            int32_t want = (int32_t)n - CVT_HISTORY + k;
+
+            r->history[k] = want >= 0 ? src[want]
+                                      : r->history[CVT_HISTORY + want];
+        }
+    }
+    return made;
+}
+
 typedef struct AudioConverter {
-    int32_t   from;         /* the engine's rate */
-    int32_t   to;           /* the caller's */
-    int32_t   times;        /* to over from where that is whole, else nought */
-    int32_t   at;           /* where the fractional walk has got to, in units
-                               of one input sample over `to' */
-    int32_t   method;
-    int32_t   last;         /* the sample before this run, for linear */
-    int       have_last;
-    int32_t  *room;         /* what convertSamples answers with */
-    uint32_t  samples;      /* how many it has room for */
-    SDATA     out;
+    PcmResampler  walk;
+    int32_t      *room;      /* what convertSamples answers with */
+    uint32_t      samples;   /* how many it has room for */
+    SDATA         out;
 } AudioConverter;
 
 const uint32_t pcm_cvt_bytes = sizeof(AudioConverter);
@@ -207,7 +311,7 @@ const uint32_t pcm_cvt_bytes = sizeof(AudioConverter);
 static int cvt_method(void)
 {
     static int decided;
-    static int method = CVT_HOLD;
+    static int method = CVT_CUBIC;
 
     if (!decided) {
         const char *say = getenv("EVV_UPSAMPLE");
@@ -218,8 +322,10 @@ static int cvt_method(void)
                 method = CVT_ZEROS;
             else if (strcmp(say, "linear") == 0)
                 method = CVT_LINEAR;
-            else
+            else if (strcmp(say, "hold") == 0)
                 method = CVT_HOLD;
+            else
+                method = CVT_CUBIC;
         }
     }
     return method;
@@ -228,8 +334,7 @@ static int cvt_method(void)
 THIS void *pcm_cvt_ctor(AudioConverter *c)
 {
     memset(c, 0, sizeof *c);
-    c->times = 1;
-    c->method = cvt_method();
+    pcm_resample_start(&c->walk, 1, 1, cvt_method());
     return c;
 }
 
@@ -242,24 +347,18 @@ THIS void pcm_cvt_dtor(AudioConverter *c)
 
 THIS int32_t pcm_cvt_setSource(AudioConverter *c, void *fmt)
 {
-    c->from = (int32_t)((WaveFormat *)fmt)->rate;
-    c->have_last = 0;
+    c->walk.from = (int32_t)((WaveFormat *)fmt)->rate;
     return 0;
 }
 
-/* The ratio is settled here, and a fractional one is refused rather than
-   rounded. */
 THIS int32_t pcm_cvt_setDest(AudioConverter *c, void *fmt)
 {
     int32_t to = (int32_t)((WaveFormat *)fmt)->rate;
 
-    if (c->from <= 0 || to < c->from)
+    if (c->walk.from <= 0 || to < c->walk.from)
         return -1;
 
-    c->to = to;
-    c->times = (to % c->from) == 0 ? to / c->from : 0;
-    c->at = 0;
-    c->have_last = 0;
+    pcm_resample_start(&c->walk, c->walk.from, to, cvt_method());
     return 0;
 }
 
@@ -285,44 +384,9 @@ THIS int32_t pcm_cvt_convert(AudioConverter *c, SDATA in, SDATA **out)
 {
     const int32_t *src = in.at;
     uint32_t n = in.bytes >> 2;
-    uint32_t want = n * (uint32_t)c->times;
-    uint32_t i;
-    int32_t  j, times = c->times;
-    int32_t *put;
+    uint32_t want, made;
 
-    if (times == 0 && src != 0 && c->to > c->from) {
-        /* The nearest input sample to each output one, walked with the
-           position carried over from the run before. */
-        uint32_t made = 0;
-        int32_t  at = c->at;
-
-        want = 0;
-        while ((uint32_t)(at / c->to) < n) {
-            want++;
-            at += c->from;
-        }
-        if (!cvt_room(c, want))
-            return -1;
-
-        at = c->at;
-        put = c->room;
-        while ((uint32_t)(at / c->to) < n) {
-            put[made++] = src[at / c->to];
-            at += c->from;
-        }
-        c->at = at - (int32_t)n * c->to;
-
-        if (n > 0) {
-            c->last = src[n - 1];
-            c->have_last = 1;
-        }
-        c->out.at = c->room;
-        c->out.bytes = made << 2;
-        *out = &c->out;
-        return 0;
-    }
-
-    if (times <= 1 || src == 0) {
+    if (src == 0 || c->walk.to == c->walk.from) {
         /* Nothing to do, and saying so by handing back what came in keeps
            the caller's one code path. */
         c->out.at = (void *)src;
@@ -331,47 +395,13 @@ THIS int32_t pcm_cvt_convert(AudioConverter *c, SDATA in, SDATA **out)
         return 0;
     }
 
+    want = pcm_resample_count(&c->walk, n);
     if (!cvt_room(c, want))
         return -1;
 
-    put = c->room;
-
-    switch (c->method) {
-    case CVT_ZEROS:
-        for (i = 0; i < n; i++) {
-            *put++ = src[i];
-            for (j = 1; j < times; j++)
-                *put++ = 0;
-        }
-        break;
-
-    case CVT_LINEAR:
-        for (i = 0; i < n; i++) {
-            int32_t was = (i == 0) ? (c->have_last ? c->last : src[0])
-                                   : src[i - 1];
-
-            /* Between the sample before and this one, so the run joins on to
-               the one before it rather than stepping at every boundary. */
-            for (j = 0; j < times; j++)
-                *put++ = was + (int32_t)(((int64_t)(src[i] - was) * j)
-                                         / times);
-        }
-        break;
-
-    default:
-        for (i = 0; i < n; i++)
-            for (j = 0; j < times; j++)
-                *put++ = src[i];
-        break;
-    }
-
-    if (n > 0) {
-        c->last = src[n - 1];
-        c->have_last = 1;
-    }
-
+    made = pcm_resample(&c->walk, src, n, c->room);
     c->out.at = c->room;
-    c->out.bytes = want << 2;
+    c->out.bytes = made << 2;
     *out = &c->out;
     return 0;
 }
