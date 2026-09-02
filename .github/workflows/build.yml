@@ -36,6 +36,16 @@ jobs:
       - name: Check the samples
         run: test/hash.sh
 
+      # English only here, and every language in the bytecode job below.
+      # Decompiling nine languages into C is a hundred and seventeen megabytes
+      # and most of an hour on a two-core runner; what this job is for is that
+      # the C form says what the interpreter says, and one language answers
+      # that.
+      - name: Check the recorded answers, with the rules as C
+        run: |
+          make -j"$(nproc)" RULES=c probe
+          EVV_MATRIX_NATIVE=$PWD/build/probe test/matrix.sh check enus
+
       - name: Check the words the original cannot say
         run: make crashers
 
@@ -63,6 +73,14 @@ jobs:
 
       - name: Check the samples
         run: test/hash.sh
+
+      # The gate: every case of every language, samples and the answers the
+      # interface gave, held against what this engine has said before. 791
+      # cases, one binary with all nine languages in it, and neither Wine nor
+      # IBM's objects wanted. The differential suite that blessed these
+      # numbers cannot run here and does not need to.
+      - name: Check the recorded answers, every language
+        run: make matrix
 
       - name: Check the words the original cannot say
         run: make crashers

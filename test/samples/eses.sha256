@@ -1,0 +1,100 @@
+# What this engine says, case by case, for eses.
+#
+# Every line was blessed by IBM's own binary: the whole
+# differential suite was run for this language
+# immediately before these were written, and every case
+# matched. See docs/building.md.
+#
+# Written by test/matrix.sh record. One line a case:
+# the category, which case in it, the first sixteen hex of
+# the samples' hash, the same of the reported answers', and
+# the sentence.
+
+plain 1 1ad3261741d76bdf 544cda1c3801b73b Hola. Aqui habla el sintetizador de voz Eloquence.
+plain 2 7b683bfbffc87b81 873eb766819fa6f6 El doctor Gomez pago 1.234,56 euros el 3 de mayo de 2026 a las 19:45.
+plain 3 5220ad879508c5c1 8a33b044d72f6eb7 El rapido zorro marron salta sobre el perro perezoso; p.ej. www.ejemplo.es/ruta?q=1
+plain 4 70de42bdc42b4916 613698f4d11c3ca4 Prueba 1 2 3, ABC XYZ, palabras-con-guion y MAYUSCULAS.
+plain 5 2768bfaa47448601 19fde244fe4a2e2c Una sola palabra. Y otra mas; con "texto citado" en medio.
+plain 6 ef6f9add9d2a7168 28fc854c60102401 Otorrinolaringologo, desoxirribonucleico, 42% de 3,14159, y el senor Perez-Lopez hijo.
+plain 7 90c6e9b552c9a9b1 ddecfa5220abc8cc Dijo: no lo hagas! Luego (entre parentesis) 1/2 + 3/4 = 5/4; vease p. 12.
+utf8 1 a1bb0d836d3f9a7e ca7de4a889477c68 El senor Munoz envio una pinata a Sao Paulo.
+utf8 2 d2f87f2c886bbd9d 569e29cf98119437 El señor Muñoz envió una piñata a São Paulo.
+utf8 3 72d1f7185c7c1071 fad46abdb279ccc3 La cigüeña bebió agua en el río antes del amanecer.
+utf8 4 3d7bfc5c12dbd24d 153296c961955817 Aquí está la más útil página que jamás vi.
+utf8 5 12feb1a1b1a520d7 213299f82fc989fc El niño pequeño jugaba con la araña en el jardín.
+utf8 6 151a52f5d6d7ef6a 794d7adeaeb9ada4 ¿Cómo estás? ¡Qué día tan espléndido hace hoy!
+utf8 7 e83fc0fa3cdf600b 9686e6fc78d1506b Una frase completamente sin acentos para comparar.
+anno 1 d9f664bfdfdd9c1c c8715cde26ec4e74 Habla normal `vs50 ahora mucho mas lenta que antes.
+anno 2 488bbc608ba013bb 44fa72685333220a Volumen `vv30 mas bajo, y luego `vv90 mas alto otra vez.
+anno 3 eeadb5c25ec28ad9 07ebe73e2468e8e0 Tono `vb20 grave y `vb80 agudo en una sola frase.
+anno 4 874220b81af33337 7249b7779ab92504 Voz `v2 dos, `v5 cinco, y `v1 de vuelta a uno.
+anno 5 509e221983795fae 4fcaa19fbb3f0a28 Una pausa `0 corta y `4 larga entre palabras.
+anno 6 2fe136a913226445 031c8f479e7df89f Aspereza `vr40 y soplo `vf60 modificados.
+anno 7 79c7ead87aef2f43 70d1f2e4f2730479 Un acento grave \`literal debe leerse como texto.
+anno 8 6d9673cf3ef06259 95a870f4d3189a13 Velocidad por nombre `vsfast y luego `vsslow de nuevo.
+anno 9 5ccc9d823cd609a2 39a6756c7a5734e1 Tamano de cabeza `vh30 y luego `vh70 en la misma linea.
+anno 10 976b67a50f56847b 23a893c150188230 Genero `vg1 y `vg0 alternando.
+anno 11 a02bc7e51040e4cf 8517fd641b99a51c Antes de `ui"marca uno" y despues de la marca.
+anno 12 6025849028f9c8ea 32510975b86ca045 Marcador de audio `aud"pitido" en medio de una linea.
+anno 13 501a53007853bdd4 615180840417e96f `vs40 Una anotacion justo al principio del todo.
+anno 14 8a0741fd89670323 5e2c2977837413d6 Terminando con una anotacion justo al final `vs60
+anno 15 143f70199aa15d10 4c4d4c3b7952c311 Mal formadas `vzz y `q y `v999 todas en una linea.
+anno 16 72c1b963f4df1360 8409d859aac688d1 Dos `vs30`vv40 anotaciones sin nada en medio.
+anno 17 a051eb2b2b420135 17b5e8a6c57a6b7b `ui"a"`ui"b" dos marcas sin nada entre ellas.
+anno 18 f9564e0771b49eee 74ed66e1120cd67e Una marca `ui"sin cerrar que nunca termina aqui
+anno 19 5c09fbc4cf265592 72e8e340b130ed07 Mezcla `v3 voz `vs70 velocidad `vv50 volumen juntas.
+anno 20 3bfec4278aa4916c 37eb66fc4a8e44bd Tabulador	y salto de linea con `vb40 un cambio.
+anno3 1 bc41a7aca34ec41f a0461ebb061b79ab Habla normal `vs50 ahora mucho mas lenta que antes.
+anno3 2 d665ff072223cbb5 28a5132938820a3e Volumen `vv30 mas bajo, y luego `vv90 mas alto otra vez.
+anno3 3 f116d97d23016200 fe9fbe62bef69d53 Tono `vb20 grave y `vb80 agudo en una sola frase.
+anno3 4 813d7eb1322c5646 e0ab70076febb23e Voz `v2 dos, `v5 cinco, y `v1 de vuelta a uno.
+anno3 5 12f96b7916ee796d 0a6fb9e5a7cd4e85 Una pausa `0 corta y `4 larga entre palabras.
+anno3 6 19b30d0a5f5795ba 6f2f52b16c627f5c Aspereza `vr40 y soplo `vf60 modificados.
+anno3 7 79c7ead87aef2f43 8cbd137b3dcc19cc Un acento grave \`literal debe leerse como texto.
+anno3 8 50a11be926aaef91 8399d40549a5416a Velocidad por nombre `vsfast y luego `vsslow de nuevo.
+anno3 9 162fb642b8636817 cf468ec9a043d82f Tamano de cabeza `vh30 y luego `vh70 en la misma linea.
+anno3 10 46047085e3f7301b e312a20c66bc3310 Genero `vg1 y `vg0 alternando.
+anno3 11 8dda93efc64f81d7 9c66583cb8fdd97c Antes de `ui"marca uno" y despues de la marca.
+anno3 12 b71c037b8628b7da 914dbf89c9dd826d Marcador de audio `aud"pitido" en medio de una linea.
+anno3 13 f5a3105f4878b974 8a5070ea788ced99 `vs40 Una anotacion justo al principio del todo.
+anno3 14 a8caa0b84f1fd66e e689b34fd1c9c030 Terminando con una anotacion justo al final `vs60
+anno3 15 143f70199aa15d10 2f2a19d31d82cec5 Mal formadas `vzz y `q y `v999 todas en una linea.
+anno3 16 717f7798a1f90227 01e0eba675d0d90d Dos `vs30`vv40 anotaciones sin nada en medio.
+anno3 17 6973fe4ce7d867f3 73009b2289d9ef89 `ui"a"`ui"b" dos marcas sin nada entre ellas.
+anno3 18 f9564e0771b49eee d527a9a924fb2b2c Una marca `ui"sin cerrar que nunca termina aqui
+anno3 19 387dd940727afe60 c79dfdf5f759cbb5 Mezcla `v3 voz `vs70 velocidad `vv50 volumen juntas.
+anno3 20 329fc376da4b58fd 78d19168fb444173 Tabulador	y salto de linea con `vb40 un cambio.
+realworld 1 8f14f31a9ee1fd7a 20c6261868b7284f Habla normal `vs50 ahora mucho mas lenta que antes.
+realworld 2 d0544961082be218 c258a9e2ab2a87a7 Volumen `vv30 mas bajo, y luego `vv90 mas alto otra vez.
+realworld 3 a93cf7414a883cbd 3559a9705660a17f Tono `vb20 grave y `vb80 agudo en una sola frase.
+realworld 4 813d7eb1322c5646 939dd31986285554 Voz `v2 dos, `v5 cinco, y `v1 de vuelta a uno.
+realworld 5 12f96b7916ee796d d21c863f37bb6faf Una pausa `0 corta y `4 larga entre palabras.
+realworld 6 19b30d0a5f5795ba 14ed5b70f68a15d0 Aspereza `vr40 y soplo `vf60 modificados.
+realworld 7 79c7ead87aef2f43 f12f6f4ae3a014fa Un acento grave \`literal debe leerse como texto.
+realworld 8 50a11be926aaef91 b7ec3942f3ba2eb5 Velocidad por nombre `vsfast y luego `vsslow de nuevo.
+realworld 9 162fb642b8636817 17a21c2bd1c99371 Tamano de cabeza `vh30 y luego `vh70 en la misma linea.
+realworld 10 46047085e3f7301b 0cce3be47ca5067b Genero `vg1 y `vg0 alternando.
+realworld 11 8dda93efc64f81d7 908399729c182384 Antes de `ui"marca uno" y despues de la marca.
+realworld 12 b71c037b8628b7da f5ac5a5a4d5c85c6 Marcador de audio `aud"pitido" en medio de una linea.
+realworld 13 d160d6c6a339502c 9a815852429c71f9 `vs40 Una anotacion justo al principio del todo.
+realworld 14 a8caa0b84f1fd66e 2e0c6a863c7c8d5b Terminando con una anotacion justo al final `vs60
+realworld 15 143f70199aa15d10 92812a69807b047b Mal formadas `vzz y `q y `v999 todas en una linea.
+realworld 16 d4026721c042ad24 10af04965040b5c8 Dos `vs30`vv40 anotaciones sin nada en medio.
+realworld 17 6973fe4ce7d867f3 be35c209df5e694b `ui"a"`ui"b" dos marcas sin nada entre ellas.
+realworld 18 f9564e0771b49eee 90ebba16137113dc Una marca `ui"sin cerrar que nunca termina aqui
+realworld 19 eb29ecab808c227b 956815bb99f048e5 Mezcla `v3 voz `vs70 velocidad `vv50 volumen juntas.
+realworld 20 4041d2a6ae9984b5 da11266c2dae55b5 Tabulador	y salto de linea con `vb40 un cambio.
+dict 1 1ad3261741d76bdf b73a178403ed5efc Hola. Aqui habla el sintetizador de voz Eloquence.
+dict 2 7b683bfbffc87b81 1dded582b7e7f56f El doctor Gomez pago 1.234,56 euros el 3 de mayo de 2026 a las 19:45.
+dict 3 5220ad879508c5c1 4600190ab514728c El rapido zorro marron salta sobre el perro perezoso; p.ej. www.ejemplo.es/ruta?q=1
+dict 4 70de42bdc42b4916 785d35a1fa5bf9e4 Prueba 1 2 3, ABC XYZ, palabras-con-guion y MAYUSCULAS.
+dict 5 2768bfaa47448601 eec2007a92a6ed36 Una sola palabra. Y otra mas; con "texto citado" en medio.
+dict 6 ef6f9add9d2a7168 e915cfa14f6d376f Otorrinolaringologo, desoxirribonucleico, 42% de 3,14159, y el senor Perez-Lopez hijo.
+dict 7 90c6e9b552c9a9b1 31a4ea33bceda83c Dijo: no lo hagas! Luego (entre parentesis) 1/2 + 3/4 = 5/4; vease p. 12.
+second 1 980484a95c8056af 5cc2387c05827c4b Hola. Aqui habla el sintetizador de voz Eloquence.
+second 2 02f5ce70ccdd0359 28a5f8688eb98473 El doctor Gomez pago 1.234,56 euros el 3 de mayo de 2026 a las 19:45.
+second 3 934cc3f796866891 6310cf7f41a11b2a El rapido zorro marron salta sobre el perro perezoso; p.ej. www.ejemplo.es/ruta?q=1
+second 4 e7a51f596ad2b051 f1feeb156bd5d204 Prueba 1 2 3, ABC XYZ, palabras-con-guion y MAYUSCULAS.
+second 5 81b294cfd1ce987c ba3382d0a147e90c Una sola palabra. Y otra mas; con "texto citado" en medio.
+second 6 18c5795a015ac0da c39c11bb33c2e447 Otorrinolaringologo, desoxirribonucleico, 42% de 3,14159, y el senor Perez-Lopez hijo.
+second 7 dac131bf893adfcd bdbc571a479c946b Dijo: no lo hagas! Luego (entre parentesis) 1/2 + 3/4 = 5/4; vease p. 12.

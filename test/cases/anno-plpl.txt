@@ -1,0 +1,20 @@
+Mowa normalna `vs50 teraz o wiele wolniejsza niz przedtem.
+Glosnosc `vv30 ciszej, potem `vv90 znowu glosniej.
+Wysokosc `vb20 niska i `vb80 wysoka w jednym zdaniu.
+Glos `v2 dwa, `v5 piec, i `v1 znowu jeden.
+Pauza `0 krotka i `4 dluga miedzy slowami.
+Chropowatosc `vr40 i oddech `vf60 zmienione.
+Doslowny \`odwrotny apostrof ma byc przeczytany jako tekst.
+Szybkosc po nazwie `vsfast a potem `vsslow z powrotem.
+Rozmiar glowy `vh30 potem `vh70 w tym samym wierszu.
+Plec `vg1 i `vg0 zmieniane po kolei.
+Przed `ui"znacznik jeden" i po znaczniku indeksu.
+Znacznik `aud"bip" dzwiekowy w srodku wiersza.
+`vs40 Adnotacja zaraz na samym poczatku wiersza.
+Konczy sie adnotacja na samym koncu `vs60
+Bledne `vzz i `q i `v999 wszystkie w jednym wierszu.
+Dwie `vs30`vv40 adnotacje bez niczego pomiedzy.
+`ui"a"`ui"b" dwa znaczniki bez niczego miedzy nimi.
+Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
+Razem `v3 glos `vs70 szybkosc `vv50 glosnosc naraz.
+Tabulacja	i zawijanie wiersza z `vb40 zmiana.

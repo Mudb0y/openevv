@@ -942,17 +942,49 @@ synthesiser underneath them is not the one in `klatt_*.c`. The nine in the EVV
 
 ## Testing
 
+### The gate
+
+    make matrix
+
+`test/matrix.sh` speaks every case of every language through the engine and holds each against what this engine has said before. 791 cases over the nine languages -- the same seven categories the suite below runs -- two hashes apiece, and it wants neither Wine nor IBM's objects. That is the check a change has to pass. It runs the same categories deliberately: what makes the baselines worth anything is that the suite had just agreed with every one of them, and a category the suite could not run would be a number nothing had ever blessed.
+
+Two hashes rather than one because they fail in different ways. The samples say what came out of the synthesiser. The reported answers say what the interface did, which the audio cannot see, and how much is in them depends on what the category asked for: a plain case reports the index mark it was given back and how many samples came out, and a `realworld` or `dict` case reports the eight editable voices read back, all seventeen general parameters, and what each of the six dictionary calls returned.
+
+That second hash is why the two exist rather than one. The loop that fills those eight voices can be turned off entirely without a single sample moving anywhere, and that is not a hypothetical -- a stale script in `/tmp` once got exactly that edit past every check in the tree. So did a rate change that lost the caller's buffer, which left an instance permanently silent while all 81 differential cases passed on both sides, because nothing in them ever changed a rate.
+
+Only one thing is taken out of the reported answers before hashing, which is the list of languages the binary has in it: a baseline belongs to a language and has to be checkable out of a build with one language in it or with nine. Everything else is held verbatim, which is why the samples are always written to the same path in a directory of the harness's own -- the probe prints where it put them, and a temporary name would be a hash that moved every run.
+
+**A case that moves is a question rather than a failure.** The engine is being changed on purpose now. If a case moved because you meant it to, say in the commit which and why, then
+
+    test/matrix.sh record
+
+writes the new answers down. If a case you did not touch moved, that is the accident the gate exists to catch, and it names the sentence.
+
+It builds one probe with every language asked for in it rather than one build a language, which is a build rather than nine and which walks the path a real caller walks -- a library holding several languages, asked for one. `EVV_MATRIX_NATIVE` names a binary to drive instead, which is how the thirty-two bit build and the Windows build are held to the same numbers. `test/matrix.sh check enus plpl` does two languages rather than all nine.
+
+The baselines are in `test/samples`, one file a language, one line a case: the category, which case in it, sixteen hex of each hash, and the sentence. They are meant to be read in a diff -- a commit that moves twelve cases in one language and none anywhere else says something quite different from one that moves two cases in each of nine.
+
+Every number in there was blessed by IBM's own binary. The whole differential suite below was run for all eight lifted languages immediately before the baselines were recorded -- 647 cases over the six categories that existed then, and 56 more when the seventh was added -- and every one of the 703 matched, so each recorded value is one the original had just agreed with. The other 88 are Polish. Polish is the exception, and its file says so at the top: IBM never shipped Polish, there is nothing to hold it to, and what is recorded is what this engine does. That is still worth having, because it is the only thing besides an ear that can tell a change to Polish from an accident. `test/cases/*-plpl.txt` are its cases and they are ours, written for Polish orthography -- the digraphs, the nasals, the retroflex series, ó against u -- rather than translated from another language's.
+
+### The oracle
+
     make probe
     make -C reference
     nix develop --command test/suite.sh
 
 The suite speaks each case through our engine and through IBM's and compares the samples. It needs Wine, and it needs IBM's objects in `analysis/enus`, which `tools/extract.sh` puts there out of the SDK above. Building the reference binary writes it to `build/reference/speak.exe`.
 
-Six categories run by default: plain text, UTF-8, annotations, annotations with the annotation input type on, real-world text with the parameters read back in a person's units, and the user dictionary. A seventh, `long`, is paragraphs rather than sentences and is left out of the default set because under Wine it takes minutes. Name any of them to run only those: `test/suite.sh plain long`.
+**It is not the gate any more and it is not going away.** What it was for -- proving this engine is IBM's, byte for byte, over every case in every build -- is done, and it stopped being a thing to maintain the moment the language data started being worked on deliberately. What it is for now is answering the question the gate cannot: not "did anything move" but "what does the original do here". That question comes up constantly and will go on coming up. A path no case has ever walked. A machine primitive no rule in the nine shipped languages ever called, which a rule of ours may be the first to reach -- `test/prims.sh` is that, 577,300 calls a side. A piece of IBM's code just transcribed, which is the whole of what is left of Japanese: `test/romcan.sh` replays IBM's own romanizer conversation and `test/romprims.sh` holds 789,549 calls a side, and there is no other way to know a transcription of `TextAnalysis` is right.
 
-`EVV_NATIVE=$PWD/build/probe32 test/suite.sh` runs the same cases through the thirty-two bit build. Both word sizes have to pass, and so does `RULES=c`.
+So `reference/` stays, `analysis/` stays regenerable from the SDK, and the suite stays runnable. What went is the obligation to run it before every change, not the ability to run it when there is something to ask.
 
-Without Wine there is no automatic check that the audio is right. `tools/say.sh` speaks a sentence and plays it, laying the dictionaries down first, so a change to the language data can be heard.
+Seven categories run by default: plain text, UTF-8, annotations, annotations with the annotation input type on, real-world text with the parameters read back in a person's units, the user dictionary, and the same sentence said twice on one instance. An eighth, `long`, is paragraphs rather than sentences and is left out of the default set because under Wine it takes minutes. Name any of them to run only those: `test/suite.sh plain long`.
+
+The seventh is worth a word, since it is the one added last and the one that looks like it should be redundant. The engine's second utterance is not its first: the same sentence twice on one instance gives the same number of samples both times and most of them differ, because the machine's state has moved on. That is faithful rather than random -- it is deterministic across processes, and IBM's engine does it too, to the same samples -- so both binaries are told to say the text twice, both write the second beside the first under a name of its own, and `compare.sh` holds both pairs against each other. Nothing else in the tree looks at the second utterance at all, so a change that quietly reset the state between them would move nothing anywhere else.
+
+`EVV_NATIVE=$PWD/build/probe32 test/suite.sh` runs the same cases through the thirty-two bit build.
+
+`tools/say.sh` speaks a sentence and plays it, laying the dictionaries down first, so a change to the language data can be heard. Since Polish has no oracle, that and `test/matrix.sh` are the whole of what it has.
 
     make crashers
 

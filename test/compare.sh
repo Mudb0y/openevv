@@ -85,7 +85,7 @@ cd "$work"
 # timed out.
 one_run() {
     local who=$1 out=$2
-    rm -f "$out"
+    rm -f "$out" "$out.again.wav"
     if [ "$who" = ref ]; then
         timeout "$LIMIT" $PE ./speak.exe @case.txt "$out" $mode > "$out.txt" 2>/dev/null
     else
@@ -110,6 +110,14 @@ while IFS= read -r text; do
 
     ok=yes
     cmp -s ref.wav nat.wav || ok=no
+    # A mode that says the text twice writes the second utterance beside the
+    # first, under a name of its own, and both engines do it. Comparing the
+    # first alone would say nothing about the thing that category is for --
+    # the machine's state has moved on by the second, and whether it has
+    # moved on the same way is the question.
+    if [ -s ref.wav.again.wav ] || [ -s nat.wav.again.wav ]; then
+        cmp -s ref.wav.again.wav nat.wav.again.wav || ok=no
+    fi
     # The reference writes its lines the way Windows does, so the carriage
     # returns come off before the two are set against each other.
     if [ -n "$pattern" ]; then

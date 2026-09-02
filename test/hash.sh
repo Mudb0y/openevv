@@ -3,10 +3,10 @@
 # Speak one fixed sentence and check the samples against what they have always
 # been.
 #
-# This is the only check that needs neither Wine nor IBM's objects, which makes
-# it the one a machine that has never seen the SDK can run. It does not prove
-# the engine right -- test/suite.sh does that, against IBM's own binary -- it
-# proves it unchanged, which is what catches a careless edit.
+# One sentence, so this is the smoke test rather than the gate: it answers in
+# two seconds and it is what to run between edits. test/matrix.sh is the gate
+# and asks the same question of 791 cases over nine languages, with the
+# interface's own answers held as well as the audio.
 #
 # The samples do not depend on the compiler: gcc 15 and clang 21 agree byte for
 # byte, which is what you would hope from an engine whose arithmetic is all
@@ -49,7 +49,7 @@ fi
 echo "hash: the samples have moved" >&2
 echo "  wanted $want" >&2
 echo "  got    $have" >&2
-echo "If that was deliberate -- a change to the language data -- run" >&2
-echo "test/suite.sh to see what IBM's binary says, then put the new hash in" >&2
+echo "If that was deliberate, run test/matrix.sh to see everything else that" >&2
+echo "moved with it, then test/matrix.sh record and put the new hash in" >&2
 echo "test/samples.sha256." >&2
 exit 1

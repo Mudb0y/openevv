@@ -1,0 +1,99 @@
+# What this engine says, case by case, for dede.
+#
+# Every line was blessed by IBM's own binary: the whole
+# differential suite was run for this language
+# immediately before these were written, and every case
+# matched. See docs/building.md.
+#
+# Written by test/matrix.sh record. One line a case:
+# the category, which case in it, the first sixteen hex of
+# the samples' hash, the same of the reported answers', and
+# the sentence.
+
+plain 1 8a6f133862a889a0 25945de5b56d4d98 Hallo. Hier spricht der Eloquence Sprachsynthesizer.
+plain 2 9697cdb99916f466 fcfe076be6ab32f4 Dr. Schmidt zahlte 1.234,56 Euro am 3. Mai 2026 um 19:45 Uhr.
+plain 3 b03be34f26b968b2 3aa604b5a86d1f4b Der schnelle braune Fuchs springt ueber den faulen Hund; z.B. www.beispiel.de/pfad?q=1
+plain 4 8001a766555db7e7 e2dc8c70bb9f1481 Test 1 2 3, ABC XYZ, Bindestrich-Woerter und GROSSBUCHSTABEN.
+plain 5 11e7b2bf7d27a3d7 38afeeeff09b997c Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
+plain 6 0868c08ddbf8f5c1 c9e541dda574dd73 Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
+plain 7 be533e7952525711 7ca22f1b16765da4 Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.
+utf8 1 5132604b497b64d2 e0c22b19018cc8db Strasse, Gruesse, Mueller, Koeln, Weiss.
+utf8 2 5134c1147acf358c 91287eb8e86d05d7 Straße, Grüße, Müller, Köln, Weiß.
+utf8 3 153615a797b3e3cf 80e62a2614c80050 Über den Fluss und durch den Wald zur Großmutter.
+utf8 4 061e771e13b0550c 83b10e55a872c3b7 Ärzte, Öfen, Übungen, Äpfel, Öl und Übermut.
+utf8 5 fd9290d188402007 f6765b721d05540c Der Weißkopfseeadler fliegt über die schöne Landschaft.
+utf8 6 59c6c0861f4201b5 ea6be8eaf0b7ee2f Ein Satz ganz ohne Umlaute zum Vergleich.
+anno 1 6854c20ed24dd8f4 a49315262a2086e4 Normale Sprache `vs50 jetzt viel langsamer als zuvor.
+anno 2 af315ec89b5087f5 7208d28455cf952b Lautstaerke `vv30 leiser, dann `vv90 wieder lauter.
+anno 3 73a9e69322407a31 f4f517cc2744b72d Tonhoehe `vb20 tief und `vb80 hoch in einem Satz.
+anno 4 774e678797e82b60 d40b2be4dfd44bac Stimme `v2 zwei, `v5 fuenf, und `v1 zurueck zu eins.
+anno 5 dffda46e2a67b845 acf64b1257545cfa Eine Pause `0 kurz und `4 lang zwischen Woertern.
+anno 6 63badb669854b28e 65587a98f443d1dc Rauheit `vr40 und Behauchtheit `vf60 geaendert.
+anno 7 c15afd9281ab39d3 7ddeefe0dc2e6699 Ein woertlicher \`Backtick soll als Text gesprochen werden.
+anno 8 93c24998dd73ca89 9d3aad3520a374f5 Tempo mit Namen `vsfast und dann wieder `vsslow.
+anno 9 4bf2e84c0917779e aae7a3c914061937 Kopfgroesse `vh30 dann `vh70 in derselben Zeile.
+anno 10 62088c99d71da03c 3ff15304a874af3b Geschlecht `vg1 und `vg0 im Wechsel.
+anno 11 c6193f623f707939 6433910a2cdb6679 Vor `ui"Marke eins" und nach der Indexmarke.
+anno 12 faa7c0e8e1b11891 ad019d1342e639e9 Ton `aud"beep" Markierung mitten in einer Zeile.
+anno 13 d422a0f9ac7f9824 3fd9766eb04ef29d `vs40 Eine Annotation gleich ganz am Anfang.
+anno 14 83ea41770e7a5901 5f2f637fa1d24e43 Eine Zeile, die mit einer Annotation endet `vs60
+anno 15 bc22ae5027dce86c 598e150803ee15eb Fehlerhaft `vzz und `q und `v999 alle in einer Zeile.
+anno 16 6896c12f525ef9bd 8b61b6b9c0928f3f Zwei `vs30`vv40 Annotationen ohne etwas dazwischen.
+anno 17 23c201d12c4213cc 9074ea5c8ad96ac2 `ui"a"`ui"b" zwei Marken ohne etwas dazwischen.
+anno 18 1200d40e5c72835a eb849028ec3bcaa8 Eine nicht beendete `ui"Marke, die nie schliesst
+anno 19 fab8807e46031b73 04a41fa8ea858bc0 Gemischt `v3 Stimme `vs70 Tempo `vv50 Lautstaerke zusammen.
+anno 20 c2934f60e0bf038a 3f9c0441d7f208ed Tabulator	und Zeilenumbruch mit `vb40 einer Aenderung.
+anno3 1 e719251ab208de73 400db429ef9c26c1 Normale Sprache `vs50 jetzt viel langsamer als zuvor.
+anno3 2 018ae6d2a9014db3 14215475306df6e8 Lautstaerke `vv30 leiser, dann `vv90 wieder lauter.
+anno3 3 a7a68cd5435ad23f 0cc99da06731ba10 Tonhoehe `vb20 tief und `vb80 hoch in einem Satz.
+anno3 4 04bf481b81f81947 7b15ed824636cd0d Stimme `v2 zwei, `v5 fuenf, und `v1 zurueck zu eins.
+anno3 5 02a9a98f269bd1da d3055dde6e7f2fc8 Eine Pause `0 kurz und `4 lang zwischen Woertern.
+anno3 6 d544cb15cacd26a1 d6249ff50d55ef7a Rauheit `vr40 und Behauchtheit `vf60 geaendert.
+anno3 7 c15afd9281ab39d3 df229e3b175f23b2 Ein woertlicher \`Backtick soll als Text gesprochen werden.
+anno3 8 479573bfaa50a2fd 04d974ffd9df3b10 Tempo mit Namen `vsfast und dann wieder `vsslow.
+anno3 9 1ac3f9cbe062d850 7ca513c868aad03d Kopfgroesse `vh30 dann `vh70 in derselben Zeile.
+anno3 10 6b0b49f8967de94b ae6b7bfa6c7efa30 Geschlecht `vg1 und `vg0 im Wechsel.
+anno3 11 86e4f982ff81feaa 0150129cf9ff5501 Vor `ui"Marke eins" und nach der Indexmarke.
+anno3 12 4a9c97a7756803b9 6280e9cba87b461f Ton `aud"beep" Markierung mitten in einer Zeile.
+anno3 13 6e7ef07ceef03c5e 7e0a4b3404d1bac8 `vs40 Eine Annotation gleich ganz am Anfang.
+anno3 14 d707cf9fba317609 9577907d577f3897 Eine Zeile, die mit einer Annotation endet `vs60
+anno3 15 bc22ae5027dce86c 1e38a9b48ae28249 Fehlerhaft `vzz und `q und `v999 alle in einer Zeile.
+anno3 16 38c966312732ab76 a9cdc9c235285dbe Zwei `vs30`vv40 Annotationen ohne etwas dazwischen.
+anno3 17 d2e29215ab701aba e4b2a4b90fdb2c08 `ui"a"`ui"b" zwei Marken ohne etwas dazwischen.
+anno3 18 1200d40e5c72835a 545d6467690d42a8 Eine nicht beendete `ui"Marke, die nie schliesst
+anno3 19 aadf9f74c32e65da a4207e02e121cd3b Gemischt `v3 Stimme `vs70 Tempo `vv50 Lautstaerke zusammen.
+anno3 20 78f83c2ad17da1f8 ff574bf56cb06421 Tabulator	und Zeilenumbruch mit `vb40 einer Aenderung.
+realworld 1 8e8460eca8b69083 6556c471afeb906e Normale Sprache `vs50 jetzt viel langsamer als zuvor.
+realworld 2 0e8fd6ea0743b261 e945be2413278b24 Lautstaerke `vv30 leiser, dann `vv90 wieder lauter.
+realworld 3 134b3099138a2a68 72869a5ea268fd86 Tonhoehe `vb20 tief und `vb80 hoch in einem Satz.
+realworld 4 04bf481b81f81947 f73c5082d7cbe7d7 Stimme `v2 zwei, `v5 fuenf, und `v1 zurueck zu eins.
+realworld 5 02a9a98f269bd1da 98fe1b92b3a0eb52 Eine Pause `0 kurz und `4 lang zwischen Woertern.
+realworld 6 d544cb15cacd26a1 7599f2895d6417d7 Rauheit `vr40 und Behauchtheit `vf60 geaendert.
+realworld 7 c15afd9281ab39d3 e1d9ced2338c513a Ein woertlicher \`Backtick soll als Text gesprochen werden.
+realworld 8 479573bfaa50a2fd 4a33ab91fa7a6c6e Tempo mit Namen `vsfast und dann wieder `vsslow.
+realworld 9 1ac3f9cbe062d850 4aa7e6913869aef9 Kopfgroesse `vh30 dann `vh70 in derselben Zeile.
+realworld 10 6b0b49f8967de94b e843772d63488075 Geschlecht `vg1 und `vg0 im Wechsel.
+realworld 11 86e4f982ff81feaa 0991721b4e5f0abf Vor `ui"Marke eins" und nach der Indexmarke.
+realworld 12 4a9c97a7756803b9 e4b30e62e71e4f7e Ton `aud"beep" Markierung mitten in einer Zeile.
+realworld 13 12286cd65bf41fb6 626c4b42442d2ae9 `vs40 Eine Annotation gleich ganz am Anfang.
+realworld 14 d707cf9fba317609 c22122a4b7bae52f Eine Zeile, die mit einer Annotation endet `vs60
+realworld 15 bc22ae5027dce86c afff1fe05de106b1 Fehlerhaft `vzz und `q und `v999 alle in einer Zeile.
+realworld 16 e4d7756cf321879c 8987e5ba6ac82a24 Zwei `vs30`vv40 Annotationen ohne etwas dazwischen.
+realworld 17 d2e29215ab701aba ffad886dbf1cbf5a `ui"a"`ui"b" zwei Marken ohne etwas dazwischen.
+realworld 18 1200d40e5c72835a caf6aad5b4957664 Eine nicht beendete `ui"Marke, die nie schliesst
+realworld 19 39b9fe5d35039c30 bd271fe6d1beac0c Gemischt `v3 Stimme `vs70 Tempo `vv50 Lautstaerke zusammen.
+realworld 20 e1301da8341ade1c 20324eb9211616e9 Tabulator	und Zeilenumbruch mit `vb40 einer Aenderung.
+dict 1 8a6f133862a889a0 16740549920204e7 Hallo. Hier spricht der Eloquence Sprachsynthesizer.
+dict 2 9697cdb99916f466 734e446bbbf403af Dr. Schmidt zahlte 1.234,56 Euro am 3. Mai 2026 um 19:45 Uhr.
+dict 3 b03be34f26b968b2 9adf60453212e45d Der schnelle braune Fuchs springt ueber den faulen Hund; z.B. www.beispiel.de/pfad?q=1
+dict 4 8001a766555db7e7 75ca157531287ccd Test 1 2 3, ABC XYZ, Bindestrich-Woerter und GROSSBUCHSTABEN.
+dict 5 11e7b2bf7d27a3d7 a8e85ab491c9fedf Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
+dict 6 0868c08ddbf8f5c1 2fe112e8ca8f36a9 Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
+dict 7 be533e7952525711 f959f0f04ec3bba0 Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.
+second 1 4a873c4ab9720da3 465e2ee6d6165148 Hallo. Hier spricht der Eloquence Sprachsynthesizer.
+second 2 2e5afb43d495d892 ca99797a15515f18 Dr. Schmidt zahlte 1.234,56 Euro am 3. Mai 2026 um 19:45 Uhr.
+second 3 1ff4a44b28b8b2c6 08761f7eb9401122 Der schnelle braune Fuchs springt ueber den faulen Hund; z.B. www.beispiel.de/pfad?q=1
+second 4 3d327de03e68d241 8fd18773d5cfa68b Test 1 2 3, ABC XYZ, Bindestrich-Woerter und GROSSBUCHSTABEN.
+second 5 e3bcf367dbab9886 339f7169aed38898 Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
+second 6 03904986e0c9fe4d c00e3714b207a979 Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
+second 7 dfdf1a9c59b8cc87 c81bc1ac7c5199bd Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.

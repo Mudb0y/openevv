@@ -650,6 +650,26 @@ missing: $(OBJECTS)
 crashers: $(BUILD)/evv
 	@test/crashers.sh $(BUILD)/evv
 
+# The gate. Every case of every language spoken and held against what this
+# engine has said before -- the samples and the answers the interface gave,
+# both -- so that a change made on purpose can be told from one nobody meant.
+# It builds the probe it needs and wants neither Wine nor IBM's objects.
+#
+# `matrix-record' writes the answers down instead of checking them, which is
+# what a deliberate change ends with. What test/suite.sh does is a different
+# question now -- what IBM's engine does, rather than whether anything moved
+# -- and docs/building.md says when each is the one to reach for.
+# It takes no LANGS and ignores the one a build was made with, on purpose. A
+# gate that checked only the language last worked on would be worse than none,
+# since the thing it exists to catch is a change made for one language landing
+# in another. `test/matrix.sh check plpl' is there for iterating on one.
+.PHONY: matrix matrix-record
+matrix:
+	@bash test/matrix.sh check
+
+matrix-record:
+	@bash test/matrix.sh record
+
 clean:
 	@rm -rf $(BUILD)/obj-* $(BUILD)/obj32-* $(BUILD)/objwin-* \
 	        $(BUILD)/objwin32-* \

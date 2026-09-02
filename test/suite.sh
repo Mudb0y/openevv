@@ -46,7 +46,7 @@ run() {
 }
 
 bad=0
-want=${*:-plain utf8 anno anno3 realworld dict}
+want=${*:-plain utf8 anno anno3 realworld dict second}
 
 for one in $want; do
     case $one in
@@ -57,6 +57,13 @@ for one in $want; do
     realworld) run realworld "$cases/anno$suf.txt"  ar   "$TEXT" || bad=1 ;;
     long)      run long      "$cases/long$suf.txt"  ""   ""      || bad=1 ;;
     dict)      run dict      "$cases/plain$suf.txt" ard  "$DICT" || bad=1 ;;
+    # The same sentence twice on one instance. The engine's second utterance
+    # is not its first -- the machine's state has moved on -- and it is
+    # deterministic, so the question is whether it has moved on the way IBM's
+    # does. Both binaries write the second beside the first and compare.sh
+    # holds both pairs against each other. This is what blesses the `second'
+    # category of test/matrix.sh.
+    second)    run second    "$cases/plain$suf.txt" t    ""      || bad=1 ;;
     *) echo "suite: no such comparison: $one" >&2; bad=1 ;;
     esac
 done

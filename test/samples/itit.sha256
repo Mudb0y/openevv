@@ -1,0 +1,100 @@
+# What this engine says, case by case, for itit.
+#
+# Every line was blessed by IBM's own binary: the whole
+# differential suite was run for this language
+# immediately before these were written, and every case
+# matched. See docs/building.md.
+#
+# Written by test/matrix.sh record. One line a case:
+# the category, which case in it, the first sixteen hex of
+# the samples' hash, the same of the reported answers', and
+# the sentence.
+
+plain 1 7cdc9ec4552675a6 94af617bb9197043 Ciao. Qui parla il sintetizzatore vocale Eloquence.
+plain 2 01772c31d74f82e7 1e73a4bc737721e6 Il dottor Rossi ha pagato 1.234,56 euro il 3 maggio 2026 alle 19:45.
+plain 3 32fdcc4eda442f95 19c9214cee11bff5 La rapida volpe marrone salta sopra il cane pigro; p.es. www.esempio.it/percorso?q=1
+plain 4 8c311c48c8f852bd fa5311631dbd034e Prova 1 2 3, ABC XYZ, parole-con-trattino e MAIUSCOLE.
+plain 5 6ce9357f81c16460 fd98068fcb60d982 Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
+plain 6 fd7054a8041856c9 8e4119535bfbee73 Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
+plain 7 8ea6301a06313f68 fb25bd08ee96aff7 Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
+utf8 1 08189a74b61fe275 71690b026164ae09 Perche la citta e cosi bella in primavera.
+utf8 2 f42c8776c67a93a3 4613337024a5dbfc Perché la città è così bella in primavera.
+utf8 3 3e0ba5627f694716 666046ba4bfeeaf2 Niccolò andò a Nizza più tardi con lui.
+utf8 4 230d7de175b77219 053c2eb79127bbb9 Città, virtù, però, caffè, lunedì e giovedì.
+utf8 5 da959c740ace36fa ca65a648e0f81982 L'università è chiusa oggi perché è festa.
+utf8 6 356ce22c3bca3e6a 89bc7a2647217726 Non è però così tardi come sembrava ieri sera.
+utf8 7 a0aaf825d78d1041 2031e232b728ab14 Una frase completamente senza accenti per confronto.
+anno 1 988b03ea2aacd832 3f9c0441d7f208ed Voce normale `vs50 ora molto piu lenta di prima.
+anno 2 0265b0dde7fd80e4 a11ce008a4d09294 Volume `vv30 piu basso, poi `vv90 piu alto di nuovo.
+anno 3 d4d76647e9a105e6 6771676ddc9e449f Altezza `vb20 grave e `vb80 acuta in una sola frase.
+anno 4 f556a720b4f36f90 a23eebb2832b7bd1 Voce `v2 due, `v5 cinque, e `v1 di nuovo uno.
+anno 5 bcdb0536269595c8 3ce728c6a0aaa6aa Una pausa `0 breve e `4 lunga tra le parole.
+anno 6 3bc5386232af9178 3100de1442fc34a1 Ruvidezza `vr40 e soffio `vf60 modificati.
+anno 7 6661367fa7ddbd8f 488ecbe16cacb550 Un accento grave \`letterale va letto come testo.
+anno 8 a273d306ac43532f 96a2d988c97a18c4 Velocita per nome `vsfast e poi `vsslow di nuovo.
+anno 9 62332384eeb6a073 9b78f3f55147d056 Dimensione della testa `vh30 e poi `vh70 nella stessa riga.
+anno 10 11daf50ce2f31665 503d98e4cab6b734 Genere `vg1 e `vg0 che si alternano.
+anno 11 8e43aac637769d15 07586270e014a874 Prima di `ui"segno uno" e dopo il segno.
+anno 12 588c4445bb26dee3 d9025c0c103c9072 Marcatore audio `aud"bip" in mezzo a una riga.
+anno 13 2051bd481d66f0c4 fbb5639522069c78 `vs40 Un'annotazione proprio all'inizio di tutto.
+anno 14 702ffd78c96225d4 b4460c401c04a0c0 Che termina con un'annotazione proprio alla fine `vs60
+anno 15 9c0abe31151fe5d0 0ea95ec5b74cc099 Malformate `vzz e `q e `v999 tutte in una riga.
+anno 16 42da36dd8fd6c4ec c7f602985e0f15db Due `vs30`vv40 annotazioni senza niente in mezzo.
+anno 17 291d4c552c57e8cd ae22171cf35c6384 `ui"a"`ui"b" due segni senza niente tra loro.
+anno 18 980c9a514b62e4e5 c95dd9fc59c95780 Un segno `ui"non chiuso che non termina mai qui
+anno 19 d2e6b5f03242a184 7be965808f096384 Insieme `v3 voce `vs70 velocita `vv50 volume.
+anno 20 fa21b477c7137f3a f4d3dd64320cc254 Tabulazione	e ritorno a capo con `vb40 un cambio.
+anno3 1 2a95f77b0ed5feb5 e217db6e1d5c3c01 Voce normale `vs50 ora molto piu lenta di prima.
+anno3 2 0cc6e77c7bfc7614 87c554c959e821bb Volume `vv30 piu basso, poi `vv90 piu alto di nuovo.
+anno3 3 7fd2577efaf939e4 b76d2f3820eae6da Altezza `vb20 grave e `vb80 acuta in una sola frase.
+anno3 4 53a289e1b38d453c e3d46b0ce44d775a Voce `v2 due, `v5 cinque, e `v1 di nuovo uno.
+anno3 5 96affb493779002c 070134f7274d38c0 Una pausa `0 breve e `4 lunga tra le parole.
+anno3 6 0b009df4dd4e5e2a 8fddf9f840144301 Ruvidezza `vr40 e soffio `vf60 modificati.
+anno3 7 6661367fa7ddbd8f cc906020e310bd5f Un accento grave \`letterale va letto come testo.
+anno3 8 1e79c0e09aa9469f 4575be477a8681ef Velocita per nome `vsfast e poi `vsslow di nuovo.
+anno3 9 ca03b04d0f69de33 573f7513ef76721c Dimensione della testa `vh30 e poi `vh70 nella stessa riga.
+anno3 10 bcb3b7405f3110b5 124d05448a1f716e Genere `vg1 e `vg0 che si alternano.
+anno3 11 002978af6b3c5a0e b0203a99b16d2d95 Prima di `ui"segno uno" e dopo il segno.
+anno3 12 0ed51f695f20ab13 b5328ae53c833773 Marcatore audio `aud"bip" in mezzo a una riga.
+anno3 13 28b08a4e69230388 9ec9055888073d6c `vs40 Un'annotazione proprio all'inizio di tutto.
+anno3 14 9df9c35a414e9aab cb0c77faea36303e Che termina con un'annotazione proprio alla fine `vs60
+anno3 15 9c0abe31151fe5d0 45530de5e374d4ba Malformate `vzz e `q e `v999 tutte in una riga.
+anno3 16 a4c2431818e52e62 c18143316be8ee34 Due `vs30`vv40 annotazioni senza niente in mezzo.
+anno3 17 6f3ac2d9c14cb181 e8c121339e85b1ae `ui"a"`ui"b" due segni senza niente tra loro.
+anno3 18 980c9a514b62e4e5 eb12f3adac100f21 Un segno `ui"non chiuso che non termina mai qui
+anno3 19 3796a6c5372ccb58 aae960ac9e748397 Insieme `v3 voce `vs70 velocita `vv50 volume.
+anno3 20 3bdd8971a6f10cec c48519f63812ac7f Tabulazione	e ritorno a capo con `vb40 un cambio.
+realworld 1 c9a519b2d92c9775 8a1389b5d048fc74 Voce normale `vs50 ora molto piu lenta di prima.
+realworld 2 0871463e918bec6c 9a43e868687e2761 Volume `vv30 piu basso, poi `vv90 piu alto di nuovo.
+realworld 3 e9a10a56b08bf9ae 611ccadcc860e269 Altezza `vb20 grave e `vb80 acuta in una sola frase.
+realworld 4 53a289e1b38d453c fa07b623ade4e983 Voce `v2 due, `v5 cinque, e `v1 di nuovo uno.
+realworld 5 96affb493779002c 0b822d4da205398c Una pausa `0 breve e `4 lunga tra le parole.
+realworld 6 0b009df4dd4e5e2a 4fd8c9e844e8fee1 Ruvidezza `vr40 e soffio `vf60 modificati.
+realworld 7 6661367fa7ddbd8f f88f7403e8fbe28e Un accento grave \`letterale va letto come testo.
+realworld 8 1e79c0e09aa9469f 4ea8d534a1f61939 Velocita per nome `vsfast e poi `vsslow di nuovo.
+realworld 9 ca03b04d0f69de33 3597cd8abf7cd3be Dimensione della testa `vh30 e poi `vh70 nella stessa riga.
+realworld 10 bcb3b7405f3110b5 6687ccb9e3af51a7 Genere `vg1 e `vg0 che si alternano.
+realworld 11 002978af6b3c5a0e 81e0a6e315b2d2a0 Prima di `ui"segno uno" e dopo il segno.
+realworld 12 0ed51f695f20ab13 3a4a66cbde7eb072 Marcatore audio `aud"bip" in mezzo a una riga.
+realworld 13 56ec1f9e4a5eb4ec 62392baa57727121 `vs40 Un'annotazione proprio all'inizio di tutto.
+realworld 14 9df9c35a414e9aab 164a6661d5aaa13f Che termina con un'annotazione proprio alla fine `vs60
+realworld 15 9c0abe31151fe5d0 52c6313c58dd6e92 Malformate `vzz e `q e `v999 tutte in una riga.
+realworld 16 94503111eb76d2d8 91285a8a7098f68c Due `vs30`vv40 annotazioni senza niente in mezzo.
+realworld 17 6f3ac2d9c14cb181 68101eb5743379a5 `ui"a"`ui"b" due segni senza niente tra loro.
+realworld 18 980c9a514b62e4e5 b2312adccfe784cf Un segno `ui"non chiuso che non termina mai qui
+realworld 19 c5120fb3db499fb7 d3b4326cd1665648 Insieme `v3 voce `vs70 velocita `vv50 volume.
+realworld 20 88ecf9ea88afe2d5 0616a2b0e4741892 Tabulazione	e ritorno a capo con `vb40 un cambio.
+dict 1 7cdc9ec4552675a6 4b2c0dea409283af Ciao. Qui parla il sintetizzatore vocale Eloquence.
+dict 2 01772c31d74f82e7 aeb1ed70625d5626 Il dottor Rossi ha pagato 1.234,56 euro il 3 maggio 2026 alle 19:45.
+dict 3 32fdcc4eda442f95 6ccadc5e2fe94fd5 La rapida volpe marrone salta sopra il cane pigro; p.es. www.esempio.it/percorso?q=1
+dict 4 8c311c48c8f852bd 5b556c3ef02dccc6 Prova 1 2 3, ABC XYZ, parole-con-trattino e MAIUSCOLE.
+dict 5 6ce9357f81c16460 47e591bcd765e10e Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
+dict 6 fd7054a8041856c9 fa29f93dcb5a64a4 Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
+dict 7 8ea6301a06313f68 c8e13610d367359a Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
+second 1 ebf3cd4f69450924 c9bb4dd438ef5357 Ciao. Qui parla il sintetizzatore vocale Eloquence.
+second 2 5f900579ea07dfe9 ca277d958772824b Il dottor Rossi ha pagato 1.234,56 euro il 3 maggio 2026 alle 19:45.
+second 3 dbbb20b8252791bd a47dfd5779158aae La rapida volpe marrone salta sopra il cane pigro; p.es. www.esempio.it/percorso?q=1
+second 4 d9361aa21df01563 df339167aae1c3d4 Prova 1 2 3, ABC XYZ, parole-con-trattino e MAIUSCOLE.
+second 5 3215b153accf8545 529169d22b9d98e0 Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
+second 6 e18c965a04d533eb 65577c6ee527ffbd Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
+second 7 50ed06bf37cb3597 8427e44d0f0f56d4 Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
