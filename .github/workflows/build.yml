@@ -48,9 +48,11 @@ jobs:
           path: build/evv
           if-no-files-found: error
 
-  # The quick one: no Python, no thirteen megabytes of generated C, half a
-  # minute. It proves the interpreter still says what it has always said, and it
-  # is what a fresh clone with nothing but a C compiler gets.
+  # The quick one: no thirteen megabytes of generated C, half a minute. It
+  # proves the interpreter still says what it has always said. Python is
+  # wanted even here, because the rules a build compiles are written out of
+  # the text in lang/<tag>/rules first -- two seconds a language -- and it is
+  # the decompiling into C that this build skips.
   linux-bytecode:
     runs-on: ubuntu-latest
     steps:

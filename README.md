@@ -7,7 +7,7 @@ It speaks, and it speaks IBM's own samples: the audio is byte for byte identical
     make
     ./build/evv -o hello.wav "Hello from Eloquence."
 
-That wants a C compiler, Python, and about a quarter of an hour, most of it compiling the rules. `make RULES=bytecode` is the same engine in half a minute with no Python, saying the same samples; it runs the rules interpreted rather than compiled, which costs rather more than half the speed. On Linux nothing plays the audio yet, so the engine writes a wave file; pipe it into a player to hear it at once:
+That wants a C compiler, Python, and about a quarter of an hour, most of it compiling the rules. `make RULES=bytecode` is the same engine in half a minute, saying the same samples; it runs the rules interpreted rather than compiled, which costs rather more than half the speed. On Linux nothing plays the audio yet, so the engine writes a wave file; pipe it into a player to hear it at once:
 
     ./build/evv "Hello from Eloquence." | aplay -q -
 
@@ -21,7 +21,7 @@ On Windows there is a speak window. Take `evvspeak.exe` from the latest release,
 
 `src` is the engine: hand-written C, one file per object in IBM's own module decomposition, so that a file can be checked against the object it came from.
 
-`lang/enus` is US English: the rules, the constants they read, the sets, the link tables, the voice presets and the dictionary. This is the part lifted out of IBM's objects rather than written, and it is in the tree so that the engine builds without the SDK. `lang/dede` is German, lifted the same way. A build takes as many languages as it is given -- `make LANGS="lang/enus lang/dede"` puts both in one binary and the caller picks between them. English is the one that is finished; German matches IBM over the cases there are for it. `docs/status.md` says in which configurations.
+`lang/enus` is US English: the rules, the constants they read, the sets, the link tables, the voice presets and the dictionary. This is the part lifted out of IBM's objects rather than written, and it is in the tree so that the engine builds without the SDK. The rules are text there, one file to an object in `lang/enus/rules`, and what the engine runs is written out of that text by every build. `lang/dede` is German, lifted the same way. A build takes as many languages as it is given -- `make LANGS="lang/enus lang/dede"` puts both in one binary and the caller picks between them. English is the one that is finished; German matches IBM over the cases there are for it. `docs/status.md` says in which configurations.
 
 `cli/evv.c` is the command above and `win/speak.c` is the speak window. `cli/probe.c` is the same engine behind a front that reports what it answered at every step, which is what `test` sets against IBM's binary case for case. `tools` holds the lifters, the decompiler and the analysers. `reference` builds IBM's own binary under Wine, which is what the tests compare against.
 

@@ -21,15 +21,18 @@ restructures into loops and conditionals for a person to read, and inverting it
 exactly would be hard. Reading and round-tripping are different jobs, so they
 have different forms.
 
-usage: delta-notation.py write  <object> [> file]
-       delta-notation.py rewrite         the two generated files, lifted only
-       delta-notation.py authored        the same with the upper form in
-       delta-notation.py authored-check  and that held against the tree
+usage: delta-notation.py build            the three files a build compiles
+       delta-notation.py rewrite          the same, IBM's rules alone
+       delta-notation.py authored         the same, the module's trials in too
+       delta-notation.py write  <object> [> file]
        delta-notation.py read   <file>
        delta-notation.py check  <object> [...]
        delta-notation.py check-all
-       delta-notation.py tree            write lang/enus/rules
-       delta-notation.py verify          the tree against IBM's objects
+       delta-notation.py tree             write lang/<tag>/rules
+       delta-notation.py verify           the tree against IBM's objects
+       delta-notation.py prove            the same, as one stream
+
+EVV_NOTATION_LANG says which language, English by default.
 """
 
 import importlib.util
@@ -50,10 +53,11 @@ def load(name, path):
 dl = load("delta_lift", "tools/delta-lift.py")
 de = load("delta_emit", "tools/delta-emit.py")
 
-# Which language this reads. English is the only one with a notation tree, but
-# the reader and writer are the machine's rather than English's, so a rule from
-# another module can be round-tripped to check that a form covers it -- which is
-# how the floating-point form was checked, since no English rule has any.
+# Which language this reads. Every module in the tree has a notation tree, and
+# the reader and writer are the machine's rather than any language's, so a
+# rule from a module without one can still be round-tripped to check that a
+# form covers it -- which is how the floating-point form was checked before
+# the Frenches had a tree, since no English rule has any.
 LANG = os.environ.get("EVV_NOTATION_LANG", "enus")
 OBJECTS = os.path.join(ROOT, "analysis", LANG)
 
@@ -189,29 +193,18 @@ def check(obj):
 
 
 TREE = os.path.join(ROOT, "lang", LANG, "rules")
-# Which language this speaks for. Only English has a notation tree so far; the
-# tables carry the language's name since two of them can be linked into one
-# program, so the name is wanted in three places and is written down once.
+# Which language this speaks for. The tables carry the language's name since
+# two of them can be linked into one program, so the name is wanted in three
+# places and is written down once. The three paths below are written rather
+# than read: they are what a build compiles and they are not in the tree.
 TAG = LANG
-SHIPPED = os.path.join(ROOT, "lang", TAG, "delta_rules_%s.c" % TAG)
-SHIPPED_H = os.path.join(ROOT, "lang", TAG, "delta_rules_%s.h" % TAG)
+BUILT_C = os.path.join(ROOT, "lang", TAG, "delta_rules_%s.c" % TAG)
+BUILT_H = os.path.join(ROOT, "lang", TAG, "delta_rules_%s.h" % TAG)
 # Each rule under its own name, standing in for the compiled one. It is the
 # emitter's to write and follows from the same rule list, so it belongs
 # wherever that list is built rather than only in the lifter.
-SHIPPED_SHIM = os.path.join(ROOT, "lang", TAG,
-                            "delta_rules_shim_%s.c" % TAG)
-
-
-def shipped_bytecode():
-    """The bytecode the engine actually runs, out of the tree."""
-    import re as _re
-    s = open(SHIPPED).read()
-    m = _re.search(r"const uint8_t %s_delta_rule_code\[\] = \{(.*?)\};" % TAG,
-                   s, _re.S)
-    if m is None:
-        raise ValueError("no %s_delta_rule_code in %s" % (TAG, SHIPPED))
-    return bytes(int(x) for x in m.group(1).replace("\n", "").split(",")
-                 if x.strip())
+BUILT_SHIM = os.path.join(ROOT, "lang", TAG,
+                          "delta_rules_shim_%s.c" % TAG)
 
 
 def all_rules(known):
@@ -312,6 +305,32 @@ def symbol_table(e, where):
 # the real-rule compiler would not know what to do with a line of it.
 WRAPPERS = "wrappers.up"
 
+# The .up files a module keeps but does not build.
+TRIALS = os.path.join(TREE, "trials")
+
+
+def trials():
+    """Which of the module's upper-form files stand outside it.
+
+    A rule written in the upper form is normally the module's own -- writing
+    Polish is what the form is for -- so an ordinary build takes every one of
+    them in. English's four are the exception. They stand in for rules IBM
+    itself compiled, they are kept so that tools/upper-check.sh has something
+    to hold against those, and building them would put our bytecode where
+    IBM's is and give up the byte identity the whole tree is proved by.
+
+    Which of the two a file is cannot be read off the file, so the module says
+    it. Silence means the module's own, because that is what a module being
+    written wants. Taking English's four in would not change the sound --
+    upper-check is the check that they do the same thing, and they do -- but
+    it would cost the claim that English's bytecode is IBM's, which every
+    other check here is anchored to.
+    """
+    if not os.path.exists(TRIALS):
+        return set()
+    return set(line.split()[0] for line in open(TRIALS)
+               if line.strip() and not line.lstrip().startswith("#"))
+
 
 def text_files():
     """The tree's rule files, in the order the emitter takes them: every
@@ -325,7 +344,7 @@ def text_files():
                                                  if f == "glob"])
 
 
-def text_rules(upper=True):
+def text_rules(upper=True, trial=False):
     """Every rule the engine runs, out of the text alone.
 
     A rule written in the upper form stands in for the one of the same name
@@ -333,12 +352,15 @@ def text_rules(upper=True):
     everything else reaches it by. A name that is only in the upper form
     comes after that object's own.
 
-    Asked for the lower form alone, it ignores the upper files alogether,
-    which is what the check that the lifted text still reproduces the tree
-    wants: a rule written afresh is meant to differ, so counting it there
-    would turn that check red and leave it red.
+    Asked for the lower form alone, it ignores the upper files altogether,
+    which is what a check against IBM's objects wants: a rule written afresh
+    is meant to differ, so counting it there would turn that check red and
+    leave it red. Asked for the trials as well, it takes in the files the
+    module says are not its own, which is the second of the two builds
+    tools/upper-check.sh holds against each other.
     """
     du = load("delta_upper", "tools/delta-upper.py") if upper else None
+    left_out = set() if trial else trials()
     out = []
     authored = []
     for stem in text_files():
@@ -347,7 +369,7 @@ def text_rules(upper=True):
         rules, tables = ([], {})
         if os.path.exists(low):
             rules, tables = read_rules(open(low))
-        if upper and os.path.exists(up):
+        if upper and os.path.exists(up) and stem + ".up" not in left_out:
             written = du.compile_file(up, LANG)
             by_name = dict((r[0], r) for r in written)
             rules = [by_name.pop(name, (name, d, obj))
@@ -358,11 +380,11 @@ def text_rules(upper=True):
     return out, authored
 
 
-def from_text(upper=True):
+def from_text(upper=True, trial=False):
     """The whole language's rules in one emitter, out of the text."""
     e = de.Emitter()
     n = 0
-    files, authored = text_rules(upper)
+    files, authored = text_rules(upper, trial)
     for _stem, rules, tables in files:
         for name, d, obj in rules:
             e.rule(name, d, tables, obj)
@@ -374,26 +396,24 @@ def from_text(upper=True):
     return e, n
 
 
-def regenerate(write=False, upper=None):
-    """Write the engine's bytecode file out of the text, and see whether it is
-    the one in the tree.
+def write_files(upper=True, trial=False):
+    """Write the three files a build compiles, out of the text alone.
 
-    This is the whole point of the exercise: if it matches, the rules can be
-    rebuilt from text a person can edit, and IBM's objects are wanted for the
-    comparison suite and nothing else.
+    These are the rules as the engine runs them: the bytecode array, the
+    header that numbers every entry, and a shim under each rule's own name.
+    They are not in the tree. The text is the source, and a second copy of
+    the same rules sitting beside it could only ever be the stale one -- a
+    rule edited in the text and not written out again would be a change that
+    silently did not happen.
 
-    Asked to write, it puts the two files in the language's own directory
-    instead of comparing, which is how a rule written in the upper form gets
-    into a build. Nothing else about the two is different.
-
-    What it compares is the lifted text alone, because a rule written afresh
-    in the upper form is meant to differ from the one it stands in for and
-    counting it here would leave this check red for as long as the rule
-    existed. `authored\' is what writes those in, and tools/upper-check.sh is
-    what says whether they do the same thing.
+    `upper' takes the module's own rules written in the upper form in, which
+    is what an ordinary build wants; without it only the lifted text is read,
+    which is IBM's rules and nothing of ours. `trial' takes in the upper-form
+    files the module says are not its own as well. The three answers are the
+    three builds anything here ever wants: what IBM compiled, what the module
+    is, and what the module would be if its trials were part of it.
     """
-    import tempfile
-    e, n = from_text(upper=write if upper is None else upper)
+    e, n = from_text(upper=upper, trial=trial)
     print("rules read out of %s: %d (no object opened)"
           % (os.path.relpath(TREE, ROOT), n))
 
@@ -402,61 +422,34 @@ def regenerate(write=False, upper=None):
     print("stores %d, addresses %d of the %d recorded"
           % (len(stores), len(names), len(where)))
 
-    if write:
-        de.write_c(e, None, SHIPPED, SHIPPED_H, None, stores, names, TAG)
-        de.write_shims(e, SHIPPED_SHIM, None)
-        for what in (SHIPPED, SHIPPED_H, SHIPPED_SHIM):
-            print("%-26s %d bytes, written"
-                  % (os.path.basename(what), os.path.getsize(what)))
-        return True
-
-    with tempfile.TemporaryDirectory() as tmp:
-        out_c = os.path.join(tmp, "delta_rules_enus.c")
-        out_h = os.path.join(tmp, "delta_rules_%s.h" % TAG)
-        out_shim = os.path.join(tmp, "shim.c")
-        de.write_c(e, None, out_c, out_h, None, stores, names, TAG)
-        de.write_shims(e, out_shim, None)
-        got = open(out_c, "rb").read()
-        got_h = open(out_h, "rb").read()
-        got_shim = open(out_shim, "rb").read()
-
-    ok = True
-    for what, made, have in (("delta_rules_%s.c" % TAG, got, SHIPPED),
-                             ("delta_rules_%s.h" % TAG, got_h, SHIPPED_H),
-                             ("delta_rules_shim_%s.c" % TAG, got_shim,
-                              SHIPPED_SHIM)):
-        want = open(have, "rb").read()
-        if made == want:
-            print("%-22s %d bytes, the same as the tree's" % (what, len(made)))
-        else:
-            print("%-22s differs: %d bytes against %d"
-                  % (what, len(made), len(want)))
-            a = made.split(b"\n")
-            b = want.split(b"\n")
-            for i in range(min(len(a), len(b))):
-                if a[i] != b[i]:
-                    print("  first line that differs is %d" % (i + 1))
-                    print("  made: %s" % a[i][:100])
-                    print("  tree: %s" % b[i][:100])
-                    break
-            ok = False
-    return ok
+    de.write_c(e, None, BUILT_C, BUILT_H, None, stores, names, TAG)
+    de.write_shims(e, BUILT_SHIM, None)
+    for what in (BUILT_C, BUILT_H, BUILT_SHIM):
+        print("%-26s %d bytes, written"
+              % (os.path.basename(what), os.path.getsize(what)))
+    return True
 
 
 def prove():
-    """Emit every rule out of the text and hold the whole stream against the
-    bytecode in the tree.
+    """Emit every rule out of the text and hold the whole stream against a
+    fresh lift of IBM's objects.
 
     This is the check that matters. The pools -- constants, strings, entry
     points, tag maps -- are shared across the whole language and numbered in
     the order the rules are taken, so reproducing the stream byte for byte says
     the text carries not just each rule but every rule, in order, with nothing
     added and nothing left out. A per-rule comparison cannot say that.
+
+    Three streams are emitted and all three have to agree: a fresh lift of the
+    objects, that lift written to text and read back, and the text as it
+    stands in the tree. The lift is the authority. What the engine runs used
+    to be the fourth and is not a stream any more -- it is written out of the
+    text at build time, so holding the text against it would be holding the
+    text against itself.
     """
     known = arities()
     print("entries whose arity was learned: %d" % len(known))
 
-    want = shipped_bytecode()
     from_text = de.Emitter()
     from_lift = de.Emitter()
     n = 0
@@ -490,28 +483,23 @@ def prove():
     lift_ = bytes(from_lift.code)
     tree = bytes(from_tree.code)
     print("rules taken: %d" % n)
-    print("written afresh: %d, from a fresh lift: %d, from the tree: %d,"
-          " what the engine runs: %d"
-          % (len(text), len(lift_), len(tree), len(want)))
+    print("from a fresh lift: %d, written afresh and read back: %d,"
+          " from the tree: %d" % (len(lift_), len(text), len(tree)))
 
     ok = True
     if text != lift_:
         print("the text and a fresh lift do not agree")
-        ok = False
-    if tree != want:
-        print("the text in the tree is stale and does not reproduce the"
-              " bytecode the engine runs; write it again with"
-              " make notation")
-        ok = False
-    if text != want:
-        print("a text written afresh does not reproduce the bytecode")
-        for i in range(min(len(text), len(want))):
-            if text[i] != want[i]:
+        for i in range(min(len(text), len(lift_))):
+            if text[i] != lift_[i]:
                 print("  first difference at byte %d" % i)
                 break
         ok = False
+    if tree != lift_:
+        print("the text in the tree is stale and does not reproduce IBM's"
+              " objects; write it again with make notation")
+        ok = False
     if ok:
-        print("the text reproduces the engine's bytecode byte for byte")
+        print("the text reproduces IBM's objects byte for byte")
     return ok
 
 
@@ -890,17 +878,19 @@ def main():
     if what == "symbols":
         return 0 if write_symbols() else 1
 
-    if what == "regenerate":
-        return 0 if regenerate() else 1
+    # The module as it means itself, which is what a build compiles.
+    if what == "build":
+        return 0 if write_files() else 1
 
-    if what == "authored":
-        return 0 if regenerate(write=True) else 1
-
-    if what == "authored-check":
-        return 0 if regenerate(upper=True) else 1
-
+    # IBM's rules and nothing of ours, which is the side
+    # tools/upper-check.sh holds an authored rule against.
     if what == "rewrite":
-        return 0 if regenerate(write=True, upper=False) else 1
+        return 0 if write_files(upper=False) else 1
+
+    # And the module with its trials taken in as well, which is the other
+    # side of that comparison.
+    if what == "authored":
+        return 0 if write_files(trial=True) else 1
 
     if what == "prove":
         return 0 if prove() else 1

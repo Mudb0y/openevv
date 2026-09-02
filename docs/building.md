@@ -2,7 +2,7 @@
 
 ## What you need
 
-A C compiler and Python 3. The language data is in the tree, so there is no IBM SDK to find and nothing is downloaded; Python is wanted because an ordinary build now writes the rules out as C first, which is what `RULES` below is about. `make RULES=bytecode` needs the C compiler alone.
+A C compiler and Python 3. The language data is in the tree, so there is no IBM SDK to find and nothing is downloaded. Python is wanted twice. Every build writes the rules the engine runs out of the text in `lang/<tag>/rules`, which is about two seconds a language and is where those rules live now; and an ordinary build then decompiles them into C, which is two minutes and is what `RULES` below is about. `make RULES=bytecode` skips the second and not the first.
 
 Two more things are wanted only for particular jobs. A thirty-two bit compiler builds the thirty-two bit engine. Wine and IBM's own objects run the comparison tests, which is the only automatic check that the audio is right.
 
@@ -12,11 +12,11 @@ On this machine all of those come from the flake, and `nix develop` puts them on
 
     make
 
-That builds `build/libevv.a` and `build/evv`, which speaks. From nothing, that is about two and a half minutes: a little over two for Python to write the rules out as C and about fifteen seconds to compile the thirteen megabytes of it across twenty-four cores. Once those files exist they are not written again unless the decompiler or the bytecode changes.
+That builds `build/libevv.a` and `build/evv`, which speaks. From nothing, that is about two and a half minutes: two seconds to write the rules out of the text, a little over two minutes for Python to decompile them into C, and about fifteen seconds to compile the thirteen megabytes of it across twenty-four cores. Once those files exist they are not written again unless the text, the decompiler or the bytecode changes.
 
     make RULES=bytecode
 
-That is the small, quick build -- half a minute on one core, under twenty seconds with `make -j8`, and a C compiler is all it wants. It speaks the same samples and it is the one to use while working on anything but the rules. What it costs is speed, which the next section puts numbers to.
+That is the small, quick build -- half a minute on one core, under twenty seconds with `make -j8`, plus the two seconds a language the rules cost whichever form they are in. It speaks the same samples and it is the one to use while working on anything but the rules. What it costs is speed, which the next section puts numbers to.
 
     make probe
 
@@ -84,41 +84,75 @@ needs to be told.
 
     make notation-prove
 
-is the stronger check and the one to believe. It emits every rule out of the
-text into one stream and holds that against `delta_rule_code` as it stands in
-`lang/<tag>/delta_rules_<tag>.c` -- the bytecode the engine actually runs. The
+is the stronger check and the one to believe. It emits three whole streams --
+a fresh lift of IBM's objects, that lift written out as text and read back,
+and the text as it stands in the tree -- and all three have to agree. The
 pools the rules draw on, the constants and strings and entry points and tag
 maps, are shared across the whole language and numbered in the order the rules
-are taken, so reproducing the stream byte for byte says the text carries every
+are taken, so reproducing a stream byte for byte says the text carries every
 rule, in order, with nothing added and nothing left out. A rule-by-rule
 comparison cannot say that. It matches for all eight lifted languages:
 English's 1,496,807 bytes, British English's 1,466,417, German's 1,168,990,
 Canadian French's 1,107,281, French's 1,083,599, Spain's Spanish 744,858,
 American Spanish's 742,075 and Italian's 709,771, measured on 2 September
 2026. Polish is the one it cannot be run on, because its rules are written
-rather than lifted and there are no Polish objects to lift against;
-`make authored-check` is what stands in its place.
+rather than lifted and there are no Polish objects to lift against; there the
+suite and an ear are the check, as they are for anything nobody compiled
+before.
 
 Both want IBM's objects, so they are in the same class as the suite:
 obtainable, and not needed to build.
 
-    make notation-regenerate
+## The rules a build compiles
 
-is the one that says the text is the source rather than a second copy. It reads
-`lang/<tag>/rules`, opens no object at all, and writes the three files a build
-compiles -- `delta_rules_<tag>.c`, `delta_rules_<tag>.h` and
-`delta_rules_shim_<tag>.c` -- into a directory of its own, then holds all
-three against the files in the tree. For English they match byte for byte at
-4,999,514, 168,881 and 709,414 bytes, and all three match for each of the
-other seven lifted languages too. Polish is checked by `make authored-check`
-instead, which is this same comparison with the rules written in the upper
-form taken in; `notation-regenerate` leaves those out on purpose, so on Polish
-it would report the Italian module Polish was copied from. It takes about two
-seconds a language, which is worth knowing: this is the cheap half of the
-pipeline, and the two minutes an ordinary build spends on Python is the rules
-being decompiled into readable C, not this.
+Three files a language: `delta_rules_<tag>.c`, which holds the bytecode array
+and the pools; `delta_rules_<tag>.h`, which numbers every entry; and
+`delta_rules_shim_<tag>.c`, a stand-in under each rule's own name.
 
-What made that possible was one small table. A rule names a constant by a
+    make rulecode
+
+writes them, and every build runs it first. **They are not in the tree.** The
+text is the source, and a second copy of the same rules sitting beside it
+could only ever be the stale one: a rule edited in the text and not written
+out again would be a change that silently did not happen, and the build would
+go on compiling yesterday's rules with nothing to say so. It costs two seconds
+a language, so there is nothing to weigh against that. `.gitignore` says which
+three, and the one file in a language module that looks like them and is not
+generated -- `delta_rules_none_<tag>.c`, the empty table `RULES=bytecode`
+links -- is named there as an exception.
+
+What the build writes is the module as it means itself: the lifted text with
+its own rules in the upper form compiled in over the top. Which those are is
+the module's to say, in `lang/<tag>/rules/trials`, which names the `.up` files
+it keeps but does not build. English names its four, because they stand in for
+rules IBM itself compiled and are kept so that `make upper-check` has
+something to hold against those; building them would put our bytecode where
+IBM's is and give up the byte identity English is checked by. Polish names
+none, because all fifty-five of its written rules are its own. Silence means
+the module's own, because that is what a module being written wants and
+writing modules is what the form is for.
+
+What taking English's four in would cost is worth stating exactly, because it
+is not what a person would guess. It would not change the sound: `upper-check`
+is precisely the check that they enter the same rules, make the same calls
+with the same values and produce the same samples, so the suite would pass.
+What it would cost is the claim that English's bytecode is IBM's, which is the
+thing every other check in this tree is anchored to. That is why the four are
+named and not merely left to be noticed.
+
+Two other ways of writing the same three files exist and are not what a build
+wants. `make notation-rewrite` writes the lifted text alone -- IBM's rules and
+nothing of ours -- and `make authored` writes every `.up` file in, trials and
+all. They are the two sides `tools/upper-check.sh` builds and holds against
+each other, and it puts the module's own back when it is done.
+
+A module with no rules as text is the one exception, and `lang/jajp` is it:
+not in the tree at all, lifted whole by the commands in `docs/japanese.md`,
+which write these three files themselves. The Makefile has a rule for that
+case whose whole job is to say so rather than leave make reporting a target it
+does not know how to make.
+
+What made the text a source was one small table. A rule names a constant by a
 symbol; the bytes behind it are a whole data section of the object it was
 compiled into, and what the rule gets is an offset into that section. The bytes
 were already in the tree, in `delta_consts_<tag>.c`. The mapping -- which store
@@ -127,8 +161,8 @@ objects for. It is now `lang/<tag>/rules/symbols`, written by
 `make notation-symbols`: 76 stores and 6,719 addresses for English, and
 between 63 and 90 stores for each of the others.
 
-So the rules can be rebuilt from text a person can read and change, and IBM's
-objects are wanted for the comparison suite and for nothing else.
+So the rules are built from text a person can read and change, every time,
+and IBM's objects are wanted for the comparison suite and for nothing else.
 
 ## What a rule stands for
 
@@ -269,9 +303,12 @@ Three things are left out of the comparison and all three are the harness. The i
 
 The audio is the third comparison and it is not the weakest of them. A rule whose whole effect is to write a variable is invisible to a trace of calls, and that is not hypothetical: setting `eng_ph_F_dur`'s duration to 21 where IBM sets 20 passes the trace on every sentence and changes the sound of the second. Sabotage a rule and see which check answers, and if none of them does, the cases do not reach it.
 
+A rule a module claims gets into a build by being there: an ordinary build compiles the module as it means itself, which is the lifted text with its own `.up` rules over the top, and every one of Polish's fifty-five is in that way. What a module does not claim it names in `lang/<tag>/rules/trials`, and English's four are named there -- they stand in for rules IBM compiled and are kept to be checked against them, not to be built.
+
+    make notation-rewrite
     make authored
 
-is how an authored rule gets into a build: it writes `delta_rules_enus.c` and `delta_rules_enus.h` out of the text with the upper form included, which is what `upper-check.sh` does before it builds. An ordinary build compiles what is in the tree, and what is in the tree is IBM's rules -- `make notation-regenerate` reads the lower form alone, so a rule written afresh does not turn that check red for as long as it exists. Once a module has been written with `authored`, as Polish has, the check for it is `authored-check`, which is the same comparison with the upper form in.
+are the two ends of that, IBM's rules alone and every `.up` file in whatever the module says, and they exist because `upper-check.sh` builds both and holds them against each other. Running either by hand leaves the tree holding rules an ordinary build did not ask for, so `make rulecode` puts it back.
 
 ### Bytes of our own
 
@@ -347,17 +384,17 @@ dʒ, the palatal nasal that is exactly Polish ń, and a trilled r -- which is th
 hardest part of Polish and the part Spanish only half has. And it is the
 smallest of the European modules, 1,749 rules against English's 3,377.
 
-What making one takes, in the order it was done:
+What making one takes. Every module in the tree already holds its rules as
+text, so a template needs no lifting first:
 
-    EVV_NOTATION_LANG=itit make notation notation-symbols   the template's rules as text
-    cp the five text forms and rules/, with the tag renamed
+    cp the template's five text forms and its rules/, with the tag renamed
     a section naming the language, and a library name
     "plpl": "Polish" in tools/gen-lang.py, then run it
     make LANGS="lang/enus lang/plpl" tables-write             the C from the texts
-    EVV_NOTATION_LANG=plpl python3 tools/delta-notation.py rewrite
 
-and then it builds and speaks like any other. No object is opened at any point
-after the first line, which is the whole reason the text forms exist.
+and then it builds and speaks like any other: the three files a build compiles
+are written out of the copied text by the build itself. No object is opened at
+any point, which is the whole reason the text forms exist.
 
 ### The number a language is
 
@@ -590,7 +627,7 @@ What `RULES=bytecode` is for, then, is not building. It is the second opinion. `
 
 C is the default, because the speed is the part a person waiting for speech feels. Measured on one machine, the same long sentence, bytecode against C: the whole utterance synthesises in 138 ms against 63; the wait before the first samples of an utterance is 38 ms against 12; and interrupting an utterance and asking for another costs 124 ms against 39. That last one matters most and is the least obvious: the engine cannot abandon an utterance it has been told to stop -- see the interrupting section of `docs/status.md` for why not -- so what a cancel costs is whatever is left of the work, and compiled rules do that leftover work in a third of the time.
 
-What it costs is the build. The C is thirteen megabytes: a little over two minutes of Python to write and about fifteen seconds to compile over twenty-four cores, where the bytecode build wants half a minute and no Python at all. The binaries are about twice the size -- `build/probe` is 7.1 MB against 3.7 -- because that is what a machine's worth of lifted code looks like written out as C.
+What it costs is the build. The C is thirteen megabytes: a little over two minutes of Python to write and about fifteen seconds to compile over twenty-four cores, where the bytecode build wants half a minute and the two seconds a language that writing the rules out of the text costs either way. The binaries are about twice the size -- `build/probe` is 7.1 MB against 3.7 -- because that is what a machine's worth of lifted code looks like written out as C.
 
     make RULES=bytecode
 

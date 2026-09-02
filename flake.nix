@@ -16,10 +16,15 @@
       };
     in {
       # `nix build' and `nix run'. The ordinary make, which wants a C
-      # compiler and nothing else, so this is the plain stdenv and no inputs.
+      # compiler and Python: the rules a build compiles are written out of the
+      # text in lang/<tag>/rules rather than kept beside it, and the default
+      # build decompiles them into C after that. Nothing else, so the plain
+      # stdenv otherwise.
       packages.${system}.default = pkgs.stdenv.mkDerivation {
         name = "openevv";
         src = self;
+
+        nativeBuildInputs = [ pkgs.python3 ];
 
         # -no-pie is in the Makefile, where it belongs: the machine keeps host
         # addresses in thirty-two bit values, so the program has to sit low

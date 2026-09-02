@@ -1,5 +1,6 @@
 # Extracted from IBM's SDK by tools/extract.sh and tools/extract-langs.sh.
-# The lifted C in lang/ is in the tree, so nothing here is needed to build.
+# The language data in lang/ is in the tree, the rules as text among it, so
+# nothing here is needed to build.
 analysis/
 build/
 .wine/
@@ -7,15 +8,27 @@ result
 result-*
 __pycache__/
 
-# Thirteen megabytes written out of the transcription beside it by
-# tools/delta-decompile.py, and rewritten whole by every change to that tool.
-# `make rules' makes them. Numbered because one translation unit that size
-# cannot be compiled on more than one core.
-lang/*/delta_rules_c[0-9][0-9]_*.c
-lang/*/delta_rules_c_*.c
-
 # The Japanese language module, lifted by the commands in docs/japanese.md.
 # It stays out of the tree until its romanizer can make an instance, because a
 # module that cannot would fail any build that named it -- and most of it is
 # nine megabytes of the romanizer's dictionary, written by tools/lift-rom.py.
 lang/jajp/
+
+# Every form of a language's rules that a build makes rather than holds.
+#
+# delta_rules_<tag>.c, delta_rules_<tag>.h and delta_rules_shim_<tag>.c are
+# the rules as the engine runs them -- the bytecode array, the header
+# numbering every entry, and a shim under each rule's own name -- written out
+# of lang/<tag>/rules by `make rulecode', which every build runs first, and
+# about two seconds a language. The text is the source; a second copy of the
+# same rules in the tree could only ever be the stale one.
+#
+# delta_rules_cNN_<tag>.c is those rules decompiled into C, thirteen
+# megabytes of it by tools/delta-decompile.py, rewritten whole by every
+# change to that tool. `make rules' makes them. Numbered because one
+# translation unit that size cannot be compiled on more than one core.
+lang/*/delta_rules_*.c
+lang/*/delta_rules_*.h
+# Except the empty table that leaves every rule as bytecode, which is written
+# by hand once per language and is generated from nothing.
+!lang/*/delta_rules_none_*.c

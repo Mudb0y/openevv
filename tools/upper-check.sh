@@ -70,22 +70,29 @@
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 # The language as a tag, which is what everything else here calls it:
-# `EVV_LANG=dede' picks German, as it does for the suite. Only English has
-# been run through this, because only English has a rule written in the upper
-# form; the rest is here so that the day another does, this is not the thing
-# that has to be worked out.
+# `EVV_LANG=dede' picks German, as it does for the suite. English is the one
+# this is for, and the only one it means anything on: what it compares is a
+# rule of ours against the rule it stands in for, and English's four are the
+# only upper-form rules that stand in for anything. Polish's are its own --
+# there is no Polish rule of IBM's to hold them against -- so running this on
+# Polish would compare Polish against the Italian it replaced and report the
+# difference it was written to make.
 tag=${EVV_LANG:-enus}
 lang=lang/$tag
 suf=
 [ "$tag" = enus ] || suf=-$tag
 export EVV_NOTATION_LANG=$tag
 rules="$here/$lang/delta_rules_$tag.c"
-header="$here/$lang/delta_rules_$tag.h"
 work=$(mktemp -d)
 
+# The three files a build compiles are written out of the text rather than
+# kept in the tree, so what is left behind here is whatever was written last.
+# An ordinary build wants the module as it means itself, which is what `build'
+# writes, so that is what this puts back however it ends. Nothing needs
+# copying aside: the text is the source and every form of it can be written
+# again from that.
 restore() {
-    [ -f "$work/kept.c" ] && cp "$work/kept.c" "$rules"
-    [ -f "$work/kept.h" ] && cp "$work/kept.h" "$header"
+    python3 "$here/tools/delta-notation.py" build >/dev/null 2>&1
     rm -rf "$work"
 }
 trap restore EXIT
@@ -130,14 +137,18 @@ speak() {
     sed -E 's/^rule [0-9]+:/rule:/' "$work/$1.trace" > "$work/$1.plain"
 }
 
-# IBM's, as the tree stands, kept so that the tree is put back whatever
-# happens next.
+# IBM's rules and nothing of ours, which is the side an authored rule has to
+# be held against. `rewrite' is that: the lifted text alone, with every
+# upper-form file left out whether the module claims it or not.
+echo "upper: writing IBM's rules out of the lifted text"
+python3 "$here/tools/delta-notation.py" rewrite >/dev/null || exit 1
 cp "$rules" "$work/kept.c"
-cp "$header" "$work/kept.h"
-echo "upper: building the rules as they are"
 build ibm
 
-echo "upper: compiling the upper form into the tree"
+# And the same with every upper-form file compiled in, the module's own and
+# the ones lang/<tag>/rules/trials says are not. English's four are trials,
+# and they are the whole point here.
+echo "upper: compiling the upper form in"
 python3 "$here/tools/delta-notation.py" authored >/dev/null || exit 1
 if cmp -s "$rules" "$work/kept.c"; then
     echo "upper: the rules did not change, so nothing here is being tested" >&2

@@ -1,8 +1,9 @@
 # The engine, built for the machine it is running on.
 #
 # `make' builds build/evv, which speaks a sentence into a wave file, and the
-# library it is linked against. Nothing else is needed: no SDK, no Wine, and
-# no Python unless the rules are wanted as C.
+# library it is linked against. Nothing else is needed: no SDK and no Wine.
+# Python is, because the rules a build compiles are written out of the text in
+# lang/<tag>/rules rather than kept beside it.
 #
 # `make probe' builds the driver the tests drive instead. It is the same
 # engine with a different front: it prints what the engine answered at every
@@ -78,13 +79,25 @@ NM  ?= nm
 # costs interpreted, since the engine cannot abandon an utterance and has to
 # finish the one it was told to stop.
 #
-# What it costs. Writing the files needs Python and about two minutes, and
+# What it costs. Writing the files is about two minutes of Python and
 # compiling them fifteen seconds over twenty-four cores, where the bytecode
-# build wants only a C compiler and half a minute. `RULES=bytecode' is the
-# quick build, and it is also the second opinion: tools/delta-check.sh holds
-# the two forms against each other call for call, which is the only check
-# finer than the audio. See docs/building.md.
+# build is half a minute and the two seconds a language RULECODE costs below.
+# `RULES=bytecode' is the quick build, and it is also the second opinion:
+# tools/delta-check.sh holds the two forms against each other call for call,
+# which is the only check finer than the audio. See docs/building.md.
 RULES ?= c
+
+# The rules as the engine runs them: the bytecode array, the header that
+# numbers every entry, and a shim under each rule's own name. Written out of
+# lang/<tag>/rules by tools/delta-notation.py, about two seconds a language,
+# and not in the tree. The text is the source and a second copy of the same
+# rules beside it could only ever be the stale one -- a rule edited in the
+# text and not written out again would be a change that silently did not
+# happen. Everything else below is made out of these.
+RULECODE := $(foreach l,$(LANGS), \
+              $(l)/delta_rules_$(notdir $(l)).c \
+              $(l)/delta_rules_$(notdir $(l)).h \
+              $(l)/delta_rules_shim_$(notdir $(l)).c)
 
 # Each language has both forms of its rules beside it: the empty table that
 # leaves every rule as bytecode, and the C the decompiler writes. One of the
@@ -155,14 +168,26 @@ ROMDEFS := $(if $(filter jajp,$(TAGS)),-DEVV_ROM_JAJP)
 # The engine, plus every language beside it. port_win32.c is the Windows
 # porting layer and belongs to the reference build; the two rule tables are
 # chosen between above rather than both linked.
+#
+# RULECODE is named rather than left to the wildcard beside it, and taken out
+# of that wildcard so as not to be named twice. A wildcard answers with what
+# is there when the Makefile is read, and on a fresh clone none of those three
+# files is there yet -- so a wildcard would leave them out of this build and
+# find them in the next one, which is a link that fails for no visible reason
+# the first time and succeeds the second.
 SOURCES := $(filter-out $(SRC)/port_win32.c,$(wildcard $(SRC)/*.c)) \
-           $(filter-out $(STALE) $(GENERATED) $(STUBS), \
+           $(filter-out $(STALE) $(GENERATED) $(STUBS) $(RULECODE), \
              $(sort $(foreach l,$(LANGS),$(wildcard $(l)/*.c)))) \
+           $(filter %.c,$(RULECODE)) \
            $(ROMS) $(RULESRC) $(LANGLIST)
 
 # Every header, because a struct that changed shape and an object that was
 # not rebuilt is a link that succeeds and an engine that writes over itself.
-HEADERS := $(wildcard $(SRC)/*.h) $(foreach l,$(LANGS),$(wildcard $(l)/*.h)) \
+# The rule header is named for the same reason its sources are.
+HEADERS := $(wildcard $(SRC)/*.h) \
+           $(filter-out $(RULECODE), \
+             $(foreach l,$(LANGS),$(wildcard $(l)/*.h))) \
+           $(filter %.h,$(RULECODE)) \
            $(foreach l,$(LANGS),$(wildcard rom/$(notdir $(l))/*.h))
 
 # Everything a language module holds is named for that module, and the
@@ -401,13 +426,16 @@ $(BUILD)/libevv$(SUF).a: $(OBJECTS) $(RULESTAMP)
 	@ar rcs $@ $(OBJECTS)
 	@echo "built $@ from $(words $(OBJECTS)) objects"
 
-# The rules as text that can be read and edited, in lang/enus/rules. Written
-# out of IBM's objects once; `notation-check' holds what is in the tree against
-# those objects again, emitting the bytecode from each and comparing, so it says
-# both that the text is still faithful and, once a rule has been changed on
-# purpose, which rules those are. It wants the objects, so it is in the same
-# class as the suite: obtainable, and not needed to build.
-.PHONY: notation notation-check notation-prove notation-regenerate \
+# The rules as text that can be read and edited, in lang/<tag>/rules, and the
+# source everything a build compiles is written out of. EVV_NOTATION_LANG says
+# which language; English by default.
+#
+# Written out of IBM's objects once; `notation-check' holds what is in the tree
+# against those objects again, emitting the bytecode from each and comparing,
+# so it says both that the text is still faithful and, once a rule has been
+# changed on purpose, which rules those are. It wants the objects, so it is in
+# the same class as the suite: obtainable, and not needed to build.
+.PHONY: notation notation-check notation-prove rulecode \
         notation-symbols notation-rewrite upper upper-prove upper-check \
         authored constants codepoints
 notation:
@@ -416,29 +444,24 @@ notation:
 notation-check:
 	@python3 tools/delta-notation.py verify
 
-# The stronger of the two, and the one to believe: every rule emitted out of
-# the text into one stream, held against the bytecode the engine actually runs.
-# The pools are shared and numbered in the order the rules are taken, so
-# matching the whole stream says the text carries every rule, in order, with
-# nothing added and nothing lost -- which a rule-by-rule comparison cannot.
+# The stronger of the two, and the one to believe: three streams emitted --
+# a fresh lift of the objects, that lift written to text and read back, and
+# the text as it stands in the tree -- and all three have to agree. The pools
+# are shared and numbered in the order the rules are taken, so matching a
+# whole stream says the text carries every rule, in order, with nothing added
+# and nothing lost, which a rule-by-rule comparison cannot.
 notation-prove:
 	@python3 tools/delta-notation.py prove
-
-# The rules rebuilt out of the text alone, opening no object, and the result
-# held against the two generated files in the tree. This is the one that says
-# the text is the source rather than a second copy: what it writes has to be
-# what is already there, byte for byte.
-notation-regenerate:
-	@python3 tools/delta-notation.py regenerate
 
 # Where each address the rules name falls. Written out of the objects once,
 # because it is the last thing the emitter wanted them for.
 notation-symbols:
 	@python3 tools/delta-notation.py symbols
 
-# The two generated files written for real rather than compared, out of the
-# lifted text alone. Wanted when something other than a rule changes what they
-# hold -- a constant of ours adds a store, and the store is named in there.
+# The three files a build compiles, written out of the lifted text alone --
+# IBM's rules and nothing of ours. That is one of the two sides `upper-check'
+# holds against each other, and it is not what an ordinary build wants; `make
+# rulecode' is.
 notation-rewrite:
 	@python3 tools/delta-notation.py rewrite
 
@@ -447,9 +470,9 @@ notation-rewrite:
 # `upper' and `upper-prove' are the wrappers as the primitive each stands for:
 # written out of the lower form and compiled back, where the bytecode has to
 # match byte for byte. `authored' is the other upper form, the real rules in
-# lang/<tag>/rules/*.up, compiled into the two generated files a build
-# compiles -- which is how one gets into a build at all, since an ordinary
-# build reads what is in the tree.
+# lang/<tag>/rules/*.up -- every one of them, including the files
+# lang/<tag>/rules/trials says are not the module's own, which an ordinary
+# build leaves out.
 #
 # `upper-check' is the one that says whether an authored rule is the rule it
 # stands in for. There is no byte comparison to be had: our compiler would
@@ -468,11 +491,6 @@ upper-check:
 
 authored:
 	@python3 tools/delta-notation.py authored
-
-# And that held against the tree, which is the check for a module written with
-# `authored' rather than lifted. EVV_NOTATION_LANG says which one.
-authored-check:
-	@python3 tools/delta-notation.py authored-check
 
 # Bytes a rule of ours names by address, out of lang/<tag>/rules/constants
 # into the one file in a language module that no lifter writes. Run
@@ -540,6 +558,55 @@ tables-write:
 	    python3 tools/delta-consts.py write $$t || exit 1; \
 	done
 
+# The rules as the engine runs them, written out of lang/<tag>/rules. Two
+# seconds a language, so this runs before anything else in a build and is
+# never noticed.
+rulecode: $(RULECODE)
+
+# One rule per language rather than a pattern, for the same reason as the
+# decompiler's below: the name carries the language twice and a pattern rule
+# may only have the one stem. The three files come out of one run, so they are
+# named as a group.
+#
+# `build' is the module as it means itself: its own rules written in the upper
+# form taken in, and the ones lang/<tag>/rules/trials names left out. That is
+# the whole of the per-language knowledge, and it is in the module rather than
+# here.
+define rulecode_from_text
+$(1)/delta_rules_$(notdir $(1)).c \
+$(1)/delta_rules_$(notdir $(1)).h \
+$(1)/delta_rules_shim_$(notdir $(1)).c &: \
+                    $(wildcard $(1)/rules/*.dr) $(wildcard $(1)/rules/*.up) \
+                    $(wildcard $(1)/rules/symbols) \
+                    $(wildcard $(1)/rules/trials) \
+                    tools/delta-notation.py tools/delta-lower.py \
+                    tools/delta-upper.py tools/delta-emit.py
+	@EVV_NOTATION_LANG=$(notdir $(1)) \
+	  python3 tools/delta-notation.py build > /dev/null
+	@echo "wrote the rules of $(notdir $(1)) out of $(1)/rules"
+endef
+
+# And for a module that has no rules as text. lang/jajp is the one: it is not
+# in the tree at all, it is lifted whole by the commands in docs/japanese.md,
+# and those write these three files themselves. So there is nothing to build
+# them from here, and the rule exists to say that rather than to leave make
+# reporting a target it does not know how to make. A file that is already
+# there has no prerequisites to be older than, so this never runs for a
+# module that has been lifted.
+define rulecode_lifted
+$(1)/delta_rules_$(notdir $(1)).c \
+$(1)/delta_rules_$(notdir $(1)).h \
+$(1)/delta_rules_shim_$(notdir $(1)).c &:
+	@echo "$(1) holds no rules as text and none of the three files a" >&2
+	@echo "build compiles, so there is nothing here to write them from." >&2
+	@echo "A module lifted whole rather than kept as text is made by the" >&2
+	@echo "commands in docs/japanese.md." >&2
+	@false
+endef
+
+$(foreach l,$(LANGS),$(eval $(call \
+    $(if $(wildcard $(l)/rules),rulecode_from_text,rulecode_lifted),$(l))))
+
 # The rules as C. Thirteen megabytes written out of the bytecode beside it,
 # so it is made here rather than kept in the tree, where every change to the
 # decompiler would rewrite the whole of it.
@@ -553,8 +620,13 @@ rules: $(GENERATED)
 #
 # One run writes all PARTS files of a language, so they are named as a group:
 # make asks for the recipe once and gets the lot, rather than once per file.
+#
+# The bytecode is a prerequisite because the decompiler reads it: this writes
+# the rules as C out of the array in delta_rules_<tag>.c, which is itself
+# written out of the text. A rule changed in the text goes through both.
 define rules_for
 $(foreach n,$(PARTNS),$(1)/delta_rules_c$(n)_$(notdir $(1)).c) &: \
+                                     $(1)/delta_rules_$(notdir $(1)).c \
                                      tools/delta-decompile.py \
                                      tools/delta-census.py
 	@rm -f $(1)/delta_rules_c[0-9][0-9]_$(notdir $(1)).c \
