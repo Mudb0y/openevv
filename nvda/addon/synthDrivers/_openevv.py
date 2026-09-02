@@ -73,12 +73,13 @@ SAMPLE_RATE = 11025
 #: changes which voice it is. What it buys a reader is an audio device handed
 #: something it wants without resampling it again on the way out.
 #:
-#: Synthesising at the higher rate outright is possible and sounds worse --
-#: the frication comes from a generator that makes one value per output
-#: sample, so the sibilants go thin -- and is behind EVV_UPSAMPLE=none rather
-#: than in this list, along with the ways of raising the rate that keep the
-#: mirror of the speech a resampler removes. Ordered by rate rather than by
-#: number so a reader is offered them in the order a person thinks of them.
+#: The raising is a windowed sinc, so what a reader hears at any of these is
+#: the eleven thousand voice with the images taken out rather than left in;
+#: EVV_UPSAMPLE has the cheaper ways for anyone who wants the old aliased
+#: sound, and none to synthesise at the rate outright, which sounds worse
+#: because the frication comes from a generator that makes one value per
+#: output sample. Ordered by rate rather than by number so a reader is
+#: offered them in the order a person thinks of them.
 SAMPLE_RATES = (
 	(0, 8000),
 	(1, 11025),

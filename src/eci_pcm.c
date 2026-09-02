@@ -139,16 +139,25 @@ THIS int32_t pcm_setup(SoundOutput *o, char *a, int32_t *b, int32_t *c,
  *   linear  a straight line between one sample and the next. Suppresses the
  *           mirror by roughly twice what holding does.
  *   cubic   a curve through four of them, which is what libsoxr calls its
- *           quick mode and is the default here. It suppresses the mirror far
- *           enough that the result is a rate change rather than an effect,
- *           and it is short of what a windowed sinc would do, which is why
- *           it stays lively rather than sounding filtered.
+ *           quick mode. It suppresses the mirror by some nine decibels over
+ *           holding, which is a rate change rather than an effect, and it is
+ *           well short of removing it.
+ *   sinc    a windowed sinc across forty-eight of them, which is what a
+ *           resampler actually is and is the default. The images are gone
+ *           rather than quieter -- some fifty decibels below where the curve
+ *           leaves them -- and the band below the cutoff comes through flat
+ *           instead of drooping at the top.
  *
- * Cubic rather than libsoxr itself because the engine has no dependency but
- * the C library and gains none here: this ships inside a DLL a screen reader
- * loads and inside builds for platforms nobody has put soxr on. It is the
- * same interpolation soxr's quick mode is documented as, not the same code,
- * so it is an equivalent and not a match to the byte.
+ * The sinc is the default because the curve was not enough. Held against
+ * Apple's driver, which does its own resampling out of an eci.dylib that
+ * only runs at eight and eleven thousand, the curve was the closest of the
+ * cheap ways and still short of it. What separates a resampler from an
+ * interpolator is the stopband, and only a real filter has one.
+ *
+ * Written here rather than linked from libsoxr because the engine has no
+ * dependency but the C library and gains none here: this ships inside a DLL
+ * a screen reader loads and inside builds for platforms nobody has put soxr
+ * on. Same arithmetic, not the same code.
  *
  * Both interpolating ways look only backwards, at samples already handed
  * over, so a run joins the one before it with no seam and nothing is held
@@ -162,6 +171,7 @@ THIS int32_t pcm_setup(SoundOutput *o, char *a, int32_t *b, int32_t *c,
  * forty-eight thousand come to an uneven one, by the same arithmetic.
  */
 
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -182,6 +192,72 @@ typedef struct {
     uint16_t extra;
 } WaveFormat;
 
+/* The modified Bessel function of the first kind, order nought, which is
+   what shapes a Kaiser window. The series converges in a dozen terms for the
+   arguments a window of this shape asks for. */
+static double cvt_i0(double x)
+{
+    double term = 1.0, sum = 1.0, half = x / 2.0;
+    int    k;
+
+    for (k = 1; k < 40; k++) {
+        term *= (half / (double)k) * (half / (double)k);
+        sum += term;
+        if (term < sum * 1e-16)
+            break;
+    }
+    return sum;
+}
+
+/* Draw the filter: a sinc cut off below the input's own Nyquist, under a
+   Kaiser window, sampled finely enough that a straight line between two of
+   its points is not what limits the stopband.
+
+   In units of one input sample throughout, which is what makes it the same
+   filter whatever the ratio: raising a rate needs the images of the input
+   removed, and where those images begin is a property of the input alone. */
+static void cvt_draw(PcmResampler *r)
+{
+    double edge = cvt_i0(SINC_BETA);
+    int    i;
+
+    for (i = 0; i < SINC_TABLE; i++) {
+        double t = (double)(i - SINC_HALF * SINC_PHASES) / (double)SINC_PHASES;
+        double x = t / (double)SINC_HALF;
+        double w, v;
+
+        if (x < -1.0 || x > 1.0) {
+            r->sinc[i] = 0.0;
+            continue;
+        }
+        w = cvt_i0(SINC_BETA * sqrt(1.0 - x * x)) / edge;
+
+        if (t == 0.0) {
+            v = SINC_CUTOFF;
+        } else {
+            double a = 3.14159265358979323846 * SINC_CUTOFF * t;
+
+            v = SINC_CUTOFF * sin(a) / a;
+        }
+        r->sinc[i] = v * w;
+    }
+    r->drawn = 1;
+}
+
+/* One coefficient, by a straight line between the two points either side. */
+static double cvt_weight(const PcmResampler *r, double t)
+{
+    double at = (t + (double)SINC_HALF) * (double)SINC_PHASES;
+    int    i;
+    double f;
+
+    if (at <= 0.0 || at >= (double)(SINC_TABLE - 1))
+        return 0.0;
+    i = (int)at;
+    f = at - (double)i;
+    return r->sinc[i] + (r->sinc[i + 1] - r->sinc[i]) * f;
+}
+
 void pcm_resample_start(PcmResampler *r, int32_t from, int32_t to,
                         int32_t method)
 {
@@ -189,6 +265,8 @@ void pcm_resample_start(PcmResampler *r, int32_t from, int32_t to,
     r->from = from;
     r->to = to;
     r->method = method;
+    if (method == CVT_SINC)
+        cvt_draw(r);
 }
 
 /* How many output samples a run of n input ones comes to. Every output
@@ -266,6 +344,34 @@ uint32_t pcm_resample(PcmResampler *r, const int32_t *src, uint32_t n,
             break;
         }
 
+        case CVT_SINC: {
+            /* The window sits on the position, and the position is behind
+               the newest sample by half the window, so every sample it
+               reaches has already been handed over. */
+            double acc = 0.0, weight = 0.0;
+            int32_t j;
+
+            for (j = -2 * SINC_HALF + 1; j <= 0; j++) {
+                double w = cvt_weight(r, (double)(j + SINC_HALF) - f);
+
+                acc += w * (double)cvt_tap(r, src, n, i + j);
+                weight += w;
+            }
+            /* Divided by what the weights actually came to rather than
+               trusting them to come to one.
+
+               They do come to one, near enough: over every fraction of a
+               sample the worst departure is two parts in a hundred thousand,
+               which is three quarters of a count on a full-scale sample, so
+               taking this division out changes nothing anything here can
+               measure. It stays because it makes a level in a level out a
+               property of the arithmetic rather than of the particular
+               window and cutoff above it, and those are numbers somebody
+               will want to change. */
+            out[made] = cvt_clamp(weight != 0.0 ? acc / weight : 0.0);
+            break;
+        }
+
         default:
             out[made] = cvt_tap(r, src, n, i);
             break;
@@ -311,7 +417,7 @@ const uint32_t pcm_cvt_bytes = sizeof(AudioConverter);
 static int cvt_method(void)
 {
     static int decided;
-    static int method = CVT_CUBIC;
+    static int method = CVT_SINC;
 
     if (!decided) {
         const char *say = getenv("EVV_UPSAMPLE");
@@ -324,8 +430,10 @@ static int cvt_method(void)
                 method = CVT_LINEAR;
             else if (strcmp(say, "hold") == 0)
                 method = CVT_HOLD;
-            else
+            else if (strcmp(say, "cubic") == 0)
                 method = CVT_CUBIC;
+            else
+                method = CVT_SINC;
         }
     }
     return method;

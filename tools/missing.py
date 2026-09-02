@@ -22,7 +22,7 @@ SYSTEM = re.compile(
     r"getc$|putc$|ungetc$|rewind$|remove$|rename$|setvbuf$|perror$|"
     r"time$|clock$|clock_gettime$|nanosleep$|getenv$|system$|readlink$|"
     r"rand$|srand$|abs$|labs$|atoi$|atof$|"
-    r"pow$|floor$|ceil$|sqrt$|exp$|cos$|"
+    r"pow$|floor$|ceil$|sqrt$|exp$|cos$|sin$|"
     r"longjmp$|setjmp$|_setjmp$|stat$)")
 
 

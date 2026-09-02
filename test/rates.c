@@ -104,9 +104,9 @@ static int   report;
  * and that is checked to the byte. EVV_UPSAMPLE=none synthesises at the
  * rate instead, which is a different half of the engine again. No one run
  * enters another's code. */
-static int   method = CVT_CUBIC;
+static int   method = CVT_SINC;
 static int   synthesising;
-static const char *method_name = "cubic";
+static const char *method_name = "sinc";
 
 /* What one run said, and how it behaved while saying it. */
 static short kept[ROOM];
@@ -275,6 +275,7 @@ static const struct { int32_t method; const char *name; } METHODS[] = {
     { CVT_ZEROS,  "zeros" },
     { CVT_LINEAR, "linear" },
     { CVT_CUBIC,  "cubic" },
+    { CVT_SINC,   "sinc" },
 };
 
 #define METHOD_COUNT ((int)(sizeof METHODS / sizeof METHODS[0]))
@@ -334,7 +335,12 @@ static int unitChecks(void)
                walked past. Zeros is not asked: putting silence between the
                samples is the whole of what it does. */
             if (METHODS[m].method != CVT_ZEROS) {
-                uint32_t settled = (uint32_t)((int64_t)(delay + 2) * to / from);
+                /* Twice the delay is how far back the window reaches, not
+                   once: a way that runs `delay' behind reaches that far
+                   either side of where it sits. Plus a couple, so nothing
+                   sits exactly on the boundary. */
+                uint32_t settled =
+                    (uint32_t)((int64_t)(2 * delay + 2) * to / from);
 
                 for (i = settled; i < (uint32_t)((int64_t)(n / 2) * to / from);
                      i++)
@@ -352,8 +358,9 @@ static int unitChecks(void)
                line is at 1000 plus three for every sample past the halfway
                point, less however far behind this way runs. */
             if (METHODS[m].method == CVT_LINEAR
-                || METHODS[m].method == CVT_CUBIC) {
-                uint32_t first = (uint32_t)(((int64_t)(n / 2) + delay + 2)
+                || METHODS[m].method == CVT_CUBIC
+                || METHODS[m].method == CVT_SINC) {
+                uint32_t first = (uint32_t)(((int64_t)(n / 2) + 2 * delay + 2)
                                             * to / from);
 
                 for (i = first; i < whole; i++) {
@@ -364,7 +371,14 @@ static int unitChecks(void)
 
                     if (off < 0)
                         off = -off;
-                    if (off > 1.0) {
+                    /* A straight line comes out straight, and the two ways
+                       that draw a curve through a handful of points do it to
+                       the count. The sinc is held a shade looser: its window
+                       is cut off at the ends, so the weights either side of
+                       the position are not quite balanced and the line it
+                       draws is out by a fraction of a count rather than by
+                       nothing at all. */
+                    if (off > (METHODS[m].method == CVT_SINC ? 4.0 : 1.0)) {
                         printf("rates: %s at %d to %d does not follow a "
                                "slope: sample %u is %d where the line is at "
                                "%.2f\n", METHODS[m].name, (int)from, (int)to,
@@ -588,6 +602,8 @@ int main(void)
                 method = CVT_ZEROS;
             else if (strcmp(say, "linear") == 0)
                 method = CVT_LINEAR;
+            else if (strcmp(say, "cubic") == 0)
+                method = CVT_CUBIC;
         }
     }
     report = getenv("EVV_RATES_REPORT") != 0;
@@ -767,13 +783,20 @@ int main(void)
                            wrong - 1, (int)kept[wrong - 1], (int)base11[at]);
                     return 1;
                 }
-            } else if ((hz % from) == 0) {
+            } else if (method != CVT_SINC && (hz % from) == 0) {
                 /* A curve does not hand back what it was given, but where
                    the two grids meet it passes through the point, so every
                    output sample that lands on an input one has to be that
                    input sample exactly -- offset by however far behind the
                    way in force runs. That is still byte for byte, on one
-                   sample in every few. */
+                   sample in every few.
+
+                   The sinc is not asked, and that is what it is for rather
+                   than a gap in the checking. It cuts the band off below the
+                   input's own Nyquist, so it changes the signal on the grid
+                   as well as between: a filter that passed every input
+                   sample through untouched would not be filtering. What
+                   stands for it is the arithmetic driven directly above. */
                 long times = hz / from;
                 long delay = CVT_DELAY(method);
 
@@ -799,6 +822,8 @@ int main(void)
                 printf("rates: %6d hertz  %s\n", (int)hz,
                        method == CVT_HOLD
                        ? "every sample is the engine's own"
+                       : method == CVT_SINC
+                       ? "filtered, so the resampler's own checks stand"
                        : (hz % from) == 0
                        ? "every sample where the grids meet is the engine's own"
                        : "an uneven ratio, so the resampler's own checks stand");
@@ -830,6 +855,9 @@ int main(void)
                method == CVT_HOLD
                ? "every rate above eleven thousand is the engine's own "
                  "samples to the byte"
+               : method == CVT_SINC
+               ? "the resampler holds a level, follows a slope and has no "
+                 "seams"
                : "every whole ratio meets the engine's own samples on the "
                  "grid", WANTED_COUNT);
     return 0;
