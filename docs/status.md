@@ -458,6 +458,8 @@ A sustained vowel, in 500 Hz bands from nought to 5.5 kHz, dB relative to each f
 
 And four sentences chosen for sibilants, plosives and transitions, in 250 Hz bands over the same span: the worst disagreement anywhere is 0.76 dB, at 4,750 to 5,000 Hz.
 
+Where that worst band sits is itself the reassuring part, and worth saying so nobody reads it as a warning. Through 3,250 to 4,250 Hz, where the engine's response is flat, the two agree to within 0.07 dB. The disagreement only appears once the rolloff begins -- the level falls 5.4 dB across 4,250 to 5,000 -- and on a slope that steep a difference of a few tens of hertz in where the fall starts reads as most of a decibel. The concerning shape would have been the largest gap sitting in the middle of the spectrum where the response is level; this is the opposite of that.
+
 That is a stronger statement than `test/suite.sh` can make. The suite holds us against the very objects we were transcribed from, so it proves the transcription and not the model. This holds us against a different implementation, on a different architecture, compiled by a different vendor from a different source tree.
 
 What it does not cover, and the limits are worth stating because the two engines are now known to be separately implemented -- which is exactly where separate implementations would be most likely to diverge. One voice of eight. One language of nine. The steady-state spectrum and the sibilant and transition bands, not prosody, timing or marks. Widening it needs nothing but more captures of the same kind: the method is in the last section here.
