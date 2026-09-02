@@ -267,7 +267,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims romcan romprims
+.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa romcan romprims
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -409,6 +409,18 @@ prims: $(BUILD)/prims
 
 $(BUILD)/prims: test/prims.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) -DEVV_PRIMS_OURS test/prims.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# The IPA converters, held against IBM's own. The suite cannot see these
+# either: nothing in the engine asks what an IPA symbol means until the SSML
+# reader is on, and even then a sentence reaches only the symbols it spells.
+# `test/ipa.sh' builds this and the same file against IBM's objects and diffs
+# the two, over every code point in six languages.
+ipa: $(BUILD)/ipa
+	@$(BUILD)/ipa > /dev/null && echo "built and ran $(BUILD)/ipa"
+
+$(BUILD)/ipa: test/ipa.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) -DEVV_IPA_OURS test/ipa.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 $(OBJDIR)/%.o: %.c $(HEADERS)

@@ -168,6 +168,21 @@ $(BUILD)/prims.exe: ../test/prims.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/prims.err >&2 || true; exit $$s
 	@echo "built $@"
 
+# The IPA converters out of IBM's own object, for test/ipa.sh. Same
+# arrangement as prims above: one file compiled twice, once here and once by
+# the top-level `make ipa'.
+.PHONY: ipa
+ipa: $(BUILD)/ipa.exe
+
+$(BUILD)/ipa.exe: ../test/ipa.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
+                  $(SHIM) $(WORK)/.stamp
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src ../test/ipa.c \
+	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/ipa.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/ipa.err >&2 || true; exit $$s
+	@echo "built $@"
+
 # The romanizer's converters called directly, which is the other half of
 # test/romprims.sh. Only Japanese has a romanizer, so this wants TAG=jajp, and
 # it reads the maps in rom/jajp as well as the engine's own headers: the state
@@ -192,6 +207,7 @@ clean:
 	@rm -f $(BUILD)/speak.exe $(BUILD)/speak-tap.exe $(BUILD)/ral_shim.obj \
 	       $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/*.tmp.o \
 	       $(BUILD)/prims.exe $(BUILD)/prims.err \
+	       $(BUILD)/ipa.exe $(BUILD)/ipa.err \
 	       $(BUILD)/uni.syms $(BUILD)/link.err $(BUILD)/taplink.err
 
 # The romanizer's own seam, tapped. Six of RomanizerManager's public methods
