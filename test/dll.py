@@ -8,6 +8,11 @@ handle and of a callback matches what the library expects. Those are different
 questions, and the second one is the one that bites -- a handle is sixty-four
 bits and ctypes will happily pass thirty-two of them unless it is told.
 
+A document in place of the text is read as SSML: the filter is registered
+through the exported calls first, which is a second question again, since a
+filter's entry point is a callback of the caller's and goes over as stdcall
+with a pointer-to-pointer in front of it.
+
 usage: dll.py <eci.dll> <out.wav> <text>
 """
 
@@ -44,6 +49,15 @@ def main(path, out, text):
     dll.eciSpeaking.argtypes = [ctypes.c_void_p]
     dll.eciDelete.restype = ctypes.c_void_p
     dll.eciDelete.argtypes = [ctypes.c_void_p]
+    dll.eciRegisterFilter.argtypes = [ctypes.c_void_p, ctypes.c_uint,
+                                      ctypes.c_void_p, ctypes.c_void_p,
+                                      ctypes.c_int]
+    dll.eciNewFilter.restype = ctypes.c_void_p
+    dll.eciNewFilter.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_int]
+    dll.eciActivateFilter.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+    dll.eciGetFilteredText.argtypes = [ctypes.c_void_p, ctypes.c_void_p,
+                                       ctypes.c_char_p,
+                                       ctypes.POINTER(ctypes.c_char_p)]
 
     buf = (ctypes.c_short * FRAME)()
     said = bytearray()
@@ -75,6 +89,42 @@ def main(path, out, text):
         raise SystemExit("dll.py: it refused a sample buffer")
     dll.eciSetParam(h, 1, 1)              # annotations, as the add-on asks
     dll.eciInsertIndex(h, 4242)
+
+    # A document goes through the SSML reader first, which means registering
+    # the filter the library carries. What registering takes is the address
+    # of a filter's entry point, and this library exports its own under the
+    # name IBM's separate ssmlfilter.dll used, so the address is taken from
+    # the library rather than made here -- and it goes over as a pointer to
+    # a pointer, which is the shape registerFilter reads.
+    if text.lstrip().startswith("<"):
+        class Attrib(ctypes.Structure):
+            _fields_ = [("eciFilterName", ctypes.c_char * 80),
+                        ("language", ctypes.c_int)]
+
+        entry = ctypes.cast(dll.ssmlFilterGetObject, ctypes.c_void_p)
+        attrib = Attrib()
+        rc = dll.eciRegisterFilter(h, 0, ctypes.byref(entry),
+                                   ctypes.byref(attrib), 1)
+        if rc:
+            raise SystemExit("dll.py: it would not register the SSML filter")
+        print("dll.py: registered [%s]"
+              % attrib.eciFilterName.decode("ascii", "replace"))
+
+        flt = dll.eciNewFilter(h, 0, 1)
+        if not flt:
+            raise SystemExit("dll.py: it would not make the SSML filter")
+        dll.eciActivateFilter(h, flt)
+
+        # A writable copy, because IBM's reader writes into the document it
+        # is given where a numeric character reference ends.
+        document = ctypes.create_string_buffer(text.encode("mbcs"))
+        answer = ctypes.c_char_p(None)
+        if dll.eciGetFilteredText(h, flt, document, ctypes.byref(answer)):
+            raise SystemExit("dll.py: it would not read the document")
+        if answer.value is None:
+            raise SystemExit("dll.py: the reader answered nothing")
+        text = answer.value.decode("mbcs")
+        print("dll.py: read as [%s]" % text)
 
     if not dll.eciAddText(h, text.encode("mbcs")):
         raise SystemExit("dll.py: it refused the text")

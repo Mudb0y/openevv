@@ -60,10 +60,16 @@ extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
 #define ECI_VOICE_PARAM         0x11
 
 /* An environment is reached through two entries, and the order is the
-   original's rather than the one its names suggest. */
+   original's rather than the one its names suggest.
+
+   Both are methods, so both are thiscall, and on thirty-two bits that is
+   not decoration: the environment goes over in a register there and on the
+   stack here. Declared without it this built and ran on sixty-four bits,
+   where there is one convention, and smashed the stack the moment a
+   thirty-two bit build read a document. */
 typedef struct {
-    int32_t (*getVoiceParam)(void *env, int32_t which);
-    int32_t (*getParam)(void *env, int32_t which);
+    THIS int32_t (*getVoiceParam)(void *env, int32_t which);
+    THIS int32_t (*getParam)(void *env, int32_t which);
 } ECIEnvironmentTable;
 
 typedef struct {

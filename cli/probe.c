@@ -50,7 +50,7 @@ void    *STDCALL es_newFilter(OldInst *h, int32_t id, int32_t global);
 int32_t  STDCALL es_activateFilter(OldInst *h, void *filter);
 int32_t  STDCALL es_getFilteredText(OldInst *h, void *filter, const void *in,
                                     const void **out);
-extern STDCALL int ssmlFilterGetObject(uint32_t which, void **out);
+extern STDCALL int ssml_getFilterObject(uint32_t which, void **out);
 int      STDCALL et_addText(OldInst *h, const char *text);
 int      STDCALL et_synthesize(OldInst *h);
 int      STDCALL et_insertIndex(OldInst *h, int32_t n);
@@ -337,7 +337,7 @@ int main(int argc, char **argv)
        and the engine only reads those with the annotation input type on. */
     if (argc > 3 && strchr(argv[3], 's')) {
         ECIFilterAttrib attrib;
-        void *entry = (void *)ssmlFilterGetObject;
+        void *entry = (void *)ssml_getFilterObject;
         void *filter;
 
         memset(&attrib, 0, sizeof attrib);

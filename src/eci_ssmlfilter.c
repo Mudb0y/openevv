@@ -271,7 +271,7 @@ int isSSMLFilterUsable(const char *text)
  * Number one is accepted as well as seven and gives the same thing, which
  * is IBM's and is kept: an older header numbered the filter interface one
  * and the engine still answers to it. */
-STDCALL int ssmlFilterGetObject(uint32_t idInterface, void **out)
+STDCALL int ssml_getFilterObject(uint32_t idInterface, void **out)
 {
     void *object = 0;
 
@@ -330,7 +330,7 @@ ALIAS("?getFilterDescription@SSMLFilter@@UAEPADXZ",
 ALIAS("?getFilterVersion@SSMLFilter@@UAEHQAJ@Z", "ssf_getFilterVersion");
 ALIAS("?getFilterDependencies@SSMLFilter@@UAEPAPADXZ",
       "ssf_getFilterDependencies");
-ALIAS("_ssmlFilterGetObject", "ssmlFilterGetObject");
+ALIAS("_ssmlFilterGetObject", "ssml_getFilterObject");
 ALIAS("_isSSMLFilterUsable", "isSSMLFilterUsable");
 ALIAS("_g_aiFilterVersion", "g_aiFilterVersion");
 ALIAS("?lexerMutex@SSMLFilter@@1VMutex@@A", "ssml_lexerMutex");

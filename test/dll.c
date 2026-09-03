@@ -10,7 +10,14 @@
  * It takes the same arguments as build/evv, so test/hash.sh can hold what the
  * library says against what everything else says.
  *
+ * Text that begins with a `<' is read as SSML first, which is a third thing
+ * a program depends on: that the filter interface is exported, that the
+ * reader's own entry point is too, and that handing one to the other across
+ * the library boundary works. With IBM's engine the entry point came out of
+ * a DLL of its own; ours is in eci.dll, under the same name.
+ *
  *   dlltest.exe -o out.wav "Some text."
+ *   dlltest.exe -o out.wav "<speak version=\"1.0\" xml:lang=\"en-US\">Hi.</speak>"
  */
 
 #include <windows.h>
@@ -146,6 +153,11 @@ int main(int argc, char **argv)
     int   (*eciSynthesize)(void *);
     int   (*eciSpeaking)(void *);
     void *(*eciDelete)(void *);
+    int   (*eciRegisterFilter)(void *, unsigned int, void *, void *, int);
+    void *(*eciNewFilter)(void *, int, int);
+    int   (*eciActivateFilter)(void *, void *);
+    int   (*eciGetFilteredText)(void *, void *, const void *, const void **);
+    int   (*ssmlFilterGetObject)(unsigned long, void **);
 
     unsigned int langs[32];
     int          nlangs = 0;
@@ -176,6 +188,11 @@ int main(int argc, char **argv)
     GET(eciSynthesize);
     GET(eciSpeaking);
     GET(eciDelete);
+    GET(eciRegisterFilter);
+    GET(eciNewFilter);
+    GET(eciActivateFilter);
+    GET(eciGetFilteredText);
+    GET(ssmlFilterGetObject);
 
     /* Asked twice, as the add-on asks: with no room, which answers how many
        there are, and then with room. Asking for the count with room left over
@@ -200,6 +217,45 @@ int main(int argc, char **argv)
         return 1;
     }
     eciSetParam(h, 1, 1);       /* annotations, as the add-on asks for */
+
+    /* A document goes through the reader first, and what comes out of it is
+       annotations, which is why the line above is not optional here. */
+    if (text[0] == '<') {
+        struct { char name[80]; int language; } attrib;
+        void *entry = (void *)ssmlFilterGetObject;
+        void *filter;
+        const void *read = 0;
+        char *writable;
+
+        memset(&attrib, 0, sizeof attrib);
+        if (eciRegisterFilter(h, 0, &entry, &attrib, 1) != 0) {
+            fprintf(stderr, "dlltest: it would not register the SSML"
+                    " filter\n");
+            return 1;
+        }
+        printf("dlltest: registered [%s]\n", attrib.name);
+
+        filter = eciNewFilter(h, 0, 1);
+        if (filter == 0) {
+            fprintf(stderr, "dlltest: it would not make the SSML filter\n");
+            return 1;
+        }
+        eciActivateFilter(h, filter);
+
+        /* A copy it may write on: the reader ends the digits of a numeric
+           character reference by writing a NUL over the semicolon, in the
+           document it was handed. */
+        writable = malloc(strlen(text) + 1);
+        if (writable == 0)
+            return 1;
+        strcpy(writable, text);
+        if (eciGetFilteredText(h, filter, writable, &read) != 0 || read == 0) {
+            fprintf(stderr, "dlltest: it would not read the document\n");
+            return 1;
+        }
+        printf("dlltest: read as [%s]\n", (const char *)read);
+        text = (const char *)read;
+    }
 
     eciInsertIndex(h, 4242);
     if (!eciAddText(h, text) || !eciSynthesize(h)) {

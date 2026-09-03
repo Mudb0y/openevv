@@ -70,8 +70,16 @@ extern int32_t STDCALL es_getFilteredText(void *h, void *filter,
                                           const void *in, const void **out)
     ECI("_eciGetFilteredText@16");
 
+/* Ours is `ssml_getFilterObject' -- see src/eci_filter.h -- and IBM's is
+   the published name, under which its object defines it. */
+#if defined(EVV_SSML_OURS)
+extern int ENTRY ssml_getFilterObject(uint32_t which, void **out);
+#define GET_FILTER_OBJECT ssml_getFilterObject
+#else
 extern int ENTRY ssmlFilterGetObject(uint32_t which, void **out)
     ENTRY_NAME("_ssmlFilterGetObject");
+#define GET_FILTER_OBJECT ssmlFilterGetObject
+#endif
 
 void evvRunStaticInitialisers(void);
 void evv_port_start(void);
@@ -493,7 +501,7 @@ static void one(void *h, void *filter, const char *text)
 int main(int argc, char **argv)
 {
     ECIFilterAttrib attrib;
-    GetFilterObjectFn entry = (GetFilterObjectFn)ssmlFilterGetObject;
+    GetFilterObjectFn entry = (GetFilterObjectFn)GET_FILTER_OBJECT;
     void *filter;
     void *h;
     int32_t rc;

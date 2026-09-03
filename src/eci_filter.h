@@ -86,8 +86,13 @@ typedef int (*FilterUsableFn)(const char *text);
    not got. */
 #define FILTER_NOT_FOUND      (-3)
 
-/* The one filter this engine carries, in src/eci_ssmlfilter.c. */
-extern STDCALL int ssmlFilterGetObject(uint32_t idInterface, void **out);
+/* The one filter this engine carries, in src/eci_ssmlfilter.c.
+ *
+ * It is not called `ssmlFilterGetObject' here, which is the name a caller
+ * asks the library for. That name belongs to the wrapper in
+ * win/eci_api.c, because a `dllexport' only exports where the function is
+ * defined and this file compiles for Linux as well. */
+extern STDCALL int ssml_getFilterObject(uint32_t idInterface, void **out);
 extern int isSSMLFilterUsable(const char *text);
 
 #endif

@@ -225,7 +225,38 @@ API int eciGetFilteredText(void *h, const void *text, void *out, int room)
 
 /* Registering is what turns the SSML reader on: the engine carries it but
    never loads it by itself, so a caller hands in the entry point and gets
-   a filter it can activate. src/eci_filtermanager.c is the whole of why. */
+   a filter it can activate. src/eci_filtermanager.c is the whole of why.
+ *
+ * Which raises the question of where a caller gets an entry point for the
+ * SSML filter, since the whole of registering is handing one over. With
+ * IBM's engine it came out of a DLL of its own: a caller loaded
+ * ssmlfilter.dll and asked it for `ssmlFilterGetObject'. Ours is inside
+ * this library, so the same name is exported from here, and a caller does
+ * the same thing with one fewer file to find.
+ *
+ * The wrapper below is what exports it. It is a wrapper rather than a
+ * `dllexport' on the engine's own definition because that definition is in
+ * src/eci_ssmlfilter.c, which knows nothing about being in a library and
+ * compiles for Linux as well; a `dllexport' on a mere declaration exports
+ * nothing, and a linker directive naming the symbol has to know whether
+ * stdcall decorated it, which differs between the two bitnesses. So the
+ * engine's own name for it is `ssml_getFilterObject' and the published one
+ * is here, like every other name in this file.
+ *
+ * It is the one name here that says stdcall, and on thirty-two bits that
+ * is not decoration. Everything else in this file is called by whoever
+ * loaded the library; this one is called by the engine, through a pointer
+ * the filter interface declares stdcall. Left plain it works on
+ * sixty-four bits, where there is one convention, and on thirty-two the
+ * engine's call returns with the stack pointer eight bytes out and the
+ * next thing to touch the stack dies. `--kill-at' in the Makefile is what
+ * publishes it under the plain name all the same. */
+int STDCALL ssml_getFilterObject(uint32_t idInterface, void **out);
+
+API int STDCALL ssmlFilterGetObject(uint32_t idInterface, void **out)
+{
+    return ssml_getFilterObject(idInterface, out);
+}
 
 API int eciRegisterFilter(void *h, unsigned int id, void *entry, void *attrib,
                           int autoload)
