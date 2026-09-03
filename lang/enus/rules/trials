@@ -1,7 +1,7 @@
 # The upper-form files this module keeps but does not build.
 #
 # Each of these stands in for a rule IBM itself compiled. They are here so
-# that tools/upper-check.sh has an authored rule to hold against the one it
+# that tools/rules/check-upper.sh has an authored rule to hold against the one it
 # replaces, which is how the compiler is proved at all; building them would
 # put our bytecode where IBM's is and give up the byte identity English is
 # checked by. A module written rather than lifted names nothing here, because

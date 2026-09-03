@@ -1,4 +1,4 @@
-# Bytes a rule of ours names by address, laid down by tools/delta-consts.py
+# Bytes a rule of ours names by address, laid down by tools/rules/consts.py
 # into delta_authored_enus.c and recorded in rules/symbols. See the top of
 # that tool for what the bytes are: not ASCII, but one code per character in
 # the alphabet the statement type declares.

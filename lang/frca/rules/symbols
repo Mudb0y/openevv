@@ -1,6 +1,6 @@
 # Where each address the rules name falls: which store of the
 # language's own bytes, and how far into it. Written by
-# tools/delta-notation.py out of IBM's objects. The bytes
+# tools/rules/notation.py out of IBM's objects. The bytes
 # themselves are in delta_consts_frca.c.
 #
 # An address is named by the object that compiled it and the

@@ -1,6 +1,6 @@
 # Where each address the rules name falls: which store of the
 # language's own bytes, and how far into it. Written by
-# tools/delta-notation.py out of IBM's objects. The bytes
+# tools/rules/notation.py out of IBM's objects. The bytes
 # themselves are in delta_consts_enus.c.
 #
 # An address is named by the object that compiled it and the
@@ -6802,8 +6802,6 @@ at glob.obj ZZstring125 enus_evv_glob_data_3 460
 at glob.obj ZZstring222 enus_evv_glob_data_3 860
 at glob.obj ZZstring327 enus_evv_glob_data_3 1340
 
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
-
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
+# And the constants of our own, out of rules/constants by tools/rules/consts.py.
 store enus_evv_authored_data
 at * lex_prefix_re enus_evv_authored_data 0

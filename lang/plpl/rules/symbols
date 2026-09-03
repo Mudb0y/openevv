@@ -1,6 +1,6 @@
 # Where each address the rules name falls: which store of the
 # language's own bytes, and how far into it. Written by
-# tools/delta-notation.py out of IBM's objects. The bytes
+# tools/rules/notation.py out of IBM's objects. The bytes
 # themselves are in delta_consts_plpl.c.
 #
 # An address is named by the object that compiled it and the
@@ -1400,35 +1400,7 @@ at glob.obj ZZstring94 plpl_evv_glob_data_3 232
 at glob.obj ZZstring104 plpl_evv_glob_data_3 264
 at glob.obj ZZstring130 plpl_evv_glob_data_3 372
 
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
-
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
-
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
-
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
-
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
-
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
-
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
-
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
-
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
-
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
-
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
-
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
-
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
-
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
-
-# And the constants of our own, out of rules/constants by tools/delta-consts.py.
+# And the constants of our own, out of rules/constants by tools/rules/consts.py.
 store plpl_evv_authored_data
 at * pol_letter_aogonek plpl_evv_authored_data 0
 at * pol_letter_cacute plpl_evv_authored_data 1

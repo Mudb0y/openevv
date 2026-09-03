@@ -1,9 +1,9 @@
 # Bytes a rule of Polish's names by address, which no lifter writes: these are
 # ours. A string a rule holds against the text is one code per character in
 # the alphabet the statement type declares, not ASCII, and
-# tools/lang-alphabet.py show plpl is what says which code is which letter.
+# tools/module/alphabet.py show plpl is what says which code is which letter.
 # The phonemes are the phone statement's own alphabet, which
-# tools/lang-phonemes.py prints.
+# tools/module/phonemes.py prints.
 
 # The eight letters Italian has not got, by the codes the alphabet gives them.
 bytes pol_letter_aogonek  cf      # a with an ogonek

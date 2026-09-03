@@ -140,6 +140,13 @@ def write_symbols(path, tag, at):
             if line.split()[:1] != ["store"] or line.split()[1] != store]
     kept = [line for line in kept
             if line.split()[:2] != ["at", ANY]]
+    # And the comment written with them, or a second run appends another copy
+    # of it: the store and the addresses were already being replaced, so the
+    # file grew by one line every time this was asked to write the same thing.
+    kept = [line for line in kept
+            if not line.startswith("# And the constants of our own")]
+    while kept and not kept[-1].strip():
+        kept.pop()
     out = kept
     if at:
         out = out + ["", "# And the constants of our own, out of"
