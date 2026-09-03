@@ -90,7 +90,7 @@ typedef int (*FilterUsableFn)(const char *text);
  *
  * It is not called `ssmlFilterGetObject' here, which is the name a caller
  * asks the library for. That name belongs to the wrapper in
- * win/eci_api.c, because a `dllexport' only exports where the function is
+ * lib/eci_api.c, because a `dllexport' only exports where the function is
  * defined and this file compiles for Linux as well. */
 extern STDCALL int ssml_getFilterObject(uint32_t idInterface, void **out);
 extern int isSSMLFilterUsable(const char *text);

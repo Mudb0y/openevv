@@ -827,20 +827,20 @@ $(BUILD)/evvspeak.exe: win/speak.c $(OBJDIRWIN)/speak.res $(BUILD)/libevv-win$(S
 
 # The engine as a library, under the names IBM published, so that a program
 # written against IBM's eci.dll -- a screen reader add-on, most likely -- can
-# load ours instead. win/eci_api.c is the whole of the difference: fifty-two
+# load ours instead. lib/eci_api.c is the whole of the difference: fifty-two
 # wrappers and an entry point.
 #
 # eci.ini goes beside it because add-ons look for one and patch a path inside
 # it. Nothing here reads it: the engine carries its own settings in the image.
-$(BUILD)/eci.dll: win/eci_api.c $(OBJDIRWIN)/eci.res $(BUILD)/libevv-win$(SUF).a $(RULESTAMP)
-	@$(CCWIN) $(CFLAGSWIN) -shared win/eci_api.c $(OBJDIRWIN)/eci.res \
+$(BUILD)/eci.dll: lib/eci_api.c $(OBJDIRWIN)/eci.res $(BUILD)/libevv-win$(SUF).a $(RULESTAMP)
+	@$(CCWIN) $(CFLAGSWIN) -shared lib/eci_api.c $(OBJDIRWIN)/eci.res \
 	   $(BUILD)/libevv-win$(SUF).a $(LDFLAGSWIN) -o $@
-	@cp win/eci.ini $(BUILD)/eci.ini
+	@cp lib/eci.ini $(BUILD)/eci.ini
 	@echo "built $@"
 
-$(OBJDIRWIN)/eci.res: win/eci.rc
+$(OBJDIRWIN)/eci.res: lib/eci.rc
 	@mkdir -p $(OBJDIRWIN)
-	@$(WINDRES) -I win win/eci.rc -O coff -o $@
+	@$(WINDRES) -I lib lib/eci.rc -O coff -o $@
 
 # Speaks through the library rather than against the engine, by name, the way
 # an add-on does. `test/hash.sh build/dlltest.exe' then holds what comes out of
@@ -886,8 +886,8 @@ OBJECTSWIN32 := $(patsubst %.c,$(OBJDIRWIN32)/%.o,$(notdir $(SOURCESWIN)))
 .PHONY: win32
 win32: $(BUILD)/eci32.dll $(BUILD)/dlltest32.exe
 
-$(BUILD)/eci32.dll: win/eci_api.c $(OBJDIRWIN32)/eci.res $(BUILD)/libevv-win32$(SUF).a $(RULESTAMP)
-	@$(CCWIN32) $(CFLAGSWIN32) -shared win/eci_api.c $(OBJDIRWIN32)/eci.res \
+$(BUILD)/eci32.dll: lib/eci_api.c $(OBJDIRWIN32)/eci.res $(BUILD)/libevv-win32$(SUF).a $(RULESTAMP)
+	@$(CCWIN32) $(CFLAGSWIN32) -shared lib/eci_api.c $(OBJDIRWIN32)/eci.res \
 	   $(BUILD)/libevv-win32$(SUF).a $(LDFLAGSWIN32) -o $@
 	@echo "built $@"
 
@@ -895,9 +895,9 @@ $(BUILD)/dlltest32.exe: test/lib/dll.c $(BUILD)/eci32.dll $(RULESTAMP)
 	@$(CCWIN32) $(CFLAGSWIN32) test/lib/dll.c -static -lversion -o $@
 	@echo "built $@"
 
-$(OBJDIRWIN32)/eci.res: win/eci.rc
+$(OBJDIRWIN32)/eci.res: lib/eci.rc
 	@mkdir -p $(OBJDIRWIN32)
-	@$(WINDRES32) -I win win/eci.rc -O coff -o $@
+	@$(WINDRES32) -I lib lib/eci.rc -O coff -o $@
 
 $(OBJDIRWIN32)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJDIRWIN32)
