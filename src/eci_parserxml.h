@@ -34,12 +34,12 @@ typedef struct {
 
 Parserxml *CreateParserXML(void);
 void       DeleteParserXML(Parserxml *p);
-int8_t     px_parseText(Parserxml *p, const char *text, int32_t len,
+THIS int8_t     px_parseText(Parserxml *p, const char *text, int32_t len,
                         int32_t unused, int8_t convert);
-void       px_setTagHandler(Parserxml *p, OpenTagHandlerFn open,
+THIS void       px_setTagHandler(Parserxml *p, OpenTagHandlerFn open,
                             CloseTagHandlerFn close);
-void       px_setTextHandler(Parserxml *p, CharDataHandlerFn text);
-void       px_setData(Parserxml *p, void *data);
+THIS void       px_setTextHandler(Parserxml *p, CharDataHandlerFn text);
+THIS void       px_setData(Parserxml *p, void *data);
 
 /* The scanner's own state, which the parser hands over before each
    document. src/eci_xmltok.c is where it lives. */

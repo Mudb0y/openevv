@@ -98,3 +98,13 @@ second 4 c9d4d7e74e952926 1bbee8c7413fe1df Testing 1 2 3, ABC XYZ, hyphenated-wo
 second 5 a158c0f26a6bce27 62031a09777747a8 A one-word line. And another; plus "quoted text" inside.
 second 6 7f08a1330ec6be34 7daf0e20104fe1f4 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 second 7 f4b0e35262159568 21c18b9772eb2b94 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
+ssml 1 aa1bdf3d6cf3ab7f 850a2450f5acd9c0 <speak version="1.0" xml:lang="en-GB">Hello there.</speak>
+ssml 2 bbec3a73b6400fc7 8958b935427d2db4 <speak version="1.0" xml:lang="en-GB"><prosody rate="slow">Slowly now.</prosody> Back to normal.</speak>
+ssml 3 21064891cec3c3dd faf5a463ea77cc7a <speak version="1.0" xml:lang="en-GB"><prosody pitch="high" range="x-high" volume="loud">All four at once.</prosody></speak>
+ssml 4 93502ff44e156e4e 06255afbb44d9cf3 <speak version="1.0" xml:lang="en-GB"><emphasis level="strong">This</emphasis> one, not that one.</speak>
+ssml 5 c97e512a867c468b 78ee26695a507444 <speak version="1.0" xml:lang="en-GB"><voice gender="female">She said so.</voice> And he did not.</speak>
+ssml 6 fdbf9871ada7727a d9fd8849ffa1681a <speak version="1.0" xml:lang="en-GB">It cost <say-as interpret-as="cardinal">1234</say-as> on the <say-as interpret-as="ordinal">3</say-as>.</speak>
+ssml 7 923059a6f2390512 76530e270f6910f2 <speak version="1.0" xml:lang="en-GB">Spell it: <say-as interpret-as="letters">abc</say-as>, and dial <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+ssml 8 d24dd03d17f94b0c 418948f5f11136d8 <speak version="1.0" xml:lang="en-GB">Wait<break time="500ms"/>for it.<mark name="here"/> There.</speak>
+ssml 9 654ee9cec8244e32 b28d07af8e5a195d <speak version="1.0" xml:lang="en-GB"><sub alias="World Wide Web">WWW</sub> and <phoneme ph="h.E.l.oU">hello</phoneme>.</speak>
+ssml 10 a507e903fa5f9b25 b038e058389b2b62 <speak version="1.0" xml:lang="en-GB">The café near the naïve façade, with a &amp; b &lt; c.</speak>

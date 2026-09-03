@@ -1,6 +1,6 @@
 # What works and what does not
 
-Last measured 2 September 2026.
+Last measured 3 September 2026.
 
 ## Works
 
@@ -24,9 +24,9 @@ That worked on Windows before it worked here. Any build with two languages in it
 
 It builds and speaks on Windows, sixty-four bit, as one static file. The speak window plays what it makes through waveOut; `win/speak.c` is that, and it is the only front end that plays anything.
 
-And it builds as `eci.dll`, exporting the fifty-two names IBM published, so a program written against IBM's library -- a screen reader add-on, most likely -- can load ours instead. Both bitnesses: sixty-four bit for an add-on that loads the engine into the reader's own process, thirty-two bit for the most used driver, which hosts the engine in a 32-bit process of its own whatever the reader is. Checked on Windows itself: by name from C for both, and through ctypes for the sixty-four bit one, as an add-on does.
+And it builds as `eci.dll`, exporting sixty of the names IBM published, so a program written against IBM's library -- a screen reader add-on, most likely -- can load ours instead. Both bitnesses: sixty-four bit for an add-on that loads the engine into the reader's own process, thirty-two bit for the most used driver, which hosts the engine in a 32-bit process of its own whatever the reader is. Checked on Windows itself: by name from C for both, and through ctypes for the sixty-four bit one, as an add-on does.
 
-What is not exported is the filter interface, which the engine does not implement, and the dictionary find, lookup and update calls, which have no public wrapper yet.
+What is not exported is the dictionary find, lookup and update calls, which have no public wrapper yet, and `eciGeneratePhonemes`. The filter interface is exported now, and the section on SSML below says what is behind it.
 
 ## Not done
 
@@ -175,6 +175,26 @@ The spine is compared as a shape: every node is asked the string test for every 
 Every one of those is written where it bites rather than left for a passing count to imply otherwise.
 
 Three things reading turned up. The immediate loads into the right pointer register ask the statement table about the *left* register's field, which is a slip in the original that cannot show, and is kept. All four `settvar` entry points are the same body: none looks at the width its name announces. And so are the two that ask whether a context may be taken, which follow the same word of the node whichever side they are named for.
+
+## SSML
+
+**The engine reads SSML, and it reads it exactly as IBM's does.** `test/ssml.sh` puts 176 documents through our reader and through IBM's own and diffs the annotations that come out: identical, character for character. That covers the whole vocabulary -- `say-as` in eleven kinds, `prosody` in four parameters and every way of writing each, `emphasis`, `voice` by gender, age, variant and name, `phoneme` in IBM's own alphabet and in IPA, `sub`, `break`, `mark`, `audio`, `p`, `s`, `metadata`, `prompt` and `xml:lang` -- along with the documents that are wrong in every way a document can be.
+
+Nothing in the synthesiser changed for it. SSML is a preprocessor: a document becomes the annotations this engine has always understood -- `` `vs50 `` for a rate, `` `card[123] `` for a number to be read as a number, `` `[hEHlOW] `` for a pronunciation -- and is handed to the text path as though the caller had written them itself. So a caller gets say-as, prosody, IPA and voice selection at the cost of a text pass and no change to the sound.
+
+How it was reachable at all is the part worth keeping. IBM's SSML filter was compiled into every one of the nine language object sets and nothing in those sets ever registered it: it shipped as a DLL of its own, and the two functions that would have found and loaded it -- `autoLoadFilter` and `getINIValue` -- are empty in IBM's own build. So the code was there, unreferenced, and a program linked beside those objects can hand the engine its own `ssmlFilterGetObject` through `eciRegisterFilter` and turn it on. `reference/ssmltry.c` was that program and `test/ssml.c` is the harness it became. It is a sharper oracle than the audio, because what comes back is text: a wrong annotation names itself instead of showing up as a different hash over forty thousand samples.
+
+Which languages get what is IBM's own arrangement and is worth knowing before wondering why a document did nothing. Prosody -- pitch, range and volume -- is only US and British English, French and German. Rate is those four and Japanese. Emphasis is those four and both Spanishes, Canadian French, Italian, Portuguese and Finnish, which is everything in the SDK but nothing else. Say-as is the four plus Japanese, Korean and Chinese. IPA is the four plus Japanese and Korean. A document asking for something its language has not got is ignored rather than refused, and a document in a language the build has not got produces nothing at all.
+
+Polish gets none of it, and that is not a fault in the transcription. IBM's own language table in `ssmlmap.obj` has fifteen entries and Polish is not one of them, so `xml:lang="pl-PL"` does not become a number; and family seventeen, which Polish uses here, is Thai in that table. So the reader works in Polish only as far as the elements that do not consult the language -- `break`, `mark`, `sub`, `audio`, spelling out, and a pronunciation in IBM's own alphabet. Giving Polish its own entry is a small change and a deliberate divergence, and it has not been made.
+
+The eleventh deliberate divergence came out of this, and like the ninth and tenth it is IBM's fault rather than a choice about what to sound like. IBM's reader ends the digits of a numeric character reference by writing a NUL over the semicolon that closes them -- in the caller's own string, not in a copy -- so `&#65;` handed over as a literal page-faults on the write. `src/eci_mbconvert.c` copies the digits out instead. `test/ssml.c` hands both sides a writable copy of each document, which is what lets IBM's side survive the corpus at all.
+
+Two other things are IBM's own routing rather than the specification's, and both are kept because sounding like Eloquence is the point. `interpret-as="number"` with no format reads as an ordinal, so 123 comes out as a place rather than a count. And a Canadian French pronunciation in IPA goes through the German converter, because the language table in `win_ipatospr.obj` puts 0x30001 where 0x40000 belongs.
+
+Three harnesses cover the layer and all three want Wine and IBM's objects: `test/ipa.sh` over 10,934 answers, `test/xmltok.sh` over 961 lines of scanner output, `test/ssml.sh` over 176 documents. The recorded gate that wants neither is `test/matrix.sh`, whose `ssml` category speaks the reader's own output through the engine in all nine languages.
+
+`docs/remaining.md` says where each of the sixteen objects went, and why the XML scanner's eight tables are lifted rather than written -- the only lifted data in `src` besides the synthesiser's own tables, and `NOTICE` says so.
 
 ## Polish
 

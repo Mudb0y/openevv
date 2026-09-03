@@ -97,3 +97,13 @@ second 4 3d327de03e68d241 8fd18773d5cfa68b Test 1 2 3, ABC XYZ, Bindestrich-Woer
 second 5 e3bcf367dbab9886 339f7169aed38898 Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
 second 6 03904986e0c9fe4d c00e3714b207a979 Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
 second 7 dfdf1a9c59b8cc87 c81bc1ac7c5199bd Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.
+ssml 1 c5c5395dad437d78 62240b6643dc2745 <speak version="1.0" xml:lang="de-DE">Guten Tag.</speak>
+ssml 2 c0e91a0416640ee2 aedd1120ac4d52fc <speak version="1.0" xml:lang="de-DE"><prosody rate="slow">Jetzt langsamer.</prosody> Wieder normal.</speak>
+ssml 3 4f716caca45f22b4 10cbbf5988e2f4ea <speak version="1.0" xml:lang="de-DE"><prosody pitch="high" range="x-high" volume="loud">Alle vier zugleich.</prosody></speak>
+ssml 4 05cfa4cfdf787c76 b5195ddf5cd2ebf2 <speak version="1.0" xml:lang="de-DE"><emphasis level="strong">Dieses</emphasis> hier, nicht jenes.</speak>
+ssml 5 9f33e5df5559a7f3 b5fa8617156aea4a <speak version="1.0" xml:lang="de-DE"><voice gender="female">Sie sagte es.</voice> Und er nicht.</speak>
+ssml 6 9a436f2b935dd471 13c250ce9367f69e <speak version="1.0" xml:lang="de-DE">Es kostete <say-as interpret-as="cardinal">1234</say-as> am <say-as interpret-as="ordinal">3</say-as>.</speak>
+ssml 7 4e0a0c33d5484f1d c897e0fca67beace <speak version="1.0" xml:lang="de-DE">Buchstabiere: <say-as interpret-as="letters">abc</say-as>, und rufe <say-as interpret-as="number" format="telephone">5551234</say-as> an.</speak>
+ssml 8 c5427dda15be3560 9eba36de77727904 <speak version="1.0" xml:lang="de-DE">Warte<break time="500ms"/>darauf.<mark name="hier"/> Da.</speak>
+ssml 9 6543385594988b60 70f5a0b74eb3210a <speak version="1.0" xml:lang="de-DE"><sub alias="Weltweites Netz">WWW</sub> und <phoneme ph="h.E.l.oU">hallo</phoneme>.</speak>
+ssml 10 ce0ee0304a8ce40e bf9269de355591d4 <speak version="1.0" xml:lang="de-DE">Die Straße heißt schön, mit a &amp; b &lt; c.</speak>

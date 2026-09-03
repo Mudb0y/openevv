@@ -40,30 +40,30 @@ typedef struct {
     int32_t available;     /* +0x2c             */
 } LanguageId;
 
-void       li_setLanguageBytes(LanguageId *l, uint8_t lang, uint8_t dialect,
+THIS void       li_setLanguageBytes(LanguageId *l, uint8_t lang, uint8_t dialect,
                                uint8_t codeset);
-void       li_setLanguagePacked(LanguageId *l, int32_t packed);
-void       li_setLanguageString(LanguageId *l, const char *s);
-void       li_init(LanguageId *l);
-void       li_initPacked(LanguageId *l, int32_t packed);
-void       li_initBytes(LanguageId *l, uint8_t lang, uint8_t dialect,
+THIS void       li_setLanguagePacked(LanguageId *l, int32_t packed);
+THIS void       li_setLanguageString(LanguageId *l, const char *s);
+THIS void       li_init(LanguageId *l);
+THIS void       li_initPacked(LanguageId *l, int32_t packed);
+THIS void       li_initBytes(LanguageId *l, uint8_t lang, uint8_t dialect,
                         uint8_t codeset);
-void       li_initString(LanguageId *l, const char *s);
-void       li_initNames(LanguageId *l, const char *major, const char *minor);
-int32_t    li_equals(LanguageId *l, LanguageId *other);
-int32_t    li_codeSetEquals(LanguageId *l, LanguageId *other);
-uint8_t    li_getLanguage(const LanguageId *l);
-uint8_t    li_getDialect(const LanguageId *l);
-uint8_t    li_getCodeSet(const LanguageId *l);
-int32_t    li_getPackedInt(const LanguageId *l);
-const char *li_getString(const LanguageId *l);
-const char *li_getMajorString(const LanguageId *l);
-const char *li_getMinorString(const LanguageId *l);
-int32_t    li_getIsLanguageAvailable(const LanguageId *l);
-void       li_setIsLanguageAvailable(LanguageId *l, int32_t yes);
-int32_t    li_compareLanguage(const LanguageId *l, int32_t packed);
-void       li_setString(LanguageId *l);
-void       li_setPackedInt(LanguageId *l);
+THIS void       li_initString(LanguageId *l, const char *s);
+THIS void       li_initNames(LanguageId *l, const char *major, const char *minor);
+THIS int32_t    li_equals(LanguageId *l, LanguageId *other);
+THIS int32_t    li_codeSetEquals(LanguageId *l, LanguageId *other);
+THIS uint8_t    li_getLanguage(const LanguageId *l);
+THIS uint8_t    li_getDialect(const LanguageId *l);
+THIS uint8_t    li_getCodeSet(const LanguageId *l);
+THIS int32_t    li_getPackedInt(const LanguageId *l);
+THIS const char *li_getString(const LanguageId *l);
+THIS const char *li_getMajorString(const LanguageId *l);
+THIS const char *li_getMinorString(const LanguageId *l);
+THIS int32_t    li_getIsLanguageAvailable(const LanguageId *l);
+THIS void       li_setIsLanguageAvailable(LanguageId *l, int32_t yes);
+THIS int32_t    li_compareLanguage(const LanguageId *l, int32_t packed);
+THIS void       li_setString(LanguageId *l);
+THIS void       li_setPackedInt(LanguageId *l);
 
 /* ---- the three stacks ------------------------------------------------ */
 
@@ -89,15 +89,15 @@ typedef struct {
     int32_t *runs;
 } SSMLIntStack;
 
-void     sis_ctor(SSMLIntStack *s);
-void     sis_dtor(SSMLIntStack *s);
-void     sis_delete(SSMLIntStack *s);
-void     sis_push(SSMLIntStack *s, int32_t v);
-int32_t  sis_pop(SSMLIntStack *s);
-int32_t  sis_peek(SSMLIntStack *s);
-int8_t   sis_isValid(SSMLIntStack *s);
-int8_t   sis_isEmpty(SSMLIntStack *s);
-int32_t  sis_stackSize(SSMLIntStack *s);
+THIS void     sis_ctor(SSMLIntStack *s);
+THIS void     sis_dtor(SSMLIntStack *s);
+THIS void     sis_delete(SSMLIntStack *s);
+THIS void     sis_push(SSMLIntStack *s, int32_t v);
+THIS int32_t  sis_pop(SSMLIntStack *s);
+THIS int32_t  sis_peek(SSMLIntStack *s);
+THIS int8_t   sis_isValid(SSMLIntStack *s);
+THIS int8_t   sis_isEmpty(SSMLIntStack *s);
+THIS int32_t  sis_stackSize(SSMLIntStack *s);
 
 /* The string stack keeps a copy of what is pushed and hands ownership of
    it back on a pop; whatever is still on it when it goes is freed. */
@@ -107,16 +107,16 @@ typedef struct {
     char   **items;
 } SSMLStrStack;
 
-void     sss_ctor(SSMLStrStack *s);
-void     sss_dtor(SSMLStrStack *s);
-void     sss_delete(SSMLStrStack *s);
-void     sss_push(SSMLStrStack *s, char *v);
-char    *sss_pop(SSMLStrStack *s);
-char    *sss_peek(SSMLStrStack *s);
-char    *sss_peekAt(SSMLStrStack *s, int32_t which);
-int8_t   sss_isValid(SSMLStrStack *s);
-int8_t   sss_isEmpty(SSMLStrStack *s);
-int32_t  sss_stackSize(SSMLStrStack *s);
+THIS void     sss_ctor(SSMLStrStack *s);
+THIS void     sss_dtor(SSMLStrStack *s);
+THIS void     sss_delete(SSMLStrStack *s);
+THIS void     sss_push(SSMLStrStack *s, char *v);
+THIS char    *sss_pop(SSMLStrStack *s);
+THIS char    *sss_peek(SSMLStrStack *s);
+THIS char    *sss_peekAt(SSMLStrStack *s, int32_t which);
+THIS int8_t   sss_isValid(SSMLStrStack *s);
+THIS int8_t   sss_isEmpty(SSMLStrStack *s);
+THIS int32_t  sss_stackSize(SSMLStrStack *s);
 
 typedef struct {
     int32_t     top;
@@ -126,15 +126,15 @@ typedef struct {
     int32_t    *runs;
 } SSMLLangStack;
 
-void       sls_ctor(SSMLLangStack *s);
-void       sls_dtor(SSMLLangStack *s);
-void       sls_delete(SSMLLangStack *s);
-void       sls_push(SSMLLangStack *s, LanguageId v);
-LanguageId sls_pop(SSMLLangStack *s);
-LanguageId sls_peek(SSMLLangStack *s);
-int8_t     sls_isValid(SSMLLangStack *s);
-int8_t     sls_isEmpty(SSMLLangStack *s);
-int32_t    sls_stackSize(SSMLLangStack *s);
+THIS void       sls_ctor(SSMLLangStack *s);
+THIS void       sls_dtor(SSMLLangStack *s);
+THIS void       sls_delete(SSMLLangStack *s);
+THIS void       sls_push(SSMLLangStack *s, LanguageId v);
+THIS LanguageId sls_pop(SSMLLangStack *s);
+THIS LanguageId sls_peek(SSMLLangStack *s);
+THIS int8_t     sls_isValid(SSMLLangStack *s);
+THIS int8_t     sls_isEmpty(SSMLLangStack *s);
+THIS int32_t    sls_stackSize(SSMLLangStack *s);
 
 /* ---- odds the reader's own files share -------------------------------- */
 

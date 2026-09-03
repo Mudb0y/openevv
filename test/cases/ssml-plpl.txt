@@ -1,0 +1,10 @@
+<speak version="1.0" xml:lang="pl-PL">Dzien dobry.</speak>
+<speak version="1.0" xml:lang="pl-PL"><prosody rate="slow">Teraz wolniej.</prosody> Znowu normalnie.</speak>
+<speak version="1.0" xml:lang="pl-PL"><prosody pitch="high" range="x-high" volume="loud">Wszystkie cztery naraz.</prosody></speak>
+<speak version="1.0" xml:lang="pl-PL"><emphasis level="strong">Ten</emphasis>, nie tamten.</speak>
+<speak version="1.0" xml:lang="pl-PL"><voice gender="female">Ona to powiedziala.</voice> A on nie.</speak>
+<speak version="1.0" xml:lang="pl-PL">Kosztowalo <say-as interpret-as="cardinal">1234</say-as> dnia <say-as interpret-as="ordinal">3</say-as>.</speak>
+<speak version="1.0" xml:lang="pl-PL">Przeliteruj: <say-as interpret-as="letters">abc</say-as>, i zadzwon pod <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+<speak version="1.0" xml:lang="pl-PL">Poczekaj<break time="500ms"/>chwile.<mark name="tutaj"/> Tam.</speak>
+<speak version="1.0" xml:lang="pl-PL"><sub alias="Siec ogolnoswiatowa">WWW</sub> i <phoneme ph="h.E.l.oU">czesc</phoneme>.</speak>
+<speak version="1.0" xml:lang="pl-PL">Zażółć gęślą jaźń, z a &amp; b &lt; c.</speak>

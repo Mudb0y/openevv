@@ -1,0 +1,10 @@
+<speak version="1.0" xml:lang="de-DE">Guten Tag.</speak>
+<speak version="1.0" xml:lang="de-DE"><prosody rate="slow">Jetzt langsamer.</prosody> Wieder normal.</speak>
+<speak version="1.0" xml:lang="de-DE"><prosody pitch="high" range="x-high" volume="loud">Alle vier zugleich.</prosody></speak>
+<speak version="1.0" xml:lang="de-DE"><emphasis level="strong">Dieses</emphasis> hier, nicht jenes.</speak>
+<speak version="1.0" xml:lang="de-DE"><voice gender="female">Sie sagte es.</voice> Und er nicht.</speak>
+<speak version="1.0" xml:lang="de-DE">Es kostete <say-as interpret-as="cardinal">1234</say-as> am <say-as interpret-as="ordinal">3</say-as>.</speak>
+<speak version="1.0" xml:lang="de-DE">Buchstabiere: <say-as interpret-as="letters">abc</say-as>, und rufe <say-as interpret-as="number" format="telephone">5551234</say-as> an.</speak>
+<speak version="1.0" xml:lang="de-DE">Warte<break time="500ms"/>darauf.<mark name="hier"/> Da.</speak>
+<speak version="1.0" xml:lang="de-DE"><sub alias="Weltweites Netz">WWW</sub> und <phoneme ph="h.E.l.oU">hallo</phoneme>.</speak>
+<speak version="1.0" xml:lang="de-DE">Die Straße heißt schön, mit a &amp; b &lt; c.</speak>

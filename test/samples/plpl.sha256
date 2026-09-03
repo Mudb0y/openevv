@@ -99,3 +99,13 @@ second 4 1f7e6c1473dc0d1f d6fb121ac05235ab Test 1 2 3, ABC XYZ, wyrazy-z-lacznik
 second 5 f6379c9797af93b4 6a7919fbd31b0e60 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
 second 6 78a023d1f865b3f9 f6c4da442db24d67 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
 second 7 ea108aeb0d502067 f482be5b2b39c718 Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+ssml 1 dbfb9af0560a281d 5df66aa5a66c4eb5 <speak version="1.0" xml:lang="pl-PL">Dzien dobry.</speak>
+ssml 2 dbfb9af0560a281d 5df66aa5a66c4eb5 <speak version="1.0" xml:lang="pl-PL"><prosody rate="slow">Teraz wolniej.</prosody> Znowu normalnie.</speak>
+ssml 3 dbfb9af0560a281d 5df66aa5a66c4eb5 <speak version="1.0" xml:lang="pl-PL"><prosody pitch="high" range="x-high" volume="loud">Wszystkie cztery naraz.</prosody></speak>
+ssml 4 dbfb9af0560a281d 5df66aa5a66c4eb5 <speak version="1.0" xml:lang="pl-PL"><emphasis level="strong">Ten</emphasis>, nie tamten.</speak>
+ssml 5 dbfb9af0560a281d 5df66aa5a66c4eb5 <speak version="1.0" xml:lang="pl-PL"><voice gender="female">Ona to powiedziala.</voice> A on nie.</speak>
+ssml 6 dbfb9af0560a281d 5df66aa5a66c4eb5 <speak version="1.0" xml:lang="pl-PL">Kosztowalo <say-as interpret-as="cardinal">1234</say-as> dnia <say-as interpret-as="ordinal">3</say-as>.</speak>
+ssml 7 dbfb9af0560a281d 5df66aa5a66c4eb5 <speak version="1.0" xml:lang="pl-PL">Przeliteruj: <say-as interpret-as="letters">abc</say-as>, i zadzwon pod <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+ssml 8 dbfb9af0560a281d 5df66aa5a66c4eb5 <speak version="1.0" xml:lang="pl-PL">Poczekaj<break time="500ms"/>chwile.<mark name="tutaj"/> Tam.</speak>
+ssml 9 dbfb9af0560a281d 5df66aa5a66c4eb5 <speak version="1.0" xml:lang="pl-PL"><sub alias="Siec ogolnoswiatowa">WWW</sub> i <phoneme ph="h.E.l.oU">czesc</phoneme>.</speak>
+ssml 10 dbfb9af0560a281d 5df66aa5a66c4eb5 <speak version="1.0" xml:lang="pl-PL">Zażółć gęślą jaźń, z a &amp; b &lt; c.</speak>

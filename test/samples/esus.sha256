@@ -98,3 +98,13 @@ second 4 f099326f804348bb add48a0ebe16814f Prueba 1 2 3, ABC XYZ, palabras-con-g
 second 5 a22ffaa558fa8ed9 4de8846d6dce1077 Una sola palabra. Y otra mas; con "texto citado" en medio.
 second 6 c9b4e9828b75095b 09fc27bb38b69071 Otorrinolaringologo, desoxirribonucleico, 42% de 3,14159, y el senor Perez-Lopez hijo.
 second 7 21f23640e4bd0c3c a3d69b06486c87ac Dijo: no lo hagas! Luego (entre parentesis) 1/2 + 3/4 = 5/4; vease p. 12.
+ssml 1 28b7971b9e96dbf5 a230e3d2854c3a6d <speak version="1.0" xml:lang="es-MX">Buenos dias.</speak>
+ssml 2 0793af2c3a32ded3 7008738377487250 <speak version="1.0" xml:lang="es-MX"><prosody rate="slow">Ahora mas despacio.</prosody> Otra vez normal.</speak>
+ssml 3 ddc43963b8e51159 e804f6fad91f7e12 <speak version="1.0" xml:lang="es-MX"><prosody pitch="high" range="x-high" volume="loud">Los cuatro a la vez.</prosody></speak>
+ssml 4 f0768a8f3f94508c 023642e73fddc493 <speak version="1.0" xml:lang="es-MX"><emphasis level="strong">Este</emphasis>, no aquel.</speak>
+ssml 5 fa0435a7a0bd1a71 5a32f77ebaf98a56 <speak version="1.0" xml:lang="es-MX"><voice gender="female">Ella lo dijo.</voice> Y el no.</speak>
+ssml 6 835e02936940c07d b1aa5a753423a942 <speak version="1.0" xml:lang="es-MX">Costo <say-as interpret-as="cardinal">1234</say-as> el <say-as interpret-as="ordinal">3</say-as>.</speak>
+ssml 7 0e86a981dacff9b0 2fb75cf03510f7ed <speak version="1.0" xml:lang="es-MX">Deletrea: <say-as interpret-as="letters">abc</say-as>, y llama al <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+ssml 8 be5d5ff96406e7ae e09d53148573813f <speak version="1.0" xml:lang="es-MX">Espera<break time="500ms"/>un momento.<mark name="aqui"/> Alli.</speak>
+ssml 9 b5e7d7262ad4d513 997eb4ddbaa74d13 <speak version="1.0" xml:lang="es-MX"><sub alias="Red informatica mundial">WWW</sub> y <phoneme ph="h.E.l.oU">hola</phoneme>.</speak>
+ssml 10 63cbcb6f3d9acd45 e47ca863ac8ecf56 <speak version="1.0" xml:lang="es-MX">El niño preguntó: ¿qué tal?, con a &amp; b &lt; c.</speak>

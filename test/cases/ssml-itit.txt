@@ -1,0 +1,10 @@
+<speak version="1.0" xml:lang="it-IT">Buongiorno.</speak>
+<speak version="1.0" xml:lang="it-IT"><prosody rate="slow">Adesso piu lentamente.</prosody> Di nuovo normale.</speak>
+<speak version="1.0" xml:lang="it-IT"><prosody pitch="high" range="x-high" volume="loud">Tutti quattro insieme.</prosody></speak>
+<speak version="1.0" xml:lang="it-IT"><emphasis level="strong">Questo</emphasis>, non quello.</speak>
+<speak version="1.0" xml:lang="it-IT"><voice gender="female">Lei lo ha detto.</voice> E lui no.</speak>
+<speak version="1.0" xml:lang="it-IT">Costava <say-as interpret-as="cardinal">1234</say-as> il <say-as interpret-as="ordinal">3</say-as>.</speak>
+<speak version="1.0" xml:lang="it-IT">Compita: <say-as interpret-as="letters">abc</say-as>, e chiama il <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+<speak version="1.0" xml:lang="it-IT">Aspetta<break time="500ms"/>un momento.<mark name="qui"/> La.</speak>
+<speak version="1.0" xml:lang="it-IT"><sub alias="Rete mondiale">WWW</sub> e <phoneme ph="h.E.l.oU">ciao</phoneme>.</speak>
+<speak version="1.0" xml:lang="it-IT">Il caffè e perché più città, con a &amp; b &lt; c.</speak>

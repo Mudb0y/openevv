@@ -1,0 +1,10 @@
+<speak version="1.0" xml:lang="es-ES">Buenos dias.</speak>
+<speak version="1.0" xml:lang="es-ES"><prosody rate="slow">Ahora mas despacio.</prosody> Otra vez normal.</speak>
+<speak version="1.0" xml:lang="es-ES"><prosody pitch="high" range="x-high" volume="loud">Los cuatro a la vez.</prosody></speak>
+<speak version="1.0" xml:lang="es-ES"><emphasis level="strong">Este</emphasis>, no aquel.</speak>
+<speak version="1.0" xml:lang="es-ES"><voice gender="female">Ella lo dijo.</voice> Y el no.</speak>
+<speak version="1.0" xml:lang="es-ES">Costo <say-as interpret-as="cardinal">1234</say-as> el <say-as interpret-as="ordinal">3</say-as>.</speak>
+<speak version="1.0" xml:lang="es-ES">Deletrea: <say-as interpret-as="letters">abc</say-as>, y llama al <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+<speak version="1.0" xml:lang="es-ES">Espera<break time="500ms"/>un momento.<mark name="aqui"/> Alli.</speak>
+<speak version="1.0" xml:lang="es-ES"><sub alias="Red informatica mundial">WWW</sub> y <phoneme ph="h.E.l.oU">hola</phoneme>.</speak>
+<speak version="1.0" xml:lang="es-ES">El niño preguntó: ¿qué tal?, con a &amp; b &lt; c.</speak>

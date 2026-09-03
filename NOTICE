@@ -10,6 +10,22 @@ the documents in `docs` are our own work: C written against IBM's objects and
 checked against them, line by line, by the audio coming out. That is what the
 MIT licence in LICENSE covers.
 
+Two files in `src` are the exception, and they are data rather than code.
+`src/klatt_tables.c` is the synthesiser's own tables, lifted out of `clsyn.obj`
+by `tools/gen-tables.py`, and `src/eci_xmltok_tables.c` is the eight tables the
+XML scanner is, lifted out of `xmltok.obj` by `tools/lift-xmltok.py`. Both are
+IBM's on the terms below, exactly as everything under `lang` is. The head of
+each says which object it came from, and either can be produced again from
+IBM's own file rather than taken on trust. Nothing else in `src` is lifted:
+every other file there is C written by hand.
+
+The XML scanner is worth a sentence on why. It is flex output, and a rule set
+that has been compiled into a state machine cannot be recovered from the
+machine -- the equivalence classes, the base and default rows and the accepting
+lists are the only surviving statement of what the forty-eight rules were. So
+lifting them was the only faithful course; writing a parser that behaved
+roughly the same would have been ours and would have been a different scanner.
+
 `rom` is where the split between the two halves matters most, and it is why
 that directory exists at all. A language written in another script needs a
 romanizer, which in IBM's SDK is a module of code beside the language's data.

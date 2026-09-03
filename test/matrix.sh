@@ -62,7 +62,7 @@ language_of() {
     esac
 }
 
-# The seven comparisons test/suite.sh makes, said here in the same order and
+# The eight comparisons test/suite.sh makes, said here in the same order and
 # with the same mode letters so that the two harnesses ask the same questions
 # of the engine. That is deliberate and it is what makes the baselines worth
 # anything: every one of them is a number the suite had just agreed with, and
@@ -81,11 +81,20 @@ language_of() {
 # engine does it too, to the same samples -- so it is a thing that can be
 # recorded, and nothing else in the tree records it. A change that quietly
 # reset the state between utterances would move nothing else here.
-CATEGORIES="plain utf8 anno anno3 realworld dict second"
+#
+# `ssml' is the eighth and the newest. Its case is a document rather than a
+# sentence: the probe registers the SSML filter, asks it what the document
+# turns into, and speaks that, so the recorded answer covers the reader and
+# the engine together. Polish is in it like the rest, and Polish is the
+# reason it is worth having -- there is no Polish oracle, so a recorded gate
+# is the only thing besides an ear that can tell a change to the reader from
+# an accident there.
+CATEGORIES="plain utf8 anno anno3 realworld dict second ssml"
 file_of() {
     case $1 in
     plain|dict|second) echo "plain" ;;
     utf8)              echo "utf8" ;;
+    ssml)              echo "ssml" ;;
     *)                 echo "anno" ;;
     esac
 }
@@ -96,6 +105,7 @@ mode_of() {
     realworld)       echo "ar" ;;
     dict)            echo "ard" ;;
     second)          echo "t" ;;
+    ssml)            echo "as" ;;
     esac
 }
 

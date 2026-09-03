@@ -204,6 +204,11 @@ const void *vtbl_ibmecienvironment[2] = {
     (void *)env_getParam
 };
 
+/* Two the manager asks itself, out of order. */
+THIS int32_t fm_isActiveById(FilterManager *self, uint32_t id);
+static THIS int8_t fm_removeElement(FilterManager *self,
+                                    FilterRegistryElement *which);
+
 /* ---- the registry ---------------------------------------------------- */
 
 /* A record at the end of the chain, or the first one if there is none.

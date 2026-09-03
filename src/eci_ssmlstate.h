@@ -46,69 +46,69 @@ typedef struct {
     CVoicesInfo   *voices;
 } SSMLState;
 
-void    ss_ctor(SSMLState *s);
-void    ss_dtor(SSMLState *s);
-void    ss_delete(SSMLState *s);
+THIS void    ss_ctor(SSMLState *s);
+THIS void    ss_dtor(SSMLState *s);
+THIS void    ss_delete(SSMLState *s);
 
-void    ss_setErrorSyntax(SSMLState *s);
-int8_t  ss_getErrorSyntax(SSMLState *s);
-void    ss_setErrorPhoneme(SSMLState *s);
-int8_t  ss_getErrorPhoneme(SSMLState *s);
-void    ss_setErrorMalloc(SSMLState *s);
-int8_t  ss_getErrorMalloc(SSMLState *s);
-int8_t  ss_getErrorSet(SSMLState *s);
+THIS void    ss_setErrorSyntax(SSMLState *s);
+THIS int8_t  ss_getErrorSyntax(SSMLState *s);
+THIS void    ss_setErrorPhoneme(SSMLState *s);
+THIS int8_t  ss_getErrorPhoneme(SSMLState *s);
+THIS void    ss_setErrorMalloc(SSMLState *s);
+THIS int8_t  ss_getErrorMalloc(SSMLState *s);
+THIS int8_t  ss_getErrorSet(SSMLState *s);
 
-void    ss_setBlockAddText(SSMLState *s);
-void    ss_relBlockAddText(SSMLState *s);
-int8_t  ss_canAddTextBlock(SSMLState *s);
-int8_t  ss_canAddText(SSMLState *s);
-void    ss_setSpellOut(SSMLState *s);
-void    ss_relSpellOut(SSMLState *s);
-int8_t  ss_isSpellOut(SSMLState *s);
-void    ss_setEndStruct(SSMLState *s);
-void    ss_relEndStruct(SSMLState *s);
-int8_t  ss_getEndStruct(SSMLState *s);
-void    ss_setSpellAddSpace(SSMLState *s, int8_t yes);
-int8_t  ss_isSpellAddSpace(SSMLState *s);
+THIS void    ss_setBlockAddText(SSMLState *s);
+THIS void    ss_relBlockAddText(SSMLState *s);
+THIS int8_t  ss_canAddTextBlock(SSMLState *s);
+THIS int8_t  ss_canAddText(SSMLState *s);
+THIS void    ss_setSpellOut(SSMLState *s);
+THIS void    ss_relSpellOut(SSMLState *s);
+THIS int8_t  ss_isSpellOut(SSMLState *s);
+THIS void    ss_setEndStruct(SSMLState *s);
+THIS void    ss_relEndStruct(SSMLState *s);
+THIS int8_t  ss_getEndStruct(SSMLState *s);
+THIS void    ss_setSpellAddSpace(SSMLState *s, int8_t yes);
+THIS int8_t  ss_isSpellAddSpace(SSMLState *s);
 
-int32_t ss_addToFilteredText(SSMLState *s, const char *text, int32_t length);
-int32_t ss_getFilteredTextLength(SSMLState *s);
-char   *ss_getFilteredText(SSMLState *s);
-void    ss_resetFilterText(SSMLState *s);
-int8_t  ss_resetFilterState(SSMLState *s);
+THIS int32_t ss_addToFilteredText(SSMLState *s, const char *text, int32_t length);
+THIS int32_t ss_getFilteredTextLength(SSMLState *s);
+THIS char   *ss_getFilteredText(SSMLState *s);
+THIS void    ss_resetFilterText(SSMLState *s);
+THIS int8_t  ss_resetFilterState(SSMLState *s);
 
-char   *ss_getTmpBuffer(SSMLState *s);
-int32_t ss_getTmpBufferSize(SSMLState *s);
-int32_t ss_reallocTmpBuffer(SSMLState *s, int32_t want);
+THIS char   *ss_getTmpBuffer(SSMLState *s);
+THIS int32_t ss_getTmpBufferSize(SSMLState *s);
+THIS int32_t ss_reallocTmpBuffer(SSMLState *s, int32_t want);
 
-int8_t  ss_setFilterEnv(SSMLState *s);
-int8_t  ss_setFilterEnvValues(SSMLState *s, int32_t voice, int32_t lang,
+THIS int8_t  ss_setFilterEnv(SSMLState *s);
+THIS int8_t  ss_setFilterEnvValues(SSMLState *s, int32_t voice, int32_t lang,
                               int32_t volume);
-void    ss_setEnvironment(SSMLState *s, void *env);
-void    ss_setEnvironmentVoice(SSMLState *s, int32_t voice);
-void    ss_setEnvironmentVolume(SSMLState *s, int32_t volume);
-void    ss_setEnvironmentLang(SSMLState *s, int32_t packed);
+THIS void    ss_setEnvironment(SSMLState *s, void *env);
+THIS void    ss_setEnvironmentVoice(SSMLState *s, int32_t voice);
+THIS void    ss_setEnvironmentVolume(SSMLState *s, int32_t volume);
+THIS void    ss_setEnvironmentLang(SSMLState *s, int32_t packed);
 
-int32_t ss_getVoiceInfo(SSMLState *s, VOICE_INFO *out, int32_t which);
+THIS int32_t ss_getVoiceInfo(SSMLState *s, VOICE_INFO *out, int32_t which);
 
 /* The eight stacks. Each is push, pop, peek, valid, empty and size, and
    the string ones also answer by position from the bottom. */
-#define SS_INT_STACK(name)                                                \
-    void    ss_push##name(SSMLState *s, int32_t v);                       \
-    int32_t ss_pop##name(SSMLState *s);                                   \
-    int32_t ss_peek##name(SSMLState *s);                                  \
-    int8_t  ss_valid##name(SSMLState *s);                                 \
-    int8_t  ss_isEmpty##name(SSMLState *s);                               \
-    int32_t ss_size##name(SSMLState *s);
+#define SS_INT_STACK(name)                                           \
+    THIS void    ss_push##name(SSMLState *s, int32_t v);             \
+    THIS int32_t ss_pop##name(SSMLState *s);                         \
+    THIS int32_t ss_peek##name(SSMLState *s);                        \
+    THIS int8_t  ss_valid##name(SSMLState *s);                       \
+    THIS int8_t  ss_isEmpty##name(SSMLState *s);                     \
+    THIS int32_t ss_size##name(SSMLState *s);
 
-#define SS_STR_STACK(name)                                                \
-    void    ss_push##name(SSMLState *s, char *v);                         \
-    char   *ss_pop##name(SSMLState *s);                                   \
-    char   *ss_peek##name(SSMLState *s);                                  \
-    char   *ss_peek##name##At(SSMLState *s, int32_t which);               \
-    int8_t  ss_valid##name(SSMLState *s);                                 \
-    int8_t  ss_isEmpty##name(SSMLState *s);                               \
-    int32_t ss_size##name(SSMLState *s);
+#define SS_STR_STACK(name)                                           \
+    THIS void    ss_push##name(SSMLState *s, char *v);               \
+    THIS char   *ss_pop##name(SSMLState *s);                         \
+    THIS char   *ss_peek##name(SSMLState *s);                        \
+    THIS char   *ss_peek##name##At(SSMLState *s, int32_t which);     \
+    THIS int8_t  ss_valid##name(SSMLState *s);                       \
+    THIS int8_t  ss_isEmpty##name(SSMLState *s);                     \
+    THIS int32_t ss_size##name(SSMLState *s);
 
 SS_INT_STACK(VoiceNumber)
 SS_INT_STACK(VoiceVolume)
@@ -118,17 +118,17 @@ SS_STR_STACK(VoiceSpeed)
 SS_STR_STACK(Emphasis)
 SS_STR_STACK(Audio)
 
-void       ss_pushLang(SSMLState *s, LanguageId v);
-LanguageId ss_popLang(SSMLState *s);
-LanguageId ss_peekLang(SSMLState *s);
-int8_t     ss_validLang(SSMLState *s);
-int8_t     ss_isEmptyLang(SSMLState *s);
+THIS void       ss_pushLang(SSMLState *s, LanguageId v);
+THIS LanguageId ss_popLang(SSMLState *s);
+THIS LanguageId ss_peekLang(SSMLState *s);
+THIS int8_t     ss_validLang(SSMLState *s);
+THIS int8_t     ss_isEmptyLang(SSMLState *s);
 
 /* The five say-as counters, in src/eci_ssmlsayas.c. */
-#define SS_SAYAS(name)                                                    \
-    void   ss_set##name(SSMLState *s);                                    \
-    void   ss_rel##name(SSMLState *s);                                    \
-    int8_t ss_is##name(SSMLState *s);
+#define SS_SAYAS(name)                                               \
+    THIS void   ss_set##name(SSMLState *s);                          \
+    THIS void   ss_rel##name(SSMLState *s);                          \
+    THIS int8_t ss_is##name(SSMLState *s);
 
 SS_SAYAS(SayAsDate)
 SS_SAYAS(SayAsNumber)

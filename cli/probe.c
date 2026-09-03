@@ -44,6 +44,13 @@ enum ECICallbackReturn {
 OldInst *STDCALL eo_new(void);
 OldInst *STDCALL eo_newEx(int32_t language);
 int      STDCALL es_delete(OldInst *h);
+int32_t  STDCALL es_registerFilter(OldInst *h, uint32_t id, void *entry,
+                                   void *attrib, int32_t autoload);
+void    *STDCALL es_newFilter(OldInst *h, int32_t id, int32_t global);
+int32_t  STDCALL es_activateFilter(OldInst *h, void *filter);
+int32_t  STDCALL es_getFilteredText(OldInst *h, void *filter, const void *in,
+                                    const void **out);
+extern STDCALL int ssmlFilterGetObject(uint32_t which, void **out);
 int      STDCALL et_addText(OldInst *h, const char *text);
 int      STDCALL et_synthesize(OldInst *h);
 int      STDCALL et_insertIndex(OldInst *h, int32_t n);
@@ -69,6 +76,14 @@ void evv_port_start(void);
 void evv_port_finish(void);
 
 #define FRAME 2048
+
+/* What a caller registering a filter gets back: the filter's own name and
+   the language it answers for, both written by the manager rather than by
+   the caller. */
+typedef struct ECIFilterAttrib {
+    char    eciFilterName[80];
+    int32_t language;
+} ECIFilterAttrib;
 
 static short  frame[FRAME];
 static short *samples;
@@ -313,6 +328,44 @@ int main(int argc, char **argv)
         printf("speak: loadDict %d\n", ed_loadDict(h, dict, 0, "x"));
         printf("speak: setDict none %d\n", ed_setDict(h, NULL));
         printf("speak: deleteDict %d\n", ed_deleteDict(h, dict));
+    }
+
+    /* An s reads the text as SSML before speaking it, which is the only way
+       to reach the reader from here: the engine carries the filter and never
+       loads it by itself, so this registers it the way a caller would.
+       Combine it with an a, since what the reader produces is annotations
+       and the engine only reads those with the annotation input type on. */
+    if (argc > 3 && strchr(argv[3], 's')) {
+        ECIFilterAttrib attrib;
+        void *entry = (void *)ssmlFilterGetObject;
+        void *filter;
+
+        memset(&attrib, 0, sizeof attrib);
+        printf("speak: registerFilter %d [%s] language 0x%x\n",
+               (int)es_registerFilter(h, 0, &entry, &attrib, 1),
+               attrib.eciFilterName, (unsigned)attrib.language);
+
+        filter = es_newFilter(h, 0, 1);
+        printf("speak: newFilter %s\n", filter ? "made" : "refused");
+        if (filter != NULL) {
+            const void *filtered = NULL;
+            char *writable = malloc(strlen(text) + 1);
+
+            printf("speak: activateFilter %d\n",
+                   (int)es_activateFilter(h, filter));
+            /* IBM's reader writes into the text it is given -- see
+               src/eci_mbconvert.c -- so it gets a copy it may write on. */
+            if (writable != NULL) {
+                strcpy(writable, text);
+                printf("speak: getFilteredText %d\n",
+                       (int)es_getFilteredText(h, filter, writable,
+                                               &filtered));
+            }
+            if (filtered != NULL) {
+                text = (const char *)filtered;
+                printf("speak: filtered [%s]\n", text);
+            }
+        }
     }
 
     if (!et_insertIndex(h, 4242))

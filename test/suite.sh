@@ -37,6 +37,10 @@ esac
 
 TEXT='^speak: (voice )?param|^speak: index'
 DICT='^speak: (voice )?param|^speak: index|^speak: (new|set|get|load|delete)Dict'
+# What the SSML reader answered, which is the whole point of that category:
+# the annotations it made are text, so they are compared as text rather than
+# only through the samples they turn into.
+SSML='^speak: (registerFilter|newFilter|activateFilter|getFilteredText|filtered)'
 
 run() {
     local name=$1; shift
@@ -46,7 +50,7 @@ run() {
 }
 
 bad=0
-want=${*:-plain utf8 anno anno3 realworld dict second}
+want=${*:-plain utf8 anno anno3 realworld dict second ssml}
 
 for one in $want; do
     case $one in
@@ -64,6 +68,12 @@ for one in $want; do
     # holds both pairs against each other. This is what blesses the `second'
     # category of test/matrix.sh.
     second)    run second    "$cases/plain$suf.txt" t    ""      || bad=1 ;;
+    # A document rather than a sentence, read as SSML and then spoken. Both
+    # binaries register the filter that is in their own objects, so what is
+    # compared is two readers as well as two engines: the annotations each
+    # made, and the samples those turned into. This is what blesses the
+    # `ssml' category of test/matrix.sh.
+    ssml)      run ssml      "$cases/ssml$suf.txt"  as   "$SSML" || bad=1 ;;
     *) echo "suite: no such comparison: $one" >&2; bad=1 ;;
     esac
 done

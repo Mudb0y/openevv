@@ -1,0 +1,10 @@
+<speak version="1.0" xml:lang="fr-CA">Bonjour.</speak>
+<speak version="1.0" xml:lang="fr-CA"><prosody rate="slow">Plus lentement.</prosody> De nouveau normal.</speak>
+<speak version="1.0" xml:lang="fr-CA"><prosody pitch="high" range="x-high" volume="loud">Les quatre a la fois.</prosody></speak>
+<speak version="1.0" xml:lang="fr-CA"><emphasis level="strong">Celui-ci</emphasis>, pas celui-la.</speak>
+<speak version="1.0" xml:lang="fr-CA"><voice gender="female">Elle l'a dit.</voice> Et lui non.</speak>
+<speak version="1.0" xml:lang="fr-CA">Cela coutait <say-as interpret-as="cardinal">1234</say-as> le <say-as interpret-as="ordinal">3</say-as>.</speak>
+<speak version="1.0" xml:lang="fr-CA">Epelez: <say-as interpret-as="letters">abc</say-as>, et appelez <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+<speak version="1.0" xml:lang="fr-CA">Attends<break time="500ms"/>un peu.<mark name="ici"/> La.</speak>
+<speak version="1.0" xml:lang="fr-CA"><sub alias="Toile mondiale">WWW</sub> et <phoneme ph="h.E.l.oU">bonjour</phoneme>.</speak>
+<speak version="1.0" xml:lang="fr-CA">Le café près de la façade naïve, avec a &amp; b &lt; c.</speak>

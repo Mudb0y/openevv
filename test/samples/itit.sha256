@@ -98,3 +98,13 @@ second 4 d9361aa21df01563 df339167aae1c3d4 Prova 1 2 3, ABC XYZ, parole-con-trat
 second 5 3215b153accf8545 529169d22b9d98e0 Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
 second 6 e18c965a04d533eb 65577c6ee527ffbd Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
 second 7 50ed06bf37cb3597 8427e44d0f0f56d4 Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
+ssml 1 5ef49c7aef96ecd0 2c98046a8b10b044 <speak version="1.0" xml:lang="it-IT">Buongiorno.</speak>
+ssml 2 d3abbd182a011f31 916b3630b0072a4b <speak version="1.0" xml:lang="it-IT"><prosody rate="slow">Adesso piu lentamente.</prosody> Di nuovo normale.</speak>
+ssml 3 dfd2f700d8a88252 a420bfcd7dc3aed8 <speak version="1.0" xml:lang="it-IT"><prosody pitch="high" range="x-high" volume="loud">Tutti quattro insieme.</prosody></speak>
+ssml 4 bd76e5dcbaf0aff0 2a8ceb07e2d56e42 <speak version="1.0" xml:lang="it-IT"><emphasis level="strong">Questo</emphasis>, non quello.</speak>
+ssml 5 da09c11dc0936362 540baedb27121027 <speak version="1.0" xml:lang="it-IT"><voice gender="female">Lei lo ha detto.</voice> E lui no.</speak>
+ssml 6 60a56c0a81fa2815 dc0aaa3669fb018e <speak version="1.0" xml:lang="it-IT">Costava <say-as interpret-as="cardinal">1234</say-as> il <say-as interpret-as="ordinal">3</say-as>.</speak>
+ssml 7 1554831edbdb5f59 557d451edc7e1790 <speak version="1.0" xml:lang="it-IT">Compita: <say-as interpret-as="letters">abc</say-as>, e chiama il <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+ssml 8 c07e389b0e4e4962 24d49ba8e8068fb3 <speak version="1.0" xml:lang="it-IT">Aspetta<break time="500ms"/>un momento.<mark name="qui"/> La.</speak>
+ssml 9 6df310ed9a6053f1 fb4ee33a8d0542a7 <speak version="1.0" xml:lang="it-IT"><sub alias="Rete mondiale">WWW</sub> e <phoneme ph="h.E.l.oU">ciao</phoneme>.</speak>
+ssml 10 ebd80f3f9895d09d 207aea0129d33741 <speak version="1.0" xml:lang="it-IT">Il caffè e perché più città, con a &amp; b &lt; c.</speak>

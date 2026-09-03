@@ -38,12 +38,12 @@ typedef struct {
     VOICE_INFO *voices[CVI_VOICES];
 } CVoicesInfo;
 
-void    cvi_ctor(CVoicesInfo *self);
-void    cvi_dtor(CVoicesInfo *self);
-void    cvi_delete(CVoicesInfo *self);
-void    cvi_initVoicesInfo(CVoicesInfo *self);
-int32_t cvi_getVoiceInfo(CVoicesInfo *self, VOICE_INFO *info, int32_t mask);
-void    cvi_getScansoftVoices(CVoicesInfo *self);
-int32_t cvi_isSsftVoicesAvailables(CVoicesInfo *self);
+THIS void    cvi_ctor(CVoicesInfo *self);
+THIS void    cvi_dtor(CVoicesInfo *self);
+THIS void    cvi_delete(CVoicesInfo *self);
+THIS void    cvi_initVoicesInfo(CVoicesInfo *self);
+THIS int32_t cvi_getVoiceInfo(CVoicesInfo *self, VOICE_INFO *info, int32_t mask);
+THIS void    cvi_getScansoftVoices(CVoicesInfo *self);
+THIS int32_t cvi_isSsftVoicesAvailables(CVoicesInfo *self);
 
 #endif

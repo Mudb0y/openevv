@@ -98,3 +98,13 @@ second 4 c54112457aca5c03 95a71ea8121fa0be Essai 1 2 3, ABC XYZ, mots-avec-trait
 second 5 3691d536c022f1e2 a03c842043e75bc8 Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
 second 6 4727b08f26107be1 4128678e908d7849 Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
 second 7 3025a979786cb4f5 ef9802180bb3280c Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+ssml 1 079150332f17ed4b b1f7e8c8a9204538 <speak version="1.0" xml:lang="fr-CA">Bonjour.</speak>
+ssml 2 194009e4e618541f 93be54ce0802a524 <speak version="1.0" xml:lang="fr-CA"><prosody rate="slow">Plus lentement.</prosody> De nouveau normal.</speak>
+ssml 3 5dc180ff281e641b 04fef6c9a6760d30 <speak version="1.0" xml:lang="fr-CA"><prosody pitch="high" range="x-high" volume="loud">Les quatre a la fois.</prosody></speak>
+ssml 4 1cb724c451fd9758 cc413ae2fae6c395 <speak version="1.0" xml:lang="fr-CA"><emphasis level="strong">Celui-ci</emphasis>, pas celui-la.</speak>
+ssml 5 7947b2ed50ac431d 968bb1c8d6080b41 <speak version="1.0" xml:lang="fr-CA"><voice gender="female">Elle l'a dit.</voice> Et lui non.</speak>
+ssml 6 2df1912460ad380f d3fce483de6fb317 <speak version="1.0" xml:lang="fr-CA">Cela coutait <say-as interpret-as="cardinal">1234</say-as> le <say-as interpret-as="ordinal">3</say-as>.</speak>
+ssml 7 c374339f268fb7e8 1b601745993634f5 <speak version="1.0" xml:lang="fr-CA">Epelez: <say-as interpret-as="letters">abc</say-as>, et appelez <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+ssml 8 01d1ee7a9ecaed24 57fe1ac86ab5af3a <speak version="1.0" xml:lang="fr-CA">Attends<break time="500ms"/>un peu.<mark name="ici"/> La.</speak>
+ssml 9 da444258b4772c64 a3a951ec4bca329a <speak version="1.0" xml:lang="fr-CA"><sub alias="Toile mondiale">WWW</sub> et <phoneme ph="h.E.l.oU">bonjour</phoneme>.</speak>
+ssml 10 b2fe20083fa827e1 83a69c6e1d978408 <speak version="1.0" xml:lang="fr-CA">Le café près de la façade naïve, avec a &amp; b &lt; c.</speak>
