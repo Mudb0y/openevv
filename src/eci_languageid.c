@@ -207,6 +207,14 @@ THIS void li_setString(LanguageId *l)
         strcpy(l->major, "Da");
         strcpy(l->minor, "DK");
         break;
+    /* And Polish, which is not IBM's: its own table stops at fifteen, and
+       family seventeen -- which Polish is in this tree -- had no name at
+       all, so a Polish document could not be named. See the head of
+       `mapToIBMlang' in src/eci_ssmlmap.c for the whole of it. */
+    case 17:
+        strcpy(l->major, "Pl");
+        strcpy(l->minor, "PL");
+        break;
     default:
         strcpy(l->major, "");
         strcpy(l->minor, "");
@@ -349,6 +357,8 @@ THIS void li_initNames(LanguageId *l, const char *major, const char *minor)
         packed = 0xf0000;
     else if (strcmp(major, "Ct") == 0)
         packed = 0xb0000;
+    else if (strcmp(major, "Pl") == 0)
+        packed = 0x110000;
 
     if (packed == 0x10000
         && (strcmp(minor, "GB") == 0 || strcmp(minor, "UK") == 0

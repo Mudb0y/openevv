@@ -66,7 +66,9 @@ Three harnesses came out of this and all three say identical: `test/ipa.sh` over
 
 Two things are IBM's own routing rather than the specification's and are kept. `interpret-as="number"` with no format reads as an ordinal, so 123 comes out as a place rather than a count. And a Canadian French IPA pronunciation goes through the German converter, because the language table in `win_ipatospr.obj` puts 0x30001 where 0x40000 belongs.
 
-One thing is a deliberate divergence and is in the list in `docs/status.md`. IBM's reader ends the digits of a numeric character reference by writing a NUL over the semicolon that ends them -- in the caller's own string, not in a copy -- so `&#65;` in a literal page-faults. Ours copies the digits out instead.
+Two things are deliberate divergences and both are in the list in `docs/status.md`. IBM's reader ends the digits of a numeric character reference by writing a NUL over the semicolon that ends them -- in the caller's own string, not in a copy -- so `&#65;` in a literal page-faults. Ours copies the digits out instead.
+
+And Polish is in the reader's language table, where IBM's has Thai. Family seventeen is Polish in this tree, and it was Thai in `ssmlmap.obj` and nothing at all in `win_languageid.obj`, whose own table stops at fifteen -- so a Polish document became a number nothing could name and every element fell through. Polish is on the prosody, rate and emphasis lists as well, and deliberately not on the say-as or IPA ones, because a say-as annotation is read by the language's own rules and Polish's are still Italian's.
 
 ## The public calls with no wrapper
 

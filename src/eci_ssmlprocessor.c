@@ -71,10 +71,20 @@ static int8_t inLanguages(LanguageId *id, const int32_t *list, size_t n)
     return 0;
 }
 
-/* Pitch, range and volume. */
+/* Pitch, range and volume. Polish is on the end of this list and of the two
+   below and is not IBM's: what these three turn into is annotations, and an
+   annotation means the same thing in every language the engine has. What
+   Polish is deliberately not on is `langSupportSayAs' and
+   `langSupportIPA' below, and for the opposite reason -- a say-as
+   annotation is read by the language's own rules and Polish's are still
+   Italian's, which IBM did not list either, and there is no Polish IPA
+   converter to route to. Adding it to those two would produce a confident
+   wrong reading rather than nothing. */
 int8_t langSupportProsody(LanguageId id)
 {
-    static const int32_t LANGS[] = { 0x10000, 0x10001, 0x30000, 0x40000 };
+    static const int32_t LANGS[] = {
+        0x10000, 0x10001, 0x30000, 0x40000, 0x110000
+    };
 
     return inLanguages(&id, LANGS, sizeof LANGS / sizeof LANGS[0]);
 }
@@ -83,17 +93,19 @@ int8_t langSupportProsody(LanguageId id)
 int8_t langSupportProsodyRate(LanguageId id)
 {
     static const int32_t LANGS[] = {
-        0x10000, 0x10001, 0x30000, 0x40000, 0x80000
+        0x10000, 0x10001, 0x30000, 0x40000, 0x80000, 0x110000
     };
 
     return inLanguages(&id, LANGS, sizeof LANGS / sizeof LANGS[0]);
 }
 
+/* Emphasis is a pause and a slowing, which every language can do; IBM's
+   list is every language it shipped, so Polish belongs on it. */
 int8_t langSupportEmphasis(LanguageId id)
 {
     static const int32_t LANGS[] = {
         0x10000, 0x10001, 0x30000, 0x40000, 0x20000, 0x50000, 0x70000,
-        0x90000, 0x20001, 0x30001
+        0x90000, 0x20001, 0x30001, 0x110000
     };
 
     return inLanguages(&id, LANGS, sizeof LANGS / sizeof LANGS[0]);

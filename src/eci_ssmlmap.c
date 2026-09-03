@@ -848,6 +848,21 @@ int32_t mapToIBMvxmldate(const char *value, char *out, int32_t length)
    anything where the language has more than one dialect, and Hong Kong
    Chinese comes out as Cantonese, which is the same crossing as in
    src/eci_languageid.c. */
+/* A document's `xml:lang' as a number.
+ *
+ * Fifteen languages, and the fifteenth is the one thing here that is not
+ * IBM's. Its own entry at family seventeen is Thai, which it never shipped
+ * a name for, a voice for or a rule of -- `LanguageId' in
+ * src/eci_languageid.c stops at fifteen and has no seventeen at all, so a
+ * Thai document became a number nothing else in the engine could say
+ * anything about. Polish is family seventeen in this tree and is real, so
+ * the slot is Polish's. That is a deliberate divergence and
+ * `docs/status.md' lists it; a Thai document now reads as Polish, and
+ * there is no Thai in this SDK for that to cost anything.
+ *
+ * The country only decides the dialect where the language has more than
+ * one, and which countries mean British English is the original's own
+ * list. */
 int32_t mapToIBMlang(const char *value, int32_t length)
 {
     static const struct { const char *name; int32_t packed; } MAJOR[] = {
@@ -855,7 +870,7 @@ int32_t mapToIBMlang(const char *value, int32_t length)
         { "DE", 0x40000 }, { "IT", 0x50000 }, { "ZH", 0x60000 },
         { "PT", 0x70000 }, { "JA", 0x80000 }, { "FI", 0x90000 },
         { "KO", 0xa0000 }, { "NL", 0xc0000 }, { "NO", 0xd0000 },
-        { "SV", 0xe0000 }, { "DA", 0xf0000 }, { "TH", 0x110000 }
+        { "SV", 0xe0000 }, { "DA", 0xf0000 }, { "PL", 0x110000 }
     };
     static const char *BRITISH[] = {
         "GB", "UK", "VG", "IO", "IE", "ZA", "IN", "AU", "CA"
