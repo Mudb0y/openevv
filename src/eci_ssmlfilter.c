@@ -163,6 +163,19 @@ THIS int32_t ssf_getFilterVersion(SSMLFilter *self, int32_t *out)
     return 1;
 }
 
+/* And the same thing again as a plain C entry, which is what a caller with
+   no filter object in hand asks: IBM's filter shipped as a DLL and this was
+   an export of it, so a program could read the version without loading
+   anything. It answers one, as the method does. */
+int STDCALL getFilterVersion(int32_t *out)
+{
+    int32_t i;
+
+    for (i = 0; i < FILTER_VERSION_LONGS; i++)
+        out[i] = g_aiFilterVersion[i];
+    return 1;
+}
+
 /* No filter has to be loaded before this one. */
 THIS char **ssf_getFilterDependencies(SSMLFilter *self)
 {
@@ -332,5 +345,6 @@ ALIAS("?getFilterDependencies@SSMLFilter@@UAEPAPADXZ",
       "ssf_getFilterDependencies");
 ALIAS("_ssmlFilterGetObject", "ssml_getFilterObject");
 ALIAS("_isSSMLFilterUsable", "isSSMLFilterUsable");
+ALIAS_N("_getFilterVersion@4", "getFilterVersion", 4);
 ALIAS("_g_aiFilterVersion", "g_aiFilterVersion");
 ALIAS("?lexerMutex@SSMLFilter@@1VMutex@@A", "ssml_lexerMutex");
