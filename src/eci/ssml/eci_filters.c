@@ -302,17 +302,17 @@ int32_t enableFilter(void *p, int32_t lang, const char *text, char **out)
 
 /* The eight published calls about filters. Six of them are one line over
    the newer interface underneath; two are not.
- *
- * Registering and unregistering go straight to the manager rather than
- * through that interface, because there is nothing in the newer one to go
- * through: the pair was never given a `2' form. And making one waits for
- * the engine to fall quiet first, since loading a filter while a sentence
- * is being spoken would change the text underneath it.
- *
- * `eciActivateFilter' answers a refusal over a filter it has just turned
- * on, which is the original's: the manager's answer is always the
- * refusal, and anything but nought is reported as one. See
- * `fm_activateById' in src/eci/ssml/eci_filtermanager.c. */
+
+   Registering and unregistering go straight to the manager rather than
+   through that interface, because there is nothing in the newer one to go
+   through: the pair was never given a `2' form. And making one waits for
+   the engine to fall quiet first, since loading a filter while a sentence
+   is being spoken would change the text underneath it.
+
+   `eciActivateFilter' answers a refusal over a filter it has just turned
+   on, which is the original's: the manager's answer is always the
+   refusal, and anything but nought is reported as one. See
+   `fm_activateById' in src/eci/ssml/eci_filtermanager.c. */
 
 extern int ev_sendParameters(OldInst *h);
 extern STDCALL int32_t api_check_synth(void *h2)
@@ -415,10 +415,10 @@ int32_t STDCALL es_deleteFilter(OldInst *h, void *filter)
 
 /* One is a filter's handle rather than a number, so a caller keeps what
    comes back. A language of one means whatever is in force.
- *
- * Everything queued is spoken out first. A filter loaded halfway through a
- * sentence would be asked to filter the rest of it and not the start,
- * so the call refuses while the engine is speaking and only then waits. */
+
+   Everything queued is spoken out first. A filter loaded halfway through a
+   sentence would be asked to filter the rest of it and not the start,
+   so the call refuses while the engine is speaking and only then waits. */
 void *STDCALL es_newFilter(OldInst *h, int32_t id, int32_t language)
 {
     void   *filter = 0;
@@ -453,10 +453,10 @@ void *STDCALL es_newFilter(OldInst *h, int32_t id, int32_t language)
    UTF-16, so each is converted first and the copy freed afterwards --
    except where the converter handed back what it was given, which is how
    it says a string was already in the language's own code set.
- *
- * What comes back is nought whether the filter accepted them or not: the
- * answer is worked out, stored, and then thrown away for a nought. That is
- * the original's. */
+
+   What comes back is nought whether the filter accepted them or not: the
+   answer is worked out, stored, and then thrown away for a nought. That is
+   the original's. */
 int32_t STDCALL es_updateFilter(OldInst *h, void *filter, const char *a,
                                 const char *b)
 {

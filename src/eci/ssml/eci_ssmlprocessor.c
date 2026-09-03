@@ -59,7 +59,7 @@ extern int32_t IPAToSPR(uint8_t *utf8, uint32_t bytes, char *spr,
    src/eci/ssml/eci_mbconvert.c. */
 #define NARROW_MARK      7
 
-/* ---- which languages have what -------------------------------------- */
+/* ---- which languages have what --------------------------------------- */
 
 static int8_t inLanguages(LanguageId *id, const int32_t *list, size_t n)
 {
@@ -164,7 +164,7 @@ int8_t isLanguageAvailable(LanguageId id)
     return found;
 }
 
-/* ---- putting every enclosing setting back --------------------------- */
+/* ---- putting every enclosing setting back ---------------------------- */
 
 /* Walk a string stack from the bottom and write out every entry that says
    something. This is what an element's close does after resetting a
@@ -209,10 +209,10 @@ void applyProsody(SSMLState *s)
 
 /* A language given on an element. Answers whether an annotation was
    written, which is what tells the caller the language actually changed.
- *
- * A language the engine has not got is pushed all the same, with its
- * availability cleared, so that everything inside the element is silent
- * and the close still has something to pop. */
+
+   A language the engine has not got is pushed all the same, with its
+   availability cleared, so that everything inside the element is silent
+   and the close still has something to pop. */
 int8_t xmllangOpen(SSMLState *s, char *value)
 {
     int8_t     changed = 0;
@@ -383,11 +383,11 @@ void closeEmphasis(SSMLState *s)
 /* Every attribute is pushed whether or not it was given, so that the close
    pops the same number of things it pushed: an attribute that was not
    there pushes the empty string, which the close knows to ignore.
- *
- * Volume is the one that is not like the others. It is a number rather
- * than a string, the engine's own setting is needed to work out what a
- * percentage means, and the annotation is only written when the answer
- * differs from what was already in force. */
+
+   Volume is the one that is not like the others. It is a number rather
+   than a string, the engine's own setting is needed to work out what a
+   percentage means, and the annotation is only written when the answer
+   differs from what was already in force. */
 void openProsody(SSMLState *s, const char **atts)
 {
     int8_t any = 0;
@@ -569,11 +569,11 @@ static int32_t variantOf(const char *variant, int32_t want, int32_t current)
 
 /* <voice>. Its attributes are a name, a gender, an age and a variant, in
    seven combinations, and each says a voice number a different way.
- *
- * The name is the odd one out: it is looked up in the voice table rather
- * than worked out, and on this extraction that table has no names in it --
- * see src/eci/lang/eci_vcinfo.c. A name is split on spaces and each word offered in
- * turn, so a name of several words matches a voice named by any of them. */
+
+   The name is the odd one out: it is looked up in the voice table rather
+   than worked out, and on this extraction that table has no names in it --
+   see src/eci/lang/eci_vcinfo.c. A name is split on spaces and each word offered in
+   turn, so a name of several words matches a voice named by any of them. */
 void openVoice(SSMLState *s, const char **atts)
 {
     int8_t  changed = 0;
@@ -1314,25 +1314,25 @@ void CloseTagHandler(void *data, const char *name)
 }
 
 /* A run of character data.
- *
- * Which of six things happens to it depends on what say-as is open. A
- * number is put through the Roman-numeral reader, which passes digits
- * through and turns numerals into the number they are. A VoiceXML date
- * becomes the whole annotation here, because the annotation names which of
- * its fields are present. A boolean, a currency and a date are lowered and
- * trimmed. And anything being spelt out is taken apart character by
- * character.
- *
- * Spelling out is the intricate one. Four characters -- `a', `A', `-' and
- * `&' -- are things the engine would read as a word or a name rather than
- * as a letter, so each is wrapped in the two annotations that make the
- * engine spell exactly one character; everything else gets a space in
- * front of it, which is enough. An entity that survived as its own
- * spelling is written out as that spelling. And a run with any multi-byte
- * character in it is spelt whole in one pair of annotations rather than
- * character by character, because a narrowed character is several bytes
- * and cannot be taken apart.
- */
+
+   Which of six things happens to it depends on what say-as is open. A
+   number is put through the Roman-numeral reader, which passes digits
+   through and turns numerals into the number they are. A VoiceXML date
+   becomes the whole annotation here, because the annotation names which of
+   its fields are present. A boolean, a currency and a date are lowered and
+   trimmed. And anything being spelt out is taken apart character by
+   character.
+
+   Spelling out is the intricate one. Four characters -- `a', `A', `-' and
+   `&' -- are things the engine would read as a word or a name rather than
+   as a letter, so each is wrapped in the two annotations that make the
+   engine spell exactly one character; everything else gets a space in
+   front of it, which is enough. An entity that survived as its own
+   spelling is written out as that spelling. And a run with any multi-byte
+   character in it is spelt whole in one pair of annotations rather than
+   character by character, because a narrowed character is several bytes
+   and cannot be taken apart.
+   */
 void CharDataHandler(void *data, char *text, int32_t length)
 {
     SSMLState *s = data;

@@ -4,18 +4,18 @@
 #include <stdint.h>
 
 /* Raising the sample rate, and what goes between the samples.
- *
- * The engine runs at eleven thousand and twenty five and every rate above it
- * is made from that, so this is what decides what a caller actually hears
- * above the engine's own ceiling. src/eci/sound/eci_pcm.c says what each way sounds
- * like and why the default is what it is.
- *
- * It is declared here rather than kept inside that file so the arithmetic
- * can be driven directly, without an engine behind it. test/harness/rates.c does
- * that: a run split into several blocks has to come out identical to the
- * same run handed over whole, which is the one property no measurement of
- * the audio would catch and the one a mistake in the history would break.
- */
+
+   The engine runs at eleven thousand and twenty five and every rate above it
+   is made from that, so this is what decides what a caller actually hears
+   above the engine's own ceiling. src/eci/sound/eci_pcm.c says what each way sounds
+   like and why the default is what it is.
+
+   It is declared here rather than kept inside that file so the arithmetic
+   can be driven directly, without an engine behind it. test/harness/rates.c does
+   that: a run split into several blocks has to come out identical to the
+   same run handed over whole, which is the one property no measurement of
+   the audio would catch and the one a mistake in the history would break.
+   */
 
 #define CVT_HOLD    0
 #define CVT_ZEROS   1
@@ -24,31 +24,31 @@
 #define CVT_SINC    4
 
 /* The windowed sinc, and the two numbers worth arguing about.
- *
- * How far up the band it passes, as a fraction of the input's own Nyquist,
- * and how many samples it reaches over. The two trade against each other:
- * taking the filter closer to Nyquist leaves it less room to fall, so it
- * needs more samples to fall as steeply, and a Kaiser window of this shape
- * puts the stopband roughly 2.285 times the transition times the taps, in
- * radians, below the passband.
- *
- * The first choice here was 0.91 over 48 samples, copied from what soxr uses
- * at its medium setting, and it was wrong for this engine. At eleven
- * thousand and twenty five, 0.91 of Nyquist is 5,016 hertz, and Eloquence
- * has real speech above that -- measured, the band from 5,016 to 5,512
- * carries 27 decibels less than the band below it, which is quiet but is
- * not nothing. Cutting there threw away 12.4 decibels of it, and that was
- * heard: the voice came out duller than it should be.
- *
- * So 0.98 over 192 samples. Measured on the same sentence, that band now
- * comes through 1.1 decibels under where the engine put it, against 12.4
- * before, and the images are still 83 decibels down. Pushing further costs
- * more than it returns: 0.99 over 256 gains another half a decibel of speech
- * and gives up fifteen of stopband. Ninety-six samples of delay is under
- * nine milliseconds at the engine's rate.
- *
- * EVV_SINC_CUTOFF and EVV_SINC_TAPS move both, because where exactly to put
- * them is a matter for a listener and not for this file. */
+
+   How far up the band it passes, as a fraction of the input's own Nyquist,
+   and how many samples it reaches over. The two trade against each other:
+   taking the filter closer to Nyquist leaves it less room to fall, so it
+   needs more samples to fall as steeply, and a Kaiser window of this shape
+   puts the stopband roughly 2.285 times the transition times the taps, in
+   radians, below the passband.
+
+   The first choice here was 0.91 over 48 samples, copied from what soxr uses
+   at its medium setting, and it was wrong for this engine. At eleven
+   thousand and twenty five, 0.91 of Nyquist is 5,016 hertz, and Eloquence
+   has real speech above that -- measured, the band from 5,016 to 5,512
+   carries 27 decibels less than the band below it, which is quiet but is
+   not nothing. Cutting there threw away 12.4 decibels of it, and that was
+   heard: the voice came out duller than it should be.
+
+   So 0.98 over 192 samples. Measured on the same sentence, that band now
+   comes through 1.1 decibels under where the engine put it, against 12.4
+   before, and the images are still 83 decibels down. Pushing further costs
+   more than it returns: 0.99 over 256 gains another half a decibel of speech
+   and gives up fifteen of stopband. Ninety-six samples of delay is under
+   nine milliseconds at the engine's rate.
+
+   EVV_SINC_CUTOFF and EVV_SINC_TAPS move both, because where exactly to put
+   them is a matter for a listener and not for this file. */
 #define SINC_CUTOFF   0.98
 #define SINC_TAPS     192
 #define SINC_PHASES   128

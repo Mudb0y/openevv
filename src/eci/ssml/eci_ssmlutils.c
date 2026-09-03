@@ -34,14 +34,14 @@ char *stripspaces(char *s, int32_t *len)
 
 /* The value of one attribute, or nothing if the list has not got it. The
    comparison ignores case, because SSML's attribute names do.
- *
- * The copy is made only to be trimmed and thrown away; the value handed
- * back points into the scanner's own list. One divergence, and it is the
- * only way this file differs from the original: IBM frees the pointer
- * stripspaces answered with rather than the one malloc gave it, so an
- * attribute name with a space in front of it frees an address the allocator
- * never issued. That is an abort on any allocator that checks, and every
- * case where the original survives it behaves identically to this. */
+
+   The copy is made only to be trimmed and thrown away; the value handed
+   back points into the scanner's own list. One divergence, and it is the
+   only way this file differs from the original: IBM frees the pointer
+   stripspaces answered with rather than the one malloc gave it, so an
+   attribute name with a space in front of it frees an address the allocator
+   never issued. That is an abort on any allocator that checks, and every
+   case where the original survives it behaves identically to this. */
 char *getAttributeValue(const char **atts, const char *name)
 {
     int32_t i = 0;

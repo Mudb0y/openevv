@@ -1,20 +1,20 @@
 /* The thread that pushes finished samples at the audio device.
-
-   Everything the engine wants done to the sound output happens here rather
-   than on the caller's thread, and it happens by message: open, write,
-   flush, hold, reset, close, and a mark to be reported when the samples
-   around it are heard. Each of those is a small class with one run of its
-   own, which is why this file is mostly the same eleven lines eleven times.
-
-   Nearly all of them are sent rather than posted, because the caller wants
-   the answer; only laying down an index mark is posted, because there is
-   nothing to wait for.
-
-   The one piece with a shape of its own is the index callback. Asking for
-   one starts a repeating timer that posts a poll message, and that poll is
-   what notices a mark has been reached; asking for none stops the timer
-   again. A target without a timer thread would put that poll wherever its
-   audio buffers are drained. */
+ *
+ * Everything the engine wants done to the sound output happens here rather
+ * than on the caller's thread, and it happens by message: open, write,
+ * flush, hold, reset, close, and a mark to be reported when the samples
+ * around it are heard. Each of those is a small class with one run of its
+ * own, which is why this file is mostly the same eleven lines eleven times.
+ *
+ * Nearly all of them are sent rather than posted, because the caller wants
+ * the answer; only laying down an index mark is posted, because there is
+ * nothing to wait for.
+ *
+ * The one piece with a shape of its own is the index callback. Asking for
+ * one starts a repeating timer that posts a poll message, and that poll is
+ * what notices a mark has been reached; asking for none stops the timer
+ * again. A target without a timer thread would put that poll wherever its
+ * audio buffers are drained. */
 
 #include <stdint.h>
 #include <stddef.h>
@@ -96,7 +96,7 @@ const uint32_t st_bytes = sizeof(SoundThread);
 /* How often the poll message asks. */
 #define SND_TICK_MS 30
 
-/* ---- what the original supplies --------------------------------------- */
+/* ---- what the original supplies -------------------------------------- */
 
 extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
 extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
@@ -190,7 +190,7 @@ typedef struct {
     int16_t answer;    /* +0x24 */
 } StatusMsg;
 
-/* ---- the thread with a queue in it ------------------------------------ */
+/* ---- the thread with a queue in it ----------------------------------- */
 
 THIS ETImessageQueueThread *qt_ctor(ETImessageQueueThread *t)
 {
@@ -267,7 +267,7 @@ THIS int16_t qt_sendMessage(ETImessageQueueThread *t, ETImessage *m)
     return rc;
 }
 
-/* ---- the messages ----------------------------------------------------- */
+/* ---- the messages ---------------------------------------------------- */
 
 static THIS void *snd_destroy(ETImessage *m, int32_t free_it)
 {
@@ -395,7 +395,7 @@ static THIS void run_setIndexCallback(ETImessage *m)
     }
 }
 
-/* ---- putting one together --------------------------------------------- */
+/* ---- putting one together -------------------------------------------- */
 
 static SndMsg *newSnd(uint32_t size, uint32_t type, const MessageVtbl *vt,
                       void *subject)
@@ -574,7 +574,7 @@ THIS int16_t snd_getStatusDirect(SoundThread *t)
     return pcm_getStatus(&t->out);
 }
 
-/* ---- the thread itself ------------------------------------------------ */
+/* ---- the thread itself ----------------------------------------------- */
 
 THIS SoundThread *snd_ctor(SoundThread *t, TimerThread *timers)
 {
@@ -607,7 +607,7 @@ THIS void *snd_destroy_thread(SoundThread *t, int32_t free_it)
     return t;
 }
 
-/* ---- the tables ------------------------------------------------------- */
+/* ---- the tables ------------------------------------------------------ */
 
 extern THIS uint32_t msg_addRef(ETImessage *m)
     MANGLED("?addRef@ETImessage@@UAEKXZ");

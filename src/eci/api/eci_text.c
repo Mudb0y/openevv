@@ -1,26 +1,26 @@
 /* Text on its way in, and the annotations buried in it.
-
-   A caller hands over a string. Two things then happen to it. If the caller
-   asked for the queued kind of working, the string is copied into a queue
-   element along with the settings in force at the moment it arrived, and
-   nothing is sent down until synthesis is asked for; that way a program can
-   set a voice, add some words, set another voice, add some more, and have
-   each stretch spoken in the voice that was current when it was written. If
-   the caller did not ask for that, the string goes straight down.
-
-   Either way it is read for annotations first. An annotation is a backtick
-   followed by a letter and usually a number, and it says the same thing a
-   call to set a parameter would say. The engine acts on them itself further
-   down, so this pass does not remove them; it mirrors them into the records
-   kept here, so that those records still describe what is being spoken.
-
-   The one thing it does rewrite is a number given in real-world units. The
-   engine only understands its own, so the number is converted and written
-   back over the original in place. It has to fit in the room the original
-   took, which is why there is a digit count and a fallback to a row of
-   nines.
-
-   Names are prefixed and the aliases at the foot carry the real ones. */
+ *
+ * A caller hands over a string. Two things then happen to it. If the caller
+ * asked for the queued kind of working, the string is copied into a queue
+ * element along with the settings in force at the moment it arrived, and
+ * nothing is sent down until synthesis is asked for; that way a program can
+ * set a voice, add some words, set another voice, add some more, and have
+ * each stretch spoken in the voice that was current when it was written. If
+ * the caller did not ask for that, the string goes straight down.
+ *
+ * Either way it is read for annotations first. An annotation is a backtick
+ * followed by a letter and usually a number, and it says the same thing a
+ * call to set a parameter would say. The engine acts on them itself further
+ * down, so this pass does not remove them; it mirrors them into the records
+ * kept here, so that those records still describe what is being spoken.
+ *
+ * The one thing it does rewrite is a number given in real-world units. The
+ * engine only understands its own, so the number is converted and written
+ * back over the original in place. It has to fit in the room the original
+ * took, which is why there is a digit count and a fallback to a row of
+ * nines.
+ *
+ * Names are prefixed and the aliases at the foot carry the real ones. */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -111,7 +111,7 @@ void et_processAnnotations(void *concat, int32_t *voice, int32_t *env,
                            int32_t *voice2, int32_t *env2, int32_t realWorld,
                            char *text);
 
-/* ---- finding a voice in one of the two tables ----------------------- */
+/* ---- finding a voice in one of the two tables ------------------------ */
 
 static char *et_concatEntry(void *concat, int family, int dialect,
                             int32_t rate, int32_t voiceno)
@@ -136,7 +136,7 @@ static int et_present(const char *entry)
     return *(const int32_t *)(entry + CV_PRESENT) != 0;
 }
 
-/* ---- reading the annotations ---------------------------------------- */
+/* ---- reading the annotations ----------------------------------------- */
 
 /* How many characters a number takes when written out. */
 static int et_digits(int32_t v)
@@ -432,7 +432,7 @@ void et_processAnnotations(void *concat, int32_t *voice, int32_t *env,
     text[w] = text[r];
 }
 
-/* ---- the queue the caller may fill ---------------------------------- */
+/* ---- the queue the caller may fill ----------------------------------- */
 
 /* A stretch of text, with the settings that were in force when it arrived. */
 QueueElement *et_createTextElement(OldInst *h, const char *text, int32_t len,
@@ -567,7 +567,7 @@ unblock:
     return ok;
 }
 
-/* ---- the entry points ----------------------------------------------- */
+/* ---- the entry points ------------------------------------------------ */
 
 /* Refuse a call that arrived while another was still running. */
 static int et_reentered(OldInst *h, uint32_t bit)

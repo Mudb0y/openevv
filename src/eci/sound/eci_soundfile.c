@@ -1,18 +1,18 @@
 /* A sound file, which is usually not a file.
-
-   One record stands for wherever finished samples are going: a file on disk,
-   or a device, told apart only by the name. Everything it can actually do is
-   deferred to a format object looked up from that name, so this file is
-   almost entirely a set of front doors -- check we are not already open,
-   remember the value, and let the format decide whether it will have it.
-
-   The one field that matters is the status. While it is anything but nought
-   the record is in use and every setter below refuses, which is how the
-   engine is stopped from changing the rate underneath a device that is
-   already playing.
-
-   Names carry no prefix: the object uses plain C names throughout, so ours
-   are the same and the swap stands the original's aside on that alone. */
+ *
+ * One record stands for wherever finished samples are going: a file on disk,
+ * or a device, told apart only by the name. Everything it can actually do is
+ * deferred to a format object looked up from that name, so this file is
+ * almost entirely a set of front doors -- check we are not already open,
+ * remember the value, and let the format decide whether it will have it.
+ *
+ * The one field that matters is the status. While it is anything but nought
+ * the record is in use and every setter below refuses, which is how the
+ * engine is stopped from changing the rate underneath a device that is
+ * already playing.
+ *
+ * Names carry no prefix: the object uses plain C names throughout, so ours
+ * are the same and the swap stands the original's aside on that alone. */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -119,7 +119,7 @@ int soundFileFormat(SoundFile *sf, const char *ext, int32_t mode)
     return named & accepted;
 }
 
-/* ---- what the caller may set --------------------------------------- */
+/* ---- what the caller may set ----------------------------------------- */
 
 int soundFileSetDevice(SoundFile *sf, int32_t device, int32_t mode)
 {
@@ -146,7 +146,7 @@ int soundFileWidth(SoundFile *sf, int32_t width)
     return ((FmtOneFn)FMT_SLOT(sf->format, FMT_CONFIGURE))(sf);
 }
 
-/* ---- opening and closing -------------------------------------------- */
+/* ---- opening and closing --------------------------------------------- */
 
 /* Open for writing. A format that works through a file wants one opened
    first; one that works through a device does not. If the format then
@@ -201,7 +201,7 @@ int soundFileClose(SoundFile *sf)
     return ok;
 }
 
-/* ---- what it does while open ---------------------------------------- */
+/* ---- what it does while open ----------------------------------------- */
 
 void soundFilePoll(SoundFile *sf)
 {

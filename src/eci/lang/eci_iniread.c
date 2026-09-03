@@ -50,7 +50,7 @@ THIS int32_t     ini_goEndSection(IniFileReader *r);
 THIS int32_t     ini_goEndKey(IniFileReader *r);
 THIS int32_t     ini_goEndData(IniFileReader *r, int32_t *at);
 
-/* ---- opening and closing -------------------------------------------- */
+/* ---- opening and closing --------------------------------------------- */
 
 THIS IniFileReader *ini_ctor(IniFileReader *r)
 {
@@ -97,7 +97,7 @@ THIS int32_t ini_doubleBuffer(IniFileReader *r)
     return 1;
 }
 
-/* ---- finding something ---------------------------------------------- */
+/* ---- finding something ----------------------------------------------- */
 
 /* Look for a name from one place up to another. On a hit the answer is where
    it starts; on a miss it is wherever the scan stopped, which the callers
@@ -140,7 +140,7 @@ THIS int32_t ini_stringSearch(IniFileReader *r, const char *want,
     return found ? i - j : i;
 }
 
-/* ---- walking past things -------------------------------------------- */
+/* ---- walking past things --------------------------------------------- */
 
 /* Past the closing bracket of a section header, which is only a header if
    the line ends right after it. */
@@ -217,7 +217,7 @@ THIS int32_t ini_goEndData(IniFileReader *r, int32_t *at)
     }
 }
 
-/* ---- what the callers ask for --------------------------------------- */
+/* ---- what the callers ask for ---------------------------------------- */
 
 /* The section header is looked for whole, brackets and all, so a section
    named "a" is not found inside one named "ab". */

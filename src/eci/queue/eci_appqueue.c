@@ -1,19 +1,19 @@
 /* The queue an application takes its answers off.
-
-   The synthesis thread does not call the application back on its own
-   thread; it posts a message, and the application collects it later on its
-   own. That collecting is `poll`, which is what eciSpeaking ends up
-   calling, and it is why a caller that never polls never hears anything.
-
-   Two counts keep the two sides in step: one of everything posted, one of
-   everything seen. A special message carries the posted count across, and
-   when the two agree there is nothing outstanding — which is what
-   `synchronize` waits for.
-
-   A callback can answer three ways. Nought means it is finished with.
-   Minus one means not yet, come back to me: poll holds the message and
-   starts a timer, synchronize sleeps thirty milliseconds and asks again.
-   Minus eighteen means stop altogether. */
+ *
+ * The synthesis thread does not call the application back on its own
+ * thread; it posts a message, and the application collects it later on its
+ * own. That collecting is `poll`, which is what eciSpeaking ends up
+ * calling, and it is why a caller that never polls never hears anything.
+ *
+ * Two counts keep the two sides in step: one of everything posted, one of
+ * everything seen. A special message carries the posted count across, and
+ * when the two agree there is nothing outstanding -- which is what
+ * `synchronize` waits for.
+ *
+ * A callback can answer three ways. Nought means it is finished with.
+ * Minus one means not yet, come back to me: poll holds the message and
+ * starts a timer, synchronize sleeps thirty milliseconds and asks again.
+ * Minus eighteen means stop altogether. */
 
 #include <stdint.h>
 #include <stddef.h>

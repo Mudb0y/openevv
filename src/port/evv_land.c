@@ -17,17 +17,17 @@
 #include <stdlib.h>
 
 /* One landing place per name, kept here rather than in the machine.
- *
- * A name is the address of the buffer a rule planted its landing in, and the
- * same few addresses come round again and again: a frame comes off the frame
- * stack, so a rule at the same depth gets the same one. That is why nothing is
- * ever given back -- the table settles at as many entries as there are places
- * a landing is ever planted, which is dozens, and a name that comes round
- * again wants the same place anyway.
- *
- * One table per thread, so there is no lock on the way in. Two threads cannot
- * share a name: their frames come from different blocks.
- */
+
+   A name is the address of the buffer a rule planted its landing in, and the
+   same few addresses come round again and again: a frame comes off the frame
+   stack, so a rule at the same depth gets the same one. That is why nothing is
+   ever given back -- the table settles at as many entries as there are places
+   a landing is ever planted, which is dozens, and a name that comes round
+   again wants the same place anyway.
+
+   One table per thread, so there is no lock on the way in. Two threads cannot
+   share a name: their frames come from different blocks.
+   */
 #define LAND_BUCKETS 256
 
 typedef struct land_entry {

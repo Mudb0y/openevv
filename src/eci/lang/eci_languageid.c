@@ -36,7 +36,7 @@
    language given as text gets. */
 #define LI_TEXT_ROOM 12
 
-/* ---- reading the word ------------------------------------------------- */
+/* ---- reading the word ------------------------------------------------ */
 
 THIS uint8_t li_getLanguage(const LanguageId *l)
 {
@@ -105,7 +105,7 @@ THIS int32_t li_compareLanguage(const LanguageId *l, int32_t packed)
     return packed == l->packed;
 }
 
-/* ---- writing the text out of the word --------------------------------- */
+/* ---- writing the text out of the word -------------------------------- */
 
 /* The two names for each language, in the order the language number
    indexes them. Fifteen languages, numbered from one. */
@@ -222,7 +222,7 @@ THIS void li_setString(LanguageId *l)
     }
 }
 
-/* ---- and the word out of the text ------------------------------------- */
+/* ---- and the word out of the text ------------------------------------ */
 
 /* "1.0" back into a number. Both halves accumulate in a single byte, so
    anything above two hundred and fifty-five wraps; that is the original's
@@ -250,7 +250,7 @@ THIS void li_setPackedInt(LanguageId *l)
     l->packed = ((int32_t)major << 16) | minor;
 }
 
-/* ---- setting one ------------------------------------------------------ */
+/* ---- setting one ----------------------------------------------------- */
 
 THIS void li_setLanguageBytes(LanguageId *l, uint8_t lang, uint8_t dialect,
                               uint8_t codeset)
@@ -278,7 +278,7 @@ THIS void li_setLanguageString(LanguageId *l, const char *s)
     li_setPackedInt(l);
 }
 
-/* ---- and making one --------------------------------------------------- */
+/* ---- and making one -------------------------------------------------- */
 
 THIS void li_init(LanguageId *l)
 {
@@ -311,12 +311,12 @@ THIS void li_initString(LanguageId *l, const char *s)
 
 /* The one a document reaches: xml:lang="en-GB" arrives here as its two
    halves and has to become a number.
- *
- * The country decides the dialect only where the language has more than
- * one, and the list of countries that mean British English is the
- * original's own: the two names for the United Kingdom, the two territories
- * that use its spelling, Ireland, South Africa, India and Australia, with
- * Canada on the end. Anything else is dialect nought. */
+
+   The country decides the dialect only where the language has more than
+   one, and the list of countries that mean British English is the
+   original's own: the two names for the United Kingdom, the two territories
+   that use its spelling, Ireland, South Africa, India and Australia, with
+   Canada on the end. Anything else is dialect nought. */
 THIS void li_initNames(LanguageId *l, const char *major, const char *minor)
 {
     int32_t packed = 0;

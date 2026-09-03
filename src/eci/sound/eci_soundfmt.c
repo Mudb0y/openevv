@@ -85,7 +85,7 @@ void *findMatchingSoundFormat(void *file)
     return 0;
 }
 
-/* ---- what a format may fall back on --------------------------------- */
+/* ---- what a format may fall back on ---------------------------------- */
 
 void defaultSetDuration(void)
 {

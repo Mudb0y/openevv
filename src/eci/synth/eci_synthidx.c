@@ -1,15 +1,15 @@
 /* Index marks in the queue, and the name of a language.
-
-   Small classes the synthesis thread is built out of. The index queue is one
-   of the library's collections: a singly linked list with a queue over it and
-   an index queue over that, which is why constructing one writes five tables
-   into the same word in turn and taking one apart empties it twice.
-
-   The index manager is a fixed-size allocator with a lock round it. An index
-   is named by a number rather than by a pointer, because the number has to
-   survive being handed to the engine and given back later.
-
-   Names are prefixed; the aliases at the foot carry the real ones. */
+ *
+ * Small classes the synthesis thread is built out of. The index queue is one
+ * of the library's collections: a singly linked list with a queue over it and
+ * an index queue over that, which is why constructing one writes five tables
+ * into the same word in turn and taking one apart empties it twice.
+ *
+ * The index manager is a fixed-size allocator with a lock round it. An index
+ * is named by a number rather than by a pointer, because the number has to
+ * survive being handed to the engine and given back later.
+ *
+ * Names are prefixed; the aliases at the foot carry the real ones. */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -49,7 +49,7 @@ typedef IndexManager IndexMemory;
 /* The blocks start a little way past whatever the allocator keeps first. */
 #define IDXMGR_FIRST   0x0c
 
-/* ---- the collections ---- */
+/* ---- the collections ------------------------------------------------- */
 
 /* Empty on all three counts means the same thing: nothing at the head. */
 THIS int32_t sti_esListIsEmpty(const List *l)   { return l->head == 0; }
@@ -126,7 +126,7 @@ THIS int32_t sti_indexDue(const List *l)
     return vt->head(l)[1] == 0;
 }
 
-/* ---- the index manager ---- */
+/* ---- the index manager ----------------------------------------------- */
 
 /* Take a number for a new mark. Everything here runs under the lock because
    marks are made on the caller's thread and used on ours. */
@@ -172,7 +172,7 @@ THIS void sti_deleteAll(IndexMemory *m)
     sy_mutexRelease(lock);
 }
 
-/* ---- the name of a language ---- */
+/* ---- the name of a language ------------------------------------------ */
 
 /* A language starts as nought, which is a real language rather than none:
    the first of the first family. The printable form is made from the number

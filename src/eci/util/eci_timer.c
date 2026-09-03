@@ -82,7 +82,7 @@ THIS void     tt_terminate(TimerThread *t);
 THIS void     tt_dtor(TimerThread *t);
 THIS void    *tt_destroy(TimerThread *t, int32_t free_it);
 
-/* ---- posting ---------------------------------------------------------- */
+/* ---- posting --------------------------------------------------------- */
 
 /* Putting a message on a queue thread already belongs to the sound thread's
    own file, so it is borrowed rather than written twice. */
@@ -94,7 +94,7 @@ THIS void tt_timerPost(TimerThreadTimer *timer)
     qt_postMessage(timer->queue, timer->message);
 }
 
-/* ---- one timer -------------------------------------------------------- */
+/* ---- one timer ------------------------------------------------------- */
 
 THIS TimerThreadTimer *tt_timerCtor(TimerThreadTimer *timer,
                                     ETImessageQueueThread *queue,
@@ -136,7 +136,7 @@ THIS int tt_timerIsDue(TimerThreadTimer *timer, uint32_t slept)
     return due;
 }
 
-/* ---- the thread ------------------------------------------------------- */
+/* ---- the thread ------------------------------------------------------ */
 
 THIS TimerThread *tt_ctor(TimerThread *t)
 {
@@ -316,7 +316,7 @@ const TimerVtbl vtbl_timerthread = {
     tt_destroy, tt_terminate, th_waitForExit, tt_run
 };
 
-/* ---- the sleep cycle -------------------------------------------------- */
+/* ---- the sleep cycle ------------------------------------------------- */
 
 /* The original kept a list of periodic callbacks driven by a Windows
    multimedia timer. Nothing in the engine ever makes one, and the only

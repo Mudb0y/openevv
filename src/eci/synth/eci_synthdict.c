@@ -1,31 +1,31 @@
 /* User dictionaries.
-
-   A caller can give the engine a list of its own pronunciations. This is the
-   whole of how that is asked for: making a dictionary, filling it, saving and
-   loading it, looking things up in it and walking through it.
-
-   None of it does the work. A dictionary is really two dictionaries -- one
-   the engine keeps and one the romanizer keeps for the same language -- and
-   everything here is a matter of holding the pair together, converting the
-   caller's text into whatever each side wants, and handing the question on.
-   The record made by newDict is that pair plus what it takes to reach them.
-
-   Which of the two answers depends on the volume asked for. Volumes nought
-   to two are the engine's; volume three is the romanizer's. The extended
-   calls, the ones that also carry a part of speech, are the romanizer's
-   whatever volume they name.
-
-   The thread keeps three scratch pointers for converted results, one for a
-   lookup and two for a walk, so that what a caller is handed stays where it
-   is until the next call of the same kind. Each is freed as the next call
-   starts rather than at the end of the last, which is why they are fields
-   rather than locals.
-
-   Not verified. Nothing in the harness opens a dictionary; driving one
-   through the published interface was tried and the call that makes a
-   dictionary active refuses, so the audio never changes and there is nothing
-   to compare. This is transcription read carefully off the original and
-   nothing more than that. */
+ *
+ * A caller can give the engine a list of its own pronunciations. This is the
+ * whole of how that is asked for: making a dictionary, filling it, saving and
+ * loading it, looking things up in it and walking through it.
+ *
+ * None of it does the work. A dictionary is really two dictionaries -- one
+ * the engine keeps and one the romanizer keeps for the same language -- and
+ * everything here is a matter of holding the pair together, converting the
+ * caller's text into whatever each side wants, and handing the question on.
+ * The record made by newDict is that pair plus what it takes to reach them.
+ *
+ * Which of the two answers depends on the volume asked for. Volumes nought
+ * to two are the engine's; volume three is the romanizer's. The extended
+ * calls, the ones that also carry a part of speech, are the romanizer's
+ * whatever volume they name.
+ *
+ * The thread keeps three scratch pointers for converted results, one for a
+ * lookup and two for a walk, so that what a caller is handed stays where it
+ * is until the next call of the same kind. Each is freed as the next call
+ * starts rather than at the end of the last, which is why they are fields
+ * rather than locals.
+ *
+ * Not verified. Nothing in the harness opens a dictionary; driving one
+ * through the published interface was tried and the call that makes a
+ * dictionary active refuses, so the audio never changes and there is nothing
+ * to compare. This is transcription read carefully off the original and
+ * nothing more than that. */
 
 #include <stdint.h>
 #include <string.h>
@@ -131,7 +131,7 @@ static void std_name(LangIdentifier *l, int32_t language)
     lang_setString(l);
 }
 
-/* ---- turning the caller's text into what each side wants ---- */
+/* ---- turning the caller's text into what each side wants ------------- */
 
 /* From whatever the caller handed down into plain bytes.
 
@@ -246,7 +246,7 @@ THIS int32_t std_convertToECIinputText(SynthThread *t, const char *in,
     return rc;
 }
 
-/* ---- making and unmaking ---- */
+/* ---- making and unmaking --------------------------------------------- */
 
 /* Ask both sides for a dictionary of their own and hold the pair together.
    The romanizer half is allowed to be missing; the engine half is not. */
@@ -320,7 +320,7 @@ THIS int32_t std_deleteDict(SynthThread *t, Dict *dict)
     return rc;
 }
 
-/* ---- which one is in play ---- */
+/* ---- which one is in play -------------------------------------------- */
 
 THIS int32_t std_activateDict(SynthThread *t, Dict *dict)
 {
@@ -395,7 +395,7 @@ THIS int32_t std_getDictLanguage(SynthThread *t, Dict *dict, int32_t *out)
     return rc;
 }
 
-/* ---- files ---- */
+/* ---- files ----------------------------------------------------------- */
 
 /* Read a volume in from a file, from whichever side owns that volume. */
 THIS int32_t std_loadDictVolume(SynthThread *t, Dict *dict, int32_t volume,
@@ -456,7 +456,7 @@ THIS int32_t std_saveDictVolume(SynthThread *t, Dict *dict, int32_t volume,
     return rc;
 }
 
-/* ---- entries ---- */
+/* ---- entries --------------------------------------------------------- */
 
 /* Put one entry in. Both halves of it are converted to bytes first and both
    copies given back afterwards, whether or not the engine took them. */
@@ -612,7 +612,7 @@ THIS int32_t std_findNextDictEntry(SynthThread *t, Dict *dict, int32_t volume,
                              mode, 0);
 }
 
-/* ---- the extended four ---- */
+/* ---- the extended four ----------------------------------------------- */
 
 /* These carry a part of speech and a language as well, and they are the
    romanizer's whatever volume they name: the engine's own dictionaries have

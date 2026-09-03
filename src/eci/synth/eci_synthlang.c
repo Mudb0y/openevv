@@ -1,19 +1,19 @@
 /* Changing which language the thread speaks.
-
-   This is one function. It is long because a language change is really an
-   engine change: a different engine object, a different set of callbacks, a
-   different sample format, a different romanizer and a different answer to
-   whether the voice is concatenative. Every one of those has to be taken
-   down and put back up in order.
-
-   The short road out is when only the dialect has moved. The engine id
-   carries the dialect in its second byte, so a change that leaves the rest
-   of the word alone keeps the same engine and only has to tell the romanizer
-   and the concatenative side which dialect to use.
-
-   A language the engine array does not have falls back to the one already in
-   play rather than failing, so a caller asking for something impossible
-   keeps a voice. */
+ *
+ * This is one function. It is long because a language change is really an
+ * engine change: a different engine object, a different set of callbacks, a
+ * different sample format, a different romanizer and a different answer to
+ * whether the voice is concatenative. Every one of those has to be taken
+ * down and put back up in order.
+ *
+ * The short road out is when only the dialect has moved. The engine id
+ * carries the dialect in its second byte, so a change that leaves the rest
+ * of the word alone keeps the same engine and only has to tell the romanizer
+ * and the concatenative side which dialect to use.
+ *
+ * A language the engine array does not have falls back to the one already in
+ * play rather than failing, so a caller asking for something impossible
+ * keeps a voice. */
 
 #include <stdint.h>
 #include "eci_synththread.h"

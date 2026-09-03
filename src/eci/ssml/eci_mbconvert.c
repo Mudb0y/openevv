@@ -149,10 +149,10 @@ int32_t Mbcs2Sbcs(char *in, char *out)
    is. A bell with no closing bell after it is minus one, since the text
    cannot have come from the pass above. Answers the length of what it
    wrote.
- *
- * This one does write a nought into what it is given, over the closing
- * bell, and that is kept: what it is ever given is the reader's own
- * intermediate buffer rather than anything of the caller's. */
+
+   This one does write a nought into what it is given, over the closing
+   bell, and that is kept: what it is ever given is the reader's own
+   intermediate buffer rather than anything of the caller's. */
 int32_t Sbcs2Mbcs(char *in, char *out)
 {
     char *p;

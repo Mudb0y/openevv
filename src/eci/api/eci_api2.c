@@ -1,9 +1,9 @@
 /* The plain C face of an ECI instance.
-
-   Every entry here takes the handle first and hands the rest straight to the
-   object behind it. They exist because the object is C++ and the callers are
-   not; there is nothing else to them, and the three that do more are the
-   three at the end. */
+ *
+ * Every entry here takes the handle first and hands the rest straight to the
+ * object behind it. They exist because the object is C++ and the callers are
+ * not; there is nothing else to them, and the three that do more are the
+ * three at the end. */
 
 #include <string.h>
 #include <stdint.h>

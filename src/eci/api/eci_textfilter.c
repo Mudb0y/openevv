@@ -1,23 +1,23 @@
 /* What happens to text on the way in.
-
-   Everything a caller hands to eciAddText comes through here before Delta
-   sees a character of it. The job is to find the annotations — a backtick
-   and a short code — pull each one out, turn it into a parameter change,
-   and hand the words between them to the synthesis thread.
-
-   It is done in two passes because a language change has to be handled
-   before anything else. The first pass looks only for that, and hands each
-   run of text between language changes to the global filter chain, which
-   may rewrite it. The second pass walks what comes back and deals with
-   every other annotation.
-
-   An annotation is blanked out with spaces rather than removed, so that
-   nothing after it moves; the reader was going to skip spaces anyway. A
-   backtick with a backslash in front of it is a literal backtick and is
-   left alone.
-
-   Transcribed rather than rewritten. Everything here decides which
-   characters reach Delta, and the grammar is the language's own. */
+ *
+ * Everything a caller hands to eciAddText comes through here before Delta
+ * sees a character of it. The job is to find the annotations -- a backtick
+ * and a short code -- pull each one out, turn it into a parameter change,
+ * and hand the words between them to the synthesis thread.
+ *
+ * It is done in two passes because a language change has to be handled
+ * before anything else. The first pass looks only for that, and hands each
+ * run of text between language changes to the global filter chain, which
+ * may rewrite it. The second pass walks what comes back and deals with
+ * every other annotation.
+ *
+ * An annotation is blanked out with spaces rather than removed, so that
+ * nothing after it moves; the reader was going to skip spaces anyway. A
+ * backtick with a backslash in front of it is a literal backtick and is
+ * left alone.
+ *
+ * Transcribed rather than rewritten. Everything here decides which
+ * characters reach Delta, and the grammar is the language's own. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,7 +72,7 @@ extern THIS int32_t st_insertAudioIndex(void *t, char *s)
 extern THIS void lang_setString(LangIdentifier *l)
     MANGLED("?setString@LangIdentifier@@AAEXXZ");
 
-/* ---- which languages are written two bytes to a character ------------- */
+/* ---- which languages are written two bytes to a character ------------ */
 
 /* The ranges are the original's own list, and there is no rule behind them
    to shorten it with. */
@@ -108,7 +108,7 @@ static int32_t currentLanguage(TextFilter *f)
     return lang;
 }
 
-/* ---- reading one annotation ------------------------------------------- */
+/* ---- reading one annotation ------------------------------------------ */
 
 /* A string-valued annotation: `vs"..."`, and the two like it. What it
    answers is a copy the caller owns. */
@@ -381,7 +381,7 @@ static THIS int32_t tf_annotations(TextFilter *f, char *text, int32_t *skip,
     return rc;
 }
 
-/* ---- the second pass -------------------------------------------------- */
+/* ---- the second pass ------------------------------------------------- */
 
 /* Hand everything since the last annotation to the thread. */
 static int32_t flushWords(TextFilter *f, char **last, char *p, int32_t flag,
@@ -509,7 +509,7 @@ static THIS int32_t tf_processText(TextFilter *f, char *text, uint32_t len,
     return rc;
 }
 
-/* ---- the first pass --------------------------------------------------- */
+/* ---- the first pass -------------------------------------------------- */
 
 /* Hand one run of text to the filter chain and then to the second pass.
    The chain is given a copy, because it is allowed to keep what it is
@@ -586,7 +586,7 @@ static THIS int32_t tf_globalFilters(TextFilter *f, char *text, int32_t len,
     return err;
 }
 
-/* ---- what the instance calls ------------------------------------------ */
+/* ---- what the instance calls ----------------------------------------- */
 
 THIS TextFilter *tf_ctor(TextFilter *f)
 {

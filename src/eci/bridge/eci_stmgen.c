@@ -216,7 +216,7 @@ static int32_t moveRightOverVal(delta_state *d, int32_t node, int8_t field,
     return found;
 }
 
-/* ---- the set of cursors --------------------------------------------- */
+/* ---- the set of cursors ---------------------------------------------- */
 
 static void valueSetReset(delta_state *d, ValueSet *vs, int8_t field,
                           int32_t start, int32_t unused, int32_t end)

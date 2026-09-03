@@ -1,14 +1,14 @@
 /* The object behind an ECI handle.
-
-   It owns four things and does almost nothing itself: the synthesis thread,
-   the queue of messages coming back from it, the parameters, and the filter
-   that text passes through on the way in. Nearly every entry point below
-   hands its arguments straight to one of them, which is why they read as
-   they do — the object is a facade, and a facade with any cleverness in it
-   would be the wrong shape.
-
-   Written to the original's layout, because the thread and the queue are
-   still the original's and they are reached at fixed offsets inside it. */
+ *
+ * It owns four things and does almost nothing itself: the synthesis thread,
+ * the queue of messages coming back from it, the parameters, and the filter
+ * that text passes through on the way in. Nearly every entry point below
+ * hands its arguments straight to one of them, which is why they read as
+ * they do -- the object is a facade, and a facade with any cleverness in it
+ * would be the wrong shape.
+ *
+ * Written to the original's layout, because the thread and the queue are
+ * still the original's and they are reached at fixed offsets inside it. */
 
 #include <string.h>
 #include <stdint.h>
@@ -143,7 +143,7 @@ extern THIS void stm_getAvailableFilters(void *t, int32_t a, uint32_t *b, uint32
 extern THIS void stm_getFilterDescription(void *t, int32_t a, uint32_t b, char *c)
     MANGLED("?getFilterDescription@SynthThread@@QAEXJIPAD@Z");
 
-/* ---- making one and taking it apart ------------------------------------ */
+/* ---- making one and taking it apart ---------------------------------- */
 
 THIS ECIstate *es_ctor(ECIstate *s)
 {
@@ -217,7 +217,7 @@ THIS void ei_dtor(ECIinstance *self)
     aq_dtor(&self->queue);
 }
 
-/* ---- the ones that are not plain forwarding ---------------------------- */
+/* ---- the ones that are not plain forwarding -------------------------- */
 
 /* Two means idle, three means still going. */
 THIS int32_t ei_check_synthesizing(ECIinstance *self)
@@ -278,7 +278,7 @@ THIS int32_t ei_reset(ECIinstance *self, int32_t lang)
     return rc;
 }
 
-/* ---- the ones that are ------------------------------------------------- */
+/* ---- the ones that are ----------------------------------------------- */
 
 THIS int32_t ei_act_dict(ECIinstance *self, void *a)
 {

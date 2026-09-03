@@ -1,11 +1,11 @@
 /* Where the Delta machine meets ECI.
-
-   Six streams get wired up here. Two of them — the ones the machine would
-   have printed its own chatter to — go nowhere. The other four are the
-   links: the text to speak goes in through wordsin, the answers come back
-   out through sprout, errors through errorout, and the concatenative
-   synthesizer's output through consprout. After this the machine is talking
-   to ECI without either of them knowing it. */
+ *
+ * Six streams get wired up here. Two of them -- the ones the machine would
+ * have printed its own chatter to -- go nowhere. The other four are the
+ * links: the text to speak goes in through wordsin, the answers come back
+ * out through sprout, errors through errorout, and the concatenative
+ * synthesizer's output through consprout. After this the machine is talking
+ * to ECI without either of them knowing it. */
 
 #include <stdlib.h>
 #include <string.h>

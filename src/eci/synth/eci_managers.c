@@ -1,17 +1,17 @@
 /* Two managers the formant engine never asks anything of.
-
-   The synthesis thread holds three: a filter manager, a romanizer manager,
-   and a concatenation manager. The first of those is real and is in
-   src/eci/ssml/eci_filtermanager.c, since the SSML reader hangs off it. The other
-   two are here. The romanizer belongs to the languages that are written in
-   another script. The concatenative manager belongs to the other engine;
-   this extraction runs the formant one.
-
-   So these are interfaces met rather than code transcribed, on the same
-   footing as the sound boundary. Each answers the way an empty manager
-   would: nothing is present, nothing is active, nothing is supported.
-
-   Names are prefixed and the aliases at the foot carry the real ones. */
+ *
+ * The synthesis thread holds three: a filter manager, a romanizer manager,
+ * and a concatenation manager. The first of those is real and is in
+ * src/eci/ssml/eci_filtermanager.c, since the SSML reader hangs off it. The other
+ * two are here. The romanizer belongs to the languages that are written in
+ * another script. The concatenative manager belongs to the other engine;
+ * this extraction runs the formant one.
+ *
+ * So these are interfaces met rather than code transcribed, on the same
+ * footing as the sound boundary. Each answers the way an empty manager
+ * would: nothing is present, nothing is active, nothing is supported.
+ *
+ * Names are prefixed and the aliases at the foot carry the real ones. */
 
 #include <stdint.h>
 #include <string.h>
@@ -31,18 +31,18 @@
 #endif
 
 /* The four numbers the concatenation manager is told and asked for again.
- *
- * Everything else about that manager is an interface met rather than code
- * transcribed, because the concatenative engine is not in this extraction.
- * These four are not about that engine at all: they are what the synthesis
- * thread hands the manager and reads back out of it, and one of them -- the
- * sample rate -- is handed on to a romanizer, which is the only thing in the
- * engine that ever asks. So an empty manager cannot answer nought here; it
- * has to remember.
- *
- * They sit where IBM's setActiveLanguage puts them, which is inside the
- * 0x2c0 bytes the thread allocates for one, and nothing but this file reads
- * them. The three that are bytes are bytes in the original too. */
+
+   Everything else about that manager is an interface met rather than code
+   transcribed, because the concatenative engine is not in this extraction.
+   These four are not about that engine at all: they are what the synthesis
+   thread hands the manager and reads back out of it, and one of them -- the
+   sample rate -- is handed on to a romanizer, which is the only thing in the
+   engine that ever asks. So an empty manager cannot answer nought here; it
+   has to remember.
+
+   They sit where IBM's setActiveLanguage puts them, which is inside the
+   0x2c0 bytes the thread allocates for one, and nothing but this file reads
+   them. The three that are bytes are bytes in the original too. */
 #define CM_FAMILY(m)  (*(uint8_t *)((char *)(m) + 0x144))
 #define CM_DIALECT(m) (*(uint8_t *)((char *)(m) + 0x148))
 #define CM_VOICE(m)   (*(uint8_t *)((char *)(m) + 0x14c))
@@ -70,7 +70,7 @@
 #define CM_PARAM_VOICE    0x10
 #define CM_PARAM_RATE     0x11
 
-/* ---- the romanizer -------------------------------------------------- */
+/* ---- the romanizer --------------------------------------------------- */
 
 THIS void *rm_ctor(void *m, void *thread)
 {
@@ -190,7 +190,7 @@ THIS int rm_UnicodeToMBCS(void *m, uint32_t lang, const uint16_t *in,
     return 0;
 }
 
-/* ---- the concatenative engine --------------------------------------- */
+/* ---- the concatenative engine ---------------------------------------- */
 
 THIS void *cm_ctor(void *m, void *thread)
 {

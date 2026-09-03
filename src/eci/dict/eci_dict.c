@@ -1,19 +1,19 @@
 /* User dictionaries: making them, choosing them, and taking them away.
-
-   A dictionary belongs to a language, and an instance may have one in force
-   for each language and dialect at once. That is what the table in the
-   middle of the instance is: eighteen families of two dialects, each holding
-   the dictionary currently active for it, or nothing.
-
-   The table starts at the same offset as the queue the caller may fill,
-   which looks alarming until you notice that families are numbered from one,
-   so the family-nought slot is never touched by anything here and the queue
-   has it to itself.
-
-   Loading a dictionary from a file and saving one to a file were published
-   and never written; both answer that they could not.
-
-   Names are prefixed and the aliases at the foot carry the real ones. */
+ *
+ * A dictionary belongs to a language, and an instance may have one in force
+ * for each language and dialect at once. That is what the table in the
+ * middle of the instance is: eighteen families of two dialects, each holding
+ * the dictionary currently active for it, or nothing.
+ *
+ * The table starts at the same offset as the queue the caller may fill,
+ * which looks alarming until you notice that families are numbered from one,
+ * so the family-nought slot is never touched by anything here and the queue
+ * has it to itself.
+ *
+ * Loading a dictionary from a file and saving one to a file were published
+ * and never written; both answer that they could not.
+ *
+ * Names are prefixed and the aliases at the foot carry the real ones. */
 
 #include <stdint.h>
 #include "eci_synththread.h"
@@ -72,7 +72,7 @@ extern int32_t STDCALL eo_getParam(OldInst *h, int32_t which)
 
 extern int ev_sendParameters(OldInst *h);
 
-/* ---- turning the engine's answers into the older interface's -------- */
+/* ---- turning the engine's answers into the older interface's --------- */
 
 int ed_rc_to_ECIDictError(int32_t rc)
 {
@@ -83,7 +83,7 @@ int ed_rc_to_ECIDictError(int32_t rc)
     return DICT_NOT_SUPPORTED;
 }
 
-/* ---- the table of what is in force ---------------------------------- */
+/* ---- the table of what is in force ----------------------------------- */
 
 /* Remember a dictionary as the one in force for its own language. */
 int32_t ed_add_active_dict(OldInst *h, void *dict)
@@ -129,7 +129,7 @@ int32_t ed_deactivate_all_dicts(OldInst *h)
     return 0;
 }
 
-/* ---- the entry points ----------------------------------------------- */
+/* ---- the entry points ------------------------------------------------ */
 
 /* Make an empty dictionary for whatever language is in force.
 

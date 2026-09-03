@@ -1,15 +1,15 @@
 /* The runtime abstraction layer the engine expects underneath it.
-
-   The original ships this in a separate library: threads, semaphores,
-   events, a little string handling, an audio device interface and a trace
-   log. None of it is speech, and none of it is what this port is about, so
-   it is written afresh on top of evv_port.h rather than transcribed. Only
-   enough to let the engine run and hand samples back through its own
-   buffer interface.
-
-   The audio device half is deliberately empty. Asked how many devices there
-   are, it answers none, which is what sends the engine down the buffer path
-   we want. */
+ *
+ * The original ships this in a separate library: threads, semaphores,
+ * events, a little string handling, an audio device interface and a trace
+ * log. None of it is speech, and none of it is what this port is about, so
+ * it is written afresh on top of evv_port.h rather than transcribed. Only
+ * enough to let the engine run and hand samples back through its own
+ * buffer interface.
+ *
+ * The audio device half is deliberately empty. Asked how many devices there
+ * are, it answers none, which is what sends the engine down the buffer path
+ * we want. */
 
 #include "evv_port.h"
 #include <stdio.h>

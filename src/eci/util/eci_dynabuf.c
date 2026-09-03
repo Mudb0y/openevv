@@ -1,12 +1,12 @@
 /* The growable buffer everything above the Delta machine writes through.
-
-   Written to the original's behaviour rather than its instructions, because
-   what matters to the machine is which characters come out and in what
-   order, not how the room for them was found. Two asymmetries are the
-   original's own and are kept: adding a string shifts from one below the end
-   while adding a buffer shifts from the end itself, and the two put the
-   terminator back at different points. Nothing has been tidied, because a
-   tidy version would be a different buffer. */
+ *
+ * Written to the original's behaviour rather than its instructions, because
+ * what matters to the machine is which characters come out and in what
+ * order, not how the room for them was found. Two asymmetries are the
+ * original's own and are kept: adding a string shifts from one below the end
+ * while adding a buffer shifts from the end itself, and the two put the
+ * terminator back at different points. Nothing has been tidied, because a
+ * tidy version would be a different buffer. */
 
 #include <stdlib.h>
 #include <stdio.h>

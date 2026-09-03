@@ -252,17 +252,17 @@ int32_t initializeDeltaStack(delta_state *d, int32_t size)
 }
 
 /* Walking the backtracking stack a record at a time.
- *
- * Every record starts with its kind, and the kind says how long it is: the
- * fixed sizes the stack block carries for each, except a token record, whose
- * own length word decides it -- rounded up to the odd number above it and
- * then past the header. A kind the switch does not know costs two bytes,
- * which is the back marker.
- *
- * Nothing in the engine walks the stack this way. It is the display's, the
- * one src/delta/delta_trace.c says why this tree does not have, and it is here for
- * completeness rather than for a caller.
- */
+
+   Every record starts with its kind, and the kind says how long it is: the
+   fixed sizes the stack block carries for each, except a token record, whose
+   own length word decides it -- rounded up to the odd number above it and
+   then past the header. A kind the switch does not know costs two bytes,
+   which is the back marker.
+
+   Nothing in the engine walks the stack this way. It is the display's, the
+   one src/delta/delta_trace.c says why this tree does not have, and it is here for
+   completeness rather than for a caller.
+   */
 int32_t peekDeltaStackNext(delta_state *d)
 {
     delta_stack *s = EVV_AT(delta_stack *, d->stack);

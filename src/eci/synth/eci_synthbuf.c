@@ -1,19 +1,19 @@
 /* The buffers and the format the caller asks results in.
-
-   A caller wants either samples or phonemes, never both, and says so by
-   handing down a buffer for one of them. Registering either is the same
-   shape of thing: refuse it if anything is still outstanding or if the other
-   kind is already registered, take the reporting callbacks down, tell the
-   engine which mode it is now in, put the reporting back, and only then keep
-   the buffer.
-
-   Taking the callbacks down and putting them back is written out four times
-   over in the original, identically each time. It is one pair of routines
-   here, because four copies of the same thing is the compiler's business and
-   not something worth preserving.
-
-   Names are prefixed because a plain C name has to be unique across the
-   whole link; the aliases at the foot carry the real ones. */
+ *
+ * A caller wants either samples or phonemes, never both, and says so by
+ * handing down a buffer for one of them. Registering either is the same
+ * shape of thing: refuse it if anything is still outstanding or if the other
+ * kind is already registered, take the reporting callbacks down, tell the
+ * engine which mode it is now in, put the reporting back, and only then keep
+ * the buffer.
+ *
+ * Taking the callbacks down and putting them back is written out four times
+ * over in the original, identically each time. It is one pair of routines
+ * here, because four copies of the same thing is the compiler's business and
+ * not something worth preserving.
+ *
+ * Names are prefixed because a plain C name has to be unique across the
+ * whole link; the aliases at the foot carry the real ones. */
 
 #include <stdint.h>
 #include <string.h>
@@ -160,7 +160,7 @@ extern THIS int32_t rz_setParam(void *r, int32_t which, int32_t value)
 /* Where the state block records that phonemes are wanted. */
 #define STATE_PHONEMES(s) (*(int32_t *)((char *)(s) + 0x50))
 
-/* ---- the reporting callbacks, off and on ---- */
+/* ---- the reporting callbacks, off and on ----------------------------- */
 
 /* Take down whichever of the two ways of reporting word positions this
    engine uses, on both sides at once. */
@@ -202,7 +202,7 @@ static void stf_reportingOn(SynthThread *t)
                               stb_staticSynthesisBreakCallback, t);
 }
 
-/* ---- the format the sound manager is already playing ---- */
+/* ---- the format the sound manager is already playing ----------------- */
 
 /* Is a format the sound manager holds the one being asked for? The name is
    compared only when either side has one, and then both must. */
@@ -249,7 +249,7 @@ THIS int32_t stf_deleteAudioFormat(SynthThread *t)
     return rc;
 }
 
-/* ---- the caller's phoneme buffer ---- */
+/* ---- the caller's phoneme buffer ------------------------------------- */
 
 /* Hand down a buffer to be given the phonemes in, or a null one to stop.
 
@@ -322,7 +322,7 @@ done:
     return rc;
 }
 
-/* ---- the caller's sample buffer ---- */
+/* ---- the caller's sample buffer -------------------------------------- */
 
 /* Hand down a buffer to be given the samples in, or a null one to stop.
 
@@ -419,7 +419,7 @@ done:
     return rc;
 }
 
-/* ---- a whole new format from the sound manager ---- */
+/* ---- a whole new format from the sound manager ----------------------- */
 
 /* Ask the sound manager for a format, and with it the device that plays it.
 

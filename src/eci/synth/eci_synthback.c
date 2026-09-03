@@ -1,20 +1,20 @@
 /* What the synthesis thread hands back.
-
-   Everything below runs on the thread, called from underneath rather than
-   from above: the engine and the concatenative side both take callbacks, and
-   these are what they call. From here results go three ways -- out to the
-   sound device, into whichever buffers the caller registered, and onto the
-   application queue as messages the caller will collect later.
-
-   Each kind of callback is registered twice over, as a plain function the
-   caller's side can hold and as a method. The plain ones are the trampolines
-   at the top: they take the thread as their last argument and hand
-   everything else straight on.
-
-   Two of the original's own faults are transcribed rather than mended, and
-   both are marked where they are. Neither can be reached by anything short
-   of the engine failing outright, and mending either would change what the
-   binary does under a condition there is no way to test. */
+ *
+ * Everything below runs on the thread, called from underneath rather than
+ * from above: the engine and the concatenative side both take callbacks, and
+ * these are what they call. From here results go three ways -- out to the
+ * sound device, into whichever buffers the caller registered, and onto the
+ * application queue as messages the caller will collect later.
+ *
+ * Each kind of callback is registered twice over, as a plain function the
+ * caller's side can hold and as a method. The plain ones are the trampolines
+ * at the top: they take the thread as their last argument and hand
+ * everything else straight on.
+ *
+ * Two of the original's own faults are transcribed rather than mended, and
+ * both are marked where they are. Neither can be reached by anything short
+ * of the engine failing outright, and mending either would change what the
+ * binary does under a condition there is no way to test. */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -200,7 +200,7 @@ void stb_staticSynthesisBreakCallback(int32_t where, void *self);
    callback, because there would be nobody to take it off the queue. */
 #define LISTENING(t) (APP_LISTENING(ST_APP(t)) != 0)
 
-/* ---- telling the caller something went wrong ---- */
+/* ---- telling the caller something went wrong ------------------------- */
 
 /* Each of the three is reported once and then held quiet, because a failing
    engine fails on every sample and the caller wants to be told, not
@@ -240,7 +240,7 @@ THIS void stb_postSoundError(SynthThread *t)
     sy_mutexRelease(lock);
 }
 
-/* ---- filling the caller's buffers ---- */
+/* ---- filling the caller's buffers ------------------------------------ */
 
 /* Samples go into the caller's buffer a word at a time, and the buffer is
    handed over whenever it is exactly full. The engine works in long words
@@ -349,7 +349,7 @@ THIS void stb_sendRemainingPhonemesToUser(SynthThread *t)
     ST_PHONHELD(t) = 0;
 }
 
-/* ---- index marks coming back out ---- */
+/* ---- index marks coming back out ------------------------------------- */
 
 /* A mark the engine has now reached. Which message the caller gets depends
    on what kind of mark it was; one kind is not the caller's business at all
@@ -402,7 +402,7 @@ THIS void stb_postIndexToUser(SynthThread *t, int32_t id)
     sti_deleteIndex(ST_INDEXMGR(t), (uint32_t)id);
 }
 
-/* ---- what the engine and the concatenative side call ---- */
+/* ---- what the engine and the concatenative side call ----------------- */
 
 /* Samples. Everything that ever gets heard comes through here.
 
@@ -717,7 +717,7 @@ THIS void stb_sendEnhancedSPRToTorrentManager(SynthThread *t, char *text,
         cm_bufferSPR(ST_CONCAT(t), text, len);
 }
 
-/* ---- the plain functions the other side holds ----
+/* ---- the plain functions the other side holds ---------------------------
 
    Every one of these takes the thread as its last argument, because that is
    the only thing a C callback can be given to say which instance it belongs

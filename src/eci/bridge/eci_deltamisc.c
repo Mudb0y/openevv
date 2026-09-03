@@ -37,7 +37,7 @@ extern int32_t logicalIOSetErrorCallback(delta_state *d, void *fn);
 extern int32_t vcmdinit(delta_state *d, int32_t argc, char **argv);
 extern int32_t vinitrun(delta_state *d);
 
-/* ---- misc ----------------------------------------------------------- */
+/* ---- misc ------------------------------------------------------------ */
 
 /* Whatever the last C helper answered with is not to be believed until one
    actually runs, so it starts as the value nothing returns. */
@@ -51,23 +51,23 @@ void ccode_misc_delete(void)
 }
 
 /* The command language's own operations, which this engine never runs.
- *
- * Delta is two languages in one object: the rules, which is what a voice is
- * written in, and a command script that drives the machine from outside. The
- * engine is the library case, where the commands come through the ECI
- * interface instead, so every one of these is empty in the original -- not
- * stubbed by us, empty where IBM compiled it, which is why they take no
- * arguments here. A body that reads none cannot say how many its callers
- * push, and cdecl does not mind; a rule of ours that calls one with more
- * will need the declaration widened, and that is the moment to look at the
- * object again.
- *
- * The two that are not empty are the two ways a script stops, and both of
- * them end the process. That is the original's doing and it is worth knowing
- * before anything calls one: in a library the process is the host's, so
- * halting a script would take the caller's program down with it. The same is
- * true of vcmdend above, and is said there too.
- */
+
+   Delta is two languages in one object: the rules, which is what a voice is
+   written in, and a command script that drives the machine from outside. The
+   engine is the library case, where the commands come through the ECI
+   interface instead, so every one of these is empty in the original -- not
+   stubbed by us, empty where IBM compiled it, which is why they take no
+   arguments here. A body that reads none cannot say how many its callers
+   push, and cdecl does not mind; a rule of ours that calls one with more
+   will need the declaration widened, and that is the moment to look at the
+   object again.
+
+   The two that are not empty are the two ways a script stops, and both of
+   them end the process. That is the original's doing and it is worth knowing
+   before anything calls one: in a library the process is the host's, so
+   halting a script would take the caller's program down with it. The same is
+   true of vcmdend above, and is said there too.
+   */
 void noop1(delta_state *d)       { (void)d; }
 void code_end(delta_state *d)    { (void)d; }
 void goto_1(delta_state *d)      { (void)d; }
@@ -128,17 +128,17 @@ int32_t etiwinMainDLL(delta_state *d, int32_t argc, char **argv)
 }
 
 /* And starting it as a program, which is what the command layer was written
- * for. The count and the vector are the caller's own here rather than one
- * short, since a program's argv[0] is its name and the layer wants what
- * follows; then the command layer comes up, the run is initialised, and the
- * machine is handed to the language's own main rule. It ends by ending the
- * process, which is the command layer's way out and is why a library uses
- * etiwinMainDLL above instead.
- *
- * One line of the original is not here. Between the main rule and the way
- * out it takes the length of a string and does nothing with it -- a leftover
- * of whatever printed that message once. Nothing can observe the difference.
- */
+   for. The count and the vector are the caller's own here rather than one
+   short, since a program's argv[0] is its name and the layer wants what
+   follows; then the command layer comes up, the run is initialised, and the
+   machine is handed to the language's own main rule. It ends by ending the
+   process, which is the command layer's way out and is why a library uses
+   etiwinMainDLL above instead.
+
+   One line of the original is not here. Between the main rule and the way
+   out it takes the length of a string and does nothing with it -- a leftover
+   of whatever printed that message once. Nothing can observe the difference.
+   */
 int32_t etiwinMain(delta_state *d, int32_t argc, char **argv)
 {
     delta_owner *o = EVV_AT(delta_owner *, d->owner);
@@ -161,7 +161,7 @@ int32_t etiwinMain(delta_state *d, int32_t argc, char **argv)
     return 0;
 }
 
-/* ---- dttime --------------------------------------------------------- */
+/* ---- dttime ---------------------------------------------------------- */
 
 /* The value of an expression over a run, which is what a rule asks for when
    it wants a duration or a field read across two positions.
@@ -172,7 +172,7 @@ int32_t etiwinMain(delta_state *d, int32_t argc, char **argv)
    durcalc and firstdefd -- about eight hundred instructions -- for a path no
    rule takes. It is here now because the machine is being finished rather
    than because something wants it, and vgen wants the same three. */
-/* ---- dterror -------------------------------------------------------- */
+/* ---- dterror --------------------------------------------------------- */
 
 /* Asked of the file table rather than reached into: the field sat at 0xc0 in
    the original and sits at 368 here, so writing at 0xc0 set nothing and trod
@@ -182,7 +182,7 @@ int32_t dtSetErrorCallback(delta_state *d, void *fn)
     return logicalIOSetErrorCallback(d, fn);
 }
 
-/* ---- ctxt ----------------------------------------------------------- */
+/* ---- ctxt ------------------------------------------------------------ */
 
 /* Set the flag bits of one entry, keeping the bottom two, which say
    something the caller is not allowed to disturb. Which entry depends on
@@ -203,7 +203,7 @@ void vsetsc(delta_state *d, int32_t fromStart, int32_t unused,
     table[at] = (table[at] & 3) | bits;
 }
 
-/* ---- dictinit ------------------------------------------------------- */
+/* ---- dictinit -------------------------------------------------------- */
 
 /* One entry of a lookup set or a dictionary action. What goes in it is the
    lowest key its kind can hold, so that a search starting there finds the
@@ -291,15 +291,15 @@ int32_t vdictinit(delta_state *d)
 
 
 /* How long the run between two positions is, remembering the last answer.
- *
- * Asked outright -- the flag set -- it is dur2 and nothing more. Asked
- * through the cache it measures from where it measured last: the two nodes
- * it saw before are in the cache with the duration between them, so the new
- * duration is that one, plus the distance from the old right end to the new,
- * less the distance from the old left end to the new. The cache is then told
- * the new pair, with the offsets folded in so that a position part way into
- * a statement is not counted twice.
- */
+
+   Asked outright -- the flag set -- it is dur2 and nothing more. Asked
+   through the cache it measures from where it measured last: the two nodes
+   it saw before are in the cache with the duration between them, so the new
+   duration is that one, plus the distance from the old right end to the new,
+   less the distance from the old left end to the new. The cache is then told
+   the new pair, with the offsets folded in so that a position part way into
+   a statement is not counted twice.
+   */
 int32_t durcalc(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
                 int32_t *cache, int32_t direct)
 {
@@ -331,16 +331,16 @@ int32_t durcalc(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
 }
 
 /* The first position at or beyond one where the field is actually written.
- *
- * A sync is stepped over unless it carries the statement type asked about.
- * Anything else is looked at: a field whose value is nought is not written,
- * and the walk goes on in whichever direction was asked for. The first that
- * is written is the answer, and running out answers with where it started.
- *
- * A field kind other than the two integer widths leaves the original reading
- * an uninitialised word to decide with. None of the ten English types is
- * one; ours takes it as written rather than as undefined.
- */
+
+   A sync is stepped over unless it carries the statement type asked about.
+   Anything else is looked at: a field whose value is nought is not written,
+   and the walk goes on in whichever direction was asked for. The first that
+   is written is the answer, and running out answers with where it started.
+
+   A field kind other than the two integer widths leaves the original reading
+   an uninitialised word to decide with. None of the ten English types is
+   one; ours takes it as written rather than as undefined.
+   */
 int32_t firstdefd(delta_state *d, int8_t f, int32_t t, uint8_t st,
                   int32_t back)
 {
@@ -393,23 +393,23 @@ int32_t firstdefd(delta_state *d, int8_t f, int32_t t, uint8_t st,
 }
 
 /* What a field is worth at a position, measured across the run it sits in.
- *
- * The shape of it: find the two ends of the run, read the field at each, and
- * answer. If the two ends agree the answer is that value. If they do not, and
- * the run has a duration, the answer is the two interpolated by how far into
- * the run the position lies -- which is what durcalc is for and why the
- * caller is told, through `out', that the answer was worked out rather than
- * read. If there is no duration the selector decides: the left value, the
- * right, or the two averaged.
- *
- * Three things in it are the original's and are kept. A short field whose
- * value is the smallest short means undefined and is answered as such. The
- * walk that checks every mark between the ends agrees does not advance when
- * it meets something that is not a mark, so a spine that put one there would
- * hang -- ours hangs the same way. And the two positions handed to durcalc
- * have their field left unset, which is a word of stack in the original;
- * here it is nought.
- */
+
+   The shape of it: find the two ends of the run, read the field at each, and
+   answer. If the two ends agree the answer is that value. If they do not, and
+   the run has a duration, the answer is the two interpolated by how far into
+   the run the position lies -- which is what durcalc is for and why the
+   caller is told, through `out', that the answer was worked out rather than
+   read. If there is no duration the selector decides: the left value, the
+   right, or the two averaged.
+
+   Three things in it are the original's and are kept. A short field whose
+   value is the smallest short means undefined and is answered as such. The
+   walk that checks every mark between the ends agrees does not advance when
+   it meets something that is not a mark, so a spine that put one there would
+   hang -- ours hangs the same way. And the two positions handed to durcalc
+   have their field left unset, which is a word of stack in the original;
+   here it is nought.
+   */
 int32_t val_expr2(delta_state *d, delta_tpos *p, int8_t st, uint8_t fld,
                   int32_t which, int32_t mode, int32_t *out)
 {

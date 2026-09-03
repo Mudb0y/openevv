@@ -1,16 +1,16 @@
 /* Logical files: how the Delta machine reaches the outside world.
-
-   The machine never names a file. It names a stream — pgmin, cmdout, the
-   one ECI puts text into — and this table says what that stream is made of:
-   a list of places to read from, a list of places to write to, and a buffer
-   holding the line last read. A physical file is five functions and three
-   words of state, so a stream can be a disk file, a block of memory, the
-   terminal, or nothing at all without the machine knowing the difference.
-
-   Written to the original's behaviour rather than its instructions. The
-   parts that decide what the machine sees are exact: which characters
-   vf_getc hands back, when a line is refilled, when one input file gives way
-   to the next. The bookkeeping under that is ours. */
+ *
+ * The machine never names a file. It names a stream -- pgmin, cmdout, the
+ * one ECI puts text into -- and this table says what that stream is made of:
+ * a list of places to read from, a list of places to write to, and a buffer
+ * holding the line last read. A physical file is five functions and three
+ * words of state, so a stream can be a disk file, a block of memory, the
+ * terminal, or nothing at all without the machine knowing the difference.
+ *
+ * Written to the original's behaviour rather than its instructions. The
+ * parts that decide what the machine sees are exact: which characters
+ * vf_getc hands back, when a line is refilled, when one input file gives way
+ * to the next. The bookkeeping under that is ours. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -103,7 +103,7 @@ int32_t logicalIOSetErrorCallback(delta_state *d, void *fn)
 }
 #define LF(d, n)  (&LOGIO(d)->files[(int)(int8_t)(n)])
 
-/* ---- the physical file classes ---------------------------------------- */
+/* ---- the physical file classes --------------------------------------- */
 
 /* Put a space before the end of a line if there is not one there already.
    Both of these leave the cursor where they found it. */
@@ -384,7 +384,7 @@ static void setClass(PhysicalFile *p,
     p->close = close;
 }
 
-/* ---- the table ---------------------------------------------------------- */
+/* ---- the table ------------------------------------------------------- */
 
 int32_t logio_new(delta_state *d)
 {
@@ -550,7 +550,7 @@ int32_t builtInLogicalFiles(delta_state *d)
     return LOGIO(d)->builtin;
 }
 
-/* ---- reading ------------------------------------------------------------ */
+/* ---- reading --------------------------------------------------------- */
 
 static InFile *findLastInputFile(delta_state *d, int32_t lf)
 {
@@ -739,7 +739,7 @@ int32_t vf_eof(delta_state *d, int32_t lf)
     return 1;
 }
 
-/* ---- writing ------------------------------------------------------------ */
+/* ---- writing --------------------------------------------------------- */
 
 static OutFile *findOutputFile(delta_state *d, const char *name)
 {
@@ -868,7 +868,7 @@ int32_t vf_puts(delta_state *d, int32_t lf, const char *s, int32_t flush)
     return 1;
 }
 
-/* ---- opening and closing ------------------------------------------------ */
+/* ---- opening and closing --------------------------------------------- */
 
 int32_t logicalFileAddPhysical(delta_state *d, int32_t lf, const char *name,
                                void *cls, void *handle, int32_t mode)
@@ -984,7 +984,7 @@ void vfclose_lf(delta_state *d, int32_t lf)
     LF(d, lf)->in_cur = 0;
 }
 
-/* ---- the rest of the surface ------------------------------------------- */
+/* ---- the rest of the surface ----------------------------------------- */
 
 /* Printing to a stream with a format. The printing half of the runtime is
    stubbed, and this is part of it: the machine's own output goes through

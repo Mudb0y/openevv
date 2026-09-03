@@ -1,21 +1,21 @@
 /* What the synthesis thread does when it takes a message off the queue.
-
-   Every one of these is the far half of a sender in eci_synthmsg.c. They all
-   run on the thread rather than on the caller, which is why almost all of
-   them end the same way: take the lock, take what the message stood for off
-   the count of outstanding work, let go. Anything that gives up early leaves
-   the count alone, so work that was never done is never counted as done.
-
-   Nearly all of them begin the same way too, by flushing whatever text is
-   half-processed. A parameter change has to land between words rather than
-   inside one, and stw_processRemaining is what makes sure of that.
-
-   The two long ones, addTextRun and changeLanguageRun, are not here yet;
-   they are still the original's.
-
-   None of these read the application-queue slot the sender claimed for them,
-   with the single exception of synthesizeRun, which hands it on to whatever
-   stops the synthesis. The rest take it and ignore it. */
+ *
+ * Every one of these is the far half of a sender in eci_synthmsg.c. They all
+ * run on the thread rather than on the caller, which is why almost all of
+ * them end the same way: take the lock, take what the message stood for off
+ * the count of outstanding work, let go. Anything that gives up early leaves
+ * the count alone, so work that was never done is never counted as done.
+ *
+ * Nearly all of them begin the same way too, by flushing whatever text is
+ * half-processed. A parameter change has to land between words rather than
+ * inside one, and stw_processRemaining is what makes sure of that.
+ *
+ * The two long ones, addTextRun and changeLanguageRun, are not here yet;
+ * they are still the original's.
+ *
+ * None of these read the application-queue slot the sender claimed for them,
+ * with the single exception of synthesizeRun, which hands it on to whatever
+ * stops the synthesis. The rest take it and ignore it. */
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -147,7 +147,7 @@ static void finished(SynthThread *t)
     sy_mutexRelease(lock);
 }
 
-/* ---- the parameter changes ---- */
+/* ---- the parameter changes ------------------------------------------- */
 
 /* All of these say the same thing to the concatenative side and nothing at
    all to anybody else, because the engine proper picks its parameters up
@@ -232,7 +232,7 @@ THIS void changeVolumeRun(SynthThread *t, int32_t v, int32_t seq)
     finished(t);
 }
 
-/* ---- the ones that are their own shape ---- */
+/* ---- the ones that are their own shape ------------------------------- */
 
 /* Turning phoneme marks on or off is one of the few things the engine itself
    has to be told, and the state block is told too so that a caller asking
@@ -334,7 +334,7 @@ THIS void changeFilterRun(SynthThread *t, uint32_t which, uint32_t value,
     finished(t);
 }
 
-/* ---- index marks ---- */
+/* ---- index marks ----------------------------------------------------- */
 
 /* All three kinds of mark take the same two roads. When the romanizer is in
    the way the mark is queued behind the text it follows and the romanizer is
@@ -407,7 +407,7 @@ THIS void insertAudioIndexRun(SynthThread *t, char *name, int32_t seq)
     markRun(t, 5, EVV_REF(strdup(name)));
 }
 
-/* ---- the rest ---- */
+/* ---- the rest -------------------------------------------------------- */
 
 /* Text handed straight to the romanizer without going near Delta. What it
    stands for is a length rather than a single message, so that is what comes

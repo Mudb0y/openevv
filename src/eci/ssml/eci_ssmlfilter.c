@@ -220,10 +220,10 @@ THIS char *ssf_filterSSMLText(SSMLFilter *self, const char *text,
    through untouched unless the caller insists, which is what `force' is
    for -- `eciGetFilteredText' asks that way, so that a caller can see what
    the filter would do without turning it on.
- *
- * What is handed back is a copy of the reader's answer rather than the
- * answer itself, so that it survives the next document. The copy is the
- * filter's and is freed by the call after it. */
+
+   What is handed back is a copy of the reader's answer rather than the
+   answer itself, so that it survives the next document. The copy is the
+   filter's and is freed by the call after it. */
 THIS int32_t ssf_filterText(SSMLFilter *self, const char *text, char **out,
                             int8_t force)
 {
@@ -280,10 +280,10 @@ int isSSMLFilterUsable(const char *text)
 
 /* The published entry point: number seven asks for a filter, number eight
    for the test above. Anything else is answered with nothing.
- *
- * Number one is accepted as well as seven and gives the same thing, which
- * is IBM's and is kept: an older header numbered the filter interface one
- * and the engine still answers to it. */
+
+   Number one is accepted as well as seven and gives the same thing, which
+   is IBM's and is kept: an older header numbered the filter interface one
+   and the engine still answers to it. */
 STDCALL int ssml_getFilterObject(uint32_t idInterface, void **out)
 {
     void *object = 0;

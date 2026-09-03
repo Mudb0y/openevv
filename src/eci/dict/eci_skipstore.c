@@ -206,15 +206,15 @@ Translation *sl_search(SkipList *l, Key *key)
 }
 
 /* Every prefix of the key of even length, looked up in one pass.
- *
- * Japanese keys are two-byte characters, so the prefixes worth asking about
- * are two bytes, four bytes and so on; there are half as many of them as the
- * key is long. What comes back is an array of that many translations, with the
- * count in the four bytes before it, and an entry is left empty where its
- * prefix was not found.
- *
- * The position reached on each level is carried from one prefix to the next,
- * which is why this is one pass and not one search per prefix. */
+
+   Japanese keys are two-byte characters, so the prefixes worth asking about
+   are two bytes, four bytes and so on; there are half as many of them as the
+   key is long. What comes back is an array of that many translations, with the
+   count in the four bytes before it, and an entry is left empty where its
+   prefix was not found.
+
+   The position reached on each level is carried from one prefix to the next,
+   which is why this is one pass and not one search per prefix. */
 Translation *sl_multiSearch(SkipList *l, Key *key)
 {
     SkipListNode *from[SL_MAX_LEVEL + 1];
@@ -253,12 +253,12 @@ Translation *sl_multiSearch(SkipList *l, Key *key)
 }
 
 /* And give back what it answered.
- *
- * IBM calls Translation's vector deleting destructor on the array, which is
- * MSVC's own arrangement: the count sits in the four bytes in front of the
- * first element and the destructor walks back to find it. multiSearch above
- * lays the block out the same way, so this is the other half of that and the
- * only thing that may be handed the answer. */
+
+   IBM calls Translation's vector deleting destructor on the array, which is
+   MSVC's own arrangement: the count sits in the four bytes in front of the
+   first element and the destructor walks back to find it. multiSearch above
+   lays the block out the same way, so this is the other half of that and the
+   only thing that may be handed the answer. */
 void sl_freeMultiSearch(Translation *found)
 {
     char    *block;
@@ -326,7 +326,7 @@ int32_t sl_getNext(SkipList *l, Key **key, Translation **t)
     return -1;
 }
 
-/* ---- to a file and back --------------------------------------------- */
+/* ---- to a file and back ---------------------------------------------- */
 
 /* How far along the bottom row a node is, counting the head as nought. This is
    what a forward pointer becomes in a file. */

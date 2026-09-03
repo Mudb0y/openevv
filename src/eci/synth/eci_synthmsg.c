@@ -1,26 +1,26 @@
 /* What the world says to the synthesis thread.
-
-   Every public request on SynthThread -- speak this text, change the speed,
-   drop an index mark in -- is a message. The caller takes the thread's lock,
-   builds the message, posts it and returns; the thread picks it up later and
-   calls the matching Run method. This file is the near half of that: the
-   twenty message classes and the twenty-one senders. The far half is in
-   eci_synthrun.c.
-
-   The senders look alike but are not interchangeable, and the differences
-   are the whole reason this file is written out longhand rather than
-   generated. Each one reserves the next slot in the application queue before
-   posting and writes it back only if the post was actually taken, so a
-   refused message leaves the numbering untouched. Six of them start the
-   sound device first and shut it down again if the post then fails. Two
-   count the text they carry rather than counting themselves. Seven throw the
-   message away when the post fails while the other fourteen only drop their
-   reference. Getting any of that wrong is not a crash and not a difference
-   in the audio: it shows up much later as an index mark reported against the
-   wrong word.
-
-   The tables of virtual functions at the end are read off the original's own
-   .rdata, slot for slot. */
+ *
+ * Every public request on SynthThread -- speak this text, change the speed,
+ * drop an index mark in -- is a message. The caller takes the thread's lock,
+ * builds the message, posts it and returns; the thread picks it up later and
+ * calls the matching Run method. This file is the near half of that: the
+ * twenty message classes and the twenty-one senders. The far half is in
+ * eci_synthrun.c.
+ *
+ * The senders look alike but are not interchangeable, and the differences
+ * are the whole reason this file is written out longhand rather than
+ * generated. Each one reserves the next slot in the application queue before
+ * posting and writes it back only if the post was actually taken, so a
+ * refused message leaves the numbering untouched. Six of them start the
+ * sound device first and shut it down again if the post then fails. Two
+ * count the text they carry rather than counting themselves. Seven throw the
+ * message away when the post fails while the other fourteen only drop their
+ * reference. Getting any of that wrong is not a crash and not a difference
+ * in the audio: it shows up much later as an index mark reported against the
+ * wrong word.
+ *
+ * The tables of virtual functions at the end are read off the original's own
+ * .rdata, slot for slot. */
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -240,7 +240,7 @@ extern const MessageVtbl vt_changeVoice, vt_changeEmphasis;
 extern const MessageVtbl vt_setPhonemeIndicies, vt_insertIndex;
 extern const MessageVtbl vt_insertStringIndex, vt_insertAudioIndex;
 
-/* ---- what each kind does when the thread gets to it ---- */
+/* ---- what each kind does when the thread gets to it ------------------ */
 
 THIS void run_addText(ETImessage *m)
 {
@@ -361,7 +361,7 @@ THIS void run_insertAudioIndex(ETImessage *m)
     insertAudioIndexRun(x->thread, x->text, x->seq);
 }
 
-/* ---- tearing one down ---- */
+/* ---- tearing one down ------------------------------------------------ */
 
 /* Most kinds own nothing, so all there is to undo is the base class: put the
    base table back before running its destructor, then free if asked. */
@@ -460,7 +460,7 @@ THIS void *destroy_insertAudioIndex(ETImessage *m, int32_t free_it)
     return m;
 }
 
-/* ---- the two that build themselves ---- */
+/* ---- the two that build themselves ----------------------------------- */
 
 /* Both copy the caller's bytes and hang a terminator off the end, so the run
    method can treat what it was given as a string even though the caller
@@ -501,7 +501,7 @@ THIS MsgText *ctor_addParam(MsgText *x, SynthThread *t, char *text,
     return x;
 }
 
-/* ---- the device ---- */
+/* ---- the device ------------------------------------------------------ */
 
 /* Anything that will make sound has to find the device open first. The
    caller is told whether this call is the one that opened it, because if the
@@ -536,7 +536,7 @@ THIS int32_t stg_startUpSound(SynthThread *t, int32_t *opened)
     return rc;
 }
 
-/* ---- posting ---- */
+/* ---- posting --------------------------------------------------------- */
 
 /* The tail every sender shares. The message is already built; take a
    reference so the thread cannot free it out from under us, post it, and on
@@ -580,7 +580,7 @@ static int32_t claim(SynthThread *t)
     return APP_POSTED(ST_APP(t)) + 1;
 }
 
-/* ---- the senders ---- */
+/* ---- the senders ----------------------------------------------------- */
 
 /* The plainest shape: one value and the slot it claimed, no device, and the
    reference merely dropped if the post is refused. */
@@ -944,7 +944,7 @@ THIS int32_t st_insertAudioIndex(SynthThread *t, char *name)
     return sendString(t, MSG_AUDIO_INDEX, &vt_insertAudioIndex, name);
 }
 
-/* ---- the tables ----
+/* ---- the tables ---------------------------------------------------------
 
    Six of the seven slots are the base class's and never change. Only the
    destructor and the run differ, which is why the whole set comes out of one

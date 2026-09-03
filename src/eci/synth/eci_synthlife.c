@@ -1,18 +1,18 @@
 /* Building a synthesis thread, settling it on a language, stopping it and
-   taking it apart again.
-
-   The two constructors differ only at the ends. Both build the same object
-   and both share the two things every synthesis thread in the process holds
-   between them -- the sound manager and the table of phoneme names -- which
-   are made by whichever thread is built first and given back by whichever is
-   destroyed last, counted by a number held beside them.
-
-   The one that is given a language also starts the thread running and copies
-   the language in; the one that is not leaves both for later.
-
-   Nothing in here reports a failure by returning: a constructor cannot. What
-   it does instead is leave a complaint in a field the layer above reads back
-   once it has the object. */
+ * taking it apart again.
+ *
+ * The two constructors differ only at the ends. Both build the same object
+ * and both share the two things every synthesis thread in the process holds
+ * between them -- the sound manager and the table of phoneme names -- which
+ * are made by whichever thread is built first and given back by whichever is
+ * destroyed last, counted by a number held beside them.
+ *
+ * The one that is given a language also starts the thread running and copies
+ * the language in; the one that is not leaves both for later.
+ *
+ * Nothing in here reports a failure by returning: a constructor cannot. What
+ * it does instead is leave a complaint in a field the layer above reads back
+ * once it has the object. */
 
 #include <stdint.h>
 #include <string.h>
@@ -274,7 +274,7 @@ struct AppQueue { const AppQueueVtbl *vt; };
 /* And the mark queue, whose deleting destructor is slot nought. */
 typedef struct { void *(*destroy)(void *self, int32_t free_it); } QueueVtbl;
 
-/* ---- building ---- */
+/* ---- building -------------------------------------------------------- */
 
 /* The body both constructors share: every field of the object put into a
    known state, and the five things it owns made. A block that could not be
@@ -409,7 +409,7 @@ THIS SynthThread *stl_ctorWithLanguage(SynthThread *t, void *app, void *state,
     return t;
 }
 
-/* ---- settling on a language ---- */
+/* ---- settling on a language ------------------------------------------ */
 
 /* Put the thread on a language and get the engine behind it ready to speak.
 
@@ -529,7 +529,7 @@ THIS int32_t stl_initialize(SynthThread *t, LangIdentifier *want)
     return rc;
 }
 
-/* ---- stopping ---- */
+/* ---- stopping -------------------------------------------------------- */
 
 /* Throw away everything in flight and put the thread back where it started.
 
@@ -613,7 +613,7 @@ THIS int32_t stl_stop(SynthThread *t)
     return rc;
 }
 
-/* ---- taking apart ---- */
+/* ---- taking apart ---------------------------------------------------- */
 
 /* Stop, wait for the thread to actually be gone, then give back everything
    in the order it was taken. Whoever is last out gives back the two shared

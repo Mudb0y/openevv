@@ -58,7 +58,7 @@ const delta_language *delta_lang_by_id(int32_t id)
     return 0;
 }
 
-/* ---- a machine and the language that made it ------------------------ */
+/* ---- a machine and the language that made it ------------------------- */
 
 /* In front of the state rather than inside it. The state is IBM's layout
    from its first byte -- the rules address the globals as offsets from it,
@@ -98,7 +98,7 @@ const delta_language *delta_lang_of(const struct delta_state *d)
     return d != 0 ? ((const delta_head *)d)[-1].lang : 0;
 }
 
-/* ---- the settings of every language, as one blob -------------------- */
+/* ---- the settings of every language, as one blob --------------------- */
 
 /* The original's reader walks sections and stops on a byte of 0xff, and
    eciGetAvailableLanguages answers out of the section names, so a build with

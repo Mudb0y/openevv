@@ -40,26 +40,26 @@ typedef char delta_fielddesc_is_0x18[sizeof(delta_fielddesc) == 0x18 ? 1 : -1];
 #endif
 
 /* A walk that is not going to finish.
- *
- * Most of what is below walks the delta: it steps from one node to the next
- * along a link and stops when the chain ends or when it reaches what it was
- * told to look for. That is sound while the links go somewhere. Links that
- * have come round on themselves take the walk round with them, and the engine
- * stops answering instead of saying anything -- which, in something a screen
- * reader has loaded into itself, is worse than a fault, because a fault at
- * least ends.
- *
- * The machine keeps no count of its nodes to hold a walk against, so this is
- * a ceiling and not a measure. What a walk over a delta that is whole costs
- * was measured rather than reasoned about, over every case in the suite and
- * over the strings the NVDA driver keeps a list of because they kill the
- * original: the deepest was EVV_MEASURED. The ceiling is far above that and
- * far below what a person would sit through, and reaching it is treated the
- * way the machine treats everything else it is asked to do and cannot -- the
- * rule backtracks, and the utterance goes rather than the process.
- *
- * No text reaches it. It is here for a delta that is already wrong.
- */
+
+   Most of what is below walks the delta: it steps from one node to the next
+   along a link and stops when the chain ends or when it reaches what it was
+   told to look for. That is sound while the links go somewhere. Links that
+   have come round on themselves take the walk round with them, and the engine
+   stops answering instead of saying anything -- which, in something a screen
+   reader has loaded into itself, is worse than a fault, because a fault at
+   least ends.
+
+   The machine keeps no count of its nodes to hold a walk against, so this is
+   a ceiling and not a measure. What a walk over a delta that is whole costs
+   was measured rather than reasoned about, over every case in the suite and
+   over the strings the NVDA driver keeps a list of because they kill the
+   original: the deepest was EVV_MEASURED. The ceiling is far above that and
+   far below what a person would sit through, and reaching it is treated the
+   way the machine treats everything else it is asked to do and cannot -- the
+   rule backtracks, and the utterance goes rather than the process.
+
+   No text reaches it. It is here for a delta that is already wrong.
+   */
 #define EVV_WALK_MAX  200000
 
 #define EVV_WALK(n)        int32_t n = EVV_WALK_MAX
@@ -230,19 +230,19 @@ int testle(delta_state *d)
 }
 
 /* A timing mark on the spine, and the record a rule leaves so a backtrack
- * can put the scan back.
- *
- * The mark test is asked of a copy of the left register rather than of the
- * register, so a rule that asks does not move. What follows walks the scan
- * forward until it reaches the position the register names, comparing the
- * two as it goes; a comparison that comes out unequal advances and asks
- * again, and a comparison that will not be made at all is a failure.
- *
- * When it arrives, two records go on the stack: the tag the rule is testing
- * against, and the scan's own eight bytes, so that a backtrack restores where
- * the scan had got to. The last line arms the fence for the register's own
- * field, which is what keeps the scan inside the run the rule is looking at.
- */
+   can put the scan back.
+
+   The mark test is asked of a copy of the left register rather than of the
+   register, so a rule that asks does not move. What follows walks the scan
+   forward until it reaches the position the register names, comparing the
+   two as it goes; a comparison that comes out unequal advances and asks
+   again, and a comparison that will not be made at all is a failure.
+
+   When it arrives, two records go on the stack: the tag the rule is testing
+   against, and the scan's own eight bytes, so that a backtrack restores where
+   the scan had got to. The last line arms the fence for the register's own
+   field, which is what keeps the scan inside the run the rule is looking at.
+   */
 int test_time(delta_state *d, int16_t tag)
 {
     delta_vars  *v = EVV_AT(delta_vars *, d->vars);
@@ -288,20 +288,20 @@ int test_time(delta_state *d, int16_t tag)
 }
 
 /* Walk the scan forward until every field asked about is fenced where it
- * stands, and then hold it there.
- *
- * With no characters named it is every field the language declares except
- * the one the scan is walking, and only those the fence table does not
- * already carry; with characters named it is those, and the scan's own field
- * is not exempt. Either way a field that is not fenced at the scan's position
- * advances the scan and starts the sweep again, because moving may unfence
- * one that was fenced a moment ago. A scan that will not advance is a
- * failure.
- *
- * The two records left behind are test_time's, and what the tail does with
- * them is where the two forms part: with no characters the scan is simply
- * held, and with characters each of their fences is armed instead.
- */
+   stands, and then hold it there.
+
+   With no characters named it is every field the language declares except
+   the one the scan is walking, and only those the fence table does not
+   already carry; with characters named it is those, and the scan's own field
+   is not exempt. Either way a field that is not fenced at the scan's position
+   advances the scan and starts the sweep again, because moving may unfence
+   one that was fenced a moment ago. A scan that will not advance is a
+   failure.
+
+   The two records left behind are test_time's, and what the tail does with
+   them is where the two forms part: with no characters the scan is simply
+   held, and with characters each of their fences is armed instead.
+   */
 int test_fence(delta_state *d, int16_t tag, uint8_t n, const uint8_t *chars)
 {
     delta_vars  *v = EVV_AT(delta_vars *, d->vars);
@@ -480,17 +480,17 @@ void *popDeltaStackTop(delta_state *d)
 }
 
 /* Unwind until something says stop.
- *
- * The same eight kinds popDeltaStackTop knows the size of, and what each
- * one means on the way back: a context record answers with the tag it was
- * pushed under, a saved scan position is put back, a copied span is copied
- * back, an alternative marker moves the count of how deep we are, and the
- * floor marker restores how far an unwind may go.
- *
- * The count is what the caller is looking for. Above nought it is walking
- * out of alternatives it does not want; at nought the next context record
- * is the one to answer with.
- */
+
+   The same eight kinds popDeltaStackTop knows the size of, and what each
+   one means on the way back: a context record answers with the tag it was
+   pushed under, a saved scan position is put back, a copied span is copied
+   back, an alternative marker moves the count of how deep we are, and the
+   floor marker restores how far an unwind may go.
+
+   The count is what the caller is looking for. Above nought it is walking
+   out of alternatives it does not want; at nought the next context record
+   is the one to answer with.
+   */
 int32_t vback(delta_state *d, int32_t depth)
 {
     delta_frame *slot;
@@ -714,11 +714,11 @@ void CLRONESTM(delta_node *t)     { t->link &= ~1; }
 void CLRNONSEQ(delta_node *t)     { t->flags8 &= ~2; }
 
 /* Whether the run between two nodes is anything but a plain sequence.
- *
- * It is, if some field other than the one being worked in has a mark at both
- * ends and the left one's mark does not lead straight to the right one --
- * which means something else is threaded through the run and an insert has
- * to be told so. */
+
+   It is, if some field other than the one being worked in has a mark at both
+   ends and the left one's mark does not lead straight to the right one --
+   which means something else is threaded through the run and an insert has
+   to be told so. */
 int visnonseq(delta_state *d, uint8_t f, int32_t l, int32_t r)
 {
     int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
@@ -871,20 +871,20 @@ void vadd(delta_state *d, const delta_operand *a, const delta_operand *b)
 }
 
 /* Collecting a frame.
- *
- * A generate statement comes in three parts -- the frame, the moment it
- * covers, and the parameters that go with it -- and the machine reads them
- * one at a time, each call putting its part into the cell and setting its
- * own bit. The statement's first byte says which part it is, and the byte
- * decides which of the two cells is written: its own marker means the one
- * being filled, anything else means the one already finished. That is the
- * original's arrangement and it is what lets a rule generate one frame while
- * the last is still being written out.
- *
- * None of the four is called by any rule in the nine languages IBM shipped,
- * which is why they were missing. A language's acoustic rules are what would
- * want them.
- */
+
+   A generate statement comes in three parts -- the frame, the moment it
+   covers, and the parameters that go with it -- and the machine reads them
+   one at a time, each call putting its part into the cell and setting its
+   own bit. The statement's first byte says which part it is, and the byte
+   decides which of the two cells is written: its own marker means the one
+   being filled, anything else means the one already finished. That is the
+   original's arrangement and it is what lets a rule generate one frame while
+   the last is still being written out.
+
+   None of the four is called by any rule in the nine languages IBM shipped,
+   which is why they were missing. A language's acoustic rules are what would
+   want them.
+   */
 
 /* Which cell this part belongs in. */
 static delta_gencell *gen_cell(delta_state *d, uint8_t marker)
@@ -1005,16 +1005,16 @@ int32_t vgen_copy(delta_state *d)
 }
 
 /* The same three parts again, said the way a rule says them.
- *
- * Where the vgen_ calls read the generate statement and work out which cell
- * to fill, these are told outright: the `gendef' three fill the cell being
- * collected and the `gencur' three the one already finished. Otherwise they
- * are the same three parts -- a frame assigned from a location, a moment
- * taken as a byte, and a run of parameter bytes copied into the cell's own
- * buffer -- and each sets its own bit as it arrives.
- *
- * The frame comes in as a long here rather than a short, which is the only
- * difference in what is written. */
+
+   Where the vgen_ calls read the generate statement and work out which cell
+   to fill, these are told outright: the `gendef' three fill the cell being
+   collected and the `gencur' three the one already finished. Otherwise they
+   are the same three parts -- a frame assigned from a location, a moment
+   taken as a byte, and a run of parameter bytes copied into the cell's own
+   buffer -- and each sets its own bit as it arrives.
+
+   The frame comes in as a long here rather than a short, which is the only
+   difference in what is written. */
 static void gen_framedur(delta_state *d, delta_gencell *cell, delta_loc *loc)
 {
     delta_operand dst;
@@ -1238,12 +1238,12 @@ int32_t VRSYNC(delta_state *d, const int32_t *t, int8_t i)
 }
 
 /* Walk to the mark that carries a field, one link at a time.
- *
- * A position that already carries it is the answer; otherwise the walk
- * follows the sync links of another field -- the one named separately --
- * until it finds one that does. The two differ in which way they walk and
- * in nothing else. Only vgen calls them, which is why they arrive with it.
- */
+
+   A position that already carries it is the answer; otherwise the walk
+   follows the sync links of another field -- the one named separately --
+   until it finds one that does. The two differ in which way they walk and
+   in nothing else. Only vgen calls them, which is why they arrive with it.
+   */
 int32_t gcql(delta_state *d, int32_t at, int8_t f, int8_t i)
 {
     int32_t base = EVV_AT(delta_vars *, d->vars)->fence_base;
@@ -1265,34 +1265,34 @@ int32_t gcqr(delta_state *d, int32_t at, int8_t f, int8_t i)
 }
 
 /* A generate statement written out, which is the largest thing the machine
- * does and the only one that produces text rather than spine.
- *
- * The collected cell carries three things: the frame, whose value is how
- * long one step lasts; the field the moment is measured in, which arrives
- * as the cell's time; and the parameter bytes, which are a little program.
- * That program is a count of statement types, and for each one its number,
- * how many of its fields follow, and those field numbers.
- *
- * vgen walks the span the two registers mark, one frame at a time, and
- * writes a line for every frame: each field asked for, worked out at that
- * moment by val_expr2, with the frame's own duration put in at whichever
- * position of the line the cell names. A first pass over the program settles
- * where each statement type's value is to be read from, and those two ends
- * are kept in the stack's own arrays so that val_expr2 can find them; the
- * answers are cached across frames whenever neither end has moved, which is
- * what makes a long span affordable. checkInterrupt is asked between fields,
- * so a caller who has stopped listening stops the walk.
- *
- * Nothing in the nine languages IBM shipped generates frames, so no rule
- * reaches it. A language whose acoustic rules do would.
- *
- * Three things here are the original's and are kept rather than corrected.
- * The buffer is not given back on the two paths that fail before the working
- * table exists. The gap count is compared the wrong way round, so one to ten
- * gaps give up at once and the branch meant to let ten through can never be
- * taken, which makes the test after the loop unreachable as well. And the
- * fourth of the five arrays is allocated and never checked.
- */
+   does and the only one that produces text rather than spine.
+
+   The collected cell carries three things: the frame, whose value is how
+   long one step lasts; the field the moment is measured in, which arrives
+   as the cell's time; and the parameter bytes, which are a little program.
+   That program is a count of statement types, and for each one its number,
+   how many of its fields follow, and those field numbers.
+
+   vgen walks the span the two registers mark, one frame at a time, and
+   writes a line for every frame: each field asked for, worked out at that
+   moment by val_expr2, with the frame's own duration put in at whichever
+   position of the line the cell names. A first pass over the program settles
+   where each statement type's value is to be read from, and those two ends
+   are kept in the stack's own arrays so that val_expr2 can find them; the
+   answers are cached across frames whenever neither end has moved, which is
+   what makes a long span affordable. checkInterrupt is asked between fields,
+   so a caller who has stopped listening stops the walk.
+
+   Nothing in the nine languages IBM shipped generates frames, so no rule
+   reaches it. A language whose acoustic rules do would.
+
+   Three things here are the original's and are kept rather than corrected.
+   The buffer is not given back on the two paths that fail before the working
+   table exists. The gap count is compared the wrong way round, so one to ten
+   gaps give up at once and the branch meant to let ten through can never be
+   taken, which makes the test after the loop unreachable as well. And the
+   fourth of the five arrays is allocated and never checked.
+   */
 int32_t vgen(delta_state *d, delta_tpos *l, delta_tpos *r,
              const delta_gencell *g, int32_t lf)
 {
@@ -1636,20 +1636,20 @@ void generate(delta_state *d, int32_t lf)
 }
 
 /* The check that a spine's context marks are consistent.
- *
- * This is the Delta debugger's, not the engine's: `vredoctxt' ends by saying
- * "The delta is correct." on the command layer's own stream. Nothing in this
- * engine calls any of the four, and the display they belong to is not here --
- * src/delta/delta_trace.c says why. They are written because the machine is being
- * finished rather than because something wants them.
- *
- * vctxtinit takes the six tables the check works in, four of a word per
- * statement type and two of a byte, and gives them all back if any one of
- * them cannot be had. vclrctxt walks every field's chain from the spine's
- * right-hand end and clears the pointer out of every link whose field is not
- * marked, keeping the two flag bits and remembering that it did. mapsyncs
- * numbers the syncs it can reach, marking each so it is not counted twice.
- */
+
+   This is the Delta debugger's, not the engine's: `vredoctxt' ends by saying
+   "The delta is correct." on the command layer's own stream. Nothing in this
+   engine calls any of the four, and the display they belong to is not here --
+   src/delta/delta_trace.c says why. They are written because the machine is being
+   finished rather than because something wants them.
+
+   vctxtinit takes the six tables the check works in, four of a word per
+   statement type and two of a byte, and gives them all back if any one of
+   them cannot be had. vclrctxt walks every field's chain from the spine's
+   right-hand end and clears the pointer out of every link whose field is not
+   marked, keeping the two flag bits and remembering that it did. mapsyncs
+   numbers the syncs it can reach, marking each so it is not counted twice.
+   */
 int vctxtinit(delta_state *d)
 {
     delta_stack *s = EVV_AT(delta_stack *, d->stack);
@@ -1686,15 +1686,15 @@ int vctxtinit(delta_state *d)
 
 
 /* What the check looks at before the clearing: a node whose two link words
- * carry anything but their own two flag bits is inconsistent, and the first
- * one found stops the walk. Asking whether the caller has interrupted is
- * what lets a long spine be given up on; an interrupt turns the report off
- * and the walk goes on clearing.
- *
- * Then the clearing itself, which is the same five bits every time: the
- * sync bit and the mark bit out of both words, and whatever is above the
- * bottom two out of both.
- */
+   carry anything but their own two flag bits is inconsistent, and the first
+   one found stops the walk. Asking whether the caller has interrupted is
+   what lets a long spine be given up on; an interrupt turns the report off
+   and the walk goes on clearing.
+
+   Then the clearing itself, which is the same five bits every time: the
+   sync bit and the mark bit out of both words, and whatever is above the
+   bottom two out of both.
+   */
 int chksyncsflags(delta_state *d)
 {
     delta_stack *s = EVV_AT(delta_stack *, d->stack);
@@ -2956,21 +2956,21 @@ int test_string_s(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
 }
 
 /* The same test where a token in the string is wider than a byte.
- *
- * A record holds one code per character of the alphabet its statement type
- * declares, and an alphabet larger than 256 does not fit in a byte, so the
- * string a rule carries spells each code across two bytes or four. The top
- * bit of the first byte is the sign and the rest is the value, most
- * significant part first, which is the one place in the machine where a
- * number is not laid down the way the host lays one down.
- *
- * Neither is called by any rule in the nine languages IBM shipped, all of
- * whose alphabets fit in a byte. A language of ours with a larger one would
- * want them, and so would a rule comparing against a field that is not a
- * character at all.
- *
- * Everything else is test_string_s: peek at the scan, skip a sync, compare
- * the code against what the record holds, and advance. */
+
+   A record holds one code per character of the alphabet its statement type
+   declares, and an alphabet larger than 256 does not fit in a byte, so the
+   string a rule carries spells each code across two bytes or four. The top
+   bit of the first byte is the sign and the rest is the value, most
+   significant part first, which is the one place in the machine where a
+   number is not laid down the way the host lays one down.
+
+   Neither is called by any rule in the nine languages IBM shipped, all of
+   whose alphabets fit in a byte. A language of ours with a larger one would
+   want them, and so would a rule comparing against a field that is not a
+   character at all.
+
+   Everything else is test_string_s: peek at the scan, skip a sync, compare
+   the code against what the record holds, and advance. */
 int test_string_l(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
 {
     const delta_stmt *e = &vstmtbl[st];
@@ -3053,22 +3053,22 @@ int test_string_lng(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
 }
 
 /* The string test that carries its own width.
- *
- * Here the first byte of the string is a marker saying how wide the tokens
- * after it are: 199 a byte apiece, 202 two and 201 four, the wide ones sign
- * first as in the two forms above. A length of nothing is not a comparison
- * at all but a step -- the scan moves over one token and the answer is
- * whether it could.
- *
- * Marker 200 is a defect, and it is worth saying out loud because it cannot
- * be reproduced. Its head takes the two-byte cell for the operand and its
- * body decodes four bytes into the four-byte one, so what it compares is a
- * cell nothing has written; in the original that is whatever the stack
- * happened to hold. Ours holds nought there. Nothing reaches it: no rule in
- * the nine languages IBM shipped calls test_string at all, which is why it
- * was missing from this engine, and a rule of ours would use one of the
- * three markers that work.
- */
+
+   Here the first byte of the string is a marker saying how wide the tokens
+   after it are: 199 a byte apiece, 202 two and 201 four, the wide ones sign
+   first as in the two forms above. A length of nothing is not a comparison
+   at all but a step -- the scan moves over one token and the answer is
+   whether it could.
+
+   Marker 200 is a defect, and it is worth saying out loud because it cannot
+   be reproduced. Its head takes the two-byte cell for the operand and its
+   body decodes four bytes into the four-byte one, so what it compares is a
+   cell nothing has written; in the original that is whatever the stack
+   happened to hold. Ours holds nought there. Nothing reaches it: no rule in
+   the nine languages IBM shipped calls test_string at all, which is why it
+   was missing from this engine, and a rule of ours would use one of the
+   three markers that work.
+   */
 int test_string(delta_state *d, uint8_t st, uint8_t n, const uint8_t *str)
 {
     const delta_stmt *e = &vstmtbl[st];
@@ -5961,17 +5961,17 @@ void lpta_loadi(delta_state *d, uint8_t f, int32_t v)
 
 /* The right register's twin of it, and of the two loads beside it. Three
    things about these are the original's and are kept.
- *
- * Each asks the statement table about the *left* register's field and not its
- * own -- 0x44 where 0x54 was meant -- which is a slip in the original that
- * cannot show: both arms of the switch write the same thing, so all the wrong
- * question can do is decide whether the offset is written at all.
- *
- * The long forms take the immediate whole where the short ones narrow it to
- * sixteen bits first, and neither faults on a kind it does not handle.
- *
- * No rule in the nine languages IBM shipped calls any of these, which is why
- * they were missing; a rule of ours that walks rightwards wants them. */
+
+   Each asks the statement table about the *left* register's field and not its
+   own -- 0x44 where 0x54 was meant -- which is a slip in the original that
+   cannot show: both arms of the switch write the same thing, so all the wrong
+   question can do is decide whether the offset is written at all.
+
+   The long forms take the immediate whole where the short ones narrow it to
+   sixteen bits first, and neither faults on a kind it does not handle.
+
+   No rule in the nine languages IBM shipped calls any of these, which is why
+   they were missing; a rule of ours that walks rightwards wants them. */
 void rpta_loadi(delta_state *d, uint8_t f, int32_t v)
 {
     d->rpta.flags = 2;
@@ -7563,14 +7563,14 @@ int forall_adv_upto_r(delta_state *d, int16_t tag, int16_t loop, int16_t bound,
 }
 
 /* The same four walks leftwards rather than rightwards.
- *
- * A loop over a run of tokens comes in four spellings: whether it stops at
- * the far end or steps over it, and which way it walks. This tree had the
- * two that walk right and one of the two that walk to a marker, because
- * those are the ones the nine languages IBM shipped use; these are their
- * mirrors, and the mirror is two lines -- which way the scan is told it is
- * going, and which of a node's two link words the peek reads.
- */
+
+   A loop over a run of tokens comes in four spellings: whether it stops at
+   the far end or steps over it, and which way it walks. This tree had the
+   two that walk right and one of the two that walk to a marker, because
+   those are the ones the nine languages IBM shipped use; these are their
+   mirrors, and the mirror is two lines -- which way the scan is told it is
+   going, and which of a node's two link words the peek reads.
+   */
 static int forall_adv_leftwards(delta_state *d, int16_t tag, int16_t loop,
                                 int16_t bound, uint8_t f, delta_token *tok,
                                 int twice)

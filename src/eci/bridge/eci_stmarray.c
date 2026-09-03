@@ -80,7 +80,7 @@ THIS void sa_dtor(StreamArray *s);
 THIS void sa_deleteSegment(StreamArray *s, delta_state_fwd *d, uint32_t a,
                            uint32_t b);
 
-/* ---- one stream ----------------------------------------------------- */
+/* ---- one stream ------------------------------------------------------ */
 
 THIS void sa_dtor(StreamArray *s)
 {
@@ -193,7 +193,7 @@ THIS void sa_deleteSegment(StreamArray *s, delta_state_fwd *d, uint32_t a,
     (void)b;
 }
 
-/* ---- the whole set -------------------------------------------------- */
+/* ---- the whole set --------------------------------------------------- */
 
 /* One block holding the count in front of the streams, which is what the
    array-aware destructor above expects to find there. */
@@ -299,7 +299,7 @@ THIS void sal_deleteAllSegments(StreamArrayList *l, void *d, uint32_t a,
         sa_deleteSegment(&l->streams[i], (delta_state_fwd *)d, a, b);
 }
 
-/* ---- what the rules call -------------------------------------------- */
+/* ---- what the rules call --------------------------------------------- */
 
 int32_t stmarray_new(void *d)
 {

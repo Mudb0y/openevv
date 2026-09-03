@@ -1,19 +1,19 @@
 /* A thread, as everything above the Delta machine understands one.
-
-   Only two are ever started: one that turns text into samples and one that
-   pushes samples at the audio device. Both are this class with a run of
-   their own, and both are driven by the message queue underneath them.
-
-   Four semaphores, and it is worth naming them because the handshake is
-   the whole of it. Starting takes the gate, so a second start cannot
-   overtake the first. The thread body runs, and when it comes back it
-   signals `done`, waits on `may_finish` until whoever asked for the exit
-   says so, marks itself finished, and gives back both the gate and
-   `finished`. Waiting for the exit is the other half: wait on `done`,
-   release `may_finish`, then wait on `finished`.
-
-   Everything platform-shaped is in the ral layer underneath, so this file
-   is the same on any target that can start a task and hold a semaphore. */
+ *
+ * Only two are ever started: one that turns text into samples and one that
+ * pushes samples at the audio device. Both are this class with a run of
+ * their own, and both are driven by the message queue underneath them.
+ *
+ * Four semaphores, and it is worth naming them because the handshake is
+ * the whole of it. Starting takes the gate, so a second start cannot
+ * overtake the first. The thread body runs, and when it comes back it
+ * signals `done`, waits on `may_finish` until whoever asked for the exit
+ * says so, marks itself finished, and gives back both the gate and
+ * `finished`. Waiting for the exit is the other half: wait on `done`,
+ * release `may_finish`, then wait on `finished`.
+ *
+ * Everything platform-shaped is in the ral layer underneath, so this file
+ * is the same on any target that can start a task and hold a semaphore. */
 
 #include <stdint.h>
 #include <stddef.h>
@@ -157,7 +157,7 @@ THIS int32_t th_terminateAndWait(ETIThread *t)
     return t->vt->waitForExit(t);
 }
 
-/* ---- making and unmaking one ------------------------------------------ */
+/* ---- making and unmaking one ----------------------------------------- */
 
 static void *makeSemaphore(int32_t held)
 {
@@ -225,7 +225,7 @@ THIS void *th_destroy(ETIThread *t, int32_t free_it)
     return t;
 }
 
-/* ---- running ---------------------------------------------------------- */
+/* ---- running --------------------------------------------------------- */
 
 /* What the runtime actually starts. The body runs to completion, and then
    this waits to be told it may go, so that whoever wants the answer has a
@@ -343,7 +343,7 @@ THIS int32_t th_waitForExit(ETIThread *t)
     return 1;
 }
 
-/* ---- the table -------------------------------------------------------- */
+/* ---- the table ------------------------------------------------------- */
 
 const ThreadVtbl vtbl_thread = {
     th_destroy, th_terminate, th_waitForExit, th_run

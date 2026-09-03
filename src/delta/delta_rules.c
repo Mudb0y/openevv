@@ -1,23 +1,23 @@
 /* The interpreter for the language's rules.
-
-   A rule is a byte stream of operations over operands, produced by
-   tools/rules/emit.py from what the language's own compiler generated. The
-   machine it runs on is the one that code was written for: eight registers,
-   the four condition flags, a frame of bytes addressed from a base, and
-   calls out to the runtime. Nothing here is a translation into something
-   nicer; that comes later, once this is known to be exact.
-
-   The frame is one buffer with the base part way up it, because the code was
-   compiled that way: locals below the base, the rule's own arguments above.
-   An offset is signed and reaches either side.
-
-   One operation is not a call at all although it looks like one. A rule
-   plants a landing place for a backtrack by calling setjmp, and a call made
-   from here would land back in this function rather than in the rule, so it
-   is taken as an operation of its own and the landing place is this
-   function's. Everything the interpreter needs afterwards therefore lives in
-   one block whose address has escaped, so that a landing does not find it
-   stale. */
+ *
+ * A rule is a byte stream of operations over operands, produced by
+ * tools/rules/emit.py from what the language's own compiler generated. The
+ * machine it runs on is the one that code was written for: eight registers,
+ * the four condition flags, a frame of bytes addressed from a base, and
+ * calls out to the runtime. Nothing here is a translation into something
+ * nicer; that comes later, once this is known to be exact.
+ *
+ * The frame is one buffer with the base part way up it, because the code was
+ * compiled that way: locals below the base, the rule's own arguments above.
+ * An offset is signed and reaches either side.
+ *
+ * One operation is not a call at all although it looks like one. A rule
+ * plants a landing place for a backtrack by calling setjmp, and a call made
+ * from here would land back in this function rather than in the rule, so it
+ * is taken as an operation of its own and the landing place is this
+ * function's. Everything the interpreter needs afterwards therefore lives in
+ * one block whose address has escaped, so that a landing does not find it
+ * stale. */
 
 #include <setjmp.h>
 #include <stdio.h>
@@ -658,30 +658,30 @@ static void step(interp *st)
 }
 
 /* One call to a primitive, with the arity known where the call is written.
- *
- * Every call a rule makes used to go through delta_rule_called, which cleared
- * a scratch array of twenty-five words, copied the arguments into it off the
- * back of the machine's argument area, and then read the arity again in
- * call_entry to pick which signature to make the call under. That last one
- * was an indirect branch through a jump table on every call, and between them
- * the two were a fifth of a run.
- *
- * A rule written as C knows its arity where it stands, so it says which of
- * these it wants and the whole of that goes: no array, no copy, no branch on
- * the arity. What is left is reading the arguments off the top of the
- * argument area, in the order the entry takes them -- the last thing pushed
- * is the first argument -- and making the call.
- *
- * Two things send it back to the old path. Tracing wants the arguments
- * written out, which no rule should pay for; and an argument area shallower
- * than the call asks for is a place the compiled code and the interpreter
- * disagree about, which delta_rule_called answers with noughts as it always
- * has. Both are the one test at the top.
- *
- * All twenty-six arities are here whether or not English uses them. Which a
- * language wants is the language's business, and a missing one would be a
- * link error in the middle of somebody else's build.
- */
+
+   Every call a rule makes used to go through delta_rule_called, which cleared
+   a scratch array of twenty-five words, copied the arguments into it off the
+   back of the machine's argument area, and then read the arity again in
+   call_entry to pick which signature to make the call under. That last one
+   was an indirect branch through a jump table on every call, and between them
+   the two were a fifth of a run.
+
+   A rule written as C knows its arity where it stands, so it says which of
+   these it wants and the whole of that goes: no array, no copy, no branch on
+   the arity. What is left is reading the arguments off the top of the
+   argument area, in the order the entry takes them -- the last thing pushed
+   is the first argument -- and making the call.
+
+   Two things send it back to the old path. Tracing wants the arguments
+   written out, which no rule should pay for; and an argument area shallower
+   than the call asks for is a place the compiled code and the interpreter
+   disagree about, which delta_rule_called answers with noughts as it always
+   has. Both are the one test at the top.
+
+   All twenty-six arities are here whether or not English uses them. Which a
+   language wants is the language's business, and a missing one would be a
+   link error in the middle of somebody else's build.
+   */
 int32_t delta_call_0(int which, const int32_t *stack, int argn)
 {
     if (delta_rule_trace != 0)

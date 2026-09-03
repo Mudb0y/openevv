@@ -1076,16 +1076,16 @@ static int32_t ipa_forLanguage(int32_t lang, int32_t cur, int32_t next,
 }
 
 /* A whole IPA string, in UTF-8, turned into SPR.
- *
- * The bytes are read into code points first, one more slot than characters
- * so that the walk can always look at the one after the last and find the
- * marker put there. Then each symbol is converted with its successor in
- * hand, and what comes back is appended if there is room; a symbol the
- * language has no answer for contributes nothing and the walk carries on.
- *
- * The caller says how much room the answer has in *room and reads back how
- * much was used. Running out is minus three, and what was written up to
- * that point stands. */
+
+   The bytes are read into code points first, one more slot than characters
+   so that the walk can always look at the one after the last and find the
+   marker put there. Then each symbol is converted with its successor in
+   hand, and what comes back is appended if there is room; a symbol the
+   language has no answer for contributes nothing and the walk carries on.
+
+   The caller says how much room the answer has in *room and reads back how
+   much was used. Running out is minus three, and what was written up to
+   that point stands. */
 int32_t IPAToSPR(uint8_t *utf8, uint32_t bytes, char *spr, uint32_t *room,
                  int32_t lang)
 {

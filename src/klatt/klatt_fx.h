@@ -17,23 +17,23 @@ static inline int32_t mul32(int32_t a, int32_t b)
    so they pre-shift x by however much its magnitude demands and take the rest
    out of the final shift. The staged form drops low bits that a wider multiply
    would keep, so it cannot be folded back into a single expression.
- *
- * How far to pre-shift is a question about x alone -- which of five ranges its
- * magnitude falls in -- and the answer is always
- *
- *     mul32(coef, x >> pre) >> (15 - pre)
- *
- * with pre one of 0, 4, 8, 12 and 15. Written as five comparisons it was a
- * chain of unpredictable branches on every multiply, and every sample of every
- * resonator goes through one: pole_filter alone was a seventh of the whole
- * engine's instructions. Written as the position of the topmost bit that is
- * not a copy of the sign it is a count, a load and two shifts.
- *
- * The two are the same answer, not nearly the same, and that was checked
- * rather than argued: sixteen coefficients -- both signs, every magnitude,
- * the extremes and the boundaries -- against all 4,294,967,296 values of x,
- * identical throughout. Which matters more here than the speed, because the
- * whole engine is held to IBM's samples byte for byte. */
+
+   How far to pre-shift is a question about x alone -- which of five ranges its
+   magnitude falls in -- and the answer is always
+
+   mul32(coef, x >> pre) >> (15 - pre)
+
+   with pre one of 0, 4, 8, 12 and 15. Written as five comparisons it was a
+   chain of unpredictable branches on every multiply, and every sample of every
+   resonator goes through one: pole_filter alone was a seventh of the whole
+   engine's instructions. Written as the position of the topmost bit that is
+   not a copy of the sign it is a count, a load and two shifts.
+
+   The two are the same answer, not nearly the same, and that was checked
+   rather than argued: sixteen coefficients -- both signs, every magnitude,
+   the extremes and the boundaries -- against all 4,294,967,296 values of x,
+   identical throughout. Which matters more here than the speed, because the
+   whole engine is held to IBM's samples byte for byte. */
 static const unsigned char fx_pre[8] = { 15, 12, 8, 4, 0, 0, 0, 0 };
 
 static inline int32_t fxmul_scaled(int32_t coef, int32_t x)

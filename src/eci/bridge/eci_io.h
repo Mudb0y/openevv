@@ -1,10 +1,10 @@
 /* The layer between the Delta machine and ECI: a growable buffer, the
-   physical file classes built on it, and the logical file table the machine
-   reaches its streams through.
-
-   Delta never names a file. It names a stream, and this decides what that
-   stream is: a block of memory ECI fills with the text to speak, another it
-   takes the answers out of, a real file, or nothing at all. */
+ * physical file classes built on it, and the logical file table the machine
+ * reaches its streams through.
+ *
+ * Delta never names a file. It names a stream, and this decides what that
+ * stream is: a block of memory ECI fills with the text to speak, another it
+ * takes the answers out of, a real file, or nothing at all. */
 
 #ifndef ECI_IO_H
 #define ECI_IO_H

@@ -1,18 +1,18 @@
 /* A ring of times and values, growing and shrinking as it is used.
-
-   The synthesis thread keeps what it has to report — an index mark reached,
-   a word begun — against the sample count it happens at, and hands them to
-   the caller as the audio is drained. The ring doubles when it fills and
-   halves when it empties past a point, never going below the size it was
-   asked for.
-
-   This is the first class of the original's C++ that is ours, so it is also
-   where the calling convention is settled: the original's methods take
-   their object in a register and clean their own arguments off the stack,
-   and are named the way the Microsoft compiler names them. The functions
-   below say both of those things explicitly, and the assembler aliases at
-   the end give each one the name its callers already use. Nothing else is
-   needed to stand in for a class with no virtual functions. */
+ *
+ * The synthesis thread keeps what it has to report -- an index mark reached,
+ * a word begun -- against the sample count it happens at, and hands them to
+ * the caller as the audio is drained. The ring doubles when it fills and
+ * halves when it empties past a point, never going below the size it was
+ * asked for.
+ *
+ * This is the first class of the original's C++ that is ours, so it is also
+ * where the calling convention is settled: the original's methods take
+ * their object in a register and clean their own arguments off the stack,
+ * and are named the way the Microsoft compiler names them. The functions
+ * below say both of those things explicitly, and the assembler aliases at
+ * the end give each one the name its callers already use. Nothing else is
+ * needed to stand in for a class with no virtual functions. */
 
 #include <stdlib.h>
 #include <string.h>

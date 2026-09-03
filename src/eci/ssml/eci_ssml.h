@@ -71,13 +71,13 @@ THIS void       li_setPackedInt(LanguageId *l);
    count rather than taking another slot, and popping takes the count back
    down. SSML nests, and a document that opens six <prosody> elements with
    the same rate in a row costs one slot rather than six.
- *
- * The exception is the string stack, which has no run length: every push
- * takes a slot and keeps its own copy.
- *
- * Each starts at twenty slots and doubles. `top' indexes the slot in play
- * and `count' is how many pushes are outstanding, which is not the same
- * number once a run has been folded up. */
+
+   The exception is the string stack, which has no run length: every push
+   takes a slot and keeps its own copy.
+
+   Each starts at twenty slots and doubles. `top' indexes the slot in play
+   and `count' is how many pushes are outstanding, which is not the same
+   number once a run has been folded up. */
 
 #define SSML_STACK_SLOTS 0x14
 
@@ -136,7 +136,7 @@ THIS int8_t     sls_isValid(SSMLLangStack *s);
 THIS int8_t     sls_isEmpty(SSMLLangStack *s);
 THIS int32_t    sls_stackSize(SSMLLangStack *s);
 
-/* ---- odds the reader's own files share -------------------------------- */
+/* ---- odds the reader's own files share ------------------------------- */
 
 char *stripspaces(char *s, int32_t *len);
 char *getAttributeValue(const char **atts, const char *name);

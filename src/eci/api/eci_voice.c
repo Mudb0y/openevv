@@ -1,23 +1,23 @@
 /* Voices, and the two sets of units they are kept in.
-
-   A voice is eighty bytes: a name, then eight settings in the engine's own
-   units, then three of those same settings a second time in the units a
-   person would use. Pitch, speed and volume are the three; the engine counts
-   them nought to a hundred, while a person wants hertz and words a minute.
-   Both copies are kept because the caller may ask for either, and which one
-   it gets is decided by a setting in the environment.
-
-   The third of those duplicated words does double duty. A voice whose
-   real-world pitch is nought has never been filled in, so that same word is
-   what every lookup in this file tests to decide whether a voice exists at
-   all.
-
-   There are four places a voice can come from. The one in play, the eight
-   the caller may edit, the eight standard ones that come with a language,
-   and the concatenative table, which has its own set for every rate. The
-   lookups below try them in that order and it is the same order everywhere.
-
-   Names are prefixed and the aliases at the foot carry the real ones. */
+ *
+ * A voice is eighty bytes: a name, then eight settings in the engine's own
+ * units, then three of those same settings a second time in the units a
+ * person would use. Pitch, speed and volume are the three; the engine counts
+ * them nought to a hundred, while a person wants hertz and words a minute.
+ * Both copies are kept because the caller may ask for either, and which one
+ * it gets is decided by a setting in the environment.
+ *
+ * The third of those duplicated words does double duty. A voice whose
+ * real-world pitch is nought has never been filled in, so that same word is
+ * what every lookup in this file tests to decide whether a voice exists at
+ * all.
+ *
+ * There are four places a voice can come from. The one in play, the eight
+ * the caller may edit, the eight standard ones that come with a language,
+ * and the concatenative table, which has its own set for every rate. The
+ * lookups below try them in that order and it is the same order everywhere.
+ *
+ * Names are prefixed and the aliases at the foot carry the real ones. */
 
 #include <stdint.h>
 #include <string.h>
@@ -107,7 +107,7 @@ extern const int32_t ev_realWorldVoiceParamRange[8][2];
 int getRealWorldVoiceParam(ECIVoice v, int32_t which);
 void setRealWorldParamsFromECIParams(char *voice, int32_t which);
 
-/* ---- the two sets of units ------------------------------------------ */
+/* ---- the two sets of units ------------------------------------------- */
 
 /* Read one setting out of a voice, in a person's units where there are any
    and the engine's where there are not. The voice arrives by value, which is
@@ -170,7 +170,7 @@ void setRealWorldParamsFromECIParams(char *voice, int32_t which)
                            eci2RealWorld(1, which, VOICE_PARAM(voice, which)));
 }
 
-/* ---- finding a voice ------------------------------------------------ */
+/* ---- finding a voice ------------------------------------------------- */
 
 static char *vc_concatEntry(OldInst *h, int family, int dialect,
                             int32_t rate, int32_t voiceno)
@@ -225,7 +225,7 @@ static char *vc_editableVoice(OldInst *h, int32_t voiceno)
     return OI_VOICES(h) + (voiceno - EDITABLE_FIRST) * VOICE_BYTES;
 }
 
-/* ---- turning the engine's answers into the older interface's -------- */
+/* ---- turning the engine's answers into the older interface's --------- */
 
 int vc_rc_to_VoiceError(int32_t rc)
 {
@@ -242,7 +242,7 @@ int vc_rc_to_VoiceError(int32_t rc)
     return VOICE_FAILED;
 }
 
-/* ---- the entry points ----------------------------------------------- */
+/* ---- the entry points ------------------------------------------------ */
 
 static int vc_reentered(OldInst *h)
 {

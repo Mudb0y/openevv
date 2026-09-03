@@ -62,13 +62,13 @@ typedef struct ECIFilterAttrib {
 #define FILTER_INTERFACE_USABLE 8
 
 /* The entry point itself, and the second thing it can hand back.
- *
- * The pointer is stdcall because that is the type the published headers
- * declare, so a filter in a library of somebody else's has to be. IBM's
- * own SSML entry point is compiled cdecl and so disagrees with the type it
- * is passed as; the arguments are read correctly either way and the eight
- * bytes are recovered by the frame pointer, which is why the original gets
- * away with it. Ours is stdcall, as declared. */
+
+   The pointer is stdcall because that is the type the published headers
+   declare, so a filter in a library of somebody else's has to be. IBM's
+   own SSML entry point is compiled cdecl and so disagrees with the type it
+   is passed as; the arguments are read correctly either way and the eight
+   bytes are recovered by the frame pointer, which is why the original gets
+   away with it. Ours is stdcall, as declared. */
 typedef STDCALL int (*GetFilterObjectFn)(uint32_t idInterface, void **out);
 typedef int (*FilterUsableFn)(const char *text);
 
@@ -87,11 +87,11 @@ typedef int (*FilterUsableFn)(const char *text);
 #define FILTER_NOT_FOUND      (-3)
 
 /* The one filter this engine carries, in src/eci/ssml/eci_ssmlfilter.c.
- *
- * It is not called `ssmlFilterGetObject' here, which is the name a caller
- * asks the library for. That name belongs to the wrapper in
- * lib/eci_api.c, because a `dllexport' only exports where the function is
- * defined and this file compiles for Linux as well. */
+
+   It is not called `ssmlFilterGetObject' here, which is the name a caller
+   asks the library for. That name belongs to the wrapper in
+   lib/eci_api.c, because a `dllexport' only exports where the function is
+   defined and this file compiles for Linux as well. */
 extern STDCALL int ssml_getFilterObject(uint32_t idInterface, void **out);
 extern int isSSMLFilterUsable(const char *text);
 

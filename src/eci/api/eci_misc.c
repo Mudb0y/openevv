@@ -1,17 +1,17 @@
 /* The rest of the older interface: the calls that are one thing each.
-
-   Ending an instance, putting one back the way it started, reading and
-   writing the defaults that a new instance inherits, the shorthand that
-   speaks a string and tidies up after itself, and a handful of calls that
-   were published and then never implemented.
-
-   Those last are not oversights on my part. Eight entry points in this
-   object do nothing whatever: two return one, four return nought, and two
-   simply return. Logging, licensing, the dialog box and the error message
-   are all of that kind. They are transcribed as they stand so that a program
-   linking against this still finds them.
-
-   Names are prefixed and the aliases at the foot carry the real ones. */
+ *
+ * Ending an instance, putting one back the way it started, reading and
+ * writing the defaults that a new instance inherits, the shorthand that
+ * speaks a string and tidies up after itself, and a handful of calls that
+ * were published and then never implemented.
+ *
+ * Those last are not oversights on my part. Eight entry points in this
+ * object do nothing whatever: two return one, four return nought, and two
+ * simply return. Logging, licensing, the dialog box and the error message
+ * are all of that kind. They are transcribed as they stand so that a program
+ * linking against this still finds them.
+ *
+ * Names are prefixed and the aliases at the foot carry the real ones. */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -90,7 +90,7 @@ static int32_t es_flipDictionary(int32_t v)
     return 0;
 }
 
-/* ---- reading and writing settings ----------------------------------- */
+/* ---- reading and writing settings ------------------------------------ */
 
 int32_t STDCALL eo_getParam(OldInst *h, int32_t which)
 {
@@ -182,7 +182,7 @@ int32_t STDCALL es_setDefaultParam(int32_t which, int32_t value)
     return old;
 }
 
-/* ---- waiting, pausing, ending --------------------------------------- */
+/* ---- waiting, pausing, ending ---------------------------------------- */
 
 /* Wait for everything queued to be spoken. The instance is marked busy for
    the whole wait, so a callback that tries to call back in is refused. */
@@ -342,7 +342,7 @@ int STDCALL es_reset(OldInst *h)
     return 1;
 }
 
-/* ---- the shorthand -------------------------------------------------- */
+/* ---- the shorthand --------------------------------------------------- */
 
 /* Make an instance, say one thing with it, and take it away again. */
 static int es_speakWith(OldInst *inst, const char *text, int32_t annotate)
@@ -405,7 +405,7 @@ int STDCALL es_testPhrase(OldInst *h)
     return 1;
 }
 
-/* ---- run the filters over a string without speaking it -------------- */
+/* ---- run the filters over a string without speaking it --------------- */
 
 int STDCALL es_getFilteredText(OldInst *h, void *a, void *b, void *c)
 {
@@ -415,7 +415,7 @@ int STDCALL es_getFilteredText(OldInst *h, void *a, void *b, void *c)
     return 0;
 }
 
-/* ---- and the ones that were never written --------------------------- */
+/* ---- and the ones that were never written ---------------------------- */
 
 /* Naming a file to write to was published and does nothing. */
 int STDCALL es_setOutputFilename(OldInst *h, const char *name)

@@ -113,12 +113,12 @@ void           aln_dump(ArrayListNode *n);
 
 /* The store itself: an ordered set of key and translation, with a tower of
    forward pointers over it so that a lookup skips rather than walks.
- *
- * `count' includes the head, so a new list says one. `level' is the highest
- * tower in use. `cursor' is where getFirst and getNext have got to, and
- * `closest' is scratch that findClosest works in -- both are the original's
- * own fields rather than locals, which is why two searches cannot run at
- * once. */
+
+   `count' includes the head, so a new list says one. `level' is the highest
+   tower in use. `cursor' is where getFirst and getNext have got to, and
+   `closest' is scratch that findClosest works in -- both are the original's
+   own fields rather than locals, which is why two searches cannot run at
+   once. */
 typedef struct SkipList {
     int32_t       count;    /* +0x04 */
     SkipListNode *head;     /* +0x08 */

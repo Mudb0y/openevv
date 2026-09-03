@@ -128,7 +128,7 @@ const uint8_t ConversionTable[256] = {
 int rz_isRomExist(int32_t family, int32_t dialect);
 void rz_removeUnusedByCode(RomanizerManager *m, uint8_t f, uint8_t d);
 
-/* ---- which languages have a romanizer at all ------------------------ */
+/* ---- which languages have a romanizer at all ------------------------- */
 
 /* Five families do, and only some of their dialects. Everything else is
    spoken as it is written. */
@@ -144,7 +144,7 @@ int rz_isRomExist(int32_t family, int32_t dialect)
     }
 }
 
-/* ---- making and unmaking -------------------------------------------- */
+/* ---- making and unmaking --------------------------------------------- */
 
 static void rz_forgetAll(RomanizerManager *m)
 {
@@ -193,7 +193,7 @@ THIS void rz_dtor(RomanizerManager *m)
     sy_mutexDtor(RM_LOCK(m));
 }
 
-/* ---- what runs when there is no romanizer --------------------------- */
+/* ---- what runs when there is no romanizer ---------------------------- */
 
 /* A parameter on its way down. With a romanizer it is that romanizer's
    business; without one it is text like any other and goes straight to the
@@ -315,14 +315,14 @@ static int ownByte(SynthThread *t, uint8_t c)
 
 /* With no corpus loaded, every byte is mapped through one table. With a
    corpus the text is left alone, because the corpus has already had it.
- *
- * A letter of a language's own is left alone as well, which the original
- * does not do because it had no such language. The table turns most of
- * 0x80 to 0x9f into a space -- undefined in the Western set it was made
- * for -- and those are the byte values a new language's letters are free to
- * take, so without this a Polish word arrives as several one-letter ones.
- * Nothing IBM shipped has a letter of its own, so nothing IBM shipped
- * reaches this. */
+
+   A letter of a language's own is left alone as well, which the original
+   does not do because it had no such language. The table turns most of
+   0x80 to 0x9f into a space -- undefined in the Western set it was made
+   for -- and those are the byte values a new language's letters are free to
+   take, so without this a Polish word arrives as several one-letter ones.
+   Nothing IBM shipped has a letter of its own, so nothing IBM shipped
+   reaches this. */
 THIS void rz_convertText(RomanizerManager *m, uint8_t *text)
 {
     SynthThread *t = RM_THREAD(m);
@@ -345,7 +345,7 @@ static const char quadBackSlash[] = "\\\\\\\\ ";
 extern THIS int stw_isOldEngine(SynthThread *t)
     MANGLED("?isOldEngine@SynthThread@@QAEHXZ");
 
-/* ---- rewriting the text --------------------------------------------- */
+/* ---- rewriting the text ---------------------------------------------- */
 
 /* How much longer the text will be once the characters that mean something
    have been escaped. Counted first so that one allocation holds the
@@ -519,7 +519,7 @@ THIS int32_t rz_processText(RomanizerManager *m, char **io, uint32_t len,
     return rc;
 }
 
-/* ---- text arriving and leaving -------------------------------------- */
+/* ---- text arriving and leaving --------------------------------------- */
 
 /* Hand back whatever has been held. With a romanizer that is its business;
    without one the held text is rewritten and passed on. */
@@ -586,19 +586,19 @@ THIS int rz_addText(RomanizerManager *m, const char *text, int32_t len,
     return rc;
 }
 
-/* ---- choosing a language -------------------------------------------- */
+/* ---- choosing a language --------------------------------------------- */
 
 /* One romanizer per language, made the first time it is asked for and kept.
- *
- * The original makes a LangIdentifier here, fills it in from the family and
- * dialect, asks it for its string and then frees it without using either.
- * That is left out: it allocates and frees twenty bytes and nothing else
- * happens.
- *
- * What the romanizer is told is the directory the program was loaded from,
- * which is where IBM's own is to find its files. Ours has its data compiled
- * in and does not need it, and it is handed over anyway because that is what
- * the call says. */
+
+   The original makes a LangIdentifier here, fills it in from the family and
+   dialect, asks it for its string and then frees it without using either.
+   That is left out: it allocates and frees twenty bytes and nothing else
+   happens.
+
+   What the romanizer is told is the directory the program was loaded from,
+   which is where IBM's own is to find its files. Ours has its data compiled
+   in and does not need it, and it is handed over anyway because that is what
+   the call says. */
 THIS EvvRom *rz_getRomanizerInst(RomanizerManager *m, uint8_t family,
                                  uint8_t dialect)
 {
@@ -688,7 +688,7 @@ THIS int rz_setParam(RomanizerManager *m, int32_t which, int32_t value)
     return rc;
 }
 
-/* ---- the two the caller may ask for directly ------------------------ */
+/* ---- the two the caller may ask for directly ------------------------- */
 
 THIS int rz_UnicodeToMBCS(RomanizerManager *m, uint32_t lang,
                           const uint16_t *in, char **out, int32_t n)

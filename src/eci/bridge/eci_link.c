@@ -1,16 +1,16 @@
 /* The two blocks of memory ECI and the Delta machine pass text through.
-
-   A link is a pair of buffers: one ECI fills with the text to speak and the
-   machine reads a line at a time, one the machine writes its answers into
-   and ECI takes them out of. Three of them exist — the main one, one for
-   errors, and one for the concatenative synthesizer's output — and each is
-   handed to the logical file table as a physical file, so the machine sees a
-   stream and never knows it is talking to memory.
-
-   The dialog class below is the same idea for the Delta debugger's window.
-   Nothing in the library ever asks for it, because the only thing that would
-   is showDialogs, which always answers no; it is here because the block that
-   holds it is laid out for both. */
+ *
+ * A link is a pair of buffers: one ECI fills with the text to speak and the
+ * machine reads a line at a time, one the machine writes its answers into
+ * and ECI takes them out of. Three of them exist -- the main one, one for
+ * errors, and one for the concatenative synthesizer's output -- and each is
+ * handed to the logical file table as a physical file, so the machine sees a
+ * stream and never knows it is talking to memory.
+ *
+ * The dialog class below is the same idea for the Delta debugger's window.
+ * Nothing in the library ever asks for it, because the only thing that would
+ * is showDialogs, which always answers no; it is here because the block that
+ * holds it is laid out for both. */
 
 #include <stdlib.h>
 
@@ -76,7 +76,7 @@ int32_t eciLinkDataToECI(EciLink *l, char *out, int32_t max, int32_t *n)
     return 1;
 }
 
-/* ---- the link as a physical file ---------------------------------------- */
+/* ---- the link as a physical file ------------------------------------- */
 
 /* The same as the one in eci_logio.c, and the original has it twice too. */
 static void addSpace(DynaBuf *b)
@@ -173,7 +173,7 @@ static int eciLinkFileClose(PhysicalFile *p)
     return 1;
 }
 
-/* ---- the debugger's window as a physical file --------------------------- */
+/* ---- the debugger's window as a physical file ------------------------ */
 
 static int dialogFileOpen(delta_state *d, PhysicalFile *p, int mode)
 {

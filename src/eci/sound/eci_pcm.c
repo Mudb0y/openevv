@@ -1,19 +1,19 @@
 /* The boundary between the engine and whatever plays the sound.
-
-   Everything above this file works in samples and knows nothing about
-   devices. Below it, IBM's original had three objects that between them
-   opened a Windows waveform device, converted between sample formats using
-   WAVEFORMATEX, and pushed buffers at it. None of that survives a port: a
-   Rockbox build has its own PCM path and, like our harness, hands the engine
-   a buffer of its own rather than asking the engine to find a speaker.
-
-   So this is not a transcription. It is the same interface, met by code that
-   belongs to us, and it is deliberately the one place in the project where
-   that is true.
-
-   This first version reports every call and does nothing else, so that the
-   question of which of these the engine actually reaches can be settled by
-   running it rather than by reading. */
+ *
+ * Everything above this file works in samples and knows nothing about
+ * devices. Below it, IBM's original had three objects that between them
+ * opened a Windows waveform device, converted between sample formats using
+ * WAVEFORMATEX, and pushed buffers at it. None of that survives a port: a
+ * Rockbox build has its own PCM path and, like our harness, hands the engine
+ * a buffer of its own rather than asking the engine to find a speaker.
+ *
+ * So this is not a transcription. It is the same interface, met by code that
+ * belongs to us, and it is deliberately the one place in the project where
+ * that is true.
+ *
+ * This first version reports every call and does nothing else, so that the
+ * question of which of these the engine actually reaches can be settled by
+ * running it rather than by reading. */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -25,7 +25,7 @@ static void pcm_saw(const char *what)
     (void)what;
 }
 
-/* ---- where finished samples go -------------------------------------- */
+/* ---- where finished samples go --------------------------------------- */
 
 /* Sixty-four bytes embedded in the sound thread. Nothing outside this file
    looks inside it. */
@@ -113,66 +113,66 @@ THIS int32_t pcm_setup(SoundOutput *o, char *a, int32_t *b, int32_t *c,
     return 1;
 }
 
-/* ---- turning one sample format into another ------------------------- */
+/* ---- turning one sample format into another -------------------------- */
 
 /* Raising the rate, four ways, none of them the engine's business.
- *
- * This is the one object of IBM's sound layer the port never transcribed,
- * and it is the reason a caller asking for twenty-two thousand used to be
- * handed the eleven thousand stream under a twenty-two thousand label -- the
- * same speech at half the duration. It is ours rather than a transcription,
- * for the reason the head of this file gives about the rest of the layer.
- *
- * The engine runs at eleven thousand and twenty five and this decides what
- * the samples in between are. Which way is a matter for a listener, so there
- * are four and EVV_UPSAMPLE picks:
- *
- *   hold    the sample before, repeated until the next one is due. Keeps the
- *           mirror of the speech that a resampler exists to remove, which is
- *           what old hardware did and what some ears want. Every value that
- *           comes out is a value the engine put in, so what a caller gets at
- *           twenty-two thousand is Eloquence to the byte.
- *   zeros   the sample, then silence until the next is due. The mirror at
- *           full strength with no droop at the top of the band: brighter and
- *           harder still, and quieter, since only one sample in so many
- *           carries anything.
- *   linear  a straight line between one sample and the next. Suppresses the
- *           mirror by roughly twice what holding does.
- *   cubic   a curve through four of them, which is what libsoxr calls its
- *           quick mode. It suppresses the mirror by some nine decibels over
- *           holding, which is a rate change rather than an effect, and it is
- *           well short of removing it.
- *   sinc    a windowed sinc across a hundred and ninety-two of them,
- *           which is what a resampler actually is and is the default. The
- *           images are gone rather than quieter -- some fifty decibels below
- *           where the curve leaves them -- and the passband comes through
- *           flat instead of drooping at the top. Where it stops passing and
- *           how many samples it takes to stop are in eci_pcm.h with the
- *           argument for the particular numbers, and EVV_SINC_CUTOFF and
- *           EVV_SINC_TAPS move them.
- *
- * The sinc is the default because the curve was not enough. Held against
- * Apple's driver, which does its own resampling out of an eci.dylib that
- * only runs at eight and eleven thousand, the curve was the closest of the
- * cheap ways and still short of it. What separates a resampler from an
- * interpolator is the stopband, and only a real filter has one.
- *
- * Written here rather than linked from libsoxr because the engine has no
- * dependency but the C library and gains none here: this ships inside a DLL
- * a screen reader loads and inside builds for platforms nobody has put soxr
- * on. Same arithmetic, not the same code.
- *
- * Both interpolating ways look only backwards, at samples already handed
- * over, so a run joins the one before it with no seam and nothing is held
- * back at the end. What that costs is a constant delay of one input sample
- * for linear and two for cubic -- under two tenths of a millisecond -- which
- * is why the history below is three samples deep.
- *
- * The ratio need not be whole. Position is counted in units of one input
- * sample over the output rate, so twenty-two and forty-four thousand come to
- * an even number of copies and sixteen, twenty-four, thirty-two and
- * forty-eight thousand come to an uneven one, by the same arithmetic.
- */
+
+   This is the one object of IBM's sound layer the port never transcribed,
+   and it is the reason a caller asking for twenty-two thousand used to be
+   handed the eleven thousand stream under a twenty-two thousand label -- the
+   same speech at half the duration. It is ours rather than a transcription,
+   for the reason the head of this file gives about the rest of the layer.
+
+   The engine runs at eleven thousand and twenty five and this decides what
+   the samples in between are. Which way is a matter for a listener, so there
+   are four and EVV_UPSAMPLE picks:
+
+   hold    the sample before, repeated until the next one is due. Keeps the
+   mirror of the speech that a resampler exists to remove, which is
+   what old hardware did and what some ears want. Every value that
+   comes out is a value the engine put in, so what a caller gets at
+   twenty-two thousand is Eloquence to the byte.
+   zeros   the sample, then silence until the next is due. The mirror at
+   full strength with no droop at the top of the band: brighter and
+   harder still, and quieter, since only one sample in so many
+   carries anything.
+   linear  a straight line between one sample and the next. Suppresses the
+   mirror by roughly twice what holding does.
+   cubic   a curve through four of them, which is what libsoxr calls its
+   quick mode. It suppresses the mirror by some nine decibels over
+   holding, which is a rate change rather than an effect, and it is
+   well short of removing it.
+   sinc    a windowed sinc across a hundred and ninety-two of them,
+   which is what a resampler actually is and is the default. The
+   images are gone rather than quieter -- some fifty decibels below
+   where the curve leaves them -- and the passband comes through
+   flat instead of drooping at the top. Where it stops passing and
+   how many samples it takes to stop are in eci_pcm.h with the
+   argument for the particular numbers, and EVV_SINC_CUTOFF and
+   EVV_SINC_TAPS move them.
+
+   The sinc is the default because the curve was not enough. Held against
+   Apple's driver, which does its own resampling out of an eci.dylib that
+   only runs at eight and eleven thousand, the curve was the closest of the
+   cheap ways and still short of it. What separates a resampler from an
+   interpolator is the stopband, and only a real filter has one.
+
+   Written here rather than linked from libsoxr because the engine has no
+   dependency but the C library and gains none here: this ships inside a DLL
+   a screen reader loads and inside builds for platforms nobody has put soxr
+   on. Same arithmetic, not the same code.
+
+   Both interpolating ways look only backwards, at samples already handed
+   over, so a run joins the one before it with no seam and nothing is held
+   back at the end. What that costs is a constant delay of one input sample
+   for linear and two for cubic -- under two tenths of a millisecond -- which
+   is why the history below is three samples deep.
+
+   The ratio need not be whole. Position is counted in units of one input
+   sample over the output rate, so twenty-two and forty-four thousand come to
+   an even number of copies and sixteen, twenty-four, thirty-two and
+   forty-eight thousand come to an uneven one, by the same arithmetic.
+   */
 
 #include <math.h>
 #include <stdlib.h>

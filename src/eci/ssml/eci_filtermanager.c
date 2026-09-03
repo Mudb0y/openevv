@@ -105,12 +105,12 @@ typedef struct FilterRegistryElement {
 
 /* And one per filter actually loaded. The version is asked for once, on
    the way in, because whether the filter gets an environment turns on it.
- *
- * The library slot is where IBM put the loader for a filter that came out
- * of a DLL of its own, so that unloading the filter could unload the
- * library with it. Nothing in this extraction can put one there: the only
- * path that loaded a library was `autoLoadFilter', which IBM's own build
- * leaves empty. */
+
+   The library slot is where IBM put the loader for a filter that came out
+   of a DLL of its own, so that unloading the filter could unload the
+   library with it. Nothing in this extraction can put one there: the only
+   path that loaded a library was `autoLoadFilter', which IBM's own build
+   leaves empty. */
 typedef struct LoadedFilter {
     void    *library;
     int32_t  version[4];
@@ -345,11 +345,11 @@ THIS void fm_dtor(FilterManager *self)
    entry point, and gets back the filter's name and language written into
    its own structure -- which it has to, since the manager keys on the
    language and the caller has no way of knowing what the filter will say.
- *
- * A filter is made and immediately deleted here. That is the only way to
- * ask it anything: what is registered is an entry point, and the questions
- * are methods on an object. The original checks its arguments twice over,
- * to the same effect both times. */
+
+   A filter is made and immediately deleted here. That is the only way to
+   ask it anything: what is registered is an entry point, and the questions
+   are methods on an object. The original checks its arguments twice over,
+   to the same effect both times. */
 THIS int32_t fm_registerFilter(FilterManager *self, ECIFilterAttrib *attrib,
                                uint32_t id, GetFilterObjectFn *entry,
                                int8_t autoload)
@@ -422,10 +422,10 @@ THIS int32_t fm_unregisterFilter(FilterManager *self, ECIFilterAttrib *attrib,
 /* The entry point is called and what comes back is remembered, with the
    version it reports and the language it was loaded for. A filter already
    loaded for that pair is handed back rather than made again.
- *
- * The array grows by one each time, which is what the original does: a
- * realloc when there is one already and a malloc of a single slot when
- * there is not. */
+
+   The array grows by one each time, which is what the original does: a
+   realloc when there is one already and a malloc of a single slot when
+   there is not. */
 THIS int32_t fm_loadFilter(FilterManager *self, int32_t language, int32_t id,
                            void **out)
 {
@@ -503,10 +503,10 @@ THIS int32_t fm_loadFilter(FilterManager *self, int32_t language, int32_t id,
 /* By number, for whichever language is in force. A filter registered
    against no language at all is global and is turned on whenever the
    caller says so.
- *
- * What comes back is always the refusal, whether or not anything was
- * turned on. That is the original's, and it is why `eciActivateFilter'
- * reports a failure over a filter that is now working. */
+
+   What comes back is always the refusal, whether or not anything was
+   turned on. That is the original's, and it is why `eciActivateFilter'
+   reports a failure over a filter that is now working. */
 THIS int32_t fm_activateById(FilterManager *self, uint32_t id, int8_t global)
 {
     LangIdentifier lang = self->thread->lang;

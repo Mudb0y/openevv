@@ -1,17 +1,17 @@
 /* Audio formats, and the sound threads that serve them.
-
-   A caller asks for a format -- a rate, a width, a device name, and four
-   numbers describing how the device is to be buffered -- and gets back a
-   record it can hold on to. Several callers asking for the same thing share
-   one record, which is why it is counted rather than owned: the last one to
-   let go is the one that takes it down.
-
-   Whether a format is usable at all is not decided here. A sound thread is
-   made for it and asked to set itself up, and what comes back is both the
-   answer and, where the caller left a field at nought, the value the device
-   chose. That is why asking for a format can change the request.
-
-   Names are prefixed and the aliases at the foot carry the real ones. */
+ *
+ * A caller asks for a format -- a rate, a width, a device name, and four
+ * numbers describing how the device is to be buffered -- and gets back a
+ * record it can hold on to. Several callers asking for the same thing share
+ * one record, which is why it is counted rather than owned: the last one to
+ * let go is the one that takes it down.
+ *
+ * Whether a format is usable at all is not decided here. A sound thread is
+ * made for it and asked to set itself up, and what comes back is both the
+ * answer and, where the caller left a field at nought, the value the device
+ * chose. That is why asking for a format can change the request.
+ *
+ * Names are prefixed and the aliases at the foot carry the real ones. */
 
 #include <stdint.h>
 #include <string.h>
@@ -95,7 +95,7 @@ THIS AudioFormat *sm_formatCtor(AudioFormat *a, uint32_t slot,
 THIS void sm_formatDtor(AudioFormat *a);
 THIS uint32_t sm_release(AudioFormat *a);
 
-/* ---- deleting through a vtable -------------------------------------- */
+/* ---- deleting through a vtable --------------------------------------- */
 
 /* A sound thread is taken down through the first slot of its own table,
    which is the scalar deleting destructor, so that its own class decides

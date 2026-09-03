@@ -55,7 +55,7 @@
 
 extern int ralStrIcmp(int n, const char *a, const char *b);
 
-/* ---- what the automaton was built with -------------------------------- */
+/* ---- what the automaton was built with ------------------------------- */
 
 /* The state at which a transition has to go through the equivalence-class
    map a second time, and the base value that means a state has jammed.
@@ -105,7 +105,7 @@ extern int ralStrIcmp(int n, const char *a, const char *b);
 #define ADD_FULL       (-1)
 #define ADD_NO_ROOM    (-2)
 
-/* ---- the scanner's own state ------------------------------------------ */
+/* ---- the scanner's own state ----------------------------------------- */
 
 /* flex's buffer. The field order is the original's, because the whole
    skeleton reads it. */
@@ -197,7 +197,7 @@ static void yy_flex_free(void *p)
     free(p);
 }
 
-/* ---- the buffers the actions write into ------------------------------- */
+/* ---- the buffers the actions write into ------------------------------ */
 
 int32_t AddChar2Buffer(char c)
 {
@@ -279,7 +279,7 @@ int32_t PopTag(char *name)
     return 0;
 }
 
-/* ---- flex's buffer handling ------------------------------------------- */
+/* ---- flex's buffer handling ------------------------------------------ */
 
 static void xml_load_buffer_state(void)
 {
@@ -439,7 +439,7 @@ int32_t xmlwrap(void)
     return 1;
 }
 
-/* ---- pushing a character back into the input -------------------------- */
+/* ---- pushing a character back into the input ------------------------- */
 
 /* flex's own unput. Where there is no room in front of the read position
    the whole of what is left is shifted to the end of the buffer first. */
@@ -477,7 +477,7 @@ static void yyunput(int32_t c, char *yy_bp)
     yy_c_buf_p = yy_cp;
 }
 
-/* ---- and filling it ---------------------------------------------------- */
+/* ---- and filling it -------------------------------------------------- */
 
 #define EOB_ACT_CONTINUE_SCAN     0
 #define EOB_ACT_END_OF_FILE       1
@@ -560,7 +560,7 @@ static int32_t yy_get_next_buffer(void)
     return ret_val;
 }
 
-/* ---- walking the automaton -------------------------------------------- */
+/* ---- walking the automaton ------------------------------------------- */
 
 static int32_t yy_get_previous_state(void)
 {
@@ -600,18 +600,18 @@ static int32_t yy_try_NUL_trans(int32_t yy_current_state)
     return yy_current_state == YY_JAM_STATE ? 0 : yy_current_state;
 }
 
-/* ---- the entity rules ------------------------------------------------- */
+/* ---- the entity rules ------------------------------------------------ */
 
 /* Every one of the twenty named-entity rules is the same shape: put the
    character the entity means into the text buffer, and if there is no room
    push the entity's own spelling back into the input and ask for a bigger
    buffer. With conversion off the spelling goes into the buffer as it was
    written instead.
- *
- * The quoted forms are the ones that matched inside an attribute value, so
- * the quotes go back too. Which spelling is pushed back is the rule's own,
- * and the pairs of rules that differ only in the start condition they leave
- * are the original's; both are here. */
+
+   The quoted forms are the ones that matched inside an attribute value, so
+   the quotes go back too. Which spelling is pushed back is the rule's own,
+   and the pairs of rules that differ only in the start condition they leave
+   are the original's; both are here. */
 static int32_t entity(char meant, const char *spelling, const char *literal,
                       int32_t *token)
 {
@@ -634,7 +634,7 @@ static int32_t entity(char meant, const char *spelling, const char *literal,
     return 0;
 }
 
-/* ---- the scanner ------------------------------------------------------- */
+/* ---- the scanner ----------------------------------------------------- */
 
 int32_t xmllex(void)
 {
@@ -736,7 +736,7 @@ int32_t xmllex(void)
 
         switch (yy_act) {
 
-        /* ---- 1 to 3: a run of text ended by something ----------------- */
+        /* ---- 1 to 3: a run of text ended by something ---------------- */
 
         case 1:
         case 2:
@@ -747,7 +747,7 @@ int32_t xmllex(void)
             yy_start = SC_TEXT;
             break;
 
-        /* ---- 4 to 23: the five named entities ------------------------- */
+        /* ---- 4 to 23: the five named entities ------------------------ */
 
         case 4: {
             int32_t token;
@@ -932,7 +932,7 @@ int32_t xmllex(void)
             break;
         }
 
-        /* ---- 24 to 32: what is skipped, and the three resumptions ----- */
+        /* ---- 24 to 32: what is skipped, and the three resumptions ---- */
 
         case 24:
             break;
@@ -961,7 +961,7 @@ int32_t xmllex(void)
         case 32:
             break;
 
-        /* ---- 33 to 44: the tags --------------------------------------- */
+        /* ---- 33 to 44: the tags -------------------------------------- */
 
         /* A close tag written out in full: the name runs from the third
            character to the one before the last. */
@@ -1094,7 +1094,7 @@ int32_t xmllex(void)
             yy_start = SC_TEXT;
             return TOK_CLOSE_TAG;
 
-        /* ---- 45 to 48: a character of text at a time ------------------ */
+        /* ---- 45 to 48: a character of text at a time ----------------- */
 
         case 45:
             pTextBuffer = TextBuffer;
@@ -1130,7 +1130,7 @@ int32_t xmllex(void)
         case 48:
             break;
 
-        /* ---- the end of the input, and the end of a buffer ------------ */
+        /* ---- the end of the input, and the end of a buffer ----------- */
 
         case YY_END_OF_BUFFER: {
             int32_t yy_amount_of_matched_text =

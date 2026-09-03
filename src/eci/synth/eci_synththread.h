@@ -1,14 +1,14 @@
 /* SynthThread: the thread that turns text into samples, and what it holds.
-
-   This was written out as a list of byte offsets, because for a long time
-   most of the block was still the original's and only the fields our own
-   parts touched were known. All of it is ours now and every offset has a
-   name, so it is a struct. The old names are kept as macros over the fields,
-   since a hundred places read them and none of those had to change.
-
-   The comment against each field is where it sat when a pointer was four
-   bytes. Nothing depends on that any more; it is there because the original's
-   own code is what the names were read out of. */
+ *
+ * This was written out as a list of byte offsets, because for a long time
+ * most of the block was still the original's and only the fields our own
+ * parts touched were known. All of it is ours now and every offset has a
+ * name, so it is a struct. The old names are kept as macros over the fields,
+ * since a hundred places read them and none of those had to change.
+ *
+ * The comment against each field is where it sat when a pointer was four
+ * bytes. Nothing depends on that any more; it is there because the original's
+ * own code is what the names were read out of. */
 
 #ifndef ECI_SYNTHTHREAD_H
 #define ECI_SYNTHTHREAD_H

@@ -1,25 +1,25 @@
 /* The thin layers.
-
-   Most of what a caller can ask about filters and voices the synthesis
-   thread does not do itself: it hands the question to the filter manager or
-   the concatenative side and hands the answer back. There is nothing in
-   these but the handing over, and the one thing worth saying about them is
-   which ones drop the answer on the way back.
-
-   Six of them do. Activating or deactivating a filter by number, doing so
-   with a flag, deactivating all of them, and updating one all say nought
-   whatever the manager said. Only the ones that take a filter by pointer,
-   the two that ask a question, and the one that loads a new filter pass the
-   real answer on. That is the original's and is marked below rather than
-   mended, because a caller that has learned to ignore the answer would be
-   surprised by a real one.
-
-   The two pairs at the foot belong to other classes: stopping and starting a
-   message queue thread, and the timer the application queue runs off. They
-   are here because they are the last of their kind rather than because they
-   belong together.
-
-   Names are prefixed; the aliases carry the real ones. */
+ *
+ * Most of what a caller can ask about filters and voices the synthesis
+ * thread does not do itself: it hands the question to the filter manager or
+ * the concatenative side and hands the answer back. There is nothing in
+ * these but the handing over, and the one thing worth saying about them is
+ * which ones drop the answer on the way back.
+ *
+ * Six of them do. Activating or deactivating a filter by number, doing so
+ * with a flag, deactivating all of them, and updating one all say nought
+ * whatever the manager said. Only the ones that take a filter by pointer,
+ * the two that ask a question, and the one that loads a new filter pass the
+ * real answer on. That is the original's and is marked below rather than
+ * mended, because a caller that has learned to ignore the answer would be
+ * surprised by a real one.
+ *
+ * The two pairs at the foot belong to other classes: stopping and starting a
+ * message queue thread, and the timer the application queue runs off. They
+ * are here because they are the last of their kind rather than because they
+ * belong together.
+ *
+ * Names are prefixed; the aliases carry the real ones. */
 
 #include <stdint.h>
 #include <stddef.h>
@@ -72,7 +72,7 @@ extern THIS int32_t cm_unregisterVoice(void *c, int32_t voice, void *attrib,
                                         void **out)
     MANGLED("?unregisterVoice@ConcatenationManager@@QAEJHPAUECIVoiceAttrib@@PAPAX@Z");
 
-/* ---- filters ---- */
+/* ---- filters --------------------------------------------------------- */
 
 /* Marked: the manager's answer is dropped. */
 THIS int32_t stm_activateFilterById(SynthThread *t, uint32_t id)
@@ -220,7 +220,7 @@ THIS void stm_getFilterDescription(SynthThread *t, int32_t engine,
         fm_getFilterDescription(ST_FILTERS(t), engine, id, out);
 }
 
-/* ---- voices ---- */
+/* ---- voices ---------------------------------------------------------- */
 
 /* Voices belong to the concatenative side, so without one there is nothing
    to register with and the caller is told so. */
@@ -244,7 +244,7 @@ THIS int32_t stm_unregisterVoice(SynthThread *t, int32_t voice, void *attrib,
     return rc;
 }
 
-/* ---- stopping and starting a message queue thread ---- */
+/* ---- stopping and starting a message queue thread -------------------- */
 
 typedef ETImessageQueueThread QueueThread;
 typedef ETImessageQueue MsgQueue;
@@ -305,7 +305,7 @@ THIS int16_t stm_qtResume(QueueThread *t)
     return ok;
 }
 
-/* ---- the application queue's timer ---- */
+/* ---- the application queue's timer ----------------------------------- */
 
 /* Fields of the application queue this pair reaches. */
 #define AQ_PARAM(q)    (((ETIappMessageQueue *)(q))->cb_param)

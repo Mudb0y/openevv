@@ -1,23 +1,23 @@
 /* Driving the Klatt synthesiser: where the samples are sent, and when the
-   marks buried in them come back.
-
-   The Delta engine hands phonemes down and gets samples back. Between the
-   two sits a small record saying where those samples are to go -- a callback
-   the caller supplied, or a file -- and what to do about the index marks the
-   caller put in the text. A mark cannot be reported when it is read, because
-   at that moment the sound it belongs to has not been made yet, let alone
-   played. So marks are held in a queue with the number of samples that must
-   come out before each is due, and released as the sound goes past them.
-
-   That is what the three running totals in the language record are for. One
-   is how far the marks have been accounted for, one is how far the phonemes
-   have got, and one is the duration of everything queued. A mark arriving
-   while all three agree is due immediately; otherwise it is queued at the
-   distance between them.
-
-   These carry their own names rather than aliases: the object uses plain C
-   names for all of them, so ours are the same names and the swap stands the
-   original's aside on that alone. */
+ * marks buried in them come back.
+ *
+ * The Delta engine hands phonemes down and gets samples back. Between the
+ * two sits a small record saying where those samples are to go -- a callback
+ * the caller supplied, or a file -- and what to do about the index marks the
+ * caller put in the text. A mark cannot be reported when it is read, because
+ * at that moment the sound it belongs to has not been made yet, let alone
+ * played. So marks are held in a queue with the number of samples that must
+ * come out before each is due, and released as the sound goes past them.
+ *
+ * That is what the three running totals in the language record are for. One
+ * is how far the marks have been accounted for, one is how far the phonemes
+ * have got, and one is the duration of everything queued. A mark arriving
+ * while all three agree is due immediately; otherwise it is queued at the
+ * distance between them.
+ *
+ * These carry their own names rather than aliases: the object uses plain C
+ * names for all of them, so ours are the same names and the swap stands the
+ * original's aside on that alone. */
 
 #include <stdint.h>
 #include <stdarg.h>
@@ -124,7 +124,7 @@ int insertDelayedSynthIndex(DeltaThis *d, int32_t index);
    clock counts in. */
 #define IDLE_HOLD  2000
 
-/* ---- finishing, and letting the device go --------------------------- */
+/* ---- finishing, and letting the device go ---------------------------- */
 
 /* The synthesiser is closed, the device marked idle, and the moment noted so
    that the idle timer below has something to measure from. */
@@ -166,7 +166,7 @@ void deleteOutputDevice(DeltaThis *d)
     sleepCycleCallback(dev, 1);
 }
 
-/* ---- what the device is doing --------------------------------------- */
+/* ---- what the device is doing ---------------------------------------- */
 
 int synthDevicePlaying(DeltaThis *d)
 {
@@ -212,7 +212,7 @@ int turnLazyWriteOff(DeltaThis *d)
     return 0;
 }
 
-/* ---- where the sound goes ------------------------------------------- */
+/* ---- where the sound goes -------------------------------------------- */
 
 /* Send it to a file of this name, or with no name, stop sending it to one.
    A device that is playing will not be redirected. */
@@ -282,7 +282,7 @@ void registerPhonemeCallback(DeltaThis *d, void *cb, void *data)
     SD_PHONEME_DATA(dev) = data;
 }
 
-/* ---- marks, and when they come due ---------------------------------- */
+/* ---- marks, and when they come due ----------------------------------- */
 
 /* Report a mark now. Only worth doing when the samples are going to a
    callback, because that is the only case where the caller is listening. */
@@ -361,7 +361,7 @@ int flushDelayedSynthQueue(DeltaThis *d)
     }
 }
 
-/* ---- taking it all down --------------------------------------------- */
+/* ---- taking it all down ---------------------------------------------- */
 
 /* Give back everything the language record owns. The buffers are wiped
    before they are freed, which the original does throughout and which is
@@ -420,7 +420,7 @@ void deltaCleanup(DeltaThis *d)
 }
 
 
-/* ---- building an engine's language half ----------------------------- */
+/* ---- building an engine's language half ------------------------------ */
 
 /* One of the engine's value cells. Only the two fields read here are
    named: a word at two and a long at four. */
@@ -559,7 +559,7 @@ int dlang_new(DeltaThis *d)
     return 0;
 }
 
-/* ---- one utterance, from a frame of parameters ---------------------- */
+/* ---- one utterance, from a frame of parameters ----------------------- */
 
 /* Speak from a parameter frame.
 
@@ -630,7 +630,7 @@ int callSynthesizeArray(DeltaThis *d, Cell *rate, Cell *c2, Cell *c3,
 }
 
 
-/* ---- choosing which stream feeds which parameter -------------------- */
+/* ---- choosing which stream feeds which parameter --------------------- */
 
 /* The names the engine knows each parameter by, in frame order. The last is
    not a parameter at all but the duration stream, which is why it is looked
@@ -727,7 +727,7 @@ int assignParameters(DeltaThis *d, int32_t kind, ParmAssignments *pa)
     return *(int8_t *)&pa->slot[PARM_MS] != SLOT_NONE;
 }
 
-/* ---- samples coming back out ---------------------------------------- */
+/* ---- samples coming back out ----------------------------------------- */
 
 /* What the synthesiser hands back: how many samples, and where they are. */
 typedef struct KlattSamples {
@@ -847,7 +847,7 @@ static int ensureRateTables(DeltaLang *lang, int32_t rate)
     return 1;
 }
 
-/* ---- one utterance ---------------------------------------------------- */
+/* ---- one utterance --------------------------------------------------- */
 
 /* Turn a stretch of parameters into sound.
 

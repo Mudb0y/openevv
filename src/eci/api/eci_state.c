@@ -1,18 +1,18 @@
 /* The parameters an ECI instance holds, and what the engine is told about
-   them.
-
-   Almost everything here turns a number into a two-letter annotation and
-   posts it into the text stream ahead of the words: speed becomes `vs,
-   volume `vv, the standard voice `v, and so on. That is how ECI changes
-   the voice — not by reaching into the synthesizer, but by saying so in the
-   text, which is why a parameter set between two sentences takes effect
-   between them and not in the middle of one.
-
-   This is transcribed rather than rewritten. Every one of these numbers can
-   change what comes out of the speaker, and the annotations are the
-   language's own, so there is nothing here to improve on. The layout is the
-   original's too, because the constructor still belongs to the object next
-   door. */
+ * them.
+ *
+ * Almost everything here turns a number into a two-letter annotation and
+ * posts it into the text stream ahead of the words: speed becomes `vs,
+ * volume `vv, the standard voice `v, and so on. That is how ECI changes
+ * the voice -- not by reaching into the synthesizer, but by saying so in the
+ * text, which is why a parameter set between two sentences takes effect
+ * between them and not in the middle of one.
+ *
+ * This is transcribed rather than rewritten. Every one of these numbers can
+ * change what comes out of the speaker, and the annotations are the
+ * language's own, so there is nothing here to improve on. The layout is the
+ * original's too, because the constructor still belongs to the object next
+ * door. */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -111,7 +111,7 @@ extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
 static const char ANNO[] = "`%s%u";
 static const char ANNO_S[] = "`%s%s";
 
-/* ---- the language identifier ------------------------------------------ */
+/* ---- the language identifier ----------------------------------------- */
 
 THIS LangIdentifier *lang_ctor(LangIdentifier *l, const char *s)
 {
@@ -129,7 +129,7 @@ THIS void lang_setString(LangIdentifier *l)
             (unsigned)(l->packed & 0xff));
 }
 
-/* ---- saying it to the engine ------------------------------------------ */
+/* ---- saying it to the engine ----------------------------------------- */
 
 static THIS int32_t es_sendAnnotationInt(ECIstate *s, const char *code,
                                          int32_t value, void *thread)
@@ -285,7 +285,7 @@ THIS int32_t es_getParam(ECIstate *s, int32_t kind, int32_t p, int32_t *out)
     return rc;
 }
 
-/* ---- setting one --------------------------------------------------- */
+/* ---- setting one ----------------------------------------------------- */
 
 static THIS int32_t setGeneral(ECIstate *s, int32_t p, int32_t v,
                                void *thread, int32_t extra)
@@ -464,7 +464,7 @@ THIS int32_t es_setParam(ECIstate *s, int32_t kind, int32_t p, int32_t v,
     return ECI_BAD_PARAM;
 }
 
-/* ---- starting up ------------------------------------------------------ */
+/* ---- starting up ----------------------------------------------------- */
 
 /* A section name in the settings file is a number in brackets, and this
    reads it as tenths so that one and two tenths sorts after one. */

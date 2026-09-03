@@ -8,12 +8,12 @@
 
 /* The synthesizer's whole working state: one calloc of 0x1d24 bytes, handed
    back to the caller as an opaque handle.
- *
- * Named fields are ones a decoded function actually touches. The pad arrays
- * are not guesses: their sizes fall out of the distance between two offsets
- * we do know, so naming more of them later cannot move anything already here.
- * offsetof assertions at the top of klatt_state.c hold every field in place.
- */
+
+   Named fields are ones a decoded function actually touches. The pad arrays
+   are not guesses: their sizes fall out of the distance between two offsets
+   we do know, so naming more of them later cannot move anything already here.
+   offsetof assertions at the top of klatt_state.c hold every field in place.
+   */
 
 /* What output_speech hands the host: a count and the samples themselves.
    runklatt.obj names this type in its own symbols. */

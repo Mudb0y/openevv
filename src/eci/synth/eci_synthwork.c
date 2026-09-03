@@ -1,18 +1,18 @@
 /* The synthesis thread's own working parts.
-
-   Neither the message side nor the callbacks: the pieces both of those lean
-   on. Handing text to the engine, winding the counts back when the engine
-   says it has finished with some, flushing what is left at the end of a run,
-   shutting the device down, settling on a sample rate, and the short
-   accessors the layer above asks its questions through.
-
-   Most of these are on the path of every spoken sentence, which is what
-   makes them worth taking before the rest.
-
-   Everything here is prefixed rather than named after the method it becomes,
-   because a plain C name has to be unique across the whole link and several
-   of these words are used elsewhere for other things entirely. The names the
-   engine reaches them by are on the alias lines at the foot. */
+ *
+ * Neither the message side nor the callbacks: the pieces both of those lean
+ * on. Handing text to the engine, winding the counts back when the engine
+ * says it has finished with some, flushing what is left at the end of a run,
+ * shutting the device down, settling on a sample rate, and the short
+ * accessors the layer above asks its questions through.
+ *
+ * Most of these are on the path of every spoken sentence, which is what
+ * makes them worth taking before the rest.
+ *
+ * Everything here is prefixed rather than named after the method it becomes,
+ * because a plain C name has to be unique across the whole link and several
+ * of these words are used elsewhere for other things entirely. The names the
+ * engine reaches them by are on the alias lines at the foot. */
 
 #include <stdint.h>
 #include <string.h>
@@ -251,7 +251,7 @@ static int stw_queueIsEmpty(void *q)
     return c->vt->isEmpty(c);
 }
 
-/* ---- the short answers ---- */
+/* ---- the short answers ----------------------------------------------- */
 
 THIS void *stw_getRomMngr(SynthThread *t)      { return ST_ROMAN(t); }
 THIS void *stw_getFilterMngr(SynthThread *t)   { return ST_FILTERS(t); }
@@ -301,7 +301,7 @@ THIS int32_t stw_isOldEngine(SynthThread *t)
     return old;
 }
 
-/* ---- what the caller asks of the thread from outside ---- */
+/* ---- what the caller asks of the thread from outside ----------------- */
 
 /* Stand still, or start again. Both the queue of messages waiting for the
    caller and the device itself have to be told. */
@@ -363,7 +363,7 @@ THIS int32_t stw_registerCallback(SynthThread *t, void *inst, void *cb,
     return rc;
 }
 
-/* ---- text into the engine ---- */
+/* ---- text into the engine -------------------------------------------- */
 
 /* A sentence the romanizer has finished with, on its way to the engine.
 
@@ -462,7 +462,7 @@ THIS void stw_removeCharsFromEngine(SynthThread *t, int32_t n)
     }
 }
 
-/* ---- winding down ---- */
+/* ---- winding down ---------------------------------------------------- */
 
 /* Put a mark of our own at the very end of the sound and wait for the device
    to reach it, so that nothing is cut off. Then close the device, but only
@@ -546,7 +546,7 @@ THIS void stw_stopSynthesis(SynthThread *t, int32_t seq)
     sy_mutexRelease(lock);
 }
 
-/* ---- choosing a language and a rate ---- */
+/* ---- choosing a language and a rate ---------------------------------- */
 
 /* Is there an engine for this language, and if the caller left the dialect
    open, which one?
@@ -698,7 +698,7 @@ THIS int32_t stw_createAudioConverter(SynthThread *t, SampleFormat *fmt)
     return rc;
 }
 
-/* ---- getting an engine going ---- */
+/* ---- getting an engine going ----------------------------------------- */
 
 /* Hand the engine every callback it will need, then start it.
 

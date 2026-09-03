@@ -150,16 +150,16 @@ extern const void *vtbl_enginewrapper[];
 
 
 /* Which language the wrapper is speaking, for as long as a method runs.
- *
- * The machine knows: it was made for one language and remembers which. The
- * primitives underneath do not all get told -- several are handed nothing
- * but the value they are working on -- so the language is set here, at the
- * boundary between the ECI layer and the machine, and every table read
- * below finds the right one.
- *
- * It goes back on the way out however the method leaves, which is what the
- * cleanup is for: some of these return from the middle. A method that never
- * touches the machine does not have one. */
+
+   The machine knows: it was made for one language and remembers which. The
+   primitives underneath do not all get told -- several are handed nothing
+   but the value they are working on -- so the language is set here, at the
+   boundary between the ECI layer and the machine, and every table read
+   below finds the right one.
+
+   It goes back on the way out however the method leaves, which is what the
+   cleanup is for: some of these return from the middle. A method that never
+   touches the machine does not have one. */
 static void lang_put_back(const delta_language *const *was)
 {
     delta_lang_set(*was);
@@ -170,7 +170,7 @@ static void lang_put_back(const delta_language *const *was)
         __attribute__((cleanup(lang_put_back)))                         \
         = delta_lang_set(delta_lang_of((e)->machine))
 
-/* ---- the object itself ---------------------------------------------- */
+/* ---- the object itself ----------------------------------------------- */
 
 THIS EngineWrapper *ew_ctor(EngineWrapper *e)
 {

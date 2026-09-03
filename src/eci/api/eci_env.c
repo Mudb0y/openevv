@@ -1,17 +1,17 @@
 /* The environment and the parameters, as the older interface keeps them.
-
-   An instance holds three copies of the same eighteen settings. The live one
-   is what the caller has asked for. The saved one is what the layer beneath
-   has actually been told. And a third, the standard tables, is where both
-   started. Nearly everything here is the business of noticing that the first
-   two have drifted apart and closing the gap one setting at a time.
-
-   Four of the eighteen are not settings at all but the shape of the sound:
-   which rate, and three numbers that go with the device. Changing any of them
-   means building an audio format afresh and handing it down, which is why the
-   output setters live here beside the rest.
-
-   Names are prefixed and the aliases at the foot carry the real ones. */
+ *
+ * An instance holds three copies of the same eighteen settings. The live one
+ * is what the caller has asked for. The saved one is what the layer beneath
+ * has actually been told. And a third, the standard tables, is where both
+ * started. Nearly everything here is the business of noticing that the first
+ * two have drifted apart and closing the gap one setting at a time.
+ *
+ * Four of the eighteen are not settings at all but the shape of the sound:
+ * which rate, and three numbers that go with the device. Changing any of them
+ * means building an audio format afresh and handing it down, which is why the
+ * output setters live here beside the rest.
+ *
+ * Names are prefixed and the aliases at the foot carry the real ones. */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -95,7 +95,7 @@ int32_t ev_engineHz(int32_t hz);
    in hertz. */
 static int ev_rateIsCoded(int32_t rate);
 
-/* ---- how much of each setting the caller may ask for ---------------- */
+/* ---- how much of each setting the caller may ask for ----------------- */
 
 /* Read out of the original's own table. A pair to a setting: the least it
    will take and the most.
@@ -125,7 +125,7 @@ const int32_t ev_realWorldVoiceParamRange[8][2] = {
     { 1, 0xffff }, { 1, 0xffff }, { 1, 0xffff }, { 1, 0xffff },
 };
 
-/* ---- what the machine will actually do ------------------------------ */
+/* ---- what the machine will actually do ------------------------------- */
 
 /* Whether a language may be asked for at all. In the original the
    comparison is settled when the object is compiled -- 0x10000 in the
@@ -198,7 +198,7 @@ int ev_sampleRateSupported(int32_t rate)
     }
 }
 
-/* ---- the shape of the sound ----------------------------------------- */
+/* ---- the shape of the sound ------------------------------------------ */
 
 /* What an audio format says. The last four are the device's own business
    and only the device form carries them. */
@@ -211,46 +211,46 @@ typedef struct AudioFormat {
 } AudioFormat;
 
 /* What the sample rate setting means, and how the engine is to produce it.
- *
- * IBM numbered four rates and shipped two. The first four numbers keep the
- * rates IBM gave them and always will. What they no longer mean is that the
- * engine runs at them.
- *
- * Every rate above eleven thousand and twenty five is reached by running the
- * engine at one of its own two and repeating each sample, rather than by
- * synthesising at the higher rate. The synthesiser will do either -- it can
- * be built resonator tables for any rate, and src/klatt/klatt_rates.c is that --
- * but they do not sound the same and holding is the one worth having.
- * Synthesising higher widens the noise the frication and aspiration are made
- * of, because that generator produces one value per output sample, so the
- * sibilants go thin and hissy. Holding touches none of it: the speech is bit
- * for bit the speech Eloquence has always made, and what fills the new band
- * is a mirror of it rather than new noise. That mirror is what a bandlimited
- * resampler exists to remove, and keeping it is the sound old hardware made.
- *
- * So the rule is the rate itself and there is nothing else to carry: above
- * eleven thousand and twenty five the engine runs at eleven thousand and
- * twenty five and the samples are repeated, and at or below it the engine
- * runs at the rate asked for. Twenty-two and forty-four thousand are whole
- * multiples and every sample is repeated the same number of times; sixteen,
- * thirty-two and forty-eight are not, and each output sample takes the input
- * sample nearest it in time, which is the same idea with uneven repeats and
- * still no interpolation and no filtering.
- *
- * EVV_UPSAMPLE=none turns the holding off and synthesises everything at its
- * own rate, which is how the two are compared without a rebuild. The other
- * values of it choose between ways of filling the gap and src/eci/sound/eci_pcm.c
- * describes them.
- *
- * Two of these are fixes to IBM rather than additions. The device form knew
- * sixteen thousand and the sample form did not, so a buffer could not have
- * it; both forms answer the same table now. And IBM's twenty-two and sixteen
- * thousand were meant to be exactly this -- the other two doubled by an
- * AudioConverter -- and the object that was to do it is the one this port
- * never transcribed, so what a caller got was the undoubled stream under the
- * doubled label, the same speech at half the duration. That is what these
- * now do, some twenty-seven years later.
- */
+
+   IBM numbered four rates and shipped two. The first four numbers keep the
+   rates IBM gave them and always will. What they no longer mean is that the
+   engine runs at them.
+
+   Every rate above eleven thousand and twenty five is reached by running the
+   engine at one of its own two and repeating each sample, rather than by
+   synthesising at the higher rate. The synthesiser will do either -- it can
+   be built resonator tables for any rate, and src/klatt/klatt_rates.c is that --
+   but they do not sound the same and holding is the one worth having.
+   Synthesising higher widens the noise the frication and aspiration are made
+   of, because that generator produces one value per output sample, so the
+   sibilants go thin and hissy. Holding touches none of it: the speech is bit
+   for bit the speech Eloquence has always made, and what fills the new band
+   is a mirror of it rather than new noise. That mirror is what a bandlimited
+   resampler exists to remove, and keeping it is the sound old hardware made.
+
+   So the rule is the rate itself and there is nothing else to carry: above
+   eleven thousand and twenty five the engine runs at eleven thousand and
+   twenty five and the samples are repeated, and at or below it the engine
+   runs at the rate asked for. Twenty-two and forty-four thousand are whole
+   multiples and every sample is repeated the same number of times; sixteen,
+   thirty-two and forty-eight are not, and each output sample takes the input
+   sample nearest it in time, which is the same idea with uneven repeats and
+   still no interpolation and no filtering.
+
+   EVV_UPSAMPLE=none turns the holding off and synthesises everything at its
+   own rate, which is how the two are compared without a rebuild. The other
+   values of it choose between ways of filling the gap and src/eci/sound/eci_pcm.c
+   describes them.
+
+   Two of these are fixes to IBM rather than additions. The device form knew
+   sixteen thousand and the sample form did not, so a buffer could not have
+   it; both forms answer the same table now. And IBM's twenty-two and sixteen
+   thousand were meant to be exactly this -- the other two doubled by an
+   AudioConverter -- and the object that was to do it is the one this port
+   never transcribed, so what a caller got was the undoubled stream under the
+   doubled label, the same speech at half the duration. That is what these
+   now do, some twenty-seven years later.
+   */
 
 /* The rates the settings name. IBM's four keep IBM's numbers. */
 static const int32_t ev_rateByCode[] = {
@@ -433,7 +433,7 @@ int ev_setOutputToPhonemeCallback(OldInst *h, int32_t n, void *buf)
     return 1;
 }
 
-/* ---- putting things by while the output is rebuilt ------------------ */
+/* ---- putting things by while the output is rebuilt ------------------- */
 
 void ev_saveInstanceData(OldInst *h)
 {
@@ -449,7 +449,7 @@ void ev_restoreInstanceData(OldInst *h)
     OI_SAMPBUF(h) = OI_SAMPBUF_SAVED(h);
 }
 
-/* ---- closing the gap between what was asked and what was sent ------- */
+/* ---- closing the gap between what was asked and what was sent -------- */
 
 /* Six of the settings put back as they stand, whatever the saved copy says.
    The second argument is not looked at. */
@@ -574,7 +574,7 @@ int ev_sendParameters(OldInst *h)
     return 1;
 }
 
-/* ---- the entry point ------------------------------------------------ */
+/* ---- the entry point ------------------------------------------------- */
 
 /* One entry in the concatenative table, or nought if that voice is not in
    it at this rate.
@@ -750,7 +750,7 @@ done:
     return old;
 }
 
-/* ---- the two ways out ----------------------------------------------- */
+/* ---- the two ways out ------------------------------------------------ */
 
 /* Refuse a call that arrived while another was still running. */
 static int ev_reentered(OldInst *h)

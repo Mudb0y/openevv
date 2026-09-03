@@ -2,7 +2,7 @@
 
 A portable Eloquence. IBM's Embedded ViaVoice text-to-speech engine, taken out of its 1999 Windows objects and rebuilt as C that compiles and speaks on a machine it was never meant to run on.
 
-It speaks, and it spoke IBM's own samples: the audio came out byte for byte identical to IBM's binary across all 81 test cases, from both a thirty-two and a sixty-four bit build, and across eight of the nine languages the SDK shipped. That is what the transcription was proved by; the engine is being changed on purpose now, so what is held to from here is a recorded answer for each of 881 cases rather than IBM's. Nothing is borrowed at build time. No DLL, no SDK, no Wine.
+It speaks, and it spoke IBM's own samples: the audio came out byte for byte identical to IBM's binary across all 81 test cases of each language, from both a thirty-two and a sixty-four bit build, and across eight of the nine languages the SDK shipped. That is what the transcription was proved by; the engine is being changed on purpose now, so what is held to from here is a recorded answer for each of 881 cases rather than IBM's. Nothing is borrowed at build time. No DLL, no SDK, no Wine.
 
     make
     ./build/evv -o hello.wav "Hello from Eloquence."
@@ -37,4 +37,4 @@ Our own work -- the engine, the two front ends, the tools, the tests and the doc
 
 The language data under `lang` is not ours. It is transcribed out of IBM's Embedded ViaVoice objects, byte for byte where the engine's arithmetic depends on it, and it is IBM's work. The MIT licence does not cover it and we are in no position to license it to anyone. NOTICE says what it is, whose it is, and who the rights in it may belong to today.
 
-Nothing else of IBM's is here. The objects the port was read out of, and the headers and symbol tables it was read with, are not in the tree and are not needed to build. IBM still serves the SDK they came out of from its own public download host, and `docs/building.md` says where it is and what to do with it -- which is what anyone wanting to check this work against the original, or to add one of the seven other languages, would start from.
+Nothing else of IBM's is here. The objects the port was read out of, and the headers and symbol tables it was read with, are not in the tree and are not needed to build. IBM still serves the SDK they came out of from its own public download host, and `docs/building.md` says where it is and what to do with it -- which is what anyone wanting to check this work against the original, or to finish Japanese, the one language not here, would start from.

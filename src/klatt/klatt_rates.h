@@ -4,26 +4,26 @@
 #include <stdint.h>
 
 /* The two tables every resonator in KlattSynth is built from.
- *
- * IBM shipped four of them, two for each of the two rates its synthesiser
- * recognises by name, sliced out of clsyn.obj by tools/engine/klatt-tables.py. They
- * are not arbitrary data: the excitation table is the decay factor of a pole
- * at a given bandwidth and the cosine table is that pole's angle, both in
- * fifteen-bit fixed point, and both indexed by hertz from ten upwards.
- *
- * Which is what makes another rate possible at all. Generating IBM's four
- * from the formulae below and comparing entry by entry: every one of the
- * 3,991 excitation entries is exact at both rates, and every cosine entry is
- * exact except two at eight thousand where IBM stored the saturated value
- * where the formula rounds one short of it. test/harness/rates.c is that comparison,
- * kept so the claim stays checked rather than remembered.
- *
- * So the tables for a rate IBM never shipped are built rather than stored,
- * and IBM's own four are never rebuilt -- KlattSetConstParms goes on handing
- * out the static arrays at eight thousand and eleven thousand and twenty
- * five, so the two rates that have to stay byte for byte identical do not
- * depend on anyone's rounding.
- */
+
+   IBM shipped four of them, two for each of the two rates its synthesiser
+   recognises by name, sliced out of clsyn.obj by tools/engine/klatt-tables.py. They
+   are not arbitrary data: the excitation table is the decay factor of a pole
+   at a given bandwidth and the cosine table is that pole's angle, both in
+   fifteen-bit fixed point, and both indexed by hertz from ten upwards.
+
+   Which is what makes another rate possible at all. Generating IBM's four
+   from the formulae below and comparing entry by entry: every one of the
+   3,991 excitation entries is exact at both rates, and every cosine entry is
+   exact except two at eight thousand where IBM stored the saturated value
+   where the formula rounds one short of it. test/harness/rates.c is that comparison,
+   kept so the claim stays checked rather than remembered.
+
+   So the tables for a rate IBM never shipped are built rather than stored,
+   and IBM's own four are never rebuilt -- KlattSetConstParms goes on handing
+   out the static arrays at eight thousand and eleven thousand and twenty
+   five, so the two rates that have to stay byte for byte identical do not
+   depend on anyone's rounding.
+   */
 
 /* KlattSynth clamps every frequency to ten through five thousand and every
    bandwidth to ten through four thousand before it indexes, so those bounds

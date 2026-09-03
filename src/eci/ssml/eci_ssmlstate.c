@@ -76,7 +76,7 @@ typedef struct {
     const ECIEnvironmentTable *table;
 } ECIEnvironment;
 
-/* ---- the three errors ------------------------------------------------- */
+/* ---- the three errors ------------------------------------------------ */
 
 THIS void ss_setErrorSyntax(SSMLState *s)
 {
@@ -190,11 +190,11 @@ THIS int8_t ss_isSpellAddSpace(SSMLState *s)
 /* Everything the handlers write goes through here. The buffer doubles when
    it will not fit; running out of memory is recorded and nothing more is
    added.
- *
- * The space before a digit is what spelling out needs: the engine reads
- * `1 2 3' as three digits and `123' as a number, so a run of characters
- * being spelt out asks for a space in front of each and this puts one there
- * when the next thing is a digit. */
+
+   The space before a digit is what spelling out needs: the engine reads
+   `1 2 3' as three digits and `123' as a number, so a run of characters
+   being spelt out asks for a space in front of each and this puts one there
+   when the next thing is a digit. */
 THIS int32_t ss_addToFilteredText(SSMLState *s, const char *text,
                                   int32_t length)
 {

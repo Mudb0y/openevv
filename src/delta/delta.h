@@ -7,18 +7,18 @@
 #include "evv_arena.h"
 
 /* The Delta machine's working state: one allocation, named fields first and
- * then a cell for every global the language declares.
- *
- * How big it is therefore depends on which language the machine is for --
- * English runs to 0x1088 and German to 0x10b4 -- so the struct below stops
- * where the named fields do, at DG_BASE, and the cells are the rest of an
- * allocation whose size the language states. Nothing takes sizeof this.
- *
- * Named fields are ones a decoded primitive touches. As with the synthesizer,
- * the pad arrays are sized by the distance between offsets we do know, so
- * naming more of them later cannot move anything already placed, and the
- * offsetof assertions in delta.c hold every field where it belongs.
- */
+   then a cell for every global the language declares.
+
+   How big it is therefore depends on which language the machine is for --
+   English runs to 0x1088 and German to 0x10b4 -- so the struct below stops
+   where the named fields do, at DG_BASE, and the cells are the rest of an
+   allocation whose size the language states. Nothing takes sizeof this.
+
+   Named fields are ones a decoded primitive touches. As with the synthesizer,
+   the pad arrays are sized by the distance between offsets we do know, so
+   naming more of them later cannot move anything already placed, and the
+   offsetof assertions in delta.c hold every field where it belongs.
+   */
 
 #include "delta_lang.h"
 

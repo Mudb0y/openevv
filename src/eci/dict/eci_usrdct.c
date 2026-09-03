@@ -145,7 +145,7 @@ THIS int32_t   ud_lookupUndo(UserDict *u, delta_state *d,
                              int32_t l, int32_t r);
 
 
-/* ---- one dictionary ---- */
+/* ---- one dictionary -------------------------------------------------- */
 
 /* Nothing loaded, no table, nothing to undo. */
 THIS UserDict *ud_ctor(UserDict *u)
@@ -510,7 +510,7 @@ THIS int32_t ud_lookupUndo(UserDict *u, delta_state *d, int32_t l, int32_t r)
 }
 
 
-/* ---- the three of them together ---- */
+/* ---- the three of them together -------------------------------------- */
 
 /* The three are made the same way whichever constructor is used; only what
    each one is handed differs. If any of the three could not be made the
@@ -698,7 +698,7 @@ int32_t setCurrentUserDict(delta_state *d, DictionarySet *s)
 }
 
 
-/* ---- what the rules call ---- */
+/* ---- what the rules call --------------------------------------------- */
 
 /* Both of these answer one when they did nothing, which is what the rules
    read as "carry on as you were". */

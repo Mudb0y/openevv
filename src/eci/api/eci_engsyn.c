@@ -114,7 +114,7 @@ extern THIS int32_t ds_updateEntry(void *s, int32_t volume,
 
 STDCALL int32_t es_engsynRestart(delta_state *d);
 
-/* ---- coming up and going down --------------------------------------- */
+/* ---- coming up and going down ---------------------------------------- */
 
 /* Starting twice is an error rather than a no-op, which is why the flag is
    set before anything else is tried: a second caller is refused even while
@@ -170,7 +170,7 @@ STDCALL int32_t es_engsynClose(delta_state *d)
     return 0;
 }
 
-/* ---- what went wrong ------------------------------------------------ */
+/* ---- what went wrong ------------------------------------------------- */
 
 STDCALL int32_t es_engsynGetLastError(delta_state *d, int32_t *from,
                                       int32_t *to)
@@ -179,7 +179,7 @@ STDCALL int32_t es_engsynGetLastError(delta_state *d, int32_t *from,
     return getEngsynError(d);
 }
 
-/* ---- interrupting --------------------------------------------------- */
+/* ---- interrupting ---------------------------------------------------- */
 
 /* Stopping and resuming are the same door. Stopping throws whatever the
    machine was holding and shuts the synthesiser down; not stopping starts it
@@ -231,7 +231,7 @@ STDCALL int32_t es_engsynClearInput(delta_state *d)
     return checkEngsynError(d);
 }
 
-/* ---- index marks ---------------------------------------------------- */
+/* ---- index marks ----------------------------------------------------- */
 
 /* Both answer true for success, where the layer below answers nought. */
 STDCALL int32_t es_engsynInsertSynthesisIndex(delta_state *d, int32_t index)
@@ -246,7 +246,7 @@ STDCALL int32_t es_engsynInsertDelayedSynthesisIndex(delta_state *d,
     return insertDelayedSynthIndex(d, index, delay) == 0;
 }
 
-/* ---- the user dictionary -------------------------------------------- */
+/* ---- the user dictionary --------------------------------------------- */
 
 /* Built and then checked: one that could not open its volumes is taken
    apart again and nothing comes back. */
@@ -318,7 +318,7 @@ STDCALL const char *es_engsynDictLookup(void *set, int32_t volume,
     return ds_lookup(set, volume, word);
 }
 
-/* ---- where the answers go ------------------------------------------- */
+/* ---- where the answers go -------------------------------------------- */
 
 /* Each of these is one slot for a function and one for whatever the caller
    wants handed back with it, side by side in the block the machine keeps
@@ -387,7 +387,7 @@ STDCALL void es_engsynSetDurationCallback(delta_state *d, void *fn, void *param)
     setSynthDurationCallback(d, fn, param);
 }
 
-/* ---- where the sound goes ------------------------------------------- */
+/* ---- where the sound goes -------------------------------------------- */
 
 /* All three answer true for success where the layer below answers nought. */
 STDCALL int32_t es_engsynSetSynthToNamedFile(delta_state *d, const char *name)
@@ -414,7 +414,7 @@ STDCALL int32_t es_engsynOutputPlaying(delta_state *d)
     return 0;
 }
 
-/* ---- putting text in and taking answers out ------------------------- */
+/* ---- putting text in and taking answers out -------------------------- */
 
 /* The two are the same but for which of the machine's doors they go
    through. Both refuse to run inside themselves, which is what the busy
@@ -497,7 +497,7 @@ STDCALL int32_t es_engsynReadErrorMessage(delta_state *d, char *buf,
     return 1;
 }
 
-/* ---- stopping and starting again ------------------------------------ */
+/* ---- stopping and starting again ------------------------------------- */
 
 /* Abort is not a request: it sets the error and throws immediately, so
    whatever the machine was in the middle of unwinds. */
@@ -536,7 +536,7 @@ STDCALL int32_t es_engsynRestart(delta_state *d)
     return checkEngsynError(d);
 }
 
-/* ---- the rest of the user dictionary -------------------------------- */
+/* ---- the rest of the user dictionary --------------------------------- */
 
 STDCALL int32_t es_engsynSaveDict(void *set, int32_t volume, const char *name)
 {

@@ -71,7 +71,7 @@ const void *vtbl_ecollectiter[7];
 
 extern void purecall(void) MANGLED("__purecall");
 
-/* ---- the list ------------------------------------------------------- */
+/* ---- the list -------------------------------------------------------- */
 
 /* A new link at the front. An empty list gains a tail as well. */
 THIS int32_t el_addToHead(ESList *l, IndexPair p)
@@ -185,7 +185,7 @@ THIS void el_listReset(ESList *l)
         ((THIS void (*)(ESList *))VT(l)[8])(l);
 }
 
-/* ---- the iterator --------------------------------------------------- */
+/* ---- the iterator ---------------------------------------------------- */
 
 THIS int32_t el_iterInBounds(const ESListIter *it) { return it->at != 0; }
 THIS void   *el_iterAt(const ESListIter *it)       { return it->at; }
@@ -211,7 +211,7 @@ THIS void *el_iterPostInc(ESListIter *it, int32_t unused)
     return was;
 }
 
-/* ---- counting ------------------------------------------------------- */
+/* ---- counting -------------------------------------------------------- */
 
 /* Kept as the original wrote it. See the note at the top of the file. */
 THIS int32_t el_collectionSize(void *self)
@@ -234,7 +234,7 @@ THIS int32_t el_collectionSize(void *self)
     return count;
 }
 
-/* ---- the tables ----------------------------------------------------- */
+/* ---- the tables ------------------------------------------------------ */
 
 const void *vtbl_eslist[11] = {
     (void *)sti_esListIsEmpty,

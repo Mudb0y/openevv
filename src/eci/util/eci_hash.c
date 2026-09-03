@@ -161,7 +161,7 @@ int32_t hashDelete(void *table, int32_t freeKeys, int32_t freeValues)
     return 0;
 }
 
-/* ---- keyed by string ------------------------------------------------ */
+/* ---- keyed by string ------------------------------------------------- */
 
 /* Straight onto the front of its bucket, without looking to see whether the
    key is already there. Two entries with the same key are allowed; the
@@ -264,7 +264,7 @@ void *hashMoveString(void *table, const char *oldKey, char *newKey)
     return e->value;
 }
 
-/* ---- keyed by number ------------------------------------------------ */
+/* ---- keyed by number ------------------------------------------------- */
 
 int32_t hashInsertInt(void *table, int32_t key, void *value)
 {
@@ -357,7 +357,7 @@ void *hashMoveInt(void *table, int32_t oldKey, int32_t newKey)
     return e->value;
 }
 
-/* ---- walking the whole table ---------------------------------------- */
+/* ---- walking the whole table ----------------------------------------- */
 
 /* Step to the next entry, or to the first entry of the next bucket that has
    one. Answers whether there is anything to look at. Running off the end

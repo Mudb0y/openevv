@@ -267,7 +267,7 @@ static head *next_block(head *b)
    inlining the frame above was walkable and with another's it was not, so the
    engine built by Ubuntu's gcc faulted inside the allocator on the first
    sentence while the same source built here was fine. */
-/* ---- the guard ---------------------------------------------------------
+/* ---- the guard ----------------------------------------------------------
  *
  * Off unless asked for: build with -DEVV_ARENA_GUARD=1. What it is for is one
  * kind of fault, which has now been found four times in this engine and will
@@ -586,7 +586,7 @@ int32_t evv_ref_checked(const void *p)
     return (int32_t)(uint32_t)v;
 }
 
-/* ---- what is still held ------------------------------------------------
+/* ---- what is still held -------------------------------------------------
  *
  * Everything the engine allocates comes from here, so anything an instance
  * keeps after it has been deleted is a used block still on this list. Grouped
@@ -655,7 +655,7 @@ void evv_arena_outstanding(const char *when)
 
 #endif
 
-/* ---- one rule's frame ------------------------------------------------- */
+/* ---- one rule's frame ------------------------------------------------ */
 
 #define FRAME_STACK (4u * 1024u * 1024u)
 #define FRAME_ALIGN 16
@@ -664,16 +664,16 @@ void evv_arena_outstanding(const char *when)
 static __thread unsigned char *fs_base, *fs_top, *fs_end;
 
 /* A thread's frame stack, given back when the thread is done with it.
- *
- * Four megabytes, taken on the first rule the thread runs and kept for as long
- * as the thread lives, which is right: the frames nest strictly and the stack is
- * reused. What was wrong was that nothing gave it back. Every engine instance
- * starts a synthesis thread, so every instance made and thrown away kept four
- * megabytes of the arena, and the arena is 256 by default -- which is why the
- * engine went quiet on the 63rd instance and reported nothing.
- *
- * Safe here and only here: the thread body has returned, so no rule of that
- * thread is running and nothing holds a frame. */
+
+   Four megabytes, taken on the first rule the thread runs and kept for as long
+   as the thread lives, which is right: the frames nest strictly and the stack is
+   reused. What was wrong was that nothing gave it back. Every engine instance
+   starts a synthesis thread, so every instance made and thrown away kept four
+   megabytes of the arena, and the arena is 256 by default -- which is why the
+   engine went quiet on the 63rd instance and reported nothing.
+
+   Safe here and only here: the thread body has returned, so no rule of that
+   thread is running and nothing holds a frame. */
 void evv_frame_done(void)
 {
     if (fs_base != 0) {

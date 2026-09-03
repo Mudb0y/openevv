@@ -105,15 +105,15 @@ char *dupstr(const char *s)
 
 /* The directory the program itself was loaded from, with its separator still
    on the end.
- *
- * The romanizer manager works this out before asking for a romanizer, and
- * hands it over as where that romanizer's own files are to be found. IBM asks
- * GetModuleHandleA for the running image and GetModuleFileNameA for its path,
- * then walks back to the last separator. There is no such pair anywhere else,
- * so the path comes from the kernel's own answer instead and the walk back is
- * the same.
- *
- * Answers one and writes the directory, or nought and writes nothing. */
+
+   The romanizer manager works this out before asking for a romanizer, and
+   hands it over as where that romanizer's own files are to be found. IBM asks
+   GetModuleHandleA for the running image and GetModuleFileNameA for its path,
+   then walks back to the last separator. There is no such pair anywhere else,
+   so the path comes from the kernel's own answer instead and the walk back is
+   the same.
+
+   Answers one and writes the directory, or nought and writes nothing. */
 int32_t fileModuleDirectory(char *out, int32_t room)
 {
     char  path[PATH_ROOM];

@@ -1,40 +1,40 @@
 /* The Delta runtime's printing, reading and file layer.
-
-   Two things live here. The printing half is stubbed: it exists in the
-   original for the Delta debugger's trace and display, it rests on ANSI
-   standard input and output, and the targets this port is for have no
-   reason to carry a debugger. Those stubs are variadic, because the
-   original's argument lists are not reproduced and nothing here reads them,
-   and a variadic stub is the one shape a caller can pass anything to
-   without the call being undefined.
-
-   The reading half is transcribed, because a sentence goes through it two
-   hundred times. Opening a stream, reading a variable off one, taking a
-   token off one: none of those is a file operation in any useful sense on
-   the way in, whatever their names suggest.
-
-   One divergence, and it is the printing again: the debugger's trace and
-   display do nothing at all, and neither does the line an error report
-   would have written.
-
-   What a report decides is another matter, and that is not a divergence.
-   Both reporters ask whether the console the Delta debugger reads from is
-   open, by looking for a physical file called cmdwin or one called pgmwin.
-   No object in the library ever creates either, so neither is ever found,
-   and both answer that the read should be given up rather than tried
-   again. That is what the two below answer, which is what the original
-   answers here; a target that ever grows a console is where the rest of
-   them would go back in.
-
-   Two names the runtime calls are not here: gettok and print_prompt are
-   rules the language supplies rather than runtime entries, and stubbing
-   them would take the language's own answers away. The reader's own
-   tokeniser was also called gettok, privately, and is below under a name
-   that does not collide with the language's.
-
-   If a target ever wants the trace, the printing half is the place to put
-   it back: give vf_puts and vf_printf somewhere to write and transcribe the
-   six io.obj entries above them. */
+ *
+ * Two things live here. The printing half is stubbed: it exists in the
+ * original for the Delta debugger's trace and display, it rests on ANSI
+ * standard input and output, and the targets this port is for have no
+ * reason to carry a debugger. Those stubs are variadic, because the
+ * original's argument lists are not reproduced and nothing here reads them,
+ * and a variadic stub is the one shape a caller can pass anything to
+ * without the call being undefined.
+ *
+ * The reading half is transcribed, because a sentence goes through it two
+ * hundred times. Opening a stream, reading a variable off one, taking a
+ * token off one: none of those is a file operation in any useful sense on
+ * the way in, whatever their names suggest.
+ *
+ * One divergence, and it is the printing again: the debugger's trace and
+ * display do nothing at all, and neither does the line an error report
+ * would have written.
+ *
+ * What a report decides is another matter, and that is not a divergence.
+ * Both reporters ask whether the console the Delta debugger reads from is
+ * open, by looking for a physical file called cmdwin or one called pgmwin.
+ * No object in the library ever creates either, so neither is ever found,
+ * and both answer that the read should be given up rather than tried
+ * again. That is what the two below answer, which is what the original
+ * answers here; a target that ever grows a console is where the rest of
+ * them would go back in.
+ *
+ * Two names the runtime calls are not here: gettok and print_prompt are
+ * rules the language supplies rather than runtime entries, and stubbing
+ * them would take the language's own answers away. The reader's own
+ * tokeniser was also called gettok, privately, and is below under a name
+ * that does not collide with the language's.
+ *
+ * If a target ever wants the trace, the printing half is the place to put
+ * it back: give vf_puts and vf_printf somewhere to write and transcribe the
+ * six io.obj entries above them. */
 
 #include <stdlib.h>
 #include <string.h>

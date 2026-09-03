@@ -74,7 +74,7 @@ typedef struct {
 extern void *vardesc(delta_state *d, uint8_t hi, uint8_t lo, void *frame);
 
 
-/* ---- what the language says about itself ---- */
+/* ---- what the language says about itself ----------------------------- */
 
 /* How many statement types the language declared. */
 int num_streams(delta_state *d)
@@ -120,7 +120,7 @@ int enum_field(int8_t f, int32_t i)
 }
 
 
-/* ---- the spine, a token at a time ---- */
+/* ---- the spine, a token at a time ------------------------------------ */
 
 /* The two ends of it. */
 int32_t left_delta(delta_state *d)
@@ -290,21 +290,21 @@ int project_sync(delta_state *d, int32_t l, int8_t f, int32_t r, int32_t back)
 }
 
 /* Whether joining two marks would leave the spine sound.
- *
- * A mark may always be joined with itself, and the spine's own two ends may
- * never be joined with each other. Past that it is a question asked of every
- * field in turn, and the four cases are which of the two marks carries that
- * field:
- *
- * both -- one has to link straight to the other, either way round;
- * one of them -- whatever the other one links to has to be on the right side
- *   of the one that carries it, which is what visleft and visright answer;
- * neither -- the two must not be threaded past each other, which is the same
- *   pair of questions asked the other way about.
- *
- * A field that fails any of those is a join that would cross something, and
- * the answer is no.
- */
+
+   A mark may always be joined with itself, and the spine's own two ends may
+   never be joined with each other. Past that it is a question asked of every
+   field in turn, and the four cases are which of the two marks carries that
+   field:
+
+   both -- one has to link straight to the other, either way round;
+   one of them -- whatever the other one links to has to be on the right side
+   of the one that carries it, which is what visleft and visright answer;
+   neither -- the two must not be threaded past each other, which is the same
+   pair of questions asked the other way about.
+
+   A field that fails any of those is a join that would cross something, and
+   the answer is no.
+   */
 static int safe_mergable(delta_state *d, int32_t l, int32_t r)
 {
     delta_stack   *s = EVV_AT(delta_stack *, d->stack);
@@ -419,7 +419,7 @@ int32_t ins_sync(delta_state *d, int8_t f, int32_t at, int32_t left)
 }
 
 
-/* ---- a field's value, as a number and as text ---- */
+/* ---- a field's value, as a number and as text ------------------------ */
 
 /* The value of the first field of a walkable type, which is the only one
    that carries a duration. Anything else answers minus one. */
@@ -493,7 +493,7 @@ char *field_value(int8_t f, void *tok, int32_t fld)
 }
 
 
-/* ---- reading text back into a value ---- */
+/* ---- reading text back into a value ---------------------------------- */
 
 /* True when every character of a string is the same one. An empty string
    counts. */
@@ -517,19 +517,19 @@ static int strprefix(const char *s, const char *pre)
 }
 
 /* Walking the names a field can take.
- *
- * A field whose values are named rather than numbered carries the list in
- * its descriptor, and this is how the outside reads it: first_fieldval sets
- * the walk up and answers the first name, next_fieldval answers each one
- * after it, and nothing is answered when the list runs out. Where the walk
- * stands lives in the stack block rather than in the caller's hands, so only
- * one walk can be under way at a time -- the original's arrangement, kept.
- *
- * The prefix filters: a name is answered only if it starts with it. An empty
- * prefix answers every name, which is the fast arm at the top. A prefix that
- * is nothing but dashes is the odd one: it answers whatever the field calls
- * its undefined value, and that is what the flag set up beside it is for.
- */
+
+   A field whose values are named rather than numbered carries the list in
+   its descriptor, and this is how the outside reads it: first_fieldval sets
+   the walk up and answers the first name, next_fieldval answers each one
+   after it, and nothing is answered when the list runs out. Where the walk
+   stands lives in the stack block rather than in the caller's hands, so only
+   one walk can be under way at a time -- the original's arrangement, kept.
+
+   The prefix filters: a name is answered only if it starts with it. An empty
+   prefix answers every name, which is the fast arm at the top. A prefix that
+   is nothing but dashes is the odd one: it answers whatever the field calls
+   its undefined value, and that is what the flag set up beside it is for.
+   */
 const char *next_fieldval(delta_state *d)
 {
     delta_stack           *s = EVV_AT(delta_stack *, d->stack);
@@ -684,19 +684,19 @@ int non_unique_value(delta_state *d, int8_t f, int32_t fld, const char *s,
 }
 
 /* The same question asked strictly: a name only counts if it is the only one
- * the string could mean.
- *
- * Where non_unique_value takes the first name the string is a prefix of and
- * stops, this one goes on looking and gives up the moment a second matches.
- * Two smaller differences follow from that. The run of dashes and the
- * ordinary prefix are not alternatives here -- the dash pass runs and then
- * the prefix pass runs over the whole list as well, so a string that is both
- * is two matches and therefore none. And nothing breaks out of either loop
- * early, since finding one match is not the end of the question.
- *
- * The statics are the original's: what is answered is a pointer into them,
- * so a second call overwrites what the first handed back.
- */
+   the string could mean.
+
+   Where non_unique_value takes the first name the string is a prefix of and
+   stops, this one goes on looking and gives up the moment a second matches.
+   Two smaller differences follow from that. The run of dashes and the
+   ordinary prefix are not alternatives here -- the dash pass runs and then
+   the prefix pass runs over the whole list as well, so a string that is both
+   is two matches and therefore none. And nothing breaks out of either loop
+   early, since finding one match is not the end of the question.
+
+   The statics are the original's: what is answered is a pointer into them,
+   so a second call overwrites what the first handed back.
+   */
 int unique_value(delta_state *d, int8_t f, int32_t fld, const char *s,
                  const char **out_name, void **out_value)
 {
@@ -769,18 +769,18 @@ int unique_value(delta_state *d, int8_t f, int32_t fld, const char *s,
 }
 
 /* Whether a string could still become a value of this field, and whether a
- * single character could still be the start of one.
- *
- * These are what something offering a person a choice asks as the text is
- * typed: not "is this a value" but "could it yet be one". A numbered field
- * answers by whether the text reads as a number at all, and a character by
- * whether it is a digit or the minus sign. A named field answers by whether
- * any of its names begins that way, with a run of dashes standing for the
- * undefined one as everywhere else here.
- *
- * Neither takes the machine: the answer is in the language's own table and
- * nothing about the spine comes into it.
- */
+   single character could still be the start of one.
+
+   These are what something offering a person a choice asks as the text is
+   typed: not "is this a value" but "could it yet be one". A numbered field
+   answers by whether the text reads as a number at all, and a character by
+   whether it is a digit or the minus sign. A named field answers by whether
+   any of its names begins that way, with a run of dashes standing for the
+   undefined one as everywhere else here.
+
+   Neither takes the machine: the answer is in the language's own table and
+   nothing about the spine comes into it.
+   */
 int valid_prefix(int8_t f, int32_t fld, const char *s)
 {
     const char *const *names;
@@ -843,7 +843,7 @@ int valid_prefix_char(int8_t f, int32_t fld, char c)
 }
 
 
-/* ---- putting things in ---- */
+/* ---- putting things in ----------------------------------------------- */
 
 /* Put one token in, named. The name only matters in that a token called
    GAP is flagged as one. */
@@ -1010,7 +1010,7 @@ int can_del_sync(delta_state *d, int8_t f, int32_t at)
 }
 
 
-/* ---- which streams and fields a caller wants ---- */
+/* ---- which streams and fields a caller wants ------------------------- */
 
 /* How many fields a whole list adds up to. */
 int32_t num_fields(const stream_list *list)
@@ -1159,7 +1159,7 @@ int next_field(delta_state *d, const stream_list *list, int8_t *out_stm,
 }
 
 
-/* ---- the variable list a caller is handed ---- */
+/* ---- the variable list a caller is handed ---------------------------- */
 
 /* Two bytes of length, most significant first, then a pair of bytes per
    variable. */

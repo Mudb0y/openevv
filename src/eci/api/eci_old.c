@@ -1,21 +1,21 @@
 /* The published interface, as it was before the engine grew a second one.
-
-   Everything a program links against is here. Underneath it there is a newer
-   interface, the one whose entry points end in a two, and most of what this
-   layer does is hold a record of its own beside that one and hand the call
-   on. The record is what the older interface promised: a callback, a queue
-   the caller can fill before speaking, eight voices it can edit, and the
-   settings that go with them.
-
-   Two things run through nearly every entry point. The first is a guard
-   against being called from inside its own callback: a call that arrives
-   while another is still running is refused, and the bit it would have used
-   is remembered so the layer above can tell what was missed. The second is
-   that the answer from underneath is turned into the older interface's own
-   notion of an error before anyone sees it.
-
-   This is the first part of that object. Names are prefixed and the aliases
-   at the foot carry the real ones. */
+ *
+ * Everything a program links against is here. Underneath it there is a newer
+ * interface, the one whose entry points end in a two, and most of what this
+ * layer does is hold a record of its own beside that one and hand the call
+ * on. The record is what the older interface promised: a callback, a queue
+ * the caller can fill before speaking, eight voices it can edit, and the
+ * settings that go with them.
+ *
+ * Two things run through nearly every entry point. The first is a guard
+ * against being called from inside its own callback: a call that arrives
+ * while another is still running is refused, and the bit it would have used
+ * is remembered so the layer above can tell what was missed. The second is
+ * that the answer from underneath is turned into the older interface's own
+ * notion of an error before anyone sees it.
+ *
+ * This is the first part of that object. Names are prefixed and the aliases
+ * at the foot carry the real ones. */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -115,7 +115,7 @@ static int eo_reentered(OldInst *h, uint32_t bit)
 #define SV_DIALECT_BYTES 0x504
 #define SV_FIRST         4
 
-/* ---- turning the newer interface's answers into the older one's ---- */
+/* ---- turning the newer interface's answers into the older one's ------ */
 
 /* Every refusal the newer interface can give has a bit in the older one's
    word of errors. This is that table, read off the original's own two: a
@@ -154,7 +154,7 @@ int32_t setECIerror(int32_t rc, OldInst *h)
     return rc;
 }
 
-/* ---- the bridge from the engine's callback to the caller's ---- */
+/* ---- the bridge from the engine's callback to the caller's ----------- */
 
 /* What the older interface calls each kind of report. */
 #define ECI_WAVEFORM      0
@@ -345,7 +345,7 @@ int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data)
     return ret;
 }
 
-/* ---- the queue the caller fills before speaking ---- */
+/* ---- the queue the caller fills before speaking ---------------------- */
 
 /* Throw away everything waiting, and the text any of it owns. */
 void eo_clearManualQueue(OldInst *h)
@@ -365,7 +365,7 @@ void eo_clearManualQueue(OldInst *h)
     OI_QTAIL(h) = 0;
 }
 
-/* ---- what a new instance starts out as ---- */
+/* ---- what a new instance starts out as ------------------------------- */
 
 /* Copy the settings every instance starts with. The language is not among
    them: it is asked of the instance itself, because the instance may have
@@ -447,7 +447,7 @@ int eo_getDefaultActiveVoice(OldInst *h, int32_t check)
     return 1;
 }
 
-/* ---- making an instance ---- */
+/* ---- making an instance ---------------------------------------------- */
 
 /* Both ways of making one, which differ only in where the language comes
    from: one is told, the other takes whatever the settings say.
@@ -543,7 +543,7 @@ OldInst *STDCALL eo_newEx(int32_t language)
     return eo_newInstance(language, 1);
 }
 
-/* ---- the entry points ---- */
+/* ---- the entry points ------------------------------------------------ */
 
 /* Nothing to do: errors are cleared as they are read. */
 void STDCALL eo_clearErrors(OldInst *h)

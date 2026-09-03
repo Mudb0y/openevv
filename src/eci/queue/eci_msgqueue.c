@@ -1,19 +1,19 @@
 /* Messages, and the queue a thread takes them off.
-
-   This is how everything above the Delta machine talks to itself. A caller
-   builds a message, posts it, and either walks away or waits; a thread sits
-   in a loop pulling messages off and running them. Posting takes a
-   reference and running gives it back, so a message outlives whichever of
-   the two finishes with it first.
-
-   Two kinds of send. Posting returns as soon as the message is on the
-   queue. Sending puts it there and then waits on an event the thread
-   signals when it has run it, which is how a caller gets an answer back.
-
-   The tables of virtual functions are written out at the end. Their order
-   is not a choice: it is read off the original's own tables, and getting a
-   slot wrong is a jump into the wrong function rather than a quiet
-   difference, so it is worth saying where each one came from. */
+ *
+ * This is how everything above the Delta machine talks to itself. A caller
+ * builds a message, posts it, and either walks away or waits; a thread sits
+ * in a loop pulling messages off and running them. Posting takes a
+ * reference and running gives it back, so a message outlives whichever of
+ * the two finishes with it first.
+ *
+ * Two kinds of send. Posting returns as soon as the message is on the
+ * queue. Sending puts it there and then waits on an event the thread
+ * signals when it has run it, which is how a caller gets an answer back.
+ *
+ * The tables of virtual functions are written out at the end. Their order
+ * is not a choice: it is read off the original's own tables, and getting a
+ * slot wrong is a jump into the wrong function rather than a quiet
+ * difference, so it is worth saying where each one came from. */
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -102,8 +102,8 @@ extern const MessageVtbl vtbl_message;
 extern const MessageVtbl vtbl_quit;
 
 /* Waking a window is how the original tells an application thread that a
-   message has arrived. Nothing in this library ever supplies a window —
-   every caller passes nothing — so the branch is dead here, and it is the
+   message has arrived. Nothing in this library ever supplies a window --
+   every caller passes nothing -- so the branch is dead here, and it is the
    one place a Windows host would want its own answer. */
 #ifdef _WIN32
 __attribute__((dllimport, stdcall)) int PostMessageA(void *, unsigned,

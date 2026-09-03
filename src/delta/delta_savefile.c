@@ -1,8 +1,8 @@
 /* The save layer's file seam, over the C library.
-
-   This is the one file the save and restore routines in delta_trace.c reach
-   the outside world through, and the only place stdio is named. A target
-   without stdio replaces this file; nothing else has to change. */
+ *
+ * This is the one file the save and restore routines in delta_trace.c reach
+ * the outside world through, and the only place stdio is named. A target
+ * without stdio replaces this file; nothing else has to change. */
 
 #include <stdio.h>
 

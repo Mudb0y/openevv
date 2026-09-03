@@ -1,24 +1,24 @@
 /* Text on its way from the caller into the engine.
-
-   This is one function, addTextRun, and it is the longest in the object
-   because it is where five separate concerns meet: telling the caller
-   whether the voice went concatenative, wiring up the callbacks the first
-   time anything is said after a reset, letting a star command through
-   untouched, recoding the text if the SSML filter is in the way, and finally
-   handing what comes out to the romanizer a sentence at a time.
-
-   The recoding is the bulk of it. The caller's text arrives as UTF-8 and the
-   engine wants single bytes, so there are two roads: with a romanizer
-   instance for this engine the text goes to UTF-16 and the romanizer maps it
-   down, and without one it is decoded here and the handful of code points
-   that have a place in the Windows Western byte set are put there. Text that
-   turns out not to be UTF-8 at all is copied across untouched rather than
-   mangled.
-
-   Two things in here are the original's and are left as they are because
-   they are what it does: a local for a UTF-16 result that is never assigned
-   and so never used, and a flag set in every arm of the mapping table and
-   never read. */
+ *
+ * This is one function, addTextRun, and it is the longest in the object
+ * because it is where five separate concerns meet: telling the caller
+ * whether the voice went concatenative, wiring up the callbacks the first
+ * time anything is said after a reset, letting a star command through
+ * untouched, recoding the text if the SSML filter is in the way, and finally
+ * handing what comes out to the romanizer a sentence at a time.
+ *
+ * The recoding is the bulk of it. The caller's text arrives as UTF-8 and the
+ * engine wants single bytes, so there are two roads: with a romanizer
+ * instance for this engine the text goes to UTF-16 and the romanizer maps it
+ * down, and without one it is decoded here and the handful of code points
+ * that have a place in the Windows Western byte set are put there. Text that
+ * turns out not to be UTF-8 at all is copied across untouched rather than
+ * mangled.
+ *
+ * Two things in here are the original's and are left as they are because
+ * they are what it does: a local for a UTF-16 result that is never assigned
+ * and so never used, and a flag set in every arm of the mapping table and
+ * never read. */
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -425,21 +425,21 @@ THIS void addTextRun(SynthThread *t, char *text, uint32_t len, int32_t seq,
 
     /* And the way in for a language whose letters are not in the byte set
        this engine was built around.
-     *
-     * IBM's takes the caller's bytes as characters on this path: the code set
-     * only ever mattered under the SSML filter, which recodes above, and for
-     * the languages with a romanizer, which convert their own. Every letter of
-     * the nine it shipped is in the Western byte set, so nothing else needed
-     * saying. A language of ours can have letters that are not, and then a
-     * caller writing UTF-8 -- which is every caller now -- would hand over two
-     * bytes the machine reads as two characters.
-     *
-     * So a language that declares characters of its own gets its text
-     * converted here, and one that declares none is left exactly as it was.
-     * The nine IBM shipped declare none, which is what makes this safe rather
-     * than merely careful: their behaviour cannot change, and the suite says
-     * so. Text that is not UTF-8 after all is left alone by the converter
-     * itself. */
+
+       IBM's takes the caller's bytes as characters on this path: the code set
+       only ever mattered under the SSML filter, which recodes above, and for
+       the languages with a romanizer, which convert their own. Every letter of
+       the nine it shipped is in the Western byte set, so nothing else needed
+       saying. A language of ours can have letters that are not, and then a
+       caller writing UTF-8 -- which is every caller now -- would hand over two
+       bytes the machine reads as two characters.
+
+       So a language that declares characters of its own gets its text
+       converted here, and one that declares none is left exactly as it was.
+       The nine IBM shipped declare none, which is what makes this safe rather
+       than merely careful: their behaviour cannot change, and the suite says
+       so. Text that is not UTF-8 after all is left alone by the converter
+       itself. */
     {
         const delta_language *l = langOf(t);
 
