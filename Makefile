@@ -784,10 +784,18 @@ CFLAGSWIN  := $(OPT) -std=gnu99 $(INCS) $(WARN) -DEVV_ARENA=1 \
 # outside a real cross stdenv.
 LDFLAGSWIN := -static $(MINGW64_LDFLAGS)
 
+# The same list for Windows, and RULECODE is named here for the same reason
+# it is named above: a wildcard answers with what is on disk when the Makefile
+# is read, and on a fresh clone the three files a build writes out of
+# lang/<tag>/rules are not there yet. This list had been left to the wildcard,
+# so a first build of a clean checkout linked without the bytecode array, the
+# rule count and the symbol table, and failed with four undefined references
+# that a second build would not reproduce.
 SOURCESWIN := $(filter-out %/port_posix.c, \
                 $(foreach d,$(SRCDIRS),$(wildcard $(d)/*.c))) \
-              $(filter-out $(GENERATED) $(STUBS), \
+              $(filter-out $(STALE) $(GENERATED) $(STUBS) $(RULECODE), \
                 $(sort $(foreach l,$(LANGS),$(wildcard $(l)/*.c)))) \
+              $(filter %.c,$(RULECODE)) \
               $(ROMS) $(RULESRC) $(LANGLIST)
 OBJECTSWIN := $(patsubst %.c,$(OBJDIRWIN)/%.o,$(notdir $(SOURCESWIN)))
 
