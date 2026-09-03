@@ -6,7 +6,7 @@
 # romanizer is transcribed there is no way to get a word of such a language as
 # far as the engine. This gets round that. For each case it runs IBM's engine
 # with reference/romtap.c recording every call its romanizer manager makes and
-# every answer it gets, and then runs ours with test/romcan.c standing where the
+# every answer it gets, and then runs ours with test/harness/romcan.c standing where the
 # romanizer would stand and giving those recorded answers back.
 #
 # Two things then have to hold. The samples have to be identical, which says
@@ -18,7 +18,7 @@
 # What it does not test is the romanizer, which is the point: it is what says
 # that the romanizer is all that is left.
 #
-# usage: EVV_LANG=jajp test/romcan.sh [cases-file]
+# usage: EVV_LANG=jajp test/harness/romcan.sh [cases-file]
 #
 # Wants `make -C reference TAG=jajp BUILD=../build/reference-jajp romtap' and
 # `make romcan LANGS=lang/jajp'.
@@ -26,7 +26,7 @@
 set -u
 
 LIMIT=${EVV_CASE_TIMEOUT:-120}
-ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 BUILD=$ROOT/build
 
 LANG_TAG=${EVV_LANG:-jajp}

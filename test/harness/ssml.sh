@@ -2,20 +2,20 @@
 #
 # The SSML reader, ours against IBM's.
 #
-# test/ssml.c is the list of documents and is compiled twice: by the
+# test/harness/ssml.c is the list of documents and is compiled twice: by the
 # top-level `make ssml' against our engine, and by `make -C reference ssml'
 # against IBM's objects. Both register the SSML filter through the published
 # interface, turn it on, and print the annotations every document turns
 # into, and this diffs them.
 #
-# It wants Wine and IBM's objects, like test/ipa.sh and unlike
+# It wants Wine and IBM's objects, like test/harness/ipa.sh and unlike
 # test/matrix.sh.
 #
 # usage: ssml.sh [cases.txt]
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-root=$(cd "$here/.." && pwd)
+root=$(cd "$here/../.." && pwd)
 
 ours=$root/build/ssml
 theirs=$root/build/reference/ssml.exe

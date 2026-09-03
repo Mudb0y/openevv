@@ -31,7 +31,7 @@
  * letter already written a capital, which is how this notation marks a variant
  * of the sound before it.
  *
- * test/romprims.sh holds all of it to IBM's own answer, over every byte and
+ * test/harness/romprims.sh holds all of it to IBM's own answer, over every byte and
  * every two-byte character.
  */
 

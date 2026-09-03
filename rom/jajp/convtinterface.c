@@ -28,7 +28,7 @@
  * only then resets the buffer and clears the stop. That is IBM's arrangement
  * and it is why stop and resume are two calls rather than one.
  *
- * Held to IBM's answer by test/romprims.sh.
+ * Held to IBM's answer by test/harness/romprims.sh.
  */
 
 #include <stdint.h>

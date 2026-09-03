@@ -2,20 +2,20 @@
 #
 # The IPA converters, ours against IBM's.
 #
-# test/ipa.c is the table of questions and is compiled twice: by the
+# test/harness/ipa.c is the table of questions and is compiled twice: by the
 # top-level `make ipa' against our engine, and by `make -C reference ipa'
 # against IBM's objects. Both print an answer for every code point in six
 # languages, for a dozen whole strings in fifteen, and for the code-set
 # conversions underneath, and this diffs them.
 #
-# It wants Wine and IBM's objects, like test/prims.sh and unlike
+# It wants Wine and IBM's objects, like test/harness/prims.sh and unlike
 # test/matrix.sh.
 #
 # usage: ipa.sh
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-root=$(cd "$here/.." && pwd)
+root=$(cd "$here/../.." && pwd)
 
 ours=$root/build/ipa
 theirs=$root/build/reference/ipa.exe

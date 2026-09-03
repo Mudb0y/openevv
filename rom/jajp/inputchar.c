@@ -18,7 +18,7 @@
  * one sitting at the character it has reached. Nothing searches the chain: it
  * is kept in position order and walked until the position is passed.
  *
- * Held to IBM's answer by test/romprims.sh.
+ * Held to IBM's answer by test/harness/romprims.sh.
  */
 
 #include <stdlib.h>

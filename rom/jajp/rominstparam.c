@@ -20,7 +20,7 @@
  * Both matter to the manager rather than being curiosities. src/eci/lang/eci_romanizer.c
  * reads a parameter before it writes one and flushes what the romanizer is
  * holding when the two differ, so what getParam answers decides how often the
- * engine flushes. test/romcan.sh is what says the answers are right: it holds
+ * engine flushes. test/harness/romcan.sh is what says the answers are right: it holds
  * our conversation with the romanizer against IBM's, call for call.
  */
 

@@ -292,16 +292,16 @@ $(BUILD)/probe$(SUF): cli/probe.c $(BUILD)/libevv$(SUF).a
 # gives back shows here and nowhere else.
 instances: $(BUILD)/instances
 
-$(BUILD)/instances: test/instances.c $(BUILD)/libevv.a
-	@$(CC) $(ALL_CFLAGS) test/instances.c $(BUILD)/libevv.a -lpthread -lm -o $@
+$(BUILD)/instances: test/harness/instances.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/harness/instances.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # An utterance interrupted and another asked for, on one instance, over and
 # over. The suite never interrupts anything.
 interrupt: $(BUILD)/interrupt
 
-$(BUILD)/interrupt: test/interrupt.c $(BUILD)/libevv.a
-	@$(CC) $(ALL_CFLAGS) test/interrupt.c $(BUILD)/libevv.a -lpthread -lm -o $@
+$(BUILD)/interrupt: test/harness/interrupt.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/harness/interrupt.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # The sample rate changed on an instance that speaks into a buffer, which the
@@ -310,8 +310,8 @@ $(BUILD)/interrupt: test/interrupt.c $(BUILD)/libevv.a
 rate: $(BUILD)/rate
 	@$(BUILD)/rate
 
-$(BUILD)/rate: test/rate.c $(BUILD)/libevv.a
-	@$(CC) $(ALL_CFLAGS) test/rate.c $(BUILD)/libevv.a -lpthread -lm -o $@
+$(BUILD)/rate: test/harness/rate.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/harness/rate.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # The rates IBM never shipped: that the built resonator tables are IBM's own
@@ -323,32 +323,32 @@ rates: $(BUILD)/rates
 	@EVV_UPSAMPLE=hold $(BUILD)/rates
 	@EVV_UPSAMPLE=none $(BUILD)/rates
 
-$(BUILD)/rates: test/rates.c $(BUILD)/libevv.a
-	@$(CC) $(ALL_CFLAGS) test/rates.c $(BUILD)/libevv.a -lpthread -lm -o $@
+$(BUILD)/rates: test/harness/rates.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/harness/rates.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # A romanizer with no language in it, replaying what IBM's romanizer answered.
 # This is what proves that everything below the romanizer is already right for
 # a language written in another script, before a line of that romanizer exists:
 # our engine is handed IBM's own answers at the same seam and has to produce
-# the same samples. See the head of test/romcan.c. Built against whichever
+# the same samples. See the head of test/harness/romcan.c. Built against whichever
 # languages LANGS names, since the point of it is Japanese:
 #
 #   make romcan LANGS=lang/jajp
 romcan: $(BUILD)/romcan$(SUF)
 
-$(BUILD)/romcan$(SUF): test/romcan.c $(BUILD)/libevv$(SUF).a
-	@$(CC) $(ALL_CFLAGS) test/romcan.c $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
+$(BUILD)/romcan$(SUF): test/harness/romcan.c $(BUILD)/libevv$(SUF).a
+	@$(CC) $(ALL_CFLAGS) test/harness/romcan.c $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
 	@echo "built $@"
 
 # The romanizer's converters, ours against IBM's, one call at a time. The same
 # file is built against IBM's objects by `make -C reference TAG=jajp romprims',
-# and test/romprims.sh diffs what the two print. This is the only thing that
+# and test/harness/romprims.sh diffs what the two print. This is the only thing that
 # reaches a romanizer class the text path never asks for.
 romprims: $(BUILD)/romprims$(SUF)
 
-$(BUILD)/romprims$(SUF): test/romprims.c $(BUILD)/libevv$(SUF).a
-	@$(CC) $(ALL_CFLAGS) -DEVV_ROMPRIMS_OURS test/romprims.c \
+$(BUILD)/romprims$(SUF): test/harness/romprims.c $(BUILD)/libevv$(SUF).a
+	@$(CC) $(ALL_CFLAGS) -DEVV_ROMPRIMS_OURS test/harness/romprims.c \
 	  $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
 	@echo "built $@"
 
@@ -359,8 +359,8 @@ $(BUILD)/romprims$(SUF): test/romprims.c $(BUILD)/libevv$(SUF).a
 pieces: $(BUILD)/pieces
 	@$(BUILD)/pieces
 
-$(BUILD)/pieces: test/pieces.c $(BUILD)/libevv.a
-	@$(CC) $(ALL_CFLAGS) test/pieces.c $(BUILD)/libevv.a -lpthread -lm -o $@
+$(BUILD)/pieces: test/harness/pieces.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/harness/pieces.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # The eight voices the caller may edit, which the suite is blind to: nothing it
@@ -370,8 +370,8 @@ $(BUILD)/pieces: test/pieces.c $(BUILD)/libevv.a
 voices: $(BUILD)/voices
 	@$(BUILD)/voices
 
-$(BUILD)/voices: test/voices.c $(BUILD)/libevv.a
-	@$(CC) $(ALL_CFLAGS) test/voices.c $(BUILD)/libevv.a -lpthread -lm -o $@
+$(BUILD)/voices: test/harness/voices.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/harness/voices.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # A backtrack landed on from a thread that never planted it, which is how
@@ -380,19 +380,19 @@ $(BUILD)/voices: test/voices.c $(BUILD)/libevv.a
 # non-zero when the guard does not fire.
 landing: $(BUILD)/landing
 
-$(BUILD)/landing: test/landing.c $(BUILD)/libevv.a
-	@$(CC) $(ALL_CFLAGS) test/landing.c $(BUILD)/libevv.a -lpthread -lm -o $@
+$(BUILD)/landing: test/harness/landing.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/harness/landing.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # A stop from a thread that is not the one speaking, which is what a screen
-# reader does and what test/interrupt.c does not: it aborts from the callback,
+# reader does and what test/harness/interrupt.c does not: it aborts from the callback,
 # on the engine's own thread. This one crosses a thread and requires the
 # interrupted utterance to come out short, so a stop that did nothing fails.
 stopthread: $(BUILD)/stopthread
 	@$(BUILD)/stopthread
 
-$(BUILD)/stopthread: test/stopthread.c $(BUILD)/libevv.a
-	@$(CC) $(ALL_CFLAGS) test/stopthread.c $(BUILD)/libevv.a -lpthread -lm -o $@
+$(BUILD)/stopthread: test/harness/stopthread.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/harness/stopthread.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # A key that is not in a section, which neither suite can see: the reader
@@ -402,53 +402,53 @@ $(BUILD)/stopthread: test/stopthread.c $(BUILD)/libevv.a
 inikeys: $(BUILD)/inikeys
 	@$(BUILD)/inikeys
 
-$(BUILD)/inikeys: test/inikeys.c $(BUILD)/libevv.a
-	@$(CC) $(ALL_CFLAGS) test/inikeys.c $(BUILD)/libevv.a -lpthread -lm -o $@
+$(BUILD)/inikeys: test/harness/inikeys.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/harness/inikeys.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # A machine primitive no rule calls, held against IBM's own. The suite cannot
 # see one of these: a call nothing makes cannot be reached by speaking a
 # sentence, which is why the primitives the shipped languages never use were
-# missing in the first place. `test/prims.sh' builds this and the same file
+# missing in the first place. `test/harness/prims.sh' builds this and the same file
 # against IBM's objects and diffs the two.
 prims: $(BUILD)/prims
 	@$(BUILD)/prims > /dev/null && echo "built and ran $(BUILD)/prims"
 
-$(BUILD)/prims: test/prims.c $(BUILD)/libevv.a
-	@$(CC) $(ALL_CFLAGS) -DEVV_PRIMS_OURS test/prims.c $(BUILD)/libevv.a -lpthread -lm -o $@
+$(BUILD)/prims: test/harness/prims.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) -DEVV_PRIMS_OURS test/harness/prims.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # The IPA converters, held against IBM's own. The suite cannot see these
 # either: nothing in the engine asks what an IPA symbol means until the SSML
 # reader is on, and even then a sentence reaches only the symbols it spells.
-# `test/ipa.sh' builds this and the same file against IBM's objects and diffs
+# `test/harness/ipa.sh' builds this and the same file against IBM's objects and diffs
 # the two, over every code point in six languages.
 ipa: $(BUILD)/ipa
 	@$(BUILD)/ipa > /dev/null && echo "built and ran $(BUILD)/ipa"
 
-$(BUILD)/ipa: test/ipa.c $(BUILD)/libevv.a
-	@$(CC) $(ALL_CFLAGS) -DEVV_IPA_OURS test/ipa.c $(BUILD)/libevv.a -lpthread -lm -o $@
+$(BUILD)/ipa: test/harness/ipa.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) -DEVV_IPA_OURS test/harness/ipa.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # The XML scanner, held against IBM's own. What has to be right about it is
 # the token stream, and neither the suite nor the audio can see that: a
-# document tokenised differently may still sound the same. `test/xmltok.sh'
+# document tokenised differently may still sound the same. `test/harness/xmltok.sh'
 # builds this and the same file against IBM's objects and diffs the handler
 # calls.
 xmltok: $(BUILD)/xmltok
 	@$(BUILD)/xmltok > /dev/null && echo "built and ran $(BUILD)/xmltok"
 
-$(BUILD)/xmltok: test/xmltok.c $(BUILD)/libevv.a
-	@$(CC) $(ALL_CFLAGS) -DEVV_XMLTOK_OURS test/xmltok.c $(BUILD)/libevv.a -lpthread -lm -o $@
+$(BUILD)/xmltok: test/harness/xmltok.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) -DEVV_XMLTOK_OURS test/harness/xmltok.c $(BUILD)/libevv.a -lpthread -lm -o $@
 
 # And the whole reader through the published filter interface, which is what
-# `test/ssml.sh' holds against IBM's own. The document goes in as text and the
+# `test/harness/ssml.sh' holds against IBM's own. The document goes in as text and the
 # engine's annotations come out as text, so a difference names itself.
 ssml: $(BUILD)/ssml
 	@$(BUILD)/ssml > /dev/null && echo "built and ran $(BUILD)/ssml"
 
-$(BUILD)/ssml: test/ssml.c $(BUILD)/libevv.a
-	@$(CC) $(ALL_CFLAGS) -DEVV_SSML_OURS test/ssml.c $(BUILD)/libevv.a -lpthread -lm -o $@
+$(BUILD)/ssml: test/harness/ssml.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) -DEVV_SSML_OURS test/harness/ssml.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 $(OBJDIR)/%.o: %.c $(HEADERS)
@@ -800,8 +800,8 @@ win: $(BUILD)/evv.exe $(BUILD)/evvspeak.exe $(BUILD)/eci.dll
 win-stopthread: $(BUILD)/stopthread$(SUF).exe
 	@wine $(BUILD)/stopthread$(SUF).exe
 
-$(BUILD)/stopthread$(SUF).exe: test/stopthread.c $(BUILD)/libevv-win$(SUF).a
-	@$(CCWIN) $(CFLAGSWIN) test/stopthread.c $(BUILD)/libevv-win$(SUF).a $(LDFLAGSWIN) -o $@
+$(BUILD)/stopthread$(SUF).exe: test/harness/stopthread.c $(BUILD)/libevv-win$(SUF).a
+	@$(CCWIN) $(CFLAGSWIN) test/harness/stopthread.c $(BUILD)/libevv-win$(SUF).a $(LDFLAGSWIN) -o $@
 	@echo "built $@"
 
 # The probe, for Windows, which is how a fault there gets localised: it says
@@ -847,8 +847,8 @@ $(OBJDIRWIN)/eci.res: win/eci.rc
 # eci.dll against what comes out of everything else.
 win-dlltest: $(BUILD)/dlltest.exe
 
-$(BUILD)/dlltest.exe: test/dll.c $(BUILD)/eci.dll $(RULESTAMP)
-	@$(CCWIN) $(CFLAGSWIN) test/dll.c -static -lversion -o $@
+$(BUILD)/dlltest.exe: test/lib/dll.c $(BUILD)/eci.dll $(RULESTAMP)
+	@$(CCWIN) $(CFLAGSWIN) test/lib/dll.c -static -lversion -o $@
 	@echo "built $@"
 
 $(OBJDIRWIN)/speak.res: win/speak.rc win/speak.h
@@ -891,8 +891,8 @@ $(BUILD)/eci32.dll: win/eci_api.c $(OBJDIRWIN32)/eci.res $(BUILD)/libevv-win32$(
 	   $(BUILD)/libevv-win32$(SUF).a $(LDFLAGSWIN32) -o $@
 	@echo "built $@"
 
-$(BUILD)/dlltest32.exe: test/dll.c $(BUILD)/eci32.dll $(RULESTAMP)
-	@$(CCWIN32) $(CFLAGSWIN32) test/dll.c -static -lversion -o $@
+$(BUILD)/dlltest32.exe: test/lib/dll.c $(BUILD)/eci32.dll $(RULESTAMP)
+	@$(CCWIN32) $(CFLAGSWIN32) test/lib/dll.c -static -lversion -o $@
 	@echo "built $@"
 
 $(OBJDIRWIN32)/eci.res: win/eci.rc

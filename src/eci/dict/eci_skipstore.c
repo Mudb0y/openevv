@@ -11,7 +11,7 @@
  * The list is seeded from the clock: the constructor calls srand(time(0)). So
  * two runs build different towers over the same entries, and a file saved twice
  * is not the same file twice. That is IBM's own behaviour, not ours, and it is
- * why test/romprims.sh compares what this answers rather than what it writes.
+ * why test/harness/romprims.sh compares what this answers rather than what it writes.
  * Nothing else in this engine uses rand, so the seeding disturbs nothing.
  *
  * The answers themselves do not depend on the draw. Order decides them, and

@@ -21,7 +21,7 @@
  * files in this directory. Two reasons, and both are about being able to prove
  * a piece at a time. A class this size arrives half-written for a long while,
  * and a half-written one has to work with state built by hand; keeping IBM's
- * offsets means test/romprims.c can build that state the same way on both
+ * offsets means test/harness/romprims.c can build that state the same way on both
  * sides and compare, instead of maintaining two descriptions of the same
  * bytes. And the record is only partly understood -- rom/jajp/dictsearch.h
  * says which parts -- so a tidy struct would have to invent names for fields
@@ -40,7 +40,7 @@
  * whatever words it finds into the entry array, which is what the path search
  * above will choose between.
  *
- * Everything here is held to IBM's own answer by test/romprims.sh.
+ * Everything here is held to IBM's own answer by test/harness/romprims.sh.
  */
 
 #include <string.h>
@@ -93,7 +93,7 @@
  * Read out of the object rather than decoded from the name it is stored
  * under: 0x82f0 is wo, and the mangled form `?$IC?p' reads as 0x8270 to
  * anybody working the encoding out by hand, which is a different character
- * altogether. test/romprims.sh is what caught that. */
+ * altogether. test/harness/romprims.sh is what caught that. */
 static const char CASE_MARKER[] = "\x82\xf0";
 
 /* And the one character that is neither a letter nor a kana but belongs to an

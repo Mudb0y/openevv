@@ -46,7 +46,7 @@ static EvvRomMaker linked(int32_t family, int32_t dialect)
     return 0;
 }
 
-/* And what a caller put there instead, which is how test/romcan.c stands a
+/* And what a caller put there instead, which is how test/harness/romcan.c stands a
    recording where the romanizer would be. */
 static EvvRomMaker makers[ROM_FAMILIES][ROM_DIALECTS];
 

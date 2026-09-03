@@ -11,7 +11,7 @@
  * not walking, and then the queue-count fix changed what a stop leaves behind.
  * Neither was re-measured from a second thread afterwards, so docs/status.md
  * carried "whether the stop door is still a race is an open question" until
- * this. test/interrupt.c does not answer it: it interrupts by answering
+ * this. test/harness/interrupt.c does not answer it: it interrupts by answering
  * eciDataAbort from the callback, which happens on the engine's own thread and
  * never crosses one.
  *
@@ -47,7 +47,7 @@
  *
  * Nothing here times anything, and no number here is a latency.
  *
- * It is built for Windows as well as for here, which test/landing.c is not,
+ * It is built for Windows as well as for here, which test/harness/landing.c is not,
  * because Wine is where this used to fail: eight of twelve turns before the
  * busy guard, against none of twelve on real Windows. `make stopthread' is
  * this machine and `make win-stopthread' is the same thing under Wine.

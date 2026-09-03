@@ -15,7 +15,7 @@
  * from the formulae below and comparing entry by entry: every one of the
  * 3,991 excitation entries is exact at both rates, and every cosine entry is
  * exact except two at eight thousand where IBM stored the saturated value
- * where the formula rounds one short of it. test/rates.c is that comparison,
+ * where the formula rounds one short of it. test/harness/rates.c is that comparison,
  * kept so the claim stays checked rather than remembered.
  *
  * So the tables for a rate IBM never shipped are built rather than stored,
@@ -60,7 +60,7 @@
 
    So the ceiling on what the synthesiser is asked to run at is 44,100 --
    four hundred hertz below the boundary and clean over every text measured.
-   test/rates.c holds the slew of every synthesised rate to a bound, so this
+   test/harness/rates.c holds the slew of every synthesised rate to a bound, so this
    cannot be crossed again without something saying so.
 
    It is a ceiling on the engine and not on the caller. A rate reached by

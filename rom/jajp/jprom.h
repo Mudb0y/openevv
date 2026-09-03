@@ -6,7 +6,7 @@
  * looks its words up, works out their readings and their accents, and hands
  * back a string in the notation the engine already speaks. Everything below
  * that seam is the same engine that speaks the other eight languages, and
- * test/romcan.c is what proved it before any of this existed.
+ * test/harness/romcan.c is what proved it before any of this existed.
  *
  * How it is reached. src/eci/lang/eci_romanizer.c holds one romanizer per language
  * family and calls it through the table in src/eci/lang/eci_rom.h; this is the one that
@@ -683,7 +683,7 @@ int16_t pb_SetPhraseBuffer(void *pb, uint8_t *out);
    rather than speaking something wrong. Take it out when Romanizer is
    finished, and not before -- a half-written romanizer that quietly answers
    nothing is the one failure this whole exercise is arranged to prevent.
-   test/romcan.sh is unaffected either way: it registers its own romanizer
+   test/harness/romcan.sh is unaffected either way: it registers its own romanizer
    over whatever is linked. */
 #define JPROM_INCOMPLETE 1
 

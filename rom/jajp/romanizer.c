@@ -16,7 +16,7 @@
  * unclamped value, so the upper clamp has no effect at all. Only the clamp at
  * nought does anything.
  *
- * Held to IBM's answer by test/romprims.sh.
+ * Held to IBM's answer by test/harness/romprims.sh.
  */
 
 #include <stdio.h>

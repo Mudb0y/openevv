@@ -2,19 +2,19 @@
 #
 # The XML scanner, ours against IBM's.
 #
-# test/xmltok.c is the list of documents and is compiled twice: by the
+# test/harness/xmltok.c is the list of documents and is compiled twice: by the
 # top-level `make xmltok' against our engine, and by `make -C reference
 # xmltok' against IBM's objects. Both drive the parser directly and print
 # every call its three handlers get, and this diffs them.
 #
-# It wants Wine and IBM's objects, like test/prims.sh and unlike
+# It wants Wine and IBM's objects, like test/harness/prims.sh and unlike
 # test/matrix.sh.
 #
 # usage: xmltok.sh
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-root=$(cd "$here/.." && pwd)
+root=$(cd "$here/../.." && pwd)
 
 ours=$root/build/xmltok
 theirs=$root/build/reference/xmltok.exe

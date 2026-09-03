@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Speak through eci.dll with ctypes, the way a screen reader add-on does.
 
-The C harness beside this one, test/dll.c, checks that the names are exported
+The C harness beside this one, test/lib/dll.c, checks that the names are exported
 and that a callback survives the crossing. This checks the thing an add-on
 actually depends on: that ctypes' own idea of the calling convention, of a
 handle and of a callback matches what the library expects. Those are different

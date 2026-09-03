@@ -12,7 +12,7 @@
  * of x86 to transcribe, and audio comparison says only that two runs differ,
  * not where. This turns the whole of it into a function with an exact oracle:
  * for a given input, these are the bytes IBM's romanizer produces. The same
- * dump replayed by test/romcan.c is a romanizer for our engine that has no
+ * dump replayed by test/harness/romcan.c is a romanizer for our engine that has no
  * Japanese in it at all, which is what proves that everything downstream of
  * this seam is already right before a line of the romanizer is written.
  *

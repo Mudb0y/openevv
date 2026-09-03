@@ -2,10 +2,10 @@
 #
 # The romanizer's converters, ours against IBM's, one call at a time.
 #
-# test/romcan.sh cannot see these. It proves the engine below the romanizer by
+# test/harness/romcan.sh cannot see these. It proves the engine below the romanizer by
 # replaying what IBM's romanizer answered, so a class the romanizer reaches for
 # itself is never called on that path -- the codeset conversion is exactly
-# that. test/romprims.c is the sweep and is compiled twice, once against our
+# that. test/harness/romprims.c is the sweep and is compiled twice, once against our
 # romanizer and once against IBM's own objects, and this diffs what the two
 # print.
 #
@@ -19,7 +19,7 @@
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-root=$(cd "$here/.." && pwd)
+root=$(cd "$here/../.." && pwd)
 
 ours=$root/build/romprims-jajp
 theirs=$root/build/reference-jajp/romprims.exe

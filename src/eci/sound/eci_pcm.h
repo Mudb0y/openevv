@@ -11,7 +11,7 @@
  * like and why the default is what it is.
  *
  * It is declared here rather than kept inside that file so the arithmetic
- * can be driven directly, without an engine behind it. test/rates.c does
+ * can be driven directly, without an engine behind it. test/harness/rates.c does
  * that: a run split into several blocks has to come out identical to the
  * same run handed over whole, which is the one property no measurement of
  * the audio would catch and the one a mistake in the history would break.

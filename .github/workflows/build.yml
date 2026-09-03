@@ -108,7 +108,7 @@ jobs:
       - name: Check a stop from another thread leaves the engine whole
         run: make RULES=bytecode stopthread
 
-      # Half of test/prims.sh. The comparison against IBM's own objects wants
+      # Half of test/harness/prims.sh. The comparison against IBM's own objects wants
       # Wine and the SDK and cannot run here, but our side of it exercises
       # every machine primitive no rule calls -- fifty thousand calls that
       # nothing else in the tree makes -- so a crash or a link that has lost
@@ -257,7 +257,7 @@ jobs:
           $havec = (Get-FileHash fromc.wav -Algorithm SHA256).Hash.ToLower()
           "from C:      $havec"
           if ($havec -ne $want) { throw "the library says something else than the engine" }
-          python test/dll.py eci.dll fromctypes.wav "The quick brown fox jumps over the lazy dog."
+          python test/lib/dll.py eci.dll fromctypes.wav "The quick brown fox jumps over the lazy dog."
           $havep = (Get-FileHash fromctypes.wav -Algorithm SHA256).Hash.ToLower()
           "from ctypes: $havep"
           "wanted:      $want"
@@ -310,7 +310,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path p32 | Out-Null
           Copy-Item eci32.dll p32\eci.dll
           Copy-Item eci.ini p32\
-          python test/dll.py p32\eci.dll from32py.wav "The quick brown fox jumps over the lazy dog."
+          python test/lib/dll.py p32\eci.dll from32py.wav "The quick brown fox jumps over the lazy dog."
           $have = (Get-FileHash from32py.wav -Algorithm SHA256).Hash.ToLower()
           $want = (Get-Content test/samples.sha256).Split(' ')[0]
           "from a 32-bit ctypes: $have"

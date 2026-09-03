@@ -30,7 +30,7 @@
  * after it, which is the wrong way round; the comment at the join says so
  * again where it happens.
  *
- * Held to IBM's answer by test/romprims.sh.
+ * Held to IBM's answer by test/harness/romprims.sh.
  */
 
 #include <stdint.h>

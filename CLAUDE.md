@@ -18,7 +18,7 @@ Polish has no oracle and never will, since IBM never shipped it. Its baselines a
 
 `make crashers` is another that wants neither Wine nor IBM's objects. It speaks the text in `test/cases/crashers.txt`, which is text IBM's engine dies on and ours used to die on with it, and it fails if the engine faulted on one or would not finish. It is not part of the differential suite and cannot be: the reference produces no audio for any of those strings, so there is nothing to compare. `tools/engine/crashers.py` is what found them and is how to find more.
 
-The library has its own two: `test/dll.c` loads `eci.dll` by name and speaks, and `test/dll.py` does it through ctypes. `make win32` builds the thirty-two bit library, which is where a wrong signature shows up -- stdcall carries the argument size in the decorated name on x86, so a declaration that disagrees with the engine fails to link there and links silently on x86-64.
+The library has its own two: `test/lib/dll.c` loads `eci.dll` by name and speaks, and `test/lib/dll.py` does it through ctypes. `make win32` builds the thirty-two bit library, which is where a wrong signature shows up -- stdcall carries the argument size in the decorated name on x86, so a declaration that disagrees with the engine fails to link there and links silently on x86-64.
 
 A pass proves nothing until the new code is shown to be the code that ran. Break the function on purpose, rebuild, check the audio changes, then put it back. That has caught two functions that were never reached at all. When a sabotage changes nothing, ask whether the harness can observe that function at all before concluding the code is dead.
 
@@ -30,7 +30,7 @@ A rule written in the upper form is proved by `make upper-check`, and byte ident
 
 German has its own cases and its own oracle: `EVV_LANG=dede test/suite.sh`, against a reference built from German objects. It matches over all 80 of them, on its own and in one binary with English -- `make LANGS="lang/enus lang/dede"`, then the suite twice with `EVV_NATIVE` naming that binary. `docs/status.md` says in which configurations, and what has not been built from `lang/dede` at all.
 
-A build with two languages in it proves something a build with one cannot: that nothing has quietly stayed global. `test/langs.py build/eci.dll` is the cheap form of that -- every language spoken from one process, each held against what it says alone -- and it needs neither Wine nor IBM's objects. If a change makes only one language's suite pass, the language in force is being read from the wrong place.
+A build with two languages in it proves something a build with one cannot: that nothing has quietly stayed global. `test/lib/langs.py build/eci.dll` is the cheap form of that -- every language spoken from one process, each held against what it says alone -- and it needs neither Wine nor IBM's objects. If a change makes only one language's suite pass, the language in force is being read from the wrong place.
 
 A change made for one language is not finished until every language has been run again, which is why `test/matrix.sh` walks all nine rather than the one being worked on. They share every line of `src` and every tool in `tools`: the dictionary table German crashed on had been wrong on sixty-four bits all along, and the lift that German needed changed two places in the English bytecode as well.
 

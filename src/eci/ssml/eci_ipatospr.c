@@ -29,7 +29,7 @@
  * answer stands.
  *
  * The tables are read out of IBM's object rather than typed from a chart,
- * and `test/ipa.sh' is what says they are right: it asks IBM's own
+ * and `test/harness/ipa.sh' is what says they are right: it asks IBM's own
  * converters and ours the same question for every code point up to 0x2100
  * with every following symbol that can matter, and passes only on identical
  * answers. That is where these numbers came from and it is what keeps them

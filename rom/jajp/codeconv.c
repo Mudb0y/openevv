@@ -21,7 +21,7 @@
  * as clearing it. And jis2sjis divides by two to find the row, which the
  * compiler wrote as a real division because the value it works on is signed.
  *
- * Held to IBM's answer by test/romprims.sh.
+ * Held to IBM's answer by test/harness/romprims.sh.
  */
 
 #include <stdint.h>

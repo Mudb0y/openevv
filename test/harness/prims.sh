@@ -9,7 +9,7 @@
 # the first place: the link never asked for them. So a primitive written for a
 # rule of ours is proved here instead, by calling it directly on both sides.
 #
-# test/prims.c is the table of cases and is compiled twice: by the top-level
+# test/harness/prims.c is the table of cases and is compiled twice: by the top-level
 # `make prims' against our engine, and by `make -C reference prims' against
 # IBM's own objects, which define these under plain C names. Both print the
 # bytes each call leaves behind and this diffs them.
@@ -20,7 +20,7 @@
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-root=$(cd "$here/.." && pwd)
+root=$(cd "$here/../.." && pwd)
 
 ours=$root/build/prims
 theirs=$root/build/reference/prims.exe

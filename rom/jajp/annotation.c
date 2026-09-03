@@ -14,7 +14,7 @@
  * nothing outside this file reads them -- unlike DictSearch, whose layout
  * rom/jajp/dictsearch.c has to share with the sweep.
  *
- * Held to IBM's answer by test/romprims.sh.
+ * Held to IBM's answer by test/harness/romprims.sh.
  */
 
 #include <string.h>

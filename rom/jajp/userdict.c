@@ -16,7 +16,7 @@
  * a candidate entry holds -- transKatakana2Yomi is DictSearch's own katakana
  * walk done again over a string instead of over the input.
  *
- * Held to IBM's answer by test/romprims.sh.
+ * Held to IBM's answer by test/harness/romprims.sh.
  */
 
 #include <stdlib.h>

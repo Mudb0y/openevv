@@ -10,7 +10,7 @@
  *
  * Every one of them is an index into a table with no bound test, which is the
  * original's arrangement: the caller knows the range because the table it came
- * out of says so. test/romprims.sh sweeps each accessor over the whole range
+ * out of says so. test/harness/romprims.sh sweeps each accessor over the whole range
  * its table can answer for and holds every answer against IBM's own.
  *
  * What the tables hold is not decided here and does not need to be. The

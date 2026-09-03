@@ -19,7 +19,7 @@
  * IBM calls a _W_PHRASE_T, and the path and sub-word records this reads out
  * of JPath, which are rom/jajp/jpath.h.
  *
- * Held to IBM's answer by test/romprims.sh.
+ * Held to IBM's answer by test/harness/romprims.sh.
  */
 
 #include <stdint.h>

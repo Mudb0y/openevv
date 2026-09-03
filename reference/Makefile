@@ -173,77 +173,77 @@ $(BUILD)/speak-tap.exe: speak.c tap.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 
 # IBM's machine primitives called one at a time, which is the only way to
 # reach the ones no rule calls. The same file is built against our engine by
-# the top-level `make prims', and test/prims.sh diffs what the two print.
+# the top-level `make prims', and test/harness/prims.sh diffs what the two print.
 # It links the whole set as speak.exe does, because these objects are objects
 # and not a library: every name one of them wants has to be answered whether
 # this harness reaches it or not.
 .PHONY: prims
 prims: $(BUILD)/prims.exe
 
-$(BUILD)/prims.exe: ../test/prims.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
+$(BUILD)/prims.exe: ../test/harness/prims.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
                     $(SHIM) $(WORK)/.stamp
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w $(INCS) ../test/prims.c \
+	@$(CC) -O2 -std=gnu99 -w $(INCS) ../test/harness/prims.c \
 	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/prims.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/prims.err >&2 || true; exit $$s
 	@echo "built $@"
 
-# The IPA converters out of IBM's own object, for test/ipa.sh. Same
+# The IPA converters out of IBM's own object, for test/harness/ipa.sh. Same
 # arrangement as prims above: one file compiled twice, once here and once by
 # the top-level `make ipa'.
 .PHONY: ipa
 ipa: $(BUILD)/ipa.exe
 
-$(BUILD)/ipa.exe: ../test/ipa.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
+$(BUILD)/ipa.exe: ../test/harness/ipa.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
                   $(SHIM) $(WORK)/.stamp
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) ../test/ipa.c \
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) ../test/harness/ipa.c \
 	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/ipa.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/ipa.err >&2 || true; exit $$s
 	@echo "built $@"
 
-# And the XML scanner out of the same objects, for test/xmltok.sh.
+# And the XML scanner out of the same objects, for test/harness/xmltok.sh.
 .PHONY: xmltok
 xmltok: $(BUILD)/xmltok.exe
 
-$(BUILD)/xmltok.exe: ../test/xmltok.c $(BUILD)/ral_shim.obj \
+$(BUILD)/xmltok.exe: ../test/harness/xmltok.c $(BUILD)/ral_shim.obj \
                      $(BUILD)/ctors.obj $(SHIM) $(WORK)/.stamp
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) ../test/xmltok.c \
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) ../test/harness/xmltok.c \
 	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/xmltok.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/xmltok.err >&2 || true; exit $$s
 	@echo "built $@"
 
 # And the whole reader, driven through IBM's own published filter interface,
-# for test/ssml.sh. Same file the top-level `make ssml' compiles.
+# for test/harness/ssml.sh. Same file the top-level `make ssml' compiles.
 .PHONY: ssml
 ssml: $(BUILD)/ssml.exe
 
-$(BUILD)/ssml.exe: ../test/ssml.c $(BUILD)/ral_shim.obj \
+$(BUILD)/ssml.exe: ../test/harness/ssml.c $(BUILD)/ral_shim.obj \
                    $(BUILD)/ctors.obj $(SHIM) $(WORK)/.stamp
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) ../test/ssml.c \
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) ../test/harness/ssml.c \
 	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/ssml.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/ssml.err >&2 || true; exit $$s
 	@echo "built $@"
 
 # The romanizer's converters called directly, which is the other half of
-# test/romprims.sh. Only Japanese has a romanizer, so this wants TAG=jajp, and
+# test/harness/romprims.sh. Only Japanese has a romanizer, so this wants TAG=jajp, and
 # it reads the maps in rom/jajp as well as the engine's own headers: the state
 # a half-written class is handed is built at IBM's own offsets, and those are
 # what say where they are.
 .PHONY: romprims
 romprims: $(BUILD)/romprims.exe
 
-$(BUILD)/romprims.exe: ../test/romprims.c $(BUILD)/ral_shim.obj \
+$(BUILD)/romprims.exe: ../test/harness/romprims.c $(BUILD)/ral_shim.obj \
                        $(BUILD)/ctors.obj $(SHIM) $(WORK)/.stamp
 	@mkdir -p $(BUILD)
 	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) -I../rom/jajp \
-	  ../test/romprims.c \
+	  ../test/harness/romprims.c \
 	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) \
 	  $(wildcard $(WORK)/*.obj) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/romprims.err; \

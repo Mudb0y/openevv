@@ -3,7 +3,7 @@
  * One file compiled twice: by the top-level `make ssml' against our engine,
  * and by `make -C reference ssml' against IBM's objects. Both print the
  * annotations a document turns into, one line in and one line out, and
- * test/ssml.sh diffs them.
+ * test/harness/ssml.sh diffs them.
  *
  * What makes this possible is that IBM's SSML filter is in every one of its
  * language object sets and nothing in them registers it -- it shipped as a

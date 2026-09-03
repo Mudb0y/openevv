@@ -15,7 +15,7 @@ On Windows there is a speak window. Take `evvspeak.exe` from the latest release,
 
 `eci.dll` is in the release too: the same engine exporting the names IBM published, so a program written against IBM's library can load ours instead -- a screen reader add-on, for instance. It ships in both bitnesses, in folders that say which is which: an add-on that loads the engine into the reader's own process wants the reader's bitness, and the most used one hosts the engine in a thirty-two bit process of its own whatever the reader is.
 
-It reads SSML. A document goes in and the annotations the engine already understands come out -- say-as for numbers, ordinals, dates, times, telephone numbers and currency, prosody for rate, pitch, range and volume, emphasis, voice selection by gender and age, pronunciations in IPA or in the engine's own alphabet, pauses, marks and language switching. It is IBM's own reader, transcribed, and it answers what IBM's answers over 176 documents. Turning it on takes three calls of the published interface and `test/dll.c` is the shortest example of them.
+It reads SSML. A document goes in and the annotations the engine already understands come out -- say-as for numbers, ordinals, dates, times, telephone numbers and currency, prosody for rate, pitch, range and volume, emphasis, voice selection by gender and age, pronunciations in IPA or in the engine's own alphabet, pauses, marks and language switching. It is IBM's own reader, transcribed, and it answers what IBM's answers over 176 documents. Turning it on takes three calls of the published interface and `test/lib/dll.c` is the shortest example of them.
 
 `./build/evv -h` says what the options are, and `./build/evv -l` says what each of the eight voices is set to.
 

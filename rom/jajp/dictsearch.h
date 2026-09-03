@@ -51,7 +51,7 @@
  * keeps the owner past the end of IBM's record instead, at DS_OWNER_AT. The
  * offsets IBM's own code uses are untouched, which is what matters for the
  * map and for the sweep; only our own code knows where the owner really is,
- * and test/romprims.c sets it through a macro so that each side writes its
+ * and test/harness/romprims.c sets it through a macro so that each side writes its
  * own place. See docs/japanese.md on what a byte offset costs when a pointer
  * grows. */
 #define DS_ROOM         (DS_BYTES + 3 * sizeof(void *))

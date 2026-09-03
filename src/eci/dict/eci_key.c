@@ -14,7 +14,7 @@
  * ever fired -- but a double free is not a behaviour to reproduce faithfully.
  *
  * `dump' prints to standard output, which is what it does in the original,
- * and is left in because test/romprims.sh is what reads it: it is the only
+ * and is left in because test/harness/romprims.sh is what reads it: it is the only
  * way to see what a stored key holds without knowing the file format.
  */
 

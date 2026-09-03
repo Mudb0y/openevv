@@ -1,12 +1,12 @@
 /* The romanizer's converters, ours against IBM's, one call at a time.
  *
- * test/romcan.sh cannot reach these. It proves the engine below the romanizer
+ * test/harness/romcan.sh cannot reach these. It proves the engine below the romanizer
  * by replaying what IBM's romanizer answered, and a class the romanizer reaches
  * for itself is never called on that path at all -- the codeset conversion is
- * exactly that. So this is the same arrangement test/prims.c uses for the
+ * exactly that. So this is the same arrangement test/harness/prims.c uses for the
  * machine's primitives: one file compiled twice, once against our romanizer and
  * once against IBM's own objects, both printing the same lines for the same
- * sweep, and test/romprims.sh diffing them.
+ * sweep, and test/harness/romprims.sh diffing them.
  *
  * What is swept is every input there is. Shift-JIS to UCS-2 takes every single
  * byte and every two-byte pair the converter accepts, which is about eleven and

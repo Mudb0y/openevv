@@ -10,7 +10,7 @@
  * So this is the differential harness put back for one purpose. The same file
  * is compiled twice: once against our engine, and once against IBM's own
  * objects, which define these under plain C names. Both print the same lines
- * for the same table of cases, and `test/prims.sh' diffs them. What is being
+ * for the same table of cases, and `test/harness/prims.sh' diffs them. What is being
  * compared is what the call leaves behind -- eight bytes of an operand,
  * sixteen of each pointer register, the records it pushed -- so that a
  * primitive writing four bytes where the original wrote two is a difference

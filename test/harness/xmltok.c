@@ -12,7 +12,7 @@
  * handlers get. The same file is compiled twice: once against our engine
  * and once against IBM's objects, where the parser's methods are mangled
  * C++ names and are reached by name rather than through its table.
- * `test/xmltok.sh' diffs the two.
+ * `test/harness/xmltok.sh' diffs the two.
  *
  * Every document is copied into a buffer of its own before being parsed,
  * and that is not tidiness. IBM's narrowing pass terminates the digits of a

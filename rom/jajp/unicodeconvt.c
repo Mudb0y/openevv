@@ -18,7 +18,7 @@
  * in. Those last two are the only places this file does not do what IBM's
  * does, and each says why where it happens.
  *
- * test/romprims.sh is what found the second of them and is what holds the rest
+ * test/harness/romprims.sh is what found the second of them and is what holds the rest
  * of this file to IBM's answer: every single byte, every two-byte pair, and all
  * sixty-five thousand code points in the other direction.
  */

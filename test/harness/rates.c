@@ -1,6 +1,6 @@
 /* The rates IBM never shipped, and the two ways of reaching them.
  *
- * test/rate.c beside this one is about a different question -- whether an
+ * test/harness/rate.c beside this one is about a different question -- whether an
  * instance survives having its rate changed at all -- and it asks it only of
  * the numbers IBM's engine took. This one is about the rates above eleven
  * thousand, and it has three halves.
@@ -452,7 +452,7 @@ static int unitChecks(void)
  *
  * A fresh instance every time, because the engine's second utterance is not
  * its first and the whole of the check below is one run against another. A
- * new instance says the same thing every run, which is what test/instances.c
+ * new instance says the same thing every run, which is what test/harness/instances.c
  * is about; the same instance asked twice does not.
  */
 static const char TEXT[] =
