@@ -4,7 +4,7 @@
 # This is for comparison, not for building: what a language module is, is the
 # rules, the statement table, the sets and the dictionaries, and the only way
 # to see which of those are the language's own is to hold several side by
-# side. The symbol prefixing extract.sh does is not wanted here -- that was
+# side. The symbol prefixing tools/sdk/extract.sh does is not wanted here -- that was
 # for standing our objects beside IBM's, which is finished.
 set -euo pipefail
 

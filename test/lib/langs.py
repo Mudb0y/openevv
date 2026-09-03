@@ -20,7 +20,7 @@ test/hash.sh, and unlike test/hash.sh it says nothing about whether the
 audio is right -- test/suite.sh is what says that. This says the audio does
 not depend on what else is loaded.
 
-usage: langs.py <eci.dll>
+usage: test/lib/langs.py <eci.dll>
 """
 
 import ctypes

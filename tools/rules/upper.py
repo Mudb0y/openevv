@@ -43,8 +43,8 @@ assign, and there are 1,058 distinct shapes between the 1,042. They are
 programs, and this is a form for writing programs with the machine's
 bookkeeping taken off.
 
-usage: delta-upper.py lower <file>...    what it compiles to, as lower notation
-       delta-upper.py rules <file>...    one line a rule: shape, blocks, ops
+usage: tools/rules/upper.py lower <file>...    what it compiles to, as lower notation
+       tools/rules/upper.py rules <file>...    one line a rule: shape, blocks, ops
 """
 
 import importlib.util

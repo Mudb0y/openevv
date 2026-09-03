@@ -32,10 +32,10 @@ same reason the sets are: tools/module/dict.py appends a record to one of those
 stores when a pronunciation is edited, so the objects hold what the dictionary
 said before anything was added.
 
-usage: delta-consts.py <tag>...        write each language's authored store
-       delta-consts.py dump <tag>       write <tag>.consts out of the C
-       delta-consts.py regenerate <tag> the C from the text against the tree
-       delta-consts.py write <tag>      the C from the text, for real
+usage: tools/rules/consts.py <tag>...        write each language's authored store
+       tools/rules/consts.py dump <tag>       write <tag>.consts out of the C
+       tools/rules/consts.py regenerate <tag> the C from the text against the tree
+       tools/rules/consts.py write <tag>      the C from the text, for real
 """
 
 import os

@@ -34,10 +34,10 @@ same melody once it is in semitones, and over 335 read Polish sentences they
 agree to within a tenth of one; and Praat, given the same two-pass treatment,
 agrees with this on every file it was held against.
 
-usage: pitch.py <wav>...              one line of numbers a wav
-       pitch.py trace <wav>           the contour itself, a frame to a line
-       pitch.py survey <tsv> <dir>    a FLEURS-shaped corpus, as one summary
-       pitch.py shape <tsv> <dir>     the average shape of a statement in it
+usage: tools/measure/pitch.py <wav>...              one line of numbers a wav
+       tools/measure/pitch.py trace <wav>           the contour itself, a frame to a line
+       tools/measure/pitch.py survey <tsv> <dir>    a FLEURS-shaped corpus, as one summary
+       tools/measure/pitch.py shape <tsv> <dir>     the average shape of a statement in it
 """
 
 import math

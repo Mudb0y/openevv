@@ -138,7 +138,7 @@ It does not make a Polish word sound different, and the reason is the next piece
 
 says how much of the module is still the template's, rule by rule and table by table, out of the text forms alone. It reads 99% Italian today: 1,749 rules of 1,750 character for character Italian's, one ours, the settings two lines apart and the variables named. The number falls as the work is done, and what it is there for is the failure it prevents -- Italian phonology coming out of something labelled Polish without anyone noticing.
 
-`TEMPLATE` says what to hold it against, and `lang-census.py <tag> <template> rules` lists every rule with which of the three it is.
+`TEMPLATE` says what to hold it against, and `tools/module/census.py <tag> <template> rules` lists every rule with which of the three it is.
 
 ## Languages
 

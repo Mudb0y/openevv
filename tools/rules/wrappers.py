@@ -15,7 +15,7 @@ is a wrapper that cannot be inlined.
 
 The strings are read where they can be. A record's content is not ASCII: it is
 one code per character in the alphabet its statement type declares, which is
-the value-name table of that statement's first field, and delta-lexicon.py
+the value-name table of that statement's first field, and tools/module/lexicon.py
 already spells it. Wherever a call takes a statement, a length and a symbol in
 that order, the symbol is spelled; elsewhere it keeps its number, because
 guessing which alphabet a number means would put words in the language's mouth.

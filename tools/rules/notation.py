@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """The rules as text that can be read, edited and compiled back.
 
-The rules reach us as compiled x86 in IBM's objects. `delta-lift.py` turns one
-into blocks of operations over operands, and `delta-emit.py` turns those into
+The rules reach us as compiled x86 in IBM's objects. `tools/rules/lift.py` turns one
+into blocks of operations over operands, and `tools/rules/emit.py` turns those into
 the bytecode the engine runs. That middle form is the thing worth writing down:
 it is one to one with what the machine does, so it can be written out and read
 back without loss, and once it is in the tree the rules can be edited and the
@@ -16,21 +16,21 @@ in tools/rules/lower.py, because tools/rules/upper.py writes the same form from
 above and a second copy of the print and the parse is the one fault it can
 have.
 
-What the text is not is the readable C that `delta-decompile.py` writes. That
+What the text is not is the readable C that `tools/rules/decompile.py` writes. That
 restructures into loops and conditionals for a person to read, and inverting it
 exactly would be hard. Reading and round-tripping are different jobs, so they
 have different forms.
 
-usage: delta-notation.py build            the three files a build compiles
-       delta-notation.py rewrite          the same, IBM's rules alone
-       delta-notation.py authored         the same, the module's trials in too
-       delta-notation.py write  <object> [> file]
-       delta-notation.py read   <file>
-       delta-notation.py check  <object> [...]
-       delta-notation.py check-all
-       delta-notation.py tree             write lang/<tag>/rules
-       delta-notation.py verify           the tree against IBM's objects
-       delta-notation.py prove            the same, as one stream
+usage: tools/rules/notation.py build            the three files a build compiles
+       tools/rules/notation.py rewrite          the same, IBM's rules alone
+       tools/rules/notation.py authored         the same, the module's trials in too
+       tools/rules/notation.py write  <object> [> file]
+       tools/rules/notation.py read   <file>
+       tools/rules/notation.py check  <object> [...]
+       tools/rules/notation.py check-all
+       tools/rules/notation.py tree             write lang/<tag>/rules
+       tools/rules/notation.py verify           the tree against IBM's objects
+       tools/rules/notation.py prove            the same, as one stream
 
 EVV_NOTATION_LANG says which language, English by default.
 """

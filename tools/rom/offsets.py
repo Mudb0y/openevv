@@ -23,7 +23,7 @@ displacement is negative and cannot be mistaken for one. From every other object
 in the module, every offset larger than the widest thing the analyser allocates
 besides this one -- past that, a field can only be TextAnalysis's.
 
-usage: rom-offsets.py [textanalysis|dictsearch|inputchar|jpath|phrasebuf]
+usage: tools/rom/offsets.py [textanalysis|dictsearch|inputchar|jpath|phrasebuf]
 """
 
 import os

@@ -4,7 +4,7 @@
 # by IBM's own under Wine, and the samples compared.
 # Answers non-zero if anything differed or hung.
 #
-# usage: suite.sh [name ...]     with no names, runs all but long
+# usage: test/suite.sh [name ...]     with no names, runs all but long
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)

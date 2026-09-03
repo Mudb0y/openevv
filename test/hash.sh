@@ -12,7 +12,7 @@
 # byte, which is what you would hope from an engine whose arithmetic is all
 # integer. So a hash in the tree is a fair thing to hold a build to.
 #
-# usage: hash.sh [binary]        default build/evv
+# usage: test/hash.sh [binary]        default build/evv
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)

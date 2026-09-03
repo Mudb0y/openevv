@@ -18,7 +18,7 @@ A language's rules are the whole of what it knows about its own spelling, and th
 
 One operation to a line, the verb first, and an operand is one or two words -- so a line can be read straight through with nothing to keep track of. Nothing is carried by indentation and nothing needs punctuation counted. Registers are the machine's eight, `r0` to `r7`, with `w`, `b` or `h` for how much of one is meant. Blocks are numbered; `was ...` on the label line is what the block was called in IBM's object, which is only useful while rules are still being lifted and is ignored when the text is read.
 
-It is one to one with what the machine does, which is the point: it holds registers, the argument stack and the backtracking as they are rather than tidying them into loops and conditionals. The readable C that `delta-decompile.py` writes is the other form, for reading rather than for round-tripping, and inverting that exactly would be hard.
+It is one to one with what the machine does, which is the point: it holds registers, the argument stack and the backtracking as they are rather than tidying them into loops and conditionals. The readable C that `tools/rules/decompile.py` writes is the other form, for reading rather than for round-tripping, and inverting that exactly would be hard.
 
     make notation
 
@@ -76,13 +76,13 @@ Every one takes the machine's state as its first argument, so that is not writte
 
 **It writes only what it can reproduce exactly.** 381 wrappers are left in the lower form, of which 371 do not fit the shape at all and ten do fit but widen an argument, and the original compiler put that load where it suited it rather than always in one place. Where this cannot reproduce the placement, an upper form would be a description that is not the rule, so the rule stays as it is. That is the whole discipline of the thing: byte-identity is not a nicety here, it is what makes a re-description of an existing rule worth having.
 
-What is deliberately not attempted is the 1,042 real rules. Those are programs: a median of 28 calls over 15 blocks, 1,058 distinct shapes between them, and only 12% fitting even a loose template of tests and ordinary actions. Only 4% merely test and assign. For those the readable form is the C `delta-decompile.py` writes, and the naming it already does -- which primitive a wrapper stands for, which variable a reach touches, which alternative an arm is -- is the win. A declarative form would not fit them and pretending otherwise would cost the exactness that makes any of this checkable.
+What is deliberately not attempted is the 1,042 real rules. Those are programs: a median of 28 calls over 15 blocks, 1,058 distinct shapes between them, and only 12% fitting even a loose template of tests and ordinary actions. Only 4% merely test and assign. For those the readable form is the C `tools/rules/decompile.py` writes, and the naming it already does -- which primitive a wrapper stands for, which variable a reach touches, which alternative an arm is -- is the win. A declarative form would not fit them and pretending otherwise would cost the exactness that makes any of this checkable.
 
 The other use of an upper layer is the one that has nothing to be identical to: writing rules that do not exist yet, which is what Polish needs. There the check is the suite and an ear, not a byte comparison, so the constraint above does not bind.
 
 ## Writing a rule
 
-One trap in the decompiler before any of this. `delta-decompile.py` with no arguments writes the hundred smallest rules, and it writes them to the same file `all` writes to -- so reading its usage by running it truncates the language's rules-as-C from every rule to a hundred. That file is gitignored, so nothing says so, and the next default build links it and aborts on the first rule that is missing: `init_platform was not written as C and this build has no bytecode to run it as`. The answer is `delta-decompile.py all` again, and the lesson is to read the usage in the file.
+One trap in the decompiler before any of this. `tools/rules/decompile.py` with no arguments writes the hundred smallest rules, and it writes them to the same file `all` writes to -- so reading its usage by running it truncates the language's rules-as-C from every rule to a hundred. That file is gitignored, so nothing says so, and the next default build links it and aborts on the first rule that is missing: `init_platform was not written as C and this build has no bytecode to run it as`. The answer is `tools/rules/decompile.py all` again, and the lesson is to read the usage in the file.
 
 `lang/enus/rules/*.up` beside the `.dr` files is the form to write a rule in. It is the same rule: every call is the same entry with the same arguments in the same order, because a form that reworded what a rule calls would be describing the rule rather than being it. What it takes over is the machine.
 
@@ -111,7 +111,7 @@ A phoneme is in three places and `tools/module/phonemes.py <tag>` prints all thr
 
 Beside those it carries a record, in the `variants` bytes of its own statement exactly as a letter does in the input statement's. The statement says how long one is -- `at start stride` -- and the fields it covers are its own, after the name and less `afterslash` where it has one. For the phone statement that is eight: class, voicing, sonority, manner of articulation, place of articulation, and the three a vowel wants. Those are not decoration. `place_of_artic` runs lab, alv, pal, vel and ret, and it is where a language says that its sz is retroflex and its s is not.
 
-    lang-phonemes.py set plpl L manner_of_artic=fric place_of_artic=ret
+    tools/module/phonemes.py set plpl L manner_of_artic=fric place_of_artic=ret
 
 writes one by name, which is the point: read eight bytes by eye and a fricative quietly becomes a lateral.
 
@@ -135,7 +135,7 @@ A rule re-expressed from one of IBM's needs its numbers rather than ours, and th
 
 is what says so, and there is no byte comparison in it. There was never going to be: our compiler would have to make the same register choices and put the instructions in the same order as IBM's, which is a study of their compiler rather than of this engine, and it would forbid us writing anything they never wrote. `eng_ph_F_dur` says it in one line -- theirs pushes the state register, does the two stores and then calls `succeed`, and anything straightforward does the stores and then the push.
 
-So the standard is what the engine can observe. With tracing on it says every rule it enters and every call it makes with its arguments, and that is what the audio is made of. `upper-check.sh` speaks each case through a build carrying the authored rules and through one carrying IBM's, and those have to match, and the audio besides.
+So the standard is what the engine can observe. With tracing on it says every rule it enters and every call it makes with its arguments, and that is what the audio is made of. `tools/rules/check-upper.sh` speaks each case through a build carrying the authored rules and through one carrying IBM's, and those have to match, and the audio besides.
 
 Four rules are in the tree that way, chosen for their shapes rather than their size. `eng_ph_F_dur` is a body with no alternatives in it. `has_lex_prefix` is two alternatives, a tail they share and a dispatch through six planted places. `high_tone` carries a value from one alternative into a test they share, and has a gap in its planted numbers -- IBM's compiler planted 1, 2 and 4 and dispatches on 3 as well -- so its numbers are stated rather than allocated and one place is bound to a number nothing plants. `clear_delta` is the loop: the language's loops are backtracking loops, where the body is reached by the machine answering an alternative rather than by falling into it, so a place inside a `while` is what says one. All four come out the same, call for call, over 7,986,891 lines of trace.
 
@@ -152,7 +152,7 @@ A rule a module claims gets into a build by being there: an ordinary build compi
     make notation-rewrite
     make authored
 
-are the two ends of that, IBM's rules alone and every `.up` file in whatever the module says, and they exist because `upper-check.sh` builds both and holds them against each other. Running either by hand leaves the tree holding rules an ordinary build did not ask for, so `make rulecode` puts it back.
+are the two ends of that, IBM's rules alone and every `.up` file in whatever the module says, and they exist because `tools/rules/check-upper.sh` builds both and holds them against each other. Running either by hand leaves the tree holding rules an ordinary build did not ask for, so `make rulecode` puts it back.
 
 ### Bytes of our own
 

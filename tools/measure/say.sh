@@ -5,8 +5,8 @@
 # and the rules down from the file, builds the engine, speaks, and plays what
 # came out if this machine has anything to play it with.
 #
-# usage: say.sh <text>...
-#        say.sh -f <file>
+# usage: tools/measure/say.sh <text>...
+#        tools/measure/say.sh -f <file>
 
 set -u
 tools=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)

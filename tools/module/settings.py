@@ -15,10 +15,10 @@ the caller asks for no language in particular. Under it are the eight voice
 presets and every phoneme the language declares, which src/eci/lang/eci_phonemes.c
 reads at startup.
 
-usage: lift-ini.py <tag> [objdir]        lift the blob and write the C
-       lift-ini.py dump <tag> [objdir]   write the text out of the objects
-       lift-ini.py regenerate <tag>      the C from the text against the tree
-       lift-ini.py write <tag>           the C from the text, for real
+usage: tools/module/settings.py <tag> [objdir]        lift the blob and write the C
+       tools/module/settings.py dump <tag> [objdir]   write the text out of the objects
+       tools/module/settings.py regenerate <tag>      the C from the text against the tree
+       tools/module/settings.py write <tag>           the C from the text, for real
 """
 
 import os

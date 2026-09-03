@@ -42,7 +42,7 @@
 #
 # One sentence to a run, because tracing costs twenty times what the synthesis
 # does and feeding it that slowly faults part way through several sentences in
-# one run. That is delta-check.sh's finding and it holds here.
+# one run. That is tools/rules/check-c.sh's finding and it holds here.
 #
 # The sentences are the suite's seven plain ones and test/cases/upper.txt
 # beside them, which is this harness's own; EVV_UPPER_CASES names another list
@@ -63,9 +63,9 @@
 # rather than from IBM's, where nothing may change but the sound is the thing
 # that would.
 #
-# usage: upper-check.sh            every .up rule file in the tree
-#        upper-check.sh <file>...  the ones named
-#        upper-check.sh -sound ... the audio is the standard, not the trace
+# usage: tools/rules/check-upper.sh            every .up rule file in the tree
+#        tools/rules/check-upper.sh <file>...  the ones named
+#        tools/rules/check-upper.sh -sound ... the audio is the standard, not the trace
 
 set -u
 tools=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)

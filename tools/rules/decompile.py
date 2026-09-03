@@ -30,10 +30,10 @@ comment at the top of it says what else that comparison needs and what would
 make it finer. Both suites are the coarser check behind it, and the only one
 for the inlining itself.
 
-usage: delta-decompile.py                 the hundred smallest with a body
-       delta-decompile.py <count>         the smallest that many
-       delta-decompile.py all             every rule there is
-       delta-decompile.py <rule>...       the ones named
+usage: tools/rules/decompile.py                 the hundred smallest with a body
+       tools/rules/decompile.py <count>         the smallest that many
+       tools/rules/decompile.py all             every rule there is
+       tools/rules/decompile.py <rule>...       the ones named
 """
 
 import collections
@@ -522,7 +522,7 @@ def write(names):
         # Only as much of the frame as this rule has. The interpreter clears
         # the largest any rule asks for, since it has one piece of code for
         # all of them; here the shape is known, and the number below is the
-        # same one delta-emit.py takes the largest of. A rule reaching past it
+        # same one tools/rules/emit.py takes the largest of. A rule reaching past it
         # would be reaching outside its own frame either way.
         text.append('    memset(%s, 0, %d);\n'
                     % ('own' if loose else 'frame', room))

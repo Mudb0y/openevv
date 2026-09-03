@@ -11,7 +11,7 @@
 # It wants Wine and IBM's objects, like test/harness/prims.sh and unlike
 # test/matrix.sh.
 #
-# usage: ipa.sh
+# usage: test/harness/ipa.sh
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)

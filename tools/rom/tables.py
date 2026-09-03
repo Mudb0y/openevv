@@ -23,7 +23,7 @@ is the distance to the next one and includes whatever padding sat between.
 Two of dictman's names are counts rather than arrays -- s_nEng2Roman and
 s_nRoman2Kana -- and come out as the two-byte arrays that hold them.
 
-usage: lift-romtables.py [objdir] [outdir]
+usage: tools/rom/tables.py [objdir] [outdir]
 """
 
 import os

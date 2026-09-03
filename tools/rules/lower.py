@@ -3,7 +3,7 @@
 
 This is the half of the notation that is the machine's rather than any
 language's -- the registers, the operands, the operations, and a rule as the
-blocks it is made of. It was in delta-notation.py, which lifts IBM's objects
+blocks it is made of. It was in tools/rules/notation.py, which lifts IBM's objects
 into it; tools/rules/upper.py compiles into it from above. Neither of those
 may have a copy of its own, since a print and a parse that disagree is the one
 fault this form can have, so it lives here and both load it.

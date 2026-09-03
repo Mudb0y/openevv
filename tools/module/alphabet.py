@@ -14,16 +14,16 @@ bytes per name, in the order the names are in. Reading those bytes by eye and
 writing them by hand is how a letter quietly comes out as a digit, so this
 reads and writes them by name.
 
-    lang-alphabet.py show <tag>              every character and what it is
-    lang-alphabet.py show <tag> <char>...    only the ones named
-    lang-alphabet.py add <tag> <byte> <field>=<value>...
+    tools/module/alphabet.py show <tag>              every character and what it is
+    tools/module/alphabet.py show <tag> <char>...    only the ones named
+    tools/module/alphabet.py add <tag> <byte> <field>=<value>...
 
 `add' puts a character at a byte value nothing in the alphabet claims yet, so
 that no existing code changes meaning: the dictionaries are keyed by these
 codes and moving one would move every word that used it. The byte is what the
 engine will see for that character once it arrives, in hex.
 
-    lang-alphabet.py add plpl b1 case=lower type=letter letter=vow \\
+    tools/module/alphabet.py add plpl b1 case=lower type=letter letter=vow \\
                               accent='~yes' phoneme=a
 
 usage: as above; `show' with no character lists the lot

@@ -37,8 +37,8 @@
 # smaller frame than the interpreter's, so the two land in different places,
 # and where a frame landed is not what this is checking.
 #
-# usage: delta-check.sh <rule>...
-#        delta-check.sh <count>          the smallest that many with a body
+# usage: tools/rules/check-c.sh <rule>...
+#        tools/rules/check-c.sh <count>          the smallest that many with a body
 
 set -u
 tools=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)

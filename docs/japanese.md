@@ -37,7 +37,7 @@ It is deliberately **not** in the tree, and `.gitignore` says so. A language mod
     python3 tools/rom/dictionary.py analysis/jajp lang/jajp
     python3 tools/rom/tables.py analysis/jajp lang/jajp
 
-Japanese is the one module with no rules as text. Every other language builds `delta_rules_<tag>.c`, its header and its shim out of `lang/<tag>/rules`, and those three files are not in the tree; here `delta-emit.py` above writes them straight out of the objects, which is the same emitter reached the other way round. So the lift is the whole source of this module, and a build that finds `lang/jajp` without those three files says so and stops rather than looking for a text tree that was never made.
+Japanese is the one module with no rules as text. Every other language builds `delta_rules_<tag>.c`, its header and its shim out of `lang/<tag>/rules`, and those three files are not in the tree; here `tools/rules/emit.py` above writes them straight out of the objects, which is the same emitter reached the other way round. So the lift is the whole source of this module, and a build that finds `lang/jajp` without those three files says so and stops rather than looking for a text tree that was never made.
 
 `rom/jajp/jprom.h` defines `JPROM_INCOMPLETE` while the romanizer cannot yet convert anything, and what that does is make `jp_rom_new` answer no instance at all -- so the engine behaves exactly as it did before there was a romanizer to find, and refuses the instance rather than speaking something wrong. Take it out when `Romanizer` is finished and not before. Nothing in `test/harness/romcan.sh` depends on it either way: that registers its own romanizer over whatever is linked.
 

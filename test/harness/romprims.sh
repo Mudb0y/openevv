@@ -15,7 +15,7 @@
 #
 # It wants Wine and IBM's objects, like the suite and unlike test/hash.sh.
 #
-# usage: romprims.sh
+# usage: test/harness/romprims.sh
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)

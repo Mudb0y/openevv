@@ -15,7 +15,7 @@
 # the reference hangs now and again on an index mark, and calling that a
 # difference has cost false alarms.
 #
-# usage: compare.sh <cases-file> [mode-letters] [text-pattern]
+# usage: test/compare.sh <cases-file> [mode-letters] [text-pattern]
 
 set -u
 
@@ -23,7 +23,7 @@ LIMIT=${EVV_CASE_TIMEOUT:-120}
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 BUILD=$ROOT/build
 
-cases=${1:?usage: compare.sh <cases-file> [mode] [pattern]}
+cases=${1:?usage: test/compare.sh <cases-file> [mode] [pattern]}
 case $cases in /*) ;; *) cases=$PWD/$cases ;; esac
 [ -r "$cases" ] || { echo "compare: cannot read $cases" >&2; exit 2; }
 mode=${2:-}

@@ -10,7 +10,7 @@ reads nothing and needs no objects.
 It writes the empty table of rules-written-as-C beside it, because that is
 per language too and an ordinary build wants one for each.
 
-usage: gen-lang.py <tag> [outdir]
+usage: tools/module/gather.py <tag> [outdir]
 """
 
 import os

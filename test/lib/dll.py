@@ -13,7 +13,7 @@ through the exported calls first, which is a second question again, since a
 filter's entry point is a callback of the caller's and goes over as stdcall
 with a pointer-to-pointer in front of it.
 
-usage: dll.py <eci.dll> <out.wav> <text>
+usage: test/lib/dll.py <eci.dll> <out.wav> <text>
 """
 
 import ctypes

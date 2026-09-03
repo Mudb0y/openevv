@@ -488,7 +488,7 @@ def regenerate(tag, write=False):
 
 
 def main(argv=()):
-    # As in delta-link.py: the objects' directory names the language, and
+    # As in tools/module/link.py: the objects' directory names the language, and
     # the written file is named for it. No arguments means US English.
     tag = argv[0] if argv else "enus"
     where = argv[1] if len(argv) > 1 else os.path.join(ROOT, "analysis", tag)

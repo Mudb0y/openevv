@@ -22,7 +22,7 @@ The byte has to be one the alphabet claims, or the character arrives as
 something else. `tools/module/alphabet.py show <tag>` says which is which, and
 this refuses a byte that alphabet does not name.
 
-usage: lang-codepoints.py <tag>...      write each language's table
+usage: tools/module/codepoints.py <tag>...      write each language's table
 """
 
 import os

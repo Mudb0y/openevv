@@ -14,11 +14,11 @@ machine of the language is are worked out from them by the same walk the
 engine does, so there is one source for the layout rather than two that can
 disagree.
 
-usage: gen-globals.py <glob.obj> <out.c>    lift and write the C
-       gen-globals.py dump <tag>            write the text out of the objects
-       gen-globals.py regenerate <tag>       the C from the text against the tree
-       gen-globals.py write <tag>            the C from the text, for real
-       gen-globals.py where <tag> <offset>.. which variable sits at a byte
+usage: tools/module/globals.py <glob.obj> <out.c>    lift and write the C
+       tools/module/globals.py dump <tag>            write the text out of the objects
+       tools/module/globals.py regenerate <tag>       the C from the text against the tree
+       tools/module/globals.py write <tag>            the C from the text, for real
+       tools/module/globals.py where <tag> <offset>.. which variable sits at a byte
 """
 
 import os
@@ -219,7 +219,7 @@ def emit(cells, end, out, lang):
     # One language to a module, and the objects it was read from say which --
     # not the directory being written to, which used to name it and quietly
     # renamed every symbol when the output went anywhere but lang/<tag>. That
-    # is the same trap delta-emit.py was fixed for.
+    # is the same trap tools/rules/emit.py was fixed for.
     names = {"W": "DG_WORD", "L": "DG_LONG", "S": "DG_SHORT",
              "C": "DG_COMPOUND"}
     kinds = [names[k] for _, k, _ in cells]

@@ -17,7 +17,7 @@ nobody thought of.
 The tables are the same in every one of the nine languages' object sets,
 which was checked: this is engine code and not a language's data.
 
-usage: lift-xmltok.py [--check] [object]
+usage: tools/engine/xmltok.py [--check] [object]
 
 With no argument it reads analysis/enus/xmltok.obj and writes
 src/eci/ssml/eci_xmltok_tables.c. With --check it writes nothing and answers whether

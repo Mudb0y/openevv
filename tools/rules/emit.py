@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Turn the lifted rules into bytecode the interpreter can run.
 
-The front end in delta-lift.py hands back each rule as blocks of operations
+The front end in tools/rules/lift.py hands back each rule as blocks of operations
 over operands. This writes those out as a byte stream, with the constants,
 the string addresses and the runtime entry points pulled into pools beside
 it so the stream itself carries only indices.

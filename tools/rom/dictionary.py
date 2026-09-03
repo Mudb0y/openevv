@@ -17,7 +17,7 @@ and a string, all three named by relocations. So the arrays are read off rather
 than guessed at, the same way tools/module/globals.py reads the variable area off
 delta_new.
 
-usage: lift-rom.py [objdir] [outdir]
+usage: tools/rom/dictionary.py [objdir] [outdir]
 """
 
 import os

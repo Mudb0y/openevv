@@ -10,7 +10,7 @@
 # It wants Wine and IBM's objects, like test/harness/prims.sh and unlike
 # test/matrix.sh.
 #
-# usage: xmltok.sh
+# usage: test/harness/xmltok.sh
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)

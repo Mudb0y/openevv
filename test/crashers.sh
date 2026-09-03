@@ -14,7 +14,7 @@
 # It wants neither Wine nor IBM's objects, so it runs anywhere the engine
 # builds. Like test/hash.sh it is one of the two quick ones.
 #
-# usage: crashers.sh [binary]
+# usage: test/crashers.sh [binary]
 
 set -u
 

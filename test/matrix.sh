@@ -29,7 +29,7 @@
 #
 # It wants neither Wine nor IBM's objects. That is the point of it.
 #
-# usage: matrix.sh check  [lang ...]     the default
+# usage: test/matrix.sh check  [lang ...]     the default
 #        matrix.sh record [lang ...]     write the baselines instead
 #
 # EVV_MATRIX_NATIVE names a binary to drive rather than building one, which is

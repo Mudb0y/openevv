@@ -15,8 +15,8 @@ starts at everything and falls, and what it names is the work that is left.
 It reads the text forms and nothing else, so it wants no objects and no
 compiler, and it is as true of a module built from text as of one lifted.
 
-usage: lang-census.py <tag> <template>          the counts
-       lang-census.py <tag> <template> rules    every rule, one to a line
+usage: tools/module/census.py <tag> <template>          the counts
+       tools/module/census.py <tag> <template> rules    every rule, one to a line
 """
 
 import difflib

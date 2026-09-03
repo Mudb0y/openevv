@@ -11,7 +11,7 @@
 # It wants Wine and IBM's objects, like test/harness/ipa.sh and unlike
 # test/matrix.sh.
 #
-# usage: ssml.sh [cases.txt]
+# usage: test/harness/ssml.sh [cases.txt]
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)

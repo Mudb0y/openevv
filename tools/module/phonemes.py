@@ -25,10 +25,10 @@ vowel wants -- so `place' is where a language says that its sz is retroflex and
 its s is not. Reading those by eye and writing them by hand is how a fricative
 quietly becomes a lateral, so `set' writes them by name.
 
-usage: lang-phonemes.py <tag>            every phoneme
-       lang-phonemes.py <tag> <name>...  only the ones named
-       lang-phonemes.py set <tag> <phoneme> <field>=<value>...
-       lang-phonemes.py add <tag> <name> <field>=<value>...
+usage: tools/module/phonemes.py <tag>            every phoneme
+       tools/module/phonemes.py <tag> <name>...  only the ones named
+       tools/module/phonemes.py set <tag> <phoneme> <field>=<value>...
+       tools/module/phonemes.py add <tag> <name> <field>=<value>...
 
 `add' puts a phoneme on the end, which is the only place one can go: the codes
 below it are what every rule and every dictionary entry already say. It is the

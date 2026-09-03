@@ -94,8 +94,8 @@ HEADER = """\
 #
 # To add a word, put a line in with the word `new' where its action number
 # goes and say what it is to sound like. Building gives it an action of its
-# own and writes the number back here. `delta-dict.py where <dictionary>
-# <word>' says which two words it belongs between, and `delta-dict.py find
+# own and writes the number back here. `tools/module/dict.py where <dictionary>
+# <word>' says which two words it belongs between, and `tools/module/dict.py find
 # <word>' says which dictionaries hold it and what each says it sounds like.
 #
 # What a word says belongs to its action rather than to the word, so two words
@@ -587,7 +587,7 @@ if __name__ == '__main__':
     mode = sys.argv[1] if len(sys.argv) > 1 else 'dump'
     how = {'dump': dump, 'build': build, 'where': where, 'find': find}
     if mode not in how:
-        print('usage: delta-dict.py [dump | build | where <dictionary> <word> '
+        print('usage: tools/module/dict.py [dump | build | where <dictionary> <word> '
               '| find <word>]', file=sys.stderr)
         sys.exit(2)
     sys.exit(how[mode]())
