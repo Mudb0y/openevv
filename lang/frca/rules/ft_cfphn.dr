@@ -1,5 +1,5 @@
 # The rules of ft_cfphn.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule assign_canfren_affricates from ft_cfphn.obj
 shape frame 220 argbase 8 params 1

@@ -1,5 +1,5 @@
 # The rules of ga_roots.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule ger_roots from ga_roots.obj
 shape frame 232 argbase 116 params 3

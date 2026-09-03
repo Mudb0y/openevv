@@ -125,11 +125,7 @@ It is a Japanese morphological analyser, not a lookup table. The classes, with h
     InputManager 10 (done)            RomUserDict 9 (done)
     PhraseBuf 9 (done)                TextNormalizer 4
 
-The two counts that have moved since the first census are IBM's, not a
-recount of ours. `JpnUtil` has thirty-seven methods rather than thirty-two:
-five of them are in `codeconv.obj` rather than in its own object.
-`ConverterInterface` has twenty-one that exist rather than twenty-four
-declared, the other three being pure in it and Romanizer's to supply.
+The two counts that have moved since the first census are IBM's, not a recount of ours. `JpnUtil` has thirty-seven methods rather than thirty-two: five of them are in `codeconv.obj` rather than in its own object. `ConverterInterface` has twenty-one that exist rather than twenty-four declared, the other three being pure in it and Romanizer's to supply.
 
 and the objects they sit in, with their code sizes:
 
@@ -225,45 +221,15 @@ One correction to something this file used to say. `RomInstParam::setInputType` 
 
 ## The spine
 
-`TextAnalysis` is the record everything else in the analyser reads. `Romanizer`
-allocates one in a single lump of 946,216 bytes, and `DictSearch`, `InputChar`,
-`JPath`, `PhraseBuf`, `Annotation` and `RomUserDict` all take a reference to it
-in their constructors and read its fields directly. So not one of them can be
-written -- or even constructed in a harness -- until the record is known.
-`rom/jajp/txtanal.h` is that map and `tools/rom/offsets.py` is what keeps it
-true.
+`TextAnalysis` is the record everything else in the analyser reads. `Romanizer` allocates one in a single lump of 946,216 bytes, and `DictSearch`, `InputChar`, `JPath`, `PhraseBuf`, `Annotation` and `RomUserDict` all take a reference to it in their constructors and read its fields directly. So not one of them can be written -- or even constructed in a harness -- until the record is known. `rom/jajp/txtanal.h` is that map and `tools/rom/offsets.py` is what keeps it true.
 
-The head is settled outright, because the constructor and `initialize` write
-every field of it and nothing else does: a vtable, the romanizer that owns it,
-the text as it arrives, and pointers to the six objects it makes -- an
-`InputChar` of 10,168 bytes, an `Annotation` of 1,292, a `DictSearch` of 35,080,
-a `JPath` of 31,980, a `PhraseBuf` of 235,996 and a `PhraseTable` of 20, with a
-`TextNormalizer` of 20 at the very end.
+The head is settled outright, because the constructor and `initialize` write every field of it and nothing else does: a vtable, the romanizer that owns it, the text as it arrives, and pointers to the six objects it makes -- an `InputChar` of 10,168 bytes, an `Annotation` of 1,292, a `DictSearch` of 35,080, a `JPath` of 31,980, a `PhraseBuf` of 235,996 and a `PhraseTable` of 20, with a `TextNormalizer` of 20 at the very end.
 
-The tail is settled by `InitPhraseTable`, which fills in a chain of two
-sixteen-bit indices per entry and whose arithmetic says where that chain begins
-and how long it is: 707 entries, the number `ClearPhraseTable` asks for. It is
-the same shape `JpnUtil::TableFree` splices. Above it, `initialize` memsets
-exactly 0x389d8 bytes, which is 707 times 0x148 to the byte -- the phrase table
-proper, one row per chain entry.
+The tail is settled by `InitPhraseTable`, which fills in a chain of two sixteen-bit indices per entry and whose arithmetic says where that chain begins and how long it is: 707 entries, the number `ClearPhraseTable` asks for. It is the same shape `JpnUtil::TableFree` splices. Above it, `initialize` memsets exactly 0x389d8 bytes, which is 707 times 0x148 to the byte -- the phrase table proper, one row per chain entry.
 
-The middle came from the arithmetic in `CheckPhraseLink`, which reaches a
-candidate word as `this + 0x900 + buffer * 0x399d0 + slot * 0x158`. That is
-three buffers of 686 slots of 344 bytes, and what says three rather than two or
-four is that three of them reach exactly as far as the next named field. Nothing
-indexes those buffers with a constant, so no sweep of the object can see them;
-the arithmetic is the only evidence, and it is why the checker tests it.
+The middle came from the arithmetic in `CheckPhraseLink`, which reaches a candidate word as `this + 0x900 + buffer * 0x399d0 + slot * 0x158`. That is three buffers of 686 slots of 344 bytes, and what says three rather than two or four is that three of them reach exactly as far as the next named field. Nothing indexes those buffers with a constant, so no sweep of the object can see them; the arithmetic is the only evidence, and it is why the checker tests it.
 
-**What the checker does.** It takes every offset `txtanal.obj` uses on a pointer
--- displacements and the immediates the compiler adds to form an inner base --
-and refuses any that does not fall inside a region the header names. It does the
-same across every other object in the module for offsets too large to belong to
-anything else, since nothing else the analyser allocates is that wide. And it
-holds the map's own arithmetic together: the regions have to tile the object
-from nought to 946,216 with no gap and no overlap. Forty-three offsets, all
-accounted for, and the tiling exact. Changing the buffer count from three to two
-leaves a gap of 235,984 bytes; changing the phrase count by one leaves a gap of
-328; growing the chain by one makes the phrase table overlap it.
+**What the checker does.** It takes every offset `txtanal.obj` uses on a pointer -- displacements and the immediates the compiler adds to form an inner base -- and refuses any that does not fall inside a region the header names. It does the same across every other object in the module for offsets too large to belong to anything else, since nothing else the analyser allocates is that wide. And it holds the map's own arithmetic together: the regions have to tile the object from nought to 946,216 with no gap and no overlap. Forty-three offsets, all accounted for, and the tiling exact. Changing the buffer count from three to two leaves a gap of 235,984 bytes; changing the phrase count by one leaves a gap of 328; growing the chain by one makes the phrase table overlap it.
 
 `DictSearch` is mapped beside it, in `rom/jajp/dictsearch.h`, and held by the same checker. Its 35,080 bytes are mostly working store reached by arithmetic rather than by a constant, so nothing is claimed that its own code does not prove.
 
@@ -428,11 +394,7 @@ Those four arrays carry a caution for whoever transcribes `GenerateKanaString`: 
 
 About twelve hundred bytes are left over in two spans, each named as unresolved with its exact bounds so the map still tiles and says plainly what is not known. Twenty-nine offsets across its seven objects, all inside a named region; a count or a stride changed by one is caught as a gap or an overlap of exactly that much.
 
-Two regions inside the map of the spine are named but not resolved: the parse's own marks
-between 0x2c and 0x5d8, cleared at the top of `TextParsing` and read at several
-widths, and a working area of 1,716 bytes that `CheckPhraseLink` takes the
-address of. Both are bounded exactly; what is in them is for whoever writes
-`TextParsing`.
+Two regions inside the map of the spine are named but not resolved: the parse's own marks between 0x2c and 0x5d8, cleared at the top of `TextParsing` and read at several widths, and a working area of 1,716 bytes that `CheckPhraseLink` takes the address of. Both are bounded exactly; what is in them is for whoever writes `TextParsing`.
 
 ## Where to go next
 

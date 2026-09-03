@@ -1,5 +1,5 @@
 # The rules of us_insv.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule extend_vals from us_insv.obj
 shape frame 196 argbase 8 params 1

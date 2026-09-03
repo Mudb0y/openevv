@@ -32,7 +32,7 @@
  * printing the same line to the same variable. They are not kept in the tree:
  * a diagnostic that is always compiled in is a diagnostic nobody checks, and
  * the point of the exercise is to put one in for an afternoon and take it out
- * again. docs/building.md says what the lines look like.
+ * again. docs/testing.md says what the lines look like.
  *
  * This found the one thing that is wrong with German: of the hundred and
  * thirty-one points the language writes into its streams for one word, a

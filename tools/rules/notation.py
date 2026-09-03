@@ -525,7 +525,7 @@ def to_tree():
 
     for obj in sorted(per_object):
         out = ["# The rules of %s, written by tools/rules/notation.py." % obj,
-               "# One operation to a line. See docs/building.md.",
+               "# One operation to a line. See docs/rules.md.",
                ""]
         for name, d, tables in per_object[obj]:
             write_rule(name, obj, d, tables, out)

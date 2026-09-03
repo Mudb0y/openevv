@@ -1,5 +1,5 @@
 # The rules of is_inton.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule clash_tone_alert from is_inton.obj
 shape frame 200 argbase 8 params 2

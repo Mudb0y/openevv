@@ -1,5 +1,5 @@
 # The rules of it_prfx.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule is_not_prfxable from it_prfx.obj
 shape frame 212 argbase 8 params 3

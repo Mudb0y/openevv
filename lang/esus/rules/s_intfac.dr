@@ -1,5 +1,5 @@
 # The rules of s_intfac.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule register_span_phones from s_intfac.obj
 shape frame 268 argbase 8 params 3

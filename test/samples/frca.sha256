@@ -3,7 +3,7 @@
 # Every line was blessed by IBM's own binary: the whole
 # differential suite was run for this language
 # immediately before these were written, and every case
-# matched. See docs/building.md.
+# matched. See docs/testing.md.
 #
 # Written by test/matrix.sh record. One line a case:
 # the category, which case in it, the first sixteen hex of

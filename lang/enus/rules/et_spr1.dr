@@ -1,5 +1,5 @@
 # The rules of et_spr1.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule insert_eng_spr_phone from et_spr1.obj
 shape frame 232 argbase 116 params 3

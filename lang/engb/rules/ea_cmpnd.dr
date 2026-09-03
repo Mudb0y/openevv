@@ -1,5 +1,5 @@
 # The rules of ea_cmpnd.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule noun_cmpnd1 from ea_cmpnd.obj
 shape frame 232 argbase 8 params 6

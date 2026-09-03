@@ -1,5 +1,5 @@
 # The rules of ut_spr.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule print_after_word_chars from ut_spr.obj
 shape frame 236 argbase 116 params 3

@@ -21,17 +21,15 @@ It reads SSML. A document goes in and the annotations the engine already underst
 
 ## What is here
 
-`src` is the engine: hand-written C, one file per object in IBM's own module decomposition, so that a file can be checked against the object it came from.
+`src` is the engine: hand-written C, one file per object in IBM's own module decomposition, so that a file can be checked against the object it came from. It is in four groups -- `delta` for the machine that runs a language's rules, `klatt` for the formant synthesiser that makes the sound, `port` for what the port supplies itself, and `eci` for the published interface and the machinery behind it, which is most of it and has groups of its own.
 
 `lang/enus` is US English: the rules, the constants they read, the sets, the link tables, the voice presets and the dictionary. This is the part lifted out of IBM's objects rather than written, and it is in the tree so that the engine builds without the SDK. The rules are text there, one file to an object in `lang/enus/rules`, and what the engine runs is written out of that text by every build. `lang/dede` is German, lifted the same way. A build takes as many languages as it is given -- `make LANGS="lang/enus lang/dede"` puts both in one binary and the caller picks between them. English is the one that is finished; German matches IBM over the cases there are for it. `docs/status.md` says in which configurations.
 
-`cli/evv.c` is the command above and `win/speak.c` is the speak window. `cli/probe.c` is the same engine behind a front that reports what it answered at every step, which is what `test` sets against IBM's binary case for case. `tools` holds the lifters, the decompiler and the analysers. `reference` builds IBM's own binary under Wine, which is what the tests compare against.
+`cli/evv.c` is the command above and `win/speak.c` is the speak window. `cli/probe.c` is the same engine behind a front that reports what it answered at every step, which is what `test` sets against IBM's binary case for case. `lib` is the engine under the names IBM published. `tools` is grouped by what a tool acts on: `rules` for the whole rules toolchain, `module` for everything else in a language, `engine` for what acts on `src`, `rom` for the Japanese romanizer, `sdk` for unpacking IBM's libraries, and `measure` for the three that answer a question about the sound in numbers. `reference` builds IBM's own binary under Wine, which is what the tests compare against.
 
 ## Documentation
 
-`docs/building.md` is what you need, what to build, and what each variable does.
-`docs/status.md` is what works, what does not, and what has not been started.
-`docs/tree.md` says what every directory is for.
+`docs/building.md` is what you need, what to build, and what every variable does. `docs/rules.md` is the rules, in all three forms, and how a rule of ours is written and proved. `docs/language.md` is everything else in a language module, and what it takes to add one. `docs/testing.md` is what proves any of it. `docs/windows.md` is the Windows side, the library and the screen reader add-on. `docs/tree.md` says what every directory is for, and `docs/status.md` what works, what does not, and what has not been started. `docs/notes` is the finished results, one to a file, which are the answers rather than the state: Polish, SSML, the crashing strings, the sample rates, a language module as text, and the comparison against Apple's Eloquence.
 
 ## Licence and provenance
 

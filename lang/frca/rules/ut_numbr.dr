@@ -1,5 +1,5 @@
 # The rules of ut_numbr.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule convert_digits_to_words from ut_numbr.obj
 shape frame 212 argbase 8 params 3

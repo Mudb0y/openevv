@@ -1,5 +1,5 @@
 # The rules of ut_dict.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule user_dict_error from ut_dict.obj
 shape frame 216 argbase 8 params 4

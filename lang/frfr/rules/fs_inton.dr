@@ -1,5 +1,5 @@
 # The rules of fs_inton.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule is_french_target_syll from fs_inton.obj
 shape frame 196 argbase 8 params 1

@@ -1,6 +1,6 @@
 # openevv
 
-IBM's Embedded ViaVoice text-to-speech engine, taken out of its 1999 Windows objects and rebuilt as C. `docs/tree.md` says what every directory is and `docs/building.md` what every target and variable does; read those rather than guessing, and keep them true when something moves.
+IBM's Embedded ViaVoice text-to-speech engine, taken out of its 1999 Windows objects and rebuilt as C. `docs/tree.md` says what every directory is, `docs/building.md` what every target and variable does, `docs/rules.md` the rules, `docs/language.md` the rest of a language module, `docs/testing.md` what proves any of it, and `docs/windows.md` the Windows side; read those rather than guessing, and keep them true when something moves.
 
 ## Prove it before saying it
 
@@ -42,16 +42,7 @@ The engine's second utterance is not its first, and that is faithful rather than
 
 File names in `src` are the names of IBM's objects. A file named for the object it came from can be checked against that object; renaming them would look tidier and cost real verification.
 
-`lang/plpl` says Polish and is Italian. It was copied from `lang/itit`'s text
-forms and renamed, so every rule and every table in it is IBM's Italian until
-something written here has replaced it -- which is what `make EVVLANG=lang/plpl
-census` counts, rule by rule. Two things follow. NOTICE governs it exactly as it
-governs `lang/itit`, and a change made there is only Polish when the census says
-so; a module that sounds plausible because it is still Italian is the failure
-that check exists to prevent. Polish is family seventeen, and the family is not
-free: three tables are indexed by it and hold eighteen, IBM used six, and four
-more are families its own code says have a romanizer, so an instance of one of
-those is refused when the romanizer is absent.
+`lang/plpl` says Polish and is Italian. It was copied from `lang/itit`'s text forms and renamed, so every rule and every table in it is IBM's Italian until something written here has replaced it -- which is what `make EVVLANG=lang/plpl census` counts, rule by rule. Two things follow. NOTICE governs it exactly as it governs `lang/itit`, and a change made there is only Polish when the census says so; a module that sounds plausible because it is still Italian is the failure that check exists to prevent. Polish is family seventeen, and the family is not free: three tables are indexed by it and hold eighteen, IBM used six, and four more are families its own code says have a romanizer, so an instance of one of those is refused when the romanizer is absent.
 
 `lang/enus` is transcribed data, not code to improve. It is what the engine sounds like. `tools/module/sets.py` puts IBM's own dictionary tables back and loses anything added through `tools/module/dict.py`, so do not run it to "regenerate" that file.
 

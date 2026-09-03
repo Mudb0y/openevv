@@ -1,5 +1,5 @@
 # The rules of st_strss.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule span_final_str from st_strss.obj
 shape frame 204 argbase 8 params 1

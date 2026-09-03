@@ -1,5 +1,5 @@
 # The rules of ga_morph.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule ger_particles from ga_morph.obj
 shape frame 228 argbase 116 params 3

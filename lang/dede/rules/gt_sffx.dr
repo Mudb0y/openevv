@@ -1,5 +1,5 @@
 # The rules of gt_sffx.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule is_chen_not_en from gt_sffx.obj
 shape frame 228 argbase 116 params 3

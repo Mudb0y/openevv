@@ -90,7 +90,7 @@ NM  ?= nm
 # build is half a minute and the two seconds a language RULECODE costs below.
 # `RULES=bytecode' is the quick build, and it is also the second opinion:
 # tools/rules/check-c.sh holds the two forms against each other call for call,
-# which is the only check finer than the audio. See docs/building.md.
+# which is the only check finer than the audio. See docs/rules.md.
 RULES ?= c
 
 # The rules as the engine runs them: the bytecode array, the header that
@@ -698,7 +698,7 @@ crashers: $(BUILD)/evv
 # `matrix-record' writes the answers down instead of checking them, which is
 # what a deliberate change ends with. What test/suite.sh does is a different
 # question now -- what IBM's engine does, rather than whether anything moved
-# -- and docs/building.md says when each is the one to reach for.
+# -- and docs/testing.md says when each is the one to reach for.
 # It takes no LANGS and ignores the one a build was made with, on purpose. A
 # gate that checked only the language last worked on would be worse than none,
 # since the thing it exists to catch is a change made for one language landing

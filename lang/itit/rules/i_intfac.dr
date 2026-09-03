@@ -1,5 +1,5 @@
 # The rules of i_intfac.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule register_ital_phones from i_intfac.obj
 shape frame 268 argbase 8 params 3

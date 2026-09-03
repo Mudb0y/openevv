@@ -1,5 +1,5 @@
 # The rules of it_phone.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule del_ital_extra_syncs from it_phone.obj
 shape frame 212 argbase 8 params 2

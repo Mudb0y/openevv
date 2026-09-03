@@ -1,5 +1,5 @@
 # The rules of ut_struc.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule word_level_rules from ut_struc.obj
 shape frame 220 argbase 8 params 3

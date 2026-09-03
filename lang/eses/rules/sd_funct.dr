@@ -1,5 +1,5 @@
 # The rules of sd_funct.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule process_function_successes from sd_funct.obj
 shape frame 240 argbase 8 params 5

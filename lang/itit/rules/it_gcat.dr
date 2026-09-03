@@ -1,5 +1,5 @@
 # The rules of it_gcat.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule is_ital_clsd_class from it_gcat.obj
 shape frame 216 argbase 8 params 3

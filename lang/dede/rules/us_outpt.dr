@@ -1,5 +1,5 @@
 # The rules of us_outpt.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule synthesizeRange from us_outpt.obj
 shape frame 240 argbase 8 params 7

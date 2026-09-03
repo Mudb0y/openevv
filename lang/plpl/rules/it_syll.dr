@@ -1,5 +1,5 @@
 # The rules of it_syll.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule assign_ital_syll_init_con from it_syll.obj
 shape frame 260 argbase 8 params 3

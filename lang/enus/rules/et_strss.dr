@@ -1,5 +1,5 @@
 # The rules of et_strss.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule set_extrametrical_syll from et_strss.obj
 shape frame 204 argbase 8 params 2

@@ -1,5 +1,5 @@
 # The rules of it_inton.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule handle_destressed_verbs from it_inton.obj
 shape frame 224 argbase 8 params 4

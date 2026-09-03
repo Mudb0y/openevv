@@ -1,5 +1,5 @@
 # The rules of fa_homog.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule fren_homog_words from fa_homog.obj
 shape frame 264 argbase 8 params 3

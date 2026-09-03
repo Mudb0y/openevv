@@ -1,5 +1,5 @@
 # The rules of it_phrs.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule molto_words from it_phrs.obj
 shape frame 252 argbase 8 params 5

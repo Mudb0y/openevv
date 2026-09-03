@@ -1,5 +1,5 @@
 # The rules of ft_spr1.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule print_fren_SPR from ft_spr1.obj
 shape frame 220 argbase 8 params 3

@@ -1,5 +1,5 @@
 # The rules of et_gcat.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule mark_eng_prepositions from et_gcat.obj
 shape frame 200 argbase 8 params 2

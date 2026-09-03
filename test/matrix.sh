@@ -264,7 +264,7 @@ for t in $want; do
                 echo "# Every line was blessed by IBM's own binary: the whole"
                 echo "# differential suite was run for this language"
                 echo "# immediately before these were written, and every case"
-                echo "# matched. See docs/building.md."
+                echo "# matched. See docs/testing.md."
             fi
             echo "#"
             echo "# Written by test/matrix.sh record. One line a case:"

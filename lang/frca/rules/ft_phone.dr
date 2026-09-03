@@ -1,5 +1,5 @@
 # The rules of ft_phone.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule reduce_duplicate_cons from ft_phone.obj
 shape frame 240 argbase 116 params 3

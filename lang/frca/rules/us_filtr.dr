@@ -1,5 +1,5 @@
 # The rules of us_filtr.obj, written by tools/rules/notation.py.
-# One operation to a line. See docs/building.md.
+# One operation to a line. See docs/rules.md.
 
 rule size_filter from us_filtr.obj
 shape frame 208 argbase 8 params 3
