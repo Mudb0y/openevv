@@ -948,7 +948,7 @@ synthesiser underneath them is not the one in `klatt_*.c`. The nine in the EVV
 
     make matrix
 
-`test/matrix.sh` speaks every case of every language through the engine and holds each against what this engine has said before. 791 cases over the nine languages -- the same seven categories the suite below runs -- two hashes apiece, and it wants neither Wine nor IBM's objects. That is the check a change has to pass. It runs the same categories deliberately: what makes the baselines worth anything is that the suite had just agreed with every one of them, and a category the suite could not run would be a number nothing had ever blessed.
+`test/matrix.sh` speaks every case of every language through the engine and holds each against what this engine has said before. 881 cases over the nine languages -- the same eight categories the suite below runs -- two hashes apiece, and it wants neither Wine nor IBM's objects. That is the check a change has to pass. It runs the same categories deliberately: what makes the baselines worth anything is that the suite had just agreed with every one of them, and a category the suite could not run would be a number nothing had ever blessed.
 
 Two hashes rather than one because they fail in different ways. The samples say what came out of the synthesiser. The reported answers say what the interface did, which the audio cannot see, and how much is in them depends on what the category asked for: a plain case reports the index mark it was given back and how many samples came out, and a `realworld` or `dict` case reports the eight editable voices read back, all seventeen general parameters, and what each of the six dictionary calls returned.
 

@@ -4,7 +4,7 @@ IBM's Embedded ViaVoice text-to-speech engine, taken out of its 1999 Windows obj
 
 ## Prove it before saying it
 
-Nothing works until `test/matrix.sh` says so. It speaks every case of every language through the engine and holds each against what this engine has said before: two hashes a case, the samples and the answers the interface gave, 791 cases over the nine languages. It wants neither Wine nor IBM's objects. `make matrix` runs it.
+Nothing works until `test/matrix.sh` says so. It speaks every case of every language through the engine and holds each against what this engine has said before: two hashes a case, the samples and the answers the interface gave, 881 cases over the nine languages. It wants neither Wine nor IBM's objects. `make matrix` runs it.
 
 **A case that moves is not a failure, it is a question.** The engine is being changed on purpose now and byte-identity with IBM is a thing that was proved rather than a thing that is maintained. What the gate is for is telling a change from an accident: if a case moved, say in the commit which and why, then `test/matrix.sh record` writes the new answers down. If a case you did not touch moved, that is the accident it exists to catch.
 
