@@ -58,7 +58,7 @@
           pkgs.pkgsCross.mingw32.buildPackages.gcc
           pkgs.pkgsCross.mingw32.buildPackages.binutils
 
-          # Builds the Windows release: the same engine with src/port_win32.c
+          # Builds the Windows release: the same engine with src/port/port_win32.c
           # standing in for the POSIX layer, linked static so what ships is one
           # file.
           pkgs.pkgsCross.mingwW64.buildPackages.gcc

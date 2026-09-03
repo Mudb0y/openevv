@@ -17,7 +17,7 @@
  * still look like one and are not. And setParam(4) reads its value into a
  * local and does nothing with it at all.
  *
- * Both matter to the manager rather than being curiosities. src/eci_romanizer.c
+ * Both matter to the manager rather than being curiosities. src/eci/lang/eci_romanizer.c
  * reads a parameter before it writes one and flushes what the romanizer is
  * holding when the two differ, so what getParam answers decides how often the
  * engine flushes. test/romcan.sh is what says the answers are right: it holds

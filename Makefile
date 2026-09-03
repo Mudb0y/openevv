@@ -26,9 +26,15 @@
 .DEFAULT_GOAL := all
 
 SRC   := src
+# Every directory the engine's sources sit in, worked out rather than listed:
+# the groups under src, and the ECI layer's own groups under those. A group
+# added or renamed therefore needs nothing said here. The source wildcards,
+# the include path and vpath below are all driven from this, so there is one
+# statement of where the engine is rather than four.
+SRCDIRS := $(SRC) $(patsubst %/,%,$(wildcard $(SRC)/*/ $(SRC)/*/*/))
 # Which languages get built in. As many as are named: every module names its
 # own tables after itself, and the engine reaches whichever is in force
-# through the table src/delta_lang.h describes, so several can be linked
+# through the table src/delta/delta_lang.h describes, so several can be linked
 # into one program and chosen between at run time.
 #
 # `make LANGS="lang/enus lang/dede"' builds both, and the first one named is
@@ -175,7 +181,8 @@ ROMDEFS := $(if $(filter jajp,$(TAGS)),-DEVV_ROM_JAJP)
 # files is there yet -- so a wildcard would leave them out of this build and
 # find them in the next one, which is a link that fails for no visible reason
 # the first time and succeeds the second.
-SOURCES := $(filter-out $(SRC)/port_win32.c,$(wildcard $(SRC)/*.c)) \
+SOURCES := $(filter-out %/port_win32.c, \
+             $(foreach d,$(SRCDIRS),$(wildcard $(d)/*.c))) \
            $(filter-out $(STALE) $(GENERATED) $(STUBS) $(RULECODE), \
              $(sort $(foreach l,$(LANGS),$(wildcard $(l)/*.c)))) \
            $(filter %.c,$(RULECODE)) \
@@ -184,7 +191,7 @@ SOURCES := $(filter-out $(SRC)/port_win32.c,$(wildcard $(SRC)/*.c)) \
 # Every header, because a struct that changed shape and an object that was
 # not rebuilt is a link that succeeds and an engine that writes over itself.
 # The rule header is named for the same reason its sources are.
-HEADERS := $(wildcard $(SRC)/*.h) \
+HEADERS := $(foreach d,$(SRCDIRS),$(wildcard $(d)/*.h)) \
            $(filter-out $(RULECODE), \
              $(foreach l,$(LANGS),$(wildcard $(l)/*.h))) \
            $(filter %.h,$(RULECODE)) \
@@ -204,7 +211,7 @@ $(error these are in a language module but are not named for it, so they are \
         either left over or in the wrong place: $(STRAYS))
 endif
 
-vpath %.c $(SRC) $(LANGS) $(foreach l,$(LANGS),rom/$(notdir $(l))) $(BUILD)
+vpath %.c $(SRCDIRS) $(LANGS) $(foreach l,$(LANGS),rom/$(notdir $(l))) $(BUILD)
 
 # One line per language, and one call per language to fill in the numbers
 # each module states in a file of its own.
@@ -240,9 +247,9 @@ WARN := -w -Wno-implicit-function-declaration \
 
 # The machine this code was written for keeps addresses in thirty-two bit
 # values, so on a wider host everything it can point at has to live somewhere
-# such a value can still name: src/evv_arena.c maps that region low in memory
+# such a value can still name: src/port/evv_arena.c maps that region low in memory
 # and everything the machine holds comes out of it, including the language's
-# own data, which src/delta_low.c copies out of the program at startup. That
+# own data, which src/delta/delta_low.c copies out of the program at startup. That
 # copy is what lets the program itself be loaded anywhere -- there is no
 # -no-pie here any more, and there does not need to be. None of it is wanted
 # when the host is thirty-two bit already.
@@ -254,7 +261,7 @@ LOW := -DEVV_ARENA=1
 endif
 
 OPT        ?= -O2
-INCS       := -I$(SRC) $(addprefix -I,$(LANGS)) \
+INCS       := $(addprefix -I,$(SRCDIRS)) $(addprefix -I,$(LANGS)) \
               $(foreach l,$(LANGS),-Irom/$(notdir $(l)))
 ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
               $(CFLAGS)
@@ -762,7 +769,7 @@ $(BUILD)/libevv32$(SUF).a: $(OBJECTS32) $(RULESTAMP)
 # this machine, and evvspeak.exe, the speak window, which is the one to hand
 # somebody who wants to hear it.
 #
-# The Win32 porting layer stands in for the POSIX one. src/port_win32.c was
+# The Win32 porting layer stands in for the POSIX one. src/port/port_win32.c was
 # written for the reference build and answers the same twelve calls, so nothing
 # else in the engine knows the difference.
 CCWIN      ?= x86_64-w64-mingw32-gcc
@@ -777,7 +784,8 @@ CFLAGSWIN  := $(OPT) -std=gnu99 $(INCS) $(WARN) -DEVV_ARENA=1 \
 # outside a real cross stdenv.
 LDFLAGSWIN := -static $(MINGW64_LDFLAGS)
 
-SOURCESWIN := $(filter-out $(SRC)/port_posix.c,$(wildcard $(SRC)/*.c)) \
+SOURCESWIN := $(filter-out %/port_posix.c, \
+                $(foreach d,$(SRCDIRS),$(wildcard $(d)/*.c))) \
               $(filter-out $(GENERATED) $(STUBS), \
                 $(sort $(foreach l,$(LANGS),$(wildcard $(l)/*.c)))) \
               $(ROMS) $(RULESRC) $(LANGLIST)

@@ -178,7 +178,7 @@ const int32_t itit_eciIniSize = 2500;
    array calls the copy linked into the image. The original
    spells both into getLibraryName, which answers with the
    name only when it is asked about this language; here they
-   are data, so that src/eci_engarray.c is the same code
+   are data, so that src/eci/api/eci_engarray.c is the same code
    whichever language is built beside it. */
 const int32_t itit_eci_library_lang = 0x50000;
 const char itit_eci_library_name[] = "Static Engine ITA";

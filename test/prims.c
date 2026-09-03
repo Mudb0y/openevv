@@ -454,7 +454,7 @@ int main(void)
        layout is deliberately ours and not IBM's -- 64 bytes where theirs was
        nearly 500, because writing at their offsets was corrupting the arena.
        So only its answer is compared here; what it writes is the pair of
-       fields src/delta_trace.c already clears in three places, which is where
+       fields src/delta/delta_trace.c already clears in three places, which is where
        those two offsets were read off in the first place. The block is given
        room for IBM's offsets so that their write lands somewhere harmless. */
     {
@@ -1233,7 +1233,7 @@ int main(void)
        first, because vgen_copy resets that cell's buffer without ever making
        one, and on a cell that has never been filled there is nothing there
        to reset. That is the original's own slip, transcribed as it runs;
-       src/delta.c says what it was meant to say. */
+       src/delta/delta.c says what it was meant to say. */
     {
         uint8_t *marker = calloc(1, 4);
         uint8_t *params = calloc(1, 8);

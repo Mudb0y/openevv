@@ -51,7 +51,7 @@ enum { FRAME = 4096 };
 
 enum { PARAM_RATE = 5 };
 
-/* The highest rate a caller may ask for. src/eci_env.c owns this; it is
+/* The highest rate a caller may ask for. src/eci/api/eci_env.c owns this; it is
    named again here so the refusals below stay in step with it. */
 enum { EV_RATE_MAX_HZ = 48000 };
 

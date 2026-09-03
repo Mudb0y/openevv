@@ -225,7 +225,7 @@ API int eciGetFilteredText(void *h, const void *text, void *out, int room)
 
 /* Registering is what turns the SSML reader on: the engine carries it but
    never loads it by itself, so a caller hands in the entry point and gets
-   a filter it can activate. src/eci_filtermanager.c is the whole of why.
+   a filter it can activate. src/eci/ssml/eci_filtermanager.c is the whole of why.
  *
  * Which raises the question of where a caller gets an entry point for the
  * SSML filter, since the whole of registering is handing one over. With
@@ -236,7 +236,7 @@ API int eciGetFilteredText(void *h, const void *text, void *out, int room)
  *
  * The wrapper below is what exports it. It is a wrapper rather than a
  * `dllexport' on the engine's own definition because that definition is in
- * src/eci_ssmlfilter.c, which knows nothing about being in a library and
+ * src/eci/ssml/eci_ssmlfilter.c, which knows nothing about being in a library and
  * compiles for Linux as well; a `dllexport' on a mere declaration exports
  * nothing, and a linker directive naming the symbol has to know whether
  * stdcall decorated it, which differs between the two bitnesses. So the

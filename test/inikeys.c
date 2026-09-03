@@ -33,7 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../src/eci_engine.h"
+#include "../src/eci/api/eci_engine.h"
 
 extern IniFileReader *ini_ctor(IniFileReader *r);
 extern char          *ini_getString(IniFileReader *r, const char *section,

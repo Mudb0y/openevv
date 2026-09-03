@@ -444,7 +444,7 @@ def write_consts(e, where, out_c, tag="enus"):
             f.write("};\n")
     with open(out_c, "a") as f:
         f.write("\n/* Where each store is and how big, so that startup can\n"
-                "   copy them somewhere a value can name. src/delta_syms.c is\n"
+                "   copy them somewhere a value can name. src/delta/delta_low.c is\n"
                 "   the only reader: the machine holds addresses of these, and\n"
                 "   an address in the program is not one a value can hold\n"
                 "   unless the program was linked low, which a shared library\n"
@@ -559,7 +559,7 @@ def write_c(e, where, out_c, out_h, out_syms, stores, names, tag="enus"):
                 "   What this language calls its own tables. Every one of\n"
                 "   them carries the language, because a program may have\n"
                 "   several language modules in it and IBM gave the tables\n"
-                "   the same names in every one; src/delta_lang.h says how\n"
+                "   the same names in every one; src/delta/delta_lang.h says how\n"
                 "   the engine reaches whichever is in force, and\n"
                 "   delta_lang_%s.c is where these are gathered. */\n\n"
                 "#ifndef DELTA_RULES_%s_H\n#define DELTA_RULES_%s_H\n\n"

@@ -8,8 +8,8 @@
  * that seam is the same engine that speaks the other eight languages, and
  * test/romcan.c is what proved it before any of this existed.
  *
- * How it is reached. src/eci_romanizer.c holds one romanizer per language
- * family and calls it through the table in src/eci_rom.h; this is the one that
+ * How it is reached. src/eci/lang/eci_romanizer.c holds one romanizer per language
+ * family and calls it through the table in src/eci/lang/eci_rom.h; this is the one that
  * answers for family 8. The manager finds it the way IBM's does, by asking
  * what is linked in rather than by loading anything.
  *
@@ -65,7 +65,7 @@ extern void  cpp_delete(void *p);
  * Romanizer overrides the first four and inherits the rest; in
  * ConverterInterface itself the middle three are pure. Nothing of ours needs a
  * vtable at those numbers -- the manager reaches a romanizer through the named
- * table in src/eci_rom.h -- but a transcription that calls slot two has to
+ * table in src/eci/lang/eci_rom.h -- but a transcription that calls slot two has to
  * know it means getOffset. */
 typedef struct Converter Converter;
 
@@ -501,7 +501,7 @@ typedef struct RomUserDict {
 } RomUserDict;
 
 /* What the dictionary calls answer. These are the raw numbers IBM's own
-   methods return; src/eci_dict.c is what turns them into the older
+   methods return; src/eci/dict/eci_dict.c is what turns them into the older
    interface's names, and it only distinguishes the second. */
 #define ECI_DICT_NO_ENTRY       5    /* the search found nothing */
 #define ECI_DICT_NO_MEMORY     (-2)  /* an allocation or an insert failed */
@@ -605,7 +605,7 @@ int32_t          im_getNextOffset(InputManager *m);
 int32_t          im_getNextData(InputManager *m, const char **out);
 void             im_removeElement(InputManager *m);
 
-/* The queue itself is the engine's, which src/eci_etiqueue.c has. These are
+/* The queue itself is the engine's, which src/eci/queue/eci_etiqueue.c has. These are
    IBM's own methods and carry IBM's convention: on a thirty-two bit build the
    object goes in a register rather than on the stack, so a declaration that
    leaves THIS off links and then passes the arguments one slot out. */
@@ -678,7 +678,7 @@ int16_t pb_SetPhraseBuffer(void *pb, uint8_t *out);
 /* ---- how much of this is written ------------------------------------ */
 
 /* While this is defined the romanizer cannot convert anything yet, and says
-   so by refusing to be made at all: src/eci_romanizer.c then behaves exactly
+   so by refusing to be made at all: src/eci/lang/eci_romanizer.c then behaves exactly
    as it did before there was a romanizer to find, and the instance is refused
    rather than speaking something wrong. Take it out when Romanizer is
    finished, and not before -- a half-written romanizer that quietly answers

@@ -242,7 +242,7 @@ def write_lifted_c(tag, stores, out):
                         + ",\n")
             f.write("};\n")
         f.write("\n/* Where each store is and how big, so that startup can\n"
-                "   copy them somewhere a value can name. src/delta_syms.c is\n"
+                "   copy them somewhere a value can name. src/delta/delta_low.c is\n"
                 "   the only reader: the machine holds addresses of these, and\n"
                 "   an address in the program is not one a value can hold\n"
                 "   unless the program was linked low, which a shared library\n"

@@ -284,7 +284,7 @@ int main(int argc, char **argv)
      *
      * It does not report anything yet, and what is missing is written down
      * rather than guessed at. The engine places its phonemes -- placePhoneme
-     * in src/eci_deltacb.c is reached, five times for one short word -- and
+     * in src/eci/bridge/eci_deltacb.c is reached, five times for one short word -- and
      * returns at once because ELOQ_WANT_PHONEMES is nought. Registering the
      * buffer sets the thread state, parameter four sets the flag through
      * setPhonemeIndiciesRun, and something puts it back before the utterance:
@@ -354,7 +354,7 @@ int main(int argc, char **argv)
             printf("speak: activateFilter %d\n",
                    (int)es_activateFilter(h, filter));
             /* IBM's reader writes into the text it is given -- see
-               src/eci_mbconvert.c -- so it gets a copy it may write on. */
+               src/eci/ssml/eci_mbconvert.c -- so it gets a copy it may write on. */
             if (writable != NULL) {
                 strcpy(writable, text);
                 printf("speak: getFilteredText %d\n",

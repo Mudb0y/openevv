@@ -10,7 +10,7 @@ This is written for somebody who is not the person who found it. Everything here
 
 So Japanese is now a text-to-text problem with an exact oracle. For any input, the bytes IBM's romanizer produces are known, and anything that produces the same bytes is right.
 
-**The seam is ours.** `src/eci_romanizer.c` used to say that finding a romanizer was Win32 `LoadLibrary` work and stub it out. That was wrong: IBM's `getRomanizerInst` takes the address of `getRomObject`, a link-time symbol that `romedll_link.obj` answers when the romanizer is part of the program, and the only Win32 in it is `GetModuleFileNameA` asked for the directory the program was loaded from. It is transcribed now. `src/eci_rom.h` says what a romanizer is -- one struct of named functions where IBM had numbered vtable slots -- and `src/eci_romedll.c` stands in for the linker's answer. A romanizer is a property of its language, so an English build carries none of it.
+**The seam is ours.** `src/eci/lang/eci_romanizer.c` used to say that finding a romanizer was Win32 `LoadLibrary` work and stub it out. That was wrong: IBM's `getRomanizerInst` takes the address of `getRomObject`, a link-time symbol that `romedll_link.obj` answers when the romanizer is part of the program, and the only Win32 in it is `GetModuleFileNameA` asked for the directory the program was loaded from. It is transcribed now. `src/eci/lang/eci_rom.h` says what a romanizer is -- one struct of named functions where IBM had numbered vtable slots -- and `src/eci/lang/eci_romedll.c` stands in for the linker's answer. A romanizer is a property of its language, so an English build carries none of it.
 
 **The data is lifted.** Two commands, no format understood:
 
@@ -59,7 +59,7 @@ Both harnesses found real faults on the first run, which is the argument for bui
 
 ## What the harnesses found
 
-**The sample rate never reached the romanizer.** `src/eci_managers.c` answers for the concatenative engine, which this extraction does not have, and `getActiveSampleRate` was a stub answering nought. The romanizer is the only thing in the engine that ever asks, so no language could see it: eight languages match IBM byte for byte with that stub in place. The four numbers the synthesis thread hands that manager and reads back out of it are remembered now, at IBM's own offsets inside the block the thread already allocates.
+**The sample rate never reached the romanizer.** `src/eci/synth/eci_managers.c` answers for the concatenative engine, which this extraction does not have, and `getActiveSampleRate` was a stub answering nought. The romanizer is the only thing in the engine that ever asks, so no language could see it: eight languages match IBM byte for byte with that stub in place. The four numbers the synthesis thread hands that manager and reads back out of it are remembered now, at IBM's own offsets inside the block the thread already allocates.
 
 **A byte of 0x80, 0xfe or 0xff hangs IBM's converter.** Those reach the end of `MBCSToUCS2`'s chain of tests without its walk advancing over them, so it loops on the same byte for ever and the synthesis thread never comes back. Ours drops the byte. There are no samples of IBM's to differ from, because it produces none.
 
@@ -73,7 +73,7 @@ That last one is also why the lifted tables are one block per object with a poin
 
 There was no reference for Japanese until 23 August 2026, because one would not link: IBM's Japanese object set is missing three names. Where each one came from matters more than that they are now supplied.
 
-`ralStrNicmp` is in `src/port_ral.c` beside `ralStrIcmp`, which already had the same signature -- a length first, nought meaning the whole string -- and is called the same way, comparing a phone name against a table of five-byte entries. The runtime abstraction layer has always been ours on both sides of every comparison this project makes, so that is the boundary the reference already stood on rather than a new one.
+`ralStrNicmp` is in `src/port/port_ral.c` beside `ralStrIcmp`, which already had the same signature -- a length first, nought meaning the whole string -- and is called the same way, comparing a phone name against a table of five-byte entries. The runtime abstraction layer has always been ours on both sides of every comparison this project makes, so that is the boundary the reference already stood on rather than a new one.
 
 `getFullPathName` and `__chkstk` are in `reference/jajp_shim.c`, linked for that one module. They cannot go in the shared layer: every other module defines `getFullPathName` itself in `libmain.obj` and collides, and a weak alias does not resolve in PE the way it would in ELF, which is why the shim is a separate object chosen by `TAG` rather than something cleverer.
 
@@ -159,7 +159,7 @@ The thirty-five objects want only 85 names from outside themselves, and most are
 
 `JpnUtil::euc2shift` and `seven2shift` used to be on that list and are not any more: `codeconv.obj` is `rom/jajp/codeconv.c` now, all five of its functions.
 
-The skiplist chain is written and proved: `src/eci_key.c`, `eci_translation.c`, `eci_listnode.c`, `eci_skiplistnode.c`, `eci_arraylistnode.c` and `eci_skipstore.c`, held to IBM's own objects by `test/romprims.sh` over insert, search, multiSearch, remove, a full walk and a save-and-load round trip.
+The skiplist chain is written and proved: `src/eci/dict/eci_key.c`, `eci_translation.c`, `eci_listnode.c`, `eci_skiplistnode.c`, `eci_arraylistnode.c` and `eci_skipstore.c`, held to IBM's own objects by `test/romprims.sh` over insert, search, multiSearch, remove, a full walk and a save-and-load round trip.
 
 Two things about that store are worth knowing before reading it. Its constructor calls `srand(time(0))`, so the tower over the entries differs between two runs and **a saved file is not the same file twice** -- which is why the sweep compares what the list answers rather than what it writes, and why a round trip is checked by walking the loaded list. Nothing else in this engine uses `rand`, so the seeding disturbs nothing. And the load path turns file indices back into pointers only after every node exists, because it cannot do it sooner.
 
@@ -215,9 +215,9 @@ One correction to something this file used to say. `RomInstParam::setInputType` 
 
 ## Decisions already taken
 
-**Call our romanizer directly and retire the vtable slot offsets.** Agreed 23 August 2026, done 27 August. `src/eci_romanizer.c` reached a romanizer through IBM's numbered slots -- `ROM_ADD_TEXT` at 0x0c and the rest -- and those existed only because IBM loaded a DLL. They are named functions in one struct now. The alternative considered and rejected was building a C++-ABI-compatible vtable object so those offsets kept working.
+**Call our romanizer directly and retire the vtable slot offsets.** Agreed 23 August 2026, done 27 August. `src/eci/lang/eci_romanizer.c` reached a romanizer through IBM's numbered slots -- `ROM_ADD_TEXT` at 0x0c and the rest -- and those existed only because IBM loaded a DLL. They are named functions in one struct now. The alternative considered and rejected was building a C++-ABI-compatible vtable object so those offsets kept working.
 
-**One registration struct rather than a link-time symbol.** IBM answers "is there a romanizer" with the presence of `getRomObject`. A binary of ours can hold several languages, so the question is answered by family and dialect in `src/eci_romedll.c`, at compile time for what is linked and at run time for what a caller registers over it -- which is how `test/romcan.c` stands a recording where the romanizer would be. A weak symbol would have been the obvious way to ask the linker instead and does not resolve in PE the way it would in ELF, and this engine is built both ways.
+**One registration struct rather than a link-time symbol.** IBM answers "is there a romanizer" with the presence of `getRomObject`. A binary of ours can hold several languages, so the question is answered by family and dialect in `src/eci/lang/eci_romedll.c`, at compile time for what is linked and at run time for what a caller registers over it -- which is how `test/romcan.c` stands a recording where the romanizer would be. A weak symbol would have been the obvious way to ask the linker instead and does not resolve in PE the way it would in ELF, and this engine is built both ways.
 
 **The dictionary and the tables are data, not code.** Lifted verbatim, like every other language's.
 
@@ -450,7 +450,7 @@ Then `TextAnalysis` and `PhraseTable` **together**, because they are mutually re
 
 `Romanizer` is **last**, not next, which is the opposite of what this file used to say. It drives everything -- `processSentence`, `ResetBuffer`, `getOffset` and the two conversions between the caller's bytes and the readable form -- and `processSentence` reaches straight into `TextAnalysis`, `TextNormalizer`, `IntonPhrase` and `ProsCtrl`, so it cannot be finished until all four are.
 
-Two objects on the list will not be transcribed at all. `romreg.obj` is registration, which this port retired, and `romedll_link.obj` is the link-time symbol `src/eci_romedll.c` already stands in for.
+Two objects on the list will not be transcribed at all. `romreg.obj` is registration, which this port retired, and `romedll_link.obj` is the link-time symbol `src/eci/lang/eci_romedll.c` already stands in for.
 
 **Nothing is audible until nearly all of it exists**, and that is worth knowing before starting. The phoneme string the engine speaks is made by `MakeReadableJP` and the ESPR writer, and `Romanizer` is what drives the chain into them. Every unit before that is held to IBM's own objects byte for byte and heard by nobody.
 

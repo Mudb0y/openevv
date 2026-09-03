@@ -7,7 +7,7 @@ the automaton flex built out of that grammar -- eight tables, three and a
 half kilobytes of them -- and the skeleton that walks them, which is flex's
 own and the same in every scanner it has ever generated.
 
-So the skeleton is written out by hand in `src/eci_xmltok.c', where it can
+So the skeleton is written out by hand in `src/eci/ssml/eci_xmltok.c', where it can
 be read, and the tables are lifted here. Writing a scanner to the same
 interface instead would have meant guessing the grammar from the tables and
 then hoping every corner of it agreed; taking the automaton means the
@@ -20,7 +20,7 @@ which was checked: this is engine code and not a language's data.
 usage: lift-xmltok.py [--check] [object]
 
 With no argument it reads analysis/enus/xmltok.obj and writes
-src/eci_xmltok_tables.c. With --check it writes nothing and answers whether
+src/eci/ssml/eci_xmltok_tables.c. With --check it writes nothing and answers whether
 what is in the tree is what the object says.
 """
 
@@ -51,7 +51,7 @@ HEAD = '''/* The XML scanner's automaton, lifted out of IBM's object.
  * Written by tools/lift-xmltok.py. Do not edit.
  *
  * These are flex 2.5.4's own tables for the grammar IBM wrote and did not
- * ship. src/eci_xmltok.c is the skeleton that walks them, written out by
+ * ship. src/eci/ssml/eci_xmltok.c is the skeleton that walks them, written out by
  * hand there because it is flex's and not IBM's; what is here is the
  * automaton, and it is IBM's. See NOTICE.
  *

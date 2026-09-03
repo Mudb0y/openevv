@@ -4,15 +4,15 @@
 Every language module holds one of these: sections in square brackets, key
 equals value lines under them, and a byte of 0xff on the end. Lines are
 separated by a nought rather than a newline, which is why the reader in
-src/eci_iniread.c stops on either, and it is why this is lifted byte for
+src/eci/lang/eci_iniread.c stops on either, and it is why this is lifted byte for
 byte rather than retyped -- the reader's arithmetic depends on the exact
 separators.
 
 It matters more than its size suggests. The section name is the language
-written as numbers, which is what src/eci_getlangs.c answers
-eciGetAvailableLanguages2 out of and what src/eci_state.c settles on when
+written as numbers, which is what src/eci/lang/eci_getlangs.c answers
+eciGetAvailableLanguages2 out of and what src/eci/api/eci_state.c settles on when
 the caller asks for no language in particular. Under it are the eight voice
-presets and every phoneme the language declares, which src/eci_phonemes.c
+presets and every phoneme the language declares, which src/eci/lang/eci_phonemes.c
 reads at startup.
 
 usage: lift-ini.py <tag> [objdir]        lift the blob and write the C
@@ -30,7 +30,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # The names the original's compiler gave the two. Ours do not go under
 # them any more: a program may have several language modules in it, and
-# src/delta_lang.c joins their blobs into the one the reader opens.
+# src/delta/delta_lang.c joins their blobs into the one the reader opens.
 INI = "?eciIni@@3QBDB"
 SIZE = "?eciIniSize@@3HB"
 
@@ -211,7 +211,7 @@ def emit(tag, blob, declared, name, out):
                 "   array calls the copy linked into the image. The original\n"
                 "   spells both into getLibraryName, which answers with the\n"
                 "   name only when it is asked about this language; here they\n"
-                "   are data, so that src/eci_engarray.c is the same code\n"
+                "   are data, so that src/eci/api/eci_engarray.c is the same code\n"
                 "   whichever language is built beside it. */\n")
         f.write("const int32_t %s_eci_library_lang = 0x%x;\n"
                 % (tag, declared))

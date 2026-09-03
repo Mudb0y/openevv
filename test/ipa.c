@@ -12,7 +12,7 @@
  * converters keep their own names, and once against IBM's objects, where
  * they are mangled. Both print the same lines and `test/ipa.sh' diffs them.
  *
- * The tables in src/eci_ipatospr.c were read out of IBM's object by asking
+ * The tables in src/eci/ssml/eci_ipatospr.c were read out of IBM's object by asking
  * it these questions, so this is not an independent check of how they were
  * derived -- it is the check that they were transcribed without loss and
  * that the lookup in front of them behaves as the original's switch did.

@@ -9,7 +9,7 @@
 # of the differential suite. What it checks is only that ours answers: either
 # it speaks the word or it gives the utterance up, and in both cases the
 # process is still there afterwards. That is the whole point of the guards in
-# src/delta.c, and this is what says they are still in place.
+# src/delta/delta.c, and this is what says they are still in place.
 #
 # It wants neither Wine nor IBM's objects, so it runs anywhere the engine
 # builds. Like test/hash.sh it is one of the two quick ones.

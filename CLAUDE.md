@@ -57,7 +57,7 @@ those is refused when the romanizer is absent.
 
 The audio is identical to IBM's by design. If it sounds wrong, that is Eloquence sounding like Eloquence, not a fault to fix.
 
-Never hand the machine an address in the program. A value is thirty-two bits, and the program may be loaded anywhere -- it has to be, or there could be no library. Anything the machine can be given the address of is copied into the arena at startup by `src/delta_low.c` and translated at the crossing; a pointer in the program that is in none of the registered stores aborts with a message. If a new table is ever handed over, register it there rather than linking the program low again.
+Never hand the machine an address in the program. A value is thirty-two bits, and the program may be loaded anywhere -- it has to be, or there could be no library. Anything the machine can be given the address of is copied into the arena at startup by `src/delta/delta_low.c` and translated at the crossing; a pointer in the program that is in none of the registered stores aborts with a message. If a new table is ever handed over, register it there rather than linking the program low again.
 
 ## Two hard rules
 

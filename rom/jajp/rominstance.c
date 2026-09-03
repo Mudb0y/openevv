@@ -5,11 +5,11 @@
  * with that RomInstParam. Every one of its thirty-one methods then forwards --
  * the parameter calls to the first, everything about text to the second -- and
  * that is the whole of the object. So this is that forwarding, over the table
- * in src/eci_rom.h rather than over a vtable found in a loaded library.
+ * in src/eci/lang/eci_rom.h rather than over a vtable found in a loaded library.
  *
  * romedll_link.obj is what answers the manager's question in a build where the
  * romanizer is part of the program rather than a DLL, and jp_rom_new is that:
- * the manager takes it from the table in src/eci_romedll.c and calls it for an
+ * the manager takes it from the table in src/eci/lang/eci_romedll.c and calls it for an
  * instance.
  */
 

@@ -62,7 +62,7 @@ int      STDCALL eo_speaking(OldInst *h);
 int      STDCALL eo_getAvailableLanguages(uint32_t *out, int *count);
 
 /* What a sample rate setting comes to in hertz. One definition, in
-   src/eci_env.c, so the wave header cannot disagree with the engine. */
+   src/eci/api/eci_env.c, so the wave header cannot disagree with the engine. */
 int32_t  ev_rateHz(int32_t rate);
 
 void evvRunStaticInitialisers(void);

@@ -310,7 +310,7 @@ def emit(rule):
             # The little floating point the Frenches have. Worked out in long
             # double because that is the x87 register the original computes in,
             # and with the constant 0.4 the narrower type truncates
-            # differently: see the comment on OP_FTOL in src/delta_rules.c.
+            # differently: see the comment on OP_FTOL in src/delta/delta_rules.c.
             # Built up in parentheses rather than as one flat expression,
             # so it is worked out in the order the machine works it out in.
             # Written flat, C's precedence would read a + b * k as a + (b * k)

@@ -316,7 +316,7 @@ A rule that tests text names the bytes it tests against by address, and until th
 
     bytes lex_prefix_re 18 02
 
-`make constants` writes it into `delta_authored_<tag>.c`, which is the one file in a language module that no lifter writes, and records where it falls in `rules/symbols`. A rule then says `sym lex_prefix_re` and nothing else has to know. Startup copies that store into the arena beside the lifted ones, because the machine holds addresses in thirty-two bit values and an address in the program is not one of those; `src/delta_low.c` is where both lists are walked. A new store is named in the generated rules file as well, so `make notation-rewrite` goes with it.
+`make constants` writes it into `delta_authored_<tag>.c`, which is the one file in a language module that no lifter writes, and records where it falls in `rules/symbols`. A rule then says `sym lex_prefix_re` and nothing else has to know. Startup copies that store into the arena beside the lifted ones, because the machine holds addresses in thirty-two bit values and an address in the program is not one of those; `src/delta/delta_low.c` is where both lists are walked. A new store is named in the generated rules file as well, so `make notation-rewrite` goes with it.
 
 The bytes are bytes. A string a rule holds against the text being read is not ASCII: it is one code per character in the alphabet the statement type declares, which `tools/delta-lexicon.py` prints for a language. `text <name> "..."` is there for the ones that really are ASCII.
 
@@ -400,8 +400,8 @@ any point, which is the whole reason the text forms exist.
 
 A language is a family and a dialect packed into a word, and the family is not
 free. Three tables are indexed by it and all three hold eighteen: the standard
-voices in `src/eci_voicetable.c`, the dictionary in force in `src/eci_dict.c`
-and the romanizers in `src/eci_romanizer.c`. IBM used families one to five and
+voices in `src/eci/lang/eci_voicetable.c`, the dictionary in force in `src/eci/dict/eci_dict.c`
+and the romanizers in `src/eci/lang/eci_romanizer.c`. IBM used families one to five and
 eight. And four more are spoken for: `rz_isRomExist` says families 6, 10, 11
 and 16 have a romanizer, so an instance of one of those is refused outright
 when the romanizer is not there -- which is what happened when Polish was first
@@ -512,7 +512,7 @@ writes that into `delta_codepoints_<tag>.c`, and the language carries it in
 refuses a byte the language's alphabet does not name, since a character
 arriving as a byte nothing names would simply be something else.
 
-`addTextRun` in `src/eci_synthtext.c` then converts the text on the way in --
+`addTextRun` in `src/eci/synth/eci_synthtext.c` then converts the text on the way in --
 and this is a deliberate divergence from IBM's engine, the fourth in the tree.
 What makes it safe rather than merely careful is the guard: the conversion runs
 only for a language that declares characters of its own, and the nine IBM
@@ -539,7 +539,7 @@ letter-to-sound answered without anybody listening.
 
 It does not report anything yet, and where it stops is written down rather than
 guessed at. The engine places its phonemes -- `placePhoneme` in
-`src/eci_deltacb.c` is reached, five times for one short word -- and returns at
+`src/eci/bridge/eci_deltacb.c` is reached, five times for one short word -- and returns at
 once because `ELOQ_WANT_PHONEMES` is nought. Registering a phoneme buffer sets
 the thread's state, parameter four sets the flag through
 `setPhonemeIndiciesRun`, and something puts it back before the utterance:
@@ -651,7 +651,7 @@ or several, in one binary:
 
 A build of English alone keeps the plain names -- `build/probe`, `build/libevv.a`. Anything else carries what it has in it: `build/probe-dede`, `build/probe-enus-dede`, and the archives to match. That is not tidiness. An archive is built out of one set of objects, and those already sit in directories of their own, so building German and then English again would leave an archive newer than every English object: make would not rebuild it, and the English probe would be linked against the German engine.
 
-How several fit in one program is in `src/delta_lang.h`. The short of it: every module names its own tables after itself -- `enus_vstmtbl`, `dede_vstmtbl` -- because IBM gave them the same names in every language, and the engine reaches whichever is in force rather than linking to one by name. A machine remembers the language it was made for, the engine keeps one engine per language as the original does, and `eciGetAvailableLanguages` answers with all of them.
+How several fit in one program is in `src/delta/delta_lang.h`. The short of it: every module names its own tables after itself -- `enus_vstmtbl`, `dede_vstmtbl` -- because IBM gave them the same names in every language, and the engine reaches whichever is in force rather than linking to one by name. A machine remembers the language it was made for, the engine keeps one engine per language as the original does, and `eciGetAvailableLanguages` answers with all of them.
 
 ## Testing another language
 
@@ -714,7 +714,7 @@ The language list is what `eciGetAvailableLanguages` answers, under the names th
 
 `evvspeak.exe /say "some text"` speaks at once and is how the sound gets tested without a mouse. `/lang` in front of it picks the language to start in -- `evvspeak.exe /lang dede /say "Hallo."` -- and takes the tag, the name or the number: `dede`, `German` and `0x40000` all mean the same one. A language the build does not have is ignored and the window opens in whichever the engine picked.
 
-Two things about the Windows build are worth knowing. `src/port_win32.c` stands in for `src/port_posix.c`, which is the whole of the platform layer. And the arena takes its region from VirtualAlloc at the same low addresses mmap gets on Linux. The image itself is an ordinary PE at whatever base mingw chooses, with ASLR on: nothing needs it low any more.
+Two things about the Windows build are worth knowing. `src/port/port_win32.c` stands in for `src/port/port_posix.c`, which is the whole of the platform layer. And the arena takes its region from VirtualAlloc at the same low addresses mmap gets on Linux. The image itself is an ordinary PE at whatever base mingw chooses, with ASLR on: nothing needs it low any more.
 
 ### The library
 
@@ -1014,7 +1014,7 @@ builds `build/reference/speak-tap.exe`, which is the reference binary with a wra
 
 The head of `reference/tap.c` says which four functions and why it can only be those: a rename reaches the object's own relocations too, so only a function called from another object can be stood in front of at all.
 
-The other side of each tap is a few lines in our own C at the same function, printing the same line to the same variable. They are not kept in the tree -- a diagnostic that is always compiled in is a diagnostic nobody checks -- so they get written for an afternoon and taken out again. The stream one goes in `src/eci_stmarray.c` and looks like this:
+The other side of each tap is a few lines in our own C at the same function, printing the same line to the same variable. They are not kept in the tree -- a diagnostic that is always compiled in is a diagnostic nobody checks -- so they get written for an afternoon and taken out again. The stream one goes in `src/eci/bridge/eci_stmarray.c` and looks like this:
 
     fprintf(f, "PT stream=%d val=%d t=%d\n", stream[1], when[1], value[1]);
     fprintf(f, "SS stream=%d val=%d t1=%d t2=%d\n",
@@ -1096,7 +1096,7 @@ Every language module is built and spoken in the bytecode CI job, and then all e
 
 ## The sixty-four bit build
 
-The Delta machine keeps addresses in thirty-two bit values, so on a wider host everything it can point at has to live somewhere such a value can still name. `src/evv_arena.c` maps a region low in memory and everything the machine holds comes out of it. That includes the language's own data: the rules name their constants by address, and the set and action tables hand over an address per entry, so `src/delta_low.c` copies those stores out of the program at startup and translates an address into its copy at the few places where one becomes a value. A pointer from anywhere else says so and stops.
+The Delta machine keeps addresses in thirty-two bit values, so on a wider host everything it can point at has to live somewhere such a value can still name. `src/port/evv_arena.c` maps a region low in memory and everything the machine holds comes out of it. That includes the language's own data: the rules name their constants by address, and the set and action tables hand over an address per entry, so `src/delta/delta_low.c` copies those stores out of the program at startup and translates an address into its copy at the few places where one becomes a value. A pointer from anywhere else says so and stops.
 
 Which is why there is no `-no-pie` and no fixed image base any more. The program can be loaded wherever the loader fancies, ASLR and all, which is what makes a shared library possible: a library does not get to choose where it goes. The Makefile asks the compiler how wide a pointer is and leaves the arena out altogether when the host is thirty-two bit, where a pointer is a value already.
 

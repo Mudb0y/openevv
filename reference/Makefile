@@ -32,6 +32,12 @@ OBJCOPY := i686-w64-mingw32-objcopy
 # Which language's objects to build from, and where the binary goes.
 TAG     ?= enus
 OBJS    ?= ../analysis/$(TAG)
+
+# The engine's headers, which are in groups under ../src and are included by
+# bare name, so every group has to be on the path. Worked out rather than
+# listed, as in the top-level Makefile.
+SRCDIRS := $(patsubst %/,%,$(wildcard ../src/ ../src/*/ ../src/*/*/))
+INCS    := $(addprefix -I,$(SRCDIRS))
 BUILD   ?= ../build/reference
 
 # The objects are copied here and worked on rather than in place, because
@@ -52,7 +58,7 @@ all: $(BUILD)/speak.exe
 # walk it and some do not, which is why this went unnoticed until the binary
 # was first run outside Wine.
 #
-# Nothing is lost by taking the tables out. src/port_ctors.c exists precisely
+# Nothing is lost by taking the tables out. src/port/port_ctors.c exists precisely
 # to run those initialisers by hand, in the right order, on the right objects,
 # and speak.c calls it before anything else.
 $(WORK)/.stamp: $(wildcard $(OBJS)/*.obj)
@@ -69,18 +75,18 @@ $(WORK)/.stamp: $(wildcard $(OBJS)/*.obj)
 
 # The runtime abstraction layer, plus the one file that gives it a machine to
 # run on, joined into a single object.
-$(BUILD)/ral_shim.obj: ../src/port_ral.c ../src/port_win32.c ../src/evv_port.h
+$(BUILD)/ral_shim.obj: ../src/port/port_ral.c ../src/port/port_win32.c ../src/port/evv_port.h
 	@mkdir -p $(BUILD)
 	@printf '_uni_strlen ?UniStrlen@@YAIPBG@Z\n_uni_strstr ?UniStrstr@@YAPAGPBG0@Z\n' > $(BUILD)/uni.syms
-	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src -c ../src/port_ral.c -o $(BUILD)/ral_shim.tmp.o
-	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src -c ../src/port_win32.c -o $(BUILD)/port.tmp.o
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) -c ../src/port/port_ral.c -o $(BUILD)/ral_shim.tmp.o
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) -c ../src/port/port_win32.c -o $(BUILD)/port.tmp.o
 	@i686-w64-mingw32-ld -r $(BUILD)/ral_shim.tmp.o $(BUILD)/port.tmp.o \
 	  -o $(BUILD)/ral_both.tmp.o
 	@$(OBJCOPY) --redefine-syms=$(BUILD)/uni.syms $(BUILD)/ral_both.tmp.o $@
 
-$(BUILD)/ctors.obj: ../src/port_ctors.c
+$(BUILD)/ctors.obj: ../src/port/port_ctors.c
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src -c $< -o $@
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) -c $< -o $@
 
 # Japanese's objects want two names their own set does not carry, so that one
 # module gets an extra object. Every other module defines one of them itself.
@@ -97,7 +103,7 @@ jptry: $(BUILD)/jptry.exe
 
 $(BUILD)/jptry.exe: jptry.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(WORK)/.stamp
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src jptry.c \
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) jptry.c \
 	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/jptry.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/jptry.err >&2 || true; exit $$s
@@ -111,7 +117,7 @@ ssmltry: $(BUILD)/ssmltry.exe
 $(BUILD)/ssmltry.exe: ssmltry.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
                       $(SHIM) $(WORK)/.stamp
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src ssmltry.c \
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) ssmltry.c \
 	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/ssmltry.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/ssmltry.err >&2 || true; exit $$s
@@ -119,11 +125,11 @@ $(BUILD)/ssmltry.exe: ssmltry.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 
 $(BUILD)/jajp_shim.obj: jajp_shim.c
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w -I../src -c $< -o $@
+	@$(CC) -O2 -std=gnu99 -w $(INCS) -c $< -o $@
 
 $(BUILD)/speak.exe: speak.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(WORK)/.stamp
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src speak.c $(BUILD)/ral_shim.obj \
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) speak.c $(BUILD)/ral_shim.obj \
 	  $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/link.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/link.err >&2 || true; exit $$s
@@ -159,7 +165,7 @@ $(TAPDIR)/.stamp: $(WORK)/.stamp
 
 $(BUILD)/speak-tap.exe: speak.c tap.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
                         $(TAPDIR)/.stamp
-	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src speak.c tap.c \
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) speak.c tap.c \
 	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(wildcard $(TAPDIR)/*.obj) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/taplink.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/taplink.err >&2 || true; exit $$s
@@ -177,7 +183,7 @@ prims: $(BUILD)/prims.exe
 $(BUILD)/prims.exe: ../test/prims.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
                     $(SHIM) $(WORK)/.stamp
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w -I../src ../test/prims.c \
+	@$(CC) -O2 -std=gnu99 -w $(INCS) ../test/prims.c \
 	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/prims.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/prims.err >&2 || true; exit $$s
@@ -192,7 +198,7 @@ ipa: $(BUILD)/ipa.exe
 $(BUILD)/ipa.exe: ../test/ipa.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
                   $(SHIM) $(WORK)/.stamp
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src ../test/ipa.c \
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) ../test/ipa.c \
 	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/ipa.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/ipa.err >&2 || true; exit $$s
@@ -205,7 +211,7 @@ xmltok: $(BUILD)/xmltok.exe
 $(BUILD)/xmltok.exe: ../test/xmltok.c $(BUILD)/ral_shim.obj \
                      $(BUILD)/ctors.obj $(SHIM) $(WORK)/.stamp
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src ../test/xmltok.c \
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) ../test/xmltok.c \
 	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/xmltok.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/xmltok.err >&2 || true; exit $$s
@@ -219,7 +225,7 @@ ssml: $(BUILD)/ssml.exe
 $(BUILD)/ssml.exe: ../test/ssml.c $(BUILD)/ral_shim.obj \
                    $(BUILD)/ctors.obj $(SHIM) $(WORK)/.stamp
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src ../test/ssml.c \
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) ../test/ssml.c \
 	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/ssml.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/ssml.err >&2 || true; exit $$s
@@ -236,7 +242,7 @@ romprims: $(BUILD)/romprims.exe
 $(BUILD)/romprims.exe: ../test/romprims.c $(BUILD)/ral_shim.obj \
                        $(BUILD)/ctors.obj $(SHIM) $(WORK)/.stamp
 	@mkdir -p $(BUILD)
-	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src -I../rom/jajp \
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) -I../rom/jajp \
 	  ../test/romprims.c \
 	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) \
 	  $(wildcard $(WORK)/*.obj) \
@@ -281,7 +287,7 @@ $(ROMDIR)/.stamp: $(WORK)/.stamp
 
 $(BUILD)/speak-romtap.exe: speak.c romtap.c $(BUILD)/ral_shim.obj \
                            $(BUILD)/ctors.obj $(SHIM) $(ROMDIR)/.stamp
-	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES -I../src speak.c romtap.c \
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) speak.c romtap.c \
 	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) \
 	  $(wildcard $(ROMDIR)/*.obj) \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/romlink.err; \

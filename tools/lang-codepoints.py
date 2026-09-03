@@ -13,7 +13,7 @@ come in as: the code point, then the byte its alphabet knows that character by.
     0105 82   # a with ogonek
     0107 83   # c with acute
 
-`src/eci_synthtext.c` asks the language in force before it falls back to the
+`src/eci/synth/eci_synthtext.c` asks the language in force before it falls back to the
 Western list, so a character a language names is its own business. A language
 with no such file gets an empty table, which is what the eight IBM shipped
 have: their letters are all in the Western set already.

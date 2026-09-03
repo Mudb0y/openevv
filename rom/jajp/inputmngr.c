@@ -8,7 +8,7 @@
  * until somebody asks for it, and everything that is not text goes on a queue
  * with a note of how far into the output it belonged.
  *
- * The queue is the engine's own ETIqueue, which src/eci_etiqueue.c already
+ * The queue is the engine's own ETIqueue, which src/eci/queue/eci_etiqueue.c already
  * has. IBM reaches four of its six through its vtable, which is what lets a
  * subclass of it override them; the queue made here is a plain ETIqueue and
  * can be nothing else, so the four are called by name instead. The things on

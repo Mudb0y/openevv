@@ -3268,7 +3268,7 @@ uint8_t enus_evv_ut_util_data_3[2] = {
 };
 
 /* Where each store is and how big, so that startup can
-   copy them somewhere a value can name. src/delta_syms.c is
+   copy them somewhere a value can name. src/delta/delta_low.c is
    the only reader: the machine holds addresses of these, and
    an address in the program is not one a value can hold
    unless the program was linked low, which a shared library

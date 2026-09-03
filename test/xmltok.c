@@ -18,7 +18,7 @@
  * and that is not tidiness. IBM's narrowing pass terminates the digits of a
  * numeric character reference by writing a nought over the semicolon in the
  * text it was given, so a document handed over as a string literal faults
- * on `&#65;'. src/eci_mbconvert.c does not, and says why; passing a copy is
+ * on `&#65;'. src/eci/ssml/eci_mbconvert.c does not, and says why; passing a copy is
  * what lets the two be compared past that point.
  *
  * The documents are chosen to reach the corners the automaton was taken

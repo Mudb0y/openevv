@@ -70,7 +70,7 @@ extern int32_t STDCALL es_getFilteredText(void *h, void *filter,
                                           const void *in, const void **out)
     ECI("_eciGetFilteredText@16");
 
-/* Ours is `ssml_getFilterObject' -- see src/eci_filter.h -- and IBM's is
+/* Ours is `ssml_getFilterObject' -- see src/eci/ssml/eci_filter.h -- and IBM's is
    the published name, under which its object defines it. */
 #if defined(EVV_SSML_OURS)
 extern int ENTRY ssml_getFilterObject(uint32_t which, void **out);
@@ -477,7 +477,7 @@ static const char *CASES[] = {
    which is not tidiness: IBM's reader terminates the digits of a numeric
    character reference by writing a NUL over the semicolon that ends them,
    in the caller's own string. Handed a literal it faults there. Ours
-   copies the digits out instead -- see src/eci_mbconvert.c -- and does not
+   copies the digits out instead -- see src/eci/ssml/eci_mbconvert.c -- and does not
    care either way, so the copy is what lets both sides read the same
    document. */
 static void one(void *h, void *filter, const char *text)
