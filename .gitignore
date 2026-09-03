@@ -32,3 +32,7 @@ lang/*/delta_rules_*.h
 # Except the empty table that leaves every rule as bytecode, which is written
 # by hand once per language and is generated from nothing.
 !lang/*/delta_rules_none_*.c
+
+# The default output name of cli/probe.c and reference/speak.c, so it
+# appears in the root whenever either is run without one.
+speak.wav
