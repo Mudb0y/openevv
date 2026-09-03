@@ -6,7 +6,7 @@
 /* The two tables every resonator in KlattSynth is built from.
  *
  * IBM shipped four of them, two for each of the two rates its synthesiser
- * recognises by name, sliced out of clsyn.obj by tools/gen-tables.py. They
+ * recognises by name, sliced out of clsyn.obj by tools/engine/klatt-tables.py. They
  * are not arbitrary data: the excitation table is the decay factor of a pole
  * at a given bandwidth and the cosine table is that pole's angle, both in
  * fifteen-bit fixed point, and both indexed by hertz from ten upwards.

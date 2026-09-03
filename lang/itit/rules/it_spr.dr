@@ -1,4 +1,4 @@
-# The rules of it_spr.obj, written by tools/delta-notation.py.
+# The rules of it_spr.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule print_ital_SPR from it_spr.obj

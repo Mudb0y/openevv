@@ -1,4 +1,4 @@
-# The rules of gs_sgdur.obj, written by tools/delta-notation.py.
+# The rules of gs_sgdur.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule find_ger_nucleus from gs_sgdur.obj

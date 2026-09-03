@@ -25,7 +25,7 @@
  *   the four arrays     their strides in GenerateKanaString, and the four of
  *                       them reach the count after them exactly
  *
- * tools/rom-offsets.py checks it the way it checks the spine: every offset
+ * tools/rom/offsets.py checks it the way it checks the spine: every offset
  * IBM's own code uses on one of these has to fall inside a region named here,
  * and the regions have to tile the object exactly.
  */

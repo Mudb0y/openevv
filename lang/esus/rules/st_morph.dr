@@ -1,4 +1,4 @@
-# The rules of st_morph.obj, written by tools/delta-notation.py.
+# The rules of st_morph.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule mark_adverb_ending from st_morph.obj

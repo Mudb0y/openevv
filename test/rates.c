@@ -84,7 +84,7 @@ void evvRunStaticInitialisers(void);
 void evv_port_start(void);
 void evv_port_finish(void);
 
-/* IBM's own four, as tools/gen-tables.py sliced them out of clsyn.obj. */
+/* IBM's own four, as tools/engine/klatt-tables.py sliced them out of clsyn.obj. */
 extern const int16_t klatt_EX8[3992];
 extern const int16_t klatt_CO8[4991];
 extern const int16_t klatt_EX11[3992];

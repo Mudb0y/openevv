@@ -10,7 +10,7 @@
  * The size is settled: TextAnalysis::initialize asks operator new for
  * 0x399e4 bytes, and the last field sits four from the end of that.
  *
- * `tools/rom-offsets.py phrasebuf' holds this against the object, and what
+ * `tools/rom/offsets.py phrasebuf' holds this against the object, and what
  * that check is worth here is worth saying plainly. It proves the regions
  * tile the record exactly and that nothing in the object reaches past the
  * end of it. It does not separate a displacement on this record from one on

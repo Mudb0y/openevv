@@ -1,4 +1,4 @@
-# The rules of ut_main.obj, written by tools/delta-notation.py.
+# The rules of ut_main.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule DeltaProc_main from ut_main.obj

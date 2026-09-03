@@ -499,7 +499,7 @@ extern const uint8_t *ibm_paUserDictIdx
 
 /* The static dictionary's pointer arrays are filled in at run time by
    StaticDict::Initialize, six and a half thousand unrolled stores. Ours are
-   not: tools/lift-rom.py reads those stores and writes the arrays out with
+   not: tools/rom/dictionary.py reads those stores and writes the arrays out with
    their contents already in them, so there is nothing to call. IBM's side has
    to call it or the supplement pointers come back empty -- which is what this
    sweep said before it did. */
@@ -668,7 +668,7 @@ extern THIS void ibm_taAddLongWord(void *t, uint8_t *word, int16_t n)
     MANGLED("?AddLongWord@TextAnalysis@@QAEXPAEF@Z");
 
 /* How many pages each dictionary has. Each side is asked its own -- IBM its
-   constant, ours the count tools/lift-rom.py wrote beside the array -- so a
+   constant, ours the count tools/rom/dictionary.py wrote beside the array -- so a
    lifted array of the wrong length shows up as a different number of lines
    rather than as nothing at all. */
 extern const uint8_t *const ibm_s_apszSuppD[]
@@ -1302,7 +1302,7 @@ static void sweepStrings(Conv *c)
 /* ---- DictMan ---------------------------------------------------------- */
 
 /* How far each table goes, worked out from its length and the stride the
-   accessor uses. The lengths are what tools/lift-romtables.py measured, which
+   accessor uses. The lengths are what tools/rom/tables.py measured, which
    is the distance to the next table, so these are the indices the original
    could have answered for.
  *

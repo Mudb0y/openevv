@@ -1,4 +1,4 @@
-# The rules of fa_cf.obj, written by tools/delta-notation.py.
+# The rules of fa_cf.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule canfren_roots from fa_cf.obj

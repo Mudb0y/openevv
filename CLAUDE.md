@@ -16,7 +16,7 @@ Polish has no oracle and never will, since IBM never shipped it. Its baselines a
 
 `test/hash.sh` is the quick one, one English sentence. It is the two-second smoke test, not the gate.
 
-`make crashers` is another that wants neither Wine nor IBM's objects. It speaks the text in `test/cases/crashers.txt`, which is text IBM's engine dies on and ours used to die on with it, and it fails if the engine faulted on one or would not finish. It is not part of the differential suite and cannot be: the reference produces no audio for any of those strings, so there is nothing to compare. `tools/crash-search.py` is what found them and is how to find more.
+`make crashers` is another that wants neither Wine nor IBM's objects. It speaks the text in `test/cases/crashers.txt`, which is text IBM's engine dies on and ours used to die on with it, and it fails if the engine faulted on one or would not finish. It is not part of the differential suite and cannot be: the reference produces no audio for any of those strings, so there is nothing to compare. `tools/engine/crashers.py` is what found them and is how to find more.
 
 The library has its own two: `test/dll.c` loads `eci.dll` by name and speaks, and `test/dll.py` does it through ctypes. `make win32` builds the thirty-two bit library, which is where a wrong signature shows up -- stdcall carries the argument size in the decorated name on x86, so a declaration that disagrees with the engine fails to link there and links silently on x86-64.
 
@@ -53,7 +53,7 @@ free: three tables are indexed by it and hold eighteen, IBM used six, and four
 more are families its own code says have a romanizer, so an instance of one of
 those is refused when the romanizer is absent.
 
-`lang/enus` is transcribed data, not code to improve. It is what the engine sounds like. `tools/delta-sets.py` puts IBM's own dictionary tables back and loses anything added through `tools/delta-dict.py`, so do not run it to "regenerate" that file.
+`lang/enus` is transcribed data, not code to improve. It is what the engine sounds like. `tools/module/sets.py` puts IBM's own dictionary tables back and loses anything added through `tools/module/dict.py`, so do not run it to "regenerate" that file.
 
 The audio is identical to IBM's by design. If it sounds wrong, that is Eloquence sounding like Eloquence, not a fault to fix.
 
@@ -61,7 +61,7 @@ Never hand the machine an address in the program. A value is thirty-two bits, an
 
 ## Two hard rules
 
-Nothing here may reconfigure, restart or kill PipeWire, and nothing may write speech-dispatcher configuration. `tools/say.sh` plays as an ordinary client, which is the only way anything in this project touches sound.
+Nothing here may reconfigure, restart or kill PipeWire, and nothing may write speech-dispatcher configuration. `tools/measure/say.sh` plays as an ordinary client, which is the only way anything in this project touches sound.
 
 Our own code is MIT, in LICENSE. `lang/enus` is IBM's data and is not ours to license: never put a licence header on anything in there, and never write anything that implies the MIT licence reaches it. NOTICE is the file that says whose is whose, and it is the one to keep true.
 

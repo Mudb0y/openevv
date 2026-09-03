@@ -131,7 +131,7 @@ delta_state *delta_new(void)
         case DG_COMPOUND:
             /* A compound whose first word is 6 holds four-byte items and goes
                on a four-byte boundary; the rest want two. The lifter's model
-               of this area in tools/gen-globals.py has the same rule and
+               of this area in tools/module/globals.py has the same rule and
                checks it against the object cell by cell, so the two have to
                agree or every offset from the first such compound onwards is
                two bytes out -- which is what four languages did, reading a

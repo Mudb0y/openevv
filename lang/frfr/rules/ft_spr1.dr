@@ -1,4 +1,4 @@
-# The rules of ft_spr1.obj, written by tools/delta-notation.py.
+# The rules of ft_spr1.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule print_fren_SPR from ft_spr1.obj

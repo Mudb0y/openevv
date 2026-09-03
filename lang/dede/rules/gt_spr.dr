@@ -1,4 +1,4 @@
-# The rules of gt_spr.obj, written by tools/delta-notation.py.
+# The rules of gt_spr.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule insert_ger_spr_phone from gt_spr.obj

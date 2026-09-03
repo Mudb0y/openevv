@@ -15,7 +15,7 @@
  * function word after it takes a different road at the end of that method.
  *
  * The record is IBM's and rom/jajp/phrasebuf.h is the map, checked against
- * the object by `tools/rom-offsets.py phrasebuf'. So is the phrase, which
+ * the object by `tools/rom/offsets.py phrasebuf'. So is the phrase, which
  * IBM calls a _W_PHRASE_T, and the path and sub-word records this reads out
  * of JPath, which are rom/jajp/jpath.h.
  *

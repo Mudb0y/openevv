@@ -1,4 +1,4 @@
-# The rules of fa_text.obj, written by tools/delta-notation.py.
+# The rules of fa_text.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule fren_abbr from fa_text.obj

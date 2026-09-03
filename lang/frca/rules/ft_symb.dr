@@ -1,4 +1,4 @@
-# The rules of ft_symb.obj, written by tools/delta-notation.py.
+# The rules of ft_symb.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule fren_symbolic_rules from ft_symb.obj

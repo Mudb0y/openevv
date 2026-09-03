@@ -1,4 +1,4 @@
-# The rules of us_inton.obj, written by tools/delta-notation.py.
+# The rules of us_inton.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule init_nuclwrd_vars from us_inton.obj

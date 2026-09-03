@@ -1,4 +1,4 @@
-# The rules of ft_gcat.obj, written by tools/delta-notation.py.
+# The rules of ft_gcat.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule move_past_nounadj_pl from ft_gcat.obj

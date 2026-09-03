@@ -1,7 +1,7 @@
 /* The interpreter for the language's rules.
 
    A rule is a byte stream of operations over operands, produced by
-   tools/delta-emit.py from what the language's own compiler generated. The
+   tools/rules/emit.py from what the language's own compiler generated. The
    machine it runs on is the one that code was written for: eight registers,
    the four condition flags, a frame of bytes addressed from a base, and
    calls out to the runtime. Nothing here is a translation into something

@@ -1,4 +1,4 @@
-# The rules of us_filtr.obj, written by tools/delta-notation.py.
+# The rules of us_filtr.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule size_filter from us_filtr.obj

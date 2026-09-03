@@ -89,7 +89,7 @@ typedef struct ConverterVtbl {
 
 /* ---- the tables ------------------------------------------------------ */
 
-/* Lifted out of IBM's objects by tools/lift-romtables.py, which writes both
+/* Lifted out of IBM's objects by tools/rom/tables.py, which writes both
    lang/jajp/rom_tables_jajp.c and the header declaring what is in it. Each
    object's tables are one block there with a pointer per table, because that
    is how the original had them and its own code does not always stay inside
@@ -97,7 +97,7 @@ typedef struct ConverterVtbl {
    they are used; the block is aligned so that the cast is sound. */
 #include "rom_tables_jajp.h"
 
-/* The static dictionary itself, which tools/lift-rom.py writes: the words, the
+/* The static dictionary itself, which tools/rom/dictionary.py writes: the words, the
    single kanji, the two tries that index them by reading, and the two
    supplement blobs DictMan reaches for. Each array's own count comes with it,
    because a lookup that has walked off the end of the hash has to be able to

@@ -1,4 +1,4 @@
-# The rules of ut_gcat.obj, written by tools/delta-notation.py.
+# The rules of ut_gcat.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule print_interword_chars from ut_gcat.obj

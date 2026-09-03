@@ -4,7 +4,7 @@
  * of 0xff on the end. Lines are separated by a nought rather than a newline,
  * which is why the reader in eci_iniread.c stops on either.
  *
- * Lifted byte for byte out of the original by tools/lift-ini.py rather than
+ * Lifted byte for byte out of the original by tools/module/settings.py rather than
  * retyped, because the reader's arithmetic depends on the exact separators.
  */
 

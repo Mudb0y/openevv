@@ -1,5 +1,5 @@
 # has_lex_prefix written as what it does. The lower form of it is in
-# et_prfx.dr, which this stands in for; tools/upper-check.sh holds the two
+# et_prfx.dr, which this stands in for; tools/rules/check-upper.sh holds the two
 # against each other, call for call, through the engine.
 #
 # It is here because of its shape rather than its size: two alternatives, a

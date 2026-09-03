@@ -1,4 +1,4 @@
-# The rules of it_numbr.obj, written by tools/delta-notation.py.
+# The rules of it_numbr.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule add_ital_currency_units from it_numbr.obj

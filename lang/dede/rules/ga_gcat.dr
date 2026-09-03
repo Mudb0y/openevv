@@ -1,4 +1,4 @@
-# The rules of ga_gcat.obj, written by tools/delta-notation.py.
+# The rules of ga_gcat.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule ger_gramm_cat_dict from ga_gcat.obj

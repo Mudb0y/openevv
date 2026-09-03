@@ -6,7 +6,7 @@
 # them, so test/crashers.sh checks only that ours answers: either it speaks
 # the word or it gives the utterance up, and the process is still there.
 #
-# These were found rather than listed. tools/crash-search.py starts from text
+# These were found rather than listed. tools/engine/crashers.py starts from text
 # that kills the engine, tries every one-letter change to it, keeps whatever
 # kills it too, and does the same to those. Three seeds -- the word this
 # started from and two misspellings of Wednesday -- became 230 after one round

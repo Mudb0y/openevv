@@ -1,7 +1,7 @@
 /* Where the romanizer's tables are, and nothing more.
  *
  * Twenty-six accessors over the tables lifted out of IBM's own dictman.obj by
- * tools/lift-romtables.py: the hashes that index four dictionaries, the
+ * tools/rom/tables.py: the hashes that index four dictionaries, the
  * penalty and phrase vectors the path search scores with, the number and
  * reading tables, the variant-kanji tables, and the two substitution tables
  * that make romaji out of English and kana out of romaji. Six hundred bytes of

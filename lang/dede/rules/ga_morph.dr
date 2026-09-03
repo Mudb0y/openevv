@@ -1,4 +1,4 @@
-# The rules of ga_morph.obj, written by tools/delta-notation.py.
+# The rules of ga_morph.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule ger_particles from ga_morph.obj

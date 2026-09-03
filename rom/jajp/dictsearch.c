@@ -12,7 +12,7 @@
  * three whole objects were missing: engread's four string-rule methods,
  * numanal's eight number ones, and phrasetable's copy of IsOnin. So the
  * closure of anything that reaches those looked smaller than it is, and
- * tools/rom-offsets.py was checking this record against four objects while
+ * tools/rom/offsets.py was checking this record against four objects while
  * saying it checked the class. Both are put right. The map itself was never
  * wrong: none of the three missing objects touches a DictSearch field, which
  * is why the tiling held all along.

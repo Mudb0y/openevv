@@ -5,7 +5,7 @@
  * skeleton that walks it. The grammar itself was never shipped.
  *
  * So the two halves are separated here. `src/eci/ssml/eci_xmltok_tables.c' is the
- * automaton, lifted out of the object by `tools/lift-xmltok.py' -- eight
+ * automaton, lifted out of the object by `tools/engine/xmltok.py' -- eight
  * tables, nine start conditions, forty-eight rules, a hundred and sixty-six
  * states. This file is everything else: flex's own skeleton, written out by
  * hand because it is flex's and the same in every scanner it has ever

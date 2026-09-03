@@ -1,4 +1,4 @@
-# The rules of fs_sfdur.obj, written by tools/delta-notation.py.
+# The rules of fs_sfdur.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule find_fren_nucleus from fs_sfdur.obj

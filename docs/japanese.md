@@ -14,8 +14,8 @@ So Japanese is now a text-to-text problem with an exact oracle. For any input, t
 
 **The data is lifted.** Two commands, no format understood:
 
-    python3 tools/lift-rom.py analysis/jajp lang/jajp
-    python3 tools/lift-romtables.py analysis/jajp lang/jajp
+    python3 tools/rom/dictionary.py analysis/jajp lang/jajp
+    python3 tools/rom/tables.py analysis/jajp lang/jajp
 
 The first is the static dictionary: 1,723 blobs, 2,669,092 bytes, and seven pointer arrays whose lengths match the symbol counts exactly. The second takes the five objects that carry tables -- `dictman.obj`, `unicodeconvt.obj` and `jpnutil.obj`, whose own data section holds the romaji every kana is spelled with, and the one table apiece of `userdict.obj` and `phrasebuf.obj` -- and answers 115 tables, 193,858 bytes. It writes a header beside the C declaring what is in it, so a table cannot be declared one way and defined another. Each object comes out as one block with a pointer per table rather than an array each, and that matters -- see the note on the lead-byte tables below.
 
@@ -27,15 +27,15 @@ The first is the static dictionary: 1,723 blobs, 2,669,092 bytes, and seven poin
 
 It is deliberately **not** in the tree, and `.gitignore` says so. A language module that cannot make an instance would fail any build that named it, including the CI step that builds and speaks every module in `lang/`. Lift it when you start:
 
-    python3 tools/gen-globals.py analysis/jajp/glob.obj lang/jajp/delta_globals_jajp.c
-    python3 tools/delta-link.py jajp
-    python3 tools/delta-sets.py jajp
-    python3 tools/lift-ini.py jajp
-    python3 tools/delta-emit.py analysis/jajp lang/jajp jajp
-    python3 tools/gen-lang.py jajp lang/jajp
-    python3 tools/lang-codepoints.py jajp
-    python3 tools/lift-rom.py analysis/jajp lang/jajp
-    python3 tools/lift-romtables.py analysis/jajp lang/jajp
+    python3 tools/module/globals.py analysis/jajp/glob.obj lang/jajp/delta_globals_jajp.c
+    python3 tools/module/link.py jajp
+    python3 tools/module/sets.py jajp
+    python3 tools/module/settings.py jajp
+    python3 tools/rules/emit.py analysis/jajp lang/jajp jajp
+    python3 tools/module/gather.py jajp lang/jajp
+    python3 tools/module/codepoints.py jajp
+    python3 tools/rom/dictionary.py analysis/jajp lang/jajp
+    python3 tools/rom/tables.py analysis/jajp lang/jajp
 
 Japanese is the one module with no rules as text. Every other language builds `delta_rules_<tag>.c`, its header and its shim out of `lang/<tag>/rules`, and those three files are not in the tree; here `delta-emit.py` above writes them straight out of the objects, which is the same emitter reached the other way round. So the lift is the whole source of this module, and a build that finds `lang/jajp` without those three files says so and stops rather than looking for a text tree that was never made.
 
@@ -110,7 +110,7 @@ That is the engine's own phoneme notation with prosody annotations around it, no
 
 ## What is left
 
-The Japanese-only object set is 116 objects. Sixteen are the Delta language data, which the ordinary lifters take. Forty-nine are the static dictionary, which `tools/lift-rom.py` takes. Sixteen are the prosody chain, of which thirteen are empty -- everything inlined away -- leaving `PCWriteESPR2` at 5,834 bytes, `PCRoman2BG` at 2,724 and `PCProsCtrl` at 308 over 1,589 bytes of table.
+The Japanese-only object set is 116 objects. Sixteen are the Delta language data, which the ordinary lifters take. Forty-nine are the static dictionary, which `tools/rom/dictionary.py` takes. Sixteen are the prosody chain, of which thirteen are empty -- everything inlined away -- leaving `PCWriteESPR2` at 5,834 bytes, `PCRoman2BG` at 2,724 and `PCProsCtrl` at 308 over 1,589 bytes of table.
 
 The remaining thirty-five are the romanizer proper: about 168,000 bytes of x86 and 198,000 of data, of which the data is the three objects already lifted -- `dictman`, `unicodeconvt` and `jpnutil`, whose own data section holds the romaji spellings. Fifteen of those objects are written whole: `rominstparam`, `unicodeconvt`, `dictman`, `jpnutil`, `codeconv`, `annotation`, `userdict`, `inputchar`, `inputmngr`, `convtinterface`, `phrasebuf`, and the five of DictSearch's seven that hold nothing else -- `dictapi`, `fdictapi`, `kanastr`, `engread` and `numanal`. The other two are written too but hold a method apiece of `TextAnalysis` and of `PhraseTable`, which are not. What is left is roughly twenty thousand lines of C, judged from the four to eight bytes of x86 per line of ours that three already-ported objects came out at.
 
@@ -177,7 +177,7 @@ Two things the sweep settled that reading alone had not. The two longs at the en
 
 It was the right unit because it closes: everything it calls outside itself -- two of `DictMan`'s accessors and one method of `DictSearch` -- was already written. `JPath` was read at the same time and is not written yet, because `JrtJrtCheck` alone is a thousand lines and the two together would have been too much for one commit.
 
-Three records came out of the reading and `rom/jajp/phrasebuf.h` and `rom/jajp/jpath.h` are the maps. A path is a count and up to twelve entry indices; a sub-word is one of `DictSearch`'s candidate entries copied out with the fields a phrase wants; and a phrase is eight bytes of head, up to eighteen words of eighteen bytes, and the function words after them at ten bytes each. `tools/rom-offsets.py` grew a case for each of the two objects and both tile exactly.
+Three records came out of the reading and `rom/jajp/phrasebuf.h` and `rom/jajp/jpath.h` are the maps. A path is a count and up to twelve entry indices; a sub-word is one of `DictSearch`'s candidate entries copied out with the fields a phrase wants; and a phrase is eight bytes of head, up to eighteen words of eighteen bytes, and the function words after them at ten bytes each. `tools/rom/offsets.py` grew a case for each of the two objects and both tile exactly.
 
 Two of those readings were wrong at first and the sweep found both. The cost of a phrase comes from the first word on the path and not the last, in both of the roads that write one -- read from the road that has a sub-word already in hand, the last is the obvious answer and it is not IBM's. And the test that refuses a one-word path reads how many characters the word covers, not how long its reading is; the two are adjacent bytes of the same record. Neither would have shown without fixtures where the two differ, which is the same lesson the sweep has taught before about varying a hand-built record's fields independently.
 
@@ -230,7 +230,7 @@ allocates one in a single lump of 946,216 bytes, and `DictSearch`, `InputChar`,
 `JPath`, `PhraseBuf`, `Annotation` and `RomUserDict` all take a reference to it
 in their constructors and read its fields directly. So not one of them can be
 written -- or even constructed in a harness -- until the record is known.
-`rom/jajp/txtanal.h` is that map and `tools/rom-offsets.py` is what keeps it
+`rom/jajp/txtanal.h` is that map and `tools/rom/offsets.py` is what keeps it
 true.
 
 The head is settled outright, because the constructor and `initialize` write
@@ -277,7 +277,7 @@ The second unit is the whole of `dictapi.obj`: the five dictionaries a stretch o
 
 Three things in it are worth writing down. The compound walk retries twice, and neither retry is obvious from the code alone: the hash lands on a block boundary, so a word may sit in the block *before* the one it points at -- hence stepping back while anything matched at all -- and where the walk went deeper than one character the block after is worth one try. Then, third, a run that found nothing at all is tried again with the variant table on. A word may not end where the character after it would join it, which is what `WriteData` refuses before writing anything: a small kana joins the sound before it, and a long bar after a katakana or another bar lengthens it. And the English walk lowercases as it goes and stops at a capital following a small letter, which is how a name written as one run comes apart into its words.
 
-A correction that arrived with the third unit and applies to everything above it. `DictSearch` is spread over **seven** objects, not four: engread's four string-rule methods, numanal's eight number ones and phrasetable's copy of `IsOnin` were missed, and two of the sixty-four symbols the first four objects name are one method compiled twice as a COMDAT. So the class is sixty-two methods, the earlier counts of twenty and thirty-one and thirty-four were each one too many, and every closure computed before this was smaller than the truth -- `ProcessRomanAlphabet` reaches `EngRulesConvert` in engread, which the tool silently dropped because its filter for "outside these objects" excluded anything with `DictSearch` in the name. `tools/rom-offsets.py` was reading the same four objects while saying it checked the class; it reads all seven now. The map itself was never wrong, because none of the three missing objects touches a `DictSearch` field, and the tiling holds unchanged over all seven.
+A correction that arrived with the third unit and applies to everything above it. `DictSearch` is spread over **seven** objects, not four: engread's four string-rule methods, numanal's eight number ones and phrasetable's copy of `IsOnin` were missed, and two of the sixty-four symbols the first four objects name are one method compiled twice as a COMDAT. So the class is sixty-two methods, the earlier counts of twenty and thirty-one and thirty-four were each one too many, and every closure computed before this was smaller than the truth -- `ProcessRomanAlphabet` reaches `EngRulesConvert` in engread, which the tool silently dropped because its filter for "outside these objects" excluded anything with `DictSearch` in the name. `tools/rom/offsets.py` was reading the same four objects while saying it checked the class; it reads all seven now. The map itself was never wrong, because none of the three missing objects touches a `DictSearch` field, and the tiling holds unchanged over all seven.
 
 The sixth unit is `Annotation`, six methods and the first class outside `DictSearch` since the user dictionary. A caller may put marks in what it sends -- a pause, an index, a phoneme spelled out by hand -- and those are not Japanese and must not go through the analyser. `InputChar` lifts them out of the text as it reads and leaves them here, each with the position it belonged to; the output side asks for them back as it passes that position, so what is finally spoken has them where the caller put them. It is a ring of 128, and that is its only bound: a sentence with more annotations than that overwrites the oldest without saying so, which the sweep drives past on purpose so that IBM's answer is on record rather than an opinion.
 
@@ -446,7 +446,7 @@ The five remaining leaves can be taken in any order and each closes on code alre
 
 Then `TextNormalizer`, which wants `MakeReadableJP`.
 
-Then `TextAnalysis` and `PhraseTable` **together**, because they are mutually recursive -- `TextAnalysis` calls `PhraseTable::initialize` and `SetPhraseTable`, and `PhraseTable` calls `TextAnalysis::CopyJrtPart`. That is 54 entry points in one unit and the largest single piece of work left. `TextAnalysis` is the spine: 946,216 bytes of record that every other class indexes into, which is why `tools/rom-offsets.py` had to map it before anything at all could be written. The map is true and checked, so the work is the code rather than the reading.
+Then `TextAnalysis` and `PhraseTable` **together**, because they are mutually recursive -- `TextAnalysis` calls `PhraseTable::initialize` and `SetPhraseTable`, and `PhraseTable` calls `TextAnalysis::CopyJrtPart`. That is 54 entry points in one unit and the largest single piece of work left. `TextAnalysis` is the spine: 946,216 bytes of record that every other class indexes into, which is why `tools/rom/offsets.py` had to map it before anything at all could be written. The map is true and checked, so the work is the code rather than the reading.
 
 `Romanizer` is **last**, not next, which is the opposite of what this file used to say. It drives everything -- `processSentence`, `ResetBuffer`, `getOffset` and the two conversions between the caller's bytes and the readable form -- and `processSentence` reaches straight into `TextAnalysis`, `TextNormalizer`, `IntonPhrase` and `ProsCtrl`, so it cannot be finished until all four are.
 

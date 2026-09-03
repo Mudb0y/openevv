@@ -1,4 +1,4 @@
-# The rules of es_inton.obj, written by tools/delta-notation.py.
+# The rules of es_inton.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule eng_low_tone from es_inton.obj

@@ -1,4 +1,4 @@
-# The rules of et_phnol.obj, written by tools/delta-notation.py.
+# The rules of et_phnol.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule adjust_plur_poss_pronunc from et_phnol.obj

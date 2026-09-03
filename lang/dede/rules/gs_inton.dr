@@ -1,4 +1,4 @@
-# The rules of gs_inton.obj, written by tools/delta-notation.py.
+# The rules of gs_inton.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule eng_high_tone from gs_inton.obj

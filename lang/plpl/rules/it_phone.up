@@ -18,7 +18,7 @@
 # the digraph.
 #
 # The codes are the phone statement's own alphabet, which
-# tools/lang-phonemes.py prints: S is the postalveolar Italian spells sc,
+# tools/module/phonemes.py prints: S is the postalveolar Italian spells sc,
 # lowered to a retroflex for Polish in is_val.up.
 
 # Polish sz is one sound, and it is not an s. The letter on its own is simpler

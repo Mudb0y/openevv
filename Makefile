@@ -73,7 +73,7 @@ NM  ?= nm
 
 # Which rules the interpreter finds already written as C.
 #
-# `c' links the thirteen megabytes tools/delta-decompile.py writes out of the
+# `c' links the thirteen megabytes tools/rules/decompile.py writes out of the
 # bytecode, and the interpreter prefers that C for every rule it has one for.
 # `bytecode' links an empty table instead, so every rule is interpreted.
 #
@@ -89,13 +89,13 @@ NM  ?= nm
 # compiling them fifteen seconds over twenty-four cores, where the bytecode
 # build is half a minute and the two seconds a language RULECODE costs below.
 # `RULES=bytecode' is the quick build, and it is also the second opinion:
-# tools/delta-check.sh holds the two forms against each other call for call,
+# tools/rules/check-c.sh holds the two forms against each other call for call,
 # which is the only check finer than the audio. See docs/building.md.
 RULES ?= c
 
 # The rules as the engine runs them: the bytecode array, the header that
 # numbers every entry, and a shim under each rule's own name. Written out of
-# lang/<tag>/rules by tools/delta-notation.py, about two seconds a language,
+# lang/<tag>/rules by tools/rules/notation.py, about two seconds a language,
 # and not in the tree. The text is the source and a second copy of the same
 # rules beside it could only ever be the stale one -- a rule edited in the
 # text and not written out again would be a change that silently did not
@@ -479,10 +479,10 @@ $(BUILD)/libevv$(SUF).a: $(OBJECTS) $(RULESTAMP)
         notation-symbols notation-rewrite upper upper-prove upper-check \
         authored constants codepoints
 notation:
-	@python3 tools/delta-notation.py tree
+	@python3 tools/rules/notation.py tree
 
 notation-check:
-	@python3 tools/delta-notation.py verify
+	@python3 tools/rules/notation.py verify
 
 # The stronger of the two, and the one to believe: three streams emitted --
 # a fresh lift of the objects, that lift written to text and read back, and
@@ -491,19 +491,19 @@ notation-check:
 # whole stream says the text carries every rule, in order, with nothing added
 # and nothing lost, which a rule-by-rule comparison cannot.
 notation-prove:
-	@python3 tools/delta-notation.py prove
+	@python3 tools/rules/notation.py prove
 
 # Where each address the rules name falls. Written out of the objects once,
 # because it is the last thing the emitter wanted them for.
 notation-symbols:
-	@python3 tools/delta-notation.py symbols
+	@python3 tools/rules/notation.py symbols
 
 # The three files a build compiles, written out of the lifted text alone --
 # IBM's rules and nothing of ours. That is one of the two sides `upper-check'
 # holds against each other, and it is not what an ordinary build wants; `make
 # rulecode' is.
 notation-rewrite:
-	@python3 tools/delta-notation.py rewrite
+	@python3 tools/rules/notation.py rewrite
 
 # What a rule stands for, and what a rule does.
 #
@@ -521,22 +521,22 @@ notation-rewrite:
 # and holds every rule entered and every call made with its arguments against
 # each other, and the audio besides. It wants no objects and no Wine.
 upper:
-	@python3 tools/delta-notation.py upper
+	@python3 tools/rules/notation.py upper
 
 upper-prove:
-	@python3 tools/delta-notation.py upper-prove
+	@python3 tools/rules/notation.py upper-prove
 
 upper-check:
-	@bash tools/upper-check.sh
+	@bash tools/rules/check-upper.sh
 
 authored:
-	@python3 tools/delta-notation.py authored
+	@python3 tools/rules/notation.py authored
 
 # Bytes a rule of ours names by address, out of lang/<tag>/rules/constants
 # into the one file in a language module that no lifter writes. Run
 # `notation-rewrite' after it: a new store is named in the generated file too.
 constants:
-	@python3 tools/delta-consts.py $(TAGS)
+	@python3 tools/rules/consts.py $(TAGS)
 
 # What each of a language's own characters arrives as: the code point a caller
 # writes and the byte its alphabet knows it by. Authored like the constants
@@ -544,7 +544,7 @@ constants:
 # have is in the byte set the engine was built around, and a language of ours
 # can have letters that are not.
 codepoints:
-	@python3 tools/lang-codepoints.py $(TAGS)
+	@python3 tools/module/codepoints.py $(TAGS)
 
 # The tables beside the rules, as text: the variables the language declares,
 # the settings it carries, the statement table, the lookup sets and the bytes
@@ -553,7 +553,7 @@ codepoints:
 #
 # `tables-dump' writes the four texts. Three of them read IBM's objects; the
 # sets read the C in the tree instead, on purpose, because the dictionary's
-# arrays in that file are laid down by tools/delta-dict.py out of the words and
+# arrays in that file are laid down by tools/module/dict.py out of the words and
 # IBM's objects hold what the dictionary said before anything was added.
 #
 # `tables-check' writes the C from each text into a directory of its own and
@@ -565,20 +565,20 @@ TEMPLATE ?= itit
 .PHONY: tables-dump tables-check tables-write
 tables-dump:
 	@for t in $(TAGS); do \
-	    python3 tools/gen-globals.py dump $$t && \
-	    python3 tools/lift-ini.py dump $$t && \
-	    python3 tools/delta-link.py dump $$t && \
-	    python3 tools/delta-sets.py dump $$t && \
-	    python3 tools/delta-consts.py dump $$t || exit 1; \
+	    python3 tools/module/globals.py dump $$t && \
+	    python3 tools/module/settings.py dump $$t && \
+	    python3 tools/module/link.py dump $$t && \
+	    python3 tools/module/sets.py dump $$t && \
+	    python3 tools/rules/consts.py dump $$t || exit 1; \
 	done
 
 tables-check:
 	@for t in $(TAGS); do \
-	    python3 tools/gen-globals.py regenerate $$t && \
-	    python3 tools/lift-ini.py regenerate $$t && \
-	    python3 tools/delta-link.py regenerate $$t && \
-	    python3 tools/delta-sets.py regenerate $$t && \
-	    python3 tools/delta-consts.py regenerate $$t || exit 1; \
+	    python3 tools/module/globals.py regenerate $$t && \
+	    python3 tools/module/settings.py regenerate $$t && \
+	    python3 tools/module/link.py regenerate $$t && \
+	    python3 tools/module/sets.py regenerate $$t && \
+	    python3 tools/rules/consts.py regenerate $$t || exit 1; \
 	done
 
 # How much of a module is still the module it was copied from. A language IBM
@@ -587,15 +587,15 @@ tables-check:
 # against. It reads the text forms only.
 .PHONY: census
 census:
-	@python3 tools/lang-census.py $(firstword $(TAGS)) $(TEMPLATE)
+	@python3 tools/module/census.py $(firstword $(TAGS)) $(TEMPLATE)
 
 tables-write:
 	@for t in $(TAGS); do \
-	    python3 tools/gen-globals.py write $$t && \
-	    python3 tools/lift-ini.py write $$t && \
-	    python3 tools/delta-link.py write $$t && \
-	    python3 tools/delta-sets.py write $$t && \
-	    python3 tools/delta-consts.py write $$t || exit 1; \
+	    python3 tools/module/globals.py write $$t && \
+	    python3 tools/module/settings.py write $$t && \
+	    python3 tools/module/link.py write $$t && \
+	    python3 tools/module/sets.py write $$t && \
+	    python3 tools/rules/consts.py write $$t || exit 1; \
 	done
 
 # The rules as the engine runs them, written out of lang/<tag>/rules. Two
@@ -619,10 +619,10 @@ $(1)/delta_rules_shim_$(notdir $(1)).c &: \
                     $(wildcard $(1)/rules/*.dr) $(wildcard $(1)/rules/*.up) \
                     $(wildcard $(1)/rules/symbols) \
                     $(wildcard $(1)/rules/trials) \
-                    tools/delta-notation.py tools/delta-lower.py \
-                    tools/delta-upper.py tools/delta-emit.py
+                    tools/rules/notation.py tools/rules/lower.py \
+                    tools/rules/upper.py tools/rules/emit.py tools/evv.py
 	@EVV_NOTATION_LANG=$(notdir $(1)) \
-	  python3 tools/delta-notation.py build > /dev/null
+	  python3 tools/rules/notation.py build > /dev/null
 	@echo "wrote the rules of $(notdir $(1)) out of $(1)/rules"
 endef
 
@@ -667,12 +667,12 @@ rules: $(GENERATED)
 define rules_for
 $(foreach n,$(PARTNS),$(1)/delta_rules_c$(n)_$(notdir $(1)).c) &: \
                                      $(1)/delta_rules_$(notdir $(1)).c \
-                                     tools/delta-decompile.py \
-                                     tools/delta-census.py
+                                     tools/rules/decompile.py \
+                                     tools/rules/patterns.py tools/evv.py
 	@rm -f $(1)/delta_rules_c[0-9][0-9]_$(notdir $(1)).c \
 	       $(1)/delta_rules_c_$(notdir $(1)).c
 	@EVV_LANG_DIR=$(1) EVV_RULE_PARTS=$(PARTS) \
-	  python3 tools/delta-decompile.py all
+	  python3 tools/rules/decompile.py all
 endef
 $(foreach l,$(LANGS),$(eval $(call rules_for,$(l))))
 
@@ -681,7 +681,7 @@ $(foreach l,$(LANGS),$(eval $(call rules_for,$(l))))
 # original's, and writing it is the rest of the port.
 missing: $(OBJECTS)
 	@$(NM) $(OBJECTS) > $(BUILD)/syms.txt
-	@python3 tools/missing.py $(BUILD)/syms.txt
+	@python3 tools/engine/missing.py $(BUILD)/syms.txt
 
 # The words IBM's engine cannot say. It wants neither Wine nor the objects,
 # because there is nothing to hold ours against: the original takes a page

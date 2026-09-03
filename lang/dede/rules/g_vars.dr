@@ -1,4 +1,4 @@
-# The rules of g_vars.obj, written by tools/delta-notation.py.
+# The rules of g_vars.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule set_ger_global_constants from g_vars.obj

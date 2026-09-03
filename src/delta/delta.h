@@ -1141,7 +1141,7 @@ const uint8_t *actdlookup(delta_state *d, int32_t l, int32_t r,
                           const void *entry);
 
 /* The runtime's constant tables, lifted out of the original by
-   tools/delta-tables.py. */
+   tools/engine/runtime-tables.py. */
 extern const int16_t delta_ETI2WPM_Table[252];
 extern const int16_t delta_ExpTab[176];
 extern const int16_t delta_ExpTable[128];

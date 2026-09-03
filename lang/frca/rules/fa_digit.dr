@@ -1,4 +1,4 @@
-# The rules of fa_digit.obj, written by tools/delta-notation.py.
+# The rules of fa_digit.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule fren_digit from fa_digit.obj

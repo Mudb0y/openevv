@@ -9,7 +9,7 @@
  *
  * So each module now names its own tables after itself -- `enus_vstmtbl',
  * `dede_vstmtbl' -- and gathers them into one of these, which is the only
- * name the engine knows it by. tools/gen-lang.py writes that gathering.
+ * name the engine knows it by. tools/module/gather.py writes that gathering.
  *
  * How the engine finds the right one is the other half. Almost everything
  * that reads a table is a primitive the rules call, and a good many of those

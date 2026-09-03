@@ -18,7 +18,7 @@
  * is what says there are three and not two or four.
  *
  * What is settled and what is not is marked field by field below.
- * tools/rom-offsets.py holds this against IBM's own object: it pulls every
+ * tools/rom/offsets.py holds this against IBM's own object: it pulls every
  * offset txtanal.obj uses on a TextAnalysis pointer and refuses any that does
  * not fall inside a region named here. Run it after adding a field.
  *

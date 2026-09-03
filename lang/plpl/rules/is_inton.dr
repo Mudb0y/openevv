@@ -1,4 +1,4 @@
-# The rules of is_inton.obj, written by tools/delta-notation.py.
+# The rules of is_inton.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule clash_tone_alert from is_inton.obj

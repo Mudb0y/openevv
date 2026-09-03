@@ -1,6 +1,6 @@
 /* The XML scanner's automaton, lifted out of IBM's object.
  *
- * Written by tools/lift-xmltok.py. Do not edit.
+ * Written by tools/engine/xmltok.py. Do not edit.
  *
  * These are flex 2.5.4's own tables for the grammar IBM wrote and did not
  * ship. src/eci/ssml/eci_xmltok.c is the skeleton that walks them, written out by

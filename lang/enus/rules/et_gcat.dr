@@ -1,4 +1,4 @@
-# The rules of et_gcat.obj, written by tools/delta-notation.py.
+# The rules of et_gcat.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule mark_eng_prepositions from et_gcat.obj

@@ -1,4 +1,4 @@
-# The rules of ut_dict.obj, written by tools/delta-notation.py.
+# The rules of ut_dict.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule user_dict_error from ut_dict.obj

@@ -1,4 +1,4 @@
-# The rules of it_siphn.obj, written by tools/delta-notation.py.
+# The rules of it_siphn.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule break_into_stanital_phones from it_siphn.obj

@@ -1,4 +1,4 @@
-# The rules of et_prfx.obj, written by tools/delta-notation.py.
+# The rules of et_prfx.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule insert_prefix from et_prfx.obj

@@ -1,7 +1,7 @@
 /* What the XML scanner's two halves share.
  *
  * src/eci/ssml/eci_xmltok_tables.c is the automaton, lifted out of IBM's object by
- * tools/lift-xmltok.py; src/eci/ssml/eci_xmltok.c is the skeleton that walks it and
+ * tools/engine/xmltok.py; src/eci/ssml/eci_xmltok.c is the skeleton that walks it and
  * the actions IBM's grammar attached to each rule. Only the tables cross
  * between them.
  */

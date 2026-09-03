@@ -1,4 +1,4 @@
-# The rules of st_phrs.obj, written by tools/delta-notation.py.
+# The rules of st_phrs.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule span_non_phrasal_comma from st_phrs.obj

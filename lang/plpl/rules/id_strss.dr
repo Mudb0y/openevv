@@ -1,4 +1,4 @@
-# The rules of id_strss.obj, written by tools/delta-notation.py.
+# The rules of id_strss.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule assign_homogr_stress from id_strss.obj

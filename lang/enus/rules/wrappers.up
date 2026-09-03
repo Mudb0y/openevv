@@ -1,5 +1,5 @@
 # The wrappers, as the primitive each stands for. Written by
-# tools/delta-notation.py. Every one takes the machine's state as
+# tools/rules/notation.py. Every one takes the machine's state as
 # its first argument, so that is not written; `arg n' is the
 # wrapper's own nth.
 

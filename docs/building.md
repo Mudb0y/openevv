@@ -40,7 +40,7 @@ On a Nix machine `nix build` makes the same binary at `result/bin/evv`, and `nix
 ## The rules as text
 
 `lang/<tag>/rules` holds a language's rules as text, one file to an object,
-written by `tools/delta-notation.py`. Every module in the tree has one --
+written by `tools/rules/notation.py`. Every module in the tree has one --
 21,075 rules over the nine, from English's 3,377 down to Italian's 1,749 --
 and `EVV_NOTATION_LANG` says which language every target below reads, English
 by default. This is the form to read a rule in, and it is meant to become the
@@ -143,7 +143,7 @@ named and not merely left to be noticed.
 Two other ways of writing the same three files exist and are not what a build
 wants. `make notation-rewrite` writes the lifted text alone -- IBM's rules and
 nothing of ours -- and `make authored` writes every `.up` file in, trials and
-all. They are the two sides `tools/upper-check.sh` builds and holds against
+all. They are the two sides `tools/rules/check-upper.sh` builds and holds against
 each other, and it puts the module's own back when it is done.
 
 A module with no rules as text is the one exception, and `lang/jajp` is it:
@@ -231,7 +231,7 @@ That is where the length of the lower form goes. Of the 322,890 operations in En
 
 The 43 lines that went are the landing place, the `ventproc` entry, the `vretproc` tail with its 94, the pushes, the pops, the register that carries the answer and the return.
 
-A line is a verb and then its words, one operation to a line, and a block ends at a bare `end`, so nothing depends on indentation and no line has to be read together with another. `tools/delta-upper.py lower <file>` prints what a file compiles to, which is the way to read what the compiler did.
+A line is a verb and then its words, one operation to a line, and a block ends at a bare `end`, so nothing depends on indentation and no line has to be read together with another. `tools/rules/upper.py lower <file>` prints what a file compiles to, which is the way to read what the compiler did.
 
 What a rule can say. `local <name>` gives it a word of its frame and `local <name> bytes <n>` gives it more; `variable <name> <width> <offset>` names a state variable so the body can call it something. `call <entry> <values>...` makes a call and leaves the answer in `answer`. `set <place> to <value>`, and `add`, `subtract`, `and`, `or`, `shift left`, `shift right`, `increment`, `decrement` and `negate` for the arithmetic. `put <value> into <value> at <n>` writes through a pointer, which is how a rule answers something to whatever called it: the machine cannot store from one place in memory to another, so both ends go through a register, and neither of them is the one the answer is in. `if <test>` with `else` and `end`, and `while <test>` with `leave` and `again`. `match` and `give up` are the two ways out, `answer <value>` for a rule that leaves something else, and `raw` takes a line of the lower notation for the operations too rare to have a word here -- the nine rules that read a table, the little floating point the Frenches have, and anything else.
 
@@ -241,7 +241,7 @@ Two things about it are the machine's and are easy to get wrong. `arg 1` is the 
 
 ### A phoneme, and the record that says what it is
 
-A phoneme is in three places and `tools/lang-phonemes.py <tag>` prints all three
+A phoneme is in three places and `tools/module/phonemes.py <tag>` prints all three
 beside each other: its name is a value of the phone statement's first field,
 which is the list the rules index by; its numbers are a `Phoneme` line in the
 settings, four bytes of name and eleven values, read when a caller sends
@@ -318,11 +318,11 @@ A rule that tests text names the bytes it tests against by address, and until th
 
 `make constants` writes it into `delta_authored_<tag>.c`, which is the one file in a language module that no lifter writes, and records where it falls in `rules/symbols`. A rule then says `sym lex_prefix_re` and nothing else has to know. Startup copies that store into the arena beside the lifted ones, because the machine holds addresses in thirty-two bit values and an address in the program is not one of those; `src/delta/delta_low.c` is where both lists are walked. A new store is named in the generated rules file as well, so `make notation-rewrite` goes with it.
 
-The bytes are bytes. A string a rule holds against the text being read is not ASCII: it is one code per character in the alphabet the statement type declares, which `tools/delta-lexicon.py` prints for a language. `text <name> "..."` is there for the ones that really are ASCII.
+The bytes are bytes. A string a rule holds against the text being read is not ASCII: it is one code per character in the alphabet the statement type declares, which `tools/module/lexicon.py` prints for a language. `text <name> "..."` is there for the ones that really are ASCII.
 
 `rules/symbols` names an address by the object that compiled it and the symbol it had there, which is what a rule holds; a constant of ours belongs to the language rather than to an object and is recorded against none, so any rule may name it. That file used to be a list in order, which was only right as long as no rule was ever added or written afresh -- a rule naming a constant nothing had named before would have been handed an index past the end of the table and read whatever lay after it. It says so now instead.
 
-What proves the naming, as against the linking, is a rule reading our copy of bytes IBM also has. `lex_prefix_re` is IBM's own two-byte prefix as `ZZstring278` holds it: the codes 24 and 2, which in the alphabet statement type 1 declares spell "re", and `tools/delta-lexicon.py` is what says so. A `has_lex_prefix` that calls `test_string_s 1 2 sym lex_prefix_re` where IBM's calls the wrapper for `ZZstring278` therefore has to sound exactly the same, and `tools/upper-check.sh -sound` is how that is asked: the audio is the standard and the trace is reported instead of required, since the wrapper is a rule and a run of IBM's says it was entered. On 23 August 2026 all nine sentences came out identical to the sample, with the traces 18 to 87 lines apart out of between 505,443 and 1,386,180 -- the wrapper being entered and answering, at each of the sites where it is called, and nothing else.
+What proves the naming, as against the linking, is a rule reading our copy of bytes IBM also has. `lex_prefix_re` is IBM's own two-byte prefix as `ZZstring278` holds it: the codes 24 and 2, which in the alphabet statement type 1 declares spell "re", and `tools/module/lexicon.py` is what says so. A `has_lex_prefix` that calls `test_string_s 1 2 sym lex_prefix_re` where IBM's calls the wrapper for `ZZstring278` therefore has to sound exactly the same, and `tools/rules/check-upper.sh -sound` is how that is asked: the audio is the standard and the trace is reported instead of required, since the wrapper is a rule and a run of IBM's says it was entered. On 23 August 2026 all nine sentences came out identical to the sample, with the traces 18 to 87 lines apart out of between 505,443 and 1,386,180 -- the wrapper being entered and answering, at each of the sites where it is called, and nothing else.
 
 How far apart is said with the running count of rules entered masked off, which is what that harness does. A trace one entry short differs in the count on every line after it, so the raw figure is the length of the trace rather than the size of the difference: the same sentences read as 178,356 to 475,222 lines apart before the mask went in, which is a hundredth of the truth about them.
 
@@ -337,7 +337,7 @@ A language module is the rules and five other things: the variables the machine 
     lang/enus/enus.statements   the statement table, 905
     lang/enus/enus.sets         the sets and the dictionary actions, 9,750
     lang/enus/enus.consts       the bytes the rules name, 445
-    lang/<tag>/<tag>.dict       the words, which tools/delta-dict.py writes
+    lang/<tag>/<tag>.dict       the words, which tools/module/dict.py writes
 
     make tables-dump      writes the four
     make tables-check     the C from each, held against the tree
@@ -350,22 +350,22 @@ Each of the four keeps one writer, and the tool that lifts is the tool that writ
 What is deliberately not in the text is anything that follows from what is. The variables are a run of kinds -- `word 20`, `short 2`, `compound 1 5` -- and where each one lands and how big a machine of the language is are worked out from them by the same walk `delta_new` does, so English's 794 variables are 95 lines and the state size is derived rather than declared. The statement table's readers and writers are an offset and a width each, and their names follow the order the fields are in, exactly as the original's compiler numbered them: `vfg0000` upwards, one per field, no two fields sharing one across all 58 of English's. The settings' language number is the section that names it read as a family and a dialect. Nothing in any of the four is stated twice.
 
 The dictionaries read for any language now, not only English. `EVV_LANG_DIR`
-points `tools/delta-dict.py` and the two tools it leans on at one module, the
+points `tools/module/dict.py` and the two tools it leans on at one module, the
 same way it points the decompiler, so
 
-    EVV_LANG_DIR=lang/plpl python3 tools/delta-dict.py dump
+    EVV_LANG_DIR=lang/plpl python3 tools/module/dict.py dump
 
 writes `lang/plpl/plpl.dict`. Italian declares 13 dictionaries with 892 entries
 where English declares 28 with 5,945, and the shapes are the same: words to
 action numbers, and what an action says in an arm of a rule.
 
-Two things about the sets are worth knowing before touching them. Its text is lifted from the C in the tree and not from IBM's objects, on purpose: the dictionary's three arrays in that file are laid down by `tools/delta-dict.py` out of the words, so the objects hold what the dictionary said before anything was ever added to it. Running the sets lifter over that file is the one thing this repository tells you not to do, and this is why. And its numbers are the language: English declares 511 sets and 28 dictionary actions in 274 kilobytes of entries where Italian declares 153 and 13 in 77.
+Two things about the sets are worth knowing before touching them. Its text is lifted from the C in the tree and not from IBM's objects, on purpose: the dictionary's three arrays in that file are laid down by `tools/module/dict.py` out of the words, so the objects hold what the dictionary said before anything was ever added to it. Running the sets lifter over that file is the one thing this repository tells you not to do, and this is why. And its numbers are the language: English declares 511 sets and 28 dictionary actions in 274 kilobytes of entries where Italian declares 153 and 13 in 77.
 
 The statement table is the same shape in every language and that is a measurement rather than an assumption: ten types each, with 57 fields in Italian and both Spanishes, 58 in the two Englishes, 61 in German, 63 in Canadian French and 65 in French.
 
-One thing this found and fixed. `tools/delta-sets.py` had not been able to write the file it generates for some time: the copy in the tree had been brought to the arena's forms during the sixty-four bit work -- `EVV_REF(0)` where the tool still wrote `0` -- and the tool's own comment about the stores had gone stale with it, saying they are copied when what is copied is the table of pointers and the stores are handed over as they lie. English's file had the newer forms and the other seven the older ones. The tool now writes what English's says and the other seven have been brought into line: ten lines each, no data touched, and every one of the eight then regenerates byte for byte.
+One thing this found and fixed. `tools/module/sets.py` had not been able to write the file it generates for some time: the copy in the tree had been brought to the arena's forms during the sixty-four bit work -- `EVV_REF(0)` where the tool still wrote `0` -- and the tool's own comment about the stores had gone stale with it, saying they are copied when what is copied is the table of pointers and the stores are handed over as they lie. English's file had the newer forms and the other seven the older ones. The tool now writes what English's says and the other seven have been brought into line: ten lines each, no data touched, and every one of the eight then regenerates byte for byte.
 
-So a language IBM never shipped is now five text files and a table. The rules in `rules/`, the four above, the words in `<tag>.dict`, and `tools/gen-lang.py` for the one table the engine knows a language by.
+So a language IBM never shipped is now five text files and a table. The rules in `rules/`, the four above, the words in `<tag>.dict`, and `tools/module/gather.py` for the one table the engine knows a language by.
 
 ## Adding a language
 
@@ -389,7 +389,7 @@ text, so a template needs no lifting first:
 
     cp the template's five text forms and its rules/, with the tag renamed
     a section naming the language, and a library name
-    "plpl": "Polish" in tools/gen-lang.py, then run it
+    "plpl": "Polish" in tools/module/gather.py, then run it
     make LANGS="lang/enus lang/plpl" tables-write             the C from the texts
 
 and then it builds and speaks like any other: the three files a build compiles
@@ -419,7 +419,7 @@ now say:
     name short 423 f2_in
 
 and a rule written in the upper form says `set f2_in to 2000`, which compiles
-to that same offset. `python3 tools/gen-globals.py where plpl 2926` is how one
+to that same offset. `python3 tools/module/globals.py where plpl 2926` is how one
 is worked out from the other: it answers `short number 423, 2 bytes into it`,
 two bytes being where a short cell keeps its value.
 
@@ -455,9 +455,9 @@ of its own because the rules decide it. A capital says nothing either: `B` and
 filled by matching a phoneme's name to a character's, so the rules take a
 capital down to its own lower case before they ask.
 
-    python3 tools/lang-alphabet.py show plpl          every character
-    python3 tools/lang-alphabet.py show plpl a e y    only the ones named
-    python3 tools/lang-alphabet.py add plpl 82 case=lower type=letter \
+    python3 tools/module/alphabet.py show plpl          every character
+    python3 tools/module/alphabet.py show plpl a e y    only the ones named
+    python3 tools/module/alphabet.py add plpl 82 case=lower type=letter \
                                    letter=vow accent='~yes' phoneme=a
 
 reads and writes it by name, because a five-byte record read by eye in a hex
@@ -508,7 +508,7 @@ So a language can say what its own characters arrive as, and
     make EVVLANG=lang/plpl codepoints
 
 writes that into `delta_codepoints_<tag>.c`, and the language carries it in
-`delta_language` beside everything else it knows. `tools/lang-codepoints.py`
+`delta_language` beside everything else it knows. `tools/module/codepoints.py`
 refuses a byte the language's alphabet does not name, since a character
 arriving as a byte nothing names would simply be something else.
 
@@ -558,7 +558,7 @@ rather than text is read against. And what it sounds like is a rule named for
 it -- `ital_ph_S` -- which sets its source parameters and then calls one locus
 rule, `ital_pal_Fv` and its kin, where the formant targets are.
 
-    python3 tools/lang-phonemes.py plpl
+    python3 tools/module/phonemes.py plpl
 
 puts the three beside each other. Italian declares 35 in the statements, 34 in
 the settings and gives 21 a rule of their own; the vowels and a few consonants
@@ -615,15 +615,15 @@ rules` lists every rule with which of the three it is.
 
 ## The rules, twice
 
-The language's rules exist in the tree as bytecode, and the engine has an interpreter for them. They also exist as C: `tools/delta-decompile.py` writes all 3,377 of them out of that same bytecode into `lang/enus/delta_rules_c00_enus.c` and thirty-one more beside it, and the interpreter prefers a rule written as C wherever it finds one. It writes beside whichever language it was pointed at, so `make LANG=lang/dede rules` writes German into `lang/dede`.
+The language's rules exist in the tree as bytecode, and the engine has an interpreter for them. They also exist as C: `tools/rules/decompile.py` writes all 3,377 of them out of that same bytecode into `lang/enus/delta_rules_c00_enus.c` and thirty-one more beside it, and the interpreter prefers a rule written as C wherever it finds one. It writes beside whichever language it was pointed at, so `make LANG=lang/dede rules` writes German into `lang/dede`.
 
 Thirty-two files rather than one because a translation unit cannot be compiled on more than one core, and thirteen megabytes of it is seven minutes. The decompiler deals the rules out by size so the files finish together; each carries its own piece of the table of rules-written-as-C and the first gathers the pieces, which is what lets every rule stay `static` and keeps one language's names from meeting another's. `PARTS` in the Makefile and `EVV_RULE_PARTS` in the decompiler have to agree, because the build names the files it expects rather than looking for whatever is there -- and the recipe deletes the old ones first, so lowering the number does not leave yesterday's files to be compiled in beside today's.
 
-Both speak the same samples. That is not a hope: `test/suite.sh` holds each form against IBM's binary over all 81 cases, and the two forms are set against each other call by call by `tools/delta-check.sh`. So which one is linked is a trade of build time and size against speed, and nothing else.
+Both speak the same samples. That is not a hope: `test/suite.sh` holds each form against IBM's binary over all 81 cases, and the two forms are set against each other call by call by `tools/rules/check-c.sh`. So which one is linked is a trade of build time and size against speed, and nothing else.
 
 Every rule of every language in the tree is written as C, with nothing refused: 3,377 of 3,377 for US English, 3,395 for British, 2,600 for German, 2,378 and 2,386 for the Frenches, 1,724 and 1,717 for the Spanishes, 1,749 for Italian and 1,804 for the Polish chassis. So the interpreter is not a fallback anything depends on any more, and a `RULES=c` build carries none of it: the bytecode, the constants it names and the tables it jumps through come to a megabyte and a half a language, and the language table says nought where it used to name them so the linker can drop the lot.
 
-What `RULES=bytecode` is for, then, is not building. It is the second opinion. `tools/delta-check.sh` is the only check finer than the audio -- it speaks a sentence twice, once each way, and holds every rule entered and every call made with its arguments against the other -- and that check exists only while there is something to compare against. The auxiliary harnesses use it too, for the plain reason that it builds in half a minute. Retiring it would save nothing that ships and would cost the decompiler its oracle.
+What `RULES=bytecode` is for, then, is not building. It is the second opinion. `tools/rules/check-c.sh` is the only check finer than the audio -- it speaks a sentence twice, once each way, and holds every rule entered and every call made with its arguments against the other -- and that check exists only while there is something to compare against. The auxiliary harnesses use it too, for the plain reason that it builds in half a minute. Retiring it would save nothing that ships and would cost the decompiler its oracle.
 
 C is the default, because the speed is the part a person waiting for speech feels. Measured on one machine, the same long sentence, bytecode against C: the whole utterance synthesises in 138 ms against 63; the wait before the first samples of an utterance is 38 ms against 12; and interrupting an utterance and asking for another costs 124 ms against 39. That last one matters most and is the least obvious: the engine cannot abandon an utterance it has been told to stop -- see the interrupting section of `docs/status.md` for why not -- so what a cancel costs is whatever is left of the work, and compiled rules do that leftover work in a third of the time.
 
@@ -695,12 +695,12 @@ With no `-o` it writes the wave to standard output, unless that is a terminal, i
 
 `-R` is the sample rate, which is not the speed. Nought to six are 8,000, 11,025, 22,050, 16,000, 32,000, 44,100 and 48,000 hertz, in the order IBM numbered the first four and this port the rest. The default is 11,025.
 
-Above 11,025 the engine goes on running at 11,025 and the rate is raised from there, so the voice is the same one at every setting; `docs/status.md` says why that is better than synthesising at the higher rate and what it does to the spectrum. A number of 8,000 or more is that rate in hertz, raised the same way, so `-R 24000` is a rate nobody numbered. `EVV_UPSAMPLE` says how the raising is done -- `sinc` by default, or `cubic`, `linear`, `hold` or `zeros` -- and `none` synthesises at the rate instead, so the two halves can be compared. `none` is an experiment rather than a setting, and `docs/status.md` says why: synthesised above 11.025 the engine loses up to 24 dB through the consonant band, for a reason that is in the Klatt design rather than in this port. `EVV_SINC_CUTOFF` and `EVV_SINC_TAPS` move where the sinc stops passing the band and over how many samples it stops, which is the one knob that changes how bright the result is without letting images back in. `tools/rate-compare.py` reads the resulting wave files and says it in numbers:
+Above 11,025 the engine goes on running at 11,025 and the rate is raised from there, so the voice is the same one at every setting; `docs/status.md` says why that is better than synthesising at the higher rate and what it does to the spectrum. A number of 8,000 or more is that rate in hertz, raised the same way, so `-R 24000` is a rate nobody numbered. `EVV_UPSAMPLE` says how the raising is done -- `sinc` by default, or `cubic`, `linear`, `hold` or `zeros` -- and `none` synthesises at the rate instead, so the two halves can be compared. `none` is an experiment rather than a setting, and `docs/status.md` says why: synthesised above 11.025 the engine loses up to 24 dB through the consonant band, for a reason that is in the Klatt design rather than in this port. `EVV_SINC_CUTOFF` and `EVV_SINC_TAPS` move where the sinc stops passing the band and over how many samples it stops, which is the one knob that changes how bright the result is without letting images back in. `tools/measure/rates.py` reads the resulting wave files and says it in numbers:
 
     ./build/evv -R 1 -o held11.wav "She sells sea shells."
     ./build/evv -R 2 -o held22.wav "She sells sea shells."
     EVV_UPSAMPLE=hold ./build/evv -R 2 -o held22.wav "She sells sea shells."
-    tools/rate-compare.py held11.wav held22.wav native22.wav
+    tools/measure/rates.py held11.wav held22.wav native22.wav
 
 ## Windows
 
@@ -811,7 +811,7 @@ There is a second piece of evidence for that, taken with `DELTA_RULE_TRACE`
 set so the interpreter reports an argument area whose depth is not what the
 compiled code expected. Ten interruptions on one instance produce 154,253 such
 remarks across 520 different rules -- that diagnostic is ordinary background
-noise, which is why `tools/delta-check.sh` filters it out -- and *none at all*
+noise, which is why `tools/rules/check-c.sh` filters it out -- and *none at all*
 on `callInternalSynthesizer`, `callSynthesizeArray`, `sendArrayParameters` or
 `stopSynthesizing`. All 1,085 dispatches of the synthesiser rule ended the way
 an uninterrupted one does. A real abort put a bad depth on exactly those rules,
@@ -922,8 +922,8 @@ That gives `evv4.3/wxp`, with the libraries, the headers, IBM's documentation an
 
 Point `EVV_LIBDIR` at that directory and run the extractors:
 
-    EVV_LIBDIR=/somewhere/evv4.3/wxp/lib/NT/X86/COMMON tools/extract.sh
-    EVV_LIBDIR=/somewhere/evv4.3/wxp/lib/NT/X86/COMMON tools/extract-langs.sh
+    EVV_LIBDIR=/somewhere/evv4.3/wxp/lib/NT/X86/COMMON tools/sdk/extract.sh
+    EVV_LIBDIR=/somewhere/evv4.3/wxp/lib/NT/X86/COMMON tools/sdk/extract-langs.sh
 
 `extract.sh` fills `analysis/enus` with the 207 objects of the English module, which is what `make -C reference` links and what every lifter reads. It also writes `analysis/obj` and `analysis/delta-ibm`, which carry the same objects with IBM's symbols renamed out of the way; that was for standing our code beside IBM's in one binary, and that harness is retired.
 
@@ -974,7 +974,7 @@ Every number in there was blessed by IBM's own binary. The whole differential su
     make -C reference
     nix develop --command test/suite.sh
 
-The suite speaks each case through our engine and through IBM's and compares the samples. It needs Wine, and it needs IBM's objects in `analysis/enus`, which `tools/extract.sh` puts there out of the SDK above. Building the reference binary writes it to `build/reference/speak.exe`.
+The suite speaks each case through our engine and through IBM's and compares the samples. It needs Wine, and it needs IBM's objects in `analysis/enus`, which `tools/sdk/extract.sh` puts there out of the SDK above. Building the reference binary writes it to `build/reference/speak.exe`.
 
 **It is not the gate any more and it is not going away.** What it was for -- proving this engine is IBM's, byte for byte, over every case in every build -- is done, and it stopped being a thing to maintain the moment the language data started being worked on deliberately. What it is for now is answering the question the gate cannot: not "did anything move" but "what does the original do here". That question comes up constantly and will go on coming up. A path no case has ever walked. A machine primitive no rule in the nine shipped languages ever called, which a rule of ours may be the first to reach -- `test/prims.sh` is that, 577,300 calls a side. A piece of IBM's code just transcribed, which is the whole of what is left of Japanese: `test/romcan.sh` replays IBM's own romanizer conversation and `test/romprims.sh` holds 789,549 calls a side, and there is no other way to know a transcription of `TextAnalysis` is right.
 
@@ -986,15 +986,15 @@ The seventh is worth a word, since it is the one added last and the one that loo
 
 `EVV_NATIVE=$PWD/build/probe32 test/suite.sh` runs the same cases through the thirty-two bit build.
 
-`tools/say.sh` speaks a sentence and plays it, laying the dictionaries down first, so a change to the language data can be heard. Since Polish has no oracle, that and `test/matrix.sh` are the whole of what it has.
+`tools/measure/say.sh` speaks a sentence and plays it, laying the dictionaries down first, so a change to the language data can be heard. Since Polish has no oracle, that and `test/matrix.sh` are the whole of what it has.
 
     make crashers
 
 is the other check that wants neither Wine nor IBM's objects. `test/cases/crashers.txt` holds text the original cannot survive: every one of those strings takes an unhandled page fault in IBM's engine, all of them on a node reference of nought, and ours used to take the same one. This speaks each of them through ours and answers non-zero if the engine died on one or would not finish. There is nothing to hold the audio against, since the reference produces none for any of these, so what it checks is only that ours answers -- either the word is spoken or the utterance is given up, and the process is still there afterwards. It takes about fifteen seconds across the machine's cores, and `EVV_CRASH_JOBS` says how many to use.
 
-The strings were found rather than listed. `tools/crash-search.py` takes text that kills the engine, tries every one-letter change to it, keeps whatever kills it too, and does the same to those, with the engine itself as the oracle. Point it at a build with the guards taken out to find more of them, and at the build in the tree to check that none is left.
+The strings were found rather than listed. `tools/engine/crashers.py` takes text that kills the engine, tries every one-letter change to it, keeps whatever kills it too, and does the same to those, with the engine itself as the oracle. Point it at a build with the guards taken out to find more of them, and at the build in the tree to check that none is left.
 
-`tools/delta-check.sh` is the other check. It holds named rules written as C against the same rules left as bytecode: it speaks each of the seven plain cases twice, once each way, with the engine saying which rule it is entering and every call it makes, arguments and all, and the two accounts have to be identical. That is finer than the audio, because a rule can go wrong in a way that changes what runs and not what is heard.
+`tools/rules/check-c.sh` is the other check. It holds named rules written as C against the same rules left as bytecode: it speaks each of the seven plain cases twice, once each way, with the engine saying which rule it is entering and every call it makes, arguments and all, and the two accounts have to be identical. That is finer than the audio, because a rule can go wrong in a way that changes what runs and not what is heard.
 
 Four things about it are deliberate, and the comment at the top of the script says why at length. One sentence at a time in its own run, because tracing costs twenty times what the synthesis does and seven of them in one run faults part way with less audio written; the wave files are compared first for that reason. The stores are left out, because the interpreter prints the ones it makes and a rule written as C makes its own. So is the interpreter's remark about the argument area being a different depth than the compiled code expected, which is about the compiled code rather than either form of it. The rules are written out with `EVV_FAITHFUL` set, which leaves a wrapper rule as a call to that rule rather than writing out the primitive it stood for, since an inlined wrapper is never entered and so cannot appear in a trace at all. And addresses in the arena are masked, because a rule written as C takes a smaller frame on purpose and the two land in different places.
 

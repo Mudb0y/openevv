@@ -23,7 +23,7 @@ jobs:
   # one is the default has changed once and could change again, so each job says
   # which it wants rather than taking it: whichever way the default points, the
   # other form is the one that would quietly rot, and the compiled rules are
-  # checked against the interpreter by tools/delta-check.sh -- so if the
+  # checked against the interpreter by tools/rules/check-c.sh -- so if the
   # interpreter moves, the thing the C is held against has moved.
   linux:
     runs-on: ubuntu-latest
@@ -123,7 +123,7 @@ jobs:
       # suite's seven, because tracing costs twenty times what the synthesis
       # does and these are the ones that reach the rules being checked.
       - name: Check the rules written as what they do
-        run: EVV_UPPER_CASES=test/cases/upper.txt bash tools/upper-check.sh
+        run: EVV_UPPER_CASES=test/cases/upper.txt bash tools/rules/check-upper.sh
 
       # The four texts a language module is made of besides its rules, each
       # written back out as the C the build compiles and held against the tree

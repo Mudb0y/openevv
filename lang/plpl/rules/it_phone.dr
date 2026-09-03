@@ -1,4 +1,4 @@
-# The rules of it_phone.obj, written by tools/delta-notation.py.
+# The rules of it_phone.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule del_ital_extra_syncs from it_phone.obj

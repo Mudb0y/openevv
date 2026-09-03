@@ -1,4 +1,4 @@
-# The rules of ft_syll.obj, written by tools/delta-notation.py.
+# The rules of ft_syll.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/building.md.
 
 rule assign_syll_coda from ft_syll.obj
