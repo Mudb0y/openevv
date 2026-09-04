@@ -59,10 +59,13 @@
 
 /* ---- one accent phrase ---------------------------------------------- */
 
-#define AP_MORAS        0x00      /* uint8, from IH_LEN of the phrase */
-#define AP_CODE         0x01      /* uint8 [], the codes of the reading as
-                                     this class rewrites them */
-#define AP_KIND         0x1a      /* uint8, from IH_MORAS */
+#define AP_CODES        0x00      /* uint8, how many codes it holds. Starts as
+                                     the phrase's IH_LEN and is kept in step as
+                                     the copy inserts and drops codes. */
+#define AP_CODE         0x01      /* uint8 [], the codes of the reading as this
+                                     class rewrites them */
+#define AP_MORAS        0x1a      /* uint8, from IH_MORAS, and the index of the
+                                     last code: it is read back as one */
 #define AP_LONG         0x1c      /* int16, from IH_F */
 #define AP_MORA_N       0x1e      /* uint8, how many of the moras below */
 #define AP_MORA         0x20      /* mora *, AP_MORA_N of them */
@@ -70,7 +73,9 @@
                                      accent phrase of it and nought on the
                                      others */
 #define AP_HEAD         0x25      /* uint8, from IH_A */
-#define AP_LEN          0x26      /* uint8, from IH_MORAS */
+#define AP_LEN          0x26      /* uint8, from IH_MORAS again, kept as a
+                                     second copy that is decremented with
+                                     AP_MORAS rather than instead of it */
 #define AP_PITCH        0x27      /* uint8, from IH_PITCH */
 #define AP_SIZE         0x28
 
@@ -80,7 +85,10 @@
 #define MO_CODE         0x01      /* uint8 [], and the codes. WriteGokiInfo
                                      reads each as eight times a pitch level
                                      plus a phoneme, so one byte is both. */
-#define MO_LONG         0x1a      /* int16, from IH_F */
+#define MO_KIND         0x1a      /* int16, from IH_F. GetGokiInfoToWrite
+                                     switches on it over one to ten, so it is
+                                     what kind of mora this is rather than a
+                                     length. */
 #define MO_SIZE         0x1c
 
 /* ---- what the ESPR text is made of ---------------------------------- */
@@ -89,5 +97,13 @@
    works the length out with a strlen in a static initialiser; it is four. */
 #define PC_USER_IDX     "`ui "
 #define PC_USER_IDX_LEN 4
+
+/* The pitch pair written where a mora wants one and has none of its own. */
+#define PC_DUMMY_F0     "(1,1)"
+
+/* And the two the head of a breath group takes, by whether it has a body
+   pitch of its own to state. */
+#define PC_F0_TWO       "(p1, t1) "
+#define PC_F0_THREE     "(p1, b1, t1) "
 
 #endif
