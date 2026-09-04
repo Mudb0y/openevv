@@ -736,7 +736,17 @@ int32_t STDCALL ev_setParam(OldInst *h, int32_t which, int32_t value)
             OI_ENV(inst)[which] = value;
             old = 0;
         }
-    } else {
+    } else if (which != ENV_RATE) {
+        /* The rate is left out because it has been settled already: written
+           above if the output took it, and deliberately left alone if it did
+           not, which the voice block in between depends on. Storing it here
+           as well undid that -- a rate the engine refused was recorded all
+           the same, so eciGetParam answered a rate nothing was synthesising
+           at. It cannot arise in IBM's engine, whose range for this setting
+           stops at two, so every value in range there is a rate; it arises
+           here because that range now runs to the highest rate the tables
+           can be built for, which makes everything above two reachable and
+           most of it invalid. */
         OI_ENV(inst)[which] = v;
     }
 
