@@ -275,7 +275,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe so so32 sotest phonemes rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims
+.PHONY: all probe so so32 sotest phonemes objects rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -749,6 +749,20 @@ $(foreach n,$(PARTNS),$(1)/delta_rules_c$(n)_$(notdir $(1)).c) &: \
 	  python3 tools/rules/decompile.py all
 endef
 $(foreach l,$(LANGS),$(eval $(call rules_for,$(l))))
+
+# The other direction from `make missing'. That one asks what our code wants
+# and nothing of ours defines, which the linker can answer; this asks what
+# IBM's objects define that nothing here has written, which the linker never
+# can -- a function no rule in the nine shipped languages happens to call is
+# a function the link never asks for. The Delta runtime's printing layer sat
+# in that blind spot for months.
+#
+# It wants IBM's objects in analysis/<tag>, so it is not part of any build.
+# `--matched' prints what it answered by name rather than by alias, which is
+# the half worth looking over; `--object eci' is one object in full.
+.PHONY: objects
+objects:
+	@python3 tools/engine/census.py
 
 # What our code asks for and nothing of ours answers. The C library's own
 # names are dropped, since those come from the system; what is left is the
