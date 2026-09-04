@@ -23,18 +23,30 @@
 int g_iTTSLogLevel = 9;
 int RAL_THREAD_PRIORITY_NORMAL = 0;
 
+/* The engine's own trace, which several of IBM's objects write to when
+   something under them answers badly.
+ *
+ * It goes to standard error rather than to standard output, and that is a
+ * correction rather than a preference. The original writes to the file its
+ * ini names; ours printed, and standard output is where a driver's answers
+ * go -- so an internal grumble landed in the middle of what the probe
+ * reported and moved a recorded hash. Two gate runs failed that way before
+ * anyone noticed the moved answer was a log line rather than a wrong one.
+ *
+ * The message is kept rather than dropped: it is how the mutex race below
+ * announced itself at all. */
 void elgTraceLog(int level, const char *fmt, ...)
 {
     va_list ap;
 
     if (fmt == NULL)
         return;
-    printf("log[%d]: ", level);
+    fprintf(stderr, "log[%d]: ", level);
     va_start(ap, fmt);
-    vprintf(fmt, ap);
+    vfprintf(stderr, fmt, ap);
     va_end(ap);
-    printf("\n");
-    fflush(stdout);
+    fprintf(stderr, "\n");
+    fflush(stderr);
 }
 
 /* Semaphores, events and mutexes.

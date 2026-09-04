@@ -212,8 +212,17 @@ for t in $want; do
             # The probe writes its lines the way the host does, and the
             # Windows build of it is one of the things checked here.
             #
-            # Which languages the binary has in it is taken off first, and it
-            # is the only thing that is. A baseline is a language's own, so it
+            # Which languages the binary has in it is taken off first, and
+            # the engine's own trace log is taken off with it. Those two are
+            # the only things that are.
+            #
+            # The log has to go because it is not an answer. It is what
+            # IBM's objects write when something under them answers badly,
+            # and on the road it took to get here it went to standard output
+            # and landed in the middle of what the probe reported -- so a
+            # rare internal grumble moved a recorded hash and read as a case
+            # that had changed. It writes to standard error now, which is
+            # the real fix; this is the belt beside it. A baseline is a language's own, so it
             # has to be checkable out of a build with one language in it or
             # nine, and the inventory a probe prints at startup is a property
             # of the build rather than of the language. Everything else stays:
@@ -225,6 +234,7 @@ for t in $want; do
             # such an edit past everything once.
             said=$(tr -d '\r' < "$work/said.txt" \
                    | grep -vE '^speak: [0-9]+ languages$|^speak:   language 0x' \
+                   | grep -v '^log\[' \
                    | sha256sum | cut -d' ' -f1)
 
             line="$cat $i ${audio:0:16} ${said:0:16} $text"
