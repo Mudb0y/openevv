@@ -15,6 +15,22 @@
 void evv_port_start(void) { }
 void evv_port_finish(void) { }
 
+/* The lock the runtime layer guards its table with. A slim reader-writer
+   lock taken for writing, because it is the one shape Windows offers with a
+   static initialiser -- and it has to work before anything has set it up,
+   port_ral.c being reached from a static initialiser. */
+static SRWLOCK evv_low = SRWLOCK_INIT;
+
+void evv_low_lock(void)
+{
+    AcquireSRWLockExclusive(&evv_low);
+}
+
+void evv_low_unlock(void)
+{
+    ReleaseSRWLockExclusive(&evv_low);
+}
+
 /* ---- semaphores ------------------------------------------------------ */
 
 struct evv_sem { HANDLE h; };

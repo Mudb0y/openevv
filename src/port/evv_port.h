@@ -48,6 +48,20 @@ typedef struct evv_task  evv_task;
 void evv_port_start(void);
 void evv_port_finish(void);
 
+/* The one lock below everything else.
+ *
+ * The runtime layer in port_ral.c keeps a table of the semaphores, events
+ * and mutexes the engine has asked for, and three of the engine's threads
+ * use it at once. It cannot guard that table with one of the engine's own
+ * mutexes, because those are the thing it is handing out -- so it needs a
+ * lock that stands underneath them, which is this one.
+ *
+ * It is not recursive and nothing may block while holding it. Both are
+ * conditions the one caller keeps rather than the target enforcing them,
+ * and the head of port_ral.c says how. */
+void evv_low_lock(void);
+void evv_low_unlock(void);
+
 /* A counting semaphore. Created with a count and the most it may reach;
    a most of zero means no limit the target need enforce. */
 evv_sem *evv_sem_create(int initial, int most);

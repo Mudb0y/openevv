@@ -75,11 +75,36 @@ void elgTraceLog(int level, const char *fmt, ...)
 #define RAL_SEM    1
 #define RAL_EVENT  2
 
+/* The table, and the one rule about it.
+ *
+ * Three of the engine's threads use this at once -- measured rather than
+ * assumed, with RAL_TRACE over a single utterance: 1,127 operations from
+ * one thread, 1,135 from another and 35 from a third. For a long while
+ * nothing guarded it, and what that cost is worth knowing because it did
+ * not look like a locking bug from outside. Two threads binding at the same
+ * time would both find the same free slot and one would lose its object, so
+ * a later lookup missed a key that was there; the wait under it then
+ * answered that it had failed, and the engine went on without the lock.
+ * What showed at the top was IBM's own Mutex writing `wait failed' to its
+ * trace, one run in three hundred on thirty-two bits, moving a hash in the
+ * gate. docs/status.md has the whole account.
+ *
+ * So: every entry point below takes evv_low_lock, and the helpers between
+ * them assume it is held. The one condition that cannot be relaxed is that
+ * nothing may block while holding it -- the thing being waited on is handed
+ * out by this very table, so a thread sleeping with the guard would keep
+ * the thread that would wake it from ever reaching the post. The two
+ * blocking paths therefore let go of the guard first, and `busy' is how the
+ * slot survives the gap: a delete arriving in the middle unbinds the key at
+ * once, so nothing new finds it, and leaves the object for the last waiter
+ * out to destroy. */
 static uintptr_t ral_key[RAL_MAX];
 static void    *ral_obj[RAL_MAX];
 static int      ral_kind[RAL_MAX];
 static unsigned ral_owner[RAL_MAX];
 static int    ral_depth[RAL_MAX];
+static int    ral_busy[RAL_MAX];   /* waits outstanding on this slot */
+static int    ral_dead[RAL_MAX];   /* deleted, and waiting to be freed */
 static uintptr_t ral_next = 1;
 static int    ral_trace;
 
@@ -106,10 +131,15 @@ static void ral_free(void *h, int kind)
         evv_sem_destroy((evv_sem *)h);
 }
 
+/* Everything from here to the entry points assumes the guard is held. A key
+   of nought is not a key: it is what a free slot holds, and what a delete
+   leaves behind. */
 static int ral_slot(uintptr_t key)
 {
     int i;
 
+    if (key == 0)
+        return -1;
     for (i = 0; i < RAL_MAX; i++)
         if (ral_key[i] == key)
             return i;
@@ -126,7 +156,7 @@ static int ral_bind(uintptr_t key, void *h, int kind)
     i = ral_slot(key);
     if (i < 0)
         for (i = 0; i < RAL_MAX; i++)
-            if (ral_obj[i] == NULL)
+            if (ral_obj[i] == NULL && !ral_dead[i])
                 break;
     if (i >= RAL_MAX) {
         ral_free(h, kind);
@@ -141,6 +171,8 @@ static int ral_bind(uintptr_t key, void *h, int kind)
     ral_kind[i] = kind;
     ral_owner[i] = 0;
     ral_depth[i] = 0;
+    ral_busy[i] = 0;
+    ral_dead[i] = 0;
     return 0;
 }
 
@@ -158,6 +190,27 @@ static void *ral_find(struct ral_req *r, int *slot)
     return ral_obj[i];
 }
 
+/* Let go of a slot a blocking wait was holding, and destroy what it was
+   waiting on if a delete arrived while it waited and this is the last one
+   out. Called with the guard held; the destroy happens under it, which is
+   safe because destroying does not block. */
+static void ral_release(int i)
+{
+    if (i < 0)
+        return;
+    if (ral_busy[i] > 0)
+        ral_busy[i]--;
+    if (ral_busy[i] == 0 && ral_dead[i]) {
+        if (ral_obj[i] != NULL)
+            ral_free(ral_obj[i], ral_kind[i]);
+        ral_obj[i] = NULL;
+        ral_kind[i] = 0;
+        ral_dead[i] = 0;
+        ral_owner[i] = 0;
+        ral_depth[i] = 0;
+    }
+}
+
 /* The plain semaphores: count in the second slot, identifier back in the
    first. The other families here read the first slot and write the second,
    and this one is the other way round -- ETIThread hands the initial count
@@ -166,13 +219,19 @@ static void *ral_find(struct ral_req *r, int *slot)
 static int ral_sem_create(struct ral_req *r, int max)
 {
     uintptr_t key;
+    void *h;
     int rc;
 
     if (r == NULL)
         return 10041;
 
+    h = evv_sem_create(r->b ? 1 : 0, max);
+
+    evv_low_lock();
     key = ++ral_next;
-    rc = ral_bind(key, evv_sem_create(r->b ? 1 : 0, max), RAL_SEM);
+    rc = ral_bind(key, h, RAL_SEM);
+    evv_low_unlock();
+
     if (rc == 0)
         r->a = (void *)key;
     ral_say("ralSemaphoreCreate", key, rc);
@@ -192,12 +251,17 @@ int ralCountingSemaphoreCreate(struct ral_req *r)
 /* The event: state in, the caller's own object as the identity. */
 int ralEventCreate(struct ral_req *r)
 {
+    void *h;
     int rc;
 
     if (r == NULL)
         return 10041;
-    rc = ral_bind((uintptr_t)r->b, evv_event_create(r->a ? 1 : 0),
-                  RAL_EVENT);
+    h = evv_event_create(r->a ? 1 : 0);
+
+    evv_low_lock();
+    rc = ral_bind((uintptr_t)r->b, h, RAL_EVENT);
+    evv_low_unlock();
+
     ral_say("ralEventCreate", (uintptr_t)r->b, rc);
     return rc;
 }
@@ -206,30 +270,50 @@ int ralEventCreate(struct ral_req *r)
    no use for since it keeps the depth itself. */
 int ralRecMutexSemaphoreCreate(struct ral_req *r)
 {
+    void *h;
     int rc;
 
     if (r == NULL)
         return 10041;
-    rc = ral_bind((uintptr_t)r->a, evv_sem_create(1, 1), RAL_SEM);
+    h = evv_sem_create(1, 1);
+
+    evv_low_lock();
+    rc = ral_bind((uintptr_t)r->a, h, RAL_SEM);
+    evv_low_unlock();
+
     ral_say("ralRecMutexSemaphoreCreate", (uintptr_t)r->a, rc);
     return rc;
 }
 
+/* The key goes at once, so nothing new can find it. What it named goes too
+   unless a wait is still out on it, and then the last waiter destroys it --
+   which is the whole of why `busy' and `dead' exist. */
 static int ral_drop(struct ral_req *r, const char *what)
 {
     int i = -1;
-    void *h = ral_find(r, &i);
+    void *h;
+    int rc = 0;
 
+    evv_low_lock();
+    h = ral_find(r, &i);
     if (h == NULL) {
-        ral_say(what, r ? (uintptr_t)r->a : 0, 10041);
-        return 10041;
+        rc = 10041;
+    } else {
+        ral_key[i] = 0;
+        if (ral_busy[i] > 0) {
+            ral_dead[i] = 1;
+        } else {
+            ral_free(h, ral_kind[i]);
+            ral_obj[i] = NULL;
+            ral_kind[i] = 0;
+            ral_owner[i] = 0;
+            ral_depth[i] = 0;
+        }
     }
-    ral_free(h, ral_kind[i]);
-    ral_key[i] = 0;
-    ral_obj[i] = NULL;
-    ral_kind[i] = 0;
-    ral_say(what, (uintptr_t)r->a, 0);
-    return 0;
+    evv_low_unlock();
+
+    ral_say(what, r ? (uintptr_t)r->a : 0, rc);
+    return rc;
 }
 
 int ralBinarySemaphoreDelete(struct ral_req *r)
@@ -252,14 +336,21 @@ int ralEventDelete(struct ral_req *r)
     return ral_drop(r, "ralEventDelete");
 }
 
+/* Held across the post, which is safe because posting does not block. */
 static int ral_post(struct ral_req *r, const char *what)
 {
-    void *h = ral_find(r, NULL);
+    void *h;
 
-    ral_say(what, r ? (uintptr_t)r->a : 0, h == NULL ? 10041 : 0);
-    if (h == NULL)
+    evv_low_lock();
+    h = ral_find(r, NULL);
+    if (h == NULL) {
+        evv_low_unlock();
+        ral_say(what, r ? (uintptr_t)r->a : 0, 10041);
         return 10041;
+    }
     evv_sem_post((evv_sem *)h, 1);
+    evv_low_unlock();
+    ral_say(what, r ? (uintptr_t)r->a : 0, 0);
     return 0;
 }
 
@@ -275,16 +366,13 @@ int ralCountingSemaphoreSignal(struct ral_req *r)
 
 /* A waiter does not know whether it holds a semaphore or an event, so ask
    the table. */
-static int ral_wait_any(void *h, int ms)
+/* The kind is looked up before the wait rather than during it: this used to
+   scan the table for the object and block inside the scan, which is a read
+   of shared state with no guard and a wait that could not have held one. */
+static int ral_wait_any(void *h, int kind, int ms)
 {
-    int i;
-
-    for (i = 0; i < RAL_MAX; i++)
-        if (ral_obj[i] == h)
-            return ral_kind[i] == RAL_EVENT
-                   ? evv_event_wait((evv_event *)h, ms)
-                   : evv_sem_wait((evv_sem *)h, ms);
-    return EVV_WAIT_FAILED;
+    return kind == RAL_EVENT ? evv_event_wait((evv_event *)h, ms)
+                             : evv_sem_wait((evv_sem *)h, ms);
 }
 
 /* Two answers, not one. Nearly everything here reports the way a C function
@@ -294,15 +382,35 @@ static int ral_wait_any(void *h, int ms)
    back to zero again. Each of these was taken from the caller. */
 #define RAL_GOT 0x2739
 
+/* The guard comes off before the wait and goes back on after it. What keeps
+   the object alive over the gap is the slot's own count: a delete arriving
+   in the middle takes the key away and leaves the object to whoever is last
+   out of here. */
 static int ral_wait(struct ral_req *r, const char *what, int got, int lost)
 {
-    void *h = ral_find(r, NULL);
+    int i = -1;
+    void *h;
+    int kind;
     int w;
 
-    ral_say(what, r ? (uintptr_t)r->a : 0, -1);
-    if (h == NULL)
+    evv_low_lock();
+    h = ral_find(r, &i);
+    if (h == NULL) {
+        evv_low_unlock();
+        ral_say(what, r ? (uintptr_t)r->a : 0, lost);
         return lost;
-    w = ral_wait_any(h, EVV_FOREVER);
+    }
+    kind = ral_kind[i];
+    ral_busy[i]++;
+    evv_low_unlock();
+
+    ral_say(what, (uintptr_t)r->a, -1);
+    w = ral_wait_any(h, kind, EVV_FOREVER);
+
+    evv_low_lock();
+    ral_release(i);
+    evv_low_unlock();
+
     ral_say(what, (uintptr_t)r->a, w == EVV_WAIT_OK ? got : lost);
     return w == EVV_WAIT_OK ? got : lost;
 }
@@ -328,57 +436,86 @@ int ralEventWait(struct ral_req *r)
 int ralRecMutexSemaphoreTest(struct ral_req *r)
 {
     int i = -1;
-    void *h = ral_find(r, &i);
+    void *h;
     unsigned me = evv_task_self();
 
-    ral_say("ralRecMutexSemaphoreTest", r ? (uintptr_t)r->a : 0, h == NULL ? 0 : -1);
-    if (h == NULL)
+    evv_low_lock();
+    h = ral_find(r, &i);
+    if (h == NULL) {
+        evv_low_unlock();
+        ral_say("ralRecMutexSemaphoreTest", r ? (uintptr_t)r->a : 0, 0);
         return 0;
-
+    }
+    /* Already ours: the depth goes up and nothing waits, so the guard never
+       comes off. */
     if (ral_depth[i] > 0 && ral_owner[i] == me) {
         ral_depth[i]++;
+        evv_low_unlock();
+        ral_say("ralRecMutexSemaphoreTest", (uintptr_t)r->a, RAL_GOT);
         return RAL_GOT;
     }
+    ral_busy[i]++;
+    evv_low_unlock();
 
-    if (evv_sem_wait((evv_sem *)h, EVV_FOREVER) != EVV_WAIT_OK)
+    ral_say("ralRecMutexSemaphoreTest", (uintptr_t)r->a, -1);
+    if (evv_sem_wait((evv_sem *)h, EVV_FOREVER) != EVV_WAIT_OK) {
+        evv_low_lock();
+        ral_release(i);
+        evv_low_unlock();
         return 0;
+    }
 
+    evv_low_lock();
     ral_owner[i] = me;
     ral_depth[i] = 1;
+    ral_release(i);
+    evv_low_unlock();
     return RAL_GOT;
 }
 
 int ralRecMutexSemaphoreSignal(struct ral_req *r)
 {
     int i = -1;
-    void *h = ral_find(r, &i);
+    void *h;
 
-    ral_say("ralRecMutexSemaphoreSignal", r ? (uintptr_t)r->a : 0, h == NULL ? 10041 : 0);
-    if (h == NULL)
+    evv_low_lock();
+    h = ral_find(r, &i);
+    if (h == NULL) {
+        evv_low_unlock();
+        ral_say("ralRecMutexSemaphoreSignal", r ? (uintptr_t)r->a : 0, 10041);
         return 10041;
-
+    }
     if (ral_depth[i] > 0)
         ral_depth[i]--;
     if (ral_depth[i] == 0) {
         ral_owner[i] = 0;
         evv_sem_post((evv_sem *)h, 1);
     }
+    evv_low_unlock();
+    ral_say("ralRecMutexSemaphoreSignal", (uintptr_t)r->a, 0);
     return 0;
 }
 
+/* Held across the set, which is safe because none of the three blocks. */
 static int ral_event_set(struct ral_req *r, int how, const char *what)
 {
-    void *h = ral_find(r, NULL);
+    void *h;
 
-    ral_say(what, r ? (uintptr_t)r->a : 0, h == NULL ? 10041 : 0);
-    if (h == NULL)
+    evv_low_lock();
+    h = ral_find(r, NULL);
+    if (h == NULL) {
+        evv_low_unlock();
+        ral_say(what, r ? (uintptr_t)r->a : 0, 10041);
         return 10041;
+    }
     if (how > 0)
         evv_event_signal((evv_event *)h);
     else if (how < 0)
         evv_event_unsignal((evv_event *)h);
     else
         evv_event_pulse((evv_event *)h);
+    evv_low_unlock();
+    ral_say(what, r ? (uintptr_t)r->a : 0, 0);
     return 0;
 }
 

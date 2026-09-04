@@ -24,6 +24,21 @@
 #define PTHREAD_STACK_MIN 16384
 #endif
 
+/* The lock the runtime layer guards its table with. Statically initialised,
+   because it has to work before anything has had a chance to set it up:
+   port_ral.c is reached from a static initialiser. */
+static pthread_mutex_t evv_low = PTHREAD_MUTEX_INITIALIZER;
+
+void evv_low_lock(void)
+{
+    pthread_mutex_lock(&evv_low);
+}
+
+void evv_low_unlock(void)
+{
+    pthread_mutex_unlock(&evv_low);
+}
+
 void evv_port_start(void) { }
 void evv_port_finish(void) { }
 
