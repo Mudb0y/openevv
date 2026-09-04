@@ -111,7 +111,7 @@ builds and runs it against `build/libeci.so`. `EVV_ECI_LIB` names another librar
 
 Two things to get right when loading by name. On thirty-two bit Windows the published interface is stdcall, so a callback made with `WINFUNCTYPE` rather than `CFUNCTYPE` and calls made through `WinDLL` rather than `CDLL`; off Windows there is one convention and the distinction disappears. And a handle is a pointer: ctypes truncates one to an int unless the `restype` and `argtypes` say otherwise, which on a sixty-four bit machine hands the engine half an address.
 
-One existing consumer will not load this library as it stands. speech-dispatcher's `sd_eloquence` module resolves forty-two names at load time, and one of them is `eciGeneratePhonemes`, which the engine has never had a public wrapper for. Every other name it wants is exported. `docs/api.md` says what else is in that gap.
+speech-dispatcher's `sd_eloquence` module resolves forty-two names when it loads an ECI runtime, opening `<dir>/eci.so`; all forty-two are exported here. What is still missing is the dictionary find, lookup and update calls, which nothing known asks for; `docs/api.md` says what is in that gap.
 
 ## Route three: run the command
 

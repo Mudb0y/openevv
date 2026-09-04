@@ -36,7 +36,7 @@ One caveat about mixing toolchains, learned by tripping over it. The libraries i
 
 Two ways to check it, and both are worth having. `make win-dlltest` builds `build/dlltest.exe`, which links against nothing, loads `eci.dll` by name, asks for each entry point by name and speaks; `test/hash.sh build/dlltest.exe` then holds what comes out of the library against what comes out of everything else. `test/lib/dll.py` does the same through ctypes, which is a different question -- ctypes has its own ideas about handles, and a handle is sixty-four bits -- and CI runs it on Windows itself. `make win32` builds `build/dlltest32.exe` for the thirty-two bit library; that one is checked from C, since a sixty-four bit Python cannot load a thirty-two bit library at all. Both harnesses also read the version resource and fail if it is missing.
 
-What the library does not export: `eciGeneratePhonemes` and the dictionary find, lookup and update calls, which exist inside the engine with no public wrapper yet. A caller asking for one of those gets nothing rather than something wrong. `docs/quirks.md` says what that costs, which is not nothing -- speech-dispatcher's Eloquence module resolves `eciGeneratePhonemes` when it loads a runtime and refuses one that has not got it.
+What the library does not export: the dictionary find, lookup and update calls, which exist inside the engine with no public wrapper yet. A caller asking for one of those gets nothing rather than something wrong, and nothing known asks.
 
 ## The NVDA add-on
 

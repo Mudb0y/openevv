@@ -224,9 +224,30 @@ A name is at most thirty bytes. The eight presets are called, in order, `Adult M
 
 A set holds three volumes -- `eciMainDict`, `eciRootDict` and `eciAbbvDict` -- and an instance has one set in force at a time. `eciSetDict(h, 0)` puts none in force.
 
-What is not exported is the find, lookup and update calls: `eciDictFindFirst`, `eciDictFindNext`, `eciDictLookup` and `eciUpdateDict`, each in a plain and a wide form. The machinery beneath them is ported and working -- it is what the engine's own dictionary runs on -- and only the public wrappers are missing. A caller asking for one of those names gets nothing rather than something wrong. `eciGeneratePhonemes` is missing for the same reason, and that one has a consequence: speech-dispatcher's Eloquence module resolves it at load time and will refuse a library that has not got it.
+What is not exported is the find, lookup and update calls: `eciDictFindFirst`, `eciDictFindNext`, `eciDictLookup` and `eciUpdateDict`, each in a plain and a wide form. The machinery beneath them is ported and working -- it is what the engine's own dictionary runs on -- and only the public wrappers are missing. A caller asking for one of those names gets nothing rather than something wrong.
 
 The other way to teach the engine a word is to put it in the language module's own dictionary, which `tools/module/dict.py` does and `docs/language.md` describes. That is a build-time answer, not a run-time one.
+
+## Phonemes instead of sound
+
+    int eciGeneratePhonemes(ECIHand h, int room, void *buffer);
+
+What the language decided the words were made of, in the engine's own alphabet, instead of the sound. `"Hello there."` comes back as ``` `2 `[.2hE.1lo]`0 `[.1Der]. ``` -- the annotations the engine would have acted on, with each word's phonemes and stress marks inside a pronunciation annotation.
+
+Three things have to be true first, and two of them are IBM's own tests rather than advice.
+
+A callback has to be registered, because the phonemes arrive through it as `eciPhonemeBuffer` messages into the buffer handed over, not as a return value. `eciSynthMode` has to be one, because the call walks the queue that mode builds and in the immediate mode there is nothing in it. And the text has to have been added already, with `eciAddText`.
+
+The output is switched to the phoneme buffer, everything queued is put through, and the output is switched back to wherever it was, so an instance can be asked this in the middle of ordinary use. What the call answers is only whether that worked.
+
+    eciRegisterCallback(h, on_message, 0);
+    eciSetParam(h, eciSynthMode, 1);
+    eciAddText(h, "Hello there.");
+    eciGeneratePhonemes(h, sizeof buffer, buffer);
+
+The separator between phonemes comes back followed by backspaces and spaces. That is the engine writing to what it takes for a terminal, and it is IBM's behaviour: strip them if they are in the way.
+
+`test/harness/phonemes.sh` is what holds this to IBM's own engine, case for case over the same text, and `make phonemes` runs it.
 
 ## SSML
 

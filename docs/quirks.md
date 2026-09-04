@@ -86,9 +86,15 @@ Hand the reader a document it may write on. IBM's reader ends the digits of a nu
 
 ## Names that are not exported
 
-`eciGeneratePhonemes` and the dictionary find, lookup and update calls -- `eciDictFindFirst`, `eciDictFindNext`, `eciDictLookup` and `eciUpdateDict`, each in a plain and a wide form -- exist inside the engine with no public wrapper. A caller asking for one of those gets nothing rather than something wrong.
+The dictionary find, lookup and update calls -- `eciDictFindFirst`, `eciDictFindNext`, `eciDictLookup` and `eciUpdateDict`, each in a plain and a wide form -- exist inside the engine with no public wrapper. A caller asking for one of those gets nothing rather than something wrong. Nothing known needs them.
 
-That has one known consequence: **speech-dispatcher's `sd_eloquence` module resolves forty-two names when it loads a runtime, and `eciGeneratePhonemes` is one of them**, so it will refuse this library as it stands. Every other name it wants is exported.
+Everything speech-dispatcher's `sd_eloquence` module resolves is exported, `eciGeneratePhonemes` included.
+
+## Asking for phonemes
+
+`eciGeneratePhonemes` will answer nought and look broken unless three things are true, and the first two are IBM's own tests rather than advice. A callback has to be registered, because that is the only way the phonemes can arrive. `eciSynthMode` has to be one, because the call walks the queue that mode builds. And the text has to have been added first.
+
+What comes back has the separator between phonemes followed by backspaces and spaces, because the engine is writing to what it takes for a terminal. That is IBM's, byte for byte.
 
 ## Calling convention on thirty-two bit Windows
 

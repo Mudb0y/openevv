@@ -74,7 +74,9 @@ And Polish is in the reader's language table, where IBM's has Thai. Family seven
 
 ## The public calls with no wrapper
 
-`eci.obj` defines 130 names and we answer 76. About 12 KB of what is left is the flat C entry points: `eciDictFindFirst`, `eciDictFindNext`, `eciDictLookup` and `eciUpdateDict`, each in a plain and a wide form, with `fgetUCS2` under them, and `eciGeneratePhonemes`. The machinery beneath the dictionary calls is already ported -- `es_engsynDictFindFirst` in `src/eci/api/eci_engsyn.c`, `eciUpdateDict` in `src/eci/api/eci_api2.c` -- so those are glue rather than transcription. `lib/eci_api.c` says so in its own head, and a caller asking for one of them gets nothing rather than something wrong.
+`eci.obj` defines 130 names and we answer 77. About 12 KB of what is left is the flat C entry points: `eciDictFindFirst`, `eciDictFindNext`, `eciDictLookup` and `eciUpdateDict`, each in a plain and a wide form, with `fgetUCS2` under them. The machinery beneath them is already ported -- `es_engsynDictFindFirst` in `src/eci/api/eci_engsyn.c`, `eciUpdateDict` in `src/eci/api/eci_api2.c` -- so those are glue rather than transcription. `lib/eci_api.c` says so in its own head, and a caller asking for one of them gets nothing rather than something wrong. Nothing known asks.
+
+`eciGeneratePhonemes` was in that list and is out of it: it is transcribed, in `src/eci/api/eci_env.c`, and `make phonemes` holds what it answers against IBM's own engine case for case. What it cost was not the entry point but the Delta runtime's printing layer under it, which `docs/status.md` describes.
 
 The eight filter calls that used to be listed here are written, in `src/eci/ssml/eci_filters.c`, and exported from `lib/eci_api.c`: `eciRegisterFilter`, `eciUnregisterFilter`, `eciNewFilter`, `eciDeleteFilter`, `eciActivateFilter`, `eciDeactivateFilter`, `eciSetFilter` and `eciUpdateFilter`. Two of them answer oddly and faithfully. `eciActivateFilter` reports a refusal over a filter it has just turned on, because the manager's answer is always the refusal whatever it did. And `eciUpdateFilter` works out an answer, stores it, and returns nought.
 
