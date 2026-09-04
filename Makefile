@@ -275,7 +275,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe so so32 sotest phonemes dict objects rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims
+.PHONY: all probe so so32 sotest phonemes dict objects stubs rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -763,6 +763,18 @@ $(foreach l,$(LANGS),$(eval $(call rules_for,$(l))))
 .PHONY: objects
 objects:
 	@python3 tools/engine/census.py
+
+# The third way a name can be absent, which neither of the other two checks
+# can see: a function that exists, is called, and does nothing. The symbol
+# is there, so `make missing' is content, and `make objects' counts it as
+# answered. That is where the Delta runtime's printing layer sat for months.
+#
+# It finds them by shape and then asks IBM's object what it holds under the
+# same name, so a stub whose reasoning has quietly stopped holding has
+# somewhere to show up. It wants IBM's objects, so it is not part of a build.
+.PHONY: stubs
+stubs:
+	@python3 tools/engine/stubs.py
 
 # What our code asks for and nothing of ours answers. The C library's own
 # names are dropped, since those come from the system; what is left is the

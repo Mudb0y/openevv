@@ -70,8 +70,11 @@ DATA = re.compile(r"^(ea_|e_|es_|et_|u_|us_|ut_|ed_|glob|link|clsyn)")
 
 # Where our own code is. lang and rom are in it because a language module
 # carries its own set builders -- `enus_set_dict_new' answers `set_dict_new'
-# -- and the romanizer is ours as well.
-SOURCES = ("src", "lang", "rom")
+# -- and the romanizer is ours as well. lib is in it because the published
+# names are wrappers there, and two of them exist nowhere else: the filter
+# queries, which are empty in IBM's object and are answered by being empty
+# here. Leaving lib out reported those two as missing.
+SOURCES = ("src", "lang", "rom", "lib")
 
 # A prefix our sources put in front of a name they took from an object or a
 # class. Two to four lower-case letters and an underscore covers every one
