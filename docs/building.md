@@ -20,6 +20,10 @@ That builds `build/libevv.a` and `build/evv`, which speaks. From nothing, that i
 
 That is the small, quick build -- half a minute on one core, under twenty seconds with `make -j8`, plus the two seconds a language the rules cost whichever form they are in. It speaks the same samples and it is the one to use while working on anything but the rules. What it costs is speed, which the next section puts numbers to.
 
+    make so
+
+That builds `build/libeci.so.1`, with `build/libeci.so` beside it: the same engine under the names IBM published, which is what a program of someone else's links against or loads by name. `include/eci.h` is what it compiles against, and `make so32` builds the same library thirty-two bit. `docs/using.md` is how to use it and `docs/api.md` what every call does.
+
     make probe
 
 That builds `build/probe` instead: the same engine behind the front the tests drive. It prints what the engine answered at every step so those answers can be set against IBM's, which is why it is not the thing to run by hand.
@@ -31,7 +35,7 @@ The same two, thirty-two bit. That build is a check rather than a target: a diff
 
 On a Nix machine `nix build` makes the same binary at `result/bin/evv`, and `nix run . -- -o hello.wav "text"` runs it without installing anything. `nix develop` is the shell the rest of this assumes: the thirty-two bit compiler, Wine and Python on the path.
 
-`make install` copies the binary to `/usr/local/bin/evv`, or wherever `PREFIX` and `DESTDIR` say. There is nothing else to install: it reads no file of its own at run time and wants no library but the C one, libm and pthreads. `make clean` takes the objects and the binaries away and leaves the generated C alone.
+`make install` copies the binary to `/usr/local/bin/evv`, or wherever `PREFIX` and `DESTDIR` say. There is nothing else the command needs: it reads no file of its own at run time and wants no library but the C one, libm and pthreads. `make install-lib` is the other half and puts the shared library and the header under `LIBDIR` and `INCDIR`, which default to `PREFIX`; it is a separate target because it is a separate build, so `make so` comes first. `make clean` takes the objects and the binaries away and leaves the generated C alone.
 
 ## The variables
 

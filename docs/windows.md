@@ -2,6 +2,8 @@
 
 The engine cross-compiles to Windows with mingw and is checked on a real Windows runner. Three things come out of it: the command, the speak window -- the only front end that plays what the engine makes -- and the library under the names IBM published, which is what a screen reader add-on loads.
 
+The library is no longer only a Windows thing: `make so` builds the same names as an ELF shared library out of the same `lib/eci_api.c`. What is still Windows here is the version resource, the two bitnesses and the add-on. `docs/using.md` is the platform-neutral account of using the library, and `docs/api.md` the interface itself.
+
     make win
 
 That cross-compiles two binaries with mingw: `build/evvspeak.exe`, the speak window, and `build/evv.exe`, the same console driver as on this machine. Both are static, so each is one file that wants nothing installed, and both are sixty-four bit. `make win-probe` builds the test driver as `build/probe.exe`, which `EVV_NATIVE=$PWD/build/probe.exe test/suite.sh` will run against IBM's binary case for case, under the same Wine.
@@ -34,7 +36,7 @@ One caveat about mixing toolchains, learned by tripping over it. The libraries i
 
 Two ways to check it, and both are worth having. `make win-dlltest` builds `build/dlltest.exe`, which links against nothing, loads `eci.dll` by name, asks for each entry point by name and speaks; `test/hash.sh build/dlltest.exe` then holds what comes out of the library against what comes out of everything else. `test/lib/dll.py` does the same through ctypes, which is a different question -- ctypes has its own ideas about handles, and a handle is sixty-four bits -- and CI runs it on Windows itself. `make win32` builds `build/dlltest32.exe` for the thirty-two bit library; that one is checked from C, since a sixty-four bit Python cannot load a thirty-two bit library at all. Both harnesses also read the version resource and fail if it is missing.
 
-What the library does not export: the filter interface, which the engine does not implement, and `eciGeneratePhonemes` and the dictionary find, lookup and update calls, which exist inside the engine with no public wrapper yet. A caller asking for one of those gets nothing rather than something wrong.
+What the library does not export: `eciGeneratePhonemes` and the dictionary find, lookup and update calls, which exist inside the engine with no public wrapper yet. A caller asking for one of those gets nothing rather than something wrong. `docs/quirks.md` says what that costs, which is not nothing -- speech-dispatcher's Eloquence module resolves `eciGeneratePhonemes` when it loads a runtime and refuses one that has not got it.
 
 ## The NVDA add-on
 
