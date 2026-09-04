@@ -286,6 +286,17 @@ ECIAPI int ECICALL eciSynthesize(ECIHand handle);
    nothing. eciSetOutputBuffer is the only way to get samples out. */
 ECIAPI int ECICALL eciSynthesizeFile(ECIHand handle, const void *filename);
 ECIAPI int ECICALL eciClearInput(ECIHand handle);
+
+/* The text as phonemes rather than as sound. The output is switched to the
+   caller's buffer, everything queued is put through, and the output goes
+   back to wherever it was; the answer here is only whether that worked, the
+   phonemes themselves arriving through the callback as eciPhonemeBuffer.
+
+   Two conditions, both IBM's and neither obvious. A callback has to be
+   registered, since that is the only way the phonemes can arrive. And
+   eciSynthMode has to be one: this walks the queue that mode builds, and in
+   mode nought there is nothing in it. */
+ECIAPI int ECICALL eciGeneratePhonemes(ECIHand handle, int room, void *buffer);
 ECIAPI int ECICALL eciSpeakText(const void *text, int annotations);
 ECIAPI int ECICALL eciSpeakTextEx(const void *text, int annotations,
                                   int language);

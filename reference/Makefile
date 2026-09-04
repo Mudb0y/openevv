@@ -123,6 +123,20 @@ $(BUILD)/ssmltry.exe: ssmltry.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/ssmltry.err >&2 || true; exit $$s
 	@echo "built $@"
 
+# What IBM's own eciGeneratePhonemes delivers, which is the oracle that call
+# was transcribed against. See the head of phontry.c.
+.PHONY: phontry
+phontry: $(BUILD)/phontry.exe
+
+$(BUILD)/phontry.exe: phontry.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
+                      $(SHIM) $(WORK)/.stamp
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) phontry.c \
+	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/phontry.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/phontry.err >&2 || true; exit $$s
+	@echo "built $@"
+
 $(BUILD)/jajp_shim.obj: jajp_shim.c
 	@mkdir -p $(BUILD)
 	@$(CC) -O2 -std=gnu99 -w $(INCS) -c $< -o $@

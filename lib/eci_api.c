@@ -24,10 +24,9 @@
  * declspec and the platform is started from a constructor rather than from
  * an entry point.
  *
- * What is not here: eciGeneratePhonemes and the dictionary find, lookup and
- * update calls, which exist inside the engine but have no public wrapper in
- * our tree yet. A caller asking for one of those gets nothing rather than
- * something wrong.
+ * What is not here: the dictionary find, lookup and update calls, which exist
+ * inside the engine but have no public wrapper in our tree yet. A caller
+ * asking for one of those gets nothing rather than something wrong.
  */
 
 #include <stdint.h>
@@ -73,6 +72,7 @@ int      STDCALL vc_setVoiceParam(OldInst *h, int32_t voice, int32_t which,
 int      STDCALL et_addText(OldInst *h, const void *text);
 int      STDCALL et_insertIndex(OldInst *h, int32_t index);
 int      STDCALL et_synthesize(OldInst *h);
+int      STDCALL ev_generatePhonemes(OldInst *h, int32_t n, void *buf);
 int      STDCALL es_synthesizeFile(OldInst *h, const void *name);
 int      STDCALL eo_clearInput(OldInst *h);
 int32_t  STDCALL eo_getIndex(OldInst *h);
@@ -162,6 +162,11 @@ ECIAPI int ECICALL eciSetVoiceParam(void *h, int voice, int which, int value)
 ECIAPI int ECICALL eciAddText(void *h, const void *text) { return et_addText(h, text); }
 ECIAPI int ECICALL eciInsertIndex(void *h, int index) { return et_insertIndex(h, index); }
 ECIAPI int ECICALL eciSynthesize(void *h) { return et_synthesize(h); }
+
+ECIAPI int ECICALL eciGeneratePhonemes(void *h, int n, void *buf)
+{
+    return ev_generatePhonemes(h, n, buf);
+}
 ECIAPI int ECICALL eciSynthesizeFile(void *h, const void *name) { return es_synthesizeFile(h, name); }
 ECIAPI int ECICALL eciClearInput(void *h) { return eo_clearInput(h); }
 ECIAPI int ECICALL eciGetIndex(void *h) { return eo_getIndex(h); }

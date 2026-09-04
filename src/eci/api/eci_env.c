@@ -81,12 +81,17 @@ extern int32_t STDCALL api_new_audio_format(void *h2, void *fmt)
     MANGLED("_eciNewAudioFormat2@8");
 extern int32_t STDCALL api_delete_audio_format(void *h2)
     MANGLED("_eciDeleteAudioFormat2@4");
+extern int32_t STDCALL api_synthesize(void *h2) MANGLED("_eciSynthesize2@4");
+extern int32_t STDCALL api_synchronize(void *h2)
+    MANGLED("_eciSynchronize2@4");
 extern int ealQueryDevCaps(int32_t dev, int32_t kind, int32_t *n, void *out)
     MANGLED("_ealQueryDevCaps");
 extern char standardVoices[] MANGLED("_standardVoices");
 extern int32_t g_DefaultEnvironment[] MANGLED("_g_DefaultEnvironment");
 
 extern int32_t setECIerror(int32_t rc, OldInst *h);
+extern int et_processManualQueue(OldInst *h)
+    MANGLED("?processManualQueue@@YAHPAUoldECIInstData@@@Z");
 
 int32_t ev_rateHz(int32_t rate);
 int32_t ev_engineHz(int32_t hz);
@@ -836,6 +841,82 @@ int STDCALL ev_setOutputBuffer(OldInst *h, int32_t n, void *buf)
     return 1;
 }
 
+/* Say what the text would be as phonemes rather than as sound.
+ *
+ * The output is switched to the caller's phoneme buffer, everything queued
+ * is put through, and the output is switched back to wherever it was --
+ * which is why the instance's own idea of where the samples go is taken
+ * before any of it and restored after. What the caller gets is not the
+ * answer here, which is only whether it worked: the phonemes arrive through
+ * the callback as ECI_PHONEMES, in the buffer handed over.
+ *
+ * Two conditions IBM's own code imposes and neither is obvious. There has to
+ * be a callback registered, since that is the only way the phonemes can
+ * arrive. And the synthesis mode has to be the queued one: this walks the
+ * manual queue, and in the immediate mode there is nothing in it because the
+ * text went straight down when it was added.
+ *
+ * One thing here is not IBM's. Its own code tests the handle for nought,
+ * skips setting the busy flag, and then clears that flag through the same
+ * nought a few instructions later -- so eciGeneratePhonemes(0, ...) faults on
+ * a write to address 0x6b4. Every other entry point in this file refuses a
+ * null handle rather than dying on it, and so does this one.
+ */
+int STDCALL ev_generatePhonemes(OldInst *h, int32_t n, void *buf)
+{
+    OldInst *inst;
+    void    *fresh;
+    int32_t  wasWhere;
+
+    if (ev_reentered(h))
+        return 0;
+
+    inst = h;
+    if (!inst)
+        return 0;
+
+    OI_BUSY(inst) = 1;
+
+    /* Nowhere for the phonemes to arrive, or nothing queued to make them
+       from. */
+    if (!OI_CALLBACK(inst) || OI_ENV(inst)[ENV_SYNTHMODE] != 1) {
+        OI_BUSY(inst) = 0;
+        return 0;
+    }
+
+    fresh    = OI_NEW(inst);
+    wasWhere = OI_WHERE(inst);
+
+    if (!ev_setOutputToPhonemeCallback(inst, n, buf)
+        || !et_processManualQueue(inst)) {
+        OI_BUSY(inst) = 0;
+        return 0;
+    }
+
+    api_synthesize(fresh);
+    api_synchronize(fresh);
+
+    /* And back to where the samples were going before, at whatever rate is
+       in force now rather than the one that was. */
+    if (wasWhere == WHERE_DEVICE) {
+        if (!ev_setOutputToDevice(inst, OI_RATE(inst), OI_ENV(inst)[13],
+                                  OI_ENV(inst)[14], OI_ENV(inst)[15],
+                                  OI_ENV(inst)[16])) {
+            OI_BUSY(inst) = 0;
+            return 0;
+        }
+    } else if (wasWhere == WHERE_SAMPLES) {
+        if (!ev_setOutputToSampleCallback(inst, OI_RATE(inst))) {
+            OI_BUSY(inst) = 0;
+            return 0;
+        }
+    }
+
+    OI_ENV_SAVED(inst)[ENV_RATE] = OI_RATE(inst);
+    OI_BUSY(inst) = 0;
+    return 1;
+}
+
 ALIAS("?checklang@@YAHH@Z", "ev_checklang");
 ALIAS("?sampleRateSupported@@YAHH@Z", "ev_sampleRateSupported");
 ALIAS("?saveInstanceData@@YAXPAUoldECIInstData@@@Z", "ev_saveInstanceData");
@@ -857,3 +938,4 @@ ALIAS("?sendParameters@@YAHPAUoldECIInstData@@@Z", "ev_sendParameters");
 ALIAS_N("_eciSetParam@12", "ev_setParam", 12);
 ALIAS_N("_eciSetOutputDevice@8", "ev_setOutputDevice", 8);
 ALIAS_N("_eciSetOutputBuffer@12", "ev_setOutputBuffer", 12);
+ALIAS_N("_eciGeneratePhonemes@12", "ev_generatePhonemes", 12);

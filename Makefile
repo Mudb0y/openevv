@@ -275,7 +275,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe so so32 sotest rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims
+.PHONY: all probe so so32 sotest phonemes rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -756,6 +756,24 @@ $(foreach l,$(LANGS),$(eval $(call rules_for,$(l))))
 missing: $(OBJECTS)
 	@$(NM) $(OBJECTS) > $(BUILD)/syms.txt
 	@python3 tools/engine/missing.py $(BUILD)/syms.txt
+
+# What the language decided a word was made of, as phonemes rather than as
+# sound, which is what eciGeneratePhonemes asks for. Both sides of it: ours
+# and the same driver against IBM's own objects, since a wrong letter-to-sound
+# answer names itself here where in a wave file it is a hash that moved.
+.PHONY: phonemes
+phonemes: $(BUILD)/phonemes
+	@$(MAKE) -C reference phontry
+	@bash test/harness/phonemes.sh
+
+# lib/eci_api.c goes in because the harness calls the published names and the
+# archive holds only the engine's own short ones. It brings the constructor
+# with it, which is what starts the platform and runs the static
+# initialisers, so this driver does not do either for itself.
+$(BUILD)/phonemes: test/harness/phonemes.c lib/eci_api.c $(BUILD)/libevv$(SUF).a
+	@$(CC) $(ALL_CFLAGS) -DECI_STATIC test/harness/phonemes.c lib/eci_api.c \
+	   $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
+	@echo "built $@"
 
 # The words IBM's engine cannot say. It wants neither Wine nor the objects,
 # because there is nothing to hold ours against: the original takes a page
