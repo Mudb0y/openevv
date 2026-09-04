@@ -145,8 +145,10 @@
    otherwise flag them. */
 #include "inputchar.h"
 
-/* And into DictSearch. */
-#define DS_COUNT        0x080ac   /* int16, what SetNextPhraseBuffer reads */
+/* And into DictSearch. Spelt exactly as dictsearch.h spells it: a file that
+   includes both headers gets it twice, and a redefinition warns on the tokens
+   rather than on the value. */
+#define DS_COUNT        0x80ac    /* int16, what SetNextPhraseBuffer reads */
 
 /* And into PhraseBuf. */
 #define PB_TAIL         0x399d8

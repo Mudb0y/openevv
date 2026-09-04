@@ -184,16 +184,17 @@ def regions_ic(d):
 
 
 def regions_jp(d):
-    """And for JPath, which is mapped whole but for one span. The three arrays
-    are almost the whole of it and their counts agree with each other and with
-    DictSearch's own."""
+    """And for JPath, which is mapped whole now that the search is written.
+    The three arrays are almost the whole of it and their counts agree with
+    each other and with DictSearch's own; the fourth is one byte a character,
+    which agrees with InputChar's count."""
     r = [
         (d["JP_VTABLE"], 4, "the vtable"),
         (d["JP_OWNER"], 4, "the owner"),
         (d["JP_PATH"], d["JP_PATH_N"] * d["JP_PATH_SIZE"], "the paths"),
         (d["JP_SUB"], d["JP_SUB_N"] * d["JP_SUB_SIZE"], "the sub-words"),
         (d["JP_PATH_COUNT"], 2, "how many paths"),
-        (d["JP_UNREAD_7486"], d["JP_UNREAD_N"], "the span nobody has read"),
+        (d["JP_COST"], d["JP_COST_N"], "the cheapest way to each character"),
         (d["JP_INDEX"], d["JP_INDEX_N"] * 2, "entry to sub-word"),
         (d["JP_SEARCH"], 4, "the dictionary search"),
     ]

@@ -318,6 +318,24 @@ static Conv *makeConv(Param *p)
     pb_SetPhrasePart((pb), (p), (n), (f), (k), (o))
 #define ibm_pbSetPhraseBuffer(pb, o) pb_SetPhraseBuffer((pb), (o))
 #define PB(name) ibm_pb##name
+/* ---- JPath ------------------------------------------------------------ */
+
+#define ibm_jpCtor(jp, ta)  jp_ctor((jp), (ta))
+#define ibm_jpMake(jp, at)  jp_Make((jp), (at))
+#define ibm_jpAddPath(jp, p, e, o, n, i) \
+    jp_AddPath((jp), (p), (e), (o), (n), (i))
+#define ibm_jpCheckType(jp, tg) jp_CheckType((jp), (tg))
+#define ibm_jpCheckAdFlag(jp, lt, rt, la, ra, c) \
+    jp_CheckAdFlag((jp), (lt), (rt), (la), (ra), (c))
+#define ibm_jpJrtJrtCheck(jp, lt, rt, la, ra, a) \
+    jp_JrtJrtCheck((jp), (lt), (rt), (la), (ra), (a))
+#define ibm_jpIsHead(jp, e)        jp_IsHead((jp), (e))
+#define ibm_jpIsEnd(jp, e)         jp_IsEnd((jp), (e))
+#define ibm_jpIsContinuable(jp, e) jp_IsContinuable((jp), (e))
+#define ibm_jpGetMoraOnPath(jp, p, x) jp_GetMoraOnPath((jp), (p), (x))
+#define ibm_jpSetWordAttr(jp, s, e)   jp_SetWordAttr((jp), (s), (e))
+#define ibm_jpMakeJrtSubTable(jp)     jp_MakeJrtSubTable((jp))
+#define JP(name) ibm_jp##name
 
 /* Where each side keeps PhraseBuf's four pointers and JPath's three. Ours are
    parked past their records; IBM's are at the offsets the maps name. */
@@ -998,6 +1016,44 @@ extern THIS int16_t ibm_pbSetPhrasePart(void *pb, const uint8_t *path,
 extern THIS int16_t ibm_pbSetPhraseBuffer(void *pb, uint8_t *out)
     MANGLED("?SetPhraseBuffer@PhraseBuf@@QAEFPAU_W_PHRASE_T@@@Z");
 #define PB(name) ibm_pb##name
+/* ---- JPath ------------------------------------------------------------ */
+
+/* Nine of these eleven are private members in IBM's own source. Access
+   control is a matter for its compiler and not for its linker: each one has
+   an external symbol in the object all the same, so each can be called here
+   and held to on its own. */
+extern THIS void *ibm_jpCtor(void *jp, void *ta)
+    MANGLED("??0JPath@@QAE@AAVTextAnalysis@@@Z");
+extern THIS void ibm_jpMake(void *jp, int16_t at)
+    MANGLED("?Make@JPath@@QAEXF@Z");
+extern THIS int32_t ibm_jpAddPath(void *jp, const uint8_t *path,
+                                  const uint8_t *entry, uint8_t *out,
+                                  int16_t nPaths, int16_t entryIndex)
+    MANGLED("?AddPath@JPath@@QAEHPAU_J_PATH_T@@PAU_DICTENT_T@@0FF@Z");
+extern THIS int16_t ibm_jpCheckType(void *jp, const uint8_t *tg)
+    MANGLED("?CheckType@JPath@@IAEFPAE@Z");
+extern THIS int16_t ibm_jpCheckAdFlag(void *jp, const uint8_t *lt,
+                                      const uint8_t *rt, const uint8_t *la,
+                                      const uint8_t *ra, int16_t cost)
+    MANGLED("?CheckAdFlag@JPath@@IAEFPAE000F@Z");
+extern THIS int16_t ibm_jpJrtJrtCheck(void *jp, const uint8_t *lt,
+                                      const uint8_t *rt, const uint8_t *la,
+                                      const uint8_t *ra, int32_t adjust)
+    MANGLED("?JrtJrtCheck@JPath@@IAEFPAE000H@Z");
+extern THIS int32_t ibm_jpIsHead(void *jp, const uint8_t *e)
+    MANGLED("?IsHead@JPath@@IAEHPAU_DICTENT_T@@@Z");
+extern THIS int32_t ibm_jpIsEnd(void *jp, const uint8_t *e)
+    MANGLED("?IsEnd@JPath@@IAEHPAU_DICTENT_T@@@Z");
+extern THIS int32_t ibm_jpIsContinuable(void *jp, const uint8_t *e)
+    MANGLED("?IsContinuable@JPath@@IAEHPAU_DICTENT_T@@@Z");
+extern THIS int16_t ibm_jpGetMoraOnPath(void *jp, const uint8_t *path,
+                                        int16_t extra)
+    MANGLED("?GetMoraOnPath@JPath@@IAEFPAU_J_PATH_T@@F@Z");
+extern THIS void ibm_jpSetWordAttr(void *jp, uint8_t *sub, const uint8_t *e)
+    MANGLED("?SetWordAttr@JPath@@IAEXPAU_J_SUB_T@@PAU_DICTENT_T@@@Z");
+extern THIS void ibm_jpMakeJrtSubTable(void *jp)
+    MANGLED("?MakeJrtSubTable@JPath@@IAEXXZ");
+#define JP(name) ibm_jp##name
 
 #define PB_SET(blk, which, p) (*(void **)((blk) + which) = (p))
 #define JP_SET(blk, which, p) (*(void **)((blk) + which) = (p))
@@ -5776,14 +5832,14 @@ static void jpSub(int s, int e, int at, int32_t mark, int accent,
 }
 
 /* And one path over a run of entry indices. */
-static void jpPath(int p, int spare, const int *ents, int n)
+static void jpPath(int p, int cost, const int *ents, int n)
 {
     uint8_t *path = JP_PATH_AT(jp_room, p);
     int      i;
 
     memset(path, 0, JP_PATH_SIZE);
     path[JPT_COUNT] = (uint8_t)n;
-    path[JPT_SPARE] = (uint8_t)spare;
+    path[JPT_COST]  = (uint8_t)cost;
     for (i = 0; i < n && i < JPT_AT_N; i++)
         path[JPT_AT + i] = (uint8_t)ents[i];
 }
@@ -6089,6 +6145,564 @@ static void sweepPhraseBuf(void)
     printf("PB done\n");
 }
 
+
+/* ---- the path search -------------------------------------------------- */
+
+/* How this one is driven.
+ *
+ * JPath's eleven methods split three ways. Four read nothing but a part of
+ * speech and one or two attribute bytes, so they are swept exhaustively over
+ * every value of each: 256 parts of speech is the whole of that input, and
+ * the attribute bytes are read one bit at a time, so 256 values of each is
+ * the whole of theirs too.
+ *
+ * Two -- the pair that decides what it costs to put one word after another --
+ * take two four-byte type groups and two attribute pairs between them, which
+ * is eighty bits of input and cannot be swept whole. CheckAdFlag reduces each
+ * type group to one of eleven classes and then reads the attribute bytes, so
+ * it is swept over all 121 pairs of classes with each attribute byte taken
+ * through all 256 of its values, and again with the four bits it reads out of
+ * the type groups themselves turned on and off in every combination.
+ * JrtJrtCheck's guards read all four bytes of the left-hand type group
+ * directly, so it gets a byte-at-a-time sweep instead: each of the eight
+ * bytes through all 256 of its values against a spread of the other seven.
+ *
+ * Those two run to millions of calls, and a line a call would be gigabytes.
+ * Their answers go into a rolling digest printed every 1024 calls, which
+ * still says which window of calls a difference is in; the structured part of
+ * each sweep is printed in full besides, so the common cases are legible.
+ *
+ * The last five need a lattice of candidate entries, which nothing written
+ * yet builds. The harness lays one into DictSearch by hand at IBM's own
+ * offsets -- 64 lattices over the same eight characters, each with different
+ * parts of speech, attributes and dictionary costs -- and then drives Make
+ * over it, printing every path and every sub-word it leaves behind. That is
+ * what covers Make, AddPath, GetMoraOnPath and MakeJrtSubTable together, and
+ * what would catch a search that finds the wrong paths rather than one that
+ * merely scores them wrongly.
+ */
+
+/* One type group per class CheckType names. Each is exactly what CheckType
+   reads and nothing more; the four bits the cost functions read out of a type
+   group themselves are in the other two bytes and the sweep adds them. */
+static const uint8_t JP_TG[11][4] = {
+    { 0, 0, 0x00, 0x80 },   /*  0, the sentence's edge */
+    { 0, 0, 0x00, 0x00 },   /*  1 */
+    { 0, 0, 0x02, 0x00 },   /*  2 */
+    { 0, 0, 0x01, 0x00 },   /*  3 */
+    { 0, 0, 0x00, 0x01 },   /*  4 */
+    { 0, 0, 0x02, 0x01 },   /*  5 */
+    { 0, 0, 0x01, 0x01 },   /*  6 */
+    { 0, 0, 0x10, 0x00 },   /*  7 */
+    { 0, 0, 0x00, 0x08 },   /*  8 */
+    { 0, 0, 0x01, 0x10 },   /*  9 */
+    { 0, 0, 0x00, 0x10 },   /* 10 */
+};
+
+static uint32_t jp_roll;
+static long     jp_rolled;
+
+static void jpRoll(long v)
+{
+    jp_roll = jp_roll * 1000003u + (uint32_t)v;
+    jp_rolled++;
+    if ((jp_rolled & 0x3ff) == 0)
+        printf("JP roll %ld %08lx\n", jp_rolled, (unsigned long)jp_roll);
+}
+
+/* The eight bytes of one call to either cost function, so that a sweep can
+   name one byte and leave the rest alone. */
+static void jpBytes(uint8_t *lt, uint8_t *rt, uint8_t *la, uint8_t *ra,
+                    uint32_t seed)
+{
+    int i;
+
+    for (i = 0; i < 4; i++) {
+        seed = seed * 1103515245u + 12345u;
+        lt[i] = (uint8_t)(seed >> 16);
+        seed = seed * 1103515245u + 12345u;
+        rt[i] = (uint8_t)(seed >> 16);
+    }
+    for (i = 0; i < 2; i++) {
+        seed = seed * 1103515245u + 12345u;
+        la[i] = (uint8_t)(seed >> 16);
+        seed = seed * 1103515245u + 12345u;
+        ra[i] = (uint8_t)(seed >> 16);
+    }
+}
+
+/* One candidate entry of the search, which is thirty-two bytes at IBM's own
+   offsets whichever side is reading it. */
+#define JP_ENT_AT(i) ((uint8_t *)ds_block + DS_ENTRY + (i) * DS_ENTRY_SIZE)
+
+/* One entry of the lattice, at IBM's own offsets within a candidate. */
+static void jpEntry(int i, int at, int chars, int pos, int attr, int attr2,
+                    int32_t cost, int kanalen)
+{
+    uint8_t *e = JP_ENT_AT(i);
+    int      k;
+
+    memset(e, 0, DS_ENTRY_SIZE);
+    *(int16_t *)(e + DE_ACCENT) = (int16_t)(1 + i % 4);
+    e[DE_KANALEN]  = (uint8_t)kanalen;
+    e[DE_CHARS]    = (uint8_t)chars;
+    e[DE_HIRAGANA] = (uint8_t)(i % 3);
+    e[DE_POS]      = (uint8_t)pos;
+    e[DE_ATTR]     = (uint8_t)attr;
+    e[DE_ATTR2]    = (uint8_t)attr2;
+    for (k = 0; k < 10; k++)
+        e[DE_KANA + k] = (uint8_t)(0x30 + i + k);
+    *(int16_t *)(e + DE_AT)     = (int16_t)at;
+    *(int32_t *)(e + DE_MARK)   = (int32_t)(at * 2);
+    *(int16_t *)(e + DE_OFFSET) = (int16_t)(i * 3);
+    *(int32_t *)(e + DE_COST)   = cost;
+}
+
+/* The lattice: how many characters each entry covers and where it starts.
+   The entries are in rising order of where they start, because Make looks for
+   the first entry at a character and then walks the run of them, which is
+   what DictSearch's own writers leave behind. */
+static const signed char JP_LAT[][2] = {
+    /* at, chars */
+    { 0, 1 }, { 0, 2 }, { 0, 1 },
+    { 1, 1 }, { 1, 3 },
+    { 2, 2 }, { 2, 1 },
+    { 3, 1 }, { 3, 2 },
+    { 4, 1 }, { 4, 2 },
+    { 5, 1 },
+    { 6, 2 },
+};
+
+/* And a second shape, of one-character words only, so that a path can grow to
+   the ten entries the record holds and to more moras than a phrase may. The
+   first shape cannot reach either bound: its words are long enough that four
+   of them cover the text. */
+static const signed char JP_LONG[][2] = {
+    { 0, 1 }, { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 },
+    { 6, 1 }, { 7, 1 }, { 8, 1 }, { 9, 1 }, { 10, 1 }, { 11, 1 },
+    { 12, 1 },
+};
+#define JP_LAT_N ((int)(sizeof JP_LAT / sizeof JP_LAT[0]))
+
+/* Everything JPath needs, laid out the same on both sides. The reader's text
+   carries a case marker at one character and not at the others, so the one
+   branch of Make that asks about the character before a word is taken for
+   some words and not for the rest. */
+static void jpSetUp(void)
+{
+    int i;
+
+    memset(ta_block, 0, sizeof ta_block);
+    memset(ic_block, 0, sizeof ic_block);
+    memset(ds_block, 0, sizeof ds_block);
+    memset(jp_room, 0, sizeof jp_room);
+
+    /* A case marker at the first character as well as at the third: the
+       first is what makes the bound on that test observable, since a word
+       starting at the second character is the only one whose neighbour is
+       character nought. */
+    for (i = 0; i < 16; i++) {
+        ic_block[IC_TEXT + i * 2]     = (char)0x82;
+        ic_block[IC_TEXT + i * 2 + 1] =
+            (char)((i == 0 || i == 2) ? 0xf0 : 0xa0 + i);
+    }
+    *(int16_t *)(ic_block + IC_COUNT) = 16;
+
+    TA_SET(ta_block, TA_INPUTCHAR, ic_block);
+    TA_SET(ta_block, TA_DICTSEARCH, ds_block);
+    TA_SET(ta_block, TA_JPATH, jp_room);
+    DS_SET_OWNER(ds_block, ta_block);
+    *(void **)(ds_block + DS_INPUTCHAR) = ic_block;
+    JP(Ctor)(jp_room, ta_block);
+}
+
+/* What one run of Make left behind: the paths, the cheapest way to each
+   character, and the sub-words. Printed whole, so a path found in the wrong
+   order or a sub-word field copied from the wrong place both show. */
+static void jpReport(long lat, int at)
+{
+    long n = (long)*(uint16_t *)(jp_room + JP_PATH_COUNT);
+    long i;
+    int  k;
+
+    printf("JP make %ld %d paths %ld\n", lat, at, n);
+    for (i = 0; i < n; i++) {
+        const uint8_t *path = JP_PATH_AT(jp_room, i);
+
+        printf("JP path %ld %d %ld %d %d %d %d ", lat, at, i,
+               (int)path[JPT_COUNT], (int)path[JPT_COST],
+               (int)path[JPT_END], (int)path[JPT_CONT]);
+        for (k = 0; k < JPT_AT_N; k++)
+            printf("%02x", (unsigned)path[JPT_AT + k]);
+        putchar('\n');
+    }
+    printf("JP cost %ld %d ", lat, at);
+    for (k = 0; k < 20; k++)
+        printf("%02x", (unsigned)(uint8_t)jp_room[JP_COST + k]);
+    putchar('\n');
+    for (i = 0; i < JP_LAT_N; i++) {
+        long   sub = (long)JP_INDEX_OF(jp_room, i);
+        printf("JP index %ld %d %ld %ld", lat, at, i, sub);
+        if (sub >= 0) {
+            const uint8_t *w = JP_SUB_AT(jp_room, sub);
+
+            putchar(' ');
+            for (k = 0; k < JP_SUB_SIZE; k++)
+                printf("%02x", (unsigned)w[k]);
+        }
+        putchar('\n');
+    }
+}
+
+static void sweepJPath(void)
+{
+    long i, j, b, v, c;
+
+    jpSetUp();
+
+    /* The eleven classes, over every value of the two type-group bytes
+       CheckType reads. This is the whole of its input. */
+    for (i = 0; i < 256; i++)
+        for (j = 0; j < 256; j++) {
+            uint8_t tg[4];
+
+            tg[0] = 0xa5;
+            tg[1] = 0x5a;
+            tg[2] = (uint8_t)i;
+            tg[3] = (uint8_t)j;
+            printf("JP type %ld %ld %d\n", i, j,
+                   (int)JP(CheckType)(jp_room, tg));
+        }
+
+    /* And the type group the sweep below relies on being each class. A wrong
+       one here would leave whole branches of the cost functions unreached
+       without anything saying so. */
+    for (i = 0; i < 11; i++)
+        printf("JP class %ld %d\n", i,
+               (int)JP(CheckType)(jp_room, JP_TG[i]));
+
+    /* The three that read nothing but a part of speech and one bit. */
+    for (i = 0; i < 256; i++) {
+        uint8_t e[DS_ENTRY_SIZE];
+
+        memset(e, 0, sizeof e);
+        e[DE_POS] = (uint8_t)i;
+        printf("JP head %ld %d\n", i, (int)JP(IsHead)(jp_room, e));
+        printf("JP cont %ld %d\n", i, (int)JP(IsContinuable)(jp_room, e));
+        printf("JP end %ld 0 %d\n", i, (int)JP(IsEnd)(jp_room, e));
+        e[DE_ATTR2] = 0x02;
+        printf("JP end %ld 1 %d\n", i, (int)JP(IsEnd)(jp_room, e));
+    }
+
+    /* The attribute byte of a sub-word, over the whole of what it reads: 256
+       parts of speech, 256 second attribute bytes, and the one bit of the
+       first that it looks at. */
+    for (i = 0; i < 256; i++)
+        for (j = 0; j < 256; j++)
+            for (c = 0; c < 2; c++) {
+                uint8_t e[DS_ENTRY_SIZE];
+                uint8_t sub[JP_SUB_SIZE];
+
+                memset(e, 0, sizeof e);
+                memset(sub, 0xa5, sizeof sub);
+                e[DE_POS]   = (uint8_t)i;
+                e[DE_ATTR2] = (uint8_t)j;
+                e[DE_ATTR]  = (uint8_t)(c ? 0x80 : 0x00);
+                JP(SetWordAttr)(jp_room, sub, e);
+                printf("JP attr %ld %ld %ld %02x\n", i, j, c,
+                       (unsigned)sub[JS_ATTR]);
+            }
+
+    /* The cost of putting one word after another, printed in full over every
+       pair of classes and the corners of the attribute bytes. */
+    for (i = 0; i < 11; i++)
+        for (j = 0; j < 11; j++)
+            for (v = 0; v < 4; v++)
+                for (c = 0; c < 3; c++) {
+                    uint8_t la[2], ra[2];
+                    int16_t cost = (int16_t)(c == 0 ? 0 : c == 1 ? 5 : 40);
+
+                    la[0] = (uint8_t)((v & 1) ? 0xff : 0x00);
+                    la[1] = (uint8_t)((v & 1) ? 0xff : 0x00);
+                    ra[0] = (uint8_t)((v & 2) ? 0xff : 0x00);
+                    ra[1] = (uint8_t)((v & 2) ? 0xff : 0x00);
+                    printf("JP ad %ld %ld %ld %ld %d\n", i, j, v, c,
+                           (int)JP(CheckAdFlag)(jp_room, JP_TG[i], JP_TG[j],
+                                                la, ra, cost));
+                }
+
+    /* And over all 121 pairs of classes with each attribute byte taken
+       through all 256 of its values, and the four bits the function reads out
+       of the type groups themselves in every combination. */
+    for (i = 0; i < 11; i++)
+        for (j = 0; j < 11; j++)
+            for (v = 0; v < 16; v++) {
+                uint8_t lt[4], rt[4];
+
+                memcpy(lt, JP_TG[i], 4);
+                memcpy(rt, JP_TG[j], 4);
+                if (v & 1)
+                    lt[1] |= 0x08;
+                if (v & 2)
+                    lt[2] |= 0x40;
+                if (v & 4)
+                    rt[1] |= 0x08;
+                if (v & 8)
+                    rt[2] |= 0x40;
+
+                for (b = 0; b < 4; b++)
+                    for (c = 0; c < 256; c++) {
+                        uint8_t la[2], ra[2];
+
+                        la[0] = la[1] = ra[0] = ra[1] = 0;
+                        if (b == 0)
+                            la[0] = (uint8_t)c;
+                        else if (b == 1)
+                            la[1] = (uint8_t)c;
+                        else if (b == 2)
+                            ra[0] = (uint8_t)c;
+                        else
+                            ra[1] = (uint8_t)c;
+                        jpRoll(JP(CheckAdFlag)(jp_room, lt, rt, la, ra,
+                                               (int16_t)(c & 0x1f)));
+                    }
+            }
+    /* One byte at a time leaves the tests that read a bit of one attribute
+       byte and a bit of another only ever seeing both bits clear, so the same
+       classes and variants are swept again over pairs of bytes: the two first
+       attribute bytes together over every pair of the values whose bits the
+       function reads, and then the two second ones. */
+    {
+        static const uint8_t FIRST[8] = {
+            0x00, 0x07, 0x08, 0x10, 0x20, 0x40, 0x80, 0xff
+        };
+        static const uint8_t SECOND[8] = {
+            0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40
+        };
+        long x, y;
+
+        for (i = 0; i < 11; i++)
+            for (j = 0; j < 11; j++)
+                for (v = 0; v < 16; v++) {
+                    uint8_t lt[4], rt[4];
+
+                    memcpy(lt, JP_TG[i], 4);
+                    memcpy(rt, JP_TG[j], 4);
+                    if (v & 1)
+                        lt[1] |= 0x08;
+                    if (v & 2)
+                        lt[2] |= 0x40;
+                    if (v & 4)
+                        rt[1] |= 0x08;
+                    if (v & 8)
+                        rt[2] |= 0x40;
+
+                    for (x = 0; x < 8; x++)
+                        for (y = 0; y < 8; y++) {
+                            uint8_t la[2], ra[2];
+
+                            la[0] = FIRST[x];
+                            ra[0] = FIRST[y];
+                            la[1] = 0;
+                            ra[1] = 0;
+                            jpRoll(JP(CheckAdFlag)(jp_room, lt, rt, la, ra,
+                                                   (int16_t)(x * 8 + y)));
+                            la[0] = 0;
+                            ra[0] = 0;
+                            la[1] = SECOND[x];
+                            ra[1] = SECOND[y];
+                            jpRoll(JP(CheckAdFlag)(jp_room, lt, rt, la, ra,
+                                                   (int16_t)(x * 8 + y)));
+                            la[0] = FIRST[y];
+                            ra[0] = FIRST[x];
+                            la[1] = SECOND[x];
+                            ra[1] = SECOND[y];
+                            jpRoll(JP(CheckAdFlag)(jp_room, lt, rt, la, ra,
+                                                   (int16_t)(x * 8 + y)));
+                        }
+                }
+    }
+    printf("JP ad done %ld %08lx\n", jp_rolled, (unsigned long)jp_roll);
+
+    /* The table lookup, printed in full over the classes and both roads
+       through the adjustment. */
+    for (i = 0; i < 11; i++)
+        for (j = 0; j < 11; j++)
+            for (v = 0; v < 2; v++) {
+                uint8_t la[2], ra[2];
+
+                la[0] = 0x11;
+                la[1] = 0x22;
+                ra[0] = 0x44;
+                ra[1] = 0x88;
+                printf("JP jrt %ld %ld %ld %d\n", i, j, v,
+                       (int)JP(JrtJrtCheck)(jp_room, JP_TG[i], JP_TG[j],
+                                            la, ra, (int32_t)v));
+            }
+
+    /* And byte at a time over all eight bytes of its input, each through all
+       256 of its values against a spread of the other seven. */
+    for (b = 0; b < 8; b++)
+        for (v = 0; v < 256; v++)
+            for (i = 0; i < 64; i++) {
+                uint8_t lt[4], rt[4], la[2], ra[2];
+
+                jpBytes(lt, rt, la, ra, (uint32_t)(i * 7919 + 1));
+                if (b < 4)
+                    lt[b] = (uint8_t)v;
+                else
+                    rt[b - 4] = (uint8_t)v;
+                jpRoll(JP(JrtJrtCheck)(jp_room, lt, rt, la, ra,
+                                       (int32_t)(i & 1)));
+            }
+    /* Two places in JrtJrtCheck that a sweep over byte patterns does not
+       reach, because both want a left-hand type group that passes all nine
+       of the guards before the fall-through chain -- which a pattern picked
+       at random almost never does.
+     *
+     * The first is the tail of the chain, which takes a cost of exactly
+       nought where every block above it wanted more: reaching it needs a
+       left-hand word whose only set bit is one of the two that the first
+       block of the chain reads, and a right-hand word whose table entry is
+       nought. The second is the one place two of the tables leave alone once
+       a cost has been found, which wants a right-hand word with that bit set
+       and a dearer bit set before it. */
+    {
+        static const uint8_t TAIL_L[6][4] = {
+            { 0, 0x10, 0x00, 0x00 },   /* the first block of the chain */
+            { 0, 0x20, 0x00, 0x00 },
+            { 0, 0x80, 0x00, 0x00 },   /* and the second */
+            { 0, 0x00, 0x20, 0x00 },
+            { 0, 0x00, 0x10, 0x00 },   /* the kanji block */
+            { 0, 0x00, 0x04, 0x00 },   /* and the one that takes the cheaper */
+        };
+        long x;
+
+        for (x = 0; x < 6; x++)
+            for (b = 0; b < 4; b++)
+                for (v = 0; v < 256; v++)
+                    for (i = 0; i < 2; i++) {
+                        uint8_t rt[4], la[2], ra[2];
+
+                        memset(rt, 0, sizeof rt);
+                        rt[b] = (uint8_t)v;
+                        la[0] = la[1] = ra[0] = ra[1] = 0;
+                        printf("JP tail %ld %ld %ld %ld %d\n", x, b, v, i,
+                               (int)JP(JrtJrtCheck)(jp_room, TAIL_L[x], rt,
+                                                    la, ra, (int32_t)i));
+                    }
+
+        /* And the kept place: the function-word table and the second of the
+           plain ones, with that bit always set on the right-hand word and
+           every other byte of it swept, so that something dearer is found
+           before the sweep reaches it. */
+        for (x = 0; x < 2; x++)
+            for (b = 0; b < 3; b++)
+                for (v = 0; v < 256; v++) {
+                    uint8_t lt[4], rt[4], la[2], ra[2];
+
+                    memset(lt, 0, sizeof lt);
+                    if (x == 0)
+                        lt[3] = 0x08;
+                    else
+                        lt[1] = 0x80;
+                    memset(rt, 0, sizeof rt);
+                    rt[2] = 0x08;
+                    if (b < 2)
+                        rt[b] = (uint8_t)v;
+                    else
+                        rt[2] = (uint8_t)(0x08 | v);
+                    la[0] = la[1] = ra[0] = ra[1] = 0;
+                    printf("JP keep %ld %ld %ld %d\n", x, b, v,
+                           (int)JP(JrtJrtCheck)(jp_room, lt, rt, la, ra, 0));
+                }
+    }
+    printf("JP jrt done %ld %08lx\n", jp_rolled, (unsigned long)jp_roll);
+
+    /* How many moras a path runs to, over paths of every length the record
+       allows and every entry the lattice holds. */
+    for (i = 0; i < JP_LAT_N; i++)
+        jpEntry((int)i, JP_LAT[i][0], JP_LAT[i][1], (int)(i * 17) & 0xff,
+                0, 0, 0, (int)(1 + i % 7));
+    *(int16_t *)(ds_block + DS_COUNT) = (int16_t)JP_LAT_N;
+
+    for (i = 1; i <= JPT_AT_N; i++)
+        for (j = 0; j < JP_LAT_N; j++) {
+            uint8_t path[JP_PATH_SIZE];
+            int     k;
+
+            memset(path, 0, sizeof path);
+            path[JPT_COUNT] = (uint8_t)i;
+            for (k = 0; k < (int)i; k++)
+                path[JPT_AT + k] = (uint8_t)((j + k) % JP_LAT_N);
+            printf("JP mora %ld %ld %d\n", i, j,
+                   (int)JP(GetMoraOnPath)(jp_room, path, (int16_t)j));
+        }
+
+    /* How many entries a path may hold, asked of AddPath directly. No
+       lattice reaches it: most pairs of word classes cannot stand together
+       at all, so the longest path any of the 128 lattices grows is four
+       entries, and the bound of ten is never seen. Handing it a path that is
+       already that long is the only way to ask. */
+    for (i = 6; i <= 11; i++)
+        for (j = 0; j < JP_LAT_N; j++)
+            for (c = 0; c < JP_LAT_N; c++) {
+                uint8_t path[JP_PATH_SIZE], out[JP_PATH_SIZE];
+                int     k;
+
+                /* Nothing may have been left in the way of a cheaper path,
+                   or the cost test refuses the join before the bound is
+                   reached and the two sides agree for the wrong reason. */
+                for (k = 0; k < JP_COST_N; k++)
+                    JP_COST_AT(jp_room, k) = 0xff;
+                memset(path, 0, sizeof path);
+                memset(out, 0xa5, sizeof out);
+                path[JPT_COUNT] = (uint8_t)i;
+                path[JPT_COST]  = 0;
+                for (k = 0; k < (int)i && k < JPT_AT_N; k++)
+                    path[JPT_AT + k] = (uint8_t)j;
+                printf("JP grow %ld %ld %ld %d ", i, j, c,
+                       (int)JP(AddPath)(jp_room, path, JP_ENT_AT(c),
+                                        out, 5, (int16_t)c));
+                for (k = 0; k < JP_PATH_SIZE; k++)
+                    printf("%02x", (unsigned)out[k]);
+                putchar('\n');
+            }
+
+    /* The whole search, over sixty-four lattices of each of the two shapes
+       with different parts of speech, attributes and dictionary costs on the
+       entries, from each of the first four characters. */
+    for (i = 0; i < 128; i++) {
+        const signed char (*lat)[2] = (i < 64) ? JP_LAT : JP_LONG;
+
+        for (j = 0; j < JP_LAT_N; j++)
+            jpEntry((int)j, lat[j][0], lat[j][1],
+                    (int)((i * 7 + j * 31) & 0xff),
+                    (int)((i * 13 + j * 5) & 0xff),
+                    (int)((i * 29 + j * 11) & 0xff),
+                    (int32_t)((i + j) % 10),
+                    /* Past nine for some of the first shape's words, which
+                       is where a sub-word's reading is cut off; one mora
+                       each for the second shape's, so that a path there can
+                       reach the ten entries the record holds before the
+                       bound on moras stops it. */
+                    (i < 64) ? (int)(1 + (i + j) % 12) : 1);
+        *(int16_t *)(ds_block + DS_COUNT) = (int16_t)JP_LAT_N;
+
+        for (j = 0; j < 4; j++) {
+            /* The whole block, then the constructor again: IBM keeps its
+               three pointers inside the record and ours past it, so only
+               remaking it leaves both sides in the same state. */
+            memset(jp_room, 0, sizeof jp_room);
+            JP(Ctor)(jp_room, ta_block);
+            JP(Make)(jp_room, (int16_t)j);
+            jpReport(i, (int)j);
+        }
+    }
+
+    printf("JP done\n");
+}
+
 int main(void)
 {
     Param *p;
@@ -6141,6 +6755,7 @@ int main(void)
     sweepInputManager();
     sweepConverter();
     sweepPhraseBuf();
+    sweepJPath();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

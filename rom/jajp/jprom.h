@@ -675,6 +675,36 @@ int16_t pb_SetPhrasePart(void *pb, const uint8_t *path, int16_t n,
                          int16_t fzk, int32_t sokuon, uint8_t *out);
 int16_t pb_SetPhraseBuffer(void *pb, uint8_t *out);
 
+/* ---- JPath ------------------------------------------------------------ */
+
+/* The path search. The block is passed as bytes because the record is IBM's;
+   rom/jajp/jpath.h is the map, and the paths and sub-words it leaves behind
+   are what PhraseBuf reads. */
+void   *jp_ctor(void *jp, void *analysis);
+void   *jp_destroy(void *jp, int32_t freeIt);
+void    jp_Make(void *jp, int16_t at);
+int32_t jp_AddPath(void *jp, const uint8_t *path, const uint8_t *entry,
+                   uint8_t *out, int16_t nPaths, int16_t entryIndex);
+
+/* The nine below are private to JPath in IBM's own source, and nothing else
+   here calls them. They are not static all the same, because IBM's compiler
+   gave each of them an external symbol and test/harness/romprims.c can
+   therefore hold each one to IBM's own answer -- which the two public entry
+   points above could not do on their own. Two of the nine are where all the
+   difficulty is: a wrong branch in either would show as a slightly different
+   reading of one sentence in a thousand, and nowhere else. */
+int16_t jp_CheckType(void *jp, const uint8_t *tg);
+int16_t jp_CheckAdFlag(void *jp, const uint8_t *lt, const uint8_t *rt,
+                       const uint8_t *la, const uint8_t *ra, int16_t cost);
+int16_t jp_JrtJrtCheck(void *jp, const uint8_t *lt, const uint8_t *rt,
+                       const uint8_t *la, const uint8_t *ra, int32_t adjust);
+int32_t jp_IsHead(void *jp, const uint8_t *e);
+int32_t jp_IsEnd(void *jp, const uint8_t *e);
+int32_t jp_IsContinuable(void *jp, const uint8_t *e);
+int16_t jp_GetMoraOnPath(void *jp, const uint8_t *path, int16_t extra);
+void    jp_SetWordAttr(void *jp, uint8_t *sub, const uint8_t *e);
+void    jp_MakeJrtSubTable(void *jp);
+
 /* ---- how much of this is written ------------------------------------ */
 
 /* While this is defined the romanizer cannot convert anything yet, and says

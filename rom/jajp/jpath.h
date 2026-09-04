@@ -30,11 +30,20 @@
 #define JP_PATH_N       710       /* (0x26dc - 8) / 14, exactly */
 #define JP_PATH_SIZE    0x000e
 
-/* One path, at IBM's own offsets within it. */
+/* One path, at IBM's own offsets within it.
+ *
+ * Two of these were read wrong before `Make' and `AddPath' were transcribed,
+ * and both are corrected here. What was called a spare byte is the running
+ * cost of the path, which is what the search prunes on. And the entry
+ * indices are ten rather than twelve: `AddPath' refuses a path that already
+ * holds ten, and the two bytes at the end that twelve would have run over
+ * are the two answers cached beside it. */
 #define JPT_COUNT       0x00      /* uint8, how many entries are on it */
-#define JPT_SPARE       0x01      /* uint8, nothing read so far writes it */
-#define JPT_AT          0x02      /* uint8 [12], the entry indices */
-#define JPT_AT_N        12
+#define JPT_COST        0x01      /* uint8, what the path has cost so far */
+#define JPT_AT          0x02      /* uint8 [10], the entry indices */
+#define JPT_AT_N        10
+#define JPT_END         0x0c      /* uint8, IsEnd of the last entry on it */
+#define JPT_CONT        0x0d      /* uint8, and IsContinuable of it */
 
 /* A sub-word: one candidate entry copied out of DictSearch, with the fields
    the phrase buffer wants and nothing else. Written by MakeJrtSubTable, which
@@ -68,13 +77,20 @@
 /* How many paths there are. */
 #define JP_PATH_COUNT   0x7484    /* uint16 */
 
-/* A span between the count and the index that nothing read so far touches.
-   It is 726 bytes, which is the number of characters InputChar holds and the
-   number of function-word slots DictSearch has, so it is probably one byte a
-   character; until something is seen to write it that is a guess and it is
-   named as unread. */
-#define JP_UNREAD_7486  0x7486
-#define JP_UNREAD_N     726
+/* One byte a character, holding the least a path has cost to reach that
+   character -- which is what makes the search a search rather than an
+   enumeration: a path costing more than the best already recorded there is
+   thrown away instead of grown.
+ *
+ * This was named as unread until `Make' was transcribed, on the grounds that
+ * nothing seen so far wrote it. `Make' fills the whole of it with minus one
+ * and both it and `AddPath' write it, so the guess that it was one byte a
+ * character was right, and what a byte means is now known.
+ *
+ * It is read back unsigned, so the minus one `Make' writes is 255 -- which is
+ * what lets the first path to reach a character always be kept. */
+#define JP_COST         0x7486
+#define JP_COST_N       726
 
 /* Which sub-word each entry became, or minus one for an entry on no path.
    MakeJrtSubTable fills the whole of it with minus one first. */
@@ -99,6 +115,7 @@
 #define JP_S16(jp, off) (*(int16_t *)JP_P((jp), (off)))
 #define JP_U16(jp, off) (*(uint16_t *)JP_P((jp), (off)))
 
+#define JP_COST_AT(jp, i) (*(uint8_t *)JP_P((jp), JP_COST + (i)))
 #define JP_PATH_AT(jp, i) JP_P((jp), JP_PATH + (i) * JP_PATH_SIZE)
 #define JP_SUB_AT(jp, i)  JP_P((jp), JP_SUB + (i) * JP_SUB_SIZE)
 #define JP_INDEX_OF(jp, e) JP_S16((jp), JP_INDEX + (e) * 2)

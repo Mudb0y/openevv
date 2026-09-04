@@ -378,7 +378,7 @@ int16_t pb_SetPhrasePart(void *pb, const uint8_t *path, int16_t n,
         *(int16_t *)(w + WP_MORAS) = (int16_t)(length + a);
         w[WP_ACCENT] = (uint8_t)(accent + b);
         w[WP_WORDS]  = path[JPT_COUNT];
-        w[WP_CHARS]  = (uint8_t)(path[JPT_SPARE] + moras);
+        w[WP_CHARS]  = (uint8_t)(path[JPT_COST] + moras);
         w[WP_UNREAD_06] = (uint8_t)nOut;
         if (w[WP_ACCENT] == *(uint16_t *)(w + WP_MORAS))
             w[WP_TYPE] = 3;
@@ -392,7 +392,8 @@ int16_t pb_SetPhrasePart(void *pb, const uint8_t *path, int16_t n,
        last word can close one. */
     {
         const uint8_t *sub =
-            JP_SUB_AT(jp, JP_INDEX_OF(jp, path[JPT_SPARE + path[JPT_COUNT]]));
+            JP_SUB_AT(jp, JP_INDEX_OF(jp,
+                                  path[JPT_AT + path[JPT_COUNT] - 1]));
         uint8_t *w = WP_SLOT(out, n);
         int16_t  a, b;
 
@@ -410,7 +411,7 @@ int16_t pb_SetPhrasePart(void *pb, const uint8_t *path, int16_t n,
 
         *(int16_t *)(w + WP_MORAS) = a;
         w[WP_ACCENT] = (uint8_t)b;
-        w[WP_CHARS]  = path[JPT_SPARE];
+        w[WP_CHARS]  = path[JPT_COST];
         w[WP_WORDS]  = path[JPT_COUNT];
         w[WP_UNREAD_06] = 0;
         w[WP_TYPE]   = (uint8_t)pb_GetSpecialPhraseType(pb, w);
@@ -449,7 +450,8 @@ int16_t pb_SetPhraseBuffer(void *pb, uint8_t *out)
 
         memset(pos, 0, sizeof pos);
 
-        sub = JP_SUB_AT(jp, JP_INDEX_OF(jp, path[JPT_SPARE + path[JPT_COUNT]]));
+        sub = JP_SUB_AT(jp, JP_INDEX_OF(jp,
+                                  path[JPT_AT + path[JPT_COUNT] - 1]));
         pb_ModifyPos(pb, pos, JS_B(sub, JS_POS));
 
         moras = (int16_t)(JS_S16(sub, JS_AT) + JS_B(sub, JS_CHARS));
