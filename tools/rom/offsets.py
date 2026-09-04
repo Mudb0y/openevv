@@ -23,7 +23,8 @@ displacement is negative and cannot be mistaken for one. From every other object
 in the module, every offset larger than the widest thing the analyser allocates
 besides this one -- past that, a field can only be TextAnalysis's.
 
-usage: tools/rom/offsets.py [textanalysis|dictsearch|inputchar|jpath|phrasebuf]
+usage: tools/rom/offsets.py
+         [textanalysis|dictsearch|inputchar|jpath|phrasebuf|numread]
 """
 
 import os
@@ -215,6 +216,23 @@ def regions_pb(d):
     return [(at, at + n - 1, name) for at, n, name in r]
 
 
+def regions_nr(d):
+    """And for NumRead, which is a pointer, two arrays and the digits. The
+    substring array's base is what the copy in SegmentYomiBlock settles: the
+    header says why it is 0x164 and not either of the two offsets the code
+    uses."""
+    r = [
+        (d["NR_OWNER"], 4, "the owner"),
+        (d["NR_READ"], d["NR_READ_N"] * d["NR_READ_SIZE"], "the readings"),
+        (d["NR_SUBSTR"], d["NR_SUBSTR_N"] * d["NR_SUBSTR_SIZE"],
+         "the substrings"),
+        (d["NR_ANSWER"], d["NR_ANSWER_N"] * 2, "what Do answers"),
+        (d["NR_COUNT"], 1, "how many digits"),
+        (d["NR_DIGITS"], 256, "the digits"),
+    ]
+    return [(at, at + n - 1, name) for at, n, name in r]
+
+
 # Which objects hold a class's own code -- a class may be spread over
 # several, and DictSearch is spread over four -- the header that maps it, the
 # region table, and the three names the checker needs out of that header: how
@@ -236,6 +254,8 @@ CLASSES = {
               "JP_BYTES", "JP_PATH", None),
     "phrasebuf": (["phrasebuf.obj"], ["phrasebuf.h"], regions_pb,
                   "PB_BYTES", "PB_BUFFER", None),
+    "numread": (["numread.obj"], ["numread.h"], regions_nr,
+                "NR_BYTES", "NR_READ", None),
 }
 
 

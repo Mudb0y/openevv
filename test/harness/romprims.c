@@ -109,6 +109,7 @@ static Conv *makeConv(Param *p)
 #include "dictsearch.h"
 #include "txtanal.h"
 #include "phrasebuf.h"
+#include "numread.h"
 #include "jpath.h"
 
 #define ibm_dsCheckCaseMarker(d, at)      ds_CheckCaseMarker((d), (at))
@@ -336,6 +337,25 @@ static Conv *makeConv(Param *p)
 #define ibm_jpSetWordAttr(jp, s, e)   jp_SetWordAttr((jp), (s), (e))
 #define ibm_jpMakeJrtSubTable(jp)     jp_MakeJrtSubTable((jp))
 #define JP(name) ibm_jp##name
+/* ---- NumRead --------------------------------------------------------- */
+
+#define ibm_nrInit(nr)              nr_Init((nr))
+#define ibm_nrSegmentYomiBlock(nr, w, k) nr_SegmentYomiBlock((nr), (w), (k))
+#define ibm_nrSetYomiType(nr, h)    nr_SetYomiType((nr), (h))
+#define ibm_nrGenerateStdForm(nr, h) nr_GenerateStdForm((nr), (h))
+#define ibm_nrApplySRule(nr, h, g)  nr_ApplySRule((nr), (h), (g))
+#define ibm_nrApplySRuleToKetaYomi(nr, i, n, a, g, s) \
+    nr_ApplySRuleToKetaYomi((nr), (i), (n), (a), (g), (s))
+#define ibm_nrApplySRuleToBouYomi(nr, n, a, g, s) \
+    nr_ApplySRuleToBouYomi((nr), (n), (a), (g), (s))
+#define ibm_nrApplySRuleToShosu(nr, n, a, g, p, s) \
+    nr_ApplySRuleToShosu((nr), (n), (a), (g), (p), (s))
+#define ibm_nrApplySRuleToBunsu(nr, n, a, g, s) \
+    nr_ApplySRuleToBunsu((nr), (n), (a), (g), (s))
+#define ibm_nrApplyJRule(nr, w, k, n, h, g) \
+    nr_ApplyJRule((nr), (w), (k), (n), (h), (g))
+#define ibm_nrDo(nr, w, pk, po)     nr_Do((nr), (w), (pk), (po))
+#define NR(name) ibm_nr##name
 
 /* Where each side keeps PhraseBuf's four pointers and JPath's three. Ours are
    parked past their records; IBM's are at the offsets the maps name. */
@@ -628,6 +648,7 @@ extern THIS int32_t ibm_slLoad(void *self, const char *path)
 #include "dictsearch.h"
 #include "txtanal.h"
 #include "phrasebuf.h"
+#include "numread.h"
 #include "jpath.h"
 
 extern THIS int32_t ibm_dsCheckCaseMarker(void *d, int16_t at)
@@ -1054,6 +1075,45 @@ extern THIS void ibm_jpSetWordAttr(void *jp, uint8_t *sub, const uint8_t *e)
 extern THIS void ibm_jpMakeJrtSubTable(void *jp)
     MANGLED("?MakeJrtSubTable@JPath@@IAEXXZ");
 #define JP(name) ibm_jp##name
+/* ---- NumRead --------------------------------------------------------- */
+
+extern THIS void ibm_nrInit(void *nr)
+    MANGLED("?Init@NumRead@@QAEXXZ");
+extern THIS int16_t ibm_nrSegmentYomiBlock(void *nr, const uint8_t *w,
+                                           int16_t word)
+    MANGLED("?SegmentYomiBlock@NumRead@@QAEFPAU_W_PHRASE_T@@F@Z");
+extern THIS int16_t ibm_nrSetYomiType(void *nr, int16_t howmany)
+    MANGLED("?SetYomiType@NumRead@@QAEFF@Z");
+extern THIS void ibm_nrGenerateStdForm(void *nr, int16_t howmany)
+    MANGLED("?GenerateStdForm@NumRead@@QAEXF@Z");
+extern THIS int16_t ibm_nrApplySRule(void *nr, int16_t howmany, int16_t *got)
+    MANGLED("?ApplySRule@NumRead@@QAEFFPAF@Z");
+extern THIS int16_t ibm_nrApplySRuleToKetaYomi(void *nr, int16_t which,
+                                               int16_t n, int16_t at,
+                                               int16_t *got,
+                                               const uint8_t *ss)
+    MANGLED("?ApplySRuleToKetaYomi@NumRead@@QAEFFFFQAFPAU_substr_t@@@Z");
+extern THIS int16_t ibm_nrApplySRuleToBouYomi(void *nr, int16_t n, int16_t at,
+                                              int16_t *got,
+                                              const uint8_t *ss)
+    MANGLED("?ApplySRuleToBouYomi@NumRead@@QAEFFFQAFPAU_substr_t@@@Z");
+extern THIS int16_t ibm_nrApplySRuleToShosu(void *nr, int16_t n, int16_t at,
+                                            int16_t *got,
+                                            const uint8_t *prev,
+                                            const uint8_t *ss)
+    MANGLED("?ApplySRuleToShosu@NumRead@@QAEFFFQAFPAU_substr_t@@1@Z");
+extern THIS int16_t ibm_nrApplySRuleToBunsu(void *nr, int16_t n, int16_t at,
+                                            int16_t *got,
+                                            const uint8_t *ss)
+    MANGLED("?ApplySRuleToBunsu@NumRead@@QAEFFFQAFPAU_substr_t@@@Z");
+extern THIS int16_t ibm_nrApplyJRule(void *nr, const uint8_t *w, int16_t word,
+                                     int16_t n, int16_t howmany,
+                                     int16_t *got)
+    MANGLED("?ApplyJRule@NumRead@@QAEFPAU_W_PHRASE_T@@FFFPAF@Z");
+extern THIS int16_t ibm_nrDo(void *nr, const uint8_t *w, int16_t *pWord,
+                             int16_t *pOut)
+    MANGLED("?Do@NumRead@@QAEFPAU_W_PHRASE_T@@PAF1@Z");
+#define NR(name) ibm_nr##name
 
 #define PB_SET(blk, which, p) (*(void **)((blk) + which) = (p))
 #define JP_SET(blk, which, p) (*(void **)((blk) + which) = (p))
@@ -6703,6 +6763,470 @@ static void sweepJPath(void)
     printf("JP done\n");
 }
 
+
+/* ---- the number reader ----------------------------------------------- */
+
+/* How this one is driven.
+ *
+ * NumRead reads three things it does not own: the phrase word it is handed,
+ * the spine's long-reading store when a reading is too long for that word,
+ * and two of the romanizer's settings. All three are laid out by hand here
+ * at IBM's own offsets, and the record itself is ours to fill.
+ *
+ * What is swept. Init over a record filled with a pattern, so that every
+ * byte it clears and every byte it leaves shows. Then each of the four
+ * reading roads over a substring built by hand: every kind, counts from one
+ * to the thirty-two a substring holds, and codes drawn from the whole of
+ * m_sanTCodes. Then SegmentYomiBlock, SetYomiType and GenerateStdForm over
+ * numbers built as digit strings, printing the substring array whole after
+ * each. And last Do, which drives all of it, over every number the harness
+ * can write: each length from one digit to twenty, each of the operators in
+ * each position, and a counter word after it.
+ */
+static char nr_room[NR_ROOM];
+static char nr_rom[RZ_ROOM];
+static char nr_word[PB_SLOT_SIZE];
+
+/* Where each side keeps NumRead's owner: ours past the record, IBM's at
+   nought with the readings starting at four. */
+#ifdef EVV_ROMPRIMS_OURS
+#define NR_SET_OWNER(blk, ta) (*(void **)((blk) + NR_OWNER_AT) = (ta))
+#else
+#define NR_SET_OWNER(blk, ta) (*(void **)((blk) + NR_OWNER) = (ta))
+#endif
+
+/* The digits of a number, as the codes NumRead reads rather than as
+   characters: nought to nine are the digits, ten to eighteen the scales and
+   the punctuation. */
+static void nrDigits(const int *codes, int n)
+{
+    int i;
+
+    for (i = 0; i < n; i++)
+        nr_room[NR_DIGITS + i] = (char)codes[i];
+    nr_room[NR_COUNT] = (char)n;
+}
+
+/* One word of a phrase, which is what Do and the two that need a word are
+   handed. The reading goes in the word itself when it fits and in the
+   spine's long-reading store when it does not, which is the road
+   SegmentYomiBlock takes on a reading of more than nine. */
+static void nrWord(int kanalen, int chars, int pos, int accent,
+                   const int *kana, int slot)
+{
+    uint8_t *ww = WW_SLOT(nr_word, 0);
+    int      i;
+
+    memset(nr_word, 0, sizeof nr_word);
+    nr_word[WP_WORDS] = 2;
+    ww[WW_KANALEN] = (uint8_t)kanalen;
+    ww[WW_CHARS]   = (uint8_t)chars;
+    ww[WW_POS]     = (uint8_t)pos;
+    *(int16_t *)(ww + WW_ACCENT) = (int16_t)accent;
+    if (kanalen > 9) {
+        ww[WW_KANA] = (uint8_t)slot;
+        for (i = 0; i < kanalen && i < TA_LONGWORD_SIZE; i++)
+            ta_block[TA_LONGWORD + slot * TA_LONGWORD_SIZE + i] =
+                (char)kana[i];
+    } else {
+        for (i = 0; i < kanalen && i < WW_KANA_N; i++)
+            ww[WW_KANA + i] = (uint8_t)kana[i];
+    }
+}
+
+/* Everything the record needs, laid out the same on both sides. */
+static void nrSetUp(int spell, int mode)
+{
+    memset(ta_block, 0, sizeof ta_block);
+    memset(ds_block, 0, sizeof ds_block);
+    memset(nr_room, 0, sizeof nr_room);
+    memset(nr_rom, 0, sizeof nr_rom);
+
+    TA_SET(ta_block, TA_DICTSEARCH, ds_block);
+    TA_SET(ta_block, TA_OWNER, nr_rom);
+    DS_SET_OWNER(ds_block, ta_block);
+    NR_SET_OWNER(nr_room, ta_block);
+    *(int32_t *)(nr_rom + RZ_SPELL_ENGLISH) = spell;
+    *(uint16_t *)(nr_rom + RZ_NUMBER_MODE) = (uint16_t)mode;
+}
+
+/* One of a reading's five pairs, which the fixtures set before a call so
+   that a rule adjusting one shows. */
+static void rd_pair_a(uint8_t *rd, int i, int v)
+{
+    *(int16_t *)(rd + RD_A + i * RD_PAIR_SIZE) = (int16_t)v;
+}
+
+/* One reading and one substring printed whole, which is how a field written
+   to the wrong place shows even where no answer changes. */
+static void nrShow(const char *what, long a, long b, long c)
+{
+    int i, k;
+
+    printf("NR %s %ld %ld %ld", what, a, b, c);
+    for (i = 0; i < 3; i++) {
+        const uint8_t *rd = NR_READ_AT(nr_room, i);
+
+        putchar(' ');
+        for (k = 0; k < NR_READ_SIZE; k++)
+            printf("%02x", (unsigned)rd[k]);
+    }
+    putchar('\n');
+}
+
+static void nrShowSubstr(const char *what, long a, long b, int howmany)
+{
+    int i, k;
+
+    printf("NR %s %ld %ld %d", what, a, b, howmany);
+    for (i = 0; i < 4 && i < NR_SUBSTR_HALF; i++) {
+        const uint8_t *ss = NR_SUBSTR_AT(nr_room, NR_SUBSTR_HALF + i);
+
+        putchar(' ');
+        for (k = 0; k < NR_SUBSTR_SIZE; k++)
+            printf("%02x", (unsigned)ss[k]);
+    }
+    printf(" %02x", (unsigned)(uint8_t)nr_room[NR_COUNT]);
+    putchar('\n');
+}
+
+static void sweepNumRead(void)
+{
+    long i, j, c;
+    int  k;
+
+    nrSetUp(0, 0);
+
+    /* Init over a record filled with a pattern: what it clears and what it
+       leaves both show, including the last byte of each run that IBM does
+       not reach. */
+    for (i = 0; i < NR_BYTES; i++)
+        nr_room[i] = (char)(0xa5 ^ (i & 0xff));
+    NR_SET_OWNER(nr_room, ta_block);
+    NR(Init)(nr_room);
+    printf("NR init");
+    /* From the readings on: the four bytes in front of them are the owner
+       on IBM's side and pattern on ours, so printing them would compare an
+       address with a fill byte. */
+    for (i = NR_READ; i < NR_BYTES; i++)
+        printf("%s%02x", ((i - NR_READ) % 32) ? "" : "\n  ",
+               (unsigned)(uint8_t)nr_room[i]);
+    putchar('\n');
+
+    /* The four reading roads. A substring is built by hand for each: every
+       kind, every count the record holds, and every code GenerateStdForm can
+       put in one.
+     *
+     * Nineteen codes and not the twenty-six m_sanTCodes names, because SINDX
+     * is twenty long and KetaYomi reads it at the code and at the code plus
+     * one. A code of twenty or more indexes past that table on both sides,
+     * and what each finds after it is its own linker's business rather than
+     * the engine's -- so the sweep stays inside what the standard form can
+     * actually hold, which is nought to eighteen. */
+    for (i = 0; i < 4; i++)
+        for (j = 1; j <= SS_CODES_N; j++)
+            for (c = 0; c < 0x13; c++) {
+                int16_t  got[NR_ANSWER_N];
+                uint8_t *ss;
+                uint8_t *two;
+                int16_t  n;
+
+                nrSetUp(0, 0);
+                NR(Init)(nr_room);
+                for (k = 0; k < NR_ANSWER_N; k++)
+                    got[k] = 1;
+
+                ss  = NR_SUBSTR_AT(nr_room, NR_SUBSTR_HALF);
+                two = NR_SUBSTR_AT(nr_room, NR_SUBSTR_HALF + 1);
+                SS_B8(ss, SS_COUNT) = (uint8_t)j;
+                for (k = 0; k < (int)j; k++) {
+                    SS_B8(ss, SS_CODES + k) = (uint8_t)((c + k) % 0x13);
+                    SS_B8(ss, SS_MORE + k)  = (uint8_t)(k + 1);
+                }
+                SS_S16(ss, SS_FROM) = 0;
+                SS_S16(ss, SS_TO)   = (int16_t)j;
+                SS_B8(two, SS_COUNT) = (uint8_t)(j % 3);
+                for (k = 0; k < NR_READ_N; k++) {
+                    rd_pair_a(NR_READ_AT(nr_room, k), 0, 5);
+                    RD_B8(NR_READ_AT(nr_room, k), RD_COUNT) = 4;
+                }
+
+                if (i == 0)
+                    n = NR(ApplySRuleToKetaYomi)(nr_room, 1, 0, 0, got, ss);
+                else if (i == 1)
+                    n = NR(ApplySRuleToBouYomi)(nr_room, 0, 0, got, ss);
+                else if (i == 2)
+                    n = NR(ApplySRuleToShosu)(nr_room, 1, 0, got, ss, two);
+                else
+                    n = NR(ApplySRuleToBunsu)(nr_room, 0, 0, got, ss);
+                printf("NR road %ld %ld %ld %d %d %d %d\n", i, j, c,
+                       (int)n, (int)got[0], (int)got[1], (int)got[2]);
+                nrShow("after", i, j, c);
+            }
+
+
+    /* Every adjacent pair of codes, which the sweep above cannot reach: its
+       codes run consecutively, so a pair like "eighteen then sixteen" never
+       occurs, and several of the tests in the by-place road read the code
+       before the one they are on. */
+    for (i = 0; i < 4; i++)
+        for (j = 0; j < 0x13; j++)
+            for (c = 0; c < 0x13; c++) {
+                int16_t  got[NR_ANSWER_N];
+                uint8_t *ss;
+                uint8_t *two;
+                int16_t  n;
+                long     len;
+
+                for (len = 2; len <= 6; len += 2) {
+                    nrSetUp(0, 0);
+                    NR(Init)(nr_room);
+                    for (k = 0; k < NR_ANSWER_N; k++)
+                        got[k] = 1;
+
+                    ss  = NR_SUBSTR_AT(nr_room, NR_SUBSTR_HALF);
+                    two = NR_SUBSTR_AT(nr_room, NR_SUBSTR_HALF + 1);
+                    SS_B8(ss, SS_COUNT) = (uint8_t)len;
+                    for (k = 0; k < (int)len; k++) {
+                        SS_B8(ss, SS_CODES + k) =
+                            (uint8_t)((k & 1) ? c : j);
+                        SS_B8(ss, SS_MORE + k) = (uint8_t)(k + 1);
+                    }
+                    SS_S16(ss, SS_FROM) = 0;
+                    SS_S16(ss, SS_TO)   = (int16_t)len;
+                    SS_B8(two, SS_COUNT) = (uint8_t)(len % 3);
+                    for (k = 0; k < NR_READ_N; k++) {
+                        rd_pair_a(NR_READ_AT(nr_room, k), 0, 5);
+                        RD_B8(NR_READ_AT(nr_room, k), RD_COUNT) = 4;
+                    }
+
+                    if (i == 0)
+                        n = NR(ApplySRuleToKetaYomi)(nr_room, 1, 0, 0,
+                                                     got, ss);
+                    else if (i == 1)
+                        n = NR(ApplySRuleToBouYomi)(nr_room, 0, 0, got, ss);
+                    else if (i == 2)
+                        n = NR(ApplySRuleToShosu)(nr_room, 1, 0, got, ss,
+                                                  two);
+                    else
+                        n = NR(ApplySRuleToBunsu)(nr_room, 0, 0, got, ss);
+                    printf("NR pair %ld %ld %ld %ld %d %d\n", i, j, c, len,
+                           (int)n, (int)got[0]);
+                    nrShow("pairs", i * 100 + j, c, len);
+                }
+            }
+
+    /* And over the whole of the JCC table, which is what the counter's own
+       accent field indexes: forty of the five hundred and nineteen rows it
+       holds left three of the rules in the second and third pass unreached,
+       so a handful of the parts of speech that are counters at all get every
+       row instead. Which parts of speech those are was measured rather than
+       guessed: of 256, forty-six carry the bit. */
+    {
+        static const int COUNTERS[6] = { 124, 137, 150, 161, 174, 188 };
+        long x;
+
+        for (x = 0; x < 6; x++)
+            for (j = 1; j < 519; j++) {
+                int      codes[8];
+                int16_t  got[NR_ANSWER_N];
+                int16_t  n;
+
+                nrSetUp(0, 0);
+                NR(Init)(nr_room);
+                for (k = 0; k < NR_ANSWER_N; k++)
+                    got[k] = 1;
+                /* The number itself has to vary as well as the counter: the
+                   rule is indexed by the last code of the standard form as
+                   well as by the counter's own row, and a number of one
+                   fixed shape reaches one column of the table. */
+                for (k = 0; k < 5; k++)
+                    codes[k] = (int)((j * 3 + k * 7) % 0x13);
+                codes[0] = (int)(j % 10);
+                nrDigits(codes, (int)(1 + j % 5));
+                nrWord((int)(1 + j % 5), 2, COUNTERS[x], (int)j, codes, 2);
+                for (k = 0; k < NR_READ_N; k++) {
+                    rd_pair_a(NR_READ_AT(nr_room, k), 0, 6);
+                    RD_B8(NR_READ_AT(nr_room, k), RD_COUNT) = 5;
+                    RD_B8(NR_READ_AT(nr_room, k), RD_CODES + 3) = 0x31;
+                    RD_B8(NR_READ_AT(nr_room, k), RD_CODES + 4) = 0x42;
+                }
+                n = NR(SegmentYomiBlock)(nr_room, nr_word, 0);
+                n = NR(SetYomiType)(nr_room, n);
+                NR(GenerateStdForm)(nr_room, n);
+                printf("NR rows %ld %ld %d\n", x, j,
+                       (int)NR(ApplyJRule)(nr_room, nr_word, 0, 0, n, got));
+                nrShow("rowed", x, j, 0);
+            }
+    }
+
+    /* The counter word, over every part of speech: the sweep above never
+       reached ApplyJRule at all, because none of the two dozen parts of
+       speech it used has the type-group bit that says a word is a counter,
+       so the method refused on its first line every time and five sabotages
+       of it moved nothing. */
+    for (i = 0; i < 256; i++)
+        for (j = 1; j <= 40; j++)
+            for (c = 0; c < 2; c++) {
+                int      codes[8];
+                int16_t  got[NR_ANSWER_N];
+                int16_t  n;
+
+                nrSetUp(0, 0);
+                NR(Init)(nr_room);
+                for (k = 0; k < NR_ANSWER_N; k++)
+                    got[k] = 1;
+                for (k = 0; k < 4; k++)
+                    codes[k] = (int)((j + k) % 10);
+                nrDigits(codes, 4);
+                nrWord(3, 2, (int)i, (int)j, codes, 2);
+                for (k = 0; k < NR_READ_N; k++) {
+                    rd_pair_a(NR_READ_AT(nr_room, k), 0, 6);
+                    RD_B8(NR_READ_AT(nr_room, k), RD_COUNT) = 5;
+                    RD_B8(NR_READ_AT(nr_room, k), RD_CODES + 3) =
+                        (uint8_t)(0x30 + c);
+                    RD_B8(NR_READ_AT(nr_room, k), RD_CODES + 4) =
+                        (uint8_t)(0x40 + c);
+                }
+                n = NR(SegmentYomiBlock)(nr_room, nr_word, 0);
+                n = NR(SetYomiType)(nr_room, n);
+                NR(GenerateStdForm)(nr_room, n);
+                printf("NR join %ld %ld %ld %d\n", i, j, c,
+                       (int)NR(ApplyJRule)(nr_room, nr_word, 0, 0, n, got));
+                nrShow("joined", i * 100 + j, c, 0);
+                printf("NR rec %ld %ld %ld", i, j, c);
+                for (k = 0; k < 16; k++)
+                    printf("%02x", (unsigned)(uint8_t)ds_block[DS_REC + k]);
+                putchar('\n');
+            }
+
+    /* The three passes that cut a number up and rewrite it, over numbers
+       built as digit strings. */
+    for (i = 1; i <= 20; i++)
+        for (j = 0; j < 24; j++)
+            for (c = 0; c < 2; c++) {
+                int      codes[24];
+                int16_t  howmany;
+
+                nrSetUp((int)c, 0);
+                NR(Init)(nr_room);
+                for (k = 0; k < (int)i; k++)
+                    codes[k] = (int)((j + k * 7) % 0x1c);
+                nrDigits(codes, (int)i);
+                nrWord((int)i, (int)i, 0x30, 1, codes, 0);
+
+                howmany = NR(SegmentYomiBlock)(nr_room, nr_word, 0);
+                nrShowSubstr("cut", i * 100 + j, c, (int)howmany);
+                howmany = NR(SetYomiType)(nr_room, howmany);
+                nrShowSubstr("kind", i * 100 + j, c, (int)howmany);
+                NR(GenerateStdForm)(nr_room, howmany);
+                nrShowSubstr("form", i * 100 + j, c, (int)howmany);
+            }
+
+    /* And the whole of it, over every number the harness can write and a
+       counter word after each.
+     *
+     * The first code is always a digit, which is what a number begins with.
+     * A standard form beginning with anything else asks the first reading
+     * for a pair it has not got, and IBM then reads the second half of its
+     * own owner pointer as how many codes that reading holds -- 131, into a
+     * field of twenty-two. The record goes and so does the harness driving
+     * it: the run stops with its own loop counter smashed and no final line.
+     * rom/jajp/numread.c says what ours does there instead, and
+     * docs/status.md lists it with the other deliberate divergences. Only
+     * the first reading is affected; every later one asks in front of the
+     * reading before it, which both engines have and hold the same.
+     *
+     * And thirteen codes rather than twenty, for the second half of the same
+     * defect: a longer number asks for more than the eight readings IBM's
+     * `Do' keeps on its stack, and it then reads and writes its caller's
+     * frame. Fourteen codes is where the sweep first reaches nine readings
+     * and where IBM's run stops. The three passes above go to twenty, since
+     * none of them touches that array. */
+    for (i = 1; i <= 13; i++)
+        for (j = 0; j < 24; j++)
+            for (c = 0; c < 4; c++) {
+                int     codes[24];
+                int16_t word = 0;
+                int16_t out = 0;
+                int16_t n;
+
+                nrSetUp((int)(c & 1), (int)(c >> 1) * 2);
+                for (k = 0; k < (int)i; k++)
+                    codes[k] = (int)((j + k * 5) % 0x1c);
+                codes[0] = (int)(j % 10);
+                nrDigits(codes, (int)i);
+                nrWord((int)i, (int)i, (int)(0x30 + j), (int)(1 + j % 8),
+                       codes, 1);
+
+                n = NR(Do)(nr_room, nr_word, &word, &out);
+                printf("NR do %ld %ld %ld %d %d %d", i, j, c,
+                       (int)n, (int)word, (int)out);
+                for (k = 0; k < NR_ANSWER_N; k++)
+                    printf(" %d", (int)NR_ANSWER_AT(nr_room, k));
+                putchar('\n');
+                nrShow("said", i * 100 + j, c, 0);
+                nrShowSubstr("left", i * 100 + j, c, 0);
+            }
+
+
+    /* Six shapes written out by hand rather than swept, each aimed at a road
+       the sweeps above never take. A number with one decimal marker and one
+       fraction marker in it, so that the count of substrings read as more
+       than a scale is two rather than one and the fraction road is refused.
+       A digit either side of a myriad marker, which is what makes a scale
+       stand alone and is the only thing that reaches the rewrite of the two
+       codes before it. And a marker at the end, which is what makes the walk
+       backwards in SegmentYomiBlock ask whether the digits group in fours. */
+    {
+        static const int SHAPES[6][8] = {
+            { 1, 0x13, 2, 0x15, 3, -1 },
+            { 4, 0x18, 5, -1 },
+            { 7, 0x18, 8, -1 },
+            { 1, 2, 3, 4, 0x18, 5, 6, -1 },
+            { 1, 2, 3, 4, 0x1b, 5, -1 },
+            { 2, 0x14, 3, 0x1a, 4, -1 },
+        };
+        /* One more, and it is the only shape that makes the walk backwards
+           in SegmentYomiBlock decide anything. Three conditions have to hold
+           at once: fewer than four digits in front of the marker, so the
+           scan backwards does not stop on its own; a whole group of four
+           behind it, so the length test does not either; and nothing but
+           digits after it. A marker at the fourth character of seven is the
+           smallest that does all three. */
+        static const int FOURS[9] = { 1, 2, 3, 0x18, 4, 5, 6, -1 };
+        long x;
+
+        for (x = 0; x < 7; x++)
+            for (c = 0; c < 2; c++) {
+                int     codes[9];
+                int16_t word = 0;
+                int16_t out = 0;
+                int16_t nn;
+                int     len = 0;
+
+                {
+                    const int *from = (x == 6) ? FOURS : SHAPES[x];
+
+                    while (from[len] >= 0)
+                        len++;
+                    for (k = 0; k < len; k++)
+                        codes[k] = from[k];
+                }
+                nrSetUp((int)c, 0);
+                nrDigits(codes, len);
+                nrWord(len, len, 0x7c, 3, codes, 1);
+                nn = NR(Do)(nr_room, nr_word, &word, &out);
+                printf("NR shape %ld %ld %d %d %d\n", x, c,
+                       (int)nn, (int)word, (int)out);
+                nrShow("shaped", x, c, 0);
+                nrShowSubstr("shapecut", x, c, 0);
+            }
+    }
+
+    printf("NR done\n");
+}
+
 int main(void)
 {
     Param *p;
@@ -6756,6 +7280,7 @@ int main(void)
     sweepConverter();
     sweepPhraseBuf();
     sweepJPath();
+    sweepNumRead();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

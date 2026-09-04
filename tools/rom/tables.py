@@ -62,6 +62,25 @@ OBJECTS = [
      " * single-kanji verbs a doubled consonant may attach to."),
 ]
 
+# And the objects whose tables are each in a COMDAT section of its own rather
+# than together in one block. Neither the largest-section rule below nor the
+# offsets `nm' prints can tell those apart: every one of them starts at
+# nought of its own section. Such an object names its tables here instead,
+# with the section each is in and how long each is, and the lift refuses
+# unless exactly the expected number of blocks of that length is there and
+# they all hold the same bytes.
+PER_SECTION = [
+    ("numread.obj",
+     "NumRead's tables. m_sanTCodes is the twenty-six characters a digit or\n"
+     " * an operator is written as, and SINDX is the run table that says\n"
+     " * which entries of the reading table one of those codes names --\n"
+     " * entry i runs from SINDX[i] to SINDX[i + 1] less one. IBM's compiler\n"
+     " * put a copy of SINDX in a section of its own for each of the two\n"
+     " * methods that reads it, and the two copies are identical.",
+     [("m_sanTCodes", ".data", 0x20, 1),
+      ("SINDX", ".data", 0x14, 2)]),
+]
+
 # A static member of a class, as MSVC spells one: ?name@Class@@ and then the
 # type. A global of no class, which is ?name@@ and the type. And a plain
 # file-static, which carries only the C underscore.
@@ -79,13 +98,12 @@ def run(*args):
                           check=True).stdout
 
 
-def rdata(obj, section):
-    """The object's table section, as one block of bytes.
+def sections(obj, section):
+    """Every block of that section name in the object, in the order printed.
 
-    Only the section that holds the tables is wanted. An object may have
-    several sections of one name -- a two-byte COMDAT for a string literal
-    beside the large one -- and objdump prints them all under that name, so
-    the largest is the one meant."""
+    An object may have several sections of one name: a two-byte COMDAT for a
+    string literal beside the large one, or a table apiece where the compiler
+    gave each its own."""
     text = run("i686-w64-mingw32-objdump", "-s", "-j", section, obj)
     blocks = []
     data = bytearray()
@@ -107,7 +125,32 @@ def rdata(obj, section):
         blocks.append(bytes(data))
     if not blocks:
         raise SystemExit("rom/tables: %s printed no data" % obj)
-    return max(blocks, key=len)
+    return blocks
+
+
+def rdata(obj, section):
+    """And the one of those that holds the tables, which is the largest."""
+    return max(sections(obj, section), key=len)
+
+
+def one_table(obj, section, want, howmany):
+    """One named table out of an object that keeps each in its own section.
+
+    Picked by how long it is, since that is the only thing that tells the
+    sections apart. Refuses unless the count is what was expected and every
+    block of that length holds the same bytes, either of which failing means
+    the object is not the one this was written against."""
+    found = [b for b in sections(obj, section) if len(b) == want]
+    if len(found) != howmany:
+        raise SystemExit(
+            "rom/tables: %s has %d sections of %d bytes in %s, wanted %d"
+            % (obj, len(found), want, section, howmany))
+    for b in found[1:]:
+        if b != found[0]:
+            raise SystemExit(
+                "rom/tables: %s's sections of %d bytes in %s differ"
+                % (obj, want, section))
+    return found[0]
 
 
 def tables(obj):
@@ -218,6 +261,22 @@ def emit_all(where, out, tag):
                         % (tag, name, end - at))
                 total += end - at
                 lines.append((obj, name, end - at))
+            f.write("\n")
+
+        for obj, about, wanted in PER_SECTION:
+            path = os.path.join(where, obj)
+            if not os.path.exists(path):
+                raise SystemExit("rom/tables: no %s" % path)
+            f.write("/* %s\n * %s\n */\n\n" % (obj, about))
+            for name, section, want, howmany in wanted:
+                block = os.path.splitext(obj)[0] + "_" + name
+                emit_block(f, block, one_table(path, section, want, howmany))
+                f.write("const uint8_t *const %s_%s = %s;\n"
+                        % (tag, name, block))
+                f.write("const int32_t %s_%s_n = %d;\n\n"
+                        % (tag, name, want))
+                total += want
+                lines.append((obj, name, want))
             f.write("\n")
     return lines, total
 

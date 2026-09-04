@@ -705,6 +705,28 @@ int16_t jp_GetMoraOnPath(void *jp, const uint8_t *path, int16_t extra);
 void    jp_SetWordAttr(void *jp, uint8_t *sub, const uint8_t *e);
 void    jp_MakeJrtSubTable(void *jp);
 
+/* ---- NumRead --------------------------------------------------------- */
+
+/* How a number becomes words. The block is passed as bytes because the
+   record is IBM's; rom/jajp/numread.h is the map. `Do' is the whole of it and
+   the other ten are its passes, all public in IBM's own source. */
+void    nr_Init(void *nr);
+int16_t nr_SegmentYomiBlock(void *nr, const uint8_t *w, int16_t word);
+int16_t nr_SetYomiType(void *nr, int16_t howmany);
+void    nr_GenerateStdForm(void *nr, int16_t howmany);
+int16_t nr_ApplySRule(void *nr, int16_t howmany, int16_t *got);
+int16_t nr_ApplySRuleToKetaYomi(void *nr, int16_t which, int16_t n,
+                                int16_t at, int16_t *got, const uint8_t *ss);
+int16_t nr_ApplySRuleToBouYomi(void *nr, int16_t n, int16_t at, int16_t *got,
+                               const uint8_t *ss);
+int16_t nr_ApplySRuleToShosu(void *nr, int16_t n, int16_t at, int16_t *got,
+                             const uint8_t *prev, const uint8_t *ss);
+int16_t nr_ApplySRuleToBunsu(void *nr, int16_t n, int16_t at, int16_t *got,
+                             const uint8_t *ss);
+int16_t nr_ApplyJRule(void *nr, const uint8_t *w, int16_t word, int16_t n,
+                      int16_t howmany, int16_t *got);
+int16_t nr_Do(void *nr, const uint8_t *w, int16_t *pWord, int16_t *pOut);
+
 /* ---- how much of this is written ------------------------------------ */
 
 /* While this is defined the romanizer cannot convert anything yet, and says
