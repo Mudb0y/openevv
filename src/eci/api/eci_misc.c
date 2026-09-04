@@ -242,10 +242,10 @@ int STDCALL es_delete(OldInst *h)
 
     api_delete(OI_NEW(inst));
 
-    if (OI_DIRECT(inst))
-        OI_DIRECT(inst) = 0;
-    if (OI_DIRECT2(inst))
-        OI_DIRECT2(inst) = 0;
+    if (OI_DICT_XLAT(inst))
+        OI_DICT_XLAT(inst) = 0;
+    if (OI_DICT_KEY(inst))
+        OI_DICT_KEY(inst) = 0;
     if (OI_OWNED1(inst)) {
         cpp_delete(OI_OWNED1(inst));
         OI_OWNED1(inst) = 0;

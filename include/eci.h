@@ -203,13 +203,38 @@ typedef enum {
    checks. */
 #define ECI_VERSION_LENGTH       20
 
-/* The three volumes a user dictionary set holds. */
+/* The volumes a dictionary set holds. Three of them are the set's own; the
+   fourth is the extended main dictionary, which carries a part of speech
+   beside each entry and which only a language written in another script has
+   -- Chinese, Korean and Japanese. Asking any other language for it answers
+   eciDictInvalidVolume. */
 typedef enum {
-    eciMainDict = 0,
-    eciRootDict = 1,
-    eciAbbvDict = 2,
-    eciNumDictVolumes = 3
+    eciMainDict    = 0,
+    eciRootDict    = 1,
+    eciAbbvDict    = 2,
+    eciMainDictExt = 3,
+    eciNumDictVolumes = 4
 } ECIDictVolume;
+
+/* What a dictionary call answers. Every one of these but eciDictFileNotFound
+   was read out of the code that returns it; that one is IBM's published name
+   for a value nothing here produces, and it is listed so that a program
+   porting from IBM's header finds it. */
+typedef enum {
+    eciDictNoError       = 0,
+    eciDictFileNotFound  = 1,
+    eciDictOutOfMemory   = 2,
+    eciDictInternalError = 3,
+    eciDictNoEntry       = 4,
+    eciDictErrLookUpKey  = 5,
+    eciDictAccessError   = 6,
+    eciDictInvalidVolume = 7
+} ECIDictError;
+
+/* A part of speech, which the extended volume keeps beside an entry. The
+   engine treats it as a number and only Korean asks for one, so what the
+   values mean is the language's business rather than the interface's. */
+typedef int ECIPartOfSpeech;
 
 /* ---- languages -------------------------------------------------------- */
 
@@ -367,6 +392,47 @@ ECIAPI int         ECICALL eciLoadDict(ECIHand handle, ECIDictHand dict,
 ECIAPI int         ECICALL eciSaveDict(ECIHand handle, ECIDictHand dict,
                                        int volume, const void *filename);
 
+/* Reading a dictionary and writing to it. eciDictLookup answers the
+   translation for a key, or nothing; the walk answers an ECIDictError and
+   hands back the key and the translation of each entry in turn.
+ *
+ * The two strings a walk answers with live in memory the instance owns and
+ * are gone by the next call, so a caller that wants to keep them copies
+ * them. The A forms carry a part of speech and are for eciMainDictExt.
+ *
+ * eciDictLookup refuses a wide code set outright, before it looks at the
+ * language at all, which is IBM's and is the one place among the eight where
+ * that happens. */
+ECIAPI const char *ECICALL eciDictLookup(ECIHand handle, ECIDictHand dict,
+                                         int volume, const void *key);
+/* The extended form answers an ECIDictError and leaves what it found in
+   `out'. It ends by turning an empty answer into eciDictNoEntry, and that
+   test reads `out' even on the roads that never write it -- so clear it
+   before calling, or an invalid volume can come back as no entry. */
+ECIAPI int ECICALL eciDictLookupA(ECIHand handle, ECIDictHand dict,
+                                  int volume, const void *key,
+                                  const char **out, ECIPartOfSpeech *part);
+ECIAPI int ECICALL eciDictFindFirst(ECIHand handle, ECIDictHand dict,
+                                    int volume, const char **key,
+                                    const char **translation);
+ECIAPI int ECICALL eciDictFindFirstA(ECIHand handle, ECIDictHand dict,
+                                     int volume, const char **key,
+                                     const char **translation,
+                                     ECIPartOfSpeech *part);
+ECIAPI int ECICALL eciDictFindNext(ECIHand handle, ECIDictHand dict,
+                                   int volume, const char **key,
+                                   const char **translation);
+ECIAPI int ECICALL eciDictFindNextA(ECIHand handle, ECIDictHand dict,
+                                    int volume, const char **key,
+                                    const char **translation,
+                                    ECIPartOfSpeech *part);
+ECIAPI int ECICALL eciUpdateDict(ECIHand handle, ECIDictHand dict, int volume,
+                                 const void *key, const void *translation);
+ECIAPI int ECICALL eciUpdateDictA(ECIHand handle, ECIDictHand dict,
+                                  int volume, const void *key,
+                                  const void *translation,
+                                  ECIPartOfSpeech part);
+
 /* What went wrong, which none of these will tell you.
  *
  * All five are empty in IBM's own object and are transcribed empty here:
@@ -423,6 +489,18 @@ ECIAPI int ECICALL eciDeactivateFilter(ECIHand handle, ECIFilterHand filter);
 ECIAPI int ECICALL eciSetFilter(ECIHand handle, ECIFilterHand filter);
 ECIAPI int ECICALL eciUpdateFilter(ECIHand handle, ECIFilterHand filter,
                                    const char *a, const char *b);
+
+/* Which filters there are for a language, and what one of them calls
+   itself. Both are empty in IBM's own object -- they answer nought and never
+   touch what the caller handed them -- and both are exported answering the
+   same, so that a program calling them links. The language is second because
+   that is where the layer beneath takes it, which is how the argument count
+   was settled. */
+ECIAPI int ECICALL eciGetAvailableFilters(ECIHand handle, int language,
+                                          unsigned int *ids,
+                                          unsigned int *count);
+ECIAPI int ECICALL eciGetFilterDescription(ECIHand handle, int language,
+                                           unsigned int id, char *out);
 
 /* A document in, the annotations the engine understands out. The answer is
    the reader's own buffer and the caller is given a pointer to it. IBM's

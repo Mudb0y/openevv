@@ -275,7 +275,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe so so32 sotest phonemes objects rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims
+.PHONY: all probe so so32 sotest phonemes dict objects rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -786,6 +786,20 @@ phonemes: $(BUILD)/phonemes
 # initialisers, so this driver does not do either for itself.
 $(BUILD)/phonemes: test/harness/phonemes.c lib/eci_api.c $(BUILD)/libevv$(SUF).a
 	@$(CC) $(ALL_CFLAGS) -DECI_STATIC test/harness/phonemes.c lib/eci_api.c \
+	   $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
+	@echo "built $@"
+
+# The eight dictionary calls, held against what IBM's own engine answers.
+# They were the last published names with no wrapper here and they are glue
+# rather than transcription, which is the kind of code that looks right and
+# answers differently -- so it is checked against the original.
+.PHONY: dict
+dict: $(BUILD)/dict
+	@$(MAKE) -C reference dicttry
+	@bash test/harness/dict.sh
+
+$(BUILD)/dict: test/harness/dict.c lib/eci_api.c $(BUILD)/libevv$(SUF).a
+	@$(CC) $(ALL_CFLAGS) -DECI_STATIC test/harness/dict.c lib/eci_api.c \
 	   $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
 	@echo "built $@"
 

@@ -211,6 +211,8 @@ A name is at most thirty bytes. The eight presets are called, in order, `Adult M
 
 `eciRegisterVoice` and `eciUnregisterVoice` are exported and are IBM's mechanism for a voice supplied from outside; nothing in this tree uses them.
 
+`eciGetAvailableFilters` and `eciGetFilterDescription` are exported too, and both are empty in IBM's own object: they answer nought and never touch what they were handed. That was read rather than assumed.
+
 ## The user dictionary
 
     ECIDictHand eciNewDict(ECIHand h);
@@ -222,11 +224,31 @@ A name is at most thirty bytes. The eight presets are called, in order, `Adult M
     int         eciSaveDict(ECIHand h, ECIDictHand dict, int volume,
                             const void *filename);
 
-A set holds three volumes -- `eciMainDict`, `eciRootDict` and `eciAbbvDict` -- and an instance has one set in force at a time. `eciSetDict(h, 0)` puts none in force.
+    const char *eciDictLookup(ECIHand h, ECIDictHand dict, int volume,
+                              const void *key);
+    int eciDictLookupA(ECIHand h, ECIDictHand dict, int volume,
+                       const void *key, const char **out,
+                       ECIPartOfSpeech *part);
+    int eciDictFindFirst(ECIHand h, ECIDictHand dict, int volume,
+                         const char **key, const char **translation);
+    int eciDictFindNext(ECIHand h, ECIDictHand dict, int volume,
+                        const char **key, const char **translation);
+    int eciUpdateDict(ECIHand h, ECIDictHand dict, int volume,
+                      const void *key, const void *translation);
 
-What is not exported is the find, lookup and update calls: `eciDictFindFirst`, `eciDictFindNext`, `eciDictLookup` and `eciUpdateDict`, each in a plain and a wide form. The machinery beneath them is ported and working -- it is what the engine's own dictionary runs on -- and only the public wrappers are missing. A caller asking for one of those names gets nothing rather than something wrong.
+A set holds four volumes. Three are the set's own -- `eciMainDict`, `eciRootDict` and `eciAbbvDict` -- and an instance has one set in force at a time; `eciSetDict(h, 0)` puts none in force. The fourth, `eciMainDictExt`, keeps a part of speech beside each entry and exists only for a language written in another script: Chinese, Korean and Japanese. **Ask any other language for it and every one of these answers `eciDictInvalidVolume`**, which is 7.
 
-The other way to teach the engine a word is to put it in the language module's own dictionary, which `tools/module/dict.py` does and `docs/language.md` describes. That is a build-time answer, not a run-time one.
+`eciUpdateDict` teaches the engine a word: a key and what to say instead. `eciDictLookup` answers what a key was taught, or nothing. `eciDictFindFirst` and `eciDictFindNext` walk a volume, handing back the key and the translation of each entry until there are none left, which is `eciDictNoEntry`.
+
+The two strings a walk hands back live in memory the instance owns and are gone by the next call, so a caller that wants to keep them copies them.
+
+Each has an `A` form carrying a part of speech, for `eciMainDictExt`. Two things about `eciDictLookupA` are worth knowing and both are IBM's. It answers an error code where the plain form answers the string, leaving what it found in the pointer you hand it. And it finishes by turning an empty answer into `eciDictNoEntry` -- a test it makes even on the roads that never write that pointer, so clear your own variable first or an invalid volume can come back as no entry.
+
+`eciDictLookup` alone among the eight refuses a wide code set outright, before it has looked at the language at all.
+
+The other way to teach the engine a word is to put it in the language module's own dictionary, which `tools/module/dict.py` does and `docs/language.md` describes. That is a build-time answer, not a run-time one, and it is the one that changes what the engine says without a program having to say it every time.
+
+`test/harness/dict.sh` holds all eight against IBM's own engine, answer for answer, and `make dict` runs it.
 
 ## Phonemes instead of sound
 

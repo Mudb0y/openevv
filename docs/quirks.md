@@ -86,9 +86,17 @@ Hand the reader a document it may write on. IBM's reader ends the digits of a nu
 
 ## Names that are not exported
 
-The dictionary find, lookup and update calls -- `eciDictFindFirst`, `eciDictFindNext`, `eciDictLookup` and `eciUpdateDict`, each in a plain and a wide form -- exist inside the engine with no public wrapper. A caller asking for one of those gets nothing rather than something wrong. Nothing known needs them.
+**Nothing.** Every one of the seventy-one names IBM's own `eci.obj` publishes is exported, and nothing is exported that IBM does not publish. That was checked by diffing the two export tables rather than by counting.
 
-Everything speech-dispatcher's `sd_eloquence` module resolves is exported, `eciGeneratePhonemes` included.
+Two of the seventy-one are empty in IBM's object as well as here: `eciGetAvailableFilters` and `eciGetFilterDescription` answer nought and never touch what they were handed.
+
+## The dictionary has a fourth volume, and it is not yours
+
+A set holds `eciMainDict`, `eciRootDict` and `eciAbbvDict`, and then `eciMainDictExt`, which keeps a part of speech beside each entry. That fourth one exists only for a language written in another script -- Chinese, Korean, Japanese -- so for every language in this tree all eight dictionary calls answer `eciDictInvalidVolume` when you ask for it. That is IBM's, and it is why the calls come in pairs: the `A` forms carry the part of speech the extended volume wants.
+
+`eciDictLookupA` answers an error code where `eciDictLookup` answers the string, and it finishes by turning an empty answer into `eciDictNoEntry` -- a test it makes even on the roads that never write your pointer. So clear your own variable before calling, or an invalid volume comes back as no entry. Both are IBM's.
+
+One asymmetry in IBM's own switch is carried here because it is IBM's: Chinese in code set two reaches the extended volume in its second dialect and not its first. No build of this tree can show it, there being no Chinese in this SDK at all.
 
 ## Asking for phonemes
 

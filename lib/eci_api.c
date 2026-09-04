@@ -24,9 +24,9 @@
  * declspec and the platform is started from a constructor rather than from
  * an entry point.
  *
- * What is not here: the dictionary find, lookup and update calls, which exist
- * inside the engine but have no public wrapper in our tree yet. A caller
- * asking for one of those gets nothing rather than something wrong.
+ * Every name IBM's own eci.obj publishes is here now. Two of them --
+ * eciGetAvailableFilters and eciGetFilterDescription -- are empty in that
+ * object as well as here, which was read rather than assumed.
  */
 
 #include <stdint.h>
@@ -93,6 +93,26 @@ int      STDCALL ed_loadDict(OldInst *h, void *dict, int32_t volume,
                              const void *name);
 int      STDCALL ed_saveDict(OldInst *h, void *dict, int32_t volume,
                              const void *name);
+const char *STDCALL ed_dictLookup(OldInst *h, void *dict, int32_t volume,
+                                  const void *key);
+int32_t  STDCALL ed_dictLookupA(OldInst *h, void *dict, int32_t volume,
+                                const void *key, const char **out,
+                                int32_t *pos);
+int32_t  STDCALL ed_dictFindFirst(OldInst *h, void *dict, int32_t volume,
+                                  const char **key, const char **xlat);
+int32_t  STDCALL ed_dictFindFirstA(OldInst *h, void *dict, int32_t volume,
+                                   const char **key, const char **xlat,
+                                   int32_t *pos);
+int32_t  STDCALL ed_dictFindNext(OldInst *h, void *dict, int32_t volume,
+                                 const char **key, const char **xlat);
+int32_t  STDCALL ed_dictFindNextA(OldInst *h, void *dict, int32_t volume,
+                                  const char **key, const char **xlat,
+                                  int32_t *pos);
+int32_t  STDCALL ed_updateDict(OldInst *h, void *dict, int32_t volume,
+                               const void *key, const void *xlat);
+int32_t  STDCALL ed_updateDictA(OldInst *h, void *dict, int32_t volume,
+                                const void *key, const void *xlat,
+                                int32_t pos);
 int      STDCALL vc_registerVoice(OldInst *h, int32_t voice, void *data,
                                   void *attrib);
 int      STDCALL vc_unregisterVoice(OldInst *h, int32_t voice, void *attrib,
@@ -203,6 +223,87 @@ ECIAPI int ECICALL eciLoadDict(void *h, void *dict, int volume, const void *name
 ECIAPI int ECICALL eciSaveDict(void *h, void *dict, int volume, const void *name)
 {
     return ed_saveDict(h, dict, volume, name);
+}
+
+/* Reading the dictionary and writing to it. The A forms carry a part of
+   speech and are for the extended volume, which only a language written in
+   another script has. */
+
+ECIAPI const char *ECICALL eciDictLookup(void *h, void *dict, int volume,
+                                         const void *key)
+{
+    return ed_dictLookup(h, dict, volume, key);
+}
+
+ECIAPI int ECICALL eciDictLookupA(void *h, void *dict, int volume,
+                                  const void *key, const char **out,
+                                  int *pos)
+{
+    return ed_dictLookupA(h, dict, volume, key, out, (int32_t *)pos);
+}
+
+ECIAPI int ECICALL eciDictFindFirst(void *h, void *dict, int volume,
+                                    const char **key, const char **xlat)
+{
+    return ed_dictFindFirst(h, dict, volume, key, xlat);
+}
+
+ECIAPI int ECICALL eciDictFindFirstA(void *h, void *dict, int volume,
+                                     const char **key, const char **xlat,
+                                     int *pos)
+{
+    return ed_dictFindFirstA(h, dict, volume, key, xlat, (int32_t *)pos);
+}
+
+ECIAPI int ECICALL eciDictFindNext(void *h, void *dict, int volume,
+                                   const char **key, const char **xlat)
+{
+    return ed_dictFindNext(h, dict, volume, key, xlat);
+}
+
+ECIAPI int ECICALL eciDictFindNextA(void *h, void *dict, int volume,
+                                    const char **key, const char **xlat,
+                                    int *pos)
+{
+    return ed_dictFindNextA(h, dict, volume, key, xlat, (int32_t *)pos);
+}
+
+ECIAPI int ECICALL eciUpdateDict(void *h, void *dict, int volume,
+                                 const void *key, const void *xlat)
+{
+    return ed_updateDict(h, dict, volume, key, xlat);
+}
+
+ECIAPI int ECICALL eciUpdateDictA(void *h, void *dict, int volume,
+                                  const void *key, const void *xlat, int pos)
+{
+    return ed_updateDictA(h, dict, volume, key, xlat, pos);
+}
+
+/* The two filter queries, and both are empty in IBM's own object: it clears
+   a local buffer nobody sees and answers nought without touching what the
+   caller handed it. Exported so that a program calling them links, and
+   answering what the original answers. */
+
+ECIAPI int ECICALL eciGetAvailableFilters(void *h, int language,
+                                          unsigned int *ids,
+                                          unsigned int *count)
+{
+    (void)h;
+    (void)language;
+    (void)ids;
+    (void)count;
+    return 0;
+}
+
+ECIAPI int ECICALL eciGetFilterDescription(void *h, int language,
+                                           unsigned int id, char *out)
+{
+    (void)h;
+    (void)language;
+    (void)id;
+    (void)out;
+    return 0;
 }
 
 ECIAPI int ECICALL eciRegisterVoice(void *h, int voice, void *data, void *attrib)

@@ -86,13 +86,23 @@ Two things are deliberate divergences and both are in the list in `docs/status.m
 
 And Polish is in the reader's language table, where IBM's has Thai. Family seventeen is Polish in this tree, and it was Thai in `ssmlmap.obj` and nothing at all in `win_languageid.obj`, whose own table stops at fifteen -- so a Polish document became a number nothing could name and every element fell through. Polish is on the prosody, rate and emphasis lists as well, and deliberately not on the say-as or IPA ones, because a say-as annotation is read by the language's own rules and Polish's are still Italian's.
 
-## The public calls with no wrapper
+## The published interface, closed
 
-`eci.obj` defines 130 names and we answer 77. About 12 KB of what is left is the flat C entry points: `eciDictFindFirst`, `eciDictFindNext`, `eciDictLookup` and `eciUpdateDict`, each in a plain and a wide form, with `fgetUCS2` under them. The machinery beneath them is already ported -- `es_engsynDictFindFirst` in `src/eci/api/eci_engsyn.c`, `eciUpdateDict` in `src/eci/api/eci_api2.c` -- so those are glue rather than transcription. `lib/eci_api.c` says so in its own head, and a caller asking for one of them gets nothing rather than something wrong. Nothing known asks.
+`eci.obj` publishes seventy-one `eci*` entry points and the library exports all seventy-one, with nothing exported that IBM does not publish. That was settled by diffing the two export tables rather than by counting, and it is what `make objects` will say of that object from here.
 
-`eciGeneratePhonemes` was in that list and is out of it: it is transcribed, in `src/eci/api/eci_env.c`, and `make phonemes` holds what it answers against IBM's own engine case for case. What it cost was not the entry point but the Delta runtime's printing layer under it, which `docs/status.md` describes.
+The last ten went in on 4 September 2026. Eight are the dictionary calls -- `eciDictLookup`, `eciDictFindFirst`, `eciDictFindNext` and `eciUpdateDict`, each in a plain form and in an extended form carrying a part of speech -- and they are in `src/eci/dict/eci_dict.c` beside the rest of the dictionary glue. Two are `eciGetAvailableFilters` and `eciGetFilterDescription`, and both are empty in IBM's own object: they answer nought and never touch what the caller handed them, which was read rather than assumed. `fgetUCS2` under them is written too, with the one divergence its head names -- the original asks the stream's own flag word what Microsoft's runtime put there and this asks `feof` and `ferror`, which are the same two questions.
 
-The eight filter calls that used to be listed here are written, in `src/eci/ssml/eci_filters.c`, and exported from `lib/eci_api.c`: `eciRegisterFilter`, `eciUnregisterFilter`, `eciNewFilter`, `eciDeleteFilter`, `eciActivateFilter`, `eciDeactivateFilter`, `eciSetFilter` and `eciUpdateFilter`. Two of them answer oddly and faithfully. `eciActivateFilter` reports a refusal over a filter it has just turned on, because the manager's answer is always the refusal whatever it did. And `eciUpdateFilter` works out an answer, stores it, and returns nought.
+Three things came out of writing the eight and are worth keeping.
+
+**A set has four volumes, not three.** `eciMainDictExt` keeps a part of speech beside each entry and exists only for a language written in another script -- Chinese in four code sets, Korean in two, Japanese in two. Every other language answers `eciDictInvalidVolume`, and that answer is most of what those calls do for anything in this tree. All eight carry the same switch on the language to decide, which was checked by comparing the constants their compares hold rather than assumed; `ed_road` is the one copy of it here. One asymmetry in it is IBM's own slip and is kept: Chinese code set two reaches the extended road in its second dialect and not its first.
+
+**Two instance fields are named now.** What were `direct` and `direct2` with twelve unknown bytes after them are the five slots the dictionary layer answers into: the translation, the key, a length for each and the part of speech. And `owned1` and `owned2` are the narrow copies handed back to the caller, which the instance frees on the next call. Nothing but these eight calls reads any of them, which is why the names were not knowable before.
+
+**`eciDictLookupA` answers an error where the plain form answers the string**, and it ends by turning an empty answer into `eciDictNoEntry` -- a test it makes even on the roads that never write the caller's pointer, so an uncleared variable can turn an invalid volume into no entry. The first version written here answered the string, and `make dict` is what said so: the same driver against IBM's objects and against ours, thirty-two answers, every one now identical.
+
+The eight filter calls that used to be listed here are written, in `src/eci/ssml/eci_filters.c`: `eciRegisterFilter`, `eciUnregisterFilter`, `eciNewFilter`, `eciDeleteFilter`, `eciActivateFilter`, `eciDeactivateFilter`, `eciSetFilter` and `eciUpdateFilter`. Two of them answer oddly and faithfully. `eciActivateFilter` reports a refusal over a filter it has just turned on, because the manager's answer is always the refusal whatever it did. And `eciUpdateFilter` works out an answer, stores it, and returns nought.
+
+`eciGeneratePhonemes` is written as well, and what it cost was not the entry point but the Delta runtime's printing layer under it, which `docs/status.md` describes.
 
 ## What not to transcribe
 

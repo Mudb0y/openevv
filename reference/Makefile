@@ -137,6 +137,20 @@ $(BUILD)/phontry.exe: phontry.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/phontry.err >&2 || true; exit $$s
 	@echo "built $@"
 
+# The eight dictionary calls as IBM answers them, which is the oracle the
+# glue over them was written against. See the head of dicttry.c.
+.PHONY: dicttry
+dicttry: $(BUILD)/dicttry.exe
+
+$(BUILD)/dicttry.exe: dicttry.c $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj \
+                      $(SHIM) $(WORK)/.stamp
+	@mkdir -p $(BUILD)
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) dicttry.c \
+	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) $(wildcard $(WORK)/*.obj) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/dicttry.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/dicttry.err >&2 || true; exit $$s
+	@echo "built $@"
+
 $(BUILD)/jajp_shim.obj: jajp_shim.c
 	@mkdir -p $(BUILD)
 	@$(CC) -O2 -std=gnu99 -w $(INCS) -c $< -o $@

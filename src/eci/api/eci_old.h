@@ -36,9 +36,16 @@ typedef struct OldInst {
     int32_t  samproom_saved;      /* +0x3d4 */
     int32_t  lastindex;           /* +0x3d8 */
     int32_t  where;               /* +0x3dc, device, buffer or phonemes */
-    void    *direct;              /* +0x3e0 */
-    void    *direct2;             /* +0x3e4 */
-    uint8_t  unknown_3e8[0x3f4 - 0x3e8];
+    /* Where the dictionary layer leaves what it found, and how long each of
+       them is. These were `direct' and `direct2' with twelve unknown bytes
+       after them for as long as nothing here called the dictionary; the
+       eight published calls that do are what says which is which. The layer
+       is handed the address of each and fills it in. */
+    void    *dict_xlat;           /* +0x3e0, the translation */
+    void    *dict_key;            /* +0x3e4, and the key it was found under */
+    int32_t  dict_xlatlen;        /* +0x3e8 */
+    int32_t  dict_keylen;         /* +0x3ec */
+    int32_t  dict_pos;            /* +0x3f0, the part of speech */
     char     filename[0x100];     /* +0x3f4 */
     char     filename_saved[0x100]; /* +0x4f4 */
     /* The index report handed back, mode and all: it is one record and the
@@ -55,8 +62,11 @@ typedef struct OldInst {
     int32_t  busy;                /* +0x6b4 */
     void    *rommgr;              /* +0x6b8 */
     void    *filtermgr;           /* +0x6bc */
-    void    *owned1;              /* +0x6c0 */
-    void    *owned2;              /* +0x6c4 */
+    /* The two the instance owns and gives back on the next call: the narrow
+       copies of what the dictionary layer found, which is what the caller is
+       handed a pointer to. */
+    void    *owned1;              /* +0x6c0, the translation */
+    void    *owned2;              /* +0x6c4, and the key */
     void    *concat;              /* +0x6c8 */
 } OldInst;
 
@@ -80,8 +90,11 @@ typedef struct OldInst {
 #define OI_SAMPROOM_SAVED(h) ((h)->samproom_saved)
 #define OI_LASTINDEX(h)      ((h)->lastindex)
 #define OI_WHERE(h)          ((h)->where)
-#define OI_DIRECT(h)         ((h)->direct)
-#define OI_DIRECT2(h)        ((h)->direct2)
+#define OI_DICT_XLAT(h)      ((h)->dict_xlat)
+#define OI_DICT_KEY(h)       ((h)->dict_key)
+#define OI_DICT_XLATLEN(h)   ((h)->dict_xlatlen)
+#define OI_DICT_KEYLEN(h)    ((h)->dict_keylen)
+#define OI_DICT_POS(h)       ((h)->dict_pos)
 #define OI_FILENAME(h)       ((h)->filename)
 #define OI_FILENAME_SAVED(h) ((h)->filename_saved)
 #define OI_REPORT(h)         ((h)->report)
