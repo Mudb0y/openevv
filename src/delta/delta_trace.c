@@ -47,6 +47,21 @@
    one is not, and hex the same way after an x, putting the character that
    ended it back. Everything else is the C escapes, and a backslash before
    anything else is that thing. */
+/* How much room a printed value gets. The original keeps eighty bytes on the
+   stack for one and does not bound what goes into it; nothing the language
+   prints comes near that. */
+#define VPRT_BUF 0x50
+
+/* The kinds of location below nought are the machine's own rather than a
+   language's, and each is written out its own way. Everything at or above
+   nought is a statement type, and the value is a field of a token. */
+#define VLOC_LONG      (-3)
+#define VLOC_SHORT     (-4)
+#define VLOC_NODE      (-6)
+
+/* The field that says there is nothing to print. */
+#define VLOC_NO_FIELD  0xff
+
 int8_t getbksl(delta_state *d, int32_t f)
 {
     int32_t c = vf_getc(d, f);
@@ -210,11 +225,126 @@ static int8_t read_token(delta_state *d, uint8_t st, int32_t f, char *buf)
     }
 }
 
-void print_lit(delta_state *d, ...)     { (void)d; }
-void print_var(delta_state *d, ...)     { (void)d; }
-void print_stream(delta_state *d, ...)  { (void)d; }
-void vprt_var(delta_state *d, ...)      { (void)d; }
-void vprt_strm(delta_state *d, ...)     { (void)d; }
+/* A literal string to a logical file, flushed. */
+void print_lit(delta_state *d, int32_t lf, const char *s)
+{
+    vf_puts(d, lf, s, 1);
+}
+/* One variable, written out under whatever name its field gives the value,
+   and then the field put back.
+
+   The four kinds below nought are the machine's own rather than a
+   language's: a long, a short, a node reference, and everything else, which
+   is a token field and goes through disptok. A name that comes back
+   beginning with a backslash is an escaped literal and is unescaped before
+   it goes out, which is the one place cleanLiteral is asked for by the
+   printing side. Field 255 is the one that says there is nothing to print. */
+void vprt_var(delta_state *d, int32_t lf, delta_loc *loc)
+{
+    char buf[VPRT_BUF];
+
+    switch (loc->kind) {
+    case VLOC_LONG:
+        sprintf(buf, "%ld", (long)loc->value);
+        vf_puts(d, lf, buf, 1);
+        return;
+
+    case VLOC_SHORT:
+        sprintf(buf, "%d", (int)loc->field);
+        vf_puts(d, lf, buf, 1);
+        return;
+
+    case VLOC_NODE:
+        if (loc->value == 0)
+            vf_puts(d, lf, "NULL", 1);
+        else if (loc->value == 1)
+            vf_puts(d, lf, "dangling", 1);
+        else {
+            sprintf(buf, "%d",
+                    (int)absoluteSyncNum(d, EVV_AT(uint8_t *, loc->value)));
+            vf_puts(d, lf, buf, 1);
+        }
+        return;
+
+    default:
+        if (loc->field == VLOC_NO_FIELD)
+            return;
+        disptok(d, &loc->value, loc->kind, loc->field, buf);
+        if (buf[0] == '\\')
+            cleanLiteral(buf, 0, 0);
+        vf_puts(d, lf, buf, 1);
+        return;
+    }
+}
+
+void print_var(delta_state *d, int32_t lf, delta_loc *loc)
+{
+    vprt_var(d, lf, loc);
+    reset_field(loc);
+}
+
+/* Everything between the two positions the machine is holding, which is what
+   a rule printing a stream means: it prints the run rather than a variable.
+   The range has to settle first, and a range that will not is the same
+   failure as anywhere else -- the rule backtracks. */
+void print_stream(delta_state *d, int32_t lf, int32_t stream, int32_t field,
+                  const char *sep)
+{
+    if (!vprt_range(d, &d->lpta, &d->rpta))
+        forceErrorBacktrack(d);
+
+    vprt_strm(d, lf, d->lpta.node, d->rpta.node, (uint8_t)stream,
+              (uint8_t)field, sep);
+}
+
+/* Every node between the two positions, written out with the separator after
+   each, and then the last separator taken back off again.
+ *
+ * The walk follows the stream's own field, which is the fence base plus the
+ * stream number -- the same arithmetic every other walk in the machine does.
+ * It stops at the right-hand position or at the end of the spine, whichever
+ * comes first. A node whose first word has bit one set is a sync rather than
+ * a statement and is stepped over without being printed.
+ *
+ * Taking the last separator off is done by writing it again as backspaces
+ * and then as spaces, which is what a terminal wanted in 1990 and what the
+ * original does. Neither of those goes anywhere on a link, where the output
+ * is a string rather than a screen -- so what a caller reading phonemes gets
+ * is the separator followed by that many backspaces and that many spaces,
+ * and that is faithful.
+ */
+void vprt_strm(delta_state *d, int32_t lf, int32_t from, int32_t to,
+               uint8_t stream, uint8_t field, const char *sep)
+{
+    char buf[VPRT_BUF];
+    size_t n;
+
+    while (from != EVV_AT(delta_stack *, d->stack)->spine_r && from != to) {
+        delta_vars *v = EVV_AT(delta_vars *, d->vars);
+        int32_t next = *(int32_t *)(intptr_t)
+                       (from + (v->fence_base + stream) * 4) & ~3;
+
+        if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
+            from = next;
+            continue;
+        }
+
+        disptok(d, TFLDS((void *)(intptr_t)next), stream, field, buf);
+        if (buf[0] == '\\')
+            cleanLiteral(buf, 0, 0);
+        strcat(buf, sep);
+        vf_puts(d, lf, buf, 0);
+
+        from = *(int32_t *)(intptr_t)(next + 4) & ~3;
+    }
+
+    n = strlen(sep);
+    memset(buf, '\b', n);
+    buf[n] = 0;
+    vf_puts(d, lf, buf, 0);
+    memset(buf, ' ', n);
+    vf_puts(d, lf, buf, 1);
+}
 
 /* One field of one token, under the name the language gives that value.
    IBM's own was its debugger's display and this port left it empty, which
@@ -224,8 +354,13 @@ void vprt_strm(delta_state *d, ...)     { (void)d; }
    field_value in eci_access.c already turns one into the other for the
    dictionary's sake.
 
-   The pointer arrives four bytes into the token, which is how the original's
-   caller hands it over; field_value counts eight from the token itself. */
+   What arrives is the token's body -- eight bytes in, which is what TFLDS
+   answers and what every caller of the original hands over -- and that is
+   what the language's own reader for the field wants. field_value counts
+   those eight itself, so the eight come back off here. This said four for as
+   long as there was one caller to calibrate it against, and a second caller
+   is what found it: every name came back as the value four bytes further on,
+   which for the phoneme field is entry nought of its list. */
 void disptok(delta_state *d, const void *at, int32_t stream, int32_t field,
              char *out)
 {
@@ -236,7 +371,7 @@ void disptok(delta_state *d, const void *at, int32_t stream, int32_t field,
         return;
     if (field < 0 || field >= vstmtbl[stream].nfields)
         return;
-    strcpy(out, field_value((int8_t)stream, (char *)at - 4, field));
+    strcpy(out, field_value((int8_t)stream, (char *)at - 8, field));
 }
 
 /* Spell a token so that it can be shown: the printable characters as they

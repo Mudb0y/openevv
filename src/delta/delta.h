@@ -1085,11 +1085,13 @@ void callSetEngsynError(delta_state *d, const void *what);
 void initDllLink(void);
 void setEngsynError(delta_state *d, int32_t code);
 
-void print_lit(delta_state *d, ...);
-void print_var(delta_state *d, ...);
-void print_stream(delta_state *d, ...);
-void vprt_var(delta_state *d, ...);
-void vprt_strm(delta_state *d, ...);
+void print_lit(delta_state *d, int32_t lf, const char *s);
+void print_var(delta_state *d, int32_t lf, delta_loc *loc);
+void print_stream(delta_state *d, int32_t lf, int32_t stream,
+                  int32_t field, const char *sep);
+void vprt_var(delta_state *d, int32_t lf, delta_loc *loc);
+void vprt_strm(delta_state *d, int32_t lf, int32_t from, int32_t to,
+               uint8_t stream, uint8_t field, const char *sep);
 /* Spell one field of one token as the language names it, which is what the
    phoneme callback reports and what a person reads a token by. The pointer is
    the token four bytes in, as the original's own caller hands it over. */
