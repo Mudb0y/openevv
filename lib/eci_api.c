@@ -11,11 +11,18 @@
  * calls seventeen of these, loads the library with ctypes' windll, and hands
  * in a callback made with WINFUNCTYPE.
  *
- * None of the calling convention business matters here, which is worth saying
- * because it matters enormously in a thirty-two bit build. On x86-64 there is
- * one convention: __stdcall and __cdecl are the same thing, a stdcall name
- * carries no @N to strip, and a callback made as stdcall is callable as
- * anything. So these are plain functions, exported under plain names.
+ * The calling convention comes from include/eci.h and is not decoration on
+ * thirty-two bit Windows: IBM's own objects export `_eciSetParam@12', so the
+ * published interface is stdcall there, and a caller that assumes so of a
+ * cdecl function leaves the stack out by the size of the arguments. These
+ * wrappers were plain until the header existed, which was right for x86-64
+ * and wrong for eci32.dll. `--kill-at' publishes them under the plain names
+ * a caller asking by name asks for.
+ *
+ * Off Windows there is no convention to say and no DLL: the same file builds
+ * build/libeci.so, where the names are exported by visibility rather than by
+ * declspec and the platform is started from a constructor rather than from
+ * an entry point.
  *
  * What is not here: eciGeneratePhonemes and the dictionary find, lookup and
  * update calls, which exist inside the engine but have no public wrapper in
@@ -25,11 +32,12 @@
 
 #include <stdint.h>
 
+#define ECI_BUILDING
+#include "eci.h"
+
 #include "evv_abi.h"
 
 typedef struct OldInst OldInst;
-
-#define API __declspec(dllexport)
 
 /* Ours, as the engine defines them. */
 OldInst *STDCALL eo_new(void);
@@ -43,9 +51,9 @@ int32_t  STDCALL es_registerFilter(OldInst *h, uint32_t id, void *entry,
 int32_t  STDCALL es_unregisterFilter(OldInst *h, uint32_t id, void *attrib);
 void    *STDCALL es_newFilter(OldInst *h, int32_t id, int32_t language);
 int32_t  STDCALL es_deleteFilter(OldInst *h, void *filter);
-int32_t  STDCALL es_activateFilter(OldInst *h, int32_t id);
-int32_t  STDCALL es_deactivateFilter(OldInst *h, int32_t id);
-int32_t  STDCALL es_setFilter(OldInst *h, int32_t id);
+int32_t  STDCALL es_activateFilter(OldInst *h, int32_t filter);
+int32_t  STDCALL es_deactivateFilter(OldInst *h, int32_t filter);
+int32_t  STDCALL es_setFilter(OldInst *h, int32_t filter);
 int32_t  STDCALL es_updateFilter(OldInst *h, void *filter, const char *a,
                                  const char *b);
 int      STDCALL es_speakText(const void *text, int32_t annotations);
@@ -100,8 +108,8 @@ int      STDCALL es_getLog(void *out);
 int      STDCALL es_getIntLog(int32_t which, int32_t *out);
 int      STDCALL es_dialogBox(OldInst *h, void *parent, int32_t which,
                               void *a, void *b);
-int      STDCALL es_getFilteredText(OldInst *h, const void *text, void *out,
-                                    int32_t room);
+int      STDCALL es_getFilteredText(OldInst *h, void *filter,
+                                    const void *text, char **out);
 
 /* What the engine needs of the platform before anything is asked of it. The
    original's DLL did this in its entry point, and so does this one, below. */
@@ -111,114 +119,122 @@ void evv_port_finish(void);
 
 /* ---- the published names -------------------------------------------- */
 
-API void *eciNew(void) { return eo_new(); }
-API void *eciNewEx(int language) { return eo_newEx(language); }
+ECIAPI void * ECICALL eciNew(void) { return eo_new(); }
+ECIAPI void * ECICALL eciNewEx(int language) { return eo_newEx(language); }
 
 /* The original answers a handle, which is always nothing. */
-API void *eciDelete(void *h) { return (void *)(intptr_t)es_delete(h); }
+ECIAPI void * ECICALL eciDelete(void *h) { return (void *)(intptr_t)es_delete(h); }
 
-API int  eciReset(void *h) { return es_reset(h); }
-API void eciVersion(char *out) { eo_version(out); }
-API int  eciTestPhrase(void *h) { return es_testPhrase(h); }
+ECIAPI int ECICALL eciReset(void *h) { return es_reset(h); }
+ECIAPI void ECICALL eciVersion(char *out) { eo_version(out); }
+ECIAPI int ECICALL eciTestPhrase(void *h) { return es_testPhrase(h); }
 
-API int eciSpeakText(const void *text, int annotations)
+ECIAPI int ECICALL eciSpeakText(const void *text, int annotations)
 {
     return es_speakText(text, annotations);
 }
 
-API int eciSpeakTextEx(const void *text, int annotations, int language)
+ECIAPI int ECICALL eciSpeakTextEx(const void *text, int annotations, int language)
 {
     return es_speakTextEx(text, annotations, language);
 }
 
-API int eciGetParam(void *h, int which) { return eo_getParam(h, which); }
-API int eciSetParam(void *h, int which, int v) { return ev_setParam(h, which, v); }
-API int eciGetDefaultParam(int which) { return es_getDefaultParam(which); }
-API int eciSetDefaultParam(int which, int v) { return es_setDefaultParam(which, v); }
+ECIAPI int ECICALL eciGetParam(void *h, int which) { return eo_getParam(h, which); }
+ECIAPI int ECICALL eciSetParam(void *h, int which, int v) { return ev_setParam(h, which, v); }
+ECIAPI int ECICALL eciGetDefaultParam(int which) { return es_getDefaultParam(which); }
+ECIAPI int ECICALL eciSetDefaultParam(int which, int v) { return es_setDefaultParam(which, v); }
 
-API int eciGetAvailableLanguages(unsigned int *langs, int *count)
+ECIAPI int ECICALL eciGetAvailableLanguages(unsigned int *langs, int *count)
 {
     return eo_getAvailableLanguages((uint32_t *)langs, count);
 }
 
-API int eciCopyVoice(void *h, int from, int to) { return vc_copyVoice(h, from, to); }
-API int eciGetVoiceName(void *h, int voice, void *out) { return vc_getVoiceName(h, voice, out); }
-API int eciSetVoiceName(void *h, int voice, const void *name) { return vc_setVoiceName(h, voice, name); }
-API int eciGetVoiceParam(void *h, int voice, int which) { return vc_getVoiceParam(h, voice, which); }
+ECIAPI int ECICALL eciCopyVoice(void *h, int from, int to) { return vc_copyVoice(h, from, to); }
+ECIAPI int ECICALL eciGetVoiceName(void *h, int voice, void *out) { return vc_getVoiceName(h, voice, out); }
+ECIAPI int ECICALL eciSetVoiceName(void *h, int voice, const void *name) { return vc_setVoiceName(h, voice, name); }
+ECIAPI int ECICALL eciGetVoiceParam(void *h, int voice, int which) { return vc_getVoiceParam(h, voice, which); }
 
-API int eciSetVoiceParam(void *h, int voice, int which, int value)
+ECIAPI int ECICALL eciSetVoiceParam(void *h, int voice, int which, int value)
 {
     return vc_setVoiceParam(h, voice, which, value);
 }
 
-API int eciAddText(void *h, const void *text) { return et_addText(h, text); }
-API int eciInsertIndex(void *h, int index) { return et_insertIndex(h, index); }
-API int eciSynthesize(void *h) { return et_synthesize(h); }
-API int eciSynthesizeFile(void *h, const void *name) { return es_synthesizeFile(h, name); }
-API int eciClearInput(void *h) { return eo_clearInput(h); }
-API int eciGetIndex(void *h) { return eo_getIndex(h); }
-API int eciStop(void *h) { return eo_stop(h); }
-API int eciSpeaking(void *h) { return eo_speaking(h); }
-API int eciSynchronize(void *h) { return es_synchronize(h); }
-API void eciSynchronizeSynth(void *h) { eo_synchronizeSynth(h); }
+ECIAPI int ECICALL eciAddText(void *h, const void *text) { return et_addText(h, text); }
+ECIAPI int ECICALL eciInsertIndex(void *h, int index) { return et_insertIndex(h, index); }
+ECIAPI int ECICALL eciSynthesize(void *h) { return et_synthesize(h); }
+ECIAPI int ECICALL eciSynthesizeFile(void *h, const void *name) { return es_synthesizeFile(h, name); }
+ECIAPI int ECICALL eciClearInput(void *h) { return eo_clearInput(h); }
+ECIAPI int ECICALL eciGetIndex(void *h) { return eo_getIndex(h); }
+ECIAPI int ECICALL eciStop(void *h) { return eo_stop(h); }
+ECIAPI int ECICALL eciSpeaking(void *h) { return eo_speaking(h); }
+ECIAPI int ECICALL eciSynchronize(void *h) { return es_synchronize(h); }
+ECIAPI void ECICALL eciSynchronizeSynth(void *h) { eo_synchronizeSynth(h); }
 
-API int eciSetOutputBuffer(void *h, int samples, short *buffer)
+ECIAPI int ECICALL eciSetOutputBuffer(void *h, int samples, short *buffer)
 {
     return ev_setOutputBuffer(h, samples, buffer);
 }
 
-API int eciSetOutputFilename(void *h, const void *name) { return es_setOutputFilename(h, name); }
-API int eciSetOutputDevice(void *h, int device) { return ev_setOutputDevice(h, device); }
-API int eciPause(void *h, int on) { return es_pause(h, on); }
+ECIAPI int ECICALL eciSetOutputFilename(void *h, const void *name) { return es_setOutputFilename(h, name); }
+ECIAPI int ECICALL eciSetOutputDevice(void *h, int device) { return ev_setOutputDevice(h, device); }
+ECIAPI int ECICALL eciPause(void *h, int on) { return es_pause(h, on); }
 
-API void eciRegisterCallback(void *h, void *callback, void *data)
+ECIAPI void ECICALL eciRegisterCallback(void *h, ECICallback callback,
+                                        void *data)
 {
-    eo_registerCallback(h, callback, data);
+    eo_registerCallback(h, (void *)callback, data);
 }
 
-API void *eciNewDict(void *h) { return ed_newDict(h); }
-API void *eciGetDict(void *h) { return ed_getDict(h); }
-API int   eciSetDict(void *h, void *dict) { return ed_setDict(h, dict); }
-API void *eciDeleteDict(void *h, void *dict) { return (void *)(intptr_t)ed_deleteDict(h, dict); }
+ECIAPI void * ECICALL eciNewDict(void *h) { return ed_newDict(h); }
+ECIAPI void * ECICALL eciGetDict(void *h) { return ed_getDict(h); }
+ECIAPI int ECICALL eciSetDict(void *h, void *dict) { return ed_setDict(h, dict); }
+ECIAPI void * ECICALL eciDeleteDict(void *h, void *dict) { return (void *)(intptr_t)ed_deleteDict(h, dict); }
 
-API int eciLoadDict(void *h, void *dict, int volume, const void *name)
+ECIAPI int ECICALL eciLoadDict(void *h, void *dict, int volume, const void *name)
 {
     return ed_loadDict(h, dict, volume, name);
 }
 
-API int eciSaveDict(void *h, void *dict, int volume, const void *name)
+ECIAPI int ECICALL eciSaveDict(void *h, void *dict, int volume, const void *name)
 {
     return ed_saveDict(h, dict, volume, name);
 }
 
-API int eciRegisterVoice(void *h, int voice, void *data, void *attrib)
+ECIAPI int ECICALL eciRegisterVoice(void *h, int voice, void *data, void *attrib)
 {
     return vc_registerVoice(h, voice, data, attrib);
 }
 
-API int eciUnregisterVoice(void *h, int voice, void *attrib, void **data)
+ECIAPI int ECICALL eciUnregisterVoice(void *h, int voice, void *attrib, void **data)
 {
     return vc_unregisterVoice(h, voice, attrib, data);
 }
 
-API void eciClearErrors(void *h) { eo_clearErrors(h); }
-API void eciErrorMessage(void *h, void *out) { es_errorMessage(h, out); }
-API int  eciProgStatus(void *h) { return es_progStatus(h); }
-API int  eciIsBeingReentered(void *h) { return es_isBeingReentered(h); }
-API int  eciRequestLicense(void *h) { return es_requestLicense(h); }
-API void eciStartLogging(int what) { es_startLogging(what); }
-API void eciStopLogging(int what) { es_stopLogging(what); }
-API int  eciGetLog(void *out) { return es_getLog(out); }
-API int  eciGetIntLog(int which, int *out) { return es_getIntLog(which, (int32_t *)out); }
+ECIAPI void ECICALL eciClearErrors(void *h) { eo_clearErrors(h); }
+ECIAPI void ECICALL eciErrorMessage(void *h, void *out) { es_errorMessage(h, out); }
+ECIAPI int ECICALL eciProgStatus(void *h) { return es_progStatus(h); }
+ECIAPI int ECICALL eciIsBeingReentered(void *h) { return es_isBeingReentered(h); }
+ECIAPI int ECICALL eciRequestLicense(void *h) { return es_requestLicense(h); }
+ECIAPI void ECICALL eciStartLogging(int what) { es_startLogging(what); }
+ECIAPI void ECICALL eciStopLogging(int what) { es_stopLogging(what); }
+ECIAPI int ECICALL eciGetLog(void *out) { return es_getLog(out); }
+ECIAPI int ECICALL eciGetIntLog(int which, int *out) { return es_getIntLog(which, (int32_t *)out); }
 
-API int eciDialogBox(void *h, void *parent, int which, void *a, void *b)
+ECIAPI int ECICALL eciDialogBox(void *h, void *parent, int which, void *a, void *b)
 {
     return es_dialogBox(h, parent, which, a, b);
 }
 
-API int eciGetFilteredText(void *h, const void *text, void *out, int room)
+/* Four arguments and none of them is a room: what goes in slot two is the
+   filter, slot three the document and slot four where to leave the answer.
+   This wrapper said `const void *text, void *out, int room' until the header
+   was written, which truncated the caller's answer pointer to thirty-two
+   bits on its way past and only worked because the compiler tail-called
+   rather than storing anything. */
+ECIAPI int ECICALL eciGetFilteredText(void *h, void *filter, const void *text,
+                                      char **out)
 {
-    return es_getFilteredText(h, text, out, room);
+    return es_getFilteredText(h, filter, text, out);
 }
 
 /* ---- filters ---------------------------------------------------------- */
@@ -253,48 +269,52 @@ API int eciGetFilteredText(void *h, const void *text, void *out, int room)
  * publishes it under the plain name all the same. */
 int STDCALL ssml_getFilterObject(uint32_t idInterface, void **out);
 
-API int STDCALL ssmlFilterGetObject(uint32_t idInterface, void **out)
+ECIAPI int ECICALL ssmlFilterGetObject(unsigned int idInterface, void **out)
 {
     return ssml_getFilterObject(idInterface, out);
 }
 
-API int eciRegisterFilter(void *h, unsigned int id, void *entry, void *attrib,
+ECIAPI int ECICALL eciRegisterFilter(void *h, unsigned int id, void *entry, void *attrib,
                           int autoload)
 {
     return es_registerFilter(h, id, entry, attrib, autoload);
 }
 
-API int eciUnregisterFilter(void *h, unsigned int id, void *attrib)
+ECIAPI int ECICALL eciUnregisterFilter(void *h, unsigned int id, void *attrib)
 {
     return es_unregisterFilter(h, id, attrib);
 }
 
-API void *eciNewFilter(void *h, int id, int global)
+ECIAPI void * ECICALL eciNewFilter(void *h, int id, int global)
 {
     return es_newFilter(h, id, global);
 }
 
-API int eciDeleteFilter(void *h, void *filter)
+ECIAPI int ECICALL eciDeleteFilter(void *h, void *filter)
 {
     return es_deleteFilter(h, filter);
 }
 
-API int eciActivateFilter(void *h, int id)
+/* The three below take a filter's handle. The engine takes it as a number,
+   which holds because a filter is in the arena and every arena address fits
+   in thirty-two bits; the cast is here rather than left implicit so that it
+   is a decision rather than a warning nobody sees. */
+ECIAPI int ECICALL eciActivateFilter(void *h, void *filter)
 {
-    return es_activateFilter(h, id);
+    return es_activateFilter(h, (int32_t)(intptr_t)filter);
 }
 
-API int eciDeactivateFilter(void *h, int id)
+ECIAPI int ECICALL eciDeactivateFilter(void *h, void *filter)
 {
-    return es_deactivateFilter(h, id);
+    return es_deactivateFilter(h, (int32_t)(intptr_t)filter);
 }
 
-API int eciSetFilter(void *h, int id)
+ECIAPI int ECICALL eciSetFilter(void *h, void *filter)
 {
-    return es_setFilter(h, id);
+    return es_setFilter(h, (int32_t)(intptr_t)filter);
 }
 
-API int eciUpdateFilter(void *h, void *filter, const char *a, const char *b)
+ECIAPI int ECICALL eciUpdateFilter(void *h, void *filter, const char *a, const char *b)
 {
     return es_updateFilter(h, filter, a, b);
 }
@@ -307,7 +327,13 @@ API int eciUpdateFilter(void *h, void *filter, const char *a, const char *b)
  * platform layer's start is empty on Windows, the initialisers only construct,
  * and the engine's own threads are made later, on the caller's thread, when it
  * asks for an instance.
+ *
+ * Which is why the ELF form can do it from a constructor and a destructor,
+ * where the same restraint is the difference between working and deadlocking
+ * under the dynamic loader's own lock.
  */
+#if defined(_WIN32)
+
 int __stdcall DllMain(void *module, unsigned long why, void *reserved)
 {
     (void)module;
@@ -321,3 +347,18 @@ int __stdcall DllMain(void *module, unsigned long why, void *reserved)
     }
     return 1;
 }
+
+#else
+
+__attribute__((constructor)) static void eci_attach(void)
+{
+    evv_port_start();
+    evvRunStaticInitialisers();
+}
+
+__attribute__((destructor)) static void eci_detach(void)
+{
+    evv_port_finish();
+}
+
+#endif

@@ -52,10 +52,26 @@ jobs:
       - name: Check the add-on's own two
         run: make nvda-test
 
+      # The shared library goes out beside the command, because the command
+      # is for a person and the library is for a program. Built here rather
+      # than in the bytecode job so that what ships has the rules as C, which
+      # is what a program interrupting speech wants.
+      - name: Build the shared library
+        run: make -j"$(nproc)" RULES=c so
+
+      # Staged into a directory of its own so the artifact holds three files
+      # at its top rather than the paths they were built at; the release job
+      # unpacks it straight into what becomes the archive.
+      - name: Stage what ships
+        run: |
+          set -eu
+          mkdir -p stage
+          cp build/evv build/libeci.so.1 include/eci.h stage/
+
       - uses: actions/upload-artifact@v7
         with:
           name: evv-linux-x86_64
-          path: build/evv
+          path: stage/
           if-no-files-found: error
 
   # The quick one: no thirteen megabytes of generated C, half a minute. It
@@ -149,6 +165,44 @@ jobs:
             "$p" "The quick brown fox jumps over the lazy dog." "/tmp/$t.wav"
             test -s "/tmp/$t.wav"
           done
+
+      # The engine as a shared library, under the names IBM published. The C
+      # harness links against nothing and asks for every name by string, so a
+      # name that stops being exported fails here; what it says has to be
+      # what build/evv says on the same sentence, byte for byte. The ctypes
+      # one is a different question -- ctypes has its own idea of a handle
+      # and of a calling convention -- and until there was an ELF library it
+      # could only be asked on Windows.
+      - name: Speak through the shared library
+        run: |
+          set -eu
+          make -j"$(nproc)" RULES=bytecode sotest
+          ./build/evv -o /tmp/fromevv.wav \
+            "Hello. This is the Eloquence synthesizer speaking."
+          cmp build/sotest.wav /tmp/fromevv.wav
+
+      - name: Speak through the shared library with ctypes
+        run: |
+          set -eu
+          python3 test/lib/dll.py build/libeci.so /tmp/fromctypes.wav \
+            "Hello. This is the Eloquence synthesizer speaking."
+          cmp /tmp/fromctypes.wav /tmp/fromevv.wav
+
+      - name: Read a document through the shared library
+        run: |
+          set -eu
+          python3 test/lib/dll.py build/libeci.so /tmp/ssml.wav \
+            '<speak version="1.0" xml:lang="en-US">Hello there.</speak>'
+          test -s /tmp/ssml.wav
+
+      # Two languages alive in one process through the library, each held to
+      # what it says alone. The binary check below is the same question asked
+      # of the probe; this one asks it of the thing a program actually loads.
+      - name: Two languages from one library
+        run: |
+          set -eu
+          make -j"$(nproc)" RULES=bytecode so LANGS="lang/enus lang/dede"
+          python3 test/lib/langs.py build/libeci-enus-dede.so
 
       # And all of them in one binary, each still speaking: this is what says
       # nothing in the engine has quietly stayed global.
@@ -359,6 +413,11 @@ jobs:
           (cd dist/windows \
              && zip -q -r ../../openevv-${GITHUB_REF_NAME}-windows-x86_64.zip .)
           chmod +x dist/linux/evv
+          # The library keeps the name its soname says, with the plain one a
+          # link to it: that is what a linker looks for and what a dlopen of
+          # "libeci.so" finds. The header goes with it, since a library with
+          # nothing to compile against is half an answer.
+          ln -sf libeci.so.1 dist/linux/libeci.so
           cp README.md LICENSE NOTICE dist/linux/
           tar -C dist/linux -czf \
               openevv-${GITHUB_REF_NAME}-linux-x86_64.tar.gz .

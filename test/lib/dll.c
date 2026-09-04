@@ -1,11 +1,16 @@
 /* Speak through the library, the way something else would.
  *
- * Nothing here links against the engine: it loads eci.dll by name, asks for
- * each entry point by name, and calls through the pointers -- which is exactly
- * what a screen reader add-on does through ctypes. So this checks the two
- * things a program using the library depends on and the ordinary tests cannot
- * see: that the published names are exported under those spellings, and that a
- * callback and a sample buffer survive the crossing.
+ * Nothing here links against the engine: it loads the library by name, asks
+ * for each entry point by name, and calls through the pointers -- which is
+ * exactly what a screen reader add-on does through ctypes, and what
+ * speech-dispatcher's Eloquence module does through dlsym. So this checks the
+ * two things a program using the library depends on and the ordinary tests
+ * cannot see: that the published names are exported under those spellings,
+ * and that a callback and a sample buffer survive the crossing.
+ *
+ * It does that on both kinds of library. `eci.dll' is the default name on
+ * Windows and `./libeci.so' everywhere else, and EVV_ECI_LIB names another.
+ * The version resource is a Windows question and is only asked there.
  *
  * It takes the same arguments as build/evv, so test/hash.sh can hold what the
  * library says against what everything else says.
@@ -20,11 +25,27 @@
  *   dlltest.exe -o out.wav "<speak version=\"1.0\" xml:lang=\"en-US\">Hi.</speak>"
  */
 
-#include <windows.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if defined(_WIN32)
+#include <windows.h>
+#define ECICALL     __stdcall
+#define LIB_DEFAULT "eci.dll"
+#define LIB_OPEN(p) ((void *)LoadLibraryA(p))
+#define LIB_SYM(l, n) ((void *)GetProcAddress((HMODULE)(l), (n)))
+#define LIB_WAIT(ms)  Sleep(ms)
+#else
+#include <dlfcn.h>
+#include <unistd.h>
+#define ECICALL
+#define LIB_DEFAULT "./libeci.so"
+#define LIB_OPEN(p) dlopen((p), RTLD_NOW)
+#define LIB_SYM(l, n) dlsym((l), (n))
+#define LIB_WAIT(ms)  usleep((ms) * 1000)
+#endif
 
 #define FRAME 2048
 
@@ -45,8 +66,10 @@ static void keep(const short *p, size_t n)
 }
 
 /* The add-on's callback is made with WINFUNCTYPE, which is stdcall; on x86-64
-   that is the only convention there is, so this is the same thing. */
-static int __stdcall on_message(void *h, int msg, long param, void *data)
+   that is the only convention there is, and off Windows there is nothing to
+   say. The engine passes the count as a four-byte value whatever IBM's own
+   header spells it, so this takes an int. */
+static int ECICALL on_message(void *h, int msg, int param, void *data)
 {
     (void)h;
     (void)data;
@@ -99,6 +122,7 @@ static int write_wav(const char *path)
    which engine it is talking to, and NVDA's own reader raises rather than
    loading a file that has no version information at all. So the harness says
    what it finds, and finding nothing is a failure like any other. */
+#if defined(_WIN32)
 static int say_product(const char *path)
 {
     unsigned long room = GetFileVersionInfoSizeA(path, 0);
@@ -125,10 +149,14 @@ static int say_product(const char *path)
     free(info);
     return 1;
 }
+#else
+/* An ELF library has no version resource and no driver reads one out of it. */
+static int say_product(const char *path) { (void)path; return 1; }
+#endif
 
 #define GET(name) \
     do { \
-        name = (void *)GetProcAddress(dll, #name); \
+        name = (void *)LIB_SYM(dll, #name); \
         if (name == 0) { \
             fprintf(stderr, "dlltest: %s is not exported\n", #name); \
             return 1; \
@@ -137,27 +165,28 @@ static int say_product(const char *path)
 
 int main(int argc, char **argv)
 {
-    HMODULE dll;
+    void   *dll;
     void   *h;
+    const char *lib = getenv("EVV_ECI_LIB");
     const char *out = "out.wav";
     const char *text = "Hello. This is the Eloquence synthesizer speaking.";
     int     i;
 
-    void *(*eciNewEx)(int);
-    int   (*eciGetAvailableLanguages)(unsigned int *, int *);
-    void  (*eciRegisterCallback)(void *, void *, void *);
-    int   (*eciSetOutputBuffer)(void *, int, short *);
-    int   (*eciSetParam)(void *, int, int);
-    int   (*eciAddText)(void *, const char *);
-    int   (*eciInsertIndex)(void *, int);
-    int   (*eciSynthesize)(void *);
-    int   (*eciSpeaking)(void *);
-    void *(*eciDelete)(void *);
-    int   (*eciRegisterFilter)(void *, unsigned int, void *, void *, int);
-    void *(*eciNewFilter)(void *, int, int);
-    int   (*eciActivateFilter)(void *, void *);
-    int   (*eciGetFilteredText)(void *, void *, const void *, const void **);
-    int   (*ssmlFilterGetObject)(unsigned long, void **);
+    void *(ECICALL *eciNewEx)(int);
+    int   (ECICALL *eciGetAvailableLanguages)(unsigned int *, int *);
+    void  (ECICALL *eciRegisterCallback)(void *, void *, void *);
+    int   (ECICALL *eciSetOutputBuffer)(void *, int, short *);
+    int   (ECICALL *eciSetParam)(void *, int, int);
+    int   (ECICALL *eciAddText)(void *, const char *);
+    int   (ECICALL *eciInsertIndex)(void *, int);
+    int   (ECICALL *eciSynthesize)(void *);
+    int   (ECICALL *eciSpeaking)(void *);
+    void *(ECICALL *eciDelete)(void *);
+    int   (ECICALL *eciRegisterFilter)(void *, unsigned int, void *, void *, int);
+    void *(ECICALL *eciNewFilter)(void *, int, int);
+    int   (ECICALL *eciActivateFilter)(void *, void *);
+    int   (ECICALL *eciGetFilteredText)(void *, void *, const void *, const void **);
+    int   (ECICALL *ssmlFilterGetObject)(unsigned int, void **);
 
     unsigned int langs[32];
     int          nlangs = 0;
@@ -169,12 +198,15 @@ int main(int argc, char **argv)
             text = argv[i];
     }
 
-    if (!say_product("eci.dll"))
+    if (lib == 0)
+        lib = LIB_DEFAULT;
+
+    if (!say_product(lib))
         return 1;
 
-    dll = LoadLibraryA("eci.dll");
+    dll = LIB_OPEN(lib);
     if (dll == 0) {
-        fprintf(stderr, "dlltest: cannot load eci.dll\n");
+        fprintf(stderr, "dlltest: cannot load %s\n", lib);
         return 1;
     }
 
@@ -263,7 +295,7 @@ int main(int argc, char **argv)
         return 1;
     }
     for (i = 0; i < 30000 && eciSpeaking(h); i++)
-        Sleep(10);
+        LIB_WAIT(10);
 
     eciDelete(h);
 
@@ -271,7 +303,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "dlltest: cannot write %s\n", out);
         return 1;
     }
-    printf("dlltest: %lu samples through eci.dll to %s\n",
-           (unsigned long)nsamples, out);
+    printf("dlltest: %lu samples through %s to %s\n",
+           (unsigned long)nsamples, lib, out);
     return 0;
 }

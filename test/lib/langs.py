@@ -20,7 +20,10 @@ test/hash.sh, and unlike test/hash.sh it says nothing about whether the
 audio is right -- test/suite.sh is what says that. This says the audio does
 not depend on what else is loaded.
 
-usage: test/lib/langs.py <eci.dll>
+It takes either kind of library: eci.dll on Windows and libeci.so
+everywhere else.
+
+usage: test/lib/langs.py <eci.dll or libeci.so>
 """
 
 import ctypes
@@ -28,6 +31,16 @@ import hashlib
 import os
 import sys
 import time
+
+# The two kinds of library, said once. See the head of test/lib/dll.py.
+if os.name == "nt":
+    LOADER = ctypes.WinDLL
+    CALLBACK_TYPE = ctypes.WINFUNCTYPE
+    CODEC = "mbcs"
+else:
+    LOADER = ctypes.CDLL
+    CALLBACK_TYPE = ctypes.CFUNCTYPE
+    CODEC = "latin-1"
 
 FRAME = 2048
 
@@ -75,8 +88,8 @@ class Voice:
         self.buf = (ctypes.c_short * FRAME)()
         self.said = bytearray()
 
-        cb = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_int,
-                                ctypes.c_long, ctypes.c_void_p)
+        cb = CALLBACK_TYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_int,
+                           ctypes.c_int, ctypes.c_void_p)
 
         @cb
         def on_message(h, msg, param, data):
@@ -96,7 +109,7 @@ class Voice:
             raise SystemExit("langs.py: 0x%x refused a sample buffer" % lang)
 
     def speak(self, text):
-        if not self.dll.eciAddText(self.h, text.encode("mbcs")):
+        if not self.dll.eciAddText(self.h, text.encode(CODEC)):
             raise SystemExit("langs.py: 0x%x refused the text" % self.lang)
         if not self.dll.eciSynthesize(self.h):
             raise SystemExit("langs.py: 0x%x refused to speak" % self.lang)
@@ -128,7 +141,7 @@ def languages(dll):
 def alone(path, lang, text):
     """The same language in a process of its own, so that what it says
     beside another one can be held against it."""
-    dll = ctypes.WinDLL(os.path.abspath(path))
+    dll = LOADER(os.path.abspath(path))
     declare(dll)
     v = Voice(dll, lang)
     v.speak(text)
@@ -138,7 +151,7 @@ def alone(path, lang, text):
 
 
 def main(path):
-    dll = ctypes.WinDLL(os.path.abspath(path))
+    dll = LOADER(os.path.abspath(path))
     declare(dll)
 
     langs = languages(dll)

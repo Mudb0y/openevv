@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Speak through eci.dll with ctypes, the way a screen reader add-on does.
+"""Speak through the library with ctypes, the way a screen reader add-on does.
 
 The C harness beside this one, test/lib/dll.c, checks that the names are exported
 and that a callback survives the crossing. This checks the thing an add-on
@@ -13,7 +13,11 @@ through the exported calls first, which is a second question again, since a
 filter's entry point is a callback of the caller's and goes over as stdcall
 with a pointer-to-pointer in front of it.
 
-usage: test/lib/dll.py <eci.dll> <out.wav> <text>
+It takes either kind of library: eci.dll on Windows and libeci.so
+everywhere else. Which convention a callback goes over by, and which codec
+turns text into the engine's own bytes, follow from that.
+
+usage: test/lib/dll.py <eci.dll or libeci.so> <out.wav> <text>
 """
 
 import ctypes
@@ -25,12 +29,26 @@ import time
 
 FRAME = 2048
 
+# What the two kinds of library differ by, in one place. On Windows the
+# published interface is stdcall and the engine's bytes are the code page
+# ctypes calls mbcs; off Windows there is one convention and the same bytes
+# are Latin-1 as far as Python is concerned -- the engine reads them as the
+# Western set either way.
+if os.name == "nt":
+    LOADER = ctypes.WinDLL
+    CALLBACK_TYPE = ctypes.WINFUNCTYPE
+    CODEC = "mbcs"
+else:
+    LOADER = ctypes.CDLL
+    CALLBACK_TYPE = ctypes.CFUNCTYPE
+    CODEC = "latin-1"
+
 
 def main(path, out, text):
     # An absolute path, because since Python 3.8 ctypes does not look in the
     # working directory for a bare name. The add-on passes an absolute path for
     # the same reason, so this is what it does as well.
-    dll = ctypes.WinDLL(os.path.abspath(path))
+    dll = LOADER(os.path.abspath(path))
 
     # Everything that takes or answers a handle has to say so, or ctypes
     # truncates it to an int and the engine is handed half an address.
@@ -62,8 +80,8 @@ def main(path, out, text):
     buf = (ctypes.c_short * FRAME)()
     said = bytearray()
 
-    callback = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_int,
-                                  ctypes.c_long, ctypes.c_void_p)
+    callback = CALLBACK_TYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_int,
+                             ctypes.c_int, ctypes.c_void_p)
 
     @callback
     def on_message(h, msg, param, data):
@@ -88,7 +106,6 @@ def main(path, out, text):
     if not dll.eciSetOutputBuffer(h, FRAME, buf):
         raise SystemExit("dll.py: it refused a sample buffer")
     dll.eciSetParam(h, 1, 1)              # annotations, as the add-on asks
-    dll.eciInsertIndex(h, 4242)
 
     # A document goes through the SSML reader first, which means registering
     # the filter the library carries. What registering takes is the address
@@ -117,16 +134,20 @@ def main(path, out, text):
 
         # A writable copy, because IBM's reader writes into the document it
         # is given where a numeric character reference ends.
-        document = ctypes.create_string_buffer(text.encode("mbcs"))
+        document = ctypes.create_string_buffer(text.encode(CODEC))
         answer = ctypes.c_char_p(None)
         if dll.eciGetFilteredText(h, flt, document, ctypes.byref(answer)):
             raise SystemExit("dll.py: it would not read the document")
         if answer.value is None:
             raise SystemExit("dll.py: the reader answered nothing")
-        text = answer.value.decode("mbcs")
+        text = answer.value.decode(CODEC)
         print("dll.py: read as [%s]" % text)
 
-    if not dll.eciAddText(h, text.encode("mbcs")):
+    # After the filter and not before it: eciNewFilter speaks out whatever is
+    # queued and refuses while anything is, so an index inserted first makes
+    # it answer nothing. test/lib/dll.c has always had this order.
+    dll.eciInsertIndex(h, 4242)
+    if not dll.eciAddText(h, text.encode(CODEC)):
         raise SystemExit("dll.py: it refused the text")
     if not dll.eciSynthesize(h):
         raise SystemExit("dll.py: it refused to speak")

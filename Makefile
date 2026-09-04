@@ -191,7 +191,8 @@ SOURCES := $(filter-out %/port_win32.c, \
 # Every header, because a struct that changed shape and an object that was
 # not rebuilt is a link that succeeds and an engine that writes over itself.
 # The rule header is named for the same reason its sources are.
-HEADERS := $(foreach d,$(SRCDIRS),$(wildcard $(d)/*.h)) \
+HEADERS := include/eci.h \
+           $(foreach d,$(SRCDIRS),$(wildcard $(d)/*.h)) \
            $(filter-out $(RULECODE), \
              $(foreach l,$(LANGS),$(wildcard $(l)/*.h))) \
            $(filter %.h,$(RULECODE)) \
@@ -261,7 +262,7 @@ LOW := -DEVV_ARENA=1
 endif
 
 OPT        ?= -O2
-INCS       := $(addprefix -I,$(SRCDIRS)) $(addprefix -I,$(LANGS)) \
+INCS       := -Iinclude $(addprefix -I,$(SRCDIRS)) $(addprefix -I,$(LANGS)) \
               $(foreach l,$(LANGS),-Irom/$(notdir $(l)))
 ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
               $(CFLAGS)
@@ -274,7 +275,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe rules missing install clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims
+.PHONY: all probe so so32 sotest rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -285,6 +286,79 @@ probe: $(BUILD)/probe$(SUF)
 
 $(BUILD)/probe$(SUF): cli/probe.c $(BUILD)/libevv$(SUF).a
 	@$(CC) $(ALL_CFLAGS) cli/probe.c $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
+	@echo "built $@"
+
+# The engine as a shared library, under the names IBM published: the same
+# thing build/eci.dll is on Windows, out of the same lib/eci_api.c, so a
+# program that dlopens an ECI runtime and asks for the names by string gets
+# ours. include/eci.h is what a program compiles against.
+#
+# Two flags rather than one. -fPIC because a shared object's code has to be,
+# and -fvisibility=hidden because without it every one of the engine's eight
+# thousand internal names would be exported and interposable -- which is
+# slower, larger, and would mean a host program's own `dict' or `keyword'
+# could bind over ours. The only names left visible are the ones eci.h marks,
+# which is the published interface and nothing else. It is also what lets
+# --gc-sections do its work in this build, since with everything exported
+# there is nothing the linker may drop.
+#
+# The objects go in rather than the archive. A shared library linked from an
+# archive keeps only the members something already references, and a language
+# module is reached through a table the Makefile writes -- so an archive would
+# quietly leave the language out and the library would have nothing to say.
+SOVERSION := 1
+CFLAGSPIC := $(ALL_CFLAGS) -fPIC -fvisibility=hidden
+OBJDIRPIC := $(BUILD)/objpic-$(RULES)/$(subst $(space),-,$(TAGS))
+OBJECTSPIC := $(patsubst %.c,$(OBJDIRPIC)/%.o,$(notdir $(SOURCES)))
+SONAME    := libeci$(SUF).so.$(SOVERSION)
+
+so: $(BUILD)/$(SONAME)
+
+$(OBJDIRPIC)/%.o: %.c $(HEADERS)
+	@mkdir -p $(OBJDIRPIC)
+	@$(CC) $(CFLAGSPIC) -c $< -o $@
+
+$(BUILD)/$(SONAME): lib/eci_api.c $(OBJECTSPIC) $(RULESTAMP)
+	@for o in $(OBJDIRPIC)/*.o; do \
+	   case " $(OBJECTSPIC) " in *" $$o "*) ;; *) rm -f "$$o" ;; esac; \
+	 done
+	@$(CC) $(CFLAGSPIC) -shared -Wl,-soname,$(SONAME) \
+	   lib/eci_api.c $(OBJECTSPIC) -lpthread -lm -o $@
+	@ln -sf $(SONAME) $(BUILD)/libeci$(SUF).so
+	@echo "built $@ and the libeci$(SUF).so beside it"
+
+# And the harness that proves it: it links against nothing, loads the library
+# by name, asks for each published name by string and speaks. Being the same
+# source as the Windows one is the point -- a name exported from one and not
+# the other is what this catches.
+.PHONY: sotest
+sotest: $(BUILD)/libecitest
+	@cd $(BUILD) && EVV_ECI_LIB=./libeci$(SUF).so ./libecitest -o sotest.wav \
+	   "Hello. This is the Eloquence synthesizer speaking."
+
+$(BUILD)/libecitest: test/lib/dll.c $(BUILD)/$(SONAME)
+	@$(CC) $(OPT) -std=gnu99 test/lib/dll.c -ldl -o $@
+	@echo "built $@"
+
+# The same library thirty-two bit, for the same reason the thirty-two bit
+# engine is built at all: a difference between the word sizes is a layout
+# mistake, and a published interface is where one shows up as a wrong answer
+# rather than a crash.
+CFLAGSPIC32 = $(CFLAGS32) -fPIC -fvisibility=hidden
+OBJDIRPIC32 := $(BUILD)/objpic32-$(RULES)/$(subst $(space),-,$(TAGS))
+OBJECTSPIC32 := $(patsubst %.c,$(OBJDIRPIC32)/%.o,$(notdir $(SOURCES)))
+SONAME32    := libeci32$(SUF).so.$(SOVERSION)
+
+so32: $(BUILD)/$(SONAME32)
+
+$(OBJDIRPIC32)/%.o: %.c $(HEADERS)
+	@mkdir -p $(OBJDIRPIC32)
+	@$(CC32) $(CFLAGSPIC32) -c $< -o $@
+
+$(BUILD)/$(SONAME32): lib/eci_api.c $(OBJECTSPIC32) $(RULESTAMP)
+	@$(CC32) $(CFLAGSPIC32) -shared -Wl,-soname,$(SONAME32) \
+	   lib/eci_api.c $(OBJECTSPIC32) -lpthread -lm -o $@
+	@ln -sf $(SONAME32) $(BUILD)/libeci32$(SUF).so
 	@echo "built $@"
 
 # An instance made and thrown away over and over, which the suite never does:
@@ -712,7 +786,8 @@ matrix-record:
 
 clean:
 	@rm -rf $(BUILD)/obj-* $(BUILD)/obj32-* $(BUILD)/objwin-* \
-	        $(BUILD)/objwin32-* \
+	        $(BUILD)/objwin32-* $(BUILD)/objpic-* $(BUILD)/objpic32-* \
+	        $(BUILD)/libeci*.so $(BUILD)/libeci*.so.* \
 	        $(BUILD)/eci32.dll $(BUILD)/dlltest32.exe \
 	        $(BUILD)/libevv-win32$(SUF).a $(BUILD)/evv $(BUILD)/probe$(SUF) \
 	        $(BUILD)/evv32 $(BUILD)/probe32$(SUF) \
@@ -722,15 +797,28 @@ clean:
 	        $(BUILD)/eci.ini $(BUILD)/dlltest.exe $(BUILD)/syms.txt \
 	        $(BUILD)/openevv-*.nvda-addon
 
-# Where `make install' puts it. There is nothing else to install: one binary,
-# which reads no file of its own at run time and wants no library but the C
-# one, libm and pthreads.
+# Where `make install' puts it. The command is one binary, which reads no
+# file of its own at run time and wants no library but the C one, libm and
+# pthreads.
 PREFIX  ?= /usr/local
+LIBDIR  ?= $(PREFIX)/lib
+INCDIR  ?= $(PREFIX)/include
 
 install: $(BUILD)/evv
 	@mkdir -p $(DESTDIR)$(PREFIX)/bin
 	@cp $(BUILD)/evv $(DESTDIR)$(PREFIX)/bin/evv
 	@echo "installed $(DESTDIR)$(PREFIX)/bin/evv"
+
+# And what a program links against, which is a separate target because it is
+# a separate build: `make so' first. The real file carries the version and
+# the plain name is a link to it, which is what a linker looks for and what a
+# dlopen of "libeci.so" finds.
+install-lib: $(BUILD)/$(SONAME)
+	@mkdir -p $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCDIR)
+	@cp $(BUILD)/$(SONAME) $(DESTDIR)$(LIBDIR)/$(SONAME)
+	@ln -sf $(SONAME) $(DESTDIR)$(LIBDIR)/libeci$(SUF).so
+	@cp include/eci.h $(DESTDIR)$(INCDIR)/eci.h
+	@echo "installed $(DESTDIR)$(LIBDIR)/$(SONAME) and $(DESTDIR)$(INCDIR)/eci.h"
 
 # The same engine thirty-two bit. On this machine the compiler is the one the
 # flake provides; elsewhere it is usually the host compiler with -m32, which

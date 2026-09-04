@@ -130,10 +130,23 @@ void *evv_land_planted(uintptr_t name)
 #define EVV_A2 "%esi"
 #endif
 
+/* These two are the engine's own and have no business being visible outside
+   a shared library, but -fvisibility=hidden is a compiler flag and this is
+   hand-written assembly, so it has to say so itself. COFF has no such
+   directive and does not need one: nothing exports from a DLL by accident. */
+#if defined(_WIN32)
+#define EVV_LAND_HIDE
+#else
+#define EVV_LAND_HIDE \
+    ".hidden evv_land_save\n" \
+    ".hidden evv_land_jump\n"
+#endif
+
 __asm__(
 ".text\n"
 ".globl evv_land_save\n"
 ".globl evv_land_jump\n"
+EVV_LAND_HIDE
 
 /* Answers nought. The stack pointer stored is the one this will have after it
    returns, and the address stored is where it returns to, so landing on it
