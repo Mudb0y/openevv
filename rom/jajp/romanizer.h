@@ -44,6 +44,10 @@
 #define RZ_UNREAD_MID    0x20
 #define RZ_NUMBER_MODE   0x34    /* uint16; two refuses a bare place word */
 #define RZ_UNREAD_MID2   0x36
+#define RZ_TXTANAL       0x38    /* TextAnalysis *, the 946,216 bytes the
+                                    constructor asks for */
+#define RZ_INTON         0x3c    /* IntonPhrase *, the 432,204 after it */
+#define RZ_UNREAD_MID4   0x40
 
 /* The five an annotation may set, which is what rz_GetParameter is for. The
    letters are Eloquence's own: b is the baseline pitch, f the pitch
@@ -63,12 +67,14 @@
    they would each run over the word after. They are parked past the record,
    as DictSearch's and InputChar's are, and every one of them is reached
    through the _AT name rather than the offset. */
-#define RZ_ROOM          (RZ_BYTES + 6 * sizeof(void *))
+#define RZ_ROOM          (RZ_BYTES + 8 * sizeof(void *))
 #define RZ_VTABLE_AT     (RZ_BYTES + 0 * sizeof(void *))
 #define RZ_UNICODE_AT    (RZ_BYTES + 1 * sizeof(void *))
 #define RZ_PARAM_AT      (RZ_BYTES + 2 * sizeof(void *))
 #define RZ_INPUT_AT      (RZ_BYTES + 3 * sizeof(void *))
 #define RZ_TRANSBUF_AT   (RZ_BYTES + 4 * sizeof(void *))
 #define RZ_USERDICT_AT   (RZ_BYTES + 5 * sizeof(void *))
+#define RZ_TXTANAL_AT    (RZ_BYTES + 6 * sizeof(void *))
+#define RZ_INTON_AT      (RZ_BYTES + 7 * sizeof(void *))
 
 #endif

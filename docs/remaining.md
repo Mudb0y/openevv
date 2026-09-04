@@ -76,7 +76,7 @@ So the machine is finished in both senses now. Every name in its seventeen objec
 
 ## Japanese
 
-Written up in full in `docs/japanese.md`: a morphological analyser rather than a table, with the 2.67 MB dictionary already lifting in one command and an oracle that builds and speaks. It is the largest genuine reverse-engineering job in the tree and the only language work outstanding. Seventeen of the thirty-five romanizer objects are written whole, the reader and the dictionary search and the path search and the phrase buffer and the number reader among them, so what is left is 146 entry points in eight classes: everything from a phrase to a phoneme string, and `TextAnalysis` and `PhraseTable` together as the largest single piece.
+Written up in full in `docs/japanese.md`: a morphological analyser rather than a table, with the 2.67 MB dictionary already lifting in one command and an oracle that builds and speaks. It is the largest genuine reverse-engineering job in the tree and the only language work outstanding. Eighteen of the thirty-five romanizer objects are written whole, the reader and the dictionary search and the path search and the phrase buffer and the number reader and the intonation among them, so what is left is 129 entry points in seven classes: everything from a breath group to a phoneme string, and `TextAnalysis` and `PhraseTable` together as the largest single piece.
 
 ## SSML, XML and IPA
 

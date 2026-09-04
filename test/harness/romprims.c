@@ -111,6 +111,7 @@ static Conv *makeConv(Param *p)
 #include "phrasebuf.h"
 #include "numread.h"
 #include "jpath.h"
+#include "intonphrase.h"
 
 #define ibm_dsCheckCaseMarker(d, at)      ds_CheckCaseMarker((d), (at))
 #define ibm_dsCheckCnvChoon(d, c, n)      ds_CheckCnvChoon((d), (c), (n))
@@ -356,6 +357,32 @@ static Conv *makeConv(Param *p)
     nr_ApplyJRule((nr), (w), (k), (n), (h), (g))
 #define ibm_nrDo(nr, w, pk, po)     nr_Do((nr), (w), (pk), (po))
 #define NR(name) ibm_nr##name
+
+/* ---- IntonPhrase ------------------------------------------------------ */
+
+#define ibm_ipTableAllocBG(ip, c, l, a, k, n) \
+    ip_TableAllocBG((ip), (c), (l), (a), (k), (n))
+#define ibm_ipBreathGroupAlloc(ip)        ip_BreathGroupAlloc((ip))
+#define ibm_ipInitPhraseTable(ip, n)      ip_InitPhraseTable((ip), (n))
+#define ibm_ipCheckPhraseToPhrase(ip, st) ip_CheckPhraseToPhrase((ip), (st))
+#define ibm_ipProsodyControl(ip)          ip_ProsodyControl((ip))
+#define ibm_ipThreePhraseParsing(ip, t)   ip_ThreePhraseParsing((ip), (t))
+#define ibm_ipModifyPType(ip, t)          ip_ModifyPType((ip), (t))
+#define ibm_ipCheckBreathGroup(ip, s, r, k) \
+    ip_CheckBreathGroup((ip), (s), (r), (k))
+#define ibm_ipCheckChoon(ip, t, at)       ip_CheckChoon((ip), (t), (at))
+#define ibm_ipSetPhraseState(ip)          ip_SetPhraseState((ip))
+#define ibm_ipPhraseParsing(ip, l, r, g, o) \
+    ip_PhraseParsing((ip), (l), (r), (g), (o))
+#define ibm_ipRegroupPhrases(ip)          ip_RegroupPhrases((ip))
+#define ibm_ipPhraseSeparate(ip, a, b, m, l, f, k) \
+    ip_PhraseSeparate((ip), (a), (b), (m), (l), (f), (k))
+#define ibm_ipSetPauseLength(ip)          ip_SetPauseLength((ip))
+#define ibm_ipSetPitchValues(ip)          ip_SetPitchValues((ip))
+#define ibm_ipSetIntonationalPhrase(ip)   ip_SetIntonationalPhrase((ip))
+#define ibm_ipSetAccentualPhrase(ip, p, a) \
+    ip_SetAccentualPhrase((ip), (p), (a))
+#define IPM(name) ibm_ip##name
 
 /* Where each side keeps PhraseBuf's four pointers and JPath's three. Ours are
    parked past their records; IBM's are at the offsets the maps name. */
@@ -650,6 +677,7 @@ extern THIS int32_t ibm_slLoad(void *self, const char *path)
 #include "phrasebuf.h"
 #include "numread.h"
 #include "jpath.h"
+#include "intonphrase.h"
 
 extern THIS int32_t ibm_dsCheckCaseMarker(void *d, int16_t at)
     MANGLED("?CheckCaseMarker@DictSearch@@QAEHF@Z");
@@ -1114,6 +1142,53 @@ extern THIS int16_t ibm_nrDo(void *nr, const uint8_t *w, int16_t *pWord,
                              int16_t *pOut)
     MANGLED("?Do@NumRead@@QAEFPAU_W_PHRASE_T@@PAF1@Z");
 #define NR(name) ibm_nr##name
+
+/* ---- IntonPhrase ----------------------------------------------------- */
+
+/* Fifteen of these seventeen are private members in IBM's own source, and
+   each has an external symbol in the object all the same, so each is held to
+   IBM's own answer here rather than only through the entry point. */
+extern THIS int16_t ibm_ipTableAllocBG(void *ip, uint16_t *count,
+                                       uint16_t *last, uint16_t *at,
+                                       uint8_t *link, uint16_t n)
+    MANGLED("?TableAllocBG@IntonPhrase@@IAEFPAG00PAU_LINK_TBL_T@@G@Z");
+extern THIS void *ibm_ipBreathGroupAlloc(void *ip)
+    MANGLED("?BreathGroupAlloc@IntonPhrase@@IAEPAXXZ");
+extern THIS void ibm_ipInitPhraseTable(void *ip, int16_t n)
+    MANGLED("?InitPhraseTable@IntonPhrase@@QAEXF@Z");
+extern THIS void ibm_ipCheckPhraseToPhrase(void *ip, uint8_t *st)
+    MANGLED("?CheckPhraseToPhrase@IntonPhrase@@IAEXQAE@Z");
+extern THIS void ibm_ipProsodyControl(void *ip)
+    MANGLED("?ProsodyControl@IntonPhrase@@IAEXXZ");
+extern THIS void ibm_ipThreePhraseParsing(void *ip, void *table)
+    MANGLED("?ThreePhraseParsing@IntonPhrase@@QAEXPAU_PHR_TBL_T@@@Z");
+extern THIS int16_t ibm_ipModifyPType(void *ip, uint8_t type)
+    MANGLED("?ModifyPType@IntonPhrase@@IAEFE@Z");
+extern THIS uint8_t ibm_ipCheckBreathGroup(void *ip, uint8_t *st,
+                                           uint8_t *right, uint8_t kind)
+    MANGLED("?CheckBreathGroup@IntonPhrase@@IAEEPAE0E@Z");
+extern THIS int16_t ibm_ipCheckChoon(void *ip, const uint8_t *t, int16_t at)
+    MANGLED("?CheckChoon@IntonPhrase@@IAEFPAU_PHR_TBL_T@@F@Z");
+extern THIS void ibm_ipSetPhraseState(void *ip)
+    MANGLED("?SetPhraseState@IntonPhrase@@IAEXXZ");
+extern THIS uint8_t ibm_ipPhraseParsing(void *ip, uint8_t *l, uint8_t *r,
+                                        uint8_t group, int32_t odd)
+    MANGLED("?PhraseParsing@IntonPhrase@@IAEEPAE0EH@Z");
+extern THIS void ibm_ipRegroupPhrases(void *ip)
+    MANGLED("?RegroupPhrases@IntonPhrase@@IAEXXZ");
+extern THIS int16_t ibm_ipPhraseSeparate(void *ip, void *start, void *end,
+                                         int16_t moras, int16_t limit,
+                                         int16_t floor_, int16_t mark)
+    MANGLED("?PhraseSeparate@IntonPhrase@@IAEFPAU_PHR_TBL_T@@0FFFF@Z");
+extern THIS void ibm_ipSetPauseLength(void *ip)
+    MANGLED("?SetPauseLength@IntonPhrase@@IAEXXZ");
+extern THIS void ibm_ipSetPitchValues(void *ip)
+    MANGLED("?SetPitchValues@IntonPhrase@@IAEXXZ");
+extern THIS int16_t ibm_ipSetIntonationalPhrase(void *ip)
+    MANGLED("?SetIntonationalPhrase@IntonPhrase@@IAEFXZ");
+extern THIS uint8_t ibm_ipSetAccentualPhrase(void *ip, void *ph, uint8_t at)
+    MANGLED("?SetAccentualPhrase@IntonPhrase@@IAEEPAU_PH1_T@@E@Z");
+#define IPM(name) ibm_ip##name
 
 #define PB_SET(blk, which, p) (*(void **)((blk) + which) = (p))
 #define JP_SET(blk, which, p) (*(void **)((blk) + which) = (p))
@@ -7227,6 +7302,770 @@ static void sweepNumRead(void)
     printf("NR done\n");
 }
 
+/* ---- IntonPhrase ------------------------------------------------------ */
+
+/* The record, the rows it is handed, and one group phrase on its own.
+ *
+ * The rows have to be one array at IBM's own row stride. That is how
+ * TextAnalysis holds them, and it is what our build's chain link needs: the
+ * link cannot hold a pointer on a build where a pointer is eight bytes wide,
+ * because the row's own index sits four bytes behind it, so it holds how many
+ * rows forward the next one is instead. rom/jajp/intonphrase.h says so. IBM's
+ * side is thirty-two bit and keeps the pointer.
+ *
+ * Which means no digest may include those four bytes, and none below does.
+ * What the chain says is checked by walking it and printing which row or
+ * group comes next, which is the same number on both sides. */
+#define IP_ROW_N 14
+static char ip_room[IP_ROOM];
+static char ip_rows[IP_ROW_N * PT_ROW_SIZE];
+static char ip_one[PT_ROW_SIZE];
+static char ip_phrase[IG_PHRASE_SIZE + 8];
+static char ip_rom[RZ_ROOM];
+
+#define IP_ROW(i) (ip_rows + (long)(i) * PT_ROW_SIZE)
+
+#ifdef EVV_ROMPRIMS_OURS
+#define IP_SET(blk, which, p)  (*(void **)((blk) + which##_AT) = (p))
+#define IP_GET(blk, which)     (*(void **)((blk) + which##_AT))
+#define RZ_SET_TXTANAL(b, p)   (*(void **)((b) + RZ_TXTANAL_AT) = (p))
+#define IP_ROW_LINK(t, p)      PT_NEXT_SET((t), (p))
+#define IP_ROW_NEXT(t)         PT_NEXT_OF(t)
+#define IP_GROUP_NEXT(g)       IG_NEXT_OF(g)
+#else
+#define IP_SET(blk, which, p)  (*(void **)((blk) + which) = (p))
+#define IP_GET(blk, which)     (*(void **)((blk) + which))
+#define RZ_SET_TXTANAL(b, p)   (*(void **)((b) + RZ_TXTANAL) = (p))
+#define IP_ROW_LINK(t, p)      (*(void **)(t) = (p))
+#define IP_ROW_NEXT(t)         (*(void **)(t))
+#define IP_GROUP_NEXT(g)       (*(void **)(g))
+#endif
+
+#define IPB(p, off)   (*((uint8_t *)(p) + (off)))
+#define IPS(p, off)   (*(int16_t *)((uint8_t *)(p) + (off)))
+
+/* A region digested, so that a sweep too large to print a line a call still
+   says which case moved. */
+static unsigned long ipDigest(const void *p, long n)
+{
+    const uint8_t *b = (const uint8_t *)p;
+    uint32_t       h = 2166136261u;
+    long           i;
+
+    for (i = 0; i < n; i++)
+        h = (h ^ b[i]) * 16777619u;
+    return (unsigned long)h;
+}
+
+/* Every row but its link, which is the one field the two sides spell
+   differently. */
+static unsigned long ipRowsDigest(int n)
+{
+    uint32_t h = 2166136261u;
+    int      i;
+    long     k;
+
+    for (i = 0; i < n; i++) {
+        const uint8_t *t = (const uint8_t *)IP_ROW(i);
+
+        for (k = 4; k < PT_ROW_SIZE; k++)
+            h = (h ^ t[k]) * 16777619u;
+    }
+    return (unsigned long)h;
+}
+
+static uint32_t ipNext(uint32_t *s)
+{
+    *s = *s * 1103515245u + 12345u;
+    return *s >> 8;
+}
+
+/* One phrase-table row, filled from a seed. Every field IntonPhrase reads is
+   set, and the shapes are the ones the passes turn on: a mora run that stops
+   at a nought, a reading of exactly as many codes as the moras add up to and
+   with a chosen last one, and a long run terminated by minus one. The reading
+   is capped at twelve codes so that three phrases of a group cross the thirty
+   a group phrase holds. */
+static void ipRow(int i, uint32_t seed, int lowMoras, int hiMoras,
+                  int group, int kind, int tailCode)
+{
+    uint8_t *t = (uint8_t *)IP_ROW(i);
+    int      k;
+    int      n = 0;
+
+    memset(t, 0, PT_ROW_SIZE);
+    IPS(t, PT_INDEX) = (int16_t)i;
+    for (k = 0; k < 3; k++)
+        t[PT_STATE + k] = (uint8_t)ipNext(&seed);
+    t[PT_GROUP] = (uint8_t)group;
+    t[PT_KIND]  = (uint8_t)kind;
+    t[PT_HOLD]  = (uint8_t)(ipNext(&seed) & 7);
+    for (k = 0; k < 4; k++) {
+        t[PT_LEFT + k]  = (uint8_t)ipNext(&seed);
+        t[PT_RIGHT + k] = (uint8_t)ipNext(&seed);
+    }
+    for (k = 0; k < PT_MORA_N; k++) {
+        t[PT_MORA + k] =
+            (uint8_t)(k < lowMoras ? 1 + (ipNext(&seed) & 3) : 0);
+        t[PT_MORA_ACC + k]   = (uint8_t)(ipNext(&seed) & 0x0f);
+        t[PT_MORA_PITCH + k] = (uint8_t)(ipNext(&seed) & 7);
+        t[PT_MORA_MARK + k]  = (uint8_t)(ipNext(&seed) & 3);
+        IPS(t, PT_MORA_VAL + k * 2) = (int16_t)(ipNext(&seed) & 0x3f);
+        t[PT_MORA_HI + k] =
+            (uint8_t)(k < hiMoras ? 1 + (ipNext(&seed) & 3) : 0);
+        t[PT_MORA_HI_ACC + k]   = (uint8_t)(ipNext(&seed) & 0x0f);
+        t[PT_MORA_HI_PITCH + k] = (uint8_t)(ipNext(&seed) & 7);
+        t[PT_MORA_HI_MARK + k]  = (uint8_t)(ipNext(&seed) & 3);
+        IPS(t, PT_MORA_HI_VAL + k * 2) = (int16_t)(ipNext(&seed) & 0x3f);
+    }
+    for (k = 0; k < PT_MORA_N; k++)
+        n += t[PT_MORA + k] + t[PT_MORA_HI + k];
+    if (n > 12)
+        n = 12;
+    if (n < 1)
+        n = 1;
+    for (k = 0; k < n; k++)
+        t[PT_KANA + k] = (uint8_t)(0x20 + ipNext(&seed) % 0x60);
+    t[PT_KANA + n - 1] = (uint8_t)tailCode;
+    t[PT_MORAS] = (uint8_t)n;
+    for (k = 0; k < IH_E_N; k++) {
+        int on = k < 4 && (ipNext(&seed) & 3) != 0;
+
+        IPS(t, PT_LONG + k * 2) = (int16_t)(on ? (int)(ipNext(&seed) & 0x1f)
+                                               : -1);
+        t[PT_LONG_B + k] = (uint8_t)ipNext(&seed);
+    }
+}
+
+/* A free list over n entries, laid out as either class's own InitPhraseTable
+   leaves it. TextAnalysis's is written here rather than called, because that
+   class is not transcribed and the pass gives rows back to its list. */
+static void ipLinkTable(uint8_t *link, int n)
+{
+    int i;
+
+    *(uint16_t *)(link + IL_PREV) = (uint16_t)n;
+    *(uint16_t *)(link + IL_NEXT) = 1;
+    for (i = 1; i < n - 1; i++) {
+        *(uint16_t *)(link + i * IP_LINK_SIZE + IL_PREV) = (uint16_t)(i - 1);
+        *(uint16_t *)(link + i * IP_LINK_SIZE + IL_NEXT) = (uint16_t)(i + 1);
+    }
+    *(uint16_t *)(link + (n - 1) * IP_LINK_SIZE + IL_PREV) = (uint16_t)(n - 2);
+    *(uint16_t *)(link + (n - 1) * IP_LINK_SIZE + IL_NEXT) = (uint16_t)n;
+}
+
+/* Which group marks and kinds a shape gives its rows.
+ *
+ * Twenty is what closes a breath group and ten what closes a phrase inside
+ * one, so a shape has to carry both to reach either. Three eights of the
+ * pattern are what the first round of sabotages asked for and none of them
+ * was a statement about the code. The middle eight close almost nothing,
+ * which is the only way the second regrouping pass gets a run over its limit
+ * of twenty-five moras to break; with a closer every other row no run is ever
+ * long enough and three sabotages of that pass moved nothing. The last eight
+ * close three phrases in a row, which is the only way a group fills all three
+ * of the phrases it holds and the only way the test on that bound is reached.
+ *
+ * The kinds have to reach four, because `PhraseSeparate' widens its target
+ * where the group's last phrase has been broken four times already, and
+ * `SetPauseLength' gives a whole second of pause to a group of four or more.
+ * With a highest kind of three both were unswept. */
+static const int IP_GROUPS[24] = {
+    0x14, 0x0a, 0, 1, 0x0b, 0x14, 4, 0x0a,
+    0, 1, 2, 0x0b, 0, 1, 3, 0x14,
+    0x0a, 0x0a, 0x0a, 0x14, 0, 0, 0x0a, 0x14
+};
+static const int IP_KINDS[24]  = {
+    1, 1, 1, 2, 1, 0, 1, 3,
+    1, 1, 4, 1, 5, 1, 1, 4,
+    1, 1, 1, 4, 1, 1, 1, 5
+};
+static const int IP_TAILS[4]  = { 0x50, 0xfd, 0xf0, 0xfe };
+#define IP_SHIFT_N 24
+
+static void ipSetUp(int n, uint32_t seed, int shift)
+{
+    int i;
+
+    memset(ip_room, 0, sizeof ip_room);
+    memset(ip_rows, 0, sizeof ip_rows);
+    memset(ip_rom, 0, sizeof ip_rom);
+    memset(ta_block, 0, sizeof ta_block);
+
+    for (i = 0; i < n; i++)
+        ipRow(i, seed + (uint32_t)i * 7919u,
+              1 + (int)((seed >> (i & 7)) % 9),
+              (int)((seed >> (i & 5)) % 4),
+              IP_GROUPS[(i + shift) % IP_SHIFT_N],
+              IP_KINDS[(i + shift) % IP_SHIFT_N],
+              IP_TAILS[(i + shift) & 3]);
+    for (i = 0; i < n; i++)
+        IP_ROW_LINK(IP_ROW(i), i + 1 < n ? IP_ROW(i + 1) : NULL);
+
+    ipLinkTable((uint8_t *)ta_block + TA_LINK, TA_LINK_N);
+    *(uint16_t *)(ta_block + TA_LAST)     = (uint16_t)TA_LINK_N;
+    *(uint16_t *)(ta_block + TA_SPARE_18) = (uint16_t)TA_LINK_N;
+    *(uint16_t *)(ta_block + TA_TOP)      = 0;
+
+    RZ_SET_TXTANAL(ip_rom, ta_block);
+    IP_SET(ip_room, IP_OWNER, ip_rom);
+    IP_SET(ip_room, IP_TABLE, IP_ROW(0));
+    IP_SET(ip_room, IP_HEAD, NULL);
+    IP_SET(ip_room, IP_CUR, NULL);
+    IPM(InitPhraseTable)(ip_room, IP_LINK_N);
+    IPS(ip_room, IP_MORE) = (int16_t)(0x20 + (seed & 0x3f));
+}
+
+/* Which row or group a pointer names, so that a chain can be printed without
+   printing an address. */
+static long ipWhichRow(const void *t)
+{
+    if (t == NULL)
+        return -1;
+    return (long)(((const char *)t - ip_rows) / PT_ROW_SIZE);
+}
+
+static long ipWhichGroup(const void *g)
+{
+    if (g == NULL)
+        return -1;
+    return (long)(((const char *)g - (ip_room + IP_GROUP)) / IP_GROUP_SIZE);
+}
+
+/* Everything a pass leaves behind: the rows, the chain of them, the four
+   counters, and every group with its three phrases. Printed whole for the
+   shapes the sweep names and digested for the rest. */
+static void ipReport(const char *tag, long a, int n)
+{
+    const void *g;
+    int         i, k, guard;
+
+    printf("IP rows %s %ld %d %08lx\n", tag, a, n,
+           (unsigned long)ipRowsDigest(n));
+    for (i = 0; i < n; i++) {
+        const uint8_t *r = (const uint8_t *)IP_ROW(i);
+
+        printf("IP row %s %ld %d %d %d %d %d %d %d %d %ld", tag, a, i,
+               (int)IPS(r, PT_INDEX), (int)r[PT_STATE],
+               (int)r[PT_STATE + 1], (int)r[PT_STATE + 2],
+               (int)r[PT_GROUP], (int)r[PT_KIND], (int)r[PT_MORAS],
+               ipWhichRow(IP_ROW_NEXT((void *)r)));
+        for (k = 0; k < PT_MORA_N; k++)
+            printf(" %02x%02x%02x%02x", (unsigned)r[PT_MORA + k],
+                   (unsigned)r[PT_MORA_ACC + k],
+                   (unsigned)r[PT_MORA_PITCH + k],
+                   (unsigned)r[PT_MORA_MARK + k]);
+        for (k = 0; k < PT_MORA_N; k++)
+            printf(" %02x%02x", (unsigned)r[PT_MORA_HI_PITCH + k],
+                   (unsigned)r[PT_MORA_HI_MARK + k]);
+        putchar('\n');
+    }
+
+    printf("IP state %s %ld %d %d %d %d %d %ld %ld %ld\n", tag, a,
+           (int)IPS(ip_room, IP_COUNT), (int)IPS(ip_room, IP_LEFT),
+           (int)IPS(ip_room, IP_AT), (int)IPS(ip_room, IP_TOP),
+           (int)IPS(ip_room, IP_MORE),
+           ipWhichRow(IP_GET(ip_room, IP_TABLE)),
+           ipWhichGroup(IP_GET(ip_room, IP_HEAD)),
+           ipWhichGroup(IP_GET(ip_room, IP_CUR)));
+    printf("IP inton %s %ld %d\n", tag, a,
+           (int)IPS(ta_block, TA_INTON_FAILED));
+    printf("IP free %s %ld %d %d %d\n", tag, a,
+           (int)*(uint16_t *)(ta_block + TA_LAST),
+           (int)*(uint16_t *)(ta_block + TA_SPARE_18),
+           (int)*(uint16_t *)(ta_block + TA_TOP));
+
+    g = IP_GET(ip_room, IP_HEAD);
+    for (guard = 0; g != NULL && guard < 24; guard++) {
+        const uint8_t *bg = (const uint8_t *)g;
+
+        printf("IP group %s %ld %d %ld %d %d %d %d %d %d %d %ld\n", tag, a,
+               guard, ipWhichGroup(g), (int)IPS(bg, IG_INDEX),
+               (int)bg[IG_PHRASES], (int)bg[IG_LEVEL], (int)bg[IG_LEFT],
+               (int)bg[IG_RIGHT], (int)bg[IG_KIND], (int)IPS(bg, IG_PAUSE),
+               ipWhichGroup(IP_GROUP_NEXT((void *)bg)));
+        for (i = 0; i < IG_PHRASE_N; i++) {
+            const uint8_t *ph = bg + IG_PHRASE + i * IG_PHRASE_SIZE;
+
+            printf("IP phrase %s %ld %d %d %d %d %d %d %d", tag, a, guard, i,
+                   (int)ph[IH_FIRST], (int)ph[IH_COUNT],
+                   (int)ph[IH_KANA_LEN], (int)ph[IH_FLAG],
+                   (int)IPS(ph, IH_LONG_N));
+            for (k = 0; k < IH_RUN_N; k++)
+                printf(" %02x%02x%02x%02x%02x%04x", (unsigned)ph[IH_A + k],
+                       (unsigned)ph[IH_MORAS + k], (unsigned)ph[IH_LEN + k],
+                       (unsigned)ph[IH_PITCH + k], (unsigned)ph[IH_MARK + k],
+                       (unsigned)(uint16_t)IPS(ph, IH_VAL + k * 2));
+            printf(" |");
+            for (k = 0; k < IH_E_N; k++)
+                printf("%02x", (unsigned)ph[IH_KANA + k]);
+            printf(" |");
+            for (k = 0; k < 8; k++)
+                printf(" %04x%02x", (unsigned)(uint16_t)IPS(ph, IH_E + k * 2),
+                       (unsigned)ph[IH_F + k]);
+            putchar('\n');
+        }
+        g = IP_GROUP_NEXT((void *)bg);
+    }
+}
+
+/* And the same digested: one line a shape, over everything a pass can have
+   touched. The link words are left out of both. */
+static void ipDigestReport(const char *tag, long a, int n)
+{
+    const void *g;
+    uint32_t    h = 2166136261u;
+    int         guard;
+    long        k;
+
+    g = IP_GET(ip_room, IP_HEAD);
+    for (guard = 0; g != NULL && guard < 32; guard++) {
+        const uint8_t *bg = (const uint8_t *)g;
+
+        for (k = 4; k < IP_GROUP_SIZE; k++)
+            h = (h ^ bg[k]) * 16777619u;
+        h = (h ^ (uint32_t)ipWhichGroup(g)) * 16777619u;
+        g = IP_GROUP_NEXT((void *)bg);
+    }
+    printf("IP digest %s %ld %d %08lx %08lx %08lx %d %d %d %d %d\n", tag, a, n,
+           ipRowsDigest(n), (unsigned long)h,
+           ipDigest(ip_room + IP_LINK, IP_LINK_N * IP_LINK_SIZE),
+           (int)IPS(ip_room, IP_COUNT), (int)IPS(ip_room, IP_LEFT),
+           (int)IPS(ip_room, IP_AT), (int)IPS(ip_room, IP_TOP),
+           (int)IPS(ta_block, TA_INTON_FAILED));
+}
+
+static void sweepIntonPhrase(void)
+{
+    long     i, j, k, m;
+    uint32_t seed;
+    uint32_t roll;
+
+    /* ---- the leaves, exhaustively ----------------------------------- */
+
+    /* Which of the seven states each becomes. */
+    for (i = 0; i < 256; i++)
+        printf("IP ptype %ld %d\n", i,
+               (int)IPM(ModifyPType)(ip_room, (uint8_t)i));
+
+    /* Whether the code at a place in a reading is a long vowel: every place
+       a mora index can reach and every code that can be there. */
+    roll = 2166136261u;
+    for (i = 0; i <= 40; i++)
+        for (j = 0; j < 256; j++) {
+            memset(ip_one, 0, sizeof ip_one);
+            ip_one[PT_KANA + i] = (char)j;
+            roll = (roll
+                    ^ (uint32_t)IPM(CheckChoon)(ip_room,
+                                                (const uint8_t *)ip_one,
+                                                (int16_t)i)) * 16777619u;
+        }
+    printf("IP choon %08lx\n", (unsigned long)roll);
+
+    /* A phrase's three state bytes tidied: every pair of the first two over
+       four values of the third, which is every conjunction the function can
+       see. */
+    roll = 2166136261u;
+    for (k = 0; k < 4; k++) {
+        static const int third[4] = { 0, 1, 0x80, 0xff };
+
+        for (i = 0; i < 256; i++)
+            for (j = 0; j < 256; j++) {
+                uint8_t st[4];
+
+                st[0] = (uint8_t)i;
+                st[1] = (uint8_t)j;
+                st[2] = (uint8_t)third[k];
+                st[3] = 0;
+                IPM(CheckPhraseToPhrase)(ip_room, st);
+                roll = (roll ^ st[0]) * 16777619u;
+                roll = (roll ^ st[1]) * 16777619u;
+                roll = (roll ^ st[2]) * 16777619u;
+                roll = (roll ^ st[3]) * 16777619u;
+            }
+    }
+    printf("IP tophrase %08lx\n", (unsigned long)roll);
+
+    /* Which breath group a phrase belongs to. The three bytes are rewritten
+       where the kind is more than one, so the sweep digests them after as
+       well as the answer. */
+    roll = 2166136261u;
+    for (k = 0; k < 4; k++)
+        for (i = 0; i < 256; i++)
+            for (j = 0; j < 256; j++) {
+                uint8_t st[3];
+                uint8_t right[4];
+                int     v;
+
+                st[0] = (uint8_t)i;
+                st[1] = (uint8_t)j;
+                st[2] = (uint8_t)(i ^ j);
+                right[0] = (uint8_t)j;
+                right[1] = (uint8_t)i;
+                right[2] = 0x40;
+                right[3] = 0x20;
+                v = IPM(CheckBreathGroup)(ip_room, st, right, (uint8_t)k);
+                roll = (roll ^ (uint32_t)v) * 16777619u;
+                roll = (roll ^ st[0]) * 16777619u;
+                roll = (roll ^ st[1]) * 16777619u;
+                roll = (roll ^ st[2]) * 16777619u;
+            }
+    printf("IP breathgroup %08lx\n", (unsigned long)roll);
+
+    /* What lies between two phrases. Eight bytes, a group number and a flag
+       decide it, and the eight bytes conjoin: three sweeps, so that no
+       conjunction of two of them is left to chance. First every pair of the
+       two heads. */
+    roll = 2166136261u;
+    for (k = 0; k < 2; k++)
+        for (i = 0; i < 256; i++)
+            for (j = 0; j < 256; j++) {
+                uint8_t l[4];
+                uint8_t r[4];
+
+                l[0] = (uint8_t)i;
+                l[1] = 0xff;
+                l[2] = (uint8_t)(k ? 0x91 : 0x00);
+                l[3] = (uint8_t)(k ? 0xa8 : 0x28);
+                r[0] = (uint8_t)j;
+                r[1] = (uint8_t)(j ^ 0x55);
+                r[2] = 0x0f;
+                r[3] = 0x40;
+                roll = (roll ^ IPM(PhraseParsing)(ip_room, l, r,
+                                                  (uint8_t)(i & 0x7f),
+                                                  (int32_t)k)) * 16777619u;
+                roll = (roll ^ r[0]) * 16777619u;
+            }
+    printf("IP parsing heads %08lx\n", (unsigned long)roll);
+
+    /* Then every group number against every value of the byte that chooses
+       what kind of boundary it is. */
+    roll = 2166136261u;
+    for (i = 0; i < 256; i++)
+        for (j = 0; j < 256; j++)
+            for (k = 0; k < 2; k++) {
+                uint8_t l[4];
+                uint8_t r[4];
+
+                l[0] = 0xfc;
+                l[1] = 0xff;
+                l[2] = (uint8_t)(k ? 0x90 : 0x00);
+                l[3] = (uint8_t)j;
+                r[0] = 0xfc;
+                r[1] = 0xfc;
+                r[2] = 0xff;
+                r[3] = 0x40;
+                roll = (roll ^ IPM(PhraseParsing)(ip_room, l, r, (uint8_t)i,
+                                                  0)) * 16777619u;
+            }
+    printf("IP parsing groups %08lx\n", (unsigned long)roll);
+
+    /* And then the whole input drawn at once, so that a conjunction of three
+       bytes cannot hide either. The draw favours the values the function
+       tests for and is uniform the rest of the time. */
+    roll = 2166136261u;
+    seed = 0x51ed2701u;
+    for (i = 0; i < 400000; i++) {
+        static const uint8_t pool[16] = {
+            0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x21,
+            0x40, 0x80, 0x88, 0xa8, 0xfc, 0xff, 0x91, 0xe4
+        };
+        uint8_t l[4];
+        uint8_t r[4];
+        int     b;
+
+        for (b = 0; b < 4; b++) {
+            uint32_t v = ipNext(&seed);
+
+            l[b] = (uint8_t)((v & 1) ? pool[(v >> 1) & 15] : (v >> 5));
+            v = ipNext(&seed);
+            r[b] = (uint8_t)((v & 1) ? pool[(v >> 1) & 15] : (v >> 5));
+        }
+        j = (long)(ipNext(&seed) & 0x7f);
+        if ((ipNext(&seed) & 1) != 0)
+            j = (long)(0x10 + ipNext(&seed) % 0x50);
+        roll = (roll ^ IPM(PhraseParsing)(ip_room, l, r, (uint8_t)j,
+                                          (int32_t)(ipNext(&seed) & 1)))
+               * 16777619u;
+        roll = (roll ^ r[0]) * 16777619u;
+    }
+    printf("IP parsing draws %08lx\n", (unsigned long)roll);
+
+    /* ---- the free list ---------------------------------------------- */
+
+    /* A pool small enough to run out, allocated dry and then walked past the
+       end, which is the one answer TableAllocBG has besides an index. */
+    for (m = 2; m <= 6; m++) {
+        memset(ip_room, 0, sizeof ip_room);
+        IPM(InitPhraseTable)(ip_room, (int16_t)m);
+        printf("IP pool %ld %d %d %d %d\n", m,
+               (int)IPS(ip_room, IP_COUNT), (int)IPS(ip_room, IP_LEFT),
+               (int)IPS(ip_room, IP_AT), (int)IPS(ip_room, IP_TOP));
+        for (i = 0; i < m + 2; i++) {
+            int16_t got = IPM(TableAllocBG)(ip_room,
+                                            (uint16_t *)(ip_room + IP_COUNT),
+                                            (uint16_t *)(ip_room + IP_LEFT),
+                                            (uint16_t *)(ip_room + IP_AT),
+                                            (uint8_t *)(ip_room + IP_LINK),
+                                            (uint16_t)m);
+            printf("IP alloc %ld %ld %d %d %d %d %d %08lx\n", m, i, (int)got,
+                   (int)IPS(ip_room, IP_COUNT), (int)IPS(ip_room, IP_LEFT),
+                   (int)IPS(ip_room, IP_AT), (int)IPS(ip_room, IP_TOP),
+                   ipDigest(ip_room + IP_LINK, (long)m * IP_LINK_SIZE));
+        }
+    }
+
+    /* And a group taken out of the full pool and cleared, five times over, so
+       that both what a fresh group holds and what the list does show. */
+    memset(ip_room, 0, sizeof ip_room);
+    IPM(InitPhraseTable)(ip_room, IP_LINK_N);
+    for (i = 0; i < 5; i++) {
+        void *bg = IPM(BreathGroupAlloc)(ip_room);
+
+        printf("IP bgalloc %ld %ld %08lx %d %d\n", i, ipWhichGroup(bg),
+               bg != NULL ? ipDigest((const char *)bg + 4, IP_GROUP_SIZE - 4)
+                          : 0ul,
+               (int)IPS(ip_room, IP_LEFT), (int)IPS(ip_room, IP_AT));
+    }
+
+    /* ---- folding two accent phrases together ------------------------ */
+
+    /* Every slot of a phrase over a great many fixtures, printed whole for
+       the first few and digested for the rest. A run whose two lengths agree
+       is what the fold turns on, so a quarter of the fixtures are built to
+       agree. */
+    seed = 0x2f6ea1c3u;
+    for (i = 0; i < 600; i++) {
+        for (j = 0; j <= 11; j++) {
+            int      v;
+            uint32_t s2 = seed + (uint32_t)i * 104729u;
+
+            memset(ip_phrase, 0, sizeof ip_phrase);
+            for (k = 0; k < IH_RUN_N; k++) {
+                uint8_t len = (uint8_t)(ipNext(&s2) & 7);
+
+                ip_phrase[IH_A + k]     = (char)(ipNext(&s2) & 3);
+                ip_phrase[IH_MORAS + k] = (char)((i % 4) == 0
+                                                 ? len : (ipNext(&s2) & 7));
+                ip_phrase[IH_LEN + k]   = (char)len;
+                ip_phrase[IH_PITCH + k] = (char)(ipNext(&s2) % 8);
+                ip_phrase[IH_MARK + k]  = (char)(ipNext(&s2) & 3);
+            }
+            ip_phrase[IH_COUNT] = (char)IH_RUN_N;
+            ip_phrase[IH_FLAG]  = (char)(ipNext(&s2) % 8);
+            v = IPM(SetAccentualPhrase)(ip_room, ip_phrase, (uint8_t)j);
+            printf("IP accent %ld %ld %d %08lx\n", i, j, v,
+                   ipDigest(ip_phrase, IG_PHRASE_SIZE));
+        }
+    }
+
+    /* ---- the passes over a whole chain ------------------------------ */
+
+    /* Each pass on its own, on the same shape, so that a difference names
+       one pass rather than the lot. Then the entry point, which runs them in
+       order and is the only thing that answers TextAnalysis. */
+    for (m = 0; m < 96; m++) {
+        int n = 1 + (int)(m % IP_ROW_N);
+        int full = m < 6;
+
+        seed = 0x13579bdfu + (uint32_t)m * 2654435761u;
+
+        ipSetUp(n, seed, (int)(m % IP_SHIFT_N));
+        IPM(SetPhraseState)(ip_room);
+        if (full) ipReport("state", m, n);
+        ipDigestReport("state", m, n);
+
+        ipSetUp(n, seed, (int)(m % IP_SHIFT_N));
+        IPM(SetPhraseState)(ip_room);
+        IPM(RegroupPhrases)(ip_room);
+        if (full) ipReport("regroup", m, n);
+        ipDigestReport("regroup", m, n);
+
+        ipSetUp(n, seed, (int)(m % IP_SHIFT_N));
+        IPM(SetPitchValues)(ip_room);
+        if (full) ipReport("pitch", m, n);
+        ipDigestReport("pitch", m, n);
+
+        ipSetUp(n, seed, (int)(m % IP_SHIFT_N));
+        IPM(ProsodyControl)(ip_room);
+        if (full) ipReport("prosody", m, n);
+        ipDigestReport("prosody", m, n);
+
+        ipSetUp(n, seed, (int)(m % IP_SHIFT_N));
+        IPM(SetPhraseState)(ip_room);
+        IPM(ProsodyControl)(ip_room);
+        printf("IP inphrase %ld %d\n", m,
+               (int)IPM(SetIntonationalPhrase)(ip_room));
+        if (full) ipReport("inphrase", m, n);
+        ipDigestReport("inphrase", m, n);
+
+        ipSetUp(n, seed, (int)(m % IP_SHIFT_N));
+        IPM(ThreePhraseParsing)(ip_room, IP_ROW(0));
+        if (full) ipReport("three", m, n);
+        ipDigestReport("three", m, n);
+    }
+
+    /* Breaking a group that came out too long, called directly so that the
+       bounds and the mark can be swept rather than left to whatever the chain
+       happened to hold.
+     *
+     * The mora count has to be at least what the run itself adds up to plus
+     * the floor. RegroupPhrases always passes exactly the sum and a floor of
+     * nought, and both of its calls do; a count any smaller sends every
+     * candidate to a negative score, nothing beats the minus one the best
+     * starts at, and IBM writes the answer through a pointer it never set.
+     * That is an IBM defect and it is not reachable from either caller, so
+     * the sweep stays on the side of it that is. */
+    for (m = 0; m < 40; m++) {
+        static const int marks[5] = { 0x14, 0x0a, 0x0b, 0, 4 };
+        int n = 2 + (int)(m % (IP_ROW_N - 2));
+
+        seed = 0x0badc0deu + (uint32_t)m * 40503u;
+        for (k = 0; k < 5; k++)
+            for (j = 0; j < 4; j++) {
+                int sum = 0;
+                int moras;
+
+                ipSetUp(n, seed, (int)(m % IP_SHIFT_N));
+                for (i = 0; i < n; i++)
+                    sum += (int)IPB(IP_ROW(i), PT_MORAS);
+                moras = sum + (int)j + (int)(m % 5);
+                printf("IP separate %ld %ld %ld %d %d %08lx\n", m, k, j, sum,
+                       (int)IPM(PhraseSeparate)(ip_room, IP_ROW(0),
+                                                IP_ROW(n - 1),
+                                                (int16_t)moras,
+                                                (int16_t)(0x19 + j * 7),
+                                                (int16_t)j,
+                                                (int16_t)marks[k]),
+                       ipRowsDigest(n));
+            }
+    }
+
+    /* And how long each pause runs, over a chain whose groups the pass ahead
+       of it has already made. */
+    for (m = 0; m < 40; m++) {
+        int n = 1 + (int)(m % IP_ROW_N);
+
+        seed = 0xfeedfaceu + (uint32_t)m * 22699u;
+        ipSetUp(n, seed, (int)(m % IP_SHIFT_N));
+        IPM(SetPhraseState)(ip_room);
+        IPM(ProsodyControl)(ip_room);
+        IPM(SetIntonationalPhrase)(ip_room);
+        IPM(SetPauseLength)(ip_room);
+        if (m < 4)
+            ipReport("pause", m, n);
+        ipDigestReport("pause", m, n);
+    }
+    /* The pitch pass's second walk turns on a phrase's own state code, and the
+       four codes it names are one byte in two hundred and fifty-six apart from
+       each other: a shape whose states are drawn at random reaches 0x82 about
+       once in a thousand rows, and the sabotage of that arm moved nothing.
+       Here every code it tests for is put on every row in turn, over both
+       group marks the outer guard lets through, with the first mora made to
+       agree with its accent slot in one row of each shape. */
+    for (m = 0; m < 6; m++) {
+        static const int codes[6] = { 0x82, 0x88, 0x8b, 0x8f, 0x00, 0x81 };
+
+        for (k = 0; k < 2; k++)
+            for (j = 0; j < 4; j++) {
+                seed = 0x71c3e5a9u + (uint32_t)(m * 8 + k * 4 + j);
+                ipSetUp(4, seed, 8);
+                for (i = 0; i < 4; i++) {
+                    IPB(IP_ROW(i), PT_STATE) = (uint8_t)codes[m];
+                    IPB(IP_ROW(i), PT_GROUP) = (uint8_t)k;
+                    if (i == (int)j)
+                        IPB(IP_ROW(i), PT_MORA_ACC) = IPB(IP_ROW(i), PT_MORA);
+                }
+                IPM(SetPitchValues)(ip_room);
+                printf("IP pitchstate %ld %ld %ld %08lx\n", m, k, j,
+                       ipRowsDigest(4));
+            }
+    }
+
+    /* And the three rules that rewrite a code as the reading is copied. Two of
+       them want the code to be the first of the first phrase of the first
+       group, which a reading built from a mora count reaches only when the
+       count comes out at one, and the third wants a long vowel straight after
+       a full stop -- a pair a reading of random codes never holds, since the
+       full stop is only ever put last. So these are put there by hand. */
+    for (m = 0; m < 5; m++) {
+        static const int first[5] = { 0xfd, 0xfe, 0x50, 0xf0, 0x21 };
+
+        for (k = 0; k < 3; k++) {
+            seed = 0x2bd4f10cu + (uint32_t)(m * 4 + k);
+            ipSetUp(3, seed, 16);
+            IPB(IP_ROW(0), PT_KANA)     = (uint8_t)first[m];
+            IPB(IP_ROW(0), PT_KANA + 1) = (uint8_t)(k == 0 ? 0x50
+                                                    : k == 1 ? 0xfd : 0x30);
+            IPB(IP_ROW(0), PT_MORAS)    = (uint8_t)(k == 2 ? 1 : 2);
+            IPM(SetPhraseState)(ip_room);
+            IPM(ProsodyControl)(ip_room);
+            printf("IP firstcode %ld %ld %d\n", m, k,
+                   (int)IPM(SetIntonationalPhrase)(ip_room));
+            ipDigestReport("firstcode", m * 4 + k, 3);
+        }
+    }
+
+    /* A group that comes out holding one phrase of no length at all is
+       unlinked from the chain and given back, and where it is dropped from the
+       middle its kind is carried back to the group in front of it. Both of
+       those wanted a row with no reading at all, which nothing else here
+       builds: every row otherwise gets at least one code, so no group's length
+       is ever nought and the whole of that cleanup was unswept. */
+    for (m = 0; m < 8; m++) {
+        int n = 4;
+
+        seed = 0x5c1d9e37u + (uint32_t)m * 65599u;
+        ipSetUp(n, seed, (int)(m % 8));
+        i = 1 + (long)(m % (n - 1));
+        memset(IP_ROW(i) + PT_MORA, 0, PT_KANA - PT_MORA);
+        IPB(IP_ROW(i), PT_MORAS) = 0;
+        IPB(IP_ROW(i), PT_KIND)  = 2;
+        IPB(IP_ROW(0), PT_KIND)  = 2;
+        IPB(IP_ROW(n - 1), PT_KIND) = (uint8_t)(2 + (m & 3));
+        IPM(SetPhraseState)(ip_room);
+        IPM(ProsodyControl)(ip_room);
+        printf("IP empty %ld %ld %d\n", m, i,
+               (int)IPM(SetIntonationalPhrase)(ip_room));
+        IPM(SetPauseLength)(ip_room);
+        ipReport("empty", m, n);
+    }
+    /* `SetIntonationalPhrase' reads two things the pass in front of it has
+       just rewritten: each row's group mark, which `ProsodyControl' replaces
+       with one of `CheckBreathGroup's seven, and each mora's pitch, which
+       `SetPitchValues' replaces with a one, a three or a four. Driving it only
+       through its own caller therefore leaves three of its roads unreachable
+       -- a group that fills all three phrases it holds, the walk back over a
+       pitch of six, and the arm that rewrites a pitch of two -- and sabotages
+       of all three moved nothing. Here it is driven on its own with the marks
+       and the pitches set by hand. */
+    for (m = 0; m < 24; m++) {
+        static const int marks[4] = { 0x0a, 0x0a, 0x0a, 0x0b };
+        int n = 5;
+
+        seed = 0x3f9a17c5u + (uint32_t)m * 39916801u;
+        ipSetUp(n, seed, (int)(m % IP_SHIFT_N));
+        for (i = 0; i < n; i++) {
+            IPB(IP_ROW(i), PT_GROUP) =
+                (uint8_t)(i == n - 1 ? 0x14 : marks[(m + i) & 3]);
+            IPB(IP_ROW(i), PT_KIND) = (uint8_t)(1 + (m + i) % 5);
+            for (k = 0; k < PT_MORA_N; k++) {
+                IPB(IP_ROW(i), PT_MORA_PITCH + k) =
+                    (uint8_t)((m + i + k) % 8);
+                IPB(IP_ROW(i), PT_MORA_HI_PITCH + k) =
+                    (uint8_t)((m + i + k + 3) % 8);
+                IPB(IP_ROW(i), PT_MORA_ACC + k) = (uint8_t)((m + k) % 10);
+            }
+        }
+        printf("IP direct %ld %d\n", m,
+               (int)IPM(SetIntonationalPhrase)(ip_room));
+        if (m < 4)
+            ipReport("direct", m, n);
+        ipDigestReport("direct", m, n);
+    }
+}
+
+
 int main(void)
 {
     Param *p;
@@ -7281,6 +8120,7 @@ int main(void)
     sweepPhraseBuf();
     sweepJPath();
     sweepNumRead();
+    sweepIntonPhrase();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

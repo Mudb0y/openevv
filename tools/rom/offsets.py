@@ -24,7 +24,8 @@ in the module, every offset larger than the widest thing the analyser allocates
 besides this one -- past that, a field can only be TextAnalysis's.
 
 usage: tools/rom/offsets.py
-         [textanalysis|dictsearch|inputchar|jpath|phrasebuf|numread]
+         [textanalysis|dictsearch|inputchar|jpath|phrasebuf|numread
+          |intonphrase]
 """
 
 import os
@@ -81,7 +82,8 @@ def regions(d):
         (d["TA_MARKS"], d["TA_MARKS_END"] - d["TA_MARKS"], "the parse marks"),
         (d["TA_PERBUF"], d["TA_PERBUF_N"] * d["TA_PERBUF_SIZE"],
          "the three per-buffer records"),
-        (d["TA_SPARE"], d["TA_LONGWORD"] - d["TA_SPARE"], "the spare region"),
+        (d["TA_INTON_FAILED"], d["TA_LONGWORD"] - d["TA_INTON_FAILED"],
+         "whether the intonation could be set"),
         (d["TA_LONGWORD"], d["TA_LONGWORD_N"] * d["TA_LONGWORD_SIZE"],
          "the long readings"),
         (d["TA_LONGWORDS"], 1, "how many of them"),
@@ -233,6 +235,29 @@ def regions_nr(d):
     return [(at, at + n - 1, name) for at, n, name in r]
 
 
+def regions_ip(d):
+    """And for IntonPhrase, whose two arrays are settled by arithmetic: the
+    link chain of 707 at four bytes ends where the 707 records of 0x260
+    begin, and those end on the counters InitPhraseTable writes."""
+    r = [
+        (d["IP_VTABLE"], 4, "the vtable"),
+        (d["IP_OWNER"], 4, "the owner"),
+        (d["IP_HEAD"], 4, "the first breath group in use"),
+        (d["IP_CUR"], 4, "the one in hand"),
+        (d["IP_TABLE"], 4, "the phrase table"),
+        (d["IP_LINK"], d["IP_LINK_N"] * d["IP_LINK_SIZE"], "the link chain"),
+        (d["IP_GROUP"], d["IP_GROUP_N"] * d["IP_GROUP_SIZE"],
+         "the breath groups"),
+        (d["IP_COUNT"], 2, "how many phrases"),
+        (d["IP_LEFT"], 2, "how many are left"),
+        (d["IP_AT"], 2, "where it is"),
+        (d["IP_TOP"], 2, "the last of them"),
+        (d["IP_MORE"], 2, "one more counter"),
+        (d["IP_SPARE"], 2, "two bytes nobody has read"),
+    ]
+    return [(at, at + n - 1, name) for at, n, name in r]
+
+
 # Which objects hold a class's own code -- a class may be spread over
 # several, and DictSearch is spread over four -- the header that maps it, the
 # region table, and the three names the checker needs out of that header: how
@@ -256,6 +281,8 @@ CLASSES = {
                   "PB_BYTES", "PB_BUFFER", None),
     "numread": (["numread.obj"], ["numread.h"], regions_nr,
                 "NR_BYTES", "NR_READ", None),
+    "intonphrase": (["intonphrase.obj"], ["intonphrase.h"], regions_ip,
+                    "IP_BYTES", "IP_LINK", None),
 }
 
 

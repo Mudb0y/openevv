@@ -79,8 +79,13 @@
    TextAnalysis::AddLongWord together. A reading too long for the ten bytes a
    candidate entry holds is put here instead and the entry keeps its number:
    thirty of twenty-six bytes, and thirty of them reach the count that follows
-   exactly. Two bytes in front of it and one behind are unaccounted for. */
-#define TA_SPARE        0x005f0
+   exactly. The two bytes in front of it are IntonPhrase's answer, named
+   below; one byte behind is still unaccounted for. */
+/* Not spare after all: IntonPhrase::ThreePhraseParsing writes minus one
+   here when it could not set the intonation and nought when it could,
+   reaching it as `romanizer->[RZ_TXTANAL]'. That is the only thing seen to
+   touch it. */
+#define TA_INTON_FAILED 0x005f0   /* int16 */
 #define TA_LONGWORD     0x005f2
 #define TA_LONGWORD_N   30        /* 0x1e, what SetLongWord refuses to pass */
 #define TA_LONGWORD_SIZE 0x1a     /* 30 times 26 from 0x5f2 is 0x8fe */

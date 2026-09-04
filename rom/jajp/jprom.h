@@ -727,6 +727,40 @@ int16_t nr_ApplyJRule(void *nr, const uint8_t *w, int16_t word, int16_t n,
                       int16_t howmany, int16_t *got);
 int16_t nr_Do(void *nr, const uint8_t *w, int16_t *pWord, int16_t *pOut);
 
+/* ---- IntonPhrase ----------------------------------------------------- */
+
+/* Where a speaker breathes, and what pitch each phrase carries.
+   `ThreePhraseParsing' is the entry point and the other sixteen are its
+   passes. Eleven of them are private in IBM's own source and are not static
+   here for the same reason JPath's are not: access control is a compile-time
+   thing, so each one has an external symbol in IBM's object and each can be
+   held to IBM's own answer rather than only through the entry point.
+   rom/jajp/intonphrase.h is the map of the record and of the two records it
+   is handed. */
+void    *ip_ctor(void *ip, void *owner);
+void    *ip_destroy(void *ip, int32_t freeIt);
+int16_t  ip_TableAllocBG(void *ip, uint16_t *count, uint16_t *last,
+                         uint16_t *at, uint8_t *link, uint16_t n);
+void    *ip_BreathGroupAlloc(void *ip);
+void     ip_InitPhraseTable(void *ip, int16_t n);
+void     ip_CheckPhraseToPhrase(void *ip, uint8_t *st);
+void     ip_ProsodyControl(void *ip);
+void     ip_ThreePhraseParsing(void *ip, void *table);
+int16_t  ip_ModifyPType(void *ip, uint8_t type);
+uint8_t  ip_CheckBreathGroup(void *ip, uint8_t *st, uint8_t *right,
+                             uint8_t group);
+int16_t  ip_CheckChoon(void *ip, const uint8_t *t, int16_t at);
+void     ip_SetPhraseState(void *ip);
+uint8_t  ip_PhraseParsing(void *ip, uint8_t *l, uint8_t *r, uint8_t group,
+                          int32_t odd);
+void     ip_RegroupPhrases(void *ip);
+int16_t  ip_PhraseSeparate(void *ip, void *start, void *end, int16_t moras,
+                           int16_t limit, int16_t floor_, int16_t mark);
+void     ip_SetPauseLength(void *ip);
+void     ip_SetPitchValues(void *ip);
+int16_t  ip_SetIntonationalPhrase(void *ip);
+uint8_t  ip_SetAccentualPhrase(void *ip, void *ph, uint8_t at);
+
 /* ---- how much of this is written ------------------------------------ */
 
 /* While this is defined the romanizer cannot convert anything yet, and says
