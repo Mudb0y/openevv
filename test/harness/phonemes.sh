@@ -11,20 +11,28 @@
 # It wants IBM's objects and, off Windows, Wine -- the same as test/suite.sh
 # and for the same reason. `make phonemes' builds both sides.
 #
-# usage: test/harness/phonemes.sh [cases.txt ...]
+# usage: EVV_LANG=<tag> test/harness/phonemes.sh [cases.txt ...]
 #
-# With no case file it takes test/cases/plain.txt.
+# The language says which pair of binaries to run, and the names carry it for
+# the reason the probes' do: one language's engine held against another's
+# reference is a difference that is not one. With no case file it takes that
+# language's plain file, and `make phonemes' hands it the plain, annotation
+# and long files a language has.
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 root=$(cd "$here/../.." && pwd)
 
-ours=$root/build/phonemes
-theirs=$root/build/reference/phontry.exe
+lang=${EVV_LANG:-enus}
+suf=""
+[ "$lang" = enus ] || suf="-$lang"
+
+ours=$root/build/phonemes$suf
+theirs=$root/build/reference$suf/phontry.exe
 
 for f in "$ours" "$theirs"; do
     if [ ! -x "$f" ]; then
-        echo "phonemes: $f is not built; run 'make phonemes'" >&2
+        echo "phonemes: $f is not built; run 'make phonemes LANGS=lang/$lang'" >&2
         exit 2
     fi
 done
@@ -39,7 +47,7 @@ run_theirs() {
 }
 
 cases=("$@")
-[ ${#cases[@]} -eq 0 ] && cases=("$root/test/cases/plain.txt")
+[ ${#cases[@]} -eq 0 ] && cases=("$root/test/cases/plain$suf.txt")
 
 total=0
 moved=0
@@ -73,8 +81,8 @@ for file in "${cases[@]}"; do
 done
 
 if [ "$moved" -eq 0 ]; then
-    echo "phonemes: $total cases, every one as IBM's"
+    echo "phonemes: $lang, $total cases, every one as IBM's"
     exit 0
 fi
-echo "phonemes: $total cases, $moved different"
+echo "phonemes: $lang, $total cases, $moved different"
 exit 1

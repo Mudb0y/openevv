@@ -788,15 +788,20 @@ missing: $(OBJECTS)
 # and the same driver against IBM's own objects, since a wrong letter-to-sound
 # answer names itself here where in a wave file it is a hash that moved.
 .PHONY: phonemes
-phonemes: $(BUILD)/phonemes
-	@$(MAKE) -C reference phontry
-	@bash test/harness/phonemes.sh
+# The case files a language has of the three this asks for. A language with
+# no annotation or long file of its own contributes the ones it has, so the
+# target is the same command for every one of them.
+PHONCASES := $(wildcard $(foreach f,plain anno long,test/cases/$(f)$(SUF).txt))
+
+phonemes: $(BUILD)/phonemes$(SUF)
+	@$(MAKE) -C reference TAG=$(TAG) BUILD=../$(BUILD)/reference$(SUF) phontry
+	@EVV_LANG=$(TAG) bash test/harness/phonemes.sh $(PHONCASES)
 
 # lib/eci_api.c goes in because the harness calls the published names and the
 # archive holds only the engine's own short ones. It brings the constructor
 # with it, which is what starts the platform and runs the static
 # initialisers, so this driver does not do either for itself.
-$(BUILD)/phonemes: test/harness/phonemes.c lib/eci_api.c $(BUILD)/libevv$(SUF).a
+$(BUILD)/phonemes$(SUF): test/harness/phonemes.c lib/eci_api.c $(BUILD)/libevv$(SUF).a
 	@$(CC) $(ALL_CFLAGS) -DECI_STATIC test/harness/phonemes.c lib/eci_api.c \
 	   $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
 	@echo "built $@"
