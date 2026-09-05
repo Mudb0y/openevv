@@ -115,6 +115,7 @@ static Conv *makeConv(Param *p)
 #include "prosctrl.h"
 #include "makereadable.h"
 #include "textnormalizer.h"
+#include "phrasetable.h"
 
 #define ibm_dsCheckCaseMarker(d, at)      ds_CheckCaseMarker((d), (at))
 #define ibm_dsCheckCnvChoon(d, c, n)      ds_CheckCnvChoon((d), (c), (n))
@@ -477,6 +478,21 @@ static Conv *makeConv(Param *p)
     tn_normalizeText((tn), (t), (n), (b), (l))
 #define TNM(name) ibm_tn##name
 
+#define ibm_ptbGetPosFromTG(pt, tg)       ptb_GetPosFromTG((pt), (tg))
+#define ibm_ptbGetFzkPosFromTG(pt, tg)    ptb_GetFzkPosFromTG((pt), (tg))
+#define ibm_ptbGetAffixType(pt, tg)       ptb_GetAffixType((pt), (tg))
+#define ibm_ptbTableAllocPhrase(pt, f, l, s, k, n) \
+    ptb_TableAllocPhrase((pt), (f), (l), (s), (k), (n))
+#define ibm_ptbPhraseAlloc(pt)            ptb_PhraseAlloc((pt))
+#define ibm_ptbGeneratePhraseTable(pt)    ptb_GeneratePhraseTable((pt))
+#define ibm_ptbExtKKRPhrase(pt, k, t, o)  ptb_ExtKKRPhrase((pt), (k), (t), (o))
+#define ibm_ptbSetSubUkeType(pt, u, t, f) ptb_SetSubUkeType((pt), (u), (t), (f))
+#define ibm_ptbSetNoneFzkKKR(pt, k, w)    ptb_SetNoneFzkKKR((pt), (k), (w))
+#define ibm_ptbSetUkeTypePhrase(pt, u, w) ptb_SetUkeTypePhrase((pt), (u), (w))
+#define ibm_ptbFzkAccent(pt, i, o)        ptb_FzkAccent((pt), (i), (o))
+#define PTBM(name) ibm_ptb##name
+#define PTB_SET(blk, which, p) (*(void **)((blk) + which##_AT) = (p))
+#define AI_RULE_SET(in, i, p) (AI_RULE_OF((in), (i)) = (p))
 
 /* Where each side keeps PhraseBuf's four pointers and JPath's three. Ours are
    parked past their records; IBM's are at the offsets the maps name. */
@@ -775,6 +791,7 @@ extern THIS int32_t ibm_slLoad(void *self, const char *path)
 #include "prosctrl.h"
 #include "makereadable.h"
 #include "textnormalizer.h"
+#include "phrasetable.h"
 
 extern THIS int32_t ibm_dsCheckCaseMarker(void *d, int16_t at)
     MANGLED("?CheckCaseMarker@DictSearch@@QAEHF@Z");
@@ -1468,6 +1485,36 @@ extern THIS int32_t ibm_tnNormalizeText(void *tn, const char *t, uint32_t n,
     MANGLED("?normalizeText@TextNormalizer@@QAEHPBDIPAPADPAI@Z");
 #define TNM(name) ibm_tn##name
 
+extern THIS uint8_t ibm_ptbGetPosFromTG(void *pt, uint8_t tg)
+    MANGLED("?GetPosFromTG@PhraseTable@@QAEEE@Z");
+extern THIS uint8_t ibm_ptbGetFzkPosFromTG(void *pt, uint8_t tg)
+    MANGLED("?GetFzkPosFromTG@PhraseTable@@QAEEE@Z");
+extern THIS int16_t ibm_ptbGetAffixType(void *pt, uint8_t *tg)
+    MANGLED("?GetAffixType@PhraseTable@@QAEFPAE@Z");
+extern THIS int16_t ibm_ptbTableAllocPhrase(void *pt, uint16_t *first,
+                                            uint16_t *last, uint16_t *spare,
+                                            uint8_t *link, uint16_t count)
+    MANGLED("?TableAllocPhrase@PhraseTable@@QAEFPAG00PAU_LINK_TBL_T@@G@Z");
+extern THIS void *ibm_ptbPhraseAlloc(void *pt)
+    MANGLED("?PhraseAlloc@PhraseTable@@QAEPAXXZ");
+extern THIS void *ibm_ptbGeneratePhraseTable(void *pt)
+    MANGLED("?GeneratePhraseTable@PhraseTable@@QAEPAU_PHR_TBL_T@@XZ");
+extern THIS void ibm_ptbExtKKRPhrase(void *pt, uint8_t *kkr, int16_t tg,
+                                     uint8_t *other)
+    MANGLED("?ExtKKRPhrase@PhraseTable@@QAEXPAEF0@Z");
+extern THIS void ibm_ptbSetSubUkeType(void *pt, uint8_t *uke, int16_t tg,
+                                      uint8_t *flag)
+    MANGLED("?SetSubUkeType@PhraseTable@@QAEXPAEF0@Z");
+extern THIS void ibm_ptbSetNoneFzkKKR(void *pt, uint8_t *kkr, void *wp)
+    MANGLED("?SetNoneFzkKKR@PhraseTable@@QAEXPAEPAU_W_PHRASE_T@@@Z");
+extern THIS int16_t ibm_ptbSetUkeTypePhrase(void *pt, uint8_t *uke, void *wp)
+    MANGLED("?SetUkeTypePhrase@PhraseTable@@QAEFPAEPAU_W_PHRASE_T@@@Z");
+extern THIS void ibm_ptbFzkAccent(void *pt, uint8_t *in, uint8_t *out)
+    MANGLED("?FzkAccent@PhraseTable@@QAEXPAU_ACC_IN_T@@PAU_ACC_OUT_T@@@Z");
+#define PTBM(name) ibm_ptb##name
+#define PTB_SET(blk, which, p) (*(void **)((blk) + which) = (p))
+#define AI_RULE_SET(in, i, p) \
+    (*(uint8_t **)((uint8_t *)(in) + AI_RULE + (i) * 4) = (p))
 
 #define PB_SET(blk, which, p) (*(void **)((blk) + which) = (p))
 #define JP_SET(blk, which, p) (*(void **)((blk) + which) = (p))
@@ -9552,6 +9599,276 @@ static void sweepTextNormalizer(void)
     TNM(Dtor)(tn_room);
 }
 
+/* ---- PhraseTable ------------------------------------------------------ */
+
+static char ptb_room[PTB_ROOM + 8];
+
+/* A phrase to ask about, built from nothing so that both sides are given the
+   same bytes: how many words, what kind of phrase, how many function words
+   and which, and for each word its part of speech, its attribute byte and its
+   accent. Everything else is nought. */
+static void ptbPhrase(char *wp, int words, int kind, int fzks, int fzk,
+                      int pos0, int posL, int attr, int accent)
+{
+    memset(wp, 0, PB_SLOT_SIZE);
+    wp[WP_WORDS] = (char)words;
+    wp[WP_TYPE]  = (char)kind;
+    wp[WP_FZKS]  = (char)fzks;
+    wp[WP_FZK]   = (char)fzk;
+    *(WW_SLOT(wp, 0) + WW_POS) = (char)pos0;
+    *(WW_SLOT(wp, 0) + WW_ATTR) = (char)attr;
+    *(int16_t *)(WW_SLOT(wp, 0) + WW_ACCENT) = (int16_t)accent;
+    if (words > 1) {
+        *(WW_SLOT(wp, words - 1) + WW_POS) = (char)posL;
+        *(WW_SLOT(wp, words - 1) + WW_ATTR) = (char)attr;
+        *(int16_t *)(WW_SLOT(wp, words - 1) + WW_ACCENT) = (int16_t)accent;
+    }
+}
+
+static void sweepPhraseTable(void)
+{
+    long     i, j, k;
+    uint32_t roll;
+
+    memset(ptb_room, 0, sizeof ptb_room);
+    PTB_SET(ptb_room, PTB_OWNER, ta_block);
+
+    /* ---- what a tag says a word is ---------------------------------- */
+
+    /* Every value a tag byte can take through both readers. */
+    for (i = 0; i < 0x100; i++)
+        printf("PTB pos %ld %d %d\n", i,
+               (int)PTBM(GetPosFromTG)(ptb_room, (uint8_t)i),
+               (int)PTBM(GetFzkPosFromTG)(ptb_room, (uint8_t)i));
+
+    /* And the affix reader over every pattern its five tests can tell
+       apart, in all four bytes of the block it is handed. */
+    roll = 2166136261u;
+    for (i = 0; i < 0x10000; i++) {
+        uint8_t tg[4];
+
+        tg[0] = (uint8_t)(i >> 8);
+        tg[1] = (uint8_t)(i & 0xff);
+        tg[2] = (uint8_t)(i & 0xff);
+        tg[3] = (uint8_t)(i >> 8);
+        roll = (roll ^ (uint32_t)PTBM(GetAffixType)(ptb_room, tg)) * 16777619u;
+        tg[2] = (uint8_t)(i >> 8);
+        tg[3] = (uint8_t)(i & 0xff);
+        roll = (roll ^ (uint32_t)PTBM(GetAffixType)(ptb_room, tg)) * 16777619u;
+    }
+    printf("PTB affix all %08lx\n", (unsigned long)roll);
+
+    /* ---- the free-list splice --------------------------------------- */
+
+    /* A chain of sixteen, built the way InitPhraseTable builds one -- each
+       entry pointing at the next and the last at the count -- then taken
+       apart one row at a time, with the three words and the whole chain
+       printed after each. */
+    for (k = 0; k < 3; k++) {
+        static uint8_t link[16 * 4];
+        uint16_t first, last, free_;
+        long     q;
+
+        for (q = 0; q < 16; q++) {
+            *(uint16_t *)(link + q * 4)     = (uint16_t)(q == 0 ? 16 : q - 1);
+            *(uint16_t *)(link + q * 4 + 2) = (uint16_t)(q + 1);
+        }
+        first = 16;
+        last  = (uint16_t)(k == 0 ? 16 : k - 1);
+        free_ = 0;
+        for (q = 0; q < 18; q++) {
+            int16_t got = PTBM(TableAllocPhrase)(ptb_room, &first, &last,
+                                                 &free_, link, 16);
+            long    e;
+
+            printf("PTB alloc %ld %ld %d %u %u %u ", k, q, (int)got,
+                   (unsigned)first, (unsigned)last, (unsigned)free_);
+            for (e = 0; e < 16; e++)
+                printf("%u:%u ", (unsigned)*(uint16_t *)(link + e * 4),
+                       (unsigned)*(uint16_t *)(link + e * 4 + 2));
+            putchar('\n');
+        }
+    }
+
+    /* ---- a row taken and cleared ------------------------------------ */
+
+    /* Over the analysis's own chain, which is filled in here rather than by
+       InitPhraseTable: that method is not written and what matters is that
+       both sides start from the same bytes. Twelve rows are taken, and what
+       each one holds afterwards is printed in full. */
+    {
+        uint8_t *ta = (uint8_t *)ta_block;
+        long     q;
+
+        memset(ta + TA_LINK, 0, (size_t)TA_LINK_N * TA_LINK_SIZE);
+        for (q = 0; q < TA_LINK_N; q++) {
+            *(uint16_t *)(ta + TA_LINK + q * 4) =
+                (uint16_t)(q == 0 ? TA_LINK_N : q - 1);
+            *(uint16_t *)(ta + TA_LINK + q * 4 + 2) = (uint16_t)(q + 1);
+        }
+        memset(ta + TA_PHRASE, 0xcc, (size_t)16 * PT_ROW_SIZE);
+        *(uint16_t *)(ta + TA_FIRST)    = TA_LINK_N;
+        *(uint16_t *)(ta + TA_LAST)     = TA_LINK_N;
+        *(uint16_t *)(ta + TA_SPARE_18) = 0;
+        PTB_SET(ptb_room, PTB_HEAD, NULL);
+        PTB_SET(ptb_room, PTB_TAIL, NULL);
+
+        for (q = 0; q < 12; q++) {
+            void *row = PTBM(GeneratePhraseTable)(ptb_room);
+            long  e;
+
+            printf("PTB row %ld %ld ", q,
+                   row == NULL ? -1L
+                               : (long)(((uint8_t *)row - (ta + TA_PHRASE))
+                                        / PT_ROW_SIZE));
+            if (row != NULL)
+                for (e = 0; e < PT_ROW_SIZE; e++)
+                    printf("%02x", (unsigned)((uint8_t *)row)[e]);
+            putchar('\n');
+        }
+    }
+
+    /* ---- the three that turn a tag into kakari bits ------------------ */
+
+    for (i = 0; i < 0x80; i++) {
+        uint8_t kkr[8];
+        uint8_t other[2];
+        uint8_t uke[8];
+        uint8_t flag;
+        long    e;
+
+        /* Twice over, once on a record of noughts and once on one of ones:
+           three of these arms clear a bit rather than set one, and a record
+           of noughts cannot show that. */
+        for (j = 0; j < 4; j++) {
+            memset(kkr, (int)(j >> 1 ? 0xff : 0x00), sizeof kkr);
+            other[0] = (uint8_t)(j & 1);
+            other[1] = 0;
+            PTBM(ExtKKRPhrase)(ptb_room, kkr, (int16_t)i, other);
+            printf("PTB kkr %ld %ld ", i, j);
+            for (e = 0; e < 8; e++)
+                printf("%02x", (unsigned)kkr[e]);
+            putchar('\n');
+        }
+        for (j = 0; j < 2; j++) {
+            memset(uke, (int)(j ? 0xff : 0x00), sizeof uke);
+            flag = 0;
+            PTBM(SetSubUkeType)(ptb_room, uke, (int16_t)i, &flag);
+            printf("PTB sub %ld %ld %d ", i, j, (int)flag);
+            for (e = 0; e < 8; e++)
+                printf("%02x", (unsigned)uke[e]);
+            putchar('\n');
+        }
+    }
+
+    /* ---- and the two that read a whole phrase ------------------------ */
+
+    /* Every part of speech through both, at two word counts, four phrase
+       kinds, with and without a function word, and at three accents. */
+    roll = 2166136261u;
+    for (i = 0; i < 0x100; i++)
+        for (j = 0; j < 16; j++) {
+            static const int kinds[4] = { 0, 6, 10, 3 };
+            char    wp[PB_SLOT_SIZE];
+            uint8_t kkr[8];
+            uint8_t uke[8];
+            int16_t rc;
+            long    e;
+
+            /* The kind and whether there is a function word are chosen
+               apart: tying them together left the arm for a phrase of the
+               tenth kind with one behind it unreached. */
+            ptbPhrase(wp, (int)(j & 1) + 1, kinds[(j >> 1) & 3],
+                      (int)((j >> 3) & 1), (int)i,
+                      (int)i, (int)((i + 37) & 0xff),
+                      (int)(j & 2 ? 0x80 : 0), (int)(j & 4 ? 2 : 1));
+
+            memset(kkr, 0, sizeof kkr);
+            PTBM(SetNoneFzkKKR)(ptb_room, kkr, wp);
+            for (e = 0; e < 8; e++)
+                roll = (roll ^ kkr[e]) * 16777619u;
+
+            memset(uke, 0, sizeof uke);
+            rc = PTBM(SetUkeTypePhrase)(ptb_room, uke, wp);
+            roll = (roll ^ (uint32_t)rc) * 16777619u;
+            for (e = 0; e < 8; e++)
+                roll = (roll ^ uke[e]) * 16777619u;
+
+            printf("PTB phrase %ld %ld %d ", i, j, (int)rc);
+            for (e = 0; e < 8; e++)
+                printf("%02x", (unsigned)kkr[e]);
+            putchar(' ');
+            for (e = 0; e < 8; e++)
+                printf("%02x", (unsigned)uke[e]);
+            putchar('\n');
+        }
+    printf("PTB phrase all %08lx\n", (unsigned long)roll);
+
+    /* ---- what a run of function words does to the accent ------------- */
+
+    /* Every rule byte through it, over a phrase of a few lengths and
+       accents, with the reading made of moras that do and do not carry one.
+       What is carried through is only printed for the groups the walk
+       reached: past those the answer is whatever was on the stack, and the
+       two sides do not share one. */
+    roll = 2166136261u;
+    for (i = 0; i < 0x1000; i++)
+        for (j = 0; j < 4; j++) {
+            /* Room well past the record's own length: the accent may land
+               a good way past the reading and IBM reads there, so both sides
+               are given the same bytes to find rather than each its own
+               stack. */
+            uint8_t  in[AI_ROOM];
+            uint8_t  out[0x40];
+            uint8_t  rule[3][3];
+            long     e;
+
+            memset(in, 0, sizeof in);
+            memset(out, 0, sizeof out);
+            in[AI_MORAS]  = (uint8_t)(1 + (j & 1) * 3);
+            in[AI_ACCENT] = (uint8_t)(j & 2 ? 5 : 1);
+            in[AI_WORDS]  = (uint8_t)(1 + (i & 1));
+            in[AI_KIND]   = (uint8_t)((i >> 1) & 3);
+            for (e = 0; e < 3; e++) {
+                rule[e][0] = (uint8_t)((i >> 3) & 0xff);
+                rule[e][1] = (uint8_t)((i >> 4) & 0xff);
+                /* Not a slice of the same number as the second byte: the
+                   two are compared against each other in one arm, and while
+                   they were the same nibble that arm could not be reached. */
+                rule[e][2] = (uint8_t)((i * 7 + e * 29) & 0xff);
+                AI_RULE_SET(in, e, rule[e]);
+                in[AI_LEN + e]  = (uint8_t)(1 + ((i >> 6) & 3) + (e & 1));
+                in[AI_ENDS + e] = (uint8_t)((e + (j & 1) * 2) % 3);
+                *(int16_t *)(in + AI_MARK + e * 2) = (int16_t)(100 + e);
+            }
+            for (e = 0; e + AI_KANA < AI_TAIL; e++)
+                in[AI_KANA + e] = (uint8_t)(e * 7);
+            in[AI_AT79] = (uint8_t)(j & 1 ? 3 : 0);
+
+            PTBM(FzkAccent)(ptb_room, in, out);
+            roll = (roll ^ out[AO_MORAS]) * 16777619u;
+            roll = (roll ^ out[AO_ACCENT]) * 16777619u;
+            for (e = 0; e < 15; e++) {
+                roll = (roll ^ out[AO_LEN + e]) * 16777619u;
+                roll = (roll ^ out[AO_ACC + e]) * 16777619u;
+                /* The mark of a group the walk never reached is whatever was
+                   on the stack, so only the ones it did are compared. */
+                if (out[AO_LEN + e] != 0)
+                    roll = (roll
+                            ^ (uint32_t)*(int16_t *)(out + AO_MARK + e * 2))
+                           * 16777619u;
+            }
+            printf("PTB fzk %ld %ld %u %u ", i, j,
+                   (unsigned)out[AO_MORAS], (unsigned)out[AO_ACCENT]);
+            for (e = 0; e < 15; e++)
+                printf("%02x%02x/%d ", (unsigned)out[AO_LEN + e],
+                       (unsigned)out[AO_ACC + e],
+                       out[AO_LEN + e] != 0
+                           ? (int)*(int16_t *)(out + AO_MARK + e * 2) : 0);
+            putchar('\n');
+        }
+    printf("PTB fzk all %08lx\n", (unsigned long)roll);
+}
 
 int main(void)
 {
@@ -9611,6 +9928,7 @@ int main(void)
     sweepProsCtrl();
     sweepMakeReadable();
     sweepTextNormalizer();
+    sweepPhraseTable();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

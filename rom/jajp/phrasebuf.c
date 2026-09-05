@@ -379,7 +379,7 @@ int16_t pb_SetPhrasePart(void *pb, const uint8_t *path, int16_t n,
         w[WP_ACCENT] = (uint8_t)(accent + b);
         w[WP_WORDS]  = path[JPT_COUNT];
         w[WP_CHARS]  = (uint8_t)(path[JPT_COST] + moras);
-        w[WP_UNREAD_06] = (uint8_t)nOut;
+        w[WP_FZKS] = (uint8_t)nOut;
         if (w[WP_ACCENT] == *(uint16_t *)(w + WP_MORAS))
             w[WP_TYPE] = 3;
 
@@ -413,7 +413,7 @@ int16_t pb_SetPhrasePart(void *pb, const uint8_t *path, int16_t n,
         w[WP_ACCENT] = (uint8_t)b;
         w[WP_CHARS]  = path[JPT_COST];
         w[WP_WORDS]  = path[JPT_COUNT];
-        w[WP_UNREAD_06] = 0;
+        w[WP_FZKS] = 0;
         w[WP_TYPE]   = (uint8_t)pb_GetSpecialPhraseType(pb, w);
         n++;
     }

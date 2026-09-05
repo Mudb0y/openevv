@@ -64,7 +64,9 @@
 #define WP_TYPE         0x03      /* uint8, the phrase kind */
 #define WP_WORDS        0x04      /* uint8, how many words are in it */
 #define WP_KANALEN      0x05      /* uint8, the reading over all of them */
-#define WP_UNREAD_06    0x06      /* uint8 */
+#define WP_FZKS         0x06      /* uint8, how many function words are
+                                     on the end of it; PhraseTable reads
+                                     it as the bound of the WP_FZK run */
 #define WP_ACCENT       0x07      /* uint8, which mora carries it */
 #define WP_COST         0x08      /* int32, taken off the sub-word */
 

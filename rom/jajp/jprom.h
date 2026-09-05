@@ -863,6 +863,30 @@ int32_t     mr_normalizeDate(void *mr, const char *text, uint32_t n,
 int32_t     mr_convertSPR(void *mr, const char *text, uint32_t n,
                           char **buf, uint32_t *cap);
 
+/* ---- PhraseTable ----------------------------------------------------- */
+
+/* Where a phrase becomes a row of the phrase table. Eleven of the sixteen are
+   written; `SetPhraseTable', `CompoundWord', `SetSuushiPhrase' and
+   `SetSuushiPhraseTable' are not, and the sixteenth is a second copy of
+   `DictSearch::IsOnin'. rom/jajp/phrasetable.h is the record
+   and rom/jajp/phrasebuf.h and rom/jajp/intonphrase.h are the two it works
+   over. */
+uint8_t     ptb_GetPosFromTG(void *pt, uint8_t tg);
+uint8_t     ptb_GetFzkPosFromTG(void *pt, uint8_t tg);
+int16_t     ptb_GetAffixType(void *pt, uint8_t *tg);
+int16_t     ptb_TableAllocPhrase(void *pt, uint16_t *first, uint16_t *last,
+                                 uint16_t *free_, uint8_t *link,
+                                 uint16_t count);
+void       *ptb_PhraseAlloc(void *pt);
+void       *ptb_GeneratePhraseTable(void *pt);
+void        ptb_ExtKKRPhrase(void *pt, uint8_t *kkr, int16_t tg,
+                             uint8_t *other);
+void        ptb_SetSubUkeType(void *pt, uint8_t *uke, int16_t tg,
+                              uint8_t *flag);
+void        ptb_SetNoneFzkKKR(void *pt, uint8_t *kkr, void *wp);
+int16_t     ptb_SetUkeTypePhrase(void *pt, uint8_t *uke, void *wp);
+void        ptb_FzkAccent(void *pt, uint8_t *in, uint8_t *out);
+
 /* ---- TextNormalizer -------------------------------------------------- */
 
 /* What decides which of MakeReadableJP's readers a piece of annotated text

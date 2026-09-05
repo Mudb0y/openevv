@@ -90,8 +90,15 @@
 
 /* How long the whole of it is. Nothing in numread.obj allocates a NumRead:
    whichever class holds one holds it as a member, so the size has to come
-   from there rather than from an operator new here. Until that class is
-   read, this is as many digits as a count of one byte allows.
+   from there rather than from an operator new here.
+ *
+ * That class is `PhraseTable', which is not transcribed yet, and its
+ * `initialize' asks operator new for 0xc84 -- so the digits run from 0xc65
+ * to 0xc84 and there are thirty-one of them, not the two hundred and
+ * fifty-six a count of one byte allows. Shrinking this is a thing to do
+ * with that class rather than on its own: our own code and the harness both
+ * take the room from here, and a count above thirty-one is IBM walking past
+ * its own object. Until then this is the generous reading.
  *
  * The owner is a pointer at nought with the readings starting at four, so it
  * cannot stay there where a pointer is eight bytes wide. It is parked past
