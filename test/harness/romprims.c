@@ -113,6 +113,7 @@ static Conv *makeConv(Param *p)
 #include "jpath.h"
 #include "intonphrase.h"
 #include "prosctrl.h"
+#include "makereadable.h"
 
 #define ibm_dsCheckCaseMarker(d, at)      ds_CheckCaseMarker((d), (at))
 #define ibm_dsCheckCnvChoon(d, c, n)      ds_CheckCnvChoon((d), (c), (n))
@@ -417,6 +418,48 @@ static Conv *makeConv(Param *p)
     pc_IsValidConsForSokuOn((pc), (code))
 #define PCM(name) ibm_pc##name
 
+/* ---- MakeReadableJP --------------------------------------------------- */
+
+#define ibm_mrCtor(mr)                    mr_ctor((mr))
+#define ibm_mrDtor(mr)                    mr_dtor((mr))
+#define ibm_mrlCopyAndReturn(mr, t, n, b, c) \
+    mrl_copyAndReturn((mr), (t), (n), (b), (c))
+#define ibm_mrReallocateBuf(mr, b, u, w)  mr_reallocateBuf((mr), (b), (u), (w))
+#define ibm_mrAppendText(mr, t, b, c, l)  mr_appendText((mr), (t), (b), (c), (l))
+#define ibm_mrAppendTextN(mr, t, n, b, c, l) \
+    mr_appendTextN((mr), (t), (n), (b), (c), (l))
+#define ibm_mrAppendChar(mr, t, b, c, l)  mr_appendChar((mr), (t), (b), (c), (l))
+#define ibm_mrAppendNumber(mr, x, b, c, l, z) \
+    mr_appendMakeReadableNumber((mr), (x), (b), (c), (l), (z))
+#define ibm_mrSeparate(mr, w, l, r)       mr_separateNumberByDecimalPoint((mr), (w), (l), (r))
+#define ibm_mrSuppressZero(mr, p, e)      mr_suppressZero((mr), (p), (e))
+#define ibm_mrIsCurrencySymbol(mr, t, n)  mr_isCurrencySymbol((mr), (t), (n))
+#define ibm_mrIsBoolSymbol(mr, t, n)      mr_isBoolSymbol((mr), (t), (n))
+#define ibm_mrIsCurrencyPunct(mr, t)      mr_isCurrencyPunct((mr), (t))
+#define ibm_mrIsDecimalPoint(mr, t)       mr_isDecimalPoint((mr), (t))
+#define ibm_mrIsParenthesis(mr, t)        mr_isParenthesis((mr), (t))
+#define ibm_mrIsTimeDelimiter(mr, t)      mr_isTimeDelimiter((mr), (t))
+#define ibm_mrIsPlusMinusSymbol(mr, t)    mr_isPlusMinusSymbol((mr), (t))
+#define ibm_mrIsDayOfWeek(mr, t)          mr_isDayOfWeek((mr), (t))
+#define ibm_mrIsRangeSymbol(mr, t)        mr_isRangeSymbol((mr), (t))
+#define ibm_mrIsDateSeparator(mr, t)      mr_isDateSeparator((mr), (t))
+#define ibm_mrIsTelSymbol(mr, t)          mr_isTelSymbol((mr), (t))
+#define ibm_mrIsDBCSDigit(mr, t)          mr_isDBCSDigit((mr), (t))
+#define ibm_mrIsDigit(mr, t)              mr_isDigit((mr), (t))
+#define ibm_mrNormalizeDigits(mr, t, n, b, c, f) \
+    mr_normalizeDigits((mr), (t), (n), (b), (c), (f))
+#define ibm_mrNormalizeLiteral(mr, t, n, b, c, f) \
+    mr_normalizeLiteral((mr), (t), (n), (b), (c), (f))
+#define ibm_mrNormalizeBool(mr, t, n, b, c, f) \
+    mr_normalizeBool((mr), (t), (n), (b), (c), (f))
+#define ibm_mrNormalizeNumber(mr, t, n, b, c, f) \
+    mr_normalizeNumber((mr), (t), (n), (b), (c), (f))
+#define ibm_mrNormalizePhone(mr, t, n, b, c, f) \
+    mr_normalizePhone((mr), (t), (n), (b), (c), (f))
+#define ibm_mrNormalizeTime(mr, t, n, b, c, f) \
+    mr_normalizeTime((mr), (t), (n), (b), (c), (f))
+#define MRM(name) ibm_mr##name
+
 /* Where each side keeps PhraseBuf's four pointers and JPath's three. Ours are
    parked past their records; IBM's are at the offsets the maps name. */
 #define PB_SET(blk, which, p) (*(void **)((blk) + which##_AT) = (p))
@@ -712,6 +755,7 @@ extern THIS int32_t ibm_slLoad(void *self, const char *path)
 #include "jpath.h"
 #include "intonphrase.h"
 #include "prosctrl.h"
+#include "makereadable.h"
 
 extern THIS int32_t ibm_dsCheckCaseMarker(void *d, int16_t at)
     MANGLED("?CheckCaseMarker@DictSearch@@QAEHF@Z");
@@ -1287,6 +1331,94 @@ extern THIS int32_t ibm_pcIsBurstCons(void *pc, uint8_t code)
 extern THIS int32_t ibm_pcIsValidConsForSokuOn(void *pc, uint8_t code)
     MANGLED("?IsValidConsForSokuOn@ProsCtrl@@AAEHE@Z");
 #define PCM(name) ibm_pc##name
+
+/* ---- MakeReadableJP --------------------------------------------------- */
+
+/* All but the six virtual normalisers are private members in IBM's source,
+   and each has an external symbol all the same. Both classes hold nothing but
+   a vtable, so the harness hands in a block of its own and neither side
+   dispatches through it. */
+extern THIS void *ibm_mrCtor(void *mr)
+    MANGLED("??0MakeReadableJP@@QAE@XZ");
+extern THIS void ibm_mrDtor(void *mr)
+    MANGLED("??1MakeReadableJP@@UAE@XZ");
+extern THIS int32_t ibm_mrlCopyAndReturn(void *mr, const char *text,
+                                         uint32_t n, char **buf,
+                                         uint32_t *cap)
+    MANGLED("?copyAndReturn@MakeReadableLangInt@@IAEHPBDIPAPADPAI@Z");
+extern THIS int32_t ibm_mrReallocateBuf(void *mr, char **buf, uint32_t used,
+                                        uint32_t want)
+    MANGLED("?reallocateBuf@MakeReadableJP@@AAEHPAPADII@Z");
+extern THIS int32_t ibm_mrAppendText(void *mr, const char *text, char **buf,
+                                     uint32_t *cap, uint32_t *len)
+    MANGLED("?appendText@MakeReadableJP@@AAEHPBDPAPADPAI2@Z");
+extern THIS int32_t ibm_mrAppendTextN(void *mr, const char *text, uint32_t n,
+                                      char **buf, uint32_t *cap,
+                                      uint32_t *len)
+    MANGLED("?appendText@MakeReadableJP@@AAEHPBDIPAPADPAI2@Z");
+extern THIS int32_t ibm_mrAppendChar(void *mr, const char *c, char **buf,
+                                     uint32_t *cap, uint32_t *len)
+    MANGLED("?appendChar@MakeReadableJP@@AAEHPBDPAPADPAI2@Z");
+extern THIS int32_t ibm_mrAppendNumber(void *mr, void *num, char **buf,
+                                       uint32_t *cap, uint32_t *len,
+                                       int32_t trimZeros)
+    MANGLED("?appendMakeReadableNumber@MakeReadableJP@@AAEHPAUMAKEREADABLE_NUMBER@@PAPADPAI2H@Z");
+extern THIS int32_t ibm_mrSeparate(void *mr, const void *whole, void *left,
+                                   void *right)
+    MANGLED("?separateNumberByDecimalPoint@MakeReadableJP@@AAEHPBUMAKEREADABLE_NUMBER@@PAU2@1@Z");
+extern THIS const char *ibm_mrSuppressZero(void *mr, const char *p,
+                                           const char *end)
+    MANGLED("?suppressZero@MakeReadableJP@@AAEPBDPBD0@Z");
+extern THIS int32_t ibm_mrIsCurrencySymbol(void *mr, const char *t,
+                                           uint32_t *howLong)
+    MANGLED("?isCurrencySymbol@MakeReadableJP@@AAEHPBDPAI@Z");
+extern THIS int32_t ibm_mrIsBoolSymbol(void *mr, const char *t,
+                                       uint32_t *howLong)
+    MANGLED("?isBoolSymbol@MakeReadableJP@@AAEHPBDPAI@Z");
+extern THIS int32_t ibm_mrIsCurrencyPunct(void *mr, const char *t)
+    MANGLED("?isCurrencyPunct@MakeReadableJP@@AAEHPBD@Z");
+extern THIS int32_t ibm_mrIsDecimalPoint(void *mr, const char *t)
+    MANGLED("?isDecimalPoint@MakeReadableJP@@AAEHPBD@Z");
+extern THIS int32_t ibm_mrIsParenthesis(void *mr, const char *t)
+    MANGLED("?isParenthesis@MakeReadableJP@@AAEHPBD@Z");
+extern THIS int32_t ibm_mrIsTimeDelimiter(void *mr, const char *t)
+    MANGLED("?isTimeDelimiter@MakeReadableJP@@AAEHPBD@Z");
+extern THIS int32_t ibm_mrIsPlusMinusSymbol(void *mr, const char *t)
+    MANGLED("?isPlusMinusSymbol@MakeReadableJP@@AAEHPBD@Z");
+extern THIS int32_t ibm_mrIsDayOfWeek(void *mr, const char *t)
+    MANGLED("?isDayOfWeek@MakeReadableJP@@AAEHPBD@Z");
+extern THIS int32_t ibm_mrIsRangeSymbol(void *mr, const char *t)
+    MANGLED("?isRangeSymbol@MakeReadableJP@@AAEHPBD@Z");
+extern THIS int32_t ibm_mrIsDateSeparator(void *mr, const char *t)
+    MANGLED("?isDateSeparator@MakeReadableJP@@AAEHPBD@Z");
+extern THIS int32_t ibm_mrIsTelSymbol(void *mr, const char *t)
+    MANGLED("?isTelSymbol@MakeReadableJP@@AAEHPBD@Z");
+extern THIS int32_t ibm_mrIsDBCSDigit(void *mr, const char *t)
+    MANGLED("?isDBCSDigit@MakeReadableJP@@AAEHPBD@Z");
+extern THIS int32_t ibm_mrIsDigit(void *mr, const char *t)
+    MANGLED("?isDigit@MakeReadableJP@@AAEHPBD@Z");
+extern THIS int32_t ibm_mrNormalizeDigits(void *mr, const char *t,
+                                          uint32_t n, char **b, uint32_t *c,
+                                          int32_t f)
+    MANGLED("?normalizeDigits@MakeReadableJP@@UAEHPBDIPAPADPAIH@Z");
+extern THIS int32_t ibm_mrNormalizeLiteral(void *mr, const char *t,
+                                           uint32_t n, char **b, uint32_t *c,
+                                           int32_t f)
+    MANGLED("?normalizeLiteral@MakeReadableJP@@UAEHPBDIPAPADPAIH@Z");
+extern THIS int32_t ibm_mrNormalizeBool(void *mr, const char *t, uint32_t n,
+                                        char **b, uint32_t *c, int32_t f)
+    MANGLED("?normalizeBool@MakeReadableJP@@UAEHPBDIPAPADPAIH@Z");
+extern THIS int32_t ibm_mrNormalizeNumber(void *mr, const char *t,
+                                          uint32_t n, char **b, uint32_t *c,
+                                          int32_t f)
+    MANGLED("?normalizeNumber@MakeReadableJP@@UAEHPBDIPAPADPAIH@Z");
+extern THIS int32_t ibm_mrNormalizePhone(void *mr, const char *t, uint32_t n,
+                                         char **b, uint32_t *c, int32_t f)
+    MANGLED("?normalizePhone@MakeReadableJP@@UAEHPBDIPAPADPAIH@Z");
+extern THIS int32_t ibm_mrNormalizeTime(void *mr, const char *t, uint32_t n,
+                                        char **b, uint32_t *c, int32_t f)
+    MANGLED("?normalizeTime@MakeReadableJP@@UAEHPBDIPAPADPAIH@Z");
+#define MRM(name) ibm_mr##name
 
 #define PB_SET(blk, which, p) (*(void **)((blk) + which) = (p))
 #define JP_SET(blk, which, p) (*(void **)((blk) + which) = (p))
@@ -8832,6 +8964,256 @@ static void sweepProsCtrl(void)
     }
 }
 
+
+/* ---- MakeReadableJP --------------------------------------------------- */
+
+/* Both classes hold nothing but a vtable, and neither side dispatches
+   through it, so a block of a few bytes serves as an instance. Ours parks
+   that vtable past the record; IBM's has it at nought. */
+static char mr_room[MR_ROOM + 8];
+
+/* The buffer a normaliser is handed. It has to have been allocated, because
+   every road through this class frees it before replacing it. */
+static char    *mr_buf;
+static uint32_t mr_cap;
+
+static void mrFresh(uint32_t cap)
+{
+    if (mr_buf != NULL)
+        free(mr_buf);
+    mr_buf = (char *)malloc(cap ? cap : 1);
+    mr_cap = cap;
+    if (mr_buf != NULL)
+        mr_buf[0] = '\0';
+}
+
+/* What a normaliser left, printed with the bytes as bytes: the answers are
+   Shift-JIS and a terminal would make nonsense of them. */
+static void mrShow(const char *what, long a, long b, int32_t rc)
+{
+    uint32_t i;
+
+    printf("MR %s %ld %ld %d %u ", what, a, b, (int)rc, (unsigned)mr_cap);
+    if (mr_buf != NULL)
+        for (i = 0; mr_buf[i] != '\0' && i < 0x200; i++)
+            printf("%02x", (unsigned)(uint8_t)mr_buf[i]);
+    putchar('\n');
+}
+
+/* The texts the normalisers are given. Each is written as bytes rather than
+   as characters so that this file's own encoding decides nothing: what is in
+   them is the half-width and full-width digits, the symbols each table holds,
+   and the shapes each normaliser is looking for. */
+static const char *const MR_CASES[] = {
+    "", "0", "00", "000", "9", "12", "123", "1234", "12345",
+    "0930a", "0930p", "0930h", "0930x", "1234a", "000a", "0000a",
+    "1:2", "12:34", "12:34:56", "1:2:3:4", "01:02:03", "00:00",
+    "12:34a", "12:34:56:78", ":12", "12:", "::",
+    "03-1234-5678", "0120-000-000", "#123", "*456", "1-2-3",
+    "\x82\x50\x82\x51\x82\x52",                       /* full-width 123 */
+    "\x82\x50\x82\x51\x3a\x82\x52\x82\x53",           /* mixed time */
+    "+1", "-1", "\x81\x7b" "1", "\x81\x7c" "1", "\x81\x61" "1",
+    "1.5", "1\x81\x44" "5", "1\x81\x43" "5", "1.", ".5", "1.5.7",
+    "\x82\xcd\x82\xa2", "\x82\xa2\x82\xa2\x82\xa6",   /* hai, iie */
+    "Y", "N", "y", "n", "\x82\x99", "\x82\x8d",
+    "\\1200", "$34.56", "\x81\x8f" "500", "JPY1", "USD2",
+    "1999/12/31", "12/31", "1999.12.31", "1999\x94\x4e",
+    "\x8c\x8e", "\x89\xce", "\x93\x79", "\x93\xfa",   /* days of the week */
+    "(1)", "\x81\x69" "1\x81\x6a", "1\x81\x60" "2", "1~2",
+    "abc", "\x82\xa0\x82\xa2\x82\xa4",                /* kana */
+    "1,234,567", "1\x81\x43" "234",
+    "12h34", "12a34", "12p34", "0000", "9999", "99999",
+    "\x82\x4f\x82\x4f\x82\x50",                       /* full-width 001 */
+    "\x8e\x9e", "\x95\xaa", "\x95\x62"                /* ji, fun, byou */
+};
+#define MR_CASES_N ((int)(sizeof MR_CASES / sizeof MR_CASES[0]))
+
+static void sweepMakeReadable(void)
+{
+    long     i, j, k;
+    uint32_t roll;
+
+    memset(mr_room, 0, sizeof mr_room);
+    MRM(Ctor)(mr_room);
+    MRM(Dtor)(mr_room);
+
+    /* ---- the twelve predicates, over every two-byte character -------- */
+
+    /* Each table's strings are one or two bytes, so a pair of bytes is every
+       input any of them can tell apart. All 65,536 through all twelve, with
+       the length the two that answer one reported as well. */
+    roll = 2166136261u;
+    for (i = 0; i < 0x10000; i++) {
+        char     t[4];
+        uint32_t howLong = 0xffffffffu;
+        int32_t  v;
+
+        t[0] = (char)(i >> 8);
+        t[1] = (char)(i & 0xff);
+        t[2] = '\0';
+        t[3] = '\0';
+
+        v = MRM(IsCurrencySymbol)(mr_room, t, &howLong);
+        roll = (roll ^ (uint32_t)v) * 16777619u;
+        roll = (roll ^ howLong) * 16777619u;
+        howLong = 0xffffffffu;
+        v = MRM(IsBoolSymbol)(mr_room, t, &howLong);
+        roll = (roll ^ (uint32_t)v) * 16777619u;
+        roll = (roll ^ howLong) * 16777619u;
+        roll = (roll ^ (uint32_t)MRM(IsCurrencyPunct)(mr_room, t)) * 16777619u;
+        roll = (roll ^ (uint32_t)MRM(IsDecimalPoint)(mr_room, t)) * 16777619u;
+        roll = (roll ^ (uint32_t)MRM(IsParenthesis)(mr_room, t)) * 16777619u;
+        roll = (roll ^ (uint32_t)MRM(IsTimeDelimiter)(mr_room, t)) * 16777619u;
+        roll = (roll ^ (uint32_t)MRM(IsPlusMinusSymbol)(mr_room, t)) * 16777619u;
+        roll = (roll ^ (uint32_t)MRM(IsDayOfWeek)(mr_room, t)) * 16777619u;
+        roll = (roll ^ (uint32_t)MRM(IsRangeSymbol)(mr_room, t)) * 16777619u;
+        roll = (roll ^ (uint32_t)MRM(IsDateSeparator)(mr_room, t)) * 16777619u;
+        roll = (roll ^ (uint32_t)MRM(IsTelSymbol)(mr_room, t)) * 16777619u;
+        roll = (roll ^ (uint32_t)MRM(IsDBCSDigit)(mr_room, t)) * 16777619u;
+        roll = (roll ^ (uint32_t)MRM(IsDigit)(mr_room, t)) * 16777619u;
+        if ((i & 0xfff) == 0)
+            printf("MR asks %ld %08lx\n", i, (unsigned long)roll);
+    }
+    printf("MR asks all %08lx\n", (unsigned long)roll);
+
+    /* ---- the buffer machinery --------------------------------------- */
+
+    /* Every length of text against every size of buffer that could refuse
+       it, and the length carried in as well, since what the appenders decide
+       on is the sum. The buffer is printed after, so a grown one shows. */
+    for (i = 0; i <= 6; i++)
+        for (j = 0; j <= 8; j++)
+            for (k = 0; k <= 3; k++) {
+                char     what[8];
+                uint32_t len = (uint32_t)k;
+                long     q;
+                int32_t  rc;
+
+                for (q = 0; q < i; q++)
+                    what[q] = (char)('a' + q);
+                what[i] = '\0';
+                mrFresh((uint32_t)j);
+                rc = MRM(AppendText)(mr_room, what, &mr_buf, &mr_cap, &len);
+                printf("MR append %ld %ld %ld %d %u %u\n", i, j, k, (int)rc,
+                       (unsigned)mr_cap, (unsigned)len);
+
+                mrFresh((uint32_t)j);
+                len = (uint32_t)k;
+                rc = MRM(AppendChar)(mr_room, what, &mr_buf, &mr_cap, &len);
+                printf("MR appendc %ld %ld %ld %d %u %u\n", i, j, k, (int)rc,
+                       (unsigned)mr_cap, (unsigned)len);
+
+                mrFresh((uint32_t)j);
+                rc = MRM(lCopyAndReturn)(mr_room, what, (uint32_t)i, &mr_buf,
+                                         &mr_cap);
+                mrShow("copy", i * 100 + j * 10 + k, 0, rc);
+            }
+
+    /* A two-byte character through the appender that asks whether it is one,
+       which is the only road where two bytes go in at once. */
+    for (i = 0; i < 0x10000; i += 7) {
+        char     t[4];
+        uint32_t len = 0;
+
+        t[0] = (char)(i >> 8);
+        t[1] = (char)(i & 0xff);
+        t[2] = '\0';
+        mrFresh(0x40);
+        MRM(AppendChar)(mr_room, t, &mr_buf, &mr_cap, &len);
+        roll = (roll ^ len) * 16777619u;
+    }
+    printf("MR appendc all %08lx\n", (unsigned long)roll);
+
+    /* ---- leading zeros, and a number cut at its point ---------------- */
+
+    for (i = 0; i < MR_CASES_N; i++) {
+        const char *t = MR_CASES[i];
+        size_t      n = strlen(t);
+        const char *got = MRM(SuppressZero)(mr_room, t, t + n);
+        const char *whole[2];
+        const char *left[2];
+        const char *right[2];
+        int32_t     rc;
+
+        printf("MR zero %ld %ld\n", i, (long)(got - t));
+
+        whole[0] = t;
+        whole[1] = t + n;
+        left[0] = left[1] = right[0] = right[1] = NULL;
+        rc = MRM(Separate)(mr_room, whole, left, right);
+        printf("MR split %ld %d %ld %ld %ld %ld\n", i, (int)rc,
+               left[0] == NULL ? -1L : (long)(left[0] - t),
+               left[1] == NULL ? -1L : (long)(left[1] - t),
+               right[0] == NULL ? -1L : (long)(right[0] - t),
+               right[1] == NULL ? -1L : (long)(right[1] - t));
+
+        for (k = 0; k < 2; k++) {
+            uint32_t len = 0;
+            const char *num[2];
+
+            num[0] = t;
+            num[1] = t + n;
+            mrFresh(0x40);
+            rc = MRM(AppendNumber)(mr_room, num, &mr_buf, &mr_cap, &len,
+                                   (int32_t)k);
+            printf("MR number %ld %ld %d %u %ld\n", i, k, (int)rc,
+                   (unsigned)len, (long)(num[0] - t));
+        }
+    }
+
+    /* ---- the six normalisers ---------------------------------------- */
+
+    /* Every case through every one of them, at three buffer sizes -- one
+       that fits, one that has to grow, and none at all -- and at the two
+       values of the flag that the telephone reader is the only one to read.
+       What each leaves is printed byte for byte. */
+    for (i = 0; i < MR_CASES_N; i++)
+        for (j = 0; j < 3; j++) {
+            static const unsigned sizes[3] = { 0x200, 4, 0 };
+            const char *t = MR_CASES[i];
+            uint32_t    n = (uint32_t)strlen(t);
+            long        which;
+
+            for (which = 0; which < 6; which++)
+                for (k = 0; k < 2; k++) {
+                    int32_t f = (int32_t)(k ? 0x10301 : 0);
+                    int32_t rc = 0;
+
+                    mrFresh(sizes[j]);
+                    switch (which) {
+                    case 0:
+                        rc = MRM(NormalizeDigits)(mr_room, t, n, &mr_buf,
+                                                  &mr_cap, f);
+                        break;
+                    case 1:
+                        rc = MRM(NormalizeLiteral)(mr_room, t, n, &mr_buf,
+                                                   &mr_cap, f);
+                        break;
+                    case 2:
+                        rc = MRM(NormalizeBool)(mr_room, t, n, &mr_buf,
+                                                &mr_cap, f);
+                        break;
+                    case 3:
+                        rc = MRM(NormalizeNumber)(mr_room, t, n, &mr_buf,
+                                                  &mr_cap, f);
+                        break;
+                    case 4:
+                        rc = MRM(NormalizePhone)(mr_room, t, n, &mr_buf,
+                                                 &mr_cap, f);
+                        break;
+                    case 5:
+                        rc = MRM(NormalizeTime)(mr_room, t, n, &mr_buf,
+                                                &mr_cap, f);
+                        break;
+                    default:
+                        break;
+                    }
+                    mrShow("norm", i * 100 + j * 10 + which, k, rc);
+                }
+        }
+    mrFresh(1);
+}
+
 int main(void)
 {
     Param *p;
@@ -8888,6 +9270,7 @@ int main(void)
     sweepNumRead();
     sweepIntonPhrase();
     sweepProsCtrl();
+    sweepMakeReadable();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

@@ -802,6 +802,62 @@ int32_t  pc_ModifyWordProminence(void *pc, int32_t *prom, int32_t pos,
 int32_t  pc_IsBurstCons(void *pc, uint8_t code);
 int32_t  pc_IsValidConsForSokuOn(void *pc, uint8_t code);
 
+/* ---- MakeReadableJP -------------------------------------------------- */
+
+/* The front of the analyser: what is not words -- a date, a time, an amount
+   of money, a telephone number -- rewritten into the words a reader would
+   say, before TextAnalysis sees any of it. Six of the eight normalisers are
+   written; normalizeCurrency and normalizeDate are not, and neither is
+   convertSPR. All but the two `normalize' pairs are private in IBM's source
+   and are not static here for the same reason JPath's are not.
+   rom/jajp/makereadable.h is the record. */
+void       *mrl_ctor(void *mr);
+void        mrl_dtor(void *mr);
+int32_t     mrl_copyAndReturn(void *mr, const char *text, uint32_t n,
+                              char **buf, uint32_t *cap);
+void       *mr_ctor(void *mr);
+void        mr_dtor(void *mr);
+void       *mr_destroy(void *mr, int32_t freeIt);
+int32_t     mr_reallocateBuf(void *mr, char **buf, uint32_t used,
+                             uint32_t want);
+int32_t     mr_appendText(void *mr, const char *text, char **buf,
+                          uint32_t *cap, uint32_t *len);
+int32_t     mr_appendTextN(void *mr, const char *text, uint32_t n,
+                           char **buf, uint32_t *cap, uint32_t *len);
+int32_t     mr_appendChar(void *mr, const char *c, char **buf, uint32_t *cap,
+                          uint32_t *len);
+int32_t     mr_appendMakeReadableNumber(void *mr, void *num, char **buf,
+                                        uint32_t *cap, uint32_t *len,
+                                        int32_t trimZeros);
+int32_t     mr_separateNumberByDecimalPoint(void *mr, const void *whole,
+                                            void *left, void *right);
+const char *mr_suppressZero(void *mr, const char *p, const char *end);
+int32_t     mr_isCurrencySymbol(void *mr, const char *t, uint32_t *howLong);
+int32_t     mr_isBoolSymbol(void *mr, const char *t, uint32_t *howLong);
+int32_t     mr_isCurrencyPunct(void *mr, const char *t);
+int32_t     mr_isDecimalPoint(void *mr, const char *t);
+int32_t     mr_isParenthesis(void *mr, const char *t);
+int32_t     mr_isTimeDelimiter(void *mr, const char *t);
+int32_t     mr_isPlusMinusSymbol(void *mr, const char *t);
+int32_t     mr_isDayOfWeek(void *mr, const char *t);
+int32_t     mr_isRangeSymbol(void *mr, const char *t);
+int32_t     mr_isDateSeparator(void *mr, const char *t);
+int32_t     mr_isTelSymbol(void *mr, const char *t);
+int32_t     mr_isDBCSDigit(void *mr, const char *t);
+int32_t     mr_isDigit(void *mr, const char *t);
+int32_t     mr_normalizeDigits(void *mr, const char *text, uint32_t n,
+                               char **buf, uint32_t *cap, int32_t flag);
+int32_t     mr_normalizeLiteral(void *mr, const char *text, uint32_t n,
+                                char **buf, uint32_t *cap, int32_t flag);
+int32_t     mr_normalizeBool(void *mr, const char *text, uint32_t n,
+                             char **buf, uint32_t *cap, int32_t flag);
+int32_t     mr_normalizeNumber(void *mr, const char *text, uint32_t n,
+                               char **buf, uint32_t *cap, int32_t flag);
+int32_t     mr_normalizePhone(void *mr, const char *text, uint32_t n,
+                              char **buf, uint32_t *cap, int32_t flag);
+int32_t     mr_normalizeTime(void *mr, const char *text, uint32_t n,
+                             char **buf, uint32_t *cap, int32_t flag);
+
 /* ---- how much of this is written ------------------------------------ */
 
 /* While this is defined the romanizer cannot convert anything yet, and says

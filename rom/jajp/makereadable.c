@@ -547,7 +547,7 @@ int32_t mr_normalizePhone(void *mr, const char *text, uint32_t n, char **buf,
                     rc = mr_appendChar(mr, p, buf, cap, &len);
                 if (rc != 0)
                     return rc;
-                rc = mr_appendText(mr, " ", buf, cap, &len);
+                rc = mr_appendText(mr, ", ", buf, cap, &len);
             } else {
                 rc = mr_appendChar(mr, p, buf, cap, &len);
             }
