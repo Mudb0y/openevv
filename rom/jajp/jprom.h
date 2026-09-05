@@ -868,6 +868,19 @@ int32_t     mr_normalizeDate(void *mr, const char *text, uint32_t n,
 int32_t     mr_convertSPR(void *mr, const char *text, uint32_t n,
                           char **buf, uint32_t *cap);
 
+/* ---- Romanizer ------------------------------------------------------- */
+
+/* The class the engine asks for Japanese, and the last of the romanizer to be
+   written. rom/jajp/romanizer.h is the record and rom/jajp/jpnrom.c the code. */
+int32_t     rz_getOffset(void *rz);
+void        rz_ResetBuffer(void *rz);
+void        rz_ChangeDefYomi(void *rz, void *row);
+int16_t     rz_CheckDefYomiCMD(void *rz, void *row);
+int16_t     rz_InsertWordSeparator(void *rz, char *out, void *ph, int16_t at,
+                                   int16_t i);
+int16_t     rz_GetWordIndex(void *rz, void *bg);
+uint16_t    rz_CountUserIndex(void *rz, char *s);
+
 /* ---- TextAnalysis ---------------------------------------------------- */
 
 /* Almost none of it is written. `CopyJrtPart' is, because PhraseTable's

@@ -42,12 +42,17 @@
 /* ---- Romanizer's own ------------------------------------------------- */
 
 #define RZ_UNREAD_MID    0x20
+#define RZ_OUT           0x28    /* DynaBuf *, where the answer is built */
 #define RZ_NUMBER_MODE   0x34    /* uint16; two refuses a bare place word */
 #define RZ_UNREAD_MID2   0x36
 #define RZ_TXTANAL       0x38    /* TextAnalysis *, the 946,216 bytes the
                                     constructor asks for */
 #define RZ_INTON         0x3c    /* IntonPhrase *, the 432,204 after it */
 #define RZ_UNREAD_MID4   0x40
+#define RZ_MORE          0x44    /* int32; there is more of the text to say */
+#define RZ_FRESH         0x48    /* int32; nothing of this text has been said
+                                    yet, which is what ResetBuffer sets */
+#define RZ_MARK          0x4c    /* int16, minus one where none is pending */
 
 /* The five an annotation may set, which is what rz_GetParameter is for. The
    letters are Eloquence's own: b is the baseline pitch, f the pitch
