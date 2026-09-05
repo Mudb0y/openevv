@@ -126,6 +126,25 @@ POINTER_COUNTS = [
      [("s_aszPosInfo", 0x548), ("s_aszSpecialPosInfo", 0x54c)]),
 ]
 
+# And the objects with a table of pairs: a number and a pointer to a string,
+# eight bytes an entry, ending on an entry whose pointer is nought. Neither
+# the byte lifter nor the pointer lifter above can take those, because half of
+# each entry is in the section and half is a relocation. The lift walks the
+# entries, reads the number out of the section and the string out of its own
+# COMDAT, and stops where the pointer stops.
+SYMBOL_TABLES = [
+    ("MakeReadableJP.obj", ".data",
+     "MakeReadableJP's twelve symbol tables, which are what its dozen\n"
+     " * predicates ask. Each is a run of pairs -- what the symbol means and\n"
+     " * how it is written -- and the writing is one or two bytes of\n"
+     " * Shift-JIS, so a table holds a full-width form and a half-width form\n"
+     " * of the same thing side by side.",
+     ["aCURRENCY_SYMBOLS", "aCURRENCY_PUNCTS", "aDECIMAL_POINTS",
+      "aPLUS_MINUS_SYMBOLS", "aRANGE_SYMBOLS", "aDATE_SEPARATORS",
+      "aDAYOFWEEK_SYMBOLS", "aPARENTHESIS_SYMBOLS", "aTIME_DELIMS",
+      "aTEL_SYMBOLS", "aBOOL_SYMBOLS"]),
+]
+
 # A static member of a class, as MSVC spells one: ?name@Class@@ and then the
 # type. A global of no class, which is ?name@@ and the type. And a plain
 # file-static, which carries only the C underscore.
@@ -284,6 +303,23 @@ def int32_at(obj, section, at):
     return int.from_bytes(data[at:at + 4], "little", signed=True)
 
 
+def symbol_pairs(obj, section, at, rel, data):
+    """A run of number-and-string pairs, up to the one with no string."""
+    out = []
+    while True:
+        where = at + len(out) * 8 + 4
+        if where not in rel:
+            break
+        value = int.from_bytes(data[at + len(out) * 8:at + len(out) * 8 + 4],
+                               "little", signed=True)
+        out.append((value, literal(obj, rel[where])))
+        if len(out) > 4096:
+            raise SystemExit("rom/tables: %s at 0x%x does not end" % (obj, at))
+    if not out:
+        raise SystemExit("rom/tables: %s at 0x%x is empty" % (obj, at))
+    return out
+
+
 def named_block(obj, section, want):
     """The one section of that name and that exact length."""
     found = [b for b in sections(obj, section) if len(b) == want]
@@ -344,7 +380,11 @@ def emit_header(out, tag, lines):
             if one != obj:
                 f.write("%s/* %s */\n" % ("" if obj is None else "\n", one))
                 obj = one
-            if kind == "strings":
+            if kind == "symbols":
+                f.write("extern const struct { int32_t what;"
+                        " const char *how; }\n    %s_%s[];\n"
+                        % (tag, name))
+            elif kind == "strings":
                 f.write("extern const char *const %s_%s[];\n" % (tag, name))
             else:
                 f.write("extern const uint8_t *const %s_%s;\n" % (tag, name))
@@ -447,6 +487,31 @@ def emit_all(where, out, tag):
                 f.write("const int32_t %s_%s_n = %d;\n\n" % (tag, name, n))
                 total += n
                 lines.append((obj, name, n, "bytes"))
+            f.write("\n")
+
+        for obj, section, about, wanted in SYMBOL_TABLES:
+            path = os.path.join(where, obj)
+            if not os.path.exists(path):
+                raise SystemExit("rom/tables: no %s" % path)
+            data = rdata(path, section)
+            rel = relocs(path, section)
+            found = dict(tables(path))
+            f.write("/* %s\n * %s\n */\n\n" % (obj, about))
+            for name in wanted:
+                if name not in found:
+                    raise SystemExit("rom/tables: %s names no %s"
+                                     % (obj, name))
+                got = symbol_pairs(path, section, found[name], rel, data)
+                f.write("const struct { int32_t what; const char *how; }\n"
+                        "%s_%s[%d] = {\n" % (tag, name, len(got) + 1))
+                for value, one in got:
+                    f.write("    { %d, \"%s\" },\n"
+                            % (value, "".join("\\x%02x" % b for b in one)))
+                f.write("    { 0, 0 },\n};\n")
+                f.write("const int32_t %s_%s_n = %d;\n\n"
+                        % (tag, name, len(got)))
+                total += sum(len(x) + 9 for _v, x in got)
+                lines.append((obj, name, len(got), "symbols"))
             f.write("\n")
 
         for obj, about, wanted in POINTER_TABLES:
