@@ -215,7 +215,12 @@ static void ral_release(int i)
    first. The other families here read the first slot and write the second,
    and this one is the other way round -- ETIThread hands the initial count
    in the slot everything else uses for a timeout, and then takes the thing
-   it will name the semaphore by out of the slot it passed in empty. */
+   it will name the semaphore by out of the slot it passed in empty.
+
+   That count is a thirty-two bit field and this slot is pointer-wide, so
+   only half of it was written and the rest is whatever the caller had on
+   its stack. Read the half that was written, or a semaphore asked for
+   empty comes back holding a token. */
 static int ral_sem_create(struct ral_req *r, int max)
 {
     uintptr_t key;
@@ -225,7 +230,7 @@ static int ral_sem_create(struct ral_req *r, int max)
     if (r == NULL)
         return 10041;
 
-    h = evv_sem_create(r->b ? 1 : 0, max);
+    h = evv_sem_create(((uintptr_t)r->b & 0xffffffffu) ? 1 : 0, max);
 
     evv_low_lock();
     key = ++ral_next;
@@ -586,29 +591,46 @@ int ralTaskCreate(struct ral_task *t)
     return 0;
 }
 
-int ralTaskTerminate(void *h)
+/* These four take a block like everything else here, and ETIThread
+   passes one. Taking a scalar instead read the second argument out of a
+   register nobody had set: the delay slept for its own stack address and
+   the priority was written back through whatever that register held. */
+struct ral_delay {
+    unsigned char pad_00[0x0c];
+    int           ms;
+    int           kind;
+};
+
+struct ral_prio {
+    unsigned char pad_00[0x0c];
+    void         *task;
+    int           priority;
+};
+
+int ralTaskTerminate(struct ral_prio *p)
 {
-    (void)h;
+    (void)p;
     return 0;
 }
 
-int ralTaskDelay(int ms)
+int ralTaskDelay(struct ral_delay *d)
 {
-    evv_sleep_ms(ms);
+    if (d == NULL)
+        return 10041;
+    evv_sleep_ms(d->ms);
     return 0;
 }
 
-int ralTaskPriorityGet(void *h, int *out)
+int ralTaskPriorityGet(struct ral_prio *p)
 {
-    (void)h;
-    if (out != NULL)
-        *out = 0;
+    if (p == NULL)
+        return 10041;
+    p->priority = 0;
     return 0;
 }
 
-int ralTaskPrioritySet(void *h, int p)
+int ralTaskPrioritySet(struct ral_prio *p)
 {
-    (void)h;
     (void)p;
     return 0;
 }
