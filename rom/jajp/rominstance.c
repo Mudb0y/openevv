@@ -15,16 +15,23 @@
 
 #include <string.h>
 #include "jprom.h"
+#include "romanizer.h"
 
+/* The romanizer proper sits inside the instance rather than beside it: the
+   engine's own EvvRom is the head, and everything past it is the record
+   rom/jajp/romanizer.h maps, with the pointers parked past its end. */
 typedef struct JpRom {
     EvvRom       base;
     RomInstParam param;
+    uint8_t      rom[RZ_ROOM];
 } JpRom;
 
 static void jp_release(EvvRom *r)
 {
     JpRom *j = (JpRom *)r;
 
+    jrz_dtor(j->rom);
+    ci_closeBase(j->rom);
     rp_dtor(&j->param);
     cpp_delete(j);
 }
@@ -32,39 +39,33 @@ static void jp_release(EvvRom *r)
 static int32_t jp_addText(EvvRom *r, const char *text, int32_t len,
                           int32_t flag)
 {
-    (void)r; (void)text; (void)len; (void)flag;
-    return 1;
+    return ci_addText(((JpRom *)r)->rom, text, len, flag);
 }
 
 static int32_t jp_insertIndex(EvvRom *r)
 {
-    (void)r;
-    return 1;
+    return ci_insertIndex(((JpRom *)r)->rom);
 }
 
 static int32_t jp_processSentence(EvvRom *r, char **out, int32_t annotated)
 {
-    (void)r; (void)out; (void)annotated;
-    return 0;
+    return jrz_processSentence(((JpRom *)r)->rom, out, annotated);
 }
 
 static int32_t jp_stop(EvvRom *r)
 {
-    (void)r;
-    return 1;
+    return ci_stop(((JpRom *)r)->rom);
 }
 
 static int32_t jp_resume(EvvRom *r)
 {
-    (void)r;
-    return 1;
+    return ci_resume(((JpRom *)r)->rom);
 }
 
 static int32_t jp_UCS2ToMBCS(EvvRom *r, const uint16_t *in, char **out,
                              int32_t n)
 {
-    (void)r; (void)in; (void)out; (void)n;
-    return 0;
+    return ci_UCS2ToMBCS(((JpRom *)r)->rom, in, out, n);
 }
 
 static int32_t jp_setParam(EvvRom *r, int32_t which, int32_t value)
@@ -94,8 +95,7 @@ static void jp_errorMessage(EvvRom *r, char *out)
 
 static int32_t jp_addParam(EvvRom *r, const char *text, int32_t len)
 {
-    (void)r; (void)text; (void)len;
-    return 1;
+    return ci_addParam(((JpRom *)r)->rom, text, len);
 }
 
 static const EvvRomOps JP_OPS = {
@@ -119,13 +119,6 @@ static const EvvRomOps JP_OPS = {
    wants; if that comes back empty the object is thrown away again. */
 EvvRom *jp_rom_new(const char *dir)
 {
-#if defined(JPROM_INCOMPLETE)
-    /* Nothing here can convert Japanese yet, and answering an instance that
-       quietly produced nothing would look exactly like an engine that works.
-       See the note in jprom.h. */
-    (void)dir;
-    return 0;
-#else
     JpRom *j = (JpRom *)cpp_new((uint32_t)sizeof *j);
 
     if (j == 0)
@@ -134,9 +127,14 @@ EvvRom *jp_rom_new(const char *dir)
     j->base.ops = &JP_OPS;
     rp_ctor(&j->param, dir);
     if (rp_getErrors(&j->param) & ROM_ERR_MEMORY) {
+        rp_dtor(&j->param);
+        cpp_delete(j);
+        return 0;
+    }
+    jrz_ctor(j->rom, &j->param);
+    if (rp_getErrors(&j->param) & ROM_ERR_MEMORY) {
         jp_release(&j->base);
         return 0;
     }
     return &j->base;
-#endif
 }

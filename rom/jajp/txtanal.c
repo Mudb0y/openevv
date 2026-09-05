@@ -20,6 +20,9 @@
 #include "inputchar.h"
 #include "phrasebuf.h"
 #include "phrasetable.h"
+#include "jpath.h"
+#include "dictsearch.h"
+#include "textnormalizer.h"
 #include "intonphrase.h"
 #include "romanizer.h"
 
@@ -913,7 +916,8 @@ int32_t ta_SetText(void *ta, const char *text, int32_t len)
         cpp_delete(TA_AT(ta, TA_RAW_AT));
 
     if (rp_isAnnotationsInText(
-            *(RomInstParam **)((uint8_t *)TA_AT(ta, TA_OWNER_AT) + RZ_PARAM))
+            *(RomInstParam **)((uint8_t *)TA_AT(ta, TA_OWNER_AT)
+                               + RZ_PARAM_AT))
         && text != NULL) {
         if (tn_normalizeText(TA_AT(ta, TA_NORMALIZER_AT), text,
                              (uint32_t)len, &norm, &got) == 0) {
@@ -974,7 +978,8 @@ int32_t ta_AppendText(void *ta, const char *text, int32_t len)
     }
 
     if (rp_isAnnotationsInText(
-            *(RomInstParam **)((uint8_t *)TA_AT(ta, TA_OWNER_AT) + RZ_PARAM))
+            *(RomInstParam **)((uint8_t *)TA_AT(ta, TA_OWNER_AT)
+                               + RZ_PARAM_AT))
         && text != NULL) {
         if (tn_normalizeText(TA_AT(ta, TA_NORMALIZER_AT), text,
                              (uint32_t)len, &norm, &got) == 0) {
@@ -1479,29 +1484,31 @@ int32_t ta_initialize(void *ta)
 {
     void *p;
 
-    p = cpp_new(TA_INPUTCHAR_BYTES);
+    /* The sizes IBM asks for are its own records; ours are those plus the
+       pointers parked past each, which is what the _ROOM names hold. */
+    p = cpp_new(IC_ROOM);
     TA_AT(ta, TA_INPUTCHAR_AT) = p != NULL ? ic_ctor(p, ta) : NULL;
 
-    p = cpp_new(TA_ANNOTATION_BYTES);
+    p = cpp_new((uint32_t)sizeof(Annotation));
     TA_AT(ta, TA_ANNOTATION_AT) = p != NULL
                                   ? (void *)an_ctor((Annotation *)p, ta)
                                   : NULL;
 
-    p = cpp_new(TA_DICTSEARCH_BYTES);
+    p = cpp_new(DS_ROOM);
     TA_AT(ta, TA_DICTSEARCH_AT) = p != NULL ? dsr_ctor(p, ta) : NULL;
 
-    p = cpp_new(TA_JPATH_BYTES);
+    p = cpp_new(JP_ROOM);
     TA_AT(ta, TA_JPATH_AT) = p != NULL ? jp_ctor(p, ta) : NULL;
 
-    p = cpp_new(TA_PHRASEBUF_BYTES);
+    p = cpp_new(PB_ROOM);
     TA_AT(ta, TA_PHRASEBUF_AT) = p != NULL ? pb_ctor(p, ta) : NULL;
 
-    p = cpp_new(TA_PHRASETABLE_BYTES);
+    p = cpp_new(PTB_ROOM);
     if (p != NULL)
         *(void **)((uint8_t *)p + PTB_OWNER_AT) = ta;
     TA_AT(ta, TA_PHRASETABLE_AT) = p;
 
-    p = cpp_new(TA_NORMALIZER_BYTES);
+    p = cpp_new(TN_ROOM);
     TA_AT(ta, TA_NORMALIZER_AT) = p != NULL ? tn_ctor(p) : NULL;
 
     TA_AT(ta, TA_FORMATTED_AT) = NULL;

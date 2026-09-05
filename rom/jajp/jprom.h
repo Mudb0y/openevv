@@ -73,17 +73,19 @@ typedef struct Converter Converter;
    is a run of bytes at IBM's offsets, because Romanizer's record is shared
    with classes that read it -- so the vtable pointer is parked past the
    record with the rest of its pointers and CI_VT is how it is reached.
-   Three of the seven have not been read yet and are named without a
-   signature; nothing may call one until it has been. */
+   All seven are read now and Romanizer fills the table in. */
 typedef struct ConverterVtbl {
     void   *(*destroy)(Converter *c, int32_t freeIt);
-    void    (*processSentence)(void);
+    int32_t (*processSentence)(Converter *c, char **out, int32_t more);
     int32_t (*getOffset)(Converter *c);
     void    (*ResetBuffer)(Converter *c);
-    void    (*isValidUserDictEntry)(void);
-    void    (*mbcs2Rom)(void);
-    void    (*rom2Mbcs)(void);
+    int32_t (*isValidUserDictEntry)(Converter *c, const char *s, int32_t a,
+                                    int32_t b);
+    int32_t (*mbcs2Rom)(Converter *c, const char *s, char **out);
+    int32_t (*rom2Mbcs)(Converter *c, const char *s, char **out);
 } ConverterVtbl;
+
+extern const ConverterVtbl JRZ_VTBL;
 
 #define CI_VT(c) (*(const ConverterVtbl **)((uint8_t *)(c) + RZ_VTABLE_AT))
 
@@ -890,6 +892,13 @@ int16_t     jrz_GenerateRomajiOutput(void *rz, void *bg, void *ph, char *out,
                                     void *next);
 int32_t     jrz_GenerateResult(void *rz, int32_t flush);
 int32_t     jrz_processSentence(void *rz, char **out, int32_t more);
+void       *jrz_ctor(void *rz, RomInstParam *param);
+void        jrz_dtor(void *rz);
+void       *jrz_destroy(void *rz, int32_t freeIt);
+int32_t     jrz_isValidUserDictEntry(void *rz, const char *s, int32_t a,
+                                     int32_t b);
+int32_t     jrz_mbcs2Rom(void *rz, const char *s, char **out);
+int32_t     jrz_rom2Mbcs(void *rz, const char *s, char **out);
 
 /* ---- TextAnalysis ---------------------------------------------------- */
 
@@ -1008,6 +1017,5 @@ int32_t     tn_normalizeText(void *tn, const char *text, uint32_t n,
    nothing is the one failure this whole exercise is arranged to prevent.
    test/harness/romcan.sh is unaffected either way: it registers its own romanizer
    over whatever is linked. */
-#define JPROM_INCOMPLETE 1
 
 #endif

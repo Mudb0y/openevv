@@ -17,6 +17,7 @@
 #include "txtanal.h"
 #include "intonphrase.h"
 #include "inputchar.h"
+#include "evv_port.h"
 
 #define RZ_AT(rz, which) (*(void **)((uint8_t *)(rz) + (which)))
 #define RZ_L(rz, off)    (*(int32_t *)((uint8_t *)(rz) + (off)))
@@ -969,3 +970,176 @@ int32_t jrz_processSentence(void *rz, char **out, int32_t more)
         result = 3;
     return result;
 }
+
+/* ---- making and unmaking one ------------------------------------------ */
+
+/* How many instances there are, and the mutex that guards it. IBM keeps both
+   in statics of the class: the dictionaries are opened by the first instance
+   and given back by the last, so the count has to be right even where two
+   instances are made at once. */
+static int16_t jrz_instances;
+
+/* One instance: the base half first, then the analysis, the intonation pass,
+ * the user dictionary and the output buffer. Every one of them that cannot be
+ * made sets the memory error and is left null rather than stopping the rest,
+ * which is IBM's shape -- the caller finds out from the error rather than from
+ * the constructor.
+ */
+void *jrz_ctor(void *rz, RomInstParam *param)
+{
+    void *ta;
+    void *ip;
+    void *ud;
+
+    ci_initBase(rz, param);
+    /* The base half calls three of these on itself -- the input manager asks
+       the converter where in the output a mark belongs -- so the table has to
+       be in place before anything else runs. */
+    CI_VT(rz) = &JRZ_VTBL;
+
+    evv_low_lock();
+    if (jrz_instances == 0) {
+        if (jrz_Init(rz) == 0)
+            jrz_instances++;
+    } else {
+        jrz_instances++;
+    }
+
+    RZ_L(rz, RZ_UNREAD_MID) = 0;
+
+    ta = cpp_new(TA_ROOM);
+    RZ_AT(rz, RZ_TXTANAL_AT) = ta != NULL ? ta_ctor(ta, rz) : NULL;
+    if (RZ_AT(rz, RZ_TXTANAL_AT) != NULL
+        && ta_initialize(RZ_AT(rz, RZ_TXTANAL_AT)) != 0) {
+        ta_ClearInputBuf(RZ_AT(rz, RZ_TXTANAL_AT));
+        ta_ClearPhraseTable(RZ_AT(rz, RZ_TXTANAL_AT));
+    } else {
+        rp_setError(param, ROM_ERR_MEMORY);
+    }
+
+    ip = cpp_new(IP_ROOM);
+    if (ip != NULL)
+        *(void **)((uint8_t *)ip + IP_OWNER_AT) = rz;
+    RZ_AT(rz, RZ_INTON_AT) = ip;
+    if (RZ_AT(rz, RZ_INTON_AT) != NULL) {
+        *(void **)((uint8_t *)RZ_AT(rz, RZ_INTON_AT) + IP_CUR_AT)  = NULL;
+        *(void **)((uint8_t *)RZ_AT(rz, RZ_INTON_AT) + IP_HEAD_AT) = NULL;
+    } else {
+        rp_setError(param, ROM_ERR_MEMORY);
+    }
+
+    RZ_L(rz, RZ_UNREAD_MID + 0x0c) = 0;
+    RZ_L(rz, RZ_VOICE)             = 0;
+    RZ_L(rz, RZ_BASELINE)          = 0;
+    RZ_L(rz, RZ_FLUENCY)           = 0;
+    RZ_L(rz, RZ_RATE)              = 0;
+    RZ_L(rz, RZ_SPEED)             = 0;
+    RZ_L(rz, RZ_SPELL_ENGLISH)     = 0;
+    RZ_L(rz, RZ_VOLUME)            = 0;
+    RZ_L(rz, RZ_UNREAD_TAIL)       = 0;
+
+    if (RZ_AT(rz, RZ_TXTANAL_AT) != NULL) {
+        ud = cpp_new(sizeof(RomUserDict));
+        RZ_AT(rz, RZ_USERDICT_AT) =
+            ud != NULL
+            ? (void *)rud_ctor((RomUserDict *)ud, RZ_AT(rz, RZ_TXTANAL_AT))
+            : NULL;
+        if (RZ_AT(rz, RZ_USERDICT_AT) == NULL)
+            rp_setError(param, ROM_ERR_MEMORY);
+    }
+
+    RZ_AT(rz, RZ_OUT_AT) = dynaBufNew(0x4000);
+    if (RZ_AT(rz, RZ_OUT_AT) == NULL)
+        rp_setError(param, ROM_ERR_MEMORY);
+
+    RZ_W(rz, RZ_MARK)  = -1;
+    RZ_L(rz, RZ_MORE)  = 0;
+    RZ_L(rz, RZ_FRESH) = 1;
+    evv_low_unlock();
+    return rz;
+}
+
+/* And unmaking one, in IBM's order: the intonation pass, the user dictionary,
+   the analysis, then the count -- and the dictionaries with it where this was
+   the last instance -- and last the output buffer. */
+void jrz_dtor(void *rz)
+{
+    if (RZ_AT(rz, RZ_INTON_AT) != NULL) {
+        ip_destroy(RZ_AT(rz, RZ_INTON_AT), 1);
+        RZ_AT(rz, RZ_INTON_AT) = NULL;
+    }
+    if (RZ_AT(rz, RZ_USERDICT_AT) != NULL) {
+        cpp_delete(RZ_AT(rz, RZ_USERDICT_AT));
+        RZ_AT(rz, RZ_USERDICT_AT) = NULL;
+    }
+    if (RZ_AT(rz, RZ_TXTANAL_AT) != NULL) {
+        ta_destroy(RZ_AT(rz, RZ_TXTANAL_AT), 1);
+        RZ_AT(rz, RZ_TXTANAL_AT) = NULL;
+    }
+
+    evv_low_lock();
+    jrz_instances--;
+    if (jrz_instances == 0 && jrz_dictman != NULL) {
+        if (*(char **)((uint8_t *)jrz_dictman + DM_PATH) != NULL)
+            cpp_delete(*(char **)((uint8_t *)jrz_dictman + DM_PATH));
+        cpp_delete(jrz_dictman);
+        jrz_dictman = NULL;
+    }
+    evv_low_unlock();
+
+    if (RZ_AT(rz, RZ_OUT_AT) != NULL) {
+        dynaBufDelete((DynaBuf *)RZ_AT(rz, RZ_OUT_AT));
+        RZ_AT(rz, RZ_OUT_AT) = NULL;
+    }
+}
+
+void *jrz_destroy(void *rz, int32_t freeIt)
+{
+    jrz_dtor(rz);
+    if (freeIt & 1)
+        cpp_delete(rz);
+    return rz;
+}
+
+/* ---- the three the base leaves to whoever derives from it -------------- */
+
+/* Japanese takes any entry the caller offers. */
+int32_t jrz_isValidUserDictEntry(void *rz, const char *s, int32_t a,
+                                 int32_t b)
+{
+    (void)rz;
+    (void)s;
+    (void)a;
+    (void)b;
+    return 1;
+}
+
+/* And has no romaji form of a word to give back either way: both answer yes
+   with nothing in the caller's pointer. */
+int32_t jrz_mbcs2Rom(void *rz, const char *s, char **out)
+{
+    (void)rz;
+    (void)s;
+    *out = NULL;
+    return 1;
+}
+
+int32_t jrz_rom2Mbcs(void *rz, const char *s, char **out)
+{
+    (void)rz;
+    (void)s;
+    *out = NULL;
+    return 1;
+}
+
+/* The seven slots, at IBM's own numbers. */
+const ConverterVtbl JRZ_VTBL = {
+    (void *(*)(Converter *, int32_t))jrz_destroy,
+    (int32_t (*)(Converter *, char **, int32_t))jrz_processSentence,
+    (int32_t (*)(Converter *))jrz_getOffset,
+    (void (*)(Converter *))jrz_ResetBuffer,
+    (int32_t (*)(Converter *, const char *, int32_t, int32_t))
+        jrz_isValidUserDictEntry,
+    (int32_t (*)(Converter *, const char *, char **))jrz_mbcs2Rom,
+    (int32_t (*)(Converter *, const char *, char **))jrz_rom2Mbcs
+};
