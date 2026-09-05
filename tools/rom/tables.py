@@ -374,16 +374,19 @@ def emit_header(out, tag, lines):
                 " * each length is that table's, in bytes.\n"
                 " */\n\n"
                 "#ifndef %s\n#define %s\n\n#include <stdint.h>\n\n"
-                % (tag, tag, guard, guard))
+                "/* What a symbol table's entries are: what the symbol\n"
+                " * means and how it is written. */\n"
+                "typedef struct { int32_t what; const char *how; }\n"
+                "    %s_symbol;\n\n"
+                % (tag, tag, guard, guard, tag))
         obj = None
         for one, name, n, kind in lines:
             if one != obj:
                 f.write("%s/* %s */\n" % ("" if obj is None else "\n", one))
                 obj = one
             if kind == "symbols":
-                f.write("extern const struct { int32_t what;"
-                        " const char *how; }\n    %s_%s[];\n"
-                        % (tag, name))
+                f.write("extern const %s_symbol %s_%s[];\n"
+                        % (tag, tag, name))
             elif kind == "strings":
                 f.write("extern const char *const %s_%s[];\n" % (tag, name))
             else:
@@ -424,7 +427,9 @@ def emit_all(where, out, tag):
                 " * past the end of its table. Laid out this way, whatever\n"
                 " * such a read finds is what IBM's found.\n"
                 " */\n\n"
-                "#include <stdint.h>\n\n")
+                "#include <stdint.h>\n\n"
+                "typedef struct { int32_t what; const char *how; }\n"
+                "    %s_symbol;\n\n" % tag)
         for obj, section, about in OBJECTS:
             path = os.path.join(where, obj)
             if not os.path.exists(path):
@@ -502,8 +507,8 @@ def emit_all(where, out, tag):
                     raise SystemExit("rom/tables: %s names no %s"
                                      % (obj, name))
                 got = symbol_pairs(path, section, found[name], rel, data)
-                f.write("const struct { int32_t what; const char *how; }\n"
-                        "%s_%s[%d] = {\n" % (tag, name, len(got) + 1))
+                f.write("const %s_symbol %s_%s[%d] = {\n"
+                        % (tag, tag, name, len(got) + 1))
                 for value, one in got:
                     f.write("    { %d, \"%s\" },\n"
                             % (value, "".join("\\x%02x" % b for b in one)))
