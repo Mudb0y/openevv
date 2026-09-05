@@ -24,19 +24,17 @@
 #include "jprom.h"
 #include "prosctrl.h"
 #include "intonphrase.h"
+#include "rom_tables_jajp.h"
 
-/* Reaching into the four records. Every one of them is at IBM's own offsets
-   on both builds, because the only pointers in them are handed out by
-   operator new rather than sitting where IBM put a four-byte field: a
-   BREATHGROUP's phrase array, a phrase's word array and a word's mora array
-   all sit at offsets with four bytes of slack behind them, which is what the
-   record's own size leaves. */
+/* Reaching into the four records. Every field is at IBM's own offset; the
+   three pointers are parked past the record, which rom/jajp/prosctrl.h says
+   why, so the strides are the parked sizes rather than IBM's. */
 #define PC_S32(p, off)  (*(int32_t *)((uint8_t *)(p) + (off)))
 #define BG_B(p, off)    (*((uint8_t *)(p) + (off)))
 #define BG_S16(p, off)  (*(int16_t *)((uint8_t *)(p) + (off)))
-#define BG_AT(a, i)     ((uint8_t *)(a) + (long)(i) * BG_SIZE)
-#define PH_AT(a, i)     ((uint8_t *)(a) + (long)(i) * PH_SIZE)
-#define AP_AT(a, i)     ((uint8_t *)(a) + (long)(i) * AP_SIZE)
+#define BG_AT(a, i)     ((uint8_t *)(a) + (long)(i) * (long)BG_ROOM)
+#define PH_AT(a, i)     ((uint8_t *)(a) + (long)(i) * (long)PH_ROOM)
+#define AP_AT(a, i)     ((uint8_t *)(a) + (long)(i) * (long)AP_ROOM)
 #define MO_AT(a, i)     ((uint8_t *)(a) + (long)(i) * MO_SIZE)
 #define PTR_OF(p, off)  (*(void **)((uint8_t *)(p) + (off)))
 
@@ -156,16 +154,16 @@ int32_t pc_WriteBGInfo(void *pc, int32_t ms, int32_t kind, int32_t last,
     return 0;
 }
 
-/* Whether this word is stressed. A word is unstressed where it is the first
-   of its phrase or past the last, and stressed everywhere else -- unless the
-   flag the caller passes says to stress it whatever its place. */
+/* Whether this mora is stressed. It is where it falls inside the word's own
+   run of moras -- at or after where the word starts and before where it ends
+   -- and where the caller's flag says so whatever its place. */
 int32_t pc_WriteStressLevel(void *pc, int32_t at, int32_t from, int32_t to,
                             char *out, uint32_t cap, uint32_t *len,
                             int32_t force)
 {
     int32_t rc;
 
-    if (force != 0 || from > at || at >= to)
+    if (force != 0 || (from <= at && at < to))
         rc = pc_WriteToOutBuf(pc, ".1 ", out, cap, len);
     else
         rc = pc_WriteToOutBuf(pc, ".0 ", out, cap, len);
@@ -274,12 +272,12 @@ int32_t pc_BG_T2BreathGroups(void *pc, const void *bgt, void **outGroups,
     if (n == 0)
         return -1;
 
-    groups = (uint8_t *)cpp_new((uint32_t)(n * BG_SIZE));
+    groups = (uint8_t *)cpp_new((uint32_t)(n * (long)BG_ROOM));
     *outGroups = groups;
     if (groups == NULL)
         return -2;
     for (i = 0; i < n; i++)
-        *(int32_t *)BG_AT(groups, i) = 0;
+        PTR_OF(BG_AT(groups, i), BG_PHRASE_AT) = NULL;
     *outCount = n;
 
     t = (const uint8_t *)bgt;
@@ -290,15 +288,15 @@ int32_t pc_BG_T2BreathGroups(void *pc, const void *bgt, void **outGroups,
         BG_S16(bg, BG_PAUSE) = IG_S16_(t, IG_PAUSE);
         BG_B(bg, BG_KIND)    = IG_B_(t, IG_KIND);
 
-        PTR_OF(bg, BG_PHRASE) =
-            cpp_new((uint32_t)(BG_B(bg, BG_PHRASES) * PH_SIZE));
-        if (PTR_OF(bg, BG_PHRASE) == NULL)
+        PTR_OF(bg, BG_PHRASE_AT) =
+            cpp_new((uint32_t)(BG_B(bg, BG_PHRASES) * (long)PH_ROOM));
+        if (PTR_OF(bg, BG_PHRASE_AT) == NULL)
             return -2;
         for (i = 0; i < BG_B(bg, BG_PHRASES); i++)
-            PTR_OF(PH_AT(PTR_OF(bg, BG_PHRASE), i), PH_WORD) = NULL;
+            PTR_OF(PH_AT(PTR_OF(bg, BG_PHRASE_AT), i), PH_WORD_AT) = NULL;
 
         for (p = 0; p < IG_B_(t, IG_PHRASES); p++) {
-            ph  = PH_AT(PTR_OF(bg, BG_PHRASE), p);
+            ph  = PH_AT(PTR_OF(bg, BG_PHRASE_AT), p);
             src = IH_AT(t, p);
 
             BG_B(ph, PH_MORAS) = IH_B_(src, IH_KANA_LEN);
@@ -312,15 +310,15 @@ int32_t pc_BG_T2BreathGroups(void *pc, const void *bgt, void **outGroups,
             ahead    = 0;
             longAt   = 0;
 
-            PTR_OF(ph, PH_WORD) =
-                cpp_new((uint32_t)(BG_B(ph, PH_WORDS) * AP_SIZE));
-            if (PTR_OF(ph, PH_WORD) == NULL)
+            PTR_OF(ph, PH_WORD_AT) =
+                cpp_new((uint32_t)(BG_B(ph, PH_WORDS) * (long)AP_ROOM));
+            if (PTR_OF(ph, PH_WORD_AT) == NULL)
                 return -2;
             for (i = 0; i < BG_B(ph, PH_WORDS); i++)
-                PTR_OF(AP_AT(PTR_OF(ph, PH_WORD), i), AP_MORA) = NULL;
+                PTR_OF(AP_AT(PTR_OF(ph, PH_WORD_AT), i), AP_MORA_AT) = NULL;
 
             for (w = 0; w < BG_B(ph, PH_WORDS); w++) {
-                ap    = AP_AT(PTR_OF(ph, PH_WORD), w);
+                ap    = AP_AT(PTR_OF(ph, PH_WORD_AT), w);
                 codes = IH_B_(src, IH_LEN + w);
                 BG_B(ap, AP_CODES) = (uint8_t)codes;
                 extra = 0;
@@ -407,13 +405,13 @@ int32_t pc_BG_T2BreathGroups(void *pc, const void *bgt, void **outGroups,
                 if (subCount == 0)
                     continue;
 
-                PTR_OF(ap, AP_MORA) =
+                PTR_OF(ap, AP_MORA_AT) =
                     cpp_new((uint32_t)(subCount * MO_SIZE));
-                if (PTR_OF(ap, AP_MORA) == NULL)
+                if (PTR_OF(ap, AP_MORA_AT) == NULL)
                     return -2;
 
                 for (k = 0; k < subCount; k++) {
-                    mo = MO_AT(PTR_OF(ap, AP_MORA), k);
+                    mo = MO_AT(PTR_OF(ap, AP_MORA_AT), k);
                     BG_S16(mo, MO_KIND) = IH_B_(src, IH_F + longAt);
 
                     if (longAt < IH_E_N - 1)
@@ -507,26 +505,536 @@ void pc_FreeBreathGroups(void *pc, void *groups, int32_t count)
         uint8_t *bg = BG_AT(groups, g);
 
         for (p = 0; p < BG_B(bg, BG_PHRASES); p++) {
-            uint8_t *ph = PH_AT(PTR_OF(bg, BG_PHRASE), p);
+            uint8_t *ph = PH_AT(PTR_OF(bg, BG_PHRASE_AT), p);
 
             for (w = 0; w < BG_B(ph, PH_WORDS); w++) {
-                uint8_t *ap = AP_AT(PTR_OF(ph, PH_WORD), w);
+                uint8_t *ap = AP_AT(PTR_OF(ph, PH_WORD_AT), w);
 
-                if (PTR_OF(ap, AP_MORA) != NULL) {
-                    cpp_delete(PTR_OF(ap, AP_MORA));
-                    PTR_OF(ap, AP_MORA) = NULL;
+                if (PTR_OF(ap, AP_MORA_AT) != NULL) {
+                    cpp_delete(PTR_OF(ap, AP_MORA_AT));
+                    PTR_OF(ap, AP_MORA_AT) = NULL;
                 }
             }
-            if (PTR_OF(ph, PH_WORD) != NULL) {
-                cpp_delete(PTR_OF(ph, PH_WORD));
-                PTR_OF(ph, PH_WORD) = NULL;
+            if (PTR_OF(ph, PH_WORD_AT) != NULL) {
+                cpp_delete(PTR_OF(ph, PH_WORD_AT));
+                PTR_OF(ph, PH_WORD_AT) = NULL;
             }
         }
-        if (PTR_OF(bg, BG_PHRASE) != NULL) {
-            cpp_delete(PTR_OF(bg, BG_PHRASE));
-            PTR_OF(bg, BG_PHRASE) = NULL;
+        if (PTR_OF(bg, BG_PHRASE_AT) != NULL) {
+            cpp_delete(PTR_OF(bg, BG_PHRASE_AT));
+            PTR_OF(bg, BG_PHRASE_AT) = NULL;
         }
     }
     if (groups != NULL)
         cpp_delete(groups);
+}
+
+/* ---- one accent phrase's moras, as phonemes ------------------------- */
+
+/* Every code of one mora written out, as a consonant, a vowel and the pitch
+ * pairs between them.
+ *
+ * A code is one byte and holds both halves: divided by eight and one added it
+ * is the consonant, one of thirty-two in `s_aszCname'; the remainder is the
+ * vowel, one of eight in `s_aszVname'. Five of those eight are the plain
+ * vowels; the other three are the doubled consonant, the syllabic nasal and
+ * the long vowel, and each of those is written differently. A consonant of
+ * thirty-one is the mark that says the vowel is long, and then it is spelled
+ * out of `s_aszLVname' instead.
+ *
+ * Two things run across codes. A doubled consonant writes the consonant of
+ * the code after it as well as its own vowel, and sets a flag so that the
+ * next code writes neither its consonant nor its stress -- the doubling has
+ * said both already. And a burst consonant takes three pitch pairs where
+ * anything else takes two, which is what `IsBurstCons' is for.
+ *
+ * Everything goes into two places at once: a scratch line that is handed to
+ * the output a mora at a time, and the caller's own running buffer, which
+ * keeps the phonemes without any of the pitch or stress marks.
+ */
+int32_t pc_WriteGokiInfo(void *pc, const uint8_t *ap, int32_t which,
+                         int32_t kind, int32_t *at, char *buf,
+                         char *out, uint32_t cap, uint32_t *len)
+{
+    const uint8_t *mo = MO_AT(PTR_OF((void *)ap, AP_MORA_AT), which);
+    char     line[256];
+    int32_t  held = 0;
+    int32_t  lastWord = 0;
+    int32_t  i;
+    int32_t  force;
+    int32_t  vowel;
+    uint8_t  cons;
+    uint8_t  next = 0;   /* IBM leaves this unset until a code has one after
+                            it, so a mora whose last code is a doubling reads
+                            whatever the stack held. That cannot be
+                            reproduced and cannot arise in a real reading: a
+                            doubling exists to double the consonant that
+                            follows it, so it is never last. */
+    uint8_t  phon;
+
+    if (kind == 5 && which == BG_B((void *)ap, AP_MORA_N) - 1)
+        lastWord = 1;
+
+    for (i = 0; i < BG_B(mo, MO_CODES); i++) {
+        line[0] = '\0';
+        cons = (uint8_t)(BG_B(mo, MO_CODE + i) / 8 + 1);
+        phon = (uint8_t)(BG_B(mo, MO_CODE + i) % 8 + 0x29);
+
+        if (held == 0) {
+            force = 0;
+            if (lastWord != 0) {
+                if (i == BG_B(mo, MO_CODES) - 1)
+                    force = 1;
+                else if (phon == 0x2e && i == BG_B(mo, MO_CODES) - 2)
+                    force = 1;
+            }
+            if (pc_WriteStressLevel(pc, *at + i, BG_B((void *)ap, AP_HEAD),
+                                    BG_B((void *)ap, AP_LEN), out, cap, len,
+                                    force) != 0)
+                return -3;
+        }
+
+        vowel = phon - 0x29;
+        if (i < BG_B(mo, MO_CODES) - 1)
+            next = (uint8_t)(BG_B(mo, MO_CODE + i + 1) / 8 + 1);
+
+        if (phon >= 0x29 && phon <= 0x2d) {
+            if (cons >= 1 && cons <= 0x1e && held == 0) {
+                strcat(line, (const char *)jajp_s_aszCname + cons * 3);
+                strcat(buf,  (const char *)jajp_s_aszCname + cons * 3);
+                if (pc_IsBurstCons(pc, cons))
+                    strcat(line, PC_F0_THREE);
+                else
+                    strcat(line, PC_F0_TWO);
+                strcat(line, (const char *)jajp_s_aszVname + vowel * 3);
+                strcat(buf,  (const char *)jajp_s_aszVname + vowel * 3);
+                strcat(line, PC_F0_TWO);
+            } else if (cons == 0x1f) {
+                strcat(line, (const char *)jajp_s_aszLVname + vowel * 3);
+                strcat(buf,  (const char *)jajp_s_aszLVname + vowel * 3);
+                strcat(line, PC_F0_TWO);
+            } else {
+                strcat(line, (const char *)jajp_s_aszVname + vowel * 3);
+                strcat(buf,  (const char *)jajp_s_aszVname + vowel * 3);
+                strcat(line, PC_F0_TWO);
+            }
+            held = 0;
+        } else if (phon == 0x2e) {
+            held = 1;
+            strcat(line, (const char *)jajp_s_aszVname + vowel * 3);
+            strcat(buf,  (const char *)jajp_s_aszVname + vowel * 3);
+            strcat(line, (const char *)jajp_s_aszCname + next * 3);
+            strcat(buf,  (const char *)jajp_s_aszCname + next * 3);
+            /* The doubling asks a different question of the consonant after
+               it than an ordinary consonant asks of itself: not whether it is
+               a burst but whether it can carry a doubling at all, which is
+               what the two predicates are named for. */
+            if (pc_IsValidConsForSokuOn(pc, next))
+                strcat(line, PC_F0_THREE);
+            else
+                strcat(line, PC_F0_TWO);
+        } else if (phon == 0x2f) {
+            strcat(line, (const char *)jajp_s_aszVname + vowel * 3);
+            strcat(buf,  (const char *)jajp_s_aszVname + vowel * 3);
+            strcat(line, PC_F0_TWO);
+        }
+
+        /* The last mora of the word takes a mark of its own in the running
+           buffer, and nothing in the line. */
+        if (*at + i + 1 == BG_B((void *)ap, AP_LEN))
+            strcat(buf, "'");
+
+        if (pc_WriteToOutBuf(pc, line, out, cap, len) != 0)
+            return -3;
+    }
+
+    *at += BG_B(mo, MO_CODES);
+    return 0;
+}
+
+/* ---- which moras go out as one word -------------------------------- */
+
+/* Given a place in an accent phrase's moras, how far the word that starts
+ * there runs, and what to call it.
+ *
+ * A mora's kind is one of ten and the ten do not all behave alike: four of
+ * them are a word on their own, three run forward over every mora whose kind
+ * is nine or more, one runs forward over everything until a ten, one takes the
+ * kind of the mora after it and may take one more besides, and one is simply
+ * renamed to nine. What comes back is where the word ends, how many codes it
+ * holds -- capped at nine, which is as many as the notation can say -- and
+ * the name of its part of speech out of one of two tables.
+ *
+ * A boundary at the end of the phrase overrides the kind with the negative of
+ * itself, and a negative kind is looked up in the second table: that is how a
+ * comma, a full stop, a question and an exclamation are named. Four becomes
+ * minus four whichever way round, since a kind of six also answers minus
+ * four.
+ *
+ * IBM works out whether this is the last mora of an unstressed phrase and
+ * never reads the answer. It is left out.
+ */
+int32_t pc_GetGokiInfoToWrite(void *pc, const uint8_t *ap, int32_t *m,
+                              int32_t *first, int32_t *upto, int32_t *pos,
+                              const char **name, int32_t stress,
+                              int32_t kind)
+{
+    const uint8_t *mo;
+    const uint8_t *next;
+    int32_t where;
+    int32_t moras = 0;
+    int32_t which;
+    int32_t scan;
+
+    (void)pc;
+    (void)stress;
+
+    *first = *m;
+    where  = *first;
+    mo     = MO_AT(PTR_OF((void *)ap, AP_MORA_AT), where);
+    if (where < BG_B((void *)ap, AP_MORA_N) - 1)
+        next = MO_AT(PTR_OF((void *)ap, AP_MORA_AT), where + 1);
+    else
+        next = NULL;
+
+    moras += BG_B(mo, MO_CODES);
+    which = BG_S16(mo, MO_KIND);
+
+    switch (which) {
+    case 1:
+    case 5:
+    case 6:
+    case 7:
+        *upto = where;
+        break;
+
+    case 2:
+    case 3:
+    case 4:
+        scan = where + 1;
+        while (scan < BG_B((void *)ap, AP_MORA_N)) {
+            if (BG_S16(next, MO_KIND) < 9)
+                break;
+            where++;
+            moras += BG_B(next, MO_CODES);
+            if (BG_S16(next, MO_KIND) == 0x0a)
+                break;
+            if (scan < BG_B((void *)ap, AP_MORA_N))
+                next = MO_AT(PTR_OF((void *)ap, AP_MORA_AT), scan);
+            scan++;
+        }
+        *upto = where;
+        break;
+
+    case 9:
+        scan = where + 1;
+        while (scan < BG_B((void *)ap, AP_MORA_N)) {
+            where++;
+            moras += BG_B(next, MO_CODES);
+            if (BG_S16(next, MO_KIND) == 0x0a)
+                break;
+            if (scan < BG_B((void *)ap, AP_MORA_N))
+                next = MO_AT(PTR_OF((void *)ap, AP_MORA_AT), scan);
+            scan++;
+        }
+        *upto = where;
+        break;
+
+    case 8:
+        if (next == NULL || BG_S16(next, MO_KIND) >= 9) {
+            *upto = where;
+            break;
+        }
+        which = BG_S16(next, MO_KIND);
+        *upto = where + 1;
+        where++;
+        moras += BG_B(next, MO_CODES);
+        if (which == 2 || which == 3 || which == 4) {
+            if (BG_B((void *)ap, AP_MORA_N) > where + 1
+                && BG_S16(MO_AT(PTR_OF((void *)ap, AP_MORA_AT), where + 1),
+                          MO_KIND) >= 9) {
+                *upto = where + 1;
+                where++;
+                mo = MO_AT(PTR_OF((void *)ap, AP_MORA_AT), where);
+                moras += BG_B(mo, MO_CODES);
+            }
+        }
+        break;
+
+    case 0x0a:
+        which = 9;
+        *upto = where;
+        break;
+
+    default:
+        *upto = where;
+        break;
+    }
+
+    *m   = *upto;
+    *pos = BG_B((void *)ap, AP_PITCH);
+
+    if (kind > 0 && where == BG_B((void *)ap, AP_MORA_N) - 1) {
+        switch (kind) {
+        case 3:
+        case 5:
+            which = -kind;
+            break;
+        case 4:
+            which = -kind;
+            break;
+        case 6:
+            which = -4;
+            break;
+        default:
+            which = -3;
+            break;
+        }
+    }
+
+    *pos = (moras < 9) ? moras : 9;
+
+    if (which >= 0 && which < jajp_s_aszPosInfo_n)
+        *name = jajp_s_aszPosInfo[which];
+    else if (which < 0 && -which < jajp_s_aszSpecialPosInfo_n)
+        *name = jajp_s_aszSpecialPosInfo[-which];
+    else
+        *name = "undef";
+    return 0;
+}
+
+/* ---- the whole tree as one string ----------------------------------- */
+
+/* Four loops and a great deal of punctuation.
+ *
+ * A group opens with the caller's index marks, then its own prominence where
+ * it has one, then the pause and boundary that belong to it, and -- for the
+ * first group only -- whatever parameter `GenerateESPR' was handed. Then
+ * every phrase, every word of it and every mora of that: a word is bracketed
+ * by its part of speech and closed by its prominence, and its moras go
+ * through `WriteGokiInfo'. The group closes with its pause in hundredths, a
+ * pitch pair for every code it holds, and the phonemes of the whole group
+ * again with no marks in them, which is what the second buffer has been
+ * collecting.
+ *
+ * The length handed to `WriteToOutBuf' starts at one rather than nought, so a
+ * byte of the caller's buffer is held back; and nothing here writes the
+ * terminator the first `strcat' needs, so the caller's buffer arrives already
+ * a string. Both are IBM's.
+ *
+ * The parameter is cleared after the first group, so a second call in the
+ * same utterance does not state it again.
+ */
+int32_t pc_WriteESPR2(void *pc, void *groups, int32_t count, int32_t ms,
+                      char *out, uint32_t cap)
+{
+    char     line[256];
+    uint32_t len = 1;
+    char    *buf = NULL;
+    uint8_t *bg;
+    uint8_t *ph;
+    uint8_t *ap;
+    int32_t  g, p, w, m, i, k;
+    int32_t  phrases;
+    int32_t  room;
+    int32_t  marks;
+    int32_t  prom;
+    int32_t  last;
+    int32_t  stress;
+    int32_t  kind;
+    int32_t  at;
+    int32_t  first;
+    int32_t  upto;
+    int32_t  pos = 0;
+    const char *name;
+
+    line[0] = '\0';
+    for (g = 0; g < count; g++) {
+        bg      = BG_AT(groups, g);
+        phrases = BG_B(bg, BG_PHRASES);
+        room    = BG_B(bg, BG_LEVEL) * 5 + 1;
+
+        buf = (char *)cpp_new((uint32_t)room);
+        if (buf == NULL)
+            return -2;
+        buf[0] = '\0';
+
+        marks = 0;
+        prom  = 0;
+        for (i = 0; i < phrases; i++) {
+            uint8_t *one = PH_AT(PTR_OF(bg, BG_PHRASE_AT), i);
+
+            marks += (uint16_t)BG_S16(one, PH_AT4);
+            prom  += BG_B(one, PH_FLAG);
+        }
+
+        if (pc_WriteUserIndex(pc, marks, out, cap, &len) != 0)
+            goto refuse;
+
+        /* The prominence is stated only where there is one, but the brace
+           after it and the write of the line are not conditional -- and the
+           line is cleared once, before the first group, and never between
+           them. So a group with no prominence of its own sends out whatever
+           the group before it last put in that line, with the brace on the
+           end. IBM's, and it shows in every group after the first. */
+        if (prom > 0)
+            sprintf(line, "%s%d%s", " `g", (int)prom, "_ ");
+        strcat(line, "`{ ");
+        if (pc_WriteToOutBuf(pc, line, out, cap, &len) != 0)
+            goto refuse;
+
+        last = (g == count - 1) ? 1 : 0;
+        if (pc_WriteBGInfo(pc, g + 1, BG_B(bg, BG_KIND), last, out, cap,
+                           &len) != 0)
+            goto refuse;
+
+        if (g == 0 && PC_S32(pc, PC_ARG) != 0) {
+            line[0] = '\0';
+            sprintf(line, "%s%d%s w0 ", "#(p", (int)PC_S32(pc, PC_ARG), ")");
+            if (pc_WriteToOutBuf(pc, line, out, cap, &len) != 0) {
+                line[0] = '\0';
+                goto refuse;
+            }
+            line[0] = '\0';
+        }
+
+        for (p = 0; p < BG_B(bg, BG_PHRASES); p++) {
+            ph = PH_AT(PTR_OF(bg, BG_PHRASE_AT), p);
+
+            for (w = 0; w < BG_B(ph, PH_WORDS); w++) {
+                ap    = AP_AT(PTR_OF(ph, PH_WORD_AT), w);
+                at    = 0;
+                upto  = -1;
+                first = upto;
+
+                for (m = 0; m < BG_B(ap, AP_MORA_N); m++) {
+                    if (last != 0 && BG_B(bg, BG_KIND) <= 4
+                        && p == BG_B(bg, BG_PHRASES) - 1
+                        && w == BG_B(ph, PH_WORDS) - 1)
+                        stress = 0;
+                    else
+                        stress = 1;
+
+                    if (p == BG_B(bg, BG_PHRASES) - 1
+                        && w == BG_B(ph, PH_WORDS) - 1)
+                        kind = BG_B(bg, BG_KIND);
+                    else
+                        kind = 0;
+
+                    name = NULL;
+                    pc_GetGokiInfoToWrite(pc, ap, &m, &first, &upto, &pos,
+                                          &name, stress, kind);
+
+                    if (name != NULL)
+                        sprintf(line, "%s%s,%d %s", "<", name, (int)pos, "[");
+                    else
+                        sprintf(line, "%s%s,%d %s", "<", "undef", (int)pos,
+                                "[");
+                    if (pc_WriteToOutBuf(pc, line, out, cap, &len) != 0)
+                        goto refuse;
+
+                    for (k = first; k <= upto; k++)
+                        if (pc_WriteGokiInfo(pc, ap, k, kind, &at, buf, out,
+                                             cap, &len) != 0)
+                            goto refuse;
+
+                    line[0] = '\0';
+                    if (w == BG_B(ph, PH_WORDS) - 1
+                        && m == BG_B(ap, AP_MORA_N) - 1)
+                        sprintf(line, "%s %s%d%s ", "]", "w",
+                                (int)BG_B(PH_AT(PTR_OF(bg, BG_PHRASE_AT), p),
+                                          PH_FLAG), ">");
+                    else
+                        sprintf(line, "%s %s0%s ", "]", "w", ">");
+                    if (pc_WriteToOutBuf(pc, line, out, cap, &len) != 0)
+                        goto refuse;
+                }
+                strcat(buf, " ");
+            }
+        }
+
+        sprintf(line, "%s%d%s %s ", "#(p",
+                (int)(BG_S16(bg, BG_PAUSE) * ms / 100.0), ")", "}");
+        if (pc_WriteToOutBuf(pc, line, out, cap, &len) != 0)
+            goto refuse;
+        if (pc_WriteDummyF0Pair(pc, BG_B(bg, BG_LEVEL), out, cap, &len) != 0)
+            goto refuse;
+        if (pc_WriteToOutBuf(pc, " % ", out, cap, &len) != 0)
+            goto refuse;
+
+        /* The phonemes of the whole group, and then the buffer goes back
+           whether that succeeded or not. */
+        {
+            int32_t rc = pc_WriteToOutBuf(pc, buf, out, cap, &len);
+
+            cpp_delete(buf);
+            buf = NULL;
+            if (rc != 0)
+                return -3;
+        }
+        if (pc_WriteToOutBuf(pc, "% / ", out, cap, &len) != 0)
+            return -3;
+        PC_S32(pc, PC_ARG) = 0;
+    }
+    return 0;
+
+refuse:
+    if (buf != NULL) {
+        cpp_delete(buf);
+        buf = NULL;
+    }
+    return -3;
+}
+
+/* ---- the entry point ------------------------------------------------ */
+
+/* Two lines of work and four refusals. What comes in is the environment,
+ * whose first field says which of two modes this is, and either a string or a
+ * chain of breath groups; what goes out is the ESPR text.
+ *
+ * The string road is not implemented in the object as shipped: given text
+ * rather than groups, IBM sets its error to minus one unconditionally, frees
+ * the tree it has not built and refuses. It is transcribed as it stands.
+ *
+ * Note the tree is not freed on the road that succeeds. Whether ours diverges
+ * there is a question for whoever writes `Romanizer', which is the only
+ * caller and may free it itself; until that is read, this does what IBM does.
+ */
+int32_t pc_GenerateESPR(void *pc, const void *env, int32_t param,
+                        const char *text, const void *bgt, char *out,
+                        uint32_t cap)
+{
+    void   *groups = NULL;
+    int32_t count  = 0;
+
+    if (env == NULL)
+        return -1;
+    if (text == NULL && bgt == NULL)
+        return -1;
+    if (out == NULL)
+        return -1;
+    if (cap == 0)
+        return -1;
+
+    PC_S32(pc, PC_ARG) = param;
+    switch (*(const int32_t *)env) {
+    case 1:
+        PC_S32(pc, PC_MODE) = 1;
+        break;
+    case 2:
+        PC_S32(pc, PC_MODE) = 2;
+        break;
+    default:
+        return -1;
+    }
+
+    if (text != NULL) {
+        pc_FreeBreathGroups(pc, groups, count);
+        return -1;
+    }
+    if (pc_BG_T2BreathGroups(pc, bgt, &groups, &count) != 0) {
+        pc_FreeBreathGroups(pc, groups, count);
+        return -1;
+    }
+    return pc_WriteESPR2(pc, groups, count, 0x64, out, cap);
 }

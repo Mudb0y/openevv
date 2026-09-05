@@ -112,6 +112,7 @@ static Conv *makeConv(Param *p)
 #include "numread.h"
 #include "jpath.h"
 #include "intonphrase.h"
+#include "prosctrl.h"
 
 #define ibm_dsCheckCaseMarker(d, at)      ds_CheckCaseMarker((d), (at))
 #define ibm_dsCheckCnvChoon(d, c, n)      ds_CheckCnvChoon((d), (c), (n))
@@ -383,6 +384,38 @@ static Conv *makeConv(Param *p)
 #define ibm_ipSetAccentualPhrase(ip, p, a) \
     ip_SetAccentualPhrase((ip), (p), (a))
 #define IPM(name) ibm_ip##name
+
+/* ---- ProsCtrl -------------------------------------------------------- */
+
+#define ibm_pcCtor(pc)                    pc_ctor((pc))
+#define ibm_pcDtor(pc)                    pc_dtor((pc))
+#define ibm_pcGenerateESPR(pc, e, p, t, b, o, c) \
+    pc_GenerateESPR((pc), (e), (p), (t), (b), (o), (c))
+#define ibm_pcBG_T2BreathGroups(pc, b, g, n) \
+    pc_BG_T2BreathGroups((pc), (b), (g), (n))
+#define ibm_pcFreeBreathGroups(pc, g, n)  pc_FreeBreathGroups((pc), (g), (n))
+#define ibm_pcWriteESPR2(pc, g, n, m, o, c) \
+    pc_WriteESPR2((pc), (g), (n), (m), (o), (c))
+#define ibm_pcWriteGokiInfo(pc, a, w, k, at, b, o, c, l) \
+    pc_WriteGokiInfo((pc), (a), (w), (k), (at), (b), (o), (c), (l))
+#define ibm_pcGetGokiInfoToWrite(pc, a, m, f, u, p, nm, s, k) \
+    pc_GetGokiInfoToWrite((pc), (a), (m), (f), (u), (p), (nm), (s), (k))
+#define ibm_pcWriteBGInfo(pc, m, k, l, o, c, n) \
+    pc_WriteBGInfo((pc), (m), (k), (l), (o), (c), (n))
+#define ibm_pcWriteStressLevel(pc, a, f, t, o, c, n, force) \
+    pc_WriteStressLevel((pc), (a), (f), (t), (o), (c), (n), (force))
+#define ibm_pcWriteUserIndex(pc, n, o, c, l) \
+    pc_WriteUserIndex((pc), (n), (o), (c), (l))
+#define ibm_pcWriteDummyF0Pair(pc, n, o, c, l) \
+    pc_WriteDummyF0Pair((pc), (n), (o), (c), (l))
+#define ibm_pcWriteToOutBuf(pc, w, o, c, l) \
+    pc_WriteToOutBuf((pc), (w), (o), (c), (l))
+#define ibm_pcModifyWordProminence(pc, pr, po, f) \
+    pc_ModifyWordProminence((pc), (pr), (po), (f))
+#define ibm_pcIsBurstCons(pc, code)       pc_IsBurstCons((pc), (code))
+#define ibm_pcIsValidConsForSokuOn(pc, code) \
+    pc_IsValidConsForSokuOn((pc), (code))
+#define PCM(name) ibm_pc##name
 
 /* Where each side keeps PhraseBuf's four pointers and JPath's three. Ours are
    parked past their records; IBM's are at the offsets the maps name. */
@@ -678,6 +711,7 @@ extern THIS int32_t ibm_slLoad(void *self, const char *path)
 #include "numread.h"
 #include "jpath.h"
 #include "intonphrase.h"
+#include "prosctrl.h"
 
 extern THIS int32_t ibm_dsCheckCaseMarker(void *d, int16_t at)
     MANGLED("?CheckCaseMarker@DictSearch@@QAEHF@Z");
@@ -1189,6 +1223,70 @@ extern THIS int16_t ibm_ipSetIntonationalPhrase(void *ip)
 extern THIS uint8_t ibm_ipSetAccentualPhrase(void *ip, void *ph, uint8_t at)
     MANGLED("?SetAccentualPhrase@IntonPhrase@@IAEEPAU_PH1_T@@E@Z");
 #define IPM(name) ibm_ip##name
+
+/* ---- ProsCtrl -------------------------------------------------------- */
+
+/* Fourteen of these sixteen are private members in IBM's own source and each
+   has an external symbol all the same, so each is held to IBM's own answer.
+   The four records this class builds have their pointers parked past them on
+   our side and at IBM's own offsets on IBM's, so the sweep walks them through
+   macros rather than comparing them as bytes. */
+extern THIS void *ibm_pcCtor(void *pc)
+    MANGLED("??0ProsCtrl@@QAE@XZ");
+extern THIS void ibm_pcDtor(void *pc)
+    MANGLED("??1ProsCtrl@@QAE@XZ");
+extern THIS int32_t ibm_pcGenerateESPR(void *pc, const void *env,
+                                       int32_t param, const char *text,
+                                       const void *bgt, char *out,
+                                       uint32_t cap)
+    MANGLED("?GenerateESPR@ProsCtrl@@QAEHPBUENVPARAMS@@HPBDPBU_BG_T@@PADK@Z");
+extern THIS int32_t ibm_pcBG_T2BreathGroups(void *pc, const void *bgt,
+                                            void **outGroups,
+                                            int32_t *outCount)
+    MANGLED("?BG_T2BreathGroups@ProsCtrl@@AAEHPBU_BG_T@@PAPAUBREATHGROUP@@PAH@Z");
+extern THIS void ibm_pcFreeBreathGroups(void *pc, void *groups, int32_t n)
+    MANGLED("?FreeBreathGroups@ProsCtrl@@AAEXPAUBREATHGROUP@@H@Z");
+extern THIS int32_t ibm_pcWriteESPR2(void *pc, void *groups, int32_t count,
+                                     int32_t ms, char *out, uint32_t cap)
+    MANGLED("?WriteESPR2@ProsCtrl@@AAEHPBUBREATHGROUP@@HHPADK@Z");
+extern THIS int32_t ibm_pcWriteGokiInfo(void *pc, const uint8_t *ap,
+                                        int32_t which, int32_t kind,
+                                        int32_t *at, char *buf, char *out,
+                                        uint32_t cap, uint32_t *len)
+    MANGLED("?WriteGokiInfo@ProsCtrl@@AAEHPBUACC_PHRASE@@HHPAHPAD2KPAK@Z");
+extern THIS int32_t ibm_pcGetGokiInfoToWrite(void *pc, const uint8_t *ap,
+                                             int32_t *m, int32_t *first,
+                                             int32_t *upto, int32_t *pos,
+                                             const char **name,
+                                             int32_t stress, int32_t kind)
+    MANGLED("?GetGokiInfoToWrite@ProsCtrl@@AAEHPBUACC_PHRASE@@PAH111PAPBDHH@Z");
+extern THIS int32_t ibm_pcWriteBGInfo(void *pc, int32_t ms, int32_t kind,
+                                      int32_t last, char *out, uint32_t cap,
+                                      uint32_t *len)
+    MANGLED("?WriteBGInfo@ProsCtrl@@AAEHHHHPADKPAK@Z");
+extern THIS int32_t ibm_pcWriteStressLevel(void *pc, int32_t at, int32_t from,
+                                           int32_t to, char *out,
+                                           uint32_t cap, uint32_t *len,
+                                           int32_t force)
+    MANGLED("?WriteStressLevel@ProsCtrl@@AAEHHHHPADKPAKH@Z");
+extern THIS int32_t ibm_pcWriteUserIndex(void *pc, int32_t n, char *out,
+                                         uint32_t cap, uint32_t *len)
+    MANGLED("?WriteUserIndex@ProsCtrl@@AAEHHPADKPAK@Z");
+extern THIS int32_t ibm_pcWriteDummyF0Pair(void *pc, int32_t n, char *out,
+                                           uint32_t cap, uint32_t *len)
+    MANGLED("?WriteDummyF0Pair@ProsCtrl@@AAEHHPADKPAK@Z");
+extern THIS int32_t ibm_pcWriteToOutBuf(void *pc, const char *what,
+                                        char *out, uint32_t cap,
+                                        uint32_t *len)
+    MANGLED("?WriteToOutBuf@ProsCtrl@@AAEHPBDPADKPAK@Z");
+extern THIS int32_t ibm_pcModifyWordProminence(void *pc, int32_t *prom,
+                                               int32_t pos, int32_t flag)
+    MANGLED("?ModifyWordProminence@ProsCtrl@@AAEHPAHHH@Z");
+extern THIS int32_t ibm_pcIsBurstCons(void *pc, uint8_t code)
+    MANGLED("?IsBurstCons@ProsCtrl@@AAEHE@Z");
+extern THIS int32_t ibm_pcIsValidConsForSokuOn(void *pc, uint8_t code)
+    MANGLED("?IsValidConsForSokuOn@ProsCtrl@@AAEHE@Z");
+#define PCM(name) ibm_pc##name
 
 #define PB_SET(blk, which, p) (*(void **)((blk) + which) = (p))
 #define JP_SET(blk, which, p) (*(void **)((blk) + which) = (p))
@@ -8066,6 +8164,674 @@ static void sweepIntonPhrase(void)
 }
 
 
+
+/* ---- ProsCtrl -------------------------------------------------------- */
+
+/* The four records this class builds have their three pointers parked past
+   them on our side and at IBM's own offsets on IBM's, so the sweep reaches
+   them through these rather than as bytes -- and nothing below prints an
+   address, only which entry of an array something is. */
+#ifdef EVV_ROMPRIMS_OURS
+#define PCBG_AT(a, i)   ((uint8_t *)(a) + (long)(i) * (long)BG_ROOM)
+#define PCPH_AT(a, i)   ((uint8_t *)(a) + (long)(i) * (long)PH_ROOM)
+#define PCAP_AT(a, i)   ((uint8_t *)(a) + (long)(i) * (long)AP_ROOM)
+#define PCBG_PHRASE(p)  (*(void **)((uint8_t *)(p) + BG_PHRASE_AT))
+#define PCPH_WORD(p)    (*(void **)((uint8_t *)(p) + PH_WORD_AT))
+#define PCAP_MORA(p)    (*(void **)((uint8_t *)(p) + AP_MORA_AT))
+#else
+#define PCBG_AT(a, i)   ((uint8_t *)(a) + (long)(i) * BG_SIZE)
+#define PCPH_AT(a, i)   ((uint8_t *)(a) + (long)(i) * PH_SIZE)
+#define PCAP_AT(a, i)   ((uint8_t *)(a) + (long)(i) * AP_SIZE)
+#define PCBG_PHRASE(p)  (*(void **)((uint8_t *)(p) + BG_PHRASE))
+#define PCPH_WORD(p)    (*(void **)((uint8_t *)(p) + PH_WORD))
+#define PCAP_MORA(p)    (*(void **)((uint8_t *)(p) + AP_MORA))
+#endif
+#define PCMO_AT(a, i)   ((uint8_t *)(a) + (long)(i) * MO_SIZE)
+#define PCB(p, off)     (*((uint8_t *)(p) + (off)))
+#define PCS16(p, off)   (*(int16_t *)((uint8_t *)(p) + (off)))
+
+static char pc_room[PC_BYTES + 8];
+static char pc_out[0x4000];
+static char pc_buf[0x400];
+static char pc_ap[AP_SIZE + 32];
+static char pc_moras[12 * MO_SIZE];
+
+/* A chain of breath groups built by hand rather than by IntonPhrase.
+ *
+ * The copy rewrites three codes as it goes and the only way to reach that
+ * rewriting is a reading that holds them, which no reading built out of
+ * printable bytes does. Building the group here rather than driving the pass
+ * in front of it also lets the reading and the mora positions be made to
+ * agree whatever the rewriting does to their lengths, which a real analysis
+ * arranges and a fixture otherwise cannot.
+ *
+ * The chain link is a pointer on IBM's side and a stride count on ours, which
+ * rom/jajp/intonphrase.h says why. */
+static char pc_bgt[3][IP_GROUP_SIZE];
+
+#ifdef EVV_ROMPRIMS_OURS
+#define PCBGT_LINK(g, p) IG_NEXT_SET((g), (p))
+#else
+#define PCBGT_LINK(g, p) (*(void **)(g) = (p))
+#endif
+#define PCIH_AT(g, i) \
+    ((uint8_t *)(g) + IG_PHRASE + (long)(i) * IG_PHRASE_SIZE)
+
+/* One group of one phrase, whose reading is the codes given and whose words
+   are cut at every second code. Every field ProsCtrl reads is set, and the
+   mora positions are one every two codes, so a word of an even number of
+   codes has whole moras in it however the copy rewrites them. */
+static void pcGroup(int g, const uint8_t *codes, int len, int words,
+                    int kind, uint32_t seed)
+{
+    uint8_t *bg = (uint8_t *)pc_bgt[g];
+    uint8_t *ph;
+    int      i;
+
+    memset(bg, 0, IP_GROUP_SIZE);
+    ph = PCIH_AT(bg, 0);
+
+    for (i = 0; i < len; i++)
+        ph[IH_KANA + i] = codes[i];
+    ph[IH_KANA_LEN] = (uint8_t)len;
+    ph[IH_COUNT]    = (uint8_t)words;
+    ph[IH_FIRST]    = 1;
+    ph[IH_FLAG]     = (uint8_t)(seed % 4);
+    *(int16_t *)(ph + IH_AT66) = (int16_t)(seed % 3);
+
+    for (i = 0; i < words; i++) {
+        ph[IH_LEN + i]   = (uint8_t)(len / words
+                                     + (i < len % words ? 1 : 0));
+        /* A word holds no more moras than it holds codes. The copy trims a
+           reading that ends in a full stop by looking at the code its mora
+           count names, so a mora count above the code count reads past the
+           codes that were written -- into IBM's heap, which is not ours.
+           That is an IBM defect and a real analysis cannot reach it, since
+           whatever made the codes made the count with them. */
+        ph[IH_MORAS + i] = (uint8_t)(ph[IH_LEN + i] == 0 ? 0
+                                     : 1 + (seed >> i) % ph[IH_LEN + i]);
+        ph[IH_A + i]     = (uint8_t)((seed >> (i + 2)) % 2);
+        ph[IH_PITCH + i] = (uint8_t)(1 + (seed >> (i + 4)) % 4);
+    }
+    /* One mora a code, which is the only arrangement whose arithmetic
+       cannot drift: the walk that counts a word's moras compares a count of
+       rewritten codes against a position in the reading, and two codes to a
+       mora leaves room for those to disagree. */
+    for (i = 0; i < IH_E_N; i++) {
+        *(int16_t *)(ph + IH_E + i * 2) = (int16_t)(i < len ? i : -1);
+        ph[IH_F + i] = (uint8_t)(1 + (seed >> i) % 10);
+    }
+
+    bg[IG_PHRASES] = 1;
+    bg[IG_LEVEL]   = (uint8_t)len;
+    bg[IG_KIND]    = (uint8_t)kind;
+    *(int16_t *)(bg + IG_PAUSE) = (int16_t)(0x10 + seed % 0x40);
+    PCBGT_LINK(bg, NULL);
+}
+
+/* One accent phrase built by hand, with a chosen run of mora kinds and codes.
+   A code is a consonant times eight plus a vowel, which is what the writer
+   takes it apart into, so the codes are built that way rather than drawn. */
+static void pcPhrase(const int *kinds, int n, uint32_t seed)
+{
+    int i, j;
+
+    memset(pc_ap, 0, sizeof pc_ap);
+    memset(pc_moras, 0, sizeof pc_moras);
+    for (i = 0; i < n; i++) {
+        uint8_t *mo = PCMO_AT(pc_moras, i);
+        int      codes = 1 + (int)((seed >> (i & 7)) % 4);
+
+        PCB(mo, MO_CODES) = (uint8_t)codes;
+        for (j = 0; j < codes; j++) {
+            int cons  = (int)((seed >> j) % 0x20);
+            int vowel = (int)((seed >> (j + 3)) % 8);
+
+            /* Never a doubling as the last code of a mora: it would write
+               the consonant of the code after it, and there is none, so IBM
+               reads a local it never set. */
+            if (j == codes - 1 && vowel == 5)
+                vowel = 4;
+            PCB(mo, MO_CODE + j) = (uint8_t)(cons * 8 + vowel);
+        }
+        PCS16(mo, MO_KIND) = (int16_t)kinds[i];
+    }
+    PCB(pc_ap, AP_MORA_N) = (uint8_t)n;
+    PCB(pc_ap, AP_CODES)  = (uint8_t)n;
+    PCB(pc_ap, AP_MORAS)  = (uint8_t)n;
+    PCB(pc_ap, AP_HEAD)   = (uint8_t)(seed % 3);
+    PCB(pc_ap, AP_LEN)    = (uint8_t)n;
+    PCB(pc_ap, AP_PITCH)  = (uint8_t)(seed % 5);
+    PCS16(pc_ap, AP_LONG) = (int16_t)(seed % 7);
+    PCAP_MORA(pc_ap) = pc_moras;
+}
+
+/* The tree, printed level by level and never as bytes: what a level says is
+   the same on both sides, and the pointers between the levels are not. */
+static void pcTree(const char *tag, long a, void *groups, int32_t count)
+{
+    int32_t g, p, w, m;
+
+    printf("PC tree %s %ld %d\n", tag, a, (int)count);
+    for (g = 0; g < count; g++) {
+        uint8_t *bg = PCBG_AT(groups, g);
+
+        printf("PC group %s %ld %d %d %d %d %d\n", tag, a, (int)g,
+               (int)PCS16(bg, BG_PAUSE), (int)PCB(bg, BG_LEVEL),
+               (int)PCB(bg, BG_PHRASES), (int)PCB(bg, BG_KIND));
+        for (p = 0; p < PCB(bg, BG_PHRASES); p++) {
+            uint8_t *ph = PCPH_AT(PCBG_PHRASE(bg), p);
+
+            printf("PC phrase %s %ld %d %d %d %d %d %d %d\n", tag, a,
+                   (int)g, (int)p, (int)PCB(ph, PH_MORAS),
+                   (int)PCB(ph, PH_FLAG), (int)PCB(ph, PH_FIRST),
+                   (int)PCB(ph, PH_WORDS), (int)PCS16(ph, PH_AT4));
+            for (w = 0; w < PCB(ph, PH_WORDS); w++) {
+                uint8_t *ap = PCAP_AT(PCPH_WORD(ph), w);
+                int      k;
+
+                printf("PC word %s %ld %d %d %d %d %d %d %d %d %d %d", tag,
+                       a, (int)g, (int)p, (int)w, (int)PCB(ap, AP_CODES),
+                       (int)PCB(ap, AP_MORAS), (int)PCS16(ap, AP_LONG),
+                       (int)PCB(ap, AP_MORA_N), (int)PCB(ap, AP_LAST),
+                       (int)PCB(ap, AP_HEAD), (int)PCB(ap, AP_LEN));
+                printf(" %d ", (int)PCB(ap, AP_PITCH));
+                /* Only the codes it says it holds. What follows them in the
+                   block is whatever the heap had, which is not the same heap
+                   on the two sides and is read by nothing. */
+                for (k = 0; k < PCB(ap, AP_CODES) && k < 0x19; k++)
+                    printf("%02x", (unsigned)PCB(ap, AP_CODE + k));
+                putchar('\n');
+                for (m = 0; m < PCB(ap, AP_MORA_N); m++) {
+                    uint8_t *mo = PCMO_AT(PCAP_MORA(ap), m);
+
+                    printf("PC mora %s %ld %d %d %d %d %d %d ", tag, a,
+                           (int)g, (int)p, (int)w, (int)m,
+                           (int)PCB(mo, MO_CODES), (int)PCS16(mo, MO_KIND));
+                    for (k = 0; k < PCB(mo, MO_CODES) && k < 0x19; k++)
+                        printf("%02x", (unsigned)PCB(mo, MO_CODE + k));
+                    putchar('\n');
+                }
+            }
+        }
+    }
+}
+
+#ifndef EVV_ROMPRIMS_OURS
+/* How long IBM's user-index escape is. IBM works it out with a strlen in a
+   dynamic initialiser, and the reference build removes the section that would
+   have run it, so the value stays nought and the one method that divides by
+   it faults. It is four -- the escape is a backtick, u, i and a space -- and
+   reference/Makefile globalizes the symbol so this can say so. Ours has it as
+   a constant in rom/jajp/prosctrl.h and needs nothing. */
+extern int s_nLenUserIdx;
+#endif
+
+static void sweepProsCtrl(void)
+{
+    long     i, j, k, m;
+    uint32_t seed;
+    uint32_t roll;
+
+#ifndef EVV_ROMPRIMS_OURS
+    s_nLenUserIdx = PC_USER_IDX_LEN;
+#endif
+    memset(pc_room, 0, sizeof pc_room);
+    PCM(Ctor)(pc_room);
+    printf("PC ctor %d %d %d\n", (int)*(int32_t *)(pc_room + PC_MODE),
+           (int)*(int32_t *)(pc_room + PC_UNREAD_04),
+           (int)*(int32_t *)(pc_room + PC_ARG));
+    PCM(Dtor)(pc_room);
+
+    /* ---- the two phoneme predicates, every code ---------------------- */
+
+    for (i = 0; i < 256; i++)
+        printf("PC cons %ld %d %d\n", i,
+               (int)PCM(IsBurstCons)(pc_room, (uint8_t)i),
+               (int)PCM(IsValidConsForSokuOn)(pc_room, (uint8_t)i));
+
+    /* ---- a word's prominence ---------------------------------------- */
+
+    for (i = -8; i <= 16; i++)
+        for (j = -8; j <= 16; j++)
+            for (k = 0; k < 2; k++) {
+                int32_t prom = (int32_t)i;
+
+                PCM(ModifyWordProminence)(pc_room, &prom, (int32_t)j,
+                                          (int32_t)k);
+                printf("PC prom %ld %ld %ld %d\n", i, j, k, (int)prom);
+            }
+
+    /* ---- text into the caller's buffer ------------------------------ */
+
+    /* Every length of string against every cap that could refuse it, and the
+       length carried in as well, since what the writer refuses on is the sum
+       of the two rather than either. */
+    for (i = 0; i <= 12; i++)
+        for (j = 0; j <= 16; j++)
+            for (k = 0; k <= 4; k++) {
+                char     what[16];
+                uint32_t len = (uint32_t)k;
+                int32_t  rc;
+
+                pc_out[0] = '\0';
+                for (m = 0; m < i; m++)
+                    what[m] = (char)('a' + m);
+                what[i] = '\0';
+                rc = PCM(WriteToOutBuf)(pc_room, what, pc_out, (uint32_t)j,
+                                        &len);
+                printf("PC outbuf %ld %ld %ld %d %u [%s]\n", i, j, k,
+                       (int)rc, (unsigned)len, pc_out);
+            }
+
+    /* The index marks, which go out in batches, and a cap that stops it
+       part way through. */
+    for (i = 0; i <= 260; i += 7)
+        for (j = 0; j < 3; j++) {
+            static const unsigned caps[3] = { 0x1000, 300, 4 };
+            uint32_t len = 1;
+            int32_t  rc;
+
+            pc_out[0] = '\0';
+            rc = PCM(WriteUserIndex)(pc_room, (int32_t)i, pc_out, caps[j],
+                                     &len);
+            printf("PC useridx %ld %ld %d %u %d\n", i, j, (int)rc,
+                   (unsigned)len, (int)strlen(pc_out));
+        }
+    /* And exactly a batch, twice a batch and three times, which is the only
+       place the test that cuts the last batch decides anything. */
+    for (i = 0; i < 6; i++) {
+        static const long big[6] = { 62, 124, 186, 300, 1000, 4000 };
+        uint32_t len = 1;
+
+        pc_out[0] = '\0';
+        printf("PC useridxbig %ld %d %u %d\n", i,
+               (int)PCM(WriteUserIndex)(pc_room, (int32_t)big[i], pc_out,
+                                        sizeof pc_out, &len),
+               (unsigned)len, (int)strlen(pc_out));
+    }
+
+    /* The pause and boundary a group closes with, in all four of its forms
+       and over a cap that refuses. */
+    for (i = 0; i <= 2000; i += 137)
+        for (j = 0; j <= 8; j++)
+            for (k = 0; k < 3; k++) {
+                static const unsigned caps[3] = { 0x1000, 0x0c, 2 };
+                uint32_t len = 1;
+                int32_t  rc;
+
+                pc_out[0] = '\0';
+                rc = PCM(WriteBGInfo)(pc_room, (int32_t)i, (int32_t)j,
+                                      (int32_t)(k & 1), pc_out, caps[k],
+                                      &len);
+                printf("PC bginfo %ld %ld %ld %d %u [%s]\n", i, j, k,
+                       (int)rc, (unsigned)len, pc_out);
+            }
+
+    /* Whether a mora is stressed: every place inside and outside the word's
+       own run, and the flag that overrides it. */
+    for (i = -2; i <= 6; i++)
+        for (j = -2; j <= 6; j++)
+            for (k = -2; k <= 6; k++)
+                for (m = 0; m < 2; m++) {
+                    uint32_t len = 1;
+                    int32_t  rc;
+
+                    pc_out[0] = '\0';
+                    rc = PCM(WriteStressLevel)(pc_room, (int32_t)i,
+                                               (int32_t)j, (int32_t)k,
+                                               pc_out, sizeof pc_out, &len,
+                                               (int32_t)m);
+                    printf("PC stress %ld %ld %ld %ld %d [%s]\n", i, j, k, m,
+                           (int)rc, pc_out);
+                }
+
+    for (i = 0; i <= 6; i++)
+        for (j = 0; j < 3; j++) {
+            static const unsigned caps[3] = { 0x1000, 0x10, 3 };
+            uint32_t len = 1;
+            int32_t  rc;
+
+            pc_out[0] = '\0';
+            rc = PCM(WriteDummyF0Pair)(pc_room, (int32_t)i, pc_out, caps[j],
+                                       &len);
+            printf("PC dummyf0 %ld %ld %d %u [%s]\n", i, j, (int)rc,
+                   (unsigned)len, pc_out);
+        }
+
+    /* ---- how far a word runs, and what it is called ----------------- */
+
+    /* The mora kinds are what this turns on: one of ten, and the ten fall
+       into five roads. Every run of kinds up to four long over the ten, plus
+       longer runs drawn from them, and every boundary kind on top. */
+    roll = 2166136261u;
+    seed = 0x6f1d3ac7u;
+    for (i = 0; i < 4000; i++) {
+        int kinds[8];
+        int n = 1 + (int)(ipNext(&seed) % 8);
+        int q;
+
+        for (q = 0; q < n; q++)
+            kinds[q] = 1 + (int)(ipNext(&seed) % 10);
+        pcPhrase(kinds, n, seed);
+        for (j = 0; j < n; j++)
+            for (k = 0; k <= 8; k++) {
+                int32_t     at = (int32_t)j;
+                int32_t     first = -1;
+                int32_t     upto = -1;
+                int32_t     pos = 0;
+                const char *name = NULL;
+                int32_t     rc;
+
+                rc = PCM(GetGokiInfoToWrite)(pc_room,
+                                             (const uint8_t *)pc_ap, &at,
+                                             &first, &upto, &pos, &name,
+                                             (int32_t)(k & 1), (int32_t)k);
+                roll = (roll ^ (uint32_t)rc) * 16777619u;
+                roll = (roll ^ (uint32_t)at) * 16777619u;
+                roll = (roll ^ (uint32_t)first) * 16777619u;
+                roll = (roll ^ (uint32_t)upto) * 16777619u;
+                roll = (roll ^ (uint32_t)pos) * 16777619u;
+                roll = (roll ^ (uint32_t)(name == NULL ? 0
+                                          : (int)strlen(name))) * 16777619u;
+                if (name != NULL) {
+                    const char *c;
+
+                    for (c = name; *c; c++)
+                        roll = (roll ^ (uint32_t)(uint8_t)*c) * 16777619u;
+                }
+                if (i < 8)
+                    printf("PC goki %ld %ld %ld %d %d %d %d %d %s\n", i, j, k,
+                           (int)rc, (int)at, (int)first, (int)upto, (int)pos,
+                           name != NULL ? name : "(none)");
+            }
+    }
+    printf("PC goki roll %08lx\n", (unsigned long)roll);
+
+    /* ---- one mora's codes as phonemes ------------------------------- */
+
+    roll = 2166136261u;
+    seed = 0x11e5c3d9u;
+    for (i = 0; i < 3000; i++) {
+        int kinds[8];
+        int n = 1 + (int)(ipNext(&seed) % 8);
+        int q;
+
+        for (q = 0; q < n; q++)
+            kinds[q] = 1 + (int)(ipNext(&seed) % 10);
+        pcPhrase(kinds, n, seed);
+        for (j = 0; j < n; j++)
+            for (k = 0; k <= 6; k++) {
+                int32_t  at = 0;
+                uint32_t len = 1;
+                int32_t  rc;
+
+                pc_out[0] = '\0';
+                pc_buf[0] = '\0';
+                rc = PCM(WriteGokiInfo)(pc_room, (const uint8_t *)pc_ap,
+                                        (int32_t)j, (int32_t)k, &at, pc_buf,
+                                        pc_out, sizeof pc_out, &len);
+                roll = (roll ^ (uint32_t)rc) * 16777619u;
+                roll = (roll ^ (uint32_t)at) * 16777619u;
+                roll = (roll ^ len) * 16777619u;
+                for (m = 0; pc_out[m]; m++)
+                    roll = (roll ^ (uint32_t)(uint8_t)pc_out[m]) * 16777619u;
+                for (m = 0; pc_buf[m]; m++)
+                    roll = (roll ^ (uint32_t)(uint8_t)pc_buf[m]) * 16777619u;
+                if (i < 12) {
+                    int q;
+
+                    printf("PC gokiinfo %ld %ld %ld %d %d %u [%s] [%s]", i,
+                           j, k, (int)rc, (int)at, (unsigned)len, pc_out,
+                           pc_buf);
+                    for (q = 0; q < PCB(pc_ap, AP_MORA_N); q++) {
+                        uint8_t *one = PCMO_AT(pc_moras, q);
+                        int      z;
+
+                        printf(" %d:%d:", (int)PCS16(one, MO_KIND),
+                               (int)PCB(one, MO_CODES));
+                        for (z = 0; z < PCB(one, MO_CODES); z++)
+                            printf("%02x", (unsigned)PCB(one, MO_CODE + z));
+                    }
+                    putchar('\n');
+                }
+            }
+        printf("PC gokiinfo at %ld %08lx\n", i, (unsigned long)roll);
+    }
+    printf("PC gokiinfo roll %08lx\n", (unsigned long)roll);
+
+    /* ---- the whole chain, from IntonPhrase's own answer -------------- */
+
+    /* The only honest fixture for the copy and the writer is a chain the pass
+       in front of them really built, so IntonPhrase builds one and its head
+       is handed over. That also holds the two classes to each other: a field
+       either of them reads at the wrong offset shows here and nowhere else. */
+    /* Twenty-four shapes of at most six rows. The writer appends to the
+       caller's buffer with strcat every time, so what it costs grows with the
+       square of what it has written already and the shapes cannot be as large
+       as IntonPhrase's without the sweep taking minutes -- and a real sentence
+       is this size anyway. */
+    for (m = 0; m < 24; m++) {
+        static const int32_t modes[3] = { 1, 2, 3 };
+        int      n = 1 + (int)(m % 6);
+        void    *groups = NULL;
+        int32_t  count = 0;
+        int32_t  rc;
+        int32_t  env[4];
+
+        seed = 0x2c9e5f13u + (uint32_t)m * 2246822519u;
+        ipSetUp(n, seed, (int)(m % IP_SHIFT_N));
+
+        /* The long entries have to be positions in the row's own reading,
+           rising, and IntonPhrase does not care what they are: it copies
+           them. ProsCtrl does care, because it takes the gaps between them as
+           mora lengths and sizes its phoneme buffer from the reading's length
+           instead -- so entries that say nothing about the reading write more
+           codes into that buffer than the group says it holds, and IBM
+           overruns its own heap block. Ours is caught by the arena guard
+           rather than silently corrupting, which is how this was found.
+         *
+         * One mora a code here, and no code that is a doubling: a doubling
+           writes the consonant of the code after it out of a local IBM never
+           sets when there is none. The copy's own rewriting is swept by the
+           hand-built groups below, where the reading and the mora positions
+           can be made to agree whatever the rewriting does to them. */
+        for (i = 0; i < n; i++)
+            for (j = 0; j < IH_E_N; j++)
+                *(int16_t *)(IP_ROW(i) + PT_LONG + j * 2) =
+                    (int16_t)(j < (long)IPB(IP_ROW(i), PT_MORAS) ? j : -1);
+
+        for (i = 0; i < n; i++)
+            for (j = 0; j < PT_MORA_N * 2; j++) {
+                uint8_t *c = (uint8_t *)IP_ROW(i) + PT_KANA + j;
+
+                if ((*c & 7) == 5)
+                    *c = (uint8_t)(*c ^ 1);
+            }
+
+        IPM(SetPhraseState)(ip_room);
+        IPM(ProsodyControl)(ip_room);
+        IPM(SetIntonationalPhrase)(ip_room);
+        IPM(SetPauseLength)(ip_room);
+
+        memset(pc_room, 0, sizeof pc_room);
+        PCM(Ctor)(pc_room);
+        rc = PCM(BG_T2BreathGroups)(pc_room, IP_GET(ip_room, IP_HEAD),
+                                    &groups, &count);
+        printf("PC copy %ld %d %d\n", m, (int)rc, (int)count);
+        if (rc == 0 && m < 4)
+            pcTree("copy", m, groups, count);
+        if (rc == 0) {
+            uint32_t len = 1;
+
+            pc_out[0] = '\0';
+            pc_out[0] = '\0';
+            *(int32_t *)(pc_room + PC_ARG) = (int32_t)(m % 3);
+            printf("PC espr %ld %d [%s]\n", m,
+                   (int)PCM(WriteESPR2)(pc_room, groups, count, 0x64, pc_out,
+                                        sizeof pc_out), pc_out);
+            /* Again on the same instance and with no constructor between,
+               which is the only way the parameter being cleared after the
+               first group decides anything. */
+            pc_out[0] = '\0';
+            printf("PC espr again %ld %d [%s]\n", m,
+                   (int)PCM(WriteESPR2)(pc_room, groups, count, 0x64, pc_out,
+                                        sizeof pc_out), pc_out);
+            (void)len;
+            PCM(FreeBreathGroups)(pc_room, groups, count);
+        }
+
+        /* And the entry point, which does the two of those in order and
+           refuses four ways before it starts. */
+        for (i = 0; i < 3; i++) {
+            memset(pc_room, 0, sizeof pc_room);
+            PCM(Ctor)(pc_room);
+            pc_out[0] = '\0';
+            pc_out[0] = '\0';
+            env[0] = modes[i];
+            printf("PC espr2 %ld %ld %d [%s]\n", m, i,
+                   (int)PCM(GenerateESPR)(pc_room, env, (int32_t)(m & 3),
+                                          NULL, IP_GET(ip_room, IP_HEAD),
+                                          pc_out, sizeof pc_out),
+                   pc_out);
+        }
+    }
+
+    /* The copy's own rewriting, on groups built here rather than by the pass
+       in front. No reading made of printable bytes holds the codes it
+       rewrites, so ten sabotages of those roads moved nothing until this went
+       in, and the readings here are made of exactly those codes.
+     *
+     * Two of the rewritings are left out and this is where the line is. The
+       mark for a devoiced vowel and the mark for a nasal each become two
+       codes where they were one, and nothing puts the mora positions right
+       afterwards: the walk that decides how many moras a word holds compares
+       a count of rewritten codes against a position in the reading, so a
+       word that grew reaches into the next word's positions, and a few words
+       later the arithmetic goes negative and IBM writes a couple of hundred
+       bytes past its own mora array. Ours is stopped by the arena guard
+       instead. It cannot be reached from a real reading, since the analyser
+       that made the reading made the positions with it, so the sweep does
+       not go there and the two arms stay unswept. */
+    for (m = 0; m < 300; m++) {
+        /* The five bands the class test names are far apart in the byte, so
+           the pool has to reach each of them: the code after a full stop is
+           divided by eight and one added, and the test asks whether that is
+           at most ten, twelve, twenty-one, over twenty-two, or at most
+           twenty-six. Codes in the printable range only ever reach fourteen,
+           and two of the five bands were unswept until these went in. */
+        static const uint8_t pool[16] = {
+            0xfd, 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5,
+            0x50, 0x21, 0x92, 0x32,
+            0xa2, 0xaa, 0xc2, 0xca, 0x60
+        };
+        uint8_t codes[16];
+        int     len = 2 + (int)(m % 5);
+        void   *groups = NULL;
+        int32_t count = 0;
+        int32_t rc;
+        int     q;
+
+        seed = 0x4d2a9c07u + (uint32_t)m * 1000003u;
+        for (q = 0; q < len; q++) {
+            uint32_t v = ipNext(&seed);
+
+            codes[q] = (uint8_t)((v & 1) ? pool[(v >> 1) % 16]
+                                         : 0x30 + (v >> 4) % 0x40);
+        }
+        pcGroup(0, codes, len, 1, (int)(m % 7), seed);
+
+        memset(pc_room, 0, sizeof pc_room);
+        PCM(Ctor)(pc_room);
+        rc = PCM(BG_T2BreathGroups)(pc_room, pc_bgt[0], &groups, &count);
+        printf("PC hand %ld %d %d %d ", m, (int)rc, (int)count, len);
+        for (q = 0; q < len; q++)
+            printf("%02x", (unsigned)codes[q]);
+        putchar('\n');
+        if (rc == 0) {
+            pcTree("hand", m, groups, count);
+            PCM(FreeBreathGroups)(pc_room, groups, count);
+        }
+    }
+
+    /* And one more shape for the copy: two codes to a mora, all of them
+       ordinary but the last, which is a full stop. That is the only way to
+       reach the trim at the end of the mora loop, which takes a code back
+       from a mora of more than one that ends in a full stop -- with one code
+       to a mora it can never fire. Two codes are safe here because nothing
+       in the reading changes length: the full stop is last, so the code
+       after it is the nought the group was cleared to, whose class lets the
+       stop stand as itself. */
+    for (m = 0; m < 60; m++) {
+        uint8_t codes[16];
+        int     len = 2 + (int)(m % 4) * 2;
+        void   *groups = NULL;
+        int32_t count = 0;
+        int32_t rc;
+        int     q;
+
+        seed = 0x7b3f61d5u + (uint32_t)m * 40499u;
+        for (q = 0; q < len; q++)
+            codes[q] = (uint8_t)(0x30 + ipNext(&seed) % 0x40);
+        codes[len - 1] = 0xfd;
+        pcGroup(0, codes, len, 1, (int)(m % 7), seed);
+        {
+            uint8_t *ph = PCIH_AT((uint8_t *)pc_bgt[0], 0);
+
+            for (q = 0; q < IH_E_N; q++)
+                *(int16_t *)(ph + IH_E + q * 2) =
+                    (int16_t)(q * 2 < len ? q * 2 : -1);
+        }
+
+        memset(pc_room, 0, sizeof pc_room);
+        PCM(Ctor)(pc_room);
+        rc = PCM(BG_T2BreathGroups)(pc_room, pc_bgt[0], &groups, &count);
+        printf("PC pair %ld %d %d %d ", m, (int)rc, (int)count, len);
+        for (q = 0; q < len; q++)
+            printf("%02x", (unsigned)codes[q]);
+        putchar('\n');
+        if (rc == 0) {
+            pcTree("pair", m, groups, count);
+            PCM(FreeBreathGroups)(pc_room, groups, count);
+        }
+    }
+
+    /* The four refusals, and the road that is not implemented. */
+    {
+        int32_t env[4];
+        void   *head;
+
+        env[0] = 1;
+        ipSetUp(4, 0x5a5a5a5au, 0);
+        IPM(SetPhraseState)(ip_room);
+        IPM(ProsodyControl)(ip_room);
+        IPM(SetIntonationalPhrase)(ip_room);
+        head = IP_GET(ip_room, IP_HEAD);
+        memset(pc_room, 0, sizeof pc_room);
+        PCM(Ctor)(pc_room);
+        pc_out[0] = '\0';
+        printf("PC refuse noenv %d\n",
+               (int)PCM(GenerateESPR)(pc_room, NULL, 0, NULL, head, pc_out,
+                                      sizeof pc_out));
+        printf("PC refuse nothing %d\n",
+               (int)PCM(GenerateESPR)(pc_room, env, 0, NULL, NULL, pc_out,
+                                      sizeof pc_out));
+        printf("PC refuse noout %d\n",
+               (int)PCM(GenerateESPR)(pc_room, env, 0, NULL, head, NULL,
+                                      sizeof pc_out));
+        printf("PC refuse nocap %d\n",
+               (int)PCM(GenerateESPR)(pc_room, env, 0, NULL, head, pc_out,
+                                      0));
+        printf("PC refuse text %d\n",
+               (int)PCM(GenerateESPR)(pc_room, env, 0, "abc", head, pc_out,
+                                      sizeof pc_out));
+        env[0] = 7;
+        printf("PC refuse mode %d\n",
+               (int)PCM(GenerateESPR)(pc_room, env, 0, NULL, head, pc_out,
+                                      sizeof pc_out));
+    }
+}
+
 int main(void)
 {
     Param *p;
@@ -8121,6 +8887,7 @@ int main(void)
     sweepJPath();
     sweepNumRead();
     sweepIntonPhrase();
+    sweepProsCtrl();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

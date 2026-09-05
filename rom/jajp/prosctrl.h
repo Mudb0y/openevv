@@ -91,6 +91,29 @@
                                      length. */
 #define MO_SIZE         0x1c
 
+/* ---- where our build keeps the three pointers ----------------------- */
+
+/* Each of the three arrays is reached through a pointer at an offset IBM
+ * chose for a four-byte one, and not one of the three has four bytes of slack
+ * behind it: a breath group's phrase array is at nought with the pause at
+ * four, a phrase's word array at eight of a record that ends at twelve, and
+ * an accent phrase's mora array at 0x20 with four fields behind it. So on a
+ * build where a pointer is eight bytes wide every one of them would run over
+ * a field that is read.
+ *
+ * These records are this class's own -- operator new hands them out and
+ * nothing of IBM's ever sees them -- so each is made one pointer longer than
+ * IBM's and the pointer is parked at the end, which is what every record in
+ * this directory does. IBM's field offsets are untouched, and the sweep pokes
+ * the same offsets on both sides through a macro of its own.
+ */
+#define BG_ROOM         (BG_SIZE + sizeof(void *))
+#define BG_PHRASE_AT    (BG_SIZE)
+#define PH_ROOM         (PH_SIZE + sizeof(void *))
+#define PH_WORD_AT      (PH_SIZE)
+#define AP_ROOM         (AP_SIZE + sizeof(void *))
+#define AP_MORA_AT      (AP_SIZE)
+
 /* ---- what the ESPR text is made of ---------------------------------- */
 
 /* The escape a user index becomes, one per index, and how long it is. IBM

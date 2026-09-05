@@ -761,6 +761,47 @@ void     ip_SetPitchValues(void *ip);
 int16_t  ip_SetIntonationalPhrase(void *ip);
 uint8_t  ip_SetAccentualPhrase(void *ip, void *ph, uint8_t at);
 
+/* ---- ProsCtrl -------------------------------------------------------- */
+
+/* The prosody chain: breath groups in, the ESPR string the synthesiser reads
+   out. `GenerateESPR' is the entry point and the other sixteen are its
+   parts. Fourteen of them are private in IBM's own source and are not static
+   here for the reason JPath's and IntonPhrase's are not: each has an external
+   symbol in the object, so each can be held to IBM's own answer.
+   rom/jajp/prosctrl.h maps the four records it builds. */
+void    *pc_ctor(void *pc);
+void     pc_dtor(void *pc);
+int32_t  pc_GenerateESPR(void *pc, const void *env, int32_t param,
+                         const char *text, const void *bgt, char *out,
+                         uint32_t cap);
+int32_t  pc_BG_T2BreathGroups(void *pc, const void *bgt, void **outGroups,
+                              int32_t *outCount);
+void     pc_FreeBreathGroups(void *pc, void *groups, int32_t count);
+int32_t  pc_WriteESPR2(void *pc, void *groups, int32_t count, int32_t ms,
+                       char *out, uint32_t cap);
+int32_t  pc_WriteGokiInfo(void *pc, const uint8_t *ap, int32_t which,
+                          int32_t kind, int32_t *at, char *buf, char *out,
+                          uint32_t cap, uint32_t *len);
+int32_t  pc_GetGokiInfoToWrite(void *pc, const uint8_t *ap, int32_t *m,
+                               int32_t *first, int32_t *upto, int32_t *pos,
+                               const char **name, int32_t stress,
+                               int32_t kind);
+int32_t  pc_WriteBGInfo(void *pc, int32_t ms, int32_t kind, int32_t last,
+                        char *out, uint32_t cap, uint32_t *len);
+int32_t  pc_WriteStressLevel(void *pc, int32_t at, int32_t from, int32_t to,
+                             char *out, uint32_t cap, uint32_t *len,
+                             int32_t force);
+int32_t  pc_WriteUserIndex(void *pc, int32_t n, char *out, uint32_t cap,
+                           uint32_t *len);
+int32_t  pc_WriteDummyF0Pair(void *pc, int32_t n, char *out, uint32_t cap,
+                             uint32_t *len);
+int32_t  pc_WriteToOutBuf(void *pc, const char *what, char *out,
+                          uint32_t cap, uint32_t *len);
+int32_t  pc_ModifyWordProminence(void *pc, int32_t *prom, int32_t pos,
+                                 int32_t flag);
+int32_t  pc_IsBurstCons(void *pc, uint8_t code);
+int32_t  pc_IsValidConsForSokuOn(void *pc, uint8_t code);
+
 /* ---- how much of this is written ------------------------------------ */
 
 /* While this is defined the romanizer cannot convert anything yet, and says

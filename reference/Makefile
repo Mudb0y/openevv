@@ -71,6 +71,17 @@ $(WORK)/.stamp: $(wildcard $(OBJS)/*.obj)
 	@$(OBJCOPY) --globalize-symbol=_protectFirstTime \
 	  --globalize-symbol=_initializeStandardVoices \
 	  $(WORK)/eci.obj $(WORK)/eci.tmp && mv $(WORK)/eci.tmp $(WORK)/eci.obj
+# ProsCtrl works out how long its user-index escape is with a strlen in a
+# dynamic initialiser, and the rule above has just removed the section that
+# would have run it -- so the length stays nought and the one method that
+# divides by it faults. The symbol is a file static, so it is globalized here
+# and test/harness/romprims.c sets it before sweeping. Only that harness
+# needs it; nothing else in this tree reaches the prosody chain yet.
+	@if [ -f $(WORK)/PCWriteESPR2.obj ]; then \
+	   $(OBJCOPY) --globalize-symbol=_s_nLenUserIdx \
+	     $(WORK)/PCWriteESPR2.obj $(WORK)/pc.tmp \
+	     && mv $(WORK)/pc.tmp $(WORK)/PCWriteESPR2.obj; \
+	 fi
 	@touch $@
 
 # The runtime abstraction layer, plus the one file that gives it a machine to

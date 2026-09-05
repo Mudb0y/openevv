@@ -110,9 +110,9 @@ That is the engine's own phoneme notation with prosody annotations around it, no
 
 ## What is left
 
-The Japanese-only object set is 116 objects. Sixteen are the Delta language data, which the ordinary lifters take. Forty-nine are the static dictionary, which `tools/rom/dictionary.py` takes. Sixteen are the prosody chain, of which thirteen are empty -- everything inlined away -- leaving `PCWriteESPR2` at 5,834 bytes, `PCRoman2BG` at 2,724 and `PCProsCtrl` at 308 over 1,589 bytes of table.
+The Japanese-only object set is 116 objects. Sixteen are the Delta language data, which the ordinary lifters take. Forty-nine are the static dictionary, which `tools/rom/dictionary.py` takes. Sixteen are the prosody chain, of which thirteen are empty -- everything inlined away -- leaving `PCWriteESPR2` at 5,834 bytes, `PCRoman2BG` at 2,724 and `PCProsCtrl` at 308 over 1,589 bytes of table. Those three are written.
 
-The remaining thirty-five are the romanizer proper: about 168,000 bytes of x86 and 198,000 of data, of which the data is the three objects already lifted -- `dictman`, `unicodeconvt` and `jpnutil`, whose own data section holds the romaji spellings. Eighteen of those objects are written whole: `rominstparam`, `unicodeconvt`, `dictman`, `jpnutil`, `codeconv`, `annotation`, `userdict`, `inputchar`, `inputmngr`, `convtinterface`, `phrasebuf`, `jpath`, `numread`, `intonphrase`, and the five of DictSearch's seven that hold nothing else -- `dictapi`, `fdictapi`, `kanastr`, `engread` and `numanal`. The other two are written too but hold a method apiece of `TextAnalysis` and of `PhraseTable`, which are not. What is left is roughly twenty thousand lines of C, judged from the four to eight bytes of x86 per line of ours that three already-ported objects came out at.
+The remaining thirty-five are the romanizer proper: about 168,000 bytes of x86 and 198,000 of data, of which the data is the three objects already lifted -- `dictman`, `unicodeconvt` and `jpnutil`, whose own data section holds the romaji spellings. Twenty-one of those objects are written whole: `rominstparam`, `unicodeconvt`, `dictman`, `jpnutil`, `codeconv`, `annotation`, `userdict`, `inputchar`, `inputmngr`, `convtinterface`, `phrasebuf`, `jpath`, `numread`, `intonphrase`, the three of the prosody chain that are not empty, and the five of DictSearch's seven that hold nothing else -- `dictapi`, `fdictapi`, `kanastr`, `engread` and `numanal`. The other two are written too but hold a method apiece of `TextAnalysis` and of `PhraseTable`, which are not. What is left is roughly twenty thousand lines of C, judged from the four to eight bytes of x86 per line of ours that three already-ported objects came out at.
 
 It is a Japanese morphological analyser, not a lookup table. The classes, with how many methods each has:
 
@@ -121,9 +121,10 @@ It is a Japanese morphological analyser, not a lookup table. The classes, with h
     DictMan 26 (done)                 ConverterInterface 21 (done)
     InputChar 21 (done)               IntonPhrase 17 (done)
     Romanizer 16                      PhraseTable 16
-    NumRead 11 (done)                 JPath 11 (done)
-    InputManager 10 (done)            RomUserDict 9 (done)
-    PhraseBuf 9 (done)                TextNormalizer 4
+    ProsCtrl 16 (done)                NumRead 11 (done)
+    JPath 11 (done)                   InputManager 10 (done)
+    RomUserDict 9 (done)              PhraseBuf 9 (done)
+    TextNormalizer 4
 
 The two counts that have moved since the first census are IBM's, not a recount of ours. `JpnUtil` has thirty-seven methods rather than thirty-two: five of them are in `codeconv.obj` rather than in its own object. `ConverterInterface` has twenty-one that exist rather than twenty-four declared, the other three being pure in it and Romanizer's to supply.
 
@@ -248,6 +249,38 @@ The last round is the one worth keeping. `SetIntonationalPhrase` reads each row'
 One correction to the record came from outside the class, and it is the argument for reading the next object before believing this one. `ProsCtrl::BG_T2BreathGroups` copies a breath group and its phrases into the prosody chain's own records, so it reads the same two records this class writes -- and it confirms eleven of their fields independently, including every one whose base was settled by tiling. It also reads an int16 at 0x66 of a phrase, which is 0x4a plus twenty-eight: so the reading a phrase holds is twenty-eight codes and not the thirty this file first had. Nothing here reads that field; the prosody chain does.
 
 The sweep is `sweepIntonPhrase` in `test/harness/romprims.c` and it holds every one of the seventeen to IBM's own answer -- fifteen are private members in IBM's source and each has an external symbol in the object all the same, so none of them is reached only through the entry point. The leaves are swept exhaustively: every pair of the two state bytes for the two methods that read a pair, every place and every code for the long-vowel test, every group number against every value of the byte that chooses a boundary kind. `PhraseParsing`'s eight bytes conjoin, so besides two sweeps of one pair at a time there are 400,000 draws of the whole input at once from a pool weighted to the values it tests for. The passes over a whole chain get ninety-six shapes of up to fourteen rows, each pass run on its own from the same shape so that a difference names one pass rather than the lot, printed field by field for six shapes and digested for the rest -- and no digest includes a chain link, because that is the one field the two sides spell differently. What the chain says is checked by walking it and printing which row or group comes next, which is the same number on both sides.
+
+## The prosody
+
+`rom/jajp/prosctrl.c` is all sixteen entry points of `ProsCtrl`, which is the last thing between the analysis and the engine: the breath groups `IntonPhrase` built go in, and what comes out is the ESPR string the synthesiser reads. It is the first piece of the romanizer whose output a person can read at all -- a phrase comes out as `<undef,1 [.1 h(p1, t1) e(p1, t1) ] w0>` and a sentence as a page of that, with the phonemes repeated at the end with none of the marks in them.
+
+`GenerateESPR` is the entry point and does two things. `BG_T2BreathGroups` copies IntonPhrase's chain into a four-level tree of its own -- a breath group, its phrases, their accent phrases, their moras -- rewriting three codes on the way. `WriteESPR2` then walks that tree and writes the text, and the other thirteen are writers it calls or predicates they ask.
+
+How a code becomes a phoneme, since that is the whole of the notation. A mora's code is one byte holding both halves: divided by eight and one added it is the consonant, one of thirty-two; the remainder is the vowel, one of eight. Five of those eight are the plain vowels, and the other three are the doubled consonant, the syllabic nasal and the long vowel, each written differently -- and a consonant of thirty-one is the mark that says the vowel is long, spelled out of a table of its own. The spellings are IBM's and `tools/rom/tables.py` lifts them like every other table: `k`, `ky`, `s`, `sh`, `t`, `ch`, `ts` and twenty-five more, eight vowels, five long vowels.
+
+The two predicates beside them earn their names, and reading them against those spellings is what says so. `IsBurstCons` is twelve codes and they are the plosives and their palatalised forms; `IsValidConsForSokuOn` is sixteen. An ordinary consonant asks the first question of itself, and a doubling asks the second of the consonant after it -- since a doubling exists to double what follows. That is one of the three faults the sweep found here: the two calls are eight lines apart and the burst one was used twice, which showed as a single pitch pair too few after a doubled `j`.
+
+The other two are in the writer and both are about the line that states a group's prominence. Its two `%s` arguments were the wrong way round -- IBM puts the marker before the number and the underscore after it -- and the brace that follows that line is not inside the test that writes it. So a group with no prominence of its own still sends the brace, with whatever the group before it left in that line in front of it: the line is cleared once, before the first group, and never between them.
+
+Two arrays of names went with the tables and neither could be lifted as bytes: what the object holds is a relocation a slot, and each of the eighteen strings is in a COMDAT section of its own. `tools/rom/tables.py` grew a third mode for them -- follow the relocations, read each literal out of its own section by the file offset the header gives -- so those strings are taken rather than retyped, and IBM's own count beside each array is read and checked against the count the lift was told, which was proved by claiming the wrong one and watching it refuse.
+
+The sweep is `sweepProsCtrl` in `test/harness/romprims.c` and it holds all sixteen to IBM's answer over 1,123,932 lines a side. The leaves go whole: both predicates over every code there is, the prominence over every part of speech and every prominence it can be given, the writers over every length of string against every cap that could refuse it, and the index marks over counts that land exactly on a batch as well as between. The copy is swept twice, on chains `IntonPhrase` really built and on groups built by hand, and the two are for different things -- the chain proves the two classes agree about a record neither of them owns alone, and only the hand-built groups reach the code rewriting, since no reading made of printable bytes holds the codes it rewrites.
+
+**Where the sweep stops, and why.** This class is unusually easy to drive off the end of its own allocations, because three of its lengths are worked out separately and are equal only when a real analysis produced all of them. The walk that counts a word's moras compares a count of rewritten codes against a position in the reading. The trim that takes a full stop off the end of a word indexes the codes by the word's mora count. And the buffer that collects a group's phonemes is sized from the reading's length at five bytes a code. Give any of the three a state a real analysis would not produce and IBM writes past a heap block of its own; ours is stopped by the arena guard, which is how each of them was found and is the argument for having that guard at all. So the sweep keeps the mora positions in step with the reading, keeps a word's mora count inside its code count, and leaves out the two rewritings that make a reading longer than it was.
+
+Seventy-two sabotages and sixty-three move lines. The nine that do not are these, and none of them is a gap in the fixture.
+
+Four are the two rewritings just named -- the mark for a devoiced vowel and the mark for a nasal, each of which becomes two codes where it was one, at both the word level and the mora level. Reaching them means handing IBM a reading whose length its own mora positions do not describe, which is the state it walks off its allocation in.
+
+One is a trim the trim in front of it has already made impossible: a mora of more than one code ending in a full stop cannot happen, because the word-level trim takes that code off first and the mora's length is worked out from the shortened count afterwards. It becomes reachable only if the reading grew, which is the case left out above.
+
+One is the size of the phoneme buffer, which decides only whether that buffer overruns -- and the sweep stays on the side where it does not, so a larger one changes nothing.
+
+Two are a flag that is computed, passed, and never read: `WriteESPR2` works out whether a mora is the last of an unstressed group and hands it to `GetGokiInfoToWrite`, which stores it in a local and asks nothing of it. Both sabotages of the computation are therefore invisible, and that is a statement about IBM's code rather than about the sweep.
+
+And one is freeing, which is not an answer. Inverting the test that decides whether a mora array is given back leaks it and frees nothing, and no output moves; the arena guard's outstanding-block report is what sees that, as it did for `ConverterInterface`.
+
+Two sabotages had to be rewritten before they said anything, and the reason is worth keeping. Both changed a bound where the arm it guards could have been changed instead -- `greater than one` to `greater than two` -- so the two versions differed only on the one value the arithmetic in front of them happens never to produce. Sabotage the value the arm assigns, not the bound that reaches it.
 
 ## The surface
 
@@ -470,11 +503,11 @@ Two regions inside the map of the spine are named but not resolved: the parse's 
 
 What is left, and in what order. The counts below are entry points as `nm` reports them across the whole directory, so they include constructors and destructors; the method counts in the census above are smaller for that reason and the two are not in disagreement.
 
-**129 entry points, in seven classes.** `TextAnalysis` 37, `MakeReadableJP` 32, `Romanizer` 18 of which one is written, `PhraseTable` 17, `ProsCtrl` 16, `TextNormalizer` 6, `MakeReadableLangInt` 3. `JPath`'s twelve, `NumRead`'s eleven and `IntonPhrase`'s seventeen are done.
+**113 entry points, in six classes.** `TextAnalysis` 37, `MakeReadableJP` 32, `Romanizer` 18 of which one is written, `PhraseTable` 17, `TextNormalizer` 6, `MakeReadableLangInt` 3. `JPath`'s twelve, `NumRead`'s eleven, `IntonPhrase`'s seventeen and `ProsCtrl`'s sixteen are done.
 
 The order comes from a graph rather than from reading. Pooling what the unwritten classes call makes the remainder look inseparable; asking of each class which other *unwritten* class it calls gives six that call none at all -- `IntonPhrase`, `JPath`, `MakeReadableJP`, `NumRead`, `PhraseBuf` and `ProsCtrl`. So:
 
-`PhraseBuf`, `JPath`, `NumRead` and `IntonPhrase` are written. The two remaining leaves can be taken in either order and each closes on code already here: `ProsCtrl` at sixteen, and `MakeReadableJP` at thirty-two, which is the largest and is the one that produces the phoneme string.
+`PhraseBuf`, `JPath`, `NumRead`, `IntonPhrase` and `ProsCtrl` are written. One leaf is left: `MakeReadableJP` at thirty-two, which is the largest of them and is what turns the analysis into the phoneme string the caller asked for.
 
 Then `TextNormalizer`, which wants `MakeReadableJP`.
 
