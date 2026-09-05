@@ -124,7 +124,7 @@ The eight filter calls that used to be listed here are written, in `src/eci/ssml
 
 The live audio device layer. `ealaudio.obj` is 10 KB of buffer queue and callbacks, with the playback half of `soundfil.obj`, `audiocvt.obj` at 6 KB, `alaw.obj`, `mulaw.obj`, `sample.obj`, `audsize.obj` and `win_sleepcyc.obj` -- about 21 KB in all. `src/eci/sound/eci_pcm.c` is already the boundary where these stood, and says why: below it the original opened a Windows waveform device, and none of that survives a port. PipeWire belongs there, not in a transcription. Worth knowing that `eci.obj` and `fmtinit.obj` do reference the `eal` names, so the output-device path is where that seam shows.
 
-The concatenative manager is not on this list any more, and the sentence that used to put it here was wrong. It said the Torrent engine's data was never shipped. It is shipped, and so is the engine.
+The concatenative engine, and it stays off the list for a better reason than the one that used to be given. The old sentence said the Torrent engine's data was never shipped. That was false: it is shipped, and so is the engine. The real reason is that it is not Eloquence.
 
 `DATA/eCTTS/Voices` in the SDK holds six of them -- `de_de`, `en_gb`, `en_us`, `fr_ca`, `it_it`, `ja_jp` -- one `le/E2MLAN00.LE` apiece, 6.8 to 11 MB each and 55 MB in all. `ecictts.dll` is beside them at 0.4 MB. And the engine is in the static libraries as well: the six `...C.lib` files, one for each of those six languages, carry 74 objects the plain libraries do not, with symbols, in exactly the form everything else here was lifted from. 82,119 instructions, against 505,338 for the whole of IBM's English object set: about a sixth of everything, and four times the 20,838 this file counts as left.
 
@@ -132,7 +132,7 @@ What is in there is a unit-selection pipeline and its waveform reconstruction. `
 
 Twenty-three of the 74 are the ECI layer recompiled as `STATIC_SYNTH_CONCAT` -- `eci`, `synthrd`, `sndthrd`, `msgqueue` and their neighbours under names already ported here. Those are differences to fold into files that exist rather than new files.
 
-It is a second synthesiser, not a piece of this one, and nothing in the formant engine needs it. But it is transcribable by the same method as everything else, and calling it unshippable data was simply false.
+So it is liftable, and that is worth having written down. It is still not going to be lifted here, because this project is Eloquence and Eloquence is the formant engine. That is Eloquent Technology's synthesiser, which IBM bought; the concatenative one is IBM's own later work, and the objects say so themselves -- `synth_haifa`, `occs2speech_haifa`, `ttsnode_haifa`, a dozen more, named for the lab that wrote them. ETI never shipped anything like it. Someone who wants that engine has everything they need to lift it and this file has sized the job, but it is a different product wearing the same interface, and reproducing it would not make anything here sound more like Eloquence.
 
 The Delta debugger. `prdelta.obj` is 11 KB drawing the spine as characters, `rectbuf.obj` 2.6 KB of the record buffer under it, with `io.obj`, and `plot.obj`, `profile.obj` and `debug.obj`, which are 8, 22 and 10 bytes. `src/delta/delta_trace.c` already does the useful part of that job.
 
