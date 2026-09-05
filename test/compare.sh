@@ -69,6 +69,12 @@ REFDIR=${EVV_REFERENCE_DIR:-$BUILD/reference$SUF}
 # Which of ours to run. Both builds have to say the same thing, so either
 # can be set against the reference; EVV_NATIVE names the other one.
 OURS=${EVV_NATIVE:-$BUILD/probe$SUF}
+# Each case is spoken from a directory of its own, so a name given relative
+# to here would not be found once there.
+case $OURS in
+/*) ;;
+*)  OURS=$PWD/$OURS ;;
+esac
 [ -x "$OURS" ] || { echo "compare: no native binary" >&2; exit 2; }
 # Ours may be the Windows build now, which runs the way the reference does.
 case $OURS in

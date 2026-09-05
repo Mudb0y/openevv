@@ -149,6 +149,13 @@ if [ -z "$native" ]; then
         || { echo "matrix: the build failed" >&2; exit 1; }
     native=$root/build/probe$suf
 fi
+# Each case is spoken from a directory of its own, so a name given
+# relative to here would not be found once there and every case would
+# report as moved with nothing having run at all.
+case $native in
+/*) ;;
+*)  native=$PWD/$native ;;
+esac
 [ -x "$native" ] || { echo "matrix: no binary at $native" >&2; exit 2; }
 case $native in
 *.exe) run_native() { $PE "$native" "$@"; } ;;
