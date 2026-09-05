@@ -4,6 +4,8 @@ There is one of each bitness, in `eci-x86_64` and `eci-x86`, and which you want 
 
 On Linux the same names are in `libeci.so.1`, with `libeci.so` beside it and `eci.h` to compile against. `docs/using.md` is how to use it, `docs/api.md` what every call does, and `docs/quirks.md` what will trip you.
 
+Every library here carries all ten languages: US and British English, German, Castilian and American Spanish, French and Canadian French, Italian, Japanese and Polish. `eciGetAvailableLanguages` answers all of them, US English is what a new instance speaks, and `eciSetParam(h, eciLanguageDialect, ...)` on an instance that is not speaking changes it. All ten can be alive in one process at once, each saying what it says alone.
+
 `evvspeak.exe` is the speak window: type something, pick one of the eight voices, set the rate in words a minute, and hear it. `evv.exe` is the same engine on the command line. Both are one file, sixty-four bit, and want nothing installed.
 
 The audio is byte for byte what IBM's own binary produces, over every test case there is for each language, from this build.

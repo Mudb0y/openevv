@@ -41,6 +41,10 @@ On a Nix machine `nix build` makes the same binary at `result/bin/evv`, and `nix
 
 `CC` is the compiler for this machine, `cc` by default. `CC32` is the thirty-two bit one, which on this machine is the cross compiler the flake provides, `i686-unknown-linux-gnu-gcc`, and elsewhere is usually the host compiler with a flag: `make evv32 CC32="gcc -m32"`. `NM` is used by `make missing`. `OPT` is the optimisation level, `-O2`. `CFLAGS` is added to both builds after everything else, so it can override.
 
+`LANGS` says which language modules go in, and `EVVLANG` is the name for one of them: `make LANGS="lang/enus lang/dede"` builds both and the first named is what a caller gets when it asks for nothing in particular. A build with anything but English alone names what it makes after what is in it, so builds sit beside each other rather than over each other, and so that an archive left over from another language set cannot be linked in by mistake.
+
+`EVVPLAIN=1` keeps the shared library's plain name, and its soname with it, however many languages are in it. It is what a release is built with: the archives carry every language and the library still has to be the `libeci.so.1` a caller opens, since nothing loading it can be asked to know what is inside. It changes no other name, so the archives go on saying what they hold.
+
 `RULES` chooses which form of the language's rules gets linked, and is explained next.
 
 ## Running

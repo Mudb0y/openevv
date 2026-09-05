@@ -44,8 +44,16 @@
    may have several languages in it, each with its own: English has
    seventy-five and German ninety, plus two of dictionary entries apiece. A
    language is registered the first time one of its machines is made, so a
-   program that never speaks the second one never spends its share. */
-#define REGIONS 512
+   program that never speaks the second one never spends its share.
+
+   Which is why five hundred and twelve lasted as long as it did: nothing
+   spoke more than two or three languages in one process. A library carrying
+   every language and asked for each of them wants 779, measured over the ten
+   in the tree, so this is room for something over twenty-five of them. The
+   table is twenty-four bytes an entry and none of it is touched until a
+   language is spoken, so the ceiling is cheap and being short of it is not:
+   it aborts. */
+#define REGIONS 2048
 
 static struct {
     const unsigned char *at;

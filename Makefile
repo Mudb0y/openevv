@@ -310,7 +310,15 @@ SOVERSION := 1
 CFLAGSPIC := $(ALL_CFLAGS) -fPIC -fvisibility=hidden
 OBJDIRPIC := $(BUILD)/objpic-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTSPIC := $(patsubst %.c,$(OBJDIRPIC)/%.o,$(notdir $(SOURCES)))
-SONAME    := libeci$(SUF).so.$(SOVERSION)
+# What the shipped library is called. Everything else here names itself
+# after the languages in it, and the library would too, except that a caller
+# dlopens `libeci.so' and cannot be asked to know what is inside. EVVPLAIN=1
+# keeps the plain name, soname and all, which is what a release is built
+# with: every language in one library that is still the one anybody loads.
+# It says nothing about the archives, so the stale-archive trap the suffix
+# exists for stays shut.
+LIBSUF    := $(if $(EVVPLAIN),,$(SUF))
+SONAME    := libeci$(LIBSUF).so.$(SOVERSION)
 
 so: $(BUILD)/$(SONAME)
 
@@ -324,8 +332,8 @@ $(BUILD)/$(SONAME): lib/eci_api.c $(OBJECTSPIC) $(RULESTAMP)
 	 done
 	@$(CC) $(CFLAGSPIC) -shared -Wl,-soname,$(SONAME) \
 	   lib/eci_api.c $(OBJECTSPIC) -lpthread -lm -o $@
-	@ln -sf $(SONAME) $(BUILD)/libeci$(SUF).so
-	@echo "built $@ and the libeci$(SUF).so beside it"
+	@ln -sf $(SONAME) $(BUILD)/libeci$(LIBSUF).so
+	@echo "built $@ and the libeci$(LIBSUF).so beside it"
 
 # And the harness that proves it: it links against nothing, loads the library
 # by name, asks for each published name by string and speaks. Being the same
@@ -333,7 +341,7 @@ $(BUILD)/$(SONAME): lib/eci_api.c $(OBJECTSPIC) $(RULESTAMP)
 # the other is what this catches.
 .PHONY: sotest
 sotest: $(BUILD)/libecitest
-	@cd $(BUILD) && EVV_ECI_LIB=./libeci$(SUF).so ./libecitest -o sotest.wav \
+	@cd $(BUILD) && EVV_ECI_LIB=./libeci$(LIBSUF).so ./libecitest -o sotest.wav \
 	   "Hello. This is the Eloquence synthesizer speaking."
 
 $(BUILD)/libecitest: test/lib/dll.c $(BUILD)/$(SONAME)
@@ -347,7 +355,7 @@ $(BUILD)/libecitest: test/lib/dll.c $(BUILD)/$(SONAME)
 CFLAGSPIC32 = $(CFLAGS32) -fPIC -fvisibility=hidden
 OBJDIRPIC32 := $(BUILD)/objpic32-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTSPIC32 := $(patsubst %.c,$(OBJDIRPIC32)/%.o,$(notdir $(SOURCES)))
-SONAME32    := libeci32$(SUF).so.$(SOVERSION)
+SONAME32    := libeci32$(LIBSUF).so.$(SOVERSION)
 
 so32: $(BUILD)/$(SONAME32)
 
@@ -358,7 +366,7 @@ $(OBJDIRPIC32)/%.o: %.c $(HEADERS)
 $(BUILD)/$(SONAME32): lib/eci_api.c $(OBJECTSPIC32) $(RULESTAMP)
 	@$(CC32) $(CFLAGSPIC32) -shared -Wl,-soname,$(SONAME32) \
 	   lib/eci_api.c $(OBJECTSPIC32) -lpthread -lm -o $@
-	@ln -sf $(SONAME32) $(BUILD)/libeci32$(SUF).so
+	@ln -sf $(SONAME32) $(BUILD)/libeci32$(LIBSUF).so
 	@echo "built $@"
 
 # An instance made and thrown away over and over, which the suite never does:
@@ -883,7 +891,7 @@ install: $(BUILD)/evv
 install-lib: $(BUILD)/$(SONAME)
 	@mkdir -p $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCDIR)
 	@cp $(BUILD)/$(SONAME) $(DESTDIR)$(LIBDIR)/$(SONAME)
-	@ln -sf $(SONAME) $(DESTDIR)$(LIBDIR)/libeci$(SUF).so
+	@ln -sf $(SONAME) $(DESTDIR)$(LIBDIR)/libeci$(LIBSUF).so
 	@cp include/eci.h $(DESTDIR)$(INCDIR)/eci.h
 	@echo "installed $(DESTDIR)$(LIBDIR)/$(SONAME) and $(DESTDIR)$(INCDIR)/eci.h"
 

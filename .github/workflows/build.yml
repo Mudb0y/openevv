@@ -56,8 +56,29 @@ jobs:
       # is for a person and the library is for a program. Built here rather
       # than in the bytecode job so that what ships has the rules as C, which
       # is what a program interrupting speech wants.
-      - name: Build the shared library
-        run: make -j"$(nproc)" RULES=c so
+      #
+      # A release carries every language and an ordinary push carries
+      # English. Decompiling ten languages into C is over a hundred megabytes
+      # and most of an hour on a two-core runner, twice over for the library
+      # and the command, and there is no reason to spend it on every commit:
+      # what a tag changes here is the form of the rules, not the path. That a
+      # library can hold every language at once is proved on every push by the
+      # bytecode job below, which speaks all ten out of one.
+      #
+      # EVVPLAIN keeps the plain name with several languages in it. Everything
+      # else here names itself after what it contains, but a caller dlopens
+      # `libeci.so' and cannot be asked to know what is inside.
+      - name: Build what ships
+        run: |
+          set -eu
+          case "$GITHUB_REF" in
+          refs/tags/v*)
+            langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca \
+                                      itit plpl jajp) ;;
+          *)
+            langs=lang/enus ;;
+          esac
+          make -j"$(nproc)" RULES=c EVVPLAIN=1 LANGS="$langs" so all
 
       # Staged into a directory of its own so the artifact holds three files
       # at its top rather than the paths they were built at; the release job
@@ -195,14 +216,17 @@ jobs:
             '<speak version="1.0" xml:lang="en-US">Hello there.</speak>'
           test -s /tmp/ssml.wav
 
-      # Two languages alive in one process through the library, each held to
+      # Every language alive in one process through the library, each held to
       # what it says alone. The binary check below is the same question asked
-      # of the probe; this one asks it of the thing a program actually loads.
-      - name: Two languages from one library
+      # of the probe; this one asks it of the thing a program actually loads,
+      # and it is what says a release carrying all ten will speak all ten.
+      - name: Every language from one library
         run: |
           set -eu
-          make -j"$(nproc)" RULES=bytecode so LANGS="lang/enus lang/dede"
-          python3 test/lib/langs.py build/libeci-enus-dede.so
+          all=$(printf 'lang/%s ' enus dede engb eses esus frfr frca itit plpl jajp)
+          make -j"$(nproc)" RULES=bytecode so LANGS="$all"
+          python3 test/lib/langs.py \
+            build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp.so
 
       # And all of them in one binary, each still speaking: this is what says
       # nothing in the engine has quietly stayed global.
@@ -230,8 +254,22 @@ jobs:
           sudo apt-get install -y gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64 \
                                   gcc-mingw-w64-i686 binutils-mingw-w64-i686
 
+      # Every language on a tag, English on an ordinary push, for the same
+      # reason the Linux job gives: the rules as C are most of an hour a
+      # build and a release is where that is worth spending. The exes and the
+      # DLLs keep their plain names whatever is in them, so nothing
+      # downstream has to know which this was.
       - name: Build
-        run: make -j"$(nproc)" win win-dlltest win32
+        run: |
+          set -eu
+          case "$GITHUB_REF" in
+          refs/tags/v*)
+            langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca \
+                                      itit plpl jajp) ;;
+          *)
+            langs=lang/enus ;;
+          esac
+          make -j"$(nproc)" LANGS="$langs" win win-dlltest win32
 
       - name: Say what came out
         run: |

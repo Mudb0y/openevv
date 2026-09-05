@@ -152,11 +152,11 @@ A sentence end is free. A cut in the middle of a sentence costs a full-stop paus
 
     make LANGS="lang/enus lang/dede" so
 
-puts both in one library, `eciGetAvailableLanguages` answers both, and the first named is what `eciNew` gives. The libraries are named for what is in them -- `libeci-enus-dede.so.1` -- so builds sit beside each other rather than over each other.
+puts both in one library, `eciGetAvailableLanguages` answers both, and the first named is what `eciNew` gives. The libraries are named for what is in them -- `libeci-enus-dede.so.1` -- so builds sit beside each other rather than over each other. `make EVVPLAIN=1 ...` keeps the plain `libeci.so.1` instead, soname and all, which is what the released library is built with: it carries every language and still has to be the file a caller opens.
 
 Change language with `eciSetParam(h, eciLanguageDialect, ...)` on an instance that is not speaking, or make an instance per language. Both work. The speak window on Windows does the first, setting the language on the instance it already has rather than building another, and it will not do it while something is being said; `test/lib/langs.py` does the second, and holds each language to what it says alone.
 
-Nine languages are in the tree: US and British English, German, Castilian and American Spanish, French and Canadian French, Italian, and Polish. Eight of those are IBM's own data lifted out of its objects. Polish is not IBM's and is not finished -- its rules are still Italian's where nothing here has replaced them, and `make EVVLANG=lang/plpl census` counts how much. `docs/status.md` says where each stands.
+Ten languages are in the tree: US and British English, German, Castilian and American Spanish, French and Canadian French, Italian, Japanese, and Polish. The released library and the released DLLs carry all ten. Nine of those are IBM's own data lifted out of its objects. Polish is not IBM's and is not finished -- its rules are still Italian's where nothing here has replaced them, and `make EVVLANG=lang/plpl census` counts how much. `docs/status.md` says where each stands.
 
 ## Sample rates
 
