@@ -98,6 +98,16 @@ NAMED = [
      [("s_aszCname", 0x000, 0x60),
       ("s_aszVname", 0x060, 0x18),
       ("s_aszLVname", 0x078, 0x0f)]),
+    ("MakeReadableJP.obj", ".rdata", 0x41,
+     "MakeReadableJP's four currency names that are file statics rather\n"
+     " * than string literals: the pesos of Argentina, Chile, Colombia and\n"
+     " * Mexico. The dash in front of them is the same block and is named so\n"
+     " * that the map still tiles.",
+     [("szKANA_DASH", 0x00, 0x04),
+      ("szKANA_ARS", 0x04, 0x14),
+      ("szKANA_CLP", 0x18, 0x0c),
+      ("szKANA_COP", 0x24, 0x10),
+      ("szKANA_MXN", 0x34, 0x0d)]),
 ]
 
 # And the objects with an array of pointers to string literals rather than an

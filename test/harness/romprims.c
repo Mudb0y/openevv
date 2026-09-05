@@ -458,6 +458,8 @@ static Conv *makeConv(Param *p)
     mr_normalizePhone((mr), (t), (n), (b), (c), (f))
 #define ibm_mrNormalizeTime(mr, t, n, b, c, f) \
     mr_normalizeTime((mr), (t), (n), (b), (c), (f))
+#define ibm_mrNormalizeCurrency(mr, t, n, b, c, f) \
+    mr_normalizeCurrency((mr), (t), (n), (b), (c), (f))
 #define MRM(name) ibm_mr##name
 
 /* Where each side keeps PhraseBuf's four pointers and JPath's three. Ours are
@@ -1418,6 +1420,10 @@ extern THIS int32_t ibm_mrNormalizePhone(void *mr, const char *t, uint32_t n,
 extern THIS int32_t ibm_mrNormalizeTime(void *mr, const char *t, uint32_t n,
                                         char **b, uint32_t *c, int32_t f)
     MANGLED("?normalizeTime@MakeReadableJP@@UAEHPBDIPAPADPAIH@Z");
+extern THIS int32_t ibm_mrNormalizeCurrency(void *mr, const char *t,
+                                            uint32_t n, char **b,
+                                            uint32_t *c, int32_t f)
+    MANGLED("?normalizeCurrency@MakeReadableJP@@UAEHPBDIPAPADPAIH@Z");
 #define MRM(name) ibm_mr##name
 
 #define PB_SET(blk, which, p) (*(void **)((blk) + which) = (p))
@@ -9174,7 +9180,7 @@ static void sweepMakeReadable(void)
             uint32_t    n = (uint32_t)strlen(t);
             long        which;
 
-            for (which = 0; which < 6; which++)
+            for (which = 0; which < 7; which++)
                 for (k = 0; k < 2; k++) {
                     int32_t f = (int32_t)(k ? 0x10301 : 0);
                     int32_t rc = 0;
@@ -9204,6 +9210,10 @@ static void sweepMakeReadable(void)
                     case 5:
                         rc = MRM(NormalizeTime)(mr_room, t, n, &mr_buf,
                                                 &mr_cap, f);
+                        break;
+                    case 6:
+                        rc = MRM(NormalizeCurrency)(mr_room, t, n, &mr_buf,
+                                                    &mr_cap, f);
                         break;
                     default:
                         break;

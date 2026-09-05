@@ -806,9 +806,8 @@ int32_t  pc_IsValidConsForSokuOn(void *pc, uint8_t code);
 
 /* The front of the analyser: what is not words -- a date, a time, an amount
    of money, a telephone number -- rewritten into the words a reader would
-   say, before TextAnalysis sees any of it. Six of the eight normalisers are
-   written; normalizeCurrency and normalizeDate are not, and neither is
-   convertSPR. All but the two `normalize' pairs are private in IBM's source
+   say, before TextAnalysis sees any of it. Seven of the eight normalisers are
+   written; normalizeDate is not, and neither is convertSPR. All but the two `normalize' pairs are private in IBM's source
    and are not static here for the same reason JPath's are not.
    rom/jajp/makereadable.h is the record. */
 void       *mrl_ctor(void *mr);
@@ -857,6 +856,8 @@ int32_t     mr_normalizePhone(void *mr, const char *text, uint32_t n,
                               char **buf, uint32_t *cap, int32_t flag);
 int32_t     mr_normalizeTime(void *mr, const char *text, uint32_t n,
                              char **buf, uint32_t *cap, int32_t flag);
+int32_t     mr_normalizeCurrency(void *mr, const char *text, uint32_t n,
+                                 char **buf, uint32_t *cap, int32_t flag);
 
 /* ---- how much of this is written ------------------------------------ */
 

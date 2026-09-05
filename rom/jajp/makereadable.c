@@ -769,3 +769,294 @@ int32_t mr_normalizeTime(void *mr, const char *text, uint32_t n, char **buf,
     (*buf)[len] = '\0';
     return 0;
 }
+
+/* ---- an amount of money --------------------------------------------- */
+
+#define MR_EN      "\x89\x7e"                              /* en, the yen */
+#define MR_SEN     "\x91\x4b"                              /* sen, a hundredth */
+#define MR_DORU    "\x83\x68\x83\x8b"                      /* doru, dollar */
+#define MR_SENTO   "\x83\x5a\x83\x93\x83\x67"              /* sento, cent */
+#define MR_YUURO   "\x83\x86\x81\x5b\x83\x8d"              /* yuuro, euro */
+#define MR_GEN     "\x83\x51\x83\x93"                      /* gen, the yuan */
+#define MR_PONDO   "\x83\x7c\x83\x93\x83\x68"              /* pondo, pound */
+#define MR_WON     "\x83\x45\x83\x48\x83\x93"              /* won */
+#define MR_RUUBURU "\x83\x8b\x81\x5b\x83\x75\x83\x8b"      /* ruuburu, rouble */
+#define MR_ONSU    "\x83\x49\x83\x93\x83\x58"              /* onsu, ounce */
+#define MR_KARA    "\x82\xa9\x82\xe7"                      /* kara, from */
+#define MR_AUD  "\x83\x49\x81\x5b\x83\x58\x83\x67\x83\x89\x83\x8a\x83\x41\x83\x68\x83\x8b"
+#define MR_CAD  "\x83\x4a\x83\x69\x83\x5f\x83\x68\x83\x8b"
+#define MR_CHF  "\x83\x58\x83\x43\x83\x58\x83\x74\x83\x89\x83\x93"
+#define MR_HKD  "\x83\x7a\x83\x93\x83\x52\x83\x93\x83\x68\x83\x8b"
+#define MR_NOK  "\x83\x6d\x83\x8b\x83\x45\x83\x46\x81\x5b\x83\x4e\x83\x8d\x81\x5b\x83\x6c"
+#define MR_NZD  "\x83\x6a\x83\x85\x81\x5b\x83\x57\x81\x5b\x83\x89\x83\x93\x83\x68\x83\x68\x83\x8b"
+#define MR_SEK  "\x83\x58\x83\x45\x83\x46\x81\x5b\x83\x66\x83\x93\x83\x4e\x83\x8d\x81\x5b\x83\x69"
+#define MR_SGD  "\x83\x56\x83\x93\x83\x4b\x83\x7c\x81\x5b\x83\x8b\x83\x68\x83\x8b"
+#define MR_TRL  "\x83\x67\x83\x8b\x83\x52\x83\x8a\x83\x89"
+#define MR_TWD  "\x83\x5e\x83\x43\x83\x8f\x83\x93\x83\x68\x83\x8b"
+
+/* An amount of money, as the number and then what it is money in.
+ *
+ * The walk is three states -- having just seen a currency symbol, reading a
+ * number, and reading anything else -- and what makes it long is that a
+ * currency amount has so many parts: a symbol before the number or after it,
+ * a sign in front, thousands separators inside, a decimal point, a range with
+ * another amount after it. Each of those is a flag, and the tail of the loop
+ * writes whatever the flags say, in order: the sign, then the number, then
+ * the currency, then the fraction with its own unit, then any character that
+ * was not part of any of it, then the word for a range.
+ *
+ * Twenty-five currencies, and the names are IBM's. The fraction is only
+ * named for three of them -- sen for the yen, cents for the dollar and the
+ * euro -- and every other currency's fraction is said as a bare number.
+ *
+ * A number is only split at its decimal point where at most two digits
+ * follow the point, which is what keeps 3.14159 from being read as three
+ * point fourteen thousand.
+ */
+int32_t mr_normalizeCurrency(void *mr, const char *text, uint32_t n,
+                             char **buf, uint32_t *cap, int32_t flag)
+{
+    const char *num[2];
+    const char *left[2];
+    const char *right[2];
+    uint32_t    len = 0;
+    uint32_t    curLen = 0;
+    const char *p = text;
+    const char *end = text + n;
+    const char *next;
+    const char *afterSign;
+    int32_t     rc = 0;
+    int32_t     state;
+    int32_t     cur;
+    int32_t     unit = 0;
+    int32_t     sign;
+    int32_t     signToWrite = 0;
+    int32_t     inNumber = 0;
+    int32_t     sawPunct = 0;
+    int32_t     punctCount = 0;
+    int32_t     numberReady = 0;
+    int32_t     haveNumber = 0;
+    int32_t     sawRange = 0;
+    int32_t     split = 0;
+    int32_t     flushChar = 0;
+
+    (void)flag;
+    num[0] = NULL;
+    num[1] = NULL;
+
+    cur   = mr_isCurrencySymbol(mr, p, &curLen);
+    state = cur != 0 ? 0 : 3;
+
+    while (p < end) {
+        next = ju_IsValidDBCS(p) ? p + 2 : p + 1;
+
+        switch (state) {
+        case 0:
+            inNumber = 0;
+            if (cur != 0)
+                next = p + curLen;
+            if (*next != '\0') {
+                if (mr_isDigit(mr, next)) {
+                    num[0] = next;
+                    state  = 1;
+                    unit   = cur;
+                } else if ((sign = mr_isPlusMinusSymbol(mr, next)) != 0) {
+                    afterSign = ju_IsDBCSLeadByte(next[0]) ? next + 2
+                                                          : next + 1;
+                    if (mr_isDigit(mr, afterSign)) {
+                        num[0]      = afterSign;
+                        state       = 1;
+                        next        = afterSign;
+                        signToWrite = sign;
+                        if (inNumber == 0)
+                            unit = cur;
+                        haveNumber = 1;
+                    } else {
+                        state     = 3;
+                        flushChar = 1;
+                    }
+                } else {
+                    state     = 3;
+                    flushChar = 1;
+                }
+            } else {
+                signToWrite = mr_isPlusMinusSymbol(mr, p);
+                if (signToWrite != 0)
+                    haveNumber = 1;
+                else if (sawRange == 0)
+                    flushChar = 1;
+            }
+            break;
+
+        case 1:
+            inNumber = 1;
+            if (mr_isDigit(mr, next)) {
+                if (num[0] == NULL)
+                    num[0] = next;
+                if (sawPunct != 0)
+                    punctCount++;
+            } else if (mr_isCurrencyPunct(mr, next) && mr_isDigit(mr, p)) {
+                /* A separator inside a number is neither read nor kept. */
+            } else if (mr_isDecimalPoint(mr, next) && mr_isDigit(mr, p)
+                       && sawPunct == 0) {
+                sawPunct   = 1;
+                punctCount = 0;
+            } else if (mr_isRangeSymbol(mr, next) && mr_isDigit(mr, p)) {
+                numberReady = 1;
+                sawRange    = 1;
+                num[1]      = next;
+            } else {
+                if (num[0] != NULL) {
+                    if (mr_isCurrencyPunct(mr, p)
+                        || mr_isDecimalPoint(mr, p)) {
+                        num[1]    = p;
+                        flushChar = 1;
+                    } else {
+                        num[1] = next;
+                    }
+                    numberReady = 1;
+                }
+                cur   = mr_isCurrencySymbol(mr, next, &curLen);
+                state = cur != 0 ? 0 : 3;
+            }
+            break;
+
+        case 3:
+            if (mr_isDigit(mr, next) && inNumber != 0) {
+                state  = 1;
+                num[0] = next;
+            } else {
+                cur = mr_isCurrencySymbol(mr, next, &curLen);
+                if (cur != 0)
+                    state = 0;
+            }
+            signToWrite = mr_isPlusMinusSymbol(mr, p);
+            if (signToWrite != 0)
+                haveNumber = 1;
+            else if (mr_isRangeSymbol(mr, p))
+                sawRange = 1;
+            else
+                flushChar = 1;
+            break;
+
+        default:
+            break;
+        }
+
+        if (haveNumber != 0) {
+            switch (signToWrite) {
+            case 1:
+                rc = mr_appendText(mr, MR_PURASU, buf, cap, &len);
+                break;
+            case 2:
+                rc = mr_appendText(mr, MR_MAINASU, buf, cap, &len);
+                break;
+            case 3:
+                rc = mr_appendText(mr, MR_PURAMAI, buf, cap, &len);
+                break;
+            default:
+                break;
+            }
+            if (rc != 0)
+                return rc;
+            signToWrite = 0;
+            haveNumber  = 0;
+        }
+
+        if (numberReady != 0) {
+            split = 0;
+            if (sawPunct != 0 && punctCount <= 2) {
+                split = mr_separateNumberByDecimalPoint(mr, num, left, right);
+                rc = mr_appendMakeReadableNumber(mr, left, buf, cap, &len, 1);
+            } else {
+                rc = mr_appendMakeReadableNumber(mr, num, buf, cap, &len, 1);
+            }
+            if (rc != 0)
+                return rc;
+
+            switch (unit) {
+            case 1:  rc = mr_appendText(mr, MR_EN, buf, cap, &len); break;
+            case 2:  rc = mr_appendText(mr, MR_DORU, buf, cap, &len); break;
+            case 3:  rc = mr_appendText(mr, MR_YUURO, buf, cap, &len); break;
+            case 4:  rc = mr_appendText(mr, (const char *)jajp_szKANA_ARS,
+                                        buf, cap, &len); break;
+            case 5:  rc = mr_appendText(mr, MR_AUD, buf, cap, &len); break;
+            case 6:  rc = mr_appendText(mr, MR_CAD, buf, cap, &len); break;
+            case 7:  rc = mr_appendText(mr, MR_CHF, buf, cap, &len); break;
+            case 8:  rc = mr_appendText(mr, (const char *)jajp_szKANA_CLP,
+                                        buf, cap, &len); break;
+            case 9:  rc = mr_appendText(mr, MR_GEN, buf, cap, &len); break;
+            case 10: rc = mr_appendText(mr, (const char *)jajp_szKANA_COP,
+                                        buf, cap, &len); break;
+            case 11: rc = mr_appendText(mr, MR_PONDO, buf, cap, &len); break;
+            case 12: rc = mr_appendText(mr, MR_HKD, buf, cap, &len); break;
+            case 13: rc = mr_appendText(mr, MR_WON, buf, cap, &len); break;
+            case 14: rc = mr_appendText(mr, MR_WON, buf, cap, &len); break;
+            case 15: rc = mr_appendText(mr, (const char *)jajp_szKANA_MXN,
+                                        buf, cap, &len); break;
+            case 16: rc = mr_appendText(mr, MR_NOK, buf, cap, &len); break;
+            case 17: rc = mr_appendText(mr, MR_NZD, buf, cap, &len); break;
+            case 18: rc = mr_appendText(mr, MR_RUUBURU, buf, cap, &len); break;
+            case 19: rc = mr_appendText(mr, MR_SEK, buf, cap, &len); break;
+            case 20: rc = mr_appendText(mr, MR_SGD, buf, cap, &len); break;
+            case 21: rc = mr_appendText(mr, MR_TRL, buf, cap, &len); break;
+            case 22: rc = mr_appendText(mr, MR_TWD, buf, cap, &len); break;
+            case 23: rc = mr_appendText(mr, MR_ONSU, buf, cap, &len); break;
+            case 24: rc = mr_appendText(mr, MR_ONSU, buf, cap, &len); break;
+            case 25: rc = mr_appendText(mr, MR_ONSU, buf, cap, &len); break;
+            default: break;
+            }
+            if (rc != 0)
+                return rc;
+
+            if (split != 0) {
+                rc = mr_appendMakeReadableNumber(mr, right, buf, cap, &len,
+                                                 1);
+                if (rc != 0)
+                    return rc;
+                if (unit == 1)
+                    rc = mr_appendText(mr, MR_SEN, buf, cap, &len);
+                else if (unit == 2)
+                    rc = mr_appendText(mr, MR_SENTO, buf, cap, &len);
+                else if (unit == 3)
+                    rc = mr_appendText(mr, MR_SENTO, buf, cap, &len);
+                if (rc != 0)
+                    return rc;
+            }
+
+            if (inNumber == 0)
+                unit = 0;
+            sawPunct    = 0;
+            num[0]      = NULL;
+            num[1]      = NULL;
+            numberReady = 0;
+            if (state != 0)
+                curLen = 0;
+        }
+
+        if (flushChar != 0) {
+            if (curLen > 1 && state != 0) {
+                rc = mr_appendTextN(mr, p, curLen, buf, cap, &len);
+                curLen = 0;
+            } else {
+                rc = mr_appendChar(mr, p, buf, cap, &len);
+            }
+            if (rc != 0)
+                return rc;
+            flushChar = 0;
+            inNumber  = 0;
+            unit      = 0;
+        }
+
+        if (sawRange != 0) {
+            rc = mr_appendText(mr, MR_KARA, buf, cap, &len);
+            if (rc != 0)
+                return rc;
+            sawRange = 0;
+        }
+
+        p = next;
+    }
+    (*buf)[len] = '\0';
+    return 0;
+}
