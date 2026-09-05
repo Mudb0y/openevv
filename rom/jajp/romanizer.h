@@ -1,13 +1,13 @@
-/* What Romanizer is, as a record, as far as anything has read it.
+/* What Romanizer is, as a record.
  *
- * Romanizer's own object is not transcribed yet, but its base class is:
- * `ConverterInterface' is rom/jajp/convtinterface.c, and because Romanizer
- * derives from it the two share one record. So the head of this map is now
- * settled rather than guessed -- every field from 0x00 to 0x1f belongs to the
- * base and convtinterface.obj says what each one is -- and the tail is still
- * the partial reading it always was: the size is known, since RomInstance
- * asks operator new for 0x78 bytes, and what is understood between 0x20 and
- * 0x77 is what other classes reach in for.
+ * Romanizer derives from `ConverterInterface', which is
+ * rom/jajp/convtinterface.c, so the two share one record: every field from
+ * 0x00 to 0x1f belongs to the base and convtinterface.obj says what each one
+ * is. The tail was a partial reading for as long as the class was unwritten
+ * -- the size was known, since RomInstance asks operator new for 0x78 bytes,
+ * and what was understood between 0x20 and 0x77 was what other classes
+ * reached in for. rom/jajp/jpnrom.c is the class now and the names below are
+ * what its own code uses.
  *
  * Two other classes do reach in, which is why the layout is not ours to
  * choose: InputChar goes up through TextAnalysis to ask the parameter block

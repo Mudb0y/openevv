@@ -338,7 +338,7 @@ int16_t ds_FzkParsingReverse(void *d);
 /* Only the one method, which DictSearch::Do calls when an annotation stands
    in front of the character it is about to look up. The record it works on is
    rom/jajp/romanizer.h. */
-int32_t jrz_GetParameter(void *rz, char *p);
+int32_t rz_GetParameter(void *rz, char *p);
 
 int32_t ds_CountHrgn(void *d, int32_t n);
 const uint8_t *ds_ReadGWDict(void *d, int16_t page, int16_t at,
@@ -880,7 +880,6 @@ uint16_t    jrz_CountUserIndex(void *rz, char *s);
 int8_t      jrz_Init(void *rz);
 int32_t     jrz_SendResult(void *rz, char **out);
 int16_t     jrz_ChangeYomi(void *rz, void *dst, void *src);
-int32_t     jrz_GetParameter(void *rz, char *s);
 int32_t     jrz_GetParameters(void *rz, char *s);
 int32_t     jrz_GenerateESPR(void *rz, void *bg, char *out);
 int16_t     jrz_GenerateRomajiOutput(void *rz, void *bg, void *ph, char *out,

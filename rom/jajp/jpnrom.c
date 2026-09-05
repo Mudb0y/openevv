@@ -275,7 +275,7 @@ int32_t jrz_GetParameters(void *rz, char *s)
 
     while (c != 0) {
         if (c == '`')
-            jrz_GetParameter(rz, s + at);
+            rz_GetParameter(rz, s + at);
         at++;
         c = (uint8_t)s[at];
     }
@@ -284,20 +284,9 @@ int32_t jrz_GetParameters(void *rz, char *s)
 
 /* ---- one parameter out of an annotation ------------------------------- */
 
-/* IBM writes the value clamped at the top and then writes it again clamped at
-   the bottom, and the second write overwrites the first -- so the top clamp
-   has no effect at all and a percentage can carry the parameter past it. That
-   is kept as it is rather than corrected: it is what the original does with
-   the same annotation. */
-static int32_t jrz_clamp(int32_t got, int32_t cap)
-{
-    int32_t capped = got < cap ? got : cap;
-
-    (void)capped;
-    return got > 0 ? got : 0;
-}
-
-/* `v' and then one of six shapes: a letter and a number, which sets a
+/* One setting an annotation names, changed.
+ *
+ * `v' and then one of six shapes: a letter and a number, which sets a
  * parameter outright; a letter, a per cent sign, a sign and a number, which
  * moves it by that much of itself; `swpm' or `bhz' and a signed number, which
  * moves the speed or the baseline by words a minute or by hertz; a letter and
@@ -309,110 +298,117 @@ static int32_t jrz_clamp(int32_t got, int32_t cap)
  * says whether English is spelt out.
  *
  * Minus one is text that is not one of those, which is most text.
+ *
+ * `DictSearch::Do' calls it as well as this class does, which is why it was
+ * written before the rest of Romanizer was. One thing in it is IBM's and is
+ * kept: every relative form writes the setting twice, once clamped at the top
+ * and then again from the unclamped value, so the upper clamp has no effect
+ * at all and only the clamp at nought does anything.
+ *
+ * Held to IBM's answer by `test/harness/romprims.sh', over every shape there
+ * is and a few there are not.
  */
-int32_t jrz_GetParameter(void *rz, char *s)
-{
-    RomInstParam *param = (RomInstParam *)RZ_AT(rz, RZ_PARAM_AT);
-    char          letter = 0;
-    char          sign   = 0;
-    int32_t       value  = 0;
-    int32_t       dir;
-    int32_t       got;
-    int32_t       voice;
+#define RZ_L(rz, off)   (*(int32_t *)((uint8_t *)(rz) + (off)))
 
-    if ((int32_t)strlen(s) <= 3)
+/* Which voice the parameter block says is in force, which is what the middle
+   settings and the voice reset are taken from. */
+#define P_VOICE_ID      0x3ea
+
+/* One setting stepped by a proportion of itself, and then by the two clamps
+   IBM wrote -- the second of which undoes the first. */
+static void stepBy(void *rz, int32_t off, int32_t by, int32_t cap)
+{
+    int32_t got = by + RZ_L(rz, off);
+
+    RZ_L(rz, off) = got < cap ? got : cap;
+    RZ_L(rz, off) = got > 0 ? got : 0;
+}
+
+int32_t rz_GetParameter(void *rz, char *p)
+{
+    RomInstParam *param = *(RomInstParam **)((uint8_t *)rz + RZ_PARAM_AT);
+    int32_t       v;
+    int32_t       dir;
+    int32_t       was;
+    char          which;
+    char          sign;
+
+    if (strlen(p) <= 3)
         return -1;
 
-    if (s[1] == 'v') {
-        if (sscanf(s + 2, "%c%d", &letter, &value) == 2) {
-            switch (letter) {
-            case 's': RZ_L(rz, RZ_SPEED)    = value; break;
-            case 'b': RZ_L(rz, RZ_BASELINE) = value; break;
-            case 'f': RZ_L(rz, RZ_FLUENCY)  = value; break;
-            case 'v': RZ_L(rz, RZ_VOLUME)   = value; break;
+    if (p[1] == 'v') {
+        if (sscanf(p + 2, "%c%d", &which, &v) == 2) {
+            switch (which) {
+            case 's': RZ_L(rz, RZ_SPEED) = v; break;
+            case 'b': RZ_L(rz, RZ_BASELINE) = v; break;
+            case 'f': RZ_L(rz, RZ_FLUENCY) = v; break;
+            case 'v': RZ_L(rz, RZ_VOLUME) = v; break;
             default: break;
             }
             return 0;
         }
-        if (sscanf(s + 2, "%c%%%c%d", &letter, &sign, &value) == 3) {
+        if (sscanf(p + 2, "%c%%%c%d", &which, &sign, &v) == 3) {
             dir = sign == '+' ? 1 : -1;
-            switch (letter) {
+            switch (which) {
             case 's':
-                got = RZ_L(rz, RZ_SPEED) * dir * value / 100
-                      + RZ_L(rz, RZ_SPEED);
-                RZ_L(rz, RZ_SPEED) = jrz_clamp(got, 0xfa);
+                stepBy(rz, RZ_SPEED,
+                       RZ_L(rz, RZ_SPEED) * dir * v / 100, 0xfa);
                 break;
             case 'b':
-                got = RZ_L(rz, RZ_BASELINE) * dir * value / 100
-                      + RZ_L(rz, RZ_BASELINE);
-                RZ_L(rz, RZ_BASELINE) = jrz_clamp(got, 0x64);
+                stepBy(rz, RZ_BASELINE,
+                       RZ_L(rz, RZ_BASELINE) * dir * v / 100, 0x64);
                 break;
             case 'f':
-                got = RZ_L(rz, RZ_FLUENCY) * dir * value / 100
-                      + RZ_L(rz, RZ_FLUENCY);
-                RZ_L(rz, RZ_FLUENCY) = jrz_clamp(got, 0x64);
+                stepBy(rz, RZ_FLUENCY,
+                       RZ_L(rz, RZ_FLUENCY) * dir * v / 100, 0x64);
                 break;
             case 'v':
-                got = RZ_L(rz, RZ_VOLUME) * dir * value / 100
-                      + RZ_L(rz, RZ_VOLUME);
-                RZ_L(rz, RZ_VOLUME) = jrz_clamp(got, 0x64);
+                stepBy(rz, RZ_VOLUME,
+                       RZ_L(rz, RZ_VOLUME) * dir * v / 100, 0x64);
                 break;
-            default:
-                break;
+            default: break;
             }
             return 0;
         }
-        if (sscanf(s + 2, "swpm%c%d", &sign, &value) == 2) {
+        if (sscanf(p + 2, "swpm%c%d", &sign, &v) == 2) {
             dir = sign == '+' ? 1 : -1;
-            got = dir * value / 0xc8 + RZ_L(rz, RZ_SPEED);
-            RZ_L(rz, RZ_SPEED) = jrz_clamp(got, 0xfa);
+            stepBy(rz, RZ_SPEED, dir * v / 0xc8, 0xfa);
             return 0;
         }
-        if (sscanf(s + 2, "bhz%c%d", &sign, &value) == 2) {
+        if (sscanf(p + 2, "bhz%c%d", &sign, &v) == 2) {
             dir = sign == '+' ? 1 : -1;
-            got = dir * value / 10 + RZ_L(rz, RZ_BASELINE);
-            RZ_L(rz, RZ_BASELINE) = jrz_clamp(got, 0x64);
+            stepBy(rz, RZ_BASELINE, dir * v / 0xa, 0x64);
             return 0;
         }
-        if (sscanf(s + 2, "%cmed", &letter) == 1) {
-            voice = rp_getParam(param, 0x3ea);
-            switch (letter) {
-            case 's':
-                RZ_L(rz, RZ_SPEED) = 0x2e;
-                break;
-            case 'b':
-                RZ_L(rz, RZ_BASELINE) = voice == 1 ? 0x41 : 0x59;
-                break;
-            case 'f':
-                RZ_L(rz, RZ_FLUENCY) = voice == 1 ? 0x1e : 0x27;
-                break;
-            default:
-                break;
+        if (sscanf(p + 2, "%cmed", &which) == 1) {
+            was = rp_getParam(param, P_VOICE_ID);
+            switch (which) {
+            case 's': RZ_L(rz, RZ_SPEED) = 0x2e; break;
+            case 'b': RZ_L(rz, RZ_BASELINE) = was == 1 ? 0x41 : 0x59; break;
+            case 'f': RZ_L(rz, RZ_FLUENCY) = was == 1 ? 0x1e : 0x27; break;
+            default: break;
             }
             return 0;
         }
-        if (sscanf(s + 2, "%d", &value) == 1
-            && (value == 1 || value == 2)) {
-            RZ_L(rz, RZ_VOICE) = value;
-            if (value == 1) {
+        if (sscanf(p + 2, "%d", &v) == 1 && (v == 1 || v == 2)) {
+            RZ_L(rz, RZ_VOICE) = v;
+            if (v == 1) {
                 RZ_L(rz, RZ_BASELINE) = 0x41;
-                RZ_L(rz, RZ_FLUENCY)  = 0x1e;
-                RZ_L(rz, RZ_SPEED)    = 0x2e;
+                RZ_L(rz, RZ_FLUENCY) = 0x1e;
             } else {
                 RZ_L(rz, RZ_BASELINE) = 0x59;
-                RZ_L(rz, RZ_FLUENCY)  = 0x27;
-                RZ_L(rz, RZ_SPEED)    = 0x2e;
+                RZ_L(rz, RZ_FLUENCY) = 0x27;
             }
+            RZ_L(rz, RZ_SPEED) = 0x2e;
             return 0;
         }
         return -1;
     }
 
-    if (s[1] == 't') {
-        if (sscanf(s + 2, "%c%d", &letter, &value) == 2 && letter == 's') {
-            RZ_L(rz, RZ_SPELL_ENGLISH) = value;
-            return 0;
-        }
+    if (p[1] == 't' && sscanf(p + 2, "%c%d", &which, &v) == 2) {
+        if (which == 's')
+            RZ_L(rz, RZ_SPELL_ENGLISH) = v;
+        return 0;
     }
     return -1;
 }
@@ -636,7 +632,7 @@ int16_t jrz_GenerateRomajiOutput(void *rz, void *bg, void *ph, char *out,
             break;
         text = anno->count != 0 ? anno->text[anno->head] : NULL;
         if (rp_isAnnotationsInText(param))
-            jrz_GetParameter(rz, (char *)text);
+            rz_GetParameter(rz, (char *)text);
         else
             strcat(out, "\\\\");
         strcat(out, text);
