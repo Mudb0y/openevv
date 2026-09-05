@@ -282,6 +282,20 @@ And one is freeing, which is not an answer. Inverting the test that decides whet
 
 Two sabotages had to be rewritten before they said anything, and the reason is worth keeping. Both changed a bound where the arm it guards could have been changed instead -- `greater than one` to `greater than two` -- so the two versions differed only on the one value the arithmetic in front of them happens never to produce. Sabotage the value the arm assigns, not the bound that reaches it.
 
+## Making a sentence readable
+
+`rom/jajp/makereadable.c` is `MakeReadableJP`, and it runs in front of the analyser rather than behind it: a stretch of text that is not words -- a date, a time, an amount of money, a telephone number -- is rewritten into the words a reader would say before `TextAnalysis` sees any of it. `TextNormalizer` decides which of the eight normalisers a stretch wants; this class is the eight of them, for Japanese. It is **not** what makes the phoneme string, which is what this file used to say: `ProsCtrl` does that.
+
+Six of the eight are written, and everything they share. The machinery is one rule and four functions: the caller owns the buffer and this class may grow it, so every appender is handed the buffer, its size and how much is in it, and reallocates with a quarter of a kilobyte of slack where the answer will not fit. The twelve predicates are each one walk over a table of IBM's -- pairs of what a symbol means and how it is written, ending on a pair with no string -- and those tables needed a third mode in `tools/rom/tables.py`, since half of every entry is in the section and the other half is a relocation.
+
+What the six do. Digits and literals are handed straight back. A yes-or-no symbol becomes はい or いいえ. A sign becomes プラス, マイナス or プラスマイナス. A time is a state machine of three states -- reading a number, having just seen a delimiter, and reading anything else -- so a number followed by a colon is an hour, the next a minute and the next a second, with the unit word after each; and four digits followed by an `a`, a `p` or an `h` is the short form, where 0930a becomes gozen, nine ji, thirty fun with each half's leading zeros dropped separately. And a telephone number is wrapped in the mark that turns the reading mode on and off, with a comma and a space after every digit so each is said on its own, two said as にー and five as ごー because ni and go are too easy to confuse over a telephone, the symbols said as words and the dash said as the particle の.
+
+Two things found so far. `separateNumberByDecimalPoint` looks for the full-width comma where the decimal point should be: its own table of decimal points holds the half-width stop and the full-width stop, and the function uses neither -- it tests the half-width one by hand and the two-byte one against 0x8143, which is 0x8144's neighbour. So a number written with the full-width point is not split in two and one written with the full-width comma is. And the sweep found one fault of ours at once, which is the argument for writing the sweep before the rest of the class rather than after: a telephone number puts a comma and a space after every digit and I had the space alone.
+
+`sweepMakeReadable` in `test/harness/romprims.c` holds what is written to IBM's answer: all 65,536 two-byte characters through every one of the twelve predicates, every length of text against every size of buffer that could refuse it through all three appenders and the copier, and eighty-odd texts through the zero-suppressor, the split at the decimal point and the number appender -- then those same texts through each of the six normalisers at three buffer sizes and both values of the flag, with what each leaves printed byte for byte, since the answers are Shift-JIS.
+
+**What is left of it** is `normalizeCurrency` at 928 instructions and `normalizeDate` at 1,156, which are the two largest functions in the class and both state machines over several counters; `convertSPR`, which is in an object of its own; and `MakeReadableLangInt`'s constructor and destructor, which are two lines each. The twenty-odd currency names are already lifted -- 円, 銭, ドル, セント, ポンド, ユーロ and the rest -- so what is left there is the walk rather than the words.
+
 ## The surface
 
 `rom/jajp/convtinterface.c` is all twenty-one methods of `ConverterInterface`, `rom/jajp/inputmngr.c` all ten of `InputManager` with the three queue-element classes that belong to it, and `rom/jajp/codeconv.c` the five conversions of `JpnUtil` that IBM keeps in an object of its own. Together they are everything the engine asks a Japanese instance that is not the analysis itself.
@@ -507,7 +521,7 @@ What is left, and in what order. The counts below are entry points as `nm` repor
 
 The order comes from a graph rather than from reading. Pooling what the unwritten classes call makes the remainder look inseparable; asking of each class which other *unwritten* class it calls gives six that call none at all -- `IntonPhrase`, `JPath`, `MakeReadableJP`, `NumRead`, `PhraseBuf` and `ProsCtrl`. So:
 
-`PhraseBuf`, `JPath`, `NumRead`, `IntonPhrase` and `ProsCtrl` are written. One leaf is left: `MakeReadableJP` at thirty-two, which is the largest of them and is what turns the analysis into the phoneme string the caller asked for.
+`PhraseBuf`, `JPath`, `NumRead`, `IntonPhrase` and `ProsCtrl` are written, and `MakeReadableJP` is begun: its record, its tables, its machinery, its twelve predicates and six of its eight normalisers, all held to IBM's answer already. What is left of it is the two largest normalisers and `convertSPR`.
 
 Then `TextNormalizer`, which wants `MakeReadableJP`.
 
