@@ -303,6 +303,8 @@ void      ju_TableFree(uint16_t *used, uint16_t *tail, uint16_t *freeHead,
    parts of it are understood, and rom/jajp/dictsearch.c says why the layout
    here is IBM's rather than ours. The block is passed as bytes because the
    fields it holds are still being worked out. */
+void   *dsr_ctor(void *d, void *analysis);
+void   *dsr_destroy(void *d, int32_t freeIt);
 int32_t ds_IsOnin(uint8_t code);
 int16_t ds_GetYoonIndex(void *d, char *s);
 void    ds_SetLongWord(void *d, int16_t n, void *e, uint8_t *word);
@@ -464,6 +466,8 @@ Annotation *an_ctor(Annotation *a, void *analysis);
 int32_t     an_GetRomHandAnnoType(Annotation *a, const char *s);
 int32_t     an_Save(Annotation *a, char *text, int16_t len, int16_t at);
 const char *an_GetLastAnno(Annotation *a, int16_t before, int32_t type);
+void        an_dtor(Annotation *a);
+void       *an_destroy(Annotation *a, int32_t freeIt);
 void        an_Remove(Annotation *a);
 void        an_RemoveAfter(Annotation *a, int16_t after);
 int32_t     an_Flush(Annotation *a, int32_t escape, DynaBuf *out,
@@ -663,6 +667,7 @@ int32_t  ci_updateDictExt(void *c, void *dict, int32_t which, uint8_t *word,
    bytes because the record is IBM's; rom/jajp/phrasebuf.h is the map, and
    rom/jajp/jpath.h is the map of the two records it reads out of JPath. */
 void   *pb_ctor(void *pb, void *analysis);
+void   *pb_destroy(void *pb, int32_t freeIt);
 void    pb_Copy(void *pb, int16_t which);
 void    pb_ModifyPos(void *pb, uint8_t *out, uint8_t pos);
 int32_t pb_IsBunsetsuEnd(void *pb, const uint8_t *sub);
@@ -898,6 +903,11 @@ int32_t     ta_FormatAddText(void *ta, char *out, const char *text,
                              int32_t len);
 int32_t     ta_processSnlkAnno(void *ta, const char *text, char **word,
                                char **reading, const char **end);
+void       *ta_ctor(void *ta, void *romanizer);
+int32_t     ta_initialize(void *ta);
+void        ta_dtor(void *ta);
+void       *ta_destroy(void *ta, int32_t freeIt);
+void       *ta_GetPhraseTableRoot(void *ta);
 
 /* And the four of `unknown.obj', which read the rows the search could not. */
 void        ta_UnknownWord(void *ta);
@@ -924,6 +934,9 @@ int16_t     ta_SetUkeTypeForLink(void *ta, uint8_t *uke, void *wp);
    the sixteenth is a second copy of `DictSearch::IsOnin'. rom/jajp/phrasetable.h is the record
    and rom/jajp/phrasebuf.h and rom/jajp/intonphrase.h are the two it works
    over. */
+int32_t     ptb_initialize(void *pt);
+void        ptb_dtor(void *pt);
+void       *ptb_destroy(void *pt, int32_t freeIt);
 uint8_t     ptb_GetPosFromTG(void *pt, uint8_t tg);
 uint8_t     ptb_GetFzkPosFromTG(void *pt, uint8_t tg);
 int16_t     ptb_GetAffixType(void *pt, uint8_t *tg);

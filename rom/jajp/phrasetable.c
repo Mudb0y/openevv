@@ -1467,3 +1467,31 @@ int16_t ptb_SetPhraseTable(void *pt, int16_t a, int16_t b, void *wp,
     (void)b;
     return 0;
 }
+
+/* ---- making and unmaking one ----------------------------------------- */
+
+/* The one thing a phrase table owns: the number reader it hands a run of
+   digits to. Nought is the allocation failing, which the caller passes on. */
+int32_t ptb_initialize(void *pt)
+{
+    void *nr = cpp_new(NR_ROOM);
+
+    if (nr != NULL)
+        *(void **)((uint8_t *)nr + NR_OWNER_AT) = PTB_OWNER_OF(pt);
+    PTB_NUMREAD_OF(pt) = nr;
+    return PTB_NUMREAD_OF(pt) != NULL;
+}
+
+void ptb_dtor(void *pt)
+{
+    if (PTB_NUMREAD_OF(pt) != NULL)
+        cpp_delete(PTB_NUMREAD_OF(pt));
+}
+
+void *ptb_destroy(void *pt, int32_t freeIt)
+{
+    ptb_dtor(pt);
+    if (freeIt & 1)
+        cpp_delete(pt);
+    return pt;
+}

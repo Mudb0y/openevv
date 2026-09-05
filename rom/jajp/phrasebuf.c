@@ -470,3 +470,12 @@ int16_t pb_SetPhraseBuffer(void *pb, uint8_t *out)
     }
     return n;
 }
+
+/* The buffer holds nothing of its own, so unmaking one is only giving the
+   block back. */
+void *pb_destroy(void *pb, int32_t freeIt)
+{
+    if (freeIt & 1)
+        cpp_delete(pb);
+    return pb;
+}

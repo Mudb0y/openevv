@@ -180,3 +180,23 @@ int32_t an_Flush(Annotation *a, int32_t escape, DynaBuf *out, int32_t dropPause)
     a->count = 0;
     return 1;
 }
+
+/* ---- unmaking one ---------------------------------------------------- */
+
+/* Every mark still kept is given up. The ring is walked from the oldest, not
+   from nought. */
+void an_dtor(Annotation *a)
+{
+    int32_t i;
+
+    for (i = 0; i < (int32_t)a->count; i++)
+        cpp_delete(a->text[(a->head + i) % ANNO_N]);
+}
+
+void *an_destroy(Annotation *a, int32_t freeIt)
+{
+    an_dtor(a);
+    if (freeIt & 1)
+        cpp_delete(a);
+    return a;
+}

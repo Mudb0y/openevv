@@ -1447,3 +1447,128 @@ int32_t ta_FormatAddText(void *ta, char *out, const char *text, int32_t len)
     }
     return 0;
 }
+
+/* ---- making and unmaking one ------------------------------------------ */
+
+/* The analysis is the object every other class in the romanizer is handed a
+   reference to, so its constructor names its owner and clears the six it will
+   make; nothing is allocated until `initialize'. */
+void *ta_ctor(void *ta, void *romanizer)
+{
+    TA_AT(ta, TA_OWNER_AT)       = romanizer;
+    TA_AT(ta, TA_FORMATTED_AT)   = NULL;
+    TA_AT(ta, TA_INPUTCHAR_AT)   = NULL;
+    TA_AT(ta, TA_ANNOTATION_AT)  = NULL;
+    TA_AT(ta, TA_DICTSEARCH_AT)  = NULL;
+    TA_AT(ta, TA_JPATH_AT)       = NULL;
+    TA_AT(ta, TA_PHRASEBUF_AT)   = NULL;
+    TA_AT(ta, TA_PHRASETABLE_AT) = NULL;
+    TA_AT(ta, TA_NORMALIZER_AT)  = NULL;
+    return ta;
+}
+
+/* And the six made, each asked for out of the heap and then given the analysis
+ * to belong to. Every one is asked for before any is checked, so a failure
+ * part way through still leaves a record that can be unmade; the checks come
+ * afterwards, in the same order, and nought is any of them.
+ *
+ * The phrase table is the odd one: it has no constructor of its own, so this
+ * writes its owner itself and then asks it to make the number reader.
+ */
+int32_t ta_initialize(void *ta)
+{
+    void *p;
+
+    p = cpp_new(TA_INPUTCHAR_BYTES);
+    TA_AT(ta, TA_INPUTCHAR_AT) = p != NULL ? ic_ctor(p, ta) : NULL;
+
+    p = cpp_new(TA_ANNOTATION_BYTES);
+    TA_AT(ta, TA_ANNOTATION_AT) = p != NULL
+                                  ? (void *)an_ctor((Annotation *)p, ta)
+                                  : NULL;
+
+    p = cpp_new(TA_DICTSEARCH_BYTES);
+    TA_AT(ta, TA_DICTSEARCH_AT) = p != NULL ? dsr_ctor(p, ta) : NULL;
+
+    p = cpp_new(TA_JPATH_BYTES);
+    TA_AT(ta, TA_JPATH_AT) = p != NULL ? jp_ctor(p, ta) : NULL;
+
+    p = cpp_new(TA_PHRASEBUF_BYTES);
+    TA_AT(ta, TA_PHRASEBUF_AT) = p != NULL ? pb_ctor(p, ta) : NULL;
+
+    p = cpp_new(TA_PHRASETABLE_BYTES);
+    if (p != NULL)
+        *(void **)((uint8_t *)p + PTB_OWNER_AT) = ta;
+    TA_AT(ta, TA_PHRASETABLE_AT) = p;
+
+    p = cpp_new(TA_NORMALIZER_BYTES);
+    TA_AT(ta, TA_NORMALIZER_AT) = p != NULL ? tn_ctor(p) : NULL;
+
+    TA_AT(ta, TA_FORMATTED_AT) = NULL;
+    TA_AT(ta, TA_RAW_AT)       = NULL;
+
+    if (TA_AT(ta, TA_INPUTCHAR_AT) == NULL)
+        return 0;
+    if (TA_AT(ta, TA_ANNOTATION_AT) == NULL)
+        return 0;
+    if (TA_AT(ta, TA_DICTSEARCH_AT) == NULL)
+        return 0;
+    if (TA_AT(ta, TA_JPATH_AT) == NULL)
+        return 0;
+    if (TA_AT(ta, TA_PHRASEBUF_AT) == NULL)
+        return 0;
+    if (TA_AT(ta, TA_PHRASETABLE_AT) == NULL
+        || ptb_initialize(TA_AT(ta, TA_PHRASETABLE_AT)) == 0)
+        return 0;
+    if (TA_AT(ta, TA_NORMALIZER_AT) == NULL)
+        return 0;
+
+    memset((uint8_t *)ta + TA_PHRASE, 0,
+           (size_t)TA_PHRASE_N * TA_PHRASE_SIZE);
+    return 1;
+}
+
+/* Unmaking one, in the order IBM unmakes them: the reader first, with the
+   chain of annotation marks emptied before the block goes, then the other five
+   through their own destructors, then the two text buffers, then the
+   normaliser. */
+void ta_dtor(void *ta)
+{
+    if (TA_AT(ta, TA_INPUTCHAR_AT) != NULL) {
+        ic_DeleteSnlkTable(TA_AT(ta, TA_INPUTCHAR_AT));
+        cpp_delete(TA_AT(ta, TA_INPUTCHAR_AT));
+    }
+    if (TA_AT(ta, TA_ANNOTATION_AT) != NULL)
+        an_destroy((Annotation *)TA_AT(ta, TA_ANNOTATION_AT), 1);
+    if (TA_AT(ta, TA_DICTSEARCH_AT) != NULL)
+        dsr_destroy(TA_AT(ta, TA_DICTSEARCH_AT), 1);
+    if (TA_AT(ta, TA_JPATH_AT) != NULL)
+        jp_destroy(TA_AT(ta, TA_JPATH_AT), 1);
+    if (TA_AT(ta, TA_PHRASEBUF_AT) != NULL)
+        pb_destroy(TA_AT(ta, TA_PHRASEBUF_AT), 1);
+    if (TA_AT(ta, TA_PHRASETABLE_AT) != NULL)
+        ptb_destroy(TA_AT(ta, TA_PHRASETABLE_AT), 1);
+    if (TA_AT(ta, TA_FORMATTED_AT) != NULL)
+        cpp_delete(TA_AT(ta, TA_FORMATTED_AT));
+    if (TA_AT(ta, TA_RAW_AT) != NULL)
+        cpp_delete(TA_AT(ta, TA_RAW_AT));
+    if (TA_AT(ta, TA_NORMALIZER_AT) != NULL) {
+        tn_dtor(TA_AT(ta, TA_NORMALIZER_AT));
+        cpp_delete(TA_AT(ta, TA_NORMALIZER_AT));
+    }
+}
+
+void *ta_destroy(void *ta, int32_t freeIt)
+{
+    ta_dtor(ta);
+    if (freeIt & 1)
+        cpp_delete(ta);
+    return ta;
+}
+
+/* The first row of the phrase table, which is what Romanizer reads the answer
+   out of. */
+void *ta_GetPhraseTableRoot(void *ta)
+{
+    return *(void **)((uint8_t *)TA_AT(ta, TA_PHRASETABLE_AT) + PTB_HEAD_AT);
+}

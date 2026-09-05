@@ -4055,3 +4055,21 @@ int16_t ds_FzkParsingReverse(void *d)
             return last;
     }
 }
+
+/* ---- making and unmaking one ----------------------------------------- */
+
+/* The search is handed the analysis it belongs to and takes the reader out of
+   it, which is the only thing it keeps a pointer to besides the owner. */
+void *dsr_ctor(void *d, void *analysis)
+{
+    DS_P(d, DS_OWNER_AT)  = analysis;
+    DS_P(d, DS_INPUTCHAR) = *(void **)((uint8_t *)analysis + TA_INPUTCHAR_AT);
+    return d;
+}
+
+void *dsr_destroy(void *d, int32_t freeIt)
+{
+    if (freeIt & 1)
+        cpp_delete(d);
+    return d;
+}
