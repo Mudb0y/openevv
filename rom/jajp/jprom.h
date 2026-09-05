@@ -871,11 +871,22 @@ int32_t     mr_convertSPR(void *mr, const char *text, uint32_t n,
    rom/jajp/kakutei.c holds it, named for the object it came out of. */
 void        ta_CopyJrtPart(const void *src, void *dst);
 
+/* And the four of `comppenalty.obj', which answer for a link in the search
+   what `PhraseTable::SetUkeTypePhrase' answers for a row: which phrases may
+   sit in front of this one. rom/jajp/comppenalty.c says where the two differ. */
+void        ta_ExtKkrForLink(void *ta, uint8_t *kkr, int16_t tg,
+                             const uint8_t *other);
+int16_t     ta_SetJWordUkeTypeForLink(void *ta, uint8_t *uke,
+                                      const uint8_t *tg0, const uint8_t *tgL);
+void        ta_SetFWordUkeTypeForLink(void *ta, uint8_t at, uint8_t fzk,
+                                      uint8_t *uke, const uint8_t *tg0,
+                                      const uint8_t *tgL);
+int16_t     ta_SetUkeTypeForLink(void *ta, uint8_t *uke, void *wp);
+
 /* ---- PhraseTable ----------------------------------------------------- */
 
-/* Where a phrase becomes a row of the phrase table. Fifteen of the sixteen are
-   written; only `SetPhraseTable' is not, and the sixteenth is a second copy of
-   `DictSearch::IsOnin'. rom/jajp/phrasetable.h is the record
+/* Where a phrase becomes a row of the phrase table. Every method is written;
+   the sixteenth is a second copy of `DictSearch::IsOnin'. rom/jajp/phrasetable.h is the record
    and rom/jajp/phrasebuf.h and rom/jajp/intonphrase.h are the two it works
    over. */
 uint8_t     ptb_GetPosFromTG(void *pt, uint8_t tg);
@@ -897,6 +908,8 @@ int16_t     ptb_CompoundWord(void *pt, void *wp, void *row);
 void       *ptb_SetSuushiPhraseTable(void *pt, void *wp, void *row,
                                      uint8_t *jrt, int16_t before, int16_t n);
 void       *ptb_SetSuushiPhrase(void *pt, void *wp, void *row, int16_t *out);
+int16_t     ptb_SetPhraseTable(void *pt, int16_t a, int16_t b, void *wp,
+                               uint8_t *c, int16_t *d, int16_t *e);
 
 /* ---- TextNormalizer -------------------------------------------------- */
 

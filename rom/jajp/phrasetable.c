@@ -1127,3 +1127,343 @@ void *ptb_SetSuushiPhrase(void *pt, void *wp, void *row, int16_t *out)
     *out = ptb_CompoundWord(pt, wp, row);
     return row;
 }
+
+/* ---- the whole of one phrase ----------------------------------------- */
+
+/* The entry point: one accent phrase written out as a row of the table.
+ *
+ * A row is taken and the words of the phrase are joined into one, either
+ * through `CompoundWord' or, where the phrase is a number, through
+ * `SetSuushiPhrase', which may leave several rows behind it. Then the moras
+ * of the words go into the row's kana with one long entry a word; then the
+ * function words after them, whose readings come out of the caller's own
+ * table rather than out of the phrase; then the kakari, which says how the
+ * phrase in front may attach; then the kind of break the phrase ends on; and
+ * last the accent, worked out over the whole run by `FzkAccent' and written
+ * back as one long entry a group.
+ *
+ * Minus six is a refusal: a phrase of more than twenty-five moras is more
+ * than a row holds.
+ */
+int16_t ptb_SetPhraseTable(void *pt, int16_t a, int16_t b, void *wp,
+                           uint8_t *c, int16_t *d, int16_t *e)
+{
+    void    *ta = PTB_OWNER_OF(pt);
+    void    *row;
+    uint8_t  in[AI_ROOM];
+    uint8_t  out[0x40];
+    int16_t  nGroups = 0;
+    int16_t  start, moras, pos = 0, nLong = 0, extra;
+    int16_t  kind = 0, prevKind = 0;
+    int16_t  k, at, nFzk;
+    uint8_t  flag = 0;
+    uint8_t  prevCode;
+    uint8_t  nLast = 0;
+    const uint8_t *rule = NULL;
+
+    memset(in, 0, sizeof in);
+    memset(out, 0, sizeof out);
+
+    row = ptb_GeneratePhraseTable(pt);
+    if (row == NULL)
+        return -1;
+
+    if (PTB_B(wp, WP_TYPE) != 9) {
+        nGroups = ptb_CompoundWord(pt, wp, row);
+    } else {
+        row = ptb_SetSuushiPhrase(pt, wp, row, &nGroups);
+        if (row == NULL)
+            return -1;
+    }
+
+    start = (int16_t)PTB_B(row, PT_FIRST_WORD);
+
+    moras = 0;
+    for (k = start; k < (int16_t)PTB_B(wp, WP_WORDS); k++)
+        moras = (int16_t)(moras + *(WW_SLOT(wp, k) + WW_KANALEN));
+    for (k = 0; k < (int16_t)PTB_B(wp, WP_FZKS); k++) {
+        moras = (int16_t)(moras
+                          + c[*(int16_t *)(WF_SLOT(wp, k) + WF_AT)]);
+        moras = (int16_t)(moras - 6);
+    }
+    if (moras > 0x19)
+        return -6;
+    PTB_B(row, PT_MORAS) = (uint8_t)moras;
+
+    for (k = start; k < (int16_t)PTB_B(wp, WP_WORDS); k++) {
+        const uint8_t *w = WW_SLOT(wp, k);
+        int16_t        len = (int16_t)w[WW_KANALEN];
+        int16_t        j;
+
+        if (len > 0) {
+            PTB_B(row, PT_LONG_B + nLong) =
+                ptb_GetPosFromTG(pt, w[WW_POS]);
+            PTB_W(row, PT_LONG + nLong * 2) = pos;
+            nLong++;
+        }
+        if (len > 9) {
+            for (j = 0; j < len; j++)
+                PTB_B(row, PT_KANA + pos + j) =
+                    *((uint8_t *)ta + TA_LONGWORD
+                      + (size_t)w[WW_KANA] * TA_LONGWORD_SIZE + (size_t)j);
+        } else {
+            for (j = 0; j < len; j++)
+                PTB_B(row, PT_KANA + pos + j) = w[WW_KANA + j];
+        }
+        pos = (int16_t)(pos + w[WW_KANALEN]);
+    }
+
+    {
+        const uint8_t *w = WW_SLOT(wp, (int16_t)PTB_B(wp, WP_WORDS) - 1);
+        int16_t        j;
+
+        for (j = 0; j < (int16_t)w[WW_KANALEN]; j++)
+            in[AI_KANA + 1 + nLast++] = w[WW_KANA + j];
+    }
+
+    prevCode = 0xff;
+    nFzk = 0;
+    for (k = 0; k < (int16_t)PTB_B(wp, WP_FZKS); k++) {
+        const uint8_t *f = WF_SLOT(wp, k);
+        int16_t        j;
+
+        if (pos >= 0x19)
+            break;
+        nFzk = (int16_t)(k + 1);
+        *(int16_t *)(in + AI_MARK + k * 2) = *(int16_t *)(f + WF_OFFSET);
+        prevKind = kind;
+        kind = (int16_t)(f[WF_CODE] & 0x7f);
+        rule = c + *(int16_t *)(f + WF_AT);
+        in[AI_LEN + k] = (uint8_t)(rule[0] - 6);
+        at = (int16_t)(rule[2] + PTB_W(ta, TA_INTON_FAILED) - 1);
+        AI_RULE_OF(in, k) = (uint8_t *)dm_GetAccentAt((uint16_t)at);
+
+        extra = 0;
+        for (j = 0; j < (int16_t)in[AI_LEN + k]; j++, pos++) {
+            uint8_t code = rule[6 + j];
+
+            PTB_B(row, PT_KANA + pos) = code;
+            in[AI_KANA + 1 + nLast++] = code;
+            /* IBM keeps the last code of a one-mora function word here and
+               never reads it again; the store is kept so that the two sides
+               do the same work, and the value goes nowhere. */
+            prevCode = in[AI_LEN + k] == 1 ? rule[6 + j] : (uint8_t)0xff;
+            (void)prevCode;
+
+            if (pos == (int16_t)(uint16_t)*(int16_t *)(f + WF_ACCENT)) {
+                const uint8_t *ic =
+                    *(const uint8_t **)((uint8_t *)ta + TA_INPUTCHAR_AT);
+                uint16_t       got;
+
+                got = ju_MakeUshort((char *)(ic + 4
+                          + (size_t)*(int16_t *)(f + WF_ACCENT) * 2));
+                /* The long-vowel mark: IBM's literal is 0x815b, which
+                   the mangled name spells as an escape a nibble a
+                   letter and which reads as an exclamation mark and a
+                   bracket if the escape is skimmed. */
+                if (got == ju_MakeUshort("\x81\x5b")) {
+                    uint8_t made = (uint8_t)
+                        (PTB_B(row, PT_KANA + pos) % 8 + 0xf0);
+
+                    pos++;
+                    PTB_B(row, PT_KANA + pos) = made;
+                    PTB_B(row, PT_MORAS) = (uint8_t)(PTB_B(row, PT_MORAS) + 1);
+                    in[AI_KANA + 1 + nLast++] = made;
+                    extra++;
+                }
+            }
+        }
+        if (extra > 0)
+            in[AI_LEN + k] = (uint8_t)(in[AI_LEN + k] + extra);
+
+        if (kind == 0x0b && prevKind != 0x23) {
+            in[AI_ENDS + k] = 2;
+        } else if (kind == 0x0c) {
+            if (in[AI_LEN + k] == 1
+                && (PTB_B(row, PT_KANA - 1 + pos) == 0xf9
+                    || PTB_B(row, PT_KANA - 1 + pos) == 0x71))
+                in[AI_ENDS + k] = 1;
+            else if (in[AI_LEN + k] == 1)
+                in[AI_ENDS + k] = 0;
+        } else if (kind == 0x11) {
+            if (PTB_B(row, PT_KANA - 1 + pos) == 0x60
+                || PTB_B(row, PT_KANA - 1 + pos) == 0x94)
+                in[AI_ENDS + k] = 1;
+            else
+                in[AI_ENDS + k] = 0;
+        } else if (kind == 0x28) {
+            if (in[AI_LEN + k] == 1) {
+                if (PTB_B(row, PT_KANA - 1 + pos) == 1)
+                    in[AI_ENDS + k] = 1;
+                else
+                    in[AI_ENDS + k] = 0;
+            }
+        } else {
+            in[AI_ENDS + k] = 0;
+        }
+    }
+
+    *(int32_t *)((uint8_t *)row + PT_COST) =
+        *(int32_t *)((uint8_t *)wp + WP_COST);
+    PTB_B(row, 0x0e) = PTB_B(wp, WP_TYPE);
+    PTB_B(row, 0x0d) = PTB_B(wp, WP_ACCENT);
+    PTB_B(row, PT_HOLD) = PTB_B(wp, WP_MORAS);
+
+    /* The group the compounder made last, named one-based: a count of one
+       is the first entry of the two runs, which is why these are indexed
+       from one before each run rather than from its start. */
+    if (ptb_SetUkeTypePhrase(pt, (uint8_t *)row + PT_LEFT, wp) < 0)
+        PTB_B(row, PT_MORA_ACC - 1 + nGroups) =
+            (uint8_t)(PTB_B(row, PT_MORA_ACC - 1 + nGroups) - 1);
+    if (PTB_B(row, PT_MORA - 1 + nGroups)
+        < PTB_B(row, PT_MORA_ACC - 1 + nGroups))
+        PTB_B(row, PT_MORA_ACC - 1 + nGroups) = 0;
+
+    in[AI_MORAS]  = PTB_B(row, PT_MORA - 1 + nGroups);
+    in[AI_ACCENT] = PTB_B(row, PT_MORA_ACC - 1 + nGroups);
+    {
+        const uint8_t *last = WW_SLOT(wp, (int16_t)PTB_B(wp, WP_WORDS) - 1);
+
+        if (last[WW_ATTR] & 0x10)
+            in[AI_KIND] = 1;
+        else if (last[WW_POS] == 0x17)
+            in[AI_KIND] = 2;
+        else
+            in[AI_KIND] = 0;
+    }
+    /* IBM says how many function words the accent walk is to score by
+       counting them off the phrase rather than off the loop above, which
+       stops early once the phrase has run to the twenty-five moras a row
+       holds. Where it stops early the walk then reads a rule pointer the
+       loop never stored -- IBM's own uninitialised frame, and this one it
+       dereferences. Ours scores the ones that were read. */
+    in[AI_WORDS] = (uint8_t)nFzk;
+
+    for (k = 0; k < (int16_t)PTB_B(wp, WP_FZKS); k++)
+        ptb_SetSubUkeType(pt, (uint8_t *)row + PT_LEFT,
+                          (int16_t)(*(WF_SLOT(wp, k) + WF_CODE) & 0x7f),
+                          &flag);
+    PTB_B(row, PT_LEFT + 1) = (uint8_t)(PTB_B(row, PT_LEFT + 1)
+                                        & ~(PTB_B(row, PT_LEFT)
+                                            & PTB_B(row, PT_LEFT + 1)));
+
+    if (PTB_B(wp, WP_FZKS) > 0) {
+        if (PTB_B(wp, WP_WORDS) == 1
+            && *(WW_SLOT(wp, 0) + WW_KANALEN) == 0) {
+            PTB_B(row, PT_RIGHT) = 2;
+        } else {
+            uint8_t at2 = (uint8_t)((rule[3] - 1) & 0x3f);
+
+            for (k = 0; k < 6; k++)
+                PTB_B(row, PT_RIGHT + k) = dm_GetKakariAt((uint16_t)
+                                                          (at2 * 6 + k));
+            ptb_ExtKKRPhrase(pt, (uint8_t *)row + PT_RIGHT, kind, &flag);
+            if (PTB_B(wp, WP_FZKS) == 1 && kind == 0x1c)
+                PTB_B(row, PT_RIGHT + 2) =
+                    (uint8_t)(PTB_B(row, PT_RIGHT + 2) | 0x80);
+        }
+    } else {
+        ptb_SetNoneFzkKKR(pt, (uint8_t *)row + PT_RIGHT, wp);
+        if (PTB_B(wp, WP_WORDS) == 1 && PTB_B(wp, WP_FZKS) == 0
+            && (dm_GetTGAt2(*(WW_SLOT(wp, 0) + WW_POS), 1) & 0x30))
+            PTB_B(row, PT_RIGHT + 2) =
+                (uint8_t)(PTB_B(row, PT_RIGHT + 2) | 0x80);
+    }
+    if (PTB_B(wp, WP_TYPE) == 0x0a)
+        PTB_B(row, PT_RIGHT) = (uint8_t)(PTB_B(row, PT_RIGHT) | 0x80);
+
+    PTB_B(row, PT_GROUP) = (uint8_t)kind;
+
+    if ((int8_t)PTB_B(ta, TA_UNKNOWN_10) > 0 && a == (int16_t)(b - 1)) {
+        const uint8_t *ic = *(const uint8_t **)((uint8_t *)ta
+                                                + TA_INPUTCHAR_AT);
+
+        if (*(const int32_t *)(ic + IC_ENDED) != 0) {
+            const char *at3 = (const char *)(ic + IC_ENDMARK);
+
+            if (at3[0] == 0x3f)
+                PTB_B(row, PT_KIND) = 5;
+            else if (at3[0] == 0x21)
+                PTB_B(row, PT_KIND) = 6;
+            else if (at3[0] == 0x60)
+                PTB_B(row, PT_KIND) = 2;
+            else if (at3[0] == 0x2c)
+                PTB_B(row, PT_KIND) = 3;
+            else
+                PTB_B(row, PT_KIND) = 4;
+        } else {
+            PTB_B(row, PT_KIND) = 3;
+        }
+    } else if (PTB_B(row, PT_MORAS) >= 0x19) {
+        PTB_B(row, PT_KIND) = 3;
+    } else {
+        PTB_B(row, PT_KIND) = 1;
+    }
+
+    in[AI_AT79] = PTB_B(row, PT_KIND);
+    ptb_FzkAccent(pt, in, out);
+
+    {
+        int16_t where = 0;
+        int16_t back;
+        int32_t first = 0;
+
+        if (nLong > 0) {
+            where = (int16_t)(PTB_W(row, PT_LONG + (nLong - 1) * 2)
+                     + *(WW_SLOT(wp, (int16_t)PTB_B(wp, WP_WORDS) - 1)
+                         + WW_KANALEN));
+            back = (int16_t)(where - in[AI_MORAS]);
+        } else {
+            back = *e;
+            where = back;
+        }
+
+        if (out[AO_MORAS] > in[AI_MORAS]) {
+            first = 1;
+            for (k = 0; k < (int16_t)in[AI_WORDS]; k++) {
+                if (where >= (int16_t)(out[AO_MORAS] + back))
+                    break;
+                PTB_W(row, PT_LONG + nLong * 2) = where;
+                PTB_B(row, PT_LONG_B + nLong) =
+                    ptb_GetFzkPosFromTG(pt, *(WF_SLOT(wp, k) + WF_CODE));
+                nLong++;
+                if (where + in[AI_LEN + k] <= (int16_t)(out[AO_MORAS] + back)) {
+                    where = (int16_t)(where + in[AI_LEN + k]);
+                } else if (first != 0) {
+                    where = (int16_t)(where
+                                      + (out[AO_MORAS] + back - where));
+                    first = 0;
+                } else {
+                    where = (int16_t)(where + in[AI_LEN + k]);
+                }
+            }
+        }
+
+        for (k = 0; k < 15; k++) {
+            PTB_B(row, PT_MORA_HI + k)     = out[AO_LEN + k];
+            PTB_B(row, PT_MORA_HI_ACC + k) = out[AO_ACC + k];
+            PTB_W(row, PT_MORA_HI_VAL + k * 2) =
+                *(int16_t *)(out + AO_MARK + k * 2);
+            if (out[AO_LEN + k] > 0) {
+                PTB_W(row, PT_LONG + nLong * 2) = where;
+                PTB_B(row, PT_LONG_B + nLong)   = 9;
+                nLong++;
+                where = (int16_t)(where + out[AO_LEN + k]);
+            }
+        }
+    }
+
+    PTB_B(row, PT_MORA - 1 + nGroups) = out[AO_MORAS];
+    if (out[AO_MORAS] < out[AO_ACCENT])
+        PTB_B(row, PT_MORA_ACC - 1 + nGroups) = 0;
+    else
+        PTB_B(row, PT_MORA_ACC - 1 + nGroups) = out[AO_ACCENT];
+
+    PT_LINK(row) = 0;
+    PTB_W(row, PT_LONG_N) = nLong;
+    *d = (int16_t)(*d + nLong);
+    *e = (int16_t)(*e + pos);
+    (void)a;
+    (void)b;
+    return 0;
+}

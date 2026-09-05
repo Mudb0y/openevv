@@ -492,11 +492,20 @@ static Conv *makeConv(Param *p)
 #define ibm_ptbFzkAccent(pt, i, o)        ptb_FzkAccent((pt), (i), (o))
 #define ibm_ptbCompoundWord(pt, w, r)     ptb_CompoundWord((pt), (w), (r))
 #define ibm_taCopyJrtPart(s, d)           ta_CopyJrtPart((s), (d))
+#define ibm_taExtKkrForLink(t, k, g, o)   ta_ExtKkrForLink((t), (k), (g), (o))
+#define ibm_taSetJWordUkeTypeForLink(t, u, a, b) \
+    ta_SetJWordUkeTypeForLink((t), (u), (a), (b))
+#define ibm_taSetFWordUkeTypeForLink(t, at, f, u, a, b) \
+    ta_SetFWordUkeTypeForLink((t), (at), (f), (u), (a), (b))
+#define ibm_taSetUkeTypeForLink(t, u, w)  ta_SetUkeTypeForLink((t), (u), (w))
 #define ibm_ptbSetSuushiPhraseTable(pt, w, r, j, b, n) \
     ptb_SetSuushiPhraseTable((pt), (w), (r), (j), (b), (n))
 #define ibm_ptbSetSuushiPhrase(pt, w, r, o) \
     ptb_SetSuushiPhrase((pt), (w), (r), (o))
+#define ibm_ptbSetPhraseTable(pt, a, b, w, c, d, e) \
+    ptb_SetPhraseTable((pt), (a), (b), (w), (c), (d), (e))
 #define PTBM(name) ibm_ptb##name
+#define TAM(name) ibm_ta##name
 #define PTB_SET(blk, which, p) (*(void **)((blk) + which##_AT) = (p))
 #define AI_RULE_SET(in, i, p) (AI_RULE_OF((in), (i)) = (p))
 
@@ -1521,6 +1530,19 @@ extern THIS int16_t ibm_ptbCompoundWord(void *pt, void *wp, void *row)
     MANGLED("?CompoundWord@PhraseTable@@QAEFPAU_W_PHRASE_T@@PAU_PHR_TBL_T@@@Z");
 extern void ibm_taCopyJrtPart(const void *src, void *dst)
     MANGLED("?CopyJrtPart@TextAnalysis@@SAXPAU_P_JRT_T@@0@Z");
+extern THIS void ibm_taExtKkrForLink(void *ta, uint8_t *kkr, int16_t tg,
+                                     const uint8_t *other)
+    MANGLED("?ExtKkrForLink@TextAnalysis@@QAEXPAEF0@Z");
+extern THIS int16_t ibm_taSetJWordUkeTypeForLink(void *ta, uint8_t *uke,
+                                                 const uint8_t *tg0,
+                                                 const uint8_t *tgL)
+    MANGLED("?SetJWordUkeTypeForLink@TextAnalysis@@QAEFPAE00@Z");
+extern THIS void ibm_taSetFWordUkeTypeForLink(void *ta, uint8_t at, uint8_t fzk,
+                                              uint8_t *uke, const uint8_t *tg0,
+                                              const uint8_t *tgL)
+    MANGLED("?SetFWordUkeTypeForLink@TextAnalysis@@QAEXEEPAE00@Z");
+extern THIS int16_t ibm_taSetUkeTypeForLink(void *ta, uint8_t *uke, void *wp)
+    MANGLED("?SetUkeTypeForLink@TextAnalysis@@QAEFPAEPAU_W_PHRASE_T@@@Z");
 extern THIS void *ibm_ptbSetSuushiPhraseTable(void *pt, void *wp, void *row,
                                               uint8_t *jrt, int16_t before,
                                               int16_t n)
@@ -1528,7 +1550,12 @@ extern THIS void *ibm_ptbSetSuushiPhraseTable(void *pt, void *wp, void *row,
 extern THIS void *ibm_ptbSetSuushiPhrase(void *pt, void *wp, void *row,
                                          int16_t *out)
     MANGLED("?SetSuushiPhrase@PhraseTable@@QAEPAU_PHR_TBL_T@@PAU_W_PHRASE_T@@PAU2@PAF@Z");
+extern THIS int16_t ibm_ptbSetPhraseTable(void *pt, int16_t a, int16_t b,
+                                          void *wp, uint8_t *c, int16_t *d,
+                                          int16_t *e)
+    MANGLED("?SetPhraseTable@PhraseTable@@QAEFFFPAU_W_PHRASE_T@@PAEPAF2@Z");
 #define PTBM(name) ibm_ptb##name
+#define TAM(name) ibm_ta##name
 #define PTB_SET(blk, which, p) (*(void **)((blk) + which) = (p))
 #define AI_RULE_SET(in, i, p) \
     (*(uint8_t **)((uint8_t *)(in) + AI_RULE + (i) * 4) = (p))
@@ -9642,6 +9669,151 @@ static void ptbPhrase(char *wp, int words, int kind, int fzks, int fzk,
     }
 }
 
+/* ---- what a phrase will attach to, for a link -------------------------- */
+
+/* `comppenalty.obj', which is four methods of `TextAnalysis' answering for a
+   link in the search what `PhraseTable::SetUkeTypePhrase' answers for a row.
+   None of the four reads the analysis itself, so the block handed in as the
+   object is only there to be passed on.
+
+   The two that take tag records take them as pointers rather than looking
+   them up, so the sweep hands them records that no tag table holds: every
+   value of the byte each test reads, rather than only the ones IBM's own
+   table happens to carry. */
+static void sweepCompPenalty(void)
+{
+    long     i, j;
+    uint32_t roll;
+
+    /* Every tag through the extra bits, over a kakari of noughts and one of
+       ones -- one arm sets the top two bits only where the caller's own flag
+       says so, so both values of that are asked as well. */
+    for (i = 0; i < 0x100; i++) {
+        uint8_t kkr[8];
+        uint8_t other[2];
+        long    e;
+
+        for (j = 0; j < 4; j++) {
+            memset(kkr, (int)(j >> 1 ? 0xff : 0x00), sizeof kkr);
+            other[0] = (uint8_t)(j & 1);
+            other[1] = 0;
+            TAM(ExtKkrForLink)(ta_block, kkr, (int16_t)i, other);
+            printf("TA kkr %ld %ld ", i, j);
+            for (e = 0; e < 8; e++)
+                printf("%02x", (unsigned)kkr[e]);
+            putchar('\n');
+        }
+    }
+
+    /* The two halves of a compound. The third tag byte of each half is swept
+       whole and against every value of the other's, since what the two want
+       in common is the whole point of the method; the first and second bytes
+       are two bits apiece, which is all the two tests on them can tell. */
+    roll = 2166136261u;
+    for (i = 0; i < 0x10000; i++)
+        for (j = 0; j < 16; j++) {
+            uint8_t tg0[4];
+            uint8_t tgL[4];
+            uint8_t uke[8];
+            int16_t rc;
+            long    e;
+
+            tg0[0] = (uint8_t)(j & 1);
+            tg0[1] = (uint8_t)(j & 2 ? 0xf0 : 0x00);
+            tg0[2] = (uint8_t)(i & 0xff);
+            tg0[3] = 0;
+            tgL[0] = (uint8_t)((j >> 2) & 1);
+            tgL[1] = (uint8_t)(j & 8 ? 0xf0 : 0x00);
+            tgL[2] = (uint8_t)(i >> 8);
+            tgL[3] = 0;
+            memset(uke, (int)(i & 1 ? 0xff : 0x00), sizeof uke);
+            rc = TAM(SetJWordUkeTypeForLink)(ta_block, uke, tg0, tgL);
+            roll = (roll ^ (uint32_t)rc) * 16777619u;
+            for (e = 0; e < 8; e++)
+                roll = (roll ^ uke[e]) * 16777619u;
+            if ((i & 0x7ff) == 0) {
+                printf("TA jw %ld %ld %d ", i, j, (int)rc);
+                for (e = 0; e < 8; e++)
+                    printf("%02x", (unsigned)uke[e]);
+                putchar('\n');
+            }
+        }
+    printf("TA jw all %08lx\n", (unsigned long)roll);
+
+    /* The function word on the end. The three tag bytes are asked in turn and
+       the first that says anything answers, so each is swept whole on its own
+       with the others at nought; the function word's own number is swept
+       whole beside it, since two of the arms compare against it. The answer
+       is written at an index the caller gives and read back at the same one,
+       so both indices are asked, and the byte it is written into is started
+       at three values because one arm reads its top bit before setting it. */
+    roll = 2166136261u;
+    for (i = 0; i < 0x100; i++)
+        for (j = 0; j < 0x300 * 6; j++) {
+            uint8_t tg0[4];
+            uint8_t tgL[4];
+            uint8_t uke[8];
+            long    which = (j / 6) % 3;
+            long    v     = (j / 6) / 3;
+            long    at    = (j % 6) >> 1;
+            static const uint8_t starts[3] = { 0x00, 0x80, 0xff };
+            long    e;
+
+            tg0[0] = 0x5a;
+            tg0[1] = 0x5a;
+            tg0[2] = 0x5a;
+            tg0[3] = 0x5a;
+            tgL[0] = (uint8_t)(which == 0 ? v : 0);
+            tgL[1] = (uint8_t)(which == 1 ? v : 0);
+            tgL[2] = (uint8_t)(which == 2 ? v : 0);
+            tgL[3] = 0;
+            memset(uke, (int)starts[at], sizeof uke);
+            TAM(SetFWordUkeTypeForLink)(ta_block, (uint8_t)(j & 1),
+                                        (uint8_t)i, uke, tg0, tgL);
+            for (e = 0; e < 8; e++)
+                roll = (roll ^ uke[e]) * 16777619u;
+            if ((j % 6) == 0 && (v & 0x1f) == 0) {
+                printf("TA fw %ld %ld %ld %ld ", i, which, v, at);
+                for (e = 0; e < 8; e++)
+                    printf("%02x", (unsigned)uke[e]);
+                putchar('\n');
+            }
+        }
+    printf("TA fw all %08lx\n", (unsigned long)roll);
+
+    /* And the whole answer for one phrase, over the same field the row's own
+       reader is swept on: every part of speech, at two word counts, four
+       phrase kinds, with and without a function word -- and at three accents
+       including nought, which the row's own sweep never asks for and which is
+       the only value that reaches the second half of this one's refusal. */
+    roll = 2166136261u;
+    for (i = 0; i < 0x100; i++)
+        for (j = 0; j < 24; j++) {
+            static const int kinds[4] = { 0, 6, 10, 3 };
+            char    wp[PB_SLOT_SIZE];
+            uint8_t uke[8];
+            int16_t rc;
+            long    e;
+
+            ptbPhrase(wp, (int)(j & 1) + 1, kinds[(j >> 1) & 3],
+                      (int)((j >> 3) & 1), (int)i,
+                      (int)i, (int)((i + 37) & 0xff),
+                      (int)(j & 2 ? 0x80 : 0), (int)(j / 8));
+
+            memset(uke, 0, sizeof uke);
+            rc = TAM(SetUkeTypeForLink)(ta_block, uke, wp);
+            roll = (roll ^ (uint32_t)rc) * 16777619u;
+            for (e = 0; e < 8; e++)
+                roll = (roll ^ uke[e]) * 16777619u;
+
+            printf("TA uke %ld %ld %d ", i, j, (int)rc);
+            for (e = 0; e < 8; e++)
+                printf("%02x", (unsigned)uke[e]);
+            putchar('\n');
+        }
+    printf("TA uke all %08lx\n", (unsigned long)roll);
+}
+
 static void sweepPhraseTable(void)
 {
     long     i, j, k;
@@ -10272,6 +10444,167 @@ static void sweepPhraseTable(void)
         printf("PTB ssp all %08lx\n", (unsigned long)roll);
     }
 
+
+    /* ---- the whole of one phrase ------------------------------------- */
+
+    /* The entry point, driven over a phrase with words and function words in
+       it, the caller's own rule table, and an analysis with a free list, an
+       input reader and a chain of marks. */
+    roll = 2166136261u;
+    for (i = 0; i < 0x800; i++)
+        for (j = 0; j < 8; j++) {
+            char     buf[2 * PB_SLOT_SIZE];
+            char    *wp = buf + PB_SLOT_SIZE;
+            uint8_t *ta = (uint8_t *)ta_block;
+            uint8_t  rules[0x400];
+            int16_t  nLong = 0;
+            int16_t  where = 0;
+            int16_t  got;
+            long     e, q;
+            long     words = 1 + (j & 1);
+            long     fzks  = (j >> 1) & 3;
+
+            memset(ta_block, 0, sizeof ta_block);
+            memset(ic_block, 0, sizeof ic_block);
+            for (q = 0; q < TA_LINK_N; q++) {
+                *(uint16_t *)(ta + TA_LINK + q * 4) =
+                    (uint16_t)(q == 0 ? TA_LINK_N : q - 1);
+                *(uint16_t *)(ta + TA_LINK + q * 4 + 2) = (uint16_t)(q + 1);
+            }
+            *(uint16_t *)(ta + TA_FIRST)    = TA_LINK_N;
+            *(uint16_t *)(ta + TA_LAST)     = TA_LINK_N;
+            *(uint16_t *)(ta + TA_SPARE_18) = 0;
+            for (q = 0; q < (long)TA_LONGWORD_N * TA_LONGWORD_SIZE; q++)
+                ta[TA_LONGWORD + q] = (uint8_t)(q * 29 + 5);
+            *(int16_t *)(ta + TA_INTON_FAILED) = (int16_t)(i & 3);
+            ta[TA_UNKNOWN_10] = (uint8_t)((i >> 2) & 1);
+            TA_SET(ta_block, TA_INPUTCHAR, ic_block);
+            /* Only as far as the record IBM allocates: past that are the
+               pointers ours parks, and the two sides park a different
+               number of them. */
+            for (q = 0; q < IC_BYTES; q++)
+                ic_block[q] = (char)(q * 13 + 7);
+            ic_block[IC_ENDMARK] = (char)((i >> 3) & 1 ? 0x3f
+                                          : (i >> 4) & 1 ? 0x21
+                                          : (i >> 5) & 1 ? 0x60 : 0x2c);
+            /* The long-vowel mark, at the place a function word whose accent
+               is one looks for it. */
+            ic_block[6] = (char)0x81;
+            ic_block[7] = 0x5b;
+            *(int32_t *)(ic_block + IC_ENDED) = (int32_t)((i >> 6) & 1);
+
+            PTB_SET(ptb_room, PTB_OWNER, ta_block);
+            PTB_SET(ptb_room, PTB_NUMREAD, nr_room);
+            PTB_SET(ptb_room, PTB_HEAD, NULL);
+            PTB_SET(ptb_room, PTB_TAIL, NULL);
+            memset(nr_room, 0, sizeof nr_room);
+            NR_SET_OWNER(nr_room, ta_block);
+
+            /* Half of them in the range the accent walk calls a lengthener,
+               which is the only thing that ever reads a function word's own
+               code back: below it every code answers the same and a wrong
+               one cannot be told from a right one. */
+            for (e = 0; e < (long)sizeof rules; e++)
+                rules[e] = (uint8_t)((i + e * 7) % 5
+                                     + ((i >> 5) & 1 ? 0xf3 : 6));
+            for (e = 0; e < (long)sizeof rules; e += 0x20) {
+                rules[e]     = (uint8_t)(6 + ((i >> 2) + e) % 4);
+                /* At least one: the accent rule is looked up at this less
+                   one plus the analysis's own first mora, and a nought
+                   here sends that index below the table. */
+                rules[e + 2] = (uint8_t)(1 + (i + e) % 250);
+                rules[e + 3] = (uint8_t)(1 + ((i + e) % 30));
+            }
+
+            memset(buf, 0x5a, sizeof buf);
+            memset(wp, 0, PB_SLOT_SIZE);
+            wp[WP_WORDS] = (char)words;
+            wp[WP_FZKS]  = (char)fzks;
+            wp[WP_TYPE]  = (char)((i >> 7) & 1 ? 0x0a : 0);
+            wp[WP_ACCENT] = (char)(i & 7);
+            *(int16_t *)(wp + WP_MORAS) = (int16_t)(3 + (i & 7));
+            *(int32_t *)(wp + WP_COST)  = (int32_t)(i * 5 + 1);
+            for (e = 0; e < words; e++) {
+                char *w = (char *)WW_SLOT(wp, e);
+
+                w[WW_POS]     = (char)((i >> 8) & 1 ? 0x17
+                                       : (i * 37 + e * 53) & 0x7e);
+                /* Long enough that a phrase can outrun the twenty-five moras
+                   a row holds, and sometimes nothing at all. Only the last
+                   word's kana reaches the accent walk's own array, and the
+                   function words' codes go in after it -- so unless that one
+                   is sometimes short, nothing the function words write is
+                   ever under the two places the walk reads that array. */
+                w[WW_KANALEN] = (char)((i >> 9) & 1 ? 0
+                                       : ((i >> 10) & 1) && e == words - 1
+                                         ? (char)(i & 1)
+                                         : 1 + ((i >> 3) + e) % 12);
+                w[WW_ATTR]    = (char)((i >> 8) & 0xff);
+                *(int16_t *)(w + WW_ACCENT) = (int16_t)((i >> 4) & 0x0f);
+                *(int16_t *)(w + WW_OFFSET) = (int16_t)(e * 3 + 1);
+                for (q = 0; q < WW_KANA_N; q++)
+                    w[WW_KANA + q] = (char)((e * 7 + q) % 30);
+            }
+            for (e = 0; e < fzks; e++) {
+                char *f = (char *)WF_SLOT(wp, e);
+                long  code = (i >> 7) & 1 ? 0x0b : (i + e * 11) & 0x7f;
+
+                /* Two of the four arms that say whether a function word ends
+                   a phrase write nothing where the word runs to more than
+                   one mora, and what the accent walk then reads is whatever
+                   was on IBM's stack. Those two get a word of one mora. */
+                if (code == 0x0c || code == 0x28)
+                    rules[e * 0x20 + 0x20] = 7;
+                f[WF_CODE] = (char)code;
+                *(int16_t *)(f + WF_AT)     = (int16_t)((e * 0x20 + 0x20));
+                f[WF_KANALEN] = (char)(1 + (e & 1));
+                *(int16_t *)(f + WF_ACCENT) = (int16_t)((i >> 6) & 1
+                                                        ? 1
+                                                        : (i + e) & 0x0f);
+                *(int16_t *)(f + WF_OFFSET) = (int16_t)(e * 2 + 3);
+            }
+
+            got = PTBM(SetPhraseTable)(ptb_room, (int16_t)(i & 1),
+                                       (int16_t)((i & 1) + 1), wp, rules,
+                                       &nLong, &where);
+            roll = (roll ^ (uint32_t)got) * 16777619u;
+            roll = (roll ^ (uint32_t)nLong) * 16777619u;
+            roll = (roll ^ (uint32_t)where) * 16777619u;
+            /* Every byte of a row but its link and the marks of the groups
+               the accent walk never reached: those come out of FzkAccent's
+               own third array, which IBM does not clear. */
+            for (q = 0; q < 3 * PT_ROW_SIZE; q++) {
+                const uint8_t *r2 = ta + TA_PHRASE
+                                    + (q / PT_ROW_SIZE) * PT_ROW_SIZE;
+                long           at2 = q % PT_ROW_SIZE;
+
+                if (at2 < 4)
+                    continue;
+                if (at2 >= PT_MORA_HI_VAL && at2 < PT_MORA_HI_VAL + 30
+                    && r2[PT_MORA_HI + (at2 - PT_MORA_HI_VAL) / 2] == 0)
+                    continue;
+                roll = (roll ^ ta[TA_PHRASE + q]) * 16777619u;
+            }
+            for (q = 2; q < PB_SLOT_SIZE; q++)
+                if (q != WP_KANALEN)
+                    roll = (roll ^ (uint32_t)(uint8_t)wp[q]) * 16777619u;
+            if ((i & 7) == 0) {
+                printf("PTB spt %ld %ld %d %d %d ", i, j, (int)got,
+                       (int)nLong, (int)where);
+                for (q = 4; q < PT_ROW_SIZE; q++)
+                    if (!(q >= PT_MORA_HI_VAL && q < PT_MORA_HI_VAL + 30
+                          && ta[TA_PHRASE + PT_MORA_HI
+                                + (q - PT_MORA_HI_VAL) / 2] == 0))
+                        printf("%02x", (unsigned)ta[TA_PHRASE + q]);
+                putchar(' ');
+                for (q = 2; q < PB_SLOT_SIZE; q++)
+                    if (q != WP_KANALEN)
+                        printf("%02x", (unsigned)(uint8_t)wp[q]);
+                printf(" %08lx\n", (unsigned long)roll);
+            }
+        }
+    printf("PTB spt all %08lx\n", (unsigned long)roll);
+
     /* ---- what a run of function words does to the accent ------------- */
 
     /* Every rule byte through it, over a phrase of a few lengths and
@@ -10397,6 +10730,7 @@ int main(void)
     sweepMakeReadable();
     sweepTextNormalizer();
     sweepPhraseTable();
+    sweepCompPenalty();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS
