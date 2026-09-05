@@ -490,6 +490,7 @@ static Conv *makeConv(Param *p)
 #define ibm_ptbSetNoneFzkKKR(pt, k, w)    ptb_SetNoneFzkKKR((pt), (k), (w))
 #define ibm_ptbSetUkeTypePhrase(pt, u, w) ptb_SetUkeTypePhrase((pt), (u), (w))
 #define ibm_ptbFzkAccent(pt, i, o)        ptb_FzkAccent((pt), (i), (o))
+#define ibm_ptbCompoundWord(pt, w, r)     ptb_CompoundWord((pt), (w), (r))
 #define PTBM(name) ibm_ptb##name
 #define PTB_SET(blk, which, p) (*(void **)((blk) + which##_AT) = (p))
 #define AI_RULE_SET(in, i, p) (AI_RULE_OF((in), (i)) = (p))
@@ -1511,6 +1512,8 @@ extern THIS int16_t ibm_ptbSetUkeTypePhrase(void *pt, uint8_t *uke, void *wp)
     MANGLED("?SetUkeTypePhrase@PhraseTable@@QAEFPAEPAU_W_PHRASE_T@@@Z");
 extern THIS void ibm_ptbFzkAccent(void *pt, uint8_t *in, uint8_t *out)
     MANGLED("?FzkAccent@PhraseTable@@QAEXPAU_ACC_IN_T@@PAU_ACC_OUT_T@@@Z");
+extern THIS int16_t ibm_ptbCompoundWord(void *pt, void *wp, void *row)
+    MANGLED("?CompoundWord@PhraseTable@@QAEFPAU_W_PHRASE_T@@PAU_PHR_TBL_T@@@Z");
 #define PTBM(name) ibm_ptb##name
 #define PTB_SET(blk, which, p) (*(void **)((blk) + which) = (p))
 #define AI_RULE_SET(in, i, p) \
@@ -9803,6 +9806,158 @@ static void sweepPhraseTable(void)
             putchar('\n');
         }
     printf("PTB phrase all %08lx\n", (unsigned long)roll);
+
+    /* ---- the words of a phrase joined into one ----------------------- */
+
+    /* A phrase of up to four words, each with its own part of speech,
+       accent, reading length, attribute byte and offset, and a row that says
+       which word to start at. The long-reading store is filled here as well,
+       since a word whose reading is more than ten codes is read out of it. */
+    {
+        uint8_t *ta = (uint8_t *)ta_block;
+        long     q;
+
+        for (q = 0; q < (long)TA_LONGWORD_N * TA_LONGWORD_SIZE; q++)
+            /* A pattern whose top five bits move quickly, since what the
+               reader asks of a byte here is which of two classes those
+               five put it in. */
+            ta[TA_LONGWORD + q] = (uint8_t)(q * 29 + 5);
+    }
+    roll = 2166136261u;
+    for (i = 0; i < 0x2000; i++)
+        for (j = 0; j < 8; j++) {
+            /* Two slots, and the phrase is the second: two of the arms ask
+               about the word before the one in hand without asking whether
+               there is one, and at the first word that reads the six bytes
+               in front of the run. Both sides have to find the same six. */
+            char    buf[2 * PB_SLOT_SIZE];
+            char   *wp = buf + PB_SLOT_SIZE;
+            char    row[PT_ROW_SIZE];
+            int16_t got;
+            long    e, q, words = 1 + (j & 3);
+
+            memset(buf, 0x5a, sizeof buf);
+            memset(wp, 0, PB_SLOT_SIZE);
+            memset(row, 0, sizeof row);
+            wp[WP_WORDS] = (char)words;
+            row[PT_FIRST_WORD] = (char)((j >> 2) & 1);
+            for (e = 0; e < words; e++) {
+                char *w = (char *)WW_SLOT(wp, e);
+
+                w[WW_POS]     = (char)((i * 37 + e * 53) & 0xff);
+                w[WW_KANALEN] = (char)(1 + ((i >> 3) + e * 5) % 14);
+                w[WW_ATTR]    = (char)((i >> 11) & 0xff);
+                *(int16_t *)(w + WW_ACCENT) = (int16_t)((i >> 7) & 0x0f);
+                *(int16_t *)(w + WW_OFFSET) = (int16_t)(e * 3 + 1);
+                for (q = 0; q < WW_KANA_N; q++)
+                    w[WW_KANA + q] = (char)(i & 1
+                        ? 0xf0 + ((i + e + q) & 0x0f)
+                        : (i * 3 + e * 7 + q * 13) & 0xff);
+            }
+            got = PTBM(CompoundWord)(ptb_room, wp, row);
+            roll = (roll ^ (uint32_t)got) * 16777619u;
+            for (e = 0; e < PT_MORA_N; e++) {
+                roll = (roll ^ (uint32_t)(uint8_t)row[PT_MORA + e])
+                       * 16777619u;
+                roll = (roll ^ (uint32_t)(uint8_t)row[PT_MORA_ACC + e])
+                       * 16777619u;
+                roll = (roll
+                        ^ (uint32_t)*(int16_t *)(row + PT_MORA_VAL + e * 2))
+                       * 16777619u;
+            }
+            if ((i & 0xff) == 0) {
+                printf("PTB comp %ld %ld %d ", i, j, (int)got);
+                for (e = 0; e < 6; e++)
+                    printf("%02x%02x/%d ", (unsigned)(uint8_t)row[PT_MORA + e],
+                           (unsigned)(uint8_t)row[PT_MORA_ACC + e],
+                           (int)*(int16_t *)(row + PT_MORA_VAL + e * 2));
+                printf("%08lx\n", (unsigned long)roll);
+            }
+        }
+    printf("PTB comp all %08lx\n", (unsigned long)roll);
+
+    /* And again over sequences chosen by their affix rather than by a
+       number. Which affix a word is decides which arm it takes, and three of
+       the arms only differ from each other once a second word has seen what
+       the first left behind; a part of speech picked out of the air reaches
+       two of the seven affixes and none of those pairs. */
+    {
+        static uint8_t posFor[13];
+        static const int wanted[7] = { 2, 3, 4, 7, 8, 11, 12 };
+        long a, b, c, e, q;
+
+        for (a = 0; a < 13; a++)
+            posFor[a] = 0xff;
+        for (a = 0; a < 0x100; a++) {
+            int16_t af = PTBM(GetAffixType)(ptb_room,
+                                            (uint8_t *)DM(GetTGAt)((uint8_t)a));
+
+            if (af >= 0 && af < 13 && posFor[af] == 0xff)
+                posFor[af] = (uint8_t)a;
+        }
+        printf("PTB posfor");
+        for (a = 0; a < 13; a++)
+            printf(" %u", (unsigned)posFor[a]);
+        putchar('\n');
+
+        roll = 2166136261u;
+        for (a = 0; a < 7; a++)
+            for (b = 0; b < 7; b++)
+                for (c = 0; c < 7; c++)
+                    for (j = 0; j < 40; j++) {
+                        static const int accents[5] = { 0, 6, 7, 9, 15 };
+                        static const int lens[2]    = { 1, 11 };
+                        static const int attrs[4]   = { 0, 1, 2, 4 };
+                        const int seq[3] = { wanted[a], wanted[b], wanted[c] };
+                        char    buf[2 * PB_SLOT_SIZE];
+                        char   *wp = buf + PB_SLOT_SIZE;
+                        char    row[PT_ROW_SIZE];
+                        int16_t got;
+
+                        memset(buf, 0x5a, sizeof buf);
+                        memset(wp, 0, PB_SLOT_SIZE);
+                        memset(row, 0, sizeof row);
+                        wp[WP_WORDS] = 3;
+                        for (e = 0; e < 3; e++) {
+                            char *w = (char *)WW_SLOT(wp, e);
+
+                            w[WW_POS]     = (char)posFor[seq[e]];
+                            w[WW_KANALEN] = (char)lens[(j >> 3) & 1];
+                            w[WW_ATTR]    = (char)attrs[(j >> 4) & 3];
+                            *(int16_t *)(w + WW_ACCENT) =
+                                (int16_t)accents[j % 5];
+                            *(int16_t *)(w + WW_OFFSET) = (int16_t)(e * 3 + 1);
+                            for (q = 0; q < WW_KANA_N; q++)
+                                w[WW_KANA + q] = (char)(0xf0 + ((e + q) & 7));
+                            /* The first code doubles as the number of the
+                               long reading a word too long to hold its own
+                               is kept in, so it has to be one of the thirty
+                               there are: left at a mora code it would index
+                               a quarter of the way through the analysis and
+                               read the same nought either way. */
+                            w[WW_KANA] = (char)((e * 7 + (j & 3)) % 30);
+                        }
+                        got = PTBM(CompoundWord)(ptb_room, wp, row);
+                        roll = (roll ^ (uint32_t)got) * 16777619u;
+                        for (e = 0; e < PT_MORA_N; e++) {
+                            roll = (roll
+                                    ^ (uint32_t)(uint8_t)row[PT_MORA + e])
+                                   * 16777619u;
+                            roll = (roll
+                                    ^ (uint32_t)(uint8_t)row[PT_MORA_ACC + e])
+                                   * 16777619u;
+                            roll = (roll ^ (uint32_t)*(int16_t *)
+                                    (row + PT_MORA_VAL + e * 2)) * 16777619u;
+                        }
+                        if (j == 0)
+                            printf("PTB seq %ld %ld %ld %d %02x%02x %08lx\n",
+                                   a, b, c, (int)got,
+                                   (unsigned)(uint8_t)row[PT_MORA],
+                                   (unsigned)(uint8_t)row[PT_MORA_ACC],
+                                   (unsigned long)roll);
+                    }
+        printf("PTB seq all %08lx\n", (unsigned long)roll);
+    }
 
     /* ---- what a run of function words does to the accent ------------- */
 

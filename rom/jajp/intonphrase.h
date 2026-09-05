@@ -155,6 +155,10 @@
 #define PT_MORAS        0x00b     /* uint8, how many codes the reading runs,
                                      which is also what RegroupPhrases adds up
                                      as the length of a breath group */
+#define PT_FIRST_WORD   0x00f     /* uint8, which word of the phrase
+                                     buffer this row starts at, which is
+                                     what PhraseTable writes and
+                                     CompoundWord walks from */
 #define PT_HOLD         0x00c     /* uint8, added into the group phrase's
                                      IH_FLAG as each row arrives */
 /* The moras of the phrase, as parallel runs of fifteen. Settled, and settled

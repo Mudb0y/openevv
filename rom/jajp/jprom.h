@@ -865,8 +865,8 @@ int32_t     mr_convertSPR(void *mr, const char *text, uint32_t n,
 
 /* ---- PhraseTable ----------------------------------------------------- */
 
-/* Where a phrase becomes a row of the phrase table. Eleven of the sixteen are
-   written; `SetPhraseTable', `CompoundWord', `SetSuushiPhrase' and
+/* Where a phrase becomes a row of the phrase table. Twelve of the sixteen are
+   written; `SetPhraseTable', `SetSuushiPhrase' and
    `SetSuushiPhraseTable' are not, and the sixteenth is a second copy of
    `DictSearch::IsOnin'. rom/jajp/phrasetable.h is the record
    and rom/jajp/phrasebuf.h and rom/jajp/intonphrase.h are the two it works
@@ -886,6 +886,7 @@ void        ptb_SetSubUkeType(void *pt, uint8_t *uke, int16_t tg,
 void        ptb_SetNoneFzkKKR(void *pt, uint8_t *kkr, void *wp);
 int16_t     ptb_SetUkeTypePhrase(void *pt, uint8_t *uke, void *wp);
 void        ptb_FzkAccent(void *pt, uint8_t *in, uint8_t *out);
+int16_t     ptb_CompoundWord(void *pt, void *wp, void *row);
 
 /* ---- TextNormalizer -------------------------------------------------- */
 

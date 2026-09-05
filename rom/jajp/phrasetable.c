@@ -173,7 +173,7 @@ void *ptb_GeneratePhraseTable(void *pt)
     PT_LINK(row) = 0;
     PTB_B(row, PT_GROUP) = 0;
     PTB_B(row, PT_MORAS) = 0;
-    PTB_B(row, 0x0f)     = 0;
+    PTB_B(row, PT_FIRST_WORD) = 0;
     for (i = 0; i < PT_MORA_N; i++) {
         PTB_B(row, PT_MORA + i)        = 0;
         PTB_B(row, PT_MORA_ACC + i)    = 0;
@@ -632,4 +632,230 @@ void ptb_FzkAccent(void *pt, uint8_t *in, uint8_t *out)
         out[AO_ACC + i] = B[i + 1] < A[i + 1] ? B[i + 1] : A[i + 1];
         *(int16_t *)(out + AO_MARK + (size_t)i * 2) = C[i];
     }
+}
+
+/* ---- the words of a phrase joined into one --------------------------- */
+
+/* Where the accent of a compound falls, which is not where the accents of
+ * the words in it fell.
+ *
+ * The walk is over the words of one phrase from the row's own first word,
+ * and what it keeps is a run of groups: how many moras each has run to, where
+ * its accent falls, and the offset into the caller's text that the group
+ * began at. What decides how a word joins the group in front of it is the
+ * kind of affix it is -- five kinds have arms of their own -- and, for two of
+ * those five, a state left behind by the word before.
+ *
+ * The two arms that ask what the last mora of the previous word was do it by
+ * hand rather than through `DictSearch::IsOnin', and the two hand-written
+ * tests are not the same as each other or as that one. The first asks only
+ * whether the code's high five bits are thirty or thirty-one; the second
+ * asks that, or thirty-one with a low three of five, or a low three of six
+ * whatever the high five are. IsOnin itself wants thirty, or thirty-one with
+ * a low three of five or six. All three are transcribed as they are.
+ */
+int16_t ptb_CompoundWord(void *pt, void *wp, void *row)
+{
+    uint8_t  A[15];
+    uint8_t  B[15];
+    int16_t  C[15];
+    void    *ta = PTB_OWNER_OF(pt);
+    uint8_t  at = 0;
+    uint8_t  state = 0;
+    int16_t  i, start;
+
+    for (i = 0; i < 15; i++) {
+        B[i] = 0;
+        A[i] = 0;
+        C[i] = -1;
+    }
+    start = (int16_t)PTB_B(row, PT_FIRST_WORD);
+    C[0]  = *(int16_t *)(WW_SLOT(wp, start) + WW_OFFSET);
+
+    for (i = start; i < (int16_t)PTB_B(wp, WP_WORDS); i++) {
+        const uint8_t *w   = WW_SLOT(wp, i);
+        uint16_t       acc = (uint16_t)*(int16_t *)(w + WW_ACCENT);
+        uint8_t        len = w[WW_KANALEN];
+        int16_t        affix;
+
+        affix = ptb_GetAffixType(pt, (uint8_t *)dm_GetTGAt(w[WW_POS]));
+
+        if (affix == 2) {
+            if (state != 0) {
+                if (state == 5) {
+                    B[at] = (uint8_t)(B[at] + len);
+                    if (C[at] < 0)
+                        C[at] = *(int16_t *)(w + WW_OFFSET);
+                } else {
+                    at++;
+                }
+            }
+            if (acc == 7) {
+                A[at] = (uint8_t)acc;
+                state = 5;
+            } else if (acc >= 8 && acc <= 13) {
+                A[at] = (uint8_t)(acc - 8);
+                state = 7;
+            } else {
+                A[at] = (uint8_t)acc;
+                state = 6;
+            }
+            B[at] = len;
+            C[at] = *(int16_t *)(w + WW_OFFSET);
+        } else if (affix == 3) {
+            if (acc == 0) {
+                /* The word before this one, asked for without anyone asking
+                   whether there is one: at the first word this reads the six
+                   bytes in front of the run, which are the phrase's own head
+                   in the buffer IBM packs these in. */
+                uint8_t t = *(WW_SLOT(wp, i - 1) + WW_KANALEN);
+                uint8_t u;
+
+                if (t > 10)
+                    u = *((uint8_t *)ta + TA_LONGWORD
+                          + (size_t)*(WW_SLOT(wp, i - 1) + WW_KANA)
+                            * TA_LONGWORD_SIZE + (size_t)(int16_t)(t - 1));
+                else
+                    u = *(WW_SLOT(wp, i - 1) + WW_ATTR + t);
+                if (u / 8 == 0x1e || u / 8 == 0x1f)
+                    A[at] = (uint8_t)(B[at] - 1);
+                else
+                    A[at] = B[at];
+                B[at] = (uint8_t)(B[at] + len);
+                if (C[at] < 0)
+                    C[at] = *(int16_t *)(w + WW_OFFSET);
+                state = 4;
+            } else if (acc == 6) {
+                A[at] = 0;
+                B[at] = (uint8_t)(B[at] + len);
+                state = 4;
+            } else if (acc == 7) {
+                if (A[at] == B[at])
+                    A[at] = 0;
+                B[at] = (uint8_t)(B[at] + len);
+                state = 4;
+            } else if (acc >= 8 && acc <= 13) {
+                at++;
+                A[at] = (uint8_t)(acc - 8);
+                B[at] = len;
+                C[at] = *(int16_t *)(w + WW_OFFSET);
+                state = 3;
+            } else if (acc == 15) {
+                if (A[at] == B[at] || A[at] == 0) {
+                    uint8_t t = *(WW_SLOT(wp, i - 1) + WW_KANALEN);
+                    uint8_t u;
+
+                    if (t > 10)
+                        u = *((uint8_t *)ta + TA_LONGWORD
+                              + (size_t)*(WW_SLOT(wp, i - 1) + WW_KANA)
+                                * TA_LONGWORD_SIZE
+                              + (size_t)(int16_t)(t - 1));
+                    else
+                        u = *(WW_SLOT(wp, i - 1) + WW_ATTR + t);
+                    if (u / 8 == 0x1e || (u / 8 == 0x1f && u % 8 == 5)
+                        || u % 8 == 6)
+                        A[at] = (uint8_t)(B[at] - 1);
+                    else
+                        A[at] = B[at];
+                }
+                B[at] = (uint8_t)(B[at] + len);
+                state = 4;
+            } else {
+                A[at] = (uint8_t)(B[at] + acc);
+                B[at] = (uint8_t)(B[at] + len);
+                state = 10;
+            }
+            if (w[WW_ATTR] & 0x04)
+                state = 10;
+        } else if (affix == 4) {
+            if (state == 6) {
+                if (acc == 0)
+                    A[at] = (uint8_t)(B[at] + 1);
+                else
+                    A[at] = (uint8_t)(B[at] + acc);
+                B[at] = (uint8_t)(B[at] + len);
+                if (C[at] < 0)
+                    C[at] = *(int16_t *)(w + WW_OFFSET);
+            } else if (state == 0) {
+                A[at] = (uint8_t)acc;
+                B[at] = len;
+                C[at] = *(int16_t *)(w + WW_OFFSET);
+            } else if (state <= 8 || state == 10) {
+                at++;
+                A[at] = (uint8_t)acc;
+                B[at] = len;
+                C[at] = *(int16_t *)(w + WW_OFFSET);
+            }
+            state = 8;
+        } else if (affix == 7) {
+            if (acc > 0)
+                A[at] = (uint8_t)(B[at] + acc);
+            B[at] = (uint8_t)(B[at] + len);
+            C[at] = *(int16_t *)(w + WW_OFFSET);
+            state = 2;
+        } else if (affix == 8 || affix == 11 || affix == 12) {
+            if (affix == 8 && (state == 9 || state == 1)) {
+                A[at] = 0;
+                B[at] = (uint8_t)(B[at] + len);
+                state = 9;
+                continue;
+            }
+            if ((w[WW_ATTR] & 0x01)
+                && (state == 1 || state == 9 || state == 8))
+                state = 10;
+
+            if (state == 0) {
+                B[at] = len;
+                A[at] = (uint8_t)acc;
+                C[at] = *(int16_t *)(w + WW_OFFSET);
+            } else if (state == 2 || state == 7 || state == 10) {
+                at++;
+                B[at] = len;
+                A[at] = (uint8_t)acc;
+                C[at] = *(int16_t *)(w + WW_OFFSET);
+            } else if (state == 5) {
+                if (acc == 0)
+                    A[at] = 0;
+                else
+                    A[at] = (uint8_t)(B[at] + acc);
+                B[at] = (uint8_t)(B[at] + len);
+                if (C[at] < 0)
+                    C[at] = *(int16_t *)(w + WW_OFFSET);
+            } else if (state <= 10) {
+                if (affix == 11 && (w[WW_ATTR] & 0x02)) {
+                    A[at] = 0;
+                    B[at] = (uint8_t)(B[at] + len);
+                } else if (affix == 11 && acc == 0) {
+                    if (i > 0 && *(WW_SLOT(wp, i - 1) + WW_KANALEN) == 1)
+                        A[at] = 0;
+                    else
+                        A[at] = (uint8_t)(B[at] + 1);
+                    B[at] = (uint8_t)(B[at] + len);
+                } else if (affix == 11) {
+                    if (acc == len)
+                        A[at] = (uint8_t)(B[at] + 1);
+                    else
+                        A[at] = (uint8_t)(B[at] + acc);
+                    B[at] = (uint8_t)(B[at] + len);
+                } else if (acc == 0) {
+                    A[at] = 0;
+                    B[at] = (uint8_t)(B[at] + len);
+                } else {
+                    A[at] = (uint8_t)(B[at] + acc);
+                    B[at] = (uint8_t)(B[at] + len);
+                }
+                if (C[at] < 0)
+                    C[at] = *(int16_t *)(w + WW_OFFSET);
+            }
+            state = 1;
+        }
+    }
+
+    at++;
+    for (i = 0; i < (int16_t)at && i < 15; i++) {
+        PTB_B(row, PT_MORA + i)     = B[i];
+        PTB_B(row, PT_MORA_ACC + i) = A[i];
+        PTB_W(row, PT_MORA_VAL + i * 2) = C[i];
+    }
+    return (int16_t)at;
 }
