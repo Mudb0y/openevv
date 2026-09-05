@@ -142,6 +142,10 @@
 #define PT_STATE        0x006     /* uint8 [3], what CheckPhraseToPhrase and
                                      PhraseParsing work on */
 #define PT_GROUP        0x009     /* uint8, what CheckBreathGroup answers */
+#define PT_TYPE         0x00e     /* uint8, the phrase kind, copied straight
+                                     out of the phrase buffer's WP_TYPE.
+                                     TextAnalysis's unknown-word pass reads it
+                                     to decide which rows it may reparse. */
 #define PT_KIND         0x00a     /* uint8. PhraseSeparate writes one here
                                      where it broke a group, and reads it back
                                      on the group's last phrase, taking four or

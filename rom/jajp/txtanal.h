@@ -184,7 +184,7 @@
  * Nothing had noticed because the harness only ever set two or three of them
  * at a time; setting a third overwrote the second's upper half and DictSearch
  * followed a wild pointer on its first call. */
-#define TA_ROOM           (TA_BYTES + 10 * sizeof(void *))
+#define TA_ROOM           (TA_BYTES + 11 * sizeof(void *))
 #define TA_VTABLE_AT      (TA_BYTES)
 #define TA_OWNER_AT       (TA_BYTES + 1 * sizeof(void *))
 #define TA_FORMATTED_AT   (TA_BYTES + 2 * sizeof(void *))
@@ -195,5 +195,6 @@
 #define TA_PHRASEBUF_AT   (TA_BYTES + 7 * sizeof(void *))
 #define TA_PHRASETABLE_AT (TA_BYTES + 8 * sizeof(void *))
 #define TA_RAW_AT         (TA_BYTES + 9 * sizeof(void *))
+#define TA_NORMALIZER_AT  (TA_BYTES + 10 * sizeof(void *))
 
 #endif

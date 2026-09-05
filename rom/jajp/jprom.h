@@ -887,6 +887,24 @@ void        ta_CopyFzkPart(const void *src, void *dst, int16_t si, int16_t di);
 uint8_t     ta_CountMoraInPhrase(void *ta, void *wp, int16_t *out);
 int16_t     ta_UpdatePhraseBuffer(void *ta, void *wp, const uint8_t *dict);
 int16_t     ta_Kakutei(void *ta, void *wp);
+int16_t     ta_CheckMaru(void *ta, int16_t off);
+int16_t     ta_PhraseMatching(void *ta, int16_t *out);
+int16_t     ta_TextParsing(void *ta);
+int16_t     ta_ProcessRemaining(void *ta);
+int16_t     ta_ProcessSentence(void *ta);
+int32_t     ta_SetText(void *ta, const char *text, int32_t len);
+int32_t     ta_AppendText(void *ta, const char *text, int32_t len);
+int32_t     ta_FormatAddText(void *ta, char *out, const char *text,
+                             int32_t len);
+int32_t     ta_processSnlkAnno(void *ta, const char *text, char **word,
+                               char **reading, const char **end);
+
+/* And the four of `unknown.obj', which read the rows the search could not. */
+void        ta_UnknownWord(void *ta);
+int16_t     ta_ReParsing(void *ta, void *a, void *b);
+int16_t     ta_GenUnknownPhrase(void *ta, void *a, void *b, int16_t nFzk,
+                                int16_t at);
+void        ta_SetOneMoraWord(void *ta, void *row);
 
 /* And the four of `comppenalty.obj', which answer for a link in the search
    what `PhraseTable::SetUkeTypePhrase' answers for a row: which phrases may

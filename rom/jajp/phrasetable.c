@@ -1305,7 +1305,7 @@ int16_t ptb_SetPhraseTable(void *pt, int16_t a, int16_t b, void *wp,
 
     *(int32_t *)((uint8_t *)row + PT_COST) =
         *(int32_t *)((uint8_t *)wp + WP_COST);
-    PTB_B(row, 0x0e) = PTB_B(wp, WP_TYPE);
+    PTB_B(row, PT_TYPE) = PTB_B(wp, WP_TYPE);
     PTB_B(row, 0x0d) = PTB_B(wp, WP_ACCENT);
     PTB_B(row, PT_HOLD) = PTB_B(wp, WP_MORAS);
 

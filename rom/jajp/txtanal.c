@@ -14,12 +14,14 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <ctype.h>
 #include "jprom.h"
 #include "txtanal.h"
 #include "inputchar.h"
 #include "phrasebuf.h"
 #include "phrasetable.h"
 #include "intonphrase.h"
+#include "romanizer.h"
 
 #define TA_AT(ta, which) (*(void **)((uint8_t *)(ta) + (which)))
 #define TA_W(ta, off)    (*(int16_t *)((uint8_t *)(ta) + (off)))
@@ -506,4 +508,942 @@ int16_t ta_CheckPhraseLink(void *ta, int16_t buf, int16_t slot, int16_t at)
         rc = (int16_t)(rc + 3);
     }
     return rc;
+}
+
+/* ---- the sentence ending on a full stop ------------------------------- */
+
+/* Whether the phrases in the buffer between them reach exactly to the end of
+ * what the reader has, and if they do, settling the best of them.
+ *
+ * The best is the one that ends furthest into the text; between two that end
+ * in the same place, the one whose characters cost least once the link to the
+ * last settled row is taken off; and between two of those, the one with fewest
+ * function words. A hundred and one is the cost nothing has yet beaten.
+ *
+ * One is not an error: it is the answer where the phrases do not reach the end
+ * of the text, which is every sentence but the last of a stretch.
+ */
+int16_t ta_CheckMaru(void *ta, int16_t off)
+{
+    void    *pb = TA_AT(ta, TA_PHRASEBUF_AT);
+    int16_t  ends = 0;
+    int16_t  cost = 0x63;
+    int16_t  fzks = 0x63;
+    int16_t  at   = -1;
+    int16_t  i;
+
+    if (*(int16_t *)((uint8_t *)pb + PB_TAIL) <= 0)
+        return 1;
+
+    for (i = 0; i < *(int16_t *)((uint8_t *)pb + PB_TAIL); i++) {
+        uint8_t *wp    = WP_SLOT((uint8_t *)pb + PB_BUFFER, i);
+        int16_t  score = (int16_t)(wp[WP_CHARS]
+                                   - ta_CheckPhraseLinkEnd(ta, i));
+        int32_t  here  = (int32_t)*(uint16_t *)(wp + WP_MORAS);
+
+        if (here > ends
+            || (here == ends && score < cost)
+            || (here == ends && score == cost && wp[WP_FZKS] < fzks)) {
+            ends = *(int16_t *)(wp + WP_MORAS);
+            cost = score;
+            fzks = (int16_t)wp[WP_FZKS];
+            at   = i;
+        }
+    }
+
+    if (*(int16_t *)((uint8_t *)TA_AT(ta, TA_INPUTCHAR_AT) + IC_COUNT)
+        != (int16_t)(ends + off))
+        return 1;
+
+    *((uint8_t *)ta + TA_UNKNOWN_10) = 1;
+    *(int16_t *)((uint8_t *)ta + TA_INTON_FAILED) = 0;
+    return ta_Kakutei(ta, WP_SLOT((uint8_t *)pb + PB_BUFFER, at));
+}
+
+/* ---- the best phrase over all three buffers --------------------------- */
+
+/* Which slot of which buffer the analysis should settle next, and through the
+ * caller's pointer which buffer it came out of.
+ *
+ * Each buffer is read twice over. The first pass looks for the phrase that
+ * reaches furthest into the text and, between two that reach equally far, the
+ * one covering fewest characters -- skipping any whose first word carries the
+ * bit that says it may not stand here. The second pass is the same without
+ * that skip and runs only where the first found nothing at all, so a buffer
+ * always names something.
+ *
+ * Then the four phrases the place kept are scored against the one the first
+ * pass chose: how far the two together reach, what the characters cost once
+ * the link to the phrase in front is taken off, how many function words, and
+ * how far from each other the two ends are. Best first in that order, and a
+ * phrase the break rules refuse is passed over whatever it scored.
+ *
+ * With nothing chosen anywhere, the first place of the first buffer answers
+ * and the caller is told nought.
+ */
+int16_t ta_PhraseMatching(void *ta, int16_t *out)
+{
+    void   *pb = TA_AT(ta, TA_PHRASEBUF_AT);
+    int16_t best     = -1;
+    int16_t bestEnds = 0;
+    int16_t bestCost = 0x63;
+    int16_t bestFzks = 0x63;
+    int16_t bestGap  = 0x63;
+    int16_t bestBuf  = -1;
+    int16_t b;
+
+    for (b = 0; b < *(int16_t *)((uint8_t *)ta + TA_COUNT); b++) {
+        uint8_t *base = (uint8_t *)ta + TA_BUFFERS
+                        + (size_t)b * TA_BUFFER_SIZE;
+        int16_t  ends  = 0;
+        int16_t  chars = 0x63;
+        int16_t  kind  = 0;
+        int16_t  from = 0;  /* IBM leaves it until a pass names it; nothing
+                               reads it before one does, so ours may clear
+                               it */
+        int16_t  used = *(int16_t *)((uint8_t *)ta + TA_USED + b * 2);
+        int16_t  j;
+        int16_t  slot;
+        int16_t  gap;
+        int16_t  total;
+        int32_t  hi, lo;
+
+        if (TA_PERBUF_AT(ta, b)[0] < 0)
+            continue;
+
+        for (j = 0; j < used; j++) {
+            uint8_t *wp = WP_SLOT(base, j);
+            int32_t  here = (int32_t)*(uint16_t *)(wp + WP_MORAS);
+
+            if (here > ends || (here == ends && chars > wp[WP_CHARS])) {
+                if (WW_SLOT(wp, 0)[WW_ATTR] & 0x08)
+                    continue;
+                ends  = *(int16_t *)(wp + WP_MORAS);
+                chars = (int16_t)wp[WP_CHARS];
+                kind  = (int16_t)wp[WP_TYPE];
+                from  = j;
+            }
+        }
+        /* And again without the skip, where the skip left nothing. */
+        if (ends == 0) {
+            for (j = 0; j < used; j++) {
+                uint8_t *wp = WP_SLOT(base, j);
+                int32_t  here = (int32_t)*(uint16_t *)(wp + WP_MORAS);
+
+                if (here > ends || (here == ends && chars > wp[WP_CHARS])) {
+                    ends  = *(int16_t *)(wp + WP_MORAS);
+                    chars = (int16_t)wp[WP_CHARS];
+                    kind  = (int16_t)wp[WP_TYPE];
+                    from  = j;
+                }
+            }
+        }
+
+        slot = TA_PERBUF_AT(ta, b)[0];
+        {
+            int32_t here = (int32_t)*(uint16_t *)
+                (WP_SLOT((uint8_t *)pb + PB_BUFFER, slot) + WP_MORAS);
+
+            hi    = here > ends ? here : ends;
+            lo    = here < ends ? here : ends;
+            gap   = (int16_t)(hi - lo);
+            total = (int16_t)(here + ends);
+        }
+
+        for (j = 0; j < 4; j++) {
+            uint8_t *wp;
+            int16_t  cost;
+            int16_t  fzks;
+
+            if (TA_PERBUF_AT(ta, b)[j] < 0)
+                continue;
+            slot = TA_PERBUF_AT(ta, b)[j];
+            wp   = WP_SLOT((uint8_t *)pb + PB_BUFFER, slot);
+            cost = (int16_t)(wp[WP_CHARS] + chars);
+            fzks = (int16_t)wp[WP_FZKS];
+            if (ends != 0)
+                cost = (int16_t)(cost - ta_CheckPhraseLink(ta, b, slot, from));
+
+            if (total > bestEnds
+                || (total == bestEnds && cost < bestCost)
+                || (total == bestEnds && cost == bestCost && fzks < bestFzks)
+                || (total == bestEnds && cost == bestCost && fzks == bestFzks
+                    && gap < bestGap)) {
+                if (ta_Kinsoku(ta, slot, kind) >= 0) {
+                    bestEnds = total;
+                    bestCost = cost;
+                    bestFzks = fzks;
+                    bestGap  = gap;
+                    best     = slot;
+                    bestBuf  = b;
+                }
+            }
+        }
+    }
+
+    if (best < 0) {
+        best = TA_PERBUF_AT(ta, 0)[0];
+        *out = 0;
+    } else {
+        *out = bestBuf;
+    }
+    return best;
+}
+
+/* ---- one sentence, phrase by phrase ----------------------------------- */
+
+/* The whole of parsing one sentence. The marks are cleared and the two the
+ * parse starts from set, the dictionary search is run, a path is made and the
+ * phrase buffer filled from it. Then, while the phrases do not yet reach the
+ * end of the text: the next buffer's worth of candidates is built, the best
+ * phrase over all three buffers chosen, that phrase settled into rows of the
+ * phrase table, and the offset moved on by what it covered.
+ *
+ * The negative answers say which step refused, and one is the phrase table
+ * having run out of room, which the caller deals with rather than this.
+ */
+int16_t ta_TextParsing(void *ta)
+{
+    void   *pb = TA_AT(ta, TA_PHRASEBUF_AT);
+    int16_t maru;
+    int16_t off = 0;
+    int16_t n;
+    int16_t buf = 0;
+
+    memset((uint8_t *)ta + TA_MARKS, 0, TA_MARKS_HALF);
+    *((uint8_t *)ta + TA_MARKS2) = 1;
+    *((uint8_t *)ta + TA_MARKS)  = 2;
+    if (ds_Do(TA_AT(ta, TA_DICTSEARCH_AT)) < 0)
+        return -20;
+
+    jp_Make(TA_AT(ta, TA_JPATH_AT), off);
+    n = pb_SetPhraseBuffer(pb, (uint8_t *)pb + PB_BUFFER);
+    *(int16_t *)((uint8_t *)pb + PB_TAIL) = n;
+    if (n == 0)
+        return -11;
+    if (ta_SetPhraseMakeTable(ta, off) != 0)
+        return -12;
+
+    for (;;) {
+        int16_t got;
+
+        maru = ta_CheckMaru(ta, off);
+        if (maru <= 0)
+            break;
+        if (ta_SetNextPhraseBuffer(ta, off) == 0)
+            return -13;
+        buf = 0;
+        n = ta_PhraseMatching(ta, &buf);
+        if (n < 0)
+            return -14;
+        *((uint8_t *)ta + TA_UNKNOWN_10) = 0;
+        *(int16_t *)((uint8_t *)ta + TA_INTON_FAILED) = 0;
+        got = ta_Kakutei(ta, WP_SLOT((uint8_t *)pb + PB_BUFFER, n));
+        if (got < 0)
+            return got == -1 ? 1 : -19;
+        off = (int16_t)(off + *(uint16_t *)
+                        (WP_SLOT((uint8_t *)pb + PB_BUFFER, n) + WP_MORAS));
+        pb_Copy(pb, buf);
+        *(int16_t *)((uint8_t *)pb + PB_TAIL) =
+            *(int16_t *)((uint8_t *)ta + TA_USED + buf * 2);
+        if (ta_SetPhraseMakeTable(ta, off) != 0)
+            return -15;
+    }
+    if (maru < 0)
+        return maru == -1 ? 1 : -19;
+    return 0;
+}
+
+/* ---- and every sentence the reader still holds ------------------------ */
+
+/* Sentences are parsed one after another until the reader says the text ended
+ * on something, and a parse that answers one -- the phrase table full -- is
+ * cut short where the last row that fits ends and read again from there.
+ *
+ * Five is the romanizer having been told to stop. The unknown-word pass runs
+ * once at the end over everything settled.
+ */
+int16_t ta_ProcessRemaining(void *ta)
+{
+    void   *ic = TA_AT(ta, TA_INPUTCHAR_AT);
+    void   *pt = TA_AT(ta, TA_PHRASETABLE_AT);
+    void   *row = NULL;
+    int32_t at = 0;
+    int16_t rc;
+
+    if (*(int16_t *)((uint8_t *)ic + IC_COUNT) == 0) {
+        *(int32_t *)((uint8_t *)ta + TA_DONE) = 1;
+        return 1;
+    }
+
+    do {
+        *((uint8_t *)ta + TA_LONGWORDS) = 0;
+        if (*(int32_t *)((uint8_t *)TA_AT(ta, TA_OWNER_AT) + RZ_STOPPED) != 0)
+            return 5;
+        rc = ta_TextParsing(ta);
+        if (rc < 0) {
+            *(int32_t *)((uint8_t *)ta + TA_DONE) = 0;
+            return rc == -20 ? rc : -8;
+        }
+        if (rc == 1)
+            ta_HandleOverflow(ta, row, at);
+        row = *(void **)((uint8_t *)pt + PTB_TAIL_AT);
+        at  = *(int32_t *)((uint8_t *)ic + IC_POS);
+    } while (*(int32_t *)((uint8_t *)ic + IC_ENDED) == 0);
+
+    *(int32_t *)((uint8_t *)ta + TA_DONE) = 1;
+    *((uint8_t *)ta + TA_LONGWORDS) = 0;
+    ta_UnknownWord(ta);
+    return 0;
+}
+
+/* ---- the whole of a stretch of text ----------------------------------- */
+
+/* Sentences are read and parsed until the reader says the text ended on
+ * something. What the reader answers decides the rest: minus five is a
+ * refusal, minus four a sentence with nothing in it, minus one a sentence too
+ * long for the buffer, two an annotation, three the caller having asked for
+ * this much and no more, and anything else is a sentence to parse.
+ *
+ * Where the last row settled has to be marked, it is marked on the table's
+ * tail: the fourth kind for a sentence with nothing in it and the third for
+ * one that was too long, and the reader is wound back a character so that the
+ * next call reads it again.
+ */
+int16_t ta_ProcessSentence(void *ta)
+{
+    void   *ic = TA_AT(ta, TA_INPUTCHAR_AT);
+    void   *pt = TA_AT(ta, TA_PHRASETABLE_AT);
+    void   *row = NULL;
+    void   *tail;
+    int32_t at = 0;
+    int16_t rc;
+
+    *((uint8_t *)ta + TA_LONGWORDS) = 0;
+
+    for (;;) {
+        if (*(int32_t *)((uint8_t *)TA_AT(ta, TA_OWNER_AT) + RZ_STOPPED) != 0)
+            return 5;
+
+        rc = ic_ReadSentence(ic);
+        *(int32_t *)((uint8_t *)ic + IC_RESUME) = 0;
+
+        if (rc == -5)
+            return -8;
+        if (rc == -4) {
+            tail = *(void **)((uint8_t *)pt + PTB_HEAD_AT);
+            if (tail != NULL) {
+                tail = *(void **)((uint8_t *)pt + PTB_TAIL_AT);
+                ((uint8_t *)tail)[PT_KIND] = 4;
+                *(int32_t *)((uint8_t *)ta + TA_DONE) = 1;
+                *((uint8_t *)ta + TA_LONGWORDS) = 0;
+                ta_UnknownWord(ta);
+            }
+            /* IBM takes the address of the punctuation the sentence ended on
+               here and does nothing with it. */
+            return 0;
+        }
+        if (rc == -1) {
+            tail = *(void **)((uint8_t *)pt + PTB_HEAD_AT);
+            if (tail != NULL) {
+                tail = *(void **)((uint8_t *)pt + PTB_TAIL_AT);
+                ((uint8_t *)tail)[PT_KIND] = 3;
+                *(int32_t *)((uint8_t *)ic + IC_POS) =
+                    *(int32_t *)((uint8_t *)ic + IC_POS) - 1;
+                *(int32_t *)((uint8_t *)ta + TA_DONE) = 1;
+                *((uint8_t *)ta + TA_LONGWORDS) = 0;
+                ta_UnknownWord(ta);
+                return 2;
+            }
+            if (*(int16_t *)((uint8_t *)ic + IC_RAWPOS) > 0) {
+                *(int32_t *)((uint8_t *)ic + IC_POS) =
+                    *(int32_t *)((uint8_t *)ic + IC_POS) - 1;
+                return 2;
+            }
+            *(int32_t *)((uint8_t *)ta + TA_DONE) = 1;
+            return 1;
+        }
+        if (rc == 2) {
+            *(int32_t *)((uint8_t *)ic + IC_POS) =
+                *(int32_t *)((uint8_t *)ic + IC_POS) - 1;
+            *(int32_t *)((uint8_t *)ic + IC_RESUME) = 1;
+            return 2;
+        }
+        if (rc == 3)
+            return 3;
+
+        rc = ta_TextParsing(ta);
+        if (rc < 0) {
+            *(int32_t *)((uint8_t *)ta + TA_DONE) = 0;
+            return rc == -20 ? rc : -8;
+        }
+        if (rc == 1)
+            ta_HandleOverflow(ta, row, at);
+        row = *(void **)((uint8_t *)pt + PTB_TAIL_AT);
+        at  = *(int32_t *)((uint8_t *)ic + IC_POS);
+        if (*(int32_t *)((uint8_t *)ic + IC_ENDED) != 0)
+            break;
+    }
+
+    *(int32_t *)((uint8_t *)ta + TA_DONE) = 1;
+    *((uint8_t *)ta + TA_LONGWORDS) = 0;
+    ta_UnknownWord(ta);
+    return 0;
+}
+
+/* ---- the text arriving ------------------------------------------------ */
+
+/* A fresh stretch of text, replacing whatever was there.
+ *
+ * The annotations are taken out first if the caller asked for them to be --
+ * `TextNormalizer' rewrites each annotated stretch into the words a reader
+ * would say and hands back a buffer of its own, which is given up again at the
+ * end. Then two buffers are made: one of 0xff bytes as long as the text, which
+ * is what the marks are kept in, and one a byte longer for the text itself,
+ * which `FormatAddText' fills. Nought is a buffer that could not be made.
+ */
+int32_t ta_SetText(void *ta, const char *text, int32_t len)
+{
+    char    *norm = NULL;
+    uint32_t got  = 0;
+
+    if (TA_AT(ta, TA_FORMATTED_AT) != NULL)
+        cpp_delete(TA_AT(ta, TA_FORMATTED_AT));
+    if (TA_AT(ta, TA_RAW_AT) != NULL)
+        cpp_delete(TA_AT(ta, TA_RAW_AT));
+
+    if (rp_isAnnotationsInText(
+            *(RomInstParam **)((uint8_t *)TA_AT(ta, TA_OWNER_AT) + RZ_PARAM))
+        && text != NULL) {
+        if (tn_normalizeText(TA_AT(ta, TA_NORMALIZER_AT), text,
+                             (uint32_t)len, &norm, &got) == 0) {
+            len  = (int32_t)got;
+            text = norm;
+        }
+    }
+
+    TA_AT(ta, TA_RAW_AT) = cpp_new((uint32_t)len);
+    if (TA_AT(ta, TA_RAW_AT) == NULL)
+        return 0;
+    *(int32_t *)((uint8_t *)ta + TA_RAW_LEN) = len;
+    memset(TA_AT(ta, TA_RAW_AT), 0xff, (size_t)len);
+
+    if (text != NULL) {
+        TA_AT(ta, TA_FORMATTED_AT) = cpp_new((uint32_t)(len + 1));
+        if (TA_AT(ta, TA_FORMATTED_AT) == NULL)
+            return 0;
+        ic_DeleteSnlkTable(TA_AT(ta, TA_INPUTCHAR_AT));
+        ta_FormatAddText(ta, (char *)TA_AT(ta, TA_FORMATTED_AT), text, len);
+    } else {
+        TA_AT(ta, TA_FORMATTED_AT) = (void *)text;
+    }
+
+    ic_SetTextAt(TA_AT(ta, TA_INPUTCHAR_AT),
+                 (const char *)TA_AT(ta, TA_FORMATTED_AT), 0);
+    *(int32_t *)((uint8_t *)ta + TA_DONE) = 0;
+    if (norm != NULL) {
+        cpp_delete(norm);
+        norm = NULL;
+    }
+    return 1;
+}
+
+/* And a stretch added to whatever is left over.
+ *
+ * What is left over is the marks buffer from before the point the reader had
+ * reached, which is copied to the front of a new one so that the marks of text
+ * not yet read keep their places. The chain of annotation marks is walked
+ * twice for the same reason: everything before that point is thrown away and
+ * everything after it has its place moved back by as much.
+ */
+int32_t ta_AppendText(void *ta, const char *text, int32_t len)
+{
+    void    *ic = TA_AT(ta, TA_INPUTCHAR_AT);
+    char    *norm = NULL;
+    uint32_t got  = 0;
+    uint8_t *old  = NULL;
+    void    *node;
+    void    *last = NULL;
+    int32_t  at   = 0;
+    int32_t  read;
+    int32_t  cut  = 0;
+
+    if (TA_AT(ta, TA_FORMATTED_AT) != NULL) {
+        cpp_delete(TA_AT(ta, TA_FORMATTED_AT));
+        TA_AT(ta, TA_FORMATTED_AT) = NULL;
+    }
+
+    if (rp_isAnnotationsInText(
+            *(RomInstParam **)((uint8_t *)TA_AT(ta, TA_OWNER_AT) + RZ_PARAM))
+        && text != NULL) {
+        if (tn_normalizeText(TA_AT(ta, TA_NORMALIZER_AT), text,
+                             (uint32_t)len, &norm, &got) == 0) {
+            len  = (int32_t)got;
+            text = norm;
+        }
+    }
+
+    read = (int32_t)*(int16_t *)((uint8_t *)ic + IC_LENGTH);
+    if (TA_AT(ta, TA_RAW_AT) != NULL) {
+        old = (uint8_t *)TA_AT(ta, TA_RAW_AT);
+        while (at + read < len
+               && at + read < *(int32_t *)((uint8_t *)ta + TA_RAW_LEN)
+               && old[at + read] != 0xff)
+            at++;
+    }
+
+    node = *(void **)((uint8_t *)ic + IC_SNLK_AT);
+    while (node != NULL) {
+        if ((int32_t)*(int16_t *)((uint8_t *)node + SN_AT) >= read) {
+            cut = 1;
+            break;
+        }
+        last = node;
+        node = *(void **)((uint8_t *)node + SN_NEXT_AT);
+    }
+    if (cut != 0 && last != NULL) {
+        *(void **)((uint8_t *)last + SN_NEXT_AT) = NULL;
+        ic_DeleteSnlkTable(ic);
+        *(void **)((uint8_t *)ic + IC_SNLK_AT) = node;
+        while (node != NULL) {
+            *(int16_t *)((uint8_t *)node + SN_AT) =
+                (int16_t)(*(int16_t *)((uint8_t *)node + SN_AT) - read);
+            node = *(void **)((uint8_t *)node + SN_NEXT_AT);
+        }
+    }
+
+    TA_AT(ta, TA_RAW_AT) = cpp_new((uint32_t)len);
+    if (TA_AT(ta, TA_RAW_AT) == NULL)
+        return 0;
+    *(int32_t *)((uint8_t *)ta + TA_RAW_LEN) = len;
+    memset(TA_AT(ta, TA_RAW_AT), 0xff, (size_t)len);
+    if (old != NULL) {
+        memcpy(TA_AT(ta, TA_RAW_AT), old + read, (size_t)at);
+        cpp_delete(old);
+        old = NULL;
+    }
+
+    TA_AT(ta, TA_FORMATTED_AT) = cpp_new((uint32_t)(len + 1));
+    if (TA_AT(ta, TA_FORMATTED_AT) == NULL)
+        return 0;
+    ta_FormatAddText(ta, (char *)TA_AT(ta, TA_FORMATTED_AT), text, len);
+    ic_SetText(ic, (const char *)TA_AT(ta, TA_FORMATTED_AT));
+    *(int32_t *)((uint8_t *)ta + TA_DONE) = 0;
+    if (norm != NULL) {
+        cpp_delete(norm);
+        norm = NULL;
+    }
+    return 1;
+}
+
+/* ---- an annotation that names a word and its reading ------------------ */
+
+/* Text of the shape `s1 <reading> `s2 <word> `s3, read one character at a
+ * time, with the state moving on at each of the three marks and anything else
+ * ending the walk. The reading may be kana, a caret, or a long-vowel mark that
+ * is not the first character; the word may be anything up to thirty-two
+ * characters. What comes back through the caller's pointers is the word and
+ * the reading, each in a buffer of its own, and where the annotation ended.
+ *
+ * Minus one is anything that did not read as such an annotation, which is the
+ * ordinary answer: most text is not one.
+ */
+int32_t ta_processSnlkAnno(void *ta, const char *text, char **word,
+                           char **reading, const char **end)
+{
+    const char *p     = text;
+    const char *next  = text;
+    const char *wordStart = NULL;
+    const char *wordEnd   = NULL;
+    const char *readStart = NULL;
+    const char *readEnd   = NULL;
+    int32_t     state = 0;
+    int32_t     going = 1;
+    int32_t     found = 0;
+    int32_t     count = 0;
+    int32_t     len;
+
+    (void)ta;
+    while (*p != '\0' && going != 0) {
+        next = ju_IsDBCSLeadByte(*p) ? p + 2 : p + 1;
+
+        if (*p == '`') {
+            if (tolower((unsigned char)next[0]) == 's') {
+                switch (next[1]) {
+                case '1':
+                    if (state == 0) {
+                        state = 1;
+                        p = next + 1;
+                        continue;
+                    }
+                    going = 0;
+                    break;
+                case '2':
+                    if (state == 1) {
+                        state = 2;
+                        p = next + 1;
+                        count = 0;
+                        continue;
+                    }
+                    going = 0;
+                    break;
+                case '3':
+                    if (state == 2) {
+                        state = 3;
+                        p = next + 1;
+                        continue;
+                    }
+                    going = 0;
+                    break;
+                default:
+                    going = 0;
+                    break;
+                }
+            } else {
+                going = 0;
+            }
+        }
+
+        if (state == 1) {
+            if (next[0] == '\0') {
+                going = 0;
+            } else if (next[0] == ' ') {
+                if (readStart != NULL && readEnd == NULL)
+                    readEnd = next;
+            } else if (next[0] == '^' || ju_IsHiragana(next)
+                       || ju_IsKatakana(next)
+                       || (ju_IsLongVowel(next) && next != readStart)) {
+                if (readStart == NULL) {
+                    if (ju_IsLongVowel(next))
+                        going = 0;
+                    else
+                        readStart = next;
+                }
+            } else if (next[0] == '`') {
+                if (readStart == NULL)
+                    going = 0;
+                else if (readEnd == NULL)
+                    readEnd = next;
+            } else {
+                going = 0;
+            }
+        } else if (state == 2) {
+            if (next[0] == '\0') {
+                going = 0;
+            } else if (next[0] == ' ') {
+                if (wordStart != NULL && wordEnd == NULL)
+                    wordEnd = next;
+            } else if (next[0] == '`') {
+                if (wordStart == NULL)
+                    going = 0;
+                else if (wordEnd == NULL)
+                    wordEnd = next;
+            } else {
+                if (wordStart == NULL)
+                    wordStart = next;
+                count++;
+                if (count > 0x20)
+                    going = 0;
+            }
+        } else if (state == 3) {
+            *end  = next;
+            found = 1;
+            going = 0;
+        }
+        p = next;
+    }
+
+    if (found == 0)
+        return -1;
+
+    len = (int32_t)(wordEnd - wordStart);
+    *word = cpp_new((uint32_t)(len + 1));
+    strncpy(*word, wordStart, (size_t)len);
+    (*word)[len] = '\0';
+
+    len = (int32_t)(readEnd - readStart);
+    *reading = cpp_new((uint32_t)(len + 1));
+    strncpy(*reading, readStart, (size_t)len);
+    (*reading)[len] = '\0';
+    return 0;
+}
+
+/* ---- the text as the reader wants it ---------------------------------- */
+
+/* Text arrives with two kinds of annotation in it and leaves with neither.
+ *
+ * The first is a tilde: `~' and then a reading in kana, optionally a slash and
+ * a second reading, which says how the run of characters in front of it is to
+ * be said. The second is a backquote, which `processSnlkAnno' reads. Both are
+ * taken out of the text and put on the reader's own table instead, keyed by
+ * how many characters in they were.
+ *
+ * The marks buffer is written as the walk goes: nought for a character that
+ * came through as itself, one for the first character of an annotation's
+ * written form and two for the rest of it. A character whose mark is already
+ * something other than 0xff has been seen before and is skipped at the start,
+ * which is what makes this work on text added to text.
+ *
+ * Six states, and what moves between them is what the next character is: a
+ * delimiter, an ideographic space, a backquote, a tilde with kana behind it,
+ * or anything else. A run of more than thirty-two ordinary characters gives up
+ * and goes to the state that copies.
+ *
+ * Minus one is the reader's table refusing an annotation.
+ */
+int32_t ta_FormatAddText(void *ta, char *out, const char *text, int32_t len)
+{
+    void       *ic  = TA_AT(ta, TA_INPUTCHAR_AT);
+    uint8_t    *raw = (uint8_t *)TA_AT(ta, TA_RAW_AT);
+    const char *p;
+    const char *next      = NULL;
+    const char *segStart;
+    const char *segEnd    = NULL;
+    const char *copyFrom;
+    const char *markStart = NULL;
+    const char *slash     = NULL;
+    char       *partA = NULL;
+    char       *partB = NULL;
+    char       *partC = NULL;
+    int32_t     state;
+    int32_t     flagCopy = 0;
+    int32_t     flagSnlk = 0;
+    int32_t     flagAnno = 0;
+    int32_t     outLen   = 0;
+    int32_t     n;
+    int16_t     charIndex = 0;
+    int16_t     runLen    = 0;
+
+    (void)len;
+    out[0] = '\0';
+    *(int16_t *)((uint8_t *)ic + IC_LENGTH) = 0;
+
+    /* Whatever was read before is skipped: its marks are not 0xff. */
+    p = text;
+    while (raw[charIndex] != 0xff) {
+        p += ju_IsDBCSLeadByte(*p) ? 2 : 1;
+        charIndex++;
+    }
+    n = (int32_t)(p - text);
+    if (n > 0) {
+        strncpy(out, text, (size_t)n);
+        out[n] = '\0';
+        outLen = n;
+    }
+    segStart = p;
+    copyFrom = p;
+
+    if (ju_DbCmp(p, "\x81\x40")) {
+        state = 4;
+    } else if (ju_IsSNLKDelim(p)) {
+        state = 3;
+    } else if (*p == '`') {
+        state = 5;
+    } else if (ju_IsNum(*p) || ju_IsAlpha(*p) || ju_IsDBCSLeadByte(*p)) {
+        runLen++;
+        state = 0;
+    } else {
+        state = 4;
+    }
+
+    while (*p != '\0') {
+        next = p + (ju_IsDBCSLeadByte(*p) ? 2 : 1);
+
+        switch (state) {
+        case 0:
+            if (next[0] == '\0') {
+                segEnd = next;
+                flagCopy = 1;
+            } else if (ju_IsSNLKDelim(next)) {
+                state = 3;
+            } else if ((uint32_t)(int32_t)*p < 0x20) {
+                state = 4;
+            } else if (next[0] == '`') {
+                segEnd = next;
+                flagCopy = 1;
+                state = 5;
+            } else if (next[0] == '~'
+                       && (ju_IsHiragana(next + 1) || ju_IsKatakana(next + 1)
+                           || next[1] == '^')) {
+                markStart = next + 1;
+                state = 1;
+            } else {
+                runLen++;
+                if (runLen > 0x20)
+                    state = 4;
+            }
+            break;
+
+        case 1:
+            if (next[0] == '\0') {
+                segEnd = next;
+                flagSnlk = 1;
+                flagAnno = 1;
+            } else if (ju_IsSNLKDelim(next)) {
+                segEnd = next;
+                flagSnlk = 1;
+                flagAnno = 1;
+                state = 3;
+            } else if (p == markStart - 1) {
+                /* the character the tilde itself sits on */
+            } else if (next[0] == '/') {
+                slash = next;
+                state = 2;
+            } else if (next[0] == '^' || ju_IsHiragana(next)
+                       || ju_IsKatakana(next)
+                       || (ju_IsLongVowel(next) && next != markStart)) {
+                /* still inside the reading */
+            } else {
+                state = 4;
+            }
+            break;
+
+        case 2:
+            if (next[0] == '\0') {
+                segEnd = next;
+                flagSnlk = 1;
+                flagAnno = 1;
+            } else if (ju_IsSNLKDelim(next)) {
+                segEnd = next;
+                flagSnlk = 1;
+                flagAnno = 1;
+                state = 3;
+            } else if (ju_IsHiragana(next) || ju_IsKatakana(next)
+                       || (ju_IsLongVowel(next) && next != slash + 1)) {
+                /* still inside the second reading */
+            } else {
+                state = 4;
+            }
+            break;
+
+        case 3:
+            if (next[0] == '\0') {
+                segEnd = next;
+                flagCopy = 1;
+            } else if (next[0] == '`') {
+                segEnd = next;
+                flagCopy = 1;
+                state = 5;
+            } else if (ju_DbCmp(next, "\x81\x40")) {
+                segEnd = next;
+                flagCopy = 1;
+                state = 4;
+            } else if (!ju_IsSNLKDelim(next)) {
+                segEnd = next;
+                flagCopy = 1;
+                state = 0;
+                runLen = 1;
+            }
+            break;
+
+        case 4:
+            if (next[0] == '\0') {
+                segEnd = next;
+                flagCopy = 1;
+            } else if (next[0] == '`') {
+                segEnd = next;
+                flagCopy = 1;
+                state = 5;
+            } else if (ju_IsSNLKDelim(next)) {
+                state = 3;
+            }
+            break;
+
+        case 5:
+            if (next[0] == '\0') {
+                segEnd = next;
+                flagCopy = 1;
+            } else if (ta_processSnlkAnno(ta, p, &partA, &partB, &next) == 0) {
+                segEnd   = next;
+                flagAnno = 1;
+                if (ju_IsSNLKDelim(next))
+                    state = 3;
+                else if (next[0] != '`')
+                    state = 4;
+            } else {
+                state = 4;
+            }
+            break;
+
+        default:
+            break;
+        }
+
+        if (flagCopy != 0) {
+            const char *q = copyFrom;
+
+            while (q != segEnd) {
+                if (raw[charIndex] == 0xff)
+                    raw[charIndex] = 0;
+                q += ju_IsDBCSLeadByte(*q) ? 2 : 1;
+                charIndex++;
+            }
+            n = (int32_t)(segEnd - copyFrom);
+            strncpy(out + outLen, copyFrom, (size_t)n);
+            out[outLen + n] = '\0';
+            outLen   += n;
+            flagCopy  = 0;
+            slash     = NULL;
+            markStart = NULL;
+            copyFrom  = segEnd;
+            segStart  = copyFrom;
+        }
+
+        if (flagSnlk != 0) {
+            partC = NULL;
+            partB = NULL;
+            partA = NULL;
+            n = (int32_t)(markStart - segStart - 1);
+            partA = cpp_new((uint32_t)(n + 1));
+            strncpy(partA, segStart, (size_t)n);
+            partA[n] = '\0';
+            if (slash == NULL) {
+                n = (int32_t)(segEnd - markStart);
+                partB = cpp_new((uint32_t)(n + 1));
+                strncpy(partB, markStart, (size_t)n);
+                partB[n] = '\0';
+            } else {
+                n = (int32_t)(slash - markStart);
+                partB = cpp_new((uint32_t)(n + 1));
+                strncpy(partB, markStart, (size_t)n);
+                partB[n] = '\0';
+                /* The reading after the slash is built and then given up
+                   again: the reader's table takes two strings, not three. */
+                n = (int32_t)(segEnd - slash);
+                partC = cpp_new((uint32_t)(n + 1));
+                strncpy(partC, slash + 1, (size_t)n);
+                partC[n] = '\0';
+            }
+            flagSnlk = 0;
+        }
+
+        if (flagAnno != 0) {
+            const char *q;
+
+            if (ic_AddSnlkTable(ic, charIndex, partA, partB, 2) != 0) {
+                if (partA != NULL) { cpp_delete(partA); partA = NULL; }
+                if (partB != NULL) { cpp_delete(partB); partB = NULL; }
+                if (partC != NULL) { cpp_delete(partC); partC = NULL; }
+                return -1;
+            }
+            for (q = partA; *q != '\0'; ) {
+                raw[charIndex] = (uint8_t)(q == partA ? 1 : 2);
+                q += ju_IsDBCSLeadByte(*q) ? 2 : 1;
+                charIndex++;
+            }
+            strcat(out, partA);
+            outLen   += (int32_t)strlen(partA);
+            markStart = NULL;
+            slash     = NULL;
+            flagAnno  = 0;
+            copyFrom  = segEnd;
+            segStart  = copyFrom;
+            if (partA != NULL) { cpp_delete(partA); partA = NULL; }
+            if (partB != NULL) { cpp_delete(partB); partB = NULL; }
+            if (partC != NULL) { cpp_delete(partC); partC = NULL; }
+        }
+
+        p = next;
+    }
+    return 0;
 }
