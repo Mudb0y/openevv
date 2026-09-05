@@ -568,3 +568,204 @@ int32_t mr_normalizePhone(void *mr, const char *text, uint32_t n, char **buf,
     (*buf)[len] = '\0';
     return 0;
 }
+
+/* ---- a time of day -------------------------------------------------- */
+
+#define MR_JI     "\x8e\x9e"          /* ji, the hour */
+#define MR_FUN    "\x95\xaa"          /* fun, the minute */
+#define MR_BYOU   "\x95\x62"          /* byou, the second */
+#define MR_GOZEN  "\x8c\xdf\x91\x4f"  /* gozen, before noon */
+#define MR_GOGO   "\x8c\xdf\x8c\xe3"  /* gogo, after noon */
+
+/* A time of day, as three numbers and the words for what each of them is.
+ *
+ * The walk is a state machine of three states over the text: reading a
+ * number, having just seen a delimiter, and reading anything else. A number
+ * followed by a delimiter is an hour, the next is a minute and the next a
+ * second, and the unit word goes in after each; a number followed by
+ * something else ends the time and puts the last unit in.
+ *
+ * The one shape that is not a run of numbers with colons between is four
+ * digits in a row followed by an `a', a `p' or an `h', which is a clock time
+ * written the short way: 0930a becomes gozen, nine ji, thirty fun. Both
+ * halves have their leading zeros dropped separately, so it is nine and not
+ * oh-nine.
+ */
+int32_t mr_normalizeTime(void *mr, const char *text, uint32_t n, char **buf,
+                         uint32_t *cap, int32_t flag)
+{
+    const char *num[2];              /* where the number in hand runs */
+    uint32_t    len = 0;
+    const char *p = text;
+    const char *end = text + n;
+    const char *next;
+    int32_t     rc = 0;
+    int32_t     part = 0;            /* hour, minute, second */
+    int32_t     state;
+    int32_t     digits = 0;
+    int32_t     flushNum = 0;
+    int32_t     flushChar = 0;
+    int32_t     writeUnit = 0;
+    int32_t     resetPart = 0;
+    int32_t     shortForm = 0;
+    int32_t     ampm = 0;
+
+    (void)flag;
+    num[1] = NULL;
+    num[0] = num[1];
+
+    if (mr_isDigit(mr, p)) {
+        digits++;
+        state  = 0;
+        num[0] = p;
+    } else {
+        state = 2;
+    }
+
+    while (p < end) {
+        next = ju_IsDBCSLeadByte(p[0]) ? p + 2 : p + 1;
+
+        switch (state) {
+        case 0:
+            if (mr_isDigit(mr, next)) {
+                digits++;
+                break;
+            }
+            if (digits == 4 && next - num[0] == 4) {
+                shortForm = 1;
+                num[1]    = next;
+                ampm      = 3;
+                if (next[0] == 'a') {
+                    ampm = 1;
+                    next++;
+                } else if (next[0] == 'p') {
+                    ampm = 2;
+                    next++;
+                } else if (next[0] == 'h') {
+                    next++;
+                }
+                if (mr_isDigit(mr, next)) {
+                    state  = 0;
+                    num[0] = next;
+                    digits = 1;
+                } else {
+                    state = 2;
+                }
+                break;
+            }
+            if (mr_isTimeDelimiter(mr, next) && part < 2) {
+                state = 1;
+            } else {
+                if (part > 0) {
+                    writeUnit = 1;
+                    resetPart = 1;
+                }
+                state = 2;
+            }
+            num[1]   = next;
+            flushNum = 1;
+            break;
+
+        case 1:
+            if (mr_isDigit(mr, next)) {
+                digits    = 1;
+                writeUnit = 1;
+                num[0]    = next;
+                state     = 0;
+            } else {
+                if (part > 0) {
+                    writeUnit = 1;
+                    resetPart = 1;
+                }
+                state     = 2;
+                flushChar = 1;
+            }
+            break;
+
+        case 2:
+            if (mr_isDigit(mr, next)) {
+                digits = 1;
+                num[0] = next;
+                state  = 0;
+            }
+            flushChar = 1;
+            break;
+
+        default:
+            break;
+        }
+
+        if (flushNum != 0) {
+            rc = mr_appendMakeReadableNumber(mr, num, buf, cap, &len, 1);
+            flushNum = 0;
+            if (rc != 0)
+                return rc;
+        }
+
+        if (writeUnit != 0) {
+            switch (part) {
+            case 0:
+                rc = mr_appendText(mr, MR_JI, buf, cap, &len);
+                break;
+            case 1:
+                rc = mr_appendText(mr, MR_FUN, buf, cap, &len);
+                break;
+            case 2:
+                rc = mr_appendText(mr, MR_BYOU, buf, cap, &len);
+                break;
+            default:
+                break;
+            }
+            if (rc != 0)
+                return rc;
+            part++;
+            writeUnit = 0;
+            if (resetPart != 0) {
+                part      = 0;
+                resetPart = 0;
+            }
+        }
+
+        if (shortForm != 0) {
+            const char *hour;
+            const char *minute;
+
+            if (ampm == 1)
+                rc = mr_appendText(mr, MR_GOZEN, buf, cap, &len);
+            else if (ampm == 2)
+                rc = mr_appendText(mr, MR_GOGO, buf, cap, &len);
+            if (rc != 0)
+                return rc;
+
+            hour   = mr_suppressZero(mr, num[0], num[0] + 2);
+            minute = mr_suppressZero(mr, num[0] + 2, num[1]);
+
+            rc = mr_appendTextN(mr, hour, (uint32_t)(num[0] + 2 - hour),
+                                buf, cap, &len);
+            if (rc != 0)
+                return rc;
+            rc = mr_appendText(mr, MR_JI, buf, cap, &len);
+            if (rc != 0)
+                return rc;
+            rc = mr_appendTextN(mr, minute, (uint32_t)(num[1] - minute),
+                                buf, cap, &len);
+            if (rc != 0)
+                return rc;
+            rc = mr_appendText(mr, MR_FUN, buf, cap, &len);
+            if (rc != 0)
+                return rc;
+            shortForm = 0;
+        }
+
+        if (flushChar != 0) {
+            rc = mr_appendChar(mr, p, buf, cap, &len);
+            if (rc != 0)
+                return rc;
+            flushChar = 0;
+        }
+
+        p = next;
+    }
+    (*buf)[len] = '\0';
+    return 0;
+}
