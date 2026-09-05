@@ -473,3 +473,98 @@ int32_t mr_separateNumberByDecimalPoint(void *mr, const void *whole,
         MR_NUM_TO(left) = MR_NUM_TO(whole);
     return found;
 }
+
+/* ---- a telephone number --------------------------------------------- */
+
+#define MR_TS_ON    "`ts1"          /* the mark that turns the mode on */
+#define MR_TS_OFF   "`ts0"          /* and off again */
+#define MR_SHAAPU   "\x83\x56\x83\x83\x81\x5b\x83\x76"  /* shaapu, hash */
+#define MR_KOMEJI   "\x83\x52\x83\x81\x83\x57\x83\x8b\x83\x56"
+                                                        /* komejirushi, star */
+#define MR_NAISEN   "\x93\xe0\x90\xfc"                  /* naisen, extension */
+#define MR_NO       "\x82\xcc"                          /* no, the particle */
+#define MR_NII      "\x82\xc9\x81\x5b"                  /* nii, a long two */
+#define MR_GOO      "\x82\xb2\x81\x5b"                  /* goo, a long five */
+#define MR_FW_2     "\x82\x51"                          /* the full-width 2 */
+#define MR_FW_5     "\x82\x54"                          /* and 5 */
+
+/* A telephone number said the way a Japanese speaker says one.
+ *
+ * The whole answer is wrapped in the mark that turns the reading mode on and
+ * off. Inside it, every digit is followed by a space so that each is said on
+ * its own, and two of the ten are not said as themselves: two becomes `nii'
+ * and five becomes `goo', both drawn out, because `ni' and `go' are too easy
+ * to confuse with each other and with `shi' over a telephone. The symbols
+ * become words -- hash, star, extension -- and the dash becomes the particle
+ * `no', which is how a number is dictated.
+ *
+ * None of that happens unless the caller passes exactly 0x10301. Any other
+ * value copies the text through a character at a time, marks and all.
+ */
+int32_t mr_normalizePhone(void *mr, const char *text, uint32_t n, char **buf,
+                          uint32_t *cap, int32_t flag)
+{
+    uint32_t    len = 0;
+    const char *p = text;
+    const char *end = text + n;
+    int32_t     rc;
+
+    rc = mr_appendText(mr, MR_TS_ON, buf, cap, &len);
+    rc = mr_appendText(mr, " ", buf, cap, &len);
+
+    while (p < end) {
+        const char *next = ju_IsValidDBCS(p) ? p + 2 : p + 1;
+
+        if (flag == 0x10301) {
+            int32_t what = mr_isTelSymbol(mr, p);
+
+            if (what != 0) {
+                switch (what) {
+                case 1:
+                    rc = mr_appendText(mr, MR_SHAAPU, buf, cap, &len);
+                    break;
+                case 2:
+                    rc = mr_appendText(mr, MR_KOMEJI, buf, cap, &len);
+                    break;
+                case 3:
+                    rc = mr_appendText(mr, MR_NAISEN, buf, cap, &len);
+                    break;
+                case 4:
+                    rc = mr_appendText(mr, MR_NO, buf, cap, &len);
+                    break;
+                default:
+                    break;
+                }
+                if (rc != 0)
+                    return rc;
+                rc = mr_appendText(mr, ", ", buf, cap, &len);
+            } else if (mr_isDigit(mr, p)) {
+                if (p[0] == '2' || strncmp(p, MR_FW_2, 2) == 0)
+                    rc = mr_appendText(mr, MR_NII, buf, cap, &len);
+                else if (p[0] == '5' || strncmp(p, MR_FW_5, 2) == 0)
+                    rc = mr_appendText(mr, MR_GOO, buf, cap, &len);
+                else
+                    rc = mr_appendChar(mr, p, buf, cap, &len);
+                if (rc != 0)
+                    return rc;
+                rc = mr_appendText(mr, " ", buf, cap, &len);
+            } else {
+                rc = mr_appendChar(mr, p, buf, cap, &len);
+            }
+        } else {
+            rc = mr_appendChar(mr, p, buf, cap, &len);
+        }
+        if (rc != 0)
+            return rc;
+        p = next;
+    }
+
+    rc = mr_appendText(mr, MR_TS_OFF, buf, cap, &len);
+    if (rc != 0)
+        return rc;
+    rc = mr_appendText(mr, " ", buf, cap, &len);
+    if (rc != 0)
+        return rc;
+    (*buf)[len] = '\0';
+    return 0;
+}
