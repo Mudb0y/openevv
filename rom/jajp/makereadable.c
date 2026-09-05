@@ -278,3 +278,198 @@ int32_t mr_normalizeLiteral(void *mr, const char *text, uint32_t n,
     (void)flag;
     return mrl_copyAndReturn(mr, text, n, buf, cap);
 }
+
+/* ---- the two simple normalisers ------------------------------------- */
+
+/* Every Japanese word this file writes is Shift-JIS and is written here as
+   the bytes rather than as the characters, so that a file in another encoding
+   still compiles to the same thing. What each one says is in the comment
+   beside it. */
+#define MR_HAI      "\x82\xcd\x82\xa2"                  /* hai, yes */
+#define MR_IIE      "\x82\xa2\x82\xa2\x82\xa6"          /* iie, no */
+#define MR_PURASU   "\x83\x76\x83\x89\x83\x58"          /* purasu, plus */
+#define MR_MAINASU  "\x83\x7d\x83\x43\x83\x69\x83\x58"  /* mainasu, minus */
+#define MR_PURAMAI  MR_PURASU MR_MAINASU                /* plus or minus */
+#define MR_ZERO     "\x82\x4f"                          /* the full-width 0 */
+
+/* Yes and no, whatever they were written as. Everything else in the text is
+   copied through a character at a time. */
+int32_t mr_normalizeBool(void *mr, const char *text, uint32_t n, char **buf,
+                         uint32_t *cap, int32_t flag)
+{
+    uint32_t    len = 0;
+    const char *p = text;
+    const char *end = text + n;
+    int32_t     rc;
+
+    (void)flag;
+    while (p < end) {
+        const char *next = ju_IsDBCSLeadByte(p[0]) ? p + 2 : p + 1;
+        uint32_t    howLong = 0;
+        int32_t     what = mr_isBoolSymbol(mr, p, &howLong);
+
+        if (what != 0) {
+            next = p + howLong;
+            if (what == 1)
+                rc = mr_appendText(mr, MR_HAI, buf, cap, &len);
+            else
+                rc = mr_appendText(mr, MR_IIE, buf, cap, &len);
+        } else {
+            rc = mr_appendChar(mr, p, buf, cap, &len);
+        }
+        if (rc != 0)
+            return rc;
+        p = next;
+    }
+    (*buf)[len] = '\0';
+    return 0;
+}
+
+/* A sign in front of a number said as a word. Note the walk decides how far
+   to step before it asks what the symbol is and then steps by what the symbol
+   said instead, which is how a two-byte sign written as one byte still
+   advances by one. */
+int32_t mr_normalizeNumber(void *mr, const char *text, uint32_t n, char **buf,
+                           uint32_t *cap, int32_t flag)
+{
+    uint32_t    len = 0;
+    const char *p = text;
+    const char *end = text + n;
+    int32_t     rc;
+
+    (void)flag;
+    while (p < end) {
+        const char *next = ju_IsDBCSLeadByte(p[0]) ? p + 2 : p + 1;
+        int32_t     what = mr_isPlusMinusSymbol(mr, p);
+
+        if (what != 0) {
+            switch (what) {
+            case 1:
+                rc = mr_appendText(mr, MR_PURASU, buf, cap, &len);
+                break;
+            case 2:
+                rc = mr_appendText(mr, MR_MAINASU, buf, cap, &len);
+                break;
+            case 3:
+                rc = mr_appendText(mr, MR_PURAMAI, buf, cap, &len);
+                break;
+            default:
+                rc = 0;
+                break;
+            }
+        } else {
+            rc = mr_appendChar(mr, p, buf, cap, &len);
+        }
+        if (rc != 0)
+            return rc;
+        p = next;
+    }
+    (*buf)[len] = '\0';
+    return 0;
+}
+
+/* Where a run of leading zeros ends, so that a number is not read out with
+   them. The last character is never skipped: a number of nothing but zeros
+   keeps one, which is what a reader says. */
+const char *mr_suppressZero(void *mr, const char *p, const char *end)
+{
+    (void)mr;
+    while (p < end) {
+        if (ju_IsDBCSLeadByte(p[0])) {
+            if (strncmp(p, MR_ZERO, strlen(MR_ZERO)) != 0)
+                break;
+            if (p + 2 == end)
+                break;
+            p += 2;
+        } else if (p[0] == '0') {
+            if (p + 1 == end)
+                break;
+            p += 1;
+        } else {
+            break;
+        }
+    }
+    return p;
+}
+
+/* ---- a number, as a pair of ends ------------------------------------ */
+
+/* What the normalisers pass a number about as: where it starts and where it
+   stops, so that a piece of the caller's own text can be handed on without
+   being copied first. */
+#define MR_NUM_FROM(p) (((const char **)(p))[0])
+#define MR_NUM_TO(p)   (((const char **)(p))[1])
+
+/* A number appended, with its leading zeros dropped first where the caller
+   asks. Dropping them moves the number's own start, so a caller that asks
+   twice gets the shortened one the second time. */
+int32_t mr_appendMakeReadableNumber(void *mr, void *num, char **buf,
+                                    uint32_t *cap, uint32_t *len,
+                                    int32_t trimZeros)
+{
+    uint32_t n;
+
+    if (trimZeros != 0)
+        MR_NUM_FROM(num) = mr_suppressZero(mr, MR_NUM_FROM(num),
+                                           MR_NUM_TO(num));
+    n = (uint32_t)(MR_NUM_TO(num) - MR_NUM_FROM(num));
+    if (*len + n > *cap) {
+        if (mr_reallocateBuf(mr, buf, *cap, *len + n + MR_SLACK) != 0)
+            return 1;
+        *cap = *len + n + MR_SLACK;
+    }
+    memcpy(*buf + *len, MR_NUM_FROM(num), n);
+    *len += n;
+    return 0;
+}
+
+/* A number cut in two at its decimal point, which is only a cut if a digit
+ * follows the point: `1.' is one number and not two.
+ *
+ * IBM looks for the full-width comma here and not the full-width point. Its
+ * own table of decimal points holds the point and the half-width stop, and
+ * this function uses neither -- it tests the half-width stop by hand and the
+ * two-byte one against 0x8143, which is the comma. So a number written with
+ * the full-width point is not split and one written with the full-width comma
+ * is. That is IBM's and it is reproduced.
+ */
+#define MR_FW_COMMA "\x81\x43"
+
+int32_t mr_separateNumberByDecimalPoint(void *mr, const void *whole,
+                                        void *left, void *right)
+{
+    const char *p;
+    int32_t     found = 0;
+
+    MR_NUM_FROM(left)  = MR_NUM_FROM(whole);
+    p                  = MR_NUM_FROM(left);
+    MR_NUM_TO(right)   = MR_NUM_TO(whole);
+    MR_NUM_FROM(right) = NULL;
+    MR_NUM_TO(left)    = NULL;
+
+    while (p < MR_NUM_TO(whole)) {
+        if (ju_IsDBCSLeadByte(p[0])) {
+            if (strncmp(p, MR_FW_COMMA, strlen(MR_FW_COMMA)) == 0) {
+                MR_NUM_TO(left) = p;
+                if (mr_isDigit(mr, p + 2)) {
+                    MR_NUM_FROM(right) = p + 2;
+                    found = 1;
+                }
+                break;
+            }
+            p += 2;
+        } else if (p[0] == '.') {
+            MR_NUM_TO(left) = p;
+            if (mr_isDigit(mr, p + 1)) {
+                MR_NUM_FROM(right) = p + 1;
+                found = 1;
+            }
+            break;
+        } else {
+            p += 1;
+        }
+    }
+    if (found == 0)
+        MR_NUM_TO(left) = MR_NUM_TO(whole);
+    return found;
+}
