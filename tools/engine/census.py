@@ -199,7 +199,17 @@ def ours():
 
 
 def ibm_sizes(objs):
-    """How many instructions each name holds, for sizing what is left."""
+    """How many instructions each name holds, for sizing what is left.
+
+    The largest copy rather than the sum of them. A name can be defined in
+    several objects -- MSVC emits an inline or a template body into every
+    object that uses it, each in its own COMDAT -- and adding those up sizes
+    a function at a multiple of itself. It read as a body where there was
+    none: `translateMessage' is six instructions and does nothing, and two
+    copies of it came to twelve, which is over the line `make stubs' draws
+    at seven for a method that only returns. Same for `getSamples' at five
+    and five. Copies of one COMDAT are identical, so the largest is the
+    size."""
     cache = os.path.join(ROOT, "build", "census-sizes.json")
     if os.path.exists(cache):
         try:
@@ -215,13 +225,17 @@ def ibm_sizes(objs):
         except Exception:
             continue
         cur = None
+        here = {}
         for line in out.splitlines():
             m = re.match(r"^[0-9a-f]+ <(.+)>:$", line)
             if m:
                 cur = m.group(1)
-                sizes.setdefault(cur, 0)
+                here.setdefault(cur, 0)
             elif cur and re.match(r"^\s+[0-9a-f]+:\s", line):
-                sizes[cur] += 1
+                here[cur] += 1
+        for name, n in here.items():
+            if n > sizes.get(name, 0):
+                sizes[name] = n
     os.makedirs(os.path.dirname(cache), exist_ok=True)
     json.dump(sizes, open(cache, "w"))
     return sizes
