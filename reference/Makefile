@@ -290,8 +290,11 @@ $(BUILD)/romprims.exe: ../test/harness/romprims.c $(BUILD)/ral_shim.obj \
 	@echo "built $@"
 
 clean:
-	@rm -rf $(WORK) $(TAPDIR)
-	@rm -f $(BUILD)/speak.exe $(BUILD)/speak-tap.exe $(BUILD)/ral_shim.obj \
+	@rm -rf $(WORK) $(TAPDIR) $(ROMDIR) $(JPDIR)
+	@rm -f $(BUILD)/speak.exe $(BUILD)/speak-tap.exe \
+	       $(BUILD)/speak-romtap.exe $(BUILD)/speak-jptap.exe \
+	       $(BUILD)/romlink.err $(BUILD)/jptaplink.err \
+	       $(BUILD)/jptry.exe $(BUILD)/jptry.err $(BUILD)/ral_shim.obj \
 	       $(BUILD)/ctors.obj $(BUILD)/eci.obj $(BUILD)/*.tmp.o \
 	       $(BUILD)/prims.exe $(BUILD)/prims.err \
 	       $(BUILD)/ipa.exe $(BUILD)/ipa.err \
