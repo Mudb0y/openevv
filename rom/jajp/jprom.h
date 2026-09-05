@@ -880,6 +880,11 @@ int16_t     rz_InsertWordSeparator(void *rz, char *out, void *ph, int16_t at,
                                    int16_t i);
 int16_t     rz_GetWordIndex(void *rz, void *bg);
 uint16_t    rz_CountUserIndex(void *rz, char *s);
+int8_t      rz_Init(void *rz);
+int32_t     rz_SendResult(void *rz, char **out);
+int16_t     rz_ChangeYomi(void *rz, void *dst, void *src);
+int32_t     rz_GetParameter(void *rz, char *s);
+int32_t     rz_GetParameters(void *rz, char *s);
 
 /* ---- TextAnalysis ---------------------------------------------------- */
 

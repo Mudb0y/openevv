@@ -72,7 +72,7 @@
    they would each run over the word after. They are parked past the record,
    as DictSearch's and InputChar's are, and every one of them is reached
    through the _AT name rather than the offset. */
-#define RZ_ROOM          (RZ_BYTES + 8 * sizeof(void *))
+#define RZ_ROOM          (RZ_BYTES + 9 * sizeof(void *))
 #define RZ_VTABLE_AT     (RZ_BYTES + 0 * sizeof(void *))
 #define RZ_UNICODE_AT    (RZ_BYTES + 1 * sizeof(void *))
 #define RZ_PARAM_AT      (RZ_BYTES + 2 * sizeof(void *))
@@ -81,5 +81,13 @@
 #define RZ_USERDICT_AT   (RZ_BYTES + 5 * sizeof(void *))
 #define RZ_TXTANAL_AT    (RZ_BYTES + 6 * sizeof(void *))
 #define RZ_INTON_AT      (RZ_BYTES + 7 * sizeof(void *))
+#define RZ_OUT_AT        (RZ_BYTES + 8 * sizeof(void *))
+
+/* The dictionary manager is eight bytes in IBM's build -- a vtable slot and
+   the directory with `dic' on the end of it -- and nothing but Romanizer::Init
+   ever looks inside one, so ours is laid out for the host rather than for
+   IBM. */
+#define DM_BYTES         (2 * sizeof(void *))
+#define DM_PATH          (1 * sizeof(void *))
 
 #endif
