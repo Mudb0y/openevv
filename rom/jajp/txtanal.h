@@ -65,15 +65,24 @@
    several widths -- bytes at 0x2c and 0x302, words and longs between. Not
    settled: what the fields inside it are. It is one region here so that the
    checker has somewhere to put them. */
+/* Settled by SetNextPhraseBuffer and SetPhraseMakeTable together: it is two
+   halves of 0x2d6 bytes. The second is cleared and written by the one and
+   copied over the first by the other, so what a sentence marked is what the
+   next sentence starts from. */
 #define TA_MARKS        0x0002c
+#define TA_MARKS_HALF   0x002d6
+#define TA_MARKS2       0x00302
 #define TA_MARKS_END    0x005d8
 
-/* Three of something, eight bytes each, one per phrase buffer:
-   SetPhraseMakeTable walks it with a bound of three and a scale of eight.
-   Not settled: what the eight bytes are. */
+/* Three places, eight bytes each, one per phrase buffer. Settled by
+   SetPhraseMakeTable, which fills them: each is four sixteen-bit slot
+   numbers, best first, and minus one for a place not taken. The three are
+   ranked by how far into the text the phrases in them end. */
 #define TA_PERBUF       0x005d8
 #define TA_PERBUF_N     3
 #define TA_PERBUF_SIZE  8
+#define TA_PERBUF_AT(ta, i) \
+    ((int16_t *)((uint8_t *)(ta) + TA_PERBUF + (size_t)(i) * TA_PERBUF_SIZE))
 
 /* Between that and the buffers, and settled by DictSearch::SetLongWord and
    TextAnalysis::AddLongWord together. A reading too long for the ten bytes a
@@ -110,9 +119,15 @@
 #define TA_USED         0xad670   /* int16 [3] */
 #define TA_COUNT        0xad676   /* int16 */
 
-/* A working area CheckPhraseLink takes the address of and walks. Not settled:
-   its shape or its length. It runs to the link chain. */
+/* Settled by UpdatePhraseBuffer, which writes here: it is five phrase slots
+   of the same shape and the same stride as a slot of a phrase buffer, and
+   five times 0x158 from 0xad678 lands exactly on the link chain. What goes
+   here is the stretch of words the search settled on, cut into phrases short
+   enough for a row of the phrase table, and Kakutei reads them straight back
+   out at the same stride. CheckPhraseLink also takes the address of it. */
 #define TA_WORK         0xad678
+#define TA_WORK_N       5
+#define TA_WORK_SIZE    0x158
 #define TA_WORK_END     0xadd30
 
 /* The link chain over the phrase table: two sixteen-bit indices to an entry,

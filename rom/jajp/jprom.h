@@ -869,7 +869,24 @@ int32_t     mr_convertSPR(void *mr, const char *text, uint32_t n,
    number reader wants it: what IBM calls a `_P_JRT_T' is the same eighteen
    bytes as a word of a phrase, so rom/jajp/phrasebuf.h is its map too.
    rom/jajp/kakutei.c holds it, named for the object it came out of. */
+void        ta_ClearInputBuf(void *ta);
+int32_t     ta_IsEndOfInput(void *ta);
+void        ta_InitPhraseTable(void *ta, int16_t n);
+void        ta_ClearPhraseTable(void *ta);
+int16_t     ta_Kinsoku(void *ta, int16_t slot, int16_t kind);
+int16_t     ta_SearchJrtSeparate(void *ta, void *wp, int16_t from, int16_t to,
+                                 int16_t moras);
+void        ta_HandleOverflow(void *ta, void *row, int32_t at);
+int16_t     ta_CheckPhraseLinkEnd(void *ta, int16_t slot);
+int16_t     ta_SetNextPhraseBuffer(void *ta, int16_t off);
+int16_t     ta_SetPhraseMakeTable(void *ta, int16_t off);
+int16_t     ta_CheckPhraseLink(void *ta, int16_t buf, int16_t slot,
+                               int16_t at);
 void        ta_CopyJrtPart(const void *src, void *dst);
+void        ta_CopyFzkPart(const void *src, void *dst, int16_t si, int16_t di);
+uint8_t     ta_CountMoraInPhrase(void *ta, void *wp, int16_t *out);
+int16_t     ta_UpdatePhraseBuffer(void *ta, void *wp, const uint8_t *dict);
+int16_t     ta_Kakutei(void *ta, void *wp);
 
 /* And the four of `comppenalty.obj', which answer for a link in the search
    what `PhraseTable::SetUkeTypePhrase' answers for a row: which phrases may

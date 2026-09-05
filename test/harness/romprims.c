@@ -498,6 +498,20 @@ static Conv *makeConv(Param *p)
 #define ibm_taSetFWordUkeTypeForLink(t, at, f, u, a, b) \
     ta_SetFWordUkeTypeForLink((t), (at), (f), (u), (a), (b))
 #define ibm_taSetUkeTypeForLink(t, u, w)  ta_SetUkeTypeForLink((t), (u), (w))
+#define ibm_taClearInputBuf(t)            ta_ClearInputBuf((t))
+#define ibm_taIsEndOfInput(t)             ta_IsEndOfInput((t))
+#define ibm_taInitPhraseTable(t, n)       ta_InitPhraseTable((t), (n))
+#define ibm_taClearPhraseTable(t)         ta_ClearPhraseTable((t))
+#define ibm_taKinsoku(t, s, k)            ta_Kinsoku((t), (s), (k))
+#define ibm_taSearchJrtSeparate(t, w, f, o, m) \
+    ta_SearchJrtSeparate((t), (w), (f), (o), (m))
+#define ibm_taHandleOverflow(t, r, a)     ta_HandleOverflow((t), (r), (a))
+#define ibm_taCheckPhraseLinkEnd(t, s)    ta_CheckPhraseLinkEnd((t), (s))
+#define ibm_taSetPhraseMakeTable(t, o)    ta_SetPhraseMakeTable((t), (o))
+#define ibm_taCheckPhraseLink(t, b, s, a) ta_CheckPhraseLink((t), (b), (s), (a))
+#define ibm_taCopyFzkPart(s, d, i, j)     ta_CopyFzkPart((s), (d), (i), (j))
+#define ibm_taCountMoraInPhrase(t, w, o)  ta_CountMoraInPhrase((t), (w), (o))
+#define ibm_taUpdatePhraseBuffer(t, w, d) ta_UpdatePhraseBuffer((t), (w), (d))
 #define ibm_ptbSetSuushiPhraseTable(pt, w, r, j, b, n) \
     ptb_SetSuushiPhraseTable((pt), (w), (r), (j), (b), (n))
 #define ibm_ptbSetSuushiPhrase(pt, w, r, o) \
@@ -507,6 +521,7 @@ static Conv *makeConv(Param *p)
 #define PTBM(name) ibm_ptb##name
 #define TAM(name) ibm_ta##name
 #define PTB_SET(blk, which, p) (*(void **)((blk) + which##_AT) = (p))
+#define PTB_GET(blk, which)    (*(void **)((blk) + which##_AT))
 #define AI_RULE_SET(in, i, p) (AI_RULE_OF((in), (i)) = (p))
 
 /* Where each side keeps PhraseBuf's four pointers and JPath's three. Ours are
@@ -1543,6 +1558,36 @@ extern THIS void ibm_taSetFWordUkeTypeForLink(void *ta, uint8_t at, uint8_t fzk,
     MANGLED("?SetFWordUkeTypeForLink@TextAnalysis@@QAEXEEPAE00@Z");
 extern THIS int16_t ibm_taSetUkeTypeForLink(void *ta, uint8_t *uke, void *wp)
     MANGLED("?SetUkeTypeForLink@TextAnalysis@@QAEFPAEPAU_W_PHRASE_T@@@Z");
+extern THIS void ibm_taClearInputBuf(void *ta)
+    MANGLED("?ClearInputBuf@TextAnalysis@@QAEXXZ");
+extern THIS int32_t ibm_taIsEndOfInput(void *ta)
+    MANGLED("?IsEndOfInput@TextAnalysis@@QAEHXZ");
+extern THIS void ibm_taInitPhraseTable(void *ta, int16_t n)
+    MANGLED("?InitPhraseTable@TextAnalysis@@QAEXF@Z");
+extern THIS void ibm_taClearPhraseTable(void *ta)
+    MANGLED("?ClearPhraseTable@TextAnalysis@@QAEXXZ");
+extern THIS int16_t ibm_taKinsoku(void *ta, int16_t slot, int16_t kind)
+    MANGLED("?Kinsoku@TextAnalysis@@QAEFFF@Z");
+extern THIS int16_t ibm_taSearchJrtSeparate(void *ta, void *wp, int16_t from,
+                                            int16_t to, int16_t moras)
+    MANGLED("?SearchJrtSeparate@TextAnalysis@@QAEFPAU_W_PHRASE_T@@FFF@Z");
+extern THIS void ibm_taHandleOverflow(void *ta, void *row, int32_t at)
+    MANGLED("?HandleOverflow@TextAnalysis@@QAEXPAU_PHR_TBL_T@@J@Z");
+extern THIS int16_t ibm_taCheckPhraseLinkEnd(void *ta, int16_t slot)
+    MANGLED("?CheckPhraseLinkEnd@TextAnalysis@@QAEFF@Z");
+extern THIS int16_t ibm_taSetPhraseMakeTable(void *ta, int16_t off)
+    MANGLED("?SetPhraseMakeTable@TextAnalysis@@QAEFF@Z");
+extern THIS int16_t ibm_taCheckPhraseLink(void *ta, int16_t buf, int16_t slot,
+                                          int16_t at)
+    MANGLED("?CheckPhraseLink@TextAnalysis@@QAEFFFF@Z");
+extern void ibm_taCopyFzkPart(const void *src, void *dst, int16_t si,
+                              int16_t di)
+    MANGLED("?CopyFzkPart@TextAnalysis@@SAXPAU_W_PHRASE_T@@0FF@Z");
+extern THIS uint8_t ibm_taCountMoraInPhrase(void *ta, void *wp, int16_t *out)
+    MANGLED("?CountMoraInPhrase@TextAnalysis@@QAEEPAU_W_PHRASE_T@@PAF@Z");
+extern THIS int16_t ibm_taUpdatePhraseBuffer(void *ta, void *wp,
+                                             const uint8_t *dict)
+    MANGLED("?UpdatePhraseBuffer@TextAnalysis@@QAEFPAU_W_PHRASE_T@@PAE@Z");
 extern THIS void *ibm_ptbSetSuushiPhraseTable(void *pt, void *wp, void *row,
                                               uint8_t *jrt, int16_t before,
                                               int16_t n)
@@ -1557,6 +1602,7 @@ extern THIS int16_t ibm_ptbSetPhraseTable(void *pt, int16_t a, int16_t b,
 #define PTBM(name) ibm_ptb##name
 #define TAM(name) ibm_ta##name
 #define PTB_SET(blk, which, p) (*(void **)((blk) + which) = (p))
+#define PTB_GET(blk, which)    (*(void **)((blk) + which))
 #define AI_RULE_SET(in, i, p) \
     (*(uint8_t **)((uint8_t *)(in) + AI_RULE + (i) * 4) = (p))
 
@@ -9814,6 +9860,578 @@ static void sweepCompPenalty(void)
     printf("TA uke all %08lx\n", (unsigned long)roll);
 }
 
+/* ---- the spine of the analyser ---------------------------------------- */
+
+/* Eleven of TextAnalysis's methods: the two that only pass a question on, the
+   free list over the phrase table, the two that decide whether one phrase may
+   follow another, the cut for a stretch that ran too long, the three that
+   copy or count over a phrase, the selection that keeps the best few, and the
+   writer that turns one settled stretch into phrases a row can hold.
+
+   Everything is driven off the harness's own analysis block, with the reader,
+   the phrase buffer and the phrase table hung off it. */
+
+static void taSetUp(void)
+{
+    memset(ta_block, 0, sizeof ta_block);
+    memset(ic_block, 0, sizeof ic_block);
+    memset(ptb_room, 0, sizeof ptb_room);
+    memset(pb_room, 0, sizeof pb_room);
+    TA_SET(ta_block, TA_INPUTCHAR, ic_block);
+    TA_SET(ta_block, TA_PHRASEBUF, pb_room);
+    TA_SET(ta_block, TA_PHRASETABLE, ptb_room);
+    PTB_SET(ptb_room, PTB_OWNER, ta_block);
+    PTB_SET(ptb_room, PTB_HEAD, NULL);
+    PTB_SET(ptb_room, PTB_TAIL, NULL);
+}
+
+/* One phrase written into a block of the caller's, with as many words and
+   function words as it asks for and every field the eleven read. */
+static void taPhrase(uint8_t *wp, long seed, int words, int fzks, int kind)
+{
+    int e;
+
+    memset(wp, 0, PB_SLOT_SIZE);
+    wp[WP_TYPE]    = (uint8_t)kind;
+    wp[WP_WORDS]   = (uint8_t)words;
+    wp[WP_FZKS]    = (uint8_t)fzks;
+    wp[WP_ACCENT]  = (uint8_t)(seed & 7);
+    wp[WP_CHARS]   = (uint8_t)((seed >> 3) & 0x0f);
+    *(int16_t *)(wp + WP_MORAS) = (int16_t)((seed >> 2) & 0x3f);
+    *(int32_t *)(wp + WP_COST)  = (int32_t)(seed * 7 + 3);
+    for (e = 0; e < words; e++) {
+        uint8_t *w = WW_SLOT(wp, e);
+        int      q;
+
+        w[WW_KANALEN] = (uint8_t)(1 + ((seed >> 1) + e) % 12);
+        w[WW_CHARS]   = (uint8_t)(1 + ((seed >> 4) + e) % 5);
+        w[WW_ATTR]    = (uint8_t)((seed >> 5) & 0xff);
+        w[WW_POS]     = (uint8_t)((seed * 37 + e * 53) & 0x7f);
+        *(int16_t *)(w + WW_ACCENT) = (int16_t)((seed >> 6) & 0x0f);
+        *(int16_t *)(w + WW_OFFSET) = (int16_t)(e * 3 + 1);
+        for (q = 0; q < WW_KANA_N; q++)
+            w[WW_KANA + q] = (uint8_t)((seed + e * 7 + q) % 12);
+    }
+    for (e = 0; e < fzks; e++) {
+        uint8_t *f = WF_SLOT(wp, e);
+
+        f[WF_CODE]    = (uint8_t)(((seed >> 2) + e * 11) & 0xff);
+        f[WF_KANALEN] = (uint8_t)(1 + (e & 3));
+        *(int16_t *)(f + WF_AT)     = (int16_t)(((seed >> 3) + e * 5) % 0x60);
+        *(int16_t *)(f + WF_ACCENT) = (int16_t)(((seed >> 4) + e) & 0x0f);
+        *(int16_t *)(f + WF_OFFSET) = (int16_t)(e * 2 + 3);
+    }
+}
+
+static uint32_t taRoll(uint32_t roll, const void *p, long n)
+{
+    const uint8_t *b = (const uint8_t *)p;
+    long           i;
+
+    for (i = 0; i < n; i++)
+        roll = (roll ^ b[i]) * 16777619u;
+    return roll;
+}
+
+/* Parts of speech chosen by what their tag bytes say rather than at random.
+   Every arm of the four methods that read a tag is told apart by one or two
+   bits of one of the four bytes, and the table has 180 rows of which only a
+   handful carry any one of those bits -- so a part of speech picked by
+   arithmetic reaches the same two or three arms over and over. */
+#define TA_POS_N 24
+static int taPos[TA_POS_N];
+static int taBoth;      /* the one row that says a word reads as a number */
+
+static void taPickPos(void)
+{
+    long i, n = 0;
+    long want[TA_POS_N];
+    long k;
+
+    taBoth = 0;
+    for (i = 0; i < 180; i++) {
+        uint8_t t0 = DM(GetTGAt2)((uint8_t)i, 0);
+        uint8_t t1 = DM(GetTGAt2)((uint8_t)i, 1);
+        uint8_t t2 = DM(GetTGAt2)((uint8_t)i, 2);
+        uint8_t t3 = DM(GetTGAt2)((uint8_t)i, 3);
+
+        if ((t2 & 0x20) && (t3 & 0x10))
+            taBoth = (int)i;
+        (void)t0;
+        (void)t1;
+    }
+    for (k = 0; k < TA_POS_N; k++)
+        want[k] = -1;
+    for (i = 179; i >= 0; i--) {
+        uint8_t t0 = DM(GetTGAt2)((uint8_t)i, 0);
+        uint8_t t1 = DM(GetTGAt2)((uint8_t)i, 1);
+        uint8_t t2 = DM(GetTGAt2)((uint8_t)i, 2);
+        uint8_t t3 = DM(GetTGAt2)((uint8_t)i, 3);
+
+        /* Exactly, not merely, since the arms that read these bits are asked
+           in order and a row carrying two of them never reaches the second. */
+        if ((t2 & 0x23) == 0x01) want[0] = i;
+        if ((t2 & 0x23) == 0x02) want[1] = i;
+        if ((t2 & 0x1c) == 0x04) want[2] = i;
+        if ((t2 & 0x1c) == 0x08) want[3] = i;
+        if ((t2 & 0x1c) == 0x10) want[4] = i;
+        if ((t2 & 0x23) == 0x20) want[5] = i;
+        if ((t2 & 0x23) == 0x21) want[6] = i;
+        if ((t2 & 0x02) && !(t2 & 0x1c)) want[7] = i;
+        if (t2 == 0) want[8] = i;
+        if (t1 & 0x30) want[9] = i;
+        if ((t1 & 0x08) && !(t1 & 0x30)) want[10] = i;
+        if (t1 & 0xd0) want[11] = i;
+        if (t1 & 0x0e) want[12] = i;
+        if (t1 == 0 && t2 == 0 && t0 == 0 && (t3 & 0x40)) want[13] = i;
+        if (t3 & 0x20) want[14] = i;
+        if (t3 & 0x40) want[15] = i;
+        if (t3 & 0x04) want[16] = i;
+        if (t0 != 0) want[17] = i;
+        if (t0 == 0 && t1 == 0 && t2 == 0 && t3 == 0) want[18] = i;
+        if ((t2 & 0x23) == 0x22) want[19] = i;
+        if ((t2 & 0x23) == 0x23) want[20] = i;
+        if ((t2 & 0x23) == 0x03) want[21] = i;
+        if (t2 & 0xc0) want[22] = i;
+        if ((t2 & 0x1c) == 0x1c) want[23] = i;
+    }
+    for (k = 0; k < TA_POS_N; k++)
+        taPos[n++] = want[k] < 0 ? 0 : (int)want[k];
+}
+
+static void sweepTextAnalysis(void)
+{
+    long     i, j;
+    uint32_t roll;
+
+    taPickPos();
+
+    /* ---- the two that only pass a question on ------------------------ */
+
+    taSetUp();
+    for (i = 0; i < 6; i++) {
+        static const int32_t V[6] = { 0, 1, -1, 2, 0x7fffffff, 0x40000000 };
+
+        *(int32_t *)(ic_block + IC_AT_END) = V[i];
+        printf("TA eoi %ld %ld\n", i, (long)TAM(IsEndOfInput)(ta_block));
+    }
+
+    /* The reader thrown away. Only the bytes IBM's record has are rolled;
+       past those are the pointers ours parks. */
+    for (i = 0; i < 4; i++) {
+        long e;
+
+        memset(ic_block, 0, sizeof ic_block);
+        for (e = 0; e < IC_BYTES; e++)
+            ic_block[e] = (char)(e * 13 + 7 + i);
+        IC_TEXTP_SET(ic_block, NULL);
+        IC_SNLK_HEAD(ic_block) = NULL;
+        TAM(ClearInputBuf)(ta_block);
+        /* The three fields IBM keeps a pointer in are left out: ours are
+           parked past the record and its are inside it, so the four bytes at
+           each are a pointer on one side and whatever the pattern left on the
+           other. */
+        {
+            uint32_t r = 2166136261u;
+
+            for (e = 0; e < IC_BYTES; e++) {
+                if ((e >= IC_OWNER && e < IC_OWNER + 4)
+                    || (e >= IC_TEXTP && e < IC_TEXTP + 4)
+                    || (e >= IC_SNLK_TABLE && e < IC_SNLK_TABLE + 4))
+                    continue;
+                r = (r ^ (uint8_t)ic_block[e]) * 16777619u;
+            }
+            printf("TA ci %ld %08lx\n", i, (unsigned long)r);
+        }
+    }
+
+    /* ---- the free list over the phrase table -------------------------- */
+
+    /* Every count the chain is ever laid out at, and the small ones whole:
+       the first entry's back link and the last one's forward link are both
+       the count, which is one past the last row there is. */
+    for (i = 0; i < 8; i++) {
+        static const int N[8] = { 1, 2, 3, 4, 5, 16, 0x100, 0x2c3 };
+        long e;
+
+        taSetUp();
+        memset((uint8_t *)ta_block + TA_LINK, 0x5a,
+               (size_t)TA_LINK_N * TA_LINK_SIZE);
+        TAM(InitPhraseTable)(ta_block, (int16_t)N[i]);
+        printf("TA init %d %d %d %d %d ", N[i],
+               (int)*(int16_t *)(ta_block + TA_FIRST),
+               (int)*(int16_t *)(ta_block + TA_LAST),
+               (int)*(int16_t *)(ta_block + TA_SPARE_18),
+               (int)*(int16_t *)(ta_block + TA_TOP));
+        for (e = 0; e < (N[i] < 6 ? N[i] : 6); e++)
+            printf("%d/%d ",
+                   (int)*(int16_t *)((uint8_t *)ta_block + TA_LINK
+                                     + e * TA_LINK_SIZE),
+                   (int)*(int16_t *)((uint8_t *)ta_block + TA_LINK
+                                     + e * TA_LINK_SIZE + 2));
+        printf("%08lx\n",
+               (unsigned long)taRoll(2166136261u,
+                                     (uint8_t *)ta_block + TA_LINK,
+                                     (long)TA_LINK_N * TA_LINK_SIZE));
+    }
+
+    /* And the whole table given back, with something in it first. */
+    for (i = 0; i < 2; i++) {
+        taSetUp();
+        memset((uint8_t *)ta_block + TA_LINK, 0x5a,
+               (size_t)TA_LINK_N * TA_LINK_SIZE);
+        if (i != 0) {
+            PTB_SET(ptb_room, PTB_HEAD, ip_rows);
+            PTB_SET(ptb_room, PTB_TAIL, ip_rows);
+        }
+        TAM(ClearPhraseTable)(ta_block);
+        printf("TA clr %ld %d %d %d %d %d %08lx\n", i,
+               PTB_GET(ptb_room, PTB_HEAD) == NULL,
+               PTB_GET(ptb_room, PTB_TAIL) == NULL,
+               (int)*(int16_t *)(ta_block + TA_FIRST),
+               (int)*(int16_t *)(ta_block + TA_SPARE_18),
+               (int)*(int16_t *)(ta_block + TA_TOP),
+               (unsigned long)taRoll(2166136261u,
+                                     (uint8_t *)ta_block + TA_LINK,
+                                     (long)TA_LINK_N * TA_LINK_SIZE));
+    }
+
+    /* ---- where a line may not be broken ------------------------------- */
+
+    /* Every part of speech and every kind of break, with and without a
+       function word on the end, and with the top bit of the last function
+       word's own number both ways. */
+    roll = 2166136261u;
+    taSetUp();
+    for (i = 0; i < 0x100; i++)
+        for (j = 0; j < 8 * 3; j++) {
+            uint8_t *wp = WP_SLOT((uint8_t *)pb_room + PB_BUFFER, 2);
+            int16_t  rc;
+
+            taPhrase(wp, i, 2, (int)(j / 8), 0);
+            *(WW_SLOT(wp, 0) + WW_POS) = (uint8_t)i;
+            if (j / 8 != 0)
+                WF_SLOT(wp, (j / 8) - 1)[WF_CODE] =
+                    (uint8_t)((i & 0x7f) | (j & 1 ? 0x80 : 0));
+            rc = TAM(Kinsoku)(ta_block, 2, (int16_t)((j >> 1) & 7));
+            roll = (roll ^ (uint32_t)rc) * 16777619u;
+            if ((i & 0x1f) == 0)
+                printf("TA kin %ld %ld %d\n", i, j, (int)rc);
+        }
+    printf("TA kin all %08lx\n", (unsigned long)roll);
+
+    /* ---- one function word copied ------------------------------------- */
+
+    for (i = 0; i < 16; i++) {
+        uint8_t src[PB_SLOT_SIZE];
+        uint8_t dst[PB_SLOT_SIZE];
+        long    e;
+
+        taPhrase(src, i * 7 + 1, 1, 8, 0);
+        memset(dst, (int)(0xa5 + i), sizeof dst);
+        TAM(CopyFzkPart)(src, dst, (int16_t)(i & 7), (int16_t)((i >> 1) & 7));
+        printf("TA cfz %ld ", i);
+        for (e = 0; e < 8 * WP_FZK_SIZE; e++)
+            printf("%02x", (unsigned)dst[WP_FZK + e]);
+        putchar('\n');
+    }
+
+    /* ---- the moras of a phrase, and the digit words corrected --------- */
+
+    /* The ninth kind is the one that corrects, so it is asked for as often as
+       the others together, and the long-word store is filled since a reading
+       of more than nine codes is read out of it rather than out of the word. */
+    roll = 2166136261u;
+    for (i = 0; i < 0x200; i++) {
+        uint8_t *wp = WP_SLOT((uint8_t *)pb_room + PB_BUFFER, 0);
+        int16_t  out = -1;
+        uint8_t  got;
+        long     e, q;
+
+        taSetUp();
+        /* How many of a reading's codes are digits is counted and then
+           clamped at four, so a fixture where most codes qualify saturates
+           and no single code can be told from another. These qualify about
+           one time in four. */
+        for (e = 0; e < (long)TA_LONGWORD_N * TA_LONGWORD_SIZE; e++)
+            ta_block[TA_LONGWORD + e] = (char)((e * 29 + i) % 40);
+        taPhrase(wp, i, 1 + (int)(i & 3), 0, (int)(i & 1 ? 9 : (i >> 1) & 7));
+        for (e = 0; e < 1 + (long)(i & 3); e++) {
+            uint8_t *w = WW_SLOT(wp, e);
+
+            /* Exactly one of the table's rows carries both of the tags that
+               say a word reads as a number, so the correction is unreachable
+               unless the sweep asks for that one by name. */
+            w[WW_POS] = (uint8_t)((i >> 4) & 1 ? taBoth
+                                              : (int)((i * 5 + e) & 0x7f));
+            w[WW_KANALEN] = (uint8_t)(((i >> 2) + e) % 20);
+            w[WW_KANA] = (uint8_t)(((i >> 3) + e) % TA_LONGWORD_N);
+            for (q = 1; q < WW_KANA_N; q++)
+                w[WW_KANA + q] = (uint8_t)((i + e * 7 + q) % 40);
+        }
+        got = TAM(CountMoraInPhrase)(ta_block, wp, &out);
+        roll = (roll ^ (uint32_t)got) * 16777619u;
+        roll = (roll ^ (uint32_t)out) * 16777619u;
+        roll = taRoll(roll, wp, PB_SLOT_SIZE);
+        if ((i & 0x1f) == 0) {
+            printf("TA cmp %ld %d %d ", i, (int)got, (int)out);
+            for (e = 0; e < 1 + (long)(i & 3); e++)
+                printf("%02x", (unsigned)WW_SLOT(wp, e)[WW_KANALEN]);
+            printf(" %02x\n", (unsigned)wp[WP_TYPE]);
+        }
+    }
+    printf("TA cmp all %08lx\n", (unsigned long)roll);
+
+    /* ---- where to cut a stretch that ran too long --------------------- */
+
+    /* The walk reads the word one past its own bound, so the phrase is given
+       more words than the bound names. */
+    roll = 2166136261u;
+    for (i = 0; i < 0x400; i++) {
+        uint8_t *wp = WP_SLOT((uint8_t *)pb_room + PB_BUFFER, 0);
+        int16_t  to = (int16_t)(1 + (i & 7));
+        int16_t  rc;
+        long     e;
+
+        taSetUp();
+        taPhrase(wp, i, 12, 0, 0);
+        for (e = 0; e < 12; e++) {
+            uint8_t *w = WW_SLOT(wp, e);
+
+            /* The five arms that score a join are told apart by three bits of
+               the second tag byte either side of it, and only a handful of the
+               table's 180 rows carry any of them -- so a part of speech picked
+               by arithmetic scores five every time and neither the tie-breaks
+               nor the join nearest the middle is ever reached. */
+            w[WW_POS]     = (uint8_t)taPos[((i >> (e & 7)) + e * 5)
+                                           % TA_POS_N];
+            w[WW_KANALEN] = (uint8_t)(1 + ((i >> 3) + e) % 7);
+        }
+        rc = TAM(SearchJrtSeparate)(ta_block, wp, (int16_t)((i >> 6) & 1), to,
+                                    (int16_t)((i >> 4) & 0x3f));
+        roll = (roll ^ (uint32_t)rc) * 16777619u;
+        if ((i & 0x3f) == 0)
+            printf("TA jrt %ld %d %d\n", i, (int)to, (int)rc);
+    }
+    printf("TA jrt all %08lx\n", (unsigned long)roll);
+
+    /* ---- one settled stretch written out as phrases ------------------- */
+
+    roll = 2166136261u;
+    for (i = 0; i < 0x200; i++) {
+        uint8_t  dict[0x80];
+        uint8_t *wp = WP_SLOT((uint8_t *)pb_room + PB_BUFFER, 0);
+        int16_t  got;
+        long     e;
+
+        taSetUp();
+        for (e = 0; e < (long)sizeof dict; e++)
+            dict[e] = (uint8_t)(6 + (i + e * 7) % 4);
+        for (e = 0; e < (long)TA_LONGWORD_N * TA_LONGWORD_SIZE; e++)
+            ta_block[TA_LONGWORD + e] = (char)((e * 29 + i) % 40);
+        taPhrase(wp, i, 2 + (int)(i & 7), (int)((i >> 3) & 3),
+                 (int)(i & 1 ? 9 : (i >> 4) & 7));
+        for (e = 0; e < 2 + (long)(i & 7); e++) {
+            uint8_t *w = WW_SLOT(wp, e);
+            long     a = (i * 5 + e * 17) & 0x7f;
+
+            /* A word carrying both of the tags that say it reads as a number
+               has its length written back from what CountMoraInPhrase found
+               -- and that method only looks at a phrase of the ninth kind,
+               while the writer looks at any. So for any other kind IBM writes
+               back a number nothing set, and the seventeenth deliberate
+               divergence is ours reading nought there. The sweep keeps to the
+               side of that line: only a phrase of the ninth kind is given a
+               word that carries both. */
+            if ((i & 1) == 0) {
+                while ((DM(GetTGAt2)((uint8_t)a, 2) & 0x20)
+                       && (DM(GetTGAt2)((uint8_t)a, 3) & 0x10))
+                    a = (a + 1) & 0x7f;
+            } else if (((i >> 6) & 1) != 0) {
+                a = taBoth;
+            }
+            w[WW_POS]     = (uint8_t)a;
+            w[WW_KANALEN] = (uint8_t)(1 + ((i >> 2) + e) % 14);
+            w[WW_KANA]    = (uint8_t)(((i >> 3) + e) % TA_LONGWORD_N);
+        }
+        got = TAM(UpdatePhraseBuffer)(ta_block, wp, dict);
+        roll = (roll ^ (uint32_t)got) * 16777619u;
+        roll = taRoll(roll, (uint8_t *)ta_block + TA_WORK,
+                      (long)TA_WORK_N * TA_WORK_SIZE);
+        roll = taRoll(roll, wp, PB_SLOT_SIZE);
+        printf("TA upb %ld %d %08lx %08lx\n", i, (int)got,
+               (unsigned long)taRoll(2166136261u,
+                                     (uint8_t *)ta_block + TA_WORK,
+                                     (long)TA_WORK_N * TA_WORK_SIZE),
+               (unsigned long)taRoll(2166136261u, wp, PB_SLOT_SIZE));
+    }
+    printf("TA upb all %08lx\n", (unsigned long)roll);
+
+    /* ---- the best few phrases at each of three end positions ---------- */
+
+    roll = 2166136261u;
+    for (i = 0; i < 0x100; i++) {
+        long    n = 1 + (i & 7);
+        int16_t rc;
+        long    e;
+
+        taSetUp();
+        for (e = 0; e < n; e++) {
+            uint8_t *wp = WP_SLOT((uint8_t *)pb_room + PB_BUFFER, e);
+
+            taPhrase(wp, i + e * 3, 1, 0, 0);
+            *(int16_t *)(wp + WP_MORAS) = (int16_t)(((i >> 3) + e) % 3);
+            wp[WP_CHARS] = (uint8_t)(((i >> 2) + e) % 6);
+            wp[WP_FZKS]  = (uint8_t)(((i >> 4) + e) % 3);
+        }
+        *(int16_t *)((uint8_t *)pb_room + PB_TAIL) = (int16_t)n;
+        rc = TAM(SetPhraseMakeTable)(ta_block, (int16_t)((i >> 5) & 7));
+        roll = (roll ^ (uint32_t)rc) * 16777619u;
+        roll = taRoll(roll, (uint8_t *)ta_block + TA_PERBUF,
+                      (long)TA_PERBUF_N * TA_PERBUF_SIZE);
+        roll = taRoll(roll, (uint8_t *)ta_block + TA_MARKS2, TA_MARKS_HALF);
+        if ((i & 7) == 0) {
+            printf("TA spmt %ld %d ", i, (int)rc);
+            for (e = 0; e < (long)TA_PERBUF_N * TA_PERBUF_SIZE; e++)
+                printf("%02x",
+                       (unsigned)*((uint8_t *)ta_block + TA_PERBUF + e));
+            putchar('\n');
+        }
+    }
+    printf("TA spmt all %08lx\n", (unsigned long)roll);
+
+    /* ---- whether a phrase may follow the last one settled ------------- */
+
+    roll = 2166136261u;
+    for (i = 0; i < 0x200; i++) {
+        uint8_t *wp = WP_SLOT((uint8_t *)pb_room + PB_BUFFER, 1);
+        void    *tail = ip_rows;
+        int16_t  rc;
+
+        taSetUp();
+        memset(ip_rows, 0, sizeof ip_rows);
+        taPhrase(wp, i, 1 + (int)(i & 1), (int)((i >> 1) & 1), 0);
+        *(WW_SLOT(wp, 0) + WW_POS) = (uint8_t)taPos[(i >> 2) % TA_POS_N];
+        *(WW_SLOT(wp, 1) + WW_POS) = (uint8_t)taPos[((i >> 2) + 1)
+                                                    % TA_POS_N];
+        ((uint8_t *)tail)[PT_KIND]  = (uint8_t)((i >> 8) & 1);
+        ((uint8_t *)tail)[PT_RIGHT] = (uint8_t)((i >> 2) & 0xff);
+        if (((i >> 9) & 1) == 0)
+            PTB_SET(ptb_room, PTB_TAIL, tail);
+        rc = TAM(CheckPhraseLinkEnd)(ta_block, 1);
+        roll = (roll ^ (uint32_t)rc) * 16777619u;
+        roll = taRoll(roll, (uint8_t *)ta_block + TA_WORK, PB_SLOT_SIZE);
+        if ((i & 0x1f) == 0)
+            printf("TA cple %ld %d\n", i, (int)rc);
+    }
+    printf("TA cple all %08lx\n", (unsigned long)roll);
+
+    /* ---- and whether one phrase may follow another -------------------- */
+
+    roll = 2166136261u;
+    for (i = 0; i < 0x400; i++)
+        for (j = 0; j < TA_POS_N; j++) {
+            uint8_t *wp = WP_SLOT((uint8_t *)pb_room + PB_BUFFER, 1);
+            uint8_t *other;
+            void    *tail = ip_rows;
+            int16_t  rc;
+            long     e;
+
+            taSetUp();
+            memset(ip_rows, 0, sizeof ip_rows);
+            static const int kinds[4] = { 0, 6, 10, 3 };
+
+            taPhrase(wp, i, 1 + (int)(i & 1), (int)((i >> 1) & 3),
+                     kinds[(i >> 6) & 3]);
+            other = (uint8_t *)ta_block + TA_BUFFERS + 2 * PB_SLOT_SIZE;
+            /* The kinds matter here and not only the tags: the second bit of
+               the answer, which is the one the mask keeps, is written by a
+               phrase of the sixth kind and by one tag row and by nothing
+               else. */
+            taPhrase(other, i * 3 + 1, 1 + (int)((i >> 2) & 1),
+                     (int)((i >> 3) & 1), kinds[(i >> 4) & 3]);
+            /* Every word's own part of speech, and out of the tag-driven
+               table: the arm that writes the bottom bit of the answer wants
+               the one row whose first three tag bytes are all nought and
+               whose fourth carries 0x40, and that row is odd -- so a fixture
+               that names only the first word never reaches it. */
+            for (e = 0; e < 2; e++) {
+                *(WW_SLOT(wp, e) + WW_POS) =
+                    (uint8_t)taPos[((i >> 4) + e) % TA_POS_N];
+                *(WW_SLOT(other, e) + WW_POS) =
+                    (uint8_t)taPos[((i >> 4) + e + j) % TA_POS_N];
+            }
+            ((uint8_t *)tail)[PT_KIND]  = (uint8_t)((i >> 8) & 1);
+            ((uint8_t *)tail)[PT_RIGHT] = (uint8_t)((i * 7 + j * 33) & 0xff);
+            if (((i >> 9) & 1) == 0)
+                PTB_SET(ptb_room, PTB_TAIL, tail);
+            rc = TAM(CheckPhraseLink)(ta_block, 0, 1, 2);
+            roll = (roll ^ (uint32_t)rc) * 16777619u;
+            roll = taRoll(roll, (uint8_t *)ta_block + TA_WORK,
+                          2 * PB_SLOT_SIZE);
+            if ((i & 0x3f) == 0 && j == 0)
+                printf("TA cpl %ld %ld %d\n", i, j, (int)rc);
+        }
+    printf("TA cpl all %08lx\n", (unsigned long)roll);
+
+    /* ---- the table overflowing ---------------------------------------- */
+
+    /* A chain of rows in one strided array, the free list laid out over the
+       whole table, and the row to cut at named or left for the walk to find. */
+    roll = 2166136261u;
+    for (i = 0; i < 0x40; i++) {
+        long    n = 2 + (i % (IP_ROW_N - 2));
+        long    at = i % n;
+        long    e;
+
+        taSetUp();
+        memset(ip_rows, 0, sizeof ip_rows);
+        for (e = 0; e < n; e++) {
+            uint8_t *r = (uint8_t *)IP_ROW(e);
+
+            *(int16_t *)(r + PT_INDEX) = (int16_t)(e + 1);
+            *(int32_t *)(r + PT_COST)  = (int32_t)(0x100 + e * 17 + i);
+            r[PT_KIND] = (uint8_t)(e & 3);
+            IP_ROW_LINK(IP_ROW(e), e + 1 < n ? IP_ROW(e + 1) : NULL);
+        }
+        ipLinkTable((uint8_t *)ta_block + TA_LINK, TA_LINK_N);
+        *(uint16_t *)(ta_block + TA_LAST)     = (uint16_t)TA_LINK_N;
+        *(uint16_t *)(ta_block + TA_SPARE_18) = 0;
+        *(uint16_t *)(ta_block + TA_TOP)      = (uint16_t)(TA_LINK_N - 1);
+        PTB_SET(ptb_room, PTB_HEAD, IP_ROW(0));
+        PTB_SET(ptb_room, PTB_TAIL, NULL);
+
+        TAM(HandleOverflow)(ta_block,
+                            (i & 1) ? IP_ROW(at) : NULL,
+                            (int32_t)(0x900 + i));
+        roll = (roll ^ (uint32_t)*(int32_t *)(ic_block + IC_POS)) * 16777619u;
+        roll = (roll ^ (uint32_t)*(int32_t *)(ic_block + IC_ENDED))
+               * 16777619u;
+        roll = (roll ^ (uint32_t)(PTB_GET(ptb_room, PTB_HEAD) == NULL))
+               * 16777619u;
+        roll = (roll ^ (uint32_t)(uint16_t)(size_t)
+                ((uint8_t *)PTB_GET(ptb_room, PTB_TAIL) - (uint8_t *)ip_rows))
+               * 16777619u;
+        roll = (roll ^ (uint32_t)(uint16_t)(size_t)
+                ((uint8_t *)PTB_GET(ptb_room, PTB_HEAD) - (uint8_t *)ip_rows))
+               * 16777619u;
+        roll = taRoll(roll, (uint8_t *)ta_block + TA_LINK,
+                      (long)TA_LINK_N * TA_LINK_SIZE);
+        roll = (roll ^ (uint32_t)*(int16_t *)(ta_block + TA_LAST))
+               * 16777619u;
+        roll = (roll ^ (uint32_t)*(int16_t *)(ta_block + TA_SPARE_18))
+               * 16777619u;
+        roll = (roll ^ (uint32_t)*(int16_t *)(ta_block + TA_TOP)) * 16777619u;
+        for (e = 0; e < n; e++)
+            roll = (roll ^ (uint32_t)((uint8_t *)IP_ROW(e))[PT_KIND])
+                   * 16777619u;
+        printf("TA ovf %ld %ld %ld %d %d %d\n", i, n, at,
+               (int)*(int32_t *)(ic_block + IC_POS),
+               (int)*(int16_t *)(ta_block + TA_LAST),
+               (int)*(int16_t *)(ta_block + TA_TOP));
+    }
+    printf("TA ovf all %08lx\n", (unsigned long)roll);
+}
 static void sweepPhraseTable(void)
 {
     long     i, j, k;
@@ -10731,6 +11349,7 @@ int main(void)
     sweepTextNormalizer();
     sweepPhraseTable();
     sweepCompPenalty();
+    sweepTextAnalysis();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS
