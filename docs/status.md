@@ -288,6 +288,8 @@ What is known and what is not. The flag says the thread was told to stop, since 
 
 What it means for the gate. A configuration can fail on a hang that has nothing to do with the change being gated, and the run that caught this one had to be killed by hand. A gate failure on one case that does not reproduce is this until shown otherwise.
 
+It has been seen on an annotation case every time, in four languages now: `anno-eses`, `anno-esus`, German's `anno` case 13 and Japanese's case 17, the last two caught by the gate on 5 September 2026. Nothing yet distinguishes those cases beyond the kind.
+
 **And it has a reproducer now, which is what was missing.** `make crashers` starts 20,526 processes, each of which makes an instance, speaks a word and tears the output down, and a few of them deadlock exactly here. Three runs on 5 September 2026 answered 3, 5 and 20 not finishing out of the 20,526; every string reported finishes in three hundredths of a second when run on its own, five times over, so it is the shape of the run and not the word. One of the stuck processes was caught and traced, and its two stacks are the two above to the frame. So the fault is reachable at about one process in a thousand, and a run that takes a few minutes will hit it several times -- which is a far better place to start from than two sightings a day apart.
 
 Two things about the numbers are worth keeping. The rate is not the same run to run and does not fall with a longer limit: the run that answered 20 had a limit six times longer and a third of the jobs, so a process that gets stuck is stuck rather than slow. And `make crashers` therefore fails on this machine for a reason that has nothing to do with what is being gated, which is the same warning as the paragraph above.
