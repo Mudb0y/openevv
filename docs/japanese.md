@@ -605,6 +605,8 @@ The whole of the romanizer is written. `TextAnalysis` went in last of the analys
 
 `romreg.obj` and `romedll_link.obj` are the two objects that were never going to be transcribed: registration, which this port retired, and the link-time symbol `src/eci/lang/eci_romedll.c` stands in for.
 
+The completeness check is mechanical and worth repeating if anything here is ever doubted. The thirty-three objects of the romanizer and the prosody chain define 464 entry points between them, counted with `nm`; of those, five names appear nowhere in `rom/jajp` and each is accounted for. `RomInstance::addRef` and `RomInstance::queryInterface` are COM plumbing that went with the vtable, since `EvvRom` is a struct of functions and nothing counts references to it. And `RomInstParam`'s three private setters -- `setTextMode`, `setNumberMode` and `setRetroflexEnding` -- are each three instructions that IBM's `setParam` calls and ours writes inline in the same arms, which is the one place they could be called from. `make missing` answering nothing says the same thing from the other side: no name our link asks for goes unanswered.
+
 ## The four faults between the last unit and a match
 
 Worth keeping, because three of them are one mistake made three times.
