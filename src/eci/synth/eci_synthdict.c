@@ -600,16 +600,24 @@ THIS int32_t std_findNextDictEntry(SynthThread *t, Dict *dict, int32_t volume,
  * romanizer's whatever volume they name: the engine's own dictionaries have
  * no room for either. All four take the same eight arguments -- the
  * dictionary, the volume and six the romanizer reads -- but not of the same
- * types, so each is written out rather than shared.
+ * types, and not of the same shape either, so each is written out.
  *
- * The guard is the same for all four: a dictionary, the romanizer's own
- * volume, something to work on, a romanizer under the dictionary, and that
- * romanizer answering this call at all.
+ * Three things differ between them and all three are IBM's. The two lookups
+ * refuse a null word and the two finds do not, because a find is handed a
+ * place to put the key rather than a key. A refusal before the romanizer is
+ * reached answers minus three; a refusal by the romanizer answers five --
+ * except from `updateDictExt', which answers minus fifteen, and that is the
+ * one difference a caller sees, since the dictionary layer above turns a
+ * negative into eciDictAccessError and five into eciDictNoEntry.
+ *
+ * The test on the romanizer answering this call at all is ours: IBM reaches
+ * these through vtable slots that always exist, and a romanizer of ours that
+ * keeps no dictionary leaves the fields nought. It answers what the guard
+ * beside it answers.
  */
-static int32_t std_extOk(const Dict *dict, int32_t volume, const void *a)
+static int32_t std_extOk(const Dict *dict, int32_t volume)
 {
-    return dict != 0 && volume == VOLUME_ROMANIZER && a != 0
-           && dict->rom != 0;
+    return dict != 0 && volume == VOLUME_ROMANIZER && dict->rom != 0;
 }
 
 THIS int32_t std_lookupDictExt(SynthThread *t, Dict *dict, int32_t volume,
@@ -618,7 +626,7 @@ THIS int32_t std_lookupDictExt(SynthThread *t, Dict *dict, int32_t volume,
                                int32_t codeset)
 {
     (void)t;
-    if (!std_extOk(dict, volume, word) || !dict->rom->ops->lookupDictExt)
+    if (!word || !std_extOk(dict, volume) || !dict->rom->ops->lookupDictExt)
         return ERR_BAD_ARG;
     return dict->rom->ops->lookupDictExt(dict->rom, dict->romDict, volume,
                                          word, wordLen, value, valueLen,
@@ -632,12 +640,12 @@ THIS int32_t std_updateDictExt(SynthThread *t, Dict *dict, int32_t volume,
                                int32_t codeset)
 {
     (void)t;
-    if (!std_extOk(dict, volume, word) || !dict->rom->ops->updateDictExt)
+    if (!word || !std_extOk(dict, volume) || !dict->rom->ops->updateDictExt)
         return ERR_BAD_ARG;
     return dict->rom->ops->updateDictExt(dict->rom, dict->romDict, volume,
                                          word, wordLen, value, valueLen,
                                          pos, codeset)
-           ? DICT_NO_ENTRY : OK;
+           ? ERR_ENGINE : OK;
 }
 
 THIS int32_t std_findFirstDictEntryExt(SynthThread *t, Dict *dict,
@@ -647,7 +655,7 @@ THIS int32_t std_findFirstDictEntryExt(SynthThread *t, Dict *dict,
                                        int32_t codeset)
 {
     (void)t;
-    if (!std_extOk(dict, volume, key) || !dict->rom->ops->findFirstDictExt)
+    if (!std_extOk(dict, volume) || !dict->rom->ops->findFirstDictExt)
         return ERR_BAD_ARG;
     return dict->rom->ops->findFirstDictExt(dict->rom, dict->romDict, volume,
                                             key, keyLen, value, valueLen,
@@ -662,7 +670,7 @@ THIS int32_t std_findNextDictEntryExt(SynthThread *t, Dict *dict,
                                       int32_t codeset)
 {
     (void)t;
-    if (!std_extOk(dict, volume, key) || !dict->rom->ops->findNextDictExt)
+    if (!std_extOk(dict, volume) || !dict->rom->ops->findNextDictExt)
         return ERR_BAD_ARG;
     return dict->rom->ops->findNextDictExt(dict->rom, dict->romDict, volume,
                                            key, keyLen, value, valueLen,

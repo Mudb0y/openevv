@@ -806,11 +806,15 @@ $(BUILD)/phonemes: test/harness/phonemes.c lib/eci_api.c $(BUILD)/libevv$(SUF).a
 # rather than transcription, which is the kind of code that looks right and
 # answers differently -- so it is checked against the original.
 .PHONY: dict
-dict: $(BUILD)/dict
-	@$(MAKE) -C reference dicttry
-	@bash test/harness/dict.sh
+dict: $(BUILD)/dict$(SUF)
+	@$(MAKE) -C reference TAG=$(TAG) BUILD=../$(BUILD)/reference$(SUF) dicttry
+	@EVV_LANG=$(TAG) bash test/harness/dict.sh
 
-$(BUILD)/dict: test/harness/dict.c lib/eci_api.c $(BUILD)/libevv$(SUF).a
+# The binary carries its languages, as the probes do: it links one language's
+# archive and the reference it is held against is that language's, so a name
+# shared between builds is a stale one waiting to be compared with the wrong
+# side.
+$(BUILD)/dict$(SUF): test/harness/dict.c lib/eci_api.c $(BUILD)/libevv$(SUF).a
 	@$(CC) $(ALL_CFLAGS) -DECI_STATIC test/harness/dict.c lib/eci_api.c \
 	   $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
 	@echo "built $@"
