@@ -116,6 +116,8 @@ The wrappers in `lib/eci_api.c` were plain until the header existed, which was r
 
 Every string that kills IBM's Eloquence is the same fault: the Delta machine dereferences a node reference of nought, either because a rule left a position variable unset and then walked from it, or because a walk stepped off the end of the spine. IBM's binary faults on the same reads.
 
+**IBM never writes the return code of `TextNormalizer::makeReadable` when the annotation's number names no reader.** The switch has an arm for each of the six kinds and no default, so a number outside them leaves the local it returns through untouched and the caller gets whatever the stack held there. Ours returns nought, which is what every arm that succeeds returns. That is the fourteenth deliberate divergence, and nothing in the engine can reach it: the numbers come from IBM's own table of annotation names, every one of which names a reader.
+
 Thirteen places now test for nought and answer the way that primitive already answers everything else it cannot do, and 43 walks count their steps so that links which have come round on themselves end the rule rather than hanging the engine. That is the tenth deliberate divergence. Every guard sits on a path the old code could not survive, so no working input can reach one.
 
 `test/cases/crashers.txt` is the text, `make crashers` is the check, and `docs/notes/crashing-strings.md` is the whole of it. If your program feeds the engine arbitrary text -- a screen reader does -- this is the class of thing it used to die on.

@@ -114,6 +114,7 @@ static Conv *makeConv(Param *p)
 #include "intonphrase.h"
 #include "prosctrl.h"
 #include "makereadable.h"
+#include "textnormalizer.h"
 
 #define ibm_dsCheckCaseMarker(d, at)      ds_CheckCaseMarker((d), (at))
 #define ibm_dsCheckCnvChoon(d, c, n)      ds_CheckCnvChoon((d), (c), (n))
@@ -460,7 +461,22 @@ static Conv *makeConv(Param *p)
     mr_normalizeTime((mr), (t), (n), (b), (c), (f))
 #define ibm_mrNormalizeCurrency(mr, t, n, b, c, f) \
     mr_normalizeCurrency((mr), (t), (n), (b), (c), (f))
+#define ibm_mrNormalizeDate(mr, t, n, b, c, f) \
+    mr_normalizeDate((mr), (t), (n), (b), (c), (f))
+#define ibm_mrConvertSPR(mr, t, n, b, c) \
+    mr_convertSPR((mr), (t), (n), (b), (c))
 #define MRM(name) ibm_mr##name
+
+#define ibm_tnCtor(tn)                    tn_ctor((tn))
+#define ibm_tnDtor(tn)                    tn_dtor((tn))
+#define ibm_tnReallocateBuf(tn, b, u, w)  tn_reallocateBuf((tn), (b), (u), (w))
+#define ibm_tnGetAnnoType(tn, t, a, e)    tn_getAnnoType((tn), (t), (a), (e))
+#define ibm_tnMakeReadable(tn, t, n, b, c, f) \
+    tn_makeReadable((tn), (t), (n), (b), (c), (f))
+#define ibm_tnNormalizeText(tn, t, n, b, l) \
+    tn_normalizeText((tn), (t), (n), (b), (l))
+#define TNM(name) ibm_tn##name
+
 
 /* Where each side keeps PhraseBuf's four pointers and JPath's three. Ours are
    parked past their records; IBM's are at the offsets the maps name. */
@@ -758,6 +774,7 @@ extern THIS int32_t ibm_slLoad(void *self, const char *path)
 #include "intonphrase.h"
 #include "prosctrl.h"
 #include "makereadable.h"
+#include "textnormalizer.h"
 
 extern THIS int32_t ibm_dsCheckCaseMarker(void *d, int16_t at)
     MANGLED("?CheckCaseMarker@DictSearch@@QAEHF@Z");
@@ -1424,7 +1441,33 @@ extern THIS int32_t ibm_mrNormalizeCurrency(void *mr, const char *t,
                                             uint32_t n, char **b,
                                             uint32_t *c, int32_t f)
     MANGLED("?normalizeCurrency@MakeReadableJP@@UAEHPBDIPAPADPAIH@Z");
+extern THIS int32_t ibm_mrNormalizeDate(void *mr, const char *t, uint32_t n,
+                                        char **b, uint32_t *c, int32_t f)
+    MANGLED("?normalizeDate@MakeReadableJP@@UAEHPBDIPAPADPAIH@Z");
+extern THIS int32_t ibm_mrConvertSPR(void *mr, const char *t, uint32_t n,
+                                     char **b, uint32_t *c)
+    MANGLED("?convertSPR@MakeReadableJP@@QAEHPBDIPAPADPAI@Z");
 #define MRM(name) ibm_mr##name
+
+extern THIS void *ibm_tnCtor(void *tn)
+    MANGLED("??0TextNormalizer@@QAE@XZ");
+extern THIS void ibm_tnDtor(void *tn)
+    MANGLED("??1TextNormalizer@@QAE@XZ");
+extern THIS int32_t ibm_tnReallocateBuf(void *tn, char **b, uint32_t used,
+                                        uint32_t want)
+    MANGLED("?reallocateBuf@TextNormalizer@@AAEHPAPADII@Z");
+extern THIS int32_t ibm_tnGetAnnoType(void *tn, const char *t,
+                                      const char **argStart,
+                                      const char **after)
+    MANGLED("?getAnnoType@TextNormalizer@@AAEHPBDPAPBD1@Z");
+extern THIS int32_t ibm_tnMakeReadable(void *tn, const char *t, int32_t n,
+                                       char **b, uint32_t *c, int32_t f)
+    MANGLED("?makeReadable@TextNormalizer@@AAEHPBDHPAPADPAIH@Z");
+extern THIS int32_t ibm_tnNormalizeText(void *tn, const char *t, uint32_t n,
+                                        char **b, uint32_t *l)
+    MANGLED("?normalizeText@TextNormalizer@@QAEHPBDIPAPADPAI@Z");
+#define TNM(name) ibm_tn##name
+
 
 #define PB_SET(blk, which, p) (*(void **)((blk) + which) = (p))
 #define JP_SET(blk, which, p) (*(void **)((blk) + which) = (p))
@@ -8983,14 +9026,34 @@ static char mr_room[MR_ROOM + 8];
 static char    *mr_buf;
 static uint32_t mr_cap;
 
+#ifdef EVV_ROMPRIMS_OURS
+#define MR_TAKE(n)  cpp_new((uint32_t)(n))
+#define MR_GIVE(p)  cpp_delete((p))
+#else
+extern void *ibm_operatorNew(uint32_t n) MANGLED("??2@YAPAXI@Z");
+extern void  ibm_operatorDelete(void *p) MANGLED("??3@YAXPAX@Z");
+#define MR_TAKE(n)  ibm_operatorNew((uint32_t)(n))
+#define MR_GIVE(p)  ibm_operatorDelete((p))
+#endif
+
+/* The buffer a reader is handed has to come from the allocator the reader
+   grows it with, which is the C++ runtime's operator new on both sides: on
+   a sixty-four bit build that is the arena and the C library's free will not
+   take one of its blocks. */
 static void mrFresh(uint32_t cap)
 {
     if (mr_buf != NULL)
-        free(mr_buf);
-    mr_buf = (char *)malloc(cap ? cap : 1);
+        MR_GIVE(mr_buf);
+    mr_buf = (char *)MR_TAKE(cap ? cap : 1);
     mr_cap = cap;
+    /* Cleared rather than merely terminated. A reader that gives up part way
+       -- the phoneme reader does, on a group longer than its own buffer --
+       returns without putting a nought after what it wrote, and what is
+       printed then runs on into whatever the allocator last had in that
+       block. The two sides do not use the same allocator, so that is the one
+       thing in the sweep neither side decides. */
     if (mr_buf != NULL)
-        mr_buf[0] = '\0';
+        memset(mr_buf, 0, cap ? cap : 1);
 }
 
 /* What a normaliser left, printed with the bytes as bytes: the answers are
@@ -9000,7 +9063,11 @@ static void mrShow(const char *what, long a, long b, int32_t rc)
     uint32_t i;
 
     printf("MR %s %ld %ld %d %u ", what, a, b, (int)rc, (unsigned)mr_cap);
-    if (mr_buf != NULL)
+    /* Only what a reader that finished left. One that gave up part way
+       returns without putting a nought after what it wrote, so what follows
+       is whatever the allocator last had in that block -- and the two sides
+       do not allocate from the same place. */
+    if (mr_buf != NULL && rc == 0)
         for (i = 0; mr_buf[i] != '\0' && i < 0x200; i++)
             printf("%02x", (unsigned)(uint8_t)mr_buf[i]);
     putchar('\n');
@@ -9030,9 +9097,68 @@ static const char *const MR_CASES[] = {
     "1,234,567", "1\x81\x43" "234",
     "12h34", "12a34", "12p34", "0000", "9999", "99999",
     "\x82\x4f\x82\x4f\x82\x50",                       /* full-width 001 */
-    "\x8e\x9e", "\x95\xaa", "\x95\x62"                /* ji, fun, byou */
+    "\x8e\x9e", "\x95\xaa", "\x95\x62",               /* ji, fun, byou */
+    /* The seven arms the first sabotage matrix found nothing reaching: the
+       two truth words, plus-or-minus, a yen amount with a fraction, a
+       currency whose name is three letters and no digit after it, the two
+       won currencies, and a day of the week in the brackets that make it
+       one. */
+    "true", "false", "truefalse", "\x81\x7d" "1", "\x81\x7d",
+    "\\12.34", "\x81\x8f" "12.34", "JPY12.34", "$1.2", "\\1.234",
+    "JPYx", "USDx", "\x82\x69\x82\x6f\x82\x78x", "EUR", "\x81\x8f",
+    "KPW100", "KRW100", "CNY100", "XAG1", "XAU1", "XPT1", "RUR1", "TRL1",
+    "\x81\x69\x8c\x8e\x81\x6a", "\x81\x69\x89\xce\x81\x6a",
+    "\x81\x69\x90\x85\x81\x6a", "\x81\x69\x96\xd8\x81\x6a",
+    "\x81\x69\x8b\xe0\x81\x6a", "\x81\x69\x93\x79\x81\x6a",
+    "\x81\x69\x93\xfa\x81\x6a",
+    "1999/12/31\x81\x69\x8c\x8e\x81\x6a",
+    "12/31\x81\x69\x93\xfa\x81\x6a", "\x8c\x8e\x81\x6a" "1999/12/31"
 };
 #define MR_CASES_N ((int)(sizeof MR_CASES / sizeof MR_CASES[0]))
+/* Every distinct spelling in IBM's own phone table, taken out of the
+   object rather than retyped, and each one made into a group of its
+   own so that every entry of the table is reached. */
+static const char *const SPR_PHONES[] = {
+    "ka", "ki", "ku", "ke", "ko", "kya", "\x81@", "kyu", "kyo", "sa", "Si",
+    "su", "se", "so", "Ca", "Ci", "Cu", "Ce", "Co", "ta", "ti", "tu", "te",
+    "to", "tCa", "tCi", "tCu", "tCe", "tCo", "tSi", "tsu", "pa", "pi",
+    "pu", "pe", "po", "pya", "pyu", "pyo", "ha", "hi", "fu", "he", "ho",
+    "hya", "hyu", "hyo", "fa", "fi", "fe", "fo", "na", "ni", "nu", "ne",
+    "no", "nya", "nyu", "nyo", "ma", "mi", "mu", "me", "mo", "mya", "myu",
+    "myo", "ra", "ri", "ru", "re", "ro", "rya", "ryu", "ryo", "ya", "i",
+    "yu", "ye", "yo", "wa", "u", "e", "o", "ga", "gi", "gu", "ge", "go",
+    "gya", "gyu", "gyo", "za", "dZi", "zu", "ze", "zo", "dZa", "dZu",
+    "dZe", "dZo", "da", "di", "du", "de", "do", "ba", "bi", "bu", "be",
+    "bo", "bya", "byu", "byo", "tyu", "fyu", "dyu", "H", "a", "Q", "*",
+    "tte",
+};
+#define SPR_PHONES_N ((int)(sizeof SPR_PHONES / sizeof SPR_PHONES[0]))
+
+/* And the paths no single spelling reaches: an accent on each of its two
+   marks, the two letters the reader renames, a long vowel, a doubled
+   consonant at the end of a group and in front of a vowel, a group of more
+   than the sixteen letters the tag keeps, a two-byte character in the middle,
+   an empty group, and a run long enough to overrun the group buffer. */
+static const char *const SPR_CASES[] = {
+    "", ".", "..", "ka", "ka.", "ka..", ".ka", "ka.ki.ku.",
+    "ka1.", "ka1ki.", "ka'.", "ka0.", "ka9.", "1ka.", "ka1",
+    "N.", "S.", "NN.", "SS.", "kaN.", "kaS.", "Na.", "Sa.",
+    "A.", "I.", "U.", "E.", "O.", "AH.", "kA.", "kAH.", "kaA.",
+    "AIUEO.", "aiueo.", "AaIiUuEeOo.",
+    "k.", "kk.", "kka.", "ktk.", "tta.", "ssa.", "kkka.",
+    "Ck.", "Cka.", "gga.", "bba.", "hha.", "zza.", "ssu.",
+    "ttte.", "tte.", "ttte",
+    "abcdefghijklmnop.", "abcdefghijklmnopq.", "abcdefghijklmnopqrstuvwxyz.",
+    "\x82\xa9ka.", "ka\x82\xa9.", "ka\x81\x40ki.",
+    "kakikukeko.sasiSuseso.taCitutetto.",
+    "kakikukekokakikukekokakikukekokakikukekokakikukekokakikukeko"
+    "kakikukekokakikukekokakikukekokakikukeko.",
+    "AHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAH"
+    "AHAHAHAHAHAHAHAHAHAH.",
+    "koNnitiwa.", "arigatoH.", "toHkyoH.", "nihoNgo."
+};
+#define SPR_CASES_N ((int)(sizeof SPR_CASES / sizeof SPR_CASES[0]))
+
 
 static void sweepMakeReadable(void)
 {
@@ -9180,9 +9306,14 @@ static void sweepMakeReadable(void)
             uint32_t    n = (uint32_t)strlen(t);
             long        which;
 
-            for (which = 0; which < 7; which++)
-                for (k = 0; k < 2; k++) {
-                    int32_t f = (int32_t)(k ? 0x10301 : 0);
+            for (which = 0; which < 8; which++)
+                for (k = 0; k < 13; k++) {
+                    static const int32_t flags[13] = {
+                        0, 0x10301, 0x20100, 0x20200, 0x20300, 0x20400,
+                        0x20500, 0x20600, 0x20700, 0x20800, 0x20900,
+                        0x20a00, 0x20b00
+                    };
+                    int32_t f = flags[k];
                     int32_t rc = 0;
 
                     mrFresh(sizes[j]);
@@ -9215,6 +9346,10 @@ static void sweepMakeReadable(void)
                         rc = MRM(NormalizeCurrency)(mr_room, t, n, &mr_buf,
                                                     &mr_cap, f);
                         break;
+                    case 7:
+                        rc = MRM(NormalizeDate)(mr_room, t, n, &mr_buf,
+                                                &mr_cap, f);
+                        break;
                     default:
                         break;
                     }
@@ -9222,7 +9357,201 @@ static void sweepMakeReadable(void)
                 }
         }
     mrFresh(1);
+
+    /* ---- the phoneme string, turned back into kana ------------------- */
+
+    /* Each of IBM's own spellings as a group of its own, then the paths a
+       single spelling never takes, at the three buffer sizes. */
+    for (i = 0; i < SPR_PHONES_N + SPR_CASES_N; i++)
+        for (j = 0; j < 3; j++) {
+            static const unsigned sizes[3] = { 0x200, 4, 0 };
+            char        what[256];
+            const char *t;
+            int32_t     rc;
+
+            if (i < SPR_PHONES_N) {
+                sprintf(what, "%s.", SPR_PHONES[i]);
+                t = what;
+            } else {
+                t = SPR_CASES[i - SPR_PHONES_N];
+            }
+            mrFresh(sizes[j]);
+            rc = MRM(ConvertSPR)(mr_room, t, (uint32_t)strlen(t), &mr_buf,
+                                 &mr_cap);
+            mrShow("spr", i * 10 + j, 0, rc);
+
+            /* And again with an accent on it, which is the one thing the
+               reader writes that is not a kana. */
+            if (i < SPR_PHONES_N) {
+                sprintf(what, "%s1.", SPR_PHONES[i]);
+                mrFresh(sizes[j]);
+                rc = MRM(ConvertSPR)(mr_room, what, (uint32_t)strlen(what),
+                                     &mr_buf, &mr_cap);
+                mrShow("spra", i * 10 + j, 0, rc);
+            }
+        }
+
 }
+
+/* The texts TextNormalizer is given: an annotation of every name the table
+   holds, a name in none of them, the shapes that are not annotations at all,
+   and text long enough to make both buffers grow. Written as bytes so that
+   this file's own encoding decides nothing. */
+static const char *const TN_CASES[] = {
+    "", "a", "abc", "`", "``", "```", "`abc", "`[", "`[]", "`]",
+    "`card[123]", "`card[0]", "`card[]", "`ord[3]", "`ord[12345]",
+    "`tel[03-1234-5678]", "`telpunc[03-1234-5678]", "`tel[#123*456]",
+    "`dateymd[1999/12/31]", "`dateydm[1999/31/12]", "`datemdy[12/31/1999]",
+    "`datedmy[31/12/1999]", "`datemd[12/31]", "`datedm[31/12]",
+    "`datemy[12/1999]", "`dateym[1999/12]", "`datey[1999]", "`datem[12]",
+    "`time[12:34:56]", "`time[0930a]", "`time[12:34]",
+    "`cur[\\1200]", "`cur[$34.56]", "`cur[\\12.34]", "`cur[1\x81\x60" "2]",
+    "`bool[true]", "`bool[false]", "`bool[truefalse]",
+    "`nosuch[123]", "`CARD[123]", "`card123]", "`card[123", "`[123]",
+    "`[kaHnji.]", "`[koNnitiwa.]", "`[ka1.ki.]", "`[]",
+    "`card[1]`ord[2]", "abc`card[1]def", "`card[1] `card[2]",
+    "\x82\xa0\x82\xa2`card[1]", "`card[\x82\x50\x82\x51]",
+    "`\x82\xa0\x82\xa2", "`x", "`x\x82\xa0",
+    "`card[1\x93\xfa]", "`time[\x82\x50\x82\x51:\x82\x52\x82\x53]",
+    "\x82\xa0\x82\xa2\x82\xa4\x82\xa6\x82\xa8",
+    "`card[123456789012345678901234567890123456789012345678901234567890]",
+    "`tel[0120-000-000-0120-000-000-0120-000-000-0120-000-000-0120-000]",
+    /* Long enough that the reading outgrows the answer's first buffer: a
+       digit costs one byte going in and six coming out, and the buffer
+       starts at the text's length and a quarter of a kilobyte. It has to be
+       `telpunc' rather than `tel': the reader only says a digit as a word
+       for the one number of the two, so a `tel' annotation comes back the
+       length it went in. */
+    "`telpunc[2222222222222222222222222222222222222222"
+    "2222222222222222222222222222222222222222"
+    "5555555555555555555555555555555555555555]",
+    /* And the same again with more text behind it, and twice over: what a
+       reader put in the answer has to be carried into the bigger buffer, and
+       a grown answer whose content starts at nought is copied over anyway by
+       the very next thing written. */
+    "`telpunc[22222222222222222222222222222222222222222222222222"
+    "5555555555555555555555555555555555555555555555555]abcdefg",
+    "`telpunc[2222222222222222222222222222222222222222222222222]"
+    "`telpunc[5555555555555555555555555555555555555555555555555]",
+    "0123456789012345678901234567890123456789012345678901234567890123"
+    "0123456789012345678901234567890123456789012345678901234567890123"
+    "0123456789012345678901234567890123456789012345678901234567890123"
+    "0123456789012345678901234567890123456789012345678901234567890123"
+    "0123456789012345678901234567890123456789012345678901234567890123",
+    "`card[1]`card[2]`card[3]`card[4]`card[5]`card[6]`card[7]`card[8]"
+    "`card[9]`card[10]`card[11]`card[12]`card[13]`card[14]`card[15]"
+};
+#define TN_CASES_N ((int)(sizeof TN_CASES / sizeof TN_CASES[0]))
+
+/* Every number the table holds, and the two kinds of cardinal the telephone
+   test splits. A number the switch has no arm for is not swept: IBM returns
+   whatever its uninitialised local held, which is the fourteenth deliberate
+   divergence and is described in docs/quirks.md. */
+static const int32_t TN_FLAGS[] = {
+    -1, 0x10000, 0x10100, 0x10200, 0x102ff, 0x10300, 0x10301, 0x10400,
+    0x20100, 0x20200, 0x20300, 0x20400, 0x20500, 0x20600, 0x20700,
+    0x20800, 0x20900, 0x20a00, 0x20b00,
+    0x30000, 0x40000, 0x50000, 0xff0000
+};
+#define TN_FLAGS_N ((int)(sizeof TN_FLAGS / sizeof TN_FLAGS[0]))
+
+static char tn_room[TN_ROOM + 8];
+
+/* The answer normalizeText leaves is the caller's, and this one never gives
+   it back: the harness runs once and stops, and freeing it here would be one
+   more thing that could differ between the two sides. */
+static void sweepTextNormalizer(void)
+{
+    long i, j;
+
+    memset(tn_room, 0, sizeof tn_room);
+    TNM(Ctor)(tn_room);
+    TNM(Dtor)(tn_room);
+
+    /* ---- what an annotation's name says ------------------------------ */
+
+    /* getAnnoType is handed what follows the backquote, so a case that has
+       one is asked about from the character after it, and one that has not
+       is asked about as it stands. Both offsets it writes are reported. */
+    for (i = 0; i < TN_CASES_N; i++) {
+        const char *t = TN_CASES[i];
+        const char *from = t[0] == '`' ? t + 1 : t;
+        const char *argStart = NULL;
+        const char *after = NULL;
+        int32_t     type;
+
+        memset(tn_room, 0, sizeof tn_room);
+        TNM(Ctor)(tn_room);
+        type = TNM(GetAnnoType)(tn_room, from, &argStart, &after);
+        printf("TN anno %ld %ld %ld %ld\n", i, (long)type,
+               argStart == NULL ? -1L : (long)(argStart - t),
+               after == NULL ? -1L : (long)(after - t));
+        TNM(Dtor)(tn_room);
+    }
+
+    /* ---- one annotation read, at every number ------------------------ */
+
+    for (i = 0; i < TN_CASES_N; i++)
+        for (j = 0; j < TN_FLAGS_N; j++) {
+            const char *t = TN_CASES[i];
+            int32_t     rc;
+
+            memset(tn_room, 0, sizeof tn_room);
+            TNM(Ctor)(tn_room);
+            mrFresh(0x200);
+            rc = TNM(MakeReadable)(tn_room, t, (int32_t)strlen(t), &mr_buf,
+                                   &mr_cap, TN_FLAGS[j]);
+            mrShow("read", i, j, rc);
+            TNM(Dtor)(tn_room);
+        }
+
+    /* ---- the whole text, each case on an instance of its own --------- */
+
+    for (i = 0; i < TN_CASES_N; i++) {
+        const char *t = TN_CASES[i];
+        char       *out = NULL;
+        uint32_t    len = 0;
+        uint32_t    k;
+        int32_t     rc;
+
+        memset(tn_room, 0, sizeof tn_room);
+        TNM(Ctor)(tn_room);
+        rc = TNM(NormalizeText)(tn_room, t, (uint32_t)strlen(t), &out, &len);
+        printf("TN text %ld %d %u %u %u ", i, (int)rc, (unsigned)len,
+               (unsigned)*(uint32_t *)(tn_room + TN_OUT_CAP),
+               (unsigned)*(uint32_t *)(tn_room + TN_WORK_CAP));
+        if (rc == 0 && out != NULL)
+            for (k = 0; k < len && k < 0x400; k++)
+                printf("%02x", (unsigned)(uint8_t)out[k]);
+        putchar('\n');
+        TNM(Dtor)(tn_room);
+    }
+
+    /* And every case again through one instance. The working buffer is kept
+       between calls and never shrinks, so what a case is given to work in
+       here is whatever the longest case before it needed -- which is the
+       one thing a run of separate instances cannot show. */
+    memset(tn_room, 0, sizeof tn_room);
+    TNM(Ctor)(tn_room);
+    for (i = 0; i < TN_CASES_N; i++) {
+        const char *t = TN_CASES[i];
+        char       *out = NULL;
+        uint32_t    len = 0;
+        uint32_t    k;
+        int32_t     rc;
+
+        rc = TNM(NormalizeText)(tn_room, t, (uint32_t)strlen(t), &out, &len);
+        printf("TN again %ld %d %u %u %u ", i, (int)rc, (unsigned)len,
+               (unsigned)*(uint32_t *)(tn_room + TN_OUT_CAP),
+               (unsigned)*(uint32_t *)(tn_room + TN_WORK_CAP));
+        if (rc == 0 && out != NULL)
+            for (k = 0; k < len && k < 0x400; k++)
+                printf("%02x", (unsigned)(uint8_t)out[k]);
+        putchar('\n');
+    }
+    TNM(Dtor)(tn_room);
+}
+
 
 int main(void)
 {
@@ -9281,6 +9610,7 @@ int main(void)
     sweepIntonPhrase();
     sweepProsCtrl();
     sweepMakeReadable();
+    sweepTextNormalizer();
 
     fflush(stdout);
 #ifdef EVV_ROMPRIMS_OURS

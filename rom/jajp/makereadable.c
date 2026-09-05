@@ -80,13 +80,20 @@ void *mr_destroy(void *mr, int32_t freeIt)
    and every caller here allocates. */
 int32_t mr_reallocateBuf(void *mr, char **buf, uint32_t used, uint32_t want)
 {
-    char *got = (char *)malloc(want);
+    /* One byte more than asked for, and that byte is the divergence. Every
+       normaliser here ends by writing a nought at the length it reached, and
+       a length may reach the size exactly -- an append fits when what is
+       there plus what is coming equals the size, and only grows the buffer
+       when it is more. IBM allocates exactly what was asked and writes that
+       nought one past the end; its own heap says nothing and this one aborts
+       the process. The byte is never read, so no answer changes. */
+    char *got = (char *)cpp_new(want + 1);
 
     (void)mr;
     if (got == NULL)
         return 1;
     memcpy(got, *buf, used);
-    free(*buf);
+    cpp_delete(*buf);
     *buf = got;
     return 0;
 }
@@ -99,11 +106,11 @@ int32_t mrl_copyAndReturn(void *mr, const char *text, uint32_t n, char **buf,
 {
     (void)mr;
     if (n + 1 > *cap) {
-        char *got = (char *)malloc(n + 1);
+        char *got = (char *)cpp_new(n + 1);
 
         if (got == NULL)
             return 1;
-        free(*buf);
+        cpp_delete(*buf);
         *buf = got;
         *cap = n + 1;
     }
@@ -1057,6 +1064,470 @@ int32_t mr_normalizeCurrency(void *mr, const char *text, uint32_t n,
 
         p = next;
     }
+    (*buf)[len] = '\0';
+    return 0;
+}
+
+/* ---- a date --------------------------------------------------------- */
+
+#define MR_NEN     "\x94\x4e"                  /* nen, the year */
+#define MR_GATSU   "\x8c\x8e"                  /* gatsu, the month */
+#define MR_NICHI   "\x93\xfa"                  /* nichi, the day */
+#define MR_GETSUYO "\x8c\x8e\x97\x6a\x93\xfa"  /* getsuyoubi, Monday */
+#define MR_KAYO    "\x89\xce\x97\x6a\x93\xfa"  /* kayoubi, Tuesday */
+#define MR_SUIYO   "\x90\x85\x97\x6a\x93\xfa"  /* suiyoubi, Wednesday */
+#define MR_MOKUYO  "\x96\xd8\x97\x6a\x93\xfa"  /* mokuyoubi, Thursday */
+#define MR_KINYO   "\x8b\xe0\x97\x6a\x93\xfa"  /* kinyoubi, Friday */
+#define MR_DOYO    "\x93\x79\x97\x6a\x93\xfa"  /* doyoubi, Saturday */
+#define MR_NICHIYO "\x93\xfa\x97\x6a\x93\xfa"  /* nichiyoubi, Sunday */
+
+/* A date, in whichever of ten orders the caller says it is written in.
+ *
+ * The caller's number is what says which: 0x20100 through 0x20b00, and
+ * anything outside that is handed straight back. Below 0x20401 a date has
+ * three parts, up to 0x20900 it has two, and above that one -- and which part
+ * is the year, which the month and which the day is what the ten arms at the
+ * end differ in. The year keeps its leading zeros and the month and the day
+ * lose theirs, which is the trim flag on each.
+ *
+ * The walk is three states: reading the numbers, having just seen a day of
+ * the week, and reading anything else. A day of the week in brackets after a
+ * date is picked up and written after it with a comma either side; a day of
+ * the week before one starts the date over.
+ *
+ * A date whose parts came out but whose format is none of the ten is written
+ * back as the text it was, from the first part's start to the last part's
+ * end. Note that the last part's end is reached as the entry before the one
+ * the counter names, which for a counter of nought would read the length of
+ * the answer as a pointer -- unreachable, since the counter is only ever read
+ * after it has been stepped.
+ */
+int32_t mr_normalizeDate(void *mr, const char *text, uint32_t n, char **buf,
+                         uint32_t *cap, int32_t flag)
+{
+    const char *parts[3][2];
+    uint32_t    len = 0;
+    const char *p = text;
+    const char *end = text + n;
+    const char *next;
+    int32_t     rc = 0;
+    int32_t     state;
+    int32_t     partAt = 0;
+    int32_t     wantParts;
+    int32_t     dateFormat = 0;
+    int32_t     dateReady = 0;
+    int32_t     flushChar = 0;
+    int32_t     sawDayOfWeek = 0;
+    int32_t     dayOfWeek = 0;
+
+    if (flag < 0x20100 || flag > 0x20b00)
+        return mrl_copyAndReturn(mr, text, n, buf, cap);
+
+    if (flag <= 0x20400)
+        wantParts = 3;
+    else if (flag <= 0x20900)
+        wantParts = 2;
+    else
+        wantParts = 1;
+
+    memset(parts, 0, sizeof parts);
+
+    if (mr_isDigit(mr, p)) {
+        state       = 0;
+        parts[0][0] = p;
+    } else if (mr_isDayOfWeek(mr, p)) {
+        state = 1;
+    } else {
+        state = 2;
+    }
+
+    while (p < end) {
+        next = ju_IsDBCSLeadByte(p[0]) ? p + 2 : p + 1;
+
+        switch (state) {
+        case 0:
+            if (mr_isDigit(mr, next)) {
+                if (parts[partAt][0] == NULL)
+                    parts[partAt][0] = next;
+                if (mr_isDateSeparator(mr, p) && partAt < wantParts - 1) {
+                    parts[partAt][1] = p;
+                    partAt++;
+                    parts[partAt][0] = next;
+                }
+            } else if (mr_isDateSeparator(mr, next) && mr_isDigit(mr, p)
+                       && partAt < wantParts - 1) {
+                /* A separator between two numbers is neither read nor kept. */
+            } else {
+                if (mr_isDigit(mr, p))
+                    parts[partAt][1] = next;
+                else
+                    parts[partAt][1] = p;
+                partAt++;
+                if (mr_isDigit(mr, p) && partAt == wantParts) {
+                    dateFormat = flag;
+                } else {
+                    dateFormat = 0;
+                    if (!mr_isDigit(mr, p))
+                        flushChar = 1;
+                }
+                dateReady = 1;
+                state     = 2;
+            }
+            break;
+
+        case 1:
+            dayOfWeek = mr_isDayOfWeek(mr, p);
+            if (mr_isParenthesis(mr, next) == 2) {
+                next = ju_IsValidDBCS(next) ? next + 2 : next + 1;
+                if (mr_isDigit(mr, next)) {
+                    state  = 0;
+                    memset(parts, 0, sizeof parts);
+                    partAt = 0;
+                    parts[0][0] = next;
+                } else {
+                    state = 2;
+                }
+                sawDayOfWeek = 1;
+            } else if (mr_isDigit(mr, next)) {
+                state  = 0;
+                memset(parts, 0, sizeof parts);
+                partAt = 0;
+                parts[0][0] = next;
+            } else {
+                state     = 2;
+                flushChar = 1;
+            }
+            break;
+
+        case 2:
+            if (mr_isParenthesis(mr, p) == 1 && mr_isDayOfWeek(mr, next)) {
+                if (ju_IsValidDBCS(next) && mr_isParenthesis(mr, next + 2))
+                    state = 1;
+                else
+                    flushChar = 1;
+            } else {
+                if (mr_isDigit(mr, next)) {
+                    state  = 0;
+                    memset(parts, 0, sizeof parts);
+                    partAt = 0;
+                    parts[0][0] = next;
+                }
+                flushChar = 1;
+            }
+            break;
+
+        default:
+            break;
+        }
+
+        if (dateReady != 0) {
+            /* Which part is the year, which the month and which the day.
+               The year keeps its leading zeros; the others lose theirs. */
+            if (dateFormat == 0x20100) {
+                rc = mr_appendMakeReadableNumber(mr, parts[0], buf, cap, &len, 0);
+                if (rc == 0) rc = mr_appendText(mr, MR_NEN, buf, cap, &len);
+                if (rc == 0) rc = mr_appendMakeReadableNumber(mr, parts[1], buf, cap, &len, 1);
+                if (rc == 0) rc = mr_appendText(mr, MR_GATSU, buf, cap, &len);
+                if (rc == 0) rc = mr_appendMakeReadableNumber(mr, parts[2], buf, cap, &len, 1);
+                if (rc == 0) rc = mr_appendText(mr, MR_NICHI, buf, cap, &len);
+            } else if (dateFormat == 0x20200) {
+                rc = mr_appendMakeReadableNumber(mr, parts[0], buf, cap, &len, 0);
+                if (rc == 0) rc = mr_appendText(mr, MR_NEN, buf, cap, &len);
+                if (rc == 0) rc = mr_appendMakeReadableNumber(mr, parts[2], buf, cap, &len, 1);
+                if (rc == 0) rc = mr_appendText(mr, MR_GATSU, buf, cap, &len);
+                if (rc == 0) rc = mr_appendMakeReadableNumber(mr, parts[1], buf, cap, &len, 1);
+                if (rc == 0) rc = mr_appendText(mr, MR_NICHI, buf, cap, &len);
+            } else if (dateFormat == 0x20300) {
+                rc = mr_appendMakeReadableNumber(mr, parts[2], buf, cap, &len, 0);
+                if (rc == 0) rc = mr_appendText(mr, MR_NEN, buf, cap, &len);
+                if (rc == 0) rc = mr_appendMakeReadableNumber(mr, parts[0], buf, cap, &len, 1);
+                if (rc == 0) rc = mr_appendText(mr, MR_GATSU, buf, cap, &len);
+                if (rc == 0) rc = mr_appendMakeReadableNumber(mr, parts[1], buf, cap, &len, 1);
+                if (rc == 0) rc = mr_appendText(mr, MR_NICHI, buf, cap, &len);
+            } else if (dateFormat == 0x20400) {
+                rc = mr_appendMakeReadableNumber(mr, parts[2], buf, cap, &len, 0);
+                if (rc == 0) rc = mr_appendText(mr, MR_NEN, buf, cap, &len);
+                if (rc == 0) rc = mr_appendMakeReadableNumber(mr, parts[1], buf, cap, &len, 1);
+                if (rc == 0) rc = mr_appendText(mr, MR_GATSU, buf, cap, &len);
+                if (rc == 0) rc = mr_appendMakeReadableNumber(mr, parts[0], buf, cap, &len, 1);
+                if (rc == 0) rc = mr_appendText(mr, MR_NICHI, buf, cap, &len);
+            } else if (dateFormat == 0x20600) {
+                rc = mr_appendMakeReadableNumber(mr, parts[0], buf, cap, &len, 1);
+                if (rc == 0) rc = mr_appendText(mr, MR_GATSU, buf, cap, &len);
+                if (rc == 0) rc = mr_appendMakeReadableNumber(mr, parts[1], buf, cap, &len, 1);
+                if (rc == 0) rc = mr_appendText(mr, MR_NICHI, buf, cap, &len);
+            } else if (dateFormat == 0x20700) {
+                rc = mr_appendMakeReadableNumber(mr, parts[1], buf, cap, &len, 1);
+                if (rc == 0) rc = mr_appendText(mr, MR_GATSU, buf, cap, &len);
+                if (rc == 0) rc = mr_appendMakeReadableNumber(mr, parts[0], buf, cap, &len, 1);
+                if (rc == 0) rc = mr_appendText(mr, MR_NICHI, buf, cap, &len);
+            } else if (dateFormat == 0x20800) {
+                rc = mr_appendMakeReadableNumber(mr, parts[1], buf, cap, &len, 0);
+                if (rc == 0) rc = mr_appendText(mr, MR_NEN, buf, cap, &len);
+                if (rc == 0) rc = mr_appendMakeReadableNumber(mr, parts[0], buf, cap, &len, 1);
+                if (rc == 0) rc = mr_appendText(mr, MR_GATSU, buf, cap, &len);
+            } else if (dateFormat == 0x20900) {
+                rc = mr_appendMakeReadableNumber(mr, parts[0], buf, cap, &len, 0);
+                if (rc == 0) rc = mr_appendText(mr, MR_NEN, buf, cap, &len);
+                if (rc == 0) rc = mr_appendMakeReadableNumber(mr, parts[1], buf, cap, &len, 1);
+                if (rc == 0) rc = mr_appendText(mr, MR_GATSU, buf, cap, &len);
+            } else if (dateFormat == 0x20a00) {
+                rc = mr_appendMakeReadableNumber(mr, parts[0], buf, cap, &len, 0);
+                if (rc == 0) rc = mr_appendText(mr, MR_NEN, buf, cap, &len);
+            } else if (dateFormat == 0x20b00) {
+                rc = mr_appendMakeReadableNumber(mr, parts[0], buf, cap, &len, 1);
+                if (rc == 0) rc = mr_appendText(mr, MR_GATSU, buf, cap, &len);
+            } else {
+                uint32_t span = (uint32_t)(((const char **)parts)[partAt * 2 - 1]
+                                           - parts[0][0]);
+
+                rc = mr_appendTextN(mr, parts[0][0], span, buf, cap, &len);
+            }
+            if (rc != 0)
+                return rc;
+
+            dateReady = 0;
+            partAt    = 0;
+            memset(parts, 0, sizeof parts);
+        }
+
+        if (sawDayOfWeek != 0) {
+            rc = mr_appendText(mr, ",", buf, cap, &len);
+            if (rc != 0)
+                return rc;
+            switch (dayOfWeek) {
+            case 1: rc = mr_appendText(mr, MR_GETSUYO, buf, cap, &len); break;
+            case 2: rc = mr_appendText(mr, MR_KAYO, buf, cap, &len); break;
+            case 3: rc = mr_appendText(mr, MR_SUIYO, buf, cap, &len); break;
+            case 4: rc = mr_appendText(mr, MR_MOKUYO, buf, cap, &len); break;
+            case 5: rc = mr_appendText(mr, MR_KINYO, buf, cap, &len); break;
+            case 6: rc = mr_appendText(mr, MR_DOYO, buf, cap, &len); break;
+            case 7: rc = mr_appendText(mr, MR_NICHIYO, buf, cap, &len); break;
+            default: break;
+            }
+            if (rc != 0)
+                return rc;
+            sawDayOfWeek = 0;
+            rc = mr_appendText(mr, ",", buf, cap, &len);
+            if (rc != 0)
+                return rc;
+        } else if (flushChar != 0) {
+            rc = mr_appendChar(mr, p, buf, cap, &len);
+            if (rc != 0)
+                return rc;
+            flushChar = 0;
+        }
+
+        p = next;
+    }
+    (*buf)[len] = '\0';
+    return 0;
+}
+
+/* ---- a sound written as kana ----------------------------------------- */
+
+/* The five bytes an entry of either half of the kana table takes. */
+#define MR_KANA_STRIDE 5
+#define MR_KANA_N      163
+#define MR_KANA_SOKUON 160   /* `Q', the small tsu that doubles a consonant */
+
+#define MR_PHONE(i) ((const char *)jajp_j_phones + (i) * MR_KANA_STRIDE)
+#define MR_KANA(i)  ((const char *)jajp_j_kana + (i) * MR_KANA_STRIDE)
+
+/* Only ever asked of a byte the caller has already refused a lead byte, and
+   the C locale is the only one the engine ever runs in, where isalpha is the
+   two runs of letters and nothing else. Written out rather than called so
+   that a byte with its top bit set is a defined thing to ask about, which it
+   is not when a signed char is handed to the library's own. */
+#define MR_ISALPHA(c) (((c) >= 'A' && (c) <= 'Z') || ((c) >= 'a' && (c) <= 'z'))
+
+/* The porting layer's counted case-insensitive compare, which nothing else in
+   the tree calls and no header therefore publishes. */
+extern int ralStrNicmp(int flags, const char *a, const char *b, int n);
+
+/* The consonants a doubled consonant may be made of, which is the whole of
+   the plosives and fricatives as this converter spells them. */
+#define MR_DOUBLES "CSgbhzstkdpf"
+
+/* The synthesiser's own phoneme string, turned back into kana.
+ *
+ * This is the one method of the class that does not normalise anything: it
+ * takes what the synthesiser was told to say and writes what a reader would
+ * have written, which is what the caller shows a user. The answer opens with
+ * a tag -- a space, up to sixteen letters of the text, a tilde -- and closes
+ * with a space.
+ *
+ * A phoneme string is a run of groups separated by full stops, with a digit
+ * or an apostrophe in a group meaning an accent rather than a sound; a `1' is
+ * the accent, which comes out as a caret after the kana it fell on --
+ * not the tilde that closes the tag, though the two sit together. Within a
+ * group `N' is the moraic nasal and `S' the palatal fricative, spelt here as
+ * `*' and `C' because that is how the table spells them, and every vowel is
+ * followed by an `H' so that a long vowel is two entries rather than one.
+ *
+ * Reading a group is longest-match-first over three characters: for each
+ * length from three down to one, the whole table is walked for an entry of
+ * exactly that length that the group starts with. A case-insensitive match
+ * counts too, but only when the character after it is an `H' -- that is what
+ * lets an `AH' find the table's `a' and leave the `H' to be read as the long
+ * mark on the next turn.
+ *
+ * Nothing matching leaves two ways out, both of them the small tsu: a single
+ * consonant left over at the end of a group, or a consonant that a vowel
+ * follows which no entry covers. Neither consumes the vowel.
+ *
+ * Note the group buffer. IBM gives it eighty bytes and tests the count
+ * before appending rather than after, so a vowel arriving on the eightieth
+ * writes two past the end -- over a pointer that is assigned again before it
+ * is read, which is why nothing ever noticed. Ours has the room those two
+ * bytes want, so the bytes written are the same and none of them is
+ * somewhere else's.
+ */
+int32_t mr_convertSPR(void *mr, const char *text, uint32_t n, char **buf,
+                      uint32_t *cap)
+{
+    char        tag[19];
+    char        phon[96];
+    char       *q;
+    uint32_t    len = 0;
+    const char *p = text;
+    int32_t     rc = 0;
+    int32_t     nph = 0;
+    int32_t     left = 0;
+    int32_t     take = 0;
+    int32_t     tagLen = 0;
+    int32_t     matched = 0;
+    int32_t     wantAccent = 0;
+    int32_t     overflow = 0;
+    int32_t     flush = 0;
+    uint32_t    i;
+    char        c;
+
+    if (*cap == 0 || text == NULL || n == 0)
+        return 1;
+
+    tag[tagLen++] = ' ';
+    for (i = 0; i < n; i++) {
+        c = text[i];
+        if (ju_IsDBCSLeadByte(c)) {
+            i++;
+            continue;
+        }
+        if (MR_ISALPHA(c)) {
+            tag[tagLen++] = c;
+            if (tagLen > 0x10)
+                break;
+        }
+    }
+    tag[tagLen++] = '~';
+    tag[tagLen] = '\0';
+    rc = mr_appendText(mr, tag, buf, cap, &len);
+    if (rc != 0)
+        return rc;
+
+    for (i = 0; i <= n; i++) {
+        c = *p;
+
+        if (i == n || c == '.') {
+            flush = 1;
+        } else if ((c >= '0' && c <= '9') || c == '\'') {
+            if (c == '1')
+                wantAccent = 1;
+        } else {
+            if (nph > 0x50) {
+                overflow = 1;
+                break;
+            }
+            if (c == 'N')
+                c = '*';
+            else if (c == 'S')
+                c = 'C';
+            phon[nph++] = c;
+            if (strchr("AIUEO", c) != NULL)
+                phon[nph++] = 'H';
+        }
+
+        if (flush != 0 && nph > 0) {
+            phon[nph] = '\0';
+            left = nph;
+            q    = phon;
+
+            while (left > 0) {
+                int32_t k;
+
+                matched = 0;
+                take    = left > 3 ? 3 : left;
+
+                for (k = take; k > 0; k--) {
+                    int32_t e;
+
+                    for (e = 0; e < MR_KANA_N; e++) {
+                        size_t w = strlen(MR_PHONE(e));
+
+                        if (w != (size_t)k)
+                            continue;
+                        if (strncmp(q, MR_PHONE(e), (size_t)k) != 0) {
+                            if (ralStrNicmp(0, q, MR_PHONE(e), k) != 0)
+                                continue;
+                            if (q[strlen(MR_PHONE(e))] != 'H')
+                                continue;
+                        }
+                        matched = 1;
+                        rc = mr_appendText(mr, MR_KANA(e), buf, cap, &len);
+                        if (rc != 0)
+                            return rc;
+                        if (wantAccent != 0) {
+                            rc = mr_appendText(mr, "^", buf, cap, &len);
+                            if (rc != 0)
+                                return rc;
+                            wantAccent = 0;
+                        }
+                        break;
+                    }
+                    if (matched != 0) {
+                        if (k <= left) {
+                            left -= k;
+                            q    += k;
+                        }
+                        break;
+                    }
+                }
+                if (matched != 0)
+                    continue;
+
+                /* Nothing read it, so it is the small tsu -- either the one
+                   consonant a group ended on, or a consonant and vowel no
+                   entry spells. */
+                if (left == 1 && nph > 1 && strstr(MR_DOUBLES, q) != NULL) {
+                    left--;
+                    rc = mr_appendText(mr, MR_KANA(MR_KANA_SOKUON), buf, cap,
+                                       &len);
+                    if (rc != 0)
+                        return rc;
+                } else if (left >= 2 && strchr(MR_DOUBLES, q[0]) != NULL
+                           && strchr("aiueo", q[1]) != NULL) {
+                    left--;
+                    q++;
+                    rc = mr_appendText(mr, MR_KANA(MR_KANA_SOKUON), buf, cap,
+                                       &len);
+                    if (rc != 0)
+                        return rc;
+                } else {
+                    break;
+                }
+            }
+        }
+        if (flush != 0) {
+            nph   = 0;
+            flush = 0;
+        }
+        p++;
+    }
+    if (overflow != 0)
+        return 1;
+    rc = mr_appendText(mr, " ", buf, cap, &len);
+    if (rc != 0)
+        return rc;
     (*buf)[len] = '\0';
     return 0;
 }

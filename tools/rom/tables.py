@@ -108,6 +108,15 @@ NAMED = [
       ("szKANA_CLP", 0x18, 0x0c),
       ("szKANA_COP", 0x24, 0x10),
       ("szKANA_MXN", 0x34, 0x0d)]),
+    ("MakeReadableJP_SPR.obj", ".rdata", 0x65f,
+     "MakeReadableJP's kana table, five bytes to an entry and a hundred\n"
+     " * and sixty-three entries in each half: j_phones is how the\n"
+     " * synthesiser spells a sound and j_kana is the kana that sound is\n"
+     " * written with. convertSPR reads the first to find a match and\n"
+     " * writes the second. The pad byte at the end of the first half is\n"
+     " * counted with it so that the map still tiles.",
+     [("j_phones", 0x000, 0x330),
+      ("j_kana", 0x330, 0x32f)]),
 ]
 
 # And the objects with an array of pointers to string literals rather than an
@@ -143,6 +152,15 @@ POINTER_COUNTS = [
 # entries, reads the number out of the section and the string out of its own
 # COMDAT, and stops where the pointer stops.
 SYMBOL_TABLES = [
+    ("TextNormalizer.obj", ".data",
+     "TextNormalizer's one table: the names an annotation may be written\n"
+     " * with and the number each stands for, which is what says whether a\n"
+     " * bracketed piece of text is a date, a time, a telephone number, an\n"
+     " * amount of money, a cardinal, an ordinal or a truth value, and in\n"
+     " * which of the ten orders a date is written. The terminating entry\n"
+     " * holds minus one, which is what a name in none of them comes back\n"
+     " * as.",
+     ["aMakeReadableAnnos"]),
     ("MakeReadableJP.obj", ".data",
      "MakeReadableJP's twelve symbol tables, which are what its dozen\n"
      " * predicates ask. Each is a run of pairs -- what the symbol means and\n"
@@ -314,18 +332,24 @@ def int32_at(obj, section, at):
 
 
 def symbol_pairs(obj, section, at, rel, data):
-    """A run of number-and-string pairs, up to the one with no string."""
+    """A run of number-and-string pairs, up to the one with no string.
+
+    The terminating entry's number comes back too, as the last pair with None
+    for its string. It is not always nought: the annotation table keeps minus
+    one there, and the walk that looks a name up returns whatever the entry it
+    stopped on holds."""
     out = []
     while True:
         where = at + len(out) * 8 + 4
-        if where not in rel:
-            break
         value = int.from_bytes(data[at + len(out) * 8:at + len(out) * 8 + 4],
                                "little", signed=True)
+        if where not in rel:
+            out.append((value, None))
+            break
         out.append((value, literal(obj, rel[where])))
         if len(out) > 4096:
             raise SystemExit("rom/tables: %s at 0x%x does not end" % (obj, at))
-    if not out:
+    if len(out) < 2:
         raise SystemExit("rom/tables: %s at 0x%x is empty" % (obj, at))
     return out
 
@@ -518,15 +542,18 @@ def emit_all(where, out, tag):
                                      % (obj, name))
                 got = symbol_pairs(path, section, found[name], rel, data)
                 f.write("const %s_symbol %s_%s[%d] = {\n"
-                        % (tag, tag, name, len(got) + 1))
+                        % (tag, tag, name, len(got)))
                 for value, one in got:
-                    f.write("    { %d, \"%s\" },\n"
-                            % (value, "".join("\\x%02x" % b for b in one)))
-                f.write("    { 0, 0 },\n};\n")
+                    if one is None:
+                        f.write("    { %d, 0 },\n" % value)
+                    else:
+                        f.write("    { %d, \"%s\" },\n"
+                                % (value, "".join("\\x%02x" % b for b in one)))
+                f.write("};\n")
                 f.write("const int32_t %s_%s_n = %d;\n\n"
-                        % (tag, name, len(got)))
-                total += sum(len(x) + 9 for _v, x in got)
-                lines.append((obj, name, len(got), "symbols"))
+                        % (tag, name, len(got) - 1))
+                total += sum(len(x) + 9 for _v, x in got if x is not None)
+                lines.append((obj, name, len(got) - 1, "symbols"))
             f.write("\n")
 
         for obj, about, wanted in POINTER_TABLES:

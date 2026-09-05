@@ -652,14 +652,20 @@ int ralStrIcmp(int n, const char *a, const char *b)
     return icmp(a, b, n, n > 0);
 }
 
-/* The counted form, under its own name. IBM's own RAL has both, and Japanese's
-   readable-Japanese converter is the only caller of this one: it compares a
-   phone name against a table of five-byte entries with nought for the length,
-   which is what ralStrIcmp already takes nought to mean. The same code under
-   the second name, as it is in the original. */
-int ralStrNicmp(int n, const char *a, const char *b)
+/* The counted form, under its own name, and it is four arguments rather than
+   three: the leading int every RAL string call takes, then the two strings,
+   then the count. Japanese's readable-Japanese converter is the only caller
+   anywhere in the objects, and what it wants is a compare over exactly the
+   count -- that is how a long vowel written `AH' matches the table's `a' and
+   leaves the `H' behind to be read as the long mark. A three-argument form
+   would have taken the leading nought for the length and compared whole
+   strings, which the remainder of a phoneme run never equals. */
+int ralStrNicmp(int flags, const char *a, const char *b, int n)
 {
-    return ralStrIcmp(n, a, b);
+    (void)flags;
+    if (a == NULL || b == NULL)
+        return a == b ? 0 : 1;
+    return icmp(a, b, n, 1);
 }
 
 /* The audio device layer.
