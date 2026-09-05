@@ -149,6 +149,9 @@
                                      enough times to widen the target run. */
 #define PT_LEFT         0x0dd     /* uint8 [], the phrase before this one */
 #define PT_RIGHT        0x0e1     /* uint8 [], and this one */
+#define PT_COST         0x0e8     /* int32, the cost of the phrase, copied
+                                     straight out of the phrase buffer's
+                                     own WP_COST */
 #define PT_LONG         0x0ee     /* int16 [30], minus one where unset */
 #define PT_LONG_B       0x12a     /* uint8 [30], and 0x12a plus thirty is the
                                      0x148 a row runs to */

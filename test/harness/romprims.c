@@ -491,6 +491,11 @@ static Conv *makeConv(Param *p)
 #define ibm_ptbSetUkeTypePhrase(pt, u, w) ptb_SetUkeTypePhrase((pt), (u), (w))
 #define ibm_ptbFzkAccent(pt, i, o)        ptb_FzkAccent((pt), (i), (o))
 #define ibm_ptbCompoundWord(pt, w, r)     ptb_CompoundWord((pt), (w), (r))
+#define ibm_taCopyJrtPart(s, d)           ta_CopyJrtPart((s), (d))
+#define ibm_ptbSetSuushiPhraseTable(pt, w, r, j, b, n) \
+    ptb_SetSuushiPhraseTable((pt), (w), (r), (j), (b), (n))
+#define ibm_ptbSetSuushiPhrase(pt, w, r, o) \
+    ptb_SetSuushiPhrase((pt), (w), (r), (o))
 #define PTBM(name) ibm_ptb##name
 #define PTB_SET(blk, which, p) (*(void **)((blk) + which##_AT) = (p))
 #define AI_RULE_SET(in, i, p) (AI_RULE_OF((in), (i)) = (p))
@@ -1514,6 +1519,15 @@ extern THIS void ibm_ptbFzkAccent(void *pt, uint8_t *in, uint8_t *out)
     MANGLED("?FzkAccent@PhraseTable@@QAEXPAU_ACC_IN_T@@PAU_ACC_OUT_T@@@Z");
 extern THIS int16_t ibm_ptbCompoundWord(void *pt, void *wp, void *row)
     MANGLED("?CompoundWord@PhraseTable@@QAEFPAU_W_PHRASE_T@@PAU_PHR_TBL_T@@@Z");
+extern void ibm_taCopyJrtPart(const void *src, void *dst)
+    MANGLED("?CopyJrtPart@TextAnalysis@@SAXPAU_P_JRT_T@@0@Z");
+extern THIS void *ibm_ptbSetSuushiPhraseTable(void *pt, void *wp, void *row,
+                                              uint8_t *jrt, int16_t before,
+                                              int16_t n)
+    MANGLED("?SetSuushiPhraseTable@PhraseTable@@QAEPAU_PHR_TBL_T@@PAU_W_PHRASE_T@@PAU2@PAU_P_JRT_T@@FF@Z");
+extern THIS void *ibm_ptbSetSuushiPhrase(void *pt, void *wp, void *row,
+                                         int16_t *out)
+    MANGLED("?SetSuushiPhrase@PhraseTable@@QAEPAU_PHR_TBL_T@@PAU_W_PHRASE_T@@PAU2@PAF@Z");
 #define PTBM(name) ibm_ptb##name
 #define PTB_SET(blk, which, p) (*(void **)((blk) + which) = (p))
 #define AI_RULE_SET(in, i, p) \
@@ -9807,6 +9821,28 @@ static void sweepPhraseTable(void)
         }
     printf("PTB phrase all %08lx\n", (unsigned long)roll);
 
+    /* ---- one word copied from one place to another ------------------- */
+
+    /* Every length a reading can be said to have, over a source of known
+       bytes and a destination of others, so that what is copied and what is
+       left alone are both visible. */
+    for (i = 0; i < 0x100; i++) {
+        uint8_t src[WP_WORD_SIZE];
+        uint8_t dst[WP_WORD_SIZE];
+        long    e;
+
+        for (e = 0; e < WP_WORD_SIZE; e++) {
+            src[e] = (uint8_t)(i + e * 17);
+            dst[e] = (uint8_t)(0xa5 + e);
+        }
+        src[WW_KANALEN] = (uint8_t)i;
+        ibm_taCopyJrtPart(src, dst);
+        printf("PTB jrt %ld ", i);
+        for (e = 0; e < WP_WORD_SIZE; e++)
+            printf("%02x", (unsigned)dst[e]);
+        putchar('\n');
+    }
+
     /* ---- the words of a phrase joined into one ----------------------- */
 
     /* A phrase of up to four words, each with its own part of speech,
@@ -9957,6 +9993,283 @@ static void sweepPhraseTable(void)
                                    (unsigned long)roll);
                     }
         printf("PTB seq all %08lx\n", (unsigned long)roll);
+    }
+
+
+    /* ---- a run of digits written into rows --------------------------- */
+
+    /* The table writer driven straight, with a number reader filled in by
+       hand: what it walks is that reader's answers, so the readings and the
+       count of pairs in each are the fixture rather than anything a real
+       number produced. */
+    roll = 2166136261u;
+    for (i = 0; i < 0x200; i++)
+        for (j = 0; j < 8; j++) {
+            char     buf[2 * PB_SLOT_SIZE];
+            char    *wp = buf + PB_SLOT_SIZE;
+            uint8_t  jrt[16 * WP_WORD_SIZE];
+            uint8_t *ta = (uint8_t *)ta_block;
+            void    *back;
+            long     e, q;
+            int16_t  before = (int16_t)(j & 3);
+            int16_t  n = (int16_t)(1 + ((j >> 2) & 1) * 3);
+
+            memset(ta_block, 0, sizeof ta_block);
+            for (q = 0; q < TA_LINK_N; q++) {
+                *(uint16_t *)(ta + TA_LINK + q * 4) =
+                    (uint16_t)(q == 0 ? TA_LINK_N : q - 1);
+                *(uint16_t *)(ta + TA_LINK + q * 4 + 2) = (uint16_t)(q + 1);
+            }
+            *(uint16_t *)(ta + TA_FIRST)    = TA_LINK_N;
+            *(uint16_t *)(ta + TA_LAST)     = TA_LINK_N;
+            /* The free list starts past the row handed in, so what the first
+               turn of the loop wrote into that row is still there at the end
+               rather than cleared by the first row taken. */
+            *(uint16_t *)(ta + TA_SPARE_18) = 3;
+            for (q = 0; q < (long)TA_LONGWORD_N * TA_LONGWORD_SIZE; q++)
+                ta[TA_LONGWORD + q] = (uint8_t)(q * 29 + 5);
+            PTB_SET(ptb_room, PTB_OWNER, ta_block);
+            PTB_SET(ptb_room, PTB_NUMREAD, nr_room);
+            PTB_SET(ptb_room, PTB_HEAD, NULL);
+            PTB_SET(ptb_room, PTB_TAIL, NULL);
+
+            memset(nr_room, 0, sizeof nr_room);
+            for (q = 0; q < NR_READ_N; q++) {
+                uint8_t *rd = (uint8_t *)NR_READ_AT(nr_room, q);
+
+                rd[RD_COUNT] = (uint8_t)(1 + ((i + q) % 8));
+                rd[RD_LEN]   = (uint8_t)(1 + (((i >> 3) + q) % 6));
+                for (e = 0; e < RD_PAIR_N; e++) {
+                    rd[RD_A + e * RD_PAIR_SIZE] = (uint8_t)(1 + ((i + e) % 5));
+                    rd[RD_B + e * RD_PAIR_SIZE] = (uint8_t)((i >> 5) + e);
+                }
+                for (e = 0; e < RD_CODES_N; e++)
+                    rd[RD_CODES + e] = (uint8_t)(i + q * 3 + e * 7);
+                NR_S16(nr_room, NR_ANSWER + q * 2) =
+                    (int16_t)(1 + (((i >> 2) + q) % 4));
+            }
+
+            memset(buf, 0x5a, sizeof buf);
+            memset(wp, 0, PB_SLOT_SIZE);
+            *(int16_t *)(wp + WP_MORAS) = (int16_t)(20 + (i & 0x1f));
+            *(int32_t *)(wp + WP_COST)  = (int32_t)(i * 7 + 1);
+            wp[WP_WORDS] = (char)(before + 2);
+            for (e = 0; e < before + 2; e++) {
+                char *w = (char *)WW_SLOT(wp, e);
+
+                w[WW_KANALEN] = (char)(1 + ((i >> 4) + e) % 12);
+                w[WW_POS]     = (char)((i + e * 31) & 0xff);
+                *(int16_t *)(w + WW_OFFSET) = (int16_t)(e * 3 + 1);
+                for (q = 0; q < WW_KANA_N; q++)
+                    w[WW_KANA + q] = (char)((e * 7 + q) % 30);
+            }
+            /* One more entry than the writer fills, since the length it
+               takes off the phrase afterwards is the one belonging to the
+               entry past the last. */
+            for (e = 0; e < (long)sizeof jrt; e++)
+                jrt[e] = (uint8_t)(i + e * 11);
+            for (e = 0; e <= before; e++) {
+                uint8_t *j2 = jrt + e * WP_WORD_SIZE;
+
+                j2[WW_KANALEN] = (uint8_t)(1 + ((i >> 6) + e) % 9);
+                j2[WW_CHARS]   = (uint8_t)(1 + (e & 3));
+                *(int16_t *)(j2 + WW_ACCENT) = (int16_t)((i >> 1) & 0x0f);
+                *(int16_t *)(j2 + WW_OFFSET) = (int16_t)(e * 5 + 2);
+            }
+
+            back = PTBM(SetSuushiPhraseTable)(ptb_room, wp, ta + TA_PHRASE,
+                                              jrt, before, n);
+            roll = (roll ^ (uint32_t)(back == NULL ? -1L
+                     : (long)(((uint8_t *)back - (ta + TA_PHRASE))
+                              / PT_ROW_SIZE))) * 16777619u;
+            /* Everything but each row's own link: ours is how many rows
+               forward the next one is and IBM's is its address, and both are
+               right for the build they are in. */
+            for (q = 0; q < 6 * PT_ROW_SIZE; q++)
+                if (q % PT_ROW_SIZE >= 4)
+                    roll = (roll ^ ta[TA_PHRASE + q]) * 16777619u;
+            roll = (roll ^ (uint32_t)(uint16_t)*(uint16_t *)(wp + WP_MORAS))
+                   * 16777619u;
+            if ((i & 0x3f) == 0) {
+                printf("PTB sst %ld %ld %ld", i, j,
+                       back == NULL ? -1L
+                         : (long)(((uint8_t *)back - (ta + TA_PHRASE))
+                                  / PT_ROW_SIZE));
+                for (q = 0; q < 3; q++) {
+                    const uint8_t *r2 = ta + TA_PHRASE + q * PT_ROW_SIZE;
+                    long           z;
+
+                    printf(" |%02x%02x%02x", (unsigned)r2[PT_MORAS],
+                           (unsigned)r2[PT_HOLD], (unsigned)r2[PT_KIND]);
+                    for (z = 0; z < 5; z++)
+                        printf(" %02x%02x/%d", (unsigned)r2[PT_MORA + z],
+                               (unsigned)r2[PT_MORA_ACC + z],
+                               (int)*(const int16_t *)
+                                   (r2 + PT_MORA_VAL + z * 2));
+                    for (z = 0; z < 5; z++)
+                        printf(" %02x:%d", (unsigned)r2[PT_LONG_B + z],
+                               (int)*(const int16_t *)
+                                   (r2 + PT_LONG + z * 2));
+                    for (z = 0; z < 6; z++)
+                        printf(" %02x", (unsigned)r2[PT_KANA + z]);
+                }
+                printf(" %08lx\n", (unsigned long)roll);
+            }
+            if (i == 0)
+                for (q = 0; q < 3; q++) {
+                    long z;
+
+                    printf("PTB sstrow %ld %ld ", j, q);
+                    for (z = 4; z < PT_ROW_SIZE; z++)
+                        printf("%02x", (unsigned)ta[TA_PHRASE
+                                                    + q * PT_ROW_SIZE + z]);
+                    putchar('\n');
+                }
+        }
+    printf("PTB sst all %08lx\n", (unsigned long)roll);
+
+
+    /* ---- a phrase of digits taken apart and put back together -------- */
+
+    /* The whole of it: the phrase goes in, the number reader is asked what
+       the digits say, and the phrase comes back with the reading in it and a
+       row apiece for every reading but the last. The digits the reader is to
+       read are put in its own buffer here, as whoever calls this in the
+       engine would have done. */
+    {
+        static uint8_t posDigit = 0xff;
+        static uint8_t posPlain = 0xff;
+        long a;
+
+        for (a = 0; a < 0x100; a++) {
+            if (DM(GetTGAt2)((uint8_t)a, 3) & 0x10) {
+                if (posDigit == 0xff)
+                    posDigit = (uint8_t)a;
+            } else if (posPlain == 0xff) {
+                posPlain = (uint8_t)a;
+            }
+        }
+        printf("PTB posdigit %u %u\n", (unsigned)posDigit, (unsigned)posPlain);
+
+        roll = 2166136261u;
+        for (i = 1; i <= 13; i++)
+            for (j = 0; j < 32; j++) {
+                char     buf[2 * PB_SLOT_SIZE];
+                char    *wp = buf + PB_SLOT_SIZE;
+                uint8_t *ta = (uint8_t *)ta_block;
+                int      codes[24];
+                int16_t  out = -1;
+                void    *back;
+                long     e, q;
+                long     nBefore = j & 1;
+                long     nAfter  = (j >> 1) & 1;
+                long     words   = nBefore + 1 + nAfter;
+
+                nrSetUp((int)((j >> 2) & 1), (int)((j >> 3) & 1) * 2);
+                for (q = 0; q < TA_LINK_N; q++) {
+                    *(uint16_t *)(ta + TA_LINK + q * 4) =
+                        (uint16_t)(q == 0 ? TA_LINK_N : q - 1);
+                    *(uint16_t *)(ta + TA_LINK + q * 4 + 2) = (uint16_t)(q + 1);
+                }
+                *(uint16_t *)(ta + TA_FIRST)    = TA_LINK_N;
+                *(uint16_t *)(ta + TA_LAST)     = TA_LINK_N;
+                *(uint16_t *)(ta + TA_SPARE_18) = 0;
+                PTB_SET(ptb_room, PTB_OWNER, ta_block);
+                PTB_SET(ptb_room, PTB_NUMREAD, nr_room);
+                PTB_SET(ptb_room, PTB_HEAD, NULL);
+                PTB_SET(ptb_room, PTB_TAIL, NULL);
+
+                for (q = 0; q < i; q++)
+                    codes[q] = (int)(j & 0x10 ? j % 10
+                                              : (i + q * 5) % 0x1c);
+                codes[0] = (int)(i % 10);
+                nrDigits(codes, (int)i);
+
+                memset(buf, 0x5a, sizeof buf);
+                memset(wp, 0, PB_SLOT_SIZE);
+                wp[WP_WORDS] = (char)words;
+                *(int16_t *)(wp + WP_MORAS) = (int16_t)(20 + i);
+                *(int32_t *)(wp + WP_COST)  = (int32_t)(i * 13 + 1);
+                for (e = 0; e < words; e++) {
+                    char *w = (char *)WW_SLOT(wp, e);
+
+                    w[WW_POS] = (char)(e == nBefore ? posDigit : posPlain);
+                    w[WW_KANALEN] = (char)(e == nBefore ? i : 1 + (e & 1));
+                    w[WW_CHARS]   = (char)(1 + (e & 1));
+                    *(int16_t *)(w + WW_ACCENT) = (int16_t)(1 + (e & 3));
+                    *(int16_t *)(w + WW_OFFSET) = (int16_t)(e * 3 + 1);
+                    for (q = 0; q < WW_KANA_N; q++)
+                        w[WW_KANA + q] = (char)(e == nBefore
+                                                ? codes[q % (i ? i : 1)]
+                                                : (e * 7 + q) % 30);
+                }
+
+                back = PTBM(SetSuushiPhrase)(ptb_room, wp, ta + TA_PHRASE,
+                                             &out);
+                {
+                    uint32_t hRow = 2166136261u;
+                    uint32_t hWp  = 2166136261u;
+                    uint32_t hLw  = 2166136261u;
+
+                    for (q = 0; q < 3 * PT_ROW_SIZE; q++)
+                        if (q % PT_ROW_SIZE >= 4)
+                            hRow = (hRow ^ ta[TA_PHRASE + q]) * 16777619u;
+                    /* Everything but the phrase's own mora count and the
+                       length worked out from it. Where the phrase has words
+                       in front of the digits, the table writer takes off the
+                       length of the entry after the last one the caller
+                       filled -- which in the caller's frame is whatever was
+                       on the stack. Ours clears that frame and reads nought;
+                       there is nothing in IBM's to reproduce. */
+                    for (q = 0; q < PB_SLOT_SIZE; q++)
+                        if (q > 1 && q != WP_KANALEN)
+                            hWp = (hWp ^ (uint32_t)(uint8_t)wp[q])
+                                  * 16777619u;
+                    hLw = (hLw ^ (uint32_t)ta[TA_LONGWORDS]) * 16777619u;
+                    for (q = 0; q < (long)TA_LONGWORD_N * TA_LONGWORD_SIZE;
+                         q++)
+                        hLw = (hLw ^ ta[TA_LONGWORD + q]) * 16777619u;
+                    roll = (roll ^ (uint32_t)out) * 16777619u;
+                    roll = (roll ^ hRow) * 16777619u;
+                    roll = (roll ^ hWp) * 16777619u;
+                    roll = (roll ^ hLw) * 16777619u;
+                    printf("PTB ssp %ld %ld %d %ld %08lx %08lx %08lx %u"
+                           " %08lx\n", i, j, (int)out,
+                           back == NULL ? -1L
+                             : (long)(((uint8_t *)back - (ta + TA_PHRASE))
+                                      / PT_ROW_SIZE),
+                           (unsigned long)hRow, (unsigned long)hWp,
+                           (unsigned long)hLw, (unsigned)ta[TA_LONGWORDS],
+                           (unsigned long)roll);
+                    /* The longest reading any of the phrase's words came
+                       out with, and how many long readings the analysis is
+                       holding. Both are here to say something the sweep
+                       otherwise only implies: no number of up to thirteen
+                       digits reads as an accent phrase of more than six
+                       moras, so the road that puts a reading in the long
+                       store is one nothing the number reader makes can
+                       take. */
+                    {
+                        long most = 0;
+
+                        for (q = 0; q < (long)(uint8_t)wp[WP_WORDS]
+                                    && q < WP_WORD_N; q++)
+                            if (*(WW_SLOT(wp, q) + WW_KANALEN) > most)
+                                most = *(WW_SLOT(wp, q) + WW_KANALEN);
+                        printf("PTB sspmax %ld %ld %ld %u %u\n", i, j, most,
+                               (unsigned)(uint8_t)wp[WP_WORDS],
+                               (unsigned)ta[TA_LONGWORDS]);
+                    }
+                    if (i == 4) {
+                        printf("PTB sspwp %ld ", j);
+                        for (q = 2; q < 0x50; q++)
+                            if (q != WP_KANALEN)
+                                printf("%02x", (unsigned)(uint8_t)wp[q]);
+                        putchar('\n');
+                    }
+                }
+            }
+        printf("PTB ssp all %08lx\n", (unsigned long)roll);
     }
 
     /* ---- what a run of function words does to the accent ------------- */

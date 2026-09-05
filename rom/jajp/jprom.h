@@ -863,11 +863,18 @@ int32_t     mr_normalizeDate(void *mr, const char *text, uint32_t n,
 int32_t     mr_convertSPR(void *mr, const char *text, uint32_t n,
                           char **buf, uint32_t *cap);
 
+/* ---- TextAnalysis ---------------------------------------------------- */
+
+/* Almost none of it is written. `CopyJrtPart' is, because PhraseTable's
+   number reader wants it: what IBM calls a `_P_JRT_T' is the same eighteen
+   bytes as a word of a phrase, so rom/jajp/phrasebuf.h is its map too.
+   rom/jajp/kakutei.c holds it, named for the object it came out of. */
+void        ta_CopyJrtPart(const void *src, void *dst);
+
 /* ---- PhraseTable ----------------------------------------------------- */
 
-/* Where a phrase becomes a row of the phrase table. Twelve of the sixteen are
-   written; `SetPhraseTable', `SetSuushiPhrase' and
-   `SetSuushiPhraseTable' are not, and the sixteenth is a second copy of
+/* Where a phrase becomes a row of the phrase table. Fifteen of the sixteen are
+   written; only `SetPhraseTable' is not, and the sixteenth is a second copy of
    `DictSearch::IsOnin'. rom/jajp/phrasetable.h is the record
    and rom/jajp/phrasebuf.h and rom/jajp/intonphrase.h are the two it works
    over. */
@@ -887,6 +894,9 @@ void        ptb_SetNoneFzkKKR(void *pt, uint8_t *kkr, void *wp);
 int16_t     ptb_SetUkeTypePhrase(void *pt, uint8_t *uke, void *wp);
 void        ptb_FzkAccent(void *pt, uint8_t *in, uint8_t *out);
 int16_t     ptb_CompoundWord(void *pt, void *wp, void *row);
+void       *ptb_SetSuushiPhraseTable(void *pt, void *wp, void *row,
+                                     uint8_t *jrt, int16_t before, int16_t n);
+void       *ptb_SetSuushiPhrase(void *pt, void *wp, void *row, int16_t *out);
 
 /* ---- TextNormalizer -------------------------------------------------- */
 

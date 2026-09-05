@@ -859,3 +859,271 @@ int16_t ptb_CompoundWord(void *pt, void *wp, void *row)
     }
     return (int16_t)at;
 }
+
+/* ---- a run of digits written into rows ------------------------------- */
+
+/* What `NumRead' made of a run of digits, written out as rows.
+ *
+ * The first part of the phrase -- the words in front of the digits, which the
+ * caller has copied aside -- goes into the row as it stands, one mora entry a
+ * word. Then each of the readings but the last gets a row of its own, taken
+ * off the free list as it is needed, with the codes of the reading as the
+ * kana and one mora entry per pair of numbers the reading carries.
+ *
+ * Note two things IBM does that a reading of the listing has to keep. The
+ * length taken off the phrase's own mora count after the first part is the
+ * one belonging to the entry after the last it copied, which is whatever the
+ * caller left in it. And the offset written beside every mora of a reading is
+ * the offset of the first word after the front part, the same one each time.
+ */
+void *ptb_SetSuushiPhraseTable(void *pt, void *wp, void *row, uint8_t *jrt,
+                               int16_t before, int16_t n)
+{
+    void   *ta = PTB_OWNER_OF(pt);
+    int16_t a = 0;     /* which long entry is being written */
+    int16_t b = 0;     /* how many moras have gone by */
+    int16_t pos = 0;   /* where the next kana code goes */
+    int16_t m = 0;     /* which mora entry is being written */
+    int16_t z = 0;     /* which of the left marks */
+    int16_t k, d, q;
+
+    PTB_B(row, PT_MORAS) = 0;
+    PTB_B(row, PT_HOLD)  = 0;
+
+    if (before > 0) {
+        for (k = 0; k < before; k++) {
+            uint8_t *j = jrt + (size_t)k * WP_WORD_SIZE;
+            int16_t  c;
+
+            PTB_B(row, PT_MORAS) = (uint8_t)(PTB_B(row, PT_MORAS)
+                                             + j[WW_KANALEN]);
+            PTB_B(row, PT_HOLD)  = (uint8_t)(PTB_B(row, PT_HOLD)
+                                             + j[WW_CHARS]);
+            PTB_B(row, PT_LONG_B + a) = 8;
+            PTB_W(row, PT_LONG + a * 2) = b;
+            a++;
+
+            c = (int16_t)*(WW_SLOT(wp, k) + WW_KANALEN);
+            if (c > 9) {
+                for (d = 0; d < c; d++) {
+                    PTB_B(row, PT_KANA + pos) =
+                        *((uint8_t *)ta + TA_LONGWORD
+                          + (size_t)*(WW_SLOT(wp, k) + WW_KANA)
+                            * TA_LONGWORD_SIZE + (size_t)d);
+                    pos++;
+                }
+            } else {
+                for (d = 0; d < (int16_t)j[WW_KANALEN]; d++) {
+                    PTB_B(row, PT_KANA + pos) = j[WW_KANA + d];
+                    pos++;
+                }
+            }
+
+            PTB_B(row, PT_MORA + m) = j[WW_KANALEN];
+            PTB_W(row, PT_MORA_VAL + m * 2) = *(int16_t *)(j + WW_OFFSET);
+            if ((uint16_t)*(int16_t *)(j + WW_ACCENT) >= 8)
+                PTB_B(row, PT_MORA_ACC + m) =
+                    (uint8_t)((uint16_t)*(int16_t *)(j + WW_ACCENT) - 8);
+            else
+                PTB_B(row, PT_MORA_ACC + m) = j[WW_ACCENT];
+            m++;
+        }
+        PTB_B(row, PT_LEFT) = 8;
+        PTB_W(wp, WP_MORAS) = (int16_t)((uint16_t)PTB_W(wp, WP_MORAS)
+                                        - jrt[(size_t)before * WP_WORD_SIZE
+                                              + WW_CHARS]);
+        z = 1;
+    } else {
+        z = 0;
+    }
+
+    for (q = 0; q < n - 1; q++) {
+        const uint8_t *rd = (const uint8_t *)PTB_NUMREAD_OF(pt) + NR_READ
+                            + (size_t)q * NR_READ_SIZE;
+        int16_t        pairs;
+
+        if (q == 0 && before > 0) {
+            PTB_B(row, PT_MORAS) = (uint8_t)(PTB_B(row, PT_MORAS)
+                                             + rd[RD_COUNT]);
+            PTB_B(row, PT_HOLD)  = (uint8_t)(PTB_B(row, PT_HOLD)
+                                             + rd[RD_LEN]);
+        } else {
+            PTB_B(row, PT_MORAS) = rd[RD_COUNT];
+            PTB_B(row, PT_HOLD)  = rd[RD_LEN];
+        }
+        PTB_B(row, PT_KIND) = 1;
+        PTB_B(row, 0x0d)    = 0;
+        PTB_B(row, 0x0e)    = 0;
+        /* Where this reading's moras start counting from is where its kana
+           start, which for a row of its own is nought. */
+        b = pos;
+
+        for (d = 0; d < (int16_t)rd[RD_COUNT]; d++) {
+            PTB_B(row, PT_KANA + pos) = rd[RD_CODES + d];
+            pos++;
+        }
+
+        pairs = NR_S16(PTB_NUMREAD_OF(pt), NR_ANSWER + q * 2);
+        for (d = 0; d < pairs; d++) {
+            PTB_B(row, PT_MORA + m) = rd[RD_A + d * RD_PAIR_SIZE];
+            PTB_W(row, PT_MORA_VAL + m * 2) =
+                *(int16_t *)(WW_SLOT(wp, before) + WW_OFFSET);
+            PTB_B(row, PT_MORA_ACC + m) = rd[RD_B + d * RD_PAIR_SIZE];
+            m++;
+            PTB_B(row, PT_LONG_B + a) = 1;
+            PTB_W(row, PT_LONG + a * 2) = b;
+            a++;
+            b = (int16_t)(b + *(const int16_t *)(rd + RD_A
+                                                 + d * RD_PAIR_SIZE));
+        }
+
+        PTB_B(row, PT_LEFT + z) = 0x20;
+        PTB_B(row, PT_RIGHT)    = 0x21;
+        *(int32_t *)((uint8_t *)row + PT_COST) =
+            *(int32_t *)((uint8_t *)wp + WP_COST);
+        PTB_W(wp, WP_MORAS) = (int16_t)((uint16_t)PTB_W(wp, WP_MORAS)
+                                        - rd[RD_LEN]);
+        PT_LINK(row) = 0;
+
+        row = ptb_GeneratePhraseTable(pt);
+        if (row == NULL)
+            return row;
+        m   = 0;
+        pos = 0;
+        m   = 0;
+        z   = 0;
+        PTB_B(row, PT_FIRST_WORD) = (uint8_t)before;
+        a   = 0;
+    }
+    return row;
+}
+
+/* A phrase whose words are digits, read through `NumRead'.
+ *
+ * The phrase is taken apart into the words in front of the digits, the digits
+ * themselves and the words after them; the digits go to the number reader and
+ * what comes back is one or more readings; and the phrase is put back
+ * together out of the front, the last reading and the back. Where the reader
+ * produced more than one reading, all but the last become rows of their own
+ * through `SetSuushiPhraseTable' and only the last stays in the phrase.
+ *
+ * A reading longer than the nine codes a word can hold goes into the
+ * analysis's own store of long readings and the word keeps its number; thirty
+ * is all that store holds and a thirty-first is what this refuses on.
+ *
+ * The two arrays it takes the phrase apart into sit next to each other in
+ * IBM's frame, so the first running over reaches the second. Ours are one
+ * buffer for the same reason: a phrase of more words than the first will hold
+ * has to land where IBM's lands.
+ */
+void *ptb_SetSuushiPhrase(void *pt, void *wp, void *row, int16_t *out)
+{
+    void    *ta = PTB_OWNER_OF(pt);
+    uint8_t  frame[0x180];
+    uint8_t *jrtA = frame;
+    uint8_t *jrtB = frame + 0xc8;
+    uint8_t  before = 0;
+    uint8_t  after = 0;
+    int16_t  digits = 0;
+    int16_t  i, k, r, d, at, from;
+    int16_t  n, nLast, p, q;
+
+    memset(frame, 0, sizeof frame);
+    for (i = 0; i < (int16_t)PTB_B(wp, WP_WORDS); i++) {
+        if (dm_GetTGAt2(*(WW_SLOT(wp, i) + WW_POS), 3) & 0x10)
+            digits++;
+        else if (digits == 0)
+            before++;
+        else
+            after++;
+    }
+
+    for (k = 0; k < (int16_t)before; k++)
+        ta_CopyJrtPart(WW_SLOT(wp, k), jrtA + (size_t)k * WP_WORD_SIZE);
+
+    k = 0;
+    for (i = (int16_t)(digits + before); i < (int16_t)PTB_B(wp, WP_WORDS);
+         i++, k++)
+        ta_CopyJrtPart(WW_SLOT(wp, i), jrtB + (size_t)k * WP_WORD_SIZE);
+
+    p = (int16_t)before;
+    q = 0;
+    if ((int16_t)PTB_B(wp, WP_WORDS) > (int16_t)before)
+        n = nr_Do(PTB_NUMREAD_OF(pt), wp, &p, &q);
+    else
+        n = 0;
+
+    if (n > 1) {
+        row = ptb_SetSuushiPhraseTable(pt, wp, row, jrtA, (int16_t)before, n);
+        if (row == NULL)
+            return NULL;
+    } else if (n == 0) {
+        at = 0;
+        for (k = 0; k < (int16_t)before; k++, at++)
+            ta_CopyJrtPart(jrtA + (size_t)k * WP_WORD_SIZE, WW_SLOT(wp, at));
+        for (k = 0; k < (int16_t)after; k++, at++)
+            ta_CopyJrtPart(jrtB + (size_t)k * WP_WORD_SIZE, WW_SLOT(wp, at));
+        PTB_B(wp, WP_WORDS) = (uint8_t)(before + after);
+        PTB_B(wp, WP_CHARS) = 0;
+        PTB_B(wp, WP_TYPE)  = 0;
+        *out = ptb_CompoundWord(pt, wp, row);
+        return row;
+    }
+
+    PTB_B(wp, WP_CHARS) = 0;
+    PTB_B(wp, WP_TYPE)  = 0;
+    {
+        int16_t sum = 0;
+
+        for (i = 0; i < (int16_t)PTB_B(wp, WP_FZKS); i++)
+            sum = (int16_t)(sum + *(WF_SLOT(wp, i) + WF_KANALEN));
+        PTB_B(wp, WP_KANALEN) =
+            (uint8_t)((uint16_t)PTB_W(wp, WP_MORAS) - sum);
+    }
+    nLast = NR_S16(PTB_NUMREAD_OF(pt), NR_ANSWER + (n - 1) * 2);
+    PTB_B(wp, WP_WORDS) = (uint8_t)(nLast + after + before);
+
+    from = 0;
+    at   = 0;
+    for (k = 0; k < (int16_t)before; k++, at++)
+        ta_CopyJrtPart(jrtA + (size_t)k * WP_WORD_SIZE, WW_SLOT(wp, at));
+
+    for (r = 0; r < NR_S16(PTB_NUMREAD_OF(pt), NR_ANSWER + (n - 1) * 2);
+         r++, at++) {
+        const uint8_t *rd = (const uint8_t *)PTB_NUMREAD_OF(pt) + NR_READ
+                            + (size_t)(n - 1) * NR_READ_SIZE;
+        uint8_t       *w  = WW_SLOT(wp, at);
+
+        w[WW_KANALEN] = rd[RD_A + r * RD_PAIR_SIZE];
+        *(int16_t *)(w + WW_ACCENT) =
+            *(const int16_t *)(rd + RD_B + r * RD_PAIR_SIZE);
+        w[WW_ATTR] = 0;
+        w[WW_POS]  = 0x7e;
+        *(int16_t *)(w + WW_OFFSET) =
+            *(int16_t *)(WW_SLOT(wp, before) + WW_OFFSET);
+        if (r == (int16_t)PTB_B(wp, WP_WORDS) - 1)
+            w[WW_CHARS] = rd[RD_LEN];
+        else
+            w[WW_CHARS] = 0;
+
+        if (w[WW_KANALEN] > 9) {
+            if ((int8_t)PTB_B(ta, TA_LONGWORDS) >= TA_LONGWORD_N)
+                return NULL;
+            w[WW_KANA] = PTB_B(ta, TA_LONGWORDS);
+            for (d = 0; d < (int16_t)w[WW_KANALEN]; d++, from++)
+                *((uint8_t *)ta + TA_LONGWORD
+                  + (size_t)PTB_B(ta, TA_LONGWORDS) * TA_LONGWORD_SIZE
+                  + (size_t)d) = rd[RD_CODES + from];
+            PTB_B(ta, TA_LONGWORDS) = (uint8_t)(PTB_B(ta, TA_LONGWORDS) + 1);
+        } else {
+            for (d = 0; d < (int16_t)w[WW_KANALEN]; d++, from++)
+                w[WW_KANA + d] = rd[RD_CODES + from];
+        }
+    }
+
+    for (k = 0; k < (int16_t)after; k++, at++)
+        ta_CopyJrtPart(jrtB + (size_t)k * WP_WORD_SIZE, WW_SLOT(wp, at));
+
+    *out = ptb_CompoundWord(pt, wp, row);
+    return row;
+}
