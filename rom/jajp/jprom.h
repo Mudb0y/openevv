@@ -885,6 +885,10 @@ int32_t     rz_SendResult(void *rz, char **out);
 int16_t     rz_ChangeYomi(void *rz, void *dst, void *src);
 int32_t     rz_GetParameter(void *rz, char *s);
 int32_t     rz_GetParameters(void *rz, char *s);
+int32_t     rz_GenerateESPR(void *rz, void *bg, char *out);
+int16_t     rz_GenerateRomajiOutput(void *rz, void *bg, void *ph, char *out,
+                                    void *next);
+int32_t     rz_GenerateResult(void *rz, int32_t flush);
 
 /* ---- TextAnalysis ---------------------------------------------------- */
 

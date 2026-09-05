@@ -415,3 +415,364 @@ int32_t rz_GetParameter(void *rz, char *s)
     }
     return -1;
 }
+
+/* ---- the string the synthesiser reads --------------------------------- */
+
+/* One breath group turned into ESPR, with the annotations that belonged in
+ * front of it put out first.
+ *
+ * The annotations are taken off the front of the ring while the place each
+ * belonged to is at or before where this group starts. Three of them are the
+ * index marks -- `@g', `@i' and `@ui' -- and those get a comment opener in
+ * front so that the synthesiser does not read them as text; one is `@p' and a
+ * number, which is a pause and is added up rather than written out.
+ *
+ * Then every phrase of every group is asked what index mark it carries and how
+ * many the caller put in it, and the sample rate is turned into the device
+ * number the prosody writer wants. What comes back from that writer is the
+ * answer; nothing coming back leaves what was collected here.
+ */
+int32_t rz_GenerateESPR(void *rz, void *bg, char *out)
+{
+    RomInstParam *param = (RomInstParam *)RZ_AT(rz, RZ_PARAM_AT);
+    Annotation   *anno;
+    char         *buf;
+    void         *g;
+    int32_t       rc     = -1;
+    int32_t       pauses = 0;
+    int32_t       ms     = 0;
+    int16_t       at     = 0;
+    int16_t       marks;
+    int32_t       voice;
+    int32_t       rate;
+
+    buf = (char *)cpp_new(0x4001);
+    if (buf == NULL)
+        return rc;
+    buf[0] = '\0';
+
+    anno = (Annotation *)*(void **)((uint8_t *)RZ_AT(rz, RZ_TXTANAL_AT)
+                                    + TA_ANNOTATION_AT);
+    at   = *(int16_t *)((uint8_t *)bg + IG_PHRASE + IH_VAL);
+    strcat(out, " ");
+
+    while (anno->count > 0) {
+        int16_t     where = anno->count != 0 ? anno->at[anno->head]
+                                             : (int16_t)-1;
+        const char *text;
+
+        if (where > at)
+            break;
+        text = anno->count != 0 ? anno->text[anno->head] : NULL;
+        if (rp_isAnnotationsInText(param)
+            && strncmp(text, "@g", 2) != 0
+            && strncmp(text, "@i", 2) != 0
+            && strncmp(text, "@ui", 3) != 0)
+            strcat(out, " //");
+        if (rp_isAnnotationsInText(param)
+            && sscanf(text, "@p%d", &ms) == 1) {
+            pauses += ms;
+        } else {
+            strcat(out, text);
+            strcat(out, " ");
+        }
+        an_Remove(anno);
+    }
+
+    if (rp_isAnnotationsInText(param))
+        rz_GetParameters(rz, out);
+    ci_outputIndexOrParam(rz, buf, at);
+    if (strlen(buf) > 0) {
+        rz_GetParameters(rz, buf);
+        strcat(out, " ");
+        strcat(out, buf);
+        buf[0] = '\0';
+    }
+    strcat(out, " ");
+
+    for (g = bg; g != NULL; g = IG_NEXT_OF(g)) {
+        uint8_t i;
+
+        for (i = 0; i < ((uint8_t *)bg)[IG_PHRASES]; i++) {
+            uint8_t *ph = (uint8_t *)g + IG_PHRASE
+                          + (size_t)i * IG_PHRASE_SIZE;
+
+            if (ph[IH_COUNT] > 0)
+                at = *(int16_t *)(ph + IH_VAL + (size_t)ph[IH_COUNT] * 2);
+            else
+                at = 0;
+            buf[0] = '\0';
+            ci_outputIndexOrParam(rz, buf, at);
+            marks = strlen(buf) > 0
+                    ? (int16_t)rz_CountUserIndex(rz, buf) : (int16_t)0;
+            *(int16_t *)(ph + IH_E) = marks;
+        }
+    }
+    buf[0] = '\0';
+
+    voice = rp_getParam(param, 0x3ea);
+    rate  = rp_getParam(param, 0x3eb);
+    switch (rate) {
+    case 0x1f40: RZ_L(rz, RZ_RATE) = 0; break;
+    case 0x2b11: RZ_L(rz, RZ_RATE) = 1; break;
+    case 0x5622: RZ_L(rz, RZ_RATE) = 2; break;
+    default:     RZ_L(rz, RZ_RATE) = 1; break;
+    }
+    RZ_L(rz, RZ_VOICE) = voice;
+
+    if (RZ_AT(rz, RZ_PROS_AT) != NULL)
+        rc = pc_GenerateESPR(RZ_AT(rz, RZ_PROS_AT),
+                             (const uint8_t *)rz + RZ_VOICE, pauses, NULL,
+                             bg, buf, 0x3ff6);
+    if (rc == 0)
+        strcat(out, buf);
+    if (buf != NULL)
+        cpp_delete(buf);
+    return rc;
+}
+
+/* ---- the reading written out as romaji -------------------------------- */
+
+/* One phrase of a breath group turned into what the synthesiser reads, run by
+ * run: the annotations that belonged in front of each run first, then the
+ * index mark the run carries as `@i' and a digit, then `@g' and how many
+ * characters of the caller's own text the run covers, then the reading itself
+ * with an apostrophe where the accent falls.
+ *
+ * The answer is how many codes of the reading were written, which the caller
+ * carries into the next phrase.
+ */
+int16_t rz_GenerateRomajiOutput(void *rz, void *bg, void *ph, char *out,
+                                void *next)
+{
+    RomInstParam *param = (RomInstParam *)RZ_AT(rz, RZ_PARAM_AT);
+    void         *ta    = RZ_AT(rz, RZ_TXTANAL_AT);
+    Annotation   *anno;
+    uint8_t      *p     = (uint8_t *)ph;
+    int16_t       written = 0;
+    int16_t       from    = (int16_t)(RZ_W(rz, RZ_MARK) + 1);
+    int16_t       to      = 0;
+    int16_t       i;
+
+    (void)bg;
+    for (i = 0; i < (int16_t)p[IH_COUNT]; i++, from = to) {
+        int16_t span;
+        uint8_t len;
+        uint8_t moras;
+        uint8_t mark;
+        int16_t j;
+        char    buf[48];
+
+        if (i + 1 < (int16_t)p[IH_COUNT])
+            to = *(int16_t *)(p + IH_VAL + (size_t)(i + 1) * 2);
+        else if (next != NULL)
+            to = *(int16_t *)((uint8_t *)next + IH_VAL);
+        else
+            to = (int16_t)(*(int16_t *)
+                           ((uint8_t *)*(void **)((uint8_t *)ta
+                                                  + TA_INPUTCHAR_AT)
+                            + IC_RAWPOS) + 1);
+        RZ_W(rz, RZ_MARK) = (int16_t)(to - 1);
+        span  = (int16_t)(to - from);
+        len   = p[IH_LEN + i];
+        moras = p[IH_MORAS + i];
+        mark  = p[IH_PITCH + i];
+        (void)p[IH_A + i];
+
+        anno = (Annotation *)*(void **)((uint8_t *)ta + TA_ANNOTATION_AT);
+        while (anno->count > 0) {
+            int16_t     where = anno->count != 0 ? anno->at[anno->head]
+                                                 : (int16_t)-1;
+            const char *text;
+
+            if (where > *(int16_t *)(p + IH_VAL + (size_t)i * 2))
+                break;
+            text = anno->count != 0 ? anno->text[anno->head] : NULL;
+            if (rp_isAnnotationsInText(param)
+                && strncmp(text, "@g", 2) != 0
+                && strncmp(text, "@i", 2) != 0
+                && strncmp(text, "@ui", 3) != 0)
+                strcat(out, " //");
+            strcat(out, text);
+            strcat(out, " ");
+            an_Remove(anno);
+        }
+
+        ci_outputIndexOrParam(rz, out,
+                              *(int16_t *)(p + IH_VAL + (size_t)i * 2));
+        switch (mark) {
+        case 6: strcat(out, "@i0 "); break;
+        case 1: strcat(out, "@i1 "); break;
+        case 2: strcat(out, "@i2 "); break;
+        case 3: strcat(out, "@i3 "); break;
+        case 4: strcat(out, "@i4 "); break;
+        case 5: strcat(out, "@i5 "); break;
+        default: break;
+        }
+        sprintf(buf, "@g%d_", (int)span);
+        strcat(out, buf);
+
+        for (j = 0; j <= (int16_t)len; j++) {
+            if (j == (int16_t)moras && moras != 0)
+                strcat(out, "'");
+            if (j == (int16_t)len)
+                continue;
+            if (!ju_WriteRomajiStrBuf(p[IH_KANA + written + j],
+                                      (uint8_t *)out))
+                break;
+        }
+        strcat(out, " ");
+        written = (int16_t)(written + len);
+    }
+
+    anno = (Annotation *)*(void **)((uint8_t *)ta + TA_ANNOTATION_AT);
+    while (anno->count > 0) {
+        int16_t     where = anno->count != 0 ? anno->at[anno->head]
+                                             : (int16_t)-1;
+        const char *text;
+
+        if (where > RZ_W(rz, RZ_MARK))
+            break;
+        text = anno->count != 0 ? anno->text[anno->head] : NULL;
+        if (rp_isAnnotationsInText(param))
+            rz_GetParameter(rz, (char *)text);
+        else
+            strcat(out, "//");
+        strcat(out, text);
+        strcat(out, " ");
+        an_Remove(anno);
+    }
+
+    if (out[strlen(out) - 1] == ' ')
+        out[strlen(out) - 1] = '\0';
+    {
+        char tail[8];
+
+        sprintf(tail, " ");
+        strcat(out, tail);
+    }
+    return written;
+}
+
+/* ---- the whole answer for one sentence -------------------------------- */
+
+/* Every breath group in the chain written out, one at a time, and each one
+ * added to the output buffer as it is finished. A group whose two boundary
+ * bytes are both one is passed over.
+ *
+ * After the phrases of a group comes its pause: a pause shorter than four
+ * hundred takes the last character off and puts a full stop or a comma there
+ * instead, depending on whether another group follows, and the kind of
+ * boundary that closes the group can put a full stop, a question mark or an
+ * exclamation mark there as well.
+ *
+ * With the flush asked for, whatever annotations are left go out after
+ * everything else, and the index mark at the very end of the text with them.
+ *
+ * Nought is the buffer refusing to grow. Two things of IBM's are kept: the
+ * pause is written into a buffer of its own that nothing reads, and the one
+ * failure that gives up before the working buffer is freed leaks it.
+ */
+int32_t rz_GenerateResult(void *rz, int32_t flush)
+{
+    RomInstParam *param = (RomInstParam *)RZ_AT(rz, RZ_PARAM_AT);
+    void         *ta    = RZ_AT(rz, RZ_TXTANAL_AT);
+    void         *ip    = RZ_AT(rz, RZ_INTON_AT);
+    Annotation   *anno;
+    char         *buf;
+    void         *g;
+    int16_t       phrase = 0;
+
+    buf = (char *)cpp_new(0x4050);
+    if (buf == NULL)
+        return 0;
+    buf[0] = '\0';
+
+    ci_outputIndexOrParam(rz, buf, 0);
+    if (strlen(buf) > 0) {
+        strcat(buf, " ");
+        if (dynaBufAddString((DynaBuf *)RZ_AT(rz, RZ_OUT_AT), buf, 1) == 0)
+            return 0;
+        buf[0] = '\0';
+    }
+
+    for (g = *(void **)((uint8_t *)ip + IP_HEAD_AT); g != NULL;
+         g = IG_NEXT_OF(g)) {
+        uint8_t *gp = (uint8_t *)g;
+        int16_t  i;
+        char     pause[32];
+
+        if (gp[IG_LEFT] == 1 && gp[IG_RIGHT] == 1)
+            continue;
+
+        for (i = 0; i < (int16_t)gp[IG_PHRASES]; i++, phrase++) {
+            uint8_t *ph = gp + IG_PHRASE + (size_t)i * IG_PHRASE_SIZE;
+
+            if (i + 1 < (int16_t)gp[IG_PHRASES])
+                rz_GenerateRomajiOutput(rz, g, ph, buf,
+                                        gp + IG_PHRASE
+                                        + (size_t)(i + 1) * IG_PHRASE_SIZE);
+            else if (IG_NEXT_OF(g) != NULL)
+                rz_GenerateRomajiOutput(rz, g, ph, buf,
+                                        (uint8_t *)IG_NEXT_OF(g) + IG_PHRASE);
+            else
+                rz_GenerateRomajiOutput(rz, g, ph, buf, NULL);
+        }
+
+        /* Written and never read, which is IBM's. */
+        sprintf(pause, "P%d\\", (int)*(int16_t *)(gp + IG_PAUSE));
+
+        if (strlen(buf) > 0) {
+            if (*(int16_t *)(gp + IG_PAUSE) < 0x190) {
+                buf[strlen(buf) - 1] = '\0';
+                if (IG_NEXT_OF(g) == NULL)
+                    strcat(buf, ". ");
+                else
+                    strcat(buf, ", ");
+            }
+            switch (gp[IG_KIND]) {
+            case 4:
+                if (buf[strlen(buf) - 1] == ' ')
+                    buf[strlen(buf) - 1] = '\0';
+                strcat(buf, ". ");
+                break;
+            case 5:
+                if (buf[strlen(buf) - 1] == ' ')
+                    buf[strlen(buf) - 1] = '\0';
+                strcat(buf, "? ");
+                break;
+            case 6:
+                if (buf[strlen(buf) - 1] == ' ')
+                    buf[strlen(buf) - 1] = '\0';
+                strcat(buf, "! ");
+                break;
+            default:
+                break;
+            }
+        }
+        if (dynaBufAddString((DynaBuf *)RZ_AT(rz, RZ_OUT_AT), buf, 1) == 0) {
+            if (buf != NULL)
+                cpp_delete(buf);
+            return 0;
+        }
+        buf[0] = '\0';
+    }
+
+    if (flush != 0) {
+        anno = (Annotation *)*(void **)((uint8_t *)ta + TA_ANNOTATION_AT);
+        if (anno->count > 0) {
+            if (an_Flush(anno, rp_isAnnotationsInText(param),
+                         (DynaBuf *)RZ_AT(rz, RZ_OUT_AT), 0) == 0)
+                return 0;   /* IBM's: the working buffer is not freed here */
+        }
+        ci_outputIndexOrParam(rz, buf, 0x7ffff);
+        if (dynaBufAddString((DynaBuf *)RZ_AT(rz, RZ_OUT_AT), buf, 1) == 0) {
+            if (buf != NULL)
+                cpp_delete(buf);
+            return 0;
+        }
+    }
+    if (buf != NULL)
+        cpp_delete(buf);
+    return 1;
+}

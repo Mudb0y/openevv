@@ -63,16 +63,18 @@
 #define RZ_FLUENCY       0x58    /* int32 */
 #define RZ_SPEED         0x5c    /* int32 */
 #define RZ_VOLUME        0x60    /* int32 */
-#define RZ_UNREAD_MID3   0x64
+#define RZ_RATE          0x64    /* int32; the device number the sample rate
+                                    comes out as: nought, one or two */
 #define RZ_SPELL_ENGLISH 0x68    /* int32; above nought spells English out */
 #define RZ_UNREAD_TAIL   0x6c
+#define RZ_PROS          0x74    /* ProsCtrl *, which writes the ESPR */
 
 /* Six of the fields above are pointers and none of them can stay where IBM
    put it on a build where a pointer is eight bytes wide: laid out four apiece
    they would each run over the word after. They are parked past the record,
    as DictSearch's and InputChar's are, and every one of them is reached
    through the _AT name rather than the offset. */
-#define RZ_ROOM          (RZ_BYTES + 9 * sizeof(void *))
+#define RZ_ROOM          (RZ_BYTES + 10 * sizeof(void *))
 #define RZ_VTABLE_AT     (RZ_BYTES + 0 * sizeof(void *))
 #define RZ_UNICODE_AT    (RZ_BYTES + 1 * sizeof(void *))
 #define RZ_PARAM_AT      (RZ_BYTES + 2 * sizeof(void *))
@@ -82,6 +84,7 @@
 #define RZ_TXTANAL_AT    (RZ_BYTES + 6 * sizeof(void *))
 #define RZ_INTON_AT      (RZ_BYTES + 7 * sizeof(void *))
 #define RZ_OUT_AT        (RZ_BYTES + 8 * sizeof(void *))
+#define RZ_PROS_AT       (RZ_BYTES + 9 * sizeof(void *))
 
 /* The dictionary manager is eight bytes in IBM's build -- a vtable slot and
    the directory with `dic' on the end of it -- and nothing but Romanizer::Init
