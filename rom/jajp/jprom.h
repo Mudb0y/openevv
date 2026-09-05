@@ -336,7 +336,7 @@ int16_t ds_FzkParsingReverse(void *d);
 /* Only the one method, which DictSearch::Do calls when an annotation stands
    in front of the character it is about to look up. The record it works on is
    rom/jajp/romanizer.h. */
-int32_t rz_GetParameter(void *rz, char *p);
+int32_t jrz_GetParameter(void *rz, char *p);
 
 /* Two statics of DictMan naming a user dictionary loaded from a file. Nothing
    in this port sets them, so they stay null and the walk that reads them is
@@ -872,23 +872,24 @@ int32_t     mr_convertSPR(void *mr, const char *text, uint32_t n,
 
 /* The class the engine asks for Japanese, and the last of the romanizer to be
    written. rom/jajp/romanizer.h is the record and rom/jajp/jpnrom.c the code. */
-int32_t     rz_getOffset(void *rz);
-void        rz_ResetBuffer(void *rz);
-void        rz_ChangeDefYomi(void *rz, void *row);
-int16_t     rz_CheckDefYomiCMD(void *rz, void *row);
-int16_t     rz_InsertWordSeparator(void *rz, char *out, void *ph, int16_t at,
+int32_t     jrz_getOffset(void *rz);
+void        jrz_ResetBuffer(void *rz);
+void        jrz_ChangeDefYomi(void *rz, void *row);
+int16_t     jrz_CheckDefYomiCMD(void *rz, void *row);
+int16_t     jrz_InsertWordSeparator(void *rz, char *out, void *ph, int16_t at,
                                    int16_t i);
-int16_t     rz_GetWordIndex(void *rz, void *bg);
-uint16_t    rz_CountUserIndex(void *rz, char *s);
-int8_t      rz_Init(void *rz);
-int32_t     rz_SendResult(void *rz, char **out);
-int16_t     rz_ChangeYomi(void *rz, void *dst, void *src);
-int32_t     rz_GetParameter(void *rz, char *s);
-int32_t     rz_GetParameters(void *rz, char *s);
-int32_t     rz_GenerateESPR(void *rz, void *bg, char *out);
-int16_t     rz_GenerateRomajiOutput(void *rz, void *bg, void *ph, char *out,
+int16_t     jrz_GetWordIndex(void *rz, void *bg);
+uint16_t    jrz_CountUserIndex(void *rz, char *s);
+int8_t      jrz_Init(void *rz);
+int32_t     jrz_SendResult(void *rz, char **out);
+int16_t     jrz_ChangeYomi(void *rz, void *dst, void *src);
+int32_t     jrz_GetParameter(void *rz, char *s);
+int32_t     jrz_GetParameters(void *rz, char *s);
+int32_t     jrz_GenerateESPR(void *rz, void *bg, char *out);
+int16_t     jrz_GenerateRomajiOutput(void *rz, void *bg, void *ph, char *out,
                                     void *next);
-int32_t     rz_GenerateResult(void *rz, int32_t flush);
+int32_t     jrz_GenerateResult(void *rz, int32_t flush);
+int32_t     jrz_processSentence(void *rz, char **out, int32_t more);
 
 /* ---- TextAnalysis ---------------------------------------------------- */
 
