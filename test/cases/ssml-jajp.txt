@@ -1,0 +1,10 @@
+<speak version="1.0" xml:lang="ja-JP">おはようございます。</speak>
+<speak version="1.0" xml:lang="ja-JP"><prosody rate="slow">今はゆっくりと。</prosody> また普通に。</speak>
+<speak version="1.0" xml:lang="ja-JP"><prosody pitch="high" range="x-high" volume="loud">四つとも一緒に。</prosody></speak>
+<speak version="1.0" xml:lang="ja-JP"><emphasis level="strong">これ</emphasis>であって、それではない。</speak>
+<speak version="1.0" xml:lang="ja-JP"><voice gender="female">彼女がそう言った。</voice> 彼は言わなかった。</speak>
+<speak version="1.0" xml:lang="ja-JP">値段は <say-as interpret-as="cardinal">1234</say-as> 円、<say-as interpret-as="ordinal">3</say-as> 番目です。</speak>
+<speak version="1.0" xml:lang="ja-JP">綴りは <say-as interpret-as="letters">abc</say-as>、電話は <say-as interpret-as="number" format="telephone">5551234</say-as>。</speak>
+<speak version="1.0" xml:lang="ja-JP">少し<break time="500ms"/>待ってください。<mark name="ここ"/> そこ。</speak>
+<speak version="1.0" xml:lang="ja-JP"><sub alias="世界規模の網">WWW</sub> と <phoneme ph="h.E.l.oU">こんにちは</phoneme>。</speak>
+<speak version="1.0" xml:lang="ja-JP">東京都新宿区、a &amp; b &lt; c の記号つき。</speak>

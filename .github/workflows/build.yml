@@ -91,8 +91,8 @@ jobs:
         run: test/hash.sh
 
       # The gate: every case of every language, samples and the answers the
-      # interface gave, held against what this engine has said before. 881
-      # cases, one binary with all nine languages in it, and neither Wine nor
+      # interface gave, held against what this engine has said before. 979
+      # cases, one binary with all ten languages in it, and neither Wine nor
       # IBM's objects wanted. The differential suite that blessed these
       # numbers cannot run here and does not need to.
       - name: Check the recorded answers, every language
@@ -209,10 +209,10 @@ jobs:
       - name: Speak every language out of one binary
         run: |
           set -eu
-          all=$(printf 'lang/%s ' enus dede engb eses esus frfr frca itit plpl)
+          all=$(printf 'lang/%s ' enus dede engb eses esus frfr frca itit plpl jajp)
           make -j"$(nproc)" probe RULES=bytecode LANGS="$all"
-          b=build/probe-enus-dede-engb-eses-esus-frfr-frca-itit-plpl
-          for id in 0x10000 0x10001 0x20000 0x20001 0x30000 0x30001 0x40000 0x50000 0x110000; do
+          b=build/probe-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp
+          for id in 0x10000 0x10001 0x20000 0x20001 0x30000 0x30001 0x40000 0x50000 0x110000 0x80000; do
             EVV_LANGUAGE=$id "$b" "The quick brown fox." "/tmp/one-$id.wav"
             test -s "/tmp/one-$id.wav"
           done

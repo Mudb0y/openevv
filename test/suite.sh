@@ -73,12 +73,13 @@ for one in $want; do
     # compared is two readers as well as two engines: the annotations each
     # made, and the samples those turned into. This is what blesses the
     # `ssml' category of test/matrix.sh.
-    # Japanese has no documents of its own yet -- it is the one language not
-    # in the tree -- so this says so rather than failing on a missing file.
+    # Every language has documents of its own now, so a missing file is a
+    # missing file; this says so rather than passing quietly.
     ssml)      if [ -r "$cases/ssml$suf.txt" ]; then
                    run ssml "$cases/ssml$suf.txt" as "$SSML" || bad=1
                else
                    printf '%-10s no documents for %s\n' ssml "$lang"
+                   bad=1
                fi ;;
     *) echo "suite: no such comparison: $one" >&2; bad=1 ;;
     esac

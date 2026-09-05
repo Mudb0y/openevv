@@ -46,7 +46,7 @@ So samples are comparable, a second utterance included, as long as both sides ha
 
 ## Text is bytes, not UTF-8
 
-The engine reads single bytes and IBM's engine does almost nothing between the caller's bytes and the machine's characters. Text is the language's own code set, which for the nine languages IBM shipped is the Windows Western set. Handing it UTF-8 gets the mangling IBM's engine produces, byte for byte.
+The engine reads single bytes and IBM's engine does almost nothing between the caller's bytes and the machine's characters. Text is the language's own code set, which for eight of the nine languages IBM shipped is the Windows Western set; Japanese is the exception and its romanizer takes any of five. Handing it UTF-8 gets the mangling IBM's engine produces, byte for byte.
 
 The exception is a language that declares characters of its own, which is Polish and none of IBM's nine. Those get their text converted from UTF-8 on the way in, and their own bytes let through the romanizer's table rather than turned into spaces. Those two are the fourth and fifth deliberate divergences, and the guard is the whole point: the nine IBM shipped declare no characters, so nothing about them changes.
 
@@ -122,6 +122,10 @@ Every string that kills IBM's Eloquence is the same fault: the Delta machine der
 
 **The fourth of those places is a pointer, and IBM dereferences it.** `SetPhraseTable` reads the function words of a phrase into the accent walk's own record and stops early once the phrase has run to the twenty-five moras a row holds, and then tells the walk how many function words to score by counting them off the phrase rather than off the loop that stopped. Where it stopped early the walk reads a rule pointer that loop never stored -- on IBM's stack the pointer the last call left there, which is a real entry of the accent table and lets the run carry on producing an answer nothing can reproduce; on ours a nought, which faults. Ours scores the function words that were read. That is the sixteenth deliberate divergence, and it is the only one of the four where reading the frame could kill the engine on a caller's own text rather than merely give a number nobody can predict.
 
+**A mark the engine reaches with no note behind it is a read of address four in IBM's engine.** `SynthThread::userIndexCallback` clears the pointer it is about to ask the mark queue to fill, asks, and then -- where the queue answered that it had nothing -- writes two noughts through the pointer and reads two fields back out of it. All four go through nought. Ours gives up instead when the queue had nothing, which is the eighteenth deliberate divergence. It is reachable: an index annotation whose closing quote is missing makes the Japanese romanizer write the mark and leaves no note to go with it. IBM's own engine hangs on that text before it ever arrives, which is why the fault is one only this engine can find, and why there is no oracle for it -- `test/cases/anno-jajp.txt` carries a closed mark in that place instead, and the hang is recorded here.
+
+**IBM's Japanese engine hangs on an index annotation whose quote is never closed.** Not ours, and not any other language: the same shape in `test/cases/anno-itit.txt` is one of the twenty Italian cases and both engines agree on it. Ours speaks the Japanese one and finishes. There is nothing to compare it against, so it is not in the case files.
+
 **IBM never writes the return code of `TextNormalizer::makeReadable` when the annotation's number names no reader.** The switch has an arm for each of the six kinds and no default, so a number outside them leaves the local it returns through untouched and the caller gets whatever the stack held there. Ours returns nought, which is what every arm that succeeds returns. That is the fourteenth deliberate divergence, and nothing in the engine can reach it: the numbers come from IBM's own table of annotation names, every one of which names a reader.
 
 Thirteen places now test for nought and answer the way that primitive already answers everything else it cannot do, and 43 walks count their steps so that links which have come round on themselves end the rule rather than hanging the engine. That is the tenth deliberate divergence. Every guard sits on a path the old code could not survive, so no working input can reach one.
@@ -136,6 +140,6 @@ It does not matter for the callers that exist: Python's ctypes and a screen read
 
 ## If it sounds wrong
 
-It is not a fault in the port. The audio is identical to IBM's by design, over 881 recorded cases in nine languages and every build the tree makes. That is Eloquence sounding like Eloquence.
+It is not a fault in the port. The audio is identical to IBM's by design, over 979 recorded cases in ten languages and every build the tree makes. That is Eloquence sounding like Eloquence.
 
 Changing it is a deliberate change to the language data, and the gate will correctly report that as a difference.

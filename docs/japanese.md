@@ -1,8 +1,8 @@
-# Japanese, and what is left of it
+# Japanese, and what it took
 
-Eight of the nine languages in the SDK build, speak and match IBM byte for byte. Japanese is the ninth. What stands between it and the other eight is the romanisation module -- what `jpnrom.dll` is in stock Eloquence -- and that is now a measured piece of work with an oracle in front of it rather than an unknown.
+All nine languages in the SDK build, speak and match IBM byte for byte. Japanese was the last, and what stood between it and the other eight was the romanisation module -- what `jpnrom.dll` is in stock Eloquence. This file is the whole of that work: what it is, how it was measured, what each unit cost, and what the harnesses found.
 
-This is written for somebody who is not the person who found it. Everything here was measured rather than assumed, and where something cost hours to learn it says so, because the same hour is easy to spend twice.
+It is written for somebody who is not the person who did it. Everything here was measured rather than assumed, and where something cost hours to learn it says so, because the same hour is easy to spend twice.
 
 ## What is settled
 
@@ -25,7 +25,7 @@ The first is the static dictionary: 1,723 blobs, 2,669,092 bytes, and seven poin
 
 `lang/jajp` lifts in one pass from the tools: 477 rules, its statement and field tables, its settings, language 0x80000, and `make missing` answers nothing. Its rules, globals, lookup sets and settings are all already right.
 
-It is deliberately **not** in the tree, and `.gitignore` says so. A language module that cannot make an instance would fail any build that named it, including the CI step that builds and speaks every module in `lang/`. Lift it when you start:
+It is in the tree now that it can make an instance. It was kept out while it could not, because a module that cannot would fail any build that named it, including the CI step that builds and speaks every module in `lang/`. These are the commands that lift it, which is how it got there and how it would be lifted again:
 
     python3 tools/module/globals.py analysis/jajp/glob.obj lang/jajp/delta_globals_jajp.c
     python3 tools/module/link.py jajp
@@ -39,7 +39,7 @@ It is deliberately **not** in the tree, and `.gitignore` says so. A language mod
 
 Japanese is the one module with no rules as text. Every other language builds `delta_rules_<tag>.c`, its header and its shim out of `lang/<tag>/rules`, and those three files are not in the tree; here `tools/rules/emit.py` above writes them straight out of the objects, which is the same emitter reached the other way round. So the lift is the whole source of this module, and a build that finds `lang/jajp` without those three files says so and stops rather than looking for a text tree that was never made.
 
-`rom/jajp/jprom.h` defines `JPROM_INCOMPLETE` while the romanizer cannot yet convert anything, and what that does is make `jp_rom_new` answer no instance at all -- so the engine behaves exactly as it did before there was a romanizer to find, and refuses the instance rather than speaking something wrong. Take it out when `Romanizer` is finished and not before. Nothing in `test/harness/romcan.sh` depends on it either way: that registers its own romanizer over whatever is linked.
+`rom/jajp/jprom.h` used to define `JPROM_INCOMPLETE`, which made `jp_rom_new` answer no instance at all so that a half-written romanizer could not speak something wrong. The romanizer is finished, so it is gone, and `jp_rom_new` makes a real one. Nothing in `test/harness/romcan.sh` ever depended on it either way: that registers its own romanizer over whatever is linked.
 
 ## The two harnesses
 
@@ -595,38 +595,48 @@ About twelve hundred bytes are left over in two spans, each named as unresolved 
 
 Two regions inside the map of the spine are named but not resolved: the parse's own marks between 0x2c and 0x5d8, cleared at the top of `TextParsing` and read at several widths, and a working area of 1,716 bytes that `CheckPhraseLink` takes the address of. Both are bounded exactly; what is in them is for whoever writes `TextParsing`.
 
-## Where to go next
+## It is finished
 
-What is left, and in what order. The counts below are entry points as `nm` reports them across the whole directory, so they include constructors and destructors; the method counts in the census above are smaller for that reason and the two are not in disagreement.
+The whole of the romanizer is written. `TextAnalysis` went in last of the analyser -- twenty-two methods in `txtanal.obj`, five in `kakutei.obj`, four in `comppenalty.obj` and four in `unknown.obj` -- and then `Romanizer` itself, which drives the other four and could not be written before them. `JPROM_INCOMPLETE` is out of `rom/jajp/jprom.h` and `jp_rom_new` makes a real instance.
 
-**113 entry points, in six classes.** `TextAnalysis` 37, `MakeReadableJP` 32, `Romanizer` 18 of which one is written, `PhraseTable` 17, `TextNormalizer` 6, `MakeReadableLangInt` 3. `JPath`'s twelve, `NumRead`'s eleven, `IntonPhrase`'s seventeen and `ProsCtrl`'s sixteen are done.
+**The check is `EVV_LANG=jajp test/suite.sh`, and all 98 cases match.** A reference built from IBM's Japanese objects speaks each case, ours speaks it, and the samples are held against each other byte for byte -- 7 plain, 7 in the other codeset, 20 annotation cases in each of three modes, 7 through the dictionary calls, 7 second utterances and 10 SSML documents. `test/cases/anno-jajp.txt` and `test/cases/ssml-jajp.txt` were written for this and are Japanese rather than translations of another language's file; the SSML ones are UTF-8, like every other language's, because the reader takes a document as UTF-8 whatever codeset the engine underneath it wants. Japanese is in `test/matrix.sh` now, which walks ten languages and 979 cases.
 
-The order comes from a graph rather than from reading. Pooling what the unwritten classes call makes the remainder look inseparable; asking of each class which other *unwritten* class it calls gives six that call none at all -- `IntonPhrase`, `JPath`, `MakeReadableJP`, `NumRead`, `PhraseBuf` and `ProsCtrl`. So:
+`romreg.obj` and `romedll_link.obj` are the two objects that were never going to be transcribed: registration, which this port retired, and the link-time symbol `src/eci/lang/eci_romedll.c` stands in for.
 
-`PhraseBuf`, `JPath`, `NumRead`, `IntonPhrase` and `ProsCtrl` are written, and `MakeReadableJP` is begun: its record, its tables, its machinery, its twelve predicates and six of its eight normalisers, all held to IBM's answer already. What is left of it is the two largest normalisers and `convertSPR`.
+## The four faults between the last unit and a match
 
-Then `TextNormalizer`, which wants `MakeReadableJP`.
+Worth keeping, because three of them are one mistake made three times.
 
-Then `TextAnalysis` and `PhraseTable` **together**, because they are mutually recursive -- `TextAnalysis` calls `PhraseTable::initialize` and `SetPhraseTable`, and `PhraseTable` calls `TextAnalysis::CopyJrtPart`. That is 54 entry points in one unit and the largest single piece of work left. `TextAnalysis` is the spine: 946,216 bytes of record that every other class indexes into, which is why `tools/rom/offsets.py` had to map it before anything at all could be written. The map is true and checked, so the work is the code rather than the reading.
+**A backtick is `?$GA`.** MSVC spells a byte in a mangled string name as `?$` and two letters standing for the nibbles, A through P. `?$GA` is 0x60, a backtick, and reading the letters as letters gives 0x40, an at-sign. Every index mark and every character count the romanizer writes went out with the wrong character, and every case differed by exactly that byte and nothing else. The escape in front of an annotation is two backslashes and this tree had two slashes, from the same table read the same way -- `?2` is a backslash, `?1` is a slash.
 
-`Romanizer` is **last**, not next, which is the opposite of what this file used to say. It drives everything -- `processSentence`, `ResetBuffer`, `getOffset` and the two conversions between the caller's bytes and the readable form -- and `processSentence` reaches straight into `TextAnalysis`, `TextNormalizer`, `IntonPhrase` and `ProsCtrl`, so it cannot be finished until all four are.
+**A chain of `je` and `jne` is one condition.** The test that decides whether that escape goes in is `!isAnnotationsInText || eq("`g") || eq("`i") || eq("`ui")`, and this tree had exactly its negation. Every jump in the listing goes to the same label, and following each one to its label rather than to the next line is what says which way round it is.
 
-Two objects on the list will not be transcribed at all. `romreg.obj` is registration, which this port retired, and `romedll_link.obj` is the link-time symbol `src/eci/lang/eci_romedll.c` already stands in for.
+**One variable of IBM's had become two of ours.** `DictMan::InitSupplementDictionary` sets the supplement dictionary from the module's own tables and `DictSearch::Do` reads it. This port had a `dm_paUserDict` that the first wrote and a `dm_s_paUserDict` that the second read, the second hard-wired to nought under a comment saying it was a dictionary loaded from a file that this port has no way of setting. So the supplement was never consulted. `IBM ViaVoice` then came out as one accent phrase where IBM makes two: the eight-character entry for the whole name was missing from the lattice, and a path search cannot choose what it was not given.
 
-**Nothing is audible until nearly all of it exists**, and that is worth knowing before starting. The phoneme string the engine speaks is made by `MakeReadableJP` and the ESPR writer, and `Romanizer` is what drives the chain into them. Every unit before that is held to IBM's own objects byte for byte and heard by nobody.
+**And a stale reference binary.** The SSML documents all differed until the Japanese reference was rebuilt: `reference/speak.c` had gained its SSML mode after that binary was last linked, and make would not rebuild it. Ten cases that looked like a reader fault were a binary six days old. Rebuild both sides before believing a difference.
 
-## What finishing it means, besides the transcription
+## The tap one seam below the manager
 
-Three things, none of them large, and all of them gated on the romanizer working.
+`reference/romtap.c` says whether the two romanizers agree on a sentence. It does not say where they part company, and for a sentence that comes out as one accent phrase instead of two the answer is not in the romanizer's output at all but in what it had to choose between.
 
-`JPROM_INCOMPLETE` comes out of `rom/jajp/jprom.h`. While it is defined `rom/jajp/rominstance.c` refuses to make an instance at all, which is what stops a half-written romanizer speaking something wrong; that file is its only reader. Take it out when `Romanizer` works and not before.
+`reference/jptap.c` is that seam. It stands in front of IBM's `JPath::Make` -- the same rename trick, on one method rather than eight -- and prints the dictionary entries the lattice holds and every path built over them. `EVV_JPTRACE` prints the same lines, in the same form, from `rom/jajp/txtanal.c`. The two dumps diff as they stand, and the missing supplement dictionary above was one line of difference in a six-line dump.
 
-`lang/jajp` stops being gitignored. It is kept out of the tree only because a module that cannot make an instance would break any build that named it, and `.gitignore` says so.
+    make -C reference TAG=jajp BUILD=../build/reference-jajp jptap
+    EVV_JPTAP=ibm.txt wine build/reference-jajp/speak-jptap.exe @case.txt out.wav
+    EVV_JPTRACE=1 ./build/probe-jajp @case.txt out.wav
 
-And the real check becomes `EVV_LANG=jajp test/suite.sh` against a reference built from Japanese objects, which is the shape German already has. The cases are there: `test/cases/plain-jajp.txt` and `test/cases/utf8-jajp.txt`, seven apiece, which `test/harness/romcan.sh` uses today to prove the engine below the seam by replaying IBM's answers. When the romanizer answers for itself, the same cases become the test of the whole of it, and `test/lib/langs.py` should carry Japanese beside the other languages.
+Our own half of `reference/romtap.c` is in the tree too now, in `src/eci/lang/eci_romanizer.c`: the same eight methods, the same format, the same variable. `EVV_ROMTAP` names the file on either side, so `diff` is the whole of the comparison.
+
+## Two things IBM's Japanese engine does that ours does not
+
+**It hangs on an index annotation whose closing quote is missing.** Ours speaks it and finishes. No other language does this -- the same shape is one of the twenty Italian cases and both engines agree on it -- so there is nothing to compare the Japanese one against and it is not in the case files.
+
+**It reads address four when a mark arrives with no note behind it.** That is the eighteenth deliberate divergence and `docs/quirks.md` has it. It is reachable only through the hang above, which is why it is a fault only this engine can find.
+
+## How it was done, for the next language that needs one
 
 Read the objects with `llvm-objdump`, for the reason `docs/building.md` gives under getting IBM's objects: binutils `objdump` misparses whole functions here and says nothing about it.
 
-Each class gets a harness before it gets a transcription. Where it sits on the seam, `test/harness/romcan.c` can hand it the real work and keep replaying the rest, as it already does for the parameters. Where it does not, `test/harness/romprims.c` calls it directly on both sides. A class whose methods are spread over several objects -- `DictSearch` is spread over four -- can also be tapped the way `reference/romtap.c` taps the manager, because those calls cross an object boundary.
+Each class got a harness before it got a transcription. Where it sits on the seam, `test/harness/romcan.c` can hand it the real work and keep replaying the rest, as it does for the parameters. Where it does not, `test/harness/romprims.c` calls it directly on both sides -- 1,205,523 lines a side by the end. A class whose methods are spread over several objects -- `DictSearch` is spread over four -- can also be tapped the way `reference/romtap.c` taps the manager, because those calls cross an object boundary.
 
-And the standard the rest of this project is held to applies: it is not right until the samples are identical to IBM's, and a passing check proves nothing until the new code has been broken on purpose and seen to fail.
+And the standard the rest of this project is held to applied throughout: it was not right until the samples were identical to IBM's, and a passing check proved nothing until the new code had been broken on purpose and seen to fail.

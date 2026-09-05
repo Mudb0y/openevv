@@ -3621,13 +3621,11 @@ int16_t ds_Do(void *d)
                         return rc;
                     n = (int16_t)(n + rc);
                 }
-                /* The dictionary loaded from a file, which this port has no
-                   way of setting: both pointers stay null. */
-                if (dm_s_paUserDict != NULL)
-                    n = (int16_t)(n + ds_LookupUserDict(d, dm_s_paUserDict,
+                if (dm_paUserDict != NULL)
+                    n = (int16_t)(n + ds_LookupUserDict(d, dm_paUserDict,
                                                         IC_CHAR(in, at),
                                                         (int16_t)(slot + n),
-                                                        dm_s_paUserDictIdx,
+                                                        dm_paUserDictIdx,
                                                         at,
                                                         IC_COUNT_AT(in)));
             }

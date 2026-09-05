@@ -13,6 +13,8 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include "jprom.h"
@@ -718,8 +720,54 @@ int16_t ta_TextParsing(void *ta)
     *((uint8_t *)ta + TA_MARKS)  = 2;
     if (ds_Do(TA_AT(ta, TA_DICTSEARCH_AT)) < 0)
         return -20;
+    /* The lattice and the paths over it, in the form reference/jptap.c
+       prints them from IBM's own JPath::Make, so the two dumps diff as they
+       stand. `EVV_JPTRACE' turns it on and nothing is written without it.
+       This is the seam below the romanizer's own: the tap on the outside
+       says whether the two romanizers agree on a sentence, and this says
+       whether they agree on the words they had to choose between. A missing
+       dictionary entry that turned one Japanese sentence into one phrase
+       instead of two was found by diffing these two dumps. */
+    if (getenv("EVV_JPTRACE")) {
+        void   *d = TA_AT(ta, TA_DICTSEARCH_AT);
+        int16_t i, ne = *(int16_t *)((uint8_t *)d + DS_COUNT);
+
+        fprintf(stderr, "entries %d\n", (int)ne);
+        for (i = 0; i < ne; i++) {
+            const uint8_t *e = (const uint8_t *)d + DS_ENTRY
+                               + (size_t)i * DS_ENTRY_SIZE;
+            int j;
+
+            fprintf(stderr, "  e%d at=%d chars=%d pos=%d kanalen=%d "
+                    "accent=%d attr=%02x attr2=%02x cost=%d kana=",
+                    (int)i, (int)*(const int16_t *)(e + DE_AT),
+                    (int)e[DE_CHARS], (int)e[DE_POS], (int)e[DE_KANALEN],
+                    (int)*(const int16_t *)(e + DE_ACCENT), e[DE_ATTR],
+                    e[DE_ATTR2], (int)*(const int32_t *)(e + DE_COST));
+            for (j = 0; j < e[DE_KANALEN] && j < 10; j++)
+                fprintf(stderr, "%02x", e[DE_KANA + j]);
+            fprintf(stderr, "\n");
+        }
+    }
 
     jp_Make(TA_AT(ta, TA_JPATH_AT), off);
+    if (getenv("EVV_JPTRACE")) {
+        void   *jp = TA_AT(ta, TA_JPATH_AT);
+        int16_t i, np = (int16_t)JP_U16(jp, JP_PATH_COUNT);
+
+        fprintf(stderr, "paths %d\n", (int)np);
+        for (i = 0; i < np; i++) {
+            const uint8_t *pt = JP_PATH_AT(jp, i);
+            int j;
+
+            fprintf(stderr, "  p%d count=%d cost=%d end=%d cont=%d at=",
+                    (int)i, (int)pt[JPT_COUNT], (int)pt[JPT_COST],
+                    (int)pt[JPT_END], (int)pt[JPT_CONT]);
+            for (j = 0; j < pt[JPT_COUNT]; j++)
+                fprintf(stderr, "%d,", (int)pt[JPT_AT + j]);
+            fprintf(stderr, "\n");
+        }
+    }
     n = pb_SetPhraseBuffer(pb, (uint8_t *)pb + PB_BUFFER);
     *(int16_t *)((uint8_t *)pb + PB_TAIL) = n;
     if (n == 0)

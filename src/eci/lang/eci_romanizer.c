@@ -23,9 +23,17 @@
  * it is transcribed below: eci_rom.h says what a romanizer is and
  * eci_romedll.c stands in for the linker's answer. getLibraryName is dead
  * either way -- it returns nothing at all in IBM's own code.
+ *
+ * Eight of its methods wear a tap, at the end of this file, matching the one
+ * reference/romtap.c puts on IBM's own. Each public name is the wrapper and
+ * the body beside it is a static, because IBM's tap is a rename across an
+ * object boundary and so cannot see that object's own inner calls; ours has
+ * to be blind to the same ones or the two dumps would not line up.
  */
 
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
@@ -198,7 +206,7 @@ THIS void rz_dtor(RomanizerManager *m)
 /* A parameter on its way down. With a romanizer it is that romanizer's
    business; without one it is text like any other and goes straight to the
    engine. */
-THIS int rz_addParam(RomanizerManager *m, const char *s, int32_t n)
+static int rzb_addParam(RomanizerManager *m, const char *s, int32_t n)
 {
     if (RM_ACTIVE(m))
         return RM_ACTIVE(m)->ops->addParam(RM_ACTIVE(m), s, n);
@@ -209,7 +217,7 @@ THIS int rz_addParam(RomanizerManager *m, const char *s, int32_t n)
 
 /* An index mark. Without a romanizer it becomes the annotation that means
    the same thing. */
-THIS int rz_insertIndex(RomanizerManager *m)
+static int rzb_insertIndex(RomanizerManager *m)
 {
     if (RM_ACTIVE(m))
         return RM_ACTIVE(m)->ops->insertIndex(RM_ACTIVE(m));
@@ -224,7 +232,7 @@ THIS void rz_clear(RomanizerManager *m)
     RM_PENDING_LEN(m) = 0;
 }
 
-THIS int rz_resume(RomanizerManager *m)
+static int rzb_resume(RomanizerManager *m)
 {
     if (RM_ACTIVE(m))
         RM_ACTIVE(m)->ops->resume(RM_ACTIVE(m));
@@ -232,7 +240,7 @@ THIS int rz_resume(RomanizerManager *m)
     return 1;
 }
 
-THIS int rz_stop(RomanizerManager *m)
+static int rzb_stop(RomanizerManager *m)
 {
     RM_STOPPED(m) = 1;
     if (RM_ACTIVE(m) && !RM_ACTIVE(m)->ops->stop(RM_ACTIVE(m)))
@@ -523,7 +531,7 @@ THIS int32_t rz_processText(RomanizerManager *m, char **io, uint32_t len,
 
 /* Hand back whatever has been held. With a romanizer that is its business;
    without one the held text is rewritten and passed on. */
-THIS int32_t rz_processSentence(RomanizerManager *m, char **out,
+static int32_t rzb_processSentence(RomanizerManager *m, char **out,
                                 int32_t annotated)
 {
     int32_t n = 0;
@@ -550,14 +558,14 @@ THIS int32_t rz_processSentence(RomanizerManager *m, char **out,
     return strlen(*out);
 }
 
-THIS int32_t rz_processRemaining(RomanizerManager *m, char **out)
+static int32_t rzb_processRemaining(RomanizerManager *m, char **out)
 {
-    return rz_processSentence(m, out, 1);
+    return rzb_processSentence(m, out, 1);
 }
 
 /* Take a stretch of text. Anything still held from last time goes to the
    engine first. */
-THIS int rz_addText(RomanizerManager *m, const char *text, int32_t len,
+static int rzb_addText(RomanizerManager *m, const char *text, int32_t len,
                     int32_t flag)
 {
     int rc = 1;
@@ -568,7 +576,7 @@ THIS int rz_addText(RomanizerManager *m, const char *text, int32_t len,
     if (flag != RM_LAST_FLAG(m)) {
         char *held = 0;
 
-        rz_processRemaining(m, &held);
+        rzb_processRemaining(m, &held);
         if (held)
             stw_addTextToEngine(RM_THREAD(m), held, strlen(held));
     }
@@ -646,7 +654,7 @@ THIS int rz_setActiveLanguage(RomanizerManager *m, uint8_t family,
 
 /* Set one of the engine's settings. A change of language is the only one
    this object does anything with itself. */
-THIS int rz_setParam(RomanizerManager *m, int32_t which, int32_t value)
+static int rzb_setParam(RomanizerManager *m, int32_t which, int32_t value)
 {
     int32_t rc = 0;
 
@@ -718,6 +726,160 @@ THIS int rz_MBCSToUnicode(RomanizerManager *m, uint32_t lang,
     if (out)
         *out = 0;
     return 0;
+}
+
+/* The same tap the reference build wears, on the same eight methods and in
+   the same format, so the two dumps diff as they stand. `EVV_ROMTAP' names
+   the file and nothing is written without it. What it is for: a romanizer is
+   a text-to-text stage, and audio says only that two runs differ, never where.
+   reference/romtap.c is the other half, and test/harness/romcan.sh replays a
+   dump as a romanizer with no language in it.
+
+   IBM's half is a rename trick across an object boundary, so its own inner
+   calls between these methods go untapped. Ours has to match that, which is
+   why each body is a static below and the inner calls go to the static. */
+
+static FILE *rz_tap_file;
+static int   rz_tap_looked;
+
+static FILE *rz_tap(void)
+{
+    if (!rz_tap_looked) {
+        const char *path = getenv("EVV_ROMTAP");
+
+        rz_tap_looked = 1;
+        rz_tap_file = path ? fopen(path, "wb") : NULL;
+    }
+    return rz_tap_file;
+}
+
+/* One string as hex; nothing at all for a nought-length one, and a length
+   below nought means the string says where it ends itself. */
+static void rz_tap_hex(FILE *f, const char *s, int32_t n)
+{
+    int32_t i;
+
+    if (s == NULL) {
+        fputs("-", f);
+        return;
+    }
+    if (n < 0)
+        for (n = 0; s[n]; n++)
+            ;
+    if (n == 0) {
+        fputs(".", f);
+        return;
+    }
+    for (i = 0; i < n; i++)
+        fprintf(f, "%02x", (unsigned char)s[i]);
+}
+
+THIS int rz_addText(RomanizerManager *m, const char *text, int32_t len,
+                    int32_t flag)
+{
+    FILE *f = rz_tap();
+    int   rc = rzb_addText(m, text, len, flag);
+
+    if (f) {
+        fprintf(f, "ADDTEXT len=%d flag=%d rc=%d text=", (int)len, (int)flag,
+                (int)rc);
+        rz_tap_hex(f, text, len);
+        fputc('\n', f);
+        fflush(f);
+    }
+    return rc;
+}
+
+THIS int rz_addParam(RomanizerManager *m, const char *s, int32_t n)
+{
+    FILE *f = rz_tap();
+    int   rc = rzb_addParam(m, s, n);
+
+    if (f) {
+        fprintf(f, "ADDPARAM len=%d rc=%d text=", (int)n, (int)rc);
+        rz_tap_hex(f, s, n);
+        fputc('\n', f);
+        fflush(f);
+    }
+    return rc;
+}
+
+THIS int rz_insertIndex(RomanizerManager *m)
+{
+    FILE *f = rz_tap();
+    int   rc = rzb_insertIndex(m);
+
+    if (f) {
+        fprintf(f, "INDEX rc=%d\n", (int)rc);
+        fflush(f);
+    }
+    return rc;
+}
+
+THIS int32_t rz_processSentence(RomanizerManager *m, char **out,
+                                int32_t annotated)
+{
+    FILE   *f = rz_tap();
+    int32_t rc = rzb_processSentence(m, out, annotated);
+
+    if (f) {
+        fprintf(f, "PROCESS anno=%d rc=%d out=", (int)annotated, (int)rc);
+        rz_tap_hex(f, out ? *out : NULL, rc > 0 ? rc : (out && *out ? -1 : 0));
+        fputc('\n', f);
+        fflush(f);
+    }
+    return rc;
+}
+
+THIS int32_t rz_processRemaining(RomanizerManager *m, char **out)
+{
+    FILE   *f = rz_tap();
+    int32_t rc = rzb_processRemaining(m, out);
+
+    if (f) {
+        fprintf(f, "REMAIN rc=%d out=", (int)rc);
+        rz_tap_hex(f, out ? *out : NULL, rc > 0 ? rc : (out && *out ? -1 : 0));
+        fputc('\n', f);
+        fflush(f);
+    }
+    return rc;
+}
+
+THIS int rz_setParam(RomanizerManager *m, int32_t which, int32_t value)
+{
+    FILE *f = rz_tap();
+    int   rc = rzb_setParam(m, which, value);
+
+    if (f) {
+        fprintf(f, "SETPARAM which=%d value=%d rc=%d\n", (int)which,
+                (int)value, (int)rc);
+        fflush(f);
+    }
+    return rc;
+}
+
+THIS int rz_stop(RomanizerManager *m)
+{
+    FILE *f = rz_tap();
+    int   rc = rzb_stop(m);
+
+    if (f) {
+        fprintf(f, "STOP rc=%d\n", (int)rc);
+        fflush(f);
+    }
+    return rc;
+}
+
+THIS int rz_resume(RomanizerManager *m)
+{
+    FILE *f = rz_tap();
+    int   rc = rzb_resume(m);
+
+    if (f) {
+        fprintf(f, "RESUME rc=%d\n", (int)rc);
+        fflush(f);
+    }
+    return rc;
 }
 
 ALIAS("??0RomanizerManager@@QAE@PAVSynthThread@@@Z", "rz_ctor");

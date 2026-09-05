@@ -49,6 +49,36 @@ typedef struct EvvRomOps {
     uint32_t (*progStatus)(EvvRom *r);                       /* 0x40 */
     void     (*errorMessage)(EvvRom *r, char *out);          /* 0x44 */
     int32_t  (*addParam)(EvvRom *r, const char *text, int32_t len); /* 0x6c */
+    /* The user-dictionary half. A romanizer that keeps no dictionary of its
+       own leaves every one of these nought, and the caller in
+       src/eci/synth/eci_synthdict.c tests before it calls. */
+    void    *(*newDict)(EvvRom *r);                          /* 0x48 */
+    void     (*deleteDict)(EvvRom *r, void *dict);           /* 0x4c */
+    void     (*setDict)(EvvRom *r, void *dict);              /* 0x50 */
+    int32_t  (*loadDict)(EvvRom *r, void *dict, int32_t which,
+                         const char *name);                  /* 0x54 */
+    int32_t  (*saveDict)(EvvRom *r, void *dict, int32_t which,
+                         const char *name);                  /* 0x58 */
+    int32_t  (*lookupDictExt)(EvvRom *r, void *dict, int32_t which,
+                              void *word, int32_t wordLen, void **value,
+                              int32_t *valueLen, int32_t *pos,
+                              int32_t codeset);              /* 0x5c */
+    int32_t  (*updateDictExt)(EvvRom *r, void *dict, int32_t which,
+                              void *word, int32_t wordLen, void *value,
+                              int32_t valueLen, int32_t pos,
+                              int32_t codeset);              /* 0x60 */
+    int32_t  (*findFirstDictExt)(EvvRom *r, void *dict, int32_t which,
+                                 void **key, int32_t *keyLen, void **value,
+                                 int32_t *valueLen, int32_t *pos,
+                                 int32_t codeset);            /* 0x64 */
+    int32_t  (*findNextDictExt)(EvvRom *r, void *dict, int32_t which,
+                                void **key, int32_t *keyLen, void **value,
+                                int32_t *valueLen, int32_t *pos,
+                                int32_t codeset);             /* 0x68 */
+    /* The two conversions the dictionary calls use, which are the ones that
+       take a word rather than a stretch of text. */
+    int32_t  (*mbcs2Rom)(EvvRom *r, const char *in, char **out);  /* 0x74 */
+    int32_t  (*rom2Mbcs)(EvvRom *r, const char *in, char **out);  /* 0x78 */
 } EvvRomOps;
 
 /* Every romanizer instance begins with its table, which is what the manager

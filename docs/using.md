@@ -180,4 +180,4 @@ Three things in this tree are worth running against a program that embeds the en
 
 `test/lib/langs.py build/libeci.so` speaks every language the build has from one process and holds each against what it says alone. That is the check for anything that has quietly stayed global.
 
-`make matrix` is the engine's own gate -- 881 cases over nine languages -- and it wants neither Wine nor IBM's objects. If you have changed anything under `src` or `lang`, that is what says whether it moved.
+`make matrix` is the engine's own gate -- 979 cases over ten languages -- and it wants neither Wine nor IBM's objects. If you have changed anything under `src` or `lang`, that is what says whether it moved.

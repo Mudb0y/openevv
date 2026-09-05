@@ -8,12 +8,6 @@ result
 result-*
 __pycache__/
 
-# The Japanese language module, lifted by the commands in docs/japanese.md.
-# It stays out of the tree until its romanizer can make an instance, because a
-# module that cannot would fail any build that named it -- and most of it is
-# nine megabytes of the romanizer's dictionary, written by tools/lift-rom.py.
-lang/jajp/
-
 # Every form of a language's rules that a build makes rather than holds.
 #
 # delta_rules_<tag>.c, delta_rules_<tag>.h and delta_rules_shim_<tag>.c are
@@ -32,6 +26,13 @@ lang/*/delta_rules_*.h
 # Except the empty table that leaves every rule as bytecode, which is written
 # by hand once per language and is generated from nothing.
 !lang/*/delta_rules_none_*.c
+# And except Japanese's three, which are the exception docs/japanese.md gives:
+# that module has no rules as text for a build to compile, `tools/rules/emit.py'
+# writes these straight out of IBM's objects, and they are therefore the only
+# copy there is. The decompiled form is still made rather than held.
+!lang/jajp/delta_rules_jajp.c
+!lang/jajp/delta_rules_jajp.h
+!lang/jajp/delta_rules_shim_jajp.c
 
 # The default output name of cli/probe.c and reference/speak.c, so it
 # appears in the root whenever either is run without one.

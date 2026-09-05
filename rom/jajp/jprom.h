@@ -340,11 +340,6 @@ int16_t ds_FzkParsingReverse(void *d);
    rom/jajp/romanizer.h. */
 int32_t jrz_GetParameter(void *rz, char *p);
 
-/* Two statics of DictMan naming a user dictionary loaded from a file. Nothing
-   in this port sets them, so they stay null and the walk that reads them is
-   never taken; they are here because Do tests for them. */
-extern const uint8_t *dm_s_paUserDict;
-extern const uint8_t *dm_s_paUserDictIdx;
 int32_t ds_CountHrgn(void *d, int32_t n);
 const uint8_t *ds_ReadGWDict(void *d, int16_t page, int16_t at,
                              int16_t which);

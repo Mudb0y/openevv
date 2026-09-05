@@ -48,7 +48,7 @@ What taking English's four in would cost is worth stating exactly, because it is
 
 Two other ways of writing the same three files exist and are not what a build wants. `make notation-rewrite` writes the lifted text alone -- IBM's rules and nothing of ours -- and `make authored` writes every `.up` file in, trials and all. They are the two sides `tools/rules/check-upper.sh` builds and holds against each other, and it puts the module's own back when it is done.
 
-A module with no rules as text is the one exception, and `lang/jajp` is it: not in the tree at all, lifted whole by the commands in `docs/japanese.md`, which write these three files themselves. The Makefile has a rule for that case whose whole job is to say so rather than leave make reporting a target it does not know how to make.
+A module with no rules as text is the one exception, and `lang/jajp` is it: the commands in `docs/japanese.md` lift it whole and write these three files themselves, so for Japanese alone they are tracked -- they are the only copy there is. The Makefile has a rule for that case whose whole job is to say so rather than leave make reporting a target it does not know how to make.
 
 What made the text a source was one small table. A rule names a constant by a symbol; the bytes behind it are a whole data section of the object it was compiled into, and what the rule gets is an offset into that section. The bytes were already in the tree, in `delta_consts_<tag>.c`. The mapping -- which store and how far in -- was not, and it was the last thing the emitter needed the objects for. It is now `lang/<tag>/rules/symbols`, written by `make notation-symbols`: 76 stores and 6,719 addresses for English, and between 63 and 90 stores for each of the others.
 

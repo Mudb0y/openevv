@@ -91,7 +91,7 @@ A Polish letter *alone* is still silent, and that is the next thing rather than 
 
 ### How a character gets in
 
-A caller writes code points and the machine reads single bytes, and between them IBM's engine does almost nothing: the code set only ever mattered under the SSML filter, which recodes, and for the four families with a romanizer, which convert their own. On the ordinary path the caller's bytes are the characters. That was enough for the nine languages IBM shipped, because every letter any of them has is in the Windows Western byte set. It is not enough for a language whose letters are not, and a caller writing UTF-8 -- which is every caller now -- would hand over two bytes the machine reads as two characters. That is what `Zażółć gęślą jaźń` did: 120,714 samples, a minute of symbol names.
+A caller writes code points and the machine reads single bytes, and between them IBM's engine does almost nothing: the code set only ever mattered under the SSML filter, which recodes, and for the four families with a romanizer, which convert their own. On the ordinary path the caller's bytes are the characters. That was enough for eight of the nine languages IBM shipped, because every letter any of them has is in the Windows Western byte set, and the ninth has a romanizer that recodes. It is not enough for a language whose letters are not, and a caller writing UTF-8 -- which is every caller now -- would hand over two bytes the machine reads as two characters. That is what `Zażółć gęślą jaźń` did: 120,714 samples, a minute of symbol names.
 
 So a language can say what its own characters arrive as, and `lang/<tag>/<tag>.codepoints` is where:
 
@@ -181,7 +181,7 @@ A binary with several languages in it is driven the same way, with `EVV_NATIVE` 
 
 `compare.sh` sets `EVV_LANGUAGE` from the language it was asked for, and the probe asks the engine for that one rather than whichever is first. Those are IBM's own numbers, the ones its ini names each language section for; a language added to the tree adds a line to that table.
 
-Eight of the SDK's nine languages pass the cases there are for them, each against a reference built from its own objects: US and British English, German, both Spanishes, both Frenches and Italian. `docs/status.md` says in which configurations, and why Japanese is the ninth.
+All nine of the SDK's languages pass the cases there are for them, each against a reference built from its own objects: US and British English, German, both Spanishes, both Frenches, Italian and Japanese. `docs/status.md` says in which configurations, and what Japanese wanted first.
 
 The language numbers `compare.sh` knows are IBM's own: 0x10000 and 0x10001 for the two Englishes, 0x20000 and 0x20001 for the Spanishes, 0x30000 and 0x30001 for the Frenches, 0x40000 for German, 0x50000 for Italian. A language added to the tree adds a line to that table.
 

@@ -332,3 +332,33 @@ $(BUILD)/speak-romtap.exe: speak.c romtap.c $(BUILD)/ral_shim.obj \
 	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/romlink.err; \
 	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/romlink.err >&2 || true; exit $$s
 	@echo "built $@"
+
+# One seam further in. The romanizer's tap says whether the two romanizers
+# agree on a sentence; this one says whether they agree on the lattice of
+# dictionary entries and the paths over it, which is where a sentence that
+# comes out as one phrase instead of two parts company. See jptap.c.
+# `make TAG=jajp BUILD=../build/reference-jajp jptap'.
+.PHONY: jptap
+jptap: $(BUILD)/speak-jptap.exe
+
+JPDIR := $(BUILD)/jptap
+
+$(JPDIR)/.stamp: $(WORK)/.stamp
+	@mkdir -p $(JPDIR)
+	@cp $(WORK)/*.obj $(JPDIR)/
+	@$(OBJCOPY) --redefine-sym '?Make@JPath@@QAEXF@Z=_jpMake_ibm' \
+	  $(JPDIR)/jpath.obj $(JPDIR)/j.tmp && mv $(JPDIR)/j.tmp $(JPDIR)/jpath.obj
+	@$(OBJCOPY) \
+	  --redefine-sym '?LookupEngWordDict@DictSearch@@QAEFPAEFFFH@Z=_engLookup_ibm' \
+	  $(JPDIR)/dictapi.obj $(JPDIR)/d.tmp \
+	  && mv $(JPDIR)/d.tmp $(JPDIR)/dictapi.obj
+	@touch $@
+
+$(BUILD)/speak-jptap.exe: speak.c jptap.c $(BUILD)/ral_shim.obj \
+                          $(BUILD)/ctors.obj $(SHIM) $(JPDIR)/.stamp
+	@$(CC) -O2 -std=gnu99 -w -DEVV_IBM_NAMES $(INCS) speak.c jptap.c \
+	  $(BUILD)/ral_shim.obj $(BUILD)/ctors.obj $(SHIM) \
+	  $(wildcard $(JPDIR)/*.obj) \
+	  $(MINGW_LDFLAGS) -lwinmm -o $@ 2> $(BUILD)/jptaplink.err; \
+	  s=$$?; grep -v "corrupt .drectve" $(BUILD)/jptaplink.err >&2 || true; exit $$s
+	@echo "built $@"

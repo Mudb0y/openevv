@@ -31,6 +31,7 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "eci_rom.h"
 
 #define OK               0
 #define ERR_BAD_ARG    (-3)
@@ -60,18 +61,13 @@
 #define ENG_FIND_NEXT     0x8c
 #define ENG_LOOKUP        0x90
 
-/* And of the romanizer instance's, which are thiscall. */
-#define ROM_NEW_DICT      0x48
-#define ROM_DELETE_DICT   0x4c
-#define ROM_SET_DICT      0x50
-#define ROM_LOAD_VOLUME   0x54
-#define ROM_SAVE_VOLUME   0x58
-#define ROM_LOOKUP_EXT    0x5c
-#define ROM_UPDATE_EXT    0x60
-#define ROM_FIND_FIRST_EXT 0x64
-#define ROM_FIND_NEXT_EXT 0x68
-#define ROM_TO_CHAR       0x74
-#define ROM_TO_ECI        0x78
+/* The romanizer's own half of all this is reached through the table in
+   eci_rom.h rather than through a vtable slot. IBM's manager finds a
+   RomInstance in a library it has loaded and calls slots 0x48 to 0x78 of it;
+   ours has the romanizer linked in, and eci_rom.h names the same calls. The
+   comment on each field there is the slot it stands for, so the two can still
+   be read against each other. A romanizer that keeps no dictionary leaves
+   those fields nought, which is what every test below is for. */
 
 #define ENGCALL __attribute__((stdcall))
 /* A slot of an object's table of virtual functions, by the byte it sat at
@@ -90,15 +86,6 @@ typedef ENGCALL void (*EngFind)(void *engine, void *dict, int32_t vol,
 typedef ENGCALL char *(*EngLookup)(void *engine, void *dict, int32_t vol,
                                    char *key);
 
-typedef THIS void *(*RomNewDict)(void *rom);
-typedef THIS void (*RomSetDict)(void *rom, void *dict);
-typedef THIS int32_t (*RomVolume)(void *rom, void *dict, int32_t vol,
-                                  const char *file);
-typedef THIS int32_t (*RomExt)(void *rom, void *dict, int32_t vol, void *a,
-                               void *b, void *c, void *d, void *e);
-typedef THIS int32_t (*RomToChar)(void *rom, void *in, char **out);
-typedef THIS int32_t (*RomToECI)(void *rom, const char *in, char **out);
-
 /* What newDict hands back: the language it is for, the engine and its
    dictionary, and the romanizer and its dictionary. Either romanizer half
    may be missing. */
@@ -106,7 +93,7 @@ typedef struct {
     int32_t  language;   /* +0x00 */
     void    *engine;     /* +0x04 */
     void    *engDict;    /* +0x08 */
-    void    *rom;        /* +0x0c, may be null */
+    EvvRom  *rom;        /* +0x0c, may be null */
     void    *romDict;    /* +0x10 */
 } Dict;
 
@@ -120,7 +107,7 @@ extern THIS void *ea_getEngine(void *a, const LangIdentifier *l)
     MANGLED("?getEngine@EngineArray@@QAEPAVEngineWrapper@@QBVLangIdentifier@@@Z");
 extern THIS void *ea_getEngineData(void *a, const LangIdentifier *l)
     MANGLED("?getEngineData@EngineArray@@QAEPAVEngineData@@QBVLangIdentifier@@@Z");
-extern THIS void *rz_getRom(void *r, uint32_t language)
+extern THIS EvvRom *rz_getRom(void *r, uint32_t language)
     MANGLED("?getRom@RomanizerManager@@QAEPAVRomInstance@@K@Z");
 
 /* Name a language by its number, the way every one of these begins. */
@@ -170,10 +157,11 @@ THIS int32_t std_convertToChar(SynthThread *t, void *in, int32_t len,
         int32_t n;
 
         if (translate == 1) {
-            void *inst = *(void **)((char *)rom + 0x0c);
-            RomToChar convert = (RomToChar)VT_AT(inst, ROM_TO_CHAR);
+            EvvRom *inst = ((Dict *)rom)->rom;
 
-            if (!convert(inst, in, &text))
+            if (inst == 0 || inst->ops->mbcs2Rom == 0)
+                return ERR_BAD_ARG;
+            if (!inst->ops->mbcs2Rom(inst, (const char *)in, &text))
                 return ERR_BAD_ARG;
         } else {
             text = (char *)in;
@@ -225,10 +213,11 @@ THIS int32_t std_convertToECIinputText(SynthThread *t, const char *in,
         int32_t n;
 
         if (translate == 1) {
-            void *inst = *(void **)((char *)rom + 0x0c);
-            RomToECI convert = (RomToECI)VT_AT(inst, ROM_TO_ECI);
+            EvvRom *inst = ((Dict *)rom)->rom;
 
-            if (!convert(inst, in, &text))
+            if (inst == 0 || inst->ops->rom2Mbcs == 0)
+                return ERR_BAD_ARG;
+            if (!inst->ops->rom2Mbcs(inst, in, &text))
                 return ERR_BAD_ARG;
         } else {
             text = (char *)in;
@@ -254,7 +243,8 @@ THIS int32_t std_newDict(SynthThread *t, int32_t language, void **out)
 {
     LangIdentifier want;
     int32_t rc = ERR_BAD_ARG;
-    void *lock, *engine, *engDict, *rom = 0, *romDict = 0;
+    void *lock, *engine, *engDict, *romDict = 0;
+    EvvRom *rom = 0;
     Dict *rec;
 
     std_name(&want, language);
@@ -276,8 +266,8 @@ THIS int32_t std_newDict(SynthThread *t, int32_t language, void **out)
         return rc;
 
     rom = rz_getRom(ST_ROMAN(t), (uint32_t)language);
-    if (rom)
-        romDict = ((RomNewDict)VT_AT(rom, ROM_NEW_DICT))(rom);
+    if (rom && rom->ops->newDict)
+        romDict = rom->ops->newDict(rom);
 
     rec = (Dict *)cpp_new(sizeof(Dict));
     if (rec) {
@@ -313,9 +303,8 @@ THIS int32_t std_deleteDict(SynthThread *t, Dict *dict)
     ((EngDeleteDict)VT_AT(dict->engine, ENG_DELETE_DICT))(dict->engine,
                                                           dict->engDict);
     rc = OK;
-    if (dict->rom)
-        ((RomSetDict)VT_AT(dict->rom, ROM_DELETE_DICT))(dict->rom,
-                                                        dict->romDict);
+    if (dict->rom && dict->rom->ops->deleteDict)
+        dict->rom->ops->deleteDict(dict->rom, dict->romDict);
     cpp_delete(dict);
     return rc;
 }
@@ -337,9 +326,8 @@ THIS int32_t std_activateDict(SynthThread *t, Dict *dict)
     ((EngSetDict)VT_AT(dict->engine, ENG_SET_DICT))(dict->engine,
                                                     dict->engDict);
     rc = OK;
-    if (dict->rom)
-        ((RomSetDict)VT_AT(dict->rom, ROM_SET_DICT))(dict->rom,
-                                                     dict->romDict);
+    if (dict->rom && dict->rom->ops->setDict)
+        dict->rom->ops->setDict(dict->rom, dict->romDict);
     rc = OK;
     return rc;
 }
@@ -358,8 +346,8 @@ THIS int32_t std_deactivateDict(SynthThread *t, Dict *dict)
 
     ((EngSetDict)VT_AT(dict->engine, ENG_SET_DICT))(dict->engine, 0);
     rc = OK;
-    if (dict->rom)
-        ((RomSetDict)VT_AT(dict->rom, ROM_SET_DICT))(dict->rom, 0);
+    if (dict->rom && dict->rom->ops->setDict)
+        dict->rom->ops->setDict(dict->rom, 0);
     rc = OK;
     return rc;
 }
@@ -415,15 +403,12 @@ THIS int32_t std_loadDictVolume(SynthThread *t, Dict *dict, int32_t volume,
             rc = ERR_ENGINE;
         return rc;
     }
-    if (volume != VOLUME_ROMANIZER || !dict->rom)
+    if (volume != VOLUME_ROMANIZER || !dict->rom
+        || !dict->rom->ops->loadDict)
         return rc;
-    {
-        RomVolume load = (RomVolume)VT_AT(dict->rom, ROM_LOAD_VOLUME);
-
-        rc = OK;
-        if (load(dict->rom, dict->romDict, volume, file))
-            rc = ERR_ENGINE;
-    }
+    rc = OK;
+    if (dict->rom->ops->loadDict(dict->rom, dict->romDict, volume, file))
+        rc = ERR_ENGINE;
     return rc;
 }
 
@@ -444,15 +429,12 @@ THIS int32_t std_saveDictVolume(SynthThread *t, Dict *dict, int32_t volume,
             rc = ERR_ENGINE;
         return rc;
     }
-    if (volume != VOLUME_ROMANIZER || !dict->rom)
+    if (volume != VOLUME_ROMANIZER || !dict->rom
+        || !dict->rom->ops->saveDict)
         return rc;
-    {
-        RomVolume save = (RomVolume)VT_AT(dict->rom, ROM_SAVE_VOLUME);
-
-        rc = OK;
-        if (save(dict->rom, dict->romDict, volume, file))
-            rc = ERR_ENGINE;
-    }
+    rc = OK;
+    if (dict->rom->ops->saveDict(dict->rom, dict->romDict, volume, file))
+        rc = ERR_ENGINE;
     return rc;
 }
 
@@ -615,56 +597,77 @@ THIS int32_t std_findNextDictEntry(SynthThread *t, Dict *dict, int32_t volume,
 /* ---- the extended four ----------------------------------------------- */
 
 /* These carry a part of speech and a language as well, and they are the
-   romanizer's whatever volume they name: the engine's own dictionaries have
-   no room for either. All four are the same shape. */
-static int32_t std_ext(SynthThread *t, Dict *dict, int32_t volume,
-                       uint32_t slot, void *a, void *b, void *c, void *d,
-                       void *e)
+ * romanizer's whatever volume they name: the engine's own dictionaries have
+ * no room for either. All four take the same eight arguments -- the
+ * dictionary, the volume and six the romanizer reads -- but not of the same
+ * types, so each is written out rather than shared.
+ *
+ * The guard is the same for all four: a dictionary, the romanizer's own
+ * volume, something to work on, a romanizer under the dictionary, and that
+ * romanizer answering this call at all.
+ */
+static int32_t std_extOk(const Dict *dict, int32_t volume, const void *a)
 {
-    int32_t rc = ERR_BAD_ARG;
-
-    (void)t;
-    if (!dict)
-        return rc;
-    if (volume != VOLUME_ROMANIZER)
-        return rc;
-    if (!a)
-        return rc;
-    if (!dict->rom)
-        return rc;
-
-    if (((RomExt)VT_AT(dict->rom, slot))(dict->rom, dict->romDict, volume,
-                                         a, b, c, d, e))
-        rc = DICT_NO_ENTRY;
-    else
-        rc = OK;
-    return rc;
+    return dict != 0 && volume == VOLUME_ROMANIZER && a != 0
+           && dict->rom != 0;
 }
 
 THIS int32_t std_lookupDictExt(SynthThread *t, Dict *dict, int32_t volume,
-                               void *a, void *b, void *c, void *d, void *e)
+                               void *word, int32_t wordLen, void **value,
+                               int32_t *valueLen, int32_t *pos,
+                               int32_t codeset)
 {
-    return std_ext(t, dict, volume, ROM_LOOKUP_EXT, a, b, c, d, e);
+    (void)t;
+    if (!std_extOk(dict, volume, word) || !dict->rom->ops->lookupDictExt)
+        return ERR_BAD_ARG;
+    return dict->rom->ops->lookupDictExt(dict->rom, dict->romDict, volume,
+                                         word, wordLen, value, valueLen,
+                                         pos, codeset)
+           ? DICT_NO_ENTRY : OK;
 }
 
 THIS int32_t std_updateDictExt(SynthThread *t, Dict *dict, int32_t volume,
-                               void *a, void *b, void *c, void *d, void *e)
+                               void *word, int32_t wordLen, void *value,
+                               int32_t valueLen, int32_t pos,
+                               int32_t codeset)
 {
-    return std_ext(t, dict, volume, ROM_UPDATE_EXT, a, b, c, d, e);
+    (void)t;
+    if (!std_extOk(dict, volume, word) || !dict->rom->ops->updateDictExt)
+        return ERR_BAD_ARG;
+    return dict->rom->ops->updateDictExt(dict->rom, dict->romDict, volume,
+                                         word, wordLen, value, valueLen,
+                                         pos, codeset)
+           ? DICT_NO_ENTRY : OK;
 }
 
 THIS int32_t std_findFirstDictEntryExt(SynthThread *t, Dict *dict,
-                                       int32_t volume, void *a, void *b,
-                                       void *c, void *d, void *e)
+                                       int32_t volume, void **key,
+                                       int32_t *keyLen, void **value,
+                                       int32_t *valueLen, int32_t *pos,
+                                       int32_t codeset)
 {
-    return std_ext(t, dict, volume, ROM_FIND_FIRST_EXT, a, b, c, d, e);
+    (void)t;
+    if (!std_extOk(dict, volume, key) || !dict->rom->ops->findFirstDictExt)
+        return ERR_BAD_ARG;
+    return dict->rom->ops->findFirstDictExt(dict->rom, dict->romDict, volume,
+                                            key, keyLen, value, valueLen,
+                                            pos, codeset)
+           ? DICT_NO_ENTRY : OK;
 }
 
 THIS int32_t std_findNextDictEntryExt(SynthThread *t, Dict *dict,
-                                      int32_t volume, void *a, void *b,
-                                      void *c, void *d, void *e)
+                                      int32_t volume, void **key,
+                                      int32_t *keyLen, void **value,
+                                      int32_t *valueLen, int32_t *pos,
+                                      int32_t codeset)
 {
-    return std_ext(t, dict, volume, ROM_FIND_NEXT_EXT, a, b, c, d, e);
+    (void)t;
+    if (!std_extOk(dict, volume, key) || !dict->rom->ops->findNextDictExt)
+        return ERR_BAD_ARG;
+    return dict->rom->ops->findNextDictExt(dict->rom, dict->romDict, volume,
+                                           key, keyLen, value, valueLen,
+                                           pos, codeset)
+           ? DICT_NO_ENTRY : OK;
 }
 
 ALIAS("?convertToChar@SynthThread@@QAEJPAXJJPAPAD0J@Z", "std_convertToChar");

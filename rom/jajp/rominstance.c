@@ -98,6 +98,89 @@ static int32_t jp_addParam(EvvRom *r, const char *text, int32_t len)
     return ci_addParam(((JpRom *)r)->rom, text, len);
 }
 
+/* ---- and the user dictionary ------------------------------------------ */
+
+/* IBM's RomInstance forwards all of these to the ConverterInterface under it,
+   and the two conversions through the converter's own table rather than by
+   name. That is what these do. */
+
+static void *jp_newDict(EvvRom *r)
+{
+    return ci_newDict(((JpRom *)r)->rom);
+}
+
+static void jp_deleteDict(EvvRom *r, void *dict)
+{
+    ci_deleteDict(((JpRom *)r)->rom, dict);
+}
+
+static void jp_setDict(EvvRom *r, void *dict)
+{
+    ci_setDict(((JpRom *)r)->rom, dict);
+}
+
+static int32_t jp_loadDict(EvvRom *r, void *dict, int32_t which,
+                           const char *name)
+{
+    return ci_loadDict(((JpRom *)r)->rom, dict, which, name);
+}
+
+static int32_t jp_saveDict(EvvRom *r, void *dict, int32_t which,
+                           const char *name)
+{
+    return ci_saveDict(((JpRom *)r)->rom, dict, which, name);
+}
+
+static int32_t jp_lookupDictExt(EvvRom *r, void *dict, int32_t which,
+                                void *word, int32_t wordLen, void **value,
+                                int32_t *valueLen, int32_t *pos,
+                                int32_t codeset)
+{
+    return ci_lookupDictExt(((JpRom *)r)->rom, dict, which, (uint8_t *)word,
+                            wordLen, value, valueLen, pos, codeset);
+}
+
+static int32_t jp_updateDictExt(EvvRom *r, void *dict, int32_t which,
+                                void *word, int32_t wordLen, void *value,
+                                int32_t valueLen, int32_t pos,
+                                int32_t codeset)
+{
+    return ci_updateDictExt(((JpRom *)r)->rom, dict, which, (uint8_t *)word,
+                            wordLen, (char *)value, valueLen, pos, codeset);
+}
+
+static int32_t jp_findFirstDictExt(EvvRom *r, void *dict, int32_t which,
+                                   void **key, int32_t *keyLen, void **value,
+                                   int32_t *valueLen, int32_t *pos,
+                                   int32_t codeset)
+{
+    return ci_findFirstDictEntryExt(((JpRom *)r)->rom, dict, which, key,
+                                    keyLen, value, valueLen, pos, codeset);
+}
+
+static int32_t jp_findNextDictExt(EvvRom *r, void *dict, int32_t which,
+                                  void **key, int32_t *keyLen, void **value,
+                                  int32_t *valueLen, int32_t *pos,
+                                  int32_t codeset)
+{
+    return ci_findNextDictEntryExt(((JpRom *)r)->rom, dict, which, key,
+                                   keyLen, value, valueLen, pos, codeset);
+}
+
+static int32_t jp_mbcs2Rom(EvvRom *r, const char *in, char **out)
+{
+    void *c = ((JpRom *)r)->rom;
+
+    return CI_VT(c)->mbcs2Rom((Converter *)c, in, out);
+}
+
+static int32_t jp_rom2Mbcs(EvvRom *r, const char *in, char **out)
+{
+    void *c = ((JpRom *)r)->rom;
+
+    return CI_VT(c)->rom2Mbcs((Converter *)c, in, out);
+}
+
 static const EvvRomOps JP_OPS = {
     jp_release,
     jp_addText,
@@ -112,6 +195,17 @@ static const EvvRomOps JP_OPS = {
     jp_progStatus,
     jp_errorMessage,
     jp_addParam,
+    jp_newDict,
+    jp_deleteDict,
+    jp_setDict,
+    jp_loadDict,
+    jp_saveDict,
+    jp_lookupDictExt,
+    jp_updateDictExt,
+    jp_findFirstDictExt,
+    jp_findNextDictExt,
+    jp_mbcs2Rom,
+    jp_rom2Mbcs,
 };
 
 /* What the manager calls for an instance. The original checks a licence

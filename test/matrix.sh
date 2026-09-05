@@ -3,8 +3,9 @@
 # Every case of every language, held against what this engine has said before.
 #
 # This is the gate. test/suite.sh proved the engine against IBM's own binary
-# and that proof is done: eight of the nine languages came out byte for byte
-# identical over every case there is for them, in every build the tree makes.
+# and that proof is done: all nine of the SDK's languages came out byte for
+# byte identical over every case there is for them, in every build the tree
+# makes.
 # What is wanted from here on is different -- the engine is being changed on
 # purpose now, and the question is no longer whether it is IBM's but whether
 # anything moved that nobody meant to move. So the answers are written down
@@ -20,12 +21,12 @@
 # there changed a rate; an answer that stops being reported shows up here.
 #
 # Every number in test/samples was blessed by IBM's binary at the moment it
-# was written: the whole differential suite was run for all eight lifted
-# languages immediately before recording, so each is a value the original had
-# just agreed with. Polish is the exception and its file says so -- IBM never
-# shipped Polish, there is nothing to hold it to, and what is recorded is what
-# this engine does, which is still worth having as the only way a change to
-# Polish can be told from an accident.
+# was written: the whole differential suite was run for each lifted language
+# immediately before its numbers were recorded, so each is a value the
+# original had just agreed with. Polish is the exception and its file says so
+# -- IBM never shipped Polish, there is nothing to hold it to, and what is
+# recorded is what this engine does, which is still worth having as the only
+# way a change to Polish can be told from an accident.
 #
 # It wants neither Wine nor IBM's objects. That is the point of it.
 #
@@ -46,7 +47,7 @@ store=$here/samples
 # These are IBM's own, the ones its ini names each section for; a language
 # added to the tree adds a line here and to test/compare.sh, which has the
 # same list for the same reason.
-ALL="enus engb dede eses esus frfr frca itit plpl"
+ALL="enus engb dede eses esus frfr frca itit plpl jajp"
 language_of() {
     case $1 in
     enus) echo 0x10000 ;;
@@ -58,6 +59,7 @@ language_of() {
     dede) echo 0x40000 ;;
     itit) echo 0x50000 ;;
     plpl) echo 0x110000 ;;
+    jajp) echo 0x80000 ;;
     *) echo "matrix: no such language: $1" >&2; exit 2 ;;
     esac
 }

@@ -568,18 +568,27 @@ THIS void stb_wordIndexCallback(SynthThread *t, int32_t where)
    reached. The note it left is taken off the queue and turned into a real
    index for the engine.
 
-   A queue that has nothing to give leaves the note pointer where it was, and
-   the original writes through it regardless. It is left as it stands. */
+   IBM clears the note it did not get. Its test is on the queue answering
+   nought, which is the queue refusing, and the pointer is still the nought
+   set on the line above -- so both of those writes, and the two reads below
+   them, are through address nought. Ours gives up instead when the queue had
+   nothing, and that is the eighteenth deliberate divergence.
+
+   It is reachable, which is why it is here: an index annotation whose quote
+   is never closed makes the Japanese romanizer write the mark and leaves no
+   note to go with it. IBM's own engine hangs on that text before it ever
+   arrives, so this is a fault only an engine that gets past the hang can
+   reach, and there is nothing to compare it against. docs/quirks.md says so
+   under the divergences. */
 THIS void stb_userIndexCallback(SynthThread *t)
 {
     MarkQueue *q = ST_MARKS(t);
     IndexNote *note = 0;
     uint32_t id;
 
-    if (q->vt->pop(q, (void **)&note) == 0) {
-        note->payload = 0;
-        note->kind = 0;
-    }
+    q->vt->pop(q, (void **)&note);
+    if (!note)
+        return;
 
     id = sti_newIndex(ST_INDEXMGR(t));
     if (id) {
@@ -591,8 +600,7 @@ THIS void stb_userIndexCallback(SynthThread *t)
         if (insert(ST_ENGINE(t), id))
             stb_postEngineError(t);
     }
-    if (note)
-        cpp_delete(note);
+    cpp_delete(note);
 }
 
 /* The engine reached the end of a piece of speech. */

@@ -30,7 +30,10 @@ DictManRules dm_EngToRomanRule;
 DictManRules dm_RomanToKanaRule;
 
 /* The supplement dictionary, which is one blob of the static dictionary and
-   one index into it. */
+   one index into it. `dm_InitSupplementDictionary' below sets them and
+   `DictSearch::Do' reads them, and they are one variable apiece of IBM's:
+   this file used to have a second pair under different names, nailed to
+   nought, which is why the supplement was never consulted at all. */
 const uint8_t *dm_paUserDict;
 const uint8_t *dm_paUserDictIdx;
 
@@ -196,9 +199,3 @@ const uint8_t *dm_GetItaijiAt(uint8_t row, uint16_t i)
 {
     return jajp_s_aItaijiTable + (uint32_t)row * 0x7a6 + (uint32_t)i * 2;
 }
-
-/* The user dictionary IBM could load from a file. Its loader is in the
-   registration half this port retired, so both stay null for ever and
-   DictSearch::Do's test for them never passes. */
-const uint8_t *dm_s_paUserDict = NULL;
-const uint8_t *dm_s_paUserDictIdx = NULL;

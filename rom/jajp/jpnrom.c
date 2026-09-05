@@ -465,13 +465,13 @@ int32_t jrz_GenerateESPR(void *rz, void *bg, char *out)
         if (where > at)
             break;
         text = anno->count != 0 ? anno->text[anno->head] : NULL;
+        if (!rp_isAnnotationsInText(param)
+            || strncmp(text, "`g", 2) == 0
+            || strncmp(text, "`i", 2) == 0
+            || strncmp(text, "`ui", 3) == 0)
+            strcat(out, " \\\\");
         if (rp_isAnnotationsInText(param)
-            && strncmp(text, "@g", 2) != 0
-            && strncmp(text, "@i", 2) != 0
-            && strncmp(text, "@ui", 3) != 0)
-            strcat(out, " //");
-        if (rp_isAnnotationsInText(param)
-            && sscanf(text, "@p%d", &ms) == 1) {
+            && sscanf(text, "`p%d", &ms) == 1) {
             pauses += ms;
         } else {
             strcat(out, text);
@@ -536,9 +536,9 @@ int32_t jrz_GenerateESPR(void *rz, void *bg, char *out)
 
 /* One phrase of a breath group turned into what the synthesiser reads, run by
  * run: the annotations that belonged in front of each run first, then the
- * index mark the run carries as `@i' and a digit, then `@g' and how many
- * characters of the caller's own text the run covers, then the reading itself
- * with an apostrophe where the accent falls.
+ * index mark the run carries as a backtick, an `i' and a digit, then a
+ * backtick, a `g' and how many characters of the caller's own text the run
+ * covers, then the reading itself with an apostrophe where the accent falls.
  *
  * The answer is how many codes of the reading were written, which the caller
  * carries into the next phrase.
@@ -589,11 +589,11 @@ int16_t jrz_GenerateRomajiOutput(void *rz, void *bg, void *ph, char *out,
             if (where > *(int16_t *)(p + IH_VAL + (size_t)i * 2))
                 break;
             text = anno->count != 0 ? anno->text[anno->head] : NULL;
-            if (rp_isAnnotationsInText(param)
-                && strncmp(text, "@g", 2) != 0
-                && strncmp(text, "@i", 2) != 0
-                && strncmp(text, "@ui", 3) != 0)
-                strcat(out, " //");
+            if (!rp_isAnnotationsInText(param)
+                || strncmp(text, "`g", 2) == 0
+                || strncmp(text, "`i", 2) == 0
+                || strncmp(text, "`ui", 3) == 0)
+                strcat(out, " \\\\");
             strcat(out, text);
             strcat(out, " ");
             an_Remove(anno);
@@ -602,15 +602,15 @@ int16_t jrz_GenerateRomajiOutput(void *rz, void *bg, void *ph, char *out,
         ci_outputIndexOrParam(rz, out,
                               *(int16_t *)(p + IH_VAL + (size_t)i * 2));
         switch (mark) {
-        case 6: strcat(out, "@i0 "); break;
-        case 1: strcat(out, "@i1 "); break;
-        case 2: strcat(out, "@i2 "); break;
-        case 3: strcat(out, "@i3 "); break;
-        case 4: strcat(out, "@i4 "); break;
-        case 5: strcat(out, "@i5 "); break;
+        case 6: strcat(out, "`i0 "); break;
+        case 1: strcat(out, "`i1 "); break;
+        case 2: strcat(out, "`i2 "); break;
+        case 3: strcat(out, "`i3 "); break;
+        case 4: strcat(out, "`i4 "); break;
+        case 5: strcat(out, "`i5 "); break;
         default: break;
         }
-        sprintf(buf, "@g%d_", (int)span);
+        sprintf(buf, "`g%d_", (int)span);
         strcat(out, buf);
 
         for (j = 0; j <= (int16_t)len; j++) {
@@ -638,7 +638,7 @@ int16_t jrz_GenerateRomajiOutput(void *rz, void *bg, void *ph, char *out,
         if (rp_isAnnotationsInText(param))
             jrz_GetParameter(rz, (char *)text);
         else
-            strcat(out, "//");
+            strcat(out, "\\\\");
         strcat(out, text);
         strcat(out, " ");
         an_Remove(anno);

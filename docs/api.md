@@ -89,7 +89,7 @@ The code set travels in that same word rather than in a setting of its own. ORin
 
 With `eciSynthMode` set to one, each `eciAddText` is queued with the settings that were in force at the moment it arrived, so a program can set a voice, add words, set another voice, add more, and have each stretch spoken in the voice it was written under. With it at nought -- the default -- the text goes straight down and the settings that matter are the ones in force when synthesis starts.
 
-Text is bytes in the language's own code set, which for the nine languages IBM shipped is the Windows Western set. It is not UTF-8: the engine reads single bytes and IBM's engine does almost nothing between the caller's bytes and the machine's characters. A language that declares characters of its own -- which is Polish, and none of IBM's nine -- gets its text converted from UTF-8 on the way in, and that guard is the fourth and fifth deliberate divergences.
+Text is bytes in the language's own code set, which for eight of the nine languages IBM shipped is the Windows Western set. It is not UTF-8: the engine reads single bytes and IBM's engine does almost nothing between the caller's bytes and the machine's characters. Japanese is the ninth and is the exception: its text is Shift-JIS, EUC-JP or one of three seven-bit JIS sets, and its romanizer recodes whichever it was given. A language that declares characters of its own -- which is Polish, and none of IBM's nine -- gets its text converted from UTF-8 on the way in, and that guard is the fourth and fifth deliberate divergences.
 
     int eciSpeakText(const void *text, int annotations);
     int eciSpeakTextEx(const void *text, int annotations, int language);
