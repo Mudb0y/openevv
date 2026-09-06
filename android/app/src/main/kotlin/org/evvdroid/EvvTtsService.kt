@@ -201,7 +201,7 @@ class EvvTtsService : TextToSpeechService() {
 		s?.let { target.setAbbreviations(it.abbreviations) }
 		target.setRatePercent(request.speechRate)
 		target.setPitchPercent(request.pitch)
-		val text = request.charSequenceText?.toString().orEmpty()
+		val text = TextFixes.apply(request.charSequenceText?.toString().orEmpty())
 		if (text.isEmpty()) {
 			callback.start(target.sampleRateHz, AudioFormat.ENCODING_PCM_16BIT, 1)
 			callback.done()
