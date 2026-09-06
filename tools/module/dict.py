@@ -257,6 +257,9 @@ def lay(arms, act, segments):
                          'decided in code other words run through')
 
 
+MINTED = {}
+
+
 def mint(arms, used, codes, why):
     """An action of this word's own: a spare arm of the rule if one is going,
     and otherwise an arm added to it."""
@@ -273,28 +276,12 @@ def mint(arms, used, codes, why):
         except ValueError:
             # It looked spare but cannot be written; do not offer it again.
             used.add(act)
-    # Adding an arm changes the rule -- a block appended, the switch widened,
-    # the check on the action raised -- and arms.py writes that into
-    # lang/<tag>/delta_rules_<tag>.c. That file is generated: `make rulecode'
-    # writes it out of the text in lang/<tag>/rules at the head of every
-    # build, so the rule change is thrown away while the table change beside
-    # it survives, because the tables are tracked and the rules are not.
-    #
-    # What comes out is worse than a change that does nothing. The table says
-    # the word is action 115, the rule has 114 arms and checks against 113,
-    # the switch is walked off the end, and the engine faults on that word and
-    # on every compound holding it. `smith' in roots4 did exactly that on
-    # 6 September 2026, and dict.py reported the build a success.
-    #
-    # So refuse, until arms.py writes its rule changes where rules now live.
-    # A pronunciation that fits an arm the rule already has still works: that
-    # is a change to the constants alone, and those are tracked.
-    raise ValueError('%s would have to be given an arm of its own, and a new '
-                     'arm is a change to the rule. Rule changes are written '
-                     'to the generated delta_rules file, which `make '
-                     'rulecode\' overwrites out of lang/<tag>/rules at every '
-                     'build, so the arm would be lost and the engine would '
-                     'fault on the word. docs/status.md says more.' % why)
+    act = arms.add_arm(bytes(codes))
+    used.add(act)
+    # Written into lang/<tag>/rules rather than into the image this run
+    # holds, so the read-back below has to be told not to look for it.
+    MINTED.setdefault(arms.name, set()).add(act)
+    return act
 
 
 def work_out(d, alpha, laid):
@@ -515,6 +502,13 @@ def compare():
                 continue
             said = laid[asked['name']].get(act)
             if said is None:
+                # An arm written as the lower form is in lang/<tag>/rules and
+                # not in the image this reads, which is the compiled rules as
+                # they were before the build. So it cannot be read back here
+                # and its absence says nothing. What proves it is the build
+                # and then test/words.sh, which speaks the word.
+                if act in MINTED.get(asked['name'], ()):
+                    continue
                 bad += 1
                 print('%s action %d lays nothing down, though it was told to '
                       'say something' % (asked['name'], act), file=sys.stderr)

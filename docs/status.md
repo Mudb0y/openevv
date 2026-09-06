@@ -278,7 +278,7 @@ Three things in the rules cannot be recovered and are not going to be. The globa
 
 ## Faults and findings
 
-Mostly history, and deliberately so: a fault, how it was found, and what fixed it, kept because the reasoning outlives the diff and the next one of its kind usually rhymes. Anything still outstanding says so in its own first line, and as of 6 September 2026 that is two of the seven, the dictionary writer and the spectral tilt filter. The last two are neither faults nor fixes but measurements that turned out to contradict what everyone assumed.
+Mostly history, and deliberately so: a fault, how it was found, and what fixed it, kept because the reasoning outlives the diff and the next one of its kind usually rhymes. Anything still outstanding says so in its own first line, and as of 6 September 2026 that is one of the seven, the spectral tilt filter. The last two are neither faults nor fixes but measurements that turned out to contradict what everyone assumed.
 
 This was headed "Known limits" until 6 September 2026, by which time four of the six things under it were fixed and two were never limits at all -- which is the sort of drift that makes a reader trust a document less than they should.
 
@@ -294,7 +294,7 @@ What proves it. Sabotage first: with `finished` created holding a token on purpo
 
 **Four calls in the same layer disagreed with their callers, and one of them mattered.** `ralTaskDelay`, `ralTaskTerminate`, `ralTaskPriorityGet` and `ralTaskPrioritySet` were written to take scalars while `ETIThread` calls all four with a request block, as it does everything else in that layer. C does not catch that across a translation unit. Three of the four ignore their arguments, so they were merely wrong; `ralTaskDelay` did not, and slept for its own stack address in milliseconds. On this machine the low half of a stack address reads as a negative number and the sleep therefore did nothing, which turned the application queue's thirty millisecond backoff into a spin; on a machine where it reads positive the same call would sleep for twenty minutes. All four now take the block their callers pass.
 
-**Adding a word to a dictionary can make the engine fault on it, and it is not fixed.** Found on 6 September 2026 by the word gate, on its first sabotage.
+**Adding a word to a dictionary made the engine fault on it. Found and fixed on 6 September 2026,** by the word gate on its first sabotage.
 
 Put `smith` into `roots4` saying `z E b r x`, the way `docs/language.md` says to, and `tools/module/dict.py build` reports success: one entry added, and the tables read back word for word, value for value and sound for sound. The engine then segmentation faults on `smith` and on every compound holding it -- `blacksmiths`, `goldsmith`, `locksmith`, `silversmiths`, `smiths` -- while the other 19,994 words of the gate are untouched.
 
@@ -308,7 +308,15 @@ It is not only minting. The spare-arm path rewrites the rule as well, so changin
 
 This has been so since the rules became text and the compiler began regenerating them, and nothing noticed because nothing exercised it -- which is the same shape as the defect itself, a check that was never run.
 
-Guarded rather than fixed, on 6 September 2026. `arms.py` refuses at the point it would write the rule and `dict.py` reports it and writes nothing, so a change is now loudly refused instead of quietly half applied; the tables are verified untouched afterwards. Fixing it means `arms.py` writing its rule changes into `lang/<tag>/rules`, where rules now live, so that `make rulecode` regenerates them with the change in. That is also the moment to ask whether laying the dictionaries down should become a build step after `rulecode`, as the rules already are, so that text is the source of truth for both halves rather than one.
+Fixed by writing the lower form instead. `tools/rules/newarm.py` adds the arm as text in `lang/<tag>/rules` -- the bound above the switch raised by one, the new label on the end of the switch, and the three lines of the arm itself, which are the record's length into the slot the rule reads it from, the record's address into the register the tail expects, and a jump to that tail -- with the address recorded in `symbols` and the bytes appended to the constants blob. `make rulecode` then compiles it in like anything else.
+
+It is far less work than patching bytecode was, and for a reason worth knowing: the lower form names labels rather than offsets, so a block can be appended and a switch widened with nothing to relocate. The old writer was patching an image because it predated the compiler that made patching unnecessary.
+
+Proved: `smith` given the sound of `zebra` speaks it, faults nothing, and `test/words.sh` names six moved words out of twenty thousand -- `smith` and the five compounds holding it -- which is exactly the change asked for.
+
+Two things it taught. The arm goes before the rule's `end` and not after it, since everything past that line belongs to no rule and the reader says so. And `arms.py` now tells a change to the constants, which are tracked and survive a build, from a change to the rule image, which is generated and does not; it refuses only the second, where before it refused both and, before that, allowed a half-applied change in silence.
+
+What is still refused is changing a pronunciation that already exists, which goes through `rewrite` and still patches the image. Same technique, different three lines.
 
 Two things follow for anyone editing dictionaries. `make words` before and after, always, because it is the only thing that looks. And a successful report from `dict.py build` means the text round-trips, not that the engine survived.
 

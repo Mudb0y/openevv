@@ -66,6 +66,8 @@ lengths it can be given are the ones the language once compiled.
 
 import os
 import re
+
+
 import sys
 
 # tools/evv.py says where the tree is, so that no tool counts directories to
@@ -73,6 +75,8 @@ import sys
 # tool's group is tools itself.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from evv import ROOT, sibling
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import newarm
 # Which language. EVV_LANG_DIR is the same variable the decompiler and the
 # census read, and English without one, so nothing that used to work needs
 # saying differently.
@@ -80,6 +84,8 @@ LANG_DIR = os.environ.get('EVV_LANG_DIR', os.path.join(ROOT, 'lang', 'enus'))
 TAG = os.path.basename(os.path.normpath(LANG_DIR))
 RULES_C = os.path.join(LANG_DIR, 'delta_rules_%s.c' % TAG)
 CONSTS_C = os.path.join(LANG_DIR, 'delta_consts_%s.c' % TAG)
+TREE = os.path.join(LANG_DIR, 'rules')
+SYMBOLS = os.path.join(TREE, 'symbols')
 
 census = sibling("rules/patterns")
 
@@ -159,6 +165,7 @@ class Rules:
         # costs a walk of every arm and nothing about it changes as records
         # are rewritten.
         self.fields = {}
+        self.snapshot()
 
     def index_of(self, name):
         for i, r in enumerate(self.rules):
@@ -225,6 +232,23 @@ class Rules:
 
     # ---- writing back ----------------------------------------------------
 
+    def snapshot(self):
+        """The rule image as it was read, so a change to it can be told from
+        a change to the constants beside it. One is generated and one is
+        tracked, and only the first is lost at build time."""
+        self.code0 = bytes(self.code)
+        self.imm0 = list(self.imm)
+        self.syms0 = list(self.syms)
+        self.rules0 = [list(r) for r in self.rules]
+
+    def code_changed(self):
+        if not hasattr(self, 'code0'):
+            return False
+        return (bytes(self.code) != self.code0
+                or list(self.imm) != self.imm0
+                or list(self.syms) != self.syms0
+                or [list(r) for r in self.rules] != self.rules0)
+
     def save(self):
         # The rules are generated now. `make rulecode' writes RULES_C out of
         # the text in lang/<tag>/rules at the head of every build, so anything
@@ -240,7 +264,7 @@ class Rules:
         # This has been so since the rules became text and nothing noticed,
         # because nothing exercised it. So refuse, loudly, until the rule half
         # of a dictionary change is written where rules now live.
-        if self.touched:
+        if self.code_changed():
             raise ValueError(
                 'this change needs the rule altered as well as the tables, '
                 'and rule changes are written to the generated %s, which '
@@ -971,97 +995,30 @@ class Arms:
     def add_arm(self, data):
         """A new action, laying down a record of its own.
 
-        The switch cannot be grown where it stands without pushing everything
-        after it along, so a wider copy of it goes at the end of the rule and
-        the old one is replaced by a jump to it. The bytes of the old switch
-        after that jump are never reached again. Answers the new action
-        number.
+        Written as the lower form rather than as bytecode. The rule text in
+        lang/<tag>/rules is what the build compiles now, and anything spliced
+        into the generated delta_rules file is overwritten by `make rulecode'
+        before the compiler sees it -- which used to leave the tables pointing
+        at an arm that was not there and the engine faulting on the word.
+        tools/rules/newarm.py does the writing and says what the three lines
+        are; here is only what they need to know.
+
+        The record still goes in the constants blob through add_record, since
+        those are tracked and survive a build, and it is the same blob the arm
+        being copied lays its own records in.
         """
         by_length = self.routes()
         if not by_length:
             raise ValueError('%s has no arm to copy the shape of' % self.name)
-
-        # Found before anything is written, since a rule whose check cannot be
-        # raised must be left exactly as it was.
-        bound = self._bound()
-        if bound is None:
-            raise ValueError('%s does not check its action against a number '
-                             'this recognises, so a new arm cannot be reached'
-                             % self.name)
-
-        if self.slot is not None:
-            # The arm can state the length itself, so any arm will do to copy.
-            r = by_length[min(by_length)]
-        elif len(data) in by_length:
-            # It cannot, so it has to be sent where that length is already
-            # laid down, and only lengths the language once compiled exist.
-            r = by_length[len(data)]
-        else:
-            raise ValueError('%s says how long a record is by which of its '
-                             'own it calls, so a new one has to be a length '
-                             'it already lays down, and %d is not one of %s'
-                             % (self.name, len(data),
-                                ', '.join(str(n) for n in
-                                          sorted(by_length))))
+        r = by_length[min(by_length)]
 
         off = self.rules.add_record(r.blob, data)
-        sym = self.rules.add_sym(r.blob, off)
-
-        arm = bytearray()
-        if self.slot is not None:
-            imm = self.rules.add_imm(len(data))
-            arm += bytes([OP_STORE, census.MOVK.index(self.template),
-                          K_IMM, imm & 0xff, (imm >> 8) & 0xff,
-                          K_SLOT, self.slot & 0xff, (self.slot >> 8) & 0xff])
-        at, size, where = r.sym_insn
-        copy = bytearray(self.rules.code[self.start + at:
-                                         self.start + at + size])
-        inside = where - (self.start + at)
-        copy[inside] = sym & 0xff
-        copy[inside + 1] = (sym >> 8) & 0xff
-        arm += copy
-        arm += bytes([OP_JUMP, r.cont & 0xff, (r.cont >> 8) & 0xff])
-        where_arm = self.rules.append_block(self.index, arm)
-
-        # The rule checks the action against the number of arms before it
-        # dispatches, so the check has to be raised too or the new one is
-        # thrown out before the switch ever sees it.
-        self.rules.set16(bound, self.rules.add_imm(len(self.arms)))
-
-        # The switch again, one arm wider, reading the same operand.
-        head = self.start + self.switch_at
-        _name, _val, _w, after = self.rules.c.operand(head + 1)
-        table = bytearray()
-        table.append(census.OPS.index('switch'))
-        table += self.rules.code[head + 1:after]
-        n = len(self.arms) + 1
-        table += bytes([n & 0xff, (n >> 8) & 0xff])
-        for t in self.arms:
-            table += bytes([t & 0xff, (t >> 8) & 0xff])
-        table += bytes([where_arm & 0xff, (where_arm >> 8) & 0xff])
-        where_table = self.rules.append_block(self.index, table)
-
-        # The old switch is jumped over rather than removed, and what is left
-        # of it is filled with instructions that decode but are never reached.
-        # Execution would not care, but anything reading the rule from its
-        # first byte would lose its place in the middle of an instruction.
-        spare = self.insns[self.switch_at][4] - 3
-        filler = bytearray()
-        if spare % 2:
-            filler += bytes([OP_JUMP, 0, 0])
-            spare -= 3
-        if spare < 0:
-            raise ValueError('%s has no room to jump past its switch'
-                             % self.name)
-        filler += bytes([census.OPS.index('widen'), 0]) * (spare // 2)
-
-        self.rules.code[head] = OP_JUMP
-        self.rules.set16(head + 1, where_table)
-        self.rules.code[head + 3:head + 3 + len(filler)] = filler
-
-        act = n
-        self.__init__(self.rules, self.name)
-        return act
+        try:
+            return newarm.add(TREE, self.name,
+                              self.rules.rules[self.index][1],
+                              r.blob, off, len(data), SYMBOLS)
+        except newarm.CannotWrite as e:
+            raise ValueError('%s: %s' % (self.name, e))
 
     def rewrite_parts(self, act, datas):
         """Change what an action laid down in pieces. Each piece is its own
