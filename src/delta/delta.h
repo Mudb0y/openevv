@@ -548,7 +548,21 @@ typedef struct {
     int8_t  pad_01[3];
     int32_t value;   /* +0x04 */
     int32_t length;  /* +0x08, only a variable length record carries one */
-} delta_frame;
+} __attribute__((packed)) delta_frame;
+
+/* Packed says what is true rather than changing anything: every offset above is
+   written out, so there is no padding for packing to take away, and the layout
+   is the same one the machine has always had. What it takes away is the
+   compiler's right to assume the struct is word aligned, which it is not -- the
+   backtracking stack puts frames wherever the machine's own frame sizes land,
+   and case two of vback makes one of an explicitly odd size. On x86 and ARM64
+   an unaligned field access is simply done. On ARM32 the compiler merges two
+   adjacent fields into one LDM, and that instruction faults on anything but a
+   word boundary. */
+typedef char evv_frame_layout_is_unchanged[
+    (sizeof(delta_frame) == 12
+     && offsetof(delta_frame, value) == 4
+     && offsetof(delta_frame, length) == 8) ? 1 : -1];
 
 void lpta_loadp(delta_state *d, const delta_token *p);
 void lpta_loadpn(delta_state *d, const delta_token *p);
@@ -560,6 +574,17 @@ void lpta_rpta_loadp(delta_state *d, const delta_token *lp,
 void bspush_ca(delta_state *d, int16_t tag);
 void bspush_boa(delta_state *d);
 void bspush_nboa(delta_state *d);
+
+/* Eight bytes moved at whatever alignment they are actually at.
+ *
+ * The machine's frames and records are laid out the way 1999 laid them out and
+ * are not word aligned, while the fields declared over them say they are. On
+ * x86 and on ARM64 the difference never shows, because an unaligned load or
+ * store is simply done. On ARM32 a multi-word instruction faults instead, and a
+ * compiler that believes the declared alignment will choose one. */
+typedef struct { unsigned char b[8]; } __attribute__((packed)) evv_bytes8;
+
+#define EVV_COPY8(to, from)     (*(evv_bytes8 *)(void *)(to) = *(const evv_bytes8 *)(const void *)(from))
 
 void bspush_ca_scan(delta_state *d, int16_t tag);
 
