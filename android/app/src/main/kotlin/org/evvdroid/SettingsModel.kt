@@ -30,7 +30,7 @@ class SettingsModel(context: Context) {
 	var sampleRateHz by mutableStateOf(settings.sampleRateHz)
 		private set
 
-	private val shape = mutableStateMapOf<Int, Int>().apply { putAll(settings.shape()) }
+	private val shape = mutableStateMapOf<Int, Int>().apply { putAll(settings.shape(settings.voice)) }
 
 	private var dictionaries: Map<Int, String> by mutableStateOf(
 		Eci.DICT_VOLUMES.mapNotNull { volume ->
@@ -44,8 +44,8 @@ class SettingsModel(context: Context) {
 		preview?.open {
 			// A voice's own settings are what the sliders start at, and only
 			// the engine knows them.
-			if (!settings.shapeIsCustom()) adoptVoice()
-			shape.putAll(settings.shape())
+			if (!settings.shapeIsCustom(settings.voice)) adoptVoice()
+			shape.putAll(settings.shape(settings.voice))
 		}
 	}
 
@@ -64,9 +64,11 @@ class SettingsModel(context: Context) {
 	fun chooseVoice(which: Int) {
 		voice = which
 		settings.voice = which
-		// The eight below belong to the voice, so they follow it.
-		adoptVoice()
-		shape.putAll(settings.shape())
+		// A voice that has been changed keeps its changes. One that has not
+		// takes what the engine says it is.
+		if (!settings.shapeIsCustom(which)) adoptVoice()
+		shape.clear()
+		shape.putAll(settings.shape(which))
 	}
 
 	fun setPercent(param: Int, percent: Int) = setShape(param, Eci.fromPercent(param, percent))
@@ -75,14 +77,16 @@ class SettingsModel(context: Context) {
 		val settled = Eci.clampVoice(param, value)
 		if (shape[param] == settled) return
 		shape[param] = settled
-		settings.setShapeValue(param, settled)
+		settings.setShapeValue(voice, param, settled)
 	}
 
+	/** Forgets this voice's changes. Every other voice is left alone, and so is
+	 *  the speed, which belongs to the listener rather than to any of them. */
 	fun resetVoice() {
-		settings.clearShape()
+		settings.clearShape(voice)
 		adoptVoice()
 		shape.clear()
-		shape.putAll(settings.shape())
+		shape.putAll(settings.shape(voice))
 	}
 
 	fun chooseAbbreviations(on: Boolean) {
@@ -151,7 +155,7 @@ class SettingsModel(context: Context) {
 	/** Nothing here speaks by itself. Every setting is in force the moment it
 	 *  is written down, and this is how it gets heard. */
 	fun say() {
-		preview?.say(app.getString(R.string.preview_text), voice, settings.shape(), sampleRateHz)
+		preview?.say(app.getString(R.string.preview_text), voice, settings.shape(voice), sampleRateHz)
 	}
 
 	private fun adoptVoice() {
@@ -160,8 +164,7 @@ class SettingsModel(context: Context) {
 		// Everything but the speed, which stays where the listener put it.
 		// Glen and Sandy ship at 70 where the rest are 50, so taking the
 		// voice's own would move the slider and the pace on every change.
-		val keep = settings.shapeValue(Eci.VOICE_SPEED) ?: Eci.DEFAULT_SPEED
-		settings.writeShape(own + (Eci.VOICE_SPEED to keep))
+		settings.writeShape(settings.voice, own - Eci.VOICE_SPEED)
 	}
 
 	companion object {

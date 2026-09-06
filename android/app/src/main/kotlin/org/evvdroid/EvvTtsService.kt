@@ -156,7 +156,7 @@ class EvvTtsService : TextToSpeechService() {
 		// text carrying a backtick is read out as it stands.
 		target.setAnnotations(true)
 		loadDictionaries(target, s)
-		target.applyVoice(s.voice, s.shape())
+		target.applyVoice(s.voice, s.shape(s.voice))
 		lastVoiceName = null
 		appliedRevision = s.revision
 	}
@@ -201,7 +201,7 @@ class EvvTtsService : TextToSpeechService() {
 		// A voice asked for by name is the preset that name means, with
 		// whatever the settings screen has laid over it.
 		if (wanted != null && request.voiceName != lastVoiceName) {
-			target.applyVoice(wanted.second, s?.shape().orEmpty())
+			target.applyVoice(wanted.second, s?.shape(wanted.second).orEmpty())
 			lastVoiceName = request.voiceName
 		}
 		target.setRatePercent(request.speechRate)
