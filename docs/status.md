@@ -276,7 +276,11 @@ Of the flags, 49 comparisons and 1,054 conditions are left out of the 24,140 and
 
 Three things in the rules cannot be recovered and are not going to be. The global variables' names are gone: they are known only by kind and number, because the only record of them is a disassembly of `delta_new` that carries kinds and not names. The frame below a rule's arguments is unnamed, because nothing in the object says what any of it is for. And the 152 wrapper rules that do arithmetic as well as calling keep their names.
 
-## Known limits
+## Faults and findings
+
+Mostly history, and deliberately so: a fault, how it was found, and what fixed it, kept because the reasoning outlives the diff and the next one of its kind usually rhymes. Anything still outstanding says so in its own first line, and as of 6 September 2026 that is one entry of the six, the spectral tilt filter. The last two are neither faults nor fixes but measurements that turned out to contradict what everyone assumed.
+
+This was headed "Known limits" until 6 September 2026, by which time four of the six things under it were fixed and two were never limits at all -- which is the sort of drift that makes a reader trust a document less than they should.
 
 **An instance could hang on the way out, and the fault was ours in the porting layer.** Found and fixed on 5 September 2026, after two days of it failing the gate at random.
 
