@@ -226,6 +226,28 @@ class Rules:
     # ---- writing back ----------------------------------------------------
 
     def save(self):
+        # The rules are generated now. `make rulecode' writes RULES_C out of
+        # the text in lang/<tag>/rules at the head of every build, so anything
+        # spliced in here is thrown away before the compiler sees it -- while
+        # the constants written below survive, because those are tracked.
+        #
+        # What comes out is worse than a change that does nothing: the tables
+        # point an action at a record the rule no longer reaches, the switch
+        # is walked off its end, and the engine faults on that word and on
+        # every compound holding it. `smith' in roots4 did exactly that on
+        # 6 September 2026 and dict.py called it a success.
+        #
+        # This has been so since the rules became text and nothing noticed,
+        # because nothing exercised it. So refuse, loudly, until the rule half
+        # of a dictionary change is written where rules now live.
+        if self.touched:
+            raise ValueError(
+                'this change needs the rule altered as well as the tables, '
+                'and rule changes are written to the generated %s, which '
+                '`make rulecode\' overwrites out of lang/<tag>/rules at every '
+                'build. The change would be half applied and the engine would '
+                'fault on the word. See docs/status.md.'
+                % os.path.basename(RULES_C))
         text = open(RULES_C).read()
         text = splice(text, 'delta_rule_code[]',
                       as_c(self.code, 16))

@@ -273,9 +273,28 @@ def mint(arms, used, codes, why):
         except ValueError:
             # It looked spare but cannot be written; do not offer it again.
             used.add(act)
-    act = arms.add_arm(bytes(codes))
-    used.add(act)
-    return act
+    # Adding an arm changes the rule -- a block appended, the switch widened,
+    # the check on the action raised -- and arms.py writes that into
+    # lang/<tag>/delta_rules_<tag>.c. That file is generated: `make rulecode'
+    # writes it out of the text in lang/<tag>/rules at the head of every
+    # build, so the rule change is thrown away while the table change beside
+    # it survives, because the tables are tracked and the rules are not.
+    #
+    # What comes out is worse than a change that does nothing. The table says
+    # the word is action 115, the rule has 114 arms and checks against 113,
+    # the switch is walked off the end, and the engine faults on that word and
+    # on every compound holding it. `smith' in roots4 did exactly that on
+    # 6 September 2026, and dict.py reported the build a success.
+    #
+    # So refuse, until arms.py writes its rule changes where rules now live.
+    # A pronunciation that fits an arm the rule already has still works: that
+    # is a change to the constants alone, and those are tracked.
+    raise ValueError('%s would have to be given an arm of its own, and a new '
+                     'arm is a change to the rule. Rule changes are written '
+                     'to the generated delta_rules file, which `make '
+                     'rulecode\' overwrites out of lang/<tag>/rules at every '
+                     'build, so the arm would be lost and the engine would '
+                     'fault on the word. docs/status.md says more.' % why)
 
 
 def work_out(d, alpha, laid):
@@ -438,7 +457,13 @@ def build():
     if touched:
         rename(want)
     if rules.touched:
-        rules.save()
+        try:
+            rules.save()
+        except ValueError as e:
+            print('dict: %s' % e, file=sys.stderr)
+            print('dict: nothing was written; the tables are as they were.',
+                  file=sys.stderr)
+            return 1
 
     out, starts = lay_down(want, alpha)
     table = bytearray(act_table)

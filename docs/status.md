@@ -300,7 +300,15 @@ Put `smith` into `roots4` saying `z E b r x`, the way `docs/language.md` says to
 
 Nothing else in the tree would have caught it. `dict.py` verifies its own bookkeeping by dumping the tables back to text and comparing, which passes; it never asks the engine to speak. The sentence gate has 98 English cases and none of them says Smith. `make crashers` drives its own list. So the failure mode was: make a routine change, be told it worked, and ship an engine that dies on a common surname.
 
-It is not the hazard the notes warned of. That one was the rule checking the action against its arm count before dispatching, so that a new arm was thrown out unreached -- and `tools/rules/arms.py` already raises that check when it mints, with the reasoning written beside it. Something else in minting is wrong: the arm is appended, the bound is raised, the switch is rewritten one arm wider, and the result faults. Where has not been established.
+Found, and it is not the hazard the notes warned of. That one was the rule checking the action against its arm count, and `arms.py` already raises that check when it mints. The real cause is that a dictionary change has two halves and only one of them survives a build.
+
+`arms.py` writes its half -- the arm, the raised bound, the widened switch -- into `lang/<tag>/delta_rules_<tag>.c`. That file is generated and ignored by git, and `make rulecode` writes it out of the text in `lang/<tag>/rules` at the head of every build. So the rule half is thrown away and the table half is kept, because the tables are tracked. The tables then point an action at a record the rule cannot reach, the switch is walked off its end, and the four bytes read as a string pointer are `0x45565641`, which is "EVV" text used as an address.
+
+It is not only minting. The spare-arm path rewrites the rule as well, so changing an existing word is as unsafe as adding a new one: every pronunciation change goes through the same `save`.
+
+This has been so since the rules became text and the compiler began regenerating them, and nothing noticed because nothing exercised it -- which is the same shape as the defect itself, a check that was never run.
+
+Guarded rather than fixed, on 6 September 2026. `arms.py` refuses at the point it would write the rule and `dict.py` reports it and writes nothing, so a change is now loudly refused instead of quietly half applied; the tables are verified untouched afterwards. Fixing it means `arms.py` writing its rule changes into `lang/<tag>/rules`, where rules now live, so that `make rulecode` regenerates them with the change in. That is also the moment to ask whether laying the dictionaries down should become a build step after `rulecode`, as the rules already are, so that text is the source of truth for both halves rather than one.
 
 Two things follow for anyone editing dictionaries. `make words` before and after, always, because it is the only thing that looks. And a successful report from `dict.py build` means the text round-trips, not that the engine survived.
 
