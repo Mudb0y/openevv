@@ -108,7 +108,12 @@ void delta_low_region(const void *at, size_t bytes)
    stopping for rather than a value that will be wrong later.
 
    One past the end of a store counts as inside it, because a rule may name
-   the byte after a string. */
+   the byte after a string -- but only after every store has been asked
+   whether the address is properly inside it. Where the linker puts two stores
+   next to each other the first byte of the second is also one past the end of
+   the first, and answering with whichever was registered first hands back a
+   pointer just past that store's copy instead of the copy of the store the
+   address is in. */
 void *delta_low_at(const void *p)
 {
     const unsigned char *c = p;
@@ -118,8 +123,15 @@ void *delta_low_at(const void *p)
         return 0;
 
     for (i = 0; i < regions; i++)
-        if (c >= region[i].at && c <= region[i].at + region[i].bytes)
+        if (c >= region[i].at && c < region[i].at + region[i].bytes)
             return region[i].copy + (c - region[i].at);
+
+    /* Only now the byte after a store, because an address that is one past the
+       end of one store and inside another belongs to the one it is inside, and
+       the linker is free to put two stores next to each other. */
+    for (i = 0; i < regions; i++)
+        if (c == region[i].at + region[i].bytes)
+            return region[i].copy + region[i].bytes;
 
     fprintf(stderr, "evv: %p is in the program and in none of the stores"
             " copied out of it\n", p);
