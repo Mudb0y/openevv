@@ -279,7 +279,7 @@ int test_time(delta_state *d, int16_t tag)
 
     slot = bs_push(s, s->size_b0);
     slot->kind = 1;
-    memcpy((uint8_t *)slot + 4, &v->scan_ptr, 8);
+    EVV_COPY8((uint8_t *)slot + 4, &v->scan_ptr);
 
     EVV_AT(uint8_t *, d->fence_marks)
         [EVV_AT(uint8_t *, d->fence_index)[(uint8_t)d->lpta.field]] = 1;
@@ -355,7 +355,7 @@ int test_fence(delta_state *d, int16_t tag, uint8_t n, const uint8_t *chars)
 
     slot = bs_push(s, s->size_b0);
     slot->kind = 1;
-    memcpy((uint8_t *)slot + 4, &v->scan_ptr, 8);
+    EVV_COPY8((uint8_t *)slot + 4, &v->scan_ptr);
 
     if (n == 0) {
         v->scan_held = 1;
@@ -419,7 +419,13 @@ void bspush_ca_scan(delta_state *d, int16_t tag)
 
     save = bs_push(EVV_AT(delta_stack *, d->stack), EVV_AT(delta_stack *, d->stack)->size_b0);
     save->kind = 1;
-    memcpy(&save->value, &EVV_AT(delta_vars *, d->vars)->scan_ptr, 8);
+    /* A frame is only as aligned as the machine's own frame sizes make it,
+       which on this layout is often two bytes. The field says four, so a
+       compiler is entitled to copy eight bytes into it with one multi-word
+       store -- and on ARM that instruction faults on anything but a word
+       boundary, where x86 and ARM64 simply do the unaligned access. Going
+       through a type of alignment one keeps the copy byte-wise. */
+    EVV_COPY8(&save->value, &EVV_AT(delta_vars *, d->vars)->scan_ptr);
 }
 
 /* Build the character fence: a set of characters the rules match against,
@@ -528,7 +534,7 @@ int32_t vback(delta_state *d, int32_t depth)
             size = EVV_AT(delta_stack *, d->stack)->size_b0;
             EVV_AT(delta_stack *, d->stack)->limit += size;
             EVV_AT(delta_stack *, d->stack)->top   += size;
-            memcpy(&EVV_AT(delta_vars *, d->vars)->scan_ptr, &slot->value, 8);
+            EVV_COPY8(&EVV_AT(delta_vars *, d->vars)->scan_ptr, &slot->value);
             break;
 
         case 2:
@@ -2739,7 +2745,7 @@ static void push_ca_and_scan(delta_state *d, int16_t tag)
     save = EVV_AT(uint8_t *, s->top);
     s->limit -= s->size_b0;
     save[0] = 1;
-    memcpy(save + 4, &EVV_AT(delta_vars *, d->vars)->scan_ptr, 8);
+    EVV_COPY8(save + 4, &EVV_AT(delta_vars *, d->vars)->scan_ptr);
 }
 
 /* Remember where the scan is, both in the caller's variable and on the
@@ -5597,14 +5603,14 @@ int ventproc(delta_state *d, delta_actrec *rec, uint8_t *index,
         return 1;
 
     rec->unknown_00 = v->running;
-    memcpy(rec->tags, &v->loop_tag, 8);
+    EVV_COPY8(rec->tags, &v->loop_tag);
     rec->testing = (uint8_t)v->testing;
     rec->back = EVV_REF(EVV_AT(uint8_t *, v->back));
     rec->top = EVV_REF(EVV_AT(uint8_t *, s->top));
     rec->vbot = EVV_REF(getDeltaStackVBot(d));
     rec->fence_count = (uint8_t)v->fence_count;
     rec->err_jmp = EVV_REF(EVV_AT(void *, v->err_jmp));
-    memcpy(rec->scan, &v->scan_ptr, 8);
+    EVV_COPY8(rec->scan, &v->scan_ptr);
     memcpy(&rec->lpta, &d->lpta, sizeof(rec->lpta));
     memcpy(&rec->rpta, &d->rpta, sizeof(rec->rpta));
     rec->compared_equal = (uint8_t)v->compared_equal;
@@ -5659,14 +5665,14 @@ int vretproc(delta_state *d, int32_t tag)
     d->fence_marks = *(evv_ref *)(frame + 0x10);
 
     v->running = rec->unknown_00;
-    memcpy(&v->loop_tag, rec->tags, 8);
+    EVV_COPY8(&v->loop_tag, rec->tags);
     v->testing = (int8_t)rec->testing;
     v->back = EVV_REF(EVV_AT(uint8_t *, rec->back));
     freeDeltaStackTo(d, EVV_AT(uint8_t *, rec->top));
     setDeltaStackVBot(d, EVV_AT(void *, rec->vbot));
     v->fence_count = (int8_t)rec->fence_count;
     v->err_jmp = EVV_REF(EVV_AT(void *, rec->err_jmp));
-    memcpy(&v->scan_ptr, rec->scan, 8);
+    EVV_COPY8(&v->scan_ptr, rec->scan);
     memcpy(&d->lpta, &rec->lpta, sizeof(d->lpta));
     memcpy(&d->rpta, &rec->rpta, sizeof(d->rpta));
     v->compared_equal = (int8_t)rec->compared_equal;
@@ -6930,7 +6936,7 @@ int chstream(delta_state *d, int16_t v, uint8_t f)
     pos = EVV_AT(uint8_t *, s->top);
     s->limit -= s->size_b0;
     pos[0] = 1;
-    memcpy(pos + 4, &va->scan_ptr, 8);
+    EVV_COPY8(pos + 4, &va->scan_ptr);
 
     EVV_AT(uint8_t *, d->fence_marks)[EVV_AT(uint8_t *, d->fence_index)[f]] = 1;
     va->scan_field = f;
