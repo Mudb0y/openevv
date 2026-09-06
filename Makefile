@@ -801,6 +801,11 @@ missing: $(OBJECTS)
 # target is the same command for every one of them.
 PHONCASES := $(wildcard $(foreach f,plain anno long,test/cases/$(f)$(SUF).txt))
 
+# The driver on its own, without the comparison against IBM's binary:
+# test/words.sh wants the phonemes it answers and nothing of IBM's at all.
+.PHONY: phonemes-bin
+phonemes-bin: $(BUILD)/phonemes$(SUF)
+
 phonemes: $(BUILD)/phonemes$(SUF)
 	@$(MAKE) -C reference TAG=$(TAG) BUILD=../$(BUILD)/reference$(SUF) phontry
 	@EVV_LANG=$(TAG) bash test/harness/phonemes.sh $(PHONCASES)
@@ -852,6 +857,17 @@ crashers: $(BUILD)/evv
 # gate that checked only the language last worked on would be worse than none,
 # since the thing it exists to catch is a change made for one language landing
 # in another. `test/matrix.sh check plpl' is there for iterating on one.
+# The gate a level below the one above: twenty thousand words rather than
+# 979 sentences, and what each is made of rather than what it sounds like.
+# It is what makes a change to a rule or a dictionary answerable, since the
+# sentence gate is far too small to notice one. Wants no Wine and no objects.
+.PHONY: words words-record
+words:
+	@bash test/words.sh check
+
+words-record:
+	@bash test/words.sh record
+
 .PHONY: matrix matrix-record
 matrix:
 	@bash test/matrix.sh check
