@@ -372,7 +372,28 @@ void klatt_shape_noise(int16_t *buf, int32_t n, int32_t rate, double *z)
  * resonator's own address instead, which is stable and unique because each
  * one lives in the array inside the synthesiser's block.
  *
- * UNFINISHED, and off unless EVV_WIDE=on asks for it. As it stands the wide
+ * UNFINISHED, and off unless EVV_WIDE=on asks for it. Where it has got to,
+ * on 6 September 2026:
+ *
+ * EVV_WIDE=emulate runs this same shadow carrying the narrow path's own
+ * arithmetic, and requires the two to come out bit for bit identical. That
+ * is the check that says whether a difference is precision or structure, and
+ * it has already earned itself. It said structure, twice.
+ *
+ * The first was the whole of the spikes: KlattSynth zeroes d1 and d2 itself
+ * when a filter resets between frames, and a shadow that did not follow went
+ * on ringing from state the engine had silenced. Peak 32316 against the
+ * narrow path's 5027, clipping at ordinary volume, and the clipping was what
+ * filled the band above 5,512 with 54 dB of nonsense. Resyncing whenever the
+ * two disagree brings it to peak 4884 against 5027 and RMS 875 against 989 --
+ * the same signal, near enough to argue about.
+ *
+ * The second is still open. Emulate and narrow first differ at sample 16 and
+ * then almost everywhere, by up to 1483 counts. Sixteen is early enough to be
+ * a block boundary rather than anything in the recursion, so the state handed
+ * from one call to the next is the place to look, and the `n > 1' arm at the
+ * end of pole_filter -- which does something odd when n is nought or one --
+ * is the first suspect. As it stands the wide
  * path is wrong rather than merely different: at a quarter volume, where
  * nothing clips, it comes out 10.8 dB quieter in RMS than the narrow one and
  * with a peak three times higher, which is spikes rather than speech, and at
@@ -388,6 +409,7 @@ void klatt_shape_noise(int16_t *buf, int32_t n, int32_t rate, double *z)
  * the difference really is precision and the spikes are something the
  * truncation was holding down. */
 
+static int32_t wide_round(double y);
 #define WIDES 64
 
 static struct {
@@ -405,26 +427,50 @@ void klatt_wide_enable(int32_t rate)
         const char *say = getenv("EVV_WIDE");
 
         decided = 1;
-        allowed = say != 0 && strcmp(say, "on") == 0;
+        allowed = 0;
+        if (say != 0 && strcmp(say, "on") == 0)
+            allowed = 1;
+        /* The same structure carrying the narrow path's own arithmetic. If
+           this does not come out bit for bit identical to it, the recursion
+           here is wrong and precision was never the question. */
+        else if (say != 0 && strcmp(say, "emulate") == 0)
+            allowed = 2;
     }
     wide_on = allowed && rate > 11025;
 }
 
-static double *wide_state(const filter_parms *fp, int fresh)
+/* The wide state shadows d1 and d2 and has to follow them. KlattSynth zeroes
+   the pair itself when a filter resets between frames, and a shadow that
+   missed that went on ringing from state the engine had silenced -- which is
+   where the spikes came from, and it was structure rather than precision:
+   the same shadow carrying the narrow path's own arithmetic reproduced them
+   exactly.
+
+   So resync whenever the two disagree. In the ordinary case this path wrote
+   d1 and d2 itself at the end of the last call and they still match, so the
+   test costs a compare and says nothing; when anything else has written
+   them, it is the only warning there is. */
+static double *wide_state(filter_parms *fp)
 {
     int i, spare = -1;
 
     for (i = 0; i < WIDES; i++) {
-        if (wide[i].fp == fp)
+        if (wide[i].fp == fp) {
+            if (wide_round(wide[i].d1) != fp->d1
+                || wide_round(wide[i].d2) != fp->d2) {
+                wide[i].d1 = (double)fp->d1;
+                wide[i].d2 = (double)fp->d2;
+            }
             return &wide[i].d1;
+        }
         if (wide[i].fp == 0 && spare < 0)
             spare = i;
     }
     if (spare < 0)
         spare = 0;
     wide[spare].fp = fp;
-    wide[spare].d1 = fresh ? (double)fp->d1 : 0.0;
-    wide[spare].d2 = fresh ? (double)fp->d2 : 0.0;
+    wide[spare].d1 = (double)fp->d1;
+    wide[spare].d2 = (double)fp->d2;
     return &wide[spare].d1;
 }
 
@@ -437,9 +483,42 @@ static int32_t wide_round(double y)
    the doubling and quadrupling that one applies on the way out. */
 static void pole_filter_wide(filter_parms *fp, int32_t *buf, int32_t n)
 {
-    double *z = wide_state(fp, 1);
+    double *z = wide_state(fp);
     double y1 = z[0], y2 = z[1];
     int32_t i = 0, count, k;
+
+    if (klatt_wide_on() == 2) {
+        int32_t v1 = (int32_t)z[0], v2 = (int32_t)z[1], t1, t2, t3;
+
+        if (fp->ramp != 0) {
+            count = fp->ramp < n ? fp->ramp : n;
+            k = 3 - fp->ramp;
+
+            for (; i < count; i++) {
+                t1 = fxmul_scaled(fp->c[k], v2);
+                t2 = fxmul_scaled(fp->b[k], v1);
+                t3 = fxmul_scaled(fp->a[k], buf[i]);
+                v2 = v1;
+                v1 = t1 + t2 * 2 + t3 * 4;
+                buf[i] = v1;
+                k++;
+            }
+            fp->ramp -= count;
+        }
+        for (; i < n; i++) {
+            t1 = fxmul_scaled(fp->sc, v2);
+            t2 = fxmul_scaled(fp->sb, v1);
+            t3 = fxmul_scaled(fp->sa, buf[i]);
+            v2 = v1;
+            v1 = t1 + t2 * 2 + t3 * 4;
+            buf[i] = v1;
+        }
+        z[0] = v1;
+        z[1] = v2;
+        fp->d1 = v1;
+        fp->d2 = v2;
+        return;
+    }
 
     if (fp->ramp != 0) {
         count = fp->ramp < n ? fp->ramp : n;
