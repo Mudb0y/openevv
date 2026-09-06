@@ -25,6 +25,7 @@
 	<string name="pauses_keep">Do not shorten</string>
 	<string name="pauses_end">Shorten at end of text</string>
 	<string name="pauses_all">Shorten all pauses</string>
+	<string name="phrase_prediction_label">Phrase prediction</string>
 	<string name="abbreviations_label">Expand abbreviations</string>
 
 	<string name="dictionary_main">Main dictionary</string>

@@ -32,7 +32,7 @@ redistributing anything.
 * Pronunciation dictionaries.
 * Android 6 and later. arm64-v8a, armeabi-v7a, x86_64.
 
-`app/src/androidTest` runs on a device. 53 checks.
+`app/src/androidTest` runs on a device. 57 checks.
 
 ## Turning it on
 
@@ -81,7 +81,7 @@ constantly.
 Launcher icon, or the gear beside the engine in the text-to-speech settings.
 
 Sliders for the seven numeric voice parameters, plus gender, voice, sample
-rate, pauses, abbreviations and dictionaries. "Speak a sample" sits under the sliders.
+rate, pauses, phrase prediction, abbreviations and dictionaries. "Speak a sample" sits under the sliders.
 Nothing speaks on its own. A setting takes effect when you set it, and the
 button is how you hear it.
 
@@ -136,6 +136,24 @@ The rule is davidacm's, from the
 calls these JAWS-like pauses. A mark counts when it follows a letter, digit or
 space and is followed by whitespace, a slash or the end, which is what leaves
 the point in 3.14, the colon in 2:30 and the comma in 1,024 alone.
+
+## Voice, phrase prediction, abbreviations
+
+The voice is whichever the settings screen says. A caller that names a voice
+does not override it, because a client holds on to the Voice object it was
+given: a screen reader that connected while Reed was selected goes on asking
+for Reed however many times the setting is changed underneath it. The name is
+still what decides the language.
+
+Phrase prediction is the engine guessing where the phrase boundaries in a
+sentence are and shaping the intonation to match. That reads well in prose and
+gets in the way in a screen reader, where a line is usually a fragment and the
+guess is wrong, so it is off. It is an annotation rather than a parameter, so
+it goes out with every utterance.
+
+Expand abbreviations is `eciDictionary`, which is inverted in the engine: zero
+turns it on. Off by default. It is re-sent with every utterance, since it is
+the one setting with nothing to say whether something else has moved it.
 
 ## Dictionaries
 

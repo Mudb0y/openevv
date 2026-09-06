@@ -114,6 +114,11 @@ fun SettingsScreen(state: SettingsModel) {
 				onChoose = state::choosePauses
 			)
 			SwitchRow(
+				label = stringResource(R.string.phrase_prediction_label),
+				checked = state.phrasePrediction,
+				onChange = state::choosePhrasePrediction
+			)
+			SwitchRow(
 				label = stringResource(R.string.abbreviations_label),
 				checked = state.abbreviations,
 				onChange = state::chooseAbbreviations

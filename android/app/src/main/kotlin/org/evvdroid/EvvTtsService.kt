@@ -25,8 +25,6 @@ class EvvTtsService : TextToSpeechService() {
 	@Volatile
 	private var stopped = false
 
-	private var lastVoiceName: String? = null
-
 	private var appliedRevision = -1
 
 	private var loadedDictionaries: Map<Int, String> = emptyMap()
@@ -153,7 +151,6 @@ class EvvTtsService : TextToSpeechService() {
 		target.setAbbreviations(s.abbreviations)
 		loadDictionaries(target, s)
 		target.applyVoice(s.voice, s.shape(s.voice))
-		lastVoiceName = null
 		appliedRevision = s.revision
 	}
 
@@ -185,6 +182,11 @@ class EvvTtsService : TextToSpeechService() {
 			callback.error(TextToSpeech.ERROR_NOT_INSTALLED_YET)
 			return
 		}
+		// The voice is whichever the settings screen says, not whichever the
+		// caller named. A caller holds on to the Voice it was given, so a
+		// screen reader that connected while Reed was chosen goes on asking
+		// for Reed however many times the setting is changed underneath it.
+		// The name still decides the language, since that is what it is for.
 		val wanted = findVoice(request.voiceName)
 		val language = wanted?.first ?: found.first
 		val target = ensureEngine(language)
@@ -194,12 +196,9 @@ class EvvTtsService : TextToSpeechService() {
 		}
 		val s = settings
 		if (s != null && s.revision != appliedRevision) applySettings(target)
-		// A voice asked for by name is the preset that name means, with
-		// whatever the settings screen has laid over it.
-		if (wanted != null && request.voiceName != lastVoiceName) {
-			target.applyVoice(wanted.second, s?.shape(wanted.second).orEmpty())
-			lastVoiceName = request.voiceName
-		}
+		// Re-sent every time rather than once, because it is the one setting
+		// with no way of telling whether something else has moved it.
+		s?.let { target.setAbbreviations(it.abbreviations) }
 		target.setRatePercent(request.speechRate)
 		target.setPitchPercent(request.pitch)
 		val text = request.charSequenceText?.toString().orEmpty()
@@ -218,10 +217,11 @@ class EvvTtsService : TextToSpeechService() {
 		// annotation sits in front of the full stop, and a piece boundary is
 		// found by looking at the end of a word.
 		val pauses = settings?.pauses ?: Pauses.ALL
+		val prosody = Prosody.prefix(settings?.phrasePrediction ?: false)
 		val pieces = TextPieces.split(text)
 		for ((at, raw) in pieces.withIndex()) {
 			if (stopped) break
-			val piece = Pauses.apply(raw, pauses, at == pieces.lastIndex)
+			val piece = prosody + Pauses.apply(raw, pauses, at == pieces.lastIndex)
 			if (!target.speak(piece)) {
 				Log.e(TAG, "the engine refused ${piece.length} characters")
 				callback.error(TextToSpeech.ERROR_SYNTHESIS)

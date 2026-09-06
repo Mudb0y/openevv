@@ -33,6 +33,9 @@ class SettingsModel(context: Context) {
 	var pauses by mutableStateOf(settings.pauses)
 		private set
 
+	var phrasePrediction by mutableStateOf(settings.phrasePrediction)
+		private set
+
 	private val shape = mutableStateMapOf<Int, Int>().apply { putAll(settings.shape(settings.voice)) }
 
 	private var dictionaries: Map<Int, String> by mutableStateOf(
@@ -147,6 +150,11 @@ class SettingsModel(context: Context) {
 			if (at >= 0 && row.moveToFirst()) row.getString(at) else null
 		}
 	}.getOrNull()
+
+	fun choosePhrasePrediction(on: Boolean) {
+		phrasePrediction = on
+		settings.phrasePrediction = on
+	}
 
 	fun choosePauses(mode: Int) {
 		pauses = mode
