@@ -1,5 +1,7 @@
 # The rules
 
+**This describes the format as it is, not as it should be.** Authoring in it is harder than it should be -- the surface is Delta's own model rather than anything designed to be written -- and `docs/authoring.md` sets out why, what to do about it, and what has to be settled before starting. Read that before doing any large amount of work in the form below.
+
 A language's rules are the whole of what it knows about its own spelling, and they are the only part of a module that exists in three forms at once: as text in the tree, as bytecode the interpreter runs, and as C the compiler compiles. This says what each form is, how one becomes another, and how a rule of ours is written and proved. `docs/language.md` is everything else in a module.
 
 ## The rules as text
