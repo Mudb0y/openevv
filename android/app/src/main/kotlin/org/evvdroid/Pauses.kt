@@ -39,6 +39,15 @@ object Pauses {
 
 	private const val BRIEF = "`p1"
 
+	/** The gap after the last thing said, which is not made as short as the
+	 *  rest. The engine leaves about four hundred milliseconds there, and
+	 *  cutting all of it puts the final syllable hard against the end of the
+	 *  buffer, where whatever plays it back clips a little off: "Google Gemini"
+	 *  came out as "Google Gemin". This keeps a hundred of those milliseconds
+	 *  as somewhere for that to land, and still saves the other three hundred.
+	 *  It is silence either way, so nothing is heard except the missing wait. */
+	private const val AT_THE_END = "`p100"
+
 	/**
 	 * [text] with the pauses [mode] asks for. [last] says whether this is the
 	 * end of what was asked for, since the gap after that is the one
@@ -50,7 +59,7 @@ object Pauses {
 		if (mode == ALL) out = AT_A_MARK.replace(out, "$1 $BRIEF$2$3$4")
 		// The engine pauses at the end of an utterance whether or not anything
 		// there asked it to. A mark at the end has already been dealt with.
-		if (last && out.trimEnd().lastOrNull() !in MARKS.toSet()) out = "$out $BRIEF"
+		if (last && out.trimEnd().lastOrNull() !in MARKS.toSet()) out = "$out $AT_THE_END"
 		return out
 	}
 }

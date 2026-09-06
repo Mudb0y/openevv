@@ -46,14 +46,14 @@ class PausesTest {
 
 	@Test
 	fun theEndOnlyGetsOneWhenNothingElseWould() {
-		assertEquals("Navigate up `p1", Pauses.apply("Navigate up", Pauses.END_ONLY, true))
+		assertEquals("Navigate up `p100", Pauses.apply("Navigate up", Pauses.END_ONLY, true))
 		assertEquals("Navigate up.", Pauses.apply("Navigate up.", Pauses.END_ONLY, true))
 		assertEquals("Navigate up", Pauses.apply("Navigate up", Pauses.END_ONLY, false))
 	}
 
 	@Test
 	fun shorteningAllStillShortensTheEnd() {
-		assertEquals("Settings `p1, button `p1", Pauses.apply("Settings, button", Pauses.ALL, true))
+		assertEquals("Settings `p1, button `p100", Pauses.apply("Settings, button", Pauses.ALL, true))
 	}
 
 	/** Out of the engine rather than out of the rule. */

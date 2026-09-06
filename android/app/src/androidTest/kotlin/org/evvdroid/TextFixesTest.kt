@@ -93,8 +93,8 @@ class TextFixesTest {
 	@Test
 	fun fixesRunBeforePauses() {
 		val right = Pauses.apply(TextFixes.apply("Navigate up"), Pauses.ALL, true)
-		assertTrue("the annotation did not survive: $right", right.endsWith("`p1"))
-		assertEquals("Navigate up `p 1", TextFixes.apply(Pauses.apply("Navigate up", Pauses.ALL, true)))
+		assertTrue("the annotation did not survive: $right", right.endsWith("`p100"))
+		assertEquals("Navigate up `p 100", TextFixes.apply(Pauses.apply("Navigate up", Pauses.ALL, true)))
 	}
 
 	/** Out of the engine rather than off the page. */
