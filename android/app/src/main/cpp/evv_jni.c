@@ -45,8 +45,12 @@ typedef struct {
 	int             aborted;
 	int             started;
 	int             done;
-	pthread_t       waiter;
-	int             waiting;
+	pthread_t       worker;
+	pthread_cond_t  work;
+	int             running;
+	int             pending;
+	int             busy;
+	int             quitting;
 	unsigned char*  text;
 	ECIDictHand     dict;
 	short           frame[FRAME_SAMPLES];
@@ -96,43 +100,67 @@ static void take(instance* in, unsigned char* dst, size_t n) {
  * neither, which is what the spin limit is for; it is the only case that waits
  * it out, and it waits a fifth of a second rather than for ever.
  *
- * It has to be its own thread because the thread that reads cannot block. */
-static void* wait_for_end(void* data) {
+ * It has to be its own thread because the thread that reads cannot block.
+ *
+ * It is one thread for the life of the instance rather than one per utterance,
+ * and that is not tidiness. The engine has no thread of its own: asking it
+ * anything is what makes it run, so whichever thread calls eciSynchronize is
+ * the thread the engine runs on, and it took the callback with it. Handing it
+ * a thread made fresh each time faults after about fifty-five utterances, on
+ * the phone and in a plain C harness alike, with the machine jumping into its
+ * own data. The same loop on one kept thread runs for hundreds. */
+static void* worker_loop(void* data) {
 	instance* in = (instance*)data;
 	struct timespec tick = { 0, 1000L * 1000L };
-	int spins;
-	for (spins = 0; spins < START_SPINS; spins++) {
-		int begun;
+	for (;;) {
+		int spins;
 		pthread_mutex_lock(&in->lock);
-		begun = in->started || in->aborted;
+		while (!in->pending && !in->quitting)
+			pthread_cond_wait(&in->work, &in->lock);
+		if (in->quitting) {
+			pthread_mutex_unlock(&in->lock);
+			return NULL;
+		}
+		in->pending = 0;
 		pthread_mutex_unlock(&in->lock);
-		if (begun || eciSpeaking(in->eci))
-			break;
-		nanosleep(&tick, NULL);
+		for (spins = 0; spins < START_SPINS; spins++) {
+			int begun;
+			pthread_mutex_lock(&in->lock);
+			begun = in->started || in->aborted;
+			pthread_mutex_unlock(&in->lock);
+			if (begun || eciSpeaking(in->eci))
+				break;
+			nanosleep(&tick, NULL);
+		}
+		eciSynchronize(in->eci);
+		pthread_mutex_lock(&in->lock);
+		in->done = 1;
+		in->busy = 0;
+		pthread_cond_broadcast(&in->filled);
+		pthread_cond_broadcast(&in->work);
+		pthread_mutex_unlock(&in->lock);
 	}
-	eciSynchronize(in->eci);
-	pthread_mutex_lock(&in->lock);
-	in->done = 1;
-	pthread_cond_broadcast(&in->filled);
-	pthread_mutex_unlock(&in->lock);
-	return NULL;
 }
 
 /* Marks an utterance over that never started, so that a reader waiting on the
-   end condition is not waiting for a thread nothing made. */
+   end condition is not waiting for work nothing handed over. */
 static jboolean finished(instance* in) {
 	pthread_mutex_lock(&in->lock);
 	in->done = 1;
+	in->busy = 0;
 	pthread_cond_broadcast(&in->filled);
+	pthread_cond_broadcast(&in->work);
 	pthread_mutex_unlock(&in->lock);
 	return JNI_FALSE;
 }
 
-static void join_waiter(instance* in) {
-	if (in->waiting) {
-		pthread_join(in->waiter, NULL);
-		in->waiting = 0;
-	}
+/* Waits for the worker to be out of the engine, which is what makes it safe to
+   put the next utterance in. The lock must not be held. */
+static void wait_until_idle(instance* in) {
+	pthread_mutex_lock(&in->lock);
+	while (in->busy)
+		pthread_cond_wait(&in->work, &in->lock);
+	pthread_mutex_unlock(&in->lock);
 }
 
 /* Runs on the engine's synthesis thread. It may not call back into the same
@@ -182,6 +210,7 @@ JNIEXPORT jlong JNICALL Java_org_evvdroid_EvvNative_create(JNIEnv* env, jclass c
 	pthread_mutex_init(&in->lock, NULL);
 	pthread_cond_init(&in->room, NULL);
 	pthread_cond_init(&in->filled, NULL);
+	pthread_cond_init(&in->work, NULL);
 	eciRegisterCallback(in->eci, on_message, in);
 	if (!eciSetOutputBuffer(in->eci, FRAME_SAMPLES, in->frame)) {
 		LOGE("the engine refused the output buffer");
@@ -190,6 +219,14 @@ JNIEXPORT jlong JNICALL Java_org_evvdroid_EvvNative_create(JNIEnv* env, jclass c
 		free(in);
 		return 0;
 	}
+	if (pthread_create(&in->worker, NULL, worker_loop, in) != 0) {
+		LOGE("no thread to run the engine on");
+		eciDelete(in->eci);
+		free(in->ring);
+		free(in);
+		return 0;
+	}
+	in->running = 1;
 	return (jlong)(intptr_t)in;
 }
 
@@ -201,16 +238,24 @@ JNIEXPORT void JNICALL Java_org_evvdroid_EvvNative_destroy(JNIEnv* env, jclass c
 		return;
 	pthread_mutex_lock(&in->lock);
 	in->aborted = 1;
+	in->quitting = 1;
 	pthread_cond_broadcast(&in->room);
 	pthread_cond_broadcast(&in->filled);
+	pthread_cond_broadcast(&in->work);
 	pthread_mutex_unlock(&in->lock);
-	eciStop(in->eci);
-	join_waiter(in);
+	/* The abort flag is what brings the worker out of the engine: the next
+	   buffer it is offered is answered eciDataAbort and eciSynchronize
+	   returns. Nothing is asked of the engine from this thread. */
+	if (in->running) {
+		pthread_join(in->worker, NULL);
+		in->running = 0;
+	}
 	if (in->dict != NULL_DICT_HAND)
 		eciDeleteDict(in->eci, in->dict);
 	eciDelete(in->eci);
 	pthread_cond_destroy(&in->room);
 	pthread_cond_destroy(&in->filled);
+	pthread_cond_destroy(&in->work);
 	pthread_mutex_destroy(&in->lock);
 	free(in->text);
 	free(in->ring);
@@ -237,15 +282,20 @@ JNIEXPORT jboolean JNICALL Java_org_evvdroid_EvvNative_speak(JNIEnv* env, jclass
 		return JNI_FALSE;
 	(*env)->GetByteArrayRegion(env, text, 0, n, (jbyte*)buf);
 	buf[n] = 0;
-	join_waiter(in);
+	wait_until_idle(in);
 	pthread_mutex_lock(&in->lock);
 	in->aborted = 0;
 	in->started = 0;
 	in->done = 0;
+	in->busy = 1;
 	in->head = in->tail = in->count = 0;
 	pthread_mutex_unlock(&in->lock);
 	free(in->text);
 	in->text = buf;
+	if (!in->running) {
+		LOGE("there is no worker to run the engine");
+		return finished(in);
+	}
 	if (!eciAddText(in->eci, buf)) {
 		LOGE("eciAddText refused the text");
 		return finished(in);
@@ -254,12 +304,10 @@ JNIEXPORT jboolean JNICALL Java_org_evvdroid_EvvNative_speak(JNIEnv* env, jclass
 		LOGE("eciSynthesize refused");
 		return finished(in);
 	}
-	if (pthread_create(&in->waiter, NULL, wait_for_end, in) != 0) {
-		LOGE("no thread to wait on the utterance");
-		eciStop(in->eci);
-		return finished(in);
-	}
-	in->waiting = 1;
+	pthread_mutex_lock(&in->lock);
+	in->pending = 1;
+	pthread_cond_broadcast(&in->work);
+	pthread_mutex_unlock(&in->lock);
 	return JNI_TRUE;
 }
 
@@ -315,7 +363,14 @@ JNIEXPORT void JNICALL Java_org_evvdroid_EvvNative_stop(JNIEnv* env, jclass cls,
 	pthread_cond_broadcast(&in->room);
 	pthread_cond_broadcast(&in->filled);
 	pthread_mutex_unlock(&in->lock);
-	eciStop(in->eci);
+	/* eciStop is deliberately not called, here or anywhere else on this path.
+	   The flag makes the callback answer eciDataAbort the next time the engine
+	   offers samples, and that unwinds it from inside its own call and leaves
+	   it fit for the next utterance. eciStop does not: about eighty of them on
+	   one instance and the engine either goes silent or jumps into its own
+	   data. openevv's own harnesses show both halves of that -- the one that
+	   aborts from the callback runs clean for hundreds of turns, the one that
+	   calls eciStop dies around turn eighty. */
 }
 
 /* The instance's own dictionary set, made the first time one is wanted. An
