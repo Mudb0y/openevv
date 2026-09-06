@@ -16,7 +16,17 @@ on:
     branches: [main]
     tags: ['v*']
   pull_request:
+  # `gh workflow run build -f every_language=true' rehearses what a tag does
+  # without cutting one: the same all-language build of what ships, with the
+  # release job still skipped because this is not a tag. Worth doing before a
+  # release, since that path is otherwise only ever exercised by the release
+  # itself and takes over an hour to tell you.
   workflow_dispatch:
+    inputs:
+      every_language:
+        description: 'Build what ships with every language, as a tag does'
+        type: boolean
+        default: false
 
 jobs:
   # Both forms of the rules are built and both are held to the same hash. Which
@@ -69,10 +79,12 @@ jobs:
       # else here names itself after what it contains, but a caller dlopens
       # `libeci.so' and cannot be asked to know what is inside.
       - name: Build what ships
+        env:
+          EVERY: ${{ inputs.every_language }}
         run: |
           set -eu
-          case "$GITHUB_REF" in
-          refs/tags/v*)
+          case "$GITHUB_REF$EVERY" in
+          refs/tags/v*|*true)
             langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca \
                                       itit plpl jajp) ;;
           *)
@@ -260,10 +272,12 @@ jobs:
       # DLLs keep their plain names whatever is in them, so nothing
       # downstream has to know which this was.
       - name: Build
+        env:
+          EVERY: ${{ inputs.every_language }}
         run: |
           set -eu
-          case "$GITHUB_REF" in
-          refs/tags/v*)
+          case "$GITHUB_REF$EVERY" in
+          refs/tags/v*|*true)
             langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca \
                                       itit plpl jajp) ;;
           *)
