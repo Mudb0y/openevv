@@ -14,6 +14,10 @@ Six builds have to pass, not one: `probe`, `probe32` and `probe.exe`, each with 
 
 Polish has no oracle and never will, since IBM never shipped it. Its baselines are what this engine does rather than what any original did, and `test/matrix.sh` is the only thing besides an ear that can tell a change to Polish from an accident. `test/cases/*-plpl.txt` are its cases and they are ours, written for Polish orthography rather than translated.
 
+**Nothing in this tree needs IBM, and that was measured on 6 September 2026 by moving `analysis/` off disk and running the lot.** The gate passed in all six builds with no IBM material present, along with the crashers, every language out of one library, and the upper-form check. Two scripts run IBM's binary -- `test/compare.sh`, which the suite is built on, and `test/harness/romcan.sh` -- and the census tools and `reference/Makefile` read its objects. Nothing else, and nothing in CI. So reach for the oracle when there is a question worth asking the original, never because something will not otherwise pass.
+
+Four things were once written by reading and never run beside IBM. Three are closed -- the SSML recoding path, the dictionary's lookup and update calls, and phoneme reporting -- and `docs/testing.md` says how. The fourth, a language change on a live instance, cannot be closed: IBM's engine holds one language per binary, so there is nothing to compare against, and `test/lib/langs.py` covers it against ourselves instead.
+
 `test/hash.sh` is the quick one, one English sentence. It is the two-second smoke test, not the gate.
 
 `make crashers` is another that wants neither Wine nor IBM's objects. It speaks the text in `test/cases/crashers.txt`, which is text IBM's engine dies on and ours used to die on with it, and it fails if the engine faulted on one or would not finish. It is not part of the differential suite and cannot be: the reference produces no audio for any of those strings, so there is nothing to compare. `tools/engine/crashers.py` is what found them and is how to find more.

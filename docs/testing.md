@@ -2,6 +2,8 @@
 
 Three ranks, and it matters which question is being asked. `test/matrix.sh` is the gate: it says whether anything moved. `test/suite.sh` is the oracle: it says what IBM's own engine does, and it wants Wine and the SDK. The harnesses under `test/harness` are for what neither can see, because a call no rule makes cannot be reached by speaking a sentence.
 
+Only the middle one wants anything of IBM's. The gate, the harnesses that need no reference, the build, the release and every job in CI run against a tree with no IBM material in it, which has been checked by taking the objects away and running them -- see below.
+
 ## The gate
 
     make matrix
@@ -37,6 +39,24 @@ The suite speaks each case through our engine and through IBM's and compares the
 **It is not the gate any more and it is not going away.** What it was for -- proving this engine is IBM's, byte for byte, over every case in every build -- is done, and it stopped being a thing to maintain the moment the language data started being worked on deliberately. What it is for now is answering the question the gate cannot: not "did anything move" but "what does the original do here". That question comes up constantly and will go on coming up. A path no case has ever walked. A machine primitive no rule in the nine shipped languages ever called, which a rule of ours may be the first to reach -- `test/harness/prims.sh` is that, 577,300 calls a side. A piece of IBM's code just transcribed, which is what the whole of the Japanese romanizer was: `test/harness/romcan.sh` replays IBM's own romanizer conversation and `test/harness/romprims.sh` holds 1,205,523 lines a side, and there was no other way to know a transcription of `TextAnalysis` was right before a word of Japanese could be heard.
 
 So `reference/` stays, `analysis/` stays regenerable from the SDK, and the suite stays runnable. What went is the obligation to run it before every change, not the ability to run it when there is something to ask.
+
+### Nothing here needs IBM, and that was checked rather than assumed
+
+On 6 September 2026 `analysis/` was moved off disk entirely and the whole gate run against a tree with no IBM material in it: `make missing` at nought, all six builds at 979 cases every one as it was, `make crashers` at 20,526 of 20,526, `test/lib/langs.py` speaking all ten languages out of one library, and `make upper-check` matching call for call over 1,176,590 lines. Then the objects were put back.
+
+That is the shape of the dependency. Two scripts in the tree run IBM's binary -- `test/compare.sh`, which the suite is built on, and `test/harness/romcan.sh`. The census tools and `reference/Makefile` read its objects. Nothing else does: not the build, not the gate, not the release, and not a single job in `.github/workflows/build.yml`, which has no objects and no Wine available to it and checks all 979 cases anyway. IBM's objects are not in the repository either; `.gitignore` keeps `analysis/` out, so what is published is this engine and the language data `NOTICE` accounts for.
+
+### What the oracle has and has not been asked
+
+Four things were written by reading IBM's disassembly and never actually run side by side with it. Three have since been closed and the fourth cannot be, which is worth writing down because the list read as a debt for a while after it stopped being one.
+
+The SSML filter's recoding in `addTextRun` used to be unreachable from the published interface. It is reachable now -- the filter is registered the way a caller registers one -- and the `ssml` category runs in every language, so both roads through `recodeForSSML` are compared: Japanese's ten documents take the romanizer one and the other languages take the byte one.
+
+The dictionary's twelve lookup and update calls wanted a dictionary with entries in it, and `test/harness/dict.c` makes one: it writes to the main, root, abbreviation and extended dictionaries, reads each back, and walks them with `findFirst` and `findNext`. `make dict` holds every answer to IBM's, Japanese included, where the romanizer half of a dictionary is live rather than null.
+
+The callback layer in `eci_synthback.c` was two things. Phoneme reporting is held to IBM's by `make phonemes` over thirty cases. The rest belongs to the concatenative engine, which `docs/remaining.md` says is not this engine.
+
+What is left is a language change on a live instance, and there is no IBM behaviour to compare it against. IBM's engine as this SDK ships it holds one language: each is a static library carrying the whole engine, so two cannot be linked into one program, which is why there are ten of them. Several languages in one binary is ours. It is checked against ourselves instead, by `test/lib/langs.py`, which speaks each language out of a build holding all of them and holds it against what that language says out of a build holding only itself -- and those single-language builds are the ones the suite compares with IBM. The chain reaches the original; it just does not reach it in one step.
 
 Seven categories run by default: plain text, UTF-8, annotations, annotations with the annotation input type on, real-world text with the parameters read back in a person's units, the user dictionary, and the same sentence said twice on one instance. An eighth, `long`, is paragraphs rather than sentences and is left out of the default set because under Wine it takes minutes. Name any of them to run only those: `test/suite.sh plain long`.
 
