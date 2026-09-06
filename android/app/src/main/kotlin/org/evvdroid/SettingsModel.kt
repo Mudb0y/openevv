@@ -156,7 +156,12 @@ class SettingsModel(context: Context) {
 
 	private fun adoptVoice() {
 		val own = preview?.presetShape(settings.voice) ?: return
-		if (own.isNotEmpty()) settings.writeShape(own)
+		if (own.isEmpty()) return
+		// Everything but the speed, which stays where the listener put it.
+		// Glen and Sandy ship at 70 where the rest are 50, so taking the
+		// voice's own would move the slider and the pace on every change.
+		val keep = settings.shapeValue(Eci.VOICE_SPEED) ?: Eci.DEFAULT_SPEED
+		settings.writeShape(own + (Eci.VOICE_SPEED to keep))
 	}
 
 	companion object {

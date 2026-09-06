@@ -32,7 +32,7 @@ redistributing anything.
 * Pronunciation dictionaries.
 * Android 6 and later. arm64-v8a, armeabi-v7a, x86_64.
 
-`app/src/androidTest` runs on a device. 39 checks.
+`app/src/androidTest` runs on a device. 41 checks.
 
 ## Turning it on
 
@@ -85,7 +85,7 @@ rate, abbreviations and dictionaries. "Speak a sample" sits under the sliders.
 Nothing speaks on its own. A setting takes effect when you set it, and the
 button is how you hear it.
 
-Four deliberate choices:
+Five deliberate choices:
 
 Each row is one control. A label, a bar and a number would be three stops for a
 screen reader, so each row merges into a single node with
@@ -101,6 +101,11 @@ default rate and speed 200 speaks 16.6 times. Multiplying the speed number by
 the percentage runs away at the top, so a measured curve converts between the
 two instead. 200 percent is about twice as fast, and very high rates saturate
 at the engine's own ceiling rather than becoming unusable.
+
+Speed is the listener's, not the voice's. Six presets ship at engine speed 50
+and Glen and Sandy ship at 70, half again as fast. That is IBM's data, but it
+made changing voice change the pace, so a preset brings its other seven
+settings and leaves the speed alone.
 
 Sliders start at the voice's own values. Each preset carries its own head size,
 inflection and volume; Reed is inflection 30 and volume 92, Bobby is 35 and 90.

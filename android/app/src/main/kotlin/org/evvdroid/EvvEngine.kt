@@ -108,6 +108,12 @@ class EvvEngine private constructor(private var handle: Long, val language: Int)
 		if (closed) return
 		val preset = (index + Eci.FIRST_PRESET).coerceIn(Eci.FIRST_PRESET, Eci.LAST_PRESET)
 		EvvNative.copyVoice(handle, preset, Eci.SCRATCH_VOICE)
+		// The preset's own speed is not kept. Two of the eight ship faster than
+		// the rest, so leaving it would make changing voice change the pace.
+		EvvNative.setVoiceParam(
+			handle, Eci.SCRATCH_VOICE, Eci.VOICE_SPEED,
+			shape[Eci.VOICE_SPEED] ?: Eci.DEFAULT_SPEED
+		)
 		for ((param, value) in shape) {
 			EvvNative.setVoiceParam(handle, Eci.SCRATCH_VOICE, param, Eci.clampVoice(param, value))
 		}

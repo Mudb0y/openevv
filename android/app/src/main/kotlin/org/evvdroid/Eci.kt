@@ -44,6 +44,16 @@ object Eci {
 
 	val DICT_VOLUMES = listOf(DICT_MAIN, DICT_ROOT, DICT_ABBREVIATION)
 
+	/**
+	 * The speed every voice is spoken at unless someone has chosen otherwise.
+	 *
+	 * Six of the eight presets ship at 50 and Glen and Sandy ship at 70, which
+	 * is half again as fast. That is IBM's data rather than a fault, but it
+	 * makes speed a property of the voice, so picking Glen sped everything up
+	 * without anyone asking for it. Speed belongs to whoever is listening.
+	 */
+	const val DEFAULT_SPEED = 50
+
 	const val SPEED_MAX = 250
 	const val PERCENT_MAX = 100
 
