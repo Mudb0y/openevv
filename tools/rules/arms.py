@@ -1069,88 +1069,34 @@ class Arms:
     def rewrite(self, act, data):
         """Give one action a record of its own, and the length to go with it.
 
-        The record is always appended rather than written over, so nothing
-        that names the old bytes is disturbed. The length is set whichever way
-        this rule expresses one, and if none of them can be reached without
-        touching code another arm runs through, nothing is written and the
-        reason is raised."""
+        Written as the lower form, for the reason add_arm is: what is spliced
+        into the generated delta_rules file is overwritten by `make rulecode'
+        before the compiler sees it. The three lines of the arm are found
+        rather than written this time -- the length it states and the symbol
+        it names are replaced where they stand.
+
+        The record is appended rather than written over, so nothing that names
+        the old bytes is disturbed. An arm that names its record in code it
+        shares with other arms is refused, since changing it there would
+        change what those words say too.
+        """
         r = self.read(act)
         if r is None:
             raise ValueError('%s action %d lays down no record'
                              % (self.name, act))
-
-        sym_at, sym_size, sym_where = r.sym_insn
-        length, where = r.count_insn
-        if sym_at is None:
+        if r.sym_insn[0] is None:
             raise ValueError('%s action %d has its record named by the rule '
                              'that lays it rather than by the word, so there '
                              'is nothing of this word\'s to change'
                              % (self.name, act))
 
         off = self.rules.add_record(r.blob, data)
-        sym = self.rules.add_sym(r.blob, off)
-
-        # Nothing to say about the length: just name the new record.
-        if len(data) == r.length:
-            if not self._alone(sym_at):
-                raise ValueError(
-                    '%s action %d names its record in code other words run '
-                    'through' % (self.name, act))
-            self.rules.set16(sym_where, sym)
-            return
-
-        # A rule that pushes the length out of a frame slot can have the whole
-        # arm replaced, which is the cleanest way in and needs nothing shared.
-        if self.slot is not None and r.cont is not None:
-            imm = self.rules.add_imm(len(data))
-            block = bytearray()
-            block += bytes([OP_STORE, census.MOVK.index(self.template),
-                            K_IMM, imm & 0xff, (imm >> 8) & 0xff,
-                            K_SLOT, self.slot & 0xff, (self.slot >> 8) & 0xff])
-            copy = bytearray(self.rules.code[self.start + sym_at:
-                                             self.start + sym_at + sym_size])
-            inside = sym_where - (self.start + sym_at)
-            copy[inside] = sym & 0xff
-            copy[inside + 1] = (sym >> 8) & 0xff
-            block += copy
-            block += bytes([OP_JUMP, r.cont & 0xff, (r.cont >> 8) & 0xff])
-            at_block = self.rules.append_block(self.index, block)
-            self.rules.set16(r.arm_slot, at_block)
-            return
-
-        if not self._alone(sym_at):
-            raise ValueError('%s action %d names its record in code other '
-                             'words run through' % (self.name, act))
-
-        # A rule that says the length by which wrapper it calls can be moved
-        # to the wrapper for the length wanted, if one was ever compiled.
-        if where and where[0] == 'wrapper':
-            call_at = where[1]
-            m = WRAPPER.match(where[2])
-            if m and self._alone(call_at):
-                wanted = '%s%d' % (m.group(1), len(data))
-                if wanted in self.rules.entries:
-                    idx = self.rules.entries.index(wanted)
-                    self.rules.set16(self.start + call_at + 1, idx)
-                    self.rules.set16(sym_where, sym)
-                    return
-                raise ValueError(
-                    '%s action %d would need %s, which the language never '
-                    'compiled' % (self.name, act, wanted))
-
-        # A rule that packs the length into a byte of a constant can have the
-        # constant replaced, the other byte kept as it was.
-        if length is not None and length.shape in SHAPES \
-                and length.at is not None and self._alone(length.at):
-            whole = length.repack(len(data))
-            if whole is not None:
-                self.rules.set16(length.where, self.rules.add_imm(whole))
-                self.rules.set16(sym_where, sym)
-                return
-
-        raise ValueError('%s action %d states its length a way that cannot be '
-                         'changed without touching code other words run '
-                         'through' % (self.name, act))
+        try:
+            newarm.rewrite(TREE, self.name, act,
+                           self.rules.rules[self.index][1],
+                           r.blob, off, len(data), r.length, SYMBOLS)
+        except newarm.CannotWrite as e:
+            raise ValueError('%s: %s' % (self.name, e))
 
 
 def as_c(data, per_line):

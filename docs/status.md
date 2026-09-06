@@ -316,7 +316,9 @@ Proved: `smith` given the sound of `zebra` speaks it, faults nothing, and `test/
 
 Two things it taught. The arm goes before the rule's `end` and not after it, since everything past that line belongs to no rule and the reader says so. And `arms.py` now tells a change to the constants, which are tracked and survive a build, from a change to the rule image, which is generated and does not; it refuses only the second, where before it refused both and, before that, allowed a half-applied change in silence.
 
-What is still refused is changing a pronunciation that already exists, which goes through `rewrite` and still patches the image. Same technique, different three lines.
+Changing a pronunciation that already exists goes the same way, and did on the same day. The arm is found rather than written -- the switch names a label for each action, so the action number gives the three lines directly -- and the length it states and the symbol it names are replaced where they stand. `acorn` given the sound of `cat` moves `acorn` and nothing else out of the twenty thousand.
+
+The refusal that mattered carried over intact: an arm naming its record in code it shares with other arms is still refused, since changing it there would change what every word sharing that code says. That was IBM's constraint expressed in bytecode and it is the same constraint expressed in text.
 
 Two things follow for anyone editing dictionaries. `make words` before and after, always, because it is the only thing that looks. And a successful report from `dict.py build` means the text round-trips, not that the engine survived.
 

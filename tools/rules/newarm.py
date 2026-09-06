@@ -133,3 +133,77 @@ def add(tree, name, obj, blob, off, length, symbols_path):
         f.write('at %s %s %s %d\n' % (obj, sym, blob, off))
 
     return act + 1
+
+
+def arm_block(body, label):
+    """The three lines belonging to one arm, and where they sit."""
+    m = re.search(r'^label %s was \S+\n((?:  .*\n)*)' % re.escape(label),
+                  body, re.M)
+    if not m:
+        raise CannotWrite('no block for %s' % label)
+    return m
+
+
+def rewrite(tree, name, act, obj, blob, off, length, was, symbols_path):
+    """Give an action that already exists a record of its own.
+
+    The same three lines as a new arm, only found rather than written: the
+    length it states and the symbol it names are replaced where they stand.
+    An arm that names its record in code it shares with other arms is refused,
+    because changing it there would change what those words say too -- which
+    is the same rule the bytecode path applied, said in text.
+    """
+    dr = None
+    for f in sorted(os.listdir(tree)):
+        if not f.endswith('.dr'):
+            continue
+        path = os.path.join(tree, f)
+        text = open(path).read()
+        if re.search(r'^rule %s ' % re.escape(name), text, re.M):
+            dr = path
+            break
+    if dr is None:
+        raise CannotWrite('no lower-form file holds the rule %s' % name)
+
+    text = open(dr).read()
+    span = rule_span(text, name)
+    body = text[span[0]:span[1]]
+
+    switch = re.search(r'^  switch reg r\d+ to (.+)$', body, re.M)
+    if not switch:
+        raise CannotWrite('%s does not dispatch the way this can read' % name)
+    labels = switch.group(1).split()
+    if not 1 <= act <= len(labels):
+        raise CannotWrite('%s has no action %d to change' % (name, act))
+
+    m = arm_block(body, labels[act - 1])
+    block = m.group(0)
+
+    load = re.search(r'^  load movl sym (\S+) into (r\d+)$', block, re.M)
+    if not load:
+        raise CannotWrite('action %d names its record somewhere this cannot '
+                          'reach on its own, so changing it here would change '
+                          'what every word sharing that code says' % act)
+
+    store = re.search(r'^  store (mov[bwl]) imm (\d+) slot (\d+)$', block, re.M)
+    if store is None and length != was:
+        raise CannotWrite('action %d does not state its own length -- the rule '
+                          'says it another way -- so it can only be given a '
+                          'record of the length it already lays down, and %d '
+                          'is not %d' % (act, length, was))
+
+    sym = 'string_%d' % (max(
+        [int(x) for x in re.findall(r'\bstring_(\d+)\b', text)] or [0]) + 1)
+
+    new = block
+    if store is not None:
+        new = new.replace(store.group(0), '  store %s imm %d slot %s'
+                          % (store.group(1), length, store.group(3)), 1)
+    new = new.replace(load.group(0), '  load movl sym %s into %s'
+                      % (sym, load.group(2)), 1)
+
+    body = body[:m.start()] + new + body[m.end():]
+    open(dr, 'w').write(text[:span[0]] + body + text[span[1]:])
+
+    with open(symbols_path, 'a') as f:
+        f.write('at %s %s %s %d\n' % (obj, sym, blob, off))

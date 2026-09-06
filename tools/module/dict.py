@@ -246,6 +246,7 @@ def lay(arms, act, segments):
     datas = [bytes(codes) for codes, _j in segments]
     if len(datas) == 1:
         arms.rewrite(act, datas[0])
+        WRITTEN.setdefault(arms.name, set()).add(act)
     elif segments[1][1] == lex.THEN:
         arms.rewrite_parts(act, datas)
     else:
@@ -257,7 +258,11 @@ def lay(arms, act, segments):
                          'decided in code other words run through')
 
 
-MINTED = {}
+# Which actions had their record written into lang/<tag>/rules rather than
+# into the compiled image this run holds. The read-back at the end reads that
+# image, so it cannot see these and must not say they are missing or wrong.
+# What proves them is the build, and then test/words.sh speaking the word.
+WRITTEN = {}
 
 
 def mint(arms, used, codes, why):
@@ -280,7 +285,7 @@ def mint(arms, used, codes, why):
     used.add(act)
     # Written into lang/<tag>/rules rather than into the image this run
     # holds, so the read-back below has to be told not to look for it.
-    MINTED.setdefault(arms.name, set()).add(act)
+    WRITTEN.setdefault(arms.name, set()).add(act)
     return act
 
 
@@ -507,12 +512,14 @@ def compare():
                 # they were before the build. So it cannot be read back here
                 # and its absence says nothing. What proves it is the build
                 # and then test/words.sh, which speaks the word.
-                if act in MINTED.get(asked['name'], ()):
+                if act in WRITTEN.get(asked['name'], ()):
                     continue
                 bad += 1
                 print('%s action %d lays nothing down, though it was told to '
                       'say something' % (asked['name'], act), file=sys.stderr)
             elif said != unsay(text, asked['kind'], alpha):
+                if act in WRITTEN.get(asked['name'], ()):
+                    continue
                 bad += 1
                 print('%s action %d says something other than it was told to'
                       % (asked['name'], act), file=sys.stderr)
