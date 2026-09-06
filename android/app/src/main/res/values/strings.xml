@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="app_name">evvdroid</string>
+	<string name="engine_name">Eloquence (openevv)</string>
+	<string name="sample_text">Hello from Eloquence.</string>
+	<string name="preview_text">Hello from Eloquence. This is a test of the current voice.</string>
+
+	<string name="voice_label">Voice</string>
+	<string name="gender_label">Gender</string>
+	<string name="gender_male">Male</string>
+	<string name="gender_female">Female</string>
+
+	<string name="speed_label">Speed</string>
+	<string name="pitch_label">Pitch</string>
+	<string name="inflection_label">Inflection</string>
+	<string name="head_size_label">Head size</string>
+	<string name="roughness_label">Roughness</string>
+	<string name="breathiness_label">Breathiness</string>
+	<string name="volume_label">Volume</string>
+
+	<string name="speak_label">Speak a sample</string>
+	<string name="reset_label">Reset voice to defaults</string>
+
+	<string name="abbreviations_label">Expand abbreviations</string>
+
+	<string name="dictionary_main">Main dictionary</string>
+	<string name="dictionary_root">Root dictionary</string>
+	<string name="dictionary_abbreviation">Abbreviation dictionary</string>
+	<string name="dictionary_none">None</string>
+	<string name="dictionary_entries">%1$s, %2$d words</string>
+	<string name="dictionary_remove">Remove dictionaries</string>
+
+	<string name="sample_rate_label">Sample rate</string>
+	<string name="hertz">%1$d Hz</string>
+
+	<string name="percent">%1$d%%</string>
+	<string name="percent_spoken">%1$d percent</string>
+	<string name="labelled_value">%1$s: %2$s</string>
+	<string name="switch_on">On</string>
+	<string name="switch_off">Off</string>
+	<string name="cancel">Cancel</string>
+</resources>

@@ -1,0 +1,38 @@
+MIT License
+
+Copyright (c) 2026 Quin Gillespie
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+This covers the Kotlin, the C bridge, the build, the tests and the patches in
+this repository, and nothing else.
+
+It does not cover the engine under native/openevv. That is openevv's own work
+under its own MIT licence, and it is fetched from upstream rather than copied
+in here.
+
+It does not cover the language data that engine carries. That is transcribed
+from IBM's Embedded ViaVoice objects and is IBM's; native/openevv/NOTICE says
+what it is, whose it is, and who the rights in it may belong to today. Nobody
+here is in a position to license it to anyone.
+
+No pronunciation dictionary is included. The ones worth loading belong to the
+people who wrote them, and the best known collection carries no licence at all,
+so it is linked rather than copied and the test fixture here is written for the
+purpose.

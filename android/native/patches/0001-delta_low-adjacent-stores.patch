@@ -1,0 +1,44 @@
+delta_low_at: do not let one store claim the first byte of the next
+
+The language's stores of bytes are copied into the low arena and an address in
+the program is translated to the address of its copy. A rule may name the byte
+after a store, so the lookup counts one past the end as inside -- but it does
+that in the same pass as the ordinary case, first match winning.
+
+Where the linker puts two stores next to each other, the first byte of the
+second store is also one past the end of the first. Whichever was registered
+first then claims it, and the answer is a pointer just past that store's copy
+in the arena rather than the copy of the store the address is actually in. What
+comes back is whatever the arena happens to hold there.
+
+On x86 the stores this engine has do not land adjacently, so nothing shows. On
+aarch64 they do. The engine still spoke most text, with slightly different
+samples, and spoke nothing at all for words whose rules read a constant through
+a misresolved store -- "seven." and "eight." each gave a wave file with no
+samples in it -- and faulted in the pitch rules on others, with a null node
+reference in visleft.
+
+Looking for a store the address is properly inside before allowing the
+one-past-the-end case settles it, because an address one past the end of one
+store and inside another belongs to the one it is inside. With this, an
+aarch64 build answers byte for byte what an x86 build answers.
+
+diff --git a/src/delta/delta_low.c b/src/delta/delta_low.c
+index 9d04a63..a7ab30a 100644
+--- a/src/delta/delta_low.c
++++ b/src/delta/delta_low.c
+@@ -110,9 +110,13 @@ void *delta_low_at(const void *p)
+         return 0;
+
+     for (i = 0; i < regions; i++)
+-        if (c >= region[i].at && c <= region[i].at + region[i].bytes)
++        if (c >= region[i].at && c < region[i].at + region[i].bytes)
+             return region[i].copy + (c - region[i].at);
+
++    for (i = 0; i < regions; i++)
++        if (c == region[i].at + region[i].bytes)
++            return region[i].copy + region[i].bytes;
++
+     fprintf(stderr, "evv: %p is in the program and in none of the stores"
+             " copied out of it\n", p);
+     abort();

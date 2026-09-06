@@ -1,0 +1,190 @@
+Let the machine's frames be read on a boundary they are actually on
+
+The backtracking stack puts a frame wherever the machine's own frame sizes
+land it, and those sizes come from the language data: ca_size, size_b0, and in
+vback's case two a size worked out to be explicitly odd. So a delta_frame is
+routinely at a two-byte boundary, while the struct declared over it says its
+int32_t fields are word aligned.
+
+On x86 and on ARM64 the difference never shows, because an unaligned load or
+store is simply done. On ARM32 it is not. A compiler that believes the declared
+alignment is entitled to move two adjacent fields with one multi-word
+instruction, and LDM and STM fault on anything but a word boundary whatever
+SCTLR says. Both happen here: bspush_ca_scan's eight-byte copy became STMIB and
+vback's read of slot->value beside slot->length became LDMIB, and each faulted
+with SIGBUS on the first rule the engine ran.
+
+Two things, and neither changes a layout. delta_frame is marked packed, which
+says what is already true -- every offset in it is written out, so there is no
+padding for packing to take away -- and takes away only the compiler's right to
+assume an alignment the frame has not got. A static assertion beside it holds
+the size and both offsets to what they were, so a layout that did move would
+stop the build rather than the engine. And the nine eight-byte copies of the
+scan position and the loop tags go through a type of alignment one, since those
+move between structures rather than inside one and the same reasoning applies
+at both ends.
+
+Verified. test/matrix.sh check enus, against the baselines recorded on x86, so
+both hashes are compared -- the samples and the answers the probe reported:
+
+    x86, mingw, RULES=bytecode          98 cases, none moved
+    aarch64, Pixel 9a                   98 cases, none moved
+    armv7a, Pixel Watch 4               98 cases, none moved
+
+The armv7a column is the new one. Before this it did not reach the end of the
+first utterance: SIGBUS, BUS_ADRALN, in bspush_ca_scan. The other two are what
+says this costs the platforms that already worked nothing.
+
+The aarch64 and armv7a runs are cli/probe.c built with the NDK and driven on
+the device over adb, with a shim standing in for the probe so test/matrix.sh
+runs unchanged. Both were made with the delta_low change from the patch before
+this one also applied. That one touches different files and the two do not
+depend on each other to build, but it is exercised on 32-bit as well as on
+64-bit -- delta_syms_bind runs either way and EVV_AT and EVV_REF are identity
+casts rather than nothing where a pointer already fits a value -- so it is not
+true to say armv7a does not need it, and the numbers above were not measured
+without it.
+
+diff --git a/src/delta/delta.c b/src/delta/delta.c
+index ca44fd6..4ff1e63 100644
+--- a/src/delta/delta.c
++++ b/src/delta/delta.c
+@@ -279,7 +279,7 @@ int test_time(delta_state *d, int16_t tag)
+ 
+     slot = bs_push(s, s->size_b0);
+     slot->kind = 1;
+-    memcpy((uint8_t *)slot + 4, &v->scan_ptr, 8);
++    EVV_COPY8((uint8_t *)slot + 4, &v->scan_ptr);
+ 
+     EVV_AT(uint8_t *, d->fence_marks)
+         [EVV_AT(uint8_t *, d->fence_index)[(uint8_t)d->lpta.field]] = 1;
+@@ -355,7 +355,7 @@ int test_fence(delta_state *d, int16_t tag, uint8_t n, const uint8_t *chars)
+ 
+     slot = bs_push(s, s->size_b0);
+     slot->kind = 1;
+-    memcpy((uint8_t *)slot + 4, &v->scan_ptr, 8);
++    EVV_COPY8((uint8_t *)slot + 4, &v->scan_ptr);
+ 
+     if (n == 0) {
+         v->scan_held = 1;
+@@ -419,7 +419,13 @@ void bspush_ca_scan(delta_state *d, int16_t tag)
+ 
+     save = bs_push(EVV_AT(delta_stack *, d->stack), EVV_AT(delta_stack *, d->stack)->size_b0);
+     save->kind = 1;
+-    memcpy(&save->value, &EVV_AT(delta_vars *, d->vars)->scan_ptr, 8);
++    /* A frame is only as aligned as the machine's own frame sizes make it,
++       which on this layout is often two bytes. The field says four, so a
++       compiler is entitled to copy eight bytes into it with one multi-word
++       store -- and on ARM that instruction faults on anything but a word
++       boundary, where x86 and ARM64 simply do the unaligned access. Going
++       through a type of alignment one keeps the copy byte-wise. */
++    EVV_COPY8(&save->value, &EVV_AT(delta_vars *, d->vars)->scan_ptr);
+ }
+ 
+ /* Build the character fence: a set of characters the rules match against,
+@@ -528,7 +534,7 @@ int32_t vback(delta_state *d, int32_t depth)
+             size = EVV_AT(delta_stack *, d->stack)->size_b0;
+             EVV_AT(delta_stack *, d->stack)->limit += size;
+             EVV_AT(delta_stack *, d->stack)->top   += size;
+-            memcpy(&EVV_AT(delta_vars *, d->vars)->scan_ptr, &slot->value, 8);
++            EVV_COPY8(&EVV_AT(delta_vars *, d->vars)->scan_ptr, &slot->value);
+             break;
+ 
+         case 2:
+@@ -2739,7 +2745,7 @@ static void push_ca_and_scan(delta_state *d, int16_t tag)
+     save = EVV_AT(uint8_t *, s->top);
+     s->limit -= s->size_b0;
+     save[0] = 1;
+-    memcpy(save + 4, &EVV_AT(delta_vars *, d->vars)->scan_ptr, 8);
++    EVV_COPY8(save + 4, &EVV_AT(delta_vars *, d->vars)->scan_ptr);
+ }
+ 
+ /* Remember where the scan is, both in the caller's variable and on the
+@@ -5597,14 +5603,14 @@ int ventproc(delta_state *d, delta_actrec *rec, uint8_t *index,
+         return 1;
+ 
+     rec->unknown_00 = v->running;
+-    memcpy(rec->tags, &v->loop_tag, 8);
++    EVV_COPY8(rec->tags, &v->loop_tag);
+     rec->testing = (uint8_t)v->testing;
+     rec->back = EVV_REF(EVV_AT(uint8_t *, v->back));
+     rec->top = EVV_REF(EVV_AT(uint8_t *, s->top));
+     rec->vbot = EVV_REF(getDeltaStackVBot(d));
+     rec->fence_count = (uint8_t)v->fence_count;
+     rec->err_jmp = EVV_REF(EVV_AT(void *, v->err_jmp));
+-    memcpy(rec->scan, &v->scan_ptr, 8);
++    EVV_COPY8(rec->scan, &v->scan_ptr);
+     memcpy(&rec->lpta, &d->lpta, sizeof(rec->lpta));
+     memcpy(&rec->rpta, &d->rpta, sizeof(rec->rpta));
+     rec->compared_equal = (uint8_t)v->compared_equal;
+@@ -5659,14 +5665,14 @@ int vretproc(delta_state *d, int32_t tag)
+     d->fence_marks = *(evv_ref *)(frame + 0x10);
+ 
+     v->running = rec->unknown_00;
+-    memcpy(&v->loop_tag, rec->tags, 8);
++    EVV_COPY8(&v->loop_tag, rec->tags);
+     v->testing = (int8_t)rec->testing;
+     v->back = EVV_REF(EVV_AT(uint8_t *, rec->back));
+     freeDeltaStackTo(d, EVV_AT(uint8_t *, rec->top));
+     setDeltaStackVBot(d, EVV_AT(void *, rec->vbot));
+     v->fence_count = (int8_t)rec->fence_count;
+     v->err_jmp = EVV_REF(EVV_AT(void *, rec->err_jmp));
+-    memcpy(&v->scan_ptr, rec->scan, 8);
++    EVV_COPY8(&v->scan_ptr, rec->scan);
+     memcpy(&d->lpta, &rec->lpta, sizeof(d->lpta));
+     memcpy(&d->rpta, &rec->rpta, sizeof(d->rpta));
+     v->compared_equal = (int8_t)rec->compared_equal;
+@@ -6930,7 +6936,7 @@ int chstream(delta_state *d, int16_t v, uint8_t f)
+     pos = EVV_AT(uint8_t *, s->top);
+     s->limit -= s->size_b0;
+     pos[0] = 1;
+-    memcpy(pos + 4, &va->scan_ptr, 8);
++    EVV_COPY8(pos + 4, &va->scan_ptr);
+ 
+     EVV_AT(uint8_t *, d->fence_marks)[EVV_AT(uint8_t *, d->fence_index)[f]] = 1;
+     va->scan_field = f;
+diff --git a/src/delta/delta.h b/src/delta/delta.h
+index 43032b7..fa159cd 100644
+--- a/src/delta/delta.h
++++ b/src/delta/delta.h
+@@ -548,7 +548,21 @@ typedef struct {
+     int8_t  pad_01[3];
+     int32_t value;   /* +0x04 */
+     int32_t length;  /* +0x08, only a variable length record carries one */
+-} delta_frame;
++} __attribute__((packed)) delta_frame;
++
++/* Packed says what is true rather than changing anything: every offset above is
++   written out, so there is no padding for packing to take away, and the layout
++   is the same one the machine has always had. What it takes away is the
++   compiler's right to assume the struct is word aligned, which it is not -- the
++   backtracking stack puts frames wherever the machine's own frame sizes land,
++   and case two of vback makes one of an explicitly odd size. On x86 and ARM64
++   an unaligned field access is simply done. On ARM32 the compiler merges two
++   adjacent fields into one LDM, and that instruction faults on anything but a
++   word boundary. */
++typedef char evv_frame_layout_is_unchanged[
++    (sizeof(delta_frame) == 12
++     && offsetof(delta_frame, value) == 4
++     && offsetof(delta_frame, length) == 8) ? 1 : -1];
+ 
+ void lpta_loadp(delta_state *d, const delta_token *p);
+ void lpta_loadpn(delta_state *d, const delta_token *p);
+@@ -561,6 +575,17 @@ void bspush_ca(delta_state *d, int16_t tag);
+ void bspush_boa(delta_state *d);
+ void bspush_nboa(delta_state *d);
+ 
++/* Eight bytes moved at whatever alignment they are actually at.
++ *
++ * The machine's frames and records are laid out the way 1999 laid them out and
++ * are not word aligned, while the fields declared over them say they are. On
++ * x86 and on ARM64 the difference never shows, because an unaligned load or
++ * store is simply done. On ARM32 a multi-word instruction faults instead, and a
++ * compiler that believes the declared alignment will choose one. */
++typedef struct { unsigned char b[8]; } __attribute__((packed)) evv_bytes8;
++
++#define EVV_COPY8(to, from)     (*(evv_bytes8 *)(void *)(to) = *(const evv_bytes8 *)(const void *)(from))
++
+ void bspush_ca_scan(delta_state *d, int16_t tag);
+ 
+ int  testeq(delta_state *d);
