@@ -60,6 +60,11 @@ class EvvEngine private constructor(private var handle: Long, val language: Int)
 		EvvNative.setParam(handle, Eci.PARAM_LANGUAGE_DIALECT, language)
 		EvvNative.setParam(handle, Eci.PARAM_SYNTH_MODE, 0)
 		EvvNative.setParam(handle, Eci.PARAM_REAL_WORLD_UNITS, 0)
+		// Always on. The engine is the only thing that can act on an annotation,
+		// nothing in this app speaks without wanting pauses shortened, and one
+		// that is malformed is spoken rather than obeyed, so ordinary text
+		// carrying a backtick is read out as it stands.
+		setAnnotations(true)
 		setSampleRate(Eci.sampleRateHz(EvvNative.getParam(handle, Eci.PARAM_SAMPLE_RATE)))
 	}
 

@@ -103,6 +103,16 @@ fun SettingsScreen(state: SettingsModel) {
 			ActionRow(stringResource(R.string.reset_label), state::resetVoice)
 
 			Gap()
+			ChoiceRow(
+				label = stringResource(R.string.pauses_label),
+				options = listOf(
+					stringResource(R.string.pauses_keep),
+					stringResource(R.string.pauses_end),
+					stringResource(R.string.pauses_all)
+				),
+				chosen = state.pauses,
+				onChoose = state::choosePauses
+			)
 			SwitchRow(
 				label = stringResource(R.string.abbreviations_label),
 				checked = state.abbreviations,

@@ -53,6 +53,12 @@ class Settings(context: Context) {
 		get() = prefs.getBoolean(KEY_ABBREVIATIONS, false)
 		set(value) = prefs.edit().putBoolean(KEY_ABBREVIATIONS, value).apply()
 
+	/** How much of the engine's own pausing to keep. One of the Pauses
+	 *  constants, and not a voice's business. */
+	var pauses: Int
+		get() = prefs.getInt(KEY_PAUSES, Pauses.ALL).coerceIn(Pauses.KEEP, Pauses.ALL)
+		set(value) = prefs.edit().putInt(KEY_PAUSES, value).apply()
+
 	/** One speed for every voice. */
 	var speed: Int
 		get() = Eci.clampVoice(Eci.VOICE_SPEED, prefs.getInt(KEY_SPEED, Eci.DEFAULT_SPEED))
@@ -154,6 +160,7 @@ class Settings(context: Context) {
 		const val KEY_SAMPLE_RATE = "sample_rate_hz"
 		const val KEY_ABBREVIATIONS = "abbreviations"
 		const val KEY_SPEED = "speed"
+		const val KEY_PAUSES = "pauses"
 		const val DEFAULT_SAMPLE_RATE = 11025
 
 		/** The eight, in the order the settings screen shows them. */

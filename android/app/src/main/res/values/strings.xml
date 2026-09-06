@@ -21,6 +21,10 @@
 	<string name="speak_label">Speak a sample</string>
 	<string name="reset_label">Reset voice to defaults</string>
 
+	<string name="pauses_label">Pauses</string>
+	<string name="pauses_keep">Do not shorten</string>
+	<string name="pauses_end">Shorten at end of text</string>
+	<string name="pauses_all">Shorten all pauses</string>
 	<string name="abbreviations_label">Expand abbreviations</string>
 
 	<string name="dictionary_main">Main dictionary</string>

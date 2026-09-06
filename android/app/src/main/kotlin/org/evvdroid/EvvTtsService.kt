@@ -151,10 +151,6 @@ class EvvTtsService : TextToSpeechService() {
 		val s = settings ?: return
 		target.setSampleRate(s.sampleRateHz)
 		target.setAbbreviations(s.abbreviations)
-		// Always on. The engine is the only thing that can act on an annotation,
-		// and one that is malformed is spoken rather than obeyed, so ordinary
-		// text carrying a backtick is read out as it stands.
-		target.setAnnotations(true)
 		loadDictionaries(target, s)
 		target.applyVoice(s.voice, s.shape(s.voice))
 		lastVoiceName = null
@@ -218,8 +214,14 @@ class EvvTtsService : TextToSpeechService() {
 		val pace = Pace(target.sampleRateHz * BYTES_PER_SAMPLE)
 		// Piece by piece, so that asking for silence waits out a piece rather
 		// than the whole message: the engine cannot abandon what it is saying.
-		for (piece in TextPieces.split(text)) {
+		// Pauses are shortened after the split rather than before it: the
+		// annotation sits in front of the full stop, and a piece boundary is
+		// found by looking at the end of a word.
+		val pauses = settings?.pauses ?: Pauses.ALL
+		val pieces = TextPieces.split(text)
+		for ((at, raw) in pieces.withIndex()) {
 			if (stopped) break
+			val piece = Pauses.apply(raw, pauses, at == pieces.lastIndex)
 			if (!target.speak(piece)) {
 				Log.e(TAG, "the engine refused ${piece.length} characters")
 				callback.error(TextToSpeech.ERROR_SYNTHESIS)

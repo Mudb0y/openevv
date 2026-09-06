@@ -32,7 +32,7 @@ redistributing anything.
 * Pronunciation dictionaries.
 * Android 6 and later. arm64-v8a, armeabi-v7a, x86_64.
 
-`app/src/androidTest` runs on a device. 46 checks.
+`app/src/androidTest` runs on a device. 53 checks.
 
 ## Turning it on
 
@@ -81,7 +81,7 @@ constantly.
 Launcher icon, or the gear beside the engine in the text-to-speech settings.
 
 Sliders for the seven numeric voice parameters, plus gender, voice, sample
-rate, abbreviations and dictionaries. "Speak a sample" sits under the sliders.
+rate, pauses, abbreviations and dictionaries. "Speak a sample" sits under the sliders.
 Nothing speaks on its own. A setting takes effect when you set it, and the
 button is how you hear it.
 
@@ -117,6 +117,25 @@ Picking a voice loads that voice's numbers. A parameter you have not set is
 never sent to the engine, so a fresh install sounds like Eloquence always has.
 Getting this wrong is audible. An early version applied its own defaults over
 every preset and made all eight voices wrong the same way.
+
+## Pauses
+
+Eloquence pauses generously, which reads well in prose and badly in a screen
+reader where most utterances are a few words. The engine has no setting for it,
+but it takes an annotation: `` `p `` and a number is a pause of that many
+milliseconds, and one placed in front of a punctuation mark replaces the pause
+that mark would have had.
+
+"Pauses" offers three choices. Do not shorten leaves the engine alone. Shorten
+at end of text trims only the gap after the last thing said. Shorten all pauses
+trims punctuation as well, which is the default. On a sentence with commas that
+took 65 percent of the original time.
+
+The rule is davidacm's, from the
+[NVDA IBMTTS driver](https://github.com/davidacm/NVDA-IBMTTS-Driver), which
+calls these JAWS-like pauses. A mark counts when it follows a letter, digit or
+space and is followed by whitespace, a slash or the end, which is what leaves
+the point in 3.14, the colon in 2:30 and the comma in 1,024 alone.
 
 ## Dictionaries
 

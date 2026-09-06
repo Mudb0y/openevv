@@ -30,6 +30,9 @@ class SettingsModel(context: Context) {
 	var sampleRateHz by mutableStateOf(settings.sampleRateHz)
 		private set
 
+	var pauses by mutableStateOf(settings.pauses)
+		private set
+
 	private val shape = mutableStateMapOf<Int, Int>().apply { putAll(settings.shape(settings.voice)) }
 
 	private var dictionaries: Map<Int, String> by mutableStateOf(
@@ -144,6 +147,11 @@ class SettingsModel(context: Context) {
 			if (at >= 0 && row.moveToFirst()) row.getString(at) else null
 		}
 	}.getOrNull()
+
+	fun choosePauses(mode: Int) {
+		pauses = mode
+		settings.pauses = mode
+	}
 
 	fun chooseSampleRate(hz: Int) {
 		sampleRateHz = hz
