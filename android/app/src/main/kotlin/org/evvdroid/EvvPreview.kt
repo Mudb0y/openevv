@@ -42,6 +42,18 @@ class EvvPreview(private val language: Int) {
 	var bytesPlayed: Long = 0L
 		private set
 
+	/** Whether a sample is still being spoken, and whether the last one was
+	 *  heard all the way out. Nothing in the app reads either; they are what
+	 *  lets a test say the tail was not cut off, which is invisible from
+	 *  outside because every byte was handed over either way. */
+	@Volatile
+	var playing: Boolean = false
+		private set
+
+	@Volatile
+	var drained: Boolean = false
+		private set
+
 	/** Reads what a preset is set to. Answers an empty map until the engine has
 	 *  opened, which is the first thing the thread does. */
 	fun presetShape(index: Int): Map<Int, Int> = engine?.presetShape(index) ?: emptyMap()
@@ -76,6 +88,8 @@ class EvvPreview(private val language: Int) {
 	}
 
 	private fun play(e: EvvEngine, mine: Int) {
+		playing = true
+		drained = false
 		val rate = e.sampleRateHz
 		val minimum = AudioTrack.getMinBufferSize(
 			rate, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT
@@ -101,6 +115,7 @@ class EvvPreview(private val language: Int) {
 		track = t
 		t.play()
 		val buffer = ByteArray(CHUNK)
+		var written = 0L
 		while (mine == generation) {
 			val n = e.read(buffer)
 			if (n <= 0) break
@@ -110,16 +125,44 @@ class EvvPreview(private val language: Int) {
 				if (wrote <= 0) break
 				at += wrote
 				bytesPlayed += wrote
+				written += wrote / BYTES_PER_FRAME
 			}
 		}
 		if (mine == generation) {
-			// Let what is already in the track finish rather than cutting it.
+			// Waited out before stopping rather than after. The track holds
+			// most of a second, which is the last few words of a short sample,
+			// and release() cuts that off; stop() would let it play but also
+			// puts the playback head back to nought, so there would be nothing
+			// left to watch. So this waits for the head to reach the end of
+			// what was written while the track is still running.
+			drained = waitToDrain(t, mine, written, rate)
 			runCatching { t.stop() }
 		} else {
 			runCatching { t.pause(); t.flush(); t.stop() }
 		}
 		runCatching { t.release() }
 		if (track === t) track = null
+		playing = false
+	}
+
+	/** Answers whether everything written was actually heard. */
+	private fun waitToDrain(t: AudioTrack, mine: Int, frames: Long, rate: Int): Boolean {
+		if (frames <= 0L) return true
+		// However long the audio is, plus a margin, so a track that stops
+		// reporting cannot hold this thread for ever.
+		val giveUp = System.currentTimeMillis() + frames * 1000L / rate + MARGIN_MS
+		while (mine == generation && System.currentTimeMillis() < giveUp) {
+			val head = runCatching { t.playbackHeadPosition.toLong() and 0xFFFFFFFFL }
+				.getOrElse { return false }
+			if (head >= frames) return true
+			try {
+				Thread.sleep(SIP_MS)
+			} catch (stopping: InterruptedException) {
+				Thread.currentThread().interrupt()
+				return false
+			}
+		}
+		return false
 	}
 
 	fun stopSpeaking() {
@@ -140,5 +183,8 @@ class EvvPreview(private val language: Int) {
 	private companion object {
 		const val TAG = "evvdroid"
 		const val CHUNK = 4096
+		const val BYTES_PER_FRAME = 2
+		const val MARGIN_MS = 750L
+		const val SIP_MS = 20L
 	}
 }

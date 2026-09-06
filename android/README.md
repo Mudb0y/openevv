@@ -32,7 +32,7 @@ redistributing anything.
 * Pronunciation dictionaries.
 * Android 6 and later. arm64-v8a, armeabi-v7a, x86_64.
 
-`app/src/androidTest` runs on a device. 57 checks.
+`app/src/androidTest` runs on a device. 58 checks.
 
 ## Turning it on
 
