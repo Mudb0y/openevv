@@ -207,9 +207,15 @@ class EvvTtsService : TextToSpeechService() {
 			callback.done()
 			return
 		}
-		if (callback.start(target.sampleRateHz, AudioFormat.ENCODING_PCM_16BIT, 1) != TextToSpeech.SUCCESS) {
-			return
-		}
+		// The framework is not told an utterance has begun until there are
+		// samples for it. Saying so up front and then being silenced before the
+		// engine has made anything hands the reader a whole start and finish
+		// with no speech in it, and TalkBack reads that as its queue running
+		// dry: it answers "Completed speech while already completed", stops the
+		// queue, and the item the finger is actually on dies with it. That is
+		// what made dragging across a launcher go quiet. RHVoice opens the same
+		// way, from inside its player rather than ahead of it.
+		val opening = Opening(callback, target.sampleRateHz)
 		val pace = Pace(target.sampleRateHz * BYTES_PER_SAMPLE)
 		// Piece by piece, so that asking for silence waits out a piece rather
 		// than the whole message: the engine cannot abandon what it is saying.
@@ -227,23 +233,27 @@ class EvvTtsService : TextToSpeechService() {
 				callback.error(TextToSpeech.ERROR_SYNTHESIS)
 				return
 			}
-			if (!pump(target, callback, pace)) {
-						remember(pace)
+			if (!pump(target, callback, pace, opening)) {
+				remember(pace)
 				return
 			}
 		}
 		remember(pace)
-		callback.done()
+		if (opening.began) callback.done()
 	}
 
 	/** Hands one piece's samples on as they arrive, and answers whether the
 	 *  caller may go on to the next. */
-	private fun pump(target: EvvEngine, callback: SynthesisCallback, pace: Pace): Boolean {
+	private fun pump(target: EvvEngine, callback: SynthesisCallback, pace: Pace, opening: Opening): Boolean {
 		val size = callback.maxBufferSize.coerceIn(MIN_CHUNK, MAX_CHUNK)
 		val buffer = ByteArray(size)
 		while (!stopped) {
 			val n = target.read(buffer)
 			if (n <= 0) break
+			if (!opening.open()) {
+				target.stop()
+				return false
+			}
 			if (callback.audioAvailable(buffer, 0, n) != TextToSpeech.SUCCESS) {
 				// The framework has torn the callback down already, so done()
 				// is neither wanted nor listened to.
@@ -285,6 +295,20 @@ class EvvTtsService : TextToSpeechService() {
 				Thread.currentThread().interrupt()
 				return
 			}
+		}
+	}
+
+	/** Tells the framework an utterance has begun, once, and not before there
+	 *  is something to hear. [began] answers whether it was ever told, which is
+	 *  what decides whether it is owed a finish. */
+	private class Opening(private val callback: SynthesisCallback, private val rateHz: Int) {
+		var began = false
+			private set
+
+		fun open(): Boolean {
+			if (began) return true
+			began = callback.start(rateHz, AudioFormat.ENCODING_PCM_16BIT, 1) == TextToSpeech.SUCCESS
+			return began
 		}
 	}
 
