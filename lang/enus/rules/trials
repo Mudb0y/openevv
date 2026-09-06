@@ -1,13 +1,21 @@
 # The upper-form files this module keeps but does not build.
 #
-# Each of these stands in for a rule IBM itself compiled. They are here so
-# that tools/rules/check-upper.sh has an authored rule to hold against the one it
-# replaces, which is how the compiler is proved at all; building them would
-# put our bytecode where IBM's is and give up the byte identity English is
-# checked by. A module written rather than lifted names nothing here, because
-# every rule in the upper form is its own.
-
-es_cdur.up
-et_prfx.up
-u_integ.up
-ut_main.up
+# Nothing, as of 6 September 2026, and the four that used to be here are the
+# reason the file still exists rather than a reason to keep it.
+#
+# They were held out because building them would put our bytecode where IBM's
+# is and give up the byte identity English was checked by. That property was
+# retired: the gate is test/matrix.sh and test/words.sh, which hold this
+# engine to what this engine said before, and neither cares whose bytecode it
+# is. Holding rules out of the build to protect a claim nothing was checking
+# any more only meant English's rules could not be edited, which is the one
+# thing the compiler was written for.
+#
+# tools/rules/check-upper.sh is unaffected and still runs: it builds both
+# sides itself, the lifted text alone against the same with every upper-form
+# file compiled in, whatever this file says. What it proves has changed name
+# rather than substance -- that the compiler renders a rule faithfully, not
+# that our bytecode is IBM's.
+#
+# What the file is for now is a rule being written: name it here while it is
+# half done and the build will leave it alone.

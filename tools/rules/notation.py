@@ -306,21 +306,22 @@ TRIALS = os.path.join(TREE, "trials")
 
 
 def trials():
-    """Which of the module's upper-form files stand outside it.
+    """Which of the module's upper-form files the build leaves alone.
 
-    A rule written in the upper form is normally the module's own -- writing
-    Polish is what the form is for -- so an ordinary build takes every one of
-    them in. English's four are the exception. They stand in for rules IBM
-    itself compiled, they are kept so that tools/rules/check-upper.sh has something
-    to hold against those, and building them would put our bytecode where
-    IBM's is and give up the byte identity the whole tree is proved by.
+    Normally none. A rule written in the upper form is the module's own and
+    an ordinary build takes every one of them in.
 
-    Which of the two a file is cannot be read off the file, so the module says
-    it. Silence means the module's own, because that is what a module being
-    written wants. Taking English's four in would not change the sound --
-    upper-check is the check that they do the same thing, and they do -- but
-    it would cost the claim that English's bytecode is IBM's, which every
-    other check here is anchored to.
+    English's four used to be named here, because building them would have
+    put our bytecode where IBM's was and given up the byte identity English
+    was checked by. That property was retired on 6 September 2026 for every
+    language: the gate is test/matrix.sh and test/words.sh, which hold this
+    engine to what this engine said before, and neither asks whose bytecode
+    it is. The differential suite still answers what IBM did whenever it is
+    asked, which is the part that was worth keeping.
+
+    So what remains is a way to say `not this one yet': name a rule here
+    while it is half written and the build will pass over it. Silence, which
+    is now the ordinary case, means take them all.
     """
     if not os.path.exists(TRIALS):
         return set()
