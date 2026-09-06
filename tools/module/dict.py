@@ -583,11 +583,24 @@ def find():
     return 0
 
 
+USAGE = ('usage: tools/module/dict.py dump | build | where <dictionary> <word> '
+         '| find <word>')
+
 if __name__ == '__main__':
-    mode = sys.argv[1] if len(sys.argv) > 1 else 'dump'
     how = {'dump': dump, 'build': build, 'where': where, 'find': find}
+    # No default, and `dump' in particular is not one. It writes the file out
+    # of the tables, so running it with no argument on a file somebody has
+    # just edited throws that edit away without saying so -- which is exactly
+    # what happened on 6 September 2026, and it took three goes to notice
+    # because the tool reports success either way. `build' is the direction
+    # an edit travels and the two are one letter apart in the mind.
+    if len(sys.argv) < 2:
+        print(USAGE, file=sys.stderr)
+        print("dict: say which. `dump' overwrites the file from the tables "
+              "and `build' reads it into them.", file=sys.stderr)
+        sys.exit(2)
+    mode = sys.argv[1]
     if mode not in how:
-        print('usage: tools/module/dict.py [dump | build | where <dictionary> <word> '
-              '| find <word>]', file=sys.stderr)
+        print(USAGE, file=sys.stderr)
         sys.exit(2)
     sys.exit(how[mode]())

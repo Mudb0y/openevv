@@ -278,7 +278,7 @@ Three things in the rules cannot be recovered and are not going to be. The globa
 
 ## Faults and findings
 
-Mostly history, and deliberately so: a fault, how it was found, and what fixed it, kept because the reasoning outlives the diff and the next one of its kind usually rhymes. Anything still outstanding says so in its own first line, and as of 6 September 2026 that is one entry of the six, the spectral tilt filter. The last two are neither faults nor fixes but measurements that turned out to contradict what everyone assumed.
+Mostly history, and deliberately so: a fault, how it was found, and what fixed it, kept because the reasoning outlives the diff and the next one of its kind usually rhymes. Anything still outstanding says so in its own first line, and as of 6 September 2026 that is two of the seven, the dictionary writer and the spectral tilt filter. The last two are neither faults nor fixes but measurements that turned out to contradict what everyone assumed.
 
 This was headed "Known limits" until 6 September 2026, by which time four of the six things under it were fixed and two were never limits at all -- which is the sort of drift that makes a reader trust a document less than they should.
 
@@ -293,6 +293,16 @@ How it was settled. Reading did not settle it, and neither did the state of a ca
 What proves it. Sabotage first: with `finished` created holding a token on purpose, every process deadlocks on the first plain sentence, which is the mechanism on demand rather than at one in a thousand. Then `make crashers`, which is where the rate came from: 20,526 processes, 20,526 finished, none stuck, where three runs the day before answered 3, 5 and 20 not finishing. And all six builds pass the 979 cases.
 
 **Four calls in the same layer disagreed with their callers, and one of them mattered.** `ralTaskDelay`, `ralTaskTerminate`, `ralTaskPriorityGet` and `ralTaskPrioritySet` were written to take scalars while `ETIThread` calls all four with a request block, as it does everything else in that layer. C does not catch that across a translation unit. Three of the four ignore their arguments, so they were merely wrong; `ralTaskDelay` did not, and slept for its own stack address in milliseconds. On this machine the low half of a stack address reads as a negative number and the sleep therefore did nothing, which turned the application queue's thirty millisecond backoff into a spin; on a machine where it reads positive the same call would sleep for twenty minutes. All four now take the block their callers pass.
+
+**Adding a word to a dictionary can make the engine fault on it, and it is not fixed.** Found on 6 September 2026 by the word gate, on its first sabotage.
+
+Put `smith` into `roots4` saying `z E b r x`, the way `docs/language.md` says to, and `tools/module/dict.py build` reports success: one entry added, and the tables read back word for word, value for value and sound for sound. The engine then segmentation faults on `smith` and on every compound holding it -- `blacksmiths`, `goldsmith`, `locksmith`, `silversmiths`, `smiths` -- while the other 19,994 words of the gate are untouched.
+
+Nothing else in the tree would have caught it. `dict.py` verifies its own bookkeeping by dumping the tables back to text and comparing, which passes; it never asks the engine to speak. The sentence gate has 98 English cases and none of them says Smith. `make crashers` drives its own list. So the failure mode was: make a routine change, be told it worked, and ship an engine that dies on a common surname.
+
+It is not the hazard the notes warned of. That one was the rule checking the action against its arm count before dispatching, so that a new arm was thrown out unreached -- and `tools/rules/arms.py` already raises that check when it mints, with the reasoning written beside it. Something else in minting is wrong: the arm is appended, the bound is raised, the switch is rewritten one arm wider, and the result faults. Where has not been established.
+
+Two things follow for anyone editing dictionaries. `make words` before and after, always, because it is the only thing that looks. And a successful report from `dict.py build` means the text round-trips, not that the engine survived.
 
 **The spectral tilt filter is wrong at every rate but the two IBM shipped, and it is not fixed.** Found on 6 September 2026 while measuring something else.
 
