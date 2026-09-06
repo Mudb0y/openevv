@@ -814,6 +814,19 @@ phonemes: $(BUILD)/phonemes$(SUF)
 # archive holds only the engine's own short ones. It brings the constructor
 # with it, which is what starts the platform and runs the static
 # initialisers, so this driver does not do either for itself.
+# The heteronym filter, as text rather than as sound: what it writes is the
+# whole of its job, so a wrong answer should name itself rather than be a hash
+# that moved. It calls the rewriting directly, not through eciRegisterFilter,
+# because what is being checked is the decision and not the plumbing.
+.PHONY: hetero
+hetero: $(BUILD)/hetero$(SUF)
+	@bash test/harness/hetero.sh
+
+$(BUILD)/hetero$(SUF): test/harness/hetero.c $(BUILD)/libevv$(SUF).a
+	@$(CC) $(ALL_CFLAGS) test/harness/hetero.c \
+	   $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
+	@echo "built $@"
+
 $(BUILD)/phonemes$(SUF): test/harness/phonemes.c lib/eci_api.c $(BUILD)/libevv$(SUF).a
 	@$(CC) $(ALL_CFLAGS) -DECI_STATIC test/harness/phonemes.c lib/eci_api.c \
 	   $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@

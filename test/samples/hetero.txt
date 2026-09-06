@@ -1,0 +1,25 @@
+# What the heteronym filter writes for test/cases/hetero.txt.
+# Written by test/harness/hetero.sh record.
+I bought some `[.1pro.0dus] at the store.
+I produce music.
+the `[.1pro.0dus] was fresh.
+they will produce it.
+the transport is late.
+they will `[.0trAn.1spcrt] it.
+we must `[.0trAn.1spcrt] it.
+the export is large.
+we must `[.0Ek.1spcrt] it.
+the transfer is done.
+they will `[.0trAns.1fR] it.
+the digest is short.
+they must `[.0dX.1JEst] it.
+the `[.1di.0kris] is small.
+the transplant is ready.
+they will `[.0trAnz.1plAnt] it.
+the record is here.
+please record this.
+I read the book.
+I will read it.
+the wind is cold.
+they will wind it.
+nothing here changes at all.

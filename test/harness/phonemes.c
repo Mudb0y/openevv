@@ -19,6 +19,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <eci.h>
@@ -83,6 +84,12 @@ int main(int argc, char **argv)
 
         eciRegisterCallback(h, on_message, 0);
         eciSetParam(h, eciWantPhonemeIndices, 1);
+        /* EVV_ANNO reads the text as annotations rather than as plain words,
+           which is the only way to see what an annotation makes of a word
+           without listening to it. The heteronym filter writes annotations,
+           so this is how its answers are checked. */
+        if (getenv("EVV_ANNO") != 0)
+            eciSetParam(h, eciInputType, 1);
         eciSetParam(h, eciSynthMode, 1);
         eciAddText(h, line);
 

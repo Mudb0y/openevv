@@ -1,0 +1,28 @@
+# What the heteronym filter should and should not write.
+#
+# One case a line. The words the engine already turns correctly are here too,
+# because the filter must leave those alone: writing an annotation where the
+# engine was right is as wrong as missing one where it was not.
+I bought some produce at the store.
+I produce music.
+the produce was fresh.
+they will produce it.
+the transport is late.
+they will transport it.
+we must transport it.
+the export is large.
+we must export it.
+the transfer is done.
+they will transfer it.
+the digest is short.
+they must digest it.
+the decrease is small.
+the transplant is ready.
+they will transplant it.
+the record is here.
+please record this.
+I read the book.
+I will read it.
+the wind is cold.
+they will wind it.
+nothing here changes at all.
