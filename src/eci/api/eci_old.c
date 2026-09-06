@@ -25,6 +25,7 @@
 #include "evv_abi.h"
 #include "evv_arena.h"
 #include "eci_old.h"
+#include "eci_hetero.h"
 
 /* Which call was refused. Every entry point has its own bit; the ones here
    share the same one because the original gives them the same one. */
@@ -517,6 +518,11 @@ static OldInst *eo_newInstance(int32_t language, int told)
             }
             OI_ROMMGR(h) = api_get_rom_mngr(OI_NEW(h));
             OI_FILTERMGR(h) = api_get_filter_mngr(OI_NEW(h));
+            /* Ours, and on by itself rather than left to the caller: see
+               src/eci/hetero/eci_hetero.c for why, and docs/quirks.md for
+               its being a divergence. A refusal is not a failure -- the
+               engine speaks perfectly well without it. */
+            hetero_install(OI_FILTERMGR(h), OI_NEW(h));
         }
     }
 

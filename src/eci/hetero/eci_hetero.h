@@ -13,4 +13,8 @@
 extern STDCALL int hetero_getFilterObject(uint32_t idInterface, void **out);
 extern int hetero_isUsable(const char *text);
 
+/* Registers it and turns it on, which happens when an instance is made
+   rather than being left to the caller. Answers whether it took. */
+extern int hetero_install(void *manager, void *instance);
+
 #endif

@@ -98,7 +98,7 @@ These make a whole instance, say one thing and take it away. They register no ca
 
 ## Annotations
 
-An annotation is a backtick, a letter or two, and usually a number. They are read only when `eciInputType` is one, and a backslash before a backtick is a literal backtick. The engine acts on them itself, so they change what is being spoken from that point on rather than for one word.
+An annotation is a backtick, a letter or two, and usually a number. They are read only when `eciInputType` is one, and there is no way to write a literal backtick while they are: a backslash before one is spoken as a backslash, checked on 6 September 2026 rather than assumed. This file said the backslash escaped it, which it does not. A doubled backtick vanishes, an unrecognised one is spoken, and one that happens to match a real annotation acts on the engine -- so text a caller did not write itself is not safe to feed the engine with annotations on. `src/eci/hetero/eci_hetero.c` is where that mattered. The engine acts on them itself, so they change what is being spoken from that point on rather than for one word.
 
 The voice ones take the same numbers `eciSetVoiceParam` does. `` `vs `` is speed, `` `vb `` pitch baseline, `` `vf `` fluctuation, `` `vr `` roughness, `` `vh `` head size, `` `vv `` volume and `` `vg `` gender; `` `v `` followed by a digit selects one of the eight voices, so `` `v2 `` is voice two. Several of them also take a name rather than a number -- `` `vsfast ``, `` `vsslow ``, `` `vsmed `` -- and a relative form: `` `vs%+25 `` is a quarter faster than now, `` `vbst-6 `` is six semitones down, `` `vbhz120 `` is a baseline in hertz and `` `vswpm180 `` a speed in words a minute.
 

@@ -36,3 +36,41 @@ Each of these was written as an annotation and read back to confirm the engine a
     transport   .1trAn.0spcrF noun        .0trAn.1spcrt   verb
 
 Two things to know before writing more of these. A final `t` comes back as `F`, which is the engine's own choice of allophone and not something an annotation should try to spell. And the cues the engine's own test uses are the immediately preceding word -- `the`, `a` and prepositions for the noun, `will`, `to`, `must` and a subject pronoun for the verb -- which is why "the world record" comes out as the verb: `world` is neither. Any layer written here will have the same blind spot, and matching the engine's behaviour is worth more than beating it.
+
+## Off unless asked for, and why that was not the first answer
+
+The filter was going to install itself when an instance was made, so that a
+caller which had never heard of it got the right reading anyway. Measurement
+killed that.
+
+Loading any filter turns annotation reading on for the whole instance --
+`eciGetParam(eciInputType)` goes from 0 to 1 the moment it loads, since a
+filter that writes annotations needs them read. Every backtick in the
+caller's own text is then interpreted, and nothing can protect it:
+
+    a `` here.        vanishes entirely
+    a `vs50 here.     silently changes the voice
+    a `x here.        spoken as "backquote x", harmless
+    a \` here.        spoken as "backslash backquote"
+
+`docs/api.md` claimed a backslash before a backtick gives a literal one. It
+does not, and that is corrected there now.
+
+So the two failures fail differently, and that decides it. A mis-stressed
+`produce` is wrong and still intelligible: the word is recognisable and at
+worst it grates. A swapped voice or a swallowed character is wrong in a way a
+listener cannot detect, and undetectable is the worse class for a screen
+reader, whose whole contract is that what is heard is what is there. The gain
+fires on nine words standing behind a determiner or a modal; the loss fires on
+backticks, which are constant in code and in Markdown.
+
+`EVV_HETERO=on` installs it, and a caller can register it itself with
+`hetero_getFilterObject` as the entry. The caller is the right place for the
+decision because it is the only thing in the stack that knows whether it is
+reading prose or a program, and a screen reader already tells those apart.
+
+Two things not done, deliberately. Stripping the caller's backticks would
+trade a silent misreading for a silently missing character, which is not an
+improvement and makes the filter destructive to text it does not understand.
+And shipping it on in the hope that the backtick case is rare is not
+available: a fault nobody can hear is not one that gets reported and fixed.

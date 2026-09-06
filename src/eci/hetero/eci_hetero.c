@@ -27,6 +27,7 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -167,7 +168,7 @@ static size_t room_for(const char *text)
         if (b > most)
             most = b;
     }
-    return strlen(text) * (most + 1) + 1;
+    return strlen(text) * (most + 2) + 1;
 }
 
 char *hetero_rewrite(const char *text)
@@ -358,4 +359,89 @@ STDCALL int hetero_getFilterObject(uint32_t idInterface, void **out)
             *out = object;
     }
     return *out != 0;
+}
+
+/* ---- installing it ----------------------------------------------------
+ *
+ * Off unless asked for, which is IBM's shape for SSML and is right for the
+ * same reason. It was going to be on by itself until the cost of that turned
+ * up in measurement.
+ *
+ * Loading any filter turns annotation reading on for the whole instance --
+ * eciGetParam(eciInputType) goes from 0 to 1 the moment this loads, because a
+ * filter that writes annotations needs them read. So every backtick in the
+ * caller's own text is then interpreted, and there is no way to protect it:
+ *
+ *     a `` here.        vanishes entirely
+ *     a `vs50 here.     silently changes the voice
+ *     a `x here.        spoken as "backquote x", which is harmless
+ *     a \` here.        spoken as "backslash backquote"
+ *
+ * docs/api.md said a backslash before a backtick gives a literal backtick. It
+ * does not, and that was checked rather than assumed; the note there is
+ * corrected now.
+ *
+ * Which settles it. A mis-stressed `produce' is wrong and still intelligible;
+ * a swapped voice or a swallowed character is wrong in a way a listener
+ * cannot detect, and undetectable is the worse class for a screen reader,
+ * whose whole contract is that what is heard is what is there. The gain fires
+ * on nine words behind a determiner or a modal; the loss fires on backticks,
+ * which are constant in code and in Markdown. So the caller decides, since
+ * the caller is the only thing in the stack that knows whether it is reading
+ * prose or a program.
+ *
+ * EVV_HETERO=on installs it, or a caller can register it itself the way it
+ * would register any filter, with hetero_getFilterObject as the entry.
+ *
+ * The number is the top of the range the manager allows, so that a caller
+ * registering its own filters from nought upwards -- which is what the
+ * published examples do -- will not land on this one.
+ */
+
+#define HETERO_FILTER_ID 0x13
+
+extern STDCALL int32_t api_activate_filter(void *self, void *which);
+extern STDCALL int32_t api_new_filter(void *self, int32_t engine,
+                                      int32_t which, void **out);
+extern THIS int32_t fm_registerFilter(void *self, ECIFilterAttrib *attrib,
+                                      uint32_t id, GetFilterObjectFn *entry,
+                                      int8_t autoload)
+    MANGLED("?registerFilter@FilterManager@@QAE?AW4ECIFilterError@@PAUECIFilterAttrib@@IP6GHIPAPAX@ZE@Z");
+
+int hetero_install(void *manager, void *instance)
+{
+    ECIFilterAttrib attrib;
+    GetFilterObjectFn entry = hetero_getFilterObject;
+
+    if (manager == 0 || instance == 0)
+        return 0;
+    {
+        const char *say = getenv("EVV_HETERO");
+
+        if (say == 0 || strcmp(say, "on") != 0)
+            return 0;
+    }
+
+    memset(&attrib, 0, sizeof attrib);
+    {
+        /* Register, load, then turn on -- the three a caller does, in that
+           order. Registering only puts it in the registry; the manager runs
+           what is loaded, and loading is what gives it the language the text
+           path matches against. */
+        int32_t reg = fm_registerFilter(manager, &attrib, HETERO_FILTER_ID,
+                                        &entry, 1);
+        void   *loaded = 0;
+        int32_t act = -1;
+
+        if (reg == FILTER_OK)
+            api_new_filter(instance, (int32_t)attrib.language,
+                           HETERO_FILTER_ID, &loaded);
+        if (loaded != 0)
+            act = api_activate_filter(instance, loaded);
+        if (getenv("EVV_HETERO_TRACE") != 0)
+            fprintf(stderr, "hetero: register %d load %s activate %d "
+                    "language %u\n", (int)reg, loaded ? "yes" : "no",
+                    (int)act, (unsigned)attrib.language);
+        return reg == FILTER_OK && loaded != 0 && act == 0;
+    }
 }
