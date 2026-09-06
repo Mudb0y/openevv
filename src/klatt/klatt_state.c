@@ -69,14 +69,55 @@ typedef char klatt_state_is_0x1d24[sizeof(klatt_state) == 0x1d24 ? 1 : -1];
 
 #endif
 
+/* Where the noise shaper keeps its filter state. It cannot go in
+   klatt_state: that block is IBM's field for field and the thirty-two bit
+   build still checks every offset, so it sits beside it instead, keyed by
+   the block it belongs to.
+
+   Two streams to a block, because aspiration and frication each carry a
+   seed of their own and a filter shared between them would run one's
+   history into the other. Which one is asking is not passed in, but the
+   caller hands over the field it is about to overwrite, so comparing
+   against the two says which. */
+#define SHAPERS 8
+
+static struct {
+    const klatt_state *k;
+    double             z[2][4];
+} shaper[SHAPERS];
+
+static double *shaper_state(const klatt_state *k, int stream)
+{
+    int i, spare = -1;
+
+    for (i = 0; i < SHAPERS; i++) {
+        if (shaper[i].k == k)
+            return shaper[i].z[stream];
+        if (shaper[i].k == 0 && spare < 0)
+            spare = i;
+    }
+    if (spare < 0)
+        spare = 0;
+    memset(&shaper[spare], 0, sizeof shaper[spare]);
+    shaper[spare].k = k;
+    return shaper[spare].z[stream];
+}
+
 /* Fill the noise buffer, then optionally halve it in place over a series of
    spans. Each pair says how far to skip and how far to keep attenuating, so
-   the smoothing follows the pitch periods rather than a fixed window. */
+   the smoothing follows the pitch periods rather than a fixed window.
+
+   The shaping goes between the two: it belongs to the source, and running it
+   after the envelope would smear the envelope instead. Above 11,025 only,
+   so nothing the gate records can move. */
 uint32_t noise(klatt_state *k, uint32_t seed)
 {
     int32_t i, limit, j;
 
     seed = klatt_rand(k->noise_buf, k->noise_count, seed);
+    klatt_shape_noise(k->noise_buf, k->noise_count, k->cp.sample_rate,
+                      shaper_state(k, seed == (uint32_t)k->unknown_19dc
+                                      ? 0 : 1));
 
     if (k->av == 0)
         return seed;

@@ -1,3 +1,5 @@
+#include <math.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "klatt_fx.h"
@@ -236,5 +238,99 @@ void zero_filter(filter_parms *fp, const zero_ABCs *z, int32_t *buf, int32_t n)
     } else {
         fp->d2 = fp->d1;
         fp->d1 = p1;
+    }
+}
+
+/* ---- shaping the noise for a rate above the engine's own ---------------
+ *
+ * The frication and aspiration source is white: klatt_rand puts one value
+ * per output sample in the buffer and nothing bounds it, so the noise
+ * occupies whatever band the rate gives it. At 11,025 that is right by
+ * accident -- Nyquist is 5,512 and the source is meant to stop there. Ask
+ * the synthesiser for 22,050 and the same code spreads the same energy over
+ * twice the band; at 44,100 there is as much of it above 11 kHz as between
+ * 5.5 and 11, which is why sibilants synthesised outright go thin and hissy
+ * and why raising the rate afterwards has been the only way up.
+ *
+ * So bound it where the engine's own rate bounds it. Two poles at 5,512
+ * hertz, and a gain of sqrt(rate / 11025) to put back the power the band
+ * limit takes out: white noise at rate R carries its variance over R/2 of
+ * spectrum, so confining it to a fixed 5,512 without that gain would leave
+ * the band quieter than 11,025 leaves it rather than the same.
+ *
+ * At 11,025 and below this does nothing at all, by the test below rather
+ * than by the arithmetic coming out to unity. That is deliberate: it is what
+ * keeps every recorded case byte for byte what it was.
+ *
+ * EVV_NOISE=flat asks for the old behaviour at any rate, which is what the
+ * two are measured against. */
+
+#define NOISE_BAND 5512
+
+static int noise_shaping(void)
+{
+    static int decided, on = 1;
+
+    if (!decided) {
+        const char *say = getenv("EVV_NOISE");
+
+        decided = 1;
+        if (say != 0 && strcmp(say, "flat") == 0)
+            on = 0;
+    }
+    return on;
+}
+
+/* Fourth-order Butterworth, as two biquads. A gentler filter is no use
+   here: the whole transition band is the one octave between 5,512 and the
+   new Nyquist at 22,050, so twelve decibels an octave arrives at Nyquist
+   having taken almost nothing off. Twenty-four is the least that bites.
+
+   Designed at the rate rather than stored, the way klatt_rates.c builds the
+   resonator tables, because the rate is not known until the caller asks. */
+void klatt_shape_noise(int16_t *buf, int32_t n, int32_t rate, double *z)
+{
+    static const double q[2] = { 0.54119610, 1.30656296 };
+    double b[2][3], a[2][2], g;
+    int32_t i;
+    int s;
+
+    if (n <= 0 || rate <= 11025 || !noise_shaping())
+        return;
+
+    for (s = 0; s < 2; s++) {
+        double w0 = 6.283185307179586 * (double)NOISE_BAND / (double)rate;
+        double c = cos(w0), al = sin(w0) / (2.0 * q[s]);
+        double a0 = 1.0 + al;
+
+        b[s][0] = (1.0 - c) / 2.0 / a0;
+        b[s][1] = (1.0 - c) / a0;
+        b[s][2] = b[s][0];
+        a[s][0] = -2.0 * c / a0;
+        a[s][1] = (1.0 - al) / a0;
+    }
+
+    /* White noise carries its variance over the whole band it is given, so
+       confining it to a fixed 5,512 leaves less power in that band than
+       11,025 leaves there. This puts it back. */
+    g = sqrt((double)rate / 11025.0);
+
+    for (i = 0; i < n; i++) {
+        double v = buf[i];
+
+        for (s = 0; s < 2; s++) {
+            double *w = z + s * 2;
+            double y = b[s][0] * v + w[0];
+
+            w[0] = b[s][1] * v - a[s][0] * y + w[1];
+            w[1] = b[s][2] * v - a[s][1] * y;
+            v = y;
+        }
+        v *= g;
+        if (v > 32767.0)
+            v = 32767.0;
+        else if (v < -32768.0)
+            v = -32768.0;
+        buf[i] = (int16_t)v;
     }
 }
