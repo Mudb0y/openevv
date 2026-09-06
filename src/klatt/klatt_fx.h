@@ -82,6 +82,8 @@ static inline int32_t fxmul_scaled(int32_t coef, int32_t x)
 void     clr_vector(int32_t *v, int32_t n);
 uint32_t klatt_rand(int16_t *out, int32_t n, uint32_t seed);
 void     klatt_shape_noise(int16_t *buf, int32_t n, int32_t rate, double *z);
+void     klatt_wide_enable(int32_t rate);
+int      klatt_wide_on(void);
 int16_t  fxdivl(int32_t num, int32_t den);
 void     fxmul_vector(const int32_t *src, int16_t coef, int32_t *acc, int32_t n);
 void     fxmul1_vector(const int16_t *src, int16_t coef, int32_t *acc, int32_t n);

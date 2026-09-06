@@ -125,6 +125,8 @@ typedef char filter_parms_is_84_bytes[sizeof(filter_parms) == 84 ? 1 : -1];
    two slots ahead of the pointer it was handed, rather than in locals.
    The three products are weighted 1, 2 and 4 on the way out, so the three
    coefficients are held at three different fixed-point scales. */
+static void pole_filter_wide(filter_parms *fp, int32_t *buf, int32_t n);
+
 void pole_filter(filter_parms *fp, int32_t *buf, int32_t n)
 {
     int32_t i, count, k, t1, t2, t3;
@@ -135,6 +137,14 @@ void pole_filter(filter_parms *fp, int32_t *buf, int32_t n)
     buf[-2] = fp->d2;
     buf[-1] = fp->d1;
     i = 0;
+
+    /* After the two above, not before them: whatever runs next over this
+       buffer reads them, and leaving them as the last filter set them puts
+       a step at the head of every block. */
+    if (klatt_wide_on()) {
+        pole_filter_wide(fp, buf, n);
+        return;
+    }
 
     if (fp->ramp != 0) {
         count = fp->ramp < n ? fp->ramp : n;
@@ -333,4 +343,138 @@ void klatt_shape_noise(int16_t *buf, int32_t n, int32_t rate, double *z)
             v = -32768.0;
         buf[i] = (int16_t)v;
     }
+}
+
+/* ---- the resonators, with a fraction to their name ---------------------
+ *
+ * pole_filter keeps its state in the output buffer as whole numbers, and
+ * shifts each of the three products down by fifteen before summing them. So
+ * every sample of the recursion is truncated to an integer and that error is
+ * fed straight back. What a resonator does with a feedback error depends on
+ * how close its poles sit to the unit circle, and raising the sample rate is
+ * precisely what pushes them there: a pole at a 60 hertz bandwidth has a
+ * radius of 0.983 at 11,025 and 0.996 at 44,100, and the round-off noise a
+ * direct form throws off grows with the square of the distance closing.
+ *
+ * That is why the fixed point engine upsamples worse than a floating point
+ * one while sounding the same at 11,025 -- the design is tuned where the
+ * arithmetic is comfortable, and nothing about the tuning says so.
+ *
+ * So above the engine's own rate, keep the state in a double beside the
+ * block rather than truncated in the buffer. The coefficients stay exactly
+ * the ones the fixed point path built, so this separates the two questions:
+ * what the state's precision costs, which is this, from what the
+ * coefficients' precision costs, which is a further change if this is not
+ * enough.
+ *
+ * The state cannot go in filter_parms: that block is IBM's field for field
+ * and the thirty-two bit build checks every offset. It is keyed by the
+ * resonator's own address instead, which is stable and unique because each
+ * one lives in the array inside the synthesiser's block.
+ *
+ * UNFINISHED, and off unless EVV_WIDE=on asks for it. As it stands the wide
+ * path is wrong rather than merely different: at a quarter volume, where
+ * nothing clips, it comes out 10.8 dB quieter in RMS than the narrow one and
+ * with a peak three times higher, which is spikes rather than speech, and at
+ * full volume those spikes clip and fill the band above 5,512 with the
+ * distortion. Precision alone cannot do that -- fxmul_scaled is a block
+ * floating point multiply rather than a plain shift, so the narrow path is
+ * far less lossy than it looks -- so there is a structural mistake in here
+ * and not just a difference of arithmetic.
+ *
+ * The check that would find it: make this path truncate each of the three
+ * products separately, exactly as the narrow one does, and require the two
+ * to agree bit for bit. If they do not, the recursion is wrong; if they do,
+ * the difference really is precision and the spikes are something the
+ * truncation was holding down. */
+
+#define WIDES 64
+
+static struct {
+    const filter_parms *fp;
+    double              d1, d2;
+} wide[WIDES];
+
+static int wide_on;
+
+void klatt_wide_enable(int32_t rate)
+{
+    static int decided, allowed;
+
+    if (!decided) {
+        const char *say = getenv("EVV_WIDE");
+
+        decided = 1;
+        allowed = say != 0 && strcmp(say, "on") == 0;
+    }
+    wide_on = allowed && rate > 11025;
+}
+
+static double *wide_state(const filter_parms *fp, int fresh)
+{
+    int i, spare = -1;
+
+    for (i = 0; i < WIDES; i++) {
+        if (wide[i].fp == fp)
+            return &wide[i].d1;
+        if (wide[i].fp == 0 && spare < 0)
+            spare = i;
+    }
+    if (spare < 0)
+        spare = 0;
+    wide[spare].fp = fp;
+    wide[spare].d1 = fresh ? (double)fp->d1 : 0.0;
+    wide[spare].d2 = fresh ? (double)fp->d2 : 0.0;
+    return &wide[spare].d1;
+}
+
+static int32_t wide_round(double y)
+{
+    return (int32_t)(y >= 0.0 ? y + 0.5 : y - 0.5);
+}
+
+/* The same recursion pole_filter runs, in doubles. The three weights carry
+   the doubling and quadrupling that one applies on the way out. */
+static void pole_filter_wide(filter_parms *fp, int32_t *buf, int32_t n)
+{
+    double *z = wide_state(fp, 1);
+    double y1 = z[0], y2 = z[1];
+    int32_t i = 0, count, k;
+
+    if (fp->ramp != 0) {
+        count = fp->ramp < n ? fp->ramp : n;
+        k = 3 - fp->ramp;
+
+        for (; i < count; i++) {
+            double y = fp->a[k] * (4.0 / 32768.0) * buf[i]
+                     + fp->b[k] * (2.0 / 32768.0) * y1
+                     + fp->c[k] * (1.0 / 32768.0) * y2;
+
+            y2 = y1;
+            y1 = y;
+            buf[i] = wide_round(y);
+            k++;
+        }
+        fp->ramp -= count;
+    }
+
+    for (; i < n; i++) {
+        double y = fp->sa * (4.0 / 32768.0) * buf[i]
+                 + fp->sb * (2.0 / 32768.0) * y1
+                 + fp->sc * (1.0 / 32768.0) * y2;
+
+        y2 = y1;
+        y1 = y;
+        buf[i] = wide_round(y);
+    }
+
+    z[0] = y1;
+    z[1] = y2;
+    fp->d1 = wide_round(y1);
+    fp->d2 = wide_round(y2);
+}
+
+int klatt_wide_on(void)
+{
+    return wide_on;
 }
