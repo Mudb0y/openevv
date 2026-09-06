@@ -123,7 +123,9 @@ class EvvEngine private constructor(private var handle: Long, val language: Int)
 	 *  it, so 100% changes nothing. */
 	fun setRatePercent(percent: Int) = synchronized(guard) {
 		if (closed || percent == currentRate || baseSpeed < 0) return
-		val want = (baseSpeed.toLong() * percent / 100).toInt().coerceIn(0, Eci.SPEED_MAX)
+		// Not baseSpeed * percent. The engine's speed scale is nothing like
+		// linear in how fast it speaks, so SpeechRate does the conversion.
+		val want = SpeechRate.speedForPercent(baseSpeed, percent)
 		EvvNative.setVoiceParam(handle, Eci.VOICE_CURRENT, Eci.VOICE_SPEED, want)
 		currentRate = percent
 	}

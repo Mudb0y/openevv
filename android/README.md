@@ -32,7 +32,7 @@ redistributing anything.
 * Pronunciation dictionaries.
 * Android 6 and later. arm64-v8a, armeabi-v7a, x86_64.
 
-`app/src/androidTest` runs on a device. 35 checks.
+`app/src/androidTest` runs on a device. 39 checks.
 
 ## Turning it on
 
@@ -85,7 +85,7 @@ rate, abbreviations and dictionaries. "Speak a sample" sits under the sliders.
 Nothing speaks on its own. A setting takes effect when you set it, and the
 button is how you hear it.
 
-Three deliberate choices:
+Four deliberate choices:
 
 Each row is one control. A label, a bar and a number would be three stops for a
 screen reader, so each row merges into a single node with
@@ -94,6 +94,13 @@ screen reader, so each row merges into a single node with
 Values are percentages. The engine uses three scales (gender is 0 or 1, speed
 runs to 250, the rest to 100), so a raw number means nothing without knowing
 which. Everything is hundredths of its own range.
+
+Speech rate from the system is a multiplier, so it is treated as one. The
+engine's own speed scale is far from linear: speed 100 speaks 2.7 times the
+default rate and speed 200 speaks 16.6 times. Multiplying the speed number by
+the percentage runs away at the top, so a measured curve converts between the
+two instead. 200 percent is about twice as fast, and very high rates saturate
+at the engine's own ceiling rather than becoming unusable.
 
 Sliders start at the voice's own values. Each preset carries its own head size,
 inflection and volume; Reed is inflection 30 and volume 92, Bobby is 35 and 90.
@@ -161,14 +168,6 @@ adb pair 192.168.x.x:PAIRPORT     # then the six digits on screen
 adb connect 192.168.x.x:PORT
 adb -s SERIAL shell getprop ro.product.cpu.abilist
 ./gradlew installDebug -Pevvdroid.abis=armeabi-v7a
-```
-
-Wear OS ships `tts_default_rate` at 400. This engine takes that literally and
-multiplies its voice speed by it, which hits the ceiling and is too fast to
-follow. Until that mapping is gentler:
-
-```
-adb -s SERIAL shell settings put secure tts_default_rate 55
 ```
 
 ## Layout
