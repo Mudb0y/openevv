@@ -69,17 +69,21 @@ What would answer it is a signature for each rule: what each of its arguments po
 
 So the missing thing is what each of the machine's entries writes through a pointer handed to it. `docs/rules.md:128` already says so in as many words: "Nothing in the compiler knows how much any entry writes."
 
-**Four routes to this population were measured and all four came out at or near nothing.** Worth writing down so nobody spends the afternoon again.
+**Four routes to this population came out at or near nothing, and the fifth is the one that works.** Worth writing down so nobody spends the afternoon on the first four again.
 
 Slot tracking names nothing, because every slot those reaches read is one of the rule's own arguments and the rule never wrote it.
 
 Rule signatures expressed as an offset into the state name 262 of 5,309 argument positions, five per cent, because those arguments are not pointers into the state.
 
-Typing an entry's arguments from its own declaration works -- `delta.h` declares 370 of 371 entries with at least one typed pointer argument, `delta_loc` at 81 of them and `delta_token` at 28 -- and a rule does reveal a pointer's type by what it hands it to: 880 values are passed where a `delta_loc *` is wanted and 694 where a `delta_token *` is. But it names no reach, because the registers so typed are not the registers reached through. A rule *hands* a record to the machine and lets the machine read it; it does not reach into it itself.
+Typing an entry's arguments from its own declaration works -- `delta.h` declares 370 of 371 entries with at least one typed pointer argument, `delta_loc` at 81 of them and `delta_token` at 28 -- and a rule does reveal a pointer's type by what it hands it to: 880 values are passed where a `delta_loc *` is wanted and 694 where a `delta_token *` is. But on its own it names no reach, because the registers so typed are not the registers reached through. A rule *hands* a record to the machine and lets the machine read it; it does not reach into it itself.
+
+**What works is chasing the same information along the call graph.** Three links, each already written down somewhere. An entry declares its arguments, so handing a pointer to one says what that pointer is. A rule hands the address of its own slot to an entry, which says what that slot holds -- 1,029 slots in English. And a rule passes the address of a slot to another rule, which says what that rule's argument is. So the answer travels from the machine's own calls into the language inwards, and it has to be chased to a fixed point rather than read off: six rounds over English, 1,037 argument positions typed, 483 reaches named as the field they are across the ten languages.
+
+`argument_types()` in `tools/rules/decompile.py` is that fixed point. It reads every rule once, which is why a language now takes about half again as long to write out; there is no cheaper way, because the answer for one rule lives in its callers and theirs in turn. `RECORD(t, p, type, field)` is what it emits, and `src/delta/delta.c` asserts every offset it replaces, so a field that moved would stop the build rather than name a different byte in silence.
 
 And the census cannot be used, for the reason above.
 
-So this 5 per cent -- 622 of English's original 4,614 -- is left saying numbers, and what it waits on is a signature per rule of what each argument points at, propagated from the machine's calls into the language inwards. That is a stage of its own. Everything cheaper has been tried and measured.
+So English is down to 580 of its original 4,614 sites saying numbers, from 622 before the call graph was chased. What is left is mostly reaches whose argument the fixed point could not settle -- 155 of the 292 -- and reaches at offsets that are not a field of any record named here yet. Both are more of the same work rather than a different kind of it: more records described in `RECORD_FIELDS` with their assertions, and a fixed point that does not give up where a register is written between the load and the reach.
 
 ## The stages, and where the point of no return is
 

@@ -40,6 +40,18 @@ typedef char delta_rule_block_land_at_92[
 typedef char delta_rule_block_fence_at_156[
     offsetof(delta_rule_block, fence) == 156 ? 1 : -1];
 
+/* The records a rule reaches into by field rather than by offset now, held to
+   the offsets those fields were at when the rules were written that way. A
+   field that moved would name a different byte, silently, so each is said
+   here and checked. */
+typedef char delta_loc_kind_at_0[offsetof(delta_loc, kind) == 0 ? 1 : -1];
+typedef char delta_loc_field_at_2[offsetof(delta_loc, field) == 2 ? 1 : -1];
+typedef char delta_loc_value_at_4[offsetof(delta_loc, value) == 4 ? 1 : -1];
+typedef char delta_token_unk_at_0[offsetof(delta_token, unknown_00) == 0
+                                  ? 1 : -1];
+typedef char delta_token_value_at_4[offsetof(delta_token, value) == 4
+                                    ? 1 : -1];
+
 typedef char delta_pta_is_16[sizeof(delta_pta) == 16 ? 1 : -1];
 typedef char delta_tpos_is_16[sizeof(delta_tpos) == 16 ? 1 : -1];
 /* The language's own description of itself. Nothing compiled from a rule

@@ -435,7 +435,7 @@ def write(names):
         # flow graph is. The passes below do not look inside an expression, so
         # a name survives them; the analyses beside them go on reading the
         # flat form as it was.
-        told, saw = name_globals(flat)
+        told, saw = name_globals(flat, pbase, name)
         named = join_calls(c, drop_pops(join_pops(drop_dead(
             leave_loops(structure(told))))))
         named = name_tails(
@@ -1176,6 +1176,7 @@ def variable_at(off):
 ADDRED = [0]
 VIAED = [0]
 BLOCKED = [0]
+RECORDED = [0]
 ADDR_RE = re.compile(r'\(\(int32_t\)\((r[0-7]) \+ \((-?\d+)\)\)\)')
 
 
@@ -1454,6 +1455,183 @@ def state_registers(flat):
     return into
 
 
+# What each of the machine's entries takes, read out of delta.h, and which
+# byte of each record is which field.
+#
+# A rule never says what its pointers point at. Three things together do. An
+# entry declares its arguments, so handing a pointer to one says what it is.
+# A rule hands the address of its own slot to an entry, which says what that
+# slot is. And a rule passes the address of a slot to another rule, which says
+# what that rule's argument is -- so the answer travels along the call graph
+# and has to be chased to a fixed point rather than read off.
+#
+# Only the records a rule reaches into are here, and every offset is asserted
+# in src/delta/delta.c so a field that moved stops the build.
+RECORD_FIELDS = {
+    'delta_loc':   {0: 'kind', 2: 'field', 4: 'value'},
+    'delta_token': {0: 'unknown_00', 4: 'value'},
+}
+
+ENTRY_PTRS = {}
+ARG_TYPES = {}
+ARG_LINE = re.compile(r'^\s*ARG\((.*)\);$')
+CALL_LINE = re.compile(r'CALLW?\((\w+), (\d+)\)')
+SLOT_ARG = re.compile(r'SLOT\((-?\d+)\)')
+AT_ARG = re.compile(r'\(int32_t\)AT\(int32_t, (-?\d+)\)')
+
+
+def entry_ptrs():
+    """Which of each entry's arguments are pointers to a record we name."""
+    if ENTRY_PTRS:
+        return ENTRY_PTRS
+    text = open(os.path.join(ROOT, 'src', 'delta', 'delta.h')).read()
+    for m in re.finditer(r'^(?:int32_t|int|void|uint8_t|int16_t|int8_t)\s*\**'
+                         r'([a-z_][a-z0-9_]*)\(([^;]*)\);', text, re.M):
+        params = [q.strip() for q in m.group(2).split(',')
+                  if q.strip() and q.strip() != 'void']
+        got = {}
+        for j, q in enumerate(params):
+            t = re.match(r'(?:const\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*\*', q)
+            if t and t.group(1) in RECORD_FIELDS:
+                got[j] = t.group(1)
+        if got:
+            ENTRY_PTRS[m.group(1)] = got
+    return ENTRY_PTRS
+
+
+def _call_args(flat):
+    """Each call in the flat form, as its target and its arguments in order."""
+    pending = []
+    for line in flat:
+        m = ARG_LINE.match(line)
+        if m:
+            pending.append(m.group(1).strip())
+            continue
+        m = CALL_LINE.search(line)
+        if m:
+            n = int(m.group(2))
+            yield m.group(1), list(reversed(pending[-n:] if pending else []))
+            pending = []
+
+
+def argument_types():
+    """What each rule's arguments point at, chased to a fixed point.
+
+    Every rule is read once for this, which is the reason a language takes
+    about twice as long to write out as it did. There is no cheaper way: the
+    answer for one rule is in its callers and theirs in turn, and it settles
+    after six rounds over English rather than needing many.
+    """
+    if ARG_TYPES:
+        return ARG_TYPES
+
+    entries = entry_ptrs()
+    body, base = {}, {}
+    for name in every():
+        try:
+            c, index, row, insns = load(name)
+            base[name] = c_rule_shape(name)[1]
+            body[name] = direct_tests(tail_returns(fold(emit(
+                Rule(c, index, row, insns)))))
+        except Unhandled:
+            continue
+        except Exception:
+            continue
+
+    # A slot whose address goes to an entry is whatever that entry takes.
+    slot = {}
+    for name, flat in body.items():
+        got = {}
+        for target, vals in _call_args(flat):
+            if target not in entries:
+                continue
+            for k, one in enumerate(vals):
+                t = entries[target].get(k)
+                a = SLOT_ARG.fullmatch(one)
+                if t and a:
+                    got.setdefault(int(a.group(1)), set()).add(t)
+        slot[name] = {k: next(iter(v)) for k, v in got.items() if len(v) == 1}
+
+    args = {name: {} for name in body}
+    for _round in range(16):
+        seen = collections.defaultdict(lambda: collections.defaultdict(set))
+        for name, flat in body.items():
+            for target, vals in _call_args(flat):
+                if target not in body:
+                    continue
+                for k, one in enumerate(vals):
+                    a = SLOT_ARG.fullmatch(one)
+                    if a and int(a.group(1)) in slot[name]:
+                        seen[target][k].add(slot[name][int(a.group(1))])
+                        continue
+                    a = AT_ARG.fullmatch(one)
+                    if a and int(a.group(1)) >= base[name]:
+                        t = args[name].get(
+                            (int(a.group(1)) - base[name]) // 4)
+                        if t:
+                            seen[target][k].add(t)
+        grew = 0
+        for target, ks in seen.items():
+            for k, ts in ks.items():
+                if len(ts) == 1 and args[target].get(k) != next(iter(ts)):
+                    args[target][k] = next(iter(ts))
+                    grew += 1
+        # And a rule's argument being known says what the caller's slot was.
+        for name, flat in body.items():
+            for target, vals in _call_args(flat):
+                if target not in args:
+                    continue
+                for k, one in enumerate(vals):
+                    a = SLOT_ARG.fullmatch(one)
+                    t = args[target].get(k)
+                    if a and t and int(a.group(1)) not in slot[name]:
+                        slot[name][int(a.group(1))] = t
+                        grew += 1
+        if not grew:
+            break
+
+    ARG_TYPES.update(args)
+    return ARG_TYPES
+
+
+def argument_records(flat, pbase, name):
+    """Which register holds a pointer to which record, at each line.
+
+    The reaches this is for all read one of the rule's own arguments, so what
+    they address was settled by whoever called the rule and argument_types is
+    what knows. A register keeps the type from the load that gave it until
+    something writes it again, and nothing is carried across a label, because
+    a label may be jumped to from anywhere.
+    """
+    known = argument_types().get(name, {})
+    if not known:
+        return [{}] * len(flat)
+
+    out = []
+    live = {}
+    for line in flat:
+        if FLAT_LABEL.match(line):
+            live = {}
+        out.append(dict(live))
+        m = DEF_RE.match(line)
+        if m:
+            a = AT_ARG.search(line[m.end():])
+            t = None
+            if a and int(a.group(1)) >= pbase:
+                t = known.get((int(a.group(1)) - pbase) // 4)
+            if t:
+                live[int(m.group(1))] = t
+            else:
+                live.pop(int(m.group(1)), None)
+        elif POP_RE.match(line):
+            for r in REG_RE.findall(line):
+                live.pop(int(r), None)
+        else:
+            for r in _defuse(line)[0]:
+                live.pop(r, None)
+    return out
+
+
 def state_offsets(flat):
     """How far into the state each register points, where that is known.
 
@@ -1547,7 +1725,7 @@ def state_offsets(flat):
     return into
 
 
-def name_globals(flat):
+def name_globals(flat, pbase=0, rule=None):
     """Reaches through the state written as the variables they are.
 
     Only where the flow graph says the register must hold the state at that
@@ -1578,11 +1756,15 @@ def name_globals(flat):
     # And how far into the state each register points, which names the reaches
     # that go through a pointer to a variable rather than through the state.
     into = state_offsets(flat)
+    # And which registers hold a record the rule was handed, which only the
+    # call graph knows.
+    argrec = argument_records(flat, pbase, rule) if rule else [{}] * len(flat)
 
     where = layout()
     seen = set()
     holds = frozenset()
     points = {}
+    holds_record = {}
 
     def sub(m):
         t, reg, off = m.group(1), m.group(2), int(m.group(3))
@@ -1593,6 +1775,16 @@ def name_globals(flat):
             seen.add(where[off])
             NAMED[0] += 1
             return 'GLOBAL(%s, %s, %s)' % (t, reg, where[off])
+        # Or the register holds one of the machine's records, handed in by
+        # whoever called this rule, and the offset is one of its fields.
+        kind = holds_record.get(n)
+        if kind is not None:
+            field = RECORD_FIELDS[kind].get(off)
+            if field is not None:
+                RECORDED[0] += 1
+                return 'RECORD(%s, %s, %s, %s)' % (t, reg, kind, field)
+            return m.group(0)
+
         # Or the register points into the state rather than at it, and the
         # reach lands in a variable once the two are added up.
         base = points.get(('r', n))
@@ -1615,6 +1807,7 @@ def name_globals(flat):
     for i, line in enumerate(flat):
         holds = at[i] if at is not None else frozenset()
         points = into[i] if into is not None else {}
+        holds_record = argrec[i]
         out.append(REACH.sub(sub, line))
     return name_addresses(out, only, at, stale, seen), seen
 
@@ -2564,6 +2757,8 @@ def main():
           ' %d' % VIAED[0])
     print('the block a rule hands the machine, said by name rather than by'
           ' offset: %d' % BLOCKED[0])
+    print("reaches into a record the rule was handed, said as the field they"
+          ' are: %d' % RECORDED[0])
     if PROVENANCE:
         print('reaches and addresses left unnamed, numbered for the census:'
               ' %d' % len(PROV_SITES))

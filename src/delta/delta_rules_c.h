@@ -284,6 +284,17 @@ void evv_arg_over(const char *who, int argn, int room);
 #define GLOBAL_AT(p, v, d) \
     ((int32_t)(intptr_t)((unsigned char *)(intptr_t)(p) + DG_##v + (d)))
 
+/* A reach into one of the machine's own records, said as the field it is.
+ *
+   A rule holds a pointer to a record and reaches into it at a byte offset,
+   which is a layout nobody may move. What the pointer points at is written
+   down nowhere in the rule -- but the entry the rule hands it to declares what
+   it takes, and where the rule was handed the pointer instead, its caller's
+   own use of it says. tools/rules/decompile.py chases that along the call
+   graph. src/delta/delta.c asserts every offset this replaces. */
+#define RECORD(t, p, type, field) \
+    (*(t *)(void *)&((type *)(intptr_t)(p))->field)
+
 /* A reach into one variable through a pointer that names another.
  *
    A rule takes the address of a variable and then reaches through it, so the
