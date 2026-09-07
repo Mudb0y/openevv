@@ -1650,27 +1650,60 @@ def argument_records(flat, pbase, name):
         for j in outs:
             pred[j].append(i)
 
+    # A register loaded only ever out of one typed argument, and written
+    # nowhere else, holds that record wherever it holds anything -- which the
+    # graph cannot see, for the same reason it cannot see a landing place.
+    # Seeded into the walk, as state_offsets does.
+    once = {}
+    spoilt = set()
+    for line in flat:
+        m = DEF_RE.match(line)
+        if not m:
+            continue
+        r = int(m.group(1))
+        a = AT_ARG.search(line[m.end():])
+        t = None
+        if a and int(a.group(1)) >= pbase:
+            t = known.get((int(a.group(1)) - pbase) // 4)
+        if t is None or once.get(r, t) != t:
+            spoilt.add(r)
+        else:
+            once[r] = t
+    fixed = {r: t for r, t in once.items() if r not in spoilt}
+
     into = [None] * n
     outof = [None] * n
     changed = True
     while changed:
         changed = False
         for i in range(n):
-            if i == 0 or not pred[i] or any(outof[p] is None
-                                            for p in pred[i]):
-                got = {} if (i == 0 or not pred[i]) else {}
+            if i == 0 or not pred[i]:
+                got = dict(fixed)
             else:
-                got = outof[pred[i][0]]
-                for p in pred[i][1:]:
+                got = None
+                for p in pred[i]:
+                    if outof[p] is None:
+                        continue
                     other = outof[p]
-                    got = {k: v for k, v in got.items() if other.get(k) == v}
+                    got = (dict(other) if got is None else
+                           {k: v for k, v in got.items()
+                            if other.get(k) == v})
+                if got is None:
+                    continue
+                got.update(fixed)
             was = outof[i]
             into[i] = got
             outof[i] = after(flat[i], got)
+            outof[i].update(fixed)
             if outof[i] != was:
                 changed = True
 
-    return into
+    out = []
+    for x in into:
+        got = dict(fixed)
+        got.update(x if x is not None else {})
+        out.append(got)
+    return out
 
 
 def state_offsets(flat, only=()):
