@@ -1673,7 +1673,7 @@ def argument_records(flat, pbase, name):
     return into
 
 
-def state_offsets(flat):
+def state_offsets(flat, only=()):
     """How far into the state each register points, where that is known.
 
     state_registers answers whether a register is the state. This answers the
@@ -1706,12 +1706,21 @@ def state_offsets(flat):
     # analysis inside one rule can know it. docs/notes/no-machine.md says what
     # would.
 
+    # A register the rule loads only ever with the state holds it wherever it
+    # holds anything, and the graph cannot see that: a landing place is entered
+    # from outside it, so its label has no predecessor, is seeded knowing
+    # nothing, and poisons every join below. Seeded into the walk rather than
+    # added to its answer, or a pointer computed from such a register is still
+    # unknown while the walk runs. Same standard the naming has always used.
+    fixed = {('r', int(r[1:])): 0 for r in only}
+
     def after(line, was):
         """What each place points at once this line has run."""
         m = DEF_RE.match(line)
         if m and line[m.end():].strip() == '(FIELD(0));':
             got = dict(was)
             got[('r', int(m.group(1)))] = 0
+            got.update(fixed)
             return got
         m = add.match(line)
         if m:
@@ -1722,6 +1731,7 @@ def state_offsets(flat):
                 got.pop(here, None)
             else:
                 got[here] = base + int(m.group(3))
+            got.update(fixed)
             return got
         got = dict(was)
         if POP_RE.match(line):
@@ -1732,6 +1742,7 @@ def state_offsets(flat):
                 got.pop(('r', r), None)
         for w in PART_WRITE.finditer(line):
             got.pop(('r', int(w.group(1))), None)
+        got.update(fixed)
         return got
 
     # A meet that keeps only what every way in agrees on, value and all.
@@ -1766,7 +1777,19 @@ def state_offsets(flat):
             if outof[i] != was:
                 changed = True
 
-    return [x if x is not None else {} for x in into]
+    # And a register the rule loads only ever with the state holds it wherever
+    # it holds anything, which the graph cannot see: a landing place is entered
+    # from outside it, so its label has no predecessor, is seeded knowing
+    # nothing, and poisons every join below. That is the same standard the
+    # naming above has always used, and without it the graph gives up on
+    # exactly the registers a rule keeps the state in.
+    fixed = {('r', int(r[1:])): 0 for r in only}
+    out = []
+    for x in into:
+        got = dict(fixed)
+        got.update(x if x is not None else {})
+        out.append(got)
+    return out
 
 
 def name_globals(flat, pbase=0, rule=None):
@@ -1799,7 +1822,7 @@ def name_globals(flat, pbase=0, rule=None):
              else set())
     # And how far into the state each register points, which names the reaches
     # that go through a pointer to a variable rather than through the state.
-    into = state_offsets(flat)
+    into = state_offsets(flat, only)
     # And which registers hold a record the rule was handed, which only the
     # call graph knows.
     argrec = argument_records(flat, pbase, rule) if rule else [{}] * len(flat)
