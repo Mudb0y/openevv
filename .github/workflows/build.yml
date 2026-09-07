@@ -137,17 +137,14 @@ jobs:
       - name: Check the words the original cannot say
         run: make crashers
 
-      # The Speech Dispatcher module, driven over its own protocol with no
-      # server and no sound. It wants Speech Dispatcher's headers and its
-      # out-of-tree module helper, which is all libspeechd-dev is here for --
-      # nothing in this step plays anything or starts a daemon.
-      - name: Get the Speech Dispatcher module headers
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libspeechd-dev pkg-config
+      # Ubuntu's libspeechd-dev is the client API only: it has neither
+      # spd_module_main.h nor libspeechd_module. The development shell has
+      # Speech Dispatcher's out-of-tree module interface on every runner,
+      # which is the same environment this target is documented against.
+      - uses: cachix/install-nix-action@v31.11.1
 
       - name: Check the Speech Dispatcher module, every language
-        run: make -j"$(nproc)" RULES=bytecode speechd-test-all
+        run: nix develop --command make -j"$(nproc)" RULES=bytecode speechd-test-all
 
       - name: Check a rate change keeps the caller's buffer
         run: make RULES=bytecode rate
