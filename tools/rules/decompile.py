@@ -1608,12 +1608,8 @@ def argument_records(flat, pbase, name):
     if not known:
         return [{}] * len(flat)
 
-    out = []
-    live = {}
-    for line in flat:
-        if FLAT_LABEL.match(line):
-            live = {}
-        out.append(dict(live))
+    def after(line, was):
+        got = dict(was)
         m = DEF_RE.match(line)
         if m:
             a = AT_ARG.search(line[m.end():])
@@ -1621,16 +1617,55 @@ def argument_records(flat, pbase, name):
             if a and int(a.group(1)) >= pbase:
                 t = known.get((int(a.group(1)) - pbase) // 4)
             if t:
-                live[int(m.group(1))] = t
+                got[int(m.group(1))] = t
             else:
-                live.pop(int(m.group(1)), None)
-        elif POP_RE.match(line):
+                got.pop(int(m.group(1)), None)
+            return got
+        if POP_RE.match(line):
             for r in REG_RE.findall(line):
-                live.pop(int(r), None)
+                got.pop(int(r), None)
         else:
             for r in _defuse(line)[0]:
-                live.pop(r, None)
-    return out
+                got.pop(r, None)
+        for w in PART_WRITE.finditer(line):
+            got.pop(int(w.group(1)), None)
+        return got
+
+    # Over the flow graph rather than in a line, because clearing at every
+    # label gives up on nearly all of it: a rule's body sits inside one `if',
+    # so a pointer loaded before it is lost at the brace. The meet keeps only
+    # what every way in agrees on, type and all.
+    succ = flat_cfg(flat)
+    if succ is None:
+        return [{}] * len(flat)
+
+    n = len(flat)
+    pred = [[] for _ in range(n)]
+    for i, outs in enumerate(succ):
+        for j in outs:
+            pred[j].append(i)
+
+    into = [None] * n
+    outof = [None] * n
+    changed = True
+    while changed:
+        changed = False
+        for i in range(n):
+            if i == 0 or not pred[i] or any(outof[p] is None
+                                            for p in pred[i]):
+                got = {} if (i == 0 or not pred[i]) else {}
+            else:
+                got = outof[pred[i][0]]
+                for p in pred[i][1:]:
+                    other = outof[p]
+                    got = {k: v for k, v in got.items() if other.get(k) == v}
+            was = outof[i]
+            into[i] = got
+            outof[i] = after(flat[i], got)
+            if outof[i] != was:
+                changed = True
+
+    return into
 
 
 def state_offsets(flat):
