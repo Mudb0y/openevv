@@ -255,6 +255,17 @@ void evv_arg_over(const char *who, int argn, int room);
    way delta_new works them out, which is what makes the names true. */
 #define GLOBAL(t, p, v) (*(t *)((unsigned char *)(intptr_t)(p) + DG_##v))
 
+/* The address of one of the language's own variables, or of a byte inside a
+   compound one, as a value the machine can hold.
+ *
+   The machine hands a primitive such an address by adding a number to the
+   state, and written as the number it is a layout nobody may move. Written as
+   the variable and a displacement from it, it is the same address and the
+   compiler works it out -- so the variable may sit anywhere the next build
+   puts it. That is the whole reason for asking what these sites address. */
+#define GLOBAL_AT(p, v, d) \
+    ((int32_t)(intptr_t)((unsigned char *)(intptr_t)(p) + DG_##v + (d)))
+
 /* One reach whose object is not known, noted so that it can be. A rule
    reaching through a register that GLOBAL could not name is a site where the
    offset pins a layout and nothing says which layout, and those are what

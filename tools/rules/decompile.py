@@ -431,9 +431,13 @@ def write(names):
         alts = dispatch_names(flat)
         # Taking the dead loads out first brings more calls up against
         # their arguments, which is why the joining goes last.
-        named, saw = name_globals(
-            join_calls(c, drop_pops(join_pops(drop_dead(
-                leave_loops(structure(flat)))))))
+        # The naming goes first, on the flat form, because that is where the
+        # flow graph is. The passes below do not look inside an expression, so
+        # a name survives them; the analyses beside them go on reading the
+        # flat form as it was.
+        told, saw = name_globals(flat)
+        named = join_calls(c, drop_pops(join_pops(drop_dead(
+            leave_loops(structure(told))))))
         named = name_tails(
             name_alternatives(name_params(named, pbase, params), alts))
         USED.update(saw)
@@ -1101,6 +1105,108 @@ def layout():
     return LAYOUT
 
 
+EXTENTS = []
+
+
+def extents():
+    """Every language variable as the run of bytes it really is.
+
+    layout() answers where a variable's value sits, which is what a reach
+    wants. An address handed onward wants more than that: the machine computes
+    the address of a cell, or of a byte inside a compound one, and neither is
+    the value's own offset. So this walks the same declaration list the same
+    way and keeps the whole of each cell -- where it starts, how far it runs,
+    and how far into it the value is -- so that any offset at all can be said
+    as a variable and a displacement from it.
+    """
+    if EXTENTS:
+        return EXTENTS
+    path = os.path.join(census.LANG_DIR,
+                        'delta_globals_%s.c' % census.LANG_TAG)
+    if not os.path.exists(path):
+        return EXTENTS
+    text = open(path).read()
+    kinds = re.findall(r'DG_(WORD|LONG|SHORT|COMPOUND)', text)
+    sizes = [int(b) for _a, b in
+             re.findall(r'\{\s*(\d+),\s*(\d+)\s*\}',
+                        text[text.index('delta_compounds[]'):])]
+
+    def up(n, a):
+        return (n + a - 1) & ~(a - 1)
+
+    at = 0xb0
+    n = {'WORD': 0, 'LONG': 0, 'SHORT': 0, 'COMPOUND': 0}
+    for k in kinds:
+        if k in ('WORD', 'LONG'):
+            at = up(at, 4)
+            EXTENTS.append((at, 8, '%s%d' % ('w' if k == 'WORD' else 'l',
+                                             n[k]), 4))
+            at += 8
+        elif k == 'SHORT':
+            at = up(at, 2)
+            EXTENTS.append((at, 4, 's%d' % n[k], 2))
+            at += 4
+        else:
+            at = up(at, 2)
+            room = 4 + up(sizes[n[k]] if n[k] < len(sizes) else 0, 2)
+            EXTENTS.append((at, room, 'c%d' % n[k], 0))
+            at += room
+        n[k] += 1
+    EXTENTS.sort()
+    return EXTENTS
+
+
+def variable_at(off):
+    """The variable one offset into the state falls in, and how far into it
+    from that variable's own name. None where it falls outside them all."""
+    rows = extents()
+    lo, hi = 0, len(rows) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        start, room, name, value = rows[mid]
+        if off < start:
+            hi = mid - 1
+        elif off >= start + room:
+            lo = mid + 1
+        else:
+            return name, off - (start + value)
+    return None
+
+
+ADDRED = [0]
+ADDR_RE = re.compile(r'\(\(int32_t\)\((r[0-7]) \+ \((-?\d+)\)\)\)')
+
+
+def name_addresses(flat, only, at, stale, seen):
+    """An address computed into the state, said as the variable it points at.
+
+    The machine hands a primitive the address of one of the language's own
+    variables by adding a number to the state, and 3,965 places in English do
+    it. Written as the number it is a layout nobody may move; written as the
+    variable and a displacement it is the same address and the compiler works
+    it out, which is the whole point of asking what these sites address.
+    """
+    def sub(m):
+        reg, off = m.group(1), int(m.group(2))
+        n = int(reg[1:])
+        if reg not in only and not (n in holds and n not in stale):
+            return m.group(0)
+        got = variable_at(off)
+        if got is None:
+            return m.group(0)
+        name, step = got
+        seen.add(name)
+        ADDRED[0] += 1
+        return 'GLOBAL_AT(%s, %s, %d)' % (reg, name, step)
+
+    holds = frozenset()
+    out = []
+    for i, line in enumerate(flat):
+        holds = at[i] if at is not None else frozenset()
+        out.append(ADDR_RE.sub(sub, line))
+    return out
+
+
 PARAMED = [0]
 AT_RE = re.compile(r'AT\((u?int(?:8|16|32)_t), (-?\d+)\)')
 SLOT_RE = re.compile(r'SLOT\((-?\d+)\)')
@@ -1199,6 +1305,9 @@ def drop_dead(body):
     return [l for i, l in enumerate(body) if i not in dead]
 
 
+# A register written in part rather than whole, which is no longer the state.
+PART_WRITE = re.compile(r'SET(?:LOW|BYTE0|BYTE1)\(r([0-7])')
+
 REACH = re.compile(r'\(\*\((u?int(?:8|16|32)_t) \*\)'
                    r'\(\(unsigned char \*\)\(intptr_t\)\((r\d)\)'
                    r' \+ (\d+)\)\)')
@@ -1269,35 +1378,132 @@ def write_prov_sites(tag):
     print('wrote %s, %d sites' % (path, len(PROV_SITES)))
 
 
-def name_globals(body):
+def state_registers(flat):
+    """Which registers must hold the state at each line of the flat form.
+
+    A must-analysis over the flow graph, which is the only honest way to ask
+    it: a rule's whole body commonly sits inside one `if', so anything that
+    gives up at a join gives up everywhere, and anything that does not look
+    at the flow at all can only ask whether a register holds the state for
+    the length of the rule -- which is what this used to ask, and why it gave
+    up on every register the rule reused.
+
+    Answers None where flat_cfg does, which is where there is a shape in the
+    rule this cannot read. An edge left out is a path an analysis never looks
+    down, and the answer to that is to refuse rather than to guess.
+    """
+    succ = flat_cfg(flat)
+    if succ is None:
+        return None
+
+    n = len(flat)
+    pred = [[] for _ in range(n)]
+    for i, outs in enumerate(succ):
+        for j in outs:
+            pred[j].append(i)
+
+    every = frozenset(range(8))
+    gen, kill = [], []
+    for line in flat:
+        m = DEF_RE.match(line)
+        if m and line[m.end():].strip() == '(FIELD(0));':
+            gen.append(frozenset({int(m.group(1))}))
+            kill.append(frozenset({int(m.group(1))}))
+            continue
+        gen.append(frozenset())
+        out = set()
+        if POP_RE.match(line):
+            # _defuse does not count a pop as a write, for its own question:
+            # the machine takes nothing off an empty argument area and then
+            # the register keeps what it had. For this question that is
+            # exactly the case where an assumption would be wrong, so a pop
+            # kills.
+            out |= {int(r) for r in REG_RE.findall(line)}
+        else:
+            out |= _defuse(line)[0]
+        # A register written in part is not the state any more.
+        out |= {int(m.group(1)) for m in PART_WRITE.finditer(line)}
+        kill.append(frozenset(out))
+
+    # Everything everywhere to start with, nothing at the entry, and round
+    # until it settles. A must-analysis narrows, so this terminates.
+    into = [every] * n
+    into[0] = frozenset()
+    outof = [frozenset()] * n
+    changed = True
+    while changed:
+        changed = False
+        for i in range(n):
+            if i == 0:
+                got = frozenset()
+            elif not pred[i]:
+                # Unreachable in the graph: nothing may be assumed.
+                got = frozenset()
+            else:
+                got = every
+                for p in pred[i]:
+                    got &= outof[p]
+            was = (into[i], outof[i])
+            into[i] = got
+            outof[i] = (got - kill[i]) | gen[i]
+            if (into[i], outof[i]) != was:
+                changed = True
+
+    return into
+
+
+def name_globals(flat):
     """Reaches through the state written as the variables they are.
 
-    Only through a register that was loaded with the state and never loaded
-    with anything else, so that a name is put on a reach only where the thing
-    reached through is known to be the state.
+    Only where the flow graph says the register must hold the state at that
+    line, so that a name is put on a reach only where the thing reached
+    through is known to be the state. Run on the flat form because that is
+    where the flow graph is; the names survive the passes above it, which do
+    not look inside an expression.
     """
-    holds = set()
+    # Two answers, and a name wants either. The first is the one that has
+    # always been given: a register loaded with the state and never with
+    # anything else holds it everywhere. The second is the flow graph's, which
+    # is more generous wherever a rule reuses a register -- and which is only
+    # trusted for a register a backtrack could not leave stale, because a
+    # landing place is come back into from outside the graph and
+    # stale_registers is the tree's own answer to which registers that reaches.
+    only = set()
     other = set()
-    for line in body:
+    for line in flat:
         m = re.match(r'\s*(r\d) = (.*);$', line)
         if not m:
             continue
-        (holds if m.group(2) == '(FIELD(0))' else other).add(m.group(1))
-    holds -= other
-    if not holds:
-        return body, set()
+        (only if m.group(2) == '(FIELD(0))' else other).add(m.group(1))
+    only -= other
+
+    at = state_registers(flat)
+    stale = (stale_registers(flat) if at is not None and plants_landing(flat)
+             else set())
+
     where = layout()
     seen = set()
+    holds = frozenset()
 
     def sub(m):
         t, reg, off = m.group(1), m.group(2), int(m.group(3))
-        if reg not in holds or off not in where:
+        n = int(reg[1:])
+        if off not in where:
+            return m.group(0)
+        if reg not in only and not (n in holds and n not in stale):
             return m.group(0)
         seen.add(where[off])
         NAMED[0] += 1
         return 'GLOBAL(%s, %s, %s)' % (t, reg, where[off])
 
-    return [REACH.sub(sub, l) for l in body], seen
+    if not only and at is None:
+        return flat, set()
+
+    out = []
+    for i, line in enumerate(flat):
+        holds = at[i] if at is not None else frozenset()
+        out.append(REACH.sub(sub, line))
+    return name_addresses(out, only, at, stale, seen), seen
 
 
 
@@ -2219,6 +2425,8 @@ def main():
     print('calls joined to their arguments: %d' % JOINED[0])
     print('wrappers inlined to the primitive they stand for: %d' % WRAPPED[0])
     print('reaches through the state named as the variable they are: %d over %d variables' % (NAMED[0], len(USED)))
+    print('addresses into the state said as the variable they point at: %d'
+          % ADDRED[0])
     if PROVENANCE:
         print('reaches and addresses left unnamed, numbered for the census:'
               ' %d' % len(PROV_SITES))

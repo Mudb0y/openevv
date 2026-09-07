@@ -36,11 +36,21 @@ import os
 import struct
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from evv import ROOT, sibling
+
+ctype = sibling('rules/ctype')
+
 KINDS = ('null', 'store', 'block', 'stack', 'elsewhere', 'outside')
 
 HEAD = struct.Struct('<4IQ')
-SITE = struct.Struct('<6Q4I')
+# Nine 32-bit fields after six 64-bit ones leave four bytes of tail
+# padding, so the trailing 4x is the struct's own and not a guess: it is
+# 88 bytes in C and this has to agree or every field after the counts is
+# read from the wrong place.
+SITE = struct.Struct('<6Q9I4x')
 NAME = struct.Struct('<I48s')
+BIRTH = struct.Struct('<40sI')
 
 MAGIC = 0x32565250
 
@@ -50,7 +60,7 @@ def read_census(path):
     with open(path, 'rb') as f:
         blob = f.read()
 
-    magic, count, names, _spare, base = HEAD.unpack_from(blob, 0)
+    magic, count, names, rows, base = HEAD.unpack_from(blob, 0)
     if magic != MAGIC:
         raise SystemExit('provenance: %s is not a census' % path)
 
@@ -60,8 +70,10 @@ def read_census(path):
         row = SITE.unpack_from(blob, at + i * SITE.size)
         counts = dict(zip(KINDS, row[:6]))
         whence, many, nbytes, many_bytes = row[6], row[7], row[8], row[9]
+        born, many_born = tuple(row[10:14]), row[14]
         if any(counts.values()):
-            seen[i] = (counts, whence, bool(many), nbytes, bool(many_bytes))
+            seen[i] = (counts, whence, bool(many), nbytes, bool(many_bytes),
+                       born, bool(many_born))
 
     at += count * SITE.size
     named = {}
@@ -69,7 +81,15 @@ def read_census(path):
         whence, raw = NAME.unpack_from(blob, at + i * NAME.size)
         named[whence] = raw.split(b'\0', 1)[0].decode('ascii', 'replace')
 
-    return count, seen, named, base
+    at += names * NAME.size
+    where = {}
+    for i in range(rows):
+        raw, line = BIRTH.unpack_from(blob, at + i * BIRTH.size)
+        where[i + 1] = '%s:%d' % (raw.split(b'\0', 1)[0].decode('ascii',
+                                                                'replace'),
+                                  line)
+
+    return count, seen, named, base, where
 
 
 def symbols(binary):
@@ -136,7 +156,7 @@ def main():
         raise SystemExit('usage: provenance.py <census.bin> <sites.txt>'
                          ' [binary]')
 
-    highest, seen, named, base = read_census(sys.argv[1])
+    highest, seen, named, base, where = read_census(sys.argv[1])
     sites = read_sites(sys.argv[2])
     syms = symbols(sys.argv[3]) if len(sys.argv) == 4 else []
 
@@ -144,13 +164,54 @@ def main():
     one, many, unreached = [], [], []
     by_kind = collections.Counter()
     by_whence = collections.Counter()
+    by_birth = collections.Counter()
+    by_type = collections.Counter()
     pooled = [0]
+    named_born, mixed_born, no_born = 0, 0, 0
+    one_type, many_type = 0, 0
+
+    # Every birth the census recorded, as the type its line names. Several
+    # lines commonly name one type -- the state reaches the rules through four
+    # wrapper functions in a language module, each with its own EVV_REF -- so
+    # a site seeing two of those is seeing one type twice, not two types. The
+    # test has to be over types or it counts that as ambiguity.
+    kind_of = {}
+    why_not = {}
+    for i, spot in where.items():
+        file, _, line = spot.rpartition(':')
+        got, why = ctype.type_at(ROOT, file, int(line))
+        kind_of[i] = got
+        if why:
+            why_not[spot] = why
 
     for n in sorted(sites):
         if n not in seen:
             unreached.append(n)
             continue
-        counts, whence, several, nbytes, many_bytes = seen[n]
+        counts, whence, several, nbytes, many_bytes, born, many_b = seen[n]
+        places = [b for b in born if b]
+        if many_b:
+            mixed_born += 1
+        elif len(places) == 1:
+            named_born += 1
+        elif places:
+            named_born += 1
+        else:
+            no_born += 1
+        for b in places:
+            by_birth[where.get(b, '?%d' % b)] += 1
+        # And the same question asked of the type rather than the place, which
+        # is the one that decides whether a site can be named.
+        kinds_here = {kind_of.get(b) for b in places}
+        if not places or many_b:
+            many_type += 1 if many_b else 0
+            if not places:
+                pass
+        elif len(kinds_here) == 1:
+            one_type += 1
+            by_type[kinds_here.pop() or 'not resolved'] += 1
+        else:
+            many_type += 1
         kinds = [k for k in KINDS if counts[k]]
         # Over kinds alone. The allocator and the length were recorded too and
         # decide nothing, for the reason the footnote gives.
@@ -176,7 +237,32 @@ def main():
     say('never reached at all:           %d' % len(unreached))
     say('')
 
-    say('Of the sites whose object is known, what it was:')
+    say('Where the pointer was made, which is where its C type still is:')
+    say('  from places this could name:   %d' % named_born)
+    say('  from more than four places:    %d' % mixed_born)
+    say('  from no birth this saw:        %d' % no_born)
+    say('')
+    say('And of those, once the places are collapsed by the type they name:')
+    say('  one type:                      %d' % one_type)
+    say('  more than one type:            %d' % many_type)
+    if by_birth:
+        say('')
+        say('The places, most used first, and the type each line names:')
+        spot_kind = {}
+        for k, v in where.items():
+            spot_kind.setdefault(v, kind_of.get(k))
+        for spot, n in by_birth.most_common(25):
+            said = spot_kind.get(spot) or ('? ' + why_not.get(spot, ''))
+            say('  %-30s %-16s %d sites' % (spot, said, n))
+    if by_type:
+        say('')
+        say('And by type, which is the question that matters -- one type'
+            ' reached through')
+        say('several wrappers is one type:')
+        for t, n in by_type.most_common(25):
+            say('  %-20s %d sites' % (t, n))
+    say('')
+    say('Of the sites whose object is known, what storage it was in:')
     for kind, n in by_kind.most_common():
         say('  %-10s %d' % (kind, n))
 

@@ -73,7 +73,24 @@ char *evv_arena_strdup(const char *s);
    and is a fault in whoever allocated it, not something to truncate. */
 int32_t evv_ref_checked(const void *p);
 
+/* Where a reference was made, which is the one place its type is still known.
+ *
+ * A reference is a bare value once it exists, and the rules address memory
+ * through one and a byte offset, so what a rule is looking at cannot be
+ * recovered from the rule. But it can be recovered from here: every reference
+ * is born at one of these, in code where the pointer still has a C type, and
+ * the file and line are enough to find that type in the source. So under the
+ * census a reference is recorded as it is made and the rules are asked which
+ * birth it came from. src/delta/delta_prov.c says what is done with it.
+ *
+ * Nothing else changes: the value handed back is the value evv_ref_checked
+ * answers either way, and without the census the call is not there at all. */
+#if defined(EVV_PROVENANCE) && EVV_PROVENANCE
+int32_t evv_prov_born(const char *file, int line, const void *p);
+#define EVV_REF(p)      evv_prov_born(__FILE__, __LINE__, (p))
+#else
 #define EVV_REF(p)      evv_ref_checked(p)
+#endif
 #define EVV_AT(t, r)    ((t)(void *)(uintptr_t)(uint32_t)(r))
 
 #else

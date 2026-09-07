@@ -75,6 +75,11 @@ enum {
     SEEN_KINDS
 };
 
+/* How many births one site may be seen to come from before this gives up on
+   counting them, how many places altogether, and how much of a file name is
+   kept. */
+enum { BIRTH_MAX = 1024, BIRTH_FILE = 40, BORN_MAX = 4 };
+
 /* One site, as it is kept and as it is written. Fixed widths, because the file
    is read back by the next process and by a Python tool and both have to agree
    about it without negotiating. */
@@ -89,7 +94,136 @@ typedef struct {
        of different shapes are rarely the same length. */
     uint32_t bytes;
     uint32_t many_bytes;
+    /* And which births the pointer came from -- indexes into the birth table
+       below, one-based so that nought is an empty slot. This is the answer the
+       allocator could not give: a birth is a place in the engine's own code
+       where the pointer still had a C type.
+     *
+       A few rather than one, because several places commonly name one type:
+       the state reaches the rules through four wrapper functions in a language
+       module, each with its own EVV_REF, and a site seeing two of those is
+       seeing one type twice. Keeping only the first and a flag would count
+       that as ambiguity, which is what the first version did and why this is
+       an array. Four is enough for every site measured; the flag says when it
+       was not. */
+    uint32_t born[BORN_MAX];
+    uint32_t many_born;
 } site;
+
+/* One place a reference is made, by the file and line of the EVV_REF that made
+   it. The source line names the type, which is the whole point: the census
+   says a rule site addresses the object born at delta.c:3724 and the source
+   says what that object is. */
+
+typedef struct {
+    char     file[BIRTH_FILE];
+    uint32_t line;
+} birth;
+
+static birth births[BIRTH_MAX];
+static uint32_t birth_count;
+
+/* The last file name seen, so that the common case costs a pointer compare
+   rather than a walk: a run of references from one place is the usual shape. */
+static const char *birth_last_file;
+static uint32_t    birth_last_line;
+static uint32_t    birth_last_index;
+
+static uint32_t birth_index(const char *file, uint32_t line)
+{
+    const char *base = file;
+    const char *p;
+    uint32_t i;
+
+    if (file == birth_last_file && line == birth_last_line
+        && birth_last_index != 0)
+        return birth_last_index;
+
+    for (p = file; *p; p++)
+        if (*p == '/' || *p == '\\')
+            base = p + 1;
+
+    for (i = 0; i < birth_count; i++)
+        if (births[i].line == line && strcmp(births[i].file, base) == 0)
+            break;
+
+    if (i == birth_count) {
+        if (birth_count == BIRTH_MAX)
+            return 0;
+        strncpy(births[i].file, base, BIRTH_FILE - 1);
+        births[i].file[BIRTH_FILE - 1] = 0;
+        births[i].line = line;
+        birth_count++;
+    }
+
+    birth_last_file = file;
+    birth_last_line = line;
+    birth_last_index = i + 1;
+    return i + 1;
+}
+
+/* Which birth an address came from. Open addressing over the address itself,
+   the newest write winning, because a block reused for something else is
+   something else now. Exact addresses only: a rule holds the value a birth
+   handed back, so the base it reaches through is the address that was born,
+   and a derived one is a different question this does not pretend to answer. */
+enum { SHADOW_BITS = 20, SHADOW_SIZE = 1u << SHADOW_BITS };
+
+static struct {
+    uintptr_t at;
+    uint32_t  born;
+} *shadow;
+
+static uint32_t shadow_at(uintptr_t at)
+{
+    uint32_t h = (uint32_t)((at >> 4) * 2654435761u) >> (32 - SHADOW_BITS);
+    uint32_t i;
+
+    if (shadow == 0)
+        return 0;
+    for (i = 0; i < 8; i++) {
+        uint32_t k = (h + i) & (SHADOW_SIZE - 1);
+
+        if (shadow[k].at == at)
+            return shadow[k].born;
+        if (shadow[k].at == 0)
+            return 0;
+    }
+    return 0;
+}
+
+static void shadow_put(uintptr_t at, uint32_t born)
+{
+    uint32_t h = (uint32_t)((at >> 4) * 2654435761u) >> (32 - SHADOW_BITS);
+    uint32_t i;
+
+    if (shadow == 0) {
+        shadow = calloc(SHADOW_SIZE, sizeof *shadow);
+        if (shadow == 0)
+            return;
+    }
+    for (i = 0; i < 8; i++) {
+        uint32_t k = (h + i) & (SHADOW_SIZE - 1);
+
+        if (shadow[k].at == at || shadow[k].at == 0) {
+            shadow[k].at = at;
+            shadow[k].born = born;
+            return;
+        }
+    }
+    /* Full where this address wants to sit. Take the first slot: a census that
+       forgets a birth answers `unknown' for a site, which is honest, where one
+       that keeps a stale birth answers wrongly. */
+    shadow[h & (SHADOW_SIZE - 1)].at = at;
+    shadow[h & (SHADOW_SIZE - 1)].born = born;
+}
+
+int32_t evv_prov_born(const char *file, int line, const void *p)
+{
+    if (p != 0)
+        shadow_put((uintptr_t)p, birth_index(file, (uint32_t)line));
+    return evv_ref_checked(p);
+}
 
 /* PRV2. The layout below is this file's own business and is read back only by
    the next process and by tools/rules/provenance.py, so it carries a mark
@@ -112,7 +246,7 @@ typedef struct {
     uint32_t magic;
     uint32_t sites;
     uint32_t names;
-    uint32_t spare;
+    uint32_t rows;      /* how many births follow the names */
     /* Where this image was loaded. The recorded allocation site is a truncated
        address, and most of what allocates here is a static function, which
        dladdr cannot name because it is not a dynamic symbol. With the load
@@ -227,56 +361,101 @@ static int lock_census(const char *path, FILE **out)
 }
 
 /* What an earlier process left, added into what this one saw. */
+/* What an earlier process left, added into what this one saw.
+ *
+ * Read out of order on purpose. Every process numbers its births in the order
+ * it happened to see them, so an index of one run means nothing in another and
+ * has to be translated through the table that run wrote. That table sits after
+ * the sites in the file, so it is read first and the sites second. */
 static void merge_prior(FILE *f)
 {
     prov_head h;
+    long sites_at;
+    uint32_t prior[BIRTH_MAX + 1];
+    uint32_t i;
+    int k;
 
     rewind(f);
     if (fread(&h, sizeof h, 1, f) != 1 || h.magic != PROV_MAGIC
         || h.sites == 0 || !room_for(h.sites - 1))
         return;
 
-    {
-        uint32_t i;
-        int k;
-
-        for (i = 0; i < h.sites; i++) {
-            site was;
-
-            if (fread(&was, sizeof was, 1, f) != 1)
-                return;
-            for (k = 0; k < SEEN_KINDS; k++)
-                sites[i].count[k] += was.count[k];
-            /* Two runs disagreeing about the allocator or the length is the
-               same answer as one run seeing two: the site addresses more than
-               one sort of thing. */
-            if (was.count[SEEN_BLOCK] != 0) {
-                if (sites[i].count[SEEN_BLOCK] == was.count[SEEN_BLOCK]) {
-                    sites[i].whence = was.whence;
-                    sites[i].bytes = was.bytes;
-                } else {
-                    if (sites[i].whence != was.whence)
-                        sites[i].many_whence = 1;
-                    if (sites[i].bytes != was.bytes)
-                        sites[i].many_bytes = 1;
-                }
-                sites[i].many_whence |= was.many_whence;
-                sites[i].many_bytes |= was.many_bytes;
-            }
-        }
-    }
-
+    sites_at = ftell(f);
     if (h.names > WHENCE_MAX)
         h.names = WHENCE_MAX;
-    {
-        uint32_t i;
+    if (h.rows > BIRTH_MAX)
+        h.rows = BIRTH_MAX;
 
-        for (i = 0; i < h.names; i++) {
-            prov_name was;
+    /* The names it resolved, kept because it may have seen an allocation site
+       this process never reaches. */
+    if (fseek(f, sites_at + (long)h.sites * (long)sizeof(site), SEEK_SET) != 0)
+        return;
+    for (i = 0; i < h.names; i++) {
+        prov_name was;
 
-            if (fread(&was, sizeof was, 1, f) != 1)
-                return;
-            remember_name(was.whence, was.name);
+        if (fread(&was, sizeof was, 1, f) != 1)
+            return;
+        remember_name(was.whence, was.name);
+    }
+
+    /* Then its births, each turned into this process's own number for the
+       same place. */
+    memset(prior, 0, sizeof prior);
+    for (i = 0; i < h.rows; i++) {
+        birth was;
+
+        if (fread(&was, sizeof was, 1, f) != 1)
+            return;
+        prior[i + 1] = birth_index(was.file, was.line);
+    }
+
+    if (fseek(f, sites_at, SEEK_SET) != 0)
+        return;
+    for (i = 0; i < h.sites; i++) {
+        site was;
+
+        if (fread(&was, sizeof was, 1, f) != 1)
+            return;
+        for (k = 0; k < SEEN_KINDS; k++)
+            sites[i].count[k] += was.count[k];
+
+        {
+            int j;
+
+            for (j = 0; j < BORN_MAX && was.born[j] != 0; j++) {
+                uint32_t mine = prior[was.born[j]];
+                int k;
+
+                if (mine == 0)
+                    continue;
+                for (k = 0; k < BORN_MAX; k++) {
+                    if (sites[i].born[k] == mine)
+                        break;
+                    if (sites[i].born[k] == 0) {
+                        sites[i].born[k] = mine;
+                        break;
+                    }
+                }
+                if (k == BORN_MAX)
+                    sites[i].many_born = 1;
+            }
+        }
+        sites[i].many_born |= was.many_born;
+
+        /* Two runs disagreeing about the allocator or the length is the same
+           answer as one run seeing two. */
+        if (was.count[SEEN_BLOCK] != 0) {
+            if (sites[i].count[SEEN_BLOCK] == was.count[SEEN_BLOCK]) {
+                sites[i].whence = was.whence;
+                sites[i].bytes = was.bytes;
+            } else {
+                if (sites[i].whence != was.whence)
+                    sites[i].many_whence = 1;
+                if (sites[i].bytes != was.bytes)
+                    sites[i].many_bytes = 1;
+            }
+            sites[i].many_whence |= was.many_whence;
+            sites[i].many_bytes |= was.many_bytes;
         }
     }
 }
@@ -318,12 +497,14 @@ static void save(void)
     h.magic = PROV_MAGIC;
     h.sites = site_high;
     h.names = name_count;
-    h.spare = 0;
+    h.rows = birth_count;
     h.base = image_base();
     fwrite(&h, sizeof h, 1, f);
     fwrite(sites, sizeof *sites, site_high, f);
     if (name_count != 0)
         fwrite(names, sizeof *names, name_count, f);
+    if (birth_count != 0)
+        fwrite(births, sizeof *births, birth_count, f);
     fflush(f);
 #if !defined(_WIN32)
     if (ftruncate(fileno(f), ftell(f)) != 0)
@@ -349,6 +530,29 @@ void evv_prov_note(uint32_t which, const void *p)
     if (p == 0) {
         s->count[SEEN_NULL]++;
         return;
+    }
+
+    /* Which birth this pointer came from, which is the answer the allocator
+       could not give. Kept beside the storage kind rather than instead of it:
+       a site whose births disagree is one the rules reach with more than one
+       sort of object, and that is worth knowing whatever the storage says. */
+    {
+        uint32_t born = shadow_at(at);
+
+        if (born != 0) {
+            int k;
+
+            for (k = 0; k < BORN_MAX; k++) {
+                if (s->born[k] == born)
+                    break;
+                if (s->born[k] == 0) {
+                    s->born[k] = born;
+                    break;
+                }
+            }
+            if (k == BORN_MAX)
+                s->many_born = 1;
+        }
     }
 
     /* A frame first, because it is the commonest and the cheapest to answer:

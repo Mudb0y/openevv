@@ -29,6 +29,16 @@ The all-language executable is
 `RULES=bytecode` for the faster-speaking compiled-rule build; generating it
 takes substantially longer, and the suite passes in both forms.
 
+**A packaging trap, which cost a real afternoon.** Where a build system expands
+its make flags as separate shell words -- Nix's `makeFlags` does -- a bare
+`LANGS=lang/enus lang/engb ...` reaches make as one assignment and eight
+targets. Make answers "Nothing to be done for 'lang/engb'", exits nought, and
+you install a module with one language in it. It builds, it speaks, and it
+passes a smoke test. Quote the whole assignment as one word. What caught it was
+`speechd-test` asserting the number of languages offered rather than deriving
+it, which failed with `AssertionError: {'en-US'}` -- the argument for stating a
+count rather than computing one from the same thing you are trying to check.
+
 Ten languages are linked and nine are offered. Japanese is deliberately left
 out of the module's table: its text is Shift-JIS, EUC-JP or one of three
 seven-bit JIS sets and its romanizer recodes whichever it was given, none of
