@@ -1430,10 +1430,15 @@ def state_registers(flat):
         kill.append(frozenset(out))
 
     # Everything everywhere to start with, nothing at the entry, and round
-    # until it settles. A must-analysis narrows, so this terminates.
+    # until it settles. A must-analysis narrows, so this terminates -- and it
+    # has to start at the top for that to mean anything. Starting `outof' at
+    # the empty set is starting at the bottom: the first pass meets every
+    # predecessor with nothing, the answer is nothing, and narrowing can never
+    # get it back. That is what this did, and it is why the analysis appeared
+    # to add nothing over the whole-body test it was written to improve on.
     into = [every] * n
     into[0] = frozenset()
-    outof = [frozenset()] * n
+    outof = [every] * n
     changed = True
     while changed:
         changed = False
@@ -1733,32 +1738,35 @@ def state_offsets(flat):
     def meet(a, b):
         return {k: v for k, v in a.items() if b.get(k) == v}
 
+    # None is the top of the lattice -- nothing ruled out yet -- and not
+    # `nothing is known'. A must-analysis only ever narrows, so starting every
+    # point at the empty map is starting at the bottom: the first pass finds
+    # an unvisited predecessor, meets with nothing, and the answer stays
+    # nothing for ever. That is what this did, and it is why a register plainly
+    # holding the state was not known to.
     into = [None] * n
     outof = [None] * n
-    into[0] = {}
     changed = True
     while changed:
         changed = False
         for i in range(n):
-            if i == 0:
+            if i == 0 or not pred[i]:
                 got = {}
-            elif not pred[i] or any(outof[p] is None for p in pred[i]):
-                got = None if not pred[i] else None
-                if not pred[i]:
-                    got = {}
             else:
-                got = outof[pred[i][0]]
-                for p in pred[i][1:]:
-                    got = meet(got, outof[p])
-            if got is None:
-                got = {}
+                got = None
+                for p in pred[i]:
+                    if outof[p] is None:
+                        continue
+                    got = outof[p] if got is None else meet(got, outof[p])
+                if got is None:
+                    continue
             was = outof[i]
             into[i] = got
             outof[i] = after(flat[i], got)
             if outof[i] != was:
                 changed = True
 
-    return into
+    return [x if x is not None else {} for x in into]
 
 
 def name_globals(flat, pbase=0, rule=None):
