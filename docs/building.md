@@ -4,7 +4,7 @@ What you need, what to build, and what every variable does. The rules are the lo
 
 ## What you need
 
-A C compiler and Python 3. The language data is in the tree, so there is no IBM SDK to find and nothing is downloaded. Python is wanted twice. Every build writes the rules the engine runs out of the text in `lang/<tag>/rules`, which is about two seconds a language and is where those rules live now; and an ordinary build then decompiles them into C, which is two minutes and is what `RULES` below is about. `make RULES=bytecode` skips the second and not the first.
+A C compiler and Python 3. The language data is in the tree, so there is no IBM SDK to find and nothing is downloaded. Python is wanted twice. Every build writes the rules the engine runs out of the text in `lang/<tag>/rules`, which is about two seconds a language and is where those rules live now; and an ordinary build then decompiles them into C, which is two minutes and is what `RULES` below is about. `make RULES=bytecode` skips the second and not the first. Playing speech through `openevv-say` also wants ALSA's `aplay`; writing a WAV file does not.
 
 Two more things are wanted only for particular jobs. A thirty-two bit compiler builds the thirty-two bit engine. Wine and IBM's own objects run the comparison tests, which is the only automatic check that the audio is right.
 
@@ -14,7 +14,7 @@ On this machine all of those come from the flake, and `nix develop` puts them on
 
     make
 
-That builds `build/libevv.a` and `build/evv`, which speaks. From nothing, that is about two and a half minutes: two seconds to write the rules out of the text, a little over two minutes for Python to decompile them into C, and about fifteen seconds to compile the thirteen megabytes of it across twenty-four cores. Once those files exist they are not written again unless the text, the decompiler or the bytecode changes.
+That builds `build/libevv.a`, the WAV-producing `build/evv`, and `build/openevv-say`, which plays it. From nothing, that is about two and a half minutes: two seconds to write the rules out of the text, a little over two minutes for Python to decompile them into C, and about fifteen seconds to compile the thirteen megabytes of it across twenty-four cores. Once those files exist they are not written again unless the text, the decompiler or the bytecode changes.
 
     make RULES=bytecode
 
@@ -33,9 +33,9 @@ That builds `build/probe` instead: the same engine behind the front the tests dr
 
 The same two, thirty-two bit. That build is a check rather than a target: a difference between the word sizes is a layout mistake, and this is what makes one show up early. It needs a thirty-two bit compiler, which is `CC32`.
 
-On a Nix machine `nix build` makes the same binary at `result/bin/evv`, and `nix run . -- -o hello.wav "text"` runs it without installing anything. `nix develop` is the shell the rest of this assumes: the thirty-two bit compiler, Wine and Python on the path.
+On a Nix machine `nix build` makes both commands under `result/bin`, and `nix run . -- "text"` speaks without installing anything. `nix develop` is the shell the rest of this assumes: the thirty-two bit compiler, Wine and Python on the path.
 
-`make install` copies the binary to `/usr/local/bin/evv`, or wherever `PREFIX` and `DESTDIR` say. There is nothing else the command needs: it reads no file of its own at run time and wants no library but the C one, libm and pthreads. `make install-lib` is the other half and puts the shared library and the header under `LIBDIR` and `INCDIR`, which default to `PREFIX`; it is a separate target because it is a separate build, so `make so` comes first. `make clean` takes the objects and the binaries away and leaves the generated C alone.
+`make install` copies `evv` and `openevv-say` to `/usr/local/bin`, or wherever `PREFIX` and `DESTDIR` say. The engine reads no file of its own at run time and wants no library but the C one, libm and pthreads; the speaking helper also needs `aplay`. `make install-lib` is the other half and puts the shared library and the header under `LIBDIR` and `INCDIR`, which default to `PREFIX`; it is a separate target because it is a separate build, so `make so` comes first. `make clean` takes the objects and the binaries away and leaves the generated C alone.
 
 `make speechd` builds the Speech Dispatcher output module, which wants Speech Dispatcher's own headers, its out-of-tree module helper library and `pkg-config` beside the usual compiler; `nix develop` has all three. `make speechd-test` drives the module through its own protocol without playing anything, and `make speechd-test-all` does that with every language linked in, which is the configuration a release ships. `make speechd-install` puts the module and its configuration file where `SPEECHD_MODULEDIR` and `SPEECHD_CONFDIR` say, and is deliberately not part of `make install`: putting a module into Speech Dispatcher's directories is a decision about somebody's speech rather than a build step, and even then a line has to be added to `speechd.conf` by hand. `docs/speech-dispatcher.md` is the rest of it.
 
@@ -51,6 +51,15 @@ On a Nix machine `nix build` makes the same binary at `result/bin/evv`, and `nix
 
 ## Running
 
+    ./build/openevv-say "Hello from Openevv."
+    ./build/openevv-say -s 60 -p 70 "A different voice."
+    ./build/openevv-say -w hello.wav "Hello from Openevv."
+    ./build/openevv-say -f speech.txt
+
+`openevv-say` plays through `aplay` by default; `-d` chooses an ALSA device. `-w` writes a WAV file without opening a player. `-v` picks one of the eight voices, `-s` the speed, `-p` the pitch, `-P` the pitch range and `-a` the volume. These resemble espeak-ng's option names, but the values are OpenEVV's: speed is 0 to 250 and pitch, pitch range and volume are 0 to 100. `-r` makes speed words per minute and pitch hertz. `--voices` and `--languages` list what the build offers.
+
+The lower-level command is useful for piping WAV data to another program:
+
     ./build/evv -o hello.wav "Hello from Eloquence."
     ./build/evv -f speech.txt -o speech.wav
     ./build/evv "Hello from Eloquence." | aplay -q -
@@ -58,7 +67,7 @@ On a Nix machine `nix build` makes the same binary at `result/bin/evv`, and `nix
 
 With no `-o` it writes the wave to standard output, unless that is a terminal, in which case it says so rather than filling the terminal with samples. With no text it reads standard input.
 
-`-v` picks one of the eight voices, `-s` the speed, `-p` the pitch and `-V` the volume. Those numbers are the engine's own; `-r` makes them a person's instead, so speed is words per minute and pitch is hertz. `-l` prints what each voice is set to, in whichever units are in force.
+`evv` uses `-V` for volume where `openevv-say` uses the espeak-like `-a`. `-l` prints what each voice is set to, in whichever units are in force.
 
 `-R` is the sample rate, which is not the speed. Nought to six are 8,000, 11,025, 22,050, 16,000, 32,000, 44,100 and 48,000 hertz, in the order IBM numbered the first four and this port the rest. The default is 11,025.
 

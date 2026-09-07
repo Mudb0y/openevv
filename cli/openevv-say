@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+usage: openevv-say [options] [text ...]
+
+Speak text with OpenEVV. With no text, read standard input.
+
+  -w FILE       write a WAV file instead of playing the speech
+  -f FILE       read text from FILE, or from standard input for -
+  --stdin       read text from standard input
+  -v N          use voice N, 1 to 8
+  -s N          set speed
+  -p N          set pitch
+  -P N          set pitch range
+  -a N          set volume
+  -R N          set sample rate
+  -L ID         use the language with numeric ID
+  -r            use real-world units for speed, pitch, and volume
+  -d DEVICE     play through the named ALSA device
+  --voices      list voice settings and stop
+  --languages   list language IDs in this build and stop
+  -h, --help    show this help
+
+The numeric settings use OpenEVV's native ranges by default: speed 0-250,
+and pitch, pitch range, and volume 0-100. With -r, speed is words per minute
+and pitch is hertz. The -a spelling follows espeak-ng; it controls the same
+setting that evv calls -V.
+
+  openevv-say "Hello from Openevv."
+  openevv-say -s 60 -p 70 "A different voice."
+  openevv-say -w hello.wav "Save this instead."
+EOF
+}
+
+die() {
+    printf 'openevv-say: %s\n' "$1" >&2
+    exit 2
+}
+
+scriptDir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+if [[ -n ${OPENEVV_EVV:-} ]]; then
+    evvCommand=$OPENEVV_EVV
+elif [[ -x $scriptDir/evv ]]; then
+    evvCommand=$scriptDir/evv
+elif command -v evv >/dev/null 2>&1; then
+    evvCommand=evv
+else
+    die "cannot find evv; install it beside openevv-say or set OPENEVV_EVV"
+fi
+
+evvArgs=()
+outputFile=
+playDevice=
+mode='play'
+
+while (($#)); do
+    case $1 in
+        -w)
+            (($# >= 2)) || die "-w needs a WAV file"
+            outputFile=$2
+            mode='write'
+            shift 2
+            ;;
+        -f)
+            (($# >= 2)) || die "-f needs a text file"
+            evvArgs+=("-f" "$2")
+            shift 2
+            ;;
+        --stdin)
+            evvArgs+=("-f" "-")
+            shift
+            ;;
+        -v|-s|-p|-P|-R|-L)
+            (($# >= 2)) || die "$1 needs a value"
+            evvArgs+=("$1" "$2")
+            shift 2
+            ;;
+        -a)
+            (($# >= 2)) || die "-a needs a value"
+            evvArgs+=("-V" "$2")
+            shift 2
+            ;;
+        -r)
+            evvArgs+=("-r")
+            shift
+            ;;
+        -d)
+            (($# >= 2)) || die "-d needs an ALSA device"
+            playDevice=$2
+            shift 2
+            ;;
+        --voices)
+            evvArgs+=("-l")
+            mode='list'
+            shift
+            ;;
+        --languages)
+            evvArgs+=("-L" "list")
+            mode='list'
+            shift
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        --)
+            shift
+            evvArgs+=("$@")
+            break
+            ;;
+        -* )
+            die "unknown option: $1"
+            ;;
+        *)
+            evvArgs+=("$1")
+            shift
+            ;;
+    esac
+done
+
+if [[ $mode == write ]]; then
+    [[ -z $playDevice ]] || die "-d cannot be used with -w"
+    exec "$evvCommand" "${evvArgs[@]}" -o "$outputFile"
+fi
+
+if [[ $mode == list ]]; then
+    [[ -z $playDevice ]] || die "-d cannot be used while listing"
+    exec "$evvCommand" "${evvArgs[@]}"
+fi
+
+playerCommand=${OPENEVV_PLAYER:-aplay}
+if ! command -v "$playerCommand" >/dev/null 2>&1; then
+    die "cannot find $playerCommand; install alsa-utils or set OPENEVV_PLAYER"
+fi
+
+playerArgs=(-q)
+if [[ -n $playDevice ]]; then
+    playerArgs+=("-D" "$playDevice")
+fi
+playerArgs+=("-")
+
+"$evvCommand" "${evvArgs[@]}" -o - | "$playerCommand" "${playerArgs[@]}"

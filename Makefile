@@ -275,12 +275,20 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe so so32 sotest phonemes dict dictfile objects stubs rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims speechd speechd-install speechd-test speechd-test-all
-all: $(BUILD)/evv
+.PHONY: all probe so so32 sotest phonemes dict dictfile objects stubs rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims speechd speechd-install speechd-test speechd-test-all say-test
+all: $(BUILD)/evv $(BUILD)/openevv-say
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
 	@$(CC) $(ALL_CFLAGS) cli/evv.c $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
 	@echo "built $@"
+
+$(BUILD)/openevv-say: cli/openevv-say
+	@cp $< $@
+	@chmod +x $@
+	@echo "built $@"
+
+say-test: $(BUILD)/evv $(BUILD)/openevv-say
+	@bash test/openevv-say.sh
 
 probe: $(BUILD)/probe$(SUF)
 
@@ -949,7 +957,8 @@ clean:
 	        $(BUILD)/objwin32-* $(BUILD)/objpic-* $(BUILD)/objpic32-* \
 	        $(BUILD)/libeci*.so $(BUILD)/libeci*.so.* \
 	        $(BUILD)/eci32.dll $(BUILD)/dlltest32.exe \
-	        $(BUILD)/libevv-win32$(SUF).a $(BUILD)/evv $(BUILD)/probe$(SUF) \
+	        $(BUILD)/libevv-win32$(SUF).a $(BUILD)/evv \
+	        $(BUILD)/openevv-say $(BUILD)/probe$(SUF) \
 	        $(BUILD)/evv32 $(BUILD)/probe32$(SUF) \
 	        $(BUILD)/libevv$(SUF).a $(BUILD)/libevv32$(SUF).a \
 	        $(BUILD)/sd_openevv* \
@@ -970,10 +979,12 @@ INCDIR  ?= $(PREFIX)/include
 SPEECHD_MODULEDIR ?= $(PREFIX)/libexec/speech-dispatcher-modules
 SPEECHD_CONFDIR   ?= $(PREFIX)/etc/speech-dispatcher/modules
 
-install: $(BUILD)/evv
+install: $(BUILD)/evv $(BUILD)/openevv-say
 	@mkdir -p $(DESTDIR)$(PREFIX)/bin
 	@cp $(BUILD)/evv $(DESTDIR)$(PREFIX)/bin/evv
+	@cp $(BUILD)/openevv-say $(DESTDIR)$(PREFIX)/bin/openevv-say
 	@echo "installed $(DESTDIR)$(PREFIX)/bin/evv"
+	@echo "installed $(DESTDIR)$(PREFIX)/bin/openevv-say"
 
 # This one is not part of `make install': it writes into Speech Dispatcher's
 # own directories, and putting a module there is a decision about somebody's
