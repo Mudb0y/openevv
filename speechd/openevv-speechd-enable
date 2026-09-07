@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+
+set -eu
+
+usage() {
+    printf '%s\n' \
+        'Usage: openevv-speechd-enable [--system | --config-dir DIRECTORY]' \
+        '' \
+        'OpenEVV is discovered automatically from the installed module directory.' \
+        'This command keeps OpenEVV available without hiding other installed modules.' \
+        'It repairs the explicit registration written by older packages and adds' \
+        'OpenEVV alongside configurations that already list modules explicitly.' \
+        '' \
+        'With no option, repair the current user configuration. When run as root,' \
+        'the default is the system configuration in /etc/speech-dispatcher.' \
+        '' \
+        '  --system                use /etc/speech-dispatcher' \
+        '  --config-dir DIRECTORY  use DIRECTORY, which contains speechd.conf' \
+        '  -h, --help              show this help'
+}
+
+print_restart_warning() {
+    printf '%s\n' \
+        'Warning: restarting Speech Dispatcher temporarily stops speech.' \
+        'Continue only from a session you can recover without hearing.' \
+        'Restart Speech Dispatcher with: killall speech-dispatcher'
+}
+
+configRoot=
+systemMode=0
+
+while (( $# > 0 )); do
+    case $1 in
+        --system)
+            configRoot=/etc/speech-dispatcher
+            systemMode=1
+            ;;
+        --config-dir)
+            shift
+            if (( $# == 0 )); then
+                printf '%s\n' '--config-dir requires a directory.' >&2
+                usage >&2
+                exit 2
+            fi
+            configRoot=$1
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            printf 'Unknown option: %s\n' "$1" >&2
+            usage >&2
+            exit 2
+            ;;
+    esac
+    shift
+done
+
+if [[ -z ${configRoot} ]]; then
+    if (( EUID == 0 )); then
+        configRoot=/etc/speech-dispatcher
+        systemMode=1
+    else
+        configRoot=${XDG_CONFIG_HOME:-${HOME}/.config}/speech-dispatcher
+    fi
+fi
+
+if (( systemMode == 1 && EUID != 0 )); then
+    printf '%s\n' '--system must be run as root, normally through sudo.' >&2
+    exit 1
+fi
+
+configPath=${configRoot}/speechd.conf
+backupPath=${configPath}.openevv-git.explicit.bak
+enableBackupPath=${configPath}.openevv.bak
+markerLine='# OpenEVV module installed by openevv-git'
+moduleLine='AddModule "openevv" "sd_openevv" "openevv.conf"'
+
+if [[ ! -f ${configPath} ]]; then
+    printf '%s\n' \
+        'OpenEVV is available through Speech Dispatcher module autodetection.' \
+        "No configuration exists at ${configPath}; no change is needed."
+    exit 0
+fi
+
+tempPath=$(mktemp "${configPath}.openevv.XXXXXX")
+trap 'rm -f "${tempPath}"' EXIT
+removed=0
+
+while IFS= read -r line || [[ -n ${line} ]]; do
+    if [[ ${line} == "${markerLine}" ]]; then
+        nextLine=
+        if IFS= read -r nextLine || [[ -n ${nextLine} ]]; then
+            if [[ ${nextLine} == "${moduleLine}" ]]; then
+                removed=1
+                continue
+            fi
+            printf '%s\n' "${line}" "${nextLine}" >> "${tempPath}"
+            continue
+        fi
+    fi
+    printf '%s\n' "${line}" >> "${tempPath}"
+done < "${configPath}"
+
+if (( removed == 1 )); then
+    if grep -Eq '^[[:space:]]*AddModule([[:space:]]|$)' "${tempPath}"; then
+        printf '%s\n' \
+            'Other explicit AddModule registrations exist in this configuration.' \
+            'The existing OpenEVV registration was retained alongside them.'
+        exit 0
+    fi
+    if [[ ! -e ${backupPath} ]]; then
+        cp -p "${configPath}" "${backupPath}"
+    fi
+    chmod --reference="${configPath}" "${tempPath}"
+    chown --reference="${configPath}" "${tempPath}"
+    mv "${tempPath}" "${configPath}"
+    trap - EXIT
+    printf 'Removed the obsolete OpenEVV registration from %s\n' "${configPath}"
+    printf 'Previous explicit configuration backup: %s\n' "${backupPath}"
+    printf '%s\n' \
+        'OpenEVV and other installed modules will now be discovered automatically.'
+    print_restart_warning
+    exit 0
+fi
+
+if grep -Eq '^[[:space:]]*AddModule[[:space:]]+"openevv"([[:space:]]|$)' \
+        "${configPath}"; then
+    printf 'An OpenEVV module registration already exists in %s.\n' \
+        "${configPath}"
+    printf '%s\n' \
+        'It was not written by the package helper and has not been changed.'
+    exit 0
+fi
+
+if grep -Eq '^[[:space:]]*AddModule([[:space:]]|$)' "${configPath}"; then
+    if [[ ! -e ${enableBackupPath} ]]; then
+        cp -p "${configPath}" "${enableBackupPath}"
+    fi
+    printf '\n%s\n%s\n' "${markerLine}" "${moduleLine}" >> "${tempPath}"
+    chmod --reference="${configPath}" "${tempPath}"
+    chown --reference="${configPath}" "${tempPath}"
+    mv "${tempPath}" "${configPath}"
+    trap - EXIT
+    printf 'Added OpenEVV alongside the explicit modules in %s\n' "${configPath}"
+    printf 'Previous configuration backup: %s\n' "${enableBackupPath}"
+    print_restart_warning
+    exit 0
+fi
+
+printf '%s\n' \
+    'OpenEVV is available through Speech Dispatcher module autodetection.' \
+    "No obsolete package registration was found in ${configPath}."

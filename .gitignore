@@ -8,6 +8,11 @@ result
 result-*
 __pycache__/
 
+# Local Arch package build output.
+distro-packages/ArchLinux/openevv-git/pkg/
+distro-packages/ArchLinux/openevv-git/src/
+distro-packages/ArchLinux/openevv-git/*.pkg.tar.*
+
 # Every form of a language's rules that a build makes rather than holds.
 #
 # delta_rules_<tag>.c, delta_rules_<tag>.h and delta_rules_shim_<tag>.c are

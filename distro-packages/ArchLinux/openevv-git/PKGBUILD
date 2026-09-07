@@ -1,0 +1,87 @@
+# shellcheck shell=bash disable=SC2034,SC2154
+
+# Local development package: build the parent checkout, including uncommitted
+# changes. For an AUR submission, replace _repoRoot with a git source entry.
+# Maintainer: Username <username@example.com>
+
+pkgname=openevv-git
+pkgver=r599.9b5b801
+pkgrel=1
+pkgdesc='Open implementation of IBM Embedded ViaVoice with Speech Dispatcher support'
+arch=('aarch64' 'x86_64')
+url='https://github.com/mudb0y/openevv'
+license=('MIT AND LicenseRef-IBM-Proprietary')
+depends=('speech-dispatcher')
+makedepends=('git' 'python' 'pkgconf')
+provides=('openevv')
+conflicts=('openevv')
+options=('!lto')
+backup=('etc/speech-dispatcher/modules/openevv.conf')
+install=openevv-git.install
+source=('openevv-git.install')
+sha256sums=('1d90f494b6505a7197013581418d2e0aef5e4bd8e23afa5807c0d2377806c785')
+
+_repoRoot=${OPENEVV_LOCAL_REPO:-}
+if [[ -z ${_repoRoot} ]]; then
+    _repoRoot=$(realpath "${startdir}/../../..")
+fi
+_languages='lang/enus lang/engb lang/dede lang/eses lang/esus lang/frfr lang/frca lang/itit lang/plpl lang/jajp'
+_languageSuffix='enus-engb-dede-eses-esus-frfr-frca-itit-plpl-jajp'
+
+pkgver() {
+    local revision commit
+
+    revision=$(git -C "${_repoRoot}" rev-list --count HEAD)
+    commit=$(git -C "${_repoRoot}" rev-parse --short HEAD)
+    printf 'r%s.%s' "${revision}" "${commit}"
+}
+
+prepare() {
+    if [[ ! -f ${_repoRoot}/Makefile || ! -f ${_repoRoot}/NOTICE ]]; then
+        printf 'OpenEVV checkout not found at %s\n' "${_repoRoot}" >&2
+        return 1
+    fi
+}
+
+build() {
+    # Rebuild this package's exact object set so makepkg's current hardening
+    # flags reach every translation unit. Recreate the archive too, so objects
+    # removed or renamed upstream cannot remain as stale members.
+    rm -rf "${_repoRoot}/build/obj-c/${_languageSuffix}"
+    rm -f "${_repoRoot}/build/evv" \
+        "${_repoRoot}/build/libevv-${_languageSuffix}.a" \
+        "${_repoRoot}/build/sd_openevv-${_languageSuffix}"
+    make -C "${_repoRoot}" -j"$(nproc)" \
+        CFLAGS="${CFLAGS} ${LDFLAGS}" \
+        RULES=c LANGS="${_languages}" all speechd
+}
+
+check() {
+    "${_repoRoot}/test/hash.sh" "${_repoRoot}/build/evv"
+    OPENEVV_EXPECT_LANGUAGES=9 python \
+        "${_repoRoot}/test/speechd.py" \
+        "${_repoRoot}/build/sd_openevv-${_languageSuffix}" \
+        "${_repoRoot}/speechd/openevv.conf"
+    "${_repoRoot}/test/speechd-enable.sh"
+}
+
+package() {
+    install -Dm755 "${_repoRoot}/build/evv" \
+        "${pkgdir}/usr/bin/evv"
+    install -Dm755 \
+        "${_repoRoot}/build/sd_openevv-${_languageSuffix}" \
+        "${pkgdir}/usr/lib/speech-dispatcher/speech-dispatcher-modules/sd_openevv"
+    install -Dm644 "${_repoRoot}/speechd/openevv.conf" \
+        "${pkgdir}/etc/speech-dispatcher/modules/openevv.conf"
+    install -Dm755 "${_repoRoot}/speechd/openevv-speechd-enable" \
+        "${pkgdir}/usr/bin/openevv-speechd-enable"
+
+    install -Dm644 "${_repoRoot}/LICENSE" \
+        "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+    install -Dm644 "${_repoRoot}/NOTICE" \
+        "${pkgdir}/usr/share/licenses/${pkgname}/NOTICE"
+    install -Dm644 "${_repoRoot}/README.md" \
+        "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+    install -Dm644 "${_repoRoot}/docs/speech-dispatcher.md" \
+        "${pkgdir}/usr/share/doc/${pkgname}/speech-dispatcher.md"
+}

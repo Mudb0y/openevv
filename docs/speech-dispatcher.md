@@ -47,10 +47,30 @@ paths appropriate to the account:
 This installs `sd_openevv` below the chosen module directory and
 `openevv.conf` below the chosen configuration directory. Distribution
 packagers can set `DESTDIR`, `SPEECHD_MODULEDIR`, and `SPEECHD_CONFDIR`
-directly. Speech Dispatcher does not discover module binaries automatically;
-add the installed paths to the user's `speechd.conf`:
+directly. Speech Dispatcher automatically discovers module binaries in its
+system and user module directories when `speechd.conf` has no active
+`AddModule` directives. Do not add an explicit OpenEVV registration to such a
+configuration: Speech Dispatcher 0.12 skips automatic discovery as soon as any
+module is explicitly registered, which can hide every other installed voice.
 
-    AddModule "openevv" "/home/Username/.local/libexec/speech-dispatcher-modules/sd_openevv" "/home/Username/.config/speech-dispatcher/modules/openevv.conf"
+Older OpenEVV packages included a helper that added an explicit registration.
+After upgrading, remove that registration from the current user's configuration
+with:
+
+    openevv-speechd-enable
+
+If the helper was previously run with `sudo`, repair the system configuration
+explicitly as root:
+
+    sudo openevv-speechd-enable --system
+
+The helper backs up a configuration before changing it. If OpenEVV is the only
+explicit module written by the older package, the helper removes it and restores
+automatic discovery. If the configuration already lists other modules
+explicitly, the helper keeps or adds OpenEVV alongside them instead. Custom
+OpenEVV registrations are left untouched. The helper does not restart Speech
+Dispatcher itself. Restarting temporarily takes speech away, so do that only
+from a session that can be recovered without hearing.
 
 ## Try it without installing
 
@@ -59,7 +79,10 @@ Add the following to `~/.config/speech-dispatcher/speechd.conf`, replacing
 
     AddModule "openevv" "/absolute/path/openevv/build/sd_openevv" "/absolute/path/openevv/speechd/openevv.conf"
 
-If testing the all-language build, use its suffixed executable name instead.
+This explicit development registration disables automatic module discovery;
+the test daemon will load only modules that have their own active `AddModule`
+lines. Do not leave it in the configuration used by a screen reader. If testing
+the all-language build, use its suffixed executable name instead.
 Stop the existing per-user daemon with `killall speech-dispatcher`; the next
 client or screen reader connection will start it with the new configuration.
 
