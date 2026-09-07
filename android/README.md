@@ -251,47 +251,23 @@ files named `lib*.so`, and openevv's own library records a soname of
 
 ## Engine patches
 
-`native/patches` holds fixes to openevv itself. These are engine bugs, not
-Android changes. The submodule stays as upstream left it and the build applies
-any patch not already applied, so `git status` inside `native/openevv` shows
-modified files after a build. That is these and nothing else.
+`native/patches` holds fixes to openevv itself when there are any, and the build
+applies every patch not already applied before it compiles. There are none at
+the moment, so the submodule builds as upstream left it.
 
-`0001-delta_low-adjacent-stores.patch`. `delta_low_at` maps an address in the
-program to its copy in the arena. A rule may name the byte after a store, so
-the lookup counts one past the end as inside, in the same pass as the ordinary
-case, first match winning. Where the linker puts two stores next to each other,
-the first byte of the second is also one past the end of the first, and
-whichever registered first claims it. On x86 these stores do not land
-adjacently. On aarch64 they do. Symptoms: slightly different samples for most
-text, no samples at all for some ordinary words (`seven.`, `eight.`), and a
-null dereference in the pitch rules for others.
-
-`0002-arm32-frame-alignment.patch`. The backtracking stack puts a frame
-wherever the machine's frame sizes land it, and one of those sizes is
-deliberately odd, so a `delta_frame` often sits on a two-byte boundary while
-its declared fields claim four. x86 and ARM64 just do the unaligned access. On
-ARM32 the compiler may move two adjacent fields with one `LDM` or `STM`, and
-those fault off a word boundary, which is a `SIGBUS` on the first rule the
-engine runs. The struct is marked packed, which only states what was already
-true since every offset is written out. A static assertion holds the size and
-offsets so a real layout change stops the build.
-
-Both verified with openevv's own gate, `test/matrix.sh check enus`: 98 cases,
-comparing sample hashes and reported answers against baselines recorded on x86.
-
-| build | before | after |
-| --- | --- | --- |
-| x86, mingw | none moved | none moved |
-| aarch64, Pixel 9a | 98 of 98 moved | none moved |
-| armv7a, Pixel Watch 4 | crashed on the first utterance | none moved |
-
-`native/tools/probe-on-device.sh` makes the two device rows possible. It stands
-in for openevv's probe so the gate drives a build over adb unchanged.
-
-Both are open upstream:
+Two lived here and are upstream now. `delta_low_at` let one store claim the
+first byte of the next, which on aarch64 gave slightly different samples for
+most text, no samples at all for some ordinary words (`seven.`, `eight.`) and a
+null dereference in the pitch rules for others. And a `delta_frame` often sits
+on a two-byte boundary while its declared fields claim four, which on ARM32 is a
+`SIGBUS` on the first rule the engine runs. They are
 [#20](https://github.com/Mudb0y/openevv/pull/20) and
-[#21](https://github.com/Mudb0y/openevv/pull/21). If they land, these files go
-away.
+[#21](https://github.com/Mudb0y/openevv/pull/21).
+
+`native/tools/probe-on-device.sh` stands in for openevv's own probe, so its gate,
+`test/matrix.sh check enus`, drives an Android build over adb unchanged. That is
+how those two were shown fixed on a Pixel 9a and a Pixel Watch 4: 98 cases,
+comparing sample hashes and reported answers against baselines recorded on x86.
 
 ## Licence
 
