@@ -1,4 +1,5 @@
 import org.gradle.internal.os.OperatingSystem
+import java.util.Properties
 
 plugins {
 	alias(libs.plugins.android.application)
@@ -11,6 +12,12 @@ val abis = (findProperty("evvdroid.abis") as String? ?: "arm64-v8a,armeabi-v7a,x
 val rulesForm = findProperty("evvdroid.rules") as String? ?: "c"
 val languages = findProperty("evvdroid.langs") as String? ?: "lang/enus"
 val nativeOut = layout.buildDirectory.dir("native/jniLibs")
+
+// Release signing, from a keystore.properties the repo does not carry. Without
+// it a clone still builds and the release APK comes out unsigned.
+val keystore = rootProject.file("keystore.properties").takeIf { it.exists() }?.let { where ->
+	Properties().apply { where.inputStream().use { stream -> load(stream) } }
+}
 
 // The engine is built by its own Makefile rather than by CMake, because that
 // Makefile writes the language rules with Python before it compiles them and
@@ -81,8 +88,20 @@ android {
 		jniLibs.srcDirs(nativeOut)
 	}
 
+	signingConfigs {
+		keystore?.let { props ->
+			create("release") {
+				storeFile = file(props.getProperty("storeFile"))
+				storePassword = props.getProperty("storePassword")
+				keyAlias = props.getProperty("keyAlias")
+				keyPassword = props.getProperty("keyPassword")
+			}
+		}
+	}
+
 	buildTypes {
 		release {
+			signingConfig = signingConfigs.findByName("release")
 			isMinifyEnabled = true
 			isShrinkResources = true
 			proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
