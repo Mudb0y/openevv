@@ -273,6 +273,16 @@ void evv_arg_over(const char *who, int argn, int room);
    way delta_new works them out, which is what makes the names true. */
 #define GLOBAL(t, p, v) (*(t *)((unsigned char *)(intptr_t)(p) + DG_##v))
 
+/* A reach into a variable at a displacement from its own start.
+ *
+   GLOBAL names a variable's value, which is where a rule usually reaches. A
+   compound variable is a run of bytes, and a rule reaches into the middle of
+   one -- so the offset is a variable and a step into it, and both are said
+   rather than added up into a number. Same address, and it survives the
+   variable moving. */
+#define GLOBAL_D(t, p, v, d) \
+    (*(t *)((unsigned char *)(intptr_t)(p) + DG_##v + (d)))
+
 /* The address of one of the language's own variables, or of a byte inside a
    compound one, as a value the machine can hold.
  *

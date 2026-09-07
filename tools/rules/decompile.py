@@ -1177,6 +1177,7 @@ ADDRED = [0]
 VIAED = [0]
 BLOCKED = [0]
 RECORDED = [0]
+STEPPED = [0]
 ADDR_RE = re.compile(r'\(\(int32_t\)\((r[0-7]) \+ \((-?\d+)\)\)\)')
 
 
@@ -1771,10 +1772,19 @@ def name_globals(flat, pbase=0, rule=None):
         n = int(reg[1:])
         if n in stale:
             return m.group(0)
-        if off in where and (reg in only or n in holds):
-            seen.add(where[off])
-            NAMED[0] += 1
-            return 'GLOBAL(%s, %s, %s)' % (t, reg, where[off])
+        if reg in only or n in holds:
+            if off in where:
+                seen.add(where[off])
+                NAMED[0] += 1
+                return 'GLOBAL(%s, %s, %s)' % (t, reg, where[off])
+            # Or into the middle of one, which a compound variable is a run of
+            # bytes for. The variable and the step into it, rather than the
+            # two added up.
+            got = variable_at(off)
+            if got is not None:
+                seen.add(got[0])
+                STEPPED[0] += 1
+                return 'GLOBAL_D(%s, %s, %s, %d)' % (t, reg, got[0], got[1])
         # Or the register holds one of the machine's records, handed in by
         # whoever called this rule, and the offset is one of its fields.
         kind = holds_record.get(n)
@@ -2759,6 +2769,8 @@ def main():
           ' offset: %d' % BLOCKED[0])
     print("reaches into a record the rule was handed, said as the field they"
           ' are: %d' % RECORDED[0])
+    print('reaches into the middle of a variable, said as the variable and a'
+          ' step: %d' % STEPPED[0])
     if PROVENANCE:
         print('reaches and addresses left unnamed, numbered for the census:'
               ' %d' % len(PROV_SITES))
