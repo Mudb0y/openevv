@@ -1174,6 +1174,7 @@ def variable_at(off):
 
 
 ADDRED = [0]
+VIAED = [0]
 ADDR_RE = re.compile(r'\(\(int32_t\)\((r[0-7]) \+ \((-?\d+)\)\)\)')
 
 
@@ -1452,6 +1453,91 @@ def state_registers(flat):
     return into
 
 
+def state_offsets(flat):
+    """How far into the state each register points, where that is known.
+
+    state_registers answers whether a register is the state. This answers the
+    same question one step further out: a rule commonly takes the address of a
+    variable and then reaches through it, so the register holds the state plus
+    a constant rather than the state itself, and the reach is into a variable
+    all the same. Both are the same walk over the same graph, so this is that
+    walk with a number in place of a flag -- nought for the state, and
+    whatever was added since for a pointer into it.
+
+    None where flat_cfg is None, for the reason it gives.
+    """
+    succ = flat_cfg(flat)
+    if succ is None:
+        return None
+
+    n = len(flat)
+    pred = [[] for _ in range(n)]
+    for i, outs in enumerate(succ):
+        for j in outs:
+            pred[j].append(i)
+
+    add = re.compile(r'^\s*r([0-7]) = \(\(int32_t\)\((r[0-7]) \+ '
+                     r'\((-?\d+)\)\)\);$')
+
+    def after(line, was):
+        """What the registers point at once this line has run."""
+        m = DEF_RE.match(line)
+        if m and line[m.end():].strip() == '(FIELD(0));':
+            got = dict(was)
+            got[int(m.group(1))] = 0
+            return got
+        m = add.match(line)
+        if m:
+            got = dict(was)
+            base = was.get(int(m.group(2)[1:]))
+            if base is None:
+                got.pop(int(m.group(1)), None)
+            else:
+                got[int(m.group(1))] = base + int(m.group(3))
+            return got
+        got = dict(was)
+        if POP_RE.match(line):
+            for r in REG_RE.findall(line):
+                got.pop(int(r), None)
+        else:
+            for r in _defuse(line)[0]:
+                got.pop(r, None)
+        for w in PART_WRITE.finditer(line):
+            got.pop(int(w.group(1)), None)
+        return got
+
+    # A meet that keeps only what every way in agrees on, value and all.
+    def meet(a, b):
+        return {k: v for k, v in a.items() if b.get(k) == v}
+
+    into = [None] * n
+    outof = [None] * n
+    into[0] = {}
+    changed = True
+    while changed:
+        changed = False
+        for i in range(n):
+            if i == 0:
+                got = {}
+            elif not pred[i] or any(outof[p] is None for p in pred[i]):
+                got = None if not pred[i] else None
+                if not pred[i]:
+                    got = {}
+            else:
+                got = outof[pred[i][0]]
+                for p in pred[i][1:]:
+                    got = meet(got, outof[p])
+            if got is None:
+                got = {}
+            was = outof[i]
+            into[i] = got
+            outof[i] = after(flat[i], got)
+            if outof[i] != was:
+                changed = True
+
+    return into
+
+
 def name_globals(flat):
     """Reaches through the state written as the variables they are.
 
@@ -1480,21 +1566,38 @@ def name_globals(flat):
     at = state_registers(flat)
     stale = (stale_registers(flat) if at is not None and plants_landing(flat)
              else set())
+    # And how far into the state each register points, which names the reaches
+    # that go through a pointer to a variable rather than through the state.
+    into = state_offsets(flat)
 
     where = layout()
     seen = set()
     holds = frozenset()
+    points = {}
 
     def sub(m):
         t, reg, off = m.group(1), m.group(2), int(m.group(3))
         n = int(reg[1:])
-        if off not in where:
+        if n in stale:
             return m.group(0)
-        if reg not in only and not (n in holds and n not in stale):
+        if off in where and (reg in only or n in holds):
+            seen.add(where[off])
+            NAMED[0] += 1
+            return 'GLOBAL(%s, %s, %s)' % (t, reg, where[off])
+        # Or the register points into the state rather than at it, and the
+        # reach lands in a variable once the two are added up.
+        base = points.get(n)
+        if base is None or base == 0:
             return m.group(0)
-        seen.add(where[off])
-        NAMED[0] += 1
-        return 'GLOBAL(%s, %s, %s)' % (t, reg, where[off])
+        there = variable_at(base + off)
+        here = variable_at(base)
+        if there is None or here is None:
+            return m.group(0)
+        seen.add(there[0])
+        seen.add(here[0])
+        VIAED[0] += 1
+        return 'GLOBAL_VIA(%s, %s, %s, %d, %s, %d)' % (
+            t, reg, there[0], there[1], here[0], here[1])
 
     if not only and at is None:
         return flat, set()
@@ -1502,6 +1605,7 @@ def name_globals(flat):
     out = []
     for i, line in enumerate(flat):
         holds = at[i] if at is not None else frozenset()
+        points = into[i] if into is not None else {}
         out.append(REACH.sub(sub, line))
     return name_addresses(out, only, at, stale, seen), seen
 
@@ -2427,6 +2531,8 @@ def main():
     print('reaches through the state named as the variable they are: %d over %d variables' % (NAMED[0], len(USED)))
     print('addresses into the state said as the variable they point at: %d'
           % ADDRED[0])
+    print('reaches through a pointer into the state, said as both variables:'
+          ' %d' % VIAED[0])
     if PROVENANCE:
         print('reaches and addresses left unnamed, numbered for the census:'
               ' %d' % len(PROV_SITES))

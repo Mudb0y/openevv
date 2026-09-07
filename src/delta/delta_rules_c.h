@@ -266,6 +266,18 @@ void evv_arg_over(const char *who, int argn, int room);
 #define GLOBAL_AT(p, v, d) \
     ((int32_t)(intptr_t)((unsigned char *)(intptr_t)(p) + DG_##v + (d)))
 
+/* A reach into one variable through a pointer that names another.
+ *
+   A rule takes the address of a variable and then reaches through it, so the
+   register holds the state plus a constant rather than the state itself. The
+   reach is into a variable all the same, and both ends can be said by name:
+   the difference between the two is what has to be added to the pointer, and
+   the compiler works that out. So this holds however the variables are laid
+   out, which the number it replaces did not. */
+#define GLOBAL_VIA(t, p, to, dto, from, dfrom) \
+    (*(t *)((unsigned char *)(intptr_t)(p) \
+            + (DG_##to + (dto)) - (DG_##from + (dfrom))))
+
 /* One reach whose object is not known, noted so that it can be. A rule
    reaching through a register that GLOBAL could not name is a site where the
    offset pins a layout and nothing says which layout, and those are what
