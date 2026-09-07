@@ -3,6 +3,7 @@ package org.evvdroid
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +32,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
@@ -95,7 +102,8 @@ fun SettingsScreen(state: SettingsModel) {
 				SliderRow(
 					label = stringResource(labelOf(param)),
 					percent = state.percentOf(param),
-					onPercent = { state.setPercent(param, it) }
+					onPercent = { state.setPercent(param, it) },
+					onStep = { state.stepPercent(param, it) }
 				)
 			}
 			Gap()
@@ -175,20 +183,52 @@ private fun Gap() {
  * said and puts one control there instead: the name, the value, the range it
  * moves in, and how to move it. Without it a reader finds the text and the bar
  * separately and neither says what the other is.
+ *
+ * The row takes the keyboard, and the bar inside it does not. A bar that keeps
+ * a focus of its own is a second place for the keyboard to be, invisible to a
+ * screen reader because the semantics here are the row's: tabbing lands on a
+ * bar nothing announces, and its own answer to the End key is to go to the
+ * maximum, so a setting moves with nothing said about it. So the bar is taken
+ * out of the tab order and the row answers the keys itself.
+ *
+ * A key press moves it by one. TalkBack adjusts any slider by a twentieth of
+ * the range it is given, so its own arrow key asks for five percent here
+ * whatever the steps say, and the number of steps is not part of what the
+ * platform is told. Five percent of the speed scale is the difference between
+ * too slow to bear and faster than was wanted, so a request to move is read as
+ * a request to move one rather than as the number it carries.
  */
 @Composable
-private fun SliderRow(label: String, percent: Int, onPercent: (Int) -> Unit) {
+private fun SliderRow(
+	label: String,
+	percent: Int,
+	onPercent: (Int) -> Unit,
+	onStep: (Int) -> Unit
+) {
 	val spoken = stringResource(R.string.percent_spoken, percent)
 	Column(
 		modifier = Modifier
 			.fillMaxWidth()
 			.padding(horizontal = 16.dp, vertical = 8.dp)
+			.onKeyEvent { press ->
+				if (press.type != KeyEventType.KeyDown) return@onKeyEvent false
+				when (press.key) {
+					Key.DirectionLeft, Key.DirectionDown -> onStep(-1)
+					Key.DirectionRight, Key.DirectionUp -> onStep(1)
+					Key.MoveHome -> onPercent(0)
+					Key.MoveEnd -> onPercent(Eci.PERCENT_MAX)
+					else -> return@onKeyEvent false
+				}
+				true
+			}
+			.focusable()
 			.clearAndSetSemantics {
 				contentDescription = label
 				stateDescription = spoken
 				progressBarRangeInfo = ProgressBarRangeInfo(percent.toFloat(), 0f..100f, 99)
 				setProgress { want ->
-					onPercent(want.roundToInt())
+					val target = want.roundToInt()
+					if (target != percent) onStep(if (target > percent) 1 else -1)
 					true
 				}
 			}
@@ -202,6 +242,7 @@ private fun SliderRow(label: String, percent: Int, onPercent: (Int) -> Unit) {
 			style = MaterialTheme.typography.labelLarge
 		)
 		Slider(
+			modifier = Modifier.focusProperties { canFocus = false },
 			value = percent.toFloat(),
 			onValueChange = { onPercent(it.roundToInt()) },
 			valueRange = 0f..100f,

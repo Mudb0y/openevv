@@ -79,6 +79,16 @@ class SettingsModel(context: Context) {
 
 	fun setPercent(param: Int, percent: Int) = setShape(param, Eci.fromPercent(param, percent))
 
+	/** One percent up or down from wherever the setting is now.
+	 *
+	 *  It reads the value rather than taking one, because a held key sends
+	 *  several of these before the screen has drawn any of them, and a step
+	 *  measured from what the screen last showed would land on the same number
+	 *  every time. */
+	fun stepPercent(param: Int, by: Int) {
+		setPercent(param, (percentOf(param) + by).coerceIn(0, Eci.PERCENT_MAX))
+	}
+
 	fun setShape(param: Int, value: Int) {
 		val settled = Eci.clampVoice(param, value)
 		if (shape[param] == settled) return

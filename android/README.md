@@ -32,7 +32,7 @@ redistributing anything.
 * Pronunciation dictionaries.
 * Android 6 and later. arm64-v8a, armeabi-v7a, x86_64.
 
-`app/src/androidTest` runs on a device. 58 checks.
+`app/src/androidTest` runs on a device. 74 checks.
 
 ## Turning it on
 
@@ -85,7 +85,7 @@ rate, pauses, phrase prediction, abbreviations and dictionaries. "Speak a sample
 Nothing speaks on its own. A setting takes effect when you set it, and the
 button is how you hear it.
 
-Six deliberate choices:
+Eight deliberate choices:
 
 Each row is one control. A label, a bar and a number would be three stops for a
 screen reader, so each row merges into a single node with
@@ -94,6 +94,19 @@ screen reader, so each row merges into a single node with
 Values are percentages. The engine uses three scales (gender is 0 or 1, speed
 runs to 250, the rest to 100), so a raw number means nothing without knowing
 which. Everything is hundredths of its own range.
+
+The row takes the keyboard and the bar inside it does not. A Compose slider
+keeps a focus of its own, and here the semantics belong to the row, so tabbing
+landed on a bar no screen reader could see and its own answer to the End key
+was to go to the maximum: a setting moved with nothing said about it. The bar
+is out of the tab order and the row answers the keys itself.
+
+A key moves it by one percent, not five. TalkBack adjusts any slider by a
+twentieth of the range it is given, and the number of steps a Compose slider
+declares never reaches the platform, so TalkBack's own arrow asks for five
+percent here. Five percent of the speed scale is the difference between too
+slow to bear and faster than was wanted, so the row takes a request to move as
+a request to move one.
 
 Speech rate from the system is a multiplier, so it is treated as one. The
 engine's own speed scale is far from linear: speed 100 speaks 2.7 times the
