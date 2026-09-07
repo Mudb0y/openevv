@@ -95,6 +95,9 @@ android {
 				storePassword = props.getProperty("storePassword")
 				keyAlias = props.getProperty("keyAlias")
 				keyPassword = props.getProperty("keyPassword")
+				// Off by default in AGP. It is what lets the key be rotated
+				// later without every install having to be thrown away.
+				enableV3Signing = true
 			}
 		}
 	}
