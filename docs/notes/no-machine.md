@@ -31,7 +31,7 @@ Run over every recorded case of all ten languages, and over the 24,318 English w
          0 reached and mixing kinds                              (0%)
      9,961 never reached by either gate                          (38%)
 
-Of the 16,133, all but twenty address a block of the arena. Nineteen address something outside it and one a null. **Not one addresses the machine's state, not one addresses the language's own data stores, and not one addresses the C stack** -- frames are in the arena too, because a rule hands the machine the address of its frame and only the arena can be named in four bytes.
+Of the 16,133, all but twenty address a block of the arena. Nineteen address something outside it and one a null. Not one shows as the state, the language's data stores, or the C stack -- but that is the classification being too coarse rather than a fact about the rules, and the next section is what corrected it. The state itself lives in an arena block, and so does every frame, because a rule hands the machine the address of its frame and only the arena can be named in four bytes. So "a block of the arena" is nearly everything and says almost nothing.
 
 That nothing mixes kinds is the most encouraging number here. Every site either addresses the language's heap or it addresses a frame, consistently, over every case and every word.
 
@@ -51,11 +51,29 @@ A reference is not born at an allocation. It is born at one of 162 `EVV_REF` sit
 
 Some of the 162 have no type to offer -- `EVV_REF(malloc(...))` is a void pointer -- and those want the surrounding code read. That is a bounded job on a small number of sites rather than an open-ended one on a large number.
 
+**Measured, and it is what corrected the storage answer above.** With births recorded, English's 2,599 reached sites resolve as follows: 2,474 come from places naming exactly one C type, 60 from more than one, and 65 from no birth the run saw. Ninety-five per cent of what was reached. The types are `delta_state` overwhelmingly, then `delta_loc`, a `void *` that genuinely has no type to give, `delta_actrec` and `uint8_t`. So most of these sites do address the machine's state, which the storage classification could not see.
+
+The places have to be collapsed by type before that number means anything: the state reaches the rules through four wrapper functions in a language module, each with its own `EVV_REF`, and a site seeing two of those is seeing one type twice. The first version of the report counted that as ambiguity and made the answer look far worse than it is. `tools/rules/ctype.py` is what reads a type out of a source line -- a plain identifier, a member, an address-of, a call, and `EVV_AT`, which carries the type it produces as its own first argument.
+
+## Where the static route stops, and why it is not the census's fault either
+
+Stage two named everything it could reach from inside one rule. What is left in English is 622 sites, and 292 of them are reaches through a register loaded out of a frame slot. Every one of those 292 reads a slot the rule never wrote: they are the rule's own arguments, pointers handed in by whoever called it. Measured, not assumed -- there is no exception in the whole language.
+
+So what those reaches address was decided by the caller, and no analysis inside one rule can know it. Slot tracking was written and then taken out again for that reason: it is sound, it costs nothing, and it names nothing, because the pointers it would follow never come from the rule.
+
+**The census cannot answer this one either, which settles a question that was open.** A census names what a rule was seen to be passed. A rule called from two places with two sorts of pointer would be named after whichever the cases happened to exercise, and that name becomes a wrong offset the moment a layout moves -- silently, at the stage where it is least recoverable. Nine hundred and twenty-six entries are handed the address of a rule's own slot, so this is not a rare shape. That is the argument for keeping the census a check and never letting it become an input, and it is a better argument than the one about hermetic builds.
+
+What would answer it is a signature for each rule: what each of its arguments points at. That is inter-procedural over 21,134 rules, and it is a stage of its own rather than more of this one. It is tractable in principle, because a rule's callers are rules too and the machine's own calls into the language are typed where they start.
+
 ## The stages, and where the point of no return is
 
 **One, provenance.** Which object each reach is addressing. The census above is the first half of it and the `EVV_REF` tagging is the second. Verifiable to a standard with no judgement in it: `make notation-prove` must still find the bytecode identical and the recorded cases must not move, because nothing in this stage changes what the generated C does, only what it says about itself.
 
 **Two, typed access.** With provenance in hand, the generated C stops doing arithmetic and starts naming fields. Same layouts, same four-byte references, same arena. Verified the same way. This is the first stage with a payoff if the work stops there: the rules become readable in the sense the decompiler has been reaching for since it was written.
+
+Done for the state and for the frame's machine-written half, on 7 September 2026. 19,552 addresses into the state name the variable they point at, 4,353 reaches name the variable they are, 280 name both ends of a pointer into the state, and all 8,243 `ENTER` calls name `delta_rule_block` rather than five offsets. English went from 4,614 sites naming a number to 622. Six builds at 979 cases with nothing moved at every step, and the macros are provably live: a byte added to an address moves all 98 English cases, and four bytes added to the fence arrays moves them too. Moving the landing slot moves nothing, which is correct -- `src/port/evv_land.c` uses that address only as a name.
+
+Not done: the rule's own frame slots, and the 622 reaches the section below accounts for. Both wait on rule signatures.
 
 **Three, the layouts become ours.** Only now may a struct change shape. References become real pointers, `delta_low`'s copying goes, the arena goes, and Apple silicon and iOS fall out as a side effect rather than as the point.
 

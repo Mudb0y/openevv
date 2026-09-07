@@ -1479,32 +1479,40 @@ def state_offsets(flat):
 
     add = re.compile(r'^\s*r([0-7]) = \(\(int32_t\)\((r[0-7]) \+ '
                      r'\((-?\d+)\)\)\);$')
+    # Frame slots are deliberately not tracked here, and the reason is
+    # measured rather than assumed: of the 292 reaches in English that go
+    # through a register loaded out of a slot, every single one reads a slot
+    # the rule never wrote, because it is one of the rule's own arguments. So
+    # what those reaches address was decided by whoever called the rule, and no
+    # analysis inside one rule can know it. docs/notes/no-machine.md says what
+    # would.
 
     def after(line, was):
-        """What the registers point at once this line has run."""
+        """What each place points at once this line has run."""
         m = DEF_RE.match(line)
         if m and line[m.end():].strip() == '(FIELD(0));':
             got = dict(was)
-            got[int(m.group(1))] = 0
+            got[('r', int(m.group(1)))] = 0
             return got
         m = add.match(line)
         if m:
             got = dict(was)
-            base = was.get(int(m.group(2)[1:]))
+            base = was.get(('r', int(m.group(2)[1:])))
+            here = ('r', int(m.group(1)))
             if base is None:
-                got.pop(int(m.group(1)), None)
+                got.pop(here, None)
             else:
-                got[int(m.group(1))] = base + int(m.group(3))
+                got[here] = base + int(m.group(3))
             return got
         got = dict(was)
         if POP_RE.match(line):
             for r in REG_RE.findall(line):
-                got.pop(int(r), None)
+                got.pop(('r', int(r)), None)
         else:
             for r in _defuse(line)[0]:
-                got.pop(r, None)
+                got.pop(('r', r), None)
         for w in PART_WRITE.finditer(line):
-            got.pop(int(w.group(1)), None)
+            got.pop(('r', int(w.group(1))), None)
         return got
 
     # A meet that keeps only what every way in agrees on, value and all.
@@ -1587,7 +1595,7 @@ def name_globals(flat):
             return 'GLOBAL(%s, %s, %s)' % (t, reg, where[off])
         # Or the register points into the state rather than at it, and the
         # reach lands in a variable once the two are added up.
-        base = points.get(n)
+        base = points.get(('r', n))
         if base is None or base == 0:
             return m.group(0)
         there = variable_at(base + off)
