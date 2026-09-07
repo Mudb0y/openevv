@@ -250,6 +250,39 @@ static head *next_block(head *b)
     return (head *)p;
 }
 
+/* Which block an address is in, and who asked for that block. Nothing in the
+   engine needs this either: the allocator has recorded `whence' since the
+   overrun guard wanted it, and the provenance census is the first thing to
+   read it while nothing is wrong. Walks from the first block, which is what
+   every other walk here does and is fast enough for a census. */
+int evv_arena_whence_of2(const void *p, uint32_t *whence, uint32_t *bytes)
+{
+    const unsigned char *c = p;
+    head *b;
+
+    if (p == 0 || first == 0 || !in_arena(c))
+        return 0;
+
+    for (b = first; b != 0; b = next_block(b)) {
+        const unsigned char *body = (const unsigned char *)b + sizeof(head);
+
+        if (c >= body && c < body + (b->size - sizeof(head))) {
+            if (whence != 0)
+                *whence = b->whence;
+            if (bytes != 0)
+                *bytes = (uint32_t)(b->size - sizeof(head));
+            return b->used != 0;
+        }
+    }
+
+    return 0;
+}
+
+int evv_arena_whence_of(const void *p, uint32_t *whence)
+{
+    return evv_arena_whence_of2(p, whence, 0);
+}
+
 /* How much to take when nobody said. The pages are not touched until they are
    used, so asking for a lot costs nothing but address space, and the whole
    point of the region is that it has to sit at an address a 32-bit value can

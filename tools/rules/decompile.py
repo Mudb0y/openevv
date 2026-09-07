@@ -437,6 +437,11 @@ def write(names):
         named = name_tails(
             name_alternatives(name_params(named, pbase, params), alts))
         USED.update(saw)
+        # Last of all, and only when asked for: the reaches the passes above
+        # could not name, each given a number so that the engine can be made
+        # to say what it was addressing. src/delta/delta_prov.c is the other
+        # half.
+        named = prov_sites(named, name)
 
         plants = plants_landing(flat)
         bad = stale_registers(flat) if plants else set()
@@ -1197,6 +1202,71 @@ def drop_dead(body):
 REACH = re.compile(r'\(\*\((u?int(?:8|16|32)_t) \*\)'
                    r'\(\(unsigned char \*\)\(intptr_t\)\((r\d)\)'
                    r' \+ (\d+)\)\)')
+
+
+# The provenance census: which object each reach that GLOBAL could not name is
+# actually addressing. Off unless EVV_RULE_PROVENANCE is set, and it changes
+# only what the generated C says about itself -- the expression it computes is
+# the same one -- so the bytecode is untouched and the audio has to be.
+#
+# It runs last, after name_globals, on purpose. Instrumenting earlier would
+# stop that pass matching its own pattern and 34,012 named variables would go
+# back to being arithmetic, which would make a provenance build differ from an
+# ordinary one in a way that has nothing to do with provenance.
+PROVENANCE = os.environ.get('EVV_RULE_PROVENANCE', '') not in ('', '0')
+
+# Where each site is, so the report can be read. One line a site: its number,
+# the rule it is in, the offset it reaches at, and whether it is a reach or an
+# address handed onward.
+PROV_SITES = []
+
+# A reach through a register that name_globals left alone, and an address
+# computed from one. The first is the reach itself; the second is the folded
+# add a rule makes when it hands the machine a pointer into something.
+PROV_REACH = re.compile(r'\(\*\((u?int(?:8|16|32)_t) \*\)'
+                        r'\(\(unsigned char \*\)\(intptr_t\)\((r\d)\)'
+                        r' \+ (-?\d+)\)\)')
+PROV_ADDR = re.compile(r'\(\(int32_t\)\((r\d) \+ \((-?\d+)\)\)\)')
+
+
+def prov_sites(body, name):
+    """Every reach whose object is unknown, noted with a number of its own."""
+    if not PROVENANCE:
+        return body
+
+    def reach(m):
+        t, reg, off = m.group(1), m.group(2), m.group(3)
+        n = len(PROV_SITES)
+        PROV_SITES.append((n, name, off, 'reach'))
+        return ('(*(%s *)((unsigned char *)EVV_PROV(%d,'
+                ' (const void *)(intptr_t)(%s)) + %s))'
+                % (t, n, reg, off))
+
+    def addr(m):
+        reg, off = m.group(1), m.group(2)
+        n = len(PROV_SITES)
+        PROV_SITES.append((n, name, off, 'addr'))
+        return ('((int32_t)((intptr_t)EVV_PROV(%d,'
+                ' (const void *)(intptr_t)(%s)) + (%s)))' % (n, reg, off))
+
+    out = []
+    for line in body:
+        line = PROV_REACH.sub(reach, line)
+        line = PROV_ADDR.sub(addr, line)
+        out.append(line)
+    return out
+
+
+def write_prov_sites(tag):
+    """The site table, which is the map the report is read against."""
+    if not PROVENANCE:
+        return
+    path = os.path.join(census.LANG_DIR, 'provenance-sites-%s.txt' % tag)
+    with open(path, 'w') as f:
+        f.write('# site  rule  offset  kind\n')
+        for n, name, off, kind in PROV_SITES:
+            f.write('%d %s %s %s\n' % (n, name, off, kind))
+    print('wrote %s, %d sites' % (path, len(PROV_SITES)))
 
 
 def name_globals(body):
@@ -2145,9 +2215,13 @@ def main():
         names = smallest(int(sys.argv[1]) if len(sys.argv) > 1 else 100)
 
     done, refused = write(names)
+    write_prov_sites(census.LANG_TAG)
     print('calls joined to their arguments: %d' % JOINED[0])
     print('wrappers inlined to the primitive they stand for: %d' % WRAPPED[0])
     print('reaches through the state named as the variable they are: %d over %d variables' % (NAMED[0], len(USED)))
+    if PROVENANCE:
+        print('reaches and addresses left unnamed, numbered for the census:'
+              ' %d' % len(PROV_SITES))
     print('arms named as the alternative they are: %d in a table, %d in a'
           ' chain of decrements' % (ALTED[0], ALTED[1]))
     print('reaches into the frame named as the argument they are: %d'

@@ -255,6 +255,21 @@ void evv_arg_over(const char *who, int argn, int room);
    way delta_new works them out, which is what makes the names true. */
 #define GLOBAL(t, p, v) (*(t *)((unsigned char *)(intptr_t)(p) + DG_##v))
 
+/* One reach whose object is not known, noted so that it can be. A rule
+   reaching through a register that GLOBAL could not name is a site where the
+   offset pins a layout and nothing says which layout, and those are what
+   stand between these rules and code a person can read.
+ *
+   src/delta/delta_prov.c says what is done with the answer. Without
+   EVV_PROVENANCE this expands to the pointer and nothing else, so the
+   ordinary build compiles the expression it always did. */
+#if defined(EVV_PROVENANCE) && EVV_PROVENANCE
+#include "delta_prov.h"
+#define EVV_PROV(id, p) (evv_prov_note((id), (const void *)(p)), (p))
+#else
+#define EVV_PROV(id, p) (p)
+#endif
+
 /* Both are the arity said out loud, because the arity is known where the
    call is written and working it out again at run time was a fifth of a run.
    src/delta/delta_rules.c has one small function per arity and says why.

@@ -38,6 +38,17 @@ extern size_t         evv_arena_size;
 int  evv_arena_open(size_t bytes);
 void evv_arena_close(void);
 
+/* Which block an address is in, and the return address the allocator recorded
+   for whoever asked for it. For the provenance census in
+   src/delta/delta_prov.c, which is the first thing to read `whence' while
+   nothing is wrong. Answers nought where the address is in no live block. */
+int  evv_arena_whence_of(const void *p, uint32_t *whence);
+
+/* The same, and how many bytes the block holds. The allocator's name is too
+   coarse on its own -- one allocator serves many sorts of record -- and a
+   length separates most of them. */
+int  evv_arena_whence_of2(const void *p, uint32_t *whence, uint32_t *bytes);
+
 void *evv_arena_alloc(size_t n);
 void *evv_arena_calloc(size_t n, size_t m);
 void *evv_arena_realloc(void *p, size_t n);
