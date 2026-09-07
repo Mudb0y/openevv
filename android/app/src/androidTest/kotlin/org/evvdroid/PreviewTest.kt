@@ -5,10 +5,10 @@ import org.junit.Test
 
 /** That the settings screen's sample button really makes a sound.
  *
- *  It once did not, and nothing said so: the preview took its turn number
- *  before stopping whatever was speaking, stopping is what moves that number
- *  on, and so every sample was discarded as stale before it began. A preview
- *  that quietly plays nothing looks exactly like one that works. */
+ *  A preview that quietly plays nothing looks exactly like one that works, so
+ *  nothing else here would catch it. The trap is the order: stopping whatever
+ *  is speaking is what moves the turn number on, so a preview that takes its
+ *  turn number first is stale before it begins. */
 class PreviewTest {
 
 	@Test

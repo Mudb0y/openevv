@@ -15,7 +15,7 @@ import android.content.SharedPreferences
  * Nothing is stored until someone chooses it. That is the whole point rather
  * than a detail: every preset carries its own head size, inflection and volume,
  * so a default of our own written over the top would make every voice wrong in
- * the same way, which is what it did once.
+ * the same way.
  *
  * A revision goes up whenever anything changes, so the service can tell whether
  * the instance it is holding is still configured the way the user left it

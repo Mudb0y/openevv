@@ -11,10 +11,10 @@ package org.evvdroid
  *     speed   50   100   150    200    250
  *     times  1.0   2.7   7.0   16.6   21.2
  *
- * So multiplying the speed number by the percentage, which is what this used to
- * do, is wrong by a lot at the top: a rate of 400 asked for four times and got
- * speed 200, which is sixteen times and far too fast to follow. It is what made
- * the engine unusable on a watch, where the rate had been turned up.
+ * So the percentage cannot simply multiply the speed number. That is wrong by a
+ * lot at the top: it turns a rate of 400, four times, into speed 200, which is
+ * sixteen times and far too fast to follow. A watch ships with the rate turned
+ * up, so that is where it bites first.
  *
  * [TIMES] is that measurement. Reading it forwards says how many times the
  * default speed a given speed number is; reading it backwards turns a wanted

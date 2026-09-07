@@ -11,8 +11,8 @@ import org.junit.runner.RunWith
  * Android's speech rate is a multiplier, so it has to behave like one.
  *
  * Multiplying the engine's speed number by the percentage does not: the scale
- * is nothing like linear, and a rate of 400 used to land on speed 200, which
- * is sixteen times the default rather than four.
+ * is nothing like linear, and a rate of 400 would land on speed 200, which is
+ * sixteen times the default rather than four.
  */
 @RunWith(AndroidJUnit4::class)
 class SpeechRateTest {

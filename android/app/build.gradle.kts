@@ -22,12 +22,12 @@ val buildNative by tasks.registering(Exec::class) {
 	val script = rootProject.layout.projectDirectory.file("native/build-native.sh")
 	// Deliberately not the engine's own sources. The script patches them, so a
 	// task declaring them would be rewriting its own inputs every time it ran
-	// and would never settle -- which showed up as the first build after any
-	// change failing and the next one succeeding. What actually decides the
-	// output is the submodule's commit, the patches laid on it, and the two
-	// files here. Editing native/openevv by hand wants --rerun-tasks.
-	// A file tree rather than a directory, because there is nothing to patch at
-	// the moment and git does not carry an empty one.
+	// and would never settle: the first build after any change fails and the
+	// next one succeeds. What decides the output is the submodule's commit, the
+	// patches laid on it, and the files named here. Editing native/openevv by
+	// hand wants --rerun-tasks. The patches are a file tree rather than a
+	// directory because there are none at the moment, and git does not carry an
+	// empty one.
 	inputs.files(rootProject.fileTree("native/patches"))
 	inputs.file(rootProject.layout.projectDirectory.file("native/android.mk"))
 	inputs.file(rootProject.layout.projectDirectory.file(".gitmodules"))

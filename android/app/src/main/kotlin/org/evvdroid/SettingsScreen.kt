@@ -168,9 +168,9 @@ private fun labelOf(param: Int): Int = when (param) {
 	else -> R.string.volume_label
 }
 
-/** Air between one group of settings and the next. There were headings here,
- *  and a heading is a stop of its own for a screen reader that says nothing
- *  the labels under it do not. A spacer carries no semantics at all. */
+/** Air between one group of settings and the next. A heading would be a stop of
+ *  its own for a screen reader and would say nothing the labels under it do
+ *  not, so this is a spacer, which carries no semantics at all. */
 @Composable
 private fun Gap() {
 	Spacer(modifier = Modifier.height(16.dp))

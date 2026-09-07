@@ -146,9 +146,9 @@ class EngineTest {
 	 * Changing voice must not change the pace.
 	 *
 	 * Six of the eight presets ship at speed 50 and Glen and Sandy ship at 70,
-	 * which is half again as fast, so picking one of those two used to speed
-	 * everything up by itself. Speed is the listener's setting now, and the
-	 * only one of the eight a preset does not bring with it.
+	 * which is half again as fast, so a speed that followed the voice would
+	 * speed everything up by itself on those two. Speed is the listener's
+	 * setting, and the only one of the eight a preset does not bring with it.
 	 */
 	@Test
 	fun everyVoiceSpeaksAtTheSamePace() {

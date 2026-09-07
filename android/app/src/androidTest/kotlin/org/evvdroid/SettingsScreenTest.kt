@@ -11,9 +11,9 @@ import org.junit.runner.RunWith
  *
  *  It reads the engine's own voices to fill itself in, and the eight settings
  *  are driven off one list of keys where seven are sliders and gender is a
- *  choice of two, so it is a screen that can fail before it is ever seen. It
- *  has done, twice: once casting the gender control to a slider and once
- *  writing a number into a control that stores text.
+ *  choice of two, so it is a screen that can fail before it is ever seen:
+ *  casting the gender control to a slider, or writing a number into a control
+ *  that stores text, both throw where nobody is looking.
  *
  *  ActivityScenario.launch throws if anything in onCreate does, which is the
  *  whole of the check. What state it settles in afterwards is the device's
