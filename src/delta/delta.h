@@ -63,6 +63,34 @@ typedef struct {
     uint8_t    pad_5a[2];
 } delta_actrec;
 
+/* The block a rule hands the machine, which is the whole of what the machine
+ * writes into a rule's frame.
+ *
+ * Five places, and a rule passes all five to ventproc: the record it saves,
+ * the landing place, and three arrays of one byte a statement type. Every one
+ * of the 8,243 rules over the ten languages lays them out the same way -- the
+ * record first, the landing where the record ends, the arrays twelve bytes
+ * apart after that -- and the only thing that varies is which of the last two
+ * a rule hands over first, 4,428 one way and 3,815 the other, which says that
+ * pair is scratch either way.
+ *
+ * Written as a struct because the layout is ours rather than IBM's now, and
+ * the rules say it by name so that it can move. Our landing place is not in
+ * here at all: src/port/evv_land.c keeps the registers in a table of its own
+ * and uses this address only as a name, because the C library's own buffer is
+ * 156 bytes on a thirty-two bit host and would not fit the sixty-four
+ * reserved. So this room is IBM's shape kept for the rules compiled against
+ * it, and the assertions in delta.c are what say the shape has not moved.
+ */
+typedef struct {
+    delta_actrec  rec;
+    uint8_t       landing[64];
+    uint8_t       fence[3][12];
+} delta_rule_block;
+
+/* How far apart the three arrays are, which the rules' own macros want. */
+#define DELTA_FENCE_BYTES ((int)sizeof(((delta_rule_block *)0)->fence[0]))
+
 
 /* An operand as the machine keeps one, rather than as a caller builds one.
    The difference is the pointer: a delta_operand holds the host's, and one

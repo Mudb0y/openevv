@@ -14,6 +14,12 @@
 #include "evv_land.h"
 #include "delta_lang.h"
 
+/* For delta_rule_block, which is the shape of what the machine writes into a
+   rule's frame. The rules name that block rather than its offsets, so they
+   need to know it; nothing else of delta.h is wanted here and it guards
+   itself against being included twice. */
+#include "delta.h"
+
 /* The four flags the machine keeps, and the operations that set them. A rule
    written as C works them with the interpreter's own code, or a comparison
    after an operation would part company with it over what it says. */
@@ -186,6 +192,18 @@ void evv_arg_over(const char *who, int argn, int room);
    The arguments are named in the order they are pushed, which is the reverse
    of the order ventproc takes them: the last thing pushed is the first
    argument. */
+/* The five places in a rule's frame that the machine writes, each said as
+   where it is in the block rather than as a number.
+ *
+   A rule's own scratch is its own business and stays a number; this block is
+   not the rule's, it is delta_rule_block, and the rules name it so that it can
+   move. `b' is where the block sits in this rule's frame, which does stay a
+   number because it is where that rule chose to put it. */
+#define FRAME_REC(b)      (b)
+#define FRAME_JB(b)       ((b) + (int)offsetof(delta_rule_block, landing))
+#define FRAME_FENCE(b, n) ((b) + (int)offsetof(delta_rule_block, fence) \
+                                + (n) * DELTA_FENCE_BYTES)
+
 #define LANDING(jb) \
     do { r0 = SLOT(jb); ARG(0); ARG(SLOT(jb)); \
          { int32_t buf = (argn > 0) ? arg[argn - 1] : 0; int depth = argn; \

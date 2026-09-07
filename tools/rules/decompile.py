@@ -1175,6 +1175,7 @@ def variable_at(off):
 
 ADDRED = [0]
 VIAED = [0]
+BLOCKED = [0]
 ADDR_RE = re.compile(r'\(\(int32_t\)\((r[0-7]) \+ \((-?\d+)\)\)\)')
 
 
@@ -1862,6 +1863,26 @@ def _enter(body, i):
     if body[at:at + 4] != tail:
         return None
     FOLDED[1] += 1
+
+    # The five said as where they are in the block rather than as numbers.
+    # Every rule of every language lays the block out the same way -- the
+    # record first, the landing where it ends, the three arrays twelve bytes
+    # apart after that -- and the only thing that varies is which of the last
+    # two comes first. So the block's base is the one number that stays, being
+    # where this rule chose to put it, and the rest say themselves. A rule
+    # whose numbers do not fit the shape keeps them, because a name that is
+    # wrong is worse than a number that is right.
+    want = [int(x) for x in slots]
+    rec = want[4]
+    fence = {156: 0, 168: 1, 180: 2}
+    if (want[0] - rec == 92
+            and all(w - rec in fence for w in want[1:4])):
+        BLOCKED[0] += 1
+        return ('    ENTER(FRAME_JB(%d), %s, FRAME_REC(%d));'
+                % (rec,
+                   ', '.join('FRAME_FENCE(%d, %d)' % (rec, fence[w - rec])
+                             for w in want[1:4]),
+                   rec), 14)
     return ('    ENTER(%s);' % ', '.join(slots), 14)
 
 
@@ -2533,6 +2554,8 @@ def main():
           % ADDRED[0])
     print('reaches through a pointer into the state, said as both variables:'
           ' %d' % VIAED[0])
+    print('the block a rule hands the machine, said by name rather than by'
+          ' offset: %d' % BLOCKED[0])
     if PROVENANCE:
         print('reaches and addresses left unnamed, numbered for the census:'
               ' %d' % len(PROV_SITES))

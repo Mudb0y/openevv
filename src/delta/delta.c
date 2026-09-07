@@ -27,6 +27,19 @@ AT(stack, 0x006c);
    know, so what is held here is the boundary rather than the whole. */
 typedef char delta_state_ends_at_the_cells[sizeof(delta_state) == DG_BASE
                                            ? 1 : -1];
+/* The block a rule hands the machine, held to the shape every rule was
+   compiled against. Nothing may move here without the rules moving with it,
+   which is why the struct is described once and checked rather than trusted:
+   8,243 ENTER calls over ten languages agree on all four of these. */
+typedef char delta_rule_block_is_192[sizeof(delta_rule_block) == 192
+                                     ? 1 : -1];
+typedef char delta_rule_block_rec_at_0[offsetof(delta_rule_block, rec) == 0
+                                       ? 1 : -1];
+typedef char delta_rule_block_land_at_92[
+    offsetof(delta_rule_block, landing) == 92 ? 1 : -1];
+typedef char delta_rule_block_fence_at_156[
+    offsetof(delta_rule_block, fence) == 156 ? 1 : -1];
+
 typedef char delta_pta_is_16[sizeof(delta_pta) == 16 ? 1 : -1];
 typedef char delta_tpos_is_16[sizeof(delta_tpos) == 16 ? 1 : -1];
 /* The language's own description of itself. Nothing compiled from a rule
