@@ -8,9 +8,12 @@
 		android:supportsRtl="true"
 		android:theme="@style/Theme.Evvdroid">
 
+		<!-- Startable on the lock screen, which is where a screen reader is
+		     wanted first. What it reads there is in DirectBoot.kt. -->
 		<service
 			android:name=".EvvTtsService"
 			android:label="@string/engine_name"
+			android:directBootAware="true"
 			android:exported="true">
 			<intent-filter>
 				<action android:name="android.intent.action.TTS_SERVICE" />

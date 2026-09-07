@@ -157,12 +157,15 @@ class EvvTtsService : TextToSpeechService() {
 	/** Teaching three thousand words costs about half a second, so it happens
 	 *  when the files change rather than whenever any setting does. */
 	private fun loadDictionaries(target: EvvEngine, s: Settings) {
-		val want = s.dictionaryPaths()
+		// What is there rather than what was asked for. A dictionary picked
+		// before this build is not where the settings say until the phone has
+		// been unlocked once, and remembering only what was read means it is
+		// picked up when it arrives instead of being written off as loaded.
+		val want = s.dictionaryPaths().filterValues { java.io.File(it).exists() }
 		if (want == loadedDictionaries) return
 		target.forgetDictionaries()
 		for ((volume, path) in want) {
 			val file = java.io.File(path)
-			if (!file.exists()) continue
 			val taught = Dictionaries.load(target, volume, file)
 			Log.i(TAG, "volume $volume: $taught entries from ${file.name}")
 		}

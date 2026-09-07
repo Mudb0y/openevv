@@ -24,8 +24,10 @@ import android.content.SharedPreferences
 class Settings(context: Context) {
 
 	// The file androidx.preference used, kept under that name so a build with
-	// the old screen and a build with this one read the same settings.
-	private val prefs: SharedPreferences = context.applicationContext
+	// the old screen and a build with this one read the same settings. It is
+	// read through device-protected storage, because the speech service reads
+	// it while the phone is still locked. DirectBoot has the rest of that.
+	private val prefs: SharedPreferences = DirectBoot.storage(context)
 		.getSharedPreferences("${context.packageName}_preferences", Context.MODE_PRIVATE)
 
 	@Volatile
@@ -142,16 +144,16 @@ class Settings(context: Context) {
 
 	// ---- dictionaries ----------------------------------------------------
 
-	fun dictionaryPath(volume: Int): String? = prefs.getString("dict_path_$volume", null)
+	fun dictionaryPath(volume: Int): String? = prefs.getString(dictionaryPathKey(volume), null)
 
 	fun dictionaryName(volume: Int): String? = prefs.getString("dict_name_$volume", null)
 
 	fun setDictionary(volume: Int, path: String?, name: String?) {
 		val edit = prefs.edit()
 		if (path == null) {
-			edit.remove("dict_path_$volume").remove("dict_name_$volume")
+			edit.remove(dictionaryPathKey(volume)).remove("dict_name_$volume")
 		} else {
-			edit.putString("dict_path_$volume", path).putString("dict_name_$volume", name)
+			edit.putString(dictionaryPathKey(volume), path).putString("dict_name_$volume", name)
 		}
 		edit.apply()
 	}
@@ -170,6 +172,10 @@ class Settings(context: Context) {
 		const val KEY_PAUSES = "pauses"
 		const val KEY_PHRASE_PREDICTION = "phrase_prediction"
 		const val DEFAULT_SAMPLE_RATE = 11025
+
+		/** Where the copy taken of a picked dictionary is recorded. DirectBoot
+		 *  rewrites these when it moves the files, so it needs the name too. */
+		fun dictionaryPathKey(volume: Int) = "dict_path_$volume"
 
 		/** The eight, in the order the settings screen shows them. */
 		val SHAPE = listOf(

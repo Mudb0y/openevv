@@ -119,10 +119,12 @@ class SettingsModel(context: Context) {
 	 * A picked document is a content URI belonging to whichever app supplied
 	 * it, readable now and quite possibly not tomorrow, and the speech service
 	 * is a different process that reads these when it starts. So what is stored
-	 * is a copy of our own rather than a reference to somebody else's.
+	 * is a copy of our own rather than a reference to somebody else's, kept in
+	 * device-protected storage so that the service can still read it during a
+	 * locked boot.
 	 */
 	fun chooseDictionary(volume: Int, uri: android.net.Uri) {
-		val into = java.io.File(app.filesDir, "dictionaries").apply { mkdirs() }
+		val into = DirectBoot.dictionaries(app).apply { mkdirs() }
 		val file = java.io.File(into, "volume-$volume.dic")
 		val name = nameOf(uri) ?: file.name
 		try {
