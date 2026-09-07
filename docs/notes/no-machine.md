@@ -67,7 +67,19 @@ What would answer it is a signature for each rule: what each of its arguments po
 
 **And it wants types rather than offsets, which was measured before being assumed.** The call graph is favourable: of English's 3,377 rules, 1,187 have exactly one caller and 862 have between two and four, so call sites agreeing is the common case. But a signature saying only *how far into the state* an argument points names almost nothing -- over every call site of every English rule, 262 of 5,309 argument positions agree on such an offset, and 4,494 are never known at all, because those arguments are not pointers into the state. They point at the machine's own records, and where those came from is the caller's business, and the caller got them from a primitive writing into its frame.
 
-So the missing thing is what each of the machine's entries writes through a pointer handed to it. `docs/rules.md:128` already says so in as many words: "Nothing in the compiler knows how much any entry writes." Filling that in is bounded -- it is the machine's own entries, read out of its own C -- and it is what a rule signature would then propagate. Three measurements now say the same thing from three directions: slot tracking names nothing because slots are arguments; state-offset signatures name 5 per cent; and the types that would name the rest are not written down anywhere yet.
+So the missing thing is what each of the machine's entries writes through a pointer handed to it. `docs/rules.md:128` already says so in as many words: "Nothing in the compiler knows how much any entry writes."
+
+**Four routes to this population were measured and all four came out at or near nothing.** Worth writing down so nobody spends the afternoon again.
+
+Slot tracking names nothing, because every slot those reaches read is one of the rule's own arguments and the rule never wrote it.
+
+Rule signatures expressed as an offset into the state name 262 of 5,309 argument positions, five per cent, because those arguments are not pointers into the state.
+
+Typing an entry's arguments from its own declaration works -- `delta.h` declares 370 of 371 entries with at least one typed pointer argument, `delta_loc` at 81 of them and `delta_token` at 28 -- and a rule does reveal a pointer's type by what it hands it to: 880 values are passed where a `delta_loc *` is wanted and 694 where a `delta_token *` is. But it names no reach, because the registers so typed are not the registers reached through. A rule *hands* a record to the machine and lets the machine read it; it does not reach into it itself.
+
+And the census cannot be used, for the reason above.
+
+So this 5 per cent -- 622 of English's original 4,614 -- is left saying numbers, and what it waits on is a signature per rule of what each argument points at, propagated from the machine's calls into the language inwards. That is a stage of its own. Everything cheaper has been tried and measured.
 
 ## The stages, and where the point of no return is
 
