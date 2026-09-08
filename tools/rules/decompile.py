@@ -572,7 +572,9 @@ def write(names):
     # rule touched which would be one more thing that could be wrong.
     defs = ''
     if USED:
-        where = {v: k for k, v in layout().items()}
+        # The placement, not the lookup: this is what the generated C will
+        # compile against, so it is the layout this build actually has.
+        where = {v: k for k, v in layout(DG_BASE_NOW).items()}
         defs = ('/* Where each global the rules touch lands in the state. */\n'
                 '%s\n\n'
                 % '\n'.join('#define DG_%-6s %5d' % (v, where[v])
@@ -1078,19 +1080,27 @@ def _loop(body):
 WRAPPED = [0]
 NAMED = [0]
 USED = set()
-LAYOUT = {}
+LAYOUT_BY_BASE = {}
 
 
-def layout():
+def layout(base=None):
     """Where each of the language's global variables lands in the state.
+
+    Takes the same two layouts extents() does, and for the same reason: read
+    an offset out of the rules' text in IBM's, and place a variable in ours.
+    The emitted DG_ constants are the placement; every lookup of a number the
+    text gave is the other one.
 
     delta_new walks the declaration list once, aligning and numbering as it
     goes, and this walks it the same way. The proof that it walks it right is
     that the last variable ends exactly on the state's declared size, with
     nothing over and nothing short.
     """
-    if LAYOUT:
-        return LAYOUT
+    if base is None:
+        base = DG_BASE_IBM
+    if base in LAYOUT_BY_BASE:
+        return LAYOUT_BY_BASE[base]
+    LAYOUT = LAYOUT_BY_BASE.setdefault(base, {})
     path = os.path.join(census.LANG_DIR,
                         'delta_globals_%s.c' % census.LANG_TAG)
     if not os.path.exists(path):
@@ -1104,7 +1114,7 @@ def layout():
     def up(n, a):
         return (n + a - 1) & ~(a - 1)
 
-    at = 0xb0
+    at = base
     n = {'WORD': 0, 'LONG': 0, 'SHORT': 0, 'COMPOUND': 0}
     for k in kinds:
         if k in ('WORD', 'LONG'):
@@ -1123,10 +1133,27 @@ def layout():
     return LAYOUT
 
 
-EXTENTS = []
+EXTENTS_BY_BASE = {}
 
 
-def extents():
+# Where the language's cells begin, which is where delta_state's own named
+# fields end.
+#
+# Two numbers, not one, and they are the same number today. IBM's is what the
+# rules' text is written in: `statefld 3078' means the byte at 3078 of a state
+# laid out the way 1999 laid it out, and 697 operands in English say so. Ours
+# is where that variable actually sits in the state this build compiles --
+# which is the same place until something in delta_state changes width, and
+# the moment a reference stops being four bytes it will not be.
+#
+# So an offset out of the text is read in IBM's layout to learn which variable
+# it means, and the variable is placed in ours. Keeping one number for both
+# jobs is what would silently read the wrong variable.
+DG_BASE_IBM = 0xb0
+DG_BASE_NOW = 0xb0
+
+
+def extents(base=None):
     """Every language variable as the run of bytes it really is.
 
     layout() answers where a variable's value sits, which is what a reach
@@ -1136,9 +1163,17 @@ def extents():
     way and keeps the whole of each cell -- where it starts, how far it runs,
     and how far into it the value is -- so that any offset at all can be said
     as a variable and a displacement from it.
+
+    `base' says which layout to walk it in: DG_BASE_IBM to read an offset out
+    of the rules' text, DG_BASE_NOW to place a variable in the state this
+    build has. The two are one number until a field of delta_state changes
+    width.
     """
-    if EXTENTS:
-        return EXTENTS
+    if base is None:
+        base = DG_BASE_IBM
+    if base in EXTENTS_BY_BASE:
+        return EXTENTS_BY_BASE[base]
+    EXTENTS = EXTENTS_BY_BASE.setdefault(base, [])
     path = os.path.join(census.LANG_DIR,
                         'delta_globals_%s.c' % census.LANG_TAG)
     if not os.path.exists(path):
@@ -1152,7 +1187,7 @@ def extents():
     def up(n, a):
         return (n + a - 1) & ~(a - 1)
 
-    at = 0xb0
+    at = base
     n = {'WORD': 0, 'LONG': 0, 'SHORT': 0, 'COMPOUND': 0}
     for k in kinds:
         if k in ('WORD', 'LONG'):
@@ -1176,8 +1211,13 @@ def extents():
 
 def variable_at(off):
     """The variable one offset into the state falls in, and how far into it
-    from that variable's own name. None where it falls outside them all."""
-    rows = extents()
+    from that variable's own name. None where it falls outside them all.
+
+    The offset comes out of the rules' text, so it is read in IBM's layout.
+    What comes back is a name, and where that name sits is the other walk's
+    business -- which is the whole point of there being two.
+    """
+    rows = extents(DG_BASE_IBM)
     lo, hi = 0, len(rows) - 1
     while lo <= hi:
         mid = (lo + hi) // 2
