@@ -416,3 +416,19 @@ So the fix is not to move the block or to hold `delta_actrec` narrow. It is the 
 `delta_actrec` carries four references -- `back` at 0x1c, `top` at 0x20, `vbot` at 0x24, `err_jmp` at 0x2c -- all inside the 92 bytes before `landing`, so any of them widening moves `landing` and every one of those 694 slots with it. Which is why this has to be done before step one and not after.
 
 The care it needs: a rule with blocks at two positions has slots that could fall inside either, and those are ambiguous. Count them before assuming they are rare.
+
+## What the arena's problem actually is, which changes the plan
+
+The arena is not a region. It is a region **below two gigabytes**: `evv_arena_open` maps it low and gives up if it cannot, because a reference is thirty-two bits and has to name it. A region addressed by *offsets from a known base* has no such requirement and can live wherever the system puts it.
+
+So there are two ways to stop needing a low mapping, not one. Widen every reference into a host pointer, which is what the four steps above assumed. Or turn the references the rules can see into offsets, and leave everything else alone. The second keeps every layout still, which matters more than it first appears.
+
+**Because the rules see almost nothing.** Over the ten languages they reach into exactly two record types by field: `delta_loc`, 825 sites, and `delta_token`, 588 -- and neither carries a reference. `delta_loc` is `int16_t kind; int16_t field; int32_t value` and `delta_token` is two `int32_t`. The only rule-visible record with references in it is `delta_actrec`, inside the 192 bytes of `delta_rule_block`.
+
+Which means **every other record that carries a reference may widen freely**, because nothing compiled from a rule reaches into it. The whole constraint is `delta_actrec`: `back`, `top`, `vbot`, `err_jmp`, and `node` in each of the two `delta_tpos` it holds. Six fields.
+
+Six fields against the 4,967 frame slots that would have to be named if the block were allowed to grow -- 698 of them inside two different block positions and so not nameable statically at all. That settles it: keep `delta_rule_block` at 192 bytes for good, and make those six offsets.
+
+`top` and `vbot` are offsets from `delta_stack.base`, which the struct already has at 0x0518. `back` and `err_jmp` are saved copies of the same fields in `delta_vars`, so they take whatever base those do. The two `node` fields point at statement nodes out of the segment heap, and that is the one that needs a decision rather than a lookup: an offset wants a single base, and the node heap is segments.
+
+But that is a pool with a base, not a low mapping. Nodes addressed by offset from one reserved region can live anywhere in memory, which is the whole of what retiring the arena means.
