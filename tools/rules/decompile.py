@@ -1726,13 +1726,78 @@ def argument_records(flat, pbase, name):
 
 FRAMED = [0]
 FRAMES = [0]
+MERGED = [0]
+
+# How much an entry writes through a pointer it is handed, which is the size of
+# the type it declares. Held against the real thing in src/delta/delta.c, so a
+# struct that grows says so here rather than overwriting a neighbour in
+# silence.
+ENTRY_WRITES = {
+    'delta_loc': 8, 'delta_token': 8, 'delta_tpos': 16, 'delta_operand': 16,
+    'delta_node': 44, 'delta_actrec': 92, 'delta_field': 4, 'delta_mark': 20,
+}
+
+
+def entry_spans():
+    """Which of each entry's arguments is a pointer to something it fills in,
+    and how many bytes that is."""
+    if ENTRY_SPANS:
+        return ENTRY_SPANS
+    text = open(os.path.join(ROOT, 'src', 'delta', 'delta.h')).read()
+    for m in re.finditer(r'^(?:int32_t|int|void|uint8_t|int16_t|int8_t)\s*\**'
+                         r'([a-z_][a-z0-9_]*)\(([^;]*)\);', text, re.M):
+        params = [q.strip() for q in m.group(2).split(',')
+                  if q.strip() and q.strip() != 'void']
+        got = {}
+        for j, q in enumerate(params):
+            t = re.match(r'(?:const\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*\*', q)
+            if t and t.group(1) in ENTRY_WRITES:
+                got[j] = ENTRY_WRITES[t.group(1)]
+        if got:
+            ENTRY_SPANS[m.group(1)] = got
+    return ENTRY_SPANS
+
+
+ENTRY_SPANS = {}
+
+
+def slot_spans(body):
+    """How many bytes are written through each slot whose address a rule hands
+    to one of the machine's entries.
+
+    A rule declares a four-byte local and hands its address to `get_parm',
+    which fills in eight -- docs/rules.md:112 -- so the slot after it is part
+    of what that call writes. 783 slots in English are narrower than the entry
+    writing through them."""
+    spans = entry_spans()
+    out = {}
+    pending = []
+    for line in body:
+        m = ARG_LINE.match(line)
+        if m:
+            pending.append(m.group(1).strip())
+            continue
+        m = CALL_LINE.search(line)
+        if m:
+            if m.group(1) in spans:
+                want = spans[m.group(1)]
+                vals = list(reversed(pending[-int(m.group(2)):]
+                                     if pending else []))
+                for k, one in enumerate(vals):
+                    n = want.get(k)
+                    a = SLOT_ANY.fullmatch(one)
+                    if n and a:
+                        o = int(a.group(1))
+                        out[o] = max(out.get(o, 0), n)
+            pending = []
+    return out
 AT_ANY = re.compile(r'AT\((u?int(?:8|16|32)_t), (-?\d+)\)')
 SLOT_ANY = re.compile(r'SLOT\((-?\d+)\)')
 WIDTH_OF = {'int8_t': 1, 'uint8_t': 1, 'int16_t': 2, 'uint16_t': 2,
             'int32_t': 4, 'uint32_t': 4}
 
 
-def frame_struct(flat, frame, pbase, name):
+def frame_struct(body, frame, pbase, name):
     """A rule's own locals as a struct, so that the compiler places them.
 
     A slot is a byte offset from the frame's end today, which is a layout
@@ -1751,7 +1816,7 @@ def frame_struct(flat, frame, pbase, name):
     same word at two widths, which wants a union rather than two fields, and
     one with no locals to name.
     """
-    text = '\n'.join(flat)
+    text = '\n'.join(body)
     use = {}
     for m in AT_ANY.finditer(text):
         o = int(m.group(2))
@@ -1765,6 +1830,35 @@ def frame_struct(flat, frame, pbase, name):
     for a, b in zip(slots, slots[1:]):
         if a + use[a] > b:
             return None
+
+    # A slot the machine writes more through than the rule declared swallows
+    # the slots inside that write. They cannot be fields of their own: the rule
+    # means the wide write to fill both and reads the second afterwards, so
+    # giving it a field elsewhere would leave it reading nothing. The layout
+    # does not change -- the second slot's bytes are simply part of the first
+    # field now -- so this stays a rename.
+    spans = slot_spans(body)
+    inner = {}
+    keep = []
+    at_least = {}
+    i = 0
+    while i < len(slots):
+        o = slots[i]
+        n = max(use[o], spans.get(o, 0))
+        if o + n > 0:
+            n = -o
+        j = i + 1
+        while j < len(slots) and slots[j] < o + n:
+            if slots[j] + use[slots[j]] > o + n:
+                return None
+            inner[slots[j]] = (o, slots[j] - o)
+            MERGED[0] += 1
+            j += 1
+        use[o] = n
+        at_least[o] = spans.get(o, 0)
+        keep.append(o)
+        i = j
+    slots = keep
 
     # Bytes, not the type the slot is read as. A slot sits wherever the
     # machine's own frame sizes put it, which is not always where a uint16_t
@@ -1789,6 +1883,9 @@ def frame_struct(flat, frame, pbase, name):
         rows.append('    unsigned char pad%d[%d];' % (at, frame - at))
 
     named = {o: 's%d' % -o for o in slots}
+    # A swallowed slot is that field and a step into it.
+    for o, (host, step) in inner.items():
+        named[o] = (named[host], step)
     said = (['typedef struct {'] + rows + ['} f_%s;' % name]
             # And the size is held to what the numbers said, so a field that
             # moved stops the build rather than the engine.
@@ -1799,19 +1896,26 @@ def frame_struct(flat, frame, pbase, name):
 
 def frame_named(body, named, use):
     """The slot accesses of one rule, said as its own struct's fields."""
+    def place(o):
+        """Where one slot is, as an address of its field or a step into it."""
+        said = named[o]
+        if isinstance(said, tuple):
+            return '((unsigned char *)&fp->%s + %d)' % said
+        return '(unsigned char *)&fp->%s' % said
+
     def at(m):
         t, o = m.group(1), int(m.group(2))
         if o not in named:
             return m.group(0)
         FRAMED[0] += 1
-        return '(*(%s *)(void *)&fp->%s)' % (t, named[o])
+        return '(*(%s *)(void *)%s)' % (t, place(o))
 
     def slot(m):
         o = int(m.group(1))
         if o not in named:
             return m.group(0)
         FRAMED[0] += 1
-        return '((int32_t)(intptr_t)&fp->%s)' % named[o]
+        return '((int32_t)(intptr_t)%s)' % place(o)
 
     out = []
     for line in body:
