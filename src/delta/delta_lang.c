@@ -78,7 +78,7 @@ delta_state *delta_lang_alloc(const delta_language *l)
         return 0;
 
     bind();
-    h = malloc(sizeof *h + (size_t)l->state_bytes);
+    h = malloc(sizeof *h + DELTA_STATE_BYTES(l->state_bytes));
     if (h == 0)
         return 0;
 

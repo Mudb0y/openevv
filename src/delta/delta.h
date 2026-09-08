@@ -384,6 +384,20 @@ typedef struct {
    Used below the struct only, since it is the struct's own size. */
 #define DG_BASE ((int)((sizeof(delta_state) + 3u) & ~3u))
 
+/* Where the cells started in 1999, which is the layout every module's
+   state_bytes is written against and the number the rules' text means. It
+   does not follow DG_BASE and must not: it is IBM's, the way the offsets in
+   lang/<tag>/rules are IBM's. What it is for is turning a module's declared
+   size into a size for the state this build has, which is DG_BASE plus
+   however many bytes of cells the language declared -- see
+   DELTA_STATE_BYTES. */
+#define DG_BASE_IBM 0xb0
+
+/* How big a machine of this language is here, as against how big the module
+   says. The cells are the language's and their number does not change; where
+   they start is ours and does. */
+#define DELTA_STATE_BYTES(n) ((size_t)DG_BASE + ((size_t)(n) - DG_BASE_IBM))
+
 /* What a compound variable needs beyond its kind: what its first word is
    set to when the machine is reset, and how many bytes follow it. The
    whole cell is that plus the four bytes in front. */

@@ -82,7 +82,9 @@ typedef struct delta_language {
     const char *name;           /* "US English", for a person to choose from */
     int32_t     id;             /* the language packed as the API has it */
     const char *library_name;   /* "Static Engine ENU" */
-    int32_t     state_bytes;    /* how big a machine of this language is */
+    int32_t     state_bytes;    /* how big a machine of this language was
+                                   in IBM's layout; DELTA_STATE_BYTES
+                                   turns it into how big one is here */
 
     /* the rules */
     const uint8_t       *rule_code;

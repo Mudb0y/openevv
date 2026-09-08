@@ -362,3 +362,19 @@ Proved live by an isolated sabotage of the new emission alone: offset it by four
 `NATURAL` in the decompiler says what width an operand already is, so a comparison need not widen it again. Its `GLOBAL` entry asked for capture group two while the pattern held one group, and `GLOBAL_D` was not in the table at all. Neither had ever mattered: a `GLOBAL` could only appear after `direct_tests` had run, so the entry was never reached. Naming the state's own offsets emits one before it, and the build stopped with `IndexError: no such group`.
 
 That is twice in a day that making something layout-independent has flushed out a bug that was unreachable while the code was layout-dependent -- the cell walk being the first. Worth expecting a third.
+
+## The layout can move, and that is the whole precondition
+
+This is the measurement the rest of it was for. With every reach and every address named, `DG_BASE` was moved sixteen bytes and the gate was run: **979 cases over the ten languages, every one as it was.**
+
+That same sabotage, before the `FIELD` and `FLD` naming, moved all 98 English cases. So the property is new this morning and it is the one the arena retirement rests on: where the cells start is now the build's business and nothing in the rules pins it.
+
+One piece the seam had not covered turned up on the way, and it would have been a heap overrun rather than a wrong note. Every *offset* followed the layout, but the state's total **size** still came from the module's `state_bytes`, which is IBM's number written against a base of 0xb0. Move the base and the cells run past the allocation. So `src/delta/delta.h` now carries `DG_BASE_IBM`, said plainly to be IBM's and not to follow ours -- the way the offsets in `lang/<tag>/rules` are IBM's -- and `DELTA_STATE_BYTES(n)`, which is `DG_BASE` plus the bytes of cells the language declared. `delta_lang.c:81` was the only runtime consumer of the module's number and there is no `memset` of the state to match.
+
+That it was needed rather than merely tidy was worth checking, because the 979-case pass could not tell the difference: sixteen bytes past a `malloc` is the sort of thing glibc absorbs without a word. So the base was moved with the allocation deliberately left following IBM's number, and the arena's own guard was turned on -- `-DEVV_ARENA_GUARD=1`, which exists for exactly this. It named it at once: block 133 asked for 4248 bytes and was written at 4248, with the poison pattern intact after it. A real overrun, silently tolerated for the whole of that passing run.
+
+### And the bytecode build cannot follow, by construction
+
+The interpreter reads `statefld 3078` out of its input and adds 3078 to the state. Nothing can name that for it, so a moved base must move its cases -- and if it did not, the offsets would not be coming from where this says they come from. Measured: with the base moved, `RULES=c` holds all 979 and `RULES=bytecode` moves the lot. Same tree, same sabotage, opposite answers, which is the pair that proves it rather than either half alone.
+
+Which fixes something about the plan that had been left vague: **retiring the arena is a property of `RULES=c` and cannot be one of `RULES=bytecode`.** That is not a new cost -- `RULES=c` has been the default and the shipped form since 22 August 2026, the interpreter is already absent from the shipped build, and stage four retires it. But it means the six-build gate stops being six builds of one engine at that point, and the bytecode half has to be held at the old base while the C half moves. Two configurations of the gate, not one, for as long as both forms exist.
