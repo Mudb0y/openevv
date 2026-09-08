@@ -496,3 +496,15 @@ Five defects stood between the switch and that state, and they are the shape of 
 It could not have been caught by the gate. Under absolute addressing both arms of `WM` are the same cast, so a wrong mask changes nothing until the day a reference stops being an address -- which is the day the mask is for. The lesson is not about regexes: **a table generated for a future property cannot be tested by present behaviour, so it has to be right by construction.** Hence the keyword filter, and hence the emitter stopping rather than guessing when an entry has no declaration.
 
 The second was duller and just as costly: `entrysig.py` was not a dependency of `rulecode`, so the fix did not reach the generated tables and the old mask sat there looking correct. `Makefile` now lists it.
+
+### Where the offset patch actually stands: 7 of 98
+
+`scratchpad/offsets3.patch`, and the number that matters is 7 cases of 98, down from 99.
+
+What fixed the bulk was not another archaeological find but a C mistake of my own. The offset `EVV_AT` was a macro that tested its argument and then added to it -- two evaluations -- and five sites pass `va_arg(ap, int32_t)` as that argument, so each use took two words off the list where one was meant. `callSynthesizeArray` read every frame parameter from the wrong word. The symptom was perfect: phonemes right, first quarter of the waveform byte-identical, then 12,248 of 84,502 bytes differing. Under absolute addressing the macro used its argument once, so nothing could see it. **It is a function now, not a macro**, and the plain sentence comes out byte-identical to the absolute build.
+
+The 7 that remain are all one thing: a named or symbolic voice setting, through the annotation and SSML path. `tf_annotations` does `*value = (uint32_t)(size_t)strdup(name)` and hands a pointer through a thirty-two bit parameter, and `es_setParam` reads it back. That much is straightforward. What is not is that **the same `*value` carries a plain number in other cases** -- an index mark's number, which `et_createIndexElement` stores in a `char *` as a tagged placeholder -- so every consumer reads it by its own convention.
+
+Converting one side alone makes it worse, and that is measured rather than assumed: crossing the `strdup` producer without every consumer took the count from 8 to 15 and broke the index marks that had been passing. So this last piece is not point fixes but a consistent pass over one API layer's conventions, deciding for each `int32_t` parameter whether it carries a pointer or a number and saying so.
+
+Everything below that layer -- the machine, the rules, the dictionary, the annotations as phonemes, the synthesiser -- works with references as distances.
