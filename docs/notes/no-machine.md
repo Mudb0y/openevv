@@ -2,6 +2,10 @@
 
 The goal is an engine that has no virtual machine inside it: no `delta_state`, no bytecode array, no backtracking stack, no four-byte reference and therefore no arena. A language's rules would be C over named structures, the machine's 278 entry points would be ordinary functions with typed arguments, and the language's data would be read where it lies. The engine would sound exactly as it does now, because that never moves.
 
+**Half of that is already true and was before any of this began, which is worth saying first because the rest of the document does not make it obvious.** `RULES=c` is the default build and sets `EVV_NO_BYTECODE`, which compiles the interpreter out; the section flags let the linker drop the bytecode array with it. Checked rather than assumed: `nm` over a `RULES=c` probe finds no `run_bytecode`, no `delta_rule_code`, no `delta_rule_imm`. The two symbols matching "interp" are a language rule called `interpret_single_char_modes`.
+
+So the machine as *a program being interpreted* is gone from what ships. What is left is the machine as *a runtime*: a state block whose variables are numbered rather than named, frames that are byte arrays, a backtracking stack, and a reference that is four bytes wide -- which is what the arena exists for. That is what the rest of this is about, and `RULES=bytecode` still builds because it is half the gate.
+
 This is the account of what stands in the way, what was measured on 7 September 2026, and what the measuring changed about the plan. It is a handover rather than a description: almost none of the work is done.
 
 ## Why the arena exists, and why it is a symptom rather than the problem
