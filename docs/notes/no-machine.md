@@ -89,7 +89,17 @@ And the census cannot be used, for the reason above.
 
 So English is down to 580 of its original 4,614 sites saying numbers, from 622 before the call graph was chased. What is left is mostly reaches whose argument the fixed point could not settle -- 155 of the 292 -- and reaches at offsets that are not a field of any record named here yet. Both are more of the same work rather than a different kind of it: more records described in `RECORD_FIELDS` with their assertions, and a fixed point that does not give up where a register is written between the load and the reach.
 
-## The frame, which is the next large thing and is measured ready
+## The frame, half done
+
+A rule's own locals are a struct per rule now -- 6,643 rules over the ten languages, 116,182 slot uses -- with the layout spelled out so that every field lands where its number put it. That half is a rename and the gate says so. `frame_struct()` in the decompiler is it.
+
+Two things it taught, both guarded now. **The fields have to be byte runs, not the types the slots are read as**: given their natural types, a slot at an unaligned offset makes the compiler pad in front of the field and everything after it moves, which showed up as exactly two German cases, both a voice change, out of 979. And **every struct asserts its own size** against the frame the rules were compiled for, which would have caught that at compile time instead of forty minutes later.
+
+851 of English's 936 rules with locals are in. The other 85 read one word at two widths and offsets -- the high half of a 32-bit slot as a 16-bit value -- and want a union rather than two fields, so they keep their offsets.
+
+**What is left of the frame is letting the compiler choose the layout**, which is the half that matters, because that is what lets a slot holding a reference grow from four bytes to eight. It needs the padding dropped and each field sized at max(the widest access the rule makes, `sizeof(T)` for every entry the rule hands the slot's address to) -- and then, when references widen, eight bytes for any slot a reference is stored into, which `state_offsets` and `argument_records` can now say.
+
+## What the frame stage was measured to be
 
 22,102 sites name a byte offset into a rule's own frame. That is the last big population, and it matters for stage three because a rule's local holding a reference is four bytes today and would want eight.
 
