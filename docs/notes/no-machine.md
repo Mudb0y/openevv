@@ -133,6 +133,18 @@ It is also why pull request 16 needed a generated wrapper around every primitive
 
 It is worth being clear that this is a different goal from this document's. Base-relative references free the arena's *location*, which is what Apple silicon and iOS need. They do not remove the arena: a reference is still four bytes, so there is still one region and everything the machine points at is still inside it. Removing the arena wants references to be real pointers, and that wants the frame.
 
+## Retiring the arena: what it actually costs, asked of the compiler
+
+Widening `evv_ref` from `int32_t` to `intptr_t` and building produces **39 errors and nothing else**, all of them static assertions saying which field moved, in `src/delta/delta.c` and `src/delta/delta_heap.c` only. Ten are `delta_stack`'s fields, twenty-five are `delta_state`'s and `delta_vars`', and four are size claims -- `delta_rule_block`, `delta_mark`, `delta_seg`, and `delta_state_ends_at_the_cells`. Nothing else in the engine fails to compile. Those assertions are doing exactly the job they were added for.
+
+None of the moved fields is reached by a rule: they are the machine's own bookkeeping and the C reaches them by name. What matters is the last of them. `delta_state`'s named part is exactly `DG_BASE`, which is 0xb0, and the language's variable cells begin where it ends -- so widening the references inside it moves every cell.
+
+**And the rules' text names cells by an absolute offset.** `statefld 3078`, 697 of them in English. Both back ends read those numbers: the compiler writes them into bytecode and the interpreter reads them raw. So moving the cells invalidates the text.
+
+The way through is a seam rather than a rewrite. The text goes on saying what IBM said, and the tools translate: one cell walk in IBM's layout to work out *which* variable an offset means, and a second in ours to work out *where* that variable now is. `variable_at()` is already half of that -- it turns an absolute offset into a variable and a step -- and what is missing is that `extents()` currently serves both purposes at once. Split it and the text stays faithful, `make notation-prove` keeps its meaning, and both back ends emit the offsets of the layout they are actually building.
+
+That is the enabling step, and it is a no-op until something moves, so the gate can prove it inert before anything depends on it.
+
 ## The stages, and where the point of no return is
 
 **One, provenance.** Which object each reach is addressing. The census above is the first half of it and the `EVV_REF` tagging is the second. Verifiable to a standard with no judgement in it: `make notation-prove` must still find the bytecode identical and the recorded cases must not move, because nothing in this stage changes what the generated C does, only what it says about itself.
