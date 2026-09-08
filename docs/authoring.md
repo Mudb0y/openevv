@@ -78,26 +78,32 @@ Consonants have no steady state and cannot be spoken alone -- a pronunciation an
 
 Per-phoneme durations in running speech are still not available: the rules only fill a phoneme's proportion when a caller has asked for phoneme indices, and asking redirects the audio to a callback, so frames and durations cannot come from one utterance. Isolated phonemes give their own durations by frame count, which is what the table's `ms` column is.
 
-### The format holds: one vowel reproduces byte for byte
+### The format holds: seven vowels reproduce byte for byte
 
-`tools/measure/replay.py` builds frames from `lang/measured/enus-vowels.txt` and holds them against what the engine actually gave `KlattSynth`. `i` now matches on every parameter of every frame, and `A`, `a`, `X`, `x`, `e`, `o` and `c` differ in one frame each. That is the format validated: eight numbers a vowel, plus an utterance layer, reproduce the engine exactly.
+`tools/measure/replay.py` builds frames from `lang/measured/enus-vowels.txt` and holds them against what the engine actually gave `KlattSynth`. Seven of the sixteen -- `i`, `e`, `A`, `a`, `o`, `X` and `x` -- match on every parameter of every frame. That is the format validated: eight numbers a vowel, plus an utterance layer, reproduce the engine exactly.
 
-The utterance layer turned out to be four rules and they are worth having written down, because none of them is the vowel's and all of them had to be found by looking:
+The utterance layer is five rules, none of them the vowel's, and every one had to be found by putting the engine's numbers beside ours:
 
-Open quotient rises 18, 27, 36, 45, 54 to its resting 56 over five frames, and diplophonia falls 100, 77, 53, 29, 5 to nought over the same five. A creaky start, the same every time, recorded as measured rather than fitted.
+Open quotient rises 18, 27, 36, 45, 54 to its resting 56 over five frames while diplophonia falls 100, 77, 53, 29, 5 to nought over the same five. A creaky start, identical every time, written down as measured rather than fitted.
 
-Voicing holds its plateau for two fifths of the vowel and then drops by one. Not half: `a` holds twenty-seven of its sixty-five frames, `i` twenty-one of fifty-three, `E` twenty-two of fifty-five.
+Voicing holds its plateau until halfway through the glide and one frame more, then drops by one. That is not halfway through the vowel: the release is thirteen frames and the droop sits at the middle of what is left, which gives `i` twenty-one of fifty-three, `a` twenty-seven of sixty-five and `X` eighteen of forty-eight from the same arithmetic.
 
-Voicing lets go over the last thirteen frames -- sixty-five milliseconds, the same however loud it was -- starting two below the plateau and falling to nought in twelve even steps, **rounded up rather than to nearest**. `i` gives 53, 49, 45, 40, 36, 31, 27, 23, 18, 14, 9, 5, 0, which is `ceil` and not `round`, and getting that wrong is most of what stood between close and exact.
+Voicing lets go over the last thirteen frames, starting two below the plateau and falling to nought in twelve even steps, rounded up rather than to nearest.
 
 Aspiration rises by one from the second frame of the release.
 
-### What is left, and it is bounded
+And the formants glide over the frames before the release, holding the second target through it -- `e` runs 470 to 350 over forty-eight of its sixty-one and sits there for the last thirteen.
 
-The release top is two below the plateau for twelve of the sixteen and one below for four -- `I`, `E`, `U` and `H`. That is one rule not yet found rather than four exceptions, and there is a clue: those same four are the only ones whose release ends at 2 rather than 0, `... 11 7 2` where the others give `... 8 4 0`. They also pair off exactly, `I` and `U` both fifty frames at 57, `E` and `H` both fifty-five at 54, which says the split is about duration and loudness together rather than either alone.
+**The step is truncated towards nought, not rounded**, which is what C does converting it, and getting that wrong is most of what stood between close and exact. It makes a falling formant look as though it rounds up and a rising one down: 470 less 2.5 is 468 because `int(-2.5)` is -2, and 1800 plus 4.17 is 1804. Trying to round either way leaves f1 right and f2 wrong, or the reverse.
 
-The diphthong glide is the wrong shape. Holding the first target then interpolating linearly to the second leaves `I`, `e`, `o`, `u`, `Y`, `W` and `O` differing across most of their frames, so the transition is not a straight line between the two targets over the remaining time. `W` also moves `b3`, `f4` and `f5`, which the table says are shared -- so it is not only the glide that a diphthong does.
+### What is left, and every bit of it is visible in the frames
 
-And `c` and `O` move `b1` during the release, which the table has as a constant.
+**Four vowels release differently.** `I`, `E`, `U` and `H` start their release one below the plateau where the other twelve start two, and they are also the only four whose release ends at 2 rather than 0 -- `... 11 7 2` where the others give `... 8 4 0`. They pair off exactly, `I` and `U` both fifty frames at 57, `E` and `H` both fifty-five at 54. Both facts are one rule not yet found. `i` and `E` are the tell: both release from 53, `i` reaching 0 in twelve steps and `E` reaching 2, so the same start and a different rate.
 
-None of that is archaeology. It is all visible in the frames, and every attempt is a run of `replay.py` away from being told exactly how wrong it is -- which is the whole point of measuring against the engine rather than by ear.
+**The three big diphthongs do more than glide.** `Y`, `W` and `O` differ across most of their frames, and `W` also moves `b3`, `f4` and `f5`, which every other vowel leaves alone. So /aɪ/, /aʊ/ and /ɔɪ/ are not two targets and a straight line, and what they are is the next thing to measure.
+
+**`c` and `O` move `b1` during the release**, which the table has as a constant.
+
+`u` differs in a single frame of f2, which will be a rounding edge.
+
+None of it is archaeology. Every attempt is one run of `replay.py` away from being told exactly how wrong it is, which is the whole reason for measuring against the engine rather than by ear.

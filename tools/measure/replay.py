@@ -101,7 +101,10 @@ AV_RELEASE = 13
 def build(shared, vowel, n):
     """The frames a held vowel wants: the table, glided and enveloped."""
     out = []
-    hold = max(1, n * int(vowel.get("hold", 100)) // 100)
+    # Frames held at the first target before the glide starts. A one per
+    # cent hold is nought frames, not one: e sits at 470 for a single frame
+    # because that is where the glide begins, not because it holds.
+    hold = n * int(vowel.get("hold", 100)) // 100
     av0 = vowel["av"]
     release_at = n - AV_RELEASE
     for i in range(n):
@@ -116,11 +119,19 @@ def build(shared, vowel, n):
             for k in ("f1", "f2", "f3"):
                 frame[k] = vowel[k + "a"]
         else:
-            span = max(1, n - 1 - hold)
+            # The glide finishes when the release begins and the second
+            # target is held through it: e runs 470 to 350 over
+            # forty-eight of its sixty-one frames and sits there for the
+            # last thirteen.
+            span = max(1, n - AV_RELEASE - hold)
             t = min(1.0, (i - hold) / float(span))
             for k in ("f1", "f2", "f3"):
                 a, b = vowel[k + "a"], vowel[k + "b"]
-                frame[k] = int(round(a + (b - a) * t))
+                # The step is truncated towards nought, not rounded, which is
+                # what C does converting it. So a falling formant appears to
+                # round up and a rising one down: 470 less 2.5 is 468 because
+                # int(-2.5) is -2, and 1800 plus 4.17 is 1804.
+                frame[k] = a + int((b - a) * t)
         frame["b1"] = vowel["b1"]
 
         # The voice quality settling in.
@@ -130,10 +141,12 @@ def build(shared, vowel, n):
             frame["di"] = DI_ONSET[i]
 
         # Voicing: the table's value, one lower past the midpoint, then let go.
-        # Two fifths of the way through, not half: a holds twenty-seven of
-        # its sixty-five frames at the full value, i twenty-one of
-        # fifty-three, E twenty-two of fifty-five.
-        av = av0 - (1 if i >= n * 2 // 5 else 0)
+        # Halfway through the glide and one more, which is not halfway
+        # through the vowel: the release is thirteen frames and the droop
+        # sits at the middle of what is left. i drops at twenty-one of
+        # fifty-three, a at twenty-seven of sixty-five, X at eighteen of
+        # forty-eight, and the same arithmetic gives all three.
+        av = av0 - (1 if i >= (n - AV_RELEASE) // 2 + 1 else 0)
         if i >= release_at:
             top = av0 - 2
             k = i - release_at
