@@ -463,7 +463,20 @@ def write(names):
             named = [l.replace('RETURN(', 'LEAVE(') for l in named]
 
         text = []
+        # The rule's own locals said as a struct, where they can be. Only
+        # for a rule with a frame out of the arena; a wrapper's few words are
+        # an ordinary C array already.
+        shape = None
+        if not loose and frame:
+            shape = frame_struct(named, frame, pbase, name)
+        if shape is not None:
+            said, slots_named, slots_used = shape
+            named = frame_named(named, slots_named, slots_used)
+            FRAMES[0] += 1
+
         text.append('/* %s, from %s */\n' % (name, rule.obj))
+        if shape is not None:
+            text.append(said + '\n\n')
         text.append('static int32_t evv_%s(void *state, const int32_t *args,'
                     ' int nargs)\n{\n' % name)
         # The frame is not an ordinary local. A rule hands the machine the
@@ -485,6 +498,11 @@ def write(names):
         else:
             text.append('    unsigned char *frame = evv_frame_push('
                         'DELTA_RULE_FRAME_MAX);\n')
+            if shape is not None:
+                # The rule's own locals as its own struct. base stays what it
+                # was, because the machine's block and the argument area are
+                # still reached through it.
+                text.append('    f_%s *fp = (f_%s *)frame;\n' % (name, name))
             text.append('    unsigned char *base = frame + %d;\n' % frame)
             text.append('    unsigned char *param = base + %d;\n' % pbase)
         text.append('    int32_t arg[%d];\n' % argument_depth(flat))
@@ -1706,6 +1724,101 @@ def argument_records(flat, pbase, name):
     return out
 
 
+FRAMED = [0]
+FRAMES = [0]
+AT_ANY = re.compile(r'AT\((u?int(?:8|16|32)_t), (-?\d+)\)')
+SLOT_ANY = re.compile(r'SLOT\((-?\d+)\)')
+WIDTH_OF = {'int8_t': 1, 'uint8_t': 1, 'int16_t': 2, 'uint16_t': 2,
+            'int32_t': 4, 'uint32_t': 4}
+
+
+def frame_struct(flat, frame, pbase, name):
+    """A rule's own locals as a struct, so that the compiler places them.
+
+    A slot is a byte offset from the frame's end today, which is a layout
+    nobody may move -- and a local holding a reference is four bytes and would
+    want eight. Said as a struct it is the compiler's to place.
+
+    The layout is spelled out here rather than left to the compiler, which
+    makes this a rename and nothing else: every field lands exactly where its
+    number put it, and the gate can say so. Letting the compiler choose is the
+    step after, and it wants one thing this does not: how much each entry
+    writes through a slot's address, since `get_parm' writes eight bytes into
+    a four-byte local and takes the next one with it. docs/rules.md:112 has
+    that, and entry_ptrs() is where the answer will come from.
+
+    Answers None for a rule this cannot describe: one whose slots read the
+    same word at two widths, which wants a union rather than two fields, and
+    one with no locals to name.
+    """
+    text = '\n'.join(flat)
+    use = {}
+    for m in AT_ANY.finditer(text):
+        o = int(m.group(2))
+        use[o] = max(use.get(o, 0), WIDTH_OF[m.group(1)])
+    for m in SLOT_ANY.finditer(text):
+        use.setdefault(int(m.group(1)), 4)
+
+    slots = sorted(o for o in use if o < 0 and o >= -frame)
+    if not slots:
+        return None
+    for a, b in zip(slots, slots[1:]):
+        if a + use[a] > b:
+            return None
+
+    # Bytes, not the type the slot is read as. A slot sits wherever the
+    # machine's own frame sizes put it, which is not always where a uint16_t
+    # or an int32_t may sit, and then the compiler pads in front of the field
+    # and every field after it moves. That is not a theory: typed fields moved
+    # two German cases, both of them a voice change, and the gate said so. A
+    # byte run has no alignment to satisfy, and the access casts anyway.
+    rows = []
+    at = 0
+    for o in slots:
+        want = frame + o
+        if want < at:
+            return None
+        if want > at:
+            rows.append('    unsigned char pad%d[%d];' % (at, want - at))
+            at = want
+        rows.append('    unsigned char s%d[%d];' % (-o, use[o]))
+        at += use[o]
+    if at > frame:
+        return None
+    if at < frame:
+        rows.append('    unsigned char pad%d[%d];' % (at, frame - at))
+
+    named = {o: 's%d' % -o for o in slots}
+    said = (['typedef struct {'] + rows + ['} f_%s;' % name]
+            # And the size is held to what the numbers said, so a field that
+            # moved stops the build rather than the engine.
+            + ['typedef char f_%s_is_%d[sizeof(f_%s) == %d ? 1 : -1];'
+               % (name, frame, name, frame)])
+    return '\n'.join(said), named, use
+
+
+def frame_named(body, named, use):
+    """The slot accesses of one rule, said as its own struct's fields."""
+    def at(m):
+        t, o = m.group(1), int(m.group(2))
+        if o not in named:
+            return m.group(0)
+        FRAMED[0] += 1
+        return '(*(%s *)(void *)&fp->%s)' % (t, named[o])
+
+    def slot(m):
+        o = int(m.group(1))
+        if o not in named:
+            return m.group(0)
+        FRAMED[0] += 1
+        return '((int32_t)(intptr_t)&fp->%s)' % named[o]
+
+    out = []
+    for line in body:
+        out.append(SLOT_ANY.sub(slot, AT_ANY.sub(at, line)))
+    return out
+
+
 def state_offsets(flat, only=()):
     """How far into the state each register points, where that is known.
 
@@ -2868,6 +2981,8 @@ def main():
           ' offset: %d' % BLOCKED[0])
     print("reaches into a record the rule was handed, said as the field they"
           ' are: %d' % RECORDED[0])
+    print("a rule's own locals said as its own struct: %d rules, %d slot"
+          ' uses' % (FRAMES[0], FRAMED[0]))
     print('reaches into the middle of a variable, said as the variable and a'
           ' step: %d' % STEPPED[0])
     if PROVENANCE:
