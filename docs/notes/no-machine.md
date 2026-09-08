@@ -97,7 +97,13 @@ Two things it taught, both guarded now. **The fields have to be byte runs, not t
 
 851 of English's 936 rules with locals are in. The other 85 read one word at two widths and offsets -- the high half of a 32-bit slot as a 16-bit value -- and want a union rather than two fields, so they keep their offsets.
 
-**What is left of the frame is letting the compiler choose the layout**, which is the half that matters, because that is what lets a slot holding a reference grow from four bytes to eight. It needs the padding dropped and each field sized at max(the widest access the rule makes, `sizeof(T)` for every entry the rule hands the slot's address to) -- and then, when references widen, eight bytes for any slot a reference is stored into, which `state_offsets` and `argument_records` can now say.
+**What is left of the frame is letting the compiler choose the layout**, which is the half that matters, because that is what lets a slot holding a reference grow from four bytes to eight. It is specified rather than sketched, and measured over English:
+
+The write span of a slot is `sizeof(T)` for the widest `T *` any entry the rule hands its address to declares. `delta_loc` and `delta_token` are 8, `delta_tpos` and `delta_operand` 16, `delta_node` 44, `delta_actrec` 92, `delta_field` 4, `delta_mark` 20. 783 slots are declared narrower than the entry writes through them, which is `get_parm` filling in eight bytes of a four-byte local and is IBM's own doing.
+
+Of those spans, 597 have no other slot inside them and only want the field made as wide as the span. **202 have another slot inside, and those must become one field, not two** -- because the rule means the wide write to fill both and reads the second afterwards. Give the second a field of its own somewhere else and the rule reads nothing. So a span swallows the slots inside it and their accesses become offsets within the covering field.
+
+Then the padding goes and the compiler places the fields. Two consequences to handle: `base` stops being `frame + <frame>` and becomes `(unsigned char *)fp + sizeof(f_<rule>)`, since the machine's block and the argument area are still reached through it; and a frame that grows may pass `DELTA_RULE_FRAME_MAX`, which is a per-language maximum and would want raising. The size assertion changes from `sizeof == frame` to a minimum per field, because the layout is then deliberately not IBM's.
 
 ## What the frame stage was measured to be
 
