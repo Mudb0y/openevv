@@ -174,3 +174,107 @@ Be clear-eyed about the cost of that last one. `RULES=bytecode` cannot survive i
 9,961 sites were never reached by either gate, and they are where a change to a layout would break something with no test to say so. They are not spread evenly. In English 2,015 remain, and 376 rules hold them; the ten worst hold 799 between them, led by `hebrew_ph_Q` at 179, `eng_abbr` at 133 and `homog_roots` at 129. A word list for a language other than English would cut the other nine considerably -- `test/cases/words-enus.txt` is the only one that exists, which is why English is the only language whose coverage the words improved.
 
 Two honest options for the remainder. Reach them, by writing cases and word lists aimed at the rules that hold them, which is worth doing anyway. Or accept that they cannot be named and leave them arithmetic, which costs only that those sites pin their layouts. The `EVV_REF` route above changes this calculation entirely, since it does not depend on a site being reached at all.
+
+## The seam, and the third walk it caught
+
+Before anything in the state can move, the two jobs the cell offsets do have to be told apart. A rule's text says `statefld 3078`, meaning the byte at 3078 of a state laid out the way 1999 laid it out; English says so 697 times and the number is not ours to change. Where that variable actually goes is a different question, and the answer stops being 3078 the moment a field of `delta_state` changes width -- which is precisely what retiring the arena does.
+
+So `tools/rules/decompile.py` now reads an offset out of the text in IBM's layout and emits the placement as a distance from the first cell, and `DG_BASE` in `src/delta/delta.h` is `sizeof(delta_state)` rounded up to four. The decompiler no longer knows where anything goes; the C works it out from the struct, so the two cannot drift apart. `delta_state`'s trailing pad is gone with it -- the struct used to be padded out to meet a number, and now the number follows the struct.
+
+Proved live rather than merely inert: with the placement moved sixteen bytes and the lookup untouched, all 98 English cases move.
+
+The one assertion left is that `DG_BASE` is a multiple of four. The cell walk aligns each cell against the start of the state rather than against the cell before it, so only a four-aligned base shifts every cell by the same amount; off one, the two walks disagree from the first cell that has to be padded.
+
+Which is not hypothetical, because splitting the walk found that it had been wrong all along. There are three copies of it -- `delta_new` at run time in `src/eci/bridge/eci_deltaglob.c`, the lifter in `tools/module/globals.py`, and the decompiler -- and the decompiler had two of its own, neither of which had the rule that a compound whose first word is 6 is four-aligned. It cost nothing while a cell's name round-tripped back to the number it came from: the offset went in, came out as a name the other two walks would have called something else, and the constant emitted for that name was the number it came from. Wrong label, right address, silent.
+
+It would not have stayed silent. The moment the placement is a different walk from the lookup, a mislabelled cell is a mislabelled address, and 415 of Italian's would have landed two bytes out -- along with Spanish's, Mexican Spanish's, French's and Polish's, five of the ten. English, British English, German, Canadian French and Japanese have no compound where the rule bites, which is why every check to date passed.
+
+What settles it is the language's own declared state size. The last cell has to end exactly there, and the walk now stops and says so if it does not. `eses` declares 0xfbc and the old walk ended at 0xfb8. That check is four lines, the docstring had claimed it for months, and nobody had run it.
+
+The three walks are now two, `cells()` being the only one in the decompiler.
+
+## Why the arena cannot go yet, stated as the compiler sees it
+
+A machine register is `int32_t r0` in the generated C. That is the whole of it. The arena exists so that every address a register may hold fits in one, and no amount of tidying the allocator changes that -- the register has to widen first, and a register that widens stops wrapping at 32 bits, which the machine's arithmetic depends on.
+
+So the two cannot be separated by fiat. What separates them is knowing, site by site, which values are addresses and which are numbers, and that is what the naming work has been building: 19,552 addresses into the state named, English down from 4,614 raw offsets to 175. A named site already yields a typed lvalue from a real pointer and needs no reference at all. What is left is the sites that materialise an address *into* a register -- `GLOBAL_AT`, the frame macros, and the raw form -- because those are the ones that still have to fit in 32 bits.
+
+Counted over the ten languages: 14,200 `GLOBAL_AT`, 6,327 `FRAME_REC`, 6,327 `FRAME_JB`, 18,981 `FRAME_FENCE`, and 30 still raw. Forty-five thousand sites, but not forty-five thousand edits -- every one of them is a macro whose last act is a cast to `int32_t`, so widening them is one edit each in `src/delta/delta_rules_c.h`. That is what the naming work bought, and it is why the 30 raw ones are the ones that matter.
+
+What those addresses then flow into is the question that decides the shape of the change, and three quarters of it is already settled by the rule signature: `static int32_t evv_name(void *state, const int32_t *args, int nargs)`, with `int32_t r0` through `r7` and an `int32_t arg[8]` inside. A rule hands the machine the address of its own frame through that array. So the registers and the argument array certainly carry addresses and certainly have to widen, along with every machine primitive's signature.
+
+The one genuinely open question is whether an address is ever stored into a *variable cell*, because cells are the language's own data and widening them would move every offset in every rule's text. A single-line scan finds no address expression assigned straight into a cell, a frame slot or a record field: every one goes into a register or into a call. But an address can reach a cell in two steps, through a register, and settling that needs real liveness over the flow graph -- which is exactly where this tree has been bitten before, so it is not something to eyeball.
+
+It does not have to be settled by analysis. Widen the registers, the argument array and the primitives; leave the cells at thirty-two bits; drop the arena so that an address is genuinely sixty-four bits wide. Then any address that has to round-trip through a cell is truncated and the engine falls over, and if it does not, the gate's 979 cases say the cells never held one. The experiment and the implementation are the same piece of work, which is the cheapest way this could have turned out.
+
+## Retiring the arena: the whole of it, six places
+
+The primitives do not change. That is the finding that resizes this from a rewrite to an afternoon, and it was sitting in `src/delta/delta_rules.c:282` the whole time:
+
+```c
+typedef uintptr_t evv_word;
+#define W(x) ((evv_word)(uint32_t)(x))
+typedef evv_word (*I1)(evv_word);
+```
+
+Every entry the machine can call is already declared taking and returning `evv_word`, which is `uintptr_t`. The 136 primitives -- the bulk of the engine -- are already pointer-width and already correct. The entire arena dependency funnels through the `(uint32_t)` inside `W`, which is the one place a pointer is narrowed to a value the machine can hold.
+
+So the change is:
+
+The truncation in `W` goes. One line, and it is the crossing.
+
+A machine register, `int32_t r0` through `r7`, becomes pointer-width. The decompiler emits that declaration, so it is one line there.
+
+The argument path widens: `int32_t arg[8]` in each rule, the cast inside `ARG`, and `delta_call_N(int, const int32_t *, int)`. This one certainly carries addresses, because handing the machine the address of its own frame is what a rule does through that array.
+
+`GLOBAL_AT`, `SLOT` and `FIELD` stop casting their result down to `int32_t`. Three definitions in `src/delta/delta_rules_c.h`, covering the 14,200 sites the naming work made nameable. This is what that work was for.
+
+The 1,124 shifts of the form `rN = rN >> 31` get their operand truncated. That idiom is the only uncast arithmetic on a register in any of the ten languages: everything else already carries an explicit `(int32_t)` or goes through `ALU`, because the machine's arithmetic is 32-bit by definition and the decompiler already emits it that way. One change in the emitter.
+
+The variable cells stay at thirty-two bits, deliberately. If a rule ever stores an address into one it truncates and the engine falls over, and the 979 cases are the detector. That settles by experiment the one thing analysis could not settle cheaply, and it costs nothing extra because the experiment and the implementation are the same work.
+
+## The route not taken, and why it is not a rival
+
+Widening the word leaves the machine standing, sixty-four bits wide. The other route is type-directed: emit real C pointers at the named sites so that an address never becomes an integer at all, which is where "no machine" actually ends. It is a great deal more work and it needs real liveness over the flow graph, which this tree has been bitten by before.
+
+It is not an alternative to the widening, though, and that is worth writing down so nobody re-argues it. Any address that lives in a register needs the register to hold it, whichever route is taken. The widening is the first half of the type-directed route, not a detour around it.
+
+## Correction: it is not six places, because the records grow
+
+The six above are the value path -- registers, arguments, the crossing, the address macros, the shifts -- and that part of the account stands. What it left out is that a reference is also a *field*, and 69 declarations in `src/delta/delta.h` have one. Widen the type and every one of those records grows.
+
+`delta_actrec` is the one with teeth. It carries `back` and `top` as references and it is `delta_rule_block`'s first member -- the block a rule hands the machine on the way in, held by `src/delta/delta.c` to 192 bytes with `landing` at 92 and `fence` at 156, because 8,243 `ENTER` calls over the ten languages agree on those numbers. Widen a reference and the block is no longer 192, and `landing` is no longer at 92.
+
+Most of that follows by itself, which is the point of the naming work: `FRAME_JB` and `FRAME_FENCE` are written with `offsetof`, so a rule's reach into the block moves with the block. `RECORD` likewise, for the 1,413 field reaches. The assertions are then not wrong so much as stale -- they pin numbers that were only ever the numbers a four-byte reference produced, and they have to be re-derived rather than deleted, because what they are really checking is that the rules and the struct agree.
+
+What does not follow by itself is a site that reaches into one of these records by a raw number. There are 30 of those left in the address macros and 175 offsets in English the call-graph fixed point could not settle, and each one is a number that was right for a 192-byte block. Those have to be named before the records may grow, not after.
+
+So the order is: name the tail, then widen. Not the other way round, and the earlier claim of six places was counting only the half that was already easy.
+
+## What the tail actually is, and why most of it does not block anything
+
+The 172 unnamed reaches in English are not 172 different problems. Sorted by offset they are 103 at +4, 55 at +2, 13 at +0, and one at +2562. So 171 of them reach the first few bytes of a record the fixed point could not type.
+
+That matters less than it looks, because a reach at 0, 2 or 4 only breaks if the record shifts within its first eight bytes, and three records in `src/delta/delta.h` do: `delta_operand_at` (`ptr` at 0), `delta_seg` (`prev` at 0) and `delta_mark` (`pos` at 0, `seg` at 4). Everything else is safe. In particular the two obvious candidates for those offsets are not: `delta_loc` is `int16_t kind; int16_t field; int32_t value` and `delta_token` is two `int32_t`, and neither carries a reference, so both stay eight bytes however wide a pointer gets.
+
+So the tail is a blocker only where it reaches one of those three, and that is a question about 171 sites with a known answer set rather than an open problem.
+
+## The one site that is a real constraint, and what it says about the machine
+
+The odd one out is `lang/enus/delta_rules_c11_enus.c:733`, an `int16_t` read at `r6 + 2562`. That is inside the cell area and two-aligned, so it is a short variable's value at the cell starting 2560, and `variable_at` would name it in a moment. The analysis refuses, and it is right to.
+
+Twelve lines earlier the rule does `r6 = FIELD(0)`, which is the state. Six lines later it does `r6 = delta_sym_ref[1700]`, which is one of the language's own byte stores. The site sits under the label `alt1_564`, and the only thing that jumps there is the alternative dispatch six hundred lines below -- a switch on an alternative number, reached from everywhere, and reached from after the reassignment. So `r6` at that label is the state on one path and language data on another, and no must-analysis can say which.
+
+This is the landing-place problem generalised, and it is worth stating plainly because it bounds the whole programme: the machine's backtracking dispatch is a computed goto whose predecessors are the entire rule, so a register's object is not always statically determined. Where it is not, the offset cannot be renamed, and a layout that offset names cannot move.
+
+One site in English, so the practical answer is not an analysis but a measurement: trace what `r6` actually holds there across the cases and the twenty thousand words, and if it is always the state, name it and let the gate say whether that was true. What must not happen is naming it because the arithmetic looks right.
+
+## Which resolves the tail: it is one site, not 172
+
+The three records that shift within their first eight bytes are never handed to a rule. `delta_operand_at` is mentioned nowhere in `src` outside its own declaration; `delta_mark` once, in `delta_heap.c`; `delta_seg` seven times, across `delta.c` and `delta_heap.c`, all of it the heap's own segment bookkeeping. No entry in the machine takes any of the three, and a rule only ever reaches a record it was handed a pointer to.
+
+A rule holding heap memory points into a segment's payload, not at its header, so a reach at +0 through such a pointer is the payload and not `prev`. That is the heap's own invariant and it is what the argument rests on.
+
+So none of the 171 reaches at +0, +2 and +4 can be into a record that shifts, and all of them are safe under widening whether they are ever named or not. The tail is the single `r6 + 2562` site, and that one is settled by tracing what the register holds rather than by any amount of further analysis.
+
+This supersedes the correction above: naming the tail is not a prerequisite for widening. The prerequisite is one measurement.

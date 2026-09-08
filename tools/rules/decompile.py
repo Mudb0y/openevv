@@ -572,12 +572,16 @@ def write(names):
     # rule touched which would be one more thing that could be wrong.
     defs = ''
     if USED:
-        # The placement, not the lookup: this is what the generated C will
-        # compile against, so it is the layout this build actually has.
-        where = {v: k for k, v in layout(DG_BASE_NOW).items()}
-        defs = ('/* Where each global the rules touch lands in the state. */\n'
+        # The placement, not the lookup, and said as a distance from where the
+        # cells start rather than as a number. DG_BASE is delta_state's own
+        # size, so the C works out where a variable lands in the state this
+        # build has, and nothing here has to be told what that is or kept in
+        # step with it when a field of the state changes width.
+        where = {v: k for k, v in layout(0).items()}
+        defs = ('/* Where each global the rules touch lands in the state,\n'
+                '   as a distance from the first cell. */\n'
                 '%s\n\n'
-                % '\n'.join('#define DG_%-6s %5d' % (v, where[v])
+                % '\n'.join('#define DG_%-6s (DG_BASE + %5d)' % (v, where[v])
                             for v in sorted(USED, key=lambda x: where[x])))
 
     for n, part in enumerate(share_out(bodies)):
@@ -1091,46 +1095,16 @@ def layout(base=None):
     The emitted DG_ constants are the placement; every lookup of a number the
     text gave is the other one.
 
-    delta_new walks the declaration list once, aligning and numbering as it
-    goes, and this walks it the same way. The proof that it walks it right is
-    that the last variable ends exactly on the state's declared size, with
-    nothing over and nothing short.
+    A cell's value is not the cell: a word's sits four bytes in, a short's
+    two, a compound's at the front. cells() keeps both and this is the view a
+    reach wants.
     """
     if base is None:
         base = DG_BASE_IBM
-    if base in LAYOUT_BY_BASE:
-        return LAYOUT_BY_BASE[base]
-    LAYOUT = LAYOUT_BY_BASE.setdefault(base, {})
-    path = os.path.join(census.LANG_DIR,
-                        'delta_globals_%s.c' % census.LANG_TAG)
-    if not os.path.exists(path):
-        return LAYOUT
-    text = open(path).read()
-    kinds = re.findall(r'DG_(WORD|LONG|SHORT|COMPOUND)', text)
-    sizes = [int(b) for _a, b in
-             re.findall(r'\{\s*(\d+),\s*(\d+)\s*\}',
-                        text[text.index('delta_compounds[]'):])]
-
-    def up(n, a):
-        return (n + a - 1) & ~(a - 1)
-
-    at = base
-    n = {'WORD': 0, 'LONG': 0, 'SHORT': 0, 'COMPOUND': 0}
-    for k in kinds:
-        if k in ('WORD', 'LONG'):
-            at = up(at, 4)
-            LAYOUT[at + 4] = '%s%d' % ('w' if k == 'WORD' else 'l', n[k])
-            at += 8
-        elif k == 'SHORT':
-            at = up(at, 2)
-            LAYOUT[at + 2] = 's%d' % n[k]
-            at += 4
-        else:
-            at = up(at, 2)
-            LAYOUT[at] = 'c%d' % n[k]
-            at += 4 + up(sizes[n[k]] if n[k] < len(sizes) else 0, 2)
-        n[k] += 1
-    return LAYOUT
+    if base not in LAYOUT_BY_BASE:
+        LAYOUT_BY_BASE[base] = {at + into: name
+                                for at, _room, name, into in cells(base)}
+    return LAYOUT_BY_BASE[base]
 
 
 EXTENTS_BY_BASE = {}
@@ -1139,18 +1113,81 @@ EXTENTS_BY_BASE = {}
 # Where the language's cells begin, which is where delta_state's own named
 # fields end.
 #
-# Two numbers, not one, and they are the same number today. IBM's is what the
-# rules' text is written in: `statefld 3078' means the byte at 3078 of a state
-# laid out the way 1999 laid it out, and 697 operands in English say so. Ours
-# is where that variable actually sits in the state this build compiles --
-# which is the same place until something in delta_state changes width, and
-# the moment a reference stops being four bytes it will not be.
+# This is what the rules' text is written in: `statefld 3078' means the byte
+# at 3078 of a state laid out the way 1999 laid it out, and 697 operands in
+# English say so. So an offset out of the text is read here to learn which
+# variable it means.
 #
-# So an offset out of the text is read in IBM's layout to learn which variable
-# it means, and the variable is placed in ours. Keeping one number for both
-# jobs is what would silently read the wrong variable.
+# Where that variable then goes is a different number, and it is not in this
+# file: the emitted constants are distances from the first cell and the C adds
+# DG_BASE, which is delta_state's own size. That is the whole seam. One number
+# serving both jobs is what would silently read the variable next door the
+# moment a field of the state changed width, and a reference is going to.
 DG_BASE_IBM = 0xb0
-DG_BASE_NOW = 0xb0
+
+
+def cells(base):
+    """The language's variable cells, in declaration order, as they are laid
+    out from `base': where each starts, how many bytes it takes, what to call
+    it, and how far into it its value sits.
+
+    The one walk. delta_new does this at run time in eci_deltaglob.c and the
+    lifter does it against IBM's objects in tools/module/globals.py, and all
+    three have to agree cell for cell or an offset from the first cell they
+    disagree at onwards names the variable next door. There were two copies of
+    it in this file and both were missing the compound rule below, which cost
+    nothing while a cell's name round-tripped back to the number it came from
+    and would have placed 415 of Italian's cells two bytes out the moment the
+    base moved.
+
+    What settles it is the language's own declared state size: the last cell
+    has to end exactly there, with nothing over and nothing short.
+    """
+    path = os.path.join(census.LANG_DIR,
+                        'delta_globals_%s.c' % census.LANG_TAG)
+    if not os.path.exists(path):
+        return []
+    text = open(path).read()
+    kinds = re.findall(r'DG_(WORD|LONG|SHORT|COMPOUND)', text)
+    decls = re.findall(r'\{\s*(\d+),\s*(\d+)\s*\}',
+                       text[text.index('delta_compounds[]'):])
+    inits = [int(a) for a, _b in decls]
+    sizes = [int(b) for _a, b in decls]
+
+    def up(n, a):
+        return (n + a - 1) & ~(a - 1)
+
+    out = []
+    at = base
+    n = {'WORD': 0, 'LONG': 0, 'SHORT': 0, 'COMPOUND': 0}
+    for k in kinds:
+        i = n[k]
+        if k in ('WORD', 'LONG'):
+            at = up(at, 4)
+            out.append((at, 8, '%s%d' % ('w' if k == 'WORD' else 'l', i), 4))
+            at += 8
+        elif k == 'SHORT':
+            at = up(at, 2)
+            out.append((at, 4, 's%d' % i, 2))
+            at += 4
+        else:
+            # A compound whose first word is 6 holds four-byte items and goes
+            # on a four-byte boundary; every other kind wants two. This is the
+            # only thing about a compound that is not the same for all of
+            # them, and it is the rule both the other walks have.
+            at = up(at, 4 if i < len(inits) and inits[i] == 6 else 2)
+            room = 4 + up(sizes[i] if i < len(sizes) else 0, 2)
+            out.append((at, room, 'c%d' % i, 0))
+            at += room
+        n[k] += 1
+
+    want = re.search(r'delta_state_bytes\s*=\s*(0x[0-9a-fA-F]+|\d+)', text)
+    if want:
+        ends = int(want.group(1), 0) + (base - DG_BASE_IBM)
+        if at != ends:
+            raise SystemExit('%s: the cells end at %d, the state says %d'
+                             % (census.LANG_TAG, at, ends))
+    return out
 
 
 def extents(base=None):
@@ -1159,54 +1196,18 @@ def extents(base=None):
     layout() answers where a variable's value sits, which is what a reach
     wants. An address handed onward wants more than that: the machine computes
     the address of a cell, or of a byte inside a compound one, and neither is
-    the value's own offset. So this walks the same declaration list the same
-    way and keeps the whole of each cell -- where it starts, how far it runs,
-    and how far into it the value is -- so that any offset at all can be said
-    as a variable and a displacement from it.
+    the value's own offset. So this keeps the whole of each cell, so that any
+    offset at all can be said as a variable and a displacement from it.
 
     `base' says which layout to walk it in: DG_BASE_IBM to read an offset out
-    of the rules' text, DG_BASE_NOW to place a variable in the state this
-    build has. The two are one number until a field of delta_state changes
-    width.
+    of the rules' text, and zero to say where a variable sits as a distance
+    from the first cell, which is what the emitted constants are.
     """
     if base is None:
         base = DG_BASE_IBM
-    if base in EXTENTS_BY_BASE:
-        return EXTENTS_BY_BASE[base]
-    EXTENTS = EXTENTS_BY_BASE.setdefault(base, [])
-    path = os.path.join(census.LANG_DIR,
-                        'delta_globals_%s.c' % census.LANG_TAG)
-    if not os.path.exists(path):
-        return EXTENTS
-    text = open(path).read()
-    kinds = re.findall(r'DG_(WORD|LONG|SHORT|COMPOUND)', text)
-    sizes = [int(b) for _a, b in
-             re.findall(r'\{\s*(\d+),\s*(\d+)\s*\}',
-                        text[text.index('delta_compounds[]'):])]
-
-    def up(n, a):
-        return (n + a - 1) & ~(a - 1)
-
-    at = base
-    n = {'WORD': 0, 'LONG': 0, 'SHORT': 0, 'COMPOUND': 0}
-    for k in kinds:
-        if k in ('WORD', 'LONG'):
-            at = up(at, 4)
-            EXTENTS.append((at, 8, '%s%d' % ('w' if k == 'WORD' else 'l',
-                                             n[k]), 4))
-            at += 8
-        elif k == 'SHORT':
-            at = up(at, 2)
-            EXTENTS.append((at, 4, 's%d' % n[k], 2))
-            at += 4
-        else:
-            at = up(at, 2)
-            room = 4 + up(sizes[n[k]] if n[k] < len(sizes) else 0, 2)
-            EXTENTS.append((at, room, 'c%d' % n[k], 0))
-            at += room
-        n[k] += 1
-    EXTENTS.sort()
-    return EXTENTS
+    if base not in EXTENTS_BY_BASE:
+        EXTENTS_BY_BASE[base] = sorted(cells(base))
+    return EXTENTS_BY_BASE[base]
 
 
 def variable_at(off):

@@ -373,8 +373,16 @@ typedef struct {
 #define DG_COMPOUND  (-9)   /* a run of bytes, described separately */
 
 /* Where the cells start, which is the first byte of delta_state the fields
-   above do not name. */
-#define DG_BASE 0xb0
+   above do not name -- so it follows the struct rather than the struct being
+   padded out to meet it. IBM's was 0xb0 and ours is 0xb0 while a reference
+   is four bytes wide; when one stops being, this moves and every variable
+   moves with it.
+
+   That is why the generated rules say where a variable is as a distance from
+   here and not as a number: tools/rules/decompile.py knows 0xb0 only as the
+   layout the rules' text is written in, and never as where anything goes.
+   Used below the struct only, since it is the struct's own size. */
+#define DG_BASE ((int)((sizeof(delta_state) + 3u) & ~3u))
 
 /* What a compound variable needs beyond its kind: what its first word is
    set to when the machine is reset, and how many bytes follow it. The
@@ -465,7 +473,8 @@ struct delta_state {
     int16_t      nsets;           /* 0x00a6 */
     evv_ref     dictfile;        /* 0x00a8 */
     int16_t      nactions;        /* 0x00ac */
-    uint8_t      pad_00ae[DG_BASE - 0xae];
+    /* Nothing follows: the cells begin at the next four-byte boundary, which
+       is what DG_BASE is. */
 };
 
 /* What the rules load their pointer registers from. Only the second word is

@@ -22,11 +22,18 @@ AT(rpta, 0x0050);
 AT(vars, 0x0068);
 AT(stack, 0x006c);
 
-/* The named fields stop where the language's own cells start. How far the
-   cells run is the language's to say and is not a number this file can
-   know, so what is held here is the boundary rather than the whole. */
-typedef char delta_state_ends_at_the_cells[sizeof(delta_state) == DG_BASE
-                                           ? 1 : -1];
+/* The named fields stop where the language's own cells start, and DG_BASE is
+   that boundary by definition now, so there is nothing to check about where
+   it is. What has to be true of it is that it is a multiple of four.
+
+   The cell walk aligns each cell against the start of the state, not against
+   the previous cell, so only a base that is already four-aligned shifts every
+   cell by the same amount. That is what lets the rules say where a variable
+   is as a distance from DG_BASE while the numbers in their text go on meaning
+   1999's layout. Off a four-byte boundary the two walks would disagree from
+   the first cell that had to be padded, and 415 of Italian's would land two
+   bytes out. */
+typedef char delta_cells_start_four_aligned[DG_BASE % 4 == 0 ? 1 : -1];
 /* The block a rule hands the machine, held to the shape every rule was
    compiled against. Nothing may move here without the rules moving with it,
    which is why the struct is described once and checked rather than trusted:

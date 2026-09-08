@@ -41,6 +41,11 @@ FULL = {"ax": "eax", "cx": "ecx", "dx": "edx", "bx": "ebx", "si": "esi",
 # What delta_new works with: the block in esi, and four tables it allocates
 # and stores at these offsets.
 T_WORD, T_COMPOUND, T_LONG, T_SHORT = 0x14, 0x18, 0x1c, 0x20
+
+# Where the cells start, in the layout IBM's state had. This one does not
+# follow ours and must not: everything here either reads IBM's objects or
+# reads the module text form, and both are written in 1999's layout. The
+# number that follows our own delta_state is DG_BASE in src/delta/delta.h.
 DG_BASE = 0xb0
 
 
