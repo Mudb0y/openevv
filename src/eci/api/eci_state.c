@@ -426,7 +426,7 @@ static THIS int32_t setVoice(ECIstate *s, int32_t p, int32_t v, void *thread)
         return st_changeETIEmphasis(thread);
 
     case 30:
-        copy = strdup((char *)(size_t)v);
+        copy = strdup(EVV_AT(char *, v));
         rc = st_changeSpeedString(thread, p, v);
         if (rc == 0)
             rc = es_sendAnnotationStr(s, "vs", copy, thread);
@@ -434,7 +434,7 @@ static THIS int32_t setVoice(ECIstate *s, int32_t p, int32_t v, void *thread)
         return rc;
 
     case 31:
-        copy = strdup((char *)(size_t)v);
+        copy = strdup(EVV_AT(char *, v));
         rc = st_changePitchString(thread, p, v);
         if (rc == 0)
             rc = es_sendAnnotationStr(s, "vb", copy, thread);
@@ -442,7 +442,7 @@ static THIS int32_t setVoice(ECIstate *s, int32_t p, int32_t v, void *thread)
         return rc;
 
     case 32:
-        copy = strdup((char *)(size_t)v);
+        copy = strdup(EVV_AT(char *, v));
         rc = st_changeFluctuationString(thread, p, v);
         if (rc == 0)
             rc = es_sendAnnotationStr(s, "vf", copy, thread);

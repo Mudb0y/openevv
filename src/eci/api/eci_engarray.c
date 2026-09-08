@@ -24,14 +24,7 @@
 
 /* What the list keeps in a slot. The callback word is never set here: the
    base leaves it alone and so does this, which is the original's doing. */
-typedef struct EngineData {
-    const void *vt;         /* +0x00 */
-    uint32_t    callbacks;  /* +0x04 */
-    int32_t     unused_08;
-    void       *engine;     /* +0x0c, the wrapper, once it has proved itself */
-    int (*factory)(int32_t kind, void **out);  /* +0x10 */
-    int32_t     unused_14;
-} EngineData;
+/* EngineData is in eci_objects.h: the dictionary layer reaches it too. */
 
 
 /* Which kind of object the factory is asked for. */
@@ -102,7 +95,7 @@ THIS EngineData *ed_ctor(EngineData *e, const char *name)
     e->unused_08 = 0;
     e->engine    = 0;
     e->factory   = 0;
-    e->unused_14 = 0;
+    e->active    = 0;
 
     e->factory = getObject;
     if (e->factory != 0)

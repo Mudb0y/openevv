@@ -574,3 +574,25 @@ The crash is `ed_dtor` at `ENGINE_CALL(e->engine, VS_CLOSE)`, which reads a vtab
 Which leaves the pointer itself being wrong, or something writing over `EngineData` -- it is a record IBM reached by offset, so a stray write at +0x0c is the shape to look for. That is where the trail stops.
 
 One caution for the next attempt, learned twice today: the object directory is keyed on the rules form and the language set but **not on `OPT` or `CFLAGS`**, so a guard build or a `-O0` build leaves objects that the next ordinary build reuses. Touch the sources after either.
+
+## The high mapping found two bugs that were never the arena's
+
+Chasing what a region above two gigabytes costs took the failures from nineteen cases to seven, and two of the three steps were real faults with nothing to do with where the region sits.
+
+**`ED_ACTIVE` was IBM's offset on a struct that had grown.** It read `(*(void **)((char *)(d) + 0x14))`, and 0x14 is where IBM kept the active dictionary in a record whose fields were four bytes each. In ours they are eight, so twenty bytes in is the middle of `engine` -- and `std_activateDict` writing a dictionary pointer there took out that field's top half and `factory`'s bottom. `EngineData` has a named `active` slot now, declared once in `eci_objects.h` because two files reach it.
+
+**That is a sixty-four bit fault whatever the arena does**, and it survived because a low region makes the top half of every pointer nought: the write landed on zeros and the truncation it caused was lossless. Raising the region is what exposed it, which is an argument for having tried whether or not the mapping ever moves. It also cleared all seven `dict` cases at a stroke, which is why they failed together rather than by text.
+
+**The named voice parameter string wanted all three of its owners crossed, not two.** `tf_annotations` makes it, the text filter frees the copy it did not use, and `toldConcatNamed` frees the one that went across. Crossing a subset is worse than crossing none, and that is why three earlier attempts each made the count rise -- not the allocator, not the wrong configuration, just an incomplete set.
+
+### What the abort message tells you, which is most of the method
+
+`evv_ref_checked` prints the value it refused, and its shape names the fault:
+
+A full pointer -- `0x7fffe84a18a0` -- means a crossing is missing where a real pointer is being made into a reference.
+
+A small number -- `0x8ba40` -- means an offset was used as an address, so a consumer somewhere still reads it raw.
+
+A sign-extended one -- `0xffffffffe809ebe0` -- means it went through something too narrow to hold it and came back out.
+
+That last is the seven that remain, and they are not a defect: `eo_tell` hands the caller's callback an `int32_t`, `include/eci.h` publishes `ECICallback` as taking `int param`, and a string index mark's name goes through it as a pointer. No crossing makes a sixty-four bit address fit in it. Raising the region means changing what a caller is handed, which is a decision about the published interface rather than a repair.

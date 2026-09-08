@@ -99,7 +99,10 @@ typedef struct {
 
 /* Where the engine array keeps what it knows about a language. Only the
    field naming the dictionary in play is reached from here. */
-#define ED_ACTIVE(d) (*(void **)((char *)(d) + 0x14))
+/* The engine record's own slot for the active dictionary, by name. It was
+   `(char *)(d) + 0x14' -- IBM's offset, which on sixty-four bits lands inside
+   the engine pointer rather than after it. */
+#define ED_ACTIVE(d) (((EngineData *)(d))->active)
 
 extern THIS void lang_setString(LangIdentifier *l)
     MANGLED("?setString@LangIdentifier@@AAEXXZ");
