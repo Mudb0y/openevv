@@ -85,6 +85,14 @@ And the census cannot be used, for the reason above.
 
 So English is down to 580 of its original 4,614 sites saying numbers, from 622 before the call graph was chased. What is left is mostly reaches whose argument the fixed point could not settle -- 155 of the 292 -- and reaches at offsets that are not a field of any record named here yet. Both are more of the same work rather than a different kind of it: more records described in `RECORD_FIELDS` with their assertions, and a fixed point that does not give up where a register is written between the load and the reach.
 
+## The frame, which is the next large thing and is measured ready
+
+22,102 sites name a byte offset into a rule's own frame. That is the last big population, and it matters for stage three because a rule's local holding a reference is four bytes today and would want eight.
+
+It looks tractable, and this was measured rather than hoped. Over 600 English rules, not one has a slot whose span runs into the next; a rule uses a median of five distinct slots and at most 38; and the widths are one, two and four bytes. So each rule's slots could become a struct the compiler lays out, which is what lets one of them grow.
+
+Two things make it a stage of its own rather than an afternoon. The frames are all deliberately the same size -- `docs/rules.md:128` says why: the address of a frame is the name a landing place is filed under, and frames of one size put a rule at a given depth back where it was -- so a per-rule struct has to be padded to that size. And the machine writes into the frame through addresses a rule hands it, so the block stays where it is while the rule's own slots move around it. The safe order is a struct with today's layout spelled out first, which is a pure rename and provably inert, and only then letting the compiler choose.
+
 ## The stages, and where the point of no return is
 
 **One, provenance.** Which object each reach is addressing. The census above is the first half of it and the `EVV_REF` tagging is the second. Verifiable to a standard with no judgement in it: `make notation-prove` must still find the bytecode identical and the recorded cases must not move, because nothing in this stage changes what the generated C does, only what it says about itself.
@@ -96,6 +104,8 @@ Done for the state, for the frame's machine-written half, and for the records a 
 **English went from 4,614 sites naming a number to 175, which is 96 per cent.** Six builds at 979 cases with nothing moved at every step, and every macro proved live by breaking it: a byte on an address, on a field, on a step or on the difference between two variables each moves all 98 English cases. Moving the landing slot moves nothing, which is correct -- `src/port/evv_land.c` uses that address only as a name, never as storage.
 
 Not done: the rule's own frame slots, and 172 reaches through argument positions the call-graph fixed point could not settle -- call sites that disagree about what they pass, or a position no caller ever passes a typed slot to.
+
+The 172 that remain are a long tail: 155 distinct rule-and-argument pairs wanting one or two reaches each, so there is no single fix left in them. Widening `RECORD_FIELDS` past `delta_loc` and `delta_token` gains nothing either -- tried with `delta_tpos`, `delta_operand` and `delta_node` added, and the fixed point still settles on only the two, because those are the only ones a rule is handed the address of a slot for.
 
 **Two mistakes cost most of a day between them and are the same mistake.** Both flow analyses started their fixed point at the bottom of the lattice rather than the top, so the first pass met every unvisited predecessor with nothing, and a must-analysis only narrows, so nothing is where they stayed. They were answering empty everywhere. And neither seeded the walk with what the whole body already knew -- that a register loaded only ever with the state holds it -- which matters because the flow graph *cannot see a landing place*: it is entered by the machine rather than by any visible jump, so its label has no predecessor, is seeded knowing nothing, and poisons every join below it. Fixing both took reaches through a pointer into the state from 30 to 1,218 and record fields from 483 to 1,413. The seed has to go inside the walk, not onto its answer, or a pointer computed from such a register is still unknown while the walk runs.
 
