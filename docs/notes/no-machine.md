@@ -101,6 +101,16 @@ What the widening actually needs is to know which slots hold a reference, becaus
 
 Two things make it a stage of its own rather than an afternoon. The frames are all deliberately the same size -- `docs/rules.md:128` says why: the address of a frame is the name a landing place is filed under, and frames of one size put a rule at a given depth back where it was -- so a per-rule struct has to be padded to that size. And the machine writes into the frame through addresses a rule hands it, so the block stays where it is while the rule's own slots move around it. The safe order is a struct with today's layout spelled out first, which is a pure rename and provably inert, and only then letting the compiler choose.
 
+## One crossing, and what it means for pull request 16
+
+`W(x)` in `src/delta/delta_rules.c:283` is `((evv_word)(uint32_t)(x))`, and it is the only place a reference becomes a pointer on the way into one of the machine's entries: the `delta_call_N` family widens every argument through it and an entry that declared a pointer gets the whole of it. That is one line, not a layer.
+
+It is also why pull request 16 needed a generated wrapper around every primitive. To make a reference an offset from a base rather than an address, the base has to be added to the pointer arguments and not to the ordinary numbers, and `W` cannot tell them apart. Wrappers were how that pull request told them apart.
+
+**It no longer needs to be.** `entry_ptrs()` in the decompiler reads which of each entry's arguments are pointers straight out of `delta.h`, and gets an answer for 370 of the 371 declared there. A generated table of that, read by `delta_call_N`, does what those wrappers did and is derived from the header rather than written by hand. Anyone revisiting that pull request should start there.
+
+It is worth being clear that this is a different goal from this document's. Base-relative references free the arena's *location*, which is what Apple silicon and iOS need. They do not remove the arena: a reference is still four bytes, so there is still one region and everything the machine points at is still inside it. Removing the arena wants references to be real pointers, and that wants the frame.
+
 ## The stages, and where the point of no return is
 
 **One, provenance.** Which object each reach is addressing. The census above is the first half of it and the `EVV_REF` tagging is the second. Verifiable to a standard with no judgement in it: `make notation-prove` must still find the bytecode identical and the recorded cases must not move, because nothing in this stage changes what the generated C does, only what it says about itself.
