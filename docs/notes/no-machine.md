@@ -544,3 +544,19 @@ Three attempts at the named-voice-parameter group each made things worse, and I 
 `tf_annotations` stores an absolute address in a thirty-two bit parameter and `setVoice` reads it back as one. Those two agree with each other -- while the region is low. So crossing them in a low-mapped build replaces a working convention with a broken one, and the case count rises. In a high-mapped build the convention is already broken, and crossing it is the repair.
 
 Every one of those three experiments was run low. The lesson is not about that code: **a change made for a configuration has to be measured in that configuration**, and it is worth checking which one is on the bench before believing a result. Two of the three groups that fail with the region high are probably fixable after all, and the third -- the callback's `int param` -- still is not.
+
+## What the region being high actually costs: nineteen cases, and they are crashes
+
+Mapping the region high is one edit in `src/port/evv_arena.c` -- drop the `< 0x80000000` test in `arena_map` and the address search in `evv_arena_open`. Nineteen of English's ninety-eight cases fail with it high, and the useful discovery is what kind of failure they are.
+
+**They are not wrong audio. They are crashes in teardown.** A dict-mode run high prints every dictionary step exactly as the low one does -- `newDict made`, `setDict 0`, `getDict same`, `loadDict 6`, `setDict none 0`, `deleteDict 0` -- and then nothing. The low run prints `42229 samples` after those. The backtrace puts it in `ed_dtor`, at the `ENGINE_CALL(e->engine, VS_CLOSE)` dispatch, reached through `ed_deleteItself`, `eng_dtor`, `stl_dtor`, `ei_dtor`, `api_delete`. Which means the audio was very likely written and the samples line was lost with the unflushed buffer, so a case that reads as "the samples moved" is really "the process died on the way out".
+
+The nineteen: `anno3` and `realworld` cases 8, 11, 12 and 17, all seven of `dict`, and `ssml` 2, 3, 4 and 8. The `dict` seven failing together, rather than by text, is what says the fault is in an operation and not in any sentence.
+
+### Two hypotheses tried and disproved, both worth not repeating
+
+The named voice parameter path is not the cause. Crossing its producer, its three consumers and the `free` that owns the string, **with the region high**, leaves the same nineteen cases failing in the same order. That is the third and last attempt at that path and it settles it.
+
+Nor is the allocator redirection, tried earlier and already corrected above.
+
+What the evidence points at instead is heap damage done earlier and paid for at `api_delete`: a wild free or a stale pointer that a low region made harmless because a truncated address was still the right address. `ed_dtor` reading a vtable through `e->engine` is where it surfaces, not where it is caused.
