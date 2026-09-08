@@ -514,3 +514,33 @@ Crossing the producer and the three consumers in `setVoice`: twelve. Crossing th
 So the last piece is not point fixes. It is an audit of one API layer's convention -- for each `int32_t` parameter, whether it carries a pointer or a number -- and until that is done, moving one site is as likely to move five more.
 
 Everything below that layer -- the machine, the rules, the dictionary, the annotations as phonemes, the synthesiser -- works with references as distances.
+
+## A reference is a distance now, and the arena's low mapping is the API's, not the machine's
+
+This is the answer, and it is not the one the plan expected.
+
+**References are offsets.** `evv_ref_checked` subtracts the region's base, `EVV_AT` adds it, and all ten languages pass -- 979 cases. The machine, the rules, the dictionaries, the annotations, the synthesiser: all of it works with a reference that is not an address.
+
+**And the region does not need to be low.** Mapped high, at 0x7fffe7c00000, with no `MAP_FIXED` and no two-gigabyte search, the plain sentence comes out byte-identical. The engine genuinely does not care where the region sits.
+
+**What needs it low is `include/eci.h`.** `ECICallback` takes `int param`, and a string index mark's *name* reaches the caller as a pointer in that int. IBM wrote that interface for a machine where a pointer and an int were the same thing, and on any sixty-four bit host that pointer has to fit in thirty-two bits or the caller gets a truncated one. Nineteen cases of ninety-eight fail with the region high, in three groups: the marks through that callback, the named voice parameters, and the run-time dictionary. The last two are ours and fixable. The first is a published signature that callers compile against, so moving it is a decision about compatibility rather than a repair.
+
+So the low mapping stays, and `src/port/evv_arena.c` now says why at the place it happens -- a constraint that has been examined, rather than a habit nobody questioned.
+
+### The five defects the switch found, and the two that were my own
+
+`VARS_1128` casting `d->vars` to `char *`. 497 casts of `(T *)(intptr_t)x`, 63 of which had a pointer operand and needed leaving alone -- `-Wpointer-to-int-cast` names exactly those, because `EVV_AT` truncates with `(uint32_t)`. `*(int32_t *)p` inside `VRSYNC` and `VLSYNC`, with no cast for any pattern to find. `(int32_t *)d->lpta.node` in `addfence`. The sound thread's message fields, wrong on both sides.
+
+Then the index-mark name, which arrives as a reference and has to leave as an address because the caller's callback is outside the region: one line in `eci_old.c`, and it is what took English from seven cases to none.
+
+Mine were worse. The offset `EVV_AT` was a **macro that used its argument twice**, and five sites pass `va_arg(ap, int32_t)`, so each use took two words off the list; `callSynthesizeArray` read every frame parameter from the wrong word, with phonemes right and the first quarter of the waveform byte-identical. It is a function now. And `entrysig.py` read `else\n memcpy(...)` as a declaration, giving `memcpy` a mask of nought -- untestable under absolute addressing, fatal under offsets.
+
+And Japanese cost a separate hour twice over, both times for the same reason: **its rules, shim and tables are in the tree rather than generated**, so `make rulecode` never rewrites them. Its argument mask had to be written by hand, and its shim's 956 `delta_run_rule` call sites had to be crossed by hand. Whatever the generator learns, that module has to be told separately.
+
+### A methodological mistake worth more than the fix
+
+Three attempts at the named-voice-parameter group each made things worse, and I concluded twice that the path was not the cause. Both conclusions were wrong, and for one reason: **the fix was being tested in the configuration it was not for.**
+
+`tf_annotations` stores an absolute address in a thirty-two bit parameter and `setVoice` reads it back as one. Those two agree with each other -- while the region is low. So crossing them in a low-mapped build replaces a working convention with a broken one, and the case count rises. In a high-mapped build the convention is already broken, and crossing it is the repair.
+
+Every one of those three experiments was run low. The lesson is not about that code: **a change made for a configuration has to be measured in that configuration**, and it is worth checking which one is on the bench before believing a result. Two of the three groups that fail with the region high are probably fixable after all, and the third -- the callback's `int param` -- still is not.

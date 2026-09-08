@@ -39,7 +39,7 @@ static const char UNDEFINED_TEXT[] = "---";
 #define OWNER_MOVED(d) (EVV_AT(delta_owner *, (d)->owner)->changed)
 
 /* One node's field, by statement type. */
-#define FIELD(n, f)  (((int32_t *)(intptr_t)(n))[(f)])
+#define FIELD(n, f)  ((EVV_AT(int32_t *, (n)))[(f)])
 #define FENCED       1
 #define LINK_MASK    (~3)
 
@@ -133,7 +133,7 @@ int32_t vmerge(delta_state *d, int32_t left, int32_t right)
        left one while the machine is relinking a non-sequential node. */
     if (right == EVV_AT(delta_stack *, d->stack)->spine_l
      || right == EVV_AT(delta_stack *, d->stack)->spine_r
-     || (v->relink != 0 && NONSEQ((const delta_node *)(intptr_t)left))) {
+     || (v->relink != 0 && NONSEQ(EVV_AT(const delta_node *, left)))) {
         keep = left;
         drop = right;
     } else {
@@ -160,11 +160,11 @@ int32_t vmerge(delta_state *d, int32_t left, int32_t right)
         /* A field the kept node has and the dropped one does not has to be
            carried across first, both ways, before it can go. */
         if (!(FIELD(drop, v->fence_base + f) & FENCED) && joined) {
-            if (!vproj_l(d, (delta_node *)(intptr_t)drop,
-                         (delta_node *)(intptr_t)keep, (uint8_t)f))
+            if (!vproj_l(d, EVV_AT(delta_node *, drop),
+                         EVV_AT(delta_node *, keep), (uint8_t)f))
                 return 0;
-            if (!vproj_r(d, (delta_node *)(intptr_t)drop,
-                         (delta_node *)(intptr_t)keep, (uint8_t)f))
+            if (!vproj_r(d, EVV_AT(delta_node *, drop),
+                         EVV_AT(delta_node *, keep), (uint8_t)f))
                 return 0;
         }
 

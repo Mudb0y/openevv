@@ -167,7 +167,7 @@ class Rule:
                 if got is not None:
                     USED.add(got[0])
                     FIELDED[0] += 1
-                    return 'GLOBAL_AT(state, %s, %d)' % (got[0], got[1])
+                    return 'STATE_AT(%s, %d)' % (got[0], got[1])
             return 'FIELD(%d)' % val
         if kind == 'slot':
             return self.at('base + %d' % val, width, signed)
@@ -185,13 +185,13 @@ class Rule:
                 USED.add(got[0])
                 FLDED[0] += 1
                 if got[1]:
-                    return '(int32_t)GLOBAL_D(%s, state, %s, %d)' % (
+                    return '(int32_t)STATE_D(%s, %s, %d)' % (
                         t, got[0], got[1])
-                return '(int32_t)GLOBAL(%s, state, %s)' % (t, got[0])
+                return '(int32_t)STATE(%s, %s)' % (t, got[0])
             return self.at('(unsigned char *)state + %d' % val, width, signed)
         if kind.startswith('ind('):
             inner, disp = val
-            return self.at('(unsigned char *)(intptr_t)(%s) + %d'
+            return self.at('REG_P(%s) + %d'
                            % (self.value(kind[4:-1], inner[0] if
                                          isinstance(inner, tuple) else inner,
                                          where=where[0] if
@@ -230,13 +230,13 @@ class Rule:
                 USED.add(got[0])
                 FLDED[0] += 1
                 if got[1]:
-                    return ('GLOBAL_D(%s, state, %s, %d)'
+                    return ('STATE_D(%s, %s, %d)'
                             % (t, got[0], got[1])), width
-                return 'GLOBAL(%s, state, %s)' % (t, got[0]), width
+                return 'STATE(%s, %s)' % (t, got[0]), width
             return 'FLD(%s, %d)' % (t, val), width
         if kind.startswith('ind('):
             inner, disp = val
-            return ('(*(%s *)((unsigned char *)(intptr_t)(%s) + %d))'
+            return ('(*(%s *)(REG_P(%s) + %d))'
                     % (t, self.value(kind[4:-1],
                                      inner[0] if isinstance(inner, tuple)
                                      else inner,
@@ -1412,7 +1412,7 @@ def drop_dead(body):
 PART_WRITE = re.compile(r'SET(?:LOW|BYTE0|BYTE1)\(r([0-7])')
 
 REACH = re.compile(r'\(\*\((u?int(?:8|16|32)_t) \*\)'
-                   r'\(\(unsigned char \*\)\(intptr_t\)\((r\d)\)'
+                   r'\(REG_P\((r\d)\)'
                    r' \+ (\d+)\)\)')
 
 
@@ -1436,7 +1436,7 @@ PROV_SITES = []
 # computed from one. The first is the reach itself; the second is the folded
 # add a rule makes when it hands the machine a pointer into something.
 PROV_REACH = re.compile(r'\(\*\((u?int(?:8|16|32)_t) \*\)'
-                        r'\(\(unsigned char \*\)\(intptr_t\)\((r\d)\)'
+                        r'\(REG_P\((r\d)\)'
                         r' \+ (-?\d+)\)\)')
 PROV_ADDR = re.compile(r'\(\(int32_t\)\((r\d) \+ \((-?\d+)\)\)\)')
 
@@ -1996,7 +1996,7 @@ def frame_named(body, named, use):
         if o not in named:
             return m.group(0)
         FRAMED[0] += 1
-        return '((int32_t)(intptr_t)%s)' % place(o)
+        return 'REG_REF(%s)' % place(o)
 
     out = []
     for line in body:

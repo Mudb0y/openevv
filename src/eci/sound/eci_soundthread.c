@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "evv_abi.h"
+#include "evv_arena.h"
 #include "eci_objects.h"
 
 typedef struct ETImessage ETImessage;
@@ -322,7 +323,7 @@ static THIS void run_write(ETImessage *m)
 {
     SndMsg *s = (SndMsg *)m;
 
-    s->answer = pcm_write(s->subject, (const int32_t *)(size_t)s->a,
+    s->answer = pcm_write(s->subject, EVV_AT(const int32_t *, s->a),
                          (uint32_t)s->b);
 }
 
@@ -330,14 +331,14 @@ static THIS void run_setup(ETImessage *m)
 {
     SndMsg *s = (SndMsg *)m;
 
-    s->answer = pcm_setup(s->subject, (char *)(size_t)s->a,
-                         (int32_t *)(size_t)s->b,
-                         (int32_t *)(size_t)s->c[0],
-                         (int32_t *)(size_t)s->c[1],
-                         (int32_t *)(size_t)s->c[2],
-                         (int32_t *)(size_t)s->c[3],
-                         (int32_t *)(size_t)s->c[4],
-                         (int32_t *)(size_t)s->c[5]);
+    s->answer = pcm_setup(s->subject, EVV_AT(char *, s->a),
+                         EVV_AT(int32_t *, s->b),
+                         EVV_AT(int32_t *, s->c[0]),
+                         EVV_AT(int32_t *, s->c[1]),
+                         EVV_AT(int32_t *, s->c[2]),
+                         EVV_AT(int32_t *, s->c[3]),
+                         EVV_AT(int32_t *, s->c[4]),
+                         EVV_AT(int32_t *, s->c[5]));
 }
 
 /* Laying down a mark is the one that is posted, so its answer is set before
@@ -373,7 +374,7 @@ static THIS void run_setIndexCallback(ETImessage *m)
     SndMsg *s = (SndMsg *)m;
     SoundThread *t = (SoundThread *)(size_t)s->answer;
     soundFileSetIndexCallback(&t->out, (void *)(size_t)s->subject,
-                              (void *)(size_t)s->a);
+                              EVV_AT(void *, s->a));
     s->b = 1;
 
     if (s->subject != 0) {
@@ -465,7 +466,7 @@ THIS int32_t snd_write(SoundThread *t, const int32_t *data, uint32_t n)
     SndMsg *s = newSnd(sizeof(SndMsg), SND_WRITE, &vtbl_write, &t->out);
 
     if (s != 0) {
-        s->a = (int32_t)(size_t)data;
+        s->a = EVV_REF(data);
         s->b = (int32_t)n;
     }
     return askThread(t, s, 0);
@@ -478,14 +479,14 @@ THIS int16_t snd_setup(SoundThread *t, char *a, int32_t *b, int32_t *c,
     SndMsg *s = newSnd(sizeof(SndMsg), SND_SETUP, &vtbl_setup, &t->out);
 
     if (s != 0) {
-        s->a = (int32_t)(size_t)a;
-        s->b = (int32_t)(size_t)b;
-        s->c[0] = (int32_t)(size_t)c;
-        s->c[1] = (int32_t)(size_t)d;
-        s->c[2] = (int32_t)(size_t)e;
-        s->c[3] = (int32_t)(size_t)f;
-        s->c[4] = (int32_t)(size_t)g;
-        s->c[5] = (int32_t)(size_t)h;
+        s->a = EVV_REF(a);
+        s->b = EVV_REF(b);
+        s->c[0] = EVV_REF(c);
+        s->c[1] = EVV_REF(d);
+        s->c[2] = EVV_REF(e);
+        s->c[3] = EVV_REF(f);
+        s->c[4] = EVV_REF(g);
+        s->c[5] = EVV_REF(h);
     }
     return (int16_t)askThread(t, s, 0);
 }
@@ -540,7 +541,7 @@ THIS int32_t snd_setIndexCallback(SoundThread *t, void *cb, void *param)
     if (s == 0)
         return rc;
     s->answer = (int32_t)(size_t)t;
-    s->a = (int32_t)(size_t)param;
+    s->a = EVV_REF(param);
     s->b = 0;
     s->base.vt->addRef(&s->base);
     sent = qt_sendMessage(&t->base, &s->base);

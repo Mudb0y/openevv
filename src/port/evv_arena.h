@@ -91,7 +91,26 @@ int32_t evv_prov_born(const char *file, int line, const void *p);
 #else
 #define EVV_REF(p)      evv_ref_checked(p)
 #endif
-#define EVV_AT(t, r)    ((t)(void *)(uintptr_t)(uint32_t)(r))
+/* And back again. A reference is a distance from the region's base, so this
+   is an addition rather than a cast, and nought stays nothing because the
+   region's first eight bytes are never handed out. */
+/* And back again. A reference is a distance from the region's base, so this
+   is an addition rather than a cast, and nought stays nothing because the
+   region's first eight bytes are never handed out.
+
+   A function and not a macro, because five sites pass `va_arg(ap, int32_t)'
+   as the reference and a macro that tests it and then adds to it reads the
+   argument twice -- taking two words off the list where one was meant. That
+   cost a day: the phonemes came out right, the first quarter of the waveform
+   was byte-identical, and callSynthesizeArray read every frame parameter
+   from the wrong word after that. Under absolute addressing the macro used
+   its argument once, so nothing could see it until the day a reference
+   stopped being an address. */
+static inline void *evv_at(int32_t r)
+{
+    return r ? (void *)(evv_arena_base + (uint32_t)r) : 0;
+}
+#define EVV_AT(t, r)    ((t)evv_at(r))
 
 #else
 

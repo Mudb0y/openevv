@@ -135,8 +135,19 @@ enum {
 
    AT and FLD are the value in a place; SLOT and FIELD are the place itself,
    as something a rule can hand to a call. */
-#define SLOT(n)      ((int32_t)(intptr_t)(base + (n)))
-#define FIELD(n)     ((int32_t)(intptr_t)((unsigned char *)state + (n)))
+/* A register holds a reference, and a reference is a distance into the
+   region rather than an address. So a rule turning one into a pointer adds
+   the base, and turning a pointer into one subtracts it. Every reach and
+   every address below says it through these two and nothing says it by
+   casting, which is what lets the region live wherever the system puts it.
+
+   On a thirty-two bit host EVV_AT and EVV_REF are the casts these replace,
+   so that build compiles to exactly what it did before. */
+#define REG_P(p)     ((unsigned char *)EVV_AT(void *, (p)))
+#define REG_REF(q)   EVV_REF(q)
+
+#define SLOT(n)      REG_REF(base + (n))
+#define FIELD(n)     REG_REF((unsigned char *)state + (n))
 #define AT(t, n)     (*(t *)(base + (n)))
 #define FLD(t, n)    (*(t *)((unsigned char *)state + (n)))
 
@@ -244,7 +255,7 @@ void evv_arg_over(const char *who, int argn, int room);
    reads them as often as anything else it has. Which offset that is depends
    on the rule, so the rule works it out once and these count from there. */
 #define PARAM(t, k)  (*(t *)(param + 4 * (k)))
-#define PARAMAT(k)   ((int32_t)(intptr_t)(param + 4 * (k)))
+#define PARAMAT(k)   REG_REF(param + 4 * (k))
 
 /* Part of a register. The machine had a sixteen-bit half and two eight-bit
    quarters of each of its registers, and a rule reads and writes them as
@@ -271,7 +282,7 @@ void evv_arg_over(const char *who, int argn, int room);
    rules touching the same variable now say the same thing rather than two
    different byte offsets, and the offsets themselves are worked out the same
    way delta_new works them out, which is what makes the names true. */
-#define GLOBAL(t, p, v) (*(t *)((unsigned char *)(intptr_t)(p) + DG_##v))
+#define GLOBAL(t, p, v) (*(t *)(REG_P(p) + DG_##v))
 
 /* A reach into a variable at a displacement from its own start.
  *
@@ -281,7 +292,7 @@ void evv_arg_over(const char *who, int argn, int room);
    rather than added up into a number. Same address, and it survives the
    variable moving. */
 #define GLOBAL_D(t, p, v, d) \
-    (*(t *)((unsigned char *)(intptr_t)(p) + DG_##v + (d)))
+    (*(t *)(REG_P(p) + DG_##v + (d)))
 
 /* The address of one of the language's own variables, or of a byte inside a
    compound one, as a value the machine can hold.
@@ -292,7 +303,7 @@ void evv_arg_over(const char *who, int argn, int room);
    compiler works it out -- so the variable may sit anywhere the next build
    puts it. That is the whole reason for asking what these sites address. */
 #define GLOBAL_AT(p, v, d) \
-    ((int32_t)(intptr_t)((unsigned char *)(intptr_t)(p) + DG_##v + (d)))
+    REG_REF(REG_P(p) + DG_##v + (d))
 
 /* A reach the flow graph cannot settle, decided when the rule runs.
  *
@@ -324,9 +335,18 @@ void evv_arg_over(const char *who, int argn, int room);
    exactly: DG_s326 is DG_BASE + 2386, DG_BASE is 176, and the offset the
    compiler emitted is 2562. */
 #define GLOBAL_MAYBE(t, p, v, d, raw) \
-    (*(t *)((unsigned char *)(intptr_t)(p) \
-            + (((const void *)(intptr_t)(p) == (const void *)(state)) \
+    (*(t *)(REG_P(p) \
+            + (((const void *)REG_P(p) == (const void *)(state)) \
                ? (DG_##v + (d)) : (raw))))
+
+/* The same three, for the state the rule was handed rather than a register.
+   `state' is a real pointer -- the rule's own first parameter -- and not a
+   reference, so it does not go through the crossing. Two names rather than
+   one overload, because the difference is exactly the thing that must not be
+   confused: a register holds a distance, a parameter holds an address. */
+#define STATE(t, v)        (*(t *)((unsigned char *)(state) + DG_##v))
+#define STATE_D(t, v, d)   (*(t *)((unsigned char *)(state) + DG_##v + (d)))
+#define STATE_AT(v, d)     REG_REF((unsigned char *)(state) + DG_##v + (d))
 
 /* A reach into one of the machine's own records, said as the field it is.
  *
@@ -337,7 +357,7 @@ void evv_arg_over(const char *who, int argn, int room);
    own use of it says. tools/rules/decompile.py chases that along the call
    graph. src/delta/delta.c asserts every offset this replaces. */
 #define RECORD(t, p, type, field) \
-    (*(t *)(void *)&((type *)(intptr_t)(p))->field)
+    (*(t *)(void *)&((type *)(void *)REG_P(p))->field)
 
 /* A reach into one variable through a pointer that names another.
  *
@@ -348,7 +368,7 @@ void evv_arg_over(const char *who, int argn, int room);
    the compiler works that out. So this holds however the variables are laid
    out, which the number it replaces did not. */
 #define GLOBAL_VIA(t, p, to, dto, from, dfrom) \
-    (*(t *)((unsigned char *)(intptr_t)(p) \
+    (*(t *)(REG_P(p) \
             + (DG_##to + (dto)) - (DG_##from + (dfrom))))
 
 /* One reach whose object is not known, noted so that it can be. A rule

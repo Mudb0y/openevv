@@ -323,6 +323,11 @@ int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data)
     case 14: {  /* and one naming a piece of audio */
         int32_t which = msg == 13 ? ECI_STRING_INDEX : ECI_AUDIO_INDEX;
 
+        /* The name arrives as a reference and leaves as an address: what
+           follows hands it to the caller's own callback, which is outside
+           the engine and knows nothing of the region, and frees it. */
+        param = (int32_t)(intptr_t)EVV_AT(char *, param);
+
         /* The name was copied for the caller and is ours to give back.
            A caller that says it took the name keeps it; one that does not,
            and one that never asked for a callback at all, does not. */

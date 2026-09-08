@@ -169,9 +169,19 @@ int evv_arena_open(size_t bytes)
     if (evv_arena_base != 0)
         return 1;
 
-    /* Less room is worse than plenty and better than nothing, so a machine
-       whose low addresses are too crowded for the whole region is offered
-       halves rather than refused. */
+    /* Still low, and the reason is no longer the machine's. A reference is a
+       distance from this base now, so nothing the engine holds needs the
+       region to be anywhere in particular -- moving it high leaves the plain
+       cases byte-identical. What needs it low is the published interface:
+       ECICallback in include/eci.h takes `int param', and a string index
+       mark's name goes to the caller as a pointer in that int. IBM's API was
+       written for a machine where that was the same thing. Nineteen cases of
+       ninety-eight say so, in three groups -- the marks through that
+       callback, the named voice parameters, and the run-time dictionary.
+
+       Less room is worse than plenty and better than nothing, so a machine
+       whose low addresses are crowded is offered halves rather than
+       refused. */
     for (want = ROUND(bytes); want >= (32u * 1024u * 1024u); want /= 2) {
         uintptr_t at;
 
@@ -196,7 +206,7 @@ int evv_arena_open(size_t bytes)
            comes from this region, so without it the next thing to happen is a
            null pointer with no explanation, which is exactly how this was
            found. Say it instead. */
-        fprintf(stderr, "evv: nowhere below two gigabytes to put the arena;"
+        fprintf(stderr, "evv: nowhere below two gigabytes to put the region;"
                 " the engine cannot run on this machine\n");
         abort();
     }
@@ -603,20 +613,26 @@ void *evv_arena_realloc(void *p, size_t n)
 
 int32_t evv_ref_checked(const void *p)
 {
-    uintptr_t v = (uintptr_t)p;
+    ptrdiff_t off;
 
     if (p == 0)
         return 0;
-    if (v >= 0x80000000u) {
-        /* Truncating this would hand the machine an address that is not the
-           one asked for. Everything the machine can hold a pointer to comes
-           out of the arena: the heap, and the language's own data, which
-           src/delta/delta_low.c copies out of the program at startup. Something that
-           got here came from neither. */
-        fprintf(stderr, "evv: %p is too high to be a value\n", p);
+    off = (const unsigned char *)p - evv_arena_base;
+    if (off <= 0 || (size_t)off >= evv_arena_size) {
+        /* A reference is a distance into the region, so a pointer from
+           anywhere else cannot be made into one. Everything the machine can
+           hold a pointer to comes out of here: the heap, and the language's
+           own data, which src/delta/delta_low.c copies out of the program at
+           startup. Something that got here came from neither.
+
+           Nought is refused along with the rest because the first eight bytes
+           are never handed out, so that a reference of nought goes on meaning
+           nothing -- which is what every test for an empty value assumes. */
+        fprintf(stderr, "evv: %p is not in the region, so it cannot be a"
+                " value\n", p);
         abort();
     }
-    return (int32_t)(uint32_t)v;
+    return (int32_t)off;
 }
 
 /* ---- what is still held -------------------------------------------------

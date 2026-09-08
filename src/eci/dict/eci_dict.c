@@ -442,7 +442,7 @@ static const char *ed_lookup(OldInst *h, void *dict, int32_t volume,
                              const void *key)
 {
     const char *answer = 0;
-    void   *wide = (void *)(intptr_t)key;
+    void   *wide = (void *)key;
     void   *own;
     int32_t len;
     int32_t room;
@@ -479,7 +479,7 @@ static const char *ed_lookup(OldInst *h, void *dict, int32_t volume,
 static int32_t ed_lookupExt(OldInst *h, void *dict, int32_t volume,
                             const void *key, const char **out, int32_t *pos)
 {
-    void   *wide = (void *)(intptr_t)key;
+    void   *wide = (void *)key;
     int32_t rc;
     int32_t len;
 
@@ -630,7 +630,7 @@ static int32_t ed_findEntryExt(OldInst *h, void *dict, int32_t volume,
 static int32_t ed_update(OldInst *h, void *dict, int32_t volume,
                          const void *key, const void *xlat)
 {
-    void   *widekey = (void *)(intptr_t)key;
+    void   *widekey = (void *)key;
     void   *widexlat;
     void   *own;
     int32_t keylen, xlatlen;
@@ -647,7 +647,7 @@ static int32_t ed_update(OldInst *h, void *dict, int32_t volume,
         own = widekey;
     }
 
-    widexlat = (void *)(intptr_t)xlat;
+    widexlat = (void *)xlat;
     if (UnicodeConverter(h, xlat, &widexlat, 1)) {
         if (key != widekey)
             cpp_delete(own);
@@ -667,7 +667,7 @@ static int32_t ed_update(OldInst *h, void *dict, int32_t volume,
 static int32_t ed_updateExt(OldInst *h, void *dict, int32_t volume,
                             const void *key, const void *xlat, int32_t pos)
 {
-    void   *widekey = (void *)(intptr_t)key;
+    void   *widekey = (void *)key;
     void   *widexlat;
     void   *own;
     int32_t keylen, xlatlen, rc;
@@ -684,7 +684,7 @@ static int32_t ed_updateExt(OldInst *h, void *dict, int32_t volume,
         own = widekey;
     }
 
-    widexlat = (void *)(intptr_t)xlat;
+    widexlat = (void *)xlat;
     if (UnicodeConverter(h, xlat, &widexlat, 1)) {
         if (key != widekey)
             cpp_delete(own);
