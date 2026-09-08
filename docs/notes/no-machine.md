@@ -432,3 +432,17 @@ Six fields against the 4,967 frame slots that would have to be named if the bloc
 `top` and `vbot` are offsets from `delta_stack.base`, which the struct already has at 0x0518. `back` and `err_jmp` are saved copies of the same fields in `delta_vars`, so they take whatever base those do. The two `node` fields point at statement nodes out of the segment heap, and that is the one that needs a decision rather than a lookup: an offset wants a single base, and the node heap is segments.
 
 But that is a pool with a base, not a low mapping. Nodes addressed by offset from one reserved region can live anywhere in memory, which is the whole of what retiring the arena means.
+
+## A wrong turn worth writing down: references as offsets
+
+The reframing above -- that the arena's problem is the low mapping and not the region -- is right. The conclusion drawn from it, that a reference could simply become a distance from the region's base, is wrong, and it took a working build and four crashes to find out why.
+
+It very nearly works. `evv_ref_checked` subtracts the base instead of truncating, `EVV_AT` adds it instead of casting, `arena_map` stops asking for a low address, and the region comes up at 0x7fffe7c00000 -- high memory, no `MAP_FIXED`, no two-gigabyte limit. Everything the machine allocates already comes from that region, so every reference is expressible, and the first eight bytes are already reserved so nought goes on meaning nothing.
+
+**Where it fails is `W(x)`, the crossing into a primitive.** Every argument a rule pushes goes through it, and it cannot tell a reference from a number -- today it does not have to, because a thirty-two bit absolute address is both at once. With offsets a pointer argument needs the base added and a number must not have it, and `W` has no way to know which it is holding: the entries are called through `I1`..`I12`, which take `evv_word` and nothing more. That is not a patch, it is the premise failing.
+
+The four crashes before that point were all real and all the same kind -- a reference used as an address without going through the crossing -- and each is worth keeping in mind because they will matter under any scheme:
+
+`VARS_1128` in `eci_deltamisc.c` cast `d->vars` straight to `char *`. `CLRONESTM((delta_node *)(intptr_t)t)` and 496 other casts of the shape `(T *)(intptr_t)x`. `*(int32_t *)p` inside `VRSYNC` and `VLSYNC`, with no intermediate cast at all, which no grep for a cast shape can find. And the generated shim, `delta_run_rule((void *)(intptr_t)a0, ...)`, which survived every sweep of `src` because it is written by `tools/rules/emit.py` rather than kept in the tree.
+
+So the crossing is the thing that decides this, and the plan is the earlier one with a reason attached: **real pointers everywhere the rules cannot see, and offsets only in the six fields of `delta_actrec` that they can.** Then `W` becomes the identity rather than a decision, because a register holds a pointer and a number is a number. The patch for the abandoned attempt is kept out of tree; nothing of it is wanted except the knowledge of where it broke.
