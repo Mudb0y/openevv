@@ -95,6 +95,10 @@ So English is down to 580 of its original 4,614 sites saying numbers, from 622 b
 
 It looks tractable, and this was measured rather than hoped. Over 600 English rules, not one has a slot whose span runs into the next; a rule uses a median of five distinct slots and at most 38; and the widths are one, two and four bytes. So each rule's slots could become a struct the compiler lays out, which is what lets one of them grow.
 
+It is also smaller than 22,102 suggests. Only 1,042 of English's 3,377 rules have a frame at all: the other 2,335 are wrappers, which `write()` already detects and which keep their few words on the C stack like any other function. Across those 1,042 there are 121 distinct shapes, `pbase` is 8 for every wrapper and between 104 and 124 for a real rule, and the frame runs from 196 to 392 bytes.
+
+What the widening actually needs is to know which slots hold a reference, because those are the ones that grow from four bytes to eight and shift everything after them. That is answerable now and was not this morning: `state_offsets` and `argument_records` say which registers hold a reference at each point, so a store into a slot from such a register says the slot does. Slot tracking was written and removed earlier in the day because it named no reaches -- this is a different use for it and a better one.
+
 Two things make it a stage of its own rather than an afternoon. The frames are all deliberately the same size -- `docs/rules.md:128` says why: the address of a frame is the name a landing place is filed under, and frames of one size put a rule at a given depth back where it was -- so a per-rule struct has to be padded to that size. And the machine writes into the frame through addresses a rule hands it, so the block stays where it is while the rule's own slots move around it. The safe order is a struct with today's layout spelled out first, which is a pure rename and provably inert, and only then letting the compiler choose.
 
 ## The stages, and where the point of no return is
