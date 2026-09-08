@@ -460,3 +460,21 @@ That is the job: read the 158 declarations, and for each emit a wrapper that con
 Two things to get right when doing it. The arguments arrive in the reverse of the order the entry takes them, which `delta_call_N` already knows and a generator must not forget. And this is the hot path: two and a half million rule entries in a run, which is why `delta_run_rule` was made to read the language in force once and hold it, so a wrapper per entry must not undo that.
 
 It is also, and not by coincidence, exactly what the no-machine endgame needs. An entry that declares its arguments is the difference between a machine calling numbered primitives and a program calling functions.
+
+## The crossing, made to know what it is holding
+
+`W(x)` is gone. In its place each argument is converted or not according to what the entry declares it takes, and that is the thing without which the arena cannot go.
+
+`tools/rules/entrysig.py` reads the entries' own C declarations and answers a mask per entry: bit *n* for argument *n* being a pointer, bit thirty-one for one that answers with a pointer. All 158 of the machine's entries resolve -- 156 declared in `src`, plus `memcpy` and `memset`, which the C library provides and which are written down in the module. There is no second copy of a signature anywhere, which is the point: a mask that disagreed with a declaration would hand a primitive a distance where it wanted an address, and the fault would land a long way from the mistake.
+
+`emit.py` writes it beside the entry table as `delta_rule_argmask[]` -- 158 nonzero and 3,342 zero for English, the zeros being the module's own rules, which take references and keep them. `delta_rules.c` uses it at all 57 crossing sites through `WM(m, i, x)` and `RM(m, r)`, `call_entry` having gained the mask as a parameter.
+
+**Under absolute addressing both arms of `WM` are the cast that was there before, so this must be inert, and the gate says it is.** That is what makes it worth having on its own: it changes nothing today, and nothing else can change until it exists.
+
+Japanese wanted its table written by hand, which is the ten-language gate earning its keep. `lang/jajp` keeps its rules in the tree rather than generating them -- the lift wrote those files and they are the only copy -- so `make rulecode` never rewrites them and the symbol was simply absent. The numbers still come from `entrysig.py`, so there is one source and not two: 1,029 entries, 878 of them Japanese's own at nought, none unresolved.
+
+### Two traps met on the way
+
+The object directory is keyed on the rules form and the language set but **not on `OPT`**. So a build with `-O0` leaves un-optimised objects that the next ordinary build reuses, and it does not fail quietly: it fails at the link, complaining about `vtbl_eCollection`, because `sti_indexQueueCtor` assigns five vtables over one another and only the optimiser's dead-store removal keeps the first four from being referenced. Touch the sources to be rid of it.
+
+And the struct-wrapper trick -- making `evv_ref` a one-field struct so every misuse is a compile error -- is the wrong tool for finding a reference used as an address. It reports 112 sites across three files and every one of them is arithmetic or a comparison on a reference, which is correct: an offset plus a number is an offset. It finds no casts at all, because those already go through the crossing. What it is good for is the opposite question.

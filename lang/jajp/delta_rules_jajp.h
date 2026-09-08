@@ -19,6 +19,7 @@ extern const uint8_t      jajp_delta_rule_code[];
 extern const int32_t      jajp_delta_rule_imm[];
 extern const uint8_t      jajp_delta_rule_map[];
 extern const delta_rule_fn jajp_delta_rule_entry[];
+extern const uint32_t     jajp_delta_rule_argmask[];
 extern const char *const  jajp_delta_rule_entry_name[];
 extern const void *const  jajp_delta_rule_sym[];
 extern const int          jajp_delta_rule_sym_count;
@@ -35,6 +36,7 @@ extern const int          jajp_delta_rule_setjmp;
 #define delta_rule_imm         jajp_delta_rule_imm
 #define delta_rule_map         jajp_delta_rule_map
 #define delta_rule_entry       jajp_delta_rule_entry
+#define delta_rule_argmask     jajp_delta_rule_argmask
 #define delta_rule_entry_name  jajp_delta_rule_entry_name
 #define delta_rule_sym         jajp_delta_rule_sym
 #define delta_rule_sym_count   jajp_delta_rule_sym_count

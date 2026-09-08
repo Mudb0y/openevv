@@ -110,6 +110,7 @@ delta_language delta_lang_engb = {
     engb_delta_rule_map,
 #endif
     engb_delta_rule_entry,
+    engb_delta_rule_argmask,
     engb_delta_rule_entry_name,
     engb_delta_rule_sym,
     0,                   /* how many of those */

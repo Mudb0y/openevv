@@ -91,6 +91,14 @@ typedef struct delta_language {
     const int32_t       *rule_imm;
     const uint8_t       *rule_map;
     const delta_rule_fn *rule_entry;
+    /* Which of each entry's arguments are pointers, a bit each, and bit
+       thirty-one for one that answers with one. What it is for is the
+       crossing: a rule pushes references and an entry declaring a pointer
+       wants an address, and where a reference is a distance into the region
+       rather than an address, something has to say which is which.
+       Generated from the entries' own declarations by
+       tools/rules/entrysig.py. */
+    const uint32_t      *rule_argmask;
     const char *const   *rule_entry_name;
     const void *const   *rule_sym;
     int32_t              rule_sym_count;

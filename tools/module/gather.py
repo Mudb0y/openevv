@@ -123,6 +123,7 @@ delta_language delta_lang_%(tag)s = {
     %(tag)s_delta_rule_map,
 #endif
     %(tag)s_delta_rule_entry,
+    %(tag)s_delta_rule_argmask,
     %(tag)s_delta_rule_entry_name,
     %(tag)s_delta_rule_sym,
     0,                   /* how many of those */
