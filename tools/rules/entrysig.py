@@ -17,6 +17,18 @@ import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# What cannot be a return type, however much it looks like one. Without this
+# the pattern below reads `else\n    memcpy(place, &out, 4);' as a declaration
+# of memcpy taking three values, and the mask that follows hands memcpy two
+# distances where it wanted addresses. It went unnoticed because under
+# absolute addressing both arms of the crossing agree, so nothing could fail
+# until the day a reference stopped being an address -- which is the whole
+# reason the mask exists. A wrong mask is worse than a refused one.
+NOT_A_TYPE = frozenset((
+    'if', 'else', 'while', 'do', 'for', 'switch', 'case', 'default',
+    'break', 'continue', 'goto', 'return', 'sizeof', 'typedef', 'struct',
+    'union', 'enum'))
+
 DECL = re.compile(
     r'(?:^|\n)[ \t]*(?:extern[ \t]+|static[ \t]+)?'
     r'((?:const[ \t]+)?(?:unsigned[ \t]+|signed[ \t]+)?'
@@ -71,6 +83,8 @@ def _read():
             for m in DECL.finditer(text):
                 name = m.group(2)
                 if name in _cache:
+                    continue
+                if m.group(1).strip().rstrip('*').strip() in NOT_A_TYPE:
                     continue
                 args = _split(m.group(3))
                 if args in ([], ['void']):

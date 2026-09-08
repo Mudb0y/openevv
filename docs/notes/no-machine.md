@@ -478,3 +478,21 @@ Japanese wanted its table written by hand, which is the ten-language gate earnin
 The object directory is keyed on the rules form and the language set but **not on `OPT`**. So a build with `-O0` leaves un-optimised objects that the next ordinary build reuses, and it does not fail quietly: it fails at the link, complaining about `vtbl_eCollection`, because `sti_indexQueueCtor` assigns five vtables over one another and only the optimiser's dead-store removal keeps the first four from being referenced. Touch the sources to be rid of it.
 
 And the struct-wrapper trick -- making `evv_ref` a one-field struct so every misuse is a compile error -- is the wrong tool for finding a reference used as an address. It reports 112 sites across three files and every one of them is arithmetic or a comparison on a reference, which is correct: an offset plus a number is an offset. It finds no casts at all, because those already go through the crossing. What it is good for is the opposite question.
+
+## References as offsets: the linguistic engine is done, the synthesiser is not
+
+With the crossing able to tell an address from a number, the offset scheme works -- for everything except the waveform.
+
+The engine runs: 101,991 rules, 1,742,617 steps, 42,229 samples, exit nought, with `evv_ref` a distance into the region rather than an address. **`make phonemes` reports all thirty cases as IBM's, the twenty annotation cases among them.** So the machine, the rules, the dictionary and the annotation path are all correct under offsets. `test/matrix.sh` says "the samples moved" and never "the samples and what it answered", so every interface answer matches as well. What is left wrong is inside the formant synthesiser's own data path, and the patch that gets this far is kept out of tree.
+
+Five defects stood between the switch and that state, and they are the shape of what remains:
+
+`VARS_1128` in `eci_deltamisc.c` cast `d->vars` straight to `char *`. 497 casts of the form `(T *)(intptr_t)x`, of which 63 turned out to have a *pointer* operand rather than a reference -- and `-Wpointer-to-int-cast` names exactly those, because `EVV_AT`'s `(uint32_t)` truncates a real pointer. `*(int32_t *)p` inside `VRSYNC` and `VLSYNC`, with no intermediate cast for any pattern to match. `(int32_t *)d->lpta.node` in `addfence` and `remfence`. The sound thread's message fields, wrong on both sides -- the sender truncating a pointer into `s->a`, the receiver casting it back. And the voice-parameter strings in `eci_state.c`, which is what a wrong waveform with right phonemes looks like from the outside.
+
+### And one that was mine, which is the one worth remembering
+
+`entrysig.py` read `else\n    memcpy(place, &out, 4);` as a declaration of `memcpy` taking three values. Mask nought, so its two pointers were never converted, and the engine died inside `memmove`.
+
+It could not have been caught by the gate. Under absolute addressing both arms of `WM` are the same cast, so a wrong mask changes nothing until the day a reference stops being an address -- which is the day the mask is for. The lesson is not about regexes: **a table generated for a future property cannot be tested by present behaviour, so it has to be right by construction.** Hence the keyword filter, and hence the emitter stopping rather than guessing when an entry has no declaration.
+
+The second was duller and just as costly: `entrysig.py` was not a dependency of `rulecode`, so the fix did not reach the generated tables and the old mask sat there looking correct. `Makefile` now lists it.

@@ -26885,7 +26885,7 @@ const uint32_t jajp_delta_rule_argmask[] = {
     0,
     0x00000005u,
     0x00000011u,
-    0x00000000u,
+    0x00000003u,
     0,
     0,
     0,

@@ -758,7 +758,8 @@ $(1)/delta_rules_shim_$(notdir $(1)).c &: \
                     $(wildcard $(1)/rules/symbols) \
                     $(wildcard $(1)/rules/trials) \
                     tools/rules/notation.py tools/rules/lower.py \
-                    tools/rules/upper.py tools/rules/emit.py tools/evv.py
+                    tools/rules/upper.py tools/rules/emit.py \
+                    tools/rules/entrysig.py tools/evv.py
 	@EVV_NOTATION_LANG=$(notdir $(1)) \
 	  python3 tools/rules/notation.py build > /dev/null
 	@echo "wrote the rules of $(notdir $(1)) out of $(1)/rules"
