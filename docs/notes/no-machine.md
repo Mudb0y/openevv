@@ -378,3 +378,41 @@ That it was needed rather than merely tidy was worth checking, because the 979-c
 The interpreter reads `statefld 3078` out of its input and adds 3078 to the state. Nothing can name that for it, so a moved base must move its cases -- and if it did not, the offsets would not be coming from where this says they come from. Measured: with the base moved, `RULES=c` holds all 979 and `RULES=bytecode` moves the lot. Same tree, same sabotage, opposite answers, which is the pair that proves it rather than either half alone.
 
 Which fixes something about the plan that had been left vague: **retiring the arena is a property of `RULES=c` and cannot be one of `RULES=bytecode`.** That is not a new cost -- `RULES=c` has been the default and the shipped form since 22 August 2026, the interpreter is already absent from the shipped build, and stage four retires it. But it means the six-build gate stops being six builds of one engine at that point, and the bytecode half has to be held at the old base while the C half moves. Two configurations of the gate, not one, for as long as both forms exist.
+
+## The frame is the same seam again, for the third time
+
+Step one needs `delta_actrec` to grow, since it carries two references, and it is the first member of `delta_rule_block` -- the 192 bytes a rule hands the machine on the way in. Whether that may grow at all comes down to what else is in a rule's frame, and the generated C answers it plainly:
+
+```c
+typedef struct {
+    unsigned char pad0[192];
+    unsigned char s132[4];
+    ...
+} f_homog_roots;
+static int32_t evv_homog_roots(void *state, const int32_t *args, int nargs)
+{
+    unsigned char *frame = evv_frame_push(DELTA_RULE_FRAME_MAX);
+    unsigned char *base  = frame + 324;
+```
+
+The block is the leading `pad0[192]` and the rule's own locals begin after it. So growing the block would land on `s132` -- if any of those numbers were fixed. None of them is: the decompiler writes the struct, the frame size, and the `FRAME_REC(-324)` the block is addressed by, all in one pass. What is IBM's is where a local sits *relative to base*, because that is what the rules' text says; the block's size is ours.
+
+Which makes the frame the same arithmetic as the state, and the same as the cells before it:
+
+    frame size = sizeof(delta_rule_block) + (IBM's frame size - 192)
+
+exactly as `DELTA_STATE_BYTES(n)` is `DG_BASE + (n - DG_BASE_IBM)`. Three places now where a number is IBM's plus a delta that is ours: the cell offsets, the state's size, and a rule's frame. That is the shape of this whole conversion and it is worth recognising on sight -- anything that mixes the two in one constant is the next bug.
+
+So step one is: let the block grow, have the decompiler take the leading pad and the frame size from `sizeof(delta_rule_block)`, re-derive the three block assertions, and retype the references that are declared `int32_t`. The i686 gate holds the lot to a no-op, since `intptr_t` is `int32_t` there.
+
+### Except the frame is not a shift, and the reason is worth having
+
+The arithmetic above is right and the assumption under it was not. A rule's block is not always at the start of its frame: over English's 849 rules the block sits at frame zero 789 times and somewhere else 232 times, and a rule may hand the machine blocks at several places. Worse, **694 of the rules' own named slots fall inside a block's 192 bytes, across 321 rules.** So growing the block in place would change which bytes are the block while the rule went on reaching the old ones.
+
+What is actually happening there is better than it looks. Take `homog_roots`: its block sits at frame 100, and it has a slot `s132` at frame 192 -- which is block plus 92, which is `landing`. And the rule's use of it is `(int32_t)(intptr_t)&fp->s132`, the address of its own landing buffer, handed to the machine. That is the `ENTER` mechanism, and the decompiler is naming the same bytes twice: once as `FRAME_JB(-224)`, which follows the struct through `offsetof`, and once as `fp->s132`, which does not.
+
+So the fix is not to move the block or to hold `delta_actrec` narrow. It is the same move as the cell offsets and the state's size: a slot that coincides with a block field *is* that block field, and should be emitted as one. Then `sizeof(delta_rule_block)` may be whatever the host makes it and every reach follows.
+
+`delta_actrec` carries four references -- `back` at 0x1c, `top` at 0x20, `vbot` at 0x24, `err_jmp` at 0x2c -- all inside the 92 bytes before `landing`, so any of them widening moves `landing` and every one of those 694 slots with it. Which is why this has to be done before step one and not after.
+
+The care it needs: a rule with blocks at two positions has slots that could fall inside either, and those are ambiguous. Count them before assuming they are rare.
