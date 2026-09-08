@@ -1,0 +1,37 @@
+# English's vowels, as the engine says them.
+#
+# Measured, not read. Each vowel is spoken on its own as a pronunciation
+# annotation and what the synthesiser was told is written down:
+# tools/measure/phonetargets.py takes the steady values,
+# tools/measure/replay.py holds this table against the engine again.
+#
+# Every vowel shares these, so they are said once:
+#
+shared oq=56 tl=0 di=0 ah=34 af=0 b2=100 b3=150 f4=3600 b4=330 f5=3900
+shared b5=260 fnz=200 a1f=0 a2f=0 a3f=0 a4f=0 a5f=0 ab=0
+#
+# And a vowel is eight numbers. Two formant targets and the fraction of
+# its length it holds the first before gliding to the second -- which is
+# how a diphthong and a monophthong come out of one shape rather than two:
+# hold a hundred per cent and the second target never arrives.
+#
+# ms is what a stressed vowel alone was given. av is its voicing, and b1
+# is the first bandwidth, which only two of them move.
+#
+vowel   ms  hold   f1a  f2a  f3a    f1b  f2b  f3b   av  b1
+i      265  100%   270 2190 2800    270 2190 2800   55 120
+I      250    2%   380 1800 2480    440 1650 2480   57 120
+e      305    1%   470 1800 2480    350 2000 2430   55 120
+E      275  100%   570 1650 2480    570 1650 2480   54 120
+A      325  100%   750 1650 2410    750 1650 2410   49 120
+a      325  100%   750 1200 2440    750 1200 2440   50 120
+u      265    1%   270 1200 2340    270  870 2340   59 120
+U      250  100%   440 1150 2300    440 1150 2300   57 120
+o      305    1%   550 1100 2400    400  850 2400   56 120
+c      325  100%   700 1050 2410    700 1050 2410   52 200
+Y      295    1%   750 1200 2440    400 1850 2400   50 120
+W      325    1%   750 1400 2410    550  900 2200   50 120
+O      295   61%   480  900 2440    400 1800 2350   56 200
+X      240  100%   400 1600 2550    400 1600 2550   53 120
+H      275  100%   600 1300 2500    600 1300 2500   54 120
+x      240    2%   550 1300 2450    550 1300 2550   52 120
