@@ -560,3 +560,17 @@ The named voice parameter path is not the cause. Crossing its producer, its thre
 Nor is the allocator redirection, tried earlier and already corrected above.
 
 What the evidence points at instead is heap damage done earlier and paid for at `api_delete`: a wild free or a stale pointer that a low region made harmless because a truncated address was still the right address. `ed_dtor` reading a vtable through `e->engine` is where it surfaces, not where it is caused.
+
+### The trail on the teardown crash, as far as it goes
+
+For whoever picks this up. Map high by dropping the `< 0x80000000` test in `arena_map` and the address search in `evv_arena_open`; the copy that does it is kept as `scratchpad/keep-arena-high.c`.
+
+The crash is `ed_dtor` at `ENGINE_CALL(e->engine, VS_CLOSE)`, which reads a vtable through `e->engine`. Chasing that pointer back:
+
+`e->engine` is filled by `ed_ctor` calling `e->factory(OBJ_ENGINE, &e->engine)`, which is `getObject` in `eci_dllobj.c`, which does `cpp_new(ew_bytes)` and `ew_ctor(p)`. So it is an ordinary pointer to arena memory. `ew_ctor` sets `vt` to `&vtbl_enginewrapper`, a program address, and `machine` to `delta_new()`. Every field in that path is a real pointer and none of it goes through the crossing.
+
+**And the arena guard says nothing.** Built with `-DEVV_ARENA_GUARD=1` and run high, it reports no overrun and no wild free, and the process still dies. So it is not damage of the kind the guard watches for.
+
+Which leaves the pointer itself being wrong, or something writing over `EngineData` -- it is a record IBM reached by offset, so a stray write at +0x0c is the shape to look for. That is where the trail stops.
+
+One caution for the next attempt, learned twice today: the object directory is keyed on the rules form and the language set but **not on `OPT` or `CFLAGS`**, so a guard build or a `-O0` build leaves objects that the next ordinary build reuses. Touch the sources after either.
