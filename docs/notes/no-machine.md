@@ -446,3 +446,17 @@ The four crashes before that point were all real and all the same kind -- a refe
 `VARS_1128` in `eci_deltamisc.c` cast `d->vars` straight to `char *`. `CLRONESTM((delta_node *)(intptr_t)t)` and 496 other casts of the shape `(T *)(intptr_t)x`. `*(int32_t *)p` inside `VRSYNC` and `VLSYNC`, with no intermediate cast at all, which no grep for a cast shape can find. And the generated shim, `delta_run_rule((void *)(intptr_t)a0, ...)`, which survived every sweep of `src` because it is written by `tools/rules/emit.py` rather than kept in the tree.
 
 So the crossing is the thing that decides this, and the plan is the earlier one with a reason attached: **real pointers everywhere the rules cannot see, and offsets only in the six fields of `delta_actrec` that they can.** Then `W` becomes the identity rather than a decision, because a register holds a pointer and a number is a number. The patch for the abandoned attempt is kept out of tree; nothing of it is wanted except the knowledge of where it broke.
+
+## What actually stands between here and no arena: 158 signatures
+
+The single crossing is the whole problem, and it has a shape now.
+
+`W(x)` in `src/delta/delta_rules.c` is applied to every argument a rule pushes, and it cannot tell a reference from a number. Today it does not have to: a reference *is* an address. Any scheme that makes a reference something other than an address -- an offset, an index, anything -- has to put that distinction somewhere, and the only place it can live is the entry's own signature. `delta_direct_1` calls `((I1)delta_rule_entry[which])(W(a0))`, and `I1` is `evv_word (*)(evv_word)`, which has thrown the types away.
+
+So the last piece is typed entries, and it is smaller than the table suggests. English's `delta_rule_entry` has 3,500 slots, but 3,341 of them are the module's own rules, which go through `delta_run_rule` and are already handled by the shim. **The machine's own entries number 158.** Of those, 156 are declared in `src` with their real C signatures and the other two are `memcpy` and `memset`.
+
+That is the job: read the 158 declarations, and for each emit a wrapper that converts the arguments the declaration says are pointers and leaves the rest alone. Then `W` is gone -- not made cleverer, gone, because each entry converts what it knows it has -- and a reference need not be an address, and the region can be mapped wherever the system likes.
+
+Two things to get right when doing it. The arguments arrive in the reverse of the order the entry takes them, which `delta_call_N` already knows and a generator must not forget. And this is the hot path: two and a half million rule entries in a run, which is why `delta_run_rule` was made to read the language in force once and hold it, so a wrapper per entry must not undo that.
+
+It is also, and not by coincidence, exactly what the no-machine endgame needs. An entry that declares its arguments is the difference between a machine calling numbered primitives and a program calling functions.
