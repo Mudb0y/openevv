@@ -199,11 +199,19 @@ class EngineTest {
 		)
 	}
 
-	/** Android's speech rate and pitch are percentages of normal, and normal is
-	 *  the voice as it stands. A hundred per cent has to change nothing. */
+	/**
+	 * Android's speech rate and pitch are percentages of normal, and normal is
+	 * the voice as it stands. A hundred per cent has to change nothing.
+	 *
+	 * The doubled rate is heard rather than read back out of the voice, because
+	 * neither goes into the voice any more: both are sent in front of the words
+	 * for the reason Prosody gives. So the voice standing still under an ask is
+	 * part of what this says now rather than something it works around.
+	 */
 	@Test
 	fun aRateOfOneHundredPerCentChangesNothing() {
 		val e = open()
+		e.setSampleRate(11025)
 		e.applyVoice(0)
 		val speed = e.getVoiceParam(Eci.VOICE_SPEED)
 		val pitch = e.getVoiceParam(Eci.VOICE_PITCH_BASELINE)
@@ -211,8 +219,10 @@ class EngineTest {
 		e.setPitchPercent(100)
 		assertEquals("the speed moved", speed, e.getVoiceParam(Eci.VOICE_SPEED))
 		assertEquals("the pitch moved", pitch, e.getVoiceParam(Eci.VOICE_PITCH_BASELINE))
+		val ordinary = collect(e, SENTENCE).size
 		e.setRatePercent(200)
-		assertTrue("a doubled rate did nothing", e.getVoiceParam(Eci.VOICE_SPEED) > speed)
+		val quicker = collect(e, SENTENCE).size
+		assertTrue("a doubled rate did nothing: $quicker against $ordinary", quicker < ordinary)
 	}
 
 	/** A Latin-1 character is in the engine's own code set and goes straight

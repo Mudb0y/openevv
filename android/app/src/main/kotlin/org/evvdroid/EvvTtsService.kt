@@ -150,8 +150,10 @@ class EvvTtsService : TextToSpeechService() {
 		target.setSampleRate(s.sampleRateHz)
 		target.setAbbreviations(s.abbreviations)
 		loadDictionaries(target, s)
-		target.applyVoice(s.voice, s.shape(s.voice))
-		appliedRevision = s.revision
+		// A voice is written, so the engine can refuse it while it is speaking.
+		// One that did not land is left unrecorded and asked for again at the
+		// next utterance rather than believed.
+		if (target.applyVoice(s.voice, s.shape(s.voice))) appliedRevision = s.revision
 	}
 
 	/** Teaching three thousand words costs about half a second, so it happens

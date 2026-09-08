@@ -24,8 +24,11 @@ class EvvEngine private constructor(private var handle: Long, val language: Int)
 	private var baseSpeed = -1
 	private var basePitch = -1
 
-	private var currentRate = -1
-	private var currentPitch = -1
+	/** What the rate and pitch last asked for come to in the engine's own
+	 *  numbers, sent in front of every utterance. Below nought until a voice
+	 *  has been applied, when there is no base to scale them onto. */
+	private var wantSpeed = -1
+	private var wantPitch = -1
 
 	companion object {
 		private const val TAG = "evvdroid"
@@ -109,43 +112,52 @@ class EvvEngine private constructor(private var handle: Long, val language: Int)
 	 * preset had, which is why an empty map is the right thing to pass when
 	 * nobody has chosen otherwise.
 	 */
-	fun applyVoice(index: Int, shape: Map<Int, Int> = emptyMap()) = synchronized(guard) {
-		if (closed) return
+	fun applyVoice(index: Int, shape: Map<Int, Int> = emptyMap()): Boolean = synchronized(guard) {
+		if (closed) return false
 		val preset = (index + Eci.FIRST_PRESET).coerceIn(Eci.FIRST_PRESET, Eci.LAST_PRESET)
-		EvvNative.copyVoice(handle, preset, Eci.SCRATCH_VOICE)
+		// A voice is written rather than annotated, so it can be refused: the
+		// engine takes nothing while it is speaking, and answers nought for a
+		// copy and -1 for a parameter when it does. Saying so is what lets the
+		// caller ask again rather than believe a voice is in force that never
+		// arrived.
+		if (EvvNative.copyVoice(handle, preset, Eci.SCRATCH_VOICE) == 0) return false
 		// The preset's own speed is not kept. Two of the eight ship faster than
 		// the rest, so leaving it would make changing voice change the pace.
-		EvvNative.setVoiceParam(
-			handle, Eci.SCRATCH_VOICE, Eci.VOICE_SPEED,
-			shape[Eci.VOICE_SPEED] ?: Eci.DEFAULT_SPEED
-		)
+		if (EvvNative.setVoiceParam(
+				handle, Eci.SCRATCH_VOICE, Eci.VOICE_SPEED,
+				shape[Eci.VOICE_SPEED] ?: Eci.DEFAULT_SPEED
+			) < 0
+		) return false
 		for ((param, value) in shape) {
-			EvvNative.setVoiceParam(handle, Eci.SCRATCH_VOICE, param, Eci.clampVoice(param, value))
+			if (EvvNative.setVoiceParam(
+					handle, Eci.SCRATCH_VOICE, param, Eci.clampVoice(param, value)
+				) < 0
+			) return false
 		}
-		EvvNative.copyVoice(handle, Eci.SCRATCH_VOICE, Eci.VOICE_CURRENT)
+		if (EvvNative.copyVoice(handle, Eci.SCRATCH_VOICE, Eci.VOICE_CURRENT) == 0) return false
+		// Reading is never refused, only writing, so these are what the engine
+		// really has.
 		baseSpeed = EvvNative.getVoiceParam(handle, Eci.VOICE_CURRENT, Eci.VOICE_SPEED)
 		basePitch = EvvNative.getVoiceParam(handle, Eci.VOICE_CURRENT, Eci.VOICE_PITCH_BASELINE)
-		currentRate = -1
-		currentPitch = -1
+		wantSpeed = baseSpeed
+		wantPitch = basePitch
+		return true
 	}
 
 	/** Android hands rate and pitch over as a percentage of normal, where the
 	 *  engine wants its own numbers. Normal is the voice as [applyVoice] left
-	 *  it, so 100% changes nothing. */
+	 *  it, so 100% changes nothing. Neither is written: [speak] sends both in
+	 *  front of the words, for the reason [Prosody] gives. */
 	fun setRatePercent(percent: Int) = synchronized(guard) {
-		if (closed || percent == currentRate || baseSpeed < 0) return
+		if (closed || baseSpeed < 0) return
 		// Not baseSpeed * percent. The engine's speed scale is nothing like
 		// linear in how fast it speaks, so SpeechRate does the conversion.
-		val want = SpeechRate.speedForPercent(baseSpeed, percent)
-		EvvNative.setVoiceParam(handle, Eci.VOICE_CURRENT, Eci.VOICE_SPEED, want)
-		currentRate = percent
+		wantSpeed = SpeechRate.speedForPercent(baseSpeed, percent)
 	}
 
 	fun setPitchPercent(percent: Int) = synchronized(guard) {
-		if (closed || percent == currentPitch || basePitch < 0) return
-		val want = (basePitch.toLong() * percent / 100).toInt().coerceIn(0, Eci.PERCENT_MAX)
-		EvvNative.setVoiceParam(handle, Eci.VOICE_CURRENT, Eci.VOICE_PITCH_BASELINE, want)
-		currentPitch = percent
+		if (closed || basePitch < 0) return
+		wantPitch = (basePitch.toLong() * percent / 100).toInt().coerceIn(0, Eci.PERCENT_MAX)
 	}
 
 	fun getVoiceParam(param: Int): Int = synchronized(guard) {
@@ -171,9 +183,14 @@ class EvvEngine private constructor(private var handle: Long, val language: Int)
 		if (!closed) EvvNative.forgetDictionaries(handle)
 	}
 
-	/** Queues [text] and starts the engine. The samples come out of [read]. */
+	/** Queues [text] and starts the engine. The samples come out of [read].
+	 *  The rate and pitch asked for go in front of the words rather than into
+	 *  the voice, so that an utterance carries its own and nothing is left to
+	 *  be refused. */
 	fun speak(text: String): Boolean = synchronized(guard) {
-		if (closed) false else EvvNative.speak(handle, WesternText.encode(text))
+		if (closed) return false
+		val ask = if (wantSpeed >= 0 && wantPitch >= 0) Prosody.voice(wantSpeed, wantPitch) else ""
+		return EvvNative.speak(handle, WesternText.encode(ask + text))
 	}
 
 	/** Bytes of PCM, blocking until there are some. 0 ends the utterance and
