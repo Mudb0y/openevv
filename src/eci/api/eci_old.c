@@ -323,10 +323,20 @@ int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data)
     case 14: {  /* and one naming a piece of audio */
         int32_t which = msg == 13 ? ECI_STRING_INDEX : ECI_AUDIO_INDEX;
 
-        /* The name arrives as a reference and leaves as an address: what
-           follows hands it to the caller's own callback, which is outside
-           the engine and knows nothing of the region, and frees it. */
-        param = (int32_t)(intptr_t)EVV_AT(char *, param);
+        /* The name arrives as a reference into the region, and the caller's
+           callback takes `int param' -- IBM's shape, and a pointer has to fit
+           in it. So it is copied into the little low region, which is the one
+           thing in the engine that still has to be addressable in thirty-two
+           bits, and the copy is what goes across. The original goes back to
+           the region it came from either way. */
+        {
+            char *name = EVV_AT(char *, param);
+            char *low  = name ? evv_low_strdup(name) : 0;
+
+            if (name != 0)
+                free(name);
+            param = (int32_t)(intptr_t)low;
+        }
 
         /* The name was copied for the caller and is ours to give back.
            A caller that says it took the name keeps it; one that does not,
@@ -334,12 +344,12 @@ int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data)
         if (h && OI_CALLBACK(h)) {
             if (eo_tell(h, inst, which, param, &ret) == CALLER_TOOK
                 && param) {
-                free((void *)(size_t)param);
+                evv_low_free((void *)(size_t)param);
                 param = 0;
             }
             OI_LASTINDEX(h) = param;
         } else if (param) {
-            free((void *)(size_t)param);
+            evv_low_free((void *)(size_t)param);
             param = 0;
         }
         break;

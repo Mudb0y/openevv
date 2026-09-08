@@ -66,6 +66,23 @@ void  evv_arena_free(void *p);
 char *evv_arena_strdup(const char *s);
 #define strdup(s)       evv_arena_strdup(s)
 
+/* A string the caller is handed through a thirty-two bit parameter.
+
+   ECICallback in include/eci.h takes `int param', and for a string index mark
+   that int is a pointer to the name. IBM wrote it for a machine where the two
+   were one thing. So the name -- and only the name -- has to live somewhere a
+   thirty-two bit value can still say, which is what this small region is for.
+   Everything else the engine allocates is reached by a distance from its own
+   base and may sit anywhere at all.
+
+   A few short strings at a time, freed as soon as the callback has had them,
+   so a page or two and a free list is the whole of it. Answers nought where
+   there is no room, and the caller gets no name rather than a wrong
+   pointer. */
+char *evv_low_strdup(const char *s);
+void  evv_low_free(void *p);
+#define EVV_HAVE_LOW 1
+
 /* Turning a pointer into a value the machine can hold. Everything the machine
    can hold a pointer to comes out of the arena: the heap, the frames, and the
    language's own data, which src/delta/delta_low.c copies out of the program at
@@ -121,6 +138,12 @@ static inline void *evv_at(int32_t r)
 
 #define evv_arena_alloc(n)  malloc(n)
 #define evv_arena_free(p)   free(p)
+
+/* And no little low region either: where a pointer is four bytes wide it
+   already fits in the parameter ECICallback hands the caller, so the copy
+   the sixty-four bit build makes is an ordinary one here. */
+#define evv_low_strdup(s)   strdup(s)
+#define evv_low_free(p)     free(p)
 
 #endif
 
