@@ -344,3 +344,21 @@ Return types: `peekDeltaStackNext` is declared `int32_t` and returns `at`, which
 That last group is the reassuring one, because a narrowing at a `return` is exactly what `-Wconversion` reports. So the sieve covers all three categories and there is no need to find them by hand -- which is just as well, since the local case cannot be found by hand.
 
 What this changes about step one is its size, not its shape. It is a sieve, a list, and a pass of retyping, and the i686 gate holds it to a no-op throughout.
+
+## Eleven thousand frozen offsets nobody had looked for
+
+Widening the type to run the sieve turned up the largest thing standing in the way, and it was not in the value path at all.
+
+`GLOBAL_AT` names the address of a cell taken through a register that holds the state, and `GLOBAL` names a reach through one. Both were done and counted. But where the state is the rule's own parameter rather than something in a register, the decompiler emitted `FIELD(288)` for an address and `FLD(int16_t, 2562)` for a reach -- a frozen byte offset into the cell area, and no analysis had ever been asked for because none is needed to see that the operand says "the state".
+
+Over the ten languages that is 5,220 addresses and 5,916 reaches. Every one of them would have named the wrong variable the moment `DG_BASE` moved, which is precisely what widening a reference does. None of it was visible while the layout could not move, and the seam is what made it findable.
+
+The fix wanted no analysis, which is why it had been so easy to leave: the operand gives the offset, `variable_at` names it, and the address is the same address. `FIELD(0)` stays as it is, being the state itself and not a cell -- 10,524 sites in English alone. Every language now reports zero of both kinds.
+
+Proved live by an isolated sabotage of the new emission alone: offset it by four and every English case moves. An earlier attempt sabotaged the macro and caught `GLOBAL_D` with it, which proved something broader and therefore nothing.
+
+### And it flushed out a bug of its own
+
+`NATURAL` in the decompiler says what width an operand already is, so a comparison need not widen it again. Its `GLOBAL` entry asked for capture group two while the pattern held one group, and `GLOBAL_D` was not in the table at all. Neither had ever mattered: a `GLOBAL` could only appear after `direct_tests` had run, so the entry was never reached. Naming the state's own offsets emits one before it, and the build stopped with `IndexError: no such group`.
+
+That is twice in a day that making something layout-independent has flushed out a bug that was unreachable while the code was layout-dependent -- the cell walk being the first. Worth expecting a third.

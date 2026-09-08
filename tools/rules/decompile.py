@@ -155,10 +155,39 @@ class Rule:
         if kind == 'slotaddr':
             return 'SLOT(%d)' % val
         if kind == 'state':
+            # The address of one of the language's own variables, where the
+            # state is the parameter rather than something in a register. No
+            # analysis is wanted for these: the operand says the state, so the
+            # offset is a cell and variable_at names it outright. GLOBAL_AT
+            # covered only the ones reached through a register, which is why
+            # five thousand of these stayed raw and would have pinned the cell
+            # layout the moment DG_BASE moved.
+            if val:
+                got = variable_at(val)
+                if got is not None:
+                    USED.add(got[0])
+                    FIELDED[0] += 1
+                    return 'GLOBAL_AT(state, %s, %d)' % (got[0], got[1])
             return 'FIELD(%d)' % val
         if kind == 'slot':
             return self.at('base + %d' % val, width, signed)
         if kind == 'statefld':
+            # A reach into the state at an offset the operand gives outright,
+            # so no analysis is wanted: it is a cell and variable_at names it.
+            # The same gap FIELD had -- GLOBAL covered the reaches through a
+            # register and left these, and they pin the cell layout just as
+            # hard.
+            got = variable_at(val)
+            if got is not None:
+                t = {1: 'int8_t', 2: 'int16_t', 4: 'int32_t'}[width]
+                if not signed:
+                    t = 'u' + t
+                USED.add(got[0])
+                FLDED[0] += 1
+                if got[1]:
+                    return '(int32_t)GLOBAL_D(%s, state, %s, %d)' % (
+                        t, got[0], got[1])
+                return '(int32_t)GLOBAL(%s, state, %s)' % (t, got[0])
             return self.at('(unsigned char *)state + %d' % val, width, signed)
         if kind.startswith('ind('):
             inner, disp = val
@@ -196,6 +225,14 @@ class Rule:
         if kind == 'slot':
             return 'AT(%s, %d)' % (t, val), width
         if kind == 'statefld':
+            got = variable_at(val)
+            if got is not None:
+                USED.add(got[0])
+                FLDED[0] += 1
+                if got[1]:
+                    return ('GLOBAL_D(%s, state, %s, %d)'
+                            % (t, got[0], got[1])), width
+                return 'GLOBAL(%s, state, %s)' % (t, got[0]), width
             return 'FLD(%s, %d)' % (t, val), width
         if kind.startswith('ind('):
             inner, disp = val
@@ -1238,6 +1275,8 @@ BLOCKED = [0]
 RECORDED = [0]
 STEPPED = [0]
 MAYBED = [0]
+FIELDED = [0]
+FLDED = [0]
 ADDR_RE = re.compile(r'\(\(int32_t\)\((r[0-7]) \+ \((-?\d+)\)\)\)')
 
 
@@ -2595,7 +2634,12 @@ def _operands(text):
 
 NATURAL = (
     (re.compile(r'^(AT|FLD)\((u?int(?:8|16|32)_t),'), 2),
-    (re.compile(r'^GLOBAL\((u?int(?:8|16|32)_t),'), 2),
+    # GLOBAL and its two variants, which say a width the same way AT and
+    # FLD do. This asked for group two while matching only one, which
+    # went unnoticed for as long as a GLOBAL could only appear after
+    # direct_tests had already run; naming the state's own offsets emits
+    # one before it, and GLOBAL_D was falling through to int32_t besides.
+    (re.compile(r'^(GLOBAL|GLOBAL_D|GLOBAL_MAYBE)\((u?int(?:8|16|32)_t),'), 2),
     (re.compile(r'^PARAM\((u?int(?:8|16|32)_t),'), 2),
     (re.compile(r'^\(\*\((u?int(?:8|16|32)_t) \*\)'), 1),
     (re.compile(r'^(LOW)\(r\d\)$'), 0),
@@ -3149,6 +3193,10 @@ def main():
     if MAYBED[0]:
         print('reaches the graph cannot settle, decided when the rule runs:'
               ' %d' % MAYBED[0])
+    print("addresses of a variable taken off the state itself, said by name:"
+          ' %d' % FIELDED[0])
+    print('reaches into the state at an offset it gave outright, said by'
+          ' name: %d' % FLDED[0])
     if PROVENANCE:
         print('reaches and addresses left unnamed, numbered for the census:'
               ' %d' % len(PROV_SITES))
