@@ -294,6 +294,40 @@ void evv_arg_over(const char *who, int argn, int room);
 #define GLOBAL_AT(p, v, d) \
     ((int32_t)(intptr_t)((unsigned char *)(intptr_t)(p) + DG_##v + (d)))
 
+/* A reach the flow graph cannot settle, decided when the rule runs.
+ *
+   Almost every reach through a register can be named, because the graph can
+   say the register must hold the state there. One in the ten languages cannot:
+   `evv_pnames3' loads the state into a register, later loads one of the
+   language's own byte stores into the same register, and the reach sits under
+   a label that only the alternative dispatch jumps to -- from six hundred
+   lines below, and from after the second load. So on one path the register is
+   the state and on another it is not, and no must-analysis may name it.
+
+   Naming it anyway would be a guess, and a bad one to take on trust: the
+   979 recorded cases never reach that line at all, so the gate could not
+   catch a wrong answer. Only test/words.sh reaches it, and there the register
+   was the state 1,116 times out of 1,116.
+
+   So the rule asks. Where the pointer is the state the reach is the variable,
+   wherever the next build puts it; where it is not, it is the offset the
+   compiler emitted, which is what that path meant. Exact under both, and it
+   costs a compare on a line the cases never execute.
+
+   No sabotage proves this one, and that is not an omission. Moving the named
+   branch two bytes changes nothing in the 98 cases or the 24,318 words,
+   because the read feeds `== 1' and both the right value and a wrong one fail
+   it alike -- the site runs, as the instrumentation showed, but its value is
+   not observable from outside. Which is the whole argument for asking rather
+   than assuming: a wrong answer here would never show up. What is checked
+   instead is that the two branches name one address today, statically and
+   exactly: DG_s326 is DG_BASE + 2386, DG_BASE is 176, and the offset the
+   compiler emitted is 2562. */
+#define GLOBAL_MAYBE(t, p, v, d, raw) \
+    (*(t *)((unsigned char *)(intptr_t)(p) \
+            + (((const void *)(intptr_t)(p) == (const void *)(state)) \
+               ? (DG_##v + (d)) : (raw))))
+
 /* A reach into one of the machine's own records, said as the field it is.
  *
    A rule holds a pointer to a record and reaches into it at a byte offset,

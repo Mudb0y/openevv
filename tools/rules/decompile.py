@@ -1237,6 +1237,7 @@ VIAED = [0]
 BLOCKED = [0]
 RECORDED = [0]
 STEPPED = [0]
+MAYBED = [0]
 ADDR_RE = re.compile(r'\(\(int32_t\)\((r[0-7]) \+ \((-?\d+)\)\)\)')
 
 
@@ -2106,6 +2107,11 @@ def name_globals(flat, pbase=0, rule=None):
         if not m:
             continue
         (only if m.group(2) == '(FIELD(0))' else other).add(m.group(1))
+    # Every register the rule ever loads with the state, before the ones that
+    # are loaded with something else as well are taken back out. A register in
+    # here but not in `only' may be the state at a given line and may not be,
+    # which is what MAYBE below is for.
+    ever = set(only)
     only -= other
 
     at = state_registers(flat)
@@ -2152,9 +2158,19 @@ def name_globals(flat, pbase=0, rule=None):
                 return 'RECORD(%s, %s, %s, %s)' % (t, reg, kind, field)
             return m.group(0)
 
+        # Or the register is the state on one path and not on another, and
+        # the offset lands in a variable. Then neither answer is safe to
+        # assume and the rule decides when it runs: see GLOBAL_MAYBE.
+        base = points.get(('r', n))
+        if (base is None or base == 0) and reg in ever:
+            got = variable_at(off)
+            if got is not None:
+                seen.add(got[0])
+                MAYBED[0] += 1
+                return 'GLOBAL_MAYBE(%s, %s, %s, %d, %d)' % (
+                    t, reg, got[0], got[1], off)
         # Or the register points into the state rather than at it, and the
         # reach lands in a variable once the two are added up.
-        base = points.get(('r', n))
         if base is None or base == 0:
             return m.group(0)
         there = variable_at(base + off)
@@ -3130,6 +3146,9 @@ def main():
           ' uses' % (FRAMES[0], FRAMED[0]))
     print('reaches into the middle of a variable, said as the variable and a'
           ' step: %d' % STEPPED[0])
+    if MAYBED[0]:
+        print('reaches the graph cannot settle, decided when the rule runs:'
+              ' %d' % MAYBED[0])
     if PROVENANCE:
         print('reaches and addresses left unnamed, numbered for the census:'
               ' %d' % len(PROV_SITES))

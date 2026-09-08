@@ -278,3 +278,69 @@ A rule holding heap memory points into a segment's payload, not at its header, s
 So none of the 171 reaches at +0, +2 and +4 can be into a record that shifts, and all of them are safe under widening whether they are ever named or not. The tail is the single `r6 + 2562` site, and that one is settled by tracing what the register holds rather than by any amount of further analysis.
 
 This supersedes the correction above: naming the tail is not a prerequisite for widening. The prerequisite is one measurement.
+
+## Doing it in four steps rather than one, and why the first is free
+
+`Makefile` decides the arena on pointer size alone: `LOW := -DEVV_ARENA=1` where a pointer is eight bytes, and nothing where it is four. So a thirty-two bit build is already the no-arena configuration and already passes, which is worth more than it looks -- it means every step below can be checked on i686 as well, where it must come out a no-op.
+
+That gives a sequence where each step is provable on its own and only one of them is risky.
+
+**One: widen the type, keep the arena.** `typedef intptr_t evv_ref`, and `EVV_REF(p)` becomes `((evv_ref)(intptr_t)(p))`. On i686 `intptr_t` is `int32_t` and this is character-for-character what it compiles to today, so the 32-bit gate says nothing structural moved. On x86-64 references widen and 69 records grow, but the arena is still there, so every address still fits and nothing truncates. This isolates *records growing* from *addresses going high*, which are the two things that would otherwise fail together and be hard to tell apart.
+
+The open question in this step, and it wants answering before the edit rather than after: whether any of those 69 records overlays IBM's own module data rather than being built at run time. A record the machine fills is free to grow; a record that is a window onto bytes IBM wrote is not, and widening a field in one would read the wrong bytes. `src/delta/delta.c` already says `delta_stmt` and `delta_fielddesc` may grow because nothing compiled from a rule reaches into them, which is the shape of the argument but only for two of them.
+
+**Two: widen the value path, keep the arena.** Registers, `arg[8]`, `ARG`, `delta_call_N`, `GLOBAL_AT`, `SLOT`, `FIELD`, and the 1,124 `>> 31` shifts. Addresses are still low, so this is a pure refactor and the gate can hold it to the letter.
+
+**Three: turn the arena off.** `LOW :=` empty on sixty-four bits, and the `(uint32_t)` in `W` goes. Now an address is genuinely wide and this is where a thirty-two bit slot nobody found bites. One step, one suspect.
+
+**Four: delete it.** `src/port/evv_arena.c`, and `delta_low.c`'s copying of the language's data out of the program, which existed only so that data could be named in thirty-two bits.
+
+### Step one's open question, answered
+
+None of the records that would grow is a window onto bytes IBM wrote. The language's data in `lang/<tag>/delta_*.c` is generated C -- `dede_vstmtbl[]` is a real `delta_stmt` array, compiled against whatever the struct currently says -- so a field widening moves the data and the reader together. What `delta_low.c` copies into the arena is byte blobs, and a byte blob stays a byte blob however wide a pointer gets; the offsets into it are IBM's and no struct governs them.
+
+The casts in `src` bear this out: `delta_node` sixty-three times, then `delta_vars`, `delta_stack`, `delta_frame` and the rest, every one a record the machine builds for itself. Nothing reinterprets module bytes through a struct that carries a reference.
+
+`delta_stmt` is the instructive case. It is already allowed to grow on sixty-four bits, and not because of a reference -- it holds real host function pointers, `void *(*const *get)(void *)` and the rest, which is why `src/delta/delta.c` asserts its 0x40 size only where a pointer is four bytes. A statement's own field layout comes from the module's `length` and `stride` and is reached through those function pointers, so it is the language's business and not the struct's.
+
+### Step two, located
+
+Every edit, with where it is, so that the doing of it is mechanical.
+
+`src/port/evv_arena.h:26` -- `typedef int32_t evv_ref` becomes `intptr_t`, and the `EVV_REF` in the no-arena branch stops casting down. On i686 both are what they compile to now.
+
+`src/delta/delta_rules.c:283` -- `#define W(x) ((evv_word)(uint32_t)(x))` loses the `(uint32_t)`. That is the crossing, and it is the last line of step three rather than step two, because until the arena goes an address still fits.
+
+`src/delta/delta_rules_c.h` -- `SLOT` at 138, `FIELD` at 139 and `GLOBAL_AT` at 295 stop casting their result to `int32_t`. `ARG` at 170 and 176 stops casting its argument down, and `arg[8]` and the `delta_call_N` and `delta_direct_N` declarations from 349 take the wide type.
+
+`tools/rules/decompile.py:338` -- `r2 = r0 >> 31` becomes `(int32_t)r0 >> 31`. One line, for the `cltd` opcode, and the only uncast arithmetic on a register in any of the ten languages. Everything around it is already explicit: the divide below it reads `((int64_t)r2 << 32) | (uint32_t)r0` and casts both results to `int32_t`, so it stays right on a wide register without being touched.
+
+The register declaration the decompiler emits, and `int32_t arg[8]` beside it, take the wide type in the same pass.
+
+### Three references that are not declared as references, and the flag that will not catch them
+
+Reading for step one turned up what the plan had missed: places where a reference is held in something declared `int32_t`, which therefore does not widen with the type and truncates in silence.
+
+`delta_tpos.node`, at +0x00 of the sixteen bytes a rule's two pointer registers are. Twenty-five sites assign `EVV_REF` into it -- `d->lpta.node`, `p->node = EVV_REF(rmost(...))` -- and it is read back as `(int32_t *)(intptr_t)p->node`, a pointer taken out through a thirty-two bit field. `src/delta/delta.c` holds `delta_tpos` to sixteen bytes unconditionally, on the grounds that the rules reach into all of it, so widening `node` grows it to twenty-four and that assertion has to be re-derived -- the same stale-not-wrong case as `delta_actrec`.
+
+The generate record's `value` at +0x00, "the frame", assigned from `EVV_REF(getDeltaStackVBot(d))` in two places. This one already has an `evv_ref params` at +0x08, so the record is half converted and nobody noticed the other half.
+
+And a local: `int32_t stop = l->node` in `src/delta/delta.c:1496`, which then round-trips through `(delta_node *)(intptr_t)stop`. So it is not only fields. Locals of this shape cannot be enumerated by grepping for a type.
+
+**The warning that is already on does not cover this.** `WARN` in the `Makefile` carries `-Werror=int-conversion`, and its comment says a narrowed field assigned from a pointer was the whole of what went wrong in the sixty-four bit port. That catches pointer against integer. It does not catch integer against integer, and `int32_t stop = l->node` with `node` widened is exactly that: a `long` narrowed to an `int`, which GCC only mentions under `-Wconversion`.
+
+So step one's method is a build with `-Wconversion` added, and the output filtered to the narrowings whose source is pointer-width. Turning `-Wconversion` on for good is not on: this is transcribed code and it narrows int to short constantly and deliberately. It is a sieve to run once per step, not a flag to keep.
+
+### And it is a category, not three sites
+
+Pushing the same reading further, the shape is broader than fields. A reference held in something declared `int32_t` turns up in three places, and only the first can be found by grepping for a type.
+
+Fields: `delta_tpos.node`, the generate record's `value`, and any other that reading has not reached yet.
+
+Locals: `int32_t stop = l->node` in `delta.c:1496`, `int32_t at = s->walk` in `delta_heap.c:269`. The second walks the stack's records and hands the reference back out, so it is not a scratch copy.
+
+Return types: `peekDeltaStackNext` is declared `int32_t` and returns `at`, which is a reference; `peekDeltaStackStart` returns `s->walk`; and five sites across `src` say `return EVV_REF(...)` from a function declared `int32_t`, in `delta_heap.c`, `delta.c`, `eci_phonemes.c`, `eci_deltacb.c` and `eci_hash.c`.
+
+That last group is the reassuring one, because a narrowing at a `return` is exactly what `-Wconversion` reports. So the sieve covers all three categories and there is no need to find them by hand -- which is just as well, since the local case cannot be found by hand.
+
+What this changes about step one is its size, not its shape. It is a sieve, a list, and a pass of retyping, and the i686 gate holds it to a no-op throughout.
