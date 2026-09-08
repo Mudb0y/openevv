@@ -505,6 +505,12 @@ What fixed the bulk was not another archaeological find but a C mistake of my ow
 
 The 7 that remain are all one thing: a named or symbolic voice setting, through the annotation and SSML path. `tf_annotations` does `*value = (uint32_t)(size_t)strdup(name)` and hands a pointer through a thirty-two bit parameter, and `es_setParam` reads it back. That much is straightforward. What is not is that **the same `*value` carries a plain number in other cases** -- an index mark's number, which `et_createIndexElement` stores in a `char *` as a tagged placeholder -- so every consumer reads it by its own convention.
 
-Converting one side alone makes it worse, and that is measured rather than assumed: crossing the `strdup` producer without every consumer took the count from 8 to 15 and broke the index marks that had been passing. So this last piece is not point fixes but a consistent pass over one API layer's conventions, deciding for each `int32_t` parameter whether it carries a pointer or a number and saying so.
+Converting it makes things worse, and that is measured rather than assumed. Three attempts, each from seven cases:
+
+Crossing the producer and the three consumers in `setVoice`: twelve. Crossing those and the `free` in `eci_textfilter.c` that owns the string: twelve. And crossing all four while keeping that file on the C library's allocator, on the theory that including `evv_arena.h` had silently redirected its `malloc` and `free`: twelve again. **So the redirection was not the cause and that theory is wrong** -- worth saying plainly, because the guard I added to `evv_arena.h` for it was reverted with the rest and nothing about it should be believed.
+
+`ANN_SPEED_S` is 0x1e, which is voice parameter 30, so the annotation and the API call really do land on the same `setVoice` case; the identification is right and the crossing of it is still wrong somewhere. What has not been chased is `st_changeSpeedString`, which takes the raw value onward past the copy, and where that value is read after that.
+
+So the last piece is not point fixes. It is an audit of one API layer's convention -- for each `int32_t` parameter, whether it carries a pointer or a number -- and until that is done, moving one site is as likely to move five more.
 
 Everything below that layer -- the machine, the rules, the dictionary, the annotations as phonemes, the synthesiser -- works with references as distances.
