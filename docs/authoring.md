@@ -104,7 +104,29 @@ The clamp inside the `min` is the hold. A segment written `42:700/20` reaches 70
 
 And the truncation is the whole of the arithmetic. `int` towards nought, as C converts, which makes a falling parameter appear to round up and a rising one down: 470 less 2.5 is 468 because `int(-2.5)` is -2, while 1800 plus 4.17 is 1804. No rounding rule reproduces both.
 
-### What the table does not yet say
+### All twenty-six consonants reproduce byte for byte too
+
+A consonant cannot be measured on its own. Asked for one, the engine spells the letter out and hands back four hundred live frames of it, so each is measured in a carrier -- between two /a/ -- and `lang/measured/enus-consonants.txt` holds all twenty-six. With the sixteen vowels that is 42 of 42 cases reproducing every one of the sixty parameters of every frame. Two sabotages on the consonant table prove it, one moving a locus by a single hertz and one lying about a frame count.
+
+The carrier shows the structure the format was hoping for. In `ama` the first /a/ holds its targets to frame 30, six frames carry every parameter to the /m/, the /m/ holds from 36 to 46, and six more carry it out. Aspiration goes to nought through the nasal and voicing *rises*, from 49 to 52, which is a real thing about nasals and not an artefact. So a consonant is a locus and two transitions, exactly as expected.
+
+### But the locus is coarticulated, so a consonant is not yet a thing you can place
+
+The expectation was that the locus belongs to the consonant and the transition to the pair. It does not. /m/ measured in three carriers:
+
+Between two /a/, its f2 holds flat at 1000 and its f1 at 300.
+
+Between two /i/, its f2 runs 1300 to 1400 across the hold and its f1 sits at 250.
+
+Between two /u/, its f2 runs 850 to 1000 and its f1 again 250.
+
+Three different loci for one consonant, and the hold is not even flat in two of them. No single stored pair of numbers produces all three. A weighted blend of the consonant's own target with the neighbouring vowel's does not either: fitting the weight to the /a/ and /i/ cases gives 0.303 and a target of 913, and the /u/ case then wants 841.
+
+**So these forty-two tables are forty-two utterances, not forty-two phonemes.** They reproduce what the engine said, exactly, which is what makes them a foundation; what they do not yet do is compose. Placing /m/ between an /e/ and an /o/ is not something this table can answer, and until it can, there is no front end.
+
+That is the next thing to measure and the shape of it is clear. The corpus needed is every consonant against every vowel on both sides, which at sixteen vowels and twenty-six consonants is a few thousand carriers at about a second each -- an hour of measurement, not a research project. What comes out of it is either a rule that predicts the locus from the neighbours, or the discovery that the engine holds a table of transitions and the honest thing is to hold one too. Either answer is progress, and the measurement distinguishes them.
+
+### What the tables do not yet say
 
 The breakpoints are absolute frame numbers at the one duration each vowel was measured at, five milliseconds a frame. What the engine does with a shorter or longer vowel is unmeasured, and until it is, this table describes sixteen utterances rather than sixteen vowels. That is the next thing to measure and it is cheap: the annotation carries a duration, so the same vowel at several lengths answers it.
 

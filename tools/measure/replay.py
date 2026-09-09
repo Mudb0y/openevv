@@ -6,13 +6,13 @@ producing it is that the comparison is exact: same text, same parameter
 frames, and the audio is identical because the synthesiser below is unchanged.
 No ear, no alignment, no judgement.
 
-So this reads `lang/measured/enus-vowels.txt', builds the frames one held
-vowel wants, and compares them against what the engine actually gave
-KlattSynth for the same vowel. What it does not model is f0, which is the
-intonation and moves over an utterance rather than belonging to the vowel; the
-table says so and this excludes it from the comparison rather than pretending.
+So this reads every `lang/measured/enus-*.txt' table, builds the frames each
+case wants, and compares them against what the engine actually gave KlattSynth
+for the same text. What it does not model is f0, which is the intonation and
+moves over an utterance rather than belonging to a phoneme; the tables say so
+and this excludes it from the comparison rather than pretending.
 
-    tools/measure/replay.py <probe> [vowel]...
+    tools/measure/replay.py <probe> [name]...
 """
 
 import collections
@@ -45,10 +45,10 @@ def table(path):
             for kv in parts[1:]:
                 k, v = kv.split("=")
                 shared[k] = int(v)
-        elif parts[0] == "vowel":
-            head = dict(kv.split("=") for kv in parts[2:])
+        elif parts[0] == "phone":
+            head = dict(kv.split("=", 1) for kv in parts[2:])
             cur = {"name": parts[1], "still": {}, "track": {},
-                   "frames": int(head["frames"]), "ms": int(head["ms"])}
+                   "frames": int(head["frames"]), "text": head["text"]}
             phones[parts[1]] = cur
         elif parts[0] == "still":
             cur["still"][parts[1]] = int(parts[2])
@@ -130,17 +130,33 @@ def main(argv):
         sys.stderr.write(__doc__)
         return 2
     probe = argv[1]
-    shared, phones = table(os.path.join(ROOT, "lang", "measured",
-                                        "enus-vowels.txt"))
-    want = argv[2:] or list(phones)
+    here = os.path.join(ROOT, "lang", "measured")
+    tables = [("vowels", "enus-vowels.txt"),
+              ("consonants", "enus-consonants.txt")]
     idx = {n: i for i, n in enumerate(NAMES)}
+    total = good = 0
+    for what, fname in tables:
+        path = os.path.join(here, fname)
+        if not os.path.exists(path):
+            continue
+        shared, phones = table(path)
+        want = [a for a in argv[2:] if a in phones] or (
+            list(phones) if not argv[2:] else [])
+        if not want:
+            continue
+        print("--- %s" % what)
+        n, b = run(probe, shared, phones, want, idx)
+        total += n
+        good += n - b
+    print()
+    print("%d of %d cases reproduced exactly, f0 aside" % (good, total))
+    return 0
 
+
+def run(probe, shared, phones, want, idx):
     bad = 0
     for v in want:
-        if v not in phones:
-            sys.stderr.write("replay: no measured %s\n" % v)
-            continue
-        got = frames_of(probe, "`[.1%s]" % v)
+        got = frames_of(probe, phones[v]["text"])
         live = [r for r in got
                 if any(r[idx[s]] >= 20 for s in ("av", "af", "ah"))]
         mine = build(shared, phones[v])
@@ -161,10 +177,7 @@ def main(argv):
         else:
             print("%-3s %4d frames, every parameter as the engine had it" % (
                 v, len(live)))
-    print()
-    print("%d of %d vowels reproduced exactly, f0 aside"
-          % (len(want) - bad, len(want)))
-    return 0
+    return len(want), bad
 
 
 if __name__ == "__main__":
