@@ -41,6 +41,38 @@ RATE = 11025
 
 VOWELS = set("iIeEAauUocYWOXHx")
 
+# Voicing is the utterance's and not a phoneme's, and splicing it from two
+# carriers of different lengths lands every step in the wrong place -- which
+# is most of what is still wrong with a chain.
+#
+# The rule below is measured and right, and generating voicing from it was
+# tried three times and beaten by splicing each time: it took /aCaSa/ from
+# 10.4 per cent to 3.6 and /awaya/ from 55 to 41, and it took /atapa/ from
+# 14.5 to 60 and /akaga/ from 12.3 to 60. So the knowledge is kept here and
+# `voicing' is left unused until what is wrong with those two is found. What
+# is known to be wrong with the first two attempts is written in them: the
+# drop must not be taken off twice, and a closure must keep its own shape.
+#
+# The rule, measured over /a/, /aa/, /ama/, /amama/, /amamama/, /imi/, /umu/,
+# /AmA/, /imu/, /ini/ and /asa/: the staircase does not decline across an
+# utterance, it RESETS after every consonant. After each closure the voicing
+# resumes at the FOLLOWING vowel's own value less three and steps down by one,
+# four steps, over that vowel. /a/ is 50 and gives 47 46 45 44; /A/ is 49 and
+# gives 46 45 44 43; /u/ is 59 and gives 56 55 54 53, and it gives those in
+# /imu/ as well as /umu/, so it is the vowel after the consonant that decides
+# and not the one before.
+#
+# /imi/ looks like an exception and is not: /i/ is 55, so its staircase starts
+# at 52, which is also what /m/ holds through its own closure, and the two
+# runs merge into one of seventeen frames.
+#
+# The first vowel of an utterance is its own value and then one less, two
+# steps rather than four, since nothing has reset it yet.
+AV_DROP = 3        # below the following vowel's own value
+AV_STEPS = 4       # steps across a vowel that follows a consonant
+AV_FIRST_STEPS = 2 # across the first vowel of the utterance
+AV_RELEASE = 13    # frames of letting go at the end
+
 
 def live_frames(probe, text, wpm=None):
     got = R.frames_of(probe, text, wpm)
@@ -370,7 +402,75 @@ def compose_chain(phonemes, frames, left, right):
             last = seq[i]
         for i in range(n):
             out[i][name] = seq[i]
+
     return out, None
+
+
+def staircase(top, steps, n):
+    """`n' frames declining one step at a time from `top', in `steps' runs."""
+    if n <= 0:
+        return []
+    out = []
+    for k in range(steps):
+        lo = (n * k) // steps
+        hi = (n * (k + 1)) // steps
+        out += [top - k] * (hi - lo)
+    return out[:n] + [top - steps + 1] * max(0, n - len(out))
+
+
+def voicing(frames, spans, order, left, right, n):
+    """The whole utterance's voicing, generated rather than spliced.
+
+    `frames' are the engine's own, indexed by IDX; a pair carrier's frames come
+    out of the tables and are keyed by name. Mixing the two is a KeyError and
+    was one.
+    """
+    seq = [None] * n
+    rel = min(AV_RELEASE, n)
+
+    # The first vowel: its own value, then one less.
+    first = spans[0][0] if spans else n - rel
+    top = frames[0][IDX["av"]]
+    if first > 0:
+        seq[:first] = staircase(top, AV_FIRST_STEPS, first)
+
+    for k, ((c, vp, vn), (a, b)) in enumerate(zip(order, spans)):
+        # The closure is left alone: voicing through it is the consonant's own
+        # shape and not a single value -- /t/ holds 35 for four frames and
+        # then drops to nought for the burst -- so the shaped path that fits
+        # every other parameter fits this one too. Holding one value across it
+        # was the last thing wrong here.
+        rp = right.get((c, vn)) if vn else None
+
+        lo = b + 1
+        hi = spans[k + 1][0] if k + 1 < len(spans) else n - rel
+        if hi <= lo:
+            continue
+        # And the vowel after it resumes three below its own value. The pair
+        # carrier's own run-out already IS that staircase, so its top is the
+        # number wanted and the three must not be taken off again -- doing so
+        # put every step exactly three low and took /atapa/ from 14.5 per cent
+        # to 71.3.
+        top4 = None
+        if rp:
+            tail = rp[0]["frames"][rp[0]["span"][1] + 1:]
+            if tail:
+                top4 = max(f["av"] for f in tail)
+        if top4 is None:
+            top4 = frames[lo][IDX["av"]]
+        seq[lo:hi] = staircase(top4, AV_STEPS, hi - lo)
+
+    # Letting go: from one below wherever it had got to, down to nought.
+    at = n - rel
+    if at > 0 and seq[at - 1] is not None:
+        start = seq[at - 1] - 1
+    else:
+        start = top - AV_FIRST_STEPS
+    for i in range(at, n):
+        k = i - at
+        seq[i] = max(0, start - int(start * k / float(max(1, rel - 1))))
+
+    return seq
 
 
 def write_frames(path, frames, borrow):
