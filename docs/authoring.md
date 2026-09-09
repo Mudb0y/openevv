@@ -186,6 +186,24 @@ The closure's remaining 4.7 per cent is the residual non-separability, and it is
 
 **The honest summary is that pair tables get within a few hertz and not to the byte.** Whether that is enough is an audio question rather than a measurement one, and it is now answerable by ear whenever somebody wants to: the composer writes frames, and frames are what the synthesiser takes. Byte-exactness would need the full cross product, 16 by 26 by 16, which is 6,656 carriers and about seven hours of measurement with no new method required.
 
+### Listened to, and the answer is that pair tables are enough
+
+Counting wrong parameter values was the wrong measure and the ear said so. `test/harness/klattplay.c` drives `KlattSynth` directly from a file of frames -- the other half of the tap, which only ever read them out -- so a composed utterance and a measured one can be rendered through the same code and heard against each other, the only difference being the frames. `tools/measure/hear.py` does that over the held-out square and reports the waveform difference, and it builds a self-describing A/B file a case, the engine speaking which side is which so there is nothing to read alongside the sound.
+
+Stas listened on 9 September 2026. Of the first five, spanning nought to 36 per cent formant error, he could not tell any pair apart, and the one he thought he might have heard turned out to have the *smallest* waveform difference of the four. Of the three worst in the whole set, he heard one.
+
+**The waveform difference over all 320 held-out carriers**: 55 under 2 per cent, 63 between 2 and 5, 89 between 5 and 10, 72 between 10 and 20, 17 between 20 and 40, and 24 above 40. Median 7.1 per cent. Only seven exceed 80 per cent and only **two exceed 85, both of them /J/**. The `/g/` case at 82.9 per cent was not audible; `/J/` at 98.7 was.
+
+**So 318 of 320 compose to something indistinguishable, and the format is usable as it stands.** The full cross product -- 6,656 carriers, seven hours -- is not needed and should not be measured. That was the open question and it is answered.
+
+### Two corrections the ear forced
+
+**The parameter count overstates errors that land in silence.** /k/ between /A/ and /u/ has a formant 32 per cent out, and that frame's voicing is nought -- frication only -- so there is almost no sound for it to be wrong in. Eleven wrong values there come out quieter than eighty-eight in a nasal. Any future metric here should weight by what is audible, or better, just render and compare the samples.
+
+**"The velars are the exception" was the wrong grouping.** In parameter terms it held: /k/, /g/ and /G/ disagree between squares by hundreds of hertz where everything else lands within tens. But in audible terms /k/ and /G/ are 0 of 16 over 20 per cent, and what actually fails is **the voiced obstruents** -- /J/ 16 of 16, /g/ 9 of 16, then /z/, /Z/, /v/, /D/ and /n/ with a handful each. Every other consonant is 0 of 16, /b/ and /d/ included. So composing a *voiced* closure is wrong in a way a voiceless one is not, and the two facts are about different things: place of articulation moves the numbers, voicing moves the sound.
+
+**/J/ is the one real defect and there is an obvious suspect.** It is an affricate, which is a stop and a fricative in sequence, and it is being composed as though it were one closure with one locus. Its sixteen contexts run from 48 to 99 per cent, worse than anything else by a wide margin. Modelling it as two segments rather than one is the thing to try, and it is cheap.
+
 ### What the tables do not yet say
 
 The breakpoints are absolute frame numbers at the one duration each vowel was measured at, five milliseconds a frame. What the engine does with a shorter or longer vowel is unmeasured, and until it is, this table describes sixteen utterances rather than sixteen vowels. That is the next thing to measure and it is cheap: the annotation carries a duration, so the same vowel at several lengths answers it.

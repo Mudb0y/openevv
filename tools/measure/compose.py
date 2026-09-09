@@ -28,6 +28,14 @@ So the run-in is reproduced as fractions of the left carrier's own run-in,
 stretched to the target the right carrier asks for, and the run-out likewise.
 
     tools/measure/compose.py <train> <train> <holdout> [--true-length]
+    tools/measure/compose.py <train> <train> <holdout> --write <dir> [case]...
+
+`--write' puts two frame files a case into a directory, the measured frames
+and the composed ones, in the form test/harness/klattplay.c reads. That is how
+this gets listened to rather than counted: both sides through the same
+renderer, so the only difference is the frames. With no case named it writes
+the four that span the range -- the closest, the median, the worst, and the
+worst velar.
 """
 
 import collections
@@ -69,7 +77,7 @@ def cases(path):
         if span is None:
             continue
         out[name] = {"cons": cons, "v1": vv[0], "v2": vv[1],
-                     "frames": fr, "span": span}
+                     "frames": fr, "span": span, "text": phone["text"]}
     return out
 
 
@@ -173,12 +181,43 @@ def compose(aa_pair, bb_pair, n_out=None):
     return out
 
 
+def write_frames(path, frames, borrow=None):
+    """One case as klattplay reads it: a header line, then a line a frame.
+
+    `step' and `f0' are not in the tables -- `step' is five milliseconds a
+    frame and f0 is the intonation, which belongs to the utterance and not to
+    any phoneme -- so both are borrowed from the measured case. That is the
+    point rather than a shortcut: the synthesiser makes no samples at all
+    without a duration, and lending both sides the same pitch is what leaves
+    only the phonetic parameters to listen to.
+    """
+    order = list(R.NAMES)
+    with open(path, "w") as f:
+        f.write("\t".join(order) + "\n")
+        for i, fr in enumerate(frames):
+            row = []
+            for n in order:
+                if n in ("step", "f0") and borrow is not None:
+                    j = min(i, len(borrow) - 1)
+                    row.append(str(borrow[j][n]))
+                else:
+                    row.append(str(fr.get(n, 0)))
+            f.write("\t".join(row) + "\n")
+
+
 def main(argv):
     if len(argv) < 4:
         sys.stderr.write(__doc__)
         return 2
     truelen = "--true-length" in argv
     argv = [x for x in argv if x != "--true-length"]
+    writedir = None
+    if "--write" in argv:
+        i = argv.index("--write")
+        writedir = argv[i + 1]
+        wanted = argv[i + 2:]
+        argv = argv[:i]
+        truelen = True
     train = collections.defaultdict(list)
     for path in argv[1:3]:
         for name, rec in cases(path).items():
@@ -194,6 +233,7 @@ def main(argv):
     lenbad = 0
     bycons = collections.defaultdict(list)
     byregion = collections.Counter()
+    percase = {}
     regionsize = collections.Counter()
     FORMANTS = ("f1", "f2", "f3", "f4", "f5")
     for name, want in sorted(held.items()):
@@ -210,6 +250,7 @@ def main(argv):
             lenbad += 1
         bad = False
         fmax = 0
+        nwrong = 0
         wa, wb = want["span"]
         for i, (mine, theirs) in enumerate(zip(got, want["frames"])):
             where = ("run-in" if i < wa else
@@ -219,6 +260,7 @@ def main(argv):
                 if t is None or mine[p] == t:
                     continue
                 wrong[p] += 1
+                nwrong += 1
                 byregion[where] += 1
                 e = abs(mine[p] - t)
                 errs[p].append(e)
@@ -230,10 +272,47 @@ def main(argv):
         if fmax <= 1.0:
             close += 1
         bycons[want["cons"]].append(fmax)
+        percase[name] = (fmax, got, nwrong)
         n = len(want["frames"])
         regionsize["run-in"] += wa
         regionsize["closure"] += wb - wa + 1
         regionsize["run-out"] += max(0, n - wb - 1)
+    if writedir is not None:
+        os.makedirs(writedir, exist_ok=True)
+        # step and f0 are not in the tables, so they come from the engine
+        # itself, once, for the handful of cases being written.
+        probe = os.environ.get("EVV_PROBE", "./build/probe")
+        idx = {n: i for i, n in enumerate(R.NAMES)}
+        if wanted == ["--all"]:
+            wanted = sorted(percase)
+        elif not wanted:
+            # Ranked by how many values are wrong, not by the formants alone:
+            # a case with no formant error at all can still differ in voicing,
+            # and the control has to be one that differs in nothing.
+            ranked = sorted(percase, key=lambda k: (percase[k][2],
+                                                    percase[k][0]))
+            velar = [k for k in ranked if k.split(":")[0] in ("k", "g", "G")]
+            wanted = [ranked[0], ranked[len(ranked) // 2], ranked[-1]]
+            if velar:
+                wanted.append(velar[-1])
+        for name in wanted:
+            if name not in percase:
+                sys.stderr.write("compose: no held-out %s\n" % name)
+                continue
+            tag = name.replace(":", "-")
+            rows = R.frames_of(probe, held[name]["text"])
+            live = [r for r in rows
+                    if any(r[idx[k]] >= 20 for k in ("av", "af", "ah"))]
+            raw = [{"step": r[idx["step"]], "f0": r[idx["f0"]]}
+                   for r in live]
+            write_frames(os.path.join(writedir, tag + ".true.tsv"),
+                         held[name]["frames"], raw)
+            write_frames(os.path.join(writedir, tag + ".mine.tsv"),
+                         percase[name][1], raw)
+            print("%-9s %6d values wrong, worst formant %6.2f per cent   %s"
+                  % (name, percase[name][2], percase[name][0], tag))
+        return 0
+
     print("composed %d held-out carriers from the two training squares%s"
           % (tried, " (length given, not predicted)" if truelen else ""))
     print("  %d reproduce every parameter of every frame" % exact)

@@ -392,6 +392,11 @@ $(BUILD)/interrupt: test/harness/interrupt.c $(BUILD)/libevv.a
 rate: $(BUILD)/rate
 	@$(BUILD)/rate
 
+# Frames in, sound out: the other half of the tap, so a composed utterance
+# can be heard. See the head of test/harness/klattplay.c.
+$(BUILD)/klattplay: test/harness/klattplay.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/harness/klattplay.c $(BUILD)/libevv.a -lpthread -lm -o $@
+
 $(BUILD)/rate: test/harness/rate.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/harness/rate.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
