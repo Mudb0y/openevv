@@ -81,6 +81,15 @@ def cases(path):
     return out
 
 
+# How far outside the two measurements the wanted target may lie before the
+# straight line through them stops meaning anything. Two carriers whose own
+# targets are six hertz apart say nothing about a target four hundred and
+# fifty away, and extrapolating anyway multiplies every difference between
+# them by seventy-five: /g/, /k/ and /G/ before /u/ went from six per cent
+# wrong to two hundred. Beyond this the shape is rescaled instead.
+WEIGHT_LIMIT = 3.0
+
+
 def between(s1, t1, s2, t2, want):
     """Two measured trajectories aimed at two targets, aimed at a third.
 
@@ -98,8 +107,19 @@ def between(s1, t1, s2, t2, want):
     portion comes through untouched without having to be found.
     """
     if t1 == t2:
+        # Two measurements that agree say the parameter does not respond to
+        # the target at all, and the measurement stands. Rescaling here
+        # instead was tried and cost 24 exact cases: it distorts everything
+        # that genuinely does not move.
         return list(s1)
     w = (want - t1) / float(t2 - t1)
+    if abs(w) > WEIGHT_LIMIT:
+        # Unidentifiable: say so rather than guess, and let the caller use the
+        # straight line it would have drawn before any of this. Rescaling the
+        # shape instead was tried and was no better -- it left /g/ and /k/
+        # before /u/ where they were and added a fresh group at thirty per
+        # cent.
+        return None
     return [a + int((b - a) * w) for a, b in zip(s1, s2)]
 
 
@@ -147,14 +167,30 @@ def compose(aa_pair, bb_pair, n_out=None):
         # aimed at its first, which the preceding vowel sets.
         want_out = vb[bb]
 
-        pre = list(va[:aa])
-        onset_v = va[aa]
-        if va2 is not None and len(va2) == len(va):
+        # The run-in AND the closure, both from the left pair's own measured
+        # shape. A straight line across the closure is wrong for anything
+        # voiced: /C/ holds av flat at nought and a line is right by accident,
+        # but /J/ ramps 0 0 4 12 20 27 35 40 41 43 44 45 as voicing returns
+        # through the affricate, and /g/ steps -- 20 for twelve frames, then
+        # nought for three while af jumps to 62 for the burst. Neither is a
+        # line between its ends, and imposing one is why the voiced obstruents
+        # were the ones that failed.
+        pre = list(va[:ba + 1])
+        shaped = False
+        if va2 is not None:
+            # Only the closure has to line up, not the whole carrier. The two
+            # left carriers share their first vowel and their consonant but
+            # not their second, so their total lengths differ -- /J/'s are 98
+            # and 82 frames -- and requiring those to match silently skipped
+            # the shape for every consonant, which is why the first attempt
+            # at this left /J/ exactly as wrong as before.
             a2a, a2b = a2["span"]
             if (a2a, a2b) == (aa, ba):
-                pre = between(va[:aa], va[ba], va2[:aa], va2[a2b], want_out)
-                onset_v = between([va[aa]], va[ba], [va2[aa]], va2[a2b],
-                                  want_out)[0]
+                got_shape = between(va[:ba + 1], va[ba], va2[:a2b + 1],
+                                    va2[a2b], want_out)
+                if got_shape is not None:
+                    pre = got_shape
+                    shaped = True
 
         # The same trick on the run-out, parameterised by the closure's first
         # frame, was tried and made the answer worse: 82 carriers within one
@@ -166,15 +202,19 @@ def compose(aa_pair, bb_pair, n_out=None):
         tail = list(vb[bb + 1:])
         offset_v = vb[bb]
 
-        # Rebuild the closure with its corrected onset.
-        if flat_a and flat_b:
-            hold_vals = [offset_v] * (ba - aa + 1)
+        if shaped:
+            # The closure came with the shape, so nothing to rebuild.
+            seq = pre + list(tail)
+        elif flat_a and flat_b:
+            seq = pre[:aa] + [offset_v] * (ba - aa + 1) + list(tail)
         else:
             k = ba - aa
-            hold_vals = [onset_v + (int((offset_v - onset_v) * i / float(k))
-                                    if k else 0) for i in range(k + 1)]
+            onset_v = va[aa]
+            seq = pre[:aa] + [
+                onset_v + (int((offset_v - onset_v) * i / float(k))
+                           if k else 0) for i in range(k + 1)] + list(tail)
 
-        seq = pre + hold_vals + list(tail)
+        
         seq = (seq + [seq[-1]] * n_out)[:n_out]
         for i in range(n_out):
             out[i][p] = seq[i]

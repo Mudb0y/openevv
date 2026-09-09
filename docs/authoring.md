@@ -204,6 +204,24 @@ Stas listened on 9 September 2026. Of the first five, spanning nought to 36 per 
 
 **/J/ is the one real defect and there is an obvious suspect.** It is an affricate, which is a stop and a fricative in sequence, and it is being composed as though it were one closure with one locus. Its sixteen contexts run from 48 to 99 per cent, worse than anything else by a wide margin. Modelling it as two segments rather than one is the thing to try, and it is cheap.
 
+### /J/ fixed, and with it every case above twenty per cent
+
+The affricate was the only audible defect and the suspect was right, though not for the reason guessed. It is not that /J/ needs two segments spelt out. It is that **a closure must not be crossed with a straight line**, and /J/ is the phoneme where that shows worst.
+
+Look at voicing through a closure. /C/, voiceless, holds `av` flat at nought for all seventeen frames, so a line between its ends is right by accident -- which is why /C/ composed fine all along. /J/ ramps 0 0 4 12 20 27 35 40 41 43 44 45 as voicing returns through the affricate, an S-curve. /g/ steps: 20 for twelve frames, then nought for three while `af` jumps to 62 for the burst. Neither is a line between its endpoints, and imposing one is exactly why the voiced obstruents were the ones that failed.
+
+The fix is the same idea that solved the run-in, extended over the closure: take the measured *shape* from the two training carriers that share the near pair and interpolate it in the target, rather than inventing a ramp between two endpoints. Three things had to be got right and each was found by the answer getting worse:
+
+**Only the closure has to line up, not the whole carrier.** The two left carriers share their first vowel and their consonant but not their second, so their total lengths differ -- /J/'s are 98 and 82 frames. A first version required those to match, which silently skipped the shape for every consonant and left /J/ exactly as wrong as before.
+
+**Two measurements that agree mean the parameter does not respond, and the measurement stands.** Rescaling in that case instead cost 24 exact cases, because it distorts everything that genuinely does not move.
+
+**Two measurements that nearly agree say nothing at all, and must say so.** For /g/ before /u/ the two left carriers' f2 closure targets are 1658 and 1652 -- six hertz apart -- while the wanted target is 1208. The straight line through them has a weight of 75, and every difference between the two gets multiplied by it: /g/, /k/ and /G/ before /u/ went from six per cent wrong to two hundred and twenty. That is the velar pinch, and it is unidentifiable from these two carriers, because neither of their far vowels is back. Rescaling the shape there was tried and was no better. What works is answering nothing and letting the caller draw the straight line it would have drawn anyway.
+
+**The result over all 320 held-out carriers**: 148 under 2 per cent, 70 from 2 to 5, 89 from 5 to 10, 13 from 10 to 20, and **nothing above 20**. Median 2.1 per cent against 7.0, worst 19.4 against 98.7, and nothing left in the range Stas could hear -- he judged 25.6 per cent indistinguishable and even 82.9. /J/ itself went from 98.7 to 8.0. In frames: 63 cases exact against 5, the run-in still 0.0 per cent, the closure down from 4.7 to 1.2.
+
+The run-out is now the largest remaining error at 2.2 per cent, and most of it is voicing, which is an utterance-level staircase rather than a pair's business.
+
 ### What the tables do not yet say
 
 The breakpoints are absolute frame numbers at the one duration each vowel was measured at, five milliseconds a frame. What the engine does with a shorter or longer vowel is unmeasured, and until it is, this table describes sixteen utterances rather than sixteen vowels. That is the next thing to measure and it is cheap: the annotation carries a duration, so the same vowel at several lengths answers it.
