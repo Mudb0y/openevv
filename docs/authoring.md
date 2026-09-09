@@ -222,6 +222,22 @@ The fix is the same idea that solved the run-in, extended over the closure: take
 
 The run-out is now the largest remaining error at 2.2 per cent, and most of it is voicing, which is an utterance-level staircase rather than a pair's business.
 
+### The stretch law: a phoneme is two endpoints and a length
+
+The tables described utterances rather than phonemes because every breakpoint in them is an absolute frame number at the one length that case happened to be. That is now answered, and it needed no new measurement at all: a vowel before a voiceless consonant is shorter than the same vowel before a voiced one -- /a/ runs 32 frames before /p/ and 37 before /b/ -- so the pair corpus already holds vowels at two lengths.
+
+Comparing them gives the law in two parts.
+
+**The voice-quality onset does not stretch.** Open quotient rises 18, 27, 36, 45, 54 and diplophonia falls 100, 77, 53, 29, 5 over five frames whatever the phoneme's length. Five frames, fixed.
+
+**The body stretches and keeps its endpoints.** /a/'s f2 glides 1200 to 1151 at both lengths, in 26 steps at the short one and 33 at the long, and the engine's own segment arithmetic reproduces both from the same two numbers -- `v0 + int((v1 - v0) * min(den, 2 * i) / den)` with `den` twice the number of steps. The `av` droop moves with it, frame 16 of 32 against 19 of 37.
+
+`tools/measure/stretch.py` tests that by predicting each vowel's body at one length from the same vowel's two endpoints at another. **66 of 70 parameters come out exactly**, and /c/ and /O/ are exact on all fourteen. The four misses are not the law failing: each is a body *endpoint* differing by forty to sixty hertz between the two contexts, which is the same coarticulation the pair tables already record, reaching back into the vowel from the consonant after it.
+
+One thing had to be got right and cost a round. **The body is not the whole stretch up to the closure** -- the run-in belongs to the consonant, not the vowel, and /a/ glides its f2 over 26 frames and then runs in over 6 before /p/, or over 33 and then 4 before /b/. Taking everything up to the closure as the body left the law unable to describe even its own source, and the fix is to find the body as the longest straight line the law does describe.
+
+So a phoneme is two endpoints and a length, which is what makes these tables about phonemes rather than about the utterances they were measured in.
+
 ### What the tables do not yet say
 
 The breakpoints are absolute frame numbers at the one duration each vowel was measured at, five milliseconds a frame. What the engine does with a shorter or longer vowel is unmeasured, and until it is, this table describes sixteen utterances rather than sixteen vowels. That is the next thing to measure and it is cheap: the annotation carries a duration, so the same vowel at several lengths answers it.
