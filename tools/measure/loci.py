@@ -40,22 +40,25 @@ def rebuild(shared, phone):
 
 
 def hold(frames):
-    """The consonant's own stretch: longest interior run at one f1."""
-    n = len(frames)
-    if n < 5:
+    """The consonant's own stretch, by the marker the engine itself gives.
+
+    Aspiration sits at 34 through a vowel and at nought through a consonant,
+    and that boundary is exact: over the twenty-six consonants between two
+    /a/, the `ah == 0' span agrees frame for frame with the stretch at one f1
+    for twenty of them, and the ones it does not agree about are the ones a
+    plateau is the wrong question for. /h/ is aspiration, so it never
+    suppresses it; /r/, /l/, /y/, /w/ and /R/ are sonorants with no closure,
+    and a glide is a continuous transition rather than a target held. For
+    those six this answers None rather than guessing, which is what an earlier
+    version of this did -- it looked for the longest interior run at one f1
+    and found stretches of the vowels instead, reporting an /f1/ of 272
+    against 742 for the same pair and making it look as though the locus does
+    not separate.
+    """
+    zero = [i for i, f in enumerate(frames) if f.get("ah", 34) == 0]
+    if not zero:
         return None
-    f1 = [f["f1"] for f in frames]
-    best = None
-    i = 1
-    while i < n - 1:
-        j = i
-        while j + 1 < n - 1 and f1[j + 1] == f1[i]:
-            j += 1
-        if f1[i] != f1[0] and f1[i] != f1[n - 1]:
-            if best is None or (j - i) > (best[1] - best[0]):
-                best = (i, j)
-        i = j + 1
-    return best
+    return (zero[0], zero[-1])
 
 
 def read(path):
@@ -71,6 +74,7 @@ def read(path):
         frames = rebuild(shared, phone)
         span = hold(frames)
         if span is None:
+            out.setdefault("__noplateau__", set()).add(cons)
             continue
         a, b = span
         out[name] = {
@@ -84,6 +88,13 @@ def read(path):
 
 def compare(one, two):
     """Hold each square's loci against the other's for the same pair."""
+    skipped = (one.pop("__noplateau__", set())
+               | two.pop("__noplateau__", set()))
+    if skipped:
+        print("no plateau to compare, so left out: %s"
+              % " ".join(sorted(skipped)))
+        print("(/h/ is aspiration; r l y w R are sonorants with no closure)")
+        print()
     # A vowel before a consonant sets the `in' locus; after it, the `out'.
     agree = collections.Counter()
     differ = collections.Counter()
@@ -134,6 +145,9 @@ def main(argv):
         compare(read(args[0]), read(args[1]))
         return 0
     tbl = read(args[0])
+    skipped = tbl.pop("__noplateau__", set())
+    if skipped:
+        print("no plateau: %s" % " ".join(sorted(skipped)))
     print("%-9s %4s %4s  %s" % ("case", "at", "len",
           " ".join("%s" % p for p in ("f1", "f2", "f3", "av", "af"))))
     for name in sorted(tbl):
