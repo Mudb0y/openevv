@@ -78,32 +78,34 @@ Consonants have no steady state and cannot be spoken alone -- a pronunciation an
 
 Per-phoneme durations in running speech are still not available: the rules only fill a phoneme's proportion when a caller has asked for phoneme indices, and asking redirects the audio to a callback, so frames and durations cannot come from one utterance. Isolated phonemes give their own durations by frame count, which is what the table's `ms` column is.
 
-### The format holds: seven vowels reproduce byte for byte
+### All sixteen vowels reproduce byte for byte
 
-`tools/measure/replay.py` builds frames from `lang/measured/enus-vowels.txt` and holds them against what the engine actually gave `KlattSynth`. Seven of the sixteen -- `i`, `e`, `A`, `a`, `o`, `X` and `x` -- match on every parameter of every frame. That is the format validated: eight numbers a vowel, plus an utterance layer, reproduce the engine exactly.
+`tools/measure/replay.py` builds frames from `lang/measured/enus-vowels.txt` and holds them against what the engine actually gave `KlattSynth`. All sixteen English vowels match on sixty of the sixty-two parameters of every frame -- everything except `step`, which is the frame counter, and `f0`, which is the intonation and belongs to the utterance rather than the vowel.
 
-The utterance layer is five rules, none of them the vowel's, and every one had to be found by putting the engine's numbers beside ours:
+Four sabotages prove the check is not vacuous: a shared resting value, a value only one vowel holds, one breakpoint's value, and one breakpoint's denominator. Each is caught, and one of them was caught only after a first attempt at it silently failed to edit the file at all, which is exactly the false pass this project's habit of sabotaging on purpose exists to find.
 
-Open quotient rises 18, 27, 36, 45, 54 to its resting 56 over five frames while diplophonia falls 100, 77, 53, 29, 5 to nought over the same five. A creaky start, identical every time, written down as measured rather than fitted.
+### The format is breakpoint tracks, because a vowel is not two targets
 
-Voicing holds its plateau until halfway through the glide and one frame more, then drops by one. That is not halfway through the vowel: the release is thirteen frames and the droop sits at the middle of what is left, which gives `i` twenty-one of fifty-three, `a` twenty-seven of sixty-five and `X` eighteen of forty-eight from the same arithmetic.
+The first format tried was eight numbers a vowel: two formant targets and the fraction of its length it holds the first. That reproduced seven of the sixteen and could not be made to reproduce the rest, and the reason turned out to be a fact about the vowels rather than a bug in the arithmetic.
 
-Voicing lets go over the last thirteen frames, starting two below the plateau and falling to nought in twelve even steps, rounded up rather than to nearest.
+**/aU/ moves three times.** Its f1 drifts 750 to 700 over forty-three frames, then runs to 550 over ten, then holds. Its f2 does the same shape from 1400 through 1300 to 900. And its third bandwidth, fourth formant and fifth formant move out and come back -- `b3` goes 150 to 500, sits there five frames, and returns to 150 over the last eight -- which no other vowel does at all, so the table had them as shared constants. **/aI/ moves twice** and not from frame nought: its f2 drifts 1200 to 1350 over thirty-six frames and only then runs to 1850. Its f1 and f3 hold flat for those thirty-six frames and glide in the last fifteen, which is what a diphthong actually is: a target, held, and then a fast transition, not a slow interpolation across the whole vowel.
 
-Aspiration rises by one from the second frame of the release.
+So the format became what the synthesiser is already told: **a piecewise-linear track per parameter, written as the frames at which it turns and the value it turns at.** Between two breakpoints,
 
-And the formants glide over the frames before the release, holding the second target through it -- `e` runs 470 to 350 over forty-eight of its sixty-one and sits there for the last thirteen.
+    v0 + int((v1 - v0) * min(den, 2 * (i - i0)) / den)
 
-**The step is truncated towards nought, not rounded**, which is what C does converting it, and getting that wrong is most of what stood between close and exact. It makes a falling formant look as though it rounds up and a rising one down: 470 less 2.5 is 468 because `int(-2.5)` is -2, and 1800 plus 4.17 is 1804. Trying to round either way leaves f1 right and f2 wrong, or the reverse.
+with `den` the segment's length in half-frames. `tools/measure/tracks.py` fits those breakpoints from the engine's own frames, greedily taking the longest segment that still reproduces every value exactly.
 
-### What is left, and every bit of it is visible in the frames
+Three things fell out of that form for free, each of which had been a special case before:
 
-**Four vowels release differently.** `I`, `E`, `U` and `H` start their release one below the plateau where the other twelve start two, and they are also the only four whose release ends at 2 rather than 0 -- `... 11 7 2` where the others give `... 8 4 0`. They pair off exactly, `I` and `U` both fifty frames at 57, `E` and `H` both fifty-five at 54. Both facts are one rule not yet found. `i` and `E` are the tell: both release from 53, `i` reaching 0 in twelve steps and `E` reaching 2, so the same start and a different rate.
+The clamp inside the `min` is the hold. A segment written `42:700/20` reaches 700 ten frames later and stays there, so "glide then settle" needs no separate rule.
 
-**The three big diphthongs do more than glide.** `Y`, `W` and `O` differ across most of their frames, and `W` also moves `b3`, `f4` and `f5`, which every other vowel leaves alone. So /aɪ/, /aʊ/ and /ɔɪ/ are not two targets and a straight line, and what they are is the next thing to measure.
+**The half-frame denominator is why four vowels looked anomalous.** `I`, `E`, `U` and `H` had appeared to break every rule about voicing -- releasing from one below the plateau rather than two, and stopping at 2 rather than nought. In half-frames there is nothing wrong with them: their segments are one half-frame shorter than the obvious length, `den` says so, and the same walk produces them and everything else. What had looked like four exceptions to a rule was one unit of measurement being wrong.
 
-**`c` and `O` move `b1` during the release**, which the table has as a constant.
+And the truncation is the whole of the arithmetic. `int` towards nought, as C converts, which makes a falling parameter appear to round up and a rising one down: 470 less 2.5 is 468 because `int(-2.5)` is -2, while 1800 plus 4.17 is 1804. No rounding rule reproduces both.
 
-`u` differs in a single frame of f2, which will be a rounding edge.
+### What the table does not yet say
 
-None of it is archaeology. Every attempt is one run of `replay.py` away from being told exactly how wrong it is, which is the whole reason for measuring against the engine rather than by ear.
+The breakpoints are absolute frame numbers at the one duration each vowel was measured at, five milliseconds a frame. What the engine does with a shorter or longer vowel is unmeasured, and until it is, this table describes sixteen utterances rather than sixteen vowels. That is the next thing to measure and it is cheap: the annotation carries a duration, so the same vowel at several lengths answers it.
+
+Consonants are the other half and want a carrier syllable, since a consonant is a locus and a transition rather than a target. The tap already shows they separate cleanly -- `asa` peaks at `af` 70 where `ama` sits flat at nought -- and `tracks.py` fits them the same way it fits a vowel, so the format needs nothing new for them. What needs deciding is how to say that a locus belongs to the consonant while the transition belongs to the pair.

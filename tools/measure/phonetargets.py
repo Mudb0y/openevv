@@ -73,6 +73,43 @@ def frames_of(probe, text, mode="a"):
         return rows
 
 
+def envelope(probe, phoneme):
+    """How the voicing of one phoneme rises, holds and lets go.
+
+    The shape is always a plateau, a second run one lower, and a release ramp,
+    and what differs is three numbers: where the droop falls, how many frames
+    the release takes, and what it does over them. Twelve of the sixteen
+    vowels release from two below the plateau to nought as
+    `top - int(top * k / (frames - 1))', truncated; `I', `E', `U' and `H' do
+    not, and theirs is written down as measured because the arithmetic behind
+    it has not been found.
+    """
+    rows = frames_of(probe, "`[.1%s]" % phoneme)
+    idx = {n: i for i, n in enumerate(NAMES)}
+    live = [r[idx["av"]] for r in rows
+            if any(r[idx[s]] >= FLOOR for s in SOUNDING)]
+    if not live:
+        return None
+    runs = []
+    for v in live:
+        if runs and runs[-1][0] == v:
+            runs[-1][1] += 1
+        else:
+            runs.append([v, 1])
+    if len(runs) < 3:
+        return None
+    av0 = runs[0][0]
+    hold = runs[0][1]
+    release = live[hold + runs[1][1]:]
+    top = release[0]
+    n = len(release)
+    fits = (top == av0 - 2 and release[-1] == 0
+            and all(release[k] == top - int(top * k / float(n - 1))
+                    for k in range(n)))
+    return {"n": len(live), "hold": hold, "relfr": n,
+            "fits": fits, "release": release}
+
+
 def targets(probe, phoneme):
     """What one phoneme held while it was sounding, parameter by parameter."""
     rows = frames_of(probe, "`[.1%s]" % phoneme)
