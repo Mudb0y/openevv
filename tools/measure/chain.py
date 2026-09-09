@@ -48,8 +48,21 @@ def live_frames(probe, text, wpm=None):
             if any(r[IDX[s]] >= 20 for s in ("av", "af", "ah"))]
 
 
-def closures(frames):
-    """Every stretch with no aspiration: one a consonant that closes."""
+def closures(frames, want=None):
+    """Every stretch with no aspiration: one a consonant that closes.
+
+    Aspiration comes back up during a vowel, which is what separates two
+    closures -- until the rate is high enough that the vowel between them is
+    too short for it to. At 450 words a minute /akaga/ is thirty frames and
+    reports one closure for its /k/ and its /g/, and the composition refuses
+    outright rather than merely composing badly.
+
+    `want' says how many consonants the phoneme string has, and when fewer
+    stretches than that are found the longest are split at the loudest frame
+    inside them. Voicing is what tells them apart where aspiration cannot:
+    across /k/ it is nought, across the /a/ between them it is 47, across /g/
+    it is 20, so the peak is the vowel and the split belongs there.
+    """
     n = len(frames)
     out, i = [], 0
     while i < n:
@@ -61,6 +74,22 @@ def closures(frames):
             i = j + 1
         else:
             i += 1
+
+    while want is not None and len(out) < want:
+        # The longest stretch that can be split at all.
+        best = None
+        for k, (a, b) in enumerate(out):
+            if b - a >= 2 and (best is None or
+                               b - a > out[best][1] - out[best][0]):
+                best = k
+        if best is None:
+            break
+        a, b = out[best]
+        peak = max(range(a + 1, b), key=lambda i: frames[i][IDX["av"]])
+        if frames[peak][IDX["av"]] <= frames[a][IDX["av"]] and \
+           frames[peak][IDX["av"]] <= frames[b][IDX["av"]]:
+            break
+        out[best:best + 1] = [(a, peak - 1), (peak + 1, b)]
     return out
 
 
@@ -213,8 +242,8 @@ def stitch(out, tail, want):
 
 def compose_chain(phonemes, frames, left, right):
     """The whole utterance, from the tables, laid out on the engine's timing."""
-    spans = closures(frames)
     cons = [p for p in phonemes if p not in VOWELS]
+    spans = closures(frames, len(cons))
     vows = [p for p in phonemes if p in VOWELS]
     if len(spans) != len(cons):
         return None, ("%d closures but %d consonants in the string"
