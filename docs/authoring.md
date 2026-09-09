@@ -238,6 +238,22 @@ One thing had to be got right and cost a round. **The body is not the whole stre
 
 So a phoneme is two endpoints and a length, which is what makes these tables about phonemes rather than about the utterances they were measured in.
 
+### A whole utterance, and the voicing envelope is the last thing in the way
+
+`tools/measure/chain.py` composes more than one closure. A word is a chain of overlapping pair contexts -- in /atapa/ the /t/ is the (a,t) and (t,a) pairs, the /p/ is (a,p) and (p,a), and the /a/ between them is the run-out of one meeting the run-in of the next -- so the pair tables are enough for a word if they can be stitched.
+
+What it does not do is decide the timing. When each closure starts and how long it lasts is a language's business, settled long before the synthesiser sees anything, so the frame layout is taken from the engine's own frames for the same text. That separates the question these tables can answer, which is whether they describe real speech, from what a language chooses to do, which is not a formant question at all.
+
+The stitch had one bug worth recording because it was invisible in the totals. Writing the run-out of one closure and the run-in of the next into the same stretch and letting the second overwrite the first leaves the vowel with **no run-out at all**, and puts 179 of 180 wrong values in the vowels while the closures come out nearly perfect. Meeting them in the middle, with the vowel holding between, took /atapa/ from 39 per cent to 13.5 and /aCaSa/ from 42 to 10.8.
+
+**And then one parameter turned out to be nearly the whole of what was left.** Lending `av` from the measured utterance and composing everything else:
+
+/atapa/ 13.5 per cent becomes 8.6. /aCaSa/ 10.8 becomes 3.0. /akaga/ 40.3 becomes 7.3. /asaka/ **72.6 becomes 7.7**. Lending `af` and `ah` as well changes almost nothing further -- 8.6 stays 8.6, 7.7 stays 7.7.
+
+So with voicing right, every chain composes to between three and nine per cent, which is well inside what has been shown inaudible. **The voicing envelope is the single remaining piece**, and it is not a formant problem: `av` declines in a staircase across a whole utterance, holds each consonant's own value through its closure, and lets go at the end. In one carrier a spliced staircase is nearly right by luck. Across two closures the errors compound, which is why /asaka/ was five times worse than /atapa/ from the same tables.
+
+That is also the third time this has surfaced -- in the isolated vowels, in the single carriers' run-out, and now in chains -- so it is the thing to do next. A staircase of one step every nine frames was fitted to two carriers and tried once and was much worse than splicing, so the rule is genuinely not known yet.
+
 ### What the tables do not yet say
 
 The breakpoints are absolute frame numbers at the one duration each vowel was measured at, five milliseconds a frame. What the engine does with a shorter or longer vowel is unmeasured, and until it is, this table describes sixteen utterances rather than sixteen vowels. That is the next thing to measure and it is cheap: the annotation carries a duration, so the same vowel at several lengths answers it.
