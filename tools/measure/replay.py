@@ -132,7 +132,9 @@ def main(argv):
     probe = argv[1]
     here = os.path.join(ROOT, "lang", "measured")
     tables = [("vowels", "enus-vowels.txt"),
-              ("consonants", "enus-consonants.txt")]
+              ("consonants", "enus-consonants.txt"),
+              ("pairs", "enus-pairs.txt"),
+              ("pairs2", "enus-pairs2.txt")]
     idx = {n: i for i, n in enumerate(NAMES)}
     total = good = 0
     for what, fname in tables:
@@ -145,7 +147,9 @@ def main(argv):
         if not want:
             continue
         print("--- %s" % what)
-        n, b = run(probe, shared, phones, want, idx)
+        # With hundreds of cases a line each is noise, so only the ones that
+        # differ are named and the rest are counted.
+        n, b = run(probe, shared, phones, want, idx, quiet=len(want) > 50)
         total += n
         good += n - b
     print()
@@ -153,7 +157,7 @@ def main(argv):
     return 0
 
 
-def run(probe, shared, phones, want, idx):
+def run(probe, shared, phones, want, idx, quiet=False):
     bad = 0
     for v in want:
         got = frames_of(probe, phones[v]["text"])
@@ -174,9 +178,12 @@ def run(probe, shared, phones, want, idx):
             print("%-3s %4d frames, differs: %s" % (
                 v, len(live),
                 " ".join("%s in %d" % (n, c) for n, c in wrong.most_common(6))))
-        else:
+        elif not quiet:
             print("%-3s %4d frames, every parameter as the engine had it" % (
                 v, len(live)))
+    if quiet:
+        print("    %d cases, %d as the engine had them" % (len(want),
+                                                           len(want) - bad))
     return len(want), bad
 
 

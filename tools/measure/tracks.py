@@ -54,6 +54,28 @@ HEAD = [
 ]
 
 BLURB = {
+    "pairs2": [
+        "# The same 416 pairs, each against a different partner.",
+        "#",
+        "# Carrier k is vowel k, the consonant, vowel k+3, where the first",
+        "# square used k+1. So every (consonant, vowel) pair is measured a",
+        "# second time with a different neighbour on the other side, which is",
+        "# what tests separability: if the value a vowel sets does not depend",
+        "# on the vowel at the far end, the two squares must agree.",
+        "#",
+    ] + HEAD,
+    "pairs": [
+        "# English's consonants against every vowel, both sides.",
+        "#",
+        "# One Latin square a consonant: carrier k is vowel k, the consonant,",
+        "# vowel k+1. Every vowel therefore appears once before the consonant",
+        "# and once after it, which is enough because the locus separates --",
+        "# across a consonant f1 holds one value the FOLLOWING vowel sets while",
+        "# f2 and f3 ramp from a value the PRECEDING vowel sets to one the",
+        "# following vowel sets. See docs/authoring.md. 416 carriers rather",
+        "# than the 6,656 of the full cross product.",
+        "#",
+    ] + HEAD,
     "vowels": ["# English's vowels, as the engine says them.", "#"] + HEAD,
     "consonants": [
         "# English's consonants, as the engine says them between two /a/.",
@@ -150,7 +172,21 @@ def corpus(which):
     """The name and the text of each case."""
     if which == "vowels":
         return [(v, "`[.1%s]" % v) for v in VOWELS]
-    return [(c, "`[.1a%sa]" % c) for c in CONSONANTS]
+    if which == "consonants":
+        return [(c, "`[.1a%sa]" % c) for c in CONSONANTS]
+    # One Latin square a consonant: every vowel once before it and once
+    # after. That is what separability buys -- `aCi' reports /a/-before-C
+    # and C-before-/i/ in the same utterance -- so 416 carriers cover
+    # every consonant against every vowel on both sides rather than the
+    # 6,656 the full cross product would want.
+    step = 1 if which == "pairs" else 3
+    out = []
+    for c in CONSONANTS:
+        for k, v1 in enumerate(VOWELS):
+            v2 = VOWELS[(k + step) % len(VOWELS)]
+            out.append(("%s:%s%s" % (c, v1, v2),
+                        "`[.1%s%s%s]" % (v1, c, v2)))
+    return out
 
 
 def emit(probe, which, path, blurb):
@@ -204,7 +240,7 @@ def main(argv):
     if len(argv) < 3:
         sys.stderr.write(__doc__)
         return 2
-    if argv[2] in ("vowels", "consonants"):
+    if argv[2] in ("vowels", "consonants", "pairs", "pairs2"):
         which = argv[2]
         path = os.path.join(os.path.dirname(os.path.dirname(
             os.path.dirname(os.path.abspath(__file__)))),

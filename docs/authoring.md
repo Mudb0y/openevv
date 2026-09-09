@@ -124,6 +124,10 @@ So the shape of a consonant between two vowels is this:
 
 That the two ends separate is the whole game, because it says what the corpus is. **A table of consonant-vowel pairs is enough: 26 by 16, and one Latin square of 416 carriers measures both sides of every pair at once**, since `aCi` reports /a/-before-C and C-before-/i/ in the same utterance. The earlier note here guessed a few thousand carriers because it assumed the full cross product; separability is what makes it 416 rather than 6,656, and about ten minutes rather than an afternoon.
 
+**An obstruent behaves the same way and more cleanly than a nasal.** /t/ and /s/ hold f1 at 300 in every context measured, and their f2 locus is 1500 after /a/ or /u/ and 1800 after /i/ -- so a vowel can raise an alveolar's locus but not lower it, /a/ at 1200 and /u/ at 870 both leaving it where it was. Their `out` values agree across contexts to within ten hertz, 1740 against 1750 before /i/, which is the same ramp arithmetic and not a real difference.
+
+Worth knowing for later: between two /a/, /t/ and /s/ sit at exactly the same place -- f1 300, f2 1500, f3 2550, with b1, b2 and b3 unmoved. What tells them apart is entirely the frication and the voicing. /t/ gives one frame of `af` at 48 and drops `av` to nought for its closure; /s/ ramps `af` to 70 and holds it for twenty frames. So manner lives in the noise sources and place lives in the formants, which is the textbook account and is reassuring to find rather than have to assume.
+
 What is still unknown is whether the two directions share one table. /m/'s f2 is 1300 leaving an /i/ and about 1390 approaching one, which is close enough to be suspicious and far enough apart not to assume.
 
 ### What the tables do not yet say
