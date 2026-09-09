@@ -44,7 +44,7 @@ So `reference/` stays, `analysis/` stays regenerable from the SDK, and the suite
 
 On 6 September 2026 `analysis/` was moved off disk entirely and the whole gate run against a tree with no IBM material in it: `make missing` at nought, all six builds at 979 cases every one as it was, `make crashers` at 20,526 of 20,526, `test/lib/langs.py` speaking all ten languages out of one library, and `make upper-check` matching call for call over 1,176,590 lines. Then the objects were put back.
 
-**`make crashers` was failing and is fixed as of 9 September 2026.** All 20,526 strings survive again. What it was, because the shape of it is worth keeping:
+**`make crashers` was failing and is fixed as of 9 September 2026.** All 20,526 strings survive again, and the six builds pass 979 cases each -- `probe`, `probe32` and `probe.exe`, with `RULES=c` and `RULES=bytecode`. What it was, because the shape of it is worth keeping:
 
 The walk bound the crashers fix installed -- `EVV_WALK_MAX` in `src/delta/delta.c`, two hundred thousand steps -- was doing its job. It caught the runaway list walk in `chkdelnonseq` that these strings cause, and then called `forceErrorBacktrack`, whose comment says exactly what should happen: "the rule backtracks, and the utterance goes rather than the process". The backtrack jumps to the machine's `err_jmp`, and the landing there had never been planted, so the landing guard aborted the process instead.
 
