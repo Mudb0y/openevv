@@ -117,20 +117,26 @@ static enum ECICallbackReturn STDCALL on_message(OldInst *h,
     (void)data;
 
     if (msg == eciPhonemeBuffer) {
+        /* The buffer holds what the language decided the words were made of,
+           as one annotation string -- `2 `[.2hE.1lo]`0 and so on -- and
+           param counts its characters. It was read here as pairs of a
+           four-character name and a duration until 9 September 2026, which
+           printed the string's own bytes as durations of hundreds of
+           millions of milliseconds. There are no durations in it: those go
+           to a phoneme callback the public interface does not reach, so
+           anything wanting the length of a phoneme has to time it against
+           the frames instead. */
         long i;
 
-        /* A name is four characters packed into a word and is not
-           nul-terminated when all four are used, so it is printed by
-           length rather than as a string. */
-        for (i = 0; i < param; i++) {
-            const char *nm = (const char *)&phonemes[i * 2];
-            int j;
+        printf("speak: phonemes ");
+        for (i = 0; i < param * (long)sizeof phonemes[0]; i++) {
+            char c = ((const char *)phonemes)[i];
 
-            printf("speak: phoneme ");
-            for (j = 0; j < 4 && nm[j] != 0; j++)
-                putchar(nm[j]);
-            printf(" %d ms\n", (int)phonemes[i * 2 + 1]);
+            if (c == 0)
+                break;
+            putchar(c);
         }
+        putchar('\n');
     } else if (msg == eciWaveformBuffer)
         keep(frame, (size_t)param);
     else if (msg == eciIndexReply)
