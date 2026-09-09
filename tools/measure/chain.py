@@ -45,13 +45,15 @@ VOWELS = set("iIeEAauUocYWOXHx")
 # carriers of different lengths lands every step in the wrong place -- which
 # is most of what is still wrong with a chain.
 #
-# The rule below is measured and right, and generating voicing from it was
-# tried three times and beaten by splicing each time: it took /aCaSa/ from
-# 10.4 per cent to 3.6 and /awaya/ from 55 to 41, and it took /atapa/ from
-# 14.5 to 60 and /akaga/ from 12.3 to 60. So the knowledge is kept here and
-# `voicing' is left unused until what is wrong with those two is found. What
-# is known to be wrong with the first two attempts is written in them: the
-# drop must not be taken off twice, and a closure must keep its own shape.
+# Three things had to be right and each was found by the answer getting
+# worse. The drop must not be taken off twice, a pair carrier's run-out
+# already being the staircase. A closure must keep its own shape rather than
+# one held value, /t/ holding 35 for four frames and then dropping to nought
+# for its burst. And the voicing does not come back the moment the closure
+# ends -- a voiceless stop holds it at nought through its release as well,
+# /p/ for four frames past the `ah == 0' span and /k/ for five -- so starting
+# the staircase there moved every step boundary with it and cost /atapa/ 60
+# per cent against splicing's 14.5.
 #
 # The rule, measured over /a/, /aa/, /ama/, /amama/, /amamama/, /imi/, /umu/,
 # /AmA/, /imu/, /ini/ and /asa/: the staircase does not decline across an
@@ -71,7 +73,25 @@ VOWELS = set("iIeEAauUocYWOXHx")
 AV_DROP = 3        # below the following vowel's own value
 AV_STEPS = 4       # steps across a vowel that follows a consonant
 AV_FIRST_STEPS = 2 # across the first vowel of the utterance
-AV_RELEASE = 13    # frames of letting go at the end
+# Letting go at the end is not a fixed number of frames: it is thirteen at
+# 175 words a minute, eight at 250, four at 350, three at 450 and one at 700,
+# so it scales with the rate like everything else. Taking it as thirteen
+# always reserved thirteen frames where the engine used three and squeezed the
+# whole staircase into what was left, which cost /atapa/ at 450 words a
+# minute 51 per cent against splicing's 16.3. It is read off the right-hand
+# carrier instead, as the trailing frames whose voicing falls by more than one
+# a frame -- a staircase steps by one and a release plunges.
+AV_RELEASE = 13    # only the fallback, where no carrier says otherwise
+
+
+def release_len(tail):
+    """How many frames at the end of a carrier are the letting go."""
+    k = 0
+    i = len(tail) - 1
+    while i > 0 and tail[i - 1] - tail[i] > 1:
+        k += 1
+        i -= 1
+    return k + 1 if k else 0
 
 
 def live_frames(probe, text, wpm=None):
@@ -403,6 +423,15 @@ def compose_chain(phonemes, frames, left, right):
         for i in range(n):
             out[i][name] = seq[i]
 
+    # The measured voicing rule, which beats splicing on seven of eight
+    # chains -- /aCaSa/ 10.4 per cent to 3.6, /akaga/ 12.3 to 7.9, /atapa/
+    # 14.5 to 10.9 -- and is never worse by more than a fifth of a point.
+    # EVV_CHAIN_AV=0 splices instead, which is how the two were compared.
+    if os.environ.get("EVV_CHAIN_AV") != "0":
+        av = voicing(frames, spans, order, left, right, n)
+        for i in range(n):
+            if av[i] is not None:
+                out[i]["av"] = av[i]
     return out, None
 
 
@@ -426,7 +455,18 @@ def voicing(frames, spans, order, left, right, n):
     was one.
     """
     seq = [None] * n
-    rel = min(AV_RELEASE, n)
+
+    # How long the letting go is, from whichever carrier ends the utterance.
+    rel = 0
+    if spans and order:
+        c, vp, vn = order[len(spans) - 1]
+        rp = right.get((c, vn)) if vn else None
+        if rp:
+            t = [f["av"] for f in rp[0]["frames"][rp[0]["span"][1] + 1:]]
+            rel = release_len(t)
+    if rel == 0:
+        rel = AV_RELEASE
+    rel = min(rel, n)
 
     # The first vowel: its own value, then one less.
     first = spans[0][0] if spans else n - rel
@@ -446,19 +486,27 @@ def voicing(frames, spans, order, left, right, n):
         hi = spans[k + 1][0] if k + 1 < len(spans) else n - rel
         if hi <= lo:
             continue
-        # And the vowel after it resumes three below its own value. The pair
-        # carrier's own run-out already IS that staircase, so its top is the
-        # number wanted and the three must not be taken off again -- doing so
-        # put every step exactly three low and took /atapa/ from 14.5 per cent
-        # to 71.3.
+        # The voicing does not come back the moment the closure ends. A
+        # voiceless stop holds it at nought through its release as well: /p/
+        # for four frames past the `ah == 0' span and /k/ for five. The pair
+        # carrier's own run-out carries those zeros, so they are taken from
+        # it, and the staircase begins after them -- which also puts its step
+        # boundaries where the engine has them, since starting four frames
+        # early moved every one of them.
         top4 = None
+        off = 0
         if rp:
-            tail = rp[0]["frames"][rp[0]["span"][1] + 1:]
+            tail = [f["av"] for f in rp[0]["frames"][rp[0]["span"][1] + 1:]]
             if tail:
-                top4 = max(f["av"] for f in tail)
+                top4 = max(tail)
+                while off < len(tail) and tail[off] < 20:
+                    off += 1
         if top4 is None:
             top4 = frames[lo][IDX["av"]]
-        seq[lo:hi] = staircase(top4, AV_STEPS, hi - lo)
+        off = min(off, hi - lo)
+        for i in range(lo, lo + off):
+            seq[i] = 0
+        seq[lo + off:hi] = staircase(top4, AV_STEPS, hi - lo - off)
 
     # Letting go: from one below wherever it had got to, down to nought.
     at = n - rel
