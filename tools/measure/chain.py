@@ -48,35 +48,66 @@ def live_frames(probe, text, wpm=None):
             if any(r[IDX[s]] >= 20 for s in ("av", "af", "ah"))]
 
 
-def closures(frames, want=None):
-    """Every stretch with no aspiration: one a consonant that closes.
-
-    Aspiration comes back up during a vowel, which is what separates two
-    closures -- until the rate is high enough that the vowel between them is
-    too short for it to. At 450 words a minute /akaga/ is thirty frames and
-    reports one closure for its /k/ and its /g/, and the composition refuses
-    outright rather than merely composing badly.
-
-    `want' says how many consonants the phoneme string has, and when fewer
-    stretches than that are found the longest are split at the loudest frame
-    inside them. Voicing is what tells them apart where aspiration cannot:
-    across /k/ it is nought, across the /a/ between them it is 47, across /g/
-    it is 20, so the peak is the vowel and the split belongs there.
-    """
-    n = len(frames)
-    out, i = [], 0
+def runs_where(frames, test):
+    """Every interior run of frames the test holds over."""
+    out, i, n = [], 0, len(frames)
     while i < n:
-        if frames[i][IDX["ah"]] == 0:
+        if test(frames[i]):
             j = i
-            while j + 1 < n and frames[j + 1][IDX["ah"]] == 0:
+            while j + 1 < n and test(frames[j + 1]):
                 j += 1
-            out.append((i, j))
+            if i > 0 and j < n - 1:
+                out.append((i, j))
             i = j + 1
         else:
             i += 1
+    return out
+
+
+def closures(frames, want=None):
+    """Where each consonant of the utterance is, by whichever marker shows it.
+
+    Three markers, the same three `loci.hold' uses and for the same reason:
+    aspiration going to nought is the obstruents and the nasals, voicing going
+    to nought is /h/, and the third bandwidth leaving the vowel's own 150 is
+    the five sonorants, which have no amplitude marker at all. Asking only
+    the first, which this did until 9 September 2026, finds no consonant
+    whatever in /alara/ or /awaya/ and the composition refuses the whole
+    utterance.
+
+    Runs touching either edge are the utterance's own onset and release and
+    are left out. Where two markers cover the same stretch the longer wins.
+
+    `want' says how many consonants the phoneme string has. Too few runs and
+    the longest is split at its loudest frame, which is how two closures that
+    have merged are told apart -- at speed the vowel between them is too
+    short for aspiration to return. Too many and the longest `want' of them
+    are kept.
+    """
+    n = len(frames)
+    if not n:
+        return []
+    # Strictly in order, and a later marker is only asked when the ones
+    # before it have not found enough. Pooling all three and taking the
+    # longest instead was tried: it found the sonorants but broke the
+    # obstruents, because voicing also touches nought in a vowel's release
+    # and the third bandwidth also moves in /W/, so /akaga/ went from 12.3
+    # per cent to 59.1 and gained a dropout it did not have.
+    base = frames[0][IDX["b3"]]
+    markers = [lambda f: f[IDX["ah"]] == 0,
+               lambda f: f[IDX["av"]] == 0,
+               lambda f: f[IDX["b3"]] != base]
+    out = []
+    for test in markers:
+        if want is not None and len(out) >= want:
+            break
+        for a, b in sorted(runs_where(frames, test),
+                           key=lambda r: r[0] - r[1]):
+            if not any(a <= y and x <= b for x, y in out):
+                out.append((a, b))
+    out.sort()
 
     while want is not None and len(out) < want:
-        # The longest stretch that can be split at all.
         best = None
         for k, (a, b) in enumerate(out):
             if b - a >= 2 and (best is None or
@@ -90,6 +121,9 @@ def closures(frames, want=None):
            frames[peak][IDX["av"]] <= frames[b][IDX["av"]]:
             break
         out[best:best + 1] = [(a, peak - 1), (peak + 1, b)]
+
+    if want is not None and len(out) > want:
+        out = sorted(sorted(out, key=lambda r: r[0] - r[1])[:want])
     return out
 
 

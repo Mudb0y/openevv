@@ -39,26 +39,92 @@ def rebuild(shared, phone):
     return R.build(shared, phone)
 
 
-def hold(frames):
-    """The consonant's own stretch, by the marker the engine itself gives.
+def span_where(frames, test, middle=False):
+    """The longest run of frames the test holds over, or None.
 
-    Aspiration sits at 34 through a vowel and at nought through a consonant,
-    and that boundary is exact: over the twenty-six consonants between two
-    /a/, the `ah == 0' span agrees frame for frame with the stretch at one f1
-    for twenty of them, and the ones it does not agree about are the ones a
-    plateau is the wrong question for. /h/ is aspiration, so it never
-    suppresses it; /r/, /l/, /y/, /w/ and /R/ are sonorants with no closure,
-    and a glide is a continuous transition rather than a target held. For
-    those six this answers None rather than guessing, which is what an earlier
-    version of this did -- it looked for the longest interior run at one f1
-    and found stretches of the vowels instead, reporting an /f1/ of 272
-    against 742 for the same pair and making it look as though the locus does
-    not separate.
+    A run, not the outer bounds of every match. Aspiration goes to nought
+    over exactly one stretch so the difference never showed, but voicing goes
+    to nought twice -- once for /h/ and again for the utterance's own release
+    at the end -- and taking the first and last match merged the two. In
+    `Aha' that made /h/'s anchor run from frame 44 to 107 of 108, so the
+    composition held the voice at nought from the consonant to the end of the
+    word and never recovered. The third bandwidth has the same shape: /R/
+    picked up a single frame at the very end instead of its own thirty.
+
+    A run touching either edge is the utterance's own onset or release rather
+    than a consonant, so only interior runs count and a marker that finds
+    none answers None -- which lets the next marker be tried. Falling back to
+    an edge run instead is what left /R/ anchored on frame 94 of 95: its
+    aspiration touches nought on the last frame alone, that was taken as the
+    consonant, and the third bandwidth -- which moves 150 to 250 and back over
+    frames 25 to 55, exactly the /R/ -- was never looked at.
     """
-    zero = [i for i, f in enumerate(frames) if f.get("ah", 34) == 0]
-    if not zero:
+    runs = []
+    i, n = 0, len(frames)
+    while i < n:
+        if test(frames[i]):
+            j = i
+            while j + 1 < n and test(frames[j + 1]):
+                j += 1
+            runs.append((i, j))
+            i = j + 1
+        else:
+            i += 1
+    inner = [r for r in runs if r[0] > 0 and r[1] < n - 1]
+    if middle:
+        # /W/ is the one vowel that moves the third bandwidth itself, 150 to
+        # 500 and back, so in a carrier like `WlX' it cannot be told from the
+        # consonant's own movement by value. It can be told by place: a
+        # consonant in a carrier is in the middle, and a vowel's own movement
+        # is not. Without this /l/ between /W/ and /X/ took the vowel's
+        # stretch and put a hundred and forty milliseconds of silence in.
+        mid = [r for r in inner
+               if n // 4 <= (r[0] + r[1]) // 2 <= (3 * n) // 4]
+        inner = mid or inner
+    if not inner:
         return None
-    return (zero[0], zero[-1])
+    return max(inner, key=lambda r: r[1] - r[0])
+
+
+def hold(frames):
+    """The consonant's own stretch, by whichever marker the engine gives.
+
+    Three markers, tried in turn, because no one of them covers every manner.
+
+    **Aspiration going to nought** is the obstruents and the nasals, and it is
+    exact: over the twenty-six consonants between two /a/ the `ah == 0' span
+    agrees frame for frame with the stretch held at one f1 for twenty of them.
+
+    **Voicing going to nought** is /h/, which is aspiration itself and so
+    never suppresses it -- it lifts `ah' from 34 to 37 instead -- but does
+    stop the voice.
+
+    **The third bandwidth leaving the vowel's own value** is the five
+    sonorants, /r/, /l/, /y/, /w/ and /R/. They have no amplitude marker at
+    all: voicing stays up, frication stays at nought, aspiration stays at its
+    baseline, and only the formants move. But every one of them takes `b3'
+    away from the 150 a vowel holds -- to 250, 400, 500, 550 and 250 -- with
+    the extremum squarely in the interior, so the departure is the anchor.
+
+    An earlier version of this had only the first marker and answered None for
+    the other six, which was honest but cost 96 of the 416 carriers at 175
+    words a minute and 124 at 700. The one thing it must not do is guess: a
+    version before that took the longest interior run at one f1, silently
+    found stretches of the *vowels*, and reported an f1 of 272 against 742 for
+    the same pair.
+    """
+    if not frames:
+        return None
+    span = span_where(frames, lambda f: f.get("ah", 34) == 0)
+    if span is not None:
+        return span
+    span = span_where(frames, lambda f: f.get("av", 50) == 0)
+    if span is not None:
+        return span
+    base = frames[0].get("b3")
+    if base is None:
+        return None
+    return span_where(frames, lambda f: f.get("b3") != base, middle=True)
 
 
 def read(path):
