@@ -110,21 +110,21 @@ A consonant cannot be measured on its own. Asked for one, the engine spells the 
 
 The carrier shows the structure the format was hoping for. In `ama` the first /a/ holds its targets to frame 30, six frames carry every parameter to the /m/, the /m/ holds from 36 to 46, and six more carry it out. Aspiration goes to nought through the nasal and voicing *rises*, from 49 to 52, which is a real thing about nasals and not an artefact. So a consonant is a locus and two transitions, exactly as expected.
 
-### But the locus is coarticulated, so a consonant is not yet a thing you can place
+### The locus is coarticulated, and it is separable, which is what matters
 
-The expectation was that the locus belongs to the consonant and the transition to the pair. It does not. /m/ measured in three carriers:
+The first measurement of this said the locus does not compose, and that was wrong. It was measured only in symmetric carriers -- /a/-C-/a/, /i/-C-/i/ -- where both neighbours change together, so there was no way to tell which of them was doing the work. Asymmetric carriers answer it immediately.
 
-Between two /a/, its f2 holds flat at 1000 and its f1 at 300.
+Compare the transition into /m/. In `ama` f1 runs 750 to 300; in `ami` it runs 750 to 250. Same preceding vowel, same starting value, different destination -- so the destination is set by what comes *after* the consonant. And in `ima` f1 runs 270 to 300 while in `imi` it runs 270 to 250, which says the same thing from the other side.
 
-Between two /i/, its f2 runs 1300 to 1400 across the hold and its f1 sits at 250.
+So the shape of a consonant between two vowels is this:
 
-Between two /u/, its f2 runs 850 to 1000 and its f1 again 250.
+**f1 holds one constant across the whole consonant, and the following vowel sets it.** For /m/ it is 300 before /a/, /e/ and /o/ and 250 before /i/ and /u/ -- which is to say before a close vowel. The transition into the consonant therefore aims at a value chosen by the phoneme after it, which is the engine reading ahead, and is why no amount of measuring in symmetric carriers could separate the two.
 
-Three different loci for one consonant, and the hold is not even flat in two of them. No single stored pair of numbers produces all three. A weighted blend of the consonant's own target with the neighbouring vowel's does not either: fitting the weight to the /a/ and /i/ cases gives 0.303 and a target of 913, and the /u/ case then wants 841.
+**f2 and f3 ramp straight across the consonant, from a value the preceding vowel sets to one the following vowel sets.** For /m/, f2 starts at 1147 after /e/ whatever follows -- 1147, 1155, 1147, 1147 across `ema`, `emi`, `emu`, `emo` -- and ends at about 1250 before /e/ whatever precedes: 1240, 1250, 1250, 1218 across `ame`, `ime`, `ume`, `ome`. The thirty-hertz spread in the second set is not coarticulation but ramp arithmetic, those holds being ten and eleven frames long, so the last frame of a straight line falls one step short in one and not the other.
 
-**So these forty-two tables are forty-two utterances, not forty-two phonemes.** They reproduce what the engine said, exactly, which is what makes them a foundation; what they do not yet do is compose. Placing /m/ between an /e/ and an /o/ is not something this table can answer, and until it can, there is no front end.
+That the two ends separate is the whole game, because it says what the corpus is. **A table of consonant-vowel pairs is enough: 26 by 16, and one Latin square of 416 carriers measures both sides of every pair at once**, since `aCi` reports /a/-before-C and C-before-/i/ in the same utterance. The earlier note here guessed a few thousand carriers because it assumed the full cross product; separability is what makes it 416 rather than 6,656, and about ten minutes rather than an afternoon.
 
-That is the next thing to measure and the shape of it is clear. The corpus needed is every consonant against every vowel on both sides, which at sixteen vowels and twenty-six consonants is a few thousand carriers at about a second each -- an hour of measurement, not a research project. What comes out of it is either a rule that predicts the locus from the neighbours, or the discovery that the engine holds a table of transitions and the honest thing is to hold one too. Either answer is progress, and the measurement distinguishes them.
+What is still unknown is whether the two directions share one table. /m/'s f2 is 1300 leaving an /i/ and about 1390 approaching one, which is close enough to be suspicious and far enough apart not to assume.
 
 ### What the tables do not yet say
 

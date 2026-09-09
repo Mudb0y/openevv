@@ -3,12 +3,15 @@
 # A consonant cannot be measured on its own: asked for one, the engine
 # spells the letter out and gives four hundred frames of it. So each
 # is measured in a carrier, and what is written down is the whole
-# carrier rather than the consonant, because the consonant's own
-# values cannot be separated from it -- see docs/authoring.md. /m/
-# between two /a/ holds f2 flat at 1000; between two /i/ it runs 1300
-# to 1400 and between two /u/ 850 to 1000, and its f1 is 300 after /a/
-# against 250 after either. The locus is coarticulated, so these
-# tables are twenty-six utterances and not twenty-six consonants.
+# carrier rather than the consonant.
+#
+# The locus is coarticulated and it separates: across a consonant, f1
+# holds one value that the FOLLOWING vowel sets, while f2 and f3 ramp
+# from a value the PRECEDING vowel sets to one the following vowel
+# sets. So /m/ runs f1 750 to 300 in `ama' and 750 to 250 in `ami'.
+# These twenty-six are therefore one column of a table that wants
+# every consonant against every vowel on both sides, which is 416
+# carriers rather than 6,656. See docs/authoring.md.
 #
 # Measured, not read. Each case is spoken as a pronunciation annotation
 # and what the synthesiser was told is written down frame by frame, then
