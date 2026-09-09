@@ -64,12 +64,25 @@ def closures(frames):
     return out
 
 
-def load_pairs():
-    """Every measured carrier, by the pair on each side of its consonant."""
+def load_pairs(wpm=None):
+    """Every measured carrier, by the pair on each side of its consonant.
+
+    A rate of its own has tables of its own, since speed changes the number of
+    frames: `enus-pairs-450.txt' beside `enus-pairs.txt'. Falling back to the
+    175 tables when a rate has none is deliberate -- it is what composing at
+    an unmeasured rate has to do, and the stretch in `fit' is what makes it
+    possible at all.
+    """
     here = os.path.join(ROOT, "lang", "measured")
     left = collections.defaultdict(list)
     right = collections.defaultdict(list)
-    for f in ("enus-pairs.txt", "enus-pairs2.txt", "enus-holdout.txt"):
+    names = ["enus-pairs.txt", "enus-pairs2.txt", "enus-holdout.txt"]
+    if wpm is not None:
+        at_rate = ["enus-pairs-%d.txt" % wpm, "enus-pairs2-%d.txt" % wpm,
+                   "enus-holdout-%d.txt" % wpm]
+        if all(os.path.exists(os.path.join(here, f)) for f in at_rate):
+            names = at_rate
+    for f in names:
         p = os.path.join(here, f)
         if not os.path.exists(p):
             continue
@@ -328,12 +341,13 @@ def main(argv):
         sys.stderr.write(__doc__)
         return 2
     probe, play = argv[1], argv[2]
-    rest = list(argv[3:])
+    rest = [x for x in argv[3:] if x != "--own-tables"]
     wpm = None
     if rest and rest[0] == "--wpm":
         wpm = int(rest[1])
         rest = rest[2:]
-    left, right = load_pairs()
+    left, right = load_pairs(wpm if "--own-tables" in argv else None)
+    argv = [x for x in argv if x != "--own-tables"]
     work = os.path.join(ROOT, "build", "chain")
     if not os.path.isdir(work):
         os.makedirs(work)

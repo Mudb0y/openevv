@@ -142,14 +142,20 @@ def main(argv):
         return 2
     probe = argv[1]
     here = os.path.join(ROOT, "lang", "measured")
-    tables = [("vowels", "enus-vowels.txt"),
-              ("consonants", "enus-consonants.txt"),
-              ("pairs", "enus-pairs.txt"),
-              ("pairs2", "enus-pairs2.txt"),
-              ("holdout", "enus-holdout.txt")]
+    # Every table in the directory, and the rate in its name says how fast
+    # to speak it: enus-pairs-450.txt was measured at 450 words a minute and
+    # only reproduces when spoken at 450.
+    tables = []
+    for f in sorted(os.listdir(here)):
+        if not (f.startswith("enus-") and f.endswith(".txt")):
+            continue
+        stem = f[len("enus-"):-len(".txt")]
+        bits = stem.rsplit("-", 1)
+        rate = int(bits[1]) if len(bits) == 2 and bits[1].isdigit() else None
+        tables.append((stem, f, rate))
     idx = {n: i for i, n in enumerate(NAMES)}
     total = good = 0
-    for what, fname in tables:
+    for what, fname, rate in tables:
         path = os.path.join(here, fname)
         if not os.path.exists(path):
             continue
@@ -161,7 +167,8 @@ def main(argv):
         print("--- %s" % what)
         # With hundreds of cases a line each is noise, so only the ones that
         # differ are named and the rest are counted.
-        n, b = run(probe, shared, phones, want, idx, quiet=len(want) > 50)
+        n, b = run(probe, shared, phones, want, idx,
+                   quiet=len(want) > 50, wpm=rate)
         total += n
         good += n - b
     print()
@@ -169,10 +176,10 @@ def main(argv):
     return 0
 
 
-def run(probe, shared, phones, want, idx, quiet=False):
+def run(probe, shared, phones, want, idx, quiet=False, wpm=None):
     bad = 0
     for v in want:
-        got = frames_of(probe, phones[v]["text"])
+        got = frames_of(probe, phones[v]["text"], wpm)
         live = [r for r in got
                 if any(r[idx[s]] >= 20 for s in ("av", "af", "ah"))]
         mine = build(shared, phones[v])

@@ -153,10 +153,10 @@ def fit(seq):
     return out
 
 
-def tracks(probe, text):
+def tracks(probe, text, wpm=None):
     """Every parameter that moves, as breakpoints, plus the ones that do not."""
     idx = {n: i for i, n in enumerate(R.NAMES)}
-    got = R.frames_of(probe, text)
+    got = R.frames_of(probe, text, wpm)
     live = [r for r in got
             if any(r[idx[s]] >= 20 for s in ("av", "af", "ah"))]
     moving, still = {}, {}
@@ -204,10 +204,11 @@ def corpus(which):
     return out
 
 
-def emit(probe, which, path, blurb):
+def emit(probe, which, path, blurb, wpm=None):
     """Fit every case in the corpus and write the table."""
     cases = corpus(which)
-    fitted = [(name, text) + tracks(probe, text) for name, text in cases]
+    fitted = [(name, text) + tracks(probe, text, wpm)
+              for name, text in cases]
 
     # What every case holds at the same value, said once.
     common = {}
@@ -258,13 +259,26 @@ def main(argv):
     if argv[2] in ("vowels", "consonants", "pairs", "pairs2",
                    "holdout"):
         which = argv[2]
+        # A rate other than probe's own 175 words a minute writes its own
+        # table, so the tables at each rate sit beside each other and nothing
+        # already recorded is overwritten.
+        wpm = int(argv[3]) if len(argv) > 3 else None
+        tag = which if wpm is None else "%s-%d" % (which, wpm)
         path = os.path.join(os.path.dirname(os.path.dirname(
             os.path.dirname(os.path.abspath(__file__)))),
-            "lang", "measured", "enus-%s.txt" % which)
-        blurb = BLURB[which]
-        cases, common = emit(argv[1], which, path, blurb)
+            "lang", "measured", "enus-%s.txt" % tag)
+        blurb = list(BLURB[which])
+        if wpm is not None:
+            blurb = blurb[:1] + [
+                "#",
+                "# Measured at %d words a minute, not probe's own 175." % wpm,
+                "# Speed changes the number of frames and not their length,",
+                "# so every breakpoint here is at a different scale from the",
+                "# table of the same name without a rate in it.",
+            ] + blurb[1:]
+        cases, common = emit(argv[1], which, path, blurb, wpm)
         print("%s: %d cases, %d shared stills, written to %s"
-              % (which, cases, common, os.path.relpath(path)))
+              % (tag, cases, common, os.path.relpath(path)))
         return 0
     for t in argv[2:]:
         show(argv[1], t)
