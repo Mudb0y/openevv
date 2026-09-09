@@ -264,6 +264,24 @@ So the metric is not the waveform ratio. **It is whether the voice stops.** `dro
 
 The cause of the dropout was a rule of mine and worth recording. Both sides of a vowel between two closures are now handed over whole, and `stitch` cuts the middle. Trying to find where each transition ends first was worse than not trying: **a run-out begins with a plateau** -- after a /k/ closure the voicing is still nought for several frames before it returns -- so a rule that stopped at the first repeated value captured one frame of silence and held it across the entire vowel. Handing both sides over whole took /akaga/ from 40.3 per cent to 12.3 and removed the dropout.
 
+### It works at every rate, given that rate's own tables
+
+Stas asked whether speeding the engine up would change anything, on the grounds that a fault can hide at a normal rate and show at a fast one. It does, and he was right to ask: with the tables measured at probe's own 175 words a minute, composing at 450 gave 80 to 100 per cent waveform difference, **voicing dropouts from 350 upwards**, and above 450 the segmentation failed outright.
+
+Three facts settled it.
+
+**Speed changes the number of frames, not their length.** `step` stays five milliseconds at every rate, so a short utterance is 115 frames at 175 words a minute and 12 at 700. Laying a shape measured at one rate down at its measured length is therefore wrong by a factor of ten across the range.
+
+**The format itself is rate-independent.** Every table reproduces the engine exactly at its own rate: 2,538 of 2,538 cases with the 450 tables in, and the breakpoints, the truncation and the half-frame denominators all hold unchanged.
+
+**And measuring a rate is cheap.** All three squares at 450 words a minute took ninety seconds, against the better part of an hour at 175, because there is a tenth as much to fit. So the answer is a table per rate rather than a stretch law stretched across the whole range, and `tools/measure/tracks.py` takes a rate as its third argument.
+
+Measured at ten rates from 200 to 700 words a minute, composing each from its own tables, the held-out carriers give: **no dropouts at any rate**, the run-in 0.0 to 0.2 per cent wrong, the closure 1.2 to 1.4, the run-out 2.2 to 3.3. At 175 from its own tables those are 0.0, 1.2 and 2.2, so the method does not care about the rate at all once the tables match it. Chains likewise: no dropouts at any rate, and ratios mostly between 8 and 35 per cent.
+
+**One structural fix was needed.** Aspiration returning during a vowel is what separates two closures, and at speed the vowel between them is too short for it to return, so both read as one stretch. `closures()` now takes how many consonants the phoneme string has and splits the longest stretch at the loudest frame inside it: voicing is nought across a voiceless stop, high across the vowel, low but present across a voiced one, so the peak is the vowel.
+
+**And one limitation, which counting made obvious.** At 175 words a minute 96 of the 416 carriers have no findable closure, and 96 is exactly the six consonants that have none by nature -- /h/, /r/, /l/, /y/, /w/ and /R/ -- times sixteen vowels. At 450 it is 106 and at 700 it is 124, so speed costs another ten and another twenty-eight as obstruents lose theirs too. Those pairs are missing from the tables, which is why a chain containing one is refused rather than composed badly. They want an anchor that is not a closure, and that is the second time this gap has appeared: `loci.py` already answers "no plateau to compare" for the same six.
+
 ### What the tables do not yet say
 
 The breakpoints are absolute frame numbers at the one duration each vowel was measured at, five milliseconds a frame. What the engine does with a shorter or longer vowel is unmeasured, and until it is, this table describes sixteen utterances rather than sixteen vowels. That is the next thing to measure and it is cheap: the annotation carries a duration, so the same vowel at several lengths answers it.
