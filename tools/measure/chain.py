@@ -79,22 +79,15 @@ def load_pairs():
     return left, right
 
 
-def moving_head(seq):
-    """How many frames at the front of a run-out are still moving."""
-    n = len(seq)
-    k = 0
-    while k + 1 < n and seq[k + 1] != seq[k]:
-        k += 1
-    return min(k + 1, n)
-
-
-def moving_tail(seq):
-    """How many frames at the end of a run-in are already moving."""
-    n = len(seq)
-    k = 0
-    while k + 1 < n and seq[n - 1 - k] != seq[n - 2 - k]:
-        k += 1
-    return min(k + 1, n)
+# Both sides of a region are handed over whole and `stitch' cuts the middle.
+# Trying to find where each transition ends first was worse than not trying:
+# a run-out BEGINS with a plateau -- after a /k/ closure the voicing is still
+# nought for several frames before it returns -- so a rule that stops at the
+# first repeated value captured one frame of silence and held it across the
+# whole vowel. In /akaga/ that put twenty-four frames of av at nought where
+# the engine has 47 declining to 44, which is a hundred and twenty
+# milliseconds of the voice cutting out and coming back, and is exactly what
+# Stas heard.
 
 
 def stitch(out, tail, want):
@@ -208,10 +201,7 @@ def compose_chain(phonemes, frames, left, right):
             room = hi - lo
             if room <= 0:
                 continue
-            outp = runout[k][:moving_head(runout[k])] if runout[k] else []
-            inp = runin[k + 1]
-            inp = inp[len(inp) - moving_tail(inp):] if inp else []
-            seq[lo:hi] = stitch(outp, inp, room)
+            seq[lo:hi] = stitch(runout[k], runin[k + 1], room)
 
         # After the last closure: the right carrier's run-out entire.
         lo = spans[-1][1] + 1
@@ -291,8 +281,13 @@ def main(argv):
         ra, rd = rms(a), rms(d)
         wrong = sum(1 for i in range(len(mine))
                     for nm in mine[i] if mine[i][nm] != truth[i][nm])
-        print("%-12s %6d %8.0f %8.0f %6.1f%%  %d values wrong"
-              % (ph, len(frames), ra, rd, 100.0 * rd / max(1.0, ra), wrong))
+        drop = K.dropouts(truth, mine)
+        note = "%d values wrong" % wrong
+        if drop:
+            note += ";  VOICE CUTS OUT: %s" % ", ".join(
+                "%d frames at %d" % (n, a) for a, n in drop)
+        print("%-12s %6d %8.0f %8.0f %6.1f%%  %s"
+              % (ph, len(frames), ra, rd, 100.0 * rd / max(1.0, ra), note))
     print()
     print("frames and wave files in %s" % os.path.relpath(work, ROOT))
     return 0

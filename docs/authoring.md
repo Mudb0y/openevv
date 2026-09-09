@@ -254,6 +254,16 @@ So with voicing right, every chain composes to between three and nine per cent, 
 
 That is also the third time this has surfaced -- in the isolated vowels, in the single carriers' run-out, and now in chains -- so it is the thing to do next. A staircase of one step every nine frames was fitted to two carriers and tried once and was much worse than splicing, so the rule is genuinely not known yet.
 
+### The metric was wrong, and the ear said which one to use instead
+
+Stas heard /akaga/ at 40 per cent waveform difference and barely heard /asaka/ at 72. The difference between them was not size but kind, and his description named it: "ours slips a bit, almost like the synth loses his voice for a second before coming back."
+
+That is exactly what it was. /akaga/'s middle vowel had **twenty-four frames with `av` at nought where the engine has 47 declining to 44** -- a hundred and twenty milliseconds of the voice cutting out and coming back. /asaka/'s 72 per cent is formants in slightly the wrong places, and that is forgiven.
+
+So the metric is not the waveform ratio. **It is whether the voice stops.** `dropouts()` in `tools/measure/compose.py` reports every run where the engine is voicing at 20 or more and the composition is under 10 for three frames or longer, which is fifteen milliseconds and about where a gap stops being a click. By that measure: **none of the 320 held-out carriers cuts out, and none of nineteen chains does either.** The waveform ratio stays in the reports as a rough guide, and is now known to be a poor predictor.
+
+The cause of the dropout was a rule of mine and worth recording. Both sides of a vowel between two closures are now handed over whole, and `stitch` cuts the middle. Trying to find where each transition ends first was worse than not trying: **a run-out begins with a plateau** -- after a /k/ closure the voicing is still nought for several frames before it returns -- so a rule that stopped at the first repeated value captured one frame of silence and held it across the entire vowel. Handing both sides over whole took /akaga/ from 40.3 per cent to 12.3 and removed the dropout.
+
 ### What the tables do not yet say
 
 The breakpoints are absolute frame numbers at the one duration each vowel was measured at, five milliseconds a frame. What the engine does with a shorter or longer vowel is unmeasured, and until it is, this table describes sixteen utterances rather than sixteen vowels. That is the next thing to measure and it is cheap: the annotation carries a duration, so the same vowel at several lengths answers it.

@@ -49,6 +49,39 @@ import replay as R                                       # noqa: E402
 
 SKIP = ("step", "f0")
 
+# What the ear actually catches. Stas heard /akaga/ at 40 per cent waveform
+# difference and barely heard /asaka/ at 72, and the difference between them
+# was not size but kind: /akaga/ had twenty-four frames where the voicing was
+# nought and should have been 47, which is a hundred and twenty milliseconds
+# of the voice cutting out and coming back. A formant in the wrong place is
+# forgiven; the voice stopping is not. So this is the metric that matters, and
+# the waveform ratio is only a rough guide beside it.
+DROP_ON = 20        # the engine is voicing here
+DROP_OFF = 10       # and we are not
+DROP_FRAMES = 3     # for long enough to be a gap rather than a glitch
+
+
+def dropouts(truth, mine, name="av"):
+    """Runs where the engine is voicing and the composition is not.
+
+    Answers a list of (first frame, length). A run of three frames is fifteen
+    milliseconds, which is about where a gap stops being a click.
+    """
+    out = []
+    run = None
+    for i in range(min(len(truth), len(mine))):
+        t = truth[i][name] if isinstance(truth[i], dict) else truth[i]
+        m = mine[i][name] if isinstance(mine[i], dict) else mine[i]
+        if t >= DROP_ON and m < DROP_OFF:
+            run = i if run is None else run
+        else:
+            if run is not None and i - run >= DROP_FRAMES:
+                out.append((run, i - run))
+            run = None
+    if run is not None and len(mine) - run >= DROP_FRAMES:
+        out.append((run, len(mine) - run))
+    return out
+
 # Voicing is not a phoneme's, it is the utterance's: it declines in a
 # staircase from the first vowel's plateau, holds the consonant's own value
 # through the closure, resumes declining and lets go at the end. Splicing two
@@ -272,6 +305,7 @@ def main(argv):
     errs = collections.defaultdict(list)
     lenbad = 0
     bycons = collections.defaultdict(list)
+    drops = {}
     byregion = collections.Counter()
     percase = {}
     regionsize = collections.Counter()
@@ -312,6 +346,9 @@ def main(argv):
         if fmax <= 1.0:
             close += 1
         bycons[want["cons"]].append(fmax)
+        d = dropouts(want["frames"], got)
+        if d:
+            drops[name] = sum(x[1] for x in d)
         percase[name] = (fmax, got, nwrong)
         n = len(want["frames"])
         regionsize["run-in"] += wa
@@ -358,6 +395,13 @@ def main(argv):
     print("  %d reproduce every parameter of every frame" % exact)
     print("  %d come out the wrong length" % lenbad)
     print()
+    if drops:
+        print("  %d have the voice cut out where the engine has it: %s"
+              % (len(drops), ", ".join(
+                  "%s (%d frames)" % (k, v) for k, v in
+                  sorted(drops.items(), key=lambda kv: -kv[1])[:6])))
+    else:
+        print("  none has the voice cut out where the engine has it")
     print("  %d have every formant within one per cent, which is under the"
           % close)
     print("     ear's threshold for telling two formants apart")
