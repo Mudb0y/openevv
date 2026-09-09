@@ -65,7 +65,14 @@ def table(path):
     return shared, phones
 
 
-def frames_of(probe, text):
+# Speaking at a chosen rate wants the other CLI: probe takes annotations but
+# cannot change the speed, evv can change the speed and takes annotations
+# since -A. So a measurement at the default rate goes through probe, as every
+# recorded table was measured, and one at a named rate goes through evv.
+EVV = os.environ.get("EVV_EVV", os.path.join(ROOT, "build", "evv"))
+
+
+def frames_of(probe, text, wpm=None):
     with tempfile.TemporaryDirectory() as work:
         case = os.path.join(work, "case.txt")
         tap = os.path.join(work, "tap.tsv")
@@ -73,8 +80,12 @@ def frames_of(probe, text):
             f.write(text + "\n")
         env = dict(os.environ)
         env["EVV_KLATT_TAP"] = tap
-        subprocess.run([probe, "@" + case, os.path.join(work, "case.wav"),
-                        "a"], capture_output=True, env=env)
+        if wpm is None:
+            argv = [probe, "@" + case, os.path.join(work, "case.wav"), "a"]
+        else:
+            argv = [EVV, "-A", "-r", "-s", str(int(wpm)),
+                    "-f", case, "-o", os.path.join(work, "case.wav")]
+        subprocess.run(argv, capture_output=True, env=env)
         rows = []
         if not os.path.exists(tap):
             return rows

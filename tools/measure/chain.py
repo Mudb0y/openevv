@@ -14,7 +14,7 @@ the same text. That is deliberate rather than a shortcut: it separates the
 question this can answer -- do the tables describe real speech -- from the
 question of what a language chooses to do, which is not a formant question.
 
-    tools/measure/chain.py <probe> <klattplay> <phonemes> [<phonemes>...]
+    tools/measure/chain.py <probe> <klattplay> [--wpm N] <phonemes>...
 
 A phoneme string is what the engine itself accepts, so `atapa' means the
 utterance `` `[.1atapa] ``.
@@ -42,8 +42,8 @@ RATE = 11025
 VOWELS = set("iIeEAauUocYWOXHx")
 
 
-def live_frames(probe, text):
-    got = R.frames_of(probe, text)
+def live_frames(probe, text, wpm=None):
+    got = R.frames_of(probe, text, wpm)
     return [r for r in got
             if any(r[IDX[s]] >= 20 for s in ("av", "af", "ah"))]
 
@@ -90,6 +90,70 @@ def load_pairs():
 # Stas heard.
 
 
+def fit(seq, room, keep):
+    """A measured shape into the room it has, stretching only if it must.
+
+    A shape measured at very nearly the right length is used as measured, and
+    only one measured at a different length is stretched. Both halves matter.
+    Stretching everything cost the default rate its accuracy -- /atapa/ went
+    from 14.5 per cent to 39.4 -- because the tables are measured at 175 words
+    a minute and at 175 the room already fits. Stretching nothing is what
+    breaks at speed, where the room is a fifth of what was measured.
+
+    `keep' says which end to hold on to when the difference is small: `tail'
+    for a run-in, whose last frame meets the closure, `head' for a run-out,
+    whose first frame leaves it.
+    """
+    m = len(seq)
+    if room <= 0:
+        return []
+    if not m:
+        return None
+    if m == room:
+        return list(seq)
+    # Within a couple of frames the shape is the right shape and only its
+    # edge moves; beyond that the rate has changed and it has to be stretched.
+    if abs(m - room) <= 2:
+        if room < m:
+            return list(seq[m - room:]) if keep == "tail" else list(seq[:room])
+        pad = [seq[0]] * (room - m) if keep == "tail" else \
+              [seq[-1]] * (room - m)
+        return pad + list(seq) if keep == "tail" else list(seq) + pad
+    return resample(seq, room)
+
+
+def resample(seq, n):
+    """A measured shape at a different length, by the stretch law.
+
+    The tables are measured at 175 words a minute, which is what probe speaks
+    at, and speed changes the number of frames rather than their length --
+    `step' stays five milliseconds at every rate, so /atapa/ is 115 frames at
+    175 and 12 at 700. Laying a measured shape down at its measured length is
+    therefore wrong at any other rate, and wrong by a factor of ten at the
+    top of the range.
+
+    So a shape is stretched to the room it has, read at fractional positions
+    and truncated as the engine's own arithmetic truncates. This is the
+    stretch law applied to a whole trajectory rather than to a single ramp.
+    """
+    m = len(seq)
+    if n <= 0 or m == 0:
+        return []
+    if m == 1:
+        return [seq[0]] * n
+    if n == 1:
+        return [seq[0]]
+    out = []
+    for i in range(n):
+        pos = i * (m - 1) / float(n - 1)
+        k = int(pos)
+        if k >= m - 1:
+            out.append(seq[m - 1])
+        else:
+            out.append(seq[k] + int((seq[k + 1] - seq[k]) * (pos - k)))
+    return out
+
+
 def stitch(out, tail, want):
     """One region's values, held or trimmed in its middle to reach `want'.
 
@@ -111,7 +175,18 @@ def stitch(out, tail, want):
         # Hold whatever the two sides meet at.
         mid = out[-1] if out else (tail[0] if tail else 0)
         return list(out) + [mid] * (want - have) + list(tail)
-    # Too much: cut from the middle, leaving both ends whole where possible.
+    # Too much for the room: squeeze both sides rather than cut either, which
+    # is what a higher rate asks for. Cutting from the middle is right when
+    # the middle is a vowel holding still, and wrong when there is no middle
+    # at all -- above 350 words a minute a region is four or five frames and
+    # a run-out alone is six, so cutting takes the transitions themselves.
+    # Cut from the middle, keeping both ends whole. The middle of a region is
+    # the vowel holding still and is what a shorter region has less of; the
+    # ends are the transitions and are where all the information is.
+    # Resampling both proportionally instead was tried and cost the default
+    # rate more than it gained at speed -- /atapa/ 14.5 per cent to 39.1 --
+    # because compressing a transition distorts it where dropping a frame of
+    # steady vowel does not.
     cut = have - want
     keep_out = max(0, len(out) - (cut + 1) // 2)
     keep_tail = max(0, len(tail) - cut // 2)
@@ -180,18 +255,19 @@ def compose_chain(phonemes, frames, left, right):
 
         seq = [None] * n
         for k, (a, b) in enumerate(spans):
+            # The closure is stretched to the room the engine gave it, which
+            # at speed is a fraction of what it was measured at.
+            fitted = fit(closure[k], b - a + 1, "head")
             for i in range(a, b + 1):
-                j = i - a
-                seq[i] = closure[k][min(j, len(closure[k]) - 1)]
+                seq[i] = fitted[i - a]
 
         # Before the first closure: the left carrier's own prefix, which
         # carries the vowel's onset as well as the run-in.
         room = spans[0][0]
         if room > 0:
             src = runin[0]
-            seq[:room] = (src[-room:] if len(src) >= room
-                          else list(src) + [src[-1]] * (room - len(src))
-                          if src else [frames[0][name]] * room)
+            got = fit(src, room, "tail") if src else None
+            seq[:room] = got if got else [frames[0][name]] * room
 
         # Between two closures: the run-out of the first meeting the run-in of
         # the second, with the vowel holding in between.
@@ -208,9 +284,8 @@ def compose_chain(phonemes, frames, left, right):
         room = n - lo
         if room > 0:
             src = runout[len(spans) - 1]
-            seq[lo:n] = (list(src[:room]) if len(src) >= room
-                         else list(src) + [src[-1]] * (room - len(src))
-                         if src else [seq[lo - 1]] * room)
+            got = fit(src, room, "head") if src else None
+            seq[lo:n] = got if got else [seq[lo - 1]] * room
 
         last = None
         for i in range(n):
@@ -253,6 +328,11 @@ def main(argv):
         sys.stderr.write(__doc__)
         return 2
     probe, play = argv[1], argv[2]
+    rest = list(argv[3:])
+    wpm = None
+    if rest and rest[0] == "--wpm":
+        wpm = int(rest[1])
+        rest = rest[2:]
     left, right = load_pairs()
     work = os.path.join(ROOT, "build", "chain")
     if not os.path.isdir(work):
@@ -260,16 +340,16 @@ def main(argv):
 
     print("%-12s %6s %8s %8s %7s  %s"
           % ("utterance", "frames", "signal", "differs", "ratio", "note"))
-    for ph in argv[3:]:
+    for ph in rest:
         text = "`[.1%s]" % ph
-        frames = live_frames(probe, text)
+        frames = live_frames(probe, text, wpm)
         truth = [{nm: r[IDX[nm]] for nm in R.NAMES} for r in frames]
         mine, err = compose_chain(ph, frames, left, right)
         if mine is None:
             print("%-12s %6d %8s %8s %7s  %s"
                   % (ph, len(frames), "-", "-", "-", err))
             continue
-        base = os.path.join(work, ph)
+        base = os.path.join(work, ph + ("" if wpm is None else ".%d" % wpm))
         write_frames(base + ".true.tsv", truth, frames)
         write_frames(base + ".mine.tsv", mine, frames)
         for side in ("true", "mine"):
