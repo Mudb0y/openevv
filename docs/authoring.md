@@ -282,8 +282,19 @@ Measured at ten rates from 200 to 700 words a minute, composing each from its ow
 
 **And one limitation, which counting made obvious.** At 175 words a minute 96 of the 416 carriers have no findable closure, and 96 is exactly the six consonants that have none by nature -- /h/, /r/, /l/, /y/, /w/ and /R/ -- times sixteen vowels. At 450 it is 106 and at 700 it is 124, so speed costs another ten and another twenty-eight as obstruents lose theirs too. Those pairs are missing from the tables, which is why a chain containing one is refused rather than composed badly. They want an anchor that is not a closure, and that is the second time this gap has appeared: `loci.py` already answers "no plateau to compare" for the same six.
 
-### What the tables do not yet say
+### What is actually left
 
-The breakpoints are absolute frame numbers at the one duration each vowel was measured at, five milliseconds a frame. What the engine does with a shorter or longer vowel is unmeasured, and until it is, this table describes sixteen utterances rather than sixteen vowels. That is the next thing to measure and it is cheap: the annotation carries a duration, so the same vowel at several lengths answers it.
+Six things, in the order they block a front end.
 
-Consonants are the other half and want a carrier syllable, since a consonant is a locus and a transition rather than a target. The tap already shows they separate cleanly -- `asa` peaks at `af` 70 where `ama` sits flat at nought -- and `tracks.py` fits them the same way it fits a vowel, so the format needs nothing new for them. What needs deciding is how to say that a locus belongs to the consonant while the transition belongs to the pair.
+**Consonants with no closure cannot be anchored at all.** Every segmentation here finds a consonant by aspiration going to nought, and 96 of the 416 carriers have no such stretch -- exactly the six consonants that have none by nature, /h/, /r/, /l/, /y/, /w/ and /R/, times sixteen vowels. At 450 words a minute it is 106 and at 700 it is 124, as stops whose closure was already a frame or two lose it entirely. Those pairs are missing from the tables, so a chain containing one is refused rather than composed badly. It is the same gap `loci.py` reports as "no plateau to compare", and it has now cost something three times, so it is the thing to fix first. A sonorant has a formant target without having a closure, so the anchor wants to be that rather than the absence of aspiration.
+
+**The voicing envelope is the largest error that is not a hole.** The run-out is 2.2 to 3.3 per cent wrong at every rate and most of it is `av`, which belongs to the utterance and not to any phoneme: it declines in a staircase across the whole thing, holds each consonant's own value through its closure, and lets go at the end. Lending it from the measured utterance takes a chain from 72 per cent to 7.7, so it is nearly all of what remains. A staircase of one step every nine frames was fitted to two carriers and tried, and was much worse than splicing, so the rule is not known.
+
+**The velar pinch is unidentifiable from pair tables.** /k/, /g/ and /G/ take their f2 locus from both neighbours at once, and two training carriers whose far vowels are both non-back say nothing about what a back one does: /g/ before /u/ has left targets of 1658 and 1652 against a wanted 1208. `between()` answers None there and the caller draws a straight line, which is the honest thing but not the right answer.
+
+**The timing is borrowed, not composed.** `chain.py` takes the frame layout -- where each closure starts and how long it lasts -- from the engine's own frames for the same text. That is deliberate, and it separates what these tables can answer from what a language decides, but a front end has to decide it, and that is a durations-from-the-rules question rather than a formant one.
+
+**Rates between the measured ones are unmeasured.** There are tables at 125, 150, 200, 250, 300, 350, 450, 500, 550, 600 and 700 words a minute. A rate in between wants either its own table -- ninety seconds at the fast end, twenty minutes at the slow -- or an interpolation between the two nearest, which is untested.
+
+**And the corpus is one language in one context.** English, sixteen vowels and twenty-six consonants, measured between vowels and chained two consonants deep. Consonant clusters, word boundaries and unstressed vowels are untested, and a real word has all three.
+
