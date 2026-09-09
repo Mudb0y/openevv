@@ -134,7 +134,8 @@ def main(argv):
     tables = [("vowels", "enus-vowels.txt"),
               ("consonants", "enus-consonants.txt"),
               ("pairs", "enus-pairs.txt"),
-              ("pairs2", "enus-pairs2.txt")]
+              ("pairs2", "enus-pairs2.txt"),
+              ("holdout", "enus-holdout.txt")]
     idx = {n: i for i, n in enumerate(NAMES)}
     total = good = 0
     for what, fname in tables:

@@ -54,6 +54,18 @@ HEAD = [
 ]
 
 BLURB = {
+    "holdout": [
+        "# The same 416 pairs again, at an offset neither training square",
+        "# uses: carrier k is vowel k, the consonant, vowel k+2, where the",
+        "# two squares in enus-pairs.txt and enus-pairs2.txt use k+1 and k+3.",
+        "#",
+        "# So no carrier here appears in either of those, and a composer built",
+        "# from them can be tested against this without having seen a frame",
+        "# of it. That is the point: 874 cases reproducing the engine proves",
+        "# the measurement, and only a held-out set proves the format can be",
+        "# used to generate rather than merely to record.",
+        "#",
+    ] + HEAD,
     "pairs2": [
         "# The same 416 pairs, each against a different partner.",
         "#",
@@ -179,7 +191,10 @@ def corpus(which):
     # and C-before-/i/ in the same utterance -- so 416 carriers cover
     # every consonant against every vowel on both sides rather than the
     # 6,656 the full cross product would want.
-    step = 1 if which == "pairs" else 3
+    # The offset between the two vowels of a carrier. Two squares train a
+    # composer and a third, never seen by it, tests one: +1 and +3 are the
+    # training pair and +2 is held out.
+    step = {"pairs": 1, "pairs2": 3, "holdout": 2}[which]
     out = []
     for c in CONSONANTS:
         for k, v1 in enumerate(VOWELS):
@@ -240,7 +255,8 @@ def main(argv):
     if len(argv) < 3:
         sys.stderr.write(__doc__)
         return 2
-    if argv[2] in ("vowels", "consonants", "pairs", "pairs2"):
+    if argv[2] in ("vowels", "consonants", "pairs", "pairs2",
+                   "holdout"):
         which = argv[2]
         path = os.path.join(os.path.dirname(os.path.dirname(
             os.path.dirname(os.path.abspath(__file__)))),

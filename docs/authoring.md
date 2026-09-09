@@ -162,6 +162,30 @@ What does not separate is the length of what follows. The frames after the closu
 
 One thing this test cannot do, and it is worth saying why rather than reporting a number nobody should trust. Comparing the run-in frame by frame measures nothing about separability: the transition into a consonant aims at an f1 that the *following* vowel sets, so two carriers sharing their first vowel and their consonant are supposed to differ all through the run-in. A first version of this reported that they agree for 0 frames and called it a failure, when it was the design.
 
+### Generating an utterance nobody measured: the run-in is solved, the rest is not
+
+Every table above reproduces the engine exactly, and that proves the measurement rather than the format. What tests the format is generating a carrier nobody measured. `lang/measured/enus-holdout.txt` is a third Latin square at a vowel offset neither training square uses -- carrier k is vowel k, the consonant, vowel k+2, where the training squares use k+1 and k+3 -- so no carrier in it appears in either, and `tools/measure/compose.py` has seen no frame of it. All 1,290 measured cases across the five tables reproduce exactly, so the held-out square is trustworthy ground truth without running the engine again.
+
+Composing all 320 held-out carriers from the training squares gives, as it stands:
+
+Five reproduce every one of the sixty parameters of every frame. Eighty-nine have every formant within one per cent, which is below the ear's threshold for telling two formants apart. Eighty-nine come out the wrong length, and never by more than a frame.
+
+Broken down by where in the utterance the error is, against the number of values compared:
+
+The **run-in** is 54 wrong out of 541,800, which is 0.0 per cent. The **closure** is 4.7 per cent. The **run-out** is 2.2 per cent.
+
+**So the run-in is solved, and the thing that solved it is worth keeping.** Rescaling one measured run-in to a new target needs to know where the vowel stops and the transition starts, and getting that boundary wrong distorts the vowel's own glide -- a first version did exactly that and came out 15 per cent wrong on /p/ and 27 per cent on /J/. There is no need to know. Each side of a carrier has *two* measured neighbours, one from each training square, aimed at two different targets, and a run-in is linear in its target: /a/ into /m/ reaches one tenth and fourteen fifteenths of the way whether that way ends at 300 or at 250. So the answer is the straight line through the two measurements evaluated at the target wanted, and where the two measurements agree it returns that value, which is how the vowel's own portion comes through untouched without ever being located.
+
+**What is not solved, and what was tried.**
+
+The run-out is still the right carrier's own frames, spliced. The same interpolation applied to it, parameterised by the closure's first frame, made the answer worse -- 82 carriers within one per cent against 88, the run-out's own error unmoved -- so whatever the preceding vowel does to a run-out is not linear in the closure's onset.
+
+Most of what is wrong in the run-out is voicing, and voicing is not a phoneme's property at all. It declines in a staircase across the whole utterance, holds the consonant's own value through the closure, resumes declining and lets go at the end, so splicing two carriers of different lengths lands every step after the join in the wrong place. A staircase of one step every nine frames with the remainder given to the first step, fitted to two carriers and tried, made it much worse: 8,085 frames wrong against the splice's 3,892, and no carrier exact at all. The nine does not generalise and the rule is not found.
+
+The closure's remaining 4.7 per cent is the residual non-separability, and it is small but real. For /m/ between /E/ and /a/ the true closure runs 1147 to 1012; composition gives 1152 to 1004, because the left training carrier's own following vowel was /A/ rather than /a/ and the right one's preceding vowel was /A/ rather than /E/. Five hertz and eight hertz. The velars are the exception that is not small, as above.
+
+**The honest summary is that pair tables get within a few hertz and not to the byte.** Whether that is enough is an audio question rather than a measurement one, and it is now answerable by ear whenever somebody wants to: the composer writes frames, and frames are what the synthesiser takes. Byte-exactness would need the full cross product, 16 by 26 by 16, which is 6,656 carriers and about seven hours of measurement with no new method required.
+
 ### What the tables do not yet say
 
 The breakpoints are absolute frame numbers at the one duration each vowel was measured at, five milliseconds a frame. What the engine does with a shorter or longer vowel is unmeasured, and until it is, this table describes sixteen utterances rather than sixteen vowels. That is the next thing to measure and it is cheap: the annotation carries a duration, so the same vowel at several lengths answers it.
