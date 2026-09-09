@@ -39,6 +39,25 @@ typedef struct land_entry {
 
 static __thread land_entry *land_tab[LAND_BUCKETS];
 
+/* The landings planted by rules still running, innermost last.
+
+   Comparing stack addresses is not enough to tell a landing whose frame is
+   still on the stack from one whose frame has returned: the addresses come
+   round again, so a sibling that has already gone can have saved a stack
+   pointer above the frame asking. Trying that first gave a stack smashing
+   report instead of the abort it replaced.
+
+   So the depth is bracketed instead. delta_run_rule takes a mark before it
+   runs a rule and releases to it after, which un-plants whatever that rule
+   planted, and the entries left are exactly the ones whose frames are still
+   there. Sixteen deep is far more than the rules go -- the deepest run seen
+   is nine -- and going over it costs the fallback rather than anything else.
+   */
+#define LAND_LIVE_MAX 64
+
+static __thread land_entry *land_live[LAND_LIVE_MAX];
+static __thread int         land_depth;
+
 static land_entry *found(uintptr_t name)
 {
     unsigned h = (unsigned)((name >> 4) & (LAND_BUCKETS - 1));
@@ -70,7 +89,30 @@ void *evv_land_place(uintptr_t name)
         land_tab[h] = e;
     }
     e->planted = 1;
+    if (land_depth < LAND_LIVE_MAX)
+        land_live[land_depth] = e;
+    land_depth++;
     return e->saved;
+}
+
+/* How deep the planted landings are now, and putting them back to that. A
+   rule's landing stops being one when the rule returns, and this is where
+   that is said in a build whose rules are C: nothing else says it, since
+   evv_land_forget belongs to the interpreter. */
+int evv_land_mark(void)
+{
+    return land_depth;
+}
+
+void evv_land_release(int mark)
+{
+    while (land_depth > mark) {
+        land_depth--;
+        if (land_depth < LAND_LIVE_MAX && land_live[land_depth] != 0) {
+            land_live[land_depth]->planted = 0;
+            land_live[land_depth] = 0;
+        }
+    }
 }
 
 /* Forget every landing planted in a run of addresses, which is what a rule's
@@ -108,16 +150,59 @@ void evv_land_forget(uintptr_t lo, uintptr_t hi)
    state, where whoever stops the engine can reach it. Saying so is the whole
    point of this: the caller has asked the machine to backtrack on a thread
    that was never in the rule. */
+/* Where a forced error backtrack goes when the rule that asked for one never
+   planted its own landing.
+
+   A rule sets the machine's err_jmp when it enters -- ventproc is handed the
+   buffer -- and plants the landing in it a moment later, and those are two
+   steps. An error forced in between names a buffer with nothing in it. That
+   is not a hole in the port: IBM's engine longjmps into an uninitialised
+   buffer at the same moment, which is why every string in
+   test/cases/crashers.txt takes an unhandled page fault there.
+
+   The nearest enclosing rule's landing looks like the answer and is not.
+   Landing on it does answer one and the rule does take its error path, but
+   the backtracking stack still carries a marker for every rule that was
+   skipped, so that rule's vretproc pops one belonging to something else and
+   reads a record out of whatever is there. Tried, and it turned an abort into
+   a segmentation fault inside vretproc.
+
+   So the landing is the outermost rule call's instead. Nothing is unwound
+   half way there: the whole run is abandoned, delta_run_rule answers nought,
+   and the utterance goes rather than the process, which is what the walk
+   bound's own comment in delta.c says it is for. */
+static __thread uintptr_t land_outer;
+static __thread int       land_outer_set;
+
+void evv_land_outermost(uintptr_t name)
+{
+    land_outer = name;
+    land_outer_set = 1;
+}
+
+void evv_land_no_outermost(void)
+{
+    land_outer_set = 0;
+}
+
 void *evv_land_planted(uintptr_t name)
 {
     land_entry *e = found(name);
 
-    if (e == 0 || !e->planted) {
-        fprintf(stderr, "evv: landing 0x%lx was never planted on this thread,"
-                " so there is nowhere to jump to\n", (unsigned long)name);
-        abort();
+    if (e != 0 && e->planted)
+        return e->saved;
+
+    if (land_outer_set && land_outer != name) {
+        land_entry *out = found(land_outer);
+
+        if (out != 0 && out->planted)
+            return out->saved;
     }
-    return e->saved;
+
+    fprintf(stderr, "evv: landing 0x%lx was never planted on this thread and"
+            " nothing encloses it, so there is nowhere to jump to\n",
+            (unsigned long)name);
+    abort();
 }
 
 #if defined(__x86_64__)

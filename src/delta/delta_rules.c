@@ -1351,6 +1351,9 @@ static delta_rule_cfn delta_native_walk(const delta_language *lang, int n)
     return 0;
 }
 
+/* How deep the rules are, so the outermost can be told from the rest. */
+static __thread int delta_rule_depth;
+
 int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
                        int nargs)
 {
@@ -1359,6 +1362,7 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
     delta_rule_cfn    *by_number;
     int32_t answer;
     int n;
+    int mark;
 
     /* Which language, before anything reads a table. The machine says: it
        was made by one language and remembers which, and a rule of another
@@ -1424,8 +1428,46 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
         fn = (n >= 0 && n < lang->rule_count) ? by_number[n] : 0;
     else
         fn = delta_native_walk(lang, n);
-    answer = (fn != 0) ? fn(state, args, nargs)
-                       : run_bytecode(state, r, args, nargs);
+    /* A landing this rule plants stops being one when the rule returns, and
+       this is the only place that can say so where the rules are C: the
+       interpreter has evv_land_forget and a C rule has nothing. Without it a
+       forced error backtrack whose own landing was never planted -- the
+       machine's err_jmp is set when a rule enters and the landing planted a
+       moment later, so an error in between names an empty buffer -- would
+       fall back to a landing whose frame had already returned. */
+    mark = evv_land_mark();
+
+    /* The outermost rule of a run plants somewhere for a forced error
+       backtrack to go when the rule that asks for one never planted its own.
+       Landing here abandons the whole run, which is the only thing that can
+       be done coherently: the backtracking stack carries a marker for every
+       rule below, so returning into any of them reads a record out of the
+       wrong place. See the note in src/port/evv_land.c. */
+    if (delta_rule_depth == 0) {
+        unsigned long long outer[EVV_LAND_WORDS];
+
+        if (EVV_LAND_SAVE(outer) != 0) {
+            evv_land_no_outermost();
+            evv_land_release(mark);
+            delta_rule_depth = 0;
+            delta_rule_here = was;
+            if (was_lang != lang)
+                delta_lang_set(was_lang);
+            return 0;
+        }
+        evv_land_outermost((uintptr_t)outer);
+        delta_rule_depth++;
+        answer = (fn != 0) ? fn(state, args, nargs)
+                           : run_bytecode(state, r, args, nargs);
+        delta_rule_depth--;
+        evv_land_no_outermost();
+    } else {
+        delta_rule_depth++;
+        answer = (fn != 0) ? fn(state, args, nargs)
+                           : run_bytecode(state, r, args, nargs);
+        delta_rule_depth--;
+    }
+    evv_land_release(mark);
 
     delta_rule_here = was;
     if (delta_rule_trace) {
