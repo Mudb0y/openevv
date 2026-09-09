@@ -146,6 +146,22 @@ On the twenty that do have a closure, the answer splits by parameter:
 
 The way to settle the rest is not more carriers but a better reading. The in-transition is a fitted straight line whose endpoint is the target the engine was aiming at, so the locus should be taken from the breakpoint rather than from whatever the plateau had reached -- which costs nothing, the fits being already in the tables.
 
+### The timing separates completely, and to the left
+
+`tools/measure/split.py` asks the question the locus reading cannot: not what value a consonant holds but *when* it holds it. The two squares give, for every (consonant, vowel) pair, two carriers sharing that vowel and that consonant, so any timing difference between them is the far vowel reaching across the consonant.
+
+Grouped by the consonant and the vowel **before** it, over 320 pairs:
+
+The closure begins at the same frame in 320 of 320. The closure lasts the same number of frames in 320 of 320.
+
+Grouped by the consonant and the vowel **after** it instead, the closure begins at the same frame in only 90 of 320 -- as it must, the first vowel differing and so shifting everything -- and lasts the same number of frames in 300 of 320.
+
+So **when the closure happens and how long it lasts are functions of the preceding vowel and the consonant, and nothing else.** That is the first thing in this whole exercise that separates completely rather than approximately, and it is worth more than it looks: a front end that knows the phoneme sequence can lay out the timing of every closure from a table of 416 pairs before it computes a single formant value.
+
+What does not separate is the length of what follows. The frames after the closure agree in only 202 of 320 pairs sharing the consonant and the following vowel, so how long the second vowel runs depends on what came before the consonant -- a rhythm effect, and the first sign in these measurements of anything reaching further than one phoneme.
+
+One thing this test cannot do, and it is worth saying why rather than reporting a number nobody should trust. Comparing the run-in frame by frame measures nothing about separability: the transition into a consonant aims at an f1 that the *following* vowel sets, so two carriers sharing their first vowel and their consonant are supposed to differ all through the run-in. A first version of this reported that they agree for 0 frames and called it a failure, when it was the design.
+
 ### What the tables do not yet say
 
 The breakpoints are absolute frame numbers at the one duration each vowel was measured at, five milliseconds a frame. What the engine does with a shorter or longer vowel is unmeasured, and until it is, this table describes sixteen utterances rather than sixteen vowels. That is the next thing to measure and it is cheap: the annotation carries a duration, so the same vowel at several lengths answers it.
