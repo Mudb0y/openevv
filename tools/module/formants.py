@@ -53,8 +53,48 @@ VALUE = re.compile(
     r'(?:STATE|GLOBAL)\(int16_t,(?: r\d+,)? (s4\d\d)\) = \((\d+)\)')
 LABEL = re.compile(r'^\s*(alt\d+_\d+|L\d+):')
 RULE = re.compile(r'^/\* (\w+), from (\S+) \*/')
-TEST = re.compile(r'CALLW?\((test\w*|starttest\w*), [^)]*?'
-                  r'(?:delta_sym_ref\[(\d+)\]|(\d+))\)')
+# `CALLW(test_string_s, FIELD(0), 2, 1, delta_sym_ref[6260])' -- the statement
+# whose field to read, how many bytes to compare, and where they are.
+# test_string_s walks the scan comparing each node's field against the string,
+# and every call in these rules passes one byte, so a condition is "the
+# neighbouring phoneme is X".
+TEST = re.compile(r'CALLW?\((test_string_s), [^,]+, (\d+), (\d+), '
+                  r'delta_sym_ref\[(\d+)\]\)')
+OTHER = re.compile(r'CALLW?\((test\w+|starttest\w*), [^)]*?(\d+)\)')
+
+
+def stores(tag):
+    """Every store of the language's own bytes, by name."""
+    path = os.path.join(ROOT, "lang", tag, "%s.consts" % tag)
+    out = {}
+    if not os.path.exists(path):
+        return out
+    name = None
+    for line in open(path):
+        if line.startswith("store "):
+            name = line.split()[1]
+            out[name] = []
+        elif line.startswith("bytes ") and name:
+            out[name] += [int(x, 16) for x in line.split()[1:]]
+    return out
+
+
+def phoneme_codes(tag):
+    """Which phoneme each code is, from the language's own table."""
+    import subprocess
+    out = {}
+    try:
+        r = subprocess.run([sys.executable,
+                            os.path.join(ROOT, "tools", "module",
+                                         "phonemes.py"), tag],
+                           capture_output=True, text=True)
+    except Exception:
+        return out
+    for line in r.stdout.split("\n"):
+        m = re.match(r'\s*\d+\s+(\S+)\s+numbers (\d+)', line)
+        if m:
+            out[int(m.group(2))] = m.group(1)
+    return out
 
 
 def symbols(tag):
@@ -108,8 +148,12 @@ def read_rule(lines):
             continue
         for m in TEST.finditer(line):
             guards.setdefault(where, []).append(
-                (m.group(1), int(m.group(2) or m.group(3) or 0),
-                 m.group(2) is not None))
+                ("string", int(m.group(2)), int(m.group(3)),
+                 int(m.group(4))))
+        if not TEST.search(line):
+            for m in OTHER.finditer(line):
+                guards.setdefault(where, []).append(
+                    (m.group(1), 0, 0, -int(m.group(2)) - 1))
         m = VALUE.search(line)
         if m:
             slot, v = m.group(1), int(m.group(2))
@@ -124,6 +168,8 @@ def read_rule(lines):
 def main(argv):
     tag = argv[1] if len(argv) > 1 else "enus"
     syms = symbols(tag)
+    blobs = stores(tag)
+    codes = phoneme_codes(tag)
     bodies = rule_bodies(tag)
     names = sorted(n for n in bodies if n.endswith("_Fv"))
     if not names:
@@ -150,14 +196,19 @@ def main(argv):
                 continue
             vals = "  ".join("%s=%s" % (s, v) for s, v in sets[k])
             print("  %-9s %s" % (k, vals))
-            for kind, num, is_sym in guards.get(k, [])[:3]:
-                if is_sym and num in syms:
-                    obj, store, _, off = syms[num][0], syms[num][2], 0, \
-                        syms[num][3]
-                    print("      when %-14s %s +%d (%s)"
-                          % (kind, store, off, syms[num][1]))
-                else:
-                    print("      when %-14s %d" % (kind, num))
+            for kind, st, wide, num in guards.get(k, [])[:4]:
+                if kind != "string":
+                    print("      after %s %d" % (kind, -num - 1))
+                    continue
+                if num not in syms:
+                    print("      when the scan matches symbol %d" % num)
+                    continue
+                _, symname, store, off = syms[num]
+                blob = blobs.get(store, [])
+                seq = blob[off:off + max(1, wide)]
+                said = " ".join(codes.get(c, "?%d" % c) for c in seq)
+                print("      when the next is %-10s (%s +%d, %s)"
+                      % (said or "?", store, off, symname))
     print()
     print("# %d rules, %d blocks that set a formant value" % (len(names), total))
     return 0

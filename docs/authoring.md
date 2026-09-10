@@ -335,7 +335,18 @@ The base loci, straight from the rules: alveolar f2 1500 f3 2550; interdental 14
 
 And what does not match confirms the structure rather than denying it. Six consonants -- /b/, /f/, /l/, /m/, /p/, /v/ -- have `keep` for a base value, so whatever they measure at must come from an override arm and there is nothing in the base to compare. The four that differ, /G/, /R/, /r/ and /w/, are cases where an arm fired: /w/'s base f2 is 600 and it measures 1038, which is a bilabial's base being overridden, not a wrong reading.
 
-So the extraction is verified where it can be and explained where it cannot. What remains is decoding the conditions: the test is named and its symbol resolved to a store and an offset, and reading the bytes there against `tools/module/phonemes.py`'s codes says which phonemes each arm is for. That is a reading job with every piece present.
+**The conditions are partly decoded too.** `test_string_s(d, st, n, str)` walks the scan comparing each node's field against a string, and every call in these rules passes one byte, so such a condition is "the neighbouring phoneme is X" -- and the byte is read out of the store the symbol names. `lang/enus/enus.formants` therefore says things like
+
+    place eng_alv_Fv
+      base      f2a=1500  f2b=1500  f3a=2550  f3b=2550
+      alt1_3    f2a=1300  f3a=2450
+          when the next is i
+      alt1_20   f2a=1700
+          when the next is u
+
+Forty-eight conditions come out as a named phoneme that way. And note what the shape of it says: `f2a`, the half *before* the consonant, is chosen by what comes *after* it -- which is the separability that two Latin squares and 832 carriers were built to establish.
+
+**What is not done, and it is the larger half.** There are 102 blocks and only 48 readable conditions: the rest are selected by `starttest`, which is the machine's alternation rather than a string comparison, so which arm fires wants the alternation semantics read. So the *values* are extracted and verified and the *selection* is not, and nothing here should be taken as saying which arm applies when. Reading one arm's condition and predicting from it was tried on the alveolars and does not yet agree with measurement -- the rule sets `f2b=1350` where /t/ before /i/ measures 1740 -- which is exactly what an unread selection order looks like.
 
 ### What is actually left
 
