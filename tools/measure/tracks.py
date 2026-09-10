@@ -66,6 +66,22 @@ BLURB = {
         "# used to generate rather than merely to record.",
         "#",
     ] + HEAD,
+    "initial": [
+        "# English's consonants at the start of a word, before each vowel.",
+        "#",
+        "# The pair corpus has no such case: every carrier in it is a vowel, a",
+        "# consonant and a vowel, so a consonant with nothing on one side of",
+        "# it is unmeasured, and a real word opens on one. `hello' is /h/",
+        "# before /E/ and there is no (silence, h) anywhere in the squares.",
+        "#",
+    ] + HEAD,
+    "final": [
+        "# English's consonants at the end of a word, after each vowel.",
+        "#",
+        "# The other half of the same gap: `system' closes on /m/ with nothing",
+        "# after it, and the pair corpus has only consonants between vowels.",
+        "#",
+    ] + HEAD,
     "pairs2": [
         "# The same 416 pairs, each against a different partner.",
         "#",
@@ -186,6 +202,21 @@ def corpus(which):
         return [(v, "`[.1%s]" % v) for v in VOWELS]
     if which == "consonants":
         return [(c, "`[.1a%sa]" % c) for c in CONSONANTS]
+    if which in ("initial", "final"):
+        # A consonant at a word's edge has no vowel on one side of it, and
+        # the pair corpus has no such case: every carrier there is a vowel,
+        # a consonant and a vowel. A real word needs both -- `hello' opens on
+        # /h/ and `system' closes on /m/ -- so each consonant is measured
+        # against each vowel with nothing on the far side.
+        out = []
+        for c in CONSONANTS:
+            for v in VOWELS:
+                if which == "initial":
+                    out.append(("%s:.%s" % (c, v), "`[.1%s%s]" % (c, v)))
+                else:
+                    out.append(("%s:%s." % (c, v), "`[.1%s%s]" % (v, c)))
+        return out
+
     # One Latin square a consonant: every vowel once before it and once
     # after. That is what separability buys -- `aCi' reports /a/-before-C
     # and C-before-/i/ in the same utterance -- so 416 carriers cover
@@ -257,7 +288,7 @@ def main(argv):
         sys.stderr.write(__doc__)
         return 2
     if argv[2] in ("vowels", "consonants", "pairs", "pairs2",
-                   "holdout"):
+                   "holdout", "initial", "final"):
         which = argv[2]
         # A rate other than probe's own 175 words a minute writes its own
         # table, so the tables at each rate sit beside each other and nothing

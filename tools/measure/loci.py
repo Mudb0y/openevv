@@ -113,18 +113,50 @@ def hold(frames):
     found stretches of the *vowels*, and reported an f1 of 272 against 742 for
     the same pair.
     """
+    return (hold_marked(frames) or (None, None))[0]
+
+
+def hold_marked(frames):
+    """The consonant's stretch and which marker found it, or None.
+
+    Which marker matters as well as where: they are not equally reliable, and
+    a pair anchored by a later one is a worse choice than the same pair
+    anchored by an earlier. Preferring the earlier where there is a choice
+    keeps the two dropouts that the third formant marker otherwise costs.
+    """
     if not frames:
         return None
     span = span_where(frames, lambda f: f.get("ah", 34) == 0)
     if span is not None:
-        return span
+        return span, 0
     span = span_where(frames, lambda f: f.get("av", 50) == 0)
     if span is not None:
-        return span
+        return span, 1
     base = frames[0].get("b3")
-    if base is None:
-        return None
-    return span_where(frames, lambda f: f.get("b3") != base, middle=True)
+    if base is not None:
+        span = span_where(frames, lambda f: f.get("b3") != base, middle=True)
+        if span is not None:
+            return span, 2
+
+    # The third formant would mark the rest -- /r/ takes it to 1618, /l/ to
+    # 3000, /y/ to 2800, /w/ to 2250, /R/ to 1600, against a vowel's 2300 to
+    # 2800 -- and it is deliberately not used here. Tried at thresholds of
+    # 200, 300 and 400 hertz it anchored between five and ten more of /l/'s
+    # pairs and cost two to four dropouts every time, one of them of
+    # thirty-eight frames, because the span it finds for /l/ is the wrong
+    # extent often enough to misplace the voicing. Preferring the earlier
+    # markers where a pair has a choice did not save it either.
+    #
+    # A dropout is the one fault the ear reliably catches and a missing pair
+    # only refuses to compose, so refusing is the better failure. tools/measure
+    # /chain.py does use f3, where it decides only where a consonant is in an
+    # utterance being composed and not which pairs the tables offer.
+    #
+    # What this costs: `hello' cannot be composed, because it needs (l, o) and
+    # that is one of the six /l/ pairs with no anchor. Telling a vowel's third
+    # bandwidth and formant from a consonant's is the thing that would fix it
+    # properly, and is not done.
+    return None
 
 
 def read(path):

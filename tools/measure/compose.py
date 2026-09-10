@@ -105,12 +105,20 @@ def cases(path):
         cons, vv = name.split(":", 1)
         if len(vv) != 2:
             continue
+        # A dot is the edge of a word: `h:.E' is /h/ opening a word before
+        # /E/, `m:a.' is /m/ closing one after /a/. The pair corpus has no
+        # such case, every carrier in it being a vowel, a consonant and a
+        # vowel, and a real word has one at each end.
         fr = R.build(shared, phone)
-        span = L.hold(fr)
-        if span is None:
+        got = L.hold_marked(fr)
+        if got is None:
             continue
-        out[name] = {"cons": cons, "v1": vv[0], "v2": vv[1],
-                     "frames": fr, "span": span, "text": phone["text"]}
+        span, marker = got
+        out[name] = {"cons": cons,
+                     "v1": None if vv[0] == "." else vv[0],
+                     "v2": None if vv[1] == "." else vv[1],
+                     "frames": fr, "span": span, "marker": marker,
+                     "text": phone["text"]}
     return out
 
 
@@ -174,8 +182,13 @@ def nearest(cands, span):
     if span is None or len(cands) < 2:
         return cands
     want = span[1] - span[0]
-    return sorted(cands, key=lambda c: abs((c["span"][1] - c["span"][0])
-                                           - want))
+    # The marker first, then the length: a pair anchored by aspiration going
+    # to nought is a better witness than one anchored by the third formant
+    # wandering, and choosing on length alone let the weaker anchor win and
+    # cost two dropouts.
+    return sorted(cands, key=lambda c: (c.get("marker", 9),
+                                        abs((c["span"][1] - c["span"][0])
+                                            - want)))
 
 
 def compose(aa_pair, bb_pair, n_out=None):

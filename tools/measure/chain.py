@@ -83,6 +83,11 @@ AV_FIRST_STEPS = 2 # across the first vowel of the utterance
 # a frame -- a staircase steps by one and a release plunges.
 AV_RELEASE = 13    # only the fallback, where no carrier says otherwise
 
+# How far the third formant has to leave the middle of the utterance to say a
+# sonorant is there. A vowel's own f3 sits between 2300 and 2800 and the
+# sonorants take it to 1600, 2250, 2800 or 3000.
+F3_MARK = 200
+
 
 def release_len(tail):
     """How many frames at the end of a carrier are the letting go."""
@@ -100,15 +105,19 @@ def live_frames(probe, text, wpm=None):
             if any(r[IDX[s]] >= 20 for s in ("av", "af", "ah"))]
 
 
-def runs_where(frames, test):
-    """Every interior run of frames the test holds over."""
+def runs_where(frames, test, edges=(False, False)):
+    """Every run of frames the test holds over, edges included if asked."""
     out, i, n = [], 0, len(frames)
     while i < n:
         if test(frames[i]):
             j = i
             while j + 1 < n and test(frames[j + 1]):
                 j += 1
-            if i > 0 and j < n - 1:
+            # A run touching an edge is the utterance's own onset or release
+            # in a carrier, and a word-edge consonant in a word. `edges' says
+            # which this is: the phoneme string knows whether it opens or
+            # closes on a consonant.
+            if (i > 0 or edges[0]) and (j < n - 1 or edges[1]):
                 out.append((i, j))
             i = j + 1
         else:
@@ -116,7 +125,7 @@ def runs_where(frames, test):
     return out
 
 
-def closures(frames, want=None):
+def closures(frames, want=None, edges=(False, False)):
     """Where each consonant of the utterance is, by whichever marker shows it.
 
     Three markers, the same three `loci.hold' uses and for the same reason:
@@ -145,15 +154,25 @@ def closures(frames, want=None):
     # obstruents, because voicing also touches nought in a vowel's release
     # and the third bandwidth also moves in /W/, so /akaga/ went from 12.3
     # per cent to 59.1 and gained a dropout it did not have.
+    # The third bandwidth marks a sonorant in a carrier and does not always
+    # mark one in a word: /l/ takes b3 from 150 to 400 between two /a/ and
+    # leaves it at 150 throughout `hello'. The third formant marks it in both,
+    # and marks every sonorant -- /r/ takes f3 to 1618, /l/ to 3000, /y/ to
+    # 2800, /w/ to 2250, /R/ to 1600, against a vowel's 2300 to 2800 -- so it
+    # is the last marker asked, being the broadest and the likeliest to fire
+    # where it should not.
     base = frames[0][IDX["b3"]]
+    f3s = sorted(f[IDX["f3"]] for f in frames)
+    mid_f3 = f3s[len(f3s) // 2] if f3s else 0
     markers = [lambda f: f[IDX["ah"]] == 0,
                lambda f: f[IDX["av"]] == 0,
-               lambda f: f[IDX["b3"]] != base]
+               lambda f: f[IDX["b3"]] != base,
+               lambda f: abs(f[IDX["f3"]] - mid_f3) > F3_MARK]
     out = []
     for test in markers:
         if want is not None and len(out) >= want:
             break
-        for a, b in sorted(runs_where(frames, test),
+        for a, b in sorted(runs_where(frames, test, edges),
                            key=lambda r: r[0] - r[1]):
             if not any(a <= y and x <= b for x, y in out):
                 out.append((a, b))
@@ -191,12 +210,15 @@ def load_pairs(wpm=None):
     here = os.path.join(ROOT, "lang", "measured")
     left = collections.defaultdict(list)
     right = collections.defaultdict(list)
-    names = ["enus-pairs.txt", "enus-pairs2.txt", "enus-holdout.txt"]
+    names = ["enus-pairs.txt", "enus-pairs2.txt", "enus-holdout.txt",
+             "enus-initial.txt", "enus-final.txt"]
     if wpm is not None:
         at_rate = ["enus-pairs-%d.txt" % wpm, "enus-pairs2-%d.txt" % wpm,
                    "enus-holdout-%d.txt" % wpm]
-        if all(os.path.exists(os.path.join(here, f)) for f in at_rate):
-            names = at_rate
+        at_rate += ["enus-initial-%d.txt" % wpm, "enus-final-%d.txt" % wpm]
+        if all(os.path.exists(os.path.join(here, f)) for f in at_rate[:3]):
+            names = [f for f in at_rate
+                     if os.path.exists(os.path.join(here, f))]
     for f in names:
         p = os.path.join(here, f)
         if not os.path.exists(p):
@@ -329,7 +351,9 @@ def stitch(out, tail, want):
 def compose_chain(phonemes, frames, left, right):
     """The whole utterance, from the tables, laid out on the engine's timing."""
     cons = [p for p in phonemes if p not in VOWELS]
-    spans = closures(frames, len(cons))
+    edges = (bool(phonemes) and phonemes[0] not in VOWELS,
+             bool(phonemes) and phonemes[-1] not in VOWELS)
+    spans = closures(frames, len(cons), edges)
     vows = [p for p in phonemes if p in VOWELS]
     if len(spans) != len(cons):
         return None, ("%d closures but %d consonants in the string"
@@ -356,8 +380,8 @@ def compose_chain(phonemes, frames, left, right):
         runin = {}
         runout = {}
         for k, ((c, vp, vn), (a, b)) in enumerate(zip(order, spans)):
-            lp = left.get((c, vp)) if vp else None
-            rp = right.get((c, vn)) if vn else None
+            lp = left.get((c, vp))
+            rp = right.get((c, vn))
             if not lp or not rp:
                 return None, "no measured pair for %s around %s" % (c, vp)
             la, la2 = lp[0], (lp[1] if len(lp) > 1 else None)
@@ -460,7 +484,7 @@ def voicing(frames, spans, order, left, right, n):
     rel = 0
     if spans and order:
         c, vp, vn = order[len(spans) - 1]
-        rp = right.get((c, vn)) if vn else None
+        rp = right.get((c, vn))
         if rp:
             t = [f["av"] for f in rp[0]["frames"][rp[0]["span"][1] + 1:]]
             rel = release_len(t)
@@ -480,7 +504,7 @@ def voicing(frames, spans, order, left, right, n):
         # then drops to nought for the burst -- so the shaped path that fits
         # every other parameter fits this one too. Holding one value across it
         # was the last thing wrong here.
-        rp = right.get((c, vn)) if vn else None
+        rp = right.get((c, vn))
 
         lo = b + 1
         hi = spans[k + 1][0] if k + 1 < len(spans) else n - rel
