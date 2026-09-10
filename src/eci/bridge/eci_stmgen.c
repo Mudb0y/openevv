@@ -17,7 +17,6 @@
  * the array side uses.
  */
 
-#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include "delta.h"
