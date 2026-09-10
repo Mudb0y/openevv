@@ -326,7 +326,13 @@ The idea was sound on its face: every carrier of a Latin square shares its two v
 
 **The vowels are not the same across consonant contexts.** A vowel before a voiceless consonant is shorter than the same vowel before a voiced one -- /a/ runs 32 frames before /p/ and 37 before /b/, which is the pre-fortis clipping the stretch law was derived from -- so its whole track is compressed rather than merely cut short, and two carriers of the same vowel context disagree from their first frames. Where they disagree is everywhere.
 
-So the same fact that made the stretch law measurable for free is what makes anchoring by exclusion impossible. Any second attempt has to compare like with like: carriers whose first vowel is the same length, which means grouping by the consonant's voicing before comparing, and there are not many carriers left in a group after that.
+Grouping by the consonant's voicing before comparing was the obvious repair -- a voiceless consonant is what shortens the vowel -- and it does not help: within a group of eleven carriers sharing both vowels and the voicing, the bracket is still (0, n-1).
+
+**And the reason for that is the finding worth having.** In `l:cW` the first frame is f1 630, f2 960, f3 2580, where every sibling in its group starts at /c/'s actual onset targets of 700, 1050 and 2410. **/l/ colours the entire preceding vowel, from its very first frame** -- f3 is already lifted a hundred and seventy hertz toward /l/'s own 3000 before the vowel has begun.
+
+So a sonorant has no localised extent to find. That is why every marker tried has failed on /l/ and why exclusion fails too: there is no vowel-only stretch to exclude, because the consonant is in all of it. A stop is a closure with transitions either side and the whole apparatus here suits it; **a sonorant is not that shape at all**, and modelling it as one is the mistake underneath six unanchored pairs, four failed markers and two failed exclusions.
+
+What that suggests, and it is a guess rather than a measurement: a sonorant may want to be composed as a modification applied across a whole vowel-consonant-vowel stretch rather than as a segment placed inside one. Nothing here tests that yet.
 
 **And the corpus is one language.** English, sixteen vowels and twenty-six consonants, measured between vowels, at both word edges, and chained two consonants deep. Consonant clusters are untested -- `system` reports two closures for four consonants, /st/ merging into one -- and so are unstressed vowels.
 
