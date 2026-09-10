@@ -49,8 +49,13 @@ SLOT = {
 # has no extent of its own.
 KEEP = 65534
 
+# Not every write is an immediate. Thirty-three of the 267 writes to a
+# formant slot in the nine rules take their value from a register instead,
+# `GLOBAL(int16_t, r6, s440) = (LOW(r7))', and those are reported as computed
+# rather than left out: a table that quietly omits an eighth of what the rules
+# do is worse than one that says where it cannot see.
 VALUE = re.compile(
-    r'(?:STATE|GLOBAL)\(int16_t,(?: r\d+,)? (s4\d\d)\) = \((\d+)\)')
+    r'(?:STATE|GLOBAL)\(int16_t,(?: r\d+,)? (s4\d\d)\) = \((.+?)\);')
 LABEL = re.compile(r'^\s*(alt\d+_\d+|L\d+):')
 RULE = re.compile(r'^/\* (\w+), from (\S+) \*/')
 # `CALLW(test_string_s, FIELD(0), 2, 1, delta_sym_ref[6260])' -- the statement
@@ -60,7 +65,17 @@ RULE = re.compile(r'^/\* (\w+), from (\S+) \*/')
 # neighbouring phoneme is X".
 TEST = re.compile(r'CALLW?\((test_string_s), [^,]+, (\d+), (\d+), '
                   r'delta_sym_ref\[(\d+)\]\)')
-OTHER = re.compile(r'CALLW?\((test\w+|starttest\w*), [^)]*?(\d+)\)')
+# `testFldeq(r6, st, field, value)': a field of the scanned item equals a
+# value. And the scan setters say which way to look: a name ending `l' sets
+# the scan leftwards, one ending `r' rightwards, so a condition is about the
+# phoneme before or the phoneme after.
+FLDEQ = re.compile(r'CALLW?\(testFldeq, [^,]+, (\d+), (\d+), (\d+)\)')
+SETSCAN = re.compile(r'CALL\(ZZlpta_load_\w*?setscan_\d+([lr])\w*, ')
+
+# starttest only opens a test -- it sets a tag, clears the stack back and
+# pushes a context record -- so it selects nothing and its number is a label
+# rather than a condition. The arms are a sequential chain instead: each
+# block's predicates are tried and the first whose predicates all pass wins.
 
 
 def stores(tag):
@@ -139,6 +154,7 @@ def read_rule(lines):
     order = ["base"]
     sets = {}
     guards = {}
+    side = {}
     for line in lines:
         m = LABEL.match(line)
         if m:
@@ -146,23 +162,28 @@ def read_rule(lines):
             if where not in order:
                 order.append(where)
             continue
+        m = SETSCAN.search(line)
+        if m:
+            side[where] = "before" if m.group(1) == "l" else "after"
         for m in TEST.finditer(line):
             guards.setdefault(where, []).append(
-                ("string", int(m.group(2)), int(m.group(3)),
-                 int(m.group(4))))
-        if not TEST.search(line):
-            for m in OTHER.finditer(line):
-                guards.setdefault(where, []).append(
-                    (m.group(1), 0, 0, -int(m.group(2)) - 1))
+                ("phoneme", int(m.group(3)), int(m.group(4))))
+        for m in FLDEQ.finditer(line):
+            guards.setdefault(where, []).append(
+                ("field", int(m.group(2)), int(m.group(3))))
         m = VALUE.search(line)
         if m:
-            slot, v = m.group(1), int(m.group(2))
+            slot, raw = m.group(1), m.group(2).strip()
             if slot in SLOT:
-                sets.setdefault(where, []).append(
-                    (SLOT[slot], "keep" if v == KEEP else v))
+                if re.fullmatch(r'\d+', raw):
+                    v = int(raw)
+                    said = "keep" if v == KEEP else str(v)
+                else:
+                    said = "computed"
+                sets.setdefault(where, []).append((SLOT[slot], said))
                 if where not in order:
                     order.append(where)
-    return order, sets, guards
+    return order, sets, guards, side
 
 
 def main(argv):
@@ -183,10 +204,13 @@ def main(argv):
     print("# the consonant and `b' the half after. Written by")
     print("# tools/module/formants.py -- see its head for how the slots were")
     print("# identified, which was by measurement and not by any name.")
+    print("#")
+    print("# The blocks of a place are tried in the order they appear and the")
+    print("# first whose conditions all hold is the one that applies.")
     total = 0
     for name in names:
         b = bodies[name]
-        order, sets, guards = read_rule(b["lines"])
+        order, sets, guards, side = read_rule(b["lines"])
         n = sum(1 for k in order if sets.get(k))
         total += n
         print()
@@ -196,21 +220,34 @@ def main(argv):
                 continue
             vals = "  ".join("%s=%s" % (s, v) for s, v in sets[k])
             print("  %-9s %s" % (k, vals))
-            for kind, st, wide, num in guards.get(k, [])[:4]:
-                if kind != "string":
-                    print("      after %s %d" % (kind, -num - 1))
+            look = side.get(k, "after")
+            for kind, wide, num in guards.get(k, [])[:4]:
+                if kind == "field":
+                    print("      when the %s item's field %d is %d"
+                          % (look, wide, num))
                     continue
                 if num not in syms:
-                    print("      when the scan matches symbol %d" % num)
+                    print("      when the %s item matches symbol %d"
+                          % (look, num))
                     continue
                 _, symname, store, off = syms[num]
                 blob = blobs.get(store, [])
                 seq = blob[off:off + max(1, wide)]
                 said = " ".join(codes.get(c, "?%d" % c) for c in seq)
-                print("      when the next is %-10s (%s +%d, %s)"
-                      % (said or "?", store, off, symname))
+                print("      when the %s phoneme is %-8s (%s +%d, %s)"
+                      % (look, said or "?", store, off, symname))
     print()
-    print("# %d rules, %d blocks that set a formant value" % (len(names), total))
+    print("# %d rules, %d blocks that set a formant value." % (len(names), total))
+    print("#")
+    print("# `computed' is a value the rule takes from a register rather than")
+    print("# an immediate -- 33 of the 267 writes -- and this does not resolve")
+    print("# those. `keep' is the rules' own sentinel for leaving a target")
+    print("# unset. And the order in which the blocks are tried is read off")
+    print("# their order in the C and is NOT verified: predicting from it")
+    print("# disagrees with measurement for /t/ before /i/, where the block")
+    print("# whose condition names /i/ sets f2b to 1350 and the engine")
+    print("# measures 1720. So the values here are the rules' own and the")
+    print("# selection is not to be trusted yet.")
     return 0
 
 

@@ -4,56 +4,49 @@
 # the consonant and `b' the half after. Written by
 # tools/module/formants.py -- see its head for how the slots were
 # identified, which was by measurement and not by any name.
+#
+# The blocks of a place are tried in the order they appear and the
+# first whose conditions all hold is the one that applies.
 
 place eng_alv_Fv from es_val.obj in delta_rules_c23_enus.c
-  base      f2a=1500  f2b=1500  f3a=2550  f3b=2550
-      after testFldeq 0
+  base      f2a=1500  f2b=1500  f3a=2550  f3b=2550  f3a=computed
+      when the before item's field 5 is 2
+  L275      f2a=computed
   alt1_7    f2a=1350
-      after starttest 13
-      after testFldeq 0
+      when the before item's field 5 is 0
   alt1_3    f2a=1300  f3a=2450
-      after testFldeq 3
-      after starttest 6
-      when the next is i          (enus_evv_glob_data_3 +1435, ZZstring347)
+      when the before item's field 1 is 3
+      when the before phoneme is i        (enus_evv_glob_data_3 +1435, ZZstring347)
   alt1_15   f2a=1100
   alt1_20   f2a=1700
-      when the next is u          (enus_evv_glob_data_3 +1778, ZZstring430)
+      when the after phoneme is u        (enus_evv_glob_data_3 +1778, ZZstring430)
+  alt1_28   f2b=computed
+  alt1_33   f2b=computed  f3b=computed
   alt1_35   f3b=2250
-      after starttest 39
-      when the next is f          (enus_evv_glob_data_3 +1107, ZZstring273)
-      after starttest 40
+      when the after phoneme is f        (enus_evv_glob_data_3 +1107, ZZstring273)
+  alt1_37   f2b=computed
   alt1_38   f2b=1350
-      after starttest 42
-      when the next is i          (enus_evv_glob_data_3 +1435, ZZstring347)
+      when the after phoneme is i        (enus_evv_glob_data_3 +1435, ZZstring347)
   alt1_39   f3b=2050
   alt1_41   f2b=1800
-      after starttest 43
-      when the next is h          (enus_evv_glob_data_3 +1294, ZZstring316)
+      when the after phoneme is h        (enus_evv_glob_data_3 +1294, ZZstring316)
   alt1_42   f2b=1750  f3b=2750
-      after starttest 44
-      after testFldeq 0
-      after starttest 45
-      when the next is k          (enus_evv_glob_data_3 +1479, ZZstring358)
+      when the after item's field 6 is 0
+      when the after phoneme is k        (enus_evv_glob_data_3 +1479, ZZstring358)
   alt1_43   f3b=2450
-      after starttest 50
-      when the next is u          (enus_evv_glob_data_3 +1778, ZZstring430)
+      when the after phoneme is u        (enus_evv_glob_data_3 +1778, ZZstring430)
   alt1_46   f2b=1600
   alt1_48   f2b=1650
   alt1_50   f2b=1700  f3b=2650
   alt1_54   f3a=3800
-      after starttest 57
-      after starttest 58
   alt1_56   f3a=3400
-      after starttest 62
   alt1_57   f4a=3800  f5a=4000
-      after starttest 60
   alt1_59   f4a=3800
   alt1_62   f4a=4000  f5a=4300
   alt1_63   f4a=3300  f5a=3800
-      when the next is f          (enus_evv_glob_data_3 +1107, ZZstring273)
+      when the after phoneme is f        (enus_evv_glob_data_3 +1107, ZZstring273)
   alt1_5    f2a=1800  f3a=2500
-      after starttest 7
-      when the next is h          (enus_evv_glob_data_3 +1294, ZZstring316)
+      when the before phoneme is h        (enus_evv_glob_data_3 +1294, ZZstring316)
   L3770     f2a=1600
   L3783     f2a=1800
   L3796     f2a=1600
@@ -62,163 +55,154 @@ place eng_alv_Fv from es_val.obj in delta_rules_c23_enus.c
 
 place eng_bilab_Fv from es_val.obj in delta_rules_c06_enus.c
   base      f2a=600  f2b=600  f3a=2200  f3b=2200  f4a=3300  f5a=3600
-      after testFldeq 0
+      when the before item's field 1 is 2
   alt1_2    f3a=1900
-      after starttest 4
-      when the next is f          (enus_evv_glob_data_3 +1107, ZZstring273)
+      when the before phoneme is f        (enus_evv_glob_data_3 +1107, ZZstring273)
   alt1_16   f2a=700
   alt1_10   f3a=2000
-      after starttest 14
-      after testFldeq 2
+      when the before item's field 6 is 2
   alt1_12   f2a=900
   alt1_15   f2a=800
-      after testFldeq 7
-  alt1_24   f2b=1050
+      when the after item's field 5 is 7
+  alt1_24   f2a=computed  f2b=1050
   alt1_40   f2b=800
   alt1_41   f2b=710
-      after starttest 37
-      after testFldeq 4
+      when the after item's field 5 is 4
+  L1758     f2b=computed  f2a=computed
+  alt1_43   f3b=computed  f3a=computed
   alt1_14   f3a=keep
-      after starttest 17
-      when the next is u          (enus_evv_glob_data_3 +1778, ZZstring430)
-  L2118     f2b=1000
-  alt1_29   f2b=900
-      after starttest 31
-      when the next is ?52        (enus_evv_glob_data_3 +1965, ZZstring480)
+      when the before phoneme is u        (enus_evv_glob_data_3 +1778, ZZstring430)
+  L2118     f2a=computed  f2b=1000
+  alt1_29   f2a=computed  f2b=900
+      when the after phoneme is ?52      (enus_evv_glob_data_3 +1965, ZZstring480)
+  alt1_30   f2a=computed
   L2284     f2b=750
   L2297     f2b=750  f3b=keep
 
 place eng_high_pal_Fv from es_val.obj in delta_rules_c24_enus.c
   alt1_0    f2a=2050  f2b=2050  f3a=2800  f3b=2800  f2a=keep  f3a=keep
-      when the next is h          (enus_evv_glob_data_3 +1294, ZZstring316)
+      when the before phoneme is h        (enus_evv_glob_data_3 +1294, ZZstring316)
   L442      f2b=keep  f3b=keep
-      after starttest 18
-      when the next is h          (enus_evv_glob_data_3 +1294, ZZstring316)
+      when the after phoneme is h        (enus_evv_glob_data_3 +1294, ZZstring316)
   alt1_7    f2a=2260  f3a=2900
-      after testFldeq 2
-      after starttest 10
-      after testFldeq 2
+      when the before item's field 1 is 2
+      when the before item's field 5 is 2
   alt1_9    f2a=2260
-      after starttest 12
-      after testFldeq 3
+      when the before item's field 5 is 3
   alt1_14   f2a=1750  f3a=2700
   alt1_16   f2a=1850
+  alt1_25   f2a=computed
+      when the after phoneme is g        (enus_evv_glob_data_3 +1203, ZZstring295)
+  alt1_23   f2b=computed  f3b=computed
   alt1_31   f2b=1700
   alt1_37   f2b=1950  f3b=2600
   alt1_42   f2b=1450
-      when the next is g          (enus_evv_glob_data_3 +1203, ZZstring295)
+      when the after phoneme is g        (enus_evv_glob_data_3 +1203, ZZstring295)
+  alt1_57   f2b=computed  f2a=computed
+  alt1_60   f3b=computed  f3a=computed
+  alt1_65   f2a=computed
+      when the after item's field 1 is 1
+      when the after item's field 4 is 6
+      when the after item's field 1 is 1
+      when the after item's field 4 is 6
   L3564     f2b=1450
   L3577     f2b=1800
   L3587     f3b=keep
+  alt1_27   f2a=computed  f2b=computed
   L3692     f2b=2300  f3b=2900
   alt1_39   f2b=1850
-      after starttest 19
-      when the next is ?52        (enus_evv_glob_data_3 +1965, ZZstring480)
+      when the after phoneme is ?52      (enus_evv_glob_data_3 +1965, ZZstring480)
   L3778     f2a=1950
   alt1_11   f3a=2300
-      after starttest 11
-      when the next is f          (enus_evv_glob_data_3 +1107, ZZstring273)
+      when the before phoneme is f        (enus_evv_glob_data_3 +1107, ZZstring273)
 
 place eng_intd_Fv from es_val.obj in delta_rules_c19_enus.c
   base      f2a=1450  f2b=1450  f3a=2600  f3b=2600
-      after testFldeq 0
+      when the before item's field 5 is 1
   alt1_2    f2a=keep  f3a=keep
   alt1_6    f2a=1150
   alt1_10   f2a=1800
   alt1_16   f2b=1850
-      after starttest 19
-      after testFldeq 0
-      after starttest 20
-      when the next is k          (enus_evv_glob_data_3 +1479, ZZstring358)
+      when the after item's field 6 is 0
+      when the after phoneme is k        (enus_evv_glob_data_3 +1479, ZZstring358)
   alt1_7    f2a=1350
-      after starttest 4
-      when the next is s          (enus_evv_glob_data_3 +1751, ZZstring423)
+      when the before phoneme is s        (enus_evv_glob_data_3 +1751, ZZstring423)
   alt1_8    f2a=1600
   alt1_17   f3b=2500
   alt1_18   f2b=1350
-      after starttest 16
-      when the next is p          (enus_evv_glob_data_3 +1725, ZZstring417)
+      when the after phoneme is p        (enus_evv_glob_data_3 +1725, ZZstring417)
   alt1_19   f2b=1550
   L1135     f2b=keep  f3b=keep
 
 place eng_lab_Fv from es_val.obj in delta_rules_c13_enus.c
   base      f2a=1000  f2b=1000  f3a=2200  f3b=2250  f4a=3300  f5a=3600  f2a=keep  f3a=keep
-      after testFldeq 0
+      when the before item's field 5 is 0
   alt1_4    f2a=850
-      after starttest 8
-      after testFldeq 2
+      when the before item's field 6 is 2
   alt1_14   f2b=1400
-      after starttest 16
-      after testFldeq 0
-      after starttest 17
-      when the next is k          (enus_evv_glob_data_3 +1479, ZZstring358)
+      when the after item's field 6 is 0
+      when the after phoneme is k        (enus_evv_glob_data_3 +1479, ZZstring358)
   alt1_20   f2b=850
-      when the next is g          (enus_evv_glob_data_3 +1203, ZZstring295)
+      when the after phoneme is g        (enus_evv_glob_data_3 +1203, ZZstring295)
   L1298     f3b=2400
   alt1_25   f2b=920
-      when the next is f          (enus_evv_glob_data_3 +1107, ZZstring273)
-      after starttest 28
-      when the next is ?48        (enus_evv_glob_data_3 +1880, ZZstring462)
+      when the after phoneme is f        (enus_evv_glob_data_3 +1107, ZZstring273)
+      when the after phoneme is ?48      (enus_evv_glob_data_3 +1880, ZZstring462)
   alt1_27   f3b=1850
   L1455     f2a=1100
   alt1_5    f2a=1150
   L1531     f2a=1300
   alt1_8    f2a=700
-      after starttest 10
-      when the next is g          (enus_evv_glob_data_3 +1203, ZZstring295)
+      when the before phoneme is g        (enus_evv_glob_data_3 +1203, ZZstring295)
   alt1_9    f2b=850
-      after starttest 2
-      when the next is f          (enus_evv_glob_data_3 +1107, ZZstring273)
+      when the before phoneme is f        (enus_evv_glob_data_3 +1107, ZZstring273)
   L1673     f2b=1500
   L1686     f2b=1200
   alt1_16   f2b=1250
   alt1_22   f2b=920  f3b=2150
-      after starttest 12
-      when the next is ?48        (enus_evv_glob_data_3 +1880, ZZstring462)
+      when the after phoneme is ?48      (enus_evv_glob_data_3 +1880, ZZstring462)
   L1810     f2b=keep  f3b=keep
 
 place eng_lat_Fv from es_val.obj in delta_rules_c27_enus.c
   base      f2a=800  f2b=800  f3a=3000  f3b=3000  f2a=keep  f3a=keep
-      when the next is g          (enus_evv_glob_data_3 +1203, ZZstring295)
+      when the before phoneme is g        (enus_evv_glob_data_3 +1203, ZZstring295)
   L236      f2b=keep  f3b=keep
-      after starttest 25
-      when the next is g          (enus_evv_glob_data_3 +1203, ZZstring295)
+      when the after phoneme is g        (enus_evv_glob_data_3 +1203, ZZstring295)
   L681      f2a=900
   alt1_3    f2a=900  f3a=2800
-      when the next is i          (enus_evv_glob_data_3 +1435, ZZstring347)
+      when the after phoneme is i        (enus_evv_glob_data_3 +1435, ZZstring347)
   alt1_11   f2a=1000
-      when the next is f          (enus_evv_glob_data_3 +1107, ZZstring273)
+      when the after phoneme is f        (enus_evv_glob_data_3 +1107, ZZstring273)
   alt1_23   f2a=700  f3a=2900
   alt1_36   f2b=950
   alt1_35   f2b=900
-      after starttest 37
-      when the next is k          (enus_evv_glob_data_3 +1479, ZZstring358)
+      when the after phoneme is k        (enus_evv_glob_data_3 +1479, ZZstring358)
+  alt1_40   f2a=computed  f2b=computed
+  alt1_45   f3a=computed  f3b=computed
   alt1_27   f2b=750  f3b=2800
   L2183     f3b=2700
   alt1_10   f2a=900
   L2206     f3a=2700
   alt1_19   f2a=850
-      after starttest 19
-      when the next is o          (enus_evv_glob_data_3 +1706, ZZstring412)
+      when the before phoneme is o        (enus_evv_glob_data_3 +1706, ZZstring412)
   alt1_17   f2a=950
 
 place eng_pal_Fv from es_val.obj in delta_rules_c18_enus.c
   base      f2a=1700  f2b=1700  f3a=2400  f3b=2400  f4a=3600  f4b=3600  f5a=4000  f5b=4000
-      when the next is h          (enus_evv_glob_data_3 +1294, ZZstring316)
+      when the before phoneme is h        (enus_evv_glob_data_3 +1294, ZZstring316)
   alt1_10   f2a=1950
   alt1_6    f2a=keep  f3a=keep
   alt1_19   f2b=1850  f3b=2600
   L1059     f2a=1450  f3a=2300
   alt1_8    f2a=1900
-      after starttest 13
-      when the next is l          (enus_evv_glob_data_3 +1563, ZZstring373)
+      when the before phoneme is l        (enus_evv_glob_data_3 +1563, ZZstring373)
   alt1_12   f2a=1800
   alt1_17   f2b=1750  f3b=2500
   L1206     f2b=keep  f3b=keep
 
 place eng_ret_Fv from es_val.obj in delta_rules_c24_enus.c
   base      f2a=1200  f2b=1200  f3a=1650  f3b=1600  f4a=3300  f5a=3600
-      when the next is f          (enus_evv_glob_data_3 +1107, ZZstring273)
+      when the before phoneme is f        (enus_evv_glob_data_3 +1107, ZZstring273)
   alt1_2    f2a=keep
   L296      f3a=keep
   alt1_10   f2a=1400
@@ -226,60 +210,52 @@ place eng_ret_Fv from es_val.obj in delta_rules_c24_enus.c
   L1210     f3a=1850
   L1322     f2a=1100
   alt1_28   f2a=1050
-      after starttest 4
-      after testFldeq 0
+      when the before item's field 5 is 0
   alt1_30   f2a=1300  f3a=1750
   alt1_45   f2b=1000
   alt1_48   f2b=1350
-      when the next is ?52        (enus_evv_glob_data_3 +1965, ZZstring480)
+      when the after phoneme is ?52      (enus_evv_glob_data_3 +1965, ZZstring480)
   L2181     f3b=1650
+  alt1_61   f2a=computed  f2b=computed  f3a=computed  f3b=computed
   alt1_34   f2b=keep  f3b=keep
   L2591     f2b=1100  f3b=1500
   alt1_39   f3b=1750
   alt1_51   f2b=1500  f3b=1800
-      after starttest 38
-      when the next is h          (enus_evv_glob_data_3 +1294, ZZstring316)
+      when the after phoneme is h        (enus_evv_glob_data_3 +1294, ZZstring316)
   L2750     f2a=1300
   alt1_5    f2a=1500
-      after starttest 18
-      when the next is k          (enus_evv_glob_data_3 +1479, ZZstring358)
+      when the before phoneme is k        (enus_evv_glob_data_3 +1479, ZZstring358)
   L2826     f2a=1250
 
 place eng_vel_Fv from es_val.obj in delta_rules_c22_enus.c
   base      f2a=1650  f2b=1650  f3a=2300  f3b=2300
-      after testFldeq 0
+      when the before item's field 1 is 2
   alt1_2    f2a=keep  f3a=keep
-      after starttest 4
-      after testFldeq 4
+      when the before item's field 5 is 4
   alt1_21   f2b=keep
-      after starttest 23
-      after testFldeq 4
+      when the after item's field 5 is 4
   L510      f3b=keep
+  L622      f2a=computed
   alt1_0    f2a=2200  f3a=2700
-      after starttest 10
-      after testFldeq 0
-      after starttest 11
-      when the next is k          (enus_evv_glob_data_3 +1479, ZZstring358)
+      when the before item's field 6 is 0
+      when the before phoneme is k        (enus_evv_glob_data_3 +1479, ZZstring358)
   alt1_7    f2a=1000
   alt1_16   f2a=950  f3a=2200
   alt1_19   f2b=2150
-      after starttest 35
-      after testFldeq 0
-      after starttest 36
-      when the next is k          (enus_evv_glob_data_3 +1479, ZZstring358)
+      when the after item's field 6 is 0
+      when the after phoneme is k        (enus_evv_glob_data_3 +1479, ZZstring358)
   L1417     f3b=2500
   alt1_29   f2b=2100
   L1826     f2b=1250
   L2231     f2b=1200
   alt1_47   f2b=1350
-      when the next is g          (enus_evv_glob_data_3 +1203, ZZstring295)
+      when the after phoneme is g        (enus_evv_glob_data_3 +1203, ZZstring295)
   alt1_53   f2b=1550  f3b=2200
-      when the next is ?52        (enus_evv_glob_data_3 +1965, ZZstring480)
+      when the after phoneme is ?52      (enus_evv_glob_data_3 +1965, ZZstring480)
   L3213     f2b=1000
   L3226     f2b=1200  f3b=2100
   alt1_35   f2b=2050
-      after starttest 38
-      when the next is m          (enus_evv_glob_data_3 +1663, ZZstring399)
+      when the after phoneme is m        (enus_evv_glob_data_3 +1663, ZZstring399)
   alt1_37   f2b=2000
   L3322     f3b=2600
   L3335     f2b=1350
@@ -287,18 +263,24 @@ place eng_vel_Fv from es_val.obj in delta_rules_c22_enus.c
   L3361     f2b=1850  f3b=2400
   L3384     f2b=1450
   alt1_5    f2a=2050
-      after starttest 5
-      when the next is h          (enus_evv_glob_data_3 +1294, ZZstring316)
+      when the before phoneme is h        (enus_evv_glob_data_3 +1294, ZZstring316)
   alt1_12   f2a=1900
   L3520     f3a=2500
   alt1_13   f2a=1800
-      after starttest 9
-      when the next is p          (enus_evv_glob_data_3 +1725, ZZstring417)
+      when the before phoneme is p        (enus_evv_glob_data_3 +1725, ZZstring417)
   alt1_14   f2a=1100
-      after starttest 19
-      when the next is ?48        (enus_evv_glob_data_3 +1880, ZZstring462)
+      when the before phoneme is ?48      (enus_evv_glob_data_3 +1880, ZZstring462)
   alt1_18   f2a=1350
-      after starttest 18
-      when the next is ?46        (enus_evv_glob_data_3 +1873, ZZstring459)
+      when the before phoneme is ?46      (enus_evv_glob_data_3 +1873, ZZstring459)
 
-# 9 rules, 155 blocks that set a formant value
+# 9 rules, 172 blocks that set a formant value.
+#
+# `computed' is a value the rule takes from a register rather than
+# an immediate -- 33 of the 267 writes -- and this does not resolve
+# those. `keep' is the rules' own sentinel for leaving a target
+# unset. And the order in which the blocks are tried is read off
+# their order in the C and is NOT verified: predicting from it
+# disagrees with measurement for /t/ before /i/, where the block
+# whose condition names /i/ sets f2b to 1350 and the engine
+# measures 1720. So the values here are the rules' own and the
+# selection is not to be trusted yet.

@@ -346,7 +346,15 @@ And what does not match confirms the structure rather than denying it. Six conso
 
 Forty-eight conditions come out as a named phoneme that way. And note what the shape of it says: `f2a`, the half *before* the consonant, is chosen by what comes *after* it -- which is the separability that two Latin squares and 832 carriers were built to establish.
 
-**What is not done, and it is the larger half.** There are 102 blocks and only 48 readable conditions: the rest are selected by `starttest`, which is the machine's alternation rather than a string comparison, so which arm fires wants the alternation semantics read. So the *values* are extracted and verified and the *selection* is not, and nothing here should be taken as saying which arm applies when. Reading one arm's condition and predicting from it was tried on the alveolars and does not yet agree with measurement -- the rule sets `f2b=1350` where /t/ before /i/ measures 1740 -- which is exactly what an unread selection order looks like.
+`starttest` turned out to select nothing: it sets a tag, clears the stack back and pushes a context record, so its number is a label. The blocks are a sequential chain instead, each with its own predicates, and the scan-setter that precedes a test says which way it looks -- a name ending `l` sets the scan leftwards and one ending `r` rightwards, so a condition is about the phoneme *before* or the phoneme *after*. That is what the table prints.
+
+**Two things it does not do, both named in the file itself.**
+
+**Thirty-three of the 267 writes take their value from a register**, `GLOBAL(int16_t, r6, s440) = (LOW(r7))`, rather than from an immediate. Those come out as `computed` and are not resolved. They are very likely the interesting ones -- a value computed from the neighbouring vowel's own formants is exactly what coarticulation would look like -- and a first version of this tool matched only immediates and so dropped all thirty-three silently, which is worse than saying where it cannot see.
+
+**And the order the blocks are tried in is read off their order in the C and is not verified.** Predicting from it fails: for /t/ before /i/ the block whose condition names /i/ sets `f2b` to 1350, and the engine measures 1720 -- which sits just under the 1750 of a later block whose condition reads as /k/. So one of the ordering, the attribution of conditions to blocks, or the slot reading for `f2b` is wrong, and static reading cannot say which. Watching which block executes would, and that wants a breakpoint a block rather than another pass over the text.
+
+So: **the values are the engine's own and 25 of 32 comparable ones are verified against it; the selection is not to be trusted yet.**
 
 ### What is actually left
 
