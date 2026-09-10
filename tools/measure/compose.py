@@ -156,6 +156,28 @@ def between(s1, t1, s2, t2, want):
     return [a + int((b - a) * w) for a, b in zip(s1, s2)]
 
 
+def nearest(cands, span):
+    """The carriers of a pair, the one whose own closure matches first.
+
+    An anchor is not always the same length in every carrier of a pair: /l/
+    between /W/ and /O/ anchors over seventeen frames and between /W/ and /H/
+    over forty-three, because /W/ moves the third bandwidth itself and one of
+    the two anchors caught the vowel's movement rather than the consonant's.
+    Taking whichever carrier came first then laid a seventeen-frame closure
+    into a forty-three frame one and put twenty-eight frames of silence in the
+    middle of the word.
+
+    So the one whose closure is nearest the length wanted goes first. That is
+    a smaller fix than telling the vowel's bandwidth from the consonant's,
+    and it is the alignment that actually matters.
+    """
+    if span is None or len(cands) < 2:
+        return cands
+    want = span[1] - span[0]
+    return sorted(cands, key=lambda c: abs((c["span"][1] - c["span"][0])
+                                           - want))
+
+
 def compose(aa_pair, bb_pair, n_out=None):
     """The carrier with the left pair's first vowel and the right pair's second.
 
@@ -316,6 +338,8 @@ def main(argv):
         if not al or not bl:
             continue
         tried += 1
+        al = nearest(al, want["span"])
+        bl = nearest(bl, want["span"])
         pair_a = (al[0], al[1] if len(al) > 1 else None)
         pair_b = (bl[0], bl[1] if len(bl) > 1 else None)
         got = compose(pair_a, pair_b,
