@@ -325,6 +325,18 @@ So the whole context table for every consonant is recoverable mechanically. `too
 
 **What that makes of the measuring.** It is the oracle, not the product. Every value read out of a rule can be held against the tables and the tap, which is the "prove it before saying it" this tree runs on, and the audibility calibration from an ear stays the standard for when something is close enough. But the tables were the wrong deliverable, and the mistake was not looking for where the numbers come from before spending a day measuring where they land.
 
+### Read out: nine rules, 155 blocks, 110 distinct values
+
+`tools/module/formants.py` reads all nine and writes `lang/enus/enus.formants`. Every place of articulation comes out as a base locus and a set of context-dependent overrides, with the test that selects each one named -- and the test's symbol resolved through `lang/enus/rules/symbols` to a store and an offset, so a condition can be chased to the bytes it matches against.
+
+The base loci, straight from the rules: alveolar f2 1500 f3 2550; interdental 1450 and 2600; palatal 1700 and 2400 with f4 3600 and f5 4000; velar 1650 and 2300; retroflex 1200 and 1650/1600 with f4 3300 and f5 3600; bilabial 600 and 2200; labial 1000 and 2200/2250 with f4 3300 and f5 3600; lateral 800 and 3000. **155 blocks set a formant value and there are 110 distinct values in all.**
+
+**Held against measurement, 25 of 32 comparable values match exactly**, to within two hertz: /D/, /F/, /S/, /T/, /Z/, /d/, /g/, /k/, /n/, /s/, /t/ and /z/ agree on both f2 and f3. That is the slot mapping proved, since the slots carry no names -- a language declares its globals by kind and count, so a number is positional and the original's names are gone.
+
+And what does not match confirms the structure rather than denying it. Six consonants -- /b/, /f/, /l/, /m/, /p/, /v/ -- have `keep` for a base value, so whatever they measure at must come from an override arm and there is nothing in the base to compare. The four that differ, /G/, /R/, /r/ and /w/, are cases where an arm fired: /w/'s base f2 is 600 and it measures 1038, which is a bilabial's base being overridden, not a wrong reading.
+
+So the extraction is verified where it can be and explained where it cannot. What remains is decoding the conditions: the test is named and its symbol resolved to a store and an offset, and reading the bytes there against `tools/module/phonemes.py`'s codes says which phonemes each arm is for. That is a reading job with every piece present.
+
 ### What is actually left
 
 Six things, in the order they block a front end.
