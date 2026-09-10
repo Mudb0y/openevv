@@ -72,6 +72,12 @@ TEST = re.compile(r'CALLW?\((test_string_s), [^,]+, (\d+), (\d+), '
 FLDEQ = re.compile(r'CALLW?\(testFldeq, [^,]+, (\d+), (\d+), (\d+)\)')
 SETSCAN = re.compile(r'CALL\(ZZlpta_load_\w*?setscan_\d+([lr])\w*, ')
 
+# `advance_tok' steps the scan on, so a condition after one is about the item
+# beyond the one before it: the guards are a conjunction that can reach two
+# positions out. /t/'s 1750 wants field 6 of the item to the right to be
+# nought AND the item after that to be a particular phoneme.
+ADVANCE = re.compile(r'CALL\(advance_tok, ')
+
 # starttest only opens a test -- it sets a tag, clears the stack back and
 # pushes a context record -- so it selects nothing and its number is a label
 # rather than a condition. The arms are a sequential chain instead: each
@@ -149,12 +155,26 @@ def rule_bodies(tag):
 
 
 def read_rule(lines):
-    """The base locus and every override, by the block that sets it."""
+    """The base locus and every override, by the block that sets it.
+
+    A block runs from its label to the `goto' that ends it, and the tests that
+    guard a value write are the ones between the label and that write. A first
+    version collected every test seen since the last label, which crosses the
+    nested `if' blocks and the gotos the generated C is full of and so
+    attributed tests to the wrong block: it had /t/'s f2b of 1750 guarded by a
+    string test naming /k/, where the guard is really `testFldeq(2, 6, 0)' --
+    a feature of the item to the right rather than its identity. Instrumenting
+    every write in `eng_alv_Fv' and speaking /ati/ is what caught it: the
+    block that fires is the one setting 1750 and 2750, and /t/ before /i/
+    measures f2 ramping to 1720 and f3 to 2726.
+    """
     where = "base"
     order = ["base"]
     sets = {}
     guards = {}
     side = {}
+    step = {}
+    closed = set()
     for line in lines:
         m = LABEL.match(line)
         if m:
@@ -162,17 +182,31 @@ def read_rule(lines):
             if where not in order:
                 order.append(where)
             continue
+        if where in closed:
+            m = VALUE.search(line)
+            if m and m.group(1) in SLOT:
+                raw = m.group(2).strip()
+                said = ("keep" if raw == str(KEEP)
+                        else raw if re.fullmatch(r'\d+', raw) else "computed")
+                sets.setdefault(where, []).append((SLOT[m.group(1)], said))
+            continue
+        if ADVANCE.search(line):
+            step[where] = step.get(where, 0) + 1
         m = SETSCAN.search(line)
         if m:
             side[where] = "before" if m.group(1) == "l" else "after"
         for m in TEST.finditer(line):
             guards.setdefault(where, []).append(
-                ("phoneme", int(m.group(3)), int(m.group(4))))
+                ("phoneme", int(m.group(3)), int(m.group(4)),
+                 step.get(where, 0)))
         for m in FLDEQ.finditer(line):
             guards.setdefault(where, []).append(
-                ("field", int(m.group(2)), int(m.group(3))))
+                ("field", int(m.group(2)), int(m.group(3)),
+                 step.get(where, 0)))
         m = VALUE.search(line)
         if m:
+            # Everything gathered since the label guards this write, and what
+            # comes after it belongs to whatever block follows.
             slot, raw = m.group(1), m.group(2).strip()
             if slot in SLOT:
                 if re.fullmatch(r'\d+', raw):
@@ -183,6 +217,7 @@ def read_rule(lines):
                 sets.setdefault(where, []).append((SLOT[slot], said))
                 if where not in order:
                     order.append(where)
+                closed.add(where)
     return order, sets, guards, side
 
 
@@ -221,21 +256,23 @@ def main(argv):
             vals = "  ".join("%s=%s" % (s, v) for s, v in sets[k])
             print("  %-9s %s" % (k, vals))
             look = side.get(k, "after")
-            for kind, wide, num in guards.get(k, [])[:4]:
+            for kind, wide, num, hop in guards.get(k, [])[:4]:
+                where_at = look if not hop else (
+                    "%s+%d" % (look, hop))
                 if kind == "field":
-                    print("      when the %s item's field %d is %d"
-                          % (look, wide, num))
+                    print("      and the %s item's field %d is %d"
+                          % (where_at, wide, num))
                     continue
                 if num not in syms:
-                    print("      when the %s item matches symbol %d"
-                          % (look, num))
+                    print("      and the %s item matches symbol %d"
+                          % (where_at, num))
                     continue
                 _, symname, store, off = syms[num]
                 blob = blobs.get(store, [])
                 seq = blob[off:off + max(1, wide)]
                 said = " ".join(codes.get(c, "?%d" % c) for c in seq)
-                print("      when the %s phoneme is %-8s (%s +%d, %s)"
-                      % (look, said or "?", store, off, symname))
+                print("      and the %s phoneme is %-8s (%s +%d, %s)"
+                      % (where_at, said or "?", store, off, symname))
     print()
     print("# %d rules, %d blocks that set a formant value." % (len(names), total))
     print("#")

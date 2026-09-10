@@ -352,9 +352,13 @@ Forty-eight conditions come out as a named phoneme that way. And note what the s
 
 **Thirty-three of the 267 writes take their value from a register**, `GLOBAL(int16_t, r6, s440) = (LOW(r7))`, rather than from an immediate. Those come out as `computed` and are not resolved. They are very likely the interesting ones -- a value computed from the neighbouring vowel's own formants is exactly what coarticulation would look like -- and a first version of this tool matched only immediates and so dropped all thirty-three silently, which is worse than saying where it cannot see.
 
-**And the order the blocks are tried in is read off their order in the C and is not verified.** Predicting from it fails: for /t/ before /i/ the block whose condition names /i/ sets `f2b` to 1350, and the engine measures 1720 -- which sits just under the 1750 of a later block whose condition reads as /k/. So one of the ordering, the attribution of conditions to blocks, or the slot reading for `f2b` is wrong, and static reading cannot say which. Watching which block executes would, and that wants a breakpoint a block rather than another pass over the text.
+**The ordering is verified now, and it was my attribution of conditions that was wrong.** Every value write in `eng_alv_Fv` was instrumented with a print, the engine was asked to say /ati/, and what fires is the base and then one block: `f2b=1750`, `f3b=2750`. /t/ before /i/ measures f2 ramping to 1720 and f3 to 2726, which is that block's pair approached and not quite reached. So the blocks are tried in the order they appear and the first whose conditions hold wins, exactly as read.
 
-So: **the values are the engine's own and 25 of 32 comparable ones are verified against it; the selection is not to be trusted yet.**
+What was wrong is which conditions belong to which block. **A block runs from its label to the `goto` that ends it, and the guards are the tests between the label and the value write.** Collecting every test seen since the last label crosses the nested `if` blocks and the gotos the generated C is full of, so the block setting 1750 came out guarded by a string test naming /k/ when its real guard is `testFldeq(2, 6, 0)` -- a *feature* of the item to the right rather than its identity.
+
+And the guards are conjunctions that reach further than one position. That block's full condition is: field 6 of the item to the right is nought, then `advance_tok`, then the item *after that* is a particular phoneme. So a condition can be two positions out, and the table says `after+1` where it is.
+
+So: **the values are the engine's own, 25 of 32 comparable ones are verified against it, and the block order is verified by watching one rule run.** What is still not resolved is the 33 computed writes, and the guards are read rather than tested -- only that one block's selection has been checked against the engine.
 
 ### What is actually left
 
