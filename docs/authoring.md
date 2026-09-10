@@ -301,6 +301,28 @@ set after a `test_string_s`, 65534 being -2 as an int16 and so a sentinel. **So 
 
 **So the route to formant values that are the engine's rather than nearly the engine's is to read those nine rules.** Exact by construction rather than fitted; it explains the coarticulation instead of approximating it; and it needs no corpus at all -- no 416 carriers, no eleven rates, no cross product. `eng_lat_Fv` is about 480 lines of generated C.
 
+### What `eng_lat_Fv` actually is, and the four steps to read one
+
+Read out, `eng_lat_Fv` is a base locus and fourteen context-dependent overrides, every value an integer immediate:
+
+The base sets f2 to 800 for both halves and f3 to 3000 for both, and then sets the first half of each to 65534 -- minus two as an int16, the sentinel for "leave it". Fourteen labelled blocks then override: f2 at 700, 850, 900, 950 or 1000, and f3 at 2700, 2800 or 2900, with the preceding and following halves settable apart. Twenty-one distinct settings in all.
+
+**The sentinel is why a sonorant looked like it had no extent.** Where a target is not set, there is nothing to ramp *to* at that end, so the trajectory runs from wherever the vowel already was -- which is exactly the "whole vowel is the transition" that a day of measuring produced, and it is one magic number in a rule.
+
+**And there is no curve to fit, which is why none fitted.** Fourteen arms is a decision tree with fourteen leaves. The velar pinch being "unidentifiable from pair tables", a run-out's level being a hundred hertz out, /l/'s third bandwidth marking it in a carrier and not in a word -- all of it is the same thing: sampling the output of a decision tree.
+
+Reading the conditions as well as the values needs four steps and every one of them is in the tree as text, with no IBM object anywhere:
+
+The arm's test names a symbol, `CALLW(test_string_s, FIELD(0), 2, 1, delta_sym_ref[6260])`.
+
+`lang/enus/rules/symbols` says where that symbol falls: `at ut_norm.obj string_58 enus_evv_ut_norm_data_3 29` -- a store and an offset.
+
+`lang/enus/enus.consts` holds that store as bytes, thirty-two to a line.
+
+And `tools/module/phonemes.py` says which phoneme each code in it is.
+
+So the whole context table for every consonant is recoverable mechanically. `tools/module/sets.py` is not the tool for it -- that one lifts from IBM's objects and wants `link.obj` -- but nothing new has to be lifted, only read.
+
 **What that makes of the measuring.** It is the oracle, not the product. Every value read out of a rule can be held against the tables and the tap, which is the "prove it before saying it" this tree runs on, and the audibility calibration from an ear stays the standard for when something is close enough. But the tables were the wrong deliverable, and the mistake was not looking for where the numbers come from before spending a day measuring where they land.
 
 ### What is actually left
