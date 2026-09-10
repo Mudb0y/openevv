@@ -320,7 +320,13 @@ With all four right the rule beats splicing at every rate, over nineteen chains,
 
 What still stops `hello` is /l/. It needs the (l, o) pair and that is one of six /l/ pairs with no anchor: **the third bandwidth marks a sonorant in a carrier and does not always mark one in a word** -- /l/ takes `b3` from 150 to 400 between two /a/ and leaves it at 150 throughout `hello`. The third formant does mark it in both, and marks every sonorant, so it is the marker `chain.py` uses to place a consonant in an utterance. It is deliberately *not* used to decide which pairs the tables offer: tried at 200, 300 and 400 hertz it anchored between five and ten more of /l/'s pairs and cost two to four dropouts every time, one of them thirty-eight frames, because the span it finds for /l/ is the wrong extent often enough to misplace the voicing. Preferring the earlier markers where a pair has a choice did not save it. **A dropout is the one fault the ear reliably catches and a missing pair only refuses to compose, so refusing is the better failure.**
 
-Telling a vowel's own third bandwidth and formant from a consonant's is the thing that would fix this properly, and is not done.
+Telling a vowel's own third bandwidth and formant from a consonant's is the thing that would fix this properly. **Anchoring by exclusion was tried for it and does not work**, and the reason is worth keeping because it is a fact about the corpus rather than about the code.
+
+The idea was sound on its face: every carrier of a Latin square shares its two vowels with the twenty-five others of the same vowel context and differs only in the consonant between them, so the stretch where they disagree ought to *be* the consonant, with no marker needed. Implemented, the bracket it answers is (0, n-1) -- the whole utterance -- for every case tried, so it constrains nothing at all.
+
+**The vowels are not the same across consonant contexts.** A vowel before a voiceless consonant is shorter than the same vowel before a voiced one -- /a/ runs 32 frames before /p/ and 37 before /b/, which is the pre-fortis clipping the stretch law was derived from -- so its whole track is compressed rather than merely cut short, and two carriers of the same vowel context disagree from their first frames. Where they disagree is everywhere.
+
+So the same fact that made the stretch law measurable for free is what makes anchoring by exclusion impossible. Any second attempt has to compare like with like: carriers whose first vowel is the same length, which means grouping by the consonant's voicing before comparing, and there are not many carriers left in a group after that.
 
 **And the corpus is one language.** English, sixteen vowels and twenty-six consonants, measured between vowels, at both word edges, and chained two consonants deep. Consonant clusters are untested -- `system` reports two closures for four consonants, /st/ merging into one -- and so are unstressed vowels.
 
