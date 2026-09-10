@@ -30,7 +30,7 @@ static int   tried;
 static long  frames;
 
 /* In frame order, which is the order KlattSynth reads them. */
-static const char *const tap_names[TAP_PARMS] = {
+const char *const evv_klatt_parm_names[TAP_PARMS] = {
     "step", "f0",  "av",  "oq",  "tl",  "fl",  "di",  "ah",
     "af",   "f1",  "b1",  "df1", "db1", "f2",  "b2",  "f3",
     "b3",   "f4",  "b4",  "f5",  "b5",  "f6",  "b6",  "f7",
@@ -74,7 +74,7 @@ static int tap_open(void)
        repeat it. */
     if (ftell(tap) == 0) {
         for (i = 0; i < TAP_PARMS; i++)
-            fprintf(tap, "%s%s", i ? "\t" : "", tap_names[i]);
+            fprintf(tap, "%s%s", i ? "\t" : "", evv_klatt_parm_names[i]);
         fputc('\n', tap);
     }
     return 1;

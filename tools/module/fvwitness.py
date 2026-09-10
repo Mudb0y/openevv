@@ -33,7 +33,12 @@ SLOTS = ("s439", "s440", "s441", "s442", "s443", "s444", "s445", "s446")
 WRITE = re.compile(
     r'^(\s*)(?:STATE|GLOBAL)\(int16_t,(?: r\d+,)? (s4\d\d)\) = \((.+?)\);')
 RULE = re.compile(r'^/\* (\w+), from')
-WANT = re.compile(r'_Fv$|^(?:eng|ga)_ph_')
+# No name filter. Which rules write a formant slot is a question the
+# generated C answers exactly, and a name pattern answers wrongly: the nine
+# place rules and the per-phoneme rules are 56 of the 65 that write one, and
+# the nine left out include `set_seg_default_acoustic_vals', which is where a
+# vowel's f2 comes from when the vowel has no rule of its own. Guessing from
+# names had /E/ at 1650 where the engine says 2090.
 MARK = "FVW"
 
 
@@ -44,7 +49,7 @@ def rule_files(tag):
 
 
 def instrument(tag):
-    """A print at every formant write in every _Fv rule. Answers the count."""
+    """A print at every write to a formant slot, anywhere. Answers the count."""
     n = 0
     for path in rule_files(tag):
         lines = open(path).read().split("\n")
@@ -54,14 +59,12 @@ def instrument(tag):
         for i, ln in enumerate(lines, 1):
             m = RULE.match(ln)
             if m:
-                # Any rule that writes a formant slot, not only the nine
-                # named for a place of articulation. Thirty-one do, and the
-                # rest are per-phoneme -- `ga_ph_a', `ga_ph_u', `eng_ph_x'
-                # and the like, which are where a VOWEL's targets come from.
-                # tools/module/phonemes.py reports a vowel as having "no rule
-                # of its own" because it looks for `eng_ph_<v>' and the
-                # vowels' are `ga_ph_<v>', General American's.
-                rule = m.group(1) if WANT.search(m.group(1)) else None
+                # Every rule, and the write itself decides. The
+                # per-phoneme rules are where a vowel's targets come from --
+                # `ga_ph_a', `ga_ph_u', `eng_ph_x'; phonemes.py reports a
+                # vowel as having "no rule of its own" because it looks for
+                # `eng_ph_<v>' and General American's are `ga_ph_<v>'.
+                rule = m.group(1)
             if rule is not None:
                 m = WRITE.match(ln)
                 if m and m.group(2) in SLOTS:

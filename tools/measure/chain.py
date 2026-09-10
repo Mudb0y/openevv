@@ -211,10 +211,14 @@ WITNESS_SLOT = {"s439": ("f2", 0), "s440": ("f2", 1),
 
 
 def load_witness():
-    """Each (consonant, vowels) context's formant targets, as the rules chose."""
-    path = os.path.join(ROOT, "lang", "measured", "..", "enus",
-                        "enus.formants-witnessed")
-    path = os.path.normpath(path)
+    """Each context's targets, per rule, as the engine's own rules chose them.
+
+    The file has a block a case and a line a rule inside it, because the place
+    rules and the per-phoneme rules write the same slots and which is which is
+    the whole point: `eng_alv_Fv' is the /t/'s targets, `ga_ph_A' the vowel
+    before it and `ga_ph_o' the vowel after.
+    """
+    path = os.path.join(ROOT, "lang", "enus", "enus.formants-witnessed")
     out = {}
     if not os.path.exists(path):
         return out
@@ -223,16 +227,30 @@ def load_witness():
         m = re.match(r'case (\S+)', line)
         if m:
             key = m.group(1)
+            out[key] = {}
             continue
-        if key and line.startswith("  gives"):
+        m = re.match(r'\s+(\w+)\s+(s4\d\d=.*)', line)
+        if key and m:
             vals = {}
-            for slot, v in re.findall(r'(s4\d\d)=(-?\d+)', line):
+            for slot, v in re.findall(r'(s4\d\d)=(-?\d+)', m.group(2)):
                 if slot in WITNESS_SLOT and int(v) >= 0:
                     name, half = WITNESS_SLOT[slot]
                     vals.setdefault(name, [None, None])[half] = int(v)
-            out[key] = vals
-            key = None
+            out[key][m.group(1)] = vals
     return out
+
+
+def vowel_target(wit, cons, vp, vn, vowel, name):
+    """What the rules give this vowel's parameter in this context, or None."""
+    case = wit.get("%s:%s%s" % (cons, vp or ".", vn or "."))
+    if not case:
+        return None
+    for rule, vals in case.items():
+        if rule.endswith("_ph_" + vowel) and name in vals:
+            pair = vals[name]
+            if pair[0] is not None and pair[1] is not None:
+                return pair
+    return None
 
 
 def load_pairs(wpm=None):
@@ -367,9 +385,19 @@ def stitch(out, tail, want):
     if have == want:
         return list(out) + list(tail)
     if have < want:
-        # Hold whatever the two sides meet at.
-        mid = out[-1] if out else (tail[0] if tail else 0)
-        return list(out) + [mid] * (want - have) + list(tail)
+        # Hold whatever the two sides meet at -- or run between them, since
+        # a vowel's own two targets need not be equal: /o/'s f2 goes 1200 to
+        # 850 by the rules, and holding the first then stepping to the second
+        # puts the whole glide in one frame. EVV_CHAIN_RAMP=0 holds instead.
+        a = out[-1] if out else (tail[0] if tail else 0)
+        b = tail[0] if tail else a
+        room = want - have
+        if a == b or os.environ.get("EVV_CHAIN_RAMP") == "0":
+            return list(out) + [a] * room + list(tail)
+        return (list(out)
+                + [a + int((b - a) * (i + 1) / float(room + 1))
+                   for i in range(room)]
+                + list(tail))
     # Too much for the room: squeeze both sides rather than cut either, which
     # is what a higher rate asks for. Cutting from the middle is right when
     # the middle is a vowel holding still, and wrong when there is no middle
@@ -391,6 +419,22 @@ def stitch(out, tail, want):
     while len(seq) < want:
         seq.append(seq[-1] if seq else 0)
     return seq
+
+
+def pulled(seq, want, end):
+    """`seq' with one end moved to `want', the correction ramped to nothing.
+
+    Which end is which: a run-out starts at the closure and ends in the
+    vowel, so its tail is what a vowel target names; a run-in is the other
+    way about. The other end is a locus the rules have already given us and
+    must not move, which is why this is a ramp and not an offset.
+    """
+    d = want - (seq[-1] if end == "tail" else seq[0])
+    if d == 0 or len(seq) == 1:
+        return [want] if len(seq) == 1 else list(seq)
+    m = len(seq) - 1
+    return [v + int(d * ((i if end == "tail" else m - i) / float(m)))
+            for i, v in enumerate(seq)]
 
 
 wit = {}
@@ -504,13 +548,36 @@ def compose_chain(phonemes, frames, left, right):
             closes = lp[0].get("span") is not None and \
                 rp[0].get("span") is not None
             if closes and os.environ.get("EVV_CHAIN_FV") != "0":
-                pair = wit.get("%s:%s%s"
-                               % (c, vp or ".", vn or "."), {}).get(name)
+                case = wit.get("%s:%s%s" % (c, vp or ".", vn or "."), {})
+                pair = None
+                for rname, vals in case.items():
+                    if rname.endswith("_Fv") and name in vals:
+                        pair = vals[name]
+                        break
                 if pair and pair[0] is not None and pair[1] is not None:
                     m = len(closure[k])
                     lo, hi = pair
                     closure[k] = [lo + (int((hi - lo) * i / float(m - 1))
                                         if m > 1 else 0) for i in range(m)]
+
+        # The vowels next. A run-out was measured in a carrier and so ends
+        # at that carrier's vowel value, which is not this context's: the
+        # rules give /o/ after /t/ between /A/ and /o/ an f2 of 1200 falling
+        # to 850, and the carrier it came from need not agree. So correct the
+        # vowel end of each transition to the rules' target and leave the
+        # closure end alone, ramping the correction across so the locus we
+        # just took from the same rules is not moved by it.
+        # EVV_CHAIN_VF=0 keeps the carriers' own vowel ends.
+        if os.environ.get("EVV_CHAIN_VF") != "0":
+            for k, (c, vp, vn) in enumerate(order):
+                if vn is not None and runout[k]:
+                    t = vowel_target(wit, c, vp, vn, vn, name)
+                    if t is not None:
+                        runout[k] = pulled(runout[k], t[0], "tail")
+                if vp is not None and runin[k]:
+                    t = vowel_target(wit, c, vp, vn, vp, name)
+                    if t is not None:
+                        runin[k] = pulled(runin[k], t[1], "head")
 
         seq = [None] * n
         for k, (a, b) in enumerate(spans):

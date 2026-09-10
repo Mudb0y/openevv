@@ -469,3 +469,39 @@ One thing measured and unexplained: /l/ leaves /a/'s f1 alone at 750 but pulls /
 
 **And the corpus is one language.** English, sixteen vowels and twenty-six consonants, measured between vowels, at both word edges, and chained two consonants deep. Consonant clusters are untested -- `system` reports two closures for four consonants, /st/ merging into one -- and so are unstressed vowels.
 
+
+## The formant tracks are a breakpoint list, and it is exact
+
+Everything above measures where the engine's formants go. **None of it needed to.** The engine's formant tracks are a list of breakpoints -- a value at a moment in milliseconds, and a straight line in whole numbers to the next -- and the frames are what that list unfolds into. `EVV_ARRAY_TAP` names a file and `src/eci/bridge/eci_arraygen.c` writes the list out.
+
+`tools/measure/breaks.py` rebuilds every frame from the list alone and compares it against `EVV_KLATT_TAP`. **Twenty-eight parameters, every frame, exact, on all eleven test utterances** -- `atapa`, `aCaSa`, `akaga`, `amada`, `tomato`, `potato`, `hello`, `money`, `happy`, `banana` and `lemon`. Not close: identical. There is no measurement in it, no fitting, and no residual.
+
+So the question "can the formant values and transitions be recreated exactly" has a yes and the thing to recreate is the breakpoint list. `/atapa/`'s f2 is nine numbers:
+
+    at 0    span 136   1200..1200
+    at 136  span 20    1200..1500
+    at 156  span 25    1500..1500
+    at 181  span 30    1500..1250
+    at 211  span 83    1250..1150
+    at 294  span 30    1150..1000
+    at 324  span 75    1000..1000
+    at 399  span 20    1000..1200
+    at 419  span 163   1200..1200
+
+/a/ at 1200, the /t/ locus at 1500 reached over 20 milliseconds and held for 25, the vowel between the stops running 1250 to 1150 over 83, /p/'s 1000, and the last /a/ back at 1200. That is the whole track and it is the whole of what the composer was trying to estimate.
+
+**Two things had to be right to get the rebuild exact**, and both were wrong first. The moment a frame is built at has to come from the tap and not from the run header: a bounded run trims its end to a whole step and the next run starts from where the last one really got to, so by the second segment of /atapa/ the header's `from` is four milliseconds early and every value after it reads wrong. And the gap in force has to be found by replaying the cursor, in the order the cursor crossed onto each gap, rather than by searching the list for the one covering a moment -- a stream whose cursor is reset mid-utterance has two gaps covering the same moment and only the order says which was in force. Searching by time left five amplitude parameters wrong on three of the eleven words.
+
+### Where the numbers in the list come from
+
+The rules, and they are exactly the numbers `tools/module/fvwitness.py` witnesses. `set_seg_default_acoustic_vals` fires once a segment and sets every formant target to -1, which is "unset"; then the segment's own rules fill them in. For /atapa/, in order: `ga_ph_a` 1200/1200, `eng_alv_Fv` 1500/1500, `ga_ph_a` 1200/1200, `ga_ph_a` 1250/1150, `eng_lab_Fv` 1000/1000, `ga_ph_a` 1200/1200. Every one of those appears in the f2 list above, in that order. **So the witnessed values are right, the segment boundaries are what delimits them, and `set_seg_default_acoustic_vals` is the delimiter.**
+
+**Filtering the instrumentation by rule name was a mistake worth naming.** `fvwitness.py` instrumented rules whose names end in `_Fv` or start `eng_ph_`/`ga_ph_`, which is 56 of the 65 rules that write a formant slot. The nine left out include `set_seg_default_acoustic_vals`, which is both the segment delimiter and where f4 and f5 get their defaults of 3600 and 3900. The criterion should have been behavioural from the start: instrument every write to one of the eight slots, whatever the rule is called. It is now.
+
+### And this retires the composition model above
+
+Wiring the witnessed consonant targets into `tools/measure/chain.py` moved nothing. Wiring the vowels' in as well made it slightly worse -- `tomato` 61.9 per cent to 64.7, `banana` 42.6 to 44.3, `atapa` 10.9 to 12.6 -- and the reason is now plain: a rule fires once per occurrence of its phoneme, the witnessed table keeps one value per rule per case, and a value placed in the wrong segment is worse than no value. The placement is what `set_seg_default_acoustic_vals` supplies and what the table did not record.
+
+So the measured corpus, the Latin squares, the markers, the locus interpolation, the stretch law and the voicing staircase are all estimates of something the engine states outright. They stay as an oracle -- a value read out of a rule can be held against a value measured coming out of the synthesiser, which is how anything here is proved -- but they are not the way to build a formant generator. **The way is the breakpoint list.**
+
+What that leaves is a real and much smaller question: how much of the list is predictable from the phoneme and its neighbours alone. The values are; that is what the witnessing showed. The spans are the duration rules' business and are not measured yet.
