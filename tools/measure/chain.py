@@ -390,14 +390,30 @@ def compose_chain(phonemes, frames, left, right):
         for k, ((c, vp, vn), (a, b)) in enumerate(zip(order, spans)):
             lp = left.get((c, vp))
             rp = right.get((c, vn))
+            # A word-edge consonant has a vowel on one side only, and the key
+            # for the missing side is (c, None) -- which lumps all sixteen
+            # carriers of that consonant together, so choosing among them by
+            # span length picks one with the wrong vowel. During /h/ the
+            # formants are already the following vowel's, /h/ having none of
+            # its own -- it is that vowel's shape excited by noise -- so a
+            # wrong vowel is 780 hertz of f2 wrong from the first frame.
+            # Naming the side that does have a vowel fixes it: `hE' is both
+            # the initial /h/ and the (h, E) pair.
+            #
+            # Using ONLY the edge carrier, rather than interpolating across
+            # the carriers of (c, vowel), was tried both ways round and was
+            # much worse -- 150 per cent against 93.7 -- so the ordinary
+            # carriers of the pair are evidently telling it something the
+            # edge one alone does not.
+            if vp is None:
+                lp = rp
+            elif vn is None:
+                rp = lp
+
             if not lp or not rp:
                 return None, "no measured pair for %s around %s" % (c, vp)
             la, la2 = lp[0], (lp[1] if len(lp) > 1 else None)
             rb = rp[0]
-            # A sonorant carrier has no closure recorded, because the whole
-            # vowel is the transition: f3 climbs from the vowel's own value
-            # toward the consonant's across all of it. Taking the whole
-            # carrier as the closure is what that means here.
             if la.get("span") is None:
                 la = dict(la, span=(0, len(la["frames"]) - 1))
             if rb.get("span") is None:
