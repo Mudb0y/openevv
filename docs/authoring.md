@@ -282,6 +282,27 @@ Measured at ten rates from 200 to 700 words a minute, composing each from its ow
 
 **And one limitation, which counting made obvious.** At 175 words a minute 96 of the 416 carriers have no findable closure, and 96 is exactly the six consonants that have none by nature -- /h/, /r/, /l/, /y/, /w/ and /R/ -- times sixteen vowels. At 450 it is 106 and at 700 it is 124, so speed costs another ten and another twenty-eight as obstruents lose theirs too. Those pairs are missing from the tables, which is why a chain containing one is refused rather than composed badly. They want an anchor that is not a closure, and that is the second time this gap has appeared: `loci.py` already answers "no plateau to compare" for the same six.
 
+### The numbers are in the rules, and measuring where they land was the wrong way round
+
+Every phoneme in `lang/enus` is declared "at" one of nine rules named for a place of articulation -- `eng_lab_Fv`, `eng_alv_Fv`, `eng_vel_Fv`, `eng_pal_Fv`, `eng_ret_Fv`, `eng_lat_Fv`, `eng_intd_Fv`, `eng_high_pal_Fv`, `eng_bilab_Fv` -- and `tools/module/phonemes.py` prints which. Those rules **compute the formant values**, and they are already in the tree as C, `make rules` having written them out.
+
+What is inside them is not a model of anything. It is the numbers:
+
+`eng_lat_Fv` sets `s439` and `s440` to 800 and `s441` and `s442` to 3000. `eng_alv_Fv` sets them to 1500 and 2550. `eng_lab_Fv` sets 1000, then 2200 and **2250**, then `s443` 3300 and `s445` 3600.
+
+Set those against what a day of measuring found. /l/'s f2 goes to 800 and its f3 to 3000. /t/ and /s/ between two /a/ sit at f2 1500 and f3 2550. /m/ between two /a/ holds f2 at 1000, runs f3 from 2200 to 2248, and takes f4 to 3300 and f5 to 3600. **Every one of those numbers is an immediate in a rule.** And `s441` against `s442` -- 2200 and 2250 -- is the finding that a locus separates into a value the preceding vowel sets and a value the following one sets, which took two Latin squares and 832 carriers to establish. It is two variables.
+
+The context-dependence is there too, as branches rather than as noise. A few lines further into `eng_lat_Fv`:
+
+    STATE(int16_t, s439) = (65534);
+    STATE(int16_t, s441) = (65534);
+
+set after a `test_string_s`, 65534 being -2 as an int16 and so a sentinel. **So coarticulation is conditional logic.** That is why the velar pinch was "unidentifiable from pair tables" and why a run-out's level came out a hundred hertz wrong: the output being sampled is a decision tree's, and no curve fits it.
+
+**So the route to formant values that are the engine's rather than nearly the engine's is to read those nine rules.** Exact by construction rather than fitted; it explains the coarticulation instead of approximating it; and it needs no corpus at all -- no 416 carriers, no eleven rates, no cross product. `eng_lat_Fv` is about 480 lines of generated C.
+
+**What that makes of the measuring.** It is the oracle, not the product. Every value read out of a rule can be held against the tables and the tap, which is the "prove it before saying it" this tree runs on, and the audibility calibration from an ear stays the standard for when something is close enough. But the tables were the wrong deliverable, and the mistake was not looking for where the numbers come from before spending a day measuring where they land.
+
 ### What is actually left
 
 Six things, in the order they block a front end.
