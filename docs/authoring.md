@@ -358,7 +358,17 @@ What was wrong is which conditions belong to which block. **A block runs from it
 
 And the guards are conjunctions that reach further than one position. That block's full condition is: field 6 of the item to the right is nought, then `advance_tok`, then the item *after that* is a particular phoneme. So a condition can be two positions out, and the table says `after+1` where it is.
 
-So: **the values are the engine's own, 25 of 32 comparable ones are verified against it, and the block order is verified by watching one rule run.** What is still not resolved is the 33 computed writes, and the guards are read rather than tested -- only that one block's selection has been checked against the engine.
+### Witnessed rather than read: `lang/enus/enus.formants-witnessed`
+
+Reading the guards is error-prone and reading them is not necessary. `tools/module/fvwitness.py` puts a print at each of the 267 formant writes in the nine rules, builds, speaks every consonant between every pair of adjacent vowels and at both word edges, and writes down which blocks the engine chose and what each slot ended up holding. **1,210 cases, 172 distinct outcomes.** It owes nothing to understanding the scan, and it is the shape a composer wants: context to values, as the engine chose them.
+
+**The print reads the slot back rather than copying the expression**, which matters more than it sounds. A third of the writes take their value from a register, and /l/'s are *all* `LOW(r0)` -- so printing the expression collapsed every one of /l/'s contexts into the same unhelpful string, and 150 outcomes came out where there are 172. Read back, /l/ resolves: 800 and 3000 between /a/ and /u/, 750 and 2950 between /U/ and /o/. **That is why /l/ resisted every table-reading approach: its values are computed at run time, so no amount of reading immediates was ever going to produce them.**
+
+**Held against the measured tables, 86 per cent of obstruent values fall within forty hertz** of the locus measured independently, and 81 per cent within twenty. The tolerance curve flattens at 86, so the remaining fourteen per cent differ genuinely rather than marginally and want explaining.
+
+The sonorants are excluded from that figure and should be: 0 of 4 agree for /h/, 0 of 6 for /y/, 1 of 18 for /l/. That is not the rule disagreeing with the engine -- both come from the engine -- it is the *comparison* being invalid, because a sonorant has no closure and the measured "value at the closure end" is an artefact of whichever marker found a span for it. The witnessed value is the one to trust there.
+
+So: **the values are the engine's own; 25 of 32 base loci match measurement exactly; the block order is verified by watching a rule run; and the witnessed table gives every context's outcome without needing the guards read at all.** What the guards *say* is still only an index, and the fourteen per cent of obstruent disagreements are unexplained.
 
 ### What is actually left
 
