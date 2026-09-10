@@ -414,10 +414,20 @@ def compose_chain(phonemes, frames, left, right):
                 return None, "no measured pair for %s around %s" % (c, vp)
             la, la2 = lp[0], (lp[1] if len(lp) > 1 else None)
             rb = rp[0]
+            # A sonorant carrier has no closure, and the measured model says
+            # why: the whole first vowel ramps toward the consonant and the
+            # whole second ramps away from it, so the consonant is a point in
+            # the middle rather than a stretch. Taking the whole carrier as
+            # the closure instead left no run-in and no run-out at all, so
+            # the first vowel held flat where the engine ramps it and the
+            # second was never laid down -- /hElo/'s final /o/ came out as a
+            # held 736 where the engine has 500.
             if la.get("span") is None:
-                la = dict(la, span=(0, len(la["frames"]) - 1))
+                mid = len(la["frames"]) // 2
+                la = dict(la, span=(mid, mid))
             if rb.get("span") is None:
-                rb = dict(rb, span=(0, len(rb["frames"]) - 1))
+                mid = len(rb["frames"]) // 2
+                rb = dict(rb, span=(mid, mid))
             if la2 is not None and la2.get("span") is None:
                 la2 = None
             lav = [f[name] for f in la["frames"]]
