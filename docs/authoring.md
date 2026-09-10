@@ -370,6 +370,33 @@ The sonorants are excluded from that figure and should be: 0 of 4 agree for /h/,
 
 So: **the values are the engine's own; 25 of 32 base loci match measurement exactly; the block order is verified by watching a rule run; and the witnessed table gives every context's outcome without needing the guards read at all.** What the guards *say* is still only an index, and the fourteen per cent of obstruent disagreements are unexplained.
 
+### The whole table, witnessed: every rule's targets in every context
+
+Nine place-of-articulation rules are not all of it. **Thirty-one rules write a formant slot**, and the other twenty-two are per-phoneme -- `ga_ph_a`, `ga_ph_u`, `eng_ph_x` and the like -- which is where a **vowel's** targets come from. `tools/module/phonemes.py` reports a vowel as having "no rule of its own" because it looks for `eng_ph_<v>`, and the vowels' are `ga_ph_<v>`, General American's.
+
+That matters because a real word's error is in its vowels. Of `tomato`'s 405 wrong values, 389 are in the vowel regions.
+
+So `tools/module/fvwitness.py` instruments all 522 formant writes in all thirty-one rules and speaks the whole cross product -- every consonant between every pair of vowels and at both word edges, 6,912 cases. **`lang/enus/enus.formants-witnessed` is 7,488 cases and 3,963 distinct outcomes**, and it records each rule's targets separately:
+
+    case t:Ao
+      eng_alv_Fv    s439=1500  s440=1500  s441=2550  s442=2550  s443=4000  s445=4300
+      ga_ph_A       s439=1650  s440=1650  s441=2410  s442=2410
+      ga_ph_o       s439=1200  s440=850   s441=2400  s442=2400
+
+**Recording only the final value per slot loses exactly what matters**, and a first run did: the place rules and the per-phoneme rules write the same slots, so a vowel's targets overwrite the consonant's and there is no telling which belongs to the closure and which to the vowel around it. That run gave 296 outcomes where there are 3,963.
+
+**The vowel rules agree with measurement exactly.** /A/'s rule says f2 1650 and f3 2410 for both halves; the measured vowel table says 1650 to 1650 and 2410 to 2410. /o/'s f3 is 2400 in both.
+
+### And the consonant targets were not the bottleneck
+
+Wiring the witnessed consonant targets into the composer, in place of the two carriers' measured ends, **does not move the ratio at all**: `tomato` stays at 76.3 per cent, `hello` at 42.8, `atapa` at 10.8. It reduces the wrong-value count for two chains -- /akaga/ from 127 to 97, /banana/ from 366 to 351 -- and raises it slightly for four others.
+
+That is worth knowing rather than disappointing. The measured loci were already 86 per cent within forty hertz, so replacing them with exact ones cannot buy much, and it confirms where the error is not. `EVV_CHAIN_FV=0` composes with the measured ends instead, which is how the two were compared.
+
+One restriction was needed: the rules' targets are used only where the consonant really closes. A sonorant has none, so ramping two targets across whatever span a marker found for it imposes a shape that is not there, and doing it for all of them took `hello` from 42.8 per cent to 57.2.
+
+**What that leaves is the vowels**, whose targets are now in hand and not yet used. That is the next thing and it is where `tomato`'s 389 wrong values are.
+
 ### What is actually left
 
 Six things, in the order they block a front end.

@@ -23,6 +23,7 @@ utterance `` `[.1atapa] ``.
 import collections
 import math
 import os
+import re
 import struct
 import subprocess
 import sys
@@ -198,6 +199,42 @@ def closures(frames, want=None, edges=(False, False)):
     return out
 
 
+# What the engine's own rules chose for each consonant in each vowel context,
+# witnessed by tools/module/fvwitness.py. The slots are f2, f3, f4 and f5,
+# each with a value for the half before the consonant and the half after;
+# there is no f1 among them, f1 coming from somewhere other than the
+# place-of-articulation rules.
+WITNESS_SLOT = {"s439": ("f2", 0), "s440": ("f2", 1),
+                "s441": ("f3", 0), "s442": ("f3", 1),
+                "s443": ("f4", 0), "s444": ("f4", 1),
+                "s445": ("f5", 0), "s446": ("f5", 1)}
+
+
+def load_witness():
+    """Each (consonant, vowels) context's formant targets, as the rules chose."""
+    path = os.path.join(ROOT, "lang", "measured", "..", "enus",
+                        "enus.formants-witnessed")
+    path = os.path.normpath(path)
+    out = {}
+    if not os.path.exists(path):
+        return out
+    key = None
+    for line in open(path):
+        m = re.match(r'case (\S+)', line)
+        if m:
+            key = m.group(1)
+            continue
+        if key and line.startswith("  gives"):
+            vals = {}
+            for slot, v in re.findall(r'(s4\d\d)=(-?\d+)', line):
+                if slot in WITNESS_SLOT and int(v) >= 0:
+                    name, half = WITNESS_SLOT[slot]
+                    vals.setdefault(name, [None, None])[half] = int(v)
+            out[key] = vals
+            key = None
+    return out
+
+
 def load_pairs(wpm=None):
     """Every measured carrier, by the pair on each side of its consonant.
 
@@ -356,6 +393,9 @@ def stitch(out, tail, want):
     return seq
 
 
+wit = {}
+
+
 def compose_chain(phonemes, frames, left, right):
     """The whole utterance, from the tables, laid out on the engine's timing."""
     cons = [p for p in phonemes if p not in VOWELS]
@@ -448,6 +488,29 @@ def compose_chain(phonemes, frames, left, right):
             closure[k] = piece[laa:lab + 1]
             runin[k] = piece[:laa]
             runout[k] = list(rbv[rbb + 1:])
+
+            # And where the engine's own rules have a target for this
+            # parameter in this context, use theirs rather than the two
+            # carriers' ends. The values come from tools/module/fvwitness.py,
+            # which watched which block of the place-of-articulation rule
+            # fired and read the slot back, so they are the engine's choice
+            # and not an estimate of it. EVV_CHAIN_FV=0 keeps the measured
+            # ends, which is how the two are compared.
+            # Only where the consonant really closes. A sonorant has no
+            # closure, so ramping the rules' two targets across the span a
+            # marker found for it imposes a shape that is not there, and
+            # /hElo/ went from 42.8 per cent to 57.2 when it was done for all
+            # of them.
+            closes = lp[0].get("span") is not None and \
+                rp[0].get("span") is not None
+            if closes and os.environ.get("EVV_CHAIN_FV") != "0":
+                pair = wit.get("%s:%s%s"
+                               % (c, vp or ".", vn or "."), {}).get(name)
+                if pair and pair[0] is not None and pair[1] is not None:
+                    m = len(closure[k])
+                    lo, hi = pair
+                    closure[k] = [lo + (int((hi - lo) * i / float(m - 1))
+                                        if m > 1 else 0) for i in range(m)]
 
         seq = [None] * n
         for k, (a, b) in enumerate(spans):
@@ -626,6 +689,8 @@ def main(argv):
         wpm = int(rest[1])
         rest = rest[2:]
     left, right = load_pairs(wpm if "--own-tables" in argv else None)
+    global wit
+    wit = load_witness()
     argv = [x for x in argv if x != "--own-tables"]
     work = os.path.join(ROOT, "build", "chain")
     if not os.path.isdir(work):

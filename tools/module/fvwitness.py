@@ -33,6 +33,7 @@ SLOTS = ("s439", "s440", "s441", "s442", "s443", "s444", "s445", "s446")
 WRITE = re.compile(
     r'^(\s*)(?:STATE|GLOBAL)\(int16_t,(?: r\d+,)? (s4\d\d)\) = \((.+?)\);')
 RULE = re.compile(r'^/\* (\w+), from')
+WANT = re.compile(r'_Fv$|^(?:eng|ga)_ph_')
 MARK = "FVW"
 
 
@@ -53,8 +54,15 @@ def instrument(tag):
         for i, ln in enumerate(lines, 1):
             m = RULE.match(ln)
             if m:
-                rule = m.group(1) if m.group(1).endswith("_Fv") else None
-            if rule:
+                # Any rule that writes a formant slot, not only the nine
+                # named for a place of articulation. Thirty-one do, and the
+                # rest are per-phoneme -- `ga_ph_a', `ga_ph_u', `eng_ph_x'
+                # and the like, which are where a VOWEL's targets come from.
+                # tools/module/phonemes.py reports a vowel as having "no rule
+                # of its own" because it looks for `eng_ph_<v>' and the
+                # vowels' are `ga_ph_<v>', General American's.
+                rule = m.group(1) if WANT.search(m.group(1)) else None
+            if rule is not None:
                 m = WRITE.match(ln)
                 if m and m.group(2) in SLOTS:
                     n += 1
@@ -114,14 +122,21 @@ CONSONANTS = "b p d t F k g D T v f z s Z S J C h m n G r l y w R".split()
 
 
 def corpus():
-    """Every consonant between every pair of adjacent vowels, and at a word's
-    edges: the same shapes the measured tables use, so the two can be set
-    against each other."""
+    """Every consonant between every pair of vowels, and at both word edges.
+
+    The whole cross product, 26 by 16 by 16 and the 32 edges: 6,912 cases.
+    Measuring that was declined as too dear when it meant fitting a model to
+    it, and it is not dear at all when it means running the engine and writing
+    down what it chose -- and it has to be the whole product, because a real
+    word's contexts are not adjacent vowels. `tomato' wants (m, x, A) and
+    (t, A, o) and an adjacent-pairs corpus has neither.
+    """
     out = []
     for c in CONSONANTS:
-        for k, v1 in enumerate(VOWELS):
-            v2 = VOWELS[(k + 1) % len(VOWELS)]
-            out.append(("%s:%s%s" % (c, v1, v2), "`[.1%s%s%s]" % (v1, c, v2)))
+        for v1 in VOWELS:
+            for v2 in VOWELS:
+                out.append(("%s:%s%s" % (c, v1, v2),
+                            "`[.1%s%s%s]" % (v1, c, v2)))
         for v in VOWELS:
             out.append(("%s:.%s" % (c, v), "`[.1%s%s]" % (c, v)))
             out.append(("%s:%s." % (c, v), "`[.1%s%s]" % (v, c)))
@@ -143,20 +158,22 @@ def run(probe, tag):
         w = witness(probe, text)
         if not w:
             continue
-        # The last value each slot was given is the one that stands.
-        final = {}
-        blocks = []
+        # Per rule, and the last value each rule gave a slot. Recording only
+        # the final value across all of them loses what matters: the place
+        # rules and the per-phoneme rules write the same slots, so a vowel's
+        # targets overwrite the consonant's and the composer cannot tell which
+        # belongs to the closure and which to the vowel around it.
+        byrule = {}
         for rule, line, slot, val in w:
-            final[slot] = (val, line)
-            if line not in blocks:
-                blocks.append(line)
-        key = tuple(sorted(final.items()))
+            byrule.setdefault(rule, {})[slot] = val
+        key = tuple(sorted((r, tuple(sorted(v.items())))
+                           for r, v in byrule.items()))
         seen.setdefault(key, []).append(name)
         print()
         print("case %s" % name)
-        print("  chose %s" % " ".join(str(b) for b in blocks))
-        print("  gives %s" % "  ".join(
-            "%s=%s" % (k, v[0]) for k, v in sorted(final.items())))
+        for rule in sorted(byrule):
+            print("  %-22s %s" % (rule, "  ".join(
+                "%s=%s" % (k, v) for k, v in sorted(byrule[rule].items()))))
     print()
     print("# %d cases, %d distinct outcomes" % (
         sum(len(v) for v in seen.values()), len(seen)))
