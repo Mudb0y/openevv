@@ -111,9 +111,11 @@ def cases(path):
         # vowel, and a real word has one at each end.
         fr = R.build(shared, phone)
         got = L.hold_marked(fr)
-        if got is None:
-            continue
-        span, marker = got
+        # A sonorant has no closure to find and that is not a failure: the
+        # whole vowel is the transition, f3 climbing from the vowel's own
+        # value toward the consonant's across all of it. Such a case is kept
+        # with no span, and composed end to end rather than split.
+        span, marker = got if got is not None else (None, 9)
         out[name] = {"cons": cons,
                      "v1": None if vv[0] == "." else vv[0],
                      "v2": None if vv[1] == "." else vv[1],
@@ -186,9 +188,66 @@ def nearest(cands, span):
     # to nought is a better witness than one anchored by the third formant
     # wandering, and choosing on length alone let the weaker anchor win and
     # cost two dropouts.
-    return sorted(cands, key=lambda c: (c.get("marker", 9),
-                                        abs((c["span"][1] - c["span"][0])
-                                            - want)))
+    scored = [c for c in cands if c.get("span") is not None]
+    if not scored:
+        return cands
+    rest = [c for c in cands if c.get("span") is None]
+    return sorted(scored, key=lambda c: (c.get("marker", 9),
+                                         abs((c["span"][1] - c["span"][0])
+                                             - want))) + rest
+
+
+def stretched(seq, n):
+    """A shape at a different length, read at fractional positions.
+
+    Padding or truncating instead misplaces whatever is at the end: a
+    carrier's voicing lets go over its last frames, so a carrier eight frames
+    longer than the target had its release cut off and one eight shorter had
+    its last value held, and both put the voice out in the wrong place.
+    """
+    m = len(seq)
+    if n <= 0 or m == 0:
+        return []
+    if m == n:
+        return list(seq)
+    if m == 1:
+        return [seq[0]] * n
+    out = []
+    for i in range(n):
+        pos = i * (m - 1) / float(n - 1) if n > 1 else 0
+        k = int(pos)
+        if k >= m - 1:
+            out.append(seq[m - 1])
+        else:
+            out.append(seq[k] + int((seq[k + 1] - seq[k]) * (pos - k)))
+    return out
+
+
+def compose_whole(a, a2, b, n_out):
+    """A carrier with no closure in it, composed as one shape.
+
+    There is nothing to split at, so the straight line through the two
+    measurements that share the near pair is drawn over the entire carrier
+    rather than over its prefix. What the line is evaluated at is the far
+    vowel's own first frame, since that is what the two measurements differ
+    in and what the target asks for.
+    """
+    fa = a["frames"]
+    names = [k for k in fa[0] if k not in SKIP]
+    out = [dict() for _ in range(n_out)]
+    for p in names:
+        va = [f[p] for f in fa]
+        vb = [f[p] for f in b["frames"]]
+        seq = list(va)
+        if a2 is not None and len(a2["frames"]) == len(fa):
+            va2 = [f[p] for f in a2["frames"]]
+            got = between(va, va[-1], va2, va2[-1], vb[-1])
+            if got is not None:
+                seq = got
+        seq = stretched(seq, n_out)
+        for i in range(n_out):
+            out[i][p] = seq[i]
+    return out
 
 
 def compose(aa_pair, bb_pair, n_out=None):
@@ -245,7 +304,7 @@ def compose(aa_pair, bb_pair, n_out=None):
         # were the ones that failed.
         pre = list(va[:ba + 1])
         shaped = False
-        if va2 is not None:
+        if va2 is not None and a2.get("span") is not None:
             # Only the closure has to line up, not the whole carrier. The two
             # left carriers share their first vowel and their consonant but
             # not their second, so their total lengths differ -- /J/'s are 98
@@ -355,16 +414,23 @@ def main(argv):
         bl = nearest(bl, want["span"])
         pair_a = (al[0], al[1] if len(al) > 1 else None)
         pair_b = (bl[0], bl[1] if len(bl) > 1 else None)
-        got = compose(pair_a, pair_b,
-                      len(want["frames"]) if truelen else None)
+        if want["span"] is None or al[0]["span"] is None \
+                or bl[0]["span"] is None:
+            got = compose_whole(al[0], al[1] if len(al) > 1 else None,
+                                bl[0], len(want["frames"]))
+        else:
+            got = compose(pair_a, pair_b,
+                          len(want["frames"]) if truelen else None)
         if len(got) != len(want["frames"]):
             lenbad += 1
         bad = False
         fmax = 0
         nwrong = 0
-        wa, wb = want["span"]
+        # A sonorant has no closure, so its frames are all one region.
+        wa, wb = want["span"] if want["span"] is not None else (-1, -1)
         for i, (mine, theirs) in enumerate(zip(got, want["frames"])):
-            where = ("run-in" if i < wa else
+            where = ("whole" if wb < 0 else
+                     "run-in" if i < wa else
                      "closure" if i <= wb else "run-out")
             for p in mine:
                 t = theirs.get(p)
@@ -388,9 +454,12 @@ def main(argv):
             drops[name] = sum(x[1] for x in d)
         percase[name] = (fmax, got, nwrong)
         n = len(want["frames"])
-        regionsize["run-in"] += wa
-        regionsize["closure"] += wb - wa + 1
-        regionsize["run-out"] += max(0, n - wb - 1)
+        if wb < 0:
+            regionsize["whole"] += n
+        else:
+            regionsize["run-in"] += wa
+            regionsize["closure"] += wb - wa + 1
+            regionsize["run-out"] += max(0, n - wb - 1)
     if writedir is not None:
         os.makedirs(writedir, exist_ok=True)
         # step and f0 are not in the tables, so they come from the engine
@@ -444,7 +513,7 @@ def main(argv):
     print("     ear's threshold for telling two formants apart")
     print()
     print("where the error is, as wrong values against values compared:")
-    for r in ("run-in", "closure", "run-out"):
+    for r in ("run-in", "closure", "run-out", "whole"):
         tot = regionsize[r] * 60
         print("  %-8s %7d wrong of about %8d  (%.1f per cent)"
               % (r, byregion[r], tot, 100.0 * byregion[r] / max(1, tot)))

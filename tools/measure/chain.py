@@ -226,6 +226,14 @@ def load_pairs(wpm=None):
         for name, rec in K.cases(p).items():
             left[(rec["cons"], rec["v1"])].append(rec)
             right[(rec["cons"], rec["v2"])].append(rec)
+    # A carrier with a closure recorded is a better witness than one without,
+    # and the second of a pair is what the straight line through two
+    # measurements is drawn from -- so a spanless one arriving first would
+    # disable that interpolation. /l/ has six pairs with no closure and
+    # putting them first cost /alara/ 56 per cent against 103.
+    for tab in (left, right):
+        for k in tab:
+            tab[k].sort(key=lambda c: c.get("span") is None)
     return left, right
 
 
@@ -386,6 +394,16 @@ def compose_chain(phonemes, frames, left, right):
                 return None, "no measured pair for %s around %s" % (c, vp)
             la, la2 = lp[0], (lp[1] if len(lp) > 1 else None)
             rb = rp[0]
+            # A sonorant carrier has no closure recorded, because the whole
+            # vowel is the transition: f3 climbs from the vowel's own value
+            # toward the consonant's across all of it. Taking the whole
+            # carrier as the closure is what that means here.
+            if la.get("span") is None:
+                la = dict(la, span=(0, len(la["frames"]) - 1))
+            if rb.get("span") is None:
+                rb = dict(rb, span=(0, len(rb["frames"]) - 1))
+            if la2 is not None and la2.get("span") is None:
+                la2 = None
             lav = [f[name] for f in la["frames"]]
             lav2 = ([f[name] for f in la2["frames"]]
                     if la2 is not None else None)
@@ -419,7 +437,7 @@ def compose_chain(phonemes, frames, left, right):
         if room > 0:
             src = runin[0]
             got = fit(src, room, "tail") if src else None
-            seq[:room] = got if got else [frames[0][name]] * room
+            seq[:room] = got if got else [frames[0][IDX[name]]] * room
 
         # Between two closures: the run-out of the first meeting the run-in of
         # the second, with the vowel holding in between.
@@ -442,7 +460,7 @@ def compose_chain(phonemes, frames, left, right):
         last = None
         for i in range(n):
             if seq[i] is None:
-                seq[i] = last if last is not None else frames[0][name]
+                seq[i] = last if last is not None else frames[0][IDX[name]]
             last = seq[i]
         for i in range(n):
             out[i][name] = seq[i]
@@ -485,7 +503,7 @@ def voicing(frames, spans, order, left, right, n):
     if spans and order:
         c, vp, vn = order[len(spans) - 1]
         rp = right.get((c, vn))
-        if rp:
+        if rp and rp[0].get("span") is not None:
             t = [f["av"] for f in rp[0]["frames"][rp[0]["span"][1] + 1:]]
             rel = release_len(t)
     if rel == 0:
@@ -519,7 +537,7 @@ def voicing(frames, spans, order, left, right, n):
         # early moved every one of them.
         top4 = None
         off = 0
-        if rp:
+        if rp and rp[0].get("span") is not None:
             tail = [f["av"] for f in rp[0]["frames"][rp[0]["span"][1] + 1:]]
             if tail:
                 top4 = max(tail)

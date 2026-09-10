@@ -338,6 +338,10 @@ f1 is identical in both, 750 throughout the first vowel. f3 is flat at /a/'s own
 
 So a sonorant is not a segment with a locus and two transitions. **The whole vowel is the transition.** That is why there is nothing to anchor: the consonant is the midpoint of a ramp that spans the utterance, and asking where it starts and stops is asking the wrong question of it. It also explains the length: `clW` is 80 frames against the pair's 86, so a sonorant does not add time, it bends what is there.
 
+**Composed that way, every pair in the corpus now composes.** A carrier with no closure is kept rather than dropped and composed end to end: the straight line through the two measurements that share its near pair, drawn over the whole carrier rather than over a prefix, and stretched to the length wanted rather than padded or truncated -- padding misplaces the release, which is at the end, and cost two dropouts until it was fixed. **416 of 416 held-out carriers, at 150, 175, 250, 450 and 700 words a minute, and no voicing dropout at any of them.** Coverage was 405 before. The sonorants' own region is 6.4 per cent wrong against the closures' 2.4, which is a new capability rather than a regression.
+
+And `hello` composes, for the first time -- at 154 per cent, which is worse than anything the ear has passed, but it is a whole word out of pair tables and it was refused outright an hour ago.
+
 That gives a composition model, and a simpler one than the closure model rather than a harder one. For a sonorant between two vowels: ramp from the first vowel's own target to the consonant's locus across the whole of that vowel, then from the locus back to the second vowel's target across the whole of that. The locus is one number a parameter, which the /aCa/ carrier already gives. Nothing else is needed -- no closure, no run-in, no run-out, no anchor.
 
 One thing measured and unexplained: /l/ leaves /a/'s f1 alone at 750 but pulls /c/'s from 700 down to 630 in the very first frame. So how far a vowel's own target is bent toward the consonant depends on the vowel, and the amount is not yet measured.
