@@ -505,3 +505,32 @@ Wiring the witnessed consonant targets into `tools/measure/chain.py` moved nothi
 So the measured corpus, the Latin squares, the markers, the locus interpolation, the stretch law and the voicing staircase are all estimates of something the engine states outright. They stay as an oracle -- a value read out of a rule can be held against a value measured coming out of the synthesiser, which is how anything here is proved -- but they are not the way to build a formant generator. **The way is the breakpoint list.**
 
 What that leaves is a real and much smaller question: how much of the list is predictable from the phoneme and its neighbours alone. The values are; that is what the witnessing showed. The spans are the duration rules' business and are not measured yet.
+
+### A segment is a unit, and it can be borrowed
+
+The runs the tap reports are one per phoneme and one trailing silence, exactly, and each run's breakpoints tile exactly its own interval. /atapa/ is six runs, /sIstxm/ seven, and the /st/ cluster does not merge them -- which is where `tools/measure/chain.py`'s closure finder saw two closures for four consonants. `/h/` is the one exception and it is the measured one: it has no run of its own, being the following vowel's shape excited by noise, so `hello` is three runs and a silence.
+
+So an utterance is a list of segments and `tools/measure/segs.py` asks whether a segment can be borrowed. Take a word, harvest each of its segments out of a *different* utterance that has the same phoneme between the same two neighbours, lay them end to end, and unfold.
+
+**Every parameter comes back exactly, except f0.** Six cases: /atapa/ and /asasa/ and /akapa/ with the vowel between the two stops taken from a carrier whose outer vowels are /u/ or /i/, so a match says the two-away neighbours do not reach it; /atapa/ again with its /p/ taken from the second syllable of `apapa`, so a match says the position in the word does not either; `hello` with its /hE/ from a made-up `hEla` and the rest from `Elo`; and `sIstxm` in six pieces from five other utterances, cluster and all.
+
+f0 is the exception and has to be. It is the phrase's melody, laid over the whole utterance by the intonation pass, so a borrowed segment carries a piece of a different tune. It is the one parameter a segment table cannot hold, and this engine already generates it elsewhere.
+
+### What the duration does to a segment
+
+Not all of it. `hElo` and the made-up `hEla` give /hE/ 154 milliseconds and 167, and the two segments are otherwise the same thing:
+
+    hElo   f2 [(0, 80, 1650, 1650), (80, 74, 1650, 1500)]
+    hEla   f2 [(0, 80, 1650, 1650), (80, 87, 1650, 1500)]
+
+Same values, same first span, and the whole of the difference in the last one. Across twelve words rebuilt from made-up donors, **every span that differed was the last one, 83 of 83.**
+
+So a segment is: values fixed by the phoneme and its two neighbours, spans fixed but for one, and that one absorbs whatever length the segment is given. **The values are a table and the durations are a separate question** -- which is the division `chain.py` already worked under, borrowing the engine's timing and composing only the values. The difference is that the values can now be exact rather than estimated.
+
+### What else a segment depends on
+
+Stress and the shape of the word, and this is measured rather than guessed. Of 59 segments harvested from donors made up on the spot -- `aC1VC2a` for a vowel, `V1CV2` for a consonant -- 25 came back identical and 10 more differed only in that last span. Five differed in a value and 19 in the *number* of breakpoints. The clearest case is a word-final unstressed vowel: /a/ at the end of /atapa/ against the same /a/ in `pa`, where it is a stressed monosyllable and takes the full targets rather than the reduced ones.
+
+That is a longer key, not a different model. A segment is decided by its phoneme, its two neighbours, its stress and its position in the word, and the honest size of the table is not known until those are enumerated. What is known is that it is a table: nothing in it was measured, fitted or estimated, and where the key matched the engine's own frames came back to the digit.
+
+**And `test/matrix.sh` passes with the tap in, 979 cases, every one as it was.**
