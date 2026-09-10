@@ -332,7 +332,15 @@ Grouping by the consonant's voicing before comparing was the obvious repair -- a
 
 So a sonorant has no localised extent to find. That is why every marker tried has failed on /l/ and why exclusion fails too: there is no vowel-only stretch to exclude, because the consonant is in all of it. A stop is a closure with transitions either side and the whole apparatus here suits it; **a sonorant is not that shape at all**, and modelling it as one is the mistake underneath six unanchored pairs, four failed markers and two failed exclusions.
 
-What that suggests, and it is a guess rather than a measurement: a sonorant may want to be composed as a modification applied across a whole vowel-consonant-vowel stretch rather than as a segment placed inside one. Nothing here tests that yet.
+**And that guess is now measured.** A vowel pair with no consonant in it speaks -- `` `[.1aa] `` gives 93 live frames -- so the sonorant's whole contribution can be had by difference. Against `ala`:
+
+f1 is identical in both, 750 throughout the first vowel. f3 is flat at /a/'s own 2440 in the pair, and in `ala` it climbs from the second frame onward -- 2440, 2446, 2453, 2460 and on to 2611 by frame 25 -- a continuous ramp from the vowel's own value toward /l/'s 3000, spanning the *entire* vowel.
+
+So a sonorant is not a segment with a locus and two transitions. **The whole vowel is the transition.** That is why there is nothing to anchor: the consonant is the midpoint of a ramp that spans the utterance, and asking where it starts and stops is asking the wrong question of it. It also explains the length: `clW` is 80 frames against the pair's 86, so a sonorant does not add time, it bends what is there.
+
+That gives a composition model, and a simpler one than the closure model rather than a harder one. For a sonorant between two vowels: ramp from the first vowel's own target to the consonant's locus across the whole of that vowel, then from the locus back to the second vowel's target across the whole of that. The locus is one number a parameter, which the /aCa/ carrier already gives. Nothing else is needed -- no closure, no run-in, no run-out, no anchor.
+
+One thing measured and unexplained: /l/ leaves /a/'s f1 alone at 750 but pulls /c/'s from 700 down to 630 in the very first frame. So how far a vowel's own target is bent toward the consonant depends on the vowel, and the amount is not yet measured.
 
 **And the corpus is one language.** English, sixteen vowels and twenty-six consonants, measured between vowels, at both word edges, and chained two consonants deep. Consonant clusters are untested -- `system` reports two closures for four consonants, /st/ merging into one -- and so are unstressed vowels.
 
