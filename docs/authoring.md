@@ -569,3 +569,26 @@ Where in the word it is. The second /l/ of `lalala` is 70 and the third is 80; t
 **So the two halves of a segment divide cleanly and they divide by mechanism, not by convenience.** The values are local, decided by the phoneme and its neighbours, stated as immediates in the rules and reproducible exactly from a table. The durations are prosodic, computed over the whole word by `distribute_nucdur` and its neighbours in `us_dur.obj` and clamped by `apply_min_durs`, and no local table can hold them. That is the same division `chain.py` worked under from the start -- borrow the timing, compose the values -- and it turns out to be the real one rather than a convenience.
 
 **One trap in measuring this.** A piece boundary is only visible where some parameter changes at it, so /p/ between two /a/ reads as 30+70+5 in four words and as a single 105 in a fifth. That is one segment with a boundary unobserved, not two different segments, and comparing pieces rather than totals reports it as a difference. Compare totals.
+
+### What a segment actually is
+
+A run is two gaps: a transition of fixed length into the phoneme's first target, then an interior that runs from that target to its second and carries whatever duration the segment was given. `/atapa/`'s middle /a/ is
+
+    at 181  span 30  1500..1250      the transition in, from /t/'s locus
+    at 211  span 83  1250..1150      the interior, and where the length goes
+
+and 1250 and 1150 are, exactly, what `ga_ph_a` writes into `s439` and `s440` in that context. **So the slots really are the segment's two targets, the transition runs from the previous segment's second target to this one's first, and the interior runs between this one's two.** The witnessed table and the breakpoint list are the same numbers seen from either end.
+
+Where a target is unset -- the -2 sentinel -- no breakpoint is placed and the line runs straight on to the next target that is set. Schwa between /b/ and /n/ has no second formant of its own, so its whole segment is one ramp to whatever the /n/ after it wants: 1500 before an /a/, 1625 before an /i/. That is the /n/'s number, not the schwa's.
+
+**Three attribution mistakes had to be undone to see this, and each made a vowel look as though it depended on more than it does.**
+
+A gap belongs to the run its own start falls in, not to the run being built when the cursor crossed onto it. The cursor advances only when a frame needs a value past its right end, so a parameter holding still crosses late and its gaps land a run or two after the ones they cover. That put two of /l/'s gaps inside the /E/ after it.
+
+The value a segment starts from is inherited from the one before and is not its own. /E/ between /l/ and /m/ starts at 875 after an /a/ and 1050 after an /i/, and ends at 1500 in both.
+
+And where a segment ends is the next segment's business when its own target is unset, which is the schwa above.
+
+**With those undone, the reach of the context is short.** `tools/measure/segs.py --reach` puts the same three phonemes in six different words -- different phonemes two away, the stress on it or off it, a longer word -- and compares. **Every consonant tried keeps one set of targets across all six**: /t/, /s/, /m/, /l/, /k/, /p/ and /d/ between two /a/. Every vowel tried keeps two, and the split is stress: /E/ between /l/ and /m/ goes to 1500 unstressed and 1450 stressed, with the first formant 570 against 600. That is vowel reduction, and it is the whole of the extra key.
+
+So a segment's targets are decided by the phoneme, its two neighbours and its stress, and by nothing else. The transition length is decided the same way. The interior length is the duration model's and is not local.

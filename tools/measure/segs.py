@@ -16,6 +16,7 @@ on more than its immediate neighbours.
     tools/measure/segs.py <probe>
     tools/measure/segs.py <probe> --words <phoneme string>...
     tools/measure/segs.py <probe> --durations <phoneme string>...
+    tools/measure/segs.py <probe> --reach <three letters>...
 
 The first runs the hand-picked borrowing tests. The second builds each word
 out of segments harvested from donor utterances made up for the purpose --
@@ -33,6 +34,7 @@ is the same division `tools/measure/chain.py' already worked under.
 """
 
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -47,10 +49,9 @@ STEP = 5
 def tapped(probe, text):
     """One utterance's segments and the frames the engine made from them.
 
-    A breakpoint belongs to the run it was crossed during, which is where it
-    stands in the file and not which run's interval contains it: a cursor
-    reset leaves two gaps over one moment and only the order says which was
-    in force.
+    A breakpoint belongs to the run its own start falls in. Where the file
+    puts it is where the cursor happened to cross onto it, which lags, and
+    that is not the same thing.
     """
     with tempfile.TemporaryDirectory() as w:
         c = os.path.join(w, "c.txt")
@@ -63,6 +64,7 @@ def tapped(probe, text):
                        capture_output=True, env=env)
         segs = []
         times = []
+        gaps = []
         for line in open(env["EVV_ARRAY_TAP"]):
             f = line.split()
             if not f:
@@ -71,10 +73,24 @@ def tapped(probe, text):
                 segs.append({"from": int(f[2]), "to": int(f[4]), "par": {}})
             elif f[0] == "frame":
                 times.append(int(f[1]))
-            elif f[0] == "at" and segs:
+            elif f[0] == "at":
                 lo, hi = f[5].split("..")
-                segs[-1]["par"].setdefault(f[2], []).append(
-                    (int(f[1]), int(f[4]), int(lo), int(hi)))
+                gaps.append((int(f[1]), int(f[4]), int(lo), int(hi), f[2]))
+        # A gap belongs to the run its own start falls in, not to the run
+        # that was being built when the cursor crossed onto it. The cursor
+        # advances only when a frame needs a value past its right end, so a
+        # parameter that holds still crosses late and its gaps land in a run
+        # or two after the one they cover. Attributing by crossing order put
+        # two of /l/'s gaps inside the /E/ after it and made a vowel look as
+        # though it depended on phonemes two away.
+        for at, span, v0, v1, name in gaps:
+            for sg in segs:
+                if sg["from"] <= at < sg["to"]:
+                    sg["par"].setdefault(name, []).append((at, span, v0, v1))
+                    break
+        for sg in segs:
+            for v in sg["par"].values():
+                v.sort()
         frames = []
         if os.path.exists(env["EVV_KLATT_TAP"]):
             for line in open(env["EVV_KLATT_TAP"]):
@@ -349,6 +365,116 @@ def words(probe, get, targets):
     return 1 if tally["values"] or tally["shape"] else 0
 
 
+def phonemes_of(text):
+    """The phonemes in an annotation body, with the stress marks taken out.
+
+    A stress mark is `.1' for primary, `.2' for secondary and `.0' for none,
+    and it stands before the syllable it marks -- `hello' is `.2hE.1lo'.
+    """
+    body = re.sub(r'\.[0-9]', '', text)
+    body = re.sub(r'^`\[|\]$', '', body)
+    return list(body)
+
+
+def signature(seg, what="values"):
+    """What a segment says, either as targets or as lengths.
+
+    The two have to be asked separately. A target is what the rules state and
+    is the thing a table can hold; a length is the duration model's and
+    varies with stress and the shape of the word. Comparing them together
+    reports a segment as different when only its timing moved, and comparing
+    offsets does the same, an earlier span moving everything after it.
+    """
+    # Where a segment gets to, not which gaps it happens to own. Two things
+    # made owning gaps the wrong test. A gap that began in the segment
+    # before belongs to it, and the value this one starts from is whatever
+    # that left behind -- /E/ between /l/ and /m/ starts at 875 after an /a/
+    # and 1050 after an /i/, and ends at 1500 in both, which made it look as
+    # though a vowel depended on phonemes two away. And a short segment can
+    # own no gap at all, one transition spanning the whole of it, which made
+    # the same vowel in a longer word look different again.
+    out = []
+    for name in sorted(seg["par"]):
+        if name in APART:
+            continue
+        if what == "values":
+            out.append((name, value(seg["par"][name], seg["to"])))
+        else:
+            out.append((name, tuple(span for _, span, _, _
+                                    in relative(seg)[name])))
+    return tuple(out)
+
+
+def framings(core):
+    """The same three phonemes put in as many different words as possible.
+
+    The padding has to be of the other kind or it is not padding: putting an
+    /a/ beside the /a/ of `ata' gives `aataa' and a vowel sequence, which is
+    a different context rather than a wider one. So a consonant core is
+    padded with consonants and a vowel core with vowels.
+
+    What is varied is everything except the segment's own two neighbours:
+    which phonemes are two away, where the stress falls, and how long the
+    word is. A core that keeps one signature across all of them is decided
+    by its neighbours alone.
+    """
+    pads = ("t", "s", "m") if core[0] in VOWELS else ("a", "i", "u")
+    out = [("bare", "`[.1%s]" % core)]
+    for pad in pads:
+        out.append(("%s either side" % pad,
+                    "`[.1%s%s%s]" % (pad, core, pad)))
+    out.append(("stressed on it",
+                "`[.2%s.1%s%s]" % (pads[0], core, pads[0])))
+    out.append(("longer",
+                "`[.1%s%s%s%s%s]" % (pads[0], pads[1], core,
+                                     pads[1], pads[0])))
+    return out
+
+
+def reach(probe, get, cores):
+    """Whether a segment is the same thing wherever it is put.
+
+    Each core is a phoneme and its two neighbours, spelled as three letters.
+    A core with one signature is decided by its immediate neighbours and
+    nothing else; a core with more needs a longer key, and which framings it
+    splits into says what the extra key is.
+    """
+    alone = 0
+    split = 0
+    for core in cores:
+        unit, left, right = core[1], core[0], core[2]
+        groups = {}
+        spans = {}
+        for name, text in framings(core):
+            segs, _, _ = get(text, raw=True)
+            units = contexts(phonemes_of(text))
+            k = None
+            for i, (u, l, r) in enumerate(units):
+                if (u, l, r) == (unit, left, right):
+                    k = i
+                    break
+            if k is None or k >= len(segs):
+                groups.setdefault("not present", []).append(name)
+                continue
+            groups.setdefault(signature(segs[k]), []).append(name)
+            spans.setdefault(signature(segs[k], "spans"), []).append(name)
+        n = len(framings(core))
+        if len(groups) == 1:
+            alone += 1
+        else:
+            split += 1
+        print("%-6s %d target%s and %d timing%s over %d framings"
+              % (core, len(groups), "" if len(groups) == 1 else "s",
+                 len(spans), "" if len(spans) == 1 else "s", n))
+        if len(groups) > 1:
+            for g in groups.values():
+                print("        same targets: %s" % ", ".join(g))
+    print()
+    print("%d cores whose targets are decided by their neighbours alone, "
+          "%d needing more" % (alone, split))
+    return 0
+
+
 def pieces(seg):
     """The lengths a segment is built out of.
 
@@ -425,11 +551,14 @@ def main(argv):
     probe = argv[1]
     cache = {}
 
-    def get(text):
-        if text not in cache:
-            cache[text] = tapped(probe, "`[.1%s]" % text)
-        return cache[text]
+    def get(text, raw=False):
+        key = (text, raw)
+        if key not in cache:
+            cache[key] = tapped(probe, text if raw else "`[.1%s]" % text)
+        return cache[key]
 
+    if "--reach" in argv:
+        return reach(probe, get, argv[argv.index("--reach") + 1:])
     if "--durations" in argv:
         return durations(probe, get, argv[argv.index("--durations") + 1:])
     if "--words" in argv:
