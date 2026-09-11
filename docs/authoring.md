@@ -592,3 +592,33 @@ And where a segment ends is the next segment's business when its own target is u
 **With those undone, the reach of the context is short.** `tools/measure/segs.py --reach` puts the same three phonemes in six different words -- different phonemes two away, the stress on it or off it, a longer word -- and compares. **Every consonant tried keeps one set of targets across all six**: /t/, /s/, /m/, /l/, /k/, /p/ and /d/ between two /a/. Every vowel tried keeps two, and the split is stress: /E/ between /l/ and /m/ goes to 1500 unstressed and 1450 stressed, with the first formant 570 against 600. That is vowel reduction, and it is the whole of the extra key.
 
 So a segment's targets are decided by the phoneme, its two neighbours and its stress, and by nothing else. The transition length is decided the same way. The interior length is the duration model's and is not local.
+
+## The segment table
+
+`tools/module/segments.py` writes `lang/enus/enus.segments`: what every segment of English is made of, as targets, keyed by the phoneme, the phoneme either side and the stress on its syllable. `E l m 1 f2  1450 1500` is /E/ between /l/ and /m/ in a stressed syllable, whose second formant reaches 1450 and then 1500.
+
+**The corpus is not made up.** `test/samples/enus.words` already holds what this engine says each of twenty-four thousand words is made of, stress marks and all, because that is the word gate's baseline. Speaking those covers exactly the contexts the language produces, rather than a cross product most of which never occurs, and it costs one run of the array tap a word.
+
+**A key seen twice that disagrees with itself is the check.** Nothing is averaged and nothing is preferred by frequency: where a key comes out two ways, either one is the other cut short -- which is a duration effect and allowed -- or it is reported as a disagreement, which says the key is too short. Over the whole corpus: **17,103 segments, 428,514 lines, 282,675 keys seen more than once, and 833 disagreeing.** One line in five hundred.
+
+Five things had to be right first, and each was found by the count of disagreements dropping.
+
+**Runs have to line up with phonemes.** One run a phoneme and one more for the trailing silence, or every segment after a mismatch goes under the wrong key. Two things break the count and both are measured rather than assumed: /h/ has no run of its own and folds into the vowel after it, and **five phonemes take two runs -- /C/, /J/, /Y/, /W/ and /O/**, the two affricates and the three diphthongs. Over six hundred words, every word containing one of those has a run more than it has phonemes and no other phoneme is above a third. The two rules compose, so `hY` in `anaheim` is two runs and not one. With both in, 24,222 of 24,302 words line up and the eighty that do not are dropped.
+
+**A gap belongs to the run its own start falls in.** Not the run being built when the cursor crossed onto it, which is what the tap prints: the cursor advances only when a frame needs a value past its right end, so a parameter holding still crosses late and its gaps land a run or two after the ones they cover.
+
+**Every span is the duration model's, not only the last.** /n/ before /t/ after an /X/ reaches 350 and then 200 over spans of 63 and 49 milliseconds in one word and 43 and 29 in another. Same two targets, and the table holds targets.
+
+**A target repeated is a breakpoint that changes nothing.** The line between two equal values is the same line whether it is drawn in one stretch or two, so collapsing them is lossless and stops one word's extra breakpoint reading as a different segment. That alone took the disagreements from 3,027 to 597 over two thousand words.
+
+**A trajectory cut short writes down where it got to.** Shortening a segment can drop the breakpoints it never reached and leave a single interpolated value: /E/ between /s/ and /l/ reaches 1650 then 1500 when there is room, and a single 1575 when there is not, which is the midpoint of the two and neither of the targets. What can be checked is that the value lies on the path -- between where the segment started and the targets it still had to reach -- and 6,684 shapes are accounted for that way.
+
+**What is left disagreeing is mostly not the formants.** Of 833 keys, the frication and voicing amplitudes are 301 and the bandwidths 264; the five formants together are 209, of 17,103 segments each. `af` on /s/ before a word edge is the single worst, three hundred words of it, which is the same kind of thing as f0: an excitation envelope belongs to the utterance rather than to a segment.
+
+### The table's shape, and what it predicts
+
+**A base and its exceptions, not a line a context.** Most of the cross product says the same thing -- eleven parameters hold one value across better than fifteen thousand of the seventeen thousand segments -- so a flat dump buries what a neighbour actually changes under four hundred thousand lines that repeat. Written as a base with overrides it is 42,204 lines and 776 kilobytes rather than 428,514 and seven megabytes, and it has the shape the rules themselves have: a base locus and a handful of context overrides. /l/'s second formant is `base 800`, which is the immediate in `eng_lat_Fv`, and 310 exceptions; /t/'s is `base 1500`, the immediate in `eng_alv_Fv`, and 162.
+
+**Held out, it predicts.** Building the table from four fifths of the words and testing on the fifth it never saw: 765,150 segment parameters, of which **560,123 exactly as the table says and 14,455 the same segment cut short -- 99.70 per cent of those whose context the table holds -- and 1,745 wrong.** The remaining 188,827 are in contexts the training fifth never contained, which is coverage rather than correctness: the key is right, the corpus does not yet fill it.
+
+So the next thing the table wants is not a better key but the rest of the key space. Twenty-four thousand words of running English do not contain every phoneme between every pair of phonemes at every stress, and a table meant to stand in for the rules has to answer for the ones they never say.
