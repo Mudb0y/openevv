@@ -305,8 +305,14 @@ def harvest(job):
                     # after it; dropping the stretch outright dropped the
                     # 350, and a nasal without its murmur is a glide --
                     # `abandonment' came out as abandonwend.
-                    if running.get(name) != v0:
-                        items.append((v0, None))
+                    # Always, not only where it differs from what came
+                    # before. A segment that says nothing lets the stretch
+                    # before it run past to whatever the segment after wants:
+                    # in `abandonment' the /n/ before the /m/ ramped its
+                    # nasal zero down to the default 200 because the /m/ had
+                    # no entry to stop at, and the /m/ had no entry because
+                    # its 350 matched the /n/'s and so read as no jump.
+                    items.append((v0, None))
                     running[name] = v1
                     continue
                 # Nothing has run before the first stretch of an utterance,

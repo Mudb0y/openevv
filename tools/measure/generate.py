@@ -384,16 +384,21 @@ def gaps_from_tables(pros, durs, base, over, dflt):
                 jump = None
                 k = i - shift
                 # Fewer stretches than targets means the engine drew one
-                # line where the table holds two ends of it, so the last
-                # stretch takes the last target and the ones it passed
-                # through are simply passed through.
+                # line where the table holds several ends of it, so that
+                # stretch runs from the one before the last to the last.
+                # /m/ between /n/ and a schwa has its second formant written
+                # 1000 then 1200 and the engine draws a single stretch from
+                # 1000 to 1200 -- not from wherever the /n/ left off, which
+                # is 1500 and is the difference between a nasal and a glide.
                 if len(where) < len(targets) and i == len(where) - 1:
-                    jump, end = targets[-1]
+                    prev = targets[-2] if len(targets) >= 2 else None
+                    if prev is not None:
+                        jump = prev[1] if prev[1] is not None else prev[0]
+                    else:
+                        jump = targets[-1][0]
+                    end = targets[-1][1]
                     if end is None:
-                        # A start with no end: it is where the line goes
-                        # from, so the stretch ends wherever the next
-                        # target is, or holds it.
-                        end = ahead if ahead is not None else jump
+                        end = ahead if ahead is not None else targets[-1][0]
                 elif 0 <= k < len(targets):
                     jump, end = targets[k]
                     if end is None:

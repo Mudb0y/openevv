@@ -842,3 +842,13 @@ Stas asked whether there is a better way to measure the engine, and there is, be
 And it names them. Schwa heard as the second half of /Y/ 23 times, /t/ as the first half of /C/ 11 times, /k/ as /p/ 9, /W/'s first half as /Y/'s 7. That is a work list, arrived at without listening to anything, and it is what the next round of fixes should be driven by.
 
 **It also puts the earlier faults in proportion.** A stop's burst smeared over its closure and a nasal with no murmur were each a handful of frames in one segment of one word; against 556,740 parameter values they were noise, and to a listener they were a different word.
+
+### Two more from one word
+
+`abandonment` was still abandonwend, and the /m/ had two faults, both of a kind the parameter count could not see and the automated ear could.
+
+**A run-through's start has to be recorded always**, not only when it differs from what came before. The /n/ before the /m/ ran its nasal zero past its own end, and with the /m/ saying nothing there was nothing to stop at, so the ramp went to the default 200 -- the murmur gone. The /m/ said nothing because its 350 matched the /n/'s and so read as no jump at all. Recording it unconditionally puts the murmur back exactly: 350 held for five frames and then falling, to the digit.
+
+**And one stretch can carry several targets.** The table writes /m/'s second formant as 1000 then 1200, and the engine draws it as a single stretch from 1000 to 1200. Taking the last target and starting from wherever the segment before left off gave a ramp from 1500, which is not a nasal. The rule is that such a stretch runs from the target before the last to the last.
+
+Together they take the error from 2.413 per cent to 2.269, the frication's share from 573 to 308, and the confusions the automated ear finds from 86 of 2,159 to 77 -- **3.57 per cent against the engine's own 25.7 by the same measure.**
