@@ -266,6 +266,160 @@ def write_frames(path, rows):
             f.write("\t".join(str(int(v)) for v in row) + "\n")
 
 
+def gaps_from_tables(pros, durs, base, over, dflt):
+    """Every parameter's breakpoints for a word, from the two tables.
+
+    Answers the gaps and how long the word is, or None where the duration
+    table has no entry for one of the contexts. Pulled out of `main' so that
+    `tools/measure/confuse.py' can build the same frames and ask a different
+    question of them.
+    """
+    # Every segment's pieces and every parameter's targets. Where a
+    # segment has more pieces than targets it holds the last one: the
+    # table collapses a repeated target, and /A/ at the start of `abbey'
+    # is a piece of nought and one of 157 that both end at 1650.
+    #
+    # Looking ahead instead -- running the spare pieces on to the next
+    # segment's target, on the grounds that an unset target places no
+    # breakpoint -- was tried and is wrong. It turns /A/'s second piece
+    # into a ramp to the /b/'s 1100 where the engine holds 1650, and it
+    # took the frame error from 4 per cent to 29. The cases it was meant
+    # to fix are key disagreements in the segment table, not a structure
+    # the generator can recover.
+    plan = []
+    ok = True
+    for f in pros:
+        k = tuple(str(f[x]) for x in D.KEY)
+        if k not in durs:
+            ok = False
+            break
+        total, spans, odd = durs[k]
+        want = {}
+        for name in SHAPED:
+            if name not in dflt:
+                return None
+            got = F.targets(base, over, f["unit"], f["left"],
+                            f["right"], f["stress"], name)
+            want[name] = got if got else ((), False)
+        plan.append((total, spans, odd, want))
+    if not ok:
+                return None
+    
+    # One flat list a parameter: a span and what it ends at, with None
+    # where the segment has no target for that stretch. Then coalesce,
+    # because a stretch with no target has no breakpoint either and
+    # belongs to the next gap: schwa in `aback' is 62 milliseconds and
+    # the /b/ after it 15, and the engine draws one gap of 77 ending at
+    # the /b/'s locus rather than two.
+    # A gap whose span overshoots its own segment is one the segment has
+    # no target for: the engine draws no breakpoint at the segment's end
+    # and the line runs on to whatever the next segment wants. The spans
+    # say so by themselves -- schwa in `aback' is 62 milliseconds with a
+    # second gap of 77, and that gap ends at the /b/'s locus -- so no
+    # flag is needed and the one tried first was unstable, being
+    # duration-dependent.
+    gaps = collections.defaultdict(list)
+    v = {}
+    at = 0
+    f_of = pros
+    for j, (total, spans, odd, want) in enumerate(plan):
+        for name, value in want.items():
+            targets = value[0]
+            where = odd.get(name, spans)
+            # The rule says what the voiced part of a segment does, not
+            # where it starts: /hE/ in `hello' is silent through the /h/
+            # and only then runs 51 down to 47, so laying the rule over
+            # the whole segment voices the /h/ and made the word 143 per
+            # cent different instead of 43. The table already knows
+            # where the stretches fall; only their values are replaced,
+            # and only for the last one, which is the vowel proper.
+            # A rule over the whole segment rather than its voiced tail
+            # was tried, so that the aspiration and the tilt could leave
+            # the table altogether. It costs 0.2 points of accuracy and
+            # the table did not shrink in the end, so the rules stay
+            # where they are: on the last stretch only.
+            rule = None
+            unit = f_of[j]
+            if os.environ.get("EVV_EXCITE_RULE") != "0" and where:
+                if name == "av":
+                    rule = voicing(unit["unit"][-1], unit["stress"],
+                                   total)
+                elif name == "ah":
+                    rule = aspiration(unit["unit"], total)
+            if name not in v:
+                first = targets[0] if targets else None
+                v[name] = (dflt.get(name, 0) if first is None
+                           else first[1] if first[1] is not None
+                           else first[0])
+            # Where the line runs on to, when this segment has no
+            # target for its last stretch -- but only if the next
+            # segment's first target continues from here. If that target
+            # jumps, nothing runs into it and the stretch holds instead:
+            # the flap in `tomato' begins its tilt at 35 out of nowhere
+            # a quarter of the way through itself, and running the vowel
+            # before it up to that 35 sweeps the tilt across the whole
+            # vowel, which is what Stas heard as the word phasing.
+            ahead = None
+            for later in plan[j + 1:]:
+                nxt = later[3].get(name, ((), False))[0]
+                if nxt:
+                    if nxt[0][0] is None and nxt[0][1] is not None:
+                        ahead = nxt[0][1]
+                    break
+            # Where there are more stretches than targets, which of
+            # them the spare stretches belong to depends on whether the
+            # last target jumps. A jump means a new value starts there,
+            # so it belongs at the end and the padding goes in front:
+            # /b/'s burst in `banana' is 51 on the third of three
+            # stretches, and padding at the back put it on the first,
+            # which smeared the burst over the whole closure and turned
+            # the stop into a fricative. Without a jump the last target
+            # is a hold and the padding goes behind it, which is what
+            # /A/ at the start of `abbey' wants.
+            shift = 0
+            if targets and len(where) > len(targets) \
+                    and targets[-1][0] is not None:
+                shift = len(where) - len(targets)
+            for i, (rel, span) in enumerate(where):
+                jump = None
+                k = i - shift
+                # Fewer stretches than targets means the engine drew one
+                # line where the table holds two ends of it, so the last
+                # stretch takes the last target and the ones it passed
+                # through are simply passed through.
+                if len(where) < len(targets) and i == len(where) - 1:
+                    jump, end = targets[-1]
+                    if end is None:
+                        # A start with no end: it is where the line goes
+                        # from, so the stretch ends wherever the next
+                        # target is, or holds it.
+                        end = ahead if ahead is not None else jump
+                elif 0 <= k < len(targets):
+                    jump, end = targets[k]
+                    if end is None:
+                        # A start with no end of its own: it runs on.
+                        end = ahead if ahead is not None else jump
+                elif targets:
+                    pick = targets[0] if k < 0 else targets[-1]
+                    end = pick[1] if pick[1] is not None else pick[0]
+                else:
+                    end = v[name]
+                if rel + span > total and ahead is not None:
+                    end = ahead
+                # A stretch that starts somewhere other than where the
+                # last one left off says so, and the voicing does it two
+                # times in five. Chaining regardless is what made a
+                # generated word fluctuate in volume.
+                start = v[name] if jump is None else jump
+                if rule is not None and i == len(where) - 1:
+                    _, start, end = rule
+                gaps[name].append((at + rel, span, start, end))
+                v[name] = end
+        at += total
+
+    return gaps, at
+
+
 def main(argv):
     if len(argv) < 2:
         sys.stderr.write(__doc__)
@@ -325,132 +479,13 @@ def main(argv):
         if not frames or len(runs) != len(pros) + 1:
             skipped += 1
             continue
-        # Every segment's pieces and every parameter's targets. Where a
-        # segment has more pieces than targets it holds the last one: the
-        # table collapses a repeated target, and /A/ at the start of `abbey'
-        # is a piece of nought and one of 157 that both end at 1650.
-        #
-        # Looking ahead instead -- running the spare pieces on to the next
-        # segment's target, on the grounds that an unset target places no
-        # breakpoint -- was tried and is wrong. It turns /A/'s second piece
-        # into a ramp to the /b/'s 1100 where the engine holds 1650, and it
-        # took the frame error from 4 per cent to 29. The cases it was meant
-        # to fix are key disagreements in the segment table, not a structure
-        # the generator can recover.
-        plan = []
-        ok = True
-        for f in pros:
-            k = tuple(str(f[x]) for x in D.KEY)
-            if k not in durs:
-                ok = False
-                break
-            total, spans, odd = durs[k]
-            want = {}
-            for name in SHAPED:
-                if name not in dflt:
-                    continue
-                got = F.targets(base, over, f["unit"], f["left"],
-                                f["right"], f["stress"], name)
-                want[name] = got if got else ((), False)
-            plan.append((total, spans, odd, want))
-        if not ok:
+        got = gaps_from_tables(pros, durs, base, over, dflt)
+        if got is None:
             skipped += 1
             continue
+        gaps, at = got
         tried += 1
 
-        # One flat list a parameter: a span and what it ends at, with None
-        # where the segment has no target for that stretch. Then coalesce,
-        # because a stretch with no target has no breakpoint either and
-        # belongs to the next gap: schwa in `aback' is 62 milliseconds and
-        # the /b/ after it 15, and the engine draws one gap of 77 ending at
-        # the /b/'s locus rather than two.
-        # A gap whose span overshoots its own segment is one the segment has
-        # no target for: the engine draws no breakpoint at the segment's end
-        # and the line runs on to whatever the next segment wants. The spans
-        # say so by themselves -- schwa in `aback' is 62 milliseconds with a
-        # second gap of 77, and that gap ends at the /b/'s locus -- so no
-        # flag is needed and the one tried first was unstable, being
-        # duration-dependent.
-        gaps = collections.defaultdict(list)
-        v = {}
-        at = 0
-        f_of = pros
-        for j, (total, spans, odd, want) in enumerate(plan):
-            for name, value in want.items():
-                targets = value[0]
-                where = odd.get(name, spans)
-                # The rule says what the voiced part of a segment does, not
-                # where it starts: /hE/ in `hello' is silent through the /h/
-                # and only then runs 51 down to 47, so laying the rule over
-                # the whole segment voices the /h/ and made the word 143 per
-                # cent different instead of 43. The table already knows
-                # where the stretches fall; only their values are replaced,
-                # and only for the last one, which is the vowel proper.
-                # A rule over the whole segment rather than its voiced tail
-                # was tried, so that the aspiration and the tilt could leave
-                # the table altogether. It costs 0.2 points of accuracy and
-                # the table did not shrink in the end, so the rules stay
-                # where they are: on the last stretch only.
-                rule = None
-                unit = f_of[j]
-                if os.environ.get("EVV_EXCITE_RULE") != "0" and where:
-                    if name == "av":
-                        rule = voicing(unit["unit"][-1], unit["stress"],
-                                       total)
-                    elif name == "ah":
-                        rule = aspiration(unit["unit"], total)
-                if name not in v:
-                    v[name] = targets[0][1] if targets else dflt.get(name, 0)
-                # Where the line runs on to, when this segment has no
-                # target for its last stretch -- but only if the next
-                # segment's first target continues from here. If that target
-                # jumps, nothing runs into it and the stretch holds instead:
-                # the flap in `tomato' begins its tilt at 35 out of nowhere
-                # a quarter of the way through itself, and running the vowel
-                # before it up to that 35 sweeps the tilt across the whole
-                # vowel, which is what Stas heard as the word phasing.
-                ahead = None
-                for later in plan[j + 1:]:
-                    nxt = later[3].get(name, ((), False))[0]
-                    if nxt:
-                        if nxt[0][0] is None:
-                            ahead = nxt[0][1]
-                        break
-                # Where there are more stretches than targets, which of
-                # them the spare stretches belong to depends on whether the
-                # last target jumps. A jump means a new value starts there,
-                # so it belongs at the end and the padding goes in front:
-                # /b/'s burst in `banana' is 51 on the third of three
-                # stretches, and padding at the back put it on the first,
-                # which smeared the burst over the whole closure and turned
-                # the stop into a fricative. Without a jump the last target
-                # is a hold and the padding goes behind it, which is what
-                # /A/ at the start of `abbey' wants.
-                shift = 0
-                if targets and len(where) > len(targets) \
-                        and targets[-1][0] is not None:
-                    shift = len(where) - len(targets)
-                for i, (rel, span) in enumerate(where):
-                    jump = None
-                    k = i - shift
-                    if 0 <= k < len(targets):
-                        jump, end = targets[k]
-                    elif targets:
-                        end = targets[0][1] if k < 0 else targets[-1][1]
-                    else:
-                        end = v[name]
-                    if rel + span > total and ahead is not None:
-                        end = ahead
-                    # A stretch that starts somewhere other than where the
-                    # last one left off says so, and the voicing does it two
-                    # times in five. Chaining regardless is what made a
-                    # generated word fluctuate in volume.
-                    start = v[name] if jump is None else jump
-                    if rule is not None and i == len(where) - 1:
-                        _, start, end = rule
-                    gaps[name].append((at + rel, span, start, end))
-                    v[name] = end
-            at += total
         if os.environ.get("EVV_F0_RULE") == "1":
             acc = lastv = None
             t = 0

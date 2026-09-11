@@ -830,3 +830,15 @@ Stas heard `banana` as "vanana": the initial /b/ came out a fricative. The frame
 With that, the frication's wrong values fall from 3,531 to 668 over a hundred and fifty words, the tilt and the bypass leave the list of the twelve worst entirely, and the whole error falls from **3.955 per cent to 2.961**, with three words frame for frame rather than one.
 
 **And one measurement stops working here.** With the pitch generated too, the waveform difference against the engine reads 120 to 140 per cent for every word -- not because the words sound wrong but because two hertz of pitch difference decorrelates the phase completely. Root-mean-square difference is only meaningful while the pitch is shared; past that the parameter counts and the ear are the measures.
+
+## An automated ear
+
+Stas asked whether there is a better way to measure the engine, and there is, because counting wrong parameter values had stopped being informative. Two of the three faults he heard -- `banana` as vanana, `abandonment` as abandonwend -- were a per cent or two of values inside one segment, invisible against a total of three per cent, and each turned one phoneme into another.
+
+`tools/measure/confuse.py` asks the other question: **not how far a segment is from where it should be, but whether it is now nearer to some other phoneme.** It builds a centroid for every phoneme out of the engine's own frames -- the mean of fourteen parameters over every segment of that phoneme in the corpus, each scaled by its own spread so a formant and an amplitude count alike -- and then asks of each generated segment which centroid it lands nearest.
+
+**The control is the whole of it.** A centroid is one mean over a whole segment, so phonemes that are genuinely close land on each other whoever made them: the engine's own segments land on the wrong phoneme 25.7 per cent of the time by this measure. Ours land wrong 28.9. Neither number means anything alone, and the difference does: **86 segments of 2,159, 3.98 per cent, are ours alone** -- the engine's landed right and ours did not.
+
+And it names them. Schwa heard as the second half of /Y/ 23 times, /t/ as the first half of /C/ 11 times, /k/ as /p/ 9, /W/'s first half as /Y/'s 7. That is a work list, arrived at without listening to anything, and it is what the next round of fixes should be driven by.
+
+**It also puts the earlier faults in proportion.** A stop's burst smeared over its closure and a nasal with no murmur were each a handful of frames in one segment of one word; against 556,740 parameter values they were noise, and to a listener they were a different word.

@@ -77,7 +77,9 @@ def _read(path, base, over):
         def read(items):
             out = []
             for x in items:
-                if ":" in x:
+                if x.endswith(":"):
+                    out.append((int(x[:-1]), None))
+                elif ":" in x:
                     a, b = x.split(":")
                     out.append((int(a), int(b)))
                 else:

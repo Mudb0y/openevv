@@ -299,6 +299,14 @@ def harvest(job):
             items = []
             for _, _, v0, v1, ends in gs:
                 if not ends:
+                    # A stretch that runs past the segment still says where
+                    # it begins, and that start is the segment's own. /m/'s
+                    # nasal zero jumps to 350 and ramps on into the vowel
+                    # after it; dropping the stretch outright dropped the
+                    # 350, and a nasal without its murmur is a glide --
+                    # `abandonment' came out as abandonwend.
+                    if running.get(name) != v0:
+                        items.append((v0, None))
                     running[name] = v1
                     continue
                 # Nothing has run before the first stretch of an utterance,
@@ -320,23 +328,24 @@ def harvest(job):
 def truncates(short, full, start):
     """Whether `short' is `full' stopped part way through.
 
-    Every target before the last has to be one of the full sequence's, in
-    order, and the last has to lie on the rest of the path -- between where
-    the segment started and the targets it still had to reach -- because a
-    trajectory cut short drops the breakpoints it never got to and leaves
-    only the value it stopped at. /E/ between /s/ and /l/ reaches 1650 then
-    1500 with room and a single 1575 without.
+    Only the ends lie on the path: a target written as a start with no end
+    of its own says where a run-through begins and not where it goes. Every
+    end before the last has to be one of the full sequence's, in order, and
+    the last has to lie between where the segment started and the ends it
+    still had to reach -- a trajectory cut short drops the breakpoints it
+    never got to and leaves only the value it stopped at. /E/ between /s/
+    and /l/ reaches 1650 then 1500 with room and a single 1575 without.
     """
-    if len(short) > len(full):
-        return False
-    if not short:
+    a = tuple(v for _, v in short if v is not None)
+    b = tuple(v for _, v in full if v is not None)
+    if not a:
         return True
-    if short[:-1] != full[:len(short) - 1]:
+    if not b or len(a) > len(b):
         return False
-    short = tuple(v for _, v in short)
-    full = tuple(v for _, v in full)
-    rest = (start,) + full[len(short) - 1:]
-    return min(rest) <= short[-1] <= max(rest)
+    if a[:-1] != b[:len(a) - 1]:
+        return False
+    rest = (start,) + b[len(a) - 1:]
+    return min(rest) <= a[-1] <= max(rest)
 
 
 def setup(probe):
@@ -481,8 +490,15 @@ def main(argv):
 
     def spell(value):
         targets, runson = value
-        return " ".join("%d:%d" % (j, v) if j is not None else str(v)
-                        for j, v in targets) + (" >" if runson else "")
+        out = []
+        for j, v in targets:
+            if v is None:
+                out.append("%d:" % j)          # a start with no end of its own
+            elif j is None:
+                out.append(str(v))
+            else:
+                out.append("%d:%d" % (j, v))
+        return " ".join(out) + (" >" if runson else "")
 
     # The parameters a context cannot move go in their own file, keyed on
     # the phoneme and its stress and nothing else.
