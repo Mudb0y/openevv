@@ -53,15 +53,26 @@ def load(tag):
         if len(f) < 5:
             continue
         unit, stress, name = f[0], f[1], f[2]
-        # A trailing `>' says the last stretch has no target of its own.
+        # A trailing `>' says the last stretch has no target of its own; a
+        # value written `from:to' starts somewhere other than where the
+        # stretch before left off.
         runson = f[-1] == ">"
         vals = f[:-1] if runson else f
+
+        def read(items):
+            out = []
+            for x in items:
+                if ":" in x:
+                    a, b = x.split(":")
+                    out.append((int(a), int(b)))
+                else:
+                    out.append((None, int(x)))
+            return tuple(out)
+
         if f[3] == "base":
-            base[(unit, stress, name)] = (
-                tuple(int(v) for v in vals[4:]), runson)
+            base[(unit, stress, name)] = (read(vals[4:]), runson)
         else:
-            over[(unit, f[3], f[4], stress, name)] = (
-                tuple(int(v) for v in vals[5:]), runson)
+            over[(unit, f[3], f[4], stress, name)] = (read(vals[5:]), runson)
     return base, over
 
 
@@ -141,7 +152,8 @@ def main(argv):
                     if not said or said[-1] != v:
                         said.append(v)
                 said = tuple(said)
-                want = targets(base, over, unit, left, right, stress, name)
+                got = targets(base, over, unit, left, right, stress, name)
+                want = tuple(v for _, v in got[0]) if got else None
                 if want is None:
                     # A segment that sets nothing has no entry, and a run
                     # whose gaps all carry on into the next segment sets
@@ -152,7 +164,9 @@ def main(argv):
                         bad.add(name)
                         if name not in ENVELOPE:
                             badshape.add(name)
-                elif want != said and not S.truncates(said, want, gs[0][2]):
+                elif want != said and not S.truncates(
+                        tuple((None, v) for v in said),
+                        tuple((None, v) for v in want), gs[0][2]):
                     wrong[name] += 1
                     badsegs += 1
                     bad.add(name)

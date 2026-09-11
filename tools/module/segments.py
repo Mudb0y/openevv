@@ -245,42 +245,42 @@ def tap(probe, text):
 
 
 def harvest(job):
-    """One word's segments, as table entries."""
+    """One word's segments, as table entries.
+
+    A gap's value where it starts is usually the one the gap before left
+    behind, and where it is not, that start is the segment's own and has to
+    be written down. It is not rare: of the gaps in four hundred words, 40
+    per cent of the aspiration's start somewhere else, 38 per cent of the
+    voicing's, 15 per cent of the frication's and 14 per cent of the third
+    formant's. Treating every parameter as continuous is what made a word
+    generated from these tables fluctuate in volume.
+    """
     word, body = job
     ph = marked(body)
     if not ph:
         return []
     runs = tap(PROBE, body)
     got = units(ph)
-    # One run a phoneme and one more for the trailing silence. Anything else
-    # means the runs and the phonemes are not the same list, and guessing
-    # which is which would put every segment after the mismatch under the
-    # wrong key.
     if len(runs) != len(got) + 1:
         return [(None, len(got), len(runs))]
+    # The running value a parameter holds, across the whole utterance, so a
+    # jump can be told from a continuation.
+    running = {}
     out = []
     for i, (unit, left, right, stress) in enumerate(got):
         for name, gs in runs[i][2].items():
             if name in SKIP:
                 continue
-            # The value the segment starts from comes with it. It is not
-            # part of the key -- it is whatever the segment before left
-            # behind -- but it is what a trajectory cut short in its first
-            # stretch was heading away from, so the truncation test needs it.
-            #
-            # And whether the last gap runs on past the segment, which is
-            # the one bit a generator cannot do without. A segment with
-            # fewer targets than pieces either holds its last target -- /A/
-            # in `abbey' is a piece of nought and one of 157 both ending at
-            # 1650 -- or has no target for that piece at all, in which case
-            # the engine draws no breakpoint and the piece joins the next
-            # segment's first: schwa in `aback' is 62 milliseconds and the
-            # /b/ after it 15, and the engine draws one gap of 77 ending at
-            # the /b/'s locus. Collapsing repeated targets loses the
-            # difference, so it is kept here.
+            items = []
+            for _, _, v0, v1, ends in gs:
+                if not ends:
+                    running[name] = v1
+                    continue
+                jump = None if running.get(name) == v0 else v0
+                items.append((jump, v1))
+                running[name] = v1
             out.append(((unit, left, right, stress, name),
-                        (gs[0][2],
-                         tuple(v for _, _, _, v, ends in gs if ends),
+                        (gs[0][2], tuple(items),
                          not gs[-1][4]),
                         word))
     return out
@@ -290,11 +290,11 @@ def truncates(short, full, start):
     """Whether `short' is `full' stopped part way through.
 
     Every target before the last has to be one of the full sequence's, in
-    order, and the last has to lie between the target it stopped after and
-    the next one -- an interpolated endpoint being what a trajectory cut
-    short writes down. Cut inside the first stretch, the value it stopped
-    at lies between where the segment started and its first target, which
-    is why the start is wanted here and nowhere else.
+    order, and the last has to lie on the rest of the path -- between where
+    the segment started and the targets it still had to reach -- because a
+    trajectory cut short drops the breakpoints it never got to and leaves
+    only the value it stopped at. /E/ between /s/ and /l/ reaches 1650 then
+    1500 with room and a single 1575 without.
     """
     if len(short) > len(full):
         return False
@@ -302,13 +302,8 @@ def truncates(short, full, start):
         return True
     if short[:-1] != full[:len(short) - 1]:
         return False
-    # Where along the rest of the path it stopped is not recoverable, and
-    # need not be. Cutting a segment short can drop the breakpoints it had
-    # not reached and leave only the value it had got to, so /E/ between
-    # /s/ and /l/ reaches 1650 then 1500 with room and a single 1575 without
-    # -- the midpoint, and neither of the two targets. What can be checked
-    # is that it lies on the path: between where the segment started and the
-    # targets it had still to reach.
+    short = tuple(v for _, v in short)
+    full = tuple(v for _, v in full)
     rest = (start,) + full[len(short) - 1:]
     return min(rest) <= short[-1] <= max(rest)
 
@@ -382,9 +377,10 @@ def main(argv):
                 # a different segment.
                 start, targets, runson = gaps
                 shape = []
-                for v in targets:
-                    if not shape or shape[-1] != v:
-                        shape.append(v)
+                for item in targets:
+                    if shape and shape[-1] == item and item[0] is None:
+                        continue
+                    shape.append(item)
                 where = shapes if done <= cut else held
                 where[key][(tuple(shape), start, runson)] += 1
                 example.setdefault(key, word)
@@ -454,7 +450,8 @@ def main(argv):
 
     def spell(value):
         targets, runson = value
-        return " ".join(str(v) for v in targets) + (" >" if runson else "")
+        return " ".join("%d:%d" % (j, v) if j is not None else str(v)
+                        for j, v in targets) + (" >" if runson else "")
 
     lines = 0
     with open(out, "w") as f:
@@ -469,7 +466,12 @@ def main(argv):
         f.write("# does instead.\n")
         f.write("#\n")
         f.write("# The numbers are the targets the parameter reaches, in "
-                "order, and a\n")
+                "order. One\n")
+        f.write("# written `from:to' starts somewhere other than where the "
+                "stretch before\n")
+        f.write("# left off, which happens for two fifths of the "
+                "aspiration's stretches\n")
+        f.write("# and a seventh of the third formant's. A\n")
         f.write("# trailing `>' means the last stretch has no target of its "
                 "own: the\n")
         f.write("# engine draws no breakpoint there and the stretch joins "

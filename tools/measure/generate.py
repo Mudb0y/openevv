@@ -264,22 +264,29 @@ def main(argv):
                 targets = value[0]
                 where = odd.get(name, spans)
                 if name not in v:
-                    v[name] = targets[0] if targets else dflt.get(name, 0)
+                    v[name] = targets[0][1] if targets else dflt.get(name, 0)
                 ahead = None
                 for later in plan[j + 1:]:
                     if later[3].get(name, ((), False))[0]:
-                        ahead = later[3][name][0][0]
+                        ahead = later[3][name][0][0][1]
                         break
                 for i, (rel, span) in enumerate(where):
-                    if rel + span > total and ahead is not None:
-                        end = ahead
-                    elif i < len(targets):
-                        end = targets[i]
+                    jump = None
+                    if i < len(targets):
+                        jump, end = targets[i]
                     elif targets:
-                        end = targets[-1]
+                        end = targets[-1][1]
                     else:
                         end = v[name]
-                    gaps[name].append((at + rel, span, v[name], end))
+                    if rel + span > total and ahead is not None:
+                        end = ahead
+                    # A stretch that starts somewhere other than where the
+                    # last one left off says so, and the voicing does it two
+                    # times in five. Chaining regardless is what made a
+                    # generated word fluctuate in volume.
+                    gaps[name].append((at + rel, span,
+                                       v[name] if jump is None else jump,
+                                       end))
                     v[name] = end
             at += total
         if wav:
