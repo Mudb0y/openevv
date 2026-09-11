@@ -790,3 +790,15 @@ All of the above is English, so the question is how much of it is English. Briti
 **The duration half does not.** Every one of those words came back "not covered": the duration key is the phoneme, its neighbours, its stress, the syllable it sits in, where that syllable is in the word, the stresses either side and the next syllable's onset, and a corpus of eight-phoneme chunks exercises none of those as a word does. A made-up chunk has made-up prosody.
 
 So a new language needs a word list before its durations can be harvested, and `test/words.sh record` is the thing that makes one. That is the concrete prerequisite for doing this for Polish, and it is worth knowing now rather than after building the rest.
+
+## The pitch
+
+The last thing the generator borrowed. It is not a segment's property at all and never could be: it is **one contour over the whole word, five stretches, and its values barely move.**
+
+Measured over twelve hundred words, every one of which has five or six pitch breakpoints and no other number: it starts flat, rises to a peak, falls, falls again and holds. The values cluster hard -- the start is 1217 when the first syllable carries the accent and 1044 when it does not, the peak 1293, the first fall lands at 792 and the second at 742, in tenths of a hertz. Those five numbers and the shape are the whole of English's declarative intonation as this engine draws it.
+
+**The peak is anchored to the accented vowel's middle.** That came out of the measurement cleanly -- median 0.48 of the way through it, quartiles 0.42 and 0.63 -- where anchoring to the accented syllable's start gave nothing usable and the offsets scattered from 3 to 63 milliseconds. The rise begins about a third of a vowel-length before the peak, which is to say inside the consonant in front of it.
+
+**The timing is where it is still loose.** With the medians as offsets -- 51 milliseconds of rise, the first fall landing 61 before the word's end and the second 58 after that -- the contour comes within 3.5 hertz of the engine's at the median and 5.7 on average, with a worst case of 42. On a contour that runs from 74 to 130 hertz that is close but not right, and it is the offsets rather than the values or the shape that want another pass.
+
+So the shape and the values of English intonation are five numbers and a rule, which is a good deal smaller than expected, and the placement is a measurement still to do.

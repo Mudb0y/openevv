@@ -197,6 +197,45 @@ def aspiration(unit, total):
     return ((0, total), v, v)
 
 
+# The pitch is not a segment's property at all: it is one contour over the
+# whole word, five points, and its values barely move. Measured over twelve
+# hundred words -- it starts flat, rises to a peak inside the accented
+# vowel, falls twice and holds. The start is the higher value when the first
+# syllable carries the accent and the lower when it does not.
+F0_HIGH = 1217
+F0_LOW = 1044
+F0_PEAK = 1293
+F0_FALL = 792
+F0_END = 742
+F0_RISE = 51          # milliseconds of rise, from the measured median
+F0_TAIL = 61          # where the first fall lands, before the word's end
+F0_SECOND = 58        # and the second fall after that
+
+
+def pitch(spans, accent, total):
+    """The word's pitch contour: five stretches, as the engine draws them.
+
+    `accent' is the start and end of the accented vowel; the peak sits at
+    its middle, which is the one anchor that came out of the measurement
+    cleanly -- median 0.48 of the way through it, quartiles 0.42 and 0.63.
+    """
+    if accent is None:
+        return []
+    lo, hi = accent
+    peak = (lo + hi) // 2
+    rise = max(0, peak - F0_RISE)
+    fall = max(peak + 1, total - F0_TAIL)
+    second = min(total, fall + F0_SECOND)
+    start = F0_HIGH if lo <= 0 else F0_LOW
+    out = [(0, rise, start, start),
+           (rise, peak - rise, start, F0_PEAK),
+           (peak, fall - peak, F0_PEAK, F0_FALL),
+           (fall, second - fall, F0_FALL, F0_END)]
+    if second < total:
+        out.append((second, total - second, F0_END, F0_END))
+    return [g for g in out if g[1] >= 0]
+
+
 # The formant family, as against the excitation envelopes and gains.
 SPECTRUM = ("f1", "b1", "f2", "b2", "f3", "b3", "f4", "b4", "f5", "b5",
             "fnp", "fnz", "ftp", "ftz")
@@ -380,6 +419,17 @@ def main(argv):
                     gaps[name].append((at + rel, span, start, end))
                     v[name] = end
             at += total
+        if os.environ.get("EVV_F0_RULE") == "1":
+            acc = None
+            t = 0
+            for i, f in enumerate(pros):
+                d = plan[i][0]
+                if f["stress"] == "1" and f["unit"][-1] in S.VOWELS \
+                        and acc is None:
+                    acc = (t, t + d)
+                t += d
+            gaps["f0"] = pitch(None, acc, at)
+
         if wav:
             import subprocess
             play = os.path.join(ROOT, "build", "klattplay")
