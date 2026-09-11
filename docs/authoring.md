@@ -636,3 +636,13 @@ Running English does not contain every phoneme between every pair of phonemes. A
 With the fill corpus in, the table covers **221,726 segments** rather than 23,112, written as 5,382 base lines and 417,242 exceptions. Self-consistency holds up at that size: of 1,511,762 keys seen more than once, **11,388 disagree, and 8,409 of those are the voicing and frication amplitudes**. The five formants together are 1,042, which is one segment in two hundred.
 
 **And the table is more structured than its size suggests.** The 5,382 phoneme-stress-parameter groups take only 14,967 distinct values between them, under three each: 3,814 of them are one value whatever is either side, 276 depend on the phoneme to the left alone, 257 on the one to the right alone, and 1,035 on both. So the enumeration is a decision tree flattened out, and the tree is small. Writing it as a tree rather than as its output is the obvious next compression and is not needed for correctness.
+
+### Held against whole words
+
+`tools/measure/fromtable.py` takes a word, asks the table what each of its segments should reach, and holds that against what the engine's own breakpoints reached. Over 1,200 words: **912 are entirely as the table says, and 1,122 are right in every parameter but the excitation envelopes** -- 207,482 segment parameters with 387 disagreeing, one in five hundred.
+
+The envelopes are `av`, `af`, `ah` and `tl`, and counting them separately is not a convenience. They are how hard the utterance is being voiced and how hard it is being blown; the voicing staircase was measured as the utterance's property rather than a phoneme's long before any of this, and `af` on a word-final /s/ is the single largest disagreement in the whole table. They belong with f0, which no segment table can hold either.
+
+**Rebuilding the frames by substitution was tried first and measures nothing.** The table deliberately collapses a repeated target and drops one that runs on into the next segment, so putting its values back onto the engine's own gap list misaligns them, and every frame then differs -- zero words of two hundred came out right, against a per-segment agreement of better than ninety-nine per cent measured the same afternoon. The misalignment was the harness's. Frame-exact generation needs the spans, and the spans are the duration model's.
+
+So the segment table is done and checked to the level it specifies. **What it cannot do on its own is make a frame**, because a frame needs to know how long each stretch lasts, and that is the next table.
