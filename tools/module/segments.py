@@ -276,7 +276,13 @@ def harvest(job):
                 if not ends:
                     running[name] = v1
                     continue
-                jump = None if running.get(name) == v0 else v0
+                # Nothing has run before the first stretch of an utterance,
+                # so its start is not a jump. Calling it one recorded a jump
+                # for every parameter of every word's first segment, which
+                # put 24,187 exceptions in the table for `fl' -- a
+                # parameter that never leaves nought.
+                jump = (None if name not in running or running[name] == v0
+                        else v0)
                 items.append((jump, v1))
                 running[name] = v1
             out.append(((unit, left, right, stress, name),

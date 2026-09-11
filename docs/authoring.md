@@ -728,3 +728,13 @@ Stas heard `tomato` and said it "almost phased through" the stressed vowel. It d
 **The tilt is nearly binary** -- flat nought in 10,883 segments of 12,287, and 35 falling to nought in the rest, which are only the voiced stops /b/, /d/ and /g/ and the flap /F/. The sweep was the generator's doing. A stretch with no target of its own runs on to the next target there is, and the flap after that vowel begins its tilt at 35 out of nowhere a quarter of the way through itself. Running the vowel up to that 35 spreads a stop's burst across a whole syllable.
 
 **So a stretch runs on only when the next target continues from where this one is.** A target that jumps is not continued into, and nothing should run to meet it. With that, `tomato` falls from 38.3 per cent of the signal to 4.7 and the wrong parameter values over a hundred and fifty words from 4.37 per cent to 3.96.
+
+### What is a rule and what is a table
+
+A survey of all twenty-seven parameters over fifteen hundred words, asking how many distinct shapes each takes and how well the phoneme alone predicts it:
+
+Four never vary at all -- `fl` at nought, `fnp` at 200, `ftp` and `ftz` at 250 -- and are one line each. Fifteen more are decided by the phoneme alone to better than 88 per cent: the open quotient, the tilt, the diplophonia, the aspiration, four of the five bandwidths, the nasal zero, all five formant gains and the bypass. **Only eight are genuinely context-dependent**, and they are the five formants, the third bandwidth, the voicing and the frication -- the second formant is predicted by its phoneme alone only 25 per cent of the time, the third 31.
+
+So the table is carrying a great deal that is not table-shaped. That is the next compression and it is a bigger one than writing the exceptions as a tree: a parameter that is a constant, or a lookup on the phoneme, should be written as that and not as a quarter of a million context lines.
+
+**And one bug was paying for a lot of it.** Nothing runs before the first stretch of an utterance, so its start is not a jump -- but it was being recorded as one, for every parameter of every word's first segment. That put 24,187 exception lines in the table for `fl`, a parameter that never leaves nought. Fixing it took the table from 909,775 exceptions to 780,612 with no change to what it generates.
