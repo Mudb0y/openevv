@@ -5483,6 +5483,61 @@ int insert_rv(delta_state *d, uint8_t f, delta_loc *loc, uint8_t dup)
     return 0;
 }
 
+/* Every value a rule inserts into the spine, when EVV_INSERT_TAP names a
+ * file.
+ *
+ * This is where a language's acoustic specification is actually written
+ * down. A rule computes a number and inserts it as a statement in one of the
+ * spine's fields -- field 9 is how long a phone lasts, and the formant
+ * targets and the pitch go in the same way -- and the generator later reads
+ * those fields off and interpolates between them. So the frames are two
+ * removes from here and everything that decides them passes through.
+ *
+ * A line an insertion: the field, the value, and the two nodes it went
+ * between.
+ */
+static FILE *insert_tap;
+static int   insert_tap_tried;
+
+static FILE *insertTap(void)
+{
+    const char *name;
+
+    if (insert_tap_tried)
+        return insert_tap;
+    insert_tap_tried = 1;
+    name = getenv("EVV_INSERT_TAP");
+    if (name != 0 && *name != 0)
+        insert_tap = fopen(name, "w");
+    return insert_tap;
+}
+
+/* What an operand is worth, for the tap only. Answers 0 for a kind that does
+   not hold a number, which is honest enough for a line that names the kind
+   beside it. */
+static int32_t tapValue(const delta_operand *a)
+{
+    if (a == 0 || a->ptr == 0)
+        return 0;
+
+    switch (a->kind) {
+    case DK_UBYTE:  return *(uint8_t *)a->ptr;
+    case DK_SHORT:
+    case DK_SHORT2: return *(int16_t *)a->ptr;
+    case DK_LONG:   return *(int32_t *)a->ptr;
+    default:        return 0;
+    }
+}
+
+static void tapInsert(delta_state *d, uint8_t f, const delta_operand *a)
+{
+    if (insertTap() == 0)
+        return;
+    fprintf(insertTap(), "ins field %d\tkind %d\tvalue %d\tbetween %d %d\n",
+            (int)f, (int)(a ? a->kind : 0), (int)tapValue(a),
+            (int)d->lpta.node, (int)d->rpta.node);
+}
+
 /* Insert a rule's variable as a statement in the range. A value of a kind the
    statement does not use is converted through a scratch cell first. */
 int insert_2ptv(delta_state *d, uint8_t f, delta_loc *loc, uint8_t mode)
@@ -5511,12 +5566,14 @@ int insert_2ptv(delta_state *d, uint8_t f, delta_loc *loc, uint8_t mode)
         vinitloc_new(d, &b, loc);
         vassign(d, &a, &b);
 
+        tapInsert(d, f, &a);
         if (!vins_tok(d, f, d->lpta.node, d->rpta.node, &a)) {
             forceErrorBacktrack(d);
             return 1;
         }
     } else {
         vinitloc_new(d, &b, loc);
+        tapInsert(d, f, &b);
 
         if (!vins_tok(d, f, d->lpta.node, d->rpta.node, &b)) {
             forceErrorBacktrack(d);
