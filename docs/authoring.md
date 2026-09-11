@@ -750,3 +750,13 @@ So the table is carrying a great deal that is not table-shaped. That is the next
 So the state is: **`money` identical to the engine over every sample, `hello` 0.6 per cent of the signal, `tomato` 4.9, `absolutely` 5.9, `banana` 12.7**, with 3.955 per cent of parameter values wrong over a hundred and fifty words. Stas heard all five and called them accurate.
 
 **The compression that would actually work is still undone.** The segments file is three quarters of a million exception lines and its content is a decision tree: 5,382 phoneme-stress-parameter groups taking 14,967 distinct values between them. Writing each value once with the contexts that select it, rather than each context once with its value, is the thing -- and it needs the contexts to be describable as sets rather than listed, which is the part nobody has looked at yet.
+
+### The table as rectangles
+
+The exceptions were a line a context: three quarters of a million of them, each repeating the phoneme, the stress and the parameter to say one number. Written instead as **a line a rectangle** -- a set of left neighbours crossed with a set of right ones, and what that block of contexts does -- the file goes from **14.9 megabytes and 915,175 lines to 1.56 megabytes and 53,267**, generating exactly the same frames: 3.955 per cent of parameter values wrong over a hundred and fifty words, `money` still identical to the engine over every sample.
+
+It works because the contexts really do block up. Of 13,592 value blocks, 7,785 are a single rectangle and the rest take a handful. The right-hand sets are the wide ones -- 10.2 phonemes on average, and 39,741 of the 51,630 rectangles name more than one -- while the left-hand sets average two.
+
+**And they are classes rather than lists.** `t 1 f2  N CDFJNTdntz  >` says that /t/'s second formant in a stressed syllable, with /N/ to its left and any of C, D, F, J, N, T, d, n, t or z to its right, has no target of its own. That right-hand set is the coronal obstruents and nasals, which is exactly the class a phonetician would write, and it was arrived at by grouping identical behaviour rather than by assuming any feature system.
+
+That is the form authoring wants. A person can read a line, see which neighbours it covers, and change the number.

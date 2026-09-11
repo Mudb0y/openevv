@@ -88,17 +88,21 @@ def _read(path, base, over):
         # stress, parameter, values.
         if f[3] == "base":
             base[(unit, stress, name)] = (read(vals[4:]), runson)
-        elif len(f) > 5 and not f[3].isdigit() and len(f[3]) <= 2 \
-                and len(f[4]) <= 2 and f[3] != "-":
-            over[(unit, f[3], f[4], stress, name)] = (read(vals[5:]), runson)
+        elif len(f) > 5 and not f[3].isdigit() and f[3] != "-":
+            # A set of left neighbours and a set of right ones, written as
+            # the phonemes run together.
+            over.setdefault((unit, stress, name), []).append(
+                (set(f[3]), set(f[4]), (read(vals[5:]), runson)))
         else:
             base[(unit, stress, name)] = (read(vals[3:]), runson)
 
 
 def targets(base, over, unit, left, right, stress, name):
-    key = (unit, left, right, stress, name)
-    if key in over:
-        return over[key]
+    """What this phoneme's parameter does here: the first rectangle that
+    covers the context, or the base."""
+    for lefts, rights, value in over.get((unit, stress, name), ()):
+        if left in lefts and right in rights:
+            return value
     return base.get((unit, stress, name))
 
 
