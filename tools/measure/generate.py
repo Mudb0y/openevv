@@ -209,7 +209,8 @@ F0_FALL = 792
 F0_END = 742
 F0_RISE = 124         # milliseconds of rise, measured median
 F0_PEAK_AT = 0.47     # how far through the accented vowel the peak sits
-F0_SECOND = 67        # the second fall, after the last vowel ends
+F0_SECOND = 58        # how long the second fall takes, measured median
+F0_LAND = 3           # and where it lands, before the word's end
 
 
 def pitch(last, accent, total):
@@ -228,9 +229,20 @@ def pitch(last, accent, total):
     lo, hi = accent
     peak = lo + int((hi - lo) * F0_PEAK_AT)
     rise = max(0, peak - F0_RISE)
-    fall = last[1] if last else total
-    fall = min(total, max(peak + 1, fall))
-    second = min(total, fall + F0_SECOND)
+    # The second fall has to land, and landing is what makes a word sound
+    # finished: clipping it left `hello' ending at 79.2 hertz instead of
+    # 74.2, which Stas heard at once as the engine's comma rather than its
+    # full stop. It lasts 58 milliseconds -- quartiles 40 and 64, the one
+    # tight number in the tail -- and ends three before the word does.
+    second = max(peak + 2, total - F0_LAND)
+    # The first fall ends where the last vowel does, or 58 milliseconds
+    # before the landing, whichever comes first. Either alone is worse:
+    # anchoring only to the vowel clips the second fall away on a word that
+    # ends in one, and anchoring only to the landing puts the fall late on a
+    # word that ends in consonants. Together, 2.0 hertz at the median
+    # against 2.7 for the second and an unfinished word for the first.
+    end = last[1] if last else total
+    fall = max(peak + 1, min(end, second - F0_SECOND))
     start = F0_HIGH if lo <= 0 else F0_LOW
     out = [(0, rise, start, start),
            (rise, peak - rise, start, F0_PEAK),

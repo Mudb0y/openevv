@@ -810,3 +810,13 @@ Stas heard the first cut and it was noticeably wrong on `hello` and `tomato` and
 Two things were wrong and the measurement had hidden both behind medians taken over the wrong population. **The rise lasts 124 milliseconds, not 51**: the engine takes 116 on `hello` and 131 on the other two, and the 51 came from a median that mixed in words whose contour has six points rather than five. And **the first fall ends where the last vowel ends** -- median six milliseconds past it -- where I had it at a fixed 61 before the word's end. Neither a fixed offset nor a fraction of the word is an anchor for it: those scatter from 0.69 to 0.89 of the word between the quartiles.
 
 With the peak at 0.47 through the accented vowel, the rise 124 before it, the first fall ending with the last vowel and the second 67 after that, the contour comes within **2.0 hertz at the median and 3.2 on average**, against 3.5 and 5.7, and 61 per cent of frames are within three hertz rather than 46.
+
+### The word has to finish
+
+Stas heard the second cut and it was almost right: **"ours ends the way the engine would end at a comma, instead of ending the sentence."**
+
+Exactly so, and the numbers say the same thing once you know where to look. Anchoring the first fall to the last vowel's end leaves nothing for the second fall on a word that ends in a vowel -- `hello`'s last vowel ends where the word does -- so the contour stopped at 792 rather than reaching 742. Eleven twentieths of a hertz, five hertz on a contour spanning fifty-six, and it is the difference between a full stop and a continuation.
+
+**A landing has to be reserved.** The second fall lasts 58 milliseconds -- quartiles 40 and 64, the one tight number in the whole tail -- and ends three before the word does. So the first fall ends at the last vowel's end **or** 58 before that landing, whichever comes first: anchoring only to the vowel clips the landing away on a word ending in one, and anchoring only to the landing puts the fall late on a word ending in consonants.
+
+With both, the contour is within 2.0 hertz at the median and 3.1 on average, and the word's last frame is within 0.3 hertz of the engine's with a worst case of 1.0. The intonation is now a rule with five values and four anchors.
