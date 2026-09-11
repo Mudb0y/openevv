@@ -684,3 +684,13 @@ Extended to all twenty-seven parameters the language drives -- everything the ma
 **The excitation envelopes are where it falls down and that was expected.** With them taken from the tables as well, `hello` is 43 per cent different and `absolutely` 84. Of 51,690 wrong parameter values over 150 words, `av`, `ah`, `af`, `tl`, `ab` and `a5f` are 34,710 -- and they are how hard the utterance is being voiced and blown, which the voicing work established long ago is the utterance's business rather than a segment's. A segment table is the wrong shape for them, as it is for f0.
 
 So what the tables reproduce is the spectrum, and for some words they reproduce it exactly. What they do not hold is the excitation, which wants the same treatment the intonation already has: a pass over the utterance rather than a lookup per segment.
+
+### What the ear said
+
+Stas heard `hello`, `tomato` and `abandonment`, engine against tables' spectrum, each with a spoken label: **"honestly? Same. I'm unsure about abandonment, but generally they sound practically the same."**
+
+So four and six per cent of the signal are inaudible on a real word, and twenty-six is at the edge of noticing. That is a much looser threshold than the composed model needed -- the calibration there was under fifty per cent for a word and under seventy for a nonsense syllable, but those were shape errors in the composer's own measure rather than waveform differences against the engine, and they are not the same scale.
+
+**Which reorders the work.** Frame exactness is a verification tool and a good one -- it catches an accident that no ear would -- but it is not the product's standard, and by the product's standard the spectrum is done. Eight words in a hundred and fifty being frame for frame sounded like a poor result and is not one.
+
+**And the excitation is better than its numbers too.** The envelopes from the tables give a waveform 43 per cent different on `hello` and 84 on `absolutely`, but the difference is level rather than breaks: over six words the tables' frames have the same voiced-frame counts as the engine's to within two, and no more one-frame voicing gaps -- 0 against 0 on four of them, 0 against 1 on two. A dropout is the thing that would be unacceptable and there are none.
