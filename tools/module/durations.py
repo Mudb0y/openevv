@@ -242,6 +242,7 @@ def main(argv):
     load = opt("--load", None)
     save = opt("--save", None)
 
+    corpus = opt("--corpus", "words")
     rows = []
     if load:
         for line in open(load):
@@ -249,7 +250,9 @@ def main(argv):
             rows.append((dict(zip(f[:-2:2], f[1:-2:2])), int(f[-2]),
                          {}))
     else:
-        words = S.annotations(tag)
+        words = [] if corpus == "fill" else S.annotations(tag)
+        if corpus in ("fill", "both"):
+            words = words + S.fill_corpus(tag)
         if limit:
             words = words[:limit]
         sys.stderr.write("durations: %d words, %d jobs\n" % (len(words), jobs))

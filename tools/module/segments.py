@@ -60,9 +60,15 @@ PROBE = None
 
 
 def annotations(tag):
-    """Each word's phonemes, as the engine itself reports them."""
+    """Each word's phonemes, as the engine itself reports them.
+
+    Empty where the language has no word baseline, which is all of them but
+    English: `test/words.sh record' makes one and wants a word list.
+    """
     path = os.path.join(ROOT, "test", "samples", "%s.words" % tag)
     out = []
+    if not os.path.exists(path):
+        return out
     for line in open(path):
         if line.startswith("#") or "\t" not in line:
             continue
@@ -183,8 +189,18 @@ def fill_corpus(tag, span=8, overlap=3):
     hundred, twelve 86, eight 94. A short chunk also loses less when it does
     fail.
     """
+    # The alphabet from the words this engine says, where there is a word
+    # baseline, and from the language's own phone statement where there is
+    # not -- only English has the first. Single-letter names only: the
+    # multi-letter ones are the module's internal symbols and an annotation
+    # will not take them.
     alpha = sorted(set(
         p for _, body in annotations(tag) for p, _ in marked(body)))
+    if not alpha:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import phonemes as P
+        alpha = sorted(set(n for n in P.inventory(tag)
+                           if len(n) == 1 and n not in "#?"))
     seq = de_bruijn(alpha, 3)
     out = []
     for stress in ("0", "1", "2"):

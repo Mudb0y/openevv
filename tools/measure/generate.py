@@ -227,7 +227,12 @@ def main(argv):
     S.setup(probe)
 
     words = S.annotations(tag)
-    if show:
+    if "--body" in argv:
+        # A pronunciation given outright, for a language with no word
+        # baseline: only English has one.
+        words = [(b, b) for b in argv[argv.index("--body") + 1:]]
+        show = None
+    elif show:
         words = [(w, b) for w, b in words if w == show]
     else:
         words = words[:limit]

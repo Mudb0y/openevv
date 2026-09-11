@@ -778,3 +778,15 @@ The obvious way to shrink the duration table is the one the literature uses: a b
 Interactions are what is missing, and paying for them eats the saving. Folding the coda into the base halves the median to ten; adding the next syllable's onset takes it to six; adding the syllable count takes it to five, at 29,477 bases -- by which point the model is larger than the 26,440 distinct lengths it was meant to replace, and still only half of them within five milliseconds.
 
 So the engine's durations are a decision tree with interactions all through it, not a product of factors, and **the table is the representation**. That is worth knowing rather than assuming, and it is why `enus.durations` is eight megabytes while the two tables beside it are one and a half and forty-eight kilobytes.
+
+## A second language
+
+All of the above is English, so the question is how much of it is English. British English is the control: it shares the phone statement exactly, so the machinery can be pointed at it without touching anything, and its values differ enough to be worth measuring.
+
+**It has no word list.** Only `enus` has one, and the corpus of what the engine says each word is made of is built from it. So `segments.py --corpus fill` was taught to take the alphabet from the language's own phone statement where there is no word baseline, and British English was harvested from the de Bruijn corpus alone -- every phoneme between every pair of phonemes at every stress, and nothing else.
+
+**The segment half transfers.** `lang/engb/engb.segments` is 1.34 megabytes and `engb.phonemes` 48 kilobytes, covering 168,685 segments with 7,623 disagreeing. Held against nine real British words the engine was asked to say: **959 segment parameters, five disagreeing, six of the nine entirely as the table says** -- and the table had never seen a word. So the segment table wants nothing of a language but its phoneme inventory.
+
+**The duration half does not.** Every one of those words came back "not covered": the duration key is the phoneme, its neighbours, its stress, the syllable it sits in, where that syllable is in the word, the stresses either side and the next syllable's onset, and a corpus of eight-phoneme chunks exercises none of those as a word does. A made-up chunk has made-up prosody.
+
+So a new language needs a word list before its durations can be harvested, and `test/words.sh record` is the thing that makes one. That is the concrete prerequisite for doing this for Polish, and it is worth knowing now rather than after building the rest.
