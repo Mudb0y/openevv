@@ -267,9 +267,21 @@ def harvest(job):
             # part of the key -- it is whatever the segment before left
             # behind -- but it is what a trajectory cut short in its first
             # stretch was heading away from, so the truncation test needs it.
+            #
+            # And whether the last gap runs on past the segment, which is
+            # the one bit a generator cannot do without. A segment with
+            # fewer targets than pieces either holds its last target -- /A/
+            # in `abbey' is a piece of nought and one of 157 both ending at
+            # 1650 -- or has no target for that piece at all, in which case
+            # the engine draws no breakpoint and the piece joins the next
+            # segment's first: schwa in `aback' is 62 milliseconds and the
+            # /b/ after it 15, and the engine draws one gap of 77 ending at
+            # the /b/'s locus. Collapsing repeated targets loses the
+            # difference, so it is kept here.
             out.append(((unit, left, right, stress, name),
                         (gs[0][2],
-                         tuple(v for _, _, _, v, ends in gs if ends)),
+                         tuple(v for _, _, _, v, ends in gs if ends),
+                         not gs[-1][4]),
                         word))
     return out
 
@@ -344,7 +356,7 @@ def main(argv):
             f = line.rstrip("\n").split("\t")
             key = tuple(f[:5])
             sh = tuple(int(v) for v in f[5].split(",")) if f[5] else ()
-            shapes[key][(sh, int(f[6]))] += int(f[7])
+            shapes[key][(sh, int(f[6]), f[7] == "1")] += int(f[8])
             seen[key] += int(f[7])
             example.setdefault(key, "?")
         words = []
@@ -368,13 +380,13 @@ def main(argv):
                 # it is drawn in one stretch or two, so collapsing them is
                 # lossless and stops one word's extra breakpoint reading as
                 # a different segment.
-                start, targets = gaps
+                start, targets, runson = gaps
                 shape = []
                 for v in targets:
                     if not shape or shape[-1] != v:
                         shape.append(v)
                 where = shapes if done <= cut else held
-                where[key][(tuple(shape), start)] += 1
+                where[key][(tuple(shape), start, runson)] += 1
                 example.setdefault(key, word)
 
     # Where a key was seen with more than one shape, the longest is the
@@ -388,27 +400,38 @@ def main(argv):
     if save:
         with open(save, "w") as f:
             for key, obs in shapes.items():
-                for (sh, start), n in obs.items():
-                    f.write("%s\t%s\t%d\t%d\n"
+                for (sh, start, runson), n in obs.items():
+                    f.write("%s\t%s\t%d\t%d\t%d\n"
                             % ("\t".join(key),
-                               ",".join(str(v) for v in sh), start, n))
+                               ",".join(str(v) for v in sh), start,
+                               1 if runson else 0, n))
 
     table = {}
     clipped = 0
     clash = collections.Counter()
     rejected = []
     for key, seenshapes in shapes.items():
-        best = max(seenshapes,
-                   key=lambda ob: (len(ob[0]), seenshapes[ob]))[0]
-        table[key] = best
-        for sh, start in seenshapes:
+        pick = max(seenshapes,
+                   key=lambda ob: (len(ob[0]), seenshapes[ob]))
+        best = pick[0]
+        # Whether a segment's last stretch has a target of its own is
+        # duration-dependent -- it depends on how many stretches there are --
+        # so it is recorded as whichever way it usually goes and is not part
+        # of what makes two observations disagree. Counting it took the
+        # disagreements from 11,388 to 27,837 and said nothing new.
+        votes = collections.Counter()
+        for sh, start, ro in seenshapes:
+            if sh == best:
+                votes[ro] += seenshapes[(sh, start, ro)]
+        table[key] = (best, votes.most_common(1)[0][0] if votes else False)
+        for sh, start, ro in seenshapes:
             if sh == best:
                 continue
             if truncates(sh, best, start):
                 clipped += 1
             else:
-                clash[key] += seenshapes[(sh, start)]
-                rejected.append((key, best, sh, seenshapes[(sh, start)]))
+                clash[key] += seenshapes[(sh, start, ro)]
+                rejected.append((key, best, sh, seenshapes[(sh, start, ro)]))
     if opt("--clashes", None):
         with open(opt("--clashes", None), "w") as f:
             for key, best, sh, n in sorted(rejected):
@@ -423,11 +446,15 @@ def main(argv):
     # themselves have: a base locus and a handful of overrides.
     base = {}
     grouped = collections.defaultdict(list)
-    for (unit, left, right, stress, name), targets in table.items():
-        grouped[(unit, stress, name)].append(((left, right), targets))
+    for (unit, left, right, stress, name), value in table.items():
+        grouped[(unit, stress, name)].append(((left, right), value))
     for k, rows in grouped.items():
         common = collections.Counter(t for _, t in rows)
         base[k] = common.most_common(1)[0][0]
+
+    def spell(value):
+        targets, runson = value
+        return " ".join(str(v) for v in targets) + (" >" if runson else "")
 
     lines = 0
     with open(out, "w") as f:
@@ -442,7 +469,12 @@ def main(argv):
         f.write("# does instead.\n")
         f.write("#\n")
         f.write("# The numbers are the targets the parameter reaches, in "
-                "order. What it\n")
+                "order, and a\n")
+        f.write("# trailing `>' means the last stretch has no target of its "
+                "own: the\n")
+        f.write("# engine draws no breakpoint there and the stretch joins "
+                "the next\n")
+        f.write("# segment's first. What it\n")
         f.write("# starts from is whatever the segment before left behind "
                 "and is not here;\n")
         f.write("# how long each stretch takes is the duration model's and "
@@ -453,15 +485,13 @@ def main(argv):
         for k in sorted(grouped):
             unit, stress, name = k
             f.write("%s %s %-4s base %s\n"
-                    % (unit, stress, name,
-                       " ".join(str(v) for v in base[k])))
+                    % (unit, stress, name, spell(base[k])))
             lines += 1
-            for (left, right), targets in sorted(grouped[k]):
-                if targets == base[k]:
+            for (left, right), value in sorted(grouped[k]):
+                if value == base[k]:
                     continue
                 f.write("%s %s %-4s %s %s %s\n"
-                        % (unit, stress, name, left, right,
-                           " ".join(str(v) for v in targets)))
+                        % (unit, stress, name, left, right, spell(value)))
                 lines += 1
 
     if holdout:

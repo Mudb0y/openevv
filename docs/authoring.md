@@ -646,3 +646,31 @@ The envelopes are `av`, `af`, `ah` and `tl`, and counting them separately is not
 **Rebuilding the frames by substitution was tried first and measures nothing.** The table deliberately collapses a repeated target and drops one that runs on into the next segment, so putting its values back onto the engine's own gap list misaligns them, and every frame then differs -- zero words of two hundred came out right, against a per-segment agreement of better than ninety-nine per cent measured the same afternoon. The misalignment was the harness's. Frame-exact generation needs the spans, and the spans are the duration model's.
 
 So the segment table is done and checked to the level it specifies. **What it cannot do on its own is make a frame**, because a frame needs to know how long each stretch lasts, and that is the next table.
+
+## The duration table, and generating frames from data
+
+A frame wants two things: what each parameter reaches and how long each stretch takes. The segment table holds the first. `tools/module/durations.py` measures the second and `lang/enus/enus.durations` holds it.
+
+### What a duration depends on, measured
+
+`durations.py` harvests every segment of the word corpus with the prosodic context around it, then asks of each candidate key: of the contexts seen more than once, how many came out the same length every time. Only repeated contexts count, because a key long enough to name nearly every segment on its own scores perfectly by having nothing to compare.
+
+The segment's own key -- phoneme, both neighbours, stress -- gets 524 of 1,998 repeated contexts wrong, by up to 196 milliseconds. Adding, in turn, the syllable the segment sits in entire, where that syllable is in the word, the stress either side of it, and whether the next syllable begins with a consonant takes that to **35 of 1,711, by at most fourteen milliseconds with a median of three.** Over the whole corpus, 484 of 23,497.
+
+Each addition was found from the data rather than guessed. The coda came from the worst offenders being diphthongs: /W/ is 114 milliseconds in `bausch` and 237 in `baum`, /O/ 108 in `benoit` and 228 in `annoys`, which is pre-fortis clipping -- and a diphthong's first half has the diphthong itself as its right neighbour, so the consonant that clips it is not a neighbour at all and only the syllable says what it is. The next syllable's onset came from what was left: /A/ is 142 milliseconds in `ballad` and 78 in `balfour`, the difference being that `ballad`'s second syllable has no onset of its own, so the /l/ between them behaves as its onset rather than as the first syllable's coda.
+
+Adding the last syllable's shape and its vowel was tried and is not it -- 235 to 198 while nearly doubling the contexts. **A change to one phoneme mostly does not reach far**: swapping the final vowel of `abacuses` moves that vowel and the consonant after it and nothing else. `hello` was the misleading case, where swapping the final vowel moves all three segments, and only for the lax vowels.
+
+### Spans are per parameter
+
+The formants do not share one split. Of 4,149 segments, 2,455 have one span list across all five and **1,694 do not**, the commonest disagreement being (0, 62) against (0, 77): one formant stopping at the segment's end and another running on past it, having no target there. So the table holds the majority split with the parameters that differ named beside it, and each gap is recorded as an offset and a span rather than a span alone, because a gap that overshoots leaves the next one starting late.
+
+### Frames out of the two tables
+
+`tools/measure/generate.py` takes a word's phonemes and stress, asks the duration table where every gap falls and the segment table what each one ends at, and unfolds. Nothing of the engine's is used but the phoneme string.
+
+`abbey` comes out gap for gap: 1650 held for 157 milliseconds, down to the /b/'s 1100 over 25 and on to 1400 over 55, up to 1890 over 30 and 2190 over 110. Over 150 words, **8 are frame for frame and 93.8 per cent of formant values are exact.**
+
+**What is left is the segment table's key disagreements, and they cascade.** `aback`'s schwa is one of the five hundred keys that come out two ways, and getting it wrong shifts every breakpoint after it in the word, so half a per cent of bad keys becomes six per cent of bad frames and a word is either right or ruined. That is where the remaining work is, and it is a small and named place rather than a mystery.
+
+**One rule fell out that is worth having.** A gap whose span overshoots its own segment is one the segment has no target for: the engine draws no breakpoint at the boundary and the line runs on to whatever the next segment wants. The spans say so by themselves, so the generator needs no flag for it -- and the flag tried first, recorded in the segment table, was unstable because whether a segment's last stretch has a target of its own depends on how many stretches there are, which is duration-dependent. Counting it as part of the key took the segment table's disagreements from 11,388 to 27,837 and said nothing new.

@@ -53,11 +53,15 @@ def load(tag):
         if len(f) < 5:
             continue
         unit, stress, name = f[0], f[1], f[2]
+        # A trailing `>' says the last stretch has no target of its own.
+        runson = f[-1] == ">"
+        vals = f[:-1] if runson else f
         if f[3] == "base":
-            base[(unit, stress, name)] = tuple(int(v) for v in f[4:])
+            base[(unit, stress, name)] = (
+                tuple(int(v) for v in vals[4:]), runson)
         else:
-            over[(unit, f[3], f[4], stress, name)] = tuple(
-                int(v) for v in f[5:])
+            over[(unit, f[3], f[4], stress, name)] = (
+                tuple(int(v) for v in vals[5:]), runson)
     return base, over
 
 
