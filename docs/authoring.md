@@ -738,3 +738,15 @@ Four never vary at all -- `fl` at nought, `fnp` at 200, `ftp` and `ftz` at 250 -
 So the table is carrying a great deal that is not table-shaped. That is the next compression and it is a bigger one than writing the exceptions as a tree: a parameter that is a constant, or a lookup on the phoneme, should be written as that and not as a quarter of a million context lines.
 
 **And one bug was paying for a lot of it.** Nothing runs before the first stretch of an utterance, so its start is not a jump -- but it was being recorded as one, for every parameter of every word's first segment. That put 24,187 exception lines in the table for `fl`, a parameter that never leaves nought. Fixing it took the table from 909,775 exceptions to 780,612 with no change to what it generates.
+
+### Splitting the tables, and what the split cost
+
+`lang/enus/enus.phonemes` now holds the nineteen parameters a context cannot move -- one line a phoneme and a stress, 3,776 lines and 48 kilobytes, and it is the first thing here a person could read straight through. `lang/enus/enus.segments` holds the eight a context does decide.
+
+**Two ways of doing it were tried and the cheap one is wrong.** Moving those nineteen out *with their exceptions* takes the segments file from fifteen megabytes to nine, and costs `money` its exactness: nought to 25 per cent of the signal, `banana` 12.7 to 30.8, `tomato` 4.9 to 11.2. The nineteen are settled by the phoneme alone 88 to 100 per cent of the time, and the last few per cent are worth more than six megabytes. So the exceptions stay in the segments file for every parameter and the phonemes file holds only the bases.
+
+**Whole-segment rules were tried for the same reason and are also not it.** Letting the aspiration and the tilt be rules across a whole segment, rather than over its voiced tail only, would have let them leave the table -- and it costs 0.2 points of accuracy while the table does not shrink, because what fills it for those two is the jumps rather than the bases. The rules stay on the last stretch.
+
+So the state is: **`money` identical to the engine over every sample, `hello` 0.6 per cent of the signal, `tomato` 4.9, `absolutely` 5.9, `banana` 12.7**, with 3.955 per cent of parameter values wrong over a hundred and fifty words. Stas heard all five and called them accurate.
+
+**The compression that would actually work is still undone.** The segments file is three quarters of a million exception lines and its content is a decision tree: 5,382 phoneme-stress-parameter groups taking 14,967 distinct values between them. Writing each value once with the contexts that select it, rather than each context once with its value, is the thing -- and it needs the contexts to be describable as sets rather than listed, which is the part nobody has looked at yet.

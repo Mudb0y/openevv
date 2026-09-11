@@ -178,6 +178,11 @@ AH_VOWEL = 34
 AH_H = 42
 AH_CONSONANT = 0
 
+# The tilt is flat nought in 10,883 segments of 12,287 and 35 falling to
+# nought in the rest, which are only the voiced stops and the flap. It falls
+# within the segment: /F/ holds 35 for its first stretch and nought after.
+TL_BURST = set("bdgF")
+
 
 def aspiration(unit, total):
     """One segment's aspiration, as a single stretch."""
@@ -315,9 +320,14 @@ def main(argv):
                 # cent different instead of 43. The table already knows
                 # where the stretches fall; only their values are replaced,
                 # and only for the last one, which is the vowel proper.
+                # A rule over the whole segment rather than its voiced tail
+                # was tried, so that the aspiration and the tilt could leave
+                # the table altogether. It costs 0.2 points of accuracy and
+                # the table did not shrink in the end, so the rules stay
+                # where they are: on the last stretch only.
                 rule = None
+                unit = f_of[j]
                 if os.environ.get("EVV_EXCITE_RULE") != "0" and where:
-                    unit = f_of[j]
                     if name == "av":
                         rule = voicing(unit["unit"][-1], unit["stress"],
                                        total)

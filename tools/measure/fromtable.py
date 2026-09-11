@@ -42,15 +42,30 @@ ENVELOPE = ("av", "af", "ah", "tl")
 
 
 def load(tag):
-    """The table, as base values and the contexts that override them."""
-    path = os.path.join(ROOT, "lang", tag, "%s.segments" % tag)
+    """Both tables: the eight parameters a context decides, and the rest.
+
+    `<tag>.phonemes' holds the nineteen a context does not decide, one line
+    a phoneme and a stress, and reads as base entries with no overrides.
+    """
     base = {}
     over = {}
+    paths = [os.path.join(ROOT, "lang", tag, "%s.segments" % tag),
+             os.path.join(ROOT, "lang", tag, "%s.phonemes" % tag)]
+    for path in paths:
+        if os.path.exists(path):
+            _read(path, base, over)
+    return base, over
+
+
+def _read(path, base, over):
     for line in open(path):
         if line.startswith("#"):
             continue
         f = line.split()
-        if len(f) < 5:
+        # A segments line is phoneme, stress, parameter, `base' or a
+        # context, then values; a phonemes line has no context and so is one
+        # field shorter.
+        if len(f) < 4:
             continue
         unit, stress, name = f[0], f[1], f[2]
         # A trailing `>' says the last stretch has no target of its own; a
@@ -69,11 +84,15 @@ def load(tag):
                     out.append((None, int(x)))
             return tuple(out)
 
+        # A phonemes line has no `base' word and no context: phoneme,
+        # stress, parameter, values.
         if f[3] == "base":
             base[(unit, stress, name)] = (read(vals[4:]), runson)
-        else:
+        elif len(f) > 5 and not f[3].isdigit() and len(f[3]) <= 2 \
+                and len(f[4]) <= 2 and f[3] != "-":
             over[(unit, f[3], f[4], stress, name)] = (read(vals[5:]), runson)
-    return base, over
+        else:
+            base[(unit, stress, name)] = (read(vals[3:]), runson)
 
 
 def targets(base, over, unit, left, right, stress, name):

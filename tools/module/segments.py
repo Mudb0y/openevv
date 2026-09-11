@@ -39,6 +39,15 @@ sys.path.insert(0, os.path.join(ROOT, "tools", "measure"))
 
 VOWELS = set("iIeEAauUocYWOXHx")
 
+# Which parameters need a context table and which do not. Measured over
+# fifteen hundred words: four never vary at all, fifteen more are decided by
+# the phoneme alone to better than 88 per cent, and only these eight are
+# genuinely context-dependent -- the second formant is predicted by its
+# phoneme alone 25 per cent of the time, the third 31. Everything else goes
+# in a file of its own, one line a phoneme, which is a thousand lines
+# against three quarters of a million.
+CONTEXTUAL = ("f1", "f2", "f3", "f4", "f5", "b3", "av", "af")
+
 # Five phonemes get two runs rather than one, and it is exactly the two
 # affricates and the three diphthongs: /C/ and /J/ are a stop and a
 # fricative, /Y/, /W/ and /O/ two vowel targets. Measured rather than
@@ -459,6 +468,30 @@ def main(argv):
         return " ".join("%d:%d" % (j, v) if j is not None else str(v)
                         for j, v in targets) + (" >" if runson else "")
 
+    # The parameters a context cannot move go in their own file, keyed on
+    # the phoneme and its stress and nothing else.
+    plain = opt("--phonemes",
+                os.path.join(ROOT, "lang", tag, "%s.phonemes" % tag))
+    with open(plain, "w") as f:
+        f.write("# What each phoneme's parameters do, where no neighbour "
+                "moves them.\n")
+        f.write("#\n")
+        f.write("# One line a phoneme, a stress and a parameter. The "
+                "nineteen parameters\n")
+        f.write("# here are the ones a context does not decide: four never "
+                "vary at all and\n")
+        f.write("# the rest are settled by the phoneme alone better than "
+                "88 times in a\n")
+        f.write("# hundred. The eight that a context does decide are in "
+                "%s.segments.\n" % tag)
+        f.write("#\n")
+        f.write("# Written by tools/module/segments.py. See "
+                "docs/authoring.md.\n")
+        for k in sorted(grouped):
+            if k[2] in CONTEXTUAL:
+                continue
+            f.write("%s %s %-4s %s\n" % (k[0], k[1], k[2], spell(base[k])))
+
     lines = 0
     with open(out, "w") as f:
         f.write("# What each segment of %s is made of, as targets.\n" % tag)
@@ -488,12 +521,24 @@ def main(argv):
         f.write("# how long each stretch takes is the duration model's and "
                 "is not either.\n")
         f.write("#\n")
+        f.write("# The base of a parameter a context cannot move is in "
+                "%s.phonemes,\n" % tag)
+        f.write("# one line a phoneme; only the eight it can are based "
+                "here. Every\n")
+        f.write("# parameter's exceptions are here either way.\n")
+        f.write("#\n")
         f.write("# Harvested by tools/module/segments.py. See "
                 "docs/authoring.md.\n")
         for k in sorted(grouped):
             unit, stress, name = k
-            f.write("%s %s %-4s base %s\n"
-                    % (unit, stress, name, spell(base[k])))
+            # The base of a parameter a context cannot move lives in the
+            # phonemes file; its exceptions still live here, because
+            # dropping them is not free. Doing so cost `money' its exactness
+            # -- nought to 25 per cent of the signal -- for a file two
+            # thirds the size, which is the wrong trade.
+            if name in CONTEXTUAL:
+                f.write("%s %s %-4s base %s\n"
+                        % (unit, stress, name, spell(base[k])))
             lines += 1
             for (left, right), value in sorted(grouped[k]):
                 if value == base[k]:
