@@ -768,3 +768,13 @@ The same treatment, and it needed a different cut. **Rectangles do not help here
 What was paying for the size was repetition of a different kind. Of 716,586 lines, 622,486 were per-parameter splits, each repeating a twelve-field key to say one list of spans. **Writing the key once and the splits as continuations** takes the file from 29 megabytes to 13.6. And **one continuation a split rather than a parameter** -- the parameters needing their own split within a segment often need the same one -- takes it to **8.3 megabytes and 310,139 lines**, generating exactly the same frames.
 
 So the three files are now `enus.phonemes` at 48 kilobytes, `enus.segments` at 1.56 megabytes and `enus.durations` at 8.3, against 44 megabytes for the same information this morning. The durations are still much the largest and will stay so while they are a table: a duration is a number in milliseconds and there are twenty-six thousand distinct ones. Making that small wants a model -- a base times factors for stress, position and coda -- which is a different piece of work from compressing a table and the obvious next one.
+
+### Durations do not factorise
+
+The obvious way to shrink the duration table is the one the literature uses: a base length for the phoneme multiplied by a factor for each thing that stretches or shortens it. `tools/module/durmodel.py` fits exactly that, by coordinate descent in logs, which needs no linear algebra and converges in a dozen passes.
+
+**It does not work.** A base for the phoneme at its stress, times factors for the onset, coda, syllable position, syllable count, distance from the end, the stresses either side, the next syllable's onset and both neighbours -- 187 bases and 1,038 factor levels -- leaves a **median error of fifteen milliseconds**, with 36 per cent of lengths within ten. The table's own noise is at most fourteen milliseconds and usually three, so the model is worse than the thing it would replace.
+
+Interactions are what is missing, and paying for them eats the saving. Folding the coda into the base halves the median to ten; adding the next syllable's onset takes it to six; adding the syllable count takes it to five, at 29,477 bases -- by which point the model is larger than the 26,440 distinct lengths it was meant to replace, and still only half of them within five milliseconds.
+
+So the engine's durations are a decision tree with interactions all through it, not a product of factors, and **the table is the representation**. That is worth knowing rather than assuming, and it is why `enus.durations` is eight megabytes while the two tables beside it are one and a half and forty-eight kilobytes.
