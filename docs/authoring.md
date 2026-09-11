@@ -674,3 +674,13 @@ The formants do not share one split. Of 4,149 segments, 2,455 have one span list
 **What is left is the segment table's key disagreements, and they cascade.** `aback`'s schwa is one of the five hundred keys that come out two ways, and getting it wrong shifts every breakpoint after it in the word, so half a per cent of bad keys becomes six per cent of bad frames and a word is either right or ruined. That is where the remaining work is, and it is a small and named place rather than a mystery.
 
 **One rule fell out that is worth having.** A gap whose span overshoots its own segment is one the segment has no target for: the engine draws no breakpoint at the boundary and the line runs on to whatever the next segment wants. The spans say so by themselves, so the generator needs no flag for it -- and the flag tried first, recorded in the segment table, was unstable because whether a segment's last stretch has a target of its own depends on how many stretches there are, which is duration-dependent. Counting it as part of the key took the segment table's disagreements from 11,388 to 27,837 and said nothing new.
+
+### A whole frame, and something to listen to
+
+Extended to all twenty-seven parameters the language drives -- everything the map names but the pitch -- the two tables make a whole frame, and `generate.py --wav` renders three wave files a word through `test/harness/klattplay` so the comparison is fair: the engine's own frames, the tables' frames, and a third with the tables' spectrum over the engine's excitation.
+
+**Two words come out sample for sample.** `hello` and `money`, spectrum against the engine's own rendering: every one of 4,895 and 4,235 samples identical. `absolutely` is 3.4 per cent of the signal, `tomato` 3.9, `banana` 6.1, `abandonment` 25.9.
+
+**The excitation envelopes are where it falls down and that was expected.** With them taken from the tables as well, `hello` is 43 per cent different and `absolutely` 84. Of 51,690 wrong parameter values over 150 words, `av`, `ah`, `af`, `tl`, `ab` and `a5f` are 34,710 -- and they are how hard the utterance is being voiced and blown, which the voicing work established long ago is the utterance's business rather than a segment's. A segment table is the wrong shape for them, as it is for f0.
+
+So what the tables reproduce is the spectrum, and for some words they reproduce it exactly. What they do not hold is the excitation, which wants the same treatment the intonation already has: a pass over the utterance rather than a lookup per segment.

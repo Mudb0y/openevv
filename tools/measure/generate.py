@@ -13,6 +13,18 @@ trailing silence is left out of the comparison: it is not a phoneme and the
 duration table has no entry for it.
 
     tools/measure/generate.py <probe> [--words N] [--tag enus] [--show WORD]
+    tools/measure/generate.py <probe> --wav <out dir> <word>...
+
+The second writes three wave files a word, all rendered by
+`test/harness/klattplay' so the comparison is fair: the engine's own frames,
+the frames these tables make, and a third with the tables' spectrum over the
+engine's excitation. The excitation envelopes are where the tables are
+weakest -- they are how hard the utterance is voiced and blown, and that is
+the utterance's business rather than a segment's -- so the third says how
+much of any difference is the spectrum and how much is the envelope.
+
+The pitch is borrowed in all cases. It is the phrase's melody and no segment
+table can hold it; this engine generates it in a pass of its own.
 """
 
 import collections
@@ -31,14 +43,12 @@ import fromtable as F                                    # noqa: E402
 
 STEP = 5
 
-# What the two tables between them describe: the formant track. The
-# excitation envelopes and the voice-quality parameters split a segment into
-# pieces of their own -- /A/'s open quotient splits 0, 21 and 136 where its
-# formants split 0 and 157 -- so the duration table, which holds the
-# formants' split, does not describe them and they are left out rather than
-# compared and failed.
-SHAPED = ("f1", "b1", "f2", "b2", "f3", "b3", "f4", "b4", "f5", "b5",
-          "fnp", "fnz")
+# Every parameter the map drives, less f0. The pitch is the phrase's melody
+# and no segment table can hold it, so a word generated here borrows it and
+# nothing else -- this engine generates it in its own pass.
+SHAPED = ("av", "oq", "tl", "fl", "di", "ah", "af", "f1", "b1", "f2", "b2",
+          "f3", "b3", "f4", "b4", "f5", "b5", "fnp", "fnz", "ftp", "ftz",
+          "a1f", "a2f", "a3f", "a4f", "a5f", "ab")
 
 
 def load_durations(tag):
@@ -133,6 +143,19 @@ def lay(pieces, targets, start):
     return gaps
 
 
+# The formant family, as against the excitation envelopes and gains.
+SPECTRUM = ("f1", "b1", "f2", "b2", "f3", "b3", "f4", "b4", "f5", "b5",
+            "fnp", "fnz", "ftp", "ftz")
+
+
+def write_frames(path, rows):
+    """The frames in the shape klattplay reads: a header and 62 numbers."""
+    with open(path, "w") as f:
+        f.write("\t".join(R.NAMES) + "\n")
+        for row in rows:
+            f.write("\t".join(str(int(v)) for v in row) + "\n")
+
+
 def main(argv):
     if len(argv) < 2:
         sys.stderr.write(__doc__)
@@ -157,6 +180,21 @@ def main(argv):
     if not words:
         sys.stderr.write("generate: no such word\n")
         return 2
+    dflt = defaults(probe, words[0][1])
+
+    wav = None
+    if "--wav" in argv:
+        wav = argv[argv.index("--wav") + 1]
+        names = argv[argv.index("--wav") + 2:]
+        allw = dict(S.annotations(tag))
+        words = [(w, allw[w]) for w in names if w in allw]
+        missing = [w for w in names if w not in allw]
+        if missing:
+            sys.stderr.write("generate: not in the corpus: %s\n"
+                             % " ".join(missing))
+        if not words:
+            return 2
+        os.makedirs(wav, exist_ok=True)
     dflt = defaults(probe, words[0][1])
 
     exact = 0
@@ -244,6 +282,35 @@ def main(argv):
                     gaps[name].append((at + rel, span, v[name], end))
                     v[name] = end
             at += total
+        if wav:
+            import subprocess
+            play = os.path.join(ROOT, "build", "klattplay")
+            made = {"engine": [], "tables": [], "spectrum": []}
+            for i, fr in enumerate(frames):
+                t = i * STEP
+                if t >= at:
+                    break
+                made["engine"].append(list(fr))
+                a = list(fr)
+                b = list(fr)
+                for name, gs in gaps.items():
+                    got = F.value(gs, t)
+                    if got is None:
+                        continue
+                    a[R.NAMES.index(name)] = got
+                    if name in SPECTRUM:
+                        b[R.NAMES.index(name)] = got
+                made["tables"].append(a)
+                made["spectrum"].append(b)
+            for kind, rows in made.items():
+                tsv = os.path.join(wav, "%s.%s.tsv" % (word, kind))
+                out = os.path.join(wav, "%s.%s.wav" % (word, kind))
+                write_frames(tsv, rows)
+                subprocess.run([play, tsv, out], capture_output=True)
+            print("%s: %d frames, three wave files in %s"
+                  % (word, len(made["engine"]), wav))
+            continue
+
         bad = set()
         for i, fr in enumerate(frames):
             t = i * STEP
@@ -263,9 +330,9 @@ def main(argv):
                               else "differs in " + " ".join(sorted(bad))))
     print("%d words, %d frame for frame from the tables, %d differing, "
           "%d not covered" % (tried + skipped, exact, tried - exact, skipped))
-    print("%d frames of formant values, %d of them wrong (%.3f per cent)"
-          % (cells * 12, badcells,
-             100.0 * badcells / (cells * 12) if cells else 0))
+    print("%d parameter values over those frames, %d wrong (%.3f per cent)"
+          % (cells * len(SHAPED), badcells,
+             100.0 * badcells / (cells * len(SHAPED)) if cells else 0))
     if wrong:
         print("what differed: %s"
               % "  ".join("%s %d" % kv for kv in wrong.most_common(12)))

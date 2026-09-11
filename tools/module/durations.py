@@ -137,11 +137,14 @@ def prosody(body):
     return out
 
 
-# The formants share a segment's piece boundaries. The excitation envelopes
-# and the voice-quality parameters have their own, measured, so what this
-# table holds is the formants' and the generator says so.
-SHAPED = ("f1", "b1", "f2", "b2", "f3", "b3", "f4", "b4", "f5", "b5",
-          "fnp", "fnz")
+# Every parameter the language's map drives from a stream, which is
+# twenty-eight of the frame's sixty-two, less f0. The rest keep the default
+# they were filled with. The formants share a split with each other more
+# often than not and the envelopes have their own, so the table holds the
+# majority and names the parameters that differ.
+SHAPED = ("av", "oq", "tl", "fl", "di", "ah", "af", "f1", "b1", "f2", "b2",
+          "f3", "b3", "f4", "b4", "f5", "b5", "fnp", "fnz", "ftp", "ftz",
+          "a1f", "a2f", "a3f", "a4f", "a5f", "ab")
 
 
 def pieces(run):
