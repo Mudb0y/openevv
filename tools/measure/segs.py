@@ -15,6 +15,7 @@ on more than its immediate neighbours.
 
     tools/measure/segs.py <probe>
     tools/measure/segs.py <probe> --words <phoneme string>...
+    tools/measure/segs.py <probe> --durations <phoneme string>...
 
 The first runs the hand-picked borrowing tests. The second builds each word
 out of segments harvested from donor utterances made up for the purpose --
@@ -348,6 +349,75 @@ def words(probe, get, targets):
     return 1 if tally["values"] or tally["shape"] else 0
 
 
+def pieces(seg):
+    """The lengths a segment is built out of.
+
+    A segment is not one stretch. `insert_2ptv' puts a duration into field 9
+    of the spine several times over -- /hE/ in `hello' is 80 and then 74 --
+    and those numbers are, to the digit, the spans of the segment's formant
+    breakpoints. So the boundaries can be read back off the gaps without
+    tapping the spine at all: every offset any parameter changes at is a
+    piece boundary.
+    """
+    rel = relative(seg)
+    edges = {0, seg["dur"]}
+    for gaps in rel.values():
+        for a, span, _, _ in gaps:
+            if 0 <= a <= seg["dur"]:
+                edges.add(a)
+            if 0 <= a + span <= seg["dur"]:
+                edges.add(a + span)
+    e = sorted(edges)
+    return [b - a for a, b in zip(e, e[1:])]
+
+
+def durations(probe, get, targets):
+    """How long each segment is, gathered by what is around it.
+
+    The question is whether a duration is decided by the same key the values
+    are -- the phoneme and its two neighbours -- and it is not.
+
+    Totals are what to compare, not pieces. A boundary is only visible where
+    some parameter changes at it, so /p/ between two /a/ reads as 30+70+5 in
+    four words and as one piece of 105 in a fifth, which is the same segment
+    with one boundary unobserved rather than a different one.
+    """
+    seen = {}
+    for text in targets:
+        segs, _, _ = get(text)
+        units = contexts(list(text))
+        for i, (unit, left, right) in enumerate(units):
+            if i >= len(segs):
+                break
+            key = "%s:%s_%s" % (unit, left or ".", right or ".")
+            seen.setdefault(key, []).append(
+                (text, i, len(units), segs[i]["dur"], pieces(segs[i])))
+    same = []
+    hidden = []
+    differ = []
+    for key in sorted(seen):
+        rows = seen[key]
+        if len(rows) < 2:
+            continue
+        if len(set(r[3] for r in rows)) > 1:
+            differ.append((key, rows))
+        elif len(set(tuple(r[4]) for r in rows)) > 1:
+            hidden.append((key, rows))
+        else:
+            same.append((key, rows))
+    for key, rows in differ:
+        print("%-12s %s" % (key, "  ".join(
+            "%s #%d of %d, %d ms" % (t, i, n, d)
+            for t, i, n, d, p in rows)))
+    print()
+    print("%d contexts the same length wherever they were seen, "
+          "%d the same length with a boundary unobserved, %d different"
+          % (len(same), len(hidden), len(differ)))
+    if same:
+        print("the same: %s" % ", ".join(k for k, _ in same))
+    return 0
+
+
 def main(argv):
     if len(argv) < 2:
         sys.stderr.write(__doc__)
@@ -360,6 +430,8 @@ def main(argv):
             cache[text] = tapped(probe, "`[.1%s]" % text)
         return cache[text]
 
+    if "--durations" in argv:
+        return durations(probe, get, argv[argv.index("--durations") + 1:])
     if "--words" in argv:
         return words(probe, get, argv[argv.index("--words") + 1:])
 

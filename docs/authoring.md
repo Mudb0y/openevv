@@ -534,3 +534,38 @@ Stress and the shape of the word, and this is measured rather than guessed. Of 5
 That is a longer key, not a different model. A segment is decided by its phoneme, its two neighbours, its stress and its position in the word, and the honest size of the table is not known until those are enumerated. What is known is that it is a table: nothing in it was measured, fitted or estimated, and where the key matched the engine's own frames came back to the digit.
 
 **And `test/matrix.sh` passes with the tap in, 979 cases, every one as it was.**
+
+## The durations are in the spine, and a segment is two pieces
+
+The formant values are in the rules and the tracks are a breakpoint list. What the list still needed was its spans, and those come from somewhere else: not the arrays but the item spine, put there by `insert_2ptv`, which inserts a rule's value as a statement in one of the spine's fields. **Field 9 is how long a piece lasts and field 8 is the pitch.** `EVV_INSERT_TAP` names a file and `src/delta/delta.c` writes every insertion out.
+
+`hello`'s four segments are 154, 80, 168 and 460 milliseconds. Its field 9 insertions are 80 and 74, 45 and 35, 20 and 148, 60 and 400. Every segment is two of them, and **they are also, to the digit, the spans of its formant breakpoints**:
+
+    hElo  f2  [(0, 80, 1650, 1650), (80, 74, 1650, 1500)]
+    hEla  f2  [(0, 80, 1650, 1650), (80, 87, 1650, 1500)]
+
+So a segment is a fixed piece and a variable one, the variable one is what a duration model computes, and that is why every span that ever differed between a segment and a borrowed twin was the last one. The two questions -- what value, and for how long -- are answered in two different places, by two different mechanisms, and each has its own tap now.
+
+**Speed is an integer percentage.** `apply_speed_anno` in `us_dur.obj` compares two globals against 100, and where they differ multiplies the duration by one and divides by the other, truncating. Nothing more elaborate, and `apply_min_durs` then clamps field 9 from below.
+
+**Where the base durations come from splits by kind.** The consonants' are in `es_cdur.obj`: twenty-six rules writing `s274` and `s447`, a few as immediates -- /t/, /p/ and /k/ 5, /F/ 20, /g/ 25, /l/ 35 -- and the rest computed, so the same witnessing the formants needed applies. The nuclei's are not in a state slot at all: `es_ndur.obj` writes none, and its durations reach field 9 through the spine. So the insert tap is the oracle for durations in the way the array tap is for values, and reading rules would not have answered it.
+
+### A duration is not decided locally, and a value is
+
+`tools/measure/segs.py --durations` gathers every segment of a corpus by the same key the values use -- the phoneme and its two neighbours -- and says whether the length came out the same wherever the context appeared. Over forty-one words: **thirty-eight contexts of fifty-one were the same length everywhere, and thirteen were not.**
+
+The stable ones are stable hard. /t/ between two /a/ is 45 milliseconds in nine places across seven words, first syllable and last, two syllables and four. /d/, /g/, /s/ between two /a/, /l/ before /o/, /n/ before /i/, word-final /a/ after four different stops: all fixed.
+
+The thirteen that vary say what a duration model has to know, and none of it is local:
+
+The stress. /a/ between /t/ and /p/ is 113 milliseconds in `atapa`, `atapata` and `patapa`, and 180 in `tapa` and `tapata` where it is the stressed first syllable.
+
+How many syllables there are. Word-initial /a/ before /m/ is 152 in `ama` and 113 in `amada`.
+
+What is further away than a neighbour. /hE/ before /l/ is 154 in `hElo` and in `hEli` and 167 in `hEla`, so the *last* vowel of the word changes the length of the first syllable.
+
+Where in the word it is. The second /l/ of `lalala` is 70 and the third is 80; the second /m/ of `mamama` is 80 and the third is 70; /x/ between /t/ and /m/ is 94 at the end of `sIstxm` and 143 at the start of `txmeto`.
+
+**So the two halves of a segment divide cleanly and they divide by mechanism, not by convenience.** The values are local, decided by the phoneme and its neighbours, stated as immediates in the rules and reproducible exactly from a table. The durations are prosodic, computed over the whole word by `distribute_nucdur` and its neighbours in `us_dur.obj` and clamped by `apply_min_durs`, and no local table can hold them. That is the same division `chain.py` worked under from the start -- borrow the timing, compose the values -- and it turns out to be the real one rather than a convenience.
+
+**One trap in measuring this.** A piece boundary is only visible where some parameter changes at it, so /p/ between two /a/ reads as 30+70+5 in four words and as a single 105 in a fifth. That is one segment with a boundary unobserved, not two different segments, and comparing pieces rather than totals reports it as a difference. Compare totals.
