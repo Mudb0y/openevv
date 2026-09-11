@@ -125,6 +125,80 @@ def units(ph):
     return out
 
 
+def de_bruijn(alpha, n):
+    """A sequence over `alpha' containing every string of length `n' once.
+
+    Built as an Eulerian circuit over the graph whose nodes are the
+    (n-1)-grams and whose edges are the n-grams, which is easy to check: the
+    sequence has to come out k to the n long and hold that many distinct
+    n-grams, and it does for every small alphabet tried. The Lyndon-word
+    construction is shorter to write and the version of it written from
+    memory here gave 16,215 symbols and 131 distinct triples where there
+    should have been 91,125 of each, silently.
+
+    It is what makes filling the key space affordable: every phoneme between
+    every pair of phonemes is 91,125 triples for a forty-five letter
+    alphabet, and one sequence holds them all.
+    """
+    k = len(alpha)
+    nodes = k ** (n - 1)
+    nxt = [0] * nodes
+    stack = [0]
+    out = []
+    while stack:
+        v = stack[-1]
+        if nxt[v] < k:
+            e = nxt[v]
+            nxt[v] += 1
+            stack.append((v * k + e) % nodes)
+        else:
+            out.append(stack.pop() % k)
+    out.reverse()
+    seq = out[:nodes * k]
+    # Cyclic, so the triples that wrap round want the head repeating.
+    seq = seq + seq[:n - 1]
+    return "".join(alpha[i] for i in seq)
+
+
+def fill_corpus(tag, span=8, overlap=3):
+    """Utterances covering every phoneme between every pair of phonemes.
+
+    Three stresses, marked before every vowel so each one carries it, and
+    the chunks overlap so a triple straddling a boundary is still said
+    whole. The word edges are their own carriers, a word of running English
+    having only so many phonemes at the start and end of it.
+
+    Eight phonemes a chunk, measured. A long enough stretch of arbitrary
+    phonemes stops parsing as an annotation and is spelled out instead, and
+    the longer the chunk the likelier: twenty phonemes line up 73 times in a
+    hundred, twelve 86, eight 94. A short chunk also loses less when it does
+    fail.
+    """
+    alpha = sorted(set(
+        p for _, body in annotations(tag) for p, _ in marked(body)))
+    seq = de_bruijn(alpha, 3)
+    out = []
+    for stress in ("0", "1", "2"):
+        i = 0
+        while i < len(seq):
+            chunk = seq[i:i + span]
+            if len(chunk) < 3:
+                break
+            body = "".join(("." + stress + c) if c in VOWELS else c
+                           for c in chunk)
+            # An annotation wants a stress mark before its first syllable,
+            # and a chunk that opens on consonants has none of its own.
+            if not body.startswith("."):
+                body = "." + stress + body
+            out.append(("fill", "`[" + body + "]"))
+            i += span - overlap
+        for a in alpha:
+            for b in alpha:
+                out.append(("edge", "`[." + stress + a + b + "]"))
+                out.append(("edge", "`[." + stress + b + a + "]"))
+    return out
+
+
 def tap(probe, text):
     """One utterance's runs and the gaps that start inside each."""
     with tempfile.TemporaryDirectory() as w:
@@ -248,7 +322,10 @@ def main(argv):
 
     load = opt("--load", None)
     save = opt("--save", None)
-    words = annotations(tag)
+    corpus = opt("--corpus", "words")
+    words = [] if corpus == "fill" else annotations(tag)
+    if corpus in ("fill", "both"):
+        words = words + fill_corpus(tag)
     if limit:
         words = words[:limit]
     sys.stderr.write("segments: %d words, %d jobs\n" % (len(words), jobs))
