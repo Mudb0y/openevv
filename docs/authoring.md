@@ -852,3 +852,15 @@ And it names them. Schwa heard as the second half of /Y/ 23 times, /t/ as the fi
 **And one stretch can carry several targets.** The table writes /m/'s second formant as 1000 then 1200, and the engine draws it as a single stretch from 1000 to 1200. Taking the last target and starting from wherever the segment before left off gave a ramp from 1500, which is not a nasal. The rule is that such a stretch runs from the target before the last to the last.
 
 Together they take the error from 2.413 per cent to 2.269, the frication's share from 573 to 308, and the confusions the automated ear finds from 86 of 2,159 to 77 -- **3.57 per cent against the engine's own 25.7 by the same measure.**
+
+### The context is two deep, not one
+
+`abandonment` stayed wrong after the nasal was fixed, and the fault was not in the /m/ at all: the word's whole unstressed tail came out flat where the engine glides. The schwa before the last /n/ runs its second formant from 1500 to 1600 across the segment boundary, and neither side held the 1600 -- not the schwa, because the stretch runs past its own end and only its start was recorded, and not the /n/, because 1600 is where it already was and so was not a jump.
+
+**So a stretch that runs past its segment has to be recorded whole**, end included. The end is where the line goes, and the engine drew the line there.
+
+That fixes the tail and exposes what was underneath it. **A segment's breakpoints depend on the phonemes two away, on both sides.** Measured over fifteen hundred words on the second formant: with the key as it stands -- the phoneme, its neighbours and its stress -- 218 of 1,532 repeated keys disagree with themselves, 14 per cent. Adding the phoneme two to the right takes that to 122, six per cent. **Adding both takes it to 20, one per cent.**
+
+And it is not prosody. Adding how far the segment is from the end of the word, or its syllable's coda, or where the syllable sits, or the next syllable's onset -- each of which earned its place in the duration key -- takes 14 per cent to between 9 and 12. The reach is segmental, and the reason is plain once the run-through is recorded: a stretch that ends inside the next segment ends at *that* segment's target, and that target depends on *its* neighbours, one of which is two away from here.
+
+**Which leaves a coverage problem worth stating.** The de Bruijn corpus covers every phoneme between every pair, at order three. Two either side is order five, which is 184 million strings for a forty-five letter alphabet and is not going to be spoken. So the long key can only be filled from real words, and everything else has to fall back to the short one -- another level of the same base-and-exception structure the table already is.

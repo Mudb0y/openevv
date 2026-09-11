@@ -298,28 +298,14 @@ def harvest(job):
                 continue
             items = []
             for _, _, v0, v1, ends in gs:
-                if not ends:
-                    # A stretch that runs past the segment still says where
-                    # it begins, and that start is the segment's own. /m/'s
-                    # nasal zero jumps to 350 and ramps on into the vowel
-                    # after it; dropping the stretch outright dropped the
-                    # 350, and a nasal without its murmur is a glide --
-                    # `abandonment' came out as abandonwend.
-                    # Always, not only where it differs from what came
-                    # before. A segment that says nothing lets the stretch
-                    # before it run past to whatever the segment after wants:
-                    # in `abandonment' the /n/ before the /m/ ramped its
-                    # nasal zero down to the default 200 because the /m/ had
-                    # no entry to stop at, and the /m/ had no entry because
-                    # its 350 matched the /n/'s and so read as no jump.
-                    items.append((v0, None))
-                    running[name] = v1
-                    continue
-                # Nothing has run before the first stretch of an utterance,
-                # so its start is not a jump. Calling it one recorded a jump
-                # for every parameter of every word's first segment, which
-                # put 24,187 exceptions in the table for `fl' -- a
-                # parameter that never leaves nought.
+                # Every stretch, whether or not it ends inside the segment.
+                # One that runs past is still the segment's own -- the
+                # engine drew it there -- and its end is where the line
+                # goes. Recording only its start lost that: in
+                # `abandonment' the schwa before /n/ runs from 1500 to 1600
+                # across the boundary, and 1600 is not a jump for the /n/
+                # either, so neither side held it and the word's whole
+                # unstressed tail came out flat where the engine glides.
                 jump = (None if name not in running or running[name] == v0
                         else v0)
                 items.append((jump, v1))
