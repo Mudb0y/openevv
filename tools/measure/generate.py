@@ -207,24 +207,29 @@ F0_LOW = 1044
 F0_PEAK = 1293
 F0_FALL = 792
 F0_END = 742
-F0_RISE = 51          # milliseconds of rise, from the measured median
-F0_TAIL = 61          # where the first fall lands, before the word's end
-F0_SECOND = 58        # and the second fall after that
+F0_RISE = 124         # milliseconds of rise, measured median
+F0_PEAK_AT = 0.47     # how far through the accented vowel the peak sits
+F0_SECOND = 67        # the second fall, after the last vowel ends
 
 
-def pitch(spans, accent, total):
+def pitch(last, accent, total):
     """The word's pitch contour: five stretches, as the engine draws them.
 
-    `accent' is the start and end of the accented vowel; the peak sits at
-    its middle, which is the one anchor that came out of the measurement
-    cleanly -- median 0.48 of the way through it, quartiles 0.42 and 0.63.
+    Two anchors, both measured. The peak sits 0.47 of the way through the
+    accented vowel -- quartiles 0.41 and 0.63 -- and **the first fall ends
+    where the last vowel does**, median six milliseconds past it against
+    quartiles of minus 47 and plus 21. Neither a fixed offset from the
+    word's end nor a fraction of the word came close to the second: the
+    quartiles on those ran 0.69 to 0.89 of the word, which is no anchor at
+    all.
     """
     if accent is None:
         return []
     lo, hi = accent
-    peak = (lo + hi) // 2
+    peak = lo + int((hi - lo) * F0_PEAK_AT)
     rise = max(0, peak - F0_RISE)
-    fall = max(peak + 1, total - F0_TAIL)
+    fall = last[1] if last else total
+    fall = min(total, max(peak + 1, fall))
     second = min(total, fall + F0_SECOND)
     start = F0_HIGH if lo <= 0 else F0_LOW
     out = [(0, rise, start, start),
@@ -420,15 +425,16 @@ def main(argv):
                     v[name] = end
             at += total
         if os.environ.get("EVV_F0_RULE") == "1":
-            acc = None
+            acc = lastv = None
             t = 0
             for i, f in enumerate(pros):
                 d = plan[i][0]
-                if f["stress"] == "1" and f["unit"][-1] in S.VOWELS \
-                        and acc is None:
-                    acc = (t, t + d)
+                if f["unit"][-1] in S.VOWELS:
+                    lastv = (t, t + d)
+                    if f["stress"] == "1" and acc is None:
+                        acc = (t, t + d)
                 t += d
-            gaps["f0"] = pitch(None, acc, at)
+            gaps["f0"] = pitch(lastv, acc, at)
 
         if wav:
             import subprocess

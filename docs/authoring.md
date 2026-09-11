@@ -802,3 +802,11 @@ Measured over twelve hundred words, every one of which has five or six pitch bre
 **The timing is where it is still loose.** With the medians as offsets -- 51 milliseconds of rise, the first fall landing 61 before the word's end and the second 58 after that -- the contour comes within 3.5 hertz of the engine's at the median and 5.7 on average, with a worst case of 42. On a contour that runs from 74 to 130 hertz that is close but not right, and it is the offsets rather than the values or the shape that want another pass.
 
 So the shape and the values of English intonation are five numbers and a rule, which is a good deal smaller than expected, and the placement is a measurement still to do.
+
+### The pitch, anchored properly
+
+Stas heard the first cut and it was noticeably wrong on `hello` and `tomato` and right on `money` -- which is the whole diagnosis, `money` being the one of the three whose accent is on its first syllable.
+
+Two things were wrong and the measurement had hidden both behind medians taken over the wrong population. **The rise lasts 124 milliseconds, not 51**: the engine takes 116 on `hello` and 131 on the other two, and the 51 came from a median that mixed in words whose contour has six points rather than five. And **the first fall ends where the last vowel ends** -- median six milliseconds past it -- where I had it at a fixed 61 before the word's end. Neither a fixed offset nor a fraction of the word is an anchor for it: those scatter from 0.69 to 0.89 of the word between the quartiles.
+
+With the peak at 0.47 through the accented vowel, the rise 124 before it, the first fall ending with the last vowel and the second 67 after that, the contour comes within **2.0 hertz at the median and 3.2 on average**, against 3.5 and 5.7, and 61 per cent of frames are within three hertz rather than 46.
