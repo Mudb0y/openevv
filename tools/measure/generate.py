@@ -325,10 +325,20 @@ def main(argv):
                         rule = aspiration(unit["unit"], total)
                 if name not in v:
                     v[name] = targets[0][1] if targets else dflt.get(name, 0)
+                # Where the line runs on to, when this segment has no
+                # target for its last stretch -- but only if the next
+                # segment's first target continues from here. If that target
+                # jumps, nothing runs into it and the stretch holds instead:
+                # the flap in `tomato' begins its tilt at 35 out of nowhere
+                # a quarter of the way through itself, and running the vowel
+                # before it up to that 35 sweeps the tilt across the whole
+                # vowel, which is what Stas heard as the word phasing.
                 ahead = None
                 for later in plan[j + 1:]:
-                    if later[3].get(name, ((), False))[0]:
-                        ahead = later[3][name][0][0][1]
+                    nxt = later[3].get(name, ((), False))[0]
+                    if nxt:
+                        if nxt[0][0] is None:
+                            ahead = nxt[0][1]
                         break
                 for i, (rel, span) in enumerate(where):
                     jump = None

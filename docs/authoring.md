@@ -720,3 +720,11 @@ The voicing and the aspiration are rules and this is what they are, measured ove
 With both rules in, and applied that way, **the whole frame out of the tables**: `money` is identical to the engine over all 4,235 samples, `hello` is 0.6 per cent of the signal, `absolutely` 5.9 and `tomato` 38.3. Across a hundred and fifty words the wrong parameter values fall from 7.31 per cent to 4.37, the voicing's own share from 11,765 to 2,993 and the aspiration's from 9,338 to 1,780.
 
 So a word can be synthesised from two data tables and two rules, with nothing of the engine's in it but the pitch, and come out sample for sample.
+
+### The tilt running on into nothing
+
+Stas heard `tomato` and said it "almost phased through" the stressed vowel. It did: the spectral tilt swept from nought to 35 across that vowel where the engine holds it flat.
+
+**The tilt is nearly binary** -- flat nought in 10,883 segments of 12,287, and 35 falling to nought in the rest, which are only the voiced stops /b/, /d/ and /g/ and the flap /F/. The sweep was the generator's doing. A stretch with no target of its own runs on to the next target there is, and the flap after that vowel begins its tilt at 35 out of nowhere a quarter of the way through itself. Running the vowel up to that 35 spreads a stop's burst across a whole syllable.
+
+**So a stretch runs on only when the next target continues from where this one is.** A target that jumps is not continued into, and nothing should run to meet it. With that, `tomato` falls from 38.3 per cent of the signal to 4.7 and the wrong parameter values over a hundred and fifty words from 4.37 per cent to 3.96.
