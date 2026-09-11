@@ -820,3 +820,13 @@ Exactly so, and the numbers say the same thing once you know where to look. Anch
 **A landing has to be reserved.** The second fall lasts 58 milliseconds -- quartiles 40 and 64, the one tight number in the whole tail -- and ends three before the word does. So the first fall ends at the last vowel's end **or** 58 before that landing, whichever comes first: anchoring only to the vowel clips the landing away on a word ending in one, and anchoring only to the landing puts the fall late on a word ending in consonants.
 
 With both, the contour is within 2.0 hertz at the median and 3.1 on average, and the word's last frame is within 0.3 hertz of the engine's with a worst case of 1.0. The intonation is now a rule with five values and four anchors.
+
+### The burst belongs at the release
+
+Stas heard `banana` as "vanana": the initial /b/ came out a fricative. The frames say why at once. The engine holds the frication and the bypass at nought through the closure and then bursts -- 51 and 70 at the eleventh frame, decaying over five -- and the generated version had them at 51 and 70 from the first frame, which is a stop's burst smeared over its whole closure, which is a fricative.
+
+**It is the collapse of repeated targets, biting from the other side.** /b/ has three stretches and the engine's frication reaches nought, nought, then 51; collapsing the repeat leaves two targets for three stretches, and the generator padded at the back, putting the 51 first. Which of them the spare stretch belongs to depends on whether the last target jumps: **a jump means a new value starts there, so it belongs at the end and the padding goes in front.** Without a jump the last target is a hold and the padding goes behind it, which is what /A/ at the start of `abbey` wants.
+
+With that, the frication's wrong values fall from 3,531 to 668 over a hundred and fifty words, the tilt and the bypass leave the list of the twelve worst entirely, and the whole error falls from **3.955 per cent to 2.961**, with three words frame for frame rather than one.
+
+**And one measurement stops working here.** With the pitch generated too, the waveform difference against the engine reads 120 to 140 per cent for every word -- not because the words sound wrong but because two hertz of pitch difference decorrelates the phase completely. Root-mean-square difference is only meaningful while the pitch is shared; past that the parameter counts and the ear are the measures.

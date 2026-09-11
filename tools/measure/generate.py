@@ -416,12 +416,27 @@ def main(argv):
                         if nxt[0][0] is None:
                             ahead = nxt[0][1]
                         break
+                # Where there are more stretches than targets, which of
+                # them the spare stretches belong to depends on whether the
+                # last target jumps. A jump means a new value starts there,
+                # so it belongs at the end and the padding goes in front:
+                # /b/'s burst in `banana' is 51 on the third of three
+                # stretches, and padding at the back put it on the first,
+                # which smeared the burst over the whole closure and turned
+                # the stop into a fricative. Without a jump the last target
+                # is a hold and the padding goes behind it, which is what
+                # /A/ at the start of `abbey' wants.
+                shift = 0
+                if targets and len(where) > len(targets) \
+                        and targets[-1][0] is not None:
+                    shift = len(where) - len(targets)
                 for i, (rel, span) in enumerate(where):
                     jump = None
-                    if i < len(targets):
-                        jump, end = targets[i]
+                    k = i - shift
+                    if 0 <= k < len(targets):
+                        jump, end = targets[k]
                     elif targets:
-                        end = targets[-1][1]
+                        end = targets[0][1] if k < 0 else targets[-1][1]
                     else:
                         end = v[name]
                     if rel + span > total and ahead is not None:
