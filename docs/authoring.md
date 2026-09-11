@@ -864,3 +864,13 @@ That fixes the tail and exposes what was underneath it. **A segment's breakpoint
 And it is not prosody. Adding how far the segment is from the end of the word, or its syllable's coda, or where the syllable sits, or the next syllable's onset -- each of which earned its place in the duration key -- takes 14 per cent to between 9 and 12. The reach is segmental, and the reason is plain once the run-through is recorded: a stretch that ends inside the next segment ends at *that* segment's target, and that target depends on *its* neighbours, one of which is two away from here.
 
 **Which leaves a coverage problem worth stating.** The de Bruijn corpus covers every phoneme between every pair, at order three. Two either side is order five, which is 184 million strings for a forty-five letter alphabet and is not going to be spoken. So the long key can only be filled from real words, and everything else has to fall back to the short one -- another level of the same base-and-exception structure the table already is.
+
+### Building the two-deep key, and why it was taken out again
+
+It was built: a third level under the rectangles, one line for each context two phonemes deep that disagrees with the rectangle above it. **The table's own self-disagreement fell from 16,635 to 4,004**, which is what the measurement promised.
+
+**And it generated worse, 2.245 per cent of parameter values wrong against 2.809.** The reason is the coverage problem, arriving sooner than expected. Of 1,738 far lookups over a hundred and twenty real words, **58 hit**. The 150,346 far contexts in the table are almost all the de Bruijn corpus's -- arbitrary chunks of eight phonemes, whose two-away neighbours are combinations no English word contains -- and the words' own far contexts are mostly not there at all. Meanwhile the rectangles beneath got worse, their majority now being taken across the two-away combinations rather than over the contexts that actually occur.
+
+So the finding stands and the implementation does not: **a segment's breakpoints depend on the phonemes two away, and that key can only be filled from a word corpus.** Filling it from made-up strings is not merely useless, it is harmful, because it moves the fallback underneath it as well. This is the same lesson the durations gave -- a made-up chunk has made-up prosody -- one level further down, and it is the second time a corpus built for coverage has turned out to cover the wrong thing.
+
+The tools are reverted to the two-per-cent state. Doing this properly wants the far level harvested from `test/samples/enus.words` alone, with the rectangles left as they are, and that is a small change to make once rather than a thing to guess at.
