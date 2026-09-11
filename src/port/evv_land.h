@@ -49,6 +49,10 @@
 void *evv_land_place(uintptr_t name);
 void *evv_land_planted(uintptr_t name);
 void  evv_land_forget(uintptr_t lo, uintptr_t hi);
+int   evv_land_mark(void);
+void  evv_land_release(int mark);
+void  evv_land_outermost(uintptr_t name);
+void  evv_land_no_outermost(void);
 
 int  evv_land_save(void *place) __attribute__((returns_twice));
 void evv_land_jump(void *place, int value) __attribute__((noreturn));

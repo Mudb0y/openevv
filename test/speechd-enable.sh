@@ -40,11 +40,27 @@ configChecksum=$(sha256sum "${configPath}")
 bash "${helperPath}" --config-dir "${configRoot}"
 [[ $(sha256sum "${configPath}") == "${configChecksum}" ]]
 
-printf '%s\n' "${moduleLine}" >> "${configPath}"
-customChecksum=$(sha256sum "${configPath}")
-bash "${helperPath}" --config-dir "${configRoot}"
-grep -Fqx "${moduleLine}" "${configPath}"
-[[ $(sha256sum "${configPath}") == "${customChecksum}" ]]
+manualRoot=${testRoot}/manual
+manualPath=${manualRoot}/speechd.conf
+manualLine='AddModule "openevv" "/home/Username/openevv/build/sd_openevv" "/home/Username/openevv/speechd/openevv.conf"'
+mkdir -p "${manualRoot}"
+printf '%s\n' '# Old documentation registration' "${manualLine}" > "${manualPath}"
+manualOutput=$(bash "${helperPath}" --config-dir "${manualRoot}")
+grep -Fq "Removing OpenEVV registration: ${manualLine}" <<< "${manualOutput}"
+if grep -Fqx "${manualLine}" "${manualPath}"; then
+    printf '%s\n' 'The old documentation registration was not removed.' >&2
+    exit 1
+fi
+
+customRoot=${testRoot}/custom
+customPath=${customRoot}/speechd.conf
+customLine='AddModule "openevv" "/opt/speech/sd_custom_openevv" "custom.conf"'
+mkdir -p "${customRoot}"
+printf '%s\n' "${customLine}" > "${customPath}"
+customChecksum=$(sha256sum "${customPath}")
+bash "${helperPath}" --config-dir "${customRoot}"
+grep -Fqx "${customLine}" "${customPath}"
+[[ $(sha256sum "${customPath}") == "${customChecksum}" ]]
 
 printf '%s\n' "${marker}" "${moduleLine}" > "${configPath}"
 printf '%s\n' 'AddModule "custom" "sd_custom" "custom.conf"' >> "${configPath}"
@@ -53,6 +69,13 @@ bash "${helperPath}" --config-dir "${configRoot}"
 grep -Fqx "${marker}" "${configPath}"
 grep -Fqx "${moduleLine}" "${configPath}"
 [[ $(sha256sum "${configPath}") == "${mixedChecksum}" ]]
+
+printf '%s\n' \
+    'addmodule "custom" "sd_custom" "custom.conf"' \
+    'addmodule "openevv" "sd_openevv" "openevv.conf"' > "${configPath}"
+lowercaseChecksum=$(sha256sum "${configPath}")
+bash "${helperPath}" --config-dir "${configRoot}"
+[[ $(sha256sum "${configPath}") == "${lowercaseChecksum}" ]]
 
 printf '%s\n' \
     '# Existing explicit module configuration' \

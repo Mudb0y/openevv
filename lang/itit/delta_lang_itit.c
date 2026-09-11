@@ -110,6 +110,7 @@ delta_language delta_lang_itit = {
     itit_delta_rule_map,
 #endif
     itit_delta_rule_entry,
+    itit_delta_rule_argmask,
     itit_delta_rule_entry_name,
     itit_delta_rule_sym,
     0,                   /* how many of those */

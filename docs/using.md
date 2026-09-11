@@ -168,7 +168,7 @@ Four environment variables reach the engine from outside and are worth knowing e
 
 ## Memory
 
-The engine keeps everything the Delta machine can point at in a region mapped low in memory, because that machine holds addresses in thirty-two bit values. The program itself may be loaded anywhere, which is what makes a shared library possible at all; the language's data is copied into that region at startup rather than named where it lies. A machine that cannot map anything below two gigabytes would say so rather than misbehave.
+The engine keeps everything the Delta machine can point at in one region, because that machine holds a pointer in a thirty-two bit value. What it holds is a distance into that region rather than an address, so the region goes wherever the system puts it; the program itself may be loaded anywhere, which is what makes a shared library possible at all, and the language's data is copied into the region at startup rather than named where it lies. One thing still has to be addressable in thirty-two bits and gets its own sixty-four kilobytes low: the name of a string index mark, because `ECICallback` takes an `int` and IBM passed a pointer in it.
 
 An instance costs a four megabyte frame stack, taken by its synthesis thread on the first rule it runs and given back when the thread ends. It also leaks sixty-four bytes, which moves the ceiling on instances made and thrown away from sixty-two to about four million, so no program will meet it.
 

@@ -143,6 +143,9 @@ jobs:
       - name: Check the Speech Dispatcher module, every language
         run: nix develop --command make -j"$(nproc)" RULES=bytecode speechd-test-all
 
+      - name: Check the Speech Dispatcher configuration helper
+        run: make speechd-enable-test
+
       - name: Check a rate change keeps the caller's buffer
         run: make RULES=bytecode rate
 

@@ -76,46 +76,63 @@ backupPath=${configPath}.openevv-git.explicit.bak
 enableBackupPath=${configPath}.openevv.bak
 markerLine='# OpenEVV module installed by openevv-git'
 moduleLine='AddModule "openevv" "sd_openevv" "openevv.conf"'
+addModulePattern='^[[:space:]]*AddModule([[:space:]]|$)'
+openEvvPattern='^[[:space:]]*AddModule[[:space:]]+"openevv"([[:space:]]|$)'
+managedOpenEvvPattern='^[[:space:]]*AddModule[[:space:]]+"openevv"[[:space:]]+"([^"/]*/)*sd_openevv"([[:space:]]|$)'
 
 if [[ ! -f ${configPath} ]]; then
     printf '%s\n' \
-        'OpenEVV is available through Speech Dispatcher module autodetection.' \
+        'Speech Dispatcher will autodetect OpenEVV after its module is installed.' \
         "No configuration exists at ${configPath}; no change is needed."
     exit 0
 fi
 
-tempPath=$(mktemp "${configPath}.openevv.XXXXXX")
-trap 'rm -f "${tempPath}"' EXIT
-removed=0
+managedOpenEvvCount=0
+otherModuleCount=0
+hasOpenEvv=0
 
 while IFS= read -r line || [[ -n ${line} ]]; do
-    if [[ ${line} == "${markerLine}" ]]; then
-        nextLine=
-        if IFS= read -r nextLine || [[ -n ${nextLine} ]]; then
-            if [[ ${nextLine} == "${moduleLine}" ]]; then
-                removed=1
-                continue
-            fi
-            printf '%s\n' "${line}" "${nextLine}" >> "${tempPath}"
-            continue
+    if grep -Eqi -- "${addModulePattern}" <<< "${line}"; then
+        if grep -Eqi -- "${openEvvPattern}" <<< "${line}"; then
+            hasOpenEvv=1
+        fi
+        if grep -Eqi -- "${managedOpenEvvPattern}" <<< "${line}"; then
+            ((managedOpenEvvCount += 1))
+        else
+            ((otherModuleCount += 1))
         fi
     fi
-    printf '%s\n' "${line}" >> "${tempPath}"
 done < "${configPath}"
 
-if (( removed == 1 )); then
-    if grep -Eq '^[[:space:]]*AddModule([[:space:]]|$)' "${tempPath}"; then
-        printf '%s\n' \
-            'Other explicit AddModule registrations exist in this configuration.' \
-            'The existing OpenEVV registration was retained alongside them.'
-        exit 0
+if (( managedOpenEvvCount > 0 && otherModuleCount == 0 )); then
+    tempPath=$(mktemp "${configPath}.openevv.XXXXXX")
+    trap 'rm -f "${tempPath}"' EXIT
+    pendingMarker=
+    while IFS= read -r line || [[ -n ${line} ]]; do
+        if [[ ${line} == "${markerLine}" ]]; then
+            pendingMarker=${line}
+            continue
+        fi
+        if grep -Eqi -- "${managedOpenEvvPattern}" <<< "${line}"; then
+            pendingMarker=
+            printf 'Removing OpenEVV registration: %s\n' "${line}"
+            continue
+        fi
+        if [[ -n ${pendingMarker} ]]; then
+            printf '%s\n' "${pendingMarker}" >> "${tempPath}"
+            pendingMarker=
+        fi
+        printf '%s\n' "${line}" >> "${tempPath}"
+    done < "${configPath}"
+    if [[ -n ${pendingMarker} ]]; then
+        printf '%s\n' "${pendingMarker}" >> "${tempPath}"
     fi
     if [[ ! -e ${backupPath} ]]; then
-        cp -p "${configPath}" "${backupPath}"
+        cp -p -- "${configPath}" "${backupPath}"
     fi
     chmod --reference="${configPath}" "${tempPath}"
     chown --reference="${configPath}" "${tempPath}"
-    mv "${tempPath}" "${configPath}"
+    mv -f -- "${tempPath}" "${configPath}"
     trap - EXIT
     printf 'Removed the obsolete OpenEVV registration from %s\n' "${configPath}"
     printf 'Previous explicit configuration backup: %s\n' "${backupPath}"
@@ -125,23 +142,25 @@ if (( removed == 1 )); then
     exit 0
 fi
 
-if grep -Eq '^[[:space:]]*AddModule[[:space:]]+"openevv"([[:space:]]|$)' \
-        "${configPath}"; then
+if (( hasOpenEvv == 1 )); then
     printf 'An OpenEVV module registration already exists in %s.\n' \
         "${configPath}"
     printf '%s\n' \
-        'It was not written by the package helper and has not been changed.'
+        'It was retained alongside the other explicit module registrations.'
     exit 0
 fi
 
-if grep -Eq '^[[:space:]]*AddModule([[:space:]]|$)' "${configPath}"; then
+if (( otherModuleCount > 0 )); then
+    tempPath=$(mktemp "${configPath}.openevv.XXXXXX")
+    trap 'rm -f "${tempPath}"' EXIT
+    cp -- "${configPath}" "${tempPath}"
     if [[ ! -e ${enableBackupPath} ]]; then
-        cp -p "${configPath}" "${enableBackupPath}"
+        cp -p -- "${configPath}" "${enableBackupPath}"
     fi
     printf '\n%s\n%s\n' "${markerLine}" "${moduleLine}" >> "${tempPath}"
     chmod --reference="${configPath}" "${tempPath}"
     chown --reference="${configPath}" "${tempPath}"
-    mv "${tempPath}" "${configPath}"
+    mv -f -- "${tempPath}" "${configPath}"
     trap - EXIT
     printf 'Added OpenEVV alongside the explicit modules in %s\n' "${configPath}"
     printf 'Previous configuration backup: %s\n' "${enableBackupPath}"
@@ -150,5 +169,5 @@ if grep -Eq '^[[:space:]]*AddModule([[:space:]]|$)' "${configPath}"; then
 fi
 
 printf '%s\n' \
-    'OpenEVV is available through Speech Dispatcher module autodetection.' \
+    'Speech Dispatcher will autodetect OpenEVV if its module is installed.' \
     "No obsolete package registration was found in ${configPath}."

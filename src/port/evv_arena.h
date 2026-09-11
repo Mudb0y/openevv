@@ -38,6 +38,17 @@ extern size_t         evv_arena_size;
 int  evv_arena_open(size_t bytes);
 void evv_arena_close(void);
 
+/* Which block an address is in, and the return address the allocator recorded
+   for whoever asked for it. For the provenance census in
+   src/delta/delta_prov.c, which is the first thing to read `whence' while
+   nothing is wrong. Answers nought where the address is in no live block. */
+int  evv_arena_whence_of(const void *p, uint32_t *whence);
+
+/* The same, and how many bytes the block holds. The allocator's name is too
+   coarse on its own -- one allocator serves many sorts of record -- and a
+   length separates most of them. */
+int  evv_arena_whence_of2(const void *p, uint32_t *whence, uint32_t *bytes);
+
 void *evv_arena_alloc(size_t n);
 void *evv_arena_calloc(size_t n, size_t m);
 void *evv_arena_realloc(void *p, size_t n);
@@ -55,6 +66,23 @@ void  evv_arena_free(void *p);
 char *evv_arena_strdup(const char *s);
 #define strdup(s)       evv_arena_strdup(s)
 
+/* A string the caller is handed through a thirty-two bit parameter.
+
+   ECICallback in include/eci.h takes `int param', and for a string index mark
+   that int is a pointer to the name. IBM wrote it for a machine where the two
+   were one thing. So the name -- and only the name -- has to live somewhere a
+   thirty-two bit value can still say, which is what this small region is for.
+   Everything else the engine allocates is reached by a distance from its own
+   base and may sit anywhere at all.
+
+   A few short strings at a time, freed as soon as the callback has had them,
+   so a page or two and a free list is the whole of it. Answers nought where
+   there is no room, and the caller gets no name rather than a wrong
+   pointer. */
+char *evv_low_strdup(const char *s);
+void  evv_low_free(void *p);
+#define EVV_HAVE_LOW 1
+
 /* Turning a pointer into a value the machine can hold. Everything the machine
    can hold a pointer to comes out of the arena: the heap, the frames, and the
    language's own data, which src/delta/delta_low.c copies out of the program at
@@ -62,8 +90,44 @@ char *evv_arena_strdup(const char *s);
    and is a fault in whoever allocated it, not something to truncate. */
 int32_t evv_ref_checked(const void *p);
 
+/* Where a reference was made, which is the one place its type is still known.
+ *
+ * A reference is a bare value once it exists, and the rules address memory
+ * through one and a byte offset, so what a rule is looking at cannot be
+ * recovered from the rule. But it can be recovered from here: every reference
+ * is born at one of these, in code where the pointer still has a C type, and
+ * the file and line are enough to find that type in the source. So under the
+ * census a reference is recorded as it is made and the rules are asked which
+ * birth it came from. src/delta/delta_prov.c says what is done with it.
+ *
+ * Nothing else changes: the value handed back is the value evv_ref_checked
+ * answers either way, and without the census the call is not there at all. */
+#if defined(EVV_PROVENANCE) && EVV_PROVENANCE
+int32_t evv_prov_born(const char *file, int line, const void *p);
+#define EVV_REF(p)      evv_prov_born(__FILE__, __LINE__, (p))
+#else
 #define EVV_REF(p)      evv_ref_checked(p)
-#define EVV_AT(t, r)    ((t)(void *)(uintptr_t)(uint32_t)(r))
+#endif
+/* And back again. A reference is a distance from the region's base, so this
+   is an addition rather than a cast, and nought stays nothing because the
+   region's first eight bytes are never handed out. */
+/* And back again. A reference is a distance from the region's base, so this
+   is an addition rather than a cast, and nought stays nothing because the
+   region's first eight bytes are never handed out.
+
+   A function and not a macro, because five sites pass `va_arg(ap, int32_t)'
+   as the reference and a macro that tests it and then adds to it reads the
+   argument twice -- taking two words off the list where one was meant. That
+   cost a day: the phonemes came out right, the first quarter of the waveform
+   was byte-identical, and callSynthesizeArray read every frame parameter
+   from the wrong word after that. Under absolute addressing the macro used
+   its argument once, so nothing could see it until the day a reference
+   stopped being an address. */
+static inline void *evv_at(int32_t r)
+{
+    return r ? (void *)(evv_arena_base + (uint32_t)r) : 0;
+}
+#define EVV_AT(t, r)    ((t)evv_at(r))
 
 #else
 
@@ -74,6 +138,12 @@ int32_t evv_ref_checked(const void *p);
 
 #define evv_arena_alloc(n)  malloc(n)
 #define evv_arena_free(p)   free(p)
+
+/* And no little low region either: where a pointer is four bytes wide it
+   already fits in the parameter ECICallback hands the caller, so the copy
+   the sixty-four bit build makes is an ordinary one here. */
+#define evv_low_strdup(s)   strdup(s)
+#define evv_low_free(p)     free(p)
 
 #endif
 

@@ -155,7 +155,10 @@ static void *arena_map(uintptr_t at, size_t bytes)
                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (got == MAP_FAILED)
         return 0;
-    if ((uintptr_t)got + bytes < 0x80000000u)
+    /* Where `at' was nought the system chose, and any address will do. Where
+       it was asked for, it has to be that one: the little low region needs to
+       be namable in thirty-two bits. */
+    if (at == 0 || (uintptr_t)got + bytes < 0x80000000u)
         return got;
     munmap(got, bytes);
     return 0;
@@ -169,26 +172,22 @@ int evv_arena_open(size_t bytes)
     if (evv_arena_base != 0)
         return 1;
 
-    /* Less room is worse than plenty and better than nothing, so a machine
-       whose low addresses are too crowded for the whole region is offered
-       halves rather than refused. */
+    /* Wherever the system cares to put it. A reference is a distance from
+       this base rather than an address, so nothing the engine holds needs the
+       region anywhere in particular. The one thing that does -- a string the
+       caller is handed through ECICallback's `int param' -- has its own small
+       low region above, and needs sixty-four kilobytes rather than two
+       hundred and fifty-six megabytes.
+
+       Less room is still worse than plenty and better than nothing. */
     for (want = ROUND(bytes); want >= (32u * 1024u * 1024u); want /= 2) {
-        uintptr_t at;
+        void *got = arena_map(0, want);
 
-        for (at = ARENA_FIRST; at <= ARENA_LAST; at += ARENA_STEP) {
-            void *got;
-
-            if (at + want > 0x80000000u)
-                break;
-            got = arena_map(at, want);
-            if (got == 0)
-                continue;
+        if (got != 0) {
             evv_arena_base = got;
             evv_arena_size = want;
             break;
         }
-        if (evv_arena_base != 0)
-            break;
     }
 
     if (evv_arena_base == 0) {
@@ -196,7 +195,7 @@ int evv_arena_open(size_t bytes)
            comes from this region, so without it the next thing to happen is a
            null pointer with no explanation, which is exactly how this was
            found. Say it instead. */
-        fprintf(stderr, "evv: nowhere below two gigabytes to put the arena;"
+        fprintf(stderr, "evv: no room anywhere for the region;"
                 " the engine cannot run on this machine\n");
         abort();
     }
@@ -248,6 +247,39 @@ static head *next_block(head *b)
     if (p + sizeof(head) > evv_arena_base + evv_arena_size)
         return 0;
     return (head *)p;
+}
+
+/* Which block an address is in, and who asked for that block. Nothing in the
+   engine needs this either: the allocator has recorded `whence' since the
+   overrun guard wanted it, and the provenance census is the first thing to
+   read it while nothing is wrong. Walks from the first block, which is what
+   every other walk here does and is fast enough for a census. */
+int evv_arena_whence_of2(const void *p, uint32_t *whence, uint32_t *bytes)
+{
+    const unsigned char *c = p;
+    head *b;
+
+    if (p == 0 || first == 0 || !in_arena(c))
+        return 0;
+
+    for (b = first; b != 0; b = next_block(b)) {
+        const unsigned char *body = (const unsigned char *)b + sizeof(head);
+
+        if (c >= body && c < body + (b->size - sizeof(head))) {
+            if (whence != 0)
+                *whence = b->whence;
+            if (bytes != 0)
+                *bytes = (uint32_t)(b->size - sizeof(head));
+            return b->used != 0;
+        }
+    }
+
+    return 0;
+}
+
+int evv_arena_whence_of(const void *p, uint32_t *whence)
+{
+    return evv_arena_whence_of2(p, whence, 0);
 }
 
 /* How much to take when nobody said. The pages are not touched until they are
@@ -568,22 +600,123 @@ void *evv_arena_realloc(void *p, size_t n)
     return out;
 }
 
+/* ---- the little low region ----------------------------------------------
+ *
+ * Only for a string the caller is handed as a pointer in a thirty-two bit
+ * parameter, which ECICallback's `int param' is. Everything else lives in the
+ * region above and is reached by a distance from its base.
+ *
+ * One block header, a first-fit free list, and no coalescing: the strings are
+ * short, there are a few at a time, and each is given back as soon as the
+ * callback has had it. What matters is that the address fits in thirty-two
+ * bits, not that the allocator is clever.
+ */
+#define LOW_BYTES (64u * 1024u)
+
+typedef struct low_head {
+    struct low_head *next;   /* the next free block, when this one is free */
+    size_t           size;   /* the bytes after this header */
+    int              used;
+} low_head;
+
+static unsigned char *low_base;
+static low_head      *low_free;
+
+static int low_open(void)
+{
+    uintptr_t at;
+
+    if (low_base != 0)
+        return 1;
+
+    for (at = ARENA_FIRST; at <= ARENA_LAST; at += ARENA_STEP) {
+        void *got;
+
+        if (at + LOW_BYTES > 0x80000000u)
+            break;
+        got = arena_map(at, LOW_BYTES);
+        if (got == 0)
+            continue;
+        low_base = (unsigned char *)got;
+        break;
+    }
+    if (low_base == 0)
+        return 0;
+
+    low_free = (low_head *)low_base;
+    low_free->next = 0;
+    low_free->size = LOW_BYTES - sizeof(low_head);
+    low_free->used = 0;
+    return 1;
+}
+
+char *evv_low_strdup(const char *s)
+{
+    size_t    want;
+    low_head *b;
+
+    if (s == 0 || !low_open())
+        return 0;
+
+    want = (strlen(s) + 1 + 7u) & ~(size_t)7u;
+    for (b = low_free; b != 0; b = b->next) {
+        if (b->used || b->size < want)
+            continue;
+        /* Split only when what is left can hold a header and something. */
+        if (b->size >= want + sizeof(low_head) + 8u) {
+            low_head *rest = (low_head *)((unsigned char *)(b + 1) + want);
+
+            rest->next = b->next;
+            rest->size = b->size - want - sizeof(low_head);
+            rest->used = 0;
+            b->next = rest;
+            b->size = want;
+        }
+        b->used = 1;
+        memcpy(b + 1, s, strlen(s) + 1);
+        return (char *)(b + 1);
+    }
+    return 0;
+}
+
+void evv_low_free(void *p)
+{
+    low_head *b;
+
+    if (p == 0)
+        return;
+    if ((unsigned char *)p < low_base
+        || (unsigned char *)p >= low_base + LOW_BYTES) {
+        fprintf(stderr, "evv: %p was given back to the low region and did not"
+                " come from it\n", p);
+        abort();
+    }
+    b = (low_head *)p - 1;
+    b->used = 0;
+}
+
 int32_t evv_ref_checked(const void *p)
 {
-    uintptr_t v = (uintptr_t)p;
+    ptrdiff_t off;
 
     if (p == 0)
         return 0;
-    if (v >= 0x80000000u) {
-        /* Truncating this would hand the machine an address that is not the
-           one asked for. Everything the machine can hold a pointer to comes
-           out of the arena: the heap, and the language's own data, which
-           src/delta/delta_low.c copies out of the program at startup. Something that
-           got here came from neither. */
-        fprintf(stderr, "evv: %p is too high to be a value\n", p);
+    off = (const unsigned char *)p - evv_arena_base;
+    if (off <= 0 || (size_t)off >= evv_arena_size) {
+        /* A reference is a distance into the region, so a pointer from
+           anywhere else cannot be made into one. Everything the machine can
+           hold a pointer to comes out of here: the heap, and the language's
+           own data, which src/delta/delta_low.c copies out of the program at
+           startup. Something that got here came from neither.
+
+           Nought is refused along with the rest because the first eight bytes
+           are never handed out, so that a reference of nought goes on meaning
+           nothing -- which is what every test for an empty value assumes. */
+        fprintf(stderr, "evv: %p is not in the region, so it cannot be a"
+                " value\n", p);
         abort();
     }
-    return (int32_t)(uint32_t)v;
+    return (int32_t)off;
 }
 
 /* ---- what is still held -------------------------------------------------

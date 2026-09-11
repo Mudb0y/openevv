@@ -54,7 +54,9 @@ File names in `src` are the names of IBM's objects. A file named for the object 
 
 The audio is identical to IBM's by design. If it sounds wrong, that is Eloquence sounding like Eloquence, not a fault to fix.
 
-Never hand the machine an address in the program. A value is thirty-two bits, and the program may be loaded anywhere -- it has to be, or there could be no library. Anything the machine can be given the address of is copied into the arena at startup by `src/delta/delta_low.c` and translated at the crossing; a pointer in the program that is in none of the registered stores aborts with a message. If a new table is ever handed over, register it there rather than linking the program low again.
+Never hand the machine an address at all. A value is thirty-two bits and what it holds is a *distance* into the one region everything the machine can point at comes out of -- not an address, which is why that region goes wherever the system puts it rather than below two gigabytes. Anything the machine can be given the address of is copied into it at startup by `src/delta/delta_low.c` and turned into a distance at the crossing; a pointer from anywhere else aborts with a message saying so. If a new table is ever handed over, register it there rather than linking the program low again.
+
+One exception, and it is the interface's rather than the machine's: `ECICallback` in `include/eci.h` takes an `int param`, and for a string index mark IBM passed a pointer to the name in it. That name is copied into a sixty-four kilobyte low region on the way out to the caller, in `src/eci/api/eci_old.c`. Nothing else in the engine needs a low address.
 
 ## Two hard rules
 

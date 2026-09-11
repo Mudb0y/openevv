@@ -120,4 +120,20 @@ typedef struct HashIter {
     struct HashEntry *entry;  /* +0x08 */
 } HashIter;
 
+
+/* What the engine list keeps in a slot. Two files reach into it -- the array
+   that makes them in eci_engarray.c and the dictionary layer in
+   eci_synthdict.c -- so it is described once here rather than by offset in
+   the second. Reaching it by IBM's offsets is what put a dictionary pointer
+   through the middle of `engine' on sixty-four bits. */
+typedef struct EngineData {
+    const void *vt;         /* +0x00 */
+    uint32_t    callbacks;  /* +0x04 */
+    int32_t     unused_08;
+    void       *engine;     /* +0x0c in IBM's, the wrapper once it has proved
+                               itself */
+    int (*factory)(int32_t kind, void **out);  /* +0x10 in IBM's */
+    void       *active;     /* +0x14 in IBM's, the dictionary in force */
+} EngineData;
+
 #endif

@@ -371,7 +371,10 @@ static THIS int32_t tf_annotations(TextFilter *f, char *text, int32_t *skip,
                 memset(name, 0, sizeof name);
                 sscanf(p, "%s%n", name, &n);
                 *kind = as_name;
-                *value = (uint32_t)(size_t)strdup(name);
+                /* A reference, not an address: the region may be
+                   anywhere, and both the free below and es_setParam read
+                   this back through the crossing. */
+                *value = (uint32_t)EVV_REF(strdup(name));
             } else {
                 rc = -1;
             }
@@ -568,7 +571,7 @@ static THIS int32_t tf_globalFilters(TextFilter *f, char *text, int32_t len,
             } else if (kind >= ANN_SPEED_S && kind <= ANN_FLUCT_S) {
                 /* The second pass will read this one again; the name it
                    copied out is not wanted twice. */
-                free((void *)(size_t)value);
+                free(EVV_AT(void *, value));
             }
         }
 

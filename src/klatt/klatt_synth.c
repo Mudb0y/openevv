@@ -7,6 +7,8 @@
 
 #include "klatt_state.h"
 
+#include "evv_klatttap.h"
+
 /* Resonator slots in the filter array. Five through twelve are the cascade
    formants and thirteen through twenty their parallel counterparts, which
    share the cascade's frequencies but carry their own bandwidths. */
@@ -103,6 +105,12 @@ int KlattSynth(void *handle, const int32_t *parms)
 
     if (!verifyKlattHandle(handle))
         return 0;
+
+    /* What the synthesiser was told, when anyone is asking. This is the only
+       way a parameter frame reaches the formant engine, so a run over a
+       corpus writes down every value this engine ever asks for -- which is
+       what tools/measure/klatttap.c is for. */
+    evv_klatt_tap(parms);
 
     /* Which resonator arithmetic this rate wants, decided here because this
        is where the rate is known and the filters are about to be run. */

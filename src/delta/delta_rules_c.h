@@ -14,6 +14,12 @@
 #include "evv_land.h"
 #include "delta_lang.h"
 
+/* For delta_rule_block, which is the shape of what the machine writes into a
+   rule's frame. The rules name that block rather than its offsets, so they
+   need to know it; nothing else of delta.h is wanted here and it guards
+   itself against being included twice. */
+#include "delta.h"
+
 /* The four flags the machine keeps, and the operations that set them. A rule
    written as C works them with the interpreter's own code, or a comparison
    after an operation would part company with it over what it says. */
@@ -129,8 +135,19 @@ enum {
 
    AT and FLD are the value in a place; SLOT and FIELD are the place itself,
    as something a rule can hand to a call. */
-#define SLOT(n)      ((int32_t)(intptr_t)(base + (n)))
-#define FIELD(n)     ((int32_t)(intptr_t)((unsigned char *)state + (n)))
+/* A register holds a reference, and a reference is a distance into the
+   region rather than an address. So a rule turning one into a pointer adds
+   the base, and turning a pointer into one subtracts it. Every reach and
+   every address below says it through these two and nothing says it by
+   casting, which is what lets the region live wherever the system puts it.
+
+   On a thirty-two bit host EVV_AT and EVV_REF are the casts these replace,
+   so that build compiles to exactly what it did before. */
+#define REG_P(p)     ((unsigned char *)EVV_AT(void *, (p)))
+#define REG_REF(q)   EVV_REF(q)
+
+#define SLOT(n)      REG_REF(base + (n))
+#define FIELD(n)     REG_REF((unsigned char *)state + (n))
 #define AT(t, n)     (*(t *)(base + (n)))
 #define FLD(t, n)    (*(t *)((unsigned char *)state + (n)))
 
@@ -186,6 +203,18 @@ void evv_arg_over(const char *who, int argn, int room);
    The arguments are named in the order they are pushed, which is the reverse
    of the order ventproc takes them: the last thing pushed is the first
    argument. */
+/* The five places in a rule's frame that the machine writes, each said as
+   where it is in the block rather than as a number.
+ *
+   A rule's own scratch is its own business and stays a number; this block is
+   not the rule's, it is delta_rule_block, and the rules name it so that it can
+   move. `b' is where the block sits in this rule's frame, which does stay a
+   number because it is where that rule chose to put it. */
+#define FRAME_REC(b)      (b)
+#define FRAME_JB(b)       ((b) + (int)offsetof(delta_rule_block, landing))
+#define FRAME_FENCE(b, n) ((b) + (int)offsetof(delta_rule_block, fence) \
+                                + (n) * DELTA_FENCE_BYTES)
+
 #define LANDING(jb) \
     do { r0 = SLOT(jb); ARG(0); ARG(SLOT(jb)); \
          { int32_t buf = (argn > 0) ? arg[argn - 1] : 0; int depth = argn; \
@@ -226,7 +255,7 @@ void evv_arg_over(const char *who, int argn, int room);
    reads them as often as anything else it has. Which offset that is depends
    on the rule, so the rule works it out once and these count from there. */
 #define PARAM(t, k)  (*(t *)(param + 4 * (k)))
-#define PARAMAT(k)   ((int32_t)(intptr_t)(param + 4 * (k)))
+#define PARAMAT(k)   REG_REF(param + 4 * (k))
 
 /* Part of a register. The machine had a sixteen-bit half and two eight-bit
    quarters of each of its registers, and a rule reads and writes them as
@@ -253,7 +282,109 @@ void evv_arg_over(const char *who, int argn, int room);
    rules touching the same variable now say the same thing rather than two
    different byte offsets, and the offsets themselves are worked out the same
    way delta_new works them out, which is what makes the names true. */
-#define GLOBAL(t, p, v) (*(t *)((unsigned char *)(intptr_t)(p) + DG_##v))
+#define GLOBAL(t, p, v) (*(t *)(REG_P(p) + DG_##v))
+
+/* A reach into a variable at a displacement from its own start.
+ *
+   GLOBAL names a variable's value, which is where a rule usually reaches. A
+   compound variable is a run of bytes, and a rule reaches into the middle of
+   one -- so the offset is a variable and a step into it, and both are said
+   rather than added up into a number. Same address, and it survives the
+   variable moving. */
+#define GLOBAL_D(t, p, v, d) \
+    (*(t *)(REG_P(p) + DG_##v + (d)))
+
+/* The address of one of the language's own variables, or of a byte inside a
+   compound one, as a value the machine can hold.
+ *
+   The machine hands a primitive such an address by adding a number to the
+   state, and written as the number it is a layout nobody may move. Written as
+   the variable and a displacement from it, it is the same address and the
+   compiler works it out -- so the variable may sit anywhere the next build
+   puts it. That is the whole reason for asking what these sites address. */
+#define GLOBAL_AT(p, v, d) \
+    REG_REF(REG_P(p) + DG_##v + (d))
+
+/* A reach the flow graph cannot settle, decided when the rule runs.
+ *
+   Almost every reach through a register can be named, because the graph can
+   say the register must hold the state there. One in the ten languages cannot:
+   `evv_pnames3' loads the state into a register, later loads one of the
+   language's own byte stores into the same register, and the reach sits under
+   a label that only the alternative dispatch jumps to -- from six hundred
+   lines below, and from after the second load. So on one path the register is
+   the state and on another it is not, and no must-analysis may name it.
+
+   Naming it anyway would be a guess, and a bad one to take on trust: the
+   979 recorded cases never reach that line at all, so the gate could not
+   catch a wrong answer. Only test/words.sh reaches it, and there the register
+   was the state 1,116 times out of 1,116.
+
+   So the rule asks. Where the pointer is the state the reach is the variable,
+   wherever the next build puts it; where it is not, it is the offset the
+   compiler emitted, which is what that path meant. Exact under both, and it
+   costs a compare on a line the cases never execute.
+
+   No sabotage proves this one, and that is not an omission. Moving the named
+   branch two bytes changes nothing in the 98 cases or the 24,318 words,
+   because the read feeds `== 1' and both the right value and a wrong one fail
+   it alike -- the site runs, as the instrumentation showed, but its value is
+   not observable from outside. Which is the whole argument for asking rather
+   than assuming: a wrong answer here would never show up. What is checked
+   instead is that the two branches name one address today, statically and
+   exactly: DG_s326 is DG_BASE + 2386, DG_BASE is 176, and the offset the
+   compiler emitted is 2562. */
+#define GLOBAL_MAYBE(t, p, v, d, raw) \
+    (*(t *)(REG_P(p) \
+            + (((const void *)REG_P(p) == (const void *)(state)) \
+               ? (DG_##v + (d)) : (raw))))
+
+/* The same three, for the state the rule was handed rather than a register.
+   `state' is a real pointer -- the rule's own first parameter -- and not a
+   reference, so it does not go through the crossing. Two names rather than
+   one overload, because the difference is exactly the thing that must not be
+   confused: a register holds a distance, a parameter holds an address. */
+#define STATE(t, v)        (*(t *)((unsigned char *)(state) + DG_##v))
+#define STATE_D(t, v, d)   (*(t *)((unsigned char *)(state) + DG_##v + (d)))
+#define STATE_AT(v, d)     REG_REF((unsigned char *)(state) + DG_##v + (d))
+
+/* A reach into one of the machine's own records, said as the field it is.
+ *
+   A rule holds a pointer to a record and reaches into it at a byte offset,
+   which is a layout nobody may move. What the pointer points at is written
+   down nowhere in the rule -- but the entry the rule hands it to declares what
+   it takes, and where the rule was handed the pointer instead, its caller's
+   own use of it says. tools/rules/decompile.py chases that along the call
+   graph. src/delta/delta.c asserts every offset this replaces. */
+#define RECORD(t, p, type, field) \
+    (*(t *)(void *)&((type *)(void *)REG_P(p))->field)
+
+/* A reach into one variable through a pointer that names another.
+ *
+   A rule takes the address of a variable and then reaches through it, so the
+   register holds the state plus a constant rather than the state itself. The
+   reach is into a variable all the same, and both ends can be said by name:
+   the difference between the two is what has to be added to the pointer, and
+   the compiler works that out. So this holds however the variables are laid
+   out, which the number it replaces did not. */
+#define GLOBAL_VIA(t, p, to, dto, from, dfrom) \
+    (*(t *)(REG_P(p) \
+            + (DG_##to + (dto)) - (DG_##from + (dfrom))))
+
+/* One reach whose object is not known, noted so that it can be. A rule
+   reaching through a register that GLOBAL could not name is a site where the
+   offset pins a layout and nothing says which layout, and those are what
+   stand between these rules and code a person can read.
+ *
+   src/delta/delta_prov.c says what is done with the answer. Without
+   EVV_PROVENANCE this expands to the pointer and nothing else, so the
+   ordinary build compiles the expression it always did. */
+#if defined(EVV_PROVENANCE) && EVV_PROVENANCE
+#include "delta_prov.h"
+#define EVV_PROV(id, p) (evv_prov_note((id), (const void *)(p)), (p))
+#else
+#define EVV_PROV(id, p) (p)
+#endif
 
 /* Both are the arity said out loud, because the arity is known where the
    call is written and working it out again at run time was a fifth of a run.

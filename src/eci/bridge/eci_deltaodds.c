@@ -140,7 +140,7 @@ void *vardesc(delta_state *d, uint8_t hi, uint8_t lo, void *frame)
         return DESC_AT(v, code & NUMBER);
 
     if (frame == 0)
-        frame = (void *)(intptr_t)v->running;
+        frame = EVV_AT(void *, v->running);
 
     if (EVV_REF(frame) == v->running)
         base = *(void **)(EVV_AT(uint8_t *, v->back) + 4);

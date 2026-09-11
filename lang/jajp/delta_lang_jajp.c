@@ -110,6 +110,7 @@ delta_language delta_lang_jajp = {
     jajp_delta_rule_map,
 #endif
     jajp_delta_rule_entry,
+    jajp_delta_rule_argmask,
     jajp_delta_rule_entry_name,
     jajp_delta_rule_sym,
     0,                   /* how many of those */

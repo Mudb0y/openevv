@@ -110,6 +110,7 @@ delta_language delta_lang_esus = {
     esus_delta_rule_map,
 #endif
     esus_delta_rule_entry,
+    esus_delta_rule_argmask,
     esus_delta_rule_entry_name,
     esus_delta_rule_sym,
     0,                   /* how many of those */

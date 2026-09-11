@@ -23,6 +23,7 @@ import sys
 # find it. The one thing this line has to know is that the directory above a
 # tool's group is tools itself.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import entrysig
 from evv import ROOT, sibling
 
 # Which language is being written, and what that makes its names. Every
@@ -517,6 +518,33 @@ def write_c(e, where, out_c, out_h, out_syms, stores, names, tag="enus"):
                         % (N(name) if name in mine else name))
         f.write("};\n\n")
 
+        f.write("/* Which of each entry's arguments are pointers, a bit\n"
+                "   each, and bit thirty-one for one that answers with one.\n"
+                "   A rule pushes references, and where a reference is a\n"
+                "   distance into the region rather than an address, an\n"
+                "   argument an entry declares as a pointer has to have the\n"
+                "   base put back before the call. Nought for this module's\n"
+                "   own rules: they take references and keep them.\n"
+                "\n"
+                "   Read from the entries' own C declarations by\n"
+                "   tools/rules/entrysig.py, so no signature is written down\n"
+                "   twice and none can go stale. */\n"
+                "const uint32_t %s[] = {\n"
+                % N("delta_rule_argmask"))
+        for name in e.entry.items:
+            if name == "setjmp3" or name in mine:
+                f.write("    0,\n")
+                continue
+            m = entrysig.mask(name)
+            if m is None:
+                raise SystemExit(
+                    "%s: nothing in src declares this entry, so which of its"
+                    " arguments are pointers cannot be known; a guess here"
+                    " would hand a primitive a distance where it wanted an"
+                    " address" % name)
+            f.write("    0x%08xu,\n" % m)
+        f.write("};\n\n")
+
         f.write("/* Their names, for saying what a run did. */\n"
                 "const char *const %s[] = {\n"
                 % N("delta_rule_entry_name"))
@@ -567,6 +595,7 @@ def write_c(e, where, out_c, out_h, out_syms, stores, names, tag="enus"):
                 "extern const int32_t      %s[];\n"
                 "extern const uint8_t      %s[];\n"
                 "extern const delta_rule_fn %s[];\n"
+                "extern const uint32_t     %s[];\n"
                 "extern const char *const  %s[];\n"
                 "extern const void *const  %s[];\n"
                 "extern const int          %s;\n"
@@ -576,7 +605,8 @@ def write_c(e, where, out_c, out_h, out_syms, stores, names, tag="enus"):
                 % (tag, up, up,
                    N("delta_const_store"), N("delta_rule_code"),
                    N("delta_rule_imm"), N("delta_rule_map"),
-                   N("delta_rule_entry"), N("delta_rule_entry_name"),
+                   N("delta_rule_entry"), N("delta_rule_argmask"),
+                   N("delta_rule_entry_name"),
                    N("delta_rule_sym"), N("delta_rule_sym_count"),
                    N("delta_rules"), N("delta_rule_count"),
                    N("delta_rule_setjmp")))
@@ -587,6 +617,7 @@ def write_c(e, where, out_c, out_h, out_syms, stores, names, tag="enus"):
                 "   this header, and each of them includes just the one. */\n")
         for nm in ("delta_const_store", "delta_rule_code", "delta_rule_imm",
                    "delta_rule_map", "delta_rule_entry",
+                   "delta_rule_argmask",
                    "delta_rule_entry_name", "delta_rule_sym",
                    "delta_rule_sym_count", "delta_rules", "delta_rule_count",
                    "delta_rule_setjmp"):
@@ -627,7 +658,10 @@ def write_shims(e, out_c, out_ren):
                 "   two languages share most of these and a program may have\n"
                 "   both in it. What a run reports is the name without it,\n"
                 "   which is what the rule table holds. */\n\n")
-        f.write('#include "delta_rules_%s.h"\n\n' % TAG[0])
+        # The shim turns the reference it is handed into the machine's own
+        # address, so it wants the crossing.
+        f.write('#include "evv_arena.h"\n'
+                '#include "delta_rules_%s.h"\n\n' % TAG[0])
         for i, (name, _off, _len, _fr, _pb, params) in enumerate(e.rules):
             n = max(params, 1)
             args = ", ".join("int32_t a%d" % j for j in range(n))
@@ -635,7 +669,9 @@ def write_shims(e, out_c, out_ren):
             f.write("    int32_t a[%d];\n\n" % n)
             for j in range(n):
                 f.write("    a[%d] = a%d;\n" % (j, j))
-            f.write("    return delta_run_rule((void *)(intptr_t)a0,\n"
+            # a0 is the machine, and a rule is handed it as a reference,
+            # which is a distance into the region rather than an address.
+            f.write("    return delta_run_rule(EVV_AT(void *, a0),\n"
                     "                          &%s[%d], a, %d);\n}\n\n"
                     % (N("delta_rules"), i, n))
     return len(e.rules)
