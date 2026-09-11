@@ -68,18 +68,23 @@ def load_durations(tag):
         return tuple(tuple(int(x) for x in part.split(":"))
                      for part in text.split(","))
 
+    last = None
     for line in open(path):
         if line.startswith("#"):
             continue
         f = line.split()
+        if f and f[0] == "+":
+            # A continuation: the parameters sharing one split, for the
+            # segment above.
+            if last is not None and len(f) >= 3:
+                spans = split(f[-1])
+                for name in f[1:-1]:
+                    out[last][2][name] = spans
+            continue
         if len(f) < n + 2:
             continue
-        key = tuple(f[:n])
-        if len(f) == n + 2:
-            out[key] = (int(f[n]), split(f[n + 1]), {})
-        else:
-            if key in out:
-                out[key][2][f[n + 2]] = split(f[n + 1])
+        last = tuple(f[:n])
+        out[last] = (int(f[n]), split(f[n + 1]), {})
     return out
 
 

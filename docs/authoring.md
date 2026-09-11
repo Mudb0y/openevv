@@ -760,3 +760,11 @@ It works because the contexts really do block up. Of 13,592 value blocks, 7,785 
 **And they are classes rather than lists.** `t 1 f2  N CDFJNTdntz  >` says that /t/'s second formant in a stressed syllable, with /N/ to its left and any of C, D, F, J, N, T, d, n, t or z to its right, has no target of its own. That right-hand set is the coronal obstruents and nasals, which is exactly the class a phonetician would write, and it was arrived at by grouping identical behaviour rather than by assuming any feature system.
 
 That is the form authoring wants. A person can read a line, see which neighbours it covers, and change the number.
+
+### The duration table
+
+The same treatment, and it needed a different cut. **Rectangles do not help here**: the durations are near-continuous, 94,089 contexts holding 26,440 distinct values, three and a half contexts to a value, and most blocks are a single context. Collapsing the ten context fields where they do not matter takes 94,089 lines to 92,031, which is nothing.
+
+What was paying for the size was repetition of a different kind. Of 716,586 lines, 622,486 were per-parameter splits, each repeating a twelve-field key to say one list of spans. **Writing the key once and the splits as continuations** takes the file from 29 megabytes to 13.6. And **one continuation a split rather than a parameter** -- the parameters needing their own split within a segment often need the same one -- takes it to **8.3 megabytes and 310,139 lines**, generating exactly the same frames.
+
+So the three files are now `enus.phonemes` at 48 kilobytes, `enus.segments` at 1.56 megabytes and `enus.durations` at 8.3, against 44 megabytes for the same information this morning. The durations are still much the largest and will stay so while they are a table: a duration is a number in milliseconds and there are twenty-six thousand distinct ones. Making that small wants a model -- a base times factors for stress, position and coda -- which is a different piece of work from compressing a table and the obvious next one.

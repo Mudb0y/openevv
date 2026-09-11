@@ -292,12 +292,13 @@ def main(argv):
                      "is built out of,\n")
             fh.write("# which are the spans of its formant breakpoints. A "
                      "line with a\n")
-            fh.write("# parameter named after the pieces is that "
-                     "parameter's own split,\n")
-            fh.write("# which differs for two segments in five: one formant "
-                     "stops at the\n")
-            fh.write("# segment's end and another runs on past it, having "
-                     "no target there.\n")
+            fh.write("# line beginning `+' is one parameter's own split, "
+                     "belonging to the\n")
+            fh.write("# segment above it. Two segments in five need them: "
+                     "one formant\n")
+            fh.write("# stops at the segment's end and another runs on past "
+                     "it, having no\n")
+            fh.write("# target there.\n")
             fh.write("#\n")
             fh.write("# Written by tools/module/durations.py. See "
                      "docs/authoring.md.\n")
@@ -306,12 +307,20 @@ def main(argv):
                 fh.write("%s %d %s\n"
                          % (" ".join(k), dur,
                             ",".join("%d:%d" % x for x in best) or "-"))
+                # The key once, then a continuation a parameter. It was a
+                # whole key a line and the keys are twelve fields, so
+                # 622,486 of the 716,586 lines were thirty bytes of repeat
+                # to say one split.
+                # One continuation a split, not a parameter: within a
+                # segment the parameters that need their own split often
+                # need the same one.
+                share = collections.defaultdict(list)
                 for name, spans in odd:
-                    fh.write("%s %d %s %s\n"
-                             % (" ".join(k), dur,
-                                ",".join("%d:%d" % x for x in spans)
-                                or "-",
-                                name))
+                    share[",".join("%d:%d" % x for x in spans) or "-"].append(
+                        name)
+                for spans in sorted(share):
+                    fh.write("+ %s %s\n"
+                             % (" ".join(sorted(share[spans])), spans))
         sys.stderr.write("durations: %d contexts written, %d that disagreed\n"
                          % (len(table), clash))
 
