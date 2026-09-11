@@ -143,6 +143,50 @@ def lay(pieces, targets, start):
     return gaps
 
 
+# The voicing is a rule, not a lookup, and this is the rule measured over
+# three thousand words. Every vowel has a base: stressed it runs from that
+# base down two across the vowel, unstressed or secondary from three below
+# the base down four more. The schwas are the exception and drop three.
+#
+# The composer measured this once before and got it half right, reading the
+# two-step form as belonging to the first vowel of an utterance. Its
+# carriers were all stressed on the first vowel, so `first' and `stressed'
+# could not be told apart; at scale it is the stress.
+AV_BASE = {"i": 55, "I": 57, "e": 55, "E": 54, "A": 49, "a": 50,
+           "u": 59, "U": 57, "o": 56, "c": 52, "H": 54}
+AV_SCHWA = {"x": (52, 50, 51, 48), "X": (53, 51, 50, 47)}
+
+
+def voicing(vowel, stress, total):
+    """One vowel's voicing, as a single stretch, or None for no rule."""
+    if vowel in AV_SCHWA:
+        a, b, c, d = AV_SCHWA[vowel]
+        lo, hi = (a, b) if stress == "1" else (c, d)
+    elif vowel in AV_BASE:
+        base = AV_BASE[vowel]
+        lo, hi = (base, base - 2) if stress == "1" else (base - 3, base - 7)
+    else:
+        return None
+    return ((1, max(0, total - 1)), lo, hi)
+
+
+# The aspiration is simpler than the voicing: held at 34 through a vowel and
+# at nought through a consonant, the latter in every one of the thousands of
+# consonant segments measured. A vowel that an /h/ folds into holds 42
+# instead, which is the /h/ itself being the vowel's shape excited by noise.
+AH_VOWEL = 34
+AH_H = 42
+AH_CONSONANT = 0
+
+
+def aspiration(unit, total):
+    """One segment's aspiration, as a single stretch."""
+    if unit[-1] not in S.VOWELS:
+        return ((0, total), AH_CONSONANT, AH_CONSONANT)
+    v = AH_H if unit[0] == "h" and len(unit) > 1 else AH_VOWEL
+    return ((0, total), v, v)
+
+
 # The formant family, as against the excitation envelopes and gains.
 SPECTRUM = ("f1", "b1", "f2", "b2", "f3", "b3", "f4", "b4", "f5", "b5",
             "fnp", "fnz", "ftp", "ftz")
@@ -259,10 +303,26 @@ def main(argv):
         gaps = collections.defaultdict(list)
         v = {}
         at = 0
+        f_of = pros
         for j, (total, spans, odd, want) in enumerate(plan):
             for name, value in want.items():
                 targets = value[0]
                 where = odd.get(name, spans)
+                # The rule says what the voiced part of a segment does, not
+                # where it starts: /hE/ in `hello' is silent through the /h/
+                # and only then runs 51 down to 47, so laying the rule over
+                # the whole segment voices the /h/ and made the word 143 per
+                # cent different instead of 43. The table already knows
+                # where the stretches fall; only their values are replaced,
+                # and only for the last one, which is the vowel proper.
+                rule = None
+                if os.environ.get("EVV_EXCITE_RULE") != "0" and where:
+                    unit = f_of[j]
+                    if name == "av":
+                        rule = voicing(unit["unit"][-1], unit["stress"],
+                                       total)
+                    elif name == "ah":
+                        rule = aspiration(unit["unit"], total)
                 if name not in v:
                     v[name] = targets[0][1] if targets else dflt.get(name, 0)
                 ahead = None
@@ -284,9 +344,10 @@ def main(argv):
                     # last one left off says so, and the voicing does it two
                     # times in five. Chaining regardless is what made a
                     # generated word fluctuate in volume.
-                    gaps[name].append((at + rel, span,
-                                       v[name] if jump is None else jump,
-                                       end))
+                    start = v[name] if jump is None else jump
+                    if rule is not None and i == len(where) - 1:
+                        _, start, end = rule
+                    gaps[name].append((at + rel, span, start, end))
                     v[name] = end
             at += total
         if wav:

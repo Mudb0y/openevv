@@ -704,3 +704,19 @@ The cause was an assumption stated three sections above and never tested: that t
 Writing those starts down as `from:to` costs the table size -- 909,775 exceptions rather than 521,761 -- and it **improves everything else**. The table's own disagreements over two thousand words fall from 280 to 153. The generated frames go from 9.28 per cent of parameter values wrong to 7.31. And `absolutely`, whose spectrum was 3.4 per cent of the signal away from the engine's, becomes **identical, all 162 frames** -- so three of the six words tried now render sample for sample.
 
 **The excitation is unmoved by it**, 84 per cent to 82, and that is the honest state: the envelopes are not a table. `av` is a rule and it was measured in full for the composer -- the staircase resets after every consonant, resumes at the following vowel's own value less three and steps down by one four times across that vowel, two steps rather than four for the first vowel of an utterance, with a release at the end that scales with the rate. A table cannot hold that because the number of breakpoints follows the duration: /o/ at the end of `hello` is one stretch of 239 milliseconds from 56 to 54 where the same key in a shorter word is two. The rule is already written down in `tools/measure/chain.py`. What is left is to put it where the generator can use it.
+
+### The excitation as rules
+
+The voicing and the aspiration are rules and this is what they are, measured over three thousand words.
+
+**The voicing.** Every vowel has a base value. Stressed, it runs from that base down two across the vowel; unstressed or with secondary stress, from three below the base down four more. The bases are /i/ 55, /I/ 57, /e/ 55, /E/ 54, /A/ 49, /a/ 50, /u/ 59, /U/ 57, /o/ 56, /c/ 52, /H/ 54, and the two schwas are the exception, dropping three rather than two or four. The rule accounts for 70 to 85 per cent of cases for most vowels.
+
+**The composer measured this once and got it half right.** It read the two-step form as belonging to the first vowel of an utterance; its carriers were all stressed on the first vowel, so `first` and `stressed` could not be told apart. At scale it is the stress, and that matters because a word has one stressed syllable and several unstressed ones.
+
+**The aspiration.** Held at 34 through a vowel and at nought through a consonant, the latter in every one of the thousands of consonant segments measured -- /b/, /n/, /s/, /z/, /t/, /F/, /d/, /k/, /G/ all at 100 per cent. A vowel an /h/ folds into holds 42 instead, which is the /h/ being that vowel's shape excited by noise.
+
+**A rule says what a stretch does, not where it starts.** Laying the voicing over a whole segment voices the /h/ in `hello` and took that word from 43 per cent different to 143. The table already knows where the stretches fall and how long they are; only the values of the last one -- the vowel proper -- are the rule's.
+
+With both rules in, and applied that way, **the whole frame out of the tables**: `money` is identical to the engine over all 4,235 samples, `hello` is 0.6 per cent of the signal, `absolutely` 5.9 and `tomato` 38.3. Across a hundred and fifty words the wrong parameter values fall from 7.31 per cent to 4.37, the voicing's own share from 11,765 to 2,993 and the aspiration's from 9,338 to 1,780.
+
+So a word can be synthesised from two data tables and two rules, with nothing of the engine's in it but the pitch, and come out sample for sample.
