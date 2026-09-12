@@ -52,13 +52,29 @@ if grep -Fqx "${manualLine}" "${manualPath}"; then
     exit 1
 fi
 
+unquotedRoot=${testRoot}/unquoted
+unquotedPath=${unquotedRoot}/speechd.conf
+unquotedLine='AddModule openevv /home/Username/openevv/build/sd_openevv /home/Username/openevv/speechd/openevv.conf'
+mkdir -p "${unquotedRoot}"
+printf '%s\n' '# Unquoted old documentation registration' "${unquotedLine}" > "${unquotedPath}"
+unquotedOutput=$(bash "${helperPath}" --config-dir "${unquotedRoot}")
+grep -Fq "Removing OpenEVV registration: ${unquotedLine}" <<< "${unquotedOutput}"
+if grep -Fqx "${unquotedLine}" "${unquotedPath}"; then
+    printf '%s\n' 'The unquoted OpenEVV registration was not removed.' >&2
+    exit 1
+fi
+
 customRoot=${testRoot}/custom
 customPath=${customRoot}/speechd.conf
 customLine='AddModule "openevv" "/opt/speech/sd_custom_openevv" "custom.conf"'
 mkdir -p "${customRoot}"
 printf '%s\n' "${customLine}" > "${customPath}"
 customChecksum=$(sha256sum "${customPath}")
-bash "${helperPath}" --config-dir "${customRoot}"
+customOutput=$(bash "${helperPath}" --config-dir "${customRoot}")
+grep -Fq 'It is the only explicit module registration, so automatic discovery is disabled.' \
+    <<< "${customOutput}"
+grep -Fq 'Other installed voices are hidden until this registration is removed.' \
+    <<< "${customOutput}"
 grep -Fqx "${customLine}" "${customPath}"
 [[ $(sha256sum "${customPath}") == "${customChecksum}" ]]
 

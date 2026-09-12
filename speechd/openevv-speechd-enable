@@ -77,8 +77,8 @@ enableBackupPath=${configPath}.openevv.bak
 markerLine='# OpenEVV module installed by openevv-git'
 moduleLine='AddModule "openevv" "sd_openevv" "openevv.conf"'
 addModulePattern='^[[:space:]]*AddModule([[:space:]]|$)'
-openEvvPattern='^[[:space:]]*AddModule[[:space:]]+"openevv"([[:space:]]|$)'
-managedOpenEvvPattern='^[[:space:]]*AddModule[[:space:]]+"openevv"[[:space:]]+"([^"/]*/)*sd_openevv"([[:space:]]|$)'
+openEvvPattern='^[[:space:]]*AddModule[[:space:]]+("openevv"|openevv)([[:space:]]|$)'
+managedOpenEvvPattern='^[[:space:]]*AddModule[[:space:]]+("openevv"|openevv)[[:space:]]+("([^"/]*/)*sd_openevv"|([^[:space:]]*/)*sd_openevv)([[:space:]]|$)'
 
 if [[ ! -f ${configPath} ]]; then
     printf '%s\n' \
@@ -89,12 +89,15 @@ fi
 
 managedOpenEvvCount=0
 otherModuleCount=0
+nonOpenEvvCount=0
 hasOpenEvv=0
 
 while IFS= read -r line || [[ -n ${line} ]]; do
     if grep -Eqi -- "${addModulePattern}" <<< "${line}"; then
         if grep -Eqi -- "${openEvvPattern}" <<< "${line}"; then
             hasOpenEvv=1
+        else
+            ((nonOpenEvvCount += 1))
         fi
         if grep -Eqi -- "${managedOpenEvvPattern}" <<< "${line}"; then
             ((managedOpenEvvCount += 1))
@@ -145,8 +148,14 @@ fi
 if (( hasOpenEvv == 1 )); then
     printf 'An OpenEVV module registration already exists in %s.\n' \
         "${configPath}"
-    printf '%s\n' \
-        'It was retained alongside the other explicit module registrations.'
+    if (( nonOpenEvvCount > 0 )); then
+        printf '%s\n' \
+            'It was retained alongside the other explicit module registrations.'
+    else
+        printf '%s\n' \
+            'It is the only explicit module registration, so automatic discovery is disabled.' \
+            'Other installed voices are hidden until this registration is removed.'
+    fi
     exit 0
 fi
 
