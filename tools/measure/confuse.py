@@ -86,7 +86,7 @@ def main(argv):
 
     tag = opt("--tag", "enus")
     limit = int(opt("--words", "300"))
-    base, over = F.load(tag)
+    base, over, far = F.load(tag)
     durs = G.load_durations(tag)
     S.setup(probe)
 
@@ -100,7 +100,7 @@ def main(argv):
         runs = S.tap(probe, body)
         if not frames or len(runs) != len(pros) + 1:
             continue
-        got = G.gaps_from_tables(pros, durs, base, over, dflt)
+        got = G.gaps_from_tables(pros, durs, base, over, dflt, far)
         if got is None:
             continue
         gaps, total = got

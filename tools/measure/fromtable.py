@@ -49,19 +49,42 @@ def load(tag):
     """
     base = {}
     over = {}
+    far = {}
     paths = [os.path.join(ROOT, "lang", tag, "%s.segments" % tag),
              os.path.join(ROOT, "lang", tag, "%s.phonemes" % tag)]
     for path in paths:
         if os.path.exists(path):
-            _read(path, base, over)
-    return base, over
+            _read(path, base, over, far)
+    return base, over, far
 
 
-def _read(path, base, over):
+def read(items):
+    """Targets as written: `to', `from:to', or `from:' for a run-through."""
+    out = []
+    for x in items:
+        if x.endswith(":"):
+            out.append((int(x[:-1]), None))
+        elif ":" in x:
+            a, b = x.split(":")
+            out.append((int(a), int(b)))
+        else:
+            out.append((None, int(x)))
+    return tuple(out)
+
+
+def _read(path, base, over, far):
     for line in open(path):
         if line.startswith("#"):
             continue
         f = line.split()
+        if f and f[0] == "=":
+            # A context two phonemes deep that the rectangles get wrong.
+            if len(f) > 8:
+                runs_on = f[-1] == ">"
+                vals = f[:-1] if runs_on else f
+                far[(f[1], f[2], f[3], f[4], f[5], f[6], f[7])] = (
+                    read(vals[8:]), runs_on)
+            continue
         # A segments line is phoneme, stress, parameter, `base' or a
         # context, then values; a phonemes line has no context and so is one
         # field shorter.
@@ -73,18 +96,6 @@ def _read(path, base, over):
         # stretch before left off.
         runson = f[-1] == ">"
         vals = f[:-1] if runson else f
-
-        def read(items):
-            out = []
-            for x in items:
-                if x.endswith(":"):
-                    out.append((int(x[:-1]), None))
-                elif ":" in x:
-                    a, b = x.split(":")
-                    out.append((int(a), int(b)))
-                else:
-                    out.append((None, int(x)))
-            return tuple(out)
 
         # A phonemes line has no `base' word and no context: phoneme,
         # stress, parameter, values.
@@ -99,9 +110,18 @@ def _read(path, base, over):
             base[(unit, stress, name)] = (read(vals[3:]), runson)
 
 
-def targets(base, over, unit, left, right, stress, name):
-    """What this phoneme's parameter does here: the first rectangle that
-    covers the context, or the base."""
+def targets(base, over, unit, left, right, stress, name, far=None,
+            l2=".", r2="."):
+    """What this phoneme's parameter does here.
+
+    Three levels, the most particular first: a context two phonemes deep
+    that the rectangles get wrong, then the first rectangle covering the
+    phonemes either side, then the base.
+    """
+    if far:
+        got = far.get((unit, stress, name, l2, left, right, r2))
+        if got is not None:
+            return got
     for lefts, rights, value in over.get((unit, stress, name), ()):
         if left in lefts and right in rights:
             return value

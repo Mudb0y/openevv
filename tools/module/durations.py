@@ -72,7 +72,7 @@ def prosody(body):
     # syllable.
     where = []
     i = 0
-    for unit, left, right, stress in got:
+    for unit, left, right, stress, l2, r2 in got:
         where.append(flat[min(i, len(flat) - 1)][2])
         # A split half does not consume a phoneme of its own the second time
         # round, and a fold consumes two.
@@ -115,10 +115,11 @@ def prosody(body):
         if ph and ph[-1] not in S.VOWELS:
             lastopen = "0"
     out = []
-    for k, (unit, left, right, stress) in enumerate(got):
+    for k, (unit, left, right, stress, l2, r2) in enumerate(got):
         s = where[k]
         out.append({
             "unit": unit, "left": left, "right": right, "stress": stress,
+            "l2": l2, "r2": r2,
             "syl": s, "nsyl": n, "fromend": n - 1 - s,
             "prev": syls[s - 1][0] if s else ".",
             "next": syls[s + 1][0] if s + 1 < n else ".",

@@ -874,3 +874,13 @@ It was built: a third level under the rectangles, one line for each context two 
 So the finding stands and the implementation does not: **a segment's breakpoints depend on the phonemes two away, and that key can only be filled from a word corpus.** Filling it from made-up strings is not merely useless, it is harmful, because it moves the fallback underneath it as well. This is the same lesson the durations gave -- a made-up chunk has made-up prosody -- one level further down, and it is the second time a corpus built for coverage has turned out to cover the wrong thing.
 
 The tools are reverted to the two-per-cent state. Doing this properly wants the far level harvested from `test/samples/enus.words` alone, with the rectangles left as they are, and that is a small change to make once rather than a thing to guess at.
+
+### The two-deep key, third attempt
+
+Harvested from the word corpus alone and with one further filter, it works.
+
+**The filter is the whole difference.** A far context whose shape is only the rectangle's shape cut short is not a disagreement -- the generator already lays a shorter segment by stopping the same line early -- and recording those was the whole of the first two attempts. Of 179 far lookups that hit, **164 replaced a two-target rectangle with a one-target truncation**, which is why adding the level made the words worse both times.
+
+With truncations filtered out, the far level is **1,301 lines** rather than 150,346, and it helps: 2.245 per cent of parameter values wrong falls to **2.187**, five words come back frame for frame rather than four, and the automated ear's count falls from 77 confusions to 73.
+
+That is a small gain for a lot of machinery, and it is worth saying so plainly. The finding that a segment reaches two phonemes either side is solid -- 14 per cent self-disagreement to one -- but almost all of what that explains is truncation, which was already handled. **The residue is a per cent of a per cent.** What is left wrong is elsewhere: the second and third formants at 3,702 and 2,750 wrong values, and the voicing at 2,617, none of which the two-deep key touches.

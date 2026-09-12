@@ -129,14 +129,21 @@ def units(ph):
     for k, (u, st) in enumerate(got):
         left = got[k - 1][0][-1] if k else "."
         right = got[k + 1][0][0] if k + 1 < len(got) else "."
+        # The phonemes two away come along too. A segment depends on them
+        # once a stretch running past its own end is recorded whole: that
+        # stretch ends at the next segment's target, and that target
+        # depends on the next segment's neighbours. They take the second
+        # formant's self-disagreement from 14 per cent to one.
+        l2 = got[k - 2][0][-1] if k >= 2 else "."
+        r2 = got[k + 2][0][0] if k + 2 < len(got) else "."
         if u[-1] in TWO_RUNS:
             # Two runs, and they are halves of one phoneme: the first has
             # the real left neighbour and the second the real right one,
             # with the phoneme itself standing between them.
-            out.append((u + "1", left, u[-1], st))
-            out.append((u + "2", u[-1], right, st))
+            out.append((u + "1", left, u[-1], st, l2, u[-1]))
+            out.append((u + "2", u[-1], right, st, u[-1], r2))
         else:
-            out.append((u, left, right, st))
+            out.append((u, left, right, st, l2, r2))
     return out
 
 
@@ -292,7 +299,7 @@ def harvest(job):
     # jump can be told from a continuation.
     running = {}
     out = []
-    for i, (unit, left, right, stress) in enumerate(got):
+    for i, (unit, left, right, stress, l2, r2) in enumerate(got):
         for name, gs in runs[i][2].items():
             if name in SKIP:
                 continue
@@ -313,7 +320,7 @@ def harvest(job):
             out.append(((unit, left, right, stress, name),
                         (gs[0][2], tuple(items),
                          not gs[-1][4]),
-                        word))
+                        (word, l2, r2)))
     return out
 
 
@@ -370,6 +377,7 @@ def main(argv):
     sys.stderr.write("segments: %d words, %d jobs\n" % (len(words), jobs))
 
     shapes = collections.defaultdict(collections.Counter)
+    farobs = collections.defaultdict(collections.Counter)
     held = collections.defaultdict(collections.Counter)
     holdout = float(opt("--holdout", "0"))
     cut = int(len(words) * (1 - holdout)) if holdout else len(words)
@@ -396,7 +404,7 @@ def main(argv):
             if got and got[0][0] is None:
                 skipped += 1
                 continue
-            for key, gaps, word in got:
+            for key, gaps, (word, l2, r2) in got:
                 seen[key] += 1
                 # The targets alone. Every span is the duration model's,
                 # not only the last: /n/ before /t/ after an /X/ reaches 350
@@ -416,6 +424,14 @@ def main(argv):
                 where = shapes if done <= cut else held
                 where[key][(tuple(shape), start, runson)] += 1
                 example.setdefault(key, word)
+                # And the same observation under the longer key, but only
+                # from real words. Filling this from the de Bruijn corpus
+                # was tried and is worse than not filling it: its two-away
+                # neighbours are combinations no word contains, so 58 of
+                # 1,738 lookups hit, and the rectangles beneath were
+                # dragged about by contexts that never occur.
+                if word not in ("fill", "edge"):
+                    farobs[key + (l2, r2)][(tuple(shape), runson)] += 1
 
     # Where a key was seen with more than one shape, the longest is the
     # segment as the rules wrote it and the others are it cut short: a
@@ -617,8 +633,51 @@ def main(argv):
                missing))
 
     kinds = len(set(k[:4] for k in table))
-    sys.stderr.write("segments: %d written as a base and %d exceptions\n"
-                     % (len(grouped), lines - len(grouped)))
+    # The far level, under the rectangles: a context two phonemes deep
+    # whose shape disagrees with what the rectangles would give it. Only
+    # where the word corpus saw it more than once and agreed with itself,
+    # so one odd pronunciation cannot plant a line.
+    def start_of(sh):
+        return sh[0][0] if sh and sh[0][0] is not None else 0
+
+    far = {}
+    for k, c in farobs.items():
+        (sh, runson), n = c.most_common(1)[0]
+        if n < 2 or len(c) > 1:
+            continue
+        short = k[:5]
+        if short not in table:
+            continue
+        if table[short] == (sh, runson):
+            continue
+        # A far context that is only the rectangle's shape cut short is not
+        # a disagreement: the generator already lays a shorter segment by
+        # stopping the same line early. Recording those was the whole of
+        # the first two attempts at this level -- 164 of 179 hits replaced
+        # a two-target rectangle with a one-target truncation, and the
+        # words got worse rather than better.
+        if truncates(sh, table[short][0], start_of(sh)):
+            continue
+        far[k] = (sh, runson)
+    with open(out, "a") as f:
+        f.write("#\n")
+        f.write("# Below, a context two phonemes deep whose shape the "
+                "rectangles above\n")
+        f.write("# get wrong: `= <phoneme> <stress> <parameter> <two left> "
+                "<left> <right>\n")
+        f.write("# <two right>' and then its targets. Harvested from the "
+                "word corpus\n")
+        f.write("# alone -- the made-up one's two-away neighbours are "
+                "combinations no\n")
+        f.write("# word contains, and filling this from it is worse than "
+                "leaving it empty.\n")
+        for k in sorted(far):
+            unit, left, right, stress, name, l2, r2 = k
+            f.write("= %s %s %-4s %s %s %s %s %s\n"
+                    % (unit, stress, name, l2, left, right, r2,
+                       spell(far[k])))
+    sys.stderr.write("segments: %d bases, %d rectangles, %d far contexts\n"
+                     % (len(grouped), lines - len(grouped), len(far)))
     sys.stderr.write("segments: %d segments, %d lines, %d seen more than "
                      "once, %d shapes that were the same segment cut short, "
                      "%d disagreeing, %d words whose runs did not line up\n"

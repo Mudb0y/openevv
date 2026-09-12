@@ -266,7 +266,7 @@ def write_frames(path, rows):
             f.write("\t".join(str(int(v)) for v in row) + "\n")
 
 
-def gaps_from_tables(pros, durs, base, over, dflt):
+def gaps_from_tables(pros, durs, base, over, dflt, far=None):
     """Every parameter's breakpoints for a word, from the two tables.
 
     Answers the gaps and how long the word is, or None where the duration
@@ -299,7 +299,8 @@ def gaps_from_tables(pros, durs, base, over, dflt):
             if name not in dflt:
                 return None
             got = F.targets(base, over, f["unit"], f["left"],
-                            f["right"], f["stress"], name)
+                            f["right"], f["stress"], name, far,
+                            f.get("l2", "."), f.get("r2", "."))
             want[name] = got if got else ((), False)
         plan.append((total, spans, odd, want))
     if not ok:
@@ -437,7 +438,7 @@ def main(argv):
     tag = opt("--tag", "enus")
     limit = int(opt("--words", "200"))
     show = opt("--show", None)
-    base, over = F.load(tag)
+    base, over, far = F.load(tag)
     durs = load_durations(tag)
     S.setup(probe)
 
@@ -484,7 +485,7 @@ def main(argv):
         if not frames or len(runs) != len(pros) + 1:
             skipped += 1
             continue
-        got = gaps_from_tables(pros, durs, base, over, dflt)
+        got = gaps_from_tables(pros, durs, base, over, dflt, far)
         if got is None:
             skipped += 1
             continue
