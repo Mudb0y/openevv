@@ -290,7 +290,14 @@ typedef uintptr_t evv_word;
    pointer, which has to come back as a reference.
 
    Where a pointer is four bytes both arms come out as the cast that was here
-   before. */
+   before.
+
+   The trace marks a reference with an `@' for the same reason, and the two
+   gates mask it by that mark. They used to mask by value instead, on the
+   range the old arena was mapped into, which stopped matching anything the
+   day a reference became a distance -- and a range is the wrong test in any
+   case, since a small integer argument can fall inside it. The mask is what
+   knows. */
 #define WM(m, i, x)  (((m) >> (i) & 1u) \
                       ? (evv_word)(uintptr_t)EVV_AT(void *, (x)) \
                       : (evv_word)(uint32_t)(x))
@@ -1191,7 +1198,9 @@ int32_t delta_rule_called(int which, const int32_t *stack, int argn, int want)
 
         fprintf(stderr, "  %s(", delta_rule_entry_name[which]);
         for (j = 0; j < want && j < MAXARG; j++)
-            fprintf(stderr, "%s%08x", j ? ", " : "", (unsigned)a[j]);
+            fprintf(stderr, "%s%s%08x", j ? ", " : "",
+                    ((delta_rule_argmask[which] >> j) & 1u) ? "@" : "",
+                    (unsigned)a[j]);
         fprintf(stderr, ")\n");
         fflush(stderr);
     }
@@ -1211,7 +1220,9 @@ int32_t delta_rule_direct(int which, const int32_t *a, int n)
 
         fprintf(stderr, "  %s(", delta_rule_entry_name[which]);
         for (j = 0; j < n && j < MAXARG; j++)
-            fprintf(stderr, "%s%08x", j ? ", " : "", (unsigned)a[j]);
+            fprintf(stderr, "%s%s%08x", j ? ", " : "",
+                    ((delta_rule_argmask[which] >> j) & 1u) ? "@" : "",
+                    (unsigned)a[j]);
         fprintf(stderr, ")\n");
         fflush(stderr);
     }

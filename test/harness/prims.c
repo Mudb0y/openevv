@@ -1077,7 +1077,7 @@ int main(void)
            the rules left, and what is printed is its three own words before
            and after -- content, since a node's flags are not addresses. */
         {
-            delta_node *t = (delta_node *)(intptr_t)tok->value;
+            delta_node *t = EVV_AT(delta_node *, tok->value);
 
             /* The link word is a pointer with two flag bits at the bottom,
                so only the bits are printed: the rest is one process's own

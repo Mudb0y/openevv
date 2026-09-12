@@ -790,3 +790,97 @@ All of the above is English, so the question is how much of it is English. Briti
 **The duration half does not.** Every one of those words came back "not covered": the duration key is the phoneme, its neighbours, its stress, the syllable it sits in, where that syllable is in the word, the stresses either side and the next syllable's onset, and a corpus of eight-phoneme chunks exercises none of those as a word does. A made-up chunk has made-up prosody.
 
 So a new language needs a word list before its durations can be harvested, and `test/words.sh record` is the thing that makes one. That is the concrete prerequisite for doing this for Polish, and it is worth knowing now rather than after building the rest.
+
+## The pitch
+
+The last thing the generator borrowed. It is not a segment's property at all and never could be: it is **one contour over the whole word, five stretches, and its values barely move.**
+
+Measured over twelve hundred words, every one of which has five or six pitch breakpoints and no other number: it starts flat, rises to a peak, falls, falls again and holds. The values cluster hard -- the start is 1217 when the first syllable carries the accent and 1044 when it does not, the peak 1293, the first fall lands at 792 and the second at 742, in tenths of a hertz. Those five numbers and the shape are the whole of English's declarative intonation as this engine draws it.
+
+**The peak is anchored to the accented vowel's middle.** That came out of the measurement cleanly -- median 0.48 of the way through it, quartiles 0.42 and 0.63 -- where anchoring to the accented syllable's start gave nothing usable and the offsets scattered from 3 to 63 milliseconds. The rise begins about a third of a vowel-length before the peak, which is to say inside the consonant in front of it.
+
+**The timing is where it is still loose.** With the medians as offsets -- 51 milliseconds of rise, the first fall landing 61 before the word's end and the second 58 after that -- the contour comes within 3.5 hertz of the engine's at the median and 5.7 on average, with a worst case of 42. On a contour that runs from 74 to 130 hertz that is close but not right, and it is the offsets rather than the values or the shape that want another pass.
+
+So the shape and the values of English intonation are five numbers and a rule, which is a good deal smaller than expected, and the placement is a measurement still to do.
+
+### The pitch, anchored properly
+
+Stas heard the first cut and it was noticeably wrong on `hello` and `tomato` and right on `money` -- which is the whole diagnosis, `money` being the one of the three whose accent is on its first syllable.
+
+Two things were wrong and the measurement had hidden both behind medians taken over the wrong population. **The rise lasts 124 milliseconds, not 51**: the engine takes 116 on `hello` and 131 on the other two, and the 51 came from a median that mixed in words whose contour has six points rather than five. And **the first fall ends where the last vowel ends** -- median six milliseconds past it -- where I had it at a fixed 61 before the word's end. Neither a fixed offset nor a fraction of the word is an anchor for it: those scatter from 0.69 to 0.89 of the word between the quartiles.
+
+With the peak at 0.47 through the accented vowel, the rise 124 before it, the first fall ending with the last vowel and the second 67 after that, the contour comes within **2.0 hertz at the median and 3.2 on average**, against 3.5 and 5.7, and 61 per cent of frames are within three hertz rather than 46.
+
+### The word has to finish
+
+Stas heard the second cut and it was almost right: **"ours ends the way the engine would end at a comma, instead of ending the sentence."**
+
+Exactly so, and the numbers say the same thing once you know where to look. Anchoring the first fall to the last vowel's end leaves nothing for the second fall on a word that ends in a vowel -- `hello`'s last vowel ends where the word does -- so the contour stopped at 792 rather than reaching 742. Eleven twentieths of a hertz, five hertz on a contour spanning fifty-six, and it is the difference between a full stop and a continuation.
+
+**A landing has to be reserved.** The second fall lasts 58 milliseconds -- quartiles 40 and 64, the one tight number in the whole tail -- and ends three before the word does. So the first fall ends at the last vowel's end **or** 58 before that landing, whichever comes first: anchoring only to the vowel clips the landing away on a word ending in one, and anchoring only to the landing puts the fall late on a word ending in consonants.
+
+With both, the contour is within 2.0 hertz at the median and 3.1 on average, and the word's last frame is within 0.3 hertz of the engine's with a worst case of 1.0. The intonation is now a rule with five values and four anchors.
+
+### The burst belongs at the release
+
+Stas heard `banana` as "vanana": the initial /b/ came out a fricative. The frames say why at once. The engine holds the frication and the bypass at nought through the closure and then bursts -- 51 and 70 at the eleventh frame, decaying over five -- and the generated version had them at 51 and 70 from the first frame, which is a stop's burst smeared over its whole closure, which is a fricative.
+
+**It is the collapse of repeated targets, biting from the other side.** /b/ has three stretches and the engine's frication reaches nought, nought, then 51; collapsing the repeat leaves two targets for three stretches, and the generator padded at the back, putting the 51 first. Which of them the spare stretch belongs to depends on whether the last target jumps: **a jump means a new value starts there, so it belongs at the end and the padding goes in front.** Without a jump the last target is a hold and the padding goes behind it, which is what /A/ at the start of `abbey` wants.
+
+With that, the frication's wrong values fall from 3,531 to 668 over a hundred and fifty words, the tilt and the bypass leave the list of the twelve worst entirely, and the whole error falls from **3.955 per cent to 2.961**, with three words frame for frame rather than one.
+
+**And one measurement stops working here.** With the pitch generated too, the waveform difference against the engine reads 120 to 140 per cent for every word -- not because the words sound wrong but because two hertz of pitch difference decorrelates the phase completely. Root-mean-square difference is only meaningful while the pitch is shared; past that the parameter counts and the ear are the measures.
+
+## An automated ear
+
+Stas asked whether there is a better way to measure the engine, and there is, because counting wrong parameter values had stopped being informative. Two of the three faults he heard -- `banana` as vanana, `abandonment` as abandonwend -- were a per cent or two of values inside one segment, invisible against a total of three per cent, and each turned one phoneme into another.
+
+`tools/measure/confuse.py` asks the other question: **not how far a segment is from where it should be, but whether it is now nearer to some other phoneme.** It builds a centroid for every phoneme out of the engine's own frames -- the mean of fourteen parameters over every segment of that phoneme in the corpus, each scaled by its own spread so a formant and an amplitude count alike -- and then asks of each generated segment which centroid it lands nearest.
+
+**The control is the whole of it.** A centroid is one mean over a whole segment, so phonemes that are genuinely close land on each other whoever made them: the engine's own segments land on the wrong phoneme 25.7 per cent of the time by this measure. Ours land wrong 28.9. Neither number means anything alone, and the difference does: **86 segments of 2,159, 3.98 per cent, are ours alone** -- the engine's landed right and ours did not.
+
+And it names them. Schwa heard as the second half of /Y/ 23 times, /t/ as the first half of /C/ 11 times, /k/ as /p/ 9, /W/'s first half as /Y/'s 7. That is a work list, arrived at without listening to anything, and it is what the next round of fixes should be driven by.
+
+**It also puts the earlier faults in proportion.** A stop's burst smeared over its closure and a nasal with no murmur were each a handful of frames in one segment of one word; against 556,740 parameter values they were noise, and to a listener they were a different word.
+
+### Two more from one word
+
+`abandonment` was still abandonwend, and the /m/ had two faults, both of a kind the parameter count could not see and the automated ear could.
+
+**A run-through's start has to be recorded always**, not only when it differs from what came before. The /n/ before the /m/ ran its nasal zero past its own end, and with the /m/ saying nothing there was nothing to stop at, so the ramp went to the default 200 -- the murmur gone. The /m/ said nothing because its 350 matched the /n/'s and so read as no jump at all. Recording it unconditionally puts the murmur back exactly: 350 held for five frames and then falling, to the digit.
+
+**And one stretch can carry several targets.** The table writes /m/'s second formant as 1000 then 1200, and the engine draws it as a single stretch from 1000 to 1200. Taking the last target and starting from wherever the segment before left off gave a ramp from 1500, which is not a nasal. The rule is that such a stretch runs from the target before the last to the last.
+
+Together they take the error from 2.413 per cent to 2.269, the frication's share from 573 to 308, and the confusions the automated ear finds from 86 of 2,159 to 77 -- **3.57 per cent against the engine's own 25.7 by the same measure.**
+
+### The context is two deep, not one
+
+`abandonment` stayed wrong after the nasal was fixed, and the fault was not in the /m/ at all: the word's whole unstressed tail came out flat where the engine glides. The schwa before the last /n/ runs its second formant from 1500 to 1600 across the segment boundary, and neither side held the 1600 -- not the schwa, because the stretch runs past its own end and only its start was recorded, and not the /n/, because 1600 is where it already was and so was not a jump.
+
+**So a stretch that runs past its segment has to be recorded whole**, end included. The end is where the line goes, and the engine drew the line there.
+
+That fixes the tail and exposes what was underneath it. **A segment's breakpoints depend on the phonemes two away, on both sides.** Measured over fifteen hundred words on the second formant: with the key as it stands -- the phoneme, its neighbours and its stress -- 218 of 1,532 repeated keys disagree with themselves, 14 per cent. Adding the phoneme two to the right takes that to 122, six per cent. **Adding both takes it to 20, one per cent.**
+
+And it is not prosody. Adding how far the segment is from the end of the word, or its syllable's coda, or where the syllable sits, or the next syllable's onset -- each of which earned its place in the duration key -- takes 14 per cent to between 9 and 12. The reach is segmental, and the reason is plain once the run-through is recorded: a stretch that ends inside the next segment ends at *that* segment's target, and that target depends on *its* neighbours, one of which is two away from here.
+
+**Which leaves a coverage problem worth stating.** The de Bruijn corpus covers every phoneme between every pair, at order three. Two either side is order five, which is 184 million strings for a forty-five letter alphabet and is not going to be spoken. So the long key can only be filled from real words, and everything else has to fall back to the short one -- another level of the same base-and-exception structure the table already is.
+
+### Building the two-deep key, and why it was taken out again
+
+It was built: a third level under the rectangles, one line for each context two phonemes deep that disagrees with the rectangle above it. **The table's own self-disagreement fell from 16,635 to 4,004**, which is what the measurement promised.
+
+**And it generated worse, 2.245 per cent of parameter values wrong against 2.809.** The reason is the coverage problem, arriving sooner than expected. Of 1,738 far lookups over a hundred and twenty real words, **58 hit**. The 150,346 far contexts in the table are almost all the de Bruijn corpus's -- arbitrary chunks of eight phonemes, whose two-away neighbours are combinations no English word contains -- and the words' own far contexts are mostly not there at all. Meanwhile the rectangles beneath got worse, their majority now being taken across the two-away combinations rather than over the contexts that actually occur.
+
+So the finding stands and the implementation does not: **a segment's breakpoints depend on the phonemes two away, and that key can only be filled from a word corpus.** Filling it from made-up strings is not merely useless, it is harmful, because it moves the fallback underneath it as well. This is the same lesson the durations gave -- a made-up chunk has made-up prosody -- one level further down, and it is the second time a corpus built for coverage has turned out to cover the wrong thing.
+
+The tools are reverted to the two-per-cent state. Doing this properly wants the far level harvested from `test/samples/enus.words` alone, with the rectangles left as they are, and that is a small change to make once rather than a thing to guess at.
+
+### The two-deep key, third attempt
+
+Harvested from the word corpus alone and with one further filter, it works.
+
+**The filter is the whole difference.** A far context whose shape is only the rectangle's shape cut short is not a disagreement -- the generator already lays a shorter segment by stopping the same line early -- and recording those was the whole of the first two attempts. Of 179 far lookups that hit, **164 replaced a two-target rectangle with a one-target truncation**, which is why adding the level made the words worse both times.
+
+With truncations filtered out, the far level is **1,301 lines** rather than 150,346, and it helps: 2.245 per cent of parameter values wrong falls to **2.187**, five words come back frame for frame rather than four, and the automated ear's count falls from 77 confusions to 73.
+
+That is a small gain for a lot of machinery, and it is worth saying so plainly. The finding that a segment reaches two phonemes either side is solid -- 14 per cent self-disagreement to one -- but almost all of what that explains is truncation, which was already handled. **The residue is a per cent of a per cent.** What is left wrong is elsewhere: the second and third formants at 3,702 and 2,750 wrong values, and the voicing at 2,617, none of which the two-deep key touches.
