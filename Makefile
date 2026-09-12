@@ -151,8 +151,18 @@ RULESRC := $(GENERATED)
 # then says so by name and stops, rather than reading an array that is gone.
 TRIM    := -DEVV_NO_BYTECODE -ffunction-sections -fdata-sections \
            -Wl,--gc-sections
+else ifeq ($(RULES),both)
+# The rules that were written as C, with the interpreter still there for every
+# rule that was not. Nothing ships this and nothing else asks for it: it is
+# what tools/rules/check-c.sh needs. That gate writes a handful of rules as C
+# on purpose and holds them against the same rules run as bytecode, and a `c'
+# build has no interpreter left to run the hundred thousand it did not write --
+# the first of them aborts by name, which is what the `c' arm above intends and
+# what left the gate unable to run at all from 0855062 until this existed.
+RULESRC := $(GENERATED)
+TRIM    :=
 else
-$(error RULES is bytecode or c, not $(RULES))
+$(error RULES is bytecode, c or both, not $(RULES))
 endif
 
 # Which languages are in, as C the engine can walk. Written here because
@@ -620,6 +630,7 @@ $(BUILD)/libevv$(SUF).a: $(OBJECTS) $(RULESTAMP)
 # the same class as the suite: obtainable, and not needed to build.
 .PHONY: notation notation-check notation-prove rulecode \
         notation-symbols notation-rewrite upper upper-prove upper-check \
+        c-check \
         authored constants codepoints
 notation:
 	@python3 tools/rules/notation.py tree
@@ -671,6 +682,24 @@ upper-prove:
 
 upper-check:
 	@bash tools/rules/check-upper.sh
+
+# The other question about a rule, and the other gate. `upper-check' asks
+# whether an authored rule is the rule it stands in for; this asks whether a
+# rule written as C does what the same rule does as bytecode. It writes the
+# smallest few rules out as C, speaks the seven plain cases through a build
+# carrying those beside the interpreter and through one carrying the
+# interpreter alone, and holds every rule entered and every call made with its
+# arguments against each other, and the audio besides. It wants no objects and
+# no Wine.
+#
+# A count rather than the whole module, because the whole module as C is what
+# every ordinary build already is and what the matrix already speaks. What
+# this catches is the translation of one rule, so it is worth being quick
+# enough to run on every push. `C_CHECK_RULES' says how many, and naming
+# rules instead is what to do when one of them is the suspect.
+C_CHECK_RULES ?= 10
+c-check:
+	@bash tools/rules/check-c.sh $(C_CHECK_RULES)
 
 authored:
 	@python3 tools/rules/notation.py authored

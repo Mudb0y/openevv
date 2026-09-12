@@ -53,9 +53,13 @@ trap 'rm -rf "$work"; rm -f "$here"/lang/enus/delta_rules_c[0-9][0-9]_enus.c' EX
 
 [ $# -gt 0 ] || { echo "check: name some rules" >&2; exit 2; }
 
+# The side's own name, then the form of the rules to build it with. The two
+# differ for the C side: it is built as `both', which is the C rules with the
+# interpreter still in, because only a handful of rules were written as C here
+# and a plain `c' build has nothing left to run the rest.
 build() {
     rm -f "$here/build/probe"
-    make -C "$here" RULES="$1" probe >/dev/null || exit 1
+    make -C "$here" RULES="$2" probe >/dev/null || exit 1
     cp "$here/build/probe" "$work/probe.$1"
 }
 
@@ -100,9 +104,9 @@ speak() {
 }
 
 echo "check: building both"
-build bytecode
+build bytecode bytecode
 EVV_FAITHFUL=1 python3 "$tools/rules/decompile.py" "$@" || exit 1
-build c
+build c both
 
 lines=0
 n=0
