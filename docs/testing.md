@@ -221,3 +221,15 @@ What the sweep must not do is drive IBM into a defect that destroys the process.
 Every language module is built and spoken in the bytecode CI job, and then all eight are built into one binary and each spoken out of it. Neither wants Wine or IBM's objects -- only the comparison against IBM does -- so what that catches is a module that stops linking, or an engine change that suits one language and not another, and it requires samples rather than only a successful link.
 
 `test/hash.sh` is the check that needs nothing at all: it speaks one fixed sentence and holds the samples against a hash in `test/samples.sha256`. That does not prove the engine right -- only IBM's binary can -- but it proves it unchanged, which is what catches a careless edit, and it is what the workflow in `.github` runs on every push. The samples do not depend on the compiler: gcc 15 and clang 21 agree byte for byte, which is what an engine with no floating point in it should do.
+
+## What the upper-form gate masks, and why it stopped working
+
+`tools/rules/check-upper.sh` and `tools/rules/check-c.sh` compare two builds' traces, and a reference legitimately differs between them: the region goes wherever the system puts it, so two builds lay it out differently and every distance into it moves. Both scripts therefore mask references before comparing.
+
+**They used to mask by value**, with `s/\b1[0-9a-f]{7}\b/ARENA/g`, which was the range the old arena was mapped into. That stopped matching anything the day a reference became a distance rather than an address -- 6 September 2026, `fd6ebb5` -- and the gate has been failing ever since without anything being wrong with the engine. Found by another session chasing a red CI job.
+
+**A range was the wrong test in any case**: a small integer argument can fall inside it, and one that does was being masked silently. What knows which arguments are references is `delta_rule_argmask`, generated from the entries' own C declarations by `tools/rules/entrysig.py` and already in hand where the trace is printed. **So the trace marks a reference with an `@`** and the gates mask by that mark. Nothing else reads the trace -- `decompile.py` only mentions it in a docstring -- so the format change costs nothing.
+
+**That leaves a rule's own arguments**, which the mask says nothing about: a rule takes a reference as the distance it is, there being no crossing, so no declaration knows. Those are canonicalised instead -- each distinct value replaced by the order it first appears in, which is stronger than masking because two runs that pass different things still differ. Rank among the values was tried and is worse: the two runs meet slightly different sets of references, so every rank after the first difference shifts.
+
+**Thirteen lines of 548,529 still differ**, all of one kind: the two builds meet the same pair of references in the opposite order, so the pair's indices swap. That is the layout difference once more rather than a difference in what was passed, and closing it wants something that knows a rule's argument is a reference -- which nothing currently does.
