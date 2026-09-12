@@ -37,3 +37,7 @@ lang/*/delta_rules_*.h
 # The default output name of cli/probe.c and reference/speak.c, so it
 # appears in the root whenever either is run without one.
 speak.wav
+
+# The provenance census's site table, written by the decompiler beside the
+# rules it numbers. Generated like the rules themselves.
+lang/*/provenance-sites-*.txt

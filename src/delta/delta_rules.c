@@ -42,6 +42,7 @@
 #define delta_rule_imm         (L->rule_imm)
 #define delta_rule_map         (L->rule_map)
 #define delta_rule_entry       (L->rule_entry)
+#define delta_rule_argmask     (L->rule_argmask)
 #define delta_rule_entry_name  (L->rule_entry_name)
 #define delta_rule_setjmp      (L->rule_setjmp)
 #define delta_rule_native      (L->rule_native)
@@ -179,7 +180,7 @@ static unsigned char *operand_place(interp *st, const uint8_t **pp)
         const uint8_t *q = p;
         int32_t inner = operand_read(st, &q, 4, 0);
 
-        at = (unsigned char *)(intptr_t)inner + get16s(q);
+        at = EVV_AT(unsigned char *, inner) + get16s(q);
         p = q + 2;
         break;
     }
@@ -280,7 +281,29 @@ static void operand_skip(interp *st, const uint8_t **pp)
    low half back and an entry that wants a pointer gets the whole of it. The
    two are the same thing only where a pointer is four bytes. */
 typedef uintptr_t evv_word;
-#define W(x) ((evv_word)(uint32_t)(x))
+
+/* A reference is a distance into the region and an entry that declares a
+   pointer wants an address, so each argument is converted or not according to
+   what the entry says it takes. delta_rule_argmask carries a bit per
+   argument, generated from the entries' own C declarations by
+   tools/rules/entrysig.py; bit thirty-one says the entry answers with a
+   pointer, which has to come back as a reference.
+
+   Where a pointer is four bytes both arms come out as the cast that was here
+   before.
+
+   The trace marks a reference with an `@' for the same reason, and the two
+   gates mask it by that mark. They used to mask by value instead, on the
+   range the old arena was mapped into, which stopped matching anything the
+   day a reference became a distance -- and a range is the wrong test in any
+   case, since a small integer argument can fall inside it. The mask is what
+   knows. */
+#define WM(m, i, x)  (((m) >> (i) & 1u) \
+                      ? (evv_word)(uintptr_t)EVV_AT(void *, (x)) \
+                      : (evv_word)(uint32_t)(x))
+#define RM(m, r)     (((m) & 0x80000000u) \
+                      ? EVV_REF((const void *)(uintptr_t)(r)) \
+                      : (int32_t)(r))
 
 typedef evv_word (*I0)(void);
 typedef evv_word (*I1)(evv_word);
@@ -307,36 +330,40 @@ typedef evv_word (*IN)(evv_word, evv_word, evv_word, evv_word, evv_word, evv_wor
                       evv_word, evv_word, evv_word, evv_word, evv_word, evv_word,
                       evv_word);
 
-#define A W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), \
-          W(a[7]), W(a[8]), W(a[9]), W(a[10]), W(a[11]), W(a[12]), \
-          W(a[13]), W(a[14]), W(a[15]), W(a[16]), W(a[17]), W(a[18]), \
-          W(a[19]), W(a[20]), W(a[21]), W(a[22]), W(a[23]), W(a[24])
+#define A WM(m, 0, a[0]), WM(m, 1, a[1]), WM(m, 2, a[2]), WM(m, 3, a[3]), \
+          WM(m, 4, a[4]), WM(m, 5, a[5]), WM(m, 6, a[6]), WM(m, 7, a[7]), \
+          WM(m, 8, a[8]), WM(m, 9, a[9]), WM(m, 10, a[10]), WM(m, 11, a[11]), \
+          WM(m, 12, a[12]), WM(m, 13, a[13]), WM(m, 14, a[14]), WM(m, 15, a[15]), \
+          WM(m, 16, a[16]), WM(m, 17, a[17]), WM(m, 18, a[18]), WM(m, 19, a[19]), \
+          WM(m, 20, a[20]), WM(m, 21, a[21]), WM(m, 22, a[22]), WM(m, 23, a[23]), \
+          WM(m, 24, a[24])
 
 /* Calling with more arguments than the entry declares is what the original
    never has to do; here the number is only known at run time, so the common
    arities are called exactly and the rare long ones go through one wide
    signature. Every entry is cdecl, so the extra words are simply not read. */
-static int32_t call_entry(delta_rule_fn fn, const int32_t *a, int n)
+static int32_t call_entry(delta_rule_fn fn, uint32_t m,
+                          const int32_t *a, int n)
 {
     switch (n) {
-    case 0:  return ((I0)fn)();
-    case 1:  return ((I1)fn)(W(a[0]));
-    case 2:  return ((I2)fn)(W(a[0]), W(a[1]));
-    case 3:  return ((I3)fn)(W(a[0]), W(a[1]), W(a[2]));
-    case 4:  return ((I4)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]));
-    case 5:  return ((I5)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]));
-    case 6:  return ((I6)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]));
-    case 7:  return ((I7)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]));
-    case 8:  return ((I8)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), W(a[7]));
-    case 9:  return ((I9)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), W(a[7]),
-                             W(a[8]));
-    case 10: return ((I10)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), W(a[7]),
-                              W(a[8]), W(a[9]));
-    case 11: return ((I11)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), W(a[7]),
-                              W(a[8]), W(a[9]), W(a[10]));
-    case 12: return ((I12)fn)(W(a[0]), W(a[1]), W(a[2]), W(a[3]), W(a[4]), W(a[5]), W(a[6]), W(a[7]),
-                              W(a[8]), W(a[9]), W(a[10]), W(a[11]));
-    default: return ((IN)fn)(A);
+    case 0:  return RM(m, ((I0)fn)());
+    case 1:  return RM(m, ((I1)fn)(WM(m, 0, a[0])));
+    case 2:  return RM(m, ((I2)fn)(WM(m, 0, a[0]), WM(m, 1, a[1])));
+    case 3:  return RM(m, ((I3)fn)(WM(m, 0, a[0]), WM(m, 1, a[1]), WM(m, 2, a[2])));
+    case 4:  return RM(m, ((I4)fn)(WM(m, 0, a[0]), WM(m, 1, a[1]), WM(m, 2, a[2]), WM(m, 3, a[3])));
+    case 5:  return RM(m, ((I5)fn)(WM(m, 0, a[0]), WM(m, 1, a[1]), WM(m, 2, a[2]), WM(m, 3, a[3]), WM(m, 4, a[4])));
+    case 6:  return RM(m, ((I6)fn)(WM(m, 0, a[0]), WM(m, 1, a[1]), WM(m, 2, a[2]), WM(m, 3, a[3]), WM(m, 4, a[4]), WM(m, 5, a[5])));
+    case 7:  return RM(m, ((I7)fn)(WM(m, 0, a[0]), WM(m, 1, a[1]), WM(m, 2, a[2]), WM(m, 3, a[3]), WM(m, 4, a[4]), WM(m, 5, a[5]), WM(m, 6, a[6])));
+    case 8:  return RM(m, ((I8)fn)(WM(m, 0, a[0]), WM(m, 1, a[1]), WM(m, 2, a[2]), WM(m, 3, a[3]), WM(m, 4, a[4]), WM(m, 5, a[5]), WM(m, 6, a[6]), WM(m, 7, a[7])));
+    case 9:  return RM(m, ((I9)fn)(WM(m, 0, a[0]), WM(m, 1, a[1]), WM(m, 2, a[2]), WM(m, 3, a[3]), WM(m, 4, a[4]), WM(m, 5, a[5]), WM(m, 6, a[6]), WM(m, 7, a[7]),
+                             WM(m, 8, a[8])));
+    case 10: return RM(m, ((I10)fn)(WM(m, 0, a[0]), WM(m, 1, a[1]), WM(m, 2, a[2]), WM(m, 3, a[3]), WM(m, 4, a[4]), WM(m, 5, a[5]), WM(m, 6, a[6]), WM(m, 7, a[7]),
+                              WM(m, 8, a[8]), WM(m, 9, a[9])));
+    case 11: return RM(m, ((I11)fn)(WM(m, 0, a[0]), WM(m, 1, a[1]), WM(m, 2, a[2]), WM(m, 3, a[3]), WM(m, 4, a[4]), WM(m, 5, a[5]), WM(m, 6, a[6]), WM(m, 7, a[7]),
+                              WM(m, 8, a[8]), WM(m, 9, a[9]), WM(m, 10, a[10])));
+    case 12: return RM(m, ((I12)fn)(WM(m, 0, a[0]), WM(m, 1, a[1]), WM(m, 2, a[2]), WM(m, 3, a[3]), WM(m, 4, a[4]), WM(m, 5, a[5]), WM(m, 6, a[6]), WM(m, 7, a[7]),
+                              WM(m, 8, a[8]), WM(m, 9, a[9]), WM(m, 10, a[10]), WM(m, 11, a[11])));
+    default: return RM(m, ((IN)fn)(A));
     }
 }
 
@@ -684,273 +711,300 @@ static void step(interp *st)
    */
 int32_t delta_call_0(int which, const int32_t *stack, int argn)
 {
+    uint32_t m = delta_rule_argmask[which];
+
     if (delta_rule_trace != 0)
         return delta_rule_called(which, stack, argn, 0);
-    return (int32_t)((I0)delta_rule_entry[which])();
+    return RM(m, ((I0)delta_rule_entry[which])());
 }
 
 int32_t delta_call_1(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 1)
         return delta_rule_called(which, stack, argn, 1);
-    return (int32_t)((I1)delta_rule_entry[which])(W(t[-1]));
+    return RM(m, ((I1)delta_rule_entry[which])(WM(m, 0, t[-1])));
 }
 
 int32_t delta_call_2(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 2)
         return delta_rule_called(which, stack, argn, 2);
-    return (int32_t)((I2)delta_rule_entry[which])(W(t[-1]), W(t[-2]));
+    return RM(m, ((I2)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2])));
 }
 
 int32_t delta_call_3(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 3)
         return delta_rule_called(which, stack, argn, 3);
-    return (int32_t)((I3)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]));
+    return RM(m, ((I3)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3])));
 }
 
 int32_t delta_call_4(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 4)
         return delta_rule_called(which, stack, argn, 4);
-    return (int32_t)((I4)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]));
+    return RM(m, ((I4)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4])));
 }
 
 int32_t delta_call_5(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 5)
         return delta_rule_called(which, stack, argn, 5);
-    return (int32_t)((I5)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]));
+    return RM(m, ((I5)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5])));
 }
 
 int32_t delta_call_6(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 6)
         return delta_rule_called(which, stack, argn, 6);
-    return (int32_t)((I6)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]));
+    return RM(m, ((I6)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6])));
 }
 
 int32_t delta_call_7(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 7)
         return delta_rule_called(which, stack, argn, 7);
-    return (int32_t)((I7)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]));
+    return RM(m, ((I7)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7])));
 }
 
 int32_t delta_call_8(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 8)
         return delta_rule_called(which, stack, argn, 8);
-    return (int32_t)((I8)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]));
+    return RM(m, ((I8)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8])));
 }
 
 int32_t delta_call_9(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 9)
         return delta_rule_called(which, stack, argn, 9);
-    return (int32_t)((I9)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]));
+    return RM(m, ((I9)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9])));
 }
 
 int32_t delta_call_10(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 10)
         return delta_rule_called(which, stack, argn, 10);
-    return (int32_t)((I10)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]), W(t[-10]));
+    return RM(m, ((I10)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9]), WM(m, 9, t[-10])));
 }
 
 int32_t delta_call_11(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 11)
         return delta_rule_called(which, stack, argn, 11);
-    return (int32_t)((I11)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]), W(t[-10]), W(t[-11]));
+    return RM(m, ((I11)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9]), WM(m, 9, t[-10]), WM(m, 10, t[-11])));
 }
 
 int32_t delta_call_12(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 12)
         return delta_rule_called(which, stack, argn, 12);
-    return (int32_t)((I12)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]), W(t[-10]), W(t[-11]), W(t[-12]));
+    return RM(m, ((I12)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9]), WM(m, 9, t[-10]), WM(m, 10, t[-11]), WM(m, 11, t[-12])));
 }
 
 int32_t delta_call_13(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 13)
         return delta_rule_called(which, stack, argn, 13);
     /* Past twelve there is one wide signature, as in call_entry:
        every entry is cdecl, so the words it does not declare are
        simply not read. */
-    return (int32_t)((IN)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]), W(t[-10]), W(t[-11]), W(t[-12]), W(t[-13]), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    return RM(m, ((IN)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9]), WM(m, 9, t[-10]), WM(m, 10, t[-11]), WM(m, 11, t[-12]), WM(m, 12, t[-13]), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 }
 
 int32_t delta_call_14(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 14)
         return delta_rule_called(which, stack, argn, 14);
     /* Past twelve there is one wide signature, as in call_entry:
        every entry is cdecl, so the words it does not declare are
        simply not read. */
-    return (int32_t)((IN)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]), W(t[-10]), W(t[-11]), W(t[-12]), W(t[-13]), W(t[-14]), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    return RM(m, ((IN)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9]), WM(m, 9, t[-10]), WM(m, 10, t[-11]), WM(m, 11, t[-12]), WM(m, 12, t[-13]), WM(m, 13, t[-14]), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 }
 
 int32_t delta_call_15(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 15)
         return delta_rule_called(which, stack, argn, 15);
     /* Past twelve there is one wide signature, as in call_entry:
        every entry is cdecl, so the words it does not declare are
        simply not read. */
-    return (int32_t)((IN)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]), W(t[-10]), W(t[-11]), W(t[-12]), W(t[-13]), W(t[-14]), W(t[-15]), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    return RM(m, ((IN)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9]), WM(m, 9, t[-10]), WM(m, 10, t[-11]), WM(m, 11, t[-12]), WM(m, 12, t[-13]), WM(m, 13, t[-14]), WM(m, 14, t[-15]), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 }
 
 int32_t delta_call_16(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 16)
         return delta_rule_called(which, stack, argn, 16);
     /* Past twelve there is one wide signature, as in call_entry:
        every entry is cdecl, so the words it does not declare are
        simply not read. */
-    return (int32_t)((IN)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]), W(t[-10]), W(t[-11]), W(t[-12]), W(t[-13]), W(t[-14]), W(t[-15]), W(t[-16]), 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    return RM(m, ((IN)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9]), WM(m, 9, t[-10]), WM(m, 10, t[-11]), WM(m, 11, t[-12]), WM(m, 12, t[-13]), WM(m, 13, t[-14]), WM(m, 14, t[-15]), WM(m, 15, t[-16]), 0, 0, 0, 0, 0, 0, 0, 0, 0));
 }
 
 int32_t delta_call_17(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 17)
         return delta_rule_called(which, stack, argn, 17);
     /* Past twelve there is one wide signature, as in call_entry:
        every entry is cdecl, so the words it does not declare are
        simply not read. */
-    return (int32_t)((IN)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]), W(t[-10]), W(t[-11]), W(t[-12]), W(t[-13]), W(t[-14]), W(t[-15]), W(t[-16]), W(t[-17]), 0, 0, 0, 0, 0, 0, 0, 0);
+    return RM(m, ((IN)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9]), WM(m, 9, t[-10]), WM(m, 10, t[-11]), WM(m, 11, t[-12]), WM(m, 12, t[-13]), WM(m, 13, t[-14]), WM(m, 14, t[-15]), WM(m, 15, t[-16]), WM(m, 16, t[-17]), 0, 0, 0, 0, 0, 0, 0, 0));
 }
 
 int32_t delta_call_18(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 18)
         return delta_rule_called(which, stack, argn, 18);
     /* Past twelve there is one wide signature, as in call_entry:
        every entry is cdecl, so the words it does not declare are
        simply not read. */
-    return (int32_t)((IN)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]), W(t[-10]), W(t[-11]), W(t[-12]), W(t[-13]), W(t[-14]), W(t[-15]), W(t[-16]), W(t[-17]), W(t[-18]), 0, 0, 0, 0, 0, 0, 0);
+    return RM(m, ((IN)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9]), WM(m, 9, t[-10]), WM(m, 10, t[-11]), WM(m, 11, t[-12]), WM(m, 12, t[-13]), WM(m, 13, t[-14]), WM(m, 14, t[-15]), WM(m, 15, t[-16]), WM(m, 16, t[-17]), WM(m, 17, t[-18]), 0, 0, 0, 0, 0, 0, 0));
 }
 
 int32_t delta_call_19(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 19)
         return delta_rule_called(which, stack, argn, 19);
     /* Past twelve there is one wide signature, as in call_entry:
        every entry is cdecl, so the words it does not declare are
        simply not read. */
-    return (int32_t)((IN)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]), W(t[-10]), W(t[-11]), W(t[-12]), W(t[-13]), W(t[-14]), W(t[-15]), W(t[-16]), W(t[-17]), W(t[-18]), W(t[-19]), 0, 0, 0, 0, 0, 0);
+    return RM(m, ((IN)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9]), WM(m, 9, t[-10]), WM(m, 10, t[-11]), WM(m, 11, t[-12]), WM(m, 12, t[-13]), WM(m, 13, t[-14]), WM(m, 14, t[-15]), WM(m, 15, t[-16]), WM(m, 16, t[-17]), WM(m, 17, t[-18]), WM(m, 18, t[-19]), 0, 0, 0, 0, 0, 0));
 }
 
 int32_t delta_call_20(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 20)
         return delta_rule_called(which, stack, argn, 20);
     /* Past twelve there is one wide signature, as in call_entry:
        every entry is cdecl, so the words it does not declare are
        simply not read. */
-    return (int32_t)((IN)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]), W(t[-10]), W(t[-11]), W(t[-12]), W(t[-13]), W(t[-14]), W(t[-15]), W(t[-16]), W(t[-17]), W(t[-18]), W(t[-19]), W(t[-20]), 0, 0, 0, 0, 0);
+    return RM(m, ((IN)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9]), WM(m, 9, t[-10]), WM(m, 10, t[-11]), WM(m, 11, t[-12]), WM(m, 12, t[-13]), WM(m, 13, t[-14]), WM(m, 14, t[-15]), WM(m, 15, t[-16]), WM(m, 16, t[-17]), WM(m, 17, t[-18]), WM(m, 18, t[-19]), WM(m, 19, t[-20]), 0, 0, 0, 0, 0));
 }
 
 int32_t delta_call_21(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 21)
         return delta_rule_called(which, stack, argn, 21);
     /* Past twelve there is one wide signature, as in call_entry:
        every entry is cdecl, so the words it does not declare are
        simply not read. */
-    return (int32_t)((IN)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]), W(t[-10]), W(t[-11]), W(t[-12]), W(t[-13]), W(t[-14]), W(t[-15]), W(t[-16]), W(t[-17]), W(t[-18]), W(t[-19]), W(t[-20]), W(t[-21]), 0, 0, 0, 0);
+    return RM(m, ((IN)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9]), WM(m, 9, t[-10]), WM(m, 10, t[-11]), WM(m, 11, t[-12]), WM(m, 12, t[-13]), WM(m, 13, t[-14]), WM(m, 14, t[-15]), WM(m, 15, t[-16]), WM(m, 16, t[-17]), WM(m, 17, t[-18]), WM(m, 18, t[-19]), WM(m, 19, t[-20]), WM(m, 20, t[-21]), 0, 0, 0, 0));
 }
 
 int32_t delta_call_22(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 22)
         return delta_rule_called(which, stack, argn, 22);
     /* Past twelve there is one wide signature, as in call_entry:
        every entry is cdecl, so the words it does not declare are
        simply not read. */
-    return (int32_t)((IN)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]), W(t[-10]), W(t[-11]), W(t[-12]), W(t[-13]), W(t[-14]), W(t[-15]), W(t[-16]), W(t[-17]), W(t[-18]), W(t[-19]), W(t[-20]), W(t[-21]), W(t[-22]), 0, 0, 0);
+    return RM(m, ((IN)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9]), WM(m, 9, t[-10]), WM(m, 10, t[-11]), WM(m, 11, t[-12]), WM(m, 12, t[-13]), WM(m, 13, t[-14]), WM(m, 14, t[-15]), WM(m, 15, t[-16]), WM(m, 16, t[-17]), WM(m, 17, t[-18]), WM(m, 18, t[-19]), WM(m, 19, t[-20]), WM(m, 20, t[-21]), WM(m, 21, t[-22]), 0, 0, 0));
 }
 
 int32_t delta_call_23(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 23)
         return delta_rule_called(which, stack, argn, 23);
     /* Past twelve there is one wide signature, as in call_entry:
        every entry is cdecl, so the words it does not declare are
        simply not read. */
-    return (int32_t)((IN)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]), W(t[-10]), W(t[-11]), W(t[-12]), W(t[-13]), W(t[-14]), W(t[-15]), W(t[-16]), W(t[-17]), W(t[-18]), W(t[-19]), W(t[-20]), W(t[-21]), W(t[-22]), W(t[-23]), 0, 0);
+    return RM(m, ((IN)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9]), WM(m, 9, t[-10]), WM(m, 10, t[-11]), WM(m, 11, t[-12]), WM(m, 12, t[-13]), WM(m, 13, t[-14]), WM(m, 14, t[-15]), WM(m, 15, t[-16]), WM(m, 16, t[-17]), WM(m, 17, t[-18]), WM(m, 18, t[-19]), WM(m, 19, t[-20]), WM(m, 20, t[-21]), WM(m, 21, t[-22]), WM(m, 22, t[-23]), 0, 0));
 }
 
 int32_t delta_call_24(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 24)
         return delta_rule_called(which, stack, argn, 24);
     /* Past twelve there is one wide signature, as in call_entry:
        every entry is cdecl, so the words it does not declare are
        simply not read. */
-    return (int32_t)((IN)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]), W(t[-10]), W(t[-11]), W(t[-12]), W(t[-13]), W(t[-14]), W(t[-15]), W(t[-16]), W(t[-17]), W(t[-18]), W(t[-19]), W(t[-20]), W(t[-21]), W(t[-22]), W(t[-23]), W(t[-24]), 0);
+    return RM(m, ((IN)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9]), WM(m, 9, t[-10]), WM(m, 10, t[-11]), WM(m, 11, t[-12]), WM(m, 12, t[-13]), WM(m, 13, t[-14]), WM(m, 14, t[-15]), WM(m, 15, t[-16]), WM(m, 16, t[-17]), WM(m, 17, t[-18]), WM(m, 18, t[-19]), WM(m, 19, t[-20]), WM(m, 20, t[-21]), WM(m, 21, t[-22]), WM(m, 22, t[-23]), WM(m, 23, t[-24]), 0));
 }
 
 int32_t delta_call_25(int which, const int32_t *stack, int argn)
 {
     const int32_t *t = stack + argn;
+    uint32_t       m = delta_rule_argmask[which];
 
     if (delta_rule_trace != 0 || argn < 25)
         return delta_rule_called(which, stack, argn, 25);
     /* Past twelve there is one wide signature, as in call_entry:
        every entry is cdecl, so the words it does not declare are
        simply not read. */
-    return (int32_t)((IN)delta_rule_entry[which])(W(t[-1]), W(t[-2]), W(t[-3]), W(t[-4]), W(t[-5]), W(t[-6]), W(t[-7]), W(t[-8]), W(t[-9]), W(t[-10]), W(t[-11]), W(t[-12]), W(t[-13]), W(t[-14]), W(t[-15]), W(t[-16]), W(t[-17]), W(t[-18]), W(t[-19]), W(t[-20]), W(t[-21]), W(t[-22]), W(t[-23]), W(t[-24]), W(t[-25]));
+    return RM(m, ((IN)delta_rule_entry[which])(WM(m, 0, t[-1]), WM(m, 1, t[-2]), WM(m, 2, t[-3]), WM(m, 3, t[-4]), WM(m, 4, t[-5]), WM(m, 5, t[-6]), WM(m, 6, t[-7]), WM(m, 7, t[-8]), WM(m, 8, t[-9]), WM(m, 9, t[-10]), WM(m, 10, t[-11]), WM(m, 11, t[-12]), WM(m, 12, t[-13]), WM(m, 13, t[-14]), WM(m, 14, t[-15]), WM(m, 15, t[-16]), WM(m, 16, t[-17]), WM(m, 17, t[-18]), WM(m, 18, t[-19]), WM(m, 19, t[-20]), WM(m, 20, t[-21]), WM(m, 21, t[-22]), WM(m, 22, t[-23]), WM(m, 23, t[-24]), WM(m, 24, t[-25])));
 }
 
 /* And the same for a wrapper written out where it stood. Its arguments are
@@ -961,17 +1015,21 @@ int32_t delta_call_25(int which, const int32_t *stack, int argn)
    the same reason as above. */
 int32_t delta_direct_1(int which, int32_t a0)
 {
+    uint32_t m = delta_rule_argmask[which];
+
     if (delta_rule_trace != 0) {
         int32_t v[1];
 
         v[0] = a0;
         return delta_rule_direct(which, v, 1);
     }
-    return (int32_t)((I1)delta_rule_entry[which])(W(a0));
+    return RM(m, ((I1)delta_rule_entry[which])(WM(m, 0, a0)));
 }
 
 int32_t delta_direct_2(int which, int32_t a0, int32_t a1)
 {
+    uint32_t m = delta_rule_argmask[which];
+
     if (delta_rule_trace != 0) {
         int32_t v[2];
 
@@ -979,11 +1037,13 @@ int32_t delta_direct_2(int which, int32_t a0, int32_t a1)
         v[1] = a1;
         return delta_rule_direct(which, v, 2);
     }
-    return (int32_t)((I2)delta_rule_entry[which])(W(a0), W(a1));
+    return RM(m, ((I2)delta_rule_entry[which])(WM(m, 0, a0), WM(m, 1, a1)));
 }
 
 int32_t delta_direct_3(int which, int32_t a0, int32_t a1, int32_t a2)
 {
+    uint32_t m = delta_rule_argmask[which];
+
     if (delta_rule_trace != 0) {
         int32_t v[3];
 
@@ -992,11 +1052,13 @@ int32_t delta_direct_3(int which, int32_t a0, int32_t a1, int32_t a2)
         v[2] = a2;
         return delta_rule_direct(which, v, 3);
     }
-    return (int32_t)((I3)delta_rule_entry[which])(W(a0), W(a1), W(a2));
+    return RM(m, ((I3)delta_rule_entry[which])(WM(m, 0, a0), WM(m, 1, a1), WM(m, 2, a2)));
 }
 
 int32_t delta_direct_4(int which, int32_t a0, int32_t a1, int32_t a2, int32_t a3)
 {
+    uint32_t m = delta_rule_argmask[which];
+
     if (delta_rule_trace != 0) {
         int32_t v[4];
 
@@ -1006,11 +1068,13 @@ int32_t delta_direct_4(int which, int32_t a0, int32_t a1, int32_t a2, int32_t a3
         v[3] = a3;
         return delta_rule_direct(which, v, 4);
     }
-    return (int32_t)((I4)delta_rule_entry[which])(W(a0), W(a1), W(a2), W(a3));
+    return RM(m, ((I4)delta_rule_entry[which])(WM(m, 0, a0), WM(m, 1, a1), WM(m, 2, a2), WM(m, 3, a3)));
 }
 
 int32_t delta_direct_5(int which, int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4)
 {
+    uint32_t m = delta_rule_argmask[which];
+
     if (delta_rule_trace != 0) {
         int32_t v[5];
 
@@ -1021,11 +1085,13 @@ int32_t delta_direct_5(int which, int32_t a0, int32_t a1, int32_t a2, int32_t a3
         v[4] = a4;
         return delta_rule_direct(which, v, 5);
     }
-    return (int32_t)((I5)delta_rule_entry[which])(W(a0), W(a1), W(a2), W(a3), W(a4));
+    return RM(m, ((I5)delta_rule_entry[which])(WM(m, 0, a0), WM(m, 1, a1), WM(m, 2, a2), WM(m, 3, a3), WM(m, 4, a4)));
 }
 
 int32_t delta_direct_6(int which, int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5)
 {
+    uint32_t m = delta_rule_argmask[which];
+
     if (delta_rule_trace != 0) {
         int32_t v[6];
 
@@ -1037,11 +1103,13 @@ int32_t delta_direct_6(int which, int32_t a0, int32_t a1, int32_t a2, int32_t a3
         v[5] = a5;
         return delta_rule_direct(which, v, 6);
     }
-    return (int32_t)((I6)delta_rule_entry[which])(W(a0), W(a1), W(a2), W(a3), W(a4), W(a5));
+    return RM(m, ((I6)delta_rule_entry[which])(WM(m, 0, a0), WM(m, 1, a1), WM(m, 2, a2), WM(m, 3, a3), WM(m, 4, a4), WM(m, 5, a5)));
 }
 
 int32_t delta_direct_7(int which, int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6)
 {
+    uint32_t m = delta_rule_argmask[which];
+
     if (delta_rule_trace != 0) {
         int32_t v[7];
 
@@ -1054,11 +1122,13 @@ int32_t delta_direct_7(int which, int32_t a0, int32_t a1, int32_t a2, int32_t a3
         v[6] = a6;
         return delta_rule_direct(which, v, 7);
     }
-    return (int32_t)((I7)delta_rule_entry[which])(W(a0), W(a1), W(a2), W(a3), W(a4), W(a5), W(a6));
+    return RM(m, ((I7)delta_rule_entry[which])(WM(m, 0, a0), WM(m, 1, a1), WM(m, 2, a2), WM(m, 3, a3), WM(m, 4, a4), WM(m, 5, a5), WM(m, 6, a6)));
 }
 
 int32_t delta_direct_8(int which, int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7)
 {
+    uint32_t m = delta_rule_argmask[which];
+
     if (delta_rule_trace != 0) {
         int32_t v[8];
 
@@ -1072,7 +1142,7 @@ int32_t delta_direct_8(int which, int32_t a0, int32_t a1, int32_t a2, int32_t a3
         v[7] = a7;
         return delta_rule_direct(which, v, 8);
     }
-    return (int32_t)((I8)delta_rule_entry[which])(W(a0), W(a1), W(a2), W(a3), W(a4), W(a5), W(a6), W(a7));
+    return RM(m, ((I8)delta_rule_entry[which])(WM(m, 0, a0), WM(m, 1, a1), WM(m, 2, a2), WM(m, 3, a3), WM(m, 4, a4), WM(m, 5, a5), WM(m, 6, a6), WM(m, 7, a7)));
 }
 
 #ifdef EVV_ARG_CHECK
@@ -1128,11 +1198,14 @@ int32_t delta_rule_called(int which, const int32_t *stack, int argn, int want)
 
         fprintf(stderr, "  %s(", delta_rule_entry_name[which]);
         for (j = 0; j < want && j < MAXARG; j++)
-            fprintf(stderr, "%s%08x", j ? ", " : "", (unsigned)a[j]);
+            fprintf(stderr, "%s%s%08x", j ? ", " : "",
+                    ((delta_rule_argmask[which] >> j) & 1u) ? "@" : "",
+                    (unsigned)a[j]);
         fprintf(stderr, ")\n");
         fflush(stderr);
     }
-    return call_entry(delta_rule_entry[which], a, want);
+    return call_entry(delta_rule_entry[which],
+                      delta_rule_argmask[which], a, want);
 }
 
 /* A primitive called with the arguments written out, rather than with
@@ -1147,11 +1220,14 @@ int32_t delta_rule_direct(int which, const int32_t *a, int n)
 
         fprintf(stderr, "  %s(", delta_rule_entry_name[which]);
         for (j = 0; j < n && j < MAXARG; j++)
-            fprintf(stderr, "%s%08x", j ? ", " : "", (unsigned)a[j]);
+            fprintf(stderr, "%s%s%08x", j ? ", " : "",
+                    ((delta_rule_argmask[which] >> j) & 1u) ? "@" : "",
+                    (unsigned)a[j]);
         fprintf(stderr, ")\n");
         fflush(stderr);
     }
-    return call_entry(delta_rule_entry[which], a, n);
+    return call_entry(delta_rule_entry[which],
+                      delta_rule_argmask[which], a, n);
 }
 
 static void delta_rule_report(void)
@@ -1286,6 +1362,9 @@ static delta_rule_cfn delta_native_walk(const delta_language *lang, int n)
     return 0;
 }
 
+/* How deep the rules are, so the outermost can be told from the rest. */
+static __thread int delta_rule_depth;
+
 int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
                        int nargs)
 {
@@ -1294,6 +1373,7 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
     delta_rule_cfn    *by_number;
     int32_t answer;
     int n;
+    int mark;
 
     /* Which language, before anything reads a table. The machine says: it
        was made by one language and remembers which, and a rule of another
@@ -1359,8 +1439,46 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
         fn = (n >= 0 && n < lang->rule_count) ? by_number[n] : 0;
     else
         fn = delta_native_walk(lang, n);
-    answer = (fn != 0) ? fn(state, args, nargs)
-                       : run_bytecode(state, r, args, nargs);
+    /* A landing this rule plants stops being one when the rule returns, and
+       this is the only place that can say so where the rules are C: the
+       interpreter has evv_land_forget and a C rule has nothing. Without it a
+       forced error backtrack whose own landing was never planted -- the
+       machine's err_jmp is set when a rule enters and the landing planted a
+       moment later, so an error in between names an empty buffer -- would
+       fall back to a landing whose frame had already returned. */
+    mark = evv_land_mark();
+
+    /* The outermost rule of a run plants somewhere for a forced error
+       backtrack to go when the rule that asks for one never planted its own.
+       Landing here abandons the whole run, which is the only thing that can
+       be done coherently: the backtracking stack carries a marker for every
+       rule below, so returning into any of them reads a record out of the
+       wrong place. See the note in src/port/evv_land.c. */
+    if (delta_rule_depth == 0) {
+        unsigned long long outer[EVV_LAND_WORDS];
+
+        if (EVV_LAND_SAVE(outer) != 0) {
+            evv_land_no_outermost();
+            evv_land_release(mark);
+            delta_rule_depth = 0;
+            delta_rule_here = was;
+            if (was_lang != lang)
+                delta_lang_set(was_lang);
+            return 0;
+        }
+        evv_land_outermost((uintptr_t)outer);
+        delta_rule_depth++;
+        answer = (fn != 0) ? fn(state, args, nargs)
+                           : run_bytecode(state, r, args, nargs);
+        delta_rule_depth--;
+        evv_land_no_outermost();
+    } else {
+        delta_rule_depth++;
+        answer = (fn != 0) ? fn(state, args, nargs)
+                           : run_bytecode(state, r, args, nargs);
+        delta_rule_depth--;
+    }
+    evv_land_release(mark);
 
     delta_rule_here = was;
     if (delta_rule_trace) {

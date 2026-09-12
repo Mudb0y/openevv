@@ -110,6 +110,7 @@ delta_language delta_lang_plpl = {
     plpl_delta_rule_map,
 #endif
     plpl_delta_rule_entry,
+    plpl_delta_rule_argmask,
     plpl_delta_rule_entry_name,
     plpl_delta_rule_sym,
     0,                   /* how many of those */

@@ -321,21 +321,20 @@ void vprt_strm(delta_state *d, int32_t lf, int32_t from, int32_t to,
 
     while (from != EVV_AT(delta_stack *, d->stack)->spine_r && from != to) {
         delta_vars *v = EVV_AT(delta_vars *, d->vars);
-        int32_t next = *(int32_t *)(intptr_t)
-                       (from + (v->fence_base + stream) * 4) & ~3;
+        int32_t next = *EVV_AT(int32_t *, (from + (v->fence_base + stream) * 4)) & ~3;
 
-        if (next != 0 && (*(int32_t *)(intptr_t)next & 2) != 0) {
+        if (next != 0 && (*EVV_AT(int32_t *, next) & 2) != 0) {
             from = next;
             continue;
         }
 
-        disptok(d, TFLDS((void *)(intptr_t)next), stream, field, buf);
+        disptok(d, TFLDS(EVV_AT(void *, next)), stream, field, buf);
         if (buf[0] == '\\')
             cleanLiteral(buf, 0, 0);
         strcat(buf, sep);
         vf_puts(d, lf, buf, 0);
 
-        from = *(int32_t *)(intptr_t)(next + 4) & ~3;
+        from = *EVV_AT(int32_t *, (next + 4)) & ~3;
     }
 
     n = strlen(sep);
@@ -945,9 +944,9 @@ int32_t findsync(delta_state *d, int32_t n, int8_t dir)
     int32_t s = EVV_AT(delta_stack *, d->stack)->spine_l;
 
     while (s != 0) {
-        if ((*(const int32_t *)(size_t)s & ~3) == want)
+        if ((*EVV_AT(const int32_t *, s) & ~3) == want)
             break;
-        s = VRSYNC(d, (const int32_t *)(size_t)s, dir);
+        s = VRSYNC(d, EVV_AT(const int32_t *, s), dir);
     }
     if (s == 0)
         svgetimp(d, 2);

@@ -1,0 +1,3776 @@
+# What each phoneme's parameters do, where no neighbour moves them.
+#
+# One line a phoneme, a stress and a parameter. The nineteen parameters
+# here are the ones a context does not decide: four never vary at all and
+# the rest are settled by the phoneme alone better than 88 times in a
+# hundred. The eight that a context does decide are in enus.segments.
+#
+# Written by tools/module/segments.py. See docs/authoring.md.
+? 0 a1f  0
+? 0 a2f  0
+? 0 a3f  0
+? 0 a4f  0
+? 0 a5f  0
+? 0 ab   0
+? 0 ah   0
+? 0 b1   120
+? 0 b2   100
+? 0 b4   330
+? 0 b5   260
+? 0 di   0
+? 0 fl   0 >
+? 0 fnp  200
+? 0 fnz  200
+? 0 ftp  250 >
+? 0 ftz  250 >
+? 0 oq   18
+? 0 tl   0
+? 1 a1f  0
+? 1 a2f  0
+? 1 a3f  0
+? 1 a4f  0
+? 1 a5f  0
+? 1 ab   0
+? 1 ah   0
+? 1 b1   120
+? 1 b2   100
+? 1 b4   330
+? 1 b5   260
+? 1 di   0
+? 1 fl   0 >
+? 1 fnp  200
+? 1 fnz  200
+? 1 ftp  250 >
+? 1 ftz  250 >
+? 1 oq   18
+? 1 tl   0
+? 2 a1f  0
+? 2 a2f  0
+? 2 a3f  0
+? 2 a4f  0
+? 2 a5f  0
+? 2 ab   0
+? 2 ah   0
+? 2 b1   120
+? 2 b2   100
+? 2 b4   330
+? 2 b5   260
+? 2 di   0
+? 2 fl   0 >
+? 2 fnp  200
+? 2 fnz  200
+? 2 ftp  250 >
+? 2 ftz  250 >
+? 2 oq   18
+? 2 tl   0
+A 0 a1f  0
+A 0 a2f  0
+A 0 a3f  0
+A 0 a4f  0
+A 0 a5f  0
+A 0 ab   0
+A 0 ah   34 >
+A 0 b1   120
+A 0 b2   100
+A 0 b4   330
+A 0 b5   260
+A 0 di   0
+A 0 fl   0
+A 0 fnp  200
+A 0 fnz  200
+A 0 ftp  250
+A 0 ftz  250
+A 0 oq   56
+A 0 tl   0 >
+A 1 a1f  0
+A 1 a2f  0
+A 1 a3f  0
+A 1 a4f  0
+A 1 a5f  0
+A 1 ab   0
+A 1 ah   34 >
+A 1 b1   120
+A 1 b2   100
+A 1 b4   330
+A 1 b5   260
+A 1 di   0
+A 1 fl   0
+A 1 fnp  200
+A 1 fnz  200
+A 1 ftp  250
+A 1 ftz  250
+A 1 oq   56
+A 1 tl   0 >
+A 2 a1f  0
+A 2 a2f  0
+A 2 a3f  0
+A 2 a4f  0
+A 2 a5f  0
+A 2 ab   0
+A 2 ah   34 >
+A 2 b1   120
+A 2 b2   100
+A 2 b4   330
+A 2 b5   260
+A 2 di   0
+A 2 fl   0
+A 2 fnp  200
+A 2 fnz  200
+A 2 ftp  250
+A 2 ftz  250
+A 2 oq   56
+A 2 tl   0 >
+C1 0 a1f  0
+C1 0 a2f  0
+C1 0 a3f  0 60:60
+C1 0 a4f  0
+C1 0 a5f  0 50:50
+C1 0 ab   0
+C1 0 ah   0
+C1 0 b1   120
+C1 0 b2   100
+C1 0 b4   330
+C1 0 b5   260
+C1 0 di   0 >
+C1 0 fl   0 >
+C1 0 fnp  200
+C1 0 fnz  200
+C1 0 ftp  250 >
+C1 0 ftz  250 >
+C1 0 oq   56 >
+C1 0 tl   0
+C1 1 a1f  0
+C1 1 a2f  0
+C1 1 a3f  0 60:60
+C1 1 a4f  0
+C1 1 a5f  0 50:50
+C1 1 ab   0
+C1 1 ah   0
+C1 1 b1   120
+C1 1 b2   100
+C1 1 b4   330
+C1 1 b5   260
+C1 1 di   0 >
+C1 1 fl   0 >
+C1 1 fnp  200
+C1 1 fnz  200
+C1 1 ftp  250 >
+C1 1 ftz  250 >
+C1 1 oq   56 >
+C1 1 tl   0
+C1 2 a1f  0
+C1 2 a2f  0
+C1 2 a3f  0 60:60
+C1 2 a4f  0
+C1 2 a5f  0 50:50
+C1 2 ab   0
+C1 2 ah   0
+C1 2 b1   120
+C1 2 b2   100
+C1 2 b4   330
+C1 2 b5   260
+C1 2 di   0 >
+C1 2 fl   0 >
+C1 2 fnp  200
+C1 2 fnz  200
+C1 2 ftp  250 >
+C1 2 ftz  250 >
+C1 2 oq   56 >
+C1 2 tl   0
+C2 0 a1f  0
+C2 0 a2f  0
+C2 0 a3f  62:62
+C2 0 a4f  59:59
+C2 0 a5f  0:0
+C2 0 ab   0
+C2 0 ah   0
+C2 0 b1   120
+C2 0 b2   100
+C2 0 b4   330
+C2 0 b5   260
+C2 0 di   0
+C2 0 fnp  200
+C2 0 fnz  200
+C2 0 oq   56
+C2 0 tl   0
+C2 1 a1f  0
+C2 1 a2f  0
+C2 1 a3f  62:62
+C2 1 a4f  59:59
+C2 1 a5f  0:0
+C2 1 ab   0
+C2 1 ah   0
+C2 1 b1   120
+C2 1 b2   100
+C2 1 b4   330
+C2 1 b5   260
+C2 1 di   0
+C2 1 fnp  200
+C2 1 fnz  200
+C2 1 oq   56
+C2 1 tl   0
+C2 2 a1f  0
+C2 2 a2f  0
+C2 2 a3f  62:62
+C2 2 a4f  59:59
+C2 2 a5f  0:0
+C2 2 ab   0
+C2 2 ah   0
+C2 2 b1   120
+C2 2 b2   100
+C2 2 b4   330
+C2 2 b5   260
+C2 2 di   0
+C2 2 fnp  200
+C2 2 fnz  200
+C2 2 oq   56
+C2 2 tl   0
+D 0 a1f  0
+D 0 a2f  0
+D 0 a3f  0
+D 0 a4f  0
+D 0 a5f  0
+D 0 ab   70
+D 0 ah   0
+D 0 b1   120
+D 0 b2   100
+D 0 b4   330
+D 0 b5   260
+D 0 di   0
+D 0 fl   0 >
+D 0 fnp  200
+D 0 fnz  200
+D 0 ftp  250 >
+D 0 ftz  250 >
+D 0 oq   56
+D 0 tl   0
+D 1 a1f  0
+D 1 a2f  0
+D 1 a3f  0
+D 1 a4f  0
+D 1 a5f  0
+D 1 ab   70
+D 1 ah   0
+D 1 b1   120
+D 1 b2   100
+D 1 b4   330
+D 1 b5   260
+D 1 di   0
+D 1 fl   0 >
+D 1 fnp  200
+D 1 fnz  200
+D 1 ftp  250 >
+D 1 ftz  250 >
+D 1 oq   56
+D 1 tl   0
+D 2 a1f  0
+D 2 a2f  0
+D 2 a3f  0
+D 2 a4f  0
+D 2 a5f  0
+D 2 ab   70
+D 2 ah   0
+D 2 b1   120
+D 2 b2   100
+D 2 b4   330
+D 2 b5   260
+D 2 di   0
+D 2 fl   0 >
+D 2 fnp  200
+D 2 fnz  200
+D 2 ftp  250 >
+D 2 ftz  250 >
+D 2 oq   56
+D 2 tl   0
+E 0 a1f  0
+E 0 a2f  0
+E 0 a3f  0
+E 0 a4f  0
+E 0 a5f  0
+E 0 ab   0
+E 0 ah   34 >
+E 0 b1   120
+E 0 b2   100
+E 0 b4   330
+E 0 b5   260
+E 0 di   0
+E 0 fl   0
+E 0 fnp  200
+E 0 fnz  200
+E 0 ftp  250
+E 0 ftz  250
+E 0 oq   56
+E 0 tl   0 >
+E 1 a1f  0
+E 1 a2f  0
+E 1 a3f  0
+E 1 a4f  0
+E 1 a5f  0
+E 1 ab   0
+E 1 ah   34 >
+E 1 b1   120
+E 1 b2   100
+E 1 b4   330
+E 1 b5   260
+E 1 di   0
+E 1 fl   0
+E 1 fnp  200
+E 1 fnz  200
+E 1 ftp  250
+E 1 ftz  250
+E 1 oq   56
+E 1 tl   0 >
+E 2 a1f  0
+E 2 a2f  0
+E 2 a3f  0
+E 2 a4f  0
+E 2 a5f  0
+E 2 ab   0
+E 2 ah   34 >
+E 2 b1   120
+E 2 b2   100
+E 2 b4   330
+E 2 b5   260
+E 2 di   0
+E 2 fl   0
+E 2 fnp  200
+E 2 fnz  200
+E 2 ftp  250
+E 2 ftz  250
+E 2 oq   56
+E 2 tl   0 >
+F 0 a1f  0
+F 0 a2f  0
+F 0 a3f  0
+F 0 a4f  0
+F 0 a5f  0 50:50
+F 0 ab   0
+F 0 ah   0
+F 0 b1   120
+F 0 b2   100
+F 0 b4   330
+F 0 b5   260
+F 0 di   0 >
+F 0 fl   0 >
+F 0 fnp  200
+F 0 fnz  200
+F 0 ftp  250 >
+F 0 ftz  250 >
+F 0 oq   56 >
+F 0 tl   35:35 0:0
+F 1 a1f  0
+F 1 a2f  0
+F 1 a3f  0
+F 1 a4f  0
+F 1 a5f  0 50:50
+F 1 ab   0
+F 1 ah   0
+F 1 b1   120
+F 1 b2   100
+F 1 b4   330
+F 1 b5   260
+F 1 di   0 >
+F 1 fl   0 >
+F 1 fnp  200
+F 1 fnz  200
+F 1 ftp  250 >
+F 1 ftz  250 >
+F 1 oq   56 >
+F 1 tl   35:35 0:0
+F 2 a1f  0
+F 2 a2f  0
+F 2 a3f  0
+F 2 a4f  0
+F 2 a5f  0 50:50
+F 2 ab   0
+F 2 ah   0
+F 2 b1   120
+F 2 b2   100
+F 2 b4   330
+F 2 b5   260
+F 2 di   0 >
+F 2 fl   0 >
+F 2 fnp  200
+F 2 fnz  200
+F 2 ftp  250 >
+F 2 ftz  250 >
+F 2 oq   56 >
+F 2 tl   35:35 0:0
+G 0 a1f  0
+G 0 a2f  0
+G 0 a3f  0
+G 0 a4f  0
+G 0 a5f  0
+G 0 ab   0
+G 0 ah   0
+G 0 b1   108
+G 0 b2   150
+G 0 b4   330
+G 0 b5   260
+G 0 di   0
+G 0 fl   0 >
+G 0 fnp  200
+G 0 fnz  400 200 >
+G 0 ftp  250 >
+G 0 ftz  250 >
+G 0 oq   56
+G 0 tl   0
+G 1 a1f  0
+G 1 a2f  0
+G 1 a3f  0
+G 1 a4f  0
+G 1 a5f  0
+G 1 ab   0
+G 1 ah   0
+G 1 b1   108
+G 1 b2   150
+G 1 b4   330
+G 1 b5   260
+G 1 di   0
+G 1 fl   0 >
+G 1 fnp  200
+G 1 fnz  400 200 >
+G 1 ftp  250 >
+G 1 ftz  250 >
+G 1 oq   56
+G 1 tl   0
+G 2 a1f  0
+G 2 a2f  0
+G 2 a3f  0
+G 2 a4f  0
+G 2 a5f  0
+G 2 ab   0
+G 2 ah   0
+G 2 b1   108
+G 2 b2   150
+G 2 b4   330
+G 2 b5   260
+G 2 di   0
+G 2 fl   0 >
+G 2 fnp  200
+G 2 fnz  400 200 >
+G 2 ftp  250 >
+G 2 ftz  250 >
+G 2 oq   56
+G 2 tl   0
+H 0 a1f  0
+H 0 a2f  0
+H 0 a3f  0
+H 0 a4f  0
+H 0 a5f  0
+H 0 ab   0
+H 0 ah   34 >
+H 0 b1   120
+H 0 b2   100
+H 0 b4   330
+H 0 b5   260
+H 0 di   0
+H 0 fl   0
+H 0 fnp  200
+H 0 fnz  200
+H 0 ftp  250
+H 0 ftz  250
+H 0 oq   56
+H 0 tl   0 >
+H 1 a1f  0
+H 1 a2f  0
+H 1 a3f  0
+H 1 a4f  0
+H 1 a5f  0
+H 1 ab   0
+H 1 ah   34 >
+H 1 b1   120
+H 1 b2   100
+H 1 b4   330
+H 1 b5   260
+H 1 di   0
+H 1 fl   0
+H 1 fnp  200
+H 1 fnz  200
+H 1 ftp  250
+H 1 ftz  250
+H 1 oq   56
+H 1 tl   0 >
+H 2 a1f  0
+H 2 a2f  0
+H 2 a3f  0
+H 2 a4f  0
+H 2 a5f  0
+H 2 ab   0
+H 2 ah   34 >
+H 2 b1   120
+H 2 b2   100
+H 2 b4   330
+H 2 b5   260
+H 2 di   0
+H 2 fl   0
+H 2 fnp  200
+H 2 fnz  200
+H 2 ftp  250
+H 2 ftz  250
+H 2 oq   56
+H 2 tl   0 >
+I 0 a1f  0
+I 0 a2f  0
+I 0 a3f  0
+I 0 a4f  0
+I 0 a5f  0
+I 0 ab   0
+I 0 ah   34 >
+I 0 b1   120
+I 0 b2   100
+I 0 b4   330
+I 0 b5   260
+I 0 di   0
+I 0 fl   0
+I 0 fnp  200
+I 0 fnz  200
+I 0 ftp  250
+I 0 ftz  250
+I 0 oq   56
+I 0 tl   0 >
+I 1 a1f  0
+I 1 a2f  0
+I 1 a3f  0
+I 1 a4f  0
+I 1 a5f  0
+I 1 ab   0
+I 1 ah   34 >
+I 1 b1   120
+I 1 b2   100
+I 1 b4   330
+I 1 b5   260
+I 1 di   0
+I 1 fl   0
+I 1 fnp  200
+I 1 fnz  200
+I 1 ftp  250
+I 1 ftz  250
+I 1 oq   56
+I 1 tl   0 >
+I 2 a1f  0
+I 2 a2f  0
+I 2 a3f  0
+I 2 a4f  0
+I 2 a5f  0
+I 2 ab   0
+I 2 ah   34 >
+I 2 b1   120
+I 2 b2   100
+I 2 b4   330
+I 2 b5   260
+I 2 di   0
+I 2 fl   0
+I 2 fnp  200
+I 2 fnz  200
+I 2 ftp  250
+I 2 ftz  250
+I 2 oq   56
+I 2 tl   0 >
+J1 0 a1f  0
+J1 0 a2f  0
+J1 0 a3f  0
+J1 0 a4f  0
+J1 0 a5f  0 57:57
+J1 0 ab   0
+J1 0 ah   0
+J1 0 b1   120
+J1 0 b2   100
+J1 0 b4   330
+J1 0 b5   260
+J1 0 di   0 >
+J1 0 fl   0 >
+J1 0 fnp  200
+J1 0 fnz  200
+J1 0 ftp  250 >
+J1 0 ftz  250 >
+J1 0 oq   56 >
+J1 0 tl   0
+J1 1 a1f  0
+J1 1 a2f  0
+J1 1 a3f  0
+J1 1 a4f  0
+J1 1 a5f  0 57:57
+J1 1 ab   0
+J1 1 ah   0
+J1 1 b1   120
+J1 1 b2   100
+J1 1 b4   330
+J1 1 b5   260
+J1 1 di   0 >
+J1 1 fl   0 >
+J1 1 fnp  200
+J1 1 fnz  200
+J1 1 ftp  250 >
+J1 1 ftz  250 >
+J1 1 oq   56 >
+J1 1 tl   0
+J1 2 a1f  0
+J1 2 a2f  0
+J1 2 a3f  0
+J1 2 a4f  0
+J1 2 a5f  0 57:57
+J1 2 ab   0
+J1 2 ah   0
+J1 2 b1   120
+J1 2 b2   100
+J1 2 b4   330
+J1 2 b5   260
+J1 2 di   0 >
+J1 2 fl   0 >
+J1 2 fnp  200
+J1 2 fnz  200
+J1 2 ftp  250 >
+J1 2 ftz  250 >
+J1 2 oq   56 >
+J1 2 tl   0
+J2 0 a1f  0
+J2 0 a2f  0
+J2 0 a3f  62:62
+J2 0 a4f  59:59
+J2 0 a5f  0:0
+J2 0 ab   0
+J2 0 ah   0
+J2 0 b1   120
+J2 0 b2   100
+J2 0 b4   330
+J2 0 b5   260
+J2 0 di   0
+J2 0 fnp  200
+J2 0 fnz  200
+J2 0 oq   56
+J2 0 tl   0
+J2 1 a1f  0
+J2 1 a2f  0
+J2 1 a3f  62:62
+J2 1 a4f  59:59
+J2 1 a5f  0:0
+J2 1 ab   0
+J2 1 ah   0
+J2 1 b1   120
+J2 1 b2   100
+J2 1 b4   330
+J2 1 b5   260
+J2 1 di   0
+J2 1 fnp  200
+J2 1 fnz  200
+J2 1 oq   56
+J2 1 tl   0
+J2 2 a1f  0
+J2 2 a2f  0
+J2 2 a3f  62:62
+J2 2 a4f  59:59
+J2 2 a5f  0:0
+J2 2 ab   0
+J2 2 ah   0
+J2 2 b1   120
+J2 2 b2   100
+J2 2 b4   330
+J2 2 b5   260
+J2 2 di   0
+J2 2 fnp  200
+J2 2 fnz  200
+J2 2 oq   56
+J2 2 tl   0
+M 0 a1f  0
+M 0 a2f  0
+M 0 a3f  0
+M 0 a4f  0
+M 0 a5f  0
+M 0 ab   0
+M 0 ah   34
+M 0 b1   120
+M 0 b2   200
+M 0 b4   330
+M 0 b5   260
+M 0 di   0
+M 0 fl   0
+M 0 fnp  200
+M 0 fnz  320
+M 0 ftp  250
+M 0 ftz  250
+M 0 oq   56
+M 0 tl   0
+M 1 a1f  0
+M 1 a2f  0
+M 1 a3f  0
+M 1 a4f  0
+M 1 a5f  0
+M 1 ab   0
+M 1 ah   34
+M 1 b1   120
+M 1 b2   200
+M 1 b4   330
+M 1 b5   260
+M 1 di   0
+M 1 fl   0
+M 1 fnp  200
+M 1 fnz  320
+M 1 ftp  250
+M 1 ftz  250
+M 1 oq   56
+M 1 tl   0
+M 2 a1f  0
+M 2 a2f  0
+M 2 a3f  0
+M 2 a4f  0
+M 2 a5f  0
+M 2 ab   0
+M 2 ah   34
+M 2 b1   120
+M 2 b2   200
+M 2 b4   330
+M 2 b5   260
+M 2 di   0
+M 2 fl   0
+M 2 fnp  200
+M 2 fnz  320
+M 2 ftp  250
+M 2 ftz  250
+M 2 oq   56
+M 2 tl   0
+N 0 a1f  0
+N 0 a2f  0
+N 0 a3f  0
+N 0 a4f  0
+N 0 a5f  0
+N 0 ab   0
+N 0 ah   34
+N 0 b1   120
+N 0 b2   200
+N 0 b4   330
+N 0 b5   260
+N 0 di   0
+N 0 fl   0
+N 0 fnp  200
+N 0 fnz  320
+N 0 ftp  250
+N 0 ftz  250
+N 0 oq   56
+N 0 tl   0
+N 1 a1f  0
+N 1 a2f  0
+N 1 a3f  0
+N 1 a4f  0
+N 1 a5f  0
+N 1 ab   0
+N 1 ah   34
+N 1 b1   120
+N 1 b2   200
+N 1 b4   330
+N 1 b5   260
+N 1 di   0
+N 1 fl   0
+N 1 fnp  200
+N 1 fnz  320
+N 1 ftp  250
+N 1 ftz  250
+N 1 oq   56
+N 1 tl   0
+N 2 a1f  0
+N 2 a2f  0
+N 2 a3f  0
+N 2 a4f  0
+N 2 a5f  0
+N 2 ab   0
+N 2 ah   34
+N 2 b1   120
+N 2 b2   200
+N 2 b4   330
+N 2 b5   260
+N 2 di   0
+N 2 fl   0
+N 2 fnp  200
+N 2 fnz  320
+N 2 ftp  250
+N 2 ftz  250
+N 2 oq   56
+N 2 tl   0
+O1 0 a1f  0
+O1 0 a2f  0
+O1 0 a3f  0
+O1 0 a4f  0
+O1 0 a5f  0
+O1 0 ab   0
+O1 0 ah   34 >
+O1 0 b1   200
+O1 0 b2   100
+O1 0 b4   330
+O1 0 b5   260
+O1 0 di   0
+O1 0 fl   0 >
+O1 0 fnp  200
+O1 0 fnz  200
+O1 0 ftp  250 >
+O1 0 ftz  250 >
+O1 0 oq   56
+O1 0 tl   0 >
+O1 1 a1f  0
+O1 1 a2f  0
+O1 1 a3f  0
+O1 1 a4f  0
+O1 1 a5f  0
+O1 1 ab   0
+O1 1 ah   34 >
+O1 1 b1   200
+O1 1 b2   100
+O1 1 b4   330
+O1 1 b5   260
+O1 1 di   0
+O1 1 fl   0 >
+O1 1 fnp  200
+O1 1 fnz  200
+O1 1 ftp  250 >
+O1 1 ftz  250 >
+O1 1 oq   56
+O1 1 tl   0 >
+O1 2 a1f  0
+O1 2 a2f  0
+O1 2 a3f  0
+O1 2 a4f  0
+O1 2 a5f  0
+O1 2 ab   0
+O1 2 ah   34 >
+O1 2 b1   200
+O1 2 b2   100
+O1 2 b4   330
+O1 2 b5   260
+O1 2 di   0
+O1 2 fl   0 >
+O1 2 fnp  200
+O1 2 fnz  200
+O1 2 ftp  250 >
+O1 2 ftz  250 >
+O1 2 oq   56
+O1 2 tl   0 >
+O2 0 a1f  0
+O2 0 a2f  0
+O2 0 a3f  0
+O2 0 a4f  0
+O2 0 a5f  0
+O2 0 ab   0
+O2 0 b1   120
+O2 0 b2   100
+O2 0 b4   330
+O2 0 b5   260
+O2 0 di   0
+O2 0 fnp  200
+O2 0 fnz  200
+O2 0 oq   56
+O2 1 a1f  0
+O2 1 a2f  0
+O2 1 a3f  0
+O2 1 a4f  0
+O2 1 a5f  0
+O2 1 ab   0
+O2 1 b1   120
+O2 1 b2   100
+O2 1 b4   330
+O2 1 b5   260
+O2 1 di   0
+O2 1 fnp  200
+O2 1 fnz  200
+O2 1 oq   56
+O2 2 a1f  0
+O2 2 a2f  0
+O2 2 a3f  0
+O2 2 a4f  0
+O2 2 a5f  0
+O2 2 ab   0
+O2 2 b1   120
+O2 2 b2   100
+O2 2 b4   330
+O2 2 b5   260
+O2 2 di   0
+O2 2 fnp  200
+O2 2 fnz  200
+O2 2 oq   56
+R 0 a1f  0
+R 0 a2f  0
+R 0 a3f  0
+R 0 a4f  0
+R 0 a5f  0
+R 0 ab   0
+R 0 ah   34 >
+R 0 b1   120
+R 0 b2   100
+R 0 b4   330
+R 0 b5   260
+R 0 di   0
+R 0 fl   0
+R 0 fnp  200
+R 0 fnz  200
+R 0 ftp  250
+R 0 ftz  250
+R 0 oq   56
+R 0 tl   0 >
+R 1 a1f  0
+R 1 a2f  0
+R 1 a3f  0
+R 1 a4f  0
+R 1 a5f  0
+R 1 ab   0
+R 1 ah   34 >
+R 1 b1   120
+R 1 b2   100
+R 1 b4   330
+R 1 b5   260
+R 1 di   0
+R 1 fl   0
+R 1 fnp  200
+R 1 fnz  200
+R 1 ftp  250
+R 1 ftz  250
+R 1 oq   56
+R 1 tl   0 >
+R 2 a1f  0
+R 2 a2f  0
+R 2 a3f  0
+R 2 a4f  0
+R 2 a5f  0
+R 2 ab   0
+R 2 ah   34 >
+R 2 b1   120
+R 2 b2   100
+R 2 b4   330
+R 2 b5   260
+R 2 di   0
+R 2 fl   0
+R 2 fnp  200
+R 2 fnz  200
+R 2 ftp  250
+R 2 ftz  250
+R 2 oq   56
+R 2 tl   0 >
+S 0 a1f  0
+S 0 a2f  0
+S 0 a3f  62
+S 0 a4f  59
+S 0 a5f  0
+S 0 ab   0
+S 0 ah   0
+S 0 b1   120
+S 0 b2   100
+S 0 b4   330
+S 0 b5   260
+S 0 di   0
+S 0 fl   0 >
+S 0 fnp  200
+S 0 fnz  200
+S 0 ftp  250 >
+S 0 ftz  250 >
+S 0 oq   56
+S 0 tl   0
+S 1 a1f  0
+S 1 a2f  0
+S 1 a3f  62
+S 1 a4f  59
+S 1 a5f  0
+S 1 ab   0
+S 1 ah   0
+S 1 b1   120
+S 1 b2   100
+S 1 b4   330
+S 1 b5   260
+S 1 di   0
+S 1 fl   0 >
+S 1 fnp  200
+S 1 fnz  200
+S 1 ftp  250 >
+S 1 ftz  250 >
+S 1 oq   56
+S 1 tl   0
+S 2 a1f  0
+S 2 a2f  0
+S 2 a3f  62
+S 2 a4f  59
+S 2 a5f  0
+S 2 ab   0
+S 2 ah   0
+S 2 b1   120
+S 2 b2   100
+S 2 b4   330
+S 2 b5   260
+S 2 di   0
+S 2 fl   0 >
+S 2 fnp  200
+S 2 fnz  200
+S 2 ftp  250 >
+S 2 ftz  250 >
+S 2 oq   56
+S 2 tl   0
+T 0 a1f  0
+T 0 a2f  0
+T 0 a3f  0
+T 0 a4f  0
+T 0 a5f  0
+T 0 ab   60
+T 0 ah   0
+T 0 b1   120
+T 0 b2   100
+T 0 b4   330
+T 0 b5   260
+T 0 di   0 >
+T 0 fl   0 >
+T 0 fnp  200
+T 0 fnz  200
+T 0 ftp  250 >
+T 0 ftz  250 >
+T 0 oq   56 >
+T 0 tl   0
+T 1 a1f  0
+T 1 a2f  0
+T 1 a3f  0
+T 1 a4f  0
+T 1 a5f  0
+T 1 ab   60
+T 1 ah   0
+T 1 b1   120
+T 1 b2   100
+T 1 b4   330
+T 1 b5   260
+T 1 di   0 >
+T 1 fl   0 >
+T 1 fnp  200
+T 1 fnz  200
+T 1 ftp  250 >
+T 1 ftz  250 >
+T 1 oq   56 >
+T 1 tl   0
+T 2 a1f  0
+T 2 a2f  0
+T 2 a3f  0
+T 2 a4f  0
+T 2 a5f  0
+T 2 ab   60
+T 2 ah   0
+T 2 b1   120
+T 2 b2   100
+T 2 b4   330
+T 2 b5   260
+T 2 di   0 >
+T 2 fl   0 >
+T 2 fnp  200
+T 2 fnz  200
+T 2 ftp  250 >
+T 2 ftz  250 >
+T 2 oq   56 >
+T 2 tl   0
+U 0 a1f  0
+U 0 a2f  0
+U 0 a3f  0
+U 0 a4f  0
+U 0 a5f  0
+U 0 ab   0
+U 0 ah   34 >
+U 0 b1   120
+U 0 b2   100
+U 0 b4   330
+U 0 b5   260
+U 0 di   0
+U 0 fl   0
+U 0 fnp  200
+U 0 fnz  200
+U 0 ftp  250
+U 0 ftz  250
+U 0 oq   56
+U 0 tl   0 >
+U 1 a1f  0
+U 1 a2f  0
+U 1 a3f  0
+U 1 a4f  0
+U 1 a5f  0
+U 1 ab   0
+U 1 ah   34 >
+U 1 b1   120
+U 1 b2   100
+U 1 b4   330
+U 1 b5   260
+U 1 di   0
+U 1 fl   0
+U 1 fnp  200
+U 1 fnz  200
+U 1 ftp  250
+U 1 ftz  250
+U 1 oq   56
+U 1 tl   0 >
+U 2 a1f  0
+U 2 a2f  0
+U 2 a3f  0
+U 2 a4f  0
+U 2 a5f  0
+U 2 ab   0
+U 2 ah   34 >
+U 2 b1   120
+U 2 b2   100
+U 2 b4   330
+U 2 b5   260
+U 2 di   0
+U 2 fl   0
+U 2 fnp  200
+U 2 fnz  200
+U 2 ftp  250
+U 2 ftz  250
+U 2 oq   56
+U 2 tl   0 >
+W1 0 a1f  0
+W1 0 a2f  0
+W1 0 a3f  0
+W1 0 a4f  0
+W1 0 a5f  0
+W1 0 ab   0
+W1 0 ah   34 >
+W1 0 b1   120
+W1 0 b2   100
+W1 0 b4   330
+W1 0 b5   260
+W1 0 di   0
+W1 0 fl   0 >
+W1 0 fnp  200
+W1 0 fnz  200
+W1 0 ftp  250 >
+W1 0 ftz  250 >
+W1 0 oq   56
+W1 0 tl   0 >
+W1 1 a1f  0
+W1 1 a2f  0
+W1 1 a3f  0
+W1 1 a4f  0
+W1 1 a5f  0
+W1 1 ab   0
+W1 1 ah   34 >
+W1 1 b1   120
+W1 1 b2   100
+W1 1 b4   330
+W1 1 b5   260
+W1 1 di   0
+W1 1 fl   0 >
+W1 1 fnp  200
+W1 1 fnz  200
+W1 1 ftp  250 >
+W1 1 ftz  250 >
+W1 1 oq   56
+W1 1 tl   0 >
+W1 2 a1f  0
+W1 2 a2f  0
+W1 2 a3f  0
+W1 2 a4f  0
+W1 2 a5f  0
+W1 2 ab   0
+W1 2 ah   34 >
+W1 2 b1   120
+W1 2 b2   100
+W1 2 b4   330
+W1 2 b5   260
+W1 2 di   0
+W1 2 fl   0 >
+W1 2 fnp  200
+W1 2 fnz  200
+W1 2 ftp  250 >
+W1 2 ftz  250 >
+W1 2 oq   56
+W1 2 tl   0 >
+W2 0 a1f  0
+W2 0 a2f  0
+W2 0 a3f  0
+W2 0 a4f  0
+W2 0 a5f  0
+W2 0 ab   0
+W2 0 b1   120
+W2 0 b2   100
+W2 0 b4   330
+W2 0 b5   260
+W2 0 di   0
+W2 0 fnp  200
+W2 0 fnz  200
+W2 0 oq   56
+W2 1 a1f  0
+W2 1 a2f  0
+W2 1 a3f  0
+W2 1 a4f  0
+W2 1 a5f  0
+W2 1 ab   0
+W2 1 b1   120
+W2 1 b2   100
+W2 1 b4   330
+W2 1 b5   260
+W2 1 di   0
+W2 1 fnp  200
+W2 1 fnz  200
+W2 1 oq   56
+W2 2 a1f  0
+W2 2 a2f  0
+W2 2 a3f  0
+W2 2 a4f  0
+W2 2 a5f  0
+W2 2 ab   0
+W2 2 b1   120
+W2 2 b2   100
+W2 2 b4   330
+W2 2 b5   260
+W2 2 di   0
+W2 2 fnp  200
+W2 2 fnz  200
+W2 2 oq   56
+X 0 a1f  0
+X 0 a2f  0
+X 0 a3f  0
+X 0 a4f  0
+X 0 a5f  0
+X 0 ab   0
+X 0 ah   34 >
+X 0 b1   120
+X 0 b2   100
+X 0 b4   330
+X 0 b5   260
+X 0 di   0
+X 0 fl   0
+X 0 fnp  200
+X 0 fnz  200
+X 0 ftp  250
+X 0 ftz  250
+X 0 oq   56
+X 0 tl   0 >
+X 1 a1f  0
+X 1 a2f  0
+X 1 a3f  0
+X 1 a4f  0
+X 1 a5f  0
+X 1 ab   0
+X 1 ah   34 >
+X 1 b1   120
+X 1 b2   100
+X 1 b4   330
+X 1 b5   260
+X 1 di   0
+X 1 fl   0
+X 1 fnp  200
+X 1 fnz  200
+X 1 ftp  250
+X 1 ftz  250
+X 1 oq   56
+X 1 tl   0 >
+X 2 a1f  0
+X 2 a2f  0
+X 2 a3f  0
+X 2 a4f  0
+X 2 a5f  0
+X 2 ab   0
+X 2 ah   34 >
+X 2 b1   120
+X 2 b2   100
+X 2 b4   330
+X 2 b5   260
+X 2 di   0
+X 2 fl   0
+X 2 fnp  200
+X 2 fnz  200
+X 2 ftp  250
+X 2 ftz  250
+X 2 oq   56
+X 2 tl   0 >
+Y1 0 a1f  0
+Y1 0 a2f  0
+Y1 0 a3f  0
+Y1 0 a4f  0
+Y1 0 a5f  0
+Y1 0 ab   0
+Y1 0 ah   34 >
+Y1 0 b1   120
+Y1 0 b2   100
+Y1 0 b4   330
+Y1 0 b5   260
+Y1 0 di   0
+Y1 0 fl   0 >
+Y1 0 fnp  200
+Y1 0 fnz  200
+Y1 0 ftp  250 >
+Y1 0 ftz  250 >
+Y1 0 oq   56
+Y1 0 tl   0 >
+Y1 1 a1f  0
+Y1 1 a2f  0
+Y1 1 a3f  0
+Y1 1 a4f  0
+Y1 1 a5f  0
+Y1 1 ab   0
+Y1 1 ah   34 >
+Y1 1 b1   120
+Y1 1 b2   100
+Y1 1 b4   330
+Y1 1 b5   260
+Y1 1 di   0
+Y1 1 fl   0 >
+Y1 1 fnp  200
+Y1 1 fnz  200
+Y1 1 ftp  250 >
+Y1 1 ftz  250 >
+Y1 1 oq   56
+Y1 1 tl   0 >
+Y1 2 a1f  0
+Y1 2 a2f  0
+Y1 2 a3f  0
+Y1 2 a4f  0
+Y1 2 a5f  0
+Y1 2 ab   0
+Y1 2 ah   34 >
+Y1 2 b1   120
+Y1 2 b2   100
+Y1 2 b4   330
+Y1 2 b5   260
+Y1 2 di   0
+Y1 2 fl   0 >
+Y1 2 fnp  200
+Y1 2 fnz  200
+Y1 2 ftp  250 >
+Y1 2 ftz  250 >
+Y1 2 oq   56
+Y1 2 tl   0 >
+Y2 0 a1f  0
+Y2 0 a2f  0
+Y2 0 a3f  0
+Y2 0 a4f  0
+Y2 0 a5f  0
+Y2 0 ab   0
+Y2 0 b1   120
+Y2 0 b2   100
+Y2 0 b4   330
+Y2 0 b5   260
+Y2 0 di   0
+Y2 0 fnp  200
+Y2 0 fnz  200
+Y2 0 oq   56
+Y2 1 a1f  0
+Y2 1 a2f  0
+Y2 1 a3f  0
+Y2 1 a4f  0
+Y2 1 a5f  0
+Y2 1 ab   0
+Y2 1 b1   120
+Y2 1 b2   100
+Y2 1 b4   330
+Y2 1 b5   260
+Y2 1 di   0
+Y2 1 fnp  200
+Y2 1 fnz  200
+Y2 1 oq   56
+Y2 2 a1f  0
+Y2 2 a2f  0
+Y2 2 a3f  0
+Y2 2 a4f  0
+Y2 2 a5f  0
+Y2 2 ab   0
+Y2 2 b1   120
+Y2 2 b2   100
+Y2 2 b4   330
+Y2 2 b5   260
+Y2 2 di   0
+Y2 2 fnp  200
+Y2 2 fnz  200
+Y2 2 oq   56
+Z 0 a1f  0
+Z 0 a2f  0
+Z 0 a3f  62
+Z 0 a4f  59
+Z 0 a5f  0
+Z 0 ab   0
+Z 0 ah   0
+Z 0 b1   120
+Z 0 b2   100
+Z 0 b4   330
+Z 0 b5   260
+Z 0 di   0
+Z 0 fl   0 >
+Z 0 fnp  200
+Z 0 fnz  200
+Z 0 ftp  250 >
+Z 0 ftz  250 >
+Z 0 oq   56
+Z 0 tl   0
+Z 1 a1f  0
+Z 1 a2f  0
+Z 1 a3f  62
+Z 1 a4f  59
+Z 1 a5f  0
+Z 1 ab   0
+Z 1 ah   0
+Z 1 b1   120
+Z 1 b2   100
+Z 1 b4   330
+Z 1 b5   260
+Z 1 di   0
+Z 1 fl   0 >
+Z 1 fnp  200
+Z 1 fnz  200
+Z 1 ftp  250 >
+Z 1 ftz  250 >
+Z 1 oq   56
+Z 1 tl   0
+Z 2 a1f  0
+Z 2 a2f  0
+Z 2 a3f  62
+Z 2 a4f  59
+Z 2 a5f  0
+Z 2 ab   0
+Z 2 ah   0
+Z 2 b1   120
+Z 2 b2   100
+Z 2 b4   330
+Z 2 b5   260
+Z 2 di   0
+Z 2 fl   0 >
+Z 2 fnp  200
+Z 2 fnz  200
+Z 2 ftp  250 >
+Z 2 ftz  250 >
+Z 2 oq   56
+Z 2 tl   0
+a 0 a1f  0
+a 0 a2f  0
+a 0 a3f  0
+a 0 a4f  0
+a 0 a5f  0
+a 0 ab   0
+a 0 ah   34 >
+a 0 b1   120
+a 0 b2   100
+a 0 b4   330
+a 0 b5   260
+a 0 di   0
+a 0 fl   0
+a 0 fnp  200
+a 0 fnz  200
+a 0 ftp  250
+a 0 ftz  250
+a 0 oq   56
+a 0 tl   0 >
+a 1 a1f  0
+a 1 a2f  0
+a 1 a3f  0
+a 1 a4f  0
+a 1 a5f  0
+a 1 ab   0
+a 1 ah   34 >
+a 1 b1   120
+a 1 b2   100
+a 1 b4   330
+a 1 b5   260
+a 1 di   0
+a 1 fl   0
+a 1 fnp  200
+a 1 fnz  200
+a 1 ftp  250
+a 1 ftz  250
+a 1 oq   56
+a 1 tl   0 >
+a 2 a1f  0
+a 2 a2f  0
+a 2 a3f  0
+a 2 a4f  0
+a 2 a5f  0
+a 2 ab   0
+a 2 ah   34 >
+a 2 b1   120
+a 2 b2   100
+a 2 b4   330
+a 2 b5   260
+a 2 di   0
+a 2 fl   0
+a 2 fnp  200
+a 2 fnz  200
+a 2 ftp  250
+a 2 ftz  250
+a 2 oq   56
+a 2 tl   0 >
+b 0 a1f  0
+b 0 a2f  0
+b 0 a3f  0
+b 0 a4f  0
+b 0 a5f  0
+b 0 ab   0 70:70
+b 0 ah   0
+b 0 b1   120
+b 0 b2   100
+b 0 b4   330
+b 0 b5   260
+b 0 di   0 >
+b 0 fl   0 >
+b 0 fnp  200
+b 0 fnz  200
+b 0 ftp  250 >
+b 0 ftz  250 >
+b 0 oq   56 >
+b 0 tl   0
+b 1 a1f  0
+b 1 a2f  0
+b 1 a3f  0
+b 1 a4f  0
+b 1 a5f  0
+b 1 ab   0 70:70
+b 1 ah   0
+b 1 b1   120
+b 1 b2   100
+b 1 b4   330
+b 1 b5   260
+b 1 di   0 >
+b 1 fl   0 >
+b 1 fnp  200
+b 1 fnz  200
+b 1 ftp  250 >
+b 1 ftz  250 >
+b 1 oq   56 >
+b 1 tl   0
+b 2 a1f  0
+b 2 a2f  0
+b 2 a3f  0
+b 2 a4f  0
+b 2 a5f  0
+b 2 ab   0 70:70
+b 2 ah   0
+b 2 b1   120
+b 2 b2   100
+b 2 b4   330
+b 2 b5   260
+b 2 di   0 >
+b 2 fl   0 >
+b 2 fnp  200
+b 2 fnz  200
+b 2 ftp  250 >
+b 2 ftz  250 >
+b 2 oq   56 >
+b 2 tl   0
+c 0 a1f  0
+c 0 a2f  0
+c 0 a3f  0
+c 0 a4f  0
+c 0 a5f  0
+c 0 ab   0
+c 0 ah   34 >
+c 0 b1   200
+c 0 b2   100
+c 0 b4   330
+c 0 b5   260
+c 0 di   0
+c 0 fl   0
+c 0 fnp  200
+c 0 fnz  200
+c 0 ftp  250
+c 0 ftz  250
+c 0 oq   56
+c 0 tl   0 >
+c 1 a1f  0
+c 1 a2f  0
+c 1 a3f  0
+c 1 a4f  0
+c 1 a5f  0
+c 1 ab   0
+c 1 ah   34 >
+c 1 b1   200
+c 1 b2   100
+c 1 b4   330
+c 1 b5   260
+c 1 di   0
+c 1 fl   0
+c 1 fnp  200
+c 1 fnz  200
+c 1 ftp  250
+c 1 ftz  250
+c 1 oq   56
+c 1 tl   0 >
+c 2 a1f  0
+c 2 a2f  0
+c 2 a3f  0
+c 2 a4f  0
+c 2 a5f  0
+c 2 ab   0
+c 2 ah   34 >
+c 2 b1   200
+c 2 b2   100
+c 2 b4   330
+c 2 b5   260
+c 2 di   0
+c 2 fl   0
+c 2 fnp  200
+c 2 fnz  200
+c 2 ftp  250
+c 2 ftz  250
+c 2 oq   56
+c 2 tl   0 >
+d 0 a1f  0
+d 0 a2f  0
+d 0 a3f  0
+d 0 a4f  0
+d 0 a5f  0 57:57
+d 0 ab   0
+d 0 ah   0
+d 0 b1   120
+d 0 b2   100
+d 0 b4   330
+d 0 b5   260
+d 0 di   0 >
+d 0 fl   0 >
+d 0 fnp  200
+d 0 fnz  200
+d 0 ftp  250 >
+d 0 ftz  250 >
+d 0 oq   56 >
+d 0 tl   0
+d 1 a1f  0
+d 1 a2f  0
+d 1 a3f  0
+d 1 a4f  0
+d 1 a5f  0 57:57
+d 1 ab   0
+d 1 ah   0
+d 1 b1   120
+d 1 b2   100
+d 1 b4   330
+d 1 b5   260
+d 1 di   0 >
+d 1 fl   0 >
+d 1 fnp  200
+d 1 fnz  200
+d 1 ftp  250 >
+d 1 ftz  250 >
+d 1 oq   56 >
+d 1 tl   0
+d 2 a1f  0
+d 2 a2f  0
+d 2 a3f  0
+d 2 a4f  0
+d 2 a5f  0 57:57
+d 2 ab   0
+d 2 ah   0
+d 2 b1   120
+d 2 b2   100
+d 2 b4   330
+d 2 b5   260
+d 2 di   0 >
+d 2 fl   0 >
+d 2 fnp  200
+d 2 fnz  200
+d 2 ftp  250 >
+d 2 ftz  250 >
+d 2 oq   56 >
+d 2 tl   0
+e 0 a1f  0
+e 0 a2f  0
+e 0 a3f  0
+e 0 a4f  0
+e 0 a5f  0
+e 0 ab   0
+e 0 ah   34 >
+e 0 b1   120
+e 0 b2   100
+e 0 b4   330
+e 0 b5   260
+e 0 di   0
+e 0 fl   0
+e 0 fnp  200
+e 0 fnz  200
+e 0 ftp  250
+e 0 ftz  250
+e 0 oq   56
+e 0 tl   0 >
+e 1 a1f  0
+e 1 a2f  0
+e 1 a3f  0
+e 1 a4f  0
+e 1 a5f  0
+e 1 ab   0
+e 1 ah   34 >
+e 1 b1   120
+e 1 b2   100
+e 1 b4   330
+e 1 b5   260
+e 1 di   0
+e 1 fl   0
+e 1 fnp  200
+e 1 fnz  200
+e 1 ftp  250
+e 1 ftz  250
+e 1 oq   56
+e 1 tl   0 >
+e 2 a1f  0
+e 2 a2f  0
+e 2 a3f  0
+e 2 a4f  0
+e 2 a5f  0
+e 2 ab   0
+e 2 ah   34 >
+e 2 b1   120
+e 2 b2   100
+e 2 b4   330
+e 2 b5   260
+e 2 di   0
+e 2 fl   0
+e 2 fnp  200
+e 2 fnz  200
+e 2 ftp  250
+e 2 ftz  250
+e 2 oq   56
+e 2 tl   0 >
+f 0 a1f  55
+f 0 a2f  55
+f 0 a3f  0
+f 0 a4f  0
+f 0 a5f  0
+f 0 ab   65
+f 0 ah   0
+f 0 b1   120
+f 0 b2   100
+f 0 b4   330
+f 0 b5   260
+f 0 di   0
+f 0 fl   0 >
+f 0 fnp  200
+f 0 fnz  200
+f 0 ftp  250 >
+f 0 ftz  250 >
+f 0 oq   56
+f 0 tl   0
+f 1 a1f  55
+f 1 a2f  55
+f 1 a3f  0
+f 1 a4f  0
+f 1 a5f  0
+f 1 ab   65
+f 1 ah   0
+f 1 b1   120
+f 1 b2   100
+f 1 b4   330
+f 1 b5   260
+f 1 di   0
+f 1 fl   0 >
+f 1 fnp  200
+f 1 fnz  200
+f 1 ftp  250 >
+f 1 ftz  250 >
+f 1 oq   56
+f 1 tl   0
+f 2 a1f  55
+f 2 a2f  55
+f 2 a3f  0
+f 2 a4f  0
+f 2 a5f  0
+f 2 ab   65
+f 2 ah   0
+f 2 b1   120
+f 2 b2   100
+f 2 b4   330
+f 2 b5   260
+f 2 di   0
+f 2 fl   0 >
+f 2 fnp  200
+f 2 fnz  200
+f 2 ftp  250 >
+f 2 ftz  250 >
+f 2 oq   56
+f 2 tl   0
+g 0 a1f  0
+g 0 a2f  0 70:70
+g 0 a3f  0
+g 0 a4f  0
+g 0 a5f  0
+g 0 ab   0
+g 0 ah   0
+g 0 b1   120
+g 0 b2   100
+g 0 b4   330
+g 0 b5   260
+g 0 di   0 >
+g 0 fl   0 >
+g 0 fnp  200
+g 0 fnz  200
+g 0 ftp  250 >
+g 0 ftz  250 >
+g 0 oq   56 >
+g 0 tl   35:35 0:0
+g 1 a1f  0
+g 1 a2f  0 70:70
+g 1 a3f  0
+g 1 a4f  0
+g 1 a5f  0
+g 1 ab   0
+g 1 ah   0
+g 1 b1   120
+g 1 b2   100
+g 1 b4   330
+g 1 b5   260
+g 1 di   0 >
+g 1 fl   0 >
+g 1 fnp  200
+g 1 fnz  200
+g 1 ftp  250 >
+g 1 ftz  250 >
+g 1 oq   56 >
+g 1 tl   35:35 0:0
+g 2 a1f  0
+g 2 a2f  0 70:70
+g 2 a3f  0
+g 2 a4f  0
+g 2 a5f  0
+g 2 ab   0
+g 2 ah   0
+g 2 b1   120
+g 2 b2   100
+g 2 b4   330
+g 2 b5   260
+g 2 di   0 >
+g 2 fl   0 >
+g 2 fnp  200
+g 2 fnz  200
+g 2 ftp  250 >
+g 2 ftz  250 >
+g 2 oq   56 >
+g 2 tl   35:35 0:0
+hA 0 a1f  0
+hA 0 a2f  0
+hA 0 a3f  0
+hA 0 a4f  0
+hA 0 a5f  0
+hA 0 ab   0
+hA 0 ah   36:36 34:34
+hA 0 b1   120
+hA 0 b2   100
+hA 0 b4   330
+hA 0 b5   260
+hA 0 di   0
+hA 0 fl   0
+hA 0 fnp  200
+hA 0 fnz  200
+hA 0 ftp  250
+hA 0 ftz  250
+hA 0 oq   56
+hA 0 tl   0
+hA 1 a1f  0
+hA 1 a2f  0
+hA 1 a3f  0
+hA 1 a4f  0
+hA 1 a5f  0
+hA 1 ab   0
+hA 1 ah   39:39 34:34 >
+hA 1 b1   120
+hA 1 b2   100
+hA 1 b4   330
+hA 1 b5   260
+hA 1 di   0
+hA 1 fl   0
+hA 1 fnp  200
+hA 1 fnz  200
+hA 1 ftp  250
+hA 1 ftz  250
+hA 1 oq   56
+hA 1 tl   0 >
+hA 2 a1f  0
+hA 2 a2f  0
+hA 2 a3f  0
+hA 2 a4f  0
+hA 2 a5f  0
+hA 2 ab   0
+hA 2 ah   39:39 34:34 >
+hA 2 b1   120
+hA 2 b2   100
+hA 2 b4   330
+hA 2 b5   260
+hA 2 di   0
+hA 2 fl   0
+hA 2 fnp  200
+hA 2 fnz  200
+hA 2 ftp  250
+hA 2 ftz  250
+hA 2 oq   56
+hA 2 tl   0 >
+hE 0 a1f  0
+hE 0 a2f  0
+hE 0 a3f  0
+hE 0 a4f  0
+hE 0 a5f  0
+hE 0 ab   0
+hE 0 ah   39 34:34 >
+hE 0 b1   120
+hE 0 b2   100
+hE 0 b4   330
+hE 0 b5   260
+hE 0 di   0
+hE 0 fl   0
+hE 0 fnp  200
+hE 0 fnz  200
+hE 0 ftp  250
+hE 0 ftz  250
+hE 0 oq   56
+hE 0 tl   0 >
+hE 1 a1f  0
+hE 1 a2f  0
+hE 1 a3f  0
+hE 1 a4f  0
+hE 1 a5f  0
+hE 1 ab   0
+hE 1 ah   42:42 34:34 >
+hE 1 b1   120
+hE 1 b2   100
+hE 1 b4   330
+hE 1 b5   260
+hE 1 di   0
+hE 1 fl   0
+hE 1 fnp  200
+hE 1 fnz  200
+hE 1 ftp  250
+hE 1 ftz  250
+hE 1 oq   56
+hE 1 tl   0 >
+hE 2 a1f  0
+hE 2 a2f  0
+hE 2 a3f  0
+hE 2 a4f  0
+hE 2 a5f  0
+hE 2 ab   0
+hE 2 ah   42:42 34:34 >
+hE 2 b1   120
+hE 2 b2   100
+hE 2 b4   330
+hE 2 b5   260
+hE 2 di   0
+hE 2 fl   0
+hE 2 fnp  200
+hE 2 fnz  200
+hE 2 ftp  250
+hE 2 ftz  250
+hE 2 oq   56
+hE 2 tl   0 >
+hH 0 a1f  0
+hH 0 a2f  0
+hH 0 a3f  0
+hH 0 a4f  0
+hH 0 a5f  0
+hH 0 ab   0
+hH 0 ah   39:39 34:34
+hH 0 b1   120
+hH 0 b2   100
+hH 0 b4   330
+hH 0 b5   260
+hH 0 di   0
+hH 0 fl   0
+hH 0 fnp  200
+hH 0 fnz  200
+hH 0 ftp  250
+hH 0 ftz  250
+hH 0 oq   56
+hH 0 tl   0
+hH 1 a1f  0
+hH 1 a2f  0
+hH 1 a3f  0
+hH 1 a4f  0
+hH 1 a5f  0
+hH 1 ab   0
+hH 1 ah   42:42 34:34
+hH 1 b1   120
+hH 1 b2   100
+hH 1 b4   330
+hH 1 b5   260
+hH 1 di   0
+hH 1 fl   0
+hH 1 fnp  200
+hH 1 fnz  200
+hH 1 ftp  250
+hH 1 ftz  250
+hH 1 oq   56
+hH 1 tl   0 >
+hH 2 a1f  0
+hH 2 a2f  0
+hH 2 a3f  0
+hH 2 a4f  0
+hH 2 a5f  0
+hH 2 ab   0
+hH 2 ah   42:42 34:34
+hH 2 b1   120
+hH 2 b2   100
+hH 2 b4   330
+hH 2 b5   260
+hH 2 di   0
+hH 2 fl   0
+hH 2 fnp  200
+hH 2 fnz  200
+hH 2 ftp  250
+hH 2 ftz  250
+hH 2 oq   56
+hH 2 tl   0
+hI 0 a1f  0
+hI 0 a2f  0
+hI 0 a3f  0
+hI 0 a4f  0
+hI 0 a5f  0
+hI 0 ab   0
+hI 0 ah   39:39 34:34
+hI 0 b1   120
+hI 0 b2   100
+hI 0 b4   330
+hI 0 b5   260
+hI 0 di   0
+hI 0 fl   0
+hI 0 fnp  200
+hI 0 fnz  200
+hI 0 ftp  250
+hI 0 ftz  250
+hI 0 oq   56
+hI 0 tl   0
+hI 1 a1f  0
+hI 1 a2f  0
+hI 1 a3f  0
+hI 1 a4f  0
+hI 1 a5f  0
+hI 1 ab   0
+hI 1 ah   42:42 34:34 >
+hI 1 b1   120
+hI 1 b2   100
+hI 1 b4   330
+hI 1 b5   260
+hI 1 di   0
+hI 1 fl   0
+hI 1 fnp  200
+hI 1 fnz  200
+hI 1 ftp  250
+hI 1 ftz  250
+hI 1 oq   56
+hI 1 tl   0 >
+hI 2 a1f  0
+hI 2 a2f  0
+hI 2 a3f  0
+hI 2 a4f  0
+hI 2 a5f  0
+hI 2 ab   0
+hI 2 ah   42:42 34:34 >
+hI 2 b1   120
+hI 2 b2   100
+hI 2 b4   330
+hI 2 b5   260
+hI 2 di   0
+hI 2 fl   0
+hI 2 fnp  200
+hI 2 fnz  200
+hI 2 ftp  250
+hI 2 ftz  250
+hI 2 oq   56
+hI 2 tl   0 >
+hO1 0 a1f  0
+hO1 0 a2f  0
+hO1 0 a3f  0
+hO1 0 a4f  0
+hO1 0 a5f  0
+hO1 0 ab   0
+hO1 0 ah   37:37 34:34 >
+hO1 0 b1   200
+hO1 0 b2   100
+hO1 0 b4   330
+hO1 0 b5   260
+hO1 0 di   0
+hO1 0 fl   0 >
+hO1 0 fnp  200
+hO1 0 fnz  200
+hO1 0 ftp  250 >
+hO1 0 ftz  250 >
+hO1 0 oq   56
+hO1 0 tl   0 >
+hO1 1 a1f  0
+hO1 1 a2f  0
+hO1 1 a3f  0
+hO1 1 a4f  0
+hO1 1 a5f  0
+hO1 1 ab   0
+hO1 1 ah   40:40 34:34 >
+hO1 1 b1   200
+hO1 1 b2   100
+hO1 1 b4   330
+hO1 1 b5   260
+hO1 1 di   0
+hO1 1 fl   0 >
+hO1 1 fnp  200
+hO1 1 fnz  200
+hO1 1 ftp  250 >
+hO1 1 ftz  250 >
+hO1 1 oq   56
+hO1 1 tl   0 >
+hO1 2 a1f  0
+hO1 2 a2f  0
+hO1 2 a3f  0
+hO1 2 a4f  0
+hO1 2 a5f  0
+hO1 2 ab   0
+hO1 2 ah   40:40 34:34 >
+hO1 2 b1   200
+hO1 2 b2   100
+hO1 2 b4   330
+hO1 2 b5   260
+hO1 2 di   0
+hO1 2 fl   0 >
+hO1 2 fnp  200
+hO1 2 fnz  200
+hO1 2 ftp  250 >
+hO1 2 ftz  250 >
+hO1 2 oq   56
+hO1 2 tl   0 >
+hO2 0 a1f  0
+hO2 0 a2f  0
+hO2 0 a3f  0
+hO2 0 a4f  0
+hO2 0 a5f  0
+hO2 0 ab   0
+hO2 0 b1   120
+hO2 0 b2   100
+hO2 0 b4   330
+hO2 0 b5   260
+hO2 0 di   0
+hO2 0 fnp  200
+hO2 0 fnz  200
+hO2 0 oq   56
+hO2 1 a1f  0
+hO2 1 a2f  0
+hO2 1 a3f  0
+hO2 1 a4f  0
+hO2 1 a5f  0
+hO2 1 ab   0
+hO2 1 b1   120
+hO2 1 b2   100
+hO2 1 b4   330
+hO2 1 b5   260
+hO2 1 di   0
+hO2 1 fnp  200
+hO2 1 fnz  200
+hO2 1 oq   56
+hO2 2 a1f  0
+hO2 2 a2f  0
+hO2 2 a3f  0
+hO2 2 a4f  0
+hO2 2 a5f  0
+hO2 2 ab   0
+hO2 2 b1   120
+hO2 2 b2   100
+hO2 2 b4   330
+hO2 2 b5   260
+hO2 2 di   0
+hO2 2 fnp  200
+hO2 2 fnz  200
+hO2 2 oq   56
+hU 0 a1f  0
+hU 0 a2f  0
+hU 0 a3f  0
+hU 0 a4f  0
+hU 0 a5f  0
+hU 0 ab   0
+hU 0 ah   43:43 34:34 >
+hU 0 b1   120
+hU 0 b2   100
+hU 0 b4   330
+hU 0 b5   260
+hU 0 di   0
+hU 0 fl   0
+hU 0 fnp  200
+hU 0 fnz  200
+hU 0 ftp  250
+hU 0 ftz  250
+hU 0 oq   56
+hU 0 tl   0 >
+hU 1 a1f  0
+hU 1 a2f  0
+hU 1 a3f  0
+hU 1 a4f  0
+hU 1 a5f  0
+hU 1 ab   0
+hU 1 ah   46:46 34:34 >
+hU 1 b1   120
+hU 1 b2   100
+hU 1 b4   330
+hU 1 b5   260
+hU 1 di   0
+hU 1 fl   0
+hU 1 fnp  200
+hU 1 fnz  200
+hU 1 ftp  250
+hU 1 ftz  250
+hU 1 oq   56
+hU 1 tl   0 >
+hU 2 a1f  0
+hU 2 a2f  0
+hU 2 a3f  0
+hU 2 a4f  0
+hU 2 a5f  0
+hU 2 ab   0
+hU 2 ah   46:46 34:34 >
+hU 2 b1   120
+hU 2 b2   100
+hU 2 b4   330
+hU 2 b5   260
+hU 2 di   0
+hU 2 fl   0
+hU 2 fnp  200
+hU 2 fnz  200
+hU 2 ftp  250
+hU 2 ftz  250
+hU 2 oq   56
+hU 2 tl   0 >
+hW1 0 a1f  0
+hW1 0 a2f  0
+hW1 0 a3f  0
+hW1 0 a4f  0
+hW1 0 a5f  0
+hW1 0 ab   0
+hW1 0 ah   37:37 34:34 >
+hW1 0 b1   120
+hW1 0 b2   100
+hW1 0 b4   330
+hW1 0 b5   260
+hW1 0 di   0
+hW1 0 fl   0 >
+hW1 0 fnp  200
+hW1 0 fnz  200
+hW1 0 ftp  250 >
+hW1 0 ftz  250 >
+hW1 0 oq   56
+hW1 0 tl   0 >
+hW1 1 a1f  0
+hW1 1 a2f  0
+hW1 1 a3f  0
+hW1 1 a4f  0
+hW1 1 a5f  0
+hW1 1 ab   0
+hW1 1 ah   40:40 34:34 >
+hW1 1 b1   120
+hW1 1 b2   100
+hW1 1 b4   330
+hW1 1 b5   260
+hW1 1 di   0
+hW1 1 fl   0 >
+hW1 1 fnp  200
+hW1 1 fnz  200
+hW1 1 ftp  250 >
+hW1 1 ftz  250 >
+hW1 1 oq   56
+hW1 1 tl   0 >
+hW1 2 a1f  0
+hW1 2 a2f  0
+hW1 2 a3f  0
+hW1 2 a4f  0
+hW1 2 a5f  0
+hW1 2 ab   0
+hW1 2 ah   40:40 34:34 >
+hW1 2 b1   120
+hW1 2 b2   100
+hW1 2 b4   330
+hW1 2 b5   260
+hW1 2 di   0
+hW1 2 fl   0 >
+hW1 2 fnp  200
+hW1 2 fnz  200
+hW1 2 ftp  250 >
+hW1 2 ftz  250 >
+hW1 2 oq   56
+hW1 2 tl   0 >
+hW2 0 a1f  0
+hW2 0 a2f  0
+hW2 0 a3f  0
+hW2 0 a4f  0
+hW2 0 a5f  0
+hW2 0 ab   0
+hW2 0 b1   120
+hW2 0 b2   100
+hW2 0 b4   330
+hW2 0 b5   260
+hW2 0 di   0
+hW2 0 fnp  200
+hW2 0 fnz  200
+hW2 0 oq   56
+hW2 1 a1f  0
+hW2 1 a2f  0
+hW2 1 a3f  0
+hW2 1 a4f  0
+hW2 1 a5f  0
+hW2 1 ab   0
+hW2 1 b1   120
+hW2 1 b2   100
+hW2 1 b4   330
+hW2 1 b5   260
+hW2 1 di   0
+hW2 1 fnp  200
+hW2 1 fnz  200
+hW2 1 oq   56
+hW2 2 a1f  0
+hW2 2 a2f  0
+hW2 2 a3f  0
+hW2 2 a4f  0
+hW2 2 a5f  0
+hW2 2 ab   0
+hW2 2 b1   120
+hW2 2 b2   100
+hW2 2 b4   330
+hW2 2 b5   260
+hW2 2 di   0
+hW2 2 fnp  200
+hW2 2 fnz  200
+hW2 2 oq   56
+hX 0 a1f  0
+hX 0 a2f  0
+hX 0 a3f  0
+hX 0 a4f  0
+hX 0 a5f  0
+hX 0 ab   0
+hX 0 ah   43:43 34:34 >
+hX 0 b1   120
+hX 0 b2   100
+hX 0 b4   330
+hX 0 b5   260
+hX 0 di   0
+hX 0 fl   0
+hX 0 fnp  200
+hX 0 fnz  200
+hX 0 ftp  250
+hX 0 ftz  250
+hX 0 oq   56
+hX 0 tl   0 >
+hX 1 a1f  0
+hX 1 a2f  0
+hX 1 a3f  0
+hX 1 a4f  0
+hX 1 a5f  0
+hX 1 ab   0
+hX 1 ah   46:46 34:34 >
+hX 1 b1   120
+hX 1 b2   100
+hX 1 b4   330
+hX 1 b5   260
+hX 1 di   0
+hX 1 fl   0
+hX 1 fnp  200
+hX 1 fnz  200
+hX 1 ftp  250
+hX 1 ftz  250
+hX 1 oq   56
+hX 1 tl   0 >
+hX 2 a1f  0
+hX 2 a2f  0
+hX 2 a3f  0
+hX 2 a4f  0
+hX 2 a5f  0
+hX 2 ab   0
+hX 2 ah   46:46 34:34 >
+hX 2 b1   120
+hX 2 b2   100
+hX 2 b4   330
+hX 2 b5   260
+hX 2 di   0
+hX 2 fl   0
+hX 2 fnp  200
+hX 2 fnz  200
+hX 2 ftp  250
+hX 2 ftz  250
+hX 2 oq   56
+hX 2 tl   0 >
+hY1 0 a1f  0
+hY1 0 a2f  0
+hY1 0 a3f  0
+hY1 0 a4f  0
+hY1 0 a5f  0
+hY1 0 ab   0
+hY1 0 ah   37:37 34:34 >
+hY1 0 b1   120
+hY1 0 b2   100
+hY1 0 b4   330
+hY1 0 b5   260
+hY1 0 di   0
+hY1 0 fl   0 >
+hY1 0 fnp  200
+hY1 0 fnz  200
+hY1 0 ftp  250 >
+hY1 0 ftz  250 >
+hY1 0 oq   56
+hY1 0 tl   0 >
+hY1 1 a1f  0
+hY1 1 a2f  0
+hY1 1 a3f  0
+hY1 1 a4f  0
+hY1 1 a5f  0
+hY1 1 ab   0
+hY1 1 ah   40:40 34:34 >
+hY1 1 b1   120
+hY1 1 b2   100
+hY1 1 b4   330
+hY1 1 b5   260
+hY1 1 di   0
+hY1 1 fl   0 >
+hY1 1 fnp  200
+hY1 1 fnz  200
+hY1 1 ftp  250 >
+hY1 1 ftz  250 >
+hY1 1 oq   56
+hY1 1 tl   0 >
+hY1 2 a1f  0
+hY1 2 a2f  0
+hY1 2 a3f  0
+hY1 2 a4f  0
+hY1 2 a5f  0
+hY1 2 ab   0
+hY1 2 ah   40:40 34:34 >
+hY1 2 b1   120
+hY1 2 b2   100
+hY1 2 b4   330
+hY1 2 b5   260
+hY1 2 di   0
+hY1 2 fl   0 >
+hY1 2 fnp  200
+hY1 2 fnz  200
+hY1 2 ftp  250 >
+hY1 2 ftz  250 >
+hY1 2 oq   56
+hY1 2 tl   0 >
+hY2 0 a1f  0
+hY2 0 a2f  0
+hY2 0 a3f  0
+hY2 0 a4f  0
+hY2 0 a5f  0
+hY2 0 ab   0
+hY2 0 b1   120
+hY2 0 b2   100
+hY2 0 b4   330
+hY2 0 b5   260
+hY2 0 di   0
+hY2 0 fnp  200
+hY2 0 fnz  200
+hY2 0 oq   56
+hY2 1 a1f  0
+hY2 1 a2f  0
+hY2 1 a3f  0
+hY2 1 a4f  0
+hY2 1 a5f  0
+hY2 1 ab   0
+hY2 1 b1   120
+hY2 1 b2   100
+hY2 1 b4   330
+hY2 1 b5   260
+hY2 1 di   0
+hY2 1 fnp  200
+hY2 1 fnz  200
+hY2 1 oq   56
+hY2 2 a1f  0
+hY2 2 a2f  0
+hY2 2 a3f  0
+hY2 2 a4f  0
+hY2 2 a5f  0
+hY2 2 ab   0
+hY2 2 b1   120
+hY2 2 b2   100
+hY2 2 b4   330
+hY2 2 b5   260
+hY2 2 di   0
+hY2 2 fnp  200
+hY2 2 fnz  200
+hY2 2 oq   56
+ha 0 a1f  0
+ha 0 a2f  0
+ha 0 a3f  0
+ha 0 a4f  0
+ha 0 a5f  0
+ha 0 ab   0
+ha 0 ah   37:37 34:34 >
+ha 0 b1   120
+ha 0 b2   100
+ha 0 b4   330
+ha 0 b5   260
+ha 0 di   0
+ha 0 fl   0
+ha 0 fnp  200
+ha 0 fnz  200
+ha 0 ftp  250
+ha 0 ftz  250
+ha 0 oq   56
+ha 0 tl   0 >
+ha 1 a1f  0
+ha 1 a2f  0
+ha 1 a3f  0
+ha 1 a4f  0
+ha 1 a5f  0
+ha 1 ab   0
+ha 1 ah   40:40 34:34 >
+ha 1 b1   120
+ha 1 b2   100
+ha 1 b4   330
+ha 1 b5   260
+ha 1 di   0
+ha 1 fl   0
+ha 1 fnp  200
+ha 1 fnz  200
+ha 1 ftp  250
+ha 1 ftz  250
+ha 1 oq   56
+ha 1 tl   0 >
+ha 2 a1f  0
+ha 2 a2f  0
+ha 2 a3f  0
+ha 2 a4f  0
+ha 2 a5f  0
+ha 2 ab   0
+ha 2 ah   40:40 34:34 >
+ha 2 b1   120
+ha 2 b2   100
+ha 2 b4   330
+ha 2 b5   260
+ha 2 di   0
+ha 2 fl   0
+ha 2 fnp  200
+ha 2 fnz  200
+ha 2 ftp  250
+ha 2 ftz  250
+ha 2 oq   56
+ha 2 tl   0 >
+hc 0 a1f  0
+hc 0 a2f  0
+hc 0 a3f  0
+hc 0 a4f  0
+hc 0 a5f  0
+hc 0 ab   0
+hc 0 ah   37:37 34:34 >
+hc 0 b1   200
+hc 0 b2   100
+hc 0 b4   330
+hc 0 b5   260
+hc 0 di   0
+hc 0 fl   0
+hc 0 fnp  200
+hc 0 fnz  200
+hc 0 ftp  250
+hc 0 ftz  250
+hc 0 oq   56
+hc 0 tl   0 >
+hc 1 a1f  0
+hc 1 a2f  0
+hc 1 a3f  0
+hc 1 a4f  0
+hc 1 a5f  0
+hc 1 ab   0
+hc 1 ah   40:40 34:34 >
+hc 1 b1   200
+hc 1 b2   100
+hc 1 b4   330
+hc 1 b5   260
+hc 1 di   0
+hc 1 fl   0
+hc 1 fnp  200
+hc 1 fnz  200
+hc 1 ftp  250
+hc 1 ftz  250
+hc 1 oq   56
+hc 1 tl   0 >
+hc 2 a1f  0
+hc 2 a2f  0
+hc 2 a3f  0
+hc 2 a4f  0
+hc 2 a5f  0
+hc 2 ab   0
+hc 2 ah   40:40 34:34 >
+hc 2 b1   200
+hc 2 b2   100
+hc 2 b4   330
+hc 2 b5   260
+hc 2 di   0
+hc 2 fl   0
+hc 2 fnp  200
+hc 2 fnz  200
+hc 2 ftp  250
+hc 2 ftz  250
+hc 2 oq   56
+hc 2 tl   0 >
+he 0 a1f  0
+he 0 a2f  0
+he 0 a3f  0
+he 0 a4f  0
+he 0 a5f  0
+he 0 ab   0
+he 0 ah   39:39 34:34 >
+he 0 b1   120
+he 0 b2   100
+he 0 b4   330
+he 0 b5   260
+he 0 di   0
+he 0 fl   0
+he 0 fnp  200
+he 0 fnz  200
+he 0 ftp  250
+he 0 ftz  250
+he 0 oq   56
+he 0 tl   0 >
+he 1 a1f  0
+he 1 a2f  0
+he 1 a3f  0
+he 1 a4f  0
+he 1 a5f  0
+he 1 ab   0
+he 1 ah   42:42 34:34 >
+he 1 b1   120
+he 1 b2   100
+he 1 b4   330
+he 1 b5   260
+he 1 di   0
+he 1 fl   0
+he 1 fnp  200
+he 1 fnz  200
+he 1 ftp  250
+he 1 ftz  250
+he 1 oq   56
+he 1 tl   0 >
+he 2 a1f  0
+he 2 a2f  0
+he 2 a3f  0
+he 2 a4f  0
+he 2 a5f  0
+he 2 ab   0
+he 2 ah   42:42 34:34 >
+he 2 b1   120
+he 2 b2   100
+he 2 b4   330
+he 2 b5   260
+he 2 di   0
+he 2 fl   0
+he 2 fnp  200
+he 2 fnz  200
+he 2 ftp  250
+he 2 ftz  250
+he 2 oq   56
+he 2 tl   0 >
+hi 0 a1f  0
+hi 0 a2f  0
+hi 0 a3f  0
+hi 0 a4f  0
+hi 0 a5f  0
+hi 0 ab   0
+hi 0 ah   42:42 34:34 >
+hi 0 b1   120
+hi 0 b2   100
+hi 0 b4   330
+hi 0 b5   260
+hi 0 di   0
+hi 0 fl   0
+hi 0 fnp  200
+hi 0 fnz  200
+hi 0 ftp  250
+hi 0 ftz  250
+hi 0 oq   56
+hi 0 tl   0
+hi 1 a1f  0
+hi 1 a2f  0
+hi 1 a3f  0
+hi 1 a4f  0
+hi 1 a5f  0
+hi 1 ab   0
+hi 1 ah   42:42 34:34 >
+hi 1 b1   120
+hi 1 b2   100
+hi 1 b4   330
+hi 1 b5   260
+hi 1 di   0
+hi 1 fl   0 >
+hi 1 fnp  200
+hi 1 fnz  200
+hi 1 ftp  250 >
+hi 1 ftz  250 >
+hi 1 oq   56
+hi 1 tl   0 >
+hi 2 a1f  0
+hi 2 a2f  0
+hi 2 a3f  0
+hi 2 a4f  0
+hi 2 a5f  0
+hi 2 ab   0
+hi 2 ah   42:42 34:34 >
+hi 2 b1   120
+hi 2 b2   100
+hi 2 b4   330
+hi 2 b5   260
+hi 2 di   0
+hi 2 fl   0
+hi 2 fnp  200
+hi 2 fnz  200
+hi 2 ftp  250
+hi 2 ftz  250
+hi 2 oq   56
+hi 2 tl   0 >
+ho 0 a1f  0
+ho 0 a2f  0
+ho 0 a3f  0
+ho 0 a4f  0
+ho 0 a5f  0
+ho 0 ab   0
+ho 0 ah   43:43 34:34
+ho 0 b1   120
+ho 0 b2   100
+ho 0 b4   330
+ho 0 b5   260
+ho 0 di   0
+ho 0 fl   0
+ho 0 fnp  200
+ho 0 fnz  200
+ho 0 ftp  250
+ho 0 ftz  250
+ho 0 oq   56
+ho 0 tl   0
+ho 1 a1f  0
+ho 1 a2f  0
+ho 1 a3f  0
+ho 1 a4f  0
+ho 1 a5f  0
+ho 1 ab   0
+ho 1 ah   46 34:34 >
+ho 1 b1   120
+ho 1 b2   100
+ho 1 b4   330
+ho 1 b5   260
+ho 1 di   0
+ho 1 fl   0 >
+ho 1 fnp  200
+ho 1 fnz  200
+ho 1 ftp  250 >
+ho 1 ftz  250 >
+ho 1 oq   56
+ho 1 tl   0 >
+ho 2 a1f  0
+ho 2 a2f  0
+ho 2 a3f  0
+ho 2 a4f  0
+ho 2 a5f  0
+ho 2 ab   0
+ho 2 ah   46:46 34:34 >
+ho 2 b1   120
+ho 2 b2   100
+ho 2 b4   330
+ho 2 b5   260
+ho 2 di   0
+ho 2 fl   0 >
+ho 2 fnp  200
+ho 2 fnz  200
+ho 2 ftp  250 >
+ho 2 ftz  250 >
+ho 2 oq   56
+ho 2 tl   0 >
+hu 0 a1f  0
+hu 0 a2f  0
+hu 0 a3f  0
+hu 0 a4f  0
+hu 0 a5f  0
+hu 0 ab   0
+hu 0 ah   43:43 34:34 >
+hu 0 b1   120
+hu 0 b2   100
+hu 0 b4   330
+hu 0 b5   260
+hu 0 di   0
+hu 0 fl   0
+hu 0 fnp  200
+hu 0 fnz  200
+hu 0 ftp  250
+hu 0 ftz  250
+hu 0 oq   56
+hu 0 tl   0
+hu 1 a1f  0
+hu 1 a2f  0
+hu 1 a3f  0
+hu 1 a4f  0
+hu 1 a5f  0
+hu 1 ab   0
+hu 1 ah   46 34:34 >
+hu 1 b1   120
+hu 1 b2   100
+hu 1 b4   330
+hu 1 b5   260
+hu 1 di   0
+hu 1 fl   0 >
+hu 1 fnp  200
+hu 1 fnz  200
+hu 1 ftp  250 >
+hu 1 ftz  250 >
+hu 1 oq   56
+hu 1 tl   0 >
+hu 2 a1f  0
+hu 2 a2f  0
+hu 2 a3f  0
+hu 2 a4f  0
+hu 2 a5f  0
+hu 2 ab   0
+hu 2 ah   46:46 34:34 >
+hu 2 b1   120
+hu 2 b2   100
+hu 2 b4   330
+hu 2 b5   260
+hu 2 di   0
+hu 2 fl   0
+hu 2 fnp  200
+hu 2 fnz  200
+hu 2 ftp  250
+hu 2 ftz  250
+hu 2 oq   56
+hu 2 tl   0
+hx 0 a1f  0
+hx 0 a2f  0
+hx 0 a3f  0
+hx 0 a4f  0
+hx 0 a5f  0
+hx 0 ab   0
+hx 0 ah   43 34:34 >
+hx 0 b1   120
+hx 0 b2   100
+hx 0 b4   330
+hx 0 b5   260
+hx 0 di   0
+hx 0 fl   0
+hx 0 fnp  200
+hx 0 fnz  200
+hx 0 ftp  250
+hx 0 ftz  250
+hx 0 oq   56
+hx 0 tl   0 >
+hx 1 a1f  0
+hx 1 a2f  0
+hx 1 a3f  0
+hx 1 a4f  0
+hx 1 a5f  0
+hx 1 ab   0
+hx 1 ah   46:46 34:34 >
+hx 1 b1   120
+hx 1 b2   100
+hx 1 b4   330
+hx 1 b5   260
+hx 1 di   0
+hx 1 fl   0 >
+hx 1 fnp  200
+hx 1 fnz  200
+hx 1 ftp  250 >
+hx 1 ftz  250 >
+hx 1 oq   56
+hx 1 tl   0 >
+hx 2 a1f  0
+hx 2 a2f  0
+hx 2 a3f  0
+hx 2 a4f  0
+hx 2 a5f  0
+hx 2 ab   0
+hx 2 ah   46:46 34:34 >
+hx 2 b1   120
+hx 2 b2   100
+hx 2 b4   330
+hx 2 b5   260
+hx 2 di   0
+hx 2 fl   0 >
+hx 2 fnp  200
+hx 2 fnz  200
+hx 2 ftp  250 >
+hx 2 ftz  250 >
+hx 2 oq   56
+hx 2 tl   0 >
+i 0 a1f  0
+i 0 a2f  0
+i 0 a3f  0
+i 0 a4f  0
+i 0 a5f  0
+i 0 ab   0
+i 0 ah   34
+i 0 b1   120
+i 0 b2   100
+i 0 b4   330
+i 0 b5   260
+i 0 di   0
+i 0 fl   0
+i 0 fnp  200
+i 0 fnz  200
+i 0 ftp  250
+i 0 ftz  250
+i 0 oq   56
+i 0 tl   0 >
+i 1 a1f  0
+i 1 a2f  0
+i 1 a3f  0
+i 1 a4f  0
+i 1 a5f  0
+i 1 ab   0
+i 1 ah   34
+i 1 b1   120
+i 1 b2   100
+i 1 b4   330
+i 1 b5   260
+i 1 di   0
+i 1 fl   0
+i 1 fnp  200
+i 1 fnz  200
+i 1 ftp  250
+i 1 ftz  250
+i 1 oq   56
+i 1 tl   0 >
+i 2 a1f  0
+i 2 a2f  0
+i 2 a3f  0
+i 2 a4f  0
+i 2 a5f  0
+i 2 ab   0
+i 2 ah   34
+i 2 b1   120
+i 2 b2   100
+i 2 b4   330
+i 2 b5   260
+i 2 di   0
+i 2 fl   0
+i 2 fnp  200
+i 2 fnz  200
+i 2 ftp  250
+i 2 ftz  250
+i 2 oq   56
+i 2 tl   0 >
+k 0 a1f  0
+k 0 a2f  0 70:70
+k 0 a3f  0
+k 0 a4f  0
+k 0 a5f  0
+k 0 ab   0
+k 0 ah   0
+k 0 b1   120
+k 0 b2   100
+k 0 b4   330
+k 0 b5   260
+k 0 di   0 >
+k 0 fl   0 >
+k 0 fnp  200
+k 0 fnz  200
+k 0 ftp  250 >
+k 0 ftz  250 >
+k 0 oq   56 >
+k 0 tl   0
+k 1 a1f  0
+k 1 a2f  0 70:70
+k 1 a3f  0
+k 1 a4f  0
+k 1 a5f  0
+k 1 ab   0
+k 1 ah   0
+k 1 b1   120
+k 1 b2   100
+k 1 b4   330
+k 1 b5   260
+k 1 di   0 >
+k 1 fl   0 >
+k 1 fnp  200
+k 1 fnz  200
+k 1 ftp  250 >
+k 1 ftz  250 >
+k 1 oq   56 >
+k 1 tl   0
+k 2 a1f  0
+k 2 a2f  0 70:70
+k 2 a3f  0
+k 2 a4f  0
+k 2 a5f  0
+k 2 ab   0
+k 2 ah   0
+k 2 b1   120
+k 2 b2   100
+k 2 b4   330
+k 2 b5   260
+k 2 di   0 >
+k 2 fl   0 >
+k 2 fnp  200
+k 2 fnz  200
+k 2 ftp  250 >
+k 2 ftz  250 >
+k 2 oq   56 >
+k 2 tl   0
+l 0 a1f  0
+l 0 a2f  0
+l 0 a3f  0
+l 0 a4f  0
+l 0 a5f  0
+l 0 ab   0
+l 0 ah   34:34
+l 0 b1   120
+l 0 b2   100
+l 0 b4   330
+l 0 b5   260
+l 0 di   0
+l 0 fl   0 >
+l 0 fnp  200
+l 0 fnz  200
+l 0 ftp  250 >
+l 0 ftz  250 >
+l 0 oq   56
+l 0 tl   0
+l 1 a1f  0
+l 1 a2f  0
+l 1 a3f  0
+l 1 a4f  0
+l 1 a5f  0
+l 1 ab   0
+l 1 ah   34:34
+l 1 b1   120
+l 1 b2   100
+l 1 b4   330
+l 1 b5   260
+l 1 di   0
+l 1 fl   0 >
+l 1 fnp  200
+l 1 fnz  200
+l 1 ftp  250 >
+l 1 ftz  250 >
+l 1 oq   56
+l 1 tl   0
+l 2 a1f  0
+l 2 a2f  0
+l 2 a3f  0
+l 2 a4f  0
+l 2 a5f  0
+l 2 ab   0
+l 2 ah   34:34
+l 2 b1   120
+l 2 b2   100
+l 2 b4   330
+l 2 b5   260
+l 2 di   0
+l 2 fl   0 >
+l 2 fnp  200
+l 2 fnz  200
+l 2 ftp  250 >
+l 2 ftz  250 >
+l 2 oq   56
+l 2 tl   0
+m 0 a1f  0
+m 0 a2f  0
+m 0 a3f  0
+m 0 a4f  0
+m 0 a5f  0
+m 0 ab   0
+m 0 ah   0:0
+m 0 b1   120
+m 0 b2   150
+m 0 b4   330
+m 0 b5   260
+m 0 di   0
+m 0 fl   0 >
+m 0 fnp  200
+m 0 fnz  350 200 >
+m 0 ftp  250 >
+m 0 ftz  250 >
+m 0 oq   56
+m 0 tl   0
+m 1 a1f  0
+m 1 a2f  0
+m 1 a3f  0
+m 1 a4f  0
+m 1 a5f  0
+m 1 ab   0
+m 1 ah   0:0
+m 1 b1   120
+m 1 b2   150
+m 1 b4   330
+m 1 b5   260
+m 1 di   0
+m 1 fl   0 >
+m 1 fnp  200
+m 1 fnz  350 200 >
+m 1 ftp  250 >
+m 1 ftz  250 >
+m 1 oq   56
+m 1 tl   0
+m 2 a1f  0
+m 2 a2f  0
+m 2 a3f  0
+m 2 a4f  0
+m 2 a5f  0
+m 2 ab   0
+m 2 ah   0:0
+m 2 b1   120
+m 2 b2   150
+m 2 b4   330
+m 2 b5   260
+m 2 di   0
+m 2 fl   0 >
+m 2 fnp  200
+m 2 fnz  350 200 >
+m 2 ftp  250 >
+m 2 ftz  250 >
+m 2 oq   56
+m 2 tl   0
+n 0 a1f  0
+n 0 a2f  0
+n 0 a3f  0
+n 0 a4f  0
+n 0 a5f  0
+n 0 ab   0
+n 0 ah   0
+n 0 b1   120
+n 0 b2   200
+n 0 b4   330
+n 0 b5   260
+n 0 di   0
+n 0 fl   0 >
+n 0 fnp  200
+n 0 fnz  350 200 >
+n 0 ftp  250 >
+n 0 ftz  250 >
+n 0 oq   56
+n 0 tl   0
+n 1 a1f  0
+n 1 a2f  0
+n 1 a3f  0
+n 1 a4f  0
+n 1 a5f  0
+n 1 ab   0
+n 1 ah   0
+n 1 b1   120
+n 1 b2   200
+n 1 b4   330
+n 1 b5   260
+n 1 di   0
+n 1 fl   0 >
+n 1 fnp  200
+n 1 fnz  350 200 >
+n 1 ftp  250 >
+n 1 ftz  250 >
+n 1 oq   56
+n 1 tl   0
+n 2 a1f  0
+n 2 a2f  0
+n 2 a3f  0
+n 2 a4f  0
+n 2 a5f  0
+n 2 ab   0
+n 2 ah   0
+n 2 b1   120
+n 2 b2   200
+n 2 b4   330
+n 2 b5   260
+n 2 di   0
+n 2 fl   0 >
+n 2 fnp  200
+n 2 fnz  350 200 >
+n 2 ftp  250 >
+n 2 ftz  250 >
+n 2 oq   56
+n 2 tl   0
+o 0 a1f  0
+o 0 a2f  0
+o 0 a3f  0
+o 0 a4f  0
+o 0 a5f  0
+o 0 ab   0
+o 0 ah   34 >
+o 0 b1   120
+o 0 b2   100
+o 0 b4   330
+o 0 b5   260
+o 0 di   0
+o 0 fl   0
+o 0 fnp  200
+o 0 fnz  200
+o 0 ftp  250
+o 0 ftz  250
+o 0 oq   56
+o 0 tl   0 >
+o 1 a1f  0
+o 1 a2f  0
+o 1 a3f  0
+o 1 a4f  0
+o 1 a5f  0
+o 1 ab   0
+o 1 ah   34 >
+o 1 b1   120
+o 1 b2   100
+o 1 b4   330
+o 1 b5   260
+o 1 di   0
+o 1 fl   0
+o 1 fnp  200
+o 1 fnz  200
+o 1 ftp  250
+o 1 ftz  250
+o 1 oq   56
+o 1 tl   0 >
+o 2 a1f  0
+o 2 a2f  0
+o 2 a3f  0
+o 2 a4f  0
+o 2 a5f  0
+o 2 ab   0
+o 2 ah   34 >
+o 2 b1   120
+o 2 b2   100
+o 2 b4   330
+o 2 b5   260
+o 2 di   0
+o 2 fl   0
+o 2 fnp  200
+o 2 fnz  200
+o 2 ftp  250
+o 2 ftz  250
+o 2 oq   56
+o 2 tl   0 >
+p 0 a1f  0
+p 0 a2f  0
+p 0 a3f  0
+p 0 a4f  0
+p 0 a5f  0
+p 0 ab   0 70:70
+p 0 ah   0
+p 0 b1   120
+p 0 b2   100
+p 0 b4   330
+p 0 b5   260
+p 0 di   0 >
+p 0 fl   0 >
+p 0 fnp  200
+p 0 fnz  200
+p 0 ftp  250 >
+p 0 ftz  250 >
+p 0 oq   56 >
+p 0 tl   0
+p 1 a1f  0
+p 1 a2f  0
+p 1 a3f  0
+p 1 a4f  0
+p 1 a5f  0
+p 1 ab   0 70:70
+p 1 ah   0
+p 1 b1   120
+p 1 b2   100
+p 1 b4   330
+p 1 b5   260
+p 1 di   0 >
+p 1 fl   0 >
+p 1 fnp  200
+p 1 fnz  200
+p 1 ftp  250 >
+p 1 ftz  250 >
+p 1 oq   56 >
+p 1 tl   0
+p 2 a1f  0
+p 2 a2f  0
+p 2 a3f  0
+p 2 a4f  0
+p 2 a5f  0
+p 2 ab   0 70:70
+p 2 ah   0
+p 2 b1   120
+p 2 b2   100
+p 2 b4   330
+p 2 b5   260
+p 2 di   0 >
+p 2 fl   0 >
+p 2 fnp  200
+p 2 fnz  200
+p 2 ftp  250 >
+p 2 ftz  250 >
+p 2 oq   56 >
+p 2 tl   0
+r 0 a1f  0
+r 0 a2f  0
+r 0 a3f  0
+r 0 a4f  0
+r 0 a5f  0
+r 0 ab   0
+r 0 ah   34:34
+r 0 b1   120
+r 0 b2   100
+r 0 b4   330
+r 0 b5   260
+r 0 di   0
+r 0 fl   0 >
+r 0 fnp  200
+r 0 fnz  200
+r 0 ftp  250 >
+r 0 ftz  250 >
+r 0 oq   56
+r 0 tl   0
+r 1 a1f  0
+r 1 a2f  0
+r 1 a3f  0
+r 1 a4f  0
+r 1 a5f  0
+r 1 ab   0
+r 1 ah   34:34
+r 1 b1   120
+r 1 b2   100
+r 1 b4   330
+r 1 b5   260
+r 1 di   0
+r 1 fl   0 >
+r 1 fnp  200
+r 1 fnz  200
+r 1 ftp  250 >
+r 1 ftz  250 >
+r 1 oq   56
+r 1 tl   0
+r 2 a1f  0
+r 2 a2f  0
+r 2 a3f  0
+r 2 a4f  0
+r 2 a5f  0
+r 2 ab   0
+r 2 ah   34:34
+r 2 b1   120
+r 2 b2   100
+r 2 b4   330
+r 2 b5   260
+r 2 di   0
+r 2 fl   0 >
+r 2 fnp  200
+r 2 fnz  200
+r 2 ftp  250 >
+r 2 ftz  250 >
+r 2 oq   56
+r 2 tl   0
+s 0 a1f  0
+s 0 a2f  0
+s 0 a3f  0
+s 0 a4f  0
+s 0 a5f  50
+s 0 ab   0
+s 0 ah   0:0
+s 0 b1   120
+s 0 b2   100
+s 0 b4   330
+s 0 b5   260
+s 0 di   0
+s 0 fl   0 >
+s 0 fnp  200
+s 0 fnz  200
+s 0 ftp  250 >
+s 0 ftz  250 >
+s 0 oq   56
+s 0 tl   0
+s 1 a1f  0
+s 1 a2f  0
+s 1 a3f  0
+s 1 a4f  0
+s 1 a5f  50
+s 1 ab   0
+s 1 ah   0:0
+s 1 b1   120
+s 1 b2   100
+s 1 b4   330
+s 1 b5   260
+s 1 di   0
+s 1 fl   0 >
+s 1 fnp  200
+s 1 fnz  200
+s 1 ftp  250 >
+s 1 ftz  250 >
+s 1 oq   56
+s 1 tl   0
+s 2 a1f  0
+s 2 a2f  0
+s 2 a3f  0
+s 2 a4f  0
+s 2 a5f  50
+s 2 ab   0
+s 2 ah   0:0
+s 2 b1   120
+s 2 b2   100
+s 2 b4   330
+s 2 b5   260
+s 2 di   0
+s 2 fl   0 >
+s 2 fnp  200
+s 2 fnz  200
+s 2 ftp  250 >
+s 2 ftz  250 >
+s 2 oq   56
+s 2 tl   0
+t 0 a1f  0
+t 0 a2f  0
+t 0 a3f  0
+t 0 a4f  0
+t 0 a5f  0 50:50
+t 0 ab   0
+t 0 ah   0
+t 0 b1   120
+t 0 b2   100
+t 0 b4   330
+t 0 b5   260
+t 0 di   0 >
+t 0 fl   0 >
+t 0 fnp  200
+t 0 fnz  200
+t 0 ftp  250 >
+t 0 ftz  250 >
+t 0 oq   56 >
+t 0 tl   0
+t 1 a1f  0
+t 1 a2f  0
+t 1 a3f  0
+t 1 a4f  0
+t 1 a5f  0 50:50
+t 1 ab   0
+t 1 ah   0
+t 1 b1   120
+t 1 b2   100
+t 1 b4   330
+t 1 b5   260
+t 1 di   0 >
+t 1 fl   0 >
+t 1 fnp  200
+t 1 fnz  200
+t 1 ftp  250 >
+t 1 ftz  250 >
+t 1 oq   56 >
+t 1 tl   0
+t 2 a1f  0
+t 2 a2f  0
+t 2 a3f  0
+t 2 a4f  0
+t 2 a5f  0 50:50
+t 2 ab   0
+t 2 ah   0
+t 2 b1   120
+t 2 b2   100
+t 2 b4   330
+t 2 b5   260
+t 2 di   0 >
+t 2 fl   0 >
+t 2 fnp  200
+t 2 fnz  200
+t 2 ftp  250 >
+t 2 ftz  250 >
+t 2 oq   56 >
+t 2 tl   0
+u 0 a1f  0
+u 0 a2f  0
+u 0 a3f  0
+u 0 a4f  0
+u 0 a5f  0
+u 0 ab   0
+u 0 ah   34 >
+u 0 b1   120
+u 0 b2   100
+u 0 b4   330
+u 0 b5   260
+u 0 di   0
+u 0 fl   0
+u 0 fnp  200
+u 0 fnz  200
+u 0 ftp  250
+u 0 ftz  250
+u 0 oq   56
+u 0 tl   0 >
+u 1 a1f  0
+u 1 a2f  0
+u 1 a3f  0
+u 1 a4f  0
+u 1 a5f  0
+u 1 ab   0
+u 1 ah   34 >
+u 1 b1   120
+u 1 b2   100
+u 1 b4   330
+u 1 b5   260
+u 1 di   0
+u 1 fl   0
+u 1 fnp  200
+u 1 fnz  200
+u 1 ftp  250
+u 1 ftz  250
+u 1 oq   56
+u 1 tl   0 >
+u 2 a1f  0
+u 2 a2f  0
+u 2 a3f  0
+u 2 a4f  0
+u 2 a5f  0
+u 2 ab   0
+u 2 ah   34 >
+u 2 b1   120
+u 2 b2   100
+u 2 b4   330
+u 2 b5   260
+u 2 di   0
+u 2 fl   0
+u 2 fnp  200
+u 2 fnz  200
+u 2 ftp  250
+u 2 ftz  250
+u 2 oq   56
+u 2 tl   0 >
+v 0 a1f  0
+v 0 a2f  0
+v 0 a3f  0
+v 0 a4f  0
+v 0 a5f  0
+v 0 ab   60
+v 0 ah   0
+v 0 b1   120
+v 0 b2   95
+v 0 b4   330
+v 0 b5   260
+v 0 di   0
+v 0 fl   0 >
+v 0 fnp  200
+v 0 fnz  200
+v 0 ftp  250 >
+v 0 ftz  250 >
+v 0 oq   56
+v 0 tl   0
+v 1 a1f  0
+v 1 a2f  0
+v 1 a3f  0
+v 1 a4f  0
+v 1 a5f  0
+v 1 ab   60
+v 1 ah   0
+v 1 b1   120
+v 1 b2   95
+v 1 b4   330
+v 1 b5   260
+v 1 di   0
+v 1 fl   0 >
+v 1 fnp  200
+v 1 fnz  200
+v 1 ftp  250 >
+v 1 ftz  250 >
+v 1 oq   56
+v 1 tl   0
+v 2 a1f  0
+v 2 a2f  0
+v 2 a3f  0
+v 2 a4f  0
+v 2 a5f  0
+v 2 ab   60
+v 2 ah   0
+v 2 b1   120
+v 2 b2   95
+v 2 b4   330
+v 2 b5   260
+v 2 di   0
+v 2 fl   0 >
+v 2 fnp  200
+v 2 fnz  200
+v 2 ftp  250 >
+v 2 ftz  250 >
+v 2 oq   56
+v 2 tl   0
+w 0 a1f  0
+w 0 a2f  0
+w 0 a3f  0
+w 0 a4f  0
+w 0 a5f  0
+w 0 ab   0
+w 0 ah   34:34
+w 0 b1   120
+w 0 b2   80
+w 0 b4   330
+w 0 b5   260
+w 0 di   0
+w 0 fl   0 >
+w 0 fnp  200
+w 0 fnz  200
+w 0 ftp  250 >
+w 0 ftz  250 >
+w 0 oq   56
+w 0 tl   0
+w 1 a1f  0
+w 1 a2f  0
+w 1 a3f  0
+w 1 a4f  0
+w 1 a5f  0
+w 1 ab   0
+w 1 ah   34:34
+w 1 b1   120
+w 1 b2   80
+w 1 b4   330
+w 1 b5   260
+w 1 di   0
+w 1 fl   0 >
+w 1 fnp  200
+w 1 fnz  200
+w 1 ftp  250 >
+w 1 ftz  250 >
+w 1 oq   56
+w 1 tl   0
+w 2 a1f  0
+w 2 a2f  0
+w 2 a3f  0
+w 2 a4f  0
+w 2 a5f  0
+w 2 ab   0
+w 2 ah   34:34
+w 2 b1   120
+w 2 b2   80
+w 2 b4   330
+w 2 b5   260
+w 2 di   0
+w 2 fl   0 >
+w 2 fnp  200
+w 2 fnz  200
+w 2 ftp  250 >
+w 2 ftz  250 >
+w 2 oq   56
+w 2 tl   0
+x 0 a1f  0
+x 0 a2f  0
+x 0 a3f  0
+x 0 a4f  0
+x 0 a5f  0
+x 0 ab   0
+x 0 ah   34 >
+x 0 b1   120
+x 0 b2   100
+x 0 b4   330
+x 0 b5   260
+x 0 di   0
+x 0 fl   0
+x 0 fnp  200
+x 0 fnz  200
+x 0 ftp  250
+x 0 ftz  250
+x 0 oq   56
+x 0 tl   0 >
+x 1 a1f  0
+x 1 a2f  0
+x 1 a3f  0
+x 1 a4f  0
+x 1 a5f  0
+x 1 ab   0
+x 1 ah   34 >
+x 1 b1   120
+x 1 b2   100
+x 1 b4   330
+x 1 b5   260
+x 1 di   0
+x 1 fl   0
+x 1 fnp  200
+x 1 fnz  200
+x 1 ftp  250
+x 1 ftz  250
+x 1 oq   56
+x 1 tl   0 >
+x 2 a1f  0
+x 2 a2f  0
+x 2 a3f  0
+x 2 a4f  0
+x 2 a5f  0
+x 2 ab   0
+x 2 ah   34 >
+x 2 b1   120
+x 2 b2   100
+x 2 b4   330
+x 2 b5   260
+x 2 di   0
+x 2 fl   0
+x 2 fnp  200
+x 2 fnz  200
+x 2 ftp  250
+x 2 ftz  250
+x 2 oq   56
+x 2 tl   0 >
+y 0 a1f  0
+y 0 a2f  0
+y 0 a3f  0
+y 0 a4f  0
+y 0 a5f  0
+y 0 ab   0
+y 0 ah   34:34
+y 0 b1   120
+y 0 b2   250
+y 0 b4   330
+y 0 b5   260
+y 0 di   0
+y 0 fl   0 >
+y 0 fnp  200
+y 0 fnz  200
+y 0 ftp  250 >
+y 0 ftz  250 >
+y 0 oq   56
+y 0 tl   0
+y 1 a1f  0
+y 1 a2f  0
+y 1 a3f  0
+y 1 a4f  0
+y 1 a5f  0
+y 1 ab   0
+y 1 ah   34:34
+y 1 b1   120
+y 1 b2   250
+y 1 b4   330
+y 1 b5   260
+y 1 di   0
+y 1 fl   0 >
+y 1 fnp  200
+y 1 fnz  200
+y 1 ftp  250 >
+y 1 ftz  250 >
+y 1 oq   56
+y 1 tl   0
+y 2 a1f  0
+y 2 a2f  0
+y 2 a3f  0
+y 2 a4f  0
+y 2 a5f  0
+y 2 ab   0
+y 2 ah   34:34
+y 2 b1   120
+y 2 b2   250
+y 2 b4   330
+y 2 b5   260
+y 2 di   0
+y 2 fl   0 >
+y 2 fnp  200
+y 2 fnz  200
+y 2 ftp  250 >
+y 2 ftz  250 >
+y 2 oq   56
+y 2 tl   0
+z 0 a1f  0
+z 0 a2f  0
+z 0 a3f  0
+z 0 a4f  50
+z 0 a5f  50
+z 0 ab   0
+z 0 ah   0
+z 0 b1   120
+z 0 b2   100
+z 0 b4   330
+z 0 b5   260
+z 0 di   0
+z 0 fl   0 >
+z 0 fnp  200
+z 0 fnz  200
+z 0 ftp  250 >
+z 0 ftz  250 >
+z 0 oq   56
+z 0 tl   0
+z 1 a1f  0
+z 1 a2f  0
+z 1 a3f  0
+z 1 a4f  50
+z 1 a5f  50
+z 1 ab   0
+z 1 ah   0
+z 1 b1   120
+z 1 b2   100
+z 1 b4   330
+z 1 b5   260
+z 1 di   0
+z 1 fl   0 >
+z 1 fnp  200
+z 1 fnz  200
+z 1 ftp  250 >
+z 1 ftz  250 >
+z 1 oq   56
+z 1 tl   0
+z 2 a1f  0
+z 2 a2f  0
+z 2 a3f  0
+z 2 a4f  50
+z 2 a5f  50
+z 2 ab   0
+z 2 ah   0
+z 2 b1   120
+z 2 b2   100
+z 2 b4   330
+z 2 b5   260
+z 2 di   0
+z 2 fl   0 >
+z 2 fnp  200
+z 2 fnz  200
+z 2 ftp  250 >
+z 2 ftz  250 >
+z 2 oq   56
+z 2 tl   0

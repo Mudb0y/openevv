@@ -38,7 +38,8 @@ enum ECICallbackReturn {
 };
 
 /* The engine's own parameters, and a voice's. Only the few this needs. */
-enum { P_SAMPLE_RATE = 5, P_REAL_WORLD_UNITS = 8 };
+enum { P_INPUT_TYPE = 1, P_SAMPLE_RATE = 5,
+       P_REAL_WORLD_UNITS = 8 };
 enum { V_GENDER, V_HEAD_SIZE, V_PITCH, V_FLUCTUATION, V_ROUGHNESS,
        V_BREATHINESS, V_SPEED, V_VOLUME, V_COUNT };
 
@@ -228,6 +229,9 @@ static void usage(FILE *f)
 "            from there, so the voice is the same one at every setting.\n"
 "            EVV_UPSAMPLE says how: sinc by default, or cubic, linear,\n"
 "            hold or zeros, or none to synthesise at the rate instead\n"
+"  -A        take annotations in the text: a backquote and a name, with\n"
+"            what it applies to in square brackets. `[ ] is a\n"
+"            pronunciation in the engine's own phoneme alphabet\n"
 "  -r        take every number above in a person's units instead of the\n"
 "            engine's: words per minute for speed, hertz for pitch\n"
 "  -L ID     speak in the language with that number; -L list names the\n"
@@ -245,6 +249,7 @@ int main(int argc, char **argv)
     int         voice = 0, real = 0, list = 0, want_rate = -1;
     int         langlist = 0;
     int         set[V_COUNT];
+    int         annotations = 0;
     char       *text;
     OldInst    *h;
     FILE       *f;
@@ -268,7 +273,7 @@ int main(int argc, char **argv)
     for (i = 0; i < V_COUNT; i++)
         set[i] = -1;
 
-    while ((i = getopt(argc, argv, "o:f:v:s:p:P:V:R:L:rlh")) != -1) {
+    while ((i = getopt(argc, argv, "o:f:v:s:p:P:V:R:L:rlhA")) != -1) {
         switch (i) {
         case 'o': out = optarg; break;
         case 'f': from = optarg; break;
@@ -287,6 +292,7 @@ int main(int argc, char **argv)
             break;
         case 'r': real = 1; break;
         case 'l': list = 1; break;
+        case 'A': annotations = 1; break;
         case 'h': usage(stdout); return 0;
         default:  usage(stderr); return 2;
         }
@@ -382,6 +388,9 @@ int main(int argc, char **argv)
 
     /* A person's units are a parameter of the engine, not of the voice, and
        it has to be on before a voice setting is read or written in them. */
+    if (annotations && ev_setParam(h, P_INPUT_TYPE, 1) < 0)
+        fprintf(stderr, "evv: the engine refused annotations\n");
+
     if (real && ev_setParam(h, P_REAL_WORLD_UNITS, 1) < 0)
         die("this engine will not answer in a person's units");
 

@@ -151,8 +151,18 @@ RULESRC := $(GENERATED)
 # then says so by name and stops, rather than reading an array that is gone.
 TRIM    := -DEVV_NO_BYTECODE -ffunction-sections -fdata-sections \
            -Wl,--gc-sections
+else ifeq ($(RULES),both)
+# The rules that were written as C, with the interpreter still there for every
+# rule that was not. Nothing ships this and nothing else asks for it: it is
+# what tools/rules/check-c.sh needs. That gate writes a handful of rules as C
+# on purpose and holds them against the same rules run as bytecode, and a `c'
+# build has no interpreter left to run the hundred thousand it did not write --
+# the first of them aborts by name, which is what the `c' arm above intends and
+# what left the gate unable to run at all from 0855062 until this existed.
+RULESRC := $(GENERATED)
+TRIM    :=
 else
-$(error RULES is bytecode or c, not $(RULES))
+$(error RULES is bytecode, c or both, not $(RULES))
 endif
 
 # Which languages are in, as C the engine can walk. Written here because
@@ -275,7 +285,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe so so32 sotest phonemes dict dictfile objects stubs rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims speechd speechd-install speechd-test speechd-test-all say-test
+.PHONY: all probe so so32 sotest phonemes dict dictfile objects stubs rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims speechd speechd-install speechd-enable-test speechd-test speechd-test-all say-test
 all: $(BUILD)/evv $(BUILD)/openevv-say
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -399,6 +409,11 @@ $(BUILD)/interrupt: test/harness/interrupt.c $(BUILD)/libevv.a
 # rate, and IBM's engine goes silent there too, so both sides agreed.
 rate: $(BUILD)/rate
 	@$(BUILD)/rate
+
+# Frames in, sound out: the other half of the tap, so a composed utterance
+# can be heard. See the head of test/harness/klattplay.c.
+$(BUILD)/klattplay: test/harness/klattplay.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/harness/klattplay.c $(BUILD)/libevv.a -lpthread -lm -o $@
 
 $(BUILD)/rate: test/harness/rate.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/harness/rate.c $(BUILD)/libevv.a -lpthread -lm -o $@
@@ -623,6 +638,7 @@ $(BUILD)/libevv$(SUF).a: $(OBJECTS) $(RULESTAMP)
 # the same class as the suite: obtainable, and not needed to build.
 .PHONY: notation notation-check notation-prove rulecode \
         notation-symbols notation-rewrite upper upper-prove upper-check \
+        c-check \
         authored constants codepoints
 notation:
 	@python3 tools/rules/notation.py tree
@@ -674,6 +690,24 @@ upper-prove:
 
 upper-check:
 	@bash tools/rules/check-upper.sh
+
+# The other question about a rule, and the other gate. `upper-check' asks
+# whether an authored rule is the rule it stands in for; this asks whether a
+# rule written as C does what the same rule does as bytecode. It writes the
+# smallest few rules out as C, speaks the seven plain cases through a build
+# carrying those beside the interpreter and through one carrying the
+# interpreter alone, and holds every rule entered and every call made with its
+# arguments against each other, and the audio besides. It wants no objects and
+# no Wine.
+#
+# A count rather than the whole module, because the whole module as C is what
+# every ordinary build already is and what the matrix already speaks. What
+# this catches is the translation of one rule, so it is worth being quick
+# enough to run on every push. `C_CHECK_RULES' says how many, and naming
+# rules instead is what to do when one of them is the suspect.
+C_CHECK_RULES ?= 10
+c-check:
+	@bash tools/rules/check-c.sh $(C_CHECK_RULES)
 
 authored:
 	@python3 tools/rules/notation.py authored
@@ -766,7 +800,8 @@ $(1)/delta_rules_shim_$(notdir $(1)).c &: \
                     $(wildcard $(1)/rules/symbols) \
                     $(wildcard $(1)/rules/trials) \
                     tools/rules/notation.py tools/rules/lower.py \
-                    tools/rules/upper.py tools/rules/emit.py tools/evv.py
+                    tools/rules/upper.py tools/rules/emit.py \
+                    tools/rules/entrysig.py tools/evv.py
 	@EVV_NOTATION_LANG=$(notdir $(1)) \
 	  python3 tools/rules/notation.py build > /dev/null
 	@echo "wrote the rules of $(notdir $(1)) out of $(1)/rules"
@@ -988,14 +1023,20 @@ install: $(BUILD)/evv $(BUILD)/openevv-say
 
 # This one is not part of `make install': it writes into Speech Dispatcher's
 # own directories, and putting a module there is a decision about somebody's
-# speech rather than a build step. It still does not edit speechd.conf, which
-# is the line a person has to add themselves.
+# speech rather than a build step. Speech Dispatcher discovers the installed
+# module automatically when speechd.conf has no explicit AddModule directives.
 speechd-install: $(BUILD)/sd_openevv$(SUF)
-	@mkdir -p $(DESTDIR)$(SPEECHD_MODULEDIR) $(DESTDIR)$(SPEECHD_CONFDIR)
+	@mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(SPEECHD_MODULEDIR) $(DESTDIR)$(SPEECHD_CONFDIR)
 	@cp $(BUILD)/sd_openevv$(SUF) $(DESTDIR)$(SPEECHD_MODULEDIR)/sd_openevv
 	@cp speechd/openevv.conf $(DESTDIR)$(SPEECHD_CONFDIR)/openevv.conf
+	@cp speechd/openevv-speechd-enable $(DESTDIR)$(PREFIX)/bin/openevv-speechd-enable
+	@chmod +x $(DESTDIR)$(PREFIX)/bin/openevv-speechd-enable
 	@echo "installed $(DESTDIR)$(SPEECHD_MODULEDIR)/sd_openevv"
 	@echo "installed $(DESTDIR)$(SPEECHD_CONFDIR)/openevv.conf"
+	@echo "installed $(DESTDIR)$(PREFIX)/bin/openevv-speechd-enable"
+
+speechd-enable-test:
+	@bash test/speechd-enable.sh
 
 # And what a program links against, which is a separate target because it is
 # a separate build: `make so' first. The real file carries the version and

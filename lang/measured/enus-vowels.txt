@@ -1,0 +1,240 @@
+# English's vowels, as the engine says them.
+#
+# Measured, not read. Each case is spoken as a pronunciation annotation
+# and what the synthesiser was told is written down frame by frame, then
+# fitted to the breakpoints that reproduce it exactly:
+# tools/measure/tracks.py does the fitting, tools/measure/replay.py holds
+# this table against the engine again.
+#
+# A parameter is a piecewise-linear track, which is how the synthesiser is
+# told it. Between two breakpoints,
+#
+#     v0 + int((v1 - v0) * min(den, 2 * (i - i0)) / den)
+#
+# with den the segment's length in half-frames and the conversion
+# truncating towards nought, which is what C does. A `/den' after a
+# breakpoint says the segment does not take the whole way to the next
+# one -- so `42:700/20' reaches 700 ten frames later and holds it, which
+# is how a formant settles before the sound ends.
+#
+# Absolute frame numbers, five milliseconds a frame, at the one duration
+# each case was measured at. What a shorter or longer one does is not
+# known yet.
+#
+# What every case holds still, said once:
+#
+shared a1f=0 a1v=0 a2f=0 a2v=0 a3f=0 a3v=0 a4f=0 a4v=0 a5f=0 a5v=0 a6f=0
+shared a6v=0 a7f=0 a7v=0 a8f=0 a8v=0 ab=0 af=0 anv=0 atv=0 b1f=80 b2=100
+shared b2f=200 b3f=350 b4=330 b4f=500 b5=260 b5f=500 b6=500 b6f=1000
+shared b7=500 b7f=1500 b8=600 b8f=1500 bnp=90 bnz=90 btp=90 btz=90 db1=0
+shared df1=0 f6=5000 f7=6300 f8=7500 fl=0 fnp=200 fnz=200 ftp=250 ftz=250
+shared tl=0
+#
+
+phone i text=`[.1i] frames=53
+  still b1   120
+  still b3   150
+  still f1   270
+  still f2   2190
+  still f3   2800
+  still f4   3600
+  still f5   3900
+  track ah   0:34/81 52:35
+  track av   0:55/41 39:54 40:53 52:0
+  track di   0:100 4:5/1 52:0
+  track oq   0:18 4:54/1 52:56
+
+phone I text=`[.1I] frames=50
+  still b1   120
+  still b3   150
+  still f3   2480
+  still f4   3600
+  still f5   3900
+  track ah   0:34/75 49:35
+  track av   0:57/37 37:56 38:53 39:48 42:34 47:11 49:2
+  track di   0:100 4:5/1 49:0
+  track f1   0:380/75 49:440
+  track f2   0:1800/75 49:1650
+  track oq   0:18 4:54/1 49:56
+
+phone e text=`[.1e] frames=61
+  still b1   120
+  still b3   150
+  still f4   3600
+  still f5   3900
+  track ah   0:34/97 60:35
+  track av   0:55/49 47:54 48:53 60:0
+  track di   0:100 4:5/1 60:0
+  track f1   0:470/96 60:350
+  track f2   0:1800/96 60:2000
+  track f3   0:2480/96 60:2430
+  track oq   0:18 4:54/1 60:56
+
+phone E text=`[.1E] frames=55
+  still b1   120
+  still b3   150
+  still f1   570
+  still f2   1650
+  still f3   2480
+  still f4   3600
+  still f5   3900
+  track ah   0:34/85 54:35
+  track av   0:54/43 42:53 44:46 45:41 54:2
+  track di   0:100 4:5/1 54:0
+  track oq   0:18 4:54/1 54:56
+
+phone A text=`[.1A] frames=65
+  still b1   120
+  still b3   150
+  still f1   750
+  still f2   1650
+  still f3   2410
+  still f4   3600
+  still f5   3900
+  track ah   0:34/105 64:35
+  track av   0:49/53 51:48 52:47 64:0
+  track di   0:100 4:5/1 64:0
+  track oq   0:18 4:54/1 64:56
+
+phone a text=`[.1a] frames=65
+  still b1   120
+  still b3   150
+  still f1   750
+  still f2   1200
+  still f3   2440
+  still f4   3600
+  still f5   3900
+  track ah   0:34/105 64:35
+  track av   0:50/53 51:49 52:48 64:0
+  track di   0:100 4:5/1 64:0
+  track oq   0:18 4:54/1 64:56
+
+phone u text=`[.1u] frames=53
+  still b1   120
+  still b3   150
+  still f1   270
+  still f3   2340
+  still f4   3600
+  still f5   3900
+  track ah   0:34/81 52:35
+  track av   0:59/41 39:58 40:57 52:0
+  track di   0:100 4:5/1 52:0
+  track f2   0:1200/80 52:870
+  track oq   0:18 4:54/1 52:56
+
+phone U text=`[.1U] frames=50
+  still b1   120
+  still b3   150
+  still f1   440
+  still f2   1150
+  still f3   2300
+  still f4   3600
+  still f5   3900
+  track ah   0:34/75 49:35
+  track av   0:57/37 37:56 38:53 39:48 42:34 47:11 49:2
+  track di   0:100 4:5/1 49:0
+  track oq   0:18 4:54/1 49:56
+
+phone o text=`[.1o] frames=61
+  still b1   120
+  still b3   150
+  still f3   2400
+  still f4   3600
+  still f5   3900
+  track ah   0:34/97 60:35
+  track av   0:56/49 47:55 48:54 60:0
+  track di   0:100 4:5/1 60:0
+  track f1   0:550/96 60:400
+  track f2   0:1100/96 60:850
+  track oq   0:18 4:54/1 60:56
+
+phone c text=`[.1c] frames=65
+  still b3   150
+  still f1   700
+  still f2   1050
+  still f3   2410
+  still f4   3600
+  still f5   3900
+  track ah   0:34/105 64:35
+  track av   0:52/53 51:51 52:50 64:0
+  track b1   0:200 52:200 64:120
+  track di   0:100 4:5/1 64:0
+  track oq   0:18 4:54/1 64:56
+
+phone Y text=`[.1Y] frames=59
+  still b1   120
+  still b3   150
+  still f4   3600
+  still f5   3900
+  track ah   0:34/105 58:35
+  track av   0:50/53 51:49 52:48 58:0
+  track di   0:100 4:5/1 58:0
+  track f1   0:750 35:750/30 58:400
+  track f2   0:1200 35:1350/30 58:1850
+  track f3   0:2440 35:2440/30 58:2400
+  track oq   0:18 4:54/1 58:56
+
+phone W text=`[.1W] frames=65
+  still b1   120
+  track ah   0:34/113 64:35
+  track av   0:50/57 55:49 56:48 64:0
+  track b3   0:150 42:150/20 56:500 64:150
+  track di   0:100 4:5/1 64:0
+  track f1   0:750 42:700/20 64:550
+  track f2   0:1400 42:1300/20 64:900
+  track f3   0:2410 42:2410/20 64:2200
+  track f4   0:3600 42:3600/20 56:3300 64:3600
+  track f5   0:3900 42:3900/20 56:3600 64:3900
+  track oq   0:18 4:54/1 64:56
+
+phone O text=`[.1O] frames=59
+  still b3   150
+  still f4   3600
+  still f5   3900
+  track ah   0:34/105 58:35
+  track av   0:56/53 51:55 52:54 58:0
+  track b1   0:200 35:200/30 58:120
+  track di   0:100 4:5/1 58:0
+  track f1   0:480 35:480/30 58:400
+  track f2   0:900 35:900/30 58:1800
+  track f3   0:2440 35:2440/30 58:2350
+  track oq   0:18 4:54/1 58:56
+
+phone X text=`[.1X] frames=48
+  still b1   120
+  still b3   150
+  still f1   400
+  still f2   1600
+  still f3   2550
+  still f4   3600
+  still f5   3900
+  track ah   0:34/71 47:35
+  track av   0:53 35:51 47:0
+  track di   0:100 4:5/1 47:0
+  track oq   0:18 4:54/1 47:56
+
+phone H text=`[.1H] frames=55
+  still b1   120
+  still b3   150
+  still f1   600
+  still f2   1300
+  still f3   2500
+  still f4   3600
+  still f5   3900
+  track ah   0:34/85 54:35
+  track av   0:54/43 42:53 44:46 45:41 54:2
+  track di   0:100 4:5/1 54:0
+  track oq   0:18 4:54/1 54:56
+
+phone x text=`[.1x] frames=48
+  still b1   120
+  still b3   150
+  still f1   550
+  still f2   1300
+  still f4   3600
+  still f5   3900
+  track ah   0:34/71 47:35
+  track av   0:52 35:50 47:0
+  track di   0:100 4:5/1 47:0
+  track f3   0:2450/70 47:2550
+  track oq   0:18 4:54/1 47:56

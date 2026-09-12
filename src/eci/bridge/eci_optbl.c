@@ -14,7 +14,7 @@
 #include "delta.h"
 #include "evv_arena.h"
 
-#define NODE(n)   ((int32_t *)(intptr_t)(n))
+#define NODE(n)   (EVV_AT(int32_t *, (n)))
 #define OWN_WORDS 3
 #define LINK_MASK (~3)
 

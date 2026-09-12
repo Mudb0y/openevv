@@ -29,6 +29,16 @@ The all-language executable is
 `RULES=bytecode` for the faster-speaking compiled-rule build; generating it
 takes substantially longer, and the suite passes in both forms.
 
+**A packaging trap, which cost a real afternoon.** Where a build system expands
+its make flags as separate shell words -- Nix's `makeFlags` does -- a bare
+`LANGS=lang/enus lang/engb ...` reaches make as one assignment and eight
+targets. Make answers "Nothing to be done for 'lang/engb'", exits nought, and
+you install a module with one language in it. It builds, it speaks, and it
+passes a smoke test. Quote the whole assignment as one word. What caught it was
+`speechd-test` asserting the number of languages offered rather than deriving
+it, which failed with `AssertionError: {'en-US'}` -- the argument for stating a
+count rather than computing one from the same thing you are trying to check.
+
 Ten languages are linked and nine are offered. Japanese is deliberately left
 out of the module's table: its text is Shift-JIS, EUC-JP or one of three
 seven-bit JIS sets and its romanizer recodes whichever it was given, none of
@@ -44,22 +54,51 @@ paths appropriate to the account:
 
     make -j"$(nproc)" RULES=c LANGS="lang/enus lang/engb lang/dede lang/eses lang/esus lang/frfr lang/frca lang/itit lang/plpl lang/jajp" PREFIX=/home/Username/.local SPEECHD_CONFDIR=/home/Username/.config/speech-dispatcher/modules speechd-install
 
-This installs `sd_openevv` below the chosen module directory and
-`openevv.conf` below the chosen configuration directory. Distribution
-packagers can set `DESTDIR`, `SPEECHD_MODULEDIR`, and `SPEECHD_CONFDIR`
-directly. Speech Dispatcher does not discover module binaries automatically;
-add the installed paths to the user's `speechd.conf`:
+This installs `sd_openevv` below the chosen module directory and `openevv.conf` below the chosen configuration directory. Distribution packagers can set `DESTDIR`, `SPEECHD_MODULEDIR`, and `SPEECHD_CONFDIR` directly. Nothing further is needed to make the module visible: Speech Dispatcher walks its user and system module directories itself and loads what it finds there, so an installed module is offered the next time the daemon starts.
 
-    AddModule "openevv" "/home/Username/.local/libexec/speech-dispatcher-modules/sd_openevv" "/home/Username/.config/speech-dispatcher/modules/openevv.conf"
+**Do not register it in `speechd.conf`, and delete the line if it is already there.** Earlier versions of this file said Speech Dispatcher does not discover modules and gave an `AddModule` line to add by hand. That was wrong, and following it costs more than the line itself. `src/server/speechd.c` makes its three `detect_output_modules` calls only under `if (module_number_of_requested_modules() < 1)`, so the first explicit registration anywhere in `speechd.conf` turns discovery off for every module at once. An OpenEVV line added to a configuration that had none therefore hides espeak and every other installed voice behind the one module just added, which leaves the machine with less speech on it than before. Take the line out again; the section below says what restarting to pick that up costs.
+
+Two things make such a line harder to find by eye than it looks. The directive name is matched case-insensitively, so `addmodule` counts as much as `AddModule`, and the paths in it may be relative -- `module.c` resolves a bare binary name against the user module directory and then the system one, which is the form Speech Dispatcher's own commented examples use. A configuration that lists its modules explicitly on purpose is a different case and should be left that way: discovery is already off there by its owner's choice, and OpenEVV needs a line like everything else.
+
+If an explicit OpenEVV registration is already there, whether from an older package or from this document's own earlier advice, repair the current user's configuration with:
+
+    openevv-speechd-enable
+
+If the registration is in the system configuration, repair it explicitly as root:
+
+    sudo openevv-speechd-enable --system
+
+The helper backs up a configuration before changing it. It recognizes registrations whose module binary is named `sd_openevv`, whether their arguments are quoted or unquoted. If OpenEVV is the only explicit module, the helper prints and removes its registration to restore automatic discovery. If the configuration already lists other modules explicitly, the helper keeps or adds OpenEVV alongside them. Other custom OpenEVV registrations are left untouched.
+
+Directive names are matched case-insensitively. The helper examines only the selected `speechd.conf`; it does not follow `Include` directives, so inspect included files separately for `AddModule` lines. Use `--system` only on distributions where `/etc/speech-dispatcher/speechd.conf` is a regular, writable configuration file. On declaratively managed systems such as NixOS, change the system configuration through the distribution instead.
+
+The helper does not restart Speech Dispatcher itself. Restarting temporarily takes speech away, so do that only from a session that can be recovered without hearing.
 
 ## Try it without installing
 
-Add the following to `~/.config/speech-dispatcher/speechd.conf`, replacing
-`/absolute/path/openevv` with this checkout's absolute path:
+A build that has not been installed is in neither module directory, so discovery cannot see it. A link is enough to fix that and costs nothing else. Make the two directories if they are not there:
+
+    mkdir -p ~/.local/libexec/speech-dispatcher-modules ~/.config/speech-dispatcher/modules
+
+Then point a link named `sd_openevv` at the built module, whatever that build is actually called. Discovery follows the link, and takes both the module's name and the configuration file it will look for from the link's own name, so the all-language build needs no different treatment here:
+
+    ln -sf /absolute/path/openevv/build/sd_openevv ~/.local/libexec/speech-dispatcher-modules/sd_openevv
+
+And put the configuration file where the module will be started with it:
+
+    cp /absolute/path/openevv/speechd/openevv.conf ~/.config/speech-dispatcher/modules/openevv.conf
+
+Nothing in `speechd.conf` changes, so every module that was being discovered still is. Only a name beginning `sd_` is considered, so nothing else left in that directory gets picked up, and removing the link is the whole of undoing this.
+
+The other route is an explicit registration, and it is worth knowing only because a configuration that already lists its modules explicitly needs one:
 
     AddModule "openevv" "/absolute/path/openevv/build/sd_openevv" "/absolute/path/openevv/speechd/openevv.conf"
 
-If testing the all-language build, use its suffixed executable name instead.
+If testing the all-language build that way, use its suffixed executable name
+instead. In a configuration that lists nothing, that line turns discovery off
+and hides every other voice, so put it only in one that already registers what
+it wants.
+
 Stop the existing per-user daemon with `killall speech-dispatcher`; the next
 client or screen reader connection will start it with the new configuration.
 

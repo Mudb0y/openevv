@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include "delta.h"
+#include "delta_prov.h"
 #include "delta_rules_c.h"
 #include "evv_arena.h"
 
@@ -136,6 +137,30 @@ void *delta_low_at(const void *p)
     fprintf(stderr, "evv: %p is in the program and in none of the stores"
             " copied out of it\n", p);
     abort();
+    return 0;
+}
+
+/* Which store an address is in, by the name of the object it came from, or
+   nought where it is in none of them. Nothing in the engine needs this; the
+   provenance census does, and the table has always known the answer. The
+   store's own name is not recorded here -- only where it was and how long --
+   so what comes back is the index said as a name, which is enough to tell one
+   store from another and to count them. */
+const char *delta_low_store_of(const void *p)
+{
+    static char said[32];
+    const unsigned char *c = p;
+    int i;
+
+    if (p == 0)
+        return 0;
+
+    for (i = 0; i < regions; i++)
+        if (c >= region[i].copy && c < region[i].copy + region[i].bytes) {
+            snprintf(said, sizeof said, "store%d", i);
+            return said;
+        }
+
     return 0;
 }
 

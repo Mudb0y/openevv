@@ -27,7 +27,7 @@
    fence base rather than that fixed three is the same arithmetic written
    the other way, and both spellings appear below because both appear in
    what this was taken from. */
-#define NODE(n)   ((int32_t *)(intptr_t)(n))
+#define NODE(n)   (EVV_AT(int32_t *, (n)))
 #define OWN_WORDS 3
 #define LINK_MASK (~3)
 #define IS_SYNC   2
@@ -181,7 +181,7 @@ int is_token_next(delta_state *d, int8_t f, int32_t at)
 int32_t sync_to_left(delta_state *d, int8_t f, int32_t at)
 {
     (void)d;
-    return VLSYNC((const delta_node *)(intptr_t)at, f);
+    return VLSYNC(EVV_AT(const delta_node *, at), f);
 }
 
 int32_t sync_to_right(delta_state *d, int8_t f, int32_t at)
@@ -277,11 +277,11 @@ int project_sync(delta_state *d, int32_t l, int8_t f, int32_t r, int32_t back)
         return 0;
 
     if (back) {
-        if (!vproj_l(d, (delta_node *)(intptr_t)l, (delta_node *)(intptr_t)r,
+        if (!vproj_l(d, EVV_AT(delta_node *, l), EVV_AT(delta_node *, r),
                      (uint8_t)f))
             return 0;
     } else {
-        if (!vproj_r(d, (delta_node *)(intptr_t)l, (delta_node *)(intptr_t)r,
+        if (!vproj_r(d, EVV_AT(delta_node *, l), EVV_AT(delta_node *, r),
                      (uint8_t)f))
             return 0;
     }
@@ -888,7 +888,7 @@ char *extract_string(delta_state *d, int8_t f, int32_t l, int32_t r,
     max--;
     while (!syncmark_equ(l, r) && max != 0) {
         if (is_token_next(d, f, l)) {
-            void *tok = (void *)(intptr_t)next_token(d, f, l);
+            void *tok = EVV_AT(void *, next_token(d, f, l));
             char *v   = field_value(f, tok, 0);
 
             while (*v != 0 && max != 0) {
@@ -977,15 +977,15 @@ int can_del_sync(delta_state *d, int8_t f, int32_t at)
     next = next_token(d, f, at);
 
     if (!(signed char)vstmtbl[f].walkable) {
-        if (strcmp(field_value(f, (void *)(intptr_t)prev, 0), "GAP") != 0)
+        if (strcmp(field_value(f, EVV_AT(void *, prev), 0), "GAP") != 0)
             return 0;
-        if (strcmp(field_value(f, (void *)(intptr_t)next, 0), "GAP") != 0)
+        if (strcmp(field_value(f, EVV_AT(void *, next), 0), "GAP") != 0)
             return 0;
     }
 
     for (i = 1; i < vstmtbl[f].nfields; i++) {
-        void *a = (void *)(intptr_t)prev;
-        void *b = (void *)(intptr_t)next;
+        void *a = EVV_AT(void *, prev);
+        void *b = EVV_AT(void *, next);
 
         switch (FD(f, 0)->kind) {
         case KIND_NAMED8:

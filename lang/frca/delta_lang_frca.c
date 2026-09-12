@@ -110,6 +110,7 @@ delta_language delta_lang_frca = {
     frca_delta_rule_map,
 #endif
     frca_delta_rule_entry,
+    frca_delta_rule_argmask,
     frca_delta_rule_entry_name,
     frca_delta_rule_sym,
     0,                   /* how many of those */

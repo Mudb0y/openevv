@@ -155,14 +155,43 @@ class Rule:
         if kind == 'slotaddr':
             return 'SLOT(%d)' % val
         if kind == 'state':
+            # The address of one of the language's own variables, where the
+            # state is the parameter rather than something in a register. No
+            # analysis is wanted for these: the operand says the state, so the
+            # offset is a cell and variable_at names it outright. GLOBAL_AT
+            # covered only the ones reached through a register, which is why
+            # five thousand of these stayed raw and would have pinned the cell
+            # layout the moment DG_BASE moved.
+            if val:
+                got = variable_at(val)
+                if got is not None:
+                    USED.add(got[0])
+                    FIELDED[0] += 1
+                    return 'STATE_AT(%s, %d)' % (got[0], got[1])
             return 'FIELD(%d)' % val
         if kind == 'slot':
             return self.at('base + %d' % val, width, signed)
         if kind == 'statefld':
+            # A reach into the state at an offset the operand gives outright,
+            # so no analysis is wanted: it is a cell and variable_at names it.
+            # The same gap FIELD had -- GLOBAL covered the reaches through a
+            # register and left these, and they pin the cell layout just as
+            # hard.
+            got = variable_at(val)
+            if got is not None:
+                t = {1: 'int8_t', 2: 'int16_t', 4: 'int32_t'}[width]
+                if not signed:
+                    t = 'u' + t
+                USED.add(got[0])
+                FLDED[0] += 1
+                if got[1]:
+                    return '(int32_t)STATE_D(%s, %s, %d)' % (
+                        t, got[0], got[1])
+                return '(int32_t)STATE(%s, %s)' % (t, got[0])
             return self.at('(unsigned char *)state + %d' % val, width, signed)
         if kind.startswith('ind('):
             inner, disp = val
-            return self.at('(unsigned char *)(intptr_t)(%s) + %d'
+            return self.at('REG_P(%s) + %d'
                            % (self.value(kind[4:-1], inner[0] if
                                          isinstance(inner, tuple) else inner,
                                          where=where[0] if
@@ -196,10 +225,18 @@ class Rule:
         if kind == 'slot':
             return 'AT(%s, %d)' % (t, val), width
         if kind == 'statefld':
+            got = variable_at(val)
+            if got is not None:
+                USED.add(got[0])
+                FLDED[0] += 1
+                if got[1]:
+                    return ('STATE_D(%s, %s, %d)'
+                            % (t, got[0], got[1])), width
+                return 'STATE(%s, %s)' % (t, got[0]), width
             return 'FLD(%s, %d)' % (t, val), width
         if kind.startswith('ind('):
             inner, disp = val
-            return ('(*(%s *)((unsigned char *)(intptr_t)(%s) + %d))'
+            return ('(*(%s *)(REG_P(%s) + %d))'
                     % (t, self.value(kind[4:-1],
                                      inner[0] if isinstance(inner, tuple)
                                      else inner,
@@ -431,12 +468,21 @@ def write(names):
         alts = dispatch_names(flat)
         # Taking the dead loads out first brings more calls up against
         # their arguments, which is why the joining goes last.
-        named, saw = name_globals(
-            join_calls(c, drop_pops(join_pops(drop_dead(
-                leave_loops(structure(flat)))))))
+        # The naming goes first, on the flat form, because that is where the
+        # flow graph is. The passes below do not look inside an expression, so
+        # a name survives them; the analyses beside them go on reading the
+        # flat form as it was.
+        told, saw = name_globals(flat, pbase, name)
+        named = join_calls(c, drop_pops(join_pops(drop_dead(
+            leave_loops(structure(told))))))
         named = name_tails(
             name_alternatives(name_params(named, pbase, params), alts))
         USED.update(saw)
+        # Last of all, and only when asked for: the reaches the passes above
+        # could not name, each given a number so that the engine can be made
+        # to say what it was addressing. src/delta/delta_prov.c is the other
+        # half.
+        named = prov_sites(named, name)
 
         plants = plants_landing(flat)
         bad = stale_registers(flat) if plants else set()
@@ -454,7 +500,20 @@ def write(names):
             named = [l.replace('RETURN(', 'LEAVE(') for l in named]
 
         text = []
+        # The rule's own locals said as a struct, where they can be. Only
+        # for a rule with a frame out of the arena; a wrapper's few words are
+        # an ordinary C array already.
+        shape = None
+        if not loose and frame:
+            shape = frame_struct(named, frame, pbase, name)
+        if shape is not None:
+            said, slots_named, slots_used = shape
+            named = frame_named(named, slots_named, slots_used)
+            FRAMES[0] += 1
+
         text.append('/* %s, from %s */\n' % (name, rule.obj))
+        if shape is not None:
+            text.append(said + '\n\n')
         text.append('static int32_t evv_%s(void *state, const int32_t *args,'
                     ' int nargs)\n{\n' % name)
         # The frame is not an ordinary local. A rule hands the machine the
@@ -476,6 +535,11 @@ def write(names):
         else:
             text.append('    unsigned char *frame = evv_frame_push('
                         'DELTA_RULE_FRAME_MAX);\n')
+            if shape is not None:
+                # The rule's own locals as its own struct. base stays what it
+                # was, because the machine's block and the argument area are
+                # still reached through it.
+                text.append('    f_%s *fp = (f_%s *)frame;\n' % (name, name))
             text.append('    unsigned char *base = frame + %d;\n' % frame)
             text.append('    unsigned char *param = base + %d;\n' % pbase)
         text.append('    int32_t arg[%d];\n' % argument_depth(flat))
@@ -545,10 +609,16 @@ def write(names):
     # rule touched which would be one more thing that could be wrong.
     defs = ''
     if USED:
-        where = {v: k for k, v in layout().items()}
-        defs = ('/* Where each global the rules touch lands in the state. */\n'
+        # The placement, not the lookup, and said as a distance from where the
+        # cells start rather than as a number. DG_BASE is delta_state's own
+        # size, so the C works out where a variable lands in the state this
+        # build has, and nothing here has to be told what that is or kept in
+        # step with it when a field of the state changes width.
+        where = {v: k for k, v in layout(0).items()}
+        defs = ('/* Where each global the rules touch lands in the state,\n'
+                '   as a distance from the first cell. */\n'
                 '%s\n\n'
-                % '\n'.join('#define DG_%-6s %5d' % (v, where[v])
+                % '\n'.join('#define DG_%-6s (DG_BASE + %5d)' % (v, where[v])
                             for v in sorted(USED, key=lambda x: where[x])))
 
     for n, part in enumerate(share_out(bodies)):
@@ -1051,49 +1121,193 @@ def _loop(body):
 WRAPPED = [0]
 NAMED = [0]
 USED = set()
-LAYOUT = {}
+LAYOUT_BY_BASE = {}
 
 
-def layout():
+def layout(base=None):
     """Where each of the language's global variables lands in the state.
 
-    delta_new walks the declaration list once, aligning and numbering as it
-    goes, and this walks it the same way. The proof that it walks it right is
-    that the last variable ends exactly on the state's declared size, with
-    nothing over and nothing short.
+    Takes the same two layouts extents() does, and for the same reason: read
+    an offset out of the rules' text in IBM's, and place a variable in ours.
+    The emitted DG_ constants are the placement; every lookup of a number the
+    text gave is the other one.
+
+    A cell's value is not the cell: a word's sits four bytes in, a short's
+    two, a compound's at the front. cells() keeps both and this is the view a
+    reach wants.
     """
-    if LAYOUT:
-        return LAYOUT
+    if base is None:
+        base = DG_BASE_IBM
+    if base not in LAYOUT_BY_BASE:
+        LAYOUT_BY_BASE[base] = {at + into: name
+                                for at, _room, name, into in cells(base)}
+    return LAYOUT_BY_BASE[base]
+
+
+EXTENTS_BY_BASE = {}
+
+
+# Where the language's cells begin, which is where delta_state's own named
+# fields end.
+#
+# This is what the rules' text is written in: `statefld 3078' means the byte
+# at 3078 of a state laid out the way 1999 laid it out, and 697 operands in
+# English say so. So an offset out of the text is read here to learn which
+# variable it means.
+#
+# Where that variable then goes is a different number, and it is not in this
+# file: the emitted constants are distances from the first cell and the C adds
+# DG_BASE, which is delta_state's own size. That is the whole seam. One number
+# serving both jobs is what would silently read the variable next door the
+# moment a field of the state changed width, and a reference is going to.
+DG_BASE_IBM = 0xb0
+
+
+def cells(base):
+    """The language's variable cells, in declaration order, as they are laid
+    out from `base': where each starts, how many bytes it takes, what to call
+    it, and how far into it its value sits.
+
+    The one walk. delta_new does this at run time in eci_deltaglob.c and the
+    lifter does it against IBM's objects in tools/module/globals.py, and all
+    three have to agree cell for cell or an offset from the first cell they
+    disagree at onwards names the variable next door. There were two copies of
+    it in this file and both were missing the compound rule below, which cost
+    nothing while a cell's name round-tripped back to the number it came from
+    and would have placed 415 of Italian's cells two bytes out the moment the
+    base moved.
+
+    What settles it is the language's own declared state size: the last cell
+    has to end exactly there, with nothing over and nothing short.
+    """
     path = os.path.join(census.LANG_DIR,
                         'delta_globals_%s.c' % census.LANG_TAG)
     if not os.path.exists(path):
-        return LAYOUT
+        return []
     text = open(path).read()
     kinds = re.findall(r'DG_(WORD|LONG|SHORT|COMPOUND)', text)
-    sizes = [int(b) for _a, b in
-             re.findall(r'\{\s*(\d+),\s*(\d+)\s*\}',
-                        text[text.index('delta_compounds[]'):])]
+    decls = re.findall(r'\{\s*(\d+),\s*(\d+)\s*\}',
+                       text[text.index('delta_compounds[]'):])
+    inits = [int(a) for a, _b in decls]
+    sizes = [int(b) for _a, b in decls]
 
     def up(n, a):
         return (n + a - 1) & ~(a - 1)
 
-    at = 0xb0
+    out = []
+    at = base
     n = {'WORD': 0, 'LONG': 0, 'SHORT': 0, 'COMPOUND': 0}
     for k in kinds:
+        i = n[k]
         if k in ('WORD', 'LONG'):
             at = up(at, 4)
-            LAYOUT[at + 4] = '%s%d' % ('w' if k == 'WORD' else 'l', n[k])
+            out.append((at, 8, '%s%d' % ('w' if k == 'WORD' else 'l', i), 4))
             at += 8
         elif k == 'SHORT':
             at = up(at, 2)
-            LAYOUT[at + 2] = 's%d' % n[k]
+            out.append((at, 4, 's%d' % i, 2))
             at += 4
         else:
-            at = up(at, 2)
-            LAYOUT[at] = 'c%d' % n[k]
-            at += 4 + up(sizes[n[k]] if n[k] < len(sizes) else 0, 2)
+            # A compound whose first word is 6 holds four-byte items and goes
+            # on a four-byte boundary; every other kind wants two. This is the
+            # only thing about a compound that is not the same for all of
+            # them, and it is the rule both the other walks have.
+            at = up(at, 4 if i < len(inits) and inits[i] == 6 else 2)
+            room = 4 + up(sizes[i] if i < len(sizes) else 0, 2)
+            out.append((at, room, 'c%d' % i, 0))
+            at += room
         n[k] += 1
-    return LAYOUT
+
+    want = re.search(r'delta_state_bytes\s*=\s*(0x[0-9a-fA-F]+|\d+)', text)
+    if want:
+        ends = int(want.group(1), 0) + (base - DG_BASE_IBM)
+        if at != ends:
+            raise SystemExit('%s: the cells end at %d, the state says %d'
+                             % (census.LANG_TAG, at, ends))
+    return out
+
+
+def extents(base=None):
+    """Every language variable as the run of bytes it really is.
+
+    layout() answers where a variable's value sits, which is what a reach
+    wants. An address handed onward wants more than that: the machine computes
+    the address of a cell, or of a byte inside a compound one, and neither is
+    the value's own offset. So this keeps the whole of each cell, so that any
+    offset at all can be said as a variable and a displacement from it.
+
+    `base' says which layout to walk it in: DG_BASE_IBM to read an offset out
+    of the rules' text, and zero to say where a variable sits as a distance
+    from the first cell, which is what the emitted constants are.
+    """
+    if base is None:
+        base = DG_BASE_IBM
+    if base not in EXTENTS_BY_BASE:
+        EXTENTS_BY_BASE[base] = sorted(cells(base))
+    return EXTENTS_BY_BASE[base]
+
+
+def variable_at(off):
+    """The variable one offset into the state falls in, and how far into it
+    from that variable's own name. None where it falls outside them all.
+
+    The offset comes out of the rules' text, so it is read in IBM's layout.
+    What comes back is a name, and where that name sits is the other walk's
+    business -- which is the whole point of there being two.
+    """
+    rows = extents(DG_BASE_IBM)
+    lo, hi = 0, len(rows) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        start, room, name, value = rows[mid]
+        if off < start:
+            hi = mid - 1
+        elif off >= start + room:
+            lo = mid + 1
+        else:
+            return name, off - (start + value)
+    return None
+
+
+ADDRED = [0]
+VIAED = [0]
+BLOCKED = [0]
+RECORDED = [0]
+STEPPED = [0]
+MAYBED = [0]
+FIELDED = [0]
+FLDED = [0]
+ADDR_RE = re.compile(r'\(\(int32_t\)\((r[0-7]) \+ \((-?\d+)\)\)\)')
+
+
+def name_addresses(flat, only, at, stale, seen):
+    """An address computed into the state, said as the variable it points at.
+
+    The machine hands a primitive the address of one of the language's own
+    variables by adding a number to the state, and 3,965 places in English do
+    it. Written as the number it is a layout nobody may move; written as the
+    variable and a displacement it is the same address and the compiler works
+    it out, which is the whole point of asking what these sites address.
+    """
+    def sub(m):
+        reg, off = m.group(1), int(m.group(2))
+        n = int(reg[1:])
+        if reg not in only and not (n in holds and n not in stale):
+            return m.group(0)
+        got = variable_at(off)
+        if got is None:
+            return m.group(0)
+        name, step = got
+        seen.add(name)
+        ADDRED[0] += 1
+        return 'GLOBAL_AT(%s, %s, %d)' % (reg, name, step)
+
+    holds = frozenset()
+    out = []
+    for i, line in enumerate(flat):
+        holds = at[i] if at is not None else frozenset()
+        out.append(ADDR_RE.sub(sub, line))
+    return out
 
 
 PARAMED = [0]
@@ -1194,40 +1408,830 @@ def drop_dead(body):
     return [l for i, l in enumerate(body) if i not in dead]
 
 
+# A register written in part rather than whole, which is no longer the state.
+PART_WRITE = re.compile(r'SET(?:LOW|BYTE0|BYTE1)\(r([0-7])')
+
 REACH = re.compile(r'\(\*\((u?int(?:8|16|32)_t) \*\)'
-                   r'\(\(unsigned char \*\)\(intptr_t\)\((r\d)\)'
+                   r'\(REG_P\((r\d)\)'
                    r' \+ (\d+)\)\)')
 
 
-def name_globals(body):
+# The provenance census: which object each reach that GLOBAL could not name is
+# actually addressing. Off unless EVV_RULE_PROVENANCE is set, and it changes
+# only what the generated C says about itself -- the expression it computes is
+# the same one -- so the bytecode is untouched and the audio has to be.
+#
+# It runs last, after name_globals, on purpose. Instrumenting earlier would
+# stop that pass matching its own pattern and 34,012 named variables would go
+# back to being arithmetic, which would make a provenance build differ from an
+# ordinary one in a way that has nothing to do with provenance.
+PROVENANCE = os.environ.get('EVV_RULE_PROVENANCE', '') not in ('', '0')
+
+# Where each site is, so the report can be read. One line a site: its number,
+# the rule it is in, the offset it reaches at, and whether it is a reach or an
+# address handed onward.
+PROV_SITES = []
+
+# A reach through a register that name_globals left alone, and an address
+# computed from one. The first is the reach itself; the second is the folded
+# add a rule makes when it hands the machine a pointer into something.
+PROV_REACH = re.compile(r'\(\*\((u?int(?:8|16|32)_t) \*\)'
+                        r'\(REG_P\((r\d)\)'
+                        r' \+ (-?\d+)\)\)')
+PROV_ADDR = re.compile(r'\(\(int32_t\)\((r\d) \+ \((-?\d+)\)\)\)')
+
+
+def prov_sites(body, name):
+    """Every reach whose object is unknown, noted with a number of its own."""
+    if not PROVENANCE:
+        return body
+
+    def reach(m):
+        t, reg, off = m.group(1), m.group(2), m.group(3)
+        n = len(PROV_SITES)
+        PROV_SITES.append((n, name, off, 'reach'))
+        return ('(*(%s *)((unsigned char *)EVV_PROV(%d,'
+                ' (const void *)(intptr_t)(%s)) + %s))'
+                % (t, n, reg, off))
+
+    def addr(m):
+        reg, off = m.group(1), m.group(2)
+        n = len(PROV_SITES)
+        PROV_SITES.append((n, name, off, 'addr'))
+        return ('((int32_t)((intptr_t)EVV_PROV(%d,'
+                ' (const void *)(intptr_t)(%s)) + (%s)))' % (n, reg, off))
+
+    out = []
+    for line in body:
+        line = PROV_REACH.sub(reach, line)
+        line = PROV_ADDR.sub(addr, line)
+        out.append(line)
+    return out
+
+
+def write_prov_sites(tag):
+    """The site table, which is the map the report is read against."""
+    if not PROVENANCE:
+        return
+    path = os.path.join(census.LANG_DIR, 'provenance-sites-%s.txt' % tag)
+    with open(path, 'w') as f:
+        f.write('# site  rule  offset  kind\n')
+        for n, name, off, kind in PROV_SITES:
+            f.write('%d %s %s %s\n' % (n, name, off, kind))
+    print('wrote %s, %d sites' % (path, len(PROV_SITES)))
+
+
+def state_registers(flat):
+    """Which registers must hold the state at each line of the flat form.
+
+    A must-analysis over the flow graph, which is the only honest way to ask
+    it: a rule's whole body commonly sits inside one `if', so anything that
+    gives up at a join gives up everywhere, and anything that does not look
+    at the flow at all can only ask whether a register holds the state for
+    the length of the rule -- which is what this used to ask, and why it gave
+    up on every register the rule reused.
+
+    Answers None where flat_cfg does, which is where there is a shape in the
+    rule this cannot read. An edge left out is a path an analysis never looks
+    down, and the answer to that is to refuse rather than to guess.
+    """
+    succ = flat_cfg(flat)
+    if succ is None:
+        return None
+
+    n = len(flat)
+    pred = [[] for _ in range(n)]
+    for i, outs in enumerate(succ):
+        for j in outs:
+            pred[j].append(i)
+
+    every = frozenset(range(8))
+    gen, kill = [], []
+    for line in flat:
+        m = DEF_RE.match(line)
+        if m and line[m.end():].strip() == '(FIELD(0));':
+            gen.append(frozenset({int(m.group(1))}))
+            kill.append(frozenset({int(m.group(1))}))
+            continue
+        gen.append(frozenset())
+        out = set()
+        if POP_RE.match(line):
+            # _defuse does not count a pop as a write, for its own question:
+            # the machine takes nothing off an empty argument area and then
+            # the register keeps what it had. For this question that is
+            # exactly the case where an assumption would be wrong, so a pop
+            # kills.
+            out |= {int(r) for r in REG_RE.findall(line)}
+        else:
+            out |= _defuse(line)[0]
+        # A register written in part is not the state any more.
+        out |= {int(m.group(1)) for m in PART_WRITE.finditer(line)}
+        kill.append(frozenset(out))
+
+    # Everything everywhere to start with, nothing at the entry, and round
+    # until it settles. A must-analysis narrows, so this terminates -- and it
+    # has to start at the top for that to mean anything. Starting `outof' at
+    # the empty set is starting at the bottom: the first pass meets every
+    # predecessor with nothing, the answer is nothing, and narrowing can never
+    # get it back. That is what this did, and it is why the analysis appeared
+    # to add nothing over the whole-body test it was written to improve on.
+    into = [every] * n
+    into[0] = frozenset()
+    outof = [every] * n
+    changed = True
+    while changed:
+        changed = False
+        for i in range(n):
+            if i == 0:
+                got = frozenset()
+            elif not pred[i]:
+                # Unreachable in the graph: nothing may be assumed.
+                got = frozenset()
+            else:
+                got = every
+                for p in pred[i]:
+                    got &= outof[p]
+            was = (into[i], outof[i])
+            into[i] = got
+            outof[i] = (got - kill[i]) | gen[i]
+            if (into[i], outof[i]) != was:
+                changed = True
+
+    return into
+
+
+# What each of the machine's entries takes, read out of delta.h, and which
+# byte of each record is which field.
+#
+# A rule never says what its pointers point at. Three things together do. An
+# entry declares its arguments, so handing a pointer to one says what it is.
+# A rule hands the address of its own slot to an entry, which says what that
+# slot is. And a rule passes the address of a slot to another rule, which says
+# what that rule's argument is -- so the answer travels along the call graph
+# and has to be chased to a fixed point rather than read off.
+#
+# Only the records a rule reaches into are here, and every offset is asserted
+# in src/delta/delta.c so a field that moved stops the build.
+RECORD_FIELDS = {
+    'delta_loc':   {0: 'kind', 2: 'field', 4: 'value'},
+    'delta_token': {0: 'unknown_00', 4: 'value'},
+}
+
+ENTRY_PTRS = {}
+ARG_TYPES = {}
+ARG_LINE = re.compile(r'^\s*ARG\((.*)\);$')
+CALL_LINE = re.compile(r'CALLW?\((\w+), (\d+)\)')
+SLOT_ARG = re.compile(r'SLOT\((-?\d+)\)')
+AT_ARG = re.compile(r'\(int32_t\)AT\(int32_t, (-?\d+)\)')
+
+
+def entry_ptrs():
+    """Which of each entry's arguments are pointers to a record we name."""
+    if ENTRY_PTRS:
+        return ENTRY_PTRS
+    text = open(os.path.join(ROOT, 'src', 'delta', 'delta.h')).read()
+    for m in re.finditer(r'^(?:int32_t|int|void|uint8_t|int16_t|int8_t)\s*\**'
+                         r'([a-z_][a-z0-9_]*)\(([^;]*)\);', text, re.M):
+        params = [q.strip() for q in m.group(2).split(',')
+                  if q.strip() and q.strip() != 'void']
+        got = {}
+        for j, q in enumerate(params):
+            t = re.match(r'(?:const\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*\*', q)
+            if t and t.group(1) in RECORD_FIELDS:
+                got[j] = t.group(1)
+        if got:
+            ENTRY_PTRS[m.group(1)] = got
+    return ENTRY_PTRS
+
+
+def _call_args(flat):
+    """Each call in the flat form, as its target and its arguments in order."""
+    pending = []
+    for line in flat:
+        m = ARG_LINE.match(line)
+        if m:
+            pending.append(m.group(1).strip())
+            continue
+        m = CALL_LINE.search(line)
+        if m:
+            n = int(m.group(2))
+            yield m.group(1), list(reversed(pending[-n:] if pending else []))
+            pending = []
+
+
+def argument_types():
+    """What each rule's arguments point at, chased to a fixed point.
+
+    Every rule is read once for this, which is the reason a language takes
+    about twice as long to write out as it did. There is no cheaper way: the
+    answer for one rule is in its callers and theirs in turn, and it settles
+    after six rounds over English rather than needing many.
+    """
+    if ARG_TYPES:
+        return ARG_TYPES
+
+    entries = entry_ptrs()
+    body, base = {}, {}
+    for name in every():
+        try:
+            c, index, row, insns = load(name)
+            base[name] = c_rule_shape(name)[1]
+            body[name] = direct_tests(tail_returns(fold(emit(
+                Rule(c, index, row, insns)))))
+        except Unhandled:
+            continue
+        except Exception:
+            continue
+
+    # A slot whose address goes to an entry is whatever that entry takes.
+    slot = {}
+    for name, flat in body.items():
+        got = {}
+        for target, vals in _call_args(flat):
+            if target not in entries:
+                continue
+            for k, one in enumerate(vals):
+                t = entries[target].get(k)
+                a = SLOT_ARG.fullmatch(one)
+                if t and a:
+                    got.setdefault(int(a.group(1)), set()).add(t)
+        slot[name] = {k: next(iter(v)) for k, v in got.items() if len(v) == 1}
+
+    args = {name: {} for name in body}
+    for _round in range(16):
+        seen = collections.defaultdict(lambda: collections.defaultdict(set))
+        for name, flat in body.items():
+            for target, vals in _call_args(flat):
+                if target not in body:
+                    continue
+                for k, one in enumerate(vals):
+                    a = SLOT_ARG.fullmatch(one)
+                    if a and int(a.group(1)) in slot[name]:
+                        seen[target][k].add(slot[name][int(a.group(1))])
+                        continue
+                    a = AT_ARG.fullmatch(one)
+                    if a and int(a.group(1)) >= base[name]:
+                        t = args[name].get(
+                            (int(a.group(1)) - base[name]) // 4)
+                        if t:
+                            seen[target][k].add(t)
+        grew = 0
+        for target, ks in seen.items():
+            for k, ts in ks.items():
+                if len(ts) == 1 and args[target].get(k) != next(iter(ts)):
+                    args[target][k] = next(iter(ts))
+                    grew += 1
+        # And a rule's argument being known says what the caller's slot was.
+        for name, flat in body.items():
+            for target, vals in _call_args(flat):
+                if target not in args:
+                    continue
+                for k, one in enumerate(vals):
+                    a = SLOT_ARG.fullmatch(one)
+                    t = args[target].get(k)
+                    if a and t and int(a.group(1)) not in slot[name]:
+                        slot[name][int(a.group(1))] = t
+                        grew += 1
+        if not grew:
+            break
+
+    ARG_TYPES.update(args)
+    return ARG_TYPES
+
+
+def argument_records(flat, pbase, name):
+    """Which register holds a pointer to which record, at each line.
+
+    The reaches this is for all read one of the rule's own arguments, so what
+    they address was settled by whoever called the rule and argument_types is
+    what knows. A register keeps the type from the load that gave it until
+    something writes it again, and nothing is carried across a label, because
+    a label may be jumped to from anywhere.
+    """
+    known = argument_types().get(name, {})
+    if not known:
+        return [{}] * len(flat)
+
+    def after(line, was):
+        got = dict(was)
+        m = DEF_RE.match(line)
+        if m:
+            a = AT_ARG.search(line[m.end():])
+            t = None
+            if a and int(a.group(1)) >= pbase:
+                t = known.get((int(a.group(1)) - pbase) // 4)
+            if t:
+                got[int(m.group(1))] = t
+            else:
+                got.pop(int(m.group(1)), None)
+            return got
+        if POP_RE.match(line):
+            for r in REG_RE.findall(line):
+                got.pop(int(r), None)
+        else:
+            for r in _defuse(line)[0]:
+                got.pop(r, None)
+        for w in PART_WRITE.finditer(line):
+            got.pop(int(w.group(1)), None)
+        return got
+
+    # Over the flow graph rather than in a line, because clearing at every
+    # label gives up on nearly all of it: a rule's body sits inside one `if',
+    # so a pointer loaded before it is lost at the brace. The meet keeps only
+    # what every way in agrees on, type and all.
+    succ = flat_cfg(flat)
+    if succ is None:
+        return [{}] * len(flat)
+
+    n = len(flat)
+    pred = [[] for _ in range(n)]
+    for i, outs in enumerate(succ):
+        for j in outs:
+            pred[j].append(i)
+
+    # A register loaded only ever out of one typed argument, and written
+    # nowhere else, holds that record wherever it holds anything -- which the
+    # graph cannot see, for the same reason it cannot see a landing place.
+    # Seeded into the walk, as state_offsets does.
+    once = {}
+    spoilt = set()
+    for line in flat:
+        m = DEF_RE.match(line)
+        if not m:
+            continue
+        r = int(m.group(1))
+        a = AT_ARG.search(line[m.end():])
+        t = None
+        if a and int(a.group(1)) >= pbase:
+            t = known.get((int(a.group(1)) - pbase) // 4)
+        if t is None or once.get(r, t) != t:
+            spoilt.add(r)
+        else:
+            once[r] = t
+    fixed = {r: t for r, t in once.items() if r not in spoilt}
+
+    into = [None] * n
+    outof = [None] * n
+    changed = True
+    while changed:
+        changed = False
+        for i in range(n):
+            if i == 0 or not pred[i]:
+                got = dict(fixed)
+            else:
+                got = None
+                for p in pred[i]:
+                    if outof[p] is None:
+                        continue
+                    other = outof[p]
+                    got = (dict(other) if got is None else
+                           {k: v for k, v in got.items()
+                            if other.get(k) == v})
+                if got is None:
+                    continue
+                got.update(fixed)
+            was = outof[i]
+            into[i] = got
+            outof[i] = after(flat[i], got)
+            outof[i].update(fixed)
+            if outof[i] != was:
+                changed = True
+
+    out = []
+    for x in into:
+        got = dict(fixed)
+        got.update(x if x is not None else {})
+        out.append(got)
+    return out
+
+
+FRAMED = [0]
+FRAMES = [0]
+MERGED = [0]
+
+# How much an entry writes through a pointer it is handed, which is the size of
+# the type it declares. Held against the real thing in src/delta/delta.c, so a
+# struct that grows says so here rather than overwriting a neighbour in
+# silence.
+ENTRY_WRITES = {
+    'delta_loc': 8, 'delta_token': 8, 'delta_tpos': 16, 'delta_operand': 16,
+    'delta_node': 44, 'delta_actrec': 92, 'delta_field': 4, 'delta_mark': 20,
+}
+
+
+def entry_spans():
+    """Which of each entry's arguments is a pointer to something it fills in,
+    and how many bytes that is."""
+    if ENTRY_SPANS:
+        return ENTRY_SPANS
+    text = open(os.path.join(ROOT, 'src', 'delta', 'delta.h')).read()
+    for m in re.finditer(r'^(?:int32_t|int|void|uint8_t|int16_t|int8_t)\s*\**'
+                         r'([a-z_][a-z0-9_]*)\(([^;]*)\);', text, re.M):
+        params = [q.strip() for q in m.group(2).split(',')
+                  if q.strip() and q.strip() != 'void']
+        got = {}
+        for j, q in enumerate(params):
+            t = re.match(r'(?:const\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*\*', q)
+            if t and t.group(1) in ENTRY_WRITES:
+                got[j] = ENTRY_WRITES[t.group(1)]
+        if got:
+            ENTRY_SPANS[m.group(1)] = got
+    return ENTRY_SPANS
+
+
+ENTRY_SPANS = {}
+
+
+def slot_spans(body):
+    """How many bytes are written through each slot whose address a rule hands
+    to one of the machine's entries.
+
+    A rule declares a four-byte local and hands its address to `get_parm',
+    which fills in eight -- docs/rules.md:112 -- so the slot after it is part
+    of what that call writes. 783 slots in English are narrower than the entry
+    writing through them."""
+    spans = entry_spans()
+    out = {}
+    pending = []
+    for line in body:
+        m = ARG_LINE.match(line)
+        if m:
+            pending.append(m.group(1).strip())
+            continue
+        m = CALL_LINE.search(line)
+        if m:
+            if m.group(1) in spans:
+                want = spans[m.group(1)]
+                vals = list(reversed(pending[-int(m.group(2)):]
+                                     if pending else []))
+                for k, one in enumerate(vals):
+                    n = want.get(k)
+                    a = SLOT_ANY.fullmatch(one)
+                    if n and a:
+                        o = int(a.group(1))
+                        out[o] = max(out.get(o, 0), n)
+            pending = []
+    return out
+AT_ANY = re.compile(r'AT\((u?int(?:8|16|32)_t), (-?\d+)\)')
+SLOT_ANY = re.compile(r'SLOT\((-?\d+)\)')
+WIDTH_OF = {'int8_t': 1, 'uint8_t': 1, 'int16_t': 2, 'uint16_t': 2,
+            'int32_t': 4, 'uint32_t': 4}
+
+
+def frame_struct(body, frame, pbase, name):
+    """A rule's own locals as a struct, so that the compiler places them.
+
+    A slot is a byte offset from the frame's end today, which is a layout
+    nobody may move -- and a local holding a reference is four bytes and would
+    want eight. Said as a struct it is the compiler's to place.
+
+    The layout is spelled out here rather than left to the compiler, which
+    makes this a rename and nothing else: every field lands exactly where its
+    number put it, and the gate can say so. Letting the compiler choose is the
+    step after, and it wants one thing this does not: how much each entry
+    writes through a slot's address, since `get_parm' writes eight bytes into
+    a four-byte local and takes the next one with it. docs/rules.md:112 has
+    that, and entry_ptrs() is where the answer will come from.
+
+    Answers None for a rule this cannot describe: one whose slots read the
+    same word at two widths, which wants a union rather than two fields, and
+    one with no locals to name.
+    """
+    text = '\n'.join(body)
+    use = {}
+    for m in AT_ANY.finditer(text):
+        o = int(m.group(2))
+        use[o] = max(use.get(o, 0), WIDTH_OF[m.group(1)])
+    for m in SLOT_ANY.finditer(text):
+        use.setdefault(int(m.group(1)), 4)
+
+    slots = sorted(o for o in use if o < 0 and o >= -frame)
+    if not slots:
+        return None
+    for a, b in zip(slots, slots[1:]):
+        if a + use[a] > b:
+            return None
+
+    # A slot the machine writes more through than the rule declared swallows
+    # the slots inside that write. They cannot be fields of their own: the rule
+    # means the wide write to fill both and reads the second afterwards, so
+    # giving it a field elsewhere would leave it reading nothing. The layout
+    # does not change -- the second slot's bytes are simply part of the first
+    # field now -- so this stays a rename.
+    spans = slot_spans(body)
+    inner = {}
+    keep = []
+    at_least = {}
+    i = 0
+    while i < len(slots):
+        o = slots[i]
+        n = max(use[o], spans.get(o, 0))
+        if o + n > 0:
+            n = -o
+        j = i + 1
+        while j < len(slots) and slots[j] < o + n:
+            if slots[j] + use[slots[j]] > o + n:
+                return None
+            inner[slots[j]] = (o, slots[j] - o)
+            MERGED[0] += 1
+            j += 1
+        use[o] = n
+        at_least[o] = spans.get(o, 0)
+        keep.append(o)
+        i = j
+    slots = keep
+
+    # Bytes, not the type the slot is read as. A slot sits wherever the
+    # machine's own frame sizes put it, which is not always where a uint16_t
+    # or an int32_t may sit, and then the compiler pads in front of the field
+    # and every field after it moves. That is not a theory: typed fields moved
+    # two German cases, both of them a voice change, and the gate said so. A
+    # byte run has no alignment to satisfy, and the access casts anyway.
+    rows = []
+    at = 0
+    for o in slots:
+        want = frame + o
+        if want < at:
+            return None
+        if want > at:
+            rows.append('    unsigned char pad%d[%d];' % (at, want - at))
+            at = want
+        rows.append('    unsigned char s%d[%d];' % (-o, use[o]))
+        at += use[o]
+    if at > frame:
+        return None
+    if at < frame:
+        rows.append('    unsigned char pad%d[%d];' % (at, frame - at))
+
+    named = {o: 's%d' % -o for o in slots}
+    # A swallowed slot is that field and a step into it.
+    for o, (host, step) in inner.items():
+        named[o] = (named[host], step)
+    said = (['typedef struct {'] + rows + ['} f_%s;' % name]
+            # And the size is held to what the numbers said, so a field that
+            # moved stops the build rather than the engine.
+            + ['typedef char f_%s_is_%d[sizeof(f_%s) == %d ? 1 : -1];'
+               % (name, frame, name, frame)])
+    return '\n'.join(said), named, use
+
+
+def frame_named(body, named, use):
+    """The slot accesses of one rule, said as its own struct's fields."""
+    def place(o):
+        """Where one slot is, as an address of its field or a step into it."""
+        said = named[o]
+        if isinstance(said, tuple):
+            return '((unsigned char *)&fp->%s + %d)' % said
+        return '(unsigned char *)&fp->%s' % said
+
+    def at(m):
+        t, o = m.group(1), int(m.group(2))
+        if o not in named:
+            return m.group(0)
+        FRAMED[0] += 1
+        return '(*(%s *)(void *)%s)' % (t, place(o))
+
+    def slot(m):
+        o = int(m.group(1))
+        if o not in named:
+            return m.group(0)
+        FRAMED[0] += 1
+        return 'REG_REF(%s)' % place(o)
+
+    out = []
+    for line in body:
+        out.append(SLOT_ANY.sub(slot, AT_ANY.sub(at, line)))
+    return out
+
+
+def state_offsets(flat, only=()):
+    """How far into the state each register points, where that is known.
+
+    state_registers answers whether a register is the state. This answers the
+    same question one step further out: a rule commonly takes the address of a
+    variable and then reaches through it, so the register holds the state plus
+    a constant rather than the state itself, and the reach is into a variable
+    all the same. Both are the same walk over the same graph, so this is that
+    walk with a number in place of a flag -- nought for the state, and
+    whatever was added since for a pointer into it.
+
+    None where flat_cfg is None, for the reason it gives.
+    """
+    succ = flat_cfg(flat)
+    if succ is None:
+        return None
+
+    n = len(flat)
+    pred = [[] for _ in range(n)]
+    for i, outs in enumerate(succ):
+        for j in outs:
+            pred[j].append(i)
+
+    add = re.compile(r'^\s*r([0-7]) = \(\(int32_t\)\((r[0-7]) \+ '
+                     r'\((-?\d+)\)\)\);$')
+    # Frame slots are deliberately not tracked here, and the reason is
+    # measured rather than assumed: of the 292 reaches in English that go
+    # through a register loaded out of a slot, every single one reads a slot
+    # the rule never wrote, because it is one of the rule's own arguments. So
+    # what those reaches address was decided by whoever called the rule, and no
+    # analysis inside one rule can know it. docs/notes/no-machine.md says what
+    # would.
+
+    # A register the rule loads only ever with the state holds it wherever it
+    # holds anything, and the graph cannot see that: a landing place is entered
+    # from outside it, so its label has no predecessor, is seeded knowing
+    # nothing, and poisons every join below. Seeded into the walk rather than
+    # added to its answer, or a pointer computed from such a register is still
+    # unknown while the walk runs. Same standard the naming has always used.
+    fixed = {('r', int(r[1:])): 0 for r in only}
+
+    def after(line, was):
+        """What each place points at once this line has run."""
+        m = DEF_RE.match(line)
+        if m and line[m.end():].strip() == '(FIELD(0));':
+            got = dict(was)
+            got[('r', int(m.group(1)))] = 0
+            got.update(fixed)
+            return got
+        m = add.match(line)
+        if m:
+            got = dict(was)
+            base = was.get(('r', int(m.group(2)[1:])))
+            here = ('r', int(m.group(1)))
+            if base is None:
+                got.pop(here, None)
+            else:
+                got[here] = base + int(m.group(3))
+            got.update(fixed)
+            return got
+        got = dict(was)
+        if POP_RE.match(line):
+            for r in REG_RE.findall(line):
+                got.pop(('r', int(r)), None)
+        else:
+            for r in _defuse(line)[0]:
+                got.pop(('r', r), None)
+        for w in PART_WRITE.finditer(line):
+            got.pop(('r', int(w.group(1))), None)
+        got.update(fixed)
+        return got
+
+    # A meet that keeps only what every way in agrees on, value and all.
+    def meet(a, b):
+        return {k: v for k, v in a.items() if b.get(k) == v}
+
+    # None is the top of the lattice -- nothing ruled out yet -- and not
+    # `nothing is known'. A must-analysis only ever narrows, so starting every
+    # point at the empty map is starting at the bottom: the first pass finds
+    # an unvisited predecessor, meets with nothing, and the answer stays
+    # nothing for ever. That is what this did, and it is why a register plainly
+    # holding the state was not known to.
+    into = [None] * n
+    outof = [None] * n
+    changed = True
+    while changed:
+        changed = False
+        for i in range(n):
+            if i == 0 or not pred[i]:
+                got = {}
+            else:
+                got = None
+                for p in pred[i]:
+                    if outof[p] is None:
+                        continue
+                    got = outof[p] if got is None else meet(got, outof[p])
+                if got is None:
+                    continue
+            was = outof[i]
+            into[i] = got
+            outof[i] = after(flat[i], got)
+            if outof[i] != was:
+                changed = True
+
+    # And a register the rule loads only ever with the state holds it wherever
+    # it holds anything, which the graph cannot see: a landing place is entered
+    # from outside it, so its label has no predecessor, is seeded knowing
+    # nothing, and poisons every join below. That is the same standard the
+    # naming above has always used, and without it the graph gives up on
+    # exactly the registers a rule keeps the state in.
+    fixed = {('r', int(r[1:])): 0 for r in only}
+    out = []
+    for x in into:
+        got = dict(fixed)
+        got.update(x if x is not None else {})
+        out.append(got)
+    return out
+
+
+def name_globals(flat, pbase=0, rule=None):
     """Reaches through the state written as the variables they are.
 
-    Only through a register that was loaded with the state and never loaded
-    with anything else, so that a name is put on a reach only where the thing
-    reached through is known to be the state.
+    Only where the flow graph says the register must hold the state at that
+    line, so that a name is put on a reach only where the thing reached
+    through is known to be the state. Run on the flat form because that is
+    where the flow graph is; the names survive the passes above it, which do
+    not look inside an expression.
     """
-    holds = set()
+    # Two answers, and a name wants either. The first is the one that has
+    # always been given: a register loaded with the state and never with
+    # anything else holds it everywhere. The second is the flow graph's, which
+    # is more generous wherever a rule reuses a register -- and which is only
+    # trusted for a register a backtrack could not leave stale, because a
+    # landing place is come back into from outside the graph and
+    # stale_registers is the tree's own answer to which registers that reaches.
+    only = set()
     other = set()
-    for line in body:
+    for line in flat:
         m = re.match(r'\s*(r\d) = (.*);$', line)
         if not m:
             continue
-        (holds if m.group(2) == '(FIELD(0))' else other).add(m.group(1))
-    holds -= other
-    if not holds:
-        return body, set()
+        (only if m.group(2) == '(FIELD(0))' else other).add(m.group(1))
+    # Every register the rule ever loads with the state, before the ones that
+    # are loaded with something else as well are taken back out. A register in
+    # here but not in `only' may be the state at a given line and may not be,
+    # which is what MAYBE below is for.
+    ever = set(only)
+    only -= other
+
+    at = state_registers(flat)
+    stale = (stale_registers(flat) if at is not None and plants_landing(flat)
+             else set())
+    # And how far into the state each register points, which names the reaches
+    # that go through a pointer to a variable rather than through the state.
+    into = state_offsets(flat, only)
+    # And which registers hold a record the rule was handed, which only the
+    # call graph knows.
+    argrec = argument_records(flat, pbase, rule) if rule else [{}] * len(flat)
+
     where = layout()
     seen = set()
+    holds = frozenset()
+    points = {}
+    holds_record = {}
 
     def sub(m):
         t, reg, off = m.group(1), m.group(2), int(m.group(3))
-        if reg not in holds or off not in where:
+        n = int(reg[1:])
+        if n in stale:
             return m.group(0)
-        seen.add(where[off])
-        NAMED[0] += 1
-        return 'GLOBAL(%s, %s, %s)' % (t, reg, where[off])
+        if reg in only or n in holds:
+            if off in where:
+                seen.add(where[off])
+                NAMED[0] += 1
+                return 'GLOBAL(%s, %s, %s)' % (t, reg, where[off])
+            # Or into the middle of one, which a compound variable is a run of
+            # bytes for. The variable and the step into it, rather than the
+            # two added up.
+            got = variable_at(off)
+            if got is not None:
+                seen.add(got[0])
+                STEPPED[0] += 1
+                return 'GLOBAL_D(%s, %s, %s, %d)' % (t, reg, got[0], got[1])
+        # Or the register holds one of the machine's records, handed in by
+        # whoever called this rule, and the offset is one of its fields.
+        kind = holds_record.get(n)
+        if kind is not None:
+            field = RECORD_FIELDS[kind].get(off)
+            if field is not None:
+                RECORDED[0] += 1
+                return 'RECORD(%s, %s, %s, %s)' % (t, reg, kind, field)
+            return m.group(0)
 
-    return [REACH.sub(sub, l) for l in body], seen
+        # Or the register is the state on one path and not on another, and
+        # the offset lands in a variable. Then neither answer is safe to
+        # assume and the rule decides when it runs: see GLOBAL_MAYBE.
+        base = points.get(('r', n))
+        if (base is None or base == 0) and reg in ever:
+            got = variable_at(off)
+            if got is not None:
+                seen.add(got[0])
+                MAYBED[0] += 1
+                return 'GLOBAL_MAYBE(%s, %s, %s, %d, %d)' % (
+                    t, reg, got[0], got[1], off)
+        # Or the register points into the state rather than at it, and the
+        # reach lands in a variable once the two are added up.
+        if base is None or base == 0:
+            return m.group(0)
+        there = variable_at(base + off)
+        here = variable_at(base)
+        if there is None or here is None:
+            return m.group(0)
+        seen.add(there[0])
+        seen.add(here[0])
+        VIAED[0] += 1
+        return 'GLOBAL_VIA(%s, %s, %s, %d, %s, %d)' % (
+            t, reg, there[0], there[1], here[0], here[1])
+
+    if not only and at is None:
+        return flat, set()
+
+    out = []
+    for i, line in enumerate(flat):
+        holds = at[i] if at is not None else frozenset()
+        points = into[i] if into is not None else {}
+        holds_record = argrec[i]
+        out.append(REACH.sub(sub, line))
+    return name_addresses(out, only, at, stale, seen), seen
 
 
 
@@ -1482,6 +2486,26 @@ def _enter(body, i):
     if body[at:at + 4] != tail:
         return None
     FOLDED[1] += 1
+
+    # The five said as where they are in the block rather than as numbers.
+    # Every rule of every language lays the block out the same way -- the
+    # record first, the landing where it ends, the three arrays twelve bytes
+    # apart after that -- and the only thing that varies is which of the last
+    # two comes first. So the block's base is the one number that stays, being
+    # where this rule chose to put it, and the rest say themselves. A rule
+    # whose numbers do not fit the shape keeps them, because a name that is
+    # wrong is worse than a number that is right.
+    want = [int(x) for x in slots]
+    rec = want[4]
+    fence = {156: 0, 168: 1, 180: 2}
+    if (want[0] - rec == 92
+            and all(w - rec in fence for w in want[1:4])):
+        BLOCKED[0] += 1
+        return ('    ENTER(FRAME_JB(%d), %s, FRAME_REC(%d));'
+                % (rec,
+                   ', '.join('FRAME_FENCE(%d, %d)' % (rec, fence[w - rec])
+                             for w in want[1:4]),
+                   rec), 14)
     return ('    ENTER(%s);' % ', '.join(slots), 14)
 
 
@@ -1610,7 +2634,12 @@ def _operands(text):
 
 NATURAL = (
     (re.compile(r'^(AT|FLD)\((u?int(?:8|16|32)_t),'), 2),
-    (re.compile(r'^GLOBAL\((u?int(?:8|16|32)_t),'), 2),
+    # GLOBAL and its two variants, which say a width the same way AT and
+    # FLD do. This asked for group two while matching only one, which
+    # went unnoticed for as long as a GLOBAL could only appear after
+    # direct_tests had already run; naming the state's own offsets emits
+    # one before it, and GLOBAL_D was falling through to int32_t besides.
+    (re.compile(r'^(GLOBAL|GLOBAL_D|GLOBAL_MAYBE)\((u?int(?:8|16|32)_t),'), 2),
     (re.compile(r'^PARAM\((u?int(?:8|16|32)_t),'), 2),
     (re.compile(r'^\(\*\((u?int(?:8|16|32)_t) \*\)'), 1),
     (re.compile(r'^(LOW)\(r\d\)$'), 0),
@@ -2145,9 +3174,32 @@ def main():
         names = smallest(int(sys.argv[1]) if len(sys.argv) > 1 else 100)
 
     done, refused = write(names)
+    write_prov_sites(census.LANG_TAG)
     print('calls joined to their arguments: %d' % JOINED[0])
     print('wrappers inlined to the primitive they stand for: %d' % WRAPPED[0])
     print('reaches through the state named as the variable they are: %d over %d variables' % (NAMED[0], len(USED)))
+    print('addresses into the state said as the variable they point at: %d'
+          % ADDRED[0])
+    print('reaches through a pointer into the state, said as both variables:'
+          ' %d' % VIAED[0])
+    print('the block a rule hands the machine, said by name rather than by'
+          ' offset: %d' % BLOCKED[0])
+    print("reaches into a record the rule was handed, said as the field they"
+          ' are: %d' % RECORDED[0])
+    print("a rule's own locals said as its own struct: %d rules, %d slot"
+          ' uses' % (FRAMES[0], FRAMED[0]))
+    print('reaches into the middle of a variable, said as the variable and a'
+          ' step: %d' % STEPPED[0])
+    if MAYBED[0]:
+        print('reaches the graph cannot settle, decided when the rule runs:'
+              ' %d' % MAYBED[0])
+    print("addresses of a variable taken off the state itself, said by name:"
+          ' %d' % FIELDED[0])
+    print('reaches into the state at an offset it gave outright, said by'
+          ' name: %d' % FLDED[0])
+    if PROVENANCE:
+        print('reaches and addresses left unnamed, numbered for the census:'
+              ' %d' % len(PROV_SITES))
     print('arms named as the alternative they are: %d in a table, %d in a'
           ' chain of decrements' % (ALTED[0], ALTED[1]))
     print('reaches into the frame named as the argument they are: %d'

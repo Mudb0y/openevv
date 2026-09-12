@@ -18,13 +18,45 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include "delta.h"
 #include "klatt_state.h"
 #include "klatt_lang.h"
+#include "evv_klatttap.h"
 
 /* How many parameters a frame carries. */
 #define FRAME_PARMS 0x3e
+
+/* What each frame parameter was interpolated from, when EVV_ARRAY_TAP names
+ * a file.
+ *
+ * A formant track is not a value some rule wrote down and it is not a curve
+ * fitted to anything. It is a list of breakpoints in an array -- a value at
+ * an offset, and a straight line in whole numbers to the next -- and this
+ * writes that list out as the cursors cross onto each one. Which is the
+ * values and the timing together, the two things a generator needs and the
+ * second of which nothing else here reports.
+ *
+ * A line a breakpoint: which parameter, where it starts, how wide, and the
+ * two values. `map' lines say which stream each parameter reads, once a run.
+ */
+static FILE *array_tap;
+static int   array_tap_tried;
+static const char *array_tap_name[FRAME_PARMS];
+
+static FILE *arrayTap(void)
+{
+    const char *name;
+
+    if (array_tap_tried)
+        return array_tap;
+    array_tap_tried = 1;
+    name = getenv("EVV_ARRAY_TAP");
+    if (name != 0 && *name != 0)
+        array_tap = fopen(name, "w");
+    return array_tap;
+}
 
 /* One cursor: the two points it is between, and the gap worked out from
    them. */
@@ -115,8 +147,10 @@ static int32_t valueSetValue(delta_state *d, ValueSet *vs, int32_t stream,
                              int32_t at)
 {
     Cursor *c = &vs->cursors[stream];
+    int32_t moved = 0;
 
     while (at > c->at_r) {
+        moved = 1;
         int32_t next = 0;
         int32_t val = 0;
 
@@ -149,6 +183,14 @@ static int32_t valueSetValue(delta_state *d, ValueSet *vs, int32_t stream,
 
     c->span = c->at_r - c->at_l;
     c->rise = c->val_r - c->val_l;
+
+    if (moved && arrayTap() != 0)
+        fprintf(arrayTap(), "at %d\t%s\tspan %d\t%d..%d\n",
+                (int)c->at_l,
+                (stream >= 0 && stream < FRAME_PARMS
+                 && array_tap_name[stream] != 0)
+                    ? array_tap_name[stream] : "?",
+                (int)c->span, (int)c->val_l, (int)c->val_r);
 
     if (c->rise == 0 || c->span == 0)
         return c->val_l;
@@ -212,6 +254,20 @@ int32_t sendArrayParameters(delta_state *d, int32_t from, int32_t to,
         frame[i] = defaults[i];
     frame[0] = step;
 
+    if (arrayTap() != 0) {
+        fprintf(arrayTap(), "run from %d to %d step %d\n",
+                (int)from, (int)to, (int)step);
+        for (i = 0; i < FRAME_PARMS; i++) {
+            if (map[i + 1] == -1)
+                continue;
+            if (map[i + 1] >= 0 && map[i + 1] < FRAME_PARMS && i < 62)
+                array_tap_name[map[i + 1]] = evv_klatt_parm_names[i];
+            fprintf(arrayTap(), "map %s\tstream %d\tdefault %d\n",
+                    i < 62 ? evv_klatt_parm_names[i] : "?",
+                    (int)map[i + 1], (int)defaults[i]);
+        }
+    }
+
     if (bounded) {
         if (!continuing)
             from = GEN_AT(d);
@@ -241,6 +297,9 @@ int32_t sendArrayParameters(delta_state *d, int32_t from, int32_t to,
             break;
         if (!valueSetInRange(GEN_SET(d), at))
             break;
+
+        if (arrayTap() != 0)
+            fprintf(arrayTap(), "frame %d\n", (int)at);
 
         for (i = 0; i < FRAME_PARMS; i++) {
             if (map[i + 1] == -1)

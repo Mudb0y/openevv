@@ -63,6 +63,34 @@ typedef struct {
     uint8_t    pad_5a[2];
 } delta_actrec;
 
+/* The block a rule hands the machine, which is the whole of what the machine
+ * writes into a rule's frame.
+ *
+ * Five places, and a rule passes all five to ventproc: the record it saves,
+ * the landing place, and three arrays of one byte a statement type. Every one
+ * of the 8,243 rules over the ten languages lays them out the same way -- the
+ * record first, the landing where the record ends, the arrays twelve bytes
+ * apart after that -- and the only thing that varies is which of the last two
+ * a rule hands over first, 4,428 one way and 3,815 the other, which says that
+ * pair is scratch either way.
+ *
+ * Written as a struct because the layout is ours rather than IBM's now, and
+ * the rules say it by name so that it can move. Our landing place is not in
+ * here at all: src/port/evv_land.c keeps the registers in a table of its own
+ * and uses this address only as a name, because the C library's own buffer is
+ * 156 bytes on a thirty-two bit host and would not fit the sixty-four
+ * reserved. So this room is IBM's shape kept for the rules compiled against
+ * it, and the assertions in delta.c are what say the shape has not moved.
+ */
+typedef struct {
+    delta_actrec  rec;
+    uint8_t       landing[64];
+    uint8_t       fence[3][12];
+} delta_rule_block;
+
+/* How far apart the three arrays are, which the rules' own macros want. */
+#define DELTA_FENCE_BYTES ((int)sizeof(((delta_rule_block *)0)->fence[0]))
+
 
 /* An operand as the machine keeps one, rather than as a caller builds one.
    The difference is the pointer: a delta_operand holds the host's, and one
@@ -345,8 +373,30 @@ typedef struct {
 #define DG_COMPOUND  (-9)   /* a run of bytes, described separately */
 
 /* Where the cells start, which is the first byte of delta_state the fields
-   above do not name. */
-#define DG_BASE 0xb0
+   above do not name -- so it follows the struct rather than the struct being
+   padded out to meet it. IBM's was 0xb0 and ours is 0xb0 while a reference
+   is four bytes wide; when one stops being, this moves and every variable
+   moves with it.
+
+   That is why the generated rules say where a variable is as a distance from
+   here and not as a number: tools/rules/decompile.py knows 0xb0 only as the
+   layout the rules' text is written in, and never as where anything goes.
+   Used below the struct only, since it is the struct's own size. */
+#define DG_BASE ((int)((sizeof(delta_state) + 3u) & ~3u))
+
+/* Where the cells started in 1999, which is the layout every module's
+   state_bytes is written against and the number the rules' text means. It
+   does not follow DG_BASE and must not: it is IBM's, the way the offsets in
+   lang/<tag>/rules are IBM's. What it is for is turning a module's declared
+   size into a size for the state this build has, which is DG_BASE plus
+   however many bytes of cells the language declared -- see
+   DELTA_STATE_BYTES. */
+#define DG_BASE_IBM 0xb0
+
+/* How big a machine of this language is here, as against how big the module
+   says. The cells are the language's and their number does not change; where
+   they start is ours and does. */
+#define DELTA_STATE_BYTES(n) ((size_t)DG_BASE + ((size_t)(n) - DG_BASE_IBM))
 
 /* What a compound variable needs beyond its kind: what its first word is
    set to when the machine is reset, and how many bytes follow it. The
@@ -437,7 +487,8 @@ struct delta_state {
     int16_t      nsets;           /* 0x00a6 */
     evv_ref     dictfile;        /* 0x00a8 */
     int16_t      nactions;        /* 0x00ac */
-    uint8_t      pad_00ae[DG_BASE - 0xae];
+    /* Nothing follows: the cells begin at the next four-byte boundary, which
+       is what DG_BASE is. */
 };
 
 /* What the rules load their pointer registers from. Only the second word is
