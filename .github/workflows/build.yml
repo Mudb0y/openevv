@@ -177,6 +177,21 @@ jobs:
       - name: Run our side of the machine primitives
         run: make RULES=bytecode prims
 
+      # The C form first, because it is the form every ordinary build uses:
+      # `RULES' defaults to c, so this is the one guarding what people
+      # actually run. It builds both sides itself and wants neither Wine nor
+      # IBM's objects. Ten rules rather than the module, because the module as
+      # C is what the job above already builds and what the matrix already
+      # speaks; what this catches is the translation of one rule.
+      #
+      # It had never run here. Nothing invoked it at all -- no target, no step
+      # -- and it had rotted three ways unnoticed, the last of them leaving it
+      # unable to run since 0855062 on 22 August. Ordering matters for the same
+      # reason: a job stops at its first failure, so a step behind a red one is
+      # a step nobody reads, which is how all three of those faults survived.
+      - name: Check the rules written as C say what the interpreter says
+        run: make c-check
+
       # The rules written in the upper form, held against the ones IBM
       # compiled: every rule entered and every call made with its arguments,
       # over a build carrying each. It wants neither Wine nor IBM's objects.
@@ -185,19 +200,6 @@ jobs:
       # does and these are the ones that reach the rules being checked.
       - name: Check the rules written as what they do
         run: EVV_UPPER_CASES=test/cases/upper.txt bash tools/rules/check-upper.sh
-
-      # And the other gate on a rule: that one written as C does what the same
-      # rule does as bytecode. It builds both sides itself and wants neither
-      # Wine nor IBM's objects. Ten rules rather than the module, because the
-      # module as C is what the job above already builds and what the matrix
-      # already speaks; what this catches is the translation of one rule.
-      #
-      # It had never run here. Nothing invoked it at all -- no target, no step
-      # -- and it had rotted three ways unnoticed, the last of them leaving it
-      # unable to run since 0855062 on 22 August. That is the argument for the
-      # step rather than against it.
-      - name: Check the rules written as C say what the interpreter says
-        run: make c-check
 
       # The four texts a language module is made of besides its rules, each
       # written back out as the C the build compiles and held against the tree
