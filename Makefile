@@ -285,7 +285,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe so so32 sotest phonemes dict dictfile objects stubs rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims speechd speechd-install speechd-test speechd-test-all
+.PHONY: all probe so so32 sotest phonemes dict dictfile objects stubs rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims speechd speechd-install speechd-enable-test speechd-test speechd-test-all
 all: $(BUILD)/evv
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -1012,14 +1012,20 @@ install: $(BUILD)/evv
 
 # This one is not part of `make install': it writes into Speech Dispatcher's
 # own directories, and putting a module there is a decision about somebody's
-# speech rather than a build step. It still does not edit speechd.conf, which
-# is the line a person has to add themselves.
+# speech rather than a build step. Speech Dispatcher discovers the installed
+# module automatically when speechd.conf has no explicit AddModule directives.
 speechd-install: $(BUILD)/sd_openevv$(SUF)
-	@mkdir -p $(DESTDIR)$(SPEECHD_MODULEDIR) $(DESTDIR)$(SPEECHD_CONFDIR)
+	@mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(SPEECHD_MODULEDIR) $(DESTDIR)$(SPEECHD_CONFDIR)
 	@cp $(BUILD)/sd_openevv$(SUF) $(DESTDIR)$(SPEECHD_MODULEDIR)/sd_openevv
 	@cp speechd/openevv.conf $(DESTDIR)$(SPEECHD_CONFDIR)/openevv.conf
+	@cp speechd/openevv-speechd-enable $(DESTDIR)$(PREFIX)/bin/openevv-speechd-enable
+	@chmod +x $(DESTDIR)$(PREFIX)/bin/openevv-speechd-enable
 	@echo "installed $(DESTDIR)$(SPEECHD_MODULEDIR)/sd_openevv"
 	@echo "installed $(DESTDIR)$(SPEECHD_CONFDIR)/openevv.conf"
+	@echo "installed $(DESTDIR)$(PREFIX)/bin/openevv-speechd-enable"
+
+speechd-enable-test:
+	@bash test/speechd-enable.sh
 
 # And what a program links against, which is a separate target because it is
 # a separate build: `make so' first. The real file carries the version and

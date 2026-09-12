@@ -60,6 +60,20 @@ This installs `sd_openevv` below the chosen module directory and `openevv.conf` 
 
 Two things make such a line harder to find by eye than it looks. The directive name is matched case-insensitively, so `addmodule` counts as much as `AddModule`, and the paths in it may be relative -- `module.c` resolves a bare binary name against the user module directory and then the system one, which is the form Speech Dispatcher's own commented examples use. A configuration that lists its modules explicitly on purpose is a different case and should be left that way: discovery is already off there by its owner's choice, and OpenEVV needs a line like everything else.
 
+If an explicit OpenEVV registration is already there, whether from an older package or from this document's own earlier advice, repair the current user's configuration with:
+
+    openevv-speechd-enable
+
+If the registration is in the system configuration, repair it explicitly as root:
+
+    sudo openevv-speechd-enable --system
+
+The helper backs up a configuration before changing it. It recognizes registrations whose module binary is named `sd_openevv`, whether their arguments are quoted or unquoted. If OpenEVV is the only explicit module, the helper prints and removes its registration to restore automatic discovery. If the configuration already lists other modules explicitly, the helper keeps or adds OpenEVV alongside them. Other custom OpenEVV registrations are left untouched.
+
+Directive names are matched case-insensitively. The helper examines only the selected `speechd.conf`; it does not follow `Include` directives, so inspect included files separately for `AddModule` lines. Use `--system` only on distributions where `/etc/speech-dispatcher/speechd.conf` is a regular, writable configuration file. On declaratively managed systems such as NixOS, change the system configuration through the distribution instead.
+
+The helper does not restart Speech Dispatcher itself. Restarting temporarily takes speech away, so do that only from a session that can be recovered without hearing.
+
 ## Try it without installing
 
 A build that has not been installed is in neither module directory, so discovery cannot see it. A link is enough to fix that and costs nothing else. Make the two directories if they are not there:
@@ -80,9 +94,13 @@ The other route is an explicit registration, and it is worth knowing only becaus
 
     AddModule "openevv" "/absolute/path/openevv/build/sd_openevv" "/absolute/path/openevv/speechd/openevv.conf"
 
-If testing the all-language build that way, use its suffixed executable name instead. In a configuration that lists nothing, that line turns discovery off and hides every other voice, so put it only in one that already registers what it wants.
+If testing the all-language build that way, use its suffixed executable name
+instead. In a configuration that lists nothing, that line turns discovery off
+and hides every other voice, so put it only in one that already registers what
+it wants.
 
-Stop the existing per-user daemon with `killall speech-dispatcher`; the next client or screen reader connection will start it with the new configuration.
+Stop the existing per-user daemon with `killall speech-dispatcher`; the next
+client or screen reader connection will start it with the new configuration.
 
 **That command stops speech.** On a machine where a screen reader is how its
 user reads the screen, killing the daemon takes the speech away until
