@@ -3,6 +3,12 @@
 	<string name="app_name">evvdroid</string>
 	<string name="engine_name">Eloquence (openevv)</string>
 	<string name="sample_text">Hello from Eloquence.</string>
+	<string name="sample_text_spa">Hola, aquí habla Eloquence.</string>
+	<string name="sample_text_fra">Bonjour, ici Eloquence.</string>
+	<string name="sample_text_deu">Hallo, hier spricht Eloquence.</string>
+	<string name="sample_text_ita">Ciao, qui parla Eloquence.</string>
+	<string name="sample_text_pol">Dzień dobry, mówi Eloquence.</string>
+	<string name="sample_text_jpn">こんにちは。イロクエンスです。</string>
 	<string name="preview_text">Hello from Eloquence. This is a test of the current voice.</string>
 
 	<string name="voice_label">Voice</string>

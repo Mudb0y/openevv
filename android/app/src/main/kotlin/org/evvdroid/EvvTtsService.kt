@@ -42,35 +42,13 @@ class EvvTtsService : TextToSpeechService() {
 
 	// ---- languages -------------------------------------------------------
 
-	private fun matchLanguage(lang: String?, country: String?): Pair<Int, Int>? {
-		if (lang.isNullOrEmpty()) return null
-		val wantLang = normalise(lang)
-		val wantCountry = country?.takeIf { it.isNotEmpty() }?.let { normaliseCountry(it) }
-		var byLanguage: Int? = null
-		for (candidate in EvvEngine.available) {
-			val loc = Eci.localeOf(candidate) ?: continue
-			if (!loc.first.equals(wantLang, ignoreCase = true)) continue
-			if (wantCountry != null && loc.second.equals(wantCountry, ignoreCase = true)) {
-				return candidate to TextToSpeech.LANG_COUNTRY_AVAILABLE
-			}
-			if (byLanguage == null) byLanguage = candidate
-		}
-		return byLanguage?.let { it to TextToSpeech.LANG_AVAILABLE }
-	}
-
-	private fun normalise(lang: String): String =
-		runCatching { Locale(lang).isO3Language }.getOrNull()?.takeIf { it.isNotEmpty() } ?: lang
-
-	private fun normaliseCountry(country: String): String =
-		runCatching { Locale("", country).isO3Country }.getOrNull()?.takeIf { it.isNotEmpty() } ?: country
-
 	override fun onIsLanguageAvailable(lang: String?, country: String?, variant: String?): Int {
-		val found = matchLanguage(lang, country) ?: return TextToSpeech.LANG_NOT_SUPPORTED
+		val found = Languages.match(lang, country) ?: return TextToSpeech.LANG_NOT_SUPPORTED
 		return found.second
 	}
 
 	override fun onLoadLanguage(lang: String?, country: String?, variant: String?): Int {
-		val found = matchLanguage(lang, country) ?: return TextToSpeech.LANG_NOT_SUPPORTED
+		val found = Languages.match(lang, country) ?: return TextToSpeech.LANG_NOT_SUPPORTED
 		ensureEngine(found.first) ?: return TextToSpeech.LANG_NOT_SUPPORTED
 		return found.second
 	}
@@ -129,7 +107,7 @@ class EvvTtsService : TextToSpeechService() {
 	}
 
 	override fun onGetDefaultVoiceNameFor(lang: String?, country: String?, variant: String?): String? {
-		val found = matchLanguage(lang, country) ?: return null
+		val found = Languages.match(lang, country) ?: return null
 		return voiceName(found.first, settings?.voice ?: 0)
 	}
 
@@ -182,7 +160,7 @@ class EvvTtsService : TextToSpeechService() {
 	override fun onSynthesizeText(request: SynthesisRequest?, callback: SynthesisCallback?) {
 		if (request == null || callback == null) return
 		stopped = false
-		val found = matchLanguage(request.language, request.country)
+		val found = Languages.match(request.language, request.country)
 		if (found == null) {
 			callback.error(TextToSpeech.ERROR_NOT_INSTALLED_YET)
 			return

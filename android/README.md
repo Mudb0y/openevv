@@ -14,14 +14,14 @@ No warranty. See LICENSE, and read the part about language data before redistrib
 
 ## What works
 
-* US English.
+* Ten languages, which is every module openevv has: US and British English, Castilian and Mexican Spanish, French of France and of Canada, German, Italian, Polish and Japanese.
 * Eight preset voices: Reed, Shelley, Bobby, Rocko, Glen, Sandy, Grandma, Grandpa. Offered through the Android voice API, so they appear separately.
 * All eight voice parameters: speed, pitch, inflection, head size, roughness, breathiness, volume, gender.
 * Speech rate and pitch from the system settings.
 * Pronunciation dictionaries.
 * Android 6 and later. arm64-v8a, armeabi-v7a, x86_64.
 
-`app/src/androidTest` runs on a device. 74 checks.
+`app/src/androidTest` runs on a device. 81 checks.
 
 ## Turning it on
 
@@ -30,6 +30,31 @@ TalkBack settings, Text-to-speech settings, Preferred engine, Eloquence (openevv
 ## Turning it off
 
 TalkBack settings, Text-to-speech settings, Preferred engine, Google.
+
+## Languages
+
+All ten are in the APK. Nothing is downloaded and nothing is missing, so Android's own language list for the engine is the list below and each one has the same eight voices.
+
+| language | locale | engine number |
+| --- | --- | --- |
+| US English | eng-USA | 0x00010000 |
+| British English | eng-GBR | 0x00010001 |
+| Castilian Spanish | spa-ESP | 0x00020000 |
+| Mexican Spanish | spa-MEX | 0x00020001 |
+| French | fra-FRA | 0x00030000 |
+| Canadian French | fra-CAN | 0x00030001 |
+| German | deu-DEU | 0x00040000 |
+| Italian | ita-ITA | 0x00050000 |
+| Japanese | jpn-JPN | 0x00080000 |
+| Polish | pol-POL | 0x00110000 |
+
+Which one speaks is the caller's to say. A screen reader asks by locale and the voice name carries it too, so `pol-POL-Reed` is Reed speaking Polish. A locale that matches on the language but not the country still gets an answer: text marked Australian is read by the first English module in the build rather than refused.
+
+Text reaches the engine as bytes in the language's own code set, and the three answers are in `EngineText`. Eight of the ten read the Windows Western set, one byte a character, and anything outside it is flattened first: curly quotes become plain ones, an accent that decomposes gives up its base letter so Dvořák is readable, and everything else becomes a space rather than a noise. Polish has eight letters that set has no room for, so the module declares them and the engine converts its text from UTF-8; everything but those eight is flattened as before. Japanese has a romanizer in front of the engine and that reads Shift-JIS, which is fixed when the instance is made and cannot be moved afterwards.
+
+Polish capitals reach the letter rules as lowercase, which is openevv's and is right for every sound. Nothing here notices a capital.
+
+The settings screen's preview speaks whichever language the build names first, which is US English. The language you hear in a screen reader is not that one; it is whatever the reader asked for.
 
 ## Building
 
@@ -42,14 +67,16 @@ export ANDROID_NDK_HOME=/path/to/ndk
 ./gradlew connectedDebugAndroidTest
 ```
 
-First build is about four minutes per ABI. Most of that is the engine writing the language rules out of text with Python and decompiling them into roughly 13 MB of C, which is per language rather than per ABI, so only the first ABI pays for it.
+First build is about half an hour on sixteen cores. Most of that is the engine writing each language's rules out of text with Python and decompiling them into C, which is per language rather than per ABI, so only the first ABI pays for it; after that it is about three minutes per ABI. `-Pevvdroid.langs=lang/enus` is one language and about four minutes.
+
+Ten languages make `libevvjni.so` about 45 MB, and a library is stored uncompressed so that it is mapped straight out of the APK rather than unpacked at install. So one APK per ABI is the default rather than one holding all three.
 
 | property | default | effect |
 | --- | --- | --- |
 | `evvdroid.abis` | `arm64-v8a,armeabi-v7a,x86_64` | which ABIs to build |
-| `evvdroid.rules` | `c` | `bytecode` builds in 30s and runs at under half the speed |
-| `evvdroid.langs` | `lang/enus` | language modules to link in |
-| `evvdroid.abiSplits` | `false` | one APK per ABI |
+| `evvdroid.rules` | `c` | `bytecode` skips the decompiling, so minutes rather than half an hour, and runs at under half the speed |
+| `evvdroid.langs` | all ten | language modules to link in, space separated, first one wins a caller that names none |
+| `evvdroid.abiSplits` | `true` | one APK per ABI, plus a universal one |
 
 `-Pevvdroid.abis=arm64-v8a -Pevvdroid.rules=bytecode` is the fast loop for working on the Kotlin. Compiled rules are the default because interrupting and restarting costs about a third of what it costs interpreted, and a screen reader interrupts constantly.
 
@@ -140,7 +167,7 @@ The engine is built by its own Makefile rather than CMake, because that Makefile
 
 Everything links into one shared object, `libevvjni.so`. Android only packages files named `lib*.so`, and openevv's own library records a soname of `libeci.so.1`, which nothing would then find.
 
-`native/tools/probe-on-device.sh` stands in for openevv's own probe, so its gate, `test/matrix.sh check enus`, drives an Android build over adb unchanged. That is 98 cases comparing sample hashes and reported answers against baselines recorded on x86.
+`native/tools/probe-on-device.sh` stands in for openevv's own probe, so its gate, `test/matrix.sh check enus`, drives an Android build over adb unchanged. That is 98 cases comparing sample hashes and reported answers against baselines recorded on x86. Every other language has a gate of its own under the same name, and `test/matrix.sh` walks all ten.
 
 ## Licence
 

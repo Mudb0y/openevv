@@ -16,9 +16,15 @@ engine="$here/openevv"
 ABIS=${ABIS:-"arm64-v8a armeabi-v7a x86_64"}
 API=${API:-21}
 RULES=${RULES:-c}
-LANGS=${LANGS:-lang/enus}
+LANGS=${LANGS:-lang/enus lang/engb lang/eses lang/esus lang/frfr lang/frca lang/dede lang/itit lang/plpl lang/jajp}
 OUT=${OUT:-"$root/app/build/native/jniLibs"}
 JOBS=${JOBS:-$(nproc 2>/dev/null || echo 4)}
+
+# The engine writes its rules with Python, and every language module's text is
+# UTF-8. Python reads a file in the locale's encoding unless it is told
+# otherwise, which on Windows is cp1252 and cannot read Polish's rules at all.
+# This is what says UTF-8 whatever the machine's locale is.
+export PYTHONUTF8=1
 
 NDK=${ANDROID_NDK_HOME:-${ANDROID_NDK_ROOT:-}}
 if [ -z "$NDK" ]; then

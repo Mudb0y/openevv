@@ -1,6 +1,13 @@
 import org.gradle.internal.os.OperatingSystem
 import java.util.Properties
 
+// Every language module openevv has. US English is named first because the
+// engine gives that one to a caller who asks for no language in particular,
+// and the settings screen's preview is such a caller.
+val ALL_LANGUAGES = listOf(
+	"enus", "engb", "eses", "esus", "frfr", "frca", "dede", "itit", "plpl", "jajp"
+)
+
 plugins {
 	alias(libs.plugins.android.application)
 	alias(libs.plugins.kotlin.android)
@@ -10,7 +17,8 @@ plugins {
 val abis = (findProperty("evvdroid.abis") as String? ?: "arm64-v8a,armeabi-v7a,x86_64")
 	.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 val rulesForm = findProperty("evvdroid.rules") as String? ?: "c"
-val languages = findProperty("evvdroid.langs") as String? ?: "lang/enus"
+val languages = findProperty("evvdroid.langs") as String?
+	?: ALL_LANGUAGES.joinToString(" ") { "lang/$it" }
 val nativeOut = layout.buildDirectory.dir("native/jniLibs")
 
 // Release signing, from a keystore.properties the repo does not carry. Without
@@ -124,7 +132,7 @@ android {
 
 	splits {
 		abi {
-			isEnable = (findProperty("evvdroid.abiSplits") as String?)?.toBoolean() ?: false
+			isEnable = (findProperty("evvdroid.abiSplits") as String?)?.toBoolean() ?: true
 			reset()
 			include(*abis.toTypedArray())
 			isUniversalApk = true

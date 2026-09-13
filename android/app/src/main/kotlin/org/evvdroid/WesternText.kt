@@ -3,7 +3,7 @@ package org.evvdroid
 import java.text.Normalizer
 
 /**
- * Android text turned into what the engine reads.
+ * Android text turned into the Windows Western bytes the engine reads.
  *
  * The engine takes single bytes in the language's own code set, which for
  * every language IBM shipped is the Windows Western set. UTF-16 is not an
@@ -15,6 +15,9 @@ import java.text.Normalizer
  * engine sees it. A screen reader is handed curly quotes, dashes, emoji and
  * names in scripts Eloquence never knew, and dropping them silently is worse
  * than saying the nearest thing.
+ *
+ * The two languages that read something else are [EngineText]'s business, and
+ * [flatten] is the half of this they still want.
  */
 object WesternText {
 
@@ -45,12 +48,31 @@ object WesternText {
 	 * none in what comes back.
 	 */
 	fun encode(text: String): ByteArray {
+		val flat = flatten(text) { false }
+		val out = ByteArray(flat.length)
+		for (n in flat.indices) {
+			val c = flat[n].code
+			out[n] = if (c in 1..HIGHEST) c.toByte() else ' '.code.toByte()
+		}
+		return out
+	}
+
+	/**
+	 * [text] with everything outside the byte set turned into something inside
+	 * it, and nothing written down as bytes yet.
+	 *
+	 * [own] says which characters above the set the language reads itself, so
+	 * that they are left standing rather than flattened. For the languages IBM
+	 * shipped that is none, and then what comes back is a character a byte.
+	 */
+	fun flatten(text: String, own: (Char) -> Boolean): String {
 		val flat = StringBuilder(text.length)
 		var i = 0
 		while (i < text.length) {
 			val c = text[i]
 			val plain = PLAIN[c]
 			when {
+				own(c) -> flat.append(c)
 				plain != null -> flat.append(plain)
 				c.code == 0 -> flat.append(' ')
 				c.code <= HIGHEST -> flat.append(c)
@@ -58,12 +80,7 @@ object WesternText {
 			}
 			i += if (Character.isHighSurrogate(c) && i + 1 < text.length) 2 else 1
 		}
-		val out = ByteArray(flat.length)
-		for (n in flat.indices) {
-			val c = flat[n].code
-			out[n] = if (c in 1..HIGHEST) c.toByte() else ' '.code.toByte()
-		}
-		return out
+		return flat.toString()
 	}
 
 	/**

@@ -17,6 +17,10 @@ import java.io.File
  * ("`[Ekspoz1e]"), and the engine takes both. The bytes are the engine's own
  * code set already -- an e-acute is one byte -- so the file is read as Latin-1
  * rather than as UTF-8, which is what the files in the wild actually are.
+ *
+ * That is the Western byte set, so a file for Polish or Japanese is not read
+ * right here. Neither has a dictionary anyone shares, and guessing at a form
+ * for one would be inventing a format rather than reading one.
  */
 object Dictionaries {
 

@@ -104,6 +104,11 @@ object Eci {
 		"Reed", "Shelley", "Bobby", "Rocko", "Glen", "Sandy", "Grandma", "Grandpa"
 	)
 
+	/** The two languages that do not read the Windows Western byte set.
+	 *  [EngineText] says what each of them takes instead. */
+	const val JAPANESE = 0x00080000
+	const val POLISH = 0x00110000
+
 	/** A language word is the family in the top half, the code set in the third
 	 *  byte and the dialect in the bottom one. */
 	fun family(language: Int): Int = language and 0xFFFF0000.toInt()

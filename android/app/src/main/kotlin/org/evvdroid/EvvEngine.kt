@@ -171,12 +171,12 @@ class EvvEngine private constructor(private var handle: Long, val language: Int)
 
 	fun teachWord(volume: Int, key: String, say: String): Int = synchronized(guard) {
 		if (closed) -1 else EvvNative.teachWord(
-			handle, volume, WesternText.encode(key), WesternText.encode(say)
+			handle, volume, EngineText.encode(language, key), EngineText.encode(language, say)
 		)
 	}
 
 	fun lookUpWord(volume: Int, key: String): String? = synchronized(guard) {
-		if (closed) null else EvvNative.lookUpWord(handle, volume, WesternText.encode(key))
+		if (closed) null else EvvNative.lookUpWord(handle, volume, EngineText.encode(language, key))
 	}
 
 	fun forgetDictionaries() = synchronized(guard) {
@@ -190,7 +190,7 @@ class EvvEngine private constructor(private var handle: Long, val language: Int)
 	fun speak(text: String): Boolean = synchronized(guard) {
 		if (closed) return false
 		val ask = if (wantSpeed >= 0 && wantPitch >= 0) Prosody.voice(wantSpeed, wantPitch) else ""
-		return EvvNative.speak(handle, WesternText.encode(ask + text))
+		return EvvNative.speak(handle, EngineText.encode(language, ask + text))
 	}
 
 	/** Bytes of PCM, blocking until there are some. 0 ends the utterance and
