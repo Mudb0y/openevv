@@ -32,12 +32,17 @@ EOF
 
 cat >"$testDir/player" <<'EOF'
 #!/usr/bin/env bash
-printf '%s\n' "$@" >"$TEST_PLAYER_ARGS"
+printf '%s\n' "${0##*/}" >"$TEST_PLAYER_NAME"
+: >"$TEST_PLAYER_ARGS"
+if (($#)); then
+    printf '%s\n' "$@" >"$TEST_PLAYER_ARGS"
+fi
 cat >"$TEST_PLAYER_INPUT"
 EOF
 chmod +x "$testDir/evv" "$testDir/player"
 
 export TEST_EVV_ARGS=$testDir/evv.args
+export TEST_PLAYER_NAME=$testDir/player.name
 export TEST_PLAYER_ARGS=$testDir/player.args
 export TEST_PLAYER_INPUT=$testDir/player.input
 export OPENEVV_EVV=$testDir/evv
@@ -45,10 +50,49 @@ export OPENEVV_PLAYER=$testDir/player
 
 "$sayCommand" "Hello world"
 printf '%s\n' "Hello world" -o - >"$testDir/expected-evv.args"
-printf '%s\n' -q - >"$testDir/expected-player.args"
+: >"$testDir/expected-player.args"
 cmp "$testDir/expected-evv.args" "$TEST_EVV_ARGS"
 cmp "$testDir/expected-player.args" "$TEST_PLAYER_ARGS"
 [[ $(<"$TEST_PLAYER_INPUT") == "fake wave" ]]
+
+for playerName in pw-play paplay aplay; do
+    ln -s player "$testDir/$playerName"
+done
+
+OPENEVV_PLAYER=$testDir/pw-play "$sayCommand" text
+printf '%s\n' - >"$testDir/expected-player.args"
+cmp "$testDir/expected-player.args" "$TEST_PLAYER_ARGS"
+
+OPENEVV_PLAYER=$testDir/paplay "$sayCommand" text
+: >"$testDir/expected-player.args"
+cmp "$testDir/expected-player.args" "$TEST_PLAYER_ARGS"
+
+OPENEVV_PLAYER=$testDir/aplay "$sayCommand" text
+printf '%s\n' -q - >"$testDir/expected-player.args"
+cmp "$testDir/expected-player.args" "$TEST_PLAYER_ARGS"
+
+playerPath=$testDir/player-path
+mkdir "$playerPath"
+ln -s /usr/bin/bash "$playerPath/bash"
+ln -s /usr/bin/cat "$playerPath/cat"
+ln -s /usr/bin/dirname "$playerPath/dirname"
+ln -s ../player "$playerPath/pw-play"
+ln -s ../player "$playerPath/paplay"
+ln -s ../player "$playerPath/aplay"
+unset OPENEVV_PLAYER
+PATH=$playerPath "$sayCommand" text
+[[ $(<"$TEST_PLAYER_NAME") == pw-play ]]
+rm "$playerPath/pw-play"
+PATH=$playerPath "$sayCommand" text
+[[ $(<"$TEST_PLAYER_NAME") == paplay ]]
+rm "$playerPath/paplay"
+PATH=$playerPath "$sayCommand" text
+[[ $(<"$TEST_PLAYER_NAME") == aplay ]]
+rm "$playerPath/aplay"
+if PATH=$playerPath "$sayCommand" text >/dev/null 2>&1; then
+    printf '%s\n' 'openevv-say accepted a missing default player' >&2
+    exit 1
+fi
 
 rm -f "$TEST_PLAYER_ARGS"
 "$sayCommand" -w "$testDir/out.wav" -v 3 -s 70 -p 60 -P 40 -a 80 \
@@ -62,8 +106,8 @@ cmp "$testDir/expected-evv.args" "$TEST_EVV_ARGS"
 [[ $("$sayCommand" --voices) == "voice list" ]]
 [[ $("$sayCommand" --languages) == "language list" ]]
 
-if "$sayCommand" -w "$testDir/out.wav" -d default text >/dev/null 2>&1; then
-    printf '%s\n' 'openevv-say accepted -d with -w' >&2
+if "$sayCommand" -d default text >/dev/null 2>&1; then
+    printf '%s\n' 'openevv-say accepted the removed -d option' >&2
     exit 1
 fi
 

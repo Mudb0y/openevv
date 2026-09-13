@@ -7,11 +7,11 @@ It speaks, and it spoke IBM's own samples: the audio came out byte for byte iden
     make
     ./build/openevv-say "Hello from Openevv."
 
-That wants a C compiler, Python, ALSA's `aplay`, and about a quarter of an hour, most of it compiling the rules. `make RULES=bytecode` is the same engine in half a minute, saying the same samples; it runs the rules interpreted rather than compiled, which costs rather more than half the speed. To save the speech instead of playing it:
+That wants a C compiler, Python, an installed `pw-play`, `paplay`, or `aplay`, and about a quarter of an hour, most of it compiling the rules. `make RULES=bytecode` is the same engine in half a minute, saying the same samples; it runs the rules interpreted rather than compiled, which costs rather more than half the speed. To save the speech instead of playing it:
 
     ./build/openevv-say -w hello.wav "Hello from Openevv."
 
-`openevv-say -h` lists the voice, speed, pitch, pitch-range, volume, language, sample-rate and playback-device options. The lower-level `build/evv` command remains available when a program wants WAV data on standard output.
+`openevv-say -h` lists the voice, speed, pitch, pitch-range, volume, language and sample-rate options. The lower-level `build/evv` command remains available when a program wants WAV data on standard output.
 
 For desktop and screen-reader speech there is a native Speech Dispatcher output module: `make speechd` builds it, it hands its samples back to Speech Dispatcher rather than opening a device, and it offers every language in the build with its eight voices. `docs/speech-dispatcher.md` says how to install it, how to try it without installing it, and what it does not do.
 

@@ -19,7 +19,6 @@ Speak text with OpenEVV. With no text, read standard input.
   -R N          set sample rate
   -L ID         use the language with numeric ID
   -r            use real-world units for speed, pitch, and volume
-  -d DEVICE     play through the named ALSA device
   --voices      list voice settings and stop
   --languages   list language IDs in this build and stop
   -h, --help    show this help
@@ -53,7 +52,6 @@ fi
 
 evvArgs=()
 outputFile=
-playDevice=
 mode='play'
 
 while (($#)); do
@@ -87,11 +85,6 @@ while (($#)); do
             evvArgs+=("-r")
             shift
             ;;
-        -d)
-            (($# >= 2)) || die "-d needs an ALSA device"
-            playDevice=$2
-            shift 2
-            ;;
         --voices)
             evvArgs+=("-l")
             mode='list'
@@ -122,24 +115,47 @@ while (($#)); do
 done
 
 if [[ $mode == write ]]; then
-    [[ -z $playDevice ]] || die "-d cannot be used with -w"
     exec "$evvCommand" "${evvArgs[@]}" -o "$outputFile"
 fi
 
 if [[ $mode == list ]]; then
-    [[ -z $playDevice ]] || die "-d cannot be used while listing"
     exec "$evvCommand" "${evvArgs[@]}"
 fi
 
-playerCommand=${OPENEVV_PLAYER:-aplay}
-if ! command -v "$playerCommand" >/dev/null 2>&1; then
-    die "cannot find $playerCommand; install alsa-utils or set OPENEVV_PLAYER"
+playerCommand=${OPENEVV_PLAYER:-}
+if [[ -n $playerCommand ]]; then
+    command -v "$playerCommand" >/dev/null 2>&1 || \
+        die "cannot find $playerCommand"
+else
+    # Ask an ordinary sound-server client to play the stream so this command
+    # never reconfigures audio or opens a hardware device directly.
+    for candidate in pw-play paplay aplay; do
+        if command -v "$candidate" >/dev/null 2>&1; then
+            playerCommand=$candidate
+            break
+        fi
+    done
+    [[ -n $playerCommand ]] || \
+        die "cannot find pw-play, paplay, or aplay; set OPENEVV_PLAYER"
 fi
 
-playerArgs=(-q)
-if [[ -n $playDevice ]]; then
-    playerArgs+=("-D" "$playDevice")
-fi
-playerArgs+=("-")
+case ${playerCommand##*/} in
+    pw-play)
+        playerArgs=(-)
+        ;;
+    paplay)
+        # paplay reads a formatted audio stream from standard input when no
+        # file is named.
+        playerArgs=()
+        ;;
+    aplay)
+        playerArgs=(-q -)
+        ;;
+    *)
+        # A custom player named by OPENEVV_PLAYER receives the WAV on standard
+        # input and no player-specific arguments.
+        playerArgs=()
+        ;;
+esac
 
 "$evvCommand" "${evvArgs[@]}" -o - | "$playerCommand" "${playerArgs[@]}"

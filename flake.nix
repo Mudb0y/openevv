@@ -37,7 +37,7 @@
 
         postFixup = ''
           wrapProgram $out/bin/openevv-say \
-            --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.alsa-utils ]}
+            --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.pipewire pkgs.pulseaudio pkgs.alsa-utils ]}
         '';
 
         # No meta.license, deliberately. Our own work is MIT, but the language
@@ -45,14 +45,14 @@
         # MIT as a whole. NOTICE says which is which.
         meta = {
           description = "IBM Embedded ViaVoice rebuilt as portable C";
-          mainProgram = "openevv-say";
+          mainProgram = "evv";
           platforms = [ system ];
         };
       };
 
       apps.${system}.default = {
         type = "app";
-        program = "${self.packages.${system}.default}/bin/openevv-say";
+        program = "${self.packages.${system}.default}/bin/evv";
       };
 
       devShells.${system}.default = pkgs.mkShell {

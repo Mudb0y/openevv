@@ -120,7 +120,7 @@ speech-dispatcher's `sd_eloquence` module resolves forty-two names when it loads
     ./build/evv -o hello.wav "Hello from Eloquence."
     ./build/evv "Hello." | aplay -q -
 
-`build/openevv-say` is the convenient human-facing command: it plays the WAV from `build/evv` through `aplay`, or `-w` saves it. `build/evv` writes a wave file, or writes the wave to standard output when there is no `-o` and standard output is not a terminal. For a program that wants a file now and again rather than a synthesiser in its own process, this is the whole of the integration. Both commands describe their options with `-h`.
+`build/openevv-say` is the convenient human-facing command: it plays the WAV from `build/evv` through the first installed client among `pw-play`, `paplay` and `aplay`, or `-w` saves it. `build/evv` writes a wave file, or writes the wave to standard output when there is no `-o` and standard output is not a terminal. For a program that wants a file now and again rather than a synthesiser in its own process, this is the whole of the integration. Both commands describe their options with `-h`.
 
 ## Threads
 

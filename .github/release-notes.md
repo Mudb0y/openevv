@@ -4,7 +4,7 @@ There is one of each bitness, in `eci-x86_64` and `eci-x86`, and which you want 
 
 On Linux the same names are in `libeci.so.1`, with `libeci.so` beside it and `eci.h` to compile against. `docs/using.md` is how to use it, `docs/api.md` what every call does, and `docs/quirks.md` what will trip you.
 
-`openevv-say "Hello from Openevv."` speaks from the Linux command line through ALSA's `aplay`; `openevv-say -w hello.wav "Hello from Openevv."` saves the same speech instead. The lower-level `evv` command is beside it for programs that want a WAV file or pipe directly. Install your distribution's ALSA utilities package to use live playback.
+`openevv-say "Hello from Openevv."` speaks from the Linux command line through the first available ordinary audio client: `pw-play`, `paplay`, then `aplay`. `openevv-say -w hello.wav "Hello from Openevv."` saves the same speech instead. The lower-level `evv` command is beside it for programs that want a WAV file or pipe directly.
 
 Every library here carries all ten languages: US and British English, German, Castilian and American Spanish, French and Canadian French, Italian, Japanese and Polish. `eciGetAvailableLanguages` answers all of them, US English is what a new instance speaks, and `eciSetParam(h, eciLanguageDialect, ...)` on an instance that is not speaking changes it. All ten can be alive in one process at once, each saying what it says alone.
 
