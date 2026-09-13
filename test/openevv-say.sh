@@ -73,9 +73,9 @@ cmp "$testDir/expected-player.args" "$TEST_PLAYER_ARGS"
 
 playerPath=$testDir/player-path
 mkdir "$playerPath"
-ln -s /usr/bin/bash "$playerPath/bash"
-ln -s /usr/bin/cat "$playerPath/cat"
-ln -s /usr/bin/dirname "$playerPath/dirname"
+ln -s "$(command -v bash)" "$playerPath/bash"
+ln -s "$(command -v cat)" "$playerPath/cat"
+ln -s "$(command -v dirname)" "$playerPath/dirname"
 ln -s ../player "$playerPath/pw-play"
 ln -s ../player "$playerPath/paplay"
 ln -s ../player "$playerPath/aplay"
