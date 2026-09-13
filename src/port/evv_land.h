@@ -41,6 +41,17 @@
 #include <setjmp.h>
 #define EVV_LAND_WORDS ((sizeof(jmp_buf) + 7) / 8)
 
+/* setjmp must run in the frame the jump returns to. A helper function that
+   wraps it captures its own frame, which is dead by jump time: longjmp then
+   restores a spent stack pointer and carries on in it, seen on AArch64 as a
+   jump into non-executable memory on every crasher string (the x86-64 path
+   above cannot do this -- its hand save reads the caller's registers, not
+   its own). So the macro calls setjmp in the caller and only the jump stays
+   a function; longjmp from anywhere is fine, only the save side must be in
+   a frame that is still alive, which the outermost rule's always is. */
+#define EVV_LAND_SAVE(p)     (setjmp(*(jmp_buf *)evv_land_place((uintptr_t)(p))))
+#define EVV_LAND_JUMP(p, v)  evv_land_jump(evv_land_planted((uintptr_t)(p)), (v))
+
 #endif
 
 /* The landing place that answers to this address, made if there is not one.
@@ -54,10 +65,6 @@ void  evv_land_release(int mark);
 void  evv_land_outermost(uintptr_t name);
 void  evv_land_no_outermost(void);
 
-int  evv_land_save(void *place) __attribute__((returns_twice));
 void evv_land_jump(void *place, int value) __attribute__((noreturn));
-
-#define EVV_LAND_SAVE(p)     evv_land_save(evv_land_place((uintptr_t)(p)))
-#define EVV_LAND_JUMP(p, v)  evv_land_jump(evv_land_planted((uintptr_t)(p)), (v))
 
 #endif
