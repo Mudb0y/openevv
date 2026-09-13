@@ -107,6 +107,17 @@ fun SettingsScreen(state: SettingsModel) {
 				)
 			}
 			Gap()
+			// Above the button it belongs to. It changes what the preview
+			// speaks and nothing else: a screen reader is answered in the
+			// language it asked for.
+			if (state.languages.size > 1) {
+				ChoiceRow(
+					label = stringResource(R.string.preview_language_label),
+					options = state.languageNames,
+					chosen = state.language,
+					onChoose = state::chooseLanguage
+				)
+			}
 			ActionRow(stringResource(R.string.speak_label), state::say)
 			ActionRow(stringResource(R.string.reset_label), state::resetVoice)
 
@@ -278,7 +289,13 @@ private fun ChoiceRow(
 			onDismissRequest = { open = false },
 			title = { Text(label) },
 			text = {
-				Column(modifier = Modifier.selectableGroup()) {
+				// Scrollable because the language row offers ten and a phone
+				// held large does not fit them.
+				Column(
+					modifier = Modifier
+						.selectableGroup()
+						.verticalScroll(rememberScrollState())
+				) {
 					options.forEachIndexed { at, option ->
 						Row(
 							modifier = Modifier

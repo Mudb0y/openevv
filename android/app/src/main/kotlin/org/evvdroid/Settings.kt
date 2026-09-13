@@ -49,6 +49,16 @@ class Settings(context: Context) {
 		get() = prefs.getInt(KEY_SAMPLE_RATE, DEFAULT_SAMPLE_RATE)
 		set(value) = prefs.edit().putInt(KEY_SAMPLE_RATE, value).apply()
 
+	/** The language the settings screen speaks its preview in, or nought for
+	 *  whichever the build names first.
+	 *
+	 *  It is the screen's own and the speech service never reads it. What a
+	 *  screen reader hears is the language it asked for, which is the whole
+	 *  point of asking. */
+	var previewLanguage: Int
+		get() = prefs.getInt(KEY_PREVIEW_LANGUAGE, 0)
+		set(value) = prefs.edit().putInt(KEY_PREVIEW_LANGUAGE, value).apply()
+
 	/** The abbreviation dictionary. Off by default: it expands what it takes
 	 *  for an abbreviation whether that was wanted or not. */
 	var abbreviations: Boolean
@@ -167,6 +177,7 @@ class Settings(context: Context) {
 	companion object {
 		const val KEY_VOICE = "voice_preset"
 		const val KEY_SAMPLE_RATE = "sample_rate_hz"
+		const val KEY_PREVIEW_LANGUAGE = "preview_language"
 		const val KEY_ABBREVIATIONS = "abbreviations"
 		const val KEY_SPEED = "speed"
 		const val KEY_PAUSES = "pauses"

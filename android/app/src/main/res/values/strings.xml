@@ -10,8 +10,15 @@
 	<string name="sample_text_pol">Dzień dobry, mówi Eloquence.</string>
 	<string name="sample_text_jpn">こんにちは。イロクエンスです。</string>
 	<string name="preview_text">Hello from Eloquence. This is a test of the current voice.</string>
+	<string name="preview_text_spa">Hola, soy Eloquence. Esta es una prueba de la voz actual.</string>
+	<string name="preview_text_fra">Bonjour, ici Eloquence. Ceci est un essai de la voix actuelle.</string>
+	<string name="preview_text_deu">Hallo, hier spricht Eloquence. Dies ist eine Probe der aktuellen Stimme.</string>
+	<string name="preview_text_ita">Ciao, qui parla Eloquence. Questa è una prova della voce attuale.</string>
+	<string name="preview_text_pol">Dzień dobry, mówi Eloquence. To jest próba wybranego głosu.</string>
+	<string name="preview_text_jpn">こんにちは。イロクエンスです。これは現在の声のテストです。</string>
 
 	<string name="voice_label">Voice</string>
+	<string name="preview_language_label">Preview language</string>
 	<string name="gender_label">Gender</string>
 	<string name="gender_male">Male</string>
 	<string name="gender_female">Female</string>

@@ -20,7 +20,7 @@ import android.util.Log
  * Everything runs on one background thread, so a preview asked for while
  * another is speaking replaces it rather than overlapping.
  */
-class EvvPreview(private val language: Int) {
+class EvvPreview(private var language: Int) {
 
 	private val thread = HandlerThread("evv-preview").apply { start() }
 	private val work = Handler(thread.looper)
@@ -61,6 +61,25 @@ class EvvPreview(private val language: Int) {
 	fun open(then: (() -> Unit)? = null) {
 		work.post {
 			if (engine == null) engine = EvvEngine.open(language)
+			then?.let { Handler(android.os.Looper.getMainLooper()).post(it) }
+		}
+	}
+
+	/** Speaks in [want] from now on.
+	 *
+	 *  An instance is made for one language and cannot be moved to another, so
+	 *  this puts the one in hand down and opens another. It happens on the work
+	 *  thread like everything else, and the new one is opened there and then
+	 *  rather than at the next sample: [presetShape] reads the engine, and the
+	 *  screen asks it as soon as the language changes. */
+	fun useLanguage(want: Int, then: (() -> Unit)? = null) {
+		stopSpeaking()
+		work.post {
+			if (want != language) {
+				language = want
+				engine?.close()
+				engine = EvvEngine.open(want)
+			}
 			then?.let { Handler(android.os.Looper.getMainLooper()).post(it) }
 		}
 	}

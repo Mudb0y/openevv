@@ -21,7 +21,7 @@ No warranty. See LICENSE, and read the part about language data before redistrib
 * Pronunciation dictionaries.
 * Android 6 and later. arm64-v8a, armeabi-v7a, x86_64.
 
-`app/src/androidTest` runs on a device. 81 checks.
+`app/src/androidTest` runs on a device. 82 checks.
 
 ## Turning it on
 
@@ -54,7 +54,7 @@ Text reaches the engine as bytes in the language's own code set, and the three a
 
 Polish capitals reach the letter rules as lowercase, which is openevv's and is right for every sound. Nothing here notices a capital.
 
-The settings screen's preview speaks whichever language the build names first, which is US English. The language you hear in a screen reader is not that one; it is whatever the reader asked for.
+The settings screen has a Preview language row, so a voice can be tuned while listening to the language it will be heard in, and each language has a sentence of its own to say. That row changes the preview and nothing else. What a screen reader hears is the language it asked for.
 
 ## Building
 
@@ -84,7 +84,7 @@ A fix to openevv that upstream has not taken yet goes in `native/patches` and is
 
 ## Settings
 
-Launcher icon, or the gear beside the engine in the text-to-speech settings. Sliders for the seven numeric voice parameters, plus gender, voice, sample rate, pauses, phrase prediction, abbreviations and dictionaries. Nothing speaks on its own: a setting takes effect when you set it, and "Speak a sample" is how you hear it.
+Launcher icon, or the gear beside the engine in the text-to-speech settings. Sliders for the seven numeric voice parameters, plus gender, voice, preview language, sample rate, pauses, phrase prediction, abbreviations and dictionaries. Nothing speaks on its own: a setting takes effect when you set it, and "Speak a sample" is how you hear it.
 
 Each row is one control. A label, a bar and a number would be three stops for a screen reader, so each row merges into a single node with `clearAndSetSemantics`. It reads as "Speed, 20 percent" and adjusts in place.
 

@@ -18,23 +18,9 @@ class GetSampleTextActivity : Activity() {
 			intent.getStringExtra("language"), intent.getStringExtra("country")
 		)
 		val result = Intent().apply {
-			putExtra(TextToSpeech.Engine.EXTRA_SAMPLE_TEXT, getString(sentenceFor(found?.first)))
+			putExtra(TextToSpeech.Engine.EXTRA_SAMPLE_TEXT, getString(Sentences.sample(found?.first)))
 		}
 		setResult(TextToSpeech.LANG_AVAILABLE, result)
 		finish()
 	}
-
-	/** A sentence written in the language rather than translated into it. The
-	 *  point of a sample is to hear what the language sounds like, so one that
-	 *  came out as English words would be no sample at all. */
-	private fun sentenceFor(language: Int?): Int =
-		when (language?.let { Eci.localeOf(it) }?.first) {
-			"spa" -> R.string.sample_text_spa
-			"fra" -> R.string.sample_text_fra
-			"deu" -> R.string.sample_text_deu
-			"ita" -> R.string.sample_text_ita
-			"pol" -> R.string.sample_text_pol
-			"jpn" -> R.string.sample_text_jpn
-			else -> R.string.sample_text
-		}
 }

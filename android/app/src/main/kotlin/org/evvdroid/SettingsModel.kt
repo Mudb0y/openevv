@@ -18,8 +18,22 @@ class SettingsModel(context: Context) {
 
 	private val app = context.applicationContext
 	private val settings = Settings(app)
+
+	/** Every language the build has, in the order the engine names them. */
+	val languages: List<Int> = EvvEngine.available.toList()
+
+	/** Which of [languages] the preview speaks. What was chosen last time if
+	 *  it is still in the build, and otherwise the first one there is. */
+	var language by mutableStateOf(
+		languages.indexOf(settings.previewLanguage).coerceAtLeast(0)
+	)
+		private set
+
+	/** What the row for it says, in whatever language the phone is set to. */
+	val languageNames: List<String> = languages.map { Eci.displayName(it) }
+
 	private val preview: EvvPreview? =
-		EvvEngine.available.firstOrNull()?.let { EvvPreview(it) }
+		languages.getOrNull(language)?.let { EvvPreview(it) }
 
 	var voice by mutableStateOf(settings.voice)
 		private set
@@ -66,6 +80,26 @@ class SettingsModel(context: Context) {
 	fun percentOf(param: Int): Int = Eci.toPercent(param, shape[param] ?: 0)
 
 	// ---- what the screen changes -----------------------------------------
+
+	/**
+	 * Which language the preview speaks, and nothing else.
+	 *
+	 * The speech service never reads this. A screen reader is answered in the
+	 * language it asked for, which is what the voice names and the locale
+	 * matching are for; this is so that a voice can be tuned while listening
+	 * to the language it will be heard in.
+	 *
+	 * A voice's own settings are not re-read from the new language. Every
+	 * module carries its own numbers for the eight presets, and taking them
+	 * here would write one language's idea of Reed over the settings every
+	 * language speaks with.
+	 */
+	fun chooseLanguage(which: Int) {
+		val want = languages.getOrNull(which) ?: return
+		language = which
+		settings.previewLanguage = want
+		preview?.useLanguage(want)
+	}
 
 	fun chooseVoice(which: Int) {
 		voice = which
@@ -183,7 +217,8 @@ class SettingsModel(context: Context) {
 	/** Nothing here speaks by itself. Every setting is in force the moment it
 	 *  is written down, and this is how it gets heard. */
 	fun say() {
-		preview?.say(app.getString(R.string.preview_text), voice, settings.shape(voice), sampleRateHz)
+		val sentence = app.getString(Sentences.preview(languages.getOrNull(language)))
+		preview?.say(sentence, voice, settings.shape(voice), sampleRateHz)
 	}
 
 	private fun adoptVoice() {

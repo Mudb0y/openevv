@@ -52,8 +52,44 @@ class PreviewTest {
 		}
 	}
 
+	/**
+	 * And it speaks the language the screen last chose.
+	 *
+	 * An instance is made for one language and cannot be moved, so changing
+	 * the row puts one engine down and opens another. What that can get wrong
+	 * is silent: the old instance goes on speaking, or the new one is never
+	 * opened and the button does nothing at all.
+	 */
+	@Test
+	fun itSpeaksWhicheverLanguageWasChosen() {
+		val preview = EvvPreview(ENGLISH)
+		try {
+			preview.say("Testing one two three.", 0, emptyMap(), 11025)
+			waitForSomething(preview)
+			val english = preview.bytesPlayed
+			assertTrue("the preview played nothing in English", english > 0)
+			preview.useLanguage(GERMAN)
+			preview.say("Dies ist eine Probe.", 0, emptyMap(), 11025)
+			waitForMoreThan(preview, english)
+			assertTrue("nothing was played after the language changed",
+				preview.bytesPlayed > english)
+		} finally {
+			preview.close()
+		}
+	}
+
+	private fun waitForSomething(preview: EvvPreview) = waitForMoreThan(preview, 0)
+
+	private fun waitForMoreThan(preview: EvvPreview, than: Long) {
+		val until = System.currentTimeMillis() + WAIT_MS
+		while (preview.bytesPlayed <= than && System.currentTimeMillis() < until) {
+			Thread.sleep(50)
+		}
+	}
+
 	private companion object {
 		const val ENGLISH = 0x00010000
+		const val GERMAN = 0x00040000
 		const val WAIT_MS = 15000
 	}
 }
