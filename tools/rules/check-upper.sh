@@ -122,30 +122,45 @@ build() {
     cp "$here/build/probe$suf" "$work/probe.$1"
 }
 
-# What is left after the marked references are masked: a rule's own
-# arguments. A rule takes a reference as the distance it is -- there is no
-# crossing and so no mask to consult -- and two builds lay their regions out
-# differently, so those distances differ legitimately. Masking every
-# eight-digit value would swallow genuine integers with them, so each
-# distinct one is replaced by the order it first appears in instead.
+# What is left after the marked references are masked: values a rule passes
+# that no declaration describes. Most are distances into the region -- a
+# frame, a cell, a scan position -- and the two builds are entitled to place
+# those where they like, so comparing them compares the layout rather than the
+# behaviour.
 #
-# Order of first appearance and not rank among the values: rank was tried and
-# is worse, because the two runs meet slightly different sets of references
-# and every rank after the first difference then shifts. Order of appearance
-# survives that; what it does not survive is the two runs meeting the same
-# pair in the opposite order, which is the whole of what still differs.
-canon() {
+# Numbering each distinct one by when it first appeared was tried first and
+# cannot work. The slots are reused, so the same slot in one build is a
+# different slot in the other at a different moment: over sentence one, 728
+# references had to be remapped and 3,297 of those assignments contradicted
+# each other. No relabelling exists. Rank among the values is worse again,
+# because the two runs meet slightly different sets and every rank after the
+# first difference shifts.
+#
+# Comparing them literally is worse than either -- 57,383 lines apart, since
+# every frame offset then counts.
+#
+# So they are masked by size, which works because the two kinds are nowhere
+# near each other. Measured over the whole of sentence one, 548,529 lines:
+# every value that differs between the builds is at least 0x4a0f04, and every
+# value below 0x10000 is identical in both. The threshold sits in that gap
+# with two orders of magnitude either side, and four values in ten stay under
+# exact comparison -- every immediate a rule carries, negatives included,
+# which the numbering above swallowed whole.
+#
+# What this gives up is a large immediate, which is masked with the distances.
+# If that is ever worth having back, the way is to make the bytecode's push
+# sites say which argument is a reference, and mask by the mark alone.
+mask() {
     python3 -c '
 import re, sys
-seen = {}
 pat = re.compile(r"(?<![0-9a-fA-F])[0-9a-f]{8}(?![0-9a-fA-F])")
 
 
 def one(m):
-    v = m.group(0)
-    if v not in seen:
-        seen[v] = len(seen) + 1
-    return "REF%d" % seen[v]
+    v = int(m.group(0), 16)
+    if v >= 0x80000000:
+        v -= 0x100000000
+    return "VAL" if abs(v) >= 0x10000 else m.group(0)
 
 
 for line in sys.stdin:
@@ -157,7 +172,7 @@ speak() {
     DELTA_RULE_TRACE=200000 timeout 900 "$work/probe.$1" \
         "$2" "$work/$1.wav" 2>"$work/$1.raw" >/dev/null
     sed -E 's/@[0-9a-f]{8}/ARENA/g' "$work/$1.raw" \
-        | grep -v '^rules run:\|in the area' | canon > "$work/$1.full"
+        | grep -v '^rules run:\|in the area' | mask > "$work/$1.full"
     grep -v '^# store ' "$work/$1.full" > "$work/$1.trace"
     # The same again with the running count of rules entered taken off, for
     # saying how far two traces are apart. A trace that is short of one entry
@@ -201,7 +216,12 @@ while IFS= read -r sentence; do
         apart=$(diff "$work/ibm.plain" "$work/ours.plain" \
                 | grep -c '^[<>]')
         if [ "$sound" = 0 ]; then
-            echo "upper: sentence $n parts company" >&2
+            # How far apart, before the first twenty lines of it. Reading the
+            # head alone once cost a week: it showed thirteen differing lines
+            # and the traces were thirty-six thousand apart, so a fix was
+            # believed finished when it had barely moved.
+            echo "upper: sentence $n parts company, $apart lines of" \
+                 "$(wc -l < "$work/ibm.trace")" >&2
             diff "$work/ibm.trace" "$work/ours.trace" | head -20 >&2
             exit 1
         fi
