@@ -24,7 +24,7 @@
         name = "openevv";
         src = self;
 
-        nativeBuildInputs = [ pkgs.python3 ];
+        nativeBuildInputs = [ pkgs.python3 pkgs.makeWrapper ];
 
         # -no-pie is in the Makefile, where it belongs: the machine keeps host
         # addresses in thirty-two bit values, so the program has to sit low
@@ -35,19 +35,24 @@
         enableParallelBuilding = true;
         makeFlags = [ "PREFIX=${placeholder "out"}" ];
 
+        postFixup = ''
+          wrapProgram $out/bin/openevv-say \
+            --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.alsa-utils ]}
+        '';
+
         # No meta.license, deliberately. Our own work is MIT, but the language
         # data under lang is IBM's, so the thing this derivation builds is not
         # MIT as a whole. NOTICE says which is which.
         meta = {
           description = "IBM Embedded ViaVoice rebuilt as portable C";
-          mainProgram = "evv";
+          mainProgram = "openevv-say";
           platforms = [ system ];
         };
       };
 
       apps.${system}.default = {
         type = "app";
-        program = "${self.packages.${system}.default}/bin/evv";
+        program = "${self.packages.${system}.default}/bin/openevv-say";
       };
 
       devShells.${system}.default = pkgs.mkShell {

@@ -56,7 +56,7 @@ Two things about the answer are worth knowing. The separator between phonemes co
 
 ## Not done
 
-Live audio out of `build/evv` itself on Linux. The command still writes a wave file or a pipe and sends nothing to a sound card as the samples are made. What has changed is that this is no longer the only road to hearing it: the Speech Dispatcher module below is live speech, through the server's own backend, and it is the road a screen reader takes anyway. A PipeWire sink in the command is still worth having and is still a thin thing on top of the same buffer, but it is now a convenience rather than the thing standing between this engine and a person using it.
+Live audio out of `build/evv` itself on Linux. That lower-level command still writes a wave file or a pipe and sends nothing to a sound card as the samples are made. `build/openevv-say` supplies the command-line convenience by handing that pipe to `aplay`, while the Speech Dispatcher module below is live speech through the server's own backend and is the road a screen reader takes. A native streaming sink remains unimplemented, but hearing the command no longer requires spelling out the pipeline.
 
 Polish, which is what all of it is for. It is started: `lang/plpl` is the ninth language in the tree, it builds, it speaks, and it is Italian. The section below says what that means and what is left.
 

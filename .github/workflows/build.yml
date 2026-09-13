@@ -46,6 +46,9 @@ jobs:
       - name: Check the samples
         run: test/hash.sh
 
+      - name: Check the command-line speaking helper
+        run: make RULES=c say-test
+
       # English only here, and every language in the bytecode job below.
       # Decompiling nine languages into C is a hundred and seventeen megabytes
       # and most of an hour on a two-core runner; what this job is for is that
@@ -92,14 +95,14 @@ jobs:
           esac
           make -j"$(nproc)" RULES=c EVVPLAIN=1 LANGS="$langs" so all
 
-      # Staged into a directory of its own so the artifact holds three files
+      # Staged into a directory of its own so the artifact holds four files
       # at its top rather than the paths they were built at; the release job
       # unpacks it straight into what becomes the archive.
       - name: Stage what ships
         run: |
           set -eu
           mkdir -p stage
-          cp build/evv build/libeci.so.1 include/eci.h stage/
+          cp build/evv build/openevv-say build/libeci.so.1 include/eci.h stage/
 
       - uses: actions/upload-artifact@v7
         with:
@@ -491,7 +494,7 @@ jobs:
           cp README.md LICENSE NOTICE dist/windows/
           (cd dist/windows \
              && zip -q -r ../../openevv-${GITHUB_REF_NAME}-windows-x86_64.zip .)
-          chmod +x dist/linux/evv
+          chmod +x dist/linux/evv dist/linux/openevv-say
           # The library keeps the name its soname says, with the plain one a
           # link to it: that is what a linker looks for and what a dlopen of
           # "libeci.so" finds. The header goes with it, since a library with
