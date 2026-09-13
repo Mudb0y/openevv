@@ -65,30 +65,29 @@ build() {
 
 # One sentence through one of the two, with what only the interpreter can say
 # taken out and the references masked.
-# What is left after the marked references are masked: a rule's own
-# arguments. A rule takes a reference as the distance it is -- there is no
-# crossing and so no mask to consult -- and two builds lay their regions out
-# differently, so those distances differ legitimately. Masking every
-# eight-digit value would swallow genuine integers with them, so each
-# distinct one is replaced by the order it first appears in instead.
+# What is left after the marked references are masked: values a rule passes
+# that no declaration describes, which are mostly distances into the region.
+# A rule written as C deliberately takes a smaller frame than the
+# interpreter's, so the two sides land in different places by design and those
+# distances differ for that reason alone.
 #
-# Order of first appearance and not rank among the values: rank was tried and
-# is worse, because the two runs meet slightly different sets of references
-# and every rank after the first difference then shifts. Order of appearance
-# survives that; what it does not survive is the two runs meeting the same
-# pair in the opposite order, which is the whole of what still differs.
-canon() {
+# Masked by size rather than numbered, for the reasons written out at length
+# in check-upper.sh: numbering each distinct value by when it first appeared
+# cannot work, because the slots are reused and no relabelling reconciles
+# them, and it swallows every immediate as well. Below the threshold a value
+# is an immediate and is compared exactly; at or above it, it is a distance
+# and is not.
+mask() {
     python3 -c '
 import re, sys
-seen = {}
 pat = re.compile(r"(?<![0-9a-fA-F])[0-9a-f]{8}(?![0-9a-fA-F])")
 
 
 def one(m):
-    v = m.group(0)
-    if v not in seen:
-        seen[v] = len(seen) + 1
-    return "REF%d" % seen[v]
+    v = int(m.group(0), 16)
+    if v >= 0x80000000:
+        v -= 0x100000000
+    return "VAL" if abs(v) >= 0x10000 else m.group(0)
 
 
 for line in sys.stdin:
@@ -100,7 +99,7 @@ speak() {
     DELTA_RULE_TRACE=200000 timeout 900 "$work/probe.$1" \
         "$2" "$work/$1.wav" 2>"$work/$1.raw" >/dev/null
     grep -v '^rules run:\|^# store \|in the area' "$work/$1.raw" \
-        | sed -E 's/@[0-9a-f]{8}/ARENA/g' | canon > "$work/$1.trace"
+        | sed -E 's/@[0-9a-f]{8}/ARENA/g' | mask > "$work/$1.trace"
 }
 
 echo "check: building both"
