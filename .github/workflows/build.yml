@@ -219,6 +219,12 @@ jobs:
           set -eu
           for l in lang/*/; do
             t=$(basename "$l")
+            # A directory under lang is a module when it carries the table the
+            # engine knows the language by, and this asks rather than assumes.
+            # lang/measured holds measurement text rather than a module, and
+            # this loop spent a week trying to build it as one -- unseen,
+            # because the step never ran while the gates above it were red.
+            [ -f "$l/delta_lang_$t.c" ] || continue
             make -j"$(nproc)" probe LANG="lang/$t" RULES=bytecode
             p=build/probe
             [ "$t" = enus ] || p="build/probe-$t"
