@@ -884,3 +884,11 @@ Harvested from the word corpus alone and with one further filter, it works.
 With truncations filtered out, the far level is **1,301 lines** rather than 150,346, and it helps: 2.245 per cent of parameter values wrong falls to **2.187**, five words come back frame for frame rather than four, and the automated ear's count falls from 77 confusions to 73.
 
 That is a small gain for a lot of machinery, and it is worth saying so plainly. The finding that a segment reaches two phonemes either side is solid -- 14 per cent self-disagreement to one -- but almost all of what that explains is truncation, which was already handled. **The residue is a per cent of a per cent.** What is left wrong is elsewhere: the second and third formants at 3,702 and 2,750 wrong values, and the voicing at 2,617, none of which the two-deep key touches.
+
+### Running on over a target the table gave
+
+Of the second formant's remaining wrong values, **59 per cent were the table being right and the generator laying it wrongly**, which is worth knowing before looking for better data: measure whether the fault is in what you wrote down or in what you do with it.
+
+The fault was one condition. A stretch that overshoots its own segment runs on to the next segment's target -- that is the rule that fixed `abandonment`'s flat tail -- but it was firing even where the table *does* give that stretch a target. The schwa in `abacuses` is written 1650 and overshoots its 62 milliseconds by fifteen, so the override sent it to the /k/'s 1350 instead of the 1650 it was told. The override belongs only where the table is silent.
+
+**2.187 per cent of parameter values wrong falls to 1.577**, the second formant's share from 3,702 to 2,103, the third's from 2,750 to 1,204, and the words that come back frame for frame from five to thirteen of a hundred and fifty.

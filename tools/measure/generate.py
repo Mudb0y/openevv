@@ -383,6 +383,7 @@ def gaps_from_tables(pros, durs, base, over, dflt, far=None):
                 shift = len(where) - len(targets)
             for i, (rel, span) in enumerate(where):
                 jump = None
+                told = False
                 k = i - shift
                 # Fewer stretches than targets means the engine drew one
                 # line where the table holds several ends of it, so that
@@ -398,10 +399,12 @@ def gaps_from_tables(pros, durs, base, over, dflt, far=None):
                     else:
                         jump = targets[-1][0]
                     end = targets[-1][1]
+                    told = end is not None
                     if end is None:
                         end = ahead if ahead is not None else targets[-1][0]
                 elif 0 <= k < len(targets):
                     jump, end = targets[k]
+                    told = end is not None
                     if end is None:
                         # A start with no end of its own: it runs on.
                         end = ahead if ahead is not None else jump
@@ -410,7 +413,14 @@ def gaps_from_tables(pros, durs, base, over, dflt, far=None):
                     end = pick[1] if pick[1] is not None else pick[0]
                 else:
                     end = v[name]
-                if rel + span > total and ahead is not None:
+                # A stretch that overshoots its segment runs on to the next
+                # target -- but only where this segment has no target for
+                # it. Overriding one the table does give was 59 per cent of
+                # the second formant's remaining error: the schwa in
+                # `abacuses' is written 1650 and overshoots its 62
+                # milliseconds by fifteen, and the override sent it to the
+                # /k/'s 1350 instead.
+                if rel + span > total and ahead is not None and not told:
                     end = ahead
                 # A stretch that starts somewhere other than where the
                 # last one left off says so, and the voicing does it two
