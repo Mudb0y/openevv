@@ -24,7 +24,7 @@
         name = "openevv";
         src = self;
 
-        nativeBuildInputs = [ pkgs.python3 ];
+        nativeBuildInputs = [ pkgs.python3 pkgs.makeWrapper ];
 
         # -no-pie is in the Makefile, where it belongs: the machine keeps host
         # addresses in thirty-two bit values, so the program has to sit low
@@ -34,6 +34,11 @@
         # hardeningDisable = [ "pie" ].
         enableParallelBuilding = true;
         makeFlags = [ "PREFIX=${placeholder "out"}" ];
+
+        postFixup = ''
+          wrapProgram $out/bin/openevv-say \
+            --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.pipewire pkgs.pulseaudio pkgs.alsa-utils ]}
+        '';
 
         # No meta.license, deliberately. Our own work is MIT, but the language
         # data under lang is IBM's, so the thing this derivation builds is not

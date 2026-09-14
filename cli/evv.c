@@ -221,6 +221,7 @@ static void usage(FILE *f)
 "  -v N      speak in voice N, 1 to 8\n"
 "  -s N      speed\n"
 "  -p N      pitch\n"
+"  -P N      pitch range\n"
 "  -V N      volume\n"
 "  -R N      sample rate: 0 to 6 for 8000, 11025, 22050, 16000, 32000,\n"
 "            44100 or 48000 hertz, or the rate itself in hertz. Above\n"
@@ -272,13 +273,14 @@ int main(int argc, char **argv)
     for (i = 0; i < V_COUNT; i++)
         set[i] = -1;
 
-    while ((i = getopt(argc, argv, "o:f:v:s:p:V:R:L:rlhA")) != -1) {
+    while ((i = getopt(argc, argv, "o:f:v:s:p:P:V:R:L:rlhA")) != -1) {
         switch (i) {
         case 'o': out = optarg; break;
         case 'f': from = optarg; break;
         case 'v': voice = atoi(optarg); break;
         case 's': set[V_SPEED] = atoi(optarg); break;
         case 'p': set[V_PITCH] = atoi(optarg); break;
+        case 'P': set[V_FLUCTUATION] = atoi(optarg); break;
         case 'V': set[V_VOLUME] = atoi(optarg); break;
         case 'R': want_rate = atoi(optarg); break;
         case 'L':

@@ -1,0 +1,161 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+usage: openevv-say [options] [text ...]
+
+Speak text with OpenEVV. With no text, read standard input.
+
+  -w FILE       write a WAV file instead of playing the speech
+  -f FILE       read text from FILE, or from standard input for -
+  --stdin       read text from standard input
+  -v N          use voice N, 1 to 8
+  -s N          set speed
+  -p N          set pitch
+  -P N          set pitch range
+  -a N          set volume
+  -R N          set sample rate
+  -L ID         use the language with numeric ID
+  -r            use real-world units for speed, pitch, and volume
+  --voices      list voice settings and stop
+  --languages   list language IDs in this build and stop
+  -h, --help    show this help
+
+The numeric settings use OpenEVV's native ranges by default: speed 0-250,
+and pitch, pitch range, and volume 0-100. With -r, speed is words per minute
+and pitch is hertz. The -a spelling follows espeak-ng; it controls the same
+setting that evv calls -V.
+
+  openevv-say "Hello from Openevv."
+  openevv-say -s 60 -p 70 "A different voice."
+  openevv-say -w hello.wav "Save this instead."
+EOF
+}
+
+die() {
+    printf 'openevv-say: %s\n' "$1" >&2
+    exit 2
+}
+
+scriptDir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+if [[ -n ${OPENEVV_EVV:-} ]]; then
+    evvCommand=$OPENEVV_EVV
+elif [[ -x $scriptDir/evv ]]; then
+    evvCommand=$scriptDir/evv
+elif command -v evv >/dev/null 2>&1; then
+    evvCommand=evv
+else
+    die "cannot find evv; install it beside openevv-say or set OPENEVV_EVV"
+fi
+
+evvArgs=()
+outputFile=
+mode='play'
+
+while (($#)); do
+    case $1 in
+        -w)
+            (($# >= 2)) || die "-w needs a WAV file"
+            outputFile=$2
+            mode='write'
+            shift 2
+            ;;
+        -f)
+            (($# >= 2)) || die "-f needs a text file"
+            evvArgs+=("-f" "$2")
+            shift 2
+            ;;
+        --stdin)
+            evvArgs+=("-f" "-")
+            shift
+            ;;
+        -v|-s|-p|-P|-R|-L)
+            (($# >= 2)) || die "$1 needs a value"
+            evvArgs+=("$1" "$2")
+            shift 2
+            ;;
+        -a)
+            (($# >= 2)) || die "-a needs a value"
+            evvArgs+=("-V" "$2")
+            shift 2
+            ;;
+        -r)
+            evvArgs+=("-r")
+            shift
+            ;;
+        --voices)
+            evvArgs+=("-l")
+            mode='list'
+            shift
+            ;;
+        --languages)
+            evvArgs+=("-L" "list")
+            mode='list'
+            shift
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        --)
+            shift
+            evvArgs+=("$@")
+            break
+            ;;
+        -* )
+            die "unknown option: $1"
+            ;;
+        *)
+            evvArgs+=("$1")
+            shift
+            ;;
+    esac
+done
+
+if [[ $mode == write ]]; then
+    exec "$evvCommand" "${evvArgs[@]}" -o "$outputFile"
+fi
+
+if [[ $mode == list ]]; then
+    exec "$evvCommand" "${evvArgs[@]}"
+fi
+
+playerCommand=${OPENEVV_PLAYER:-}
+if [[ -n $playerCommand ]]; then
+    command -v "$playerCommand" >/dev/null 2>&1 || \
+        die "cannot find $playerCommand"
+else
+    # Ask an ordinary sound-server client to play the stream so this command
+    # never reconfigures audio or opens a hardware device directly.
+    for candidate in pw-play paplay aplay; do
+        if command -v "$candidate" >/dev/null 2>&1; then
+            playerCommand=$candidate
+            break
+        fi
+    done
+    [[ -n $playerCommand ]] || \
+        die "cannot find pw-play, paplay, or aplay; set OPENEVV_PLAYER"
+fi
+
+case ${playerCommand##*/} in
+    pw-play)
+        playerArgs=(-)
+        ;;
+    paplay)
+        # paplay reads a formatted audio stream from standard input when no
+        # file is named.
+        playerArgs=()
+        ;;
+    aplay)
+        playerArgs=(-q -)
+        ;;
+    *)
+        # A custom player named by OPENEVV_PLAYER receives the WAV on standard
+        # input and no player-specific arguments.
+        playerArgs=()
+        ;;
+esac
+
+"$evvCommand" "${evvArgs[@]}" -o - | "$playerCommand" "${playerArgs[@]}"
