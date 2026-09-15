@@ -892,3 +892,13 @@ Of the second formant's remaining wrong values, **59 per cent were the table bei
 The fault was one condition. A stretch that overshoots its own segment runs on to the next segment's target -- that is the rule that fixed `abandonment`'s flat tail -- but it was firing even where the table *does* give that stretch a target. The schwa in `abacuses` is written 1650 and overshoots its 62 milliseconds by fifteen, so the override sent it to the /k/'s 1350 instead of the 1650 it was told. The override belongs only where the table is silent.
 
 **2.187 per cent of parameter values wrong falls to 1.577**, the second formant's share from 3,702 to 2,103, the third's from 2,750 to 1,204, and the words that come back frame for frame from five to thirteen of a hundred and fifty.
+
+### The aspiration follows the approximants, not the consonants
+
+The voicing and the aspiration were the two largest remaining errors and both are rules, so the fault had to be in the rules. It was one class boundary.
+
+**The aspiration holds 34 through the approximants as well as the vowels** -- /l/ 85 per cent of the time, /R/ 69, /y/ 59, /r/ 54 -- and nought through the nasals, /m/, /n/ and /G/ every time without exception. The rule had "vowel or not", which put /l/, /r/, /R/, /w/ and /y/ on the wrong side of it. **Its wrong values fall from 1,864 to 726**, the whole error from 1.577 per cent to 1.373, and the words that come back frame for frame from thirteen to **twenty-six of a hundred and fifty**. The automated ear's confusions fall from 58 to 50.
+
+**And /R/ voices like the vowel it is**: 54 falling to 52 stressed, 51 to 47 unstressed, which is the vowel rule exactly, 84 and 68 per cent of the time. It is in the base table now. That changed nothing measurable on a hundred and fifty words, /R/ being rare in them, and is right regardless.
+
+The other approximants do not follow the vowel rule -- /l/, /r/ and /w/ hold 50 flat, /y/ 53 -- so they stay with the table.

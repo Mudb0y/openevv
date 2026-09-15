@@ -157,8 +157,12 @@ def lay(pieces, targets, start):
 # two-step form as belonging to the first vowel of an utterance. Its
 # carriers were all stressed on the first vowel, so `first' and `stressed'
 # could not be told apart; at scale it is the stress.
+# /R/ is in here because it behaves like one: 54 falling to 52 when stressed
+# and 51 to 47 when not, which is the rule exactly, 84 and 68 per cent of the
+# time. The other approximants do not -- /l/, /r/ and /w/ hold 50 flat and
+# /y/ 53 -- and are left to the table.
 AV_BASE = {"i": 55, "I": 57, "e": 55, "E": 54, "A": 49, "a": 50,
-           "u": 59, "U": 57, "o": 56, "c": 52, "H": 54}
+           "u": 59, "U": 57, "o": 56, "c": 52, "H": 54, "R": 54}
 AV_SCHWA = {"x": (52, 50, 51, 48), "X": (53, 51, 50, 47)}
 
 
@@ -183,6 +187,13 @@ AH_VOWEL = 34
 AH_H = 42
 AH_CONSONANT = 0
 
+# The aspiration follows the vowels and the approximants together: /l/, /r/,
+# /R/, /w/ and /y/ hold 34 like a vowel -- /l/ 85 per cent of the time, /R/
+# 69, /y/ 59, /r/ 54 -- while the nasals hold nought like an obstruent, /m/,
+# /n/ and /G/ every time. Classing the approximants with the consonants was
+# 900 of the aspiration's wrong values.
+AH_OPEN = set("lrRwy")
+
 # The tilt is flat nought in 10,883 segments of 12,287 and 35 falling to
 # nought in the rest, which are only the voiced stops and the flap. It falls
 # within the segment: /F/ holds 35 for its first stretch and nought after.
@@ -191,7 +202,7 @@ TL_BURST = set("bdgF")
 
 def aspiration(unit, total):
     """One segment's aspiration, as a single stretch."""
-    if unit[-1] not in S.VOWELS:
+    if unit[-1] not in S.VOWELS and unit[-1] not in AH_OPEN:
         return ((0, total), AH_CONSONANT, AH_CONSONANT)
     v = AH_H if unit[0] == "h" and len(unit) > 1 else AH_VOWEL
     return ((0, total), v, v)
