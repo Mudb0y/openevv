@@ -912,3 +912,15 @@ The reason is in the measurements that produced the rules in the first place and
 So the standing is: **1.178 per cent of parameter values wrong over a hundred and fifty words, twenty-nine of them frame for frame**, and the automated ear at 46 confusions of 2,159 against the engine's own 555. `EVV_RULE_FIRST=1` puts it back the other way round, which is how the two were compared.
 
 **What the rules are still for** is every context the corpus has not seen -- a new word, or a language with no word list -- and that is not a small thing. It is the difference between a table that answers for English as it has been measured and a generator that answers for anything.
+
+### What the tables do for a word they have not seen
+
+With the run-on fixed, the second formant's remaining errors are 80 per cent the table and 20 per cent the laying, the other way round from before, so the table's key is what is left.
+
+**Recording a far context seen once rather than twice was tried, and it is memorisation.** It takes the far level from 1,301 lines to 4,072 and the error on the corpus it was harvested from from 1.178 per cent to 1.128. On a hundred and twenty words it was *not* harvested from -- a table built from the first twelve thousand, tested on words twenty thousand and after -- it gives 2.706 per cent against the stricter rule's 2.707. Nothing. The lines are not worth it and the stricter rule stands.
+
+**And that experiment gives the honest number for what these tables do.** Three figures, and only the last is generalisation:
+
+The full table on words it was harvested from is 1.178 per cent of parameter values wrong, twenty-nine of a hundred and fifty frame for frame. The same table on a different part of the same corpus -- also harvested, just not the part usually quoted -- is 1.805 per cent and thirty-six. **A table built from twelve thousand words, on words it has never seen, is 2.706 per cent and eleven of a hundred and twenty.**
+
+So the tables know English as they have measured it to about one per cent, and a word outside that to under three. Whether three per cent is audible is a question for an ear rather than for this file, and the confusion measure says 46 segments of 2,159 land on the wrong phoneme against the engine's own 555.

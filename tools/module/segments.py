@@ -643,6 +643,12 @@ def main(argv):
     far = {}
     for k, c in farobs.items():
         (sh, runson), n = c.most_common(1)[0]
+        # Seen twice and agreeing with itself. Recording a context seen
+        # once was tried: it takes the far level from 1,301 lines to 4,072
+        # and the error on the corpus it was harvested from from 1.178 per
+        # cent to 1.128 -- and on words it was not harvested from, 2.706
+        # against 2.707, which is nothing. The gain was memorisation and the
+        # lines are not worth it.
         if n < 2 or len(c) > 1:
             continue
         short = k[:5]

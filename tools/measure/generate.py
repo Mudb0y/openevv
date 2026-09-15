@@ -479,7 +479,10 @@ def main(argv):
     elif show:
         words = [(w, b) for w, b in words if w == show]
     else:
-        words = words[:limit]
+        # `--skip' starts further down the list, for asking how the tables do
+        # on words they were not harvested from.
+        skip = int(opt("--skip", "0"))
+        words = words[skip:skip + limit]
     if not words:
         sys.stderr.write("generate: no such word\n")
         return 2
