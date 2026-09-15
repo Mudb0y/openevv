@@ -902,3 +902,13 @@ The voicing and the aspiration were the two largest remaining errors and both ar
 **And /R/ voices like the vowel it is**: 54 falling to 52 stressed, 51 to 47 unstressed, which is the vowel rule exactly, 84 and 68 per cent of the time. It is in the base table now. That changed nothing measurable on a hundred and fifty words, /R/ being rare in them, and is right regardless.
 
 The other approximants do not follow the vowel rule -- /l/, /r/ and /w/ hold 50 flat, /y/ 53 -- so they stay with the table.
+
+### The rule answers where the table is silent, not instead of it
+
+The voicing and the aspiration were written as rules because they are rules, and the generator was then asking the rule first and never consulting the table for them at all. Turned round -- **the table where it has something to say, the rule where it has not** -- the voicing's wrong values fall from 2,369 to 1,598 and the aspiration's from 726 to 414.
+
+The reason is in the measurements that produced the rules in the first place and was there to be read: a rule is only ever the *dominant* behaviour. The voicing base accounts for 50 to 85 per cent of cases depending on the vowel, the aspiration's 34 for 54 to 100 per cent depending on the phoneme. The remainder is not noise, it is context the table has recorded, and preferring the rule threw it away.
+
+So the standing is: **1.178 per cent of parameter values wrong over a hundred and fifty words, twenty-nine of them frame for frame**, and the automated ear at 44 confusions of 2,159 against the engine's own 555. `EVV_RULE_FIRST=1` puts it back the other way round, which is how the two were compared.
+
+**What the rules are still for** is every context the corpus has not seen -- a new word, or a language with no word list -- and that is not a small thing. It is the difference between a table that answers for English as it has been measured and a generator that answers for anything.

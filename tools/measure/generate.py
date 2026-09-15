@@ -353,10 +353,17 @@ def gaps_from_tables(pros, durs, base, over, dflt, far=None):
             rule = None
             unit = f_of[j]
             if os.environ.get("EVV_EXCITE_RULE") != "0" and where:
-                if name == "av":
-                    rule = voicing(unit["unit"][-1], unit["stress"],
-                                   total)
-                elif name == "ah":
+                # The table wins where it has something to say and the
+                # rule is what answers when it does not. Measured both ways
+                # round: the voicing's wrong values are 1,598 this way and
+                # 2,369 with the rule first, because the rule is only ever
+                # the dominant behaviour -- 50 to 85 per cent of cases --
+                # and the table holds the rest. `EVV_RULE_FIRST=1' puts it
+                # back the other way for comparison.
+                first = os.environ.get("EVV_RULE_FIRST") == "1"
+                if name == "av" and (first or not targets):
+                    rule = voicing(unit["unit"][-1], unit["stress"], total)
+                elif name == "ah" and (first or not targets):
                     rule = aspiration(unit["unit"], total)
             if name not in v:
                 first = targets[0] if targets else None
