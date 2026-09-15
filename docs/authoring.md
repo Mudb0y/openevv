@@ -909,6 +909,6 @@ The voicing and the aspiration were written as rules because they are rules, and
 
 The reason is in the measurements that produced the rules in the first place and was there to be read: a rule is only ever the *dominant* behaviour. The voicing base accounts for 50 to 85 per cent of cases depending on the vowel, the aspiration's 34 for 54 to 100 per cent depending on the phoneme. The remainder is not noise, it is context the table has recorded, and preferring the rule threw it away.
 
-So the standing is: **1.178 per cent of parameter values wrong over a hundred and fifty words, twenty-nine of them frame for frame**, and the automated ear at 44 confusions of 2,159 against the engine's own 555. `EVV_RULE_FIRST=1` puts it back the other way round, which is how the two were compared.
+So the standing is: **1.178 per cent of parameter values wrong over a hundred and fifty words, twenty-nine of them frame for frame**, and the automated ear at 46 confusions of 2,159 against the engine's own 555. `EVV_RULE_FIRST=1` puts it back the other way round, which is how the two were compared.
 
 **What the rules are still for** is every context the corpus has not seen -- a new word, or a language with no word list -- and that is not a small thing. It is the difference between a table that answers for English as it has been measured and a generator that answers for anything.
