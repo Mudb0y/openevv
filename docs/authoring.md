@@ -924,3 +924,49 @@ With the run-on fixed, the second formant's remaining errors are 80 per cent the
 The full table on words it was harvested from is 1.178 per cent of parameter values wrong, twenty-nine of a hundred and fifty frame for frame. The same table on a different part of the same corpus -- also harvested, just not the part usually quoted -- is 1.805 per cent and thirty-six. **A table built from twelve thousand words, on words it has never seen, is 2.706 per cent and eleven of a hundred and twenty.**
 
 So the tables know English as they have measured it to about one per cent, and a word outside that to under three. Whether three per cent is audible is a question for an ear rather than for this file, and the confusion measure says 46 segments of 2,159 land on the wrong phoneme against the engine's own 555.
+
+## What crosses the seam, measured, 17 September 2026
+
+The plan above assumes a front end of ours can be a program that turns text into the engine's own annotations, and that the engine's back half will then say exactly what it says now. That was an assumption. It is measured now, and it is nearly true: **every synthesiser parameter but the pitch is decided entirely by the annotation.**
+
+`tools/measure/seam.py` is the measurement. For each case it speaks the text, asks `eciGeneratePhonemes` what the engine decided the text was made of, speaks that answer back with annotations on, and holds the two sets of synthesiser frames against each other parameter by parameter. `EVV_KLATT_TAP` is what writes the frames and the audio is byte identical with it idle, so nothing about the measurement disturbs what is being measured.
+
+**One repair is needed on the way and it is not a fudge.** The report separates words by nothing at all -- `` `[.1DIs]`[.0Xz] `` -- and two pronunciation annotations run together are one token to the engine, which then spells the whole run out: the first sentence of `test/cases/plain.txt` came back at 575,498 bytes against 84,502. A space in front of every annotation is the whole of the repair, and with it that sentence round trips byte for byte.
+
+**Over three hundred words, 293 reproduce frame for frame** -- every one of the sixty-two parameters, every frame. The seven that do not are six compounds carrying a secondary stress and one ordinary word, and in each the first thing to differ is the pitch.
+
+**Over sentences the answer is the same and sharper.** Of the ten cases in `test/cases/plain.txt` and `test/cases/long.txt`, two are frame for frame, three differ in the pitch alone, five differ in length -- and none differs in any other parameter. Not a formant, not a bandwidth, not an amplitude, not a phoneme duration.
+
+**The leak is prosody and nothing else.** `Testing 1 2.` and `Testing one two.` produce the *same* annotation, the same 297 frames and the same value for all sixty-one other parameters, and differ in f0 in 98 of those frames by at most 5.3 hertz. So the engine's intonation reads something the annotation cannot say -- the phrase structure the text analysis built -- and two texts that come to the same phonemes can still come to different melodies.
+
+**Two punctuation marks lose a pause as well.** Parentheses and a dash: `He said (the cat sat).` is 417 frames spoken and 351 when its own report is spoken back, because the report renders the parenthesis as a `` `2 `` and `` `2 `` is a shorter pause than a parenthesis makes. A colon, a semicolon, a comma, a question mark and an exclamation mark all round trip exactly, and so do quotation marks in length.
+
+### What that settles
+
+A front end of ours can be developed and proved as a text-to-text program, with no engine internals in it at all, and every segment it produces will be the engine's own to the sample. That is the whole of stage one and it is now known rather than hoped.
+
+What it cannot get that way is the melody. So the intonation is not on the far side of the seam waiting to be reused; it is on our side of it, and a front end that wants the original sound has to produce the pitch as well -- either by handing the back half the phrase structure through something other than an annotation, or by owning the intonation outright, which is where this ends up anyway. `EVV_F0_RULE=1` and the pitch rule in `tools/measure/generate.py` are the start of the second.
+
+### And a fault it found on the way
+
+`eciGeneratePhonemes` crashed the engine on every sixty-four bit build, which means `make words` -- the twenty-four thousand word gate -- had been dead rather than green. `eo_callbackFn` read the phoneme record it is handed as a bare address, where the engine passes a reference into the region, so it dereferenced the low half of one. Since the arena was retired the region goes wherever the system puts it, and the low half of that is nothing at all. The same call then handed the caller's callback the address of a record inside the instance, truncated to the thirty-two bits `ECICallback` takes, which is the defect the little low region already exists to answer for an index mark's name. Both are fixed and the gate answers again: 24,318 words, every one as it was.
+
+## What English letter-to-sound actually is, 17 September 2026
+
+The plan above assumed the front half would have to be written rather than recovered, and put letter-to-sound at the centre of it because the dictionary is small: of the 24,318 words in `test/cases/words-enus.txt`, 5,042 are in one of the module's dictionaries -- twenty per cent, and more than half of those are proper names -- and a crude strip of the common suffixes reaches a dictionary root for only 1,532 more. So something like 17,700 English words get their pronunciation from rules rather than from a lookup, and whatever those rules are is the front half's centre of gravity.
+
+**They are 32 rules, one to a letter, and 271 insertions between them.** `lang/enus/rules/et_phone.dr` holds `a_rules` through `z_rules` with `strong_vowel`, `generate_diaphones`, `change_british_spelling` and four more beside them. Counting the calls that put phones down: `o_rules` makes 47, `e_rules` and `a_rules` 33 each, `i_rules` 22, `u_rules` 21, and the consonants two to thirteen apiece. That is the whole of English letter-to-sound in this engine, and it is a size a person can read.
+
+**And they read as letter-to-sound rules rather than as machine code, once the strings are resolved.** `tools/rules/strings.py` is what resolves them: `lang/<tag>/rules/symbols` says which store a named string falls in and how far, `lang/<tag>/<tag>.consts` holds the bytes, and the bytes are in the language's own alphabets -- a letter is the code its input statement gives it and a phoneme the code its statement gives that, so the same byte is a different thing in each and both are printed.
+
+`b_rules` is 97 lines of the lower form and says this much: scan right, test `string_30`, and insert one of two strings. `string_30` is `bt`. The two insertions are the phoneme `t` and the phoneme `b`. So the rule is *b before t says /t/ alone, and b otherwise says /b/* -- and `debt` is `dEt` and `subtle` is `sHFxl` in the recorded baseline, which is that rule and nothing else.
+
+The vocabulary the letter rules call is small and regular: advance the token, set the scan left or right, test a string at the scan, save and restore the scan pointer, push and pop a backtracking alternative, insert phones, succeed. `advance_tok` 390 times, `lpta_loadp__test_ptr` 218, the scan setters 500-odd between them, and the string tests are mostly one letter each -- `e`, `n`, `l`, `t`.
+
+### What follows for the plan
+
+A front end of ours does not have to invent English letter-to-sound, and should not: 271 rules that decide seventeen thousand words are worth transcribing exactly, not re-deriving approximately. The word gate is what makes transcription safe -- `make words` names the word that moved, over 24,318 of them, in ten seconds.
+
+What is missing is a notation to transcribe them *into*. The upper form is not it: this file opens by saying so, and writing 271 letter rules in frames and planted tests would be the same mistake at greater length. What these rules want is the notation they are already written in underneath -- a letter, what is to its left, what is to its right, and what it says -- which is what every other synthesiser's letter-to-sound file looks like and what an author can actually edit.
+
+So the next design is that notation and a compiler for it, and the transcription is the work after. Neither is started.
