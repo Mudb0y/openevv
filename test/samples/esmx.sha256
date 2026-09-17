@@ -1,0 +1,111 @@
+# What this engine says, case by case, for esmx.
+#
+# Mexican Spanish is not IBM's and there is nothing to hold it
+# to: these are what this engine does,not what any original
+# did. They are here so that a change to Mexican Spanish can
+# be told from an accident,which is the only check it will ever
+# have besides an ear.
+#
+# Written by test/matrix.sh record. One line a case:
+# the category, which case in it, the first sixteen hex of
+# the samples' hash, the same of the reported answers', and
+# the sentence.
+
+plain 1 0ba775696c275992 0b0ba754c9d9821a Hola. Aqui habla el sintetizador de voz Eloquence.
+plain 2 99cfd21fd886c40e 4363c88642073554 El doctor Gomez pago 1.234,56 euros el 3 de mayo de 2026 a las 19:45.
+plain 3 48ef3e35a65424d1 c72822f6c5c94717 El rapido zorro marron salta sobre el perro perezoso; p.ej. www.ejemplo.es/ruta?q=1
+plain 4 630667d03d44fd08 683eca66c396df3f Prueba 1 2 3, ABC XYZ, palabras-con-guion y MAYUSCULAS.
+plain 5 4ce382c2a806200e fa26d2bd777d2c76 Una sola palabra. Y otra mas; con "texto citado" en medio.
+plain 6 061666f081c8a589 8613a32016d19982 Otorrinolaringologo, desoxirribonucleico, 42% de 3,14159, y el senor Perez-Lopez hijo.
+plain 7 f715ce30d77c0cc9 15c0144bb2fdc9c5 Dijo: no lo hagas! Luego (entre parentesis) 1/2 + 3/4 = 5/4; vease p. 12.
+utf8 1 e8e4dd5272945fcc 0f6c8148473d0475 El senor Munoz envio una pinata a Sao Paulo.
+utf8 2 b49d3b2f5a927586 e6c12763239f69a7 El señor Muñoz envió una piñata a São Paulo.
+utf8 3 3b774d386b65ce60 c6c16376c422ea1d La cigüeña bebió agua en el río antes del amanecer.
+utf8 4 04fe29ef80206320 1018771a19d969b7 Aquí está la más útil página que jamás vi.
+utf8 5 fab0be83dc153da3 a11ce008a4d09294 El niño pequeño jugaba con la araña en el jardín.
+utf8 6 872decc0d44dcd84 74587abc764c22cb ¿Cómo estás? ¡Qué día tan espléndido hace hoy!
+utf8 7 23eee97d4b6077ee 37171942773912e2 Una frase completamente sin acentos para comparar.
+anno 1 0054515ca62bc522 3dfe4dbfb33547c3 Habla normal `vs50 ahora mucho mas lenta que antes.
+anno 2 30c4523076764537 b730fbaedaa1b89c Volumen `vv30 mas bajo, y luego `vv90 mas alto otra vez.
+anno 3 3ca19e453c18ae24 234416dd0a572544 Tono `vb20 grave y `vb80 agudo en una sola frase.
+anno 4 e3be47fd30513519 4646aee76976e6b3 Voz `v2 dos, `v5 cinco, y `v1 de vuelta a uno.
+anno 5 0d01c72a25de6851 a935149eb7f02390 Una pausa `0 corta y `4 larga entre palabras.
+anno 6 eadd00e6ff298d70 b79537e7f0286529 Aspereza `vr40 y soplo `vf60 modificados.
+anno 7 8de185ece807bf72 d04885cb31b6bc65 Un acento grave \`literal debe leerse como texto.
+anno 8 5f1cbc34f45da879 9f95f7b7abe1b216 Velocidad por nombre `vsfast y luego `vsslow de nuevo.
+anno 9 9d63e3d6da47a2d4 8c57809e94a029f8 Tamano de cabeza `vh30 y luego `vh70 en la misma linea.
+anno 10 f2183e59fa4ef12b b4ac7761c63f1a84 Genero `vg1 y `vg0 alternando.
+anno 11 f882878de69e165c 1630f5bfdff346bf Antes de `ui"marca uno" y despues de la marca.
+anno 12 bbebb63f9abf7286 6c458cff6ac66c2f Marcador de audio `aud"pitido" en medio de una linea.
+anno 13 fc8cc203046f6979 003a2e2a116d2798 `vs40 Una anotacion justo al principio del todo.
+anno 14 dfef422fa289a664 305bfca4aef16832 Terminando con una anotacion justo al final `vs60
+anno 15 0749baf18f08b0a4 04dbfefc7a3d9106 Mal formadas `vzz y `q y `v999 todas en una linea.
+anno 16 6220fe0125772a7b 0dd356f2de6f129d Dos `vs30`vv40 anotaciones sin nada en medio.
+anno 17 720f5905a9e3dc47 ebe7d340b2874f6b `ui"a"`ui"b" dos marcas sin nada entre ellas.
+anno 18 f30372ec3335f8a1 e2c242bac82ebc07 Una marca `ui"sin cerrar que nunca termina aqui
+anno 19 2bfdea9aaab668c2 ad019d1342e639e9 Mezcla `v3 voz `vs70 velocidad `vv50 volumen juntas.
+anno 20 91bc8a48226eb57c e62badb1894cba21 Tabulador	y salto de linea con `vb40 un cambio.
+anno3 1 9df67e61aabb03a7 c7fadbb9a5266302 Habla normal `vs50 ahora mucho mas lenta que antes.
+anno3 2 afc7c7a75d85cd6e dc040ed61a4a0e49 Volumen `vv30 mas bajo, y luego `vv90 mas alto otra vez.
+anno3 3 a51f301528b2474c 12157a2906d1145f Tono `vb20 grave y `vb80 agudo en una sola frase.
+anno3 4 983d37859be1ba73 9402f0a9b5b2fac3 Voz `v2 dos, `v5 cinco, y `v1 de vuelta a uno.
+anno3 5 910eb5246301506e 16756e15e6d3844c Una pausa `0 corta y `4 larga entre palabras.
+anno3 6 f7b42577ee5f5d48 363b4e3f96b8a57c Aspereza `vr40 y soplo `vf60 modificados.
+anno3 7 db50f20e73c3560a 755b35b4084b0605 Un acento grave \`literal debe leerse como texto.
+anno3 8 e333ae57fee5d8e3 a3644b7b41838d57 Velocidad por nombre `vsfast y luego `vsslow de nuevo.
+anno3 9 bd2aedba848f0f9f 3e7ed0d50130b1d1 Tamano de cabeza `vh30 y luego `vh70 en la misma linea.
+anno3 10 e1a52f2c6d8a52b9 b99b379bc0e6d423 Genero `vg1 y `vg0 alternando.
+anno3 11 7b38699f2c675d5e f2d06624d24d7c0e Antes de `ui"marca uno" y despues de la marca.
+anno3 12 1fcb1d1ce9e29e07 aa317a325d576e28 Marcador de audio `aud"pitido" en medio de una linea.
+anno3 13 f74bd922db6ddf03 26e0fd7874132bf7 `vs40 Una anotacion justo al principio del todo.
+anno3 14 09706f003f8f103e 0fc2f02cd0fff50d Terminando con una anotacion justo al final `vs60
+anno3 15 35dcee8eab45b09f fc644cb152d7994e Mal formadas `vzz y `q y `v999 todas en una linea.
+anno3 16 cf32ef7cacc57497 841bcbec162090e4 Dos `vs30`vv40 anotaciones sin nada en medio.
+anno3 17 f18568f5ac750101 8e5fe2a1d6997815 `ui"a"`ui"b" dos marcas sin nada entre ellas.
+anno3 18 f30372ec3335f8a1 50a380c2e3cf6c91 Una marca `ui"sin cerrar que nunca termina aqui
+anno3 19 0fc67921ab4eda72 039a23e8b2b27853 Mezcla `v3 voz `vs70 velocidad `vv50 volumen juntas.
+anno3 20 bcf61b9f8fbf51f5 3b5d7386f3db6044 Tabulador	y salto de linea con `vb40 un cambio.
+realworld 1 6fdc03f778368aa2 2a15d4921521c952 Habla normal `vs50 ahora mucho mas lenta que antes.
+realworld 2 bd67d26eecfa8f3e 81323a7a439ed650 Volumen `vv30 mas bajo, y luego `vv90 mas alto otra vez.
+realworld 3 c4f12f99665bd467 7856d833c5680558 Tono `vb20 grave y `vb80 agudo en una sola frase.
+realworld 4 983d37859be1ba73 4bd698380ff6202e Voz `v2 dos, `v5 cinco, y `v1 de vuelta a uno.
+realworld 5 910eb5246301506e 8f415b638a4b6230 Una pausa `0 corta y `4 larga entre palabras.
+realworld 6 92272197a47957df 97600c5907f2a578 Aspereza `vr40 y soplo `vf60 modificados.
+realworld 7 8de185ece807bf72 7ec708477276f987 Un acento grave \`literal debe leerse como texto.
+realworld 8 e333ae57fee5d8e3 3a117321fddea538 Velocidad por nombre `vsfast y luego `vsslow de nuevo.
+realworld 9 6f805806c95997e7 6a6fc6e12940d558 Tamano de cabeza `vh30 y luego `vh70 en la misma linea.
+realworld 10 e1a52f2c6d8a52b9 35a6e96c2e7e9401 Genero `vg1 y `vg0 alternando.
+realworld 11 7b38699f2c675d5e d0c5a51a041c4e67 Antes de `ui"marca uno" y despues de la marca.
+realworld 12 c8d975e6e2709ea2 ba1e10c8cbe5f02e Marcador de audio `aud"pitido" en medio de una linea.
+realworld 13 309e1c26e235ff5e 5fe52637965ba5cf `vs40 Una anotacion justo al principio del todo.
+realworld 14 0252043ce0848520 70dcff61c8e760e0 Terminando con una anotacion justo al final `vs60
+realworld 15 35dcee8eab45b09f c30b466689195bb7 Mal formadas `vzz y `q y `v999 todas en una linea.
+realworld 16 e18caf5cdcdbfa00 89ee4fe8ec08c7dd Dos `vs30`vv40 anotaciones sin nada en medio.
+realworld 17 5c95f3ac3cd8fc24 1be85245685ba777 `ui"a"`ui"b" dos marcas sin nada entre ellas.
+realworld 18 850f5aa997c17dd5 8e86c5573ad3d4ff Una marca `ui"sin cerrar que nunca termina aqui
+realworld 19 8b592047ed465e3a b260c6f640539cc5 Mezcla `v3 voz `vs70 velocidad `vv50 volumen juntas.
+realworld 20 a424faaa129181d1 c7b1cd9771d39ab5 Tabulador	y salto de linea con `vb40 un cambio.
+dict 1 0ba775696c275992 6c6ca5a120d9e0b1 Hola. Aqui habla el sintetizador de voz Eloquence.
+dict 2 712b82dd4891705e 4375410c7b6b6226 El doctor Gomez pago 1.234,56 euros el 3 de mayo de 2026 a las 19:45.
+dict 3 48ef3e35a65424d1 5254350d1792485e El rapido zorro marron salta sobre el perro perezoso; p.ej. www.ejemplo.es/ruta?q=1
+dict 4 4f93c35fe11ef413 c6e447f582c00d9d Prueba 1 2 3, ABC XYZ, palabras-con-guion y MAYUSCULAS.
+dict 5 122e83748cbfb3d2 a3f6e69d8dfa21fb Una sola palabra. Y otra mas; con "texto citado" en medio.
+dict 6 73bab19ea6e10ded a799fcc1b8c96936 Otorrinolaringologo, desoxirribonucleico, 42% de 3,14159, y el senor Perez-Lopez hijo.
+dict 7 e5d8db612df4e251 0db442a005ab911f Dijo: no lo hagas! Luego (entre parentesis) 1/2 + 3/4 = 5/4; vease p. 12.
+second 1 227103c422dbee05 89840627763b05c5 Hola. Aqui habla el sintetizador de voz Eloquence.
+second 2 548678b34cb6944e 36915c1185fe01b7 El doctor Gomez pago 1.234,56 euros el 3 de mayo de 2026 a las 19:45.
+second 3 021ad2cf1d90f7cd f5bef573ef7e0a96 El rapido zorro marron salta sobre el perro perezoso; p.ej. www.ejemplo.es/ruta?q=1
+second 4 9052f2f4149bde88 2fae16c46d70c21b Prueba 1 2 3, ABC XYZ, palabras-con-guion y MAYUSCULAS.
+second 5 0088b8fdc9b39440 7f1aae6e6acfd735 Una sola palabra. Y otra mas; con "texto citado" en medio.
+second 6 ed17f33ebd1c0dea 2c9ab30299c44fb2 Otorrinolaringologo, desoxirribonucleico, 42% de 3,14159, y el senor Perez-Lopez hijo.
+second 7 7e037fadf877d4a1 fd88bf628d96c705 Dijo: no lo hagas! Luego (entre parentesis) 1/2 + 3/4 = 5/4; vease p. 12.
+ssml 1 dbfb9af0560a281d 08ca90ac44fcbbcb <speak version="1.0" xml:lang="es-MX">Buenos dias.</speak>
+ssml 2 dbfb9af0560a281d 08ca90ac44fcbbcb <speak version="1.0" xml:lang="es-MX"><prosody rate="slow">Ahora mas despacio.</prosody> Otra vez normal.</speak>
+ssml 3 dbfb9af0560a281d 08ca90ac44fcbbcb <speak version="1.0" xml:lang="es-MX"><prosody pitch="high" range="x-high" volume="loud">Los cuatro a la vez.</prosody></speak>
+ssml 4 dbfb9af0560a281d 08ca90ac44fcbbcb <speak version="1.0" xml:lang="es-MX"><emphasis level="strong">Este</emphasis>, no aquel.</speak>
+ssml 5 dbfb9af0560a281d 08ca90ac44fcbbcb <speak version="1.0" xml:lang="es-MX"><voice gender="female">Ella lo dijo.</voice> Y el no.</speak>
+ssml 6 dbfb9af0560a281d 08ca90ac44fcbbcb <speak version="1.0" xml:lang="es-MX">Costo <say-as interpret-as="cardinal">1234</say-as> el <say-as interpret-as="ordinal">3</say-as>.</speak>
+ssml 7 dbfb9af0560a281d 08ca90ac44fcbbcb <speak version="1.0" xml:lang="es-MX">Deletrea: <say-as interpret-as="letters">abc</say-as>, y llama al <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+ssml 8 dbfb9af0560a281d 08ca90ac44fcbbcb <speak version="1.0" xml:lang="es-MX">Espera<break time="500ms"/>un momento.<mark name="aqui"/> Alli.</speak>
+ssml 9 dbfb9af0560a281d 08ca90ac44fcbbcb <speak version="1.0" xml:lang="es-MX"><sub alias="Red informatica mundial">WWW</sub> y <phoneme ph="h.E.l.oU">hola</phoneme>.</speak>
+ssml 10 dbfb9af0560a281d 08ca90ac44fcbbcb <speak version="1.0" xml:lang="es-MX">El niño preguntó: ¿qué tal?, con a &amp; b &lt; c.</speak>

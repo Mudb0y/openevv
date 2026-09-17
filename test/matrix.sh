@@ -47,13 +47,14 @@ store=$here/samples
 # These are IBM's own, the ones its ini names each section for; a language
 # added to the tree adds a line here and to test/compare.sh, which has the
 # same list for the same reason.
-ALL="enus engb dede eses esus frfr frca itit plpl jajp"
+ALL="enus engb dede eses esus esmx frfr frca itit plpl jajp"
 language_of() {
     case $1 in
     enus) echo 0x10000 ;;
     engb) echo 0x10001 ;;
     eses) echo 0x20000 ;;
     esus) echo 0x20001 ;;
+    esmx) echo 0x20002 ;;
     frfr) echo 0x30000 ;;
     frca) echo 0x30001 ;;
     dede) echo 0x40000 ;;
