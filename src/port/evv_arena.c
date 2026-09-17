@@ -650,15 +650,15 @@ static int low_open(void)
     return 1;
 }
 
-char *evv_low_strdup(const char *s)
+void *evv_low_alloc(size_t n)
 {
     size_t    want;
     low_head *b;
 
-    if (s == 0 || !low_open())
+    if (n == 0 || !low_open())
         return 0;
 
-    want = (strlen(s) + 1 + 7u) & ~(size_t)7u;
+    want = (n + 7u) & ~(size_t)7u;
     for (b = low_free; b != 0; b = b->next) {
         if (b->used || b->size < want)
             continue;
@@ -673,10 +673,21 @@ char *evv_low_strdup(const char *s)
             b->size = want;
         }
         b->used = 1;
-        memcpy(b + 1, s, strlen(s) + 1);
-        return (char *)(b + 1);
+        return (void *)(b + 1);
     }
     return 0;
+}
+
+char *evv_low_strdup(const char *s)
+{
+    char *got;
+
+    if (s == 0)
+        return 0;
+    got = (char *)evv_low_alloc(strlen(s) + 1);
+    if (got != 0)
+        memcpy(got, s, strlen(s) + 1);
+    return got;
 }
 
 void evv_low_free(void *p)

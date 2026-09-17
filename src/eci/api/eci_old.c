@@ -229,7 +229,11 @@ int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data)
         break;
 
     case 3: {   /* a phoneme reached, with everything known about it */
-        char *rec = (char *)(size_t)param;
+        /* The record arrives as a reference into the region, the same as an
+           index mark's name does below: ph_findPhoneme answers EVV_REF of the
+           phoneme it found. Read as a bare address it is the low half of one
+           and points at nothing. */
+        char *rec = EVV_AT(char *, param);
         int32_t mode;
 
         if (!h || !OI_CALLBACK(h))
@@ -267,8 +271,21 @@ int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data)
             for (i = 0; i < 8; i++)
                 OI_REPORT(h)[0x0e + i] = rec[0x10 + i * 4];
         }
-        eo_tell(h, inst, ECI_PHONEME_INDEX, (int32_t)(size_t)OI_REPORT(h),
-                &ret);
+        /* And out to the caller, whose callback takes `int param'. The report
+           lives in the instance and the instance may sit anywhere, so what
+           goes across is a copy in the little low region -- the same shape as
+           an index mark's name below, and for the same reason. The instance
+           keeps its own copy either way, which is what IBM handed over. */
+        {
+            char *low = (char *)evv_low_alloc(sizeof ((OldInst *)0)->report);
+
+            if (low != 0) {
+                memcpy(low, OI_REPORT(h), sizeof ((OldInst *)0)->report);
+                eo_tell(h, inst, ECI_PHONEME_INDEX,
+                        (int32_t)(intptr_t)low, &ret);
+                evv_low_free(low);
+            }
+        }
         break;
     }
 

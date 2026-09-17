@@ -78,7 +78,12 @@ char *evv_arena_strdup(const char *s);
    A few short strings at a time, freed as soon as the callback has had them,
    so a page or two and a free list is the whole of it. Answers nought where
    there is no room, and the caller gets no name rather than a wrong
-   pointer. */
+   pointer.
+
+   A phoneme index report goes the same way and is not a string -- it is a
+   fixed record with a mode word in the middle of it -- so the sized form is
+   what the region really offers and the string one is a wrapper over it. */
+void *evv_low_alloc(size_t n);
 char *evv_low_strdup(const char *s);
 void  evv_low_free(void *p);
 #define EVV_HAVE_LOW 1
@@ -142,6 +147,7 @@ static inline void *evv_at(int32_t r)
 /* And no little low region either: where a pointer is four bytes wide it
    already fits in the parameter ECICallback hands the caller, so the copy
    the sixty-four bit build makes is an ordinary one here. */
+#define evv_low_alloc(n)    malloc(n)
 #define evv_low_strdup(s)   strdup(s)
 #define evv_low_free(p)     free(p)
 
