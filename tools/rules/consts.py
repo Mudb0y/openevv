@@ -38,6 +38,7 @@ usage: tools/rules/consts.py <tag>...        write each language's authored stor
        tools/rules/consts.py write <tag>      the C from the text, for real
 """
 
+import glob
 import os
 import sys
 
@@ -306,8 +307,15 @@ def one(tag):
     if not os.path.isdir(lang):
         print("consts: there is no lang/%s" % tag)
         return False
-    source = os.path.join(lang, "rules", "constants")
-    constants = read_constants(source) if os.path.exists(source) else []
+    # The hand-written ones first and then any a tool wrote, so that a
+    # generated file may be thrown away and made again without disturbing
+    # where the hand-written ones fall in the store. tools/rules/letters.py
+    # writes `constants.letters', one string per letter-to-sound arm.
+    constants = []
+    for source in [os.path.join(lang, "rules", "constants")] + sorted(
+            glob.glob(os.path.join(lang, "rules", "constants.*"))):
+        if os.path.exists(source):
+            constants += read_constants(source)
     at = write_store(tag, os.path.join(lang, "delta_authored_%s.c" % tag),
                      constants)
     symbols = os.path.join(lang, "rules", "symbols")

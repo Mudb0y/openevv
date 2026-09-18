@@ -1,0 +1,14 @@
+# US English letter-to-sound.
+#
+# One block a letter and its arms in order, the first that matches winning.
+# The last arm of a block is the bare letter: what it says when nothing else
+# applies. `says nothing' swallows the letters and lays no phones down.
+#
+# The letters are the language's own characters and the phones are the ETI
+# phone letters, the same ones enus.dict uses. tools/rules/letters.py writes
+# rules/et_phone.up out of this, and test/words.sh says whether any of 24,318
+# words moved.
+
+letter b
+  bt   says t     # debt
+  b    says b

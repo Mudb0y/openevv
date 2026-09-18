@@ -367,9 +367,18 @@ class Compiler:
             name = w.pop(0)
             if name == "unwind":
                 return ("slotaddr", self.slot(self.r.unwind())), 4, False
-            if name not in self.r.locals:
-                fault(where, "%r is not a local of this rule" % name)
-            return ("slotaddr", self.slot(self.r.locals[name][0])), 4, False
+            if name in self.r.locals:
+                return ("slotaddr", self.slot(self.r.locals[name][0])), 4, False
+            # Where a variable of the language sits, rather than what is in
+            # it. The letter rules all want this: the scan pointer is saved
+            # into one and the range to be spelled is read out of two, and
+            # every one of those calls is handed the address rather than the
+            # pointer in it. The machine has an operand for it -- `state' with
+            # an offset is the address and `statefld' is what is there.
+            if name in self.r.variables:
+                return ("state", self.r.variables[name][0]), 4, False
+            fault(where, "%r is neither a local nor a variable of this rule"
+                  % name)
         if head == "cell":
             # A cell is what the machine writes where a rule hands it the
             # address of a local: a kind, a field and a value. Which of the

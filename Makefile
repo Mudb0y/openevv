@@ -688,6 +688,14 @@ upper:
 upper-prove:
 	@python3 tools/rules/notation.py upper-prove
 
+# Letter-to-sound out of lang/<tag>/letters, which is the file a person edits.
+# It writes rules/et_phone.up and the strings the arms name, and `constants'
+# lays those down; EVVLANG says which language, as everywhere else.
+.PHONY: letters
+letters:
+	@python3 tools/rules/letters.py write $(notdir $(EVVLANG))
+	@$(MAKE) --no-print-directory constants
+
 upper-check:
 	@bash tools/rules/check-upper.sh
 

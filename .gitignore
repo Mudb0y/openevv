@@ -41,3 +41,10 @@ speak.wav
 # The provenance census's site table, written by the decompiler beside the
 # rules it numbers. Generated like the rules themselves.
 lang/*/provenance-sites-*.txt
+
+# What tools/rules/letters.py writes out of lang/<tag>/letters: the letter
+# rules in the upper form and the byte strings their arms name. The file to
+# keep is `letters' itself; these are made from it by `make letters', the way
+# the rules a build compiles are made from the text beside them.
+lang/*/rules/et_phone.up
+lang/*/rules/constants.letters

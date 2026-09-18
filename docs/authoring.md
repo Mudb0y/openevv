@@ -970,3 +970,35 @@ A front end of ours does not have to invent English letter-to-sound, and should 
 What is missing is a notation to transcribe them *into*. The upper form is not it: this file opens by saying so, and writing 271 letter rules in frames and planted tests would be the same mistake at greater length. What these rules want is the notation they are already written in underneath -- a letter, what is to its left, what is to its right, and what it says -- which is what every other synthesiser's letter-to-sound file looks like and what an author can actually edit.
 
 So the next design is that notation and a compiler for it, and the transcription is the work after. Neither is started.
+
+## A notation for letter-to-sound, 18 September 2026
+
+`lang/enus/letters` is the file, `tools/rules/letters.py` is the compiler, and what they do was proved end to end before anything else was attempted:
+
+    letter b
+      bt   says t     # debt
+      b    says b
+
+One block a letter, arms in order, the first that matches winning, the last arm the bare letter -- what it says when nothing else applies. The letters are the language's own characters and the phones the ETI phone letters `enus.dict` already uses.
+
+The compiler writes `lang/<tag>/rules/et_phone.up`, which the build compiles over the lifted text in the ordinary way, so a rule written here stands exactly where IBM's compiled one stood. It also mints the byte strings an arm names into `lang/<tag>/rules/constants.letters`, because a symbol belongs to the object the rule came out of and a letter rule of ours cannot name the strings IBM's rules name -- those belong to `glob.obj`. `tools/rules/consts.py` reads that file beside the hand-written one and lays both down under no object at all, which is where a constant of the language's own goes.
+
+**It reaches the audio, which was checked by breaking it on purpose.** With `bt says t` the engine says `debt` as `dEt`; changing that one line to `bt says d` and rebuilding, it says `dEd`. All 24,318 words are otherwise unchanged. So the chain from a word in a text file to the sound is real and complete.
+
+Two things the upper form needed on the way, both small and both proved inert for everything that existed. `addr <name>` now takes a variable of the language as well as a local, answering the machine's own `state` operand with an offset, which is the address rather than what is in it; every letter rule wants it, since the scan pointer is saved into one variable and the range to be spelled is read out of two. And `tools/rules/consts.py` reads `rules/constants.*` beside `rules/constants`. `make upper-prove` still compiles all 1,954 wrappers byte for byte.
+
+### What the second letter taught, which is the whole of the next design
+
+`w` was next and it is two arms -- `wr says r` for *write* and *wrong*, `w says w` otherwise. Written that way it silenced the w correctly and moved eight other words, and the eight say exactly what is missing.
+
+`obtainable`, `obtaining`, `obtrusive`, `obtuser`, `subterfuges`, `subtracted`, `subtraction` and `subtracts` all keep their b. **So `b` before `t` is not silent; `b` before `t` *inside one piece of the word* is.** `debt` and `subtle` are one piece and lose it; `ob-tain` and `sub-tract` are a prefix and a root and keep it. IBM's `b_rules` tests exactly that before it spells anything, through a pointer the earlier passes left in the state, and dropping the test is what moved those eight words.
+
+So an arm is not only a run of letters and the phones it says. It carries conditions, and the first of them is *in one piece*. The emission has that test in it now because `b` needs it, which is the wrong way round: it should be something the file says and the compiler emits, and `w`'s own guard is a different pointer again and has not been identified.
+
+**That is the next design and it is where this stops.** The vocabulary of conditions has to be read out of the rules that use them rather than guessed: what each pointer in the state means, and what to call it in a file a person edits.
+
+### Why the letter rules are not in the tree yet
+
+`make upper-check` speaks every case through a build carrying the authored rules and one carrying IBM's and requires the two to enter the same rules and make the same calls with the same arguments. A generated letter rule cannot pass that and should not be asked to: it calls the machine's primitives directly where IBM's calls a wrapper baked to one string, it numbers its plants its own way, and it will eventually say things IBM never said. That is the point of writing it.
+
+So the gate and the notation want different things, and which gives is a decision rather than a detail. What is in the tree is the notation, the compiler and the two tool changes, with `et_phone.up` deliberately not committed, so every gate stands exactly where it did: 24,318 words unchanged, 979 cases unchanged, the wrappers byte for byte, and `upper-check` the same call for call over 7,990,752 lines.
