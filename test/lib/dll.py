@@ -98,7 +98,8 @@ def main(path, out, text):
     langs = (ctypes.c_uint * count.value)()
     dll.eciGetAvailableLanguages(langs, ctypes.byref(count))
 
-    h = dll.eciNewEx(langs[0])
+    lang_id = int(sys.argv[4], 16) if len(sys.argv) > 4 else langs[0]
+    h = dll.eciNewEx(lang_id)
     if not h:
         raise SystemExit("dll.py: it would not make an instance")
 
@@ -171,6 +172,6 @@ def main(path, out, text):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
+    if len(sys.argv) < 4 or len(sys.argv) > 5:
         raise SystemExit(__doc__.strip().splitlines()[-1])
     sys.exit(main(sys.argv[1], sys.argv[2], sys.argv[3]))

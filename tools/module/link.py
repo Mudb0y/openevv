@@ -268,16 +268,77 @@ def variant_sizes(o):
 
 NSTMT = 10
 
+# The two layouts the walker knows. IBM's COFF objects (which the original
+# linker and the iOS/Apple builds differ from) keep four-byte pointers, ten
+# words to a statement record, and fourteen bytes to a field descriptor; the
+# Apple AArch64 builds keep eight-byte pointers, sit the name a word into the
+# record, and give a field descriptor forty bytes. A layout names, in
+# section-relative offsets, where in one record (stride `stmt') each pointer
+# sits, where in one descriptor (stride `fdesc') each part sits, which scalar
+# words exist, and where the mark bytes are. A None offset means the word is
+# nought in that layout.
+LAYOUT_COFF = {
+    "P": 4,
+    "stmt": 0x40, "name": 0x00, "fields": 0x04, "get": 0x08,
+    "put": 0x0c, "variants": 0x10, "deflt": 0x14,
+    "scalars": (("u18", 0x18), ("u1c", 0x1c), ("nfields", 0x20),
+                ("length", 0x24), ("stride", 0x28), ("varlen", 0x2c),
+                ("whole", 0x30), ("u38", 0x38), ("u3c", 0x3c)),
+    "marks": (0x34, 0x35, 0x36, 0x37),
+    "marker": None,
+    "fdesc": 0x18, "fname": 0x00, "ffmt": 0x04, "fvals": 0x08,
+    "fu0c": 0x0c, "fnv": 0x10, "fnv_size": "half", "fkind": 0x12,
+    "fflag": 0x14,
+}
 
-def model_of(o):
+LAYOUT_APPLE64 = {
+    "P": 8,
+    "stmt": 0x60, "name": 0x08, "fields": 0x10, "get": 0x18,
+    "put": 0x20, "variants": 0x28, "deflt": 0x30,
+    "scalars": (("u18", None), ("u1c", None), ("nfields", 0x48),
+                ("length", 0x4c), ("stride", None), ("varlen", None),
+                ("whole", None), ("u38", 0x38), ("u3c", 0x58)),
+    "marks": None,
+    "marker": (0x00, 1),   # a word worth one before the name... for all but
+                           # the first record, which reads it as nought
+    "fdesc": 0x28, "fname": 0x00, "ffmt": 0x08, "fvals": 0x10,
+    "fu0c": 0x18, "fnv": 0x20, "fnv_size": "word", "fkind": None,
+    "fflag": None,
+}
+
+
+def _statement_base(o, sec, base, layout):
+    """The first statement record, and its name, wherever they really sit.
+
+    IBM's COFF objects open the table with the first record, but Apple's
+    builds lay a word of their own before a record's name, and the table
+    symbol can sit a word or two before the records proper, so step until
+    a pointer slot reads as a plain name.
+    """
+    for off in range(0, 0x80, 8):
+        nm, _ = o.points_to(sec, base + off)
+        name = o.string(nm) if nm else None
+        if name and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
+            return base + off - layout["name"], name
+    return base, None
+
+
+def model_of(o, layout=None):
     """The statement table as data, with nothing of the object left in it.
 
     Everything the table points at comes out as a value here -- a name as its
     text, an accessor as the offset it adds, a fresh record as its bytes -- so
     that the writer below can be handed either this or the same thing read out
-    of text, and cannot tell which.
+    of text, and cannot tell which. The records sit as LAYOUT_COFF in IBM's
+    objects and as LAYOUT_APPLE64 in the Apple AArch64 builds, which an object
+    that knows its pointer width (an Elf) declares through its _is64.
     """
+    if layout is None:
+        layout = LAYOUT_APPLE64 if getattr(o, "_is64", False) \
+            else LAYOUT_COFF
+    P = layout["P"]
     sec, base = o.at("_vstmtbl")
+    base, _ = _statement_base(o, sec, base, layout)
 
     # How far a run of bytes reaches: to the next thing named in the same
     # section, or the end of it.
@@ -302,21 +363,20 @@ def model_of(o):
 
     stmts = []
     for i in range(NSTMT):
-        at = base + i * 0x40
+        at = base + i * layout["stmt"]
         e = {}
-        name_sym, _ = o.points_to(sec, at + 0x00)
+        name_sym, _ = o.points_to(sec, at + layout["name"])
         e["name"] = o.string(name_sym)
-        fields = o.points_to(sec, at + 0x04)
-        get = o.points_to(sec, at + 0x08)
-        put = o.points_to(sec, at + 0x0c)
-        variants = o.points_to(sec, at + 0x10)
-        deflt = o.points_to(sec, at + 0x14)
-        for k, off in (("u18", 0x18), ("u1c", 0x1c), ("nfields", 0x20),
-                       ("length", 0x24), ("stride", 0x28), ("varlen", 0x2c),
-                       ("whole", 0x30), ("u38", 0x38), ("u3c", 0x3c)):
-            e[k] = o.word(sec, at + off)
-        e["marks"] = [o.byte(sec, at + 0x34), o.byte(sec, at + 0x35),
-                      o.byte(sec, at + 0x36), o.byte(sec, at + 0x37)]
+        fields = o.points_to(sec, at + layout["fields"])
+        get = o.points_to(sec, at + layout["get"])
+        put = o.points_to(sec, at + layout["put"])
+        variants = o.points_to(sec, at + layout["variants"])
+        deflt = o.points_to(sec, at + layout["deflt"])
+        for key, off in layout["scalars"]:
+            e[key] = o.word(sec, at + off) if off is not None else 0
+        marks = layout["marks"]
+        e["marks"] = ([o.byte(sec, at + off) for off in marks]
+                      if marks else [0, 0, 0, 0])
 
         fsec, fbase = o.symbol[fields[0]]
         fbase += fields[1]
@@ -327,24 +387,29 @@ def model_of(o):
 
         e["field"] = []
         for k in range(e["nfields"]):
-            fat = fbase + k * 0x18
+            fat = fbase + k * layout["fdesc"]
             f = {}
-            nm, _ = o.points_to(fsec, fat + 0x00)
-            fmt, _ = o.points_to(fsec, fat + 0x04)
-            values = o.points_to(fsec, fat + 0x08)
+            nm, _ = o.points_to(fsec, fat + layout["fname"])
+            fmt, _ = o.points_to(fsec, fat + layout["ffmt"])
+            values = o.points_to(fsec, fat + layout["fvals"])
             f["name"] = o.string(nm) if nm else None
             f["format"] = o.string(fmt) if fmt else None
-            f["u0c"] = o.word(fsec, fat + 0x0c)
-            nvalues = o.half(fsec, fat + 0x10)
-            f["kind"] = o.half(fsec, fat + 0x12)
-            f["flag"] = o.byte(fsec, fat + 0x14)
+            f["u0c"] = (o.word(fsec, fat + layout["fu0c"])
+                        if layout["fu0c"] is not None else 0)
+            nvalues = (getattr(o, layout["fnv_size"])(
+                           fsec, fat + layout["fnv"])
+                       if layout["fnv"] is not None else 0)
+            f["kind"] = (o.half(fsec, fat + layout["fkind"])
+                         if layout["fkind"] is not None else 0)
+            f["flag"] = (o.byte(fsec, fat + layout["fflag"])
+                         if layout["fflag"] is not None else 0)
 
-            gsym = o.points_to(gsec, gbase + k * 4)[0]
+            gsym = o.points_to(gsec, gbase + k * P)[0]
             n = accessor_offset(o, gsym)
             if n is None:
                 raise ValueError("%s is not a plain accessor" % gsym)
             f["read"] = n
-            psym = o.points_to(psec, pbase + k * 4)[0]
+            psym = o.points_to(psec, pbase + k * P)[0]
             if psym:
                 shape = setter_shape(o, psym)
                 if shape is None:
@@ -358,7 +423,7 @@ def model_of(o):
                 vbase += values[1]
                 names = []
                 for j in range(nvalues):
-                    who, _ = o.points_to(vsec, vbase + j * 4)
+                    who, _ = o.points_to(vsec, vbase + j * P)
                     names.append(o.string(who) if who else None)
                 f["values"] = names
             else:
