@@ -56,7 +56,12 @@ phonemes = sibling("module/phonemes")
 # debt and in subtle, and says /b/ in ob-tain and in sub-tract, where the b
 # ends a prefix and the t starts a root. Without this test those four words
 # and four more come out wrong, which is how it was found.
-LEFT, RIGHT, ONEPIECE = 844, 852, 884
+# The two ends of the range an arm spells, and the two ends of the piece
+# of the word being read -- the run the engine's earlier passes decided is
+# one root or one prefix. An arm's condition is a test that the scan has
+# arrived at one of those two, which is what `test_ptr' answers.
+LEFT, RIGHT = 844, 852
+PIECE_START, PIECE_END = 876, 884
 
 # Which field is which. A field is a level of the spine: 1 is the letters the
 # scan walks and 2 is the phones an arm lays down.
@@ -136,10 +141,20 @@ class Strings(object):
 
 # ---- the file ------------------------------------------------------------
 
+CONDITIONS = ("at start", "at end")
+
+# What a letter may be said to be, rather than which letter it is. These are
+# the values of the input statement's `letter_type` field, which is the
+# language's own answer and not ours: 1 vow, 2 con, 3 glid.
+CLASSES = {"vowel": 1, "consonant": 2, "glide": 3}
+
+
 class Arm(object):
-    def __init__(self, where, letters, phones, note):
+    def __init__(self, where, letters, before, when, phones, note):
         self.where = where
         self.letters = letters      # the whole run, the block's letter first
+        self.before = before        # letters that must follow, not swallowed
+        self.when = when            # "", "at start" or "at end"
         self.phones = phones        # [] for an arm that says nothing
         self.note = note
 
@@ -170,17 +185,27 @@ def parse(path):
         if "says" not in w:
             raise Trouble("%s: an arm is letters, `says', and phones" % where)
         at = w.index("says")
-        if at != 1:
-            raise Trouble("%s: an arm names one run of letters before `says'"
-                          % where)
         letters, said = w[0], w[at + 1:]
+        rest = w[1:at]
+        before = ""
+        if rest[:1] == ["before"]:
+            if len(rest) < 2:
+                raise Trouble("%s: `before' what?" % where)
+            before = rest[1]
+            rest = rest[2:]
+        when = " ".join(rest)
+        if when and when not in CONDITIONS:
+            raise Trouble("%s: an arm may say %s and nothing else, not %r"
+                          % (where, " or ".join("`%s'" % c
+                                                for c in CONDITIONS), when))
         if not said:
             raise Trouble("%s: `says' what?" % where)
         phones = [] if said == ["nothing"] else said
         if not letters.startswith(cur[0]):
             raise Trouble("%s: this is the %s block, so an arm starts with %s"
                           % (where, cur[0], cur[0]))
-        cur[1].append(Arm(where, letters, phones, note))
+        cur[1].append(Arm(where, letters, before, when, phones,
+                          note))
     return blocks
 
 
@@ -201,7 +226,7 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
                       " nothing else applies, so it is bare %s"
                       % (letter, letter, letter))
     for a in arms[:-1]:
-        if a.letters == letter:
+        if a.letters == letter and not a.before and not a.when:
             raise Trouble("%s: a bare %s matches everything, so nothing after"
                           " it can be reached" % (a.where, letter))
 
@@ -224,7 +249,8 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
     w("  afresh")
     w("  variable leftpoint word %d" % LEFT)
     w("  variable rightpoint word %d" % RIGHT)
-    w("  variable onepiece word %d" % ONEPIECE)
+    w("  variable piecestart word %d" % PIECE_START)
+    w("  variable pieceend word %d" % PIECE_END)
     w("")
     w("  call ZZfenceZZstring376")
 
@@ -251,6 +277,20 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
             if i:
                 w("place arm%d on %d" % (i, tag_of[("fall", i)]))
             w("  plant test %s as %d" % (nxt, tag_of[("fall", i + 1)]))
+            if a.when == "at start":
+                # The run has to begin where the piece does. Put the scan on
+                # the letter walking left and ask whether it is already at the
+                # piece's first node.
+                w("  call lpta_loadp addr leftpoint")
+                w("  call setscan_l %d" % LETTERS)
+                w("  if answer is not 0")
+                w("    go to %s" % nxt)
+                w("  end")
+                w("  call lpta_loadp addr piecestart")
+                w("  call test_ptr")
+                w("  if answer is not 0")
+                w("    go to %s" % nxt)
+                w("  end")
             w("  call lpta_loadp addr leftpoint")
             w("  call setscan_r %d" % LETTERS)
             w("  if answer is not 0")
@@ -265,11 +305,33 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
             w("  end")
             w("place body%d on %d" % (i, tag_of[("body", i)]))
             w("  call savescptr %d addr rightpoint" % tag_of[("body", i)])
-            w("  call lpta_loadp addr onepiece")
-            w("  call test_ptr")
-            w("  if answer is not 0")
-            w("    backtrack")
-            w("  end")
+            if a.before in CLASSES:
+                # What follows has to be of a kind rather than a letter, which
+                # is how a rule says `a vowel' without naming twenty of them.
+                w("  call testFldeq %d 4 %d" % (LETTERS, CLASSES[a.before]))
+                w("  if answer is not 0")
+                w("    backtrack")
+                w("  end")
+            elif a.before:
+                # Letters that have to follow and are not swallowed. The scan
+                # is where the run ended and the range to spell is already
+                # saved, so this only reads on.
+                ctx = letters_of(a.before)
+                w("  call test_string_s %d %d sym %s"
+                  % (LETTERS, len(ctx),
+                     known.name("lts", ctx, a.before)))
+                w("  if answer is not 0")
+                w("    backtrack")
+                w("  end")
+            if a.when == "at end":
+                # And the run has to finish where the piece does. The scan is
+                # past the last letter it matched, so this asks whether that
+                # is the piece's last node.
+                w("  call lpta_loadp addr pieceend")
+                w("  call test_ptr")
+                w("  if answer is not 0")
+                w("    backtrack")
+                w("  end")
             w(spell(a, known, phones_of))
             w("  go to laid")
         else:
@@ -377,12 +439,16 @@ def main(argv):
             # recorded. Say it here too, where the answer is: a string is
             # minted by this tool and laid down by tools/rules/consts.py,
             # and `make letters' is the two together.
+            # Said rather than refused: `make letters' is this tool and
+            # tools/rules/consts.py in that order, so failing here would stop
+            # the run that was about to lay them down. A build that goes on
+            # to compile a rule naming one of these stops by itself, with the
+            # emitter saying the symbol has nowhere recorded.
             print("%s: %d string%s this names %s not laid down yet (%s)."
                   " Run make letters."
                   % (tag, len(missing), "" if len(missing) == 1 else "s",
                      "is" if len(missing) == 1 else "are",
                      ", ".join(missing)))
-            return 1
         print("%s: rules/et_phone.up and rules/constants.letters written"
               % tag)
         return 0

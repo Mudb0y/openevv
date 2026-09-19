@@ -10,5 +10,28 @@
 # words moved.
 
 letter b
-  bt   says t     # debt
+  bt at end   says t     # debt
   b    says b
+
+letter w
+  wr at start   says r   # write, wrong
+  w    says w
+
+letter d
+  dg   says J     # judge, badge
+  dj   says J     # adjust
+  d    says d
+
+letter m
+  mech          says m E k # mechanic, mechanism
+  mn at start   says n     # mnemonic
+  mn at end     says m     # autumn, column, damn
+  mb at end     says m     # lamb, comb
+  m             says m
+
+letter n
+  ng at end               says G   # sing, singing
+  ng before n at end      says G
+  ng before then at end   says G   # strengthen
+  ng before ton at end    says G
+  n                       says n

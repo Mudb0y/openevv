@@ -995,9 +995,13 @@ Two things the upper form needed on the way, both small and both proved inert fo
 
 So an arm is not only a run of letters and the phones it says. It carries conditions, and the first of them is *in one piece*. The emission has that test in it now because `b` needs it, which is the wrong way round: it should be something the file says and the compiler emits, and `w`'s own guard is a different pointer again and has not been identified.
 
-**That is the next design and it is where this stops.** The vocabulary of conditions has to be read out of the rules that use them rather than guessed: what each pointer in the state means, and what to call it in a file a person edits.
+**The conditions turned out to be two, and they are `at start` and `at end`.** `test_ptr` is not a test that a pointer is valid, which is what its name suggests; it walks the scan from where it is and answers yes when the scan arrives at the node the register points at. So the guard asks whether the run an arm matched begins or ends where the piece of the word does -- the piece being what the earlier passes decided is one root or one prefix, whose two ends are variables 110 and 111 at offsets 876 and 884.
 
-What is known so far, read statically and not yet witnessed. The letter rules work through two pairs of range ends, not one: variables 106 and 107 at offsets 844 and 852 are the range an arm spells, and 110 and 111 at 876 and 884 are a second range, the one `setd_lookup` is run over -- `ZZlprp_load_vvg__setd0110_0111` loads that pair and does a set lookup between them. The guard each arm makes is `test_ptr` on one end of that second pair: `b_rules` tests 111 and `w_rules` tests 110. So the condition is about the piece of the word being read rather than about the letters, which is what the eight words say too. Which end an arm tests is not a matter of which way it scanned -- both of these grow rightwards -- and settling it wants `tools/module/witness.py` at run time rather than more reading.
+`b` is *bt at end says t*: `debt` yes, `ob-tain` and `sub-tract` no, because there the b ends a prefix and the t starts a root. `w` is *wr at start says r*: `write` and `wrong`.
+
+Both were proved to be live and to be able to fail, which is not the same as the gate being green. Giving `b`'s arm `at start` instead makes `debt` come out `dEbt`, because the b is not where the piece begins. `w`'s `at start` is the honest exception: no word in the list distinguishes it, because the earlier passes turn a mid-word `aw` into one vowel token before `w_rules` ever sees it, so a mid-word `wr` does not reach the rule. It is kept because IBM's rule tests it and it costs nothing, and it is recorded here as unobserved rather than proved.
+
+The letter rules work through two pairs of range ends, not one: variables 106 and 107 at offsets 844 and 852 are the range an arm spells, and 110 and 111 at 876 and 884 are the two ends of the piece being read -- the pair `setd_lookup` is run over, which `ZZlprp_load_vvg__setd0110_0111` loads.
 
 ### A rule written afresh, and what holds it
 
@@ -1014,3 +1018,20 @@ Four things hold a rule written afresh instead, and the first is the surprise. *
 Every build writes the letter rules out of `lang/<tag>/letters`, the same way it writes the rules a build compiles out of the text beside them, so there is no second copy to go stale. `et_phone.up` and `constants.letters` are made and gitignored; `letters` is the only thing to edit.
 
 The one step that is not automatic is laying a new string down. A string an arm names lives in the language's own store, which is a file in the tree, so an arm that wants a string nothing has named yet needs `make letters` -- the compiler and `tools/rules/consts.py` together -- before an ordinary build will work. The compiler says so by name when it happens.
+
+## Five letters, and how a letter gets transcribed
+
+`b`, `w`, `d`, `m` and `n` are ours now, out of `lang/enus/letters`, with all 24,318 words unchanged. Between them they exercise everything the notation can say:
+
+    letter m
+      mech          says m E k # mechanic, mechanism
+      mn at start   says n     # mnemonic
+      mn at end     says m     # autumn, column, damn
+      mb at end     says m     # lamb, comb
+      m             says m
+
+An arm is a run of letters, optionally what must follow it, optionally where in the piece it must fall, and what it says. `before <letters>` requires letters that are not swallowed -- `ng before then at end says G` is *strengthen* -- and `before vowel`, `before consonant` and `before glide` require a kind instead, which is the input statement's own `letter_type` field and not a list of ours.
+
+**The method is read, guess, and let the gate correct you, and it is quick.** `tools/rules/strings.py <tag> --rule <name>` prints a rule's calls with its strings read out in both alphabets, which says what the arms are within a minute. Write them, build, run `make words`, and the words that moved say what was wrong -- not vaguely, but by name. `m` took three rounds: `mn at start says n` moved nineteen words and every one of them said the rule was the other way round, `at end` left eight `mech` words, and adding `mech says m E k` left `mnemonic`, which wanted the first guess back as a second arm. Ten minutes, and nothing about it needed reading IBM's rule a second time.
+
+`d` and `n` were right first time. `q` was not and is not in yet: *qu before e at end says k* for `antique` and *qu before vowel says k w* for `quick` leaves `etiquette` and `tourniquet`, which want a condition on what stands to the *left*. A `after <letters>` was written for it and does not work -- a reversed scan reads a node's left link rather than its value, so testing letters leftwards is not the mirror of testing them rightwards -- and it was taken out rather than shipped broken. That is the next thing the notation needs, and the twenty-one letters after it are waiting on it.

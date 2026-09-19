@@ -16,6 +16,7 @@ That is the whole of reading a letter-to-sound rule.  `b_rules' tests
 
     tools/rules/strings.py <tag> <symbol>...     what each one says
     tools/rules/strings.py <tag> --in <object>   every symbol of one object
+    tools/rules/strings.py <tag> --rule <name>   one rule's calls, strings read
 """
 
 import os
@@ -87,11 +88,75 @@ def say(tag, names, only=None):
             print("   phones  %s" % " ".join(phones.get(c, "<%d>" % c) for c in raw))
 
 
+def one_rule(tag, name):
+    """A rule's calls with the strings it names read out beside them.
+
+    A letter rule is a list of arms and an arm is a scan, a test and an
+    insertion, so what it does is readable the moment the strings are: the
+    calls alone say scan, test, save, insert, and the strings say which
+    letters and which phones.
+    """
+    store, sym = stores(tag), symbols(tag)
+    letters = codes(tag, "alphabet.py")
+    phones = codes(tag, "phonemes.py")
+
+    def read(name, obj):
+        for at, where, off in sym.get(name, []):
+            if at != obj and at != "glob.obj":
+                continue
+            b = store.get(where)
+            if b is None:
+                continue
+            end = off
+            while end < len(b) and b[end]:
+                end += 1
+            raw = bytes(b[off:end])
+            return ("%s = letters %r, phones %r"
+                    % (name,
+                       "".join(letters.get(c, "<%d>" % c) for c in raw),
+                       " ".join(phones.get(c, "<%d>" % c) for c in raw)))
+        return name
+
+    import glob as _glob
+    inside = False
+    obj = None
+    for path in sorted(_glob.glob(os.path.join(ROOT, "lang", tag,
+                                               "rules", "*.dr"))):
+        for line in open(path):
+            w = line.split()
+            if w[:1] == ["rule"] and len(w) > 1:
+                inside = w[1] == name
+                if inside and len(w) > 3:
+                    obj = w[3]
+                continue
+            if not inside:
+                continue
+            if line.rstrip() == "end":
+                return True
+            if w[:1] == ["label"]:
+                print(line.rstrip())
+            elif w[:1] == ["call"]:
+                entry = w[1]
+                said = ""
+                m = re.search(r"(ZZstring\d+|string_\d+)$", entry)
+                if m:
+                    said = "   -- %s" % read(m.group(1), obj)
+                print("  call %s%s" % (entry, said))
+            elif w[:2] == ["push", "sym"]:
+                print("  push sym %s   -- %s" % (w[2], read(w[2], obj)))
+    return False
+
+
 def main(argv):
     if len(argv) < 2:
         print(__doc__.strip())
         return 2
     tag = argv[0]
+    if argv[1] == "--rule":
+        if not one_rule(tag, argv[2]):
+            print("strings: no rule called %s" % argv[2])
+            return 1
+        return 0
     if argv[1] == "--in":
         obj = argv[2]
         sym = symbols(tag)
