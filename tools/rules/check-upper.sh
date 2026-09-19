@@ -116,6 +116,18 @@ named=$(for f in "${files[@]}"; do awk '$1 == "rule" { print $2 }' "$f"; done)
 [ -n "$named" ] || { echo "upper: those files name no rule" >&2; exit 2; }
 echo "upper: $(echo "$named" | wc -w) rules: $(echo $named)"
 
+# The rules that say `afresh'. A rule of ours that stands in for one of IBM's
+# has to enter the same rules and make the same calls; one written anew has
+# nothing to be held against, since it calls a primitive where IBM's called a
+# wrapper for it, numbers its plants its own way, and will say what IBM never
+# said. So its own trace is dropped from both sides and what holds it here is
+# the audio, with test/words.sh and test/matrix.sh outside.
+afresh=$(for f in "${files[@]}"; do
+    awk '$1 == "rule" { name = $2 } $1 == "afresh" { print name }' "$f"
+done)
+[ -z "$afresh" ] || echo "upper: written afresh, so held by the sound alone:" \
+                         "$(echo $afresh)"
+
 build() {
     rm -f "$here/build/probe$suf"
     make -C "$here" EVVLANG="$lang" RULES=bytecode probe >/dev/null || exit 1
@@ -182,6 +194,56 @@ speak() {
     # same order count them the same, so the strict comparison above is the
     # one that reads it.
     sed -E 's/^rule [0-9]+:/rule:/' "$work/$1.trace" > "$work/$1.plain"
+    # And what the two sides are actually compared on. With nothing written
+    # afresh that is the trace as it stands, counter and all, which is what
+    # this has always compared. With something written afresh, its own lines
+    # come out of both sides -- and the running count has to go with them,
+    # since a masked rule legitimately enters a different number of rules and
+    # every count after it would differ. Nothing is lost: two runs that enter
+    # the same rules in the same order count them the same, so the count only
+    # ever restates what the lines already say.
+    if [ -z "$afresh" ]; then
+        cp "$work/$1.trace" "$work/$1.cmp"
+    else
+        drop "$work/$1.plain" > "$work/$1.cmp"
+    fi
+}
+
+# Every line from entering one of those rules to leaving it, taken out. A
+# trace says the call, then the rule it entered, then everything the rule did,
+# then what it left with, so the span is from the call to the leaving.
+drop() {
+    python3 -c '
+import re, sys
+
+names = set(sys.argv[2:])
+if not names:
+    sys.stdout.write(open(sys.argv[1]).read())
+    raise SystemExit
+call = re.compile(r"^\s*([A-Za-z_][A-Za-z_0-9]*)\(")
+entered = re.compile(r"^rule [0-9]*:\s*([A-Za-z_][A-Za-z_0-9]*)\(")
+left = re.compile(r"^# ([A-Za-z_][A-Za-z_0-9]*) left with")
+
+inside = None
+depth = 0
+for line in open(sys.argv[1]):
+    if inside is None:
+        m = call.match(line) or entered.match(line)
+        if m and m.group(1) in names:
+            inside = m.group(1)
+            depth = 1
+            continue
+        sys.stdout.write(line)
+        continue
+    m = call.match(line)
+    if m and m.group(1) == inside:
+        depth += 1
+    m = left.match(line)
+    if m and m.group(1) == inside:
+        depth -= 1
+        if depth == 0:
+            inside = None
+' "$1" $afresh
 }
 
 # IBM's rules and nothing of ours, which is the side an authored rule has to
@@ -212,8 +274,8 @@ while IFS= read -r sentence; do
     speak ibm "$sentence"
     speak ours "$sentence"
 
-    if ! cmp -s "$work/ibm.trace" "$work/ours.trace"; then
-        apart=$(diff "$work/ibm.plain" "$work/ours.plain" \
+    if ! cmp -s "$work/ibm.cmp" "$work/ours.cmp"; then
+        apart=$(diff "$work/ibm.cmp" "$work/ours.cmp" \
                 | grep -c '^[<>]')
         if [ "$sound" = 0 ]; then
             # How far apart, before the first twenty lines of it. Reading the
@@ -221,12 +283,12 @@ while IFS= read -r sentence; do
             # and the traces were thirty-six thousand apart, so a fix was
             # believed finished when it had barely moved.
             echo "upper: sentence $n parts company, $apart lines of" \
-                 "$(wc -l < "$work/ibm.trace")" >&2
-            diff "$work/ibm.trace" "$work/ours.trace" | head -20 >&2
+                 "$(wc -l < "$work/ibm.cmp")" >&2
+            diff "$work/ibm.cmp" "$work/ours.cmp" | head -20 >&2
             exit 1
         fi
         echo "upper: sentence $n, $apart trace lines apart of" \
-             "$(wc -l < "$work/ibm.trace")"
+             "$(wc -l < "$work/ibm.cmp")"
     fi
     if ! cmp -s "$work/ibm.wav" "$work/ours.wav"; then
         echo "upper: sentence $n sounds different" >&2

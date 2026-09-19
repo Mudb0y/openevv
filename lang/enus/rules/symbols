@@ -6805,3 +6805,6 @@ at glob.obj ZZstring327 enus_evv_glob_data_3 1340
 # And the constants of our own, out of rules/constants by tools/rules/consts.py.
 store enus_evv_authored_data
 at * lex_prefix_re enus_evv_authored_data 0
+at * lts_bt enus_evv_authored_data 2
+at * say_04 enus_evv_authored_data 4
+at * say_01 enus_evv_authored_data 5

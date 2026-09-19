@@ -16,6 +16,12 @@
 uint8_t enus_evv_authored_data[] = {
     /* lex_prefix_re, 2 bytes at 0 */
     24,2,
+    /* lts_bt, 2 bytes at 2 */
+    11,26,
+    /* say_04, 1 bytes at 4 */
+    4,
+    /* say_01, 1 bytes at 5 */
+    1,
 };
 
 const delta_store enus_delta_authored_store[] = {

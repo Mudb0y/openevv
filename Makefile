@@ -694,7 +694,7 @@ upper-prove:
 .PHONY: letters
 letters:
 	@python3 tools/rules/letters.py write $(notdir $(EVVLANG))
-	@$(MAKE) --no-print-directory constants
+	@$(MAKE) --no-print-directory constants EVVLANG=$(EVVLANG)
 
 upper-check:
 	@bash tools/rules/check-upper.sh
@@ -805,11 +805,15 @@ $(1)/delta_rules_$(notdir $(1)).c \
 $(1)/delta_rules_$(notdir $(1)).h \
 $(1)/delta_rules_shim_$(notdir $(1)).c &: \
                     $(wildcard $(1)/rules/*.dr) $(wildcard $(1)/rules/*.up) \
+                    $(wildcard $(1)/letters) \
                     $(wildcard $(1)/rules/symbols) \
                     $(wildcard $(1)/rules/trials) \
                     tools/rules/notation.py tools/rules/lower.py \
                     tools/rules/upper.py tools/rules/emit.py \
+                    tools/rules/letters.py \
                     tools/rules/entrysig.py tools/evv.py
+	@test ! -f $(1)/letters || \
+	  python3 tools/rules/letters.py write $(notdir $(1)) > /dev/null
 	@EVV_NOTATION_LANG=$(notdir $(1)) \
 	  python3 tools/rules/notation.py build > /dev/null
 	@echo "wrote the rules of $(notdir $(1)) out of $(1)/rules"

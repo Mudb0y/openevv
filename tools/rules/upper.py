@@ -189,6 +189,10 @@ class Rule:
         # no record and commits nothing, because a wrapper stands inside
         # somebody else's rule and the choice points around it are theirs.
         self.bare = False
+        # A rule written anew rather than one of IBM's re-expressed. It says
+        # nothing about the compilation and everything about what may be
+        # asked of it afterwards; `declarations' says what.
+        self.afresh = False
         self.sizes = {}
         self.at = FIXED
         self.body = []
@@ -273,6 +277,17 @@ def declarations(words, i, r):
                 fault(where, "say `bare' before the locals: it moves them")
             r.bare = True
             r.at = 0
+        elif head == "afresh":
+            # This rule is not one of IBM's re-expressed. Nothing in the
+            # compilation changes; what changes is what may be asked of it.
+            # tools/rules/check-upper.sh holds a re-expressed rule to entering
+            # the same rules and making the same calls as the one it stands in
+            # for, and a rule written anew has nothing to be held against --
+            # it calls the primitives where IBM's called a wrapper, numbers
+            # its plants its own way, and will say what IBM never said. So it
+            # is left out of that comparison and held by the audio there, and
+            # by test/words.sh and test/matrix.sh outside it.
+            r.afresh = True
         else:
             return i
         i += 1

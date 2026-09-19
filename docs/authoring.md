@@ -997,8 +997,20 @@ So an arm is not only a run of letters and the phones it says. It carries condit
 
 **That is the next design and it is where this stops.** The vocabulary of conditions has to be read out of the rules that use them rather than guessed: what each pointer in the state means, and what to call it in a file a person edits.
 
-### Why the letter rules are not in the tree yet
+What is known so far, read statically and not yet witnessed. The letter rules work through two pairs of range ends, not one: variables 106 and 107 at offsets 844 and 852 are the range an arm spells, and 110 and 111 at 876 and 884 are a second range, the one `setd_lookup` is run over -- `ZZlprp_load_vvg__setd0110_0111` loads that pair and does a set lookup between them. The guard each arm makes is `test_ptr` on one end of that second pair: `b_rules` tests 111 and `w_rules` tests 110. So the condition is about the piece of the word being read rather than about the letters, which is what the eight words say too. Which end an arm tests is not a matter of which way it scanned -- both of these grow rightwards -- and settling it wants `tools/module/witness.py` at run time rather than more reading.
+
+### A rule written afresh, and what holds it
 
 `make upper-check` speaks every case through a build carrying the authored rules and one carrying IBM's and requires the two to enter the same rules and make the same calls with the same arguments. A generated letter rule cannot pass that and should not be asked to: it calls the machine's primitives directly where IBM's calls a wrapper baked to one string, it numbers its plants its own way, and it will eventually say things IBM never said. That is the point of writing it.
 
-So the gate and the notation want different things, and which gives is a decision rather than a detail. What is in the tree is the notation, the compiler and the two tool changes, with `et_phone.up` deliberately not committed, so every gate stands exactly where it did: 24,318 words unchanged, 979 cases unchanged, the wrappers byte for byte, and `upper-check` the same call for call over 7,990,752 lines.
+So a rule now says which of the two it is. **`afresh` in a rule's declarations means it is not one of IBM's re-expressed**, and `tools/rules/check-upper.sh` takes such a rule's own lines out of both traces before comparing them -- from the call that enters it to the line that says what it left with. The running count of rules entered goes with them, because a masked rule may legitimately enter a different number of rules and every count after it would otherwise differ; nothing is lost, since two runs that enter the same rules in the same order count them the same.
+
+Four things hold a rule written afresh instead, and the first is the surprise. **Masking a rule's own trace does not hide a wrong answer**, because the rest of the engine reacts to what the rule decided: setting English's `b` to say /p/ was caught by the trace, in lines entirely outside `b_rules` -- the rules downstream are handed different phonemes and behave differently, and that is what shows. Then the audio, which `upper-check` still requires over all nine sentences and which is identical. Then `test/words.sh` over 24,318 words, which is the instrument made for exactly this kind of rule -- a letter rule can do nothing except move a pronunciation, and that gate names the word. And `test/matrix.sh` over 979 cases.
+
+`upper-check` says which rules it is holding that way rather than leaving it to be noticed: *written afresh, so held by the sound alone: b_rules*.
+
+### How it reaches a build
+
+Every build writes the letter rules out of `lang/<tag>/letters`, the same way it writes the rules a build compiles out of the text beside them, so there is no second copy to go stale. `et_phone.up` and `constants.letters` are made and gitignored; `letters` is the only thing to edit.
+
+The one step that is not automatic is laying a new string down. A string an arm names lives in the language's own store, which is a file in the tree, so an arm that wants a string nothing has named yet needs `make letters` -- the compiler and `tools/rules/consts.py` together -- before an ordinary build will work. The compiler says so by name when it happens.

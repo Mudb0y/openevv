@@ -221,6 +221,7 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
     w = out.append
     w("rule %s_rules takes 1 from et_phone.obj" % letter)
     w("  through wrappers")
+    w("  afresh")
     w("  variable leftpoint word %d" % LEFT)
     w("  variable rightpoint word %d" % RIGHT)
     w("  variable onepiece word %d" % ONEPIECE)
@@ -330,6 +331,25 @@ def compile_tag(tag):
     return "\n".join(out) + "\n", known.text(tag)
 
 
+def not_laid_down(tag, strings):
+    """The names this minted that rules/symbols has nowhere for.
+
+    A rule that names one of those builds into an index past the end of the
+    symbol table, so the emitter stops; this says the same thing earlier and
+    names the answer.
+    """
+    want = [line.split()[1] for line in strings.splitlines()
+            if line.startswith("bytes ")]
+    have = set()
+    where = os.path.join(ROOT, "lang", tag, "rules", "symbols")
+    if os.path.exists(where):
+        for line in open(where):
+            w = line.split()
+            if len(w) == 5 and w[0] == "at":
+                have.add(w[2])
+    return [n for n in want if n not in have]
+
+
 def main(argv):
     if len(argv) != 2:
         print(__doc__.strip())
@@ -350,8 +370,21 @@ def main(argv):
     if what == "write":
         open(rules, "w").write(text)
         open(consts, "w").write(strings)
-        print("%s: rules/et_phone.up and rules/constants.letters written;"
-              " make constants lays the strings down" % tag)
+        missing = not_laid_down(tag, strings)
+        if missing:
+            # An ordinary build will stop on the first of these, with a
+            # message from the emitter saying the symbol has nowhere
+            # recorded. Say it here too, where the answer is: a string is
+            # minted by this tool and laid down by tools/rules/consts.py,
+            # and `make letters' is the two together.
+            print("%s: %d string%s this names %s not laid down yet (%s)."
+                  " Run make letters."
+                  % (tag, len(missing), "" if len(missing) == 1 else "s",
+                     "is" if len(missing) == 1 else "are",
+                     ", ".join(missing)))
+            return 1
+        print("%s: rules/et_phone.up and rules/constants.letters written"
+              % tag)
         return 0
     if what == "regenerate":
         ok = True
