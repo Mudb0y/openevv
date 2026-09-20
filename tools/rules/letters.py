@@ -399,16 +399,22 @@ def spell(arm, known, phones_of):
     """The one line that lays an arm's phones over the range it matched."""
     said = phones_of(arm.phones)
     if not said:
-        # There is no arm that says nothing yet. Emptying the range with
-        # delete_2pt compiles and then hangs the engine on the first word
-        # that takes the arm -- the walk is left where it was and the letter
-        # is read again for ever -- so how a letter is made silent is an open
-        # question rather than something to guess at. A silent letter is
-        # written today by swallowing it with its neighbour, which is what
-        # `bt says t' does for debt.
-        raise Trouble("%s: nothing here can say nothing yet. A silent letter"
-                      " is written by swallowing it with the letter beside"
-                      " it, the way `bt says t' does." % arm.where)
+        # A letter cannot be silent by saying nothing, and that was measured
+        # three ways rather than argued. Emptying the range with delete_2pt
+        # hangs the engine on the first word that takes the arm; so does the
+        # machine's own spelling of a deletion, which is this same call with
+        # a count of nought; and so does an arm that matches and simply lays
+        # nothing down. The walk over the letters is left where it was and
+        # the letter is read again for ever.
+        #
+        # So a silent letter is swallowed rather than silenced: an arm takes
+        # it together with the letter beside it and spells the pair with
+        # fewer phones, which is what `bt says t' does for debt. No rule of
+        # IBM's ever inserts nought phones either -- the counts across the
+        # nine languages run one to four -- which says the same thing.
+        raise Trouble("%s: a letter cannot be silent by saying nothing here."
+                      " Swallow it with the letter beside it instead, the way"
+                      " `bt says t' does." % arm.where)
     return ("  call lpta_rpta_loadp addr leftpoint addr rightpoint\n"
             "  call insert_2pt_s %d %d sym %s 0"
             % (PHONES, len(said),

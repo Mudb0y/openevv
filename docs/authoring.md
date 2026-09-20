@@ -1046,10 +1046,18 @@ The first was one call. A scan is set on one of the two ends of the range the ru
 
 **Read the generated rule before believing a theory about the engine.** It is forty lines and it says exactly what was emitted.
 
+### How a letter is made silent, which is the answer to the question `z` and `r` raised
+
+**It is not by saying nothing, and that was measured three ways rather than argued.**
+
+Emptying the range with `delete_2pt` compiles and then hangs the engine on the first word that takes the arm. So does the machine's own spelling of a deletion, which is the ordinary insertion with a count of nought -- `ins_tokens_run` turns that into `vdel_2pt` itself. And so does an arm that matches and simply lays nothing down, no call at all. In each case the walk over the letters is left where it was and the letter is read again for ever.
+
+So **a silent letter is swallowed rather than silenced**: an arm takes it together with the letter beside it and spells the pair with fewer phones, which is exactly what *bt says t* does for `debt`. No rule of IBM's ever inserts nought phones either -- the counts across the nine languages run one to four -- which says the same thing from the other side. The compiler refuses `says nothing` and says so in those words.
+
 ### What is still out, and why
 
-`z` is two arms -- *zh says Z*, and *z after r says nothing* for `przy` and the Polish names an English voice is handed. It is out because of the second arm: there is no way to say nothing yet. Emptying the range with `delete_2pt` compiles and then hangs the engine on the first word that takes the arm, the walk being left where it was so the letter is read for ever. The compiler refuses `says nothing` rather than leaving that trap in the notation, and a silent letter is written today by swallowing it with its neighbour, which is what *bt says t* does for `debt`. Without the second arm the matrix moves -- the English voice reading `przy` says the z -- so `z` waits.
+`z` is two arms -- *zh says Z*, and something for `przy` and the Polish names an English voice is handed, where the z is not spoken. The second wants a swallow rather than a silence, and the swallow belongs to `r` rather than to `z`.
 
-`r` is out for the same want of an ending. *re at end says x r* is right and puts `acre` back to `e.0kR`, which is also worth knowing on its own: two phones that read as a schwa and an r become the r-coloured vowel later, and the order matters, `x r` being right where `r x` is not. But the block hangs the word gate on some word not yet found, and a hang is not something to leave in the tree overnight.
+`r` is out and is more interesting than it looked. *re at end says x r* is right and puts `acre` back to `e.0kR`, which is worth knowing on its own: two phones reading as a schwa and an r become the r-coloured vowel later, and the order matters, `x r` being right where `r x` is not. But **a bare `letter r` with nothing in it but `r says r` hangs the engine on `przy`**, where IBM's own rule does not. So IBM's `r_rules` does something on that path that a plain insertion does not do, and what that is has to be read before either letter goes in. That is where this stops.
 
-So six letters are in -- `b`, `w`, `d`, `m`, `n`, `q` -- and the next two are a question about how a letter is made silent rather than about the notation.
+So six letters are in -- `b`, `w`, `d`, `m`, `n`, `q` -- and what stands between here and the rest is one rule's behaviour on one word, not the notation.
