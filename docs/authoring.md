@@ -1019,9 +1019,9 @@ Every build writes the letter rules out of `lang/<tag>/letters`, the same way it
 
 The one step that is not automatic is laying a new string down. A string an arm names lives in the language's own store, which is a file in the tree, so an arm that wants a string nothing has named yet needs `make letters` -- the compiler and `tools/rules/consts.py` together -- before an ordinary build will work. The compiler says so by name when it happens.
 
-## Five letters, and how a letter gets transcribed
+## Six letters, and how a letter gets transcribed
 
-`b`, `w`, `d`, `m` and `n` are ours now, out of `lang/enus/letters`, with all 24,318 words unchanged. Between them they exercise everything the notation can say:
+`b`, `w`, `d`, `m`, `n` and `q` are ours now, out of `lang/enus/letters`, with all 24,318 words unchanged. Between them they exercise everything the notation can say:
 
     letter m
       mech          says m E k # mechanic, mechanism
@@ -1030,8 +1030,26 @@ The one step that is not automatic is laying a new string down. A string an arm 
       mb at end     says m     # lamb, comb
       m             says m
 
-An arm is a run of letters, optionally what must follow it, optionally where in the piece it must fall, and what it says. `before <letters>` requires letters that are not swallowed -- `ng before then at end says G` is *strengthen* -- and `before vowel`, `before consonant` and `before glide` require a kind instead, which is the input statement's own `letter_type` field and not a list of ours.
+An arm is a run of letters, optionally what must stand to its left and right, optionally where in the piece it must fall, and what it says. `before <letters>` and `after <letters>` require letters that are not swallowed -- `ng before then at end says G` is *strengthen* and `qu after i before et says k` is *etiquette* -- and `vowel`, `consonant` and `glide` stand in either place for a kind instead, which is the input statement's own `letter_type` field and not a list of ours.
 
 **The method is read, guess, and let the gate correct you, and it is quick.** `tools/rules/strings.py <tag> --rule <name>` prints a rule's calls with its strings read out in both alphabets, which says what the arms are within a minute. Write them, build, run `make words`, and the words that moved say what was wrong -- not vaguely, but by name. `m` took three rounds: `mn at start says n` moved nineteen words and every one of them said the rule was the other way round, `at end` left eight `mech` words, and adding `mech says m E k` left `mnemonic`, which wanted the first guess back as a second arm. Ten minutes, and nothing about it needed reading IBM's rule a second time.
 
-`d` and `n` were right first time. `q` was not and is not in yet: *qu before e at end says k* for `antique` and *qu before vowel says k w* for `quick` leaves `etiquette` and `tourniquet`, which want a condition on what stands to the *left*. A `after <letters>` was written for it and does not work -- a reversed scan reads a node's left link rather than its value, so testing letters leftwards is not the mirror of testing them rightwards -- and it was taken out rather than shipped broken. That is the next thing the notation needs, and the twenty-one letters after it are waiting on it.
+`d`, `n`, `q` and `z` were right first time or nearly.
+
+### The left context, and the fault underneath it
+
+`q` wanted one: *qu before e at end says k* gets `antique` and *qu before vowel says k w* gets `quick`, but `etiquette` and `tourniquet` want *qu after i before et says k*, and `banquet` must not take it. The first `after` written for it did nothing, and there were two reasons, one on top of the other.
+
+The first was one call. A scan is set on one of the two ends of the range the rule was handed, and those ends sit *outside* the letter, so a scan set on the left one and told to read leftwards already meets the letter before this one -- the mirror of the rightward scan, which is set on the same end and meets this letter first. The first version stepped the scan on once more before reading, and so tested the letter before that. With the step taken out, `q` goes in, and the gate proves the condition in both directions at once: `etiquette` takes that arm, `banquet` does not, and neither moved.
+
+**The second was worse and is the one to remember.** The compiler decided an arm's shape by looking at its run of letters alone: an arm whose run was the block's own letter was taken for the bare last arm and emitted as a plain insertion, with every condition on it *silently dropped*. So `z after r says nothing` and `r after u says x r` compiled into rules that tested nothing at all, and the natural reading of that -- that a left context cannot see a letter the earlier passes have folded into a token -- was wrong and was written down here for half an hour before the generated rule was read. An arm's shape is decided by whether it asks anything now, and `tests()` says so in one place.
+
+**Read the generated rule before believing a theory about the engine.** It is forty lines and it says exactly what was emitted.
+
+### What is still out, and why
+
+`z` is two arms -- *zh says Z*, and *z after r says nothing* for `przy` and the Polish names an English voice is handed. It is out because of the second arm: there is no way to say nothing yet. Emptying the range with `delete_2pt` compiles and then hangs the engine on the first word that takes the arm, the walk being left where it was so the letter is read for ever. The compiler refuses `says nothing` rather than leaving that trap in the notation, and a silent letter is written today by swallowing it with its neighbour, which is what *bt says t* does for `debt`. Without the second arm the matrix moves -- the English voice reading `przy` says the z -- so `z` waits.
+
+`r` is out for the same want of an ending. *re at end says x r* is right and puts `acre` back to `e.0kR`, which is also worth knowing on its own: two phones that read as a schwa and an r become the r-coloured vowel later, and the order matters, `x r` being right where `r x` is not. But the block hangs the word gate on some word not yet found, and a hang is not something to leave in the tree overnight.
+
+So six letters are in -- `b`, `w`, `d`, `m`, `n`, `q` -- and the next two are a question about how a letter is made silent rather than about the notation.

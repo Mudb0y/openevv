@@ -14,8 +14,10 @@ written in:
 
 One block a letter, arms in order, the first that matches winning, and the last
 arm of a block the bare letter with no test at all -- what the letter says when
-nothing else applies. `says nothing' is an arm that swallows its letters and
-lays no phones down.
+nothing else applies. An arm may also say what must stand to its left and right
+without swallowing it -- `after', `before', and `vowel', `consonant' or `glide'
+in either place -- and whether the run has to begin or end where the piece of
+the word does, which is `at start' and `at end'.
 
 The phones are the ETI phone letters, the same ones `lang/<tag>/<tag>.dict'
 already uses, and the letters are the language's own characters.
@@ -25,10 +27,10 @@ the lifted text in the ordinary way, so a rule written here stands where IBM's
 compiled one stood and `test/words.sh' says whether any of 24,318 words moved.
 
 The strings an arm needs -- the letters it tests and the phones it lays down --
-have to be bytes the module already carries. Every string IBM's own rules test
-is one, which is why a transcription needs nothing new; an arm that wants a
-string no rule has ever named says so and names the bytes, and the answer is a
-line in `lang/<tag>/rules/constants' and a `make constants'.
+are minted here and written to `lang/<tag>/rules/constants.letters', because a
+symbol belongs to the object its rule came out of and a letter rule of ours
+cannot name the ones IBM's name. `tools/rules/consts.py' lays them down, and
+`make letters' is the two in that order.
 
 usage: tools/rules/letters.py show  <tag>     what the file compiles to
        tools/rules/letters.py write <tag>     write rules/et_phone.up
@@ -46,20 +48,17 @@ alphabet = sibling("module/alphabet")
 phonemes = sibling("module/phonemes")
 
 
-# The three variables every letter rule works through. 844 and 852 are the two
-# ends of the range an arm spells: the rule that walks the word sets them
-# around the letter before it calls us, and an arm that swallows more letters
-# moves the second one along.
+# The two ends of the range an arm spells, and the two ends of the piece of the
+# word being read -- the run the engine's earlier passes decided is one root or
+# one prefix. The rule that walks the word sets the first pair around the
+# letter before it calls us, and an arm that swallows more letters moves the
+# second of them along.
 #
-# 884 is the pointer that says the run an arm matched is one piece of the word
-# rather than two, and it is not decoration. `b' before `t' says nothing in
-# debt and in subtle, and says /b/ in ob-tain and in sub-tract, where the b
-# ends a prefix and the t starts a root. Without this test those four words
-# and four more come out wrong, which is how it was found.
-# The two ends of the range an arm spells, and the two ends of the piece
-# of the word being read -- the run the engine's earlier passes decided is
-# one root or one prefix. An arm's condition is a test that the scan has
-# arrived at one of those two, which is what `test_ptr' answers.
+# An arm's condition is a test that the scan has arrived at one end of the
+# second pair, which is what `test_ptr' answers, and it is not decoration:
+# `b' before `t' says nothing in debt and says /b/ in ob-tain and sub-tract,
+# where the b ends a prefix and the t starts a root. Without it those and six
+# more come out wrong, which is how the condition was found.
 LEFT, RIGHT = 844, 852
 PIECE_START, PIECE_END = 876, 884
 
@@ -150,13 +149,26 @@ CLASSES = {"vowel": 1, "consonant": 2, "glide": 3}
 
 
 class Arm(object):
-    def __init__(self, where, letters, before, when, phones, note):
+    def __init__(self, where, letters, after, before, when, phones, note):
         self.where = where
         self.letters = letters      # the whole run, the block's letter first
+        self.after = after          # letters that must precede, not swallowed
         self.before = before        # letters that must follow, not swallowed
         self.when = when            # "", "at start" or "at end"
         self.phones = phones        # [] for an arm that says nothing
         self.note = note
+
+    def tests(self):
+        """Whether this arm asks anything at all, which decides its shape.
+
+        An arm that asks nothing is the block's last: the letter on its own,
+        with no run to match, nothing either side of it and nowhere it has to
+        fall. Anything else is tried and may fail, and reading the run alone
+        to decide that was a fault worth naming -- an arm of one letter with
+        a condition on it came out as a bare arm with the condition dropped,
+        silently, and three letters were blamed on the machine for it."""
+        return bool(len(self.letters) > 1 or self.after or self.before
+                    or self.when)
 
 
 def parse(path):
@@ -187,6 +199,12 @@ def parse(path):
         at = w.index("says")
         letters, said = w[0], w[at + 1:]
         rest = w[1:at]
+        after = ""
+        if rest[:1] == ["after"]:
+            if len(rest) < 2:
+                raise Trouble("%s: `after' what?" % where)
+            after = rest[1]
+            rest = rest[2:]
         before = ""
         if rest[:1] == ["before"]:
             if len(rest) < 2:
@@ -204,8 +222,8 @@ def parse(path):
         if not letters.startswith(cur[0]):
             raise Trouble("%s: this is the %s block, so an arm starts with %s"
                           % (where, cur[0], cur[0]))
-        cur[1].append(Arm(where, letters, before, when, phones,
-                          note))
+        cur[1].append(Arm(where, letters, after, before, when,
+                          phones, note))
     return blocks
 
 
@@ -221,12 +239,12 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
     """
     if not arms:
         raise Trouble("the %s block has no arms" % letter)
-    if arms[-1].letters != letter:
+    if arms[-1].tests():
         raise Trouble("the last arm of the %s block is what %s says when"
-                      " nothing else applies, so it is bare %s"
+                      " nothing else applies, so it asks nothing: bare %s"
                       % (letter, letter, letter))
     for a in arms[:-1]:
-        if a.letters == letter and not a.before and not a.when:
+        if not a.tests():
             raise Trouble("%s: a bare %s matches everything, so nothing after"
                           " it can be reached" % (a.where, letter))
 
@@ -262,7 +280,7 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
         if i:
             n += 1
             tag_of[("fall", i)] = n
-        if a.letters != letter:
+        if a.tests():
             n += 1
             tag_of[("body", i)] = n
     n += 1
@@ -270,13 +288,34 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
 
     for i, a in enumerate(arms):
         nxt = "arm%d" % (i + 1)
-        if a.letters != letter:
+        if a.tests():
             w("")
             if a.note:
                 w("# %s" % a.note)
             if i:
                 w("place arm%d on %d" % (i, tag_of[("fall", i)]))
             w("  plant test %s as %d" % (nxt, tag_of[("fall", i + 1)]))
+            if a.after:
+                # What stands to the left. The two ends of the range the rule
+                # was given sit outside the letter, so a scan set on the left
+                # one and told to read leftwards meets the letter before this
+                # one first -- the mirror of the rightward scan below, which
+                # is set on the same end and meets this letter first.
+                w("  call lpta_loadp addr leftpoint")
+                w("  call setscan_l %d" % LETTERS)
+                w("  if answer is not 0")
+                w("    go to %s" % nxt)
+                w("  end")
+                if a.after in CLASSES:
+                    w("  call testFldeq %d 4 %d" % (LETTERS, CLASSES[a.after]))
+                else:
+                    ctx = letters_of(a.after)
+                    w("  call test_string_s %d %d sym %s"
+                      % (LETTERS, len(ctx),
+                         known.name("lts", ctx, a.after)))
+                w("  if answer is not 0")
+                w("    go to %s" % nxt)
+                w("  end")
             if a.when == "at start":
                 # The run has to begin where the piece does. Put the scan on
                 # the letter walking left and ask whether it is already at the
@@ -291,18 +330,20 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
                 w("  end")
-            w("  call lpta_loadp addr leftpoint")
-            w("  call setscan_r %d" % LETTERS)
-            w("  if answer is not 0")
-            w("    go to %s" % nxt)
-            w("  end")
-            run = letters_of(a.letters)
-            w("  call test_string_s %d %d sym %s"
-              % (LETTERS, len(run),
-                 known.name("lts", run, a.letters)))
-            w("  if answer is not 0")
-            w("    go to %s" % nxt)
-            w("  end")
+            if len(a.letters) > 1 or a.before:
+                w("  call lpta_loadp addr leftpoint")
+                w("  call setscan_r %d" % LETTERS)
+                w("  if answer is not 0")
+                w("    go to %s" % nxt)
+                w("  end")
+            if len(a.letters) > 1:
+                run = letters_of(a.letters)
+                w("  call test_string_s %d %d sym %s"
+                  % (LETTERS, len(run),
+                     known.name("lts", run, a.letters)))
+                w("  if answer is not 0")
+                w("    go to %s" % nxt)
+                w("  end")
             w("place body%d on %d" % (i, tag_of[("body", i)]))
             w("  call savescptr %d addr rightpoint" % tag_of[("body", i)])
             if a.before in CLASSES:
@@ -358,10 +399,16 @@ def spell(arm, known, phones_of):
     """The one line that lays an arm's phones over the range it matched."""
     said = phones_of(arm.phones)
     if not said:
-        # An arm that says nothing still has to empty the range, which is the
-        # same call with nothing to put in it.
-        return ("  call lpta_rpta_loadp addr leftpoint addr rightpoint\n"
-                "  call empty_2pt 0")
+        # There is no arm that says nothing yet. Emptying the range with
+        # delete_2pt compiles and then hangs the engine on the first word
+        # that takes the arm -- the walk is left where it was and the letter
+        # is read again for ever -- so how a letter is made silent is an open
+        # question rather than something to guess at. A silent letter is
+        # written today by swallowing it with its neighbour, which is what
+        # `bt says t' does for debt.
+        raise Trouble("%s: nothing here can say nothing yet. A silent letter"
+                      " is written by swallowing it with the letter beside"
+                      " it, the way `bt says t' does." % arm.where)
     return ("  call lpta_rpta_loadp addr leftpoint addr rightpoint\n"
             "  call insert_2pt_s %d %d sym %s 0"
             % (PHONES, len(said),

@@ -35,3 +35,11 @@ letter n
   ng before then at end   says G   # strengthen
   ng before ton at end    says G
   n                       says n
+
+letter q
+  qu after i before et  says k     # etiquette, tourniquet
+  qu before e at end    says k     # antique, clique
+  qu before vowel       says k w   # quick, queen
+  q                     says k     # Iraq
+
+

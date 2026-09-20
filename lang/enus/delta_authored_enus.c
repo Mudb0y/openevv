@@ -56,6 +56,16 @@ uint8_t enus_evv_authored_data[] = {
     26,16,2,21,
     /* lts_ton, 3 bytes at 36 */
     26,4,21,
+    /* lts_qu, 2 bytes at 39 */
+    23,5,
+    /* lts_et, 2 bytes at 41 */
+    2,26,
+    /* say_07, 1 bytes at 43 */
+    7,
+    /* lts_e, 1 bytes at 44 */
+    2,
+    /* say_071b, 2 bytes at 45 */
+    7,27,
 };
 
 const delta_store enus_delta_authored_store[] = {
