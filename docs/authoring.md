@@ -1046,30 +1046,26 @@ The first was one call. A scan is set on one of the two ends of the range the ru
 
 **Read the generated rule before believing a theory about the engine.** It is forty lines and it says exactly what was emitted.
 
-### How a letter is made silent, which is the answer to the question `z` and `r` raised
+### How a letter is made silent
 
-**It is not by saying nothing, and that was measured three ways rather than argued.**
+**By emptying the phones over the range, which is what Spanish does for its `h`.** `apply_span_h_rules` loads the two ends of the range and calls `delete_2pt` on the phone field, and there is no insertion anywhere in the rule.
 
-Emptying the range with `delete_2pt` compiles and then hangs the engine on the first word that takes the arm. So does the machine's own spelling of a deletion, which is the ordinary insertion with a count of nought -- `ins_tokens_run` turns that into `vdel_2pt` itself. And so does an arm that matches and simply lays nothing down, no call at all. In each case the walk over the letters is left where it was and the letter is read again for ever.
+This file said the opposite for two days, on the strength of three experiments that all hung the engine. The deletion was not the reason. The arm that tried it was a bare run with only a left context, and such an arm was saving a leftward scan as the right end of its range, so what it emptied was nonsense. The fix for that is elsewhere in this file; reading another language's rules is what settled which of the two was at fault.
 
-So **a silent letter is swallowed rather than silenced**: an arm takes it together with the letter beside it and spells the pair with fewer phones, which is exactly what *bt says t* does for `debt`. No rule of IBM's ever inserts nought phones either -- the counts across the nine languages run one to four -- which says the same thing from the other side. The compiler refuses `says nothing` and says so in those words.
+### What the eight languages come to
 
-### What is still out, and why
+Only English and British English keep their letter rules in `et_phone.dr`; every other module names the file for itself -- `gt_phone.dr`, `st_phone.dr`, `ft_phone.dr`, `it_phone.dr` -- and spells each letter's rule its own way: `apply_ger_b_rules`, `apply_span_b_rules`, `apply_ital_b_rules`, and French bare like English's. So a letters file says which object it stands in for and how a rule is spelled there, and a letter whose rule is not spelled after the character says so itself, which is what German's umlaut and Spanish's eñe want.
 
-`z` wants a swallow for `przy` and the swallow belongs to `r`. `r` is the one that has taken the work, and what it has taught is worth more than the letter.
+The sizes, counting the calls that put phones down:
 
-*re at end says x r* puts `acre` back to `e.0kR` and moves 465 other words, because a great many words end a piece in `re` -- `acquired`, `adhered`, `admired`, every inflected form of a verb in `-re`. *r after uo says x r* gets `sour`, `scour` and `flour` and moves 41, because `cour`, `tour` and `concour` are the same two letters and keep their `/r/`. So both conditions are real and both are too broad, and what separates them is not in the letters. That is where `r` stands.
+English 271, British English 276, French Canadian 162, French 151, German 121, Italian 78, and the two Spanishes 58 each. About 1,175 arms in all, and rather fewer distinct ones: the two Spanishes differ in 262 lines of 4,645 and Polish is Italian with 32 lines changed.
 
-**The order of a left context is the order the scan meets it**, nearest letter first, which is worth saying because it is the opposite of how it reads. `after uo` is a word spelling `...uor`, and `after ou` is `...uo` before the letter -- which is `languorous`, not `sour`.
+**Spanish is the place to start and it is largely one arm a letter**: `b` says /b/, `d` says /d/, `f` says /f/, `j` says /j/, `k` says /k/, `m` says /m/, `ñ` says /N/, `v` says /b/, `w` says /w/. The letters with real rules in them are `c`, `g`, `l`, `n`, `p`, `q`, `r`, `s`, `x`, `y`, `z` and the vowels.
 
-### Two faults found on the way, and they are the real yield of this stretch
+**And the field numbers are the language's own.** A field is a level of the spine, and which number the phones have is decided by the order a module declares its statements: every language but Spanish declares the phone statement third, and Spanish declares it fifth. An arm written with English's numbers would lay Spanish's phones into its words. The compiler reads both numbers out of `<tag>.statements` now.
 
-**An arm with only a left context saved the wrong end of its range.** The right end is where the scan got to, which is only meaningful when the scan was set rightwards and moved. An arm whose run is the letter alone has read nothing to the right, so `savescptr` there stored whatever the left-context scan was left pointing at, and the rule then read the same letter for ever. `languorous` is what showed it, and any future arm of that shape would have done the same. The right end is saved only when the scan moved now.
+### A word gate for every language
 
-**And the engine leaked a thread handle for every instance, which is not the letters' fault at all.** `evv_task_start` allocates a small block to name the task, `evv_task_stop` has nothing to stop, and nothing joins these threads -- so the block was held for the life of the process. An instance starts two or three tasks, so a program that makes and deletes instances left one behind each time.
+`test/words.sh` has always taken a language; only English had a list. All eight have one now, written by `tools/measure/wordlist.py` out of each language's own spelling dictionary -- SCOWL for the two Englishes, hunspell's German, Spanish, French and Italian -- twenty thousand words apiece, evenly spread, in that language's own letters rather than filtered to ASCII, which would have dropped every German word with an umlaut in it.
 
-The cost is not the bytes. Every allocation walks the whole region, used blocks included, so the count is what tells: **speaking a thousand words through `eciGeneratePhonemes` in one process took 23 seconds and fourteen hundred took 61**, and it looked exactly like a hang. With the handle given back when its task ends, the same fourteen hundred take 17 seconds and four thousand take 45 -- linear, at about eleven milliseconds a word -- and the outstanding blocks after twelve hundred instances fall from 3,691 to 91.
-
-`test/words.sh` hides it by splitting the list across the cores, which is why nothing had seen it: at 48 cores each process speaks about 500 words and never gets slow enough to notice. On eight cores it would be 3,000 a process, and the gate would look hung.
-
-`test/harness/phonemes.c` says what is outstanding every so many words when `EVV_ARENA_REPORT` asks, which is how it was found and how the next one will be.
+That is the thing that makes transcribing the other seven safe. Before it, the only gate below the sentences was about a hundred matrix cases a language, and a change that mended forty words and broke four hundred would have passed without a murmur.

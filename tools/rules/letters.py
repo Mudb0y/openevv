@@ -62,9 +62,24 @@ phonemes = sibling("module/phonemes")
 LEFT, RIGHT = 844, 852
 PIECE_START, PIECE_END = 876, 884
 
-# Which field is which. A field is a level of the spine: 1 is the letters the
-# scan walks and 2 is the phones an arm lays down.
-LETTERS, PHONES = 1, 2
+# Which field is which. A field is a level of the spine -- the letters the scan
+# walks, the phones an arm lays down -- and the number each has is the
+# language's own business rather than a constant. Every module but Spanish
+# declares its phone statement third and Spanish declares it fifth, so an arm
+# written with English's numbers would lay Spanish's phones into its words.
+
+
+def fields(tag):
+    """The letters field and the phones field, as this language numbers them,
+    which is the order it declares its statements in."""
+    at = {}
+    for line in open(os.path.join(ROOT, "lang", tag, "%s.statements" % tag)):
+        if line.startswith("statement "):
+            at.setdefault(line.split()[1], len(at))
+    for want in ("inp", "phone"):
+        if want not in at:
+            raise Trouble("%s declares no %s statement" % (tag, want))
+    return at["inp"], at["phone"]
 
 
 class Trouble(Exception):
@@ -175,6 +190,8 @@ def parse(path):
     """The file as blocks of arms, in the order they are written."""
     blocks = []
     cur = None
+    obj = None
+    pattern = None
     for n, raw in enumerate(open(path), 1):
         where = "%s line %d" % (os.path.basename(path), n)
         note = ""
@@ -185,11 +202,29 @@ def parse(path):
         if not line:
             continue
         w = line.split()
-        if w[0] == "letter":
-            if len(w) != 2:
-                raise Trouble("%s: a block is `letter' and one character"
+        if w[0] == "rules":
+            if len(w) != 5 or w[1] != "in" or w[3] != "named":
+                raise Trouble("%s: the header is `rules in <object> named"
+                              " <pattern>', the pattern saying how a letter's"
+                              " rule is spelled with %%s where the letter is"
                               % where)
-            cur = (w[1], [])
+            obj, pattern = w[2], w[4]
+            if "%s" not in pattern:
+                raise Trouble("%s: the pattern says where the letter goes,"
+                              " with %%s" % where)
+            continue
+        if w[0] == "letter":
+            if obj is None:
+                raise Trouble("%s: say which object these stand in for before"
+                              " the first letter" % where)
+            if len(w) == 2:
+                cur = (w[1], pattern % w[1], obj, [])
+            elif len(w) == 4 and w[2] == "as":
+                cur = (w[1], pattern % w[3], obj, [])
+            else:
+                raise Trouble("%s: a block is `letter <character>', with"
+                              " `as <name>' where the rule is not spelled"
+                              " after the character" % where)
             blocks.append(cur)
             continue
         if cur is None:
@@ -222,14 +257,15 @@ def parse(path):
         if not letters.startswith(cur[0]):
             raise Trouble("%s: this is the %s block, so an arm starts with %s"
                           % (where, cur[0], cur[0]))
-        cur[1].append(Arm(where, letters, after, before, when,
+        cur[3].append(Arm(where, letters, after, before, when,
                           phones, note))
     return blocks
 
 
 # ---- what it compiles to -------------------------------------------------
 
-def rule_for(tag, letter, arms, known, lcode, pcode):
+def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
+             letters_at, phones_at):
     """One letter's rule, as the upper form.
 
     The shape is IBM's own and the tags are its numbering: the arm to fall to
@@ -262,7 +298,7 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
 
     out = []
     w = out.append
-    w("rule %s_rules takes 1 from et_phone.obj" % letter)
+    w("rule %s takes 1 from %s" % (name, obj))
     w("  through wrappers")
     w("  afresh")
     w("  variable leftpoint word %d" % LEFT)
@@ -302,16 +338,16 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
                 # one first -- the mirror of the rightward scan below, which
                 # is set on the same end and meets this letter first.
                 w("  call lpta_loadp addr leftpoint")
-                w("  call setscan_l %d" % LETTERS)
+                w("  call setscan_l %d" % letters_at)
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
                 w("  end")
                 if a.after in CLASSES:
-                    w("  call testFldeq %d 4 %d" % (LETTERS, CLASSES[a.after]))
+                    w("  call testFldeq %d 4 %d" % (letters_at, CLASSES[a.after]))
                 else:
                     ctx = letters_of(a.after)
                     w("  call test_string_s %d %d sym %s"
-                      % (LETTERS, len(ctx),
+                      % (letters_at, len(ctx),
                          known.name("lts", ctx, a.after)))
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
@@ -321,7 +357,7 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
                 # the letter walking left and ask whether it is already at the
                 # piece's first node.
                 w("  call lpta_loadp addr leftpoint")
-                w("  call setscan_l %d" % LETTERS)
+                w("  call setscan_l %d" % letters_at)
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
                 w("  end")
@@ -332,14 +368,14 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
                 w("  end")
             if len(a.letters) > 1 or a.before:
                 w("  call lpta_loadp addr leftpoint")
-                w("  call setscan_r %d" % LETTERS)
+                w("  call setscan_r %d" % letters_at)
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
                 w("  end")
             if len(a.letters) > 1:
                 run = letters_of(a.letters)
                 w("  call test_string_s %d %d sym %s"
-                  % (LETTERS, len(run),
+                  % (letters_at, len(run),
                      known.name("lts", run, a.letters)))
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
@@ -359,7 +395,7 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
             if a.before in CLASSES:
                 # What follows has to be of a kind rather than a letter, which
                 # is how a rule says `a vowel' without naming twenty of them.
-                w("  call testFldeq %d 4 %d" % (LETTERS, CLASSES[a.before]))
+                w("  call testFldeq %d 4 %d" % (letters_at, CLASSES[a.before]))
                 w("  if answer is not 0")
                 w("    backtrack")
                 w("  end")
@@ -369,7 +405,7 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
                 # saved, so this only reads on.
                 ctx = letters_of(a.before)
                 w("  call test_string_s %d %d sym %s"
-                  % (LETTERS, len(ctx),
+                  % (letters_at, len(ctx),
                      known.name("lts", ctx, a.before)))
                 w("  if answer is not 0")
                 w("    backtrack")
@@ -383,7 +419,7 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
                 w("  if answer is not 0")
                 w("    backtrack")
                 w("  end")
-            w(spell(a, known, phones_of))
+            w(spell(a, known, phones_of, phones_at))
             w("  go to laid")
         else:
             w("")
@@ -391,7 +427,7 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
                 w("# %s" % a.note)
             if i:
                 w("place arm%d on %d" % (i, tag_of[("fall", i)]))
-            w(spell(a, known, phones_of))
+            w(spell(a, known, phones_of, phones_at))
 
     w("")
     w("place laid")
@@ -405,29 +441,27 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
     return "\n".join(out)
 
 
-def spell(arm, known, phones_of):
+def spell(arm, known, phones_of, phones_at):
     """The one line that lays an arm's phones over the range it matched."""
     said = phones_of(arm.phones)
     if not said:
-        # A letter cannot be silent by saying nothing, and that was measured
-        # three ways rather than argued. Emptying the range with delete_2pt
-        # hangs the engine on the first word that takes the arm; so does the
-        # machine's own spelling of a deletion, which is this same call with
-        # a count of nought; and so does an arm that matches and simply lays
-        # nothing down. The walk over the letters is left where it was and
-        # the letter is read again for ever.
+        # An arm that says nothing empties the phones over the range it
+        # matched rather than filling them. That is how Spanish makes its h
+        # silent -- `apply_span_h_rules' loads the two points and calls
+        # delete_2pt on the phone field, and there is no insertion in the
+        # whole rule.
         #
-        # So a silent letter is swallowed rather than silenced: an arm takes
-        # it together with the letter beside it and spells the pair with
-        # fewer phones, which is what `bt says t' does for debt. No rule of
-        # IBM's ever inserts nought phones either -- the counts across the
-        # nine languages run one to four -- which says the same thing.
-        raise Trouble("%s: a letter cannot be silent by saying nothing here."
-                      " Swallow it with the letter beside it instead, the way"
-                      " `bt says t' does." % arm.where)
+        # It was written down here as impossible once, because it hung the
+        # engine. The deletion was not the reason: the arm that tried it was
+        # a bare run with only a left context, and such an arm was saving a
+        # leftward scan as the right end of its range, so the range it
+        # emptied was nonsense. Reading another language's rules is what
+        # settled it.
+        return ("  call lpta_rpta_loadp addr leftpoint addr rightpoint\n"
+                "  call delete_2pt %d 0" % phones_at)
     return ("  call lpta_rpta_loadp addr leftpoint addr rightpoint\n"
             "  call insert_2pt_s %d %d sym %s 0"
-            % (PHONES, len(said),
+            % (phones_at, len(said),
                known.name("say", said, " ".join(arm.phones))))
 
 
@@ -436,6 +470,7 @@ def compile_tag(tag):
     if not os.path.exists(path):
         raise Trouble("there is no lang/%s/letters" % tag)
     known = Strings()
+    letters_at, phones_at = fields(tag)
     lcode = letter_codes(tag)
     pcode = phone_codes(tag)
     out = [
@@ -450,10 +485,15 @@ def compile_tag(tag):
         "# next arm, one a spelling arm so a failure inside it comes back to",
         "# the arm rather than to the letter, and one for having spelled.",
     ]
-    for letter, arms in parse(path):
+    stem = None
+    for letter, name, obj, arms in parse(path):
+        stem = obj[:-4] if obj.endswith(".obj") else obj
         out.append("")
-        out.append(rule_for(tag, letter, arms, known, lcode, pcode))
-    return "\n".join(out) + "\n", known.text(tag)
+        out.append(rule_for(tag, letter, name, obj, arms, known, lcode,
+                            pcode, letters_at, phones_at))
+    if stem is None:
+        raise Trouble("lang/%s/letters names no letter" % tag)
+    return "\n".join(out) + "\n", known.text(tag), stem
 
 
 def not_laid_down(tag, strings):
@@ -481,11 +521,11 @@ def main(argv):
         return 2
     what, tag = argv
     try:
-        text, strings = compile_tag(tag)
+        text, strings, stem = compile_tag(tag)
     except Trouble as e:
         print("letters: %s" % e)
         return 1
-    rules = os.path.join(ROOT, "lang", tag, "rules", "et_phone.up")
+    rules = os.path.join(ROOT, "lang", tag, "rules", stem + ".up")
     consts = os.path.join(ROOT, "lang", tag, "rules", "constants.letters")
     if what == "show":
         sys.stdout.write(text)
@@ -512,8 +552,8 @@ def main(argv):
                   % (tag, len(missing), "" if len(missing) == 1 else "s",
                      "is" if len(missing) == 1 else "are",
                      ", ".join(missing)))
-        print("%s: rules/et_phone.up and rules/constants.letters written"
-              % tag)
+        print("%s: rules/%s.up and rules/constants.letters written"
+              % (tag, stem))
         return 0
     if what == "regenerate":
         ok = True
@@ -524,8 +564,8 @@ def main(argv):
                       % (tag, os.path.basename(where), tag))
                 ok = False
         if ok:
-            print("%s: rules/et_phone.up and rules/constants.letters are what"
-                  " lang/%s/letters says" % (tag, tag))
+            print("%s: rules/%s.up and rules/constants.letters are what"
+                  " lang/%s/letters says" % (tag, stem, tag))
         return 0 if ok else 1
     print(__doc__.strip())
     return 2

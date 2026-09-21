@@ -986,11 +986,12 @@ crashers: $(BUILD)/evv
 # It is what makes a change to a rule or a dictionary answerable, since the
 # sentence gate is far too small to notice one. Wants no Wine and no objects.
 .PHONY: words words-record
+# Every language with a list, which is all of them but Polish and Japanese.
 words:
-	@bash test/words.sh check
+	@bash test/words.sh check enus engb dede eses esus frfr frca itit
 
 words-record:
-	@bash test/words.sh record
+	@bash test/words.sh record enus engb dede eses esus frfr frca itit
 
 .PHONY: matrix matrix-record
 matrix:

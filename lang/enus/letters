@@ -2,12 +2,17 @@
 #
 # One block a letter and its arms in order, the first that matches winning.
 # The last arm of a block is the bare letter: what it says when nothing else
-# applies. `says nothing' swallows the letters and lays no phones down.
+# applies. An arm may also say what must stand to its left and right without
+# swallowing it -- `after', `before', and `vowel', `consonant' or `glide' in
+# either place -- and `at start' or `at end' for a run that has to begin or
+# end where the piece of the word does.
 #
 # The letters are the language's own characters and the phones are the ETI
 # phone letters, the same ones enus.dict uses. tools/rules/letters.py writes
 # rules/et_phone.up out of this, and test/words.sh says whether any of 24,318
 # words moved.
+
+rules in et_phone.obj named %s_rules
 
 letter b
   bt at end   says t     # debt

@@ -157,3 +157,11 @@ The bytes were nothing. What cost was the count: every allocation walks the whol
 So the handle `evv_task_start` answers is good only while its task is running. Nothing here keeps one past that, and the priority calls take a block of IBM's and ignore the task in it.
 
 `test/harness/phonemes.c` will say what the region is still holding every so many words when `EVV_ARENA_REPORT` names a number, which is what found this. A leak is the group whose count climbs line after line; the blocks a process rightly keeps for its own life sit there unchanged.
+
+## Handing the engine UTF-8
+
+**Text is bytes in the language's own code set, which is the Windows Western set, and a word list in UTF-8 hangs Spanish outright.** IBM's, and `docs/api.md` has said the first half of it all along: the engine reads single bytes and does almost nothing between the caller's bytes and the machine's characters. What was not known is that it does not merely mispronounce them. The two bytes of a UTF-8 `ó`, read as two Windows Western characters, hang `apply_span_c_rules` between a `cc` and an `n` -- the Spanish for abduction is line 42 of `test/cases/words-eses.txt` and it never comes back.
+
+So a word list is written in that set rather than in UTF-8, and `tools/measure/wordlist.py` does. Polish is the exception in the other direction: it declares characters of its own and its text is converted from UTF-8 on the way in, which `docs/quirks.md` lists among the deliberate divergences.
+
+**And a shell that reads such a file wants `LC_ALL=C`.** GNU grep in a UTF-8 locale quietly drops a line whose bytes are not valid there, which is every accented word. `test/words.sh` lost three thousand Spanish words and six thousand French ones to that before the counts gave it away: it said twenty thousand words written and meant seventeen.

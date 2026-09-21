@@ -28,6 +28,22 @@ The baselines are in `test/samples`, one file a language, one line a case: the c
 
 Every number in there was blessed by IBM's own binary. The whole differential suite below was run for all eight lifted languages immediately before the baselines were recorded -- 647 cases over the six categories that existed then, and 56 more when the seventh was added -- and every one of the 703 matched, so each recorded value is one the original had just agreed with. The other 88 are Polish. Polish is the exception, and its file says so at the top: IBM never shipped Polish, there is nothing to hold it to, and what is recorded is what this engine does. That is still worth having, because it is the only thing besides an ear that can tell a change to Polish from an accident. `test/cases/*-plpl.txt` are its cases and they are ours, written for Polish orthography -- the digraphs, the nasals, the retroflex series, ó against u -- rather than translated from another language's.
 
+### The gate below it, one word to a line
+
+    make words
+
+`test/words.sh` speaks a word list through the engine and holds each answer against what it said before -- the phonemes the language decided on, not the audio, which is what makes it affordable: no wave file, nothing to compare but text, and a word that moves names itself rather than being a hash that changed. It wants neither Wine nor IBM's objects, and it takes a language as the matrix does.
+
+It exists because the sentence gate is the wrong size for a question about rules. There are about a hundred cases a language in it, and a change that mends forty words and breaks four hundred passes it without a murmur. Twenty thousand words will not.
+
+Every language has a list now. `test/cases/words-<tag>.txt` is written by `tools/measure/wordlist.py` out of that language's own spelling dictionary -- SCOWL for the two Englishes, hunspell's German, Spanish, French and Italian -- twenty thousand words apiece, evenly spread through the source rather than the first twenty thousand, and in the language's own letters rather than filtered to ASCII. English also folds in every word its dictionaries hold, which the sample mostly does not and which are exactly the words a change to a dictionary can move.
+
+Polish has no list, for the same reason it has no oracle: it would want words chosen for Polish rather than borrowed, and that is a judgement rather than a download.
+
+A word that moves is a question, exactly as a case is, and `test/words.sh record` writes the new answers down.
+
+**What it does not see is anything but a word on its own.** The Polish sentence in English's `utf8` cases moved once for a letter rule that 24,318 English words were happy with; a word list has no Polish name in it. So the two gates answer different questions and a change wants both.
+
 ## The oracle
 
     make probe
