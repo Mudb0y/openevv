@@ -1056,8 +1056,20 @@ So **a silent letter is swallowed rather than silenced**: an arm takes it togeth
 
 ### What is still out, and why
 
-`z` is two arms -- *zh says Z*, and something for `przy` and the Polish names an English voice is handed, where the z is not spoken. The second wants a swallow rather than a silence, and the swallow belongs to `r` rather than to `z`.
+`z` wants a swallow for `przy` and the swallow belongs to `r`. `r` is the one that has taken the work, and what it has taught is worth more than the letter.
 
-`r` is out and is more interesting than it looked. *re at end says x r* is right and puts `acre` back to `e.0kR`, which is worth knowing on its own: two phones reading as a schwa and an r become the r-coloured vowel later, and the order matters, `x r` being right where `r x` is not. But **a bare `letter r` with nothing in it but `r says r` hangs the engine on `przy`**, where IBM's own rule does not. So IBM's `r_rules` does something on that path that a plain insertion does not do, and what that is has to be read before either letter goes in. That is where this stops.
+*re at end says x r* puts `acre` back to `e.0kR` and moves 465 other words, because a great many words end a piece in `re` -- `acquired`, `adhered`, `admired`, every inflected form of a verb in `-re`. *r after uo says x r* gets `sour`, `scour` and `flour` and moves 41, because `cour`, `tour` and `concour` are the same two letters and keep their `/r/`. So both conditions are real and both are too broad, and what separates them is not in the letters. That is where `r` stands.
 
-So six letters are in -- `b`, `w`, `d`, `m`, `n`, `q` -- and what stands between here and the rest is one rule's behaviour on one word, not the notation.
+**The order of a left context is the order the scan meets it**, nearest letter first, which is worth saying because it is the opposite of how it reads. `after uo` is a word spelling `...uor`, and `after ou` is `...uo` before the letter -- which is `languorous`, not `sour`.
+
+### Two faults found on the way, and they are the real yield of this stretch
+
+**An arm with only a left context saved the wrong end of its range.** The right end is where the scan got to, which is only meaningful when the scan was set rightwards and moved. An arm whose run is the letter alone has read nothing to the right, so `savescptr` there stored whatever the left-context scan was left pointing at, and the rule then read the same letter for ever. `languorous` is what showed it, and any future arm of that shape would have done the same. The right end is saved only when the scan moved now.
+
+**And the engine leaked a thread handle for every instance, which is not the letters' fault at all.** `evv_task_start` allocates a small block to name the task, `evv_task_stop` has nothing to stop, and nothing joins these threads -- so the block was held for the life of the process. An instance starts two or three tasks, so a program that makes and deletes instances left one behind each time.
+
+The cost is not the bytes. Every allocation walks the whole region, used blocks included, so the count is what tells: **speaking a thousand words through `eciGeneratePhonemes` in one process took 23 seconds and fourteen hundred took 61**, and it looked exactly like a hang. With the handle given back when its task ends, the same fourteen hundred take 17 seconds and four thousand take 45 -- linear, at about eleven milliseconds a word -- and the outstanding blocks after twelve hundred instances fall from 3,691 to 91.
+
+`test/words.sh` hides it by splitting the list across the cores, which is why nothing had seen it: at 48 cores each process speaks about 500 words and never gets slow enough to notice. On eight cores it would be 3,000 a process, and the gate would look hung.
+
+`test/harness/phonemes.c` says what is outstanding every so many words when `EVV_ARENA_REPORT` asks, which is how it was found and how the next one will be.

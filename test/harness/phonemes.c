@@ -24,6 +24,13 @@
 
 #include <eci.h>
 
+/* What the engine is still holding. An instance is made and deleted for every
+   word here, so anything an instance keeps shows up as a group whose count
+   climbs line after line -- which is how the task handle that was never given
+   back was found, and with it the reason this got slower the longer it ran.
+   EVV_ARENA_REPORT says after how many words to say so. */
+void evv_arena_outstanding(const char *when);
+
 /* Room for what one case comes to, and for one line of it. */
 #define PHON_ROOM 8192
 #define LINE_ROOM 4096
@@ -99,6 +106,20 @@ int main(int argc, char **argv)
         printf("[%s]\n", said);
 
         eciDelete(h);
+
+        {
+            static long done;
+            const char *every = getenv("EVV_ARENA_REPORT");
+            long n = every != 0 ? atol(every) : 0;
+
+            done++;
+            if (n > 0 && done % n == 0) {
+                char label[64];
+
+                sprintf(label, "after %ld words", done);
+                evv_arena_outstanding(label);
+            }
+        }
     }
 
     fclose(f);

@@ -257,6 +257,7 @@ struct evv_task { pthread_t id; };
 struct evv_start {
     void (*entry)(void *);
     void  *arg;
+    evv_task *self;
 };
 
 static void *evv_trampoline(void *p)
@@ -264,6 +265,7 @@ static void *evv_trampoline(void *p)
     struct evv_start *s = p;
     void (*entry)(void *) = s->entry;
     void *arg = s->arg;
+    evv_task *self = s->self;
 
     free(s);
     entry(arg);
@@ -276,6 +278,21 @@ static void *evv_trampoline(void *p)
 #ifndef EVV_IBM_NAMES
     evv_frame_done();
 #endif
+
+    /* And the handle. Nothing joins these threads and evv_task_stop has
+       nothing to stop, so the block that names one would otherwise be held
+       for the life of the process: an instance starts two or three tasks, so
+       a program that makes and deletes instances leaves a block behind for
+       each. That is not a few bytes going astray. Every allocation walks the
+       whole region -- used blocks included -- so the count is what costs, and
+       it showed as the engine getting slower and slower rather than as memory
+       running out: a thousand instances in one process took 23 seconds and
+       fourteen hundred took 61.
+
+       The handle is therefore good only while its task is running, which is
+       true of every caller here: the priority calls take a block of IBM's and
+       ignore the task in it. */
+    free(self);
     return NULL;
 }
 
@@ -300,6 +317,9 @@ evv_task *evv_task_start(void (*entry)(void *), void *arg, int stack_bytes)
     }
     s->entry = entry;
     s->arg = arg;
+    /* Set before the thread can exist, since it is the thread that gives the
+       handle back. */
+    s->self = t;
 
     pthread_attr_init(&attr);
     if (stack_bytes < PTHREAD_STACK_MIN)

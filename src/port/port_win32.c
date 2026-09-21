@@ -128,6 +128,7 @@ struct evv_task { HANDLE h; };
 struct evv_start {
     void (*entry)(void *);
     void  *arg;
+    evv_task *self;
 };
 
 static DWORD WINAPI evv_trampoline(LPVOID p)
@@ -135,6 +136,7 @@ static DWORD WINAPI evv_trampoline(LPVOID p)
     struct evv_start *s = p;
     void (*entry)(void *) = s->entry;
     void *arg = s->arg;
+    evv_task *self = s->self;
 
     free(s);
     entry(arg);
@@ -147,6 +149,14 @@ static DWORD WINAPI evv_trampoline(LPVOID p)
 #ifndef EVV_IBM_NAMES
     evv_frame_done();
 #endif
+
+    /* And the handle, for the reason src/port/port_posix.c gives: nothing
+       joins these threads, so a block naming one is otherwise held for the
+       life of the process, and every allocation walks the whole region. The
+       handle is good only while its task is running. */
+    if (self != NULL)
+        CloseHandle(self->h);
+    free(self);
     return 0;
 }
 
@@ -169,6 +179,9 @@ evv_task *evv_task_start(void (*entry)(void *), void *arg, int stack_bytes)
     }
     s->entry = entry;
     s->arg = arg;
+    /* Set before the thread can exist, since it is the thread that gives the
+       handle back. */
+    s->self = t;
 
     t->h = CreateThread(NULL, (SIZE_T)(stack_bytes > 0 ? stack_bytes : 0),
                         evv_trampoline, s, 0, NULL);

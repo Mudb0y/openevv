@@ -147,3 +147,13 @@ It does not matter for the callers that exist: Python's ctypes and a screen read
 It is not a fault in the port. The audio is identical to IBM's by design, over 979 recorded cases in ten languages and every build the tree makes. That is Eloquence sounding like Eloquence.
 
 Changing it is a deliberate change to the language data, and the gate will correctly report that as a difference.
+
+## Making and deleting many instances
+
+**An instance used to leave a small block behind and the engine got slower the longer a program ran.** Ours, fixed on 21 September 2026, and worth knowing because of how it showed rather than what it was. `evv_task_start` allocates a block to name a task, nothing joins these threads and `evv_task_stop` has nothing to stop, so the block was held for the life of the process -- two or three of them for every instance made and deleted.
+
+The bytes were nothing. What cost was the count: every allocation walks the whole region, used blocks included. A program that spoke a thousand words through `eciGeneratePhonemes`, one instance a word, took 23 seconds, and fourteen hundred took 61 -- which looks exactly like a hang rather than like a leak. With the handle given back when its task ends, fourteen hundred take 17 seconds and four thousand take 45, at about eleven milliseconds a word throughout.
+
+So the handle `evv_task_start` answers is good only while its task is running. Nothing here keeps one past that, and the priority calls take a block of IBM's and ignore the task in it.
+
+`test/harness/phonemes.c` will say what the region is still holding every so many words when `EVV_ARENA_REPORT` names a number, which is what found this. A leak is the group whose count climbs line after line; the blocks a process rightly keeps for its own life sit there unchanged.

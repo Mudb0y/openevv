@@ -345,7 +345,17 @@ def rule_for(tag, letter, arms, known, lcode, pcode):
                 w("    go to %s" % nxt)
                 w("  end")
             w("place body%d on %d" % (i, tag_of[("body", i)]))
-            w("  call savescptr %d addr rightpoint" % tag_of[("body", i)])
+            # Where the scan got to is the end of the range to spell -- but
+            # only where the scan was set rightwards and moved. An arm whose
+            # run is the letter alone has read nothing to the right, so the
+            # range is the one the caller handed over and saving here would
+            # store whatever the left-context scan was left pointing at. That
+            # is what hung the engine on `languorous': `r after ou' matched,
+            # saved a leftward scan as the right end of the range, and the
+            # rule read the same letter for ever after.
+            if len(a.letters) > 1 or a.before:
+                w("  call savescptr %d addr rightpoint"
+                  % tag_of[("body", i)])
             if a.before in CLASSES:
                 # What follows has to be of a kind rather than a letter, which
                 # is how a rule says `a vowel' without naming twenty of them.
