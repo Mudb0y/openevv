@@ -6805,16 +6805,16 @@ at glob.obj ZZstring327 enus_evv_glob_data_3 1340
 # And the constants of our own, out of rules/constants by tools/rules/consts.py.
 store enus_evv_authored_data
 at * lex_prefix_re enus_evv_authored_data 0
-at * lts_bt enus_evv_authored_data 2
-at * say_04 enus_evv_authored_data 4
-at * say_01 enus_evv_authored_data 5
-at * lts_wr enus_evv_authored_data 6
-at * say_18 enus_evv_authored_data 8
-at * say_1b enus_evv_authored_data 9
-at * lts_dg enus_evv_authored_data 10
-at * say_11 enus_evv_authored_data 12
-at * lts_dj enus_evv_authored_data 13
-at * say_03 enus_evv_authored_data 15
+at * fence_03 enus_evv_authored_data 2
+at * lts_bt enus_evv_authored_data 3
+at * say_04 enus_evv_authored_data 5
+at * say_01 enus_evv_authored_data 6
+at * lts_wr enus_evv_authored_data 7
+at * say_18 enus_evv_authored_data 9
+at * say_1b enus_evv_authored_data 10
+at * lts_dg enus_evv_authored_data 11
+at * say_11 enus_evv_authored_data 13
+at * lts_dj enus_evv_authored_data 14
 at * lts_mech enus_evv_authored_data 16
 at * say_141f07 enus_evv_authored_data 20
 at * lts_mn enus_evv_authored_data 23

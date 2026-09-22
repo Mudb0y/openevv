@@ -16,26 +16,26 @@
 uint8_t enus_evv_authored_data[] = {
     /* lex_prefix_re, 2 bytes at 0 */
     24,2,
-    /* lts_bt, 2 bytes at 2 */
-    11,26,
-    /* say_04, 1 bytes at 4 */
-    4,
-    /* say_01, 1 bytes at 5 */
-    1,
-    /* lts_wr, 2 bytes at 6 */
-    28,24,
-    /* say_18, 1 bytes at 8 */
-    24,
-    /* say_1b, 1 bytes at 9 */
-    27,
-    /* lts_dg, 2 bytes at 10 */
-    13,15,
-    /* say_11, 1 bytes at 12 */
-    17,
-    /* lts_dj, 2 bytes at 13 */
-    13,17,
-    /* say_03, 1 bytes at 15 */
+    /* fence_03, 1 bytes at 2 */
     3,
+    /* lts_bt, 2 bytes at 3 */
+    11,26,
+    /* say_04, 1 bytes at 5 */
+    4,
+    /* say_01, 1 bytes at 6 */
+    1,
+    /* lts_wr, 2 bytes at 7 */
+    28,24,
+    /* say_18, 1 bytes at 9 */
+    24,
+    /* say_1b, 1 bytes at 10 */
+    27,
+    /* lts_dg, 2 bytes at 11 */
+    13,15,
+    /* say_11, 1 bytes at 13 */
+    17,
+    /* lts_dj, 2 bytes at 14 */
+    13,17,
     /* lts_mech, 4 bytes at 16 */
     20,2,12,16,
     /* say_141f07, 3 bytes at 20 */

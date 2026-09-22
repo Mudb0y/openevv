@@ -69,17 +69,42 @@ PIECE_START, PIECE_END = 876, 884
 # written with English's numbers would lay Spanish's phones into its words.
 
 
+def takes(tag, stem, name):
+    """How many arguments the rule this one stands in for is handed.
+
+    It decides where the range to spell comes from, and the two families
+    differ: English's letter rules take the state alone and read the two ends
+    out of variables 106 and 107, and Spanish's are handed them. A rule of
+    ours that read the variables where the caller passes the range spells
+    nothing at all, which is what the whole of Spanish did until this was
+    noticed -- every b and d and f simply gone from the words.
+    """
+    where = os.path.join(ROOT, "lang", tag, "rules", stem + ".dr")
+    want = False
+    for line in open(where):
+        w = line.split()
+        if w[:1] == ["rule"]:
+            want = len(w) > 1 and w[1] == name
+        elif want and w[:1] == ["shape"]:
+            for i, t in enumerate(w):
+                if t == "params":
+                    return int(w[i + 1])
+    raise Trouble("%s has no rule called %s to stand in for"
+                  % (os.path.basename(where), name))
+
+
 def fields(tag):
-    """The letters field and the phones field, as this language numbers them,
-    which is the order it declares its statements in."""
+    """The letters field, the phones field and the one a letter rule fences,
+    as this language numbers them, which is the order it declares its
+    statements in."""
     at = {}
     for line in open(os.path.join(ROOT, "lang", tag, "%s.statements" % tag)):
         if line.startswith("statement "):
             at.setdefault(line.split()[1], len(at))
-    for want in ("inp", "phone"):
+    for want in ("inp", "phone", "morph"):
         if want not in at:
             raise Trouble("%s declares no %s statement" % (tag, want))
-    return at["inp"], at["phone"]
+    return at["inp"], at["phone"], at["morph"]
 
 
 class Trouble(Exception):
@@ -265,7 +290,7 @@ def parse(path):
 # ---- what it compiles to -------------------------------------------------
 
 def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
-             letters_at, phones_at):
+             letters_at, phones_at, fence_at, params):
     """One letter's rule, as the upper form.
 
     The shape is IBM's own and the tags are its numbering: the arm to fall to
@@ -298,15 +323,25 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
 
     out = []
     w = out.append
-    w("rule %s takes 1 from %s" % (name, obj))
+    w("rule %s takes %d from %s" % (name, params, obj))
     w("  through wrappers")
     w("  afresh")
-    w("  variable leftpoint word %d" % LEFT)
-    w("  variable rightpoint word %d" % RIGHT)
+    if params == 1:
+        w("  variable leftpoint word %d" % LEFT)
+        w("  variable rightpoint word %d" % RIGHT)
     w("  variable piecestart word %d" % PIECE_START)
     w("  variable pieceend word %d" % PIECE_END)
+    # Where the two ends of the range live, which is the whole of the
+    # difference between the two families of letter rule.
+    left = "addr leftpoint" if params == 1 else "arg 1"
+    right = "addr rightpoint" if params == 1 else "arg 2"
     w("")
-    w("  call ZZfenceZZstring376")
+    # The fence is one statement type, and the wrapper IBM's own rule calls
+    # is named for a string of that language's own. Ours is minted instead,
+    # since a wrapper named for English's string does not exist in Spanish's
+    # module and the build says so rather than guessing.
+    w("  call fence 1 sym %s"
+      % known.name("fence", bytes([fence_at]), "the morph statement"))
 
     # The tags. One a spelling arm, one for each arm that can be fallen to,
     # and the last for the rule having spelled something.
@@ -337,7 +372,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 # one and told to read leftwards meets the letter before this
                 # one first -- the mirror of the rightward scan below, which
                 # is set on the same end and meets this letter first.
-                w("  call lpta_loadp addr leftpoint")
+                w("  call lpta_loadp %s" % left)
                 w("  call setscan_l %d" % letters_at)
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
@@ -356,7 +391,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 # The run has to begin where the piece does. Put the scan on
                 # the letter walking left and ask whether it is already at the
                 # piece's first node.
-                w("  call lpta_loadp addr leftpoint")
+                w("  call lpta_loadp %s" % left)
                 w("  call setscan_l %d" % letters_at)
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
@@ -367,7 +402,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("    go to %s" % nxt)
                 w("  end")
             if len(a.letters) > 1 or a.before:
-                w("  call lpta_loadp addr leftpoint")
+                w("  call lpta_loadp %s" % left)
                 w("  call setscan_r %d" % letters_at)
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
@@ -390,8 +425,8 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
             # saved a leftward scan as the right end of the range, and the
             # rule read the same letter for ever after.
             if len(a.letters) > 1 or a.before:
-                w("  call savescptr %d addr rightpoint"
-                  % tag_of[("body", i)])
+                w("  call savescptr %d %s"
+                  % (tag_of[("body", i)], right))
             if a.before in CLASSES:
                 # What follows has to be of a kind rather than a letter, which
                 # is how a rule says `a vowel' without naming twenty of them.
@@ -419,7 +454,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("  if answer is not 0")
                 w("    backtrack")
                 w("  end")
-            w(spell(a, known, phones_of, phones_at))
+            w(spell(a, known, phones_of, phones_at, left, right))
             w("  go to laid")
         else:
             w("")
@@ -427,7 +462,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("# %s" % a.note)
             if i:
                 w("place arm%d on %d" % (i, tag_of[("fall", i)]))
-            w(spell(a, known, phones_of, phones_at))
+            w(spell(a, known, phones_of, phones_at, left, right))
 
     w("")
     w("place laid")
@@ -441,7 +476,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
     return "\n".join(out)
 
 
-def spell(arm, known, phones_of, phones_at):
+def spell(arm, known, phones_of, phones_at, left, right):
     """The one line that lays an arm's phones over the range it matched."""
     said = phones_of(arm.phones)
     if not said:
@@ -457,11 +492,19 @@ def spell(arm, known, phones_of, phones_at):
         # leftward scan as the right end of its range, so the range it
         # emptied was nonsense. Reading another language's rules is what
         # settled it.
-        return ("  call lpta_rpta_loadp addr leftpoint addr rightpoint\n"
-                "  call delete_2pt %d 0" % phones_at)
-    return ("  call lpta_rpta_loadp addr leftpoint addr rightpoint\n"
+        raise Trouble(
+            "%s: `says nothing' is not ready. Emptying the phones over the"
+            " range is what a silent letter is -- Spanish's h does exactly"
+            " that -- and an arm of ours that does only it answers correctly"
+            " and leaves something behind every time it fires, so the engine"
+            " slows to a crawl: Spanish went from thirteen milliseconds a"
+            " word to over a second. IBM's rule does more than the one call"
+            " and which part the engine needs has not been read yet."
+            " Swallow the letter with the one beside it instead, the way"
+            " `bt says t' does." % arm.where)
+    return ("  call lpta_rpta_loadp %s %s\n"
             "  call insert_2pt_s %d %d sym %s 0"
-            % (phones_at, len(said),
+            % (left, right, phones_at, len(said),
                known.name("say", said, " ".join(arm.phones))))
 
 
@@ -470,7 +513,7 @@ def compile_tag(tag):
     if not os.path.exists(path):
         raise Trouble("there is no lang/%s/letters" % tag)
     known = Strings()
-    letters_at, phones_at = fields(tag)
+    letters_at, phones_at, fence_at = fields(tag)
     lcode = letter_codes(tag)
     pcode = phone_codes(tag)
     out = [
@@ -490,7 +533,8 @@ def compile_tag(tag):
         stem = obj[:-4] if obj.endswith(".obj") else obj
         out.append("")
         out.append(rule_for(tag, letter, name, obj, arms, known, lcode,
-                            pcode, letters_at, phones_at))
+                            pcode, letters_at, phones_at, fence_at,
+                            takes(tag, stem, name)))
     if stem is None:
         raise Trouble("lang/%s/letters names no letter" % tag)
     return "\n".join(out) + "\n", known.text(tag), stem

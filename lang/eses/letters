@@ -1,0 +1,42 @@
+# Castilian Spanish letter-to-sound.
+#
+# One block a letter and its arms in order, the first that matches winning.
+# The last arm of a block is the bare letter: what it says when nothing else
+# applies. An arm may also say what must stand to its left and right without
+# swallowing it -- `after', `before', and `vowel', `consonant' or `glide' in
+# either place -- and `at start' or `at end' for a run that has to begin or
+# end where the piece of the word does.
+#
+# Spanish spells what it says, so most of these are one arm. The letters with
+# real rules in them are c, g, l, n, p, q, r, s, x, y, z and the vowels, and
+# those are not written here yet; h is not either, because it is silent and
+# `says nothing' is not ready -- tools/rules/letters.py says why.
+
+rules in st_phone.obj named apply_span_%s_rules
+
+letter b
+  b    says b
+
+letter d
+  d    says d
+
+letter f
+  f    says f
+
+letter j
+  j    says j
+
+letter k
+  k    says k
+
+letter m
+  m    says m
+
+letter ñ as enye
+  ñ    says N
+
+letter v
+  v    says b         # v and b are one sound
+
+letter w
+  w    says w

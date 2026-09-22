@@ -1046,11 +1046,13 @@ The first was one call. A scan is set on one of the two ends of the range the ru
 
 **Read the generated rule before believing a theory about the engine.** It is forty lines and it says exactly what was emitted.
 
-### How a letter is made silent
+### How a letter is made silent, and why it is still not ready
 
-**By emptying the phones over the range, which is what Spanish does for its `h`.** `apply_span_h_rules` loads the two ends of the range and calls `delete_2pt` on the phone field, and there is no insertion anywhere in the rule.
+**By emptying the phones over the range**, which is what Spanish does for its `h`: `apply_span_h_rules` loads the two ends and calls `delete_2pt` on the phone field, and there is no insertion anywhere in the rule. This file said that was impossible for two days, on the strength of three experiments that all hung the engine -- and the hang was the arm bug above rather than the deletion.
 
-This file said the opposite for two days, on the strength of three experiments that all hung the engine. The deletion was not the reason. The arm that tried it was a bare run with only a left context, and such an arm was saving a leftward scan as the right end of its range, so what it emptied was nonsense. The fix for that is elsewhere in this file; reading another language's rules is what settled which of the two was at fault.
+**Emitting only that call is not enough, and the words do not say so.** They all come out right. What says so is the clock: Spanish with `h says nothing` answers three thousand words in 39 seconds without the arm and takes over a second a word with it, getting steadily worse, so something is left behind every time it fires. IBM's own rule does more than the one call -- it plants a choice point, compares, and on one path pops it and calls `delete_1pt` as well -- and which of that the engine needs has not been read yet.
+
+So the compiler refuses `says nothing` and says that, rather than emitting something correct and unusable. **A gate that only reads answers cannot see this**, which is worth remembering: the word gate was perfectly happy.
 
 ### What the eight languages come to
 
@@ -1069,3 +1071,17 @@ English 271, British English 276, French Canadian 162, French 151, German 121, I
 `test/words.sh` has always taken a language; only English had a list. All eight have one now, written by `tools/measure/wordlist.py` out of each language's own spelling dictionary -- SCOWL for the two Englishes, hunspell's German, Spanish, French and Italian -- twenty thousand words apiece, evenly spread, in that language's own letters rather than filtered to ASCII, which would have dropped every German word with an umlaut in it.
 
 That is the thing that makes transcribing the other seven safe. Before it, the only gate below the sentences was about a hundred matrix cases a language, and a change that mended forty words and broke four hundred would have passed without a murmur.
+
+## Spanish, the first language after English
+
+Nine letters are ours -- `b`, `d`, `f`, `j`, `k`, `m`, `ñ`, `v`, `w` -- and eight of them are one arm, because Spanish spells what it says. `v says b` is the whole of why *baca* and *vaca* sound alike. All 20,000 words unchanged and the 98 matrix cases with them.
+
+Three things the second family taught, none of which English could have.
+
+**The range comes from somewhere else.** English's letter rules take the state alone and read the two ends of the range they spell out of variables 106 and 107. Spanish's are *handed* them: `apply_span_b_rules` takes three arguments and its insert wrapper is `lprp_load` rather than `lprp_load_vvg_0106_0107`. A rule of ours that read the variables where the caller passes the range spelled nothing at all, and the whole of Spanish lost every `b`, `d` and `f` before that was noticed. The compiler reads the argument count out of the lower form now and uses whichever the rule it stands in for uses.
+
+**The phone field is not field 2.** Every module but Spanish declares its phone statement third; Spanish declares it fifth. Both numbers come out of `<tag>.statements`.
+
+**And the fence is named for a string of that language's own.** English's rules call `ZZfenceZZstring376` and Spanish's `ZZfenceZZstring109`, and both fence exactly one statement type, the third, which is `morph` everywhere. A wrapper named for English's string does not exist in Spanish's module, so the compiler mints its own constant and calls `fence` directly. The build says so rather than guessing, which is what `delta.h` declaring every entry is for.
+
+The letters with real rules in them -- `c`, `g`, `l`, `n`, `p`, `q`, `r`, `s`, `x`, `y`, `z` and the vowels -- are next, and `h` waits on `says nothing`.

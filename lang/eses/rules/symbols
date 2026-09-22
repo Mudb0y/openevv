@@ -1155,3 +1155,14 @@ at glob.obj ZZstring71 eses_evv_glob_data_3 160
 at glob.obj ZZstring91 eses_evv_glob_data_3 232
 at glob.obj ZZstring79 eses_evv_glob_data_3 188
 at glob.obj ZZstring98 eses_evv_glob_data_3 252
+
+# And the constants of our own, out of rules/constants by tools/rules/consts.py.
+store eses_evv_authored_data
+at * fence_03 eses_evv_authored_data 0
+at * say_04 eses_evv_authored_data 1
+at * say_05 eses_evv_authored_data 2
+at * say_0b eses_evv_authored_data 3
+at * say_10 eses_evv_authored_data 4
+at * say_16 eses_evv_authored_data 5
+at * say_18 eses_evv_authored_data 6
+at * say_1e eses_evv_authored_data 7

@@ -13,6 +13,26 @@
 
 #include "delta_lang.h"
 
+uint8_t eses_evv_authored_data[] = {
+    /* fence_03, 1 bytes at 0 */
+    3,
+    /* say_04, 1 bytes at 1 */
+    4,
+    /* say_05, 1 bytes at 2 */
+    5,
+    /* say_0b, 1 bytes at 3 */
+    11,
+    /* say_10, 1 bytes at 4 */
+    16,
+    /* say_16, 1 bytes at 5 */
+    22,
+    /* say_18, 1 bytes at 6 */
+    24,
+    /* say_1e, 1 bytes at 7 */
+    30,
+};
+
 const delta_store eses_delta_authored_store[] = {
+    { eses_evv_authored_data, sizeof eses_evv_authored_data },
     { 0, 0 },
 };

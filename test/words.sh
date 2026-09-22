@@ -21,7 +21,8 @@
 # usage: test/words.sh check  [lang ...]     the default
 #        test/words.sh record [lang ...]
 #
-# EVV_WORDS_NATIVE names a phonemes binary to drive rather than building one.
+# EVV_WORDS_NATIVE names a phonemes binary to drive rather than building one,
+# and EVV_WORDS_JOBS how many processes to run at once, every core by default.
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -72,7 +73,12 @@ for tag in $want; do
     # Every word is its own instance -- test/harness/phonemes.c makes and
     # deletes one a line -- so nothing carries from one to the next and the
     # list can be cut into as many pieces as there are cores.
-    jobs=$(nproc)
+    # As many processes at once as EVV_WORDS_JOBS says, and every core by
+    # default. The default is right for a machine nobody else is using and
+    # wrong for one somebody is working on: twenty thousand words across
+    # forty-eight cores is ten seconds and takes the whole machine while it
+    # runs.
+    jobs=${EVV_WORDS_JOBS:-$(nproc)}
     split -n l/"$jobs" -d -a 3 "$work/words.txt" "$work/part."
     for p in "$work"/part.*; do
         ( "$native" "$p" > "$p.said" 2>/dev/null ) &
