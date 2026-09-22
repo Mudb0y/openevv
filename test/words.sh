@@ -143,7 +143,11 @@ for tag in $want; do
         echo "words: $tag, $total words, every one as it was"
     else
         echo "words: $tag, $total words, $moved moved" >&2
-        diff "$work/was.txt" "$work/now.txt" | grep '^[<>]' | head -40 >&2
+        # LC_ALL=C again: the answers carry the language's own letters, so
+        # grep in a UTF-8 locale calls the diff a binary file and prints one
+        # line saying so instead of the words that moved.
+        diff "$work/was.txt" "$work/now.txt" \
+            | LC_ALL=C grep '^[<>]' | head -40 >&2
         [ "$moved" -gt 20 ] && echo "  ... $moved in all" >&2
         bad=1
     fi

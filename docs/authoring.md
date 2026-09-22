@@ -1092,8 +1092,14 @@ Three things the second family taught, none of which English could have.
 
 The letters left are `c`, `g`, `n`, `p`, `r`, `x`, `y` and the vowels, and `h` waits on `says nothing`.
 
-**The vowels are where Spanish stops being easy, and it is worth saying why before anyone tries them again.** They carry the diphthongs: `aire` is `ay.re`, `causa` is `kaw.sa`, `peine` is `pey.ne`, so an `i` or a `u` beside another vowel is a glide rather than a vowel. Written as one arm each the five vowels move 661 words; written with `i after vowel says y` and `u after vowel says w` they move 1,552, which is worse and says the rule is not that.
+**The vowels are a glide system, and this is what it is.** Read out of `apply_span_i_rules` and `apply_span_a_rules` properly rather than pattern-matched, and taken from 1,552 words wrong to 393 by writing it down.
 
-Two things the wrong answers said. The glide goes both ways -- `abecedario` is `da.1ry.o`, so an `i` *before* a vowel is a glide too -- and it is not a matter of the letter beside it: `abanquino` came out `banky.no` because the silent `u` of `qu` counted as a vowel. And a written accent breaks a diphthong, which is what `apply_span_i_rules` is testing when it names `á`, `é` and `í` one after another.
+A falling diphthong is spelled by the *first* vowel's own rule, both letters at once: `ai says a y` is `aire` and `baile`, and `ei` and `oi` the same. That is what the two-phone insert in `apply_span_a_rules` is, and it is why `apply_span_i_rules` never sees the `i` of `aire`.
 
-So the vowels want each rule's control flow read rather than its call list pattern-matched, and that is a different afternoon. The same shape waits in Italian and French, so it is worth getting right once.
+A rising one is spelled by the glide itself: `i before vowel says y` is `abecedario` and `radio`, and `u before a`, `before e`, `before i`, `before o` says `w` is `agua`, `bueno`, `cuido`, `cuota`. `u after a`, `after e`, `after o` says `w` is `causa` and `deuda`.
+
+**Only one of an adjacent pair glides, and it is the first**, which is why `u after vowel` is wrong where `u after a`, `e` and `o` are right: in `ciudad` the `i` has already become the glide and the `u` stays a vowel, and `u after vowel` made it `Tywdad`. And `u before u` is wrong for the same reason from the other side -- `duunviro` is two syllables.
+
+**What is left is the written accent, and it is 393 words.** `abolirías` is `li.1ri.0as` and not `li.1ryas`; `abolíais` is `li.0ays` and not `lyays`. So an accented vowel does not glide -- it is the stressed one, and stress is what a glide gives up. `apply_span_i_rules` names `á`, `é` and `í` by their own letter codes, which says the accented letters are still distinct letters when the letter rules run, and that the same rule is entered for `i` and for `í`. An arm in this notation must begin with its block's own letter, so saying *í does not glide* wants either a block for `í` or a way for an arm to name a letter the block is not named after.
+
+That is the next thing, and it is the last thing in Spanish's vowels. The same shape waits in Italian and French.
