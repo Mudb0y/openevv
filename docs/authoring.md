@@ -1084,4 +1084,10 @@ Three things the second family taught, none of which English could have.
 
 **And the fence is named for a string of that language's own.** English's rules call `ZZfenceZZstring376` and Spanish's `ZZfenceZZstring109`, and both fence exactly one statement type, the third, which is `morph` everywhere. A wrapper named for English's string does not exist in Spanish's module, so the compiler mints its own constant and calls `fence` directly. The build says so rather than guessing, which is what `delta.h` declaring every entry is for.
 
-The letters with real rules in them -- `c`, `g`, `l`, `n`, `p`, `q`, `r`, `s`, `x`, `y`, `z` and the vowels -- are next, and `h` waits on `says nothing`.
+**Fifteen now**: `b`, `ç`, `d`, `f`, `j`, `k`, `l`, `m`, `ñ`, `q`, `s`, `t`, `v`, `w`, `z`. `ll says L` is *calle*, `z says T` is the Castilian theta, and `s` voices before four consonants -- `s before d says z` is *desde*, and l, m and n with it. Not before b, g or r, which was worth learning from the gate rather than from Spanish lessons: `atisbar`, `apesgar` and `desrabar` all keep their /s/.
+
+**A `before` on a bare letter scans from the other end**, which is a thing only Spanish could have shown. Where an arm has a run to match, the scan starts at the left end of the range and meets this letter first. Where it only looks at what follows, it has to start at the right end, or the first thing it meets is the letter itself: `s before m says z` read from the left tests an `s` against an `m` and never matches, which is what 455 words said before the compiler was taught the difference. No English arm has that shape -- `ng before then` and `qu before e` all have a run -- so the fault could not have turned up there.
+
+**And `q` is narrower than it looks.** *qu says k* passes 20,000 words and moves a matrix case: the `u` is only silent before `e` and `i`, accented or not, and IBM's rule tests exactly those four. The word list has no counter-example and the sentence gate does, which is the pair of gates doing what they are for.
+
+The letters left are `c`, `g`, `n`, `p`, `r`, `x`, `y` and the vowels, and `h` waits on `says nothing`. The vowels want the two-phone inserts a diphthong takes -- writing them as one arm each moves 661 words.

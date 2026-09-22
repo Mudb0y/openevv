@@ -40,3 +40,30 @@ letter v
 
 letter w
   w    says w
+
+letter z
+  z    says T         # the Castilian theta
+
+letter ç as c_cedilla
+  ç    says s
+
+letter l
+  ll   says L         # calle, llamar
+  l    says l
+
+letter q
+  qu before e   says k    # que, quedar
+  qu before i   says k    # quien, quinto
+  qu before é   says k
+  qu before í   says k
+  q             says k
+
+letter t
+  t    says t
+
+letter s
+  s before d   says z     # desde
+  s before l   says z     # isla
+  s before m   says z     # abismo
+  s before n   says z     # asno
+  s            says s

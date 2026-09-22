@@ -402,7 +402,15 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("    go to %s" % nxt)
                 w("  end")
             if len(a.letters) > 1 or a.before:
-                w("  call lpta_loadp %s" % left)
+                # From the left end where there is a run to match, since the
+                # scan meets this letter first there; from the right end
+                # where the arm only looks at what follows, since then the
+                # first thing the scan should meet is the letter after this
+                # one. Spanish's s does the second -- `s before m says z' is
+                # abismo -- and reading from the left there tests the s
+                # against an m and never matches.
+                w("  call lpta_loadp %s"
+                  % (left if len(a.letters) > 1 else right))
                 w("  call setscan_r %d" % letters_at)
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
