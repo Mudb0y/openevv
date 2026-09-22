@@ -1090,4 +1090,10 @@ Three things the second family taught, none of which English could have.
 
 **And `q` is narrower than it looks.** *qu says k* passes 20,000 words and moves a matrix case: the `u` is only silent before `e` and `i`, accented or not, and IBM's rule tests exactly those four. The word list has no counter-example and the sentence gate does, which is the pair of gates doing what they are for.
 
-The letters left are `c`, `g`, `n`, `p`, `r`, `x`, `y` and the vowels, and `h` waits on `says nothing`. The vowels want the two-phone inserts a diphthong takes -- writing them as one arm each moves 661 words.
+The letters left are `c`, `g`, `n`, `p`, `r`, `x`, `y` and the vowels, and `h` waits on `says nothing`.
+
+**The vowels are where Spanish stops being easy, and it is worth saying why before anyone tries them again.** They carry the diphthongs: `aire` is `ay.re`, `causa` is `kaw.sa`, `peine` is `pey.ne`, so an `i` or a `u` beside another vowel is a glide rather than a vowel. Written as one arm each the five vowels move 661 words; written with `i after vowel says y` and `u after vowel says w` they move 1,552, which is worse and says the rule is not that.
+
+Two things the wrong answers said. The glide goes both ways -- `abecedario` is `da.1ry.o`, so an `i` *before* a vowel is a glide too -- and it is not a matter of the letter beside it: `abanquino` came out `banky.no` because the silent `u` of `qu` counted as a vowel. And a written accent breaks a diphthong, which is what `apply_span_i_rules` is testing when it names `á`, `é` and `í` one after another.
+
+So the vowels want each rule's control flow read rather than its call list pattern-matched, and that is a different afternoon. The same shape waits in Italian and French, so it is worth getting right once.
