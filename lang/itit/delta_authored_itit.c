@@ -13,6 +13,46 @@
 
 #include "delta_lang.h"
 
+uint8_t itit_evv_authored_data[] = {
+    /* fence_03, 1 bytes at 0 */
+    3,
+    /* lts_bb, 2 bytes at 1 */
+    11,11,
+    /* say_0101, 2 bytes at 3 */
+    1,1,
+    /* say_01, 1 bytes at 5 */
+    1,
+    /* lts_dd, 2 bytes at 6 */
+    13,13,
+    /* say_0303, 2 bytes at 8 */
+    3,3,
+    /* lts_ff, 2 bytes at 10 */
+    14,14,
+    /* say_0808, 2 bytes at 12 */
+    8,8,
+    /* say_08, 1 bytes at 14 */
+    8,
+    /* lts_pp, 2 bytes at 15 */
+    22,22,
+    /* say_0202, 2 bytes at 17 */
+    2,2,
+    /* say_02, 1 bytes at 19 */
+    2,
+    /* lts_tt, 2 bytes at 20 */
+    26,26,
+    /* say_0404, 2 bytes at 22 */
+    4,4,
+    /* say_04, 1 bytes at 24 */
+    4,
+    /* lts_vv, 2 bytes at 25 */
+    27,27,
+    /* say_0707, 2 bytes at 27 */
+    7,7,
+    /* say_07, 1 bytes at 29 */
+    7,
+};
+
 const delta_store itit_delta_authored_store[] = {
+    { itit_evv_authored_data, sizeof itit_evv_authored_data },
     { 0, 0 },
 };

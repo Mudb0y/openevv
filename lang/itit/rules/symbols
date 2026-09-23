@@ -1399,3 +1399,24 @@ at glob.obj ZZstring54 itit_evv_glob_data_3 144
 at glob.obj ZZstring94 itit_evv_glob_data_3 232
 at glob.obj ZZstring104 itit_evv_glob_data_3 264
 at glob.obj ZZstring130 itit_evv_glob_data_3 372
+
+# And the constants of our own, out of rules/constants by tools/rules/consts.py.
+store itit_evv_authored_data
+at * fence_03 itit_evv_authored_data 0
+at * lts_bb itit_evv_authored_data 1
+at * say_0101 itit_evv_authored_data 3
+at * say_01 itit_evv_authored_data 5
+at * lts_dd itit_evv_authored_data 6
+at * say_0303 itit_evv_authored_data 8
+at * lts_ff itit_evv_authored_data 10
+at * say_0808 itit_evv_authored_data 12
+at * say_08 itit_evv_authored_data 14
+at * lts_pp itit_evv_authored_data 15
+at * say_0202 itit_evv_authored_data 17
+at * say_02 itit_evv_authored_data 19
+at * lts_tt itit_evv_authored_data 20
+at * say_0404 itit_evv_authored_data 22
+at * say_04 itit_evv_authored_data 24
+at * lts_vv itit_evv_authored_data 25
+at * say_0707 itit_evv_authored_data 27
+at * say_07 itit_evv_authored_data 29

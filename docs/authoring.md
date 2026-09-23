@@ -1123,3 +1123,20 @@ Only `x` is left, and `h`, which waits on `says nothing`.
 Until that was there, every `at start` and `at end` arm in Spanish quietly failed -- `ps at start` and `ng at end` compiled, never fired, and the words that moved looked like a rule being wrong rather than a variable being another language's. The compiler refuses a condition now where the file has not said.
 
 **That also means English's `at start` has never been proved by anything**, and still is not: no word in the list distinguishes `wr at start` from a bare `wr`. Spanish's does, so the mechanism is sound; English's own arm is still only faithful to IBM's rule rather than measured.
+
+
+## Italian, and the word gate is not enough
+
+Six letters are in -- `b`, `d`, `f`, `p`, `t`, `v` -- and every one of them is the same shape, because Italian doubles its consonants and means it:
+
+    letter t
+      tt   says t t
+      t    says t
+
+The Spanish groundwork transferred whole. The header says `rules in it_phone.obj named apply_ital_%s_rules` and `a piece runs from 712 to 872`, the argument count and the field numbers come out of the module as before, and the first seven letters went in green on the first try.
+
+**And then ten more letters passed the word gate and moved matrix cases.** `l`, `m`, `n`, `r`, `j`, `k`, `w`, `x`, `q` and `a` all leave 20,000 Italian words exactly as they were, and `ll says l l` on its own moves fifteen of the 98 sentences. So they are out, and what that says is worth more than the letters would have been.
+
+**A word list cannot see a letter rule that only matters in a sentence.** The likeliest reason is that the common words in a list are answered from the dictionary and never reach the letter rules at all, so a list of twenty thousand words exercises the rules on the *uncommon* ones while a sentence exercises them on `il`, `la` and `alle`. Spanish's `q` said the same thing more quietly -- `qu says k` passed every word and moved one case.
+
+So both gates run for every letter from here, and the matrix is the one that decides. That is a build and a minute a letter rather than fifteen seconds, and it is what the letters cost.

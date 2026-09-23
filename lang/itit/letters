@@ -1,0 +1,43 @@
+# Italian letter-to-sound.
+#
+# One block a letter and its arms in order, the first that matches winning.
+# The last arm of a block is the bare letter: what it says when nothing else
+# applies. An arm may also say what must stand to its left and right without
+# swallowing it -- `after', `before', and `vowel', `consonant' or `glide' in
+# either place -- and `at start' or `at end' for a run that has to begin or
+# end where the piece of the word does.
+#
+# Italian doubles its consonants and means it: a doubled letter says its
+# phone twice, and that is the shape of nearly every consonant here.
+#
+# Six are in. l, m, n, r, j, k, w, x, q and a all pass the word gate over
+# 20,000 words and move matrix cases, which is the pair of gates disagreeing
+# rather than either being wrong -- see docs/authoring.md.
+
+rules in it_phone.obj named apply_ital_%s_rules
+a piece runs from 712 to 872
+
+letter b
+  bb   says b b
+  b    says b
+
+letter d
+  dd   says d d
+  d    says d
+
+letter f
+  ff   says f f
+  f    says f
+
+letter p
+  pp   says p p
+  p    says p
+
+letter t
+  tt   says t t
+  t    says t
+
+letter v
+  vv   says v v
+  v    says v
+
