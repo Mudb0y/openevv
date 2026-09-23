@@ -10,9 +10,9 @@
 # Italian doubles its consonants and means it: a doubled letter says its
 # phone twice, and that is the shape of nearly every consonant here.
 #
-# Six are in. l, m, n, r, j, k, w, x, q and a all pass the word gate over
-# 20,000 words and move matrix cases, which is the pair of gates disagreeing
-# rather than either being wrong -- see docs/authoring.md.
+# Thirteen are in. l, m and n are not: each passes the word gate over 20,000
+# words and moves matrix cases on its own, which is the pair of gates
+# disagreeing rather than either being wrong -- see docs/authoring.md.
 
 rules in it_phone.obj named apply_ital_%s_rules
 a piece runs from 712 to 872
@@ -41,3 +41,25 @@ letter v
   vv   says v v
   v    says v
 
+
+letter r
+  rr   says R     # carro -- one trill rather than two taps
+  r    says r
+
+letter j
+  j    says J
+
+letter k
+  k    says k
+
+letter w
+  w    says v
+
+letter x
+  x    says k s
+
+letter q
+  q    says k
+
+letter a
+  a    says a
