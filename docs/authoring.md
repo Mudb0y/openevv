@@ -1108,4 +1108,18 @@ A rising one is spelled by the glide itself: `i before vowel says y` is `abeceda
 
 The one trap in it, and it cost two builds: **`testFldeq` reads at the scan**, so the scan has to be put on this letter first. Emitted without that, the test asks about whatever the scan last pointed at, quietly answers no, and the arm never fires.
 
-The letters left in Spanish are `c`, `g`, `n`, `p`, `r`, `x` and `y`, and `h` waits on `says nothing`.
+### Twenty-six letters, and where a piece lives is the language's own
+
+Only `x` is left, and `h`, which waits on `says nothing`.
+
+`c` and `g` are the soft-hard pair -- `c before e says T` is the Castilian theta and `gu before e says g` is *guerra* -- and the diaeresis is the exception that proves it: `ü before e says w` is *bilingüe*, `ü before i says w` is *piragüismo*, and a bare `ü says u` for *lingüística*, where the stressed `í` after it takes the syllable.
+
+`r` is trilled in four places and tapped everywhere else: at the start of a piece, and after `l`, `n` or `s`. `p` is silent only at the start -- `ps at start says s` is *psique* where *apocalipsis* keeps its p. `n` swallows a final `g`: `ng at end says n` is *hong*.
+
+**And `at start` and `at end` needed something the file had to say.** Both test against the two ends of the piece being read, and where those live is the language's own: English holds them at 876 and 884 and Spanish at 704 and 872. Nothing in a rule says which is which, so a letters file says it once at the top:
+
+    a piece runs from 704 to 872
+
+Until that was there, every `at start` and `at end` arm in Spanish quietly failed -- `ps at start` and `ng at end` compiled, never fired, and the words that moved looked like a rule being wrong rather than a variable being another language's. The compiler refuses a condition now where the file has not said.
+
+**That also means English's `at start` has never been proved by anything**, and still is not: no word in the list distinguishes `wr at start` from a bare `wr`. Spanish's does, so the mechanism is sound; English's own arm is still only faithful to IBM's rule rather than measured.

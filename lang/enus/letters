@@ -13,6 +13,7 @@
 # words moved.
 
 rules in et_phone.obj named %s_rules
+a piece runs from 876 to 884
 
 letter b
   bt at end   says t     # debt

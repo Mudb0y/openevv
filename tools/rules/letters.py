@@ -60,7 +60,9 @@ phonemes = sibling("module/phonemes")
 # where the b ends a prefix and the t starts a root. Without it those and six
 # more come out wrong, which is how the condition was found.
 LEFT, RIGHT = 844, 852
-PIECE_START, PIECE_END = 876, 884
+# Where the two ends of the piece live is the language's own business and
+# nothing in a rule says which is which, so a letters file says: English holds
+# them at 876 and 884, Spanish at 704 and 872.
 
 # Which field is which. A field is a level of the spine -- the letters the scan
 # walks, the phones an arm lays down -- and the number each has is the
@@ -218,6 +220,7 @@ def parse(path):
     cur = None
     obj = None
     pattern = None
+    piece = None
     for n, raw in enumerate(open(path), 1):
         where = "%s line %d" % (os.path.basename(path), n)
         note = ""
@@ -228,6 +231,17 @@ def parse(path):
         if not line:
             continue
         w = line.split()
+        if w[:2] == ["a", "piece"]:
+            # Where this language keeps the two ends of the piece being read,
+            # which an `at start' or `at end' arm tests against. They are the
+            # language's own: English holds them at 876 and 884 and Spanish
+            # at 704 and 872, and nothing in a rule says which is which, so
+            # the file says.
+            if len(w) != 7 or w[2:4] != ["runs", "from"] or w[5] != "to":
+                raise Trouble("%s: the line is `a piece runs from <start> to"
+                              " <end>'" % where)
+            piece = (int(w[4]), int(w[6]))
+            continue
         if w[0] == "rules":
             if len(w) != 5 or w[1] != "in" or w[3] != "named":
                 raise Trouble("%s: the header is `rules in <object> named"
@@ -244,9 +258,9 @@ def parse(path):
                 raise Trouble("%s: say which object these stand in for before"
                               " the first letter" % where)
             if len(w) == 2:
-                cur = (w[1], pattern % w[1], obj, [])
+                cur = (w[1], pattern % w[1], obj, [], piece)
             elif len(w) == 4 and w[2] == "as":
-                cur = (w[1], pattern % w[3], obj, [])
+                cur = (w[1], pattern % w[3], obj, [], piece)
             else:
                 raise Trouble("%s: a block is `letter <character>', with"
                               " `as <name>' where the rule is not spelled"
@@ -293,7 +307,7 @@ def parse(path):
 # ---- what it compiles to -------------------------------------------------
 
 def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
-             letters_at, phones_at, fence_at, params):
+             letters_at, phones_at, fence_at, params, piece):
     """One letter's rule, as the upper form.
 
     The shape is IBM's own and the tags are its numbering: the arm to fall to
@@ -332,8 +346,9 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
     if params == 1:
         w("  variable leftpoint word %d" % LEFT)
         w("  variable rightpoint word %d" % RIGHT)
-    w("  variable piecestart word %d" % PIECE_START)
-    w("  variable pieceend word %d" % PIECE_END)
+    if piece is not None:
+        w("  variable piecestart word %d" % piece[0])
+        w("  variable pieceend word %d" % piece[1])
     # Where the two ends of the range live, which is the whole of the
     # difference between the two families of letter rule.
     left = "addr leftpoint" if params == 1 else "arg 1"
@@ -390,6 +405,11 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
                 w("  end")
+            if a.when and piece is None:
+                raise Trouble("%s: `%s' needs the line `a piece runs from"
+                              " <start> to <end>' at the top of the file,"
+                              " since where those live is the language's own"
+                              % (a.where, a.when))
             if a.when == "at start":
                 # The run has to begin where the piece does. Put the scan on
                 # the letter walking left and ask whether it is already at the
@@ -555,12 +575,12 @@ def compile_tag(tag):
         "# the arm rather than to the letter, and one for having spelled.",
     ]
     stem = None
-    for letter, name, obj, arms in parse(path):
+    for letter, name, obj, arms, piece in parse(path):
         stem = obj[:-4] if obj.endswith(".obj") else obj
         out.append("")
         out.append(rule_for(tag, letter, name, obj, arms, known, lcode,
                             pcode, letters_at, phones_at, fence_at,
-                            takes(tag, stem, name)))
+                            takes(tag, stem, name), piece))
     if stem is None:
         raise Trouble("lang/%s/letters names no letter" % tag)
     return "\n".join(out) + "\n", known.text(tag), stem

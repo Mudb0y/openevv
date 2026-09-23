@@ -13,6 +13,7 @@
 # `says nothing' is not ready -- tools/rules/letters.py says why.
 
 rules in st_phone.obj named apply_span_%s_rules
+a piece runs from 704 to 872
 
 letter b
   b    says b
@@ -88,6 +89,8 @@ letter i
 
 letter u
   ú                says u     # aúlico, noúmeno -- an accent is stress
+  ü before e       says w     # bilingüe
+  ü before i       says w     # güira, piragüismo
   ü                says u     # lingüística
   u before a       says w     # agua
   u before e       says w     # bueno
@@ -98,3 +101,43 @@ letter u
   u after e        says w     # deuda, Europa
   u after o        says w
   u                says u
+
+letter c
+  ch           says C     # mucho, chico
+  c before e   says T     # cena
+  c before i   says T     # cine
+  c before é   says T
+  c before í   says T
+  c            says k     # casa, cosa
+
+letter g
+  gu before e  says g     # guerra
+  gu before i  says g     # guitarra
+  gu before í  says g     # borceguí
+  gu before é  says g
+  g before e   says j     # gente
+  g before i   says j     # gitano
+  g before é   says j
+  g before í   says j
+  g            says g     # gato
+
+letter n
+  ng at end    says n     # hong -- the g goes with it
+  n            says n
+
+letter p
+  ps at start  says s     # psique, psicopatía -- silent only at the start
+  p    says p
+
+letter r
+  rr            says R     # perro, carro
+  r at start    says R     # rosa, ropa -- trilled at the start of a piece
+  r after l     says R     # alrota
+  r after n     says R     # enredar
+  r after s     says R     # desrabar
+  r             says r
+
+letter y
+  y before vowel   says Y     # yo, ya
+  y after vowel    says y     # muy, rey
+  y                says i     # the word y
