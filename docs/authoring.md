@@ -1140,3 +1140,20 @@ The Spanish groundwork transferred whole. The header says `rules in it_phone.obj
 **A word list cannot see a letter rule that only matters in a sentence.** The likeliest reason is that the common words in a list are answered from the dictionary and never reach the letter rules at all, so a list of twenty thousand words exercises the rules on the *uncommon* ones while a sentence exercises them on `il`, `la` and `alle`. Spanish's `q` said the same thing more quietly -- `qu says k` passed every word and moved one case.
 
 So both gates run for every letter from here, and the matrix is the one that decides. That is a build and a minute a letter rather than fifteen seconds, and it is what the letters cost.
+
+
+### Thirteen of Italian, and three letters the notation cannot reach
+
+`b`, `d`, `f`, `p`, `t`, `v`, `r`, `j`, `k`, `w`, `x`, `q` and `a`, each proved on both gates before the next went in.
+
+`l`, `m` and `n` are out, and they are out for three different reasons, which is why they are worth naming rather than lumping together.
+
+**`n` computes its phone.** The ordinary path through `apply_ital_n_rules` is not an insertion of a string at all: it calls `settvar_s`, `npush_s`, `npop` and `insert_2ptv2`, which build a phone at run time and put that in. Even `n says n` with no other arm moves nineteen of the 98 cases. Nothing in this notation can say that, and it is the only Italian letter that does it.
+
+**`m` starts by looking left.** Its first arm sets the scan leftwards before anything else, where every letter that went in starts rightwards. `m says m` alone moves one case.
+
+**`l` starts rightwards like the ones that work** and still moves fifteen, so it is neither of the above and has not been read yet.
+
+### The way to find that out is one letter at a time, and the old way was wrong
+
+Testing subsets does not attribute blame here, because the letters interact: a rule that swallows a letter changes what the next rule is handed. Fourteen letters moved three cases where ten of them moved nineteen -- dropping letters made it look worse. Only adding one letter to a green set and running both gates says anything, and it costs a build and a minute a letter.
