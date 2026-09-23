@@ -198,7 +198,7 @@ class Arm(object):
         self.phones = phones        # [] for an arm that says nothing
         self.note = note
 
-    def tests(self):
+    def tests(self, letter=None):
         """Whether this arm asks anything at all, which decides its shape.
 
         An arm that asks nothing is the block's last: the letter on its own,
@@ -208,7 +208,8 @@ class Arm(object):
         a condition on it came out as a bare arm with the condition dropped,
         silently, and three letters were blamed on the machine for it."""
         return bool(len(self.letters) > 1 or self.after or self.before
-                    or self.when)
+                    or self.when
+                    or (letter is not None and self.letters[0] != letter))
 
 
 def parse(path):
@@ -279,9 +280,11 @@ def parse(path):
         if not said:
             raise Trouble("%s: `says' what?" % where)
         phones = [] if said == ["nothing"] else said
-        if not letters.startswith(cur[0]):
-            raise Trouble("%s: this is the %s block, so an arm starts with %s"
-                          % (where, cur[0], cur[0]))
+        # An arm may begin with a letter the block is not named after. The
+        # dispatcher hands one rule several characters -- Spanish's i rule is
+        # entered for `i' and for `í' alike -- and IBM's own arms tell them
+        # apart by asking what the character is, which is what such an arm
+        # compiles to.
         cur[3].append(Arm(where, letters, after, before, when,
                           phones, note))
     return blocks
@@ -300,12 +303,12 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
     """
     if not arms:
         raise Trouble("the %s block has no arms" % letter)
-    if arms[-1].tests():
+    if arms[-1].tests(letter):
         raise Trouble("the last arm of the %s block is what %s says when"
                       " nothing else applies, so it asks nothing: bare %s"
                       % (letter, letter, letter))
     for a in arms[:-1]:
-        if not a.tests():
+        if not a.tests(letter):
             raise Trouble("%s: a bare %s matches everything, so nothing after"
                           " it can be reached" % (a.where, letter))
 
@@ -351,7 +354,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
         if i:
             n += 1
             tag_of[("fall", i)] = n
-        if a.tests():
+        if a.tests(letter):
             n += 1
             tag_of[("body", i)] = n
     n += 1
@@ -359,7 +362,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
 
     for i, a in enumerate(arms):
         nxt = "arm%d" % (i + 1)
-        if a.tests():
+        if a.tests(letter):
             w("")
             if a.note:
                 w("# %s" % a.note)
@@ -398,6 +401,21 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("  end")
                 w("  call lpta_loadp addr piecestart")
                 w("  call test_ptr")
+                w("  if answer is not 0")
+                w("    go to %s" % nxt)
+                w("  end")
+            if a.letters[0] != letter:
+                # Which character this is, rather than what stands beside it.
+                # testFldeq reads at the scan, so the scan has to be put on
+                # this letter first -- from the left end of the range, which
+                # is where it meets this one.
+                w("  call lpta_loadp %s" % left)
+                w("  call setscan_r %d" % letters_at)
+                w("  if answer is not 0")
+                w("    go to %s" % nxt)
+                w("  end")
+                w("  call testFldeq %d 0 %d"
+                  % (letters_at, lcode[a.letters[0]]))
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
                 w("  end")

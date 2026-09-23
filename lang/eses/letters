@@ -67,3 +67,34 @@ letter s
   s before m   says z     # abismo
   s before n   says z     # asno
   s            says s
+letter a
+  ai   says a y     # aire, baile -- the a rule spells both letters
+  ái   says a y     # an accent does not stop a falling diphthong
+  a    says a
+
+letter e
+  ei   says e y     # peine, reina
+  éi   says e y     # aboliríais, agnusdéi
+  e    says e
+
+letter o
+  oi   says o y     # boina, oigo
+  o    says o
+
+letter i
+  í                says i     # an accent is stress, and a stressed vowel does not glide
+  i before vowel   says y     # abecedario, radio
+  i                says i
+
+letter u
+  ú                says u     # aúlico, noúmeno -- an accent is stress
+  ü                says u     # lingüística
+  u before a       says w     # agua
+  u before e       says w     # bueno
+  u before i       says w     # cuido, acuicultura
+  u before í       says w     # acuífero
+  u before o       says w     # cuota
+  u after a        says w     # causa, auto
+  u after e        says w     # deuda, Europa
+  u after o        says w
+  u                says u

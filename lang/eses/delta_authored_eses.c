@@ -54,6 +54,36 @@ uint8_t eses_evv_authored_data[] = {
     19,
     /* lts_m, 1 bytes at 21 */
     20,
+    /* lts_ai, 2 bytes at 22 */
+    1,3,
+    /* say_211d, 2 bytes at 24 */
+    33,29,
+    /* lts_6b03, 2 bytes at 26 */
+    107,3,
+    /* say_21, 1 bytes at 28 */
+    33,
+    /* lts_ei, 2 bytes at 29 */
+    2,3,
+    /* say_201d, 2 bytes at 31 */
+    32,29,
+    /* lts_6c03, 2 bytes at 33 */
+    108,3,
+    /* say_20, 1 bytes at 35 */
+    32,
+    /* lts_oi, 2 bytes at 36 */
+    4,3,
+    /* say_221d, 2 bytes at 38 */
+    34,29,
+    /* say_22, 1 bytes at 40 */
+    34,
+    /* say_1f, 1 bytes at 41 */
+    31,
+    /* say_1d, 1 bytes at 42 */
+    29,
+    /* say_23, 1 bytes at 43 */
+    35,
+    /* lts_a, 1 bytes at 44 */
+    1,
 };
 
 const delta_store eses_delta_authored_store[] = {

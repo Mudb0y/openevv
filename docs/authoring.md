@@ -1092,14 +1092,20 @@ Three things the second family taught, none of which English could have.
 
 The letters left are `c`, `g`, `n`, `p`, `r`, `x`, `y` and the vowels, and `h` waits on `says nothing`.
 
-**The vowels are a glide system, and this is what it is.** Read out of `apply_span_i_rules` and `apply_span_a_rules` properly rather than pattern-matched, and taken from 1,552 words wrong to 393 by writing it down.
+**The vowels are a glide system and they are done: twenty letters of Spanish now, 20,000 words and 98 cases unchanged.**
 
-A falling diphthong is spelled by the *first* vowel's own rule, both letters at once: `ai says a y` is `aire` and `baile`, and `ei` and `oi` the same. That is what the two-phone insert in `apply_span_a_rules` is, and it is why `apply_span_i_rules` never sees the `i` of `aire`.
+A falling diphthong is spelled by the *first* vowel's own rule, both letters at once -- `ai says a y` is `aire` and `baile`, and `ei` the same. That is what the two-phone insert in `apply_span_a_rules` is, and it is why `apply_span_i_rules` never sees the `i` of `aire`.
 
-A rising one is spelled by the glide itself: `i before vowel says y` is `abecedario` and `radio`, and `u before a`, `before e`, `before i`, `before o` says `w` is `agua`, `bueno`, `cuido`, `cuota`. `u after a`, `after e`, `after o` says `w` is `causa` and `deuda`.
+A rising one is spelled by the glide itself: `i before vowel says y` is `abecedario`, and `u` glides before a, e, i, í and o, and after a, e and o.
 
-**Only one of an adjacent pair glides, and it is the first**, which is why `u after vowel` is wrong where `u after a`, `e` and `o` are right: in `ciudad` the `i` has already become the glide and the `u` stays a vowel, and `u after vowel` made it `Tywdad`. And `u before u` is wrong for the same reason from the other side -- `duunviro` is two syllables.
+**Only one of an adjacent pair glides and it is the first.** `u after vowel` is wrong where `u after a`, `e`, `o` is right, because in `ciudad` the `i` has already become the glide and the `u` stays a vowel. `u before u` is wrong from the other side: `duunviro` is two syllables.
 
-**What is left is the written accent, and it is 393 words.** `abolirías` is `li.1ri.0as` and not `li.1ryas`; `abolíais` is `li.0ays` and not `lyays`. So an accented vowel does not glide -- it is the stressed one, and stress is what a glide gives up. `apply_span_i_rules` names `á`, `é` and `í` by their own letter codes, which says the accented letters are still distinct letters when the letter rules run, and that the same rule is entered for `i` and for `í`. An arm in this notation must begin with its block's own letter, so saying *í does not glide* wants either a block for `í` or a way for an arm to name a letter the block is not named after.
+**An accent is stress, and a stressed vowel does not glide** -- `í says i` and `ú says u` and `ü says u`, which is `abolíais`, `aúlico` and `lingüística`. But an accent does not stop a *falling* diphthong, so `ái` and `éi` glide as their plain forms do, and `ói` does not: `óigame` is `o.0i.ga.me` where `agnusdéi` is `de.1y`. That asymmetry is IBM's and is written here because nothing about it is guessable.
 
-That is the next thing, and it is the last thing in Spanish's vowels. The same shape waits in Italian and French.
+### The notation gained one thing, and it is what the accents needed
+
+**An arm may begin with a letter its block is not named after.** The dispatcher hands one rule several characters -- Spanish's `i` rule is entered for `i` and for `í` alike -- so `í says i` sits inside the `i` block and compiles to the field-0 test IBM's own arms use, asking which character this is rather than what stands beside it.
+
+The one trap in it, and it cost two builds: **`testFldeq` reads at the scan**, so the scan has to be put on this letter first. Emitted without that, the test asks about whatever the scan last pointed at, quietly answers no, and the arm never fires.
+
+The letters left in Spanish are `c`, `g`, `n`, `p`, `r`, `x` and `y`, and `h` waits on `says nothing`.
