@@ -40,10 +40,12 @@
 	<string name="pauses_all">Shorten all pauses</string>
 	<string name="phrase_prediction_label">Phrase prediction</string>
 	<string name="abbreviations_label">Expand abbreviations</string>
+	<string name="read_emoji_label">Read emojis with spoken descriptions</string>
 
 	<string name="dictionary_main">Main dictionary</string>
 	<string name="dictionary_root">Root dictionary</string>
 	<string name="dictionary_abbreviation">Abbreviation dictionary</string>
+	<string name="dictionary_emoji">Emoji dictionary</string>
 	<string name="dictionary_none">None</string>
 	<string name="dictionary_entries">%1$s, %2$d words</string>
 	<string name="dictionary_remove">Remove dictionaries</string>
@@ -57,4 +59,45 @@
 	<string name="switch_on">On</string>
 	<string name="switch_off">Off</string>
 	<string name="cancel">Cancel</string>
+
+	<!-- Number Reading -->
+	<string name="number_processing_label">Process numbers</string>
+	<string name="number_mode_label">Number reading style</string>
+	<string name="number_mode_default">Normal</string>
+	<string name="number_mode_digits">Digits</string>
+	<string name="number_mode_pairs">Pairs</string>
+	<string name="number_mode_triplets">Triplets</string>
+	<string name="number_mode_words">Words</string>
+	<string name="number_time_label">Natural time reading</string>
+	<string name="number_roman_label">Roman numerals</string>
+
+	<!-- Punctuation -->
+	<string name="punctuation_label">Punctuation pronunciation</string>
+	<string name="punctuation_level_none">None</string>
+	<string name="punctuation_level_some">Some</string>
+	<string name="punctuation_level_most">Most</string>
+	<string name="punctuation_level_all">All</string>
+
+	<!-- User Dictionary Management -->
+	<string name="dictionary_manage_words">Manage words (%1$s)</string>
+	<string name="dictionary_add_word">Add word</string>
+	<string name="dictionary_edit_word">Edit word</string>
+	<string name="dictionary_delete_word">Delete</string>
+	<string name="dictionary_word_key">Word or phrase</string>
+	<string name="dictionary_word_say">Pronunciation or replacement</string>
+	<string name="dictionary_case_sensitive">Case sensitive match</string>
+	<string name="dictionary_search_placeholder">Search words</string>
+	<string name="dictionary_empty">No dictionary entries</string>
+	<string name="dictionary_save">Save</string>
+	<string name="dictionary_close">Close</string>
+	<string name="dictionary_delete">Delete</string>
+	<string name="dictionary_import">Import file</string>
+	<string name="dictionary_word_item_desc">%1$s is pronounced as %2$s</string>
+	<string name="dictionary_word_item_cs_desc">%1$s (case sensitive) is pronounced as %2$s</string>
+	<string name="dictionary_action_edit">Edit entry</string>
+	<string name="dictionary_action_suspend">Suspend entry</string>
+	<string name="dictionary_action_resume">Resume entry</string>
+	<string name="dictionary_action_delete">Delete entry</string>
+	<string name="dictionary_word_suspended_suffix">, suspended</string>
+	<string name="dictionary_more_options">Options for %1$s</string>
 </resources>

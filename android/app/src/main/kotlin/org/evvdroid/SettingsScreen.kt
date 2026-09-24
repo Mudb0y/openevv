@@ -1,23 +1,38 @@
 package org.evvdroid
 
+import android.content.Context
+import android.view.inputmethod.InputMethodManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -38,30 +53,33 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
 /**
  * Every setting the engine has, and a button to hear them.
  *
- * Two things about it are deliberate and easy to undo by accident.
- *
+ * Controls are designed with accessibility in mind:
  * A control is one thing to stop at. A label, a bar and a number are three
  * stops for a screen reader, so each row merges into a single node that says
  * what it is and what it is set to, and adjusts in place.
- *
- * And the numbers are percentages. The engine's own are on three scales --
- * gender is a choice of two, speed runs to 250, the rest to a hundred -- and a
- * bare number leaves it to the listener to remember which scale they are on.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,6 +88,7 @@ fun SettingsScreen(state: SettingsModel) {
 	val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
 		uri?.let { state.chooseDictionary(wanted, it) }
 	}
+
 	Scaffold(
 		topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) }
 	) { inset ->
@@ -107,9 +126,6 @@ fun SettingsScreen(state: SettingsModel) {
 				)
 			}
 			Gap()
-			// Above the button it belongs to. It changes what the preview
-			// speaks and nothing else: a screen reader is answered in the
-			// language it asked for.
 			if (state.languages.size > 1) {
 				ChoiceRow(
 					label = stringResource(R.string.preview_language_label),
@@ -142,11 +158,69 @@ fun SettingsScreen(state: SettingsModel) {
 				checked = state.abbreviations,
 				onChange = state::chooseAbbreviations
 			)
+			SwitchRow(
+				label = stringResource(R.string.read_emoji_label),
+				checked = state.readEmoji,
+				onChange = state::chooseReadEmoji
+			)
+
+			// ---- Punctuation Pronunciation Settings ----
+			Gap()
+			ChoiceRow(
+				label = stringResource(R.string.punctuation_label),
+				options = listOf(
+					stringResource(R.string.punctuation_level_none),
+					stringResource(R.string.punctuation_level_some),
+					stringResource(R.string.punctuation_level_most),
+					stringResource(R.string.punctuation_level_all)
+				),
+				chosen = state.punctuationLevel,
+				onChoose = state::choosePunctuationLevel
+			)
+
+			// ---- Number Reading Settings ----
+			Gap()
+			SwitchRow(
+				label = stringResource(R.string.number_processing_label),
+				checked = state.processNumbers,
+				onChange = state::chooseProcessNumbers
+			)
+			if (state.processNumbers) {
+				ChoiceRow(
+					label = stringResource(R.string.number_mode_label),
+					options = listOf(
+						stringResource(R.string.number_mode_default),
+						stringResource(R.string.number_mode_digits),
+						stringResource(R.string.number_mode_pairs),
+						stringResource(R.string.number_mode_triplets),
+						stringResource(R.string.number_mode_words)
+					),
+					chosen = state.numberMode,
+					onChoose = state::chooseNumberMode
+				)
+			}
+			SwitchRow(
+				label = stringResource(R.string.number_time_label),
+				checked = state.readTimeNaturally,
+				onChange = state::chooseReadTimeNaturally
+			)
+			SwitchRow(
+				label = stringResource(R.string.number_roman_label),
+				checked = state.readRomanNumerals,
+				onChange = state::chooseReadRomanNumerals
+			)
+
+			// ---- User Dictionaries ----
 			Gap()
 			for (volume in Eci.DICT_VOLUMES) {
+				val volLabel = stringResource(dictionaryLabelOf(volume))
 				ValueRow(
-					label = stringResource(dictionaryLabelOf(volume)),
+					label = volLabel,
 					value = state.dictionaryName(volume),
+					onClick = { state.openDictionaryManager(volume) }
+				)
+				ActionRow(
+					label = stringResource(R.string.dictionary_import) + " ($volLabel)",
 					onClick = { wanted = volume; pick.launch(arrayOf("*/*")) }
 				)
 			}
@@ -161,12 +235,373 @@ fun SettingsScreen(state: SettingsModel) {
 			)
 		}
 	}
+
+	// Dialog for managing words in a dictionary volume
+	val managingVol = state.managingVolume
+	if (managingVol != null) {
+		DictionaryManagerDialog(state = state, volume = managingVol)
+	}
+
+	// Dialog for adding or editing a single word
+	if (state.isAddEditDialogOpen) {
+		AddEditWordDialog(
+			state = state,
+			volume = state.managingVolume ?: Eci.DICT_MAIN,
+			entry = state.editingEntry
+		)
+	}
+}
+
+data class WordEntryActionItem(
+	val label: String,
+	val action: () -> Unit
+)
+
+fun getWordEntryActions(
+	entry: DictEntry,
+	editLabel: String,
+	suspendLabel: String,
+	resumeLabel: String,
+	deleteLabel: String,
+	onEdit: () -> Unit,
+	onToggleSuspend: () -> Unit,
+	onDelete: () -> Unit
+): List<WordEntryActionItem> {
+	val toggleLabel = if (entry.suspended) resumeLabel else suspendLabel
+	return listOf(
+		WordEntryActionItem(label = editLabel, action = onEdit),
+		WordEntryActionItem(label = toggleLabel, action = onToggleSuspend),
+		WordEntryActionItem(label = deleteLabel, action = onDelete)
+	)
+}
+
+@Composable
+private fun DictionaryManagerDialog(state: SettingsModel, volume: Int) {
+	val volLabel = stringResource(dictionaryLabelOf(volume))
+	val keyboardController = LocalSoftwareKeyboardController.current
+	val focusManager = LocalFocusManager.current
+	val view = LocalView.current
+
+	fun hideKeyboard() {
+		keyboardController?.hide()
+		focusManager.clearFocus()
+		(view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager)
+			?.hideSoftInputFromWindow(view.windowToken, 0)
+	}
+
+	fun closeManager() {
+		hideKeyboard()
+		state.closeDictionaryManager()
+	}
+
+	AlertDialog(
+		onDismissRequest = ::closeManager,
+		title = { Text(stringResource(R.string.dictionary_manage_words, volLabel)) },
+		text = {
+			Column(modifier = Modifier.fillMaxWidth()) {
+				OutlinedTextField(
+					value = state.dictSearchQuery,
+					onValueChange = { state.dictSearchQuery = it },
+					label = { Text(stringResource(R.string.dictionary_search_placeholder)) },
+					singleLine = true,
+					keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+					keyboardActions = KeyboardActions(onSearch = { hideKeyboard() }),
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(bottom = 8.dp)
+				)
+
+				Button(
+					onClick = {
+						hideKeyboard()
+						state.openAddWordDialog(null)
+					},
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(vertical = 4.dp)
+				) {
+					Text(stringResource(R.string.dictionary_add_word))
+				}
+
+				HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+				val query = state.dictSearchQuery.trim()
+				val filtered = remember(state.activeDictWords, query) {
+					if (query.isEmpty()) state.activeDictWords
+					else state.activeDictWords.filter {
+						it.key.contains(query, ignoreCase = true) ||
+						it.say.contains(query, ignoreCase = true)
+					}
+				}
+
+				if (filtered.isEmpty()) {
+					Text(
+						text = stringResource(R.string.dictionary_empty),
+						style = MaterialTheme.typography.bodyMedium,
+						modifier = Modifier.padding(vertical = 16.dp)
+					)
+				} else {
+					Column(
+						modifier = Modifier
+							.fillMaxWidth()
+							.heightIn(max = 350.dp)
+							.verticalScroll(rememberScrollState())
+					) {
+						filtered.forEach { entry ->
+							WordRow(
+								entry = entry,
+								onEdit = {
+									hideKeyboard()
+									state.openAddWordDialog(entry)
+								},
+								onToggleSuspend = {
+									hideKeyboard()
+									state.toggleSuspendWord(volume, entry)
+								},
+								onDelete = {
+									hideKeyboard()
+									state.deleteWord(volume, entry.key, entry.caseSensitive)
+								}
+							)
+							HorizontalDivider()
+						}
+					}
+				}
+			}
+		},
+		confirmButton = {
+			TextButton(onClick = ::closeManager) {
+				Text(stringResource(R.string.dictionary_close))
+			}
+		}
+	)
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun WordRow(
+	entry: DictEntry,
+	onEdit: () -> Unit,
+	onToggleSuspend: () -> Unit,
+	onDelete: () -> Unit
+) {
+	var showMenu by remember { mutableStateOf(false) }
+
+	val editLabel = stringResource(R.string.dictionary_action_edit)
+	val suspendLabel = stringResource(R.string.dictionary_action_suspend)
+	val resumeLabel = stringResource(R.string.dictionary_action_resume)
+	val deleteLabel = stringResource(R.string.dictionary_action_delete)
+	val moreOptionsDesc = stringResource(R.string.dictionary_more_options, entry.key)
+
+	val actions = remember(entry, editLabel, suspendLabel, resumeLabel, deleteLabel) {
+		getWordEntryActions(
+			entry = entry,
+			editLabel = editLabel,
+			suspendLabel = suspendLabel,
+			resumeLabel = resumeLabel,
+			deleteLabel = deleteLabel,
+			onEdit = onEdit,
+			onToggleSuspend = onToggleSuspend,
+			onDelete = onDelete
+		)
+	}
+
+	val desc = buildString {
+		append(
+			if (entry.caseSensitive) {
+				stringResource(R.string.dictionary_word_item_cs_desc, entry.key, entry.say)
+			} else {
+				stringResource(R.string.dictionary_word_item_desc, entry.key, entry.say)
+			}
+		)
+		if (entry.suspended) {
+			append(stringResource(R.string.dictionary_word_suspended_suffix))
+		}
+	}
+
+	Box(modifier = Modifier.fillMaxWidth()) {
+		Row(
+			modifier = Modifier
+				.fillMaxWidth()
+				.combinedClickable(
+					onClick = onEdit,
+					onLongClick = { showMenu = true }
+				)
+				.semantics(mergeDescendants = true) {
+					contentDescription = desc
+					customActions = actions.map { item ->
+						CustomAccessibilityAction(label = item.label) {
+							item.action()
+							true
+						}
+					}
+				}
+				.padding(horizontal = 8.dp, vertical = 10.dp),
+			horizontalArrangement = Arrangement.SpaceBetween,
+			verticalAlignment = Alignment.CenterVertically
+		) {
+			Column(modifier = Modifier.weight(1f)) {
+				Row(verticalAlignment = Alignment.CenterVertically) {
+					Text(
+						text = entry.key,
+						style = MaterialTheme.typography.bodyLarge,
+						textDecoration = if (entry.suspended) TextDecoration.LineThrough else null,
+						color = if (entry.suspended) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
+					)
+					if (entry.caseSensitive) {
+						Text(
+							text = " (CS)",
+							style = MaterialTheme.typography.bodySmall,
+							color = MaterialTheme.colorScheme.primary,
+							modifier = Modifier.padding(start = 4.dp)
+						)
+					}
+					if (entry.suspended) {
+						Text(
+							text = " (" + stringResource(R.string.dictionary_action_suspend) + ")",
+							style = MaterialTheme.typography.bodySmall,
+							color = MaterialTheme.colorScheme.error,
+							modifier = Modifier.padding(start = 4.dp)
+						)
+					}
+				}
+				Text(
+					text = "→ " + entry.say,
+					style = MaterialTheme.typography.bodyMedium,
+					color = MaterialTheme.colorScheme.onSurfaceVariant
+				)
+			}
+
+			IconButton(
+				onClick = { showMenu = true },
+				modifier = Modifier.semantics {
+					contentDescription = moreOptionsDesc
+				}
+			) {
+				Text(
+					text = "⋮",
+					style = MaterialTheme.typography.titleLarge
+				)
+			}
+		}
+
+		DropdownMenu(
+			expanded = showMenu,
+			onDismissRequest = { showMenu = false }
+		) {
+			actions.forEach { item ->
+				DropdownMenuItem(
+					text = { Text(item.label) },
+					onClick = {
+						showMenu = false
+						item.action()
+					}
+				)
+			}
+		}
+	}
+}
+
+@Composable
+private fun AddEditWordDialog(
+	state: SettingsModel,
+	volume: Int,
+	entry: DictEntry?
+) {
+	var word by remember { mutableStateOf(entry?.key ?: "") }
+	var say by remember { mutableStateOf(entry?.say ?: "") }
+	var caseSensitive by remember { mutableStateOf(entry?.caseSensitive ?: false) }
+	val keyboardController = LocalSoftwareKeyboardController.current
+	val focusManager = LocalFocusManager.current
+	val view = LocalView.current
+
+	fun hideKeyboard() {
+		keyboardController?.hide()
+		focusManager.clearFocus()
+		(view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager)
+			?.hideSoftInputFromWindow(view.windowToken, 0)
+	}
+
+	fun closeDialog() {
+		hideKeyboard()
+		state.closeAddWordDialog()
+	}
+
+	AlertDialog(
+		onDismissRequest = ::closeDialog,
+		title = {
+			Text(
+				if (entry == null) stringResource(R.string.dictionary_add_word)
+				else stringResource(R.string.dictionary_edit_word)
+			)
+		},
+		text = {
+			Column(modifier = Modifier.fillMaxWidth()) {
+				OutlinedTextField(
+					value = word,
+					onValueChange = { word = it },
+					label = { Text(stringResource(R.string.dictionary_word_key)) },
+					singleLine = true,
+					keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(bottom = 8.dp)
+				)
+
+				OutlinedTextField(
+					value = say,
+					onValueChange = { say = it },
+					label = { Text(stringResource(R.string.dictionary_word_say)) },
+					singleLine = true,
+					keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+					keyboardActions = KeyboardActions(onDone = { hideKeyboard() }),
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(bottom = 8.dp)
+				)
+
+				SwitchRow(
+					label = stringResource(R.string.dictionary_case_sensitive),
+					checked = caseSensitive,
+					onChange = { caseSensitive = it }
+				)
+			}
+		},
+		confirmButton = {
+			Button(
+				onClick = {
+					hideKeyboard()
+					if (word.isNotBlank() && say.isNotBlank()) {
+						if (entry != null && (entry.key != word || entry.caseSensitive != caseSensitive)) {
+							state.deleteWord(volume, entry.key, entry.caseSensitive)
+						}
+						state.addOrUpdateWord(
+							volume = volume,
+							key = word.trim(),
+							say = say.trim(),
+							caseSensitive = caseSensitive,
+							suspended = entry?.suspended ?: false
+						)
+					}
+				},
+				enabled = word.isNotBlank() && say.isNotBlank()
+			) {
+				Text(stringResource(R.string.dictionary_save))
+			}
+		},
+		dismissButton = {
+			TextButton(onClick = ::closeDialog) {
+				Text(stringResource(R.string.cancel))
+			}
+		}
+	)
 }
 
 private fun dictionaryLabelOf(volume: Int): Int = when (volume) {
 	Eci.DICT_MAIN -> R.string.dictionary_main
 	Eci.DICT_ROOT -> R.string.dictionary_root
-	else -> R.string.dictionary_abbreviation
+	Eci.DICT_ABBREVIATION -> R.string.dictionary_abbreviation
+	else -> R.string.dictionary_emoji
 }
 
 private fun labelOf(param: Int): Int = when (param) {
@@ -179,36 +614,11 @@ private fun labelOf(param: Int): Int = when (param) {
 	else -> R.string.volume_label
 }
 
-/** Air between one group of settings and the next. A heading would be a stop of
- *  its own for a screen reader and would say nothing the labels under it do
- *  not, so this is a spacer, which carries no semantics at all. */
 @Composable
 private fun Gap() {
 	Spacer(modifier = Modifier.height(16.dp))
 }
 
-/**
- * A label, the value it is at, and a bar, as one thing.
- *
- * clearAndSetSemantics throws away what the label and the bar would each have
- * said and puts one control there instead: the name, the value, the range it
- * moves in, and how to move it. Without it a reader finds the text and the bar
- * separately and neither says what the other is.
- *
- * The row takes the keyboard, and the bar inside it does not. A bar that keeps
- * a focus of its own is a second place for the keyboard to be, invisible to a
- * screen reader because the semantics here are the row's: tabbing lands on a
- * bar nothing announces, and its own answer to the End key is to go to the
- * maximum, so a setting moves with nothing said about it. So the bar is taken
- * out of the tab order and the row answers the keys itself.
- *
- * A key press moves it by one. TalkBack adjusts any slider by a twentieth of
- * the range it is given, so its own arrow key asks for five percent here
- * whatever the steps say, and the number of steps is not part of what the
- * platform is told. Five percent of the speed scale is the difference between
- * too slow to bear and faster than was wanted, so a request to move is read as
- * a request to move one rather than as the number it carries.
- */
 @Composable
 private fun SliderRow(
 	label: String,
@@ -276,21 +686,21 @@ private fun ChoiceRow(
 		style = MaterialTheme.typography.bodyLarge,
 		modifier = Modifier
 			.fillMaxWidth()
-			.clickable { open = true }
-			.padding(horizontal = 16.dp, vertical = 14.dp)
-			.clearAndSetSemantics {
+			.clickable(
+				role = Role.Button,
+				onClick = { open = true }
+			)
+			.semantics {
 				contentDescription = label
 				stateDescription = now
-				role = Role.Button
 			}
+			.padding(horizontal = 16.dp, vertical = 14.dp)
 	)
 	if (open) {
 		AlertDialog(
 			onDismissRequest = { open = false },
 			title = { Text(label) },
 			text = {
-				// Scrollable because the language row offers ten and a phone
-				// held large does not fit them.
 				Column(
 					modifier = Modifier
 						.selectableGroup()
@@ -336,13 +746,15 @@ private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Un
 	Row(
 		modifier = Modifier
 			.fillMaxWidth()
-			.clickable { onChange(!checked) }
-			.padding(horizontal = 16.dp, vertical = 14.dp)
-			.clearAndSetSemantics {
+			.clickable(
+				role = Role.Switch,
+				onClick = { onChange(!checked) }
+			)
+			.semantics(mergeDescendants = true) {
 				contentDescription = label
 				stateDescription = on
-				role = Role.Switch
-			},
+			}
+			.padding(horizontal = 16.dp, vertical = 14.dp),
 		verticalAlignment = Alignment.CenterVertically
 	) {
 		Text(
@@ -354,7 +766,6 @@ private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Un
 	}
 }
 
-/** A label, what it is set to, and something to press to change it. */
 @Composable
 private fun ValueRow(label: String, value: String, onClick: () -> Unit) {
 	Text(
@@ -362,13 +773,15 @@ private fun ValueRow(label: String, value: String, onClick: () -> Unit) {
 		style = MaterialTheme.typography.bodyLarge,
 		modifier = Modifier
 			.fillMaxWidth()
-			.clickable(onClick = onClick)
-			.padding(horizontal = 16.dp, vertical = 14.dp)
-			.clearAndSetSemantics {
+			.clickable(
+				role = Role.Button,
+				onClick = onClick
+			)
+			.semantics {
 				contentDescription = label
 				stateDescription = value
-				role = Role.Button
 			}
+			.padding(horizontal = 16.dp, vertical = 14.dp)
 	)
 }
 
@@ -379,11 +792,13 @@ private fun ActionRow(label: String, onClick: () -> Unit) {
 		style = MaterialTheme.typography.bodyLarge,
 		modifier = Modifier
 			.fillMaxWidth()
-			.clickable(onClick = onClick)
-			.padding(horizontal = 16.dp, vertical = 14.dp)
-			.clearAndSetSemantics {
+			.clickable(
+				role = Role.Button,
+				onClick = onClick
+			)
+			.semantics {
 				contentDescription = label
-				role = Role.Button
 			}
+			.padding(horizontal = 16.dp, vertical = 14.dp)
 	)
 }

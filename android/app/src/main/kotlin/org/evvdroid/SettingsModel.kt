@@ -50,6 +50,33 @@ class SettingsModel(context: Context) {
 	var phrasePrediction by mutableStateOf(settings.phrasePrediction)
 		private set
 
+	var processNumbers by mutableStateOf(settings.processNumbers)
+		private set
+
+	var numberMode by mutableStateOf(settings.numberMode)
+		private set
+
+	var readTimeNaturally by mutableStateOf(settings.readTimeNaturally)
+		private set
+
+	var readRomanNumerals by mutableStateOf(settings.readRomanNumerals)
+		private set
+
+	var readPunctuation by mutableStateOf(settings.readPunctuation)
+		private set
+
+	var punctuationLevel by mutableStateOf(settings.punctuationLevel)
+		private set
+
+	var readEmoji by mutableStateOf(settings.readEmoji)
+		private set
+
+	var managingVolume: Int? by mutableStateOf(null)
+	var dictSearchQuery by mutableStateOf("")
+	var editingEntry: DictEntry? by mutableStateOf(null)
+	var isAddEditDialogOpen by mutableStateOf(false)
+	var activeDictWords by mutableStateOf<List<DictEntry>>(emptyList())
+
 	private val shape = mutableStateMapOf<Int, Int>().apply { putAll(settings.shape(settings.voice)) }
 
 	private var dictionaries: Map<Int, String> by mutableStateOf(
@@ -81,19 +108,6 @@ class SettingsModel(context: Context) {
 
 	// ---- what the screen changes -----------------------------------------
 
-	/**
-	 * Which language the preview speaks, and nothing else.
-	 *
-	 * The speech service never reads this. A screen reader is answered in the
-	 * language it asked for, which is what the voice names and the locale
-	 * matching are for; this is so that a voice can be tuned while listening
-	 * to the language it will be heard in.
-	 *
-	 * A voice's own settings are not re-read from the new language. Every
-	 * module carries its own numbers for the eight presets, and taking them
-	 * here would write one language's idea of Reed over the settings every
-	 * language speaks with.
-	 */
 	fun chooseLanguage(which: Int) {
 		val want = languages.getOrNull(which) ?: return
 		language = which
@@ -104,8 +118,6 @@ class SettingsModel(context: Context) {
 	fun chooseVoice(which: Int) {
 		voice = which
 		settings.voice = which
-		// A voice that has been changed keeps its changes. One that has not
-		// takes what the engine says it is.
 		if (!settings.shapeIsCustom(which)) adoptVoice()
 		shape.clear()
 		shape.putAll(settings.shape(which))
@@ -113,12 +125,6 @@ class SettingsModel(context: Context) {
 
 	fun setPercent(param: Int, percent: Int) = setShape(param, Eci.fromPercent(param, percent))
 
-	/** One percent up or down from wherever the setting is now.
-	 *
-	 *  It reads the value rather than taking one, because a held key sends
-	 *  several of these before the screen has drawn any of them, and a step
-	 *  measured from what the screen last showed would land on the same number
-	 *  every time. */
 	fun stepPercent(param: Int, by: Int) {
 		setPercent(param, (percentOf(param) + by).coerceIn(0, Eci.PERCENT_MAX))
 	}
@@ -130,8 +136,6 @@ class SettingsModel(context: Context) {
 		settings.setShapeValue(voice, param, settled)
 	}
 
-	/** Forgets this voice's changes. Every other voice is left alone, and so is
-	 *  the speed, which belongs to the listener rather than to any of them. */
 	fun resetVoice() {
 		settings.clearShape(voice)
 		adoptVoice()
@@ -144,19 +148,165 @@ class SettingsModel(context: Context) {
 		settings.abbreviations = on
 	}
 
+	fun chooseProcessNumbers(on: Boolean) {
+		processNumbers = on
+		settings.processNumbers = on
+	}
+
+	fun chooseNumberMode(mode: Int) {
+		numberMode = mode
+		settings.numberMode = mode
+	}
+
+	fun chooseReadTimeNaturally(on: Boolean) {
+		readTimeNaturally = on
+		settings.readTimeNaturally = on
+	}
+
+	fun chooseReadRomanNumerals(on: Boolean) {
+		readRomanNumerals = on
+		settings.readRomanNumerals = on
+	}
+
+	fun chooseReadPunctuation(on: Boolean) {
+		readPunctuation = on
+		settings.readPunctuation = on
+	}
+
+	fun choosePunctuationLevel(level: Int) {
+		punctuationLevel = level
+		settings.punctuationLevel = level
+	}
+
+	fun chooseReadEmoji(on: Boolean) {
+		readEmoji = on
+		settings.readEmoji = on
+	}
+
 	/** What the row for [volume] says: the file picked for it, or nothing. */
 	fun dictionaryName(volume: Int): String = dictionaries[volume] ?: app.getString(R.string.dictionary_none)
 
-	/**
-	 * Takes a copy of the file the picker handed back.
-	 *
-	 * A picked document is a content URI belonging to whichever app supplied
-	 * it, readable now and quite possibly not tomorrow, and the speech service
-	 * is a different process that reads these when it starts. So what is stored
-	 * is a copy of our own rather than a reference to somebody else's, kept in
-	 * device-protected storage so that the service can still read it during a
-	 * locked boot.
-	 */
+	fun dictionaryFile(volume: Int): java.io.File {
+		val existing = settings.dictionaryPath(volume)
+		if (existing != null) return java.io.File(existing)
+		val dir = DirectBoot.dictionaries(app).apply { mkdirs() }
+		val defaultName = when (volume) {
+			Eci.DICT_MAIN -> "volume-0-main.dic"
+			Eci.DICT_ROOT -> "volume-1-root.dic"
+			Eci.DICT_ABBREVIATION -> "volume-2-abbr.dic"
+			else -> "volume-3-emoji.dic"
+		}
+		return java.io.File(dir, defaultName)
+	}
+
+	fun openDictionaryManager(volume: Int) {
+		managingVolume = volume
+		dictSearchQuery = ""
+		refreshDictWords(volume)
+	}
+
+	fun closeDictionaryManager() {
+		managingVolume = null
+		editingEntry = null
+		isAddEditDialogOpen = false
+		dictSearchQuery = ""
+	}
+
+	fun refreshDictWords(volume: Int) {
+		val file = dictionaryFile(volume)
+		activeDictWords = Dictionaries.readDictEntries(file)
+	}
+
+	fun openAddWordDialog(existing: DictEntry? = null) {
+		editingEntry = existing
+		isAddEditDialogOpen = true
+	}
+
+	fun closeAddWordDialog() {
+		editingEntry = null
+		isAddEditDialogOpen = false
+	}
+
+	fun addOrUpdateWord(
+		volume: Int,
+		key: String,
+		say: String,
+		caseSensitive: Boolean = false,
+		suspended: Boolean = false
+	): List<DictEntry> {
+		val file = dictionaryFile(volume)
+		val updated = Dictionaries.addOrUpdateDictEntry(file, key.trim(), say.trim(), caseSensitive, suspended)
+		val name = when (volume) {
+			Eci.DICT_MAIN -> app.getString(R.string.dictionary_main)
+			Eci.DICT_ROOT -> app.getString(R.string.dictionary_root)
+			Eci.DICT_ABBREVIATION -> app.getString(R.string.dictionary_abbreviation)
+			else -> app.getString(R.string.dictionary_emoji)
+		}
+		val activeCount = updated.count { !it.suspended }
+		val label = app.getString(R.string.dictionary_entries, name, activeCount)
+		settings.setDictionary(volume, file.absolutePath, label)
+		dictionaries = dictionaries + (volume to label)
+		activeDictWords = updated
+		if (volume == Eci.DICT_EMOJI) {
+			Emoji.loadUserEmoji(file)
+		}
+		closeAddWordDialog()
+		return updated
+	}
+
+	fun toggleSuspendWord(volume: Int, entry: DictEntry): List<DictEntry> {
+		val file = dictionaryFile(volume)
+		val updated = Dictionaries.toggleSuspendDictEntry(file, entry.key, entry.caseSensitive)
+		val name = when (volume) {
+			Eci.DICT_MAIN -> app.getString(R.string.dictionary_main)
+			Eci.DICT_ROOT -> app.getString(R.string.dictionary_root)
+			Eci.DICT_ABBREVIATION -> app.getString(R.string.dictionary_abbreviation)
+			else -> app.getString(R.string.dictionary_emoji)
+		}
+		val activeCount = updated.count { !it.suspended }
+		val label = if (updated.isEmpty()) {
+			app.getString(R.string.dictionary_none)
+		} else {
+			app.getString(R.string.dictionary_entries, name, activeCount)
+		}
+		settings.setDictionary(volume, file.absolutePath, label)
+		dictionaries = dictionaries + (volume to label)
+		activeDictWords = updated
+		if (volume == Eci.DICT_EMOJI) {
+			Emoji.loadUserEmoji(file)
+		}
+		return updated
+	}
+
+	fun deleteWord(volume: Int, key: String, caseSensitive: Boolean? = null): List<DictEntry> {
+		val file = dictionaryFile(volume)
+		val updated = Dictionaries.deleteDictEntry(file, key, caseSensitive)
+		val name = when (volume) {
+			Eci.DICT_MAIN -> app.getString(R.string.dictionary_main)
+			Eci.DICT_ROOT -> app.getString(R.string.dictionary_root)
+			Eci.DICT_ABBREVIATION -> app.getString(R.string.dictionary_abbreviation)
+			else -> app.getString(R.string.dictionary_emoji)
+		}
+		val activeCount = updated.count { !it.suspended }
+		val label = if (updated.isEmpty()) {
+			app.getString(R.string.dictionary_none)
+		} else {
+			app.getString(R.string.dictionary_entries, name, activeCount)
+		}
+		if (updated.isEmpty()) {
+			settings.setDictionary(volume, null, null)
+			dictionaries = dictionaries - volume
+		} else {
+			settings.setDictionary(volume, file.absolutePath, label)
+			dictionaries = dictionaries + (volume to label)
+		}
+		activeDictWords = updated
+		if (volume == Eci.DICT_EMOJI) {
+			Emoji.loadUserEmoji(file)
+		}
+		return updated
+	}
+
 	fun chooseDictionary(volume: Int, uri: android.net.Uri) {
 		val into = DirectBoot.dictionaries(app).apply { mkdirs() }
 		val file = java.io.File(into, "volume-$volume.dic")
@@ -182,12 +332,22 @@ class SettingsModel(context: Context) {
 		dictionaries = dictionaries + (volume to said)
 	}
 
+	fun removeDictionary(volume: Int) {
+		settings.dictionaryPath(volume)?.let { java.io.File(it).delete() }
+		settings.setDictionary(volume, null, null)
+		dictionaries = dictionaries - volume
+		if (managingVolume == volume) {
+			activeDictWords = emptyList()
+		}
+	}
+
 	fun removeDictionaries() {
 		for (volume in Eci.DICT_VOLUMES) {
 			settings.dictionaryPath(volume)?.let { java.io.File(it).delete() }
 			settings.setDictionary(volume, null, null)
 		}
 		dictionaries = emptyMap()
+		activeDictWords = emptyList()
 	}
 
 	private fun nameOf(uri: android.net.Uri): String? = runCatching {
@@ -214,8 +374,6 @@ class SettingsModel(context: Context) {
 
 	// ---- hearing it ------------------------------------------------------
 
-	/** Nothing here speaks by itself. Every setting is in force the moment it
-	 *  is written down, and this is how it gets heard. */
 	fun say() {
 		val sentence = app.getString(Sentences.preview(languages.getOrNull(language)))
 		preview?.say(sentence, voice, settings.shape(voice), sampleRateHz)
@@ -224,9 +382,6 @@ class SettingsModel(context: Context) {
 	private fun adoptVoice() {
 		val own = preview?.presetShape(settings.voice) ?: return
 		if (own.isEmpty()) return
-		// Everything but the speed, which stays where the listener put it.
-		// Glen and Sandy ship at 70 where the rest are 50, so taking the
-		// voice's own would move the slider and the pace on every change.
 		settings.writeShape(settings.voice, own - Eci.VOICE_SPEED)
 	}
 

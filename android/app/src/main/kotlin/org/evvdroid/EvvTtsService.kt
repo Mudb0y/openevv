@@ -27,7 +27,12 @@ class EvvTtsService : TextToSpeechService() {
 
 	private var appliedRevision = -1
 
-	private var loadedDictionaries: Map<Int, String> = emptyMap()
+	private data class LoadedDictState(val path: String, val lastModified: Long, val length: Long)
+	private var loadedDictStates: Map<Int, LoadedDictState> = emptyMap()
+	private var lastEmojiModified: Long = -1L
+	private var lastEmojiLength: Long = -1L
+	@Volatile
+	private var activeCaseSensitiveEntries: List<Dictionaries.CachedCaseSensitiveEntry> = emptyList()
 
 	override fun onCreate() {
 		settings = Settings(this)
@@ -117,6 +122,9 @@ class EvvTtsService : TextToSpeechService() {
 		val held = engine
 		if (held != null && held.language == language) return held
 		held?.close()
+		loadedDictStates = emptyMap()
+		lastEmojiModified = -1L
+		lastEmojiLength = -1L
 		val made = EvvEngine.open(language)
 		engine = made
 		if (made != null) applySettings(made)
@@ -134,22 +142,43 @@ class EvvTtsService : TextToSpeechService() {
 		if (target.applyVoice(s.voice, s.shape(s.voice))) appliedRevision = s.revision
 	}
 
-	/** Teaching three thousand words costs about half a second, so it happens
-	 *  when the files change rather than whenever any setting does. */
+	/** Teaching words happens when the files change rather than whenever any setting does. */
 	private fun loadDictionaries(target: EvvEngine, s: Settings) {
-		// What is there rather than what was asked for. A dictionary picked
-		// before this build is not where the settings say until the phone has
-		// been unlocked once, and remembering only what was read means it is
-		// picked up when it arrives instead of being written off as loaded.
-		val want = s.dictionaryPaths().filterValues { java.io.File(it).exists() }
-		if (want == loadedDictionaries) return
-		target.forgetDictionaries()
-		for ((volume, path) in want) {
-			val file = java.io.File(path)
-			val taught = Dictionaries.load(target, volume, file)
-			Log.i(TAG, "volume $volume: $taught entries from ${file.name}")
+		val wantPaths = s.dictionaryPaths().filterValues { java.io.File(it).exists() }
+		val currentStates = wantPaths.mapValues { (_, path) ->
+			val f = java.io.File(path)
+			LoadedDictState(path, f.lastModified(), f.length())
 		}
-		loadedDictionaries = want
+		val emojiPath = s.dictionaryPath(Eci.DICT_EMOJI)
+			?: java.io.File(DirectBoot.dictionaries(this), "volume-3-emoji.dic").takeIf { it.exists() }?.absolutePath
+		val emojiFile = emojiPath?.let { java.io.File(it) }
+		val emojiModified = emojiFile?.lastModified() ?: 0L
+		val emojiLength = emojiFile?.length() ?: 0L
+
+		if (currentStates == loadedDictStates && emojiModified == lastEmojiModified && emojiLength == lastEmojiLength) {
+			return
+		}
+
+		Log.i(TAG, "Reloading dictionaries because files or settings changed...")
+		target.forgetDictionaries()
+		val csList = mutableListOf<Dictionaries.CachedCaseSensitiveEntry>()
+		for ((volume, path) in wantPaths) {
+			val file = java.io.File(path)
+			if (volume == Eci.DICT_EMOJI) {
+				Emoji.loadUserEmoji(file)
+				continue
+			}
+			val (taught, entries) = Dictionaries.loadWithCaseSensitive(target, volume, file)
+			csList.addAll(entries)
+			Log.i(TAG, "volume $volume: $taught active entries from ${file.name}")
+		}
+		if (emojiFile != null && emojiFile.exists()) {
+			Emoji.loadUserEmoji(emojiFile)
+		}
+		activeCaseSensitiveEntries = csList
+		loadedDictStates = currentStates
+		lastEmojiModified = emojiModified
+		lastEmojiLength = emojiLength
 	}
 
 	override fun onStop() {
@@ -178,13 +207,53 @@ class EvvTtsService : TextToSpeechService() {
 			return
 		}
 		val s = settings
-		if (s != null && s.revision != appliedRevision) applySettings(target)
+		if (s != null) {
+			if (s.revision != appliedRevision) {
+				applySettings(target)
+			} else {
+				loadDictionaries(target, s)
+			}
+		}
 		// Re-sent every time rather than once, because it is the one setting
 		// with no way of telling whether something else has moved it.
 		s?.let { target.setAbbreviations(it.abbreviations) }
 		target.setRatePercent(request.speechRate)
 		target.setPitchPercent(request.pitch)
-		val text = TextFixes.apply(request.charSequenceText?.toString().orEmpty())
+		val rawText = request.charSequenceText?.toString().orEmpty()
+		if (rawText.isEmpty()) {
+			callback.start(target.sampleRateHz, AudioFormat.ENCODING_PCM_16BIT, 1)
+			callback.done()
+			return
+		}
+
+		var processedText = rawText
+		val cs = activeCaseSensitiveEntries
+		if (cs.isNotEmpty()) {
+			processedText = Dictionaries.applyCaseSensitiveDict(processedText, cs)
+		}
+		if (s?.readEmoji != false) {
+			processedText = Emoji.apply(processedText)
+		}
+		if (s?.processNumbers == true) {
+			processedText = Numbers.apply(
+				processedText,
+				mode = s.numberMode,
+				readTimeNaturally = s.readTimeNaturally,
+				readRomanNumerals = s.readRomanNumerals
+			)
+		} else if (s?.readTimeNaturally == true || s?.readRomanNumerals == true) {
+			processedText = Numbers.apply(
+				processedText,
+				mode = Numbers.MODE_DEFAULT,
+				readTimeNaturally = s.readTimeNaturally,
+				readRomanNumerals = s.readRomanNumerals
+			)
+		}
+		val punctLevel = s?.punctuationLevel ?: Punctuation.LEVEL_SOME
+		if (s?.readPunctuation != false && punctLevel > Punctuation.LEVEL_NONE) {
+			processedText = Punctuation.apply(processedText, punctLevel, target.language)
+		}
+		val text = TextFixes.apply(processedText)
 		if (text.isEmpty()) {
 			callback.start(target.sampleRateHz, AudioFormat.ENCODING_PCM_16BIT, 1)
 			callback.done()

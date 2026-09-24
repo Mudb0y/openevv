@@ -41,8 +41,9 @@ object Eci {
 	const val DICT_MAIN = 0
 	const val DICT_ROOT = 1
 	const val DICT_ABBREVIATION = 2
+	const val DICT_EMOJI = 3
 
-	val DICT_VOLUMES = listOf(DICT_MAIN, DICT_ROOT, DICT_ABBREVIATION)
+	val DICT_VOLUMES = listOf(DICT_MAIN, DICT_ROOT, DICT_ABBREVIATION, DICT_EMOJI)
 
 	/**
 	 * The speed every voice is spoken at unless someone has chosen otherwise.

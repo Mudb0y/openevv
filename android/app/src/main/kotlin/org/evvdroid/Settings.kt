@@ -83,6 +83,41 @@ class Settings(context: Context) {
 		get() = Eci.clampVoice(Eci.VOICE_SPEED, prefs.getInt(KEY_SPEED, Eci.DEFAULT_SPEED))
 		set(value) = prefs.edit().putInt(KEY_SPEED, Eci.clampVoice(Eci.VOICE_SPEED, value)).apply()
 
+	/** Whether to process numbers into custom reading styles. Off by default. */
+	var processNumbers: Boolean
+		get() = prefs.getBoolean(KEY_PROCESS_NUMBERS, false)
+		set(value) = prefs.edit().putBoolean(KEY_PROCESS_NUMBERS, value).apply()
+
+	/** Number processing mode: Default (0), Digits (1), Pairs (2), Triplets (3), Words (4). */
+	var numberMode: Int
+		get() = prefs.getInt(KEY_NUMBER_MODE, Numbers.MODE_DIGITS).coerceIn(Numbers.MODE_DEFAULT, Numbers.MODE_WORDS)
+		set(value) = prefs.edit().putInt(KEY_NUMBER_MODE, value).apply()
+
+	/** Whether to read time naturally without speaking the colon. On by default. */
+	var readTimeNaturally: Boolean
+		get() = prefs.getBoolean(KEY_READ_TIME_NATURALLY, true)
+		set(value) = prefs.edit().putBoolean(KEY_READ_TIME_NATURALLY, value).apply()
+
+	/** Whether to convert Roman numerals in contextual titles to numbers. On by default. */
+	var readRomanNumerals: Boolean
+		get() = prefs.getBoolean(KEY_READ_ROMAN_NUMERALS, true)
+		set(value) = prefs.edit().putBoolean(KEY_READ_ROMAN_NUMERALS, value).apply()
+
+	/** Whether to vocalize punctuation marks. */
+	var readPunctuation: Boolean
+		get() = prefs.getBoolean(KEY_READ_PUNCTUATION, true)
+		set(value) = prefs.edit().putBoolean(KEY_READ_PUNCTUATION, value).apply()
+
+	/** Punctuation verbosity level: None (0), Some (1), Most (2), All (3). Default is Some (1). */
+	var punctuationLevel: Int
+		get() = prefs.getInt(KEY_PUNCTUATION_LEVEL, Punctuation.LEVEL_SOME).coerceIn(Punctuation.LEVEL_NONE, Punctuation.LEVEL_ALL)
+		set(value) = prefs.edit().putInt(KEY_PUNCTUATION_LEVEL, value).apply()
+
+	/** Whether to read Unicode emojis with spoken descriptions. On by default. */
+	var readEmoji: Boolean
+		get() = prefs.getBoolean(KEY_READ_EMOJI, true)
+		set(value) = prefs.edit().putBoolean(KEY_READ_EMOJI, value).apply()
+
 	// ---- one voice's own settings ----------------------------------------
 
 	fun shapeValue(voice: Int, param: Int): Int? {
@@ -182,6 +217,13 @@ class Settings(context: Context) {
 		const val KEY_SPEED = "speed"
 		const val KEY_PAUSES = "pauses"
 		const val KEY_PHRASE_PREDICTION = "phrase_prediction"
+		const val KEY_PROCESS_NUMBERS = "process_numbers"
+		const val KEY_NUMBER_MODE = "number_mode"
+		const val KEY_READ_TIME_NATURALLY = "read_time_naturally"
+		const val KEY_READ_ROMAN_NUMERALS = "read_roman_numerals"
+		const val KEY_READ_PUNCTUATION = "read_punctuation"
+		const val KEY_PUNCTUATION_LEVEL = "punctuation_level"
+		const val KEY_READ_EMOJI = "read_emoji"
 		const val DEFAULT_SAMPLE_RATE = 11025
 
 		/** Where the copy taken of a picked dictionary is recorded. DirectBoot

@@ -63,6 +63,10 @@ val buildNative by tasks.registering(Exec::class) {
 	environment("RULES", rulesForm)
 	environment("LANGS", languages)
 	environment("OUT", nativeOut.get().asFile.absolutePath)
+	val ndkEnv = System.getenv("ANDROID_NDK_HOME") ?: System.getenv("ANDROID_NDK_ROOT") ?: ""
+	if (ndkEnv.isNotEmpty()) {
+		environment("ANDROID_NDK_HOME", ndkEnv)
+	}
 	doFirst {
 		if (!engine.file("Makefile").asFile.exists()) {
 			throw GradleException("native/openevv is empty. Run: git submodule update --init --recursive")
@@ -73,7 +77,7 @@ val buildNative by tasks.registering(Exec::class) {
 android {
 	namespace = "org.evvdroid"
 	compileSdk = 36
-	ndkVersion = "26.1.10909125"
+	ndkVersion = "27.0.12077973"
 
 	defaultConfig {
 		applicationId = "org.evvdroid"
@@ -89,6 +93,14 @@ android {
 
 	sourceSets.getByName("androidTest") {
 		kotlin.srcDirs("src/androidTest/kotlin")
+	}
+
+	sourceSets.getByName("test") {
+		kotlin.srcDirs("src/test/kotlin")
+	}
+
+	testOptions {
+		unitTests.isReturnDefaultValues = true
 	}
 
 	sourceSets.getByName("main") {
@@ -166,6 +178,7 @@ dependencies {
 	implementation(libs.compose.ui)
 	implementation(libs.compose.material3)
 
+	testImplementation(libs.junit)
 	androidTestImplementation(libs.junit)
 	androidTestImplementation(libs.androidx.test.junit)
 	androidTestImplementation(libs.androidx.test.runner)

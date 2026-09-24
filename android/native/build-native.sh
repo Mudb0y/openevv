@@ -50,11 +50,24 @@ case "$(uname -s)" in
 	Darwin*) hosttag=darwin-x86_64 ;;
 	*)       hosttag=windows-x86_64 ;;
 esac
+ndk_prebuilt="$NDK/prebuilt/$hosttag/bin"
+if command -v cygpath >/dev/null 2>&1; then
+	ndk_prebuilt_posix=$(cygpath -u "$ndk_prebuilt")
+	if [ -d "$ndk_prebuilt_posix" ]; then
+		export PATH="$ndk_prebuilt_posix:$PATH"
+	fi
+elif [ -d "$ndk_prebuilt" ]; then
+	export PATH="$ndk_prebuilt:$PATH"
+fi
 bin="$NDK/toolchains/llvm/prebuilt/$hosttag/bin"
 exe=""
 [ -x "$bin/clang" ] || exe=".exe"
 clang="$bin/clang$exe"
 strip="$bin/llvm-strip$exe"
+make="$ndk_prebuilt/make$exe"
+if [ ! -x "$make" ]; then
+	make="make"
+fi
 if [ ! -x "$clang" ]; then
 	echo "no clang at $clang" >&2
 	exit 1
@@ -142,8 +155,8 @@ for abi in $ABIS; do
 		CC="$clang --target=$triple"
 		CFLAGS="-fPIC -fvisibility=hidden -fsigned-char"
 	)
-	make "${common[@]}" -j"$JOBS" android-objects
-	objdir=$(make "${common[@]}" -s android-objdir)
+	"$make" "${common[@]}" -j"$JOBS" android-objects
+	objdir=$("$make" "${common[@]}" -s android-objdir)
 	# A response file, because the object list is longer than a Windows command
 	# line takes.
 	rsp="$engine/$build/objects.rsp"
