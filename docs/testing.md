@@ -44,6 +44,19 @@ A word that moves is a question, exactly as a case is, and `test/words.sh record
 
 **What it does not see is anything but a word on its own.** The Polish sentence in English's `utf8` cases moved once for a letter rule that 24,318 English words were happy with; a word list has no Polish name in it. So the two gates answer different questions and a change wants both.
 
+### What one letter rule does differently
+
+    tools/rules/check-letters.sh <tag> <word>...
+    tools/rules/check-letters.sh <tag> -f <file>
+
+`check-upper.sh` above holds an authored rule to making the same calls as the one it stands in for. A letter rule written in `lang/<tag>/letters` says `afresh` and is left out of that deliberately, because it is *meant* to differ. This asks the other question: where.
+
+It speaks the text through a build carrying IBM's letter rules and through one carrying ours, both with tracing on, and prints the first place they part company.
+
+**What it compares is what the rules do to the word, not every call they make**, and that is the whole reason it works. A rule of ours legitimately does less: it tests the run it wants where IBM tests one letter at a time and backtracks through four alternatives, so the calls are hundreds of lines apart on a word the two agree about completely. Comparing everything buries the one line that matters. So the comparison is over the calls that change the spine -- what phones went in, what came out, what was marked. `EVV_LETTERS_ALL=1` compares every call, which is what to reach for when the two agree on every insertion and the sound still differs.
+
+It answered in one run what six builds of guessing had not: over one Italian sentence, IBM makes four `mark_s`, four two-phone insertions and two insertions by value, where ours makes twelve single-phone insertions and no marks at all.
+
 ## The oracle
 
     make probe

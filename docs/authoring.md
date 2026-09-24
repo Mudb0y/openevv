@@ -1157,3 +1157,18 @@ So both gates run for every letter from here, and the matrix is the one that dec
 ### The way to find that out is one letter at a time, and the old way was wrong
 
 Testing subsets does not attribute blame here, because the letters interact: a rule that swallows a letter changes what the next rule is handed. Fourteen letters moved three cases where ten of them moved nineteen -- dropping letters made it look worse. Only adding one letter to a green set and running both gates says anything, and it costs a build and a minute a letter.
+
+
+## What l, m and n actually need, measured rather than guessed
+
+`tools/rules/check-letters.sh` is the instrument, and it should have existed before any of the letters did. It speaks one word or sentence through a build with IBM's letter rules and one with ours, and compares *what the rules do to the word* rather than every call they make -- the phones that went in, what came out, what was marked. A rule of ours legitimately makes fewer calls, so comparing everything shows hundreds of differing lines on a word the two agree about; comparing the spine shows four.
+
+Over the Italian sentence that moves, with `l`, `m` and `n` all in, the whole difference is this. IBM makes four `mark_s(field 2, 12, 0, 0)`, four insertions of two phones in one call, and two `insert_2ptv` -- an insertion *by value* rather than of a string. Ours makes twelve insertions of one phone and no marks.
+
+So two things are missing and they are nameable, which is what a session of reading call lists never managed:
+
+**A mark.** `mark_s` puts something on the spine that no insertion does, and the word gate cannot see it at all: the answers are identical over 20,000 words. Only the sentences show it.
+
+**An insertion by value.** `insert_2ptv` inserts what a location holds rather than a string the rule names. What IBM pushes into that location in these rules is an immediate, so the *effect* is one phone -- but it is a different call and the engine can tell.
+
+And one guess that the tool disposed of in a single build: our doubling arms are not firing at all in Italian, which is why every letter falls to its default. Making the run test use `setscan_nof_r`, the fence-respecting scan IBM uses, does not fix it -- it takes the moved cases from 19 to 30. So the reason the arm does not match is still open, and it is the thing to find next, with the tool rather than by reading.
