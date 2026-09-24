@@ -84,7 +84,7 @@ typedef THIS void *(*DeleteFn)(void *self, int32_t freeIt);
 THIS int32_t ph_ensureArraySize(PhonemeData *p);
 
 /* Sorted on the packed name, which is the first word of a record. */
-int32_t ph_compare(const void *a, const void *b)
+int ph_compare(const void *a, const void *b)
 {
     if (*(const int32_t *)a > *(const int32_t *)b)
         return 1;

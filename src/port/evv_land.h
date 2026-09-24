@@ -33,6 +33,11 @@
 /* Eighty bytes, and eight of them is all the alignment it asks for. */
 #define EVV_LAND_WORDS 10
 
+#elif defined(__thumb2__)
+
+/* r4-r11, the stack pointer and the return address, then d8-d15. */
+#define EVV_LAND_WORDS 13
+
 #else
 
 /* Elsewhere the place holds the C library's own buffer, so it is as big as

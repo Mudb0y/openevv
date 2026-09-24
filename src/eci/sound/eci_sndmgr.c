@@ -68,8 +68,8 @@ const uint32_t sm_bytes = sizeof(SoundManager);
 extern THIS void *sy_mutexCtor(void *m, int32_t recursive)
     MANGLED("??0Mutex@@QAE@H@Z");
 extern THIS void sy_mutexDtor(void *m) MANGLED("??1Mutex@@QAE@XZ");
-extern THIS int sy_mutexWait(void *m, int32_t ms) MANGLED("?wait@Mutex@@QAEHJ@Z");
-extern THIS int sy_mutexRelease(void *m) MANGLED("?release@Mutex@@QAEHXZ");
+extern THIS int32_t sy_mutexWait(void *m, int32_t ms) MANGLED("?wait@Mutex@@QAEHJ@Z");
+extern THIS int32_t sy_mutexRelease(void *m) MANGLED("?release@Mutex@@QAEHXZ");
 extern THIS void *tt_ctor(void *t) MANGLED("??0TimerThread@@QAE@XZ");
 extern THIS void tt_dtor(void *t) MANGLED("??1TimerThread@@UAE@XZ");
 extern THIS void *snd_ctor(void *t, void *timer)

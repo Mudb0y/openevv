@@ -667,7 +667,7 @@ extern int ralStrIcmp(void *ctx, const char *a, const char *b)
     MANGLED("_ralStrIcmp");
 extern int enum_field(int8_t n, int32_t which) MANGLED("_enum_field");
 extern int time_stream(int8_t n) MANGLED("_time_stream");
-extern int checkInterrupt(DeltaThis *d) MANGLED("_checkInterrupt");
+extern int32_t checkInterrupt(DeltaThis *d) MANGLED("_checkInterrupt");
 extern int timeDuration(DeltaThis *d, void *a, void *b, int8_t which)
     MANGLED("_timeDuration");
 extern int sendArrayParameters(DeltaThis *d, int32_t a, int32_t b, int32_t c,

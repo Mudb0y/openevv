@@ -58,8 +58,8 @@ extern THIS int32_t th_waitForExit(ETIThread *t)
 
 extern THIS void *sy_mutexCtor(void *m, int32_t recursive);
 extern THIS void  sy_mutexDtor(void *m);
-extern THIS int   sy_mutexWait(void *m, int32_t ms);
-extern THIS int   sy_mutexRelease(void *m);
+extern THIS int32_t sy_mutexWait(void *m, int32_t ms);
+extern THIS int32_t sy_mutexRelease(void *m);
 extern THIS void *sy_eventCtor(void *e, int32_t signalled);
 extern THIS void  sy_eventDtor(void *e);
 extern THIS int   sy_eventWait(void *e, int32_t ms);

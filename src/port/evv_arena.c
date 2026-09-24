@@ -801,7 +801,13 @@ void evv_arena_outstanding(const char *when)
 
 /* ---- one rule's frame ------------------------------------------------ */
 
+/* Measured use is 8 KB on the caller's thread and 10-16 KB on the synthesis
+   thread, so a machine without megabytes to spare can say far less. */
+#ifdef EVV_FRAME_STACK
+#define FRAME_STACK ((size_t)(EVV_FRAME_STACK))
+#else
 #define FRAME_STACK (4u * 1024u * 1024u)
+#endif
 #define FRAME_ALIGN 16
 #define FRAME_ROUND(n) (((n) + (FRAME_ALIGN - 1)) & ~(size_t)(FRAME_ALIGN - 1))
 

@@ -191,7 +191,12 @@ ROMDEFS := $(if $(filter jajp,$(TAGS)),-DEVV_ROM_JAJP)
 # files is there yet -- so a wildcard would leave them out of this build and
 # find them in the next one, which is a link that fails for no visible reason
 # the first time and succeeds the second.
-SOURCES := $(filter-out %/port_win32.c, \
+#
+# PORT=none leaves port_posix.c out as well, for a machine with no pthreads
+# that supplies what src/port/evv_port.h asks for itself.
+PORT ?= posix
+PORTOUT := %/port_win32.c $(if $(filter none,$(PORT)),%/port_posix.c)
+SOURCES := $(filter-out $(PORTOUT), \
              $(foreach d,$(SRCDIRS),$(wildcard $(d)/*.c))) \
            $(filter-out $(STALE) $(GENERATED) $(STUBS) $(RULECODE), \
              $(sort $(foreach l,$(LANGS),$(wildcard $(l)/*.c)))) \
@@ -624,7 +629,7 @@ $(BUILD)/libevv$(SUF).a: $(OBJECTS) $(RULESTAMP)
 	   case " $(OBJECTS) " in *" $$o "*) ;; *) rm -f "$$o" ;; esac; \
 	 done
 	@rm -f $@
-	@ar rcs $@ $(OBJECTS)
+	@$(AR) rcs $@ $(OBJECTS)
 	@echo "built $@ from $(words $(OBJECTS)) objects"
 
 # The rules as text that can be read and edited, in lang/<tag>/rules, and the
