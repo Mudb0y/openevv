@@ -86,8 +86,16 @@ extern void elgTraceLog(int32_t level, const char *fmt, ...);
 extern const ThreadVtbl vtbl_thread;
 
 /* The original names the thread it starts, and asks for forty thousand
-   bytes of stack. Both are its numbers, not ours. */
-#define THREAD_STACK 0x9c40
+   bytes of stack. The name is its; the stack is not, because what runs on
+   it is not IBM's code any more. The rules as bytecode recurse on the C
+   stack once a rule, and measured over the English word list the deepest
+   rule starts thirty-two and a half thousand bytes down, with the calls it
+   makes still to come -- one English word and one British one ran off the
+   end of forty thousand. Windows never saw it, since it takes the figure as
+   the stack to commit and reserves the program's default, a megabyte or
+   more, regardless; POSIX takes it as the whole stack. So this asks for the megabyte on both, and a stack
+   touched only as deep as it is used costs nothing past that. */
+#define THREAD_STACK 0x100000
 #define THREAD_NAME  "ECIThrd"
 
 /* ---- the small ones -------------------------------------------------- */

@@ -183,8 +183,11 @@ evv_task *evv_task_start(void (*entry)(void *), void *arg, int stack_bytes)
        handle back. */
     s->self = t;
 
+    /* Reserved rather than committed, or a megabyte would be charged to
+       every thread up front. */
     t->h = CreateThread(NULL, (SIZE_T)(stack_bytes > 0 ? stack_bytes : 0),
-                        evv_trampoline, s, 0, NULL);
+                        evv_trampoline, s, STACK_SIZE_PARAM_IS_A_RESERVATION,
+                        NULL);
     if (t->h == NULL) {
         free(s);
         free(t);
