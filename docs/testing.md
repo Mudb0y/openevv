@@ -44,6 +44,8 @@ A word that moves is a question, exactly as a case is, and `test/words.sh record
 
 **What it does not see is anything but a word on its own.** The Polish sentence in English's `utf8` cases moved once for a letter rule that 24,318 English words were happy with; a word list has no Polish name in it. So the two gates answer different questions and a change wants both.
 
+**And it builds the compiled rules unless it is handed a binary**, which leaves the interpreter unasked. CI runs every list through a bytecode build instead, one language a runner, because single words nest the rules deeper than any sentence in the matrix and the interpreter spends more than twice the C stack a rule. One English word and one British one ran the synthesis thread off its stack that way while every gate was green, until the thread was given a megabyte rather than IBM's forty thousand bytes. By hand it is `make RULES=bytecode EVVLANG=lang/<tag> phonemes-bin`, then `EVV_WORDS_NATIVE` naming what that built.
+
 ### What one letter rule does differently
 
     tools/rules/check-letters.sh <tag> <word>...

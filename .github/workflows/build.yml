@@ -289,6 +289,32 @@ jobs:
             test -s "/tmp/one-$id.wav"
           done
 
+  # Every word of every list, spoken through the interpreter. The matrix's
+  # sentences never nest the rules as deep as some single words do, and the
+  # interpreter takes a C stack frame a rule where the compiled rules take
+  # less than half that, so a word that runs a thread off its stack shows here
+  # and nowhere else -- one English word and one British one did, for as long
+  # as the thread was given IBM's forty thousand bytes. A language a runner,
+  # because one is five minutes or more on two cores and eight in a row would
+  # be most of an hour on every push.
+  words-bytecode:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lang: [enus, engb, dede, eses, esus, frfr, frca, itit]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check every word, with the rules as bytecode
+        run: |
+          set -eu
+          t=${{ matrix.lang }}
+          make -j"$(nproc)" RULES=bytecode EVVLANG="lang/$t" phonemes-bin
+          b=build/phonemes
+          [ "$t" = enus ] || b="build/phonemes-$t"
+          EVV_WORDS_NATIVE=$PWD/$b bash test/words.sh check "$t"
+
   # Cross-compiled here rather than on a Windows runner, because this is the
   # same toolchain the tree is developed with and it takes a minute.
   windows:
@@ -460,7 +486,8 @@ jobs:
           if ($have -ne $want) { throw "the 32-bit library says something else through ctypes" }
 
   release:
-    needs: [linux, linux-bytecode, windows, windows-check, windows-check-32]
+    needs: [linux, linux-bytecode, words-bytecode, windows, windows-check,
+            windows-check-32]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
