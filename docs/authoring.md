@@ -1171,4 +1171,23 @@ So two things are missing and they are nameable, which is what a session of read
 
 **An insertion by value.** `insert_2ptv` inserts what a location holds rather than a string the rule names. What IBM pushes into that location in these rules is an immediate, so the *effect* is one phone -- but it is a different call and the engine can tell.
 
-And one guess that the tool disposed of in a single build: our doubling arms are not firing at all in Italian, which is why every letter falls to its default. Making the run test use `setscan_nof_r`, the fence-respecting scan IBM uses, does not fix it -- it takes the moved cases from 19 to 30. So the reason the arm does not match is still open, and it is the thing to find next, with the tool rather than by reading.
+And one guess that was wrong, and is kept because it cost a day: that our doubling arms were not firing in Italian. They were, and what they lacked was the mark. The section below says how that was settled.
+
+
+## Sixteen of Italian, and the doubling arms were firing all along
+
+`l`, `m` and `n` are in, and all 20,000 Italian words sound exactly as IBM's rules make them, sample for sample.
+
+**The guess that the doubling arms never fire was wrong.** Setting `bb` to say `p p` turns babbo into `bap.0po`, and `ll` said as `t t` turns palla into `pat.0ta`, so every doubled arm was matching. What they lacked was a mark, which is the first of the two things the section above named.
+
+**A doubled consonant is two phones and one long sound.** Nine of IBM's Italian letter rules, every doubling one but `r`'s, set the phone statement's `geminate` field on both phones once they are down, through `mark_s` on field 12. Without it the phones are right and the sound is not, which is why the word gate passed and the sentences moved: `ll says l l` moves eighteen of the 98 cases, and with the mark it moves none. `r` makes no mark because its double is one trill rather than two phones. So an arm may end in a mark now:
+
+    ll   says l l   marked geminate yes
+
+The field and the value are named as the phone statement declares them, and the compiler refuses a field or a value it does not have. The mark goes on after the insertion has answered, which is IBM's order.
+
+**The insertion by value turned out to be a mark as well.** Where the ordinary n is a string, IBM's `n` before a hard c, g or q builds a record at run time: it starts a phone variable as code 20, the velar nasal, sets its `diaph_ghost` field to `+n` so that it is written as n, and inserts the variable. Dumping the records `insert_2ptv` laid down showed exactly that and nothing else, so it is the same record as `n before c says G marked diaph_ghost +n`, which is what the file says now. The ear cannot tell which call built it and neither can the samples.
+
+**And no gate the tree had could see this.** Italian's `n` went in green on both, the matrix and the word list, with fifteen of nineteen test words sounding wrong. The phoneme report prints a phone's name and not the rest of its record, and the 98 sentences hold no n before a hard consonant. That is why `tools/rules/check-letters.sh` gained `--sound`, which speaks a whole word list through IBM's letter rules and through ours and names each word whose samples differ. Run over Spanish, it found three words out of 20,000 whose u was said as a vowel rather than a glide, in every one because an accented vowel followed that no arm named. `u before vowel` says what IBM's rule tests, the class rather than a list of letters, less `u before u`, which IBM excludes separately. English's six letters are clean.
+
+So a letter rule now has three gates and the sound is the one that decides. The matrix and the word list stay, being ten times cheaper, but a letter is not finished until the whole word list sounds the same.

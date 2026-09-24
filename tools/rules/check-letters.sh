@@ -29,10 +29,22 @@
 # EVV_LETTERS_ALL=1 compares every call instead, which is what to reach for
 # when the two agree on every insertion and the sound still differs.
 #
+# And --sound asks the other question: not which call differs but whether
+# anything can be heard to. It speaks every word of a list through both builds
+# and names each word whose samples differ. That is what the two gates cannot
+# say about a letter rule. test/words.sh reads the phoneme report, which prints
+# a phone's name and nothing else it carries, so an n laid down where IBM lays
+# down a velar nasal marked to be written as n reads the same there and sounds
+# different; and test/matrix.sh hears only what its sentences happen to hold,
+# which in Italian was no n before a hard c, g or q at all.
+#
 # usage: tools/rules/check-letters.sh <tag> <word>...
 #        tools/rules/check-letters.sh <tag> -f <file>   a word to a line
+#        tools/rules/check-letters.sh <tag> --sound [<file>]
+#                                         the language's word list by default
 #
-# EVV_LETTERS_LINES says how many differing lines to print, twenty by default.
+# EVV_LETTERS_LINES says how many differing lines to print, twenty by default,
+# and EVV_LETTERS_JOBS how many words --sound speaks at once, eight by default.
 
 set -u
 tools=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
@@ -49,7 +61,11 @@ rules="$here/$lang/delta_rules_$tag.c"
 work=$(mktemp -d) || exit 1
 
 words=()
-if [ "${1:-}" = "-f" ]; then
+sound=
+if [ "${1:-}" = "--sound" ]; then
+    sound=${2:-test/cases/words-$tag.txt}
+    [ -r "$sound" ] || { echo "no such file: $sound" >&2; exit 2; }
+elif [ "${1:-}" = "-f" ]; then
     [ -r "${2:-}" ] || { echo "no such file: ${2:-}" >&2; exit 2; }
     while IFS= read -r w; do
         case $w in ''|\#*) continue ;; esac
@@ -64,7 +80,7 @@ fi
 # own back however this ends.
 restore() {
     python3 "$tools/rules/notation.py" build >/dev/null 2>&1
-    rm -rf "$work"
+    [ -n "${EVV_LETTERS_KEEP:-}" ] && echo "kept $work" || rm -rf "$work"
 }
 trap restore EXIT
 
@@ -123,6 +139,42 @@ fi
 build ours
 
 lines=${EVV_LETTERS_LINES:-20}
+
+if [ -n "$sound" ]; then
+    # One process a word and a word a line, as test/words.sh speaks them, in
+    # the engine's own code set rather than UTF-8 and so under LC_ALL=C. Each
+    # side writes afresh into a file of its own, and a word either side said
+    # nothing for is reported as that rather than compared: a stale file from
+    # the word before would otherwise read as a difference, or hide one.
+    LC_ALL=C grep -v '^#' "$sound" | LC_ALL=C grep -v '^$' > "$work/list"
+    export work
+    one() {
+        n=$1; w=$2
+        for side in ibm ours; do
+            rm -f "$work/s.$n.$side.wav"
+            timeout 60 "$work/probe.$side" "$w" "$work/s.$n.$side.wav" \
+                >/dev/null 2>&1
+            [ -s "$work/s.$n.$side.wav" ] || { printf 'silent\t%s\t%s\n' \
+                "$side" "$w"; rm -f "$work"/s.$n.*; return; }
+        done
+        cmp -s "$work/s.$n.ibm.wav" "$work/s.$n.ours.wav" \
+            || printf 'differs\t%s\n' "$w"
+        rm -f "$work"/s.$n.*
+    }
+    export -f one
+    total=$(wc -l < "$work/list")
+    echo "letters: speaking $total words through both"
+    LC_ALL=C awk '{ printf "%d\0%s\0", NR, $0 }' "$work/list" \
+        | nice -n 15 xargs -0 -n 2 -P "${EVV_LETTERS_JOBS:-8}" \
+            bash -c 'one "$0" "$1"' > "$work/heard"
+    moved=$(grep -c '^differs' "$work/heard")
+    silent=$(grep -c '^silent' "$work/heard")
+    LC_ALL=C sort "$work/heard" | head -"$lines"
+    echo "letters: $moved of $total words sound different, $silent said nothing"
+    [ "$moved" = 0 ] && [ "$silent" = 0 ]
+    exit
+fi
+
 bad=0
 for w in "${words[@]}"; do
     speak ibm "$w"

@@ -48,6 +48,7 @@ A word that moves is a question, exactly as a case is, and `test/words.sh record
 
     tools/rules/check-letters.sh <tag> <word>...
     tools/rules/check-letters.sh <tag> -f <file>
+    tools/rules/check-letters.sh <tag> --sound [<file>]
 
 `check-upper.sh` above holds an authored rule to making the same calls as the one it stands in for. A letter rule written in `lang/<tag>/letters` says `afresh` and is left out of that deliberately, because it is *meant* to differ. This asks the other question: where.
 
@@ -56,6 +57,10 @@ It speaks the text through a build carrying IBM's letter rules and through one c
 **What it compares is what the rules do to the word, not every call they make**, and that is the whole reason it works. A rule of ours legitimately does less: it tests the run it wants where IBM tests one letter at a time and backtracks through four alternatives, so the calls are hundreds of lines apart on a word the two agree about completely. Comparing everything buries the one line that matters. So the comparison is over the calls that change the spine -- what phones went in, what came out, what was marked. `EVV_LETTERS_ALL=1` compares every call, which is what to reach for when the two agree on every insertion and the sound still differs.
 
 It answered in one run what six builds of guessing had not: over one Italian sentence, IBM makes four `mark_s`, four two-phone insertions and two insertions by value, where ours makes twelve single-phone insertions and no marks at all.
+
+**`--sound` is the gate a letter rule actually needs**, and it is the one that finished Italian. It speaks every word of a list -- the language's own word list by default -- through both builds and names each word whose samples differ. Neither ordinary gate can say that about a letter rule. `test/words.sh` reads the phoneme report, which prints a phone's name and nothing else the record carries, so a doubled consonant without its geminate mark and an n that is not the velar nasal read the same there and sound different. `test/matrix.sh` hears only what its sentences hold, and Italian's held no n before a hard c, g or q at all. It passed Italian's `n` with fifteen of nineteen test words sounding wrong. Spanish's `u` said the same thing more quietly: three words out of 20,000, in every one an accented vowel after the u that no arm named, with both ordinary gates green before the fix and after it.
+
+It costs ten minutes a language at eight processes, which `EVV_LETTERS_JOBS` changes. A word either side says nothing for is reported rather than compared.
 
 ## The oracle
 

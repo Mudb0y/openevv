@@ -64,6 +64,38 @@ uint8_t itit_evv_authored_data[] = {
     5,10,
     /* say_1e, 1 bytes at 38 */
     30,
+    /* lts_ll, 2 bytes at 39 */
+    19,19,
+    /* say_1717, 2 bytes at 41 */
+    23,23,
+    /* say_17, 1 bytes at 43 */
+    23,
+    /* lts_mm, 2 bytes at 44 */
+    20,20,
+    /* say_1111, 2 bytes at 46 */
+    17,17,
+    /* say_11, 1 bytes at 48 */
+    17,
+    /* lts_nn, 2 bytes at 49 */
+    21,21,
+    /* say_1212, 2 bytes at 51 */
+    18,18,
+    /* lts_ce, 2 bytes at 53 */
+    12,2,
+    /* say_12, 1 bytes at 55 */
+    18,
+    /* lts_ci, 2 bytes at 56 */
+    12,3,
+    /* lts_ge, 2 bytes at 58 */
+    15,2,
+    /* lts_gi, 2 bytes at 60 */
+    15,3,
+    /* lts_c, 1 bytes at 62 */
+    12,
+    /* say_14, 1 bytes at 63 */
+    20,
+    /* lts_g, 1 bytes at 64 */
+    15,
 };
 
 const delta_store itit_delta_authored_store[] = {

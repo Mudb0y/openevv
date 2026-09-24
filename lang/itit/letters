@@ -7,38 +7,40 @@
 # either place -- and `at start' or `at end' for a run that has to begin or
 # end where the piece of the word does.
 #
-# Italian doubles its consonants and means it: a doubled letter says its
-# phone twice, and that is the shape of nearly every consonant here.
+# Italian doubles its consonants and means it: a doubled letter is two phones
+# and one long sound, which IBM says by marking both `geminate'. Without the
+# mark the phones are right and the sound is not, so the word gate passes and
+# the sentences move. r is the exception, its double being one trill.
 #
-# Thirteen are in. l, m and n are not: each passes the word gate over 20,000
-# words and moves matrix cases on its own, which is the pair of gates
-# disagreeing rather than either being wrong -- see docs/authoring.md.
+# An n before a hard c, g or q is the velar nasal, marked to be written as n,
+# where IBM's rule builds that record at run time. It is the same record
+# either way, and the ear cannot tell which built it.
 
 rules in it_phone.obj named apply_ital_%s_rules
 a piece runs from 712 to 872
 
 letter b
-  bb   says b b
+  bb   says b b   marked geminate yes
   b    says b
 
 letter d
-  dd   says d d
+  dd   says d d   marked geminate yes
   d    says d
 
 letter f
-  ff   says f f
+  ff   says f f   marked geminate yes
   f    says f
 
 letter p
-  pp   says p p
+  pp   says p p   marked geminate yes
   p    says p
 
 letter t
-  tt   says t t
+  tt   says t t   marked geminate yes
   t    says t
 
 letter v
-  vv   says v v
+  vv   says v v   marked geminate yes
   v    says v
 
 
@@ -63,3 +65,22 @@ letter q
 
 letter a
   a    says a
+
+letter l
+  ll   says l l   marked geminate yes
+  l    says l
+
+letter m
+  mm   says m m   marked geminate yes
+  m    says m
+
+letter n
+  nn           says n n   marked geminate yes
+  n before ce  says n
+  n before ci  says n
+  n before ge  says n
+  n before gi  says n
+  n before c   says G   marked diaph_ghost +n   # banca
+  n before g   says G   marked diaph_ghost +n   # lungo
+  n before q   says G   marked diaph_ghost +n   # cinque
+  n            says n

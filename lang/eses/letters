@@ -92,11 +92,8 @@ letter u
   ü before e       says w     # bilingüe
   ü before i       says w     # güira, piragüismo
   ü                says u     # lingüística
-  u before a       says w     # agua
-  u before e       says w     # bueno
-  u before i       says w     # cuido, acuicultura
-  u before í       says w     # acuífero
-  u before o       says w     # cuota
+  u before u       says u
+  u before vowel   says w     # agua, bueno, cuido, acuífero, abakuá
   u after a        says w     # causa, auto
   u after e        says w     # deuda, Europa
   u after o        says w

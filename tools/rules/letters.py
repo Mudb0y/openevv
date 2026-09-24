@@ -17,7 +17,9 @@ arm of a block the bare letter with no test at all -- what the letter says when
 nothing else applies. An arm may also say what must stand to its left and right
 without swallowing it -- `after', `before', and `vowel', `consonant' or `glide'
 in either place -- and whether the run has to begin or end where the piece of
-the word does, which is `at start' and `at end'.
+the word does, which is `at start' and `at end'. And an arm may end by marking
+the phones it laid down, `marked <field> <value>', in the phone statement's own
+names: Italian's doubled consonants are `geminate yes'.
 
 The phones are the ETI phone letters, the same ones `lang/<tag>/<tag>.dict'
 already uses, and the letters are the language's own characters.
@@ -121,6 +123,28 @@ def letter_codes(tag):
     return dict((name, n) for n, name in enumerate(names))
 
 
+def phone_fields(tag):
+    """Every field of the phone statement, as its number and the names of its
+    values in order, which is what a mark is written in terms of."""
+    out = {}
+    field = None
+    inside = False
+    for line in open(os.path.join(ROOT, "lang", tag, "%s.statements" % tag)):
+        if line.startswith("statement "):
+            if inside:
+                break
+            inside = line.split()[1] == "phone"
+            continue
+        if not inside:
+            continue
+        if line.startswith("  field "):
+            field = line.split()[1]
+            out[field] = (len(out), [])
+        elif line.startswith("    value ") and field is not None:
+            out[field][1].append(line.split(None, 1)[1].strip())
+    return out
+
+
 def phone_codes(tag):
     """Every phoneme the language declares and the code the rules index it by.
 
@@ -191,7 +215,8 @@ CLASSES = {"vowel": 1, "consonant": 2, "glide": 3}
 
 
 class Arm(object):
-    def __init__(self, where, letters, after, before, when, phones, note):
+    def __init__(self, where, letters, after, before, when, phones, note,
+                 marked=None):
         self.where = where
         self.letters = letters      # the whole run, the block's letter first
         self.after = after          # letters that must precede, not swallowed
@@ -199,6 +224,7 @@ class Arm(object):
         self.when = when            # "", "at start" or "at end"
         self.phones = phones        # [] for an arm that says nothing
         self.note = note
+        self.marked = marked        # (field, value) set on the phones laid
 
     def tests(self, letter=None):
         """Whether this arm asks anything at all, which decides its shape.
@@ -293,6 +319,20 @@ def parse(path):
                                                 for c in CONDITIONS), when))
         if not said:
             raise Trouble("%s: `says' what?" % where)
+        # What the phones are marked with once they are down. Italian's
+        # doubled consonants are two phones and one long sound, and IBM says
+        # the second half by setting the phone statement's `geminate' on both.
+        marked = None
+        if "marked" in said:
+            m = said.index("marked")
+            if len(said) != m + 3:
+                raise Trouble("%s: `marked' is a field of the phone statement"
+                              " and one of its values, and ends the arm"
+                              % where)
+            marked = tuple(said[m + 1:])
+            said = said[:m]
+            if not said:
+                raise Trouble("%s: `says' what?" % where)
         phones = [] if said == ["nothing"] else said
         # An arm may begin with a letter the block is not named after. The
         # dispatcher hands one rule several characters -- Spanish's i rule is
@@ -300,14 +340,14 @@ def parse(path):
         # apart by asking what the character is, which is what such an arm
         # compiles to.
         cur[3].append(Arm(where, letters, after, before, when,
-                          phones, note))
+                          phones, note, marked))
     return blocks
 
 
 # ---- what it compiles to -------------------------------------------------
 
 def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
-             letters_at, phones_at, fence_at, params, piece):
+             letters_at, phones_at, fence_at, params, piece, pfields):
     """One letter's rule, as the upper form.
 
     The shape is IBM's own and the tags are its numbering: the arm to fall to
@@ -500,7 +540,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("  if answer is not 0")
                 w("    backtrack")
                 w("  end")
-            w(spell(a, known, phones_of, phones_at, left, right))
+            w(spell(a, known, phones_of, phones_at, left, right, pfields))
             w("  go to laid")
         else:
             w("")
@@ -508,7 +548,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("# %s" % a.note)
             if i:
                 w("place arm%d on %d" % (i, tag_of[("fall", i)]))
-            w(spell(a, known, phones_of, phones_at, left, right))
+            w(spell(a, known, phones_of, phones_at, left, right, pfields))
 
     w("")
     w("place laid")
@@ -522,8 +562,9 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
     return "\n".join(out)
 
 
-def spell(arm, known, phones_of, phones_at, left, right):
-    """The one line that lays an arm's phones over the range it matched."""
+def spell(arm, known, phones_of, phones_at, left, right, pfields=None):
+    """The lines that lay an arm's phones over the range it matched, and mark
+    them where the arm says to."""
     said = phones_of(arm.phones)
     if not said:
         # An arm that says nothing empties the phones over the range it
@@ -548,10 +589,26 @@ def spell(arm, known, phones_of, phones_at, left, right):
             " and which part the engine needs has not been read yet."
             " Swallow the letter with the one beside it instead, the way"
             " `bt says t' does." % arm.where)
-    return ("  call lpta_rpta_loadp %s %s\n"
-            "  call insert_2pt_s %d %d sym %s 0"
-            % (left, right, phones_at, len(said),
-               known.name("say", said, " ".join(arm.phones))))
+    out = ("  call lpta_rpta_loadp %s %s\n"
+           "  call insert_2pt_s %d %d sym %s 0"
+           % (left, right, phones_at, len(said),
+              known.name("say", said, " ".join(arm.phones))))
+    if arm.marked:
+        field, value = arm.marked
+        if field not in pfields:
+            raise Trouble("%s: the phone statement has no field %s"
+                          % (arm.where, field))
+        at, values = pfields[field]
+        if value not in values:
+            raise Trouble("%s: %s is one of %s, not %s"
+                          % (arm.where, field, ", ".join(values), value))
+        # IBM's own order: the insertion answers first, and a failed one
+        # backtracks before anything is marked.
+        out += ("\n  if answer is not 0\n    backtrack\n  end\n"
+                "  call lpta_rpta_loadp %s %s\n"
+                "  call mark_s %d %d %d 0"
+                % (left, right, phones_at, at, values.index(value)))
+    return out
 
 
 def compile_tag(tag):
@@ -560,6 +617,7 @@ def compile_tag(tag):
         raise Trouble("there is no lang/%s/letters" % tag)
     known = Strings()
     letters_at, phones_at, fence_at = fields(tag)
+    pfields = phone_fields(tag)
     lcode = letter_codes(tag)
     pcode = phone_codes(tag)
     out = [
@@ -580,7 +638,7 @@ def compile_tag(tag):
         out.append("")
         out.append(rule_for(tag, letter, name, obj, arms, known, lcode,
                             pcode, letters_at, phones_at, fence_at,
-                            takes(tag, stem, name), piece))
+                            takes(tag, stem, name), piece, pfields))
     if stem is None:
         raise Trouble("lang/%s/letters names no letter" % tag)
     return "\n".join(out) + "\n", known.text(tag), stem
