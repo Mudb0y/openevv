@@ -320,15 +320,11 @@ __asm__(
 
 #else
 
-/* Where the registers are not x86-64, the C library will do: a thirty-two bit
-   build has a pointer that fits a value, so nothing here has ever been the
-   problem there. */
+/* Where the registers are not x86-64, the C library will do the jump; the
+   save side is deliberately not a function (see evv_land.h). A thirty-two
+   bit build has a pointer that fits a value, so nothing here has ever been
+   the problem there. */
 #include <setjmp.h>
-
-int evv_land_save(void *place)
-{
-    return setjmp(*(jmp_buf *)place);
-}
 
 void evv_land_jump(void *place, int value)
 {
