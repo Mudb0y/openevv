@@ -247,7 +247,7 @@ class Strings(object):
 
 # ---- the file ------------------------------------------------------------
 
-CONDITIONS = ("at start", "at end")
+CONDITIONS = ("at start", "at end", "at word start", "at word end")
 
 # What a letter may be said to be, rather than which letter it is. These are
 # the values of the input statement's `letter_type` field, which is the
@@ -279,6 +279,7 @@ class Arm(object):
         silently, and three letters were blamed on the machine for it."""
         return bool(len(self.letters) > 1 or self.after or self.before
                     or self.when or self.listed
+                    or getattr(self, "accented", False)
                     or (letter is not None and self.letters[0] != letter))
 
 
@@ -372,6 +373,13 @@ def parse(path):
                 raise Trouble("%s: `before' what?" % where)
             before = rest[1]
             rest = rest[2:]
+        # `accented' is the letter's own accent flag, which is set for an
+        # accented letter and for one the dictionary has marked stressed:
+        # Italian's i says i in entropia, whose i is written plain.
+        accented = False
+        if rest[:1] == ["accented"]:
+            accented = True
+            rest = rest[1:]
         when = " ".join(rest)
         if when and when not in CONDITIONS:
             raise Trouble("%s: an arm may say %s and nothing else, not %r"
@@ -422,8 +430,10 @@ def parse(path):
         # entered for `i' and for `í' alike -- and IBM's own arms tell them
         # apart by asking what the character is, which is what such an arm
         # compiles to.
-        cur[3].append(Arm(where, letters, after, before, when,
-                          phones, note, marked, listed))
+        arm = Arm(where, letters, after, before, when, phones, note, marked,
+                  listed)
+        arm.accented = accented
+        cur[3].append(arm)
     return blocks
 
 
@@ -473,7 +483,8 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
     if piece is not None:
         w("  variable piecestart word %d" % piece[0])
         w("  variable pieceend word %d" % piece[1])
-    if any(a.listed and a.listed[2] == "word" for a in arms):
+    if any((a.listed and a.listed[2] == "word")
+           or (isinstance(a.when, str) and "word" in a.when) for a in arms):
         if wordrange is None:
             raise Trouble("a list matched against the word needs the line"
                           " `a word runs from <start> to <end>'")
@@ -577,12 +588,12 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
                 w("  end")
-            if a.when and piece is None:
+            if a.when and "word" not in a.when and piece is None:
                 raise Trouble("%s: `%s' needs the line `a piece runs from"
                               " <start> to <end>' at the top of the file,"
                               " since where those live is the language's own"
                               % (a.where, a.when))
-            if a.when == "at start":
+            if a.when in ("at start", "at word start"):
                 # The run has to begin where the piece does. Put the scan on
                 # the letter walking left and ask whether it is already at the
                 # piece's first node.
@@ -591,8 +602,21 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
                 w("  end")
-                w("  call lpta_loadp addr piecestart")
+                w("  call lpta_loadp addr %s" % ("wordstart" if "word" in a.when
+                                                  else "piecestart"))
                 w("  call test_ptr")
+                w("  if answer is not 0")
+                w("    go to %s" % nxt)
+                w("  end")
+            if getattr(a, "accented", False):
+                # The accent flag of the letter itself, field 5 of the input
+                # statement, whose first value is yes.
+                w("  call lpta_loadp %s" % left)
+                w("  call setscan_r %d" % letters_at)
+                w("  if answer is not 0")
+                w("    go to %s" % nxt)
+                w("  end")
+                w("  call testFldeq %d 5 0" % letters_at)
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
                 w("  end")
@@ -642,7 +666,15 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
             # is what hung the engine on `languorous': `r after ou' matched,
             # saved a leftward scan as the right end of the range, and the
             # rule read the same letter for ever after.
-            if len(a.letters) > 1 or a.before:
+            #
+            # Nor where it only looked at what follows. The scan set on the
+            # right end and saved back into it looks like a no-op and is not:
+            # what goes back is where the scan stands rather than the token
+            # the caller handed over, and a phone laid over that range leaves
+            # the letter's phon_form unset. Nothing heard shows it until a
+            # later letter asks what this one was said as -- Italian's i does,
+            # of the u before it -- and IBM's u saves nothing there.
+            if len(a.letters) > 1:
                 w("  call savescptr %d %s"
                   % (tag_of[("body", i)], right))
             if all(k in CLASSES for k in a.before.split("+")) and a.before:
@@ -671,11 +703,25 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("  if answer is not 0")
                 w("    backtrack")
                 w("  end")
-            if a.when == "at end":
+            if a.when in ("at end", "at word end"):
                 # And the run has to finish where the piece does. The scan is
                 # past the last letter it matched, so this asks whether that
-                # is the piece's last node.
-                w("  call lpta_loadp addr pieceend")
+                # is the piece's last node. An arm of one letter with nothing
+                # after it has not moved the scan at all, so it is put on the
+                # letter and stepped past it first, which is how IBM's own u
+                # asks whether it ends the word.
+                if not (len(a.letters) > 1 or a.before):
+                    w("  call lpta_loadp %s" % left)
+                    w("  call setscan_r %d" % letters_at)
+                    w("  if answer is not 0")
+                    w("    backtrack")
+                    w("  end")
+                    w("  call advance_tok")
+                    w("  if answer is not 0")
+                    w("    backtrack")
+                    w("  end")
+                w("  call lpta_loadp addr %s" % ("wordend" if "word" in a.when
+                                                  else "pieceend"))
                 w("  call test_ptr")
                 w("  if answer is not 0")
                 w("    backtrack")

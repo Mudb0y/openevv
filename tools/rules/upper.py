@@ -682,7 +682,13 @@ class Compiler:
             tag = max(self.at_tag) + 1 if self.at_tag else 1
         self.bind(where, tag, name)
         entry, wrapper = PLANTS[kind]
-        if self.r.wrappers:
+        # Through the language's own wrapper where it has one. A rule written
+        # here can want a tag IBM's never did -- Italian's i, as a letters
+        # file writes it, plants seventy -- and a wrapper nobody compiled is
+        # a call to nothing, so past the last one the plant is made directly,
+        # which is all a wrapper does.
+        known = getattr(self.r, "known_rules", None)
+        if self.r.wrappers and (known is None or wrapper % tag in known):
             self.call(where, wrapper % tag, [])
         else:
             self.call(where, entry, [str(tag)])
@@ -810,8 +816,19 @@ def compile_file(path, lang=None):
     own variables; without one, a variable is named by its offset as before.
     """
     named = dgl.names_of(lang) if lang else {}
+    known = None
+    if lang:
+        known = set()
+        import glob as _glob
+        for dr in _glob.glob(os.path.join(os.path.dirname(os.path.dirname(
+                os.path.dirname(os.path.abspath(__file__)))), "lang", lang,
+                "rules", "*.dr")):
+            for line in open(dr):
+                if line.startswith("rule "):
+                    known.add(line.split()[1])
     out = []
     for r in parse(path, named):
+        r.known_rules = known
         out.append((r.name, Compiler(r).rule(), r.obj))
     return out
 

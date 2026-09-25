@@ -207,3 +207,63 @@ letter z
   z after vowel before vowel        says D   # azoto, ozono
   z before consonant    says D   # izba, nazca
   z           says T
+
+letter u
+  u accented             says u     # ù
+  u after consonant at word end  says u   # tu, più
+  u before vowel at start  says w   # uopo, super-uomini
+  u at start             says u     # pre-unitario, mono-utente
+  u                      says w     where the root is u_notpronounced_u
+  u                      says u     where the root begins u_pronounced_u
+  u after i              says u     # fiume
+  u before u             says u     # duumviro
+  u after u              says u
+  u before vowel         says w     # uomo, buono, quando
+  u after vowel          says w     # aurora, neutro
+  u                      says u
+
+letter i
+  i accented             says i     # ì, and entropia's i the dictionary stressed
+  i after consonant at word end  says i
+  i                      says i     where the root is i_notpronounced_y
+  i                      says y     where the root so far is i_notpronounced_i
+  i                      says i     where the root begins i_pronounced_i
+  i before vowel         says y     where the root begins i_pronounced_y
+  i after zarc   before a at word end  says i   # democrazia
+  i after zarc   before e at word end  says i
+  i after nof    before a at word end  says i   # telefonia
+  i after nof    before e at word end  says i
+  i after farg   before a at word end  says i   # geografia
+  i after farg   before e at word end  says i
+  i after gol    before a at word end  says i   # biologia
+  i after gol    before e at word end  says i
+  i after rtem   before a at word end  says i   # geometria
+  i after rtem   before e at word end  says i
+  i after mono   before a at word end  says i   # astronomia
+  i after mono   before e at word end  says i
+  i after paret  before a at word end  says i   # fisioterapia
+  i after paret  before e at word end  says i
+  i after re before a at end  says i   # artiglieria
+  i after re before e at end  says i
+  i before aco           says i     # cardiaco -- but diaclasi, niacina glide
+  i before aca           says i
+  i before ach           says i     # celiachia
+  i before vowel at start  says y   # iato, iodato
+  i at start             says i     # co-incidenza, auto-incendio
+  i before i             says i
+  i before vowel         says y     # piano, fiore
+  i after vowel at word end  says i # colei, avvarrai
+  i after a before sm    says i     # -ismo, -ista
+  i after e before sm    says i
+  i after o before sm    says i
+  i after u before sm    says i     # altruismo
+  i after a before st    says i
+  i after e before st    says i
+  i after o before st    says i
+  i after u before st    says i
+  i after a              says y     # aimone
+  i after e              says y
+  i after o              says y
+  i after u              says y     where the root begins u_pronounced_u
+  i after u              says i     # acquisto -- the u glides, so this does not
+  i                      says i

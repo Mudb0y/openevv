@@ -654,6 +654,142 @@ uint8_t itit_evv_authored_data[] = {
     24,1,15,
     /* lts_iend, 4 bytes at 1612 */
     3,2,21,13,
+    /* say_1f, 1 bytes at 1616 */
+    31,
+    /* lts_duole, 5 bytes at 1617 */
+    13,5,4,19,2,
+    /* lts_duoli, 5 bytes at 1622 */
+    13,5,4,19,3,
+    /* lts_duomo, 5 bytes at 1627 */
+    13,5,4,20,4,
+    /* lts_altrui, 6 bytes at 1632 */
+    1,19,26,24,5,3,
+    /* lts_ambedue, 7 bytes at 1638 */
+    1,20,11,2,13,5,2,
+    /* lts_ambidue, 7 bytes at 1645 */
+    1,20,11,3,13,5,2,
+    /* lts_intuit, 6 bytes at 1652 */
+    3,21,26,5,3,26,
+    /* lts_baul, 4 bytes at 1658 */
+    11,1,5,19,
+    /* lts_balau, 5 bytes at 1662 */
+    11,1,19,1,5,
+    /* lts_bue, 3 bytes at 1667 */
+    11,5,2,
+    /* lts_bui, 3 bytes at 1670 */
+    11,5,3,
+    /* lts_cadaun, 6 bytes at 1673 */
+    12,1,13,1,5,21,
+    /* lts_circuit, 7 bytes at 1679 */
+    12,3,24,12,5,3,26,
+    /* lts_deum, 4 bytes at 1686 */
+    13,2,5,20,
+    /* lts_due, 3 bytes at 1690 */
+    13,5,2,
+    /* lts_duo, 3 bytes at 1693 */
+    13,5,4,
+    /* lts_fortuit, 7 bytes at 1696 */
+    14,4,24,26,5,3,26,
+    /* lts_fui, 3 bytes at 1703 */
+    14,5,3,
+    /* lts_fluid, 5 bytes at 1706 */
+    14,19,5,3,13,
+    /* lts_fluttuante, 10 bytes at 1711 */
+    14,19,5,26,26,5,1,21,26,2,
+    /* lts_giand, 5 bytes at 1721 */
+    15,3,1,21,13,
+    /* lts_gratuit, 7 bytes at 1726 */
+    15,24,1,26,5,3,26,
+    /* lts_paur, 4 bytes at 1733 */
+    22,1,5,24,
+    /* lts_tedeum, 6 bytes at 1737 */
+    26,2,13,2,5,20,
+    /* lts_dia, 3 bytes at 1743 */
+    13,3,1,
+    /* lts_diagnosi, 8 bytes at 1746 */
+    13,3,1,15,21,4,25,3,
+    /* lts_diatriba, 8 bytes at 1754 */
+    13,3,1,26,24,3,11,1,
+    /* lts_diurno, 6 bytes at 1762 */
+    13,3,5,24,21,4,
+    /* lts_pia, 3 bytes at 1768 */
+    22,3,1,
+    /* lts_pio, 3 bytes at 1771 */
+    22,3,4,
+    /* lts_sia, 3 bytes at 1774 */
+    25,3,1,
+    /* lts_spia, 4 bytes at 1777 */
+    25,22,3,1,
+    /* lts_spiano, 6 bytes at 1781 */
+    25,22,3,1,21,4,
+    /* lts_spie, 4 bytes at 1787 */
+    25,22,3,2,
+    /* lts_spio, 4 bytes at 1791 */
+    25,22,3,4,
+    /* lts_trio, 4 bytes at 1795 */
+    26,24,3,4,
+    /* lts_zia, 3 bytes at 1799 */
+    31,3,1,
+    /* lts_zie, 3 bytes at 1802 */
+    31,3,2,
+    /* lts_zio, 3 bytes at 1805 */
+    31,3,4,
+    /* lts_avarizi, 7 bytes at 1808 */
+    1,27,1,24,3,31,3,
+    /* lts_invidi, 6 bytes at 1815 */
+    3,21,27,3,13,3,
+    /* lts_invischi, 8 bytes at 1821 */
+    3,21,27,3,25,12,16,3,
+    /* lts_ferroviari, 10 bytes at 1829 */
+    14,2,24,24,4,27,3,1,24,3,
+    /* lts_manicomi, 8 bytes at 1839 */
+    20,1,21,3,12,4,20,3,
+    /* lts_marinai, 7 bytes at 1847 */
+    20,1,24,3,21,1,3,
+    /* lts_arteri, 6 bytes at 1854 */
+    1,24,26,2,24,3,
+    /* lts_imperia, 7 bytes at 1860 */
+    3,20,22,2,24,3,1,
+    /* lts_feri, 4 bytes at 1867 */
+    14,2,24,3,
+    /* lts_maceri, 6 bytes at 1871 */
+    20,1,12,2,24,3,
+    /* lts_materi, 6 bytes at 1877 */
+    20,1,26,2,24,3,
+    /* lts_miseri, 6 bytes at 1883 */
+    20,3,25,2,24,3,
+    /* lts_seri, 4 bytes at 1889 */
+    25,2,24,3,
+    /* lts_siberi, 6 bytes at 1893 */
+    25,3,11,2,24,3,
+    /* lts_valeri, 6 bytes at 1899 */
+    27,1,19,2,24,3,
+    /* lts_zarc, 4 bytes at 1905 */
+    31,1,24,12,
+    /* lts_nof, 3 bytes at 1909 */
+    21,4,14,
+    /* lts_farg, 4 bytes at 1912 */
+    14,1,24,15,
+    /* lts_gol, 3 bytes at 1916 */
+    15,4,19,
+    /* lts_rtem, 4 bytes at 1919 */
+    24,26,2,20,
+    /* lts_mono, 4 bytes at 1923 */
+    20,4,21,4,
+    /* lts_paret, 5 bytes at 1927 */
+    22,1,24,2,26,
+    /* lts_re, 2 bytes at 1932 */
+    24,2,
+    /* lts_aco, 3 bytes at 1934 */
+    1,12,4,
+    /* lts_aca, 3 bytes at 1937 */
+    1,12,1,
+    /* lts_ach, 3 bytes at 1940 */
+    1,12,16,
+    /* lts_sm, 2 bytes at 1943 */
+    25,20,
+    /* lts_st, 2 bytes at 1945 */
+    25,26,
 };
 
 const delta_store itit_delta_authored_store[] = {
