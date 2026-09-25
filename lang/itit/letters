@@ -17,7 +17,7 @@
 # either way, and the ear cannot tell which built it.
 
 rules in it_phone.obj named apply_ital_%s_rules
-a piece runs from 712 to 872
+a piece runs from 864 to 872
 
 letter b
   bb   says b b   marked geminate yes
@@ -84,3 +84,26 @@ letter n
   n before g   says G   marked diaph_ghost +n   # lungo
   n before q   says G   marked diaph_ghost +n   # cinque
   n            says n
+
+letter c
+  cch               says k k
+  cc before ii      says t C
+  cci before vowel  says t C
+  cc before e       says t C
+  cc before è       says t C
+  cc before é       says t C
+  cc before i       says t C
+  cc before ì       says t C
+  cc before í       says t C
+  cc                says k k
+  ch                says k
+  ck                says k
+  c before ii       says C
+  ci before vowel   says C
+  c before e        says C
+  c before è        says C
+  c before é        says C
+  c before i        says C
+  c before ì        says C
+  c before í        says C
+  c                 says k
