@@ -1215,3 +1215,13 @@ Each of the four list arms was shown to be live the usual way, by making it say 
 Because a list compiles to letter tests rather than to a lookup, a list the file declares itself would compile the same way. That is the second stage, and the one Polish wants, since Polish must not inherit Italian's lists of Italian words.
 
 `tools/rules/check-letters.sh` also says now when the calls agree and the samples do not. The trace masks every string by where it lies, so two insertions of different phones read the same; asepsi was reported as the same call for call while it sounded wrong.
+
+### g, and a third way to name a list
+
+`g` is in, and all 20,000 words sound as IBM's rules make them. It says J and keeps the i, where every other gi before a vowel swallows it, in three cases. The first is -logia, -logie, -urgia and -urgie, which IBM finds by reading two letters leftwards from the g and then an a or e past the i -- `gi after ol before a says J i`, a left context being written nearest letter first -- except for the roots `giV_pronounced_gV` names, elogi, orologi and murgi. The second is where the stretch from the root's start through this i is one of `i_pronounced_i`, and the third is the one root of `giV_pronounced_giV`, regia.
+
+The second is not what `where the root begins` says, and two words showed it: giurista and prigioniero have roots beginning with the entries giuri and prigioni, but their gi is not where those entries end. IBM's g hands `setd_lookup` the stretch up to the end of the gi and nothing longer. So `where the root so far is <list>` is the third kind: the entry has to end exactly where the arm's run does. It is tested after the run is matched, which is where that end is known. Making it say something else moves bugia, bugiardona and magio and leaves giurista and prigioniero alone.
+
+`gli` is L before a vowel, swallowing the i, and L with its i said by the i rule before a consonant or at the end, as in caturegli. At the start of a root and after n it is g, l and i -- gliadina, anglicano -- and so is the one root of `gli_pronounced_gli`, negligent.
+
+IBM's `s` asks a growing stretch and its `g` a fixed one, so which of the three a list wants is a property of the rule that asks it, not of the list.

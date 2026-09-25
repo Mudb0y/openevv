@@ -140,3 +140,37 @@ letter s
   s at start                  says s     # ri-salito, para-sole
   s after vowel before vowel  says z
   s                           says s
+
+letter g
+  gg before ii      says d J
+  ggi before vowel  says d J
+  gg before e       says d J
+  gg before è       says d J
+  gg before é       says d J
+  gg before i       says d J
+  gg before ì       says d J
+  gg before í       says d J
+  gg                says g g
+  gh                says g
+  gli at start      says g l i     # gliadina
+  gli after n       says g l i     # anglicano, gangliare
+  gli               says g l i     where the root begins gli_pronounced_gli
+  gli before vowel  says L
+  gl before i       says L          # caturegli, foglifero: the i is its own
+  gn                says N
+  g before ii       says J
+  gi before vowel   says J     where the root begins giV_pronounced_gV
+  gi after ol before a  says J i   # astrologia -- the stressed i of -logia
+  gi after ol before e  says J i
+  gi after ru before a  says J i   # drammaturgia
+  gi after ru before e  says J i
+  gi                says J i   where the root so far is i_pronounced_i
+  gi                says J i   where the root is giV_pronounced_giV
+  gi before vowel   says J
+  g before e        says J
+  g before è        says J
+  g before é        says J
+  g before i        says J
+  g before ì        says J
+  g before í        says J
+  g                 says g

@@ -20,9 +20,11 @@ in either place -- and whether the run has to begin or end where the piece of
 the word does, which is `at start' and `at end'. And an arm may end by marking
 the phones it laid down, `marked <field> <value>', in the phone statement's own
 names: Italian's doubled consonants are `geminate yes'. Last of all it may say
-which words it is for, `where the root begins <list>' or `where the root is
-<list>', naming one of the language's own lookup sets: Italian's s is unvoiced
-between vowels where the root begins VsV_pronounced_s.
+which words it is for, `where the root begins <list>', `where the root is
+<list>' or `where the root so far is <list>', naming one of the language's own
+lookup sets: Italian's s is unvoiced between vowels where the root begins
+VsV_pronounced_s, and its gi keeps the i where the root so far, up to the end
+of the gi, is one of i_pronounced_i.
 
 The phones are the ETI phone letters, the same ones `lang/<tag>/<tag>.dict'
 already uses, and the letters are the language's own characters.
@@ -359,12 +361,17 @@ def parse(path):
         if "where" in said:
             m = said.index("where")
             tail = said[m:]
-            if len(tail) != 5 or tail[1:3] != ["the", "root"] \
-                    or tail[3] not in ("begins", "is"):
+            if tail[1:5] == ["the", "root", "so", "far"] and len(tail) == 7 \
+                    and tail[5] == "is":
+                listed = ("so far", tail[6])
+            elif len(tail) == 5 and tail[1:3] == ["the", "root"] \
+                    and tail[3] in ("begins", "is"):
+                listed = (tail[3], tail[4])
+            else:
                 raise Trouble("%s: the clause is `where the root begins"
-                              " <list>' or `where the root is <list>', and"
-                              " ends the arm" % where)
-            listed = (tail[3], tail[4])
+                              " <list>', `where the root is <list>' or"
+                              " `where the root so far is <list>', and ends"
+                              " the arm" % where)
             said = said[:m]
         # What the phones are marked with once they are down. Italian's
         # doubled consonants are two phones and one long sound, and IBM says
@@ -471,7 +478,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
             if i:
                 w("place arm%d on %d" % (i, tag_of[("fall", i)]))
             w("  plant test %s as %d" % (nxt, tag_of[("fall", i + 1)]))
-            if a.listed:
+            if a.listed and a.listed[0] != "so far":
                 how, which = a.listed
                 if piece is None:
                     raise Trouble("%s: a list is matched against the root,"
@@ -627,6 +634,44 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("  if answer is not 0")
                 w("    backtrack")
                 w("  end")
+            if a.listed and a.listed[0] == "so far":
+                # The stretch from the root's first letter to the end of the
+                # run this arm matched is one of the list's entries: IBM's g
+                # hands exactly that stretch to setd_lookup, so giurista's gi
+                # is not taken for the entry giuri that its root begins with.
+                # Here, after the run, because it asks where the run ended.
+                which = a.listed[1]
+                if piece is None:
+                    raise Trouble("%s: a list is matched against the root,"
+                                  " which needs the line `a piece runs from"
+                                  " <start> to <end>'" % a.where)
+                if which not in lists:
+                    raise Trouble("%s: %s has no list called %s"
+                                  % (a.where, tag, which))
+                spelled_as = dict((c, ch) for ch, c in lcode.items())
+                for k, entry in enumerate(lists[which]):
+                    miss = "sofar%d_%d" % (i, k + 1)
+                    w("  call lpta_loadp addr piecestart")
+                    w("  call setscan_r %d" % letters_at)
+                    w("  if answer is not 0")
+                    w("    go to %s" % miss)
+                    w("  end")
+                    w("  call test_string_s %d %d sym %s"
+                      % (letters_at, len(entry),
+                         known.name("lts", entry, "".join(
+                             spelled_as.get(c, "?") for c in entry))))
+                    w("  if answer is not 0")
+                    w("    go to %s" % miss)
+                    w("  end")
+                    w("  call lpta_loadp %s" % right)
+                    w("  call test_ptr")
+                    w("  if answer is not 0")
+                    w("    go to %s" % miss)
+                    w("  end")
+                    w("  go to sofar%d" % i)
+                    w("place %s" % miss)
+                w("  backtrack")
+                w("place sofar%d" % i)
             w(spell(a, known, phones_of, phones_at, left, right, pfields))
             w("  go to laid")
         else:
