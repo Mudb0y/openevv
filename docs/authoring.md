@@ -1225,3 +1225,17 @@ The second is not what `where the root begins` says, and two words showed it: gi
 `gli` is L before a vowel, swallowing the i, and L with its i said by the i rule before a consonant or at the end, as in caturegli. At the start of a root and after n it is g, l and i -- gliadina, anglicano -- and so is the one root of `gli_pronounced_gli`, negligent.
 
 IBM's `s` asks a growing stretch and its `g` a fixed one, so which of the three a list wants is a property of the rule that asks it, not of the list.
+
+### h, y and z, and a silent letter at last
+
+**A letter can be silent now.** `says nothing` was refused for a month because every way of writing it hung the engine or slowed it to a crawl: emptying the range with `delete_2pt`, inserting nought phones, laying nothing down. IBM's Italian h shows what a silent letter actually is, and it is none of those: a default projection of the phone field at the right end of the range, then a deletion at one point on the left, `proj_def` and `delete_1pt`. That is what `says nothing` compiles to, and the 781 h words speak in a minute with none hanging.
+
+And an h that begins the root, as in hall and hitler, is not silenced at all. IBM's rule does nothing whatever there, leaving the letter to whatever the machine does with one nobody spelled, and that sounds different. So `is left alone` is its own arm: `h at start is left alone`, then `h says nothing`. Seventeen words showed the difference, and making the silencing arm say k instead moved the 39 words whose h is neither initial nor part of ch or gh.
+
+`y` is a glide before or after a vowel and i otherwise, 38 words.
+
+**z has the most structure of any Italian letter, and it reads as letters once it is read.** At the start of a root it is D, zimologo. zz is t T by default and d D after i before a vowel, the -izzare verbs, each also by list. The single z is D after t, s or g and before a consonant, T after l, and after n or r it depends on what stands further left: -manz- before o, -ronz- and -garz- are D, -tronz- is T. Between vowels it is D, except before two vowels in a row, which is T -- stazione, anterozoo -- unless those are the -iend of azienda, and except before an i that ends the root, carpazi. IBM's own strings say most of this read leftwards, nearest letter first: `nam`, `nor`, `rag`, and `iend` to the right.
+
+Three things the notation gained for it. **zz is written t T, not T T**: a later phonology rule rewrites every T phone as t and T with its `diaph_ghost` mark, so T T is rewritten twice, which 700 of 1,661 words sounded. The list names say so -- `zz_pronounced_tT`. **`before vowel+vowel`** tests two kinds in a row, stepping between, as IBM's rule does. **`where the word begins`**, with `a word runs from 704 to 712`, matches a list from the word's own start rather than the root's, because `z_pronounced_D` holds inzupp and inzacch with their prefix. 704 and 712 are the pair Italian hands `make_ital_phon_adjustments`. Making the word-list arm and the two-vowel arm say something else moved exactly the list's words and the two vowel-pair words, and azoto and pranzo held.
+
+A `point` that an arm could compare with, as IBM's z compares 712, was written and taken out again: 712 turned out to be the word's end, which the word range already names, and no arm used it.

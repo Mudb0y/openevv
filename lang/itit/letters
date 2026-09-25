@@ -24,6 +24,7 @@
 
 rules in it_phone.obj named apply_ital_%s_rules
 a piece runs from 864 to 872
+a word runs from 704 to 712
 
 letter b
   bb   says b b   marked geminate yes
@@ -174,3 +175,35 @@ letter g
   g before ì        says J
   g before í        says J
   g                 says g
+
+letter h
+  h at start   is left alone   # hall, hitler: where it begins the root
+  h            says nothing
+
+letter y
+  y before vowel   says y
+  y after vowel    says y     # boy, display
+  y                says i
+
+letter z
+  z at start  says D     # zimologo
+  zz          says t T   where the root begins zz_pronounced_tT
+  zz          says d D   where the root begins zz_pronounced_dD
+  zz after i before vowel  says d D   # monetizzare, but grizzly is t T
+  zz          says t T
+  z           says D     where the word begins z_pronounced_D
+  z after t before i  says T   # strelitzia
+  z after t   says D     # gratza, trotzkista
+  z after s   says D     # puszta
+  z after g   says D     # zigzag
+  z after l   says T     # calzettone
+  z after nam before o  says D   # romanzo -- but romanzesco is T
+  z after nort          says T   # stronzio
+  z after nor           says D   # bronzo
+  z after rag           says D   # garza
+  z after vowel before iend         says D   # azienda
+  z after vowel before i at end     says T   # carpazi
+  z after vowel before vowel+vowel  says T   # stazione, anterozoo
+  z after vowel before vowel        says D   # azoto, ozono
+  z before consonant    says D   # izba, nazca
+  z           says T

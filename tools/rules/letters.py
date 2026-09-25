@@ -25,6 +25,14 @@ which words it is for, `where the root begins <list>', `where the root is
 lookup sets: Italian's s is unvoiced between vowels where the root begins
 VsV_pronounced_s, and its gi keeps the i where the root so far, up to the end
 of the gi, is one of i_pronounced_i.
+`the word' in place of `the root' matches from the word's own start, which
+wants the line `a word runs from <start> to <end>'.
+
+A silent letter `says nothing', and an arm that `is left alone' matches and
+does nothing at all, leaving the letter to whatever the machine does with one
+nobody spelled; Italian's h is the first everywhere but where it begins the
+root, and the second there. `before vowel+vowel' asks for two of a kind in a
+row.
 
 The phones are the ETI phone letters, the same ones `lang/<tag>/<tag>.dict'
 already uses, and the letters are the language's own characters.
@@ -277,6 +285,7 @@ class Arm(object):
 def parse(path):
     """The file as blocks of arms, in the order they are written."""
     blocks = []
+    wordrange = None
     cur = None
     obj = None
     pattern = None
@@ -302,6 +311,15 @@ def parse(path):
                               " <end>'" % where)
             piece = (int(w[4]), int(w[6]))
             continue
+        if w[:2] == ["a", "word"]:
+            # Where the whole word's two ends live, which a list is matched
+            # from when it holds whole words or words with their prefixes:
+            # Italian's z_pronounced_D has inzupp, whose root is zupp.
+            if len(w) != 7 or w[2:4] != ["runs", "from"] or w[5] != "to":
+                raise Trouble("%s: the line is `a word runs from <start> to"
+                              " <end>'" % where)
+            wordrange = (int(w[4]), int(w[6]))
+            continue
         if w[0] == "rules":
             if len(w) != 5 or w[1] != "in" or w[3] != "named":
                 raise Trouble("%s: the header is `rules in <object> named"
@@ -318,9 +336,9 @@ def parse(path):
                 raise Trouble("%s: say which object these stand in for before"
                               " the first letter" % where)
             if len(w) == 2:
-                cur = (w[1], pattern % w[1], obj, [], piece)
+                cur = (w[1], pattern % w[1], obj, [], (piece, wordrange))
             elif len(w) == 4 and w[2] == "as":
-                cur = (w[1], pattern % w[3], obj, [], piece)
+                cur = (w[1], pattern % w[3], obj, [], (piece, wordrange))
             else:
                 raise Trouble("%s: a block is `letter <character>', with"
                               " `as <name>' where the rule is not spelled"
@@ -329,8 +347,16 @@ def parse(path):
             continue
         if cur is None:
             raise Trouble("%s: an arm before any letter block" % where)
+        # `is left alone' is the arm that matches and does nothing at all,
+        # leaving the letter to whatever the machine does with one nobody
+        # spelled. IBM's Italian h does that where it begins the root, and
+        # silences it everywhere else, and the two sound different.
+        alone = w[-3:] == ["is", "left", "alone"]
+        if alone:
+            w = w[:-3] + ["says", "alone"]
         if "says" not in w:
-            raise Trouble("%s: an arm is letters, `says', and phones" % where)
+            raise Trouble("%s: an arm is letters, `says', and phones, or"
+                          " letters and `is left alone'" % where)
         at = w.index("says")
         letters, said = w[0], w[at + 1:]
         rest = w[1:at]
@@ -361,17 +387,19 @@ def parse(path):
         if "where" in said:
             m = said.index("where")
             tail = said[m:]
-            if tail[1:5] == ["the", "root", "so", "far"] and len(tail) == 7 \
-                    and tail[5] == "is":
-                listed = ("so far", tail[6])
-            elif len(tail) == 5 and tail[1:3] == ["the", "root"] \
+            if len(tail) == 7 and tail[1] == "the" \
+                    and tail[2] in ("root", "word") \
+                    and tail[3:6] == ["so", "far", "is"]:
+                listed = ("so far", tail[6], tail[2])
+            elif len(tail) == 5 and tail[1] == "the" \
+                    and tail[2] in ("root", "word") \
                     and tail[3] in ("begins", "is"):
-                listed = (tail[3], tail[4])
+                listed = (tail[3], tail[4], tail[2])
             else:
                 raise Trouble("%s: the clause is `where the root begins"
                               " <list>', `where the root is <list>' or"
-                              " `where the root so far is <list>', and ends"
-                              " the arm" % where)
+                              " `where the root so far is <list>', or the"
+                              " same of the word, and ends the arm" % where)
             said = said[:m]
         # What the phones are marked with once they are down. Italian's
         # doubled consonants are two phones and one long sound, and IBM says
@@ -387,7 +415,8 @@ def parse(path):
             said = said[:m]
             if not said:
                 raise Trouble("%s: `says' what?" % where)
-        phones = [] if said == ["nothing"] else said
+        phones = [] if said == ["nothing"] else None if said == ["alone"] \
+            else said
         # An arm may begin with a letter the block is not named after. The
         # dispatcher hands one rule several characters -- Spanish's i rule is
         # entered for `i' and for `í' alike -- and IBM's own arms tell them
@@ -401,7 +430,8 @@ def parse(path):
 # ---- what it compiles to -------------------------------------------------
 
 def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
-             letters_at, phones_at, fence_at, params, piece, pfields, lists):
+             letters_at, phones_at, fence_at, params, piece, pfields, lists,
+             wordrange=None):
     """One letter's rule, as the upper form.
 
     The shape is IBM's own and the tags are its numbering: the arm to fall to
@@ -443,6 +473,12 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
     if piece is not None:
         w("  variable piecestart word %d" % piece[0])
         w("  variable pieceend word %d" % piece[1])
+    if any(a.listed and a.listed[2] == "word" for a in arms):
+        if wordrange is None:
+            raise Trouble("a list matched against the word needs the line"
+                          " `a word runs from <start> to <end>'")
+        w("  variable wordstart word %d" % wordrange[0])
+        w("  variable wordend word %d" % wordrange[1])
     # Where the two ends of the range live, which is the whole of the
     # difference between the two families of letter rule.
     left = "addr leftpoint" if params == 1 else "arg 1"
@@ -479,7 +515,9 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("place arm%d on %d" % (i, tag_of[("fall", i)]))
             w("  plant test %s as %d" % (nxt, tag_of[("fall", i + 1)]))
             if a.listed and a.listed[0] != "so far":
-                how, which = a.listed
+                how, which, over = a.listed
+                begin = "wordstart" if over == "word" else "piecestart"
+                finish = "wordend" if over == "word" else "pieceend"
                 if piece is None:
                     raise Trouble("%s: a list is matched against the root,"
                                   " which needs the line `a piece runs from"
@@ -496,7 +534,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 spelled_as = dict((c, ch) for ch, c in lcode.items())
                 for k, entry in enumerate(lists[which]):
                     miss = "list%d_%d" % (i, k + 1)
-                    w("  call lpta_loadp addr piecestart")
+                    w("  call lpta_loadp addr %s" % begin)
                     w("  call setscan_r %d" % letters_at)
                     w("  if answer is not 0")
                     w("    go to %s" % miss)
@@ -509,7 +547,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                     w("    go to %s" % miss)
                     w("  end")
                     if how == "is":
-                        w("  call lpta_loadp addr pieceend")
+                        w("  call lpta_loadp addr %s" % finish)
                         w("  call test_ptr")
                         w("  if answer is not 0")
                         w("    go to %s" % miss)
@@ -607,13 +645,21 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
             if len(a.letters) > 1 or a.before:
                 w("  call savescptr %d %s"
                   % (tag_of[("body", i)], right))
-            if a.before in CLASSES:
+            if all(k in CLASSES for k in a.before.split("+")) and a.before:
                 # What follows has to be of a kind rather than a letter, which
                 # is how a rule says `a vowel' without naming twenty of them.
-                w("  call testFldeq %d 4 %d" % (letters_at, CLASSES[a.before]))
-                w("  if answer is not 0")
-                w("    backtrack")
-                w("  end")
+                # `vowel+vowel' is two of them in a row, stepping between,
+                # which is how IBM's z asks for the two vowels of -zione.
+                for n, k in enumerate(a.before.split("+")):
+                    if n:
+                        w("  call advance_tok")
+                        w("  if answer is not 0")
+                        w("    backtrack")
+                        w("  end")
+                    w("  call testFldeq %d 4 %d" % (letters_at, CLASSES[k]))
+                    w("  if answer is not 0")
+                    w("    backtrack")
+                    w("  end")
             elif a.before:
                 # Letters that have to follow and are not swallowed. The scan
                 # is where the run ended and the range to spell is already
@@ -641,6 +687,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 # is not taken for the entry giuri that its root begins with.
                 # Here, after the run, because it asks where the run ended.
                 which = a.listed[1]
+                begin = "wordstart" if a.listed[2] == "word" else "piecestart"
                 if piece is None:
                     raise Trouble("%s: a list is matched against the root,"
                                   " which needs the line `a piece runs from"
@@ -651,7 +698,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 spelled_as = dict((c, ch) for ch, c in lcode.items())
                 for k, entry in enumerate(lists[which]):
                     miss = "sofar%d_%d" % (i, k + 1)
-                    w("  call lpta_loadp addr piecestart")
+                    w("  call lpta_loadp addr %s" % begin)
                     w("  call setscan_r %d" % letters_at)
                     w("  if answer is not 0")
                     w("    go to %s" % miss)
@@ -697,30 +744,21 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
 def spell(arm, known, phones_of, phones_at, left, right, pfields=None):
     """The lines that lay an arm's phones over the range it matched, and mark
     them where the arm says to."""
+    if arm.phones is None:
+        return "# left alone: no call, the letter is the machine's"
     said = phones_of(arm.phones)
     if not said:
-        # An arm that says nothing empties the phones over the range it
-        # matched rather than filling them. That is how Spanish makes its h
-        # silent -- `apply_span_h_rules' loads the two points and calls
-        # delete_2pt on the phone field, and there is no insertion in the
-        # whole rule.
-        #
-        # It was written down here as impossible once, because it hung the
-        # engine. The deletion was not the reason: the arm that tried it was
-        # a bare run with only a left context, and such an arm was saving a
-        # leftward scan as the right end of its range, so the range it
-        # emptied was nonsense. Reading another language's rules is what
-        # settled it.
-        raise Trouble(
-            "%s: `says nothing' is not ready. Emptying the phones over the"
-            " range is what a silent letter is -- Spanish's h does exactly"
-            " that -- and an arm of ours that does only it answers correctly"
-            " and leaves something behind every time it fires, so the engine"
-            " slows to a crawl: Spanish went from thirteen milliseconds a"
-            " word to over a second. IBM's rule does more than the one call"
-            " and which part the engine needs has not been read yet."
-            " Swallow the letter with the one beside it instead, the way"
-            " `bt says t' does." % arm.where)
+        # A silent letter, as IBM's Italian h makes one: a default projection
+        # of the phone field at the right end of the range and a deletion at
+        # one point on the left. Each of the three things tried here before
+        # -- emptying the range with delete_2pt, inserting nought phones, and
+        # laying nothing down at all -- answered right and left the walk where
+        # it was, so the letter was read again for ever.
+        return ("  call lpta_loadp %s\n"
+                "  call proj_def %d\n"
+                "  call lpta_loadp %s\n"
+                "  call delete_1pt %d"
+                % (right, phones_at, left, phones_at))
     out = ("  call lpta_rpta_loadp %s %s\n"
            "  call insert_2pt_s %d %d sym %s 0"
            % (left, right, phones_at, len(said),
@@ -766,12 +804,14 @@ def compile_tag(tag):
         "# the arm rather than to the letter, and one for having spelled.",
     ]
     stem = None
-    for letter, name, obj, arms, piece in parse(path):
+    for letter, name, obj, arms, ranges in parse(path):
+        piece, wordrange = ranges
         stem = obj[:-4] if obj.endswith(".obj") else obj
         out.append("")
         out.append(rule_for(tag, letter, name, obj, arms, known, lcode,
                             pcode, letters_at, phones_at, fence_at,
-                            takes(tag, stem, name), piece, pfields, lists))
+                            takes(tag, stem, name), piece, pfields, lists,
+                            wordrange))
     if stem is None:
         raise Trouble("lang/%s/letters names no letter" % tag)
     return "\n".join(out) + "\n", known.text(tag), stem

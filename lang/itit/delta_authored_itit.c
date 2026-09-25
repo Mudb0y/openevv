@@ -540,6 +540,120 @@ uint8_t itit_evv_authored_data[] = {
     52,1,3,24,2,
     /* lts_regia, 5 bytes at 1326 */
     24,2,15,3,1,
+    /* say_19, 1 bytes at 1331 */
+    25,
+    /* lts_aizz, 4 bytes at 1332 */
+    1,3,31,31,
+    /* lts_addrizz, 7 bytes at 1336 */
+    1,13,13,24,3,31,31,
+    /* lts_indirizz, 8 bytes at 1343 */
+    3,21,13,3,24,3,31,31,
+    /* lts_intirizz, 8 bytes at 1351 */
+    3,21,26,3,24,3,31,31,
+    /* lts_isvizz, 6 bytes at 1359 */
+    3,25,27,3,31,31,
+    /* lts_drizz, 5 bytes at 1365 */
+    13,24,3,31,31,
+    /* lts_frizz, 5 bytes at 1370 */
+    14,24,3,31,31,
+    /* lts_guizz, 5 bytes at 1375 */
+    15,5,3,31,31,
+    /* lts_lizz, 4 bytes at 1380 */
+    19,3,31,31,
+    /* lts_nizz, 4 bytes at 1384 */
+    21,3,31,31,
+    /* lts_pellizz, 7 bytes at 1388 */
+    22,2,19,19,3,31,31,
+    /* lts_pizz, 4 bytes at 1395 */
+    22,3,31,31,
+    /* lts_polizz, 6 bytes at 1399 */
+    22,4,19,3,31,31,
+    /* lts_raddrizz, 8 bytes at 1405 */
+    24,1,13,13,24,3,31,31,
+    /* lts_ravizz, 6 bytes at 1413 */
+    24,1,27,3,31,31,
+    /* lts_rizz, 4 bytes at 1419 */
+    24,3,31,31,
+    /* lts_schizz, 6 bytes at 1423 */
+    25,12,16,3,31,31,
+    /* lts_stizz, 5 bytes at 1429 */
+    25,26,3,31,31,
+    /* lts_strizz, 6 bytes at 1434 */
+    25,26,24,3,31,31,
+    /* lts_svizz, 5 bytes at 1440 */
+    25,27,3,31,31,
+    /* lts_zz, 2 bytes at 1445 */
+    31,31,
+    /* say_0410, 2 bytes at 1447 */
+    4,16,
+    /* lts_aguzzin, 7 bytes at 1449 */
+    1,15,5,31,31,3,21,
+    /* lts_amazzon, 7 bytes at 1456 */
+    1,20,1,31,31,4,21,
+    /* lts_azzard, 6 bytes at 1463 */
+    1,31,31,1,24,13,
+    /* lts_azzecc, 6 bytes at 1469 */
+    1,31,31,2,12,12,
+    /* lts_azzurr, 6 bytes at 1475 */
+    1,31,31,5,24,24,
+    /* lts_orizzont, 8 bytes at 1481 */
+    4,24,3,31,31,4,21,26,
+    /* lts_buzz, 4 bytes at 1489 */
+    11,5,31,31,
+    /* lts_dirozz, 6 bytes at 1493 */
+    13,3,24,4,31,31,
+    /* lts_dozzin, 6 bytes at 1499 */
+    13,4,31,31,3,21,
+    /* lts_frammezz, 8 bytes at 1505 */
+    14,24,1,20,20,2,31,31,
+    /* lts_gazz, 4 bytes at 1513 */
+    15,1,31,31,
+    /* lts_grezz, 5 bytes at 1517 */
+    15,24,2,31,31,
+    /* lts_magazzin, 8 bytes at 1522 */
+    20,1,15,1,31,31,3,21,
+    /* lts_mezz, 4 bytes at 1530 */
+    20,2,31,31,
+    /* lts_rozz, 4 bytes at 1534 */
+    24,4,31,31,
+    /* lts_zazzer, 6 bytes at 1538 */
+    31,1,31,31,2,24,
+    /* say_030f, 2 bytes at 1544 */
+    3,15,
+    /* lts_arzill, 6 bytes at 1546 */
+    1,24,31,3,19,19,
+    /* lts_inzacch, 7 bytes at 1552 */
+    3,21,31,1,12,12,16,
+    /* lts_inzupp, 6 bytes at 1559 */
+    3,21,31,5,22,22,
+    /* lts_balzac, 6 bytes at 1565 */
+    11,1,19,31,1,12,
+    /* lts_benz, 4 bytes at 1571 */
+    11,2,21,31,
+    /* lts_donz, 4 bytes at 1575 */
+    13,4,21,31,
+    /* lts_manzan, 6 bytes at 1579 */
+    20,1,21,31,1,21,
+    /* lts_penz, 4 bytes at 1585 */
+    22,2,21,31,
+    /* lts_verz, 4 bytes at 1589 */
+    27,2,24,31,
+    /* lts_zanz, 4 bytes at 1593 */
+    31,1,21,31,
+    /* lts_t, 1 bytes at 1597 */
+    26,
+    /* say_10, 1 bytes at 1598 */
+    16,
+    /* lts_nam, 3 bytes at 1599 */
+    21,1,20,
+    /* lts_nort, 4 bytes at 1602 */
+    21,4,24,26,
+    /* lts_nor, 3 bytes at 1606 */
+    21,4,24,
+    /* lts_rag, 3 bytes at 1609 */
+    24,1,15,
+    /* lts_iend, 4 bytes at 1612 */
+    3,2,21,13,
 };
 
 const delta_store itit_delta_authored_store[] = {
