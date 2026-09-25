@@ -19,7 +19,10 @@ without swallowing it -- `after', `before', and `vowel', `consonant' or `glide'
 in either place -- and whether the run has to begin or end where the piece of
 the word does, which is `at start' and `at end'. And an arm may end by marking
 the phones it laid down, `marked <field> <value>', in the phone statement's own
-names: Italian's doubled consonants are `geminate yes'.
+names: Italian's doubled consonants are `geminate yes'. Last of all it may say
+which words it is for, `where the root begins <list>' or `where the root is
+<list>', naming one of the language's own lookup sets: Italian's s is unvoiced
+between vowels where the root begins VsV_pronounced_s.
 
 The phones are the ETI phone letters, the same ones `lang/<tag>/<tag>.dict'
 already uses, and the letters are the language's own characters.
@@ -48,6 +51,7 @@ from evv import ROOT, sibling                                  # noqa: E402
 
 alphabet = sibling("module/alphabet")
 phonemes = sibling("module/phonemes")
+setsmod = sibling("module/sets")
 
 
 # The two ends of the range an arm spells, and the two ends of the piece of the
@@ -145,6 +149,33 @@ def phone_fields(tag):
     return out
 
 
+def word_lists(tag):
+    """The language's own lookup sets, by name, as the letter strings each
+    holds.
+
+    These are the lists IBM's letter rules consult: Italian's are named for
+    what they decide, `VsV_pronounced_s' and `sci_pronounced_sci' among them,
+    and hold the beginnings of the roots they decide it for. The text form
+    lays a set's descriptor out with its count at 0x0c and its size in bytes
+    at 0x10, which is not where the runtime reads them; the store holds the
+    entries as the language's own letter codes, each ended by a nought."""
+    import struct
+    where = setsmod.text_path(tag)
+    if not os.path.exists(where):
+        return {}
+    m = setsmod.read_text(where)
+    out = {}
+    for n, name, off in m["sets"]["at"]:
+        desc = m["set_table"][n * 0x24:(n + 1) * 0x24]
+        size = struct.unpack_from("<i", desc, 0x10)[0]
+        words = [w for w in m["sets"]["store"][off:off + size].split(b"\0")
+                 if w]
+        short = name[:-len("_setentries")] if name.endswith("_setentries") \
+            else name
+        out[short] = words
+    return out
+
+
 def phone_codes(tag):
     """Every phoneme the language declares and the code the rules index it by.
 
@@ -216,7 +247,7 @@ CLASSES = {"vowel": 1, "consonant": 2, "glide": 3}
 
 class Arm(object):
     def __init__(self, where, letters, after, before, when, phones, note,
-                 marked=None):
+                 marked=None, listed=None):
         self.where = where
         self.letters = letters      # the whole run, the block's letter first
         self.after = after          # letters that must precede, not swallowed
@@ -225,6 +256,7 @@ class Arm(object):
         self.phones = phones        # [] for an arm that says nothing
         self.note = note
         self.marked = marked        # (field, value) set on the phones laid
+        self.listed = listed        # ("begins" or "is", list name)
 
     def tests(self, letter=None):
         """Whether this arm asks anything at all, which decides its shape.
@@ -236,7 +268,7 @@ class Arm(object):
         a condition on it came out as a bare arm with the condition dropped,
         silently, and three letters were blamed on the machine for it."""
         return bool(len(self.letters) > 1 or self.after or self.before
-                    or self.when
+                    or self.when or self.listed
                     or (letter is not None and self.letters[0] != letter))
 
 
@@ -319,6 +351,21 @@ def parse(path):
                                                 for c in CONDITIONS), when))
         if not said:
             raise Trouble("%s: `says' what?" % where)
+        # Which words the arm is for, where that is a list rather than a
+        # spelling. Italian keeps an s unvoiced between vowels in asepsi and
+        # dinosauro and voices it in casa, and nothing in the letters says
+        # which: IBM's rule asks a list of root beginnings.
+        listed = None
+        if "where" in said:
+            m = said.index("where")
+            tail = said[m:]
+            if len(tail) != 5 or tail[1:3] != ["the", "root"] \
+                    or tail[3] not in ("begins", "is"):
+                raise Trouble("%s: the clause is `where the root begins"
+                              " <list>' or `where the root is <list>', and"
+                              " ends the arm" % where)
+            listed = (tail[3], tail[4])
+            said = said[:m]
         # What the phones are marked with once they are down. Italian's
         # doubled consonants are two phones and one long sound, and IBM says
         # the second half by setting the phone statement's `geminate' on both.
@@ -340,14 +387,14 @@ def parse(path):
         # apart by asking what the character is, which is what such an arm
         # compiles to.
         cur[3].append(Arm(where, letters, after, before, when,
-                          phones, note, marked))
+                          phones, note, marked, listed))
     return blocks
 
 
 # ---- what it compiles to -------------------------------------------------
 
 def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
-             letters_at, phones_at, fence_at, params, piece, pfields):
+             letters_at, phones_at, fence_at, params, piece, pfields, lists):
     """One letter's rule, as the upper form.
 
     The shape is IBM's own and the tags are its numbering: the arm to fall to
@@ -424,6 +471,46 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
             if i:
                 w("place arm%d on %d" % (i, tag_of[("fall", i)]))
             w("  plant test %s as %d" % (nxt, tag_of[("fall", i + 1)]))
+            if a.listed:
+                how, which = a.listed
+                if piece is None:
+                    raise Trouble("%s: a list is matched against the root,"
+                                  " which needs the line `a piece runs from"
+                                  " <start> to <end>'" % a.where)
+                if which not in lists:
+                    raise Trouble("%s: %s has no list called %s"
+                                  % (a.where, tag, which))
+                # First, before the arm reads anything, since this moves the
+                # scan and everything after it sets the scan afresh. One test
+                # an entry, from the root's own first letter: the root begins
+                # with the entry, or for `is', is it and ends there. That is
+                # what IBM's rule asks by handing a growing stretch from the
+                # root's start to setd_lookup, without a loop to write.
+                spelled_as = dict((c, ch) for ch, c in lcode.items())
+                for k, entry in enumerate(lists[which]):
+                    miss = "list%d_%d" % (i, k + 1)
+                    w("  call lpta_loadp addr piecestart")
+                    w("  call setscan_r %d" % letters_at)
+                    w("  if answer is not 0")
+                    w("    go to %s" % miss)
+                    w("  end")
+                    w("  call test_string_s %d %d sym %s"
+                      % (letters_at, len(entry),
+                         known.name("lts", entry, "".join(
+                             spelled_as.get(c, "?") for c in entry))))
+                    w("  if answer is not 0")
+                    w("    go to %s" % miss)
+                    w("  end")
+                    if how == "is":
+                        w("  call lpta_loadp addr pieceend")
+                        w("  call test_ptr")
+                        w("  if answer is not 0")
+                        w("    go to %s" % miss)
+                        w("  end")
+                    w("  go to listed%d" % i)
+                    w("place %s" % miss)
+                w("  go to %s" % nxt)
+                w("place listed%d" % i)
             if a.after:
                 # What stands to the left. The two ends of the range the rule
                 # was given sit outside the letter, so a scan set on the left
@@ -618,6 +705,7 @@ def compile_tag(tag):
     known = Strings()
     letters_at, phones_at, fence_at = fields(tag)
     pfields = phone_fields(tag)
+    lists = word_lists(tag)
     lcode = letter_codes(tag)
     pcode = phone_codes(tag)
     out = [
@@ -638,7 +726,7 @@ def compile_tag(tag):
         out.append("")
         out.append(rule_for(tag, letter, name, obj, arms, known, lcode,
                             pcode, letters_at, phones_at, fence_at,
-                            takes(tag, stem, name), piece, pfields))
+                            takes(tag, stem, name), piece, pfields, lists))
     if stem is None:
         raise Trouble("lang/%s/letters names no letter" % tag)
     return "\n".join(out) + "\n", known.text(tag), stem

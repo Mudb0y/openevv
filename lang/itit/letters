@@ -15,6 +15,12 @@
 # An n before a hard c, g or q is the velar nasal, marked to be written as n,
 # where IBM's rule builds that record at run time. It is the same record
 # either way, and the ear cannot tell which built it.
+#
+# Some of what Italian says is decided by word rather than by letter, and IBM
+# keeps those words in lists named for what they decide: an s between vowels
+# is unvoiced in asepsi and dinosauro because their roots begin with an entry
+# of VsV_pronounced_s. An arm names such a list last of all, `where the root
+# begins <list>' or `where the root is <list>'.
 
 rules in it_phone.obj named apply_ital_%s_rules
 a piece runs from 864 to 872
@@ -107,3 +113,30 @@ letter c
   c before ì        says C
   c before í        says C
   c                 says k
+
+letter s
+  ss                          says s s   marked geminate yes
+  sh                          says S     # flash, leadership
+  sc before ii                says S     # struscii
+  sci before vowel            says S     where the root is sci_notpronounced_sci
+  sci                         says S i   where the root is sci_notpronounced_sc
+  sci                         says S i   where the root begins sci_pronounced_sci
+  sci before vowel            says S
+  sc before e                 says S
+  sc before è                 says S
+  sc before é                 says S
+  sc before i                 says S
+  sc before ì                 says S
+  sc before í                 says S
+  s before b                  says z
+  s before d                  says z
+  s before g                  says z
+  s before l                  says z
+  s before m                  says z
+  s before n                  says z
+  s before r                  says z
+  s before v                  says z
+  s after vowel before vowel  says s     where the root begins VsV_pronounced_s
+  s at start                  says s     # ri-salito, para-sole
+  s after vowel before vowel  says z
+  s                           says s

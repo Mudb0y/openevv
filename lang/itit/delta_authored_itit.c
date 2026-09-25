@@ -120,6 +120,66 @@ uint8_t itit_evv_authored_data[] = {
     12,18,
     /* say_0e, 1 bytes at 85 */
     14,
+    /* lts_ss, 2 bytes at 86 */
+    25,25,
+    /* say_0a0a, 2 bytes at 88 */
+    10,10,
+    /* lts_sh, 2 bytes at 90 */
+    25,16,
+    /* lts_sc, 2 bytes at 92 */
+    25,12,
+    /* lts_sciatica, 8 bytes at 94 */
+    25,12,3,1,26,3,12,1,
+    /* lts_sciatto, 7 bytes at 102 */
+    25,12,3,1,26,26,4,
+    /* lts_sci, 3 bytes at 109 */
+    25,12,3,
+    /* lts_scia, 4 bytes at 112 */
+    25,12,3,1,
+    /* lts_sciamo, 6 bytes at 116 */
+    25,12,3,1,20,4,
+    /* lts_sciano, 6 bytes at 122 */
+    25,12,3,1,21,4,
+    /* lts_sciare, 6 bytes at 128 */
+    25,12,3,1,24,2,
+    /* lts_scie, 4 bytes at 134 */
+    25,12,3,2,
+    /* lts_scio, 4 bytes at 138 */
+    25,12,3,4,
+    /* say_0c1b, 2 bytes at 142 */
+    12,27,
+    /* lts_sciat, 5 bytes at 144 */
+    25,12,3,1,26,
+    /* lts_sciav, 5 bytes at 149 */
+    25,12,3,1,27,
+    /* lts_scier, 5 bytes at 154 */
+    25,12,3,2,24,
+    /* lts_b, 1 bytes at 159 */
+    11,
+    /* say_09, 1 bytes at 160 */
+    9,
+    /* lts_l, 1 bytes at 161 */
+    19,
+    /* lts_r, 1 bytes at 162 */
+    24,
+    /* lts_v, 1 bytes at 163 */
+    27,
+    /* lts_aseps, 5 bytes at 164 */
+    1,25,2,22,25,
+    /* lts_asim, 4 bytes at 169 */
+    1,25,3,20,
+    /* lts_casori, 6 bytes at 173 */
+    12,1,25,4,24,3,
+    /* lts_dinosaur, 8 bytes at 179 */
+    13,3,21,4,25,1,5,24,
+    /* lts_girasol, 7 bytes at 187 */
+    15,3,24,1,25,4,19,
+    /* lts_rosic, 5 bytes at 194 */
+    24,4,25,3,12,
+    /* lts_staser, 6 bytes at 199 */
+    25,26,1,25,2,24,
+    /* say_0a, 1 bytes at 205 */
+    10,
 };
 
 const delta_store itit_delta_authored_store[] = {

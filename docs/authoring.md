@@ -1200,3 +1200,18 @@ So a letter rule now has three gates and the sound is the one that decides. The 
 **Italian's piece runs from 864 to 872, not from 712.** The header had said 712 since Italian's first letters went in, and nothing had ever tested it, because no Italian arm said `at start` until `s` needed one. IBM keeps an s unvoiced when it begins the root -- ri-salito, para-sole, pre-sentire -- by comparing the s's left end with variable 864, and 864 and 872 are the pair Italian's stress rules are handed. With 712, 112 of 7,522 s words sounded wrong; with 864, the prefix words all came right.
 
 **What stops `s`, and will stop most of what is left, is that Italian's letter rules consult word lists.** IBM's Italian carries lookup sets named for exactly what they decide -- `sci_pronounced_sci`, `VsV_pronounced_s`, `e_pronounced_E`, `o_pronounced_c`, `i_pronounced_y`, `gli_pronounced_Li`, `giV_pronounced_gV`, `z_pronounced_D`, `zz_pronounced_tT`, twenty-six of them with their `notpronounced` counterparts -- and `setd_lookup` hands a stretch of the word to one of them. The fifteen s words still wrong are the members of two: sciare and sciistico keep their i because they are in `sci_pronounced_sci`, and asepsi, dinosauro and rosicchiando keep an unvoiced s between vowels because they are in `VsV_pronounced_s`. The open and closed e and o, the vowel or glide i, z and gli will all turn on sets the same way. The notation has no way to say that yet.
+
+### s, and an arm may name a list
+
+`s` is in, and all 20,000 words sound as IBM's rules make them. An arm may now end by naming one of the language's lists:
+
+    s after vowel before vowel  says s     where the root begins VsV_pronounced_s
+    s after vowel before vowel  says z
+
+`where the root begins <list>` holds when the root starts with one of the list's entries, and `where the root is <list>` when it is one exactly. The names are IBM's own lookup sets, read out of `lang/<tag>/<tag>.sets` when the file is compiled, and each entry becomes a letter test from the root's first letter. That is what IBM's rule asks by handing a stretch of the word that grows from the root's start to `setd_lookup`, and writing it as one test per entry needs no loop. Both kinds are needed: `sci_pronounced_sci` holds beginnings -- sciat, sciav, scier -- while `sci_notpronounced_sc` holds whole roots, scia and sciare among them, which read as beginnings would wrongly catch sciabola.
+
+Each of the four list arms was shown to be live the usual way, by making it say something else: the words that moved were exactly the list's own, and casa and sciabola held.
+
+Because a list compiles to letter tests rather than to a lookup, a list the file declares itself would compile the same way. That is the second stage, and the one Polish wants, since Polish must not inherit Italian's lists of Italian words.
+
+`tools/rules/check-letters.sh` also says now when the calls agree and the samples do not. The trace masks every string by where it lies, so two insertions of different phones read the same; asepsi was reported as the same call for call while it sounded wrong.

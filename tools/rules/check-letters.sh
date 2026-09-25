@@ -180,7 +180,15 @@ for w in "${words[@]}"; do
     speak ibm "$w"
     speak ours "$w"
     if cmp -s "$work/ibm.trace" "$work/ours.trace"; then
-        echo "letters: $w, the same call for call"
+        # The traces mask every string by where it lies, so two insertions
+        # of different phones read the same here. The samples do not.
+        if cmp -s "$work/ibm.wav" "$work/ours.wav"; then
+            echo "letters: $w, the same call for call"
+        else
+            echo "letters: $w, the same calls and a different sound --" \
+                 "what differs is what a string holds or a record carries"
+            bad=1
+        fi
         continue
     fi
     apart=$(diff "$work/ibm.trace" "$work/ours.trace" | grep -c '^[<>]')
