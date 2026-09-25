@@ -21,6 +21,10 @@
 # is unvoiced in asepsi and dinosauro because their roots begin with an entry
 # of VsV_pronounced_s. An arm names such a list last of all, `where the root
 # begins <list>' or `where the root is <list>'.
+#
+# All twenty-six are here. The vowels are the most of it: whether a stressed
+# e or o is open is a tree of letter tests and lists, and a later rule closes
+# any open one that is not stressed, so the arms need not know which is.
 
 rules in it_phone.obj named apply_ital_%s_rules
 a piece runs from 864 to 872
@@ -106,6 +110,7 @@ letter c
   ch                says k
   ck                says k
   c before ii       says C
+  c before i        says C     where the root begins i_pronounced_i   # farmac-ia
   ci before vowel   says C
   c before e        says C
   c before è        says C
@@ -191,12 +196,12 @@ letter z
   zz          says d D   where the root begins zz_pronounced_dD
   zz after i before vowel  says d D   # monetizzare, but grizzly is t T
   zz          says t T
-  z           says D     where the word begins z_pronounced_D
   z after t before i  says T   # strelitzia
   z after t   says D     # gratza, trotzkista
   z after s   says D     # puszta
   z after g   says D     # zigzag
   z after l   says T     # calzettone
+  z before vowel  says D     where the word begins z_pronounced_D   # benzina, but benz is T
   z after nam before o  says D   # romanzo -- but romanzesco is T
   z after nort          says T   # stronzio
   z after nor           says D   # bronzo
@@ -225,9 +230,9 @@ letter u
 letter i
   i accented             says i     # ì, and entropia's i the dictionary stressed
   i after consonant at word end  says i
+  i after consonant before i  says i   # serii -- before the lists, as IBM asks it
   i                      says i     where the root is i_notpronounced_y
-  i                      says y     where the root so far is i_notpronounced_i
-  i                      says i     where the root begins i_pronounced_i
+  i                      says i     where the root begins i_pronounced_i  unless the root so far is i_notpronounced_i
   i before vowel         says y     where the root begins i_pronounced_y
   i after zarc   before a at word end  says i   # democrazia
   i after zarc   before e at word end  says i
@@ -250,7 +255,6 @@ letter i
   i before ach           says i     # celiachia
   i before vowel at start  says y   # iato, iodato
   i at start             says i     # co-incidenza, auto-incendio
-  i before i             says i
   i before vowel         says y     # piano, fiore
   i after vowel at word end  says i # colei, avvarrai
   i after a before sm    says i     # -ismo, -ista
@@ -267,3 +271,134 @@ letter i
   i after u              says y     where the root begins u_pronounced_u
   i after u              says i     # acquisto -- the u glides, so this does not
   i                      says i
+
+letter e
+  e   hands over to assign_homogr_E_e   where the root is E_e_homographs
+  è                      says E
+  e                      says E   where the root begins e_pronounced_E  unless the root is e_notpronounced_E
+  é                      says e
+  e                      says e   where the root begins e_pronounced_e  unless the root is e_notpronounced_e
+  e before tt+vowel at word end  says e   # -etto, -etta
+  e before ssa at word end       says e   # -essa
+  e before sse at word end       says e
+  e before nn+vowel at word end  says E   # -enne
+  e after lb             says E   # plebe -- a cluster ending in l
+  e after lc             says E   # sclera
+  e after lf             says E
+  e after lp             says E
+  e after ls             says E
+  e after lt             says E   # atleta
+  e before rb            says E
+  e before rl            says E
+  e before rm            says E
+  e before rn            says E
+  e before rp            says E
+  e before rs            says E
+  e before rt            says E
+  e before rv            says E
+  e before rz            says E
+  e before rci           says E
+  e before rce           says E
+  e before mb            says E
+  e before mp            says E   # tempo
+  e before st            says E   # festa
+  e before vowel         says E   # idea
+  e before glide         says E   # geyser
+  e at word end          says E   # tre, re -- nothing after it is a consonant
+  e before consonant+vowel+vowel  says E  unless before gu   # premio
+  e before ma at word end    says E   # problema
+  e before mi at word end    says E
+  e before tich+vowel at word end  says E
+  e before tic+vowel at word end   says E   # poetico
+  e before d+vowel       says E
+  e before z+vowel       says E
+  e before l+vowel       says E   # cielo
+  e after i              says E   # piede
+  e before c             says E   unless before ce  unless before ci   # greco
+  e before bb            says E
+  e before ff            says E
+  e before ll            says E   # bello
+  e before rr            says E
+  e before ss            says E
+  e before tt            says E
+  e before gg            says E   unless before ggi  unless before gge
+  e before cc            says e
+  e before dd            says e
+  e before gg            says e
+  e before mm            says e
+  e before nn            says e
+  e before pp            says e
+  e before qq            says e
+  e before vv            says e
+  e before zz            says e
+  e before gh            says e
+  e before ga            says e
+  e before go            says e
+  e before gu            says e
+  e before gn            says e
+  e before gli           says e
+  e before g             says E
+  e after m before nt    says e   # -mente, -mento
+  e before nd            says E   # -endo
+  e before ng            says E
+  e before ns            says E
+  e before nt            says E   # -ente
+  e before nz            says E   # -enza
+  e                      says e
+
+letter o
+  o                      says c   where the word passes one_ital_syllable
+  o   hands over to assign_homogr_c_o   where the root is c_o_homographs
+  ò                      says c
+  ó                      says o
+  o accented             is left alone
+  o                      says c   where the root begins o_pronounced_c  unless the root is o_notpronounced_c
+  o                      says o   where the root begins o_pronounced_o  unless the root is o_notpronounced_o
+  o before ne at word end        says o   # -one
+  o before ni at word end        says o
+  o before re at word end        says o   # -ore
+  o before ri at word end        says o
+  o before s+vowel at word end   says o   # -oso, -osa
+  o before io at word end        says o
+  o before ia at word end        says o
+  o before i at word end         says o
+  o after lb             says c   # a cluster ending in l
+  o after lc             says c
+  o after lf             says c
+  o after lp             says c
+  o after ls             says c
+  o after lt             says c
+  o before dromi at word end     says c   # ippodromo
+  o before dromo at word end     says c
+  o before vowel         says c
+  o before glide         says c
+  o after u              says c   # uomo, buono
+  o before consonant+vowel  says c   unless before sa at end  unless before se at end  unless before si at end  unless before so at end  unless before ga  unless before go  unless before gu  unless before ce
+  o before bb            says c
+  o before cc            says c
+  o before dd            says c
+  o before ff            says c
+  o before gg            says c
+  o before ll            says c
+  o before pp            says c
+  o before ss            says c
+  o before tt            says c
+  o before vv            says c
+  o before zz            says c
+  o before ns            says c   # alfonso
+  o before m             says c   unless before mb  unless before mp
+  o before r             says c   unless before rl  unless before rm  unless before rn  unless before rs
+  o before ld            says c
+  o before lg            says c
+  o before g             says c   unless before ga  unless before go  unless before gu  unless before gh  unless before gn
+  o before vr            says c
+  o before st            says c
+  o before sb            says c
+  o before sd            says c
+  o before sg            says c
+  o before sl            says c
+  o before sm            says c
+  o before sn            says c
+  o before sr            says c
+  o before sv            says c
+  o                      says o

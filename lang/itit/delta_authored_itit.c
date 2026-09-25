@@ -120,424 +120,424 @@ uint8_t itit_evv_authored_data[] = {
     12,18,
     /* say_0e, 1 bytes at 85 */
     14,
-    /* lts_ss, 2 bytes at 86 */
-    25,25,
-    /* say_0a0a, 2 bytes at 88 */
-    10,10,
-    /* lts_sh, 2 bytes at 90 */
-    25,16,
-    /* lts_sc, 2 bytes at 92 */
-    25,12,
-    /* lts_sciatica, 8 bytes at 94 */
-    25,12,3,1,26,3,12,1,
-    /* lts_sciatto, 7 bytes at 102 */
-    25,12,3,1,26,26,4,
-    /* lts_sci, 3 bytes at 109 */
-    25,12,3,
-    /* lts_scia, 4 bytes at 112 */
-    25,12,3,1,
-    /* lts_sciamo, 6 bytes at 116 */
-    25,12,3,1,20,4,
-    /* lts_sciano, 6 bytes at 122 */
-    25,12,3,1,21,4,
-    /* lts_sciare, 6 bytes at 128 */
-    25,12,3,1,24,2,
-    /* lts_scie, 4 bytes at 134 */
-    25,12,3,2,
-    /* lts_scio, 4 bytes at 138 */
-    25,12,3,4,
-    /* say_0c1b, 2 bytes at 142 */
-    12,27,
-    /* lts_sciat, 5 bytes at 144 */
-    25,12,3,1,26,
-    /* lts_sciav, 5 bytes at 149 */
-    25,12,3,1,27,
-    /* lts_scier, 5 bytes at 154 */
-    25,12,3,2,24,
-    /* lts_b, 1 bytes at 159 */
-    11,
-    /* say_09, 1 bytes at 160 */
-    9,
-    /* lts_l, 1 bytes at 161 */
-    19,
-    /* lts_r, 1 bytes at 162 */
-    24,
-    /* lts_v, 1 bytes at 163 */
-    27,
-    /* lts_aseps, 5 bytes at 164 */
-    1,25,2,22,25,
-    /* lts_asim, 4 bytes at 169 */
-    1,25,3,20,
-    /* lts_casori, 6 bytes at 173 */
-    12,1,25,4,24,3,
-    /* lts_dinosaur, 8 bytes at 179 */
-    13,3,21,4,25,1,5,24,
-    /* lts_girasol, 7 bytes at 187 */
-    15,3,24,1,25,4,19,
-    /* lts_rosic, 5 bytes at 194 */
-    24,4,25,3,12,
-    /* lts_staser, 6 bytes at 199 */
-    25,26,1,25,2,24,
-    /* say_0a, 1 bytes at 205 */
-    10,
-    /* lts_gg, 2 bytes at 206 */
-    15,15,
-    /* say_030d, 2 bytes at 208 */
-    3,13,
-    /* lts_ggi, 3 bytes at 210 */
-    15,15,3,
-    /* say_0606, 2 bytes at 213 */
-    6,6,
-    /* lts_gh, 2 bytes at 215 */
-    15,16,
-    /* say_06, 1 bytes at 217 */
-    6,
-    /* lts_gli, 3 bytes at 218 */
-    15,19,3,
-    /* say_06171b, 3 bytes at 221 */
-    6,23,27,
-    /* lts_negligent, 9 bytes at 224 */
-    21,2,15,19,3,15,2,21,26,
-    /* lts_gl, 2 bytes at 233 */
-    15,19,
-    /* lts_gn, 2 bytes at 235 */
-    15,21,
-    /* lts_elogi, 5 bytes at 237 */
-    2,19,4,15,3,
-    /* lts_orologi, 7 bytes at 242 */
-    4,24,4,19,4,15,3,
-    /* lts_murgi, 5 bytes at 249 */
-    20,5,24,15,3,
-    /* lts_ol, 2 bytes at 254 */
-    4,19,
-    /* say_0d1b, 2 bytes at 256 */
-    13,27,
-    /* lts_ru, 2 bytes at 258 */
-    24,5,
-    /* lts_austriac, 8 bytes at 260 */
+    /* lts_austriac, 8 bytes at 86 */
     1,5,25,26,24,3,1,12,
-    /* lts_autonom, 7 bytes at 268 */
+    /* lts_autonom, 7 bytes at 94 */
     1,5,26,4,21,4,20,
-    /* lts_autopsi, 7 bytes at 275 */
+    /* lts_autopsi, 7 bytes at 101 */
     1,5,26,4,22,25,3,
-    /* lts_abbazi, 6 bytes at 282 */
+    /* lts_abbazi, 6 bytes at 108 */
     1,11,11,1,31,3,
-    /* lts_addi, 4 bytes at 288 */
+    /* lts_addi, 4 bytes at 114 */
     1,13,13,3,
-    /* lts_agenzi, 6 bytes at 292 */
+    /* lts_agenzi, 6 bytes at 118 */
     1,15,2,21,31,3,
-    /* lts_agoni, 5 bytes at 298 */
+    /* lts_agoni, 5 bytes at 124 */
     1,15,4,21,3,
-    /* lts_albani, 6 bytes at 303 */
+    /* lts_albani, 6 bytes at 129 */
     1,19,11,1,21,3,
-    /* lts_allegri, 7 bytes at 309 */
+    /* lts_allegri, 7 bytes at 135 */
     1,19,19,2,15,24,3,
-    /* lts_allergi, 7 bytes at 316 */
+    /* lts_allergi, 7 bytes at 142 */
     1,19,19,2,24,15,3,
-    /* lts_amnisti, 7 bytes at 323 */
+    /* lts_amnisti, 7 bytes at 149 */
     1,20,21,3,25,26,3,
-    /* lts_anatomi, 7 bytes at 330 */
+    /* lts_anatomi, 7 bytes at 156 */
     1,21,1,26,4,20,3,
-    /* lts_anomali, 7 bytes at 337 */
+    /* lts_anomali, 7 bytes at 163 */
     1,21,4,20,1,19,3,
-    /* lts_andrein, 7 bytes at 344 */
+    /* lts_andrein, 7 bytes at 170 */
     1,21,13,24,2,3,21,
-    /* lts_antipati, 8 bytes at 351 */
+    /* lts_antipati, 8 bytes at 177 */
     1,21,26,3,22,1,26,3,
-    /* lts_appendicectomi, 14 bytes at 359 */
+    /* lts_appendicectomi, 14 bytes at 185 */
     1,22,22,2,21,13,3,12,2,12,26,4,20,3,
-    /* lts_armeri, 6 bytes at 373 */
+    /* lts_armeri, 6 bytes at 199 */
     1,24,20,2,24,3,
-    /* lts_armoni, 6 bytes at 379 */
+    /* lts_armoni, 6 bytes at 205 */
     1,24,20,4,21,3,
-    /* lts_asfissi, 7 bytes at 385 */
+    /* lts_asfissi, 7 bytes at 211 */
     1,25,14,3,25,25,3,
-    /* lts_assenteism, 10 bytes at 392 */
+    /* lts_assenteism, 10 bytes at 218 */
     1,25,25,2,21,26,2,3,25,20,
-    /* lts_avari, 5 bytes at 402 */
+    /* lts_avari, 5 bytes at 228 */
     1,27,1,24,3,
-    /* lts_avvi, 4 bytes at 407 */
+    /* lts_avvi, 4 bytes at 233 */
     1,27,27,3,
-    /* lts_eutanasi, 8 bytes at 411 */
+    /* lts_eutanasi, 8 bytes at 237 */
     2,5,26,1,21,1,25,3,
-    /* lts_ebraic, 6 bytes at 419 */
+    /* lts_ebraic, 6 bytes at 245 */
     2,11,24,1,3,12,
-    /* lts_editori, 7 bytes at 425 */
+    /* lts_editori, 7 bytes at 251 */
     2,13,3,26,4,24,3,
-    /* lts_egemoni, 7 bytes at 432 */
+    /* lts_egemoni, 7 bytes at 258 */
     2,15,2,20,4,21,3,
-    /* lts_emorragi, 8 bytes at 439 */
+    /* lts_emorragi, 8 bytes at 265 */
     2,20,4,24,24,1,15,3,
-    /* lts_energi, 6 bytes at 447 */
+    /* lts_energi, 6 bytes at 273 */
     2,21,2,24,15,3,
-    /* lts_enciclopedi, 11 bytes at 453 */
+    /* lts_enciclopedi, 11 bytes at 279 */
     2,21,12,3,12,19,4,22,2,13,3,
-    /* lts_epidemi, 7 bytes at 464 */
+    /* lts_epidemi, 7 bytes at 290 */
     2,22,3,13,2,20,3,
-    /* lts_epifani, 7 bytes at 471 */
+    /* lts_epifani, 7 bytes at 297 */
     2,22,3,14,1,21,3,
-    /* lts_eresi, 5 bytes at 478 */
+    /* lts_eresi, 5 bytes at 304 */
     2,24,2,25,3,
-    /* lts_eroin, 5 bytes at 483 */
+    /* lts_eroin, 5 bytes at 309 */
     2,24,4,3,21,
-    /* lts_esattori, 8 bytes at 488 */
+    /* lts_esattori, 8 bytes at 314 */
     2,25,1,26,26,4,24,3,
-    /* lts_impreditori, 11 bytes at 496 */
+    /* lts_impreditori, 11 bytes at 322 */
     3,20,22,24,2,13,3,26,4,24,3,
-    /* lts_invi, 4 bytes at 507 */
+    /* lts_invi, 4 bytes at 333 */
     3,21,27,3,
-    /* lts_ipocrisi, 8 bytes at 511 */
+    /* lts_ipocrisi, 8 bytes at 337 */
     3,22,4,12,24,3,25,3,
-    /* lts_ironi, 5 bytes at 519 */
+    /* lts_ironi, 5 bytes at 345 */
     3,24,4,21,3,
-    /* lts_obli, 4 bytes at 524 */
+    /* lts_obli, 4 bytes at 350 */
     4,11,19,3,
-    /* lts_olimpiad, 8 bytes at 528 */
+    /* lts_olimpiad, 8 bytes at 354 */
     4,19,3,20,22,3,1,13,
-    /* lts_omeli, 5 bytes at 536 */
+    /* lts_omeli, 5 bytes at 362 */
     4,20,2,19,3,
-    /* lts_ortodossi, 9 bytes at 541 */
+    /* lts_ortodossi, 9 bytes at 367 */
     4,24,26,4,13,4,25,25,3,
-    /* lts_ortopedi, 8 bytes at 550 */
+    /* lts_ortopedi, 8 bytes at 376 */
     4,24,26,4,22,2,13,3,
-    /* lts_ossi, 4 bytes at 558 */
+    /* lts_ossi, 4 bytes at 384 */
     4,25,25,3,
-    /* lts_utopi, 5 bytes at 562 */
+    /* lts_utopi, 5 bytes at 388 */
     5,26,4,22,3,
-    /* lts_bali, 4 bytes at 567 */
+    /* lts_bali, 4 bytes at 393 */
     11,1,19,3,
-    /* lts_batteri, 7 bytes at 571 */
+    /* lts_batteri, 7 bytes at 397 */
     11,1,26,26,2,24,3,
-    /* lts_bavari, 6 bytes at 578 */
+    /* lts_bavari, 6 bytes at 404 */
     11,1,27,1,24,3,
-    /* lts_beccari, 7 bytes at 584 */
+    /* lts_beccari, 7 bytes at 410 */
     11,2,12,12,1,24,3,
-    /* lts_borghesi, 8 bytes at 591 */
+    /* lts_borghesi, 8 bytes at 417 */
     11,4,24,15,16,2,25,3,
-    /* lts_bugi, 4 bytes at 599 */
+    /* lts_bugi, 4 bytes at 425 */
     11,5,15,3,
-    /* lts_bulgari, 7 bytes at 603 */
+    /* lts_bulgari, 7 bytes at 429 */
     11,5,19,15,1,24,3,
-    /* lts_calori, 6 bytes at 610 */
+    /* lts_calori, 6 bytes at 436 */
     12,1,19,4,24,3,
-    /* lts_categori, 8 bytes at 616 */
+    /* lts_categori, 8 bytes at 442 */
     12,1,26,2,15,4,24,3,
-    /* lts_cavalcavi, 9 bytes at 624 */
+    /* lts_cavalcavi, 9 bytes at 450 */
     12,1,27,1,19,12,1,27,3,
-    /* lts_cocain, 6 bytes at 633 */
+    /* lts_cocain, 6 bytes at 459 */
     12,4,12,1,3,21,
-    /* lts_compagni, 8 bytes at 639 */
+    /* lts_compagni, 8 bytes at 465 */
     12,4,20,22,1,15,21,3,
-    /* lts_corridoi, 8 bytes at 647 */
+    /* lts_corridoi, 8 bytes at 473 */
     12,4,24,24,3,13,4,3,
-    /* lts_corsi, 5 bytes at 655 */
+    /* lts_corsi, 5 bytes at 481 */
     12,4,24,25,3,
-    /* lts_cortesi, 7 bytes at 660 */
+    /* lts_cortesi, 7 bytes at 486 */
     12,4,24,26,2,25,3,
-    /* lts_chichibio, 9 bytes at 667 */
+    /* lts_chichibio, 9 bytes at 493 */
     12,16,3,12,16,3,11,3,4,
-    /* lts_chilocalori, 11 bytes at 676 */
+    /* lts_chilocalori, 11 bytes at 502 */
     12,16,3,19,4,12,1,19,4,24,3,
-    /* lts_croceri, 7 bytes at 687 */
+    /* lts_croceri, 7 bytes at 513 */
     12,24,4,12,2,24,3,
-    /* lts_deific, 6 bytes at 694 */
+    /* lts_deific, 6 bytes at 520 */
     13,2,3,14,3,12,
-    /* lts_demagogi, 8 bytes at 700 */
+    /* lts_demagogi, 8 bytes at 526 */
     13,2,20,1,15,4,15,3,
-    /* lts_detraibil, 9 bytes at 708 */
+    /* lts_detraibil, 9 bytes at 534 */
     13,2,26,24,1,3,11,3,19,
-    /* lts_devi, 4 bytes at 717 */
+    /* lts_devi, 4 bytes at 543 */
     13,2,27,3,
-    /* lts_dio, 3 bytes at 721 */
+    /* lts_dio, 3 bytes at 547 */
     13,3,4,
-    /* lts_didascali, 9 bytes at 724 */
+    /* lts_didascali, 9 bytes at 550 */
     13,3,13,1,25,12,1,19,3,
-    /* lts_dinasti, 7 bytes at 733 */
+    /* lts_dinasti, 7 bytes at 559 */
     13,3,21,1,25,26,3,
-    /* lts_diplomazi, 9 bytes at 740 */
+    /* lts_diplomazi, 9 bytes at 566 */
     13,3,22,19,4,20,1,31,3,
-    /* lts_fantasi, 7 bytes at 749 */
+    /* lts_fantasi, 7 bytes at 575 */
     14,1,21,26,1,25,3,
-    /* lts_farmaci, 7 bytes at 756 */
+    /* lts_farmaci, 7 bytes at 582 */
     14,1,24,20,1,12,3,
-    /* lts_fattori, 7 bytes at 763 */
+    /* lts_fattori, 7 bytes at 589 */
     14,1,26,26,4,24,3,
-    /* lts_ferrovi, 7 bytes at 770 */
+    /* lts_ferrovi, 7 bytes at 596 */
     14,2,24,24,4,27,3,
-    /* lts_filosofi, 8 bytes at 777 */
+    /* lts_filosofi, 8 bytes at 603 */
     14,3,19,4,25,4,14,3,
-    /* lts_folli, 5 bytes at 785 */
+    /* lts_folli, 5 bytes at 611 */
     14,4,19,19,3,
-    /* lts_fosch, 5 bytes at 790 */
+    /* lts_fosch, 5 bytes at 616 */
     14,4,25,12,16,
-    /* lts_funivi, 6 bytes at 795 */
+    /* lts_funivi, 6 bytes at 621 */
     14,5,21,3,27,3,
-    /* lts_frusci, 6 bytes at 801 */
+    /* lts_frusci, 6 bytes at 627 */
     14,24,5,25,12,3,
-    /* lts_gabriel, 7 bytes at 807 */
+    /* lts_gabriel, 7 bytes at 633 */
     15,1,11,24,3,2,19,
-    /* lts_garanzi, 7 bytes at 814 */
+    /* lts_garanzi, 7 bytes at 640 */
     15,1,24,1,21,31,3,
-    /* lts_garzi, 5 bytes at 821 */
+    /* lts_garzi, 5 bytes at 647 */
     15,1,24,31,3,
-    /* lts_gelosi, 6 bytes at 826 */
+    /* lts_gelosi, 6 bytes at 652 */
     15,2,19,4,25,3,
-    /* lts_gerarchi, 8 bytes at 832 */
+    /* lts_gerarchi, 8 bytes at 658 */
     15,2,24,1,24,12,16,3,
-    /* lts_giuri, 5 bytes at 840 */
+    /* lts_giuri, 5 bytes at 666 */
     15,3,5,24,3,
-    /* lts_lauri, 5 bytes at 845 */
+    /* lts_lauri, 5 bytes at 671 */
     19,1,5,24,3,
-    /* lts_leucemi, 7 bytes at 850 */
+    /* lts_leucemi, 7 bytes at 676 */
     19,2,5,12,2,20,3,
-    /* lts_liut, 4 bytes at 857 */
+    /* lts_liut, 4 bytes at 683 */
     19,3,5,26,
-    /* lts_logori, 6 bytes at 861 */
+    /* lts_logori, 6 bytes at 687 */
     19,4,15,4,24,3,
-    /* lts_lombardi, 8 bytes at 867 */
+    /* lts_lombardi, 8 bytes at 693 */
     19,4,20,11,1,24,13,3,
-    /* lts_maestri, 7 bytes at 875 */
+    /* lts_maestri, 7 bytes at 701 */
     20,1,2,25,26,24,3,
-    /* lts_magi, 4 bytes at 882 */
+    /* lts_magi, 4 bytes at 708 */
     20,1,15,3,
-    /* lts_malatti, 7 bytes at 886 */
+    /* lts_malatti, 7 bytes at 712 */
     20,1,19,1,26,26,3,
-    /* lts_malinconi, 9 bytes at 893 */
+    /* lts_malinconi, 9 bytes at 719 */
     20,1,19,3,21,12,4,21,3,
-    /* lts_mani, 4 bytes at 902 */
+    /* lts_mani, 4 bytes at 728 */
     20,1,21,3,
-    /* lts_melodi, 6 bytes at 906 */
+    /* lts_melodi, 6 bytes at 732 */
     20,2,19,4,13,3,
-    /* lts_messi, 5 bytes at 912 */
+    /* lts_messi, 5 bytes at 738 */
     20,2,25,25,3,
-    /* lts_mezzadri, 8 bytes at 917 */
+    /* lts_mezzadri, 8 bytes at 743 */
     20,2,31,31,1,13,24,3,
-    /* lts_miop, 4 bytes at 925 */
+    /* lts_miop, 4 bytes at 751 */
     20,3,4,22,
-    /* lts_miopi, 5 bytes at 929 */
+    /* lts_miopi, 5 bytes at 755 */
     20,3,4,22,3,
-    /* lts_migliori, 8 bytes at 934 */
+    /* lts_migliori, 8 bytes at 760 */
     20,3,15,19,3,4,24,3,
-    /* lts_miriad, 6 bytes at 942 */
+    /* lts_miriad, 6 bytes at 768 */
     20,3,24,3,1,13,
-    /* lts_monarchi, 8 bytes at 948 */
+    /* lts_monarchi, 8 bytes at 774 */
     20,4,21,1,24,12,16,3,
-    /* lts_mormori, 7 bytes at 956 */
+    /* lts_mormori, 7 bytes at 782 */
     20,4,24,20,4,24,3,
-    /* lts_mosaic, 6 bytes at 963 */
+    /* lts_mosaic, 6 bytes at 789 */
     20,4,25,1,3,12,
-    /* lts_nicosi, 6 bytes at 969 */
+    /* lts_nicosi, 6 bytes at 795 */
     21,3,12,4,25,3,
-    /* lts_nostalgi, 8 bytes at 975 */
+    /* lts_nostalgi, 8 bytes at 801 */
     21,4,25,26,1,19,15,3,
-    /* lts_parodi, 6 bytes at 983 */
+    /* lts_parodi, 6 bytes at 809 */
     22,1,24,4,13,3,
-    /* lts_pavi, 4 bytes at 989 */
+    /* lts_pavi, 4 bytes at 815 */
     22,1,27,3,
-    /* lts_pazzi, 5 bytes at 993 */
+    /* lts_pazzi, 5 bytes at 819 */
     22,1,31,31,3,
-    /* lts_pendi, 5 bytes at 998 */
+    /* lts_pendi, 5 bytes at 824 */
     22,2,21,13,3,
-    /* lts_period, 6 bytes at 1003 */
+    /* lts_period, 6 bytes at 829 */
     22,2,24,3,4,13,
-    /* lts_piol, 4 bytes at 1009 */
+    /* lts_piol, 4 bytes at 835 */
     22,3,4,19,
-    /* lts_poesi, 5 bytes at 1013 */
+    /* lts_poesi, 5 bytes at 839 */
     22,4,2,25,3,
-    /* lts_polizi, 6 bytes at 1018 */
+    /* lts_polizi, 6 bytes at 844 */
     22,4,19,3,31,3,
-    /* lts_pulizi, 6 bytes at 1024 */
+    /* lts_pulizi, 6 bytes at 850 */
     22,5,19,3,31,3,
-    /* lts_prigioni, 8 bytes at 1030 */
+    /* lts_prigioni, 8 bytes at 856 */
     22,24,3,15,3,4,21,3,
-    /* lts_proib, 5 bytes at 1038 */
+    /* lts_proib, 5 bytes at 864 */
     22,24,4,3,11,
-    /* lts_probatori, 9 bytes at 1043 */
+    /* lts_probatori, 9 bytes at 869 */
     22,24,4,11,1,26,4,24,3,
-    /* lts_protein, 7 bytes at 1052 */
+    /* lts_protein, 7 bytes at 878 */
     22,24,4,26,2,3,21,
-    /* lts_psichiatri, 10 bytes at 1059 */
+    /* lts_psichiatri, 10 bytes at 885 */
     22,25,3,12,16,3,1,26,24,3,
-    /* lts_qualsias, 8 bytes at 1069 */
+    /* lts_qualsias, 8 bytes at 895 */
     23,5,1,19,25,3,1,25,
-    /* lts_rapsodi, 7 bytes at 1077 */
+    /* lts_rapsodi, 7 bytes at 903 */
     24,1,22,25,4,13,3,
-    /* lts_retrovi, 7 bytes at 1084 */
+    /* lts_retrovi, 7 bytes at 910 */
     24,2,26,24,4,27,3,
-    /* lts_ricevitori, 10 bytes at 1091 */
+    /* lts_ricevitori, 10 bytes at 917 */
     24,3,12,2,27,3,26,4,24,3,
-    /* lts_rinvi, 5 bytes at 1101 */
+    /* lts_rinvi, 5 bytes at 927 */
     24,3,21,27,3,
-    /* lts_romani, 6 bytes at 1106 */
+    /* lts_romani, 6 bytes at 932 */
     24,4,20,1,21,3,
-    /* lts_ronzi, 5 bytes at 1112 */
+    /* lts_ronzi, 5 bytes at 938 */
     24,4,21,31,3,
-    /* lts_rosoli, 6 bytes at 1117 */
+    /* lts_rosoli, 6 bytes at 943 */
     24,4,25,4,19,3,
-    /* lts_sartori, 7 bytes at 1123 */
+    /* lts_sartori, 7 bytes at 949 */
     25,1,24,26,4,24,3,
-    /* lts_simpati, 7 bytes at 1130 */
+    /* lts_simpati, 7 bytes at 956 */
     25,3,20,22,1,26,3,
-    /* lts_sinergi, 7 bytes at 1137 */
+    /* lts_sinergi, 7 bytes at 963 */
     25,3,21,2,24,15,3,
-    /* lts_sincroni, 8 bytes at 1144 */
+    /* lts_sincroni, 8 bytes at 970 */
     25,3,21,12,24,4,21,3,
-    /* lts_sinfoni, 7 bytes at 1152 */
+    /* lts_sinfoni, 7 bytes at 978 */
     25,3,21,14,4,21,3,
-    /* lts_sintoni, 7 bytes at 1159 */
+    /* lts_sintoni, 7 bytes at 985 */
     25,3,21,26,4,21,3,
-    /* lts_sofi, 4 bytes at 1166 */
+    /* lts_sofi, 4 bytes at 992 */
     25,4,14,3,
-    /* lts_suic, 4 bytes at 1170 */
+    /* lts_suic, 4 bytes at 996 */
     25,5,3,12,
-    /* lts_suin, 4 bytes at 1174 */
+    /* lts_suin, 4 bytes at 1000 */
     25,5,3,21,
-    /* lts_supremazi, 9 bytes at 1178 */
+    /* lts_supremazi, 9 bytes at 1004 */
     25,5,22,24,2,20,1,31,3,
-    /* lts_scali, 5 bytes at 1187 */
+    /* lts_scali, 5 bytes at 1013 */
     25,12,1,19,3,
-    /* lts_scrivani, 8 bytes at 1192 */
+    /* lts_sciat, 5 bytes at 1018 */
+    25,12,3,1,26,
+    /* lts_scrivani, 8 bytes at 1023 */
     25,12,24,3,27,1,21,3,
-    /* lts_sfolgori, 8 bytes at 1200 */
+    /* lts_sfolgori, 8 bytes at 1031 */
     25,14,4,19,15,4,24,3,
-    /* lts_spiam, 5 bytes at 1208 */
+    /* lts_spiam, 5 bytes at 1039 */
     25,22,3,1,20,
-    /* lts_spiar, 5 bytes at 1213 */
+    /* lts_spiar, 5 bytes at 1044 */
     25,22,3,1,24,
-    /* lts_spiat, 5 bytes at 1218 */
+    /* lts_spiat, 5 bytes at 1049 */
     25,22,3,1,26,
-    /* lts_spion, 5 bytes at 1223 */
+    /* lts_spion, 5 bytes at 1054 */
     25,22,3,4,21,
-    /* lts_stereofoni, 10 bytes at 1228 */
+    /* lts_stereofoni, 10 bytes at 1059 */
     25,26,2,24,2,4,14,4,21,3,
-    /* lts_strategi, 8 bytes at 1238 */
+    /* lts_strategi, 8 bytes at 1069 */
     25,26,24,1,26,2,15,3,
-    /* lts_teori, 5 bytes at 1246 */
+    /* lts_teori, 5 bytes at 1077 */
     26,2,4,24,3,
-    /* lts_teleogi, 7 bytes at 1251 */
+    /* lts_teleogi, 7 bytes at 1082 */
     26,2,19,2,4,15,3,
-    /* lts_telefoni, 8 bytes at 1258 */
+    /* lts_telefoni, 8 bytes at 1089 */
     26,2,19,2,14,4,21,3,
-    /* lts_ticchetti, 9 bytes at 1266 */
+    /* lts_ticchetti, 9 bytes at 1097 */
     26,3,12,12,16,2,26,26,3,
-    /* lts_tunisi, 6 bytes at 1275 */
+    /* lts_tunisi, 6 bytes at 1106 */
     26,5,21,3,25,3,
-    /* lts_turchi, 6 bytes at 1281 */
+    /* lts_turchi, 6 bytes at 1112 */
     26,5,24,12,16,3,
-    /* lts_tuttavi, 7 bytes at 1287 */
+    /* lts_tuttavi, 7 bytes at 1118 */
     26,5,26,26,1,27,3,
-    /* lts_veicol, 6 bytes at 1294 */
+    /* lts_veicol, 6 bytes at 1125 */
     27,2,3,12,4,19,
-    /* lts_vial, 4 bytes at 1300 */
+    /* lts_vial, 4 bytes at 1131 */
     27,3,1,19,
-    /* lts_viol, 4 bytes at 1304 */
+    /* lts_viol, 4 bytes at 1135 */
     27,3,4,19,
-    /* lts_zootecni, 8 bytes at 1308 */
+    /* lts_zootecni, 8 bytes at 1139 */
     31,4,4,26,2,12,21,3,
-    /* lts_2501031a03, 5 bytes at 1316 */
+    /* lts_2501031a03, 5 bytes at 1147 */
     37,1,3,26,3,
-    /* lts_3401031802, 5 bytes at 1321 */
+    /* lts_3401031802, 5 bytes at 1152 */
     52,1,3,24,2,
+    /* lts_ss, 2 bytes at 1157 */
+    25,25,
+    /* say_0a0a, 2 bytes at 1159 */
+    10,10,
+    /* lts_sh, 2 bytes at 1161 */
+    25,16,
+    /* lts_sc, 2 bytes at 1163 */
+    25,12,
+    /* lts_sciatica, 8 bytes at 1165 */
+    25,12,3,1,26,3,12,1,
+    /* lts_sciatto, 7 bytes at 1173 */
+    25,12,3,1,26,26,4,
+    /* lts_sci, 3 bytes at 1180 */
+    25,12,3,
+    /* lts_scia, 4 bytes at 1183 */
+    25,12,3,1,
+    /* lts_sciamo, 6 bytes at 1187 */
+    25,12,3,1,20,4,
+    /* lts_sciano, 6 bytes at 1193 */
+    25,12,3,1,21,4,
+    /* lts_sciare, 6 bytes at 1199 */
+    25,12,3,1,24,2,
+    /* lts_scie, 4 bytes at 1205 */
+    25,12,3,2,
+    /* lts_scio, 4 bytes at 1209 */
+    25,12,3,4,
+    /* say_0c1b, 2 bytes at 1213 */
+    12,27,
+    /* lts_sciav, 5 bytes at 1215 */
+    25,12,3,1,27,
+    /* lts_scier, 5 bytes at 1220 */
+    25,12,3,2,24,
+    /* lts_b, 1 bytes at 1225 */
+    11,
+    /* say_09, 1 bytes at 1226 */
+    9,
+    /* lts_l, 1 bytes at 1227 */
+    19,
+    /* lts_r, 1 bytes at 1228 */
+    24,
+    /* lts_v, 1 bytes at 1229 */
+    27,
+    /* lts_aseps, 5 bytes at 1230 */
+    1,25,2,22,25,
+    /* lts_asim, 4 bytes at 1235 */
+    1,25,3,20,
+    /* lts_casori, 6 bytes at 1239 */
+    12,1,25,4,24,3,
+    /* lts_dinosaur, 8 bytes at 1245 */
+    13,3,21,4,25,1,5,24,
+    /* lts_girasol, 7 bytes at 1253 */
+    15,3,24,1,25,4,19,
+    /* lts_rosic, 5 bytes at 1260 */
+    24,4,25,3,12,
+    /* lts_staser, 6 bytes at 1265 */
+    25,26,1,25,2,24,
+    /* say_0a, 1 bytes at 1271 */
+    10,
+    /* lts_gg, 2 bytes at 1272 */
+    15,15,
+    /* say_030d, 2 bytes at 1274 */
+    3,13,
+    /* lts_ggi, 3 bytes at 1276 */
+    15,15,3,
+    /* say_0606, 2 bytes at 1279 */
+    6,6,
+    /* lts_gh, 2 bytes at 1281 */
+    15,16,
+    /* say_06, 1 bytes at 1283 */
+    6,
+    /* lts_gli, 3 bytes at 1284 */
+    15,19,3,
+    /* say_06171b, 3 bytes at 1287 */
+    6,23,27,
+    /* lts_negligent, 9 bytes at 1290 */
+    21,2,15,19,3,15,2,21,26,
+    /* lts_gl, 2 bytes at 1299 */
+    15,19,
+    /* lts_gn, 2 bytes at 1301 */
+    15,21,
+    /* lts_elogi, 5 bytes at 1303 */
+    2,19,4,15,3,
+    /* lts_orologi, 7 bytes at 1308 */
+    4,24,4,19,4,15,3,
+    /* lts_murgi, 5 bytes at 1315 */
+    20,5,24,15,3,
+    /* lts_ol, 2 bytes at 1320 */
+    4,19,
+    /* say_0d1b, 2 bytes at 1322 */
+    13,27,
+    /* lts_ru, 2 bytes at 1324 */
+    24,5,
     /* lts_regia, 5 bytes at 1326 */
     24,2,15,3,1,
     /* say_19, 1 bytes at 1331 */
@@ -620,30 +620,30 @@ uint8_t itit_evv_authored_data[] = {
     31,1,31,31,2,24,
     /* say_030f, 2 bytes at 1544 */
     3,15,
-    /* lts_arzill, 6 bytes at 1546 */
-    1,24,31,3,19,19,
-    /* lts_inzacch, 7 bytes at 1552 */
-    3,21,31,1,12,12,16,
-    /* lts_inzupp, 6 bytes at 1559 */
-    3,21,31,5,22,22,
-    /* lts_balzac, 6 bytes at 1565 */
-    11,1,19,31,1,12,
-    /* lts_benz, 4 bytes at 1571 */
-    11,2,21,31,
-    /* lts_donz, 4 bytes at 1575 */
-    13,4,21,31,
-    /* lts_manzan, 6 bytes at 1579 */
-    20,1,21,31,1,21,
-    /* lts_penz, 4 bytes at 1585 */
-    22,2,21,31,
-    /* lts_verz, 4 bytes at 1589 */
-    27,2,24,31,
-    /* lts_zanz, 4 bytes at 1593 */
-    31,1,21,31,
-    /* lts_t, 1 bytes at 1597 */
+    /* lts_t, 1 bytes at 1546 */
     26,
-    /* say_10, 1 bytes at 1598 */
+    /* say_10, 1 bytes at 1547 */
     16,
+    /* lts_arzill, 6 bytes at 1548 */
+    1,24,31,3,19,19,
+    /* lts_inzacch, 7 bytes at 1554 */
+    3,21,31,1,12,12,16,
+    /* lts_inzupp, 6 bytes at 1561 */
+    3,21,31,5,22,22,
+    /* lts_balzac, 6 bytes at 1567 */
+    11,1,19,31,1,12,
+    /* lts_benz, 4 bytes at 1573 */
+    11,2,21,31,
+    /* lts_donz, 4 bytes at 1577 */
+    13,4,21,31,
+    /* lts_manzan, 6 bytes at 1581 */
+    20,1,21,31,1,21,
+    /* lts_penz, 4 bytes at 1587 */
+    22,2,21,31,
+    /* lts_verz, 4 bytes at 1591 */
+    27,2,24,31,
+    /* lts_zanz, 4 bytes at 1595 */
+    31,1,21,31,
     /* lts_nam, 3 bytes at 1599 */
     21,1,20,
     /* lts_nort, 4 bytes at 1602 */
@@ -790,6 +790,566 @@ uint8_t itit_evv_authored_data[] = {
     25,20,
     /* lts_st, 2 bytes at 1945 */
     25,26,
+    /* lts_accetta, 7 bytes at 1947 */
+    1,12,12,2,26,26,1,
+    /* lts_affetto, 7 bytes at 1954 */
+    1,14,14,2,26,26,4,
+    /* lts_esca, 4 bytes at 1961 */
+    2,25,12,1,
+    /* lts_collega, 7 bytes at 1965 */
+    12,4,19,19,2,15,1,
+    /* lts_corregge, 8 bytes at 1972 */
+    12,4,24,24,2,15,15,2,
+    /* lts_dette, 5 bytes at 1980 */
+    13,2,26,26,2,
+    /* lts_legge, 5 bytes at 1985 */
+    19,2,15,15,2,
+    /* lts_messe, 5 bytes at 1990 */
+    20,2,25,25,2,
+    /* lts_mezzo, 5 bytes at 1995 */
+    20,2,31,31,4,
+    /* lts_pera, 4 bytes at 2000 */
+    22,2,24,1,
+    /* lts_pesca, 5 bytes at 2004 */
+    22,2,25,12,1,
+    /* lts_tema, 4 bytes at 2009 */
+    26,2,20,1,
+    /* lts_vendette, 8 bytes at 2013 */
+    27,2,21,13,2,26,26,2,
+    /* lts_venti, 5 bytes at 2021 */
+    27,2,21,26,3,
+    /* say_1d, 1 bytes at 2026 */
+    29,
+    /* lts_allen, 5 bytes at 2027 */
+    1,19,19,2,21,
+    /* lts_ecco, 4 bytes at 2032 */
+    2,12,12,4,
+    /* lts_epic, 4 bytes at 2036 */
+    2,22,3,12,
+    /* lts_cet, 3 bytes at 2040 */
+    12,2,26,
+    /* lts_cetra, 5 bytes at 2043 */
+    12,2,26,24,1,
+    /* lts_commem, 6 bytes at 2048 */
+    12,4,20,20,2,20,
+    /* lts_complessa, 9 bytes at 2054 */
+    12,4,20,22,19,2,25,25,1,
+    /* lts_compressa, 9 bytes at 2063 */
+    12,4,20,22,24,2,25,25,1,
+    /* lts_congen, 6 bytes at 2072 */
+    12,4,21,15,2,21,
+    /* lts_chela, 5 bytes at 2078 */
+    12,16,2,19,1,
+    /* lts_clement, 7 bytes at 2083 */
+    12,19,2,20,2,21,26,
+    /* lts_criteri, 7 bytes at 2090 */
+    12,24,3,26,2,24,3,
+    /* lts_deced, 5 bytes at 2097 */
+    13,2,12,2,13,
+    /* lts_degen, 5 bytes at 2102 */
+    13,2,15,2,21,
+    /* lts_dev, 3 bytes at 2107 */
+    13,2,27,
+    /* lts_dilemm, 6 bytes at 2110 */
+    13,3,19,2,20,20,
+    /* lts_fet, 3 bytes at 2116 */
+    14,2,26,
+    /* lts_fetid, 5 bytes at 2119 */
+    14,2,26,3,13,
+    /* lts_flemm, 5 bytes at 2124 */
+    14,19,2,20,20,
+    /* lts_gemm, 4 bytes at 2129 */
+    15,2,20,20,
+    /* lts_gen, 3 bytes at 2133 */
+    15,2,21,
+    /* lts_legg, 4 bytes at 2136 */
+    19,2,15,15,
+    /* lts_lev, 3 bytes at 2140 */
+    19,2,27,
+    /* lts_mel, 3 bytes at 2143 */
+    20,2,19,
+    /* lts_memor, 5 bytes at 2146 */
+    20,2,20,4,24,
+    /* lts_merci, 5 bytes at 2151 */
+    20,2,24,12,3,
+    /* lts_meta, 4 bytes at 2156 */
+    20,2,26,1,
+    /* lts_metod, 5 bytes at 2160 */
+    20,2,26,4,13,
+    /* lts_miserer, 7 bytes at 2165 */
+    20,3,25,2,24,2,24,
+    /* lts_nemesi, 6 bytes at 2172 */
+    21,2,20,2,25,3,
+    /* lts_pecc, 4 bytes at 2178 */
+    22,2,12,12,
+    /* lts_pezz, 4 bytes at 2182 */
+    22,2,31,31,
+    /* lts_prego, 5 bytes at 2186 */
+    22,24,2,15,4,
+    /* lts_pressa, 6 bytes at 2191 */
+    22,24,2,25,25,1,
+    /* lts_prezz, 5 bytes at 2197 */
+    22,24,2,31,31,
+    /* lts_regol, 5 bytes at 2202 */
+    24,2,15,4,19,
+    /* lts_reggia, 6 bytes at 2207 */
+    24,2,15,15,3,1,
+    /* lts_ressa, 5 bytes at 2213 */
+    24,2,25,25,1,
+    /* lts_rispett, 7 bytes at 2218 */
+    24,3,25,22,2,26,26,
+    /* lts_segg, 4 bytes at 2225 */
+    25,2,15,15,
+    /* lts_sepp, 4 bytes at 2229 */
+    25,2,22,22,
+    /* lts_sett, 4 bytes at 2233 */
+    25,2,26,26,
+    /* lts_stemm, 5 bytes at 2237 */
+    25,26,2,20,20,
+    /* lts_strenn, 6 bytes at 2242 */
+    25,26,24,2,21,21,
+    /* lts_tren, 4 bytes at 2248 */
+    26,24,2,21,
+    /* lts_vecchi, 6 bytes at 2252 */
+    27,2,12,12,16,3,
+    /* lts_vet, 3 bytes at 2258 */
+    27,2,26,
+    /* lts_zebra, 5 bytes at 2261 */
+    31,2,11,24,1,
+    /* lts_zel, 3 bytes at 2266 */
+    31,2,19,
+    /* lts_zenit, 5 bytes at 2269 */
+    31,2,21,3,26,
+    /* lts_zero, 4 bytes at 2274 */
+    31,2,24,4,
+    /* lts_zet, 3 bytes at 2278 */
+    31,2,26,
+    /* lts_2403051902161602, 8 bytes at 2281 */
+    36,3,5,25,2,22,22,2,
+    /* lts_pecchia, 7 bytes at 2289 */
+    22,2,12,12,16,3,1,
+    /* lts_pecchie, 7 bytes at 2296 */
+    22,2,12,12,16,3,2,
+    /* lts_seppia, 6 bytes at 2303 */
+    25,2,22,22,3,1,
+    /* lts_trenta, 6 bytes at 2309 */
+    26,24,2,21,26,1,
+    /* say_1c, 1 bytes at 2315 */
+    28,
+    /* lts_accenn, 6 bytes at 2316 */
+    1,12,12,2,21,21,
+    /* lts_adempi, 6 bytes at 2322 */
+    1,13,2,20,22,3,
+    /* lts_antenna, 7 bytes at 2328 */
+    1,21,26,2,21,21,1,
+    /* lts_avvenn, 6 bytes at 2335 */
+    1,27,27,2,21,21,
+    /* lts_ella, 4 bytes at 2341 */
+    2,19,19,1,
+    /* lts_empi, 4 bytes at 2345 */
+    2,20,22,3,
+    /* lts_entr, 4 bytes at 2349 */
+    2,21,26,24,
+    /* lts_insieme, 7 bytes at 2353 */
+    3,21,25,3,2,20,2,
+    /* lts_capello, 7 bytes at 2360 */
+    12,1,22,2,19,19,4,
+    /* lts_cece, 4 bytes at 2367 */
+    12,2,12,2,
+    /* lts_cest, 4 bytes at 2371 */
+    12,2,25,26,
+    /* lts_clavicembal, 11 bytes at 2375 */
+    12,19,1,27,3,12,2,20,11,1,19,
+    /* lts_crebb, 5 bytes at 2386 */
+    12,24,2,11,11,
+    /* lts_crest, 5 bytes at 2391 */
+    12,24,2,25,26,
+    /* lts_decim, 5 bytes at 2396 */
+    13,2,12,3,20,
+    /* lts_dett, 4 bytes at 2401 */
+    13,2,26,26,
+    /* lts_divenn, 6 bytes at 2405 */
+    13,3,27,2,21,21,
+    /* lts_ferm, 4 bytes at 2411 */
+    14,2,24,20,
+    /* lts_fess, 4 bytes at 2415 */
+    14,2,25,25,
+    /* lts_fett, 4 bytes at 2419 */
+    14,2,26,26,
+    /* lts_frett, 5 bytes at 2423 */
+    14,24,2,26,26,
+    /* lts_grett, 5 bytes at 2428 */
+    15,24,2,26,26,
+    /* lts_less, 4 bytes at 2433 */
+    19,2,25,25,
+    /* lts_mess, 4 bytes at 2437 */
+    20,2,25,25,
+    /* lts_mett, 4 bytes at 2441 */
+    20,2,26,26,
+    /* lts_nebbi, 5 bytes at 2445 */
+    21,2,11,11,3,
+    /* lts_nett, 4 bytes at 2450 */
+    21,2,26,26,
+    /* lts_penn, 4 bytes at 2454 */
+    22,2,21,21,
+    /* lts_quell, 5 bytes at 2458 */
+    23,5,2,19,19,
+    /* lts_quest, 5 bytes at 2463 */
+    23,5,2,25,26,
+    /* lts_sembr, 5 bytes at 2468 */
+    25,2,20,11,24,
+    /* lts_semplic, 7 bytes at 2473 */
+    25,2,20,22,19,3,12,
+    /* lts_senn, 4 bytes at 2480 */
+    25,2,21,21,
+    /* lts_scend, 5 bytes at 2484 */
+    25,12,2,21,13,
+    /* lts_speci, 5 bytes at 2489 */
+    25,22,2,12,3,
+    /* lts_spess, 5 bytes at 2494 */
+    25,22,2,25,25,
+    /* lts_stell, 5 bytes at 2499 */
+    25,26,2,19,19,
+    /* lts_stess, 5 bytes at 2504 */
+    25,26,2,25,25,
+    /* lts_strett, 6 bytes at 2509 */
+    25,26,24,2,26,26,
+    /* lts_tenn, 4 bytes at 2515 */
+    26,2,21,21,
+    /* lts_tett, 4 bytes at 2519 */
+    26,2,26,26,
+    /* lts_trenn, 5 bytes at 2523 */
+    26,24,2,21,21,
+    /* lts_vend, 4 bytes at 2528 */
+    27,2,21,13,
+    /* lts_vett, 4 bytes at 2532 */
+    27,2,26,26,
+    /* lts_specie, 6 bytes at 2536 */
+    25,22,2,12,3,2,
+    /* lts_ssa, 3 bytes at 2542 */
+    25,25,1,
+    /* lts_sse, 3 bytes at 2545 */
+    25,25,2,
+    /* lts_lb, 2 bytes at 2548 */
+    19,11,
+    /* lts_lc, 2 bytes at 2550 */
+    19,12,
+    /* lts_lf, 2 bytes at 2552 */
+    19,14,
+    /* lts_lp, 2 bytes at 2554 */
+    19,22,
+    /* lts_ls, 2 bytes at 2556 */
+    19,25,
+    /* lts_lt, 2 bytes at 2558 */
+    19,26,
+    /* lts_rb, 2 bytes at 2560 */
+    24,11,
+    /* lts_rl, 2 bytes at 2562 */
+    24,19,
+    /* lts_rm, 2 bytes at 2564 */
+    24,20,
+    /* lts_rn, 2 bytes at 2566 */
+    24,21,
+    /* lts_rp, 2 bytes at 2568 */
+    24,22,
+    /* lts_rs, 2 bytes at 2570 */
+    24,25,
+    /* lts_rt, 2 bytes at 2572 */
+    24,26,
+    /* lts_rv, 2 bytes at 2574 */
+    24,27,
+    /* lts_rz, 2 bytes at 2576 */
+    24,31,
+    /* lts_rci, 3 bytes at 2578 */
+    24,12,3,
+    /* lts_rce, 3 bytes at 2581 */
+    24,12,2,
+    /* lts_mb, 2 bytes at 2584 */
+    20,11,
+    /* lts_mp, 2 bytes at 2586 */
+    20,22,
+    /* lts_gu, 2 bytes at 2588 */
+    15,5,
+    /* lts_ma, 2 bytes at 2590 */
+    20,1,
+    /* lts_mi, 2 bytes at 2592 */
+    20,3,
+    /* lts_tich, 4 bytes at 2594 */
+    26,3,12,16,
+    /* lts_tic, 3 bytes at 2598 */
+    26,3,12,
+    /* lts_gge, 3 bytes at 2601 */
+    15,15,2,
+    /* lts_ga, 2 bytes at 2604 */
+    15,1,
+    /* lts_go, 2 bytes at 2606 */
+    15,4,
+    /* lts_nt, 2 bytes at 2608 */
+    21,26,
+    /* lts_nd, 2 bytes at 2610 */
+    21,13,
+    /* lts_ng, 2 bytes at 2612 */
+    21,15,
+    /* lts_ns, 2 bytes at 2614 */
+    21,25,
+    /* lts_nz, 2 bytes at 2616 */
+    21,31,
+    /* say_21, 1 bytes at 2618 */
+    33,
+    /* lts_pose, 4 bytes at 2619 */
+    22,4,25,2,
+    /* lts_rosa, 4 bytes at 2623 */
+    24,4,25,1,
+    /* lts_tocco, 5 bytes at 2627 */
+    26,4,12,12,4,
+    /* say_20, 1 bytes at 2632 */
+    32,
+    /* lts_avvolt, 6 bytes at 2633 */
+    1,27,27,4,19,26,
+    /* lts_cols, 4 bytes at 2639 */
+    12,4,19,25,
+    /* lts_colt, 4 bytes at 2643 */
+    12,4,19,26,
+    /* lts_corn, 4 bytes at 2647 */
+    12,4,24,21,
+    /* lts_cos, 3 bytes at 2651 */
+    12,4,25,
+    /* lts_donn, 4 bytes at 2654 */
+    13,4,21,21,
+    /* lts_dorm, 4 bytes at 2658 */
+    13,4,24,20,
+    /* lts_dors, 4 bytes at 2662 */
+    13,4,24,25,
+    /* lts_drog, 4 bytes at 2666 */
+    13,24,4,15,
+    /* lts_forz, 4 bytes at 2670 */
+    14,4,24,31,
+    /* lts_gioi, 4 bytes at 2674 */
+    15,3,4,3,
+    /* lts_monocrom, 8 bytes at 2678 */
+    20,4,21,4,12,24,4,20,
+    /* lts_mors, 4 bytes at 2686 */
+    20,4,24,25,
+    /* lts_nonn, 4 bytes at 2690 */
+    21,4,21,21,
+    /* lts_porr, 4 bytes at 2694 */
+    22,4,24,24,
+    /* lts_pors, 4 bytes at 2698 */
+    22,4,24,25,
+    /* lts_propri, 6 bytes at 2702 */
+    22,24,4,22,24,3,
+    /* lts_prossim, 7 bytes at 2708 */
+    22,24,4,25,25,3,20,
+    /* lts_qualcos, 7 bytes at 2715 */
+    23,5,1,19,12,4,25,
+    /* lts_ros, 3 bytes at 2722 */
+    24,4,25,
+    /* lts_sborni, 6 bytes at 2725 */
+    25,11,4,24,21,3,
+    /* lts_sciols, 6 bytes at 2731 */
+    25,12,3,4,19,25,
+    /* lts_sciolt, 6 bytes at 2737 */
+    25,12,3,4,19,26,
+    /* lts_scors, 5 bytes at 2743 */
+    25,12,4,24,25,
+    /* lts_tolsi, 5 bytes at 2748 */
+    26,4,19,25,3,
+    /* lts_tolt, 4 bytes at 2753 */
+    26,4,19,26,
+    /* lts_tors, 4 bytes at 2757 */
+    26,4,24,25,
+    /* lts_vols, 4 bytes at 2761 */
+    27,4,19,25,
+    /* lts_volt, 4 bytes at 2765 */
+    27,4,19,26,
+    /* lts_29010d041515, 6 bytes at 2769 */
+    41,1,13,4,21,21,
+    /* lts_end, 3 bytes at 2775 */
+    2,21,13,
+    /* lts_abbandon, 8 bytes at 2778 */
+    1,11,11,1,21,13,4,21,
+    /* lts_agost, 5 bytes at 2786 */
+    1,15,4,25,26,
+    /* lts_allora, 6 bytes at 2791 */
+    1,19,19,4,24,1,
+    /* lts_ampoll, 6 bytes at 2797 */
+    1,20,22,4,19,19,
+    /* lts_ancora, 6 bytes at 2803 */
+    1,21,12,4,24,1,
+    /* lts_ispezion, 8 bytes at 2809 */
+    3,25,22,2,31,3,4,21,
+    /* lts_ora, 3 bytes at 2817 */
+    4,24,1,
+    /* lts_bocc, 4 bytes at 2820 */
+    11,4,12,12,
+    /* lts_boll, 4 bytes at 2824 */
+    11,4,19,19,
+    /* lts_borg, 4 bytes at 2828 */
+    11,4,24,15,
+    /* lts_botte, 5 bytes at 2832 */
+    11,4,26,26,2,
+    /* lts_cod, 3 bytes at 2837 */
+    12,4,13,
+    /* lts_cognom, 6 bytes at 2840 */
+    12,4,15,21,4,20,
+    /* lts_confezion, 9 bytes at 2846 */
+    12,4,21,14,2,31,3,4,21,
+    /* lts_cort, 4 bytes at 2855 */
+    12,4,24,26,
+    /* lts_dodici, 6 bytes at 2859 */
+    13,4,13,3,12,3,
+    /* lts_dopo, 4 bytes at 2865 */
+    13,4,22,4,
+    /* lts_dopp, 4 bytes at 2869 */
+    13,4,22,22,
+    /* lts_for, 3 bytes at 2873 */
+    14,4,24,
+    /* lts_forc, 4 bytes at 2876 */
+    14,4,24,12,
+    /* lts_fosse, 5 bytes at 2880 */
+    14,4,25,25,2,
+    /* lts_giovan, 6 bytes at 2885 */
+    15,3,4,27,1,21,
+    /* lts_gorg, 4 bytes at 2891 */
+    15,4,24,15,
+    /* lts_gott, 4 bytes at 2895 */
+    15,4,26,26,
+    /* lts_gozz, 4 bytes at 2899 */
+    15,4,31,31,
+    /* lts_lavor, 5 bytes at 2903 */
+    19,1,27,4,24,
+    /* lts_lor, 3 bytes at 2908 */
+    19,4,24,
+    /* lts_midoll, 6 bytes at 2911 */
+    20,3,13,4,19,19,
+    /* lts_mogl, 4 bytes at 2917 */
+    20,4,15,19,
+    /* lts_most, 4 bytes at 2921 */
+    20,4,25,26,
+    /* lts_mostr, 5 bytes at 2925 */
+    20,4,25,26,24,
+    /* lts_perdon, 6 bytes at 2930 */
+    22,2,24,13,4,21,
+    /* lts_poll, 4 bytes at 2936 */
+    22,4,19,19,
+    /* lts_post, 4 bytes at 2940 */
+    22,4,25,26,
+    /* lts_pozz, 4 bytes at 2944 */
+    22,4,31,31,
+    /* lts_rod, 3 bytes at 2948 */
+    24,4,13,
+    /* lts_rom, 3 bytes at 2951 */
+    24,4,20,
+    /* lts_ross, 4 bytes at 2954 */
+    24,4,25,25,
+    /* lts_selezion, 8 bytes at 2958 */
+    25,2,19,2,31,3,4,21,
+    /* lts_siccom, 6 bytes at 2966 */
+    25,3,12,12,4,20,
+    /* lts_soffi, 5 bytes at 2972 */
+    25,4,14,14,3,
+    /* lts_sol, 3 bytes at 2977 */
+    25,4,19,
+    /* lts_son, 3 bytes at 2980 */
+    25,4,21,
+    /* lts_sorg, 4 bytes at 2983 */
+    25,4,24,15,
+    /* lts_sozz, 4 bytes at 2987 */
+    25,4,31,31,
+    /* lts_stopp, 5 bytes at 2991 */
+    25,26,4,22,22,
+    /* lts_tort, 4 bytes at 2996 */
+    26,4,24,26,
+    /* lts_toss, 4 bytes at 3000 */
+    26,4,25,25,
+    /* lts_voc, 3 bytes at 3004 */
+    27,4,12,
+    /* lts_vot, 3 bytes at 3007 */
+    27,4,26,
+    /* lts_orafa, 5 bytes at 3010 */
+    4,24,1,14,1,
+    /* lts_orafe, 5 bytes at 3015 */
+    4,24,1,14,2,
+    /* lts_orafi, 5 bytes at 3020 */
+    4,24,1,14,3,
+    /* lts_orafo, 5 bytes at 3025 */
+    4,24,1,14,4,
+    /* lts_bocce, 5 bytes at 3030 */
+    11,4,12,12,2,
+    /* lts_boccia, 6 bytes at 3035 */
+    11,4,12,12,3,1,
+    /* lts_codice, 6 bytes at 3041 */
+    12,4,13,3,12,2,
+    /* lts_codici, 6 bytes at 3047 */
+    12,4,13,3,12,3,
+    /* lts_cortic, 6 bytes at 3053 */
+    12,4,24,26,3,12,
+    /* lts_soffic, 6 bytes at 3059 */
+    25,4,14,14,3,12,
+    /* lts_solida, 6 bytes at 3065 */
+    25,4,19,3,13,1,
+    /* lts_solide, 6 bytes at 3071 */
+    25,4,19,3,13,2,
+    /* lts_solidi, 6 bytes at 3077 */
+    25,4,19,3,13,3,
+    /* lts_solido, 6 bytes at 3083 */
+    25,4,19,3,13,4,
+    /* lts_solita, 6 bytes at 3089 */
+    25,4,19,3,26,1,
+    /* lts_solite, 6 bytes at 3095 */
+    25,4,19,3,26,2,
+    /* lts_soliti, 6 bytes at 3101 */
+    25,4,19,3,26,3,
+    /* lts_solito, 6 bytes at 3107 */
+    25,4,19,3,26,4,
+    /* lts_soldi, 5 bytes at 3113 */
+    25,4,19,13,3,
+    /* lts_soldo, 5 bytes at 3118 */
+    25,4,19,13,4,
+    /* lts_solfa, 5 bytes at 3123 */
+    25,4,19,14,1,
+    /* lts_ne, 2 bytes at 3128 */
+    21,2,
+    /* lts_ni, 2 bytes at 3130 */
+    21,3,
+    /* lts_ri, 2 bytes at 3132 */
+    24,3,
+    /* lts_io, 2 bytes at 3134 */
+    3,4,
+    /* lts_ia, 2 bytes at 3136 */
+    3,1,
+    /* lts_dromi, 5 bytes at 3138 */
+    13,24,4,20,3,
+    /* lts_dromo, 5 bytes at 3143 */
+    13,24,4,20,4,
+    /* lts_sa, 2 bytes at 3148 */
+    25,1,
+    /* lts_se, 2 bytes at 3150 */
+    25,2,
+    /* lts_si, 2 bytes at 3152 */
+    25,3,
+    /* lts_so, 2 bytes at 3154 */
+    25,4,
+    /* lts_ld, 2 bytes at 3156 */
+    19,13,
+    /* lts_lg, 2 bytes at 3158 */
+    19,15,
+    /* lts_vr, 2 bytes at 3160 */
+    27,24,
+    /* lts_sb, 2 bytes at 3162 */
+    25,11,
+    /* lts_sd, 2 bytes at 3164 */
+    25,13,
+    /* lts_sg, 2 bytes at 3166 */
+    25,15,
+    /* lts_sl, 2 bytes at 3168 */
+    25,19,
+    /* lts_sn, 2 bytes at 3170 */
+    25,21,
+    /* lts_sr, 2 bytes at 3172 */
+    25,24,
+    /* lts_sv, 2 bytes at 3174 */
+    25,27,
 };
 
 const delta_store itit_delta_authored_store[] = {
