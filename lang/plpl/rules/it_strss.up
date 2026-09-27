@@ -5,7 +5,8 @@ rule pol_primary_stress takes 3 from it_strss.obj
   local togo
   call ZZget_parm_ptr2 addr left arg 1 addr right arg 2
   call ZZfence_null
-  # How many syllables there are, by walking to the end of the word.
+  # How many syllables there are, by walking to the end of the word. The
+  # scan starts outside the word, so this is one more than there are.
   call ZZlpta_load__setscan_r__7 addr left
   if answer is not 0
     give up
@@ -18,14 +19,17 @@ rule pol_primary_stress takes 3 from it_strss.obj
       leave
     end
   end
-  # And then again from the start, stopping one short of the last, which is
-  # where Polish stress is and where it always is.
+  # And then again from the start, to the syllable before the penultimate:
+  # what the mark covers begins after its left end, so it lands on the
+  # penultimate, which is where Polish stress is and where it always is.
+  # The phoneme report says where the mark went and a pitch peak does not:
+  # Italian's statement accent peaks on the syllable before its mark.
   call ZZlpta_load__setscan_r__7 addr left
   if answer is not 0
     give up
   end
   set togo to count
-  subtract 2 from togo
+  subtract 3 from togo
   while togo is more than 0
     call advance_tok
     decrement togo
