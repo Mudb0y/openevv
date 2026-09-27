@@ -36,9 +36,9 @@ Every number in there was blessed by IBM's own binary. The whole differential su
 
 It exists because the sentence gate is the wrong size for a question about rules. There are about a hundred cases a language in it, and a change that mends forty words and breaks four hundred passes it without a murmur. Twenty thousand words will not.
 
-Every language has a list now. `test/cases/words-<tag>.txt` is written by `tools/measure/wordlist.py` out of that language's own spelling dictionary -- SCOWL for the two Englishes, hunspell's German, Spanish, French and Italian -- twenty thousand words apiece, evenly spread through the source rather than the first twenty thousand, and in the language's own letters rather than filtered to ASCII. English also folds in every word its dictionaries hold, which the sample mostly does not and which are exactly the words a change to a dictionary can move.
+Every language has a list now. `test/cases/words-<tag>.txt` is written by `tools/measure/wordlist.py` out of that language's own spelling dictionary -- SCOWL for the two Englishes, hunspell's German, Spanish, French, Italian and Polish -- twenty thousand words apiece, evenly spread through the source rather than the first twenty thousand, and in the language's own letters rather than filtered to ASCII. English also folds in every word its dictionaries hold, which the sample mostly does not and which are exactly the words a change to a dictionary can move.
 
-Polish has no list, for the same reason it has no oracle: it would want words chosen for Polish rather than borrowed, and that is a judgement rather than a download.
+Polish's is LibreOffice's Polish dictionary, which is ISO 8859-2 where every other source is UTF-8, and it is written out as UTF-8 rather than in the Windows Western set the other lists use, since Polish is the one language whose text the engine converts from UTF-8 itself and the Western set has no room for eight of its letters. What its answers are held against is this engine and nothing else, as with Polish's cases, so the list says whether a word moved and never whether it was right.
 
 A word that moves is a question, exactly as a case is, and `test/words.sh record` writes the new answers down.
 

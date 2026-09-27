@@ -84,6 +84,17 @@ SOURCES = {
              'nixpkgs#hunspellDicts.fr-any', 'a-zàâçéèêëîïôùûüÿœæ'),
     'itit': ('/nix/store/*-hunspell-dict-it-it-*/share/hunspell/it_IT.dic',
              'nixpkgs#hunspellDicts.it_IT', 'a-zàèéìòù'),
+    'plpl': ('/nix/store/*-hunspell-dict-pl-pl-*/share/hunspell/pl_PL.dic',
+             'nixpkgs#hunspellDicts.pl_PL', 'a-ząćęłńóśźż'),
+}
+
+# What a source is read as and what the list is written in, where that is not
+# UTF-8 in and the Windows Western set out. LibreOffice's Polish dictionary is
+# ISO 8859-2, as its .aff says, and Polish is the one language whose text the
+# engine converts from UTF-8 itself: the Western set has no room for eight of
+# its letters, so every word with one of them would be dropped.
+ENCODINGS = {
+    'plpl': ('iso8859-2', 'utf-8'),
 }
 
 
@@ -97,7 +108,8 @@ def source_words(tag):
         return None, None
     keep = re.compile(r'[%s]{3,12}\Z' % letters)
     words = set()
-    for line in open(found[0], encoding='utf-8', errors='replace'):
+    read_as = ENCODINGS.get(tag, ('utf-8', 'cp1252'))[0]
+    for line in open(found[0], encoding=read_as, errors='replace'):
         # A hunspell .dic is a count, then one stem a line with its affix
         # flags after a slash; SCOWL is one word a line and has neither.
         w = line.split('/')[0].strip().lower()
@@ -142,7 +154,8 @@ def main(argv):
     else:
         picked = [words[(i * len(words)) // want] for i in range(want)]
 
-    sys.stdout.reconfigure(encoding="cp1252", errors="replace")
+    written_as = ENCODINGS.get(tag, ('utf-8', 'cp1252'))[1]
+    sys.stdout.reconfigure(encoding=written_as, errors="replace")
     print("# %d words of %s, spread evenly through the %d in %s."
           % (len(picked), tag, len(words), source))
     carried = held(tag)
@@ -158,7 +171,7 @@ def main(argv):
     dropped = 0
     for w in both:
         try:
-            out.write(w.encode("cp1252") + b"\n")
+            out.write(w.encode(written_as) + b"\n")
         except UnicodeEncodeError:
             dropped += 1
     if dropped:

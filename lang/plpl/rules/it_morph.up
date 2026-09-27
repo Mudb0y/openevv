@@ -1,0 +1,18 @@
+# Italian attaches its object pronouns to the end of a verb -- dammi, darli,
+# prendila -- and reads a word that ends in one as the verb and the pronoun,
+# which is what enclitics does: it asks whether what comes before the ending is
+# one of Italian's verbs, and if so strips the ending and says it from a
+# dictionary of its own. Polish has no such pronouns, and that dictionary is
+# one of those emptied of Italian, so a Polish word that happens to spell an
+# Italian verb and a pronoun lost most of itself: tonami and stanami, the
+# plurals of ton and stan, came out as a third of a second of sound, and the
+# phoneme report never came back from them at all.
+#
+# So Polish answers that no word ends in an enclitic. It is bare because it
+# does nothing but answer, and the caller reads an answer that is not nought
+# as the word being an ordinary one.
+rule pol_no_enclitics takes 5 from it_morph.obj
+  bare
+  afresh
+  answer 1
+end

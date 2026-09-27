@@ -17,6 +17,7 @@ reads and writes them by name.
     tools/module/alphabet.py show <tag>              every character and what it is
     tools/module/alphabet.py show <tag> <char>...    only the ones named
     tools/module/alphabet.py add <tag> <byte> <field>=<value>...
+    tools/module/alphabet.py set <tag> <byte> <field>=<value>...
 
 `add' puts a character at a byte value nothing in the alphabet claims yet, so
 that no existing code changes meaning: the dictionaries are keyed by these
@@ -25,6 +26,11 @@ engine will see for that character once it arrives, in hex.
 
     tools/module/alphabet.py add plpl b1 case=lower type=letter letter=vow \\
                               accent='~yes' phoneme=a
+
+`set' changes some of the record of a character the alphabet already has and
+leaves the rest of it, and every other byte of the file, as it was.
+
+    tools/module/alphabet.py set plpl 86 letter=con
 
 usage: as above; `show' with no character lists the lot
 """
@@ -174,6 +180,45 @@ def add(tag, byte, args):
     return True
 
 
+def set_fields(tag, byte, args):
+    lines, _first, _last, names, values, variants, var_at = read(tag)
+    ch = bytes([int(byte, 16)]).decode("latin-1")
+    if ch not in names:
+        raise SystemExit("module/alphabet: %s has no character at byte %s"
+                         % (tag, byte))
+    code = names.index(ch)
+    changes = {}
+    for a in args:
+        if "=" not in a:
+            raise SystemExit("module/alphabet: %r is not field=value" % a)
+        k, v = a.split("=", 1)
+        if k not in RECORD:
+            raise SystemExit("module/alphabet: a record has no %r; it has %s"
+                             % (k, ", ".join(RECORD)))
+        changes[code * 5 + RECORD.index(k)] = number(values, k, v)
+    if not changes:
+        raise SystemExit("module/alphabet: say which fields to set")
+
+    # The records are spread over several `variants' lines of no fixed width,
+    # since `add' puts each new one on a line of its own, so a byte is found
+    # by counting through them rather than by arithmetic.
+    at = 0
+    for i in var_at:
+        w = lines[i].split()
+        n = len(w) - 1
+        hit = [k for k in changes if at <= k < at + n]
+        for k in hit:
+            w[1 + k - at] = "%02x" % changes[k]
+        if hit:
+            lines[i] = "  variants " + " ".join(w[1:])
+        at += n
+
+    open(path_of(tag), "w").write("\n".join(lines))
+    print("%s: %s is code %d, now %s"
+          % (tag, ch, code, ", ".join(a for a in args)))
+    return True
+
+
 def main(argv):
     if len(argv) < 2:
         print(__doc__.strip())
@@ -183,6 +228,8 @@ def main(argv):
         return 0 if show(tag, set(argv[2:])) else 1
     if what == "add" and len(argv) > 2:
         return 0 if add(tag, argv[2], argv[3:]) else 1
+    if what == "set" and len(argv) > 3:
+        return 0 if set_fields(tag, argv[2], argv[3:]) else 1
     print(__doc__.strip())
     return 2
 

@@ -2533,7 +2533,7 @@ label L3 was at_0x133
   load movl slotaddr 92 into r0
   push slotaddr 92
   push reg r6
-  call enclitics arity 5 depth 6
+  call pol_no_enclitics arity 5 depth 6
   popn 6
   cmp testl reg r0 reg r0
   branch jne to L4
