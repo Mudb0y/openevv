@@ -1,0 +1,239 @@
+# Polish letter-to-sound.
+#
+# One block a letter and its arms in order, the first that matches winning.
+# The last arm of a block is the bare letter: what it says when nothing else
+# applies. `before' is what must follow without being swallowed; an arm whose
+# run is longer than its letter swallows the rest, which is how sz, cz, rz,
+# dz, dż, dź and ch are one sound.
+#
+# A consonant before an i is the soft one, and the i is a softener rather than
+# a vowel when a vowel follows it: Kasia is two syllables and dziś is one. So
+# si before a vowel swallows the i, and s before an i leaves it to be spoken.
+#
+# A voiced consonant is voiceless before a voiceless one and at the end of a
+# word -- raz is ras, babka is bapka, wtorek is ftorek -- and `voiceless'
+# below counts both.
+#
+# The phones are the engine's own, and several are named for the Italian
+# sounds they took over, so the lines above the letters let an arm name them
+# by Polish spelling instead. The vowels keep the engine's names, since e, o,
+# y and c are phones already: e says E, the open ɛ; o says c, the open ɔ;
+# y says e, the close-mid e Polish's ɨ took over; j says y, which is the
+# engine's name for the glide; and ł says w, the other glide.
+#
+# f, p, t, v, k, x, a, l, m, i and u are still Italian's, copied from
+# lang/itit/letters, and say what Italian's rules say.
+
+rules in it_phone.obj named apply_pol_%s_rules
+a piece runs from 864 to 872
+a word runs from 704 to 712
+
+voiceless means p t k f s c h ś ć and the end of the word
+ą ć ę ł ń ś ź ż come through q
+
+phone sz is L
+phone ż is R
+phone ś is S
+phone ź is Z
+phone ć is C
+phone dź is J
+phone dz is D
+phone ń is N
+phone ts is T
+phone ch is A
+phone ą is x
+phone ę is o
+
+letter s
+  sz                   says sz      # szafa
+  si before vowel      says ś       # Kasia
+  s before i           says ś       # siła
+  s                    says s
+
+letter c
+  cz                   says t sz    # czas
+  ch                   says ch      # chleb
+  ci before vowel      says ć       # ciasto
+  c before i           says ć       # cisza
+  c                    says ts      # cena
+
+# rz is the voiced retroflex, not an r and a z. The words where it is one --
+# marznie, and the others where the two letters meet across a seam in the
+# word -- are the dictionary's to say.
+letter r
+  rz before voiceless  says sz      # przy
+  rz                   says ż       # rzeka
+  r                    says r
+
+# dzi is asked about first, since the dz below would swallow it.
+letter d
+  dzi before vowel     says dź      # dziecko
+  dz before i          says dź      # dzik
+  dz before voiceless  says ts
+  dz                   says dz      # dzwon
+  dż before voiceless  says t sz
+  dż                   says d ż     # dżem
+  dź before voiceless  says ć
+  dź                   says dź
+  d before voiceless   says t       # kod
+  d                    says d
+
+letter z
+  zi before vowel      says ź       # ziarno
+  z before i           says ź       # zima
+  z before voiceless   says s       # raz
+  z                    says z
+
+letter g
+  g before voiceless   says k       # róg
+  g                    says g
+
+# The velar nasal before a k or a g is the phonology's, not the letter's:
+# bank has it without being asked.
+letter n
+  ni before vowel      says ń       # konie
+  n before i           says ń       # nikt
+  n                    says n
+
+letter e
+  e                    says E
+
+letter o
+  ó                    says u       # mój
+  o                    says c
+
+letter y
+  y                    says e       # być
+
+letter j
+  j                    says y       # mój
+
+letter b
+  b before voiceless   says p       # chleb
+  b                    says b
+
+letter w
+  w before voiceless   says f       # rów, wtorek
+  w                    says v
+
+letter h
+  h                    says ch      # herbata
+
+letter ą
+  ą                    says ą
+
+letter ę
+  ę                    says ę
+
+letter ł
+  ł                    says w
+
+letter ń
+  ń                    says ń
+
+letter ś
+  ś                    says ś
+
+letter ć
+  ć                    says ć
+
+letter ź
+  ź before voiceless   says ś
+  ź                    says ź
+
+letter ż
+  ż before voiceless   says sz      # mąż
+  ż                    says ż
+
+letter f
+  ff   says f f   marked geminate yes
+  f    says f
+
+letter p
+  pp   says p p   marked geminate yes
+  p    says p
+
+letter t
+  tt   says t t   marked geminate yes
+  t    says t
+
+letter v
+  vv   says v v   marked geminate yes
+  v    says v
+
+letter k
+  k    says k
+
+letter x
+  x    says k s
+
+letter a
+  a    says a
+
+letter l
+  ll   says l l   marked geminate yes
+  l    says l
+
+letter m
+  mm   says m m   marked geminate yes
+  m    says m
+
+letter u
+  u accented             says u     # ù
+  u after consonant at word end  says u   # tu, più
+  u before vowel at start  says w   # uopo, super-uomini
+  u at start             says u     # pre-unitario, mono-utente
+  u                      says w     where the root is u_notpronounced_u
+  u                      says u     where the root begins u_pronounced_u
+  u after i              says u     # fiume
+  u before u             says u     # duumviro
+  u after u              says u
+  u before vowel         says w     # uomo, buono, quando
+  u after vowel          says w     # aurora, neutro
+  u                      says u
+
+letter i
+  i accented             says i     # ì, and entropia's i the dictionary stressed
+  i after consonant at word end  says i
+  i after consonant before i  says i   # serii -- before the lists, as IBM asks it
+  i                      says i     where the root is i_notpronounced_y
+  i                      says i     where the root begins i_pronounced_i  unless the root so far is i_notpronounced_i
+  i before vowel         says y     where the root begins i_pronounced_y
+  i after zarc   before a at word end  says i   # democrazia
+  i after zarc   before e at word end  says i
+  i after nof    before a at word end  says i   # telefonia
+  i after nof    before e at word end  says i
+  i after farg   before a at word end  says i   # geografia
+  i after farg   before e at word end  says i
+  i after gol    before a at word end  says i   # biologia
+  i after gol    before e at word end  says i
+  i after rtem   before a at word end  says i   # geometria
+  i after rtem   before e at word end  says i
+  i after mono   before a at word end  says i   # astronomia
+  i after mono   before e at word end  says i
+  i after paret  before a at word end  says i   # fisioterapia
+  i after paret  before e at word end  says i
+  i after re before a at end  says i   # artiglieria
+  i after re before e at end  says i
+  i before aco           says i     # cardiaco -- but diaclasi, niacina glide
+  i before aca           says i
+  i before ache          says i     # celiachia, where IBM asks for e or i
+  i before achi          says i
+  i before vowel at start  says y   # iato, iodato
+  i at start             says i     # co-incidenza, auto-incendio
+  i before vowel         says y     # piano, fiore
+  i after vowel at word end  says i # colei, avvarrai
+  i after a before sm+vowel says i     # -ismo, -ista
+  i after e before sm+vowel says i
+  i after o before sm+vowel says i
+  i after u before sm+vowel says i     # altruismo
+  i after a before st+vowel says i
+  i after e before st+vowel says i
+  i after o before st+vowel says i
+  i after u before st+vowel says i
+  i after a              says y     # aimone
+  i after e              says y
+  i after o              says y
+  i after u              says y     where the root begins u_pronounced_u
+  i after u              says i     # acquisto -- the u glides, so this does not
+  i                      says i

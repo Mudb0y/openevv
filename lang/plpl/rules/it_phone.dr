@@ -8274,7 +8274,7 @@ label L11 was $X13$90700
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_a_rules arity 3 depth 4
+  call apply_pol_a_rules arity 3 depth 4
 label L12 was at_0x241
   popn 4
 label L13 was $X14$90705
@@ -8605,7 +8605,7 @@ label L42 was $X35$90765
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_i_rules arity 3 depth 4
+  call apply_pol_i_rules arity 3 depth 4
   jump to L12
 label L43 was $X47$90808
   push reg r6
@@ -8633,7 +8633,7 @@ label L44 was $X52$90820
   cmp testl reg r0 reg r0
   branch jne to L45
   push reg r6
-  call pol_test_own_letters arity 1 depth 1
+  call apply_pol_q_rules_test arity 1 depth 1
   cmp testl reg r0 reg r0
   popreg r1
   branch je to L77
@@ -8737,7 +8737,7 @@ label L55 was $X64$90857
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_u_rules arity 3 depth 5
+  call apply_pol_u_rules arity 3 depth 5
 label L56 was at_0x6cb
   popn 5
   jump to L13
@@ -8857,7 +8857,7 @@ label L68 was at_0x7e0
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_f_rules arity 3 depth 4
+  call apply_pol_f_rules arity 3 depth 4
   jump to L12
 label L69 was at_0x7f9
   push reg r6
@@ -8897,7 +8897,7 @@ label L72 was at_0x844
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_k_rules arity 3 depth 4
+  call apply_pol_k_rules arity 3 depth 4
   jump to L12
 label L73 was at_0x85d
   push reg r6
@@ -8907,7 +8907,7 @@ label L73 was at_0x85d
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_l_rules arity 3 depth 4
+  call apply_pol_l_rules arity 3 depth 4
   jump to L12
 label L74 was at_0x876
   push reg r6
@@ -8917,7 +8917,7 @@ label L74 was at_0x876
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_m_rules arity 3 depth 4
+  call apply_pol_m_rules arity 3 depth 4
   jump to L12
 label L75 was at_0x88f
   push reg r6
@@ -8937,7 +8937,7 @@ label L76 was at_0x8a8
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_p_rules arity 3 depth 4
+  call apply_pol_p_rules arity 3 depth 4
   jump to L12
 label L77 was at_0x8c1
   push reg r6
@@ -8947,7 +8947,7 @@ label L77 was at_0x8c1
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_pol_letter_rules arity 3 depth 4
+  call apply_pol_q_rules arity 3 depth 4
   jump to L12
 label L78 was at_0x8da
   push reg r6
@@ -8977,7 +8977,7 @@ label L80 was at_0x90c
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_t_rules arity 3 depth 4
+  call apply_pol_t_rules arity 3 depth 4
   jump to L12
 label L81 was $X62$90855
   push reg r6
@@ -9001,7 +9001,7 @@ label L81 was $X62$90855
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_v_rules arity 3 depth 4
+  call apply_pol_v_rules arity 3 depth 4
   jump to L12
 label L82 was $X66$90865
   push reg r6
@@ -9049,7 +9049,7 @@ label L83 was $X68$90872
   load movl slotaddr 108 into r0
   push slotaddr 108
   push reg r6
-  call apply_ital_x_rules arity 3 depth 4
+  call apply_pol_x_rules arity 3 depth 4
   jump to L12
 label L84 was $X70$90879
   push reg r6

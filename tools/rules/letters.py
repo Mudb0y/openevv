@@ -46,6 +46,19 @@ homograph is given to the rule that knows its part of speech.
 The phones are the ETI phone letters, the same ones `lang/<tag>/<tag>.dict'
 already uses, and the letters are the language's own characters.
 
+Three lines may stand above the letters. `voiceless means p t k f s c h ś ć'
+names a class, which an arm asks for as it would a kind -- `before voiceless'
+-- and `and the end of the word' ending the line counts nothing at all
+following, or anything that is not a letter, as one of the class: Polish
+devoices a consonant before a voiceless one and at the end of a word, and
+that is one condition. `ą ć ę ł ń ś ź ż come through q' says those letters
+have no link of their own in the dispatcher and reach their rules through
+q's, so their blocks are compiled as arms of one rule standing where q's
+rule stood, with a test beside it for the dispatcher to ask. And
+`phone sz is L' lets an arm name a phone by a spelling of its own where the
+phone statement's name would mislead: Polish's hard sz took over Italian's
+L, and `sz says L' reads as something it is not.
+
 What it writes is `lang/<tag>/rules/et_phone.up', which the build compiles over
 the lifted text in the ordinary way, so a rule written here stands where IBM's
 compiled one stood and `test/words.sh' says whether any of 24,318 words moved.
@@ -108,6 +121,7 @@ def takes(tag, stem, name):
     """
     where = os.path.join(ROOT, "lang", tag, "rules", stem + ".dr")
     want = False
+    called = None
     for line in open(where):
         w = line.split()
         if w[:1] == ["rule"]:
@@ -116,8 +130,15 @@ def takes(tag, stem, name):
             for i, t in enumerate(w):
                 if t == "params":
                     return int(w[i + 1])
-    raise Trouble("%s has no rule called %s to stand in for"
-                  % (os.path.basename(where), name))
+        elif w[:2] == ["call", name] and len(w) > 3 and w[2] == "arity":
+            called = int(w[3])
+    # A rule of the language's own has no lifted body to read that from, and
+    # the dispatcher that calls it says the same thing: its arity counts the
+    # state, as a rule's params do.
+    if called is not None:
+        return called
+    raise Trouble("%s has no rule called %s to stand in for, and nothing"
+                  " calls one" % (os.path.basename(where), name))
 
 
 def fields(tag):
@@ -143,7 +164,20 @@ class Trouble(Exception):
 def letter_codes(tag):
     """Every character of the language and the code it arrives as."""
     names = alphabet.read(tag)[3]
-    return dict((name, n) for n, name in enumerate(names))
+    codes = dict((name, n) for n, name in enumerate(names))
+    # A letter of the language's own is named in the alphabet by the byte it
+    # was given, which read as Latin-1 is no letter at all: Polish's ś is 0x88.
+    # The codepoints file says which character each of those bytes is, so the
+    # file can be written in the letters themselves.
+    where = os.path.join(ROOT, "lang", tag, "%s.codepoints" % tag)
+    if os.path.exists(where):
+        for line in open(where):
+            w = line.split("#", 1)[0].split()
+            if len(w) == 2:
+                byte = bytes([int(w[1], 16)]).decode("latin-1")
+                if byte in codes:
+                    codes.setdefault(chr(int(w[0], 16)), codes[byte])
+    return codes
 
 
 def phone_fields(tag):
@@ -292,9 +326,22 @@ class Arm(object):
                     or (letter is not None and self.letters[0] != letter))
 
 
+class Header(object):
+    """What the lines above the letters say besides where things live."""
+
+    def __init__(self):
+        self.classes = {}       # name -> (letters, whether the end counts)
+        self.through = None     # (letters, the letter whose link they use)
+        self.aliases = {}       # a spelling of ours -> the phone's own name
+        self.obj = None
+        self.pattern = None
+
+
 def parse(path):
-    """The file as blocks of arms, in the order they are written."""
+    """The file as blocks of arms, in the order they are written, and what
+    the lines above them say."""
     blocks = []
+    header = Header()
     wordrange = None
     cur = None
     obj = None
@@ -330,6 +377,24 @@ def parse(path):
                               " <end>'" % where)
             wordrange = (int(w[4]), int(w[6]))
             continue
+        if len(w) > 2 and w[1] == "means" and cur is None:
+            members = w[2:]
+            end = members[-6:] == ["and", "the", "end", "of", "the", "word"]
+            if end:
+                members = members[:-6]
+            if not members or w[0] in CLASSES:
+                raise Trouble("%s: a class is `<name> means <letters>', with"
+                              " `and the end of the word' if nothing"
+                              " following counts, and its name is not one"
+                              " of %s" % (where, ", ".join(CLASSES)))
+            header.classes[w[0]] = (members, end)
+            continue
+        if w[-3:-1] == ["come", "through"] and len(w) > 3 and cur is None:
+            header.through = (w[:-3], w[-1])
+            continue
+        if w[0] == "phone" and len(w) == 4 and w[2] == "is" and cur is None:
+            header.aliases[w[1]] = w[3]
+            continue
         if w[0] == "rules":
             if len(w) != 5 or w[1] != "in" or w[3] != "named":
                 raise Trouble("%s: the header is `rules in <object> named"
@@ -340,6 +405,7 @@ def parse(path):
             if "%s" not in pattern:
                 raise Trouble("%s: the pattern says where the letter goes,"
                               " with %%s" % where)
+            header.obj, header.pattern = obj, pattern
             continue
         if w[0] == "letter":
             if obj is None:
@@ -482,31 +548,48 @@ def parse(path):
         arm.accented = accented
         arm.unless = unless
         cur[3].append(arm)
-    return blocks
+    return blocks, header
 
 
 # ---- what it compiles to -------------------------------------------------
 
+def follows_name(tag, cls):
+    return "letters_%s_%s_follows" % (tag, cls)
+
+
 def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
              letters_at, phones_at, fence_at, params, piece, pfields, lists,
-             wordrange=None):
+             wordrange=None, header=None, through=False):
     """One letter's rule, as the upper form.
 
     The shape is IBM's own and the tags are its numbering: the arm to fall to
     is planted before an arm is tried, the scan pointer is saved under a tag of
     its own so that a failure inside an arm comes back to the arm rather than
     to the letter, and one tag stands for the rule having spelled something.
+
+    A rule the `come through' letters share has no bare arm, since every arm
+    is some other letter's: it asks each in turn and gives up when none is
+    the letter it was handed.
     """
+    header = header or Header()
+    classes = header.classes
     if not arms:
         raise Trouble("the %s block has no arms" % letter)
-    if arms[-1].tests(letter):
-        raise Trouble("the last arm of the %s block is what %s says when"
-                      " nothing else applies, so it asks nothing: bare %s"
-                      % (letter, letter, letter))
-    for a in arms[:-1]:
-        if not a.tests(letter):
-            raise Trouble("%s: a bare %s matches everything, so nothing after"
-                          " it can be reached" % (a.where, letter))
+    if through:
+        for a in arms:
+            if not a.tests(letter):
+                raise Trouble("%s: an arm of a letter that comes through %s"
+                              " asks nothing, so nothing after it could be"
+                              " reached" % (a.where, letter))
+    else:
+        if arms[-1].tests(letter):
+            raise Trouble("the last arm of the %s block is what %s says when"
+                          " nothing else applies, so it asks nothing: bare %s"
+                          % (letter, letter, letter))
+        for a in arms[:-1]:
+            if not a.tests(letter):
+                raise Trouble("%s: a bare %s matches everything, so nothing"
+                              " after it can be reached" % (a.where, letter))
 
     def letters_of(run):
         try:
@@ -516,9 +599,20 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
 
     def phones_of(said):
         try:
-            return bytes(pcode[p] for p in said)
+            return bytes(pcode[header.aliases.get(p, p)] for p in said)
         except KeyError as e:
             raise Trouble("%s has no phoneme %s" % (tag, e))
+
+    def ends(before):
+        """Whether an arm's `before' is a class that nothing following
+        counts as one of, which is asked of the range's right end by a rule
+        of its own rather than read where the scan stands."""
+        items = before.split("+")
+        hit = [k for k in items if k in classes and classes[k][1]]
+        if hit and len(items) > 1:
+            raise Trouble("`before %s': a class the end of the word counts in"
+                          " stands alone" % before)
+        return bool(hit)
 
     out = []
     w = out.append
@@ -561,6 +655,9 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
         if a.tests(letter):
             n += 1
             tag_of[("body", i)] = n
+    if through:
+        n += 1
+        tag_of[("fall", len(arms))] = n
     n += 1
     tag_of[("done",)] = n
 
@@ -688,7 +785,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
                 w("  end")
-            if len(a.letters) > 1 or a.before:
+            if len(a.letters) > 1 or (a.before and not ends(a.before)):
                 # From the left end where there is a run to match, since the
                 # scan meets this letter first there; from the right end
                 # where the arm only looks at what follows, since then the
@@ -749,6 +846,30 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                             w("  if answer is not 0")
                             w("    backtrack")
                             w("  end")
+                    elif k in classes and classes[k][1]:
+                        if later:
+                            raise Trouble("%s: a class the end of the word"
+                                          " counts in says where the word"
+                                          " ends already" % a.where)
+                        w("  call %s %s" % (follows_name(tag, k), right))
+                        w("  if answer is not 0")
+                        w("    backtrack")
+                        w("  end")
+                    elif k in classes:
+                        # One letter of the class, whichever: a test of one
+                        # character that fails leaves the scan where it was,
+                        # so they are asked in turn from the same place.
+                        found = "class%d_%d" % (i, n)
+                        for m in classes[k][0]:
+                            ctx = letters_of(m)
+                            w("  call test_string_s %d %d sym %s"
+                              % (letters_at, len(ctx),
+                                 known.name("lts", ctx, m)))
+                            w("  if answer is 0")
+                            w("    go to %s" % found)
+                            w("  end")
+                        w("  backtrack")
+                        w("place %s" % found)
                     else:
                         ctx = letters_of(k)
                         w("  call test_string_s %d %d sym %s"
@@ -895,6 +1016,11 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("place arm%d on %d" % (i, tag_of[("fall", i)]))
             w(spell(a, known, phones_of, phones_at, left, right, pfields))
 
+    if through:
+        w("")
+        w("place arm%d on %d" % (len(arms), tag_of[("fall", len(arms))]))
+        w("  give up")
+
     w("")
     w("place laid")
     w("  if answer is not 0")
@@ -904,6 +1030,77 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
     w("place done on %d" % tag_of[("done",)])
     w("  match")
     w("end")
+    return "\n".join(out)
+
+
+def letter_kinds(tag):
+    """How many values the input statement's letter_type has past its first,
+    which is what a character that is not a letter holds."""
+    kinds = None
+    inside = False
+    for line in open(os.path.join(ROOT, "lang", tag, "%s.statements" % tag)):
+        if line.startswith("statement "):
+            inside = line.split()[1] == "inp"
+            continue
+        if inside and line.startswith("  field "):
+            kinds = 0 if line.split()[1] == "letter_type" else None
+        elif inside and kinds is not None and line.startswith("    value "):
+            kinds += 1
+        elif inside and kinds is not None and line.strip() == "end":
+            return kinds - 1
+    raise Trouble("%s's input statement has no letter_type" % tag)
+
+
+def follows_rule(tag, cls, members, known, lcode, letters_at, obj):
+    """Whether what follows the range's right end is one of a class the end
+    of the word counts in.
+
+    The word ends there if the scan cannot be set past it -- the scan stops at
+    the fence, so that is also the end of the piece -- or if what follows is
+    no kind of letter at all, which catches a word before a space or a full
+    stop. testFldeq cannot say which of those it is, since it answers no both
+    when a letter follows and when nothing does, so the two halves are asked
+    separately. A rule of its own, bare, because every arm that asks it wants
+    it asked of a different range.
+    """
+    out = ["rule %s takes 2 from %s" % (follows_name(tag, cls), obj),
+           "  bare",
+           "  afresh",
+           "  call lpta_loadp arg 1",
+           "  call setscan_nof_r %d" % letters_at,
+           "  if answer is not 0",
+           "    answer 0",
+           "  end"]
+    for m in members:
+        if m not in lcode:
+            raise Trouble("%s has no character %s" % (tag, m))
+        out += ["  call test_string_s %d 1 sym %s"
+                % (letters_at, known.name("lts", bytes([lcode[m]]), m)),
+                "  if answer is 0",
+                "    answer 0",
+                "  end"]
+    for k in range(1, letter_kinds(tag) + 1):
+        out += ["  call testFldeq %d 4 %d" % (letters_at, k),
+                "  if answer is 0",
+                "    answer 1",
+                "  end"]
+    out += ["  answer 0", "end"]
+    return "\n".join(out)
+
+
+def through_test(name, letters, known, lcode, letters_at, obj):
+    """The question the dispatcher asks where it asked whether this is the
+    letter whose link the others share. It is bare, being where a wrapper
+    stood, and it leaves the scan on the letter when one matches, as the
+    test it replaces did."""
+    out = ["rule %s takes 1 from %s" % (name, obj), "  bare", "  afresh"]
+    for c in letters:
+        out += ["  call test_string_s %d 1 sym %s"
+                % (letters_at, known.name("lts", bytes([lcode[c]]), c)),
+                "  if answer is 0",
+                "    answer 0",
+                "  end"]
+    out += ["  answer 1", "end"]
     return "\n".join(out)
 
 
@@ -975,17 +1172,57 @@ def compile_tag(tag):
         "# next arm, one a spelling arm so a failure inside it comes back to",
         "# the arm rather than to the letter, and one for having spelled.",
     ]
-    stem = None
-    for letter, name, obj, arms, ranges in parse(path):
+    blocks, header = parse(path)
+    for alias, phone in header.aliases.items():
+        if alias in pcode:
+            raise Trouble("`phone %s is %s': %s is a phone of %s's already"
+                          % (alias, phone, alias, tag))
+        if phone not in pcode:
+            raise Trouble("`phone %s is %s': %s has no phone %s"
+                          % (alias, phone, tag, phone))
+    if header.pattern is None:
+        raise Trouble("lang/%s/letters names no letter" % tag)
+    stem = header.obj[:-4] if header.obj.endswith(".obj") else header.obj
+
+    # The letters with no link of their own become arms of one rule, the
+    # one standing where their shared letter's rule stood.
+    shared = None
+    if header.through:
+        letters, via = header.through
+        mine = [b for b in blocks if b[0] in letters]
+        missing = [c for c in letters if c not in [b[0] for b in mine]]
+        if missing:
+            raise Trouble("%s come through %s but have no block: %s"
+                          % (" ".join(letters), via, " ".join(missing)))
+        if any(b[0] == via for b in blocks):
+            raise Trouble("%s has a block of its own, and its link is the"
+                          " one the letters that come through it use" % via)
+        blocks = [b for b in blocks if b[0] not in letters]
+        shared = (via, header.pattern % via, header.obj,
+                  [a for b in mine for a in b[3]], mine[0][4])
+
+    for cls, (members, end) in header.classes.items():
+        if end:
+            out.append("")
+            out.append(follows_rule(tag, cls, members, known, lcode,
+                                    letters_at, header.obj))
+    for letter, name, obj, arms, ranges in blocks:
         piece, wordrange = ranges
-        stem = obj[:-4] if obj.endswith(".obj") else obj
         out.append("")
         out.append(rule_for(tag, letter, name, obj, arms, known, lcode,
                             pcode, letters_at, phones_at, fence_at,
                             takes(tag, stem, name), piece, pfields, lists,
-                            wordrange))
-    if stem is None:
-        raise Trouble("lang/%s/letters names no letter" % tag)
+                            wordrange, header))
+    if shared is not None:
+        via, name, obj, arms, ranges = shared
+        out.append("")
+        out.append(through_test("%s_test" % name, header.through[0], known,
+                                lcode, letters_at, obj))
+        out.append("")
+        out.append(rule_for(tag, via, name, obj, arms, known, lcode, pcode,
+                            letters_at, phones_at, fence_at,
+                            takes(tag, stem, name), ranges[0], pfields,
+                            lists, ranges[1], header, through=True))
     return "\n".join(out) + "\n", known.text(tag), stem
 
 
