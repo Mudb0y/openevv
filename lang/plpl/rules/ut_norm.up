@@ -1,0 +1,85 @@
+# w and z are the two Polish prepositions with no vowel, and Polish says each
+# as part of the word after it: w domu is one word stressed where domu is,
+# and w polu is f polu, since a consonant takes its voice from the one after
+# it. Italian has no word of one consonant, so a token that is one is spelled
+# out by name, which is what a lone letter is. Joined to the next word before
+# anything reads the token, the pair is an ordinary word and the letter rules
+# do the rest.
+#
+# Only where a word of two letters or more follows. Litera w i litera z means
+# the letters, and so does a w at the end of a sentence or before a number.
+#
+# It stands where tok_lookup stood in normalize_text and hands over to it
+# either way. The join is the machine's way of taking a character out: the
+# letter and the space after it are one range, and the letter alone is laid
+# back down over it.
+rule pol_tok_lookup takes 2 from ut_norm.obj
+  afresh
+  local here bytes 8
+  local right bytes 8
+  local letter
+  call ZZget_parmPTR addr here arg 1
+  call ZZfence_null
+  call ZZlpta_load__setscan_r__1 addr here
+  if answer is not 0
+    go to lookup
+  end
+  set letter to 0
+  call test_string_s 1 1 sym pol_letter_w
+  if answer is 0
+    set letter to sym pol_letter_w
+  end
+  if letter is 0
+    call test_string_s 1 1 sym pol_letter_z
+    if answer is 0
+      set letter to sym pol_letter_z
+    end
+  end
+  if letter is 0
+    call test_string_s 1 1 sym pol_capital_w
+    if answer is 0
+      set letter to sym pol_capital_w
+    end
+  end
+  if letter is 0
+    call test_string_s 1 1 sym pol_capital_z
+    if answer is 0
+      set letter to sym pol_capital_z
+    end
+  end
+  if letter is 0
+    go to lookup
+  end
+  call ZZtest_string_s_1_1_ZZstring202          # a space after it
+  if answer is not 0
+    go to lookup
+  end
+  call savescptr 1 addr right
+  while 1
+    call ZZtest_string_s_1_1_ZZstring202        # and any more
+    if answer is not 0
+      leave
+    end
+    call savescptr 1 addr right
+  end
+  call ZZtestFldeq1_3_1                         # then a letter
+  if answer is not 0
+    go to lookup
+  end
+  call advance_tok
+  if answer is not 0
+    go to lookup
+  end
+  call ZZtestFldeq1_3_1                         # and another
+  if answer is not 0
+    go to lookup
+  end
+  call lpta_rpta_loadp addr here addr right
+  call insert_2pt_s 1 1 letter 0
+place lookup
+  call tok_lookup arg 1
+  if answer is 0
+    match
+  end
+  give up
+end

@@ -254,7 +254,7 @@ The reader is written and it matches IBM's over 176 documents, which is the shar
 
 ## Polish
 
-`lang/plpl` builds and speaks, and it is the one module IBM never shipped: it was made by copying Italian's text forms and renaming them, so it is Italian until each piece has been replaced. `make EVVLANG=lang/plpl census` says how much still is. It has no oracle and never will, so `test/matrix.sh` and an ear are the only things that can tell a change from an accident, and its 98 cases are ours rather than translated. What has been replaced so far -- its own letters and how they arrive, the two sibilant series, the vowels, the nasal vowels, final and pre-consonantal devoicing, counting, the letter names, the intonation and the stress -- is in `docs/notes/polish.md`, in the order it was done, with what each change cost and what it proved.
+`lang/plpl` builds and speaks, and it is the one module IBM never shipped: it was made by copying Italian's text forms and renaming them, so it is Italian until each piece has been replaced. `make EVVLANG=lang/plpl census` says how much still is. It has no oracle and never will, so `test/matrix.sh` and an ear are the only things that can tell a change from an accident, and its 98 cases are ours rather than translated. What has been replaced so far -- its own letters and how they arrive, the two sibilant series, the vowels, the nasal vowels, final and pre-consonantal devoicing, counting, the letter names, the intonation and the stress, and w and z joined to the word after them -- is in `docs/notes/polish.md`, in the order it was done, with what each change cost and what it proved.
 
 ## A language module as text
 

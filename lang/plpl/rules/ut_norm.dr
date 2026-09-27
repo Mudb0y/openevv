@@ -15332,7 +15332,7 @@ label L22 was $X15$90750
   load movl slotaddr -8 into r0
   push slotaddr -8
   push reg r6
-  call tok_lookup arity 2 depth 3
+  call pol_tok_lookup arity 2 depth 3
   popn 3
   cmp testl reg r0 reg r0
   branch jne to L24
