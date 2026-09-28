@@ -717,7 +717,28 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                     w("place %s" % miss)
                 w("  go to %s" % nxt)
                 w("place listed%d" % i)
-            if a.after:
+            if a.after and a.after in classes:
+                # Any one of a class to the left, each member read afresh
+                # from the left end, since a member may be two letters and a
+                # test of two that matches only the first has moved the scan.
+                # A member is written as it is spelled and read nearest first,
+                # so it is reversed: sz before a w is z and then s.
+                found = "after%d" % i
+                for m in classes[a.after][0]:
+                    ctx = letters_of(m[::-1])
+                    w("  call lpta_loadp %s" % left)
+                    w("  call setscan_l %d" % letters_at)
+                    w("  if answer is not 0")
+                    w("    go to %s" % nxt)
+                    w("  end")
+                    w("  call test_string_s %d %d sym %s"
+                      % (letters_at, len(ctx), known.name("lts", ctx, m)))
+                    w("  if answer is 0")
+                    w("    go to %s" % found)
+                    w("  end")
+                w("  go to %s" % nxt)
+                w("place %s" % found)
+            elif a.after:
                 # What stands to the left. The two ends of the range the rule
                 # was given sit outside the letter, so a scan set on the left
                 # one and told to read leftwards meets the letter before this
@@ -860,6 +881,11 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                         # character that fails leaves the scan where it was,
                         # so they are asked in turn from the same place.
                         found = "class%d_%d" % (i, n)
+                        if any(len(m) > 1 for m in classes[k][0]):
+                            raise Trouble("%s: `before %s' reads each member"
+                                          " from where the scan stands, so"
+                                          " each has to be one letter"
+                                          % (a.where, k))
                         for m in classes[k][0]:
                             ctx = letters_of(m)
                             w("  call test_string_s %d %d sym %s"
@@ -1063,22 +1089,28 @@ def follows_rule(tag, cls, members, known, lcode, letters_at, obj):
     separately. A rule of its own, bare, because every arm that asks it wants
     it asked of a different range.
     """
+    # The scan is set afresh before every question, since a member may be two
+    # letters and a test of two that matches only the first has moved it.
+    rescan = ["  call lpta_loadp arg 1",
+              "  call setscan_nof_r %d" % letters_at]
     out = ["rule %s takes 2 from %s" % (follows_name(tag, cls), obj),
            "  bare",
-           "  afresh",
-           "  call lpta_loadp arg 1",
-           "  call setscan_nof_r %d" % letters_at,
+           "  afresh"] + rescan + [
            "  if answer is not 0",
            "    answer 0",
            "  end"]
     for m in members:
-        if m not in lcode:
-            raise Trouble("%s has no character %s" % (tag, m))
-        out += ["  call test_string_s %d 1 sym %s"
-                % (letters_at, known.name("lts", bytes([lcode[m]]), m)),
+        try:
+            run = bytes(lcode[c] for c in m)
+        except KeyError as e:
+            raise Trouble("%s has no character %s" % (tag, e))
+        out += rescan + [
+                "  call test_string_s %d %d sym %s"
+                % (letters_at, len(run), known.name("lts", run, m)),
                 "  if answer is 0",
                 "    answer 0",
                 "  end"]
+    out += rescan
     for k in range(1, letter_kinds(tag) + 1):
         out += ["  call testFldeq %d 4 %d" % (letters_at, k),
                 "  if answer is 0",

@@ -12,7 +12,8 @@
 #
 # A voiced consonant is voiceless before a voiceless one and at the end of a
 # word -- raz is ras, babka is bapka, wtorek is ftorek -- and `voiceless'
-# below counts both.
+# below counts both. w and rz also lose their voice after a voiceless one,
+# which no other letter does: kwiat is kfiat and przy is pszy.
 #
 # The phones are the engine's own, and several are named for the Italian
 # sounds they took over, so the lines above the letters let an arm name them
@@ -28,7 +29,7 @@ rules in it_phone.obj named apply_pol_%s_rules
 a piece runs from 864 to 872
 a word runs from 704 to 712
 
-voiceless means p t k f s c h ś ć and the end of the word
+voiceless means p t k f s c h ś ć sz cz and the end of the word
 ą ć ę ł ń ś ź ż come through q
 
 phone sz is L
@@ -61,7 +62,8 @@ letter c
 # marznie, and the others where the two letters meet across a seam in the
 # word -- are the dictionary's to say.
 letter r
-  rz before voiceless  says sz      # przy
+  rz after voiceless   says sz      # przy, trzy, krzesło
+  rz before voiceless  says sz      # tchórz
   rz                   says ż       # rzeka
   r                    says r
 
@@ -113,6 +115,7 @@ letter b
   b                    says b
 
 letter w
+  w after voiceless    says f       # kwiat, twój, świat, czwartek
   w before voiceless   says f       # rów, wtorek
   w                    says v
 
