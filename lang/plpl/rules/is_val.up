@@ -109,3 +109,41 @@ rule pol_test_x takes 1 from is_val.obj
   bare
   call test_string_s 2 1 sym pol_ph_x
 end
+
+# Polish /x/ is a velar fricative: its noise is low, around the second
+# formant, and weak, where Italian's S rule, which spoke it, makes the high
+# hiss of a sibilant -- ch came out as sz. That rule sets its noise and hands
+# it to the synthesiser in modulate_noise before it returns, so a rule that
+# called it and set the noise afterwards would be too late. This is its steps
+# with /x/'s numbers: the same setting at 2918 and 3014 that it makes, the
+# velar locus, the noise, and modulate_noise. The doubled consonant it asks
+# about before modulating is not a thing Polish ch does.
+#
+# The noise is the parallel branch do_fric_amps and modulate_noise read: the
+# frication at 2754, and A2, A3, A4, A5, A6 and the bypass at 2770 to 2790.
+# The numbers are the ear's.
+rule pol_ph_x takes 1 from is_val.obj
+  afresh
+  variable g2918 half 2918
+  variable g3014 half 3014
+  variable noise half 2754
+  variable a2 half 2770
+  variable a3 half 2774
+  variable a4 half 2778
+  variable a5 half 2782
+  variable a6 half 2786
+  variable bypass half 2790
+  call ZZfence_null
+  set g2918 to 300
+  call ital_velar_Fv
+  set g3014 to 4
+  set noise to 60
+  set a2 to 75
+  set a3 to 68
+  set a4 to 55
+  set a5 to 0
+  set a6 to 0
+  set bypass to 0
+  call modulate_noise
+  match
+end

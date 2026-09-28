@@ -13552,7 +13552,7 @@ label L210 was pol_x
   push reg r6
   call ZZstarttest6 arity 1 depth 1
   push reg r6
-  call ital_ph_S arity 1 depth 2
+  call pol_ph_x arity 1 depth 2
   jump to L1
 label L10 was $X4$90638
   push reg r6
