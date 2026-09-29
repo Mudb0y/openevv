@@ -22,7 +22,7 @@
 # y says e, the close-mid e Polish's ɨ took over; j says y, which is the
 # engine's name for the glide; and ł says w, the other glide.
 #
-# f, p, t, v, k, x, a, l, m and u are still Italian's, copied from
+# f, p, t, v, k, x, a, l and m are still Italian's, copied from
 # lang/itit/letters, and say what Italian's rules say.
 
 rules in it_phone.obj named apply_pol_%s_rules
@@ -82,6 +82,7 @@ letter d
   d                    says d
 
 letter z
+  zau at word start    says z a u   # zaufanie, zauważyć
   zi before vowel      says ź       # ziarno
   z before i           says ź       # zima
   z before voiceless   says s       # raz
@@ -94,6 +95,8 @@ letter g
 # The velar nasal before a k or a g is the phonology's, not the letter's:
 # bank has it without being asked.
 letter n
+  nau at word start    says n a u   # nauka, nauczyciel
+  nieu at word start   says ń E u   # nieufny, nieudany
   ni before vowel      says ń       # konie
   n before i           says ń       # nikt
   n                    says n
@@ -188,25 +191,19 @@ letter m
   mm   says m m   marked geminate yes
   m    says m
 
+# u is a vowel, Polish writing its glide ł. After a or e it is the glide,
+# since au and eu are how Polish spells the diphthong of a loanword: auto,
+# pauza, Europa, neutralny. Except where a word ends -eum or -eusz, muzeum and
+# Mateusz, and where a prefix meets a u, which the n and z blocks take at the
+# start of a word: nauka, zaufanie, nieufny.
 letter u
-  u accented             says u     # ù
-  u after consonant at word end  says u   # tu, più
-  u before vowel at start  says w   # uopo, super-uomini
-  u at start             says u     # pre-unitario, mono-utente
-  u                      says w     where the root is u_notpronounced_u
-  u                      says u     where the root begins u_pronounced_u
-  u after i              says u     # fiume
-  u before u             says u     # duumviro
-  u after u              says u
-  u before vowel         says w     # uomo, buono, quando
-  u after vowel          says w     # aurora, neutro
+  u accented             says u
+  u after e before m at word end  says u   # muzeum, liceum
+  u after e before sz at word end  says u  # Mateusz, Tadeusz
+  u after a              says w     # auto, pauza, Australia
+  u after e              says w     # Europa, neutralny
   u                      says u
 
-# i after a vowel is a vowel, since Polish writes its glide j: naiwny is
-# na-iw-ny and moi two syllables. Between a consonant and a vowel it is the
-# glide -- biały, pies, miasto, biologia -- the soft s, z, c, n and dz having
-# swallowed theirs already. Anywhere else it is the vowel. Italian's lists and
-# its stressed endings, -logia and -grafia among them, are Italian's words.
 letter i
   i accented             says i
   i after vowel          says i     # naiwny, moi
