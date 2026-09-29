@@ -91,7 +91,7 @@ and `lang/plpl/rules/is_val.up` and the Polish blocks of `lang/plpl/letters`
 are that: the formant targets of sounds Italian has not got, and the
 letter-to-sound rules for Polish's spelling and for its own letters. The blocks
 of `lang/plpl/letters` that it says are still Italian's -- f, p, t, v, k, x,
-a, l, m, i and u, copied from `lang/itit/letters` -- are IBM's Italian as that
+a, l, m and u, copied from `lang/itit/letters` -- are IBM's Italian as that
 file is. What those rules name is
 still IBM's -- a phoneme number, a statement type and the code the alphabet
 gives a character are its numbering, and a byte in `lang/plpl/rules/constants`

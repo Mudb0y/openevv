@@ -22,7 +22,7 @@
 # y says e, the close-mid e Polish's ɨ took over; j says y, which is the
 # engine's name for the glide; and ł says w, the other glide.
 #
-# f, p, t, v, k, x, a, l, m, i and u are still Italian's, copied from
+# f, p, t, v, k, x, a, l, m and u are still Italian's, copied from
 # lang/itit/letters, and say what Italian's rules say.
 
 rules in it_phone.obj named apply_pol_%s_rules
@@ -201,48 +201,13 @@ letter u
   u after vowel          says w     # aurora, neutro
   u                      says u
 
+# i after a vowel is a vowel, since Polish writes its glide j: naiwny is
+# na-iw-ny and moi two syllables. Between a consonant and a vowel it is the
+# glide -- biały, pies, miasto, biologia -- the soft s, z, c, n and dz having
+# swallowed theirs already. Anywhere else it is the vowel. Italian's lists and
+# its stressed endings, -logia and -grafia among them, are Italian's words.
 letter i
-  i accented             says i     # ì, and entropia's i the dictionary stressed
-  i after consonant at word end  says i
-  i after consonant before i  says i   # serii -- before the lists, as IBM asks it
-  i                      says i     where the root is i_notpronounced_y
-  i                      says i     where the root begins i_pronounced_i  unless the root so far is i_notpronounced_i
-  i before vowel         says y     where the root begins i_pronounced_y
-  i after zarc   before a at word end  says i   # democrazia
-  i after zarc   before e at word end  says i
-  i after nof    before a at word end  says i   # telefonia
-  i after nof    before e at word end  says i
-  i after farg   before a at word end  says i   # geografia
-  i after farg   before e at word end  says i
-  i after gol    before a at word end  says i   # biologia
-  i after gol    before e at word end  says i
-  i after rtem   before a at word end  says i   # geometria
-  i after rtem   before e at word end  says i
-  i after mono   before a at word end  says i   # astronomia
-  i after mono   before e at word end  says i
-  i after paret  before a at word end  says i   # fisioterapia
-  i after paret  before e at word end  says i
-  i after re before a at end  says i   # artiglieria
-  i after re before e at end  says i
-  i before aco           says i     # cardiaco -- but diaclasi, niacina glide
-  i before aca           says i
-  i before ache          says i     # celiachia, where IBM asks for e or i
-  i before achi          says i
-  i before vowel at start  says y   # iato, iodato
-  i at start             says i     # co-incidenza, auto-incendio
-  i before vowel         says y     # piano, fiore
-  i after vowel at word end  says i # colei, avvarrai
-  i after a before sm+vowel says i     # -ismo, -ista
-  i after e before sm+vowel says i
-  i after o before sm+vowel says i
-  i after u before sm+vowel says i     # altruismo
-  i after a before st+vowel says i
-  i after e before st+vowel says i
-  i after o before st+vowel says i
-  i after u before st+vowel says i
-  i after a              says y     # aimone
-  i after e              says y
-  i after o              says y
-  i after u              says y     where the root begins u_pronounced_u
-  i after u              says i     # acquisto -- the u glides, so this does not
+  i accented             says i
+  i after vowel          says i     # naiwny, moi
+  i before vowel         says y     # biały, pies
   i                      says i
