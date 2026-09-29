@@ -48,3 +48,14 @@ lang/*/provenance-sites-*.txt
 # the rules a build compiles are made from the text beside them.
 lang/*/rules/*t_phone.up
 lang/*/rules/constants.letters
+
+# The modules that say the phones they are given (accents/<tag>) are made by
+# tools/module/clone.py from their recipes, whole, by every build that wants
+# them. What is kept is the recipe.
+lang/dedx/
+lang/itix/
+lang/esex/
+lang/esux/
+lang/engx/
+lang/enux/
+lang/frfx/

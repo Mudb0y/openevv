@@ -1,0 +1,9 @@
+# Italian changes what it is handed: an n before a k or a g becomes the velar
+# nasal, and a mid vowel is closed or opened by where it stands. That is
+# Italian, and a module that is to say another language's phones has to say
+# them as they were given.
+rule make_ital_phon_adjustments takes 3 from it_phnol.obj
+  afresh
+  call ZZfence_null
+  match
+end

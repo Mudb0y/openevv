@@ -1,0 +1,18 @@
+# German changes what it is handed. A voiced obstruent loses its voice at the
+# end of a syllable, so that a d written at the end of a word is said as a t;
+# an r after a vowel becomes a vowel. That is German, and a module that is to
+# say another language's phones has to say them as they were given: the
+# language that was read has done its own phonology already, and doing
+# German's on top of it is what a German accent is.
+#
+# Measured, with engine/accent/chassis.py in OpenEvv-sapi5 (github.com/joshknnd1982/OpenEvv-sapi5). German says b d g v z and its
+# voiced affricate as p t k f s and the voiceless one at the end of a word and
+# before a consonant, and r as the vowel R in both places. With this rule in
+# place of IBM's, all of those are said as they are written, and everything
+# else is said as German says it: an affricate is still a stop and a
+# fricative, which is done elsewhere.
+rule make_ger_phon_adjustments takes 1 from gt_phnol.obj
+  afresh
+  call ZZfence_null
+  match
+end

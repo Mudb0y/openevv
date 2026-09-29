@@ -1,0 +1,24 @@
+# English changes what it is handed, and British English most of all: an r
+# after a vowel is left out and one is put in between a word that ends in a
+# vowel and a word that begins with one, a t before an r or a y becomes an
+# affricate, a vowel before an r gains a schwa. American English says a t or
+# a d between vowels as a flap. That is English, and a module that is to say
+# another language's phones, or another dialect's, has to say them as they
+# were given: eSpeak NG has done the dialect's own phonology already.
+rule pre_syll_phone_adjustments takes 3 from et_phnol.obj
+  afresh
+  call ZZfence_null
+  match
+end
+
+rule post_syll_adjustments takes 3 from et_phnol.obj
+  afresh
+  call ZZfence_null
+  match
+end
+
+rule eng_phrase_level_rules takes 3 from et_phnol.obj
+  afresh
+  call ZZfence_null
+  match
+end

@@ -1,0 +1,31 @@
+# Spanish changes what it is handed. b, d and g between vowels are said as
+# the approximants B, D and G; two consonants alike are said as one; and a
+# nasal at the end of a word takes the place of the consonant that begins the
+# next. That is Spanish, and a module that is to say another language's
+# phones has to say them as they were given.
+#
+# Measured, with engine/accent/chassis.py in OpenEvv-sapi5 (github.com/joshknnd1982/OpenEvv-sapi5): with these in place of IBM's, b d
+# g stay stops wherever they stand and a doubled consonant is two.
+rule lenition takes 3 from st_phnol.obj
+  afresh
+  call ZZfence_null
+  match
+end
+
+rule no_span_double_phone takes 3 from st_phnol.obj
+  afresh
+  call ZZfence_null
+  match
+end
+
+rule syneresis takes 3 from st_phnol.obj
+  afresh
+  call ZZfence_null
+  match
+end
+
+rule span_phrase_level_rules takes 3 from st_phnol.obj
+  afresh
+  call ZZfence_null
+  match
+end

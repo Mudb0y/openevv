@@ -92,6 +92,19 @@ that stands for one of those stands for a number of its -- but what the rules
 say with them was written here. That does not soften the paragraph above:
 everything else in that module is IBM's Italian until it has been replaced.
 
+`accents` holds recipes, and a recipe is what a module differs by from the one
+it is made from: `accents/dedx` is the German module with two of its
+phonological rules replaced by rules that do nothing, and `itix`, `esex`,
+`esux`, `engx`, `enux` and `frfx` are the Italian, the two Spanish, the two
+English and the French modules treated the same way. `tools/module/clone.py`
+makes `lang/<tag>` out of the template and the recipe when a build wants it.
+The rules in a recipe were written here and are ours on the terms of the
+paragraph before this one, down to what it says of the names they use. The
+module that is made is the template's own data with those few rules over the
+top: `lang/dedx` is IBM's German exactly as `lang/plpl` is IBM's Italian, and
+nothing about its being made by a tool of ours, or kept as a recipe rather than
+as a copy, makes any of it ours.
+
 That data is IBM's work, not ours. The MIT licence does not cover it and we are
 in no position to license it to anyone. The SDK it was read out of says as much
 itself, in `doc/wxp/readme.txt`:
