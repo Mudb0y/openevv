@@ -2506,7 +2506,7 @@ label L2 was at_0xf1
   load movl slotaddr 92 into r0
   push slotaddr 92
   push reg r6
-  call strip_ital_prefixes arity 5 depth 6
+  call pol_no_prefixes arity 5 depth 6
   popn 6
   cmp testl reg r0 reg r0
   branch jne to L3

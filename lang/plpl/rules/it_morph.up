@@ -16,3 +16,14 @@ rule pol_no_enclitics takes 5 from it_morph.obj
   afresh
   answer 1
 end
+
+# Italian's prefixes are Italian's. strip_ital_prefixes reads bi off biały, sur
+# off surowy and co off codziennie, and a seam there stops a letter rule
+# seeing across it and costs a word its stress. Polish answers that no word
+# begins with one of them, the same way it answers that none ends in an
+# enclitic.
+rule pol_no_prefixes takes 5 from it_morph.obj
+  bare
+  afresh
+  answer 1
+end

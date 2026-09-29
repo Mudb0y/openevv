@@ -163,6 +163,7 @@ letter p
 # which is what tells trzy from czy and drzewo from dżem.
 letter t
   t before rz          says t       marked tenseness tense   # trzy
+  tri before vowel at word start  says t r i   # trio, triumf, triangel
   tt   says t t   marked geminate yes
   t    says t
 
