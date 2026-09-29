@@ -154,3 +154,32 @@ bytes pol_letter_w        1c
 bytes pol_letter_z        1f
 bytes pol_capital_w       31
 bytes pol_capital_z       34
+
+# The one-syllable words Polish never stresses: the prepositions, the
+# conjunctions i and a, and się and że. pol_unstressed in it_strss.up
+# holds a word against these.
+bytes pol_fw_na          15 01   # na
+bytes pol_fw_do          0d 04   # do
+bytes pol_fw_po          16 04   # po
+bytes pol_fw_od          04 0d   # od
+bytes pol_fw_za          1f 01   # za
+bytes pol_fw_o           04   # o
+bytes pol_fw_u           05   # u
+bytes pol_fw_ku          12 05   # ku
+bytes pol_fw_ze          1f 02   # ze
+bytes pol_fw_we          1c 02   # we
+bytes pol_fw_przy        16 18 1f 1e   # przy
+bytes pol_fw_bez         0b 02 1f   # bez
+bytes pol_fw_dla         0d 13 01   # dla
+bytes pol_fw_przez       16 18 1f 02 1f   # przez
+bytes pol_fw_pod         16 04 0d   # pod
+bytes pol_fw_nad         15 01 0d   # nad
+bytes pol_fw_przed       16 18 1f 02 0d   # przed
+bytes pol_fw_znad        1f 15 01 0d   # znad
+bytes pol_fw_spod        19 16 04 0d   # spod
+bytes pol_fw_zza         1f 1f 01   # zza
+bytes pol_fw_sprzed      19 16 18 1f 02 0d   # sprzed
+bytes pol_fw_i           03   # i
+bytes pol_fw_a           01   # a
+bytes pol_fw_sie_        19 03 d1   # się
+bytes pol_fw_z_e         d6 02   # że
