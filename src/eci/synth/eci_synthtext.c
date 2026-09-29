@@ -27,6 +27,9 @@
 #include "evv_abi.h"
 #include "delta_lang.h"
 #include "evv_arena.h"
+#include "evv_accent.h"
+
+extern void *ew_machine(void *engine);
 
 #define APP_CONCATENATIVE  0xc
 #define ROM_CONCATENATIVE  0x3e8
@@ -405,12 +408,35 @@ THIS void addTextRun(SynthThread *t, char *text, uint32_t len, int32_t seq,
     char *filtered;
     uint32_t asked = len;
     void *lock;
+    char *unmarked = 0;
 
     (void)seq;
 
     reportConcatenative(t);
     if (ST_FRESH(t))
         openTheEngine(t);
+
+    /* Text that says what its phones were meant to be says so in braces,
+       and that is taken out here, before anything counts a character or
+       reads one: the rules are to see the annotations they always saw. What
+       is outstanding was counted with the braces in, which `asked' still
+       says. Text with none in it comes back as nothing and is used as it
+       stands, which is every text any of the engine's own languages is
+       given. */
+    {
+        uint32_t kept = 0;
+
+        unmarked = evv_accent_strip(ew_machine(ST_ENGINE(t)), text, len,
+                                    &kept);
+        if (unmarked != 0) {
+            text = unmarked;
+            len = kept;
+            if (kept == 0) {
+                len = asked;
+                goto counted;
+            }
+        }
+    }
 
     /* A star command is the concatenative side's own language and is handed
        over without being looked at. An engine too old to have that side goes
@@ -511,6 +537,8 @@ counted:
     sy_mutexWait(lock, -1);
     ST_PENDING(t) -= (int32_t)len;
     sy_mutexRelease(lock);
+    if (unmarked != 0)
+        evv_accent_release(unmarked);
 }
 
 ALIAS("?addTextRun@SynthThread@@AAEXPADKJH@Z", "addTextRun");

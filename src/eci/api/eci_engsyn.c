@@ -24,6 +24,7 @@
 #include "eci_synththread.h"
 #include "evv_abi.h"
 #include "eci_eloqc.h"
+#include "evv_accent.h"
 
 /* What the block the machine keeps for ECI holds for this layer. */
 
@@ -188,6 +189,8 @@ STDCALL int32_t es_engsynFlush(delta_state *d, int32_t stop)
 {
     ELOQ_FLUSHING(d) = stop;
     setInterrupt(d, stop);
+    if (stop)
+        evv_accent_clear(d);
 
     if (stop) {
         /* The error is thrown only where the machine is not in the middle of a
@@ -221,6 +224,7 @@ STDCALL int32_t es_engsynFlush(delta_state *d, int32_t stop)
    and letting the machine flush behind it. */
 STDCALL int32_t es_engsynClearInput(delta_state *d)
 {
+    evv_accent_clear(d);
     if (ELOQ_BUSY(d) != 0)
         setEngsynError(d, ERR_BUSY);
     else if (!eciLinkDataFromECI(ELOQ_MAINLINK(d), ""))
@@ -425,6 +429,7 @@ STDCALL int32_t es_engsynProcessSentences(delta_state *d, const char *text)
         setEngsynError(d, ERR_BUSY);
     } else {
         ELOQ_BUSY(d) = 1;
+        evv_accent_sentence(d, text);
         if (ELOQ_MAINLINK(d) == 0) {
             setEngsynError(d, -1);
         } else {
@@ -446,6 +451,7 @@ STDCALL int32_t es_engsynProcessRemaining(delta_state *d, const char *text)
         setEngsynError(d, ERR_BUSY);
     } else {
         ELOQ_BUSY(d) = 1;
+        evv_accent_sentence(d, text);
         if (ELOQ_MAINLINK(d) == 0) {
             setEngsynError(d, -1);
         } else if (!eciLinkDataFromECI(ELOQ_MAINLINK(d), text)) {

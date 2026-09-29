@@ -24,6 +24,7 @@
 #include "klatt_state.h"
 #include "klatt_lang.h"
 #include "evv_klatttap.h"
+#include "evv_accent.h"
 
 /* How many parameters a frame carries. */
 #define FRAME_PARMS 0x3e
@@ -230,6 +231,27 @@ void dlangCleanup(delta_state *d)
     }
 }
 
+/* One frame from the accent layer on its way to the synthesiser. An
+   interrupt stops the run without its being a failure, as it does in the
+   loop this stands beside. */
+typedef struct Sending {
+    delta_state *d;
+    int          failed;
+} Sending;
+
+static int sendOne(void *context, const int32_t *frame)
+{
+    Sending *s = (Sending *)context;
+
+    if (checkInterrupt(s->d))
+        return 0;
+    if (!KlattSynth(GEN_KLATT(s->d), frame)) {
+        s->failed = 1;
+        return 0;
+    }
+    return 1;
+}
+
 /* Walk the window a step at a time, building a frame at each step and
    handing it to the synthesiser. Answers false if the synthesiser stopped,
    the caller interrupted, or the window ran out. */
@@ -243,6 +265,7 @@ int32_t sendArrayParameters(delta_state *d, int32_t from, int32_t to,
     int32_t stopped = 0;
     int32_t at;
     int32_t i;
+    int32_t asked_from = from, asked_to = to;
 
     (void)unused;
 
@@ -290,6 +313,58 @@ int32_t sendArrayParameters(delta_state *d, int32_t from, int32_t to,
         valueSetReset(d, GEN_SET(d), from, to);
     } else {
         GEN_SET(d)->to = to;
+    }
+
+    /* Where the text said what its phones were meant to be, the stretch is
+       read whole and handed to the accent layer, which sends on what it makes
+       of it. The frames are the same frames: read the same way, in the same
+       order, with the same short one last. Nothing is in force unless the
+       text asked, so without that this is the loop below and nothing else. */
+    if (evv_accent_on(d)) {
+        Sending sending;
+        int32_t *held = 0;
+        int32_t n = 0, room = 0;
+
+        for (at = from; ; at += step) {
+            if (checkInterrupt(d))
+                break;
+            if (!valueSetInRange(GEN_SET(d), at))
+                break;
+
+            if (arrayTap() != 0)
+                fprintf(arrayTap(), "frame %d\n", (int)at);
+
+            for (i = 0; i < FRAME_PARMS; i++) {
+                if (map[i + 1] == -1)
+                    continue;
+                frame[i] = valueSetValue(d, GEN_SET(d), map[i + 1], at);
+            }
+            if (at + step > to)
+                frame[0] = at + step - to;
+
+            if (n == room) {
+                int32_t more = room ? room * 2 : 64;
+                int32_t *h = (int32_t *)realloc(held,
+                                 (size_t)more * FRAME_PARMS * sizeof(int32_t));
+
+                if (h == 0) {
+                    free(held);
+                    return 0;
+                }
+                held = h;
+                room = more;
+            }
+            for (i = 0; i < FRAME_PARMS; i++)
+                held[n * FRAME_PARMS + i] = frame[i];
+            n++;
+        }
+
+        sending.d = d;
+        sending.failed = 0;
+        evv_accent_run(d, asked_from, asked_to, from, step, held, n,
+                       exact, sendOne, &sending);
+        free(held);
+        return sending.failed == 0;
     }
 
     for (at = from; !stopped; at += step) {

@@ -30,6 +30,7 @@
 #include "evv_arena.h"
 #include "delta.h"
 #include "klatt_lang.h"
+#include "evv_accent.h"
 
 /* The engine's own handle. Only the one field this file needs is named. */
 typedef delta_state DeltaThis;
@@ -309,19 +310,32 @@ int insertDelayedSynthIndex(DeltaThis *d, int32_t index)
     DeltaLang *lang = DT_LANG(d);
     int rc;
 
-    if (DL_MARKED(lang) <= DL_SPOKEN(lang))
+    int32_t behind = 0;
+
+    /* The accent layer sends a phone's frames on when all of them have come,
+       so the sound may be a little behind what the arrays have given up. A
+       mark timed from where the arrays have got to is that much early unless
+       it is made to wait that much longer. Nought wherever the layer is not
+       in force, which is everywhere the text did not ask for it. */
+    if (DL_MARKED(lang) <= DL_SPOKEN(lang)) {
         DL_MARKED(lang) = DL_SPOKEN(lang);
+        behind = evv_accent_held(d);
+    }
     if (DL_QUEUED(lang) <= DL_MARKED(lang))
         DL_QUEUED(lang) = DL_MARKED(lang);
 
     if (DL_MARKED(lang) == DL_QUEUED(lang)
-        && DL_MARKED(lang) == DL_SPOKEN(lang))
+        && DL_MARKED(lang) == DL_SPOKEN(lang) && behind == 0)
         return insertSynthIndex(d, index);
 
+    /* How far off the mark is, in sound rather than in the arrays' own
+       time: the two are the same unless the accent layer has lengthened or
+       shortened a stretch on the way, and it says so only then. */
     rc = iq_addOffsetFromLast(
              SD_QUEUE(DL_DEVICE(lang)), index,
-             (DL_QUEUED(lang) - DL_MARKED(lang)) * DL_RATE(lang)
-                 / MS_PER_SECOND);
+             (evv_accent_sounded(d, DL_QUEUED(lang))
+                  - evv_accent_sounded(d, DL_MARKED(lang)) + behind)
+                 * DL_RATE(lang) / MS_PER_SECOND);
     DL_MARKED(lang) = DL_QUEUED(lang);
     return rc;
 }
@@ -412,6 +426,7 @@ void dlang_delete(DeltaThis *d)
 /* And the five other things an engine handle carries. */
 void deltaCleanup(DeltaThis *d)
 {
+    evv_accent_free(d);
     deltaHeapCleanup(d);
     dlangCleanup(d);
     vnstackCleanup(d);

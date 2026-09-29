@@ -16,7 +16,9 @@
 #include "delta.h"
 #include "evv_arena.h"
 #include "eci_eloqc.h"
+#include "evv_accent.h"
 
+extern const char *stream_name(int8_t n);
 
 /* Not a callback: the flag that says phoneme indices are wanted at all. */
 
@@ -107,6 +109,21 @@ int32_t placePhoneme(delta_state *d, const void *tok, const void *a,
     int8_t   len;
     int32_t  packed;
     uint32_t proportion, length;
+
+    /* The accent layer is told which phone is about to be synthesised,
+       whether or not anybody asked for phoneme indices: the rules name every
+       phone here just before its stretch of sound, and that is the only
+       place the two can be put together. Nothing is in force unless the text
+       asked for it. */
+    if (evv_accent_on(d)) {
+        stream = *(const int16_t *)tok;
+        if (stream >= 0 && stream < (int32_t)d->nstmts
+            && strcmp(stream_name((int8_t)stream), "phone") == 0) {
+            memset(name, 0, sizeof name);
+            disptok(d, (const char *)tok + 4, stream, 0, name);
+            evv_accent_place(d, name, (const unsigned char *)tok + 4, 8);
+        }
+    }
 
     if (!ELOQ_WANT_PHONEMES(d))
         return 0;
