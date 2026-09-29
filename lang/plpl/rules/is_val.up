@@ -138,12 +138,12 @@ rule pol_ph_x takes 1 from is_val.obj
   call ital_velar_Fv
   set g3014 to 4
   set noise to 60
-  set a2 to 75
-  set a3 to 68
-  set a4 to 55
+  set a2 to 76
+  set a3 to 62
+  set a4 to 0
   set a5 to 0
   set a6 to 0
-  set bypass to 0
+  set bypass to 50
   call modulate_noise
   match
 end
