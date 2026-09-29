@@ -78,6 +78,7 @@ letter d
   dź before voiceless  says ć
   dź                   says dź
   d before voiceless   says t       # kod
+  d before rz          says d       marked tenseness tense   # drzewo
   d                    says d
 
 letter z
@@ -156,7 +157,12 @@ letter p
   pp   says p p   marked geminate yes
   p    says p
 
+# The t of trz and the d of drz end a cluster rather than start an affricate,
+# and are marked so, `tense' being a value no consonant has and nothing else
+# reads: the duration rules in is_dur.up give such a stop a longer release,
+# which is what tells trzy from czy and drzewo from dżem.
 letter t
+  t before rz          says t       marked tenseness tense   # trzy
   tt   says t t   marked geminate yes
   t    says t
 

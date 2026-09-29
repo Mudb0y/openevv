@@ -1,0 +1,52 @@
+# trzy is a t released and then an sz, where czy is one sound; drzewo is a d
+# and then a ż, where dżem is one. The phones are the same two in both,
+# because the hard affricates are laid down as a stop and a fricative for want
+# of codes of their own, and Italian times them identically. What tells a
+# cluster is its release, so a stop laid down for the t or d of trz or drz is
+# given a longer one than Italian's rule gave it -- added to Italian's rather
+# than set, since Italian's own is not always ten.
+#
+# The letter rules mark such a stop `tense', which no consonant is and nothing
+# else reads; the phone asked about is the one after variable 832. Reading
+# the letters from there instead works only at the start of a word, the point
+# before a phone further in being one the letters no longer share once the
+# syllables have been made. How much longer is the ear's.
+rule pol_ph_t_dur takes 1 from is_dur.obj
+  afresh
+  variable here word 832
+  variable release half 2990
+  call ital_ph_t_dur
+  if answer is not 0
+    give up
+  end
+  call ZZfence_null
+  call lpta_loadp addr here
+  call setscan_r 2
+  if answer is 0
+    call testFldeq 2 8 0
+    if answer is 0
+      add 10 to release
+    end
+  end
+  match
+end
+
+rule pol_ph_d_dur takes 1 from is_dur.obj
+  afresh
+  variable here word 832
+  variable release half 2990
+  call ital_ph_d_dur
+  if answer is not 0
+    give up
+  end
+  call ZZfence_null
+  call lpta_loadp addr here
+  call setscan_r 2
+  if answer is 0
+    call testFldeq 2 8 0
+    if answer is 0
+      add 10 to release
+    end
+  end
+  match
+end

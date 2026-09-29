@@ -7800,7 +7800,7 @@ label L32 was at_0x4ab
   push reg r6
   call ZZstarttest9 arity 1 depth 1
   push reg r6
-  call ital_ph_t_dur arity 1 depth 2
+  call pol_ph_t_dur arity 1 depth 2
   jump to L4
 label L33 was at_0x4bc
   push reg r6
@@ -7818,7 +7818,7 @@ label L35 was at_0x4de
   push reg r6
   call ZZstarttest15 arity 1 depth 1
   push reg r6
-  call ital_ph_d_dur arity 1 depth 2
+  call pol_ph_d_dur arity 1 depth 2
   jump to L4
 label L36 was at_0x4ef
   push reg r6

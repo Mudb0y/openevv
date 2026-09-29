@@ -12,12 +12,12 @@
 # the sentence.
 
 plain 1 8cac33cf9122146c 2031e232b728ab14 Dzien dobry. Tu mowi syntezator mowy Eloquence.
-plain 2 c202d67d12797eea c70b037cf4c6f33c Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
+plain 2 d6e8b52753643a10 6de7e9739acdd578 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
 plain 3 18e0cbb2f476a714 73a46d590dbc5882 Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
-plain 4 eb4286c885aa3ae9 4cf36bfe1868969a Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
+plain 4 7c4e8ac4fcc72e91 055a0f2055ee5a2c Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
 plain 5 e455018abe83e5b7 775ad5c3a1f0daad Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
-plain 6 5f6ca6dfa9127474 c9dbb5cee4592968 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
-plain 7 1ae5aee0554c605d a89baacc22f2cd52 Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+plain 6 33d22b8f2d917c02 76cf1cfaa38748b5 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
+plain 7 992dceddb33fdae1 cbf4b7c4dbbc87fd Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
 utf8 1 c25088b5fb7452f3 7f241b3b7b84ebef Zazolc gesla jazn to znany pangram bez ogonkow.
 utf8 2 3a4f4e8ad14db535 b61e7b16312d7bc0 Zażółć gęślą jaźń to znany pangram z ogonkami.
 utf8 3 29f4d9ddd9d7c037 f243c9cbbc79190b Mężczyzna zjadł źdźbło trawy i pchnął łódź jeża.
@@ -86,25 +86,25 @@ realworld 18 21c807593d00518c b041951b1e28ef4c Niedomkniety `ui"znacznik ktory n
 realworld 19 343c7c8a68970d37 d8cb8329cc113dde Razem `v3 glos `vs70 szybkosc `vv50 glosnosc naraz.
 realworld 20 506a674200b08415 912f38bead3b9532 Tabulacja	i zawijanie wiersza z `vb40 zmiana.
 dict 1 8cac33cf9122146c 8430f83f46f92e93 Dzien dobry. Tu mowi syntezator mowy Eloquence.
-dict 2 c202d67d12797eea ddf8119e89660136 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
+dict 2 d6e8b52753643a10 eccf14e5da75fa68 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
 dict 3 18e0cbb2f476a714 19227cde7dc7c9b5 Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
-dict 4 eb4286c885aa3ae9 332af587ffdbb70d Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
+dict 4 7c4e8ac4fcc72e91 c0fa806ed7c6a34d Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
 dict 5 e455018abe83e5b7 aa6059b32e3f9a16 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
-dict 6 5f6ca6dfa9127474 75ebec7e465deecb Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
-dict 7 1ae5aee0554c605d d3b744bb57036aab Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+dict 6 33d22b8f2d917c02 263792a4dbab8843 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
+dict 7 992dceddb33fdae1 9534e47557f560e9 Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
 second 1 bc15007f40049f72 53bd248dc5924f5a Dzien dobry. Tu mowi syntezator mowy Eloquence.
-second 2 7cdf5761e2f9a4c7 98e0a050c8a8ef08 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
+second 2 11cb0599ced29a74 f2fbde955973d83b Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
 second 3 18c60673b590201f 2ad691b9fc2ebcaa Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
-second 4 05a7c4745013928d 72593b99e1aceeb8 Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
+second 4 59d7fb9f3e74ac38 bb8a960d48ea6095 Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
 second 5 4ae45bbd04b5c7ec 094cc8b632a139c9 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
-second 6 ea78c6ff810cd9a5 89bcbad365adb7d9 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
-second 7 684a5bf5c6417704 ad673a973c0bcc8c Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+second 6 3b6f60f19ada475d ab24d6adae3d6267 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
+second 7 6bdf65a332f414e8 4cda65ac07b86cb0 Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
 ssml 1 f50b7011575764b1 5613e0fb8ddd3167 <speak version="1.0" xml:lang="pl-PL">Dzien dobry.</speak>
 ssml 2 4aa2a5423a5c9cea 35dadc4be4a0692c <speak version="1.0" xml:lang="pl-PL"><prosody rate="slow">Teraz wolniej.</prosody> Znowu normalnie.</speak>
 ssml 3 87cf7bd1467305cf 272e2663832eb1ca <speak version="1.0" xml:lang="pl-PL"><prosody pitch="high" range="x-high" volume="loud">Wszystkie cztery naraz.</prosody></speak>
 ssml 4 eddcc906f7eca664 dc4d9a3bcca326a0 <speak version="1.0" xml:lang="pl-PL"><emphasis level="strong">Ten</emphasis>, nie tamten.</speak>
 ssml 5 d8978dc21f884056 77111fb4fe83d5f0 <speak version="1.0" xml:lang="pl-PL"><voice gender="female">Ona to powiedziala.</voice> A on nie.</speak>
-ssml 6 71d1cea44beec2d9 cb3de7e8e56671c6 <speak version="1.0" xml:lang="pl-PL">Kosztowalo <say-as interpret-as="cardinal">1234</say-as> dnia <say-as interpret-as="ordinal">3</say-as>.</speak>
+ssml 6 76c963d18dfdd79e 55dd932209d25b0d <speak version="1.0" xml:lang="pl-PL">Kosztowalo <say-as interpret-as="cardinal">1234</say-as> dnia <say-as interpret-as="ordinal">3</say-as>.</speak>
 ssml 7 b6ff42899c2bc11b 00abb55108c0d8bc <speak version="1.0" xml:lang="pl-PL">Przeliteruj: <say-as interpret-as="letters">abc</say-as>, i zadzwon pod <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
 ssml 8 757bd8c315a46b0d 19e143f203e373f9 <speak version="1.0" xml:lang="pl-PL">Poczekaj<break time="500ms"/>chwile.<mark name="tutaj"/> Tam.</speak>
 ssml 9 20bed85109058d75 ff19dd8f9e537c11 <speak version="1.0" xml:lang="pl-PL"><sub alias="Siec ogolnoswiatowa">WWW</sub> i <phoneme ph="h.E.l.oU">czesc</phoneme>.</speak>
