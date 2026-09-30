@@ -92,7 +92,8 @@ are that: the formant targets of sounds Italian has not got, and the
 letter-to-sound rules for Polish's spelling and for its own letters. The blocks
 of `lang/plpl/letters` that it says are still Italian's -- f, p, t, v, k, x,
 a, l and m, copied from `lang/itit/letters` -- are IBM's Italian as that
-file is. What those rules name is
+file is, apart from the arms written into f, p, t and k for Polish, which
+are ours. What those rules name is
 still IBM's -- a phoneme number, a statement type and the code the alphabet
 gives a character are its numbering, and a byte in `lang/plpl/rules/constants`
 that stands for one of those stands for a number of its -- but what the rules

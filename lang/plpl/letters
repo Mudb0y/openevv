@@ -15,6 +15,15 @@
 # below counts both. w and rz also lose their voice after a voiceless one,
 # which no other letter does: kwiat is kfiat and przy is pszy.
 #
+# Except that the end of a word is not voiceless when the next word begins
+# with a voiced obstruent, which is `unless voiced follows': pod domem keeps
+# its d. And there a voiceless one takes the voice, `before voiced word':
+# jak dobrze is jag dobrze, kot biega is kod biega. w and rz do neither,
+# being voiced without making what stands before them so -- brat wie keeps
+# its t -- and so are not in `voiced'. A cluster at the end of a word takes
+# the voice whole, so its arms swallow the rest of it: jest dobrze is jezd,
+# and sześć złotych is szeźdź.
+#
 # The phones are the engine's own, and several are named for the Italian
 # sounds they took over, so the lines above the letters let an arm name them
 # by Polish spelling instead. The vowels keep the engine's names, since e, o,
@@ -23,13 +32,16 @@
 # engine's name for the glide; and ł says w, the other glide.
 #
 # f, p, t, v, k, x, a, l and m are still Italian's, copied from
-# lang/itit/letters, and say what Italian's rules say.
+# lang/itit/letters, and say what Italian's rules say, but for the arms
+# above them that are Polish's: t before rz, and a voiceless final taking
+# its voice from the next word.
 
 rules in it_phone.obj named apply_pol_%s_rules
 a piece runs from 864 to 872
 a word runs from 704 to 712
 
-voiceless means p t k f s c h ś ć sz cz and the end of the word
+voiceless means p t k f s c h ś ć sz cz and the end of the word unless voiced follows
+voiced means b d g z ź ż
 ą ć ę ł ń ś ź ż come through q
 
 phone sz is L
@@ -46,16 +58,22 @@ phone ą is x
 phone ę is o
 
 letter s
+  szcz before voiced word  says ż d ż  # deszcz go
+  sz before voiced word  says ż     # nasz dom
   sz                   says sz      # szafa
   si before vowel      says ś       # Kasia
   s before i           says ś       # siła
+  st before voiced word  says z d   # jest dobrze
+  s before voiced word says z       # las daleko
   s                    says s
 
 letter c
+  cz before voiced word  says d ż   # klucz do
   cz                   says t sz    # czas
   ch                   says ch      # chleb
   ci before vowel      says ć       # ciasto
   c before i           says ć       # cisza
+  c before voiced word says dz      # noc była
   c                    says ts      # cena
 
 # rz is the voiced retroflex, not an r and a z. The words where it is one --
@@ -139,9 +157,12 @@ letter ń
   ń                    says ń
 
 letter ś
+  ść before voiced word  says ź dź  # sześć złotych
+  ś before voiced word says ź       # coś dobrego
   ś                    says ś
 
 letter ć
+  ć before voiced word says dź      # być dobrym
   ć                    says ć
 
 letter ź
@@ -153,10 +174,12 @@ letter ż
   ż                    says ż
 
 letter f
+  f before voiced word  says v     # szef banku
   ff   says f f   marked geminate yes
   f    says f
 
 letter p
+  p before voiced word  says b     # chłop go
   pp   says p p   marked geminate yes
   p    says p
 
@@ -167,6 +190,7 @@ letter p
 letter t
   t before rz          says t       marked tenseness tense   # trzy
   tri before vowel at word start  says t r i   # trio, triumf, triangel
+  t before voiced word  says d     # kot biega
   tt   says t t   marked geminate yes
   t    says t
 
@@ -175,6 +199,8 @@ letter v
   v    says v
 
 letter k
+  kt before voiced word  says g d  # fakt był
+  k before voiced word  says g     # jak dobrze
   k    says k
 
 letter x

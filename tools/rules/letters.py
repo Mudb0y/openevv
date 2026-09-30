@@ -51,7 +51,11 @@ names a class, which an arm asks for as it would a kind -- `before voiceless'
 -- and `and the end of the word' ending the line counts nothing at all
 following, or anything that is not a letter, as one of the class: Polish
 devoices a consonant before a voiceless one and at the end of a word, and
-that is one condition. `ą ć ę ł ń ś ź ż come through q' says those letters
+that is one condition. `unless voiced follows' after that takes the end of
+the word back out of the class when the next word begins with one of the
+class `voiced', and `before voiced word' on an arm asks that of the letter
+itself: pod domem keeps its d, and jak dobrze is jag dobrze.
+`ą ć ę ł ń ś ź ż come through q' says those letters
 have no link of their own in the dispatcher and reach their rules through
 q's, so their blocks are compiled as arms of one rule standing where q's
 rule stood, with a test beside it for the dispatcher to ask. And
@@ -379,15 +383,22 @@ def parse(path):
             continue
         if len(w) > 2 and w[1] == "means" and cur is None:
             members = w[2:]
+            unless = None
+            if len(members) > 3 and members[-3] == "unless" \
+                    and members[-1] == "follows":
+                unless = members[-2]
+                members = members[:-3]
             end = members[-6:] == ["and", "the", "end", "of", "the", "word"]
             if end:
                 members = members[:-6]
-            if not members or w[0] in CLASSES:
+            if not members or w[0] in CLASSES or (unless and not end):
                 raise Trouble("%s: a class is `<name> means <letters>', with"
                               " `and the end of the word' if nothing"
-                              " following counts, and its name is not one"
+                              " following counts, `unless <class> follows'"
+                              " after that if a word beginning with one of"
+                              " that class does not, and its name is not one"
                               " of %s" % (where, ", ".join(CLASSES)))
-            header.classes[w[0]] = (members, end)
+            header.classes[w[0]] = (members, end, unless)
             continue
         if w[-3:-1] == ["come", "through"] and len(w) > 3 and cur is None:
             header.through = (w[:-3], w[-1])
@@ -450,11 +461,18 @@ def parse(path):
             after = rest[1]
             rest = rest[2:]
         before = ""
+        before_word = False
         if rest[:1] == ["before"]:
             if len(rest) < 2:
                 raise Trouble("%s: `before' what?" % where)
             before = rest[1]
             rest = rest[2:]
+            # `before voiced word': the letter ends its word and the next
+            # word begins with one of the class, which is how a consonant
+            # takes its voice from the word after it.
+            if rest[:1] == ["word"]:
+                before_word = True
+                rest = rest[1:]
         # `accented' is the letter's own accent flag, which is set for an
         # accented letter and for one the dictionary has marked stressed:
         # Italian's i says i in entropia, whose i is written plain.
@@ -547,6 +565,7 @@ def parse(path):
                   listed)
         arm.accented = accented
         arm.unless = unless
+        arm.before_word = before_word
         cur[3].append(arm)
     return blocks, header
 
@@ -555,6 +574,58 @@ def parse(path):
 
 def follows_name(tag, cls):
     return "letters_%s_%s_follows" % (tag, cls)
+
+
+def word_follows_name(tag, cls):
+    return "letters_%s_%s_word_follows" % (tag, cls)
+
+
+def word_follows_rule(tag, cls, members, known, lcode, letters_at, fence_at,
+                      obj):
+    """Whether the range's right end is the end of its word and the next
+    word begins with one of a class: the scan meets a space and then that
+    letter. Anything else there -- a comma, a full stop, another letter of
+    the same word -- is not it.
+
+    A letter rule fences its scan at the edge of the morph, which is also
+    the edge of the word, so the fence is taken down to look and put back
+    as the letter rule had it. And the space is asked for by its field
+    rather than as a string: the string tests advance past what they match,
+    and the step past a space is the one the fence refuses.
+    """
+    if " " not in lcode:
+        raise Trouble("%s has no space in its alphabet" % tag)
+    out = ["rule %s takes 2 from %s" % (word_follows_name(tag, cls), obj),
+           "  bare",
+           "  afresh",
+           "  call ZZfence_null",
+           "  call lpta_loadp arg 1",
+           "  call setscan_nof_r %d" % letters_at,
+           "  if answer is not 0",
+           "    go to other",
+           "  end",
+           "  call testFldeq %d 0 %d" % (letters_at, lcode[" "]),
+           "  if answer is not 0",
+           "    go to other",
+           "  end",
+           "  call advance_tok",
+           "  if answer is not 0",
+           "    go to other",
+           "  end"]
+    for m in members:
+        if len(m) != 1 or m not in lcode:
+            raise Trouble("%s: a class a word begins with is of single"
+                          " letters, not %s" % (cls, m))
+        out += ["  call test_string_s %d 1 sym %s"
+                % (letters_at, known.name("lts", bytes([lcode[m]]), m)),
+                "  if answer is 0",
+                "    go to one",
+                "  end"]
+    fence = "  call fence 1 sym %s" % known.name(
+        "fence", bytes([fence_at]), "the morph statement")
+    out += ["place other", fence, "  answer 1",
+            "place one", fence, "  answer 0", "end"]
+    return "\n".join(out)
 
 
 def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
@@ -603,10 +674,16 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
         except KeyError as e:
             raise Trouble("%s has no phoneme %s" % (tag, e))
 
-    def ends(before):
+    def ends(before, word=False):
         """Whether an arm's `before' is a class that nothing following
-        counts as one of, which is asked of the range's right end by a rule
-        of its own rather than read where the scan stands."""
+        counts as one of, or the first letter of the next word, either of
+        which is asked of the range's right end by a rule of its own rather
+        than read where the scan stands."""
+        if word:
+            if before not in classes or classes[before][1]:
+                raise Trouble("`before %s word' wants a class of letters"
+                              % before)
+            return True
         items = before.split("+")
         hit = [k for k in items if k in classes and classes[k][1]]
         if hit and len(items) > 1:
@@ -806,7 +883,8 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
                 w("  end")
-            if len(a.letters) > 1 or (a.before and not ends(a.before)):
+            if len(a.letters) > 1 or (a.before and not ends(
+                    a.before, getattr(a, "before_word", False))):
                 # From the left end where there is a run to match, since the
                 # scan meets this letter first there; from the right end
                 # where the arm only looks at what follows, since then the
@@ -848,7 +926,12 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
             if len(a.letters) > 1:
                 w("  call savescptr %d %s"
                   % (tag_of[("body", i)], right))
-            if a.before:
+            if a.before and getattr(a, "before_word", False):
+                w("  call %s %s" % (word_follows_name(tag, a.before), right))
+                w("  if answer is not 0")
+                w("    backtrack")
+                w("  end")
+            elif a.before:
                 # What has to follow and is not swallowed: letters, a kind of
                 # letter -- `vowel', `consonant' -- or a run of them joined by
                 # `+', which is how IBM's e asks for -etta at the end of a word:
@@ -1077,7 +1160,8 @@ def letter_kinds(tag):
     raise Trouble("%s's input statement has no letter_type" % tag)
 
 
-def follows_rule(tag, cls, members, known, lcode, letters_at, obj):
+def follows_rule(tag, cls, members, known, lcode, letters_at, obj,
+                 unless=None):
     """Whether what follows the range's right end is one of a class the end
     of the word counts in.
 
@@ -1093,11 +1177,20 @@ def follows_rule(tag, cls, members, known, lcode, letters_at, obj):
     # letters and a test of two that matches only the first has moved it.
     rescan = ["  call lpta_loadp arg 1",
               "  call setscan_nof_r %d" % letters_at]
+    # The end of the word is one of the class unless the word after it
+    # begins with one of `unless': Polish keeps a final consonant voiced
+    # before a word beginning with a voiced one, pod domem.
+    at_end = ["  answer 0"]
+    if unless is not None:
+        at_end = ["  call %s arg 1" % word_follows_name(tag, unless),
+                  "  if answer is 0",
+                  "    answer 1",
+                  "  end",
+                  "  answer 0"]
     out = ["rule %s takes 2 from %s" % (follows_name(tag, cls), obj),
            "  bare",
            "  afresh"] + rescan + [
-           "  if answer is not 0",
-           "    answer 0",
+           "  if answer is not 0"] + ["  " + x for x in at_end] + [
            "  end"]
     for m in members:
         try:
@@ -1116,7 +1209,7 @@ def follows_rule(tag, cls, members, known, lcode, letters_at, obj):
                 "  if answer is 0",
                 "    answer 1",
                 "  end"]
-    out += ["  answer 0", "end"]
+    out += at_end + ["end"]
     return "\n".join(out)
 
 
@@ -1233,11 +1326,20 @@ def compile_tag(tag):
         shared = (via, header.pattern % via, header.obj,
                   [a for b in mine for a in b[3]], mine[0][4])
 
-    for cls, (members, end) in header.classes.items():
+    for cls, (members, end, unless) in header.classes.items():
+        if not end:
+            out.append("")
+            out.append(word_follows_rule(tag, cls, members, known, lcode,
+                                         letters_at, fence_at, header.obj))
+    for cls, (members, end, unless) in header.classes.items():
         if end:
+            if unless is not None and (unless not in header.classes
+                                       or header.classes[unless][1]):
+                raise Trouble("`unless %s follows': %s is no class of"
+                              " letters" % (unless, unless))
             out.append("")
             out.append(follows_rule(tag, cls, members, known, lcode,
-                                    letters_at, header.obj))
+                                    letters_at, header.obj, unless))
     for letter, name, obj, arms, ranges in blocks:
         piece, wordrange = ranges
         out.append("")
