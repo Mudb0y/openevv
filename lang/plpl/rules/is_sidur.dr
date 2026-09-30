@@ -3212,7 +3212,7 @@ label L10 was $X4$90668
   load movl slotaddr -4 into r0
   push slotaddr -4
   push reg r6
-  call assign_stanital_start_dur arity 3 depth 4
+  call pol_stanital_start_dur arity 3 depth 4
   popn 4
 label L11 was $X9$90680
   push reg r6

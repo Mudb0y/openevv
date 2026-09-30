@@ -11,101 +11,101 @@
 # the samples' hash, the same of the reported answers', and
 # the sentence.
 
-plain 1 bafc9940e62d5afd a03ee267100b7b77 Dzien dobry. Tu mowi syntezator mowy Eloquence.
-plain 2 ad8031de9821a385 2fcb9034d0a5e6a4 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
-plain 3 144200c0ecfd7d73 674fd24b87d7604f Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
-plain 4 8882b9d8afb78a2b 58986008095ff3ba Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
-plain 5 690e090af090291f e7d4cf628ef64c23 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
-plain 6 6bff07a4816c567e f326f0d6dde6f0e2 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
-plain 7 b2e06bfddfc1c315 87070d6b5c148eec Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
-utf8 1 b7e7537f72eebd37 bdc328d82420f13c Zazolc gesla jazn to znany pangram bez ogonkow.
-utf8 2 3a4f4e8ad14db535 b61e7b16312d7bc0 Zażółć gęślą jaźń to znany pangram z ogonkami.
-utf8 3 5ec91463e4033d65 bb6b7800c9d8ab9f Mężczyzna zjadł źdźbło trawy i pchnął łódź jeża.
-utf8 4 f64d7f9462ddffce c2fad743f6e9df92 Ćma, gęś, łąka, koń, źrebię, żaba, ósemka i ściana.
-utf8 5 ac3e3723e7d5a280 583ad89aa634c3fd Wąż wśród żółtych liści szedł ścieżką przez łąkę.
-utf8 6 0997cb5f05f973bc 0eb1d32303b28780 Cześć, czy człowiek często czyta czasopisma częściowo.
-utf8 7 27d69ec5a5b7432e 734823d4c93696cc Zdanie zupelnie bez polskich znakow dla porownania.
-anno 1 1b62b35493155842 6ab48f7f4fd97d51 Mowa normalna `vs50 teraz o wiele wolniejsza niz przedtem.
-anno 2 0adcb2e47ca6e45c 1a670bb27d8062a2 Glosnosc `vv30 ciszej, potem `vv90 znowu glosniej.
-anno 3 6fb0b5f506471356 1694e4bf21329992 Wysokosc `vb20 niska i `vb80 wysoka w jednym zdaniu.
-anno 4 b754519e977b700e 3cc277d61c526c09 Glos `v2 dwa, `v5 piec, i `v1 znowu jeden.
-anno 5 1441299c02e80cae 335c6f717bff066a Pauza `0 krotka i `4 dluga miedzy slowami.
-anno 6 e886ed026a90bbb9 889fdee213a2e003 Chropowatosc `vr40 i oddech `vf60 zmienione.
-anno 7 efe24dff5b78553f 85324fdb9b152b7d Doslowny \`odwrotny apostrof ma byc przeczytany jako tekst.
-anno 8 0b9b411905a621d0 c7aef9ce8c16dfd2 Szybkosc po nazwie `vsfast a potem `vsslow z powrotem.
-anno 9 7239c7fda1b267db acfe02ab1eb2a835 Rozmiar glowy `vh30 potem `vh70 w tym samym wierszu.
-anno 10 b3f08c4f51a417b7 e2eecfabaa78132e Plec `vg1 i `vg0 zmieniane po kolei.
-anno 11 4b6af73e94b96154 b88ad07da4844d09 Przed `ui"znacznik jeden" i po znaczniku indeksu.
-anno 12 73c2189b57b8b190 5247d2152dbdbaad Znacznik `aud"bip" dzwiekowy w srodku wiersza.
-anno 13 2b3ebb327e8b1698 b26656cbebb388d0 `vs40 Adnotacja zaraz na samym poczatku wiersza.
-anno 14 992d421e87fc4993 d47271e6a1964bf9 Konczy sie adnotacja na samym koncu `vs60
-anno 15 882d7ef3c7f82285 3d3666178e425a45 Bledne `vzz i `q i `v999 wszystkie w jednym wierszu.
-anno 16 5ecb0fcf737ce877 7f7bf2c9be048e7b Dwie `vs30`vv40 adnotacje bez niczego pomiedzy.
-anno 17 f5baf23faf7ac972 9c751e0d60c876bb `ui"a"`ui"b" dwa znaczniki bez niczego miedzy nimi.
-anno 18 4e0fac11326c80b5 41eff4bcbbb089ba Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
-anno 19 6151a11054cd3a8a d8545429aed46b18 Razem `v3 glos `vs70 szybkosc `vv50 glosnosc naraz.
-anno 20 23cd75afd6af26ff 9ceee826b3261c86 Tabulacja	i zawijanie wiersza z `vb40 zmiana.
-anno3 1 2a6e1e6ba8568d42 5ef95aa3a3ca422d Mowa normalna `vs50 teraz o wiele wolniejsza niz przedtem.
-anno3 2 d236c653d1f6e591 4163cab518b3ed6c Glosnosc `vv30 ciszej, potem `vv90 znowu glosniej.
-anno3 3 9082224bc5beffd0 b581905639c276af Wysokosc `vb20 niska i `vb80 wysoka w jednym zdaniu.
-anno3 4 f2e754b5e753c2ca b07ae2412f70544c Glos `v2 dwa, `v5 piec, i `v1 znowu jeden.
-anno3 5 77cfff637ab48cfd ed0a31d7f17963b6 Pauza `0 krotka i `4 dluga miedzy slowami.
-anno3 6 f88436359bb49920 c3d8f5f6790f9995 Chropowatosc `vr40 i oddech `vf60 zmienione.
-anno3 7 efe24dff5b78553f 13365e72628e57bb Doslowny \`odwrotny apostrof ma byc przeczytany jako tekst.
-anno3 8 9e674aee41cf4a78 7c95068858283f19 Szybkosc po nazwie `vsfast a potem `vsslow z powrotem.
-anno3 9 07e344a2b476669a 89e4a19fb8b5309b Rozmiar glowy `vh30 potem `vh70 w tym samym wierszu.
-anno3 10 9cf135fbe8688732 a9cecd2fb3a7210c Plec `vg1 i `vg0 zmieniane po kolei.
-anno3 11 19bafa50363dc446 6cc30152533465e4 Przed `ui"znacznik jeden" i po znaczniku indeksu.
-anno3 12 1d64fa0e8a577b41 4bad0e7d7552fa3e Znacznik `aud"bip" dzwiekowy w srodku wiersza.
-anno3 13 39163f80557fb406 4bde88b56993ff43 `vs40 Adnotacja zaraz na samym poczatku wiersza.
-anno3 14 6ebb4995f4bf3ab6 0cce063a3736f88f Konczy sie adnotacja na samym koncu `vs60
-anno3 15 882d7ef3c7f82285 8bd453c410b3d745 Bledne `vzz i `q i `v999 wszystkie w jednym wierszu.
-anno3 16 9fbadee7205c9989 9f489ba8d9148d6d Dwie `vs30`vv40 adnotacje bez niczego pomiedzy.
-anno3 17 dd3f0c809b1464ea dd00c5d4bf42c9a2 `ui"a"`ui"b" dwa znaczniki bez niczego miedzy nimi.
-anno3 18 4e0fac11326c80b5 f50ab8b2259e81da Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
-anno3 19 e1bdae7e3a80eb43 4bd30d5e3f815ca4 Razem `v3 glos `vs70 szybkosc `vv50 glosnosc naraz.
-anno3 20 ba4ec665c34d416d ca59facd908de3bc Tabulacja	i zawijanie wiersza z `vb40 zmiana.
-realworld 1 bb2ec5be832b763c ccc1e749cf31b46a Mowa normalna `vs50 teraz o wiele wolniejsza niz przedtem.
-realworld 2 6893b321140f6bd1 6a2a6b9cd5c347f1 Glosnosc `vv30 ciszej, potem `vv90 znowu glosniej.
-realworld 3 19bfc7f09c994511 135c43b4789050a8 Wysokosc `vb20 niska i `vb80 wysoka w jednym zdaniu.
-realworld 4 f2e754b5e753c2ca 848a3140ee9617a4 Glos `v2 dwa, `v5 piec, i `v1 znowu jeden.
-realworld 5 77cfff637ab48cfd c9348d7c673bfc8d Pauza `0 krotka i `4 dluga miedzy slowami.
-realworld 6 f88436359bb49920 8c4b0d0ddc1f6e80 Chropowatosc `vr40 i oddech `vf60 zmienione.
-realworld 7 efe24dff5b78553f 369436872ff4a7a9 Doslowny \`odwrotny apostrof ma byc przeczytany jako tekst.
-realworld 8 9e674aee41cf4a78 14217b9ae7f9b2f1 Szybkosc po nazwie `vsfast a potem `vsslow z powrotem.
-realworld 9 07e344a2b476669a ca08306b81a73e50 Rozmiar glowy `vh30 potem `vh70 w tym samym wierszu.
-realworld 10 9cf135fbe8688732 40346403ab1a0780 Plec `vg1 i `vg0 zmieniane po kolei.
-realworld 11 19bafa50363dc446 b9482d84b2050858 Przed `ui"znacznik jeden" i po znaczniku indeksu.
-realworld 12 1d64fa0e8a577b41 fbef4a1bc8a05e62 Znacznik `aud"bip" dzwiekowy w srodku wiersza.
-realworld 13 055bec9e6a4f5891 3c918c07b72d5007 `vs40 Adnotacja zaraz na samym poczatku wiersza.
-realworld 14 6ebb4995f4bf3ab6 a6c85d96c2c8d020 Konczy sie adnotacja na samym koncu `vs60
-realworld 15 882d7ef3c7f82285 c7eaa422749091d1 Bledne `vzz i `q i `v999 wszystkie w jednym wierszu.
-realworld 16 053c9abc09f4ad27 e5d4cf3ee55ffdd2 Dwie `vs30`vv40 adnotacje bez niczego pomiedzy.
-realworld 17 dd3f0c809b1464ea 42c70eccb1c52d53 `ui"a"`ui"b" dwa znaczniki bez niczego miedzy nimi.
-realworld 18 4e0fac11326c80b5 9e9508720b200fbc Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
-realworld 19 343c7c8a68970d37 d8cb8329cc113dde Razem `v3 glos `vs70 szybkosc `vv50 glosnosc naraz.
-realworld 20 0b5114c92ad0f5a5 18ec956ae77fdaa5 Tabulacja	i zawijanie wiersza z `vb40 zmiana.
-dict 1 bafc9940e62d5afd 580634fcb1dc0755 Dzien dobry. Tu mowi syntezator mowy Eloquence.
-dict 2 ad8031de9821a385 352436113eb91226 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
-dict 3 144200c0ecfd7d73 53717b74e13eaf73 Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
-dict 4 8882b9d8afb78a2b bd6a67769673176a Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
-dict 5 690e090af090291f 8e9bff0fdd3e1c64 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
-dict 6 6bff07a4816c567e 078bfdb8b0ff3025 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
-dict 7 b2e06bfddfc1c315 24ca547bef030e71 Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
-second 1 479df0f45b3472a1 e798ddf2b42dcaf0 Dzien dobry. Tu mowi syntezator mowy Eloquence.
-second 2 125485f6f832cdc4 2273ecea318256cd Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
-second 3 04b1183c1af83fc0 5fd0219f132d3349 Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
-second 4 c432f36f41c8d88c ee76353c1fae6c84 Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
-second 5 03805b9506ba200f 90c25d7406de3b08 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
-second 6 ffc69aaef442a77f c3a1e49a0c689faf Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
-second 7 5f0181fb7c59417d b7b6cfeb2b24cc5b Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
-ssml 1 f50b7011575764b1 5613e0fb8ddd3167 <speak version="1.0" xml:lang="pl-PL">Dzien dobry.</speak>
-ssml 2 4aa2a5423a5c9cea 35dadc4be4a0692c <speak version="1.0" xml:lang="pl-PL"><prosody rate="slow">Teraz wolniej.</prosody> Znowu normalnie.</speak>
-ssml 3 87cf7bd1467305cf 272e2663832eb1ca <speak version="1.0" xml:lang="pl-PL"><prosody pitch="high" range="x-high" volume="loud">Wszystkie cztery naraz.</prosody></speak>
-ssml 4 eddcc906f7eca664 dc4d9a3bcca326a0 <speak version="1.0" xml:lang="pl-PL"><emphasis level="strong">Ten</emphasis>, nie tamten.</speak>
-ssml 5 f1316c6914fd61c8 d56172b453775071 <speak version="1.0" xml:lang="pl-PL"><voice gender="female">Ona to powiedziala.</voice> A on nie.</speak>
-ssml 6 76c963d18dfdd79e 55dd932209d25b0d <speak version="1.0" xml:lang="pl-PL">Kosztowalo <say-as interpret-as="cardinal">1234</say-as> dnia <say-as interpret-as="ordinal">3</say-as>.</speak>
-ssml 7 2eb0d46d14406be2 624650564fc548e9 <speak version="1.0" xml:lang="pl-PL">Przeliteruj: <say-as interpret-as="letters">abc</say-as>, i zadzwon pod <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
-ssml 8 757bd8c315a46b0d 19e143f203e373f9 <speak version="1.0" xml:lang="pl-PL">Poczekaj<break time="500ms"/>chwile.<mark name="tutaj"/> Tam.</speak>
-ssml 9 28625358a6e17d69 3f02f7404fb78bf7 <speak version="1.0" xml:lang="pl-PL"><sub alias="Siec ogolnoswiatowa">WWW</sub> i <phoneme ph="h.E.l.oU">czesc</phoneme>.</speak>
-ssml 10 53fbe8f3967d4716 40561707d9b82355 <speak version="1.0" xml:lang="pl-PL">Zażółć gęślą jaźń, z a &amp; b &lt; c.</speak>
+plain 1 0cd046da2bcb480d 30c16f1afb216021 Dzien dobry. Tu mowi syntezator mowy Eloquence.
+plain 2 ffff88fb2ae3f876 310570a32021a45c Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
+plain 3 fddedb2d5a0ed9ad dc3cf07085eb1090 Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
+plain 4 37ef39db2f300d5d b945bcb42674d842 Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
+plain 5 8c7eb7d3451bd825 ec7801b1d81d8428 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
+plain 6 5a9084a304c12741 09d2baa286bfdd4d Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
+plain 7 2812ee039d3e4d99 df7e80acd418f8fa Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+utf8 1 5f50df685f292c03 61ca9a25bcdddc3a Zazolc gesla jazn to znany pangram bez ogonkow.
+utf8 2 588d7791e03ec3d9 63344d024b003bd5 Zażółć gęślą jaźń to znany pangram z ogonkami.
+utf8 3 6ba1e58c274b2084 ffa0647f5104e735 Mężczyzna zjadł źdźbło trawy i pchnął łódź jeża.
+utf8 4 d717299365e0ffb0 e99b7720eb5384c2 Ćma, gęś, łąka, koń, źrebię, żaba, ósemka i ściana.
+utf8 5 e2fe263f56131ad8 e44908d5ff559556 Wąż wśród żółtych liści szedł ścieżką przez łąkę.
+utf8 6 5f1147c8e79e9a6e 844525c357fa5ebe Cześć, czy człowiek często czyta czasopisma częściowo.
+utf8 7 0f5a9ea53f443578 bf52d999d4145dec Zdanie zupelnie bez polskich znakow dla porownania.
+anno 1 a453ce918da9d981 17b5e8a6c57a6b7b Mowa normalna `vs50 teraz o wiele wolniejsza niz przedtem.
+anno 2 1f814b71357cbdd0 779c437dcc221f48 Glosnosc `vv30 ciszej, potem `vv90 znowu glosniej.
+anno 3 8d6e2c3ebb4309e9 0c43147abb33dd0d Wysokosc `vb20 niska i `vb80 wysoka w jednym zdaniu.
+anno 4 74976d92165e9d94 a27b3f423572e707 Glos `v2 dwa, `v5 piec, i `v1 znowu jeden.
+anno 5 a80b1fbe359e13cb 1b2b66ab9c69ba9c Pauza `0 krotka i `4 dluga miedzy slowami.
+anno 6 573004d3069d459e 5e181ee1a2c85cca Chropowatosc `vr40 i oddech `vf60 zmienione.
+anno 7 db0cbba1c1f6f369 9c91974b455bf521 Doslowny \`odwrotny apostrof ma byc przeczytany jako tekst.
+anno 8 d4d0e041fe71413a 5733d42640dad28f Szybkosc po nazwie `vsfast a potem `vsslow z powrotem.
+anno 9 cfa4f10eb872c3e9 bb630a1fc17539f0 Rozmiar glowy `vh30 potem `vh70 w tym samym wierszu.
+anno 10 83347b5807ac98ce 53bc5e0e0644b3b9 Plec `vg1 i `vg0 zmieniane po kolei.
+anno 11 786188a6302e5c7c 796e40fb214be0ba Przed `ui"znacznik jeden" i po znaczniku indeksu.
+anno 12 bf5eca934363607b f328b995b5b6eb94 Znacznik `aud"bip" dzwiekowy w srodku wiersza.
+anno 13 001e989304f1bd12 4cdcf0a06bdfdac3 `vs40 Adnotacja zaraz na samym poczatku wiersza.
+anno 14 5ebb117399d42c27 de1ac477b02ac842 Konczy sie adnotacja na samym koncu `vs60
+anno 15 33d20ce70f0bb5c3 17004d3b37f08ed8 Bledne `vzz i `q i `v999 wszystkie w jednym wierszu.
+anno 16 0bf7f6be693de88f da9620d5c2d19734 Dwie `vs30`vv40 adnotacje bez niczego pomiedzy.
+anno 17 12ff1d359476392e 8197ede2c6c4704b `ui"a"`ui"b" dwa znaczniki bez niczego miedzy nimi.
+anno 18 4532a0dd7c020d8b 8b3c3e30f65640f5 Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
+anno 19 2c72c7aa5fa6eb76 0be31140eb4e912a Razem `v3 glos `vs70 szybkosc `vv50 glosnosc naraz.
+anno 20 37a303acecff9cf9 7f66690721dd77aa Tabulacja	i zawijanie wiersza z `vb40 zmiana.
+anno3 1 f127803cc047377d 74773f22a6a411c0 Mowa normalna `vs50 teraz o wiele wolniejsza niz przedtem.
+anno3 2 a739a6fc784917e7 62f541fd95e21969 Glosnosc `vv30 ciszej, potem `vv90 znowu glosniej.
+anno3 3 08e0444da3fd3f19 65847b5c96f1dc59 Wysokosc `vb20 niska i `vb80 wysoka w jednym zdaniu.
+anno3 4 8c123816318bb8c2 5997eb7b3ffb1cba Glos `v2 dwa, `v5 piec, i `v1 znowu jeden.
+anno3 5 02e73be0369d273a f038546000270593 Pauza `0 krotka i `4 dluga miedzy slowami.
+anno3 6 6ce31c44a2e5b264 e799b2e86112b4d4 Chropowatosc `vr40 i oddech `vf60 zmienione.
+anno3 7 db0cbba1c1f6f369 ab9ff7971e77e63e Doslowny \`odwrotny apostrof ma byc przeczytany jako tekst.
+anno3 8 9eb3378408b0c5ab dba98fd2ebd71f3b Szybkosc po nazwie `vsfast a potem `vsslow z powrotem.
+anno3 9 53ead3b3fca5c6e6 2d45c1ba706b6ab1 Rozmiar glowy `vh30 potem `vh70 w tym samym wierszu.
+anno3 10 d689deb51987d761 24b1fd0008a43d42 Plec `vg1 i `vg0 zmieniane po kolei.
+anno3 11 1f8dc502c8417047 357c7f9fd8733d1c Przed `ui"znacznik jeden" i po znaczniku indeksu.
+anno3 12 5e31ec61d91a0f40 e39515cf4a701385 Znacznik `aud"bip" dzwiekowy w srodku wiersza.
+anno3 13 23a02a0191762f1c 5d6ad4e0423b49e2 `vs40 Adnotacja zaraz na samym poczatku wiersza.
+anno3 14 83aa9cea5417c01d 057719579227b324 Konczy sie adnotacja na samym koncu `vs60
+anno3 15 33d20ce70f0bb5c3 3db97f299c63ce40 Bledne `vzz i `q i `v999 wszystkie w jednym wierszu.
+anno3 16 57f173f5ab424665 bd3a696be2f3ae06 Dwie `vs30`vv40 adnotacje bez niczego pomiedzy.
+anno3 17 fd971f65d818cf35 0d50a9beaa060d5d `ui"a"`ui"b" dwa znaczniki bez niczego miedzy nimi.
+anno3 18 4532a0dd7c020d8b a5e0ff1571b26548 Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
+anno3 19 d4f5d41684248be5 a12f16c59059c0a7 Razem `v3 glos `vs70 szybkosc `vv50 glosnosc naraz.
+anno3 20 922fd8c34a0cd5c1 68784b8a3b5c3db0 Tabulacja	i zawijanie wiersza z `vb40 zmiana.
+realworld 1 8be11c50e161920f bcbcfb375c6970a1 Mowa normalna `vs50 teraz o wiele wolniejsza niz przedtem.
+realworld 2 c229f67283e5e58c 936a74613fdfe9c0 Glosnosc `vv30 ciszej, potem `vv90 znowu glosniej.
+realworld 3 45b72643a5448b60 4cec9933303b55fc Wysokosc `vb20 niska i `vb80 wysoka w jednym zdaniu.
+realworld 4 8c123816318bb8c2 ffd9032b151e2374 Glos `v2 dwa, `v5 piec, i `v1 znowu jeden.
+realworld 5 02e73be0369d273a 8172b4b43aa378f8 Pauza `0 krotka i `4 dluga miedzy slowami.
+realworld 6 6ce31c44a2e5b264 385ff95a136c0d86 Chropowatosc `vr40 i oddech `vf60 zmienione.
+realworld 7 db0cbba1c1f6f369 6e26ee5d968c2e93 Doslowny \`odwrotny apostrof ma byc przeczytany jako tekst.
+realworld 8 9eb3378408b0c5ab 9c71b2522b854cb8 Szybkosc po nazwie `vsfast a potem `vsslow z powrotem.
+realworld 9 53ead3b3fca5c6e6 421241d0a5db52d2 Rozmiar glowy `vh30 potem `vh70 w tym samym wierszu.
+realworld 10 d689deb51987d761 5499d574f9ae1183 Plec `vg1 i `vg0 zmieniane po kolei.
+realworld 11 1f8dc502c8417047 50583f47ec3c3309 Przed `ui"znacznik jeden" i po znaczniku indeksu.
+realworld 12 5e31ec61d91a0f40 a77d33aa9c672bfc Znacznik `aud"bip" dzwiekowy w srodku wiersza.
+realworld 13 c07e57fc6551d905 7f709968f5ece0f8 `vs40 Adnotacja zaraz na samym poczatku wiersza.
+realworld 14 83aa9cea5417c01d d89caf355aa31d34 Konczy sie adnotacja na samym koncu `vs60
+realworld 15 33d20ce70f0bb5c3 504e3d94178c2fe0 Bledne `vzz i `q i `v999 wszystkie w jednym wierszu.
+realworld 16 cfdb13ea809b2053 11a50711213f437d Dwie `vs30`vv40 adnotacje bez niczego pomiedzy.
+realworld 17 fd971f65d818cf35 fb383142a22b05d6 `ui"a"`ui"b" dwa znaczniki bez niczego miedzy nimi.
+realworld 18 4532a0dd7c020d8b 0e6b414cfcee419d Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
+realworld 19 83d7436b022dfa3f 00762f87d95450db Razem `v3 glos `vs70 szybkosc `vv50 glosnosc naraz.
+realworld 20 db205216bae09a05 d8d30de752afa1a8 Tabulacja	i zawijanie wiersza z `vb40 zmiana.
+dict 1 0cd046da2bcb480d c03483b21acbe312 Dzien dobry. Tu mowi syntezator mowy Eloquence.
+dict 2 ffff88fb2ae3f876 72736b6a49128682 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
+dict 3 fddedb2d5a0ed9ad 93e902217a6925a1 Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
+dict 4 37ef39db2f300d5d ab2e421b53257ee2 Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
+dict 5 8c7eb7d3451bd825 f86afea32833f304 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
+dict 6 5a9084a304c12741 ccfba082cc0dd720 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
+dict 7 2812ee039d3e4d99 4ddff34199cbbfd6 Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+second 1 0f2edde6f70e0966 d2dd645fa803c9bd Dzien dobry. Tu mowi syntezator mowy Eloquence.
+second 2 555be4d9ee3d5700 3269253fc694c832 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
+second 3 8eb3c99e8689a041 9c0df9e6f5f7a610 Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
+second 4 055e1ce9653baf1b 931d0cb820013568 Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
+second 5 70652df8e009b4f6 c1882743ed26fc06 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
+second 6 12a5ecfce4e0a056 86610fa3da77baa8 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
+second 7 31105cbaf5295fa5 cbba5aa2ccb427ed Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+ssml 1 d4af6da6da8da676 c8ad08fce9290088 <speak version="1.0" xml:lang="pl-PL">Dzien dobry.</speak>
+ssml 2 b925253a3f1ffc97 a860618b47980c69 <speak version="1.0" xml:lang="pl-PL"><prosody rate="slow">Teraz wolniej.</prosody> Znowu normalnie.</speak>
+ssml 3 f8afa4465fc1600e 7d86668fa46ad852 <speak version="1.0" xml:lang="pl-PL"><prosody pitch="high" range="x-high" volume="loud">Wszystkie cztery naraz.</prosody></speak>
+ssml 4 c7526590f2321e11 321005665035c31c <speak version="1.0" xml:lang="pl-PL"><emphasis level="strong">Ten</emphasis>, nie tamten.</speak>
+ssml 5 19d1362e3ef7f91f b3a68ccf3f4753da <speak version="1.0" xml:lang="pl-PL"><voice gender="female">Ona to powiedziala.</voice> A on nie.</speak>
+ssml 6 02dd2e6fedc2a4ea b710691d58547531 <speak version="1.0" xml:lang="pl-PL">Kosztowalo <say-as interpret-as="cardinal">1234</say-as> dnia <say-as interpret-as="ordinal">3</say-as>.</speak>
+ssml 7 54eabf75c3253f23 679c2efd989ff47a <speak version="1.0" xml:lang="pl-PL">Przeliteruj: <say-as interpret-as="letters">abc</say-as>, i zadzwon pod <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+ssml 8 30c0081156e37ff8 abf0137110bf3e6b <speak version="1.0" xml:lang="pl-PL">Poczekaj<break time="500ms"/>chwile.<mark name="tutaj"/> Tam.</speak>
+ssml 9 73483bb3dd99c80a f3c7edfea214525c <speak version="1.0" xml:lang="pl-PL"><sub alias="Siec ogolnoswiatowa">WWW</sub> i <phoneme ph="h.E.l.oU">czesc</phoneme>.</speak>
+ssml 10 a551458a30d50fca 5cd2b2c390e5875b <speak version="1.0" xml:lang="pl-PL">Zażółć gęślą jaźń, z a &amp; b &lt; c.</speak>

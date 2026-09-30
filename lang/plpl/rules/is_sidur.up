@@ -1,0 +1,21 @@
+# A Polish vowel is not much shorter unstressed than stressed, where Italian's
+# is less than half: Italian starts a vowel's length from a share of its
+# inherent length, a hundred or more when the syllable is stressed and 45 to
+# 55 when it is not, and the unstressed u of Mateusz and nauczyciel came out
+# at 51 and 45 ms against 126 for the stressed e beside it. So the share
+# Italian picks, in variable 2628, is raised to a floor; a stressed vowel's is
+# above it already and does not move. The floor is the ear's, chosen from 65,
+# 75 and 85. Nothing Italian adjusts afterwards is where the shortening was:
+# each of those five, left out in turn, still gave the same u.
+rule pol_stanital_start_dur takes 3 from is_sidur.obj
+  afresh
+  variable share word 2628
+  call assign_stanital_start_dur arg 1 arg 2
+  if answer is not 0
+    give up
+  end
+  if share is less than 85
+    set share to 85
+  end
+  match
+end
