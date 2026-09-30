@@ -183,3 +183,13 @@ bytes pol_fw_i           03   # i
 bytes pol_fw_a           01   # a
 bytes pol_fw_sie_        19 03 d1   # się
 bytes pol_fw_z_e         d6 02   # że
+
+# The phones either side of a syllable boundary pol_syll_init_con in
+# it_syll.up asks about: a t or d and then the hard sz or ż.
+bytes pol_ph_t            04
+bytes pol_ph_d            03
+bytes pol_ph_sz           18
+bytes pol_ph_zh           16
+# The word statement, which pol_syll_init_con fences on so that a t ending one
+# word is not taken into a syllable of the next.
+bytes pol_fence_word      04

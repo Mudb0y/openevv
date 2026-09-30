@@ -1360,7 +1360,7 @@ label L3 was $X2$90640
   load movl slotaddr 92 into r0
   push slotaddr 92
   push reg r6
-  call assign_ital_syll_init_con arity 3 depth 4
+  call pol_syll_init_con arity 3 depth 4
   popn 4
 label L4 was $X5$90643
   load movl slotaddr 72 into r0

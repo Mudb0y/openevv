@@ -1,0 +1,63 @@
+# cz and dż are one sound, and so are the trz and drz of trzy and drzewo to a
+# syllable: nauczyciel is na-u-czy-ciel and patrzeć pa-trzeć. The engine has
+# no code for the hard affricates and lays them down as a t or d and then the
+# hard sz or ż, which took over Italian's palatal l and strong r and were
+# recorded as fricatives -- and Italian keeps a stop with a liquid, a tap or
+# a trill at the start of a syllable and splits it from a fricative. So
+# nauczyciel was na-ut-szy-ciel, the t closing the syllable before and the
+# u shortened for being closed.
+#
+# This asks Italian's rule where the syllable begins and, where it begins
+# between a t or d and an sz or ż, begins it one phone earlier. The second
+# argument is where the rule leaves the start.
+rule pol_syll_init_con takes 3 from it_syll.obj
+  afresh
+  local fricative
+  call assign_ital_syll_init_con arg 1 arg 2
+  if answer is not 0
+    give up
+  end
+  call ZZfence_null
+  set fricative to 0
+  call lpta_loadp arg 2
+  call setscan_r 2
+  if answer is 0
+    call test_string_s 2 1 sym pol_ph_sz
+    if answer is 0
+      set fricative to 1
+    end
+  end
+  if fricative is 0
+    call lpta_loadp arg 2
+    call setscan_r 2
+    if answer is 0
+      call test_string_s 2 1 sym pol_ph_zh
+      if answer is 0
+        set fricative to 1
+      end
+    end
+  end
+  if fricative is 0
+    match
+  end
+  # Not across a word: the t ending siedemdziesiąt is not taken into sześć.
+  call fence 1 sym pol_fence_word
+  call lpta_loadp arg 2
+  call setscan_nof_l 2
+  if answer is 0
+    call test_string_s 2 1 sym pol_ph_t
+    if answer is 0
+      call savescptr 1 arg 2
+      match
+    end
+  end
+  call lpta_loadp arg 2
+  call setscan_nof_l 2
+  if answer is 0
+    call test_string_s 2 1 sym pol_ph_d
+    if answer is 0
+      call savescptr 1 arg 2
+    end
+  end
+  match
+end
