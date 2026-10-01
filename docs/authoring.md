@@ -42,7 +42,7 @@ Write the content first. Take the seventeen heteronyms and a slice of the commun
 
 ## What makes it safe
 
-`make words` -- 24,318 words, ten seconds, names what moved. Any layer that changes how words are said is precisely what it was built to police, and this plan would be much harder to justify without it.
+`make words` -- 24,317 words, ten seconds, names what moved. Any layer that changes how words are said is precisely what it was built to police, and this plan would be much harder to justify without it.
 
 ## What the seam turned out to be, 9 September 2026
 
@@ -953,7 +953,7 @@ What it cannot get that way is the melody. So the intonation is not on the far s
 
 ## What English letter-to-sound actually is, 17 September 2026
 
-The plan above assumed the front half would have to be written rather than recovered, and put letter-to-sound at the centre of it because the dictionary is small: of the 24,318 words in `test/cases/words-enus.txt`, 5,042 are in one of the module's dictionaries -- twenty per cent, and more than half of those are proper names -- and a crude strip of the common suffixes reaches a dictionary root for only 1,532 more. So something like 17,700 English words get their pronunciation from rules rather than from a lookup, and whatever those rules are is the front half's centre of gravity.
+The plan above assumed the front half would have to be written rather than recovered, and put letter-to-sound at the centre of it because the dictionary is small: of the 24,317 words in `test/cases/words-enus.txt`, 5,042 are in one of the module's dictionaries -- twenty per cent, and more than half of those are proper names -- and a crude strip of the common suffixes reaches a dictionary root for only 1,532 more. So something like 17,700 English words get their pronunciation from rules rather than from a lookup, and whatever those rules are is the front half's centre of gravity.
 
 **They are 32 rules, one to a letter, and 271 insertions between them.** `lang/enus/rules/et_phone.dr` holds `a_rules` through `z_rules` with `strong_vowel`, `generate_diaphones`, `change_british_spelling` and four more beside them. Counting the calls that put phones down: `o_rules` makes 47, `e_rules` and `a_rules` 33 each, `i_rules` 22, `u_rules` 21, and the consonants two to thirteen apiece. That is the whole of English letter-to-sound in this engine, and it is a size a person can read.
 
@@ -965,7 +965,7 @@ The vocabulary the letter rules call is small and regular: advance the token, se
 
 ### What follows for the plan
 
-A front end of ours does not have to invent English letter-to-sound, and should not: 271 rules that decide seventeen thousand words are worth transcribing exactly, not re-deriving approximately. The word gate is what makes transcription safe -- `make words` names the word that moved, over 24,318 of them, in ten seconds.
+A front end of ours does not have to invent English letter-to-sound, and should not: 271 rules that decide seventeen thousand words are worth transcribing exactly, not re-deriving approximately. The word gate is what makes transcription safe -- `make words` names the word that moved, over 24,317 of them, in ten seconds.
 
 What is missing is a notation to transcribe them *into*. The upper form is not it: this file opens by saying so, and writing 271 letter rules in frames and planted tests would be the same mistake at greater length. What these rules want is the notation they are already written in underneath -- a letter, what is to its left, what is to its right, and what it says -- which is what every other synthesiser's letter-to-sound file looks like and what an author can actually edit.
 

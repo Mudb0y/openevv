@@ -4,7 +4,6 @@
 # test/words.sh record. The list is test/cases/words-enus.txt.
 # These are what this engine does, not what IBM's did: the
 # differential suite speaks sentences, not word lists.
-warning: Git tree '/home/stas/Projects/openevv' is dirty	[`[.1wcr.0nIG]:`[.1gIt]`[.1tri]`[.1slAS]`[.1hom]`[.1slAS]`[.1staz]`[.1slAS]`[.1pra.2JEkts]`[.1slAS]`[.1a.0pX.0nxv]`00 `[.0Xz]`2 `[.1dR.0Fi]]
 a	[`[.1e]]
 aardvark	[`[.1ard.2vark]]
 aaron	[`[.1er.0Xn]]

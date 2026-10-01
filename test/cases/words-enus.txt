@@ -1,4 +1,3 @@
-warning: Git tree '/home/stas/Projects/openevv' is dirty
 # 20000 words of English, spread evenly through the 38037 in scowl's
 # wamerican.35, which is the common half of the language.
 # with every word the dictionaries hold folded in: 5042 of them,
