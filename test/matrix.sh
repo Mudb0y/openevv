@@ -26,7 +26,9 @@
 # original had just agreed with. Polish is the exception and its file says so
 # -- IBM never shipped Polish, there is nothing to hold it to, and what is
 # recorded is what this engine does, which is still worth having as the only
-# way a change to Polish can be told from an accident.
+# way a change to Polish can be told from an accident. So is any case a
+# deliberate divergence has moved or added since, which docs/quirks.md names:
+# what IBM's engine says there is what the divergence departs from.
 #
 # It wants neither Wine nor IBM's objects. That is the point of it.
 #
@@ -280,19 +282,12 @@ for t in $want; do
                 echo "# Polish can be told from an accident, which is the"
                 echo "# only check Polish will ever have besides an ear."
             else
-                echo "# Every line was blessed by IBM's own binary: the whole"
-                echo "# differential suite was run for this language"
-                echo "# immediately before these were written, and every case"
-                echo "# matched. See docs/testing.md."
-                case $t in
-                enus|engb)
-                    echo "#"
-                    echo "# Except plain 8, dict 8 and second 8, which are"
-                    echo "# ours: their numbers are read the way the same"
-                    echo "# numbers without commas are, which IBM's are not."
-                    echo "# That is a deliberate divergence, in docs/quirks.md."
-                    ;;
-                esac
+                echo "# Every line was blessed by IBM's own binary when it was"
+                echo "# first written: the whole differential suite was run"
+                echo "# for this language immediately before, and every case"
+                echo "# matched. A case a deliberate divergence has moved or"
+                echo "# added since is this engine's answer and not IBM's;"
+                echo "# docs/quirks.md names them. See docs/testing.md."
             fi
             echo "#"
             echo "# Written by test/matrix.sh record. One line a case:"

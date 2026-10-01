@@ -1,14 +1,11 @@
 # What this engine says, case by case, for engb.
 #
-# Every line was blessed by IBM's own binary: the whole
-# differential suite was run for this language
-# immediately before these were written, and every case
-# matched. See docs/testing.md.
-#
-# Except plain 8, dict 8 and second 8, which are
-# ours: their numbers are read the way the same
-# numbers without commas are, which IBM's are not.
-# That is a deliberate divergence, in docs/quirks.md.
+# Every line was blessed by IBM's own binary when it was
+# first written: the whole differential suite was run
+# for this language immediately before, and every case
+# matched. A case a deliberate divergence has moved or
+# added since is this engine's answer and not IBM's;
+# docs/quirks.md names them. See docs/testing.md.
 #
 # Written by test/matrix.sh record. One line a case:
 # the category, which case in it, the first sixteen hex of
@@ -23,6 +20,8 @@ plain 5 2834bb3006ab7d6e b014d69009da1c09 A one-word line. And another; plus "qu
 plain 6 d90751a3f5fc1cab 6b0dd65f69c11a45 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 plain 7 62d7fc6e366f83f3 516915f9a7440b54 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 plain 8 7377f8a434195c98 4c1402534b45dc75 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
+plain 9 d225dc7cc7b28c8d 0a440b6880b4a778 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+plain 10 c724ad5b6685ebb9 c3f3e2f7f91a78b4 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 utf8 1 d4ed0685e22cd95f 17313f4fe85e15c4 The café near the naïve façade serves crème brûlée.
 utf8 2 5c1ea00b27728ec0 75a95ab620d2aad9 Señor Muñoz sent a piñata to São Paulo.
 utf8 3 cdb5ea6a48277868 fc0482ef124361f7 Zdzisław Świątek mieszka w Świdnicy przy ulicy Żółkiewskiego.
@@ -98,6 +97,8 @@ dict 5 2834bb3006ab7d6e e3d23f8939cf70ff A one-word line. And another; plus "quo
 dict 6 d90751a3f5fc1cab 68bef7613d8189a4 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 dict 7 62d7fc6e366f83f3 78fafa96214f4491 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 dict 8 7377f8a434195c98 72f07d198c26a320 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
+dict 9 d225dc7cc7b28c8d f3463e1a547b9f41 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+dict 10 c724ad5b6685ebb9 372e7b9d4602401f Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 second 1 83101ee490771d66 de8d88a04ab950ec Hello. This is the Eloquence synthesizer speaking.
 second 2 bc80cdc550aca0da 32e3d988b2397141 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
 second 3 e1ae466b7de0031e 488d63d9ae95ec9f The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
@@ -106,6 +107,8 @@ second 5 a158c0f26a6bce27 62031a09777747a8 A one-word line. And another; plus "q
 second 6 7f08a1330ec6be34 7daf0e20104fe1f4 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 second 7 f4b0e35262159568 21c18b9772eb2b94 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 second 8 c226c07056456d4c 1155b9e6d756a1ca A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
+second 9 e9bd899ff4d37e02 98ba92e666cbed97 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+second 10 4bbfbb24b0172e9d ee9a33beda0b9d6d Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 ssml 1 aa1bdf3d6cf3ab7f 850a2450f5acd9c0 <speak version="1.0" xml:lang="en-GB">Hello there.</speak>
 ssml 2 bbec3a73b6400fc7 8958b935427d2db4 <speak version="1.0" xml:lang="en-GB"><prosody rate="slow">Slowly now.</prosody> Back to normal.</speak>
 ssml 3 21064891cec3c3dd faf5a463ea77cc7a <speak version="1.0" xml:lang="en-GB"><prosody pitch="high" range="x-high" volume="loud">All four at once.</prosody></speak>

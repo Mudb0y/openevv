@@ -16,55 +16,77 @@
 uint8_t enus_evv_authored_data[] = {
     /* lex_prefix_re, 2 bytes at 0 */
     24,2,
-    /* fence_03, 1 bytes at 2 */
+    /* eng_open_paren, 1 bytes at 2 */
+    70,
+    /* eng_paren_s, 3 bytes at 3 */
+    70,25,71,
+    /* eng_paren_es, 4 bytes at 6 */
+    70,2,25,71,
+    /* eng_paren_ed, 4 bytes at 10 */
+    70,2,13,71,
+    /* eng_open_bracket, 1 bytes at 14 */
+    80,
+    /* eng_open_brace, 1 bytes at 15 */
+    82,
+    /* eng_number_sign, 1 bytes at 16 */
+    74,
+    /* eng_dollar, 1 bytes at 17 */
+    85,
+    /* eng_asterisk, 1 bytes at 18 */
+    78,
+    /* eng_tilde, 1 bytes at 19 */
+    77,
+    /* eng_space, 2 bytes at 20 */
+    199,72,
+    /* fence_03, 1 bytes at 22 */
     3,
-    /* lts_bt, 2 bytes at 3 */
+    /* lts_bt, 2 bytes at 23 */
     11,26,
-    /* say_04, 1 bytes at 5 */
+    /* say_04, 1 bytes at 25 */
     4,
-    /* say_01, 1 bytes at 6 */
+    /* say_01, 1 bytes at 26 */
     1,
-    /* lts_wr, 2 bytes at 7 */
+    /* lts_wr, 2 bytes at 27 */
     28,24,
-    /* say_18, 1 bytes at 9 */
+    /* say_18, 1 bytes at 29 */
     24,
-    /* say_1b, 1 bytes at 10 */
+    /* say_1b, 1 bytes at 30 */
     27,
-    /* lts_dg, 2 bytes at 11 */
+    /* lts_dg, 2 bytes at 31 */
     13,15,
-    /* say_11, 1 bytes at 13 */
+    /* say_11, 1 bytes at 33 */
     17,
-    /* lts_dj, 2 bytes at 14 */
+    /* lts_dj, 2 bytes at 34 */
     13,17,
-    /* lts_mech, 4 bytes at 16 */
+    /* lts_mech, 4 bytes at 36 */
     20,2,12,16,
-    /* say_141f07, 3 bytes at 20 */
+    /* say_141f07, 3 bytes at 40 */
     20,31,7,
-    /* lts_mn, 2 bytes at 23 */
+    /* lts_mn, 2 bytes at 43 */
     20,21,
-    /* say_15, 1 bytes at 25 */
+    /* say_15, 1 bytes at 45 */
     21,
-    /* say_14, 1 bytes at 26 */
+    /* say_14, 1 bytes at 46 */
     20,
-    /* lts_mb, 2 bytes at 27 */
+    /* lts_mb, 2 bytes at 47 */
     20,11,
-    /* lts_ng, 2 bytes at 29 */
+    /* lts_ng, 2 bytes at 49 */
     21,15,
-    /* say_16, 1 bytes at 31 */
+    /* say_16, 1 bytes at 51 */
     22,
-    /* lts_then, 4 bytes at 32 */
+    /* lts_then, 4 bytes at 52 */
     26,16,2,21,
-    /* lts_ton, 3 bytes at 36 */
+    /* lts_ton, 3 bytes at 56 */
     26,4,21,
-    /* lts_qu, 2 bytes at 39 */
+    /* lts_qu, 2 bytes at 59 */
     23,5,
-    /* lts_et, 2 bytes at 41 */
+    /* lts_et, 2 bytes at 61 */
     2,26,
-    /* say_07, 1 bytes at 43 */
+    /* say_07, 1 bytes at 63 */
     7,
-    /* lts_e, 1 bytes at 44 */
+    /* lts_e, 1 bytes at 64 */
     2,
-    /* say_071b, 2 bytes at 45 */
+    /* say_071b, 2 bytes at 65 */
     7,27,
 };
 

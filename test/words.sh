@@ -4,7 +4,7 @@
 # sentence, and what the engine says it is made of rather than what it sounds
 # like.
 #
-# Why both. The sentence gate has 101 English cases in it, which is the right
+# Why both. The sentence gate has 107 English cases in it, which is the right
 # size for asking whether the engine still says what it always said, and far
 # too small for asking whether a change to a rule or a dictionary was a good
 # idea. A change that mends forty words and breaks four hundred passes it

@@ -375,11 +375,11 @@ def text_rules(upper=True, trial=False):
             if upper:
                 rules = [by_name.pop(name, (name, d, obj))
                          for name, d, obj in rules]
-                authored += [r[0] for r in written]
             else:
                 for name, _d, _obj in rules:
                     by_name.pop(name, None)
             rules += [by_name[r[0]] for r in written if r[0] in by_name]
+            authored += [r[0] for r in written if upper or r[0] in by_name]
         out.append((stem, rules, tables))
     return out, authored
 

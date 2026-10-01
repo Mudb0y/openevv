@@ -13,6 +13,32 @@
 
 #include "delta_lang.h"
 
+uint8_t engb_evv_authored_data[] = {
+    /* eng_open_paren, 1 bytes at 0 */
+    70,
+    /* eng_paren_s, 3 bytes at 1 */
+    70,25,71,
+    /* eng_paren_es, 4 bytes at 4 */
+    70,2,25,71,
+    /* eng_paren_ed, 4 bytes at 8 */
+    70,2,13,71,
+    /* eng_open_bracket, 1 bytes at 12 */
+    80,
+    /* eng_open_brace, 1 bytes at 13 */
+    82,
+    /* eng_number_sign, 1 bytes at 14 */
+    74,
+    /* eng_dollar, 1 bytes at 15 */
+    85,
+    /* eng_asterisk, 1 bytes at 16 */
+    78,
+    /* eng_tilde, 1 bytes at 17 */
+    77,
+    /* eng_space, 2 bytes at 18 */
+    199,72,
+};
+
 const delta_store engb_delta_authored_store[] = {
+    { engb_evv_authored_data, sizeof engb_evv_authored_data },
     { 0, 0 },
 };

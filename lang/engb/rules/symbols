@@ -5290,3 +5290,17 @@ at glob.obj ZZstring221 engb_evv_glob_data_3 868
 at glob.obj ZZstring327 engb_evv_glob_data_3 1356
 at glob.obj ZZstring310 engb_evv_glob_data_3 1288
 at glob.obj ZZstring345 engb_evv_glob_data_3 1444
+
+# And the constants of our own, out of rules/constants by tools/rules/consts.py.
+store engb_evv_authored_data
+at * eng_open_paren engb_evv_authored_data 0
+at * eng_paren_s engb_evv_authored_data 1
+at * eng_paren_es engb_evv_authored_data 4
+at * eng_paren_ed engb_evv_authored_data 8
+at * eng_open_bracket engb_evv_authored_data 12
+at * eng_open_brace engb_evv_authored_data 13
+at * eng_number_sign engb_evv_authored_data 14
+at * eng_dollar engb_evv_authored_data 15
+at * eng_asterisk engb_evv_authored_data 16
+at * eng_tilde engb_evv_authored_data 17
+at * eng_space engb_evv_authored_data 18

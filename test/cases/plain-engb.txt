@@ -6,3 +6,5 @@ A one-word line. And another; plus "quoted text" inside.
 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
+Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.

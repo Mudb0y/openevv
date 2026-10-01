@@ -150,13 +150,23 @@ It does not matter for the callers that exist: Python's ctypes and a screen read
 
 A long number is read three digits at a time, and the rule that inserts the word naming a group -- million, thousand -- also steps over the comma after the group, so the next group starts at its first digit. A group of noughts names nothing, so in IBM's rules nothing steps over its comma, and the next group is read from the comma, which is spoken as its hundreds digit. Ours steps over that comma too. And where the last group is noughts, the commas before it come out, since nothing is left after them to stand in front of: IBM's reads a 5,000-strong army as five thousand dash strong, and where such a number ends the text its phoneme report ends with a comma that makes no sound.
 
-The rules are `lang/enus/rules/ut_numbr.up` and its British twin, standing where `convert_hundreds` stood in `convert_large_numbers`. Plain 8, dict 8 and second 8 of each English in `test/matrix.sh` hold it, which makes them the only English cases IBM's binary would not have blessed: `test/suite.sh` reports those three as differing in both, and that is the oracle saying what the original does. A comma list such as 1,2,3 is one comma two comma three as before.
+The rules are `lang/enus/rules/ut_numbr.up` and its British twin, standing where `convert_hundreds` stood in `convert_large_numbers`. Plain 8, dict 8 and second 8 of each English in `test/matrix.sh` hold it, and `test/suite.sh` reports those three as differing in both, which is the oracle saying what the original does. A comma list such as 1,2,3 is one comma two comma three as before.
 
 What this leaves is a hyphen after a grouped number, which is read as minus where the same number without commas reads it as to or dash -- 5,001-6,001 against 5001-6001 -- with no group of noughts in it at all. That is another rule deciding from the commas themselves, IBM's as well, and not touched.
 
+## A word typed against a number or a bracket
+
+**IBM's English spells a word that runs straight into digits or into an opening mark, and ours reads it as a word.** Windows10 came out W I N D O W S ten, teamtalk5 T E A M T A L K five and this(thing) T H I, a pause, then S thing, where Windows 10 and this (thing) read as words. What decides it is `letter_sequence` in the text normaliser, which spells any run of letters that does not end where a word ends -- right for MP3 and H2O, wrong for a word somebody did not space. `eng_tok_lookup` in `lang/enus/rules/ut_norm.up`, and its copy in `lang/engb`, puts the space in before anything reads the token, so the two halves read exactly as they would typed with one. That is the twenty-second deliberate divergence.
+
+Where it applies was measured over 242 tokens rather than guessed. A run of four letters or more takes the space before a digit or before `[`, `{`, `#`, `$`, `*` or `~`, and a run of two or more before `(`. Shorter runs before a digit are mostly the acronyms spelling is right for, and several read worse as words -- utf8, ipv6, amd64, sha256, CO2 and A4 among them -- so they are spelled as before, and so are AUD$5 and the other currency codes, which spaced say the currency's name and then dollars again. A parenthesis takes two letters because IBM's reading of a short word before one is broken outright, sum(x) coming out S U, a pause, M X; the exception is the (s), (es) and (ed) IBM already folds into the word, so friend(s) is still friends. The token is looked up whole before the space goes in, so an entry for it as written still wins, Win32 in the language's own table or one a caller added.
+
+What it costs is that a word the engine says badly on its own is now said badly rather than spelled: iPhone12, MySQL8, Xbox360 and macOS14 say iPhone, MySQL, Xbox and macOS the way the engine says each typed alone. Digits before letters -- 10km, 3rd, 4x4 -- are untouched, and so are an apostrophe, a hyphen, an at sign and a slash. German, both Spanishes, both Frenches, Italian and Polish spell the same tokens the same way and are left as they are; Japanese's romanizer reads them as words already.
+
+The last two cases of `test/cases/plain.txt` and of `test/cases/plain-engb.txt` hold it, in the plain, dict and second categories. IBM's engine spells the words in them that this one reads, so none of the twelve is an answer it gives.
+
 ## If it sounds wrong
 
-It is not a fault in the port. The audio is identical to IBM's by design, over 985 recorded cases in ten languages and every build the tree makes, apart from the six numbers above. That is Eloquence sounding like Eloquence.
+It is not a fault in the port. The audio is identical to IBM's by design, over 997 recorded cases in ten languages and every build the tree makes, apart from the cases a deliberate divergence on this page names. That is Eloquence sounding like Eloquence.
 
 Changing it is a deliberate change to the language data, and the gate will correctly report that as a difference.
 

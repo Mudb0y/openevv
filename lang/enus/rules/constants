@@ -11,3 +11,20 @@
 # reads this against the same rule reading IBM's copy.
 
 bytes lex_prefix_re 18 02
+
+# What eng_tok_lookup in ut_norm.up tests a token against and lays down, in
+# the input statement's alphabet: the marks after which a word is not left
+# to be spelled, the three endings process_final_parenthetical already folds
+# into the word, and the space, behind the byte insert_r reads as the width
+# of what follows it.
+bytes eng_open_paren    46            # (
+bytes eng_paren_s       46 19 47      # (s)
+bytes eng_paren_es      46 02 19 47   # (es)
+bytes eng_paren_ed      46 02 0d 47   # (ed)
+bytes eng_open_bracket  50            # [
+bytes eng_open_brace    52            # {
+bytes eng_number_sign   4a            # #
+bytes eng_dollar        55            # $
+bytes eng_asterisk      4e            # *
+bytes eng_tilde         4d            # ~
+bytes eng_space         c7 48

@@ -1,0 +1,112 @@
+# British English reads a token with the same normaliser American English
+# does, and spells a word run into digits or an opening mark the same way, so
+# it carries the same rule. lang/enus/rules/ut_norm.up says why it is shaped
+# as it is; a change to one wants making to the other.
+rule eng_tok_lookup takes 2 from ut_norm.obj
+  afresh
+  local here bytes 8
+  local cut bytes 8
+  local letters
+  call ZZget_parmPTR addr here arg 1
+  call ZZfence_null
+  call tok_lookup arg 1
+  if answer is 0
+    match
+  end
+  call ZZlpta_load__setscan_r__1 addr here
+  if answer is not 0
+    give up
+  end
+  set letters to 0
+  while 1
+    call testFldeq 1 3 1                        # a letter
+    if answer is not 0
+      leave
+    end
+    increment letters
+    call advance_tok
+    if answer is not 0
+      give up
+    end
+  end
+  if letters is less than 2
+    give up
+  end
+  call savescptr 1 addr cut
+  call test_string_s 1 1 sym eng_open_paren
+  if answer is 0
+    call lpta_loadp addr cut
+    call setscan_r 1
+    call test_string_s 1 3 sym eng_paren_s
+    if answer is 0
+      give up
+    end
+    call lpta_loadp addr cut
+    call setscan_r 1
+    call test_string_s 1 4 sym eng_paren_es
+    if answer is 0
+      give up
+    end
+    call lpta_loadp addr cut
+    call setscan_r 1
+    call test_string_s 1 4 sym eng_paren_ed
+    if answer is 0
+      give up
+    end
+    go to space
+  end
+  if letters is less than 4
+    give up
+  end
+  call lpta_loadp addr cut
+  call setscan_r 1
+  call testFldeq 1 3 2                          # a digit
+  if answer is 0
+    go to space
+  end
+  call lpta_loadp addr cut
+  call setscan_r 1
+  call test_string_s 1 1 sym eng_open_bracket
+  if answer is 0
+    go to space
+  end
+  call lpta_loadp addr cut
+  call setscan_r 1
+  call test_string_s 1 1 sym eng_open_brace
+  if answer is 0
+    go to space
+  end
+  call lpta_loadp addr cut
+  call setscan_r 1
+  call test_string_s 1 1 sym eng_number_sign
+  if answer is 0
+    go to space
+  end
+  call lpta_loadp addr cut
+  call setscan_r 1
+  call test_string_s 1 1 sym eng_dollar
+  if answer is 0
+    go to space
+  end
+  call lpta_loadp addr cut
+  call setscan_r 1
+  call test_string_s 1 1 sym eng_asterisk
+  if answer is 0
+    go to space
+  end
+  call lpta_loadp addr cut
+  call setscan_r 1
+  call test_string_s 1 1 sym eng_tilde
+  if answer is 0
+    go to space
+  end
+  give up
+place space
+  call lpta_loadp addr cut
+  call insert_r 1 2 sym eng_space 0
+  call tok_lookup arg 1
+  if answer is 0
+    match
+  end
+  give up
+end

@@ -687,7 +687,7 @@ notation-rewrite:
 #
 # `upper-check' is the one that says whether an authored rule is the rule it
 # stands in for. There is no byte comparison to be had: our compiler would
-# have to make the same choices IBM's did. So it speaks the eight plain cases
+# have to make the same choices IBM's did. So it speaks the plain cases
 # through a build carrying the authored rules and through one carrying IBM's,
 # and holds every rule entered and every call made with its arguments against
 # each other, and the audio besides. It wants no objects and no Wine.
@@ -711,7 +711,7 @@ upper-check:
 # The other question about a rule, and the other gate. `upper-check' asks
 # whether an authored rule is the rule it stands in for; this asks whether a
 # rule written as C does what the same rule does as bytecode. It writes the
-# smallest few rules out as C, speaks the eight plain cases through a build
+# smallest few rules out as C, speaks the plain cases through a build
 # carrying those beside the interpreter and through one carrying the
 # interpreter alone, and holds every rule entered and every call made with its
 # arguments against each other, and the audio besides. It wants no objects and
@@ -1026,7 +1026,7 @@ crashers32: $(BUILD)/evv32
 # since the thing it exists to catch is a change made for one language landing
 # in another. `test/matrix.sh check plpl' is there for iterating on one.
 # The gate a level below the one above: twenty thousand words rather than
-# 979 sentences, and what each is made of rather than what it sounds like.
+# 997 sentences, and what each is made of rather than what it sounds like.
 # It is what makes a change to a rule or a dictionary answerable, since the
 # sentence gate is far too small to notice one. Wants no Wine and no objects.
 .PHONY: words words-record

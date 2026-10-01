@@ -107,6 +107,13 @@ digit. They are written here and stand on IBM's rules rather than replacing
 them: the two calls in each `ut_numbr.dr` that were pointed at them are an
 edit to IBM's text, and the rest of that text is IBM's as it was.
 
+`eng_tok_lookup`, in `lang/enus/rules/ut_norm.up` and again in
+`lang/engb/rules/ut_norm.up`, is ours on the same terms. It was written here to
+put a space between a word and the digits or opening mark typed against it,
+and the bytes it reads out of each module's `rules/constants` stand for codes
+of IBM's alphabet as Polish's do. Every rule it calls or hands over to is
+IBM's, and so is everything else in both modules.
+
 That data is IBM's work, not ours. The MIT licence does not cover it and we are
 in no position to license it to anyone. The SDK it was read out of says as much
 itself, in `doc/wxp/readme.txt`:

@@ -14,7 +14,7 @@
 # rule it enters and every call it makes with the arguments, and that is what
 # the audio is made of: a rule that enters the same rules and makes the same
 # calls with the same values in the same order is the same rule, whatever the
-# bytes look like. This speaks the eight plain cases through a build carrying
+# bytes look like. This speaks the plain cases through a build carrying
 # the authored rule and through one carrying IBM's, and the traces have to
 # match.
 #
@@ -44,7 +44,7 @@
 # does and feeding it that slowly faults part way through several sentences in
 # one run. That is tools/rules/check-c.sh's finding and it holds here.
 #
-# The sentences are the suite's eight plain ones and test/cases/upper.txt
+# The sentences are the suite's plain ones and test/cases/upper.txt
 # beside them, which is this harness's own; EVV_UPPER_CASES names another list
 # of files, which is how the workflow runs the short one. The seven were not
 # enough and saying why is worth more than the fix: has_lex_prefix takes one
@@ -125,8 +125,18 @@ echo "upper: $(echo "$named" | wc -w) rules: $(echo $named)"
 afresh=$(for f in "${files[@]}"; do
     awk '$1 == "rule" { name = $2 } $1 == "afresh" { print name }' "$f"
 done)
-[ -z "$afresh" ] || echo "upper: written afresh, so held by the sound alone:" \
-                         "$(echo $afresh)"
+
+# A rule the lifted text has no rule of that name for stands in for nothing,
+# and the lifted text may call it, so IBM's side is built with it too. The two
+# sides cannot differ by it, which means nothing here holds it, and it is
+# named as that rather than among the rules the sound holds.
+lifted=$(awk '$1 == "rule" { print $2 }' "$here/$lang/rules"/*.dr)
+alone=$(for r in $afresh; do echo "$lifted" | grep -qx "$r" && echo "$r"; done)
+new=$(for r in $named; do echo "$lifted" | grep -qx "$r" || echo "$r"; done)
+[ -z "$alone" ] || echo "upper: written afresh, so held by the sound alone:" \
+                        "$(echo $alone)"
+[ -z "$new" ] || echo "upper: standing in for nothing, so on both sides:" \
+                      "$(echo $new)"
 
 build() {
     rm -f "$here/build/probe$suf"
