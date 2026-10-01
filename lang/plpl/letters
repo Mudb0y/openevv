@@ -24,6 +24,12 @@
 # the voice whole, so its arms swallow the rest of it: jest dobrze is jezd,
 # and sześć złotych is szeźdź.
 #
+# Inside a word the same holds without the space, `before voiced': prośba
+# is proźba, jakby jagby, liczba lidżba. A voiced letter counts only where it
+# keeps its own voice, which is `unless voiceless follows' on its class, so
+# liczb at the end of a word keeps its cz. And a voiced cluster loses its
+# voice whole as well: gwiazd is gwiast, mózg músk.
+#
 # The phones are the engine's own, and several are named for the Italian
 # sounds they took over, so the lines above the letters let an arm name them
 # by Polish spelling instead. The vowels keep the engine's names, since e, o,
@@ -41,7 +47,7 @@ a piece runs from 864 to 872
 a word runs from 704 to 712
 
 voiceless means p t k f s c h ś ć sz cz and the end of the word unless voiced follows
-voiced means b d g z ź ż
+voiced means b d g z ź ż unless voiceless follows
 ą ć ę ł ń ś ź ż come through q
 
 phone sz is L
@@ -60,20 +66,25 @@ phone ę is o
 letter s
   szcz before voiced word  says ż d ż  # deszcz go
   sz before voiced word  says ż     # nasz dom
+  sz before voiced     says ż
   sz                   says sz      # szafa
   si before vowel      says ś       # Kasia
   s before i           says ś       # siła
   st before voiced word  says z d   # jest dobrze
+  st before voiced     says z d     # natomiastbym
   s before voiced word says z       # las daleko
+  s before voiced      says z
   s                    says s
 
 letter c
   cz before voiced word  says d ż   # klucz do
+  cz before voiced     says d ż     # liczba
   cz                   says t sz    # czas
   ch                   says ch      # chleb
   ci before vowel      says ć       # ciasto
   c before i           says ć       # cisza
   c before voiced word says dz      # noc była
+  c before voiced      says dz
   c                    says ts      # cena
 
 # rz is the voiced retroflex, not an r and a z. The words where it is one --
@@ -101,6 +112,8 @@ letter d
 
 letter z
   zau at word start    says z a u   # zaufanie, zauważyć
+  zd before voiceless  says s t     # gwiazd, gwiazdka
+  zg before voiceless  says s k     # mózg
   zi before vowel      says ź       # ziarno
   z before i           says ź       # zima
   z before voiceless   says s       # raz
@@ -159,13 +172,16 @@ letter ń
 letter ś
   ść before voiced word  says ź dź  # sześć złotych
   ś before voiced word says ź       # coś dobrego
+  ś before voiced      says ź       # prośba
   ś                    says ś
 
 letter ć
   ć before voiced word says dź      # być dobrym
+  ć before voiced      says dź
   ć                    says ć
 
 letter ź
+  źdź before voiceless  says ś ć    # gwóźdź
   ź before voiceless   says ś
   ź                    says ź
 
@@ -175,11 +191,13 @@ letter ż
 
 letter f
   f before voiced word  says v     # szef banku
+  f before voiced       says v
   ff   says f f   marked geminate yes
   f    says f
 
 letter p
   p before voiced word  says b     # chłop go
+  p before voiced       says b
   pp   says p p   marked geminate yes
   p    says p
 
@@ -191,6 +209,7 @@ letter t
   t before rz          says t       marked tenseness tense   # trzy
   tri before vowel at word start  says t r i   # trio, triumf, triangel
   t before voiced word  says d     # kot biega
+  t before voiced       says d
   tt   says t t   marked geminate yes
   t    says t
 
@@ -201,6 +220,7 @@ letter v
 letter k
   kt before voiced word  says g d  # fakt był
   k before voiced word  says g     # jak dobrze
+  k before voiced       says g     # jakby, także
   k    says k
 
 letter x

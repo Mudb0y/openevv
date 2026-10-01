@@ -345,98 +345,110 @@ uint8_t plpl_evv_authored_data[] = {
     31,1,5,
     /* say_091e1f, 3 bytes at 559 */
     9,30,31,
-    /* lts_zi, 2 bytes at 562 */
+    /* lts_zd, 2 bytes at 562 */
+    31,13,
+    /* say_0a04, 2 bytes at 564 */
+    10,4,
+    /* lts_zg, 2 bytes at 566 */
+    31,15,
+    /* say_0a05, 2 bytes at 568 */
+    10,5,
+    /* lts_zi, 2 bytes at 570 */
     31,3,
-    /* say_05, 1 bytes at 564 */
+    /* say_05, 1 bytes at 572 */
     5,
-    /* say_06, 1 bytes at 565 */
+    /* say_06, 1 bytes at 573 */
     6,
-    /* lts_nau, 3 bytes at 566 */
+    /* lts_nau, 3 bytes at 574 */
     21,1,5,
-    /* say_121e1f, 3 bytes at 569 */
+    /* say_121e1f, 3 bytes at 577 */
     18,30,31,
-    /* lts_nieu, 4 bytes at 572 */
+    /* lts_nieu, 4 bytes at 580 */
     21,3,2,5,
-    /* say_131d1f, 3 bytes at 576 */
+    /* say_131d1f, 3 bytes at 584 */
     19,29,31,
-    /* lts_ni, 2 bytes at 579 */
+    /* lts_ni, 2 bytes at 587 */
     21,3,
-    /* say_13, 1 bytes at 581 */
+    /* say_13, 1 bytes at 589 */
     19,
-    /* say_1d, 1 bytes at 582 */
+    /* say_1d, 1 bytes at 590 */
     29,
-    /* say_21, 1 bytes at 583 */
+    /* say_21, 1 bytes at 591 */
     33,
-    /* say_1c, 1 bytes at 584 */
+    /* say_1c, 1 bytes at 592 */
     28,
-    /* say_02, 1 bytes at 585 */
+    /* say_02, 1 bytes at 593 */
     2,
-    /* say_01, 1 bytes at 586 */
+    /* say_01, 1 bytes at 594 */
     1,
-    /* say_08, 1 bytes at 587 */
+    /* say_08, 1 bytes at 595 */
     8,
-    /* say_07, 1 bytes at 588 */
+    /* say_07, 1 bytes at 596 */
     7,
-    /* lts_ff, 2 bytes at 589 */
+    /* lts_ff, 2 bytes at 597 */
     14,14,
-    /* say_0808, 2 bytes at 591 */
+    /* say_0808, 2 bytes at 599 */
     8,8,
-    /* lts_pp, 2 bytes at 593 */
+    /* lts_pp, 2 bytes at 601 */
     22,22,
-    /* say_0202, 2 bytes at 595 */
+    /* say_0202, 2 bytes at 603 */
     2,2,
-    /* lts_tri, 3 bytes at 597 */
+    /* lts_tri, 3 bytes at 605 */
     26,24,3,
-    /* say_04151b, 3 bytes at 600 */
+    /* say_04151b, 3 bytes at 608 */
     4,21,27,
-    /* lts_tt, 2 bytes at 603 */
+    /* lts_tt, 2 bytes at 611 */
     26,26,
-    /* say_0404, 2 bytes at 605 */
+    /* say_0404, 2 bytes at 613 */
     4,4,
-    /* lts_vv, 2 bytes at 607 */
+    /* lts_vv, 2 bytes at 615 */
     27,27,
-    /* say_0707, 2 bytes at 609 */
+    /* say_0707, 2 bytes at 617 */
     7,7,
-    /* lts_kt, 2 bytes at 611 */
+    /* lts_kt, 2 bytes at 619 */
     18,26,
-    /* say_0603, 2 bytes at 613 */
+    /* say_0603, 2 bytes at 621 */
     6,3,
-    /* say_050a, 2 bytes at 615 */
+    /* say_050a, 2 bytes at 623 */
     5,10,
-    /* say_1e, 1 bytes at 617 */
+    /* say_1e, 1 bytes at 625 */
     30,
-    /* lts_ll, 2 bytes at 618 */
+    /* lts_ll, 2 bytes at 626 */
     19,19,
-    /* say_1717, 2 bytes at 620 */
+    /* say_1717, 2 bytes at 628 */
     23,23,
-    /* say_17, 1 bytes at 622 */
+    /* say_17, 1 bytes at 630 */
     23,
-    /* lts_mm, 2 bytes at 623 */
+    /* lts_mm, 2 bytes at 631 */
     20,20,
-    /* say_1111, 2 bytes at 625 */
+    /* say_1111, 2 bytes at 633 */
     17,17,
-    /* say_11, 1 bytes at 627 */
+    /* say_11, 1 bytes at 635 */
     17,
-    /* lts_m, 1 bytes at 628 */
+    /* lts_m, 1 bytes at 636 */
     20,
-    /* say_1b, 1 bytes at 629 */
+    /* say_1b, 1 bytes at 637 */
     27,
-    /* lts_cf, 1 bytes at 630 */
+    /* lts_cf, 1 bytes at 638 */
     207,
-    /* lts_d1, 1 bytes at 631 */
+    /* lts_d1, 1 bytes at 639 */
     209,
-    /* lts_d2, 1 bytes at 632 */
+    /* lts_d2, 1 bytes at 640 */
     210,
-    /* lts_d3, 1 bytes at 633 */
+    /* lts_d3, 1 bytes at 641 */
     211,
-    /* say_23, 1 bytes at 634 */
+    /* say_23, 1 bytes at 642 */
     35,
-    /* say_20, 1 bytes at 635 */
+    /* say_20, 1 bytes at 643 */
     32,
-    /* lts_d4d0, 2 bytes at 636 */
+    /* lts_d4d0, 2 bytes at 644 */
     212,208,
-    /* say_0b0d, 2 bytes at 638 */
+    /* say_0b0d, 2 bytes at 646 */
     11,13,
+    /* lts_d50dd5, 3 bytes at 648 */
+    213,13,213,
+    /* say_0c0e, 2 bytes at 651 */
+    12,14,
 };
 
 const delta_store plpl_delta_authored_store[] = {
