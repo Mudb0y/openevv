@@ -668,9 +668,11 @@ notation-symbols:
 	@python3 tools/rules/notation.py symbols
 
 # The three files a build compiles, written out of the lifted text alone --
-# IBM's rules and nothing of ours. That is one of the two sides `upper-check'
-# holds against each other, and it is not what an ordinary build wants; `make
-# rulecode' is.
+# IBM's rules, with nothing of ours standing in for one of them. A rule of
+# ours that stands in for nothing still comes in, because the text may have
+# been edited to call it and would not link without it. That is one of the
+# two sides `upper-check' holds against each other, and it is not what an
+# ordinary build wants; `make rulecode' is.
 notation-rewrite:
 	@python3 tools/rules/notation.py rewrite
 
@@ -685,7 +687,7 @@ notation-rewrite:
 #
 # `upper-check' is the one that says whether an authored rule is the rule it
 # stands in for. There is no byte comparison to be had: our compiler would
-# have to make the same choices IBM's did. So it speaks the seven plain cases
+# have to make the same choices IBM's did. So it speaks the eight plain cases
 # through a build carrying the authored rules and through one carrying IBM's,
 # and holds every rule entered and every call made with its arguments against
 # each other, and the audio besides. It wants no objects and no Wine.
@@ -709,7 +711,7 @@ upper-check:
 # The other question about a rule, and the other gate. `upper-check' asks
 # whether an authored rule is the rule it stands in for; this asks whether a
 # rule written as C does what the same rule does as bytecode. It writes the
-# smallest few rules out as C, speaks the seven plain cases through a build
+# smallest few rules out as C, speaks the eight plain cases through a build
 # carrying those beside the interpreter and through one carrying the
 # interpreter alone, and holds every rule entered and every call made with its
 # arguments against each other, and the audio besides. It wants no objects and

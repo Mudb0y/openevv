@@ -1,0 +1,127 @@
+# The same rules as lang/enus/rules/ut_numbr.up, and kept in step with them;
+# British English names its comma ZZstring498 where American has ZZstring494.
+#
+# A long number is read three digits at a time, and the word that names a
+# group -- million, thousand -- is inserted by a rule that then steps over a
+# comma after the group, so the next group starts at its first digit. A group
+# of three noughts names nothing, so in IBM's rules nothing steps over its
+# comma: the next group starts at the comma, and the comma is read as its
+# hundreds digit. 1,000,000 is one million comma hundred there, and 1,000,500
+# one million comma hundred fifty zero, where 1000000 and 1,001,000 are right.
+# IBM's own engine reads them so, and this is a deliberate divergence from it.
+#
+# The commas a group steps over stay where they were, which is harmless
+# before the words of the next group and not after the last: where the last
+# group is noughts nothing is left after them, and a 5,000-strong army is five
+# thousand dash strong, the comma standing between the number and the hyphen.
+
+# Whether the digits between the two points are three noughts, asked the way
+# the loop of convert_large_numbers asks it.
+rule noughts_group takes 3 from ut_numbr.obj
+  afresh
+  call ZZfence_null
+  call ZZlpta_load__setscan_r__1 arg 1
+  if answer is not 0
+    give up
+  end
+  call ZZtestFldeq1_0_53
+  if answer is not 0
+    give up
+  end
+  call advance_tok
+  if answer is not 0
+    give up
+  end
+  call ZZtestFldeq1_0_53
+  if answer is not 0
+    give up
+  end
+  call advance_tok
+  if answer is not 0
+    give up
+  end
+  call ZZtestFldeq1_0_53
+  if answer is not 0
+    give up
+  end
+  call advance_tok
+  if answer is not 0
+    give up
+  end
+  call ZZlpta_loadp__test_ptr arg 2
+  if answer is 0
+    match
+  end
+  give up
+end
+
+# It stands where convert_hundreds stood in the loop of convert_large_numbers
+# and hands over to it either way. A group of noughts with a comma after it
+# then has its end laid past the comma, since the end of a group of noughts
+# is where the loop reads on from. The noughts are asked about first, because
+# convert_hundreds takes them out.
+rule convert_hundreds_group takes 3 from ut_numbr.obj
+  afresh
+  local noughts
+  call ZZfence_null
+  set noughts to 0
+  call noughts_group arg 1 arg 2
+  if answer is 0
+    set noughts to 1
+  end
+  call convert_hundreds arg 1 arg 2
+  if answer is not 0
+    give up
+  end
+  if noughts is 0
+    match
+  end
+  call ZZlpta_load__setscan_r__1 arg 2
+  if answer is not 0
+    match
+  end
+  call ZZtest_string_s_1_1_ZZstring498          # a comma
+  if answer is not 0
+    match
+  end
+  call savescptr 1 arg 2
+  match
+end
+
+# It stands where convert_hundreds stood for the last group. Where that group
+# is noughts, the commas before it come out first, every one of them back to
+# the last word, because groups of noughts before it have left theirs there
+# too. The left point is kept and the one before the commas goes, since
+# convert_hundreds reads the group from the left point.
+rule convert_hundreds_last takes 3 from ut_numbr.obj
+  afresh
+  local before bytes 8
+  call ZZfence_null
+  call noughts_group arg 1 arg 2
+  if answer is not 0
+    go to convert
+  end
+  call ZZlpta_load__setscan_l__1 arg 1
+  if answer is not 0
+    go to convert
+  end
+  call ZZtest_string_s_1_1_ZZstring498
+  if answer is not 0
+    go to convert
+  end
+  call savescptr 1 addr before
+  while 1
+    call ZZtest_string_s_1_1_ZZstring498
+    if answer is not 0
+      leave
+    end
+    call savescptr 1 addr before
+  end
+  call delete_inp_from_left addr before arg 1
+place convert
+  call convert_hundreds arg 1 arg 2
+  if answer is 0
+    match
+  end
+  give up
+end

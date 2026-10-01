@@ -5,6 +5,11 @@
 # immediately before these were written, and every case
 # matched. See docs/testing.md.
 #
+# Except plain 8, dict 8 and second 8, which are
+# ours: their numbers are read the way the same
+# numbers without commas are, which IBM's are not.
+# That is a deliberate divergence, in docs/quirks.md.
+#
 # Written by test/matrix.sh record. One line a case:
 # the category, which case in it, the first sixteen hex of
 # the samples' hash, the same of the reported answers', and
@@ -17,6 +22,7 @@ plain 4 e7a11c93534f30c4 a1e5621c0f3ea2ab Testing 1 2 3, ABC XYZ, hyphenated-wor
 plain 5 d4fe33fae44e4dd2 0510369e14ad1de4 A one-word line. And another; plus "quoted text" inside.
 plain 6 a88f7780f99a13ba ae4f5b9644f97421 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 plain 7 7e9af2ea4dba240e 3eb8ff362ee29579 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
+plain 8 5e4e4261780111e4 b95269c27c9fd588 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
 utf8 1 2cba283bbc20a3db 40f4350994711124 The café near the naïve façade serves crème brûlée.
 utf8 2 fbfafe97c8242c26 7c4a7e73e38e6812 Señor Muñoz sent a piñata to São Paulo.
 utf8 3 61fcfac615b2d919 9ae793574e952e3e Zdzisław Świątek mieszka w Świdnicy przy ulicy Żółkiewskiego.
@@ -91,6 +97,7 @@ dict 4 e7a11c93534f30c4 6eca567e8997e026 Testing 1 2 3, ABC XYZ, hyphenated-word
 dict 5 d4fe33fae44e4dd2 33b55a66d62a7fdc A one-word line. And another; plus "quoted text" inside.
 dict 6 a88f7780f99a13ba 8f9977deac0b8aed Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 dict 7 7e9af2ea4dba240e 2caa7d7a205d4e81 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
+dict 8 5e4e4261780111e4 ea5f70aad43d4da2 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
 second 1 db2e00e0f9ab64fb 037e77e3b6c804e8 Hello. This is the Eloquence synthesizer speaking.
 second 2 57f7c1d18ea0f0ef de97496935239d6d Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
 second 3 81d0422a00ae42a5 2f2c1ff4a53946d0 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
@@ -98,6 +105,7 @@ second 4 65d73728758609e6 c9c9bcf7c5bd2bf3 Testing 1 2 3, ABC XYZ, hyphenated-wo
 second 5 e1320b954e42c341 a1b49785ad188161 A one-word line. And another; plus "quoted text" inside.
 second 6 14745f54e31b2b76 3be620822db61a80 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 second 7 d401d15e5c679712 346bc95b9a130046 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
+second 8 2b93fcf546ef2622 f36d14b6d4816c51 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
 ssml 1 aeba6858c67acfd3 ccb3a95964bf53a9 <speak version="1.0" xml:lang="en-US">Hello there.</speak>
 ssml 2 302249f0afbd77b8 de25113fd6146a34 <speak version="1.0" xml:lang="en-US"><prosody rate="slow">Slowly now.</prosody> Back to normal.</speak>
 ssml 3 3653258574f72763 69a05cfadd8d7790 <speak version="1.0" xml:lang="en-US"><prosody pitch="high" range="x-high" volume="loud">All four at once.</prosody></speak>

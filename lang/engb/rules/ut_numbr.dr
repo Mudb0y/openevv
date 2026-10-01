@@ -1438,7 +1438,7 @@ label L15 was $X7$100052
   load movl slotaddr 100 into r0
   push slotaddr 100
   push reg r6
-  call convert_hundreds arity 3 depth 4
+  call convert_hundreds_group arity 3 depth 4
   popn 4
 label L16 was $X8$100063
   store movl imm 3 slot 84
@@ -1481,7 +1481,7 @@ label L21 was $X1$100091
   load movl slotaddr 100 into r0
   push slotaddr 100
   push reg r6
-  call convert_hundreds arity 3 depth 4
+  call convert_hundreds_last arity 3 depth 4
   popn 4
 label L22 was $X20$100094
   push reg r6

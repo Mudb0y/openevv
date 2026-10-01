@@ -14,7 +14,7 @@
 # rule it enters and every call it makes with the arguments, and that is what
 # the audio is made of: a rule that enters the same rules and makes the same
 # calls with the same values in the same order is the same rule, whatever the
-# bytes look like. This speaks the seven plain cases through a build carrying
+# bytes look like. This speaks the eight plain cases through a build carrying
 # the authored rule and through one carrying IBM's, and the traces have to
 # match.
 #
@@ -44,7 +44,7 @@
 # does and feeding it that slowly faults part way through several sentences in
 # one run. That is tools/rules/check-c.sh's finding and it holds here.
 #
-# The sentences are the suite's seven plain ones and test/cases/upper.txt
+# The sentences are the suite's eight plain ones and test/cases/upper.txt
 # beside them, which is this harness's own; EVV_UPPER_CASES names another list
 # of files, which is how the workflow runs the short one. The seven were not
 # enough and saying why is worth more than the fix: has_lex_prefix takes one
@@ -246,9 +246,11 @@ for line in open(sys.argv[1]):
 ' "$1" $afresh
 }
 
-# IBM's rules and nothing of ours, which is the side an authored rule has to
-# be held against. `rewrite' is that: the lifted text alone, with every
-# upper-form file left out whether the module claims it or not.
+# IBM's rules with nothing of ours standing in for them, which is the side an
+# authored rule has to be held against. `rewrite' is that: the lifted text,
+# with every upper-form rule that stands in for one of IBM's left out whether
+# the module claims it or not, and only the ones the text calls that stand in
+# for nothing taken in.
 echo "upper: writing IBM's rules out of the lifted text"
 python3 "$tools/rules/notation.py" rewrite >/dev/null || exit 1
 cp "$rules" "$work/kept.c"

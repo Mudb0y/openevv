@@ -5,3 +5,4 @@ Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
 A one-word line. And another; plus "quoted text" inside.
 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
+A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.

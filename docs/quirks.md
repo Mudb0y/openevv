@@ -144,9 +144,19 @@ The libraries in a release are built by one mingw and tested with harnesses buil
 
 It does not matter for the callers that exist: Python's ctypes and a screen reader's host DLL are MSVC built with no mingw runtime in them at all, and CI checks both of those crossings on Windows itself. But do not conclude from a fault in a hand-mixed pair that the shipped library is broken. Check a matched pair first.
 
+## Long numbers with commas in them
+
+**IBM's English reads a group of three noughts wrongly when another group follows it.** 1,000,000 is one million comma hundred, 1,000,500 is one million comma hundred fifty zero, and 25,000,000 is twenty five million comma hundred, in both Englishes. The same numbers without commas are right, and so is a number whose noughts come last, 1,001,000 and 5,000 among them. Ours reads every one of them as the number without commas is read, which is the twenty-first deliberate divergence.
+
+A long number is read three digits at a time, and the rule that inserts the word naming a group -- million, thousand -- also steps over the comma after the group, so the next group starts at its first digit. A group of noughts names nothing, so in IBM's rules nothing steps over its comma, and the next group is read from the comma, which is spoken as its hundreds digit. Ours steps over that comma too. And where the last group is noughts, the commas before it come out, since nothing is left after them to stand in front of: IBM's reads a 5,000-strong army as five thousand dash strong, and where such a number ends the text its phoneme report ends with a comma that makes no sound.
+
+The rules are `lang/enus/rules/ut_numbr.up` and its British twin, standing where `convert_hundreds` stood in `convert_large_numbers`. Plain 8, dict 8 and second 8 of each English in `test/matrix.sh` hold it, which makes them the only English cases IBM's binary would not have blessed: `test/suite.sh` reports those three as differing in both, and that is the oracle saying what the original does. A comma list such as 1,2,3 is one comma two comma three as before.
+
+What this leaves is a hyphen after a grouped number, which is read as minus where the same number without commas reads it as to or dash -- 5,001-6,001 against 5001-6001 -- with no group of noughts in it at all. That is another rule deciding from the commas themselves, IBM's as well, and not touched.
+
 ## If it sounds wrong
 
-It is not a fault in the port. The audio is identical to IBM's by design, over 979 recorded cases in ten languages and every build the tree makes. That is Eloquence sounding like Eloquence.
+It is not a fault in the port. The audio is identical to IBM's by design, over 985 recorded cases in ten languages and every build the tree makes, apart from the six numbers above. That is Eloquence sounding like Eloquence.
 
 Changing it is a deliberate change to the language data, and the gate will correctly report that as a difference.
 

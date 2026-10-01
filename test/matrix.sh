@@ -284,6 +284,15 @@ for t in $want; do
                 echo "# differential suite was run for this language"
                 echo "# immediately before these were written, and every case"
                 echo "# matched. See docs/testing.md."
+                case $t in
+                enus|engb)
+                    echo "#"
+                    echo "# Except plain 8, dict 8 and second 8, which are"
+                    echo "# ours: their numbers are read the way the same"
+                    echo "# numbers without commas are, which IBM's are not."
+                    echo "# That is a deliberate divergence, in docs/quirks.md."
+                    ;;
+                esac
             fi
             echo "#"
             echo "# Written by test/matrix.sh record. One line a case:"

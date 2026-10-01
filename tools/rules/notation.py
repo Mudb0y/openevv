@@ -22,7 +22,7 @@ exactly would be hard. Reading and round-tripping are different jobs, so they
 have different forms.
 
 usage: tools/rules/notation.py build            the three files a build compiles
-       tools/rules/notation.py rewrite          the same, IBM's rules alone
+       tools/rules/notation.py rewrite          the same, IBM's where ours would stand in
        tools/rules/notation.py authored         the same, the module's trials in too
        tools/rules/notation.py write  <object> [> file]
        tools/rules/notation.py read   <file>
@@ -349,14 +349,17 @@ def text_rules(upper=True, trial=False):
     everything else reaches it by. A name that is only in the upper form
     comes after that object's own.
 
-    Asked for the lower form alone, it ignores the upper files altogether,
-    which is what a check against IBM's objects wants: a rule written afresh
-    is meant to differ, so counting it there would turn that check red and
-    leave it red. Asked for the trials as well, it takes in the files the
-    module says are not its own, which is the second of the two builds
-    tools/rules/check-upper.sh holds against each other.
+    Asked for the lower form alone, it takes no rule of the upper form that
+    stands in for one of the lower, which is what a check against IBM's
+    objects wants: a rule written afresh is meant to differ, so counting it
+    there would turn that check red and leave it red. A name only the upper
+    form has still comes in, because the lower form may have been edited to
+    call it, and without it what is left does not link. Asked for the trials
+    as well, it takes in the files the module says are not its own, which is
+    the second of the two builds tools/rules/check-upper.sh holds against
+    each other.
     """
-    du = sibling("rules/upper") if upper else None
+    du = sibling("rules/upper")
     left_out = set() if trial else trials()
     out = []
     authored = []
@@ -366,13 +369,17 @@ def text_rules(upper=True, trial=False):
         rules, tables = ([], {})
         if os.path.exists(low):
             rules, tables = read_rules(open(low, encoding="utf-8"))
-        if upper and os.path.exists(up) and stem + ".up" not in left_out:
+        if os.path.exists(up) and stem + ".up" not in left_out:
             written = du.compile_file(up, LANG)
             by_name = dict((r[0], r) for r in written)
-            rules = [by_name.pop(name, (name, d, obj))
-                     for name, d, obj in rules]
+            if upper:
+                rules = [by_name.pop(name, (name, d, obj))
+                         for name, d, obj in rules]
+                authored += [r[0] for r in written]
+            else:
+                for name, _d, _obj in rules:
+                    by_name.pop(name, None)
             rules += [by_name[r[0]] for r in written if r[0] in by_name]
-            authored += [r[0] for r in written]
         out.append((stem, rules, tables))
     return out, authored
 
@@ -404,8 +411,9 @@ def write_files(upper=True, trial=False):
     silently did not happen.
 
     `upper' takes the module's own rules written in the upper form in, which
-    is what an ordinary build wants; without it only the lifted text is read,
-    which is IBM's rules and nothing of ours. `trial' takes in the upper-form
+    is what an ordinary build wants; without it the lifted text is read with
+    nothing of ours standing in for IBM's rules, and only the rules of ours
+    that stand in for nothing taken in beside it. `trial' takes in the upper-form
     files the module says are not its own as well. The three answers are the
     three builds anything here ever wants: what IBM compiled, what the module
     is, and what the module would be if its trials were part of it.
@@ -889,7 +897,7 @@ def main():
     if what == "build":
         return 0 if write_files() else 1
 
-    # IBM's rules and nothing of ours, which is the side
+    # IBM's rules with nothing of ours standing in for them, which is the side
     # tools/rules/check-upper.sh holds an authored rule against.
     if what == "rewrite":
         return 0 if write_files(upper=False) else 1
