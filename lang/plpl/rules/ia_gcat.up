@@ -8,339 +8,53 @@
 # and otherwise hands over to Italian's rule, which finds nothing.
 #
 # The word must be the whole of the letters it is handed: na is not the start
-# of nazwa. nie is not here, since Polish stresses it before a verb of one
-# syllable, NIE wiem. Categories are the word statement's: 17 prep, 8 conj,
+# of nazwa. Categories are the word statement's: 3 adv, 17 prep, 8 conj,
 # 18 pro.
+#
+# nie is one of them only sometimes. Before a word of one syllable it takes
+# the stress and the word gives its own up, NIE wiem and NIE ma, which is
+# pol_tok_lookup's to say by joining the two into one word; before a longer
+# word, or one of the words above, it is unstressed like them, nie wiedziałem
+# and nie na stole; and before a pause it keeps its stress, as any word of
+# one syllable does.
 rule pol_funct_words takes 5 from ia_gcat.obj
   afresh
   variable level word 1828
   local category
   call ZZfence_null
-  call lpta_loadp arg 1
-  call setscan_r 1
+  call pol_unstressed_prep arg 1 arg 2
   if answer is 0
-    call test_string_s 1 2 sym pol_fw_na
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
+    set category to 17
+    go to found
+  end
+  call pol_unstressed_conj arg 1 arg 2
+  if answer is 0
+    set category to 8
+    go to found
+  end
+  call pol_unstressed_pro arg 1 arg 2
+  if answer is 0
+    set category to 18
+    go to found
   end
   call lpta_loadp arg 1
   call setscan_r 1
   if answer is 0
-    call test_string_s 1 2 sym pol_fw_do
+    call test_string_s 1 3 sym pol_fw_nie
     if answer is 0
       call lpta_loadp arg 2
       call test_ptr
       if answer is 0
-        set category to 17
-        go to found
+        call pol_nie_keeps_stress arg 2
+        if answer is not 0
+          set category to 3
+          go to found
+        end
+        go to others
       end
     end
   end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 2 sym pol_fw_po
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 2 sym pol_fw_od
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 2 sym pol_fw_za
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 1 sym pol_fw_o
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 1 sym pol_fw_u
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 2 sym pol_fw_ku
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 2 sym pol_fw_ze
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 2 sym pol_fw_we
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 4 sym pol_fw_przy
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 3 sym pol_fw_bez
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 3 sym pol_fw_dla
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 5 sym pol_fw_przez
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 3 sym pol_fw_pod
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 3 sym pol_fw_nad
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 5 sym pol_fw_przed
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 4 sym pol_fw_znad
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 4 sym pol_fw_spod
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 3 sym pol_fw_zza
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 6 sym pol_fw_sprzed
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 17
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 1 sym pol_fw_i
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 8
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 1 sym pol_fw_a
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 8
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 3 sym pol_fw_sie_
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 18
-        go to found
-      end
-    end
-  end
-  call lpta_loadp arg 1
-  call setscan_r 1
-  if answer is 0
-    call test_string_s 1 2 sym pol_fw_z_e
-    if answer is 0
-      call lpta_loadp arg 2
-      call test_ptr
-      if answer is 0
-        set category to 8
-        go to found
-      end
-    end
-  end
+place others
   call ital_funct_words arg 1 arg 2 arg 3 arg 4
   if answer is 0
     match
@@ -352,4 +66,500 @@ place found
   call lpta_rpta_loadp arg 3 arg 4
   call mark_s 4 1 category 0
   match
+end
+
+# Whether nie keeps its stress: it does when nothing follows but a pause, and
+# when a word of one syllable follows that is not one of the words above and
+# was not joined to it -- one written in capitals, say. Handed the point after
+# the nie.
+rule pol_nie_keeps_stress takes 2 from ia_gcat.obj
+  afresh
+  local next bytes 8
+  local last bytes 8
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is not 0
+    match
+  end
+  call testFldeq 1 0 72
+  if answer is not 0
+    match
+  end
+  call advance_tok
+  if answer is not 0
+    match
+  end
+  call savescptr 1 addr next
+  call pol_one_syllable addr next
+  if answer is not 0
+    give up
+  end
+  # Where that word ends, so that it can be held against the list whole.
+  call lpta_loadp addr next
+  call setscan_r 1
+  while 1
+    call pol_is_letter
+    if answer is not 0
+      leave
+    end
+    call advance_tok
+    if answer is not 0
+      leave
+    end
+  end
+  call savescptr 2 addr last
+  call pol_never_stressed addr next addr last
+  if answer is 0
+    give up
+  end
+  match
+end
+
+# Whether the word whose letters begin after this point has one syllable.
+# A vowel letter is a syllable, but for one straight after an i, which is
+# then the softness of the consonant before it: wiem and nie are one, piasek
+# and kiedy two.
+rule pol_one_syllable takes 2 from ia_gcat.obj
+  afresh
+  local count
+  local afteri
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is not 0
+    give up
+  end
+  set count to 0
+  set afteri to 0
+  while 1
+    call pol_is_vowel
+    if answer is 0
+      if afteri is 0
+        increment count
+      end
+      set afteri to 0
+      call testFldeq 1 0 3
+      if answer is 0
+        set afteri to 1
+      end
+    else
+      call pol_is_letter
+      if answer is not 0
+        leave
+      end
+      set afteri to 0
+    end
+    call advance_tok
+    if answer is not 0
+      leave
+    end
+  end
+  if count is 1
+    match
+  end
+  give up
+end
+
+# Whether the next letter is a vowel: a, ą, e, ę, i, o, ó, u or y.
+rule pol_is_vowel takes 1 from ia_gcat.obj
+  bare
+  afresh
+  call testFldeq 1 0 1
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 207
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 2
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 209
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 3
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 4
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 110
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 5
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 30
+  if answer is 0
+    answer 0
+  end
+  answer 1
+end
+
+# Whether the next thing is a letter of any kind, rather than a space, a
+# mark or nothing at all.
+rule pol_is_letter takes 1 from ia_gcat.obj
+  bare
+  afresh
+  call testFldeq 1 4 1
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 4 2
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 4 3
+  if answer is 0
+    answer 0
+  end
+  call pol_is_vowel
+end
+
+# Whether the letters between the two points are one of the prepositions
+# Polish never stresses.
+rule pol_unstressed_prep takes 3 from ia_gcat.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 2 sym pol_fw_na
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 2 sym pol_fw_do
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 2 sym pol_fw_po
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 2 sym pol_fw_od
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 2 sym pol_fw_za
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 1 sym pol_fw_o
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 1 sym pol_fw_u
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 2 sym pol_fw_ku
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 2 sym pol_fw_ze
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 2 sym pol_fw_we
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 4 sym pol_fw_przy
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 3 sym pol_fw_bez
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 3 sym pol_fw_dla
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 5 sym pol_fw_przez
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 3 sym pol_fw_pod
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 3 sym pol_fw_nad
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 5 sym pol_fw_przed
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 4 sym pol_fw_znad
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 4 sym pol_fw_spod
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 3 sym pol_fw_zza
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 6 sym pol_fw_sprzed
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  give up
+end
+
+# Whether the letters between the two points are one of the conjunctions
+# Polish never stresses.
+rule pol_unstressed_conj takes 3 from ia_gcat.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 1 sym pol_fw_i
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 1 sym pol_fw_a
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 2 sym pol_fw_z_e
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  give up
+end
+
+# Whether the letters between the two points are one of the pronoun
+# Polish never stresses.
+rule pol_unstressed_pro takes 3 from ia_gcat.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call test_string_s 1 3 sym pol_fw_sie_
+    if answer is 0
+      call lpta_loadp arg 2
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  give up
+end
+
+# Whether the letters between the two points are any of the words above.
+rule pol_never_stressed takes 3 from ia_gcat.obj
+  afresh
+  call pol_unstressed_prep arg 1 arg 2
+  if answer is 0
+    match
+  end
+  call pol_unstressed_conj arg 1 arg 2
+  if answer is 0
+    match
+  end
+  call pol_unstressed_pro arg 1 arg 2
+  if answer is 0
+    match
+  end
+  give up
 end

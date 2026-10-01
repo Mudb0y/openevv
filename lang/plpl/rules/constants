@@ -154,10 +154,11 @@ bytes pol_letter_w        1c
 bytes pol_letter_z        1f
 bytes pol_capital_w       31
 bytes pol_capital_z       34
+bytes pol_letter_e        02
 
 # The one-syllable words Polish never stresses: the prepositions, the
-# conjunctions i and a, and się and że. pol_unstressed in it_strss.up
-# holds a word against these.
+# conjunctions i and a, and się and że. The rules in ia_gcat.up hold a word
+# against these, and against nie, which is stressed only sometimes.
 bytes pol_fw_na          15 01   # na
 bytes pol_fw_do          0d 04   # do
 bytes pol_fw_po          16 04   # po
@@ -183,6 +184,8 @@ bytes pol_fw_i           03   # i
 bytes pol_fw_a           01   # a
 bytes pol_fw_sie_        19 03 d1   # się
 bytes pol_fw_z_e         d6 02   # że
+bytes pol_fw_nie         15 03 02   # nie
+bytes pol_capital_nie     2a 03 02   # Nie
 
 # The phones either side of a syllable boundary pol_syll_init_con in
 # it_syll.up asks about: a t or d and then the hard sz or ż.

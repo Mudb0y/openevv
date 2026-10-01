@@ -9,6 +9,11 @@
 # Only where a word of two letters or more follows. Litera w i litera z means
 # the letters, and so does a w at the end of a sentence or before a number.
 #
+# And nie before a word of one syllable is one word with it, stressed where
+# a word of two syllables is: NIE wiem, NIE ma, NIE chcę, as niewiem would be.
+# Not before one of the words Polish never stresses, nie na stole, which
+# pol_funct_words leaves nie unstressed before, nor before a longer word.
+#
 # It stands where tok_lookup stood in normalize_text and hands over to it
 # either way. The join is the machine's way of taking a character out: the
 # letter and the space after it are one range, and the letter alone is laid
@@ -17,6 +22,7 @@ rule pol_tok_lookup takes 2 from ut_norm.obj
   afresh
   local here bytes 8
   local right bytes 8
+  local last bytes 8
   local letter
   call ZZget_parmPTR addr here arg 1
   call ZZfence_null
@@ -48,7 +54,7 @@ rule pol_tok_lookup takes 2 from ut_norm.obj
     end
   end
   if letter is 0
-    go to lookup
+    go to nie
   end
   call ZZtest_string_s_1_1_ZZstring202          # a space after it
   if answer is not 0
@@ -76,6 +82,68 @@ rule pol_tok_lookup takes 2 from ut_norm.obj
   end
   call lpta_rpta_loadp addr here addr right
   call insert_2pt_s 1 1 letter 0
+  go to lookup
+place nie
+  call ZZlpta_load__setscan_r__1 addr here
+  if answer is not 0
+    go to lookup
+  end
+  call test_string_s 1 3 sym pol_fw_nie
+  if answer is 0
+    set letter to sym pol_fw_nie
+  end
+  if letter is 0
+    call ZZlpta_load__setscan_r__1 addr here
+    call test_string_s 1 3 sym pol_capital_nie
+    if answer is 0
+      set letter to sym pol_capital_nie
+    end
+  end
+  if letter is 0
+    go to lookup
+  end
+  call ZZtest_string_s_1_1_ZZstring202          # a space after it
+  if answer is not 0
+    go to lookup
+  end
+  call savescptr 1 addr right
+  while 1
+    call ZZtest_string_s_1_1_ZZstring202        # and any more
+    if answer is not 0
+      leave
+    end
+    call savescptr 1 addr right
+  end
+  call pol_one_syllable addr right
+  if answer is not 0
+    go to lookup
+  end
+  call lpta_loadp addr right                    # where that word ends
+  call setscan_r 1
+  while 1
+    call pol_is_letter
+    if answer is not 0
+      leave
+    end
+    call advance_tok
+    if answer is not 0
+      leave
+    end
+  end
+  call savescptr 2 addr last
+  call pol_never_stressed addr right addr last
+  if answer is 0
+    go to lookup
+  end
+  # The e and the space after it are the range, and the e alone goes back
+  # over it, which is the shape the w join has.
+  call lpta_loadp addr here
+  call setscan_r 1
+  call advance_tok
+  call advance_tok
+  call savescptr 3 addr last
+  call lpta_rpta_loadp addr last addr right
+  call insert_2pt_s 1 1 sym pol_letter_e 0
 place lookup
   call tok_lookup arg 1
   if answer is 0

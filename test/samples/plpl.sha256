@@ -17,7 +17,7 @@ plain 3 796fbaa1e031a448 6b0684b79f2d3ebc Zazolc gesla jazn, a pchnac w te lodz 
 plain 4 e320999747621e2a 2111889ce8b0e4ab Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
 plain 5 8f2ef8f03db03eef e05318edcb584794 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
 plain 6 22537baefc8e3896 2f6261d96796f8a5 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
-plain 7 3b4ca31204392b63 37b5f9d35ed75074 Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+plain 7 b4ea3d4796f92905 3f9df4936976828b Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
 utf8 1 24b828915fb66fbe bbf73cd0b2186def Zazolc gesla jazn to znany pangram bez ogonkow.
 utf8 2 14c2d2bcca807b4d 568dea4274af5e1a Zażółć gęślą jaźń to znany pangram z ogonkami.
 utf8 3 1eb40db1dd4061d8 8fbf6d3713c7989b Mężczyzna zjadł źdźbło trawy i pchnął łódź jeża.
@@ -42,7 +42,7 @@ anno 14 0b1d6007a29c8fa0 76d651894b76886d Konczy sie adnotacja na samym koncu `v
 anno 15 1d6800e5f3f2f26c 904afa1678781163 Bledne `vzz i `q i `v999 wszystkie w jednym wierszu.
 anno 16 f19c70a8a2edd802 b2d74bbc1be2ce9f Dwie `vs30`vv40 adnotacje bez niczego pomiedzy.
 anno 17 cd09b4b6e4a6ba07 d017fb368fdc6d0b `ui"a"`ui"b" dwa znaczniki bez niczego miedzy nimi.
-anno 18 c3e468cb1f1193b2 60dadb73e0ca76c7 Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
+anno 18 a724f822445ace01 daedc4921bf67c45 Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
 anno 19 dfd31afb01f36e1d 96000a747779b2d4 Razem `v3 glos `vs70 szybkosc `vv50 glosnosc naraz.
 anno 20 e4b5c05ad657f027 d1bb781923d9722d Tabulacja	i zawijanie wiersza z `vb40 zmiana.
 anno3 1 a61e2884ff808b36 c6b8ede2235cc4e0 Mowa normalna `vs50 teraz o wiele wolniejsza niz przedtem.
@@ -62,7 +62,7 @@ anno3 14 564fcb1d578d0d7f fee159447924e815 Konczy sie adnotacja na samym koncu `
 anno3 15 1d6800e5f3f2f26c 8b0b99afa3fe1757 Bledne `vzz i `q i `v999 wszystkie w jednym wierszu.
 anno3 16 5a893a9c08add67f 52ac00fb2a821954 Dwie `vs30`vv40 adnotacje bez niczego pomiedzy.
 anno3 17 5e5e39daba6d5bfb 0cdb99eb23c96c9f `ui"a"`ui"b" dwa znaczniki bez niczego miedzy nimi.
-anno3 18 c3e468cb1f1193b2 f80758c657c68f8e Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
+anno3 18 a724f822445ace01 24ebca7ac776383d Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
 anno3 19 e1cddc0ea4945b03 37fc9a78868114a7 Razem `v3 glos `vs70 szybkosc `vv50 glosnosc naraz.
 anno3 20 118eef839f90792f 422ffeb08337b6e7 Tabulacja	i zawijanie wiersza z `vb40 zmiana.
 realworld 1 1c752b194c1d1aea 07fdeabf60b0b4b9 Mowa normalna `vs50 teraz o wiele wolniejsza niz przedtem.
@@ -82,7 +82,7 @@ realworld 14 564fcb1d578d0d7f 3a31e1c269e31125 Konczy sie adnotacja na samym kon
 realworld 15 1d6800e5f3f2f26c 6907f17b6108cbb6 Bledne `vzz i `q i `v999 wszystkie w jednym wierszu.
 realworld 16 167c0f43d7288ed8 4923cc369c62884f Dwie `vs30`vv40 adnotacje bez niczego pomiedzy.
 realworld 17 5e5e39daba6d5bfb fc6842641aef5c3f `ui"a"`ui"b" dwa znaczniki bez niczego miedzy nimi.
-realworld 18 c3e468cb1f1193b2 154dd155cb994cee Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
+realworld 18 a724f822445ace01 ce79a4690e0480b4 Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
 realworld 19 c83ca0f8c3cd4777 1045165396013fcf Razem `v3 glos `vs70 szybkosc `vv50 glosnosc naraz.
 realworld 20 8e4e9b5842a26e57 b574f68f7ef9a969 Tabulacja	i zawijanie wiersza z `vb40 zmiana.
 dict 1 5e5e0f3c19231902 c376f7a6623f8248 Dzien dobry. Tu mowi syntezator mowy Eloquence.
@@ -91,18 +91,18 @@ dict 3 796fbaa1e031a448 219508dab35e05ed Zazolc gesla jazn, a pchnac w te lodz j
 dict 4 e320999747621e2a 7e817486c386bbb6 Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
 dict 5 8f2ef8f03db03eef 0bc6d88b4cfb9c34 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
 dict 6 22537baefc8e3896 e613ff0ac073d95b Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
-dict 7 3b4ca31204392b63 5782b7691e07f1fd Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+dict 7 b4ea3d4796f92905 6e98d5e48e70e18f Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
 second 1 3d6668611b22f6a6 4cdd5331770c2e5b Dzien dobry. Tu mowi syntezator mowy Eloquence.
 second 2 3eb41bb79f9d3736 3146be1d3317d1b6 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
 second 3 0b41448c3aad9ef4 76b297de7f564496 Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
 second 4 8235c9af2130ba72 c69368bde566226e Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
 second 5 1f5999959c8f05d3 387655eb8bd7fa6f Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
 second 6 600fb6e1018435f8 fb3b1f7ee740b018 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
-second 7 00386c6f4f8d7047 b68cdebe0afc74aa Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+second 7 9ec22a96324e6135 01c7bb15149eecca Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
 ssml 1 d4af6da6da8da676 c8ad08fce9290088 <speak version="1.0" xml:lang="pl-PL">Dzien dobry.</speak>
 ssml 2 8df7969f66d75d3b a3ee122238c34d6f <speak version="1.0" xml:lang="pl-PL"><prosody rate="slow">Teraz wolniej.</prosody> Znowu normalnie.</speak>
 ssml 3 852d5fa375096133 a6c70e1b531af984 <speak version="1.0" xml:lang="pl-PL"><prosody pitch="high" range="x-high" volume="loud">Wszystkie cztery naraz.</prosody></speak>
-ssml 4 6fa79108eb600d70 61d12471748760de <speak version="1.0" xml:lang="pl-PL"><emphasis level="strong">Ten</emphasis>, nie tamten.</speak>
+ssml 4 faf7ff0d5343e01a 61d12471748760de <speak version="1.0" xml:lang="pl-PL"><emphasis level="strong">Ten</emphasis>, nie tamten.</speak>
 ssml 5 3f823aa1d73a9bbc 4bd49e7e20342982 <speak version="1.0" xml:lang="pl-PL"><voice gender="female">Ona to powiedziala.</voice> A on nie.</speak>
 ssml 6 b7a088638e5cd05d fdd22e58a607f9cd <speak version="1.0" xml:lang="pl-PL">Kosztowalo <say-as interpret-as="cardinal">1234</say-as> dnia <say-as interpret-as="ordinal">3</say-as>.</speak>
 ssml 7 70935c3ebcd15bc1 13552c8faa86c22d <speak version="1.0" xml:lang="pl-PL">Przeliteruj: <say-as interpret-as="letters">abc</say-as>, i zadzwon pod <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
