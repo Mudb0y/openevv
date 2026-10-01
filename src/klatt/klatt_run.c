@@ -341,9 +341,9 @@ int insertPhoneme(DeltaThis *d, int32_t a, int32_t b)
 
 void resetDelayedSynthQueue(DeltaThis *d)
 {
-    void *q = SD_QUEUE(DL_DEVICE(DT_LANG(d)));
+    IndexQueue *q = &DL_DEVICE(DT_LANG(d))->queue;
 
-    *(int32_t *)((char *)q + 0x0c) = 0;
+    q->total = 0;
     el_listReset(q);
 }
 
