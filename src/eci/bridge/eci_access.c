@@ -11,6 +11,7 @@
  * and the machine owns the spine; this is the reading glass held over both.
  */
 
+#include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -16,6 +16,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include "delta.h"
 #include "delta_lang.h"
 #include "delta_rules_c.h"

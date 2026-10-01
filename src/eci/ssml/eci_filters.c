@@ -47,6 +47,7 @@
 #define ANNO_OWN_OFF     " `fd%d "
 #define ANNO_ROOM 12
 
+extern void cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");
 extern THIS char *fm_filterTextByHandle(void *m, void *filter,
                                         const char *text);
 extern THIS void  fm_getAvailableFilters(void *m, int32_t lang, uint32_t *ids,

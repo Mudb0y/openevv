@@ -256,9 +256,11 @@ $(LANGLIST): Makefile
 
 # A narrowed field assigned from a pointer, or the other way about, was the
 # whole of what went wrong in the sixty-four bit port, so it is an error here
-# rather than a warning nobody reads. The rest of the warnings stay off: this
-# is transcribed code and it is loud.
-WARN := -w -Wno-implicit-function-declaration \
+# rather than a warning nobody reads. So is a call to something undeclared,
+# which C takes as answering an int: the same narrowing, out of sight, and
+# what GCC 14 refuses on its own once nothing here turns it off. The rest of
+# the warnings stay off: this is transcribed code and it is loud.
+WARN := -w -Werror=implicit-function-declaration \
         -Werror=int-conversion -Werror=incompatible-pointer-types
 
 # The machine this code was written for keeps addresses in thirty-two bit

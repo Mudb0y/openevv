@@ -36,6 +36,7 @@
  * it back: give vf_puts and vf_printf somewhere to write and transcribe the
  * six io.obj entries above them. */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
