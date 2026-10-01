@@ -229,6 +229,21 @@ static void a_fresh_instance(int realworld)
         printf("voices: voice 3 would not copy onto voice 9\n");
     same(h, EDITABLE_FIRST, STANDARD_FIRST + 2, "copied but not equal");
 
+    /* And not onto a voice the caller does not own, which IBM's engine
+       writes regardless, outside the eight editable ones. */
+    {
+        static const int32_t theirs[] = { STANDARD_FIRST,
+                                          STANDARD_FIRST + VOICES - 1,
+                                          EDITABLE_FIRST + VOICES, -1 };
+
+        for (i = 0; i < (int)(sizeof theirs / sizeof theirs[0]); i++) {
+            if (vc_copyVoice(h, STANDARD_FIRST + 2, theirs[i]) != 0) {
+                printf("voices: voice 3 copied onto voice %d\n", theirs[i]);
+                bad = 1;
+            }
+        }
+    }
+
     /* And a second instance starts again. */
     second = eo_new();
     if (!second) {

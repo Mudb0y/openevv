@@ -279,6 +279,14 @@ int STDCALL vc_copyVoice(OldInst *h, int32_t from, int32_t to)
     family = vc_family(inst);
     dialect = vc_dialect(inst);
 
+    /* A destination the caller does not own is refused outright. IBM's test
+       below asks only about the source once one is named, so a real voice
+       copied onto 1 to 8, or past 16, went eighty bytes into whatever lies
+       either side of the editable voices -- the instance's own fields, or
+       past its end. That is the twentieth deliberate divergence. */
+    if (!vc_writable(to))
+        return 0;
+
     /* Only a source that is a real standard voice will do, and only when
        the destination is somewhere the caller owns. */
     if (!vc_writable(to) || from != 0) {

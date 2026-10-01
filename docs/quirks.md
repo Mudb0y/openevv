@@ -70,6 +70,8 @@ To hand over UTF-16 instead, OR `eciUnicodeCodeSet` -- 0x800 -- into the languag
 
 Voice 0 is the one being spoken in, 1 to 8 are the language's presets and are read-only, and 9 to 16 are the caller's. `eciCopyVoice` will only write to 0 or to 9 through 16. The way to a voice of your own is to copy a preset into an editable number, change it there, and copy that onto 0.
 
+IBM's engine keeps that promise only when the source is refused as well. Its test asks about the destination and the source together and, once a real voice is named to copy, about the source alone, so a copy onto 1 to 8 or past 16 goes ahead and writes eighty bytes wherever the number points: into the instance's own fields in front of the editable voices, or past the end of the instance. Here a destination the caller does not own is refused whatever the source, which is the twentieth deliberate divergence. KamiKitsune420's eloquence-decomp, a rebuild of desktop Eloquence 6.1, found the same hole there and refuses it too. `make voices` is the check.
+
 The presets are named `Adult Male 1`, `Adult Female 1`, `Child 1`, `Adult Male 2`, `Adult Male 3`, `Adult Female 2`, `Elderly Female 1` and `Elderly Male 1`, and all eight editable ones are called `User-Defined` until something renames them, so a program picking a voice by name has to know that the interesting ones are the read-only eight.
 
 ## Making a filter
