@@ -140,17 +140,21 @@ preprocessing. When the server inserts a symbol name and changes the module's
 punctuation mode to `none`, the module suppresses the retained non-prosodic
 symbol so names such as `dash-` and `left paren(` are not spoken twice. It
 preserves sentence punctuation for pauses and apostrophes inside words.
-UTF-8 input is converted to the Latin-1 input used by the nine languages IBM
-shipped. Left and right curly apostrophes are normalized to ASCII apostrophes;
-other characters outside Latin-1 become `?`.
+UTF-8 input is converted to the Windows Western set, which is what IBM's eight
+Western languages read: Latin-1 with twenty-seven more characters between 0x80
+and 0x9f, the dashes, the ellipsis, the euro sign and the curly quotes among
+them, which the engine reads as Windows means them. Taken as Latin-1 those had
+no byte and were each read out as "question mark". Left and right curly
+apostrophes are normalized to ASCII apostrophes; anything else the set has not
+got becomes `?`.
 
 Polish is the exception and gets no conversion here at all. It declares code
 points of its own, so the engine converts its text from UTF-8 itself, and
 converting it twice would turn eight of its nine diacritics into question
 marks -- 99,616 PCM bytes for the pangram where leaving it alone gives 36,762.
 Two byte-wise walks had to learn the same thing, because the ranges collide
-exactly: a UTF-8 lead byte of 0xc0 to 0xdf reads as a Latin-1 capital and a
-continuation byte of 0xa1 to 0xbf reads as a symbol, so a lowercase Polish z
+exactly: a UTF-8 lead byte of 0xc0 to 0xdf reads as a capital and a
+continuation byte of 0x80 to 0xbf reads as a symbol, so a lowercase Polish z
 with a dot was announced as a capital and had its second byte replaced with a
 space. Above 0x7f in UTF-8 the answer is that a byte is not a character to
 judge, and one consequence is honest to state: capital recognition works on

@@ -428,11 +428,35 @@ static int buffer_append(TextBuffer *buffer, const char *text, size_t length)
     return 0;
 }
 
-/* Every language OpenEVV currently ships uses IBM's ISO-8859-1 input path.
- * SSIP text is UTF-8, so convert it before handing it to the engine. Unknown
+/* IBM's eight Western languages read the Windows Western set, which is
+ * Latin-1 with twenty-seven characters where Latin-1 keeps its second row of
+ * control codes, and the engine reads those bytes as what Windows means by
+ * them: a dash as a hyphen, curly quotes as straight ones, the euro as a
+ * word, an ellipsis as nothing. Taken as Latin-1 they had no byte, became
+ * question marks, and were read out as "question mark". */
+static const uint16_t western_high[32] = {
+    0x20ac, 0,      0x201a, 0x0192, 0x201e, 0x2026, 0x2020, 0x2021,
+    0x02c6, 0x2030, 0x0160, 0x2039, 0x0152, 0,      0x017d, 0,
+    0,      0x2018, 0x2019, 0x201c, 0x201d, 0x2022, 0x2013, 0x2014,
+    0x02dc, 0x2122, 0x0161, 0x203a, 0x0153, 0,      0x017e, 0x0178,
+};
+
+static int western_byte(uint32_t codepoint)
+{
+    int i;
+
+    if (codepoint < 0x80 || (codepoint >= 0xa0 && codepoint <= 0xff))
+        return (int)codepoint;
+    for (i = 0; i < 32; i++)
+        if (western_high[i] != 0 && western_high[i] == codepoint)
+            return 0x80 + i;
+    return -1;
+}
+
+/* SSIP text is UTF-8, so convert it before handing it to the engine. Unknown
  * or malformed characters become question marks, matching the established
  * IBM Speech Dispatcher module's conversion fallback. */
-static char *utf8_to_latin1(const char *text)
+static char *utf8_to_western(const char *text)
 {
     TextBuffer converted = { 0 };
     const unsigned char *at = (const unsigned char *)text;
@@ -469,7 +493,8 @@ static char *utf8_to_latin1(const char *text)
         if (codepoint == 0x2018 || codepoint == 0x2019)
             codepoint = '\'';
         {
-            char output = codepoint <= 0xff ? (char)codepoint : '?';
+            int byte = western_byte(codepoint);
+            char output = byte >= 0 ? (char)byte : '?';
 
             if (buffer_append(&converted, &output, 1) != 0) {
                 free(converted.data);
@@ -483,30 +508,38 @@ static char *utf8_to_latin1(const char *text)
     return converted.data;
 }
 
-static int latin1_uppercase(unsigned char value)
+static int western_uppercase(unsigned char value)
 {
     return (value >= 'A' && value <= 'Z')
+        || value == 0x8a || value == 0x8c || value == 0x8e || value == 0x9f
         || (value >= 0xc0 && value <= 0xd6)
         || (value >= 0xd8 && value <= 0xde);
 }
 
-static int latin1_word_character(unsigned char value)
+static int western_word_character(unsigned char value)
 {
     return (value >= '0' && value <= '9')
         || (value >= 'A' && value <= 'Z')
         || (value >= 'a' && value <= 'z')
+        || value == 0x83 || value == 0x8a || value == 0x8c || value == 0x8e
+        || value == 0x9a || value == 0x9c || value == 0x9e || value == 0x9f
         || value == 0xaa || value == 0xb5 || value == 0xba
         || (value >= 0xc0 && value <= 0xd6)
         || (value >= 0xd8 && value <= 0xf6)
         || (value >= 0xf8);
 }
 
-static int latin1_symbol(unsigned char value)
+/* The ellipsis is left out, as the full stop is: it is the pause that
+ * punctuation mode none keeps for prosody. */
+static int western_symbol(unsigned char value)
 {
     return (value >= '!' && value <= '/')
         || (value >= ':' && value <= '@')
         || (value >= '[' && value <= '`')
         || (value >= '{' && value <= '~')
+        || value == 0x80 || value == 0x82 || value == 0x84
+        || (value >= 0x86 && value <= 0x89) || value == 0x8b
+        || (value >= 0x91 && value <= 0x99) || value == 0x9b
         || (value >= 0xa1 && value <= 0xa9)
         || (value >= 0xab && value <= 0xb4)
         || (value >= 0xb6 && value <= 0xb9)
@@ -523,8 +556,8 @@ static int latin1_symbol(unsigned char value)
  * the text is a language's own single-byte code set. Where the engine
  * converts the text itself the text is still UTF-8 here, and every byte over
  * 0x7f belongs to a character rather than being one -- and the two ranges
- * collide exactly: a lead byte of 0xc0 to 0xdf reads as a Latin-1 capital
- * and a continuation byte of 0xa1 to 0xbf reads as a symbol. So a lowercase
+ * collide exactly: a lead byte of 0xc0 to 0xdf reads as a capital and a
+ * continuation byte of 0x80 to 0xbf reads as a symbol. So a lowercase
  * Polish z with a dot would be announced as a capital and have its second
  * byte replaced by a space. Above 0x7f the answer in UTF-8 is that this byte
  * is not a character to judge. */
@@ -545,13 +578,13 @@ static void suppress_spoken_punctuation(char *text, int utf8)
             continue;
         }
         if (value == '\'' && at > (unsigned char *)text
-            && latin1_word_character(at[-1])
-            && latin1_word_character(at[1])) {
+            && western_word_character(at[-1])
+            && western_word_character(at[1])) {
             at++;
             continue;
         }
         if (value != ',' && value != '.' && value != ';' && value != ':'
-            && value != '?' && value != '!' && latin1_symbol(value))
+            && value != '?' && value != '!' && western_symbol(value))
             *at = ' ';
         at++;
     }
@@ -578,7 +611,7 @@ static char *text_for_engine(const char *text)
             memcpy(copy, text, bytes);
         return copy;
     }
-    return utf8_to_latin1(text);
+    return utf8_to_western(text);
 }
 
 static int add_text_with_capitals(const char *text, int suppressPunctuation)
@@ -599,7 +632,7 @@ static int add_text_with_capitals(const char *text, int suppressPunctuation)
 
         if (settings.capitals == SPD_CAP_NONE
             || !byte_is_a_character((unsigned char)*at, utf8)
-            || !latin1_uppercase((unsigned char)*at))
+            || !western_uppercase((unsigned char)*at))
             continue;
         letter[0] = *at;
         letter[1] = 0;

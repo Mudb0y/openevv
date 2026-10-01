@@ -226,6 +226,26 @@ def main():
             "punctuation retained by Speech Dispatcher was spoken after its "
             f"inserted name ({len(retainedSymbols)} versus {len(plainNames)})"
         )
+        print("speechd: the Western set's own punctuation", flush=True)
+        # A dash, an ellipsis, the euro sign and curly quotes are bytes of the
+        # Windows Western set that Latin-1 has not got. Taken as Latin-1 they
+        # became question marks, and the engine read "question mark" for each.
+        # This instance has spoken before, so its samples are not a fresh
+        # engine's and cannot be held against one; what can be held is that
+        # the same sentence with the question marks in it is far longer.
+        module.set(punctuation_mode="all")
+        western = "It costs \u20ac5 \u2013 \u201cyes\u201d\u2026 more \u2014 less."
+        asked = "It costs ?5 ? ?yes?? more ? less."
+        westernAudio, _, _, event = module.speak(western)
+        assert event == "702 END"
+        askedAudio, _, _, event = module.speak(asked)
+        assert event == "702 END"
+        assert len(westernAudio) * 3 < len(askedAudio) * 2, (
+            "Western punctuation reached the engine as question marks "
+            f"({len(westernAudio)} versus {len(askedAudio)} PCM bytes)"
+        )
+        module.set(punctuation_mode="none")
+
         print("speechd: available languages", flush=True)
         # Each sentence carries its own language's letters, which is the
         # point of speaking it. Polish is the pangram rather than a phrase
