@@ -12537,6 +12537,11 @@ label L0 was _ital_ph_n
   popreg r1
   branch jne to L1
   push state 0
+  call pol_next_in_word arity 1 depth 1
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L1
+  push state 0
   call advance_tok arity 1 depth 1
   cmp testl reg r0 reg r0
   popreg r1

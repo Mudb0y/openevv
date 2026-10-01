@@ -147,3 +147,32 @@ rule pol_ph_x takes 1 from is_val.obj
   call modulate_noise
   match
 end
+
+# Whether the phone after this one is in the same word. Italian times and
+# shapes an n as its velar nasal whenever a velar follows, in ital_ph_n and
+# ital_ph_n_dur alike, and asks nothing about where the word ends, so the n
+# of ten gwóźdź was the quieter velar murmur of bank and ten sounded clipped.
+# The fence on the word statement is what tells, since the scan cannot be
+# stepped out of a word through it. Both rules have the fence down and the
+# scan set after the phone when they ask, and that is how it is left.
+rule pol_next_in_word takes 1 from is_val.obj
+  bare
+  afresh
+  variable after word 840
+  call fence 1 sym pol_fence_word
+  call lpta_loadp addr after
+  call setscan_nof_r 2
+  if answer is 0
+    call advance_tok
+  end
+  if answer is not 0
+    call ZZfence_null
+    call lpta_loadp addr after
+    call setscan_r 2
+    answer 1
+  end
+  call ZZfence_null
+  call lpta_loadp addr after
+  call setscan_r 2
+  answer 0
+end

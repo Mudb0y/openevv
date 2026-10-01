@@ -6984,6 +6984,11 @@ label L5 was $X5$92712
   popreg r1
   branch jne to L2
   push reg r6
+  call pol_next_in_word arity 1 depth 2
+  cmp testl reg r0 reg r0
+  popreg r1
+  branch jne to L2
+  push reg r6
   call advance_tok arity 1 depth 2
   cmp testl reg r0 reg r0
   popreg r1
