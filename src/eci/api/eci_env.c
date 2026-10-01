@@ -206,13 +206,18 @@ int ev_sampleRateSupported(int32_t rate)
 /* ---- the shape of the sound ------------------------------------------ */
 
 /* What an audio format says. The last four are the device's own business
-   and only the device form carries them. */
+   and only the device form carries them: parameters 13 to 16, which the
+   sound manager reads as how many blocks the device keeps, how big each is,
+   and how many blocks and bytes it fills before it starts to play. */
 typedef struct AudioFormat {
     int32_t  kind;          /* +0x00 */
     int32_t  hz;            /* +0x04 */
     int32_t  flags;         /* +0x08 */
     char    *filename;      /* +0x0c */
-    int32_t  a, b, c, d;    /* +0x10 */
+    int32_t  blocks;        /* +0x10 */
+    int32_t  blockBytes;
+    int32_t  prerollBlocks;
+    int32_t  prerollBytes;
 } AudioFormat;
 
 /* What the sample rate setting means, and how the engine is to produce it.
@@ -353,8 +358,9 @@ int32_t ev_engineHz(int32_t hz)
 
 /* Send the samples to the device. Whatever they were going to before has to
    be let go of first, and only then is the new format built. */
-int ev_setOutputToDevice(OldInst *h, int32_t rate, int32_t a, int32_t b,
-                         int32_t c, int32_t d)
+int ev_setOutputToDevice(OldInst *h, int32_t rate, int32_t blocks,
+                         int32_t blockBytes, int32_t prerollBlocks,
+                         int32_t prerollBytes)
 {
     AudioFormat fmt;
 
@@ -379,10 +385,10 @@ int ev_setOutputToDevice(OldInst *h, int32_t rate, int32_t a, int32_t b,
     memset(&fmt, 0, sizeof fmt);
     fmt.kind = 0;
     fmt.filename = OI_FILENAME(h);
-    fmt.a = a;
-    fmt.b = b;
-    fmt.c = c;
-    fmt.d = d;
+    fmt.blocks = blocks;
+    fmt.blockBytes = blockBytes;
+    fmt.prerollBlocks = prerollBlocks;
+    fmt.prerollBytes = prerollBytes;
     fmt.hz = ev_rateHz(rate);
     fmt.flags = 0;
 

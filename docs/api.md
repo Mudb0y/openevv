@@ -58,7 +58,7 @@ An instance is not cheap. It starts a synthesis thread of its own, and that thre
 
 `eciDelete` ends it and gives back what it held. It answers a handle in IBM's declaration, which is always nothing.
 
-`eciReset` puts an instance back to the settings a new one would have. `eciTestPhrase` says "1 2 3." in the first standard voice, which is what it is for.
+`eciReset` puts an instance back to the settings a new one would have, and that includes where the samples go: back to the device, so a buffer registered with `eciSetOutputBuffer` is dropped and the instance says nothing until it is registered again. The callback is kept. `eciTestPhrase` says "1 2 3." in the first standard voice, which is what it is for.
 
 Calls are refused rather than serialised while another call on the same instance is running. There is no lock: a second thread calling in during the first call is turned away, and `eciIsBeingReentered` was published to say so and always answers nought.
 
@@ -72,7 +72,7 @@ A language is one word: the family in the top half, the code set in the third by
 
 Family seventeen is Polish here and Thai in IBM's tables. That is the twelfth deliberate divergence and it costs nothing, there being no Thai in the SDK this engine came out of.
 
-The code set travels in that same word rather than in a setting of its own. ORing `eciUnicodeCodeSet` -- 0x800 -- into the language says that text handed over is UTF-16 rather than bytes, and `eciLanguageDialect` is what the engine reads to find out, not `eciTextMode`.
+The code set travels in that same word rather than in a setting of its own. ORing `eciUnicodeCodeSet` -- 0x800 -- into the language says that text handed over is UTF-16 rather than bytes, and `eciLanguageDialect` is what the engine reads to find out, not `eciTextMode`. Only a language with a romanizer takes it -- IBM's table groups code sets under Chinese, Japanese and Korean alone -- so here it is Japanese's: `eciNewEx(0x10800)` answers no instance, and asking an English instance for 0x10800 answers -1 and leaves it English.
 
 ## Text in
 
@@ -116,9 +116,9 @@ A malformed annotation is spoken rather than refused, which is what `test/cases/
     int eciSetOutputDevice(ECIHand h, int device);
     int eciSetOutputFilename(ECIHand h, const void *filename);
 
-`eciSetOutputBuffer` is the one that works. The count is in samples, not bytes, and the buffer is the caller's: the engine fills it and calls back, and the caller must have copied what it wants before returning, because the next buffer goes in the same place.
+`eciSetOutputBuffer` is the one that works. The count is in samples, not bytes, and the buffer is the caller's: the engine fills it and calls back, and the caller must have copied what it wants before returning, because the next buffer goes in the same place. It refuses until a callback is registered -- answers nought and changes nothing -- so register the callback first: the other order is an instance that is silent and was told so only by an answer nobody checked.
 
-`eciSetOutputBuffer(h, 0, 0)` puts the instance back to the device, which is to say back to nothing.
+`eciSetOutputBuffer(h, 0, 0)` puts the instance back to the device, which is to say back to nothing, and puts the sample rate back to the default whatever the caller had set.
 
 `eciSetOutputDevice` names a device by number and there are no devices. `eciSetOutputFilename` and `eciSynthesizeFile` are empty in IBM's own object: they answer nought and write no file. There is no way to make the engine write a file; a program that wants one writes it from the callback, which is what `cli/evv.c` does.
 
@@ -132,9 +132,11 @@ Samples are signed sixteen bit, mono, little endian, at whatever `eciSampleRate`
 
 `data` is the caller's and is handed back untouched. The messages are `eciWaveformBuffer`, where `param` is a count of samples; `eciIndexReply`, where it is the number given to `eciInsertIndex`; and `eciPhonemeBuffer` and the phoneme, word, string and audio index replies, which arrive only when they were asked for.
 
+`eciPhonemeIndexReply` comes with `eciWantPhonemeIndices` set, once for every phoneme as it is reached, and `param` is the address of a record describing it: the phoneme's name in four characters, wide ones if the instance speaks UTF-16; the language; and eight bytes for the mouth -- its height, its width, its upturn, how far the jaw is open, how much of the upper and of the lower teeth show, where the tongue is and how tense the lips are, in the order IBM's own header names them. `param` is an `int`, so on a sixty-four bit build the record is a copy in a small region below two gigabytes, which is the one thing besides a string index mark's name that has to be. The copy is given back as soon as the callback returns: take what is wanted from it there.
+
 IBM's Linux header spells `param` as `long`, which is eight bytes on an ordinary sixty-four bit machine and four in everything the engine puts there. A program porting from that header should change the type rather than keep it.
 
-**The callback runs on the engine's own synthesis thread**, not on the thread that asked for the speech. What it may do is take the samples and return. What it may not do is call back into the same instance.
+**The callback runs on the thread that asks whether the engine is speaking**, not on the engine's own. The synthesis thread posts each buffer and waits for the answer; `eciSpeaking` and `eciSynchronize` are what run the callback, so a program that synthesises and then neither asks nor waits hears nothing at all. Measured: 28 callbacks of 28 on the caller's thread, and none while it slept without asking. What the callback may do is take the samples and return. What it may not do is call back into the same instance.
 
 What it answers matters more than it looks:
 
@@ -185,13 +187,13 @@ Eighteen settings, by the numbers `eci.h` names:
 
 `eciRealWorldUnits` (8), nought or one. With it on, a voice's speed is words a minute and its pitch is hertz, and both have ranges of their own.
 
-`eciLanguageDialect` (9). One of the numbers `eciGetAvailableLanguages` answered with, optionally with `eciUnicodeCodeSet` in it.
+`eciLanguageDialect` (9). One of the numbers `eciGetAvailableLanguages` answered with, and for Japanese optionally with `eciUnicodeCodeSet` in it.
 
 `eciNumberMode` (10), nought or one.
 
 `eciRomanizer` (12), nought or one. Only reachable in a language written in another script.
 
-`eciAudioFormatA` through `eciAudioFormatD` (13 to 16) are the four an audio device's format is built from. Nothing in the tree knows what any of them means. Setting one while the samples are going to a buffer records the number and rebuilds nothing, which is the second deliberate divergence -- IBM's engine rebuilds regardless and the registered buffer is lost, so the instance goes silent and reports success ever after.
+`eciAudioFormatA` through `eciAudioFormatD` (13 to 16) are the four an audio device's format is built from: how many blocks the device keeps, how many bytes each holds, and how many blocks and bytes it fills before it starts to play. They default to 10, 2,200, nought and 2,200 and may not go below 2, 220, nought and 220. Nothing here plays through a device, so none of them changes what a buffer receives. Setting one while the samples are going to a buffer records the number and rebuilds nothing, which is the second deliberate divergence -- IBM's engine rebuilds regardless and the registered buffer is lost, so the instance goes silent and reports success ever after.
 
 Numbers 11 and 17 are refused by both `eciGetParam` and `eciSetParam`, which is IBM's own refusal transcribed. Seventeen holds the number of the voice being spoken in; `eciCopyVoice` is what moves it. Numbers 4 and 6 can be set and read and nothing anywhere reads them.
 

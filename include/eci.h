@@ -150,13 +150,14 @@ typedef enum {
     /* Ours. IBM's romanizer switch sits here and is only reachable in a
        language written in another script. */
     eciRomanizer          = 12,
-    /* The four an audio device's format is built from. Nothing in the tree
-       knows what any of them means -- they are carried into the format as
-       four numbers and no code here reads them again -- so they keep the
-       letters the format gives them. Setting one while the samples are going
-       to a buffer records the number and rebuilds nothing, which is the
-       second deliberate divergence: IBM's engine rebuilds regardless and
-       loses the buffer. */
+    /* The four an audio device's format is built from: how many blocks the
+       device keeps, how many bytes each holds, and how many blocks and bytes
+       it fills before it starts to play -- 10, 2,200, 0 and 2,200 unless
+       told. They keep the letters IBM gave them. Nothing here plays through a
+       device, so none of them changes what a buffer receives. Setting one
+       while the samples are going to a buffer records the number and
+       rebuilds nothing, which is the second deliberate divergence: IBM's
+       engine rebuilds regardless and loses the buffer. */
     eciAudioFormatA       = 13,
     eciAudioFormatB       = 14,
     eciAudioFormatC       = 15,

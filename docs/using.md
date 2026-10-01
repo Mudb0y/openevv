@@ -126,9 +126,9 @@ speech-dispatcher's `sd_eloquence` module resolves forty-two names when it loads
 
 The engine's threading model is worth stating outright, because most of what goes wrong with it is a program assuming one of these is different.
 
-Each instance owns a synthesis thread. `eciSynthesize` returns as soon as the work is queued; the speaking happens on that thread, and so does every callback.
+Each instance owns a synthesis thread. `eciSynthesize` returns as soon as the work is queued, and the speaking happens on that thread. The callbacks do not: the synthesis thread posts each one and waits for its answer, and it is run on whichever thread next calls `eciSpeaking` or `eciSynchronize`.
 
-**The callback runs on the engine's thread.** Whatever it does, the engine is not synthesising while it does it. A callback that hands the samples to a player and blocks until the player has room is pacing the engine on purpose, which is usually what you want; a callback that takes a lock the driving thread might hold is a deadlock.
+**The callback runs on the thread that asks.** Whatever it does, the engine is not synthesising while it does it, because it is waiting for the answer. A callback that hands the samples to a player and blocks until the player has room is pacing the engine on purpose, which is usually what you want; a callback that takes a lock the asking thread already holds is a deadlock.
 
 **A callback may not call back into the same instance.** Calls are refused rather than serialised while another is running, so what happens is not a crash but a nought nobody checked.
 

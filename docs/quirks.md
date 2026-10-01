@@ -36,7 +36,7 @@ This is settled rather than open. The rules build a shared structure as they go 
 
 What can be done about the latency is doing the leftover work faster, which is what `RULES=c` -- the default -- is for: about 27 milliseconds to cancel and speak again against about 86 interpreted.
 
-An interrupted utterance is not necessarily short, and no harness asserts that it is. Whether the sample count comes out short depends on where the suspension lands between two buffers, and a callback that paces itself like a real player runs on the engine's own thread, so the stop then waits for the whole delivery and can never truncate.
+An interrupted utterance is not necessarily short, and no harness asserts that it is. Whether the sample count comes out short depends on where the suspension lands between two buffers, and a callback that paces itself like a real player holds the engine waiting for each answer, so the stop then waits for the whole delivery and can never truncate.
 
 ## The second utterance is not the first, and that is correct
 
@@ -50,7 +50,7 @@ The engine reads single bytes and IBM's engine does almost nothing between the c
 
 The exception is a language that declares characters of its own, which is Polish and none of IBM's nine. Those get their text converted from UTF-8 on the way in, and their own bytes let through the romanizer's table rather than turned into spaces. Those two are the fourth and fifth deliberate divergences, and the guard is the whole point: the nine IBM shipped declare no characters, so nothing about them changes.
 
-To hand over UTF-16 instead, OR `eciUnicodeCodeSet` -- 0x800 -- into the language. The code set is the third byte of the same word the language is in, and `eciLanguageDialect` is what the engine reads to find out; `eciTextMode` is a different setting and is not it.
+UTF-16 is not a way round that for these. ORing `eciUnicodeCodeSet` -- 0x800 -- into the language asks for it, and only a language whose text goes through a romanizer will take it: IBM's table of what may be asked for groups code sets under Chinese, Japanese and Korean and nothing else, so of the languages here that is Japanese alone. Asked for any of the others, `eciNewEx` answers no instance and `eciSetParam` answers -1 and leaves the language as it was, in IBM's engine and in ours. The code set is the third byte of the same word the language is in, and `eciLanguageDialect` is what the engine reads to find out; `eciTextMode` is a different setting and is not it.
 
 ## Parameters that are not what they look like
 

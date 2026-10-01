@@ -12,8 +12,8 @@
  * Neither was re-measured from a second thread afterwards, so docs/status.md
  * carried "whether the stop door is still a race is an open question" until
  * this. test/harness/interrupt.c does not answer it: it interrupts by answering
- * eciDataAbort from the callback, which happens on the engine's own thread and
- * never crosses one.
+ * eciDataAbort from the callback, which happens on the thread driving the
+ * engine and never crosses one.
  *
  * What every turn requires. The process has to survive, which is the crash.
  * The stop has to have been made while the engine was still handing samples
@@ -32,8 +32,8 @@
  * depends on whether the suspension happens to land between two buffers. With
  * the callback returning at once the engine can finish the whole thing before
  * another thread reacts at all; with the callback pacing itself like a real
- * player, the pacing runs on the engine's own thread and the stop then waits
- * for the whole delivery, so it can never truncate. Both were tried. Neither
+ * player, the pacing holds the engine waiting for each answer and the stop
+ * then waits for the whole delivery, so it can never truncate. Both were tried. Neither
  * is a fault and neither is stable, so the count is printed and not asserted
  * on.
  *

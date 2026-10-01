@@ -61,10 +61,9 @@ BREAK_FACTORS = {10: 1, 43: 2, 60: 3, 75: 4, 85: 5}
 
 #: How far an unpunctuated stretch may run before it is ended at whitespace.
 #:
-#: The engine cannot be interrupted -- both of the ways the interface offers
-#: fault it, which the engine layer beside this file explains -- so asking for
-#: silence means waiting for the utterance in flight to finish synthesising
-#: into nothing. That is cheap for a line of a list and is not cheap for a
+#: No interrupt makes the engine abandon an utterance -- the engine layer
+#: beside this file says why -- so asking for silence means waiting for the
+#: utterance in flight to finish synthesising into nothing. That is cheap for a line of a list and is not cheap for a
 #: chat message of several thousand characters: measured on this engine, one
 #: such message costs 0.83 s, and 560 characters of Arabic, which is spelled
 #: out character by character, cost 1.44 s. A reader arrowing down a list

@@ -167,13 +167,15 @@ int32_t setECIerror(int32_t rc, OldInst *h)
 #define ECI_AUDIO_INDEX   6
 #define ECI_BREAK      0x32
 
-/* And what the caller can answer. */
-#define CALLER_ABORT   0
-#define CALLER_STOP    2
+/* And what the caller can answer: eciDataNotProcessed, which asks for the
+   buffer to be offered again, eciDataProcessed and eciDataAbort. */
+#define CALLER_AGAIN   0
 #define CALLER_TOOK    1
+#define CALLER_STOP    2
 
-/* What this bridge answers back down. */
-#define BRIDGE_ABORT   (-1)
+/* What this bridge answers back down: the application queue's "not yet,
+   come back", and the stop. */
+#define BRIDGE_AGAIN   (-1)
 #define BRIDGE_STOP    (-18)
 
 /* Which parameter names the text mode, and the bit that means it is wide. */
@@ -195,8 +197,8 @@ static int32_t eo_tell(OldInst *h, void *inst, int32_t msg, int32_t param,
     int32_t said = ((OldCallback)OI_CALLBACK(h))(inst, msg, param,
                                                  OI_CBDATA(h));
 
-    if (said == CALLER_ABORT)
-        *ret = BRIDGE_ABORT;
+    if (said == CALLER_AGAIN)
+        *ret = BRIDGE_AGAIN;
     else if (said == CALLER_STOP)
         *ret = BRIDGE_STOP;
     return said;

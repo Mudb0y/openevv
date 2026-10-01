@@ -17,14 +17,13 @@
 # samples away while the utterance finishes synthesising into nothing.
 #
 # There is no cheaper way, and this was settled by measurement rather than
-# argument. All three routes the interface offers cost the same: on real
-# Windows, the wall clock from asking for silence to the first samples of the
-# next utterance is 477 ms letting it finish, 478 ms answering eciDataAbort from
-# the callback, and 488 ms calling eciStop from the cancelling thread. A cold
-# start on an idle engine is 128 ms and a cancel with nothing in flight costs
-# under a millisecond, so the whole of the difference is the utterance already
-# being spoken, and answering the abort stops the engine handing over buffers
-# without stopping it finishing the work.
+# argument. All three routes the interface offers -- letting the utterance
+# finish, answering eciDataAbort from the callback, and calling eciStop from
+# the cancelling thread -- wait for the same thing, which is the utterance in
+# flight finishing: answering the abort stops the engine handing over buffers
+# without stopping it doing the work. After a cancel the engine runs straight
+# through what is left at synthesis speed, so that synthesis is the whole of
+# the cost.
 #
 # The reason is in the machine rather than the interface, and docs/status.md has
 # it: the language's rules build a shared structure as they go and later rules
@@ -431,11 +430,11 @@ class Engine:
 		"""Stop now, and throw away what has not been spoken.
 
 		Nothing here tells the engine anything, and that is the whole design.
-		Both of the ways the interface offers to interrupt an utterance fault
-		this engine: answering eciDataAbort from the callback, and calling
-		eciStop while synthesis is running. Either one dies dereferencing a
-		null in vinitloc_new, which is how the add-on crashed NVDA the first
-		time it was asked for silence.
+		Both of the ways the interface offers to interrupt an utterance --
+		answering eciDataAbort from the callback, and calling eciStop -- once
+		faulted this engine, which is how the add-on crashed NVDA the first
+		time it was asked for silence. Both are fixed, and neither would save
+		anything: each waits for what this waits for.
 
 		So the samples are thrown away instead. The callback goes on answering
 		normally and simply drops what it is handed, the utterance finishes
@@ -899,9 +898,9 @@ class Engine:
 
 		The answer is always eciDataProcessed, even when the samples are being
 		thrown away. eciDataAbort is what the interface offers for refusing the
-		rest of an utterance and it faults this engine, so it is never used --
-		see cancel. Nothing here changes any engine state, which is what makes
-		interrupting safe.
+		rest of an utterance, and it saves nothing over this, so it is never
+		used -- see cancel. Nothing here changes any engine state, which is
+		what makes interrupting safe.
 		"""
 		try:
 			if self._discarding:
