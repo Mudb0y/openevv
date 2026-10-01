@@ -48,3 +48,8 @@ lang/*/provenance-sites-*.txt
 # the rules a build compiles are made from the text beside them.
 lang/*/rules/*t_phone.up
 lang/*/rules/constants.letters
+
+# What the declarations said about each entry a module's rules call when the
+# rules were last written, which tools/rules/entrysig.py sets against what they
+# say now.
+lang/*/rules/.declared

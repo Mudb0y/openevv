@@ -117,3 +117,74 @@ def mask(name):
                                  ' arguments needs a wider mask' % name)
             m |= 1 << i
     return m
+
+
+# A module's rules are written with the masks above built into them, so a
+# declaration that changes whether an argument is a pointer reaches a rule
+# only when the rule code is written again. Depending on every file under src
+# would rewrite every module, and the rules as C after them, on any edit to the
+# machine. So the build keeps what the declarations said for each name a
+# module calls, asks again whenever src changes -- a fifth of a second -- and
+# rewrites that record only when the answer is different, which is the one
+# thing that sends the module's rules round again.
+
+def _table(text, what):
+    m = re.search(r'\b[a-z]+_%s\[\] = \{\n(.*?)\n\};' % what, text, re.S)
+    return [] if m is None else [w.strip().rstrip(',')
+                                 for w in m.group(1).splitlines()]
+
+
+def _entries(rule_code):
+    """The names a module's written rules call, and the masks they hold."""
+    with open(rule_code, encoding='utf-8', errors='replace') as f:
+        text = f.read()
+    names = [n.strip('"') for n in _table(text, 'delta_rule_entry_name')]
+    masks = [m.split('/*')[0].strip() for m in _table(text, 'delta_rule_argmask')]
+    return names, masks
+
+
+def declared(rule_code, record):
+    """What the declarations say now about each name the module calls,
+    written to the record only if that differs from what it holds."""
+    if not os.path.exists(rule_code):
+        return
+    names, _masks = _entries(rule_code)
+    out = ''.join('%s %s\n' % (n, '-' if mask(n) is None else '%08x' % mask(n))
+                  for n in names)
+    try:
+        with open(record, encoding='utf-8') as f:
+            if f.read() == out:
+                return
+    except OSError:
+        pass
+    with open(record, 'w', encoding='utf-8') as f:
+        f.write(out)
+
+
+def check(rule_code):
+    """For a module whose rule code is kept by hand rather than written:
+    every mask it holds against what the declarations say, since nothing
+    will write it again when they change."""
+    names, masks = _entries(rule_code)
+    wrong = []
+    for n, held in zip(names, masks):
+        m = mask(n)
+        if m is not None and int(held.rstrip('u'), 0) != m:
+            wrong.append('%s holds %s and its declaration says 0x%08x'
+                         % (n, held, m))
+    for w in wrong:
+        print('%s: %s' % (rule_code, w))
+    return not wrong
+
+
+if __name__ == '__main__':
+    import sys
+    if len(sys.argv) != 3 or sys.argv[1] not in ('record', 'check'):
+        sys.exit('usage: entrysig.py record|check lang/<tag>')
+    module = sys.argv[2].rstrip('/')
+    rule_code = os.path.join(module,
+                             'delta_rules_%s.c' % os.path.basename(module))
+    if sys.argv[1] == 'record':
+        declared(rule_code, os.path.join(module, 'rules', '.declared'))
+    else:
+        sys.exit(0 if check(rule_code) else 1)

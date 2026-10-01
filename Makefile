@@ -816,12 +816,17 @@ $(1)/delta_rules_shim_$(notdir $(1)).c &: \
                     tools/rules/notation.py tools/rules/lower.py \
                     tools/rules/upper.py tools/rules/emit.py \
                     tools/rules/letters.py \
-                    tools/rules/entrysig.py tools/evv.py
+                    tools/rules/entrysig.py tools/evv.py \
+                    $(1)/rules/.declared
 	@test ! -f $(1)/letters || \
 	  python3 tools/rules/letters.py write $(notdir $(1)) > /dev/null
 	@EVV_NOTATION_LANG=$(notdir $(1)) \
 	  python3 tools/rules/notation.py build > /dev/null
+	@python3 tools/rules/entrysig.py record $(1)
+	@touch -r $(1)/delta_rules_$(notdir $(1)).c $(1)/rules/.declared
 	@echo "wrote the rules of $(notdir $(1)) out of $(1)/rules"
+
+$(1)/rules/.declared: $(BUILD)/declared-$(notdir $(1)).stamp ;
 endef
 
 # And for a module that has no rules as text. lang/jajp is the one: it is not
@@ -834,13 +839,35 @@ endef
 define rulecode_lifted
 $(1)/delta_rules_$(notdir $(1)).c \
 $(1)/delta_rules_$(notdir $(1)).h \
-$(1)/delta_rules_shim_$(notdir $(1)).c &:
+$(1)/delta_rules_shim_$(notdir $(1)).c &: \
+                    | $(BUILD)/declared-$(notdir $(1)).stamp
 	@echo "$(1) holds no rules as text and none of the three files a" >&2
 	@echo "build compiles, so there is nothing here to write them from." >&2
 	@echo "A module lifted whole rather than kept as text is made by the" >&2
 	@echo "commands in docs/japanese.md." >&2
 	@false
 endef
+
+# A module's rules are written with a mask per entry they call, read from the
+# entry's declaration under src, so a declaration that changes whether an
+# argument is a pointer has to reach rules written before it. Depending on
+# every file under src would write every module again, and the rules as C after
+# them, on any edit to the machine. So this asks what the declarations say
+# whenever src changes, a fifth of a second, and a module's record moves only
+# when the answer for one of its own entries does. lang/jajp is kept by hand,
+# so it is checked instead, and the build stops if it holds a mask its
+# declaration has moved away from: nothing would ever write it again.
+ENTRYSRC := $(foreach d,$(SRCDIRS),$(wildcard $(d)/*.c $(d)/*.h))
+
+define entry_record
+$(BUILD)/declared-$(notdir $(1)).stamp: $(ENTRYSRC) tools/rules/entrysig.py
+	@mkdir -p $(BUILD)
+	@python3 tools/rules/entrysig.py \
+	  $(if $(wildcard $(1)/rules),record,check) $(1)
+	@touch $$@
+endef
+
+$(foreach l,$(LANGS),$(eval $(call entry_record,$(l))))
 
 $(foreach l,$(LANGS),$(eval $(call \
     $(if $(wildcard $(l)/rules),rulecode_from_text,rulecode_lifted),$(l))))
