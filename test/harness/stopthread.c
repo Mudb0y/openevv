@@ -52,7 +52,12 @@
  * busy guard, against none of twelve on real Windows. `make stopthread' is
  * this machine and `make win-stopthread' is the same thing under Wine.
  *
- * usage: stopthread [turns]        default 24
+ * Every stop is made from a thread of its own, started for that turn, which
+ * makes this the one check of a thread the engine did not start giving back
+ * what it took to run rules: four megabytes of frames out of a region of 256.
+ * So the turns have to outnumber 64, or a thread that keeps them passes.
+ *
+ * usage: stopthread [turns]        default 120
  */
 #ifdef _WIN32
 #include <windows.h>
@@ -211,7 +216,7 @@ static long say_and_stop(OldInst *h, const char *text, long after)
 
 int main(int argc, char **argv)
 {
-    int turns = argc > 1 ? atoi(argv[1]) : 24;
+    int turns = argc > 1 ? atoi(argv[1]) : 120;
     uint32_t langs[32];
     int n = 32, t, live = 0;
     long whole, through;

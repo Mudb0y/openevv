@@ -25,6 +25,7 @@
  */
 
 #include "evv_arena.h"
+#include "evv_land.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -850,6 +851,93 @@ void evv_arena_outstanding(const char *when)
 
 static __thread unsigned char *fs_base, *fs_top, *fs_end;
 
+/* A thread the engine did not start gives its frames back as well.
+
+   The engine's own threads call evv_frame_done as they finish, from the
+   trampoline that started them. A caller's thread runs rules too -- eciStop
+   and eciSynchronize run them on whichever thread asks -- and nothing gave
+   its four megabytes back, so a program that stopped from a fresh thread
+   each time went quiet on the sixty-third. So the first rule a thread runs
+   asks the system to say when the thread ends. It says so on that thread,
+   before its thread-local storage goes, and evv_frame_done does the rest; on
+   a thread its trampoline has already finished, there is nothing left to do. */
+#if defined(_WIN32)
+
+#include <windows.h>
+
+static INIT_ONCE fs_once = INIT_ONCE_STATIC_INIT;
+static DWORD     fs_slot = FLS_OUT_OF_INDEXES;
+
+static void WINAPI fs_gone(void *unused)
+{
+    (void)unused;
+    evv_frame_done();
+}
+
+static BOOL CALLBACK fs_open(INIT_ONCE *once, void *arg, void **ctx)
+{
+    (void)once;
+    (void)arg;
+    (void)ctx;
+    fs_slot = FlsAlloc(fs_gone);
+    return TRUE;
+}
+
+static void fs_watch(void)
+{
+    InitOnceExecuteOnce(&fs_once, fs_open, 0, 0);
+    if (fs_slot != FLS_OUT_OF_INDEXES)
+        FlsSetValue(fs_slot, (void *)1);
+}
+
+/* A library let go of while threads that used it live on would otherwise
+   leave the system holding a callback into code that has gone. */
+__attribute__((destructor)) static void fs_close(void)
+{
+    if (fs_slot != FLS_OUT_OF_INDEXES)
+        FlsFree(fs_slot);
+}
+
+#elif defined(__unix__) || defined(__APPLE__)
+
+#include <pthread.h>
+
+static pthread_once_t fs_once = PTHREAD_ONCE_INIT;
+static pthread_key_t  fs_key;
+static int            fs_keyed;
+
+static void fs_gone(void *unused)
+{
+    (void)unused;
+    evv_frame_done();
+}
+
+static void fs_open(void)
+{
+    fs_keyed = pthread_key_create(&fs_key, fs_gone) == 0;
+}
+
+static void fs_watch(void)
+{
+    pthread_once(&fs_once, fs_open);
+    if (fs_keyed)
+        pthread_setspecific(fs_key, (void *)1);
+}
+
+__attribute__((destructor)) static void fs_close(void)
+{
+    if (fs_keyed)
+        pthread_key_delete(fs_key);
+}
+
+#else
+
+/* Nothing to ask: the port's own trampoline is the only way out of a thread
+   anyone here knows about. */
+#define fs_watch() ((void)0)
+
+#endif
+
 /* A thread's frame stack, given back when the thread is done with it.
 
    Four megabytes, taken on the first rule the thread runs and kept for as long
@@ -860,7 +948,8 @@ static __thread unsigned char *fs_base, *fs_top, *fs_end;
    engine went quiet on the 63rd instance and reported nothing.
 
    Safe here and only here: the thread body has returned, so no rule of that
-   thread is running and nothing holds a frame. */
+   thread is running and nothing holds a frame. The landing places go with
+   the frames, since their names were addresses in them. */
 void evv_frame_done(void)
 {
     if (fs_base != 0) {
@@ -869,6 +958,7 @@ void evv_frame_done(void)
         fs_top = 0;
         fs_end = 0;
     }
+    evv_land_done();
 }
 
 void *evv_frame_push(size_t n)
@@ -881,6 +971,7 @@ void *evv_frame_push(size_t n)
             return 0;
         fs_top = fs_base;
         fs_end = fs_base + FRAME_STACK;
+        fs_watch();
     }
 
     n = FRAME_ROUND(n);

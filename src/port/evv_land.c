@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* One landing place per name, kept here rather than in the machine.
 
@@ -182,6 +183,29 @@ void evv_land_outermost(uintptr_t name)
 
 void evv_land_no_outermost(void)
 {
+    land_outer_set = 0;
+}
+
+/* The table is kept for the life of the thread, as the comment over it says,
+   and this is the end of that: called with the thread's frames given back,
+   so none of these names can be planted again. */
+void evv_land_done(void)
+{
+    int h;
+
+    for (h = 0; h < LAND_BUCKETS; h++) {
+        land_entry *e = land_tab[h];
+
+        while (e != 0) {
+            land_entry *next = e->next;
+
+            free(e);
+            e = next;
+        }
+        land_tab[h] = 0;
+    }
+    memset(land_live, 0, sizeof land_live);
+    land_depth = 0;
     land_outer_set = 0;
 }
 
