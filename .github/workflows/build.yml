@@ -62,6 +62,16 @@ jobs:
       - name: Check the words the original cannot say
         run: make crashers
 
+      # Thirty-two bit, a landing is the C library's setjmp rather than the
+      # pair written for x86-64, so the step above never runs one. Every
+      # thirty-two bit build died on every one of these while the matrix
+      # stayed green.
+      - name: Check the words the original cannot say, thirty-two bit
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q gcc-multilib
+          make -j"$(nproc)" RULES=c CC32="gcc -m32" crashers32
+
       - name: Check the add-on's own two
         run: make nvda-test
 
@@ -136,6 +146,12 @@ jobs:
 
       - name: Check the words the original cannot say
         run: make crashers
+
+      - name: Check the words the original cannot say, thirty-two bit
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q gcc-multilib
+          make -j"$(nproc)" RULES=bytecode CC32="gcc -m32" crashers32
 
       # Ubuntu's libspeechd-dev is the client API only: it has neither
       # spd_module_main.h nor libspeechd_module. The development shell has

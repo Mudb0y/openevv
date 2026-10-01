@@ -274,8 +274,8 @@ EVV_LAND_HIDE
 
 #elif defined(__thumb2__)
 
-/* Thumb-2, for the Cortex-M. setjmp cannot stand in here for the reason it
-   never could anywhere: a landing is entered after the call that planted it
+/* Thumb-2, for the Cortex-M. A function calling setjmp cannot stand in here
+   for the reason it never could anywhere: a landing is entered after the call that planted it
    has returned, and longjmp into a frame setjmp has left is undefined -- the
    return address it restores is whatever has since been written over it.
    Saving the stack pointer and the return address as they will be after the
@@ -320,15 +320,9 @@ __asm__(
 
 #else
 
-/* Where the registers are not x86-64, the C library will do: a thirty-two bit
-   build has a pointer that fits a value, so nothing here has ever been the
-   problem there. */
+/* Anywhere else the C library makes the jump. The save is setjmp in the rule
+   itself, for the reason evv_land.h gives. */
 #include <setjmp.h>
-
-int evv_land_save(void *place)
-{
-    return setjmp(*(jmp_buf *)place);
-}
 
 void evv_land_jump(void *place, int value)
 {

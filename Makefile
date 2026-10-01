@@ -969,9 +969,16 @@ $(BUILD)/dict$(SUF): test/harness/dict.c lib/eci_api.c $(BUILD)/libevv$(SUF).a
 # The words IBM's engine cannot say. It wants neither Wine nor the objects,
 # because there is nothing to hold ours against: the original takes a page
 # fault on every one of them. What this says is that ours still answers.
-.PHONY: crashers
+.PHONY: crashers crashers32
 crashers: $(BUILD)/evv
 	@test/crashers.sh $(BUILD)/evv
+
+# The same, thirty-two bit. There a landing is the C library's setjmp rather
+# than the pair written for x86-64, so the run above answers nothing for it,
+# and the matrix cannot see a landing at all. `test/crashers.sh
+# build/evv32.exe' is the thirty-two bit Windows build under Wine.
+crashers32: $(BUILD)/evv32
+	@test/crashers.sh $(BUILD)/evv32
 
 # The gate. Every case of every language spoken and held against what this
 # engine has said before -- the samples and the answers the interface gave,
@@ -1009,7 +1016,7 @@ clean:
 	@rm -rf $(BUILD)/obj-* $(BUILD)/obj32-* $(BUILD)/objwin-* \
 	        $(BUILD)/objwin32-* $(BUILD)/objpic-* $(BUILD)/objpic32-* \
 	        $(BUILD)/libeci*.so $(BUILD)/libeci*.so.* \
-	        $(BUILD)/eci32.dll $(BUILD)/dlltest32.exe \
+	        $(BUILD)/eci32.dll $(BUILD)/dlltest32.exe $(BUILD)/evv32.exe \
 	        $(BUILD)/libevv-win32$(SUF).a $(BUILD)/evv \
 	        $(BUILD)/openevv-say $(BUILD)/probe$(SUF) \
 	        $(BUILD)/evv32 $(BUILD)/probe32$(SUF) \
@@ -1236,6 +1243,14 @@ $(BUILD)/eci32.dll: lib/eci_api.c $(OBJDIRWIN32)/eci.res $(BUILD)/libevv-win32$(
 
 $(BUILD)/dlltest32.exe: test/lib/dll.c $(BUILD)/eci32.dll $(RULESTAMP)
 	@$(CCWIN32) $(CFLAGSWIN32) test/lib/dll.c -static -lversion -o $@
+	@echo "built $@"
+
+# The command over the same archive, which is what test/crashers.sh drives:
+# the library is the one a reader hosts, and a landing there is the C
+# library's own, which no other build exercises.
+$(BUILD)/evv32.exe: cli/evv.c $(BUILD)/libevv-win32$(SUF).a $(RULESTAMP)
+	@$(CCWIN32) $(CFLAGSWIN32) cli/evv.c $(BUILD)/libevv-win32$(SUF).a \
+	   $(LDFLAGSWIN32) -o $@
 	@echo "built $@"
 
 $(OBJDIRWIN32)/eci.res: lib/eci.rc
