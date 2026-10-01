@@ -271,7 +271,7 @@ class FakeEngine:
             # reads the language back to decide whether the next thing it
             # is asked for needs a change at all, so the one piece of state
             # it depends on is kept here as well.
-            if name == "setLanguage":
+            if name in ("setLanguage", "selectLanguage"):
                 self.language = args[0]
                 self.voiceNames = self.voiceNamesByLanguage[args[0]]
 
@@ -311,6 +311,9 @@ class FakeEngine:
         pass
 
     def setLanguage(self, language):
+        pass
+
+    def selectLanguage(self, language, preset):
         pass
 
     def voiceNamesFor(self, language):
@@ -449,11 +452,36 @@ def main():
     )
     d.voiceTags = False
 
+    # Text goes in as the language reads it, which for English is the
+    # Windows Western set and not UTF-8: the engine converts UTF-8 only for a
+    # language with letters of its own, so UTF-8 here is two characters for
+    # every accented one.
     check(
-        "text goes in as UTF-8",
+        "text goes in in the Western set",
         spoken(d, ["café"]),
-        [("addText", "café".encode("utf-8")), ("synthesize", True)],
+        [("addText", "café".encode("cp1252")), ("synthesize", True)],
     )
+    check(
+        "a curly apostrophe is the Western set's own",
+        spoken(d, ["don\u2019t"]),
+        [("addText", b"don\x92t"), ("synthesize", True)],
+    )
+    check(
+        "an accent the set has not got is the only one taken off",
+        spoken(d, ["\u010capek and u\u0308\u030c"]),
+        [("addText", b"Capek and \xfc"), ("synthesize", True)],
+    )
+    check(
+        "a space the set has not got is a space, not a question mark",
+        spoken(d, ["5\u202fkm"]),
+        [("addText", b"5 km"), ("synthesize", True)],
+    )
+    check("Polish goes in as UTF-8, which its module converts",
+          _openevv.textFor(0x110000, "\u017c\u00f3\u0142w"),
+          "\u017c\u00f3\u0142w".encode("utf-8"))
+    check("and Japanese as Shift-JIS, which its romanizer reads",
+          _openevv.textFor(0x80000, "\u65e5\u672c"),
+          "\u65e5\u672c".encode("cp932"))
 
     check(
         "a language change is dropped, there being one language",
@@ -705,16 +733,35 @@ def main():
         # The engine is stood in for, so its language does not really move;
         # what is being checked is what the driver asks for and in what
         # order, which is what a document with two languages in it needs.
+        d.voice = "65536:2"
         d._engine.language = 0x10000
         check(
-            "a language change in a sequence switches and copies the preset",
+            "a language change in a sequence switches in the same voice,"
+            " and the reader's own comes back after it",
             spoken(d, ["This is ", LangChangeCommand("de_DE"), "Hallo."]),
             [
                 ("addText", b"This is "),
-                ("setLanguage", 0x40000),
-                ("copyVoice", 2),
+                ("selectLanguage", 0x40000, 2),
                 ("addText", b"Hallo."),
                 ("synthesize", True),
+                ("selectLanguage", 0x10000, 2),
+            ],
+        )
+        check("and that putting back is a control step, which a cancel keeps",
+              d._engine.kinds[-1], ("control", 1))
+
+        d._engine.language = 0x10000
+        check(
+            "a change naming no language is the reader's own",
+            spoken(d, [LangChangeCommand("de"), "Hallo und ",
+                       LangChangeCommand(None), "back."]),
+            [
+                ("selectLanguage", 0x40000, 2),
+                ("addText", b"Hallo und "),
+                ("selectLanguage", 0x10000, 2),
+                ("addText", b"back."),
+                ("synthesize", True),
+                ("selectLanguage", 0x10000, 2),
             ],
         )
 
@@ -730,10 +777,10 @@ def main():
             "a bare language matches the dialect the library has",
             spoken(d, [LangChangeCommand("de"), "Hallo."]),
             [
-                ("setLanguage", 0x40000),
-                ("copyVoice", 2),
+                ("selectLanguage", 0x40000, 2),
                 ("addText", b"Hallo."),
                 ("synthesize", True),
+                ("selectLanguage", 0x10000, 2),
             ],
         )
 

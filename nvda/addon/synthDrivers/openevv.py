@@ -183,8 +183,12 @@ class SynthDriver(SynthDriver):
 		#: item, or a cancel between them leaks the change into later speech.
 		prosody = set()
 		#: Which language the text being built is in, since a sequence may
-		#: change it more than once and each change is against the last.
-		speaking = self._engine.language
+		#: change it more than once and each change is against the last. A
+		#: sequence starts in the reader's own, because the one before put it
+		#: back.
+		home = self._home()
+		speaking = home
+		switched = False
 		#: Whether anything in this sequence is meant to make a sound. A
 		#: sequence of nothing but commands is silent because it should be, and
 		#: the engine layer is told so rather than complaining about it.
@@ -199,7 +203,7 @@ class SynthDriver(SynthDriver):
 
 		def flush():
 			if text:
-				joined = "".join(text).encode("utf-8", "replace")
+				joined = _openevv.textFor(speaking, "".join(text))
 				batch.append((engine.addText, (joined,)))
 				del text[:]
 
@@ -283,15 +287,16 @@ class SynthDriver(SynthDriver):
 				#
 				# The switch has to be flushed first: it is a call and not an
 				# annotation, so text already handed over would otherwise be
-				# spoken in the language that came after it. The preset is
-				# copied again because a language change replaces all eight
-				# of its settings.
-				language = self._languageFor(item.lang)
+				# spoken in the language that came after it. A command naming
+				# no language is NVDA asking for the reader's own back.
+				language = (self._languageFor(item.lang) if item.lang
+				            else home)
 				if language is not None and language != speaking:
 					flush()
-					batch.append((engine.setLanguage, (language,)))
-					batch.append((engine.copyVoice, (self._presetNow(),)))
+					batch.append((engine.selectLanguage,
+					              (language, self._presetNow())))
 					speaking = language
+					switched = True
 			else:
 				log.error("openevv: unknown speech: %s" % item)
 
@@ -308,6 +313,13 @@ class SynthDriver(SynthDriver):
 			last = position == len(pieces) - 1
 			piece.append((engine.synthesize if last else engine.synthesizePart, (expectAudio,)))
 			engine.post(piece)
+
+		# A document's language is its own and ends with it, whether or not
+		# NVDA says so: otherwise everything after a German quotation is
+		# German. Sent as a control step, since a cancel throws speech away
+		# and this has to arrive whatever was cancelled.
+		if switched:
+			engine.control([(engine.selectLanguage, (home, self._presetNow()))])
 
 	def _processText(self, text):
 		if not self._voiceTags:
@@ -516,6 +528,14 @@ class SynthDriver(SynthDriver):
 			if loose is None and have.split("_")[0].lower() == short:
 				loose = language
 		return loose
+
+	def _home(self):
+		"""The language the reader chose, which a document's own changes of
+		language are made from and go back to."""
+		try:
+			return self._splitVoiceId(self._voice)[0]
+		except (TypeError, ValueError):
+			return self._engine.language
 
 	def _presetNow(self):
 		"""Which of the eight the reader has chosen, whatever language it was

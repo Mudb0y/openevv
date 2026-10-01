@@ -54,6 +54,7 @@ import queue
 import sys
 import threading
 import time
+import unicodedata
 
 import config
 import nvwave
@@ -185,6 +186,7 @@ LOCALES = {
 	0x40000: "de_DE",
 	0x50000: "it_IT",
 	0x80000: "ja_JP",
+	0x110000: "pl_PL",
 }
 
 #: And what to call it in a list of voices. NVDA shows the voice's name, so
@@ -200,6 +202,7 @@ LANGUAGE_NAMES = {
 	0x40000: "German",
 	0x50000: "Italian",
 	0x80000: "Japanese",
+	0x110000: "Polish",
 }
 
 
@@ -211,6 +214,84 @@ def localeOf(language):
 def nameOf(language):
 	"""What to call a language in front of a person."""
 	return LANGUAGE_NAMES.get(language, "0x%x" % language)
+
+
+#: The code set each language's text goes in, which is not UTF-8. The engine
+#: reads bytes: IBM's eight Western languages take the Windows Western set and
+#: Japanese takes Shift-JIS, which its romanizer reads. Polish declares letters
+#: of its own, the one case in which the engine converts UTF-8 itself. Never
+#: the machine's own ANSI code page, which belongs to the person's Windows and
+#: not to the voice.
+CODE_SETS = {0x80000: "cp932", 0x110000: "utf-8"}
+
+#: Characters that lay text out and say nothing.
+_LAYOUT = dict.fromkeys(map(ord, "\u00ad\u061c\u200e\u200f\u202a\u202b"
+	"\u202c\u202d\u202e\u2060\u2066\u2067\u2068\u2069\ufeff\ufe0e"
+	"\ufe0f"), "")
+_LAYOUT.update({ord("\u200b"): " ", ord("\u2028"): "\n",
+	ord("\u2029"): "\n\n", ord("\u2010"): "-", ord("\u2011"): "-"})
+
+#: What to say instead of a character the code set has not got. Only these,
+#: and not compatibility decomposition across the board, since a fraction or
+#: an exponent means something its decomposition does not.
+_INSTEAD = {
+	"\u2012": "\u2013", "\u2015": "\u2014", "\u201b": "'", "\u201f": '"',
+	"\u2024": ".", "\u2025": "..", "\u1e9e": "SS",
+	"\ufb00": "ff", "\ufb01": "fi", "\ufb02": "fl", "\ufb03": "ffi",
+	"\ufb04": "ffl", "\ufb05": "st", "\ufb06": "st",
+}
+# Full-width ASCII, which pasted text carries, but not the grave accent: a
+# backtick made here would get past the driver's own filtering of annotations.
+_INSTEAD.update({chr(n): chr(n - 0xfee0) for n in range(0xff01, 0xff5f)
+	if n != 0xff40})
+
+
+def _nearestLatin(ch):
+	"""A Latin letter the Western set has not got, with as few of its
+	accents taken off as will make it one it has: u with a diaeresis and a
+	caron keeps the diaeresis."""
+	if not unicodedata.name(ch, "").startswith("LATIN ") or not ch.isalpha():
+		return None
+	parts = unicodedata.normalize("NFD", ch)
+	if len(parts) < 2 or not all(unicodedata.combining(c) for c in parts[1:]):
+		return None
+	for end in range(len(parts) - 1, 0, -1):
+		candidate = unicodedata.normalize("NFC", parts[:end])
+		try:
+			candidate.encode("cp1252")
+		except UnicodeEncodeError:
+			continue
+		return candidate
+	return None
+
+
+def textFor(language, text):
+	"""Text as the bytes a language reads.
+
+	Composed first, so that a u followed by a combining diaeresis says what
+	the u with one does. A space the code set has not got is a space, not a
+	question mark -- a narrow no-break space in a quantity was read out as one
+	-- and what is left that it cannot hold becomes the question mark IBM's
+	own drivers have always sent.
+	"""
+	code = CODE_SETS.get(language, "cp1252")
+	if not text.isascii():
+		text = unicodedata.normalize("NFC", text.translate(_LAYOUT))
+		out = []
+		for ch in text:
+			if ch != "?" and ch.encode(code, "replace") == b"?":
+				if unicodedata.category(ch) == "Zs":
+					ch = " "
+				else:
+					instead = _INSTEAD.get(ch)
+					if instead is None and code == "cp1252":
+						instead = _nearestLatin(ch)
+					if instead is not None and b"?" not in instead.encode(
+							code, "replace"):
+						ch = instead
+			out.append(ch)
+		text = "".join(out)
+	return text.encode(code, "replace")
 
 _CALLBACK = ctypes.WINFUNCTYPE(
 	ctypes.c_int,
@@ -577,6 +658,24 @@ class Engine:
 		self._readVoiceNames()
 		self._readVoiceParams()
 		return True
+
+	def selectLanguage(self, language, preset):
+		"""Speak another of the library's languages in the same voice.
+
+		The preset is copied after the change because a language change
+		replaces the voice in force. What the reader had set on top of it --
+		the rate above all -- is put back after that, or a quotation in
+		another language would come out at the preset's speed.
+		"""
+		if language == self.language or language not in self.languages:
+			return
+		kept = dict(self.voiceParams)
+		self.setLanguage(language)
+		if preset not in self.voiceNamesFor(language):
+			preset = VOICE_FIRST
+		self.copyVoice(preset)
+		for which, value in kept.items():
+			self.setVoiceParam(which, value)
 
 	def voiceNamesFor(self, language):
 		"""The eight presets of one language, whichever is in force."""
