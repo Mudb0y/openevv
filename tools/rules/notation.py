@@ -424,6 +424,16 @@ def write_files(upper=True, trial=False):
     for what in (BUILT_C, BUILT_H, BUILT_SHIM):
         print("%-26s %d bytes, written"
               % (os.path.basename(what), os.path.getsize(what)))
+    # The record the build asks whether the masks have moved since, as old as
+    # what was just written. Whatever writes the rule code writes it, the
+    # check's rewrite of IBM's rules alone included: a record missing beside
+    # rule code is one make has just made, and make takes that as reason to
+    # write the module's own rules over whatever was there.
+    record = os.path.join(TREE, ".declared")
+    if not os.path.exists(record):
+        open(record, "w", encoding="utf-8").close()
+    st = os.stat(BUILT_C)
+    os.utime(record, ns=(st.st_atime_ns, st.st_mtime_ns))
     return True
 
 

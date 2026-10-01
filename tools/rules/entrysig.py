@@ -123,10 +123,13 @@ def mask(name):
 # declaration that changes whether an argument is a pointer reaches a rule
 # only when the rule code is written again. Depending on every file under src
 # would rewrite every module, and the rules as C after them, on any edit to the
-# machine. So the build keeps what the declarations said for each name a
-# module calls, asks again whenever src changes -- a fifth of a second -- and
-# rewrites that record only when the answer is different, which is the one
-# thing that sends the module's rules round again.
+# machine. So the build asks instead, whenever src changes -- a fifth of a
+# second -- whether the masks the written rule code holds are still what the
+# declarations say, and only a module where one is not is written again. What
+# is asked about is the rule code as it stands, not a record of how it was
+# written, because more than one thing writes it: the upper-form check writes
+# IBM's rules alone and builds them, and a record kept by the build would read
+# that as stale and write the module's own over what was to be checked.
 
 def _table(text, what):
     m = re.search(r'\b[a-z]+_%s\[\] = \{\n(.*?)\n\};' % what, text, re.S)
@@ -135,43 +138,52 @@ def _table(text, what):
 
 
 def _entries(rule_code):
-    """The names a module's written rules call, and the masks they hold."""
+    """The names a module's written rules call, the masks they hold, and
+    which are the module's own rules: those are written with nought and
+    called by the module's own name for them, never the bare one."""
     with open(rule_code, encoding='utf-8', errors='replace') as f:
         text = f.read()
     names = [n.strip('"') for n in _table(text, 'delta_rule_entry_name')]
     masks = [m.split('/*')[0].strip() for m in _table(text, 'delta_rule_argmask')]
-    return names, masks
+    fns = [f.split('/*')[0].strip() for f in _table(text, 'delta_rule_entry')]
+    own = [not f.endswith(')' + n) for f, n in zip(fns, names)]
+    return names, masks, own
 
 
-def declared(rule_code, record):
-    """What the declarations say now about each name the module calls,
-    written to the record only if that differs from what it holds."""
-    if not os.path.exists(rule_code):
-        return
-    names, _masks = _entries(rule_code)
-    out = ''.join('%s %s\n' % (n, '-' if mask(n) is None else '%08x' % mask(n))
-                  for n in names)
-    try:
-        with open(record, encoding='utf-8') as f:
-            if f.read() == out:
-                return
-    except OSError:
-        pass
-    with open(record, 'w', encoding='utf-8') as f:
-        f.write(out)
-
-
-def check(rule_code):
-    """For a module whose rule code is kept by hand rather than written:
-    every mask it holds against what the declarations say, since nothing
-    will write it again when they change."""
-    names, masks = _entries(rule_code)
+def disagreements(rule_code):
+    """Every entry whose mask in the written rule code is not what its
+    declaration says now."""
+    names, masks, own = _entries(rule_code)
     wrong = []
-    for n, held in zip(names, masks):
-        m = mask(n)
+    for n, held, mine in zip(names, masks, own):
+        m = None if mine else mask(n)
         if m is not None and int(held.rstrip('u'), 0) != m:
             wrong.append('%s holds %s and its declaration says 0x%08x'
                          % (n, held, m))
+    return wrong
+
+
+def record(rule_code, path):
+    """The timestamp the rule-code step depends on, and sets to the rule
+    code's own once it has written it: made new only when a mask the rule
+    code holds has moved, which is what sends the module round again."""
+    if not os.path.exists(rule_code):
+        return
+    wrong = disagreements(rule_code)
+    if wrong:
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(''.join(w + '\n' for w in wrong))
+    elif not os.path.exists(path):
+        open(path, 'w', encoding='utf-8').close()
+        st = os.stat(rule_code)
+        os.utime(path, ns=(st.st_atime_ns, st.st_mtime_ns))
+
+
+def check(rule_code):
+    """For a module whose rule code is kept by hand rather than written: the
+    same question, and a failure rather than a rewrite, since nothing will
+    write it again when a declaration changes."""
+    wrong = disagreements(rule_code)
     for w in wrong:
         print('%s: %s' % (rule_code, w))
     return not wrong
@@ -185,6 +197,6 @@ if __name__ == '__main__':
     rule_code = os.path.join(module,
                              'delta_rules_%s.c' % os.path.basename(module))
     if sys.argv[1] == 'record':
-        declared(rule_code, os.path.join(module, 'rules', '.declared'))
+        record(rule_code, os.path.join(module, 'rules', '.declared'))
     else:
         sys.exit(0 if check(rule_code) else 1)

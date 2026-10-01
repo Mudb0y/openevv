@@ -824,8 +824,6 @@ $(1)/delta_rules_shim_$(notdir $(1)).c &: \
 	  python3 tools/rules/letters.py write $(notdir $(1)) > /dev/null
 	@EVV_NOTATION_LANG=$(notdir $(1)) \
 	  python3 tools/rules/notation.py build > /dev/null
-	@python3 tools/rules/entrysig.py record $(1)
-	@touch -r $(1)/delta_rules_$(notdir $(1)).c $(1)/rules/.declared
 	@echo "wrote the rules of $(notdir $(1)) out of $(1)/rules"
 
 $(1)/rules/.declared: $(BUILD)/declared-$(notdir $(1)).stamp ;
@@ -854,11 +852,14 @@ endef
 # entry's declaration under src, so a declaration that changes whether an
 # argument is a pointer has to reach rules written before it. Depending on
 # every file under src would write every module again, and the rules as C after
-# them, on any edit to the machine. So this asks what the declarations say
-# whenever src changes, a fifth of a second, and a module's record moves only
-# when the answer for one of its own entries does. lang/jajp is kept by hand,
-# so it is checked instead, and the build stops if it holds a mask its
-# declaration has moved away from: nothing would ever write it again.
+# them, on any edit to the machine. So this asks, whenever src changes -- a
+# fifth of a second -- whether the masks the written rule code holds are still
+# what the declarations say, and a module's record is made new only where one
+# is not. It asks the rule code as it stands rather than keeping an account of
+# how it was written, because upper-check writes IBM's rules alone and builds
+# them, and must not have the module's own written back over them. lang/jajp
+# is kept by hand, so it is checked instead, and the build stops if it holds a
+# mask its declaration has moved away from: nothing would ever write it again.
 ENTRYSRC := $(foreach d,$(SRCDIRS),$(wildcard $(d)/*.c $(d)/*.h))
 
 define entry_record
