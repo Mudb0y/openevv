@@ -201,6 +201,24 @@ static void nap(long ms)
 #endif
 }
 
+/* Nothing drains the engine's message queue by itself; asking whether it is
+   still speaking is what pumps it, so keep asking -- for thirty seconds, which
+   is a limit and not a measurement. Stopping there without a word wrote a
+   short file that read as an answer, so it says so and fails instead, and
+   writes nothing. */
+static void drain(OldInst *h)
+{
+    int i;
+
+    for (i = 0; i < 3000 && eo_speaking(h); i++)
+        nap(10);
+    if (eo_speaking(h)) {
+        fprintf(stderr, "speak: still speaking after thirty seconds, so the"
+                " samples would be short; giving up\n");
+        exit(3);
+    }
+}
+
 /* A case may hold bytes the command line cannot carry unchanged: Wine
    turns the UTF-8 line it is given into the process's ANSI code page
    before main sees it, and a native run gets the bytes as they were. So a
@@ -386,14 +404,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    /* Nothing drains the engine's message queue by itself; asking whether it
-       is still speaking is what pumps it, so keep asking. */
-    {
-        int i;
-
-        for (i = 0; i < 3000 && eo_speaking(h); i++)
-            nap(10);
-    }
+    drain(h);
 
     if (argc > 3) {
         int i;
@@ -423,8 +434,7 @@ int main(int argc, char **argv)
         if (!et_addText(h, text) || !et_synthesize(h)) {
             printf("speak: the second utterance was refused\n");
         } else {
-            for (i = 0; i < 3000 && eo_speaking(h); i++)
-                nap(10);
+            drain(h);
             write_wav(again, 11025);
             printf("speak: %lu samples to %s\n",
                    (unsigned long)nsamples, again);
