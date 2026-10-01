@@ -64,7 +64,7 @@ def read(tag):
     was asked for: everything else, including every other statement, goes
     back exactly as it came.
     """
-    lines = open(path_of(tag)).read().split("\n")
+    lines = open(path_of(tag), encoding="utf-8").read().split("\n")
     first = last = None
     names = []
     values = {}
@@ -173,7 +173,7 @@ def add(tag, byte, args):
     lines.insert(at_var, "  variants %s"
                  % " ".join("%02x" % b for b in record))
 
-    open(path_of(tag), "w").write("\n".join(lines))
+    open(path_of(tag), "w", encoding="utf-8").write("\n".join(lines))
     print("%s: %s is code %d now, %s"
           % (tag, ch, len(names),
              ", ".join("%s %s" % (k, want[k]) for k in RECORD)))
@@ -213,7 +213,7 @@ def set_fields(tag, byte, args):
             lines[i] = "  variants " + " ".join(w[1:])
         at += n
 
-    open(path_of(tag), "w").write("\n".join(lines))
+    open(path_of(tag), "w", encoding="utf-8").write("\n".join(lines))
     print("%s: %s is code %d, now %s"
           % (tag, ch, code, ", ".join(a for a in args)))
     return True

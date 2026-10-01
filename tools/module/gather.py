@@ -245,10 +245,10 @@ def main(argv):
         "procnames": "".join("    proc_%s,\n" % n for n in PROCS),
     }
 
-    with open(os.path.join(out, "delta_lang_%s.c" % tag), "w") as f:
+    with open(os.path.join(out, "delta_lang_%s.c" % tag), "w", encoding="utf-8") as f:
         f.write(LANG_C % fields)
 
-    with open(os.path.join(out, "delta_rules_none_%s.c" % tag), "w") as f:
+    with open(os.path.join(out, "delta_rules_none_%s.c" % tag), "w", encoding="utf-8") as f:
         f.write(NONE_C % {"tag": tag})
 
     # Only if there is not one already: this is the one file in a module that
@@ -256,7 +256,7 @@ def main(argv):
     # away every constant a rule of ours names.
     authored = os.path.join(out, "delta_authored_%s.c" % tag)
     if not os.path.exists(authored):
-        with open(authored, "w") as f:
+        with open(authored, "w", encoding="utf-8") as f:
             f.write(AUTHORED_C % {"tag": tag})
 
     print("written to %s" % os.path.relpath(out, ROOT))

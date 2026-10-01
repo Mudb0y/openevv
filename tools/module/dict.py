@@ -175,7 +175,7 @@ def dump():
             loose.append(name)
 
     os.makedirs(os.path.dirname(DICT_FILE), exist_ok=True)
-    with open(DICT_FILE, 'w') as f:
+    with open(DICT_FILE, 'w', encoding="utf-8") as f:
         f.write('\n'.join(lines))
 
     print('%d dictionaries, %d entries, %d with a pronunciation, written to %s'
@@ -190,7 +190,7 @@ def dump():
 
 def read_file():
     dicts = []
-    for line in open(DICT_FILE):
+    for line in open(DICT_FILE, encoding="utf-8"):
         line = line.rstrip('\n')
         if not line.strip() or line.startswith('#'):
             continue
@@ -462,14 +462,14 @@ def build():
     for i, d in enumerate(want):
         struct.pack_into('<i', table, i * ENTRY_BYTES + 0x0c, len(d['entries']))
 
-    text = open(SETS_C).read()
+    text = open(SETS_C, encoding="utf-8").read()
     text = splice(text, 'act_table[]', bytes_as_c(table))
     text = splice(text, 'actent_store[]', bytes_as_c(out))
     text = splice(text, 'actent_all[]',
                   '\n'.join('    actent_store + %d,   /* %s_actentries */'
                             % (s, d['name'])
                             for s, d in zip(starts, want)))
-    open(SETS_C, 'w').write(text)
+    open(SETS_C, 'w', encoding="utf-8").write(text)
 
     print('%d dictionaries, %d entries, %d bytes of store, %d rewritten, '
           '%d added, %d split off'
@@ -535,7 +535,7 @@ def rename(want):
     because it was being added or because it was split off from an action it
     shared, keeps it rather than being given another next time."""
     out, which, entry = [], -1, 0
-    for line in open(DICT_FILE):
+    for line in open(DICT_FILE, encoding="utf-8"):
         if line.startswith('dictionary '):
             which += 1
             entry = 0
@@ -547,7 +547,7 @@ def rename(want):
                 line = '  ' + ' '.join(f) + '\n'
             entry += 1
         out.append(line)
-    open(DICT_FILE, 'w').writelines(out)
+    open(DICT_FILE, 'w', encoding="utf-8").writelines(out)
 
 
 def splice(text, name, body):

@@ -143,7 +143,7 @@ def fault(where, what):
 def lines_of(path):
     """Every line that says something, as words, with where it came from."""
     out = []
-    for n, raw in enumerate(open(path), 1):
+    for n, raw in enumerate(open(path, encoding="utf-8"), 1):
         line = raw.split("#")[0].strip()
         if line:
             out.append(("%s line %d" % (os.path.basename(path), n),
@@ -823,7 +823,7 @@ def compile_file(path, lang=None):
         for dr in _glob.glob(os.path.join(os.path.dirname(os.path.dirname(
                 os.path.dirname(os.path.abspath(__file__)))), "lang", lang,
                 "rules", "*.dr")):
-            for line in open(dr):
+            for line in open(dr, encoding="utf-8"):
                 if line.startswith("rule "):
                     known.add(line.split()[1])
     out = []

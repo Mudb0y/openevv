@@ -52,7 +52,7 @@ def instrument(tag):
     """A print at every write to a formant slot, anywhere. Answers the count."""
     n = 0
     for path in rule_files(tag):
-        lines = open(path).read().split("\n")
+        lines = open(path, encoding="utf-8").read().split("\n")
         out = []
         rule = None
         touched = False
@@ -88,26 +88,26 @@ def instrument(tag):
             if "#include <stdio.h>" not in txt:
                 k = txt.index("\n", txt.index("#include"))
                 txt = txt[:k] + "\n#include <stdio.h>" + txt[k:]
-            open(path, "w").write(txt)
+            open(path, "w", encoding="utf-8").write(txt)
     return n
 
 
 def strip(tag):
     """Take the prints back out, leaving the file as it was."""
     for path in rule_files(tag):
-        txt = open(path).read()
+        txt = open(path, encoding="utf-8").read()
         if MARK not in txt:
             continue
         keep = [l for l in txt.split("\n") if MARK not in l]
         txt = "\n".join(keep).replace("\n#include <stdio.h>", "", 1)
-        open(path, "w").write(txt)
+        open(path, "w", encoding="utf-8").write(txt)
 
 
 def witness(probe, text):
     """Which blocks fired, in order, for one utterance."""
     with tempfile.TemporaryDirectory() as w:
         c = os.path.join(w, "c.txt")
-        with open(c, "w") as f:
+        with open(c, "w", encoding="utf-8") as f:
             f.write(text + "\n")
         r = subprocess.run([probe, "@" + c, os.path.join(w, "c.wav"), "a"],
                            capture_output=True, text=True)

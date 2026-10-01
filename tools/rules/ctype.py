@@ -44,7 +44,7 @@ def _read(root, name):
             if name in files and '/build' not in base:
                 path = os.path.join(base, name)
                 break
-        _files[name] = (open(path, errors='replace').read().splitlines()
+        _files[name] = (open(path, errors='replace', encoding="utf-8").read().splitlines()
                         if path else None)
     return _files[name]
 
@@ -74,7 +74,7 @@ def structs(root):
         for name in files:
             if not name.endswith('.h'):
                 continue
-            lines = open(os.path.join(base, name), errors='replace').read()
+            lines = open(os.path.join(base, name), errors='replace', encoding="utf-8").read()
             for body, tag in re.findall(
                     r'(?:typedef\s+)?struct(?:\s+\w+)?\s*\{(.*?)\}\s*(\w+)\s*;',
                     lines, re.S):

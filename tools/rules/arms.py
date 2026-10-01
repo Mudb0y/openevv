@@ -151,14 +151,14 @@ class Rules:
     """The lifted rules, read so that they can be written back."""
 
     def __init__(self):
-        text = open(RULES_C).read()
+        text = open(RULES_C, encoding="utf-8").read()
         self.code = bytearray(census.carve_bytes(text, 'delta_rule_code[]'))
         self.imm = census.carve_bytes(text, 'delta_rule_imm[]')
         self.syms = census.carve_syms(text)
         self.entries = census.carve_strings(text, 'delta_rule_entry_name[]')
         self.rules = carve_rules_full(text)
         self.blobs = {k: bytearray(v) for k, v in
-                      census.carve_blobs(open(CONSTS_C).read()).items()}
+                      census.carve_blobs(open(CONSTS_C, encoding="utf-8").read()).items()}
         self.c = census.Code(self.code, self.entries, self.imm, self.syms)
         self.touched = False
         # Which statement each rule's records go into, worked out once: it
@@ -272,7 +272,7 @@ class Rules:
                 'build. The change would be half applied and the engine would '
                 'fault on the word. See docs/status.md.'
                 % os.path.basename(RULES_C))
-        text = open(RULES_C).read()
+        text = open(RULES_C, encoding="utf-8").read()
         text = splice(text, 'delta_rule_code[]',
                       as_c(self.code, 16))
         text = splice(text, 'delta_rule_imm[]',
@@ -282,14 +282,14 @@ class Rules:
         text = splice(text, 'delta_rules[]',
                       '\n'.join('    { "%s", "%s", %d, %d, %d, %d, %d },' % tuple(r)
                                 for r in self.rules))
-        open(RULES_C, 'w').write(text)
+        open(RULES_C, 'w', encoding="utf-8").write(text)
 
-        consts = open(CONSTS_C).read()
+        consts = open(CONSTS_C, encoding="utf-8").read()
         for name, body in self.blobs.items():
             consts = re.sub(r'uint8_t %s\[\d+\]' % re.escape(name),
                             'uint8_t %s[%d]' % (name, len(body)), consts)
             consts = splice(consts, '%s[' % name, as_c(body, 16))
-        open(CONSTS_C, 'w').write(consts)
+        open(CONSTS_C, 'w', encoding="utf-8").write(consts)
 
 
 # The three caller-saved registers. A call leaves the others alone, which is

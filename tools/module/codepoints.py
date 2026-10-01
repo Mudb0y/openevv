@@ -68,7 +68,7 @@ def alphabet_bytes(tag):
     inside = False
     field = None
     out = set()
-    for line in open(p):
+    for line in open(p, encoding="utf-8"):
         if line.startswith("statement inp"):
             inside = True
             continue
@@ -90,7 +90,7 @@ def alphabet_bytes(tag):
 
 def read_text(path, claimed):
     out = []
-    for n, raw in enumerate(open(path), 1):
+    for n, raw in enumerate(open(path, encoding="utf-8"), 1):
         line = raw.split("#")[0].strip()
         if not line:
             continue
@@ -119,7 +119,7 @@ def one(tag):
     table = (read_text(source, alphabet_bytes(tag))
              if os.path.exists(source) else [])
 
-    with open(out_path(tag), "w") as f:
+    with open(out_path(tag), "w", encoding="utf-8") as f:
         f.write(HEAD % {"tag": tag})
         if table:
             f.write("const delta_codepoint %s_delta_codepoints[] = {\n" % tag)

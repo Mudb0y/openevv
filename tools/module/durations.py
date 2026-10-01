@@ -246,7 +246,7 @@ def main(argv):
     corpus = opt("--corpus", "words")
     rows = []
     if load:
-        for line in open(load):
+        for line in open(load, encoding="utf-8"):
             f = line.rstrip("\n").split("\t")
             rows.append((dict(zip(f[:-2:2], f[1:-2:2])), int(f[-2]),
                          {}))
@@ -267,7 +267,7 @@ def main(argv):
                 rows.extend(got)
     sys.stderr.write("durations: %d segments\n" % len(rows))
     if save:
-        with open(save, "w") as f:
+        with open(save, "w", encoding="utf-8") as f:
             for fields, dur, ps in rows:
                 f.write("\t".join(
                     "%s\t%s" % (k, fields[k]) for k in sorted(fields))
@@ -285,7 +285,7 @@ def main(argv):
             if k in table and table[k] != (dur, best, odd):
                 clash += 1
             table.setdefault(k, (dur, best, odd))
-        with open(out, "w") as fh:
+        with open(out, "w", encoding="utf-8") as fh:
             fh.write("# How long each segment of %s lasts.\n" % tag)
             fh.write("#\n")
             fh.write("# A duration is not a property of a segment, so the "

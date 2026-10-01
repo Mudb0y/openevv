@@ -51,7 +51,7 @@ def rules_of(tag):
                        if x.endswith(".up") and x != "wrappers.up")):
         name = None
         body = []
-        for raw in open(os.path.join(where, f)):
+        for raw in open(os.path.join(where, f), encoding="utf-8"):
             line = raw.rstrip("\n")
             if line.startswith("rule "):
                 name = line.split()[1]
@@ -78,7 +78,7 @@ def tables_of(tag):
     for kind in ("globals", "settings", "statements", "sets", "consts"):
         p = os.path.join(ROOT, "lang", tag, "%s.%s" % (tag, kind))
         if os.path.exists(p):
-            out[kind] = open(p).read().replace(tag, "<tag>")
+            out[kind] = open(p, encoding="utf-8").read().replace(tag, "<tag>")
     return out
 
 

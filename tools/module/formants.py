@@ -91,7 +91,7 @@ def stores(tag):
     if not os.path.exists(path):
         return out
     name = None
-    for line in open(path):
+    for line in open(path, encoding="utf-8"):
         if line.startswith("store "):
             name = line.split()[1]
             out[name] = []
@@ -125,7 +125,7 @@ def symbols(tag):
     if not os.path.exists(path):
         return out
     n = 0
-    for line in open(path):
+    for line in open(path, encoding="utf-8"):
         if line.startswith("#") or not line.strip():
             continue
         f = line.split()
@@ -143,7 +143,7 @@ def rule_bodies(tag):
         if not re.match(r'delta_rules_c\d+_%s\.c$' % tag, f):
             continue
         name = None
-        for line in open(os.path.join(d, f)):
+        for line in open(os.path.join(d, f), encoding="utf-8"):
             m = RULE.match(line)
             if m:
                 name = m.group(1)

@@ -117,8 +117,8 @@ def text_of(code, blobs, val):
 
 def main():
     code, rules = census.load()
-    blobs = census.carve_blobs(open(census.CONSTS_C).read())
-    alpha = lexicon.alphabets(open(LINK_C).read())
+    blobs = census.carve_blobs(open(census.CONSTS_C, encoding="utf-8").read())
+    alpha = lexicon.alphabets(open(LINK_C, encoding="utf-8").read())
     once = {k: lexicon.unique_names(v) for k, v in alpha.items()}
     families = collections.Counter()
     refused = collections.Counter()

@@ -30,7 +30,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 def stores(tag):
     """Every store of bytes the language's rules name, by name."""
     out, cur = {}, None
-    for line in open("%s/lang/%s/%s.consts" % (ROOT, tag, tag)):
+    for line in open("%s/lang/%s/%s.consts" % (ROOT, tag, tag), encoding="utf-8"):
         m = re.match(r"^store (\S+)", line)
         if m:
             cur = m.group(1)
@@ -44,7 +44,7 @@ def stores(tag):
 def symbols(tag):
     """Every symbol, as the object that names it, its store and its offset."""
     out = {}
-    for line in open("%s/lang/%s/rules/symbols" % (ROOT, tag)):
+    for line in open("%s/lang/%s/rules/symbols" % (ROOT, tag), encoding="utf-8"):
         p = line.split()
         if len(p) == 5 and p[0] == "at":
             out.setdefault(p[2], []).append((p[1], p[3], int(p[4])))
@@ -122,7 +122,7 @@ def one_rule(tag, name):
     obj = None
     for path in sorted(_glob.glob(os.path.join(ROOT, "lang", tag,
                                                "rules", "*.dr"))):
-        for line in open(path):
+        for line in open(path, encoding="utf-8"):
             w = line.split()
             if w[:1] == ["rule"] and len(w) > 1:
                 inside = w[1] == name

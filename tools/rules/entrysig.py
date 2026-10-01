@@ -78,7 +78,7 @@ def _read():
         for fn in sorted(files):
             if not fn.endswith(('.c', '.h')):
                 continue
-            text = open(os.path.join(base, fn)).read()
+            text = open(os.path.join(base, fn), encoding="utf-8").read()
             text = re.sub(r'/\*.*?\*/', ' ', text, flags=re.S)
             for m in DECL.finditer(text):
                 name = m.group(2)

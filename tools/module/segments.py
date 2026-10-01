@@ -69,7 +69,7 @@ def annotations(tag):
     out = []
     if not os.path.exists(path):
         return out
-    for line in open(path):
+    for line in open(path, encoding="utf-8"):
         if line.startswith("#") or "\t" not in line:
             continue
         word, ph = line.rstrip("\n").split("\t", 1)
@@ -235,7 +235,7 @@ def tap(probe, text):
     """One utterance's runs and the gaps that start inside each."""
     with tempfile.TemporaryDirectory() as w:
         c = os.path.join(w, "c.txt")
-        with open(c, "w") as f:
+        with open(c, "w", encoding="utf-8") as f:
             f.write(text + "\n")
         env = dict(os.environ)
         env["EVV_ARRAY_TAP"] = os.path.join(w, "a.txt")
@@ -245,7 +245,7 @@ def tap(probe, text):
             return []
         runs = []
         gaps = []
-        for line in open(env["EVV_ARRAY_TAP"]):
+        for line in open(env["EVV_ARRAY_TAP"], encoding="utf-8"):
             f = line.split()
             if not f:
                 continue
@@ -387,7 +387,7 @@ def main(argv):
     done = 0
     if load:
         sys.stderr.write("segments: reading %s\n" % load)
-        for line in open(load):
+        for line in open(load, encoding="utf-8"):
             f = line.rstrip("\n").split("\t")
             key = tuple(f[:5])
             sh = tuple(int(v) for v in f[5].split(",")) if f[5] else ()
@@ -442,7 +442,7 @@ def main(argv):
     # shape that is a truncation of the longest is not a disagreement; one
     # that is not is.
     if save:
-        with open(save, "w") as f:
+        with open(save, "w", encoding="utf-8") as f:
             for key, obs in shapes.items():
                 for (sh, start, runson), n in obs.items():
                     f.write("%s\t%s\t%d\t%d\t%d\n"
@@ -477,7 +477,7 @@ def main(argv):
                 clash[key] += seenshapes[(sh, start, ro)]
                 rejected.append((key, best, sh, seenshapes[(sh, start, ro)]))
     if opt("--clashes", None):
-        with open(opt("--clashes", None), "w") as f:
+        with open(opt("--clashes", None), "w", encoding="utf-8") as f:
             for key, best, sh, n in sorted(rejected):
                 f.write("%s\tkept %s\tagainst %s\tin %d words\n"
                         % (" ".join(key), best, sh, n))
@@ -512,7 +512,7 @@ def main(argv):
     # the phoneme and its stress and nothing else.
     plain = opt("--phonemes",
                 os.path.join(ROOT, "lang", tag, "%s.phonemes" % tag))
-    with open(plain, "w") as f:
+    with open(plain, "w", encoding="utf-8") as f:
         f.write("# What each phoneme's parameters do, where no neighbour "
                 "moves them.\n")
         f.write("#\n")
@@ -533,7 +533,7 @@ def main(argv):
             f.write("%s %s %-4s %s\n" % (k[0], k[1], k[2], spell(base[k])))
 
     lines = 0
-    with open(out, "w") as f:
+    with open(out, "w", encoding="utf-8") as f:
         f.write("# What each segment of %s is made of, as targets.\n" % tag)
         f.write("#\n")
         f.write("# A `base' line is what a phoneme's parameter does at a "
@@ -665,7 +665,7 @@ def main(argv):
         if truncates(sh, table[short][0], start_of(sh)):
             continue
         far[k] = (sh, runson)
-    with open(out, "a") as f:
+    with open(out, "a", encoding="utf-8") as f:
         f.write("#\n")
         f.write("# Below, a context two phonemes deep whose shape the "
                 "rectangles above\n")

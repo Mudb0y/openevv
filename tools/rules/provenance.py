@@ -142,7 +142,7 @@ def name_of(whence, base, syms):
 def read_sites(path):
     """The site table the decompiler wrote: which rule each site is in."""
     out = {}
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         for line in f:
             if line.startswith('#') or not line.strip():
                 continue

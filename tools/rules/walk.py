@@ -31,7 +31,7 @@ store, sym = st.stores(tag), st.symbols(tag)
 letters = st.codes(tag, "alphabet.py")
 phones = st.codes(tag, "phonemes.py")
 setnames = {}
-for line in open("%s/lang/%s/%s.sets" % (ROOT, tag, tag)):
+for line in open("%s/lang/%s/%s.sets" % (ROOT, tag, tag), encoding="utf-8"):
     w = line.split()
     if w[:2] == ["at", "set"]:
         setnames[int(w[2])] = w[3].replace("_setentries", "")
@@ -39,7 +39,7 @@ for line in open("%s/lang/%s/%s.sets" % (ROOT, tag, tag)):
 lines, obj = [], None
 for path in sorted(glob.glob(os.path.join(ROOT, "lang", tag, "rules", "*.dr"))):
     inside = False
-    for line in open(path):
+    for line in open(path, encoding="utf-8"):
         w = line.split()
         if w[:1] == ["rule"] and len(w) > 1:
             inside = w[1] == name

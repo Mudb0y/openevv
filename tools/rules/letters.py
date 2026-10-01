@@ -130,7 +130,7 @@ def takes(tag, stem, name):
     where = os.path.join(ROOT, "lang", tag, "rules", stem + ".dr")
     want = False
     called = None
-    for line in open(where):
+    for line in open(where, encoding="utf-8"):
         w = line.split()
         if w[:1] == ["rule"]:
             want = len(w) > 1 and w[1] == name
@@ -154,7 +154,7 @@ def fields(tag):
     as this language numbers them, which is the order it declares its
     statements in."""
     at = {}
-    for line in open(os.path.join(ROOT, "lang", tag, "%s.statements" % tag)):
+    for line in open(os.path.join(ROOT, "lang", tag, "%s.statements" % tag), encoding="utf-8"):
         if line.startswith("statement "):
             at.setdefault(line.split()[1], len(at))
     for want in ("inp", "phone", "morph"):
@@ -179,7 +179,7 @@ def letter_codes(tag):
     # file can be written in the letters themselves.
     where = os.path.join(ROOT, "lang", tag, "%s.codepoints" % tag)
     if os.path.exists(where):
-        for line in open(where):
+        for line in open(where, encoding="utf-8"):
             w = line.split("#", 1)[0].split()
             if len(w) == 2:
                 byte = bytes([int(w[1], 16)]).decode("latin-1")
@@ -194,7 +194,7 @@ def phone_fields(tag):
     out = {}
     field = None
     inside = False
-    for line in open(os.path.join(ROOT, "lang", tag, "%s.statements" % tag)):
+    for line in open(os.path.join(ROOT, "lang", tag, "%s.statements" % tag), encoding="utf-8"):
         if line.startswith("statement "):
             if inside:
                 break
@@ -355,7 +355,7 @@ def parse(path):
     obj = None
     pattern = None
     piece = None
-    for n, raw in enumerate(open(path), 1):
+    for n, raw in enumerate(open(path, encoding="utf-8"), 1):
         where = "%s line %d" % (os.path.basename(path), n)
         note = ""
         if "#" in raw:
@@ -1158,7 +1158,7 @@ def letter_kinds(tag):
     which is what a character that is not a letter holds."""
     kinds = None
     inside = False
-    for line in open(os.path.join(ROOT, "lang", tag, "%s.statements" % tag)):
+    for line in open(os.path.join(ROOT, "lang", tag, "%s.statements" % tag), encoding="utf-8"):
         if line.startswith("statement "):
             inside = line.split()[1] == "inp"
             continue
@@ -1451,7 +1451,7 @@ def not_laid_down(tag, strings):
     have = set()
     where = os.path.join(ROOT, "lang", tag, "rules", "symbols")
     if os.path.exists(where):
-        for line in open(where):
+        for line in open(where, encoding="utf-8"):
             w = line.split()
             if len(w) == 5 and w[0] == "at":
                 have.add(w[2])
@@ -1476,8 +1476,8 @@ def main(argv):
         sys.stdout.write(strings)
         return 0
     if what == "write":
-        open(rules, "w").write(text)
-        open(consts, "w").write(strings)
+        open(rules, "w", encoding="utf-8").write(text)
+        open(consts, "w", encoding="utf-8").write(strings)
         missing = not_laid_down(tag, strings)
         if missing:
             # An ordinary build will stop on the first of these, with a
@@ -1501,7 +1501,7 @@ def main(argv):
     if what == "regenerate":
         ok = True
         for where, want in ((rules, text), (consts, strings)):
-            have = open(where).read() if os.path.exists(where) else ""
+            have = open(where, encoding="utf-8").read() if os.path.exists(where) else ""
             if have != want:
                 print("%s: %s is not what lang/%s/letters says"
                       % (tag, os.path.basename(where), tag))

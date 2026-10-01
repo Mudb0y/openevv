@@ -78,14 +78,14 @@ def add(tree, name, obj, blob, off, length, symbols_path):
         if not f.endswith('.dr'):
             continue
         path = os.path.join(tree, f)
-        text = open(path).read()
+        text = open(path, encoding="utf-8").read()
         if re.search(r'^rule %s ' % re.escape(name), text, re.M):
             dr = path
             break
     if dr is None:
         raise CannotWrite('no lower-form file holds the rule %s' % name)
 
-    text = open(dr).read()
+    text = open(dr, encoding="utf-8").read()
     span = rule_span(text, name)
     body = text[span[0]:span[1]]
     shape = template(body)
@@ -127,9 +127,9 @@ def add(tree, name, obj, blob, off, length, symbols_path):
         raise CannotWrite('%s does not end where this can write' % name)
     new = new[:tail.start()] + arm + new[tail.start():]
 
-    open(dr, 'w').write(text[:span[0]] + new + text[span[1]:])
+    open(dr, 'w', encoding="utf-8").write(text[:span[0]] + new + text[span[1]:])
 
-    with open(symbols_path, 'a') as f:
+    with open(symbols_path, 'a', encoding="utf-8") as f:
         f.write('at %s %s %s %d\n' % (obj, sym, blob, off))
 
     return act + 1
@@ -158,14 +158,14 @@ def rewrite(tree, name, act, obj, blob, off, length, was, symbols_path):
         if not f.endswith('.dr'):
             continue
         path = os.path.join(tree, f)
-        text = open(path).read()
+        text = open(path, encoding="utf-8").read()
         if re.search(r'^rule %s ' % re.escape(name), text, re.M):
             dr = path
             break
     if dr is None:
         raise CannotWrite('no lower-form file holds the rule %s' % name)
 
-    text = open(dr).read()
+    text = open(dr, encoding="utf-8").read()
     span = rule_span(text, name)
     body = text[span[0]:span[1]]
 
@@ -203,7 +203,7 @@ def rewrite(tree, name, act, obj, blob, off, length, was, symbols_path):
                       % (sym, load.group(2)), 1)
 
     body = body[:m.start()] + new + body[m.end():]
-    open(dr, 'w').write(text[:span[0]] + body + text[span[1]:])
+    open(dr, 'w', encoding="utf-8").write(text[:span[0]] + body + text[span[1]:])
 
-    with open(symbols_path, 'a') as f:
+    with open(symbols_path, 'a', encoding="utf-8") as f:
         f.write('at %s %s %s %d\n' % (obj, sym, blob, off))

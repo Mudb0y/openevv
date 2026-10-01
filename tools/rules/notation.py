@@ -252,7 +252,7 @@ def write_symbols():
     for (obj, real), nm in zip(e.sym.items, names):
         store, _plus, off = nm.split()
         out.append("at %s %s %s %s" % (obj, real, store, off))
-    open(SYMBOLS, "w").write("\n".join(out) + "\n")
+    open(SYMBOLS, "w", encoding="utf-8").write("\n".join(out) + "\n")
     print("%d stores and %d addresses in %s"
           % (len(stores), len(names), os.path.relpath(SYMBOLS, ROOT)))
     return True
@@ -262,7 +262,7 @@ def read_symbols():
     """The stores, and where each object's symbol falls in one of them."""
     stores = []
     where = {}
-    for line in open(SYMBOLS):
+    for line in open(SYMBOLS, encoding="utf-8"):
         w = line.split()
         if not w or w[0].startswith("#"):
             continue
@@ -325,7 +325,7 @@ def trials():
     """
     if not os.path.exists(TRIALS):
         return set()
-    return set(line.split()[0] for line in open(TRIALS)
+    return set(line.split()[0] for line in open(TRIALS, encoding="utf-8")
                if line.strip() and not line.lstrip().startswith("#"))
 
 
@@ -365,7 +365,7 @@ def text_rules(upper=True, trial=False):
         up = os.path.join(TREE, stem + ".up")
         rules, tables = ([], {})
         if os.path.exists(low):
-            rules, tables = read_rules(open(low))
+            rules, tables = read_rules(open(low, encoding="utf-8"))
         if upper and os.path.exists(up) and stem + ".up" not in left_out:
             written = du.compile_file(up, LANG)
             by_name = dict((r[0], r) for r in written)
@@ -471,7 +471,7 @@ def prove():
     files = ([f for f in files if f != "glob.dr"]
              + [f for f in files if f == "glob.dr"])
     for f in files:
-        rules, tables = read_rules(open(os.path.join(TREE, f)))
+        rules, tables = read_rules(open(os.path.join(TREE, f), encoding="utf-8"))
         for name, d, obj in rules:
             from_tree.rule(name, d, tables, obj)
             from_tree.origin[name] = obj
@@ -532,7 +532,7 @@ def to_tree():
             write_rule(name, obj, d, tables, out)
             out.append("")
         where = os.path.join(TREE, obj[:-4] + ".dr")
-        open(where, "w").write("\n".join(out) + "\n")
+        open(where, "w", encoding="utf-8").write("\n".join(out) + "\n")
         rules += len(per_object[obj])
         print("%-16s %4d rules" % (obj, len(per_object[obj])))
     print("%d rules in %s" % (rules, os.path.relpath(TREE, ROOT)))
@@ -563,7 +563,7 @@ def verify():
             print("%-16s no text in the tree" % obj)
             ok = False
             continue
-        written, wtables = read_rules(open(where))
+        written, wtables = read_rules(open(where, encoding="utf-8"))
         by_name = lifted_by_object[obj]
         ltables = tables_by_object[obj]
         for name, d2, o in written:
@@ -775,7 +775,7 @@ def upper_compile(name, params, calls, truth=False):
 
 
 def write_upper():
-    lifted, tables = read_rules(open(os.path.join(TREE, "glob.dr")))
+    lifted, tables = read_rules(open(os.path.join(TREE, "glob.dr"), encoding="utf-8"))
     out = ["# The wrappers, as the primitive each stands for. Written by",
            "# tools/rules/notation.py. Every one takes the machine's state as",
            "# its first argument, so that is not written; `arg n' is the",
@@ -801,7 +801,7 @@ def write_upper():
             continue
         out.extend(lines)
         done += 1
-    open(UPPER, "w").write("\n".join(out) + "\n")
+    open(UPPER, "w", encoding="utf-8").write("\n".join(out) + "\n")
     print("%d wrappers written to %s, %d left in the lower form"
           % (done, os.path.relpath(UPPER, ROOT), left))
     print("  of those left, %d because this could not reproduce them exactly"
@@ -815,11 +815,11 @@ def upper_prove():
     bytecode. Byte-identity is the point: this is a re-expression of a rule
     that already exists, so anything but identical is a difference nobody
     asked for."""
-    lifted, tables = read_rules(open(os.path.join(TREE, "glob.dr")))
+    lifted, tables = read_rules(open(os.path.join(TREE, "glob.dr"), encoding="utf-8"))
     have = dict((n, d) for n, d, _o in lifted)
     same = 0
     differed = []
-    for name, params, calls, truth in upper_read(open(UPPER)):
+    for name, params, calls, truth in upper_read(open(UPPER, encoding="utf-8")):
         if name not in have:
             differed.append((name, "not in the lower form"))
             continue
@@ -856,7 +856,7 @@ def main():
         return 0
 
     if what == "read":
-        rules, _t = read_rules(open(sys.argv[2]))
+        rules, _t = read_rules(open(sys.argv[2], encoding="utf-8"))
         print("%d rules read" % len(rules))
         return 0
 

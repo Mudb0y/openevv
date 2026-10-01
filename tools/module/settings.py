@@ -187,7 +187,7 @@ def main(argv):
 
 def emit(tag, blob, declared, name, out):
     size = len(blob)
-    with open(out, "w") as f:
+    with open(out, "w", encoding="utf-8") as f:
         f.write("/* The engine's settings, built into the image.\n"
                 " *\n"
                 " * Sections in square brackets, key equals value lines under"
@@ -293,7 +293,7 @@ def write_text(tag, blob, name, path):
            ""]
     for rec in blob[:-3].split(b"\x00"):
         out.append(escape(rec))
-    open(path, "w").write("\n".join(out) + "\n")
+    open(path, "w", encoding="utf-8").write("\n".join(out) + "\n")
     return len(blob[:-3].split(b"\x00"))
 
 
@@ -302,7 +302,7 @@ def read_text(path):
     name = None
     recs = []
     started = False
-    for raw in open(path):
+    for raw in open(path, encoding="utf-8"):
         line = raw.rstrip("\n")
         if not started:
             if line.startswith("#") or not line.strip():

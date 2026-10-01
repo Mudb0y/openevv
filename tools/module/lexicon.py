@@ -302,8 +302,8 @@ def dictionaries():
     """Every dictionary as it lies: what its table entry says, where it
     begins in the store, and its entries in the order the index puts them,
     each with where it sits in the store and the value behind its key."""
-    sets = open(SETS_C).read()
-    alpha = alphabets(open(LINK_C).read())
+    sets = open(SETS_C, encoding="utf-8").read()
+    alpha = alphabets(open(LINK_C, encoding="utf-8").read())
     act_table = carve_bytes(sets, 'act_table[]')
     store = carve_bytes(sets, 'actent_store[]')
     starts = carve_starts(sets, 'actent_all[]')

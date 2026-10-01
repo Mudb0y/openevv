@@ -295,7 +295,7 @@ def render(shape):
 
 
 def load():
-    text = open(RULES_C).read()
+    text = open(RULES_C, encoding="utf-8").read()
     c = Code(carve_bytes(text, 'delta_rule_code[]'),
              carve_strings(text, 'delta_rule_entry_name[]'),
              carve_bytes(text, 'delta_rule_imm[]'),
@@ -420,7 +420,7 @@ def printable(b):
 
 def dump(want):
     c, rules = load()
-    blobs = carve_blobs(open(CONSTS_C).read())
+    blobs = carve_blobs(open(CONSTS_C, encoding="utf-8").read())
 
     for name, obj, start, length in rules:
         if name != want:

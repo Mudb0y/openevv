@@ -55,7 +55,7 @@ def inventory(tag):
     inside = False
     field = None
     out = []
-    for line in open(p):
+    for line in open(p, encoding="utf-8"):
         if line.startswith("statement phone"):
             inside = True
             continue
@@ -81,7 +81,7 @@ def statement(tag, want="phone"):
     nine languages, whose strides run from three to eight.
     """
     p = os.path.join(ROOT, "lang", tag, "%s.statements" % tag)
-    lines = open(p).read().split("\n")
+    lines = open(p, encoding="utf-8").read().split("\n")
     inside = False
     field = None
     fields = []
@@ -172,7 +172,7 @@ def add_phoneme(tag, name, args):
            for i in range(0, len(var), 32)]
     lines[min(st["var_at"]):max(st["var_at"]) + 1] = out
     lines.insert(at_name + 1, "    value %s" % name)
-    open(st["path"], "w").write("\n".join(lines))
+    open(st["path"], "w", encoding="utf-8").write("\n".join(lines))
     print("%s: %s is code %d now, %s"
           % (tag, name, len(st["names"]),
              ", ".join("%s %s" % (f, st["values"][f][rec[i]])
@@ -222,7 +222,7 @@ def set_record(tag, phoneme, args):
            for i in range(0, len(var), 32)]
     lines = st["lines"]
     lines[min(st["var_at"]):max(st["var_at"]) + 1] = out
-    open(st["path"], "w").write("\n".join(lines))
+    open(st["path"], "w", encoding="utf-8").write("\n".join(lines))
     print("%s: %s is now %s" % (tag, phoneme, ", ".join(
         "%s %s" % (f, st["values"][f][rec[i]])
         for i, f in enumerate(st["record"]))))
@@ -234,7 +234,7 @@ def declared(tag):
     of the first four bytes, and the eleven values after them."""
     p = os.path.join(ROOT, "lang", tag, "%s.settings" % tag)
     out = {}
-    for line in open(p):
+    for line in open(p, encoding="utf-8"):
         m = re.match(r"Phoneme(\d+)=(.*)", line.strip())
         if not m:
             continue
@@ -256,7 +256,7 @@ def rules(tag):
         if not (f.endswith(".dr") or f.endswith(".up")) or f == "wrappers.up":
             continue
         name = None
-        for raw in open(os.path.join(where, f)):
+        for raw in open(os.path.join(where, f), encoding="utf-8"):
             line = raw.rstrip("\n")
             if line.startswith("rule "):
                 name = line.split()[1]
