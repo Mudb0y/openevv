@@ -10,6 +10,18 @@
  * The allocator is a plain first-fit with boundary tags. It is not clever and
  * does not need to be: the Delta heap takes segments in big pieces and gives
  * them back whole, and what else asks is small and long-lived.
+ *
+ * Except that a dictionary is neither. Reading one in is three small blocks an
+ * entry, all of them kept, and a walk from the first block of the arena for
+ * each made it quadratic in the entries: the 69,000 of the community
+ * dictionary's root volume took about forty seconds in a 64-bit module and 86
+ * ms in a 32-bit one, which never came here. Giving it back walked the whole
+ * arena for every block as well. So the walk starts at `lowest_free', the block
+ * before which nothing is free, and a block being given back joins only what
+ * follows it; a free block that follows another is joined when a walk next
+ * passes the first. Which block a request is given is still the first free one
+ * that is big enough, exactly as before, so nothing is placed anywhere it was
+ * not.
  */
 
 #include "evv_arena.h"
@@ -90,6 +102,13 @@ typedef struct {
 } head;
 
 static head *first;
+
+/* No block before this one is free, so a first-fit walk can begin here and take
+   the same block one that began at `first' would. It is a block header that is
+   always there: arena_free moves it back to any block it gives back that is
+   before it, and joining only ever swallows blocks that come after the block
+   doing the joining. Nought means nothing is free at all. */
+static head *lowest_free;
 
 static void bad_block(const head *b, const char *what)
 {
@@ -211,6 +230,7 @@ int evv_arena_open(size_t bytes)
     first->mark = HEAD_MARK;
     first->size = (uint32_t)(evv_arena_size - ALIGN);
     first->used = 0;
+    lowest_free = first;
     return 1;
 }
 
@@ -225,6 +245,7 @@ void evv_arena_close(void)
     evv_arena_base = 0;
     evv_arena_size = 0;
     first = 0;
+    lowest_free = 0;
 }
 
 /* Whether something came out of here at all. */
@@ -450,7 +471,7 @@ static void guard_check(const char *doing)
 static void *arena_alloc(size_t n, uint32_t whence)
 {
     size_t want = ROUND(n) + ALIGN + GUARD_SLACK;
-    head *b;
+    head *b, *hole = 0;
 
     if (n == 0)
         return 0;
@@ -461,11 +482,24 @@ static void *arena_alloc(size_t n, uint32_t whence)
     if (evv_arena_base == 0 && !evv_arena_open(ARENA_DEFAULT))
         return 0;
 
-    for (b = first; b != 0; b = next_block(b)) {
-        head *rest;
+    for (b = lowest_free; b != 0; b = next_block(b)) {
+        head *rest = 0, *after;
 
-        if (b->used || b->size < want)
+        if (b->used)
             continue;
+
+        /* Join what follows before asking whether it is big enough, as a walk
+           from the front that had joined everything already would find it. */
+        while ((after = next_block(b)) != 0 && !after->used)
+            b->size += after->size;
+
+        if (b->size < want) {
+            /* Free, and too small: nothing free is before this one, which is
+               where the next walk can begin as long as it stays that way. */
+            if (hole == 0)
+                hole = b;
+            continue;
+        }
 
         if (b->size >= want + ALIGN * 2) {
             rest = (head *)((unsigned char *)b + want);
@@ -476,9 +510,13 @@ static void *arena_alloc(size_t n, uint32_t whence)
         }
         b->used = 1;
         b->whence = whence;
+        /* Everything before the first free block passed over is taken, or this
+           block was the first free one and what is left of it comes next. */
+        lowest_free = hole != 0 ? hole : (rest != 0 ? rest : next_block(b));
         guard_took(b, (unsigned char *)b + ALIGN, n);
         return (unsigned char *)b + ALIGN;
     }
+    lowest_free = hole;
     return 0;
 }
 
@@ -502,16 +540,15 @@ static void arena_free(void *p)
     b->used = 0;
     guard_gave_back(p);
 
-    /* Join what is free, from the front, so that the big pieces the heap
-       gives back can be handed out again. */
-    for (w = first; w != 0; w = next_block(w)) {
-        head *n = next_block(w);
+    /* Join what follows, so that the big pieces the heap gives back can be
+       handed out again. A free block before this one joins it when a walk next
+       passes that block, which is before any walk reaches this one: nothing
+       free is before `lowest_free'. */
+    for (w = next_block(b); w != 0 && !w->used; w = next_block(b))
+        b->size += w->size;
 
-        while (!w->used && n != 0 && !n->used) {
-            w->size += n->size;
-            n = next_block(w);
-        }
-    }
+    if (lowest_free == 0 || b < lowest_free)
+        lowest_free = b;
 }
 
 char *evv_arena_strdup(const char *s)
