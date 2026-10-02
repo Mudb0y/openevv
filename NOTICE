@@ -35,6 +35,15 @@ the rest of that language, on the terms below. Putting the two in one
 directory would have been tidier and would have made the licence line harder
 to state truthfully.
 
+Two pieces of that code were written outside this repository and came in
+from their authors' own projects, under the same MIT licence, and their
+copyright notices are in LICENSE beside ours. The arena allocator's walk from
+the first free block, in `src/port/evv_arena.c`, is Josh Kennedy's, from
+OpenEvv-sapi5, whose notice gives it to the OpenEVV SAPI5 contributors. The
+NVDA add-on's per-language text encoding and its return to the reader's own
+language, in `nvda/addon/synthDrivers/_openevv.py` and `openevv.py`, are
+Felix Steindorff's, from openevv-nvda.
+
 IBM's
 -----
 

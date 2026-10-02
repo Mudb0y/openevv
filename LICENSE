@@ -1,6 +1,8 @@
 MIT License
 
 Copyright (c) 2026 Stanislaw Przedzinkowski
+Copyright (c) 2026 the OpenEVV SAPI5 contributors (arena allocator changes)
+Copyright (c) 2026 Felix Steindorff (NVDA add-on contributions)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
