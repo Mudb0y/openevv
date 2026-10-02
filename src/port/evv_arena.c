@@ -12,16 +12,17 @@
  * them back whole, and what else asks is small and long-lived.
  *
  * Except that a dictionary is neither. Reading one in is three small blocks an
- * entry, all of them kept, and a walk from the first block of the arena for
- * each made it quadratic in the entries: the 69,000 of the community
- * dictionary's root volume took about forty seconds in a 64-bit module and 86
- * ms in a 32-bit one, which never came here. Giving it back walked the whole
- * arena for every block as well. So the walk starts at `lowest_free', the block
- * before which nothing is free, and a block being given back joins only what
- * follows it; a free block that follows another is joined when a walk next
- * passes the first. Which block a request is given is still the first free one
- * that is big enough, exactly as before, so nothing is placed anywhere it was
- * not.
+ * entry, all of them kept, and a walk over every block of the arena for each
+ * made it quadratic in the entries: 69,000 of them took over a minute in a
+ * 64-bit build and 86 milliseconds in a 32-bit one, which never comes here.
+ * Starting the walk at the first free block took that to a fifth of a
+ * second, but a dictionary updated a word at a time leaves small holes behind,
+ * and every walk then still passed over every block in use after the first
+ * hole. So the free blocks are a list of their own, in address order, and only
+ * they are walked. A block given back is joined at once to a free block on
+ * either side of it. Which block a request is given is still the first free one
+ * that is big enough, exactly as when the whole arena was walked, so nothing is
+ * placed anywhere it was not.
  */
 
 #include "evv_arena.h"
@@ -104,12 +105,22 @@ typedef struct {
 
 static head *first;
 
-/* No block before this one is free, so a first-fit walk can begin here and take
-   the same block one that began at `first' would. It is a block header that is
-   always there: arena_free moves it back to any block it gives back that is
-   before it, and joining only ever swallows blocks that come after the block
-   doing the joining. Nought means nothing is free at all. */
-static head *lowest_free;
+/* The free blocks, lowest first, each naming the next by its distance from the
+   base in the field that says who asked for a block in use. Nothing is written
+   into what a block holds once it is given back, so code that reads a block
+   after giving it back reads what it always read. Nought ends the list: the
+   first block is a word from the base, so no block is ever at nought. */
+static head *free_list;
+
+static head *free_next(const head *b)
+{
+    return b->whence != 0 ? (head *)(evv_arena_base + b->whence) : 0;
+}
+
+static uint32_t free_ref(const head *b)
+{
+    return b != 0 ? (uint32_t)((const unsigned char *)b - evv_arena_base) : 0;
+}
 
 static void bad_block(const head *b, const char *what)
 {
@@ -125,9 +136,13 @@ static void bad_block(const head *b, const char *what)
         const head *n = (const head *)((const unsigned char *)w + w->size);
 
         if (n == b) {
-            fprintf(stderr, "evv: the block in front is at %p, %u bytes,"
-                    " %s, asked for from %08x\n", (const void *)w, w->size,
-                    w->used ? "in use" : "free", w->whence);
+            if (w->used)
+                fprintf(stderr, "evv: the block in front is at %p, %u bytes,"
+                        " in use, asked for from %08x\n", (const void *)w,
+                        w->size, w->whence);
+            else
+                fprintf(stderr, "evv: the block in front is at %p, %u bytes,"
+                        " free\n", (const void *)w, w->size);
             break;
         }
         if (n >= b)
@@ -231,7 +246,8 @@ int evv_arena_open(size_t bytes)
     first->mark = HEAD_MARK;
     first->size = (uint32_t)(evv_arena_size - ALIGN);
     first->used = 0;
-    lowest_free = first;
+    first->whence = 0;
+    free_list = first;
     return 1;
 }
 
@@ -246,7 +262,7 @@ void evv_arena_close(void)
     evv_arena_base = 0;
     evv_arena_size = 0;
     first = 0;
-    lowest_free = 0;
+    free_list = 0;
 }
 
 /* Whether something came out of here at all. */
@@ -289,7 +305,7 @@ int evv_arena_whence_of2(const void *p, uint32_t *whence, uint32_t *bytes)
 
         if (c >= body && c < body + (b->size - sizeof(head))) {
             if (whence != 0)
-                *whence = b->whence;
+                *whence = b->used ? b->whence : 0;
             if (bytes != 0)
                 *bytes = (uint32_t)(b->size - sizeof(head));
             return b->used != 0;
@@ -472,7 +488,7 @@ static void guard_check(const char *doing)
 static void *arena_alloc(size_t n, uint32_t whence)
 {
     size_t want = ROUND(n) + ALIGN + GUARD_SLACK;
-    head *b, *hole = 0;
+    head *b, *prev;
 
     if (n == 0)
         return 0;
@@ -483,47 +499,41 @@ static void *arena_alloc(size_t n, uint32_t whence)
     if (evv_arena_base == 0 && !evv_arena_open(ARENA_DEFAULT))
         return 0;
 
-    for (b = lowest_free; b != 0; b = next_block(b)) {
-        head *rest = 0, *after;
+    for (prev = 0, b = free_list; b != 0; prev = b, b = free_next(b)) {
+        head *next;
 
-        if (b->used)
+        check(b);
+        if (b->size < want)
             continue;
 
-        /* Join what follows before asking whether it is big enough, as a walk
-           from the front that had joined everything already would find it. */
-        while ((after = next_block(b)) != 0 && !after->used)
-            b->size += after->size;
-
-        if (b->size < want) {
-            /* Free, and too small: nothing free is before this one, which is
-               where the next walk can begin as long as it stays that way. */
-            if (hole == 0)
-                hole = b;
-            continue;
-        }
-
+        /* What is left of it stays on the list where it was. */
+        next = free_next(b);
         if (b->size >= want + ALIGN * 2) {
-            rest = (head *)((unsigned char *)b + want);
+            head *rest = (head *)((unsigned char *)b + want);
+
             rest->mark = HEAD_MARK;
             rest->size = (uint32_t)(b->size - want);
             rest->used = 0;
+            rest->whence = free_ref(next);
             b->size = (uint32_t)want;
+            next = rest;
         }
+        if (prev != 0)
+            prev->whence = free_ref(next);
+        else
+            free_list = next;
+
         b->used = 1;
         b->whence = whence;
-        /* Everything before the first free block passed over is taken, or this
-           block was the first free one and what is left of it comes next. */
-        lowest_free = hole != 0 ? hole : (rest != 0 ? rest : next_block(b));
         guard_took(b, (unsigned char *)b + ALIGN, n);
         return (unsigned char *)b + ALIGN;
     }
-    lowest_free = hole;
     return 0;
 }
 
 static void arena_free(void *p)
 {
-    head *b, *w;
+    head *b, *prev, *next;
 
     if (p == 0)
         return;
@@ -541,15 +551,27 @@ static void arena_free(void *p)
     b->used = 0;
     guard_gave_back(p);
 
-    /* Join what follows, so that the big pieces the heap gives back can be
-       handed out again. A free block before this one joins it when a walk next
-       passes that block, which is before any walk reaches this one: nothing
-       free is before `lowest_free'. */
-    for (w = next_block(b); w != 0 && !w->used; w = next_block(b))
-        b->size += w->size;
-
-    if (lowest_free == 0 || b < lowest_free)
-        lowest_free = b;
+    /* Its place among the free blocks, which are in address order, and then
+       joined to the one in front if they touch and to the one behind if they
+       touch, so that the big pieces the heap gives back can be handed out
+       again and no two free blocks are ever side by side. */
+    for (prev = 0, next = free_list; next != 0 && next < b;
+         prev = next, next = free_next(next))
+        ;
+    if (prev != 0 && (unsigned char *)prev + prev->size == (unsigned char *)b) {
+        prev->size += b->size;
+        b = prev;
+    } else {
+        b->whence = free_ref(next);
+        if (prev != 0)
+            prev->whence = free_ref(b);
+        else
+            free_list = b;
+    }
+    if (next != 0 && (unsigned char *)b + b->size == (unsigned char *)next) {
+        b->size += next->size;
+        b->whence = next->whence;
+    }
 }
 
 char *evv_arena_strdup(const char *s)
