@@ -16,6 +16,7 @@
 typedef struct SynthDevice SynthDevice;
 typedef struct DeltaLang DeltaLang;
 struct DictionarySet;
+struct WideBand;
 
 /* Where the sound is going, and what is to be reported about it. The queue
    is the index marks waiting to be handed back as the sound they stand in
@@ -91,6 +92,17 @@ struct DeltaLang {
     int32_t      built_rate;      /* what the two tables below were built for */
     int16_t     *built_ex;
     int16_t     *built_co;
+
+    /* Whether the caller wants the wideband voice, and the companion that
+       makes it while it is in force. src/klatt/klatt_wide.c is the account
+       of it; like the rate, it is read at the top of an utterance. */
+    int32_t      wide_wanted;
+    struct WideBand *wide;
 };
+
+/* Every parameter frame goes to the synthesiser through this, so that the
+   wideband companion sees each one first. */
+struct delta_state;
+int klattSynthFrame(struct delta_state *d, const int32_t *frame);
 
 #endif

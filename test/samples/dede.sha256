@@ -1,9 +1,14 @@
 # What this engine says, case by case, for dede.
 #
-# Every line was blessed by IBM's own binary: the whole
-# differential suite was run for this language
-# immediately before these were written, and every case
-# matched. See docs/testing.md.
+# Every line was blessed by IBM's own binary when it was
+# first written: the whole differential suite was run
+# for this language immediately before, and every case
+# matched. A case a deliberate divergence has moved or
+# added since is this engine's answer and not IBM's;
+# docs/quirks.md names them. See docs/testing.md.
+#
+# The wide cases are the wideband voice, which IBM never
+# made: an ear blessed them, not an original.
 #
 # Written by test/matrix.sh record. One line a case:
 # the category, which case in it, the first sixteen hex of
@@ -107,3 +112,10 @@ ssml 7 4e0a0c33d5484f1d c897e0fca67beace <speak version="1.0" xml:lang="de-DE">B
 ssml 8 c5427dda15be3560 9eba36de77727904 <speak version="1.0" xml:lang="de-DE">Warte<break time="500ms"/>darauf.<mark name="hier"/> Da.</speak>
 ssml 9 6543385594988b60 70f5a0b74eb3210a <speak version="1.0" xml:lang="de-DE"><sub alias="Weltweites Netz">WWW</sub> und <phoneme ph="h.E.l.oU">hallo</phoneme>.</speak>
 ssml 10 ce0ee0304a8ce40e bf9269de355591d4 <speak version="1.0" xml:lang="de-DE">Die Straße heißt schön, mit a &amp; b &lt; c.</speak>
+wide 1 5d90688ff1b074dd b2ad2f317be58a42 Hallo. Hier spricht der Eloquence Sprachsynthesizer.
+wide 2 6c13eec5307ee45f 9692559b4feb1c7c Dr. Schmidt zahlte 1.234,56 Euro am 3. Mai 2026 um 19:45 Uhr.
+wide 3 95e77ebf3358a1f1 a2e35426894fb47e Der schnelle braune Fuchs springt ueber den faulen Hund; z.B. www.beispiel.de/pfad?q=1
+wide 4 3a4998950128f991 e1241354823f0c39 Test 1 2 3, ABC XYZ, Bindestrich-Woerter und GROSSBUCHSTABEN.
+wide 5 6d0c09a02919e1a0 6091d632fa6172bf Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
+wide 6 b250c7445f8fd36a a8ff09417b07c4c5 Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
+wide 7 5c70c9e09cd3f234 ab31c5581aed27c9 Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.

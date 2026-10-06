@@ -7,6 +7,9 @@
 # added since is this engine's answer and not IBM's;
 # docs/quirks.md names them. See docs/testing.md.
 #
+# The wide cases are the wideband voice, which IBM never
+# made: an ear blessed them, not an original.
+#
 # Written by test/matrix.sh record. One line a case:
 # the category, which case in it, the first sixteen hex of
 # the samples' hash, the same of the reported answers', and
@@ -119,3 +122,13 @@ ssml 7 923059a6f2390512 76530e270f6910f2 <speak version="1.0" xml:lang="en-GB">S
 ssml 8 d24dd03d17f94b0c 418948f5f11136d8 <speak version="1.0" xml:lang="en-GB">Wait<break time="500ms"/>for it.<mark name="here"/> There.</speak>
 ssml 9 654ee9cec8244e32 b28d07af8e5a195d <speak version="1.0" xml:lang="en-GB"><sub alias="World Wide Web">WWW</sub> and <phoneme ph="h.E.l.oU">hello</phoneme>.</speak>
 ssml 10 a507e903fa5f9b25 b038e058389b2b62 <speak version="1.0" xml:lang="en-GB">The café near the naïve façade, with a &amp; b &lt; c.</speak>
+wide 1 35b497357c713edb 2f76bd949d04bfe6 Hello. This is the Eloquence synthesizer speaking.
+wide 2 dd2a4e8690a168a0 26ccccabc30aad36 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
+wide 3 b0770b18fe8a8828 c708deebe5b49f1a The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
+wide 4 d946ba16a161a017 82d573cc622629b8 Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
+wide 5 d12413339cf8956e 37ed4caa06853f15 A one-word line. And another; plus "quoted text" inside.
+wide 6 91aace74e32c645c f9a6c2c617446ddd Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+wide 7 71633cdda6c31699 45291a9d727e2041 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
+wide 8 5dca0ff62c144aba 3755e865315c0c2d A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
+wide 9 d6e3bc396a445900 5ee347d6afdd44df Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+wide 10 0b8f1b37126262f7 672169101865b039 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.

@@ -35,6 +35,8 @@
 
 extern int32_t STDCALL api_reset(void *h2, int32_t language)
     MANGLED("_eciReset2@8");
+extern int32_t STDCALL api_set_param(void *h2, int32_t k, int32_t p,
+                                      int32_t v) MANGLED("_eciSetParam2@16");
 extern int32_t STDCALL api_delete(void *h2) MANGLED("_eciDelete2@4");
 extern int32_t STDCALL api_synchronize(void *h2)
     MANGLED("_eciSynchronize2@4");
@@ -99,6 +101,8 @@ int32_t STDCALL eo_getParam(OldInst *h, int32_t which)
 
     if (!inst)
         return v;
+    if (which == ECI_OLD_WIDEBAND)
+        return inst->wideband;
     if (which >= 0x11)
         return v;
     if (which == 0x0b)
@@ -285,6 +289,16 @@ int STDCALL es_reset(OldInst *h)
                               g_DefaultEnvironment[ENV_LANGUAGE]), inst)) {
         OI_BUSY(inst) = 0;
         return 0;
+    }
+
+    /* A reset puts every setting back, the wideband voice with them. */
+    if (inst->wideband) {
+        if (setECIerror(api_set_param(OI_NEW(inst), 0, ECI_PARAM_WIDEBAND, 0),
+                        inst)) {
+            OI_BUSY(inst) = 0;
+            return 0;
+        }
+        inst->wideband = 0;
     }
 
     eo_clearManualQueue(inst);

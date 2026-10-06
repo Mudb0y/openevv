@@ -1,9 +1,14 @@
 # What this engine says, case by case, for esus.
 #
-# Every line was blessed by IBM's own binary: the whole
-# differential suite was run for this language
-# immediately before these were written, and every case
-# matched. See docs/testing.md.
+# Every line was blessed by IBM's own binary when it was
+# first written: the whole differential suite was run
+# for this language immediately before, and every case
+# matched. A case a deliberate divergence has moved or
+# added since is this engine's answer and not IBM's;
+# docs/quirks.md names them. See docs/testing.md.
+#
+# The wide cases are the wideband voice, which IBM never
+# made: an ear blessed them, not an original.
 #
 # Written by test/matrix.sh record. One line a case:
 # the category, which case in it, the first sixteen hex of
@@ -108,3 +113,10 @@ ssml 7 0e86a981dacff9b0 2fb75cf03510f7ed <speak version="1.0" xml:lang="es-MX">D
 ssml 8 be5d5ff96406e7ae e09d53148573813f <speak version="1.0" xml:lang="es-MX">Espera<break time="500ms"/>un momento.<mark name="aqui"/> Alli.</speak>
 ssml 9 b5e7d7262ad4d513 997eb4ddbaa74d13 <speak version="1.0" xml:lang="es-MX"><sub alias="Red informatica mundial">WWW</sub> y <phoneme ph="h.E.l.oU">hola</phoneme>.</speak>
 ssml 10 63cbcb6f3d9acd45 e47ca863ac8ecf56 <speak version="1.0" xml:lang="es-MX">El niño preguntó: ¿qué tal?, con a &amp; b &lt; c.</speak>
+wide 1 a7610b58350454a9 dee75c3f3ffbf994 Hola. Aqui habla el sintetizador de voz Eloquence.
+wide 2 d111b9c70b2c176b 82547cf24a22a7d8 El doctor Gomez pago 1.234,56 euros el 3 de mayo de 2026 a las 19:45.
+wide 3 c26c6ce93fac19b1 16cfb30c7e6590b4 El rapido zorro marron salta sobre el perro perezoso; p.ej. www.ejemplo.es/ruta?q=1
+wide 4 cfd3fccb72a1619b 72d37f562bc4707f Prueba 1 2 3, ABC XYZ, palabras-con-guion y MAYUSCULAS.
+wide 5 d462a9bb8c255288 96d85e5b6b2c4aac Una sola palabra. Y otra mas; con "texto citado" en medio.
+wide 6 5bbca30c96b2f3fa 49c7f50c7e3cabca Otorrinolaringologo, desoxirribonucleico, 42% de 3,14159, y el senor Perez-Lopez hijo.
+wide 7 3fe9be9fa883aecd 6a8addbf614ed3f2 Dijo: no lo hagas! Luego (entre parentesis) 1/2 + 3/4 = 5/4; vease p. 12.

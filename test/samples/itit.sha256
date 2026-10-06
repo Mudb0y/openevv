@@ -1,9 +1,14 @@
 # What this engine says, case by case, for itit.
 #
-# Every line was blessed by IBM's own binary: the whole
-# differential suite was run for this language
-# immediately before these were written, and every case
-# matched. See docs/testing.md.
+# Every line was blessed by IBM's own binary when it was
+# first written: the whole differential suite was run
+# for this language immediately before, and every case
+# matched. A case a deliberate divergence has moved or
+# added since is this engine's answer and not IBM's;
+# docs/quirks.md names them. See docs/testing.md.
+#
+# The wide cases are the wideband voice, which IBM never
+# made: an ear blessed them, not an original.
 #
 # Written by test/matrix.sh record. One line a case:
 # the category, which case in it, the first sixteen hex of
@@ -108,3 +113,10 @@ ssml 7 1554831edbdb5f59 557d451edc7e1790 <speak version="1.0" xml:lang="it-IT">C
 ssml 8 c07e389b0e4e4962 24d49ba8e8068fb3 <speak version="1.0" xml:lang="it-IT">Aspetta<break time="500ms"/>un momento.<mark name="qui"/> La.</speak>
 ssml 9 6df310ed9a6053f1 fb4ee33a8d0542a7 <speak version="1.0" xml:lang="it-IT"><sub alias="Rete mondiale">WWW</sub> e <phoneme ph="h.E.l.oU">ciao</phoneme>.</speak>
 ssml 10 ebd80f3f9895d09d 207aea0129d33741 <speak version="1.0" xml:lang="it-IT">Il caffè e perché più città, con a &amp; b &lt; c.</speak>
+wide 1 9a5e7cadb96c2f21 5093d8838ec3fe84 Ciao. Qui parla il sintetizzatore vocale Eloquence.
+wide 2 3f475bd05b81db91 f1851aaf6cad13f1 Il dottor Rossi ha pagato 1.234,56 euro il 3 maggio 2026 alle 19:45.
+wide 3 25646e1ebc8ece55 b7d9e6bfcdd1eeac La rapida volpe marrone salta sopra il cane pigro; p.es. www.esempio.it/percorso?q=1
+wide 4 5b9a2ce1e3b2ad90 edd9e397f55e3a8a Prova 1 2 3, ABC XYZ, parole-con-trattino e MAIUSCOLE.
+wide 5 1934ed944f8bef33 80e3ff8ed90fc784 Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
+wide 6 dd34d9486a5f485a 98148446e89dea5b Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
+wide 7 4ef8f793cd931c19 ebfe55e876d623dd Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.

@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -241,6 +240,85 @@ void zero_filter(filter_parms *fp, const zero_ABCs *z, int32_t *buf, int32_t n)
     }
 }
 
+/* ---- trigonometry and roots in whole numbers -------------------------- */
+
+/* The cosine and sine of num/den of a turn, in units of 2^-30. Folded into
+   the first eighth of a turn, where a Taylor series of seven terms is good
+   to well under one of those units, and every step rounded the one way. */
+#define FX_PI4  843314857        /* pi / 4, in units of 2^-30 */
+
+static int64_t fx_sin8(int64_t x)
+{
+    static const int32_t d[6] = { 156, 110, 72, 42, 20, 6 };
+    int64_t x2 = fx_shift(x * x, 30), t = FX_ONE;
+    int     i;
+
+    for (i = 0; i < 6; i++)
+        t = FX_ONE - fx_div(fx_shift(x2 * t, 30), d[i]);
+    return fx_shift(x * t, 30);
+}
+
+static int64_t fx_cos8(int64_t x)
+{
+    static const int32_t d[7] = { 182, 132, 90, 56, 30, 12, 2 };
+    int64_t x2 = fx_shift(x * x, 30), t = FX_ONE;
+    int     i;
+
+    for (i = 0; i < 7; i++)
+        t = FX_ONE - fx_div(fx_shift(x2 * t, 30), d[i]);
+    return t;
+}
+
+void fx_cos_sin(int64_t num, int64_t den, int32_t *c, int32_t *s)
+{
+    int64_t eighths, part, x, sx, cx;
+    int     octant;
+
+    num %= den;
+    if (num < 0)
+        num += den;
+    eighths = 8 * num;
+    octant = (int)(eighths / den);
+    part = eighths - (int64_t)octant * den;
+    /* An odd octant runs back from its far end, so the series is always
+       asked about the near side of an eighth. */
+    if (octant & 1)
+        part = den - part;
+    x = fx_div(FX_PI4 * part, den);
+    sx = fx_sin8(x);
+    cx = fx_cos8(x);
+
+    switch (octant) {
+    case 0:  *c = (int32_t)cx;  *s = (int32_t)sx;  break;
+    case 1:  *c = (int32_t)sx;  *s = (int32_t)cx;  break;
+    case 2:  *c = (int32_t)-sx; *s = (int32_t)cx;  break;
+    case 3:  *c = (int32_t)-cx; *s = (int32_t)sx;  break;
+    case 4:  *c = (int32_t)-cx; *s = (int32_t)-sx; break;
+    case 5:  *c = (int32_t)-sx; *s = (int32_t)-cx; break;
+    case 6:  *c = (int32_t)sx;  *s = (int32_t)-cx; break;
+    default: *c = (int32_t)cx;  *s = (int32_t)-sx; break;
+    }
+}
+
+/* The whole part of a square root, a bit at a time. */
+uint64_t fx_isqrt(uint64_t v)
+{
+    uint64_t root = 0, bit = (uint64_t)1 << 62;
+
+    while (bit > v)
+        bit >>= 2;
+    while (bit != 0) {
+        if (v >= root + bit) {
+            v -= root + bit;
+            root = (root >> 1) + bit;
+        } else {
+            root >>= 1;
+        }
+        bit >>= 2;
+    }
+    return root;
+}
+
 /* ---- shaping the noise for a rate above the engine's own ---------------
  *
  * The frication and aspiration source is white: klatt_rand puts one value
@@ -252,7 +330,7 @@ void zero_filter(filter_parms *fp, const zero_ABCs *z, int32_t *buf, int32_t n)
  * 5.5 and 11, which is why sibilants synthesised outright go thin and hissy
  * and why raising the rate afterwards has been the only way up.
  *
- * So bound it where the engine's own rate bounds it. Two poles at 5,512
+ * So bound it where the engine's own rate bounds it. Four poles at 5,512
  * hertz, and a gain of sqrt(rate / 11025) to put back the power the band
  * limit takes out: white noise at rate R carries its variance over R/2 of
  * spectrum, so confining it to a fixed 5,512 without that gain would leave
@@ -287,50 +365,89 @@ static int noise_shaping(void)
    having taken almost nothing off. Twenty-four is the least that bites.
 
    Designed at the rate rather than stored, the way klatt_rates.c builds the
-   resonator tables, because the rate is not known until the caller asks. */
-void klatt_shape_noise(int16_t *buf, int32_t n, int32_t rate, double *z)
+   resonator tables, because the rate is not known until the caller asks;
+   and designed when the rate is set rather than on every buffer, with the
+   state beside the coefficients in the synthesiser's own block, so that one
+   synthesiser's noise history can never be another's. The gain goes into
+   the second section's numerator, where it costs nothing. */
+static void noise_design(klatt_noise_filter *f, int32_t rate, int32_t band,
+                         int64_t gain)
 {
-    static const double q[2] = { 0.54119610, 1.30656296 };
-    double b[2][3], a[2][2], g;
-    int32_t i;
-    int s;
+    /* One over twice each section's Q, in units of 2^-30: the cosine and
+       sine of an eighth of a half turn, as a fourth-order Butterworth's two
+       Qs always come to. */
+    static const int64_t inv_2q[2] = { 992008095, 410903208 };
+    int32_t c, s;
+    int     k;
 
-    if (n <= 0 || rate <= 11025 || !noise_shaping())
+    memset(f, 0, sizeof *f);
+    fx_cos_sin(band, rate, &c, &s);
+    for (k = 0; k < 2; k++) {
+        int64_t alpha = fx_shift((int64_t)s * inv_2q[k], 30);
+        int64_t a0 = FX_ONE + alpha;
+
+        f->b0[k] = (int32_t)fx_div((FX_ONE - c) << 23, a0);
+        f->a1[k] = (int32_t)fx_div(-((int64_t)c << 25), a0);
+        f->a2[k] = (int32_t)fx_div((FX_ONE - alpha) << 24, a0);
+    }
+    f->b0[1] = (int32_t)fx_shift((int64_t)f->b0[1] * gain, 16);
+}
+
+void klatt_noise_shape(klatt_noise_filter *f, int32_t rate)
+{
+    if (rate <= 11025 || !noise_shaping()) {
+        memset(f, 0, sizeof *f);
         return;
-
-    for (s = 0; s < 2; s++) {
-        double w0 = 6.283185307179586 * (double)NOISE_BAND / (double)rate;
-        double c = cos(w0), al = sin(w0) / (2.0 * q[s]);
-        double a0 = 1.0 + al;
-
-        b[s][0] = (1.0 - c) / 2.0 / a0;
-        b[s][1] = (1.0 - c) / a0;
-        b[s][2] = b[s][0];
-        a[s][0] = -2.0 * c / a0;
-        a[s][1] = (1.0 - al) / a0;
     }
 
     /* White noise carries its variance over the whole band it is given, so
        confining it to a fixed 5,512 leaves less power in that band than
-       11,025 leaves there. This puts it back. */
-    g = sqrt((double)rate / 11025.0);
+       11,025 leaves there. sqrt(rate / 11025) puts it back. */
+    noise_design(f, rate, NOISE_BAND,
+                 (int64_t)fx_isqrt(((uint64_t)rate << 32) / 11025));
+}
+
+/* The same filter at an edge the caller names, and no gain. The wideband
+   companion keeps only what lies above its partner's band, so the noise
+   there is the band it is given to be heard in, and where that stops is a
+   choice made by ear rather than the partner's Nyquist. No edge, or one at
+   or past Nyquist, leaves the noise white. */
+void klatt_noise_edge(klatt_noise_filter *f, int32_t rate, int32_t edge)
+{
+    if (edge <= 0 || 2 * edge >= rate) {
+        memset(f, 0, sizeof *f);
+        return;
+    }
+    noise_design(f, rate, edge, (int64_t)1 << 16);
+}
+
+void klatt_noise_run(klatt_noise_filter *f, int stream, int16_t *buf,
+                     int32_t n)
+{
+    int32_t i;
+    int     k;
+
+    if (f->b0[0] == 0)
+        return;
 
     for (i = 0; i < n; i++) {
-        double v = buf[i];
+        int64_t v = (int64_t)buf[i] << 12;
 
-        for (s = 0; s < 2; s++) {
-            double *w = z + s * 2;
-            double y = b[s][0] * v + w[0];
+        for (k = 0; k < 2; k++) {
+            int32_t *z = f->z[stream][k];
+            int64_t  b0 = f->b0[k];
+            int64_t  y = fx_shift(b0 * v, 24) + z[0];
 
-            w[0] = b[s][1] * v - a[s][0] * y + w[1];
-            w[1] = b[s][2] * v - a[s][1] * y;
+            z[0] = (int32_t)(fx_shift(2 * b0 * v - f->a1[k] * y, 24) + z[1]);
+            z[1] = (int32_t)fx_shift(b0 * v - f->a2[k] * y, 24);
             v = y;
         }
-        v *= g;
-        if (v > 32767.0)
-            v = 32767.0;
-        else if (v < -32768.0)
-            v = -32768.0;
+        /* Towards nought, as the cast from a double was. */
+        v = v < 0 ? -(-v >> 12) : v >> 12;
+        if (v > 32767)
+            v = 32767;
+        else if (v < -32768)
+            v = -32768;
         buf[i] = (int16_t)v;
     }
 }

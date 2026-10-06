@@ -80,6 +80,10 @@ Above 11,025 the engine goes on running at 11,025 and the rate is raised from th
     EVV_UPSAMPLE=hold ./build/evv -R 2 -o held22.wav "She sells sea shells."
     tools/measure/rates.py held11.wav held22.wav native22.wav
 
+`-W` is the wideband voice: the 11,025 voice below about 5.4 kHz, as every other rate has it, and above that a top made by a second synthesiser running the same frames at 22,050 -- the frication and breath a higher rate has room for. It does nothing at 8,000 and 11,025. How loud the top is and where its noise stops were settled by ear, at 14 dB above what the second synthesiser makes and 8 kHz; `EVV_WIDE_TOP`, in decibels, and `EVV_WIDE_EDGE`, in hertz with nought for none, move them, as experiments rather than settings. `docs/notes/sample-rates.md` says how it is built and why that way.
+
+    ./build/evv -W -R 5 -o wide44.wav "She sells sea shells."
+
 ## The sixty-four bit build
 
 The Delta machine keeps a pointer in a thirty-two bit value, so on a wider host everything it can point at has to live somewhere such a value can still say. `src/port/evv_arena.c` maps one region -- wherever the system cares to put it, since what the machine holds is a distance from that region's base and not an address -- and everything the machine holds comes out of it. That includes the language's own data: the rules name their constants by address, and the set and action tables hand over an address per entry, so `src/delta/delta_low.c` copies those stores out of the program at startup and translates an address into its copy at the few places where one becomes a value. A pointer from anywhere else says so and stops.

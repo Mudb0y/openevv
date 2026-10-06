@@ -171,7 +171,7 @@ Because of that, all three ways of cancelling cost the same: letting the utteran
 
 `eciSetParam` answers what the setting was before, or -1 if it refused. The default ones are what a new instance starts from, so setting a default changes nothing about an instance that already exists.
 
-Eighteen settings, by the numbers `eci.h` names:
+Eighteen settings, by the numbers `eci.h` names, and one of ours numbered well past them:
 
 `eciSynthMode` (0), nought or one. One queues text with the settings it arrived under.
 
@@ -181,7 +181,7 @@ Eighteen settings, by the numbers `eci.h` names:
 
 `eciDictionary` (3), nought or one, **and one turns the dictionary off**. The value is inverted on its way in and out, which is IBM's.
 
-`eciSampleRate` (5). Nought to six are 8,000, 11,025, 22,050, 16,000, 32,000, 44,100 and 48,000 hertz, in the order IBM numbered the first four and this port the rest; a value of 8,000 or more is that rate in hertz, so 24,000 is a rate nobody numbered. Everything between seven and 7,999 is in range and is not a rate: the call answers -1 and leaves the rate where it was. Above 11,025 the engine goes on synthesising at 11,025 and the rate is raised from there by a windowed sinc, so the voice is the same one at every setting. IBM numbered 16 kHz rate three and then set the range of this parameter to two, so its own fourth rate could not be asked for; the range now runs to the highest rate the tables can be built for, which is the first of three divergences `docs/notes/sample-rates.md` describes.
+`eciSampleRate` (5). Nought to six are 8,000, 11,025, 22,050, 16,000, 32,000, 44,100 and 48,000 hertz, in the order IBM numbered the first four and this port the rest; a value of 8,000 or more is that rate in hertz, so 24,000 is a rate nobody numbered. Everything between seven and 7,999 is in range and is not a rate: the call answers -1 and leaves the rate where it was. Above 11,025 the engine goes on synthesising at 11,025 and the rate is raised from there by a windowed sinc, so the voice is the same one at every setting -- unless `eciWideband` below asks for a top above it. IBM numbered 16 kHz rate three and then set the range of this parameter to two, so its own fourth rate could not be asked for; the range now runs to the highest rate the tables can be built for, which is the first of three divergences `docs/notes/sample-rates.md` describes.
 
 `eciWantPhonemeIndices` (7), nought or one.
 
@@ -194,6 +194,8 @@ Eighteen settings, by the numbers `eci.h` names:
 `eciRomanizer` (12), nought or one. Only reachable in a language written in another script.
 
 `eciAudioFormatA` through `eciAudioFormatD` (13 to 16) are the four an audio device's format is built from: how many blocks the device keeps, how many bytes each holds, and how many blocks and bytes it fills before it starts to play. They default to 10, 2,200, nought and 2,200 and may not go below 2, 220, nought and 220. Nothing here plays through a device, so none of them changes what a buffer receives. Setting one while the samples are going to a buffer records the number and rebuilds nothing, which is the second deliberate divergence -- IBM's engine rebuilds regardless and the registered buffer is lost, so the instance goes silent and reports success ever after.
+
+`eciWideband` (32), nought or one, and ours. One makes every rate above 11,025 the wideband voice. Below about 5.4 kHz it is the 11,025 voice exactly as the default raises it; above that, a second synthesiser running the same frames at 22,050 adds a top, which in this model is the noise of the fricatives, since the voiced harmonics and the breath under them are fifty decibels down by then. It changes what the samples are and not the rate they arrive at, and at 8,000 and 11,025 it does nothing. `eciReset` puts it back to nought; the default settings do not include it. In processor time it costs two to three times what the default does at the same rate, which is a sixteenth of a core at most for speech in real time. `docs/notes/sample-rates.md` says why it is built that way rather than by synthesising higher.
 
 Numbers 11 and 17 are refused by both `eciGetParam` and `eciSetParam`, which is IBM's own refusal transcribed. Seventeen holds the number of the voice being spoken in; `eciCopyVoice` is what moves it. Numbers 4 and 6 can be set and read and nothing anywhere reads them.
 

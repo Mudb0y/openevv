@@ -22,7 +22,7 @@
 #include "evv_abi.h"
 
 enum { FRAME_SAMPLES = 2048, MAX_LANGUAGES = 32, VOICES_PER_LANGUAGE = 8 };
-enum { PARAM_TEXT_MODE = 2 };
+enum { PARAM_TEXT_MODE = 2, PARAM_SAMPLE_RATE = 5, PARAM_WIDEBAND = 32 };
 enum { TEXT_MODE_DEFAULT = 0, TEXT_MODE_ALPHA_SPELL = 1,
        TEXT_MODE_ALL_SPELL = 2 };
 enum { VOICE_GENDER, VOICE_HEAD_SIZE, VOICE_PITCH, VOICE_FLUCTUATION,
@@ -102,6 +102,11 @@ static volatile int pauseRequested;
 static volatile int pauseIndexReached;
 static int engineStarted;
 static int debugEnabled;
+/* The wideband voice, which the configuration file turns on: the engine's
+   own sound below about 5.4 kHz and a top above it, made at 22,050 and so
+   handed to the server at that rate rather than at 11,025. */
+static int widebandEnabled;
+static int outputRate = 11025;
 static int logLevel;
 static FILE *debugFile;
 static ModuleSettings settings = {
@@ -280,7 +285,7 @@ static enum ECICallbackReturn STDCALL on_message(OldInst *h,
         AudioTrack track = {
             .bits = 16,
             .num_channels = 1,
-            .sample_rate = 11025,
+            .sample_rate = outputRate,
             .num_samples = (int)parameter,
             .samples = audioFrame,
         };
@@ -315,7 +320,10 @@ static int open_engine(uint32_t language)
     if (!engine)
         return -1;
     eo_registerCallback(engine, (void *)on_message, NULL);
-    if (!ev_setOutputBuffer(engine, FRAME_SAMPLES, audioFrame)) {
+    if (!ev_setOutputBuffer(engine, FRAME_SAMPLES, audioFrame)
+        || (widebandEnabled
+            && (ev_setParam(engine, PARAM_SAMPLE_RATE, outputRate) < 0
+                || ev_setParam(engine, PARAM_WIDEBAND, 1) < 0))) {
         es_delete(engine);
         engine = NULL;
         return -1;
@@ -967,6 +975,15 @@ int module_config(const char *configFile)
                 return -1;
             }
             debugEnabled = enabled;
+        } else if (!strcasecmp(at, "Wideband")) {
+            int enabled;
+
+            if (parse_number(value, 0, 1, &enabled) != 0) {
+                fclose(file);
+                return -1;
+            }
+            widebandEnabled = enabled;
+            outputRate = enabled ? 22050 : 11025;
         } else {
             fclose(file);
             return -1;

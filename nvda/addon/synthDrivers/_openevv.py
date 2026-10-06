@@ -133,6 +133,8 @@ PARAM_DICTIONARY = 3
 PARAM_SAMPLE_RATE = 5
 PARAM_REAL_WORLD = 8
 PARAM_LANGUAGE = 9
+#: Ours rather than IBM's: the wideband voice above 11,025.
+PARAM_WIDEBAND = 32
 
 # A voice's, likewise.
 VOICE_GENDER = 0
@@ -363,6 +365,10 @@ class Engine:
 		#: What the engine is running at, and therefore what the player is
 		#: built for. The two are moved together and never separately.
 		self.sampleRate = SAMPLE_RATE
+		#: Whether the wideband voice is on. It changes what the engine makes
+		#: above eleven thousand and twenty five, not the rate it hands over,
+		#: so the player stays as it is.
+		self.wideband = False
 		self.voiceNames = {}
 		#: Every language the library has, and the one in force.
 		self.languages = []
@@ -569,6 +575,21 @@ class Engine:
 			bitsPerSample=16,
 			outputDevice=config.conf["audio"]["outputDevice"],
 		)
+
+	def setWideband(self, enable):
+		"""Turn the wideband voice on or off, between utterances.
+
+		A library from before it existed refuses the setting, and the voice
+		stays as it was rather than the reader being told it changed.
+		"""
+		enable = bool(enable)
+		if enable == self.wideband:
+			return True
+		if self.setParam(PARAM_WIDEBAND, 1 if enable else 0) < 0:
+			log.error("openevv: the library has no wideband voice")
+			return False
+		self.wideband = enable
+		return True
 
 	def setSampleRate(self, hz):
 		"""Run the synthesiser at another rate, and move the player with it.

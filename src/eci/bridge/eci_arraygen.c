@@ -311,7 +311,7 @@ int32_t sendArrayParameters(delta_state *d, int32_t from, int32_t to,
         if (at + step > to)
             frame[0] = at + step - to;
 
-        if (!KlattSynth(GEN_KLATT(d), frame))
+        if (!klattSynthFrame(d, frame))
             stopped = 1;
     }
 

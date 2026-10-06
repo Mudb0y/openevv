@@ -132,6 +132,8 @@ class FakeDll:
             self.voiceParams[args[2]] = args[3]
             return was
         if name == "eciSetParam":
+            if args[1] == getattr(self, "refuse", None):
+                return -1
             was = self.params.get(args[1], 0)
             self.params[args[1]] = args[2]
             return was
@@ -303,6 +305,37 @@ def samplerate_checks():
           dll.params.get(mod.PARAM_SAMPLE_RATE), 1)
     check("and goes on saying so", engine.sampleRate, mod.SAMPLE_RATE)
     check("and still has a player", engine.player is not None, True)
+    engine.close()
+
+
+def wideband_checks():
+    """The wideband voice is a setting and nothing else: the player stays."""
+    dll = FakeDll()
+    players = []
+    mod = engine_module(dll, players)
+    engine = mod.Engine(lambda index: None)
+    engine.open()
+
+    check("it starts off", engine.wideband, False)
+    check("turning it on is taken", engine.setWideband(True), True)
+    check("the engine is told", dll.params.get(mod.PARAM_WIDEBAND), 1)
+    check("and says so", engine.wideband, True)
+    check("no player is built for it", len(players), 1)
+    check("turning it off is taken", engine.setWideband(False), True)
+    check("the engine is told that too", dll.params.get(mod.PARAM_WIDEBAND), 0)
+    engine.close()
+
+    # A library from before the setting answers minus one, as for any
+    # parameter it does not have.
+    dll = FakeDll()
+    players = []
+    mod = engine_module(dll, players)
+    engine = mod.Engine(lambda index: None)
+    engine.open()
+    dll.refuse = mod.PARAM_WIDEBAND
+    check("an older library's refusal is reported",
+          engine.setWideband(True), False)
+    check("and the setting stays off", engine.wideband, False)
     engine.close()
 
 
@@ -704,6 +737,7 @@ def main():
 
     control_checks()
     samplerate_checks()
+    wideband_checks()
     stall_checks()
     idle_stall_checks()
 

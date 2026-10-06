@@ -39,7 +39,7 @@ enum ECICallbackReturn {
 
 /* The engine's own parameters, and a voice's. Only the few this needs. */
 enum { P_INPUT_TYPE = 1, P_SAMPLE_RATE = 5,
-       P_REAL_WORLD_UNITS = 8 };
+       P_REAL_WORLD_UNITS = 8, P_WIDEBAND = 32 };
 enum { V_GENDER, V_HEAD_SIZE, V_PITCH, V_FLUCTUATION, V_ROUGHNESS,
        V_BREATHINESS, V_SPEED, V_VOLUME, V_COUNT };
 
@@ -229,6 +229,8 @@ static void usage(FILE *f)
 "            from there, so the voice is the same one at every setting.\n"
 "            EVV_UPSAMPLE says how: sinc by default, or cubic, linear,\n"
 "            hold or zeros, or none to synthesise at the rate instead\n"
+"  -W        the wideband voice above 11025: the same voice below about\n"
+"            5.4 kHz and a second synthesiser's top above it\n"
 "  -A        take annotations in the text: a backquote and a name, with\n"
 "            what it applies to in square brackets. `[ ] is a\n"
 "            pronunciation in the engine's own phoneme alphabet\n"
@@ -246,7 +248,7 @@ static void usage(FILE *f)
 int main(int argc, char **argv)
 {
     const char *out = NULL, *from = NULL, *lang = NULL;
-    int         voice = 0, real = 0, list = 0, want_rate = -1;
+    int         voice = 0, real = 0, list = 0, want_rate = -1, wide = 0;
     int         langlist = 0;
     int         set[V_COUNT];
     int         annotations = 0;
@@ -273,7 +275,7 @@ int main(int argc, char **argv)
     for (i = 0; i < V_COUNT; i++)
         set[i] = -1;
 
-    while ((i = getopt(argc, argv, "o:f:v:s:p:P:V:R:L:rlhA")) != -1) {
+    while ((i = getopt(argc, argv, "o:f:v:s:p:P:V:R:L:rlhAW")) != -1) {
         switch (i) {
         case 'o': out = optarg; break;
         case 'f': from = optarg; break;
@@ -293,6 +295,7 @@ int main(int argc, char **argv)
         case 'r': real = 1; break;
         case 'l': list = 1; break;
         case 'A': annotations = 1; break;
+        case 'W': wide = 1; break;
         case 'h': usage(stdout); return 0;
         default:  usage(stderr); return 2;
         }
@@ -436,6 +439,10 @@ int main(int argc, char **argv)
             return 1;
         }
         rate = (unsigned long)ev_rateHz(want_rate);
+    }
+    if (wide && ev_setParam(h, P_WIDEBAND, 1) < 0) {
+        fprintf(stderr, "evv: the engine refused the wideband voice\n");
+        return 1;
     }
 
     if (!et_addText(h, text))

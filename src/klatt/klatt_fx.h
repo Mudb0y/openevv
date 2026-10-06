@@ -79,9 +79,44 @@ static inline int32_t fxmul_scaled(int32_t coef, int32_t x)
 #endif
 }
 
+/* Everything above eleven thousand and twenty five is ours, and it is done
+   in whole numbers for the same reason IBM's synthesiser is: a double
+   rounds one way under SSE2, another under x87, another again where a
+   multiply and an add are fused, and not at all on a processor with no
+   floating point. These round half away from nought, and s is at least
+   one and b above nought. */
+static inline int64_t fx_shift(int64_t v, int s)
+{
+    int64_t half = (int64_t)1 << (s - 1);
+
+    return v < 0 ? -((-v + half) >> s) : (v + half) >> s;
+}
+
+static inline int64_t fx_div(int64_t a, int64_t b)
+{
+    return a < 0 ? -((-a + b / 2) / b) : (a + b / 2) / b;
+}
+
+#define FX_ONE ((int64_t)1 << 30)
+
+void     fx_cos_sin(int64_t num, int64_t den, int32_t *c, int32_t *s);
+uint64_t fx_isqrt(uint64_t v);
+
+/* The fourth-order Butterworth the noise goes through above 11,025, as two
+   biquads: the coefficients in units of 2^-24, b1 being twice b0 and b2 the
+   same as it, and the state in units of 2^-12, for each of the two noise
+   streams. Nought in b0 is no filter. */
+typedef struct {
+    int32_t b0[2], a1[2], a2[2];
+    int32_t z[2][2][2];
+} klatt_noise_filter;
+
 void     clr_vector(int32_t *v, int32_t n);
 uint32_t klatt_rand(int16_t *out, int32_t n, uint32_t seed);
-void     klatt_shape_noise(int16_t *buf, int32_t n, int32_t rate, double *z);
+void     klatt_noise_shape(klatt_noise_filter *f, int32_t rate);
+void     klatt_noise_edge(klatt_noise_filter *f, int32_t rate, int32_t edge);
+void     klatt_noise_run(klatt_noise_filter *f, int stream, int16_t *buf,
+                         int32_t n);
 int16_t  fxdivl(int32_t num, int32_t den);
 void     fxmul_vector(const int32_t *src, int16_t coef, int32_t *acc, int32_t n);
 void     fxmul1_vector(const int16_t *src, int16_t coef, int32_t *acc, int32_t n);

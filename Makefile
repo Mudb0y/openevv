@@ -292,7 +292,7 @@ ALL_CFLAGS := $(OPT) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe so so32 sotest phonemes dict dictfile objects stubs rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices inikeys stopthread pieces prims ipa xmltok ssml romcan romprims speechd speechd-install speechd-enable-test speechd-test speechd-test-all say-test
+.PHONY: all probe so so32 sotest phonemes dict dictfile objects stubs rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices wide inikeys stopthread pieces prims ipa xmltok ssml romcan romprims speechd speechd-install speechd-enable-test speechd-test speechd-test-all say-test
 all: $(BUILD)/evv $(BUILD)/openevv-say
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -473,6 +473,17 @@ pieces: $(BUILD)/pieces
 
 $(BUILD)/pieces: test/harness/pieces.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/harness/pieces.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# The wideband voice, which the suite does not ask for: that below the join
+# it is the default voice, at the rate it is made at and at the rates taken
+# from it, and that its two halves are still in step at the end of a long
+# text. See the head of test/harness/wide.c.
+wide: $(BUILD)/wide
+	@$(BUILD)/wide
+
+$(BUILD)/wide: test/harness/wide.c $(BUILD)/libevv.a
+	@$(CC) $(ALL_CFLAGS) test/harness/wide.c $(BUILD)/libevv.a -lpthread -lm -o $@
 	@echo "built $@"
 
 # The eight voices the caller may edit, which the suite is blind to: nothing it
@@ -1026,7 +1037,8 @@ crashers32: $(BUILD)/evv32
 # since the thing it exists to catch is a change made for one language landing
 # in another. `test/matrix.sh check plpl' is there for iterating on one.
 # The gate a level below the one above: twenty thousand words rather than
-# 997 sentences, and what each is made of rather than what it sounds like.
+# a thousand sentences, and what each is made of rather than what it sounds
+# like.
 # It is what makes a change to a rule or a dictionary answerable, since the
 # sentence gate is far too small to notice one. Wants no Wine and no objects.
 .PHONY: words words-record

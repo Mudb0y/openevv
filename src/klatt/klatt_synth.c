@@ -114,8 +114,17 @@ int KlattSynth(void *handle, const int32_t *parms)
 
     k->unknown_0010++;
 
-    n_samples = mul32(mul32(parms[P_UI], k->cp.unknown_00), k->cp.sample_rate)
-              / 100000;
+    /* A paced synthesiser takes its partner's count and scales it, since
+       rounding its own would not keep the two in step: a five millisecond
+       frame is 55.125 samples at eleven thousand and twenty five, which keeps
+       55, and the same frame at twice the rate keeps twice that only while
+       the fraction happens to stay under a half. */
+    if (k->pace_rate > 0)
+        n_samples = mul32(mul32(parms[P_UI], k->cp.unknown_00), k->pace_rate)
+                  / 100000 * (k->cp.sample_rate / k->pace_rate);
+    else
+        n_samples = mul32(mul32(parms[P_UI], k->cp.unknown_00),
+                          k->cp.sample_rate) / 100000;
 
     k->av = parms[P_AV];
     k->ah = parms[P_AH];
@@ -428,12 +437,20 @@ int KlattSynth(void *handle, const int32_t *parms)
                                held vowel does not sound mechanical. */
                             static const int16_t rate[3] = {0xa37, 0x5b6, 0x3c8};
                             int16_t sine = 0;
+                            int32_t said = k->length, base = k->cp.sample_rate;
                             int n;
 
+                            /* Paced, the phase is the partner's, wrapping
+                               where the partner's wraps. */
+                            if (k->pace_rate > 0) {
+                                said = k->length
+                                     / (k->cp.sample_rate / k->pace_rate);
+                                base = k->pace_rate;
+                            }
+
                             for (n = 0; n < 3; n++) {
-                                int16_t ph = fxdivl(mul32(rate[n], k->length)
-                                                    % k->cp.sample_rate,
-                                                    k->cp.sample_rate);
+                                int16_t ph = fxdivl(mul32(rate[n], said)
+                                                    % base, base);
                                 int32_t q;
 
                                 if (ph > 0x6000) {

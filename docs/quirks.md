@@ -64,6 +64,8 @@ UTF-16 is not a way round that for these. ORing `eciUnicodeCodeSet` -- 0x800 -- 
 
 **IBM's own fourth sample rate could not be asked for.** It numbered 16 kHz rate three and then set the range of the sample rate parameter to two. The range here runs to the highest rate the tables can be built for, which is the first of three divergences in `docs/notes/sample-rates.md`. The other two are that 22.05 and 16 kHz are doubled now rather than mislabelled, and that a rate given in hertz is not something IBM's engine would take at all.
 
+**`eciWideband` (32) changes the sound and not the rate, and only above 11,025.** It is ours, so IBM's engine answers -1 for it and a program written for both has to take that as "not here" rather than as a failure. At 8,000 and 11,025 it is accepted and changes nothing, since there is no top to add. It is not one of the settings `eciGetDefaultParam` and `eciSetDefaultParam` know, `eciReset` turns it off, and at 16,000 it puts the sound six milliseconds later than the default, which is the cost of lowering a rate rather than raising one.
+
 **Changing the sample rate loses a registered buffer in IBM's engine and not in ours.** IBM rebuilds the output as a device regardless, which hands the engine a null buffer on the way past; the instance then reports the new rate ever after and answers no more samples. Ours chooses on where the samples were already going. That is the first deliberate divergence, and the four audio-format numbers -- parameters 13 to 16 -- are the second, for the same reason.
 
 ## Voices
@@ -166,7 +168,7 @@ The last two cases of `test/cases/plain.txt` and of `test/cases/plain-engb.txt` 
 
 ## If it sounds wrong
 
-It is not a fault in the port. The audio is identical to IBM's by design, over 997 recorded cases in ten languages and every build the tree makes, apart from the cases a deliberate divergence on this page names. That is Eloquence sounding like Eloquence.
+It is not a fault in the port. The audio is identical to IBM's by design, over the recorded cases in ten languages and every build the tree makes, apart from the cases a deliberate divergence on this page names and the wideband voice, which IBM never made. That is Eloquence sounding like Eloquence.
 
 Changing it is a deliberate change to the language data, and the gate will correctly report that as a difference.
 

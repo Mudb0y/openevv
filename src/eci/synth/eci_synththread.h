@@ -126,6 +126,9 @@ struct SynthThread {
                                       the reset */
     uint8_t       pad_3dd[3];
     int32_t       told_cat;        /* 0x3e0, told the caller we went concat */
+    /* Ours: whether the caller wants the wideband voice above eleven
+       thousand and twenty five. */
+    int32_t       wideband;
 };
 
 #define ST_ENGINES(t)   (&(t)->engines)
@@ -178,6 +181,14 @@ struct SynthThread {
 #define ST_FILTER(t)    ((t)->filter)
 #define ST_FRESH(t)     ((t)->fresh)
 #define ST_TOLD_CAT(t)  ((t)->told_cat)
+#define ST_WIDEBAND(t)  ((t)->wideband)
+
+/* What the wideband voice is called by the newer interface's settings and
+   by the older one's. Both are ours, and include/eci.h publishes the older
+   as eciWideband: numbered well clear of the settings IBM and ETI used, so
+   no program written for either reaches it by accident. */
+#define ECI_PARAM_WIDEBAND  21
+#define ECI_OLD_WIDEBAND    32
 
 /* Bits of ST_FLAGS this side reads. */
 #define STF_WORD_MARKS  0x100  /* report where each word starts */

@@ -6,6 +6,7 @@ import select
 import struct
 import subprocess
 import sys
+import tempfile
 
 
 class ModuleProcess:
@@ -394,7 +395,41 @@ def main():
     finally:
         result = module.close()
     assert result == 0
-    print("speechd: protocol, voices, settings, audio, marks, stop and pause passed")
+
+    print("speechd: the wideband voice", flush=True)
+    wideDir = tempfile.mkdtemp()
+    wideConfig = os.path.join(wideDir, "openevv.conf")
+    with open(wideConfig, "w", encoding="utf-8") as out:
+        out.write("Wideband 1\n")
+    module = ModuleProcess(binary, wideConfig)
+    try:
+        module.send("INIT\n")
+        module.expect(b"299-OpenEVV initialized\n")
+        module.expect(b"299 OK LOADED SUCCESSFULLY\n")
+        module.command_with_data(
+            "AUDIO",
+            ["audio_output_method=server"],
+            b"207 OK RECEIVING AUDIO SETTINGS\n",
+        )
+        module.expect(b"203 OK AUDIO INITIALIZED\n")
+        module.set(voice="male1", language="en-US", synthesis_voice="NULL")
+        audio, metadata, _, event = module.speak(text)
+        assert event == "702 END"
+        assert metadata["sample_rate"] == 22050
+        direct = subprocess.check_output([
+            directBinary, "-v", "1", "-W", "-R", "22050", "-o", "-",
+            direct_text,
+        ])
+        assert audio == direct[44:], (
+            "the wideband voice through Speech Dispatcher is not the one "
+            f"evv makes ({len(audio)} versus {len(direct) - 44} PCM bytes)"
+        )
+    finally:
+        result = module.close()
+        os.unlink(wideConfig)
+        os.rmdir(wideDir)
+    assert result == 0
+    print("speechd: protocol, voices, settings, audio, marks, stop, pause and the wideband voice passed")
 
 
 if __name__ == "__main__":

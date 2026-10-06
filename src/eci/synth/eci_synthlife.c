@@ -328,6 +328,7 @@ static void stl_build(SynthThread *t, void *app, void *state)
     ST_FILTER(t) = 0;
     ST_FRESH(t) = 0;
     ST_TOLD_CAT(t) = 0;
+    ST_WIDEBAND(t) = 0;
 
     p = cpp_new(rm_bytes);
     ST_ROMAN(t) = p ? rz_ctor(p, t) : 0;

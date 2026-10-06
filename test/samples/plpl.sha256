@@ -6,6 +6,9 @@
 # Polish can be told from an accident, which is the
 # only check Polish will ever have besides an ear.
 #
+# The wide cases are the wideband voice, which IBM never
+# made: an ear blessed them, not an original.
+#
 # Written by test/matrix.sh record. One line a case:
 # the category, which case in it, the first sixteen hex of
 # the samples' hash, the same of the reported answers', and
@@ -109,3 +112,10 @@ ssml 7 70935c3ebcd15bc1 13552c8faa86c22d <speak version="1.0" xml:lang="pl-PL">P
 ssml 8 bc5d59f1e60cad31 caf4a1bf75d8a2fb <speak version="1.0" xml:lang="pl-PL">Poczekaj<break time="500ms"/>chwile.<mark name="tutaj"/> Tam.</speak>
 ssml 9 3db041aaaf1ea01a 883b80f90054d1f3 <speak version="1.0" xml:lang="pl-PL"><sub alias="Siec ogolnoswiatowa">WWW</sub> i <phoneme ph="h.E.l.oU">czesc</phoneme>.</speak>
 ssml 10 73fd1d84d11539ed 46187c2750c29219 <speak version="1.0" xml:lang="pl-PL">Zażółć gęślą jaźń, z a &amp; b &lt; c.</speak>
+wide 1 029e9c0931e3d89c b16e5ac21eeacd34 Dzien dobry. Tu mowi syntezator mowy Eloquence.
+wide 2 1268699fb86ba064 1c9096a4a2d7cac5 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
+wide 3 be9e1d9597ce0c1a 0f0998e489856501 Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
+wide 4 ef028ffef4bad314 9e106d7c1da59d1e Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
+wide 5 ab7463ff6a82d12e 0f9d9d38907807f9 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
+wide 6 4990ef2064ce6e8e 02d6ef90d6b62acb Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
+wide 7 47df8fc84dc24675 fab60e52afc19911 Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.

@@ -2,7 +2,8 @@
 
 OpenEVV has a native Speech Dispatcher output module for Linux. It keeps one
 engine instance alive, streams 16-bit mono 11025 Hz PCM back to Speech
-Dispatcher for playback, and does not open an audio device itself.
+Dispatcher for playback -- 22050 Hz with the wideband voice -- and does not
+open an audio device itself.
 
 ## Build and automatic test
 
@@ -128,6 +129,20 @@ each `-m` mode: the direct protocol test cannot cover the server-side symbol
 names or translations. Finally, test rapid interruption and language changes
 in the actual screen reader, because that test also cannot establish audible
 latency, playback routing, or application behavior.
+
+## The wideband voice
+
+A line in `openevv.conf` turns it on:
+
+    Wideband 1
+
+The voice below about 5.4 kHz is then the same one, and above that a second
+synthesiser running the same frames adds the frication and breath a higher
+rate has room for. The module hands it over at 22050 Hz, the rate it is made
+at, and Speech Dispatcher converts it to whatever the sound server wants. The
+module reads its configuration when it starts, so a change takes effect the
+next time Speech Dispatcher starts it. `test/speechd.py` holds what comes back
+to what `evv -W -R 22050` makes for the same text, byte for byte.
 
 ## Supported behavior and limits
 

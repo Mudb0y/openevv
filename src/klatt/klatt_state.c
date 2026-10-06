@@ -19,6 +19,8 @@ AT(version, 0x0000);
 AT(user, 0x0004);
 AT(unknown_0010, 0x0010);
 AT(const_parms_set, 0x0014);
+AT(pace_rate, 0x0018);
+AT(noise_filter, 0x001c);
 AT(volume, 0x0058);
 AT(open_state, 0x005c);
 AT(filters, 0x0064);
@@ -69,40 +71,6 @@ typedef char klatt_state_is_0x1d24[sizeof(klatt_state) == 0x1d24 ? 1 : -1];
 
 #endif
 
-/* Where the noise shaper keeps its filter state. It cannot go in
-   klatt_state: that block is IBM's field for field and the thirty-two bit
-   build still checks every offset, so it sits beside it instead, keyed by
-   the block it belongs to.
-
-   Two streams to a block, because aspiration and frication each carry a
-   seed of their own and a filter shared between them would run one's
-   history into the other. Which one is asking is not passed in, but the
-   caller hands over the field it is about to overwrite, so comparing
-   against the two says which. */
-#define SHAPERS 8
-
-static struct {
-    const klatt_state *k;
-    double             z[2][4];
-} shaper[SHAPERS];
-
-static double *shaper_state(const klatt_state *k, int stream)
-{
-    int i, spare = -1;
-
-    for (i = 0; i < SHAPERS; i++) {
-        if (shaper[i].k == k)
-            return shaper[i].z[stream];
-        if (shaper[i].k == 0 && spare < 0)
-            spare = i;
-    }
-    if (spare < 0)
-        spare = 0;
-    memset(&shaper[spare], 0, sizeof shaper[spare]);
-    shaper[spare].k = k;
-    return shaper[spare].z[stream];
-}
-
 /* Fill the noise buffer, then optionally halve it in place over a series of
    spans. Each pair says how far to skip and how far to keep attenuating, so
    the smoothing follows the pitch periods rather than a fixed window.
@@ -115,9 +83,14 @@ uint32_t noise(klatt_state *k, uint32_t seed)
     int32_t i, limit, j;
 
     seed = klatt_rand(k->noise_buf, k->noise_count, seed);
-    klatt_shape_noise(k->noise_buf, k->noise_count, k->cp.sample_rate,
-                      shaper_state(k, seed == (uint32_t)k->unknown_19dc
-                                      ? 0 : 1));
+    /* Two streams, because aspiration and frication each carry a seed of
+       their own and a filter shared between them would run one's history
+       into the other. Which one is asking is not passed in, but the caller
+       hands over the field it is about to overwrite, so comparing against
+       it says which. */
+    klatt_noise_run(&k->noise_filter,
+                    seed == (uint32_t)k->unknown_19dc ? 0 : 1,
+                    k->noise_buf, k->noise_count);
 
     if (k->av == 0)
         return seed;
@@ -136,16 +109,27 @@ uint32_t noise(klatt_state *k, uint32_t seed)
     return seed;
 }
 
+/* One pitch period in thousandths of a sample. A paced synthesiser works it
+   out at its partner's rate and scales the answer, rather than dividing at
+   its own, so its periods are exactly a whole multiple of its partner's
+   and the pulses of the two never drift apart -- rounded independently
+   they differ by a thousandth of a sample a period, and that adds up. */
+static int32_t period_milli(const klatt_state *k)
+{
+    if (k->pace_rate > 0)
+        return mul32(k->pace_rate, 10000) / k->f0
+             * (k->cp.sample_rate / k->pace_rate);
+    return mul32(k->cp.sample_rate, 10000) / k->f0;
+}
+
 void compute_v_start(klatt_state *k)
 {
-    k->v_start = k->v_start + mul32(k->voicing_size, 1000)
-               - mul32(k->cp.sample_rate, 10000) / k->f0;
+    k->v_start = k->v_start + mul32(k->voicing_size, 1000) - period_milli(k);
 }
 
 void compute_voicing_size(klatt_state *k)
 {
-    k->voicing_size =
-        (mul32(k->cp.sample_rate, 10000) / k->f0 - k->v_start + 999) / 1000;
+    k->voicing_size = (period_milli(k) - k->v_start + 999) / 1000;
 
     k->open_len =
         (mul32(mul32(k->cp.sample_rate, 100), k->oq)
@@ -348,6 +332,7 @@ void KlattSetConstParms(void *handle, KlattConstParms parms)
         k->ex_table = klatt_EX8;
         k->co_table = klatt_CO8;
     }
+    klatt_noise_shape(&k->noise_filter, k->cp.sample_rate);
 
     k->v_start = 0;
     k->n_formants = k->cp.n_formants;

@@ -48,11 +48,12 @@
    nine milliseconds at the engine's rate.
 
    EVV_SINC_CUTOFF and EVV_SINC_TAPS move both, because where exactly to put
-   them is a matter for a listener and not for this file. */
-#define SINC_CUTOFF   0.98
+   them is a matter for a listener and not for this file. The cutoff is in
+   ten-thousandths here, since nothing in the filter is a double. */
+#define SINC_CUTOFF   9800
 #define SINC_TAPS     192
 #define SINC_PHASES   128
-#define SINC_BETA     8.0
+#define SINC_BETA     8
 
 /* As far as either may be pushed. The taps decide how much is allocated for
    the filter and how far behind the input it runs, and two hundred and
@@ -60,9 +61,19 @@
    much delay as is worth having for this. */
 #define SINC_TAPS_MAX 256
 
+/* How many places between two input samples the filter is worked out for
+   ahead of time, at most. Every numbered rate needs fewer -- 1,280 raising
+   11,025 to 32,000 is the most, a megabyte of weights -- and only a rate
+   named in hertz that shares little with the one below it reaches this,
+   where it costs a megabyte and a half and an output sample lands up to a
+   two-thousandth of an input sample from where it belongs. */
+#define SINC_PLACES_MAX 2048
+
 /* How far back the interpolating ways look, and therefore how many samples
-   of the run before have to be kept. The sinc is the deepest. */
-#define CVT_HISTORY   SINC_TAPS_MAX
+   of the run before have to be kept. The sinc is the deepest, and deeper
+   still lowering a rate, where the same span of output reaches over more
+   samples of input; no rate is lowered by more than half. */
+#define CVT_HISTORY   (2 * SINC_TAPS_MAX)
 
 /* How far behind the input a resampler runs, in input samples. Looking only
    backwards is what lets a run join the one before it with no seam and
@@ -81,13 +92,21 @@ typedef struct PcmResampler {
     int32_t at;
     /* The last few samples of the run before. */
     int32_t history[CVT_HISTORY];
-    /* The windowed sinc, drawn once when the rate is settled and read with a
-       straight line between its points. Owned here rather than shared so
-       that two instances on two threads cannot race to draw it, and
-       allocated rather than inline because how big it is depends on how many
-       taps it was asked for. pcm_resample_end gives it back. */
+    /* The windowed sinc, worked out once when the rate is settled for every
+       place an output sample can fall between two input ones, and scaled at
+       each to come to exactly one, in units of 2^-30. Owned here rather than
+       shared so that two instances on two threads cannot race to make it,
+       and allocated because how big it is depends on the taps and the two
+       rates. pcm_resample_end gives it back. */
     int32_t half;            /* taps each side of the position */
-    double *sinc;            /* 2 * half * SINC_PHASES + 1 of them */
+    /* Lowering a rate, the filter has to stop below the output's Nyquist
+       rather than the input's, so it is read stretched over the input by
+       the ratio of the two and reaches that much further each side: this
+       many taps rather than half. */
+    int32_t reach;
+    int32_t phases;          /* places worked out */
+    int32_t spacing;         /* between them in units of 1/to, or nought */
+    int32_t *weights;        /* phases of 2 * reach */
 } PcmResampler;
 
 /* Answers zero where the filter could not be made, which is out of room and
@@ -99,5 +118,10 @@ uint32_t pcm_resample_count(const PcmResampler *r, uint32_t n);
 uint32_t pcm_resample(PcmResampler *r, const int32_t *src, uint32_t n,
                       int32_t *out);
 int32_t  pcm_resample_delay(const PcmResampler *r);
+/* The weight in units of 2^-30 the sinc gives an input sample num/den input
+   samples from the middle of its window, among the weights of the output
+   sample that window belongs to; nought where no output sample's window
+   lies so. */
+int32_t  pcm_resample_weight(const PcmResampler *r, int32_t num, int32_t den);
 
 #endif

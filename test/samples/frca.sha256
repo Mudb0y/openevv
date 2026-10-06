@@ -1,9 +1,14 @@
 # What this engine says, case by case, for frca.
 #
-# Every line was blessed by IBM's own binary: the whole
-# differential suite was run for this language
-# immediately before these were written, and every case
-# matched. See docs/testing.md.
+# Every line was blessed by IBM's own binary when it was
+# first written: the whole differential suite was run
+# for this language immediately before, and every case
+# matched. A case a deliberate divergence has moved or
+# added since is this engine's answer and not IBM's;
+# docs/quirks.md names them. See docs/testing.md.
+#
+# The wide cases are the wideband voice, which IBM never
+# made: an ear blessed them, not an original.
 #
 # Written by test/matrix.sh record. One line a case:
 # the category, which case in it, the first sixteen hex of
@@ -108,3 +113,10 @@ ssml 7 c374339f268fb7e8 1b601745993634f5 <speak version="1.0" xml:lang="fr-CA">E
 ssml 8 01d1ee7a9ecaed24 57fe1ac86ab5af3a <speak version="1.0" xml:lang="fr-CA">Attends<break time="500ms"/>un peu.<mark name="ici"/> La.</speak>
 ssml 9 da444258b4772c64 a3a951ec4bca329a <speak version="1.0" xml:lang="fr-CA"><sub alias="Toile mondiale">WWW</sub> et <phoneme ph="h.E.l.oU">bonjour</phoneme>.</speak>
 ssml 10 b2fe20083fa827e1 83a69c6e1d978408 <speak version="1.0" xml:lang="fr-CA">Le café près de la façade naïve, avec a &amp; b &lt; c.</speak>
+wide 1 bfd70800eeab7081 ae29743ffe60c40a Bonjour. Ici parle le synthetiseur de parole Eloquence.
+wide 2 4011e92ee0b496fa d0ed9423e79413b5 Le docteur Dupont a paye 1 234,56 euros le 3 mai 2026 a 19h45.
+wide 3 6e06d698c9a0799a 3fc0938553aec27c Le rapide renard brun saute par-dessus le chien paresseux; p.ex. www.exemple.fr/chemin?q=1
+wide 4 c139e7c154f72d5d e87e8b7280b68d9c Essai 1 2 3, ABC XYZ, mots-avec-traits-d-union et MAJUSCULES.
+wide 5 1b406c9ed808257e a9db67b3d11d3f25 Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
+wide 6 3178106f606b7972 3623654313489d4a Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
+wide 7 8b9835e84662f88b 85ec20cde6f441f3 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.

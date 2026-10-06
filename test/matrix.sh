@@ -94,10 +94,17 @@ language_of() {
 # reason it is worth having -- there is no Polish oracle, so a recorded gate
 # is the only thing besides an ear that can tell a change to the reader from
 # an accident there.
-CATEGORIES="plain utf8 anno anno3 realworld dict second ssml"
+#
+# `wide' is the one the suite cannot ask, and it is a ninth rather than one of
+# them: the plain cases in the wideband voice at sixteen thousand, which takes
+# in both halves of it -- the join, made at 22,050, and the rate lowered from
+# there. IBM never made a wideband voice, so what blessed these numbers is an
+# ear, on 6 October 2026, as for Polish; test/harness/wide.c holds the half
+# below the join to being the default voice.
+CATEGORIES="plain utf8 anno anno3 realworld dict second ssml wide"
 file_of() {
     case $1 in
-    plain|dict|second) echo "plain" ;;
+    plain|dict|second|wide) echo "plain" ;;
     utf8)              echo "utf8" ;;
     ssml)              echo "ssml" ;;
     *)                 echo "anno" ;;
@@ -111,6 +118,7 @@ mode_of() {
     dict)            echo "ard" ;;
     second)          echo "t" ;;
     ssml)            echo "as" ;;
+    wide)            echo "w" ;;
     esac
 }
 
@@ -290,6 +298,9 @@ for t in $want; do
                 echo "# added since is this engine's answer and not IBM's;"
                 echo "# docs/quirks.md names them. See docs/testing.md."
             fi
+            echo "#"
+            echo "# The wide cases are the wideband voice, which IBM never"
+            echo "# made: an ear blessed them, not an original."
             echo "#"
             echo "# Written by test/matrix.sh record. One line a case:"
             echo "# the category, which case in it, the first sixteen hex of"

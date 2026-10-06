@@ -162,7 +162,14 @@ typedef enum {
     eciAudioFormatB       = 14,
     eciAudioFormatC       = 15,
     eciAudioFormatD       = 16,
-    eciNumParams          = 18
+    eciNumParams          = 18,
+    /* Ours. One makes every rate above 11,025 the wideband voice: the
+       engine's own sound below about 5.4 kHz and, above it, what a second
+       synthesiser makes of the same frames at 22,050. Nought, the default,
+       is the 11,025 voice raised to the rate as before. Numbered well clear
+       of the settings IBM and ETI used, so no program written for either
+       reaches it; eciReset puts it back to nought. */
+    eciWideband           = 32
 } ECIParam;
 
 /* A voice's eight, which every one of the eight preset voices has.

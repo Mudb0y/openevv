@@ -389,7 +389,7 @@ int32_t sendStreamParameters(delta_state *d, int32_t start, int32_t unused,
         if (at + step > end)
             frame[0] = at + step - end;
 
-        if (!KlattSynth(GEN_KLATT(d), frame))
+        if (!klattSynthFrame(d, frame))
             stopped = 1;
     }
 

@@ -137,6 +137,8 @@ class SynthDriver(SynthDriver):
 		BooleanDriverSetting("voiceTags", _("Allow backquote voice &tags"), False),
 		# Translators: Label for a setting in voice settings dialog.
 		DriverSetting("samplerate", _("Sa&mple rate"), False),
+		# Translators: Label for a setting in voice settings dialog.
+		BooleanDriverSetting("wideband", _("&Wideband above 11 kHz"), False),
 	)
 
 	supportedCommands = {
@@ -455,7 +457,9 @@ class SynthDriver(SynthDriver):
 		Above it the engine still runs at eleven thousand and twenty five and
 		the rate is raised from there, so the voice is the same one at every
 		setting and what a higher rate buys is an audio device handed
-		something it wants without resampling it again on the way out.
+		something it wants without resampling it again on the way out --
+		unless the wideband voice is on, which keeps that voice below about
+		5.4 kHz and adds a top above it.
 		"""
 		return OrderedDict(
 			(
@@ -483,6 +487,12 @@ class SynthDriver(SynthDriver):
 			log.error("openevv: %r is not a sample rate" % (value,))
 			return
 		self._engine.control([(self._engine.setSampleRate, (hz,))])
+
+	def _get_wideband(self):
+		return self._engine.wideband
+
+	def _set_wideband(self, enable):
+		self._engine.control([(self._engine.setWideband, (enable,))])
 
 	def _get_availableVoices(self):
 		"""One voice per language and preset.

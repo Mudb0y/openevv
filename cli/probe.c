@@ -93,6 +93,7 @@ static short *samples;
 static int32_t phonemes[2048];
 static int     phonemes_wanted;
 static size_t nsamples;
+static unsigned long wav_rate = 11025;
 static size_t cap;
 
 static void keep(const short *p, size_t n)
@@ -339,6 +340,16 @@ int main(int argc, char **argv)
             printf("speak: setParam refused\n");
     }
 
+    /* A w asks for the wideband voice, at sixteen thousand because that
+       takes in both halves of it: the join, made at 22,050, and the rate
+       lowered from there. */
+    if (argc > 3 && strchr(argv[3], 'w')) {
+        if (ev_setParam(h, 5, 3) < 0 || ev_setParam(h, 32, 1) < 0)
+            printf("speak: the wideband voice was refused\n");
+        printf("speak: wideband %d\n", eo_getParam(h, 32));
+        wav_rate = 16000;
+    }
+
     /* A d walks the dictionary layer, which nothing else here reaches.
        Whether the engine accepts any of it is beside the point; what is
        compared is that both builds answer the same way. */
@@ -427,7 +438,7 @@ int main(int argc, char **argv)
         int i;
 
         snprintf(again, sizeof again, "%s.again.wav", out);
-        write_wav(out, 11025);
+        write_wav(out, wav_rate);
         printf("speak: %lu samples to %s\n", (unsigned long)nsamples, out);
 
         nsamples = 0;
@@ -435,7 +446,7 @@ int main(int argc, char **argv)
             printf("speak: the second utterance was refused\n");
         } else {
             drain(h);
-            write_wav(again, 11025);
+            write_wav(again, wav_rate);
             printf("speak: %lu samples to %s\n",
                    (unsigned long)nsamples, again);
         }
@@ -449,7 +460,7 @@ int main(int argc, char **argv)
     es_delete(h);
     evv_port_finish();
 
-    write_wav(out, 11025);
+    write_wav(out, wav_rate);
     printf("speak: %lu samples to %s\n", (unsigned long)nsamples, out);
     return 0;
 }

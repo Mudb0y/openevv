@@ -59,7 +59,16 @@ struct klatt_state {
     const int16_t   *co_table;            /* 0x000c, CO8 or CO11 */
     int32_t          unknown_0010;        /* 0x0010 */
     int32_t          const_parms_set;     /* 0x0014, KlattOpen refuses until 1 */
-    uint8_t          pad_0018[64];
+    /* Ours, in bytes IBM's code never touches. A synthesiser paced by a
+       partner at a lower rate takes its frame lengths, its pitch periods and
+       its flutter from the partner's rate scaled up, rather than from its
+       own, so that the two land on the same instants; src/klatt/klatt_wide.c
+       is the one that sets it. The filter its noise goes through above
+       11,025 sits after it, state and all. Nought in both is IBM's
+       synthesiser. */
+    int32_t          pace_rate;           /* 0x0018 */
+    klatt_noise_filter noise_filter;      /* 0x001c */
+    uint8_t          pad_0054[4];
     int32_t          volume;              /* 0x0058, percent */
     int32_t          open_state;          /* 0x005c, 2 once open */
     uint8_t          pad_0060[4];

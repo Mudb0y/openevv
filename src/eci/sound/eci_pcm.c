@@ -160,7 +160,8 @@ THIS int32_t pcm_setup(SoundOutput *o, char *a, int32_t *b, int32_t *c,
    Written here rather than linked from libsoxr because the engine has no
    dependency but the C library and gains none here: this ships inside a DLL
    a screen reader loads and inside builds for platforms nobody has put soxr
-   on. Same arithmetic, not the same code.
+   on. The same kind of filter, not the same code, and in whole numbers where
+   soxr works in floating point, for the reason src/klatt/klatt_fx.h gives.
 
    Both interpolating ways look only backwards, at samples already handed
    over, so a run joins the one before it with no seam and nothing is held
@@ -174,11 +175,11 @@ THIS int32_t pcm_setup(SoundOutput *o, char *a, int32_t *b, int32_t *c,
    forty-eight thousand come to an uneven one, by the same arithmetic.
    */
 
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "eci_pcm.h"
+#include "klatt_fx.h"
 
 /* What the layer above hands down, and what comes back. */
 typedef struct { void *at; uint32_t bytes; } SDATA;
@@ -195,37 +196,14 @@ typedef struct {
     uint16_t extra;
 } WaveFormat;
 
-/* The modified Bessel function of the first kind, order nought, which is
-   what shapes a Kaiser window. The series converges in a dozen terms for the
-   arguments a window of this shape asks for. */
-static double cvt_i0(double x)
-{
-    double term = 1.0, sum = 1.0, half = x / 2.0;
-    int    k;
-
-    for (k = 1; k < 40; k++) {
-        term *= (half / (double)k) * (half / (double)k);
-        sum += term;
-        if (term < sum * 1e-16)
-            break;
-    }
-    return sum;
-}
-
-/* Draw the filter: a sinc cut off below the input's own Nyquist, under a
-   Kaiser window, sampled finely enough that a straight line between two of
-   its points is not what limits the stopband.
-
-   In units of one input sample throughout, which is what makes it the same
-   filter whatever the ratio: raising a rate needs the images of the input
-   removed, and where those images begin is a property of the input alone. */
 /* How far up the band to pass and over how many samples, read once. Both are
    experiment knobs rather than settings: an engine that changed its mind
-   halfway through an utterance would be comparing two things at once. */
-static double cvt_cutoff(void)
+   halfway through an utterance would be comparing two things at once. The
+   cutoff is in ten-thousandths of the input's own Nyquist. */
+static int32_t cvt_cutoff(void)
 {
-    static int    decided;
-    static double cutoff = SINC_CUTOFF;
+    static int     decided;
+    static int32_t cutoff = SINC_CUTOFF;
 
     if (!decided) {
         const char *say = getenv("EVV_SINC_CUTOFF");
@@ -237,7 +215,7 @@ static double cvt_cutoff(void)
             /* Below a half there is no point and above one there is no
                meaning: a filter cannot pass what the input never carried. */
             if (v >= 0.5 && v <= 1.0)
-                cutoff = v;
+                cutoff = (int32_t)(v * 10000.0 + 0.5);
         }
     }
     return cutoff;
@@ -264,56 +242,175 @@ static int32_t cvt_taps(void)
     return taps;
 }
 
-/* Answers zero when there is no room for the filter. */
-static int cvt_draw(PcmResampler *r)
+/* One over pi, in units of 2^-30. */
+#define CVT_INV_PI  341782638
+
+/* The modified Bessel function of the first kind, order nought, which is
+   what shapes a Kaiser window: of x in units of 2^-26, answering in them.
+   The series converges in a couple of dozen terms for the arguments a
+   window of this shape asks for, and with the window's beta at eight no
+   term or product comes near sixty-three bits. */
+static int64_t cvt_i0(int64_t x)
 {
-    double  cutoff = cvt_cutoff();
-    double  edge = cvt_i0(SINC_BETA);
-    int32_t half = cvt_taps() / 2;
-    int32_t count = 2 * half * SINC_PHASES + 1;
-    int32_t i;
+    int64_t half = x / 2, term = (int64_t)1 << 26, sum = term;
+    int     k;
 
-    r->sinc = malloc((size_t)count * sizeof(double));
-    if (r->sinc == 0)
-        return 0;
-    r->half = half;
+    for (k = 1; k < 64 && term != 0; k++) {
+        int64_t q = fx_div(half, k);
 
-    for (i = 0; i < count; i++) {
-        double t = (double)(i - half * SINC_PHASES) / (double)SINC_PHASES;
-        double x = t / (double)half;
-        double w, v;
-
-        if (x < -1.0 || x > 1.0) {
-            r->sinc[i] = 0.0;
-            continue;
-        }
-        w = cvt_i0(SINC_BETA * sqrt(1.0 - x * x)) / edge;
-
-        if (t == 0.0) {
-            v = cutoff;
-        } else {
-            double a = 3.14159265358979323846 * cutoff * t;
-
-            v = cutoff * sin(a) / a;
-        }
-        r->sinc[i] = v * w;
+        term = fx_shift(fx_shift(term * q, 26) * q, 26);
+        sum += term;
     }
-    return 1;
+    return sum;
 }
 
-/* One coefficient, by a straight line between the two points either side. */
-static double cvt_weight(const PcmResampler *r, double t)
-{
-    double at = (t + (double)r->half) * (double)SINC_PHASES;
-    double top = (double)(2 * r->half * SINC_PHASES);
-    int    i;
-    double f;
+/* Draw the filter: a sinc cut off below the input's Nyquist, under a
+   Kaiser window, sampled finely enough that a straight line between two of
+   its points is not what limits the stopband. The middle and one side,
+   since it is symmetric: base[i] is i/SINC_PHASES input samples out, in
+   units of 2^-30.
 
-    if (at <= 0.0 || at >= top)
-        return 0.0;
-    i = (int)at;
-    f = at - (double)i;
-    return r->sinc[i] + (r->sinc[i + 1] - r->sinc[i]) * f;
+   In units of one input sample throughout, which is what makes it the same
+   filter whatever the ratio: raising a rate needs the images of the input
+   removed, and where those images begin is a property of the input alone.
+
+   And in whole numbers, sine, root and Bessel function alike, so that what
+   it comes to is a property of this code rather than of a maths library or
+   the processor under it. */
+static int32_t *cvt_draw(int32_t half, int32_t cutoff)
+{
+    int32_t  top = half * SINC_PHASES;
+    int64_t  sq = (int64_t)top * top;
+    int64_t  edge = cvt_i0((int64_t)SINC_BETA << 26);
+    int32_t *base = malloc((size_t)(top + 1) * sizeof(int32_t));
+    int32_t  i;
+
+    if (base == 0)
+        return 0;
+    base[0] = (int32_t)fx_div((int64_t)cutoff << 30, 10000);
+    for (i = 1; i <= top; i++) {
+        /* sqrt(1 - x^2) for x the way through the window, then the window
+           there, as a fraction of its middle. */
+        int64_t root = (int64_t)fx_isqrt(
+            (uint64_t)fx_div((sq - (int64_t)i * i) << 30, sq) << 30);
+        int64_t window =
+            fx_div(cvt_i0(fx_shift(SINC_BETA * root, 4)) << 28, edge) << 2;
+        int32_t c, s;
+        int64_t v;
+
+        /* sin(pi cutoff t) / (pi t), the angle being cutoff t / 2 of a
+           turn. */
+        fx_cos_sin((int64_t)cutoff * i, (int64_t)20000 * SINC_PHASES, &c, &s);
+        v = fx_shift(fx_div((int64_t)s * SINC_PHASES, i) * CVT_INV_PI, 30);
+        base[i] = (int32_t)fx_shift(v * window, 30);
+    }
+    return base;
+}
+
+/* The filter num/den input samples from its middle, by a straight line
+   between the two points of the drawing either side.
+
+   Where on the drawing that falls is settled in whole numbers, and that is
+   not a nicety. The window is not nought at its ends, so the filter steps
+   there, and lowering a rate puts taps exactly on the step: from 22,050 to
+   16,000, two output samples in every 320. Worked out as a rounded product
+   in doubles, whether such a tap counted came down to the last bit, which
+   x87 kept where every other processor dropped it. */
+static int64_t cvt_weight_at(const int32_t *base, int32_t half, int64_t num,
+                             int64_t den)
+{
+    int64_t top = (int64_t)half * SINC_PHASES;
+    int64_t at = (num + (int64_t)half * den) * SINC_PHASES;
+    int64_t i, a, b;
+
+    if (at <= 0 || at >= 2 * top * den)
+        return 0;
+    i = at / den;
+    a = base[i < top ? top - i : i - top];
+    b = base[i + 1 < top ? top - i - 1 : i + 1 - top];
+    return a + fx_div((b - a) * (at - i * den), den);
+}
+
+static int32_t cvt_gcd(int32_t a, int32_t b)
+{
+    while (b != 0) {
+        int32_t t = a % b;
+
+        a = b;
+        b = t;
+    }
+    return a;
+}
+
+/* Which of the places worked out an output sample uses, rem/to of an input
+   sample past the one before it. */
+static int32_t cvt_place(const PcmResampler *r, int32_t rem)
+{
+    int32_t p;
+
+    if (r->spacing != 0)
+        return rem / r->spacing;
+    p = (int32_t)(((int64_t)rem * r->phases + r->to / 2) / r->to);
+    return p < r->phases ? p : r->phases - 1;
+}
+
+/* The weights for every place an output sample can fall, once. Two rates
+   share a grid every gcd of them, so there are to/gcd such places: two
+   raising 11,025 to 22,050, and 1,280 raising it to 32,000, which is the
+   most any numbered rate asks. A rate given in hertz can ask for tens of
+   thousands, and past SINC_PLACES_MAX the places are spread evenly instead
+   and a sample takes the nearest.
+
+   Each place's weights are scaled to come to exactly one, and whatever
+   rounding leaves over goes on the largest, so a level in is that level
+   out as a matter of arithmetic rather than of the window and cutoff,
+   which are numbers somebody will want to change. */
+static int cvt_places(PcmResampler *r, const int32_t *base)
+{
+    int32_t g = cvt_gcd(r->from, r->to);
+    int32_t taps = 2 * r->reach;
+    int64_t den = r->to < r->from ? r->from : r->to;
+    int32_t p, k;
+
+    r->spacing = g;
+    r->phases = r->to / g;
+    if (r->phases > SINC_PLACES_MAX) {
+        r->spacing = 0;
+        r->phases = SINC_PLACES_MAX;
+    }
+    r->weights = malloc((size_t)r->phases * (size_t)taps * sizeof(int32_t));
+    if (r->weights == 0)
+        return 0;
+
+    for (p = 0; p < r->phases; p++) {
+        int32_t *w = r->weights + (size_t)p * (size_t)taps;
+        int64_t  rem = r->spacing != 0
+                     ? (int64_t)p * g
+                     : fx_div((int64_t)p * r->to, r->phases);
+        int64_t  sum = 0, got = 0;
+        int32_t  big = 0;
+
+        /* Tap k is input sample i - 2 reach + 1 + k for an output sample
+           whose walk is at i and rem: (k - reach + 1 - rem/to) input samples
+           from the window's middle, which lowering stretches by to/from, so
+           a whole number over the higher of the two rates either way. */
+        for (k = 0; k < taps; k++) {
+            int64_t v = cvt_weight_at(base, r->half,
+                                      (int64_t)(k - r->reach + 1) * r->to
+                                      - rem, den);
+
+            w[k] = (int32_t)v;
+            sum += v;
+        }
+        for (k = 0; k < taps; k++) {
+            w[k] = (int32_t)fx_div((int64_t)w[k] << 30, sum);
+            got += w[k];
+            if ((w[k] < 0 ? -w[k] : w[k]) > (w[big] < 0 ? -w[big] : w[big]))
+                big = k;
+        }
+        w[big] += (int32_t)(FX_ONE - got);
+    }
+    return 1;
 }
 
 int pcm_resample_start(PcmResampler *r, int32_t from, int32_t to,
@@ -327,15 +424,28 @@ int pcm_resample_start(PcmResampler *r, int32_t from, int32_t to,
     r->from = from;
     r->to = to;
     r->method = method;
-    if (method == CVT_SINC)
-        return cvt_draw(r);
+    if (method == CVT_SINC) {
+        int32_t *base;
+        int      ok;
+
+        r->half = cvt_taps() / 2;
+        r->reach = r->half;
+        if (to < from)
+            r->reach = (int32_t)(((int64_t)r->half * from + to - 1) / to);
+        base = cvt_draw(r->half, cvt_cutoff());
+        if (base == 0)
+            return 0;
+        ok = cvt_places(r, base);
+        free(base);
+        return ok;
+    }
     return 1;
 }
 
 void pcm_resample_end(PcmResampler *r)
 {
-    free(r->sinc);
-    r->sinc = 0;
+    free(r->weights);
+    r->weights = 0;
     r->half = 0;
 }
 
@@ -344,9 +454,30 @@ int32_t pcm_resample_delay(const PcmResampler *r)
     switch (r->method) {
     case CVT_LINEAR: return 1;
     case CVT_CUBIC:  return 2;
-    case CVT_SINC:   return r->half;
+    case CVT_SINC:   return r->reach;
     default:         return 0;
     }
+}
+
+int32_t pcm_resample_weight(const PcmResampler *r, int32_t num, int32_t den)
+{
+    int64_t D = r->to < r->from ? r->from : r->to;
+    int64_t t, rem, k;
+
+    if (r->weights == 0 || r->spacing == 0 || den <= 0
+        || ((int64_t)num * D) % den != 0)
+        return 0;
+    /* In units of 1/D, as the places were worked out, and the rem that puts
+       a tap there: whatever brings it to a whole number of `to'. */
+    t = (int64_t)num * D / den;
+    rem = t >= 0 ? (r->to - t % r->to) % r->to : (-t) % r->to;
+    if (rem % r->spacing != 0)
+        return 0;
+    k = (t + rem) / r->to + r->reach - 1;
+    if (k < 0 || k >= 2 * r->reach)
+        return 0;
+    return r->weights[(size_t)(rem / r->spacing) * (size_t)(2 * r->reach)
+                      + (size_t)k];
 }
 
 /* How many output samples a run of n input ones comes to. Every output
@@ -376,13 +507,13 @@ static int32_t cvt_tap(const PcmResampler *r, const int32_t *src, uint32_t n,
 /* Sixteen bits is where these are going, and a curve through four points can
    overshoot the points. Left to itself that wraps rather than clips, which
    is a click and not a loud sample. */
-static int32_t cvt_clamp(double v)
+static int32_t cvt_clamp(int64_t v)
 {
-    if (v >= 32767.0)
+    if (v > 32767)
         return 32767;
-    if (v <= -32768.0)
+    if (v < -32768)
         return -32768;
-    return (int32_t)(v < 0 ? -(double)(long)(-v + 0.5) : (double)(long)(v + 0.5));
+    return (int32_t)v;
 }
 
 uint32_t pcm_resample(PcmResampler *r, const int32_t *src, uint32_t n,
@@ -395,7 +526,6 @@ uint32_t pcm_resample(PcmResampler *r, const int32_t *src, uint32_t n,
     while ((int64_t)at < (int64_t)n * r->to) {
         int32_t i = at / r->to;
         int32_t rem = at - i * r->to;
-        double  f = (double)rem / (double)r->to;
 
         switch (r->method) {
         case CVT_ZEROS:
@@ -403,24 +533,29 @@ uint32_t pcm_resample(PcmResampler *r, const int32_t *src, uint32_t n,
             break;
 
         case CVT_LINEAR: {
-            double a = (double)cvt_tap(r, src, n, i - 1);
-            double b = (double)cvt_tap(r, src, n, i);
+            int64_t a = cvt_tap(r, src, n, i - 1);
+            int64_t b = cvt_tap(r, src, n, i);
 
-            out[made] = cvt_clamp(a + (b - a) * f);
+            out[made] = cvt_clamp(fx_div(a * r->to + (b - a) * rem, r->to));
             break;
         }
 
         case CVT_CUBIC: {
-            /* Catmull-Rom through four, curving between the middle two. */
-            double p0 = (double)cvt_tap(r, src, n, i - 3);
-            double p1 = (double)cvt_tap(r, src, n, i - 2);
-            double p2 = (double)cvt_tap(r, src, n, i - 1);
-            double p3 = (double)cvt_tap(r, src, n, i);
+            /* Catmull-Rom through four, curving between the middle two, with
+               the fraction in units of 2^-16: as an exact fraction its cube
+               would not fit in sixty-four bits at every rate a caller may
+               name. */
+            int64_t p0 = cvt_tap(r, src, n, i - 3);
+            int64_t p1 = cvt_tap(r, src, n, i - 2);
+            int64_t p2 = cvt_tap(r, src, n, i - 1);
+            int64_t p3 = cvt_tap(r, src, n, i);
+            int64_t f = fx_div((int64_t)rem << 16, r->to);
+            int64_t v = ((2 * p0 - 5 * p1 + 4 * p2 - p3) << 16)
+                      + (3 * (p1 - p2) + p3 - p0) * f;
 
-            out[made] = cvt_clamp(
-                p1 + 0.5 * f * ((p2 - p0)
-                    + f * ((2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3)
-                        + f * (3.0 * (p1 - p2) + p3 - p0))));
+            v = ((p2 - p0) << 16) + fx_shift(v * f, 16);
+            v = fx_shift(v * f, 16);
+            out[made] = cvt_clamp(fx_shift((p1 << 17) + v, 17));
             break;
         }
 
@@ -428,27 +563,16 @@ uint32_t pcm_resample(PcmResampler *r, const int32_t *src, uint32_t n,
             /* The window sits on the position, and the position is behind
                the newest sample by half the window, so every sample it
                reaches has already been handed over. */
-            double acc = 0.0, weight = 0.0;
-            int32_t j;
+            const int32_t *w = r->weights
+                             + (size_t)cvt_place(r, rem)
+                               * (size_t)(2 * r->reach);
+            int64_t acc = 0;
+            int32_t k;
 
-            for (j = -2 * r->half + 1; j <= 0; j++) {
-                double w = cvt_weight(r, (double)(j + r->half) - f);
-
-                acc += w * (double)cvt_tap(r, src, n, i + j);
-                weight += w;
-            }
-            /* Divided by what the weights actually came to rather than
-               trusting them to come to one.
-
-               They do come to one, near enough: over every fraction of a
-               sample the worst departure is two parts in a hundred thousand,
-               which is three quarters of a count on a full-scale sample, so
-               taking this division out changes nothing anything here can
-               measure. It stays because it makes a level in a level out a
-               property of the arithmetic rather than of the particular
-               window and cutoff above it, and those are numbers somebody
-               will want to change. */
-            out[made] = cvt_clamp(weight != 0.0 ? acc / weight : 0.0);
+            for (k = 0; k < 2 * r->reach; k++)
+                acc += (int64_t)w[k]
+                       * cvt_tap(r, src, n, i - 2 * r->reach + 1 + k);
+            out[made] = cvt_clamp(fx_shift(acc, 30));
             break;
         }
 
@@ -544,7 +668,10 @@ THIS int32_t pcm_cvt_setDest(AudioConverter *c, void *fmt)
 {
     int32_t to = (int32_t)((WaveFormat *)fmt)->rate;
 
-    if (c->walk.from <= 0 || to < c->walk.from)
+    /* Lowered only from the wideband voice's rate to sixteen thousand, and
+       only by the sinc: the other ways are ways of filling in between
+       samples and have nothing to say about taking some away. */
+    if (c->walk.from <= 0 || 2 * to < c->walk.from)
         return -1;
 
     {
@@ -553,7 +680,9 @@ THIS int32_t pcm_cvt_setDest(AudioConverter *c, void *fmt)
         int32_t from = c->walk.from;
 
         pcm_resample_end(&c->walk);
-        return pcm_resample_start(&c->walk, from, to, cvt_method()) ? 0 : -1;
+        return pcm_resample_start(&c->walk, from, to,
+                                  to < from ? CVT_SINC : cvt_method())
+               ? 0 : -1;
     }
 }
 

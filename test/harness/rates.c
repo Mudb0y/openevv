@@ -285,6 +285,7 @@ static const struct { int32_t from; int32_t to; } RATIOS[] = {
     { 11025, 44100 },   /* and a wider whole one */
     { 11025, 16000 },   /* and the uneven ones */
     { 11025, 48000 },
+    { 22050, 16000 },   /* and lowering, which only the sinc does */
 };
 
 #define RATIO_COUNT ((int)(sizeof RATIOS / sizeof RATIOS[0]))
@@ -300,6 +301,9 @@ static int unitChecks(void)
             uint32_t n = 1000, whole, made, at;
             uint32_t i;
             int32_t delay;
+
+            if (to < from && METHODS[m].method != CVT_SINC)
+                continue;
 
             /* A held level, then a straight line, so both properties are in
                the one run and the join between them is exercised too.

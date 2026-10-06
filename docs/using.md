@@ -164,7 +164,7 @@ Ten languages are in the tree: US and British English, German, Castilian and Ame
 
 The default is 11,025 hertz and that is what Eloquence has always sounded like. `eciSetParam(h, eciSampleRate, n)` takes nought to six for 8,000, 11,025, 22,050, 16,000, 32,000, 44,100 and 48,000, or any number of 8,000 or more as a rate in hertz.
 
-Above 11,025 the engine goes on synthesising at 11,025 and the rate is raised from there, so the voice is the same one at every setting rather than a different one at each. `docs/notes/sample-rates.md` says why that is better than synthesising at the higher rate, and it is not a shortcut: synthesised outright above 11,025 the engine loses up to 24 dB through the consonant band, for a reason in the Klatt design rather than in this port.
+Above 11,025 the engine goes on synthesising at 11,025 and the rate is raised from there, so the voice is the same one at every setting rather than a different one at each. `docs/notes/sample-rates.md` says why that is better than synthesising at the higher rate, and it is not a shortcut: synthesised outright above 11,025 the engine loses up to 24 dB through the consonant band, for a reason in the Klatt design rather than in this port. What a higher rate can add without that loss is the wideband voice, which `eciWideband` turns on: the same voice below about 5.4 kHz and a second synthesiser's top above it. `docs/api.md` says what it costs.
 
 Four environment variables reach the engine from outside and are worth knowing exist, since they work on a library as well as on the command. `EVV_UPSAMPLE` chooses how a rate is raised -- `sinc` by default, or `cubic`, `linear`, `hold`, `zeros`, or `none` to synthesise at the rate instead. `EVV_SINC_CUTOFF` and `EVV_SINC_TAPS` move where the sinc stops passing the band and over how many samples. `EVV_ARENA_TRACE` reports what the engine's low memory region is holding.
 
@@ -182,4 +182,4 @@ Three things in this tree are worth running against a program that embeds the en
 
 `test/lib/langs.py build/libeci.so` speaks every language the build has from one process and holds each against what it says alone. That is the check for anything that has quietly stayed global.
 
-`make matrix` is the engine's own gate -- 997 cases over ten languages -- and it wants neither Wine nor IBM's objects. If you have changed anything under `src` or `lang`, that is what says whether it moved.
+`make matrix` is the engine's own gate -- 1,073 cases over ten languages -- and it wants neither Wine nor IBM's objects. If you have changed anything under `src` or `lang`, that is what says whether it moved.

@@ -26,6 +26,7 @@
 #include "eci_synththread.h"
 #include "klatt_state.h"
 #include "klatt_rates.h"
+#include "klatt_wide.h"
 #include "evv_abi.h"
 #include "evv_arena.h"
 #include "delta.h"
@@ -74,6 +75,8 @@ typedef delta_state DeltaThis;
 #define DL_BUILT_RATE(l)  ((l)->built_rate)
 #define DL_BUILT_EX(l)    ((l)->built_ex)
 #define DL_BUILT_CO(l)    ((l)->built_co)
+#define DL_WIDE_WANTED(l) ((l)->wide_wanted)
+#define DL_WIDE(l)        ((l)->wide)
 #define DL_BYTES          sizeof(DeltaLang)
 
 /* What the language record keeps of the last utterance: the synthesiser's
@@ -134,6 +137,8 @@ void finishSynthesis(DeltaThis *d)
     SynthDevice *dev = DL_DEVICE(lang);
 
     KlattClose(DL_KLATT(lang));
+    if (DL_WIDE(lang))
+        klatt_wide_close(DL_WIDE(lang));
     SD_UNKNOWN_2C(dev) = 0;
     SD_LAST_CLOCK(dev) = clock();
     SD_PLAYING(dev) = 0;
@@ -377,6 +382,8 @@ void dlang_delete(DeltaThis *d)
     lang = DT_LANG(d);
     deleteOutputDevice(d);
     klatt_delete(DL_KLATT(lang));
+    klatt_wide_delete(DL_WIDE(lang));
+    DL_WIDE(lang) = 0;
     stmarray_delete(d);
 
     if (DL_DEVICE(lang)) {
@@ -746,14 +753,30 @@ typedef void (*SampleFn)(uint32_t n, int32_t *samples, void *data);
 int ourKlattCallback(void *user, KlattSamples *s)
 {
     DeltaThis *d = (DeltaThis *)user;
-    SynthDevice *dev = DL_DEVICE(DT_LANG(d));
+    DeltaLang *lang = DT_LANG(d);
+    SynthDevice *dev = DL_DEVICE(lang);
     void *q = SD_QUEUE(dev);
     int32_t done = 0;
+    KlattSamples wide;
 
     /* Held: wait, but keep looking for a reason to give up. */
     while (SD_HOLD(dev)) {
         if (checkInterrupt(d))
             return 0;
+    }
+
+    /* The wideband voice goes on from here as its own stream, at twice the
+       rate, and the marks are timed against that. */
+    if (DL_WIDE(lang)) {
+        int32_t made;
+        const int32_t *mixed = klatt_wide_mix(DL_WIDE(lang), s->samples,
+                                              s->count, &made);
+
+        if (mixed == 0)
+            return 0;
+        wide.count = made;
+        wide.samples = (int32_t *)mixed;
+        s = &wide;
     }
 
     while (done < s->count) {
@@ -800,6 +823,28 @@ int setNativeSampleRate(DeltaThis *d, int32_t hz)
     lang = DT_LANG(d);
     DL_NATIVE_RATE(lang) = hz;
     return 1;
+}
+
+/* Whether the caller wants the wideband voice. Like the rate, it is read at
+   the top of every utterance rather than acted on here. */
+int setWidebandSynthesis(DeltaThis *d, int32_t on)
+{
+    if (!d || !DT_LANG(d))
+        return 0;
+    DL_WIDE_WANTED(DT_LANG(d)) = on != 0;
+    return 1;
+}
+
+/* One frame to the synthesiser, and first to the companion when the
+   wideband voice is in force: its samples have to be waiting when the
+   partner's arrive to be joined to them. */
+int klattSynthFrame(DeltaThis *d, const int32_t *frame)
+{
+    DeltaLang *lang = DT_LANG(d);
+
+    if (DL_WIDE(lang) && !klatt_wide_frame(DL_WIDE(lang), frame))
+        return 0;
+    return KlattSynth(DL_KLATT(lang), frame);
 }
 
 /* Put the two resonator tables for this rate in front of the synthesiser.
@@ -871,9 +916,11 @@ int synthesize(DeltaThis *d, void *buf, int32_t isArray, int32_t *streamA,
     KlattConstParms cp;
     LastGlob *last;
     int32_t duration;
+    int32_t outRate;
     int wasIdle;
     int changed = 0;
     int finish = 0;
+    int wide;
     int rc;
 
     SD_INTERRUPTED(dev) = 1;
@@ -945,9 +992,16 @@ int synthesize(DeltaThis *d, void *buf, int32_t isArray, int32_t *streamA,
     if (rate && DL_NATIVE_RATE(lang))
         rate = DL_NATIVE_RATE(lang);
 
+    /* The wideband voice is this rate's synthesiser with a companion
+       beside it, so it is in force only where the utterance runs at the
+       companion's partner rate. What leaves here is the companion's rate
+       then, and everything that counts samples counts those. */
+    wide = DL_WIDE_WANTED(lang) && rate == WIDE_PARTNER;
+    outRate = wide ? WIDE_RATE : rate;
+
     if (rate) {
         cp.sample_rate = rate;
-        DL_RATE(lang) = rate;
+        DL_RATE(lang) = outRate;
     }
     if (nFormants)
         cp.n_formants = nFormants;
@@ -963,7 +1017,11 @@ int synthesize(DeltaThis *d, void *buf, int32_t isArray, int32_t *streamA,
         a7 = 5;
 
     last = (LastGlob *)DL_BUF_140(lang);
-    if (cp.sample_rate != last->cp.sample_rate
+    /* Turning the companion on or off starts both synthesisers afresh, so
+       that the two begin from the same instant and never from two
+       histories. */
+    if (wide != (DL_WIDE(lang) != 0)
+        || cp.sample_rate != last->cp.sample_rate
         || cp.n_formants != last->cp.n_formants
         || cp.unknown_2c != last->cp.unknown_2c
         || cp.unknown_24 != last->cp.unknown_24
@@ -1014,11 +1072,25 @@ int synthesize(DeltaThis *d, void *buf, int32_t isArray, int32_t *streamA,
             return 0;
         }
         KlattSetConstParms(DL_KLATT(lang), cp);
+
+        if (!wide) {
+            klatt_wide_delete(DL_WIDE(lang));
+            DL_WIDE(lang) = 0;
+        } else {
+            if (!DL_WIDE(lang))
+                DL_WIDE(lang) = klatt_wide_new();
+            if (!DL_WIDE(lang) || !klatt_wide_setup(DL_WIDE(lang), cp)) {
+                SD_PLAYING(dev) = 0;
+                SD_INTERRUPTED(dev) = 0;
+                return 0;
+            }
+        }
         SD_OPEN(dev) = 0;
     }
 
     if (!SD_OPEN(dev)) {
-        if (!KlattOpen(DL_KLATT(lang))) {
+        if (!KlattOpen(DL_KLATT(lang))
+            || (DL_WIDE(lang) && !klatt_wide_open(DL_WIDE(lang)))) {
             SD_PLAYING(dev) = 0;
             SD_INTERRUPTED(dev) = 0;
             return 0;
@@ -1032,8 +1104,8 @@ int synthesize(DeltaThis *d, void *buf, int32_t isArray, int32_t *streamA,
         SD_PENDING(dev) = (more > duration) ? more : duration;
         if (SD_SAMPLE_CB(dev) && SD_DUR_CB(dev))
             ((void (*)(int32_t, uint32_t, void *))SD_DUR_CB(dev))(
-                SD_PENDING(dev) * rate / MS_PER_SECOND,
-                (uint32_t)(a5 * rate) / MS_PER_SECOND,
+                SD_PENDING(dev) * outRate / MS_PER_SECOND,
+                (uint32_t)(a5 * outRate) / MS_PER_SECOND,
                 SD_DUR_DATA(dev));
     } else {
         SD_PENDING(dev) = 0;
@@ -1041,6 +1113,8 @@ int synthesize(DeltaThis *d, void *buf, int32_t isArray, int32_t *streamA,
     }
 
     klattSetVolumeMultiplier(DL_KLATT(lang), volume);
+    if (DL_WIDE(lang))
+        klatt_wide_volume(DL_WIDE(lang), volume);
 
     if (isArray)
         rc = sendArrayParameters(d, from, to, SD_LAZY_WRITE(dev), wasIdle,

@@ -1,9 +1,14 @@
 # What this engine says, case by case, for jajp.
 #
-# Every line was blessed by IBM's own binary: the whole
-# differential suite was run for this language
-# immediately before these were written, and every case
-# matched. See docs/testing.md.
+# Every line was blessed by IBM's own binary when it was
+# first written: the whole differential suite was run
+# for this language immediately before, and every case
+# matched. A case a deliberate divergence has moved or
+# added since is this engine's answer and not IBM's;
+# docs/quirks.md names them. See docs/testing.md.
+#
+# The wide cases are the wideband voice, which IBM never
+# made: an ear blessed them, not an original.
 #
 # Written by test/matrix.sh record. One line a case:
 # the category, which case in it, the first sixteen hex of
@@ -108,3 +113,10 @@ ssml 7 78f5ce1483ebf414 6054879eb5b494cc <speak version="1.0" xml:lang="ja-JP">ç
 ssml 8 d8de1f9f8b3f5854 9dbec095346406a3 <speak version="1.0" xml:lang="ja-JP">å°‘ã—<break time="500ms"/>å¾…ã£ã¦ãã ã•ã„ã€‚<mark name="ã“ã“"/> ãã“ã€‚</speak>
 ssml 9 3bf54be0137aee17 20857657d5d143d4 <speak version="1.0" xml:lang="ja-JP"><sub alias="ä¸–ç•Œè¦æ¨¡ã®ç¶²">WWW</sub> ã¨ <phoneme ph="h.E.l.oU">ã“ã‚“ã«ã¡ã¯</phoneme>ã€‚</speak>
 ssml 10 1da799c48cd80ea2 ac0e3f98bbc1eaf6 <speak version="1.0" xml:lang="ja-JP">æ±äº¬éƒ½æ–°å®¿åŒºã€a &amp; b &lt; c ã®è¨˜å·ã¤ãã€‚</speak>
+wide 1 33c4c6a8648ac33b 23327c1fc18eca80 ‚±‚ñ‚É‚¿‚ÍB‚¨Œ³‹C‚Å‚·‚©B
+wide 2 85ef0a37dbf3b49a 591b0930c6bfe233 “ú–{Œê‚Ì‰¹º‡¬‚ğƒeƒXƒg‚µ‚Ä‚¢‚Ü‚·B
+wide 3 92d9859dd2ee75cd b4cfcedb95599973 ¡“ú‚Í1999”N8Œ27“úAŒßŒã745•ª‚Å‚·B
+wide 4 df30f11ba3e1a8da 928a8c74d5399283 ƒRƒ“ƒsƒ…[ƒ^‚ÆƒCƒ“ƒ^[ƒlƒbƒg‚Ì‹ZpB
+wide 5 facd74b48ee18684 3f24a210d33044f8 IBM ViaVoice ‚Í‰pŒê‚Ì–¼‘O‚Å‚·B
+wide 6 91e884788dabe17d 97cef33e29b2c2e9 R“c‚³‚ñ‚Í“Œ‹“sVh‹æ‚ÉZ‚ñ‚Å‚¢‚Ü‚·B
+wide 7 3737cf6de2615003 a3ca605b2e41d2c6 konnichiwa. kore wa roomaji desu.

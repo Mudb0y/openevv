@@ -137,7 +137,7 @@ jobs:
         run: test/hash.sh
 
       # The gate: every case of every language, samples and the answers the
-      # interface gave, held against what this engine has said before. 997
+      # interface gave, held against what this engine has said before. 1,073
       # cases, one binary with all ten languages in it, and neither Wine nor
       # IBM's objects wanted. The differential suite that blessed these
       # numbers cannot run here and does not need to.

@@ -50,6 +50,7 @@ extern THIS int32_t st_changeVoice(void *t, int32_t v)
     MANGLED("?changeVoice@SynthThread@@QAEJJ@Z");
 extern THIS int32_t st_setPhonemeIndicies(void *t, int32_t v)
     MANGLED("?setPhonemeIndicies@SynthThread@@QAEJJ@Z");
+extern int32_t st_setWideband(void *t, int32_t v);
 extern THIS int32_t st_changeFilter(void *t, int32_t a, int32_t b, int32_t c,
                                     int8_t d)
     MANGLED("?changeFilter@SynthThread@@QAEJJJJ_N@Z");
@@ -346,6 +347,13 @@ static THIS int32_t setGeneral(ECIstate *s, int32_t p, int32_t v,
             s->param[p] = v;
         }
         return rc;
+
+    /* Ours, and only the thread keeps it: the older interface answers for
+       it from its own instance. */
+    case ECI_PARAM_WIDEBAND:
+        if (v < 0 || v > 1)
+            return ECI_BAD_PARAM;
+        return st_setWideband(thread, v);
 
     case 19:
         return st_changeFilter(thread, p, v, extra, 0);

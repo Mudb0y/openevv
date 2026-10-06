@@ -647,6 +647,17 @@ int32_t STDCALL ev_setParam(OldInst *h, int32_t which, int32_t value)
     if (!inst)
         goto done;
 
+    if (which == ECI_OLD_WIDEBAND) {
+        if (value < 0 || value > 1)
+            return -1;
+        if (setECIerror(api_set_param(OI_NEW(inst), 0, ECI_PARAM_WIDEBAND,
+                                      value), inst))
+            return -1;
+        old = inst->wideband;
+        inst->wideband = value;
+        return old;
+    }
+
     if (which >= 0x11)
         return -1;
     if (which == 0x0b)
