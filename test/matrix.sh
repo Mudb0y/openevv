@@ -37,7 +37,8 @@
 #
 # EVV_MATRIX_NATIVE names a binary to drive rather than building one, which is
 # how the Windows build and the thirty-two bit build are checked against the
-# same numbers.
+# same numbers. EVV_JOBS says how many jobs the build it makes otherwise may
+# run, six unless told, since the machine it runs on is usually in use.
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -147,7 +148,7 @@ if [ -z "$native" ]; then
     [ "$want" = "enus" ] && suf=""
     [ -n "$suf" ] && suf=-$suf
     echo "matrix: building a probe with $(printf '%s' "$want" | wc -w) languages in it"
-    make -C "$root" -j"$(nproc)" RULES=bytecode probe LANGS="$langs" >/dev/null \
+    make -C "$root" -j"${EVV_JOBS:-6}" RULES=bytecode probe LANGS="$langs" >/dev/null \
         || { echo "matrix: the build failed" >&2; exit 1; }
     native=$root/build/probe$suf
 fi
