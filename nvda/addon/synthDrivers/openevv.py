@@ -80,6 +80,13 @@ PIECE_CAP = 500
 #: inside a word and no annotation is separated from what it applies to.
 _BOUNDARY = re.compile(r"(\s+)")
 
+#: Which of the voice's settings each prosody command moves.
+_PROSODY_PARAMS = {
+	PitchCommand: _openevv.VOICE_PITCH,
+	RateCommand: _openevv.VOICE_SPEED,
+	VolumeCommand: _openevv.VOICE_VOLUME,
+}
+
 #: Closing marks which may follow sentence-final punctuation.
 _CLOSERS = "\"')]}\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}\N{RIGHT DOUBLE QUOTATION MARK}\N{RIGHT SINGLE QUOTATION MARK}"
 
@@ -134,6 +141,8 @@ class SynthDriver(SynthDriver):
 		# Translators: Label for a setting in voice settings dialog.
 		BooleanDriverSetting("abbreviations", _("Expand a&bbreviations"), False),
 		# Translators: Label for a setting in voice settings dialog.
+		BooleanDriverSetting("phrasePrediction", _("Phrase predi&ction"), False),
+		# Translators: Label for a setting in voice settings dialog.
 		BooleanDriverSetting("voiceTags", _("Allow backquote voice &tags"), False),
 		# Translators: Label for a setting in voice settings dialog.
 		DriverSetting("samplerate", _("Sa&mple rate"), False),
@@ -159,6 +168,7 @@ class SynthDriver(SynthDriver):
 	def __init__(self):
 		self._rateBoost = False
 		self._abbreviations = False
+		self._phrasePrediction = False
 		self._voiceTags = False
 		self._engine = _openevv.Engine(self._onIndexReached)
 		self._engine.open()
@@ -176,7 +186,11 @@ class SynthDriver(SynthDriver):
 		#: reader says is one piece; a long one is several, so that asking for
 		#: silence waits out a piece and not the whole of it.
 		pieces = []
-		batch = []
+		# Phrase prediction is the instance's own state and is said again at
+		# the head of every utterance rather than once: an utterance that set
+		# it can be dropped by a cancel before it starts, and nothing would
+		# then say it never happened.
+		batch = [(engine.addText, (b"`pp1 " if self._phrasePrediction else b"`pp0 ",))]
 		text = []
 		spelling = False
 		#: Prosody annotations which have not yet been restored to the reader's
@@ -322,6 +336,17 @@ class SynthDriver(SynthDriver):
 		if switched:
 			engine.control([(engine.selectLanguage, (home, self._presetNow()))])
 
+		# The same for a rate, pitch or volume the sequence never changed back.
+		# NVDA ends an utterance after each spelled character and sends the
+		# change back as an utterance of its own, which the next keystroke
+		# cancels before it reaches here, so a typing rate set for one
+		# character would otherwise stay for everything after it.
+		if prosody:
+			engine.control([(
+				engine.restoreVoiceParams,
+				(tuple(sorted(_PROSODY_PARAMS[command] for command in prosody)),),
+			)])
+
 	def _processText(self, text):
 		if not self._voiceTags:
 			# A backtick starts an annotation, so ordinary text carrying one
@@ -439,6 +464,12 @@ class SynthDriver(SynthDriver):
 		self._engine.control(
 			[(self._engine.setParam, (_openevv.PARAM_DICTIONARY, 0 if enable else 1))],
 		)
+
+	def _get_phrasePrediction(self):
+		return self._phrasePrediction
+
+	def _set_phrasePrediction(self, enable):
+		self._phrasePrediction = enable
 
 	def _get_voiceTags(self):
 		return self._voiceTags

@@ -656,6 +656,22 @@ class Engine:
 		self._dll.eciSetVoiceParam(self._instance, 0, which, value)
 		self.voiceParams[which] = value
 
+	def restoreVoiceParams(self, which):
+		"""Put these settings back to what the reader chose.
+
+		An annotation in the text changes the voice itself and not only the
+		stretch it sits in, so an utterance cut off before its change back
+		leaves every utterance after it changed. What the reader chose is read
+		here, on this thread, because a setting asked for while the utterance
+		waited reaches voiceParams in the queue's order: read when the
+		utterance was handed over, the old value would be put back over it.
+		"""
+		for param in which:
+			if param in self.voiceParams:
+				self._dll.eciSetVoiceParam(
+					self._instance, 0, param, self.voiceParams[param]
+				)
+
 	def copyVoice(self, number):
 		if not self._dll.eciCopyVoice(self._instance, number, 0):
 			log.debugWarning("openevv: the engine refused voice %d" % number)

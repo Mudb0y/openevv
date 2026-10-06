@@ -234,6 +234,33 @@ def control_checks():
     engine.close()
 
 
+def restore_checks():
+    """What an annotation left changed is put back to the reader's choice."""
+    dll = FakeDll()
+    players = []
+    mod = engine_module(dll, players)
+
+    engine = mod.Engine(lambda index: None)
+    engine.open()
+
+    engine.setVoiceParam(mod.VOICE_SPEED, 80)
+    # What a `vs in an utterance cut off before its change back leaves.
+    dll.voiceParams[mod.VOICE_SPEED] = 150
+    dll.voiceParams[mod.VOICE_PITCH] = 90
+    engine.restoreVoiceParams((mod.VOICE_SPEED,))
+    check("a rate left changed is put back to the reader's",
+          dll.voiceParams[mod.VOICE_SPEED], 80)
+    check("and what it was not asked to put back is left alone",
+          dll.voiceParams[mod.VOICE_PITCH], 90)
+
+    engine.setVoiceParam(mod.VOICE_SPEED, 95)
+    dll.voiceParams[mod.VOICE_SPEED] = 150
+    engine.restoreVoiceParams((mod.VOICE_SPEED,))
+    check("and it is the reader's latest, read when it runs",
+          dll.voiceParams[mod.VOICE_SPEED], 95)
+    engine.close()
+
+
 def samplerate_checks():
     """Changing the rate has to move the player with it, or not at all.
 
@@ -736,6 +763,7 @@ def main():
     check("and the player was closed", player.closed, 1)
 
     control_checks()
+    restore_checks()
     samplerate_checks()
     wideband_checks()
     stall_checks()
