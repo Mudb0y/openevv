@@ -112,10 +112,6 @@ int KlattSynth(void *handle, const int32_t *parms)
        what tools/measure/klatttap.c is for. */
     evv_klatt_tap(parms);
 
-    /* Which resonator arithmetic this rate wants, decided here because this
-       is where the rate is known and the filters are about to be run. */
-    klatt_wide_enable(k->cp.sample_rate);
-
     k->unknown_0010++;
 
     n_samples = mul32(mul32(parms[P_UI], k->cp.unknown_00), k->cp.sample_rate)
