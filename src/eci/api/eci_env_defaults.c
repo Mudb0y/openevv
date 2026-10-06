@@ -30,7 +30,11 @@ int32_t g_DefaultEnvironment[0x12] = {
     0,
     0,            /* language, meaning whichever is first */
     1,            /* number mode */
-    1,
+    /* Phrase prediction, which IBM shipped on and which is off here: the
+       breaks it guesses at in a stretch with no punctuation are pauses a
+       listener cannot predict from the text. `pp1 or
+       eciSetDefaultParam(11, 1) asks for it. */
+    0,
     0,            /* romanizer off */
     10,           /* the four the caller sees as the environment proper */
     2200,

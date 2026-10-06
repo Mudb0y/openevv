@@ -24,21 +24,21 @@ plain 6 0868c08ddbf8f5c1 c9e541dda574dd73 Rechtschreibpruefung, Donaudampfschiff
 plain 7 be533e7952525711 7ca22f1b16765da4 Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.
 utf8 1 5132604b497b64d2 e0c22b19018cc8db Strasse, Gruesse, Mueller, Koeln, Weiss.
 utf8 2 5134c1147acf358c 91287eb8e86d05d7 Straße, Grüße, Müller, Köln, Weiß.
-utf8 3 153615a797b3e3cf 80e62a2614c80050 Über den Fluss und durch den Wald zur Großmutter.
+utf8 3 868a2a54d07420ff 9976900b6ac287dc Über den Fluss und durch den Wald zur Großmutter.
 utf8 4 061e771e13b0550c 83b10e55a872c3b7 Ärzte, Öfen, Übungen, Äpfel, Öl und Übermut.
 utf8 5 fd9290d188402007 f6765b721d05540c Der Weißkopfseeadler fliegt über die schöne Landschaft.
 utf8 6 59c6c0861f4201b5 ea6be8eaf0b7ee2f Ein Satz ganz ohne Umlaute zum Vergleich.
 anno 1 6854c20ed24dd8f4 a49315262a2086e4 Normale Sprache `vs50 jetzt viel langsamer als zuvor.
 anno 2 af315ec89b5087f5 7208d28455cf952b Lautstaerke `vv30 leiser, dann `vv90 wieder lauter.
-anno 3 73a9e69322407a31 f4f517cc2744b72d Tonhoehe `vb20 tief und `vb80 hoch in einem Satz.
+anno 3 f7cd591522cc72d0 1b2b66ab9c69ba9c Tonhoehe `vb20 tief und `vb80 hoch in einem Satz.
 anno 4 774e678797e82b60 d40b2be4dfd44bac Stimme `v2 zwei, `v5 fuenf, und `v1 zurueck zu eins.
-anno 5 dffda46e2a67b845 acf64b1257545cfa Eine Pause `0 kurz und `4 lang zwischen Woertern.
-anno 6 63badb669854b28e 65587a98f443d1dc Rauheit `vr40 und Behauchtheit `vf60 geaendert.
+anno 5 0f418806c8127c68 c30f43bcd4c4e323 Eine Pause `0 kurz und `4 lang zwischen Woertern.
+anno 6 896b76bb3d2f00ce 9a3c0b7030e71790 Rauheit `vr40 und Behauchtheit `vf60 geaendert.
 anno 7 c15afd9281ab39d3 7ddeefe0dc2e6699 Ein woertlicher \`Backtick soll als Text gesprochen werden.
-anno 8 93c24998dd73ca89 9d3aad3520a374f5 Tempo mit Namen `vsfast und dann wieder `vsslow.
+anno 8 a04450178f0db1ff 4f532519ca22bde4 Tempo mit Namen `vsfast und dann wieder `vsslow.
 anno 9 4bf2e84c0917779e aae7a3c914061937 Kopfgroesse `vh30 dann `vh70 in derselben Zeile.
-anno 10 62088c99d71da03c 3ff15304a874af3b Geschlecht `vg1 und `vg0 im Wechsel.
-anno 11 c6193f623f707939 6433910a2cdb6679 Vor `ui"Marke eins" und nach der Indexmarke.
+anno 10 776b1c383c60f643 068623ac3f318e03 Geschlecht `vg1 und `vg0 im Wechsel.
+anno 11 6b7021a23fef52cd 714cf59d89d6e1dc Vor `ui"Marke eins" und nach der Indexmarke.
 anno 12 faa7c0e8e1b11891 ad019d1342e639e9 Ton `aud"beep" Markierung mitten in einer Zeile.
 anno 13 d422a0f9ac7f9824 3fd9766eb04ef29d `vs40 Eine Annotation gleich ganz am Anfang.
 anno 14 83ea41770e7a5901 5f2f637fa1d24e43 Eine Zeile, die mit einer Annotation endet `vs60
@@ -50,7 +50,7 @@ anno 19 fab8807e46031b73 04a41fa8ea858bc0 Gemischt `v3 Stimme `vs70 Tempo `vv50 
 anno 20 c2934f60e0bf038a 3f9c0441d7f208ed Tabulator	und Zeilenumbruch mit `vb40 einer Aenderung.
 anno3 1 e719251ab208de73 400db429ef9c26c1 Normale Sprache `vs50 jetzt viel langsamer als zuvor.
 anno3 2 018ae6d2a9014db3 14215475306df6e8 Lautstaerke `vv30 leiser, dann `vv90 wieder lauter.
-anno3 3 a7a68cd5435ad23f 0cc99da06731ba10 Tonhoehe `vb20 tief und `vb80 hoch in einem Satz.
+anno3 3 07807da93ab6354a fab67be036583ce4 Tonhoehe `vb20 tief und `vb80 hoch in einem Satz.
 anno3 4 04bf481b81f81947 7b15ed824636cd0d Stimme `v2 zwei, `v5 fuenf, und `v1 zurueck zu eins.
 anno3 5 02a9a98f269bd1da d3055dde6e7f2fc8 Eine Pause `0 kurz und `4 lang zwischen Woertern.
 anno3 6 d544cb15cacd26a1 d6249ff50d55ef7a Rauheit `vr40 und Behauchtheit `vf60 geaendert.
@@ -70,7 +70,7 @@ anno3 19 aadf9f74c32e65da a4207e02e121cd3b Gemischt `v3 Stimme `vs70 Tempo `vv50
 anno3 20 78f83c2ad17da1f8 ff574bf56cb06421 Tabulator	und Zeilenumbruch mit `vb40 einer Aenderung.
 realworld 1 8e8460eca8b69083 6556c471afeb906e Normale Sprache `vs50 jetzt viel langsamer als zuvor.
 realworld 2 0e8fd6ea0743b261 e945be2413278b24 Lautstaerke `vv30 leiser, dann `vv90 wieder lauter.
-realworld 3 134b3099138a2a68 72869a5ea268fd86 Tonhoehe `vb20 tief und `vb80 hoch in einem Satz.
+realworld 3 6ea4b58bca0a2f2e 627404beecad4290 Tonhoehe `vb20 tief und `vb80 hoch in einem Satz.
 realworld 4 04bf481b81f81947 f73c5082d7cbe7d7 Stimme `v2 zwei, `v5 fuenf, und `v1 zurueck zu eins.
 realworld 5 02a9a98f269bd1da 98fe1b92b3a0eb52 Eine Pause `0 kurz und `4 lang zwischen Woertern.
 realworld 6 d544cb15cacd26a1 7599f2895d6417d7 Rauheit `vr40 und Behauchtheit `vf60 geaendert.

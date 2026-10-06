@@ -70,6 +70,7 @@ int      STDCALL ed_loadDict(OldInst *h, void *dict, int32_t which,
 int      STDCALL ed_deleteDict(OldInst *h, void *dict);
 int      STDCALL eo_speaking(OldInst *h);
 int      STDCALL eo_getAvailableLanguages(uint32_t *out, int *count);
+int32_t  STDCALL es_setDefaultParam(int32_t which, int32_t value);
 
 void evvRunStaticInitialisers(void);
 void evv_port_start(void);
@@ -281,7 +282,12 @@ int main(int argc, char **argv)
            nothing set the engine picks, which is the first one linked. */
         {
             const char *want = getenv("EVV_LANGUAGE");
+            const char *pp = getenv("EVV_PHRASE_PREDICTION");
 
+            /* Phrase prediction is off here and on in IBM's engine, so
+               test/compare.sh asks for it whenever ours is held to IBM's. */
+            if (pp != NULL && *pp != 0)
+                es_setDefaultParam(11, atoi(pp));
             if (want != NULL && *want != 0)
                 h = eo_newEx((uint32_t)strtoul(want, NULL, 0));
             else

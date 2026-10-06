@@ -36,10 +36,10 @@ anno 4 f556a720b4f36f90 a23eebb2832b7bd1 Voce `v2 due, `v5 cinque, e `v1 di nuov
 anno 5 bcdb0536269595c8 3ce728c6a0aaa6aa Una pausa `0 breve e `4 lunga tra le parole.
 anno 6 3bc5386232af9178 3100de1442fc34a1 Ruvidezza `vr40 e soffio `vf60 modificati.
 anno 7 6661367fa7ddbd8f 488ecbe16cacb550 Un accento grave \`letterale va letto come testo.
-anno 8 a273d306ac43532f 96a2d988c97a18c4 Velocita per nome `vsfast e poi `vsslow di nuovo.
+anno 8 676c0a22783952d2 e522daaf79bdb3d4 Velocita per nome `vsfast e poi `vsslow di nuovo.
 anno 9 62332384eeb6a073 9b78f3f55147d056 Dimensione della testa `vh30 e poi `vh70 nella stessa riga.
-anno 10 11daf50ce2f31665 503d98e4cab6b734 Genere `vg1 e `vg0 che si alternano.
-anno 11 8e43aac637769d15 07586270e014a874 Prima di `ui"segno uno" e dopo il segno.
+anno 10 1f6181bf9bf42546 1e229636f68443af Genere `vg1 e `vg0 che si alternano.
+anno 11 e2d363d0ea3f9fe5 f44ebaddfcf5dc23 Prima di `ui"segno uno" e dopo il segno.
 anno 12 588c4445bb26dee3 d9025c0c103c9072 Marcatore audio `aud"bip" in mezzo a una riga.
 anno 13 2051bd481d66f0c4 fbb5639522069c78 `vs40 Un'annotazione proprio all'inizio di tutto.
 anno 14 702ffd78c96225d4 b4460c401c04a0c0 Che termina con un'annotazione proprio alla fine `vs60
@@ -51,13 +51,13 @@ anno 19 d2e6b5f03242a184 7be965808f096384 Insieme `v3 voce `vs70 velocita `vv50 
 anno 20 fa21b477c7137f3a f4d3dd64320cc254 Tabulazione	e ritorno a capo con `vb40 un cambio.
 anno3 1 2a95f77b0ed5feb5 e217db6e1d5c3c01 Voce normale `vs50 ora molto piu lenta di prima.
 anno3 2 0cc6e77c7bfc7614 87c554c959e821bb Volume `vv30 piu basso, poi `vv90 piu alto di nuovo.
-anno3 3 7fd2577efaf939e4 b76d2f3820eae6da Altezza `vb20 grave e `vb80 acuta in una sola frase.
+anno3 3 726a72b6ef0c221e ee042597671d6efd Altezza `vb20 grave e `vb80 acuta in una sola frase.
 anno3 4 53a289e1b38d453c e3d46b0ce44d775a Voce `v2 due, `v5 cinque, e `v1 di nuovo uno.
 anno3 5 96affb493779002c 070134f7274d38c0 Una pausa `0 breve e `4 lunga tra le parole.
 anno3 6 0b009df4dd4e5e2a 8fddf9f840144301 Ruvidezza `vr40 e soffio `vf60 modificati.
 anno3 7 6661367fa7ddbd8f cc906020e310bd5f Un accento grave \`letterale va letto come testo.
 anno3 8 1e79c0e09aa9469f 4575be477a8681ef Velocita per nome `vsfast e poi `vsslow di nuovo.
-anno3 9 ca03b04d0f69de33 573f7513ef76721c Dimensione della testa `vh30 e poi `vh70 nella stessa riga.
+anno3 9 b9a4141c2728799f 2b4ff507732955f6 Dimensione della testa `vh30 e poi `vh70 nella stessa riga.
 anno3 10 bcb3b7405f3110b5 124d05448a1f716e Genere `vg1 e `vg0 che si alternano.
 anno3 11 002978af6b3c5a0e b0203a99b16d2d95 Prima di `ui"segno uno" e dopo il segno.
 anno3 12 0ed51f695f20ab13 b5328ae53c833773 Marcatore audio `aud"bip" in mezzo a una riga.
@@ -71,13 +71,13 @@ anno3 19 3796a6c5372ccb58 aae960ac9e748397 Insieme `v3 voce `vs70 velocita `vv50
 anno3 20 3bdd8971a6f10cec c48519f63812ac7f Tabulazione	e ritorno a capo con `vb40 un cambio.
 realworld 1 c9a519b2d92c9775 8a1389b5d048fc74 Voce normale `vs50 ora molto piu lenta di prima.
 realworld 2 0871463e918bec6c 9a43e868687e2761 Volume `vv30 piu basso, poi `vv90 piu alto di nuovo.
-realworld 3 e9a10a56b08bf9ae 611ccadcc860e269 Altezza `vb20 grave e `vb80 acuta in una sola frase.
+realworld 3 4e4b99837ead4fcf d1065fca1316beae Altezza `vb20 grave e `vb80 acuta in una sola frase.
 realworld 4 53a289e1b38d453c fa07b623ade4e983 Voce `v2 due, `v5 cinque, e `v1 di nuovo uno.
 realworld 5 96affb493779002c 0b822d4da205398c Una pausa `0 breve e `4 lunga tra le parole.
 realworld 6 0b009df4dd4e5e2a 4fd8c9e844e8fee1 Ruvidezza `vr40 e soffio `vf60 modificati.
 realworld 7 6661367fa7ddbd8f f88f7403e8fbe28e Un accento grave \`letterale va letto come testo.
 realworld 8 1e79c0e09aa9469f 4ea8d534a1f61939 Velocita per nome `vsfast e poi `vsslow di nuovo.
-realworld 9 ca03b04d0f69de33 3597cd8abf7cd3be Dimensione della testa `vh30 e poi `vh70 nella stessa riga.
+realworld 9 b9a4141c2728799f 8fbfe3a5adae61cd Dimensione della testa `vh30 e poi `vh70 nella stessa riga.
 realworld 10 bcb3b7405f3110b5 6687ccb9e3af51a7 Genere `vg1 e `vg0 che si alternano.
 realworld 11 002978af6b3c5a0e 81e0a6e315b2d2a0 Prima di `ui"segno uno" e dopo il segno.
 realworld 12 0ed51f695f20ab13 3a4a66cbde7eb072 Marcatore audio `aud"bip" in mezzo a una riga.

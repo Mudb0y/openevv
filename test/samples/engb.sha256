@@ -26,9 +26,9 @@ plain 8 7377f8a434195c98 4c1402534b45dc75 A 5,000-strong crowd raised 1,000,500 
 plain 9 d225dc7cc7b28c8d 0a440b6880b4a778 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
 plain 10 c724ad5b6685ebb9 c3f3e2f7f91a78b4 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 utf8 1 d4ed0685e22cd95f 17313f4fe85e15c4 The café near the naïve façade serves crème brûlée.
-utf8 2 5c1ea00b27728ec0 75a95ab620d2aad9 Señor Muñoz sent a piñata to São Paulo.
+utf8 2 96cc0a051575bdb2 63923401fa9d4ca3 Señor Muñoz sent a piñata to São Paulo.
 utf8 3 cdb5ea6a48277868 fc0482ef124361f7 Zdzisław Świątek mieszka w Świdnicy przy ulicy Żółkiewskiego.
-utf8 4 6f2eea46c9ff8ad2 5a9fd3a6b455338f He said “this” and ‘that’ — costing €20 … or 50‰.
+utf8 4 e6e461ad439f1a7e 6d5cb1654e244274 He said “this” and ‘that’ — costing €20 … or 50‰.
 utf8 5 99aba5ec9794f9ce c7b7d9e2ff11ab15 Œuvres de Škoda, Žižek, Ÿ and ƒ walk into a bar.
 utf8 6 3ce6e6b6e8a5515f 70ff33c2e0923e35 Straße, Grüße, Müller, Köln, Weiß.
 utf8 7 188775a14098f213 cb327d281c667958 A plain line with no accents at all for comparison.
@@ -39,17 +39,17 @@ anno 4 2abcbc7aff9945e6 519cb931f6bf97e4 Voice `v2 two, `v5 five, and `v1 back t
 anno 5 b54b9663f77dd8bf d1bc05c2552762fd A pause `0 short and `4 long between words.
 anno 6 3ea98eaa13e72ef7 15a0f253e6f92490 Roughness `vr40 and breathiness `vf60 changed.
 anno 7 60da670d84ade039 78eedaa9125ec8a7 A literal \`backtick should be spoken as text.
-anno 8 c72869733eaf4b98 c9678432e0f1ff21 Speed by name `vsfast and then `vsslow again.
+anno 8 b138606bea866c8a a3a405d60d934193 Speed by name `vsfast and then `vsslow again.
 anno 9 7490edd9ddf6b6db 929d2ead2169875d Head size `vh30 then `vh70 in the same line.
 anno 10 a6f47ff8121742e8 9c47e48d60508641 Gender `vg1 and `vg0 switching over.
-anno 11 05e3695ce8efd9ee fc9e428936bdfcd6 Before `ui"mark one" and after the index mark.
+anno 11 3118cca46b51c354 fa01daf7dc968784 Before `ui"mark one" and after the index mark.
 anno 12 c41cff90686ec7c3 9426d81a4f3af1fb Audio `aud"beep" marker in the middle of a line.
 anno 13 173bd2755352b6f6 560ec743b76deb06 `vs40 An annotation right at the very beginning.
 anno 14 ca9e85545d66b88c d46341d4357240bf Ending with an annotation at the very end `vs60
 anno 15 7033580dfd4e0ce5 9c52151f446cf926 Malformed `vzz and `q and `v999 all in one line.
 anno 16 8daa289a6a041489 c982ff06d38d9f08 Two `vs30`vv40 annotations with nothing between.
 anno 17 309661281ad25e35 9aa8772fa067c143 `ui"a"`ui"b" two marks with nothing between them.
-anno 18 7548c60760afd1af d96256eabf01eb0f An unterminated `ui"mark that never closes here
+anno 18 d51a22a345d05f37 f3a63696fc51f75f An unterminated `ui"mark that never closes here
 anno 19 1ef1a70b3a8dd82f 753da3b3aabc6cf4 Mixed `v3 voice `vs70 speed `vv50 volume together.
 anno 20 dbdc3e51f3c68241 de7a93db7c360d9e Tab	and newline handling with `vb40 a change.
 anno3 1 26b811e7c61eed2e 7264c698f56f6513 Normal speech `vs50 now much slower than before.
@@ -69,7 +69,7 @@ anno3 14 4c432feb1c28f885 6a89160a4363cc52 Ending with an annotation at the very
 anno3 15 7033580dfd4e0ce5 ce2ed7d7a0a59b78 Malformed `vzz and `q and `v999 all in one line.
 anno3 16 7d707355b4949d15 66fc38c1e2316465 Two `vs30`vv40 annotations with nothing between.
 anno3 17 cbef2d2e6d8c7f05 6f2b10d0b1f4813b `ui"a"`ui"b" two marks with nothing between them.
-anno3 18 7548c60760afd1af f131470d3fb47fa6 An unterminated `ui"mark that never closes here
+anno3 18 d51a22a345d05f37 b499ee547e733138 An unterminated `ui"mark that never closes here
 anno3 19 5c8d202a88013349 ede85769cf2bb16d Mixed `v3 voice `vs70 speed `vv50 volume together.
 anno3 20 44871e5a0ce01024 60eb8d4454d47d3e Tab	and newline handling with `vb40 a change.
 realworld 1 7b0a5c7e0612bad4 25e8e062facfe84d Normal speech `vs50 now much slower than before.
@@ -89,7 +89,7 @@ realworld 14 4c432feb1c28f885 50518b3eb7d22724 Ending with an annotation at the 
 realworld 15 7033580dfd4e0ce5 a18a64bc3e56d790 Malformed `vzz and `q and `v999 all in one line.
 realworld 16 eef31c40764ee8c2 688b55d4249c82bd Two `vs30`vv40 annotations with nothing between.
 realworld 17 cbef2d2e6d8c7f05 183fd35b2fa33409 `ui"a"`ui"b" two marks with nothing between them.
-realworld 18 7548c60760afd1af 9b2bc463894a0fa7 An unterminated `ui"mark that never closes here
+realworld 18 d51a22a345d05f37 c5a63fcc14bc1a55 An unterminated `ui"mark that never closes here
 realworld 19 958670542c868372 2d3fbf016d9811de Mixed `v3 voice `vs70 speed `vv50 volume together.
 realworld 20 6eb3530e1f3e7d44 b8a208e9acf96a20 Tab	and newline handling with `vb40 a change.
 dict 1 a2d9d2d7a3686878 3f58c3b07d61e9f7 Hello. This is the Eloquence synthesizer speaking.

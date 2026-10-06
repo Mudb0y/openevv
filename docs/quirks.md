@@ -56,7 +56,7 @@ UTF-16 is not a way round that for these. ORing `eciUnicodeCodeSet` -- 0x800 -- 
 
 **`eciDictionary` is inverted.** One turns the dictionary off. The value is flipped on its way in and out, which is IBM's.
 
-**Numbers 11 and 17 are refused by both `eciGetParam` and `eciSetParam`**, which is IBM's own refusal transcribed. Seventeen holds the number of the voice being spoken in and `eciCopyVoice` is what moves it.
+**Numbers 11 and 17 are refused by both `eciGetParam` and `eciSetParam`**, which is IBM's own refusal transcribed. Eleven is phrase prediction, which only `eciSetDefaultParam` and the `` `pp `` annotation reach, and which is off here where IBM had it on -- see below. Seventeen holds the number of the voice being spoken in and `eciCopyVoice` is what moves it.
 
 **Numbers 4 and 6 can be set and read and nothing anywhere reads them.**
 
@@ -165,6 +165,16 @@ Where it applies was measured over 242 tokens rather than guessed. A run of four
 What it costs is that a word the engine says badly on its own is now said badly rather than spelled: iPhone12, MySQL8, Xbox360 and macOS14 say iPhone, MySQL, Xbox and macOS the way the engine says each typed alone. Digits before letters -- 10km, 3rd, 4x4 -- are untouched, and so are an apostrophe, a hyphen, an at sign and a slash. German, both Spanishes, both Frenches, Italian and Polish spell the same tokens the same way and are left as they are; Japanese's romanizer reads them as words already.
 
 The last two cases of `test/cases/plain.txt` and of `test/cases/plain-engb.txt` hold it, in the plain, dict and second categories. IBM's engine spells the words in them that this one reads, so none of the twelve is an answer it gives.
+
+## Phrase prediction is off
+
+**IBM's engine guesses where a phrase ends in a stretch with no punctuation and pauses there, and ours does not unless asked.** The reporter's sentence in issue 41, "world wide web is three syllables but luckily they abbreviated it to 9", has a 220 ms pause after "syllables" in IBM's engine and none in ours. A pause the text gives no reason for is one a listener cannot see coming, which is why issue 41 asked for a way to turn it off, and off is the default. That is the twenty-third deliberate divergence.
+
+It is one switch in each language's rules and it governs three of them: `find_unpuncted_phrases`, which makes the guessed breaks, and `handle_non_phrasal_commas` and `delete_comma_sync`, which decide that a comma is not a break. So off has a second effect, which is that a comma those two would have passed over is a break like any other: "Paris, France, is where she lives" gains 170 ms after "Paris". All nine languages with rules have the switch. Japanese has none and is unchanged, and none of Polish's cases moved.
+
+`` `pp1 `` in the text, with annotations on, turns it back on for the instance from there on, and `eciSetDefaultParam(11, 1)` does so for every instance made afterwards; `eciGetParam` and `eciSetParam` refuse eleven, as IBM's did. The default is the eleventh of `g_DefaultEnvironment` in `src/eci/api/eci_env_defaults.c`, which the older interface sends to every engine it makes, and `CMD_DEFAULTS` in `src/eci/synth/eci_synthlife.c` says the same for the newer one. The NVDA add-on has a checkbox for it, also off.
+
+It moved 165 of the 1,073 recorded cases: 8 of English, 7 of British English, 9 of German, 40 of each Spanish, 27 of each French and 7 of Italian, none of them the plain cases of the Englishes, German or Italian. `test/compare.sh` turns phrase prediction on in ours whenever it is held to IBM's, so `test/suite.sh` compares like with like and does not report them.
 
 ## If it sounds wrong
 

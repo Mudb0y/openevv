@@ -70,8 +70,11 @@ typedef ENGCALL void (*EngSetAnno)(void *engine, AnnoCallback cb, void *p);
 typedef ENGCALL void (*EngSetVoice)(void *engine, VoiceCallback cb, void *p);
 
 /* The line every engine is put through when it is first settled on a
-   language, and the one an engine with newer corpora gets as well. */
-static const char CMD_DEFAULTS[] = "`v1 `ts0 `da1 `ty1 `pp1";
+   language, and the one an engine with newer corpora gets as well. Phrase
+   prediction is off in it as it is in g_DefaultEnvironment, where IBM had it
+   on in both: the older interface sends its own setting after this and
+   overrides it, and this is what the newer interface starts from. */
+static const char CMD_DEFAULTS[] = "`v1 `ts0 `da1 `ty1 `pp0";
 static const char CMD_NORMALISE[] = "`nor";
 static const char CMD_CONCATENATIVE[] = "`esp2";
 

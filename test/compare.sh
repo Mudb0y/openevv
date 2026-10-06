@@ -76,6 +76,9 @@ case $OURS in
 *)  OURS=$PWD/$OURS ;;
 esac
 [ -x "$OURS" ] || { echo "compare: no native binary" >&2; exit 2; }
+# IBM's engine predicts phrases and ours does not unless asked, which
+# docs/quirks.md explains; asked, the two are held to the same answer.
+export EVV_PHRASE_PREDICTION=1
 # Ours may be the Windows build now, which runs the way the reference does.
 case $OURS in
 *.exe) OURS_RUN="$PE $OURS" ;;
