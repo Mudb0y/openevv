@@ -16,17 +16,7 @@ on:
     branches: [main]
     tags: ['v*']
   pull_request:
-  # `gh workflow run build -f every_language=true' rehearses what a tag does
-  # without cutting one: the same all-language build of what ships, with the
-  # release job still skipped because this is not a tag. Worth doing before a
-  # release, since that path is otherwise only ever exercised by the release
-  # itself and takes over an hour to tell you.
   workflow_dispatch:
-    inputs:
-      every_language:
-        description: 'Build what ships with every language, as a tag does'
-        type: boolean
-        default: false
 
 jobs:
   # Both forms of the rules are built and both are held to the same hash. Which
@@ -50,8 +40,9 @@ jobs:
         run: make RULES=c say-test
 
       # English only here, and every language in the bytecode job below.
-      # Decompiling nine languages into C is a hundred and seventeen megabytes
-      # and most of an hour on a two-core runner; what this job is for is that
+      # Every language's rules are built as C further down this job, but
+      # holding them all to the matrix as well would add its eight minutes
+      # and make this the job the run waits on; what this step is for is that
       # the C form says what the interpreter says, and one language answers
       # that.
       - name: Check the recorded answers, with the rules as C
@@ -80,29 +71,19 @@ jobs:
       # than in the bytecode job so that what ships has the rules as C, which
       # is what a program interrupting speech wants.
       #
-      # A release carries every language and an ordinary push carries
-      # English. Decompiling ten languages into C is over a hundred megabytes
-      # and most of an hour on a two-core runner, twice over for the library
-      # and the command, and there is no reason to spend it on every commit:
-      # what a tag changes here is the form of the rules, not the path. That a
-      # library can hold every language at once is proved on every push by the
-      # bytecode job below, which speaks all ten out of one.
+      # Every language on every push, not only on a tag: what a push uploads
+      # is what people take to try a fix before it is released, and a build
+      # with English alone is no use to anyone wanting another language. It
+      # costs this job a quarter of an hour, which the bytecode job below takes
+      # anyway, so the run as a whole finishes no later.
       #
       # EVVPLAIN keeps the plain name with several languages in it. Everything
       # else here names itself after what it contains, but a caller dlopens
       # `libeci.so' and cannot be asked to know what is inside.
       - name: Build what ships
-        env:
-          EVERY: ${{ inputs.every_language }}
         run: |
           set -eu
-          case "$GITHUB_REF$EVERY" in
-          refs/tags/v*|*true)
-            langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca \
-                                      itit plpl jajp) ;;
-          *)
-            langs=lang/enus ;;
-          esac
+          langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca itit plpl jajp)
           make -j"$(nproc)" RULES=c EVVPLAIN=1 LANGS="$langs" so all
 
       # Staged into a directory of its own so the artifact holds four files
@@ -344,23 +325,13 @@ jobs:
           sudo apt-get install -y gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64 \
                                   gcc-mingw-w64-i686 binutils-mingw-w64-i686
 
-      # Every language on a tag, English on an ordinary push, for the same
-      # reason the Linux job gives: the rules as C are most of an hour a
-      # build and a release is where that is worth spending. The exes and the
-      # DLLs keep their plain names whatever is in them, so nothing
-      # downstream has to know which this was.
+      # Every language on every push, for the reason the Linux job gives. The
+      # exes and the DLLs keep their plain names whatever is in them, so
+      # nothing downstream has to know what is inside.
       - name: Build
-        env:
-          EVERY: ${{ inputs.every_language }}
         run: |
           set -eu
-          case "$GITHUB_REF$EVERY" in
-          refs/tags/v*|*true)
-            langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca \
-                                      itit plpl jajp) ;;
-          *)
-            langs=lang/enus ;;
-          esac
+          langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca itit plpl jajp)
           make -j"$(nproc)" LANGS="$langs" win win-dlltest win32
 
       - name: Say what came out
