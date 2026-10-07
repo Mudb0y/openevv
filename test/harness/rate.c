@@ -31,6 +31,13 @@
  * 11, 8, 11, 8, 22, 11 -- because setting the rate back was as broken as
  * changing it, and so was setting it to the value it already had.
  *
+ * Last, eciWideband on an instance that has not spoken yet, which is where a
+ * screen reader sets it. That used to leave the instance counting as speaking
+ * until its next utterance, so the rate asked for after it was dropped and a
+ * new buffer refused -- issue 45. So a fresh instance has it turned on, then
+ * has to say it is not speaking, take 44,100, take a new buffer, and answer
+ * four times what 11 kHz said.
+ *
  * usage: rate
  */
 
@@ -52,6 +59,9 @@ enum { FRAME = 1024 };
    have no names in the published interface; they are the block size and the
    millisecond figures the audio format is built from. */
 enum { PARAM_RATE = 5, DEVICE_FIRST = 13, DEVICE_LAST = 16 };
+
+/* eciWideband, which is ours, and the number of 44,100 among the rates. */
+enum { PARAM_WIDEBAND = 32, RATE_44100 = 5 };
 
 typedef struct OldInst OldInst;
 
@@ -75,6 +85,7 @@ void evv_port_start(void);
 void evv_port_finish(void);
 
 static short frame[FRAME];
+static short wideframe[FRAME * 4];
 static long  said;
 
 static enum ECICallbackReturn STDCALL on_message(OldInst *h,
@@ -221,9 +232,50 @@ int main(void)
     }
 
     es_delete(h);
+
+    h = eo_newEx(langs[0]);
+    if (h == 0) {
+        printf("rate: no second instance\n");
+        return 1;
+    }
+    eo_registerCallback(h, (void *)on_message, 0);
+    if (!ev_setOutputBuffer(h, FRAME, frame)) {
+        printf("rate: the second instance would not take the buffer\n");
+        return 1;
+    }
+    if (ev_setParam(h, PARAM_WIDEBAND, 1) < 0) {
+        printf("rate: it refused the wideband voice\n");
+        return 1;
+    }
+    if (eo_speaking(h)) {
+        printf("rate: with nothing said, it counts as speaking once the"
+               " wideband voice is set\n");
+        return 1;
+    }
+    if (ev_setParam(h, PARAM_RATE, RATE_44100) < 0
+        || eo_getParam(h, PARAM_RATE) != RATE_44100) {
+        printf("rate: after the wideband voice it would not take 44,100\n");
+        return 1;
+    }
+    if (!ev_setOutputBuffer(h, FRAME * 4, wideframe)) {
+        printf("rate: after the wideband voice it refused a new buffer\n");
+        return 1;
+    }
+    {
+        long got = say_once(h);
+
+        if (got != at[1] * 4) {
+            printf("rate: %ld samples at 44,100 with the wideband voice where"
+                   " four times 11 kHz is %ld\n", got, at[1] * 4);
+            return 1;
+        }
+    }
+    es_delete(h);
+
     evv_port_finish();
     printf("rate: %d changes and %d device numbers, %ld samples at 8 kHz"
-           " and %ld at 11 kHz\n", rounds,
+           " and %ld at 11 kHz, and the wideband voice set before speaking"
+           " leaves a rate and a buffer free to change\n", rounds,
            DEVICE_LAST - DEVICE_FIRST + 1, at[0], at[1]);
     return 0;
 }

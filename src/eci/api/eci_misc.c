@@ -291,15 +291,10 @@ int STDCALL es_reset(OldInst *h)
         return 0;
     }
 
-    /* A reset puts every setting back, the wideband voice with them. */
-    if (inst->wideband) {
-        if (setECIerror(api_set_param(OI_NEW(inst), 0, ECI_PARAM_WIDEBAND, 0),
-                        inst)) {
-            OI_BUSY(inst) = 0;
-            return 0;
-        }
-        inst->wideband = 0;
-    }
+    /* A reset puts every setting back, the wideband voice with them. The
+       engine keeps its own across a reset, so it is told at the next
+       utterance, as it is of any other change. */
+    inst->wideband = 0;
 
     eo_clearManualQueue(inst);
     if (!eo_getDefaultEnvironment(inst, 0)

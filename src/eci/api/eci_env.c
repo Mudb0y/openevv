@@ -541,6 +541,17 @@ int ev_sendChangedEnvironment(OldInst *h, Environment env, int32_t force)
         OI_READY2(h) = 0;
     }
 
+    /* The wideband voice goes now and not when it was set. Sent then, it
+       waited on the engine's queue until the next synthesis, and while it
+       waited the instance counted as speaking: a new rate was dropped and a
+       new buffer refused, which is issue 45. */
+    if (h->wideband != h->wideband_sent) {
+        if (setECIerror(api_set_param(OI_NEW(h), 0, ECI_PARAM_WIDEBAND,
+                                      h->wideband), h))
+            return 0;
+        h->wideband_sent = h->wideband;
+    }
+
     /* The language first and on its own, because a change of family has to
        be noticed before the romanizer setting is decided. */
     if (force || e[ENV_LANGUAGE] != sent[ENV_LANGUAGE]) {
@@ -649,9 +660,6 @@ int32_t STDCALL ev_setParam(OldInst *h, int32_t which, int32_t value)
 
     if (which == ECI_OLD_WIDEBAND) {
         if (value < 0 || value > 1)
-            return -1;
-        if (setECIerror(api_set_param(OI_NEW(inst), 0, ECI_PARAM_WIDEBAND,
-                                      value), inst))
             return -1;
         old = inst->wideband;
         inst->wideband = value;
