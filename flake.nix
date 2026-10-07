@@ -98,7 +98,7 @@
         ];
 
         shellHook = ''
-          export EVV_ARCHIVE=/mnt/storage/Software/eloquence-archive
+          export EVV_ARCHIVE=/mnt/storage/Software/speech/eloquence-archive
           # The cross gcc is built against mcfgthreads but nothing puts it on
           # the link path outside a real cross stdenv. Referenced by path
           # rather than as a package because nixpkgs splicing would otherwise

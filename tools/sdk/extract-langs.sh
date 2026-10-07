@@ -12,7 +12,7 @@ set -euo pipefail
 # EVV_LIBDIR names the directory holding them, wherever the SDK was unpacked;
 # the default is where it sits in the archive on this machine. See
 # docs/building.md for where the SDK comes from.
-ARCHIVE="${EVV_ARCHIVE:-/mnt/storage/Software/eloquence-archive}"
+ARCHIVE="${EVV_ARCHIVE:-/mnt/storage/Software/speech/eloquence-archive}"
 LIBDIR="${EVV_LIBDIR:-$ARCHIVE/ibm-public/embedded-viavoice-sdk/extracted/evv4.3/wxp/lib/NT/X86/COMMON}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
