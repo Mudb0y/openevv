@@ -106,6 +106,8 @@ The voice ones take the same numbers `eciSetVoiceParam` does. `` `vs `` is speed
 
 `` `pp1 `` turns phrase prediction on and `` `pp0 `` off, for the instance from there on: it stays as set across utterances, voices and languages. It is off unless asked for, which is not what IBM's engine did.
 
+`` `da1 `` turns the abbreviation dictionary on and `` `da0 `` off. It is the switch `eciDictionary` is, though the right way up, so after `` `da1 `` `eciGetParam(h, eciDictionary)` answers nought. It lasts as `` `pp `` does, and it too is off unless asked for.
+
 `` `ui"name" `` is an index mark carrying a string rather than a number, and `` `aud"name" `` an audio marker. Both are reported through the callback.
 
 The bracketed ones say how to read the text they enclose: `` `ord[ `` for a number read out in full, `` `tel[ `` and `` `telpunc[ `` for a telephone number, `` `cur[ `` for currency, `` `bool[ `` for a boolean, and the eight date forms `` `datemdy[ ``, `` `dateymd[ ``, `` `datedmy[ ``, `` `dateydm[ ``, `` `datemy[ ``, `` `datemd[ ``, `` `datedm[ `` and `` `dateym[ ``. `` `[ `` encloses a pronunciation in the engine's own phoneme alphabet.
@@ -181,7 +183,7 @@ Eighteen settings, by the numbers `eci.h` names, and one of ours numbered well p
 
 `eciTextMode` (2), nought to three.
 
-`eciDictionary` (3), nought or one, **and one turns the dictionary off**. The value is inverted on its way in and out, which is IBM's.
+`eciDictionary` (3), nought or one, **and one turns the dictionary off**. The value is inverted on its way in and out, which is IBM's. It is the abbreviation dictionary, which says "Dr." as doctor and "mg" as milligrams, and a new instance answers one here where IBM's answered nought: off unless asked for, which is the twenty-fourth deliberate divergence `docs/quirks.md` describes. Off, the caller's own `eciAbbvDict` volume goes unread as well.
 
 `eciSampleRate` (5). Nought to six are 8,000, 11,025, 22,050, 16,000, 32,000, 44,100 and 48,000 hertz, in the order IBM numbered the first four and this port the rest; a value of 8,000 or more is that rate in hertz, so 24,000 is a rate nobody numbered. Everything between seven and 7,999 is in range and is not a rate: the call answers -1 and leaves the rate where it was. Above 11,025 the engine goes on synthesising at 11,025 and the rate is raised from there by a windowed sinc, so the voice is the same one at every setting -- unless `eciWideband` below asks for a top above it. IBM numbered 16 kHz rate three and then set the range of this parameter to two, so its own fourth rate could not be asked for; the range now runs to the highest rate the tables can be built for, which is the first of three divergences `docs/notes/sample-rates.md` describes.
 

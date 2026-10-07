@@ -54,7 +54,7 @@ UTF-16 is not a way round that for these. ORing `eciUnicodeCodeSet` -- 0x800 -- 
 
 ## Parameters that are not what they look like
 
-**`eciDictionary` is inverted.** One turns the dictionary off. The value is flipped on its way in and out, which is IBM's.
+**`eciDictionary` is inverted.** One turns the dictionary off. The value is flipped on its way in and out, which is IBM's. It is the abbreviation dictionary, and it is off here unless asked for, where IBM had it on -- see below.
 
 **Numbers 11 and 17 are refused by both `eciGetParam` and `eciSetParam`**, which is IBM's own refusal transcribed. Eleven is phrase prediction, which only `eciSetDefaultParam` and the `` `pp `` annotation reach, and which is off here where IBM had it on -- see below. Seventeen holds the number of the voice being spoken in and `eciCopyVoice` is what moves it.
 
@@ -175,6 +175,16 @@ It is one switch in each language's rules and it governs three of them: `find_un
 `` `pp1 `` in the text, with annotations on, turns it back on for the instance from there on, and `eciSetDefaultParam(11, 1)` does so for every instance made afterwards; `eciGetParam` and `eciSetParam` refuse eleven, as IBM's did. The default is the eleventh of `g_DefaultEnvironment` in `src/eci/api/eci_env_defaults.c`, which the older interface sends to every engine it makes, and `CMD_DEFAULTS` in `src/eci/synth/eci_synthlife.c` says the same for the newer one. The NVDA add-on has a checkbox for it, also off.
 
 It moved 165 of the 1,073 recorded cases: 8 of English, 7 of British English, 9 of German, 40 of each Spanish, 27 of each French and 7 of Italian, none of them the plain cases of the Englishes, German or Italian. `test/compare.sh` turns phrase prediction on in ours whenever it is held to IBM's, so `test/suite.sh` compares like with like and does not report them.
+
+## Abbreviations are said as written
+
+**IBM's engine says what it takes an abbreviation to stand for, and ours says what is written unless asked.** With the abbreviation dictionary on, "Dr. Smith" is doctor Smith, "10 mg" is ten milligrams and "6 ft" six feet; off, they are D R, M G and F T, and "Feb" is read as a word. Every expansion tried in English guessed right -- "Elm Dr." was drive and "Dr. Who" doctor -- so this is not a fix for wrong guesses. It is that a listener hears a word that is not in the text and cannot tell that it was not, which matters to anyone who has to type, search for or correct what is being read. The NVDA add-on's "Expand abbreviations" checkbox has been off since its first version, and the engine now starts where the add-on does. That is the twenty-fourth deliberate divergence.
+
+Off costs two things, and both are what IBM's own engine does with the dictionary off rather than anything added here. The full stop after an abbreviation is a full stop: with nothing to say that "Mr." is an abbreviation, its stop ends a sentence and pauses like one. "Mr. and Mrs. Jones live on Main St. in town." takes 3.5 seconds with the dictionary and 5.4 without, three pauses of about 400 ms where there were none. And the switch is the abbreviation volume's as well: a caller that loads entries into its own `eciAbbvDict` hears none of them until it turns the dictionary on. The main volume is unaffected.
+
+`eciSetParam(h, eciDictionary, 0)` turns it back on for an instance and `eciSetDefaultParam(eciDictionary, 0)` for every instance made afterwards -- nought is on, the parameter being inverted, which is IBM's -- and `` `da1 `` does the same from inside the text with annotations on. The default is the fourth of `g_DefaultEnvironment`, which holds it the right way up, and `CMD_DEFAULTS` says `` `da0 `` for the newer interface, as for phrase prediction. In each of the nine languages with rules the switch governs one rule, `abbreviation` in ut_norm.
+
+It moved the audio of 55 of the 1,073 recorded cases: 13 in each English, 12 in German, 5 in each Spanish, 4 in Italian and 3 in French, and none in Canadian French, Japanese or Polish. Each is an abbreviation now said as written -- "Dr.", "z.B.", "p.ej.", "p. 12" -- and two are less plain than that. The engine reads UTF-8 a byte at a time, so "Muñoz" ends in "oz", which was ounces; and French's case writes "qu" without its apostrophe, which the dictionary took for que. The second hash moved in 745, because in most categories the probe reports every general parameter and `eciDictionary` now answers one. Of the word lists, 114 words moved, every one an abbreviation: 76 of English's, 16 of each Spanish's, 2 of each French's, German's "log" and Italian's "mar", which was Tuesday. `test/compare.sh` and `test/harness/phonemes.sh` turn the dictionary back on in ours whenever it is held to IBM's, so the oracle compares like with like.
 
 ## If it sounds wrong
 

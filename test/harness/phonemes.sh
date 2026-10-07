@@ -49,6 +49,10 @@ run_theirs() {
 cases=("$@")
 [ ${#cases[@]} -eq 0 ] && cases=("$root/test/cases/plain$suf.txt")
 
+# The abbreviation dictionary and phrase prediction, which ours leaves off and
+# IBM's has on; see test/compare.sh.
+export EVV_IBM_DEFAULTS=1
+
 total=0
 moved=0
 

@@ -22,7 +22,13 @@ int32_t g_DefaultEnvironment[0x12] = {
     0,            /* synthesis mode */
     0,            /* input type */
     0,            /* text mode */
-    1,            /* dictionary on */
+    /* The abbreviation dictionary, which IBM shipped on and which is off
+       here: it says what it takes an abbreviation to stand for, "mg" as
+       milligrams and "Dr." as doctor or drive, and a listener then hears a
+       word that is not in the text. eciSetParam(h, eciDictionary, 0) or `da1
+       asks for it; nought here is off, since this table holds the setting
+       the right way up and the interface turns it over. */
+    0,
     0,
     RATE_MIDDLE,  /* sample rate */
     0,

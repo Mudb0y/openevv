@@ -16,17 +16,17 @@
 # the sentence.
 
 plain 1 3ae4e03b58575154 28775d11629885cc Hello. This is the Eloquence synthesizer speaking.
-plain 2 ef198069f013d11e 88cc9e984766dd73 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
+plain 2 0455f430e860f421 903ce95c2021fc22 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
 plain 3 2385dbb5d8947b80 8b47a3bf7642bc2f The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
 plain 4 e7a11c93534f30c4 a1e5621c0f3ea2ab Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
 plain 5 d4fe33fae44e4dd2 0510369e14ad1de4 A one-word line. And another; plus "quoted text" inside.
-plain 6 a88f7780f99a13ba ae4f5b9644f97421 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
-plain 7 7e9af2ea4dba240e 3eb8ff362ee29579 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
+plain 6 850e6621c9099816 b1f160eedbd6aba1 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+plain 7 29f67773bfed73f0 f65ca06ac278aa5c He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 plain 8 5e4e4261780111e4 b95269c27c9fd588 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
 plain 9 6f17588546ca3622 5e181ee1a2c85cca Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
 plain 10 c46b89f0b7078a27 ca4da7d34c29ca65 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 utf8 1 2cba283bbc20a3db 40f4350994711124 The café near the naïve façade serves crème brûlée.
-utf8 2 fbfafe97c8242c26 7c4a7e73e38e6812 Señor Muñoz sent a piñata to São Paulo.
+utf8 2 c96c90b9925c8cef b1777b3f1856b3a7 Señor Muñoz sent a piñata to São Paulo.
 utf8 3 61fcfac615b2d919 9ae793574e952e3e Zdzisław Świątek mieszka w Świdnicy przy ulicy Żółkiewskiego.
 utf8 4 e9ce4183e2a1e3aa abaed6eab6a47bbd He said “this” and ‘that’ — costing €20 … or 50‰.
 utf8 5 3142ce19e1893399 9247ce5e8be861c0 Œuvres de Škoda, Žižek, Ÿ and ƒ walk into a bar.
@@ -52,83 +52,83 @@ anno 17 8d96ae3089dfd069 3380d0fc4b4ad2ea `ui"a"`ui"b" two marks with nothing be
 anno 18 f236667b04117340 ebdf87aecb12cd01 An unterminated `ui"mark that never closes here
 anno 19 88feb319a74e9013 8a08751ba3e29473 Mixed `v3 voice `vs70 speed `vv50 volume together.
 anno 20 e5eb5e1af96e3fd7 f2ba8805cb9a409f Tab	and newline handling with `vb40 a change.
-anno3 1 595a6051285f76d7 d704694d6aa2894c Normal speech `vs50 now much slower than before.
-anno3 2 5bef61a3266cef29 fea73e037c26c04a Volume `vv30 quieter, then `vv90 louder again.
-anno3 3 cf1e79f688afe2ea 9857b098fef51f85 Pitch `vb20 low and `vb80 high in one sentence.
-anno3 4 bedddd12ad01903f 2a7d14b026b56600 Voice `v2 two, `v5 five, and `v1 back to one.
-anno3 5 4229ebfaec9c6bbe 8795f1baf64d5f6b A pause `0 short and `4 long between words.
-anno3 6 2eb94cf2079caa79 e0d7c9facc9c33f2 Roughness `vr40 and breathiness `vf60 changed.
-anno3 7 41d13b6f59d45f27 f8caa2a48345b998 A literal \`backtick should be spoken as text.
-anno3 8 79552abfc6d2de71 e1d5781969b9697b Speed by name `vsfast and then `vsslow again.
-anno3 9 140bb9b51d4a9dfa a3aea86ac559a0b3 Head size `vh30 then `vh70 in the same line.
-anno3 10 65bcea2dc999904a 5eceb2a7b83d6c16 Gender `vg1 and `vg0 switching over.
-anno3 11 9599072ef831f426 f37956211b020385 Before `ui"mark one" and after the index mark.
-anno3 12 a5c786e8f31572ec 789e04cba4e4bced Audio `aud"beep" marker in the middle of a line.
-anno3 13 3e14cff85870dbc6 925357a8de330bf7 `vs40 An annotation right at the very beginning.
-anno3 14 463406e4e8f90cad 362236e899b9be63 Ending with an annotation at the very end `vs60
-anno3 15 8432d727d0be91b5 9ecd99ff0e6af221 Malformed `vzz and `q and `v999 all in one line.
-anno3 16 3540592ffba145ab f4cd5177914ba1d9 Two `vs30`vv40 annotations with nothing between.
-anno3 17 345d704520115818 0e22644fa6bacfd4 `ui"a"`ui"b" two marks with nothing between them.
-anno3 18 f236667b04117340 b70bc2deab1640fb An unterminated `ui"mark that never closes here
-anno3 19 90dc46ae5c0eaba9 7ddd3ed79cf7a6cf Mixed `v3 voice `vs70 speed `vv50 volume together.
-anno3 20 c82f9be943f870c9 4c03f7966f87b55c Tab	and newline handling with `vb40 a change.
-realworld 1 169397cdcd43c2db 9bce88f806cf408f Normal speech `vs50 now much slower than before.
-realworld 2 30bbfd76d0bfbbec 93cd197cc948fe45 Volume `vv30 quieter, then `vv90 louder again.
-realworld 3 32129b42fc6ea5cc a543925096759b28 Pitch `vb20 low and `vb80 high in one sentence.
-realworld 4 bedddd12ad01903f 8c7ed4a96e8d8c07 Voice `v2 two, `v5 five, and `v1 back to one.
-realworld 5 4229ebfaec9c6bbe cb9a65f87e4c117e A pause `0 short and `4 long between words.
-realworld 6 2eb94cf2079caa79 082a0c6190594ca2 Roughness `vr40 and breathiness `vf60 changed.
-realworld 7 41d13b6f59d45f27 f4e7bd608d453d2c A literal \`backtick should be spoken as text.
-realworld 8 79552abfc6d2de71 d74408aabcc07ab9 Speed by name `vsfast and then `vsslow again.
-realworld 9 140bb9b51d4a9dfa 9a31ef88e22f67a4 Head size `vh30 then `vh70 in the same line.
-realworld 10 65bcea2dc999904a be8f95f7314ff61b Gender `vg1 and `vg0 switching over.
-realworld 11 9599072ef831f426 33690ba58d544bbb Before `ui"mark one" and after the index mark.
-realworld 12 a5c786e8f31572ec 5660f362960709b7 Audio `aud"beep" marker in the middle of a line.
-realworld 13 aaf1f2eda2f01d37 8345d6235e6c1249 `vs40 An annotation right at the very beginning.
-realworld 14 463406e4e8f90cad 179c93e0bdc37bdf Ending with an annotation at the very end `vs60
-realworld 15 8432d727d0be91b5 c640f79c8b54b664 Malformed `vzz and `q and `v999 all in one line.
-realworld 16 2c8ad59d1cfb9536 c8089a24d44f95c0 Two `vs30`vv40 annotations with nothing between.
-realworld 17 345d704520115818 1a57f13cf7aa5283 `ui"a"`ui"b" two marks with nothing between them.
-realworld 18 f236667b04117340 f594e6c11fe536a3 An unterminated `ui"mark that never closes here
-realworld 19 a740daddb8250fe5 23d664be2d754135 Mixed `v3 voice `vs70 speed `vv50 volume together.
-realworld 20 d1bc8ab16fd80b77 ee8077b757e8a00e Tab	and newline handling with `vb40 a change.
-dict 1 3ae4e03b58575154 aa089f1a2505180d Hello. This is the Eloquence synthesizer speaking.
-dict 2 ef198069f013d11e b8bcf619c8e64c31 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
-dict 3 2385dbb5d8947b80 f9e3fa391a89f408 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
-dict 4 e7a11c93534f30c4 6eca567e8997e026 Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
-dict 5 d4fe33fae44e4dd2 33b55a66d62a7fdc A one-word line. And another; plus "quoted text" inside.
-dict 6 a88f7780f99a13ba 8f9977deac0b8aed Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
-dict 7 7e9af2ea4dba240e 2caa7d7a205d4e81 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
-dict 8 5e4e4261780111e4 ea5f70aad43d4da2 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-dict 9 6f17588546ca3622 d6a79415c63419b3 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-dict 10 c46b89f0b7078a27 4426c0bbefd25052 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
-second 1 db2e00e0f9ab64fb 037e77e3b6c804e8 Hello. This is the Eloquence synthesizer speaking.
-second 2 57f7c1d18ea0f0ef de97496935239d6d Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
-second 3 81d0422a00ae42a5 2f2c1ff4a53946d0 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
-second 4 65d73728758609e6 c9c9bcf7c5bd2bf3 Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
-second 5 e1320b954e42c341 a1b49785ad188161 A one-word line. And another; plus "quoted text" inside.
-second 6 14745f54e31b2b76 3be620822db61a80 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
-second 7 d401d15e5c679712 346bc95b9a130046 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
-second 8 2b93fcf546ef2622 f36d14b6d4816c51 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-second 9 e1a19d6cbaf8422d 59c033b9df39209c Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-second 10 ab399cf2ca68c9c2 fae395e9b38e2c25 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
-ssml 1 aeba6858c67acfd3 ccb3a95964bf53a9 <speak version="1.0" xml:lang="en-US">Hello there.</speak>
-ssml 2 302249f0afbd77b8 de25113fd6146a34 <speak version="1.0" xml:lang="en-US"><prosody rate="slow">Slowly now.</prosody> Back to normal.</speak>
-ssml 3 3653258574f72763 69a05cfadd8d7790 <speak version="1.0" xml:lang="en-US"><prosody pitch="high" range="x-high" volume="loud">All four at once.</prosody></speak>
-ssml 4 3f7a881a94425db9 c81dcc849b3b301b <speak version="1.0" xml:lang="en-US"><emphasis level="strong">This</emphasis> one, not that one.</speak>
-ssml 5 a78fe46a124dea17 3e9ab4ede87dd3e4 <speak version="1.0" xml:lang="en-US"><voice gender="female">She said so.</voice> And he did not.</speak>
-ssml 6 9dd2c467e7230a4c e4e96369708ef367 <speak version="1.0" xml:lang="en-US">It cost <say-as interpret-as="cardinal">1234</say-as> on the <say-as interpret-as="ordinal">3</say-as>.</speak>
-ssml 7 4cd78177c8895c6f cb745cd77c0bed6b <speak version="1.0" xml:lang="en-US">Spell it: <say-as interpret-as="letters">abc</say-as>, and dial <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
-ssml 8 f8a129e665d4356d e73d61a2b3318c22 <speak version="1.0" xml:lang="en-US">Wait<break time="500ms"/>for it.<mark name="here"/> There.</speak>
-ssml 9 e38f0b0f18d5ea04 972d2198db058b2d <speak version="1.0" xml:lang="en-US"><sub alias="World Wide Web">WWW</sub> and <phoneme ph="h.E.l.oU">hello</phoneme>.</speak>
-ssml 10 019301a1b2fb4152 33c7a16d48100cc8 <speak version="1.0" xml:lang="en-US">The café near the naïve façade, with a &amp; b &lt; c.</speak>
-wide 1 ee12cfd97d7839cf 14ad08b4091fbf77 Hello. This is the Eloquence synthesizer speaking.
-wide 2 8fc1e15905e0be97 9015af12e5dfcbbf Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
-wide 3 3f5196e0c345c1e6 ba3fc46dbb3a9674 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
-wide 4 bf206121e5c833e5 b0ce15b384903129 Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
-wide 5 732fd54e3ea125fe 53cf5404f2241c13 A one-word line. And another; plus "quoted text" inside.
-wide 6 bcb9510c87068520 d4c4abc50e8cf31b Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
-wide 7 906df038ee1db70d a26214dfec9563f6 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
-wide 8 cb70be44f0bc71fc 7b583d2555a0e73c A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-wide 9 319c9837ae0e4e36 5d14f78dfb16ac71 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-wide 10 4260c4ee8f201429 717d71b0cad8cac3 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+anno3 1 595a6051285f76d7 e67933676e276826 Normal speech `vs50 now much slower than before.
+anno3 2 5bef61a3266cef29 54963d15fef5d13d Volume `vv30 quieter, then `vv90 louder again.
+anno3 3 cf1e79f688afe2ea c84723e4fc7619f4 Pitch `vb20 low and `vb80 high in one sentence.
+anno3 4 bedddd12ad01903f 8150f9a19e4911bc Voice `v2 two, `v5 five, and `v1 back to one.
+anno3 5 4229ebfaec9c6bbe 0b147611765655db A pause `0 short and `4 long between words.
+anno3 6 2eb94cf2079caa79 f1462e708336d992 Roughness `vr40 and breathiness `vf60 changed.
+anno3 7 41d13b6f59d45f27 36a53f25320dd5ff A literal \`backtick should be spoken as text.
+anno3 8 79552abfc6d2de71 7661824164a91d1f Speed by name `vsfast and then `vsslow again.
+anno3 9 140bb9b51d4a9dfa 9f22248a7788c4ac Head size `vh30 then `vh70 in the same line.
+anno3 10 65bcea2dc999904a a2465cd58b4ad81e Gender `vg1 and `vg0 switching over.
+anno3 11 9599072ef831f426 fff5104ae696a53d Before `ui"mark one" and after the index mark.
+anno3 12 a5c786e8f31572ec 5da9c2b1b0109d27 Audio `aud"beep" marker in the middle of a line.
+anno3 13 3e14cff85870dbc6 1c49eff459e2793e `vs40 An annotation right at the very beginning.
+anno3 14 463406e4e8f90cad b8bc86e40ea11044 Ending with an annotation at the very end `vs60
+anno3 15 8432d727d0be91b5 e7df9d6f5a41f0fb Malformed `vzz and `q and `v999 all in one line.
+anno3 16 3540592ffba145ab 9ba5a9858efd8627 Two `vs30`vv40 annotations with nothing between.
+anno3 17 345d704520115818 4f0b1244b644162c `ui"a"`ui"b" two marks with nothing between them.
+anno3 18 f236667b04117340 11960c75314b708a An unterminated `ui"mark that never closes here
+anno3 19 90dc46ae5c0eaba9 845d7154775d72db Mixed `v3 voice `vs70 speed `vv50 volume together.
+anno3 20 c82f9be943f870c9 f90f175571450039 Tab	and newline handling with `vb40 a change.
+realworld 1 169397cdcd43c2db 73f0b7be0f4ac2a2 Normal speech `vs50 now much slower than before.
+realworld 2 30bbfd76d0bfbbec b6e60171d85c60c2 Volume `vv30 quieter, then `vv90 louder again.
+realworld 3 32129b42fc6ea5cc 99764878f12f1fdb Pitch `vb20 low and `vb80 high in one sentence.
+realworld 4 bedddd12ad01903f 45ce88cf704fdb88 Voice `v2 two, `v5 five, and `v1 back to one.
+realworld 5 4229ebfaec9c6bbe 921afa0b2b4bf3d5 A pause `0 short and `4 long between words.
+realworld 6 2eb94cf2079caa79 e665f89f7af805d7 Roughness `vr40 and breathiness `vf60 changed.
+realworld 7 41d13b6f59d45f27 d7aaabf95f879d36 A literal \`backtick should be spoken as text.
+realworld 8 79552abfc6d2de71 878bb064edfe9bc2 Speed by name `vsfast and then `vsslow again.
+realworld 9 140bb9b51d4a9dfa 5bc8d19caa9e1444 Head size `vh30 then `vh70 in the same line.
+realworld 10 65bcea2dc999904a 54083e7714177a0a Gender `vg1 and `vg0 switching over.
+realworld 11 9599072ef831f426 6731f0e7b17f3ab7 Before `ui"mark one" and after the index mark.
+realworld 12 a5c786e8f31572ec fad5c2a5a7013a6c Audio `aud"beep" marker in the middle of a line.
+realworld 13 aaf1f2eda2f01d37 aefe8affa66628e8 `vs40 An annotation right at the very beginning.
+realworld 14 463406e4e8f90cad f827016bf129264c Ending with an annotation at the very end `vs60
+realworld 15 8432d727d0be91b5 b32a61ac65ae16e3 Malformed `vzz and `q and `v999 all in one line.
+realworld 16 2c8ad59d1cfb9536 a6962a190629e12b Two `vs30`vv40 annotations with nothing between.
+realworld 17 345d704520115818 bd1d0d4f0bf5c347 `ui"a"`ui"b" two marks with nothing between them.
+realworld 18 f236667b04117340 b09854c628cd5311 An unterminated `ui"mark that never closes here
+realworld 19 a740daddb8250fe5 f1be24cce3045b47 Mixed `v3 voice `vs70 speed `vv50 volume together.
+realworld 20 d1bc8ab16fd80b77 b8d9ab950a5fbf44 Tab	and newline handling with `vb40 a change.
+dict 1 3ae4e03b58575154 88a97c6214c7ae40 Hello. This is the Eloquence synthesizer speaking.
+dict 2 0455f430e860f421 79c8127c956e41f7 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
+dict 3 2385dbb5d8947b80 a24aa8d56299f975 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
+dict 4 e7a11c93534f30c4 534e4d6371f236bb Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
+dict 5 d4fe33fae44e4dd2 f51513e11b68fc5c A one-word line. And another; plus "quoted text" inside.
+dict 6 850e6621c9099816 5fd4d99699dad664 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+dict 7 29f67773bfed73f0 c571ddfba1403ab2 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
+dict 8 5e4e4261780111e4 97b1b032b412b274 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
+dict 9 6f17588546ca3622 bb9b809b096ced3c Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+dict 10 c46b89f0b7078a27 e5a59236c0aca039 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+second 1 db2e00e0f9ab64fb 86d0d4a3017b6650 Hello. This is the Eloquence synthesizer speaking.
+second 2 b2226360d82f88fc e32227ad5af7f916 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
+second 3 81d0422a00ae42a5 b8c4212e13d17a74 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
+second 4 65d73728758609e6 a265dc1024ef7902 Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
+second 5 e1320b954e42c341 e0a1ade61139aab5 A one-word line. And another; plus "quoted text" inside.
+second 6 648a3cf222543fab f617d55dda89b78e Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+second 7 27d804c74cb1f1e4 6d27f8c778157733 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
+second 8 2b93fcf546ef2622 e052c61fd60b13a3 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
+second 9 e1a19d6cbaf8422d 5e234da813464e01 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+second 10 ab399cf2ca68c9c2 ab2b327ffe7173aa Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+ssml 1 aeba6858c67acfd3 3fe5cf74a53482b3 <speak version="1.0" xml:lang="en-US">Hello there.</speak>
+ssml 2 302249f0afbd77b8 4dd4349233151d20 <speak version="1.0" xml:lang="en-US"><prosody rate="slow">Slowly now.</prosody> Back to normal.</speak>
+ssml 3 3653258574f72763 509fc18886a00308 <speak version="1.0" xml:lang="en-US"><prosody pitch="high" range="x-high" volume="loud">All four at once.</prosody></speak>
+ssml 4 3f7a881a94425db9 7942359742a9a6c9 <speak version="1.0" xml:lang="en-US"><emphasis level="strong">This</emphasis> one, not that one.</speak>
+ssml 5 a78fe46a124dea17 8821b9586362d9e4 <speak version="1.0" xml:lang="en-US"><voice gender="female">She said so.</voice> And he did not.</speak>
+ssml 6 9dd2c467e7230a4c 18ede01c0236fd17 <speak version="1.0" xml:lang="en-US">It cost <say-as interpret-as="cardinal">1234</say-as> on the <say-as interpret-as="ordinal">3</say-as>.</speak>
+ssml 7 4cd78177c8895c6f aed3d33120b156d1 <speak version="1.0" xml:lang="en-US">Spell it: <say-as interpret-as="letters">abc</say-as>, and dial <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+ssml 8 f8a129e665d4356d 5b87110639e79eb6 <speak version="1.0" xml:lang="en-US">Wait<break time="500ms"/>for it.<mark name="here"/> There.</speak>
+ssml 9 e38f0b0f18d5ea04 3292e9857759cc73 <speak version="1.0" xml:lang="en-US"><sub alias="World Wide Web">WWW</sub> and <phoneme ph="h.E.l.oU">hello</phoneme>.</speak>
+ssml 10 019301a1b2fb4152 957d5569e0328ef0 <speak version="1.0" xml:lang="en-US">The café near the naïve façade, with a &amp; b &lt; c.</speak>
+wide 1 ee12cfd97d7839cf 5d79ca06a0beb05f Hello. This is the Eloquence synthesizer speaking.
+wide 2 10e4ea7595461500 28ee60604cdcfc2d Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
+wide 3 3f5196e0c345c1e6 d2838d8806609946 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
+wide 4 bf206121e5c833e5 26a56ac7931e3b1b Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
+wide 5 732fd54e3ea125fe a630d67ae7163cd0 A one-word line. And another; plus "quoted text" inside.
+wide 6 c192df878478a064 bb991c4e5fc64df5 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+wide 7 4c7ce44b7ab05502 8af97f7b9e4451f5 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
+wide 8 cb70be44f0bc71fc cadc5e86a4493186 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
+wide 9 319c9837ae0e4e36 b2d49fdc3050dbbe Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+wide 10 4260c4ee8f201429 92c4b70ac4a03002 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.

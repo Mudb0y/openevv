@@ -21,7 +21,7 @@ plain 3 32fdcc4eda442f95 19c9214cee11bff5 La rapida volpe marrone salta sopra il
 plain 4 8c311c48c8f852bd fa5311631dbd034e Prova 1 2 3, ABC XYZ, parole-con-trattino e MAIUSCOLE.
 plain 5 6ce9357f81c16460 fd98068fcb60d982 Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
 plain 6 fd7054a8041856c9 8e4119535bfbee73 Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
-plain 7 8ea6301a06313f68 fb25bd08ee96aff7 Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
+plain 7 45df2411a0fc3a9f b609f5cf485e7a56 Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
 utf8 1 08189a74b61fe275 71690b026164ae09 Perche la citta e cosi bella in primavera.
 utf8 2 f42c8776c67a93a3 4613337024a5dbfc Perché la città è così bella in primavera.
 utf8 3 3e0ba5627f694716 666046ba4bfeeaf2 Niccolò andò a Nizza più tardi con lui.
@@ -49,74 +49,74 @@ anno 17 291d4c552c57e8cd ae22171cf35c6384 `ui"a"`ui"b" due segni senza niente tr
 anno 18 980c9a514b62e4e5 c95dd9fc59c95780 Un segno `ui"non chiuso che non termina mai qui
 anno 19 d2e6b5f03242a184 7be965808f096384 Insieme `v3 voce `vs70 velocita `vv50 volume.
 anno 20 fa21b477c7137f3a f4d3dd64320cc254 Tabulazione	e ritorno a capo con `vb40 un cambio.
-anno3 1 2a95f77b0ed5feb5 e217db6e1d5c3c01 Voce normale `vs50 ora molto piu lenta di prima.
-anno3 2 0cc6e77c7bfc7614 87c554c959e821bb Volume `vv30 piu basso, poi `vv90 piu alto di nuovo.
-anno3 3 726a72b6ef0c221e ee042597671d6efd Altezza `vb20 grave e `vb80 acuta in una sola frase.
-anno3 4 53a289e1b38d453c e3d46b0ce44d775a Voce `v2 due, `v5 cinque, e `v1 di nuovo uno.
-anno3 5 96affb493779002c 070134f7274d38c0 Una pausa `0 breve e `4 lunga tra le parole.
-anno3 6 0b009df4dd4e5e2a 8fddf9f840144301 Ruvidezza `vr40 e soffio `vf60 modificati.
-anno3 7 6661367fa7ddbd8f cc906020e310bd5f Un accento grave \`letterale va letto come testo.
-anno3 8 1e79c0e09aa9469f 4575be477a8681ef Velocita per nome `vsfast e poi `vsslow di nuovo.
-anno3 9 b9a4141c2728799f 2b4ff507732955f6 Dimensione della testa `vh30 e poi `vh70 nella stessa riga.
-anno3 10 bcb3b7405f3110b5 124d05448a1f716e Genere `vg1 e `vg0 che si alternano.
-anno3 11 002978af6b3c5a0e b0203a99b16d2d95 Prima di `ui"segno uno" e dopo il segno.
-anno3 12 0ed51f695f20ab13 b5328ae53c833773 Marcatore audio `aud"bip" in mezzo a una riga.
-anno3 13 28b08a4e69230388 9ec9055888073d6c `vs40 Un'annotazione proprio all'inizio di tutto.
-anno3 14 9df9c35a414e9aab cb0c77faea36303e Che termina con un'annotazione proprio alla fine `vs60
-anno3 15 9c0abe31151fe5d0 45530de5e374d4ba Malformate `vzz e `q e `v999 tutte in una riga.
-anno3 16 a4c2431818e52e62 c18143316be8ee34 Due `vs30`vv40 annotazioni senza niente in mezzo.
-anno3 17 6f3ac2d9c14cb181 e8c121339e85b1ae `ui"a"`ui"b" due segni senza niente tra loro.
-anno3 18 980c9a514b62e4e5 eb12f3adac100f21 Un segno `ui"non chiuso che non termina mai qui
-anno3 19 3796a6c5372ccb58 aae960ac9e748397 Insieme `v3 voce `vs70 velocita `vv50 volume.
-anno3 20 3bdd8971a6f10cec c48519f63812ac7f Tabulazione	e ritorno a capo con `vb40 un cambio.
-realworld 1 c9a519b2d92c9775 8a1389b5d048fc74 Voce normale `vs50 ora molto piu lenta di prima.
-realworld 2 0871463e918bec6c 9a43e868687e2761 Volume `vv30 piu basso, poi `vv90 piu alto di nuovo.
-realworld 3 4e4b99837ead4fcf d1065fca1316beae Altezza `vb20 grave e `vb80 acuta in una sola frase.
-realworld 4 53a289e1b38d453c fa07b623ade4e983 Voce `v2 due, `v5 cinque, e `v1 di nuovo uno.
-realworld 5 96affb493779002c 0b822d4da205398c Una pausa `0 breve e `4 lunga tra le parole.
-realworld 6 0b009df4dd4e5e2a 4fd8c9e844e8fee1 Ruvidezza `vr40 e soffio `vf60 modificati.
-realworld 7 6661367fa7ddbd8f f88f7403e8fbe28e Un accento grave \`letterale va letto come testo.
-realworld 8 1e79c0e09aa9469f 4ea8d534a1f61939 Velocita per nome `vsfast e poi `vsslow di nuovo.
-realworld 9 b9a4141c2728799f 8fbfe3a5adae61cd Dimensione della testa `vh30 e poi `vh70 nella stessa riga.
-realworld 10 bcb3b7405f3110b5 6687ccb9e3af51a7 Genere `vg1 e `vg0 che si alternano.
-realworld 11 002978af6b3c5a0e 81e0a6e315b2d2a0 Prima di `ui"segno uno" e dopo il segno.
-realworld 12 0ed51f695f20ab13 3a4a66cbde7eb072 Marcatore audio `aud"bip" in mezzo a una riga.
-realworld 13 56ec1f9e4a5eb4ec 62392baa57727121 `vs40 Un'annotazione proprio all'inizio di tutto.
-realworld 14 9df9c35a414e9aab 164a6661d5aaa13f Che termina con un'annotazione proprio alla fine `vs60
-realworld 15 9c0abe31151fe5d0 52c6313c58dd6e92 Malformate `vzz e `q e `v999 tutte in una riga.
-realworld 16 94503111eb76d2d8 91285a8a7098f68c Due `vs30`vv40 annotazioni senza niente in mezzo.
-realworld 17 6f3ac2d9c14cb181 68101eb5743379a5 `ui"a"`ui"b" due segni senza niente tra loro.
-realworld 18 980c9a514b62e4e5 b2312adccfe784cf Un segno `ui"non chiuso che non termina mai qui
-realworld 19 c5120fb3db499fb7 d3b4326cd1665648 Insieme `v3 voce `vs70 velocita `vv50 volume.
-realworld 20 88ecf9ea88afe2d5 0616a2b0e4741892 Tabulazione	e ritorno a capo con `vb40 un cambio.
-dict 1 7cdc9ec4552675a6 4b2c0dea409283af Ciao. Qui parla il sintetizzatore vocale Eloquence.
-dict 2 01772c31d74f82e7 aeb1ed70625d5626 Il dottor Rossi ha pagato 1.234,56 euro il 3 maggio 2026 alle 19:45.
-dict 3 32fdcc4eda442f95 6ccadc5e2fe94fd5 La rapida volpe marrone salta sopra il cane pigro; p.es. www.esempio.it/percorso?q=1
-dict 4 8c311c48c8f852bd 5b556c3ef02dccc6 Prova 1 2 3, ABC XYZ, parole-con-trattino e MAIUSCOLE.
-dict 5 6ce9357f81c16460 47e591bcd765e10e Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
-dict 6 fd7054a8041856c9 fa29f93dcb5a64a4 Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
-dict 7 8ea6301a06313f68 c8e13610d367359a Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
-second 1 ebf3cd4f69450924 c9bb4dd438ef5357 Ciao. Qui parla il sintetizzatore vocale Eloquence.
-second 2 5f900579ea07dfe9 ca277d958772824b Il dottor Rossi ha pagato 1.234,56 euro il 3 maggio 2026 alle 19:45.
-second 3 dbbb20b8252791bd a47dfd5779158aae La rapida volpe marrone salta sopra il cane pigro; p.es. www.esempio.it/percorso?q=1
-second 4 d9361aa21df01563 df339167aae1c3d4 Prova 1 2 3, ABC XYZ, parole-con-trattino e MAIUSCOLE.
-second 5 3215b153accf8545 529169d22b9d98e0 Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
-second 6 e18c965a04d533eb 65577c6ee527ffbd Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
-second 7 50ed06bf37cb3597 8427e44d0f0f56d4 Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
-ssml 1 5ef49c7aef96ecd0 2c98046a8b10b044 <speak version="1.0" xml:lang="it-IT">Buongiorno.</speak>
-ssml 2 d3abbd182a011f31 916b3630b0072a4b <speak version="1.0" xml:lang="it-IT"><prosody rate="slow">Adesso piu lentamente.</prosody> Di nuovo normale.</speak>
-ssml 3 dfd2f700d8a88252 a420bfcd7dc3aed8 <speak version="1.0" xml:lang="it-IT"><prosody pitch="high" range="x-high" volume="loud">Tutti quattro insieme.</prosody></speak>
-ssml 4 bd76e5dcbaf0aff0 2a8ceb07e2d56e42 <speak version="1.0" xml:lang="it-IT"><emphasis level="strong">Questo</emphasis>, non quello.</speak>
-ssml 5 da09c11dc0936362 540baedb27121027 <speak version="1.0" xml:lang="it-IT"><voice gender="female">Lei lo ha detto.</voice> E lui no.</speak>
-ssml 6 60a56c0a81fa2815 dc0aaa3669fb018e <speak version="1.0" xml:lang="it-IT">Costava <say-as interpret-as="cardinal">1234</say-as> il <say-as interpret-as="ordinal">3</say-as>.</speak>
-ssml 7 1554831edbdb5f59 557d451edc7e1790 <speak version="1.0" xml:lang="it-IT">Compita: <say-as interpret-as="letters">abc</say-as>, e chiama il <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
-ssml 8 c07e389b0e4e4962 24d49ba8e8068fb3 <speak version="1.0" xml:lang="it-IT">Aspetta<break time="500ms"/>un momento.<mark name="qui"/> La.</speak>
-ssml 9 6df310ed9a6053f1 fb4ee33a8d0542a7 <speak version="1.0" xml:lang="it-IT"><sub alias="Rete mondiale">WWW</sub> e <phoneme ph="h.E.l.oU">ciao</phoneme>.</speak>
-ssml 10 ebd80f3f9895d09d 207aea0129d33741 <speak version="1.0" xml:lang="it-IT">Il caffè e perché più città, con a &amp; b &lt; c.</speak>
-wide 1 9a5e7cadb96c2f21 5093d8838ec3fe84 Ciao. Qui parla il sintetizzatore vocale Eloquence.
-wide 2 3f475bd05b81db91 f1851aaf6cad13f1 Il dottor Rossi ha pagato 1.234,56 euro il 3 maggio 2026 alle 19:45.
-wide 3 25646e1ebc8ece55 b7d9e6bfcdd1eeac La rapida volpe marrone salta sopra il cane pigro; p.es. www.esempio.it/percorso?q=1
-wide 4 5b9a2ce1e3b2ad90 edd9e397f55e3a8a Prova 1 2 3, ABC XYZ, parole-con-trattino e MAIUSCOLE.
-wide 5 1934ed944f8bef33 80e3ff8ed90fc784 Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
-wide 6 dd34d9486a5f485a 98148446e89dea5b Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
-wide 7 4ef8f793cd931c19 ebfe55e876d623dd Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
+anno3 1 2a95f77b0ed5feb5 f65df58ab8afda1f Voce normale `vs50 ora molto piu lenta di prima.
+anno3 2 0cc6e77c7bfc7614 e4a41863a9c1c9e1 Volume `vv30 piu basso, poi `vv90 piu alto di nuovo.
+anno3 3 726a72b6ef0c221e 2eb70acfd1b8a374 Altezza `vb20 grave e `vb80 acuta in una sola frase.
+anno3 4 53a289e1b38d453c 5c74687ba4a23a25 Voce `v2 due, `v5 cinque, e `v1 di nuovo uno.
+anno3 5 96affb493779002c cf90e0f527066512 Una pausa `0 breve e `4 lunga tra le parole.
+anno3 6 0b009df4dd4e5e2a 0d59fe08651f225c Ruvidezza `vr40 e soffio `vf60 modificati.
+anno3 7 6661367fa7ddbd8f 12886d47dbd02d3e Un accento grave \`letterale va letto come testo.
+anno3 8 1e79c0e09aa9469f c52c657b6fbeb619 Velocita per nome `vsfast e poi `vsslow di nuovo.
+anno3 9 b9a4141c2728799f ebf9812e3ed283b9 Dimensione della testa `vh30 e poi `vh70 nella stessa riga.
+anno3 10 bcb3b7405f3110b5 3593a147346709cc Genere `vg1 e `vg0 che si alternano.
+anno3 11 002978af6b3c5a0e 1b77807f94cce154 Prima di `ui"segno uno" e dopo il segno.
+anno3 12 0ed51f695f20ab13 dbb0abe804be8fc3 Marcatore audio `aud"bip" in mezzo a una riga.
+anno3 13 28b08a4e69230388 fa81c05cc9f9ca6e `vs40 Un'annotazione proprio all'inizio di tutto.
+anno3 14 9df9c35a414e9aab 4b970a1653e33ae0 Che termina con un'annotazione proprio alla fine `vs60
+anno3 15 9c0abe31151fe5d0 ee1826d1fb1a9552 Malformate `vzz e `q e `v999 tutte in una riga.
+anno3 16 a4c2431818e52e62 26bf06f17f4e9daf Due `vs30`vv40 annotazioni senza niente in mezzo.
+anno3 17 6f3ac2d9c14cb181 24b9c9631b86e80c `ui"a"`ui"b" due segni senza niente tra loro.
+anno3 18 980c9a514b62e4e5 cf74e584b34aabba Un segno `ui"non chiuso che non termina mai qui
+anno3 19 3796a6c5372ccb58 776abd3d482035ee Insieme `v3 voce `vs70 velocita `vv50 volume.
+anno3 20 3bdd8971a6f10cec 9310a8db2d50fd69 Tabulazione	e ritorno a capo con `vb40 un cambio.
+realworld 1 c9a519b2d92c9775 73128f4a8c99647d Voce normale `vs50 ora molto piu lenta di prima.
+realworld 2 0871463e918bec6c 27781e6e2657ab80 Volume `vv30 piu basso, poi `vv90 piu alto di nuovo.
+realworld 3 4e4b99837ead4fcf fa1ee05d361cd8ca Altezza `vb20 grave e `vb80 acuta in una sola frase.
+realworld 4 53a289e1b38d453c 89c22bfe1342aa17 Voce `v2 due, `v5 cinque, e `v1 di nuovo uno.
+realworld 5 96affb493779002c 7d6ea1784c12eaa1 Una pausa `0 breve e `4 lunga tra le parole.
+realworld 6 0b009df4dd4e5e2a 24ac13c656966c7e Ruvidezza `vr40 e soffio `vf60 modificati.
+realworld 7 6661367fa7ddbd8f c2435573fc3a5e80 Un accento grave \`letterale va letto come testo.
+realworld 8 1e79c0e09aa9469f 1c56d9d8f8a40701 Velocita per nome `vsfast e poi `vsslow di nuovo.
+realworld 9 b9a4141c2728799f 48fe2fc0ae2370e8 Dimensione della testa `vh30 e poi `vh70 nella stessa riga.
+realworld 10 bcb3b7405f3110b5 8368fffcb5014bac Genere `vg1 e `vg0 che si alternano.
+realworld 11 002978af6b3c5a0e 6ab53cb1e09ae458 Prima di `ui"segno uno" e dopo il segno.
+realworld 12 0ed51f695f20ab13 93d6b7cc8176463f Marcatore audio `aud"bip" in mezzo a una riga.
+realworld 13 56ec1f9e4a5eb4ec 136fdf26e2c8f6b0 `vs40 Un'annotazione proprio all'inizio di tutto.
+realworld 14 9df9c35a414e9aab e0f5827e84172d0c Che termina con un'annotazione proprio alla fine `vs60
+realworld 15 9c0abe31151fe5d0 3d15901095585eb4 Malformate `vzz e `q e `v999 tutte in una riga.
+realworld 16 94503111eb76d2d8 54f31f328e0e2ffb Due `vs30`vv40 annotazioni senza niente in mezzo.
+realworld 17 6f3ac2d9c14cb181 48fea76e23f404ac `ui"a"`ui"b" due segni senza niente tra loro.
+realworld 18 980c9a514b62e4e5 c34ece311f9dd87d Un segno `ui"non chiuso che non termina mai qui
+realworld 19 c5120fb3db499fb7 9f1cf178f7efab70 Insieme `v3 voce `vs70 velocita `vv50 volume.
+realworld 20 88ecf9ea88afe2d5 9f31d6606ab5a8e8 Tabulazione	e ritorno a capo con `vb40 un cambio.
+dict 1 7cdc9ec4552675a6 b1558e5e4fcb7bcd Ciao. Qui parla il sintetizzatore vocale Eloquence.
+dict 2 01772c31d74f82e7 7738a7f94b486810 Il dottor Rossi ha pagato 1.234,56 euro il 3 maggio 2026 alle 19:45.
+dict 3 32fdcc4eda442f95 b6c59a9b0851fd50 La rapida volpe marrone salta sopra il cane pigro; p.es. www.esempio.it/percorso?q=1
+dict 4 8c311c48c8f852bd b11415bc360a4655 Prova 1 2 3, ABC XYZ, parole-con-trattino e MAIUSCOLE.
+dict 5 6ce9357f81c16460 86a9b5e625927dd8 Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
+dict 6 fd7054a8041856c9 e2c6e60ac01a19f8 Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
+dict 7 45df2411a0fc3a9f 4e9fe223b6d9698d Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
+second 1 ebf3cd4f69450924 b687026b2d0a0db5 Ciao. Qui parla il sintetizzatore vocale Eloquence.
+second 2 5f900579ea07dfe9 42046e8b2d73444e Il dottor Rossi ha pagato 1.234,56 euro il 3 maggio 2026 alle 19:45.
+second 3 dbbb20b8252791bd 202ba99e2a71072e La rapida volpe marrone salta sopra il cane pigro; p.es. www.esempio.it/percorso?q=1
+second 4 d9361aa21df01563 fd85024c04520aa1 Prova 1 2 3, ABC XYZ, parole-con-trattino e MAIUSCOLE.
+second 5 3215b153accf8545 9c8df99fcd3d03cf Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
+second 6 e18c965a04d533eb d78c9bcf72dc8648 Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
+second 7 ba317c6a1c60caf4 15afcf0ae629a3e4 Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
+ssml 1 5ef49c7aef96ecd0 98f0c6eb928dcedf <speak version="1.0" xml:lang="it-IT">Buongiorno.</speak>
+ssml 2 d3abbd182a011f31 b7c4c3f1d75d99fa <speak version="1.0" xml:lang="it-IT"><prosody rate="slow">Adesso piu lentamente.</prosody> Di nuovo normale.</speak>
+ssml 3 dfd2f700d8a88252 fe1b3e2449e19b75 <speak version="1.0" xml:lang="it-IT"><prosody pitch="high" range="x-high" volume="loud">Tutti quattro insieme.</prosody></speak>
+ssml 4 bd76e5dcbaf0aff0 093c501132b7b630 <speak version="1.0" xml:lang="it-IT"><emphasis level="strong">Questo</emphasis>, non quello.</speak>
+ssml 5 da09c11dc0936362 70663891e0c1ded9 <speak version="1.0" xml:lang="it-IT"><voice gender="female">Lei lo ha detto.</voice> E lui no.</speak>
+ssml 6 60a56c0a81fa2815 3914c1a3a220035b <speak version="1.0" xml:lang="it-IT">Costava <say-as interpret-as="cardinal">1234</say-as> il <say-as interpret-as="ordinal">3</say-as>.</speak>
+ssml 7 1554831edbdb5f59 cfd72f811c26aa7c <speak version="1.0" xml:lang="it-IT">Compita: <say-as interpret-as="letters">abc</say-as>, e chiama il <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+ssml 8 c07e389b0e4e4962 af753f16952fad7f <speak version="1.0" xml:lang="it-IT">Aspetta<break time="500ms"/>un momento.<mark name="qui"/> La.</speak>
+ssml 9 6df310ed9a6053f1 bd8dcfdc6521f02c <speak version="1.0" xml:lang="it-IT"><sub alias="Rete mondiale">WWW</sub> e <phoneme ph="h.E.l.oU">ciao</phoneme>.</speak>
+ssml 10 ebd80f3f9895d09d 716ad3282291fc5f <speak version="1.0" xml:lang="it-IT">Il caffè e perché più città, con a &amp; b &lt; c.</speak>
+wide 1 9a5e7cadb96c2f21 0d47d9ef0481318b Ciao. Qui parla il sintetizzatore vocale Eloquence.
+wide 2 3f475bd05b81db91 a4de102ec545c763 Il dottor Rossi ha pagato 1.234,56 euro il 3 maggio 2026 alle 19:45.
+wide 3 25646e1ebc8ece55 14d55a37d7b49554 La rapida volpe marrone salta sopra il cane pigro; p.es. www.esempio.it/percorso?q=1
+wide 4 5b9a2ce1e3b2ad90 06b5d3dcc7c73838 Prova 1 2 3, ABC XYZ, parole-con-trattino e MAIUSCOLE.
+wide 5 1934ed944f8bef33 23512eff878590e6 Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
+wide 6 dd34d9486a5f485a c6f688b1782564b2 Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
+wide 7 beebe28f2c625639 5f29a767421fe337 Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.

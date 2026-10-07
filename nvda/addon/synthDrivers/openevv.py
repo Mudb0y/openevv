@@ -100,7 +100,9 @@ def _endsSentence(text):
 	wait on the next cancel. So a dot has to argue for itself.
 
 	An abbreviation and an initial are what it fails on. "Mr. Jones" split after
-	the dot measured 0.70 s longer than the same sentence whole, and "J. R. R.
+	the dot measured 0.70 s longer than the same sentence whole with
+	abbreviations expanded -- off, the engine ends a sentence there itself and
+	the split costs nothing -- and "J. R. R.
 	Tolkien" split at every initial measured 1.48 s longer than 3.72, which is
 	nearly half again. Two tests are enough for both, in any of the nine
 	languages: a word carrying a dot inside it is an abbreviation rather than a

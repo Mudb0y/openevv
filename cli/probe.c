@@ -282,12 +282,16 @@ int main(int argc, char **argv)
            nothing set the engine picks, which is the first one linked. */
         {
             const char *want = getenv("EVV_LANGUAGE");
-            const char *pp = getenv("EVV_PHRASE_PREDICTION");
+            const char *ibm = getenv("EVV_IBM_DEFAULTS");
 
-            /* Phrase prediction is off here and on in IBM's engine, so
-               test/compare.sh asks for it whenever ours is held to IBM's. */
-            if (pp != NULL && *pp != 0)
-                es_setDefaultParam(11, atoi(pp));
+            /* The abbreviation dictionary and phrase prediction are off here
+               and on in IBM's engine, so test/compare.sh asks for both
+               whenever ours is held to IBM's. Nought is on for the
+               dictionary, which the interface holds inverted. */
+            if (ibm != NULL && *ibm != 0) {
+                es_setDefaultParam(3, 0);
+                es_setDefaultParam(11, 1);
+            }
             if (want != NULL && *want != 0)
                 h = eo_newEx((uint32_t)strtoul(want, NULL, 0));
             else

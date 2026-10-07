@@ -49,74 +49,74 @@ anno 17 b5d3799f1dcb1047 471b991b74cc849d `ui"a"`ui"b" deux marques sans rien en
 anno 18 310608a3ebac8748 2a46edd5ea0a3eb3 Une marque `ui"non fermee qui ne se termine jamais ici
 anno 19 e71e9674fc2d2dca 1680e1cc40d33bea Melange `v3 voix `vs70 vitesse `vv50 volume ensemble.
 anno 20 e364c6c7e5e7ddbb 196cd3467072f661 Tabulation	et retour a la ligne avec `vb40 un changement.
-anno3 1 11da113dd2295770 fd72716130b32f83 Parole normale `vs50 maintenant bien plus lente qu avant.
-anno3 2 16cce26256f0d1bb 30b9ef2edcf6fbf4 Volume `vv30 plus bas, puis `vv90 plus haut de nouveau.
-anno3 3 bb3eef187c963d70 ebef8263f9f3917c Hauteur `vb20 grave et `vb80 aigue dans une seule phrase.
-anno3 4 c4a266547ea4e67c 0d11e40a891c2282 Voix `v2 deux, `v5 cinq, et `v1 de retour a un.
-anno3 5 ef60de1a008209fb ea0ff165e6308d53 Une pause `0 courte et `4 longue entre les mots.
-anno3 6 ec5237c281d99d67 a0e21c1d090d13aa Rugosite `vr40 et souffle `vf60 modifies.
-anno3 7 d032449194f1f97d db44fe4fbc9e6d2e Un accent grave \`litteral doit se lire comme du texte.
-anno3 8 80b9b40de61ab698 551555dc18161c6b Vitesse par nom `vsfast et ensuite `vsslow de nouveau.
-anno3 9 26bab486bf5468a2 bb7c52de6888dd41 Taille de la tete `vh30 puis `vh70 dans la meme ligne.
-anno3 10 726f33389bc0ec0c a5c84dacc36bfae5 Genre `vg1 et `vg0 qui alternent.
-anno3 11 72eea30654884113 0191a0e65ecc24f4 Avant `ui"marque un" et apres la marque.
-anno3 12 1490e95931cf64c1 583835b4001af08d Marqueur audio `aud"bip" au milieu d une ligne.
-anno3 13 6c5cd4d35a086d5e f4a719c9a6f6c392 `vs40 Une annotation tout au debut de la ligne.
-anno3 14 92480d26115c4c30 7a94dc035a43f4c0 Se terminant par une annotation tout a la fin `vs60
-anno3 15 8c2e60055673121f b7a85143e0ffb5b3 Mal formees `vzz et `q et `v999 toutes sur une ligne.
-anno3 16 3a1bbee8a85cd324 f475e82090604356 Deux `vs30`vv40 annotations sans rien entre elles.
-anno3 17 e0b70785df69de69 8006dfcda72e2b96 `ui"a"`ui"b" deux marques sans rien entre elles.
-anno3 18 310608a3ebac8748 a85961ea2adb5429 Une marque `ui"non fermee qui ne se termine jamais ici
-anno3 19 ede49e8e15f36b1c 2a10f9ef75e3a767 Melange `v3 voix `vs70 vitesse `vv50 volume ensemble.
-anno3 20 21fb78e450a3d9d8 57ec607750217bec Tabulation	et retour a la ligne avec `vb40 un changement.
-realworld 1 870831cc977179c8 b57fa152cd824b92 Parole normale `vs50 maintenant bien plus lente qu avant.
-realworld 2 a3b34c41d8bb9baa 384f6f159eb11174 Volume `vv30 plus bas, puis `vv90 plus haut de nouveau.
-realworld 3 ec213f10393fd274 db35d2cf77f6af2b Hauteur `vb20 grave et `vb80 aigue dans une seule phrase.
-realworld 4 c4a266547ea4e67c a28426e862fb494c Voix `v2 deux, `v5 cinq, et `v1 de retour a un.
-realworld 5 ef60de1a008209fb 77612fc37e96529a Une pause `0 courte et `4 longue entre les mots.
-realworld 6 ec5237c281d99d67 32ee82576879f7c7 Rugosite `vr40 et souffle `vf60 modifies.
-realworld 7 d032449194f1f97d 32a371503cf2417c Un accent grave \`litteral doit se lire comme du texte.
-realworld 8 80b9b40de61ab698 cc999d601b556248 Vitesse par nom `vsfast et ensuite `vsslow de nouveau.
-realworld 9 26bab486bf5468a2 38336ed16bcce1b1 Taille de la tete `vh30 puis `vh70 dans la meme ligne.
-realworld 10 726f33389bc0ec0c df1f331dcdf76bf3 Genre `vg1 et `vg0 qui alternent.
-realworld 11 72eea30654884113 0577fb4c669270bf Avant `ui"marque un" et apres la marque.
-realworld 12 1490e95931cf64c1 d12161e4d0a636f2 Marqueur audio `aud"bip" au milieu d une ligne.
-realworld 13 6e7956647b7778d5 6120a07b7230e2eb `vs40 Une annotation tout au debut de la ligne.
-realworld 14 92480d26115c4c30 ed09c6f4d5906c54 Se terminant par une annotation tout a la fin `vs60
-realworld 15 8c2e60055673121f 03929b07194af5c8 Mal formees `vzz et `q et `v999 toutes sur une ligne.
-realworld 16 8fe05af92b4bc264 35610f9250385fa8 Deux `vs30`vv40 annotations sans rien entre elles.
-realworld 17 e0b70785df69de69 e0d6ab0891ad9f77 `ui"a"`ui"b" deux marques sans rien entre elles.
-realworld 18 310608a3ebac8748 ae47496ef917b98d Une marque `ui"non fermee qui ne se termine jamais ici
-realworld 19 5631d6371e3d9d74 66a0e26fdaa5f0fe Melange `v3 voix `vs70 vitesse `vv50 volume ensemble.
-realworld 20 71b6fe9fcb7d7062 c8a2dfddfb9e056c Tabulation	et retour a la ligne avec `vb40 un changement.
-dict 1 4643775bfd840260 1e454bcc8f5e8717 Bonjour. Ici parle le synthetiseur de parole Eloquence.
-dict 2 b55a2ac75a06be41 cbb753880b78ab99 Le docteur Dupont a paye 1 234,56 euros le 3 mai 2026 a 19h45.
-dict 3 cb1d7808204535c9 77f3ed72e8b47605 Le rapide renard brun saute par-dessus le chien paresseux; p.ex. www.exemple.fr/chemin?q=1
-dict 4 f8490501b17441dc 656f78f988b51bbf Essai 1 2 3, ABC XYZ, mots-avec-traits-d-union et MAJUSCULES.
-dict 5 025c37c98e327853 22b484f6973a1f25 Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
-dict 6 eff983579f4e7be1 7eafd7b34a758907 Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
-dict 7 1805013ec5fd70c8 b0b878936da50f7d Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
-second 1 7a59051898a4492f 1796750ace148c4e Bonjour. Ici parle le synthetiseur de parole Eloquence.
-second 2 c75a4ffb96411ac7 1a1a45d39dd97af1 Le docteur Dupont a paye 1 234,56 euros le 3 mai 2026 a 19h45.
-second 3 02809d8ee037de3f 9bbc4f272212327f Le rapide renard brun saute par-dessus le chien paresseux; p.ex. www.exemple.fr/chemin?q=1
-second 4 c54112457aca5c03 95a71ea8121fa0be Essai 1 2 3, ABC XYZ, mots-avec-traits-d-union et MAJUSCULES.
-second 5 3691d536c022f1e2 a03c842043e75bc8 Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
-second 6 4727b08f26107be1 4128678e908d7849 Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
-second 7 3025a979786cb4f5 ef9802180bb3280c Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
-ssml 1 079150332f17ed4b b1f7e8c8a9204538 <speak version="1.0" xml:lang="fr-CA">Bonjour.</speak>
-ssml 2 194009e4e618541f 93be54ce0802a524 <speak version="1.0" xml:lang="fr-CA"><prosody rate="slow">Plus lentement.</prosody> De nouveau normal.</speak>
-ssml 3 5dc180ff281e641b 04fef6c9a6760d30 <speak version="1.0" xml:lang="fr-CA"><prosody pitch="high" range="x-high" volume="loud">Les quatre a la fois.</prosody></speak>
-ssml 4 1cb724c451fd9758 cc413ae2fae6c395 <speak version="1.0" xml:lang="fr-CA"><emphasis level="strong">Celui-ci</emphasis>, pas celui-la.</speak>
-ssml 5 7947b2ed50ac431d 968bb1c8d6080b41 <speak version="1.0" xml:lang="fr-CA"><voice gender="female">Elle l'a dit.</voice> Et lui non.</speak>
-ssml 6 2df1912460ad380f d3fce483de6fb317 <speak version="1.0" xml:lang="fr-CA">Cela coutait <say-as interpret-as="cardinal">1234</say-as> le <say-as interpret-as="ordinal">3</say-as>.</speak>
-ssml 7 c374339f268fb7e8 1b601745993634f5 <speak version="1.0" xml:lang="fr-CA">Epelez: <say-as interpret-as="letters">abc</say-as>, et appelez <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
-ssml 8 01d1ee7a9ecaed24 57fe1ac86ab5af3a <speak version="1.0" xml:lang="fr-CA">Attends<break time="500ms"/>un peu.<mark name="ici"/> La.</speak>
-ssml 9 da444258b4772c64 a3a951ec4bca329a <speak version="1.0" xml:lang="fr-CA"><sub alias="Toile mondiale">WWW</sub> et <phoneme ph="h.E.l.oU">bonjour</phoneme>.</speak>
-ssml 10 b2fe20083fa827e1 83a69c6e1d978408 <speak version="1.0" xml:lang="fr-CA">Le café près de la façade naïve, avec a &amp; b &lt; c.</speak>
-wide 1 582f4dd87eebd8fc 95612e480b97f981 Bonjour. Ici parle le synthetiseur de parole Eloquence.
-wide 2 8269c2e95925a0f7 3c2c653a87c2c6c2 Le docteur Dupont a paye 1 234,56 euros le 3 mai 2026 a 19h45.
-wide 3 6e06d698c9a0799a 3fc0938553aec27c Le rapide renard brun saute par-dessus le chien paresseux; p.ex. www.exemple.fr/chemin?q=1
-wide 4 c139e7c154f72d5d e87e8b7280b68d9c Essai 1 2 3, ABC XYZ, mots-avec-traits-d-union et MAJUSCULES.
-wide 5 1b406c9ed808257e a9db67b3d11d3f25 Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
-wide 6 3178106f606b7972 3623654313489d4a Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
-wide 7 8b9835e84662f88b 85ec20cde6f441f3 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+anno3 1 11da113dd2295770 bcef6471eb6254ba Parole normale `vs50 maintenant bien plus lente qu avant.
+anno3 2 16cce26256f0d1bb 373734820465e79c Volume `vv30 plus bas, puis `vv90 plus haut de nouveau.
+anno3 3 bb3eef187c963d70 53ef68935e058ac5 Hauteur `vb20 grave et `vb80 aigue dans une seule phrase.
+anno3 4 c4a266547ea4e67c 070e4051d0cdec7a Voix `v2 deux, `v5 cinq, et `v1 de retour a un.
+anno3 5 ef60de1a008209fb e1f00d0d8990a894 Une pause `0 courte et `4 longue entre les mots.
+anno3 6 ec5237c281d99d67 ce20e938ba1d0d41 Rugosite `vr40 et souffle `vf60 modifies.
+anno3 7 d032449194f1f97d 6485e21eb13df1b2 Un accent grave \`litteral doit se lire comme du texte.
+anno3 8 80b9b40de61ab698 615969937190c944 Vitesse par nom `vsfast et ensuite `vsslow de nouveau.
+anno3 9 26bab486bf5468a2 81a9f486b1082c5f Taille de la tete `vh30 puis `vh70 dans la meme ligne.
+anno3 10 726f33389bc0ec0c 997f9463f2af54d4 Genre `vg1 et `vg0 qui alternent.
+anno3 11 72eea30654884113 7d6a36520d246a15 Avant `ui"marque un" et apres la marque.
+anno3 12 1490e95931cf64c1 1a0501ed51dd70e0 Marqueur audio `aud"bip" au milieu d une ligne.
+anno3 13 6c5cd4d35a086d5e be88c042468175e8 `vs40 Une annotation tout au debut de la ligne.
+anno3 14 92480d26115c4c30 1705bbb023cd8dfc Se terminant par une annotation tout a la fin `vs60
+anno3 15 8c2e60055673121f f4225bf7b54123be Mal formees `vzz et `q et `v999 toutes sur une ligne.
+anno3 16 3a1bbee8a85cd324 8ef221709a4560de Deux `vs30`vv40 annotations sans rien entre elles.
+anno3 17 e0b70785df69de69 8dcdbd488cdad244 `ui"a"`ui"b" deux marques sans rien entre elles.
+anno3 18 310608a3ebac8748 8778b7d054904110 Une marque `ui"non fermee qui ne se termine jamais ici
+anno3 19 ede49e8e15f36b1c 755dfe725d9cbd79 Melange `v3 voix `vs70 vitesse `vv50 volume ensemble.
+anno3 20 21fb78e450a3d9d8 8e09336e0a73f497 Tabulation	et retour a la ligne avec `vb40 un changement.
+realworld 1 870831cc977179c8 d80a2316a38c94ff Parole normale `vs50 maintenant bien plus lente qu avant.
+realworld 2 a3b34c41d8bb9baa 89f9645e292188b3 Volume `vv30 plus bas, puis `vv90 plus haut de nouveau.
+realworld 3 ec213f10393fd274 981393e309ba7653 Hauteur `vb20 grave et `vb80 aigue dans une seule phrase.
+realworld 4 c4a266547ea4e67c 0a105d605f5b165a Voix `v2 deux, `v5 cinq, et `v1 de retour a un.
+realworld 5 ef60de1a008209fb 95a4d018922f1b94 Une pause `0 courte et `4 longue entre les mots.
+realworld 6 ec5237c281d99d67 bb27e816449fbf12 Rugosite `vr40 et souffle `vf60 modifies.
+realworld 7 d032449194f1f97d ae3fed9bcab6b3a7 Un accent grave \`litteral doit se lire comme du texte.
+realworld 8 80b9b40de61ab698 a30355aa7fc09d46 Vitesse par nom `vsfast et ensuite `vsslow de nouveau.
+realworld 9 26bab486bf5468a2 b0d247183ada86a8 Taille de la tete `vh30 puis `vh70 dans la meme ligne.
+realworld 10 726f33389bc0ec0c 52848fb1f3a308c7 Genre `vg1 et `vg0 qui alternent.
+realworld 11 72eea30654884113 fe4ac767f3e92a09 Avant `ui"marque un" et apres la marque.
+realworld 12 1490e95931cf64c1 da3a55adc0e02f81 Marqueur audio `aud"bip" au milieu d une ligne.
+realworld 13 6e7956647b7778d5 aeed46f5ef65bc77 `vs40 Une annotation tout au debut de la ligne.
+realworld 14 92480d26115c4c30 9fadb55536d5ea8b Se terminant par une annotation tout a la fin `vs60
+realworld 15 8c2e60055673121f 33e34dd51d881457 Mal formees `vzz et `q et `v999 toutes sur une ligne.
+realworld 16 8fe05af92b4bc264 57f8fecea5ea664b Deux `vs30`vv40 annotations sans rien entre elles.
+realworld 17 e0b70785df69de69 026ee5e925bae4de `ui"a"`ui"b" deux marques sans rien entre elles.
+realworld 18 310608a3ebac8748 d6a47eabc77b84d0 Une marque `ui"non fermee qui ne se termine jamais ici
+realworld 19 5631d6371e3d9d74 ad3bb698d1e68cfd Melange `v3 voix `vs70 vitesse `vv50 volume ensemble.
+realworld 20 71b6fe9fcb7d7062 cecc7c405fedf6a8 Tabulation	et retour a la ligne avec `vb40 un changement.
+dict 1 4643775bfd840260 3d4e21ce511fc276 Bonjour. Ici parle le synthetiseur de parole Eloquence.
+dict 2 b55a2ac75a06be41 2a2d6f2fc0c9c8d6 Le docteur Dupont a paye 1 234,56 euros le 3 mai 2026 a 19h45.
+dict 3 cb1d7808204535c9 2b67a9d4983d34f8 Le rapide renard brun saute par-dessus le chien paresseux; p.ex. www.exemple.fr/chemin?q=1
+dict 4 f8490501b17441dc c9573cf5ae487024 Essai 1 2 3, ABC XYZ, mots-avec-traits-d-union et MAJUSCULES.
+dict 5 025c37c98e327853 9504d64c865eab8c Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
+dict 6 eff983579f4e7be1 1eeb297db8ba09e2 Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
+dict 7 1805013ec5fd70c8 f5f4028df3726fc7 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+second 1 7a59051898a4492f 2d3da1b36d1b5579 Bonjour. Ici parle le synthetiseur de parole Eloquence.
+second 2 c75a4ffb96411ac7 430d7d9c1afefa3c Le docteur Dupont a paye 1 234,56 euros le 3 mai 2026 a 19h45.
+second 3 02809d8ee037de3f a867320ff6e48242 Le rapide renard brun saute par-dessus le chien paresseux; p.ex. www.exemple.fr/chemin?q=1
+second 4 c54112457aca5c03 e75327c7d5518239 Essai 1 2 3, ABC XYZ, mots-avec-traits-d-union et MAJUSCULES.
+second 5 3691d536c022f1e2 f2f55e855563b3d8 Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
+second 6 4727b08f26107be1 98c029b0c5c0ff06 Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
+second 7 3025a979786cb4f5 e68fe049ee606546 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+ssml 1 079150332f17ed4b 8f0708d0393d9728 <speak version="1.0" xml:lang="fr-CA">Bonjour.</speak>
+ssml 2 194009e4e618541f 0c098770aebfd90a <speak version="1.0" xml:lang="fr-CA"><prosody rate="slow">Plus lentement.</prosody> De nouveau normal.</speak>
+ssml 3 5dc180ff281e641b 4a8a4cdf5a9c8099 <speak version="1.0" xml:lang="fr-CA"><prosody pitch="high" range="x-high" volume="loud">Les quatre a la fois.</prosody></speak>
+ssml 4 1cb724c451fd9758 a667c5be846bf48a <speak version="1.0" xml:lang="fr-CA"><emphasis level="strong">Celui-ci</emphasis>, pas celui-la.</speak>
+ssml 5 7947b2ed50ac431d 7b4f696e4909dd94 <speak version="1.0" xml:lang="fr-CA"><voice gender="female">Elle l'a dit.</voice> Et lui non.</speak>
+ssml 6 2df1912460ad380f d93154bcc347ad69 <speak version="1.0" xml:lang="fr-CA">Cela coutait <say-as interpret-as="cardinal">1234</say-as> le <say-as interpret-as="ordinal">3</say-as>.</speak>
+ssml 7 c374339f268fb7e8 5acde30e24a58c00 <speak version="1.0" xml:lang="fr-CA">Epelez: <say-as interpret-as="letters">abc</say-as>, et appelez <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+ssml 8 01d1ee7a9ecaed24 899ea47a3e5cbd18 <speak version="1.0" xml:lang="fr-CA">Attends<break time="500ms"/>un peu.<mark name="ici"/> La.</speak>
+ssml 9 da444258b4772c64 f7a8caf7739920ca <speak version="1.0" xml:lang="fr-CA"><sub alias="Toile mondiale">WWW</sub> et <phoneme ph="h.E.l.oU">bonjour</phoneme>.</speak>
+ssml 10 b2fe20083fa827e1 1f6b7a4aaca37eb8 <speak version="1.0" xml:lang="fr-CA">Le café près de la façade naïve, avec a &amp; b &lt; c.</speak>
+wide 1 582f4dd87eebd8fc 370f04aa28c92ad7 Bonjour. Ici parle le synthetiseur de parole Eloquence.
+wide 2 8269c2e95925a0f7 25ea4d765500d81e Le docteur Dupont a paye 1 234,56 euros le 3 mai 2026 a 19h45.
+wide 3 6e06d698c9a0799a 1d4028786c7b8069 Le rapide renard brun saute par-dessus le chien paresseux; p.ex. www.exemple.fr/chemin?q=1
+wide 4 c139e7c154f72d5d 3c13ee236cbebc71 Essai 1 2 3, ABC XYZ, mots-avec-traits-d-union et MAJUSCULES.
+wide 5 1b406c9ed808257e 5f3be727407fdf3c Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
+wide 6 3178106f606b7972 218277ccb96eb6e4 Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
+wide 7 8b9835e84662f88b 6b996f408686daf5 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
