@@ -274,6 +274,12 @@ The engine synthesises above 11,025 now, by a windowed sinc over resonator table
 
 Apple ships a separately implemented ECI 6.1, which matches ours at 11,025 and cannot be matched above it. `docs/notes/apple-eloquence.md` is the comparison, and the premise mistake that cost days before it was understood.
 
+## Toward ETI Eloquence 6.1
+
+**English reads punctuation as ETI Eloquence 6.1 does, and the rest of 6.1 has been measured.** As of 8 October 2026 the direction is ETI's 6.1 rather than IBM's 4.3 where the two differ: 4.3 is IBM's branch of the engine and 6.1 is what screen reader users know. `tools/rules/lift64.py` reads Apple's 6.1 modules into the upper form, and on its first day it read 53 to 59 per cent of the rules of every module Apple ships with nothing language-specific in it: 565 of English's 1,019, 579 of British English's 1,031, German 493 of 838, French 500 of 890 and Canadian French 506 of 919, the Spanishes 410 of 766 and 409 of 770, Italian 397 of 707, and two languages IBM never shipped -- Finnish 422 of 756 and Brazilian Portuguese 434 of 783. What stops the rest is one list of shapes for all of them: locals of the kinds a frame declares, a few registers it cannot yet name, C switch statements, and some thirty rules of English's that 6.1 wrote in floating point.
+
+Thirteen rules and 6.1's alphabet records are in English now, matching 6.1's phonemes on all 161 cases `test/harness/eti.sh` holds; `docs/quirks.md` says which and why taking one rule alone did not work. A whole 6.1 module wants its variables, statement tables, lookup sets and strings beside its rules. All four are named in Apple's modules: the variables are read already, from 6.1's own `delta_new`, and 530 of English's 572 sets carry names ours has.
+
 ## Other processors
 
 The engine ran on x86 only until 6 September 2026, when two faults that x86 cannot see were fixed and it reached aarch64 and armv7a. Neither was found here. Both are Quin Gillespie's, out of getting the engine onto Android as a TalkBack voice and then onto Wear OS, where the Pixel Watch 4 is thirty-two bit ARM and nothing else; the measurements on those devices are his.

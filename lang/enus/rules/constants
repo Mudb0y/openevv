@@ -28,3 +28,37 @@ bytes eng_dollar        55            # $
 bytes eng_asterisk      4e            # *
 bytes eng_tilde         4d            # ~
 bytes eng_space         c7 48
+
+# 6.1's own strings, which the rules it changed under punctuation test
+# against; see the end of ut_norm.up.
+bytes eti_null         00
+bytes eti_s_1b90d7     48
+bytes eti_s_1b90d8     47
+bytes eti_s_1b90d9     51
+bytes eti_s_1b90da     60
+bytes eti_s_1b90db     49
+bytes eti_s_1b90dc     a8
+bytes eti_s_1b90dd     ac
+bytes eti_s_1b90de     41
+bytes eti_s_1b90fd     43
+bytes eti_s_1b90ff     42
+bytes eti_s_1b9100     45
+bytes eti_s_1b9101     44
+bytes eti_s_1b9102     40
+bytes eti_s_1b9103     04
+bytes eti_s_1b9104     46
+bytes eti_s_1b9105     46 47
+bytes eti_s_1b9118     a7
+bytes eti_s_1b9119     4c
+bytes eti_s_1b911a     ab
+bytes eti_s_1b911d     50
+bytes eti_s_1b911e     53
+bytes eti_s_1b911f     52
+bytes eti_s_1b9120     5e
+bytes eti_s_1b9121     5f
+bytes eti_s_1b9134     19
+bytes eti_s_1b9135     2e
+bytes eti_s_1b9136     48 48
+bytes eti_s_1b9138     54
+bytes eti_s_1b9139     41 48
+bytes eti_s_1b913b     c7

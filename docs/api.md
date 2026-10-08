@@ -181,7 +181,7 @@ Eighteen settings, by the numbers `eci.h` names, and one of ours numbered well p
 
 `eciInputType` (1), nought or one. One turns annotations on.
 
-`eciTextMode` (2), nought to three.
+`eciTextMode` (2), nought to three. In English a sentence mark standing on its own is read in each of them as ETI Eloquence 6.1 reads it: `docs/quirks.md` says how.
 
 `eciDictionary` (3), nought or one, **and one turns the dictionary off**. The value is inverted on its way in and out, which is IBM's. It is the abbreviation dictionary, which says "Dr." as doctor and "mg" as milligrams, and a new instance answers one here where IBM's answered nought: off unless asked for, which is the twenty-fourth deliberate divergence `docs/quirks.md` describes. Off, the caller's own `eciAbbvDict` volume goes unread as well.
 

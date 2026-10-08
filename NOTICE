@@ -144,6 +144,17 @@ and are now the subject of Cerence Inc. v. Microsoft Corporation and Nuance
 Communications, Inc., D. Del. 1:25-cv-00553, filed 6 May 2025. None of this is
 legal advice.
 
+ETI's
+-----
+
+The rules at the end of `lang/enus/rules/ut_norm.up` that say they were lifted
+by `tools/rules/lift64.py`, the bytes named `eti_` in `lang/enus/rules/constants`
+and the sixth character type and the records that use it in
+`lang/enus/enus.statements` are ETI Eloquence 6.1's, read out of the English
+language module Apple ships with its operating systems. They are on the same
+footing as everything under `lang`: no more ours to license than IBM's are,
+and nothing here grants anything in them.
+
 Where it came from
 ------------------
 
@@ -154,6 +165,9 @@ IBM's Embedded ViaVoice 4.3 SDK for Windows, which IBM still serves at
 `docs/building.md` says what to do with it, and every tool that reads it is in
 `tools`, so anything under `lang` can be produced again from IBM's own file
 rather than taken on trust.
+
+What is ETI's came out of `enu.dylib` as Apple's tvOS 18.2 ships it, read by
+`tools/rules/lift64.py`, which works on any of Apple's modules of that engine.
 
 Measured against
 ----------------

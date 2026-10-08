@@ -230,18 +230,23 @@ def main():
         print("speechd: the Western set's own punctuation", flush=True)
         # A dash, an ellipsis, the euro sign and curly quotes are bytes of the
         # Windows Western set that Latin-1 has not got. Taken as Latin-1 they
-        # became question marks, and the engine read "question mark" for each.
-        # This instance has spoken before, so its samples are not a fresh
-        # engine's and cannot be held against one; what can be held is that
-        # the same sentence with the question marks in it is far longer.
+        # became question marks. A question mark among words is punctuation in
+        # English now, as it is in ETI's 6.1, and so are the dash and the
+        # quotes, so what tells the two apart is the euro sign: read as euros
+        # where it arrived, and a pause where a question mark stood in for it.
+        # All of them fail together if the conversion is wrong. This instance
+        # has spoken before, so its samples are not a fresh engine's and
+        # cannot be held against one; what can be held is that the sentence
+        # with its prices in it is clearly the longer.
         module.set(punctuation_mode="all")
-        western = "It costs \u20ac5 \u2013 \u201cyes\u201d\u2026 more \u2014 less."
-        asked = "It costs ?5 ? ?yes?? more ? less."
+        western = ("It costs \u20ac5, \u20ac6, \u20ac7, \u20ac8 or \u20ac9 "
+                   "\u2013 \u201cyes\u201d\u2026 more \u2014 less.")
+        asked = "It costs ?5, ?6, ?7, ?8 or ?9 ? ?yes?? more ? less."
         westernAudio, _, _, event = module.speak(western)
         assert event == "702 END"
         askedAudio, _, _, event = module.speak(asked)
         assert event == "702 END"
-        assert len(westernAudio) * 3 < len(askedAudio) * 2, (
+        assert len(askedAudio) * 11 < len(westernAudio) * 10, (
             "Western punctuation reached the engine as question marks "
             f"({len(westernAudio)} versus {len(askedAudio)} PCM bytes)"
         )
