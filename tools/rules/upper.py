@@ -540,8 +540,12 @@ class Compiler:
                 fault(where, "a set says `set <place> to <value>'")
             src, sw, ssigned = self.value(where, w)
             if sw < width:
-                fault(where, "a %d byte value will not fill %d bytes"
-                      % (sw, width))
+                # Widened the way the value says, signed or not, which is
+                # what a rule lifted from 6.1 needs: its compiler loads a
+                # half with movzwl or movswl into a register that is a word.
+                # r0 is left alone, since it may be the answer still.
+                self.op("load", WIDEN[(sw, ssigned)], src, "%ecx")
+                src = ("reg", "%ecx")
             self.op("store", MOVE[width], src, place)
 
         elif head in ("add", "subtract", "and", "or", "shift"):
