@@ -12,25 +12,11 @@
 
 bytes lex_prefix_re 18 02
 
-# What eng_tok_lookup in ut_norm.up tests a token against and lays down, in
-# the input statement's alphabet: the marks after which a word is not left
-# to be spelled, the three endings process_final_parenthetical already folds
-# into the word, and the space, behind the byte insert_r reads as the width
-# of what follows it.
-bytes eng_open_paren    46            # (
-bytes eng_paren_s       46 19 47      # (s)
-bytes eng_paren_es      46 02 19 47   # (es)
-bytes eng_paren_ed      46 02 0d 47   # (ed)
-bytes eng_open_bracket  50            # [
-bytes eng_open_brace    52            # {
-bytes eng_number_sign   4a            # #
-bytes eng_dollar        55            # $
-bytes eng_asterisk      4e            # *
-bytes eng_tilde         4d            # ~
-bytes eng_space         c7 48
-
-# 6.1's own strings, which the rules it changed under punctuation test
-# against; see the end of ut_norm.up.
+# 6.1's own strings, which the rules lifted out of it at the end of
+# ut_norm.up test against and lay down. Where 6.1 marks an annotation with a
+# backslash and an exclamation mark, which only its own annotation reader
+# takes, the annotation is written with the backquote IBM's reader takes and
+# a space after it, which keeps the length the rule states.
 bytes eti_null         00
 bytes eti_s_1b90d7     48
 bytes eti_s_1b90d8     47
@@ -40,7 +26,20 @@ bytes eti_s_1b90db     49
 bytes eti_s_1b90dc     a8
 bytes eti_s_1b90dd     ac
 bytes eti_s_1b90de     41
+bytes eti_s_1b90df     4f
+bytes eti_s_1b90e0     c7 48
+bytes eti_s_1b90e2     c7 40 48
+bytes eti_s_1b90e5     10 1a
+bytes eti_s_1b90e7     0e
+bytes eti_s_1b90e8     1a 16
+bytes eti_s_1b90ea     43 58 58
+bytes eti_s_1b90ed     1c 1c 1c 41
+bytes eti_s_1b90f1     48 41 41 41 48
+bytes eti_s_1b90f6     58
+bytes eti_s_1b90f7     c7 48 4c 35 48
+bytes eti_s_1b90fc     5d
 bytes eti_s_1b90fd     43
+bytes eti_s_1b90fe     3f
 bytes eti_s_1b90ff     42
 bytes eti_s_1b9100     45
 bytes eti_s_1b9101     44
@@ -48,6 +47,7 @@ bytes eti_s_1b9102     40
 bytes eti_s_1b9103     04
 bytes eti_s_1b9104     46
 bytes eti_s_1b9105     46 47
+bytes eti_s_1b9112     c7 48 4c 36 48 48
 bytes eti_s_1b9118     a7
 bytes eti_s_1b9119     4c
 bytes eti_s_1b911a     ab
@@ -56,6 +56,9 @@ bytes eti_s_1b911e     53
 bytes eti_s_1b911f     52
 bytes eti_s_1b9120     5e
 bytes eti_s_1b9121     5f
+bytes eti_s_1b9126     4e
+bytes eti_s_1b9127     48 4c 35 48 48 0d 04 1a 48
+bytes eti_s_1b9130     19 1a 01 18
 bytes eti_s_1b9134     19
 bytes eti_s_1b9135     2e
 bytes eti_s_1b9136     48 48

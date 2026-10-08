@@ -44,7 +44,7 @@ if [ ! -x "$driver" ] || [ "$here/eti.c" -nt "$driver" ]; then
 fi
 
 cases=("$@")
-[ ${#cases[@]} -eq 0 ] && cases=("$root/test/cases/eti-punct.txt")
+[ ${#cases[@]} -eq 0 ] && cases=("$root"/test/cases/eti-*.txt)
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT

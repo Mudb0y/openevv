@@ -144,10 +144,11 @@ const int8_t enus_delta_globals[] = {
     DG_SHORT, DG_SHORT, DG_SHORT, DG_WORD, DG_SHORT, DG_SHORT,
     DG_SHORT, DG_SHORT, DG_SHORT, DG_SHORT, DG_SHORT, DG_SHORT,
     DG_SHORT, DG_SHORT, DG_SHORT, DG_SHORT, DG_SHORT, DG_WORD,
-    DG_LONG, DG_WORD,
+    DG_LONG, DG_WORD, DG_SHORT, DG_SHORT, DG_SHORT, DG_SHORT,
+    DG_SHORT, DG_SHORT,
 };
 
-const int32_t enus_delta_globals_n = 794;
+const int32_t enus_delta_globals_n = 800;
 
 /* What the compound ones hold, in the same order they appear
    in the list above. */
@@ -180,4 +181,4 @@ const int32_t enus_delta_compounds_n = 20;
    machine of this language has to be. The struct in delta.h
    stops at the named fields; the cells are the rest of an
    allocation this size. */
-const int32_t enus_delta_state_bytes = 0x1088;
+const int32_t enus_delta_state_bytes = 0x10a0;

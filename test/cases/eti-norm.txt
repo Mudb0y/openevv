@@ -1,0 +1,84 @@
+# The text normaliser as ETI Eloquence 6.1 reads it, which test/harness/eti.sh
+# holds ours against, in the same form as eti-punct.txt.
+#
+# Words typed against digits or a bracket, which 6.1 reads as words where 4.3
+# spelled them, and the short runs it reads as words too.
+0x10000	-1	Windows10 is out.
+0x10000	-1	teamtalk5 is out.
+0x10000	-1	Call this(thing) now.
+0x10000	-1	Call sum(x) now.
+0x10000	-1	Each friend(s) came.
+0x10000	-1	Take item#3 now.
+0x10000	-1	At price$5 now.
+0x10000	-1	MP3 files.
+0x10000	-1	utf8 text.
+0x10000	-1	H2O is water.
+0x10000	-1	Use ipv6 here.
+0x10000	-1	An amd64 box.
+0x10000	-1	A sha256 sum.
+0x10000	-1	CO2 levels.
+0x10000	-1	A4 paper.
+0x10000	-1	My iPhone12 broke.
+0x10000	-1	Run MySQL8 now.
+0x10000	-1	An Xbox360 game.
+0x10000	-1	On macOS14 now.
+0x10000	-1	The Win32 API.
+0x10000	-1	Read array[1] now.
+0x10000	-1	Read word{x} now.
+0x10000	-1	Then star*2 now.
+0x10000	-1	About tilde~5 now.
+0x10000	-1	Walk 10km now.
+0x10000	-1	The 3rd one.
+0x10000	-1	A 4x4 truck.
+0x10000	-1	Windows 10 is out.
+0x10000	-1	Call this (thing) now.
+0x10000	-1	version2 of firefox115.
+
+# Hosts, web and email addresses and paths, which 6.1 reads a part at a time,
+# with a domain it knows said as a word.
+0x10000	-1	example.com
+0x10000	-1	example.org
+0x10000	-1	example.com/path
+0x10000	-1	www.example.org
+0x10000	-1	a@example.org
+0x10000	-1	see example.com now
+0x10000	-1	see example.org now
+0x10000	-1	org
+0x10000	-1	com
+0x10000	-1	Go to www.example.com now.
+0x10000	-1	Mail stas@example.org today.
+0x10000	-1	Write to john.smith@mail.co.uk please.
+0x10000	-1	Edit /etc/nixos/configuration.nix now.
+0x10000	-1	Run setup.exe twice.
+0x10000	-1	Visit example.com/path/to/page.html today.
+0x10000	-1	ftp://files.example.net/pub is old.
+0x10000	-1	The file is report_2024-final.pdf here.
+0x10000	-1	Type ~/Projects/openevv/src now.
+0x10000	-1	It costs $5.99 or 3.50 euros.
+0x10000	-1	It's the dog's bone, isn't it?
+0x10000	-1	Mr. Smith met Dr. Jones.
+0x10000	-1	A well-known self-made man.
+0x10000	-1	Item 3(a) and section 4(b)(ii).
+0x10000	-1	Version 1.2.3 is out.
+0x10000	-1	The IP is 192.168.1.1 now.
+0x10000	-1	She said "hello" and left.
+0x10000	-1	Score was 3-2 at 10:30 pm.
+0x10000	-1	Room 101B and gate A12.
+0x10000	-1	hello_world and foo_bar_baz.
+0x10000	-1	CamelCaseWord and snake_case.
+0x10000	-1	e.g. this and i.e. that.
+0x10000	-1	Read RFC2616 and ISO9001.
+
+# A full stop after an abbreviation, before a word that can start a sentence.
+0x10000	-1	He bought pears etc. The rest was fine.
+0x10000	-1	Meet at 5 p.m. Then leave.
+0x10000	-1	I saw Mr. Smith. He left.
+0x10000	-1	It is approx. Ten miles.
+0x10000	-1	See fig. A for this.
+0x10000	-1	The U.S. Army came.
+0x10000	-1	They went to the U.S. The trip was long.
+0x10000	-1	Read vol. One today.
+0x10000	-1	I like it a lot. Baby food is fine.
+0x10000	-1	Vs. Them we lost.
+0x10000	-1	The end. Air was cold.
+0x10000	-1	It works, i.e. It runs.

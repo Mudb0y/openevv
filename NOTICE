@@ -116,12 +116,11 @@ digit. They are written here and stand on IBM's rules rather than replacing
 them: the two calls in each `ut_numbr.dr` that were pointed at them are an
 edit to IBM's text, and the rest of that text is IBM's as it was.
 
-`eng_tok_lookup`, in `lang/enus/rules/ut_norm.up` and again in
-`lang/engb/rules/ut_norm.up`, is ours on the same terms. It was written here to
-put a space between a word and the digits or opening mark typed against it,
-and the bytes it reads out of each module's `rules/constants` stand for codes
-of IBM's alphabet as Polish's do. Every rule it calls or hands over to is
-IBM's, and so is everything else in both modules.
+`eng_tok_lookup`, in `lang/engb/rules/ut_norm.up`, is ours on the same terms.
+It was written here to put a space between a word and the digits or opening
+mark typed against it, and the bytes it reads out of the module's
+`rules/constants` stand for codes of IBM's alphabet as Polish's do. Every rule
+it calls or hands over to is IBM's, and so is everything else in the module.
 
 That data is IBM's work, not ours. The MIT licence does not cover it and we are
 in no position to license it to anyone. The SDK it was read out of says as much
@@ -148,12 +147,18 @@ ETI's
 -----
 
 The rules at the end of `lang/enus/rules/ut_norm.up` that say they were lifted
-by `tools/rules/lift64.py`, the bytes named `eti_` in `lang/enus/rules/constants`
-and the sixth character type and the records that use it in
-`lang/enus/enus.statements` are ETI Eloquence 6.1's, read out of the English
+by `tools/rules/lift64.py`, the bytes named `eti_` in `lang/enus/rules/constants`,
+the sixth character type and the records that use it in
+`lang/enus/enus.statements`, the six variables at the end of
+`lang/enus/enus.globals`, the three of them that `set_global_constants` in
+`lang/enus/rules/u_vars.dr` now sets to 6.1's values, and the set of
+three-letter domain names in `lang/enus/enus.sets` are ETI Eloquence 6.1's, read out of the English
 language module Apple ships with its operating systems. They are on the same
 footing as everything under `lang`: no more ours to license than IBM's are,
-and nothing here grants anything in them.
+and nothing here grants anything in them. Two things in those rules are not
+6.1's, and both are edits to its text rather than anything with a claim of its
+own: the call `normalize_text` makes to IBM's `backquote`, and the annotations
+three of the `eti_` strings write with IBM's mark rather than 6.1's.
 
 Where it came from
 ------------------

@@ -17,20 +17,20 @@
 
 plain 1 3ae4e03b58575154 28775d11629885cc Hello. This is the Eloquence synthesizer speaking.
 plain 2 0455f430e860f421 903ce95c2021fc22 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
-plain 3 2385dbb5d8947b80 8b47a3bf7642bc2f The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
+plain 3 06c583fc4771098e 33f892bece432e27 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
 plain 4 e7a11c93534f30c4 a1e5621c0f3ea2ab Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
 plain 5 d4fe33fae44e4dd2 0510369e14ad1de4 A one-word line. And another; plus "quoted text" inside.
-plain 6 850e6621c9099816 b1f160eedbd6aba1 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+plain 6 82f39eea2defc6e1 57461d66daef10d0 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 plain 7 29f67773bfed73f0 f65ca06ac278aa5c He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 plain 8 5e4e4261780111e4 b95269c27c9fd588 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-plain 9 6f17588546ca3622 5e181ee1a2c85cca Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-plain 10 c46b89f0b7078a27 ca4da7d34c29ca65 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
-utf8 1 8cadb4906a355820 0d110e783838c376 The café near the naïve façade serves crème brûlée.
-utf8 2 c96c90b9925c8cef b1777b3f1856b3a7 Señor Muñoz sent a piñata to São Paulo.
+plain 9 0c6e8d642ceee098 fece5313a416e4ed Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+plain 10 7cd979b02e0b624a aa5548d84ca05752 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+utf8 1 7c6e196773dba1a7 7b907bc587bb6d86 The café near the naïve façade serves crème brûlée.
+utf8 2 78ff65d995f63497 cd7285c4b201b708 Señor Muñoz sent a piñata to São Paulo.
 utf8 3 0d63cfdc39d625b8 6b2c0931330cc35a Zdzisław Świątek mieszka w Świdnicy przy ulicy Żółkiewskiego.
-utf8 4 e9ce4183e2a1e3aa abaed6eab6a47bbd He said “this” and ‘that’ — costing €20 … or 50‰.
-utf8 5 3142ce19e1893399 9247ce5e8be861c0 Œuvres de Škoda, Žižek, Ÿ and ƒ walk into a bar.
-utf8 6 7c427f66b343a681 1c7870bd390ffb07 Straße, Grüße, Müller, Köln, Weiß.
+utf8 4 7ec98a54ca6fd698 a59a8e591420f4c3 He said “this” and ‘that’ — costing €20 … or 50‰.
+utf8 5 6dde14f737993a91 0a607e2bc9dd5c2a Œuvres de Škoda, Žižek, Ÿ and ƒ walk into a bar.
+utf8 6 9542811b386bdb27 acea3dff2f54b9a4 Straße, Grüße, Müller, Köln, Weiß.
 utf8 7 7c82545e3589f828 861f4da718a05da8 A plain line with no accents at all for comparison.
 anno 1 a7b189c29ae1883c d97123a2dedc8b19 Normal speech `vs50 now much slower than before.
 anno 2 9561297397d5c9dc 42b79a6b5672a2ff Volume `vv30 quieter, then `vv90 louder again.
@@ -94,24 +94,24 @@ realworld 19 a740daddb8250fe5 f1be24cce3045b47 Mixed `v3 voice `vs70 speed `vv50
 realworld 20 d1bc8ab16fd80b77 b8d9ab950a5fbf44 Tab	and newline handling with `vb40 a change.
 dict 1 3ae4e03b58575154 88a97c6214c7ae40 Hello. This is the Eloquence synthesizer speaking.
 dict 2 0455f430e860f421 79c8127c956e41f7 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
-dict 3 2385dbb5d8947b80 a24aa8d56299f975 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
+dict 3 06c583fc4771098e 5871d2db91b09dd5 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
 dict 4 e7a11c93534f30c4 534e4d6371f236bb Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
 dict 5 d4fe33fae44e4dd2 f51513e11b68fc5c A one-word line. And another; plus "quoted text" inside.
-dict 6 850e6621c9099816 5fd4d99699dad664 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+dict 6 82f39eea2defc6e1 80f1996953c61db2 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 dict 7 29f67773bfed73f0 c571ddfba1403ab2 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 dict 8 5e4e4261780111e4 97b1b032b412b274 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-dict 9 6f17588546ca3622 bb9b809b096ced3c Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-dict 10 c46b89f0b7078a27 e5a59236c0aca039 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+dict 9 0c6e8d642ceee098 1cef3d4452d5577c Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+dict 10 7cd979b02e0b624a ceba59834487cff4 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 second 1 db2e00e0f9ab64fb 86d0d4a3017b6650 Hello. This is the Eloquence synthesizer speaking.
 second 2 b2226360d82f88fc e32227ad5af7f916 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
-second 3 81d0422a00ae42a5 b8c4212e13d17a74 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
+second 3 b155c32ffb51ab33 5beebeb37e711184 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
 second 4 65d73728758609e6 a265dc1024ef7902 Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
 second 5 e1320b954e42c341 e0a1ade61139aab5 A one-word line. And another; plus "quoted text" inside.
-second 6 648a3cf222543fab f617d55dda89b78e Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+second 6 752056dbc9efb0ec 5ae905798bdc9e04 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 second 7 27d804c74cb1f1e4 6d27f8c778157733 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 second 8 2b93fcf546ef2622 e052c61fd60b13a3 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-second 9 e1a19d6cbaf8422d 5e234da813464e01 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-second 10 ab399cf2ca68c9c2 ab2b327ffe7173aa Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+second 9 3d86a4feb2ef6e91 1066977e538220a9 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+second 10 562eb4ae5eb06560 64dfc6c8067f24c3 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 ssml 1 aeba6858c67acfd3 3fe5cf74a53482b3 <speak version="1.0" xml:lang="en-US">Hello there.</speak>
 ssml 2 302249f0afbd77b8 4dd4349233151d20 <speak version="1.0" xml:lang="en-US"><prosody rate="slow">Slowly now.</prosody> Back to normal.</speak>
 ssml 3 3653258574f72763 509fc18886a00308 <speak version="1.0" xml:lang="en-US"><prosody pitch="high" range="x-high" volume="loud">All four at once.</prosody></speak>
@@ -124,11 +124,11 @@ ssml 9 e38f0b0f18d5ea04 3292e9857759cc73 <speak version="1.0" xml:lang="en-US"><
 ssml 10 019301a1b2fb4152 957d5569e0328ef0 <speak version="1.0" xml:lang="en-US">The café near the naïve façade, with a &amp; b &lt; c.</speak>
 wide 1 ee12cfd97d7839cf 5d79ca06a0beb05f Hello. This is the Eloquence synthesizer speaking.
 wide 2 10e4ea7595461500 28ee60604cdcfc2d Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
-wide 3 3f5196e0c345c1e6 d2838d8806609946 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
+wide 3 f843610b04b0a249 6993d7d146276ba6 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
 wide 4 bf206121e5c833e5 26a56ac7931e3b1b Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
 wide 5 732fd54e3ea125fe a630d67ae7163cd0 A one-word line. And another; plus "quoted text" inside.
-wide 6 c192df878478a064 bb991c4e5fc64df5 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+wide 6 bd009d1a198247f7 6890b36335e24925 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 wide 7 4c7ce44b7ab05502 8af97f7b9e4451f5 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 wide 8 cb70be44f0bc71fc cadc5e86a4493186 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-wide 9 319c9837ae0e4e36 b2d49fdc3050dbbe Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-wide 10 4260c4ee8f201429 92c4b70ac4a03002 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+wide 9 0aa400e7af1ce4e4 1a4c4a80aa432492 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+wide 10 aa6d63bf9ba8d3e7 fea8e0795782445c Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.

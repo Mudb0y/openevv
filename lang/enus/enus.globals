@@ -104,3 +104,11 @@ short 13
 word 1
 long 1
 word 1
+
+# Six that ETI Eloquence 6.1 declares and 4.3 never had, which the rules
+# lifted out of it use: the cell count_input fills at the head of each pass
+# of normalize_text; what kind of token was last read whole, and the two
+# kinds it is compared against, a path or a host and a dictionary word,
+# which set_global_constants sets to two and one; and whether a slash was
+# read as per, with the one it is compared against.
+short 6
