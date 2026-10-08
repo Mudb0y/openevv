@@ -131,11 +131,18 @@ done)
 # sides cannot differ by it, which means nothing here holds it, and it is
 # named as that rather than among the rules the sound holds.
 lifted=$(awk '$1 == "rule" { print $2 }' "$here/$lang/rules"/*.dr)
-alone=$(for r in $afresh; do echo "$lifted" | grep -qx "$r" && echo "$r"; done)
-new=$(for r in $named; do echo "$lifted" | grep -qx "$r" || echo "$r"; done)
+# And a rule that says `instead' replaces IBM's on purpose, to read
+# differently, so IBM's side is built with it too and it is on both sides.
+instead=$(for f in "${files[@]}"; do
+    awk '$1 == "rule" { name = $2 } $1 == "instead" && NF == 1 { print name }' "$f"
+done)
+alone=$(for r in $afresh; do echo "$lifted" | grep -qx "$r" \
+            && ! echo "$instead" | grep -qx "$r" && echo "$r"; done)
+new=$(for r in $named; do { ! echo "$lifted" | grep -qx "$r" \
+          || echo "$instead" | grep -qx "$r"; } && echo "$r"; done)
 [ -z "$alone" ] || echo "upper: written afresh, so held by the sound alone:" \
                         "$(echo $alone)"
-[ -z "$new" ] || echo "upper: standing in for nothing, so on both sides:" \
+[ -z "$new" ] || echo "upper: standing in for nothing or written instead, so on both sides:" \
                       "$(echo $new)"
 
 build() {

@@ -184,6 +184,10 @@ MOVES = ("movq", "movl", "movw", "movb", "movzwl", "movzbl", "movswl",
 WIDTH_OF = {"movq": 8, "movl": 4, "movw": 2, "movb": 1, "movzwl": 2,
             "movzbl": 1, "movswl": 2, "movsbl": 1, "movslq": 4, "movzbw": 1,
             "movsbw": 1, "movzwq": 2, "movzbq": 1}
+# The entries of the runtime that are handed a place in one of the language's
+# lists, which list, and which argument besides the state it is.
+LISTED = {"setd_lookup": ("set", 1), "actd_lookup": ("action", 0)}
+
 SIGNED_OF = {"movswl": True, "movsbl": True, "movslq": True, "movsbw": True}
 
 class Hole(Exception):
@@ -597,6 +601,7 @@ class Rule:
         self.depth_reg = None
         self.slow_block = None
         self.exit_tags = {}
+        self.tag_facts = {}
         self.tag_reg = "rax"
         self.dispatch_head = set()
         self.dispatch_rest = set()
@@ -623,8 +628,9 @@ class Rule:
     # few numbers a chain of compares -- that ends in the place the number
     # carries on at. Rather than read the decoder's shape, every number the
     # rule can plant is put through it, the way the machine would.
-    DECODER = ("movl", "movq", "addl", "subl", "decl", "incl", "cmpl", "testl",
-               "jmp", "movslq", "addq", "jmpq", "leaq", "xorl") + tuple(CONDS)
+    DECODER = ("movl", "movq", "movb", "addl", "subl", "andl", "decl", "incl",
+               "cmpl", "testl", "jmp", "movslq", "addq", "jmpq", "leaq",
+               "xorl") + tuple(CONDS)
 
     def read_dispatch(self, head):
         starts = {b[0]: b[1] for b in self.blocks}
@@ -690,7 +696,7 @@ class Rule:
         seen = set()
         for k in range(1, max(top, 2) + 1):
             try:
-                t, visited = self.decode(decoder, k)
+                t, visited, facts = self.decode(decoder, k)
             except Hole:
                 continue
             seen |= visited
@@ -699,6 +705,8 @@ class Rule:
                 continue
             if t in self.exit_tail or self.gives_up(t):
                 continue
+            if self.tag_facts.setdefault(t, facts) != facts:
+                raise Hole("a place the dispatch enters two ways")
             self.tags.setdefault(t, []).append(k)
         if not self.tags and not self.exit_tags:
             raise Hole("a dispatch that goes nowhere")
@@ -734,24 +742,32 @@ class Rule:
                 preds.setdefault(t, set()).add(blk)
         region = set(self.dispatch_head) | self.dispatch_rest
         tabled = False
+        # A register the decoder sets to a constant on the way, which the
+        # code at the place reads: clang hoists a value every place a table
+        # leads to shares into the decoder itself, so that it is only true
+        # of the places reached through it.
+        facts = {}
+        def done(a):
+            return a, visited, {r: v for r, v in facts.items()
+                                if r not in CALLER and r != self.tag_reg}
         for _step in range(200):
             if a is not None and a in self.leaders and a != start:
                 if tabled or (preds.get(a, set()) - region - visited):
-                    return a, visited
+                    return done(a)
             if a is None or a not in self.by_addr:
                 raise Hole("a dispatch that runs off the end")
             if a in self.exits or a in self.exit_tail:
-                return a, visited
+                return done(a)
             i = self.by_addr[a]
             _a, m, o, _n = self.ins[i]
             if m not in self.DECODER:
-                return a, visited
+                return done(a)
             if a in self.leaders:
                 blk = a
                 ok = all(self.ins[j][1] in self.DECODER for j in
                          dict(self.blocks)[blk])
                 if not ok:
-                    return a, visited
+                    return done(a)
                 visited.add(blk)
             nxt = self.ins[i + 1][0] if i + 1 < len(self.ins) else None
             def val(t):
@@ -760,27 +776,35 @@ class Rule:
                 return regs.get(reg_of(t))
             if m in ("movl", "movq") and o[0].startswith("%") and o[1].startswith("%"):
                 regs[reg_of(o[1])] = val(o[0])
-            elif m in ("addl", "subl"):
+            elif m in ("movb", "movl", "movq") and o[0].startswith("$") and \
+                    o[1].startswith("%"):
+                # A byte is taken for the whole register: every rule seen
+                # doing this had cleared it or held a small count in it.
+                regs[reg_of(o[1])] = facts[reg_of(o[1])] = val(o[0])
+            elif m == "movb":
+                return done(a)
+            elif m in ("addl", "subl", "andl"):
                 x, y = val(o[0]), val(o[1])
                 if x is None or y is None:
-                    return a, visited
-                regs[reg_of(o[1])] = ((y + x) if m == "addl" else (y - x)) & 0xffffffff
+                    return done(a)
+                regs[reg_of(o[1])] = {"addl": y + x, "subl": y - x,
+                                      "andl": y & x}[m] & 0xffffffff
             elif m in ("decl", "incl"):
                 y = val(o[0])
                 if y is None:
-                    return a, visited
+                    return done(a)
                 regs[reg_of(o[0])] = (y + (1 if m == "incl" else -1)) & 0xffffffff
             elif m == "xorl" and o[0] == o[1]:
                 regs[reg_of(o[1])] = 0
             elif m == "cmpl":
                 x, y = val(o[0]), val(o[1])
                 if x is None or y is None:
-                    return a, visited
+                    return done(a)
                 flags = (y, x)
             elif m == "testl":
                 x, y = val(o[0]), val(o[1])
                 if x is None or y is None:
-                    return a, visited
+                    return done(a)
                 flags = (x & y, 0)
             elif m in CONDS:
                 y, x = flags
@@ -799,7 +823,7 @@ class Rule:
             elif m == "movslq":
                 mm = re.match(r"^\((%[a-z0-9]+),(%[a-z0-9]+),4\)$", o[0])
                 if not mm:
-                    return a, visited
+                    return done(a)
                 regs[reg_of(o[1])] = ("index", regs.get(reg_of(mm.group(2))))
             elif m == "addq":
                 pass
@@ -1383,6 +1407,21 @@ class Rule:
         if shape:
             args = shape[1](args)
         words = [self.words(v, st, r) for v, r in args]
+        chain = None
+        if name in LISTED and self.setmap is not None:
+            which, k = LISTED[name]
+            v = inner = args[k][0]
+            while inner is not None and inner[0] == "home":
+                inner = inner[2]
+            if inner is not None and inner[0] == "imm":
+                words[k] = [str(self.setmap(which, inner[1]))]
+            elif v[0] == "home" and k < 5 and self.reaching_imms(a, ARGS[k + 1]):
+                # Paths that pick different lists meet before one call, so
+                # there is a call for each number a path can bring, each with
+                # its own list's number in ours.
+                chain = (v[1], which, k, sorted(self.reaching_imms(a, ARGS[k + 1])))
+            else:
+                raise Hole("a %s chosen at run time" % which)
         self.callees[name] = len(args)
         if name in self.SPLIT:
             if len(words) != 2:
@@ -1390,6 +1429,18 @@ class Rule:
             first, second = self.SPLIT[name]
             self.say(st, lines, "call", first, *words[0])
             self.say(st, lines, "call", second, *words[1])
+        elif chain:
+            r, which, k, nums = chain
+            for n in nums:
+                words[k] = [str(self.setmap(which, n))]
+                flat = [w for ws in words for w in ws]
+                if n != nums[-1]:
+                    self.say(st, lines, "if", "h_" + r, "is", str(n))
+                self.say(st, lines, "call", name, *flat)
+                if n != nums[-1]:
+                    self.say(st, lines, "go", "to", "q%x" % a)
+                    self.say(st, lines, "end")
+            lines.append(["place", "q%x" % a])
         else:
             flat = [w for ws in words for w in ws]
             self.say(st, lines, "call", name, *flat)
@@ -1400,6 +1451,50 @@ class Rule:
         if "rax" in self.homes:
             self.say(st, lines, "set", "h_rax", "to", *self.words(regs["rax"], st))
             regs["rax"] = ("home", "rax", None)
+
+    def reaching_imms(self, a, r):
+        """Every constant r can hold at the instruction at a, from walking
+        back along each path to whatever last wrote it. None when a path
+        writes it any other way, crosses a call or reaches the top."""
+        preds = {}
+        for blk, outs in self.succ.items():
+            for t in outs:
+                preds.setdefault(t, set()).add(blk)
+        where = self.by_addr[a]
+        todo = []
+        for start, idx in self.blocks:
+            if where in idx:
+                todo.append((start, idx.index(where)))
+        out, seen = set(), set()
+        while todo:
+            b, j = todo.pop()
+            if (b, j) in seen:
+                continue
+            seen.add((b, j))
+            idx = self.block_idx[b]
+            for k in range(j - 1, -1, -1):
+                _a, m, o, _n = self.ins[idx[k]]
+                if m == "callq":
+                    return None
+                if not o or not o[-1].startswith("%") or reg_of(o[-1]) != r \
+                        or m.startswith(("cmp", "test", "push")):
+                    continue
+                prev = self.ins[idx[k - 1]] if k > 0 else None
+                if m in ("xorl", "xorq") and o[0] == o[1]:
+                    out.add(0)
+                elif m in ("movl", "movq") and o[0].startswith("$"):
+                    out.add(int(o[0][1:], 0))
+                elif m == "popq" and prev and prev[1] == "pushq" and \
+                        prev[2][0].startswith("$"):
+                    out.add(int(prev[2][0][1:], 0))
+                else:
+                    return None
+                break
+            else:
+                if not preds.get(b):
+                    return None
+                todo += [(p, len(self.block_idx[p])) for p in preds[b]]
+        return out
 
     def arity_of_private(self, at):
         """How many argument registers a private copy reads before it writes
@@ -1582,13 +1677,34 @@ class Rule:
             s["fresh"] = set()
             s["pushes"] = []
             s["cond"] = None
-            return [(t, s) for t in self.tags]
+            outs = []
+            for t in self.tags:
+                st_t = self.clone(s)
+                for r, v in self.tag_facts.get(t, {}).items():
+                    st_t["regs"][r] = ("home", r, ("imm", v)) \
+                        if r in self.homes else ("imm", v)
+                outs.append((t, st_t))
+            return outs
 
-        lines.append(["place", "p%x" % b])
-        for k in self.tags.get(b, []):
-            lines.append(["place", "t%x_%d" % (b, k), "on", str(k)])
-        if b in self.tags and self.depth_reg in self.homes:
-            self.say(st, lines, "set", "h_" + self.depth_reg, "to", "unwind")
+        facts = self.tag_facts.get(b) if b in self.tags else None
+        if facts:
+            # What the decoder set on the way is only so when the rule comes
+            # back here, so it is said where only coming back reaches.
+            self.say(st, lines, "go", "to", "p%x" % b)
+            for k in self.tags[b]:
+                lines.append(["place", "t%x_%d" % (b, k), "on", str(k)])
+            if self.depth_reg in self.homes:
+                self.say(st, lines, "set", "h_" + self.depth_reg, "to", "unwind")
+            for r, v in sorted(facts.items()):
+                if r in self.homes:
+                    self.say(st, lines, "set", "h_" + r, "to", str(v))
+            lines.append(["place", "p%x" % b])
+        else:
+            lines.append(["place", "p%x" % b])
+            for k in self.tags.get(b, []):
+                lines.append(["place", "t%x_%d" % (b, k), "on", str(k)])
+            if b in self.tags and self.depth_reg in self.homes:
+                self.say(st, lines, "set", "h_" + self.depth_reg, "to", "unwind")
         for i in idx:
             self.step(b, st, lines, i)
         if st["inline"]:
@@ -1753,9 +1869,15 @@ class Rule:
                 seen.add(reg_of(o[1]))
         return n
 
-    def lift(self, gmap, smap):
+    def lift(self, gmap, smap, setmap=None):
+        """The rule in the upper form. gmap names a variable, smap a string,
+        and setmap, when given, a lookup set or a dictionary action: each
+        is numbered by its place in the language's own list, and 6.1's lists
+        are not 4.3's, so a number carried across as it stands would look in
+        some other list without anything saying so."""
         self.gmap = gmap
         self.smap = smap
+        self.setmap = setmap
         self.globals_used = set()
         self.syms_used = set()
         self.vars_used = {}
@@ -1796,7 +1918,7 @@ class Rule:
             return None
 
     def write(self, text):
-        out = ["rule %s takes %d" % (self.name, self.params() + 1), "  afresh"]
+        out = ["rule %s takes %d" % (self.name, self.params() + 1), "  instead"]
         for c in sorted(self.cells, reverse=True):
             out.append("  local %s bytes 8" % self.local_name(c))
         for off, w in sorted(self.scalars.items(), reverse=True):

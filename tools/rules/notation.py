@@ -329,6 +329,19 @@ def trials():
                if line.strip() and not line.lstrip().startswith("#"))
 
 
+def instead_of(path):
+    """The rules in an upper-form file that say `instead': written in place
+    of IBM's on purpose, and so taken on IBM's side as well as ours."""
+    out, name = set(), None
+    for line in open(path, encoding="utf-8"):
+        w = line.split("#")[0].split()
+        if w and w[0] == "rule":
+            name = w[1]
+        elif w == ["instead"] and name:
+            out.add(name)
+    return out
+
+
 def text_files():
     """The tree's rule files, in the order the emitter takes them: every
     object's in the order of the objects, and glob.obj's thunks last. The
@@ -354,7 +367,9 @@ def text_rules(upper=True, trial=False):
     objects wants: a rule written afresh is meant to differ, so counting it
     there would turn that check red and leave it red. A name only the upper
     form has still comes in, because the lower form may have been edited to
-    call it, and without it what is left does not link. Asked for the trials
+    call it, and without it what is left does not link. So does a rule that
+    says `instead', in place of IBM's of the same name: it was taken to read
+    differently, so IBM's side is the only side there is. Asked for the trials
     as well, it takes in the files the module says are not its own, which is
     the second of the two builds tools/rules/check-upper.sh holds against
     each other.
@@ -376,6 +391,9 @@ def text_rules(upper=True, trial=False):
                 rules = [by_name.pop(name, (name, d, obj))
                          for name, d, obj in rules]
             else:
+                instead = instead_of(up)
+                rules = [by_name.pop(name) if name in instead
+                         else (name, d, obj) for name, d, obj in rules]
                 for name, _d, _obj in rules:
                     by_name.pop(name, None)
             rules += [by_name[r[0]] for r in written if r[0] in by_name]
