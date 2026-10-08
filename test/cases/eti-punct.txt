@@ -1,0 +1,170 @@
+# Punctuation as ETI Eloquence 6.1 reads it, which test/harness/eti.sh holds
+# ours against. One case to a line: the language as the number the interface
+# takes, the text mode (-1 leaves the default), and the text, between tabs.
+#
+# The six sentence marks standing alone, or between single letters, are
+# punctuation in every mode but verbatim, and brackets and quotes are named
+# only in verbatim and spell-all. 4.3 said the name of each of them.
+0x10000	-1	;
+0x10000	-1	:
+0x10000	-1	,
+0x10000	-1	.
+0x10000	-1	!
+0x10000	-1	?
+0x10000	-1	(
+0x10000	-1	)
+0x10000	-1	[
+0x10000	-1	"
+0x10000	-1	a;b
+0x10000	-1	value ; next
+0x10000	-1	value next
+0x10000	-1	hello
+0x10000	-1	Desktop list multi-select
+0x10000	-1	if (a) ; else ;
+0x10000	-1	a ; b , c . d : e ! f ?
+0x10000	-1	ended with a semicolon;
+0x10000	0	;
+0x10000	0	:
+0x10000	0	,
+0x10000	0	.
+0x10000	0	!
+0x10000	0	?
+0x10000	0	(
+0x10000	0	)
+0x10000	0	[
+0x10000	0	"
+0x10000	0	a;b
+0x10000	0	value ; next
+0x10000	0	value next
+0x10000	0	hello
+0x10000	0	Desktop list multi-select
+0x10000	0	if (a) ; else ;
+0x10000	0	a ; b , c . d : e ! f ?
+0x10000	0	ended with a semicolon;
+0x10000	1	;
+0x10000	1	:
+0x10000	1	,
+0x10000	1	.
+0x10000	1	!
+0x10000	1	?
+0x10000	1	(
+0x10000	1	)
+0x10000	1	[
+0x10000	1	"
+0x10000	1	a;b
+0x10000	1	value ; next
+0x10000	1	value next
+0x10000	1	hello
+0x10000	1	Desktop list multi-select
+0x10000	1	if (a) ; else ;
+0x10000	1	a ; b , c . d : e ! f ?
+0x10000	1	ended with a semicolon;
+0x10000	2	;
+0x10000	2	:
+0x10000	2	,
+0x10000	2	.
+0x10000	2	!
+0x10000	2	?
+0x10000	2	(
+0x10000	2	)
+0x10000	2	[
+0x10000	2	"
+0x10000	2	a;b
+0x10000	2	value ; next
+0x10000	2	value next
+0x10000	2	hello
+0x10000	2	Desktop list multi-select
+0x10000	2	if (a) ; else ;
+0x10000	2	a ; b , c . d : e ! f ?
+0x10000	2	ended with a semicolon;
+0x10000	3	;
+0x10000	3	:
+0x10000	3	,
+0x10000	3	.
+0x10000	3	!
+0x10000	3	?
+0x10000	3	(
+0x10000	3	)
+0x10000	3	[
+0x10000	3	"
+0x10000	3	a;b
+0x10000	3	value ; next
+0x10000	3	value next
+0x10000	3	hello
+0x10000	3	Desktop list multi-select
+0x10000	3	if (a) ; else ;
+0x10000	3	a ; b , c . d : e ! f ?
+0x10000	3	ended with a semicolon;
+
+# Sentences of the broad set that read as 6.1 reads them.
+0x10000	-1	Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
+0x10000	-1	A one-word line. And another; plus "quoted text" inside.
+0x10000	-1	A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
+0x10000	-1	the transfer is done.
+0x10000	-1	the decrease is small.
+0x10000	-1	the record is here.
+0x10000	-1	please record this.
+0x10000	-1	I read the book.
+0x10000	-1	the wind is cold.
+0x10000	-1	nothing here changes at all.
+0x10000	-1	Hello, world.
+0x10000	-1	Is this a question?
+0x10000	-1	Wait... what happened?
+0x10000	-1	Stop! Don't do that!!
+0x10000	-1	Really?!
+0x10000	-1	He said "hello" and left.
+0x10000	-1	She said, 'not today.'
+0x10000	-1	The (quick) brown fox.
+0x10000	-1	See [section 3] for details.
+0x10000	-1	Use {braces} in code.
+0x10000	-1	x = y + 1;
+0x10000	-1	if (a > b) { return a; }
+0x10000	-1	for i in range(10): print(i)
+0x10000	-1	The price is $19.99, or 15% off.
+0x10000	-1	It costs 1,234.56 dollars.
+0x10000	-1	The meeting is at 7:45 p.m. on 3/14/2026.
+0x10000	-1	Dr. Smith and Mr. Jones met Mrs. Brown.
+0x10000	-1	The U.S.A. and the U.K. signed.
+0x10000	-1	e.g. apples, oranges, i.e. fruit.
+0x10000	-1	Version 2.0.1 was released.
+0x10000	-1	He scored 3-2 in the final.
+0x10000	-1	Pages 10-20 are missing.
+0x10000	-1	The ratio is 3:1.
+0x10000	-1	Temperature: -5 degrees.
+0x10000	-1	Item 1; item 2; item 3.
+0x10000	-1	First - second - third.
+0x10000	-1	A -- B --- C.
+0x10000	-1	Ellipsis at the end...
+0x10000	-1	...and at the start.
+0x10000	-1	Mixed?! punctuation?!?
+0x10000	-1	Asterisk * and caret ^ and tilde ~.
+0x10000	-1	Ampersand & and pipe | and backslash \.
+0x10000	-1	Less < than and greater > than.
+0x10000	-1	"Quoted sentence."
+0x10000	-1	'Single quoted.'
+0x10000	-1	(Parenthesised sentence.)
+0x10000	-1	[Bracketed.]
+0x10000	-1	- list item
+0x10000	-1	* bullet item
+0x10000	-1	1. numbered item
+0x10000	-1	a) lettered item
+0x10000	-1	The year 1999 and the 1990s.
+0x10000	-1	Rock 'n' roll.
+0x10000	-1	O'Brien's dog's bone.
+0x10000	-1	It's 5 o'clock somewhere.
+0x10000	-1	The end.
+0x10000	-1	;
+0x10000	-1	:
+0x10000	-1	,
+0x10000	-1	.
+0x10000	-1	!
+0x10000	-1	?
+0x10000	-1	-
+0x10000	-1	(
+0x10000	-1	)
+0x10000	-1	"
+0x10000	-1	'
+0x10000	-1	/
+0x10000	-1	...
+0x10000	-1	?!
+0x10000	-1	--

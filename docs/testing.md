@@ -130,6 +130,17 @@ Four things about it are deliberate, and the comment at the top of the script sa
 
 The check deletes the generated C when it finishes, so the next build writes the ordinary form again rather than finding the faithful one sitting there newer than everything it is made from.
 
+### The second oracle: ETI Eloquence 6.1
+
+    make so
+    test/harness/eti.sh
+
+**What 4.3 did is asked of IBM's binary, and what 6.1 does is asked of Apple's.** Rules lifted out of ETI Eloquence 6.1 by `tools/rules/lift64.py` -- `docs/quirks.md` says which and why -- have no answer under Wine, since the SDK is 4.3. Apple ships 6.1 as VoiceOver's Eloquence, and apple-eloquence-elf converts its modules to run here; this asks that engine. `test/harness/eti.c` loads an ECI library by name and asks for phonemes, so one driver speaks to both engines with the same calls, and the script names every case whose phonemes differ, with both answers. Phonemes and not samples, because the synthesisers are separate programs -- Apple's floating point, ours whole numbers -- and the same reading comes out a few dozen samples apart.
+
+It runs where 6.1 is installed and nowhere else. `EVV_ETI` names the directory holding `eci.so` and `eci.ini` and `EVV_ETI_LIBS` where its libc++ is; on a machine whose Speech Dispatcher runs Eloquence through that package, both are read from its module. Three things about the engine itself are worth knowing before using it some other way. It reads `eci.ini` from the directory it runs in, and an ini rewritten with absolute paths into the Nix store overflows its reader and crashes on the first sample, so the script runs it from its own directory. It reports phonemes only in the synthesis mode that waits to be told to speak, and so does ours. And it puts a space between words in what it reports and ours does not, which the script takes out of both.
+
+On our side the abbreviation dictionary and phrase prediction are turned on, which is how 6.1 has them; 6.1 has no parameter 11 and is not handed one. `test/cases/eti-punct.txt` is issue 4's eighteen sentences in every text mode and the sentences of a broader set that read as 6.1 reads them, 161 cases, and all 161 do. The 4.3 library differs on 54 of them, which is what says the check can see the difference it is for.
+
 ## The taps
 
 The suite says whether two engines agree and nothing about where they stopped agreeing. The taps say where.

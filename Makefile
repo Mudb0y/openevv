@@ -977,6 +977,18 @@ phonemes: $(BUILD)/phonemes$(SUF)
 	@$(MAKE) -C reference TAG=$(TAG) BUILD=../$(BUILD)/reference$(SUF) phontry
 	@EVV_LANG=$(TAG) bash test/harness/phonemes.sh $(PHONCASES)
 
+# The same question asked of ETI Eloquence 6.1, which the rules lifted from it
+# are held to: one driver loads either engine by name and asks each for its
+# phonemes. It wants 6.1 installed, so it runs here and on no runner;
+# docs/testing.md says where it looks.
+.PHONY: eti
+eti: so $(BUILD)/eti
+	@bash test/harness/eti.sh
+
+$(BUILD)/eti: test/harness/eti.c
+	@$(CC) $(OPT) -std=gnu99 test/harness/eti.c -ldl -o $@
+	@echo "built $@"
+
 # lib/eci_api.c goes in because the harness calls the published names and the
 # archive holds only the engine's own short ones. It brings the constructor
 # with it, which is what starts the platform and runs the static
