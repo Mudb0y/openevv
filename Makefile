@@ -983,7 +983,7 @@ phonemes: $(BUILD)/phonemes$(SUF)
 # docs/testing.md says where it looks.
 .PHONY: eti
 eti: so $(BUILD)/eti
-	@bash test/harness/eti.sh
+	@EVV_ECI_LIB=$(BUILD)/libeci$(LIBSUF).so bash test/harness/eti.sh
 
 $(BUILD)/eti: test/harness/eti.c
 	@$(CC) $(OPT) -std=gnu99 test/harness/eti.c -ldl -o $@

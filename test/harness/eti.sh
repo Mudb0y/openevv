@@ -49,7 +49,7 @@ cases=("$@")
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
-n=0; same=0
+n=0; same=0; skipped=0
 for f in "${cases[@]}"; do
     case $f in /*) ;; *) f=$PWD/$f ;; esac
     # 6.1 reads its eci.ini from the directory it is run in, and the one it
@@ -58,6 +58,15 @@ for f in "${cases[@]}"; do
         > "$work/theirs" || { echo "eti: 6.1 did not finish $f" >&2; exit 1; }
     timeout 600 "$driver" "$ours" "$f" ours > "$work/ours" \
         || { echo "eti: ours did not finish $f" >&2; exit 1; }
+    # A library is built with the languages it was asked for, and a case file
+    # for one it has not got is passed over, saying so, rather than failed
+    # for want of an instance. A case file that makes some instances and not
+    # others is not passed over: that is a difference.
+    if ! grep -qv '^\[no instance\]' "$work/ours"; then
+        echo "eti: $(basename "$f") passed over: $(basename "$ours") has not got its language"
+        skipped=$((skipped + 1))
+        continue
+    fi
     # The one difference that is not one: 6.1 puts a space between words in
     # what it reports and ours does not, so spaces are taken out of both.
     while IFS=$'\t' read -r a text <&3 && IFS=$'\t' read -r b _ <&4; do
@@ -72,5 +81,6 @@ for f in "${cases[@]}"; do
     done 3< "$work/theirs" 4< "$work/ours"
 done
 
-echo "eti: $n cases, $same read as 6.1 reads them, $((n - same)) differ"
+echo "eti: $n cases, $same read as 6.1 reads them, $((n - same)) differ" \
+     "$([ $skipped = 0 ] || echo "($skipped files passed over)")"
 [ "$same" = "$n" ]

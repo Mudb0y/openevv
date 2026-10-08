@@ -1976,6 +1976,9 @@ label L0 was _set_global_constants
   store movw imm 1 statefld 3338
   store movw imm 2 statefld 3342
   store movw imm 3 statefld 3346
+  store movw imm 2 statefld 4230
+  store movw imm 1 statefld 4234
+  store movw imm 1 statefld 4242
   store movw imm 4 statefld 3350
   store movw imm 5 statefld 3354
   store movw imm 6 statefld 3358

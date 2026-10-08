@@ -4,19 +4,56 @@
 # alphabet the statement type declares, which is American English's
 # alphabet unchanged.
 
-# What eng_tok_lookup in ut_norm.up tests a token against and lays down, as
-# in lang/enus/rules/constants: the marks after which a word is not left to
-# be spelled, the three endings process_final_parenthetical already folds
-# into the word, and the space, behind the byte insert_r reads as the width
-# of what follows it.
-bytes eng_open_paren    46            # (
-bytes eng_paren_s       46 19 47      # (s)
-bytes eng_paren_es      46 02 19 47   # (es)
-bytes eng_paren_ed      46 02 0d 47   # (ed)
-bytes eng_open_bracket  50            # [
-bytes eng_open_brace    52            # {
-bytes eng_number_sign   4a            # #
-bytes eng_dollar        55            # $
-bytes eng_asterisk      4e            # *
-bytes eng_tilde         4d            # ~
-bytes eng_space         c7 48
+# 6.1's own strings, which the rules lifted out of it at the end of
+# ut_norm.up test against and lay down. Where 6.1 marks an annotation with a
+# backslash and an exclamation mark, which only its own annotation reader
+# takes, the annotation is written with the backquote IBM's reader takes and
+# a space after it, which keeps the length the rule states.
+bytes eti_null         00
+bytes eti_s_1c20d8     48
+bytes eti_s_1c20d9     47
+bytes eti_s_1c20da     51
+bytes eti_s_1c20db     60
+bytes eti_s_1c20dc     49
+bytes eti_s_1c20dd     a8
+bytes eti_s_1c20de     ac
+bytes eti_s_1c20df     41
+bytes eti_s_1c20e0     4f
+bytes eti_s_1c20e1     c7 48
+bytes eti_s_1c20e3     c7 40 48
+bytes eti_s_1c20e6     10 1a
+bytes eti_s_1c20e8     0e
+bytes eti_s_1c20e9     1a 16
+bytes eti_s_1c20eb     43 58 58
+bytes eti_s_1c20ee     1c 1c 1c 41
+bytes eti_s_1c20f2     48 41 41 41 48
+bytes eti_s_1c20f7     58
+bytes eti_s_1c20f8     c7 48 4c 35 48
+bytes eti_s_1c20fd     5d
+bytes eti_s_1c20fe     43
+bytes eti_s_1c20ff     3f
+bytes eti_s_1c2100     42
+bytes eti_s_1c2101     45
+bytes eti_s_1c2102     44
+bytes eti_s_1c2103     40
+bytes eti_s_1c2104     04
+bytes eti_s_1c2105     46
+bytes eti_s_1c2106     46 47
+bytes eti_s_1c2113     c7 48 4c 36 48 48
+bytes eti_s_1c2119     a7
+bytes eti_s_1c211a     4c
+bytes eti_s_1c211b     ab
+bytes eti_s_1c211e     50
+bytes eti_s_1c211f     53
+bytes eti_s_1c2120     52
+bytes eti_s_1c2121     5e
+bytes eti_s_1c2122     5f
+bytes eti_s_1c2127     4e
+bytes eti_s_1c2128     48 4c 35 48 48 0d 04 1a 48
+bytes eti_s_1c2131     19 1a 01 18
+bytes eti_s_1c2135     19
+bytes eti_s_1c2136     2e
+bytes eti_s_1c2137     48 48
+bytes eti_s_1c2139     54
+bytes eti_s_1c213a     41 48
+bytes eti_s_1c213c     c7

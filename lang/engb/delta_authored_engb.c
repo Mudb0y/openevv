@@ -14,28 +14,102 @@
 #include "delta_lang.h"
 
 uint8_t engb_evv_authored_data[] = {
-    /* eng_open_paren, 1 bytes at 0 */
-    70,
-    /* eng_paren_s, 3 bytes at 1 */
-    70,25,71,
-    /* eng_paren_es, 4 bytes at 4 */
-    70,2,25,71,
-    /* eng_paren_ed, 4 bytes at 8 */
-    70,2,13,71,
-    /* eng_open_bracket, 1 bytes at 12 */
-    80,
-    /* eng_open_brace, 1 bytes at 13 */
-    82,
-    /* eng_number_sign, 1 bytes at 14 */
-    74,
-    /* eng_dollar, 1 bytes at 15 */
-    85,
-    /* eng_asterisk, 1 bytes at 16 */
-    78,
-    /* eng_tilde, 1 bytes at 17 */
-    77,
-    /* eng_space, 2 bytes at 18 */
+    /* eti_null, 1 bytes at 0 */
+    0,
+    /* eti_s_1c20d8, 1 bytes at 1 */
+    72,
+    /* eti_s_1c20d9, 1 bytes at 2 */
+    71,
+    /* eti_s_1c20da, 1 bytes at 3 */
+    81,
+    /* eti_s_1c20db, 1 bytes at 4 */
+    96,
+    /* eti_s_1c20dc, 1 bytes at 5 */
+    73,
+    /* eti_s_1c20dd, 1 bytes at 6 */
+    168,
+    /* eti_s_1c20de, 1 bytes at 7 */
+    172,
+    /* eti_s_1c20df, 1 bytes at 8 */
+    65,
+    /* eti_s_1c20e0, 1 bytes at 9 */
+    79,
+    /* eti_s_1c20e1, 2 bytes at 10 */
     199,72,
+    /* eti_s_1c20e3, 3 bytes at 12 */
+    199,64,72,
+    /* eti_s_1c20e6, 2 bytes at 15 */
+    16,26,
+    /* eti_s_1c20e8, 1 bytes at 17 */
+    14,
+    /* eti_s_1c20e9, 2 bytes at 18 */
+    26,22,
+    /* eti_s_1c20eb, 3 bytes at 20 */
+    67,88,88,
+    /* eti_s_1c20ee, 4 bytes at 23 */
+    28,28,28,65,
+    /* eti_s_1c20f2, 5 bytes at 27 */
+    72,65,65,65,72,
+    /* eti_s_1c20f7, 1 bytes at 32 */
+    88,
+    /* eti_s_1c20f8, 5 bytes at 33 */
+    199,72,76,53,72,
+    /* eti_s_1c20fd, 1 bytes at 38 */
+    93,
+    /* eti_s_1c20fe, 1 bytes at 39 */
+    67,
+    /* eti_s_1c20ff, 1 bytes at 40 */
+    63,
+    /* eti_s_1c2100, 1 bytes at 41 */
+    66,
+    /* eti_s_1c2101, 1 bytes at 42 */
+    69,
+    /* eti_s_1c2102, 1 bytes at 43 */
+    68,
+    /* eti_s_1c2103, 1 bytes at 44 */
+    64,
+    /* eti_s_1c2104, 1 bytes at 45 */
+    4,
+    /* eti_s_1c2105, 1 bytes at 46 */
+    70,
+    /* eti_s_1c2106, 2 bytes at 47 */
+    70,71,
+    /* eti_s_1c2113, 6 bytes at 49 */
+    199,72,76,54,72,72,
+    /* eti_s_1c2119, 1 bytes at 55 */
+    167,
+    /* eti_s_1c211a, 1 bytes at 56 */
+    76,
+    /* eti_s_1c211b, 1 bytes at 57 */
+    171,
+    /* eti_s_1c211e, 1 bytes at 58 */
+    80,
+    /* eti_s_1c211f, 1 bytes at 59 */
+    83,
+    /* eti_s_1c2120, 1 bytes at 60 */
+    82,
+    /* eti_s_1c2121, 1 bytes at 61 */
+    94,
+    /* eti_s_1c2122, 1 bytes at 62 */
+    95,
+    /* eti_s_1c2127, 1 bytes at 63 */
+    78,
+    /* eti_s_1c2128, 9 bytes at 64 */
+    72,76,53,72,72,13,4,26,72,
+    /* eti_s_1c2131, 4 bytes at 73 */
+    25,26,1,24,
+    /* eti_s_1c2135, 1 bytes at 77 */
+    25,
+    /* eti_s_1c2136, 1 bytes at 78 */
+    46,
+    /* eti_s_1c2137, 2 bytes at 79 */
+    72,72,
+    /* eti_s_1c2139, 1 bytes at 81 */
+    84,
+    /* eti_s_1c213a, 2 bytes at 82 */
+    65,72,
+    /* eti_s_1c213c, 1 bytes at 84 */
+    199,
 };
 
 const delta_store engb_delta_authored_store[] = {
