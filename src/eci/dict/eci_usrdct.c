@@ -193,12 +193,20 @@ THIS int32_t ud_buildHashTable(UserDict *u, uint32_t want)
     return 1;
 }
 
-/* Where the file is and how big it is, or minus one if it is not there. */
+/* Where the file is and how big it is, or minus one if it is not there.
+
+   A name too long for the caller's buffer, or for the one the name is kept
+   in afterwards, is not there either, which is ours rather than IBM's: the
+   search copies a name it finds straight into a buffer of 0x108 bytes, so a
+   longer path handed to eciLoadDict wrote past the end of the stack. Windows
+   allows a path far longer than that, and a screen reader's profile folder
+   is not something its user chose the length of. */
 THIS long ud_findDictFile(UserDict *u, const char *name, char *out)
 {
     struct stat st;
 
-    (void)u;
+    if (name == 0 || strlen(name) >= sizeof u->path)
+        return -1;
     if (!fileFindInPath(name, out))
         return -1;
     if (stat(out, &st) != 0)

@@ -234,6 +234,33 @@ int main(void)
         es_delete(h);
     }
 
+    /* A name longer than the loader's buffer, naming a file that is there:
+       the same file reached through four hundred bytes of "./". It used to
+       be copied into 0x108 bytes of stack as it stood. Refused is right, and
+       so is anything else that comes back at all. */
+    h = eo_newEx(langs[0]);
+    if (h) {
+        char longName[512];
+        int  rc;
+
+        longName[0] = 0;
+        while (strlen(longName) < 400)
+            strcat(longName, "./");
+        strcat(longName, named);
+        dict = ed_newDict(h);
+        if (dict) {
+            rc = ed_loadDict(h, dict, VOLUME_MAIN, longName);
+            if (rc == DICT_OK) {
+                printf("dictfile: a name of %u bytes was taken, which is longer"
+                       " than the loader has room for\n",
+                       (unsigned)strlen(longName));
+                bad = 1;
+            }
+            ed_deleteDict(h, dict);
+        }
+        es_delete(h);
+    }
+
     remove(named);
     remove(other);
     remove(written);
