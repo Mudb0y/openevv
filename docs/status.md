@@ -62,6 +62,8 @@ Polish, which is what all of it is for. It is started: `lang/plpl` is the ninth 
 
 An abbreviation said as written without its stop ending the sentence. With the abbreviation dictionary off, the default since 7 October 2026, the rule that would have expanded "Mr." is also the one that knew its stop was not a sentence end, so off says M R and pauses as though the sentence were over -- about 400 ms a title, and "Mr. and Mrs. Jones live on Main St. in town." goes from 3.5 seconds to 5.4. What off should mean is not expanded but still an abbreviation, which is a change to the `abbreviation` rule in ut_norm in each of the nine languages with rules. `docs/quirks.md` has the measurement.
 
+A lone punctuation mark read as 6.1 reads it, in every language but the two Englishes. Issue 4 is still open for German, both Frenches, both Spanishes and Italian, each of which names a mark standing alone the way 4.3 did, where 6.1 reads it as punctuation in all of them. English's thirteen rules and the alphabet records they test are the pattern, but every language lays its variables and sets out differently, so each needs its own map, its own cases held against 6.1's phonemes and its own gate.
+
 ## German
 
 German builds and speaks, and speaks IBM's samples. `make LANG=lang/dede probe` and the reference beside it are in `docs/language.md`, and `EVV_LANG=dede test/suite.sh` runs the same six categories over 80 cases of its own. On 22 August 2026 all 80 came out byte for byte identical to IBM's German binary.
