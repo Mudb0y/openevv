@@ -134,6 +134,10 @@ typedef struct EngineData {
                                itself */
     int (*factory)(int32_t kind, void **out);  /* +0x10 in IBM's */
     void       *active;     /* +0x14 in IBM's, the dictionary in force */
+    /* Ours: how many dictionaries made in this language are still open. A
+       dictionary lives inside its language's engine, so while a caller holds
+       one the engine is kept rather than let go -- see ea_removeEngine. */
+    int32_t     dicts;
 } EngineData;
 
 #endif

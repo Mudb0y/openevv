@@ -158,6 +158,8 @@ puts both in one library, `eciGetAvailableLanguages` answers both, and the first
 
 Change language with `eciSetParam(h, eciLanguageDialect, ...)` on an instance that is not speaking, or make an instance per language. Both work. The speak window on Windows does the first, setting the language on the instance it already has rather than building another, and it will not do it while something is being said; `test/lib/langs.py` does the second, and holds each language to what it says alone.
 
+A dictionary belongs to the language that was in force when `eciNewDict` made it, and it stays good across changes of language until `eciDeleteDict`. So make one per language and put each back in force with `eciSetDict` when its language returns, which is what the IBMTTS and Eloquence 64 drivers do. Before 9 October 2026 a language change let go of the old language's engine with every dictionary in it, and putting one of those back faulted the process. The engine of a language with a dictionary open is now kept until the instance goes. `test/lib/dictlangs.py` is the check.
+
 Ten languages are in the tree: US and British English, German, Castilian and American Spanish, French and Canadian French, Italian, Japanese, and Polish. The released library and the released DLLs carry all ten. Nine of those are IBM's own data lifted out of its objects. Polish is not IBM's and is not finished -- its rules are still Italian's where nothing here has replaced them, and `make EVVLANG=lang/plpl census` counts how much. `docs/status.md` says where each stands.
 
 ## Sample rates

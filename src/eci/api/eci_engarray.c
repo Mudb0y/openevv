@@ -96,6 +96,7 @@ THIS EngineData *ed_ctor(EngineData *e, const char *name)
     e->engine    = 0;
     e->factory   = 0;
     e->active    = 0;
+    e->dicts     = 0;
 
     e->factory = getObject;
     if (e->factory != 0)
@@ -205,8 +206,23 @@ THIS uint32_t ea_getCallbackFnFlag(EngineArray *a, const void *lang)
     return d->callbacks;
 }
 
+/* Not while a dictionary made in the language is open, which is ours rather
+   than IBM's. A language change lets the old language's engine go, and every
+   dictionary made in it went with it while the caller still held the handle:
+   putting that dictionary back in force afterwards called through an engine
+   that was no longer there, and faulted. Keeping one dictionary per language
+   and putting each back as its language returns is how the IBMTTS and
+   Eloquence 64 drivers both use the interface, so a reader who switched
+   language and back lost the screen reader. IBM shipped one language per
+   binary and never reached this. The engine kept is the one found again when
+   its language comes back, dictionaries and all; the list's own destructor
+   still lets every engine go when the instance does. */
 THIS void ea_removeEngine(EngineArray *a, const void *lang)
 {
+    EngineData *d = (EngineData *)eng_getData(&a->base, lang);
+
+    if (d != 0 && d->dicts > 0)
+        return;
     eng_removeData(&a->base, lang);
 }
 
