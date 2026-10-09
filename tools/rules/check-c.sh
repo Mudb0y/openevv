@@ -49,10 +49,15 @@ work=$(mktemp -d)
 jobs=${EVV_JOBS:-6}
 # The rules go too, or the faithful form written here would be left sitting
 # where the next build expects the ordinary one and would be newer than
-# everything it is made from, so nothing would rewrite it. Removing them
-# rather than rewriting them is enough: absent is not stale, and the next
-# build that wants them writes them again.
-trap 'rm -rf "$work"; rm -f "$here"/lang/enus/delta_rules_c[0-9][0-9]_enus.c' EXIT
+# everything it is made from, so nothing would rewrite it. What was there
+# before is put back with the dates it had, which make then finds as it left
+# them; removing them instead was safe, since absent is not stale, but sent
+# the next build to decompile English again for two and a half minutes.
+mkdir "$work/kept"
+cp -p "$here"/lang/enus/delta_rules_c[0-9][0-9]_enus.c "$work/kept/" 2>/dev/null
+trap 'rm -f "$here"/lang/enus/delta_rules_c[0-9][0-9]_enus.c
+      cp -p "$work"/kept/* "$here/lang/enus/" 2>/dev/null
+      rm -rf "$work"' EXIT
 
 [ $# -gt 0 ] || { echo "check: name some rules" >&2; exit 2; }
 
