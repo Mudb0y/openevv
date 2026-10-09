@@ -385,6 +385,29 @@ def wideband_checks():
     engine.close()
 
 
+def pause_mode_checks():
+    """Which pauses are shortened is a setting the library keeps."""
+    dll = FakeDll()
+    players = []
+    mod = engine_module(dll, players)
+    engine = mod.Engine(lambda index: None)
+    engine.open()
+
+    check("it starts where the library does", engine.pauseMode, 1)
+    check("asking for that again tells the engine nothing",
+          (engine.setPauseMode(1), mod.PARAM_PAUSE_MODE in dll.params), (True, False))
+    check("another is taken", engine.setPauseMode(2), True)
+    check("the engine is told", dll.params.get(mod.PARAM_PAUSE_MODE), 2)
+    check("and says so", engine.pauseMode, 2)
+    check("never is taken", engine.setPauseMode(0), True)
+    check("the engine is told that too", dll.params.get(mod.PARAM_PAUSE_MODE), 0)
+
+    dll.refuse = mod.PARAM_PAUSE_MODE
+    check("a refusal is reported", engine.setPauseMode(1), False)
+    check("and the setting stays as it was", engine.pauseMode, 0)
+    engine.close()
+
+
 def stall_checks():
     """A player that stops taking audio must not silence the synthesiser.
 
@@ -903,6 +926,7 @@ def main():
     restore_checks()
     samplerate_checks()
     wideband_checks()
+    pause_mode_checks()
     stall_checks()
     idle_stall_checks()
     dictionary_checks()

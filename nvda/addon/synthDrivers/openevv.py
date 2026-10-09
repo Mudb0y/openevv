@@ -145,6 +145,13 @@ class SynthDriver(SynthDriver):
 		BooleanDriverSetting("abbreviations", _("Expand a&bbreviations"), False),
 		# Translators: Label for a setting in voice settings dialog.
 		BooleanDriverSetting("phrasePrediction", _("Phrase predi&ction"), False),
+		DriverSetting(
+			"pauseMode",
+			# Translators: Label for a setting in voice settings dialog.
+			_("Shorten pa&uses"),
+			False,
+			defaultVal=str(_openevv.DEFAULT_PAUSE_MODE),
+		),
 		# Translators: Label for a setting in voice settings dialog.
 		BooleanDriverSetting("voiceTags", _("Allow backquote voice &tags"), False),
 		# Translators: Label for a setting in voice settings dialog.
@@ -485,6 +492,40 @@ class SynthDriver(SynthDriver):
 
 	def _set_phrasePrediction(self, enable):
 		self._phrasePrediction = enable
+
+	def _get_availablePausemodes(self):
+		"""Which pauses the engine shortens, numbered as the IBMTTS and
+		Eloquence 64 drivers number their setting of the same name.
+
+		The engine pauses for as long as at a full stop wherever it finishes a
+		stretch of text: at the end of every utterance, and at every change of
+		voice, rate, pitch or language, which is where a capital letter is
+		spelled at a raised pitch. Where the text ends in punctuation that
+		pause is the sentence's; where it does not, nothing asked for it.
+		"""
+		return OrderedDict(
+			(
+				# Translators: An option of the "Shorten pauses" setting.
+				("0", StringParameterInfo("0", _("Never"))),
+				# Translators: An option of the "Shorten pauses" setting.
+				("1", StringParameterInfo("1", _("At end of text only"))),
+				# Translators: An option of the "Shorten pauses" setting.
+				("2", StringParameterInfo("2", _("Always"))),
+			)
+		)
+
+	def _get_pauseMode(self):
+		return str(self._engine.pauseMode)
+
+	def _set_pauseMode(self, value):
+		try:
+			mode = int(value)
+		except (TypeError, ValueError):
+			mode = None
+		if mode not in _openevv.PAUSE_MODES:
+			log.error("openevv: %r is not a pause mode" % (value,))
+			return
+		self._engine.control([(self._engine.setPauseMode, (mode,))])
 
 	def _get_voiceTags(self):
 		return self._voiceTags

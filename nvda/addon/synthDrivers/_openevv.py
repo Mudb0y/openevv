@@ -136,6 +136,12 @@ PARAM_REAL_WORLD = 8
 PARAM_LANGUAGE = 9
 #: Ours rather than IBM's: the wideband voice above 11,025.
 PARAM_WIDEBAND = 32
+#: Ours as well: which pauses the engine shortens. Nought none, one where text
+#: stops without punctuation, which is the library's default, two at every
+#: mark as well.
+PARAM_PAUSE_MODE = 33
+PAUSE_MODES = (0, 1, 2)
+DEFAULT_PAUSE_MODE = 1
 
 # A voice's, likewise.
 VOICE_GENDER = 0
@@ -466,6 +472,7 @@ class Engine:
 		#: above eleven thousand and twenty five, not the rate it hands over,
 		#: so the player stays as it is.
 		self.wideband = False
+		self.pauseMode = DEFAULT_PAUSE_MODE
 		self.voiceNames = {}
 		#: Every language the library has, and the one in force.
 		self.languages = []
@@ -694,6 +701,16 @@ class Engine:
 			log.error("openevv: the library has no wideband voice")
 			return False
 		self.wideband = enable
+		return True
+
+	def setPauseMode(self, mode):
+		"""Choose which pauses the engine shortens, between utterances."""
+		if mode == self.pauseMode:
+			return True
+		if self.setParam(PARAM_PAUSE_MODE, mode) < 0:
+			log.error("openevv: the library refused pause mode %r" % (mode,))
+			return False
+		self.pauseMode = mode
 		return True
 
 	def setSampleRate(self, hz):

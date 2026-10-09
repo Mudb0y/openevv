@@ -279,6 +279,7 @@ class FakeEngine:
         self.voiceParams = {0: 0, 1: 50, 2: 65, 3: 30, 4: 0, 5: 0, 6: 50, 7: 92}
         self.version = "test"
         self.player = None
+        self.pauseMode = 1
         #: Whether each batch arrived as speech or as a setting.
         self.kinds = []
 
@@ -345,6 +346,9 @@ class FakeEngine:
         pass
 
     def setDictionaryFolders(self, folders):
+        pass
+
+    def setPauseMode(self, mode):
         pass
 
     def voiceNamesFor(self, language):
@@ -759,6 +763,19 @@ def main():
     check("and off again is one", d._engine.calls,
           [("setParam", _openevv.PARAM_DICTIONARY, 1)])
 
+    check("the pauses are offered as both other drivers offer them",
+          [(k, v.displayName) for k, v in d.availablePausemodes.items()],
+          [("0", "Never"), ("1", "At end of text only"), ("2", "Always")])
+    check("and start where the library starts", d.pauseMode, "1")
+    d._engine.calls = []
+    d.pauseMode = "2"
+    check("choosing one tells the engine", d._engine.calls, [("setPauseMode", 2)])
+    d._engine.calls = []
+    d.pauseMode = "3"
+    d.pauseMode = "often"
+    check("one the engine has not is refused rather than passed on",
+          d._engine.calls, [])
+
     d._engine.calls = []
     d.pause(True)
     d.cancel()
@@ -779,8 +796,9 @@ def main():
     d.breathiness = 20
     d.abbreviations = True
     d.voice = "3"
+    d.pauseMode = "0"
     check("every setting is sent as a control step, never as speech",
-          [kind for kind, _ in d._engine.kinds], ["control"] * 9)
+          [kind for kind, _ in d._engine.kinds], ["control"] * 10)
 
     d._engine.kinds = []
     d.speak(["a sentence"])
