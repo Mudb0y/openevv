@@ -14,7 +14,7 @@ Two hashes rather than one because they fail in different ways. The samples say 
 
 That second hash is why the two exist rather than one. The loop that fills those eight voices can be turned off entirely without a single sample moving anywhere, and that is not a hypothetical -- a stale script in `/tmp` once got exactly that edit past every check in the tree. So did a rate change that lost the caller's buffer, which left an instance permanently silent while all 81 differential cases passed on both sides, because nothing in them ever changed a rate.
 
-Only one thing is taken out of the reported answers before hashing, which is the list of languages the binary has in it: a baseline belongs to a language and has to be checkable out of a build with one language in it or with nine. Everything else is held verbatim, which is why the samples are always written to the same path in a directory of the harness's own -- the probe prints where it put them, and a temporary name would be a hash that moved every run.
+Only one thing is taken out of the reported answers before hashing, which is the list of languages the binary has in it: a baseline belongs to a language and has to be checkable out of a build with one language in it or with nine. Everything else is held verbatim, which is why the samples are always written under the same name, relative to a directory of the case's own -- the probe prints where it put them, and a temporary name would be a hash that moved every run.
 
 **A case that moves is a question rather than a failure.** The engine is being changed on purpose now. If a case moved because you meant it to, say in the commit which and why, then
 
@@ -23,6 +23,8 @@ Only one thing is taken out of the reported answers before hashing, which is the
 writes the new answers down. If a case you did not touch moved, that is the accident the gate exists to catch, and it names the sentence.
 
 It builds one probe with every language asked for in it rather than one build a language, which is a build rather than nine and which walks the path a real caller walks -- a library holding several languages, asked for one. `EVV_MATRIX_NATIVE` names a binary to drive instead, which is how the thirty-two bit build and the Windows build are held to the same numbers. `test/matrix.sh check enus plpl` does two languages rather than all nine.
+
+`EVV_JOBS` says how much it does at once, six unless told: the jobs of the build it makes, and the cases spoken side by side. Each case is a process of its own in a directory of its own, carrying nothing into the next, and they are read back in the order the files give them, so what it says does not depend on how many ran together. At forty a binary takes under half a minute, the Windows one under Wine included, where one case at a time took eight to ten.
 
 The baselines are in `test/samples`, one file a language, one line a case: the category, which case in it, sixteen hex of each hash, and the sentence. They are meant to be read in a diff -- a commit that moves twelve cases in one language and none anywhere else says something quite different from one that moves two cases in each of nine.
 

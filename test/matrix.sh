@@ -37,8 +37,9 @@
 #
 # EVV_MATRIX_NATIVE names a binary to drive rather than building one, which is
 # how the Windows build and the thirty-two bit build are checked against the
-# same numbers. EVV_JOBS says how many jobs the build it makes otherwise may
-# run, six unless told, since the machine it runs on is usually in use.
+# same numbers. EVV_JOBS says how much may run at once, both the jobs of the
+# build it makes otherwise and the cases spoken side by side, six unless told,
+# since the machine it runs on is usually in use.
 
 set -u
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -135,6 +136,7 @@ check|record) shift || true ;;
 *) what=check ;;
 esac
 want=${*:-$ALL}
+jobs=${EVV_JOBS:-6}
 
 for t in $want; do
     case " $ALL " in *" $t "*) ;;
@@ -156,7 +158,7 @@ if [ -z "$native" ]; then
     [ "$want" = "enus" ] && suf=""
     [ -n "$suf" ] && suf=-$suf
     echo "matrix: building a probe with $(printf '%s' "$want" | wc -w) languages in it"
-    make -C "$root" -j"${EVV_JOBS:-6}" RULES=bytecode probe LANGS="$langs" >/dev/null \
+    make -C "$root" -j"$jobs" RULES=bytecode probe LANGS="$langs" >/dev/null \
         || { echo "matrix: the build failed" >&2; exit 1; }
     native=$root/build/probe$suf
 fi
@@ -176,19 +178,100 @@ esac
 work=$(mktemp -d) || exit 1
 trap 'rm -rf "$work"' EXIT
 
+# Every case is spoken in a directory of its own, so that as many can be
+# spoken at once as EVV_JOBS says. Each is a process of its own already and
+# carries nothing into the next, so the answers do not depend on the order
+# they come in.
+#
 # The reported answers are held verbatim, so anything in them that is not the
 # engine's has to be constant. The only such thing is the path the samples
 # were written to, which the probe prints, so the file is always called the
-# same and always sits in the same directory.
-out=$work/case.wav
+# same and is always named relative to the case's own directory.
+speak_case() {
+    local d=$1 mode=$2 audio said
+    ( cd "$d" && EVV_LANGUAGE=$3 run_native @case.txt case.wav $mode ) \
+        > "$d/said.txt" 2>/dev/null
+
+    # Both utterances where there are two, which is what the `second'
+    # category is for: the probe writes the second beside the first under a
+    # name of its own, and a hash of the first alone would say nothing about
+    # it.
+    if [ -s "$d/case.wav" ] && [ -s "$d/case.wav.again.wav" ]; then
+        audio=$(cat "$d/case.wav" "$d/case.wav.again.wav" | sha256sum | cut -d' ' -f1)
+    elif [ -s "$d/case.wav" ]; then
+        audio=$(sha256sum < "$d/case.wav" | cut -d' ' -f1)
+    else
+        audio=nothing
+    fi
+    # The probe writes its lines the way the host does, and the Windows build
+    # of it is one of the things checked here.
+    #
+    # Which languages the binary has in it is taken off first, and the
+    # engine's own trace log is taken off with it. Those two are the only
+    # things that are.
+    #
+    # The log has to go because it is not an answer. It is what IBM's objects
+    # write when something under them answers badly, and on the road it took
+    # to get here it went to standard output and landed in the middle of what
+    # the probe reported -- so a rare internal grumble moved a recorded hash
+    # and read as a case that had changed. It writes to standard error now,
+    # which is the real fix; this is the belt beside it. A baseline is a
+    # language's own, so it has to be checkable out of a build with one
+    # language in it or nine, and the inventory a probe prints at startup is
+    # a property of the build rather than of the language. Everything else
+    # stays: the index mark, the eight editable voices read back, every
+    # general parameter, what the dictionary calls answered and how many
+    # samples came out. That is the surface the audio cannot see -- the loop
+    # that fills those voices can be turned off entirely without a single
+    # sample moving, which is how a stale script got such an edit past
+    # everything once.
+    said=$(tr -d '\r' < "$d/said.txt" \
+           | grep -vE '^speak: [0-9]+ languages$|^speak:   language 0x' \
+           | grep -v '^log\[' \
+           | sha256sum | cut -d' ' -f1)
+    printf '%s %s\n' "${audio:0:16}" "${said:0:16}" > "$d/answer"
+    rm -f "$d/case.wav" "$d/case.wav.again.wav"
+}
 
 mkdir -p "$store"
 bad=0
 total=0
 moved=0
 
+# Laid out first, every case of every language in the order the files give
+# them, then spoken side by side, then read back in that same order below.
+n=0
+: > "$work/cases"
 for t in $want; do
-    export EVV_LANGUAGE=$(language_of "$t")
+    [ "$what" = check ] && [ ! -r "$store/$t.sha256" ] && continue
+    for cat in $CATEGORIES; do
+        src=$cases/$(file_of "$cat")-$t.txt
+        [ "$t" = enus ] && src=$cases/$(file_of "$cat").txt
+        [ -r "$src" ] || continue
+        while IFS= read -r text; do
+            [ -n "$text" ] || continue
+            n=$((n + 1))
+            mkdir "$work/$n"
+            printf '%s' "$text" > "$work/$n/case.txt"
+            printf '%s %s %s\n' "$n" "$(language_of "$t")" \
+                "$(mode_of "$cat")" >> "$work/cases"
+        done < "$src"
+    done
+done
+
+running=0
+while read -r d language mode; do
+    speak_case "$work/$d" "$mode" "$language" < /dev/null &
+    running=$((running + 1))
+    if [ "$running" -ge "$jobs" ]; then
+        wait -n
+        running=$((running - 1))
+    fi
+done < "$work/cases"
+wait
+
+n=0
+for t in $want; do
     baseline=$store/$t.sha256
     lines=""
     n_lang=0
@@ -202,7 +285,6 @@ for t in $want; do
 
     for cat in $CATEGORIES; do
         stem=$(file_of "$cat")
-        mode=$(mode_of "$cat")
         src=$cases/$stem-$t.txt
         [ "$t" = enus ] && src=$cases/$stem.txt
         [ -r "$src" ] || { echo "$t: no cases at ${src#$root/}" >&2; bad=1; continue; }
@@ -211,53 +293,14 @@ for t in $want; do
         while IFS= read -r text; do
             [ -n "$text" ] || continue
             i=$((i + 1))
+            n=$((n + 1))
             n_lang=$((n_lang + 1))
             total=$((total + 1))
-            printf '%s' "$text" > "$work/case.txt"
-            rm -f "$out" "$out.again.wav"
-            ( cd "$work" && run_native @case.txt case.wav $mode ) \
-                > "$work/said.txt" 2>/dev/null
+            audio=unanswered
+            said=unanswered
+            [ -r "$work/$n/answer" ] && read -r audio said < "$work/$n/answer"
 
-            # Both utterances where there are two, which is what the
-            # `second' category is for: the probe writes the second beside the
-            # first under a name of its own, and a hash of the first alone
-            # would say nothing about it.
-            if [ -s "$out" ] && [ -s "$out.again.wav" ]; then
-                audio=$(cat "$out" "$out.again.wav" | sha256sum | cut -d' ' -f1)
-            elif [ -s "$out" ]; then
-                audio=$(sha256sum < "$out" | cut -d' ' -f1)
-            else
-                audio=nothing
-            fi
-            # The probe writes its lines the way the host does, and the
-            # Windows build of it is one of the things checked here.
-            #
-            # Which languages the binary has in it is taken off first, and
-            # the engine's own trace log is taken off with it. Those two are
-            # the only things that are.
-            #
-            # The log has to go because it is not an answer. It is what
-            # IBM's objects write when something under them answers badly,
-            # and on the road it took to get here it went to standard output
-            # and landed in the middle of what the probe reported -- so a
-            # rare internal grumble moved a recorded hash and read as a case
-            # that had changed. It writes to standard error now, which is
-            # the real fix; this is the belt beside it. A baseline is a language's own, so it
-            # has to be checkable out of a build with one language in it or
-            # nine, and the inventory a probe prints at startup is a property
-            # of the build rather than of the language. Everything else stays:
-            # the index mark, the eight editable voices read back, every
-            # general parameter, what the dictionary calls answered and how
-            # many samples came out. That is the surface the audio cannot see
-            # -- the loop that fills those voices can be turned off entirely
-            # without a single sample moving, which is how a stale script got
-            # such an edit past everything once.
-            said=$(tr -d '\r' < "$work/said.txt" \
-                   | grep -vE '^speak: [0-9]+ languages$|^speak:   language 0x' \
-                   | grep -v '^log\[' \
-                   | sha256sum | cut -d' ' -f1)
-
-            line="$cat $i ${audio:0:16} ${said:0:16} $text"
+            line="$cat $i $audio $said $text"
             if [ "$what" = record ]; then
                 lines="$lines$line"$'\n'
                 continue
@@ -269,10 +312,10 @@ for t in $want; do
                 echo "$t $cat case $i: not in the baseline: $text" >&2
                 bad=1; bad_lang=$((bad_lang + 1)); continue; }
             set -- $wanted
-            if [ "${audio:0:16}" != "$1" ] || [ "${said:0:16}" != "$2" ]; then
+            if [ "$audio" != "$1" ] || [ "$said" != "$2" ]; then
                 which=""
-                [ "${audio:0:16}" != "$1" ] && which="the samples"
-                [ "${said:0:16}" != "$2" ] && \
+                [ "$audio" != "$1" ] && which="the samples"
+                [ "$said" != "$2" ] && \
                     which="${which:+$which and }what it answered"
                 echo "$t $cat case $i: $which moved: $text" >&2
                 bad=1; bad_lang=$((bad_lang + 1)); moved=$((moved + 1))

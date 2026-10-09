@@ -207,16 +207,23 @@ static void nap(long ms)
    still speaking is what pumps it, so keep asking -- for thirty seconds, which
    is a limit and not a measurement. Stopping there without a word wrote a
    short file that read as an answer, so it says so and fails instead, and
-   writes nothing. */
+   writes nothing.
+
+   EVV_PROBE_WAIT says how many seconds instead. A traced sentence takes ten
+   on its own, nearly all of it the kernel writing one flushed line at a time,
+   and two dozen traced at once took some past thirty: the trace was cut off
+   wherever the limit fell, and the two sides of a check then differed. */
 static void drain(OldInst *h)
 {
-    int i;
+    const char *e = getenv("EVV_PROBE_WAIT");
+    long limit = (e != NULL && atol(e) > 0) ? atol(e) * 100 : 3000;
+    long i;
 
-    for (i = 0; i < 3000 && eo_speaking(h); i++)
+    for (i = 0; i < limit && eo_speaking(h); i++)
         nap(10);
     if (eo_speaking(h)) {
-        fprintf(stderr, "speak: still speaking after thirty seconds, so the"
-                " samples would be short; giving up\n");
+        fprintf(stderr, "speak: still speaking after %ld seconds, so the"
+                " samples would be short; giving up\n", limit / 100);
         exit(3);
     }
 }

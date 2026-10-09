@@ -44,6 +44,9 @@ set -u
 tools=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 here=$(dirname "$tools")
 work=$(mktemp -d)
+# How much may run at once, the builds' jobs and the sentences spoken side by
+# side alike, six unless told, as for test/matrix.sh.
+jobs=${EVV_JOBS:-6}
 # The rules go too, or the faithful form written here would be left sitting
 # where the next build expects the ordinary one and would be newer than
 # everything it is made from, so nothing would rewrite it. Removing them
@@ -59,7 +62,7 @@ trap 'rm -rf "$work"; rm -f "$here"/lang/enus/delta_rules_c[0-9][0-9]_enus.c' EX
 # and a plain `c' build has nothing left to run the rest.
 build() {
     rm -f "$here/build/probe"
-    make -C "$here" RULES="$2" probe >/dev/null || exit 1
+    make -C "$here" -j"$jobs" RULES="$2" probe >/dev/null || exit 1
     cp "$here/build/probe" "$work/probe.$1"
 }
 
@@ -96,10 +99,27 @@ for line in sys.stdin:
 }
 
 speak() {
-    DELTA_RULE_TRACE=200000 timeout 900 "$work/probe.$1" \
-        "$2" "$work/$1.wav" 2>"$work/$1.raw" >/dev/null
-    grep -v '^rules run:\|^# store \|in the area' "$work/$1.raw" \
-        | sed -E 's/@[0-9a-f]{8}/ARENA/g' | mask > "$work/$1.trace"
+    DELTA_RULE_TRACE=200000 EVV_PROBE_WAIT=900 timeout 900 "$work/probe.$1" \
+        "$2" "$3/$1.wav" 2>"$3/$1.raw" >/dev/null
+    grep -v '^rules run:\|^# store \|in the area' "$3/$1.raw" \
+        | sed -E 's/@[0-9a-f]{8}/ARENA/g' | mask > "$3/$1.trace"
+}
+
+# One sentence through both sides, in a directory of its own, with what the
+# reading below needs written down before the traces are let go: every
+# sentence is spoken at once.
+judge() {
+    local d=$1 sounds=1 same=1
+    speak bytecode "$2" "$d" &
+    speak c "$2" "$d" &
+    wait
+    cmp -s "$d/bytecode.wav" "$d/c.wav" || sounds=0
+    if ! cmp -s "$d/bytecode.trace" "$d/c.trace"; then
+        same=0
+        diff "$d/bytecode.trace" "$d/c.trace" | head -20 > "$d/head"
+    fi
+    echo "$sounds $same $(wc -l < "$d/bytecode.trace")" > "$d/result"
+    rm -f "$d"/*.raw "$d"/*.trace "$d"/*.wav
 }
 
 echo "check: building both"
@@ -107,25 +127,38 @@ build bytecode bytecode
 EVV_FAITHFUL=1 python3 "$tools/rules/decompile.py" "$@" || exit 1
 build c both
 
-lines=0
 n=0
+running=0
 while IFS= read -r sentence; do
     [ -n "$sentence" ] || continue
     n=$((n + 1))
-    speak bytecode "$sentence"
-    speak c "$sentence"
-
-    if ! cmp -s "$work/bytecode.wav" "$work/c.wav"; then
-        echo "check: sentence $n does not even sound the same" >&2
-        exit 1
+    mkdir "$work/s$n"
+    judge "$work/s$n" "$sentence" < /dev/null &
+    running=$((running + 1))
+    if [ "$running" -ge "$jobs" ]; then
+        wait -n
+        running=$((running - 1))
     fi
-    if ! cmp -s "$work/bytecode.trace" "$work/c.trace"; then
-        echo "check: sentence $n parts company" >&2
-        diff "$work/bytecode.trace" "$work/c.trace" | head -20 >&2
-        exit 1
-    fi
-    lines=$((lines + $(wc -l < "$work/bytecode.trace")))
-    echo "check: sentence $n, the same"
 done < "$here/test/cases/plain.txt"
+wait
+
+lines=0
+for k in $(seq 1 "$n"); do
+    read -r sounds same traced < "$work/s$k/result" || {
+        echo "check: sentence $k was not spoken" >&2
+        exit 1
+    }
+    if [ "$sounds" = 0 ]; then
+        echo "check: sentence $k does not even sound the same" >&2
+        exit 1
+    fi
+    if [ "$same" = 0 ]; then
+        echo "check: sentence $k parts company" >&2
+        cat "$work/s$k/head" >&2
+        exit 1
+    fi
+    lines=$((lines + traced))
+    echo "check: sentence $k, the same"
+done
 
 echo "check: the same, call for call, over $lines lines of $n sentences"

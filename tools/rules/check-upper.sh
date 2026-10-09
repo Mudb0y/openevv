@@ -84,6 +84,9 @@ suf=
 [ "$tag" = enus ] || suf=-$tag
 export EVV_NOTATION_LANG=$tag
 rules="$here/$lang/delta_rules_$tag.c"
+# How much may run at once, the builds' jobs and the sentences spoken side by
+# side alike, six unless told, as for test/matrix.sh.
+jobs=${EVV_JOBS:-6}
 work=$(mktemp -d)
 
 # The three files a build compiles are written out of the text rather than
@@ -147,7 +150,7 @@ new=$(for r in $named; do { ! echo "$lifted" | grep -qx "$r" \
 
 build() {
     rm -f "$here/build/probe$suf"
-    make -C "$here" EVVLANG="$lang" RULES=bytecode probe >/dev/null || exit 1
+    make -C "$here" -j"$jobs" EVVLANG="$lang" RULES=bytecode probe >/dev/null || exit 1
     cp "$here/build/probe$suf" "$work/probe.$1"
 }
 
@@ -198,11 +201,11 @@ for line in sys.stdin:
 }
 
 speak() {
-    DELTA_RULE_TRACE=200000 timeout 900 "$work/probe.$1" \
-        "$2" "$work/$1.wav" 2>"$work/$1.raw" >/dev/null
-    sed -E 's/@[0-9a-f]{8}/ARENA/g' "$work/$1.raw" \
-        | grep -v '^rules run:\|in the area' | mask > "$work/$1.full"
-    grep -v '^# store ' "$work/$1.full" > "$work/$1.trace"
+    DELTA_RULE_TRACE=200000 EVV_PROBE_WAIT=900 timeout 900 "$work/probe.$1" \
+        "$2" "$3/$1.wav" 2>"$3/$1.raw" >/dev/null
+    sed -E 's/@[0-9a-f]{8}/ARENA/g' "$3/$1.raw" \
+        | grep -v '^rules run:\|in the area' | mask > "$3/$1.full"
+    grep -v '^# store ' "$3/$1.full" > "$3/$1.trace"
     # The same again with the running count of rules entered taken off, for
     # saying how far two traces are apart. A trace that is short of one entry
     # differs in the count on every line after it, so the raw figure would be
@@ -210,7 +213,7 @@ speak() {
     # is lost by masking it here: two runs that enter the same rules in the
     # same order count them the same, so the strict comparison above is the
     # one that reads it.
-    sed -E 's/^rule [0-9]+:/rule:/' "$work/$1.trace" > "$work/$1.plain"
+    sed -E 's/^rule [0-9]+:/rule:/' "$3/$1.trace" > "$3/$1.plain"
     # And what the two sides are actually compared on. With nothing written
     # afresh that is the trace as it stands, counter and all, which is what
     # this has always compared. With something written afresh, its own lines
@@ -220,9 +223,9 @@ speak() {
     # the same rules in the same order count them the same, so the count only
     # ever restates what the lines already say.
     if [ -z "$afresh" ]; then
-        cp "$work/$1.trace" "$work/$1.cmp"
+        cp "$3/$1.trace" "$3/$1.cmp"
     else
-        drop "$work/$1.plain" > "$work/$1.cmp"
+        drop "$3/$1.plain" > "$3/$1.cmp"
     fi
 }
 
@@ -284,44 +287,75 @@ if cmp -s "$rules" "$work/kept.c"; then
 fi
 build ours
 
+# One sentence through both sides, in a directory of its own, with what the
+# reading below needs written down before the traces are let go: every
+# sentence is spoken at once, and each trace runs to hundreds of thousands of
+# lines a side.
+judge() {
+    local d=$1 same=1 apart=0 sounds=1 full=0
+    speak ibm "$2" "$d" &
+    speak ours "$2" "$d" &
+    wait
+    if ! cmp -s "$d/ibm.cmp" "$d/ours.cmp"; then
+        same=0
+        apart=$(diff "$d/ibm.cmp" "$d/ours.cmp" | grep -c '^[<>]')
+        diff "$d/ibm.cmp" "$d/ours.cmp" | head -20 > "$d/head"
+    fi
+    cmp -s "$d/ibm.wav" "$d/ours.wav" || sounds=0
+    cmp -s "$d/ibm.full" "$d/ours.full" && full=1
+    echo "$same $apart $(wc -l < "$d/ibm.cmp") $sounds" \
+         "$(wc -l < "$d/ibm.trace") $full" > "$d/result"
+    rm -f "$d"/*.raw "$d"/*.full "$d"/*.trace "$d"/*.plain "$d"/*.cmp \
+          "$d"/*.wav
+}
+
 n=0
-lines=0
-stores=0
+running=0
 while IFS= read -r sentence; do
     [ -n "$sentence" ] || continue
     n=$((n + 1))
-    speak ibm "$sentence"
-    speak ours "$sentence"
+    mkdir "$work/s$n"
+    judge "$work/s$n" "$sentence" < /dev/null &
+    running=$((running + 1))
+    if [ "$running" -ge "$jobs" ]; then
+        wait -n
+        running=$((running - 1))
+    fi
+done < <(cat ${EVV_UPPER_CASES:-"$here/test/cases/plain.txt" \
+                                 "$here/test/cases/upper.txt"})
+wait
 
-    if ! cmp -s "$work/ibm.cmp" "$work/ours.cmp"; then
-        apart=$(diff "$work/ibm.cmp" "$work/ours.cmp" \
-                | grep -c '^[<>]')
+lines=0
+stores=0
+for k in $(seq 1 "$n"); do
+    read -r same apart length sounds traced full < "$work/s$k/result" || {
+        echo "upper: sentence $k was not spoken" >&2
+        exit 1
+    }
+    if [ "$same" = 0 ]; then
         if [ "$sound" = 0 ]; then
             # How far apart, before the first twenty lines of it. Reading the
             # head alone once cost a week: it showed thirteen differing lines
             # and the traces were thirty-six thousand apart, so a fix was
             # believed finished when it had barely moved.
-            echo "upper: sentence $n parts company, $apart lines of" \
-                 "$(wc -l < "$work/ibm.cmp")" >&2
-            diff "$work/ibm.cmp" "$work/ours.cmp" | head -20 >&2
+            echo "upper: sentence $k parts company, $apart lines of $length" >&2
+            cat "$work/s$k/head" >&2
             exit 1
         fi
-        echo "upper: sentence $n, $apart trace lines apart of" \
-             "$(wc -l < "$work/ibm.cmp")"
+        echo "upper: sentence $k, $apart trace lines apart of $length"
     fi
-    if ! cmp -s "$work/ibm.wav" "$work/ours.wav"; then
-        echo "upper: sentence $n sounds different" >&2
+    if [ "$sounds" = 0 ]; then
+        echo "upper: sentence $k sounds different" >&2
         exit 1
     fi
-    lines=$((lines + $(wc -l < "$work/ibm.trace")))
-    if cmp -s "$work/ibm.full" "$work/ours.full"; then
+    lines=$((lines + traced))
+    if [ "$full" = 1 ]; then
         stores=$((stores + 1))
-        echo "upper: sentence $n, the same, stores and all"
+        echo "upper: sentence $k, the same, stores and all"
     else
-        echo "upper: sentence $n, the same"
+        echo "upper: sentence $k, the same"
     fi
-done < <(cat ${EVV_UPPER_CASES:-"$here/test/cases/plain.txt" \
-                                 "$here/test/cases/upper.txt"})
+done
 
 echo "upper: the same, call for call, over $lines lines of $n sentences"
 echo "upper: and the same store for store in $stores of the $n"
