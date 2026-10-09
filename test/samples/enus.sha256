@@ -17,7 +17,7 @@
 
 plain 1 3ae4e03b58575154 28775d11629885cc Hello. This is the Eloquence synthesizer speaking.
 plain 2 0455f430e860f421 903ce95c2021fc22 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
-plain 3 06c583fc4771098e 33f892bece432e27 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
+plain 3 dee440f3535c1617 36fea6b8a7ea524d The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
 plain 4 e7a11c93534f30c4 a1e5621c0f3ea2ab Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
 plain 5 d4fe33fae44e4dd2 0510369e14ad1de4 A one-word line. And another; plus "quoted text" inside.
 plain 6 82f39eea2defc6e1 57461d66daef10d0 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
@@ -45,56 +45,56 @@ anno 10 b2327f27b16e213d 428dfd71add8f1a2 Gender `vg1 and `vg0 switching over.
 anno 11 8fec89c619b4a12a d2bd65d6b3b72e1a Before `ui"mark one" and after the index mark.
 anno 12 005fb9dc82263904 170d8fd1df96415c Audio `aud"beep" marker in the middle of a line.
 anno 13 bb678b81eb7a7c27 e859aee1e3212153 `vs40 An annotation right at the very beginning.
-anno 14 e58ea7c1e0d2c2f5 be156cfc89a934c0 Ending with an annotation at the very end `vs60
+anno 14 5da3f699effaab23 22cd04bdb3492833 Ending with an annotation at the very end `vs60
 anno 15 8432d727d0be91b5 cd4ee5a2b0dac074 Malformed `vzz and `q and `v999 all in one line.
 anno 16 0f1cb6078c049eab 802b309f73fba36c Two `vs30`vv40 annotations with nothing between.
 anno 17 8d96ae3089dfd069 3380d0fc4b4ad2ea `ui"a"`ui"b" two marks with nothing between them.
-anno 18 f236667b04117340 ebdf87aecb12cd01 An unterminated `ui"mark that never closes here
+anno 18 bc5787f8e61b7c06 50a43f0d03f6a85f An unterminated `ui"mark that never closes here
 anno 19 88feb319a74e9013 8a08751ba3e29473 Mixed `v3 voice `vs70 speed `vv50 volume together.
 anno 20 e5eb5e1af96e3fd7 f2ba8805cb9a409f Tab	and newline handling with `vb40 a change.
-anno3 1 595a6051285f76d7 e67933676e276826 Normal speech `vs50 now much slower than before.
-anno3 2 5bef61a3266cef29 54963d15fef5d13d Volume `vv30 quieter, then `vv90 louder again.
-anno3 3 cf1e79f688afe2ea c84723e4fc7619f4 Pitch `vb20 low and `vb80 high in one sentence.
-anno3 4 bedddd12ad01903f 8150f9a19e4911bc Voice `v2 two, `v5 five, and `v1 back to one.
+anno3 1 bb8cdeaddea6c216 35c3d90b06488bd9 Normal speech `vs50 now much slower than before.
+anno3 2 1c086d9fa9367394 59dab44cb02c3e22 Volume `vv30 quieter, then `vv90 louder again.
+anno3 3 5f6e93dcbbffee83 49e76a0780658af8 Pitch `vb20 low and `vb80 high in one sentence.
+anno3 4 a171f8c3564dbf9d 5c6b490377af05c0 Voice `v2 two, `v5 five, and `v1 back to one.
 anno3 5 4229ebfaec9c6bbe 0b147611765655db A pause `0 short and `4 long between words.
-anno3 6 2eb94cf2079caa79 f1462e708336d992 Roughness `vr40 and breathiness `vf60 changed.
+anno3 6 bf4923ffc68fbbe9 369b91b47ca29309 Roughness `vr40 and breathiness `vf60 changed.
 anno3 7 41d13b6f59d45f27 36a53f25320dd5ff A literal \`backtick should be spoken as text.
-anno3 8 79552abfc6d2de71 7661824164a91d1f Speed by name `vsfast and then `vsslow again.
+anno3 8 3ab6ec5aa3045b48 241df4cbf914a228 Speed by name `vsfast and then `vsslow again.
 anno3 9 140bb9b51d4a9dfa 9f22248a7788c4ac Head size `vh30 then `vh70 in the same line.
 anno3 10 65bcea2dc999904a a2465cd58b4ad81e Gender `vg1 and `vg0 switching over.
 anno3 11 9599072ef831f426 fff5104ae696a53d Before `ui"mark one" and after the index mark.
 anno3 12 a5c786e8f31572ec 5da9c2b1b0109d27 Audio `aud"beep" marker in the middle of a line.
 anno3 13 3e14cff85870dbc6 1c49eff459e2793e `vs40 An annotation right at the very beginning.
-anno3 14 463406e4e8f90cad b8bc86e40ea11044 Ending with an annotation at the very end `vs60
+anno3 14 592ab3ad13e81918 67c351613416b2d6 Ending with an annotation at the very end `vs60
 anno3 15 8432d727d0be91b5 e7df9d6f5a41f0fb Malformed `vzz and `q and `v999 all in one line.
-anno3 16 3540592ffba145ab 9ba5a9858efd8627 Two `vs30`vv40 annotations with nothing between.
+anno3 16 b20a9eee3a03ae56 b0bb80738c226ada Two `vs30`vv40 annotations with nothing between.
 anno3 17 345d704520115818 4f0b1244b644162c `ui"a"`ui"b" two marks with nothing between them.
-anno3 18 f236667b04117340 11960c75314b708a An unterminated `ui"mark that never closes here
-anno3 19 90dc46ae5c0eaba9 845d7154775d72db Mixed `v3 voice `vs70 speed `vv50 volume together.
-anno3 20 c82f9be943f870c9 f90f175571450039 Tab	and newline handling with `vb40 a change.
-realworld 1 169397cdcd43c2db 73f0b7be0f4ac2a2 Normal speech `vs50 now much slower than before.
-realworld 2 30bbfd76d0bfbbec b6e60171d85c60c2 Volume `vv30 quieter, then `vv90 louder again.
-realworld 3 32129b42fc6ea5cc 99764878f12f1fdb Pitch `vb20 low and `vb80 high in one sentence.
-realworld 4 bedddd12ad01903f 45ce88cf704fdb88 Voice `v2 two, `v5 five, and `v1 back to one.
+anno3 18 bc5787f8e61b7c06 ad00f5339128a4f8 An unterminated `ui"mark that never closes here
+anno3 19 01bd1ad26dc0eec1 ddd1eaab89ca2bbf Mixed `v3 voice `vs70 speed `vv50 volume together.
+anno3 20 9f00bc6cd0be504a 05acc331e704f0b7 Tab	and newline handling with `vb40 a change.
+realworld 1 3743de7ec2b4df7b 8bbc56686a5b907d Normal speech `vs50 now much slower than before.
+realworld 2 a2314d9dd7be319f 2b82853735d9578c Volume `vv30 quieter, then `vv90 louder again.
+realworld 3 38c9719d6e4a4086 7ed3eb264c363424 Pitch `vb20 low and `vb80 high in one sentence.
+realworld 4 a171f8c3564dbf9d f96fbe10159fb593 Voice `v2 two, `v5 five, and `v1 back to one.
 realworld 5 4229ebfaec9c6bbe 921afa0b2b4bf3d5 A pause `0 short and `4 long between words.
-realworld 6 2eb94cf2079caa79 e665f89f7af805d7 Roughness `vr40 and breathiness `vf60 changed.
+realworld 6 bf4923ffc68fbbe9 a687c4d230f684f8 Roughness `vr40 and breathiness `vf60 changed.
 realworld 7 41d13b6f59d45f27 d7aaabf95f879d36 A literal \`backtick should be spoken as text.
-realworld 8 79552abfc6d2de71 878bb064edfe9bc2 Speed by name `vsfast and then `vsslow again.
+realworld 8 3ab6ec5aa3045b48 60a4a2f45ff7c814 Speed by name `vsfast and then `vsslow again.
 realworld 9 140bb9b51d4a9dfa 5bc8d19caa9e1444 Head size `vh30 then `vh70 in the same line.
 realworld 10 65bcea2dc999904a 54083e7714177a0a Gender `vg1 and `vg0 switching over.
 realworld 11 9599072ef831f426 6731f0e7b17f3ab7 Before `ui"mark one" and after the index mark.
 realworld 12 a5c786e8f31572ec fad5c2a5a7013a6c Audio `aud"beep" marker in the middle of a line.
 realworld 13 aaf1f2eda2f01d37 aefe8affa66628e8 `vs40 An annotation right at the very beginning.
-realworld 14 463406e4e8f90cad f827016bf129264c Ending with an annotation at the very end `vs60
+realworld 14 592ab3ad13e81918 128ceb913b82340a Ending with an annotation at the very end `vs60
 realworld 15 8432d727d0be91b5 b32a61ac65ae16e3 Malformed `vzz and `q and `v999 all in one line.
-realworld 16 2c8ad59d1cfb9536 a6962a190629e12b Two `vs30`vv40 annotations with nothing between.
+realworld 16 9747f8182825125d a1c65f0366691064 Two `vs30`vv40 annotations with nothing between.
 realworld 17 345d704520115818 bd1d0d4f0bf5c347 `ui"a"`ui"b" two marks with nothing between them.
-realworld 18 f236667b04117340 b09854c628cd5311 An unterminated `ui"mark that never closes here
-realworld 19 a740daddb8250fe5 f1be24cce3045b47 Mixed `v3 voice `vs70 speed `vv50 volume together.
-realworld 20 d1bc8ab16fd80b77 b8d9ab950a5fbf44 Tab	and newline handling with `vb40 a change.
+realworld 18 bc5787f8e61b7c06 e7f435a24b169303 An unterminated `ui"mark that never closes here
+realworld 19 531542bd751c3ee0 0f5765243d5f1918 Mixed `v3 voice `vs70 speed `vv50 volume together.
+realworld 20 c7472812e5a4c452 6a1b3bb2f440e2e9 Tab	and newline handling with `vb40 a change.
 dict 1 3ae4e03b58575154 88a97c6214c7ae40 Hello. This is the Eloquence synthesizer speaking.
 dict 2 0455f430e860f421 79c8127c956e41f7 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
-dict 3 06c583fc4771098e 5871d2db91b09dd5 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
+dict 3 dee440f3535c1617 5ec80812b795f998 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
 dict 4 e7a11c93534f30c4 534e4d6371f236bb Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
 dict 5 d4fe33fae44e4dd2 f51513e11b68fc5c A one-word line. And another; plus "quoted text" inside.
 dict 6 82f39eea2defc6e1 80f1996953c61db2 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
@@ -104,7 +104,7 @@ dict 9 0c6e8d642ceee098 1cef3d4452d5577c Windows10 and teamtalk5 are words with 
 dict 10 7cd979b02e0b624a ceba59834487cff4 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 second 1 db2e00e0f9ab64fb 86d0d4a3017b6650 Hello. This is the Eloquence synthesizer speaking.
 second 2 b2226360d82f88fc e32227ad5af7f916 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
-second 3 b155c32ffb51ab33 5beebeb37e711184 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
+second 3 78a6c0d59944f21d e2e8fb8b668fca26 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
 second 4 65d73728758609e6 a265dc1024ef7902 Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
 second 5 e1320b954e42c341 e0a1ade61139aab5 A one-word line. And another; plus "quoted text" inside.
 second 6 752056dbc9efb0ec 5ae905798bdc9e04 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
@@ -124,7 +124,7 @@ ssml 9 e38f0b0f18d5ea04 3292e9857759cc73 <speak version="1.0" xml:lang="en-US"><
 ssml 10 019301a1b2fb4152 957d5569e0328ef0 <speak version="1.0" xml:lang="en-US">The café near the naïve façade, with a &amp; b &lt; c.</speak>
 wide 1 ee12cfd97d7839cf 5d79ca06a0beb05f Hello. This is the Eloquence synthesizer speaking.
 wide 2 10e4ea7595461500 28ee60604cdcfc2d Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
-wide 3 f843610b04b0a249 6993d7d146276ba6 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
+wide 3 8e2d9bb4096c9c28 ffb938aee70fd110 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
 wide 4 bf206121e5c833e5 26a56ac7931e3b1b Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
 wide 5 732fd54e3ea125fe a630d67ae7163cd0 A one-word line. And another; plus "quoted text" inside.
 wide 6 bd009d1a198247f7 6890b36335e24925 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.

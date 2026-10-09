@@ -74,12 +74,14 @@ int main(int argc, char **argv)
     eciGetAvailableLanguages(langs, &n);
 
     /* The abbreviation dictionary and phrase prediction, off here and on in
-       IBM's engine. test/harness/phonemes.sh sets this when it holds these
-       answers to IBM's; test/words.sh does not, since what it records is
-       this engine as it ships. */
+       IBM's engine, and the shortened pause, which IBM's never made.
+       test/harness/phonemes.sh sets this when it holds these answers to
+       IBM's; test/words.sh does not, since what it records is this engine as
+       it ships. */
     if (getenv("EVV_IBM_DEFAULTS") != 0) {
         eciSetDefaultParam(eciDictionary, 0);
         eciSetDefaultParam(11, 1);
+        eciSetDefaultParam(eciPauseMode, 0);
     }
 
     while (fgets(line, sizeof line, f) != 0) {

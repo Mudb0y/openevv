@@ -274,6 +274,8 @@ jobs:
             build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp.so
           python3 test/lib/dictlangs.py \
             build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp.so
+          python3 test/lib/pauses.py \
+            build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp.so
 
       # And all of them in one binary, each still speaking: this is what says
       # nothing in the engine has quietly stayed global.

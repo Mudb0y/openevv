@@ -365,6 +365,229 @@ THIS int32_t stw_registerCallback(SynthThread *t, void *inst, void *cb,
     return rc;
 }
 
+/* ---- shortening the pause -------------------------------------------- */
+
+/* Ours. The engine pauses wherever it is made to finish a stretch of text,
+   for as long as at a full stop, whether or not the text ended in one. It is
+   made to finish at the end of every utterance and at every change of voice,
+   speed, pitch, inflection, volume or language, so a screen reader's
+   "Desktop list", or a capital letter spelled at a raised pitch, pauses like
+   the end of a sentence where nothing in the text asked for it. The engine's own pause
+   annotation with a value of one, put at the end, takes that pause away.
+   The IBMTTS and Eloquence 64 drivers write it into their text; it is
+   written here instead, after the romanizer has escaped the caller's own
+   backquotes, so that it acts whatever the input type and wherever the
+   engine finishes rather than only where the caller stopped. */
+
+#define TAIL_NONE  0   /* nothing since the engine last finished */
+#define TAIL_SHUT  1   /* punctuation, or a pause the caller asked for */
+#define TAIL_OPEN  2   /* anything else */
+
+static const char SHORT_PAUSE[] = " `p1 ";
+
+/* The marks the engine pauses at of its own accord, in the byte set it
+   reads, where the en and em dash are 0x96 and 0x97. */
+static int isMark(unsigned char c)
+{
+    return c == '-' || c == ',' || c == '.' || c == ':' || c == ';'
+        || c == '?' || c == '!' || c == 0x96 || c == 0x97;
+}
+
+/* A closing bracket or quote, which leaves a mark before it in force. */
+static int isCloser(unsigned char c)
+{
+    return c == ')' || c == ']' || c == '}' || c == '"' || c == '\''
+        || c == 0x92 || c == 0x94 || c == 0xbb;
+}
+
+static int isSpace(unsigned char c)
+{
+    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+}
+
+static int startsAnnotation(const char *s, int32_t i, int32_t from)
+{
+    return s[i] == '`' && (i == from || s[i - 1] != '\\');
+}
+
+/* `p and a number, or one of `0 to `4: a pause the caller has chosen. Eloquence
+   64 ends text with `p0 to ask for the engine's own, which is what it gets. */
+static int isPause(const char *s, int32_t n)
+{
+    int32_t i;
+
+    if (n == 2 && s[1] >= '0' && s[1] <= '4')
+        return 1;
+    if (n < 3 || s[1] != 'p')
+        return 0;
+    for (i = 2; i < n; i++)
+        if (s[i] < '0' || s[i] > '9')
+            return 0;
+    return 1;
+}
+
+/* Whether a run of text ends in a mark, closing brackets and quotes passed
+   over; minus one if there is nothing else in it. */
+static int endsInMark(const char *s, int32_t start, int32_t end)
+{
+    while (end > start && isCloser((unsigned char)s[end - 1]))
+        end--;
+    if (end == start)
+        return -1;
+    return isMark((unsigned char)s[end - 1]);
+}
+
+/* What a stretch ends with, read from the back a word at a time. One with
+   nothing in it leaves standing what came before.
+
+   An annotation is passed over when it only sets something. Some are spoken,
+   though: a phonetic spelling, and what the SSML reader makes of a number or
+   an ordinal, carry what is said in brackets, and the sentence's own full
+   stop comes straight after them, so a word that ends in a mark has ended
+   in one whatever it starts with. */
+static int tailOf(const char *s, int32_t n, int before)
+{
+    int32_t i = n;
+
+    for (;;) {
+        int32_t end, start, q;
+
+        while (i > 0 && isSpace((unsigned char)s[i - 1]))
+            i--;
+        if (i == 0)
+            return before;
+        end = i;
+        while (i > 0 && !isSpace((unsigned char)s[i - 1]))
+            i--;
+        start = i;
+
+        for (q = start; q < end && !startsAnnotation(s, q, start); q++)
+            ;
+        if (q < end) {
+            if (endsInMark(s, start, end) == 1)
+                return TAIL_SHUT;
+            if (isPause(s + q, end - q))
+                return TAIL_SHUT;
+            if (memchr(s + q, '[', (size_t)(end - q)))
+                return TAIL_OPEN;
+            end = q;
+        }
+        switch (endsInMark(s, start, end)) {
+        case -1:
+            continue;
+        case 1:
+            return TAIL_SHUT;
+        default:
+            return TAIL_OPEN;
+        }
+    }
+}
+
+/* What a mark may follow to have its pause shortened: a letter, a digit or a
+   space. The drivers' pattern takes only the ASCII letters; the accented
+   ones are letters too. */
+static int beforeMark(unsigned char c)
+{
+    if (c >= 0x80)
+        return !isMark(c) && !isCloser(c);
+    return isSpace(c) || (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z')
+        || (c >= 'a' && c <= 'z');
+}
+
+/* The same annotation before every mark, for the setting that shortens them
+   all, where a mark follows what beforeMark allows and is followed by a
+   space, a slash, a backslash or the end. A closing bracket is never one,
+   because this engine names one that anything separates from its word.
+   Answers a new copy, or nought when nothing needed changing. */
+static char *shortenMarks(const char *s, int32_t n, int32_t *out_n)
+{
+    static const char PAUSE[] = " `p1";
+    const int32_t grow = (int32_t)sizeof PAUSE - 1;
+    int32_t pass, i, found = 0, o = 0;
+    char *out = 0;
+
+    for (pass = 0; pass < 2; pass++) {
+        for (i = 0; i < n; ) {
+            int32_t j;
+
+            if (startsAnnotation(s, i, 0)) {
+                for (j = i; j < n && !isSpace((unsigned char)s[j]); j++)
+                    ;
+            } else if (i > 0 && isMark((unsigned char)s[i])
+                       && beforeMark((unsigned char)s[i - 1])) {
+                for (j = i + 1; j < n && s[j] == s[i]; j++)
+                    ;
+                if (j == n || isSpace((unsigned char)s[j]) || s[j] == '/'
+                    || s[j] == '\\') {
+                    if (pass == 0)
+                        found++;
+                    else {
+                        memcpy(out + o, PAUSE, (size_t)grow);
+                        o += grow;
+                    }
+                }
+            } else {
+                j = i + 1;
+            }
+            if (pass == 1) {
+                memcpy(out + o, s + i, (size_t)(j - i));
+                o += j - i;
+            }
+            i = j;
+        }
+        if (pass == 0) {
+            if (found == 0)
+                return 0;
+            out = (char *)cpp_new((uint32_t)(n + found * grow + 1));
+            if (!out)
+                return 0;
+        }
+    }
+    out[o] = 0;
+    *out_n = o;
+    return out;
+}
+
+/* Whether the pauses are to be shortened at all. Not in a transcription,
+   which says what the text is made of: the pause is the sound's, and the
+   annotation would end every unpunctuated word's phonemes. A caller who
+   speaks a transcription back gets the shortening then. */
+static int shortening(SynthThread *t)
+{
+    return ST_PAUSES(t) != PAUSES_NONE && !ST_PHONBUF(t);
+}
+
+/* What the engine is to be handed as the last of a stretch: the romanizer's
+   remainder with the marks shortened if every mark is to be, and the
+   annotation after it if the stretch ends open. Answers a new copy, or
+   nought to hand over the remainder as it is. */
+static char *finishStretch(SynthThread *t, const char *left)
+{
+    int32_t n = left ? (int32_t)strlen(left) : 0;
+    char *marked = 0;
+    char *out;
+
+    if (!shortening(t))
+        return 0;
+    if (n > 0 && ST_PAUSES(t) == PAUSES_ALWAYS) {
+        marked = shortenMarks(left, n, &n);
+        if (marked)
+            left = marked;
+    }
+    if (ST_TAIL(t) != TAIL_OPEN)
+        return marked;
+
+    out = (char *)cpp_new((uint32_t)n + (uint32_t)sizeof SHORT_PAUSE);
+    if (!out)
+        return marked;
+    if (n > 0)
+        memcpy(out, left, (size_t)n);
+    memcpy(out + n, SHORT_PAUSE, sizeof SHORT_PAUSE);
+    if (marked)
+        cpp_delete(marked);
+    return out;
+}
+
 /* ---- text into the engine -------------------------------------------- */
 
 /* A sentence the romanizer has finished with, on its way to the engine.
@@ -390,6 +613,21 @@ THIS void stw_addTextToEngine(SynthThread *t, char *text, int32_t len)
 
     memcpy(copy, text, (size_t)len);
     copy[len] = 0;
+
+    /* Read before the marks are shortened, which would leave every one of
+       them looking like an annotation. The count below then takes in what
+       was added, exactly as it would had the caller written it. */
+    ST_TAIL(t) = tailOf(copy, len, ST_TAIL(t));
+    if (ST_PAUSES(t) == PAUSES_ALWAYS && shortening(t)) {
+        int32_t n;
+        char *marked = shortenMarks(copy, len, &n);
+
+        if (marked) {
+            cpp_delete(copy);
+            copy = marked;
+            len = n;
+        }
+    }
 
     if (copy[len - 1] != ' ')
         ST_SAMPLES(t) += 1;
@@ -418,6 +656,7 @@ THIS void stw_addTextToEngine(SynthThread *t, char *text, int32_t len)
 THIS void stw_processRemaining(SynthThread *t)
 {
     char *left = 0;
+    char *made;
     int32_t n;
     EngCommand command;
 
@@ -427,9 +666,16 @@ THIS void stw_processRemaining(SynthThread *t)
     else if (n == 0)
         left = 0;
 
+    if (left)
+        ST_TAIL(t) = tailOf(left, (int32_t)strlen(left), ST_TAIL(t));
+    made = finishStretch(t, left);
+    ST_TAIL(t) = TAIL_NONE;
+
     command = (EngCommand)ENG_CALL(t, ENG_COMMAND);
-    if (command(ST_ENGINE(t), left))
+    if (command(ST_ENGINE(t), made ? made : left))
         stb_postEngineError(t);
+    if (made)
+        cpp_delete(made);
 
     if (ST_SAMPLES(t) > 0)
         stb_wordCallback(t, ST_SAMPLES(t));

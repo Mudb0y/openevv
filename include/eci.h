@@ -169,7 +169,17 @@ typedef enum {
        is the 11,025 voice raised to the rate as before. Numbered well clear
        of the settings IBM and ETI used, so no program written for either
        reaches it; eciReset puts it back to nought. */
-    eciWideband           = 32
+    eciWideband           = 32,
+    /* Ours. The engine pauses for as long as at a full stop wherever it is
+       made to finish a stretch of text -- the end of an utterance, and every
+       change of voice, rate, pitch, volume or language -- whether or not the
+       text there ended in punctuation. One, the default, shortens that pause
+       where the text does not end in punctuation; two shortens the pause at
+       every mark as well; nought shortens none, which is what IBM's engine
+       did. A pause annotation at the very end is the caller's choice and is
+       left alone. eciSetDefaultParam takes it too, and eciReset puts back
+       the default. */
+    eciPauseMode          = 33
 } ECIParam;
 
 /* A voice's eight, which every one of the eight preset voices has.

@@ -333,6 +333,8 @@ static void stl_build(SynthThread *t, void *app, void *state)
     ST_FRESH(t) = 0;
     ST_TOLD_CAT(t) = 0;
     ST_WIDEBAND(t) = 0;
+    ST_PAUSES(t) = PAUSES_DEFAULT;
+    ST_TAIL(t) = 0;
 
     p = cpp_new(rm_bytes);
     ST_ROMAN(t) = p ? rz_ctor(p, t) : 0;
@@ -598,6 +600,7 @@ THIS int32_t stl_stop(SynthThread *t)
     ST_PENDING(t) = 0;
     ST_STOPPED(t) = 0;
     ST_POSTED(t) = 0;
+    ST_TAIL(t) = 0;
     sy_eventUnsignal(ST_SYNCED(t));
 
     if (ST_SOUND(t))

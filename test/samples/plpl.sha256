@@ -16,7 +16,7 @@
 
 plain 1 5e5e0f3c19231902 29f77100b5c6d5f5 Dzien dobry. Tu mowi syntezator mowy Eloquence.
 plain 2 a0542706747a9c96 b6b7fe4cd0ebd731 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
-plain 3 796fbaa1e031a448 6b0684b79f2d3ebc Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
+plain 3 48feca094f752246 18f6cd0c0e5a2f51 Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
 plain 4 e320999747621e2a 2111889ce8b0e4ab Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
 plain 5 8f2ef8f03db03eef e05318edcb584794 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
 plain 6 22537baefc8e3896 2f6261d96796f8a5 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
@@ -41,63 +41,63 @@ anno 10 22c7f04857d7b729 0e75e5554a7d150a Plec `vg1 i `vg0 zmieniane po kolei.
 anno 11 4313e594eb60d1de 8c1dbfd322015872 Przed `ui"znacznik jeden" i po znaczniku indeksu.
 anno 12 a408b8a32a02f2e8 bfc46659a7e0033d Znacznik `aud"bip" dzwiekowy w srodku wiersza.
 anno 13 d29379cc9b0ec2f3 fc76ec2fa330d8bf `vs40 Adnotacja zaraz na samym poczatku wiersza.
-anno 14 0b1d6007a29c8fa0 76d651894b76886d Konczy sie adnotacja na samym koncu `vs60
+anno 14 0d5729de4b43b98b 5737c5a9d465b803 Konczy sie adnotacja na samym koncu `vs60
 anno 15 1d6800e5f3f2f26c 904afa1678781163 Bledne `vzz i `q i `v999 wszystkie w jednym wierszu.
 anno 16 f19c70a8a2edd802 b2d74bbc1be2ce9f Dwie `vs30`vv40 adnotacje bez niczego pomiedzy.
 anno 17 cd09b4b6e4a6ba07 d017fb368fdc6d0b `ui"a"`ui"b" dwa znaczniki bez niczego miedzy nimi.
-anno 18 a724f822445ace01 daedc4921bf67c45 Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
+anno 18 57d6109cea4ff76c 6080bb565527ca1a Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
 anno 19 dfd31afb01f36e1d 96000a747779b2d4 Razem `v3 glos `vs70 szybkosc `vv50 glosnosc naraz.
 anno 20 e4b5c05ad657f027 d1bb781923d9722d Tabulacja	i zawijanie wiersza z `vb40 zmiana.
-anno3 1 a61e2884ff808b36 037a981d125e434f Mowa normalna `vs50 teraz o wiele wolniejsza niz przedtem.
-anno3 2 79de04b0fd09c4ba d3a59a632daaeac5 Glosnosc `vv30 ciszej, potem `vv90 znowu glosniej.
-anno3 3 1bebbf95457a38a9 f4b5f95956be121f Wysokosc `vb20 niska i `vb80 wysoka w jednym zdaniu.
-anno3 4 9dc3f2379cc59ea7 00b1bead05ddaddc Glos `v2 dwa, `v5 piec, i `v1 znowu jeden.
+anno3 1 a0c2d35814ac92eb 9b707ac317ebbbfa Mowa normalna `vs50 teraz o wiele wolniejsza niz przedtem.
+anno3 2 3787dc7aef2e5c5f 8051b4ab7219d602 Glosnosc `vv30 ciszej, potem `vv90 znowu glosniej.
+anno3 3 86acaa5c88509e37 e9043a2abe59c3e9 Wysokosc `vb20 niska i `vb80 wysoka w jednym zdaniu.
+anno3 4 dc1879b49583e36e 8fca33fa3f328096 Glos `v2 dwa, `v5 piec, i `v1 znowu jeden.
 anno3 5 4134aecfa5beb6b0 0759f15dd4953aea Pauza `0 krotka i `4 dluga miedzy slowami.
-anno3 6 7fe6a280deb8b686 b47e3c671611a997 Chropowatosc `vr40 i oddech `vf60 zmienione.
+anno3 6 fc3ee7afa16f3e17 4ebc6a82baee4485 Chropowatosc `vr40 i oddech `vf60 zmienione.
 anno3 7 65f1dccfcecf7793 26e2008f369de497 Doslowny \`odwrotny apostrof ma byc przeczytany jako tekst.
-anno3 8 60787ac819030e8f 9b24f8b4630f725c Szybkosc po nazwie `vsfast a potem `vsslow z powrotem.
+anno3 8 c24a2cea6e845b54 465dfa4c5f7cc915 Szybkosc po nazwie `vsfast a potem `vsslow z powrotem.
 anno3 9 0e4652c4a259b64b b2b389ce9a8f1d4c Rozmiar glowy `vh30 potem `vh70 w tym samym wierszu.
 anno3 10 acee7ad4e373e870 53736f2127263199 Plec `vg1 i `vg0 zmieniane po kolei.
 anno3 11 60bbae23f43b1181 3e4085d07480d085 Przed `ui"znacznik jeden" i po znaczniku indeksu.
 anno3 12 ca5b7cd410840398 2e6f22887de58afc Znacznik `aud"bip" dzwiekowy w srodku wiersza.
 anno3 13 983bd86e4ef89b1e 5e609a6c65552227 `vs40 Adnotacja zaraz na samym poczatku wiersza.
-anno3 14 564fcb1d578d0d7f 9ecdab74820899a4 Konczy sie adnotacja na samym koncu `vs60
+anno3 14 8fc1b667f13513e0 8ab573c7630d5de3 Konczy sie adnotacja na samym koncu `vs60
 anno3 15 1d6800e5f3f2f26c d5741fa45ec926fc Bledne `vzz i `q i `v999 wszystkie w jednym wierszu.
-anno3 16 5a893a9c08add67f d4a9f5215c594422 Dwie `vs30`vv40 adnotacje bez niczego pomiedzy.
+anno3 16 8272f471c09ade1e 4868e27be52e3b45 Dwie `vs30`vv40 adnotacje bez niczego pomiedzy.
 anno3 17 5e5e39daba6d5bfb e4c16d6b96a8d1c5 `ui"a"`ui"b" dwa znaczniki bez niczego miedzy nimi.
-anno3 18 a724f822445ace01 3f57cde01917f81a Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
-anno3 19 e1cddc0ea4945b03 1061f371f0ac58a1 Razem `v3 glos `vs70 szybkosc `vv50 glosnosc naraz.
-anno3 20 118eef839f90792f 2f0e90a63f64589a Tabulacja	i zawijanie wiersza z `vb40 zmiana.
-realworld 1 1c752b194c1d1aea 44e48688c01ec49e Mowa normalna `vs50 teraz o wiele wolniejsza niz przedtem.
-realworld 2 31e3b02cf4886b75 594b3b5cee1235a4 Glosnosc `vv30 ciszej, potem `vv90 znowu glosniej.
-realworld 3 fd613f10dc45f3e7 8879c8af5697f4f6 Wysokosc `vb20 niska i `vb80 wysoka w jednym zdaniu.
-realworld 4 9dc3f2379cc59ea7 1cf1bfc679277e1f Glos `v2 dwa, `v5 piec, i `v1 znowu jeden.
+anno3 18 57d6109cea4ff76c 8eada6ae78480c76 Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
+anno3 19 2952c1ca0229049a 46ec987720e85dba Razem `v3 glos `vs70 szybkosc `vv50 glosnosc naraz.
+anno3 20 d9e3aee203f686af d780db169ee731c0 Tabulacja	i zawijanie wiersza z `vb40 zmiana.
+realworld 1 361c376e2ca0112c 55928841b8f0dabc Mowa normalna `vs50 teraz o wiele wolniejsza niz przedtem.
+realworld 2 155d27cde0143e44 6786a6438d987ec3 Glosnosc `vv30 ciszej, potem `vv90 znowu glosniej.
+realworld 3 def43d60de3ac471 ed64800c4adabe3a Wysokosc `vb20 niska i `vb80 wysoka w jednym zdaniu.
+realworld 4 dc1879b49583e36e 98aee1db5f763fba Glos `v2 dwa, `v5 piec, i `v1 znowu jeden.
 realworld 5 4134aecfa5beb6b0 19951c7bef5191ae Pauza `0 krotka i `4 dluga miedzy slowami.
-realworld 6 7fe6a280deb8b686 53612abd6235ba83 Chropowatosc `vr40 i oddech `vf60 zmienione.
+realworld 6 fc3ee7afa16f3e17 c20bf2f25e772f55 Chropowatosc `vr40 i oddech `vf60 zmienione.
 realworld 7 65f1dccfcecf7793 2b53ba73ca521b34 Doslowny \`odwrotny apostrof ma byc przeczytany jako tekst.
-realworld 8 60787ac819030e8f 719e98e42fe6734b Szybkosc po nazwie `vsfast a potem `vsslow z powrotem.
+realworld 8 c24a2cea6e845b54 82026eb0ebb19959 Szybkosc po nazwie `vsfast a potem `vsslow z powrotem.
 realworld 9 0e4652c4a259b64b 25d6f677c86acfdc Rozmiar glowy `vh30 potem `vh70 w tym samym wierszu.
 realworld 10 acee7ad4e373e870 f4e1b62303132a36 Plec `vg1 i `vg0 zmieniane po kolei.
 realworld 11 60bbae23f43b1181 2bbe8ae7b678666e Przed `ui"znacznik jeden" i po znaczniku indeksu.
 realworld 12 ca5b7cd410840398 10db99ff28313a93 Znacznik `aud"bip" dzwiekowy w srodku wiersza.
 realworld 13 249687da60429ea6 d1bfb783390c110f `vs40 Adnotacja zaraz na samym poczatku wiersza.
-realworld 14 564fcb1d578d0d7f 98df242de448ff48 Konczy sie adnotacja na samym koncu `vs60
+realworld 14 8fc1b667f13513e0 4fbaddc0d94cb71a Konczy sie adnotacja na samym koncu `vs60
 realworld 15 1d6800e5f3f2f26c 44041cfc067eced1 Bledne `vzz i `q i `v999 wszystkie w jednym wierszu.
-realworld 16 167c0f43d7288ed8 62c783a3c5c729dc Dwie `vs30`vv40 adnotacje bez niczego pomiedzy.
+realworld 16 485f38d284d2c071 e3530538b5fd69a1 Dwie `vs30`vv40 adnotacje bez niczego pomiedzy.
 realworld 17 5e5e39daba6d5bfb b9c600ce792882a3 `ui"a"`ui"b" dwa znaczniki bez niczego miedzy nimi.
-realworld 18 a724f822445ace01 a2f101ebeb45c724 Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
-realworld 19 c83ca0f8c3cd4777 bcee2882aa6f40fe Razem `v3 glos `vs70 szybkosc `vv50 glosnosc naraz.
-realworld 20 8e4e9b5842a26e57 cd809681ca23b78d Tabulacja	i zawijanie wiersza z `vb40 zmiana.
+realworld 18 57d6109cea4ff76c 4947cb4813203c36 Niedomkniety `ui"znacznik ktory nigdy sie tu nie konczy
+realworld 19 65eca945d176b91b bdc3fe8ef991eb7d Razem `v3 glos `vs70 szybkosc `vv50 glosnosc naraz.
+realworld 20 e4d9d256cdfd9597 2fa8194583aa0614 Tabulacja	i zawijanie wiersza z `vb40 zmiana.
 dict 1 5e5e0f3c19231902 e87bcb5ce3cad0ad Dzien dobry. Tu mowi syntezator mowy Eloquence.
 dict 2 a0542706747a9c96 4e9b29ffff159880 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
-dict 3 796fbaa1e031a448 37b2951989540a9f Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
+dict 3 48feca094f752246 2e322cd11760009b Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
 dict 4 e320999747621e2a 86f866fb4439fdb3 Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
 dict 5 8f2ef8f03db03eef 9b7955e79ada4f06 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
 dict 6 22537baefc8e3896 2ed74e9dc8d74190 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
 dict 7 b4ea3d4796f92905 f6ccb42e8a6d1ae4 Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
 second 1 3d6668611b22f6a6 bc61f02b791132fb Dzien dobry. Tu mowi syntezator mowy Eloquence.
 second 2 3eb41bb79f9d3736 cb065bf560535cdd Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
-second 3 0b41448c3aad9ef4 c524186a8da7bc46 Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
+second 3 baa3f418f4667c9b 3a2ca835f91c7710 Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
 second 4 8235c9af2130ba72 2443476572293f7c Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
 second 5 1f5999959c8f05d3 dc8da690424d795f Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
 second 6 600fb6e1018435f8 07107a37251b2152 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
@@ -114,7 +114,7 @@ ssml 9 3db041aaaf1ea01a 4945ec3c8de9f4b2 <speak version="1.0" xml:lang="pl-PL"><
 ssml 10 73fd1d84d11539ed 330d4bfd43fa1c16 <speak version="1.0" xml:lang="pl-PL">Zażółć gęślą jaźń, z a &amp; b &lt; c.</speak>
 wide 1 029e9c0931e3d89c 337d1125379bba30 Dzien dobry. Tu mowi syntezator mowy Eloquence.
 wide 2 1268699fb86ba064 838b3f2e6ba97644 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
-wide 3 be9e1d9597ce0c1a 393dd56ea85b3a6a Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
+wide 3 f86f603845cf5fe3 b0b31361197729dc Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
 wide 4 ef028ffef4bad314 4326efe162eef5bb Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
 wide 5 ab7463ff6a82d12e 666602edaec873cb Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
 wide 6 4990ef2064ce6e8e 35270ec40297c089 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.

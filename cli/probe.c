@@ -292,12 +292,14 @@ int main(int argc, char **argv)
             const char *ibm = getenv("EVV_IBM_DEFAULTS");
 
             /* The abbreviation dictionary and phrase prediction are off here
-               and on in IBM's engine, so test/compare.sh asks for both
-               whenever ours is held to IBM's. Nought is on for the
+               and on in IBM's engine, and the pause at an unpunctuated end is
+               shortened here and was not there, so test/compare.sh asks for
+               all three whenever ours is held to IBM's. Nought is on for the
                dictionary, which the interface holds inverted. */
             if (ibm != NULL && *ibm != 0) {
                 es_setDefaultParam(3, 0);
                 es_setDefaultParam(11, 1);
+                es_setDefaultParam(33, 0);
             }
             if (want != NULL && *want != 0)
                 h = eo_newEx((uint32_t)strtoul(want, NULL, 0));

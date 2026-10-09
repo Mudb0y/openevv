@@ -502,6 +502,10 @@ static OldInst *eo_newInstance(int32_t language, int told)
     if (!h)
         return 0;
     memset(h, 0, INSTANCE_BYTES);
+    /* The thread starts at the built-in setting, and is told otherwise with
+       the first utterance if the default has been changed since. */
+    h->pauses = g_DefaultPauses;
+    h->pauses_sent = PAUSES_DEFAULT;
 
     voices = cpp_new(CONCAT_VOICES_BYTES);
     OI_CONCAT(h) = voices ? scv_ctor(voices) : 0;

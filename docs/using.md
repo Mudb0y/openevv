@@ -148,7 +148,7 @@ If you are discarding samples, answer `eciDataProcessed`. Answering `eciDataNotP
 
 ## Where a program may cut an utterance
 
-A sentence end is free. A cut in the middle of a sentence costs a full-stop pause when speech resumes, because the engine is starting a new utterance and prosody starts over. A program feeding a screen reader's worth of text does better to submit whole sentences and cancel between them than to submit a paragraph and cut into it.
+A sentence end is free. A cut in the middle of a sentence costs a pause, because the engine is starting a new utterance and prosody starts over: about a tenth of a second with `eciPauseMode` at its default, which shortens the pause where text stops without punctuation, and the full-stop pause IBM's engine made, nearly four tenths, with it at nought. Three cuts at whitespace in a five-sentence message cost 0.33 seconds and 1.12. A program feeding a screen reader's worth of text does better to submit whole sentences and cancel between them than to submit a paragraph and cut into it.
 
 ## Several languages
 

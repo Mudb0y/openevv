@@ -129,6 +129,11 @@ struct SynthThread {
     /* Ours: whether the caller wants the wideband voice above eleven
        thousand and twenty five. */
     int32_t       wideband;
+    /* Ours: which pauses are shortened, and what the text handed to the
+       engine since it last finished a stretch ended with -- see
+       stw_processRemaining. */
+    int32_t       pauses;
+    int32_t       tail;
 };
 
 #define ST_ENGINES(t)   (&(t)->engines)
@@ -182,6 +187,8 @@ struct SynthThread {
 #define ST_FRESH(t)     ((t)->fresh)
 #define ST_TOLD_CAT(t)  ((t)->told_cat)
 #define ST_WIDEBAND(t)  ((t)->wideband)
+#define ST_PAUSES(t)    ((t)->pauses)
+#define ST_TAIL(t)      ((t)->tail)
 
 /* What the wideband voice is called by the newer interface's settings and
    by the older one's. Both are ours, and include/eci.h publishes the older
@@ -189,6 +196,19 @@ struct SynthThread {
    no program written for either reaches it by accident. */
 #define ECI_PARAM_WIDEBAND  21
 #define ECI_OLD_WIDEBAND    32
+
+/* Which pauses the engine shortens, published as eciPauseMode and numbered
+   beside the wideband voice for the same reason. Nought shortens none, as
+   IBM's engine did; one shortens the pause wherever the engine finishes a
+   stretch that does not end in punctuation; two does that and shortens the
+   pause at every mark as well. The values are the ones the IBMTTS and
+   Eloquence 64 drivers give their own setting of the same name. */
+#define ECI_PARAM_PAUSES    22
+#define ECI_OLD_PAUSES      33
+#define PAUSES_NONE         0
+#define PAUSES_AT_END       1
+#define PAUSES_ALWAYS       2
+#define PAUSES_DEFAULT      PAUSES_AT_END
 
 /* Bits of ST_FLAGS this side reads. */
 #define STF_WORD_MARKS  0x100  /* report where each word starts */
