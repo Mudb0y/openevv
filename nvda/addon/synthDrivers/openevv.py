@@ -40,6 +40,7 @@ from synthDriverHandler import (
 )
 
 from . import _openevv
+from . import _openevv_dictionaries as dictionaries
 
 #: What the engine's speed setting is worth at either end of the reader's
 #: nought to a hundred. The engine will take nought to two hundred and fifty,
@@ -150,6 +151,15 @@ class SynthDriver(SynthDriver):
 		DriverSetting("samplerate", _("Sa&mple rate"), False),
 		# Translators: Label for a setting in voice settings dialog.
 		BooleanDriverSetting("wideband", _("&Wideband above 11 kHz"), False),
+		# Translators: Label for a setting in voice settings dialog.
+		DriverSetting("dictionarySet", _("Dictionary s&et"), False),
+		BooleanDriverSetting(
+			"personalDictionary",
+			# Translators: Label for a setting in voice settings dialog.
+			_("Use personal dictionary entrie&s"),
+			False,
+			defaultVal=True,
+		),
 	)
 
 	supportedCommands = {
@@ -172,9 +182,12 @@ class SynthDriver(SynthDriver):
 		self._abbreviations = False
 		self._phrasePrediction = False
 		self._voiceTags = False
+		self._dictionarySet = dictionaries.NO_SET
+		self._personalDictionary = True
 		self._engine = _openevv.Engine(self._onIndexReached)
 		self._engine.open()
 		self._voice = self._voiceId(self._engine.language, _openevv.VOICE_FIRST)
+		self._applyDictionaries()
 		log.debug("openevv: engine version %s" % self._engine.version)
 
 	def terminate(self):
@@ -526,6 +539,51 @@ class SynthDriver(SynthDriver):
 
 	def _set_wideband(self, enable):
 		self._engine.control([(self._engine.setWideband, (enable,))])
+
+	def _get_availableDictionarysets(self):
+		"""The managed dictionary sets installed add-ons offer, and none.
+
+		A set chosen and since uninstalled is still offered, as not
+		installed, so that opening the dialog does not quietly change the
+		choice; it comes back into force if the set does.
+		"""
+		sets = OrderedDict()
+		# Translators: The choice of no managed dictionary set.
+		sets[dictionaries.NO_SET] = StringParameterInfo(dictionaries.NO_SET, _("None"))
+		installed = dictionaries.managedSets()
+		for one in sorted(installed.values(), key=lambda s: s.name.lower()):
+			sets[one.id] = StringParameterInfo(one.id, "%s (%s)" % (one.name, one.version))
+		if self._dictionarySet not in sets:
+			sets[self._dictionarySet] = StringParameterInfo(
+				self._dictionarySet,
+				# Translators: A chosen dictionary set that is no longer installed.
+				_("%s (not installed)") % self._dictionarySet,
+			)
+		return sets
+
+	def _get_dictionarySet(self):
+		return self._dictionarySet
+
+	def _set_dictionarySet(self, value):
+		self._dictionarySet = str(value) if value else dictionaries.NO_SET
+		self._applyDictionaries()
+
+	def _get_personalDictionary(self):
+		return self._personalDictionary
+
+	def _set_personalDictionary(self, enable):
+		self._personalDictionary = bool(enable)
+		self._applyDictionaries()
+
+	def _applyDictionaries(self):
+		# Worked out here, on NVDA's thread, because finding a managed set
+		# means asking NVDA for its add-ons; the engine is handed folders.
+		try:
+			folders = dictionaries.folders(self._dictionarySet, self._personalDictionary)
+		except Exception:  # noqa: BLE001
+			log.error("openevv: could not work out where dictionaries are", exc_info=True)
+			return
+		self._engine.control([(self._engine.setDictionaryFolders, (folders,))])
 
 	def _get_availableVoices(self):
 		"""One voice per language and preset.

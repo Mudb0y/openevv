@@ -21,7 +21,9 @@ usage: engine.py
 """
 
 import os
+import shutil
 import sys
+import tempfile
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -88,6 +90,11 @@ class FakeDll:
         self.buffer = None
         self.params = {}
         self.voiceParams = dict(VOICE_PARAMS)
+        #: Each file a dictionary read: the dictionary, the volume, the bytes
+        #: as they were when it was read, and the name it was read under.
+        self.dictFiles = []
+        self.dictsMade = 0
+        self.loadAnswer = 0
 
     def __getattr__(self, name):
         if not name.startswith("eci"):
@@ -142,6 +149,18 @@ class FakeDll:
             return hook(*args) if hook else 1
         if name == "eciDelete":
             return 0
+        if name == "eciNewDict":
+            self.dictsMade += 1
+            return 0x5000 + self.dictsMade
+        if name == "eciLoadDict":
+            _h, dictionary, volume, path = args
+            with open(os.fsdecode(path), "rb") as f:
+                self.dictFiles.append((dictionary, volume, f.read(), path))
+            return self.loadAnswer
+        if name == "eciSetDict":
+            return 0
+        if name == "eciDeleteDict":
+            return None
         return 1
 
 
@@ -574,6 +593,124 @@ def idle_stall_checks():
     engine.close()
 
 
+def dictionary_checks():
+    """Which files a language's dictionary is read from, in what order, and
+    when it is read again."""
+    dll = FakeDll()
+    players = []
+    mod = engine_module(dll, players)
+    engine = mod.Engine(lambda index: None)
+    engine.open()
+    # The watchdog looks for changed files on its own; held off here, so that
+    # what the checks below call is all that reads anything.
+    engine._dictionaryLooked = time.monotonic() + 1e9
+
+    tmp = tempfile.mkdtemp(prefix="openevv-dicts-")
+    managed, personal, own, empty = (
+        os.path.join(tmp, n) for n in ("managed", "personal", "own", "empty"))
+    for folder in (managed, personal, own, empty):
+        os.makedirs(folder)
+
+    def write(folder, name, data):
+        with open(os.path.join(folder, name), "wb") as f:
+            f.write(data)
+
+    write(managed, "ENUmain.dic", b"one\tmanaged one\r\n")
+    write(managed, "ENURoot.dic", b"two\tmanaged two\r\n")
+    write(personal, "enuroot.dic", b"two\tpersonal two")
+    write(own, "enuroot.dic", b"three\town three\r\n")
+    write(own, "deumain.dic", b"vier\teigene vier\r\n")
+    write(own, "notes.txt", b"not a dictionary\r\n")
+
+    try:
+        engine.setDictionaryFolders((managed, personal, own))
+        check("one dictionary for the language in force",
+              len(dll.named("eciNewDict")), 1)
+        check("each volume read once, from every folder that has it, in order,"
+              " each file ended with a line end",
+              [(v, data) for _d, v, data, _p in dll.dictFiles],
+              [(0, b"one\tmanaged one\r\n"),
+               (1, b"two\tmanaged two\r\ntwo\tpersonal two\r\n"
+                   b"three\town three\r\n")])
+        check("and put in force", dll.named("eciSetDict")[-1][2], 0x5001)
+        check("what the engine read is not left behind",
+              [os.path.exists(os.fsdecode(p)) for *_x, p in dll.dictFiles],
+              [False, False])
+
+        before = len(dll.calls)
+        engine.setDictionaryFolders((managed, personal, own))
+        check("the same folders asked for again read nothing",
+              len(dll.calls), before)
+
+        engine.languages = [0x10000, 0x40000]
+        engine.setLanguage(0x40000)
+        check("another language gets a dictionary of its own when it is"
+              " spoken", len(dll.named("eciNewDict")), 2)
+        check("from its own files", dll.dictFiles[-1][1:3],
+              (0, b"vier\teigene vier\r\n"))
+        made = len(dll.named("eciNewDict"))
+        engine.setLanguage(0x10000)
+        check("and the first is put back rather than read again on the way"
+              " back", (len(dll.named("eciNewDict")),
+                        dll.named("eciSetDict")[-1][2]), (made, 0x5001))
+
+        check("nothing has changed", engine.dictionariesChanged(), False)
+        write(own, "enuroot.dic", b"three\town three, changed\r\n")
+        check("a file that changes is seen to", engine.dictionariesChanged(),
+              True)
+        calls = len(dll.calls)
+        engine.refreshDictionaries()
+        after = dll.calls[calls:]
+        check("reading again takes every dictionary out of force first",
+              after[0], ("eciSetDict", HANDLE, None))
+        check("and gives both back",
+              sorted(c[2] for c in after if c[0] == "eciDeleteDict"),
+              [0x5001, 0x5002])
+        check("then reads the language in force with the change in it",
+              dll.dictFiles[-1][1:3],
+              (1, b"two\tmanaged two\r\ntwo\tpersonal two\r\n"
+                  b"three\town three, changed\r\n"))
+        check("and is content after", engine.dictionariesChanged(), False)
+
+        write(personal, "enuabbr.dic", b"WWII\tworld war two\r\n")
+        check("a file that appears is seen to", engine.dictionariesChanged(),
+              True)
+
+        queued = []
+        engine.control, control = queued.append, engine.control
+        engine._dictionaryLooked = 0.0
+        engine._watchDictionaries()
+        check("the watchdog queues the reading rather than doing it",
+              [[fn.__name__ for fn, _a in b] for b in queued],
+              [["refreshDictionaries"]])
+        engine._dictionaryLooked = 0.0
+        engine._watchDictionaries()
+        check("and queues it once while it waits", len(queued), 1)
+        engine.control = control
+        engine.refreshDictionaries()
+
+        made = len(dll.named("eciNewDict"))
+        engine.setDictionaryFolders((empty,))
+        check("folders with nothing in them make no dictionary",
+              len(dll.named("eciNewDict")), made)
+        check("and leave none in force", dll.named("eciSetDict")[-1][2], None)
+
+        dll.loadAnswer = 6
+        sequence.LOGGED["error"][:] = []
+        engine.setDictionaryFolders((own,))
+        check("a file the engine refuses is said in the log and not raised",
+              any("would not read" in e for e in sequence.LOGGED["error"]),
+              True)
+        dll.loadAnswer = 0
+
+        engine.close()
+        ends = [c[0] for c in dll.calls if c[0] in ("eciDeleteDict", "eciDelete")]
+        check("the dictionaries are given back before the instance",
+              ends[-2:], ["eciDeleteDict", "eciDelete"])
+    finally:
+        shutil.rmtree(tmp, True)
+
+
 def main():
     dll = FakeDll()
     players = []
@@ -768,6 +905,7 @@ def main():
     wideband_checks()
     stall_checks()
     idle_stall_checks()
+    dictionary_checks()
 
     # A Thread subclass shares Thread's namespace, so this holds the engine to
     # not using any name the standard library's Thread does.

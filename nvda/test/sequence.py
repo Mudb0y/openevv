@@ -16,8 +16,11 @@ unnoticed until somebody listened.
 usage: sequence.py
 """
 
+import atexit
 import os
+import shutil
 import sys
+import tempfile
 import types
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -159,10 +162,30 @@ class VoiceInfo:
         self.language = language
 
 
+#: Where NVDA keeps the reader's configuration, here: made once, and where the
+#: dictionary checks lay out add-ons and files.
+CONFIG = tempfile.mkdtemp(prefix="openevv-nvda-config-")
+atexit.register(shutil.rmtree, CONFIG, True)
+
+#: The add-ons NVDA says are installed. A check that wants a dictionary
+#: provider puts one here.
+ADDONS = []
+
+
+class FakeAddon:
+    def __init__(self, path, pendingInstall=False):
+        self.path = path
+        self.isPendingInstall = pendingInstall
+
+
 def _install_stubs():
     # Recording rather than discarding, so a check can assert that the driver
-    # said something when it should have.
-    said = {"warning": [], "error": [], "debugWarning": []}
+    # said something when it should have. The same lists every time, emptied:
+    # a module imported under an earlier call keeps the log it was given, and
+    # what it says has to land where a later check reads.
+    said = {k: LOGGED.get(k, []) for k in ("warning", "error", "debugWarning")}
+    for kept in said.values():
+        del kept[:]
     log = types.SimpleNamespace(
         debug=lambda *a, **k: None,
         info=lambda *a, **k: None,
@@ -184,6 +207,8 @@ def _install_stubs():
         return m
 
     module("config", conf={"audio": {"outputDevice": "default"}})
+    module("globalVars", appArgs=types.SimpleNamespace(configPath=CONFIG))
+    module("addonHandler", getAvailableAddons=lambda: list(ADDONS))
     module("nvwave", WavePlayer=object)
     module("logHandler", log=log)
 
@@ -319,6 +344,9 @@ class FakeEngine:
     def selectLanguage(self, language, preset):
         pass
 
+    def setDictionaryFolders(self, folders):
+        pass
+
     def voiceNamesFor(self, language):
         return self.voiceNamesByLanguage.get(language, self.voiceNames)
 
@@ -384,6 +412,119 @@ def _endsPlainSentence(text):
     return bool(word) and "." not in word and not (
         len(word) <= 3 and word[:1].isupper()
     ) and not word[-1:].isdigit()
+
+
+def _write(path, text):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(text)
+
+
+CONTRACT = "[contract]\nformat = eci-dictionary-sets\nversion = 1\n"
+
+
+def provider(name, sets, contract=CONTRACT, pendingInstall=False):
+    """An add-on carrying dictionary sets, laid out as NVDA installs one."""
+    root = os.path.join(CONFIG, "addons", name)
+    os.makedirs(os.path.join(root, "dictionaries", "sets"), exist_ok=True)
+    if contract is not None:
+        _write(os.path.join(root, "dictionaries", "contract.ini"), contract)
+    for folder, fields in sets:
+        _write(
+            os.path.join(root, "dictionaries", "sets", folder, "set.ini"),
+            "[set]\n" + "".join("%s = %s\n" % kv for kv in fields.items()),
+        )
+    return FakeAddon(root, pendingInstall)
+
+
+def described(set_id, **changed):
+    """A set.ini's fields, every one present unless a check takes it out."""
+    fields = {
+        "id": set_id,
+        "name": "Community",
+        "source_url": "https://example.org/dictionaries",
+        "source_version": "2026.10",
+        "source_revision": "0" * 40,
+        "attribution": "its contributors",
+        "license": "CC0-1.0",
+        "license_url": "https://example.org/licence",
+    }
+    fields.update(changed)
+    return {k: v for k, v in fields.items() if v is not None}
+
+
+def dictionary_checks():
+    """Where the driver tells the engine to read dictionaries from.
+
+    The managed set the reader chose, then the personal entries, then the
+    add-on's own folder in the configuration; a set comes from any add-on
+    carrying the contract, and is offered only when the add-on and the set
+    both describe themselves as the contract says.
+    """
+    personal = os.path.join(CONFIG, "eciDictionaries", "personal")
+    own = os.path.join(CONFIG, "openevv")
+
+    def folders(d):
+        sent = [args[0] for name, *args in d._engine.calls
+                if name == "setDictionaryFolders"]
+        return sent[-1] if sent else None
+
+    del ADDONS[:]
+    d = driver()
+    check("with no set chosen the engine reads the personal entries and the"
+          " add-on's own folder", folders(d), (personal, own))
+    check("and with nothing installed only none is offered",
+          list(d.availableDictionarysets), ["none"])
+
+    good = "org.example.community"
+    ADDONS.extend([
+        provider("manager", [
+            (good, described(good)),
+            ("org.example.other", described("org.example.elsewhere")),
+            ("org.example.partial", described("org.example.partial",
+                                              license=None)),
+            ("Not_An_Id", described("Not_An_Id")),
+        ]),
+        provider("future", [("org.example.future",
+                             described("org.example.future"))],
+                 contract=CONTRACT.replace("version = 1", "version = 2")),
+        provider("nocontract", [("org.example.bare",
+                                 described("org.example.bare"))],
+                 contract=None),
+        provider("arriving", [("org.example.pending",
+                               described("org.example.pending"))],
+                 pendingInstall=True),
+    ])
+    offered = d.availableDictionarysets
+    check("a set is offered only where its add-on carries contract version"
+          " one, is installed, and the set names itself as its folder does",
+          list(offered), ["none", good])
+    check("and it is offered under its name and version",
+          offered[good].displayName, "Community (2026.10)")
+
+    d.dictionarySet = good
+    chosen = os.path.join(CONFIG, "addons", "manager", "dictionaries", "sets",
+                          good)
+    check("a chosen set is read first", folders(d), (chosen, personal, own))
+
+    d.personalDictionary = False
+    check("and the personal entries can be left out", folders(d),
+          (chosen, own))
+    d.personalDictionary = True
+
+    del ADDONS[:]
+    offered = d.availableDictionarysets
+    check("a chosen set since uninstalled is still offered, as not installed",
+          offered[good].displayName, good + " (not installed)")
+    LOGGED["warning"][:] = []
+    d.personalDictionary = True
+    check("and is skipped rather than read", folders(d), (personal, own))
+    check("and the log says why",
+          any("not installed" in w for w in LOGGED["warning"]), True)
+    check("the choice itself is kept", d.dictionarySet, good)
+
+    d.dictionarySet = "none"
+    check("none is no set", folders(d), (personal, own))
 
 
 def main():
@@ -845,6 +986,8 @@ def main():
         )
     finally:
         FakeEngine.languages = [0x10000]
+
+    dictionary_checks()
 
     if FAILED:
         print("\nsequence: %d of the checks failed" % len(FAILED))
