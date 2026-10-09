@@ -14,7 +14,7 @@ On this machine all of those come from the flake, and `nix develop` puts them on
 
     make
 
-That builds `build/libevv.a`, the WAV-producing `build/evv`, and `build/openevv-say`, which plays it. From nothing, that is about two and a half minutes: two seconds to write the rules out of the text, a little over two minutes for Python to decompile them into C, and about fifteen seconds to compile the thirteen megabytes of it across twenty-four cores. Once those files exist they are not written again unless the text, the decompiler or the bytecode changes.
+That builds `build/libevv.a`, the WAV-producing `build/evv`, and `build/openevv-say`, which plays it. From nothing, that is about two and a half minutes: two seconds to write the rules out of the text, a little over two minutes for Python to decompile them into C, and about fifteen seconds to compile the thirteen megabytes of it across twenty-four cores. Once those files exist they are not written again unless something the decompiler reads has changed. That is decided by content rather than by date: the rules are written out of the text again whenever anything they are made from is newer, a change to one language or to a tool rewrites all nine, and nearly every one comes out as it was. So what the decompiler would read is summed into `build/decompiled-<tag>.sum` before it runs, and a language whose sum has not moved keeps the files it has, which make then finds no newer than before.
 
     make RULES=bytecode
 
@@ -44,6 +44,8 @@ On a Nix machine `nix build` makes both commands under `result/bin`, and `nix ru
 ## The variables
 
 `CC` is the compiler for this machine, `cc` by default. `CC32` is the thirty-two bit one, which on this machine is the cross compiler the flake provides, `i686-unknown-linux-gnu-gcc`, and elsewhere is usually the host compiler with a flag: `make evv32 CC32="gcc -m32"`. `NM` is used by `make missing`. `OPT` is the optimisation level, `-O2`. `ALIAS` turns strict aliasing off in every build, and it is not optional: the rules written as C reach memory through pointers cast to whatever width an operation has, and a rule lifted from 6.1 writes a place four bytes wide and then compares two bytes of it, which the compiler is otherwise free to do before the write. IBM's rules never mixed widths on one place, so nothing showed until those did, and then only in the C form. `CFLAGS` is added to both builds after everything else, so it can override.
+
+`CCACHE` goes in front of every compile to an object, and is ccache wherever one is on the path, which the flake's shell puts there; `make CCACHE=` leaves it out. Every object depends on every header, the rule headers of each language among them, so writing one language's rules out again compiles every object of every build -- 1,740 for the three binaries the gate builds in one form -- and a cache hands back each one whose source and headers came out as they were.
 
 `LANGS` says which language modules go in, and `EVVLANG` is the name for one of them: `make LANGS="lang/enus lang/dede"` builds both and the first named is what a caller gets when it asks for nothing in particular. A build with anything but English alone names what it makes after what is in it, so builds sit beside each other rather than over each other, and so that an archive left over from another language set cannot be linked in by mistake.
 

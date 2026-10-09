@@ -85,6 +85,11 @@
           pkgs.gnumake
           pkgs.python3
 
+          # The rules as C are written again whole when anything they are
+          # made from changes, and most of the files come out as they were;
+          # this hands back the object for one it has compiled before.
+          pkgs.ccache
+
           # The Speech Dispatcher output module compiles against Speech
           # Dispatcher's own headers and links its out-of-tree module helper.
           # Headers and a library, nothing else: the module hands its samples

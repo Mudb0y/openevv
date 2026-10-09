@@ -71,6 +71,15 @@ SUF   := $(if $(filter-out enus,$(TAGS)),-$(subst $(space),-,$(TAGS)))
 CC  ?= cc
 NM  ?= nm
 
+# Put in front of every compile to an object, and empty where there is none.
+# The rules as C are thirty-two files a language for each of four compilers,
+# and a change to one language, or to a tool every language is written with,
+# leaves most of them as they were: a cache gives those back rather than
+# compiling them again. `make CCACHE=' turns it off.
+ifeq ($(origin CCACHE),undefined)
+CCACHE := $(shell command -v ccache 2>/dev/null)
+endif
+
 # Which rules the interpreter finds already written as C.
 #
 # `c' links the thirteen megabytes tools/rules/decompile.py writes out of the
@@ -357,7 +366,7 @@ so: $(BUILD)/$(SONAME)
 
 $(OBJDIRPIC)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJDIRPIC)
-	@$(CC) $(CFLAGSPIC) -c $< -o $@
+	@$(CCACHE) $(CC) $(CFLAGSPIC) -c $< -o $@
 
 $(BUILD)/$(SONAME): lib/eci_api.c $(OBJECTSPIC) $(RULESTAMP)
 	@for o in $(OBJDIRPIC)/*.o; do \
@@ -394,7 +403,7 @@ so32: $(BUILD)/$(SONAME32)
 
 $(OBJDIRPIC32)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJDIRPIC32)
-	@$(CC32) $(CFLAGSPIC32) -c $< -o $@
+	@$(CCACHE) $(CC32) $(CFLAGSPIC32) -c $< -o $@
 
 $(BUILD)/$(SONAME32): lib/eci_api.c $(OBJECTSPIC32) $(RULESTAMP)
 	@$(CC32) $(CFLAGSPIC32) -shared -Wl,-soname,$(SONAME32) \
@@ -640,7 +649,7 @@ $(BUILD)/ssml: test/harness/ssml.c $(BUILD)/libevv.a
 
 $(OBJDIR)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJDIR)
-	@$(CC) $(ALL_CFLAGS) -c $< -o $@
+	@$(CCACHE) $(CC) $(ALL_CFLAGS) -c $< -o $@
 
 # A source that gets renamed leaves its object behind, and a stale one is a
 # duplicate definition waiting to happen, so they go before the archive is
@@ -913,15 +922,34 @@ rules: $(GENERATED)
 # The bytecode is a prerequisite because the decompiler reads it: this writes
 # the rules as C out of the array in delta_rules_<tag>.c, which is itself
 # written out of the text. A rule changed in the text goes through both.
+#
+# The rule code is written again whenever anything it is made from is newer,
+# and nearly always comes out as it was -- a change to one language's rules or
+# to a tool every language is written with rewrites all nine. So what the
+# decompiler would read is summed first, along with the settings that change
+# what it writes, and where the sum is the one it last wrote from and every
+# part is there, the parts are left as they are. Make then finds them no newer
+# than before and compiles nothing, where writing them again cost two minutes
+# a language and every object after it.
 define rules_for
 $(foreach n,$(PARTNS),$(1)/delta_rules_c$(n)_$(notdir $(1)).c) &: \
                                      $(1)/delta_rules_$(notdir $(1)).c \
                                      tools/rules/decompile.py \
                                      tools/rules/patterns.py tools/evv.py
-	@rm -f $(1)/delta_rules_c[0-9][0-9]_$(notdir $(1)).c \
-	       $(1)/delta_rules_c_$(notdir $(1)).c
-	@EVV_LANG_DIR=$(1) EVV_RULE_PARTS=$(PARTS) \
-	  python3 tools/rules/decompile.py all
+	@sum=$$$$(cat $$^ $(1)/delta_globals_$(notdir $(1)).c \
+	              $(1)/delta_consts_$(notdir $(1)).c src/delta/delta.h \
+	              2>/dev/null | sha256sum | cut -c1-64)-$(PARTS)-$$$${EVV_STALE_ALL:-}-$$$${EVV_RULE_PROVENANCE:-}; \
+	 have=yes; \
+	 for f in $(foreach n,$(PARTNS),$(1)/delta_rules_c$(n)_$(notdir $(1)).c); do \
+	   [ -f "$$$$f" ] || have=; done; \
+	 [ -n "$$$$have" ] \
+	   && [ "$$$$sum" = "$$$$(cat $(BUILD)/decompiled-$(notdir $(1)).sum 2>/dev/null)" ] \
+	   && exit 0; \
+	 rm -f $(1)/delta_rules_c[0-9][0-9]_$(notdir $(1)).c \
+	       $(1)/delta_rules_c_$(notdir $(1)).c $(BUILD)/decompiled-$(notdir $(1)).sum; \
+	 EVV_LANG_DIR=$(1) EVV_RULE_PARTS=$(PARTS) \
+	   python3 tools/rules/decompile.py all || exit 1; \
+	 mkdir -p $(BUILD); echo "$$$$sum" > $(BUILD)/decompiled-$(notdir $(1)).sum
 endef
 $(foreach l,$(LANGS),$(eval $(call rules_for,$(l))))
 
@@ -1160,7 +1188,7 @@ $(BUILD)/probe32$(SUF): cli/probe.c $(BUILD)/libevv32$(SUF).a
 
 $(OBJDIR32)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJDIR32)
-	@$(CC32) $(CFLAGS32) -c $< -o $@
+	@$(CCACHE) $(CC32) $(CFLAGS32) -c $< -o $@
 
 $(BUILD)/libevv32$(SUF).a: $(OBJECTS32) $(RULESTAMP)
 	@for o in $(OBJDIR32)/*.o; do \
@@ -1271,7 +1299,7 @@ $(OBJDIRWIN)/speak.res: win/speak.rc win/speak.h
 
 $(OBJDIRWIN)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJDIRWIN)
-	@$(CCWIN) $(CFLAGSWIN) -c $< -o $@
+	@$(CCACHE) $(CCWIN) $(CFLAGSWIN) -c $< -o $@
 
 $(BUILD)/libevv-win$(SUF).a: $(OBJECTSWIN) $(RULESTAMP)
 	@for o in $(OBJDIRWIN)/*.o; do \
@@ -1323,7 +1351,7 @@ $(OBJDIRWIN32)/eci.res: lib/eci.rc
 
 $(OBJDIRWIN32)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJDIRWIN32)
-	@$(CCWIN32) $(CFLAGSWIN32) -c $< -o $@
+	@$(CCACHE) $(CCWIN32) $(CFLAGSWIN32) -c $< -o $@
 
 $(BUILD)/libevv-win32$(SUF).a: $(OBJECTSWIN32) $(RULESTAMP)
 	@for o in $(OBJDIRWIN32)/*.o; do \
