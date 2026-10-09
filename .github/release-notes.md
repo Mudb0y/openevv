@@ -1,15 +1,18 @@
-## Since v0.3
+## Since v0.4
 
-v0.3 was US English alone. Every library here carries ten languages now, and a good deal has been fixed that anything driving the engine from a screen reader will meet.
+This one is mostly about how the engine sounds by default and about the NVDA add-on. Three defaults change, so it will not sound exactly like v0.4: phrase prediction and the abbreviation dictionary are off, and both Englishes read punctuation and odd words the way ETI Eloquence 6.1 does.
 
-- `eciStop`, and answering `eciDataAbort` from the callback, no longer fault or leave the instance silent, whether an utterance is being made or has just finished (#2, #35).
-- The thirty-two bit builds, the `eci-x86` library among them, now survive all 20,526 strings IBM's engine dies on, as the sixty-four bit ones do. Before, every one of them killed the process.
-- A dictionary of 69,000 entries loads in a fifth of a second rather than minutes, and adding words one at a time no longer slows as the dictionary grows (#25).
-- A program that calls into the engine from a new thread each time no longer runs it out of memory after sixty-odd calls.
-- `eciCopyVoice` refuses a voice number the caller does not own, rather than writing outside the instance.
-- The thirty-two bit library exports its names stdcall, as IBM's does.
-- A sample rate above 11,025 is the same voice raised to that rate, rather than 11,025 samples labelled as more.
-- English reads 1,000,000 as one million and Windows10 as Windows ten, where IBM's engine said "one million comma hundred" and spelled the word out.
+- The add-on reads pronunciation dictionaries, the community's IBMTTSDictionaries among them (#48). Choose a set from Eloquence Dictionary Manager under "Dictionary set" in the voice settings, or put `.dic` files in a folder called `openevv` in your NVDA user configuration folder. Entries added in the manager's editor are used too, and changed files are picked up within a few seconds.
+- A dictionary now survives a change of language. Before, making one dictionary per language and putting one back after switching language crashed the process, which is what the IBMTTS and Eloquence 64 drivers do with dictionaries loaded.
+- A dictionary path of 264 bytes or more is refused rather than overflowing the stack.
+- Phrase prediction, the pause the engine guesses into a long clause with no punctuation, is off unless asked for (#41). The add-on's "Phrase prediction" checkbox brings it back, and so do `` `pp1 `` in the text and `eciSetDefaultParam(11, 1)`.
+- The abbreviation dictionary is off unless asked for, so "Dr. Smith" is read as written rather than as doctor Smith. The add-on's "Expand abbreviations" checkbox or `eciSetParam(h, eciDictionary, 0)` turns it on. With it off, "Mr." and "Dr." end a sentence, as they always did in IBM's engine with it off.
+- US and British English read a lone sentence mark as punctuation rather than naming it, outside verbatim mode, as 6.1 does (#4). The other languages still name it, as IBM's engine did.
+- US and British English normalise text as 6.1 does: utf8, ipv6 and amd64 are words, a web or email address is read a part at a time with the domain said as a word, and a path is read slash by slash.
+- An optional wideband voice above 11 kHz: the 11,025 voice below about 5.4 kHz, and frication and breath above it from a second synthesiser. It is the add-on's "Wideband above 11 kHz" checkbox, parameter 32 through the library, and `evv -W` on the command line. Off, which is the default, every sample rate above 11,025 is still the same voice raised (#37, #40).
+- Everything above 11,025 is now whole-number arithmetic, so the thirty-two bit builds give the same samples as the sixty-four bit ones there, and a raised rate costs a fifth of the processor time it did.
+- In the add-on, a rate set for typed characters by another add-on no longer sticks to everything after it (#42).
+- It is called OpenEVV everywhere, the add-on in NVDA's synthesiser list included (#47).
 
 ## What is in it
 
@@ -25,8 +28,8 @@ Every library here carries all ten languages: US and British English, German, Ca
 
 `evvspeak.exe` is the speak window: type something, pick one of the eight voices, set the rate in words a minute, and hear it. `evv.exe` is the same engine on the command line. Both are one file, sixty-four bit, and want nothing installed.
 
-`openevv-0.4.nvda-addon` is the engine as a synthesiser for NVDA, listed there as OpenEVV. It carries both bitnesses and loads the engine into NVDA's own process, so nothing else needs installing. Every language is offered as a voice, and a document that says part of itself is in another language is read in it. Cancelling speech waits for the utterance in flight to finish synthesising, which is a fraction of a second for a line and longer for a long chat message.
+`openevv-0.5.nvda-addon` is the engine as a synthesiser for NVDA, listed there as OpenEVV. It carries both bitnesses and loads the engine into NVDA's own process, so nothing else needs installing. Every language is offered as a voice, and a document that says part of itself is in another language is read in it. Cancelling speech waits for the utterance in flight to finish synthesising, which is a fraction of a second for a line and longer for a long chat message.
 
-The engine is held to its own recorded answers over 997 test cases in ten languages, and twenty thousand words of each language but Polish and Japanese, on every build. It sounds like IBM's Embedded ViaVoice, and where it differs on purpose `docs/quirks.md` says so: twenty-two places, two of them the English readings above.
+The engine is held to its own recorded answers over 1,073 test cases in ten languages, and twenty thousand words of each language but Polish and Japanese, on every build. It sounds like IBM's Embedded ViaVoice, and where it differs on purpose `docs/quirks.md` says so; four of those places are new in this release: phrase prediction, abbreviations, and the two ways the Englishes now read as 6.1 does.
 
-NOTICE says which parts of this are ours and which are IBM's: the engine is a reimplementation, and the language data it speaks with is IBM's, which the MIT licence does not cover.
+NOTICE says which parts of this are ours and whose the rest are: the engine is a reimplementation, the language data it speaks with is IBM's, and the rules both Englishes took from ETI Eloquence 6.1 are ETI's. The MIT licence covers none of those.
