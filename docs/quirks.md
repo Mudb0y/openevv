@@ -138,6 +138,8 @@ Every string that kills IBM's Eloquence is the same fault: the Delta machine der
 
 Thirteen places now test for nought and answer the way that primitive already answers everything else it cannot do, and 43 walks count their steps so that links which have come round on themselves end the rule rather than hanging the engine. That is the tenth deliberate divergence. Every guard sits on a path the old code could not survive, so no working input can reach one.
 
+**A pause after such a string faulted after the string itself had been survived.** The guard abandons the words, and if a pause annotation follows them -- the `` `p1 `` the IBMTTS and Eloquence 64 drivers write at the end of a line, or the one `eciPauseMode` writes -- the pause is synthesised on an instance whose synthesiser was never given its parameters, since the words that would have set them never arrived. It names no rate, so nothing looked changed and the synthesiser was opened unset, which called an error reporter nobody had installed. Twelve of the strings did it. `synthesize` in `src/klatt/klatt_run.c` now answers nought for a call that names no rate when no rate was ever set, which is silence, and silence is what the pause was.
+
 `test/cases/crashers.txt` is the text, `make crashers` is the check, and `docs/notes/crashing-strings.md` is the whole of it. If your program feeds the engine arbitrary text -- a screen reader does -- this is the class of thing it used to die on.
 
 ## Mixing toolchains on Windows

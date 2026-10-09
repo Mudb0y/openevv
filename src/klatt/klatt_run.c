@@ -1017,6 +1017,18 @@ int synthesize(DeltaThis *d, void *buf, int32_t isArray, int32_t *streamA,
         a7 = 5;
 
     last = (LastGlob *)DL_BUF_140(lang);
+    /* A call that names no rate carries on at the one in force, and a
+       synthesiser that has never been given its parameters has none: opening
+       it calls an error reporter nothing installed. That is reached when the
+       first words an instance is given are abandoned -- a string the walk
+       guard backs out of -- and a pause annotation after them is all there
+       is left to say, which is silence either way. */
+    if (!rate && !last->cp.sample_rate) {
+        SD_PLAYING(dev) = 0;
+        SD_INTERRUPTED(dev) = 0;
+        return 0;
+    }
+
     /* Turning the companion on or off starts both synthesisers afresh, so
        that the two begin from the same instant and never from two
        histories. */
