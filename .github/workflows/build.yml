@@ -244,14 +244,14 @@ jobs:
           set -eu
           make -j"$(nproc)" RULES=bytecode sotest
           ./build/evv -o /tmp/fromevv.wav \
-            "Hello. This is the Eloquence synthesizer speaking."
+            "Hello. This is OpenEVV speaking."
           cmp build/sotest.wav /tmp/fromevv.wav
 
       - name: Speak through the shared library with ctypes
         run: |
           set -eu
           python3 test/lib/dll.py build/libeci.so /tmp/fromctypes.wav \
-            "Hello. This is the Eloquence synthesizer speaking."
+            "Hello. This is OpenEVV speaking."
           cmp /tmp/fromctypes.wav /tmp/fromevv.wav
 
       - name: Read a document through the shared library
@@ -531,7 +531,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
-            --title "openevv $GITHUB_REF_NAME" \
+            --title "OpenEVV $GITHUB_REF_NAME" \
             --notes-file .github/release-notes.md \
             openevv-*-windows-x86_64.zip \
             openevv-*-linux-x86_64.tar.gz \

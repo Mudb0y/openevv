@@ -55,7 +55,7 @@ typedef struct {
     char   *result;      /* the answer, kept until the next call */
 } HeteroFilter;
 
-#define HETERO_FILTER_NAME "openevv heteronym filter"
+#define HETERO_FILTER_NAME "OpenEVV heteronym filter"
 
 /* The words, and the reading each one lacks.
  *

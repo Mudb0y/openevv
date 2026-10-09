@@ -27,13 +27,13 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "CompanyName",      "openevv"
+            VALUE "CompanyName",      "OpenEVV"
             VALUE "FileDescription",  "IBM Embedded ViaVoice rebuilt as portable C"
             VALUE "FileVersion",      "0.3.0.0"
             VALUE "InternalName",     "eci"
             VALUE "LegalCopyright",   "MIT for the engine; the language data is IBM's"
             VALUE "OriginalFilename", "eci.dll"
-            VALUE "ProductName",      "openevv"
+            VALUE "ProductName",      "OpenEVV"
             VALUE "ProductVersion",   "0.3.0.0"
         END
     END

@@ -1,4 +1,4 @@
-# openevv
+# OpenEVV
 
 IBM's Embedded ViaVoice text-to-speech engine, taken out of its 1999 Windows objects and rebuilt as C. `docs/tree.md` says what every directory is, `docs/building.md` what every target and variable does, `docs/rules.md` the rules, `docs/language.md` the rest of a language module, `docs/testing.md` what proves any of it, and `docs/windows.md` the Windows side; read those rather than guessing, and keep them true when something moves.
 

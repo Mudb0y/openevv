@@ -384,7 +384,7 @@ $(BUILD)/$(SONAME): lib/eci_api.c $(OBJECTSPIC) $(RULESTAMP)
 .PHONY: sotest
 sotest: $(BUILD)/libecitest
 	@cd $(BUILD) && EVV_ECI_LIB=./libeci$(LIBSUF).so ./libecitest -o sotest.wav \
-	   "Hello. This is the Eloquence synthesizer speaking."
+	   "Hello. This is OpenEVV speaking."
 
 $(BUILD)/libecitest: test/lib/dll.c $(BUILD)/$(SONAME)
 	@$(CC) $(OPT) -std=gnu99 test/lib/dll.c -ldl -o $@

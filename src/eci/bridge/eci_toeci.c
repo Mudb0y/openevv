@@ -100,14 +100,14 @@ int32_t initializeIO(delta_state *d)
         int8_t lf = vffind_lf(d, "cmdout");
 
         if (lf == -1
-            || !logicalFileAddPhysical(d, lf, "Eloquence output", cls, 0, 1)) {
+            || !logicalFileAddPhysical(d, lf, "OpenEVV output", cls, 0, 1)) {
             ok = 0;
             goto after;
         }
         cls = showDialogs() ? (void *)&e->dialog_class : logicalNullClass(d);
         lf = vffind_lf(d, "pgmout");
         if (lf == -1
-            || !logicalFileAddPhysical(d, lf, "Eloquence program output",
+            || !logicalFileAddPhysical(d, lf, "OpenEVV program output",
                                        cls, 0, 1)) {
             ok = 0;
             goto after;

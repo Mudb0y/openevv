@@ -125,7 +125,7 @@ def _endsSentence(text):
 
 class SynthDriver(SynthDriver):
 	name = "openevv"
-	description = "Eloquence (openevv)"
+	description = "OpenEVV"
 
 	supportedSettings = (
 		SynthDriver.VoiceSetting(),

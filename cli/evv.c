@@ -241,8 +241,8 @@ static void usage(FILE *f)
 "  -l        say what each voice is set to, and stop\n"
 "  -h        this\n"
 "\n"
-"  evv -o hello.wav \"Hello from Eloquence.\"\n"
-"  evv \"Hello from Eloquence.\" | aplay -q -\n");
+"  evv -o hello.wav \"Hello from OpenEVV.\"\n"
+"  evv \"Hello from OpenEVV.\" | aplay -q -\n");
 }
 
 int main(int argc, char **argv)

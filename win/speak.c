@@ -475,7 +475,7 @@ static INT_PTR CALLBACK on_dialog(HWND w, UINT msg, WPARAM wp, LPARAM lp)
         show_voice(1);
         SetDlgItemTextA(w, IDC_TEXT, (opening != 0 && *opening != 0)
                         ? opening
-                        : "Hello. This is the Eloquence synthesizer speaking.");
+                        : "Hello. This is OpenEVV speaking.");
         status("ready");
         return TRUE;
 
@@ -636,14 +636,14 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
     }
 
     if (!engine_start()) {
-        MessageBoxA(0, "The engine would not start.", "openevv",
+        MessageBoxA(0, "The engine would not start.", "OpenEVV",
                     MB_OK | MB_ICONERROR);
         return 1;
     }
 
     dlg = CreateDialogParamA(inst, (LPCSTR)IDD_SPEAK, 0, on_dialog, 0);
     if (dlg == 0) {
-        MessageBoxA(0, "The window would not open.", "openevv",
+        MessageBoxA(0, "The window would not open.", "OpenEVV",
                     MB_OK | MB_ICONERROR);
         return 1;
     }

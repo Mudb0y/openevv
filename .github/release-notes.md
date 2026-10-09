@@ -25,7 +25,7 @@ Every library here carries all ten languages: US and British English, German, Ca
 
 `evvspeak.exe` is the speak window: type something, pick one of the eight voices, set the rate in words a minute, and hear it. `evv.exe` is the same engine on the command line. Both are one file, sixty-four bit, and want nothing installed.
 
-`openevv-0.4.nvda-addon` is the engine as a synthesiser for NVDA, listed there as Eloquence (openevv). It carries both bitnesses and loads the engine into NVDA's own process, so nothing else needs installing. Every language is offered as a voice, and a document that says part of itself is in another language is read in it. Cancelling speech waits for the utterance in flight to finish synthesising, which is a fraction of a second for a line and longer for a long chat message.
+`openevv-0.4.nvda-addon` is the engine as a synthesiser for NVDA, listed there as OpenEVV. It carries both bitnesses and loads the engine into NVDA's own process, so nothing else needs installing. Every language is offered as a voice, and a document that says part of itself is in another language is read in it. Cancelling speech waits for the utterance in flight to finish synthesising, which is a fraction of a second for a line and longer for a long chat message.
 
 The engine is held to its own recorded answers over 997 test cases in ten languages, and twenty thousand words of each language but Polish and Japanese, on every build. It sounds like IBM's Embedded ViaVoice, and where it differs on purpose `docs/quirks.md` says so: twenty-two places, two of them the English readings above.
 

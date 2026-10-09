@@ -59,7 +59,7 @@ Here is the whole of a program that speaks. It compiles as it stands.
 
     int main(int argc, char **argv)
     {
-        const char  *text = argc > 1 ? argv[1] : "Hello from Eloquence.";
+        const char  *text = argc > 1 ? argv[1] : "Hello from OpenEVV.";
         unsigned int langs[32];
         int          n = 0;
         ECIHand      h;
@@ -117,7 +117,7 @@ speech-dispatcher's `sd_eloquence` module resolves forty-two names when it loads
 
     ./build/openevv-say "Hello from Openevv."
     ./build/openevv-say -w hello.wav "Hello from Openevv."
-    ./build/evv -o hello.wav "Hello from Eloquence."
+    ./build/evv -o hello.wav "Hello from OpenEVV."
     ./build/evv "Hello." | aplay -q -
 
 `build/openevv-say` is the convenient human-facing command: it plays the WAV from `build/evv` through the first installed client among `pw-play`, `paplay` and `aplay`, or `-w` saves it. `build/evv` writes a wave file, or writes the wave to standard output when there is no `-o` and standard output is not a terminal. For a program that wants a file now and again rather than a synthesiser in its own process, this is the whole of the integration. Both commands describe their options with `-h`.

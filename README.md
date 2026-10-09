@@ -1,6 +1,6 @@
-# openevv
+# OpenEVV
 
-A portable Eloquence. IBM's Embedded ViaVoice text-to-speech engine, taken out of its 1999 Windows objects and rebuilt as C that compiles and speaks on a machine it was never meant to run on.
+OpenEVV is IBM's Embedded ViaVoice text-to-speech engine, the one screen reader users know as Eloquence, taken out of its 1999 Windows objects and rebuilt as C that compiles and speaks on a machine it was never meant to run on.
 
 It speaks, and it spoke IBM's own samples: the audio came out byte for byte identical to IBM's binary across every test case of every language, from both a thirty-two and a sixty-four bit build, and across all nine languages the SDK shipped. That is what the transcription was proved by; the engine is being changed on purpose now, so what is held to from here is a recorded answer for each of 979 cases rather than IBM's. Nothing is borrowed at build time. No DLL, no SDK, no Wine.
 

@@ -261,7 +261,7 @@ static char *slurp(const char *path)
 int main(int argc, char **argv)
 {
     const char *text = (argc > 1) ? argv[1]
-        : "Hello. This is the Eloquence synthesizer speaking.";
+        : "Hello. This is OpenEVV speaking.";
     const char *out = (argc > 2) ? argv[2] : "speak.wav";
     OldInst    *h;
 

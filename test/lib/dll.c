@@ -169,7 +169,7 @@ int main(int argc, char **argv)
     void   *h;
     const char *lib = getenv("EVV_ECI_LIB");
     const char *out = "out.wav";
-    const char *text = "Hello. This is the Eloquence synthesizer speaking.";
+    const char *text = "Hello. This is OpenEVV speaking.";
     int     i;
 
     void *(ECICALL *eciNewEx)(int);

@@ -1,4 +1,4 @@
-# Building openevv
+# Building OpenEVV
 
 What you need, what to build, and what every variable does. The rules are the long part of a build and have a file of their own in `docs/rules.md`; adding a language is in `docs/language.md`, the Windows side in `docs/windows.md`, and what proves any of it in `docs/testing.md`.
 
@@ -64,10 +64,10 @@ On a Nix machine `nix build` makes both commands under `result/bin`, and `nix ru
 
 The lower-level command is useful for piping WAV data to another program:
 
-    ./build/evv -o hello.wav "Hello from Eloquence."
+    ./build/evv -o hello.wav "Hello from OpenEVV."
     ./build/evv -f speech.txt -o speech.wav
-    ./build/evv "Hello from Eloquence." | aplay -q -
-    echo "Hello from Eloquence." | ./build/evv | pw-play -
+    ./build/evv "Hello from OpenEVV." | aplay -q -
+    echo "Hello from OpenEVV." | ./build/evv | pw-play -
 
 With no `-o` it writes the wave to standard output, unless that is a terminal, in which case it says so rather than filling the terminal with samples. With no text it reads standard input.
 

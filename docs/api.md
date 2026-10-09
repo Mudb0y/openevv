@@ -327,4 +327,4 @@ So a program judges by return values. Everything above that answers an int answe
 
 Four numbers with dots between them, and this engine answers `7.0.0.0`, which is IBM's own number for the Embedded ViaVoice engine and is lifted rather than chosen. A program keying on the version cannot tell ours from IBM's by it; the Windows version resource is what says `openevv`. The call is never told how big the buffer is.
 
-On Windows the libraries also carry a version resource, and that is not decoration: the most used screen reader driver reads `ProductName` out of it to decide which engine it is talking to, and NVDA's own reader refuses a library with no version information at all. Ours says `openevv`. `docs/windows.md` says what that buys.
+On Windows the libraries also carry a version resource, and that is not decoration: the most used screen reader driver reads `ProductName` out of it to decide which engine it is talking to, and NVDA's own reader refuses a library with no version information at all. Ours says `OpenEVV`. `docs/windows.md` says what that buys.
