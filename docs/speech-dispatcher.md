@@ -137,8 +137,8 @@ A line in `openevv.conf` turns it on:
     Wideband 1
 
 The voice below about 5.4 kHz is then the same one, and above that a second
-synthesiser running the same frames adds the frication and breath a higher
-rate has room for. The module hands it over at 22050 Hz, the rate it is made
+synthesiser running the same frames adds what a higher rate has room for: the
+top of the frication and of the vowels. The module hands it over at 22050 Hz, the rate it is made
 at, and Speech Dispatcher converts it to whatever the sound server wants. The
 module reads its configuration when it starts, so a change takes effect the
 next time Speech Dispatcher starts it. `test/speechd.py` holds what comes back

@@ -444,6 +444,228 @@ out:
     free(w);
 }
 
+/* The median of n values, which are left sorted. */
+static int by_size(const void *a, const void *b)
+{
+    double x = *(const double *)a, y = *(const double *)b;
+
+    return x < y ? -1 : x > y;
+}
+
+static double median(double *v, long n)
+{
+    qsort(v, (size_t)n, sizeof(double), by_size);
+    return n == 0 ? -1e300 : n & 1 ? v[n / 2] : (v[n / 2 - 1] + v[n / 2]) / 2.0;
+}
+
+static const char VOWEL_TEXT[] =
+    "Are you aware of how early our ordinary hours are over?";
+
+/* How loud a band of one moment is: n samples from at under a Hann window,
+   the power of every bin of their transform from lo to hi hertz, in
+   decibels. Not a band cut by two lowpasses as above: those differ by their
+   ripple across the whole of both passbands, which lets through about fifty
+   decibels under whatever is there, and a vowel has more than that under 1.5
+   kHz over what it has past the join. */
+enum { MOMENT = 1024 };
+
+static double band_db(const double *x, long at, double lo, double hi,
+                      double hz)
+{
+    static double win[MOMENT], cs[MOMENT], sn[MOMENT];
+    static int drawn;
+    double sum = 0.0;
+    long b, i;
+
+    if (!drawn) {
+        for (i = 0; i < MOMENT; i++) {
+            double t = 2.0 * 3.14159265358979 * (double)i / MOMENT;
+
+            win[i] = 0.5 - 0.5 * cos(t);
+            cs[i] = cos(t);
+            sn[i] = sin(t);
+        }
+        drawn = 1;
+    }
+    for (b = (long)ceil(lo * MOMENT / hz); b < hi * MOMENT / hz; b++) {
+        double re = 0.0, im = 0.0;
+
+        for (i = 0; i < MOMENT; i++) {
+            long k = b * i % MOMENT;
+
+            re += x[at + i] * win[i] * cs[k];
+            im -= x[at + i] * win[i] * sn[k];
+        }
+        sum += re * re + im * im;
+    }
+    return 10.0 * log10(sum + 1e-9);
+}
+
+/* Which moments of the default stream are a vowel and which frication, by
+   where its energy lies: a vowel has it under 1.5 kHz and next to none from
+   3 to 5, frication the other way about, and a moment forty decibels under
+   the loudest is neither. Moments start every half of one. */
+enum { VOWEL = 1, FRICATION = 2 };
+
+static char *moments(const double *dd, long n, double hz, long *count)
+{
+    long nk = n < MOMENT ? 0 : (n - MOMENT) / (MOMENT / 2), k;
+    double *lo = malloc((size_t)nk * sizeof(double) + 1);
+    double *hi = malloc((size_t)nk * sizeof(double) + 1);
+    double *all = malloc((size_t)nk * sizeof(double) + 1);
+    char *kind = calloc((size_t)nk + 1, 1);
+    double loudest = -1e300;
+
+    for (k = 0; k < nk; k++) {
+        lo[k] = band_db(dd, k * (MOMENT / 2), 100.0, 1500.0, hz);
+        hi[k] = band_db(dd, k * (MOMENT / 2), 3000.0, 5000.0, hz);
+        all[k] = band_db(dd, k * (MOMENT / 2), 50.0, 5000.0, hz);
+        if (all[k] > loudest)
+            loudest = all[k];
+    }
+    for (k = 0; k < nk; k++)
+        if (all[k] > loudest - 40.0)
+            kind[k] = lo[k] > hi[k] + 15.0 ? VOWEL
+                    : hi[k] > lo[k] ? FRICATION : 0;
+    free(lo);
+    free(hi);
+    free(all);
+    *count = nk;
+    return kind;
+}
+
+/* A vowel carries on across the join, falling as it falls under it, and
+   goes on falling above. This reads four decibels down just past the
+   join. With the companion at IBM's five formants the vowel stopped there,
+   and what was left was a floor eight down all the way up: the companion
+   rounding to sixteen bits before its high side was raised, which is what
+   the far band, more than twenty down for the vowel itself, is for. With
+   the three formants above the fifth running but held under IBM's five
+   thousand hertz, or not raised, it reads ten down; at IBM's own narrower
+   bandwidths it does not fall at all, which the ear liked less. */
+static void vowels_across(void)
+{
+    enum { HZ = 22050 };
+    short *d = 0, *w = 0;
+    long nd = speak(VOWEL_TEXT, HZ, 0, &d);
+    long nw = speak(VOWEL_TEXT, HZ, 1, &w);
+    double *dd, *wd, *near_v, *far_v;
+    long nk, k, m = 0;
+    char *kind;
+    double above, beyond;
+
+    if (nd <= 0 || nw != nd) {
+        printf("wide: the vowels came out %ld and %ld samples\n", nd, nw);
+        bad = 1;
+        goto out;
+    }
+    dd = as_double(d, nd);
+    wd = as_double(w, nw);
+    kind = moments(dd, nd, HZ, &nk);
+    near_v = malloc((size_t)nk * sizeof(double) + 1);
+    far_v = malloc((size_t)nk * sizeof(double) + 1);
+    for (k = 0; k < nk; k++)
+        if (kind[k] == VOWEL) {
+            long at = k * (MOMENT / 2);
+            double under = band_db(wd, at, 4500.0, 5250.0, HZ);
+
+            near_v[m] = band_db(wd, at, 5750.0, 6500.0, HZ) - under;
+            /* Per hertz: the far band is twice as wide. */
+            far_v[m] = band_db(wd, at, 8500.0, 10000.0, HZ) - under
+                       - 10.0 * log10(2.0);
+            m++;
+        }
+    above = median(near_v, m);
+    beyond = median(far_v, m);
+
+    printf("wide: on %ld vowel moments of %ld, 5.75 to 6.5 kHz is %.1f dB "
+           "from 4.5 to 5.25, and 8.5 to 10 is %.1f\n", m, nk, above,
+           beyond);
+    if (m < nk / 2) {
+        printf("wide: the vowels were not found\n");
+        bad = 1;
+    }
+    if (above < -7.0) {
+        printf("wide: the vowels stop at the join\n");
+        bad = 1;
+    }
+    if (above > -1.0) {
+        printf("wide: the vowels do not fall across the join\n");
+        bad = 1;
+    }
+    if (beyond > -15.0) {
+        printf("wide: what is above the vowels is not the vowels\n");
+        bad = 1;
+    }
+    free(dd);
+    free(wd);
+    free(kind);
+    free(near_v);
+    free(far_v);
+out:
+    free(d);
+    free(w);
+}
+
+/* What the vowels gained, the fricatives did not: the top was settled by
+   ear on frication, and what raises the vowels' is applied before the
+   frication joins them. So on the moments the default stream says are
+   frication, the top alone -- the wideband stream less the default, which
+   at the wide rate is exactly the companion's high side at its level --
+   above 5.75 kHz, against the default's own 3 to 5. Before the vowels had
+   a top it read a tenth of a decibel lower, the voicing under a z being
+   raised with them, and two decibels either way is a third of the
+   smallest step the ear was offered. */
+#define FRICATION_TOP  (-12.4)
+
+static void frication_unmoved(void)
+{
+    enum { HZ = 22050 };
+    short *d = 0, *w = 0;
+    long nd = speak(SHORT_TEXT, HZ, 0, &d);
+    long nw = speak(SHORT_TEXT, HZ, 1, &w);
+    double *dd, *top, *v;
+    long nk, k, m = 0;
+    char *kind;
+    double level;
+
+    if (nd <= 0 || nw != nd) {
+        printf("wide: the fricatives came out %ld and %ld samples\n", nd,
+               nw);
+        bad = 1;
+        goto out;
+    }
+    dd = as_double(d, nd);
+    top = malloc((size_t)nd * sizeof(double));
+    for (k = 0; k < nd; k++)
+        top[k] = (double)w[k] - (double)d[k];
+    kind = moments(dd, nd, HZ, &nk);
+    v = malloc((size_t)nk * sizeof(double) + 1);
+    for (k = 0; k < nk; k++)
+        if (kind[k] == FRICATION) {
+            long at = k * (MOMENT / 2);
+
+            v[m++] = band_db(top, at, 5750.0, HZ / 2.0, HZ)
+                     - band_db(dd, at, 3000.0, 5000.0, HZ);
+        }
+    level = median(v, m);
+
+    printf("wide: on %ld fricative moments the top is %.1f dB from 3 to "
+           "5 kHz under it, and was %.1f\n", m, level, FRICATION_TOP);
+    if (m < 10 || level < FRICATION_TOP - 2.0
+        || level > FRICATION_TOP + 2.0) {
+        printf("wide: the fricatives' top has moved\n");
+        bad = 1;
+    }
+    free(dd);
+    free(top);
+    free(kind);
+    free(v);
+out:
+    free(d);
+    free(w);
+}
+
 static void the_setting(void)
 {
     OldInst *h = eo_new();
@@ -509,6 +731,8 @@ int main(void)
     same_below(16000);
     same_below(44100);
     in_step();
+    vowels_across();
+    frication_unmoved();
 
     free(kept);
     evv_port_finish();

@@ -72,7 +72,12 @@
 #define KLATT_RATE_MAX   44100
 
 /* Fill ex with KLATT_EX_COUNT entries and co with KLATT_CO_COUNT for this
-   rate. Answers zero and writes nothing when the rate is out of range. */
+   rate. Answers zero and writes nothing when the rate is out of range. The
+   second runs co on to co_last hertz, and so wants co_last less
+   KLATT_CO_FIRST and one, for a synthesiser whose formants may go above
+   IBM's five thousand. */
 int klatt_buildRateTables(int32_t rate, int16_t *ex, int16_t *co);
+int klatt_buildRateTablesTo(int32_t rate, int16_t *ex, int16_t *co,
+                            int32_t co_last);
 
 #endif

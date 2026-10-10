@@ -213,11 +213,16 @@ int KlattSynth(void *handle, const int32_t *parms)
     }
 
     /* Clamp and look up each cascade formant, and hand its frequency across to
-       the matching parallel slot, which only supplies its own bandwidth. */
+       the matching parallel slot, which only supplies its own bandwidth. The
+       first five stop where IBM's do whatever the rate, so that a companion
+       and its partner agree about everything under the join. */
     for (i = CASCADE_BASE; i < k->n_formants + CASCADE_BASE; i++) {
+        int32_t ceiling = i >= CASCADE_BASE + 5 && k->high_ceiling > 0
+                        ? k->high_ceiling : 5000;
+
         k->filters[i].enabled = k->unknown_1498;
 
-        freq[i] = clamp(freq[i], 10, 5000);
+        freq[i] = clamp(freq[i], 10, ceiling);
         bw[i] = clamp(bw[i], 10, 4000);
 
         k->co[i] = co_of(k, freq[i]);
@@ -731,6 +736,14 @@ int KlattSynth(void *handle, const int32_t *parms)
                         pole_filter(&k->filters[CASCADE_BASE], k->ptr_a,
                                     k->noise_count);
 
+                    /* Here and not at the output, so that what the gain
+                       raises is the voice and the aspiration and never the
+                       frication, which joins below. */
+                    if (k->cascade_gain > 0)
+                        for (i = 0; i < k->noise_count; i++)
+                            k->ptr_a[i] = (int32_t)fx_shift(
+                                (int64_t)k->ptr_a[i] * k->cascade_gain, 16);
+
                     if (k->ah == 0 && k->av == 0) {
                         k->unknown_1498 -= k->unknown_14a0;
                         if (k->unknown_1498 < 0)
@@ -790,12 +803,13 @@ int KlattSynth(void *handle, const int32_t *parms)
                 }
             }
 
-            /* Down from the accumulator's headroom into sample range, keeping
-               the largest magnitude seen so KlattMax can report it. */
+            /* Down from the accumulator's headroom into sample range, less
+               whatever bits a companion keeps below the sample, keeping the
+               largest magnitude seen so KlattMax can report it. */
             for (i = 0; i < k->noise_count; i++) {
                 int32_t v;
 
-                k->out[i] = k->ptr_a[i] >> 4;
+                k->out[i] = k->ptr_a[i] >> (4 - k->out_keep);
                 v = k->out[i];
                 if (v < 0)
                     v = (int32_t)(-(uint32_t)v);

@@ -113,10 +113,10 @@ ssml 7 d6a7e6afbf9a196d 51dfc5818cc4558f <speak version="1.0" xml:lang="es-ES">D
 ssml 8 07dea8b82763a18a e58cbf040d0e4982 <speak version="1.0" xml:lang="es-ES">Espera<break time="500ms"/>un momento.<mark name="aqui"/> Alli.</speak>
 ssml 9 be36f4350b8485f8 e8ca7327377dde9c <speak version="1.0" xml:lang="es-ES"><sub alias="Red informatica mundial">WWW</sub> y <phoneme ph="h.E.l.oU">hola</phoneme>.</speak>
 ssml 10 cdd5163e086807da 6caa573998942a2d <speak version="1.0" xml:lang="es-ES">El niño preguntó: ¿qué tal?, con a &amp; b &lt; c.</speak>
-wide 1 7433fc24ea84e679 3d4439896466f7dc Hola. Aqui habla el sintetizador de voz Eloquence.
-wide 2 70cb86d9066b92a5 c8c307c0b9eb255e El doctor Gomez pago 1.234,56 euros el 3 de mayo de 2026 a las 19:45.
-wide 3 3abd76149436b3ad 7cec39f3c2d7e7e6 El rapido zorro marron salta sobre el perro perezoso; p.ej. www.ejemplo.es/ruta?q=1
-wide 4 b82a68821ffd1de3 884e119cd4f3ef43 Prueba 1 2 3, ABC XYZ, palabras-con-guion y MAYUSCULAS.
-wide 5 0d46154dc0ca75d5 f1609e3b3e308b82 Una sola palabra. Y otra mas; con "texto citado" en medio.
-wide 6 a3fff83ae0da8e88 2398a88b53faac95 Otorrinolaringologo, desoxirribonucleico, 42% de 3,14159, y el senor Perez-Lopez hijo.
-wide 7 31b90f5115fb0f4c d664947494c28261 Dijo: no lo hagas! Luego (entre parentesis) 1/2 + 3/4 = 5/4; vease p. 12.
+wide 1 3876bd05f0941728 3d4439896466f7dc Hola. Aqui habla el sintetizador de voz Eloquence.
+wide 2 0d71f1048dceac82 c8c307c0b9eb255e El doctor Gomez pago 1.234,56 euros el 3 de mayo de 2026 a las 19:45.
+wide 3 de3bf5699918a614 7cec39f3c2d7e7e6 El rapido zorro marron salta sobre el perro perezoso; p.ej. www.ejemplo.es/ruta?q=1
+wide 4 c2ed59fdd0ad4cab 884e119cd4f3ef43 Prueba 1 2 3, ABC XYZ, palabras-con-guion y MAYUSCULAS.
+wide 5 ecd8e0ece502276f f1609e3b3e308b82 Una sola palabra. Y otra mas; con "texto citado" en medio.
+wide 6 100a21841f767f5b 2398a88b53faac95 Otorrinolaringologo, desoxirribonucleico, 42% de 3,14159, y el senor Perez-Lopez hijo.
+wide 7 cb84263ebb2f047f d664947494c28261 Dijo: no lo hagas! Luego (entre parentesis) 1/2 + 3/4 = 5/4; vease p. 12.

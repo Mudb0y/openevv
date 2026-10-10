@@ -113,10 +113,10 @@ ssml 7 1554831edbdb5f59 cfd72f811c26aa7c <speak version="1.0" xml:lang="it-IT">C
 ssml 8 c07e389b0e4e4962 af753f16952fad7f <speak version="1.0" xml:lang="it-IT">Aspetta<break time="500ms"/>un momento.<mark name="qui"/> La.</speak>
 ssml 9 6df310ed9a6053f1 bd8dcfdc6521f02c <speak version="1.0" xml:lang="it-IT"><sub alias="Rete mondiale">WWW</sub> e <phoneme ph="h.E.l.oU">ciao</phoneme>.</speak>
 ssml 10 ebd80f3f9895d09d 716ad3282291fc5f <speak version="1.0" xml:lang="it-IT">Il caffè e perché più città, con a &amp; b &lt; c.</speak>
-wide 1 9a5e7cadb96c2f21 0d47d9ef0481318b Ciao. Qui parla il sintetizzatore vocale Eloquence.
-wide 2 3f475bd05b81db91 a4de102ec545c763 Il dottor Rossi ha pagato 1.234,56 euro il 3 maggio 2026 alle 19:45.
-wide 3 b98d7840baaf80ac b5acf81bbf8c1653 La rapida volpe marrone salta sopra il cane pigro; p.es. www.esempio.it/percorso?q=1
-wide 4 5b9a2ce1e3b2ad90 06b5d3dcc7c73838 Prova 1 2 3, ABC XYZ, parole-con-trattino e MAIUSCOLE.
-wide 5 1934ed944f8bef33 23512eff878590e6 Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
-wide 6 dd34d9486a5f485a c6f688b1782564b2 Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
-wide 7 beebe28f2c625639 5f29a767421fe337 Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
+wide 1 70bfabee8765eb6e 0d47d9ef0481318b Ciao. Qui parla il sintetizzatore vocale Eloquence.
+wide 2 e892060f5ca5efc0 a4de102ec545c763 Il dottor Rossi ha pagato 1.234,56 euro il 3 maggio 2026 alle 19:45.
+wide 3 46144f8677286d08 b5acf81bbf8c1653 La rapida volpe marrone salta sopra il cane pigro; p.es. www.esempio.it/percorso?q=1
+wide 4 ffbd83bb2369a50f 06b5d3dcc7c73838 Prova 1 2 3, ABC XYZ, parole-con-trattino e MAIUSCOLE.
+wide 5 4cf053a2203656b3 23512eff878590e6 Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
+wide 6 1389071b42044c2e c6f688b1782564b2 Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
+wide 7 16d6d662d33134cc 5f29a767421fe337 Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.

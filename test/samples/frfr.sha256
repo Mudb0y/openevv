@@ -113,10 +113,10 @@ ssml 7 1bcb6ad13737bacd 4486778ba5a83448 <speak version="1.0" xml:lang="fr-FR">E
 ssml 8 c937aa403d96aabb 83725c5bc5c6df5f <speak version="1.0" xml:lang="fr-FR">Attends<break time="500ms"/>un peu.<mark name="ici"/> La.</speak>
 ssml 9 39545d2ade6f25ad b8e8e518f11feff3 <speak version="1.0" xml:lang="fr-FR"><sub alias="Toile mondiale">WWW</sub> et <phoneme ph="h.E.l.oU">bonjour</phoneme>.</speak>
 ssml 10 6182e4fe4dbaa684 a92ccb6a4590bef1 <speak version="1.0" xml:lang="fr-FR">Le café près de la façade naïve, avec a &amp; b &lt; c.</speak>
-wide 1 ff34454164149442 33976322cd904a5d Bonjour. Ici parle le synthetiseur de parole Eloquence.
-wide 2 e922392bea567161 7bb6ffde70d242b9 Le docteur Dupont a paye 1 234,56 euros le 3 mai 2026 a 19h45.
-wide 3 7adff96b9e2b0d05 8c648f9c34730ac4 Le rapide renard brun saute par-dessus le chien paresseux; p.ex. www.exemple.fr/chemin?q=1
-wide 4 41127b7dc6b92281 0bcd3849f8839209 Essai 1 2 3, ABC XYZ, mots-avec-traits-d-union et MAJUSCULES.
-wide 5 971ced808d856429 9692e9f9baa8250a Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
-wide 6 2f6f8b287f340d27 ca8f4f1f28e87f15 Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
-wide 7 b39313ed6e972622 661bea3dabd85651 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+wide 1 eefd7e85d41245f6 33976322cd904a5d Bonjour. Ici parle le synthetiseur de parole Eloquence.
+wide 2 5318ed2e5f510c47 7bb6ffde70d242b9 Le docteur Dupont a paye 1 234,56 euros le 3 mai 2026 a 19h45.
+wide 3 c2e3cbb74f29b72f 8c648f9c34730ac4 Le rapide renard brun saute par-dessus le chien paresseux; p.ex. www.exemple.fr/chemin?q=1
+wide 4 43a322427b645ab3 0bcd3849f8839209 Essai 1 2 3, ABC XYZ, mots-avec-traits-d-union et MAJUSCULES.
+wide 5 77ef2b648587ae83 9692e9f9baa8250a Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
+wide 6 76f1f8d5b4272d1d ca8f4f1f28e87f15 Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
+wide 7 0b1db4898bb5bf4b 661bea3dabd85651 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.

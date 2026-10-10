@@ -27,20 +27,29 @@
  * rate the companion can take every frame length and pitch period as its
  * partner's doubled, and klatt_state's pace_rate is what tells it to.
  *
- * IBM's frames say nothing above five thousand hertz: the sixth to eighth
- * formants sit at fixed values on every frame and their amplitudes are
- * always nought. So what the companion has up there is frication: the
- * skirts of the resonators an s, an sh and a z are made with, and the
- * bypass an f and a th are. The vowels' own harmonics are fifty decibels
- * down by then, and so is the aspiration under them, which goes in under
- * the formants as the voicing does; running the three formants IBM's
- * synthesiser leaves out raises neither by more than a fraction of a
- * decibel.
+ * IBM's frames say little above five thousand hertz. The sixth to eighth
+ * formants sit at five thousand, 6,300 and 7,500 on every frame and their
+ * parallel amplitudes are always nought, and IBM's synthesiser runs only the
+ * first five and stops every one at five thousand, near the top of its band
+ * at eleven thousand. A companion run that way gives a vowel nothing past
+ * the join. So this one runs all eight, lets the three above the fifth go
+ * where the frame puts them at twice the bandwidths it gives them, and
+ * raises its cascade -- the voicing and the aspiration, never the frication
+ * -- by six decibels; a vowel then falls four to six decibels across the
+ * join and goes on falling, as it falls under it. And it keeps four bits
+ * below the sample: its high side is raised fourteen decibels, and rounded
+ * to sixteen bits first it carried a floor eighty decibels down, too quiet
+ * to hear and loud enough to hide what a vowel has up there.
  *
- * How loud the top is and where its noise stops were settled by ear, and
- * docs/notes/sample-rates.md has the rounds: fourteen decibels over what the
- * companion makes, and eight thousand hertz. EVV_WIDE_TOP and
- * EVV_WIDE_EDGE move them, as experiments rather than settings.
+ * The rest of what the companion has above the join is frication: the
+ * skirts of the resonators an s, an sh and a z are made with, and the bypass
+ * an f and a th are. None of the above touches it.
+ *
+ * How loud the top is, where its noise stops and how a vowel crosses the
+ * join were settled by ear, and docs/notes/sample-rates.md has the rounds:
+ * fourteen decibels over what the companion makes, eight thousand hertz,
+ * and the cascade six over that. EVV_WIDE_TOP, EVV_WIDE_EDGE and
+ * EVV_WIDE_VOICED move them, as experiments rather than settings.
  */
 
 #include <math.h>
@@ -73,6 +82,7 @@ struct WideBand {
     int32_t      *out;
     int32_t       out_room;
     int32_t       top;
+    int32_t       voiced;
     int32_t       edge;
 };
 
@@ -88,23 +98,31 @@ struct WideBand {
    is ten to the power fourteen twentieths, here in units of 2^-16. */
 #define WIDE_TOP  328458
 
+/* A level in decibels from the environment, in units of 2^-16, or the one
+   settled on. */
+static int32_t wide_level(const char *name, int32_t settled)
+{
+    const char *say = getenv(name);
+
+    if (say != 0 && *say != 0) {
+        double db = atof(say);
+
+        /* A level being tried rather than the one settled on, which is the
+           only reason a double is worth having here. */
+        if (db >= -40.0 && db <= 30.0)
+            return (int32_t)(pow(10.0, db / 20.0) * 65536.0 + 0.5);
+    }
+    return settled;
+}
+
 static int32_t wide_top(void)
 {
     static int     decided;
-    static int32_t top = WIDE_TOP;
+    static int32_t top;
 
     if (!decided) {
-        const char *say = getenv("EVV_WIDE_TOP");
-
         decided = 1;
-        if (say != 0 && *say != 0) {
-            double db = atof(say);
-
-            /* A level being tried rather than the one settled on, which is
-               the only reason a double is worth having here. */
-            if (db >= -40.0 && db <= 30.0)
-                top = (int32_t)(pow(10.0, db / 20.0) * 65536.0 + 0.5);
-        }
+        top = wide_level("EVV_WIDE_TOP", WIDE_TOP);
     }
     return top;
 }
@@ -130,6 +148,40 @@ static int32_t wide_edge(void)
     }
     return edge;
 }
+
+/* How much the companion's cascade is raised, in units of 2^-16: six
+   decibels. With the formants above the fifth at twice their bandwidths
+   that has a vowel fall four to six decibels across the join, which the ear
+   chose over the same formants at IBM's bandwidths raised by nought, six
+   and twelve. */
+#define WIDE_VOICED  130762
+
+static int32_t wide_voiced(void)
+{
+    static int     decided;
+    static int32_t voiced;
+
+    if (!decided) {
+        decided = 1;
+        voiced = wide_level("EVV_WIDE_VOICED", WIDE_VOICED);
+    }
+    return voiced;
+}
+
+/* What the companion runs above IBM's synthesiser: every formant a frame
+   has, the three above the fifth free to go where the frame puts them, as
+   far as the same fraction of its band as IBM's five thousand is of eleven
+   thousand; and four more bits than a sample, which are what its high side
+   is raised from. */
+#define WIDE_FORMANTS  8
+#define WIDE_CO_LAST   10000
+#define WIDE_KEEP      4
+
+/* Where the sixth formant's bandwidth and the eighth's sit in a frame, in
+   klatt_synth.c's order, and how many words a frame has. */
+#define WF_B6     22
+#define WF_B8     26
+#define WF_WORDS  62
 
 /* ---- the companion ----------------------------------------------------- */
 
@@ -184,9 +236,9 @@ WideBand *klatt_wide_new(void)
 
     w->klatt = klatt_new(w);
     w->ex = malloc(KLATT_EX_COUNT * sizeof(int16_t));
-    w->co = malloc(KLATT_CO_COUNT * sizeof(int16_t));
+    w->co = malloc((WIDE_CO_LAST - KLATT_CO_FIRST + 1) * sizeof(int16_t));
     if (w->klatt == 0 || w->ex == 0 || w->co == 0
-        || !klatt_buildRateTables(WIDE_RATE, w->ex, w->co)
+        || !klatt_buildRateTablesTo(WIDE_RATE, w->ex, w->co, WIDE_CO_LAST)
         || !pcm_resample_start(&w->up, WIDE_PARTNER, WIDE_RATE, CVT_SINC)
         || !wide_draw(w)
         || !wide_room(&w->line, &w->line_room, 2 * w->delay + 512)) {
@@ -196,6 +248,7 @@ WideBand *klatt_wide_new(void)
     memset(w->line, 0, (size_t)w->line_room * sizeof(int32_t));
 
     w->top = wide_top();
+    w->voiced = wide_voiced();
     w->edge = wide_edge();
     return w;
 }
@@ -221,6 +274,7 @@ int klatt_wide_setup(WideBand *w, KlattConstParms cp)
     cp.sample_rate = WIDE_RATE;
     cp.callback_mode = 2;
     cp.samples_fn = wide_collect;
+    cp.n_formants = WIDE_FORMANTS;
 
     /* The tables first: KlattSetConstParms leaves them alone at a rate it
        does not know by name. */
@@ -228,6 +282,9 @@ int klatt_wide_setup(WideBand *w, KlattConstParms cp)
     KlattSetConstParms(w->klatt, cp);
     w->klatt->pace_rate = WIDE_PARTNER;
     klatt_noise_edge(&w->klatt->noise_filter, WIDE_RATE, w->edge);
+    w->klatt->high_ceiling = WIDE_CO_LAST;
+    w->klatt->cascade_gain = w->voiced;
+    w->klatt->out_keep = WIDE_KEEP;
     return 1;
 }
 
@@ -250,11 +307,21 @@ void klatt_wide_volume(WideBand *w, int32_t volume)
 
 int klatt_wide_frame(WideBand *w, const int32_t *frame)
 {
+    int32_t f[WF_WORDS];
+    int32_t j;
+
     /* Whatever is left of the last frame was cut short by an interrupt on
        the partner's side, and belongs to no sample the partner will make. */
     w->have = 0;
     w->used = 0;
-    return KlattSynth(w->klatt, frame);
+
+    /* The three formants IBM's synthesiser never ran, at twice the
+       bandwidths its frames give them, which the ear chose over IBM's own at
+       the same level. */
+    memcpy(f, frame, sizeof f);
+    for (j = WF_B6; j <= WF_B8; j += 2)
+        f[j] *= 2;
+    return KlattSynth(w->klatt, f);
 }
 
 int klatt_wide_feed(WideBand *w, const int32_t *s, int32_t n)
@@ -320,10 +387,11 @@ const int32_t *klatt_wide_mix(WideBand *w, const int32_t *in, int32_t n,
 
         for (j = 0; j < w->delay; j++)
             low += (int64_t)w->lp[j] * ((int64_t)x[j] + x[span - j]);
-        /* The companion less its low side, in units of 2^-31, brought to
-           2^-16 so that the level can multiply it without running out of
-           room. */
-        high = fx_shift(((int64_t)x[w->delay] << 31) - low, 15);
+        /* The companion less its low side, in units of 2^-31 of its own
+           samples, which are WIDE_KEEP bits finer than its partner's,
+           brought to 2^-16 of a sample so that the level can multiply it
+           without running out of room. */
+        high = fx_shift(((int64_t)x[w->delay] << 31) - low, 15 + WIDE_KEEP);
         w->out[m] = wide_sample(((int64_t)w->out[m] << 32) + high * w->top);
     }
 

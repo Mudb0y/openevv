@@ -18,16 +18,23 @@ static int16_t q15(double v)
 
 int klatt_buildRateTables(int32_t rate, int16_t *ex, int16_t *co)
 {
+    return klatt_buildRateTablesTo(rate, ex, co, KLATT_CO_LAST);
+}
+
+int klatt_buildRateTablesTo(int32_t rate, int16_t *ex, int16_t *co,
+                            int32_t co_last)
+{
     const double pi = 3.14159265358979323846;
     int32_t hz;
 
-    if (rate < KLATT_RATE_MIN || rate > KLATT_RATE_MAX || !ex || !co)
+    if (rate < KLATT_RATE_MIN || rate > KLATT_RATE_MAX || !ex || !co
+        || co_last < KLATT_CO_LAST)
         return 0;
 
     for (hz = KLATT_EX_FIRST; hz <= KLATT_EX_LAST; hz++)
         ex[hz - KLATT_EX_FIRST] = q15(exp(-pi * (double)hz / (double)rate));
 
-    for (hz = KLATT_CO_FIRST; hz <= KLATT_CO_LAST; hz++)
+    for (hz = KLATT_CO_FIRST; hz <= co_last; hz++)
         co[hz - KLATT_CO_FIRST] = q15(cos(2.0 * pi * (double)hz / (double)rate));
 
     return 1;
