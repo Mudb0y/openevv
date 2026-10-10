@@ -112,10 +112,10 @@ ssml 7 70935c3ebcd15bc1 6378786f389d0510 <speak version="1.0" xml:lang="pl-PL">P
 ssml 8 bc5d59f1e60cad31 8bb3b998cf9721b7 <speak version="1.0" xml:lang="pl-PL">Poczekaj<break time="500ms"/>chwile.<mark name="tutaj"/> Tam.</speak>
 ssml 9 3db041aaaf1ea01a 4945ec3c8de9f4b2 <speak version="1.0" xml:lang="pl-PL"><sub alias="Siec ogolnoswiatowa">WWW</sub> i <phoneme ph="h.E.l.oU">czesc</phoneme>.</speak>
 ssml 10 73fd1d84d11539ed 330d4bfd43fa1c16 <speak version="1.0" xml:lang="pl-PL">Zażółć gęślą jaźń, z a &amp; b &lt; c.</speak>
-wide 1 a71846f210309485 337d1125379bba30 Dzien dobry. Tu mowi syntezator mowy Eloquence.
-wide 2 d7a4001ca45785c8 838b3f2e6ba97644 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
-wide 3 5ec94cbe4080ec5a b0b31361197729dc Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
-wide 4 d8fb66b6355589b7 4326efe162eef5bb Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
-wide 5 a92bf8e6a64a31dc 666602edaec873cb Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
-wide 6 bed8fc790c71a91a 35270ec40297c089 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
-wide 7 9743f006db356fd6 d14df1acf81a6547 Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+wide 1 aac87ae1c0c3ea55 337d1125379bba30 Dzien dobry. Tu mowi syntezator mowy Eloquence.
+wide 2 578ce31c86ec57c7 838b3f2e6ba97644 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
+wide 3 14833dffac0a4d51 b0b31361197729dc Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
+wide 4 bc5423eb115ff3c9 4326efe162eef5bb Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
+wide 5 67a91ebdea904f07 666602edaec873cb Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
+wide 6 7a006ec12b59200d 35270ec40297c089 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
+wide 7 611f9cb58a338c09 d14df1acf81a6547 Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.

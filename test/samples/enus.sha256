@@ -122,13 +122,13 @@ ssml 7 4cd78177c8895c6f aed3d33120b156d1 <speak version="1.0" xml:lang="en-US">S
 ssml 8 f8a129e665d4356d 5b87110639e79eb6 <speak version="1.0" xml:lang="en-US">Wait<break time="500ms"/>for it.<mark name="here"/> There.</speak>
 ssml 9 e38f0b0f18d5ea04 3292e9857759cc73 <speak version="1.0" xml:lang="en-US"><sub alias="World Wide Web">WWW</sub> and <phoneme ph="h.E.l.oU">hello</phoneme>.</speak>
 ssml 10 019301a1b2fb4152 957d5569e0328ef0 <speak version="1.0" xml:lang="en-US">The café near the naïve façade, with a &amp; b &lt; c.</speak>
-wide 1 15f18109e213abf7 5d79ca06a0beb05f Hello. This is the Eloquence synthesizer speaking.
-wide 2 ba7a3674e98f9b1e 28ee60604cdcfc2d Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
-wide 3 d41ee0fa1beecb7d ffb938aee70fd110 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
-wide 4 aed4c8ead561ffd8 26a56ac7931e3b1b Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
-wide 5 6c30c2d20a583e1a a630d67ae7163cd0 A one-word line. And another; plus "quoted text" inside.
-wide 6 e717162382582272 6890b36335e24925 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
-wide 7 ddb1818e409302a3 8af97f7b9e4451f5 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
-wide 8 b7742398f8719c9d cadc5e86a4493186 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-wide 9 a2e1e034ef18e5fa 1a4c4a80aa432492 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-wide 10 b0968bdc0dc04fd3 fea8e0795782445c Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+wide 1 08d983deab11daf5 5d79ca06a0beb05f Hello. This is the Eloquence synthesizer speaking.
+wide 2 f8888e238a6898ca 28ee60604cdcfc2d Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
+wide 3 cd256e86e00a5763 ffb938aee70fd110 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
+wide 4 56281b0398e237eb 26a56ac7931e3b1b Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
+wide 5 b360ab470a285d8c a630d67ae7163cd0 A one-word line. And another; plus "quoted text" inside.
+wide 6 d89223ae2b66cbe2 6890b36335e24925 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+wide 7 2b23566b6d7bb5cd 8af97f7b9e4451f5 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
+wide 8 1d74f68a469d0099 cadc5e86a4493186 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
+wide 9 35e7407089a2582a 1a4c4a80aa432492 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+wide 10 6ad834de569d7db1 fea8e0795782445c Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.

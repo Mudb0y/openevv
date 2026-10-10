@@ -78,6 +78,15 @@ static int16_t ex_of(const klatt_state *k, int32_t hz)
     return k->ex_table[hz - 10];
 }
 
+static void run_pole(const klatt_state *k, filter_parms *fp, int32_t *buf,
+                     int32_t n)
+{
+    if (k->exact_poles)
+        pole_filter_exact(fp, buf, n);
+    else
+        pole_filter(fp, buf, n);
+}
+
 /* Turn the cosine and damping terms into the three resonator weights. The
    halving and quartering here cancel the doubling and quadrupling pole_filter
    applies on the way out, so the three land at three different scales and
@@ -428,7 +437,7 @@ int KlattSynth(void *handle, const int32_t *parms)
             if (written > 0) {
                 filtered = written;
                 if (k->filters[TILT].enabled != 0)
-                    pole_filter(&k->filters[TILT], k->ptr_a, written);
+                    run_pole(k, &k->filters[TILT], k->ptr_a, written);
             }
 
             if (left > 0) {
@@ -699,7 +708,7 @@ int KlattSynth(void *handle, const int32_t *parms)
             }
 
             if (k->filters[TILT].enabled != 0)
-                pole_filter(&k->filters[TILT], k->ptr_a + filtered,
+                run_pole(k, &k->filters[TILT], k->ptr_a + filtered,
                             k->noise_count - filtered);
 
             if (k->cp.unknown_1c == 0) {
@@ -713,14 +722,14 @@ int KlattSynth(void *handle, const int32_t *parms)
                     /* The cascade, run from the highest formant down so each
                        resonator sees the one above it already applied. */
                     if (k->filters[NASAL_POLE].enabled)
-                        pole_filter(&k->filters[NASAL_POLE], k->ptr_a,
+                        run_pole(k, &k->filters[NASAL_POLE], k->ptr_a,
                                     k->noise_count);
                     if (k->filters[NASAL_ZERO].enabled)
                         zero_filter(&k->filters[NASAL_ZERO],
                                     (const zero_ABCs *)&k->zeros[NASAL_ZERO],
                                     k->ptr_a, k->noise_count);
                     if (k->filters[TRACHEAL_POLE].enabled)
-                        pole_filter(&k->filters[TRACHEAL_POLE], k->ptr_a,
+                        run_pole(k, &k->filters[TRACHEAL_POLE], k->ptr_a,
                                     k->noise_count);
                     if (k->filters[TRACHEAL_ZERO].enabled)
                         zero_filter(&k->filters[TRACHEAL_ZERO],
@@ -729,11 +738,11 @@ int KlattSynth(void *handle, const int32_t *parms)
 
                     for (i = k->n_formants + 4; i > CASCADE_BASE; i--)
                         if (k->filters[i].enabled)
-                            pole_filter(&k->filters[i], k->ptr_a,
+                            run_pole(k, &k->filters[i], k->ptr_a,
                                         k->noise_count);
 
                     if (k->filters[CASCADE_BASE].enabled)
-                        pole_filter(&k->filters[CASCADE_BASE], k->ptr_a,
+                        run_pole(k, &k->filters[CASCADE_BASE], k->ptr_a,
                                     k->noise_count);
 
                     /* Here and not at the output, so that what the gain
@@ -774,7 +783,7 @@ int KlattSynth(void *handle, const int32_t *parms)
                         if (k->af != 0 && amp[i] != 0) {
                             for (m = 0; m < k->noise_count; m++)
                                 k->ptr_b[m] = k->frication[m];
-                            pole_filter(&k->filters[i], k->ptr_b,
+                            run_pole(k, &k->filters[i], k->ptr_b,
                                         k->noise_count);
                         } else {
                             parallel0_filter(&k->filters[i], k->ptr_b,

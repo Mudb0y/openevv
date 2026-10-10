@@ -34,6 +34,7 @@ AT(frication, 0x0df0);
 AT(buf_b, 0x1118);
 AT(ptr_b, 0x1438);
 AT(out_keep, 0x1492);
+AT(exact_poles, 0x1494);
 AT(unknown_1498, 0x1498);
 AT(unknown_14a0, 0x14a0);
 AT(di, 0x14a8);

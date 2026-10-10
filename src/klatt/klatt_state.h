@@ -67,8 +67,9 @@ struct klatt_state {
        11,025 sits after it, state and all. Three more are spread through
        the block where IBM left bytes unused: high_ceiling gives the sixth to
        eighth formants room above IBM's five thousand hertz, cascade_gain
-       raises the cascade in units of 2^-16, and out_keep keeps bits below
-       the sample IBM rounds to, all because the companion's top is all of it
+       raises the cascade in units of 2^-16, out_keep keeps bits below the
+       sample IBM rounds to, and exact_poles has the resonators round once
+       rather than three times, all because the companion's top is all of it
        that is heard. Nought in every one of them is IBM's synthesiser. */
     int32_t          pace_rate;           /* 0x0018 */
     klatt_noise_filter noise_filter;      /* 0x001c */
@@ -95,7 +96,8 @@ struct klatt_state {
     int16_t          co[21];              /* 0x143e, cosine term per resonator */
     int16_t          ex[21];              /* 0x1468, damping term per resonator */
     int16_t          out_keep;            /* 0x1492, bits, at most four */
-    uint8_t          pad_1494[4];
+    int16_t          exact_poles;         /* 0x1494 */
+    uint8_t          pad_1496[2];
     int32_t          unknown_1498;        /* 0x1498 */
     int32_t          unknown_149c;        /* 0x149c */
     int32_t          unknown_14a0;        /* 0x14a0 */

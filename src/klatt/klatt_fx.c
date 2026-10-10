@@ -165,6 +165,56 @@ void pole_filter(filter_parms *fp, int32_t *buf, int32_t n)
     }
 }
 
+/* The same resonator for a synthesiser whose top is heard: the three
+   products summed whole and rounded once, to nearest. IBM's rounds each
+   down on its own, which biases every sample the same way, so in silence a
+   resonator sits off nought rather than settling there; when the cascade is
+   switched off after speech the output steps back to nought, which goes
+   unheard in the voice IBM made and in the wideband voice's raised top is a
+   click. */
+void pole_filter_exact(filter_parms *fp, int32_t *buf, int32_t n)
+{
+    int32_t i, count, k;
+
+    if (fp->enabled == 0)
+        return;
+
+    buf[-2] = fp->d2;
+    buf[-1] = fp->d1;
+    i = 0;
+
+    if (fp->ramp != 0) {
+        count = fp->ramp < n ? fp->ramp : n;
+        k = 3 - fp->ramp;
+
+        for (; i < count; i++) {
+            int64_t v = (int64_t)fp->c[k] * buf[i - 2]
+                      + (int64_t)fp->b[k] * buf[i - 1] * 2
+                      + (int64_t)fp->a[k] * buf[i] * 4;
+
+            buf[i] = (int32_t)fx_shift(v, 15);
+            k++;
+        }
+        fp->ramp -= count;
+    }
+
+    for (; i < n; i++) {
+        int64_t v = (int64_t)fp->sc * buf[i - 2]
+                  + (int64_t)fp->sb * buf[i - 1] * 2
+                  + (int64_t)fp->sa * buf[i] * 4;
+
+        buf[i] = (int32_t)fx_shift(v, 15);
+    }
+
+    if (n > 1) {
+        fp->d2 = buf[i - 2];
+        fp->d1 = buf[i - 1];
+    } else {
+        fp->d2 = fp->d1;
+        fp->d1 = buf[i - 1];
+    }
+}
+
 /* The same resonator with no input term and no ramp: it runs purely on its
    own history, which is what the parallel branch wants when the excitation is
    summed in somewhere else. */

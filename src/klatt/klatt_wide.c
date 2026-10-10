@@ -41,6 +41,11 @@
  * to sixteen bits first it carried a floor eighty decibels down, too quiet
  * to hear and loud enough to hide what a vowel has up there.
  *
+ * Its resonators round once, to nearest, where IBM's round three products
+ * down. Rounded IBM's way they sit off nought in silence, and when the
+ * cascade is switched off after speech the step back to nought was a click
+ * in the top, twenty-five to sixty-five milliseconds after the voice stopped.
+ *
  * The rest of what the companion has above the join is frication: the
  * skirts of the resonators an s, an sh and a z are made with, and the bypass
  * an f and a th are. None of the above touches it.
@@ -285,6 +290,7 @@ int klatt_wide_setup(WideBand *w, KlattConstParms cp)
     w->klatt->high_ceiling = WIDE_CO_LAST;
     w->klatt->cascade_gain = w->voiced;
     w->klatt->out_keep = WIDE_KEEP;
+    w->klatt->exact_poles = 1;
     return 1;
 }
 

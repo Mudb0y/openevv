@@ -112,10 +112,10 @@ ssml 7 4e0a0c33d5484f1d 0b375235055ea2d3 <speak version="1.0" xml:lang="de-DE">B
 ssml 8 c5427dda15be3560 c22812a4a13a983a <speak version="1.0" xml:lang="de-DE">Warte<break time="500ms"/>darauf.<mark name="hier"/> Da.</speak>
 ssml 9 6543385594988b60 ff0d22bdfc93b95e <speak version="1.0" xml:lang="de-DE"><sub alias="Weltweites Netz">WWW</sub> und <phoneme ph="h.E.l.oU">hallo</phoneme>.</speak>
 ssml 10 ce0ee0304a8ce40e b0dd322d5043db63 <speak version="1.0" xml:lang="de-DE">Die Straße heißt schön, mit a &amp; b &lt; c.</speak>
-wide 1 b9618d83be35665a 87406496eaade1d6 Hallo. Hier spricht der Eloquence Sprachsynthesizer.
-wide 2 4f7224d78ca621f1 dd15b3f77c440ddc Dr. Schmidt zahlte 1.234,56 Euro am 3. Mai 2026 um 19:45 Uhr.
-wide 3 338b7dfdf50631e6 331f37e1c4cb586a Der schnelle braune Fuchs springt ueber den faulen Hund; z.B. www.beispiel.de/pfad?q=1
-wide 4 03b814e0caaabbca 884b22def82910a1 Test 1 2 3, ABC XYZ, Bindestrich-Woerter und GROSSBUCHSTABEN.
-wide 5 a119299e39147ebc 6d3cbe5d3f014c08 Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
-wide 6 6159cd635aec3642 570d5850cb6b4d58 Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
-wide 7 3c35624248709338 83277b15592ecdb4 Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.
+wide 1 6aa6b7364c89418f 87406496eaade1d6 Hallo. Hier spricht der Eloquence Sprachsynthesizer.
+wide 2 82de733682556f77 dd15b3f77c440ddc Dr. Schmidt zahlte 1.234,56 Euro am 3. Mai 2026 um 19:45 Uhr.
+wide 3 cb077a9185576903 331f37e1c4cb586a Der schnelle braune Fuchs springt ueber den faulen Hund; z.B. www.beispiel.de/pfad?q=1
+wide 4 3cfc271c9f150314 884b22def82910a1 Test 1 2 3, ABC XYZ, Bindestrich-Woerter und GROSSBUCHSTABEN.
+wide 5 6d33c0f9232493d9 6d3cbe5d3f014c08 Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
+wide 6 0aaacb76fa677bb5 570d5850cb6b4d58 Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
+wide 7 ca474ea31b43bc3c 83277b15592ecdb4 Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.

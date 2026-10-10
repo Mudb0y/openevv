@@ -612,11 +612,10 @@ out:
    frication joins them. So on the moments the default stream says are
    frication, the top alone -- the wideband stream less the default, which
    at the wide rate is exactly the companion's high side at its level --
-   above 5.75 kHz, against the default's own 3 to 5. Before the vowels had
-   a top it read a tenth of a decibel lower, the voicing under a z being
-   raised with them, and two decibels either way is a third of the
+   above 5.75 kHz, against the default's own 3 to 5. It read the same before
+   the vowels had a top, and two decibels either way is a third of the
    smallest step the ear was offered. */
-#define FRICATION_TOP  (-12.4)
+#define FRICATION_TOP  (-12.5)
 
 static void frication_unmoved(void)
 {
@@ -664,6 +663,61 @@ static void frication_unmoved(void)
 out:
     free(d);
     free(w);
+}
+
+/* Nothing after the voice. IBM's resonators round each product down, so in
+   silence they sit off nought, and when the cascade is switched off after
+   speech the companion's top stepped back to nought: a click twenty-five to
+   sixty-five milliseconds after the voice. So from where the default
+   stream's speech ends, the top alone has to stay quiet, after a text that
+   ends on a vowel and one that ends on a t. */
+static const char *const ENDINGS[] = {
+    VOWEL_TEXT,
+    "She sells sixty sea shells, and the fish stew is chosen for its sharp, "
+    "fresh zest."
+};
+
+static void nothing_after(void)
+{
+    enum { HZ = 22050 };
+    size_t t;
+
+    for (t = 0; t < sizeof ENDINGS / sizeof *ENDINGS; t++) {
+        short *d = 0, *w = 0;
+        long nd = speak(ENDINGS[t], HZ, 0, &d);
+        long nw = speak(ENDINGS[t], HZ, 1, &w);
+        long end = -1, at = 0, i;
+        int most = 0;
+
+        if (nd <= 0 || nw != nd) {
+            printf("wide: an ending came out %ld and %ld samples\n", nd, nw);
+            bad = 1;
+            free(d);
+            free(w);
+            continue;
+        }
+        for (i = 0; i < nd; i++)
+            if (d[i] > 300 || d[i] < -300)
+                end = i;
+        for (i = end + 1; i < nd; i++) {
+            int v = w[i] - d[i];
+
+            if (v < 0)
+                v = -v;
+            if (v > most) {
+                most = v;
+                at = i - end;
+            }
+        }
+        printf("wide: after the voice stops the top reaches %d, %ld ms "
+               "later\n", most, at * 1000 / HZ);
+        if (most > 20) {
+            printf("wide: there is a click after the voice\n");
+            bad = 1;
+        }
+        free(d);
+        free(w);
+    }
 }
 
 static void the_setting(void)
@@ -733,6 +787,7 @@ int main(void)
     in_step();
     vowels_across();
     frication_unmoved();
+    nothing_after();
 
     free(kept);
     evv_port_finish();
