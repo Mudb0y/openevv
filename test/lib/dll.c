@@ -23,6 +23,14 @@
  *
  *   dlltest.exe -o out.wav "Some text."
  *   dlltest.exe -o out.wav "<speak version=\"1.0\" xml:lang=\"en-US\">Hi.</speak>"
+ *
+ * And a fourth: that the program can end. A caller does not always delete its
+ * instance before it returns, and some let the library go and carry on, and
+ * either way the library is taken apart by the system rather than by any call
+ * it was given. `-e live' returns from main with the instance and its thread
+ * still alive; `-e unload' deletes it and unloads the library first. A run
+ * that ends any other way than with nought failed, however good the samples
+ * were.
  */
 
 #include <stdint.h>
@@ -37,6 +45,7 @@
 #define LIB_OPEN(p) ((void *)LoadLibraryA(p))
 #define LIB_SYM(l, n) ((void *)GetProcAddress((HMODULE)(l), (n)))
 #define LIB_WAIT(ms)  Sleep(ms)
+#define LIB_CLOSE(l)  (FreeLibrary((HMODULE)(l)) != 0)
 #else
 #include <dlfcn.h>
 #include <unistd.h>
@@ -45,6 +54,7 @@
 #define LIB_OPEN(p) dlopen((p), RTLD_NOW)
 #define LIB_SYM(l, n) dlsym((l), (n))
 #define LIB_WAIT(ms)  usleep((ms) * 1000)
+#define LIB_CLOSE(l)  (dlclose(l) == 0)
 #endif
 
 #define FRAME 2048
@@ -170,6 +180,7 @@ int main(int argc, char **argv)
     const char *lib = getenv("EVV_ECI_LIB");
     const char *out = "out.wav";
     const char *text = "Hello. This is OpenEVV speaking.";
+    const char *ending = "delete";
     int     i;
 
     void *(ECICALL *eciNewEx)(int);
@@ -181,6 +192,7 @@ int main(int argc, char **argv)
     int   (ECICALL *eciInsertIndex)(void *, int);
     int   (ECICALL *eciSynthesize)(void *);
     int   (ECICALL *eciSpeaking)(void *);
+    int   (ECICALL *eciSynchronize)(void *);
     void *(ECICALL *eciDelete)(void *);
     int   (ECICALL *eciRegisterFilter)(void *, unsigned int, void *, void *, int);
     void *(ECICALL *eciNewFilter)(void *, int, int);
@@ -194,6 +206,8 @@ int main(int argc, char **argv)
     for (i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-o") == 0 && i + 1 < argc)
             out = argv[++i];
+        else if (strcmp(argv[i], "-e") == 0 && i + 1 < argc)
+            ending = argv[++i];
         else
             text = argv[i];
     }
@@ -219,6 +233,7 @@ int main(int argc, char **argv)
     GET(eciInsertIndex);
     GET(eciSynthesize);
     GET(eciSpeaking);
+    GET(eciSynchronize);
     GET(eciDelete);
     GET(eciRegisterFilter);
     GET(eciNewFilter);
@@ -294,10 +309,17 @@ int main(int argc, char **argv)
         fprintf(stderr, "dlltest: it refused the text\n");
         return 1;
     }
-    for (i = 0; i < 30000 && eciSpeaking(h); i++)
-        LIB_WAIT(10);
+    /* Waiting the way the add-on does leaves the engine's thread-local state
+       on its own threads. eciSynchronize runs rules on the caller's, which is
+       what the system then has to take apart as the library goes. */
+    if (strcmp(ending, "delete") == 0)
+        for (i = 0; i < 30000 && eciSpeaking(h); i++)
+            LIB_WAIT(10);
+    else
+        eciSynchronize(h);
 
-    eciDelete(h);
+    if (strcmp(ending, "live") != 0)
+        eciDelete(h);
 
     if (!write_wav(out)) {
         fprintf(stderr, "dlltest: cannot write %s\n", out);
@@ -305,5 +327,11 @@ int main(int argc, char **argv)
     }
     printf("dlltest: %lu samples through %s to %s\n",
            (unsigned long)nsamples, lib, out);
+    fflush(stdout);
+
+    if (strcmp(ending, "unload") == 0 && !LIB_CLOSE(dll)) {
+        fprintf(stderr, "dlltest: it would not let the library go\n");
+        return 1;
+    }
     return 0;
 }

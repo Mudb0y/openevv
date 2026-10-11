@@ -385,6 +385,12 @@ $(BUILD)/$(SONAME): lib/eci_api.c $(OBJECTSPIC) $(RULESTAMP)
 sotest: $(BUILD)/libecitest
 	@cd $(BUILD) && EVV_ECI_LIB=./libeci$(LIBSUF).so ./libecitest -o sotest.wav \
 	   "Hello. This is OpenEVV speaking."
+	@cd $(BUILD) && for e in live unload; do \
+	   EVV_ECI_LIB=./libeci$(LIBSUF).so timeout 60 ./libecitest -e $$e \
+	     -o sotest-$$e.wav "Hello. This is OpenEVV speaking." || exit 1; \
+	   cmp -s sotest.wav sotest-$$e.wav \
+	     || { echo "sotest: ending with -e $$e changed what it said"; exit 1; }; \
+	 done
 
 $(BUILD)/libecitest: test/lib/dll.c $(BUILD)/$(SONAME)
 	@$(CC) $(OPT) -std=gnu99 test/lib/dll.c -ldl -o $@

@@ -411,11 +411,13 @@ jobs:
         shell: pwsh
         run: |
           .\dlltest.exe -o fromc.wav "The quick brown fox jumps over the lazy dog."
+          if ($LASTEXITCODE -ne 0) { throw "dlltest ended with $LASTEXITCODE" }
           $want = (Get-Content test/samples.sha256).Split(' ')[0]
           $havec = (Get-FileHash fromc.wav -Algorithm SHA256).Hash.ToLower()
           "from C:      $havec"
           if ($havec -ne $want) { throw "the library says something else than the engine" }
           python test/lib/dll.py eci.dll fromctypes.wav "The quick brown fox jumps over the lazy dog."
+          if ($LASTEXITCODE -ne 0) { throw "dll.py ended with $LASTEXITCODE" }
           $havep = (Get-FileHash fromctypes.wav -Algorithm SHA256).Hash.ToLower()
           "from ctypes: $havep"
           "wanted:      $want"
@@ -434,12 +436,53 @@ jobs:
           Copy-Item eci.ini t32\
           Push-Location t32
           .\dlltest32.exe -o from32.wav "The quick brown fox jumps over the lazy dog."
+          if ($LASTEXITCODE -ne 0) { throw "dlltest32 ended with $LASTEXITCODE" }
           $have = (Get-FileHash from32.wav -Algorithm SHA256).Hash.ToLower()
           Pop-Location
           $want = (Get-Content test/samples.sha256).Split(' ')[0]
           "thirty-two bit: $have"
           "wanted:         $want"
           if ($have -ne $want) { throw "the 32-bit library says something else" }
+
+      # A program that returns from main with an instance alive, or lets the
+      # library go and carries on, has the library taken apart by Windows
+      # rather than by any call it made. Both used to hang or crash on the way
+      # out, after every sample had been written, which is why checking the
+      # samples never saw it. Whether either showed hung on how the heap
+      # happened to lie: page heap makes the first certain in both libraries,
+      # and the second shows under the ordinary heap, every time in the
+      # thirty-two bit library and now and then in the other.
+      - name: End a program every way, through both libraries
+        shell: pwsh
+        run: |
+          $ifeo = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options'
+          $want = (Get-Content test/samples.sha256).Split(' ')[0]
+          foreach ($heap in 'ordinary', 'page') {
+            foreach ($run in @(@('.', 'dlltest.exe'), @('t32', 'dlltest32.exe'))) {
+              $dir = (Resolve-Path $run[0]).Path
+              $exe = $run[1]
+              if ($heap -eq 'page') {
+                New-Item -Path "$ifeo\$exe" -Force | Out-Null
+                Set-ItemProperty -Path "$ifeo\$exe" -Name GlobalFlag -Value '0x02000000'
+                Set-ItemProperty -Path "$ifeo\$exe" -Name PageHeapFlags -Value '0x3'
+              }
+              foreach ($how in 'delete', 'live', 'unload') {
+                $p = Start-Process -FilePath (Join-Path $dir $exe) -WorkingDirectory $dir `
+                     -ArgumentList "-e $how -o end-$how.wav `"The quick brown fox jumps over the lazy dog.`"" `
+                     -NoNewWindow -PassThru
+                $null = $p.Handle
+                if (-not $p.WaitForExit(120000)) {
+                  Stop-Process -Id $p.Id -Force
+                  throw "$exe -e $how, $heap heap, never ended"
+                }
+                $p.WaitForExit()
+                "{0} -e {1}, {2} heap: ended with 0x{3:x8}" -f $exe, $how, $heap, $p.ExitCode
+                if ($p.ExitCode -ne 0) { throw "$exe -e $how, $heap heap, did not end cleanly" }
+                $have = (Get-FileHash (Join-Path $dir "end-$how.wav") -Algorithm SHA256).Hash.ToLower()
+                if ($have -ne $want) { throw "$exe -e $how said something else" }
+              }
+            }
+          }
 
   # The thirty-two bit library's real caller is not one of our own binaries: it
   # is a host DLL built with MSVC, loading us across a toolchain boundary. A

@@ -889,11 +889,22 @@ static __thread unsigned char *fs_base, *fs_top, *fs_end;
 
 static INIT_ONCE fs_once = INIT_ONCE_STATIC_INIT;
 static DWORD     fs_slot = FLS_OUT_OF_INDEXES;
+static int       fs_closing;
 
+/* FlsFree calls this too, once for every thread whose slot is still set, all
+   on the thread letting the library go, and none of that is the calling
+   thread's to give back. Measured on Windows 10 with gcc's win32 threads,
+   which are what the releases are built with: a thread that ends runs this
+   before its thread-local storage goes, but FreeLibrary has already freed
+   the caller's by the time the destructor below calls FlsFree, and at
+   process exit the slots still set belong to threads ExitProcess has killed.
+   Doing the work then corrupted the heap on FreeLibrary, and returning from
+   main with an instance alive hung or crashed. */
 static void WINAPI fs_gone(void *unused)
 {
     (void)unused;
-    evv_frame_done();
+    if (!fs_closing)
+        evv_frame_done();
 }
 
 static BOOL CALLBACK fs_open(INIT_ONCE *once, void *arg, void **ctx)
@@ -916,8 +927,10 @@ static void fs_watch(void)
    leave the system holding a callback into code that has gone. */
 __attribute__((destructor)) static void fs_close(void)
 {
-    if (fs_slot != FLS_OUT_OF_INDEXES)
+    if (fs_slot != FLS_OUT_OF_INDEXES) {
+        fs_closing = 1;
         FlsFree(fs_slot);
+    }
 }
 
 #elif defined(__unix__) || defined(__APPLE__)
