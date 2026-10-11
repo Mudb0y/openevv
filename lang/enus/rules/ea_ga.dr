@@ -111,11 +111,11 @@ label L9 was at_0x111
   push reg r7
   call backtrack_function arity 2 depth 2
   alu decl none reg r0
-  cmp cmpl imm 40 reg r0
+  cmp cmpl imm 42 reg r0
   popreg r1
   popreg r1
   branch ja to L45
-  switch reg r0 to L3 L10 L11 L12 L13 L14 L15 L16 L17 L18 L19 L20 L21 L22 L23 L24 L25 L26 L27 L28 L29 L30 L31 L32 L33 L34 L35 L36 L37 L38 L39 L40 L41 L42 L43 L44 L45 L1 L46 L2 L46
+  switch reg r0 to L3 L10 L11 L12 L13 L14 L15 L16 L17 L18 L19 L20 L21 L22 L23 L24 L25 L26 L27 L28 L29 L30 L31 L32 L33 L34 L35 L36 L37 L38 L39 L40 L41 L42 L43 L44 L45 L1 L46 L2 L46 L49 L50
 label L10 was $X2$99613
   load movl sym string_3 into r6
   store movl imm 12 slot 100
@@ -263,5 +263,15 @@ label L46 was $L99607
 label L47 was at_0x30f
   return reg r0
 label L48 was $L99720
+label L49 was $arm$L49
+  store movb imm 4 slot 104
+  load movl sym string_38 into r6
+  store movl imm 10 slot 100
+  jump to L5
+label L50 was $arm$L50
+  store movb imm 6 slot 104
+  load movl sym string_39 into r6
+  store movl imm 1 slot 100
+  jump to L5
 end
 

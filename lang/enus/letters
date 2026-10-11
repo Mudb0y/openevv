@@ -26,6 +26,7 @@ letter w
 letter d
   dg   says J     # judge, badge
   dj   says J     # adjust
+  dt at end   says t   # Ahrendt, Schmidt
   d    says d
 
 letter m
@@ -40,10 +41,13 @@ letter n
   ng before n at end      says G
   ng before then at end   says G   # strengthen
   ng before ton at end    says G
+  ng before th            says G   # length, strength
+  ngh before am           says G   # Bingham, gingham
   n                       says n
 
 letter q
   qu after i before et  says k     # etiquette, tourniquet
+  qu before ette        says k     # Arquette, croquette
   qu before e at end    says k     # antique, clique
   qu before vowel       says k w   # quick, queen
   q                     says k     # Iraq

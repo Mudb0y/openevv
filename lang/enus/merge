@@ -1,0 +1,153 @@
+# US English as a merge of IBM's 4.3 and ETI's 6.1: one decision a line,
+# what was done, where, to what, and why. Everything not named here is 4.3 as
+# it was, or 6.1 already, taken earlier through the punctuation and the text
+# normaliser (docs/quirks.md has those).
+#
+# The evidence is tools/measure/referee.py, which holds both engines' sounds
+# against the CMU Pronouncing Dictionary. Where only one engine's sounds are
+# CMU's, that one is taken. Where both are, or neither, a word one engine's
+# dictionary holds and the other's does not keeps the dictionary's reading --
+# a pronunciation someone wrote down beats one a rule guessed -- and anything
+# else goes to 6.1, which is what most ears know as Eloquence.
+#
+#   drop     the entry is taken out of that dictionary
+#   add      the word is put into it, saying what 6.1 says
+#   set      what it says is changed to what 6.1 says
+#   read-as  the word is read as the text given, which 6.1 does
+#   letter   an arm added to that letter in lang/enus/letters
+#
+# test/cases/words-enus.txt holds every word here, so test/words.sh says if
+# any of them moves.
+
+drop     pnames       address          IBM's name shadowed everyday words; CMU favours the rules in 3 of the 5 words it moved, IBM in 0
+drop     pnames       bon              IBM's name shadowed everyday words; CMU favours the rules in 4 of the 11 words it moved, IBM in 0
+drop     pnames       bossier          IBM's name shadowed everyday words; CMU favours the rules in 1 of the 1 words it moved, IBM in 0
+drop     pnames       brilliant        IBM's name shadowed everyday words; CMU favours the rules in 2 of the 2 words it moved, IBM in 0
+drop     pnames       chas             IBM's name shadowed everyday words; CMU favours the rules in 5 of the 5 words it moved, IBM in 0
+drop     pnames       compact          IBM's name shadowed everyday words; CMU favours the rules in 5 of the 5 words it moved, IBM in 0
+drop     pnames       compos           IBM's name shadowed everyday words; CMU favours the rules in 4 of the 4 words it moved, IBM in 0
+drop     pnames       culinary         IBM's name shadowed everyday words; CMU favours the rules in 1 of the 1 words it moved, IBM in 0
+drop     pnames       cum              IBM's name shadowed everyday words; CMU favours the rules in 4 of the 5 words it moved, IBM in 1
+drop     pnames       eminence         IBM's name shadowed everyday words; CMU favours the rules in 2 of the 2 words it moved, IBM in 0
+drop     pnames       ergo             IBM's name shadowed everyday words; CMU favours the rules in 1 of the 1 words it moved, IBM in 0
+drop     pnames       export           IBM's name shadowed everyday words; CMU favours the rules in 5 of the 7 words it moved, IBM in 2
+drop     pnames       gorges           IBM's name shadowed everyday words; CMU favours the rules in 1 of the 1 words it moved, IBM in 0
+drop     pnames       laden            IBM's name shadowed everyday words; CMU favours the rules in 2 of the 2 words it moved, IBM in 0
+drop     pnames       mea              IBM's name shadowed everyday words; CMU favours the rules in 3 of the 3 words it moved, IBM in 0
+drop     pnames       mutual           IBM's name shadowed everyday words; CMU favours the rules in 1 of the 3 words it moved, IBM in 0
+drop     pnames       pas              IBM's name shadowed everyday words; CMU favours the rules in 2 of the 4 words it moved, IBM in 0
+drop     pnames       pate             IBM's name shadowed everyday words; CMU favours the rules in 3 of the 3 words it moved, IBM in 0
+drop     pnames       persona          IBM's name shadowed everyday words; CMU favours the rules in 1 of the 1 words it moved, IBM in 0
+drop     pnames       piet             IBM's name shadowed everyday words; CMU favours the rules in 3 of the 4 words it moved, IBM in 0
+drop     pnames       poor             IBM's name shadowed everyday words; CMU favours the rules in 6 of the 7 words it moved, IBM in 0
+drop     pnames       travers          IBM's name shadowed everyday words; CMU favours the rules in 2 of the 3 words it moved, IBM in 1
+drop     pnames       vie              IBM's name shadowed everyday words; CMU favours the rules in 2 of the 3 words it moved, IBM in 0
+drop     pnames       visual           IBM's name shadowed everyday words; CMU favours the rules in 5 of the 7 words it moved, IBM in 1
+drop     pnames       leroy            the second of two entries; which one the search found hung on how many words stood around them, so the one it found before stays
+drop     pnames       rigueur          the second of two entries, for the same reason
+drop     pnames       roquefort        the second of two entries, for the same reason; the merge had moved the search onto it
+drop     roots2       medieval         its record is shared code; the pnames3 entry, which is 6.1's reading, decides instead
+read-as  eng_tok_dict arent            aren't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Arent            Aren't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict ARENT            AREN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      roots5       bonjour          6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      pnames1      coto             6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+read-as  eng_tok_dict couldnt          couldn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Couldnt          Couldn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict COULDNT          COULDN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      roots5       couscous         6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+add      GAroots      diaper           6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+read-as  eng_tok_dict didnt            didn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Didnt            Didn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict DIDNT            DIDN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+read-as  eng_tok_dict doesnt           doesn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Doesnt           Doesn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict DOESNT           DOESN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+read-as  eng_tok_dict dont             don't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Dont             Don't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict DONT             DON'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      GAroots      dressage         6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      roots1b      ebay             6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      roots1b      ebook            6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+add      roots1b      ebusiness        6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+read-as  eng_tok_dict hadnt            hadn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Hadnt            Hadn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict HADNT            HADN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+read-as  eng_tok_dict hasnt            hasn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Hasnt            Hasn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict HASNT            HASN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+read-as  eng_tok_dict havent           haven't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Havent           Haven't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict HAVENT           HAVEN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      roots5       imac             6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+add      roots5       incoherence      6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      roots5       indeterminacy    6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+add      roots5       islet            6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+read-as  eng_tok_dict isnt             isn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Isnt             Isn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict ISNT             ISN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      roots5       lait             6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+read-as  eng_tok_dict mightnt          mightn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Mightnt          Mightn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict MIGHTNT          MIGHTN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+read-as  eng_tok_dict mustnt           mustn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Mustnt           Mustn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict MUSTNT           MUSTN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+read-as  eng_tok_dict oughtnt          oughtn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Oughtnt          Oughtn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict OUGHTNT          OUGHTN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      roots5       pingpong         6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      roots5       rugrat           6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+read-as  eng_tok_dict shouldnt         shouldn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Shouldnt         Shouldn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict SHOULDNT         SHOULDN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      pnames4      silvester        6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      roots5       thermostat       6.1 holds the word and IBM does not; only the stress differs; the tie goes to 6.1
+add      roots5       touchtone        6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+add      roots5       triumvirate      6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      roots5       turnaround       6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      roots5       ubid             6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+add      roots5       veggie           6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+read-as  eng_tok_dict wasnt            wasn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Wasnt            Wasn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict WASNT            WASN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+read-as  eng_tok_dict werent           weren't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Werent           Weren't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict WERENT           WEREN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      roots5       whaddya          6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+read-as  eng_tok_dict wouldnt          wouldn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Wouldnt          Wouldn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict WOULDNT          WOULDN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      pnames5      yves             6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      pnames5      zoe              6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      roots5       zshop            6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+set      pnames1      amis             both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames1      appalachian      both hold it and differ; CMU has 6.1's sounds and not IBM's
+set      pnames1      avery            both hold it and differ; CMU has 6.1's sounds and not IBM's
+set      roots1a      bidet            both hold it and differ; CMU does not have it; the tie goes to 6.1
+set      pnames1      caribbean        both hold it and differ; only the stress differs; the tie goes to 6.1
+set      pnames2      croat            both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames2      england          both hold it and differ; CMU has 6.1's sounds and not IBM's
+set      pnames2      fiat             both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames2      honduran         both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames3      iraq             both hold it and differ; CMU has 6.1's sounds and not IBM's
+set      pnames3      jolla            both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames3      jose             both hold it and differ; CMU has 6.1's sounds and not IBM's
+set      pnames3      kauai            both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames3      lufthansa        both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames3      mahon            both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames3      mitterand        both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames4      mohammed         both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames4      mono             both hold it and differ; CMU has 6.1's sounds and not IBM's
+set      pnames4      monongahela      both hold it and differ; CMU has neither; the tie goes to 6.1
+set      eng_words    pisces           both hold it and differ; CMU has 6.1's sounds and not IBM's
+set      roots3       produce          both hold it and differ; CMU has 6.1's sounds and not IBM's
+set      pnames4      pyrenees         both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames5      siobhan          both hold it and differ; only the stress differs; the tie goes to 6.1
+set      roots4       sulfurous        both hold it and differ; CMU does not have it; the tie goes to 6.1
+set      roots4       sulphurous       both hold it and differ; CMU does not have it; the tie goes to 6.1
+set      pnames5      tijuana          both hold it and differ; CMU has 6.1's sounds and not IBM's
+letter   d            dt at end        Ahrendt, Schmidt: 6.1 says the t alone, as CMU does
+letter   n            ng before th     length, strength: 6.1 has no g, CMU has none or k
+letter   q            qu before ette   Arquette, Bequette: 6.1 and CMU say k
+letter   n            ngh before am    Bingham, gingham: 6.1 and CMU drop the g and the h; Mangham, which CMU says with the h, is the one word it costs

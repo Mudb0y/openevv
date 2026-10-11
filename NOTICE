@@ -154,6 +154,11 @@ and nothing here grants anything in them. Two things in those rules are not
 own: the call `normalize_text` makes to IBM's `backquote`, and the annotations
 three of the `eti_` strings write with IBM's mark rather than 6.1's.
 
+In `lang/enus` alone, the words `lang/enus/merge` says were added, set or read
+as 6.1 reads them say what 6.1 says, taken from what it speaks rather than
+from its tables, and are on the same footing. The ledger itself, the letter
+arms it names and the tools that measured it are ours.
+
 Where it came from
 ------------------
 

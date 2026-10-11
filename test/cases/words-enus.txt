@@ -1,7 +1,7 @@
-# 20000 words of English, spread evenly through the 38037 in scowl's
-# wamerican.35, which is the common half of the language.
-# with every word the dictionaries hold folded in: 5042 of them,
+# 20000 words of enus, spread evenly through the 38037 in wamerican.35.
+# With every word the dictionaries hold folded in: 5060 of them,
 # which are the words a change to a dictionary can move.
+# And every word lang/enus/merge decides: 93 of them.
 # Written by tools/measure/wordlist.py. See test/words.sh.
 a
 aardvark
@@ -1029,6 +1029,7 @@ areaway
 arellano
 arena
 arens
+arent
 ares
 aretha
 arguably
@@ -2295,6 +2296,7 @@ bonier
 boniface
 boning
 bonior
+bonjour
 bonnets
 bonneville
 bonuses
@@ -4677,6 +4679,7 @@ costumed
 costumes
 cot
 coterie
+coto
 cottage
 cotton
 cottoning
@@ -4691,6 +4694,7 @@ coughed
 coughlin
 coughs
 could
+couldnt
 couldst
 council
 councilman
@@ -4742,6 +4746,7 @@ courtroom
 courtrooms
 courtship
 courtyard
+couscous
 cousin
 couture
 cove
@@ -5830,6 +5835,7 @@ diction
 dictionary
 did
 didier
+didnt
 die
 diefenbaker
 diem
@@ -6272,6 +6278,7 @@ dodges
 dodo
 doer
 does
+doesnt
 dog
 dogged
 doggedly
@@ -6328,6 +6335,7 @@ donoghue
 donohue
 donor
 dons
+dont
 doodled
 doodling
 doolittle
@@ -6448,6 +6456,7 @@ dredging
 drench
 drenches
 dress
+dressage
 dresser
 dresses
 dressiest
@@ -6679,6 +6688,7 @@ eating
 eave
 eavesdrop
 eavesdrops
+ebay
 ebbed
 ebbs
 ebbw
@@ -6686,6 +6696,8 @@ ebenezer
 eberhard
 ebola
 ebony
+ebook
+ebusiness
 eccentricity
 eccentrics
 echelon
@@ -9633,6 +9645,7 @@ hacksaw
 had
 haddocks
 hades
+hadnt
 haemorrhage
 haemorrhoid
 hagemeyer
@@ -9818,6 +9831,7 @@ hashemi
 hashes
 hasidim
 haskell
+hasnt
 hassan
 hassle
 hassles
@@ -9852,6 +9866,7 @@ haute
 have
 haven
 havens
+havent
 having
 hawaii
 hawaiian
@@ -10610,6 +10625,7 @@ illustration
 illustrator
 illustrious
 im
+imac
 imaged
 imagery
 images
@@ -10823,6 +10839,7 @@ includes
 inclusion
 inclusive
 incognitos
+incoherence
 incoherent
 income
 incoming
@@ -10864,6 +10881,7 @@ indentation
 indented
 indents
 independent
+indeterminacy
 index
 indexes
 indian
@@ -11414,8 +11432,10 @@ islamists
 island
 islanders
 isle
+islet
 islip
 ism
+isnt
 isolate
 isolated
 isolating
@@ -12036,6 +12056,7 @@ lagos
 lags
 lain
 lairs
+lait
 laity
 lakebed
 lakes
@@ -13474,6 +13495,7 @@ mieno
 might
 mightest
 mightiest
+mightnt
 mighty
 mignon
 migraine
@@ -14072,6 +14094,7 @@ mustard
 mustered
 musters
 mustiest
+mustnt
 musty
 mutant
 mutate
@@ -14963,6 +14986,7 @@ otis
 otter
 otters
 ought
+oughtnt
 ouija
 ounces
 our
@@ -15949,6 +15973,7 @@ pincushion
 pine
 pineapple
 pined
+pingpong
 pinheiro
 pining
 pinioned
@@ -18480,6 +18505,7 @@ ruger
 rugged
 ruggeder
 ruggiero
+rugrat
 rugs
 ruined
 ruining
@@ -19436,6 +19462,7 @@ should
 shoulder
 shouldered
 shoulders
+shouldnt
 shouldst
 shouted
 shouts
@@ -19595,6 +19622,7 @@ silvered
 silvers
 silversmiths
 silvery
+silvester
 similar
 similarity
 simile
@@ -21818,6 +21846,7 @@ therewithal
 thermals
 thermo
 thermometers
+thermostat
 thermostats
 thesaurus
 these
@@ -22168,6 +22197,7 @@ touche
 touches
 touchiest
 touchings
+touchtone
 touchy
 tough
 toughen
@@ -22421,6 +22451,7 @@ triumph
 triumphed
 triumphirate
 triumphs
+triumvirate
 trivial
 triviality
 trizec
@@ -22536,6 +22567,7 @@ turkey
 turkmenistan
 turmoil
 turn
+turnaround
 turned
 turning
 turnips
@@ -22621,6 +22653,7 @@ tyrannized
 tyrannizing
 tyrant
 u
+ubid
 ubiquitous
 udders
 ueberroth
@@ -23149,6 +23182,7 @@ veg
 vegetable
 vegetables
 vegetarians
+veggie
 vehemence
 vehement
 vehicle
@@ -23548,6 +23582,7 @@ washing
 washings
 washouts
 washrooms
+wasnt
 wasps
 wassail
 waste
@@ -23687,6 +23722,7 @@ wenatchee
 wendell
 wept
 were
+werent
 werewolf
 werewolve
 werwolf
@@ -23704,6 +23740,7 @@ wettest
 weyerhaeuser
 whack
 whacking
+whaddya
 whale
 whaler
 whales
@@ -24069,6 +24106,7 @@ worthless
 worthwhile
 worthy
 would
+wouldnt
 wouldst
 wound
 wounder
@@ -24265,6 +24303,7 @@ yuan
 yugoslav
 yugoslavia
 yugoslavian
+yves
 ywca
 z
 zaccaro
@@ -24302,6 +24341,7 @@ zippered
 zippers
 zips
 zodiac
+zoe
 zoete
 zofran
 zombie
@@ -24316,6 +24356,7 @@ zooms
 zouch
 zovirax
 zsa
+zshop
 zucchini
 zulus
 zurich

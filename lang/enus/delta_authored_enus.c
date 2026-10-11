@@ -132,35 +132,45 @@ uint8_t enus_evv_authored_data[] = {
     17,
     /* lts_dj, 2 bytes at 99 */
     13,17,
-    /* lts_mech, 4 bytes at 101 */
+    /* lts_dt, 2 bytes at 101 */
+    13,26,
+    /* lts_mech, 4 bytes at 103 */
     20,2,12,16,
-    /* say_141f07, 3 bytes at 105 */
+    /* say_141f07, 3 bytes at 107 */
     20,31,7,
-    /* lts_mn, 2 bytes at 108 */
+    /* lts_mn, 2 bytes at 110 */
     20,21,
-    /* say_15, 1 bytes at 110 */
+    /* say_15, 1 bytes at 112 */
     21,
-    /* say_14, 1 bytes at 111 */
+    /* say_14, 1 bytes at 113 */
     20,
-    /* lts_mb, 2 bytes at 112 */
+    /* lts_mb, 2 bytes at 114 */
     20,11,
-    /* lts_ng, 2 bytes at 114 */
+    /* lts_ng, 2 bytes at 116 */
     21,15,
-    /* say_16, 1 bytes at 116 */
+    /* say_16, 1 bytes at 118 */
     22,
-    /* lts_then, 4 bytes at 117 */
+    /* lts_then, 4 bytes at 119 */
     26,16,2,21,
-    /* lts_ton, 3 bytes at 121 */
+    /* lts_ton, 3 bytes at 123 */
     26,4,21,
-    /* lts_qu, 2 bytes at 124 */
+    /* lts_th, 2 bytes at 126 */
+    26,16,
+    /* lts_ngh, 3 bytes at 128 */
+    21,15,16,
+    /* lts_am, 2 bytes at 131 */
+    1,20,
+    /* lts_qu, 2 bytes at 133 */
     23,5,
-    /* lts_et, 2 bytes at 126 */
+    /* lts_et, 2 bytes at 135 */
     2,26,
-    /* say_07, 1 bytes at 128 */
+    /* say_07, 1 bytes at 137 */
     7,
-    /* lts_e, 1 bytes at 129 */
+    /* lts_ette, 4 bytes at 138 */
+    2,26,26,2,
+    /* lts_e, 1 bytes at 142 */
     2,
-    /* say_071b, 2 bytes at 130 */
+    /* say_071b, 2 bytes at 143 */
     7,27,
 };
 
