@@ -134,3 +134,20 @@
 0x10000	-1	Dont go.
 0x10000	-1	We couldnt go.
 0x10000	-1	It isnt here.
+0x10000	-1	neuroscience
+0x10000	-1	neurosurgeon
+0x10000	-1	neurodegenerative
+0x10000	-1	neuroimaging
+0x10000	-1	neurotoxin
+0x10000	-1	neurology
+0x10000	-1	neurotic
+0x10000	-1	neurologist
+0x10000	-1	neuropathy
+0x10000	-1	neurosis
+0x10000	-1	the produce is here.
+0x10000	-1	the transport is here.
+0x10000	-1	they will transport goods.
+0x10000	-1	the wound is here.
+0x10000	-1	she wound the clock.
+0x10000	-1	aint
+0x10000	-1	I aint going.

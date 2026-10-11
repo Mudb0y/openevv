@@ -65,3 +65,18 @@ bytes eti_s_1b9136     48 48
 bytes eti_s_1b9138     54
 bytes eti_s_1b9139     41 48
 bytes eti_s_1b913b     c7
+# The prefixes 6.1's strip_scientific_prefixes tests, in et_prfx.up.
+bytes eti_s_1be896     03
+bytes eti_s_1be8b5     01 05 0d 03 04
+bytes eti_s_1be8ba     0c 01 18 0d 03 04
+bytes eti_s_1be8c0     0c 10 02 14 04
+bytes eti_s_1be8c5     02 13 02 0c 1a 18 04
+bytes eti_s_1be8cc     10 1e 0d 18 04
+bytes eti_s_1be8d1     15 02 05 18 04
+bytes eti_s_1be8d6     15 03 1a 18 04
+bytes eti_s_1be8db     0d 02
+bytes eti_s_1be8dd     04 1d 1e
+bytes eti_s_1be8e0     18 03 0b 04
+bytes eti_s_1be8e4     18 01 0d 03 04
+bytes eti_s_1be8e9     1a 02 13 02
+bytes eti_s_1be8ed     1a 10 02 18 14 04

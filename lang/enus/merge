@@ -12,9 +12,11 @@
 #
 #   drop     the entry is taken out of that dictionary
 #   add      the word is put into it, saying what 6.1 says
-#   set      what it says is changed to what 6.1 says
+#   set      what it says is changed to what 6.1 says, or a lookup set's
+#            words to 6.1's
 #   read-as  the word is read as the text given, which 6.1 does
 #   letter   an arm added to that letter in lang/enus/letters
+#   rule     a rule of 6.1's lifted in place of IBM's
 #
 # test/cases/words-enus.txt holds every word here, so test/words.sh says if
 # any of them moves.
@@ -141,7 +143,6 @@ set      pnames4      mohammed         both hold it and differ; CMU has neither;
 set      pnames4      mono             both hold it and differ; CMU has 6.1's sounds and not IBM's
 set      pnames4      monongahela      both hold it and differ; CMU has neither; the tie goes to 6.1
 set      eng_words    pisces           both hold it and differ; CMU has 6.1's sounds and not IBM's
-set      roots3       produce          both hold it and differ; CMU has 6.1's sounds and not IBM's
 set      pnames4      pyrenees         both hold it and differ; CMU has neither; the tie goes to 6.1
 set      pnames5      siobhan          both hold it and differ; only the stress differs; the tie goes to 6.1
 set      roots4       sulfurous        both hold it and differ; CMU does not have it; the tie goes to 6.1
@@ -151,3 +152,13 @@ letter   d            dt at end        Ahrendt, Schmidt: 6.1 says the t alone, a
 letter   n            ng before th     length, strength: 6.1 has no g, CMU has none or k
 letter   q            qu before ette   Arquette, Bequette: 6.1 and CMU say k
 letter   n            ngh before am    Bingham, gingham: 6.1 and CMU drop the g and the h; Mangham, which CMU says with the h, is the one word it costs
+drop     roots3       produce          IBM's root; it said the British dyoo and, standing above the homograph, made the noun pruh-DOOS; 6.1 has none, and homog_roots then says PRO-duce and pruh-DOOS by sense
+drop     pnames       produce          an ordinary word filed as a name, which a name's single stress kept from being a homograph
+drop     pnames       transport        the same: the verb was TRANS-port; now trans-PORT, as 6.1 and CMU say it
+drop     roots5       wound            IBM's root, which made she wound the clock woond; 6.1 has none, and homog_roots says wownd by sense
+add      nonlex_prefixes neuro            6.1's prefix, which its strip_scientific_prefixes needs: without it every neuro- word loops
+read-as  eng_tok_dict aint             ain't, as 6.1 reads it
+read-as  eng_tok_dict Aint             Ain't, as the word in small letters is read
+read-as  eng_tok_dict AINT             AIN'T, as the word in small letters is read
+rule     et_prfx      strip_scientific_prefixes 6.1's, lifted: it knows neuro, so neuroscience is NOOR-o-SY-ence rather than nuh-RAH-shunts
+set      sets         no_scientific_prefix_strip 6.1's: the six neuro words its prefix must not be stripped from, neurology and neurotic among them

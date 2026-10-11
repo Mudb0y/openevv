@@ -1014,6 +1014,7 @@ dictionary nonlex_prefixes statement 1 width 0 records sound
   multi 255 255 62 says m H l t i
   mc 255 255 52 says m Xx k
   neo 255 255 63 says n i o
+  neuro 255 255 124 stress 20 says n U r o
   nitro 255 255 64 says n Y t r o
   non 255 255 65 says n a@ n
   north 255 255 66 says n o r T
@@ -3213,7 +3214,6 @@ dictionary pnames4 statement 1 width 0 records sound
   previn 255 255 367 says p r E v x n
   prima 255 255 368 says p r i m a
   principe 255 255 369 says p r I n s x p i
-  produce 255 255 370 says p r o d u s
   provencal 255 255 371 says p r a v E G k a l
   provence 255 255 372 says p r o v a n s
   prozac 255 255 373 says p r o z A k
@@ -3766,7 +3766,6 @@ dictionary pnames5 statement 1 width 0 records sound
   trans 255 255 322 says t r A n z
   transcanada 255 255 323 says t r A n z k A n x t x
   transkei 255 255 324 says t r A n s k Y
-  transport 255 255 325 says t r A n s p o r t
   transylvania 255 255 326 says t r A n s l v e n y x
   traveling 255 255 327 says t r A v x l X G
   treuhandanstalt 255 255 329 says t r u h A n d x n s t a l t
@@ -4769,7 +4768,6 @@ dictionary roots3 statement 1 width 0 records sound
   prix 255 255 53 says p r i
   procedural 255 255 55 says p r x s i J x r x l
   procedure 255 255 54 says p r x s i J x r
-  produce 255 255 56 stress 1 says p r X d u s
   prognoses 255 255 57 stress 212 says p r c@ g n o s i z
   prohibition 255 255 58 says p r o X b I S Xx n
   prologue 255 255 59 says p r o l c@ g
@@ -5060,7 +5058,6 @@ dictionary roots5 statement 1 width 0 records sound
   wool 255 255 74 says w U l
   woolen 255 255 75 says w U l Xx n
   woollen 255 255 75 says w U l Xx n
-  wound 255 255 79 says w u n d
   woman 255 255 69 says w U m Xx n
   women 255 255 70 says w I m X n
   wondrous 255 255 71 says w H n d r x s
@@ -5656,12 +5653,15 @@ dictionary eng_char_name statement 1 width 0 records characters
   [¶] 255 255 131 says paragraphs or paragraph
 
 dictionary eng_tok_dict statement 1 width 0 records characters
+  aint 255 255 140 says ain't
   am 255 255 2 says ay[ ]emm
   and/or 255 255 4 says annd[ ]ore
   arent 255 255 92 says aren't
   isnt 255 255 93 says isn't
   oughtnt 255 255 94 says oughtn't
+  Aint 255 255 141 says Ain't
   AAA 255 255 1 says triple[ ]ay
+  AINT 255 255 142 says AIN'T
   Arent 255 255 95 says Aren't
   AM 255 255 2 says ay[ ]emm
   AM/FM 255 255 3 says ay[ ]emm[ ]eff[ ]emm

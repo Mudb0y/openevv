@@ -86,15 +86,18 @@ def template(body):
     # The other shape: the record pushed and a helper called whose name ends
     # in the record's length, one helper for every length the language was
     # compiled with. A new arm can only lay a length one of them already does.
+    # Other arms may jump in between the push and the call, which leaves a
+    # label there.
     pat = re.compile(
         r'^label (L\d+) was (\S+)\n'
         r'  push sym (\S+)\n'
+        r'(?:label \S+ was \S+\n)?'
         r'  push reg (r\d+)\n'
-        r'  call (\S+_)(\d+) arity 2 depth 2\n'
+        r'  call (\S+_)(\d+) arity 2 depth (\d+)\n'
         r'  jump to (L\d+)$', re.M)
     for m in pat.finditer(body):
         return {'label': m.group(1), 'reg': m.group(4), 'helper': m.group(5),
-                'tail': m.group(7)}
+                'depth': m.group(7), 'tail': m.group(8)}
     raise CannotWrite('no arm in this rule states its own record length, so '
                       'a new one has nothing to copy')
 
@@ -166,9 +169,10 @@ def add(tree, name, obj, blob, off, length, symbols_path, stress=None):
         arm = ('label %s was $arm$%s\n'
                '  push sym %s\n'
                '  push reg %s\n'
-               '  call %s arity 2 depth 2\n'
+               '  call %s arity 2 depth %s\n'
                '  jump to %s\n'
-               % (label, label, sym, shape['reg'], helper, shape['tail']))
+               % (label, label, sym, shape['reg'], helper, shape['depth'],
+                  shape['tail']))
     else:
         arm = ('label %s was $arm$%s\n'
                '  store %s imm %d slot %s\n'
