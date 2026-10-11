@@ -14,6 +14,21 @@
         inherit system;
         config.allowUnsupportedSystem = true;
       };
+
+      # The Windows compilers with gcc's own win32 threads, which is what
+      # Ubuntu's mingw has and so what every release is built with, rather
+      # than nixpkgs' mcfgthreads. A library that hung or crashed every
+      # program ending with an instance alive passed everything here on
+      # mcfgthreads, because only win32 threads free a thread's storage before
+      # the library's destructors run. Both are in the binary cache.
+      winThreads = platform: import nixpkgs {
+        inherit system;
+        crossSystem = nixpkgs.lib.systems.examples.${platform};
+        config.allowUnsupportedSystem = true;
+        overlays = [ (final: prev: { threads = { model = "win32"; package = null; }; }) ];
+      };
+      mingw32 = winThreads "mingw32";
+      mingwW64 = winThreads "mingwW64";
     in {
       # `nix build' and `nix run'. The ordinary make, which wants a C
       # compiler and Python: the rules a build compiles are written out of the
@@ -60,14 +75,14 @@
           # Reads and links IBM's 32-bit COFF objects, and runs the reference
           # binary, which is a PE under Wine because those objects are
           # MSVC-mangled and x86-only.
-          pkgs.pkgsCross.mingw32.buildPackages.gcc
-          pkgs.pkgsCross.mingw32.buildPackages.binutils
+          mingw32.buildPackages.gcc
+          mingw32.buildPackages.binutils
 
           # Builds the Windows release: the same engine with src/port/port_win32.c
           # standing in for the POSIX layer, linked static so what ships is one
           # file.
-          pkgs.pkgsCross.mingwW64.buildPackages.gcc
-          pkgs.pkgsCross.mingwW64.buildPackages.binutils
+          mingwW64.buildPackages.gcc
+          mingwW64.buildPackages.binutils
 
           # Wow64, because there are now two kinds of PE to run: the 32-bit
           # reference the tests compare against, and our own 64-bit build.
@@ -104,12 +119,6 @@
 
         shellHook = ''
           export EVV_ARCHIVE=/mnt/storage/Software/speech/eloquence-archive
-          # The cross gcc is built against mcfgthreads but nothing puts it on
-          # the link path outside a real cross stdenv. Referenced by path
-          # rather than as a package because nixpkgs splicing would otherwise
-          # substitute a native build of it.
-          export MINGW_LDFLAGS="-L${pkgs.pkgsCross.mingw32.windows.mcfgthreads.outPath}/lib"
-          export MINGW64_LDFLAGS="-L${pkgs.pkgsCross.mingwW64.windows.mcfgthreads.outPath}/lib"
           export WINEPREFIX="$PWD/.wine"
           # Nothing under Wine plays audio here; keep it away from the sound
           # devices entirely.

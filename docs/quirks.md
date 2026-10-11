@@ -144,7 +144,7 @@ Thirteen places now test for nought and answer the way that primitive already an
 
 ## Mixing toolchains on Windows
 
-The libraries in a release are built by one mingw and tested with harnesses built by the same one. A caller built by a different mingw, with a different thread runtime -- nixpkgs uses mcfgthreads where Debian uses winpthreads -- can fault on the crossing, and one direction of that pairing does.
+The libraries in a release are built by one mingw and tested with harnesses built by the same one. A caller built by a different mingw, with a different thread runtime -- nixpkgs' default is mcfgthreads and Debian's posix compilers use winpthreads, where the releases use gcc's own win32 threads -- can fault on the crossing, and one direction of the mcfgthreads and winpthreads pairing does.
 
 It does not matter for the callers that exist: Python's ctypes and a screen reader's host DLL are MSVC built with no mingw runtime in them at all, and CI checks both of those crossings on Windows itself. But do not conclude from a fault in a hand-mixed pair that the shipped library is broken. Check a matched pair first.
 

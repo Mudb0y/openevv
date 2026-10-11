@@ -1219,9 +1219,11 @@ OBJDIRWIN  := $(BUILD)/objwin-$(RULES)/$(subst $(space),-,$(TAGS))
 
 CFLAGSWIN  := $(OPT) $(ALIAS) -std=gnu99 $(INCS) $(WARN) -DEVV_ARENA=1 \
               $(TRIM) $(ROMDEFS) $(CFLAGS)
-# Static, so what ships is one file. MINGW64_LDFLAGS is where the cross gcc's
-# thread runtime is; the flake sets it, since nothing puts it on the link path
-# outside a real cross stdenv.
+# Static, so what ships is one file. MINGW64_LDFLAGS, and MINGW_LDFLAGS for
+# thirty-two bits, are for a cross gcc whose thread runtime is a library of its
+# own, as nixpkgs' default mcfgthreads is: outside a real cross stdenv nothing
+# puts it on the link path. The flake's compilers use gcc's own win32 threads,
+# as the releases' do, and need neither.
 LDFLAGSWIN := -static $(MINGW64_LDFLAGS)
 
 # The same list for Windows, and RULECODE is named here for the same reason
