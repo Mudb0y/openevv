@@ -118,6 +118,13 @@ def source_words(tag):
     return sorted(words), os.path.basename(found[0])
 
 
+def plain(tag):
+    """A word written in the language's own letters and nothing else -- not a
+    symbol's name, an abbreviation in capitals or a clitic -- which is what
+    the list holds."""
+    return re.compile(r'[%s]{1,20}\Z' % SOURCES[tag][2])
+
+
 def held(tag):
     """Every word the module's own dictionaries hold, where it has them as
     text. Only English does today, and the rest answer nothing rather than
@@ -126,10 +133,28 @@ def held(tag):
     p = os.path.join(ROOT, 'lang', tag, '%s.dict' % tag)
     if not os.path.exists(p):
         return out
+    keep = plain(tag)
     for line in open(p, encoding='utf-8', errors='replace'):
         m = re.match(r'^  (\S+) ', line)
-        if m and len(m.group(1)) <= 20:
+        if m and keep.match(m.group(1)):
             out.add(m.group(1))
+    return out
+
+
+def merged(tag):
+    """Every word a decision in the module's merge ledger names, for the same
+    reason: those are the words a decision was made about, and a word the
+    gate cannot see is a decision nothing holds."""
+    out = set()
+    p = os.path.join(ROOT, 'lang', tag, 'merge')
+    if not os.path.exists(p):
+        return out
+    keep = plain(tag)
+    for line in open(p, encoding='utf-8'):
+        f = line.split()
+        if len(f) >= 3 and not line.startswith('#') and f[0] != 'letter' \
+                and keep.match(f[2]):
+            out.add(f[2])
     return out
 
 
@@ -159,12 +184,18 @@ def main(argv):
     print("# %d words of %s, spread evenly through the %d in %s."
           % (len(picked), tag, len(words), source))
     carried = held(tag)
-    both = sorted(set(picked) | carried)
+    decided = merged(tag)
+    both = sorted(set(picked) | carried | decided)
     if carried:
         print("# With every word the dictionaries hold folded in: %d of them,"
               % len(carried))
         print("# which are the words a change to a dictionary can move.")
+    if decided:
+        print("# And every word lang/%s/merge decides: %d of them." % (tag, len(decided)))
     print("# Written by tools/measure/wordlist.py. See test/words.sh.")
+    # The header goes through the text stream and the words through the bytes
+    # under it, so the one has to be out before the other starts.
+    sys.stdout.flush()
     # In the code set the engine reads rather than in UTF-8, and a word with a
     # character that set has no room for is dropped rather than mangled.
     out = sys.stdout.buffer

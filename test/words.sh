@@ -118,6 +118,29 @@ for tag in $want; do
     paste -d'	' "$work/words.txt" "$work/said.txt" > "$work/now.txt"
 
     if [ "$what" = record ]; then
+        # How many words CMU's dictionary agrees with on sounds, and it may
+        # not fall: a change that mends what someone listened to and breaks
+        # what nobody did is what this is for. Only American English has
+        # such a dictionary, and it is counted over the words both the old
+        # answers and the new have, so that a longer list does not count as
+        # better. EVV_WORDS_FEWER_CMU records a fall that was meant.
+        cmu=
+        if [ "$tag" = enus ] && [ -r "$baseline" ] \
+           && score=$(python3 "$root/tools/measure/referee.py" score \
+                      "$work/now.txt" "$baseline" 2>/dev/null); then
+            read -r agree held agreed <<< "$score"
+            if [ "$agree" -lt "$agreed" ] && [ -z "${EVV_WORDS_FEWER_CMU:-}" ]; then
+                echo "words: $tag, CMU's dictionary agrees with $agree of the $held words it" \
+                     "holds where it agreed with $agreed; nothing written" >&2
+                echo "  EVV_WORDS_FEWER_CMU=1 records it anyway, if that was meant." >&2
+                bad=1
+                continue
+            fi
+            cmu="# CMU's dictionary agrees with the sounds of $agree of the $held words both these answers and the ones before them have, where it agreed with $agreed."
+            echo "words: $tag, CMU's dictionary agrees with $agree of $held, where it agreed with $agreed"
+        elif [ "$tag" = enus ]; then
+            echo "words: $tag, no CMU dictionary here to count agreement with" >&2
+        fi
         {
             echo "# What this engine says each word is made of, for $tag."
             echo "#"
@@ -125,6 +148,7 @@ for tag in $want; do
             echo "# test/words.sh record. The list is test/cases/words-$tag.txt."
             echo "# These are what this engine does, not what IBM's did: the"
             echo "# differential suite speaks sentences, not word lists."
+            [ -n "$cmu" ] && echo "$cmu"
             cat "$work/now.txt"
         } > "$baseline"
         echo "words: $tag, $total words written to ${baseline#$root/}"

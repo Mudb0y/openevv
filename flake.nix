@@ -98,7 +98,10 @@
           pkgs.llvm
           pkgs.gcc
           pkgs.gnumake
-          pkgs.python3
+          # The CMU Pronouncing Dictionary is what tools/measure/referee.py
+          # settles a disputed English word by, and what test/words.sh counts
+          # agreement with when it records.
+          (pkgs.python3.withPackages (ps: [ ps.cmudict ]))
 
           # The rules as C are written again whole when anything they are
           # made from changes, and most of the files come out as they were;

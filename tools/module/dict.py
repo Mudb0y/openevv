@@ -15,8 +15,9 @@ word at all, since there are twenty-eight of them and a word can be in
 several.
 
 A word written with `new' where its action number goes is one being added.
-It is given a spare arm of its rule if there is one going, and otherwise an
-arm of its own, and the number it was given is written back into the file.
+It is given an arm of its own, and the number it was given is written back
+into the file. Where its dictionary keeps a stress pattern for a word, `stress'
+and the pattern after the action number say where it is stressed.
 
 The file is in the order the engine searches, which is by the language's own
 character codes and not by letter, because that order is the one thing about
@@ -110,6 +111,14 @@ HEADER = """\
 # A word is written as its characters. A character the alphabet does not
 # spell as one ordinary letter is written in brackets, by name where that
 # name belongs to one code alone and by number where two codes share it.
+#
+# The names and the roots keep where a word is stressed as well as what it
+# says, and `stress' after the action number is that, written the way the
+# word's phonemes write it: a digit a syllable, 1 for the main
+# stress, 2 for a secondary one and 0 for none, counted back from the last
+# syllable, so that syllables before the first digit are unstressed. It is
+# shown where the word's own arm states it; without it the rules decide, and a
+# word added or moved onto an action of its own is given one only if it asks.
 """
 
 
@@ -163,12 +172,15 @@ def dump():
         lines.append('dictionary %s statement %d width %d records %s'
                      % (name, d['stmt'], d['width'],
                         'sound' if k == SOUND_STMT else 'characters'))
+        stress = arms_mod.newarm.stresses(arms_mod.TREE, name)
         for _off, key, value in d['entries']:
             act = struct.unpack_from('<H', value, 2)[0]
             text = say(recs[act], k, alpha) if act in recs else ''
-            lines.append('  %s %d %d %d%s'
+            lines.append('  %s %d %d %d%s%s'
                          % (lex.word(key, table, once), value[0], value[1],
-                            act, (' says ' + text) if text else ''))
+                            act,
+                            (' stress ' + stress[act]) if act in stress else '',
+                            (' says ' + text) if text else ''))
         lines.append('')
 
         if not collated([k2 for _o, k2, _v in d['entries']]):
@@ -205,7 +217,12 @@ def read_file():
         # A word written with `new' where its action number goes is one being
         # added, and building gives it an action of its own.
         action = None if f[3] == 'new' else int(f[3])
-        text = ' '.join(f[5:]) if len(f) > 4 and f[4] == 'says' else None
+        rest = f[4:]
+        if len(rest) >= 2 and rest[0] == 'stress':
+            dicts[-1].setdefault('stress', {})[len(dicts[-1]['entries'])] = \
+                rest[1]
+            rest = rest[2:]
+        text = ' '.join(rest[1:]) if rest and rest[0] == 'says' else None
         dicts[-1]['entries'].append((word, left, right, action, text))
     return dicts
 
@@ -266,21 +283,16 @@ WRITTEN = {}
 
 
 def mint(arms, used, codes, why):
-    """An action of this word's own: a spare arm of the rule if one is going,
-    and otherwise an arm added to it."""
+    """An action of this word's own, as an arm added to the rule.
+
+    Never an arm nobody dispatches to any more, though one would do for the
+    record: it keeps whatever else it said for the word it was, and the
+    stress pattern is part of that, so a word given one was stressed as the
+    word it replaced."""
     if len(codes) > 1:
         raise ValueError('nor can it be given an action of its own, %s '
                          'saying things in more than one piece' % why)
     codes = codes[0][0]
-    act = arms.spare(used)
-    if act is not None:
-        try:
-            arms.rewrite(act, bytes(codes))
-            used.add(act)
-            return act
-        except ValueError:
-            # It looked spare but cannot be written; do not offer it again.
-            used.add(act)
     act = arms.add_arm(bytes(codes))
     used.add(act)
     # Written into lang/<tag>/rules rather than into the image this run
@@ -379,7 +391,7 @@ def build():
             print(why, file=sys.stderr)
             bad = 1
             continue
-        if not fresh and not change and not split:
+        if not fresh and not change and not split and not d.get('stress'):
             continue
 
         if any(d['entries'][i][4] is None for i in fresh):
@@ -438,6 +450,26 @@ def build():
                 new = mint(arms, used, codes, d['name'])
                 point([i], new)
                 added += 1
+
+            # Where each word that says so is stressed. A pattern is the
+            # action's, as what it says is, so every word on the action has
+            # to want the same one.
+            for i, pattern in sorted(d.get('stress', {}).items()):
+                act = d['entries'][i][3]
+                wants = {d['stress'].get(j) for j, e in enumerate(d['entries'])
+                         if e[3] == act}
+                if len(wants) > 1:
+                    raise ValueError('%s: %s asks for stress %s, and not every '
+                                     'word on its action %d does'
+                                     % (d['name'], d['entries'][i][0],
+                                        pattern, act))
+                try:
+                    arms.set_stress(act, pattern)
+                except ValueError as why:
+                    # What the word says is laid down whether or not its
+                    # stress can be, so this is said rather than refused.
+                    print('%s: %s keeps the stress the rules give it -- %s'
+                          % (d['name'], d['entries'][i][0], why))
         except ValueError as why:
             print(why, file=sys.stderr)
             bad = 1
