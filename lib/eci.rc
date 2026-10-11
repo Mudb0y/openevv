@@ -14,9 +14,25 @@
 
 #include <windows.h>
 
+/* The release's version, handed in by the build from the tag. A build
+   nobody gave one to says nought rather than a number a release once had. */
+#ifndef EVV_MAJOR
+#define EVV_MAJOR 0
+#endif
+#ifndef EVV_MINOR
+#define EVV_MINOR 0
+#endif
+#ifndef EVV_PATCH
+#define EVV_PATCH 0
+#endif
+#define EVV_TEXT2(n) #n
+#define EVV_TEXT(n)  EVV_TEXT2(n)
+#define EVV_VERSION  EVV_TEXT(EVV_MAJOR) "." EVV_TEXT(EVV_MINOR) "." \
+                     EVV_TEXT(EVV_PATCH) ".0"
+
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION    0,3,0,0
-PRODUCTVERSION 0,3,0,0
+FILEVERSION    EVV_MAJOR,EVV_MINOR,EVV_PATCH,0
+PRODUCTVERSION EVV_MAJOR,EVV_MINOR,EVV_PATCH,0
 FILEFLAGSMASK  0x3fL
 FILEFLAGS      0x0L
 FILEOS         VOS__WINDOWS32
@@ -29,12 +45,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName",      "OpenEVV"
             VALUE "FileDescription",  "IBM Embedded ViaVoice rebuilt as portable C"
-            VALUE "FileVersion",      "0.3.0.0"
+            VALUE "FileVersion",      EVV_VERSION
             VALUE "InternalName",     "eci"
             VALUE "LegalCopyright",   "MIT for the engine; the language data is IBM's"
             VALUE "OriginalFilename", "eci.dll"
             VALUE "ProductName",      "OpenEVV"
-            VALUE "ProductVersion",   "0.3.0.0"
+            VALUE "ProductVersion",   EVV_VERSION
         END
     END
     BLOCK "VarFileInfo"

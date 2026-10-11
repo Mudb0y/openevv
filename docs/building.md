@@ -51,6 +51,8 @@ On a Nix machine `nix build` makes both commands under `result/bin`, and `nix ru
 
 `EVVPLAIN=1` keeps the shared library's plain name, and its soname with it, however many languages are in it. It is what a release is built with: the archives carry every language and the library still has to be the `libeci.so.1` a caller opens, since nothing loading it can be asked to know what is inside. It changes no other name, so the archives go on saying what they hold.
 
+`EVV_VERSION` is the version `eci.dll` and `eci32.dll` carry in their version resource, which is what Windows shows as the file's version: `make win EVV_VERSION=0.6` makes it 0.6.0.0. The release workflow passes the tag's, and a build given none says 0.0.0.0. It was 0.3.0.0 written into `lib/eci.rc` until 11 October 2026, which every release after 0.3 shipped saying.
+
 `RULES` chooses which form of the language's rules gets linked, and is explained next.
 
 ## Running

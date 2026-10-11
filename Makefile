@@ -1286,9 +1286,16 @@ $(BUILD)/eci.dll: lib/eci_api.c $(OBJDIRWIN)/eci.res $(BUILD)/libevv-win$(SUF).a
 	@cp lib/eci.ini $(BUILD)/eci.ini
 	@echo "built $@"
 
+# What Windows shows as the library's version: the release workflow names
+# the tag, and anything else is 0.0.0.
+EVV_VERSION ?= 0.0.0
+RCVERSION := $(subst ., ,$(EVV_VERSION)) 0 0 0
+RCDEFS    := -DEVV_MAJOR=$(word 1,$(RCVERSION)) -DEVV_MINOR=$(word 2,$(RCVERSION)) \
+             -DEVV_PATCH=$(word 3,$(RCVERSION))
+
 $(OBJDIRWIN)/eci.res: lib/eci.rc
 	@mkdir -p $(OBJDIRWIN)
-	@$(WINDRES) -I lib lib/eci.rc -O coff -o $@
+	@$(WINDRES) $(RCDEFS) -I lib lib/eci.rc -O coff -o $@
 
 # Speaks through the library rather than against the engine, by name, the way
 # an add-on does. `test/hash.sh build/dlltest.exe' then holds what comes out of
@@ -1353,7 +1360,7 @@ $(BUILD)/evv32.exe: cli/evv.c $(BUILD)/libevv-win32$(SUF).a $(RULESTAMP)
 
 $(OBJDIRWIN32)/eci.res: lib/eci.rc
 	@mkdir -p $(OBJDIRWIN32)
-	@$(WINDRES32) -I lib lib/eci.rc -O coff -o $@
+	@$(WINDRES32) $(RCDEFS) -I lib lib/eci.rc -O coff -o $@
 
 $(OBJDIRWIN32)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJDIRWIN32)

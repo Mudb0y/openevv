@@ -336,7 +336,11 @@ jobs:
         run: |
           set -eu
           langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca itit plpl jajp)
-          make -j"$(nproc)" LANGS="$langs" win win-dlltest win32
+          case "$GITHUB_REF" in
+          refs/tags/v*) version=${GITHUB_REF_NAME#v} ;;
+          *)            version=0.0.0 ;;
+          esac
+          make -j"$(nproc)" LANGS="$langs" EVV_VERSION="$version" win win-dlltest win32
 
       - name: Say what came out
         run: |

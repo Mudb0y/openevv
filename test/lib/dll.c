@@ -155,7 +155,11 @@ static int say_product(const char *path)
         fprintf(stderr, "dlltest: %s names no product\n", path);
         return 0;
     }
-    printf("dlltest: %s says it is %s\n", path, (const char *)value);
+    printf("dlltest: %s says it is %s", path, (const char *)value);
+    if (VerQueryValueA(info, "\\StringFileInfo\\040904b0\\FileVersion",
+                       &value, &bytes) && bytes != 0)
+        printf(" %s", (const char *)value);
+    printf("\n");
     free(info);
     return 1;
 }
