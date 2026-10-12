@@ -230,3 +230,5 @@ read-as  eng_tok_dict vis-a-vis        6.1's phonetic spelling, vee-zuh-VEE, one
 read-as  eng_tok_dict Vis-a-vis        the same, and with the accented a in both
 rule     et_numbr     convert_eng_phone_number 6.1's, lifted: it hands a North American number to the rule below; chosen by ear
 rule     et_numbr     convert_NA_phone_number 6.1's, lifted: a nought in a phone number is oh, and the mark after the number is kept, so a sentence ending in one ends; ours said zero and lost the full stop
+rule     et_numbr     convert_eng_day_of_month 6.1's, lifted, with the three it calls that 4.3 had not got: the day after a month name is an ordinal, September thirtieth, where ours waited for an "on" or a year; a day before the month is turned round; chosen by ear
+rule     et_numbr     eng_months       ours, doing what 6.1's month dictionary does, which this module has not got: a month written out is put in small letters, a short one replaced by the whole name

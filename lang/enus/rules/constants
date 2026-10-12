@@ -94,3 +94,56 @@ bytes eti_s_1b9185     1d
 bytes eti_s_1b9186     1a
 bytes eti_s_1b9187     41
 bytes eti_s_1b9188     48 02 1d 1a 02 15 19 03 04 15 48
+
+# 6.1's own strings for the day of the month, which et_numbr.up names.
+bytes eti_s_1b91bf     c7 48
+bytes eti_s_1be0fe     48
+bytes eti_s_1be129     40
+bytes eti_s_1be12a     3f
+bytes eti_s_1be1fb     15 03
+bytes eti_s_1be1fd     04
+bytes eti_s_1be1fe     01 15 0d
+bytes eti_s_1be201     1a 04
+bytes eti_s_1be203     04 18
+bytes eti_s_1be205     48 1a 04 48
+bytes eti_s_1be209     40 48
+bytes eti_s_1be20b     15 02 02
+bytes eti_s_1be20e     c7 02
+
+# The month names eng_months in et_numbr.up tests for, and what it writes
+# in place of a short one.
+bytes month_Apr        06 16 18
+bytes month_April      06 16 18 03 13
+bytes month_Aug        06 05 0f
+bytes month_August     06 05 0f 05 19 1a
+bytes month_Dec        22 02 0c
+bytes month_December   22 02 0c 02 14 0b 02 18
+bytes month_Feb        23 02 0b
+bytes month_February   23 02 0b 18 05 01 18 1e
+bytes month_Jan        26 01 15
+bytes month_January    26 01 15 05 01 18 1e
+bytes month_Jul        26 05 13
+bytes month_July       26 05 13 1e
+bytes month_Jun        26 05 15
+bytes month_June       26 05 15 02
+bytes month_Mar        29 01 18
+bytes month_March      29 01 18 0c 10
+bytes month_May        29 01 1e
+bytes month_Nov        2a 04 1b
+bytes month_November   2a 04 1b 02 14 0b 02 18
+bytes month_Oct        09 0c 1a
+bytes month_October    09 0c 1a 04 0b 02 18
+bytes month_Sep        2e 02 16
+bytes month_Sept       2e 02 16 1a
+bytes month_September  2e 02 16 1a 02 14 0b 02 18
+bytes month_april      01 16 18 03 13
+bytes month_august     01 05 0f 05 19 1a
+bytes month_december   0d 02 0c 02 14 0b 02 18
+bytes month_february   0e 02 0b 18 05 01 18 1e
+bytes month_january    11 01 15 05 01 18 1e
+bytes month_july       11 05 13 1e
+bytes month_june       11 05 15 02
+bytes month_march      14 01 18 0c 10
+bytes month_november   15 04 1b 02 14 0b 02 18
+bytes month_october    04 0c 1a 04 0b 02 18
+bytes month_september  19 02 16 1a 02 14 0b 02 18

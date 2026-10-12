@@ -93,3 +93,33 @@
 0x10000	-1	Fax: 212-555-0100.
 0x10000	-1	Call 555-1234 ext. 56.
 0x10000	-1	Call 555-1234 or 555-4321.
+
+# The day of the month, which 6.1 reads as an ordinal after any month name
+# and reads the other way round when the day comes first.
+0x10000	-1	Due September 30.
+0x10000	-1	Due September 30, 2026.
+0x10000	-1	On September 30 we met.
+0x10000	-1	September 30 is a Monday.
+0x10000	-1	It is due on March 3.
+0x10000	-1	It is due on March 23.
+0x10000	-1	It is due March 31.
+0x10000	-1	Born June 1.
+0x10000	-1	Born June 1, 1990.
+0x10000	-1	The deadline is April 15.
+0x10000	-1	See you on December 25!
+0x10000	-1	Is it on May 5?
+0x10000	-1	Due Sept. 30.
+0x10000	-1	Due Sep 30.
+0x10000	-1	On 30 September we met.
+0x10000	-1	On the 30th of September.
+0x10000	-1	In September 2026 we met.
+0x10000	-1	Due 5 Jan.
+0x10000	-1	Due 30 Sept.
+0x10000	-1	Due 4 Jul.
+0x10000	-1	Born June 1.
+0x10000	-1	31 December 1999 was the last day.
+0x10000	-1	From March 3 to March 5.
+0x10000	-1	Between May 1 and May 10.
+0x10000	-1	Due Jan 5.
+0x10000	-1	Due Feb 5.
+0x10000	-1	Due Sep 30.

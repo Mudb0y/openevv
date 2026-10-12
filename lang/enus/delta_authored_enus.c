@@ -162,65 +162,161 @@ uint8_t enus_evv_authored_data[] = {
     65,
     /* eti_s_1b9188, 11 bytes at 161 */
     72,2,29,26,2,21,25,3,4,21,72,
-    /* fence_03, 1 bytes at 172 */
-    3,
-    /* lts_bt, 2 bytes at 173 */
-    11,26,
-    /* say_04, 1 bytes at 175 */
+    /* eti_s_1b91bf, 2 bytes at 172 */
+    199,72,
+    /* eti_s_1be0fe, 1 bytes at 174 */
+    72,
+    /* eti_s_1be129, 1 bytes at 175 */
+    64,
+    /* eti_s_1be12a, 1 bytes at 176 */
+    63,
+    /* eti_s_1be1fb, 2 bytes at 177 */
+    21,3,
+    /* eti_s_1be1fd, 1 bytes at 179 */
     4,
-    /* say_01, 1 bytes at 176 */
+    /* eti_s_1be1fe, 3 bytes at 180 */
+    1,21,13,
+    /* eti_s_1be201, 2 bytes at 183 */
+    26,4,
+    /* eti_s_1be203, 2 bytes at 185 */
+    4,24,
+    /* eti_s_1be205, 4 bytes at 187 */
+    72,26,4,72,
+    /* eti_s_1be209, 2 bytes at 191 */
+    64,72,
+    /* eti_s_1be20b, 3 bytes at 193 */
+    21,2,2,
+    /* eti_s_1be20e, 2 bytes at 196 */
+    199,2,
+    /* month_Apr, 3 bytes at 198 */
+    6,22,24,
+    /* month_April, 5 bytes at 201 */
+    6,22,24,3,19,
+    /* month_Aug, 3 bytes at 206 */
+    6,5,15,
+    /* month_August, 6 bytes at 209 */
+    6,5,15,5,25,26,
+    /* month_Dec, 3 bytes at 215 */
+    34,2,12,
+    /* month_December, 8 bytes at 218 */
+    34,2,12,2,20,11,2,24,
+    /* month_Feb, 3 bytes at 226 */
+    35,2,11,
+    /* month_February, 8 bytes at 229 */
+    35,2,11,24,5,1,24,30,
+    /* month_Jan, 3 bytes at 237 */
+    38,1,21,
+    /* month_January, 7 bytes at 240 */
+    38,1,21,5,1,24,30,
+    /* month_Jul, 3 bytes at 247 */
+    38,5,19,
+    /* month_July, 4 bytes at 250 */
+    38,5,19,30,
+    /* month_Jun, 3 bytes at 254 */
+    38,5,21,
+    /* month_June, 4 bytes at 257 */
+    38,5,21,2,
+    /* month_Mar, 3 bytes at 261 */
+    41,1,24,
+    /* month_March, 5 bytes at 264 */
+    41,1,24,12,16,
+    /* month_May, 3 bytes at 269 */
+    41,1,30,
+    /* month_Nov, 3 bytes at 272 */
+    42,4,27,
+    /* month_November, 8 bytes at 275 */
+    42,4,27,2,20,11,2,24,
+    /* month_Oct, 3 bytes at 283 */
+    9,12,26,
+    /* month_October, 7 bytes at 286 */
+    9,12,26,4,11,2,24,
+    /* month_Sep, 3 bytes at 293 */
+    46,2,22,
+    /* month_Sept, 4 bytes at 296 */
+    46,2,22,26,
+    /* month_September, 9 bytes at 300 */
+    46,2,22,26,2,20,11,2,24,
+    /* month_april, 5 bytes at 309 */
+    1,22,24,3,19,
+    /* month_august, 6 bytes at 314 */
+    1,5,15,5,25,26,
+    /* month_december, 8 bytes at 320 */
+    13,2,12,2,20,11,2,24,
+    /* month_february, 8 bytes at 328 */
+    14,2,11,24,5,1,24,30,
+    /* month_january, 7 bytes at 336 */
+    17,1,21,5,1,24,30,
+    /* month_july, 4 bytes at 343 */
+    17,5,19,30,
+    /* month_june, 4 bytes at 347 */
+    17,5,21,2,
+    /* month_march, 5 bytes at 351 */
+    20,1,24,12,16,
+    /* month_november, 8 bytes at 356 */
+    21,4,27,2,20,11,2,24,
+    /* month_october, 7 bytes at 364 */
+    4,12,26,4,11,2,24,
+    /* month_september, 9 bytes at 371 */
+    25,2,22,26,2,20,11,2,24,
+    /* fence_03, 1 bytes at 380 */
+    3,
+    /* lts_bt, 2 bytes at 381 */
+    11,26,
+    /* say_04, 1 bytes at 383 */
+    4,
+    /* say_01, 1 bytes at 384 */
     1,
-    /* lts_wr, 2 bytes at 177 */
+    /* lts_wr, 2 bytes at 385 */
     28,24,
-    /* say_18, 1 bytes at 179 */
+    /* say_18, 1 bytes at 387 */
     24,
-    /* say_1b, 1 bytes at 180 */
+    /* say_1b, 1 bytes at 388 */
     27,
-    /* lts_dg, 2 bytes at 181 */
+    /* lts_dg, 2 bytes at 389 */
     13,15,
-    /* say_11, 1 bytes at 183 */
+    /* say_11, 1 bytes at 391 */
     17,
-    /* lts_dj, 2 bytes at 184 */
+    /* lts_dj, 2 bytes at 392 */
     13,17,
-    /* lts_dt, 2 bytes at 186 */
+    /* lts_dt, 2 bytes at 394 */
     13,26,
-    /* lts_mech, 4 bytes at 188 */
+    /* lts_mech, 4 bytes at 396 */
     20,2,12,16,
-    /* say_141f07, 3 bytes at 192 */
+    /* say_141f07, 3 bytes at 400 */
     20,31,7,
-    /* lts_mn, 2 bytes at 195 */
+    /* lts_mn, 2 bytes at 403 */
     20,21,
-    /* say_15, 1 bytes at 197 */
+    /* say_15, 1 bytes at 405 */
     21,
-    /* say_14, 1 bytes at 198 */
+    /* say_14, 1 bytes at 406 */
     20,
-    /* lts_mb, 2 bytes at 199 */
+    /* lts_mb, 2 bytes at 407 */
     20,11,
-    /* lts_ng, 2 bytes at 201 */
+    /* lts_ng, 2 bytes at 409 */
     21,15,
-    /* say_16, 1 bytes at 203 */
+    /* say_16, 1 bytes at 411 */
     22,
-    /* lts_then, 4 bytes at 204 */
+    /* lts_then, 4 bytes at 412 */
     26,16,2,21,
-    /* lts_ton, 3 bytes at 208 */
+    /* lts_ton, 3 bytes at 416 */
     26,4,21,
-    /* lts_th, 2 bytes at 211 */
+    /* lts_th, 2 bytes at 419 */
     26,16,
-    /* lts_ngh, 3 bytes at 213 */
+    /* lts_ngh, 3 bytes at 421 */
     21,15,16,
-    /* lts_am, 2 bytes at 216 */
+    /* lts_am, 2 bytes at 424 */
     1,20,
-    /* lts_qu, 2 bytes at 218 */
+    /* lts_qu, 2 bytes at 426 */
     23,5,
-    /* lts_et, 2 bytes at 220 */
+    /* lts_et, 2 bytes at 428 */
     2,26,
-    /* say_07, 1 bytes at 222 */
+    /* say_07, 1 bytes at 430 */
     7,
-    /* lts_ette, 4 bytes at 223 */
+    /* lts_ette, 4 bytes at 431 */
     2,26,26,2,
-    /* lts_e, 1 bytes at 227 */
+    /* lts_e, 1 bytes at 435 */
     2,
-    /* say_071b, 2 bytes at 228 */
+    /* say_071b, 2 bytes at 436 */
     7,27,
 };
 
