@@ -13,6 +13,7 @@
 
 import os
 import re
+import unicodedata
 from collections import OrderedDict
 
 from autoSettingsUtils.driverSetting import (
@@ -141,27 +142,38 @@ _COMMA_MARKS = re.compile(r"[-,;:\u2014\u2013\u2026]|\.\.\.")
 
 
 def _quietPunctuation(text):
-	"""Text with no mark left in it that the engine would say by name."""
+	"""Text with no mark left in it that the engine would say by name.
+
+	Composed first, so that an accent written as a combining mark stays on
+	its letter rather than being taken for punctuation, and nothing is added
+	at either end of the text: whether a stretch ends in a space is how the
+	driver decides where to cut it."""
+	text = unicodedata.normalize("NFC", text)
 
 	def one(match):
 		run = match.group(0)
 		start, end = match.span()
 		before = text[start - 1] if start else ""
 		after = text[end] if end < len(text) else ""
+		if all(unicodedata.combining(c) for c in run.strip()):
+			return run
 		if len(run) == 1 and run in _INNER_MARKS and before.isalnum() and after.isalnum():
 			return run
+		# A space where the run stood between two words, and nothing where
+		# the text already has one or ends.
+		space = " " if after and not after.isspace() else ""
 		if not before.isalnum():
-			return " "
+			return space if before else ""
 		marks = "".join(run.split())
 		if "?" in marks:
-			return "? "
+			return "?" + space
 		if "!" in marks:
-			return "! "
+			return "!" + space
 		if "." in marks.replace("...", ""):
-			return ". "
+			return "." + space
 		if _COMMA_MARKS.search(marks):
-			return ", "
-		return " "
+			return "," + space
+		return space
 
 	return _MARK_RUN.sub(one, text)
 
