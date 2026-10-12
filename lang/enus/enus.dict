@@ -1258,7 +1258,6 @@ dictionary pnames1 statement 1 width 0 records sound
   amal 255 255 99 says x m a l
   amaral 255 255 100 says x m a r x l
   amax 255 255 101 says e m A k s
-  amer 255 255 103 says x m E r I k x n
   ameritech 255 255 104 says x m E r X t E k
   ameritrust 255 255 105 says x m E r X t r H s t
   amiga 255 255 106 says x m i g x
@@ -1281,7 +1280,6 @@ dictionary pnames1 statement 1 width 0 records sound
   anglesey 255 255 122 says A G g x l s i
   anheuser 255 255 123 says A n h Y z x r
   ankara 255 255 124 says A G k x r x
-  annan 255 255 125 says a n a n
   antares 255 255 126 says A n t a r i z
   antilles 255 255 127 says A n t I l i z
   antipodean 255 255 128 says A n t I p x d i Xx n
@@ -1374,10 +1372,8 @@ dictionary pnames1 statement 1 width 0 records sound
   barone 255 255 222 says b R o n
   barbados 255 255 216 says b a r b e d o s
   barbara 255 255 217 says b a r b r x
-  barnard 255 255 220 says b R n a r d
   barnett 255 255 221 says b a r n E t
   barros 255 255 223 says b a r o z
-  barrymore 255 255 224 says b A r x m o r
   basel 255 255 225 says b a z x l
   basinger 255 255 227 says b e s X G R
   bashir 255 255 226 says b x S I r
@@ -1425,7 +1421,6 @@ dictionary pnames1 statement 1 width 0 records sound
   bethpage 255 255 271 says b E T p e J
   bevill 255 255 273 says b E v x l
   bianco 255 255 275 says b i a G k o
-  biogen 255 255 281 says b Y x J E n
   biondi 255 255 282 says b i a n d i
   biosystems 255 255 283 says b Y o s I s t x m z
   bideford 255 255 276 says b I d X f x r d
@@ -1470,7 +1465,6 @@ dictionary pnames1 statement 1 width 0 records sound
   budapest 255 255 340 says b u d x p E s t
   budweiser 255 255 341 says b H d w Y z R
   buford 255 255 346 says b y u f R d
-  buffet 255 255 345 says b H f x t
   bulawayo 255 255 348 says b U l x w e o
   bulgaria 255 255 349 says b H l g E r i x
   bullard 255 255 350 says b U l R d
@@ -1575,6 +1569,7 @@ dictionary pnames1 statement 1 width 0 records sound
   celebre 255 255 426 says s E l E b r x
   celeste 255 255 427 says s x l E s t
   celtic 255 255 428 says k E l t X k
+  celtics 255 255 575 stress 10 says s E l t X k s
   centel 255 255 429 says s E n t E l
   centocor 255 255 430 says s E n t x k o r
   cerezo 255 255 431 says s R e z o
@@ -1597,7 +1592,6 @@ dictionary pnames1 statement 1 width 0 records sound
   coimbatore 255 255 512 says k o I m b a t o r i
   coughlin 255 255 566 says k o g l X n
   councilman 255 255 567 says k W n s x l m x n
-  councilwoman 255 255 568 says k W n s x l w U m x n
   cobain 255 255 503 says k o b e n
   coburn 255 255 504 says k o b R n
   codelco 255 255 505 says k o d E l k o
@@ -1611,7 +1605,6 @@ dictionary pnames1 statement 1 width 0 records sound
   colombian 255 255 519 says k x l H m b i x n
   colombians 255 255 520 says k x l H m b i x n z
   colombo 255 255 521 says k x l H m b o
-  colosio 255 255 522 says k x l a s i o
   collegiate 255 255 516 says k x l i J X t
   collier 255 255 517 says k a l y R
   collings 255 255 518 says k a l X G z
@@ -1657,7 +1650,6 @@ dictionary pnames1 statement 1 width 0 records sound
   costa 255 255 564 says k a s t x
   costas 255 255 565 says k a s t x z
   coto 255 255 574 stress 10 says k o F o
-  chai 255 255 442 says k Y
   chaim 255 255 443 says h Y m
   chau 255 255 454 says S o
   chabot 255 255 436 says S x b o
@@ -1676,7 +1668,6 @@ dictionary pnames1 statement 1 width 0 records sound
   charlotte 255 255 451 says S a r l x t
   chattanooga 255 255 453 says C A t x n u g x
   chavez 255 255 455 says C a v E z
-  chavis 255 255 456 says C a v X s
   chelsea 255 255 457 says C E l s i
   cheney 255 255 458 says C e n i
   cher 255 255 459 says S E r
@@ -1689,14 +1680,11 @@ dictionary pnames1 statement 1 width 0 records sound
   chico 255 255 466 says C i k o
   chicopee 255 255 467 says C I k x p i
   chile 255 255 469 says C I l i
-  chilean 255 255 470 says C I l e X n
-  chileans 255 255 471 says C I l e X n z
   childress 255 255 468 says C I l d r X s
   chippewa 255 255 472 says C I p x w a
   chirac 255 255 473 says S i r a k
   chisholm 255 255 474 says C I z x m
   chiswick 255 255 475 says C I z X k
-  chou 255 255 478 says C W
   chopin 255 255 477 says S o p A n
   chuan 255 255 484 says C u w a n
   chubais 255 255 485 says C u b Y
@@ -1723,7 +1711,6 @@ dictionary pnames2 statement 1 width 0 records sound
   eubanks 255 255 234 says y u b A G k s
   eugenio 255 255 235 says y u J i n i o
   euphrates 255 255 236 says y u f r e t i z
-  eurotunnel 255 255 237 says y R o t H n x l
   ebenezer 255 255 169 says E b Xx n i z x r
   eberhard 255 255 170 says E b R h a r t
   ebola 255 255 171 says i b o l x
@@ -1811,7 +1798,6 @@ dictionary pnames2 statement 1 width 0 records sound
   cuellar 255 255 27 says k y u l R
   cuomo 255 255 34 says k w o m o
   cucamonga 255 255 26 says k u k x m a G g x
-  culpa 255 255 29 says k H l p a
   cumberland 255 255 31 says k H m b x r l x n d
   cunard 255 255 32 says k u n a r d
   cunha 255 255 33 says k u n h x
@@ -1890,7 +1876,6 @@ dictionary pnames2 statement 1 width 0 records sound
   deshields 255 255 90 says d x S i x l d z
   desrosier 255 255 93 stress 2201 says d e r o z i e
   detat 255 255 94 says d E t a
-  devi 255 255 98 says d E v i
   devine 255 255 99 says d x v Y n
   dewayne 255 255 100 says d x w e n
   dewey 255 255 101 says d u w i
@@ -1942,10 +1927,8 @@ dictionary pnames2 statement 1 width 0 records sound
   dupuis 255 255 153 says d u p w i
   dupriest 255 255 152 says d u p r i s t
   duquesne 255 255 154 says d u k e n
-  duracell 255 255 155 says d U r x s E l
   durant 255 255 156 says d x r A n t
   durocher 255 255 158 says d y u r x k R
-  durham 255 255 157 says d H r x m
   dusseldorf 255 255 159 says d u s x l d o r f
   duval 255 255 160 says d u v a l
   duvalier 255 255 161 says d u v a l y e
@@ -2008,7 +1991,6 @@ dictionary pnames2 statement 1 width 0 records sound
   folkestone 255 255 298 says f o k s t x n
   fonseca 255 255 299 says f a n s e k x
   fontana 255 255 300 says f a n t A n x
-  fontes 255 255 301 says f a n t E s
   foretich 255 255 303 says f c r t i C
   formica 255 255 304 says f o r m Y k x
   forsyth 255 255 305 says f o r s Y T
@@ -2107,7 +2089,6 @@ dictionary pnames2 statement 1 width 0 records sound
   gilberto 255 255 393 says h i l b R F o
   gillett 255 255 394 says J X l E t
   gillian 255 255 395 says J I l i x n
-  gillooly 255 255 396 stress 1120 says g I l l u l i
   ginsberg 255 255 397 says g I n z b x r g
   ginsburg 255 255 398 says g I n z b x r g
   girozentrale 255 255 399 says g X r o z x n t r a l
@@ -2153,7 +2134,6 @@ dictionary pnames2 statement 1 width 0 records sound
   guccione 255 255 454 says g u C i o n e
   gunnar 255 255 463 says g H n R
   gunnison 255 255 464 says g H n X s x n
-  gustafson 255 255 465 says g u s t a f s x n
   gutierrez 255 255 466 says g u t y E r E z
   ghanaian 255 255 389 says g x n Y x n
   gladstone 255 255 405 says g l A d s t o n
@@ -2167,7 +2147,6 @@ dictionary pnames2 statement 1 width 0 records sound
   grahame 255 255 435 says g r e x m
   grandma 255 255 437 says g r A m a
   grandpa 255 255 438 says g r A n d p a
-  grata 255 255 439 says g r a F a
   greenstein 255 255 441 says g r i n s t Y n
   greenwich 255 255 442 says g r E n X C
   greco 255 255 440 says g r E k o
@@ -2230,12 +2209,10 @@ dictionary pnames2 statement 1 width 0 records sound
   heimlich 255 255 519 says h Y m l I k
   heuer 255 255 532 says h y u R
   hechinger 255 255 518 says h E k X n J R
-  helena 255 255 520 says h x l i n x
   hemingway 255 255 521 says h E m X G w e
   henrique 255 255 522 says a n r i k e
   hereford 255 255 523 says h E r Xx f x r d
   herod 255 255 524 says h E r x d
-  herr 255 255 525 says h R
   herrmann 255 255 526 says h R m X n
   hertford 255 255 527 says h a r t f x r d
   herve 255 255 528 says R v e
@@ -2304,7 +2281,6 @@ dictionary pnames3 statement 1 width 0 records sound
   infiniti 255 255 35 says X n f I n X t i
   infinitum 255 255 36 says I n f X n Y t x m
   infotechnology 255 255 37 says I n f o t E k n a l x J i
-  inge 255 255 38 says I G g x
   ingersoll 255 255 39 says I G g R s c l
   inglethorp 255 255 40 says I G g x l T c r p
   ingmar 255 255 41 says I G m a r
@@ -2357,7 +2333,6 @@ dictionary pnames3 statement 1 width 0 records sound
   humboldt 255 255 13 says h H m b o l t
   hunan 255 255 14 says h u n a n
   hse 255 255 3 says s i
-  hsu 255 255 4 says s u
   hyundai 255 255 15 says h H n d e
   jaeger 255 255 86 says y E g R
   jaime 255 255 89 says J e m i
@@ -2379,7 +2354,6 @@ dictionary pnames3 statement 1 width 0 records sound
   jamison 255 255 96 says J e m X s x n
   janeiro 255 255 97 says Z x n e r o
   jankowski 255 255 98 says y x G k W s k i
-  janzen 255 255 99 says J A n s X n
   jaramillo 255 255 100 says J A r x m I l o
   jared 255 255 101 says J E r x d
   javier 255 255 102 says h a v i E r
@@ -2427,7 +2401,6 @@ dictionary pnames3 statement 1 width 0 records sound
   juilliard 255 255 147 says J u l i a r d
   jubail 255 255 143 says J u b Y l
   jubilee 255 255 144 says J u b x l i
-  judea 255 255 145 says J u d E I x
   julio 255 255 148 says h u l i o
   jung 255 255 149 says y U G
   juntao 255 255 150 says J u n t W
@@ -2470,7 +2443,6 @@ dictionary pnames3 statement 1 width 0 records sound
   kerr 255 255 187 says k R
   keswick 255 255 188 says k E z X k
   keyes 255 255 189 says k i z
-  keynes 255 255 190 says k i n z
   keynesian 255 255 191 says k i n i z i x n
   keyser 255 255 192 says k Y z R
   kiam 255 255 201 says k i x m
@@ -2659,7 +2631,6 @@ dictionary pnames3 statement 1 width 0 records sound
   maidstone 255 255 405 says m e d s t x n
   mainwaring 255 255 406 says m A n x r I G
   maison 255 255 407 says m e z x n
-  maughan 255 255 462 says m o g x n
   maus 255 255 463 says m o z
   mabel 255 255 378 says m e b x l
   macao 255 255 379 says m x k W
@@ -2668,7 +2639,6 @@ dictionary pnames3 statement 1 width 0 records sound
   macintoshes 255 255 385 says m A k x n t a S X z
   macoutes 255 255 388 says m x k u t s
   macdonell 255 255 381 says m x k d a n x l
-  macdowell 255 255 382 says m x k d W l
   macfarlane 255 255 383 says m x k f a r l x n
   maclean 255 255 386 says m x k l e n
   macleod 255 255 387 says m x k l W d
@@ -2734,7 +2704,6 @@ dictionary pnames3 statement 1 width 0 records sound
   maslin 255 255 451 says m A z l X n
   massachusetts 255 255 452 says m A s x C u s Xx t s
   massapequa 255 255 453 says m A s x p i k w x
-  masse 255 255 454 says m a s
   matamoros 255 255 455 says m A t x m o r x s
   matisse 255 255 459 says m a t i s
   mather 255 255 456 says m A D R
@@ -2799,7 +2768,6 @@ dictionary pnames3 statement 1 width 0 records sound
   minerals 255 255 545 says m I n R x l z
   minitel 255 255 546 says m I n x t E l
   minos 255 255 547 says m i n o s
-  minot 255 255 548 says m i n o
   mindanao 255 255 542 says m I n d x n e o
   mindy 255 255 543 says m I n d i
   miramar 255 255 549 says m I r x m a r
@@ -2939,7 +2907,6 @@ dictionary pnames4 statement 1 width 0 records sound
   mohamed 255 255 4
   mohammad 255 255 5
   mohammed 255 255 6 stress 210 says m x h a m X d
-  mohan 255 255 7 says m o x n
   mohawk 255 255 8 says m o h c k
   mohawks 255 255 9 says m o h c k s
   mojave 255 255 13 says m o h a v e
@@ -2975,7 +2942,6 @@ dictionary pnames4 statement 1 width 0 records sound
   moses 255 255 45 says m o z X s
   moshe 255 255 46 says m o S
   mossad 255 255 47 says m o s a d
-  mosser 255 255 48 says m o s R
   mostar 255 255 49 says m o s t a r
   motorola 255 255 50 says m o t R o l x
   mozambican 255 255 52 says m o z x m b i k x n
@@ -3070,7 +3036,6 @@ dictionary pnames4 statement 1 width 0 records sound
   nomura 255 255 143 says n o m U r x
   non 255 255 144 says n a n
   nonproliferation 255 255 145 says n a n p r x l I f R e S x n
-  northbrook 255 255 146 says n o r T b r U k
   northfield 255 255 147 says n o r T f i l d
   northport 255 255 148 says n o r T p o r t
   northridge 255 255 149 says n o r T r I J
@@ -3171,7 +3136,6 @@ dictionary pnames4 statement 1 width 0 records sound
   polygram 255 255 341 says p a l I g r A m
   pompano 255 255 342 says p a m p x n o
   pompeii 255 255 343 says p a m p e
-  pompey 255 255 344 says p a m p e
   ponce 255 255 345 says p a n s e
   ponte 255 255 346 says p a n t e
   popejoy 255 255 349 says p o p J O
@@ -3212,7 +3176,6 @@ dictionary pnames4 statement 1 width 0 records sound
   prescott 255 255 363 says p r E s k a t
   presley 255 255 366 says p r E s l i
   previn 255 255 367 says p r E v x n
-  prima 255 255 368 says p r i m a
   principe 255 255 369 says p r I n s x p i
   provencal 255 255 371 says p r a v E G k a l
   provence 255 255 372 says p r o v a n s
@@ -3236,7 +3199,6 @@ dictionary pnames4 statement 1 width 0 records sound
   quebeckers 255 255 398 says k w E b E k R z
   quezon 255 255 399 says k y u z a n
   quijote 255 255 400 says k i h o t e
-  quindlen 255 255 401 says k w I n l x n
   quito 255 255 402 says k i t o
   quixote 255 255 403 says k i o t e
   quo 255 255 404 says k w o
@@ -3383,7 +3345,6 @@ dictionary pnames4 statement 1 width 0 records sound
   sajak 255 255 547 says s e J A k
   sakai 255 255 548 says s a k Y
   sakura 255 255 550 says s A k u r x
-  sakhalin 255 255 549 says s A k h x l X n
   salam 255 255 551 says s x l a m
   salameh 255 255 552 says s a l x m e
   salazar 255 255 553 says s A l x z a r
@@ -3470,7 +3431,6 @@ dictionary pnames5 statement 1 width 0 records sound
   senor 255 255 62 says s E n y c r
   senora 255 255 63 says s E n y c r x
   senorita 255 255 64 says s E n y c r i t x
-  sentelle 255 255 65 says s E n t E l
   sepulveda 255 255 67 says s E p a l v I F x
   sequoia 255 255 68 says s X k O x
   sera 255 255 69 says s e r a
@@ -3528,7 +3488,6 @@ dictionary pnames5 statement 1 width 0 records sound
   sonntag 255 255 156 says s a n t x g
   sophia 255 255 157 says s o f i x
   soros 255 255 158 says s o r o s
-  soss 255 255 159 says s o s
   sotomayor 255 255 160 says s o t o m e R
   soyuz 255 255 171 says s O x z
   suarez 255 255 207 says s w a r E z
@@ -3864,7 +3823,6 @@ dictionary pnames5 statement 1 width 0 records sound
   westmoreland 255 255 460 says w E s t m o r l x n d
   westmorland 255 255 461 says w E s t m x r l x n d
   weyerhaeuser 255 255 462 says w E r h W z R
-  wiesenthal 255 255 469 says w Y z X n T c l
   wiesbaden 255 255 468 says w i z b a d x n
   wigan 255 255 470 says w I g x n
   wilhelm 255 255 471 says w I l h E l m
@@ -4962,6 +4920,7 @@ dictionary roots4 statement 1 width 0 records sound
   thereabout 255 255 107 says D e r x b W t
 
 dictionary roots5 statement 1 width 0 records sound
+  abstracted 255 255 124 stress 210 says A b s t r A k t X d
   alas 255 255 92 says x l A s
   imac 255 255 107 stress 12 says Y m A k
   incoherence 255 255 108 stress 2010 says I n k o h i r X n s
@@ -4981,11 +4940,20 @@ dictionary roots5 statement 1 width 0 records sound
   upholstery 255 255 35 says x p o l s t r i
   bonjour 255 255 112 stress 1 says b c n Z u r
   couscous 255 255 113 stress 12 says k u s k u s
+  conversed 255 255 125 stress 1 says k X n v R s t
+  converses 255 255 126 stress 10 says k X n v R s X z
+  conversing 255 255 127 stress 10 says k X n v R s I G
+  chlorine 255 255 128 stress 12 says k l c r i n
+  digested 255 255 129 stress 210 says d Y J E s t X d
+  digesting 255 255 130 stress 210 says d Y J E s t I G
+  digests 255 255 131 stress 21 says d Y J E s t s
   d'etre 255 255 93 says d E t r x
   lait 255 255 114 stress 1 says l e
   lugubrious 255 255 95 says l x g u b r i x s
   neurons 255 255 96 says n y U r a@ n s
   pingpong 255 255 115 stress 12 says p I G p c G
+  recognizable 255 255 132 stress 20100 says r E k x g n Y z x b x l
+  retailers 255 255 133 stress 120 says r i t e l R z
   retreat 255 255 97 says r x t r i t
   rugrat 255 255 116 stress 10 says r H g r A t
   septuagenarian 255 255 98 says s E p t y u x J x n E r i x n

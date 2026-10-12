@@ -10,6 +10,10 @@
 # a pronunciation someone wrote down beats one a rule guessed -- and anything
 # else goes to 6.1, which is what most ears know as Eloquence.
 #
+# Where the referee could not settle it -- a foreign name read natively by
+# IBM and anglicised by CMU and 6.1, or a word whose stress alone differs --
+# both readings were listened to and one chosen, and the line says so.
+#
 #   drop     the entry is taken out of that dictionary
 #   add      the word is put into it, saying what 6.1 says
 #   set      what it says is changed to what 6.1 says, or a lookup set's
@@ -162,3 +166,57 @@ read-as  eng_tok_dict Aint             Ain't, as the word in small letters is re
 read-as  eng_tok_dict AINT             AIN'T, as the word in small letters is read
 rule     et_prfx      strip_scientific_prefixes 6.1's, lifted: it knows neuro, so neuroscience is NOOR-o-SY-ence rather than nuh-RAH-shunts
 set      sets         no_scientific_prefix_strip 6.1's: the six neuro words its prefix must not be stripped from, neurology and neurotic among them
+drop     pnames       amer             chosen by ear: IBM's said American, and Amery, Amerson and Amerman were built on it
+drop     pnames       annan            chosen by ear: AN-un, as Kofi Annan said it, where IBM's was ah-NAHN; Annandale follows
+drop     pnames       barnard          chosen by ear: BAR-nerd, as Barnard College; IBM's was ber-NARD
+drop     pnames       barrymore        chosen by ear: BAIR-ee-more
+drop     pnames       biogen           chosen by ear, though neither is right: the company says BY-oh-jen
+drop     pnames       chai             chosen by ear: CHY, the tea, where IBM's was KY
+drop     pnames       chavis           chosen by ear, though neither is right: CHAY-vis
+drop     pnames       chilean          chosen by ear: both readings are heard, and the tie goes to 6.1
+drop     pnames       chileans         the same
+drop     pnames       chou             chosen by ear, though neither is right: Zhou Enlai's name is JOH
+drop     pnames       colosio          chosen by ear: kuh-LOH-see-oh
+drop     pnames       councilwoman     chosen by ear: a word and not a name, COUN-sul-woman
+drop     pnames       culpa            chosen by ear: KUL-puh; mea culpa as a whole is still wrong in both
+drop     pnames       devi             IBM's name shadowed an everyday word: deviance was DEV-ee-unce
+drop     pnames       duracell         chosen by ear: DUR-uh-sell
+drop     pnames       durham           chosen by ear: DUR-um, the American way
+drop     pnames       eurotunnel       chosen by ear: YOOR-oh
+drop     pnames       fontes           chosen by ear: FOHN-tiss
+drop     pnames       gillooly         chosen by ear, though neither is right: gih-LOO-lee
+drop     pnames       grata            chosen by ear: GRAH-tuh, as in persona non grata
+drop     pnames       gustafson        chosen by ear: GUS-tuf-sun
+drop     pnames       helena           chosen by ear: HEL-uh-nuh, the capital of Montana and the usual American name
+drop     pnames       herr             chosen by ear: HAIR, the German for Mister; Herrman follows
+drop     pnames       hsu              chosen by ear: SHOO
+drop     pnames       inge             chosen by ear: INJ, as William Inge
+drop     pnames       janzen           chosen by ear: JAN-zen
+drop     pnames       judea            chosen by ear, though neither is right: joo-DEE-uh
+drop     pnames       keynes           chosen by ear: KAYNZ, as the economist
+drop     pnames       macdowell        chosen by ear: muk-DOW-ul
+drop     pnames       masse            chosen by ear: MASS, as in en masse
+drop     pnames       maughan          chosen by ear, though neither is right: MAWN
+drop     pnames       minot            chosen by ear, though neither is right: MY-nut
+drop     pnames       mohan            chosen by ear: MOH-hun, with the h
+drop     pnames       mosser           chosen by ear: MAW-ser
+drop     pnames       northbrook       chosen by ear, though neither is right: NORTH-brook
+drop     pnames       pompey           chosen by ear: POM-pee, where IBM's pahm-PAY is Pompeii
+drop     pnames       prima            chosen by ear: PREE-muh, as in prima donna
+drop     pnames       quindlen         chosen by ear: KWIND-lin
+drop     pnames       sakhalin         chosen by ear, though neither is right: SAK-uh-leen
+drop     pnames       sentelle         chosen by ear: sen-TEL
+drop     pnames       soss             chosen by ear: SAWS
+drop     pnames       wiesenthal       chosen by ear: WEE-sin-thawl, as Simon Wiesenthal
+drop     pnames       buffet           a name's single stress stood above the homograph, so buffets was BUFF-its; homog_roots says buh-FAY now, as 6.1 does
+add      pnames1      celtics          chosen by ear: SEL-tiks, the Boston team, where celtic stays KEL-tik
+add      roots5       retailers        chosen by ear: 6.1's REE-tail-erz, where ours stressed the plural alone on TAIL
+add      roots5       chlorine         chosen by ear: 6.1's KLOR-een
+add      roots5       abstracted       chosen by ear: 6.1's ab-STRAK-tid; abstracts stays AB-stracts, the noun
+add      roots5       recognizable     chosen by ear: 6.1's rek-ug-NY-zuh-bul; recognizably and unrecognizable follow
+add      roots5       digests          chosen by ear: 6.1's dy-JESTS, the verb; digest stays DY-jest, the noun
+add      roots5       digested         the same
+add      roots5       digesting        the same
+add      roots5       converses        chosen by ear: 6.1's kun-VER-siz, where IBM's name Converse made the verb KON-ver-siz
+add      roots5       conversed        the same verb
+add      roots5       conversing       the same verb

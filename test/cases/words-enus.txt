@@ -1,7 +1,7 @@
 # 20000 words of enus, spread evenly through the 38037 in wamerican.35.
-# With every word the dictionaries hold folded in: 5061 of them,
+# With every word the dictionaries hold folded in: 5030 of them,
 # which are the words a change to a dictionary can move.
-# And every word lang/enus/merge decides: 100 of them.
+# And every word lang/enus/merge decides: 154 of them.
 # Written by tools/measure/wordlist.py. See test/words.sh.
 a
 aardvark
@@ -90,6 +90,7 @@ abstaining
 abstention
 abstentions
 abstract
+abstracted
 abstracting
 abstractions
 abstruse
@@ -3305,6 +3306,7 @@ cellulars
 cellulose
 celsius
 celtic
+celtics
 cemented
 cements
 cemetery
@@ -4531,6 +4533,7 @@ conversation
 converse
 conversed
 converses
+conversing
 conversion
 convert
 converter
