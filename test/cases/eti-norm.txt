@@ -82,3 +82,14 @@
 0x10000	-1	Vs. Them we lost.
 0x10000	-1	The end. Air was cold.
 0x10000	-1	It works, i.e. It runs.
+
+# Phone numbers, which 6.1 reads with a nought as oh and with the mark after
+# the number kept, so one at the end of a sentence ends it.
+0x10000	-1	Call 1-800-555-0199.
+0x10000	-1	Call 555-1234.
+0x10000	-1	Call 555-0100 now.
+0x10000	-1	My number is 212-555-0100, call me.
+0x10000	-1	Call (212) 555-0100.
+0x10000	-1	Fax: 212-555-0100.
+0x10000	-1	Call 555-1234 ext. 56.
+0x10000	-1	Call 555-1234 or 555-4321.

@@ -80,3 +80,17 @@ bytes eti_s_1be8e0     18 03 0b 04
 bytes eti_s_1be8e4     18 01 0d 03 04
 bytes eti_s_1be8e9     1a 02 13 02
 bytes eti_s_1be8ed     1a 10 02 18 14 04
+
+# 6.1's own strings for the phone numbers, which et_numbr.up lays down and
+# tests against.
+bytes eti_s_1b9176     36
+bytes eti_s_1b917a     3f
+bytes eti_s_1b917f     46
+bytes eti_s_1b9180     47
+bytes eti_s_1b9181     48
+bytes eti_s_1b9182     35 35
+bytes eti_s_1b9184     02
+bytes eti_s_1b9185     1d
+bytes eti_s_1b9186     1a
+bytes eti_s_1b9187     41
+bytes eti_s_1b9188     48 02 1d 1a 02 15 19 03 04 15 48

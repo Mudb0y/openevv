@@ -728,6 +728,16 @@ class Rule:
         nxt = self.ins[idx[-1] + 1][0] if idx[-1] + 1 < len(self.ins) else None
         return nxt in self.exits
 
+    def through_memory(self, i):
+        """Whether an instruction moves a value through memory, which is the
+        rule's own work and never the decoder's. convert_eng_phone_number's
+        two numbers that match both reach a block that stores the end of the
+        phone number into its argument; read as part of the decoder, that
+        block was never written out, so one number lost the store and the
+        other had nowhere to go."""
+        _a, m, o, _n = self.ins[i]
+        return m in ("movb", "movw", "movl", "movq") and any("(" in x for x in o)
+
     def decode(self, start, k):
         """Run the decoder with k in eax and say where it ends up. It ends at
         whatever a table jump lands on, and at any block the rest of the rule
@@ -764,8 +774,9 @@ class Rule:
                 return done(a)
             if a in self.leaders:
                 blk = a
-                ok = all(self.ins[j][1] in self.DECODER for j in
-                         dict(self.blocks)[blk])
+                ok = all(self.ins[j][1] in self.DECODER
+                         and not self.through_memory(j)
+                         for j in dict(self.blocks)[blk])
                 if not ok:
                     return done(a)
                 visited.add(blk)
@@ -781,7 +792,7 @@ class Rule:
                 # A byte is taken for the whole register: every rule seen
                 # doing this had cleared it or held a small count in it.
                 regs[reg_of(o[1])] = facts[reg_of(o[1])] = val(o[0])
-            elif m == "movb":
+            elif m == "movb" or self.through_memory(i):
                 return done(a)
             elif m in ("addl", "subl", "andl"):
                 x, y = val(o[0]), val(o[1])

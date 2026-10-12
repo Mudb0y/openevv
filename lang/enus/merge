@@ -228,3 +228,5 @@ read-as  eng_tok_dict :(               sad face, as 6.1 reads it; chosen by ear
 read-as  eng_tok_dict :-(              the same
 read-as  eng_tok_dict vis-a-vis        6.1's phonetic spelling, vee-zuh-VEE, one word; IBM's was three, viz ay vee; chosen by ear
 read-as  eng_tok_dict Vis-a-vis        the same, and with the accented a in both
+rule     et_numbr     convert_eng_phone_number 6.1's, lifted: it hands a North American number to the rule below; chosen by ear
+rule     et_numbr     convert_NA_phone_number 6.1's, lifted: a nought in a phone number is oh, and the mark after the number is kept, so a sentence ending in one ends; ours said zero and lost the full stop

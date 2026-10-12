@@ -140,8 +140,9 @@ legal advice.
 ETI's
 -----
 
-In `lang/enus` and in `lang/engb` alike: the rules at the end of
-`rules/ut_norm.up` that say they were lifted by `tools/rules/lift64.py`, the
+In `lang/enus` and in `lang/engb` alike: the rules that say they were lifted
+by `tools/rules/lift64.py` -- at the end of `rules/ut_norm.up` in both, and in
+`lang/enus` the ones in `rules/et_prfx.up` and `rules/et_numbr.up` too -- the
 bytes named `eti_` in `rules/constants`, the sixth character type and the
 records that use it in the statements, the six variables at the end of the
 globals, the three of them that `set_global_constants` in `rules/u_vars.dr`
