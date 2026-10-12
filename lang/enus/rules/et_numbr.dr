@@ -5867,6 +5867,14 @@ label L0 was _convert_eng_alg_expr
   store movw imm 1 slot -56
   call ZZpush_ptr_init4 arity 5 depth 16
   popn 16
+  push imm 2
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  push state 0
+  call hyphen_chain arity 3 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L105
   load movl slotaddr -76 into r0
   push slotaddr -76
   load movl slotaddr -84 into r0

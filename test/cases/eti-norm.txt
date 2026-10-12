@@ -123,3 +123,14 @@
 0x10000	-1	Due Jan 5.
 0x10000	-1	Due Feb 5.
 0x10000	-1	Due Sep 30.
+
+# Three or more numbers joined by hyphens and nothing else, which 6.1 reads
+# with every hyphen as dash. Two alone are a range, ten to eleven, where 6.1
+# says dash as well, so none of those is here.
+0x10000	-1	The date is 2026-10-11.
+0x10000	-1	Read 2026-10-11, then go.
+0x10000	-1	See items 1-2-3.
+0x10000	-1	Set (1-2-3) aside.
+0x10000	-1	Score 3-2-1 today.
+0x10000	-1	Part 123-456-789-0 is missing.
+0x10000	-1	ISBN 978-3-16-148410-0 here.

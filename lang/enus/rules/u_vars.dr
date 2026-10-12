@@ -1541,6 +1541,7 @@ label L2 was at_0x59
   store movw reg r7w ind reg r6 1586
   store movw reg r7w ind reg r6 1590
   store movw reg r7w ind reg r6 342
+  store movl reg r7 ind reg r6 4260
   call ZZstarttest1 arity 1 depth 2
   push reg r6
   call ZZlpta_load_vvg__setscan_0001r__1 arity 1 depth 3

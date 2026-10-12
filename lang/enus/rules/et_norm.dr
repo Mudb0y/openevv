@@ -4148,6 +4148,15 @@ label L0 was _eng_hyphen_between_nums
   push state 0
   call ZZstarttest1 arity 1 depth 16
   popn 16
+  load movl slotaddr -68 into r0
+  push slotaddr -68
+  load movl slotaddr -60 into r0
+  push slotaddr -60
+  push state 0
+  call hyphen_in_chain arity 3 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L7
   load movl slotaddr -60 into r0
   push slotaddr -60
   load movl slotaddr -28 into r0

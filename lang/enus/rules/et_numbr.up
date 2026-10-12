@@ -2455,3 +2455,159 @@ place lower
   call convert_to_lowercase addr start addr after
   match
 end
+
+# Ours rather than IBM's or 6.1's. Three or more numbers joined by hyphens and
+# nothing else -- 2026-10-11, 1-2-3, a part number -- are read with every
+# hyphen as dash. IBM read 1-2-3 as a sum and the last hyphen of a date as a
+# range, ten to eleven; 6.1 reads every hyphen between two numbers as dash, a
+# range of ages among them. Two numbers alone are still read as IBM read them.
+#
+# Whether from a point there are digits, then at least as many hyphens as the
+# second argument says, each with digits after it, and then the end of the
+# word. A sum is not a chain: neither is a run whose last number goes on with
+# a decimal point or a thousands comma, or one with a sign after it, spaced or
+# not. convert_eng_alg_expr asks for two and stands aside, so that a chain is
+# read a number at a time and its hyphens by eng_hyphen_between_nums.
+rule hyphen_chain takes 3
+  afresh
+  local from bytes 8
+  local stop bytes 8
+  local hyphens
+  call get_parm addr from arg 1 -6
+  call push_ptr_init addr stop
+  call fence 0 sym eti_null
+  set hyphens to 0
+  call lpta_loadp addr from
+  call setscan_r 1
+  if answer is not 0
+    give up
+  end
+place number
+  call testFldeq 1 3 2
+  if answer is not 0
+    give up
+  end
+place digit
+  call advance_tok
+  if answer is not 0
+    give up
+  end
+  call testFldeq 1 3 2
+  if answer is 0
+    go to digit
+  end
+  call savescptr 1 addr stop
+  call test_string_s 1 1 sym hyphen_mark
+  if answer is 0
+    increment hyphens
+    go to number
+  end
+  if hyphens is less than arg 2
+    give up
+  end
+  call lpta_loadp addr stop
+  call setscan_r 1
+  if answer is not 0
+    give up
+  end
+  call testFldeq 1 0 65
+  if answer is 0
+    go to point
+  end
+  call testFldeq 1 0 64
+  if answer is not 0
+    go to space
+  end
+place point
+  call advance_tok
+  if answer is not 0
+    go to ended
+  end
+  call testFldeq 1 3 2
+  if answer is 0
+    give up
+  end
+  go to ended
+place space
+  call testFldeq 1 0 72
+  if answer is 0
+    call advance_tok
+    if answer is 0
+      go to space
+    end
+  end
+  call testFldeq 1 0 63
+  if answer is 0
+    give up
+  end
+  call testFldeq 1 0 86
+  if answer is 0
+    give up
+  end
+  call testFldeq 1 0 89
+  if answer is 0
+    give up
+  end
+  call testFldeq 1 0 88
+  if answer is 0
+    give up
+  end
+  call testFldeq 1 0 78
+  if answer is 0
+    give up
+  end
+  call testFldeq 1 0 90
+  if answer is 0
+    give up
+  end
+  call testFldeq 1 0 178
+  if answer is 0
+    give up
+  end
+  call testFldeq 1 0 179
+  if answer is 0
+    give up
+  end
+  call testFldeq 1 0 180
+  if answer is 0
+    give up
+  end
+place ended
+  call end_of_word addr stop
+  if answer is 0
+    match
+  end
+  give up
+end
+
+# Whether the hyphen between two numbers is one of a chain, handed where the
+# number before it begins and where the one after it begins. The numbers are
+# read one at a time, and by the time the last hyphen of a chain is reached
+# the numbers before it are words already, so a chain is seen from its left
+# end: a hyphen with more of the chain after its second number notes where
+# that number begins, and the next hyphen finds its own first number there.
+rule hyphen_in_chain takes 3
+  afresh
+  local first bytes 8
+  local second bytes 8
+  local before
+  local noted
+  call get_parm addr first arg 1 -6
+  call get_parm addr second arg 2 -6
+  call fence 0 sym eti_null
+  set before to cell first value
+  set noted to hyphen_chain_next
+  set hyphen_chain_next to 0
+  call hyphen_chain addr second 1
+  if answer is 0
+    set hyphen_chain_next to cell second value
+    match
+  end
+  if noted is 0
+    give up
+  end
+  if before is noted
+    match
+  end
+  give up
+end
