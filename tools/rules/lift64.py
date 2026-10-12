@@ -245,7 +245,7 @@ class Rule:
     def __init__(self, module, name):
         self.m = module
         self.name = name
-        self.ins = module.functions[name]
+        self.ins = list(module.functions[name])
         self.by_addr = {a: i for i, (a, _m, _o, _n) in enumerate(self.ins)}
         self.lo = self.ins[0][0]
         self.hi = self.ins[-1][0] + 16
@@ -265,9 +265,12 @@ class Rule:
         of the table and an add of the base back in."""
         base_reg = None
         count = None
-        for j in range(i - 1, max(i - 8, -1), -1):
+        # The constants every entry shares can sit between the add and the
+        # jump, so the bound may be a dozen instructions back.
+        for j in range(i - 1, max(i - 16, -1), -1):
             _a, m, o, _n = self.ins[j]
-            if m == "addq" and len(o) == 2 and reg_of(o[1]) == "rax":
+            if m == "addq" and len(o) == 2 and reg_of(o[1]) == "rax" and \
+                    base_reg is None:
                 base_reg = reg_of(o[0])
             if m == "cmpl" and o[0].startswith("$") and \
                     reg_of(o[1]) == "rax":
@@ -377,6 +380,57 @@ class Rule:
                     else None
                 out = [nxt] if nxt in self.by_addr and nxt in seen else []
             self.succ[start] = [t for t in out if t is not None]
+
+    def hoist_shared_loads(self):
+        """A block that starts by loading through a register every way in has
+        just pointed at a variable or a local: clang shares the load and the
+        code after it between ways in that each picked a different place to
+        read, which leaves the register holding a different address on each
+        and nothing to name it by where they meet. Each way in loads its own
+        place instead, and the shared block starts after the load."""
+        preds = {}
+        for blk, outs in self.succ.items():
+            for t in outs:
+                preds.setdefault(t, []).append(blk)
+        starts = dict(self.blocks)
+        for blk, idx in self.blocks:
+            a, m, o, _n = self.ins[idx[0]]
+            if m not in MOVES or len(o) != 2 or not o[1].startswith("%"):
+                continue
+            mm = MEM.match(o[0])
+            if not mm or mm.group(3) or \
+                    mm.group(2) in ("%rbx", "%rbp", "%rsp", "%rip"):
+                continue
+            r = reg_of(mm.group(2))
+            if reg_of(o[1]) != r or len(preds.get(blk, ())) < 2:
+                continue
+            d = int(mm.group(1), 0) if mm.group(1) else 0
+            sites = []
+            for p in preds[blk]:
+                pidx = starts[p]
+                k = pidx[-1]
+                last = self.ins[k]
+                if last[1] == "jmp" and self.target(last[2]) == blk:
+                    k -= 1
+                elif last[1] in CONDS or last[1] == "jmp" or \
+                        self.ins[k + 1][0] != blk:
+                    break
+                if k < pidx[0]:
+                    break
+                _pa, pm, po, _pn = self.ins[k]
+                pmm = MEM.match(po[0]) if pm == "leaq" else None
+                if not pmm or reg_of(po[1]) != r or pmm.group(3) or \
+                        pmm.group(2) not in ("%rbx", "%rbp"):
+                    break
+                sites.append((k, (int(pmm.group(1), 0) if pmm.group(1)
+                                  else 0) + d, pmm.group(2)))
+            else:
+                for k, off, base in sites:
+                    pa = self.ins[k][0]
+                    at = ("-0x%x" % -off if off < 0 else "0x%x" % off) + \
+                        "(%s)" % base
+                    self.ins[k] = (pa, m, [at, o[1]], None)
+                self.ins[idx[0]] = (a, "nop", [], None)
 
     def is_stub(self, text):
         """What a call into the stubs is: the compiler calls the C library
@@ -599,6 +653,7 @@ class Rule:
         self.exits = {}
         self.exit_tail = set()
         self.depth_reg = None
+        self.depth_slot = self.depth_store = None
         self.slow_block = None
         self.exit_tags = {}
         self.tag_facts = {}
@@ -630,7 +685,7 @@ class Rule:
     # rule can plant is put through it, the way the machine would.
     DECODER = ("movl", "movq", "movb", "addl", "subl", "andl", "decl", "incl",
                "cmpl", "testl", "jmp", "movslq", "addq", "jmpq", "leaq",
-               "xorl") + tuple(CONDS)
+               "xorl", "pushq", "popq") + tuple(CONDS)
 
     def read_dispatch(self, head):
         starts = {b[0]: b[1] for b in self.blocks}
@@ -675,6 +730,16 @@ class Rule:
             if m == "movl" and reg_of(o[0]) == source and \
                     reg_of(o[1]) in cleared:
                 self.depth_reg = reg_of(o[1])
+        # Or kept in the frame: the two halves meet on a store of the count
+        # into a local, which the slow half cleared first.
+        self.depth_slot = self.depth_store = None
+        _a, m, o, _n = self.ins[starts[decoder][0]]
+        if self.depth_reg is None and m == "movl" and len(o) == 2 and \
+                reg_of(o[0]) == source and source in cleared:
+            mm = MEM.match(o[1])
+            if mm and mm.group(2) == "%rbp" and not mm.group(3):
+                self.depth_slot = int(mm.group(1), 0)
+                self.depth_store = _a
         self.slow_block = slow
         # Every number the decoder can tell apart: past the end of its table
         # or past the largest number it compares against, it gives up.
@@ -693,20 +758,28 @@ class Rule:
                     if 0 <= k < 512:
                         top = max(top, k + 2)
         self.tags = {}
+        self.exit_facts = {}
         seen = set()
         for k in range(1, max(top, 2) + 1):
             try:
-                t, visited, facts = self.decode(decoder, k)
+                t, visited, facts, every = self.decode(decoder, k)
             except Hole:
                 continue
             seen |= visited
             if t in self.exits:
                 self.exit_tags.setdefault(t, []).append(k)
+                self.exit_facts[(t, k)] = every
                 continue
             if t in self.exit_tail or self.gives_up(t):
                 continue
-            if self.tag_facts.setdefault(t, facts) != facts:
-                raise Hole("a place the dispatch enters two ways")
+            old = self.tag_facts.setdefault(t, facts)
+            if old != facts:
+                # Numbers that reach one place having set a register two
+                # ways leave it unknown there, so a place that read it would
+                # stop the lift rather than read either.
+                for r in set(old) | set(facts):
+                    if old.get(r) != facts.get(r):
+                        old[r] = ("X",)
             self.tags.setdefault(t, []).append(k)
         if not self.tags and not self.exit_tags:
             raise Hole("a dispatch that goes nowhere")
@@ -755,11 +828,18 @@ class Rule:
         # A register the decoder sets to a constant on the way, which the
         # code at the place reads: clang hoists a value every place a table
         # leads to shares into the decoder itself, so that it is only true
-        # of the places reached through it.
+        # of the places reached through it. A copy of a register the decoder
+        # never wrote is that register's value as the dispatch began, and
+        # anything else it writes is unknown at the place.
         facts = {}
+        pushed = []
+        def put(r, v, fact):
+            regs[r] = v
+            facts[r] = fact
         def done(a):
             return a, visited, {r: v for r, v in facts.items()
-                                if r not in CALLER and r != self.tag_reg}
+                                if r != self.tag_reg and
+                                not (r in CALLER and v == ("X",))}, dict(facts)
         for _step in range(200):
             if a is not None and a in self.leaders and a != start:
                 if tabled or (preds.get(a, set()) - region - visited):
@@ -774,39 +854,61 @@ class Rule:
                 return done(a)
             if a in self.leaders:
                 blk = a
-                ok = all(self.ins[j][1] in self.DECODER
-                         and not self.through_memory(j)
+                ok = all(self.ins[j][0] == self.depth_store or
+                         (self.ins[j][1] in self.DECODER
+                          and not self.through_memory(j)
+                          and not (self.ins[j][1] == "pushq" and
+                                   not self.ins[j][2][0].startswith("$")))
                          for j in dict(self.blocks)[blk])
                 if not ok:
                     return done(a)
                 visited.add(blk)
             nxt = self.ins[i + 1][0] if i + 1 < len(self.ins) else None
+            if a == self.depth_store:
+                a = nxt
+                continue
             def val(t):
                 if t.startswith("$"):
                     return int(t.lstrip("$"), 0) & 0xffffffff
                 return regs.get(reg_of(t))
             if m in ("movl", "movq") and o[0].startswith("%") and o[1].startswith("%"):
-                regs[reg_of(o[1])] = val(o[0])
+                src = reg_of(o[0])
+                v = val(o[0])
+                if src not in regs:
+                    fact = ("reg", src)
+                elif isinstance(v, int):
+                    fact = v
+                else:
+                    fact = facts.get(src, ("X",))
+                put(reg_of(o[1]), v, fact)
             elif m in ("movb", "movl", "movq") and o[0].startswith("$") and \
                     o[1].startswith("%"):
                 # A byte is taken for the whole register: every rule seen
                 # doing this had cleared it or held a small count in it.
-                regs[reg_of(o[1])] = facts[reg_of(o[1])] = val(o[0])
+                put(reg_of(o[1]), val(o[0]), val(o[0]))
+            elif m == "pushq" and o[0].startswith("$"):
+                pushed.append(val(o[0]))
+            elif m == "popq" and pushed:
+                v = pushed.pop()
+                put(reg_of(o[0]), v, v)
+            elif m in ("pushq", "popq"):
+                return done(a)
             elif m == "movb" or self.through_memory(i):
                 return done(a)
             elif m in ("addl", "subl", "andl"):
                 x, y = val(o[0]), val(o[1])
                 if x is None or y is None:
                     return done(a)
-                regs[reg_of(o[1])] = {"addl": y + x, "subl": y - x,
-                                      "andl": y & x}[m] & 0xffffffff
+                put(reg_of(o[1]), {"addl": y + x, "subl": y - x,
+                                   "andl": y & x}[m] & 0xffffffff, ("X",))
             elif m in ("decl", "incl"):
                 y = val(o[0])
                 if y is None:
                     return done(a)
-                regs[reg_of(o[0])] = (y + (1 if m == "incl" else -1)) & 0xffffffff
+                put(reg_of(o[0]), (y + (1 if m == "incl" else -1)) & 0xffffffff,
+                    ("X",))
             elif m == "xorl" and o[0] == o[1]:
-                regs[reg_of(o[1])] = 0
+                put(reg_of(o[1]), 0, 0)
             elif m == "cmpl":
                 x, y = val(o[0]), val(o[1])
                 if x is None or y is None:
@@ -830,14 +932,15 @@ class Rule:
             elif m == "jmp":
                 nxt = self.target(o)
             elif m == "leaq":
-                pass
+                facts[reg_of(o[1])] = ("X",)
             elif m == "movslq":
                 mm = re.match(r"^\((%[a-z0-9]+),(%[a-z0-9]+),4\)$", o[0])
                 if not mm:
                     return done(a)
-                regs[reg_of(o[1])] = ("index", regs.get(reg_of(mm.group(2))))
+                put(reg_of(o[1]), ("index", regs.get(reg_of(mm.group(2)))),
+                    ("X",))
             elif m == "addq":
-                pass
+                facts[reg_of(o[1])] = ("X",)
             elif m == "jmpq":
                 tab = self.tables.get(a)
                 idx = regs.get("rax")
@@ -890,6 +993,12 @@ class Rule:
                 off = int(mm.group(1), 0) if mm.group(1) else 0
                 if m == "leaq":
                     self.cells.add(off)
+        # A cell of a short is four bytes, and a long's value is eight bytes
+        # into it: a place read anywhere past a cell but its field and that
+        # value is not in it, and says the cell is a short one, as another
+        # cell starting inside its sixteen does.
+        self.short_cells = {c for c in self.cells
+                            if any(c < d < c + 16 for d in self.cells)}
         for a in self.reach:
             _a, m, o, _n = self.ins[self.by_addr[a]]
             if m == "leaq":
@@ -899,7 +1008,19 @@ class Rule:
                 if not mm or mm.group(2) != "%rbp":
                     continue
                 off = int(mm.group(1), 0) if mm.group(1) else 0
-                if any(c <= off < c + 16 for c in self.cells):
+                below = [c for c in self.cells if c <= off < c + 16]
+                if below and off - max(below) not in (0, 2, 8):
+                    self.short_cells.add(max(below))
+        for a in self.reach:
+            _a, m, o, _n = self.ins[self.by_addr[a]]
+            if m == "leaq":
+                continue
+            for t in o:
+                mm = MEM.match(t)
+                if not mm or mm.group(2) != "%rbp":
+                    continue
+                off = int(mm.group(1), 0) if mm.group(1) else 0
+                if self.cell_of(off) is not None:
                     continue
                 w = WIDTH_OF.get(m, 8 if m.endswith("q") else
                                  4 if m.endswith("l") else
@@ -907,6 +1028,13 @@ class Rule:
                 self.scalars[off] = max(self.scalars.get(off, 0), w)
 
     # -- names -----------------------------------------------------------
+
+    def cell_of(self, off):
+        """The cell a place in the frame is part of, if any: the nearest
+        below it that spans it."""
+        below = [c for c in self.cells
+                 if c <= off < c + (4 if c in self.short_cells else 16)]
+        return max(below) if below else None
 
     def local_name(self, off):
         return "c%x" % -off if off in self.cells else "v%x" % -off
@@ -919,10 +1047,9 @@ class Rule:
         # cell is four bytes, and 6.1 lays two or three of them side by side
         # inside what a location's sixteen would span, so the field of the
         # second read as six bytes into the first.
-        below = [c for c in self.cells if c <= off < c + 16]
-        if not below:
+        c = self.cell_of(off)
+        if c is None:
             return [self.local_name(off)]
-        c = max(below)
         inner = off - c
         if inner == 0 and width == 4:
             return [self.local_name(c)]
@@ -1019,6 +1146,11 @@ class Rule:
         i = self.by_addr[a] + 1
         while i < len(self.ins):
             _b, m, o, _n = self.ins[i]
+            # A set writes its register before the test it carries out is
+            # said, so a set into the register tested overwrites it first.
+            if m.startswith("set") and m[3:] in WORDS and o and \
+                    reg_of(o[0]) == r:
+                return True
             if m in CONDS or m.startswith("cmov") or m.startswith("set"):
                 return False
             if m in ("callq", "jmp", "jmpq", "retq") or \
@@ -1066,8 +1198,11 @@ class Rule:
             self.say(st, lines, "end")
             st["regs"][r] = ("home", r, None)
             return
+        # The state is never kept: rbx holds it throughout, and a register
+        # the compiler also uses for something else is only handed it for a
+        # call.
         if r in self.homes and not framed and \
-                v[0] not in ("got", "canary", "frame", "code", "sp"):
+                v[0] not in ("got", "canary", "frame", "code", "sp", "state"):
             self.say(st, lines, "set", "h_" + r, "to", *self.words(v, st, r))
             # What the local now holds, for reading it as an address: the
             # innermost value, since a local that remembered another local
@@ -1662,17 +1797,28 @@ class Rule:
         out = []
         for t, ks in sorted(self.exit_tags.items()):
             ans = self.exits[t]
-            if ans[0] == "imm":
-                v = ans
-            else:
-                st = getattr(self, "dispatch_state", None)
-                v = st["regs"].get(ans[1], ("X",)) if st else ("X",)
-                if v[0] == "home" and v[2] is not None:
-                    v = v[2]
-            if v == ("imm", 0):
-                out += ks
-            elif v != ("imm", 94):
-                raise Hole("a number that leads to a way out answering %s" % (v,))
+            for k in ks:
+                # What the decoder put in the answer's register on the way,
+                # and failing that what it held as the dispatch began.
+                fact = self.exit_facts.get((t, k), {}).get(ans[1]) \
+                    if ans[0] == "reg" else None
+                if ans[0] == "imm":
+                    v = ans
+                elif isinstance(fact, int):
+                    v = ("imm", fact)
+                elif fact is not None and fact[0] != "reg":
+                    v = fact
+                else:
+                    src = fact[1] if fact is not None else ans[1]
+                    st = getattr(self, "dispatch_state", None)
+                    v = st["regs"].get(src, ("X",)) if st else ("X",)
+                    if v[0] == "home" and v[2] is not None:
+                        v = v[2]
+                if v == ("imm", 0):
+                    out.append(k)
+                elif v != ("imm", 94):
+                    raise Hole("a number that leads to a way out answering %s"
+                               % (v,))
         return sorted(out)
 
     def do_block(self, b, st, lines):
@@ -1690,37 +1836,44 @@ class Rule:
             if self.depth_reg:
                 s["regs"][self.depth_reg] = ("home", self.depth_reg, None) \
                     if self.depth_reg in self.homes else ("X",)
+            if self.depth_slot is not None:
+                s["slots"].pop(self.depth_slot, None)
             s["fresh"] = set()
             s["pushes"] = []
             s["cond"] = None
+            self.dispatch_regs = dict(s["regs"])
             outs = []
             for t in self.tags:
                 st_t = self.clone(s)
                 for r, v in self.tag_facts.get(t, {}).items():
-                    st_t["regs"][r] = ("home", r, ("imm", v)) \
-                        if r in self.homes else ("imm", v)
+                    st_t["regs"][r] = self.fact_value(r, v)
                 outs.append((t, st_t))
             return outs
 
-        facts = self.tag_facts.get(b) if b in self.tags else None
-        if facts:
+        facts = self.tag_facts.get(b, {}) if b in self.tags else {}
+        said = [(r, v) for r, v in sorted(facts.items())
+                if r in self.homes and v != ("X",)]
+        if said or any(isinstance(v, int) and r not in CALLER
+                       for r, v in facts.items()):
             # What the decoder set on the way is only so when the rule comes
             # back here, so it is said where only coming back reaches.
             self.say(st, lines, "go", "to", "p%x" % b)
             for k in self.tags[b]:
                 lines.append(["place", "t%x_%d" % (b, k), "on", str(k)])
-            if self.depth_reg in self.homes:
-                self.say(st, lines, "set", "h_" + self.depth_reg, "to", "unwind")
-            for r, v in sorted(facts.items()):
-                if r in self.homes:
+            self.say_unwind(st, lines)
+            for r, v in said:
+                if isinstance(v, int):
                     self.say(st, lines, "set", "h_" + r, "to", str(v))
+                else:
+                    self.say(st, lines, "set", "h_" + r, "to",
+                             *self.words(self.fact_value(r, v, False), st))
             lines.append(["place", "p%x" % b])
         else:
             lines.append(["place", "p%x" % b])
             for k in self.tags.get(b, []):
                 lines.append(["place", "t%x_%d" % (b, k), "on", str(k)])
-            if b in self.tags and self.depth_reg in self.homes:
-                self.say(st, lines, "set", "h_" + self.depth_reg, "to", "unwind")
+            if b in self.tags:
+                self.say_unwind(st, lines)
         for i in idx:
             self.step(b, st, lines, i)
         if st["inline"]:
@@ -1736,6 +1889,11 @@ class Rule:
                 if m == "jne":
                     return [(nxt, st)]
                 if m == "je":
+                    # The way on is a jump past the block that gives up, and
+                    # when anything else reaches that block it is written
+                    # out next, so the jump has to be said.
+                    if self.written_after(b) != t:
+                        self.say(st, lines, "go", "to", "p%x" % t)
                     return [(t, st)]
                 raise Hole("the landing place read as %s" % m)
             body = self.edge(st, t)
@@ -1756,6 +1914,48 @@ class Rule:
         for line in self.fall(st, nxt):
             self.say(st, lines, *line)
         return [(nxt, st)]
+
+    def say_unwind(self, st, lines):
+        """Where the dispatch kept the count it was handed, it now holds what
+        is left of it."""
+        if self.depth_reg in self.homes:
+            self.say(st, lines, "set", "h_" + self.depth_reg, "to", "unwind")
+        if self.depth_slot is not None:
+            self.say(st, lines, "set", *self.local_place(self.depth_slot, 4),
+                     "to", "unwind")
+            st["slots"].pop(self.depth_slot, None)
+
+    def fact_value(self, r, v, homed=True):
+        """What a register the decoder set holds at a place it leads to."""
+        if isinstance(v, int):
+            v = ("imm", v)
+        elif v[0] == "reg" and v[1] == self.depth_reg:
+            # A copy of the count the dispatch was handed is what is left of
+            # it.
+            v = ("unwindv",)
+        elif v[0] == "reg":
+            v = ("X",) if v[1] in CALLER else \
+                self.dispatch_regs.get(v[1], ("X",))
+            if v[0] == "home" and v[2] is not None and v[2][0] in PURE:
+                v = v[2]
+            if v[0] == "home" and r not in self.homes:
+                raise Need(("home", r))
+        if homed and r in self.homes and v[0] != "X":
+            while v is not None and v[0] == "home":
+                v = v[2]
+            return ("home", r, v)
+        return v
+
+    def written_after(self, b):
+        """The first block after b that the rule's text will hold: the way
+        out, the dispatch and blocks nothing reaches are not written."""
+        silent = set(self.exits) | self.exit_tail | self.dispatch_rest | \
+            self.dispatch_head
+        starts = [s for s, _idx in self.blocks]
+        for s in starts[starts.index(b) + 1:]:
+            if s in self.entered and s not in silent:
+                return s
+        return None
 
     def depth_at(self, st):
         """What the slow half of the dispatch would hand vback as the count,
@@ -1812,6 +2012,7 @@ class Rule:
         needs = set()
         for _round in range(80):
             changed = False
+            self.entered = set(ins)
             for b in order:
                 if b not in ins:
                     continue
@@ -1903,6 +2104,7 @@ class Rule:
             self.walk()
             if self.holes:
                 return None
+            self.hoist_shared_loads()
             self.classify()
             self.locals_used()
             self.frame_locals = set()
