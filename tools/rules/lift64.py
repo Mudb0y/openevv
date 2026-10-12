@@ -915,16 +915,21 @@ class Rule:
         """A place in the frame, as the upper form says it."""
         if off in self.frame_locals:
             raise Hole("the rule reads the machine's own frame at %d" % off)
-        for c in self.cells:
-            if c <= off < c + 16:
-                inner = off - c
-                if inner == 0 and width == 4:
-                    return [self.local_name(c)]
-                part = {0: "kind", 2: "field", 8: "value"}.get(inner)
-                if part is None or (part != "value" and width != 2):
-                    raise Hole("a cell read at %d wide %d" % (inner, width))
-                return ["cell", self.local_name(c), part]
-        return [self.local_name(off)]
+        # The nearest cell at or below, not the first that spans it: a short
+        # cell is four bytes, and 6.1 lays two or three of them side by side
+        # inside what a location's sixteen would span, so the field of the
+        # second read as six bytes into the first.
+        below = [c for c in self.cells if c <= off < c + 16]
+        if not below:
+            return [self.local_name(off)]
+        c = max(below)
+        inner = off - c
+        if inner == 0 and width == 4:
+            return [self.local_name(c)]
+        part = {0: "kind", 2: "field", 8: "value"}.get(inner)
+        if part is None or (part != "value" and width != 2):
+            raise Hole("a cell read at %d wide %d" % (inner, width))
+        return ["cell", self.local_name(c), part]
 
     def glob_words(self, off, width):
         self.globals_used.add((off, width))
