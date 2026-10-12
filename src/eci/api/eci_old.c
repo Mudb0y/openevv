@@ -204,6 +204,89 @@ static int32_t eo_tell(OldInst *h, void *inst, int32_t msg, int32_t param,
     return said;
 }
 
+/* Russian's words that start with a vowel -- он, она, это, и -- start
+   with a click after a pause. The English module that speaks them begins a
+   vowel from silence at full strength, half its peak within a millisecond,
+   which in English is the hard attack of own and on and in Russian is
+   heard as the о snapping. So for Russian only, a start from ten
+   milliseconds of silence is faded in over five, which takes the click and
+   leaves the vowel. Ours, not IBM's: the other languages are left exactly as
+   they were, and their recorded samples with them.
+
+   What it needs to remember between buffers -- how long it has been quiet
+   and how far into a fade it is -- is kept per instance by address in a
+   table of its own, since the instance's layout is IBM's. */
+#define DECLICK_SLOTS 32
+#define DECLICK_QUIET 64
+
+static struct {
+    const void *key;
+    int32_t quiet;
+    int32_t fade;
+} declick[DECLICK_SLOTS];
+
+static int32_t eo_rateHz(OldInst *h)
+{
+    static const int32_t HZ[] = { 8000, 11025, 22050, 16000, 32000, 44100, 48000 };
+    int32_t r = OI_RATE(h);
+
+    if (r >= 0 && r < (int32_t)(sizeof HZ / sizeof HZ[0]))
+        return HZ[r];
+    return r > 1000 ? r : 11025;
+}
+
+static int32_t eo_declickSlot(OldInst *h)
+{
+    int32_t k, slot = -1, empty = -1;
+
+    for (k = 0; k < DECLICK_SLOTS; k++) {
+        if (declick[k].key == h)
+            return k;
+        if (declick[k].key == 0 && empty < 0)
+            empty = k;
+    }
+    slot = empty >= 0 ? empty : (int32_t)(((size_t)h >> 4) % DECLICK_SLOTS);
+    memset(&declick[slot], 0, sizeof declick[slot]);
+    declick[slot].key = h;
+    /* An utterance starts from silence. */
+    declick[slot].quiet = eo_rateHz(h) / 100;
+    return slot;
+}
+
+static void eo_declick(OldInst *h, int16_t *pcm, int32_t n)
+{
+    int32_t hz = eo_rateHz(h);
+    int32_t quietNeeded = hz / 100;     /* ten milliseconds */
+    int32_t length = hz / 200;          /* five */
+    int32_t i, slot = eo_declickSlot(h);
+
+    for (i = 0; i < n; i++) {
+        int32_t v = pcm[i];
+        int32_t a = v < 0 ? -v : v;
+
+        if (declick[slot].fade > 0) {
+            int32_t done = length - declick[slot].fade;
+
+            pcm[i] = (int16_t)(v * (done + 1) / (length + 1));
+            declick[slot].fade--;
+            declick[slot].quiet = 0;
+            continue;
+        }
+        if (a < DECLICK_QUIET) {
+            if (declick[slot].quiet < quietNeeded)
+                declick[slot].quiet++;
+            continue;
+        }
+        if (declick[slot].quiet >= quietNeeded && length > 0) {
+            declick[slot].fade = length;
+            i--;
+            declick[slot].quiet = 0;
+            continue;
+        }
+        declick[slot].quiet = 0;
+    }
+}
+
 /* The engine reports everything here, and this is where it is turned into
    what the older interface promised. The instance the caller knows is the
    one handed back as the data, so it is passed on as the handle. */
@@ -221,6 +304,8 @@ int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data)
         break;
 
     case 1:     /* samples, counted in bytes here and in samples there */
+        if (h && OI_SAMPBUF(h) && (OI_LANG(h) & 0xff0000) == 0x120000)
+            eo_declick(h, (int16_t *)OI_SAMPBUF(h), param / 2);
         if (h && OI_CALLBACK(h))
             eo_tell(h, inst, ECI_WAVEFORM, param / 2, &ret);
         break;
@@ -237,6 +322,7 @@ int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data)
            and points at nothing. */
         char *rec = EVV_AT(char *, param);
         int32_t mode;
+
 
         if (!h || !OI_CALLBACK(h))
             break;

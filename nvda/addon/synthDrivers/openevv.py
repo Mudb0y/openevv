@@ -13,6 +13,7 @@
 
 import os
 import re
+import unicodedata
 from collections import OrderedDict
 
 from autoSettingsUtils.driverSetting import (
@@ -41,6 +42,42 @@ from synthDriverHandler import (
 
 from . import _openevv
 from . import _openevv_dictionaries as dictionaries
+
+# The add-on's own translations, out of its locale folder. Without this the
+# labels below go through NVDA's catalog, which has none of them.
+try:
+	import addonHandler
+
+	addonHandler.initTranslation()
+except Exception:
+	pass
+
+#: The languages' names, to be shown in front of each voice. Marked here so the
+#: add-on's catalog carries them; _openevv.py keeps the English it is given.
+LANGUAGE_NAMES = {
+	# Translators: A language, shown in front of a voice's name.
+	0x10000: _("US English"),
+	# Translators: A language, shown in front of a voice's name.
+	0x10001: _("British English"),
+	# Translators: A language, shown in front of a voice's name.
+	0x20000: _("Castilian Spanish"),
+	# Translators: A language, shown in front of a voice's name.
+	0x20001: _("Latin American Spanish"),
+	# Translators: A language, shown in front of a voice's name.
+	0x30000: _("French"),
+	# Translators: A language, shown in front of a voice's name.
+	0x30001: _("Canadian French"),
+	# Translators: A language, shown in front of a voice's name.
+	0x40000: _("German"),
+	# Translators: A language, shown in front of a voice's name.
+	0x50000: _("Italian"),
+	# Translators: A language, shown in front of a voice's name.
+	0x80000: _("Japanese"),
+	# Translators: A language, shown in front of a voice's name.
+	0x110000: _("Polish"),
+	# Translators: A language, shown in front of a voice's name.
+	0x120000: _("Russian"),
+}
 
 #: What the engine's speed setting is worth at either end of the reader's
 #: nought to a hundred. The engine will take nought to two hundred and fifty,
@@ -87,6 +124,58 @@ _PROSODY_PARAMS = {
 	RateCommand: _openevv.VOICE_SPEED,
 	VolumeCommand: _openevv.VOICE_VOLUME,
 }
+# What the engine says out loud rather than pausing at, when it is left in
+# the text: a bracket, a quotation mark, @, #, /, a comma or a full stop with
+# no word before it, a run of commas, and the rest, by name and in English
+# whatever the language. NVDA has its own setting for how much punctuation to
+# say, in the reader's language, and what it chose not to say still reaches
+# the synth, so unless the reader asks for the engine's punctuation every mark
+# goes before the engine sees it. What a mark is for besides its name is the
+# pause, and that much is kept: a run of marks after a word becomes the one
+# mark that says how long to pause, attached to that word, where the engine
+# never names it. A run with no word before it is only a space.
+_MARK_RUN = re.compile(r"\s*(?:[^\w\s]|_)(?:\s*(?:[^\w\s]|_))*")
+# One of these alone between two letters or digits belongs to the word: 3.5,
+# 10:30, 1,5, 1-\u0433\u043e, \u0442.\u0435, don't.
+_INNER_MARKS = ".,:-/'\u2019"
+_COMMA_MARKS = re.compile(r"[-,;:\u2014\u2013\u2026]|\.\.\.")
+
+
+def _quietPunctuation(text):
+	"""Text with no mark left in it that the engine would say by name.
+
+	Composed first, so that an accent written as a combining mark stays on
+	its letter rather than being taken for punctuation, and nothing is added
+	at either end of the text: whether a stretch ends in a space is how the
+	driver decides where to cut it."""
+	text = unicodedata.normalize("NFC", text)
+
+	def one(match):
+		run = match.group(0)
+		start, end = match.span()
+		before = text[start - 1] if start else ""
+		after = text[end] if end < len(text) else ""
+		if all(unicodedata.combining(c) for c in run.strip()):
+			return run
+		if len(run) == 1 and run in _INNER_MARKS and before.isalnum() and after.isalnum():
+			return run
+		# A space where the run stood between two words, and nothing where
+		# the text already has one or ends.
+		space = " " if after and not after.isspace() else ""
+		if not before.isalnum():
+			return space if before else ""
+		marks = "".join(run.split())
+		if "?" in marks:
+			return "?" + space
+		if "!" in marks:
+			return "!" + space
+		if "." in marks.replace("...", ""):
+			return "." + space
+		if _COMMA_MARKS.search(marks):
+			return "," + space
+		return space
+
+	return _MARK_RUN.sub(one, text)
 
 #: Closing marks which may follow sentence-final punctuation.
 _CLOSERS = "\"')]}\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}\N{RIGHT DOUBLE QUOTATION MARK}\N{RIGHT SINGLE QUOTATION MARK}"
@@ -152,6 +241,7 @@ class SynthDriver(SynthDriver):
 			False,
 			defaultVal=str(_openevv.DEFAULT_PAUSE_MODE),
 		),
+		BooleanDriverSetting("synthPunctuation", _("Synthesizer reads &punctuation"), False),
 		# Translators: Label for a setting in voice settings dialog.
 		BooleanDriverSetting("voiceTags", _("Allow backquote voice &tags"), False),
 		# Translators: Label for a setting in voice settings dialog.
@@ -191,10 +281,25 @@ class SynthDriver(SynthDriver):
 		self._voiceTags = False
 		self._dictionarySet = dictionaries.NO_SET
 		self._personalDictionary = True
+		self._synthPunctuation = False
 		self._engine = _openevv.Engine(self._onIndexReached)
 		self._engine.open()
 		self._voice = self._voiceId(self._engine.language, _openevv.VOICE_FIRST)
 		self._applyDictionaries()
+		# Until the reader has chosen a voice, speak the language NVDA itself
+		# is in where the library has it. The library's first language is US
+		# English, and Russian or Polish text handed to the English module is
+		# read as Western bytes -- a stream of symbol names that sounds like
+		# the text arriving in the wrong encoding. A voice the reader has
+		# saved is set after this and wins.
+		try:
+			import languageHandler
+			mine = self._languageFor(languageHandler.getLanguage())
+		except Exception:
+			log.debugWarning("openevv: could not ask NVDA its language", exc_info=True)
+			mine = None
+		if mine is not None and mine != self._engine.language:
+			self._set_voice(self._voiceId(mine, _openevv.VOICE_FIRST))
 		log.debug("openevv: engine version %s" % self._engine.version)
 
 	def terminate(self):
@@ -262,7 +367,7 @@ class SynthDriver(SynthDriver):
 
 		for item in speechSequence:
 			if isinstance(item, str):
-				said = self._processText(item)
+				said = self._processText(item, spelling)
 				words = words or said.strip() != ""
 				# Sentence ends are free boundaries because the engine already pauses
 				# there. Whitespace after the much larger cap bounds a sentence which
@@ -369,12 +474,18 @@ class SynthDriver(SynthDriver):
 				(tuple(sorted(_PROSODY_PARAMS[command] for command in prosody)),),
 			)])
 
-	def _processText(self, text):
+	def _processText(self, text, spelling=False):
 		if not self._voiceTags:
 			# A backtick starts an annotation, so ordinary text carrying one
 			# would be read as a command rather than spoken. Unless the reader
 			# has asked for tags to go through, it becomes a space.
 			text = text.replace("`", " ")
+			# Punctuation is NVDA's to say unless the reader has asked for the
+			# engine's. Not while spelling: a character on its own is what
+			# the reader asked to hear. And not with voice tags on, whose
+			# annotations are made of these characters.
+			if not self._synthPunctuation and not spelling:
+				text = _quietPunctuation(text)
 		return text
 
 	def cancel(self):
@@ -527,6 +638,12 @@ class SynthDriver(SynthDriver):
 			return
 		self._engine.control([(self._engine.setPauseMode, (mode,))])
 
+	def _get_synthPunctuation(self):
+		return self._synthPunctuation
+
+	def _set_synthPunctuation(self, enable):
+		self._synthPunctuation = bool(enable)
+
 	def _get_voiceTags(self):
 		return self._voiceTags
 
@@ -642,7 +759,7 @@ class SynthDriver(SynthDriver):
 			for number, name in names.items():
 				voices[self._voiceId(language, number)] = VoiceInfo(
 					self._voiceId(language, number),
-					"%s - %s" % (_openevv.nameOf(language), name),
+					"%s - %s" % (LANGUAGE_NAMES.get(language) or _openevv.nameOf(language), name),
 					_openevv.localeOf(language),
 				)
 		return voices

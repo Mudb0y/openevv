@@ -1,0 +1,3 @@
+# RuLex is in KOI8-R and must reach rulex.py byte for byte.
+tools/russian/rulex/* binary
+*.gz binary

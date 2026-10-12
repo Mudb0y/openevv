@@ -292,6 +292,9 @@ typedef enum {
        twelfth deliberate divergence. There is no Thai in the SDK this engine
        came out of for that to cost anything. */
     eciStandardPolish         = 0x00110000,
+    /* And eighteen, the last family the engine's tables have room for, is
+       Russian here. IBM never numbered it. */
+    eciStandardRussian        = 0x00120000,
     /* The bit that says the text is UTF-16 rather than bytes. */
     eciUnicodeCodeSet         = 0x00000800
 } ECILanguageDialect;

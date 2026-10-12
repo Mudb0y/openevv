@@ -53,3 +53,9 @@ lang/*/rules/constants.letters
 # rules were last written, which tools/rules/entrysig.py sets against what they
 # say now.
 lang/*/rules/.declared
+
+# Russian, all of it written by tools/russian/make-ruru.py as a build starts:
+# the module, made out of lang/enus; the stress table, out of the data in
+# tools/russian; and RuLex's lexicon goes into build/ with everything else.
+lang/ruru/
+src/eci/synth/eci_russian_stress.h

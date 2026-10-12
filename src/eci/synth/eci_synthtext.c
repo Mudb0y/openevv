@@ -27,6 +27,7 @@
 #include "evv_abi.h"
 #include "delta_lang.h"
 #include "evv_arena.h"
+#include "eci_russian.h"
 
 #define APP_CONCATENATIVE  0xc
 #define ROM_CONCATENATIVE  0x3e8
@@ -339,6 +340,101 @@ static int utf8ToWestern(const char *text, uint32_t len, char *out,
     return 1;
 }
 
+/* Russian, which arrives in an alphabet no module has and is said by the
+   English one from phonemes. eci_russian.c writes each word as a
+   pronunciation annotation, in code points, and this decodes the caller's
+   UTF-8 for it and puts what it answers into the module's bytes the way
+   utf8ToWestern would.
+
+   Answers a buffer from cpp_new, or nought when the text is not UTF-8 or
+   there is no memory, and then the caller goes the ordinary way. */
+static char *russianText(SynthThread *t, const char *text, uint32_t len,
+                         const delta_language *l)
+{
+    uint32_t *cps = (uint32_t *)malloc((len + 1) * sizeof *cps);
+    uint32_t *said;
+    size_t n = 0, said_n = 0, k;
+    uint32_t i;
+    char *out;
+
+    if (cps == 0)
+        return 0;
+    for (i = 0; i < len; i++) {
+        uint8_t c = (uint8_t)text[i];
+        uint32_t cp;
+        int want, m;
+
+        if (c < 0x80) {
+            cps[n++] = c;
+            continue;
+        }
+        if ((c & 0xe0) == 0xc0)
+            want = 2, cp = c & 0x1f;
+        else if ((c & 0xf0) == 0xe0)
+            want = 3, cp = c & 0x0f;
+        else if ((c & 0xf8) == 0xf0)
+            want = 4, cp = c & 0x07;
+        else
+            goto not_utf8;
+        if (i + (uint32_t)want > len)
+            goto not_utf8;
+        for (m = 1; m < want; m++) {
+            uint8_t cc = (uint8_t)text[i + m];
+
+            if ((cc & 0xc0) != 0x80)
+                goto not_utf8;
+            cp = (cp << 6) | (cc & 0x3f);
+        }
+        i += (uint32_t)want - 1;
+        cps[n++] = cp;
+    }
+
+    said = ru_transcribe(cps, n, &said_n, ru_spelling(t));
+    free(cps);
+    if (said == 0)
+        return 0;
+    out = (char *)cpp_new((uint32_t)said_n + 1);
+    if (out == 0) {
+        ru_free(said);
+        return 0;
+    }
+    for (k = 0; k < said_n; k++) {
+        uint32_t cp = said[k];
+        int32_t m;
+        uint32_t w;
+        int done = 0;
+
+        /* A nought would end the text, and the engine has no use for one. */
+        if (cp == 0)
+            cp = ' ';
+        if (cp >= 0x80) {
+            for (m = 0; m < l->codepoints_n && !done; m++)
+                if (l->codepoints[m].cp == cp) {
+                    cp = l->codepoints[m].byte;
+                    done = 1;
+                }
+            for (w = 0; w < sizeof WESTERN / sizeof WESTERN[0] && !done; w++)
+                if (WESTERN[w].cp == cp) {
+                    cp = WESTERN[w].byte;
+                    done = 1;
+                }
+            /* Latin-1 is where the Western set has it. Anything else is
+               neither Russian nor the module's, and is better silence than
+               the symbol its low byte happens to be. */
+            if (!done && cp > 0xff)
+                cp = ' ';
+        }
+        out[k] = (char)cp;
+    }
+    out[said_n] = 0;
+    ru_free(said);
+    return out;
+
+not_utf8:
+    free(cps);
+    return 0;
+}
+
 /* Recode the text if the SSML filter is in the way, and answer whichever
    buffer the caller should go on with. Either of the two out parameters may
    come back holding something that has to be given back afterwards. */
@@ -443,10 +539,16 @@ THIS void addTextRun(SynthThread *t, char *text, uint32_t len, int32_t seq,
     {
         const delta_language *l = langOf(t);
 
-        if (mbcs_out == 0 && mapped_out == 0
-            && l != 0 && l->codepoints_n > 0) {
-            char *out = (char *)cpp_new(len + 1);
+        if (mbcs_out == 0 && mapped_out == 0 && l != 0
+            && (l->codepoints_n > 0 || strcmp(l->tag, "ruru") == 0)) {
+            char *out;
 
+            /* Russian is said from phonemes rather than converted a
+               character at a time, and how is in russianText. */
+            if (strcmp(l->tag, "ruru") == 0)
+                mbcs_out = russianText(t, text, len, l);
+
+            out = mbcs_out != 0 ? 0 : (char *)cpp_new(len + 1);
             if (out != 0) {
                 memset(out, 0, len + 1);
                 if (utf8ToWestern(text, len, out, l)) {

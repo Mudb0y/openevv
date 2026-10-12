@@ -186,6 +186,12 @@ development sets were used. Neither its audio nor its text is in this
 repository; what is here is the numbers derived from it and `tools/measure/pitch.py`,
 which derived them.
 
+Russian is the US English module copied and edited as it is built, so what
+is said here of lang/enus is said of lang/ruru. Its stress table is made
+from OpenRussian's dictionary, under CC BY-SA 4.0, and RuLex's lexicon is
+under the GNU General Public License, version 2, kept as a file the engine
+reads rather than compiled in. tools/russian/NOTICE says which is which.
+
 Names
 -----
 
