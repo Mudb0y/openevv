@@ -2132,6 +2132,13 @@ label L3 was at_0x2d9
   store movw imm 9 ind reg r6 1910
   store movw imm 10 ind reg r6 1914
   store movw imm 11 ind reg r6 1918
+  store movw imm 13 ind reg r6 4266
+  store movw imm 1 ind reg r6 4270
+  store movw imm 2 ind reg r6 4274
+  store movw imm 3 ind reg r6 4278
+  store movw imm 4 ind reg r6 4282
+  store movw imm 5 ind reg r6 4286
+  store movw imm 8 ind reg r6 4290
   store movw reg r7w ind reg r6 1210
   store movw imm 2 ind reg r6 1214
   store movw reg r3w ind reg r6 1218

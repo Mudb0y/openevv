@@ -610,7 +610,22 @@ label L0 was _monetary_exp
   call eng_monetary_exp arity 3 depth 5
   popn 5
   cmp testl reg r0 reg r0
+  branch je to L5
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  load movl slotaddr -12 into r0
+  push slotaddr -12
+  push state 0
+  call eng_monetary_exp_43 arity 3 depth 5
+  popn 5
+  cmp testl reg r0 reg r0
   branch jne to L1
+label L5
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  push state 0
+  call money_range arity 2 depth 2
+  popn 2
   store movl imm 1 slot -4
 label L1 was at_0xa9
   load movl slotaddr -4 into r0
@@ -1182,6 +1197,11 @@ label L0 was _convert_monetary_exp
   popn 7
   cmp testl reg r0 reg r0
   branch jne to L1
+  load movl slotaddr -20 into r0
+  push slotaddr -20
+  push state 0
+  call money_range arity 2 depth 2
+  popn 2
   store movl imm 1 slot -4
 label L1 was at_0xcd
   load movl slotaddr -4 into r0

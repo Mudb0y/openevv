@@ -260,65 +260,199 @@ uint8_t enus_evv_authored_data[] = {
     25,2,22,26,2,20,11,2,24,
     /* hyphen_mark, 1 bytes at 380 */
     63,
-    /* fence_03, 1 bytes at 381 */
-    3,
-    /* lts_bt, 2 bytes at 382 */
-    11,26,
-    /* say_04, 1 bytes at 384 */
-    4,
-    /* say_01, 1 bytes at 385 */
-    1,
-    /* lts_wr, 2 bytes at 386 */
-    28,24,
-    /* say_18, 1 bytes at 388 */
-    24,
-    /* say_1b, 1 bytes at 389 */
-    27,
-    /* lts_dg, 2 bytes at 390 */
-    13,15,
-    /* say_11, 1 bytes at 392 */
-    17,
-    /* lts_dj, 2 bytes at 393 */
-    13,17,
-    /* lts_dt, 2 bytes at 395 */
-    13,26,
-    /* lts_mech, 4 bytes at 397 */
-    20,2,12,16,
-    /* say_141f07, 3 bytes at 401 */
-    20,31,7,
-    /* lts_mn, 2 bytes at 404 */
-    20,21,
-    /* say_15, 1 bytes at 406 */
-    21,
-    /* say_14, 1 bytes at 407 */
+    /* eti_s_1be0f8, 1 bytes at 381 */
+    53,
+    /* eti_s_1be0f9, 1 bytes at 382 */
+    85,
+    /* eti_s_1be0fa, 1 bytes at 383 */
+    164,
+    /* eti_s_1be0fb, 3 bytes at 384 */
+    7,10,45,
+    /* eti_s_1be0ff, 3 bytes at 387 */
+    46,47,36,
+    /* eti_s_1be102, 1 bytes at 390 */
+    46,
+    /* eti_s_1be103, 1 bytes at 391 */
+    25,
+    /* eti_s_1be104, 2 bytes at 392 */
+    26,15,
+    /* eti_s_1be106, 3 bytes at 394 */
+    10,46,34,
+    /* eti_s_1be109, 3 bytes at 397 */
+    33,34,42,
+    /* eti_s_1be10c, 3 bytes at 400 */
+    6,10,34,
+    /* eti_s_1be10f, 3 bytes at 403 */
+    37,39,34,
+    /* eti_s_1be112, 3 bytes at 406 */
+    46,36,34,
+    /* eti_s_1be115, 2 bytes at 409 */
+    10,46,
+    /* eti_s_1be117, 2 bytes at 411 */
+    33,6,
+    /* eti_s_1be119, 1 bytes at 413 */
+    34,
+    /* eti_s_1be11a, 1 bytes at 414 */
+    42,
+    /* eti_s_1be11b, 2 bytes at 415 */
+    6,10,
+    /* eti_s_1be11d, 2 bytes at 417 */
+    37,39,
+    /* eti_s_1be11f, 1 bytes at 419 */
+    33,
+    /* eti_s_1be120, 1 bytes at 420 */
+    6,
+    /* eti_s_1be121, 2 bytes at 421 */
+    42,52,
+    /* eti_s_1be123, 1 bytes at 423 */
+    70,
+    /* eti_s_1be124, 2 bytes at 424 */
+    85,71,
+    /* eti_s_1be126, 2 bytes at 426 */
+    34,42,
+    /* eti_s_1be128, 1 bytes at 428 */
+    65,
+    /* eti_s_1be12b, 1 bytes at 429 */
+    26,
+    /* eti_s_1be12c, 1 bytes at 430 */
+    47,
+    /* eti_s_1be12d, 7 bytes at 431 */
+    16,4,5,25,1,21,13,
+    /* eti_s_1be134, 1 bytes at 438 */
     20,
-    /* lts_mb, 2 bytes at 408 */
-    20,11,
-    /* lts_ng, 2 bytes at 410 */
-    21,15,
-    /* say_16, 1 bytes at 412 */
+    /* eti_s_1be135, 1 bytes at 439 */
+    41,
+    /* eti_s_1be136, 1 bytes at 440 */
+    11,
+    /* eti_s_1be137, 1 bytes at 441 */
+    32,
+    /* eti_s_1be138, 1 bytes at 442 */
+    24,
+    /* eti_s_1be139, 6 bytes at 443 */
+    3,19,19,3,4,21,
+    /* eti_s_1be13f, 8 bytes at 449 */
+    47,37,9,10,46,6,42,34,
+    /* eti_s_1be147, 2 bytes at 457 */
+    47,45,
+    /* eti_s_1be149, 6 bytes at 459 */
+    8,40,40,8,9,42,
+    /* eti_s_1be14f, 1 bytes at 465 */
+    21,
+    /* eti_s_1be150, 2 bytes at 466 */
+    26,21,
+    /* eti_s_1be152, 8 bytes at 468 */
+    72,20,3,19,19,3,4,21,
+    /* eti_s_1be15a, 8 bytes at 476 */
+    72,11,3,19,19,3,4,21,
+    /* eti_s_1be162, 9 bytes at 484 */
+    72,26,24,3,19,19,3,4,21,
+    /* eti_s_1be16b, 6 bytes at 493 */
+    20,3,21,5,25,72,
+    /* eti_s_1be171, 2 bytes at 499 */
+    53,53,
+    /* eti_s_1be173, 4 bytes at 501 */
+    31,2,24,4,
+    /* eti_s_1be177, 1 bytes at 505 */
+    54,
+    /* eti_s_1be178, 3 bytes at 506 */
+    28,5,21,
+    /* eti_s_1be17b, 2 bytes at 509 */
+    53,54,
+    /* eti_s_1be17d, 5 bytes at 511 */
+    72,1,21,13,72,
+    /* eti_s_1be182, 1 bytes at 516 */
     22,
-    /* lts_then, 4 bytes at 413 */
+    /* eti_s_1be183, 3 bytes at 517 */
+    25,26,15,
+    /* eti_s_1be186, 3 bytes at 520 */
+    46,26,15,
+    /* eti_s_1be189, 8 bytes at 523 */
+    199,72,13,4,19,19,1,24,
+    /* eti_s_1be191, 7 bytes at 531 */
+    199,72,22,4,5,21,13,
+    /* eti_s_1be198, 6 bytes at 538 */
+    199,72,2,5,24,4,
+    /* eti_s_1be19e, 2 bytes at 544 */
+    199,25,
+    /* eti_s_1be1a0, 10 bytes at 546 */
+    199,72,25,26,2,24,19,3,21,15,
+    /* eti_s_1be1aa, 9 bytes at 556 */
+    199,72,30,5,2,72,2,25,25,
+    /* eti_s_1be1b3, 12 bytes at 565 */
+    199,72,1,5,25,26,24,1,19,3,1,21,
+    /* eti_s_1be1bf, 10 bytes at 577 */
+    199,72,12,1,21,1,13,3,1,21,
+    /* eti_s_1be1c9, 11 bytes at 587 */
+    199,72,25,3,21,15,1,22,4,24,2,
+    /* eti_s_1be1d4, 11 bytes at 598 */
+    199,72,16,4,21,15,72,18,4,21,15,
+    /* eti_s_1be1df, 13 bytes at 609 */
+    199,72,21,2,28,72,31,2,1,19,1,21,13,
+    /* eti_s_1be1ec, 6 bytes at 622 */
+    199,72,12,2,21,26,
+    /* eti_s_1be1f2, 7 bytes at 628 */
+    199,72,22,2,21,12,2,
+    /* eti_s_1be339, 6 bytes at 635 */
+    72,22,4,3,21,26,
+    /* fence_03, 1 bytes at 641 */
+    3,
+    /* lts_bt, 2 bytes at 642 */
+    11,26,
+    /* say_04, 1 bytes at 644 */
+    4,
+    /* say_01, 1 bytes at 645 */
+    1,
+    /* lts_wr, 2 bytes at 646 */
+    28,24,
+    /* say_18, 1 bytes at 648 */
+    24,
+    /* say_1b, 1 bytes at 649 */
+    27,
+    /* lts_dg, 2 bytes at 650 */
+    13,15,
+    /* say_11, 1 bytes at 652 */
+    17,
+    /* lts_dj, 2 bytes at 653 */
+    13,17,
+    /* lts_dt, 2 bytes at 655 */
+    13,26,
+    /* lts_mech, 4 bytes at 657 */
+    20,2,12,16,
+    /* say_141f07, 3 bytes at 661 */
+    20,31,7,
+    /* lts_mn, 2 bytes at 664 */
+    20,21,
+    /* say_15, 1 bytes at 666 */
+    21,
+    /* say_14, 1 bytes at 667 */
+    20,
+    /* lts_mb, 2 bytes at 668 */
+    20,11,
+    /* lts_ng, 2 bytes at 670 */
+    21,15,
+    /* say_16, 1 bytes at 672 */
+    22,
+    /* lts_then, 4 bytes at 673 */
     26,16,2,21,
-    /* lts_ton, 3 bytes at 417 */
+    /* lts_ton, 3 bytes at 677 */
     26,4,21,
-    /* lts_th, 2 bytes at 420 */
+    /* lts_th, 2 bytes at 680 */
     26,16,
-    /* lts_ngh, 3 bytes at 422 */
+    /* lts_ngh, 3 bytes at 682 */
     21,15,16,
-    /* lts_am, 2 bytes at 425 */
+    /* lts_am, 2 bytes at 685 */
     1,20,
-    /* lts_qu, 2 bytes at 427 */
+    /* lts_qu, 2 bytes at 687 */
     23,5,
-    /* lts_et, 2 bytes at 429 */
+    /* lts_et, 2 bytes at 689 */
     2,26,
-    /* say_07, 1 bytes at 431 */
+    /* say_07, 1 bytes at 691 */
     7,
-    /* lts_ette, 4 bytes at 432 */
+    /* lts_ette, 4 bytes at 692 */
     2,26,26,2,
-    /* lts_e, 1 bytes at 436 */
+    /* lts_e, 1 bytes at 696 */
     2,
-    /* say_071b, 2 bytes at 437 */
+    /* say_071b, 2 bytes at 697 */
     7,27,
 };
 

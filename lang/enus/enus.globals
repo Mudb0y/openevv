@@ -119,3 +119,9 @@ short 6
 # clears it.
 long 1
 name long 39 hyphen_chain_next
+
+# Seven that 6.1 declares and 4.3 never had, which its money rules lifted into
+# et_numbr.up compare against: a thirteenth kind of currency, where both number
+# the first eleven alike, and six kinds of dollar. set_global_constants sets
+# them to 6.1's values.
+short 7

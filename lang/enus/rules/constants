@@ -150,3 +150,72 @@ bytes month_september  19 02 16 1a 02 14 0b 02 18
 
 # The hyphen hyphen_chain in et_numbr.up looks for between numbers.
 bytes hyphen_mark      3f
+
+# 6.1's own strings for money, which et_numbr.up names.
+bytes eti_s_1be0f8     35
+bytes eti_s_1be0f9     55
+bytes eti_s_1be0fa     a4
+bytes eti_s_1be0fb     07 0a 2d
+bytes eti_s_1be0ff     2e 2f 24
+bytes eti_s_1be102     2e
+bytes eti_s_1be103     19
+bytes eti_s_1be104     1a 0f
+bytes eti_s_1be106     0a 2e 22
+bytes eti_s_1be109     21 22 2a
+bytes eti_s_1be10c     06 0a 22
+bytes eti_s_1be10f     25 27 22
+bytes eti_s_1be112     2e 24 22
+bytes eti_s_1be115     0a 2e
+bytes eti_s_1be117     21 06
+bytes eti_s_1be119     22
+bytes eti_s_1be11a     2a
+bytes eti_s_1be11b     06 0a
+bytes eti_s_1be11d     25 27
+bytes eti_s_1be11f     21
+bytes eti_s_1be120     06
+bytes eti_s_1be121     2a 34
+bytes eti_s_1be123     46
+bytes eti_s_1be124     55 47
+bytes eti_s_1be126     22 2a
+bytes eti_s_1be128     41
+bytes eti_s_1be12b     1a
+bytes eti_s_1be12c     2f
+bytes eti_s_1be12d     10 04 05 19 01 15 0d
+bytes eti_s_1be134     14
+bytes eti_s_1be135     29
+bytes eti_s_1be136     0b
+bytes eti_s_1be137     20
+bytes eti_s_1be138     18
+bytes eti_s_1be139     03 13 13 03 04 15
+bytes eti_s_1be13f     2f 25 09 0a 2e 06 2a 22
+bytes eti_s_1be147     2f 2d
+bytes eti_s_1be149     08 28 28 08 09 2a
+bytes eti_s_1be14f     15
+bytes eti_s_1be150     1a 15
+bytes eti_s_1be152     48 14 03 13 13 03 04 15
+bytes eti_s_1be15a     48 0b 03 13 13 03 04 15
+bytes eti_s_1be162     48 1a 18 03 13 13 03 04 15
+bytes eti_s_1be16b     14 03 15 05 19 48
+bytes eti_s_1be171     35 35
+bytes eti_s_1be173     1f 02 18 04
+bytes eti_s_1be177     36
+bytes eti_s_1be178     1c 05 15
+bytes eti_s_1be17b     35 36
+bytes eti_s_1be17d     48 01 15 0d 48
+bytes eti_s_1be182     16
+bytes eti_s_1be183     19 1a 0f
+bytes eti_s_1be186     2e 1a 0f
+bytes eti_s_1be189     c7 48 0d 04 13 13 01 18
+bytes eti_s_1be191     c7 48 16 04 05 15 0d
+bytes eti_s_1be198     c7 48 02 05 18 04
+bytes eti_s_1be19e     c7 19
+bytes eti_s_1be1a0     c7 48 19 1a 02 18 13 03 15 0f
+bytes eti_s_1be1aa     c7 48 1e 05 02 48 02 19 19
+bytes eti_s_1be1b3     c7 48 01 05 19 1a 18 01 13 03 01 15
+bytes eti_s_1be1bf     c7 48 0c 01 15 01 0d 03 01 15
+bytes eti_s_1be1c9     c7 48 19 03 15 0f 01 16 04 18 02
+bytes eti_s_1be1d4     c7 48 10 04 15 0f 48 12 04 15 0f
+bytes eti_s_1be1df     c7 48 15 02 1c 48 1f 02 01 13 01 15 0d
+bytes eti_s_1be1ec     c7 48 0c 02 15 1a
+bytes eti_s_1be1f2     c7 48 16 02 15 0c 02
+bytes eti_s_1be339     48 16 04 03 15 1a

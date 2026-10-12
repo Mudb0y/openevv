@@ -134,3 +134,14 @@
 0x10000	-1	Score 3-2-1 today.
 0x10000	-1	Part 123-456-789-0 is missing.
 0x10000	-1	ISBN 978-3-16-148410-0 here.
+
+# Money, which 6.1 reads with the nation after the number, and with the
+# letters of a currency before a number as that currency. Its dash in $5-$10
+# and its letters for DM 5 are not taken, so neither is here.
+0x10000	-1	It costs US$5.50.
+0x10000	-1	It costs A$5 million.
+0x10000	-1	It costs AUD$5.
+0x10000	-1	It costs C$1,000.
+0x10000	-1	It costs HK$100.
+0x10000	-1	It costs EUR 20.50.
+0x10000	-1	They paid AU$20.

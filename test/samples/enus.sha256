@@ -24,8 +24,9 @@ plain 6 82f39eea2defc6e1 57461d66daef10d0 Rzeczpospolita, naiveté, 42% of 3.141
 plain 7 29f67773bfed73f0 f65ca06ac278aa5c He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 plain 8 5e4e4261780111e4 b95269c27c9fd588 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
 plain 9 0c6e8d642ceee098 fece5313a416e4ed Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-plain 10 7cd979b02e0b624a aa5548d84ca05752 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+plain 10 7ce5a5e125142b1e dd512c41c70ddd40 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 plain 11 18383775fc714219 d9b13a74a6db9958 On 2026-10-11 part 123-456-789 suited ages 3-5, and 10-5-2=3.
+plain 12 2a0104dbde86c7d7 a0c0f4b3ce61259e It cost US$5.50 here, EUR 20.50 there, $5-$10 a head, or DM 5.
 utf8 1 7c6e196773dba1a7 7b907bc587bb6d86 The café near the naïve façade serves crème brûlée.
 utf8 2 78ff65d995f63497 cd7285c4b201b708 Señor Muñoz sent a piñata to São Paulo.
 utf8 3 0d63cfdc39d625b8 6b2c0931330cc35a Zdzisław Świątek mieszka w Świdnicy przy ulicy Żółkiewskiego.
@@ -102,8 +103,9 @@ dict 6 82f39eea2defc6e1 80f1996953c61db2 Rzeczpospolita, naiveté, 42% of 3.1415
 dict 7 29f67773bfed73f0 c571ddfba1403ab2 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 dict 8 5e4e4261780111e4 97b1b032b412b274 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
 dict 9 0c6e8d642ceee098 1cef3d4452d5577c Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-dict 10 7cd979b02e0b624a ceba59834487cff4 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+dict 10 7ce5a5e125142b1e e8529d20b5a7988b Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 dict 11 18383775fc714219 f516d0953de8f107 On 2026-10-11 part 123-456-789 suited ages 3-5, and 10-5-2=3.
+dict 12 2a0104dbde86c7d7 b187648f71977773 It cost US$5.50 here, EUR 20.50 there, $5-$10 a head, or DM 5.
 second 1 db2e00e0f9ab64fb 86d0d4a3017b6650 Hello. This is the Eloquence synthesizer speaking.
 second 2 b2226360d82f88fc e32227ad5af7f916 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
 second 3 78a6c0d59944f21d e2e8fb8b668fca26 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
@@ -113,8 +115,9 @@ second 6 752056dbc9efb0ec 5ae905798bdc9e04 Rzeczpospolita, naiveté, 42% of 3.14
 second 7 27d804c74cb1f1e4 6d27f8c778157733 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 second 8 2b93fcf546ef2622 e052c61fd60b13a3 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
 second 9 3d86a4feb2ef6e91 1066977e538220a9 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-second 10 562eb4ae5eb06560 64dfc6c8067f24c3 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+second 10 aaf4a22d692dd644 5216c3fcc01d357d Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 second 11 42381b25367965bb 5276ccf885dc29f0 On 2026-10-11 part 123-456-789 suited ages 3-5, and 10-5-2=3.
+second 12 e39f9d8ddbeaeb00 e889aedb1dc6c5b3 It cost US$5.50 here, EUR 20.50 there, $5-$10 a head, or DM 5.
 ssml 1 aeba6858c67acfd3 3fe5cf74a53482b3 <speak version="1.0" xml:lang="en-US">Hello there.</speak>
 ssml 2 302249f0afbd77b8 4dd4349233151d20 <speak version="1.0" xml:lang="en-US"><prosody rate="slow">Slowly now.</prosody> Back to normal.</speak>
 ssml 3 3653258574f72763 509fc18886a00308 <speak version="1.0" xml:lang="en-US"><prosody pitch="high" range="x-high" volume="loud">All four at once.</prosody></speak>
@@ -134,5 +137,6 @@ wide 6 d89223ae2b66cbe2 6890b36335e24925 Rzeczpospolita, naiveté, 42% of 3.1415
 wide 7 2b23566b6d7bb5cd 8af97f7b9e4451f5 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 wide 8 1d74f68a469d0099 cadc5e86a4493186 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
 wide 9 35e7407089a2582a 1a4c4a80aa432492 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-wide 10 6ad834de569d7db1 fea8e0795782445c Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+wide 10 a626dc44994e6fcd a2c7361b0f9cc475 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 wide 11 62ddc27c9774e6c1 223c149dd8257c3c On 2026-10-11 part 123-456-789 suited ages 3-5, and 10-5-2=3.
+wide 12 ed3298ac84d139b2 c8ae12798f80fff2 It cost US$5.50 here, EUR 20.50 there, $5-$10 a head, or DM 5.
