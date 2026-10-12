@@ -16,6 +16,7 @@ usage: build.py [--version V] [--tested V] [--out DIR]
 """
 
 import argparse
+import ast
 import os
 import re
 import struct
@@ -148,6 +149,84 @@ def described():
     return out[1:] if out.startswith("v") else out
 
 
+# ---- translations ----------------------------------------------------------
+
+
+def _po_entries(path):
+    """The msgid and msgstr pairs of a .po file, plurals and contexts aside,
+    which the add-on has none of."""
+    entries = {}
+    msgid = msgstr = None
+    which = None
+
+    def done():
+        if msgid is not None and msgstr:
+            entries[msgid] = msgstr
+
+    def unquote(text):
+        # A .po string is quoted and escaped the way a Python one is.
+        return ast.literal_eval(text.strip())
+
+    for line in open(path, encoding="utf-8"):
+        line = line.strip()
+        if line.startswith("#") or not line:
+            continue
+        if line.startswith("msgid "):
+            done()
+            msgid, msgstr, which = unquote(line[6:]), None, "id"
+        elif line.startswith("msgstr "):
+            msgstr, which = unquote(line[7:]), "str"
+        elif line.startswith('"'):
+            if which == "id":
+                msgid += unquote(line)
+            else:
+                msgstr += unquote(line)
+    done()
+    return entries
+
+
+def compile_mo(path):
+    """A .po file as the .mo gettext reads, written here so that packing
+    needs nothing but Python."""
+    entries = sorted(_po_entries(path).items())
+    ids = b"".join(k.encode("utf-8") + b"\0" for k, _v in entries)
+    strs = b"".join(v.encode("utf-8") + b"\0" for _k, v in entries)
+    n = len(entries)
+    start = 7 * 4 + 16 * n
+    offsets = []
+    at = 0
+    for k, _v in entries:
+        offsets.append((len(k.encode("utf-8")), start + at))
+        at += len(k.encode("utf-8")) + 1
+    at = 0
+    soffsets = []
+    for _k, v in entries:
+        soffsets.append((len(v.encode("utf-8")), start + len(ids) + at))
+        at += len(v.encode("utf-8")) + 1
+    head = struct.pack("<7I", 0x950412DE, 0, n, 28, 28 + 8 * n, 0, 0)
+    table = b"".join(struct.pack("<2I", *o) for o in offsets)
+    table += b"".join(struct.pack("<2I", *o) for o in soffsets)
+    return head + table + ids + strs
+
+
+def translations():
+    """Every file the add-on's locale folder contributes, as zip names and
+    bytes: each manifest as it is and each catalog compiled."""
+    out = []
+    base = os.path.join(ADDON, "locale")
+    if not os.path.isdir(base):
+        return out
+    for root, _dirs, files in os.walk(base):
+        for name in sorted(files):
+            path = os.path.join(root, name)
+            rel = os.path.relpath(path, ADDON).replace(os.sep, "/")
+            if name.endswith(".po"):
+                out.append((rel[:-3] + ".mo", compile_mo(path)))
+            elif name == "manifest.ini":
+                out.append((rel, open(path, "rb").read()))
+    return out
+
+
 # ---- packing ---------------------------------------------------------------
 
 
@@ -192,6 +271,16 @@ def main():
             z.write(os.path.join(ADDON, "synthDrivers", leaf), "synthDrivers/" + leaf)
         for path, name in LIBRARIES:
             z.write(path, ENGINE_DIR + "/" + name)
+        # RuLex's lexicon for Russian, a file the engine reads from beside
+        # the library rather than a table in it: it is GPL, and its licence
+        # goes with it. Written by tools/russian/make-ruru.py.
+        for name in ("rulex.dat", "rulex-LICENSE.GPL-2.txt"):
+            extra = os.path.join(ROOT, "build", name)
+            if os.path.isfile(extra):
+                z.write(extra, ENGINE_DIR + "/" + name)
+                say("packed %s" % name)
+        for name, data in translations():
+            z.writestr(name, data)
 
     say("wrote %s, %d bytes" % (target, os.path.getsize(target)))
     return 0

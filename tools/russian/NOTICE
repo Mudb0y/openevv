@@ -1,0 +1,30 @@
+What in tools/russian is whose.
+
+openrussian.tsv.gz is made from the dictionary of OpenRussian
+(https://en.openrussian.org), as published at
+https://github.com/Badestrand/russian-dictionary. It keeps, for each inflected
+form of each word there, which vowel the stress falls on, and drops the rest:
+translations, grammar and the forms of one syllable. openrussian.py is what
+made it.
+
+That dictionary is licensed under the Creative Commons Attribution-ShareAlike
+4.0 International licence, https://creativecommons.org/licenses/by-sa/4.0/,
+and so is openrussian.tsv.gz, and so is the table tools/russian/stress.py
+writes out of it into the engine, src/eci/synth/eci_russian_stress.h, and the
+part of any built library that table becomes. Anyone redistributing them has
+to say where they came from, as this file does, and pass them on under the
+same licence.
+
+rulex/ is RuLex, Igor B. Poretsky's pronunciation dictionary for Russian
+(https://github.com/poretsky/rulex), as its source files are published, the
+test dictionary gzipped. It is licensed under the GNU General Public
+License, version 2; rulex/LICENSE.GPL-2 is that licence. rulex.py turns it
+into rulex.dat, which is what the APK carries as an asset and the NVDA
+add-on carries beside the engine's library, with the licence beside it.
+rulex.dat is a file the engine reads when it is there, not part of the
+engine: the engine speaks Russian without it, and nothing GPL is compiled
+into any library.
+
+Everything else here -- stress.txt, the scripts, the rules, and the engine's
+Russian in src/eci/synth, including the code that reads rulex.dat -- is ours and under
+the MIT licence in LICENSE at the top of this repository.

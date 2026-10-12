@@ -870,7 +870,8 @@ int32_t mapToIBMlang(const char *value, int32_t length)
         { "DE", 0x40000 }, { "IT", 0x50000 }, { "ZH", 0x60000 },
         { "PT", 0x70000 }, { "JA", 0x80000 }, { "FI", 0x90000 },
         { "KO", 0xa0000 }, { "NL", 0xc0000 }, { "NO", 0xd0000 },
-        { "SV", 0xe0000 }, { "DA", 0xf0000 }, { "PL", 0x110000 }
+        { "SV", 0xe0000 }, { "DA", 0xf0000 }, { "PL", 0x110000 },
+        { "RU", 0x120000 }
     };
     static const char *BRITISH[] = {
         "GB", "UK", "VG", "IO", "IE", "ZA", "IN", "AU", "CA"

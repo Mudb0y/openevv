@@ -195,6 +195,7 @@ LOCALES = {
 	0x50000: "it_IT",
 	0x80000: "ja_JP",
 	0x110000: "pl_PL",
+	0x120000: "ru_RU",
 }
 
 #: And what to call it in a list of voices. NVDA shows the voice's name, so
@@ -211,6 +212,7 @@ LANGUAGE_NAMES = {
 	0x50000: "Italian",
 	0x80000: "Japanese",
 	0x110000: "Polish",
+	0x120000: "Russian",
 }
 
 

@@ -335,7 +335,7 @@ jobs:
       - name: Build
         run: |
           set -eu
-          langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca itit plpl jajp)
+          langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca itit plpl ruru jajp)
           case "$GITHUB_REF" in
           refs/tags/v*) version=${GITHUB_REF_NAME#v} ;;
           *)            version=0.0.0 ;;

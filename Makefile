@@ -51,6 +51,19 @@ TAG   := $(notdir $(firstword $(LANGS)))
 TAGS  := $(notdir $(LANGS))
 BUILD := build
 
+# Russian is made rather than kept: tools/russian/make-ruru.py writes the
+# stress table src/eci/synth/eci_russian.c is compiled with, which every build
+# wants, and where LANGS names lang/ruru the module itself, out of lang/enus,
+# and RuLex's lexicon into $(BUILD). Here rather than as a target because the
+# rest of this file asks which modules have their rules as text while it is
+# being read, and the module has to be there by then. It writes nothing that
+# is already current.
+RUSSIAN := $(shell python3 tools/russian/make-ruru.py \
+    $(if $(filter lang/ruru,$(LANGS)),--module --rulex $(BUILD)) 1>&2 && echo ok)
+ifneq ($(RUSSIAN),ok)
+$(error tools/russian/make-ruru.py failed)
+endif
+
 # make has no space of its own to substitute with.
 empty :=
 space := $(empty) $(empty)

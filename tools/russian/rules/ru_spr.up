@@ -1,0 +1,42 @@
+# Russian х, which is the phone Q: tools/russian/make-ruru.py says why.
+#
+# What a T in a phoneme annotation lays down, in place of English's th. It is
+# the wrapper insert_eng_spr_phone called for th, ZZlprp_load__insert_2pt_s_
+# 2_1_ZZstring34, with the code it inserts changed and nothing else.
+rule ru_insert_x takes 3 from glob.obj
+  bare
+  raw push param 2
+  raw push param 1
+  raw push param 0
+  raw call lpta_rpta_loadp arity 3 depth 3
+  raw push imm 0
+  raw push sym ru_ph_x
+  raw push imm 1
+  raw push imm 2
+  raw push param 0
+  raw call insert_2pt_s arity 5 depth 8
+  raw popn 8
+  raw alu negl none reg r0
+  raw alu sbbl reg r0 reg r0
+  raw alu negl none reg r0
+  raw return reg r0
+end
+
+# Whether the phone about to be spoken is х, for the arm of eng_con_vals that
+# hands it to ru_ph_x.
+rule ru_test_x takes 1 from es_val.obj
+  bare
+  call test_string_s 2 1 sym ru_ph_x
+end
+
+# Whether the phone is th or х, for the rules that time a consonant, its
+# transition and the syllable it starts: х is spoken as English's th was
+# when it stood for it, so it is timed as th is.
+rule ru_test_th_or_x takes 1 from es_val.obj
+  bare
+  call ZZtest_string_s_2_1_ZZstring34
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 2 1 sym ru_ph_x
+end

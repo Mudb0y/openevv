@@ -526,7 +526,10 @@ int et_processManualQueue(OldInst *h)
 
         if (!failed) {
             if (e->kind == 0) {
-                int annotate = (e->env[ENV_INPUTTYPE] == 1);
+                /* Russian is read with annotations whatever was asked, as
+                   et_addText says; the element remembers its language. */
+                int annotate = (e->env[ENV_INPUTTYPE] == 1)
+                    || (e->env[ENV_LANGUAGE] & 0xff0000) == 0x120000;
                 int32_t rc;
 
                 if (annotate)
@@ -727,6 +730,27 @@ int STDCALL et_addText(OldInst *h, const char *text)
         annotate = 1;
     }
 
+    /* And Russian, whose text eci_russian.c turns into pronunciation
+       annotations on the way into the engine, so they have to be read
+       whatever the caller asked for -- the same reason a filter turns them
+       on. Unlike a filter this leaves the caller's setting alone, and what
+       the caller wrote is not to be read as annotations when it asked for
+       none: a backquote of its own is a space. Ours, not IBM's. */
+    if ((lang & 0xff0000) == 0x120000 && !annotate) {
+        const char *from = filtered ? filtered : (bom ? bom : s);
+        size_t k, m = strlen(from);
+        char *quiet = (char *)cpp_new((uint32_t)m + 1);
+
+        if (quiet) {
+            for (k = 0; k <= m; k++)
+                quiet[k] = from[k] == '`' ? ' ' : from[k];
+            if (filtered)
+                cpp_delete(filtered);
+            filtered = quiet;
+            annotate = 1;
+        }
+    }
+
     body = filtered ? filtered : (bom ? bom : s);
     len = strlen(body);
 
@@ -736,8 +760,7 @@ int STDCALL et_addText(OldInst *h, const char *text)
     }
 
     if (OI_ENV(inst)[ENV_SYNTHMODE] == 1) {
-        QueueElement *e = et_createTextElement(inst, body, len,
-                                               OI_ENV(inst)[ENV_INPUTTYPE]);
+        QueueElement *e = et_createTextElement(inst, body, len, annotate);
 
         if (!e) {
             OI_REFUSED(inst) = 2;
