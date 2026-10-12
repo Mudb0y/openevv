@@ -220,3 +220,11 @@ add      roots5       digesting        the same
 add      roots5       converses        chosen by ear: 6.1's kun-VER-siz, where IBM's name Converse made the verb KON-ver-siz
 add      roots5       conversed        the same verb
 add      roots5       conversing       the same verb
+read-as  eng_tok_dict :)               smiley face, as 6.1 reads it; chosen by ear, where IBM's read nothing but a pause
+read-as  eng_tok_dict :-)              the same
+read-as  eng_tok_dict ;)               the same
+read-as  eng_tok_dict ;-)              the same
+read-as  eng_tok_dict :(               sad face, as 6.1 reads it; chosen by ear
+read-as  eng_tok_dict :-(              the same
+read-as  eng_tok_dict vis-a-vis        6.1's phonetic spelling, vee-zuh-VEE, one word; IBM's was three, viz ay vee; chosen by ear
+read-as  eng_tok_dict Vis-a-vis        the same, and with the accented a in both

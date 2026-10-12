@@ -203,3 +203,8 @@
 0x10000	-1	soss
 0x10000	-1	wiesenthal
 0x10000	-1	The Boston Celtics won.
+0x10000	-1	He said vis-a-vis.
+0x10000	-1	Vis-a-vis the plan, no.
+0x10000	-1	Call me :)
+0x10000	-1	Ha ;-) and :-( and ;) ok.
+0x10000	-1	That was it :(

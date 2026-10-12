@@ -5681,8 +5681,8 @@ dictionary eng_tok_dict statement 1 width 0 records characters
   s/he 255 255 50 says she[ ]or[ ]he
   t[ê]te-[à]-t[ê]te 255 255 52 says tett[ ]ah[ ]tett
   viavoice 255 255 55 says [#76][#80].1vix.2vOs[#81]
-  vis-a-vis 255 255 56 says [#76]0[ ]veez[ ][#76]0[ ]a[ ]vee
-  vis-[à]-vis 255 255 56 says [#76]0[ ]veez[ ][#76]0[ ]a[ ]vee
+  vis-a-vis 255 255 143 says [#76][#80]2vizx1vi[#81]
+  vis-[à]-vis 255 255 143 says [#76][#80]2vizx1vi[#81]
   w 255 255 58 says with
   wasnt 255 255 111 says wasn't
   werent 255 255 112 says weren't
@@ -5742,8 +5742,8 @@ dictionary eng_tok_dict statement 1 width 0 records characters
   SHOULDNT 255 255 133 says SHOULDN'T
   S/he 255 255 50 says she[ ]or[ ]he
   ViaVoice 255 255 55 says [#76][#80].1vix.2vOs[#81]
-  Vis-a-vis 255 255 56 says [#76]0[ ]veez[ ][#76]0[ ]a[ ]vee
-  Vis-[à]-vis 255 255 56 says [#76]0[ ]veez[ ][#76]0[ ]a[ ]vee
+  Vis-a-vis 255 255 143 says [#76][#80]2vizx1vi[#81]
+  Vis-[à]-vis 255 255 143 says [#76][#80]2vizx1vi[#81]
   VoicePad 255 255 57 says voice[ ][#76]0[ ]pad
   W 255 255 58 says with
   Wasnt 255 255 134 says Wasn't
@@ -5764,6 +5764,12 @@ dictionary eng_tok_dict statement 1 width 0 records characters
   49ers 255 255 67 says forty[ ]niners
   76er 255 255 68 says seventy[ ]sixer
   76ers 255 255 69 says seventy[ ]sixers
+  :-( 255 255 144 says sad[ ][#76]0[ ]face
+  :-) 255 255 145 says smiley[ ]face
+  :( 255 255 146 says sad[ ][#76]0[ ]face
+  :) 255 255 147 says smiley[ ]face
+  ;-) 255 255 148 says smiley[ ]face
+  ;) 255 255 149 says smiley[ ]face
   (s)he 255 255 50 says she[ ]or[ ]he
   (S)he 255 255 50 says she[ ]or[ ]he
 

@@ -7013,3 +7013,10 @@ at ea_roots.obj string_1081 enus_evv_glob_data_3 2392
 at ea_roots.obj string_1082 enus_evv_glob_data_3 2408
 at ea_roots.obj string_1083 enus_evv_glob_data_3 2416
 at ea_roots.obj string_1084 enus_evv_glob_data_3 2432
+at ea_text.obj string_795 enus_evv_ea_text_data_3 7528
+at ea_text.obj string_796 enus_evv_ea_text_data_3 7544
+at ea_text.obj string_797 enus_evv_ea_text_data_3 7560
+at ea_text.obj string_798 enus_evv_ea_text_data_3 7576
+at ea_text.obj string_799 enus_evv_ea_text_data_3 7592
+at ea_text.obj string_800 enus_evv_ea_text_data_3 7608
+at ea_text.obj string_801 enus_evv_ea_text_data_3 7624
