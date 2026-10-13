@@ -206,6 +206,9 @@ for _k in range(8, 16):
 # The sixteen that hold 6.1's doubles, which here hold fixed values and are
 # kept the way any other register is.
 XMM = tuple("xmm%d" % _k for _k in range(16))
+# The one-time answer the machine may have left for a dispatch, read through
+# whichever register holds the state.
+ANSWER = re.compile(r"^0x68\(%r[a-z0-9]+\)$")
 for _x in XMM:
     REG[_x] = _x
 
@@ -235,7 +238,7 @@ ARGS = ("rdi", "rsi", "rdx", "rcx", "r8", "r9")
 # functions touch them, and it keeps a double in one across a call to any
 # that does not -- which is every entry of the runtime a rule calls.
 CALLER = ("rax", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10", "r11")
-MEM = re.compile(r"^(-?0x[0-9a-f]+|-?\d+)?\((%[a-z0-9]+)(?:,(%[a-z0-9]+),(\d))?\)$")
+MEM = re.compile(r"^(-?0x[0-9a-f]+|-?\d+)?\((%[a-z0-9]+)(?:,(%[a-z0-9]+)(?:,(\d))?)?\)$")
 
 # Values that can be named wherever they are read.
 PURE = ("imm", "laddr", "gaddr", "sym", "state", "param", "code")
@@ -258,7 +261,8 @@ OPPOSITE = {"e": "ne", "ne": "e", "l": "ge", "ge": "l", "g": "le", "le": "g",
 # What 6.1 does in doubles and the machine here in fixed values, and the
 # constant the two differ by.
 SSE = ("movsd", "movapd", "movaps", "movups", "movupd", "xorps", "xorpd",
-       "unpcklpd", "shufpd", "divpd", "haddpd", "movlpd",
+       "unpcklpd", "shufpd", "divpd", "haddpd", "movlpd", "movddup", "mulpd",
+       "unpckhpd",
        "cvtsi2sd", "cvtsi2sdl",
        "cvtsi2sdq", "cvttsd2si", "cvttsd2siq", "mulsd", "divsd", "addsd",
        "subsd", "ucomisd")
@@ -408,10 +412,12 @@ class Rule:
         # The register jumped through, the one the table's base is added
         # from and the one the entry is chosen by are whichever the compiler
         # picked. The constants every entry shares can sit between the add
-        # and the jump, so the bound may be a dozen instructions back.
+        # and the jump, and so can a copy of the count into every register
+        # and local a place it leads to keeps it in -- fifteen of them in
+        # Portuguese's por_vals -- so the bound may be two dozen back.
         jump_reg = reg_of(self.ins[i][2][0].lstrip("*"))
         same = set()
-        for j in range(i - 1, max(i - 24, -1), -1):
+        for j in range(i - 1, max(i - 40, -1), -1):
             _a, m, o, _n = self.ins[j]
             if m == "addq" and len(o) == 2 and reg_of(o[1]) == jump_reg and \
                     base_reg is None:
@@ -442,7 +448,7 @@ class Rule:
         if len(bases) > 1:
             # Several tables through one register: the one loaded nearest
             # before the jump is this jump's.
-            near = [n for _a, m, o, n in self.ins[max(i - 24, 0):i]
+            near = [n for _a, m, o, n in self.ins[max(i - 40, 0):i]
                     if m == "leaq" and len(o) == 2 and
                     reg_of(o[1]) == base_reg and "(%rip)" in o[0] and n]
             bases = {near[-1][0]} if near else set()
@@ -508,7 +514,7 @@ class Rule:
         # that is straight after a call in the middle of a block.
         for a in seen:
             _a, m, o, _n = self.ins[self.by_addr[a]]
-            if m == "movq" and o and o[0] == "0x68(%rbx)":
+            if m == "movq" and o and ANSWER.match(o[0]):
                 leaders.add(a)
         # The way out starts where vretproc is handed the state, so that
         # whatever a rule does on its way there is ordinary code.
@@ -516,8 +522,13 @@ class Rule:
             i = self.by_addr[a]
             _a, m, o, _n = self.ins[i]
             if m == "callq" and o and o[0].endswith("<_vretproc>"):
-                j = i - 1 if i and self.ins[i - 1][1] == "movq" and \
-                    self.ins[i - 1][2] == ["%rbx", "%rdi"] else i
+                # Handed it out of rbx, or out of the frame where a rule that
+                # wanted rbx for something else keeps it.
+                prev = self.ins[i - 1] if i else None
+                j = i - 1 if prev and prev[1] == "movq" and \
+                    prev[2][1] == "%rdi" and (prev[2][0] == "%rbx" or
+                                              prev[2][0].endswith("(%rbp)")) \
+                    else i
                 leaders.add(self.ins[j][0])
         self.reach = sorted(seen)
         self.leaders = sorted(x for x in leaders if x in seen)
@@ -864,7 +875,12 @@ class Rule:
                 for t in self.succ[start]:
                     self.exit_tail.add(t)
             first = ms[0]
-            if first[1] == "movq" and first[2] and first[2][0] == "0x68(%rbx)":
+            if first[1] == "movq" and first[2] and \
+                    (first[2][0] == "0x68(%rbx)" or
+                     (ANSWER.match(first[2][0]) and self.asks_vback(start))):
+                # Through another register only where the state has been
+                # taken out of the frame into it, which a call to vback on
+                # one of the two ways on is what says.
                 self.dispatch_head.add(start)
             # A rule that plants nothing asks only whether there is an answer
             # to clear, since it gives up whatever the answer is.
@@ -886,6 +902,12 @@ class Rule:
                "movapd", "movaps") + \
         tuple(CONDS)
 
+    def asks_vback(self, start):
+        starts = {b[0]: b[1] for b in self.blocks}
+        return any(m == "callq" and o and o[0].endswith("<_vback>")
+                   for t in self.succ.get(start, ())
+                   for _a, m, o, _n in (self.ins[i] for i in starts.get(t, ())))
+
     def read_dispatch(self, head):
         starts = {b[0]: b[1] for b in self.blocks}
         hidx = starts[head]
@@ -900,7 +922,8 @@ class Rule:
             ms = [self.ins[i][1:3] for i in starts[t]]
             if any(m == "callq" and o[0].endswith("<_vback>") for m, o in ms):
                 slow = t
-            elif any(m == "andq" and o == ["$0x0", "0x68(%rbx)"] for m, o in ms):
+            elif any(m == "andq" and o[0] == "$0x0" and ANSWER.match(o[1])
+                     for m, o in ms):
                 fast = t
         if fast is None or slow is None:
             raise Hole("a dispatch of another shape")
@@ -1813,6 +1836,8 @@ class Rule:
             self.put_reg(st, lines, reg_of(o[1]), ("imm", 0))
             return
 
+        # The disassembler prints a negative double's bits as a negative
+        # number, so whoever reads them as a double masks them first.
         if m == "movabsq" and o[0].startswith("$") and o[1].startswith("%"):
             self.put_reg(st, lines, reg_of(o[1]), ("imm", int(o[0][1:], 0)))
             return
@@ -1822,7 +1847,8 @@ class Rule:
             if v[0] != "imm":
                 raise Hole("a double's bits from %s" % (v[0],))
             self.put_reg(st, lines, reg_of(o[1]),
-                         ("imm", as_fixed(struct.pack("<Q", v[1]))))
+                         ("imm", as_fixed(struct.pack(
+                             "<Q", v[1] & 0xffffffffffffffff))))
             return
         if m in SSE:
             return self.sse(b, st, lines, a, m, o, note)
@@ -2081,7 +2107,26 @@ class Rule:
             return v[1 + which]
         if which == 0:
             return v
+        # A pair lost where it met something else on the way here: every
+        # way into that place writes both halves where the pair is kept, the
+        # next time round.
+        want = tuple(sorted(x for x in self.pair_meets if x not in self.pairs))
+        if want:
+            raise Need(("pairs", want))
         raise Hole("the top half of %s, which holds one double" % r)
+
+    def pair_of(self, st, lines, r, lo, hi):
+        """A pair written into the two locals a packed product or quotient
+        leaves its halves in, so that a pair made one way and a pair made
+        another are the same pair where the two ways meet."""
+        out = []
+        for k, v in enumerate((lo, hi)):
+            tmp = "v%s_%d" % (r, k)
+            self.packs.add(tmp)
+            if v != ("pack", tmp):
+                self.say(st, lines, "set", tmp, "to", *self.words(v, st))
+            out.append(("pack", tmp))
+        return ("pair", out[0], out[1])
 
     def packed(self, st, lines, a, m, o, note):
         """Two doubles side by side in one register, which 6.1's compiler made
@@ -2092,6 +2137,16 @@ class Rule:
             s, d = reg_of(o[0]), reg_of(o[1])
             regs[d] = ("pair", self.pair_half(st, lines, d, 0),
                        self.pair_half(st, lines, s, 0))
+            return
+        if m == "unpckhpd":
+            s, d = reg_of(o[0]), reg_of(o[1])
+            regs[d] = ("pair", self.pair_half(st, lines, d, 1),
+                       self.pair_half(st, lines, s, 1))
+            return
+        if m == "movddup":
+            s, d = reg_of(o[0]), reg_of(o[1])
+            v = self.pair_half(st, lines, s, 0)
+            regs[d] = self.pair_of(st, lines, d, v, v)
             return
         if m == "movapd" and not o[0].startswith("%"):
             p = self.addr_of(st, o[0])
@@ -2108,25 +2163,34 @@ class Rule:
             hi = ("imm", as_fixed(self.m.bytes[note[0] + 8:note[0] + 16]))
             regs[d] = ("pair", self.pair_half(st, lines, d, 0), hi)
             return
-        if m in ("divpd", "haddpd"):
-            s, d = reg_of(o[0]), reg_of(o[1])
+        if m in ("divpd", "mulpd", "haddpd"):
+            d = reg_of(o[1])
             out = []
-            if m == "divpd":
-                halves = [(self.pair_half(st, lines, d, k),
-                           self.pair_half(st, lines, s, k)) for k in (0, 1)]
+            if o[0].endswith("(%rip)"):
+                def half(k):
+                    at = note[0] + 8 * k
+                    return ("imm", as_fixed(self.m.bytes[at:at + 8]))
+            else:
+                def half(k, s=reg_of(o[0])):
+                    return self.pair_half(st, lines, s, k)
+            if m in ("divpd", "mulpd"):
+                halves = [(self.pair_half(st, lines, d, k), half(k))
+                          for k in (0, 1)]
             else:
                 halves = [(self.pair_half(st, lines, d, 0),
                            self.pair_half(st, lines, d, 1)),
-                          (self.pair_half(st, lines, s, 0),
-                           self.pair_half(st, lines, s, 1))]
+                          (half(0), half(1))]
             for k, (x, y) in enumerate(halves):
-                name = "h_%s%s" % (d, "_hi" if k else "")
                 tmp = "v%s_%d" % (d, k)
                 self.packs.add(tmp)
-                self.say(st, lines, "set", tmp, "to", *self.words(x, st))
+                if x != ("pack", tmp):
+                    self.say(st, lines, "set", tmp, "to", *self.words(x, st))
                 if m == "divpd":
                     self.say(st, lines, "scale", tmp, "by", str(ONE), "over",
                              *self.words(y, st))
+                elif m == "mulpd":
+                    self.say(st, lines, "scale", tmp, "by",
+                             *self.words(y, st), "over", str(ONE))
                 else:
                     self.say(st, lines, "add", *self.words(y, st), "to", tmp)
                 out.append(("pack", tmp))
@@ -2144,7 +2208,8 @@ class Rule:
         and a quotient are scaled back by ONE in sixty-four bits; and a
         comparison is of whole numbers."""
         regs = st["regs"]
-        if m in ("unpcklpd", "shufpd", "divpd", "haddpd", "movlpd") or \
+        if m in ("unpcklpd", "unpckhpd", "shufpd", "divpd", "mulpd", "haddpd",
+                 "movlpd", "movddup") or \
                 (m == "movapd" and any(regs.get(reg_of(x), ("X",))[0] == "pair"
                                        for x in o if x.startswith("%xmm"))) \
                 or (m == "movapd" and not o[0].startswith("%") and
@@ -2153,7 +2218,16 @@ class Rule:
         if m in ("xorps", "xorpd"):
             if o[0] != o[1]:
                 raise Hole("%s of two registers" % m)
-            self.put_reg(st, lines, reg_of(o[1]), ("imm", 0))
+            r = reg_of(o[1])
+            if r in self.pairs:
+                # Both halves are nought, and a place that meets a packed
+                # pair on another way in reads both. The register's own local
+                # is written too, for a place that meets it instead.
+                if r in self.homes:
+                    self.say(st, lines, "set", "h_" + r, "to", "0")
+                regs[r] = self.pair_of(st, lines, r, ("imm", 0), ("imm", 0))
+                return
+            self.put_reg(st, lines, r, ("imm", 0))
             return
         if m in ("movups", "movupd", "movaps", "movapd") and \
                 not o[0].startswith("%") and o[1].startswith("%xmm"):
@@ -2248,6 +2322,12 @@ class Rule:
                     r = k + n if m == "addsd" else k - n
                 self.put_reg(st, lines, x, ("imm", r))
                 return
+            if cur[0] == "pair" and x in self.homes:
+                # A scalar operation on a packed pair works on the lower,
+                # and what it leaves is read as one double from then on.
+                self.say(st, lines, "set", "h_" + x, "to",
+                         *self.words(cur[1], st))
+                cur = ("home", x, None)
             if x not in self.homes or cur[0] != "home":
                 raise Need(("home", x))
             words = self.words(v, st, reg_of(src) if src.startswith("%")
@@ -2386,16 +2466,33 @@ class Rule:
             st["regs"][reg_of(dst)] = ("machine",
                                        self.FENCE_BLOCKS[int(src[:-6], 16)])
             return True
-        if m != "movb" or not src.startswith("$") or dst.startswith("%"):
+        if m != "movb" or dst.startswith("%"):
             return False
         mm = MEM.match(dst)
-        if not mm or mm.group(3):
+        if not mm:
             return False
         held = st["regs"].get(reg_of(mm.group(2)), ("X",))
         if held[0] != "machine":
             return False
+
+        def known(text):
+            if text.startswith("$"):
+                return int(text[1:], 0)
+            v = st["regs"].get(reg_of(text), ("X",))
+            if v[0] == "home":
+                v = v[2] or ("X",)
+            return v[1] if v[0] == "imm" else None
+        # Each written as a constant, or out of a register that holds one,
+        # with the place in the index chosen by a register the same way.
+        n = known(src)
         k = int(mm.group(1), 0) if mm.group(1) else 0
-        n = int(src[1:], 0)
+        if mm.group(3):
+            step = known(mm.group(3))
+            if step is None or mm.group(4) not in (None, "1"):
+                return False
+            k += step
+        if n is None:
+            return False
         if held[1] == "vars" and k == 0x1fb9:
             st["fence"] = {"n": n, "chars": {}}
         elif held[1] == "chars" and st.get("fence"):
@@ -2423,6 +2520,14 @@ class Rule:
         if src.endswith("(%rip)"):
             if note and self.m.got_at[0] <= note[0] < self.m.got_at[1]:
                 self.put_reg(st, lines, reg_of(dst), ("got", note[0]))
+                return
+            if note and note[1] and note[1].startswith("string_") and \
+                    w == 1 and dst.startswith("%"):
+                # A byte of one of the module's strings, which nothing
+                # writes: the type an inline fence fences, taken out of the
+                # string it was handed rather than written as a constant.
+                self.put_reg(st, lines, reg_of(dst),
+                             ("imm", self.m.bytes[note[0]]))
                 return
             raise Hole("a read of the module's data at 0x%x" % note[0])
         if dst.startswith("%"):
@@ -2458,7 +2563,8 @@ class Rule:
         if w == 8 and v[0] == "imm" and self.is_double(v[1]):
             # A double written as its bits from an ordinary register: what
             # clang does with a constant it has no reason to load.
-            v = ("imm", as_fixed(struct.pack("<Q", v[1])))
+            v = ("imm", as_fixed(struct.pack("<Q",
+                                             v[1] & 0xffffffffffffffff)))
         if p[0] == "stackarg":
             st["stackargs"][p[1]] = v
             return
@@ -3005,6 +3111,10 @@ class Rule:
         regs = {}
         for r in set(a["regs"]) | set(b["regs"]):
             x, y = a["regs"].get(r, ("X",)), b["regs"].get(r, ("X",))
+            if x != y and "pair" in (x[0], y[0]):
+                # A packed pair one way in and not the other, which matters
+                # only if the upper half is read after: pair_half asks then.
+                self.pair_meets.add(r)
             if x == y and x[0] != "X":
                 regs[r] = x
             elif x[0] == "home" and y[0] == "home":
@@ -3401,6 +3511,7 @@ class Rule:
         ins = {self.lo: self.entry_state()}
         text = {}
         needs = set()
+        self.pair_meets = set()
         for _round in range(80):
             changed = False
             self.entered = set(ins)
@@ -3520,6 +3631,7 @@ class Rule:
             self.frame_locals = set()
             self.find_frame()
             self.homes = set()
+            self.pairs = set()
             self.saves = set()
             self.snaps = set()
             again = False
@@ -3528,7 +3640,9 @@ class Rule:
                 if not needs:
                     break
                 new = {n for n in needs if not (
-                    (n[0] == "home" and n[1] in self.homes) or n in self.saves)}
+                    (n[0] == "home" and n[1] in self.homes) or
+                    (n[0] == "pairs" and set(n[1]) <= self.pairs) or
+                    n in self.saves)}
                 if not new:
                     # A place the dispatch leads to may come before the
                     # dispatch in the rule, and read what the dispatch held
@@ -3545,6 +3659,8 @@ class Rule:
                         if n[1] is None or n[1] in ("rsp", "rbp"):
                             raise Hole("a register that cannot have a home")
                         self.homes.add(n[1])
+                    elif n[0] == "pairs":
+                        self.pairs.update(n[1])
                     else:
                         self.saves.add(n)
             else:
