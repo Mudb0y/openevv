@@ -704,6 +704,15 @@ void vcompare(delta_state *d, const delta_operand *a, const delta_operand *b)
             set3(d, *(int16_t *)a->ptr, *(int16_t *)b->ptr);
         break;
 
+    /* 6.1 compares a double with a double or a long and leaves the answer
+       alone for anything else. */
+    case DK_FIXED:
+        if (b->kind == DK_FIXED)
+            set3(d, *(int32_t *)a->ptr, *(int32_t *)b->ptr);
+        else if (b->kind == DK_LONG)
+            set3(d, *(int32_t *)a->ptr, delta_int_fixed(*(int32_t *)b->ptr));
+        break;
+
     case DK_SYNC:
         /* A sync number has no ordering, only same or different. */
         EVV_AT(delta_vars *, d->vars)->compared_equal =
@@ -876,6 +885,7 @@ void vnspush(delta_state *d, const delta_operand *v)
         *(int8_t *)slot = *(int8_t *)v->ptr;
         break;
     case DK_LONG:
+    case DK_FIXED:
         *(int32_t *)slot = *(int32_t *)v->ptr;
         break;
     case DK_SHORT:
@@ -1912,6 +1922,7 @@ void vnspop(delta_state *d, delta_operand *out)
     case DK_SHORT:
     case DK_LONG:
     case DK_SHORT2:
+    case DK_FIXED:
         out->ptr = slot;
         break;
     default:
@@ -1932,7 +1943,7 @@ void vpush_var(delta_state *d, const delta_operand *v)
     int32_t step;
     uint8_t *slot;
 
-    if (v->kind == DK_SYNC)
+    if (v->kind == DK_SYNC || v->kind == DK_FIXED)
         size = 4;
     else if (v->kind == DK_SHORT2)
         size = 2;
@@ -2176,6 +2187,17 @@ void npush_i(delta_state *d, int32_t x)
     vnspush(d, &v);
 }
 
+/* 6.1's push of a double, here a fixed value. */
+void npush_f(delta_state *d, int32_t x)
+{
+    delta_operand v;
+
+    v.ptr = &x;
+    v.kind = DK_FIXED;
+    v.flag = 0;
+    vnspush(d, &v);
+}
+
 void npush_s(delta_state *d, int32_t x)
 {
     delta_operand v;
@@ -2365,10 +2387,35 @@ void vassign(delta_state *d, const delta_operand *dst, const delta_operand *src)
             *(int32_t *)dst->ptr = *(const int32_t *)src->ptr;
         else if (src->kind == DK_SHORT2)
             *(int32_t *)dst->ptr = *(const int16_t *)src->ptr;
+        else if (src->kind == DK_FIXED)
+            *(int32_t *)dst->ptr =
+                *(const int32_t *)src->ptr == DELTA_FIXED_UNSET
+                ? (int32_t)0x80000001
+                : delta_fixed_int(*(const int32_t *)src->ptr);
         break;
     case DK_SHORT2:
         if (src->kind == DK_LONG || src->kind == DK_SHORT2)
             *(int16_t *)dst->ptr = *(const int16_t *)src->ptr;
+        else if (src->kind == DK_FIXED)
+            *(int16_t *)dst->ptr =
+                *(const int32_t *)src->ptr == DELTA_FIXED_UNSET
+                ? (int16_t)0x8001
+                : (int16_t)delta_fixed_int(*(const int32_t *)src->ptr);
+        break;
+    /* Only a language lifted from 6.1 has these, and 6.1 carries an unset
+       short or long across as an unset double. */
+    case DK_FIXED:
+        if (src->kind == DK_FIXED)
+            *(int32_t *)dst->ptr = *(const int32_t *)src->ptr;
+        else if (src->kind == DK_SHORT2)
+            *(int32_t *)dst->ptr =
+                *(const uint16_t *)src->ptr == 0x8001 ? DELTA_FIXED_UNSET
+                : delta_int_fixed(*(const int16_t *)src->ptr);
+        else if (src->kind == DK_LONG)
+            *(int32_t *)dst->ptr =
+                *(const int32_t *)src->ptr == (int32_t)0x80000001
+                ? DELTA_FIXED_UNSET
+                : delta_int_fixed(*(const int32_t *)src->ptr);
         break;
     case DK_SYNC:
         memcpy(dst->ptr, src->ptr, 4);
@@ -2493,6 +2540,7 @@ void vinitloc_new(delta_state *d, delta_operand *out, const delta_loc *loc)
         out->kind = loc->kind;
         switch (out->kind) {
         case DK_LONG:
+        case DK_FIXED:
             out->ptr = (char *)loc + 4;
             break;
         case DK_SHORT2:
@@ -2722,6 +2770,13 @@ int advance_tok(delta_state *d)
     return vscanadvOverToken(d, 1) ? 0 : 1;
 }
 
+/* 6.1's step of the scan by one, through the fence, which its rules call
+   where 4.3's wrote the call to vscanadv out themselves. */
+int advanc(delta_state *d)
+{
+    return vscanadv(d, 0, 1) ? 0 : 1;
+}
+
 /* Restart a forall from a given value: assign the source to the loop
    variable, note what is being iterated, and drop the backtracking the
    previous pass left. */
@@ -2812,9 +2867,29 @@ int get_parm(delta_state *d, delta_loc *out, delta_loc *loc, int16_t kind)
             out->value = loc->value;
         } else if (loc->kind == DK_SHORT2) {
             out->value = loc->field;
+        } else if (loc->kind == DK_FIXED) {
+            out->value = delta_fixed_int(loc->value);
         } else if (loc->kind >= 0) {
             vinitloc_new(d, &v, loc);
             out->value = *(const int16_t *)v.ptr;
+            reset_field(loc);
+        } else {
+            err = 1;
+        }
+        break;
+
+    /* A language lifted from 6.1 hands its doubles about as fixed values,
+       converted the way 6.1's get_parm converts its doubles. */
+    case DK_FIXED:
+        if (loc->kind == DK_FIXED) {
+            out->value = loc->value;
+        } else if (loc->kind == DK_SHORT2) {
+            out->value = delta_int_fixed(loc->field);
+        } else if (loc->kind == DK_LONG) {
+            out->value = delta_int_fixed(loc->value);
+        } else if (loc->kind >= 0) {
+            vinitloc_new(d, &v, loc);
+            out->value = delta_int_fixed(*(const int16_t *)v.ptr);
             reset_field(loc);
         } else {
             err = 1;
@@ -2826,6 +2901,8 @@ int get_parm(delta_state *d, delta_loc *out, delta_loc *loc, int16_t kind)
             out->field = (int16_t)loc->value;
         } else if (loc->kind == DK_SHORT2) {
             out->field = loc->field;
+        } else if (loc->kind == DK_FIXED) {
+            out->field = (int16_t)delta_fixed_int(loc->value);
         } else if (loc->kind >= 0) {
             vinitloc_new(d, &v, loc);
             out->field = *(const int16_t *)v.ptr;
@@ -5821,12 +5898,57 @@ void move_i(delta_state *d, delta_loc *loc, int16_t value)
         return;
     }
 
+    if (loc->kind == DK_FIXED) {
+        loc->value = delta_int_fixed(value);
+        return;
+    }
+
     if (loc->kind < 0) {
         forceErrorBacktrack(d);
         return;
     }
 
     a.kind = DK_SHORT2;
+    a.ptr = &value;
+    a.flag = 0;
+
+    vinitloc_new(d, &b, loc);
+    vassign(d, &b, &a);
+    reset_field(loc);
+}
+
+/* 6.1's move of a double into a variable or a field, here a fixed value: a
+   whole-number variable takes it truncated, as cvttsd2si truncates, and a
+   field takes it through vassign, which converts by the field's kind. */
+void move_f(delta_state *d, delta_loc *loc, int32_t value)
+{
+    delta_operand a;
+    delta_operand b;
+
+    if (EVV_AT(delta_vars *, d->vars)->testing)
+        save_var(d, loc);
+
+    switch (loc->kind) {
+    case DK_SYNC:
+    case DK_LONG:
+        loc->value = delta_fixed_int(value);
+        return;
+    case DK_FIXED:
+        loc->value = value;
+        return;
+    case DK_SHORT2:
+        loc->field = (int16_t)delta_fixed_int(value);
+        return;
+    default:
+        break;
+    }
+
+    if (loc->kind < 0) {
+        forceErrorBacktrack(d);
+        return;
+    }
+
+    a.kind = DK_FIXED;
     a.ptr = &value;
     a.flag = 0;
 
@@ -6009,6 +6131,8 @@ void lpta_loadv(delta_state *d, uint8_t f, const delta_loc *loc)
         d->lpta.offset = loc->value;
     else if (loc->kind == DK_SHORT2)
         d->lpta.offset = loc->field;
+    else if (loc->kind == DK_FIXED)
+        d->lpta.offset = delta_fixed_int(loc->value);
     else
         forceErrorBacktrack(d);
 }
@@ -8147,6 +8271,92 @@ int dur_ass(delta_state *d, int8_t f, delta_loc *field, uint8_t mode)
     vassign(d, &want, &loc);
 
     if (vdur_ass(d, &d->lpta, &d->rpta, f, total)) {
+        reset_field(field);
+        return 1;
+    }
+
+    reset_field(field);
+    return 0;
+}
+
+/* 6.1's dur_ass, which a rule lifted from 6.1 calls. 6.1 divides in doubles,
+   so its factor is the wanted total over what the run measures exactly where
+   4.3's is a whole number of thousandths, and a share can come out one
+   different. Here the exact ratio is kept as the fraction it is, and each
+   share has the half added or taken away by the factor's sign before it is
+   cut towards nought, which is what 6.1 does with its double. */
+static int vdur_ass61(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
+                      int32_t total)
+{
+    const delta_stmt *e = &vstmtbl[f];
+    int64_t span;
+    int64_t half;
+    int32_t p;
+
+    if (vrange_2pt(d, a, b, f, 0))
+        return 1;
+
+    span = vdur(d, a, b, f);
+    if (e->fields[0].kind == DK_SHORT2 || e->fields[0].kind == DK_LONG)
+        half = ((int64_t)total * span >= 0) ? span : -span;
+    else
+        half = 0;
+
+    p = a->node;
+    EVV_WALK(w);
+
+    while (p != b->node) {
+        int64_t was;
+        int32_t share;
+
+        EVV_WALKED(d, w);
+
+        if (p != 0 && (*EVV_AT(const int32_t *, p) & 2)) {
+            p = (EVV_AT(const int32_t *, p))[EVV_AT(delta_vars *, d->vars)->fence_base + f] & -4;
+            continue;
+        }
+
+        if (e->fields[0].kind == DK_LONG)
+            was = *(const int32_t *)e->get[0](TFLDS(EVV_AT(void *, p)));
+        else
+            was = *(const int16_t *)e->get[0](TFLDS(EVV_AT(void *, p)));
+
+        share = span == 0 ? 0
+            : (int32_t)((2 * was * total + half) / (2 * span));
+
+        if (e->fields[0].kind == DK_LONG) {
+            vinitflds(d, (uint8_t)f, TFLDS(EVV_AT(void *, p)), &share);
+        } else {
+            int16_t s16 = (int16_t)share;
+
+            vinitflds(d, (uint8_t)f, TFLDS(EVV_AT(void *, p)), &s16);
+        }
+
+        p = (EVV_AT(const int32_t *, p))[1] & -4;
+    }
+
+    return 0;
+}
+
+int dur_ass61(delta_state *d, int8_t f, delta_loc *field, uint8_t mode)
+{
+    delta_operand want;
+    delta_operand loc;
+    int32_t total;
+
+    if (vrange_2pt(d, &d->lpta, &d->rpta, f, mode)) {
+        reset_field(field);
+        return 1;
+    }
+
+    want.kind = DK_LONG;
+    want.ptr = &total;
+    want.flag = 0;
+
+    vinitloc_new(d, &loc, field);
+    vassign(d, &want, &loc);
+
+    if (vdur_ass61(d, &d->lpta, &d->rpta, f, total)) {
         reset_field(field);
         return 1;
     }

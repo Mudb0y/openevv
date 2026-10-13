@@ -1,0 +1,10 @@
+<speak version="1.0" xml:lang="fi-FI">Hyvaa paivaa.</speak>
+<speak version="1.0" xml:lang="fi-FI"><prosody rate="slow">Nyt hitaammin.</prosody> Taas normaalisti.</speak>
+<speak version="1.0" xml:lang="fi-FI"><prosody pitch="high" range="x-high" volume="loud">Kaikki nelja kerralla.</prosody></speak>
+<speak version="1.0" xml:lang="fi-FI"><emphasis level="strong">Tama</emphasis>, ei tuo.</speak>
+<speak version="1.0" xml:lang="fi-FI"><voice gender="female">Han sanoi sen.</voice> Mutta han ei.</speak>
+<speak version="1.0" xml:lang="fi-FI">Se maksoi <say-as interpret-as="cardinal">1234</say-as> paivana <say-as interpret-as="ordinal">3</say-as>.</speak>
+<speak version="1.0" xml:lang="fi-FI">Tavaa: <say-as interpret-as="letters">abc</say-as>, ja soita numeroon <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+<speak version="1.0" xml:lang="fi-FI">Odota<break time="500ms"/>hetki.<mark name="tassa"/> Tuolla.</speak>
+<speak version="1.0" xml:lang="fi-FI"><sub alias="maailmanlaajuinen verkko">WWW</sub> ja <phoneme ph="h.E.l.oU">hei</phoneme>.</speak>
+<speak version="1.0" xml:lang="fi-FI">Hyvää päivää, a &amp; b &lt; c.</speak>

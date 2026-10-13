@@ -161,6 +161,13 @@ typedef struct delta_language {
     /* the settings this language carries in the image */
     const char *ini;
     int32_t     ini_size;
+
+    /* Whether the interface tells a machine of this language a setting only
+       when the caller has changed it, as 6.1's interface does. 4.3's sends
+       every setting the first time an instance speaks, as annotations ahead
+       of the caller's text, which 4.3's rules read past and the rules of a
+       language lifted from 6.1 read as part of what was said. */
+    int32_t     settings_on_change;
 } delta_language;
 
 /* Every language linked into this program, ending with a null, and the

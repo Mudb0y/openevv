@@ -26,7 +26,7 @@ module and exercise each one:
     make -j"$(nproc)" RULES=bytecode speechd-test-all
 
 The all-language executable is
-`build/sd_openevv-enus-engb-dede-eses-esus-frfr-frca-itit-plpl-jajp`. Omit
+`build/sd_openevv-enus-engb-dede-eses-esus-frfr-frca-itit-plpl-jajp-fifi`. Omit
 `RULES=bytecode` for the faster-speaking compiled-rule build; generating it
 takes substantially longer, and the suite passes in both forms.
 
@@ -53,7 +53,7 @@ language that quietly stopped being offered fails the check.
 For a user-local compiled-rule installation with every language, use absolute
 paths appropriate to the account:
 
-    make -j"$(nproc)" RULES=c LANGS="lang/enus lang/engb lang/dede lang/eses lang/esus lang/frfr lang/frca lang/itit lang/plpl lang/jajp" PREFIX=/home/Username/.local SPEECHD_CONFDIR=/home/Username/.config/speech-dispatcher/modules speechd-install
+    make -j"$(nproc)" RULES=c LANGS="lang/enus lang/engb lang/dede lang/eses lang/esus lang/frfr lang/frca lang/itit lang/plpl lang/jajp lang/fifi" PREFIX=/home/Username/.local SPEECHD_CONFDIR=/home/Username/.config/speech-dispatcher/modules speechd-install
 
 This installs `sd_openevv` below the chosen module directory and `openevv.conf` below the chosen configuration directory. Distribution packagers can set `DESTDIR`, `SPEECHD_MODULEDIR`, and `SPEECHD_CONFDIR` directly. Nothing further is needed to make the module visible: Speech Dispatcher walks its user and system module directories itself and loads what it finds there, so an installed module is offered the next time the daemon starts.
 

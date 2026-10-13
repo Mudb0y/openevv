@@ -1,0 +1,2752 @@
+# The rules of Finnish, lifted by tools/rules/lift64.py out of ETI
+# Eloquence 6.1 as Apple ships it, by tools/module/lift61.py. Each says
+# `instead' because it is written afresh rather than re-expressed from one of
+# IBM's: nothing of IBM's is under it.
+
+rule analyze_compound takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  place p94568
+  place p945a7
+  place p9460a
+  call get_parm addr c110 arg 1 -6
+  call get_parm addr c100 arg 2 -6
+  call fence 0 sym eti_null
+  call init_morph_vars
+  place p94661
+  place t94661_1 on 1
+  call roots_dict_lookup addr c110 addr c100
+  if answer is 0
+    match
+  end
+  place p94673
+  place t94673_2 on 2
+  call starttest 4
+  call split_compound addr c110 addr c100
+  if answer is 0
+    match
+  end
+  place p94690
+  place t94690_4 on 4
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 3 1 sym eti_s_fbbc1 0
+  if answer is 0
+    match
+  end
+  set unwind to 0
+  backtrack
+  place tm_3 on 3
+  match
+end
+
+rule split_compound takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  local h_r12
+  local h_r14
+  local h_r15
+  local h_rax
+  local h_rcx
+  local h_rsi
+  local s94881
+  local s94900
+  local s94a2e
+  local k948af_0
+  local k949d2_0
+  place p94710
+  set h_r14 to arg 2
+  set h_r15 to arg 1
+  place p9474b
+  place p947ab
+  set h_rsi to addr c110
+  set h_r12 to -6
+  set h_rcx to -6
+  call get_parm h_rsi arg 1 h_rcx
+  set h_rax to answer
+  set h_rsi to addr c120
+  set h_rcx to -6
+  call get_parm h_rsi arg 2 h_rcx
+  set h_rax to answer
+  set h_r15 to addr c100
+  set h_rsi to addr c100
+  call push_ptr_init h_rsi
+  set h_rax to answer
+  set h_rsi to addr c130
+  call push_ptr_init h_rsi
+  set h_rax to answer
+  set h_r14 to 0
+  set h_rsi to 0
+  call fence h_rsi sym eti_null
+  set h_rax to answer
+  set h_rsi to 1
+  call fence h_rsi sym eti_s_fbbc2
+  set h_rax to answer
+  set h_rax to global word 2224
+  set cell c100 value to h_rax
+  if global half 2582 is not 1
+    go to p94ab5
+  end
+  place p9483a
+  set h_rsi to 1
+  call starttest_l h_rsi
+  set h_rax to answer
+  set h_rsi to addr c110
+  call lpta_loadp h_rsi
+  call setscan_r 4
+  set h_rax to answer
+  if h_rax is not 0
+    go to p94ab5
+  end
+  place p9485f
+  set h_rsi to 2
+  call bspush_ca_scan_boa h_rsi
+  set h_rax to answer
+  set h_rsi to 3
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rsi to 4
+  set h_rcx to 7
+  call testFldeq h_rsi 1 h_rcx
+  set s94881 to answer
+  set h_rax to s94881
+  set h_r15 to 0
+  if h_rax is not 0
+    go to p94b32
+  end
+  place p94891
+  set h_rsi to 4
+  call bspush_ca_scan_boa h_rsi
+  set h_rax to answer
+  set h_rsi to 4
+  set h_rcx to 3
+  call testFldeq h_rsi 2 h_rcx
+  set h_rax to answer
+  set h_rcx to 0
+  set k948af_0 to h_rax
+  set h_rax to 0
+  if k948af_0 is 0
+    set h_rax to 1
+  end
+  set h_rcx to h_rax
+  set h_r15 to h_rcx
+  go to p94b32
+  place p948f5
+  place t948f5_3 on 3
+  set h_r12 to unwind
+  set h_rsi to 4
+  set h_rcx to 1
+  call testFldeq h_rsi 1 h_rcx
+  set s94900 to answer
+  set h_rax to s94900
+  set h_rsi to h_r12
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p9490c
+  go to p94916
+  place p9490e
+  place t9490e_4 on 4
+  set h_r12 to unwind
+  call bspop_boa
+  set h_rax to answer
+  place p94916
+  place t94916_5 on 5
+  set h_r12 to unwind
+  call advance_tok
+  set h_rax to answer
+  go to p949d2
+  place p94923
+  place t94923_6 on 6
+  set h_r12 to unwind
+  set h_rsi to 8
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr c110
+  call lpta_loadp h_rsi
+  call setscan_r 1
+  set h_rax to answer
+  if h_rax is not 0
+    go to p94968
+  end
+  place p94940
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    go to p94968
+  end
+  place p9494c
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    go to p94968
+  end
+  place p94958
+  call advance_tok
+  set h_rax to answer
+  if h_rax is 0
+    go to p949ee
+  end
+  place p94968
+  place t94968_8 on 8
+  set h_r12 to unwind
+  set h_rsi to addr c110
+  call initial_compound_word h_rsi addr c100
+  set h_rax to answer
+  if h_rax is 0
+    go to p94a40
+  end
+  place p94982
+  place t94982_13 on 13
+  set h_r12 to unwind
+  set h_rsi to addr c110
+  set h_rcx to addr c120
+  call find_compound h_rsi addr c100 h_rcx
+  set h_rax to answer
+  if h_rax is not 0
+    give up
+  end
+  place p949a3
+  place t949a3_12 on 12
+  place t949a3_14 on 14
+  set h_r12 to unwind
+  set h_rsi to 11
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to 17
+  call bspush_ca_boa h_rsi
+  set h_rax to answer
+  set h_rsi to addr c110
+  set h_rcx to addr c120
+  call is_possible_compound h_rsi addr c100 h_rcx
+  set h_rax to answer
+  place p949d2
+  set k949d2_0 to h_rax
+  set h_rax to 1
+  if k949d2_0 is 0
+    set h_r12 to 1
+  end
+  place p949db
+  set h_rsi to h_r12
+  set unwind to h_rsi
+  backtrack
+  place p949e3
+  set h_rsi to 9
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  place p949ee
+  place t949ee_10 on 10
+  set h_r12 to unwind
+  call advance_tok
+  set h_rax to answer
+  if h_rax is 0
+    go to p949e3
+  end
+  place p949fa
+  go to p949db
+  place p949fc
+  place t949fc_9 on 9
+  set h_r12 to unwind
+  set h_rsi to 9
+  set h_r14 to addr c110
+  call savescptr h_rsi addr c130
+  set h_rax to answer
+  set h_rsi to addr c110
+  set h_rcx to addr c100
+  call fin_compounds h_rsi addr c130 h_rcx
+  set s94a2e to answer
+  set h_rax to s94a2e
+  set h_rsi to h_r12
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p94a3e
+  go to p94a77
+  place p94a40
+  set h_rsi to 14
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to 15
+  call bspush_ca_boa h_rsi
+  set h_rax to answer
+  set h_rsi to addr c100
+  call possible_root_to_right h_rsi
+  set h_rax to answer
+  go to p949d2
+  place p94a6a
+  place t94a6a_2 on 2
+  place t94a6a_7 on 7
+  place t94a6a_15 on 15
+  place t94a6a_17 on 17
+  set h_r12 to unwind
+  call bspop_boa
+  set h_rax to answer
+  give up
+  place p94a77
+  place t94a77_11 on 11
+  set h_r12 to unwind
+  set h_rsi to addr c110
+  call insert_compound h_rsi addr c100
+  set h_rax to answer
+  place p94a8d
+  place t94a8d_18 on 18
+  set h_r12 to unwind
+  set h_rsi to addr c100
+  call analyze_compound h_rsi addr c120
+  set h_rax to answer
+  match
+  place p94ab2
+  place t94ab2_1 on 1
+  set h_r12 to unwind
+  set h_r14 to h_r12
+  place p94ab5
+  set h_r15 to h_r14
+  set h_rsi to 6
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to 7
+  call bspush_ca_boa h_rsi
+  set h_rax to answer
+  set h_rsi to addr c110
+  set h_r14 to 1
+  call lpta_loadp h_rsi
+  call setscan_r 1
+  set h_rax to answer
+  if h_rax is not 0
+    go to p94b32
+  end
+  place p94ae8
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    go to p94b32
+  end
+  place p94af4
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    go to p94b32
+  end
+  place p94b00
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    go to p94b32
+  end
+  place p94b0c
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    go to p94b32
+  end
+  place p94b18
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    go to p94b32
+  end
+  place p94b24
+  call advance_tok
+  set h_rax to answer
+  if h_rax is 0
+    set h_r15 to 1
+  end
+  place p94b32
+  set h_rsi to h_r15
+  set h_r15 to 9
+  set unwind to h_rsi
+  backtrack
+  place tm_19 on 19
+  match
+end
+
+rule initial_compound_word takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local h_r13
+  local h_rax
+  local h_rcx
+  local h_rsi
+  local s94dad
+  place p94b98
+  place p94bd7
+  place p94c0a
+  set h_r13 to -6
+  set h_rsi to addr c110
+  set h_rcx to -6
+  call get_parm h_rsi arg 1 h_rcx
+  set h_rax to answer
+  set h_rsi to addr c100
+  set h_rcx to -6
+  call get_parm h_rsi arg 2 h_rcx
+  set h_rax to answer
+  set h_rsi to 0
+  call fence h_rsi sym eti_null
+  set h_rax to answer
+  set h_rsi to 1
+  call fence h_rsi sym eti_s_fbbc2
+  set h_rax to answer
+  set h_rsi to 1
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr c110
+  call lpta_loadp h_rsi
+  call setscan_r 1
+  set h_rax to answer
+  if h_rax is not 0
+    give up
+  end
+  place p94c7f
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    give up
+  end
+  place p94c8b
+  call advance_tok
+  set h_rax to answer
+  if h_rax is 0
+    go to p94cc8
+  end
+  give up
+  place p94cc8
+  set h_r13 to 0
+  place p94cd2
+  place t94cd2_3 on 3
+  set h_r13 to unwind
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    go to p94ceb
+  end
+  place p94cde
+  set h_rsi to 2
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  go to p94cd2
+  place p94ceb
+  set h_rsi to h_r13
+  set unwind to h_rsi
+  backtrack
+  place p94d1d
+  place t94d1d_2 on 2
+  set h_r13 to unwind
+  set h_rsi to 2
+  call savescptr h_rsi addr c100
+  set h_rax to answer
+  set h_rsi to 4
+  call bspush_ca h_rsi
+  set h_rax to answer
+  set h_rsi to addr c110
+  call lpta_rpta_loadp h_rsi addr c100
+  set h_rax to answer
+  set h_rsi to 1
+  call setd_lookup h_rsi 77
+  set h_rax to answer
+  go to p94d82
+  place p94d6c
+  place t94d6c_4 on 4
+  set h_r13 to unwind
+  set h_rsi to addr c110
+  call is_initial_construct_word h_rsi addr c100
+  set h_rax to answer
+  place p94d82
+  set h_rsi to h_r13
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p94d8d
+  place t94d8d_5 on 5
+  place t94d8d_6 on 6
+  set h_r13 to unwind
+  set h_rsi to 7
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to 8
+  call bspush_ca_boa h_rsi
+  set h_rax to answer
+  set h_rsi to addr c100
+  call legal_root_init_cons h_rsi
+  set s94dad to answer
+  set h_rax to s94dad
+  set h_rcx to 1
+  if h_rax is 0
+    go to p94dbc
+  end
+  place p94db9
+  set h_rcx to h_r13
+  place p94dbc
+  set h_rsi to h_rcx
+  set unwind to h_rsi
+  backtrack
+  place p94dc3
+  place t94dc3_8 on 8
+  set h_r13 to unwind
+  call bspop_boa
+  set h_rax to answer
+  give up
+  place p94dd0
+  place t94dd0_7 on 7
+  set h_r13 to unwind
+  set h_rax to cell c100 value
+  put h_rax into arg 2 at 4
+  match
+end
+
+rule find_compound takes 4
+  instead
+  local c108 bytes 8
+  local c118 bytes 8
+  local c128 bytes 8
+  local c138 bytes 8
+  local vf8 word
+  local h_r14
+  local h_rax
+  local h_rcx
+  local h_rdx
+  local h_rsi
+  place p94e0c
+  set h_r14 to arg 3
+  set vf8 to arg 2
+  place p94e4e
+  place p94eae
+  set h_rsi to addr c128
+  set h_rdx to arg 1
+  set h_rcx to -6
+  call get_parm h_rsi h_rdx h_rcx
+  set h_rax to answer
+  set h_rsi to addr c118
+  set h_rdx to arg 2
+  set h_rcx to -6
+  call get_parm h_rsi h_rdx h_rcx
+  set h_rax to answer
+  set h_rsi to addr c138
+  set h_rdx to arg 3
+  set h_rcx to -6
+  call get_parm h_rsi h_rdx h_rcx
+  set h_rax to answer
+  set h_rsi to addr c108
+  call push_ptr_init h_rsi
+  set h_rax to answer
+  set h_rdx to sym eti_null
+  set h_r14 to 0
+  set h_rsi to 0
+  call fence h_rsi h_rdx
+  set h_rax to answer
+  set h_rdx to sym eti_s_fbbc2
+  set h_rsi to 1
+  call fence h_rsi h_rdx
+  set h_rax to answer
+  set h_rsi to addr c128
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set h_rax to answer
+  if h_rax is not 0
+    go to p94f8c
+  end
+  place p94f44
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    go to p94f8c
+  end
+  place p94f50
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    go to p94f8c
+  end
+  place p94f5c
+  call advance_tok
+  set h_rax to answer
+  set h_rcx to 0
+  set h_r14 to 0
+  if h_rax is not 0
+    go to p94f8c
+  end
+  place p94f6d
+  go to p94f77
+  place p94f74
+  place t94f74_2 on 2
+  set h_r14 to unwind
+  set h_rcx to h_r14
+  place p94f77
+  set h_r14 to h_rcx
+  set h_rsi to 2
+  set h_rdx to addr c108
+  call savescptr h_rsi h_rdx
+  set h_rax to answer
+  place p94f8c
+  set h_rsi to 3
+  place p94fa4
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr c128
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set h_rax to answer
+  set h_rdx to h_r14
+  set h_rcx to h_r14
+  if h_rax is 0
+    go to p95033
+  end
+  place p94fc8
+  set h_r14 to h_rcx
+  set h_rsi to 10
+  call startloop h_rsi
+  set h_rax to answer
+  set h_rsi to addr c118
+  set h_rdx to addr c108
+  call copyvar h_rsi h_rdx
+  set h_rax to answer
+  place p94fe8
+  place t94fe8_18 on 18
+  set h_r14 to unwind
+  set h_rsi to 12
+  call bspush_ca h_rsi
+  set h_rax to answer
+  set h_rsi to addr c118
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set h_rax to answer
+  if h_rax is not 0
+    go to p9525b
+  end
+  place p95009
+  call advance_tok
+  set h_rax to answer
+  set h_rcx to h_r14
+  if h_rax is not 0
+    go to p9525b
+  end
+  place p9501c
+  go to p95231
+  place p95021
+  place t95021_1 on 1
+  set h_r14 to unwind
+  set h_rsi to 3
+  go to p94fa4
+  place p95030
+  place t95030_5 on 5
+  set h_r14 to unwind
+  set h_rdx to h_r14
+  place p95033
+  set h_r14 to h_rdx
+  set h_rsi to 4
+  call bspush_ca_scan_boa h_rsi
+  set h_rax to answer
+  set h_rsi to 1
+  set h_rdx to 4
+  set h_rcx to 1
+  call testFldeq h_rsi h_rdx h_rcx
+  set h_rax to answer
+  go to p95255
+  place p9508a
+  place t9508a_4 on 4
+  set h_r14 to unwind
+  call bspop_boa
+  set h_rax to answer
+  call advance_tok
+  set h_rax to answer
+  set h_rsi to h_r14
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p950a1
+  set h_rsi to 5
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rax to cell c108 value
+  call lpta_loadp addr c108
+  call test_ptr
+  set h_rax to answer
+  set h_rsi to h_r14
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p950d5
+  set h_rsi to 6
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr c108
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set h_rax to answer
+  if h_rax is 0
+    go to p9510e
+  end
+  give up
+  place p950fb
+  place t950fb_8 on 8
+  set h_r14 to unwind
+  call advance_tok
+  set h_rax to answer
+  set h_rsi to h_r14
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p9510e
+  place t9510e_7 on 7
+  set h_r14 to unwind
+  set h_rsi to 8
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rsi to 1
+  set h_rdx to 4
+  set h_rcx to 1
+  call testFldeq h_rsi h_rdx h_rcx
+  set h_rax to answer
+  set h_rsi to h_r14
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p95135
+  call advance_tok
+  set h_rax to answer
+  set h_rsi to h_r14
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p95148
+  place t95148_9 on 9
+  set h_r14 to unwind
+  set h_rsi to 9
+  set h_rdx to addr c108
+  call savescptr h_rsi h_rdx
+  set h_rax to answer
+  call advance_tok
+  set h_rax to answer
+  set h_rcx to h_r14
+  set h_rsi to h_r14
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p95170
+  go to p94fc8
+  place p95175
+  place t95175_13 on 13
+  set h_r14 to unwind
+  set h_rsi to 15
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr c118
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_l h_rdx
+  set h_rax to answer
+  if h_rax is 0
+    go to p951aa
+  end
+  place p95192
+  place t95192_15 on 15
+  set h_r14 to unwind
+  set h_rsi to 12
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr c118
+  call compound_con_cluster h_rsi
+  set h_rax to answer
+  go to p951fe
+  place p951aa
+  set h_rsi to 1
+  set h_rdx to 4
+  set h_rcx to 1
+  call testFldeq h_rsi h_rdx h_rcx
+  set h_rax to answer
+  set h_rsi to h_r14
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p951c6
+  call advance_tok
+  set h_rax to answer
+  set h_rsi to h_r14
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p951d9
+  set h_rsi to addr c118
+  call disharmonic_vows h_rsi
+  set h_rax to answer
+  if h_rax is 0
+    go to p95263
+  end
+  place p951e8
+  place t951e8_16 on 16
+  set h_r14 to unwind
+  set h_rsi to 17
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr c118
+  call compound_vow_cluster h_rsi
+  set h_rax to answer
+  place p951fe
+  if h_rax is 0
+    go to p95263
+  end
+  place p95202
+  place t95202_12 on 12
+  place t95202_17 on 17
+  set h_r14 to unwind
+  set h_rsi to 10
+  set h_rdx to 11
+  set h_rcx to 18
+  call forall_adv_r h_rsi h_rdx h_rcx 1 addr c118
+  set h_rax to answer
+  set h_rsi to h_r14
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p95224
+  go to p95263
+  place p95226
+  place t95226_3 on 3
+  set h_r14 to unwind
+  set h_rcx to h_r14
+  go to p94fc8
+  place p9522e
+  place t9522e_11 on 11
+  set h_r14 to unwind
+  set h_rcx to h_r14
+  place p95231
+  set h_r14 to h_rcx
+  set h_rsi to 13
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to 14
+  call bspush_ca_boa h_rsi
+  set h_rax to answer
+  set h_rsi to addr c118
+  call possible_root_to_right h_rsi
+  set h_rax to answer
+  place p95255
+  if h_rax is 0
+    set h_r14 to 1
+  end
+  place p9525b
+  set h_rsi to h_r14
+  set unwind to h_rsi
+  backtrack
+  place p95263
+  place t95263_10 on 10
+  set h_r14 to unwind
+  set h_rax to cell c118 value
+  set h_rcx to arg 2
+  put h_rax into arg 2 at 4
+  match
+  place p95284
+  place t95284_14 on 14
+  set h_r14 to unwind
+  call bspop_boa
+  set h_rax to answer
+  give up
+end
+
+rule is_possible_compound takes 4
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  place p952dc
+  place p9531a
+  place p9537a
+  call get_parm addr c110 arg 1 -6
+  call get_parm addr c100 arg 2 -6
+  call get_parm addr c130 arg 3 -6
+  call push_ptr_init addr c120
+  call fence 0 sym eti_null
+  call fence 1 sym eti_s_fbbc2
+  if global half 4186 is not 1
+    go to p9541c
+  end
+  place p953f9
+  call root_disharmonic_vows addr c110 addr c100
+  if answer is not 0
+    go to p954ef
+  end
+  give up
+  place p9541c
+  place p95432
+  place t95432_1 on 1
+  call starttest 3
+  call lpta_loadp addr c100
+  call setscan_r 1
+  if answer is not 0
+    go to p954ef
+  end
+  place p95457
+  call advance_tok
+  if answer is not 0
+    go to p954ef
+  end
+  place p95467
+  call advance_tok
+  if answer is not 0
+    go to p954ef
+  end
+  place p95473
+  place t95473_4 on 4
+  call advance_tok
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p9547f
+  call bspush_ca_scan 4
+  place p9548a
+  place t9548a_5 on 5
+  call savescptr 5 addr c120
+  call lpta_rpta_loadp addr c110 addr c120
+  call setd_lookup 1 78
+  if answer is 0
+    give up
+  end
+  set unwind to 0
+  backtrack
+  place p954ef
+  place t954ef_2 on 2
+  place t954ef_3 on 3
+  call is_noun_suffix_sequence addr c110 addr c100 addr c130
+  if answer is 0
+    give up
+  end
+  match
+  place tm_6 on 6
+  match
+end
+
+rule insert_compound takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c128 bytes 8
+  local h_r15
+  local s95658
+  place p95540
+  set h_r15 to arg 1
+  place p9557b
+  place p955db
+  call get_parm addr c110 arg 1 -6
+  set h_r15 to addr c100
+  call get_parm addr c100 arg 2 -6
+  and 0 into cell c128 half 0
+  set c128 to -65533
+  call fence 0 sym eti_null
+  call starttest 1
+  call bspush_ca_boa 2
+  call roots_dict_entry addr c110 addr c100 addr c100
+  set s95658 to answer
+  set h_r15 to 0
+  set h_r15 to 0
+  if s95658 is 0
+    set h_r15 to 1
+  end
+  set unwind to h_r15
+  backtrack
+  place p95693
+  place t95693_2 on 2
+  set h_r15 to unwind
+  call bspop_boa
+  call lpta_rpta_loadp addr c110 addr c100
+  call settvar_s addr c128 1
+  call insert_2ptv 3 addr c128 0
+  if answer is not 0
+    set unwind to h_r15
+    backtrack
+  end
+  place p956d3
+  go to p956de
+  place p956de
+  place t956de_1 on 1
+  set h_r15 to unwind
+  call lpta_loadp addr c100
+  call proj_def 7
+  increment global half 2582
+  match
+end
+
+rule root_disharmonic_vows takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  place p9571e
+  place p95761
+  place p95794
+  call get_parm addr c110 arg 1 -6
+  call get_parm addr c120 arg 2 -6
+  call push_ptr_init addr c100
+  call fence 0 sym eti_null
+  call fence 1 sym eti_s_fbbc2
+  call starttest 1
+  call lpta_loadp addr c120
+  call setscan_r 1
+  if answer is 0
+    go to p9584c
+  end
+  give up
+  place p9584c
+  place p95856
+  place t95856_2 on 2
+  call bspush_ca_scan 3
+  place p95861
+  place t95861_4 on 4
+  call savescptr 4 addr c100
+  call is_root_with_disharmonic_vows addr c110 addr c100
+  if answer is 0
+    match
+  end
+  set unwind to 0
+  backtrack
+  place p958bf
+  place t958bf_3 on 3
+  call advance_tok
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p958cb
+  go to p95856
+  place tm_5 on 5
+  match
+end
+
+rule is_initial_construct_word takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  place p958ec
+  place p95927
+  place p95987
+  call get_parm addr c110 arg 1 -6
+  call get_parm addr c100 arg 2 -6
+  call fence 0 sym eti_null
+  call starttest 1
+  call bspush_ca_boa 2
+  call lpta_rpta_loadp addr c110 addr c100
+  call setd_lookup 1 88
+  if answer is 0
+    set unwind to 1
+  end
+  if answer is not 0
+    set unwind to 0
+  end
+  backtrack
+  place p95a33
+  place t95a33_1 on 1
+  set global half 4190 to 1
+  match
+  place p95a4b
+  place t95a4b_2 on 2
+  call bspop_boa
+  give up
+end
+
+rule legal_root_init_cons takes 2
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  place p95a5d
+  place p95a95
+  place p95af9
+  call get_parm addr c110 arg 1 -6
+  call push_ptr_init addr c100
+  call fence 0 sym eti_null
+  call fence 1 sym eti_s_fbbc2
+  call starttest 1
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is 0
+    go to p95b70
+  end
+  match
+  place p95b70
+  call testFldeq 1 4 2
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p95b85
+  call advance_tok
+  if answer is 0
+    go to p95bb0
+  end
+  set unwind to 0
+  backtrack
+  place p95bb0
+  place t95bb0_3 on 3
+  place p95bc0
+  call testFldeq 1 4 2
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p95bd5
+  call advance_tok
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p95be1
+  call bspush_ca_scan 2
+  go to p95bc0
+  go to p95c02
+  place t95c02_2 on 2
+  place p95c02
+  call savescptr 2 addr c100
+  match
+  place tm_1 on 1
+  match
+end
+
+rule disharmonic_vows takes 2
+  instead
+  local c108 bytes 8
+  local c118 bytes 8
+  local c128 bytes 8
+  local vf8 word
+  local h_r12
+  local h_r14
+  local h_rax
+  local h_rcx
+  local s95d12
+  local s95d61
+  local s95e12
+  local s95ee0
+  local s95ef7
+  local s95f6f
+  place p95c26
+  set vf8 to arg 1
+  place p95c66
+  place p95c99
+  set h_r14 to addr c108
+  set h_rcx to -6
+  call get_parm addr c108 arg 1 h_rcx
+  set h_rax to answer
+  call push_ptr_init addr c128
+  set h_rax to answer
+  call push_ptr_init addr c118
+  set h_rax to answer
+  set h_r12 to 0
+  call fence 0 sym eti_null
+  set h_rax to answer
+  call fence 1 sym eti_s_fbbc2
+  set h_rax to answer
+  call starttest 1
+  set h_rax to answer
+  call lpta_loadp addr c108
+  call setscan_r 1
+  set s95d12 to answer
+  set h_rax to s95d12
+  set h_rcx to 0
+  set h_r14 to 0
+  if h_rax is not 0
+    go to p95d86
+  end
+  place p95d21
+  set h_r14 to h_rcx
+  call bspush_ca_scan 3
+  set h_rax to answer
+  go to p95d34
+  place p95d31
+  place t95d31_4 on 4
+  set h_r12 to unwind
+  set h_r14 to h_r12
+  place p95d34
+  call savescptr 4 addr c128
+  set h_rax to answer
+  set h_rcx to 1
+  call testFldeq 1 4 h_rcx
+  set h_rax to answer
+  if h_rax is not 0
+    go to p95e7a
+  end
+  place p95d5e
+  call advance_tok
+  set s95d61 to answer
+  set h_rax to s95d61
+  set h_r12 to h_r14
+  if h_rax is not 0
+    go to p95e7a
+  end
+  place p95d71
+  place t95d71_5 on 5
+  set h_r12 to unwind
+  call savescptr 5 addr c118
+  set h_rax to answer
+  place p95d83
+  place t95d83_1 on 1
+  set h_r12 to unwind
+  set h_r14 to h_r12
+  place p95d86
+  call starttest 6
+  set h_rax to answer
+  call lpta_loadp addr c108
+  call setscan_r 1
+  set h_rax to answer
+  if h_rax is 0
+    go to p95df8
+  end
+  place p95da7
+  call is_front_vow addr c108
+  set h_rax to answer
+  if h_rax is 0
+    go to p95e20
+  end
+  place p95dba
+  call is_back_vow addr c108
+  set h_rax to answer
+  if h_rax is not 0
+    give up
+  end
+  place p95dd1
+  call starttest_e 17
+  set h_rax to answer
+  call bspush_ca_boa 18
+  set h_rax to answer
+  call is_front_vow addr c118
+  set h_rax to answer
+  go to p95e45
+  place p95df8
+  call bspush_ca_scan 7
+  set h_rax to answer
+  set h_rcx to sym eti_s_fbbc3
+  call test_string_s 1 1 h_rcx
+  set s95e12 to answer
+  set h_rax to s95e12
+  set h_rcx to h_r14
+  if h_rax is not 0
+    go to p95e7a
+  end
+  place p95e1e
+  go to p95e4d
+  place p95e20
+  call starttest_e 14
+  set h_rax to answer
+  call bspush_ca_boa 15
+  set h_rax to answer
+  call is_back_vow addr c118
+  set h_rax to answer
+  place p95e45
+  if h_rax is 0
+    set h_r14 to 1
+  end
+  go to p95e7a
+  place p95e4d
+  set h_r14 to h_rcx
+  set h_rax to cell c128 value
+  call lpta_loadp addr c128
+  call test_ptr
+  set h_rax to answer
+  if h_rax is 0
+    give up
+  end
+  place p95e7a
+  set h_r12 to h_r14
+  set unwind to h_r12
+  backtrack
+  place p95ebd
+  place t95ebd_12 on 12
+  place t95ebd_14 on 14
+  place t95ebd_17 on 17
+  set h_r12 to unwind
+  call starttest 19
+  set h_rax to answer
+  call bspush_ca_boa 20
+  set h_rax to answer
+  call find_root_boundary addr c108 addr c128
+  set s95ee0 to answer
+  set h_rax to s95ee0
+  set h_rcx to 1
+  if h_rax is 0
+    go to p95eef
+  end
+  place p95eec
+  set h_rcx to h_r12
+  place p95eef
+  set h_r12 to h_rcx
+  set unwind to h_r12
+  backtrack
+  place p95ef4
+  place t95ef4_3 on 3
+  set h_r12 to unwind
+  call advance_tok
+  set s95ef7 to answer
+  set h_rax to s95ef7
+  set h_rcx to h_r12
+  if h_rax is not 0
+    set unwind to h_r12
+    backtrack
+  end
+  place p95f03
+  go to p95d21
+  place p95f08
+  place t95f08_7 on 7
+  set h_r12 to unwind
+  call bspush_ca_scan 9
+  set h_rax to answer
+  set h_rcx to sym eti_s_fbbc4
+  go to p95f6f
+  place p95f25
+  place t95f25_9 on 9
+  set h_r12 to unwind
+  call bspush_ca_scan 10
+  set h_rax to answer
+  set h_rcx to sym eti_s_fbbc5
+  go to p95f6f
+  place p95f42
+  place t95f42_10 on 10
+  set h_r12 to unwind
+  call bspush_ca_scan 11
+  set h_rax to answer
+  set h_rcx to sym eti_s_fbbc6
+  go to p95f6f
+  place p95f5f
+  place t95f5f_11 on 11
+  set h_r12 to unwind
+  set h_rcx to sym eti_s_fbbc7
+  place p95f6f
+  call test_string_s 1 1 h_rcx
+  set s95f6f to answer
+  set h_rax to s95f6f
+  set h_rcx to h_r12
+  if h_rax is not 0
+    set unwind to h_r12
+    backtrack
+  end
+  place p95f7f
+  go to p95e4d
+  place p95f84
+  place t95f84_15 on 15
+  place t95f84_18 on 18
+  place t95f84_20 on 20
+  set h_r12 to unwind
+  call bspop_boa
+  set h_rax to answer
+  give up
+  place p95fb9
+  place t95fb9_2 on 2
+  set h_r12 to unwind
+  set h_rcx to h_r12
+  go to p95d21
+  place p95fc1
+  place t95fc1_6 on 6
+  set h_r12 to unwind
+  set h_r14 to h_r12
+  go to p95da7
+  place p95fc9
+  place t95fc9_8 on 8
+  set h_r12 to unwind
+  set h_rcx to h_r12
+  go to p95e4d
+  place p95fd1
+  place t95fd1_13 on 13
+  set h_r12 to unwind
+  set h_r14 to h_r12
+  go to p95dba
+  place p95fd9
+  place t95fd9_19 on 19
+  set h_r12 to unwind
+  set global half 4186 to 1
+  set h_rax to cell c108 value
+  set h_rcx to arg 1
+  put h_rax into arg 1 at 4
+  match
+end
+
+rule compound_vow_cluster takes 2
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  local c148 bytes 9
+  local c160 bytes 9
+  local h_r12
+  local h_r15
+  local h_rcx
+  local h_rdx
+  local h_rsi
+  local s96268
+  local s96347
+  local s9635a
+  local s96374
+  local s96387
+  local s963a8
+  local s963d5
+  local s963f2
+  local s96405
+  local s96432
+  local s96595
+  local s965c1
+  local s965ee
+  local s9660b
+  local s9661e
+  local s96638
+  local s9664b
+  local s96665
+  local s96686
+  local s966b3
+  local s96784
+  local s967cc
+  local s967df
+  local s9680c
+  local s96829
+  local s9683c
+  local s9684f
+  local s9687c
+  local s968de
+  local s96911
+  local s96930
+  local s96994
+  local s969cf
+  local s96a09
+  local s96a43
+  local s96a8d
+  local s96ad7
+  local s96b11
+  local s96b4b
+  place p96058
+  set h_r15 to arg 1
+  place p96094
+  place p960c7
+  set h_rcx to -6
+  set h_rsi to addr c100
+  set h_rdx to arg 1
+  call get_parm h_rsi h_rdx h_rcx
+  set h_r15 to 0
+  and 0 into cell c160 word 0
+  set h_r12 to 0
+  set cell c160 byte 4 to 0
+  set c160 to -65535
+  set h_rsi to addr c120
+  call push_ptr_init h_rsi
+  set h_rsi to addr c130
+  call push_ptr_init h_rsi
+  set h_rsi to addr c110
+  call push_ptr_init h_rsi
+  set cell c148 byte 4 to 0
+  and 0 into cell c148 word 0
+  set c148 to -65535
+  set h_rdx to sym eti_null
+  set h_rsi to 0
+  call fence h_rsi h_rdx
+  set h_rdx to sym eti_s_fbbc2
+  set h_r12 to 1
+  set h_rsi to 1
+  call fence h_rsi h_rdx
+  set h_rsi to 1
+  call starttest h_rsi
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_l h_rdx
+  if answer is 0
+    go to p961b8
+  end
+  give up
+  place p961b8
+  set h_rsi to 2
+  set h_rdx to addr c110
+  set h_r12 to 4
+  place p961d1
+  call savescptr h_rsi h_rdx
+  place p961d9
+  set h_rsi to 1
+  set h_rdx to 4
+  set h_rcx to 1
+  call testFldeq h_rsi h_rdx h_rcx
+  if answer is not 0
+    go to p96207
+  end
+  place p961ee
+  call advance_tok
+  if answer is not 0
+    go to p96207
+  end
+  place p961fa
+  set h_rsi to 3
+  call bspush_ca_scan h_rsi
+  go to p961d9
+  place p96207
+  set h_rsi to h_r15
+  set unwind to h_rsi
+  backtrack
+  place p9623d
+  place t9623d_30 on 30
+  place t9623d_41 on 41
+  place t9623d_46 on 46
+  place t9623d_62 on 62
+  set h_r12 to unwind
+  set h_rcx to sym eti_s_fbbc9
+  go to p9698c
+  place p96249
+  place t96249_3 on 3
+  set h_r12 to unwind
+  set h_rsi to 3
+  set h_rdx to addr c120
+  call savescptr h_rsi h_rdx
+  set h_rsi to addr c110
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set s96268 to answer
+  set h_rsi to h_r12
+  if s96268 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96274
+  go to p96281
+  place p96276
+  set h_rsi to 5
+  call bspush_ca_scan h_rsi
+  place p96281
+  place t96281_6 on 6
+  set h_r12 to unwind
+  set h_rdx to 4
+  set h_rcx to 1
+  set h_rsi to 1
+  call testFldeq h_rsi h_rdx h_rcx
+  if answer is not 0
+    go to p967af
+  end
+  place p96299
+  call advance_tok
+  if answer is 0
+    go to p96276
+  end
+  place p962a5
+  go to p967af
+  place p962aa
+  place t962aa_5 on 5
+  set h_r12 to unwind
+  set h_rsi to 5
+  set h_rdx to addr c130
+  call savescptr h_rsi h_rdx
+  place p962bc
+  place t962bc_7 on 7
+  set h_r12 to unwind
+  set h_rsi to 8
+  call starttest h_rsi
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_l h_rdx
+  if answer is 0
+    go to p967b7
+  end
+  place p962e1
+  place t962e1_8 on 8
+  set h_r12 to unwind
+  set h_rsi to 16
+  call starttest h_rsi
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_l h_rdx
+  if answer is 0
+    go to p965ac
+  end
+  place p96306
+  place t96306_16 on 16
+  set h_r12 to unwind
+  set h_rsi to 34
+  call starttest h_rsi
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_l h_rdx
+  if answer is not 0
+    give up
+  end
+  place p9632b
+  place t9632b_35 on 35
+  set h_r12 to unwind
+  set h_rsi to 35
+  set h_rdx to addr c110
+  call savescptr h_rsi h_rdx
+  set h_rsi to addr c160
+  call savetok h_rsi
+  set s96347 to answer
+  set h_rsi to h_r12
+  if s96347 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96357
+  call advance_tok
+  set s9635a to answer
+  set h_rsi to h_r12
+  if s9635a is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p9636a
+  set h_rsi to addr c148
+  call savetok h_rsi
+  set s96374 to answer
+  set h_rsi to h_r12
+  if s96374 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96384
+  call advance_tok
+  set s96387 to answer
+  set h_rsi to h_r12
+  if s96387 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96397
+  set h_rsi to addr c160
+  set h_rdx to addr c148
+  call testeq_tvars h_rsi h_rdx
+  set s963a8 to answer
+  set h_rsi to h_r12
+  if s963a8 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p963b8
+  call lpta_loadp addr c120
+  call test_ptr
+  set s963d5 to answer
+  set h_rsi to h_r12
+  if s963d5 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p963e5
+  set h_rsi to addr c110
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set s963f2 to answer
+  set h_rsi to h_r12
+  if s963f2 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96402
+  call advance_tok
+  set s96405 to answer
+  set h_rsi to h_r12
+  if s96405 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96415
+  call lpta_loadp addr c130
+  call test_ptr
+  set s96432 to answer
+  set h_rsi to h_r12
+  if s96432 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96442
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_l h_rdx
+  if answer is not 0
+    go to p96474
+  end
+  place p96458
+  set h_rcx to sym eti_s_fbbd6
+  set h_rdx to 1
+  set h_rsi to 1
+  call test_string_s h_rsi h_rdx h_rcx
+  if answer is 0
+    go to p96aee
+  end
+  place p96474
+  place t96474_36 on 36
+  set h_r12 to unwind
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_l h_rdx
+  if answer is not 0
+    go to p964a6
+  end
+  place p9648a
+  set h_rcx to sym eti_s_fbbc2
+  set h_rdx to 1
+  set h_rsi to 1
+  call test_string_s h_rsi h_rdx h_rcx
+  if answer is 0
+    go to p96a6a
+  end
+  place p964a6
+  place t964a6_43 on 43
+  set h_r12 to unwind
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_l h_rdx
+  if answer is not 0
+    go to p964d8
+  end
+  place p964bc
+  set h_rcx to sym eti_s_fbbcc
+  set h_rdx to 1
+  set h_rsi to 1
+  call test_string_s h_rsi h_rdx h_rcx
+  if answer is 0
+    go to p96a20
+  end
+  place p964d8
+  place t964d8_48 on 48
+  set h_r12 to unwind
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_l h_rdx
+  if answer is not 0
+    go to p9650a
+  end
+  place p964ee
+  set h_rcx to sym eti_s_fbbc8
+  set h_rdx to 1
+  set h_rsi to 1
+  call test_string_s h_rsi h_rdx h_rcx
+  if answer is 0
+    go to p969e6
+  end
+  place p9650a
+  place t9650a_53 on 53
+  set h_r12 to unwind
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_l h_rdx
+  if answer is not 0
+    go to p9653c
+  end
+  place p96520
+  set h_rcx to sym eti_s_fbbca
+  set h_rdx to 1
+  set h_rsi to 1
+  call test_string_s h_rsi h_rdx h_rcx
+  if answer is 0
+    go to p969ac
+  end
+  place p9653c
+  place t9653c_59 on 59
+  set h_r12 to unwind
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_l h_rdx
+  if answer is not 0
+    give up
+  end
+  place p96556
+  set h_rcx to sym eti_s_fbbc9
+  set h_rdx to 1
+  set h_rsi to 1
+  call test_string_s h_rsi h_rdx h_rcx
+  if answer is not 0
+    give up
+  end
+  place p96572
+  set h_rsi to 65
+  call starttest_l h_rsi
+  set h_rsi to 66
+  call bspush_ca_boa h_rsi
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set s96595 to answer
+  set h_rsi to h_r12
+  if s96595 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p965a5
+  set h_rsi to 67
+  go to p96947
+  place p965ac
+  place t965ac_17 on 17
+  set h_r12 to unwind
+  set h_rsi to 17
+  set h_rdx to addr c110
+  call savescptr h_rsi h_rdx
+  call advance_tok
+  set s965c1 to answer
+  set h_rsi to h_r12
+  if s965c1 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p965d1
+  call lpta_loadp addr c120
+  call test_ptr
+  set s965ee to answer
+  set h_rsi to h_r12
+  if s965ee is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p965fe
+  set h_rsi to addr c110
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set s9660b to answer
+  set h_rsi to h_r12
+  if s9660b is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p9661b
+  call advance_tok
+  set s9661e to answer
+  set h_rsi to h_r12
+  if s9661e is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p9662e
+  set h_rsi to addr c160
+  call savetok h_rsi
+  set s96638 to answer
+  set h_rsi to h_r12
+  if s96638 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96648
+  call advance_tok
+  set s9664b to answer
+  set h_rsi to h_r12
+  if s9664b is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p9665b
+  set h_rsi to addr c148
+  call savetok h_rsi
+  set s96665 to answer
+  set h_rsi to h_r12
+  if s96665 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96675
+  set h_rsi to addr c160
+  set h_rdx to addr c148
+  call testeq_tvars h_rsi h_rdx
+  set s96686 to answer
+  set h_rsi to h_r12
+  if s96686 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96696
+  call lpta_loadp addr c130
+  call test_ptr
+  set s966b3 to answer
+  set h_rsi to h_r12
+  if s966b3 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p966c3
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  if answer is not 0
+    go to p966f5
+  end
+  place p966d9
+  set h_rcx to sym eti_s_fbbcb
+  set h_rdx to 1
+  set h_rsi to 1
+  call test_string_s h_rsi h_rdx h_rcx
+  if answer is 0
+    go to p96b28
+  end
+  place p966f5
+  place t966f5_18 on 18
+  set h_r12 to unwind
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  if answer is not 0
+    go to p96727
+  end
+  place p9670b
+  set h_rcx to sym eti_s_fbbc8
+  set h_rdx to 1
+  set h_rsi to 1
+  call test_string_s h_rsi h_rdx h_rcx
+  if answer is 0
+    go to p96ab4
+  end
+  place p96727
+  place t96727_25 on 25
+  set h_r12 to unwind
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  if answer is not 0
+    give up
+  end
+  place p96741
+  set h_rcx to sym eti_s_fbbc9
+  set h_rdx to 1
+  set h_rsi to 1
+  call test_string_s h_rsi h_rdx h_rcx
+  if answer is not 0
+    give up
+  end
+  place p9675d
+  set h_rsi to 32
+  call starttest_l h_rsi
+  set h_rsi to 33
+  call bspush_ca_boa h_rsi
+  set h_rsi to addr c100
+  set h_r15 to 1
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_l h_rdx
+  set s96784 to answer
+  set h_rsi to h_r12
+  if s96784 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96794
+  set h_rcx to sym eti_s_fbbd6
+  set h_rsi to 1
+  set h_rdx to 1
+  call test_string_s h_rsi h_rdx h_rcx
+  if answer is 0
+    set h_r12 to 1
+  end
+  place p967af
+  set h_rsi to h_r12
+  set unwind to h_rsi
+  backtrack
+  place p967b7
+  place t967b7_9 on 9
+  set h_r12 to unwind
+  set h_rsi to 9
+  set h_rdx to addr c110
+  call savescptr h_rsi h_rdx
+  call advance_tok
+  set s967cc to answer
+  set h_rsi to h_r12
+  if s967cc is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p967dc
+  call advance_tok
+  set s967df to answer
+  set h_rsi to h_r12
+  if s967df is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p967ef
+  call lpta_loadp addr c120
+  call test_ptr
+  set s9680c to answer
+  set h_rsi to h_r12
+  if s9680c is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p9681c
+  set h_rsi to addr c110
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set s96829 to answer
+  set h_rsi to h_r12
+  if s96829 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96839
+  call advance_tok
+  set s9683c to answer
+  set h_rsi to h_r12
+  if s9683c is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p9684c
+  call advance_tok
+  set s9684f to answer
+  set h_rsi to h_r12
+  if s9684f is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p9685f
+  call lpta_loadp addr c130
+  call test_ptr
+  set s9687c to answer
+  set h_rsi to h_r12
+  if s9687c is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p9688c
+  set h_rsi to 10
+  call starttest_l h_rsi
+  set h_rsi to addr c120
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  if answer is not 0
+    match
+  end
+  place p968b1
+  set h_rsi to 11
+  call bspush_ca_scan h_rsi
+  set h_rcx to sym eti_s_fbbd0
+  set h_rsi to 1
+  set h_rdx to 4
+  go to p96930
+  place p968ce
+  place t968ce_11 on 11
+  set h_r12 to unwind
+  set h_rcx to sym eti_s_fbbd4
+  set h_rsi to 1
+  set h_rdx to 2
+  call test_string_s h_rsi h_rdx h_rcx
+  set s968de to answer
+  set h_rsi to h_r12
+  if s968de is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p968ee
+  set h_rsi to 13
+  call bspush_ca_scan h_rsi
+  set h_rcx to sym eti_s_fbbc1
+  go to p96909
+  place p96902
+  place t96902_13 on 13
+  set h_r12 to unwind
+  set h_rcx to sym eti_s_fbbcc
+  place p96909
+  set h_rdx to 1
+  set h_rsi to 1
+  call test_string_s h_rsi h_rdx h_rcx
+  set s96911 to answer
+  set h_rsi to h_r12
+  if s96911 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96921
+  place t96921_14 on 14
+  set h_r12 to unwind
+  set h_rcx to sym eti_s_fbbc2
+  set h_rdx to 1
+  set h_rsi to 1
+  place p96930
+  call test_string_s h_rsi h_rdx h_rcx
+  set s96930 to answer
+  set h_rsi to h_r12
+  if s96930 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  give up
+  place p96945
+  place t96945_21 on 21
+  set h_r12 to unwind
+  set h_rsi to 23
+  place p96947
+  call bspush_ca_scan h_rsi
+  place p96950
+  place t96950_51 on 51
+  set h_r12 to unwind
+  set h_rcx to sym eti_s_fbbd6
+  go to p9698c
+  place p96959
+  place t96959_23 on 23
+  set h_r12 to unwind
+  set h_rcx to sym eti_s_fbbcc
+  go to p9698c
+  place p96962
+  place t96962_28 on 28
+  set h_r12 to unwind
+  set h_rsi to 30
+  go to p96968
+  place p96966
+  place t96966_39 on 39
+  set h_r12 to unwind
+  set h_rsi to 41
+  place p96968
+  call bspush_ca_scan h_rsi
+  place p96971
+  place t96971_58 on 58
+  place t96971_67 on 67
+  set h_r12 to unwind
+  set h_rcx to sym eti_s_fbbca
+  go to p9698c
+  place p9697a
+  place t9697a_56 on 56
+  set h_r12 to unwind
+  set h_rsi to 58
+  place p9697c
+  call bspush_ca_scan h_rsi
+  set h_rcx to sym eti_s_fbbc2
+  place p9698c
+  set h_rdx to 1
+  set h_rsi to 1
+  call test_string_s h_rsi h_rdx h_rcx
+  set s96994 to answer
+  set h_rsi to h_r12
+  if s96994 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p969a4
+  place t969a4_22 on 22
+  place t969a4_29 on 29
+  place t969a4_40 on 40
+  place t969a4_47 on 47
+  place t969a4_52 on 52
+  place t969a4_57 on 57
+  place t969a4_63 on 63
+  place t969a4_68 on 68
+  set h_r12 to unwind
+  set h_rsi to 1
+  set unwind to h_rsi
+  backtrack
+  place p969ac
+  set h_rsi to 60
+  call starttest_l h_rsi
+  set h_rsi to 61
+  call bspush_ca_boa h_rsi
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set s969cf to answer
+  set h_rsi to h_r12
+  if s969cf is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p969df
+  set h_rsi to 62
+  go to p96947
+  place p969e6
+  set h_rsi to 54
+  call starttest_l h_rsi
+  set h_rsi to 55
+  call bspush_ca_boa h_rsi
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set s96a09 to answer
+  set h_rsi to h_r12
+  if s96a09 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96a19
+  set h_rsi to 56
+  go to p96947
+  place p96a20
+  set h_rsi to 49
+  call starttest_l h_rsi
+  set h_rsi to 50
+  call bspush_ca_boa h_rsi
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set s96a43 to answer
+  set h_rsi to h_r12
+  if s96a43 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96a53
+  set h_rsi to 51
+  place p96a55
+  call bspush_ca_scan h_rsi
+  set h_rcx to sym eti_s_fbbc1
+  go to p9698c
+  place p96a6a
+  set h_rsi to 44
+  call starttest_l h_rsi
+  set h_rsi to 45
+  call bspush_ca_boa h_rsi
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set s96a8d to answer
+  set h_rsi to h_r12
+  if s96a8d is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96a9d
+  set h_rsi to 46
+  place p96a9f
+  call bspush_ca_scan h_rsi
+  set h_rcx to sym eti_s_fbbc8
+  go to p9698c
+  place p96ab4
+  set h_rsi to 26
+  call starttest_l h_rsi
+  set h_rsi to 27
+  call bspush_ca_boa h_rsi
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_l h_rdx
+  set s96ad7 to answer
+  set h_rsi to h_r12
+  if s96ad7 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96ae7
+  set h_rsi to 28
+  go to p9697c
+  place p96aee
+  set h_rsi to 37
+  call starttest_l h_rsi
+  set h_rsi to 38
+  call bspush_ca_boa h_rsi
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set s96b11 to answer
+  set h_rsi to h_r12
+  if s96b11 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96b21
+  set h_rsi to 39
+  go to p96a9f
+  place p96b28
+  set h_rsi to 19
+  call starttest_l h_rsi
+  set h_rsi to 20
+  call bspush_ca_boa h_rsi
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_l h_rdx
+  set s96b4b to answer
+  set h_rsi to h_r12
+  if s96b4b is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p96b5b
+  set h_rsi to 21
+  go to p96a55
+  place p96b62
+  place t96b62_4 on 4
+  set h_r12 to unwind
+  set h_r15 to h_r12
+  set h_r12 to 4
+  go to p961d9
+  place p96b6e
+  place t96b6e_2 on 2
+  set h_r12 to unwind
+  set h_r15 to h_r12
+  set h_rsi to 2
+  set h_rdx to addr c110
+  set h_r12 to 4
+  go to p961d1
+  place p96b93
+  place t96b93_20 on 20
+  place t96b93_27 on 27
+  place t96b93_33 on 33
+  place t96b93_38 on 38
+  place t96b93_45 on 45
+  place t96b93_50 on 50
+  place t96b93_55 on 55
+  place t96b93_61 on 61
+  place t96b93_66 on 66
+  set h_r12 to unwind
+  call bspop_boa
+  give up
+  place tm_10 on 10
+  place tm_15 on 15
+  place tm_19 on 19
+  place tm_24 on 24
+  place tm_26 on 26
+  place tm_32 on 32
+  place tm_37 on 37
+  place tm_42 on 42
+  place tm_44 on 44
+  place tm_49 on 49
+  place tm_54 on 54
+  place tm_60 on 60
+  place tm_65 on 65
+  match
+end
+
+rule compound_con_cluster takes 2
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  place p96cb4
+  place p96cf4
+  place p96d23
+  call get_parm addr c110 arg 1 -6
+  call push_ptr_init addr c100
+  call fence 0 sym eti_null
+  call starttest 1
+  call lpta_loadp addr c110
+  call setscan_l 1
+  if answer is 0
+    go to p96dac
+  end
+  give up
+  place p96dac
+  place p96dc1
+  place t96dc1_2 on 2
+  call savescptr 2 addr c100
+  call test_string_s 1 1 sym eti_s_fbbc5
+  if answer is not 0
+    go to p96e17
+  end
+  place p96de1
+  call lpta_loadp addr c100
+  call setscan_r 1
+  if answer is not 0
+    go to p96e17
+  end
+  place p96df3
+  call bspush_ca_scan 3
+  call test_string_s 1 1 sym eti_s_fbbcf
+  if answer is 0
+    match
+  end
+  place p96e17
+  set unwind to 0
+  backtrack
+  go to p96e3d
+  place t96e3d_3 on 3
+  place p96e3d
+  call test_string_s 1 1 sym eti_s_fbbcd
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  match
+  place tm_4 on 4
+  place tm_5 on 5
+  match
+end
+
+rule is_front_vow takes 2
+  instead
+  local c108 bytes 8
+  local vf8 word
+  local h_rcx
+  variable g1720 word 4192
+  place p96e95
+  place p96ed1
+  place p96f00
+  set h_rcx to -6
+  call get_parm addr c108 arg 1 h_rcx
+  call fence 0 sym eti_null
+  call starttest 1
+  call lpta_loadp addr c108
+  call setscan_l 1
+  if answer is 0
+    go to p96f7a
+  end
+  give up
+  place p96f7a
+  call bspush_ca_scan 2
+  set vf8 to addr g1720
+  place p96fa5
+  place t96fa5_3 on 3
+  call savescptr 3 addr g1720
+  set h_rcx to sym eti_s_fbbc8
+  place p96fc7
+  call test_string_s 1 1 h_rcx
+  if answer is 0
+    match
+  end
+  set unwind to 0
+  backtrack
+  place p96fff
+  place t96fff_2 on 2
+  call bspush_ca_scan 5
+  set h_rcx to sym eti_s_fbbc9
+  go to p96fc7
+  place p9701c
+  place t9701c_5 on 5
+  set h_rcx to sym eti_s_fbbca
+  go to p96fc7
+  place tm_4 on 4
+  place tm_6 on 6
+  match
+end
+
+rule is_back_vow takes 2
+  instead
+  local c100 bytes 8
+  local h_r12
+  local h_rcx
+  place p9704c
+  place p97084
+  place p970e4
+  set h_rcx to -6
+  call get_parm addr c100 arg 1 h_rcx
+  set h_r12 to 0
+  call fence 0 sym eti_null
+  call starttest 1
+  call bspush_ca_boa 2
+  call lpta_loadp addr c100
+  call setscan_l 1
+  if answer is not 0
+    go to p97167
+  end
+  place p97139
+  call bspush_ca_scan 3
+  set h_rcx to sym eti_s_fbbcb
+  call test_string_s 1 1 h_rcx
+  if answer is not 0
+    go to p97167
+  end
+  place p9715c
+  go to p97163
+  place p97163
+  place t97163_4 on 4
+  set h_r12 to unwind
+  set h_r12 to 1
+  place p97167
+  set unwind to h_r12
+  backtrack
+  place p971ab
+  place t971ab_3 on 3
+  set h_r12 to unwind
+  call bspush_ca_scan 5
+  set h_rcx to sym eti_s_fbbcc
+  go to p971d4
+  place p971c8
+  place t971c8_5 on 5
+  set h_r12 to unwind
+  set h_rcx to sym eti_s_fbbc1
+  place p971d4
+  call test_string_s 1 1 h_rcx
+  if answer is not 0
+    set unwind to h_r12
+    backtrack
+  end
+  place p971dd
+  go to p97163
+  place p971df
+  place t971df_2 on 2
+  set h_r12 to unwind
+  call bspop_boa
+  give up
+  place tm_1 on 1
+  match
+end
+
+rule find_root_boundary takes 3
+  instead
+  local c100 bytes 8
+  local c118 bytes 8
+  local v108 word
+  local h_rcx
+  local h_rsi
+  place p97210
+  place p9724f
+  place p972b2
+  set h_rsi to addr c100
+  set v108 to arg 1
+  set h_rcx to -6
+  call get_parm h_rsi arg 1 h_rcx
+  set h_rsi to addr c118
+  set h_rcx to -6
+  call get_parm h_rsi arg 2 h_rcx
+  set h_rsi to 0
+  call fence h_rsi sym eti_null
+  set h_rsi to addr c100
+  call lpta_loadpn h_rsi
+  set h_rsi to addr c118
+  call rpta_loadpn h_rsi
+  call compare_ptas
+  if answer is not 0
+    go to p97330
+  end
+  place p97320
+  call testeq
+  if answer is 0
+    go to p975e7
+  end
+  place p97330
+  place p97345
+  place t97345_1 on 1
+  set h_rsi to 3
+  call starttest h_rsi
+  set h_rsi to addr c100
+  call lpta_loadp h_rsi
+  call setscan_r 1
+  if answer is 0
+    go to p975b1
+  end
+  place p9736a
+  place t9736a_3 on 3
+  set h_rsi to addr c100
+  call lpta_loadp h_rsi
+  call setscan_r 1
+  if answer is not 0
+    go to p9739d
+  end
+  place p97380
+  set h_rsi to 1
+  set h_rcx to sym eti_s_fbbc6
+  call test_string_s h_rsi 1 h_rcx
+  if answer is 0
+    go to p9748a
+  end
+  place p9739d
+  place t9739d_7 on 7
+  set h_rsi to addr c100
+  call lpta_loadp h_rsi
+  call setscan_r 1
+  if answer is not 0
+    go to p975e7
+  end
+  place p973b7
+  set h_rsi to 1
+  set h_rcx to sym eti_s_fbbc7
+  call test_string_s h_rsi 1 h_rcx
+  if answer is not 0
+    go to p975e7
+  end
+  place p973d4
+  place t973d4_18 on 18
+  set h_rsi to 18
+  call savescptr h_rsi addr c100
+  set h_rsi to 19
+  call starttest h_rsi
+  set h_rsi to addr c100
+  call lpta_loadp h_rsi
+  call setscan_r 1
+  if answer is not 0
+    go to p975e7
+  end
+  place p97413
+  set h_rsi to 20
+  place p97418
+  call bspush_ca_scan h_rsi
+  set h_rsi to 1
+  set h_rcx to sym eti_s_fbbc4
+  place p9742e
+  call test_string_s h_rsi 1 h_rcx
+  if answer is 0
+    give up
+  end
+  set unwind to 0
+  backtrack
+  place p9746a
+  place t9746a_4 on 4
+  set h_rsi to 6
+  call bspush_ca_scan h_rsi
+  set h_rsi to 1
+  set h_rcx to sym eti_s_fbbc4
+  go to p975c8
+  place p9748a
+  place t9748a_8 on 8
+  set h_rsi to 8
+  call savescptr h_rsi addr c100
+  set h_rsi to 9
+  call starttest h_rsi
+  set h_rsi to addr c100
+  call lpta_loadp h_rsi
+  call setscan_r 1
+  if answer is not 0
+    go to p975e7
+  end
+  place p974c1
+  set h_rsi to 10
+  call bspush_ca_scan h_rsi
+  set h_rsi to 1
+  set h_rcx to sym eti_s_fbbcd
+  go to p9742e
+  place p974e1
+  place t974e1_6 on 6
+  set h_rsi to 1
+  set h_rcx to sym eti_s_fbbc5
+  go to p975c8
+  place p974f6
+  place t974f6_10 on 10
+  set h_rsi to 12
+  call bspush_ca_scan h_rsi
+  place p97501
+  place t97501_20 on 20
+  set h_rsi to 1
+  set h_rcx to sym eti_s_fbbc7
+  go to p9742e
+  place p97516
+  place t97516_12 on 12
+  set h_rsi to 13
+  call bspush_ca_scan h_rsi
+  set h_rsi to 1
+  set h_rcx to sym eti_s_fbbce
+  go to p9742e
+  place p97536
+  place t97536_13 on 13
+  set h_rsi to 14
+  call bspush_ca_scan h_rsi
+  set h_rsi to 1
+  set h_rcx to sym eti_s_fbbc3
+  go to p9742e
+  place p97552
+  place t97552_14 on 14
+  set h_rsi to 15
+  go to p97418
+  place p9755c
+  place t9755c_15 on 15
+  set h_rsi to 16
+  call bspush_ca_scan h_rsi
+  set h_rsi to 1
+  set h_rcx to sym eti_s_fbbc5
+  go to p9742e
+  place p9757c
+  place t9757c_16 on 16
+  set h_rsi to 17
+  call bspush_ca_scan h_rsi
+  set h_rsi to 1
+  set h_rcx to sym eti_s_fbbcf
+  go to p9742e
+  place p9759c
+  place t9759c_17 on 17
+  set h_rsi to 1
+  set h_rcx to sym eti_s_fbbc6
+  go to p9742e
+  place p975b1
+  set h_rsi to 4
+  call bspush_ca_scan h_rsi
+  set h_rsi to 1
+  set h_rcx to sym eti_s_fbbc3
+  place p975c8
+  call test_string_s h_rsi 1 h_rcx
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p975d5
+  place t975d5_5 on 5
+  set h_rsi to 5
+  call savescptr h_rsi addr c100
+  place p975e7
+  place t975e7_2 on 2
+  place t975e7_9 on 9
+  place t975e7_19 on 19
+  set h_rcx to arg 1
+  put cell c100 value into arg 1 at 4
+  match
+end
+
+rule is_root_with_disharmonic_vows takes 3
+  instead
+  local c110 bytes 8
+  local c120 bytes 8
+  local vf8 word
+  local v100 word
+  local h_rdx
+  variable g1720 word 4192
+  variable gd10 word 2220
+  place p97660
+  place p9769f
+  place p97702
+  set h_rdx to arg 1
+  call get_parm addr c110 h_rdx -6
+  set h_rdx to arg 2
+  call get_parm addr c120 h_rdx -6
+  set h_rdx to sym eti_null
+  call fence 0 h_rdx
+  set h_rdx to addr c120
+  call lpta_rpta_loadp addr c110 h_rdx
+  set h_rdx to 79
+  call setd_lookup 1 h_rdx
+  if answer is 0
+    match
+  end
+  place p97770
+  set v100 to addr g1720
+  set vf8 to addr gd10
+  place p97797
+  place t97797_1 on 1
+  call starttest 3
+  call lpta_loadpn addr g1720
+  call rpta_loadpn addr gd10
+  call compare_ptas
+  if answer is not 0
+    give up
+  end
+  place p977d0
+  call testneq
+  if answer is not 0
+    give up
+  end
+  place p977e0
+  call bspush_ca 4
+  set h_rdx to addr c120
+  call lpta_rpta_loadp addr c110 h_rdx
+  set h_rdx to 106
+  place p97806
+  call setd_lookup 1 h_rdx
+  if answer is 0
+    match
+  end
+  set unwind to 0
+  backtrack
+  place p9783e
+  place t9783e_4 on 4
+  set h_rdx to addr c120
+  call lpta_rpta_loadp addr c110 h_rdx
+  set h_rdx to 107
+  go to p97806
+  place tm_2 on 2
+  place tm_5 on 5
+  match
+end

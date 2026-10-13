@@ -1189,7 +1189,7 @@ def cells(base):
     if not os.path.exists(path):
         return []
     text = open(path, encoding="utf-8").read()
-    kinds = re.findall(r'DG_(WORD|LONG|SHORT|COMPOUND)', text)
+    kinds = re.findall(r'DG_(WORD|LONG|SHORT|COMPOUND|FIXED)', text)
     decls = re.findall(r'\{\s*(\d+),\s*(\d+)\s*\}',
                        text[text.index('delta_compounds[]'):])
     inits = [int(a) for a, _b in decls]
@@ -1200,12 +1200,12 @@ def cells(base):
 
     out = []
     at = base
-    n = {'WORD': 0, 'LONG': 0, 'SHORT': 0, 'COMPOUND': 0}
+    n = {'WORD': 0, 'LONG': 0, 'SHORT': 0, 'COMPOUND': 0, 'FIXED': 0}
     for k in kinds:
         i = n[k]
-        if k in ('WORD', 'LONG'):
+        if k in ('WORD', 'LONG', 'FIXED'):
             at = up(at, 4)
-            out.append((at, 8, '%s%d' % ('w' if k == 'WORD' else 'l', i), 4))
+            out.append((at, 8, '%s%d' % (k[0].lower(), i), 4))
             at += 8
         elif k == 'SHORT':
             at = up(at, 2)

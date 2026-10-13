@@ -601,7 +601,7 @@ class Compiler:
         elif head in ("scale", "truncate", "multiply", "divide"):
             # The products and quotients a rule lifted from 6.1 makes, in
             # whole numbers: `scale x by a over b' is x * a / b rounded to the
-            # nearest, which is a product or a quotient of thousandths;
+            # nearest, which is a product or a quotient of fixed values;
             # `truncate' is the same cut towards nought, which is a double
             # made a whole number; `multiply a into x' and `divide x by a' are
             # the integer ones. All four are one operation, worked in sixty-

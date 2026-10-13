@@ -334,7 +334,7 @@ class Emitter:
                 elif kind == "muldiv":
                     # a * b / c in sixty-four bits, rounded or truncated:
                     # what a rule lifted from 6.1 does its decimal
-                    # arithmetic with, in thousandths.
+                    # arithmetic with, in fixed values.
                     self.u8(OP["MULDIV"])
                     self.u8(1 if op[1] == "round" else 0)
                     self.operand(op[2], d.pbase)

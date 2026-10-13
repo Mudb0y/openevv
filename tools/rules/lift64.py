@@ -203,8 +203,8 @@ for _n in ("si", "di", "bp", "sp"):
 for _k in range(8, 16):
     for _f in ("r%d" % _k, "r%dd" % _k, "r%dw" % _k, "r%db" % _k):
         REG[_f] = "r%d" % _k
-# The sixteen that hold 6.1's doubles, which here hold thousandths and are kept
-# the way any other register is.
+# The sixteen that hold 6.1's doubles, which here hold fixed values and are
+# kept the way any other register is.
 XMM = tuple("xmm%d" % _k for _k in range(16))
 for _x in XMM:
     REG[_x] = _x
@@ -255,29 +255,32 @@ WIDTH_OF = {"movq": 8, "movl": 4, "movw": 2, "movb": 1, "movzwl": 2,
 OPPOSITE = {"e": "ne", "ne": "e", "l": "ge", "ge": "l", "g": "le", "le": "g",
             "b": "ae", "ae": "b", "a": "be", "be": "a", "s": "ns", "ns": "s"}
 
-# What 6.1 does in doubles and the machine here in thousandths, and the
+# What 6.1 does in doubles and the machine here in fixed values, and the
 # constant the two differ by.
 SSE = ("movsd", "movapd", "movaps", "movups", "movupd", "xorps", "xorpd",
        "unpcklpd", "shufpd", "divpd", "haddpd", "movlpd",
        "cvtsi2sd", "cvtsi2sdl",
        "cvtsi2sdq", "cvttsd2si", "cvttsd2siq", "mulsd", "divsd", "addsd",
        "subsd", "ucomisd")
-ONE = 1000
+ONE = 10000
 
 
-def thousandths(raw):
-    """A double as a whole number of thousandths, rounded to the nearest:
-    0.85 is held exactly as 850 where the double only approximates it."""
+def as_fixed(raw):
+    """A double as a whole number of ten-thousandths, rounded to the nearest:
+    0.85 is held exactly as 8500 where the double only approximates it."""
     v = struct.unpack("<d", raw)[0]
     n = int(abs(v) * ONE + 0.5)
     return -n if v < 0 else n
 
 
 # Entries of 6.1's runtime handed a double, in xmm0, after how many of the
-# ordinary arguments; ours are handed the thousandths as one more of those.
+# ordinary arguments; ours are handed the fixed value as one more of those.
 FLOAT_ARGS = {"move_f": 1, "npush_f": 0}
+# Entries 6.1 kept the name of and changed what they do, which a lifted rule
+# calls under the name of 6.1's version so that a 4.3 language is untouched.
+AS_61 = {"dur_ass": "dur_ass61"}
 # The C library's mathematics, which a few rules call on a double and which
-# the runtime here does in thousandths.
+# the runtime here does in fixed values.
 LIBM = {"exp": "fixed_exp", "log": "fixed_log", "exp2": "fixed_exp2",
         "pow": "fixed_pow"}
 
@@ -353,7 +356,7 @@ class Rule:
         self.m = module
         self.name = name
         # A parity jump follows a comparison of doubles and is taken only when
-        # one was not a number, which a thousandth never is: so jp is never
+        # one was not a number, which a fixed value never is: so jp is never
         # taken and jnp always.
         self.ins = [(a, "nop" if m == "jp" else "jmp" if m == "jnp" else m,
                      o, n) for a, m, o, n in module.functions[name]]
@@ -676,6 +679,8 @@ class Rule:
         p = self.addr_of(st, text)
         if p[0] == "gotval":
             return ("canary",)
+        if p[0] == "stackparam":
+            return ("param", p[1])
         if p[0] == "local" and p[1] in st["slots"]:
             return st["slots"][p[1]]
         return ("mem", p, width or 4, signed, None)
@@ -698,6 +703,10 @@ class Rule:
         if base == "rbx" and st["regs"].get("rbx", ("state",))[0] == "state":
             return ("glob", off)
         if base == "rbp":
+            # Above the saved frame pointer and the return are the arguments
+            # past the fifth, which the caller pushed.
+            if off >= 16:
+                return ("stackparam", 6 + (off - 16) // 8)
             return ("local", off)
         v = st["regs"].get(base, ("X",))
         if v[0] == "home" and v[2] is not None:
@@ -993,7 +1002,15 @@ class Rule:
                 self.exit_tags.setdefault(t, []).append(k)
                 self.exit_facts[(t, k)] = every
                 continue
-            if t in self.exit_tail or self.gives_up(t):
+            if self.gives_up(t):
+                # A block that only moves registers into the way out answers
+                # whatever it leaves there, which is not always giving up:
+                # the way out says which once the moves are made.
+                out, every = self.through_moves(t, every)
+                self.exit_tags.setdefault(out, []).append(k)
+                self.exit_facts[(out, k)] = every
+                continue
+            if t in self.exit_tail:
                 continue
             old = self.tag_facts.setdefault(t, facts)
             if old != facts:
@@ -1008,21 +1025,48 @@ class Rule:
             raise Hole("a dispatch that goes nowhere")
         self.dispatch_rest |= seen
 
+    def through_moves(self, t, facts):
+        """What the registers hold once a block that only moves them has
+        run, from what they held on the way in, and the way out it falls
+        into."""
+        f = dict(facts)
+        pushes = []
+        idx = dict(self.blocks)[t]
+        for i in idx:
+            _a, m, o, _n = self.ins[i]
+            if m in ("movl", "movq"):
+                src = reg_of(o[0])
+                f[reg_of(o[1])] = f.get(src, ("reg", src))
+            elif m == "xorl":
+                f[reg_of(o[1])] = 0
+            elif m == "pushq":
+                pushes.append(int(o[0].lstrip("$"), 0) if o[0].startswith("$")
+                              else f.get(reg_of(o[0]), ("reg", reg_of(o[0]))))
+            elif m == "popq":
+                f[reg_of(o[0])] = pushes.pop() if pushes else ("X",)
+        return self.moves_into(t), f
+
     def gives_up(self, t):
-        """A block that only moves registers on its way into the way out."""
+        """A block that only moves registers on its way into the way out,
+        by falling into it or by a jump to it."""
+        return self.moves_into(t) in self.exits
+
+    def moves_into(self, t):
+        """Where a block that only moves registers goes: the way out it falls
+        or jumps into, or None for any other block."""
         idx = dict(self.blocks).get(t)
         if idx is None:
-            return False
+            return None
         for i in idx:
             _a, m, o, _n = self.ins[i]
             if m in ("movl", "movq") and o[0].startswith("%") and o[1].startswith("%"):
                 continue
             if m in ("pushq", "popq") or (m == "xorl" and o[0] == o[1]):
                 continue
-            return False
-        last = self.ins[idx[-1]]
-        nxt = self.ins[idx[-1] + 1][0] if idx[-1] + 1 < len(self.ins) else None
-        return nxt in self.exits
+            if m == "jmp" and i == idx[-1] and o and o[0].startswith("0x"):
+                return int(o[0].split()[0], 16)
+            return None
+        return self.ins[idx[-1] + 1][0] if idx[-1] + 1 < len(self.ins) else None
 
     def frame_store(self, i):
         """A register stored into the rule's own frame: (offset, width)."""
@@ -1204,7 +1248,7 @@ class Rule:
             elif m == "movsd" and o[0].endswith("(%rip)") and \
                     o[1].startswith("%xmm") and _n:
                 # A double the places it leads to share, hoisted into it.
-                facts[reg_of(o[1])] = thousandths(
+                facts[reg_of(o[1])] = as_fixed(
                     self.m.bytes[_n[0]:_n[0] + 8])
             elif m in ("xorps", "xorpd") and o[0] == o[1]:
                 facts[reg_of(o[1])] = 0
@@ -1273,53 +1317,99 @@ class Rule:
             i += 1
         raise Hole("a way out answering nothing that can be read")
 
+    def frame_accesses(self):
+        """Every place in the frame the rule reads or writes, as its offset,
+        how wide, and whether it is only having its address taken: through
+        rbp, and through a register a lea pointed into the frame, which is
+        how a rule reaches a record it keeps -- and with them every constant
+        kind and field written into the frame, through either."""
+        out = []
+        kinds = []
+        held = {}
+        # What a register holds is only carried down a straight line: where
+        # control can arrive from anywhere but the instruction before, the
+        # walk in address order has not seen the way in, and a register the
+        # code reloaded on that way would be taken to hold whatever it held
+        # above -- which is how a store through the caller's pointer was read
+        # as one into the frame.
+        blocks = dict(self.blocks)
+        joined = set()
+        for blk, outs in self.succ.items():
+            last = blocks[blk][-1] if blocks.get(blk) else None
+            for t in outs:
+                if t in self.by_addr and (last is None or
+                                          self.by_addr[t] != last + 1):
+                    joined.add(t)
+        for a in self.reach:
+            if a in joined:
+                held = {}
+            _a, m, o, _n = self.ins[self.by_addr[a]]
+            width = {"movups": 16, "movaps": 16, "movupd": 16, "movapd": 16,
+                     "movsd": 8}.get(m) or WIDTH_OF.get(m) or \
+                (8 if m.endswith("q") else 4 if m.endswith("l") else
+                 2 if m.endswith("w") else 1)
+            for k, t in enumerate(o):
+                mm = MEM.match(t)
+                if not mm or mm.group(3):
+                    continue
+                d = int(mm.group(1), 0) if mm.group(1) else 0
+                if mm.group(2) == "%rbp" and d >= 16:
+                    continue
+                if mm.group(2) == "%rbp":
+                    off = d
+                elif reg_of(mm.group(2)) in held and \
+                        held[reg_of(mm.group(2))][0] == "laddr":
+                    off = held[reg_of(mm.group(2))][1] + d
+                else:
+                    continue
+                out.append((off, width, m == "leaq"))
+                if k == 1 and m == "movl" and len(o) == 2:
+                    v = int(o[0][1:], 16) if o[0].startswith("$") else \
+                        held.get(reg_of(o[0]), (None, None))[1] \
+                        if o[0].startswith("%") and \
+                        held.get(reg_of(o[0]), ("",))[0] == "imm" else None
+                    if v is not None:
+                        kinds.append((off, v))
+            if m == "callq":
+                for r in CALLER:
+                    held.pop(r, None)
+                continue
+            if len(o) == 2 and o[1].startswith("%"):
+                r = reg_of(o[1])
+                mm = MEM.match(o[0])
+                if m == "leaq" and mm and mm.group(2) == "%rbp" and \
+                        not mm.group(3):
+                    held[r] = ("laddr", int(mm.group(1), 0)
+                               if mm.group(1) else 0)
+                elif m in ("movl", "movq") and o[0].startswith("$"):
+                    held[r] = ("imm", int(o[0][1:], 0) & 0xffffffff)
+                elif m in ("movl", "movq") and o[0].startswith("%") and \
+                        reg_of(o[0]) in held:
+                    held[r] = held[reg_of(o[0])]
+                else:
+                    held.pop(r, None)
+            elif m in ("popq", "incl", "decl", "incq", "decq", "negl") and o:
+                held.pop(reg_of(o[0]), None)
+        return out, kinds
+
     def locals_used(self):
         """Which places in the frame the rule uses, and as what. A place
         whose address goes anywhere is a cell, which is sixteen bytes here
         and eight in our machine: the kind at nought, the field at two and
         the value eight bytes in, where ours keeps it four in."""
-        self.cells = set()
+        accesses, kinds = self.frame_accesses()
+        self.cells = {off for off, _w, lea in accesses if lea}
         self.scalars = {}
-        for a in self.reach:
-            _a, m, o, _n = self.ins[self.by_addr[a]]
-            for t in o:
-                mm = MEM.match(t)
-                if not mm or mm.group(2) != "%rbp":
-                    continue
-                off = int(mm.group(1), 0) if mm.group(1) else 0
-                if m == "leaq":
-                    self.cells.add(off)
         # A location naming a statement type and no field holds a whole
         # record of that type, and 6.1 keeps the record sixteen bytes into
         # it where ours keeps it four in. Which type it is, is the kind the
         # rule writes into it with the field of minus one.
         self.records = {}
         lengths = self.m.record_lengths()
-        held = {}
-        for a in self.reach:
-            _a, m, o, _n = self.ins[self.by_addr[a]]
-            if m == "leaq" and len(o) == 2:
-                mm = MEM.match(o[0])
-                if mm and mm.group(2) == "%rbp" and not mm.group(3):
-                    held[reg_of(o[1])] = int(mm.group(1), 0) \
-                        if mm.group(1) else 0
-                    continue
-            if m == "movl" and len(o) == 2 and o[0].startswith("$0xffff") \
-                    and len(o[0]) == 11:
-                kind = int(o[0][1:], 16) & 0xffff
-                mm = MEM.match(o[1])
-                at = None
-                if mm and mm.group(2) == "%rbp" and not mm.group(3):
-                    at = int(mm.group(1), 0) if mm.group(1) else 0
-                elif mm and not mm.group(1) and not mm.group(3):
-                    at = held.get(reg_of(mm.group(2)))
-                if at is not None and kind in lengths:
-                    self.records[at] = lengths[kind]
-                    self.cells.add(at)
-            if len(o) >= 1 and o[-1].startswith("%"):
-                held.pop(reg_of(o[-1]), None)
-            if m == "callq":
-                held = {}
+        for at, v in kinds:
+            if v >> 16 == 0xffff and (v & 0xffff) in lengths:
+                self.records[at] = lengths[v & 0xffff]
+                self.cells.add(at)
         # A cell of a short is four bytes, and a long's value is eight bytes
         # into it: a place read anywhere past a cell but its field and that
         # value is not in it, and says the cell is a short one, as another
@@ -1327,34 +1417,17 @@ class Rule:
         self.short_cells = {c for c in self.cells
                             if c not in self.records and
                             any(c < d < c + 16 for d in self.cells)}
-        for a in self.reach:
-            _a, m, o, _n = self.ins[self.by_addr[a]]
-            if m == "leaq":
+        for off, _w, lea in accesses:
+            if lea:
                 continue
-            for t in o:
-                mm = MEM.match(t)
-                if not mm or mm.group(2) != "%rbp":
-                    continue
-                off = int(mm.group(1), 0) if mm.group(1) else 0
-                below = [c for c in self.cells if c <= off < c + 16]
-                if below and off - max(below) not in (0, 2, 8) and \
-                        max(below) not in self.records:
-                    self.short_cells.add(max(below))
-        for a in self.reach:
-            _a, m, o, _n = self.ins[self.by_addr[a]]
-            if m == "leaq":
+            below = [c for c in self.cells if c <= off < c + 16]
+            if below and off - max(below) not in (0, 2, 8) and \
+                    max(below) not in self.records:
+                self.short_cells.add(max(below))
+        for off, w, lea in accesses:
+            if lea or self.cell_of(off) is not None:
                 continue
-            for t in o:
-                mm = MEM.match(t)
-                if not mm or mm.group(2) != "%rbp":
-                    continue
-                off = int(mm.group(1), 0) if mm.group(1) else 0
-                if self.cell_of(off) is not None:
-                    continue
-                w = WIDTH_OF.get(m, 8 if m.endswith("q") else
-                                 4 if m.endswith("l") else
-                                 2 if m.endswith("w") else 1)
-                self.scalars[off] = max(self.scalars.get(off, 0), w)
+            self.scalars[off] = max(self.scalars.get(off, 0), min(w, 8))
 
     # -- names -----------------------------------------------------------
 
@@ -1522,6 +1595,62 @@ class Rule:
             i += 1
         return True
 
+    def flags_signed(self, a):
+        """Whether what reads the flags a compare at a sets reads them as a
+        signed comparison: the first jump, set or move on a condition after
+        it, before anything sets them again. Equality is read either way and
+        is taken as unsigned."""
+        i = self.by_addr[a] + 1
+        while i < len(self.ins):
+            m = self.ins[i][1]
+            cc = CONDS.get(m) or \
+                (m[3:] if m.startswith("set") and m[3:] in WORDS else None) or \
+                (m[4:] if m.startswith("cmov") and m[4:] in WORDS else None) or \
+                (m[4:-1] if m.startswith("cmov") and m[4:-1] in WORDS else None)
+            if cc is not None:
+                return cc in ("l", "le", "g", "ge", "s", "ns")
+            if m.startswith(("cmp", "test", "add", "sub", "and", "or", "xor",
+                             "inc", "dec", "neg", "shl", "sar", "shr",
+                             "imul", "callq", "ucomisd")):
+                return False
+            i += 1
+        return False
+
+    def narrow(self, st, lines, v, w, a, k):
+        """An operand of a compare or a test narrower than a word, as the
+        flags see it: only its low w bytes, sign-extended when what reads
+        the flags compares signed. A half read out of memory is read again at
+        that width and signedness; anything else is copied and narrowed."""
+        signed = self.flags_signed(a)
+        bits = 8 * w
+        if v[0] == "imm":
+            n = v[1] & ((1 << bits) - 1)
+            if signed and n >= 1 << (bits - 1):
+                n -= 1 << bits
+            return ("imm", n)
+        if v[0] == "mem":
+            if v[2] >= w:
+                return ("mem", v[1], w, signed, v[4])
+            if not v[3] or signed:
+                return v
+            raise Hole("a %d-byte unsigned compare of a signed read" % w)
+        inner = v[2] if v[0] == "home" else None
+        if inner is not None and inner[0] == "mem" and (
+                (inner[2] < w and (not inner[3] or signed)) or
+                (inner[2] == w and inner[3] == signed)):
+            # A register loaded from memory no wider, and extended the way
+            # the comparison reads it, already holds what the flags see.
+            return v
+        name = "n%x_%d" % (a, k)
+        self.snaps.add(name)
+        self.say(st, lines, "set", name, "to", *self.words(v, st))
+        if signed:
+            self.say(st, lines, "shift", "left", str(32 - bits), "into", name)
+            self.say(st, lines, "shift", "right", str(32 - bits), "into", name)
+        else:
+            self.say(st, lines, "and", str((1 << bits) - 1), "into", name)
+        return ("snap", name)
+
     def snap(self, st, lines, v, a, k):
         """What a test reads, as it stands when the test is made. A
         register's own local may be written again before the branch or the
@@ -1550,8 +1679,9 @@ class Rule:
             if r not in self.homes:
                 raise Need(("home", r))
         framed = v[0] == "laddr" and v[1] in self.frame_locals
-        if v[0] == "mem" and v[2] == 8 and v[1][0] == "local" and \
-                self.record_data(v[1][1]):
+        if v[0] == "mem" and v[2] == 8 and (
+                (v[1][0] == "local" and self.record_data(v[1][1])) or
+                (v[1][0] == "through" and v[1][2] >= 0x10)):
             # Eight bytes of a record on their way into another: nothing
             # here holds eight bytes, so the copy is said where it lands.
             st["regs"][r] = v
@@ -1692,7 +1822,7 @@ class Rule:
             if v[0] != "imm":
                 raise Hole("a double's bits from %s" % (v[0],))
             self.put_reg(st, lines, reg_of(o[1]),
-                         ("imm", thousandths(struct.pack("<Q", v[1]))))
+                         ("imm", as_fixed(struct.pack("<Q", v[1]))))
             return
         if m in SSE:
             return self.sse(b, st, lines, a, m, o, note)
@@ -1706,8 +1836,13 @@ class Rule:
 
         if m in ("testl", "testq", "testw", "testb") and o[0] == o[1]:
             v = self.value_of(st, o[0])
-            st["cond"] = ("frame",) if v[0] == "frame" else \
-                ("test", self.snap(st, lines, v, a, 0), reg_of(o[0]))
+            if v[0] == "frame":
+                st["cond"] = ("frame",)
+                return
+            w = {"l": 4, "q": 8, "w": 2, "b": 1}[m[-1]]
+            if w < 4:
+                v = self.narrow(st, lines, v, w, a, 0)
+            st["cond"] = ("test", self.snap(st, lines, v, a, 0), reg_of(o[0]))
             return
         if m in ("cmpl", "cmpq", "cmpw", "cmpb"):
             w = {"l": 4, "q": 8, "w": 2, "b": 1}[m[-1]]
@@ -1716,6 +1851,9 @@ class Rule:
             if dst[0] == "canary" or src[0] == "canary":
                 st["cond"] = ("frame",)
                 return
+            if w < 4:
+                dst = self.narrow(st, lines, dst, w, a, 0)
+                src = self.narrow(st, lines, src, w, a, 1)
             st["cond"] = ("cmp", self.snap(st, lines, dst, a, 0),
                           self.snap(st, lines, src, a, 1),
                           reg_of(o[1]) if o[1].startswith("%") else None,
@@ -1756,7 +1894,7 @@ class Rule:
         raise Hole("%s %s" % (m, ",".join(o)))
 
     def fixed_value(self, st, text, note, a):
-        """A double operand as thousandths: a register, a constant in the
+        """A double operand as a fixed value: a register, a constant in the
         module's data, or a place in memory, which is the same place a word
         is read from here."""
         if text.startswith("%"):
@@ -1765,7 +1903,7 @@ class Rule:
             # A scalar operation on a register holding two reads the lower.
             return v[1] if v[0] == "pair" else v
         if text.endswith("(%rip)"):
-            return ("imm", thousandths(self.m.bytes[note[0]:note[0] + 8]))
+            return ("imm", as_fixed(self.m.bytes[note[0]:note[0] + 8]))
         p = self.addr_of(st, text)
         if p[0] == "local" and p[1] in st["slots"]:
             return st["slots"][p[1]]
@@ -1792,8 +1930,9 @@ class Rule:
         words: a constant split in two, or eight bytes read from another
         record or from what a caller handed over, copied a word at a time."""
         halves = []
-        if v[0] == "home" or (v[0] == "imm" and src and src.startswith("%xmm")):
-            # A double into a record: the field is thousandths here, in the
+        if src and src.startswith("%xmm") and v[0] in ("home", "imm", "mem",
+                                                        "saved"):
+            # A double into a record: the field is a fixed value here, in the
             # first four of the eight bytes 6.1 gave it.
             self.say(st, lines, "set", *self.local_place(p[1], 4), "to",
                      *self.words(v, st, reg_of(src) if src else None))
@@ -1817,8 +1956,19 @@ class Rule:
                            str(self.through_offset(q[2] + 4, 4))]]
         if not halves:
             raise Hole("eight bytes of %s into a record" % (v[0],))
+        c = self.cell_of(p[1])
         for k, words in enumerate(halves):
-            self.say(st, lines, "set", *self.local_place(p[1] + 4 * k, 4),
+            # Only as much as the record has: 6.1 copies eight bytes of a
+            # five-byte record, and the three after it are nothing.
+            left = c + 0x10 + self.records[c] - (p[1] + 4 * k)
+            if left <= 0:
+                continue
+            w = 4 if left >= 4 else 2 if left >= 2 else 1
+            if w < 4 and words[0] in ("cell", "through"):
+                # The same place read narrower: its width is the word
+                # before its offset.
+                words = words[:-2] + [{2: "half", 1: "byte"}[w], words[-1]]
+            self.say(st, lines, "set", *self.local_place(p[1] + 4 * k, w),
                      "to", *words)
         st["slots"].pop(p[1], None)
         self.forget_memory(st, p)
@@ -1843,9 +1993,16 @@ class Rule:
                 raise Hole("sixteen bytes of the frame that are no local")
             inner = off - c
             if c in self.records and inner >= 0x10:
-                w = self.local_place(off, min(4, c + 0x10 + self.records[c]
-                                              - off))
+                left = c + 0x10 + self.records[c] - off
+                if left <= 0:
+                    return None
+                w = self.local_place(off, 4 if left >= 4 else
+                                     2 if left >= 2 else 1)
                 return w, w
+            if c in self.records and inner in (4, 8, 12):
+                # A record's header in 6.1 has a pointer where ours starts
+                # the record itself.
+                return None
             if inner == 0:
                 return [self.local_name(c)], [self.local_name(c)]
             if inner == 8:
@@ -1948,7 +2105,7 @@ class Rule:
             return
         if m == "shufpd" and o[0] == "$0x2" and o[1].endswith("(%rip)"):
             d = reg_of(o[2])
-            hi = ("imm", thousandths(self.m.bytes[note[0] + 8:note[0] + 16]))
+            hi = ("imm", as_fixed(self.m.bytes[note[0] + 8:note[0] + 16]))
             regs[d] = ("pair", self.pair_half(st, lines, d, 0), hi)
             return
         if m in ("divpd", "haddpd"):
@@ -1982,10 +2139,10 @@ class Rule:
         raise Hole("%s %s" % (m, ",".join(o)))
 
     def sse(self, b, st, lines, a, m, o, note):
-        """6.1's doubles as thousandths. A move is a move; a conversion from a
-        whole number multiplies by a thousand and one back truncates; a
-        product and a quotient are scaled back by a thousand in sixty-four
-        bits; and a comparison is of whole numbers."""
+        """6.1's doubles as fixed values. A move is a move; a conversion from
+        a whole number multiplies by ONE and one back truncates; a product
+        and a quotient are scaled back by ONE in sixty-four bits; and a
+        comparison is of whole numbers."""
         regs = st["regs"]
         if m in ("unpcklpd", "shufpd", "divpd", "haddpd", "movlpd") or \
                 (m == "movapd" and any(regs.get(reg_of(x), ("X",))[0] == "pair"
@@ -2276,6 +2433,8 @@ class Rule:
                 p = self.addr_of(st, src)
                 if p[0] == "gotval":
                     v = ("canary",)
+                elif p[0] == "stackparam":
+                    v = ("param", p[1])
                 elif p[0] == "local" and p[1] in st["slots"]:
                     v = st["slots"][p[1]]
                 else:
@@ -2299,7 +2458,7 @@ class Rule:
         if w == 8 and v[0] == "imm" and self.is_double(v[1]):
             # A double written as its bits from an ordinary register: what
             # clang does with a constant it has no reason to load.
-            v = ("imm", thousandths(struct.pack("<Q", v[1])))
+            v = ("imm", as_fixed(struct.pack("<Q", v[1])))
         if p[0] == "stackarg":
             st["stackargs"][p[1]] = v
             return
@@ -2434,6 +2593,7 @@ class Rule:
                      "or": n | (k or 0), "shl": n << c,
                      "sar": n >> c, "shr": n >> c}[op]
                 self.put_reg(st, lines, r, ("imm", n))
+                self.flags_from(st, lines, ("imm", n), r, m, a)
                 return
             if r not in self.homes or v[0] != "home":
                 raise Need(("home", r))
@@ -2441,6 +2601,7 @@ class Rule:
                           {"w": 2, "b": 1}.get(m[-1], 4))
             st["regs"][r] = ("home", r, None)
             st["fresh"].add(r)
+            self.flags_from(st, lines, st["regs"][r], r, m, a)
             return
         p = self.addr_of(st, dst)
         w = {"l": 4, "q": 8, "w": 2, "b": 1}[m[-1]]
@@ -2464,11 +2625,45 @@ class Rule:
                      str(self.through_offset(p[2], w)),
                      *{1: ["byte"], 2: ["half"]}.get(w, []))
             self.forget_memory(st, p)
+            name = "n%x_r" % a
+            self.snaps.add(name)
+            self.say(st, lines, "set", name, "to", "scratch")
+            self.flags_from(st, lines, ("snap", name), None, m, a)
             return
         else:
             raise Hole("arithmetic on %s" % (p,))
         self.arith_on(st, lines, op, place, src, w)
         self.forget_memory(st, p)
+        self.flags_from(st, lines, ("mem", p, w, False, a), None, m, a)
+
+    def flags_from(self, st, lines, v, r, m, a):
+        """The flags an operation leaves are those of what it left, which is
+        what a branch after it reads: held against nought, at the width the
+        operation was done in."""
+        if not self.flags_read(a):
+            st["cond"] = None
+            return
+        w = {"l": 4, "q": 8, "w": 2, "b": 1}.get(m[-1], 4)
+        if w < 4:
+            v = self.narrow(st, lines, v, w, a, 2)
+        st["cond"] = ("test", self.snap(st, lines, v, a, 2), r)
+
+    def flags_read(self, a):
+        """Whether anything reads the flags the instruction at a leaves
+        before something else sets them. A jump away is taken to mean they
+        may be read where it lands."""
+        i = self.by_addr[a] + 1
+        while i < len(self.ins):
+            m = self.ins[i][1]
+            if m in CONDS or (m.startswith("set") and m[3:] in WORDS) or \
+                    m.startswith("cmov") or m == "jmp" or m == "jmpq":
+                return True
+            if m.startswith(("cmp", "test", "add", "sub", "and", "or", "xor",
+                             "inc", "dec", "neg", "shl", "sar", "shr",
+                             "imul", "callq", "ucomisd", "ret")):
+                return False
+            i += 1
+        return False
 
     def arith_on(self, st, lines, op, place, src, width=4):
         if op == "inc":
@@ -2516,7 +2711,7 @@ class Rule:
             return
         if stub in LIBM:
             # The C library on a double, which the runtime here answers in
-            # thousandths: handed in a register and answered in one.
+            # fixed values: handed in a register and answered in one.
             args = ["xmm0", "xmm1"] if stub == "pow" else ["xmm0"]
             words = []
             for r in args:
@@ -2627,7 +2822,7 @@ class Rule:
             lines.append(["place", "q%x" % a])
         else:
             flat = [w for ws in words for w in ws]
-            self.say(st, lines, "call", name, *flat)
+            self.say(st, lines, "call", AS_61.get(name, name), *flat)
         self.after_call(st, ("ans", a, None))
         if ("save", a) in self.saves:
             self.say(st, lines, "set", "s%x" % a, "to", "answer")
@@ -2779,7 +2974,7 @@ class Rule:
                 raise Hole("a comparison read as %s" % cc)
             if c[0] == "cmp" and len(c) > 5 and c[5] == "float":
                 # ucomisd sets the flags the way an unsigned comparison does,
-                # and thousandths compare as signed whole numbers.
+                # and fixed values compare as signed whole numbers.
                 word = {"is below": "is less than",
                         "is not below": "is at least",
                         "is above": "is more than",
@@ -3181,10 +3376,7 @@ class Rule:
                 pass
             else:
                 raise Hole("a dispatch that does %s before vback" % m)
-        v = regs.get("rsi", ("X", "rsi"))
-        if v[0] == "home" and v[1] == self.depth_reg:
-            return ("unwindv",)
-        return v
+        return regs.get("rsi", ("X", "rsi"))
 
     def backtrack_lines(self, st):
         d = self.depth_at(st)
@@ -3288,6 +3480,14 @@ class Rule:
                     seen.add(r)
             if len(o) == 2 and o[1].startswith("%"):
                 seen.add(reg_of(o[1]))
+        # And the arguments past the fifth, which are wherever the rule
+        # reads them from above its frame.
+        for a in self.reach:
+            for t in self.ins[self.by_addr[a]][2]:
+                mm = MEM.match(t)
+                if mm and mm.group(2) == "%rbp" and not mm.group(3) and \
+                        mm.group(1) and int(mm.group(1), 0) >= 16:
+                    n = max(n, 6 + (int(mm.group(1), 0) - 16) // 8)
         return n
 
     def lift(self, gmap, smap, setmap=None):
@@ -3307,6 +3507,9 @@ class Rule:
         self.scratch = False
         self.kept = set()
         self.packs = set()
+        # What the registers hold where the dispatch begins, which a place it
+        # leads to can be reached before: until then none of them is known.
+        self.dispatch_regs = {}
         try:
             self.walk()
             if self.holes:

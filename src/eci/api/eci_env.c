@@ -481,12 +481,23 @@ int ev_setDefaultEnvironment(OldInst *h, int32_t unused)
     return 1;
 }
 
+/* A language lifted from 6.1 is never sent a setting the caller has not
+   changed, even the first time it speaks: 6.1's interface does not, and its
+   rules read one as part of the text. */
+static int32_t ev_mayForce(OldInst *h, int32_t force)
+{
+    const delta_language *l = delta_lang_by_id(OI_ENV(h)[ENV_LANGUAGE]);
+
+    return force && !(l && l->settings_on_change);
+}
+
 /* The eight voice settings, each sent only if it has moved. */
 int ev_sendChangedActiveVoice(OldInst *h, ECIVoice v, int32_t force)
 {
     int32_t err = 0;
     int i;
 
+    force = ev_mayForce(h, force);
     for (i = VOICE_FIRST_PARAM; i < VOICE_LAST_PARAM + 1 && err == 0; i++) {
         int32_t *want = (int32_t *)((char *)&v + VOICE_HEAD) + i;
         int32_t *sent = (int32_t *)(OI_VOICE_SAVED(h) + VOICE_HEAD) + i;
@@ -573,7 +584,7 @@ int ev_sendChangedEnvironment(OldInst *h, Environment env, int32_t force)
     for (i = 0; i < (int)(sizeof SEND / sizeof SEND[0]); i++) {
         int n = SEND[i].env;
 
-        if (!force && e[n] == sent[n])
+        if (!ev_mayForce(h, force) && e[n] == sent[n])
             continue;
         if (setECIerror(api_set_param(OI_NEW(h), 0, SEND[i].param, e[n]), h))
             return 0;

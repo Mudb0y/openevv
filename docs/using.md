@@ -160,7 +160,7 @@ Change language with `eciSetParam(h, eciLanguageDialect, ...)` on an instance th
 
 A dictionary belongs to the language that was in force when `eciNewDict` made it, and it stays good across changes of language until `eciDeleteDict`. So make one per language and put each back in force with `eciSetDict` when its language returns, which is what the IBMTTS and Eloquence 64 drivers do. Before 9 October 2026 a language change let go of the old language's engine with every dictionary in it, and putting one of those back faulted the process. The engine of a language with a dictionary open is now kept until the instance goes. `test/lib/dictlangs.py` is the check.
 
-Ten languages are in the tree: US and British English, German, Castilian and American Spanish, French and Canadian French, Italian, Japanese, and Polish. The released library and the released DLLs carry all ten. Nine of those are IBM's own data lifted out of its objects. Polish is not IBM's and is not finished -- its rules are still Italian's where nothing here has replaced them, and `make EVVLANG=lang/plpl census` counts how much. `docs/status.md` says where each stands.
+Eleven languages are in the tree: US and British English, German, Castilian and American Spanish, French and Canadian French, Italian, Japanese, Finnish, and Polish. The released library and the released DLLs carry all eleven. Nine of those are IBM's own data lifted out of its objects. Finnish is ETI Eloquence 6.1's, lifted whole out of the module Apple ships, and asked for as `0x90000`; with the abbreviation dictionary on, it reads all 20,000 words of its list and 59 sentences as 6.1 reads them, phoneme for phoneme. Polish is not IBM's and is not finished -- its rules are still Italian's where nothing here has replaced them, and `make EVVLANG=lang/plpl census` counts how much. `docs/status.md` says where each stands.
 
 ## Sample rates
 
@@ -184,4 +184,4 @@ Three things in this tree are worth running against a program that embeds the en
 
 `test/lib/langs.py build/libeci.so` speaks every language the build has from one process and holds each against what it says alone. That is the check for anything that has quietly stayed global.
 
-`make matrix` is the engine's own gate -- 1,081 cases over ten languages -- and it wants neither Wine nor IBM's objects. If you have changed anything under `src` or `lang`, that is what says whether it moved.
+`make matrix` is the engine's own gate -- 1,186 cases over eleven languages -- and it wants neither Wine nor IBM's objects. If you have changed anything under `src` or `lang`, that is what says whether it moved.

@@ -45,6 +45,8 @@ move underneath it.
 
     nix shell nixpkgs#hunspellDicts.it_IT
     tools/measure/wordlist.py itit > test/cases/words-itit.txt
+    nix build --no-link nixpkgs#voikko-fi.src
+    tools/measure/wordlist.py fifi > test/cases/words-fifi.txt
 
 usage: tools/measure/wordlist.py <tag> [count]
 """
@@ -86,6 +88,11 @@ SOURCES = {
              'nixpkgs#hunspellDicts.it_IT', 'a-zàèéìòù'),
     'plpl': ('/nix/store/*-hunspell-dict-pl-pl-*/share/hunspell/pl_PL.dic',
              'nixpkgs#hunspellDicts.pl_PL', 'a-ząćęłńóśźż'),
+    # Finnish has no hunspell dictionary; its spelling is Voikko's, whose
+    # vocabulary is one base form to a <form> in the source rather than
+    # anything installed.
+    'fifi': ('/nix/store/*-source/voikko-fi/vocabulary/joukahainen.xml',
+             'nixpkgs#voikko-fi.src', 'a-zåäö'),
 }
 
 # What a source is read as and what the list is written in, where that is not
@@ -111,8 +118,13 @@ def source_words(tag):
     read_as = ENCODINGS.get(tag, ('utf-8', 'cp1252'))[0]
     for line in open(found[0], encoding=read_as, errors='replace'):
         # A hunspell .dic is a count, then one stem a line with its affix
-        # flags after a slash; SCOWL is one word a line and has neither.
-        w = line.split('/')[0].strip().lower()
+        # flags after a slash; SCOWL is one word a line and has neither; and
+        # Voikko's vocabulary is XML.
+        if found[0].endswith('.xml'):
+            m = re.search(r'<form>([^<]*)</form>', line)
+            w = m.group(1).strip().lower() if m else ''
+        else:
+            w = line.split('/')[0].strip().lower()
         if keep.match(w):
             words.add(w)
     return sorted(words), os.path.basename(found[0])

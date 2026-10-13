@@ -264,6 +264,7 @@ def main():
             "en-US": "The quick brown fox.",
             "es-ES": "El pingüino está aquí.",
             "es-MX": "El pingüino está aquí.",
+            "fi-FI": "Hyvää yötä, Jyväskylä.",
             "fr-CA": "L'été à Montréal.",
             "fr-FR": "L'été à Paris.",
             "it-IT": "Perché è così.",

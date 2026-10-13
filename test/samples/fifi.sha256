@@ -1,0 +1,122 @@
+# What this engine says, case by case, for fifi.
+#
+# Every line was blessed by IBM's own binary when it was
+# first written: the whole differential suite was run
+# for this language immediately before, and every case
+# matched. A case a deliberate divergence has moved or
+# added since is this engine's answer and not IBM's;
+# docs/quirks.md names them. See docs/testing.md.
+#
+# The wide cases are the wideband voice, which IBM never
+# made: an ear blessed them, not an original.
+#
+# Written by test/matrix.sh record. One line a case:
+# the category, which case in it, the first sixteen hex of
+# the samples' hash, the same of the reported answers', and
+# the sentence.
+
+plain 1 993488a54b2638ad eb8391d9dc03673b Kello on kolme ja ulkona sataa lunta.
+plain 2 c72f3d9224ddbfaa 492efae1173a9570 Tohtori Virtanen maksoi 1234,56 euroa 3. toukokuuta 2026 kello 19.45.
+plain 3 b83914eba521bbb9 5904ad939c5c9997 Osoite on www.esimerkki.fi/polku?q=1 ja puhelin 09 123 4567.
+plain 4 aa5240be6dff80d8 0ea55749355b48e0 Testi 1 2 3, ABC XYZ, yhdys-sana-testi ja ISOT KIRJAIMET.
+plain 5 c024371863b69063 47324618adacafc9 Yksi sana rivilla. Ja viela yksi; lisaksi "teksti lainausmerkeissa" keskella.
+plain 6 f0157f1a3b8cd931 44ac5a71829b26bc Lentokonesuihkuturbiinimoottoriapumekaanikkoaliupseerioppilas, Kuopio ja 42 % luvusta 3,14159.
+plain 7 e26553c7946b3041 ec85259572237ca4 Han sanoi: ala tee sita! Sitten (sivumennen sanoen) 1/2 + 3/4 = 5/4; katso s. 12.
+utf8 1 b0bcacb2c7c7b728 cc0ec84f002bf79e Hyvää päivää, mitä kuuluu?
+utf8 2 b5a71b6302ba2852 5b6fb4b3c56a12f7 Älä hätäile, kyllä se siitä järjestyy.
+utf8 3 76879ae3a2722deb 04051fc52868900b Öljy, äiti, yö, täällä ja tyttö sekä Åland.
+utf8 4 9bac454d4967e8b9 ecfb6201cf8b7468 Pöytä, säätiö, käärme ja hämärä ilta.
+utf8 5 3943494808407f95 a18ea43efccc98c7 Ystävällisin terveisin, Pekka Mäkinen.
+utf8 6 d6bbda0ceec2d4c6 f44ebaddfcf5dc23 Kesäkuussa järvellä uiskentelee kaksi joutsenta.
+utf8 7 14370c7e6371dc6e 9733adab06707268 Tama lause on kirjoitettu ilman pisteita vertailun vuoksi.
+anno 1 225e16bacd335c0a 4c7171aa07cc0caf Normaali puhe `vs50 nyt paljon hitaampaa kuin ennen.
+anno 2 2bde50952e528ec0 d4dc7ec6e3c80b9d Aanenvoimakkuus `vv30 hiljempaa, sitten `vv90 taas kovempaa.
+anno 3 82a45821808bf9c7 c9b9783c30cd5ec0 Korkeus `vb20 matala ja `vb80 korkea samassa lauseessa.
+anno 4 f13e6a63ae4ae866 5bf2317cf60817dc Aani `v2 kaksi, `v5 viisi, ja `v1 taas yksi.
+anno 5 eec5f0a0f5806169 afd68c5c121d98f5 Tauko `0 lyhyt ja `4 pitka sanojen valissa.
+anno 6 e6807a1de59b509d e7e2ad124507b28f Karheus `vr40 ja hengitys `vf60 muutettu.
+anno 7 a2cc98b0729a61a7 1be6f5c80a3819cd Kirjaimellinen \`takahipsu luetaan tekstina.
+anno 8 b686fd02b5fca0d5 a678cc824fbd7e34 Nopeus nimella `vsfast ja sitten `vsslow takaisin.
+anno 9 4666bbae24aac3fc 1f0b7193288b31f1 Paan koko `vh30 sitten `vh70 samalla rivilla.
+anno 10 0dbab19a3cfaf09e 76058c3d603e188f Sukupuoli `vg1 ja `vg0 vuorotellen.
+anno 11 f2c5281491966b1c 9eb9f2bd96686bda Ennen `ui"merkki yksi" ja jalkeen indeksimerkin.
+anno 12 ad058b174ad964d7 f9e26e492f768a3c Merkki `aud"piip" aanellinen keskella rivia.
+anno 13 b068b5871024e990 c5bd8694b1ea4d7c `vs40 Merkinta heti rivin alussa.
+anno 14 f3a84426dfcd43b2 e99b7720eb5384c2 Paattyy merkintaan aivan rivin lopussa `vs60
+anno 15 d1d1cde70d32282b b9cf86a9e9963d1b Virheelliset `vzz ja `q ja `v999 kaikki samalla rivilla.
+anno 16 2b689c8209cf08fe 2688ef58f2e5ba06 Kaksi `vs30`vv40 merkintaa ilman mitaan valissa.
+anno 17 7d36163281019397 d0688f7269436b83 `ui"a"`ui"b" kaksi merkkia ilman mitaan valissa.
+anno 18 e94c4a238ea2fe61 5f21552fe9b854c3 Sulkematon `ui"merkki joka ei koskaan paaty
+anno 19 bb2f7c89697545f0 312e3ea8bd9ce3dd Yhdessa `v3 aani `vs70 nopeus `vv50 voimakkuus kerralla.
+anno 20 22d4257ee9162e13 9a215260978dbbfb Sarkain	ja rivin rivitys `vb40 muutoksella.
+anno3 1 aeb1ebade2d41585 08787af6d6a76b9f Normaali puhe `vs50 nyt paljon hitaampaa kuin ennen.
+anno3 2 0e8e9e41f74df079 43aa75c4511c1918 Aanenvoimakkuus `vv30 hiljempaa, sitten `vv90 taas kovempaa.
+anno3 3 de0fa897e0f512a9 2d718bae01b6eecf Korkeus `vb20 matala ja `vb80 korkea samassa lauseessa.
+anno3 4 0a80f0c90448b17e 5503cb74de4e2777 Aani `v2 kaksi, `v5 viisi, ja `v1 taas yksi.
+anno3 5 de907507f0689414 93b7f3d6926b45cf Tauko `0 lyhyt ja `4 pitka sanojen valissa.
+anno3 6 1491fcdc3d23063b 275d2f9cc19abdd9 Karheus `vr40 ja hengitys `vf60 muutettu.
+anno3 7 a2cc98b0729a61a7 c7ed5b1cef4424ac Kirjaimellinen \`takahipsu luetaan tekstina.
+anno3 8 9a18d7e7abe83a71 302d5c158ac355c0 Nopeus nimella `vsfast ja sitten `vsslow takaisin.
+anno3 9 8435ed16b2497163 47480530c8d2dd7f Paan koko `vh30 sitten `vh70 samalla rivilla.
+anno3 10 4fcaec54419c37ee 683d92b8d4708c2f Sukupuoli `vg1 ja `vg0 vuorotellen.
+anno3 11 bfb244d18afa2cc3 8c0ffb4bfa8524ae Ennen `ui"merkki yksi" ja jalkeen indeksimerkin.
+anno3 12 f53212ebd4f7b41e ccce74ea812b9e64 Merkki `aud"piip" aanellinen keskella rivia.
+anno3 13 36e0bdef118dde8a 8116016d8ca5525d `vs40 Merkinta heti rivin alussa.
+anno3 14 2df2c8a9aba67ab9 5c8cba69253dd0cd Paattyy merkintaan aivan rivin lopussa `vs60
+anno3 15 d1d1cde70d32282b af68097c72f19956 Virheelliset `vzz ja `q ja `v999 kaikki samalla rivilla.
+anno3 16 c1ecb235acc2c105 949f9ea27e578d03 Kaksi `vs30`vv40 merkintaa ilman mitaan valissa.
+anno3 17 9bf68c9748c7dee7 3de2220c47bf5efd `ui"a"`ui"b" kaksi merkkia ilman mitaan valissa.
+anno3 18 e94c4a238ea2fe61 0ff374db0550d978 Sulkematon `ui"merkki joka ei koskaan paaty
+anno3 19 65351cf940ef0123 f5a01434dff3ac8a Yhdessa `v3 aani `vs70 nopeus `vv50 voimakkuus kerralla.
+anno3 20 b88992e0817522ff 5b9d605626ce903e Sarkain	ja rivin rivitys `vb40 muutoksella.
+realworld 1 68853fedf7218b8f b30ab4faefacc920 Normaali puhe `vs50 nyt paljon hitaampaa kuin ennen.
+realworld 2 a5761b4351a5095a d9234f7cf2d64658 Aanenvoimakkuus `vv30 hiljempaa, sitten `vv90 taas kovempaa.
+realworld 3 2cd29afe5f2bfdd6 b2086a90df34e048 Korkeus `vb20 matala ja `vb80 korkea samassa lauseessa.
+realworld 4 0a80f0c90448b17e 3f34ef485619cad3 Aani `v2 kaksi, `v5 viisi, ja `v1 taas yksi.
+realworld 5 de907507f0689414 f630412c07128626 Tauko `0 lyhyt ja `4 pitka sanojen valissa.
+realworld 6 1491fcdc3d23063b 23b9b0210956cf8c Karheus `vr40 ja hengitys `vf60 muutettu.
+realworld 7 a2cc98b0729a61a7 033bd6b9c5920202 Kirjaimellinen \`takahipsu luetaan tekstina.
+realworld 8 9a18d7e7abe83a71 329fa965cb1035fb Nopeus nimella `vsfast ja sitten `vsslow takaisin.
+realworld 9 8435ed16b2497163 13043886b3844942 Paan koko `vh30 sitten `vh70 samalla rivilla.
+realworld 10 4fcaec54419c37ee f53fd0b1aaf1ae0e Sukupuoli `vg1 ja `vg0 vuorotellen.
+realworld 11 bfb244d18afa2cc3 937f7e0f19723e85 Ennen `ui"merkki yksi" ja jalkeen indeksimerkin.
+realworld 12 f53212ebd4f7b41e 3be84adc5988c082 Merkki `aud"piip" aanellinen keskella rivia.
+realworld 13 d5f78cd7def511cb b8f948ad37688c3c `vs40 Merkinta heti rivin alussa.
+realworld 14 2df2c8a9aba67ab9 49bfa29a028fe934 Paattyy merkintaan aivan rivin lopussa `vs60
+realworld 15 d1d1cde70d32282b afaa2df776e7f566 Virheelliset `vzz ja `q ja `v999 kaikki samalla rivilla.
+realworld 16 21425a44ddbc901b 62913ea1cae6c49d Kaksi `vs30`vv40 merkintaa ilman mitaan valissa.
+realworld 17 9bf68c9748c7dee7 01f7d0ad48aef411 `ui"a"`ui"b" kaksi merkkia ilman mitaan valissa.
+realworld 18 e94c4a238ea2fe61 946f573bc8f90bb4 Sulkematon `ui"merkki joka ei koskaan paaty
+realworld 19 19a96f2eeed55770 1f7f17b45240cdde Yhdessa `v3 aani `vs70 nopeus `vv50 voimakkuus kerralla.
+realworld 20 8812d6fcebb49287 05415df3fa456bdd Sarkain	ja rivin rivitys `vb40 muutoksella.
+dict 1 993488a54b2638ad d5fa4f2600f57d99 Kello on kolme ja ulkona sataa lunta.
+dict 2 c72f3d9224ddbfaa c824fd6afab09baf Tohtori Virtanen maksoi 1234,56 euroa 3. toukokuuta 2026 kello 19.45.
+dict 3 b83914eba521bbb9 6bdccfdc390dcc04 Osoite on www.esimerkki.fi/polku?q=1 ja puhelin 09 123 4567.
+dict 4 aa5240be6dff80d8 fcde8ac0c59b44b9 Testi 1 2 3, ABC XYZ, yhdys-sana-testi ja ISOT KIRJAIMET.
+dict 5 c024371863b69063 ecafe8139e23f361 Yksi sana rivilla. Ja viela yksi; lisaksi "teksti lainausmerkeissa" keskella.
+dict 6 f0157f1a3b8cd931 1eaad0e948e434e0 Lentokonesuihkuturbiinimoottoriapumekaanikkoaliupseerioppilas, Kuopio ja 42 % luvusta 3,14159.
+dict 7 e26553c7946b3041 db0a8916cbeea23d Han sanoi: ala tee sita! Sitten (sivumennen sanoen) 1/2 + 3/4 = 5/4; katso s. 12.
+second 1 6e2c43dd16108c1d 3ce31bd40392253a Kello on kolme ja ulkona sataa lunta.
+second 2 f03e300ca82f5a83 d7fb488b912009f9 Tohtori Virtanen maksoi 1234,56 euroa 3. toukokuuta 2026 kello 19.45.
+second 3 1df6fdb23f2d776a ea099b91de65c495 Osoite on www.esimerkki.fi/polku?q=1 ja puhelin 09 123 4567.
+second 4 c5476552b7a02436 19ed06a12ccfa699 Testi 1 2 3, ABC XYZ, yhdys-sana-testi ja ISOT KIRJAIMET.
+second 5 4f31beb2668edce3 efc1a36780ad97e3 Yksi sana rivilla. Ja viela yksi; lisaksi "teksti lainausmerkeissa" keskella.
+second 6 e0e1145850e4e916 a0f7fbd97698b84e Lentokonesuihkuturbiinimoottoriapumekaanikkoaliupseerioppilas, Kuopio ja 42 % luvusta 3,14159.
+second 7 56cc4d31d4354915 f6cb89f636674523 Han sanoi: ala tee sita! Sitten (sivumennen sanoen) 1/2 + 3/4 = 5/4; katso s. 12.
+ssml 1 e88dc093404e3987 7b85bb177a2fbf48 <speak version="1.0" xml:lang="fi-FI">Hyvaa paivaa.</speak>
+ssml 2 0434359b81a4a35d 2c24582ade214dc4 <speak version="1.0" xml:lang="fi-FI"><prosody rate="slow">Nyt hitaammin.</prosody> Taas normaalisti.</speak>
+ssml 3 10865db989788381 6c66eba1adfdd3ff <speak version="1.0" xml:lang="fi-FI"><prosody pitch="high" range="x-high" volume="loud">Kaikki nelja kerralla.</prosody></speak>
+ssml 4 ca8a943751ba28cf f8a647bc51f41b35 <speak version="1.0" xml:lang="fi-FI"><emphasis level="strong">Tama</emphasis>, ei tuo.</speak>
+ssml 5 20a8ea98484ffd6f b0c103d341e4ffdf <speak version="1.0" xml:lang="fi-FI"><voice gender="female">Han sanoi sen.</voice> Mutta han ei.</speak>
+ssml 6 276edc2f0cf0bb3b 1e2f3cdf59d0c24f <speak version="1.0" xml:lang="fi-FI">Se maksoi <say-as interpret-as="cardinal">1234</say-as> paivana <say-as interpret-as="ordinal">3</say-as>.</speak>
+ssml 7 0803a7050d842c00 09427aca1499057d <speak version="1.0" xml:lang="fi-FI">Tavaa: <say-as interpret-as="letters">abc</say-as>, ja soita numeroon <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+ssml 8 3b9892f6455d5ee2 35f8982781c11d02 <speak version="1.0" xml:lang="fi-FI">Odota<break time="500ms"/>hetki.<mark name="tassa"/> Tuolla.</speak>
+ssml 9 b287fa1213497acc b2c79b95a8ffd00b <speak version="1.0" xml:lang="fi-FI"><sub alias="maailmanlaajuinen verkko">WWW</sub> ja <phoneme ph="h.E.l.oU">hei</phoneme>.</speak>
+ssml 10 3598f95497b3f1cb 1e934f48631927c0 <speak version="1.0" xml:lang="fi-FI">Hyvää päivää, a &amp; b &lt; c.</speak>
+wide 1 1eb3b45b29b27a6d 530cbdf3544b74a9 Kello on kolme ja ulkona sataa lunta.
+wide 2 fc3e582e5fec77dc b9da771eca91afe9 Tohtori Virtanen maksoi 1234,56 euroa 3. toukokuuta 2026 kello 19.45.
+wide 3 66eeaf54f6238891 2bd20d3eb7cd7704 Osoite on www.esimerkki.fi/polku?q=1 ja puhelin 09 123 4567.
+wide 4 f77db1f323f880f4 500b70abc71f21b5 Testi 1 2 3, ABC XYZ, yhdys-sana-testi ja ISOT KIRJAIMET.
+wide 5 583ffbd80485c76b 22b8202cb2f6e57d Yksi sana rivilla. Ja viela yksi; lisaksi "teksti lainausmerkeissa" keskella.
+wide 6 e1d5095922d4ef38 2e6d89c2c0e27ccb Lentokonesuihkuturbiinimoottoriapumekaanikkoaliupseerioppilas, Kuopio ja 42 % luvusta 3,14159.
+wide 7 213a253f9c913770 072aa993dbbaeada Han sanoi: ala tee sita! Sitten (sivumennen sanoen) 1/2 + 3/4 = 5/4; katso s. 12.

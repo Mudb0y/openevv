@@ -15,9 +15,9 @@ which for a rebase is the target in the low 36 bits. A cell is sixteen bytes
 with its value eight in, where ours is eight with it four in, so every
 variable is renumbered by its place in the list rather than carried across by
 offset. And 6.1 declares a fifth kind of variable, a double, which the machine
-here keeps as thousandths (DG_FIXED in src/delta/delta.h).
+here keeps as ten-thousandths (DG_FIXED in src/delta/delta.h).
 
-usage: tools/module/lift61.py <module.dylib> <tag> globals|statements|sets|rules
+usage: tools/module/lift61.py <module.dylib> <tag> globals|statements|sets|rules|settings
 """
 
 import collections
@@ -35,6 +35,12 @@ dgl = sibling("module/globals")
 LANG_NAMES = {"fifi": "Finnish", "ptbr": "Brazilian Portuguese",
               "kokr": "Korean", "zhcn": "Mandarin Chinese",
               "zhtw": "Taiwanese Mandarin"}
+
+# The family and dialect each is, which are 6.1's own numbers -- the sections
+# of the eci.ini Apple's engine reads -- and the library name its settings
+# carry.
+LANG_NUMBERS = {"fifi": (9, 0, "Static Engine FIN"),
+                "ptbr": (7, 0, "Static Engine PTB")}
 
 
 # ---- reading the module ---------------------------------------------------
@@ -346,8 +352,8 @@ def write_globals(m, tag):
 # IBM's is 0x18, and the two words IBM never named are eight bytes each. A
 # reader and a writer are each a function of one instruction, an offset into
 # the record, as in IBM's. What is new is a field 6.1 keeps as a double; the
-# record keeps 6.1's layout, and the eight bytes it had hold thousandths in the
-# first four here, which is what kind -5 says to the machine.
+# record keeps 6.1's layout, and the eight bytes it had hold a fixed value in
+# the first four here, which is what kind -5 says to the machine.
 
 ENTRY, FIELD = 0x60, 0x28
 FIXED_KIND = -5
@@ -377,14 +383,11 @@ def writer(m, name):
     raise SystemExit("lift61: %s is not a plain writer" % name)
 
 
-def thousandths(raw):
-    """A double as the whole number of thousandths the machine keeps it as,
-    rounded to the nearest, which is what holds a constant like 0.85 that
-    the double itself only approximates."""
-    import struct
-    v = struct.unpack("<d", raw)[0]
-    n = int(abs(v) * 1000 + 0.5)
-    return -n if v < 0 else n
+def as_fixed(raw):
+    """A double as the whole number the machine keeps it as, in the units the
+    lifter writes the rules in, so that a field's fresh value and a rule's
+    constant are on one scale."""
+    return sibling("rules/lift64").as_fixed(raw)
 
 
 def name_of(m, addr):
@@ -449,7 +452,7 @@ def statements_61(m):
                     width = 4
                     raw = bytes(fresh[off:off + 8])
                     fresh[off:off + 8] = \
-                        thousandths(raw).to_bytes(4, "little", signed=True) \
+                        as_fixed(raw).to_bytes(4, "little", signed=True) \
                         + bytes(4)
                 f["write"] = (off, width)
             values = m.pointer(fa + 0x10)
@@ -788,6 +791,14 @@ def main():
         write_rules(sys.argv[1], sys.argv[2],
                     os.path.join(ROOT, "lang", sys.argv[2], "rules"),
                     LANG_NAMES.get(sys.argv[2], sys.argv[2]))
+        return 0
+    if what == "settings":
+        # Out of the rules rather than the module: the voices and phonemes
+        # are what two of the lifted rules register, so `rules' comes first.
+        family, dialect, library = LANG_NUMBERS[sys.argv[2]]
+        write_settings(sys.argv[2],
+                       os.path.join(ROOT, "lang", sys.argv[2], "rules"),
+                       family, dialect, library)
         return 0
     print(__doc__.split("usage:")[1].strip())
     return 2

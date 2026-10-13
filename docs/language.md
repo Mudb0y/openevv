@@ -56,7 +56,7 @@ and then it builds and speaks like any other: the three files a build compiles a
 
 ### The number a language is
 
-A language is a family and a dialect packed into a word, and the family is not free. Three tables are indexed by it and all three hold eighteen: the standard voices in `src/eci/lang/eci_voicetable.c`, the dictionary in force in `src/eci/dict/eci_dict.c` and the romanizers in `src/eci/lang/eci_romanizer.c`. IBM used families one to five and eight. And four more are spoken for: `rz_isRomExist` says families 6, 10, 11 and 16 have a romanizer, so an instance of one of those is refused outright when the romanizer is not there -- which is what happened when Polish was first given family sixteen, and `eciNewEx` answered -21 and nothing else. Polish is family seventeen, `0x110000`, which is clear of all of it with eighteen left spare.
+A language is a family and a dialect packed into a word, and the family is not free. Three tables are indexed by it and all three hold eighteen: the standard voices in `src/eci/lang/eci_voicetable.c`, the dictionary in force in `src/eci/dict/eci_dict.c` and the romanizers in `src/eci/lang/eci_romanizer.c`. IBM used families one to five and eight. And four more are spoken for: `rz_isRomExist` says families 6, 10, 11 and 16 have a romanizer, so an instance of one of those is refused outright when the romanizer is not there -- which is what happened when Polish was first given family sixteen, and `eciNewEx` answered -21 and nothing else. Polish is family seventeen, `0x110000`, which is clear of all of it with eighteen left spare. Finnish is family nine, `0x90000`, which is 6.1's own number for it and clear of the four.
 
 ### What the language means by its variables
 
@@ -145,6 +145,24 @@ It does not make a Polish word sound different, and the reason is the next piece
 says how much of the module is still the template's, rule by rule and table by table, out of the text forms alone. It reads 99% Italian today: 1,749 rules of 1,750 character for character Italian's, one ours, the settings two lines apart and the variables named. The number falls as the work is done, and what it is there for is the failure it prevents -- Italian phonology coming out of something labelled Polish without anyone noticing.
 
 `TEMPLATE` says what to hold it against, and `tools/module/census.py <tag> <template> rules` lists every rule with which of the three it is.
+
+### A language lifted from ETI's 6.1
+
+Apple ships ETI Eloquence 6.1's language modules with its operating systems, and every one of them can be read the way Finnish was. The module is a fat Mach-O; its x86-64 slice is the one the tools read:
+
+    llvm-lipo -thin x86_64 fin.dylib -o fin.x64.dylib
+    tools/module/lift61.py fin.x64.dylib fifi globals          the variables
+    tools/module/lift61.py fin.x64.dylib fifi statements       the statement table
+    tools/module/lift61.py fin.x64.dylib fifi sets             the sets and dictionaries
+    tools/module/lift61.py fin.x64.dylib fifi rules            every rule, through tools/rules/lift64.py
+    tools/module/lift61.py fin.x64.dylib fifi settings         out of the rules that register voices
+    python3 tools/rules/consts.py fifi                         the strings the rules name
+    "fifi": "Finnish" in tools/module/gather.py, then run it
+    make LANGS="lang/fifi" tables-write                        the C from the texts
+
+A tag goes in `LANG_NAMES` and `LANG_NUMBERS` in `lift61.py` first: its name, and the family, dialect and library name 6.1 gives it. A rule the lifter cannot read is reported by name and is not written; `rules/written.up` is where one written by hand goes, saying `instead`. The settings say `Version=6.1`, which is what tells the interface to drive the language as 6.1's does.
+
+What the result is held to is 6.1 itself, through `test/harness/eti.sh` and a `test/cases/eti-<tag>.txt` of its own, with its word list run through the same harness; `docs/status.md` says how Finnish was.
 
 ## Languages
 

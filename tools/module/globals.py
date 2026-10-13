@@ -282,8 +282,8 @@ def emit(cells, end, out, lang):
 # holds. Nothing here says where a variable lands: that is the walk's answer
 # and the walk is above.
 
-# A fixed one is what ETI's 6.1 holds as a double, kept as thousandths; only a
-# language lifted from 6.1 declares any.
+# A fixed one is what ETI's 6.1 holds as a double, kept in ten-thousandths;
+# only a language lifted from 6.1 declares any.
 TEXT_KIND = {"W": "word", "L": "long", "S": "short", "F": "fixed"}
 BACK_KIND = dict((v, k) for k, v in TEXT_KIND.items())
 

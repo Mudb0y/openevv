@@ -404,11 +404,19 @@ int32_t deleteStreamArrayStream(void *d, const int16_t *which,
 }
 
 /* One value into the stream a pointer register names. */
+/* The value as a whole number: a language lifted from 6.1 hands over a cell
+   of ten-thousandths where IBM's handed a long, and 6.1 truncates it. */
+static int32_t value_of_cell(const int32_t *cell)
+{
+    return *(const int16_t *)cell == DG_FIXED ? delta_fixed_int(cell[1])
+                                              : cell[1];
+}
+
 int32_t addStreamArrayPtValC(void *d, const int16_t *stream,
                              const int16_t *when, const int32_t *value)
 {
     return sa_appendValue(&GEN_LIST(d)->streams[stream[1]],
-                          (uint32_t)value[1], when[1]) == 0;
+                          (uint32_t)value_of_cell(value), when[1]) == 0;
 }
 
 /* The same value into two streams at once. */
@@ -417,11 +425,11 @@ int32_t addStreamArraySsValC(void *d, const int16_t *stream,
                              const int32_t *second)
 {
     if (!sa_appendValue(&GEN_LIST(d)->streams[stream[1]],
-                        (uint32_t)first[1], when[1]))
+                        (uint32_t)value_of_cell(first), when[1]))
         return 1;
 
     return sa_appendValue(&GEN_LIST(d)->streams[stream[1]],
-                          (uint32_t)second[1], when[1]) == 0;
+                          (uint32_t)value_of_cell(second), when[1]) == 0;
 }
 
 /* The original prints nothing here. */

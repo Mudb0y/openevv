@@ -57,6 +57,7 @@ SAY = {
     0x30001: "Le rapide renard brun saute par-dessus le chien paresseux.",
     0x40000: "Der schnelle braune Fuchs springt ueber den faulen Hund.",
     0x50000: "La rapida volpe marrone salta sopra il cane pigro.",
+    0x90000: "Nopea ruskea kettu hyppää laiskan koiran yli.",
 }
 FALLBACK = SAY[0x10000]
 

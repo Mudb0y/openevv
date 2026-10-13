@@ -148,6 +148,7 @@ delta_language delta_lang_itit = {
     proc_main,
 
     0, 0,                /* the settings blob and its size */
+    0,                   /* settings sent only when changed */
 };
 
 void delta_lang_bind_itit(void)
