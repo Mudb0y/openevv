@@ -1228,10 +1228,6 @@ rule convert_eng_day_of_month takes 3
   if h_rax is 0
     go to p10ce70
   end
-  place p10ce67
-  place t10ce67_1 on 1
-  place t10ce67_32 on 32
-  set h_r15 to unwind
   give up
   place p10ce70
   set v160 to arg 2
@@ -1273,7 +1269,7 @@ rule convert_eng_day_of_month takes 3
   set h_rcx to sym eti_s_1be0fe
   set h_r12 to addr c120
   if h_rax is not 0
-    go to p10ce67
+    give up
   end
   place p10cf05
   set h_rdx to 1
@@ -1281,7 +1277,7 @@ rule convert_eng_day_of_month takes 3
   call test_string_s h_rsi h_rdx h_rcx
   set h_rax to answer
   if h_rax is not 0
-    go to p10ce67
+    give up
   end
   place p10cf1b
   place t10cf1b_33 on 33
@@ -1394,7 +1390,7 @@ rule convert_eng_day_of_month takes 3
     go to p10d184
   end
   place p10d04e
-  go to p10ce67
+  give up
   place p10d053
   place t10d053_6 on 6
   set h_r15 to unwind
@@ -1951,7 +1947,6 @@ rule convert_to_day_of_month takes 4
   place p114a5d
   put cell c100 value into arg 2 at 4
   put cell c120 value into arg 3 at 4
-  place p114a76
   match
   place p114aaa
   call convert_eng_double addr c110 addr c100
@@ -1977,6 +1972,7 @@ rule is_valid_date takes 3
   local c100 bytes 8
   local c110 bytes 8
   local h_rax
+  local n1150cf_0
   place p114f3c
   place p114f7f
   place p114fb2
@@ -2039,7 +2035,9 @@ rule is_valid_date takes 3
   set h_rax to answer
   set h_rax to cell cf0 field
   add -32 to h_rax
-  if h_rax is below -31
+  set n1150cf_0 to h_rax
+  and 65535 into n1150cf_0
+  if n1150cf_0 is below 65505
     give up
   end
   place p1150d5
@@ -2690,6 +2688,7 @@ rule eng_monetary_exp takes 3
   local s111cd1
   local s111dc0
   local k111cd8_0
+  local n111d38_1
   place p111b88
   set v108 to arg 2
   set v100 to arg 1
@@ -2754,7 +2753,9 @@ rule eng_monetary_exp takes 3
   place p111d31
   set h_rax to cell cf0 field
   place p111d38
-  if global half 4266 is not h_rax
+  set n111d38_1 to h_rax
+  and 65535 into n111d38_1
+  if global half 4266 is not n111d38_1
     go to p111ddb
   end
   place p111d45
@@ -2924,6 +2925,13 @@ rule convert_eng_monetary_exp takes 5
   local s10faeb
   local k10e771_0
   local k10f1e1_0
+  local n10f38a_0
+  local n10f652_0
+  local n10f65c_0
+  local n10f681_0
+  local n10f823_0
+  local n10fe3d_0
+  local n10fe7e_0
   variable gc18 word 1848
   variable gdd0 word 2196
   place p10e5a4
@@ -2933,13 +2941,6 @@ rule convert_eng_monetary_exp takes 5
   set h_r13 to arg 1
   set h_rcx to 94
   place p10e5f0
-  go to p10e628
-  place p10e61f
-  place t10e61f_110 on 110
-  place t10e61f_113 on 113
-  set vf4 to unwind
-  set h_r14 to 94
-  give up
   place p10e628
   set h_rsi to addr c148
   set h_rcx to -6
@@ -4123,7 +4124,7 @@ rule convert_eng_monetary_exp takes 5
   set h_rsi to 7
   place p10f1a1
   if cell cf8 field is 0
-    go to p10e61f
+    give up
   end
   go to p10f1af
   place t10f1af_80 on 80
@@ -4304,7 +4305,9 @@ rule convert_eng_monetary_exp takes 5
   set h_r9 to 1
   set h_r8 to h_r15
   set h_r14 to h_r12
-  if h_r12 is 1
+  set n10f38a_0 to h_r12
+  and 65535 into n10f38a_0
+  if n10f38a_0 is 1
     go to p10f652
   end
   go to p10f395
@@ -4553,12 +4556,16 @@ rule convert_eng_monetary_exp takes 5
   set h_r8 to h_r12
   set h_r9 to h_r15
   place p10f652
-  if h_r9 is not 1
+  set n10f652_0 to h_r9
+  and 65535 into n10f652_0
+  if n10f652_0 is not 1
     go to p10f676
   end
   place p10f659
   set h_r15 to h_r8
-  if h_r8 is not 0
+  set n10f65c_0 to h_r8
+  and 65535 into n10f65c_0
+  if n10f65c_0 is not 0
     go to p10f67e
   end
   place p10f662
@@ -4581,7 +4588,9 @@ rule convert_eng_monetary_exp takes 5
   set h_r9 to h_r14
   place p10f67e
   set h_r14 to h_r9
-  if h_r15 is not 1
+  set n10f681_0 to h_r15
+  and 65535 into n10f681_0
+  if n10f681_0 is not 1
     go to p10f6c6
   end
   place p10f688
@@ -4718,7 +4727,9 @@ rule convert_eng_monetary_exp takes 5
   call starttest h_rsi
   set h_rax to answer
   set h_rax to h_r15
-  if h_r15 is not 1
+  set n10f823_0 to h_r15
+  and 65535 into n10f823_0
+  if n10f823_0 is not 1
     go to p10f851
   end
   place p10f82a
@@ -5267,7 +5278,7 @@ rule convert_eng_monetary_exp takes 5
   place p10fdb7
   call bspop_boa
   set h_rax to answer
-  go to p10e61f
+  give up
   go to p10fdc4
   place t10fdc4_104 on 104
   place t10fdc4_105 on 105
@@ -5322,7 +5333,9 @@ rule convert_eng_monetary_exp takes 5
   set h_r8 to h_r15
   place p10fe3a
   set h_rax to h_r8
-  if h_r8 is not 0
+  set n10fe3d_0 to h_r8
+  and 65535 into n10fe3d_0
+  if n10fe3d_0 is not 0
     go to p10fe62
   end
   place p10fe43
@@ -5340,7 +5353,9 @@ rule convert_eng_monetary_exp takes 5
   set h_rax to answer
   set h_rax to h_r14
   place p10fe7e
-  if h_rax is not 1
+  set n10fe7e_0 to h_rax
+  and 65535 into n10fe7e_0
+  if n10fe7e_0 is not 1
     go to p10feb2
   end
   place p10fe84
@@ -5442,6 +5457,8 @@ rule handle_postposed_currency takes 5
   local h_rdi
   local h_rdx
   local h_rsi
+  local n1130ac_0
+  local n1130ac_1
   place p112f08
   set v120 to arg 4
   set v118 to arg 3
@@ -5510,8 +5527,12 @@ rule handle_postposed_currency takes 5
   set h_rdi to h_rax
   set h_rax to 3
   set h_rcx to h_rsi
+  set n1130ac_0 to h_rdx
+  and 65535 into n1130ac_0
+  set n1130ac_1 to h_rdi
+  and 65535 into n1130ac_1
   set h_rsi to addr c108
-  if h_rdx is not h_rdi
+  if n1130ac_0 is not n1130ac_1
     go to p1130c1
   end
   place p1130b8
@@ -5753,10 +5774,10 @@ rule handle_postposed_currency takes 5
   put h_rax into arg 2 at 4
   set h_rax to cell cf0 field
   set h_rcx to arg 3
-  put h_rax into arg 3 at 2
+  put h_rax into arg 3 at 2 half
   set h_rax to cell cf8 field
   set h_rcx to arg 4
-  put h_rax into arg 4 at 2
+  put h_rax into arg 4 at 2 half
   match
 end
 
@@ -5779,11 +5800,6 @@ rule get_currency_type takes 6
   place p111ee7
   set v118 to arg 1
   set v100 to arg 2
-  go to p111f2d
-  place p111f24
-  place t111f24_9 on 9
-  place t111f24_14 on 14
-  give up
   place p111f2d
   set h_rdx to arg 1
   set h_rcx to -6
@@ -5870,7 +5886,7 @@ rule get_currency_type takes 6
   call setscan_r h_rdx
   set h_rax to answer
   if h_rax is not 0
-    go to p111f24
+    give up
   end
   place p1120ad
   call bspush_ca_scan 10
@@ -5891,7 +5907,7 @@ rule get_currency_type takes 6
   call advance_tok
   set h_rax to answer
   if h_rax is 0
-    go to p111f24
+    give up
   end
   set unwind to 0
   backtrack
@@ -5945,9 +5961,9 @@ rule get_currency_type takes 6
   set h_rcx to arg 2
   put h_rax into arg 2 at 4
   set h_rax to cell cf4 field
-  put h_rax into arg 3 at 2
+  put h_rax into arg 3 at 2 half
   set h_rax to cell cf8 field
-  put h_rax into arg 4 at 2
+  put h_rax into arg 4 at 2 half
   match
   place p1121f9
   place t1121f9_8 on 8
@@ -6001,11 +6017,6 @@ rule get_dollar_type takes 6
   place p1122d7
   set v120 to arg 1
   set v118 to arg 2
-  go to p11231d
-  place p112314
-  place t112314_44 on 44
-  set h_r12 to unwind
-  give up
   place p11231d
   set h_r12 to arg 3
   set h_rsi to addr c168
@@ -6698,9 +6709,9 @@ rule get_dollar_type takes 6
   set h_rsi to arg 2
   put h_rdx into arg 2 at 4
   set h_rdx to arg 3
-  put h_rcx into arg 3 at 2
+  put h_rcx into arg 3 at 2 half
   set h_rcx to arg 4
-  put h_rax into arg 4 at 2
+  put h_rax into arg 4 at 2 half
   match
   place p112aec
   place t112aec_43 on 43
@@ -6717,6 +6728,7 @@ rule add_eng_currency_units takes 4
   local h_rax
   local h_rcx
   local h_rdx
+  local n113bf7_0
   place p113ab0
   place p113aee
   place p113b4e
@@ -6751,7 +6763,9 @@ rule add_eng_currency_units takes 4
   set h_rax to answer
   set h_rax to global half 1890
   place p113bf7
-  if h_rax is cell cf0 field
+  set n113bf7_0 to h_rax
+  and 65535 into n113bf7_0
+  if n113bf7_0 is cell cf0 field
     go to p113c39
   end
   set unwind to 0
@@ -6884,6 +6898,7 @@ rule add_eng_subunits takes 3
   local h_rax
   local h_rcx
   local h_rdx
+  local n1148a5_0
   place p1146b5
   place p1146f0
   place p114750
@@ -6951,7 +6966,9 @@ rule add_eng_subunits takes 3
   place t11489e_5 on 5
   set h_rax to global half 4266
   place p1148a5
-  if h_rax is not cell cf0 field
+  set n1148a5_0 to h_rax
+  and 65535 into n1148a5_0
+  if n1148a5_0 is not cell cf0 field
     set unwind to 0
     backtrack
   end
@@ -7141,6 +7158,7 @@ rule handle_medial_currency_type takes 4
   backtrack
   place p112de8
   place t112de8_2 on 2
+  set h_r15 to unwind
   set h_rax to h_r15
   if global half 1890 is not cell cf0 field
     set unwind to h_r15
@@ -7150,6 +7168,7 @@ rule handle_medial_currency_type takes 4
   go to p112cff
   place p112e00
   place t112e00_6 on 6
+  set h_r15 to unwind
   call end_of_word addr c128
   set h_rax to answer
   if h_rax is not 0
@@ -7158,22 +7177,27 @@ rule handle_medial_currency_type takes 4
   end
   place p112e0f
   place t112e0f_7 on 7
+  set h_r15 to unwind
   set h_r13 to 1
   go to p112da5
   place p112e15
   place t112e15_3 on 3
+  set h_r15 to unwind
   set h_rax to h_r15
   go to p112cff
   place p112e1d
   place t112e1d_4 on 4
+  set h_r15 to unwind
   call mark_non_letter addr c108 addr c128
   set h_rax to answer
   place p112e33
   place t112e33_8 on 8
+  set h_r15 to unwind
   set h_rax to cell c128 value
   set cell c108 value to h_rax
   place p112e41
   place t112e41_1 on 1
+  set h_r15 to unwind
   set h_rax to global half 1878
   if h_rax is cell cf0 field
     go to p112e91
@@ -7193,19 +7217,22 @@ rule handle_medial_currency_type takes 4
   end
   place p112e7f
   place t112e7f_10 on 10
+  set h_r15 to unwind
   call savescptr 10 addr c108
   set h_rax to answer
   place p112e91
   place t112e91_9 on 9
+  set h_r15 to unwind
   set h_rax to cell c108 value
   put h_rax into arg 1 at 4
   set h_rax to cell cf0 field
-  put h_rax into arg 2 at 2
+  put h_rax into arg 2 at 2 half
   set h_rax to cell cf4 field
-  put h_rax into arg 3 at 2
+  put h_rax into arg 3 at 2 half
   match
   place p112ed0
   place t112ed0_5 on 5
+  set h_r15 to unwind
   call bspop_boa
   set h_rax to answer
   give up

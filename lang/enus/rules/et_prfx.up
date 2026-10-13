@@ -99,7 +99,7 @@ rule strip_scientific_prefixes takes 1
   set h_rdx to sym eti_s_1be896
   set h_r13 to 1
   set h_rsi to 1
-  call fence 0 sym eti_null
+  call fence 1 sym eti_s_1be896
   set v108 to addr g668
   set cell c130 value to global word 880
   set h_rsi to 1

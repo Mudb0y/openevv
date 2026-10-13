@@ -31,7 +31,7 @@ rule in_brackets takes 3
   place p3b404
   call test_string_s 1 1 sym eti_s_1c20d9
   if answer is 0
-    go to p3b50d
+    match
   end
   place p3b420
   call lpta_loadp addr c110
@@ -53,34 +53,31 @@ rule in_brackets takes 3
   place p3b464
   call test_string_s 1 1 sym eti_s_1c20da
   if answer is 0
-    go to p3b50d
+    match
   end
   place p3b480
   call lpta_loadp addr c110
   call setscan_l 1
   if answer is not 0
-    go to p3b4dc
+    give up
   end
   place p3b496
   call test_string_s 1 1 sym eti_s_1c2120
   if answer is not 0
-    go to p3b4dc
+    give up
   end
   place p3b4ae
   call lpta_loadp addr c100
   call setscan_r 1
   if answer is not 0
-    go to p3b4dc
+    give up
   end
   place p3b4c4
   call test_string_s 1 1 sym eti_s_1c211f
   if answer is 0
-    go to p3b50d
+    match
   end
-  place p3b4dc
   give up
-  place p3b50d
-  match
 end
 
 rule read_punct_by_name takes 3
@@ -95,14 +92,7 @@ rule read_punct_by_name takes 3
   local h_rcx
   local h_rdx
   local h_rsi
-  local s39b09
-  local s39cb1
-  local s39d61
-  local s39db3
-  local s39ddd
-  local s39e01
-  local s39e42
-  local s39e6f
+  local n39c97_0
   place p39a08
   set v118 to arg 2
   place p39a47
@@ -120,7 +110,8 @@ rule read_punct_by_name takes 3
   set h_rdx to sym eti_null
   set h_r12 to 0
   set h_rsi to 0
-  call fence 0 sym eti_null
+  call fence h_rsi h_rdx
+  set h_rax to answer
   set h_rsi to 1
   call starttest h_rsi
   set h_rax to answer
@@ -128,8 +119,7 @@ rule read_punct_by_name takes 3
   set h_rdx to 1
   call lpta_loadp h_rsi
   call setscan_r h_rdx
-  set s39b09 to answer
-  set h_rax to s39b09
+  set h_rax to answer
   set h_r13 to 0
   if h_rax is not 0
     go to p39b78
@@ -255,7 +245,9 @@ rule read_punct_by_name takes 3
   set h_rax to global half 3350
   place p39c94
   set h_rsi to h_r13
-  if h_rax is not global half 3334
+  set n39c97_0 to h_rax
+  and 65535 into n39c97_0
+  if n39c97_0 is not global half 3334
     set unwind to h_rsi
     backtrack
   end
@@ -266,8 +258,7 @@ rule read_punct_by_name takes 3
   set h_rdx to 1
   call lpta_loadp h_rsi
   call setscan_r h_rdx
-  set s39cb1 to answer
-  set h_rax to s39cb1
+  set h_rax to answer
   set h_rsi to h_r13
   if h_rax is not 0
     set unwind to h_rsi
@@ -330,8 +321,7 @@ rule read_punct_by_name takes 3
   set h_rdx to 1
   call lpta_loadp h_rsi
   call setscan_r h_rdx
-  set s39d61 to answer
-  set h_rax to s39d61
+  set h_rax to answer
   set h_rsi to h_r13
   if h_rax is not 0
     set unwind to h_rsi
@@ -364,8 +354,7 @@ rule read_punct_by_name takes 3
   set h_rcx to 1
   place p39db3
   call testFldeq h_rsi h_rdx h_rcx
-  set s39db3 to answer
-  set h_rax to s39db3
+  set h_rax to answer
   set h_rsi to h_r13
   if h_rax is not 0
     set unwind to h_rsi
@@ -382,8 +371,7 @@ rule read_punct_by_name takes 3
   set h_rdx to 1
   set h_rcx to sym eti_s_1c2104
   call test_synch h_rsi h_rdx h_rcx
-  set s39ddd to answer
-  set h_rax to s39ddd
+  set h_rax to answer
   place p39de2
   set h_rsi to h_r13
   if h_rax is not 0
@@ -404,8 +392,7 @@ rule read_punct_by_name takes 3
   set h_rdx to 1
   set h_rcx to 2
   call testFldeq h_rsi h_rdx h_rcx
-  set s39e01 to answer
-  set h_rax to s39e01
+  set h_rax to answer
   set h_rsi to h_r13
   if h_rax is not 0
     set unwind to h_rsi
@@ -432,8 +419,7 @@ rule read_punct_by_name takes 3
   set h_rcx to sym eti_s_1c2102
   place p39e42
   call test_string_s h_rsi h_rdx h_rcx
-  set s39e42 to answer
-  set h_rax to s39e42
+  set h_rax to answer
   set h_rsi to h_r13
   if h_rax is not 0
     set unwind to h_rsi
@@ -445,14 +431,12 @@ rule read_punct_by_name takes 3
   set h_rax to cell c100 value
   call lpta_loadp addr c100
   call test_ptr
-  set s39e6f to answer
-  set h_rax to s39e6f
+  set h_rax to answer
   set h_rsi to h_r13
   if h_rax is not 0
     set unwind to h_rsi
     backtrack
   end
-  place p39e7f
   give up
   place p39e84
   set h_rsi to 13
@@ -600,7 +584,8 @@ rule punctuation takes 3
   set h_rdx to sym eti_null
   set h_r12 to 0
   set h_rsi to 0
-  call fence 0 sym eti_null
+  call fence h_rsi h_rdx
+  set h_rax to answer
   set h_rsi to 1
   call starttest h_rsi
   set h_rax to answer
@@ -1169,6 +1154,7 @@ rule end_of_word takes 2
   call push_ptr_init addr c110
   set h_rax to answer
   call fence 0 sym eti_null
+  set h_rax to answer
   set h_rax to global half 3338
   if h_rax is not global half 3334
     go to p3525d
@@ -1220,7 +1206,7 @@ rule end_of_word takes 2
   call setscan_r 1
   set h_rax to answer
   if h_rax is not 0
-    go to p353d9
+    give up
   end
   place p352a3
   place t352a3_12 on 12
@@ -1249,7 +1235,7 @@ rule end_of_word takes 2
   call advance_tok
   set h_rax to answer
   if h_rax is 0
-    go to p353e2
+    match
   end
   place p3530f
   set unwind to 0
@@ -1292,13 +1278,6 @@ rule end_of_word takes 2
     set unwind to 0
     backtrack
   end
-  place p353d4
-  match
-  place p353d9
-  place t353d9_10 on 10
-  place t353d9_13 on 13
-  give up
-  place p353e2
   match
   place tm_8 on 8
   place tm_9 on 9
@@ -1364,7 +1343,8 @@ rule end_of_sentence takes 2
   set h_rax to answer
   set h_r14 to 0
   set h_rsi to 0
-  call fence 0 sym eti_null
+  call fence h_rsi sym eti_null
+  set h_rax to answer
   set h_rsi to 1
   call starttest h_rsi
   set h_rax to answer
@@ -1563,7 +1543,6 @@ rule end_of_sentence takes 2
     set unwind to h_rsi
     backtrack
   end
-  place p3a35a
   give up
   place p3a35f
   place t3a35f_15 on 15
@@ -1911,7 +1890,6 @@ rule end_of_sentence takes 2
     set unwind to h_rsi
     backtrack
   end
-  place p3a6b2
   match
   place p3a6b7
   place t3a6b7_78 on 78
@@ -2388,6 +2366,7 @@ rule single_chars takes 3
   local s34fae
   local s34fc1
   local k34ff1_0
+  local n34e1c_0
   variable g568 word 740
   place p34b70
   set v120 to arg 2
@@ -2416,7 +2395,8 @@ rule single_chars takes 3
   call push_ptr_init h_rsi
   set h_rax to answer
   set h_rsi to 0
-  call fence 0 sym eti_null
+  call fence h_rsi sym eti_null
+  set h_rax to answer
   and 0 into cell c104 field
   and 0 into cell cf0 field
   set h_rsi to addr c150
@@ -2512,7 +2492,9 @@ rule single_chars takes 3
     go to p35021
   end
   place p34e1c
-  if h_rax is 1
+  set n34e1c_0 to h_rax
+  and 65535 into n34e1c_0
+  if n34e1c_0 is 1
     go to p3507e
   end
   place p34e26
@@ -2716,6 +2698,7 @@ rule skip_punct_and_delimiters takes 2
   call get_parm addr c100 arg 1 h_rcx
   set h_rax to answer
   call fence 0 sym eti_null
+  set h_rax to answer
   call starttest 1
   set h_rax to answer
   call lpta_loadp addr c100
@@ -2810,7 +2793,7 @@ rule build_phrase_final_structure takes 2
   set h_rsi to addr c100
   call push_ptr_init h_rsi
   set h_rsi to 0
-  call fence 0 sym eti_null
+  call fence h_rsi sym eti_null
   set h_rsi to 1
   call starttest h_rsi
   set h_rsi to addr cf0
@@ -2870,6 +2853,7 @@ rule interpret_single_char_modes takes 3
   local c110 bytes 8
   local h_rax
   local s2f522
+  local n2f4b8_1
   variable g568 word 740
   place p2f3e4
   place p2f427
@@ -2879,13 +2863,16 @@ rule interpret_single_char_modes takes 3
   call get_parm addr c100 arg 2 -6
   set h_rax to answer
   call fence 0 sym eti_null
+  set h_rax to answer
   set h_rax to global half 1694
   if global half 1698 is h_rax
     give up
   end
   place p2f4ad
   place p2f4b8
-  if global half 1706 is h_rax
+  set n2f4b8_1 to h_rax
+  and 65535 into n2f4b8_1
+  if global half 1706 is n2f4b8_1
     go to p2f652
   end
   place p2f4c5
@@ -3000,18 +2987,8 @@ rule parenthesis takes 3
   local h_rax
   local h_rcx
   local h_rsi
-  local s3058e
-  local s305c7
-  local s30630
-  local s30683
-  local s307af
-  local s307f8
-  local s30872
-  local s30896
-  local s308f0
-  local s30953
-  local s3098a
   local k30635_0
+  local n30854_0
   variable g568 word 740
   place p30464
   set v118 to arg 2
@@ -3039,15 +3016,15 @@ rule parenthesis takes 3
   set h_rax to answer
   set h_r15 to 0
   set h_rsi to 0
-  call fence 0 sym eti_null
+  call fence h_rsi sym eti_null
+  set h_rax to answer
   set h_rsi to 1
   call starttest h_rsi
   set h_rax to answer
   set h_rsi to addr c110
   call lpta_loadp h_rsi
   call setscan_r 1
-  set s3058e to answer
-  set h_rax to s3058e
+  set h_rax to answer
   set h_r14 to 0
   if h_rax is 0
     go to p3069f
@@ -3064,8 +3041,7 @@ rule parenthesis takes 3
   set h_rcx to sym eti_s_1c20d9
   set h_rsi to 1
   call test_string_s h_rsi 1 h_rcx
-  set s305c7 to answer
-  set h_rax to s305c7
+  set h_rax to answer
   set h_r12 to h_r15
   if h_rax is not 0
     give up
@@ -3095,8 +3071,7 @@ rule parenthesis takes 3
   set h_rax to answer
   set h_rsi to addr c100
   call end_of_word h_rsi
-  set s30630 to answer
-  set h_rax to s30630
+  set h_rax to answer
   place p30635
   set k30635_0 to h_rax
   set h_rax to 1
@@ -3125,8 +3100,7 @@ rule parenthesis takes 3
   set h_rcx to sym eti_s_1c20db
   set h_rsi to 1
   call test_string_s h_rsi 1 h_rcx
-  set s30683 to answer
-  set h_rax to s30683
+  set h_rax to answer
   set h_rcx to h_r12
   set h_r14 to h_r12
   if h_rax is not 0
@@ -3214,8 +3188,7 @@ rule parenthesis takes 3
   set h_rsi to addr c100
   call lpta_loadp h_rsi
   call setscan_r 1
-  set s307af to answer
-  set h_rax to s307af
+  set h_rax to answer
   set h_rsi to h_r13
   if h_rax is not 0
     set unwind to h_rsi
@@ -3239,8 +3212,7 @@ rule parenthesis takes 3
   set h_rcx to sym eti_s_1c2104
   set h_rsi to 10
   call test_synch h_rsi 1 h_rcx
-  set s307f8 to answer
-  set h_rax to s307f8
+  set h_rax to answer
   set h_rsi to h_r13
   if h_rax is not 0
     set unwind to h_rsi
@@ -3274,7 +3246,9 @@ rule parenthesis takes 3
   set h_rax to global half 3346
   place p30851
   set h_rsi to h_r13
-  if h_rax is not global half 3334
+  set n30854_0 to h_rax
+  and 65535 into n30854_0
+  if n30854_0 is not global half 3334
     set unwind to h_rsi
     backtrack
   end
@@ -3283,8 +3257,7 @@ rule parenthesis takes 3
   set h_r13 to unwind
   set h_rsi to addr c110
   call convert_phone_number h_rsi addr c100
-  set s30872 to answer
-  set h_rax to s30872
+  set h_rax to answer
   set h_rsi to h_r13
   if h_rax is not 0
     set unwind to h_rsi
@@ -3299,8 +3272,7 @@ rule parenthesis takes 3
   place p3088e
   set h_rsi to 1
   call test_string_s h_rsi 1 h_rcx
-  set s30896 to answer
-  set h_rax to s30896
+  set h_rax to answer
   set h_rsi to h_r13
   if h_rax is not 0
     set unwind to h_rsi
@@ -3334,8 +3306,7 @@ rule parenthesis takes 3
   set h_rcx to sym eti_s_1c20dc
   set h_rsi to 1
   call test_string_s h_rsi 1 h_rcx
-  set s308f0 to answer
-  set h_rax to s308f0
+  set h_rax to answer
   set h_rcx to h_r13
   set h_rsi to h_r13
   if h_rax is not 0
@@ -3370,8 +3341,7 @@ rule parenthesis takes 3
   set h_rsi to 1
   set h_rcx to 4
   call testFldeq h_rsi 3 h_rcx
-  set s30953 to answer
-  set h_rax to s30953
+  set h_rax to answer
   set h_rsi to h_r13
   if h_rax is not 0
     set unwind to h_rsi
@@ -3387,8 +3357,7 @@ rule parenthesis takes 3
   set h_rax to global word 744
   call lpta_loadp addr g568
   call test_ptr
-  set s3098a to answer
-  set h_rax to s3098a
+  set h_rax to answer
   place p3098f
   set h_rsi to h_r13
   if h_rax is not 0
@@ -3569,7 +3538,7 @@ rule bracket takes 3
   set h_rdx to sym eti_null
   set h_r15 to 0
   set h_rsi to 0
-  call fence 0 sym eti_null
+  call fence h_rsi h_rdx
   set h_rsi to addr c118
   set h_rdx to 1
   call lpta_loadp h_rsi
@@ -3736,7 +3705,7 @@ rule bracket takes 3
   call lpta_loadp h_rsi
   call setscan_r h_rdx
   if answer is not 0
-    go to p33e54
+    give up
   end
   place p33c24
   set h_rcx to sym eti_s_1c2122
@@ -3746,7 +3715,7 @@ rule bracket takes 3
   set s33c33 to answer
   set h_r14 to h_r15
   if s33c33 is not 0
-    go to p33e54
+    give up
   end
   place p33c43
   set h_rsi to 31
@@ -3913,12 +3882,6 @@ rule bracket takes 3
   set h_rsi to addr c130
   set h_rdx to addr c140
   go to p33bb9
-  place p33e54
-  place t33e54_30 on 30
-  place t33e54_37 on 37
-  set h_r12 to unwind
-  set h_r14 to 94
-  give up
   place p33e5d
   place t33e5d_11 on 11
   set h_r12 to unwind
@@ -4121,8 +4084,6 @@ rule quote_mark takes 3
   if answer is 0
     go to p335e2
   end
-  place p335d9
-  place t335d9_1 on 1
   give up
   place p335e2
   call bspush_ca_scan 2
@@ -4228,6 +4189,7 @@ rule normalize_text takes 3
   local v110 word
   local h_rax
   local h_rsi
+  local n2e212_0
   variable g568 word 740
   variable ga38 word 4220
   variable ga50 word 1468
@@ -4253,7 +4215,8 @@ rule normalize_text takes 3
   call push_ptr_init h_rsi
   set h_rax to answer
   set h_rsi to 0
-  call fence 0 sym eti_null
+  call fence h_rsi sym eti_null
+  set h_rax to answer
   set h_rax to global word 2168
   set cell c130 value to h_rax
   set cell c100 value to h_rax
@@ -4349,7 +4312,6 @@ rule normalize_text takes 3
     set unwind to 0
     backtrack
   end
-  place p2e05a
   match
   place p2e05f
   place t2e05f_5 on 5
@@ -4537,7 +4499,9 @@ rule normalize_text takes 3
   place t2e208_30 on 30
   set h_rax to global half 1582
   add -10 to h_rax
-  if h_rax is below -9
+  set n2e212_0 to h_rax
+  and 65535 into n2e212_0
+  if n2e212_0 is below 65527
     go to p2e226
   end
   place p2e218
@@ -4658,11 +4622,7 @@ rule letter_sequence takes 3
   local h_rax
   local h_rcx
   local h_rsi
-  local s3297c
-  local s32b1f
-  local s32bc7
-  local s32c09
-  local s32c70
+  local n3295e_0
   variable ga90 word 1492
   place p3271c
   place p3275b
@@ -4687,7 +4647,8 @@ rule letter_sequence takes 3
   call push_ptr_init h_rsi
   set h_rax to answer
   set h_rsi to 0
-  call fence 0 sym eti_null
+  call fence h_rsi sym eti_null
+  set h_rax to answer
   set h_rax to global word 2168
   set cell c148 value to h_rax
   set h_rsi to 1
@@ -4779,7 +4740,9 @@ rule letter_sequence takes 3
   set h_rax to global half 3338
   place p3295b
   set h_rsi to h_r13
-  if h_rax is not global half 3334
+  set n3295e_0 to h_rax
+  and 65535 into n3295e_0
+  if n3295e_0 is not global half 3334
     set unwind to h_rsi
     backtrack
   end
@@ -4790,8 +4753,7 @@ rule letter_sequence takes 3
   place p3296b
   set h_rsi to addr c110
   call monetary_exp h_rsi addr c100
-  set s3297c to answer
-  set h_rax to s3297c
+  set h_rax to answer
   set h_rsi to h_r13
   if h_rax is not 0
     set unwind to h_rsi
@@ -4934,8 +4896,7 @@ rule letter_sequence takes 3
   set h_rsi to addr c110
   call lpta_loadp h_rsi
   call setscan_r 1
-  set s32b1f to answer
-  set h_rax to s32b1f
+  set h_rax to answer
   set h_rsi to 29
   if h_rax is 0
     go to p32c27
@@ -5009,8 +4970,7 @@ rule letter_sequence takes 3
   set h_rsi to 1
   set h_rcx to 2
   call testFldeq h_rsi 3 h_rcx
-  set s32bc7 to answer
-  set h_rax to s32bc7
+  set h_rax to answer
   set h_rsi to h_r13
   if h_rax is not 0
     set unwind to h_rsi
@@ -5044,8 +5004,7 @@ rule letter_sequence takes 3
   call bspop_boa
   set h_rax to answer
   call advance_tok
-  set s32c09 to answer
-  set h_rax to s32c09
+  set h_rax to answer
   set h_rsi to h_r13
   if h_rax is not 0
     set unwind to h_rsi
@@ -5085,8 +5044,7 @@ rule letter_sequence takes 3
   set h_rax to cell c100 value
   call lpta_loadp addr c100
   call test_ptr
-  set s32c70 to answer
-  set h_rax to s32c70
+  set h_rax to answer
   set h_rsi to h_r13
   if h_rax is not 0
     set unwind to h_rsi
@@ -5373,7 +5331,8 @@ rule three_letter_extension takes 2
   set h_rax to answer
   set h_rdx to sym eti_null
   set h_rsi to 0
-  call fence 0 sym eti_null
+  call fence h_rsi h_rdx
+  set h_rax to answer
   set h_rax to global half 1698
   if h_rax is not global half 1694
     give up
@@ -5835,7 +5794,7 @@ rule abbreviation takes 4
   call push_ptr_init h_rsi
   set h_r15 to 0
   set h_rsi to 0
-  call fence 0 sym eti_null
+  call fence h_rsi sym eti_null
   if global half 1342 is global half 3574
     give up
   end
@@ -6170,7 +6129,7 @@ rule init_ptr_End_reproc_string takes 3
   call get_parm addr c100 arg 1 -6
   call get_parm addr c110 arg 2 -6
   call fence 0 sym eti_null
-  call fence 0 sym eti_null
+  call fence 1 sym eti_s_1c20d7
   call lpta_loadpn addr ga80
   call rpta_loadpn addr gdd0
   call compare_ptas
@@ -6229,18 +6188,14 @@ end
 
 rule is_pathname takes 2
   instead
-  local c108 bytes 8
+  local c108 bytes 9
   local c118 bytes 8
-  local c130 bytes 8
+  local c130 bytes 9
   local c140 bytes 8
   local c150 bytes 8
   local c160 bytes 8
   local c170 bytes 8
   local c180 bytes 8
-  local vf4 byte
-  local vf8 word
-  local v11c byte
-  local v120 word
   local h_r14
   local h_rcx
   local h_rdx
@@ -6272,8 +6227,8 @@ rule is_pathname takes 2
   set h_rdx to arg 1
   call get_parm h_rsi h_rdx h_rcx
   set h_r14 to 0
-  and 0 into v120
-  set v11c to 0
+  and 0 into cell c130 word 0
+  set cell c130 byte 4 to 0
   set c130 to -65535
   set h_rsi to addr c118
   call push_ptr_init h_rsi
@@ -6285,12 +6240,12 @@ rule is_pathname takes 2
   call push_ptr_init h_rsi
   set h_rsi to addr c150
   call push_ptr_init h_rsi
-  set vf4 to 0
-  and 0 into vf8
+  set cell c108 byte 4 to 0
+  and 0 into cell c108 word 0
   set c108 to -65535
   set h_rdx to sym eti_null
   set h_rsi to 0
-  call fence 0 sym eti_null
+  call fence h_rsi h_rdx
   if global half 4230 is not global half 4226
     go to p321ec
   end
@@ -6828,7 +6783,7 @@ rule URL takes 2
   call push_ptr_init h_rsi
   set h_rdx to sym eti_null
   set h_rsi to 0
-  call fence 0 sym eti_null
+  call fence h_rsi h_rdx
   if global half 4230 is not global half 4226
     go to p31c17
   end
@@ -7217,7 +7172,7 @@ rule email_address takes 2
   set h_rdx to sym eti_null
   set h_r14 to 0
   set h_rsi to 0
-  call fence 0 sym eti_null
+  call fence h_rsi h_rdx
   if global half 4230 is not global half 4226
     go to p3116c
   end
@@ -7961,6 +7916,7 @@ rule process_hostname takes 3
   local c168 bytes 8
   local v128 word
   local h_rax
+  local n35bf4_0
   variable gdd0 word 2164
   place p35693
   place p356d2
@@ -7980,6 +7936,7 @@ rule process_hostname takes 3
   call push_ptr_init addr c120
   set h_rax to answer
   call fence 0 sym eti_null
+  set h_rax to answer
   set h_rax to cell c148 value
   set global word 1488 to h_rax
   set h_rax to global half 4230
@@ -8154,7 +8111,6 @@ rule process_hostname takes 3
     set unwind to 0
     backtrack
   end
-  place p35ab5
   match
   place p35aba
   place t35aba_7 on 7
@@ -8260,7 +8216,9 @@ rule process_hostname takes 3
   set h_rax to answer
   set h_rax to global half 3350
   place p35bf4
-  if h_rax is not global half 3334
+  set n35bf4_0 to h_rax
+  and 65535 into n35bf4_0
+  if n35bf4_0 is not global half 3334
     set unwind to 0
     backtrack
   end
@@ -8388,7 +8346,7 @@ rule process_hostname takes 3
   call testeq
   set h_rax to answer
   if h_rax is 0
-    go to p35e5c
+    match
   end
   place p35dcd
   place t35dcd_29 on 29
@@ -8419,11 +8377,6 @@ rule process_hostname takes 3
   end
   place p35e4e
   go to p35c4c
-  place p35e53
-  place t35e53_32 on 32
-  give up
-  place p35e5c
-  match
   place tm_1 on 1
   match
 end

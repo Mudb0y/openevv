@@ -10,6 +10,7 @@
 # takes, the annotation is written with the backquote IBM's reader takes and
 # a space after it, which keeps the length the rule states.
 bytes eti_null         00
+bytes eti_s_1c20d7     05
 bytes eti_s_1c20d8     48
 bytes eti_s_1c20d9     47
 bytes eti_s_1c20da     51

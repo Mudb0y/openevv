@@ -18,6 +18,7 @@ bytes lex_prefix_re 18 02
 # takes, the annotation is written with the backquote IBM's reader takes and
 # a space after it, which keeps the length the rule states.
 bytes eti_null         00
+bytes eti_s_1b90d6     05
 bytes eti_s_1b90d7     48
 bytes eti_s_1b90d8     47
 bytes eti_s_1b90d9     51
