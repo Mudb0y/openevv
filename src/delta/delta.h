@@ -366,11 +366,39 @@ typedef struct {
 /* One global variable of the machine, as the language declared it. Every
    variable lives in the tail of delta_state as a cell: its type tag first,
    then its value, so that a pointer to the value always has the tag just
-   in front of it. There are four kinds and the tag says which. */
+   in front of it. There are five kinds and the tag says which. */
 #define DG_WORD      (-6)   /* a 32-bit value, in an eight-byte cell */
 #define DG_LONG      (-3)   /* likewise, but the language calls it a long */
 #define DG_SHORT     (-4)   /* a 16-bit value, in a four-byte cell */
 #define DG_COMPOUND  (-9)   /* a run of bytes, described separately */
+/* What ETI's 6.1 holds as a double, here a whole number of thousandths in an
+   eight-byte cell: no language IBM shipped declares one, and the signal path
+   is kept to whole numbers so that a machine with no floating point can run
+   every language the same. A thousandth holds every constant 6.1's rules
+   write but a few in set_global_constants exactly, which is why it is a
+   decimal scale rather than a binary one. */
+#define DG_FIXED     (-5)
+#define DELTA_FIXED_ONE 1000
+
+/* a * b / c with the product held in sixty-four bits, which is what a rule
+   lifted from 6.1 does its decimal arithmetic in: a product of thousandths
+   divided back by a thousand, a quotient multiplied up by one first. Rounded
+   to the nearest, half away from nought, where the original worked in
+   doubles; truncated towards nought where it truncated one to a whole
+   number. A division by nought answers nought, since there is no whole
+   number for the infinity the original would have held. */
+static inline int32_t delta_muldiv(int32_t a, int32_t b, int32_t c, int round)
+{
+    int64_t n = (int64_t)a * b;
+    int64_t an = n < 0 ? -n : n;
+    int64_t ad = c < 0 ? -(int64_t)c : c;
+    int64_t q;
+
+    if (ad == 0)
+        return 0;
+    q = round ? (an + ad / 2) / ad : an / ad;
+    return (int32_t)((n < 0) != (c < 0) ? -q : q);
+}
 
 /* Where the cells start, which is the first byte of delta_state the fields
    above do not name -- so it follows the struct rather than the struct being
@@ -429,7 +457,10 @@ struct delta_state {
     int32_t      ncompound;       /* 0x0000 */
     int32_t      nlong;           /* 0x0004 */
     int32_t      nshort;          /* 0x0008 */
-    int32_t      unknown_000c;
+    /* IBM left this word and the one at 0x24 unused, and they sit where the
+       other kinds' count and index do; a language lifted from 6.1 keeps its
+       DG_FIXED variables here. */
+    int32_t      nfixed;          /* 0x000c */
     int32_t      nword;           /* 0x0010 */
     /* Where each variable's value is. Nothing outside delta_new knows what
        offset a variable landed at; everything reaches one through these. */
@@ -437,7 +468,7 @@ struct delta_state {
     evv_ref     compound;     /* 0x0018 */
     evv_ref     lng;             /* 0x001c */
     evv_ref     shrt;            /* 0x0020 */
-    int32_t      unknown_0024;
+    evv_ref     fixed;           /* 0x0024 */
     evv_ref     sets;            /* 0x0028, the language's lookup sets, one
                                      0x24-byte descriptor each */
     evv_ref     act_table;       /* 0x002c, the dictionary's action table,
@@ -512,6 +543,7 @@ typedef struct {
 #define DK_SHORT  (-2)
 #define DK_LONG   (-3)
 #define DK_SHORT2 (-4)
+#define DK_FIXED  (-5)   /* thousandths, as DG_FIXED says */
 #define DK_SYNC   (-6)
 
 /* A compiled location: what a rule names when it refers to a variable. A

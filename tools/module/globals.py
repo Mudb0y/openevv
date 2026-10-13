@@ -188,8 +188,8 @@ def lift(image):
 
     # Check the list reproduces every offset, so that nothing about the
     # layout is being taken on trust.
-    size = {"W": 8, "L": 8, "S": 4}
-    align = {"W": 4, "L": 4, "S": 2, "C": 2}
+    size = {"W": 8, "L": 8, "S": 4, "F": 8}
+    align = {"W": 4, "L": 4, "S": 2, "C": 2, "F": 4}
     at = DG_BASE
     for a, kind, extra in cells:
         # A compound of the seventh kind holds four-byte items and is laid on
@@ -226,7 +226,7 @@ def emit(cells, end, out, lang):
     # renamed every symbol when the output went anywhere but lang/<tag>. That
     # is the same trap tools/rules/emit.py was fixed for.
     names = {"W": "DG_WORD", "L": "DG_LONG", "S": "DG_SHORT",
-             "C": "DG_COMPOUND"}
+             "C": "DG_COMPOUND", "F": "DG_FIXED"}
     kinds = [names[k] for _, k, _ in cells]
     comps = [x for _, k, x in cells if k == "C"]
 
@@ -268,9 +268,10 @@ def emit(cells, end, out, lang):
     f.close()
 
     kept = collections.Counter(k for _, k, _ in cells)
-    print("%d variables (%d word, %d long, %d short, %d compound), "
+    print("%d variables (%d word, %d long, %d short, %d compound%s), "
           "cells run to 0x%x"
-          % (len(cells), kept["W"], kept["L"], kept["S"], kept["C"], end))
+          % (len(cells), kept["W"], kept["L"], kept["S"], kept["C"],
+             ", %d fixed" % kept["F"] if kept["F"] else "", end))
 
 
 # ---- the same list as text ---------------------------------------------
@@ -281,7 +282,9 @@ def emit(cells, end, out, lang):
 # holds. Nothing here says where a variable lands: that is the walk's answer
 # and the walk is above.
 
-TEXT_KIND = {"W": "word", "L": "long", "S": "short"}
+# A fixed one is what ETI's 6.1 holds as a double, kept as thousandths; only a
+# language lifted from 6.1 declares any.
+TEXT_KIND = {"W": "word", "L": "long", "S": "short", "F": "fixed"}
 BACK_KIND = dict((v, k) for k, v in TEXT_KIND.items())
 
 HEAD = """# The machine's global variables, as %(tag)s declares them.
@@ -375,8 +378,8 @@ def read_text(path, want_names=False):
         else:
             raise SystemExit("%s: no kind called %r" % (where, w[0]))
 
-    size = {"W": 8, "L": 8, "S": 4}
-    align = {"W": 4, "L": 4, "S": 2, "C": 2}
+    size = {"W": 8, "L": 8, "S": 4, "F": 8}
+    align = {"W": 4, "L": 4, "S": 2, "C": 2, "F": 4}
     cells = []
     at = DG_BASE
     for kind, extra in kinds:
@@ -395,8 +398,8 @@ def read_text(path, want_names=False):
     # which keep it where one keeps its value. A rule names the value, so
     # that is what a name answers.
     seen = {}
-    width = {"W": 4, "L": 4, "S": 2, "C": 4}
-    value_at = {"W": 4, "L": 4, "S": 2, "C": 0}
+    width = {"W": 4, "L": 4, "S": 2, "C": 4, "F": 4}
+    value_at = {"W": 4, "L": 4, "S": 2, "C": 0, "F": 4}
     where_of = {}
     for a, kind, _extra in cells:
         n = seen.get(kind, 0)
@@ -469,7 +472,7 @@ def where(tag, offsets):
     it that a `name\' line uses. A rule names a variable by the offset, so
     this is how one is worked back to something that can be named."""
     cells, _end = read_text(text_path(tag))
-    size = {"W": 8, "L": 8, "S": 4}
+    size = {"W": 8, "L": 8, "S": 4, "F": 8}
     seen = {}
     spans = []
     for a, kind, extra in cells:

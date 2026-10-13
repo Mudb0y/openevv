@@ -46,7 +46,7 @@ dlk = sibling("module/link")
 OPS = [
     "CALL", "JUMP", "BRANCH", "CMP", "ALU2", "ALU1", "LOAD", "STORE",
     "SWITCH", "MAP", "RETURN", "SCALE", "ADDK", "MUL", "DIV", "WIDEN",
-    "SETCC", "PUSH", "SETARG", "POPN", "POPREG", "FTOL",
+    "SETCC", "PUSH", "SETARG", "POPN", "POPREG", "FTOL", "MULDIV",
 ]
 OP = {name: i for i, name in enumerate(OPS)}
 
@@ -331,6 +331,16 @@ class Emitter:
                             self.u16(self.imm.add((step[1] >> 32)
                                                   & 0xffffffff))
                     self.u8(reg_code(op[2]))
+                elif kind == "muldiv":
+                    # a * b / c in sixty-four bits, rounded or truncated:
+                    # what a rule lifted from 6.1 does its decimal
+                    # arithmetic with, in thousandths.
+                    self.u8(OP["MULDIV"])
+                    self.u8(1 if op[1] == "round" else 0)
+                    self.operand(op[2], d.pbase)
+                    self.operand(op[3], d.pbase)
+                    self.operand(op[4], d.pbase)
+                    self.u8(reg_code(op[5]))
                 elif kind == "widen":
                     self.u8(OP["WIDEN"])
                     self.u8(1 if op[1] == "cltd" else 0)

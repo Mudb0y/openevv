@@ -37,8 +37,8 @@ delta_state *delta_new(void)
     const delta_language *lang = delta_lang_now();
     delta_state *d;
     int32_t      at, i;
-    int32_t      nword = 0, nlong = 0, nshort = 0, ncompound = 0;
-    int32_t      w = 0, l = 0, s = 0, c = 0;
+    int32_t      nword = 0, nlong = 0, nshort = 0, ncompound = 0, nfixed = 0;
+    int32_t      w = 0, l = 0, s = 0, c = 0, f = 0;
 
     /* The constants go where a value can name them before anything
        can name one. */
@@ -55,6 +55,7 @@ delta_state *delta_new(void)
     d->compound = EVV_REF(0);
     d->lng = EVV_REF(0);
     d->shrt = EVV_REF(0);
+    d->fixed = EVV_REF(0);
 
     for (i = 0; i < delta_globals_n; i++)
         switch (delta_globals[i]) {
@@ -62,12 +63,14 @@ delta_state *delta_new(void)
         case DG_LONG:     nlong++;     break;
         case DG_SHORT:    nshort++;    break;
         case DG_COMPOUND: ncompound++; break;
+        case DG_FIXED:    nfixed++;    break;
         }
 
     d->nword     = nword * 2;
     d->nlong     = nlong * 2;
     d->nshort    = nshort * 2;
     d->ncompound = ncompound * 2;
+    d->nfixed    = nfixed * 2;
 
     d->word = EVV_REF(malloc((size_t)d->nword * sizeof *EVV_AT(int32_t **, d->word)));
     if (EVV_AT(int32_t **, d->word) == 0) {
@@ -88,6 +91,15 @@ delta_state *delta_new(void)
     if (EVV_AT(int16_t **, d->shrt) == 0) {
         delta_delete(d);
         return 0;
+    }
+    /* Only a language lifted from 6.1 has any, and malloc of nothing may
+       answer null, which is not a failure. */
+    if (nfixed) {
+        d->fixed = EVV_REF(malloc((size_t)d->nfixed * sizeof *EVV_AT(int32_t **, d->fixed)));
+        if (EVV_AT(int32_t **, d->fixed) == 0) {
+            delta_delete(d);
+            return 0;
+        }
     }
 
     /* Lay the cells out in declaration order and index each one twice. A
@@ -126,6 +138,16 @@ delta_state *delta_new(void)
             EVV_AT(int16_t **, d->shrt)[s] = EVV_AT(int16_t **, d->shrt)[s + nshort] = (int16_t *)(cell + 2);
             s++;
             at += 4;
+            break;
+
+        case DG_FIXED:
+            at   = ALIGN_UP(at, 4);
+            cell = (unsigned char *)d + at;
+            *(int16_t *)cell        = DG_FIXED;
+            *(int32_t *)(cell + 4)  = 0;
+            EVV_AT(int32_t **, d->fixed)[f] = EVV_AT(int32_t **, d->fixed)[f + nfixed] = (int32_t *)(cell + 4);
+            f++;
+            at += 8;
             break;
 
         case DG_COMPOUND:
@@ -200,6 +222,10 @@ void delta_delete(delta_state *d)
     if (EVV_AT(int32_t **, d->lng) != 0) {
         free(EVV_AT(int32_t **, d->lng));
         d->lng = EVV_REF(0);
+    }
+    if (EVV_AT(int32_t **, d->fixed) != 0) {
+        free(EVV_AT(int32_t **, d->fixed));
+        d->fixed = EVV_REF(0);
     }
 
     delta_lang_free(d);

@@ -186,6 +186,12 @@ def put_op(op, out, name_of):
                 out.extend(("times" if step[0] == "mulk" else "plusk",
                             "0x%016x" % step[1]))
         out.extend(("into", put_reg(op[2])))
+    elif k == "muldiv":
+        out.append(str(op[1]))
+        put_operand(op[2], out)
+        put_operand(op[3], out)
+        put_operand(op[4], out)
+        out.extend(("into", put_reg(op[5])))
     elif k == "widen":
         out.append(str(op[1]))
     elif k == "setcc":
@@ -285,6 +291,15 @@ def get_op(w):
                 raise ValueError("no floating step called %r" % (how,))
         word(w, "into")
         return ("ftol", tuple(steps), get_reg(w.pop(0)))
+    if k == "muldiv":
+        how = w.pop(0)
+        if how not in ("round", "cut"):
+            raise ValueError("a muldiv rounds or cuts, not %r" % (how,))
+        a = get_operand(w)
+        b = get_operand(w)
+        c = get_operand(w)
+        word(w, "into")
+        return ("muldiv", how, a, b, c, get_reg(w.pop(0)))
     if k == "widen":
         return ("widen", w.pop(0))
     if k == "setcc":

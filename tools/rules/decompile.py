@@ -371,6 +371,10 @@ def emit(rule):
                                            term)
             body.append('    ' + rule.reg_write(
                 rule.raw(last), '(int32_t)(%s)' % expr))
+        elif op == 'muldiv':
+            body.append('    ' + rule.reg_write(
+                rule.raw(last), 'delta_muldiv(%s, %s, %s, %d)'
+                % (v(ops[0]), v(ops[1]), v(ops[2]), shape[1])))
         elif op == 'widen':
             body.append('    r2 = r0 >> 31;')
         elif op == 'setcc':

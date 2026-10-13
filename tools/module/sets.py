@@ -236,6 +236,16 @@ def model_of(where):
     }
 
 
+# What every language IBM shipped allocates for its fences and its tables:
+# ten statement types, room for 574 sets and 29 actions. A language lifted
+# from 6.1 says its own, which tools/module/lift61.py reads out of its
+# link_new, and a `link' line in the text carries them.
+LINK = {"fence_room": 0x19, "chars": 10, "index": 10, "marks": 11,
+        "statements": 10, "set_room": 0x50b8, "act_room": 0x488}
+LINK_ORDER = ("fence_room", "chars", "index", "marks", "statements",
+              "set_room", "act_room")
+
+
 def emit(m, out_c, tag):
     """One writer, whether the model came out of the objects or out of text."""
     nsets = len(m["set_table"]) // 0x24
@@ -290,8 +300,11 @@ def emit(m, out_c, tag):
         # The names in the tail carry the language, because a program may
         # have more than one module in it; the numbers above are put in
         # first, so this is a second pass rather than another placeholder.
-        f.write((TAIL % (0x19, 10, 10, 11, 10, 1, 2, len(m["streams"]),
-                         nsets, nacts, 0x50b8, 0x488)) % {"tag": tag})
+        k = dict(LINK, **m.get("link", {}))
+        f.write((TAIL % (k["fence_room"], k["chars"], k["index"], k["marks"],
+                         k["statements"], 1, 2, len(m["streams"]),
+                         nsets, nacts, k["set_room"], k["act_room"]))
+                % {"tag": tag})
 
     return nsets, nacts
 
@@ -355,6 +368,14 @@ def model_from_c(path):
     df = re.search(r'static const char dictfile\[\] = "((?:[^"\\]|\\.)*)";',
                    s)
     m["dictfile"] = from_c_string(df.group(1))
+    found = [re.search(pat, s) for pat in (
+        r"d->fence_room = (\d+);", r"d->fence_chars = EVV_REF\(malloc\((\d+)",
+        r"d->fence_index = EVV_REF\(malloc\((\d+)",
+        r"d->fence_marks = EVV_REF\(malloc\((\d+)", r"d->nstmts = (\d+);",
+        r"d->sets = EVV_REF\(malloc\((\d+)",
+        r"d->act_table = EVV_REF\(malloc\((\d+)")]
+    if all(found):
+        m["link"] = dict(zip(LINK_ORDER, (int(x.group(1)) for x in found)))
     return m
 
 
@@ -378,7 +399,11 @@ HEAD = """# The lookup sets %(tag)s declares and its dictionary's actions, as te
 # in, the name the original's compiler gave it, and how far in it lies.
 #
 # `stream' is a stream the language can open by name, in order, and
-# `dictionary' the file it looks its words up in.
+# `dictionary' the file it looks its words up in. `link', where there is one,
+# is what the language allocates when a machine is made, if it is not what
+# every language IBM shipped allocates: the fence room, the three fence
+# arrays, how many statement types, and the bytes of room for the set and
+# action tables.
 #
 # Written by tools/module/sets.py. The words themselves are not in here: they
 # are in %(tag)s.dict.
@@ -393,6 +418,9 @@ def hexes(word, data, out):
 
 def write_text(m, path, tag):
     out = [HEAD % {"tag": tag}, ""]
+    if m.get("link") and dict(LINK, **m["link"]) != LINK:
+        k = dict(LINK, **m["link"])
+        out.append("link %s" % " ".join(str(k[n]) for n in LINK_ORDER))
     for n in m["streams"]:
         out.append("stream %s" % n)
     out.append("dictionary %s" % m["dictfile"])
@@ -419,7 +447,12 @@ def read_text(path):
             continue
         w = line.split()
         where = "%s line %d" % (os.path.basename(path), n)
-        if w[0] == "stream":
+        if w[0] == "link":
+            if len(w) != len(LINK_ORDER) + 1:
+                raise SystemExit("%s: a link line says %s" % (
+                    where, ", ".join(LINK_ORDER)))
+            m["link"] = dict(zip(LINK_ORDER, (int(x) for x in w[1:])))
+        elif w[0] == "stream":
             m["streams"].append(" ".join(w[1:]))
         elif w[0] == "dictionary":
             m["dictfile"] = " ".join(w[1:])

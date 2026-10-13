@@ -420,14 +420,38 @@ class Compiler:
                 fault(where, "%r is %d bytes and a cell is eight"
                       % (name, self.r.sizes.get(name, 4)))
             part = w.pop(0) if w else ""
+            at, _cw, _cs = self.r.locals[name]
+            if part in WIDTH:
+                # A whole statement record held in the local, as a location
+                # naming a statement type and no field holds one: its bytes
+                # start where a cell's value does, and `word 4' is four bytes
+                # from that start.
+                n = number(where, w.pop(0)) if w else None
+                if n is None or 4 + n + WIDTH[part] > self.r.sizes[name]:
+                    fault(where, "%r holds no %s at %r" % (name, part, n))
+                return ("slot", self.slot(at + 4 + n)), WIDTH[part], False
             if part not in CELL:
                 fault(where, "a cell has a kind, a field and a value, and"
                       " nothing called %r" % part)
             off, width, signed = CELL[part]
-            at, _cw, _cs = self.r.locals[name]
             return ("slot", self.slot(at + off)), width, signed
         if head == "sym":
             return ("sym", w.pop(0)), 4, False
+        if head == "through":
+            # What a pointer points at: `through <value> <width> <n>' is the
+            # value that many bytes past where the pointer says, which is how
+            # a rule reads a cell or a record its caller handed it. The
+            # pointer goes through a register of its own, one each for the
+            # two a statement can read.
+            ptr, pw, _ps = self.value(where, w)
+            if pw != 4:
+                fault(where, "a pointer is a whole word")
+            width, signed = kind_of(where, w)
+            n = number(where, w.pop(0)) if w else 0
+            self.through = getattr(self, "through", 0) + 1
+            reg = ("%edi", "%esi")[(self.through - 1) % 2]
+            self.op("load", "movl", ptr, reg)
+            return ("indirect", ("reg", reg), n), width, signed
         if head == "global":
             width, signed = kind_of(where, w)
             return ("statefld", number(where, w.pop(0))), width, signed
@@ -574,6 +598,46 @@ class Compiler:
                 fault(where, "the machine has no arithmetic on one byte")
             self.op("alu", table[head], src, place)
 
+        elif head in ("scale", "truncate", "multiply", "divide"):
+            # The products and quotients a rule lifted from 6.1 makes, in
+            # whole numbers: `scale x by a over b' is x * a / b rounded to the
+            # nearest, which is a product or a quotient of thousandths;
+            # `truncate' is the same cut towards nought, which is a double
+            # made a whole number; `multiply a into x' and `divide x by a' are
+            # the integer ones. All four are one operation, worked in sixty-
+            # four bits so that the product cannot overflow on the way.
+            if head == "multiply":
+                a = self.value(where, w)
+                if not w or w.pop(0) != "into":
+                    fault(where, "a multiply says `multiply <value> into"
+                          " <place>'")
+                place, width, _s = self.place_of(where, w)
+                b, c, how = ("imm", 1), 4, "cut"
+                parts = [(place, width, _s), a, (("imm", 1), 4, False)]
+            else:
+                place, width, _s = self.place_of(where, w)
+                if not w or w.pop(0) != "by":
+                    fault(where, "%s says `by'" % head)
+                a = self.value(where, w)
+                if head == "divide":
+                    parts = [(place, width, _s), (("imm", 1), 4, False), a]
+                else:
+                    if not w or w.pop(0) != "over":
+                        fault(where, "%s says `over'" % head)
+                    parts = [(place, width, _s), a, self.value(where, w)]
+                how = "round" if head == "scale" else "cut"
+            if w:
+                fault(where, "%r is left over" % " ".join(w))
+            ops = []
+            for k, (op, wd, sg) in enumerate(parts):
+                if wd < 4:
+                    reg = "%" + ("edx", "ebx", "esi")[k]
+                    self.op("load", WIDEN[(wd, sg)], op, reg)
+                    op = ("reg", reg)
+                ops.append(op)
+            self.op("muldiv", how, ops[0], ops[1], ops[2], "%ecx")
+            self.op("store", MOVE[width], ("reg", "%ecx"), place)
+
         elif head in ("increment", "decrement", "negate"):
             place, width, _s = self.place_of(where, w)
             if width == 1:
@@ -597,12 +661,19 @@ class Compiler:
             if w[:1] == ["at"]:
                 del w[:1]
                 off = number(where, w.pop(0))
+            # As wide as the place it goes into, which is a word unless the
+            # line says otherwise: a short's value in a caller's cell is two
+            # bytes, and four written there would run past the cell.
+            width = 4
+            if w and w[0] in WIDTH:
+                width = WIDTH[w.pop(0)]
             if sw < 4:
                 self.op("load", WIDEN[(sw, ssigned)], src, "%ecx")
             else:
                 self.op("load", "movl", src, "%ecx")
             self.op("load", "movl", ptr, "%edi")
-            self.op("store", "movl", ("reg", "%ecx"),
+            self.op("store", MOVE[width], ("reg", {4: "%ecx", 2: "%cx",
+                                                    1: "%cl"}[width]),
                     ("indirect", ("reg", "%edi"), off))
 
         elif head == "place":
@@ -765,8 +836,10 @@ class Compiler:
         # One decrement a number, from one up to the highest planted, because
         # that is how the answer is read: a decrement leaves nothing when the
         # answer was the number of decrements so far. A number with nowhere to
-        # carry on at costs the decrement and no branch.
-        for tag in range(1, max(self.at_tag) + 1):
+        # carry on at costs the decrement and no branch. A rule that plants
+        # nothing backtracks only to undo what it did before giving up, as
+        # IBM's own do when a call fails partway through a run of deletions.
+        for tag in range(1, max(self.at_tag, default=0) + 1):
             self.op("alu", "decl", None, ("reg", "%eax"))
             if tag in self.at_tag:
                 self.branch("e", self.at_tag[tag])
@@ -807,8 +880,6 @@ class Compiler:
             self.op("jump", "gave_up")
 
         if self.dispatches:
-            if not self.at_tag:
-                fault(r.where, "%s backtracks with nothing planted" % r.name)
             self.dispatch()
 
         self.start("gave_up")
