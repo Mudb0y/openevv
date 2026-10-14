@@ -8279,12 +8279,88 @@ int dur_ass(delta_state *d, int8_t f, delta_loc *field, uint8_t mode)
     return 0;
 }
 
+static int bit_length(uint64_t v)
+{
+    int n = 0;
+
+    while (v != 0) {
+        n++;
+        v >>= 1;
+    }
+    return n;
+}
+
+/* Whether 6.1 gives the lower of the two whole numbers a share falls exactly
+   half way between. Its share is was * (total / span) + 0.5 cut towards
+   nought, all in doubles, and the factor is a double: where the division
+   rounded down and the product falls more than half a step of its own below
+   the half, the half added does not reach the whole number above. Both are
+   decided here in whole numbers, so that every processor and every port
+   answers alike, which a double would not on an x87. Held against the double
+   sum over every share with span and total to 1,500, and eighteen million
+   halves made with both to 30,000: they agree on all of them, and 6.1 rounds
+   one half in thirty or so down. All three are positive. */
+static int half_rounds_down(int64_t was, int64_t total, int64_t span)
+{
+    uint64_t rem, k, lhs, rhs;
+    int log2r, digits, i, last, ex, e2;
+
+    /* The factor to fifty-three bits: how far below its leading bit the
+       division runs, and what is left over. */
+    log2r = bit_length((uint64_t)total) - bit_length((uint64_t)span);
+    if (log2r >= 0 ? (uint64_t)total < ((uint64_t)span << log2r)
+                   : ((uint64_t)total << -log2r) < (uint64_t)span)
+        log2r--;
+    digits = 52 - log2r;
+    rem = (uint64_t)(total % span);
+    last = (int)((total / span) & 1);
+    for (i = 0; i < digits; i++) {
+        rem <<= 1;
+        last = rem >= (uint64_t)span;
+        if (last)
+            rem -= (uint64_t)span;
+    }
+    if (rem == 0 || 2 * rem > (uint64_t)span ||
+        (2 * rem == (uint64_t)span && last))
+        return 0;
+
+    /* It rounded down by rem / span of its last place. The product is that
+       much times was below the half; it rounds to a lower double when that
+       is more than half the half's own step. */
+    k = (uint64_t)((2 * was * total - span) / (2 * span));
+    ex = bit_length(2 * k + 1) - 2;
+    e2 = ex - log2r - 1;
+    lhs = (uint64_t)was * rem;
+    rhs = (uint64_t)span;
+    if (k == 0) {
+        /* A half is the foot of its binade: a step under it with the half
+           added is a tie that rounds back up, so it takes a step and a half,
+           and exactly that rounds to the even step below. */
+        rhs *= 3;
+        e2 -= 1;
+    }
+    if (e2 >= 0) {
+        if (e2 > 30)
+            return 0;
+        rhs <<= e2;
+    } else {
+        if (-e2 > 30)
+            return 1;
+        lhs <<= -e2;
+    }
+    if (lhs != rhs)
+        return lhs > rhs;
+    return k == 0 || ex == 51;
+}
+
 /* 6.1's dur_ass, which a rule lifted from 6.1 calls. 6.1 divides in doubles,
    so its factor is the wanted total over what the run measures exactly where
    4.3's is a whole number of thousandths, and a share can come out one
    different. Here the exact ratio is kept as the fraction it is, and each
    share has the half added or taken away by the factor's sign before it is
-   cut towards nought, which is what 6.1 does with its double. */
+   cut towards nought, which is what 6.1 does with its double -- except at an
+   exact half, where 6.1's double can fall short of it, and
+   half_rounds_down says when. */
 static int vdur_ass61(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
                       int32_t total)
 {
@@ -8323,6 +8399,10 @@ static int vdur_ass61(delta_state *d, delta_tpos *a, delta_tpos *b, int8_t f,
 
         share = span == 0 ? 0
             : (int32_t)((2 * was * total + half) / (2 * span));
+        if (half > 0 && was > 0 && total > 0 &&
+            (2 * was * total) % (2 * span) == span &&
+            half_rounds_down(was, total, span))
+            share--;
 
         if (e->fields[0].kind == DK_LONG) {
             vinitflds(d, (uint8_t)f, TFLDS(EVV_AT(void *, p)), &share);

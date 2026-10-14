@@ -934,6 +934,10 @@ rule init_voice_vars takes 1
   scale h_xmm0 by 50000 over 10000
   scale h_xmm0 by 10000 over 100000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 3458 to h_rax
   call starttest 2
@@ -1873,6 +1877,10 @@ rule insert_f0 takes 4
   end
   place p1316e
   set h_rax to global word 3676
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   go to p13246
   go to p1317d
@@ -1922,6 +1930,10 @@ rule insert_f0 takes 4
   add vxmm1_1 to vxmm0_1
   set global word 3444 to vxmm1_0
   set h_rax to vxmm0_0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set h_rcx to h_rax
   set h_rsi to global half 3458
@@ -1953,6 +1965,10 @@ rule insert_f0 takes 4
   multiply 10000 into h_xmm0
   scale h_xmm0 by 10000 over 1000000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set cell cfc field to h_rax
   set h_rsi to addr c138

@@ -277,6 +277,10 @@ def as_fixed(raw):
     return -n if v < 0 else n
 
 
+# How far under a whole number a fixed value may fall and still be read as
+# it when 6.1 truncates a double: one unit, a ten-thousandth.
+SLACK = 1
+
 # Entries of 6.1's runtime handed a double, in xmm0, after how many of the
 # ordinary arguments; ours are handed the fixed value as one more of those.
 FLOAT_ARGS = {"move_f": 1, "npush_f": 0}
@@ -341,7 +345,12 @@ def our_arities(lang="enus"):
         sig = es._read().get(name)
         if sig is not None and sig[1] and name not in variadic:
             out[name] = len(sig[1]) - 1
+    VARIADIC.update(variadic)
     return out
+
+
+# Our entries declared with an ellipsis, which a call may hand any number.
+VARIADIC = set()
 
 
 # Entries whose shape 6.1 changed: how many arguments 6.1 hands over, and how
@@ -1722,6 +1731,13 @@ class Rule:
         # call.
         if r in self.homes and not framed and \
                 v[0] not in ("got", "canary", "frame", "code", "sp", "state"):
+            if v[0] == "imm" and r not in XMM and self.is_double(v[1]):
+                # A double's bits in an ordinary register, which a store of
+                # eight bytes takes for the double it is; the register's
+                # local holds four, so it is given the fixed value. Written
+                # as the bits, por_ph_t_dur set a duration of 34 to nought.
+                v = ("imm", as_fixed(struct.pack(
+                    "<Q", v[1] & 0xffffffffffffffff)))
             self.say(st, lines, "set", "h_" + r, "to", *self.words(v, st, r))
             # What the local now holds, for reading it as an address: the
             # innermost value, since a local that remembered another local
@@ -2286,11 +2302,17 @@ class Rule:
             st["fresh"].add(x)
             return
         if m.startswith("cvttsd2si"):
+            # Truncated with one ten-thousandth of slack away from nought.
+            # A value that is a whole number in 6.1's doubles to sixteen
+            # places can come out one unit under it here, every step having
+            # been rounded to ten-thousandths: Portuguese takes a duration
+            # over a count as a percentage and multiplies it back, and 144
+            # came back 143.9999 and was cut to 143 where 6.1 cut 144.
             src, dst = o
             r = reg_of(dst)
             v = self.fixed_value(st, src, note, a)
             if v[0] == "imm":
-                n = abs(v[1]) // ONE
+                n = (abs(v[1]) + SLACK) // ONE
                 self.put_reg(st, lines, r, ("imm", -n if v[1] < 0 else n))
                 return
             if r not in self.homes:
@@ -2298,6 +2320,11 @@ class Rule:
             words = self.words(v, st, reg_of(src) if src.startswith("%")
                                else None)
             self.say(st, lines, "set", "h_" + r, "to", *words)
+            self.say(st, lines, "add", str(SLACK), "to", "h_" + r)
+            self.say(st, lines, "if", "h_" + r, "is", "less", "than",
+                     str(SLACK))
+            self.say(st, lines, "subtract", str(2 * SLACK), "from", "h_" + r)
+            self.say(st, lines, "end")
             self.say(st, lines, "truncate", "h_" + r, "by", "1", "over",
                      str(ONE))
             regs[r] = ("home", r, None)
@@ -2887,6 +2914,12 @@ class Rule:
             args.append((v, None))
         for off in sorted(st["stackargs"]):
             args.append((st["stackargs"][off], None))
+        if len(args) < n and name not in VARIADIC:
+            # Said short, the call would hand the entry whatever was left in
+            # the argument area, which is how forto_adv_upto_r came to step a
+            # loop to an end nobody named.
+            raise Hole("%s handed %d of its %d arguments"
+                       % (name, len(args), n))
         if name in FLOAT_ARGS:
             args.append((regs.get("xmm0", ("X", "xmm0")), "xmm0"))
         if shape:
@@ -3128,11 +3161,16 @@ class Rule:
                 regs[r] = ("X",)
         slots = {k: v for k, v in a["slots"].items()
                  if b["slots"].get(k) == v}
+        # An argument a call takes off the stack may be written on each way
+        # in before the ways meet and the call is made: adjust_por_accents
+        # writes its forto's last on all three.
+        stackargs = {k: v for k, v in a["stackargs"].items()
+                     if b["stackargs"].get(k) == v}
         return {"regs": regs, "fresh": a["fresh"] & b["fresh"],
                 "pushes": a["pushes"] if a["pushes"] == b["pushes"] else [],
                 "cond": a["cond"] if a["cond"] == b["cond"] else None,
                 "said": a["said"], "inline": {}, "slots": slots,
-                "begun": True, "stackargs": {}}
+                "begun": True, "stackargs": stackargs}
 
     def pre_exit(self, t):
         """The way out a block leads straight into if all it does is move

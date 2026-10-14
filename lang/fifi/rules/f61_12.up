@@ -1087,6 +1087,10 @@ rule pause_anno takes 4
   scale h_xmm0 by h_xmm1 over 10000
   scale h_xmm0 by 10000 over 1000000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set cell c100 value to h_rax
   place p1ab12
@@ -3753,6 +3757,10 @@ rule apply_roughness_val takes 2
   multiply 10000 into h_xmm0
   scale h_xmm0 by 10000 over 100000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 2470 to h_rax
   match
@@ -3841,6 +3849,10 @@ rule apply_volume_val takes 2
   set cell cf0 value to 10000
   scale h_xmm0 by 1250 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   go to p1e80e
   place p1e7d4
@@ -3904,6 +3916,10 @@ rule apply_speed_val takes 2
   scale h_xmm0 by 5000 over 10000
   add 500000 to h_xmm0
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set cell cf0 field to h_rax
   shift left 16 into h_rax

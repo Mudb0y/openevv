@@ -987,6 +987,10 @@ rule find_acoustic_nuc takes 1
   multiply 10000 into h_xmm0
   scale h_xmm0 by 10000 over 100000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set cell cf4 field to h_rax
   call lpta_loadpn addr g350
@@ -1390,6 +1394,10 @@ rule insert_dur takes 5
   end
   place paa85
   set h_rax to cell c100 value
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 3234 to h_rax
   match
@@ -1798,6 +1806,10 @@ rule scale_transdur takes 4
   multiply 10000 into h_xmm0
   scale h_xmm0 by 10000 over 1000000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set h_r14 to h_rax
   set cell cf0 field to h_rax
@@ -1960,6 +1972,10 @@ rule distribute_nucdur takes 1
   scale h_xmm0 by cell c140 value over 10000
   scale h_xmm0 by 10000 over 1000000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set cell cf0 field to h_rax
   set h_rdx to addr g350
@@ -2054,6 +2070,10 @@ rule distribute_nucdur takes 1
   multiply 10000 into h_xmm1
   subtract h_xmm1 from h_xmm0
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set cell cfc field to h_rax
   set h_rdx to addr g638

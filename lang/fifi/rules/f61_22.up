@@ -1712,6 +1712,10 @@ rule strip_last_digit takes 3
   multiply 10000 into h_xmm0
   scale h_xmm0 by 10000 over 100000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set cell c100 value to h_rax
   put h_rax into arg 1 at 4

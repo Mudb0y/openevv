@@ -128,6 +128,10 @@ rule set_global_constants takes 1
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set cell cf0 field to h_rax
   call npush_v addr cf0
@@ -145,6 +149,10 @@ rule set_global_constants takes 1
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 1416 to h_rax
   place p66f6

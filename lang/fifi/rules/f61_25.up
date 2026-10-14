@@ -9476,6 +9476,10 @@ rule general_consonant_reduction takes 1
   go to p5ab87
   place p5ad2d
   set h_rax to v108
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   shift left 16 into h_rax
   shift right 16 into h_rax

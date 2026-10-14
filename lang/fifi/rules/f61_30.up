@@ -886,6 +886,10 @@ rule adjust_AV_for_misc takes 1
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 2946 to h_rax
   go to p8a88f
@@ -1545,6 +1549,10 @@ rule adjust_AV_for_misc takes 1
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 2950 to h_rax
   match
@@ -2759,6 +2767,10 @@ rule stanfin_ph_i takes 1
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 3170 to h_rax
   or -1 into global half 3174
@@ -3961,6 +3973,10 @@ rule stanfin_ph_e takes 1
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 3170 to h_rax
   or -1 into global half 3174
@@ -5693,6 +5709,10 @@ rule stanfin_ph_A takes 1
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 3170 to h_rax
   or -1 into global half 3174
@@ -7344,6 +7364,10 @@ rule stanfin_ph_a takes 1
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 3170 to h_rax
   or -1 into global half 3174
@@ -7406,10 +7430,18 @@ rule stanfin_ph_u takes 1
   set h_xmm1 to 7000
   scale h_xmm1 by h_xmm0 over 10000
   set h_rax to h_xmm1
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   scale h_xmm0 by 8000 over 10000
   set global half 2958 to h_rax
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 2962 to h_rax
   set h_rax to global signed half 2874
@@ -7417,6 +7449,10 @@ rule stanfin_ph_u takes 1
   multiply 10000 into h_xmm0
   scale h_xmm0 by 15000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 2966 to h_rax
   set global half 2970 to h_rax
@@ -8328,6 +8364,10 @@ rule stanfin_ph_u takes 1
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rcx to h_xmm0
+  add 1 to h_rcx
+  if h_rcx is less than 1
+    subtract 2 from h_rcx
+  end
   truncate h_rcx by 1 over 10000
   set global half 3170 to h_rcx
   or -1 into global half 3174
@@ -9342,6 +9382,10 @@ rule stanfin_ph_y takes 1
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 3170 to h_rax
   or -1 into global half 3174
@@ -10331,6 +10375,10 @@ rule stanfin_ph_o takes 1
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 3170 to h_rax
   or -1 into global half 3174
@@ -11540,6 +11588,10 @@ rule stanfin_ph_O takes 1
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set h_rcx to addr g11ea
   set global half 3170 to h_rax
@@ -12599,6 +12651,10 @@ rule reduce_long_vowel_coarticulation takes 5
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 3162 to h_rax
   place p93d59
@@ -12619,6 +12675,10 @@ rule reduce_long_vowel_coarticulation takes 5
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 3166 to h_rax
   place p93d87
@@ -12639,6 +12699,10 @@ rule reduce_long_vowel_coarticulation takes 5
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 3170 to h_rax
   place p93db5
@@ -12659,6 +12723,10 @@ rule reduce_long_vowel_coarticulation takes 5
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 3174 to h_rax
   place p93de3
@@ -12679,6 +12747,10 @@ rule reduce_long_vowel_coarticulation takes 5
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 3178 to h_rax
   place p93e11
@@ -12699,6 +12771,10 @@ rule reduce_long_vowel_coarticulation takes 5
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 3182 to h_rax
   place p93e3f
@@ -12719,6 +12795,10 @@ rule reduce_long_vowel_coarticulation takes 5
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 3186 to h_rax
   place p93e6d
@@ -12739,6 +12819,10 @@ rule reduce_long_vowel_coarticulation takes 5
   multiply 10000 into h_xmm0
   scale h_xmm0 by 5000 over 10000
   set h_rax to h_xmm0
+  add 1 to h_rax
+  if h_rax is less than 1
+    subtract 2 from h_rax
+  end
   truncate h_rax by 1 over 10000
   set global half 3190 to h_rax
   match
