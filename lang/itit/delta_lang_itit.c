@@ -37,6 +37,8 @@ extern const delta_store itit_delta_authored_store[];
 extern const delta_codepoint itit_delta_codepoints[];
 extern const int32_t itit_delta_codepoints_n;
 
+extern const delta_builtin_dict itit_builtin_dict;
+
 /* The two slots the runtime fills in for this language: the symbol table,
    once delta_syms_bind has copied the stores into the arena, and the index
    of whichever rules are written as C. Not const, unlike everything else
@@ -149,6 +151,7 @@ delta_language delta_lang_itit = {
 
     0, 0,                /* the settings blob and its size */
     0,                   /* settings sent only when changed */
+    &itit_builtin_dict,  /* the dictionary it carries */
 };
 
 void delta_lang_bind_itit(void)

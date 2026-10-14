@@ -134,6 +134,9 @@ struct SynthThread {
        stw_processRemaining. */
     int32_t       pauses;
     int32_t       tail;
+    /* Ours: whether the language's own dictionary is consulted, which every
+       engine the thread takes up is told. */
+    int32_t       builtin;
 };
 
 #define ST_ENGINES(t)   (&(t)->engines)
@@ -188,6 +191,7 @@ struct SynthThread {
 #define ST_TOLD_CAT(t)  ((t)->told_cat)
 #define ST_WIDEBAND(t)  ((t)->wideband)
 #define ST_PAUSES(t)    ((t)->pauses)
+#define ST_BUILTIN(t)   ((t)->builtin)
 #define ST_TAIL(t)      ((t)->tail)
 
 /* What the wideband voice is called by the newer interface's settings and
@@ -210,6 +214,12 @@ struct SynthThread {
 #define PAUSES_ALWAYS       2
 #define PAUSES_DEFAULT      PAUSES_AT_END
 
+/* Whether a language's own dictionary is consulted after the caller's,
+   published as eciBuiltInDict and numbered beside the other two. */
+#define ECI_PARAM_BUILTIN   23
+#define ECI_OLD_BUILTIN     34
+#define BUILTIN_DEFAULT     1
+
 /* Bits of ST_FLAGS this side reads. */
 #define STF_WORD_MARKS  0x100  /* report where each word starts */
 #define STF_ROMANIZING  0x200  /* index marks go through the romanizer */
@@ -229,6 +239,8 @@ extern THIS int32_t sy_mutexRelease(void *m)
     MANGLED("?release@Mutex@@QAEHXZ");
 extern THIS void sy_mutexDtor(void *m)
     MANGLED("??1Mutex@@QAE@XZ");
+
+void stw_tellBuiltin(SynthThread *t);
 
 extern void *cpp_new(uint32_t n) MANGLED("??2@YAPAXI@Z");
 extern void  cpp_delete(void *p) MANGLED("??3@YAXPAX@Z");

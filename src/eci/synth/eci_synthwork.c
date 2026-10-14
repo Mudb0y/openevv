@@ -168,6 +168,7 @@ extern THIS void rz_romClearErrors(void *r)
 extern int setNativeSampleRate(delta_state *d, int32_t hz);
 extern int setWidebandSynthesis(delta_state *d, int32_t on);
 extern delta_state *ew_machine(void *engine);
+extern void builtin_dict_enable(delta_state *d, int32_t on);
 extern int32_t ev_engineHz(int32_t rate);
 
 extern THIS char *fm_filterText(void *m, const char *text, int32_t engine)
@@ -283,6 +284,15 @@ THIS char *stw_filterText(SynthThread *t, const char *text, int32_t engine)
 
    Asking hands back an object that has to be let go of again, and an engine
    that answers at all is by that token not old. */
+/* Tell the engine in use whether its language's own dictionary is wanted.
+   Called whenever the thread takes up an engine and whenever the setting
+   changes, since each language's engine keeps its own. */
+void stw_tellBuiltin(SynthThread *t)
+{
+    if (ST_ENGINE(t) != 0)
+        builtin_dict_enable(ew_machine(ST_ENGINE(t)), ST_BUILTIN(t));
+}
+
 THIS int32_t stw_isOldEngine(SynthThread *t)
 {
     void *answer = 0;

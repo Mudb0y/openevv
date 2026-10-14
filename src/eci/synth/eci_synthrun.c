@@ -271,6 +271,17 @@ void setPausesRun(SynthThread *t, int32_t mode, int32_t seq)
     finished(t);
 }
 
+/* The same flush first, and then the engine in use is told; one the thread
+   takes up later is told when it is taken up -- see stw_tellBuiltin. */
+void setBuiltinRun(SynthThread *t, int32_t on, int32_t seq)
+{
+    (void)seq;
+    stw_processRemaining(t);
+    ST_BUILTIN(t) = on != 0;
+    stw_tellBuiltin(t);
+    finished(t);
+}
+
 /* A voice change is the widest of them: the sample format may have moved
    under it, the concatenative side may or may not have this voice, and if
    that answer has changed since last time the caller is told so. */

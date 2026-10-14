@@ -436,7 +436,50 @@ def main():
         os.unlink(wideConfig)
         os.rmdir(wideDir)
     assert result == 0
-    print("speechd: protocol, voices, settings, audio, marks, stop, pause and the wideband voice passed")
+
+    print("speechd: without the built-in dictionary", flush=True)
+    # Teamtalk is in the dictionary US English carries and its rules say it
+    # otherwise, so the two readings differ and the line is heard to reach
+    # the engine.
+    dictText = "We met on teamtalk."
+    withDict = subprocess.check_output([
+        directBinary, "-v", "1", "-o", "-", dictText,
+    ])
+    withoutDict = subprocess.check_output([
+        directBinary, "-v", "1", "-D", "-o", "-", dictText,
+    ])
+    assert withDict != withoutDict, (
+        "teamtalk is said the same with the built-in dictionary and without"
+    )
+    plainDir = tempfile.mkdtemp()
+    plainConfig = os.path.join(plainDir, "openevv.conf")
+    with open(plainConfig, "w", encoding="utf-8") as out:
+        out.write("BuiltInDictionary 0\n")
+    module = ModuleProcess(binary, plainConfig)
+    try:
+        module.send("INIT\n")
+        module.expect(b"299-OpenEVV initialized\n")
+        module.expect(b"299 OK LOADED SUCCESSFULLY\n")
+        module.command_with_data(
+            "AUDIO",
+            ["audio_output_method=server"],
+            b"207 OK RECEIVING AUDIO SETTINGS\n",
+        )
+        module.expect(b"203 OK AUDIO INITIALIZED\n")
+        module.set(voice="male1", language="en-US", synthesis_voice="NULL")
+        audio, _, _, event = module.speak(dictText)
+        assert event == "702 END"
+        assert audio == withoutDict[44:], (
+            "BuiltInDictionary 0 through Speech Dispatcher is not what "
+            f"evv -D makes ({len(audio)} versus {len(withoutDict) - 44} "
+            "PCM bytes)"
+        )
+    finally:
+        result = module.close()
+        os.unlink(plainConfig)
+        os.rmdir(plainDir)
+    assert result == 0
+    print("speechd: protocol, voices, settings, audio, marks, stop, pause, the wideband voice and the built-in dictionary passed")
 
 
 if __name__ == "__main__":

@@ -179,7 +179,15 @@ typedef enum {
        did. A pause annotation at the very end is the caller's choice and is
        left alone. eciSetDefaultParam takes it too, and eciReset puts back
        the default. */
-    eciPauseMode          = 33
+    eciPauseMode          = 33,
+    /* Ours. One, the default, has a language that carries a dictionary of
+       its own consult it after whatever dictionary the caller has put in
+       force, so a word the caller's dictionary holds is still said the
+       caller's way; nought leaves the language to its rules alone, which is
+       IBM's engine. US English carries one, the community's
+       IBMTTSDictionaries with additions of ours; docs/using.md says more.
+       eciSetDefaultParam takes it too, and eciReset puts back the default. */
+    eciBuiltInDict        = 34
 } ECIParam;
 
 /* A voice's eight, which every one of the eight preset voices has.

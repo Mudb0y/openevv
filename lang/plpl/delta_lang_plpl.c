@@ -37,6 +37,8 @@ extern const delta_store plpl_delta_authored_store[];
 extern const delta_codepoint plpl_delta_codepoints[];
 extern const int32_t plpl_delta_codepoints_n;
 
+extern const delta_builtin_dict plpl_builtin_dict;
+
 /* The two slots the runtime fills in for this language: the symbol table,
    once delta_syms_bind has copied the stores into the arena, and the index
    of whichever rules are written as C. Not const, unlike everything else
@@ -149,6 +151,7 @@ delta_language delta_lang_plpl = {
 
     0, 0,                /* the settings blob and its size */
     0,                   /* settings sent only when changed */
+    &plpl_builtin_dict,  /* the dictionary it carries */
 };
 
 void delta_lang_bind_plpl(void)

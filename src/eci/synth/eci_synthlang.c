@@ -191,6 +191,7 @@ static void switchEngine(SynthThread *t, LangIdentifier *lang)
     ST_FILTER(t) = 0;
 
     ST_ENGINE(t) = ea_getEngine(ST_ENGINES(t), lang);
+    stw_tellBuiltin(t);
     ST_FLAGS(t) = ea_getCallbackFnFlag(ST_ENGINES(t), lang);
     ST_CORPORA(t) = ea_getCorporaVersion(ST_ENGINES(t), lang);
     /* Asked and the answer thrown away. It is called for whatever it does on

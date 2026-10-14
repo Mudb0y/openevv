@@ -168,7 +168,27 @@ typedef struct delta_language {
        of the caller's text, which 4.3's rules read past and the rules of a
        language lifted from 6.1 read as part of what was said. */
     int32_t     settings_on_change;
+
+    /* The dictionary the language carries, consulted by the rules after
+       whatever dictionary the caller has put in force; null for a language
+       that carries none. tools/module/builtindict.py writes it. */
+    const struct delta_builtin_dict *builtin_dict;
 } delta_language;
+
+/* One line of a dictionary a language carries: the word, and what is said
+   in its place, exactly as a line of a dictionary file a caller loads says
+   them. The three volumes are a caller's three -- main, root and
+   abbreviation -- and each is sorted by its words byte for byte, so a lookup
+   is a search by halves and nothing has to be built when an instance starts. */
+typedef struct delta_dict_entry {
+    const char *word;
+    const char *says;
+} delta_dict_entry;
+
+typedef struct delta_builtin_dict {
+    const delta_dict_entry *volume[3];
+    int32_t                 count[3];
+} delta_builtin_dict;
 
 /* Every language linked into this program, ending with a null, and the
    numbers each of them states filled into it. The build writes both,

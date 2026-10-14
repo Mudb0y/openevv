@@ -710,32 +710,142 @@ int32_t setCurrentUserDict(delta_state *d, DictionarySet *s)
 }
 
 
+/* ---- the dictionary a language carries -------------------------------- */
+
+/* Ours. A language may carry a dictionary of its own in the image, written
+   by tools/module/builtindict.py out of lang/<tag>/dictionary: the same three
+   volumes as a caller's, each entry a line of the kind a caller's file has,
+   sorted so that a lookup is a search by halves and nothing is built when an
+   instance starts. It is consulted only where the caller's dictionary did
+   not answer, so a word the caller has put in its own is said the caller's
+   way, and eciBuiltInDict turns it off. */
+
+static const delta_dict_entry *builtin_find(const delta_builtin_dict *b,
+                                            int32_t vol, const char *word)
+{
+    int32_t lo = 0, hi;
+
+    if (b == 0 || vol < 0 || vol >= UD_VOLUMES)
+        return 0;
+    hi = b->count[vol] - 1;
+    while (lo <= hi) {
+        int32_t mid = lo + (hi - lo) / 2;
+        int     c   = strcmp(b->volume[vol][mid].word, word);
+
+        if (c == 0)
+            return &b->volume[vol][mid];
+        if (c < 0)
+            lo = mid + 1;
+        else
+            hi = mid - 1;
+    }
+    return 0;
+}
+
+/* Whether every character is one the stream's first field can name, which
+   is what a line of a caller's file has to pass to be kept at all. Asked of
+   an entry when it is found rather than when the image was built, since the
+   names belong to the running machine. */
+static int builtin_sayable(delta_state *d, int8_t stream, const char *s)
+{
+    for (; *s; s++) {
+        char        one[2];
+        const char *name;
+        void       *value;
+
+        if (*s == ' ')
+            continue;
+        one[0] = *s;
+        one[1] = 0;
+        if (!non_unique_value(d, stream, 0, one, &name, &value))
+            return 0;
+    }
+    return 1;
+}
+
+static int32_t builtin_lookupAndTranslate(delta_state *d, int32_t vol,
+                                          int32_t l, int32_t r)
+{
+    DeltaLang                *lang = DT_LANG(d);
+    const delta_language     *of   = delta_lang_of(d);
+    int8_t                    stream = DL_STREAM(lang);
+    const delta_dict_entry   *e;
+
+    if (lang->builtin_off || of == 0 || of->builtin_dict == 0
+        || vol < 0 || vol >= UD_VOLUMES || of->builtin_dict->count[vol] == 0)
+        return UD_NOT_FOUND;
+
+    if (!sync_in_stm(d, stream, l) || !sync_in_stm(d, stream, r))
+        return UD_NO_SPINE;
+    if (!extract_string(d, stream, l, r, lang->builtin_last[vol],
+                        UD_LAST_ROOM))
+        return UD_NO_SPINE;
+
+    e = builtin_find(of->builtin_dict, vol, lang->builtin_last[vol]);
+    if (e == 0 || !builtin_sayable(d, stream, e->says))
+        return UD_NOT_FOUND;
+
+    del_two_point(d, stream, l, r);
+    OWNER_MOVED(d) = 1;
+    if (!insert_string(d, stream, r, e->says))
+        return UD_NO_SPINE;
+
+    lang->builtin_took[vol] = 1;
+    return UD_OK;
+}
+
+void builtin_dict_enable(delta_state *d, int32_t on)
+{
+    if (d != 0 && d->dlang != 0)
+        DT_LANG(d)->builtin_off = !on;
+}
+
+
 /* ---- what the rules call --------------------------------------------- */
 
 /* Both of these answer one when they did nothing, which is what the rules
-   read as "carry on as you were". */
+   read as "carry on as you were". The caller's dictionary is asked first;
+   where it does not hold the word, has nothing in that volume -- which a
+   volume never loaded answers as no memory -- or is not there at all, the
+   language's own is asked. */
 int32_t callUserDictLookup(delta_state *d, const void *volume,
                            const delta_token *l, const delta_token *r)
 {
-    DictionarySet *s = DL_CURRENT(DT_LANG(d));
+    DictionarySet *s   = DL_CURRENT(DT_LANG(d));
+    int32_t        vol = *(const int16_t *)((const char *)volume + 2);
+    int32_t        rc  = UD_NOT_FOUND;
 
-    if (s == 0)
-        return 1;
+    if (vol >= 0 && vol < UD_VOLUMES)
+        DT_LANG(d)->builtin_took[vol] = 0;
 
-    return ds_lookupAndTranslate(s, *(const int16_t *)((const char *)volume + 2),
-                                 l->value, r->value) != 0;
+    if (s != 0) {
+        rc = ds_lookupAndTranslate(s, vol, l->value, r->value);
+        if (rc != UD_NOT_FOUND && rc != UD_NO_MEMORY)
+            return rc != 0;
+    }
+
+    return builtin_lookupAndTranslate(d, vol, l->value, r->value) != 0;
 }
 
 int32_t callInsertLastDictString(delta_state *d, const void *volume,
                                  const delta_token *l, const delta_token *r)
 {
-    DictionarySet *s = DL_CURRENT(DT_LANG(d));
+    DictionarySet *s   = DL_CURRENT(DT_LANG(d));
+    int32_t        vol = *(const int16_t *)((const char *)volume + 2);
+
+    if (vol >= 0 && vol < UD_VOLUMES && DT_LANG(d)->builtin_took[vol]) {
+        DeltaLang *lang = DT_LANG(d);
+        int8_t     stream = DL_STREAM(lang);
+
+        del_two_point(d, stream, l->value, r->value);
+        OWNER_MOVED(d) = 1;
+        return !insert_string(d, stream, r->value, lang->builtin_last[vol]);
+    }
 
     if (s == 0)
         return 1;
 
-    return ds_lookupUndo(s, *(const int16_t *)((const char *)volume + 2),
-                         l->value, r->value) != 0;
+    return ds_lookupUndo(s, vol, l->value, r->value) != 0;
 }
 
 ALIAS("??0UserDict@@QAE@XZ", "ud_ctor");

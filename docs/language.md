@@ -39,6 +39,29 @@ One thing this found and fixed. `tools/module/sets.py` had not been able to writ
 
 So a language IBM never shipped is now five text files and a table. The rules in `rules/`, the four above, the words in `<tag>.dict`, and `tools/module/gather.py` for the one table the engine knows a language by.
 
+## The dictionary a language carries
+
+A language can carry a dictionary of the kind a caller loads, beside the tables above and consulted after the caller's own: `eciBuiltInDict` in `docs/api.md` is the switch and `docs/quirks.md` says why US English carries the community's. It is the place for a word whose spelling the rules cannot be expected to read -- a name, a brand, a word from another language -- where `<tag>.dict` is IBM's tables and a change there is a change to what the rules know. A word that is one case of a pattern belongs in a letter rule instead, which `docs/rules.md` and `lang/enus/letters` cover.
+
+It is text in `lang/<tag>/dictionary`, and every build writes `delta_builtin_<tag>.c` out of it with `tools/module/builtindict.py`; that file is not in the tree, and a module with no such directory carries an empty dictionary. `community/main.dic`, `root.dic` and `abbr.dic` are a snapshot of somebody else's, kept exactly as it came, in the Windows Western set; `community/source` says from where and which commit. `main.dic`, `root.dic` and `abbr.dic` beside it are ours, read after the snapshot, so an entry of ours replaces one of theirs for the same word. `held` names entries of the snapshot the build leaves out, one a line: the volume, a tab, the word, and after another tab why.
+
+A line of ours is the word, a tab, and what to say in its place, in UTF-8; the build converts it to the Windows Western set and stops on a character that set has not got. A line starting `#` is a remark. What to say is either words spelled as they sound, which the rules then read, or a pronunciation in the engine's own phoneme alphabet between `` `[ `` and `]` -- `` `[.1nIks.0o.2Es] `` -- with a stress mark before each syllable. `build/evv -A` takes the same notation in text, which is the quick way to try one before writing it down.
+
+Which file decides how the word is found. A main entry is matched against a whole token as written, capitals and all, so `Allrecipes` in main is found for Allrecipes and not for allrecipes, and it is the place for anything with a capital or a mark in it. A root entry is written in small letters and is found inside a longer word as well, as a stem the rules have taken an ending off, so one entry for a noun gives its plural and its possessive too. The abbreviation file is read only while the abbreviation dictionary is on, which it is not by default.
+
+To hear a word with it and without, write it twice, the second time leaving the dictionary out:
+
+    build/evv -o with.wav "We met on teamtalk."
+    build/evv -D -o without.wav "We met on teamtalk."
+
+An entry moves `test/words.sh` wherever its word is in the list, and the recording refuses if CMU then agrees with fewer words than it did, which is the check that an entry made things better rather than different.
+
+To bring the snapshot up to date, copy the three files of a newer commit over `community` and correct `source`, then build a library with `held` emptied and ask what the newer snapshot says against CMU:
+
+    tools/measure/dictgate.py build/libeci.so lang/enus dictgate.tsv --held
+
+That speaks every entry with the dictionary off and on, forty instances at once, writes a verdict for each word it changes to `dictgate.tsv` and writes `held` anew from the words where CMU supports the rules and not the entry. It takes a few minutes and the whole machine, so run it in an idle-class scope. The verdicts are in its own head, and so is why an entry is held rather than dropped.
+
 ## Adding a language
 
 `lang/plpl` is the ninth language in the tree and the first IBM never shipped. As it stands it is Italian: made by copying `lang/itit`'s text forms and renaming them, so it speaks Italian under a Polish name. That is not a placeholder, it is the chassis -- everything after this is a change with something audible on both sides of it -- and `NOTICE` says what the licence consequence is, which is that all of it is IBM's Italian until it has been replaced.

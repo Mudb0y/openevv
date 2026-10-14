@@ -335,6 +335,7 @@ static void stl_build(SynthThread *t, void *app, void *state)
     ST_WIDEBAND(t) = 0;
     ST_PAUSES(t) = PAUSES_DEFAULT;
     ST_TAIL(t) = 0;
+    ST_BUILTIN(t) = BUILTIN_DEFAULT;
 
     p = cpp_new(rm_bytes);
     ST_ROMAN(t) = p ? rz_ctor(p, t) : 0;
@@ -500,6 +501,7 @@ THIS int32_t stl_initialize(SynthThread *t, LangIdentifier *want)
     }
 
     ST_ENGINE(t) = engine;
+    stw_tellBuiltin(t);
     stw_isOldEngine(t);
 
     ST_LANG(t)->packed = want->packed;

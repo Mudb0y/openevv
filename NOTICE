@@ -47,12 +47,13 @@ Felix Steindorff's, from openevv-nvda.
 IBM's
 -----
 
-Everything under `lang` but `lang/fifi` and `lang/ptbr` is transcribed out of
-IBM's Embedded ViaVoice objects: `lang/enus` is US English, `lang/dede` is
-German, `lang/engb` is British English, `lang/eses` and `lang/esus` are the two
-Spanishes, `lang/frfr` and `lang/frca` the two Frenches and `lang/itit` is
-Italian. `lang/fifi` and `lang/ptbr` are ETI's, and the section after this one
-says so.
+Everything under `lang` but `lang/fifi`, `lang/ptbr` and
+`lang/enus/dictionary` is transcribed out of IBM's Embedded ViaVoice objects:
+`lang/enus` is US English, `lang/dede` is German, `lang/engb` is British
+English, `lang/eses` and `lang/esus` are the two Spanishes, `lang/frfr` and
+`lang/frca` the two Frenches and `lang/itit` is Italian. `lang/fifi` and
+`lang/ptbr` are ETI's and `lang/enus/dictionary` is the community's and ours,
+and the two sections after this one say so.
 
 `lang/jajp` is Japanese and is not in the tree, because a language module that
 cannot yet make an instance would break any build that named it. What that
@@ -175,6 +176,23 @@ transcription and on the same footing. None of it is ours to license.
 `lang/ptbr`, Brazilian Portuguese, is ETI Eloquence 6.1's on exactly the same
 terms, read out of the Portuguese module Apple ships, and the one rule in its
 `rules/written.up` is the same transcription as Finnish's.
+
+The community's
+---------------
+
+`lang/enus/dictionary/community` is a snapshot of IBMTTSDictionaries,
+
+    https://github.com/eigencrow/IBMTTSDictionaries
+
+pronunciations written for this engine by the people who listen to it,
+maintained by amirsol81, x0 and thunderdrop with contributions from many.
+Its authors dedicated it to the public domain under CC0 1.0, whose text is
+beside it in `LICENSE.md`, and `source` there says which commit it is. It is
+here as it came and is nobody's to license, ours least of all.
+
+The rest of `lang/enus/dictionary` is ours and the MIT licence covers it:
+`held`, which names entries of the snapshot the build leaves out, and
+`main.dic`, `root.dic` and `abbr.dic`, the words we add.
 
 Where it came from
 ------------------

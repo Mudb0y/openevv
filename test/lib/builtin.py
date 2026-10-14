@@ -1,0 +1,279 @@
+#!/usr/bin/env python3
+"""The dictionary a language carries, eciBuiltInDict.
+
+US English carries the community's IBMTTSDictionaries in the library, and an
+instance consults it after whatever dictionary the caller has given it. This
+holds the engine to that: an entry it carries is read exactly as the same
+entry is when a caller loads it, the caller's own entry for a word wins over
+it in every volume, a dictionary the caller has given that does not hold the
+word leaves it to the one carried, a root entry reaches the word's endings,
+the abbreviation volume answers only while abbreviations are on, and the
+switch answers as the engine's other settings do. A language that carries
+none says the same with the switch either way.
+
+What a word is read as is asked of eciGeneratePhonemes, which says it plainly;
+one check holds the samples as well, so that what the synthesiser is handed
+is known to follow.
+
+It needs neither Wine nor IBM's objects.
+
+usage: test/lib/builtin.py <eci.dll or libeci.so>
+"""
+
+import ctypes
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import langs  # noqa: E402  the library's two kinds and its prototypes
+
+ENGLISH = 0x10000
+BRITISH = 0x10001
+
+SYNTH_MODE = 0
+DICTIONARY = 3
+PHONEME_MODE = 7
+BUILTIN = 34
+
+MAIN, ROOT, ABBR = 0, 1, 2
+
+PHONEME_BUFFER = 1
+
+#: Words the dictionary US English carries holds, each with the entry it
+#: holds, written the way a caller would load it.
+CARRIED_ROOT = (b"teamtalk", b"`[.1tim.2tck]")
+CARRIED_MAIN = (b"Allrecipes", b"all recipes")
+CARRIED_ABBR = (b"WWII", b"world war two")
+
+
+def declare(dll):
+    langs.declare(dll)
+    v = ctypes.c_void_p
+    dll.eciSetParam.argtypes = [v, ctypes.c_int, ctypes.c_int]
+    dll.eciGetParam.argtypes = [v, ctypes.c_int]
+    dll.eciReset.argtypes = [v]
+    dll.eciSetDefaultParam.argtypes = [ctypes.c_int, ctypes.c_int]
+    dll.eciGetDefaultParam.argtypes = [ctypes.c_int]
+    dll.eciGeneratePhonemes.argtypes = [v, ctypes.c_int, ctypes.c_char_p]
+    dll.eciNewDict.restype = v
+    dll.eciNewDict.argtypes = [v]
+    dll.eciSetDict.argtypes = [v, v]
+    dll.eciDeleteDict.restype = v
+    dll.eciDeleteDict.argtypes = [v, v]
+    dll.eciUpdateDict.argtypes = [v, v, ctypes.c_int, ctypes.c_char_p,
+                                  ctypes.c_char_p]
+
+
+class Reader:
+    """An instance that answers what a text is read as."""
+
+    def __init__(self, dll, lang=ENGLISH, builtin=None, entries=(),
+                 abbreviations=False):
+        self.dll = dll
+        self.said = []
+        self.buf = ctypes.create_string_buffer(8192)
+        cb = langs.CALLBACK_TYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_int,
+                                 ctypes.c_int, ctypes.c_void_p)
+
+        @cb
+        def on_message(h, msg, param, data):
+            if msg == PHONEME_BUFFER and param > 0:
+                self.said.append(self.buf.raw[:param])
+            return 1
+
+        self.callback = on_message
+        self.h = dll.eciNewEx(lang)
+        if not self.h:
+            raise SystemExit("builtin.py: no instance in 0x%x" % lang)
+        dll.eciRegisterCallback(self.h, self.callback, None)
+        # Phonemes come only in the synthesis mode that waits to be told.
+        dll.eciSetParam(self.h, SYNTH_MODE, 1)
+        dll.eciSetParam(self.h, PHONEME_MODE, 1)
+        if abbreviations:
+            dll.eciSetParam(self.h, DICTIONARY, 0)
+        if builtin is not None:
+            dll.eciSetParam(self.h, BUILTIN, builtin)
+        self.dict = None
+        if entries:
+            self.dict = dll.eciNewDict(self.h)
+            for vol, word, says in entries:
+                if dll.eciUpdateDict(self.h, self.dict, vol, word, says):
+                    raise SystemExit("builtin.py: the dictionary refused %r"
+                                     % word)
+            if dll.eciSetDict(self.h, self.dict):
+                raise SystemExit("builtin.py: the dictionary was not taken")
+
+    def read(self, text):
+        del self.said[:]
+        self.dll.eciAddText(self.h, text)
+        self.dll.eciGeneratePhonemes(self.h, len(self.buf), self.buf)
+        return b"".join(self.said)
+
+    def close(self):
+        if self.dict:
+            self.dll.eciSetDict(self.h, None)
+            self.dll.eciDeleteDict(self.h, self.dict)
+        self.dll.eciDelete(self.h)
+
+
+def read(dll, text, **how):
+    r = Reader(dll, **how)
+    out = r.read(text)
+    r.close()
+    return out
+
+
+FAILED = []
+
+
+def check(what, ok):
+    print("builtin.py: %s %s" % ("ok  " if ok else "FAIL", what))
+    if not ok:
+        FAILED.append(what)
+
+
+def setting_checks(dll):
+    v = langs.Voice(dll, ENGLISH)
+    h = v.h
+    check("an instance starts with it on", dll.eciGetParam(h, BUILTIN) == 1)
+    check("a new value is taken and the old one answered",
+          dll.eciSetParam(h, BUILTIN, 0) == 1
+          and dll.eciGetParam(h, BUILTIN) == 0)
+    check("a value it has not got is refused and changes nothing",
+          dll.eciSetParam(h, BUILTIN, 2) == -1
+          and dll.eciSetParam(h, BUILTIN, -1) == -1
+          and dll.eciGetParam(h, BUILTIN) == 0)
+    dll.eciReset(h)
+    check("a reset puts back the default", dll.eciGetParam(h, BUILTIN) == 1)
+    v.close()
+
+    check("the default is on", dll.eciGetDefaultParam(BUILTIN) == 1)
+    check("and can be changed for instances made after",
+          dll.eciSetDefaultParam(BUILTIN, 0) == 1)
+    later = langs.Voice(dll, ENGLISH)
+    check("which start with it", dll.eciGetParam(later.h, BUILTIN) == 0)
+    later.close()
+    word = CARRIED_ROOT[0]
+    off_by_default = read(dll, word)
+    dll.eciSetDefaultParam(BUILTIN, 1)
+    check("and read as one set to off does",
+          off_by_default == read(dll, word, builtin=0))
+
+
+def reading_checks(dll):
+    for vol, (word, says), name in ((ROOT, CARRIED_ROOT, "root"),
+                                    (MAIN, CARRIED_MAIN, "main")):
+        off = read(dll, word, builtin=0)
+        on = read(dll, word)
+        loaded = read(dll, word, builtin=0, entries=[(vol, word, says)])
+        check("%s: %s is read otherwise with it on" % (name, word.decode()),
+              on != off and on)
+        check("%s: and exactly as the same entry loaded by a caller"
+              % name, on == loaded)
+
+    word, says = CARRIED_ROOT
+    mine = (ROOT, word, b"tea time")
+    by_caller = read(dll, word, builtin=0, entries=[mine])
+    check("a caller's root entry wins over it",
+          read(dll, word, entries=[mine]) == by_caller
+          and by_caller != read(dll, word))
+    word2, says2 = CARRIED_MAIN
+    mine2 = (MAIN, word2, b"recipe site")
+    by_caller2 = read(dll, word2, builtin=0, entries=[mine2])
+    check("a caller's main entry wins over it",
+          read(dll, word2, entries=[mine2]) == by_caller2
+          and by_caller2 != read(dll, word2))
+
+    other = [(ROOT, b"zorblat", b"door bell"), (MAIN, b"Zorblat", b"door")]
+    check("a caller's dictionary without the word leaves it to the one"
+          " carried", read(dll, word, entries=other) == read(dll, word))
+    check("and so does one with only another volume loaded",
+          read(dll, word, entries=[(MAIN, b"Zorblat", b"door")])
+          == read(dll, word))
+
+    plural = word + b"s"
+    check("a root entry reaches the word's endings",
+          read(dll, plural) == read(dll, plural, builtin=0,
+                                    entries=[(ROOT, word, says)])
+          and read(dll, plural) != read(dll, plural, builtin=0))
+
+    abbr, means = CARRIED_ABBR
+    check("the abbreviation volume is silent while abbreviations are off",
+          read(dll, abbr) == read(dll, abbr, builtin=0))
+    on = read(dll, abbr, abbreviations=True)
+    check("and answers while they are on, as the entry loaded by a caller",
+          on != read(dll, abbr, builtin=0, abbreviations=True)
+          and on == read(dll, abbr, builtin=0, abbreviations=True,
+                         entries=[(ABBR, abbr, means)]))
+
+    sentence = b"We met on teamtalk and talked."
+    r = Reader(dll)
+    first = r.read(sentence)
+    dll.eciSetParam(r.h, BUILTIN, 0)
+    second = r.read(sentence)
+    dll.eciSetParam(r.h, BUILTIN, 1)
+    third = r.read(sentence)
+    r.close()
+    check("turned off and on again on one instance, between utterances",
+          second == read(dll, sentence, builtin=0) and third == first
+          and first != second)
+
+
+def sample_checks(dll):
+    text = "We met on teamtalk."
+
+    def said(builtin, entries=()):
+        v = langs.Voice(dll, ENGLISH)
+        d = None
+        if builtin is not None:
+            dll.eciSetParam(v.h, BUILTIN, builtin)
+        if entries:
+            d = dll.eciNewDict(v.h)
+            for vol, word, says in entries:
+                dll.eciUpdateDict(v.h, d, vol, word, says)
+            dll.eciSetDict(v.h, d)
+        v.speak(text)
+        out = bytes(v.said)
+        if d:
+            dll.eciSetDict(v.h, None)
+            dll.eciDeleteDict(v.h, d)
+        v.close()
+        return out
+
+    on = said(None)
+    check("the samples follow: %d with it, %d without" % (
+          len(on) // 2, len(said(0)) // 2),
+          on != said(0)
+          and on == said(0, [(ROOT,) + CARRIED_ROOT]))
+
+
+def main(path):
+    dll = langs.LOADER(os.path.abspath(path))
+    declare(dll)
+    have = langs.languages(dll)
+    if ENGLISH not in have:
+        print("builtin.py: this library has no US English, the one language"
+              " that carries a dictionary")
+        return 0
+
+    setting_checks(dll)
+    reading_checks(dll)
+    sample_checks(dll)
+    if BRITISH in have:
+        word = CARRIED_ROOT[0]
+        check("British English carries none, and reads the same either way",
+              read(dll, word, lang=BRITISH)
+              == read(dll, word, lang=BRITISH, builtin=0))
+
+    if FAILED:
+        print("builtin.py: %d failed" % len(FAILED))
+        return 1
+    print("builtin.py: all passed")
+    return 0
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        raise SystemExit(__doc__.strip())
+    sys.exit(main(sys.argv[1]))

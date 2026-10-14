@@ -22,6 +22,7 @@ __pycache__/
 # change to that tool. `make rules' makes them. Numbered because one
 # translation unit that size cannot be compiled on more than one core.
 lang/*/delta_rules_*.c
+lang/*/delta_builtin_*.c
 lang/*/delta_rules_*.h
 # Except the empty table that leaves every rule as bytecode, which is written
 # by hand once per language and is generated from nothing.

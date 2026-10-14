@@ -77,14 +77,17 @@ typedef struct OldInst {
        see ev_sendChangedEnvironment. */
     int32_t  wideband;
     int32_t  wideband_sent;
-    /* And eciPauseMode, which goes the same way. */
+    /* And eciPauseMode and eciBuiltInDict, which go the same way. */
     int32_t  pauses;
     int32_t  pauses_sent;
+    int32_t  builtin;
+    int32_t  builtin_sent;
 } OldInst;
 
 /* What eciPauseMode a new instance starts with, which eciSetDefaultParam
    sets as it does the eighteen it has a table for. */
 extern int32_t g_DefaultPauses;
+extern int32_t g_DefaultBuiltin;
 
 #define OI_NEW(h)            ((h)->fresh)
 #define OI_CALLBACK(h)       ((h)->callback)

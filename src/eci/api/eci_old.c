@@ -506,6 +506,8 @@ static OldInst *eo_newInstance(int32_t language, int told)
        the first utterance if the default has been changed since. */
     h->pauses = g_DefaultPauses;
     h->pauses_sent = PAUSES_DEFAULT;
+    h->builtin = g_DefaultBuiltin;
+    h->builtin_sent = BUILTIN_DEFAULT;
 
     voices = cpp_new(CONCAT_VOICES_BYTES);
     OI_CONCAT(h) = voices ? scv_ctor(voices) : 0;

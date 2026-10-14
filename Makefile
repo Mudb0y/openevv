@@ -114,6 +114,13 @@ RULECODE := $(foreach l,$(LANGS), \
               $(l)/delta_rules_$(notdir $(l)).h \
               $(l)/delta_rules_shim_$(notdir $(l)).c)
 
+# The dictionary each language carries, written out of lang/<tag>/dictionary
+# by tools/module/builtindict.py, and three empty volumes for a language that
+# has no such directory. Made for every language and named here rather than
+# found by the wildcard below, for the same reason as RULECODE: on a fresh
+# clone it is not there yet.
+BUILTIN := $(foreach l,$(LANGS),$(l)/delta_builtin_$(notdir $(l)).c)
+
 # Each language has both forms of its rules beside it: the empty table that
 # leaves every rule as bytecode, and the C the decompiler writes. One of the
 # two is linked per language, never both.
@@ -207,9 +214,9 @@ PORT ?= posix
 PORTOUT := %/port_win32.c $(if $(filter none,$(PORT)),%/port_posix.c)
 SOURCES := $(filter-out $(PORTOUT), \
              $(foreach d,$(SRCDIRS),$(wildcard $(d)/*.c))) \
-           $(filter-out $(STALE) $(GENERATED) $(STUBS) $(RULECODE), \
+           $(filter-out $(STALE) $(GENERATED) $(STUBS) $(RULECODE) $(BUILTIN), \
              $(sort $(foreach l,$(LANGS),$(wildcard $(l)/*.c)))) \
-           $(filter %.c,$(RULECODE)) \
+           $(filter %.c,$(RULECODE)) $(BUILTIN) \
            $(ROMS) $(RULESRC) $(LANGLIST)
 
 # Every header, because a struct that changed shape and an object that was
@@ -910,6 +917,15 @@ $(foreach l,$(LANGS),$(eval $(call entry_record,$(l))))
 
 $(foreach l,$(LANGS),$(eval $(call \
     $(if $(wildcard $(l)/rules),rulecode_from_text,rulecode_lifted),$(l))))
+
+define builtin_for
+$(1)/delta_builtin_$(notdir $(1)).c: tools/module/builtindict.py \
+    $(wildcard $(1)/dictionary/*.dic $(1)/dictionary/held \
+               $(1)/dictionary/community/*.dic)
+	@python3 tools/module/builtindict.py write $(1)
+	@touch $$@
+endef
+$(foreach l,$(LANGS),$(eval $(call builtin_for,$(l))))
 
 # The rules as C. Thirteen megabytes written out of the bytecode beside it,
 # so it is made here rather than kept in the tree, where every change to the
