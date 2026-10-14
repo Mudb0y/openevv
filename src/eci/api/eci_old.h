@@ -54,7 +54,10 @@ typedef struct OldInst {
     char     report[0x60c - 0x5f4]; /* +0x5f4 */
     QueueElement *qhead;          /* +0x60c */
     QueueElement *qtail;          /* +0x610 */
-    uint8_t  unknown_614[0x6a4 - 0x614];
+    /* The dictionary in force for each language: eighteen families of two
+       dialects, family one first. src/eci/dict/eci_dict.c says why each is
+       a value rather than a pointer. */
+    int32_t  active_dict[0x12][2]; /* +0x614 */
     int32_t  ready;               /* +0x6a4, and stopped: the same word */
     int32_t  ready2;              /* +0x6a8 */
     uint32_t refused_all;         /* +0x6ac */

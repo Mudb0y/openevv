@@ -41,9 +41,17 @@
    family three, dialect one, and the loop below reads that one first and
    hands the engine half a pointer. English never showed it -- family one is
    the first slot the loop looks at, so the slot its store reaches into is
-   one nothing ever reads. */
+   one nothing ever reads.
+
+   The table is a field of the instance rather than IBM's offset into it,
+   which is where it is on a thirty-two bit host and nowhere near it on a
+   sixty-four bit one, where the pointers before it have grown: there the
+   offset put English's slot on the first word of the phoneme and index
+   report, so taking every dictionary out after phonemes had been reported
+   handed the engine a phoneme for a dictionary, and Italian's on the
+   queue's head. */
 #define ACTIVE_DICT(h, family, dialect) \
-    (*(evv_ref *)((char *)(h) + 0x60c + (family) * 8 + (dialect) * 4))
+    ((h)->active_dict[(family) - 1][(dialect)])
 #define DICT_FAMILIES   0x12
 #define DICT_DIALECTS   2
 
@@ -164,14 +172,27 @@ int ed_rc_to_ECIDictError(int32_t rc)
 
 /* ---- the table of what is in force ----------------------------------- */
 
+/* A language's slot, or none for a number outside the table, which would
+   otherwise be written over whatever follows it. */
+static evv_ref *active_slot(OldInst *h, int32_t lang)
+{
+    int family = (lang & 0xff0000) >> 16;
+    int dialect = lang & 0xff;
+
+    if (family < 1 || family > DICT_FAMILIES || dialect >= DICT_DIALECTS)
+        return 0;
+    return &ACTIVE_DICT(h, family, dialect);
+}
+
 /* Remember a dictionary as the one in force for its own language. */
 int32_t ed_add_active_dict(OldInst *h, void *dict)
 {
     int32_t lang;
     int32_t rc = api_get_dict_language(OI_NEW(h), dict, &lang);
+    evv_ref *slot;
 
-    if (rc >= 0)
-        ACTIVE_DICT(h, (lang & 0xff0000) >> 16, lang & 0xff) = EVV_REF(dict);
+    if (rc >= 0 && (slot = active_slot(h, lang)) != 0)
+        *slot = EVV_REF(dict);
     return rc;
 }
 
@@ -180,14 +201,11 @@ int32_t ed_delete_active_dict(OldInst *h, void *dict)
 {
     int32_t lang;
     int32_t rc = api_get_dict_language(OI_NEW(h), dict, &lang);
+    evv_ref *slot;
 
-    if (rc >= 0) {
-        int family = (lang & 0xff0000) >> 16;
-        int dialect = lang & 0xff;
-
-        if (EVV_AT(void *, ACTIVE_DICT(h, family, dialect)) == dict)
-            ACTIVE_DICT(h, family, dialect) = 0;
-    }
+    if (rc >= 0 && (slot = active_slot(h, lang)) != 0
+        && EVV_AT(void *, *slot) == dict)
+        *slot = 0;
     return rc;
 }
 
