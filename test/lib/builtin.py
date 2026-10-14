@@ -11,6 +11,12 @@ the abbreviation volume answers only while abbreviations are on, and the
 switch answers as the engine's other settings do. A language that carries
 none says the same with the switch either way.
 
+The dictionary also splits a word with a capital inside it that nothing
+holds into the words it is made of, NixOS as Nix OS. That is held to reading
+exactly as the parts written apart do, with a name beginning such as Mc, a
+plural of capitals and a word a root volume holds left whole, and British
+English, which carries no entries, splitting all the same.
+
 What a word is read as is asked of eciGeneratePhonemes, which says it plainly;
 one check holds the samples as well, so that what the synthesiser is handed
 is known to follow.
@@ -220,6 +226,31 @@ def reading_checks(dll):
           and first != second)
 
 
+def split_checks(dll, have):
+    for word, parts in ((b"NixOS", b"Nix OS"), (b"HTMLElement", b"HTML Element"),
+                        (b"iOS", b"i OS")):
+        check("%s is read as %s" % (word.decode(), parts.decode()),
+              read(dll, word) == read(dll, parts)
+              and read(dll, word) != read(dll, word, builtin=0))
+    for word in (b"McDonald", b"DiCaprio", b"SDKs"):
+        check("%s is left whole" % word.decode(),
+              read(dll, word) == read(dll, word, builtin=0))
+    check("a word a root volume holds is left for the root lookup",
+          read(dll, b"TeamTalk") == read(dll, CARRIED_ROOT[0])
+          and read(dll, b"TeamTalk") != read(dll, b"Team Talk"))
+    mine = [(ROOT, b"zorbfoo", b"door")]
+    check("and so is one the caller's root volume holds",
+          read(dll, b"ZorbFoo", entries=mine)
+          == read(dll, b"zorbfoo", entries=mine)
+          and read(dll, b"ZorbFoo") == read(dll, b"Zorb Foo"))
+    if BRITISH in have:
+        check("British English, which carries no entries, splits as well",
+              read(dll, b"NixOS", lang=BRITISH)
+              == read(dll, b"Nix OS", lang=BRITISH)
+              and read(dll, b"NixOS", lang=BRITISH)
+              != read(dll, b"NixOS", lang=BRITISH, builtin=0))
+
+
 def sample_checks(dll):
     text = "We met on teamtalk."
 
@@ -259,10 +290,12 @@ def main(path):
 
     setting_checks(dll)
     reading_checks(dll)
+    split_checks(dll, have)
     sample_checks(dll)
     if BRITISH in have:
         word = CARRIED_ROOT[0]
-        check("British English carries none, and reads the same either way",
+        check("British English carries no entries, and reads one the same"
+              " either way",
               read(dll, word, lang=BRITISH)
               == read(dll, word, lang=BRITISH, builtin=0))
 

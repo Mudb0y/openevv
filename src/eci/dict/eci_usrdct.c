@@ -70,6 +70,8 @@
 
 /* How many volumes the holder makes. */
 #define UD_VOLUMES 3
+#define UD_MAIN    0
+#define UD_ROOT    1
 
 typedef struct UserDict {
     char     path[0x108];   /* +0x000, what it was told to load */
@@ -794,6 +796,129 @@ static int32_t builtin_lookupAndTranslate(delta_state *d, int32_t vol,
     return UD_OK;
 }
 
+/* Ours as well. Where the language asks for it, a word in the main volume's
+   place that neither dictionary holds and that has a capital inside it is
+   read as the words it is made of -- iPhone as i Phone, NixOS as Nix OS,
+   HTMLElement as HTML Element -- by putting a space before each capital that
+   starts one, the same way an entry saying so would. A capital starts a word
+   after a small letter, and the last of a run of capitals does when small
+   letters follow it, unless all that follows is a plural s, so that APIs and
+   IDs are left as they are. Two kinds of word are left whole: one beginning
+   with a beginning the language lists and a capital, which is a name --
+   McDonald, LeBron, DiCaprio -- and one a root volume holds in small
+   letters, as it is or without a plural or possessive ending, which the
+   root lookup will find later and say as the entry says. */
+
+/* Only the letters of ASCII count. Text in UTF-8 handed over as the Western
+   set arrives with each accented letter as a capital A with a mark and a sign
+   after it, so counting the Western set's capitals cut cafe with its accent
+   in two. */
+static int split_upper(unsigned char c)
+{
+    return c >= 'A' && c <= 'Z';
+}
+
+static int split_lower(unsigned char c)
+{
+    return c >= 'a' && c <= 'z';
+}
+
+static int split_starts(const char *w, size_t i)
+{
+    size_t m;
+
+    if (!split_upper((unsigned char)w[i]))
+        return 0;
+    if (split_lower((unsigned char)w[i - 1]))
+        return 1;
+    if (!split_upper((unsigned char)w[i - 1])
+        || !split_lower((unsigned char)w[i + 1]))
+        return 0;
+    for (m = 0; split_lower((unsigned char)w[i + 1 + m]); m++)
+        ;
+    return !(m == 1 && w[i + 1] == 's'
+             && (w[i + 2] == 0 || w[i + 2] == '\''));
+}
+
+static int split_rooted(delta_state *d, const delta_builtin_dict *b,
+                        const char *low)
+{
+    DictionarySet *s = DL_CURRENT(DT_LANG(d));
+
+    if (s != 0 && s->status == 0 && s->vol[UD_ROOT] != 0
+        && ud_lookup(s->vol[UD_ROOT], low) != 0)
+        return 1;
+    return builtin_find(b, UD_ROOT, low) != 0;
+}
+
+static int split_held(delta_state *d, const delta_builtin_dict *b,
+                      const char *w)
+{
+    char   low[UD_LAST_ROOM];
+    size_t n;
+
+    for (n = 0; w[n] && n + 1 < sizeof low; n++)
+        low[n] = (char)(split_upper((unsigned char)w[n]) ? w[n] + 0x20 : w[n]);
+    low[n] = 0;
+    if (split_rooted(d, b, low))
+        return 1;
+    if (n > 2 && low[n - 2] == '\'' && low[n - 1] == 's') {
+        low[n - 2] = 0;
+        return split_rooted(d, b, low);
+    }
+    if (n > 1 && low[n - 1] == 's') {
+        low[n - 1] = 0;
+        return split_rooted(d, b, low);
+    }
+    return 0;
+}
+
+static int32_t builtin_split(delta_state *d, int32_t l, int32_t r)
+{
+    DeltaLang                *lang = DT_LANG(d);
+    const delta_language     *of   = delta_lang_of(d);
+    const delta_builtin_dict *b    = of ? of->builtin_dict : 0;
+    int8_t                    stream = DL_STREAM(lang);
+    char                     *w = lang->builtin_last[UD_MAIN];
+    char                      out[UD_LAST_ROOM * 2];
+    const char *const        *p;
+    size_t                    i, k, n;
+    int                       cuts = 0;
+
+    if (lang->builtin_off || b == 0 || !b->split)
+        return UD_NOT_FOUND;
+    if (!sync_in_stm(d, stream, l) || !sync_in_stm(d, stream, r))
+        return UD_NO_SPINE;
+    if (!extract_string(d, stream, l, r, w, UD_LAST_ROOM))
+        return UD_NO_SPINE;
+
+    for (p = b->whole; p != 0 && *p != 0; p++) {
+        n = strlen(*p);
+        if (strncmp(w, *p, n) == 0 && split_upper((unsigned char)w[n]))
+            return UD_NOT_FOUND;
+    }
+
+    n = strlen(w);
+    for (i = k = 0; i < n && k + 2 < sizeof out; i++) {
+        if (i > 0 && split_starts(w, i)) {
+            out[k++] = ' ';
+            cuts++;
+        }
+        out[k++] = w[i];
+    }
+    out[k] = 0;
+    if (cuts == 0 || i < n || split_held(d, b, w))
+        return UD_NOT_FOUND;
+
+    del_two_point(d, stream, l, r);
+    OWNER_MOVED(d) = 1;
+    if (!insert_string(d, stream, r, out))
+        return UD_NO_SPINE;
+
+    lang->builtin_took[UD_MAIN] = 1;
+    return UD_OK;
+}
+
 void builtin_dict_enable(delta_state *d, int32_t on)
 {
     if (d != 0 && d->dlang != 0)
@@ -824,7 +949,10 @@ int32_t callUserDictLookup(delta_state *d, const void *volume,
             return rc != 0;
     }
 
-    return builtin_lookupAndTranslate(d, vol, l->value, r->value) != 0;
+    rc = builtin_lookupAndTranslate(d, vol, l->value, r->value);
+    if (rc == UD_NOT_FOUND && vol == UD_MAIN)
+        rc = builtin_split(d, l->value, r->value);
+    return rc != 0;
 }
 
 int32_t callInsertLastDictString(delta_state *d, const void *volume,

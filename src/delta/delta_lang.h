@@ -188,6 +188,11 @@ typedef struct delta_dict_entry {
 typedef struct delta_builtin_dict {
     const delta_dict_entry *volume[3];
     int32_t                 count[3];
+    /* Whether a word with a capital inside it that no dictionary holds is
+       read as the words it is made of, and the beginnings that make such a
+       word a name to leave whole, ending in a null. */
+    int32_t                 split;
+    const char *const      *whole;
 } delta_builtin_dict;
 
 /* Every language linked into this program, ending with a null, and the

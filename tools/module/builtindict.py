@@ -19,6 +19,10 @@ lang/<tag>/dictionary holds it as text:
   main.dic, root.dic, abbr.dic
       ours, in UTF-8, read after the snapshot so that an entry of ours is the
       one used; a line starting # is a remark
+  split
+      if it is there, a word with a capital inside it that no dictionary
+      holds is read as the words it is made of; each line is a beginning
+      that makes such a word a name to be left whole, Mc for McDonald
 
 Each line is read the way the engine reads a file a caller loads -- a line
 with no tab is no entry, white space round both halves goes, every white
@@ -108,6 +112,25 @@ def volumes(lang):
     return out
 
 
+def read_split(lang):
+    """The beginnings that leave a word whole, or None where the language
+    does not split words at all."""
+    path = os.path.join(lang, "dictionary", "split")
+    if not os.path.exists(path):
+        return None
+    out = []
+    with open(path, "rb") as f:
+        for n, raw in enumerate(f, 1):
+            line = raw.strip()
+            if not line or line.startswith(b"#"):
+                continue
+            try:
+                out.append(line.decode("utf-8").encode("cp1252"))
+            except (UnicodeDecodeError, UnicodeEncodeError) as e:
+                sys.exit("builtindict: %s line %d: %s" % (path, n, e))
+    return out
+
+
 def literal(b):
     """A C string literal for the bytes, octal past ASCII and a question mark
     escaped so that no pair of them reads as a trigraph."""
@@ -145,17 +168,28 @@ def write(lang):
         lines.append("};")
         lines.append("")
         names.append((name, len(vols[vol])))
+    whole = read_split(lang)
+    if whole:
+        lines.append("static const char *const %s_builtin_whole[] = {" % tag)
+        for w in whole:
+            lines.append("    %s," % literal(w))
+        lines.append("    0")
+        lines.append("};")
+        lines.append("")
     lines.append("const delta_builtin_dict %s_builtin_dict = {" % tag)
     lines.append("    { %s }," % ", ".join(n for n, _c in names))
     lines.append("    { %s }," % ", ".join(str(c) for _n, c in names))
+    lines.append("    %d," % (whole is not None))
+    lines.append("    %s," % ("%s_builtin_whole" % tag if whole else "0"))
     lines.append("};")
     text = "\n".join(lines) + "\n"
     if os.path.exists(path) and open(path).read() == text:
         return
     with open(path, "w") as f:
         f.write(text)
-    print("%s: %s" % (path, ", ".join("%d %s" % (len(vols[v]), v)
-                                       for v in VOLUMES)))
+    print("%s: %s%s" % (path, ", ".join("%d %s" % (len(vols[v]), v)
+                                         for v in VOLUMES),
+                         "" if whole is None else ", split"))
 
 
 def main(argv):

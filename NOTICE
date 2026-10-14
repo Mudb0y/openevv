@@ -47,13 +47,14 @@ Felix Steindorff's, from openevv-nvda.
 IBM's
 -----
 
-Everything under `lang` but `lang/fifi`, `lang/ptbr` and
-`lang/enus/dictionary` is transcribed out of IBM's Embedded ViaVoice objects:
+Everything under `lang` but `lang/fifi`, `lang/ptbr`, `lang/enus/dictionary`
+and `lang/engb/dictionary` is transcribed out of IBM's Embedded ViaVoice objects:
 `lang/enus` is US English, `lang/dede` is German, `lang/engb` is British
 English, `lang/eses` and `lang/esus` are the two Spanishes, `lang/frfr` and
 `lang/frca` the two Frenches and `lang/itit` is Italian. `lang/fifi` and
 `lang/ptbr` are ETI's and `lang/enus/dictionary` is the community's and ours,
-and the two sections after this one say so.
+and the two sections after this one say so, as they do of
+`lang/engb/dictionary`, which is ours.
 
 `lang/jajp` is Japanese and is not in the tree, because a language module that
 cannot yet make an instance would break any build that named it. What that
@@ -191,8 +192,9 @@ beside it in `LICENSE.md`, and `source` there says which commit it is. It is
 here as it came and is nobody's to license, ours least of all.
 
 The rest of `lang/enus/dictionary` is ours and the MIT licence covers it:
-`held`, which names entries of the snapshot the build leaves out, and
-`main.dic`, `root.dic` and `abbr.dic`, the words we add.
+`held`, which names entries of the snapshot the build leaves out, `split`,
+which names the beginnings that keep a name whole, and `main.dic`,
+`root.dic` and `abbr.dic`, the words we add. So is `lang/engb/dictionary`.
 
 Where it came from
 ------------------

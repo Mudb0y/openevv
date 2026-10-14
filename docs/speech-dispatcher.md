@@ -146,7 +146,7 @@ to what `evv -W -R 22050` makes for the same text, byte for byte.
 
 ## The built-in dictionary
 
-US English carries the community's IBMTTSDictionaries in the library, with additions of ours, and reads a word it holds the way the entry says rather than the way the rules would. A line in `openevv.conf` turns that off:
+US English carries the community's IBMTTSDictionaries in the library, with additions of ours, and reads a word it holds the way the entry says rather than the way the rules would. Both Englishes also read a word with a capital inside it that no dictionary holds as the words it is made of, NixOS as Nix OS. A line in `openevv.conf` turns both off:
 
     BuiltInDictionary 0
 

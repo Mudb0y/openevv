@@ -1,0 +1,16 @@
+# A word with a capital inside it that no dictionary holds is read as the
+# words it is made of: iPhone as i Phone, NixOS as Nix OS, HTMLElement as
+# HTML Element. Each line below is a beginning that, with a capital after
+# it, makes the word a name to be left whole instead: McDonald, LeBron,
+# DiCaprio. tools/module/builtindict.py reads it.
+
+Mc
+Mac
+O'
+De
+Di
+Du
+La
+Le
+Van
+Von
