@@ -1,0 +1,123 @@
+# Words of ours for US English's main volume: a word here is matched as the
+# whole token it is written as, capitals and all, so Qt here is not qt and
+# MATE is not mate. One a line, the word, a tab, and what is said in its
+# place; tools/module/builtindict.py reads it after the community's, so an
+# entry here replaces theirs. docs/language.md says how to add one.
+
+# Typesetting
+TeX	`[.1tEk]
+LaTeX	`[.1le.2tEk]
+BibTeX	`[.1bIb.2tEk]
+
+# Systems, desktops and the programs on them
+MacOS	mac O S
+openSUSE	open `[.1su.0sx]
+FreeDOS	free `[.1das]
+Qt	cute
+LXQt	L X cute
+GNOME	`[.0gx.1nom]
+MATE	`[.1ma.0te]
+Xfce	X F C E
+Xorg	X org
+Xwayland	X wayland
+HAProxy	H A proxy
+Kdenlive	K den live
+ROCm	`[.1rak.0xm]
+CUDA	`[.1ku.0dx]
+
+# Formats and languages
+YAML	`[.1yA.0mxl]
+TOML	`[.1ta.0mxl]
+SAML	`[.1sA.0mxl]
+OCaml	O camel
+Haxe	`[.1hEks]
+Vue	view
+Vite	`[.1vit]
+PostgreSQL	`[.2post.1grEs] Q L
+LLaMA	`[.1la.0mx]
+WhatsApp	whats app
+
+# Protocols and hardware
+URI	U R I
+DDoS	`[.1di.2das]
+PCIe	P C I E
+IoT	I O T
+EOF	E O F
+SIGSEGV	sig seg V
+SIGINT	sig int
+
+# Units, which IBM's abbreviation dictionary would expand and which is off
+Hz	hertz
+kHz	kilohertz
+MHz	megahertz
+GHz	gigahertz
+mAh	milliamp hours
+Wh	watt hours
+kWh	kilowatt hours
+KiB	kibibytes
+MiB	mebibytes
+GiB	gibibytes
+TiB	tebibytes
+kbps	kilobits per second
+Mbps	megabits per second
+Gbps	gigabits per second
+ms	milliseconds
+
+# Several words in place of one, which only the main volume can say, so
+# these are matched as written, in small letters.
+nixpkgs	nix packages
+egrep	E grep
+nvim	N vim
+cmake	C make
+strace	S trace
+ltrace	L trace
+htop	H top
+dmesg	D message
+udevadm	you dev admin
+gdisk	G disk
+btrfs	butter F S
+cryptsetup	crypt setup
+lsmod	L S mod
+rmmod	R M mod
+ulimit	you limit
+bzip	B zip
+ffprobe	F F probe
+pactl	P A C T L
+speechd	speech D
+liblouis	lib louis
+lightdm	light D M
+nmcli	N M C L I
+iwd	I W D
+nftables	N F tables
+firewalld	firewall D
+pipx	pip X
+kubectl	cube control
+nginx	engine X
+mkdir	make dir
+rmdir	R M dir
+whoami	who am I
+ifconfig	if config
+nslookup	N S lookup
+tcpdump	T C P dump
+stdin	standard in
+stdout	standard out
+stderr	standard error
+stdlib	standard lib
+argv	arg V
+argc	arg C
+sprintf	S print F
+snprintf	S N print F
+scanf	scan F
+strcpy	stir copy
+strncpy	stir N copy
+strcat	stir cat
+strlen	stir len
+memcpy	mem copy
+uint	you int
+nullptr	null pointer
+libc	lib C
+glibc	G lib C
+pthread	P thread
+ioctl	I O C T L
+mmap	M map
+execve	exec V
