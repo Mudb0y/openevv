@@ -15,108 +15,108 @@
 # the samples' hash, the same of the reported answers', and
 # the sentence.
 
-plain 1 23ad65d9eb92b5cb f243c9cbbc79190b Sao tres horas e la fora esta chovendo muito.
-plain 2 7f3feb8f3a4e7d70 ac79c4b806601e4e O Dr. Pereira pagou R$ 1.234,56 no dia 3 de maio de 2026 as 19h45.
-plain 3 39e9618b82ee897f df813fb609e7f646 O endereco e www.exemplo.com.br/caminho?q=1 e o telefone (11) 3456-7890.
-plain 4 2dad319220a0df33 5f98046920670334 Teste 1 2 3, ABC XYZ, palavra-com-hifen e LETRAS MAIUSCULAS.
-plain 5 59d86f1e6dc4f492 468f61b31e0dccb4 Uma palavra por linha. E mais uma; alem disso "texto entre aspas" no meio.
-plain 6 0e3f4d5b61c47f4d 1d9ae189ab5a3bc5 Inconstitucionalissimamente, Campinas e 42 % do total de 3,14159.
-plain 7 a01a473083a626ab 77ad99560937e40e Ele disse: nao faca isso! Depois (de passagem) 1/2 + 3/4 = 5/4; veja p. 12.
-utf8 1 a39a875c296cea46 335c6f717bff066a Bom dia, como você está?
-utf8 2 759241dc0bfef65c 653f1cd965a712ed Não se preocupe, tudo vai dar certo amanhã.
-utf8 3 1d22344a0d7dd11e 5c74dcddf18e9b25 Ação, coração, pão, mãe e avô com a avó em São Luís.
-utf8 4 634419f28961f35f dbbd7de7149886af Açúcar, café, inglês, português e ótimo dia.
-utf8 5 a1f2b34c5874e0e4 669fca64e9edaca4 Atenciosamente, João Conceição.
-utf8 6 5ca9d1e7c67182cc e62badb1894cba21 Em junho, duas garças nadam no lago de Brasília.
-utf8 7 0303a114e038ec3b a6ad22fff707d07f Esta frase foi escrita sem acentos para comparacao
-anno 1 8590becc6d8f815d c79946d0ee868e33 Fala normal `vs50 agora muito mais devagar do que antes.
-anno 2 7ebc0dea753f8260 6baf586ba9b703dd Volume `vv30 mais baixo, depois `vv90 mais alto de novo.
-anno 3 0770a016bf14012e 2b6a1f4c1a448c89 Altura `vb20 grave e `vb80 aguda na mesma frase.
-anno 4 5b108f624885b2ed 9f20e3efd9b2ce7e Voz `v2 dois, `v5 cinco, e `v1 um de novo.
-anno 5 ae3693ec8ed541df 90b0bf36e9791755 Pausa `0 curta e `4 longa entre as palavras.
-anno 6 6d044f194dfec6c5 8a3eb90634aac56a Aspereza `vr40 e respiracao `vf60 alteradas.
-anno 7 c52703126b94054d 206ad911292e2f72 Uma \`crase literal lida como texto.
-anno 8 ab928f96a47b8f26 e8a95775bb0675cc Velocidade pelo nome `vsfast e depois `vsslow de volta.
-anno 9 119bb833a7dfd54c 3b81ce4fefd616aa Tamanho da cabeca `vh30 depois `vh70 na mesma linha.
-anno 10 4e83860b08517a3b 69c7cc9fbad2c5c1 Genero `vg1 e `vg0 alternados.
-anno 11 bd6a1fe72f21aad5 43598bc840d6f89c Antes `ui"marca um" e depois da marca de indice.
-anno 12 848686584142958d 47af8fd3bf7a9a6f Marca `aud"bip" sonora no meio da linha.
-anno 13 360b2ee620d09d34 ba2a1c44d62f5fa0 `vs40 Anotacao logo no inicio da linha.
-anno 14 139e54691be3ae0c 8c74ce4855aa7302 Termina com uma anotacao bem no fim da linha `vs60
-anno 15 d85455296edd19a5 b87ba8fdcabe364c Erradas `vzz e `q e `v999 todas na mesma linha.
-anno 16 09b0b9d8627c754b a45e289ae47948d1 Duas `vs30`vv40 anotacoes sem nada entre elas.
-anno 17 029b0b2a58d1487a a2a167269b07f61d `ui"a"`ui"b" duas marcas sem nada entre elas.
-anno 18 e5faa9f72011a5a5 598ba37941b39586 Sem fechar `ui"marca que nunca termina
-anno 19 e879d33759a4c505 5cc9cdfb2a070c5f Juntos `v3 voz `vs70 velocidade `vv50 volume de uma vez.
-anno 20 1f66792004096a1e 775ad5c3a1f0daad Tabulacao	e quebra de linha `vb40 com mudanca.
-anno3 1 f92cf399d0ceaadc 4d544a3fbfa30d20 Fala normal `vs50 agora muito mais devagar do que antes.
-anno3 2 663ef84cbe60990f c108c5051b0bebe9 Volume `vv30 mais baixo, depois `vv90 mais alto de novo.
-anno3 3 fffe5c887efe3a3d 36f25b82364e8118 Altura `vb20 grave e `vb80 aguda na mesma frase.
-anno3 4 76b8c689b7c736a9 eaa158078c2a52df Voz `v2 dois, `v5 cinco, e `v1 um de novo.
-anno3 5 7837294c5055e669 9849ab8791e748a2 Pausa `0 curta e `4 longa entre as palavras.
-anno3 6 9b3ee2fbdf6878eb 6f83739cccadbb7b Aspereza `vr40 e respiracao `vf60 alteradas.
-anno3 7 c52703126b94054d e0f65914f2e336bc Uma \`crase literal lida como texto.
-anno3 8 7aae87a82d01f61e 975261cee34d3a1c Velocidade pelo nome `vsfast e depois `vsslow de volta.
-anno3 9 ff0cde4141748c9e ffa9da4c421d4a9c Tamanho da cabeca `vh30 depois `vh70 na mesma linha.
-anno3 10 891ce2362c9ab93c c0bcd7a79d0cf222 Genero `vg1 e `vg0 alternados.
-anno3 11 6dbcdbaf59b5cdbf 2e87e7d518634a0f Antes `ui"marca um" e depois da marca de indice.
-anno3 12 0351debcc1001d2f 28973d22971b8317 Marca `aud"bip" sonora no meio da linha.
-anno3 13 d50bd94ea963d925 f1be7baf263cbd0b `vs40 Anotacao logo no inicio da linha.
-anno3 14 8d023e377db7f73a 0bdacf91cfc3ac15 Termina com uma anotacao bem no fim da linha `vs60
-anno3 15 d85455296edd19a5 582b5a414283177d Erradas `vzz e `q e `v999 todas na mesma linha.
-anno3 16 c5649b3f6ee46805 7334386e3e0a52dc Duas `vs30`vv40 anotacoes sem nada entre elas.
-anno3 17 4ea1dd70c0db8555 14327295c00b8acc `ui"a"`ui"b" duas marcas sem nada entre elas.
-anno3 18 e5faa9f72011a5a5 6facd56542db85d1 Sem fechar `ui"marca que nunca termina
-anno3 19 f3d0a6f403043355 44cbba59ff864e75 Juntos `v3 voz `vs70 velocidade `vv50 volume de uma vez.
-anno3 20 ec598b382fa2bb38 9101bf38e907b329 Tabulacao	e quebra de linha `vb40 com mudanca.
-realworld 1 94f6fff789f49068 28fdb28a7307da0a Fala normal `vs50 agora muito mais devagar do que antes.
-realworld 2 748aa5da9a15c4b6 460245d5001f3e0c Volume `vv30 mais baixo, depois `vv90 mais alto de novo.
-realworld 3 6b7d04b205eb2a27 95c8692130c5cc03 Altura `vb20 grave e `vb80 aguda na mesma frase.
-realworld 4 76b8c689b7c736a9 16f578a98c4068ac Voz `v2 dois, `v5 cinco, e `v1 um de novo.
-realworld 5 7837294c5055e669 534f2efa4b57770c Pausa `0 curta e `4 longa entre as palavras.
-realworld 6 9b3ee2fbdf6878eb 8067dca8b30637e8 Aspereza `vr40 e respiracao `vf60 alteradas.
-realworld 7 c52703126b94054d c5bdf6d6d7656e80 Uma \`crase literal lida como texto.
-realworld 8 7aae87a82d01f61e 4065c5d504254246 Velocidade pelo nome `vsfast e depois `vsslow de volta.
-realworld 9 ff0cde4141748c9e a13b5a285129fc51 Tamanho da cabeca `vh30 depois `vh70 na mesma linha.
-realworld 10 891ce2362c9ab93c 9d6207691b1e0e08 Genero `vg1 e `vg0 alternados.
-realworld 11 6dbcdbaf59b5cdbf 15862700c1694cb8 Antes `ui"marca um" e depois da marca de indice.
-realworld 12 0351debcc1001d2f c623dcd458c8a529 Marca `aud"bip" sonora no meio da linha.
-realworld 13 4233262deda576a9 78360802b0a2883f `vs40 Anotacao logo no inicio da linha.
-realworld 14 8d023e377db7f73a 867d7c53eb797e36 Termina com uma anotacao bem no fim da linha `vs60
-realworld 15 d85455296edd19a5 fa3a403f6616de79 Erradas `vzz e `q e `v999 todas na mesma linha.
-realworld 16 3d59aaa905caf117 afdaae0581fe1eef Duas `vs30`vv40 anotacoes sem nada entre elas.
-realworld 17 4ea1dd70c0db8555 1dfa7f315ee2abab `ui"a"`ui"b" duas marcas sem nada entre elas.
-realworld 18 e5faa9f72011a5a5 d4bd9969c0a7e89e Sem fechar `ui"marca que nunca termina
-realworld 19 099b6749a1a0b774 b6e232977983c64f Juntos `v3 voz `vs70 velocidade `vv50 volume de uma vez.
-realworld 20 efeac1f58d9b664e b948865f3d7756b0 Tabulacao	e quebra de linha `vb40 com mudanca.
-dict 1 23ad65d9eb92b5cb 80045850334022a6 Sao tres horas e la fora esta chovendo muito.
-dict 2 7f3feb8f3a4e7d70 7c6a423da454ed9e O Dr. Pereira pagou R$ 1.234,56 no dia 3 de maio de 2026 as 19h45.
-dict 3 39e9618b82ee897f 90f649ef1fa63d65 O endereco e www.exemplo.com.br/caminho?q=1 e o telefone (11) 3456-7890.
-dict 4 2dad319220a0df33 2f9b83a9fc1e57aa Teste 1 2 3, ABC XYZ, palavra-com-hifen e LETRAS MAIUSCULAS.
-dict 5 59d86f1e6dc4f492 bb0ab9e8f243bfc8 Uma palavra por linha. E mais uma; alem disso "texto entre aspas" no meio.
-dict 6 0e3f4d5b61c47f4d fc61dc227f513d72 Inconstitucionalissimamente, Campinas e 42 % do total de 3,14159.
-dict 7 a01a473083a626ab 149897d4ca1a92f3 Ele disse: nao faca isso! Depois (de passagem) 1/2 + 3/4 = 5/4; veja p. 12.
-second 1 c1163a5754a6e1ef 1a36cd3c1ec41597 Sao tres horas e la fora esta chovendo muito.
-second 2 02f72202e5f716d5 ce3a1ce00e3c497b O Dr. Pereira pagou R$ 1.234,56 no dia 3 de maio de 2026 as 19h45.
-second 3 dbf42a49497fb805 4792a8fc19cfb9d2 O endereco e www.exemplo.com.br/caminho?q=1 e o telefone (11) 3456-7890.
-second 4 3abfc56ad45bbdb9 a2243900ea866bf9 Teste 1 2 3, ABC XYZ, palavra-com-hifen e LETRAS MAIUSCULAS.
-second 5 74bd842f8887fb7b 699b94987941e2f8 Uma palavra por linha. E mais uma; alem disso "texto entre aspas" no meio.
-second 6 ad2fc13a91062f85 225baa7eac08e817 Inconstitucionalissimamente, Campinas e 42 % do total de 3,14159.
-second 7 c02af099a3ec4118 e26245032784d82e Ele disse: nao faca isso! Depois (de passagem) 1/2 + 3/4 = 5/4; veja p. 12.
-ssml 1 e5138d76efddd544 da517611a70726c0 <speak version="1.0" xml:lang="pt-BR">Bom dia.</speak>
-ssml 2 890e243e307f90e2 06a701825841e28b <speak version="1.0" xml:lang="pt-BR"><prosody rate="slow">Agora mais devagar.</prosody> De novo normal.</speak>
-ssml 3 fd3c9efd2a1ec88c 86dab554c77e1cee <speak version="1.0" xml:lang="pt-BR"><prosody pitch="high" range="x-high" volume="loud">Todos os quatro de uma vez.</prosody></speak>
-ssml 4 cb3e68c19488e64c 99fac4426748f0ab <speak version="1.0" xml:lang="pt-BR"><emphasis level="strong">Este</emphasis>, nao aquele.</speak>
-ssml 5 fec6295c9e1e992e 0635966eb00b5356 <speak version="1.0" xml:lang="pt-BR"><voice gender="female">Ela disse isso.</voice> Mas ele nao.</speak>
-ssml 6 ea5235566bbb0a29 c5e625b2b34fb9a1 <speak version="1.0" xml:lang="pt-BR">Custou <say-as interpret-as="cardinal">1234</say-as> no dia <say-as interpret-as="ordinal">3</say-as>.</speak>
-ssml 7 7726e9af81aa466c 31cf8c1b62f5fcac <speak version="1.0" xml:lang="pt-BR">Soletre: <say-as interpret-as="letters">abc</say-as>, e ligue para <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
-ssml 8 d6740433fc82da28 318bb37215cc0b66 <speak version="1.0" xml:lang="pt-BR">Espere<break time="500ms"/>um pouco.<mark name="aqui"/> Ali.</speak>
-ssml 9 897b12324d434568 3d65ffe01d215c58 <speak version="1.0" xml:lang="pt-BR"><sub alias="rede mundial">WWW</sub> e <phoneme ph="h.E.l.oU">oi</phoneme>.</speak>
-ssml 10 3ffdb9c88dd9bff3 b8175a591c47fc0c <speak version="1.0" xml:lang="pt-BR">Ação e coração, a &amp; b &lt; c.</speak>
-wide 1 4f40d36fef584ba7 b3bf731dd5922621 Sao tres horas e la fora esta chovendo muito.
-wide 2 0aa26cca09232df2 bad30738a6b9f45f O Dr. Pereira pagou R$ 1.234,56 no dia 3 de maio de 2026 as 19h45.
-wide 3 d04f37d248770374 d23b041733d401a7 O endereco e www.exemplo.com.br/caminho?q=1 e o telefone (11) 3456-7890.
-wide 4 3eec6892178369ea 72c744873277894e Teste 1 2 3, ABC XYZ, palavra-com-hifen e LETRAS MAIUSCULAS.
-wide 5 833448c9acce3a9f de7817e050bebf63 Uma palavra por linha. E mais uma; alem disso "texto entre aspas" no meio.
-wide 6 b89008b43b1922d9 eeedcbd02ed0a9cc Inconstitucionalissimamente, Campinas e 42 % do total de 3,14159.
-wide 7 2412d66645f4f508 44d41f4ffe726773 Ele disse: nao faca isso! Depois (de passagem) 1/2 + 3/4 = 5/4; veja p. 12.
+plain 1 c0a6cf2c9d3923ba f243c9cbbc79190b Sao tres horas e la fora esta chovendo muito.
+plain 2 db39c4c896eaf2ea ac79c4b806601e4e O Dr. Pereira pagou R$ 1.234,56 no dia 3 de maio de 2026 as 19h45.
+plain 3 71d89525f4220051 df813fb609e7f646 O endereco e www.exemplo.com.br/caminho?q=1 e o telefone (11) 3456-7890.
+plain 4 dad467d006af3307 5f98046920670334 Teste 1 2 3, ABC XYZ, palavra-com-hifen e LETRAS MAIUSCULAS.
+plain 5 f1882979d506508a 468f61b31e0dccb4 Uma palavra por linha. E mais uma; alem disso "texto entre aspas" no meio.
+plain 6 a857ddcaafb1ae9e 1d9ae189ab5a3bc5 Inconstitucionalissimamente, Campinas e 42 % do total de 3,14159.
+plain 7 5caa52cc4eab7e23 77ad99560937e40e Ele disse: nao faca isso! Depois (de passagem) 1/2 + 3/4 = 5/4; veja p. 12.
+utf8 1 43a72f8abe4e31db 335c6f717bff066a Bom dia, como você está?
+utf8 2 7b2689e19e4860f0 653f1cd965a712ed Não se preocupe, tudo vai dar certo amanhã.
+utf8 3 dbbafa9a4e67bab1 5c74dcddf18e9b25 Ação, coração, pão, mãe e avô com a avó em São Luís.
+utf8 4 ac084373a17766b9 dbbd7de7149886af Açúcar, café, inglês, português e ótimo dia.
+utf8 5 71422e5fad7a77f2 669fca64e9edaca4 Atenciosamente, João Conceição.
+utf8 6 711bc7e56c3697ce e62badb1894cba21 Em junho, duas garças nadam no lago de Brasília.
+utf8 7 46c3a1efb81db9d4 a6ad22fff707d07f Esta frase foi escrita sem acentos para comparacao
+anno 1 ad1f4693ed5ff783 c79946d0ee868e33 Fala normal `vs50 agora muito mais devagar do que antes.
+anno 2 6c9df08574a7f51e 6baf586ba9b703dd Volume `vv30 mais baixo, depois `vv90 mais alto de novo.
+anno 3 e5a996a9df6aa7ba 2b6a1f4c1a448c89 Altura `vb20 grave e `vb80 aguda na mesma frase.
+anno 4 3e608572800d51cf 9f20e3efd9b2ce7e Voz `v2 dois, `v5 cinco, e `v1 um de novo.
+anno 5 5e1feabd60768a00 90b0bf36e9791755 Pausa `0 curta e `4 longa entre as palavras.
+anno 6 97951310380d7f4e 8a3eb90634aac56a Aspereza `vr40 e respiracao `vf60 alteradas.
+anno 7 38e774ece19cae86 206ad911292e2f72 Uma \`crase literal lida como texto.
+anno 8 22a521b0601e4d9d e8a95775bb0675cc Velocidade pelo nome `vsfast e depois `vsslow de volta.
+anno 9 4fd14a6fb77f0bf7 3b81ce4fefd616aa Tamanho da cabeca `vh30 depois `vh70 na mesma linha.
+anno 10 00a4b8795db6b859 69c7cc9fbad2c5c1 Genero `vg1 e `vg0 alternados.
+anno 11 bcf48dcf2d01e6f4 43598bc840d6f89c Antes `ui"marca um" e depois da marca de indice.
+anno 12 9ac297172098eb27 47af8fd3bf7a9a6f Marca `aud"bip" sonora no meio da linha.
+anno 13 cfc5f4296e3d227f ba2a1c44d62f5fa0 `vs40 Anotacao logo no inicio da linha.
+anno 14 0b622fb40f040c92 8c74ce4855aa7302 Termina com uma anotacao bem no fim da linha `vs60
+anno 15 df01a02c3360f5ee b87ba8fdcabe364c Erradas `vzz e `q e `v999 todas na mesma linha.
+anno 16 99dc22352096f0e8 a45e289ae47948d1 Duas `vs30`vv40 anotacoes sem nada entre elas.
+anno 17 77ebb6b4fb29099c a2a167269b07f61d `ui"a"`ui"b" duas marcas sem nada entre elas.
+anno 18 445c79a8c61f3c00 598ba37941b39586 Sem fechar `ui"marca que nunca termina
+anno 19 eee2fa7b1b667adb 5cc9cdfb2a070c5f Juntos `v3 voz `vs70 velocidade `vv50 volume de uma vez.
+anno 20 3b3fd1601efd4465 775ad5c3a1f0daad Tabulacao	e quebra de linha `vb40 com mudanca.
+anno3 1 8632983b2acf4c1b 4d544a3fbfa30d20 Fala normal `vs50 agora muito mais devagar do que antes.
+anno3 2 8d2d45d0a7a011d5 c108c5051b0bebe9 Volume `vv30 mais baixo, depois `vv90 mais alto de novo.
+anno3 3 1d3d524988ac9b05 36f25b82364e8118 Altura `vb20 grave e `vb80 aguda na mesma frase.
+anno3 4 1da03701813f2e2e eaa158078c2a52df Voz `v2 dois, `v5 cinco, e `v1 um de novo.
+anno3 5 e4ef8ff13e656249 9849ab8791e748a2 Pausa `0 curta e `4 longa entre as palavras.
+anno3 6 f5b13ed24356486e 6f83739cccadbb7b Aspereza `vr40 e respiracao `vf60 alteradas.
+anno3 7 38e774ece19cae86 e0f65914f2e336bc Uma \`crase literal lida como texto.
+anno3 8 397339d9d594b609 975261cee34d3a1c Velocidade pelo nome `vsfast e depois `vsslow de volta.
+anno3 9 87d723d258b1bf3e ffa9da4c421d4a9c Tamanho da cabeca `vh30 depois `vh70 na mesma linha.
+anno3 10 ea77ba23665833bd c0bcd7a79d0cf222 Genero `vg1 e `vg0 alternados.
+anno3 11 b6a9c28702a25c02 2e87e7d518634a0f Antes `ui"marca um" e depois da marca de indice.
+anno3 12 0a755057d91d569e 28973d22971b8317 Marca `aud"bip" sonora no meio da linha.
+anno3 13 f2e1d2bcc7f11cf2 f1be7baf263cbd0b `vs40 Anotacao logo no inicio da linha.
+anno3 14 cb4f3fdee559b458 0bdacf91cfc3ac15 Termina com uma anotacao bem no fim da linha `vs60
+anno3 15 df01a02c3360f5ee 582b5a414283177d Erradas `vzz e `q e `v999 todas na mesma linha.
+anno3 16 a38937a29297a882 7334386e3e0a52dc Duas `vs30`vv40 anotacoes sem nada entre elas.
+anno3 17 eaa544f4949f6e4d 14327295c00b8acc `ui"a"`ui"b" duas marcas sem nada entre elas.
+anno3 18 445c79a8c61f3c00 6facd56542db85d1 Sem fechar `ui"marca que nunca termina
+anno3 19 bbc8812174a522bb 44cbba59ff864e75 Juntos `v3 voz `vs70 velocidade `vv50 volume de uma vez.
+anno3 20 c4046e0a83f9f447 9101bf38e907b329 Tabulacao	e quebra de linha `vb40 com mudanca.
+realworld 1 502988241230c5b5 28fdb28a7307da0a Fala normal `vs50 agora muito mais devagar do que antes.
+realworld 2 78be6b68f2e93ca8 460245d5001f3e0c Volume `vv30 mais baixo, depois `vv90 mais alto de novo.
+realworld 3 754b0cd6af615805 95c8692130c5cc03 Altura `vb20 grave e `vb80 aguda na mesma frase.
+realworld 4 1da03701813f2e2e 16f578a98c4068ac Voz `v2 dois, `v5 cinco, e `v1 um de novo.
+realworld 5 e4ef8ff13e656249 534f2efa4b57770c Pausa `0 curta e `4 longa entre as palavras.
+realworld 6 f5b13ed24356486e 8067dca8b30637e8 Aspereza `vr40 e respiracao `vf60 alteradas.
+realworld 7 38e774ece19cae86 c5bdf6d6d7656e80 Uma \`crase literal lida como texto.
+realworld 8 397339d9d594b609 4065c5d504254246 Velocidade pelo nome `vsfast e depois `vsslow de volta.
+realworld 9 87d723d258b1bf3e a13b5a285129fc51 Tamanho da cabeca `vh30 depois `vh70 na mesma linha.
+realworld 10 ea77ba23665833bd 9d6207691b1e0e08 Genero `vg1 e `vg0 alternados.
+realworld 11 b6a9c28702a25c02 15862700c1694cb8 Antes `ui"marca um" e depois da marca de indice.
+realworld 12 0a755057d91d569e c623dcd458c8a529 Marca `aud"bip" sonora no meio da linha.
+realworld 13 e5db8587e9659cd2 78360802b0a2883f `vs40 Anotacao logo no inicio da linha.
+realworld 14 cb4f3fdee559b458 867d7c53eb797e36 Termina com uma anotacao bem no fim da linha `vs60
+realworld 15 df01a02c3360f5ee fa3a403f6616de79 Erradas `vzz e `q e `v999 todas na mesma linha.
+realworld 16 11b176ed756e5d4f afdaae0581fe1eef Duas `vs30`vv40 anotacoes sem nada entre elas.
+realworld 17 eaa544f4949f6e4d 1dfa7f315ee2abab `ui"a"`ui"b" duas marcas sem nada entre elas.
+realworld 18 445c79a8c61f3c00 d4bd9969c0a7e89e Sem fechar `ui"marca que nunca termina
+realworld 19 6711a5b2934a4682 b6e232977983c64f Juntos `v3 voz `vs70 velocidade `vv50 volume de uma vez.
+realworld 20 4d7a400438f1d3d1 b948865f3d7756b0 Tabulacao	e quebra de linha `vb40 com mudanca.
+dict 1 c0a6cf2c9d3923ba 80045850334022a6 Sao tres horas e la fora esta chovendo muito.
+dict 2 db39c4c896eaf2ea 7c6a423da454ed9e O Dr. Pereira pagou R$ 1.234,56 no dia 3 de maio de 2026 as 19h45.
+dict 3 71d89525f4220051 90f649ef1fa63d65 O endereco e www.exemplo.com.br/caminho?q=1 e o telefone (11) 3456-7890.
+dict 4 dad467d006af3307 2f9b83a9fc1e57aa Teste 1 2 3, ABC XYZ, palavra-com-hifen e LETRAS MAIUSCULAS.
+dict 5 f1882979d506508a bb0ab9e8f243bfc8 Uma palavra por linha. E mais uma; alem disso "texto entre aspas" no meio.
+dict 6 a857ddcaafb1ae9e fc61dc227f513d72 Inconstitucionalissimamente, Campinas e 42 % do total de 3,14159.
+dict 7 5caa52cc4eab7e23 149897d4ca1a92f3 Ele disse: nao faca isso! Depois (de passagem) 1/2 + 3/4 = 5/4; veja p. 12.
+second 1 1b2d3a64ac10544c 1a36cd3c1ec41597 Sao tres horas e la fora esta chovendo muito.
+second 2 4738065d86fdde3a ce3a1ce00e3c497b O Dr. Pereira pagou R$ 1.234,56 no dia 3 de maio de 2026 as 19h45.
+second 3 5f82d2b3bbd4f8ee 4792a8fc19cfb9d2 O endereco e www.exemplo.com.br/caminho?q=1 e o telefone (11) 3456-7890.
+second 4 c668ba63c0e771f9 a2243900ea866bf9 Teste 1 2 3, ABC XYZ, palavra-com-hifen e LETRAS MAIUSCULAS.
+second 5 7944b76c32c32cd5 699b94987941e2f8 Uma palavra por linha. E mais uma; alem disso "texto entre aspas" no meio.
+second 6 734419c690ce905a 225baa7eac08e817 Inconstitucionalissimamente, Campinas e 42 % do total de 3,14159.
+second 7 a5f383b09adfcaa8 e26245032784d82e Ele disse: nao faca isso! Depois (de passagem) 1/2 + 3/4 = 5/4; veja p. 12.
+ssml 1 67f855a043141fbf da517611a70726c0 <speak version="1.0" xml:lang="pt-BR">Bom dia.</speak>
+ssml 2 ca500661d1cd4e9e 06a701825841e28b <speak version="1.0" xml:lang="pt-BR"><prosody rate="slow">Agora mais devagar.</prosody> De novo normal.</speak>
+ssml 3 abfb238d00e362c9 86dab554c77e1cee <speak version="1.0" xml:lang="pt-BR"><prosody pitch="high" range="x-high" volume="loud">Todos os quatro de uma vez.</prosody></speak>
+ssml 4 9580152bfe4da2ca 99fac4426748f0ab <speak version="1.0" xml:lang="pt-BR"><emphasis level="strong">Este</emphasis>, nao aquele.</speak>
+ssml 5 dfd94448bf21eaa5 0635966eb00b5356 <speak version="1.0" xml:lang="pt-BR"><voice gender="female">Ela disse isso.</voice> Mas ele nao.</speak>
+ssml 6 078c5afe8b28aa9d c5e625b2b34fb9a1 <speak version="1.0" xml:lang="pt-BR">Custou <say-as interpret-as="cardinal">1234</say-as> no dia <say-as interpret-as="ordinal">3</say-as>.</speak>
+ssml 7 1328a13f192e6b52 31cf8c1b62f5fcac <speak version="1.0" xml:lang="pt-BR">Soletre: <say-as interpret-as="letters">abc</say-as>, e ligue para <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+ssml 8 d81272c703efee9d 318bb37215cc0b66 <speak version="1.0" xml:lang="pt-BR">Espere<break time="500ms"/>um pouco.<mark name="aqui"/> Ali.</speak>
+ssml 9 5fa96089d5ec3569 3d65ffe01d215c58 <speak version="1.0" xml:lang="pt-BR"><sub alias="rede mundial">WWW</sub> e <phoneme ph="h.E.l.oU">oi</phoneme>.</speak>
+ssml 10 0198e45207fc6c09 b8175a591c47fc0c <speak version="1.0" xml:lang="pt-BR">Ação e coração, a &amp; b &lt; c.</speak>
+wide 1 6bc3d9be622ece76 b3bf731dd5922621 Sao tres horas e la fora esta chovendo muito.
+wide 2 4e1b0612dc25cb02 bad30738a6b9f45f O Dr. Pereira pagou R$ 1.234,56 no dia 3 de maio de 2026 as 19h45.
+wide 3 53841c992568c840 d23b041733d401a7 O endereco e www.exemplo.com.br/caminho?q=1 e o telefone (11) 3456-7890.
+wide 4 c68dfbd23d429eb8 72c744873277894e Teste 1 2 3, ABC XYZ, palavra-com-hifen e LETRAS MAIUSCULAS.
+wide 5 ec2f5137ace98cab de7817e050bebf63 Uma palavra por linha. E mais uma; alem disso "texto entre aspas" no meio.
+wide 6 a08f5d21b4a63efb eeedcbd02ed0a9cc Inconstitucionalissimamente, Campinas e 42 % do total de 3,14159.
+wide 7 a63b28eeb0fb0b05 44d41f4ffe726773 Ele disse: nao faca isso! Depois (de passagem) 1/2 + 3/4 = 5/4; veja p. 12.

@@ -450,6 +450,19 @@ static int32_t cell_word(const Cell *c)
     return c->pad == DG_FIXED ? delta_fixed_int(c->l) : c->w;
 }
 
+/* The volume, which IBM's synthesiser takes in hundredths of the factor it
+   scales the samples by -- English hands it 202 -- and 6.1 hands over as the
+   factor itself, 2.02, which its own synthesiser takes as a float. Cut to a
+   whole number like the rest it was 2, two hundredths, and Finnish and
+   Portuguese came out forty decibels quieter than 6.1. */
+static int32_t cell_hundredths(const Cell *c)
+{
+    if (c->pad != DG_FIXED)
+        return c->w;
+    return (int32_t)(((int64_t)c->l * 100 + DELTA_FIXED_ONE / 2)
+                     / DELTA_FIXED_ONE);
+}
+
 /* The parameter frame the synthesiser works from, and the defaults every
    frame starts at: a hundred hertz, the eight formants at five hundred,
    fifteen hundred, twenty-five hundred and so on, and everything not named
@@ -619,7 +632,7 @@ int callSynthesizeArray(DeltaThis *d, Cell *rate, Cell *c2, Cell *c3,
     v10 = cell_word(c10);
     v11 = cell_word(c11);
     v12 = cell_word(c12);
-    v13 = cell_word(c13);
+    v13 = cell_hundredths(c13);
 
     for (i = 0; i < FRAME_WORDS; i++)
         frame[i] = 0;
