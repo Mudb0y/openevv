@@ -1,0 +1,20 @@
+Fala normal `vs50 agora muito mais devagar do que antes.
+Volume `vv30 mais baixo, depois `vv90 mais alto de novo.
+Altura `vb20 grave e `vb80 aguda na mesma frase.
+Voz `v2 dois, `v5 cinco, e `v1 um de novo.
+Pausa `0 curta e `4 longa entre as palavras.
+Aspereza `vr40 e respiracao `vf60 alteradas.
+Uma \`crase literal lida como texto.
+Velocidade pelo nome `vsfast e depois `vsslow de volta.
+Tamanho da cabeca `vh30 depois `vh70 na mesma linha.
+Genero `vg1 e `vg0 alternados.
+Antes `ui"marca um" e depois da marca de indice.
+Marca `aud"bip" sonora no meio da linha.
+`vs40 Anotacao logo no inicio da linha.
+Termina com uma anotacao bem no fim da linha `vs60
+Erradas `vzz e `q e `v999 todas na mesma linha.
+Duas `vs30`vv40 anotacoes sem nada entre elas.
+`ui"a"`ui"b" duas marcas sem nada entre elas.
+Sem fechar `ui"marca que nunca termina
+Juntos `v3 voz `vs70 velocidade `vv50 volume de uma vez.
+Tabulacao	e quebra de linha `vb40 com mudanca.

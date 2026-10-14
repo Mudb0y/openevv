@@ -48,6 +48,9 @@ move underneath it.
     nix build --no-link nixpkgs#voikko-fi.src
     tools/measure/wordlist.py fifi > test/cases/words-fifi.txt
 
+    nix build --no-link nixpkgs#hunspellDicts.pt_BR
+    tools/measure/wordlist.py ptbr > test/cases/words-ptbr.txt
+
 usage: tools/measure/wordlist.py <tag> [count]
 """
 
@@ -93,6 +96,8 @@ SOURCES = {
     # anything installed.
     'fifi': ('/nix/store/*-source/voikko-fi/vocabulary/joukahainen.xml',
              'nixpkgs#voikko-fi.src', 'a-zåäö'),
+    'ptbr': ('/nix/store/*-hunspell-dict-pt-br-*/share/hunspell/pt_BR.dic',
+             'nixpkgs#hunspellDicts.pt_BR', 'a-záâãàçéêíóôõúü'),
 }
 
 # What a source is read as and what the list is written in, where that is not
@@ -102,6 +107,9 @@ SOURCES = {
 # its letters, so every word with one of them would be dropped.
 ENCODINGS = {
     'plpl': ('iso8859-2', 'utf-8'),
+    # LibreOffice's Brazilian Portuguese is ISO 8859-1, which the Western set
+    # holds every letter of.
+    'ptbr': ('iso8859-1', 'cp1252'),
 }
 
 

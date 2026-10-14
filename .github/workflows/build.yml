@@ -83,7 +83,7 @@ jobs:
       - name: Build what ships
         run: |
           set -eu
-          langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca itit plpl jajp fifi)
+          langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca itit plpl jajp fifi ptbr)
           make -j"$(nproc)" RULES=c EVVPLAIN=1 LANGS="$langs" so all
 
       # Staged into a directory of its own so the artifact holds four files
@@ -206,7 +206,7 @@ jobs:
       # byte for byte. Wants no objects and no Wine, and takes seconds.
       - name: Check the tables beside the rules
         run: |
-          make LANGS="$(printf 'lang/%s ' enus dede engb eses esus frfr frca itit plpl fifi)" \
+          make LANGS="$(printf 'lang/%s ' enus dede engb eses esus frfr frca itit plpl fifi ptbr)" \
                tables-check
 
       # Every language module builds and speaks, which wants neither Wine nor
@@ -264,28 +264,28 @@ jobs:
       # Every language alive in one process through the library, each held to
       # what it says alone. The binary check below is the same question asked
       # of the probe; this one asks it of the thing a program actually loads,
-      # and it is what says a release carrying all eleven will speak all eleven.
+      # and it is what says a release carrying all twelve will speak all twelve.
       - name: Every language from one library
         run: |
           set -eu
-          all=$(printf 'lang/%s ' enus dede engb eses esus frfr frca itit plpl jajp fifi)
+          all=$(printf 'lang/%s ' enus dede engb eses esus frfr frca itit plpl jajp fifi ptbr)
           make -j"$(nproc)" RULES=bytecode so LANGS="$all"
           python3 test/lib/langs.py \
-            build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp-fifi.so
+            build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp-fifi-ptbr.so
           python3 test/lib/dictlangs.py \
-            build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp-fifi.so
+            build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp-fifi-ptbr.so
           python3 test/lib/pauses.py \
-            build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp-fifi.so
+            build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp-fifi-ptbr.so
 
       # And all of them in one binary, each still speaking: this is what says
       # nothing in the engine has quietly stayed global.
       - name: Speak every language out of one binary
         run: |
           set -eu
-          all=$(printf 'lang/%s ' enus dede engb eses esus frfr frca itit plpl jajp fifi)
+          all=$(printf 'lang/%s ' enus dede engb eses esus frfr frca itit plpl jajp fifi ptbr)
           make -j"$(nproc)" probe RULES=bytecode LANGS="$all"
-          b=build/probe-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp-fifi
-          for id in 0x10000 0x10001 0x20000 0x20001 0x30000 0x30001 0x40000 0x50000 0x110000 0x80000 0x90000; do
+          b=build/probe-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp-fifi-ptbr
+          for id in 0x10000 0x10001 0x20000 0x20001 0x30000 0x30001 0x40000 0x50000 0x110000 0x80000 0x90000 0x70000; do
             EVV_LANGUAGE=$id "$b" "The quick brown fox." "/tmp/one-$id.wav"
             test -s "/tmp/one-$id.wav"
           done
@@ -303,7 +303,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lang: [enus, engb, dede, eses, esus, frfr, frca, itit, fifi]
+        lang: [enus, engb, dede, eses, esus, frfr, frca, itit, fifi, ptbr]
     steps:
       - uses: actions/checkout@v7
 
@@ -335,7 +335,7 @@ jobs:
       - name: Build
         run: |
           set -eu
-          langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca itit plpl jajp fifi)
+          langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca itit plpl jajp fifi ptbr)
           case "$GITHUB_REF" in
           refs/tags/v*) version=${GITHUB_REF_NAME#v} ;;
           *)            version=0.0.0 ;;

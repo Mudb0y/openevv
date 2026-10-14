@@ -47,11 +47,12 @@ Felix Steindorff's, from openevv-nvda.
 IBM's
 -----
 
-Everything under `lang` but `lang/fifi` is transcribed out of IBM's Embedded
-ViaVoice objects: `lang/enus` is US English, `lang/dede` is German,
-`lang/engb` is British English, `lang/eses` and `lang/esus` are the two
+Everything under `lang` but `lang/fifi` and `lang/ptbr` is transcribed out of
+IBM's Embedded ViaVoice objects: `lang/enus` is US English, `lang/dede` is
+German, `lang/engb` is British English, `lang/eses` and `lang/esus` are the two
 Spanishes, `lang/frfr` and `lang/frca` the two Frenches and `lang/itit` is
-Italian. `lang/fifi` is ETI's, and the section after this one says so.
+Italian. `lang/fifi` and `lang/ptbr` are ETI's, and the section after this one
+says so.
 
 `lang/jajp` is Japanese and is not in the tree, because a language module that
 cannot yet make an instance would break any build that named it. What that
@@ -171,6 +172,10 @@ another way. The one rule in `rules/written.up` was written here because the
 lifter could not read 6.1's, and it says what 6.1's does, so it is a
 transcription and on the same footing. None of it is ours to license.
 
+`lang/ptbr`, Brazilian Portuguese, is ETI Eloquence 6.1's on exactly the same
+terms, read out of the Portuguese module Apple ships, and the one rule in its
+`rules/written.up` is the same transcription as Finnish's.
+
 Where it came from
 ------------------
 
@@ -182,9 +187,10 @@ IBM's Embedded ViaVoice 4.3 SDK for Windows, which IBM still serves at
 `tools`, so anything under `lang` can be produced again from IBM's own file
 rather than taken on trust.
 
-What is ETI's came out of `enu.dylib`, `eng.dylib` and `fin.dylib` as Apple's
-tvOS 18.2 ships them, read by `tools/rules/lift64.py` and
-`tools/module/lift61.py`, which work on any of Apple's modules of that engine.
+What is ETI's came out of `enu.dylib`, `eng.dylib`, `fin.dylib` and
+`ptb.dylib` as Apple's tvOS 18.2 ships them, read by `tools/rules/lift64.py`
+and `tools/module/lift61.py`, which work on any of Apple's modules of that
+engine.
 
 Measured against
 ----------------
@@ -194,6 +200,12 @@ vocabulary of the Voikko project's Finnish (https://voikko.puimula.org),
 whose copyright holders are listed in its CONTRIBUTORS and which is published
 under the GNU General Public License, version 2 or later. Only the words are
 here, lowercased; `tools/measure/wordlist.py` says how they were chosen.
+
+`test/cases/words-ptbr.txt` is twenty thousand words spread through VERO, the
+Brazilian Portuguese spelling dictionary LibreOffice ships, copyright
+Raimundo Santos Moura and published under the GNU Lesser General Public
+License, version 3, and the Mozilla Public License. Only the words are here,
+lowercased, chosen the same way.
 
 The Polish intonation numbers in `docs/status.md` were measured from FLEURS
 (https://huggingface.co/datasets/google/fleurs), read speech published by

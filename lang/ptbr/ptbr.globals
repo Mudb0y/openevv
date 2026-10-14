@@ -1,0 +1,112 @@
+# The machine's global variables, as ptbr declares them.
+#
+# One line to a kind and how many in a row, in the order the language declares
+# them, which is the order that decides both where each lands in the tail of
+# the machine and what its number is. A compound says what it holds: the kind
+# of item and how many.
+#
+# A `name' line gives one of them a name of ours: the kind, then which one of
+# that kind it is counting from nought, then what to call it. IBM's own names
+# are gone -- the only record of the list is a disassembly that carries kinds
+# and not names -- so these are what the language is worked out to mean, and a
+# rule written in the upper form can then say `set f1_locus to 1000' rather
+# than naming a byte offset. Nothing here is required, and a name that is
+# wrong is a wrong name rather than a wrong build.
+#
+# Written by tools/module/globals.py. Where each variable lands and how big a
+# machine of this language is are not in here -- they follow from the kinds,
+# by the same walk delta_new does.
+
+word 19
+short 1
+word 5
+short 12
+word 10
+short 26
+fixed 6
+short 1
+word 3
+short 2
+word 1
+short 3
+word 33
+fixed 2
+compound 1 6
+compound 1 6
+compound 1 6
+compound 7 2
+compound 8 2
+compound 0 2
+short 42
+fixed 11
+short 5
+word 3
+short 3
+compound 1 6
+short 16
+word 4
+short 1
+word 1
+short 137
+compound 5 10
+compound 5 10
+compound 5 10
+short 40
+word 1
+short 3
+fixed 2
+short 43
+long 1
+compound 2 16
+compound 6 48
+compound 2 16
+fixed 1
+short 1
+compound 1 6
+short 1
+long 1
+short 3
+word 1
+short 5
+long 1
+short 10
+word 6
+short 2
+fixed 1
+short 6
+fixed 10
+short 11
+fixed 1
+short 84
+word 1
+fixed 2
+word 1
+short 9
+compound 6 48
+compound 6 48
+compound 6 48
+short 2
+word 1
+fixed 2
+short 2
+word 4
+short 1
+fixed 1
+short 1
+word 1
+short 15
+fixed 3
+word 1
+short 2
+compound 5 10
+compound 2 16
+compound 2 16
+short 1
+fixed 3
+short 6
+fixed 1
+short 81
+fixed 11
+short 14
+word 2
+short 1

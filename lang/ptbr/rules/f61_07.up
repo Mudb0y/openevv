@@ -1,0 +1,386 @@
+# The rules of Brazilian Portuguese, lifted by tools/rules/lift64.py out of ETI
+# Eloquence 6.1 as Apple ships it, by tools/module/lift61.py. Each says
+# `instead' because it is written afresh rather than re-expressed from one of
+# IBM's: nothing of IBM's is under it.
+
+rule synthesizeRange takes 7
+  instead
+  local cf0 bytes 8
+  local c108 bytes 8
+  local c118 bytes 8
+  local c128 bytes 8
+  local c138 bytes 8
+  local c148 bytes 8
+  local vf8 word
+  local h_r15
+  local h_rsi
+  local sfbdf
+  place pfa1b
+  set vf8 to arg 5
+  set h_r15 to arg 1
+  place pfa63
+  place pfac3
+  set h_rsi to addr cf0
+  call get_parm h_rsi arg 1 -4
+  set h_rsi to addr c108
+  set h_r15 to -6
+  call get_parm h_rsi arg 2 -6
+  set h_rsi to addr c148
+  call get_parm h_rsi arg 3 -6
+  set h_rsi to addr c138
+  call get_parm h_rsi arg 4 -5
+  set h_rsi to addr c128
+  call get_parm h_rsi arg 5 -5
+  set h_rsi to addr c118
+  call get_parm h_rsi arg 6 -5
+  call fence 0 sym eti_null
+  set h_rsi to addr c108
+  call PhonemeIndex h_rsi addr c148
+  set h_r15 to 0
+  place pfb7a
+  place tfb7a_1 on 1
+  set h_r15 to unwind
+  if global half 2854 is not 0
+    match
+  end
+  place pfb88
+  if global half 2858 is not 0
+    match
+  end
+  place pfb96
+  set h_rsi to 2
+  call starttest_l h_rsi
+  set h_rsi to 3
+  call bspush_ca_boa h_rsi
+  set h_rsi to addr cf0
+  call callInternalSynthesizer h_rsi addr c108 addr c148 addr c138 addr c128 addr c118
+  set sfbdf to answer
+  set h_rsi to 1
+  if sfbdf is 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place pfbeb
+  set h_rsi to h_r15
+  set unwind to h_rsi
+  backtrack
+  place pfc23
+  place tfc23_3 on 3
+  set h_r15 to unwind
+  call bspop_boa
+  give up
+  place tm_2 on 2
+  match
+end
+
+rule set_klattparms takes 1
+  instead
+  local vf8 word
+  local h_rax
+  local h_rdx
+  local h_xmm0
+  local h_xmm1
+  variable g1068 word 2812
+  variable g1270 word 3276
+  variable gfcc word 2728
+  variable gfd4 word 2736
+  place pfc44
+  place pfc79
+  place pfcd9
+  call fence 0 sym eti_null
+  set global half 3278 to 3
+  set h_rdx to addr g1270
+  call copyvar addr gfcc h_rdx
+  set h_rax to answer
+  and 0 into global half 2834
+  set global half 3278 to 4
+  set h_rdx to 1
+  call if_testeq_v_i addr g1270 h_rdx
+  set h_rax to answer
+  if h_rax is 0
+    go to pfd36
+  end
+  place pfd26
+  place tfd26_1 on 1
+  set h_rax to global half 2826
+  set global half 2822 to h_rax
+  go to pfd68
+  place pfd36
+  set h_rax to global half 2830
+  set global half 2822 to h_rax
+  set global half 3278 to 5
+  set h_rdx to 30
+  call if_testgt_v_i addr g1270 h_rdx
+  set h_rax to answer
+  if h_rax is not 0
+    go to pfd68
+  end
+  place pfd5f
+  set global half 2834 to 1
+  place pfd68
+  set h_rax to addr gfd4
+  set vf8 to addr gfd4
+  place pfd84
+  place tfd84_2 on 2
+  place tfd84_3 on 3
+  call set_num_formants
+  set h_rax to answer
+  place pfd8c
+  place tfd8c_4 on 4
+  set global half 3278 to 1
+  set h_rdx to addr g1270
+  call copyvar addr gfd4 h_rdx
+  set h_rax to answer
+  if global half 2834 is not 1
+    go to pfdef
+  end
+  place pfdb1
+  set h_rax to 10000000
+  set global word 2760 to 10000000
+  set global word 2768 to 10000000
+  set global word 2744 to 0
+  set h_rax to 900000
+  set global word 2752 to 900000
+  set h_xmm0 to 50000
+  go to pff24
+  place pfdef
+  place tfdef_5 on 5
+  if global half 2734 is not 3
+    go to pfe51
+  end
+  place pfdf9
+  set h_rax to 10000000
+  set global word 2760 to 10000000
+  set global word 2768 to 10000000
+  set h_rax to 1000000
+  set global word 2744 to 1000000
+  set h_rax to 150000
+  set global word 2752 to 150000
+  set h_rax to 70000
+  set global word 2784 to 70000
+  set h_xmm0 to 70000
+  go to pff24
+  place pfe51
+  place tfe51_7 on 7
+  set global half 3278 to 4
+  set h_rdx to 1
+  call if_testeq_v_i addr g1270 h_rdx
+  set h_rax to answer
+  if h_rax is 0
+    go to pfec9
+  end
+  place pfe6c
+  place tfe6c_8 on 8
+  set h_rax to 3500000
+  set global word 2760 to 3500000
+  set h_rax to 5000000
+  set global word 2768 to 5000000
+  set global word 2776 to 5000000
+  set global word 2744 to 0
+  set h_rax to 900000
+  set global word 2752 to 900000
+  set h_rax to 40000
+  set global word 2784 to 40000
+  set h_xmm0 to 40000
+  go to pff24
+  place pfec9
+  set h_rax to 3500000
+  set global word 2760 to 3500000
+  set h_rax to 5000000
+  set global word 2768 to 5000000
+  set global word 2776 to 5000000
+  set global word 2744 to 0
+  set h_rax to 900000
+  set global word 2752 to 900000
+  set h_rax to 30000
+  set global word 2784 to 30000
+  set h_xmm0 to 30000
+  place pff24
+  set h_rax to global signed half 2738
+  add -100 to h_rax
+  set h_xmm1 to h_rax
+  multiply 10000 into h_xmm1
+  scale h_xmm1 by 2500 over 10000
+  add h_xmm0 to h_xmm1
+  set global word 2784 to h_xmm1
+  set h_rax to 60000
+  set global word 2800 to 60000
+  set global half 3278 to 4
+  set h_rdx to 1
+  call if_testeq_v_i addr g1270 h_rdx
+  set h_rax to answer
+  set h_xmm0 to -30000
+  if h_rax is 0
+    go to pff82
+  end
+  place pff7a
+  place tff7a_9 on 9
+  set h_xmm0 to -50000
+  place pff82
+  set global word 2808 to h_xmm0
+  place pff8a
+  place tff8a_10 on 10
+  call starttest 11
+  set h_rax to answer
+  call bspush_ca 12
+  set h_rax to answer
+  set global half 3278 to 4
+  set h_rdx to 0
+  place pffb2
+  call if_testeq_v_i addr g1270 h_rdx
+  set h_rax to answer
+  if h_rax is 0
+    go to p1000b
+  end
+  set unwind to 0
+  backtrack
+  place pffea
+  place tffea_12 on 12
+  set global half 3278 to 4
+  set h_rdx to 2
+  go to pffb2
+  place pfffe
+  place tfffe_6 on 6
+  set h_xmm0 to global word 2784
+  go to pff24
+  place p1000b
+  place t1000b_13 on 13
+  set h_xmm0 to 0
+  go to p10033
+  place p10010
+  place t10010_11 on 11
+  set global half 3278 to 4
+  set h_rdx to 1
+  call if_testeq_v_i addr g1270 h_rdx
+  set h_rax to answer
+  if h_rax is 0
+    go to p10065
+  end
+  place p1002b
+  place t1002b_15 on 15
+  set h_xmm0 to -100000
+  place p10033
+  set global word 2792 to h_xmm0
+  place p1003b
+  place t1003b_14 on 14
+  set global half 3278 to 8
+  set h_rdx to addr g1270
+  call copyvar addr g1068 h_rdx
+  set h_rax to answer
+  match
+  place p10065
+  set h_xmm0 to -70000
+  go to p10033
+end
+
+rule set_num_formants takes 1
+  instead
+  local h_r15
+  local h_rax
+  local h_rcx
+  local h_rdx
+  local s101bf
+  local s101d8
+  local n10184_0
+  variable g1270 word 3276
+  place p100b0
+  place p100e1
+  place p1013d
+  call fence 0 sym eti_null
+  set h_rax to global half 2838
+  if h_rax is 0
+    go to p101a4
+  end
+  place p10151
+  set global half 2734 to h_rax
+  place p10158
+  set global half 3278 to 3
+  set h_rdx to 8000
+  call if_testeq_v_i addr g1270 h_rdx
+  set h_rax to answer
+  if h_rax is not 0
+    match
+  end
+  place p10179
+  set h_rax to global half 2734
+  set h_rcx to h_rax
+  decrement h_rcx
+  set n10184_0 to h_rax
+  shift left 16 into n10184_0
+  shift right 16 into n10184_0
+  set h_rax to 3
+  if n10184_0 is at least 3
+    set h_rax to h_rcx
+  end
+  set global half 2734 to h_rax
+  match
+  place p101a4
+  set global half 3278 to 3
+  set h_rdx to 16000
+  call if_testeq_v_i addr g1270 h_rdx
+  set s101bf to answer
+  set h_rax to s101bf
+  set h_r15 to h_rax
+  set global half 3278 to 4
+  set h_rdx to 0
+  call if_testeq_v_i addr g1270 h_rdx
+  set s101d8 to answer
+  set h_rax to s101d8
+  if h_r15 is 0
+    go to p1022d
+  end
+  place p101e2
+  if h_rax is 0
+    go to p10250
+  end
+  place p101e6
+  set global half 3278 to 4
+  set h_rdx to 1
+  call if_testeq_v_i addr g1270 h_rdx
+  set h_rax to answer
+  if h_rax is not 0
+    go to p10158
+  end
+  place p10205
+  set global half 3278 to 5
+  set h_rdx to 30
+  call if_testge_v_i addr g1270 h_rdx
+  set h_rax to answer
+  if h_rax is 0
+    go to p10279
+  end
+  place p10220
+  set global half 3278 to 5
+  set h_rdx to 40
+  go to p1025b
+  place p1022d
+  if h_rax is 0
+    go to p10287
+  end
+  place p10231
+  set global half 3278 to 4
+  set h_rdx to 1
+  call if_testeq_v_i addr g1270 h_rdx
+  set h_rax to answer
+  if h_rax is not 0
+    go to p10158
+  end
+  place p10250
+  set global half 3278 to 5
+  set h_rdx to 30
+  place p1025b
+  call if_testge_v_i addr g1270 h_rdx
+  set h_rax to answer
+  if h_rax is 0
+    go to p10279
+  end
+  place p1026b
+  set global half 2734 to 5
+  go to p10158
+  place p10279
+  set global half 2734 to 4
+  go to p10158
+  place p10287
+  set global half 2734 to 7
+  go to p10158
+end

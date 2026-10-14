@@ -1,0 +1,730 @@
+# The rules of Brazilian Portuguese, lifted by tools/rules/lift64.py out of ETI
+# Eloquence 6.1 as Apple ships it, by tools/module/lift61.py. Each says
+# `instead' because it is written afresh rather than re-expressed from one of
+# IBM's: nothing of IBM's is under it.
+
+rule init_platform takes 1
+  instead
+  local cf0 bytes 8
+  local c108 bytes 8
+  local c120 bytes 10
+  local h_r15
+  local s4f54
+  place p4e67
+  place p4e9c
+  place p4efc
+  and 0 into cell c120 half 4
+  and 0 into cell c120 word 0
+  and 0 into cell c108 half 0
+  set c120 to -65535
+  set c108 to -65536
+  set cf0 to 65532
+  call fence 0 sym eti_null
+  call starttest 1
+  call bspush_ca_boa 2
+  call initializeIO
+  set s4f54 to answer
+  set h_r15 to 0
+  set h_r15 to 0
+  if s4f54 is 0
+    set h_r15 to 1
+  end
+  set unwind to h_r15
+  backtrack
+  place p4fa0
+  place t4fa0_1 on 1
+  set h_r15 to unwind
+  call turnLazyWriteOn
+  place p4fa8
+  place t4fa8_3 on 3
+  set h_r15 to unwind
+  call starttest 4
+  call move_i addr cf0 2
+  call setNonSequential addr cf0 addr c120 addr c108
+  if answer is not 0
+    set unwind to h_r15
+    backtrack
+  end
+  place p4fe1
+  place t4fe1_4 on 4
+  set h_r15 to unwind
+  call open_input 6
+  place p4fec
+  place t4fec_5 on 5
+  set h_r15 to unwind
+  call open_output 8
+  place p4ff7
+  place t4ff7_6 on 6
+  set h_r15 to unwind
+  call open_output 11
+  match
+  place p5011
+  place t5011_2 on 2
+  set h_r15 to unwind
+  call bspop_boa
+  give up
+  place tm_7 on 7
+  match
+end
+
+rule DeltaProc_flush takes 1
+  instead
+  place p5040
+  place p5073
+  place p50a2
+  call fence 0 sym eti_null
+  call init_delta
+  and 0 into global half 1376
+  call read_end
+  match
+end
+
+rule read_end takes 1
+  instead
+  local h_r12
+  local h_rsi
+  local s51ca
+  variable g938 word 1348
+  place p50f1
+  place p5126
+  place p5186
+  call fence 0 sym eti_null
+  set h_rsi to 1
+  call startloop h_rsi
+  set h_r12 to 0
+  place p51ab
+  place t51ab_2 on 2
+  place t51ab_3 on 3
+  set h_r12 to unwind
+  set h_rsi to 3
+  call starttest h_rsi
+  set h_rsi to 4
+  call bspush_ca_boa h_rsi
+  set h_rsi to 6
+  call read_tvar h_rsi addr g938
+  set s51ca to answer
+  set h_rsi to 1
+  if s51ca is 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p51d6
+  set h_rsi to h_r12
+  set unwind to h_rsi
+  backtrack
+  place p520f
+  place t520f_4 on 4
+  set h_r12 to unwind
+  call bspop_boa
+  set h_rsi to addr g938
+  call settvar_s h_rsi 90
+  match
+  place tm_1 on 1
+  match
+end
+
+rule close_platform takes 1
+  instead
+  place p5239
+  place p526c
+  place p529b
+  call fence 0 sym eti_null
+  call closeIO
+  match
+end
+
+rule print_prompt takes 1
+  instead
+  place p52da
+  place p530d
+  place p533c
+  call fence 0 sym eti_null
+  match
+end
+
+rule PhonemeIndex takes 3
+  instead
+  local cf0 bytes 8
+  local cf4 bytes 8
+  local c118 bytes 10
+  local c138 bytes 18
+  local c148 bytes 8
+  local c158 bytes 8
+  local v100 word
+  variable g4e8 word 724
+  variable ge30 word 2456
+  place p5373
+  place p53b2
+  place p5415
+  call get_parm addr c158 arg 1 -6
+  call get_parm addr c148 arg 2 -6
+  set cell c138 word 0 to 0
+  set cell c138 word 4 to 0
+  set cell c138 word 6 to 0
+  set cell c138 word 10 to 0
+  set c138 to -65532
+  set cell cf4 kind to 65532
+  set cf0 to 65532
+  and 0 into cell c118 word 0
+  and 0 into cell c118 half 4
+  set c118 to -65535
+  call fence 0 sym eti_null
+  and 0 into cell cf4 field
+  set global half 2458 to 3
+  call copyvar addr cf4 addr ge30
+  call lpta_loadp addr c158
+  call setscan_r 4
+  if answer is not 0
+    go to p54e6
+  end
+  place p54cb
+  call advance_tok
+  if answer is not 0
+    go to p54e6
+  end
+  place p54d7
+  call savetok addr c138
+  place p54e6
+  set v100 to addr g4e8
+  place p5509
+  place t5509_1 on 1
+  call starttest 2
+  call move_i addr cf0 0
+  call placePhoneme addr c138 addr cf0 addr cf4
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p553e
+  place t553e_2 on 2
+  call lpta_loadpn addr c148
+  call rpta_loadpn addr g4e8
+  call compare_ptas
+  if answer is not 0
+    match
+  end
+  place p556f
+  call testeq
+  if answer is not 0
+    match
+  end
+  place p557f
+  call settvar_s addr c118 197
+  call starttest 3
+  call move_i addr cf0 0
+  call placePhonemeText addr c118 addr cf0 addr cf4
+  if answer is 0
+    match
+  end
+  set unwind to 0
+  backtrack
+  place tm_3 on 3
+  match
+end
+
+rule DeltaProc_registerLanguages takes 1
+  instead
+  local cf0 bytes 8
+  local cf4 bytes 8
+  local cf8 bytes 8
+  local cfc bytes 8
+  local c10c bytes 8
+  local c110 bytes 8
+  local c114 bytes 8
+  local c118 bytes 8
+  local c11c bytes 8
+  local v108 word
+  local v128 word
+  local v130 word
+  variable g158 word 184
+  variable g168 word 192
+  place p560a
+  place p563f
+  place p569f
+  set cf4 to 65532
+  set cf0 to 65532
+  set cfc to 65532
+  set cf8 to 65532
+  set c10c to 65532
+  set c11c to 65532
+  set c118 to 65532
+  set c114 to 65532
+  set c110 to 65532
+  call fence 0 sym eti_null
+  call set_voice_param_constants
+  set v130 to addr g158
+  set v128 to addr g168
+  set v108 to state
+  place p5728
+  place t5728_1 on 1
+  call register_SAPI_voices
+  place p5730
+  place t5730_2 on 2
+  set cell cfc field to 6
+  set cell cf8 field to 1
+  call setup_lang_reg addr cf4 addr cf0
+  place p5758
+  place t5758_3 on 3
+  call starttest 4
+  call move_i addr c10c 1
+  call move_i addr c11c 1
+  call move_i addr c118 1
+  call move_i addr c114 1
+  call move_i addr c110 1
+  call registerLanguage addr cf4 addr cf0 addr cfc addr cf8 addr g158 addr g168 addr c10c addr c11c addr c118 addr c114 addr c110
+  if answer is 0
+    go to p585c
+  end
+  set unwind to 0
+  backtrack
+  place p585c
+  place t585c_4 on 4
+  call initdelta 9 sym eti_s_ef000
+  call register_voices addr cf4 addr cf0 addr cfc addr cf8
+  place p5892
+  place t5892_5 on 5
+  and 0 into global half 2402
+  call register_por_phones addr cf4 addr cf0
+  place p58b0
+  place t58b0_6 on 6
+  call initdelta 9 sym eti_s_ef000
+  match
+end
+
+rule register_SAPI_voices takes 1
+  instead
+  local cf0 bytes 8
+  local cf4 bytes 8
+  local cf8 bytes 8
+  local v100 word
+  local v108 word
+  variable g152c word 3748
+  variable g1530 word 3752
+  variable g1534 word 3756
+  variable g1538 word 3760
+  variable g153c word 3764
+  variable g1540 word 3768
+  variable g1544 word 3772
+  variable g1548 word 3776
+  variable g154c word 3780
+  variable g1550 word 3784
+  variable g1554 word 3788
+  variable g1558 word 3792
+  variable g155c word 3796
+  variable g1560 word 3800
+  variable g1564 word 3804
+  variable g1568 word 3808
+  variable g156c word 3812
+  variable g1570 word 3816
+  variable g1574 word 3820
+  variable g1578 word 3824
+  variable g157c word 3828
+  variable g158 word 184
+  variable g1580 word 3832
+  variable g1584 word 3836
+  variable g1588 word 3840
+  variable g158c word 3844
+  variable g1590 word 3848
+  variable g1594 word 3852
+  variable g1598 word 3856
+  variable g159c word 3860
+  variable g15a0 word 3864
+  variable g15a4 word 3868
+  variable g15a8 word 3872
+  variable g15ac word 3876
+  variable g15b0 word 3880
+  variable g15b4 word 3884
+  variable g15b8 word 3888
+  variable g15bc word 3892
+  variable g15c0 word 3896
+  variable g15c4 word 3900
+  variable g15c8 word 3904
+  variable g15cc word 3908
+  variable g15d0 word 3912
+  variable g15d4 word 3916
+  variable g15d8 word 3920
+  variable g15dc word 3924
+  variable g15e0 word 3928
+  variable g15e4 word 3932
+  variable g15e8 word 3936
+  variable g164c word 4036
+  variable g1650 word 4040
+  variable g1654 word 4044
+  variable g1658 word 4048
+  variable g165c word 4052
+  variable g1660 word 4056
+  variable g1664 word 4060
+  variable g1668 word 4064
+  variable g168 word 192
+  place p58f0
+  place p592d
+  place p5960
+  set cf4 to 65532
+  set cf0 to 65532
+  set cf8 to 65532
+  call fence 0 sym eti_null
+  set v108 to addr g158
+  set v100 to addr g168
+  call lpta_rpta_loadp addr g158 addr g168
+  call insert_2pt_s 1 5 sym eti_s_ef009 0
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p59c3
+  call starttest 1
+  call move_i addr cf4 1
+  call move_i addr cf0 30
+  call move_i addr cf8 1
+  call registerSAPIVoice addr cf4 addr g158 addr g168 addr g152c addr g153c addr g1530 addr g1540 addr g1544 addr g1548 addr g1534 addr g1538 addr cf0 addr cf8
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p5a82
+  place t5a82_1 on 1
+  call starttest 2
+  call move_i addr cf8 2
+  call move_i addr cf0 30
+  call move_i addr cf4 1
+  call registerSAPIVoice addr cf8 addr g158 addr g168 addr g154c addr g155c addr g1550 addr g1560 addr g1564 addr g1568 addr g1554 addr g1558 addr cf0 addr cf4
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p5b3d
+  place t5b3d_2 on 2
+  call starttest 3
+  call move_i addr cf4 3
+  call move_i addr cf0 30
+  call move_i addr cf8 1
+  call registerSAPIVoice addr cf4 addr g158 addr g168 addr g164c addr g165c addr g1650 addr g1660 addr g1664 addr g1668 addr g1654 addr g1658 addr cf0 addr cf8
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p5bf8
+  place t5bf8_3 on 3
+  call starttest 4
+  call move_i addr cf8 1
+  call move_i addr cf0 30
+  call move_i addr cf4 1
+  call registerSAPIVoice addr cf8 addr g158 addr g168 addr g156c addr g157c addr g1570 addr g1580 addr g1584 addr g1588 addr g1574 addr g1578 addr cf0 addr cf4
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p5cb7
+  place t5cb7_4 on 4
+  call starttest 5
+  call move_i addr cf4 1
+  call move_i addr cf0 6
+  call move_i addr cf8 1
+  call registerSAPIVoice addr cf4 addr g158 addr g168 addr g158c addr g159c addr g1590 addr g15a0 addr g15a4 addr g15a8 addr g1594 addr g1598 addr cf0 addr cf8
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p5d76
+  place t5d76_5 on 5
+  call starttest 6
+  call move_i addr cf8 1
+  call move_i addr cf0 70
+  call move_i addr cf4 1
+  call registerSAPIVoice addr cf8 addr g158 addr g168 addr g15ac addr g15bc addr g15b0 addr g15c0 addr g15c4 addr g15c8 addr g15b4 addr g15b8 addr cf0 addr cf4
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p5e35
+  place t5e35_6 on 6
+  call starttest 7
+  call move_i addr cf4 1
+  call move_i addr cf0 70
+  call move_i addr cf8 1
+  call registerSAPIVoice addr cf4 addr g158 addr g168 addr g15cc addr g15dc addr g15d0 addr g15e0 addr g15e4 addr g15e8 addr g15d4 addr g15d8 addr cf0 addr cf8
+  if answer is 0
+    go to p5f21
+  end
+  set unwind to 0
+  backtrack
+  place p5f21
+  place t5f21_7 on 7
+  call initdelta 9 sym eti_s_ef000
+  match
+end
+
+rule setup_lang_reg takes 3
+  instead
+  local cf0 bytes 8
+  local cf4 bytes 8
+  local n60c2_2
+  local n60c2_r
+  local scratch
+  variable g158 word 184
+  variable g168 word 192
+  place p5f8c
+  place p5fcb
+  place p602e
+  call get_parm addr cf4 arg 1 -4
+  call get_parm addr cf0 arg 2 -4
+  call fence 0 sym eti_null
+  call lpta_rpta_loadp addr g158 addr g168
+  call insert_2pt_s 1 16 sym eti_s_ef010 0
+  if answer is 0
+    go to p60aa
+  end
+  set unwind to 0
+  backtrack
+  place p60aa
+  set cell cf4 field to 7
+  and 0 into cell cf0 field
+  put 7 into arg 1 at 2 half
+  set scratch to through arg 2 half 2
+  and 0 into scratch
+  put scratch into arg 2 at 2 half
+  set n60c2_r to scratch
+  set n60c2_2 to n60c2_r
+  and 65535 into n60c2_2
+  match
+end
+
+rule register_voices takes 5
+  instead
+  local cf0 bytes 8
+  local cf4 bytes 8
+  local cf8 bytes 8
+  local c14c bytes 8
+  local c150 bytes 8
+  local v100 word
+  local v108 word
+  local v110 word
+  local v118 word
+  local v120 word
+  local v128 word
+  local v130 word
+  local v138 word
+  local v140 word
+  local v148 word
+  variable g152c word 3748
+  variable g1530 word 3752
+  variable g1534 word 3756
+  variable g1538 word 3760
+  variable g153c word 3764
+  variable g1540 word 3768
+  variable g1544 word 3772
+  variable g1548 word 3776
+  variable g156c word 3812
+  variable g1570 word 3816
+  variable g1574 word 3820
+  variable g1578 word 3824
+  variable g157c word 3828
+  variable g158 word 184
+  variable g1580 word 3832
+  variable g1584 word 3836
+  variable g1588 word 3840
+  variable g158c word 3844
+  variable g1590 word 3848
+  variable g1594 word 3852
+  variable g1598 word 3856
+  variable g159c word 3860
+  variable g15a0 word 3864
+  variable g15a4 word 3868
+  variable g15a8 word 3872
+  variable g15ac word 3876
+  variable g15b0 word 3880
+  variable g15b4 word 3884
+  variable g15b8 word 3888
+  variable g15bc word 3892
+  variable g15c0 word 3896
+  variable g15c4 word 3900
+  variable g15c8 word 3904
+  variable g15cc word 3908
+  variable g15d0 word 3912
+  variable g15d4 word 3916
+  variable g15d8 word 3920
+  variable g15dc word 3924
+  variable g15e0 word 3928
+  variable g15e4 word 3932
+  variable g15e8 word 3936
+  variable g15ec word 3940
+  variable g15f0 word 3944
+  variable g15f4 word 3948
+  variable g15f8 word 3952
+  variable g15fc word 3956
+  variable g1600 word 3960
+  variable g1604 word 3964
+  variable g1608 word 3968
+  variable g160c word 3972
+  variable g1610 word 3976
+  variable g1614 word 3980
+  variable g1618 word 3984
+  variable g161c word 3988
+  variable g1620 word 3992
+  variable g1624 word 3996
+  variable g1628 word 4000
+  variable g162c word 4004
+  variable g1630 word 4008
+  variable g1634 word 4012
+  variable g1638 word 4016
+  variable g163c word 4020
+  variable g1640 word 4024
+  variable g1644 word 4028
+  variable g1648 word 4032
+  variable g168 word 192
+  place p60e4
+  place p6125
+  go to p618c
+  place p6154
+  place t6154_9 on 9
+  give up
+  place p618c
+  call get_parm addr cf8 arg 1 -4
+  call get_parm addr cf4 arg 2 -4
+  call get_parm addr c150 arg 3 -4
+  call get_parm addr c14c arg 4 -4
+  set cf0 to 65532
+  call fence 0 sym eti_null
+  set v108 to addr g158
+  set v100 to addr g168
+  call lpta_rpta_loadp addr g158 addr g168
+  call insert_2pt_s 1 4 sym eti_s_ef020 0
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p623b
+  call starttest 1
+  call move_i addr cf0 1
+  set v110 to addr g1530
+  call registerVoice addr cf8 addr cf4 addr cf0 addr g158 addr g168 addr g152c addr g153c addr g1530 addr g1540 addr g1544 addr g1548 addr g1534 addr g1538
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p62e1
+  go to p62e8
+  place p62e8
+  place t62e8_1 on 1
+  call lpta_rpta_loadp addr g158 addr g168
+  call insert_2pt_s 1 7 sym eti_s_ef024 0
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p631e
+  call starttest 2
+  call move_i addr cf0 2
+  set v148 to addr g156c
+  call registerVoice addr cf8 addr cf4 addr cf0 addr g158 addr g168 addr g156c addr g157c addr g1570 addr g1580 addr g1584 addr g1588 addr g1574 addr g1578
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p63c4
+  place t63c4_2 on 2
+  call lpta_rpta_loadp addr g158 addr g168
+  call insert_2pt_s 1 5 sym eti_s_ef02b 0
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p63fa
+  call starttest 3
+  call move_i addr cf0 3
+  set v140 to addr g158c
+  call registerVoice addr cf8 addr cf4 addr cf0 addr g158 addr g168 addr g158c addr g159c addr g1590 addr g15a0 addr g15a4 addr g15a8 addr g1594 addr g1598
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p64a0
+  place t64a0_3 on 3
+  call lpta_rpta_loadp addr g158 addr g168
+  call insert_2pt_s 1 3 sym eti_s_ef030 0
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p64d6
+  call starttest 4
+  call move_i addr cf0 7
+  set v138 to addr g15cc
+  call registerVoice addr cf8 addr cf4 addr cf0 addr g158 addr g168 addr g15cc addr g15dc addr g15d0 addr g15e0 addr g15e4 addr g15e8 addr g15d4 addr g15d8
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p657c
+  place t657c_4 on 4
+  call lpta_rpta_loadp addr g158 addr g168
+  call insert_2pt_s 1 3 sym eti_s_ef033 0
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p65b2
+  call starttest 5
+  call move_i addr cf0 8
+  set v130 to addr g15ac
+  call registerVoice addr cf8 addr cf4 addr cf0 addr g158 addr g168 addr g15ac addr g15bc addr g15b0 addr g15c0 addr g15c4 addr g15c8 addr g15b4 addr g15b8
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p6658
+  place t6658_5 on 5
+  call lpta_rpta_loadp addr g158 addr g168
+  call insert_2pt_s 1 5 sym eti_s_ef036 0
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p668e
+  call starttest 6
+  call move_i addr cf0 4
+  set v128 to addr g15ec
+  call registerVoice addr cf8 addr cf4 addr cf0 addr g158 addr g168 addr g15ec addr g15fc addr g15f0 addr g1600 addr g1604 addr g1608 addr g15f4 addr g15f8
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p6734
+  place t6734_6 on 6
+  call lpta_rpta_loadp addr g158 addr g168
+  call insert_2pt_s 1 7 sym eti_s_ef03b 0
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p676a
+  call starttest 7
+  call move_i addr cf0 5
+  set v120 to addr g160c
+  call registerVoice addr cf8 addr cf4 addr cf0 addr g158 addr g168 addr g160c addr g161c addr g1610 addr g1620 addr g1624 addr g1628 addr g1614 addr g1618
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p6810
+  place t6810_7 on 7
+  call lpta_rpta_loadp addr g158 addr g168
+  call insert_2pt_s 1 6 sym eti_s_ef042 0
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p6846
+  call starttest 8
+  call move_i addr cf0 6
+  set v118 to addr g162c
+  call registerVoice addr cf8 addr cf4 addr cf0 addr g158 addr g168 addr g162c addr g163c addr g1630 addr g1640 addr g1644 addr g1648 addr g1634 addr g1638
+  if answer is 0
+    match
+  end
+  set unwind to 0
+  backtrack
+  place p6924
+  place t6924_8 on 8
+  match
+end

@@ -195,6 +195,7 @@ LOCALES = {
 	0x50000: "it_IT",
 	0x80000: "ja_JP",
 	0x90000: "fi_FI",
+	0x70000: "pt_BR",
 	0x110000: "pl_PL",
 }
 
@@ -212,6 +213,7 @@ LANGUAGE_NAMES = {
 	0x50000: "Italian",
 	0x80000: "Japanese",
 	0x90000: "Finnish",
+	0x70000: "Brazilian Portuguese",
 	0x110000: "Polish",
 }
 
@@ -260,7 +262,8 @@ _INSTEAD.update({chr(n): chr(n - 0xfee0) for n in range(0xff01, 0xff5f)
 #: They are Windows' own short names for the languages, which is where IBM's
 #: drivers got enu, eng and deu, and so they are the names the community's
 #: files already carry. Polish, which IBM never shipped, takes Windows' plk on
-#: the same terms, and Finnish, which came from ETI's 6.1, takes fin.
+#: the same terms, and Finnish and Brazilian Portuguese, which came from ETI's
+#: 6.1, take fin and ptb.
 DICTIONARY_CODES = {
 	0x10000: "enu",
 	0x10001: "eng",
@@ -272,6 +275,7 @@ DICTIONARY_CODES = {
 	0x50000: "ita",
 	0x80000: "jpn",
 	0x90000: "fin",
+	0x70000: "ptb",
 	0x110000: "plk",
 }
 

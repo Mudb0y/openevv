@@ -81,6 +81,7 @@ static const LanguageInfo knownLanguages[] = {
     { 0x00040000, "dede", "de-DE", "German",               0 },
     { 0x00050000, "itit", "it-IT", "Italian",              0 },
     { 0x00090000, "fifi", "fi-FI", "Finnish",              0 },
+    { 0x00070000, "ptbr", "pt-BR", "Brazilian Portuguese", 0 },
     { 0x00110000, "plpl", "pl-PL", "Polish",               1 },
 };
 

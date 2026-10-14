@@ -1,0 +1,63 @@
+# Brazilian Portuguese as ETI Eloquence 6.1 reads it, which
+# test/harness/eti.sh holds ours against: Portuguese is lifted whole from
+# 6.1, so every case here is one 6.1 had just agreed with when it was
+# written. In ISO 8859-1, which is what both engines take unless told
+# otherwise.
+#
+# Phrase prediction is off here and on in 6.1 (docs/quirks.md), and nine
+# sentences whose phrasing it decides are not here: "Pague com cartão ou em
+# dinheiro." is one, where 6.1 gives "cartão" the accent that ends a phrase
+# and ours does not. All nine read as 6.1 reads them once `pp1 is in their
+# text.
+0x70000	-1	Bom dia.
+0x70000	-1	Eu estou em casa.
+0x70000	-1	O gato está sentado na janela.
+0x70000	-1	Este é um bom livro.
+0x70000	-1	Brasília é a capital do Brasil.
+0x70000	-1	São três horas.
+0x70000	-1	Ela comprou 25 maçãs.
+0x70000	-1	Como vai você?
+0x70000	-1	Obrigado, vou bem.
+0x70000	-1	Onde fica a estação de trem mais próxima?
+0x70000	-1	Duas garças nadam no lago.
+0x70000	-1	As crianças brincaram no quintal o dia inteiro.
+0x70000	-1	Comprei leite, pão e queijo no mercado.
+0x70000	-1	O português é uma língua românica.
+0x70000	-1	Ele nasceu em 1985 em Belo Horizonte.
+0x70000	-1	O trem sai da plataforma quatro às 14h35.
+0x70000	-1	Meu telefone é (11) 3456-7890.
+0x70000	-1	Isto custa R$ 12,50.
+0x70000	-1	A temperatura é de menos vinte graus.
+0x70000	-1	Eu disse a ele: não vá lá!
+0x70000	-1	Dr. Pereira atende das 8h às 17h.
+0x70000	-1	Hoje é dia 7 de setembro de 2026.
+0x70000	-1	A reunião foi marcada para 15/11/2025.
+0x70000	-1	Dom Pedro II foi imperador do Brasil.
+0x70000	-1	A população é de 210.000.000 de habitantes.
+0x70000	-1	Ele correu 42,195 km.
+0x70000	-1	O desconto é de 15%.
+0x70000	-1	São 23h59 de 31 de dezembro.
+0x70000	-1	O capítulo 3 fala da página 45 à 78.
+0x70000	-1	Ela tem 1,65 m de altura.
+0x70000	-1	O carro custa US$ 25.000,00.
+0x70000	-1	A gasolina subiu 0,5%.
+0x70000	-1	Visite www.exemplo.com.br para mais informações.
+0x70000	-1	Escreva para contato@exemplo.com.br.
+0x70000	-1	Ele perguntou: você vem amanhã?
+0x70000	-1	Que dia lindo!
+0x70000	-1	O CPF tem 11 dígitos.
+0x70000	-1	A ONU foi fundada em 1945.
+0x70000	-1	O Flamengo venceu por 3 a 1.
+0x70000	-1	Faltam 10 minutos para as 6.
+0x70000	-1	O avião decolou às 7:45.
+0x70000	-1	Hoje faz 30°C em Salvador.
+0x70000	-1	A conta deu R$ 1.234.567,89.
+0x70000	-1	O jogo terminou empatado em 0 a 0.
+0x70000	-1	João, Maria e José foram à festa.
+0x70000	-1	Você sabia que o Rio de Janeiro já foi capital?
+0x70000	-1	O metrô de São Paulo transporta milhões de pessoas.
+0x70000	-1	Ela leu 1/3 do livro em 2 horas.
+0x70000	-1	O preço caiu de R$ 100 para R$ 80.
+0x70000	-1	Ele mora no apto. 42 do bloco B.
+0x70000	-1	A Profa. Ana deu aula ontem.
+0x70000	-1	Os anos 80 foram marcados pela música pop.

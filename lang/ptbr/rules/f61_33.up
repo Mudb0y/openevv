@@ -1,0 +1,361 @@
+# The rules of Brazilian Portuguese, lifted by tools/rules/lift64.py out of ETI
+# Eloquence 6.1 as Apple ships it, by tools/module/lift61.py. Each says
+# `instead' because it is written afresh rather than re-expressed from one of
+# IBM's: nothing of IBM's is under it.
+
+rule break_into_morphs takes 5
+  instead
+  local c110 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  local c140 bytes 8
+  local vf8 word
+  local v100 word
+  place p9add4
+  place p9ae20
+  place p9ae58
+  call get_parm addr c140 arg 1 -6
+  set vf8 to arg 2
+  call get_parm addr c130 arg 2 -6
+  set v100 to arg 3
+  call get_parm addr c110 arg 3 -6
+  call get_parm addr c120 arg 4 -6
+  call fence 0 sym eti_null
+  call fence 1 sym eti_s_f0102
+  set cell c110 value to cell c120 value
+  if global half 2594 is not 1
+    go to p9af56
+  end
+  place p9aefe
+  place t9aefe_2 on 2
+  put cell c130 value into arg 2 at 4
+  put cell c110 value into arg 3 at 4
+  match
+  place p9af56
+  place p9af6b
+  place t9af6b_1 on 1
+  call starttest 3
+  call lpta_loadp addr c140
+  call setscan_r 3
+  if answer is not 0
+    go to p9afb5
+  end
+  place p9af88
+  call testFldeq 3 0 2
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p9afa0
+  call advance_tok
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p9afb0
+  go to p9b090
+  place p9afb5
+  place t9afb5_3 on 3
+  call por_words addr c140 addr c120
+  if answer is 0
+    go to p9aefe
+  end
+  place p9afcb
+  place t9afcb_4 on 4
+  call roots_dict_lookup addr c140 addr c120 addr c120
+  if answer is 0
+    go to p9aefe
+  end
+  place p9afe4
+  place t9afe4_5 on 5
+  call strip_suffix addr c140 addr c110 addr c120
+  place p9aff5
+  place t9aff5_6 on 6
+  call starttest 7
+  if global half 4182 is 0
+    go to p9b02e
+  end
+  place p9b00a
+  call starttest_l 7
+  call roots_dict_lookup addr c140 addr c110 addr c120
+  if answer is 0
+    go to p9aefe
+  end
+  place p9b02e
+  place t9b02e_7 on 7
+  call lpta_rpta_loadp addr c140 addr c110
+  call insert_2pt_s 3 1 sym eti_s_f0102 0
+  if answer is 0
+    go to p9aefe
+  end
+  set unwind to 0
+  backtrack
+  place p9b090
+  set global half 2626 to global half 1306
+  go to p9aefe
+end
+
+rule roots_dict_lookup takes 4
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  place p9b0c4
+  place p9b102
+  place p9b166
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr c120 arg 2 -6
+  call get_parm addr c110 arg 3 -6
+  call fence 0 sym eti_null
+  call user_rootdict addr c100 addr c120
+  if answer is 0
+    match
+  end
+  place p9b1db
+  call por_roots addr c100 addr c120 addr c110
+  if answer is not 0
+    give up
+  end
+  match
+end
+
+rule one_syllable takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local h_r13
+  local h_rax
+  local h_rcx
+  local h_rdx
+  local h_rsi
+  local s9b383
+  local s9b3d9
+  local s9b408
+  local s9b4e4
+  place p9b20a
+  place p9b249
+  place p9b278
+  set h_r13 to -6
+  set h_rsi to addr c110
+  set h_rdx to arg 1
+  set h_rcx to -6
+  call get_parm h_rsi h_rdx h_rcx
+  set h_rax to answer
+  set h_rsi to addr c100
+  set h_rdx to arg 2
+  set h_rcx to -6
+  call get_parm h_rsi h_rdx h_rcx
+  set h_rax to answer
+  set h_rdx to sym eti_null
+  set h_r13 to 0
+  set h_rsi to 0
+  call fence h_rsi h_rdx
+  set h_rax to answer
+  set h_rsi to 1
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr c110
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set h_rax to answer
+  if h_rax is 0
+    go to p9b310
+  end
+  give up
+  place p9b310
+  go to p9b31b
+  place t9b31b_2 on 2
+  set h_r13 to unwind
+  set h_rsi to 3
+  place p9b31b
+  set h_rcx to h_r13
+  place p9b31e
+  set h_r13 to h_rcx
+  set h_rsi to 4
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rsi to 5
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rsi to 1
+  set h_rdx to 4
+  set h_rcx to 1
+  call testFldeq h_rsi h_rdx h_rcx
+  set h_rax to answer
+  if h_rax is not 0
+    go to p9b358
+  end
+  place p9b34c
+  call advance_tok
+  set h_rax to answer
+  if h_rax is 0
+    go to p9b35d
+  end
+  place p9b358
+  set h_rdx to h_r13
+  go to p9b396
+  place p9b35d
+  set h_rsi to 6
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rsi to 7
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rsi to 1
+  set h_rdx to 1
+  set h_rcx to sym eti_s_f0103
+  call test_string_s h_rsi h_rdx h_rcx
+  set s9b383 to answer
+  set h_rax to s9b383
+  set h_rdx to h_r13
+  set h_rcx to h_r13
+  if h_rax is 0
+    go to p9b4b9
+  end
+  place p9b396
+  set h_rsi to h_rdx
+  set unwind to h_rsi
+  backtrack
+  go to p9b3ce
+  place t9b3ce_3 on 3
+  set h_r13 to unwind
+  set h_rsi to 3
+  place p9b3ce
+  call bspop_boa
+  set h_rax to answer
+  call advance_tok
+  set s9b3d9 to answer
+  set h_rax to s9b3d9
+  set h_rcx to h_r13
+  set h_rsi to h_r13
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p9b3e8
+  go to p9b31e
+  go to p9b3ed
+  place t9b3ed_5 on 5
+  set h_r13 to unwind
+  set h_rsi to 3
+  place p9b3ed
+  set h_rsi to 9
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rsi to 1
+  set h_rdx to 1
+  set h_rcx to sym eti_s_f0105
+  call test_string_s h_rsi h_rdx h_rcx
+  set s9b408 to answer
+  set h_rax to s9b408
+  set h_rsi to h_r13
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p9b414
+  set h_rsi to 10
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rsi to 1
+  set h_rdx to 1
+  set h_rcx to sym eti_s_f0102
+  go to p9b465
+  go to p9b431
+  place t9b431_7 on 7
+  set h_r13 to unwind
+  set h_rsi to 3
+  place p9b431
+  set h_rsi to 1
+  set h_rdx to 1
+  set h_rcx to sym eti_s_f0104
+  go to p9b465
+  go to p9b443
+  place t9b443_9 on 9
+  set h_r13 to unwind
+  set h_rsi to 3
+  place p9b443
+  set h_rsi to 1
+  set h_rdx to 2
+  set h_rcx to sym eti_s_f0107
+  go to p9b465
+  go to p9b455
+  place t9b455_10 on 10
+  set h_r13 to unwind
+  set h_rsi to 3
+  place p9b455
+  set h_rsi to 1
+  set h_rdx to 1
+  set h_rcx to sym eti_s_f0106
+  place p9b465
+  call test_string_s h_rsi h_rdx h_rcx
+  set h_rax to answer
+  go to p9b47c
+  go to p9b46c
+  place t9b46c_13 on 13
+  set h_r13 to unwind
+  set h_rsi to 3
+  place p9b46c
+  call bspop_boa
+  set h_rax to answer
+  call advance_tok
+  set h_rax to answer
+  place p9b47c
+  set h_rcx to h_r13
+  set h_rsi to h_r13
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p9b48a
+  go to p9b4b9
+  go to p9b48c
+  place t9b48c_14 on 14
+  set h_r13 to unwind
+  set h_rsi to 3
+  place p9b48c
+  set h_rsi to 13
+  go to p9b48f
+  place t9b48f_4 on 4
+  set h_r13 to unwind
+  set h_rsi to 3
+  place p9b48f
+  call bspush_ca_scan_boa h_rsi
+  set h_rax to answer
+  set h_rsi to 1
+  set h_rdx to 4
+  set h_rcx to 1
+  call testFldeq h_rsi h_rdx h_rcx
+  set h_rax to answer
+  if h_rax is 0
+    set h_r13 to 1
+  end
+  set h_rsi to h_r13
+  set unwind to h_rsi
+  backtrack
+  go to p9b4b6
+  place t9b4b6_6 on 6
+  place t9b4b6_8 on 8
+  place t9b4b6_11 on 11
+  place t9b4b6_12 on 12
+  set h_r13 to unwind
+  set h_rsi to 3
+  place p9b4b6
+  set h_rcx to h_r13
+  place p9b4b9
+  set h_r13 to h_rcx
+  set h_rsi to 14
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rax to cell c100 value
+  call lpta_loadp addr c100
+  call test_ptr
+  set s9b4e4 to answer
+  set h_rax to s9b4e4
+  set h_rdx to h_r13
+  if h_rax is not 0
+    go to p9b396
+  end
+  match
+end

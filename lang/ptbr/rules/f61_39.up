@@ -1,0 +1,66 @@
+# The rules of Brazilian Portuguese, lifted by tools/rules/lift64.py out of ETI
+# Eloquence 6.1 as Apple ships it, by tools/module/lift61.py. Each says
+# `instead' because it is written afresh rather than re-expressed from one of
+# IBM's: nothing of IBM's is under it.
+
+rule strip_nonlex_prefix takes 5
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  place pb5e20
+  place pb5e65
+  place pb5e94
+  call get_parm addr c130 arg 1 -6
+  call get_parm addr c120 arg 2 -6
+  call get_parm addr c110 arg 3 -6
+  call get_parm addr c100 arg 4 -6
+  call fence 0 sym eti_null
+  give up
+end
+
+rule strip_prod_prefix takes 5
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  place pb5f27
+  place pb5f6c
+  place pb5f9b
+  call get_parm addr c130 arg 1 -6
+  call get_parm addr c120 arg 2 -6
+  call get_parm addr c110 arg 3 -6
+  call get_parm addr c100 arg 4 -6
+  call fence 0 sym eti_null
+  give up
+end
+
+rule legal_initial_consonants takes 2
+  instead
+  local cf0 bytes 8
+  place pb602e
+  place pb6066
+  place pb6095
+  call get_parm addr cf0 arg 1 -6
+  call fence 0 sym eti_null
+  match
+end
+
+rule strip_other_prefix takes 5
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  place pb60e6
+  place pb612b
+  place pb615a
+  call get_parm addr c130 arg 1 -6
+  call get_parm addr c120 arg 2 -6
+  call get_parm addr c110 arg 3 -6
+  call get_parm addr c100 arg 4 -6
+  call fence 0 sym eti_null
+  give up
+end

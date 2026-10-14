@@ -1,0 +1,49 @@
+# The rules of Brazilian Portuguese, lifted by tools/rules/lift64.py out of ETI
+# Eloquence 6.1 as Apple ships it, by tools/module/lift61.py. Each says
+# `instead' because it is written afresh rather than re-expressed from one of
+# IBM's: nothing of IBM's is under it.
+
+rule por_symbolic_rules takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  local c140 bytes 8
+  place pbbb67
+  place pbbbaa
+  place pbbbdd
+  call get_parm addr c140 arg 1 -6
+  call get_parm addr c130 arg 2 -6
+  call push_ptr_init addr c120
+  call push_ptr_init addr c110
+  call push_ptr_init addr c100
+  call fence 0 sym eti_null
+  set cell c120 value to cell c140 value
+  set cell c110 value to cell c130 value
+  call init_por_word_vars
+  call break_into_morphs addr c140 addr c120 addr c110 addr c130
+  call generate_diaphones addr c120 addr c100 addr c110
+  call create_syllables addr c140 addr c130
+  call assign_stress addr c140 addr c130
+  call adjust_phones addr c140 addr c100 addr c110 addr c130
+  match
+end
+
+rule init_por_word_vars takes 1
+  instead
+  place pbbcf7
+  place pbbd2e
+  place pbbd5d
+  call fence 0 sym eti_null
+  set global half 2626 to global half 1310
+  set global half 2630 to global half 1310
+  and 0 into global half 2570
+  and 0 into global half 4186
+  and 0 into global half 4210
+  set global half 2614 to global half 1310
+  and 0 into global half 4182
+  set global half 4190 to global half 1474
+  set global word 4216 to global word 2224
+  match
+end

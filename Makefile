@@ -554,13 +554,13 @@ speechd-test: $(BUILD)/sd_openevv$(SUF) $(BUILD)/evv
 	   python3 test/speechd.py $(BUILD)/sd_openevv$(SUF) speechd/openevv.conf
 
 # And with every language in it, which is the configuration a release ships.
-# Eleven are linked and ten are advertised: Japanese builds and speaks but its
+# Twelve are linked and eleven are advertised: Japanese builds and speaks but its
 # text is not UTF-8 in any of its three code sets, and speechd/openevv.c says
 # why it is deliberately not offered. So the count is stated rather than taken
 # from LANGS, and a language that stopped being advertised would fail here.
 speechd-test-all:
-	@$(MAKE) RULES=$(RULES) SPEECHD_LANGUAGES=10 \
-	   LANGS="lang/enus lang/engb lang/dede lang/eses lang/esus lang/frfr lang/frca lang/itit lang/plpl lang/jajp lang/fifi" \
+	@$(MAKE) RULES=$(RULES) SPEECHD_LANGUAGES=11 \
+	   LANGS="lang/enus lang/engb lang/dede lang/eses lang/esus lang/frfr lang/frca lang/itit lang/plpl lang/jajp lang/fifi lang/ptbr" \
 	   speechd-test
 
 # A dictionary read in from a file, which nothing else here does: cli/probe.c
@@ -1098,10 +1098,10 @@ crashers32: $(BUILD)/evv32
 .PHONY: words words-record
 # Every language with a list, which is all of them but Polish and Japanese.
 words:
-	@bash test/words.sh check enus engb dede eses esus frfr frca itit fifi
+	@bash test/words.sh check enus engb dede eses esus frfr frca itit fifi ptbr
 
 words-record:
-	@bash test/words.sh record enus engb dede eses esus frfr frca itit fifi
+	@bash test/words.sh record enus engb dede eses esus frfr frca itit fifi ptbr
 
 .PHONY: matrix matrix-record
 matrix:

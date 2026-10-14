@@ -1,0 +1,10 @@
+<speak version="1.0" xml:lang="pt-BR">Bom dia.</speak>
+<speak version="1.0" xml:lang="pt-BR"><prosody rate="slow">Agora mais devagar.</prosody> De novo normal.</speak>
+<speak version="1.0" xml:lang="pt-BR"><prosody pitch="high" range="x-high" volume="loud">Todos os quatro de uma vez.</prosody></speak>
+<speak version="1.0" xml:lang="pt-BR"><emphasis level="strong">Este</emphasis>, nao aquele.</speak>
+<speak version="1.0" xml:lang="pt-BR"><voice gender="female">Ela disse isso.</voice> Mas ele nao.</speak>
+<speak version="1.0" xml:lang="pt-BR">Custou <say-as interpret-as="cardinal">1234</say-as> no dia <say-as interpret-as="ordinal">3</say-as>.</speak>
+<speak version="1.0" xml:lang="pt-BR">Soletre: <say-as interpret-as="letters">abc</say-as>, e ligue para <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+<speak version="1.0" xml:lang="pt-BR">Espere<break time="500ms"/>um pouco.<mark name="aqui"/> Ali.</speak>
+<speak version="1.0" xml:lang="pt-BR"><sub alias="rede mundial">WWW</sub> e <phoneme ph="h.E.l.oU">oi</phoneme>.</speak>
+<speak version="1.0" xml:lang="pt-BR">Ação e coração, a &amp; b &lt; c.</speak>
