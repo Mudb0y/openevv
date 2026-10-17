@@ -190,7 +190,7 @@ The closure's remaining 4.7 per cent is the residual non-separability, and it is
 
 Counting wrong parameter values was the wrong measure and the ear said so. `test/harness/klattplay.c` drives `KlattSynth` directly from a file of frames -- the other half of the tap, which only ever read them out -- so a composed utterance and a measured one can be rendered through the same code and heard against each other, the only difference being the frames. `tools/measure/hear.py` does that over the held-out square and reports the waveform difference, and it builds a self-describing A/B file a case, the engine speaking which side is which so there is nothing to read alongside the sound.
 
-Stas listened on 9 September 2026. Of the first five, spanning nought to 36 per cent formant error, he could not tell any pair apart, and the one he thought he might have heard turned out to have the *smallest* waveform difference of the four. Of the three worst in the whole set, he heard one.
+Mudb0y listened on 9 September 2026. Of the first five, spanning nought to 36 per cent formant error, no pair could be told apart, and the one that might have been heard turned out to have the *smallest* waveform difference of the four. Of the three worst in the whole set, one was heard.
 
 **The waveform difference over all 320 held-out carriers**: 55 under 2 per cent, 63 between 2 and 5, 89 between 5 and 10, 72 between 10 and 20, 17 between 20 and 40, and 24 above 40. Median 7.1 per cent. Only seven exceed 80 per cent and only **two exceed 85, both of them /J/**. The `/g/` case at 82.9 per cent was not audible; `/J/` at 98.7 was.
 
@@ -218,7 +218,7 @@ The fix is the same idea that solved the run-in, extended over the closure: take
 
 **Two measurements that nearly agree say nothing at all, and must say so.** For /g/ before /u/ the two left carriers' f2 closure targets are 1658 and 1652 -- six hertz apart -- while the wanted target is 1208. The straight line through them has a weight of 75, and every difference between the two gets multiplied by it: /g/, /k/ and /G/ before /u/ went from six per cent wrong to two hundred and twenty. That is the velar pinch, and it is unidentifiable from these two carriers, because neither of their far vowels is back. Rescaling the shape there was tried and was no better. What works is answering nothing and letting the caller draw the straight line it would have drawn anyway.
 
-**The result over all 320 held-out carriers**: 148 under 2 per cent, 70 from 2 to 5, 89 from 5 to 10, 13 from 10 to 20, and **nothing above 20**. Median 2.1 per cent against 7.0, worst 19.4 against 98.7, and nothing left in the range Stas could hear -- he judged 25.6 per cent indistinguishable and even 82.9. /J/ itself went from 98.7 to 8.0. In frames: 63 cases exact against 5, the run-in still 0.0 per cent, the closure down from 4.7 to 1.2.
+**The result over all 320 held-out carriers**: 148 under 2 per cent, 70 from 2 to 5, 89 from 5 to 10, 13 from 10 to 20, and **nothing above 20**. Median 2.1 per cent against 7.0, worst 19.4 against 98.7, and nothing left in the range Mudb0y could hear -- 25.6 per cent was judged indistinguishable, and even 82.9. /J/ itself went from 98.7 to 8.0. In frames: 63 cases exact against 5, the run-in still 0.0 per cent, the closure down from 4.7 to 1.2.
 
 The run-out is now the largest remaining error at 2.2 per cent, and most of it is voicing, which is an utterance-level staircase rather than a pair's business.
 
@@ -256,7 +256,7 @@ That is also the third time this has surfaced -- in the isolated vowels, in the 
 
 ### The metric was wrong, and the ear said which one to use instead
 
-Stas heard /akaga/ at 40 per cent waveform difference and barely heard /asaka/ at 72. The difference between them was not size but kind, and his description named it: "ours slips a bit, almost like the synth loses his voice for a second before coming back."
+Mudb0y heard /akaga/ at 40 per cent waveform difference and barely heard /asaka/ at 72. The difference between them was not size but kind, and Mudb0y's description named it: "ours slips a bit, almost like the synth loses his voice for a second before coming back."
 
 That is exactly what it was. /akaga/'s middle vowel had **twenty-four frames with `av` at nought where the engine has 47 declining to 44** -- a hundred and twenty milliseconds of the voice cutting out and coming back. /asaka/'s 72 per cent is formants in slightly the wrong places, and that is forgiven.
 
@@ -266,7 +266,7 @@ The cause of the dropout was a rule of mine and worth recording. Both sides of a
 
 ### It works at every rate, given that rate's own tables
 
-Stas asked whether speeding the engine up would change anything, on the grounds that a fault can hide at a normal rate and show at a fast one. It does, and he was right to ask: with the tables measured at probe's own 175 words a minute, composing at 450 gave 80 to 100 per cent waveform difference, **voicing dropouts from 350 upwards**, and above 450 the segmentation failed outright.
+Mudb0y asked whether speeding the engine up would change anything, on the grounds that a fault can hide at a normal rate and show at a fast one. It does, and it was the right question: with the tables measured at probe's own 175 words a minute, composing at 450 gave 80 to 100 per cent waveform difference, **voicing dropouts from 350 upwards**, and above 450 the segmentation failed outright.
 
 Three facts settled it.
 
@@ -457,7 +457,7 @@ So a sonorant is not a segment with a locus and two transitions. **The whole vow
 
 **And real words compose.** `hello` is 43 per cent, `money` 24, `happy` 32, `banana` 43, `tomato` 76, `lemon` 99 and `potato` 142, none of them with a voicing dropout. Two fixes got `hello` there from 154. A word-edge consonant has a vowel on one side only and the key for the missing side lumps all sixteen of that consonant's carriers together, so choosing among them by span length picked one with the wrong vowel -- which matters most for /h/, that having no formants of its own, being the following vowel's shape excited by noise, so the engine holds f1 at /E/'s 570 flat where the composition had 685 falling to 550. And a carrier with no closure had been translated as "the closure is the whole carrier", which left no run-in and no run-out, so the first vowel held flat where the engine ramps it and the final vowel was never laid down at all.
 
-**The threshold for a word is lower than for a nonsense syllable.** Stas judged 72 per cent barely noticeable on `asaka` and 82.9 inaudible on `aCaSa`, and called `tomato` at 76 wrong. A word has a lexical identity to violate, so it wants to be under something like 50 rather than under 70.
+**The threshold for a word is lower than for a nonsense syllable.** Mudb0y judged 72 per cent barely noticeable on `asaka` and 82.9 inaudible on `aCaSa`, and called `tomato` at 76 wrong. A word has a lexical identity to violate, so it wants to be under something like 50 rather than under 70.
 
 **What is wrong with `tomato` is the vowels and not the closures** -- 389 of its 405 wrong values are in the vowel regions, its closures being nearly exact. The engine ramps the vowel between /t/ and /m/ smoothly, f2 from 1263 down to 1057, and the composition runs 1360 down to 1300 and then jumps to 1147: two measured halves that were measured with different neighbours and do not meet.
 
@@ -687,7 +687,7 @@ So what the tables reproduce is the spectrum, and for some words they reproduce 
 
 ### What the ear said
 
-Stas heard `hello`, `tomato` and `abandonment`, engine against tables' spectrum, each with a spoken label: **"honestly? Same. I'm unsure about abandonment, but generally they sound practically the same."**
+Mudb0y heard `hello`, `tomato` and `abandonment`, engine against tables' spectrum, each with a spoken label: **"honestly? Same. I'm unsure about abandonment, but generally they sound practically the same."**
 
 So four and six per cent of the signal are inaudible on a real word, and twenty-six is at the edge of noticing. That is a much looser threshold than the composed model needed -- the calibration there was under fifty per cent for a word and under seventy for a nonsense syllable, but those were shape errors in the composer's own measure rather than waveform differences against the engine, and they are not the same scale.
 
@@ -697,7 +697,7 @@ So four and six per cent of the signal are inaudible on a real word, and twenty-
 
 ### A stretch does not always start where the last one left off
 
-Stas heard the fully-from-tables version and it was wrong: **"they fluctuated in volume and were kind of messed up."** No voicing dropouts -- the tables' frames match the engine's voiced-frame counts to within two over six words and add no one-frame gaps -- so the fault was level, not breaks.
+Mudb0y heard the fully-from-tables version and it was wrong: **"they fluctuated in volume and were kind of messed up."** No voicing dropouts -- the tables' frames match the engine's voiced-frame counts to within two over six words and add no one-frame gaps -- so the fault was level, not breaks.
 
 The cause was an assumption stated three sections above and never tested: that the value a stretch begins at is whatever the stretch before left behind. **It is not, and not rarely.** Over four hundred words, the proportion of a parameter's stretches that begin somewhere else is 40 per cent for the aspiration, 38 for the voicing, 15 for the frication, 14 for the third formant, 12 for the tilt and the diplophonia, and 8 for the second formant. The engine's arrays can hold two points at one moment, and a jump is what that is: /hE/'s voicing in `hello` sits at nought through the /h/ and then begins the vowel at 51, which is /E/'s own value less three -- the staircase reset the voicing work measured long ago.
 
@@ -723,7 +723,7 @@ So a word can be synthesised from two data tables and two rules, with nothing of
 
 ### The tilt running on into nothing
 
-Stas heard `tomato` and said it "almost phased through" the stressed vowel. It did: the spectral tilt swept from nought to 35 across that vowel where the engine holds it flat.
+Mudb0y heard `tomato` and said it "almost phased through" the stressed vowel. It did: the spectral tilt swept from nought to 35 across that vowel where the engine holds it flat.
 
 **The tilt is nearly binary** -- flat nought in 10,883 segments of 12,287, and 35 falling to nought in the rest, which are only the voiced stops /b/, /d/ and /g/ and the flap /F/. The sweep was the generator's doing. A stretch with no target of its own runs on to the next target there is, and the flap after that vowel begins its tilt at 35 out of nowhere a quarter of the way through itself. Running the vowel up to that 35 spreads a stop's burst across a whole syllable.
 
@@ -747,7 +747,7 @@ So the table is carrying a great deal that is not table-shaped. That is the next
 
 **Whole-segment rules were tried for the same reason and are also not it.** Letting the aspiration and the tilt be rules across a whole segment, rather than over its voiced tail only, would have let them leave the table -- and it costs 0.2 points of accuracy while the table does not shrink, because what fills it for those two is the jumps rather than the bases. The rules stay on the last stretch.
 
-So the state is: **`money` identical to the engine over every sample, `hello` 0.6 per cent of the signal, `tomato` 4.9, `absolutely` 5.9, `banana` 12.7**, with 3.955 per cent of parameter values wrong over a hundred and fifty words. Stas heard all five and called them accurate.
+So the state is: **`money` identical to the engine over every sample, `hello` 0.6 per cent of the signal, `tomato` 4.9, `absolutely` 5.9, `banana` 12.7**, with 3.955 per cent of parameter values wrong over a hundred and fifty words. Mudb0y heard all five and called them accurate.
 
 **The compression that would actually work is still undone.** The segments file is three quarters of a million exception lines and its content is a decision tree: 5,382 phoneme-stress-parameter groups taking 14,967 distinct values between them. Writing each value once with the contexts that select it, rather than each context once with its value, is the thing -- and it needs the contexts to be describable as sets rather than listed, which is the part nobody has looked at yet.
 
@@ -805,7 +805,7 @@ So the shape and the values of English intonation are five numbers and a rule, w
 
 ### The pitch, anchored properly
 
-Stas heard the first cut and it was noticeably wrong on `hello` and `tomato` and right on `money` -- which is the whole diagnosis, `money` being the one of the three whose accent is on its first syllable.
+Mudb0y heard the first cut and it was noticeably wrong on `hello` and `tomato` and right on `money` -- which is the whole diagnosis, `money` being the one of the three whose accent is on its first syllable.
 
 Two things were wrong and the measurement had hidden both behind medians taken over the wrong population. **The rise lasts 124 milliseconds, not 51**: the engine takes 116 on `hello` and 131 on the other two, and the 51 came from a median that mixed in words whose contour has six points rather than five. And **the first fall ends where the last vowel ends** -- median six milliseconds past it -- where I had it at a fixed 61 before the word's end. Neither a fixed offset nor a fraction of the word is an anchor for it: those scatter from 0.69 to 0.89 of the word between the quartiles.
 
@@ -813,7 +813,7 @@ With the peak at 0.47 through the accented vowel, the rise 124 before it, the fi
 
 ### The word has to finish
 
-Stas heard the second cut and it was almost right: **"ours ends the way the engine would end at a comma, instead of ending the sentence."**
+Mudb0y heard the second cut and it was almost right: **"ours ends the way the engine would end at a comma, instead of ending the sentence."**
 
 Exactly so, and the numbers say the same thing once you know where to look. Anchoring the first fall to the last vowel's end leaves nothing for the second fall on a word that ends in a vowel -- `hello`'s last vowel ends where the word does -- so the contour stopped at 792 rather than reaching 742. Eleven twentieths of a hertz, five hertz on a contour spanning fifty-six, and it is the difference between a full stop and a continuation.
 
@@ -823,7 +823,7 @@ With both, the contour is within 2.0 hertz at the median and 3.1 on average, and
 
 ### The burst belongs at the release
 
-Stas heard `banana` as "vanana": the initial /b/ came out a fricative. The frames say why at once. The engine holds the frication and the bypass at nought through the closure and then bursts -- 51 and 70 at the eleventh frame, decaying over five -- and the generated version had them at 51 and 70 from the first frame, which is a stop's burst smeared over its whole closure, which is a fricative.
+Mudb0y heard `banana` as "vanana": the initial /b/ came out a fricative. The frames say why at once. The engine holds the frication and the bypass at nought through the closure and then bursts -- 51 and 70 at the eleventh frame, decaying over five -- and the generated version had them at 51 and 70 from the first frame, which is a stop's burst smeared over its whole closure, which is a fricative.
 
 **It is the collapse of repeated targets, biting from the other side.** /b/ has three stretches and the engine's frication reaches nought, nought, then 51; collapsing the repeat leaves two targets for three stretches, and the generator padded at the back, putting the 51 first. Which of them the spare stretch belongs to depends on whether the last target jumps: **a jump means a new value starts there, so it belongs at the end and the padding goes in front.** Without a jump the last target is a hold and the padding goes behind it, which is what /A/ at the start of `abbey` wants.
 
@@ -833,7 +833,7 @@ With that, the frication's wrong values fall from 3,531 to 668 over a hundred an
 
 ## An automated ear
 
-Stas asked whether there is a better way to measure the engine, and there is, because counting wrong parameter values had stopped being informative. Two of the three faults he heard -- `banana` as vanana, `abandonment` as abandonwend -- were a per cent or two of values inside one segment, invisible against a total of three per cent, and each turned one phoneme into another.
+Mudb0y asked whether there is a better way to measure the engine, and there is, because counting wrong parameter values had stopped being informative. Two of the three faults heard -- `banana` as vanana, `abandonment` as abandonwend -- were a per cent or two of values inside one segment, invisible against a total of three per cent, and each turned one phoneme into another.
 
 `tools/measure/confuse.py` asks the other question: **not how far a segment is from where it should be, but whether it is now nearer to some other phoneme.** It builds a centroid for every phoneme out of the engine's own frames -- the mean of fourteen parameters over every segment of that phoneme in the corpus, each scaled by its own spread so a formant and an amplitude count alike -- and then asks of each generated segment which centroid it lands nearest.
 
