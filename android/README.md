@@ -80,11 +80,15 @@ Ten languages make `libevvjni.so` about 45 MB, and a library is stored uncompres
 
 `-Pevvdroid.abis=arm64-v8a -Pevvdroid.rules=bytecode` is the fast loop for working on the Kotlin. Compiled rules are the default because interrupting and restarting costs about a third of what it costs interpreted, and a screen reader interrupts constantly.
 
-A fix to openevv that upstream has not taken yet goes in `native/patches` and is applied at build time. There are none, so the submodule builds as upstream left it.
+A fix to openevv that upstream has not taken yet goes in `native/patches` and is applied at build time. There is one:
+
+* `0001-compare-tokens-by-byte-difference.patch`. The engine keeps only the low byte of what `memcmp` answers. Android's `memcmp` on x86_64 answers a difference in the fourth byte as a multiple of 4096, whose low byte is nought, so different tokens compare equal. The tokeniser then never finishes reading the engine's own setup string and no instance is ever made: on an x86_64 emulator the engine is bound but never speaks. The patch compares byte by byte, which is what glibc answers and what the engine's baselines were recorded against. It changes arm64 as well: Android's `memcmp` there answers only -1 or 1, so comparisons the engine reads as one apart were not the ones glibc gives, and what an arm64 phone says can differ slightly from before. Proposed upstream as [openevv#53](https://github.com/Mudb0y/openevv/pull/53); once the submodule is past it, the patch goes.
+
+A build leaves its patches applied in `native/openevv`, so clear them with `git -C native/openevv checkout -- .` before moving the submodule.
 
 ## Settings
 
-Launcher icon, or the gear beside the engine in the text-to-speech settings. Sliders for the seven numeric voice parameters, plus gender, voice, preview language, sample rate, pauses, phrase prediction, abbreviations and dictionaries. Nothing speaks on its own: a setting takes effect when you set it, and "Speak a sample" is how you hear it.
+Launcher icon, or the gear beside the engine in the text-to-speech settings. Sliders for the seven numeric voice parameters, plus gender, voice, preview language, sample rate, pauses, phrase prediction, abbreviations and dictionaries. Background and stability, at the bottom, opens Android's battery optimisation and app hibernation screens and the phone maker's auto start screen, and counts why Android has stopped evvdroid, from its exit history on Android 11 and later. Nothing speaks on its own: a setting takes effect when you set it, and "Speak a sample" is how you hear it.
 
 Each row is one control. A label, a bar and a number would be three stops for a screen reader, so each row merges into a single node with `clearAndSetSemantics`. It reads as "Speed, 20 percent" and adjusts in place.
 

@@ -2,6 +2,7 @@ package org.evvdroid
 
 import android.content.Context
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -53,6 +54,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
@@ -63,6 +65,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -71,6 +74,8 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import java.text.DateFormat
+import java.util.Date
 import kotlin.math.roundToInt
 
 /**
@@ -85,6 +90,7 @@ import kotlin.math.roundToInt
 @Composable
 fun SettingsScreen(state: SettingsModel) {
 	var wanted by remember { mutableStateOf(Eci.DICT_MAIN) }
+	var stability by remember { mutableStateOf(false) }
 	val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
 		uri?.let { state.chooseDictionary(wanted, it) }
 	}
@@ -233,7 +239,14 @@ fun SettingsScreen(state: SettingsModel) {
 				chosen = SettingsModel.RATES.indexOf(state.sampleRateHz).coerceAtLeast(0),
 				onChoose = { state.chooseSampleRate(SettingsModel.RATES[it]) }
 			)
+
+			Gap()
+			ActionRow(stringResource(R.string.stability_label)) { stability = true }
 		}
+	}
+
+	if (stability) {
+		StabilityDialog(state = state, onClose = { stability = false })
 	}
 
 	// Dialog for managing words in a dictionary volume
@@ -248,6 +261,116 @@ fun SettingsScreen(state: SettingsModel) {
 			state = state,
 			volume = state.managingVolume ?: Eci.DICT_MAIN,
 			entry = state.editingEntry
+		)
+	}
+}
+
+/**
+ * What the phone may be doing to the engine in the background, each with the
+ * screen that stops it. A state is shown where Android will say what it is;
+ * auto start and locking in recents belong to the phone's maker, and nothing
+ * can ask about them.
+ */
+@Composable
+private fun StabilityDialog(state: SettingsModel, onClose: () -> Unit) {
+	val context = LocalContext.current
+	val missing = stringResource(R.string.stability_autostart_missing)
+	val on = stringResource(R.string.switch_on)
+	val off = stringResource(R.string.switch_off)
+	var pinning by remember { mutableStateOf(false) }
+
+	AlertDialog(
+		onDismissRequest = onClose,
+		title = { Text(stringResource(R.string.stability_label)) },
+		text = {
+			Column(
+				modifier = Modifier
+					.fillMaxWidth()
+					.verticalScroll(rememberScrollState())
+			) {
+				Text(
+					text = stringResource(R.string.stability_intro),
+					style = MaterialTheme.typography.bodyMedium,
+					modifier = Modifier.padding(bottom = 8.dp)
+				)
+				ValueRow(
+					label = stringResource(R.string.stability_battery),
+					value = if (state.batteryUnrestricted) off else on,
+					onClick = { Stability.openBattery(context) }
+				)
+				if (Stability.hasHibernation) {
+					ValueRow(
+						label = stringResource(R.string.stability_hibernation),
+						value = if (state.hibernationExempt) off else on,
+						onClick = { Stability.openHibernation(context) }
+					)
+				}
+				ActionRow(stringResource(R.string.stability_autostart)) {
+					if (!Stability.openAutoStart(context)) {
+						Toast.makeText(context, missing, Toast.LENGTH_LONG).show()
+					}
+				}
+				ActionRow(stringResource(R.string.stability_pinning)) { pinning = true }
+				ExitHistory(state.exits)
+			}
+		},
+		confirmButton = {
+			TextButton(onClick = onClose) {
+				Text(stringResource(R.string.dictionary_close))
+			}
+		}
+	)
+
+	if (pinning) {
+		AlertDialog(
+			onDismissRequest = { pinning = false },
+			title = { Text(stringResource(R.string.stability_pinning)) },
+			text = { Text(stringResource(R.string.stability_pinning_help)) },
+			confirmButton = {
+				TextButton(onClick = { pinning = false }) {
+					Text(stringResource(R.string.dictionary_close))
+				}
+			}
+		)
+	}
+}
+
+/** What Android remembers of how the engine's process ended, one line a kind,
+ *  with what to do about it where there is anything. A heading first, so a
+ *  screen reader can jump straight here. */
+@Composable
+private fun ExitHistory(exits: Stability.Exits) {
+	Text(
+		text = stringResource(R.string.stability_exits_label),
+		style = MaterialTheme.typography.titleSmall,
+		modifier = Modifier
+			.padding(top = 16.dp, bottom = 4.dp)
+			.semantics { heading() }
+	)
+	val lines = buildList {
+		if (!Stability.hasExitHistory) {
+			add(stringResource(R.string.stability_exits_unavailable))
+			return@buildList
+		}
+		val since = exits.since
+		if (since == null) {
+			add(stringResource(R.string.stability_exits_none))
+			return@buildList
+		}
+		add(stringResource(R.string.stability_exits_since, DateFormat.getDateInstance().format(Date(since))))
+		if (exits.killedInUse > 0) add(stringResource(R.string.stability_exits_killed, exits.killedInUse))
+		if (exits.crashed > 0) add(stringResource(R.string.stability_exits_crashed, exits.crashed))
+		if (exits.unresponsive > 0) add(stringResource(R.string.stability_exits_unresponsive, exits.unresponsive))
+		if (exits.byUser > 0) add(stringResource(R.string.stability_exits_user, exits.byUser))
+		if (exits.idle > 0) add(stringResource(R.string.stability_exits_idle, exits.idle))
+		if (exits.killedInUse > 0) add(stringResource(R.string.stability_exits_advice_killed))
+		if (exits.crashed + exits.unresponsive > 0) add(stringResource(R.string.stability_exits_advice_crashed))
+	}
+	for (line in lines) {
+		Text(
+			text = line,
+			style = MaterialTheme.typography.bodyMedium,
+			modifier = Modifier.padding(vertical = 2.dp)
 		)
 	}
 }

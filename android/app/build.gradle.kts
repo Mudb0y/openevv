@@ -41,8 +41,8 @@ val buildNative by tasks.registering(Exec::class) {
 	// next one succeeds. What decides the output is the submodule's commit, the
 	// patches laid on it, and the files named here. Editing native/openevv by
 	// hand wants --rerun-tasks. The patches are a file tree rather than a
-	// directory because there are none at the moment, and git does not carry an
-	// empty one.
+	// directory so that the build still works if they are ever all upstreamed
+	// and the directory goes, since git does not carry an empty one.
 	inputs.files(rootProject.fileTree("native/patches"))
 	inputs.file(rootProject.layout.projectDirectory.file("native/android.mk"))
 	inputs.file(rootProject.layout.projectDirectory.file(".gitmodules"))

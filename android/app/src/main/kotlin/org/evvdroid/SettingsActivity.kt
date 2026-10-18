@@ -24,6 +24,13 @@ class SettingsActivity : ComponentActivity() {
 		}
 	}
 
+	override fun onResume() {
+		super.onResume()
+		// Coming back from one of Android's own screens, which may have changed
+		// how the phone treats the engine.
+		model?.refreshStability()
+	}
+
 	override fun onStop() {
 		super.onStop()
 		// Leaving the screen should not leave a sample talking over whatever

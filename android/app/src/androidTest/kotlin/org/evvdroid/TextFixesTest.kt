@@ -105,11 +105,21 @@ class TextFixesTest {
 		try {
 			e!!.setSampleRate(11025)
 			e.applyVoice(0)
-			for (text in listOf("teamtalk5", "windows11", "hello(world)", "1,000,000")) {
+			// openevv reads these as words itself since fe58262, so the fixes no
+			// longer shorten them. What still matters is that neither form is
+			// spelled out: each is held against the same words written apart.
+			for ((text, words) in listOf(
+				"teamtalk5" to "teamtalk 5",
+				"windows11" to "windows 11",
+				"hello(world)" to "hello (world)",
+				"1,000,000" to "1000000"
+			)) {
+				val spaced = say(e, words)
 				val before = say(e, text)
 				val after = say(e, TextFixes.apply(text))
-				android.util.Log.e(TAG, "$text: $before then $after")
-				assertTrue("no shorter: $text, $before then $after", after < before * 0.9)
+				android.util.Log.e(TAG, "$text: $before then $after, written apart $spaced")
+				assertTrue("spelled: $text, $after against $spaced", after < spaced * 1.1)
+				assertTrue("spelled unfixed: $text, $before against $spaced", before < spaced * 1.1)
 			}
 		} finally {
 			e?.close()

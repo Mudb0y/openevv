@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+	<!-- So that "Battery optimisation" in the settings can ask Android's own
+	     yes-or-no question rather than leave the user to find the engine in a
+	     list. A screen reader's voice being frozen between utterances is what
+	     it is for. -->
+	<uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
 	<application
 		android:allowBackup="true"
 		android:icon="@mipmap/ic_launcher"

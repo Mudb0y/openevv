@@ -1,0 +1,43 @@
+diff --git a/src/delta/delta.c b/src/delta/delta.c
+index cf9f0d8..d42f353 100644
+--- a/src/delta/delta.c
++++ b/src/delta/delta.c
+@@ -676,6 +676,25 @@ static void set3(delta_state *d, int32_t x, int32_t y)
+     EVV_AT(delta_vars *, d->vars)->compared_equal = (int8_t)(x < y ? -1 : (x == y ? 0 : 1));
+ }
+ 
++/* What memcmp answers in the C library the original was built against: the
++   first two bytes that differ, one taken from the other. The C standard
++   promises only the sign, and not every library answers this way. Android's
++   on x86_64 compares a word at a time and answers the difference of the
++   words, so two tokens differing in their fourth byte come back as a multiple
++   of 4096 -- nought in the low byte, which is all the comparison below keeps,
++   and so equal. A tokeniser that cannot tell its tokens apart never finishes
++   reading them, and an engine then never finishes being made. */
++static int byte_difference(const void *a, const void *b, size_t n)
++{
++    const unsigned char *x = a;
++    const unsigned char *y = b;
++
++    for (; n != 0; n--, x++, y++)
++        if (*x != *y)
++            return *x - *y;
++    return 0;
++}
++
+ /* Three-way comparison, dispatched on the type of the left operand. Only the
+    two integer widths look at the right operand's type as well; the rest
+    assume it matches. */
+@@ -719,9 +738,10 @@ void vcompare(delta_state *d, const delta_operand *a, const delta_operand *b)
+ 
+             /* The original keeps only the low byte of what memcmp returns,
+                so the exact value matters and not just its sign. That was
+-               already true of IBM's builds; using memcmp keeps it so. */
++               already true of IBM's builds, and byte_difference answers
++               what their memcmp did whichever C library this is. */
+             EVV_AT(delta_vars *, d->vars)->compared_equal =
+-                (int8_t)memcmp(a->ptr, b->ptr, (size_t)len);
++                (int8_t)byte_difference(a->ptr, b->ptr, (size_t)len);
+         }
+         break;
+     }

@@ -71,6 +71,23 @@ class SettingsModel(context: Context) {
 	var readEmoji by mutableStateOf(settings.readEmoji)
 		private set
 
+	/** How the phone treats the engine in the background, read again each time
+	 *  the screen comes back, since the screens that change it are Android's. */
+	var batteryUnrestricted by mutableStateOf(Stability.batteryUnrestricted(app))
+		private set
+
+	var hibernationExempt by mutableStateOf(Stability.hibernationExempt(app))
+		private set
+
+	var exits by mutableStateOf(Stability.exits(app))
+		private set
+
+	fun refreshStability() {
+		batteryUnrestricted = Stability.batteryUnrestricted(app)
+		hibernationExempt = Stability.hibernationExempt(app)
+		exits = Stability.exits(app)
+	}
+
 	var managingVolume: Int? by mutableStateOf(null)
 	var dictSearchQuery by mutableStateOf("")
 	var editingEntry: DictEntry? by mutableStateOf(null)
