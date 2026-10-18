@@ -19,6 +19,7 @@ import java.util.Locale
  */
 class EvvTtsService : TextToSpeechService() {
 
+	@Volatile
 	private var engine: EvvEngine? = null
 	private var settings: Settings? = null
 
@@ -284,6 +285,13 @@ class EvvTtsService : TextToSpeechService() {
 				Log.e(TAG, "the engine refused ${piece.length} characters")
 				callback.error(TextToSpeech.ERROR_SYNTHESIS)
 				return
+			}
+			// stop may have arrived while speak waited for the previous worker.
+			// speak resets native cancellation when starting the new piece;
+			// abort it again rather than leave an undrained worker behind.
+			if (stopped) {
+				target.stop()
+				break
 			}
 			if (!pump(target, callback, pace, opening)) {
 				remember(pace)

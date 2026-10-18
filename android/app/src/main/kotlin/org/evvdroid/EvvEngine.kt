@@ -11,6 +11,10 @@ import android.util.Log
 class EvvEngine private constructor(private var handle: Long, val language: Int) {
 
 	private val guard = Any()
+	// Cancellation must not wait for a call holding guard: native speak can
+	// wait for a worker whose full audio ring only cancellation can release.
+	// This lock protects stop's handle access and the closing transition only.
+	private val cancellation = Any()
 
 	@Volatile
 	private var closed = false
@@ -195,19 +199,28 @@ class EvvEngine private constructor(private var handle: Long, val language: Int)
 
 	/** Bytes of PCM, blocking until there are some. 0 ends the utterance and
 	 *  -1 says it was stopped. */
-	fun read(into: ByteArray): Int {
+	fun read(into: ByteArray): Int = synchronized(guard) {
 		if (closed) return -1
 		return EvvNative.read(handle, into)
 	}
 
-	fun stop() = synchronized(guard) {
+	fun stop() = synchronized(cancellation) {
 		if (!closed) EvvNative.stop(handle)
 	}
 
-	fun close() = synchronized(guard) {
-		if (closed) return
-		closed = true
-		EvvNative.destroy(handle)
-		handle = 0
+	fun close() {
+		// Mark closed and wake blocked readers/writers before waiting for them.
+		// A stop already in progress finishes before native memory is released.
+		synchronized(cancellation) {
+			if (closed) return
+			closed = true
+			EvvNative.stop(handle)
+		}
+		synchronized(guard) {
+			// An in-flight speak can start its next utterance after the first
+			// stop. destroy aborts that worker again before joining it.
+			EvvNative.destroy(handle)
+			handle = 0
+		}
 	}
 }
