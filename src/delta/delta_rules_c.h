@@ -218,7 +218,7 @@ void evv_arg_over(const char *who, int argn, int room);
 #define LANDING(jb) \
     do { r0 = SLOT(jb); ARG(0); ARG(SLOT(jb)); \
          { int32_t buf = (argn > 0) ? arg[argn - 1] : 0; int depth = argn; \
-           r0 = EVV_LAND_SAVE((intptr_t)buf); \
+           r0 = EVV_LAND_SAVE(EVV_AT(void *, buf)); \
            argn = depth; } \
          CMP(testl, r0, r0); } while (0)
 

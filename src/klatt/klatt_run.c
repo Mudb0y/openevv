@@ -233,9 +233,12 @@ int setSynthToNamedFile(DeltaThis *d, const char *name)
         SD_SAMPLE_CB(dev) = 0;
 
     if (name && name[0]) {
-        SD_FILENAME(dev) = dupstr(name);
-        if (!SD_FILENAME(dev))
+        char *fresh = dupstr(name);
+
+        if (!fresh)
             return 0;
+        free(SD_FILENAME(dev));
+        SD_FILENAME(dev) = fresh;
         return 1;
     }
 

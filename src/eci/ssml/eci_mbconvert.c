@@ -79,6 +79,14 @@ int32_t Mbcs2Sbcs(char *in, char *out)
         }
 
         if (bytes != 1) {
+            /* Do not encode a terminator or read beyond it when a character
+               was cut short. Check the whole sequence before emitting it. */
+            for (i = 1; i < bytes; i++) {
+                if (((uint8_t)p[i] & 0xc0) != 0x80) {
+                    *q = 0;
+                    return (int32_t)(q - out);
+                }
+            }
             for (i = 0; i < bytes; i++) {
                 uint8_t b;
 
@@ -119,8 +127,8 @@ int32_t Mbcs2Sbcs(char *in, char *out)
             {
                 uint32_t point = hex ? (uint32_t)strtol(copy, 0, 16)
                                      : (uint32_t)atoi(copy);
-                uint8_t  utf8[4];
-                uint32_t room = sizeof utf8;
+                uint8_t  utf8[5];
+                uint32_t room = sizeof utf8 - 1;
                 char     narrow[sizeof utf8 * 5 + 1];
 
                 p = p + length + 1;

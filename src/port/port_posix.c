@@ -252,7 +252,8 @@ void evv_event_pulse(evv_event *e)
 
 /* ---- threads --------------------------------------------------------- */
 
-struct evv_task { pthread_t id; };
+/* Opaque identity while running; detached threads need no stored pthread_t. */
+struct evv_task { unsigned unused; };
 
 struct evv_start {
     void (*entry)(void *);
@@ -299,6 +300,7 @@ static void *evv_trampoline(void *p)
 evv_task *evv_task_start(void (*entry)(void *), void *arg, int stack_bytes)
 {
     pthread_attr_t attr;
+    pthread_t id;
     struct evv_start *s;
     evv_task *t;
     int rc;
@@ -335,7 +337,9 @@ evv_task *evv_task_start(void (*entry)(void *), void *arg, int stack_bytes)
     /* Nothing joins these, so let the system reclaim them. */
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
-    rc = pthread_create(&t->id, &attr, evv_trampoline, s);
+    /* The child owns t once it starts and may free it immediately. The
+       pthread implementation must write its result into parent-owned memory. */
+    rc = pthread_create(&id, &attr, evv_trampoline, s);
     pthread_attr_destroy(&attr);
 
     if (rc != 0) {

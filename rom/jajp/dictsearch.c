@@ -1555,6 +1555,10 @@ int16_t ds_LookupEngWordDict(void *d, uint8_t *roman, int16_t slot,
     end = (int16_t)(i * 2);
 
     for (b = block; b < end; b++) {
+        /* The hash can select an absent trailing bucket. As in the other
+           dictionary lookups, stop at the actual generated pointer count. */
+        if ((uint16_t)b >= jajp_s_apszEng_n)
+            break;
         const uint8_t *p = jajp_s_apszEng[(uint16_t)b];
 
         while (p != NULL && p[UH_LEN] != 0) {

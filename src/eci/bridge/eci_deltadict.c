@@ -65,8 +65,14 @@ static int32_t extract(delta_state *d, int32_t l, int32_t r, uint8_t field,
     delta_vars *v = EVV_AT(delta_vars *, d->vars);
     int32_t     f = v->fence_base + field;
     void       *(*get)(void *);
-    int32_t     most = room / width;
+    int32_t     most;
     int32_t     n = 0;
+
+    /* A rule may ask about a missing span (notably a version/file name in
+       Spanish). A null fence is not a run, and must not be indexed as one. */
+    if (l == 0 || r == 0 || width <= 0 || width > room)
+        return 0;
+    most = room / width;
 
     /* Both ends have to be fenced on this field or there is no run. */
     if (!((EVV_AT(int32_t *, l))[f] & 1)
@@ -76,9 +82,13 @@ static int32_t extract(delta_state *d, int32_t l, int32_t r, uint8_t field,
     get = (void *(*)(void *))vstmtbl[field].get[0];
 
     while (l != EVV_AT(delta_stack *, d->stack)->spine_r && l != r && n < most) {
+        if (l == 0)
+            return 0;
         int32_t at = (EVV_AT(int32_t *, l))[f] & ~3;
 
-        if (at != 0 && (*EVV_AT(int32_t *, at) & 2)) {
+        if (at == 0)
+            return 0;
+        if (*EVV_AT(int32_t *, at) & 2) {
             /* Nothing of its own here; step over it. */
             l = at;
         } else {

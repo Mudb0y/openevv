@@ -89,20 +89,30 @@ THIS int32_t px_setFlexVariable(Parserxml *p)
    are thrown away and made again rather than copied. */
 THIS int32_t px_reallocTextBuffer(Parserxml *p)
 {
-    int32_t want = p->textRoom * 2;
-    char   *fresh = malloc((size_t)want + 1);
+    int32_t want;
+    char *fresh, *sbcs, *mbcs;
 
-    free(p->sbcs);
-    free(p->mbcs);
-    p->sbcs = malloc((size_t)want + 1);
-    p->mbcs = malloc((size_t)want + 1);
-
-    if (fresh == 0 || p->sbcs == 0 || p->mbcs == 0)
+    if (p->textRoom <= 0 || p->textRoom > (INT32_MAX - 1) / 2)
         return 0;
+    want = p->textRoom * 2;
+    fresh = malloc((size_t)want + 1);
+    sbcs = malloc((size_t)want + 1);
+    mbcs = malloc((size_t)want + 1);
+
+    if (fresh == 0 || sbcs == 0 || mbcs == 0) {
+        free(fresh);
+        free(sbcs);
+        free(mbcs);
+        return 0;
+    }
 
     strncpy(fresh, p->textBuffer, (size_t)p->textRoom);
     free(p->textBuffer);
+    free(p->sbcs);
+    free(p->mbcs);
     p->textBuffer = fresh;
+    p->sbcs = sbcs;
+    p->mbcs = mbcs;
 
     TextBuffer     = p->textBuffer;
     pTextBuffer    = TextBuffer + p->textRoom;
@@ -117,8 +127,13 @@ THIS int32_t px_reallocTextBuffer(Parserxml *p)
 THIS int32_t px_reallocTagBuffer(Parserxml *p)
 {
     int32_t used = (int32_t)(pTagBuffer - TagBuffer);
-    int32_t want = used * 2;
-    char   *fresh = malloc((size_t)want + 1);
+    int32_t want;
+    char *fresh;
+
+    if (used <= 0 || used > (INT32_MAX - 1) / 2)
+        return 0;
+    want = used * 2;
+    fresh = malloc((size_t)want + 1);
 
     if (fresh == 0)
         return 0;
@@ -134,9 +149,15 @@ THIS int32_t px_reallocTagBuffer(Parserxml *p)
 
 THIS int32_t px_reallocTagStack(Parserxml *p)
 {
-    int32_t want = p->tagSlots * 2;
-    char  **fresh = malloc((size_t)want * sizeof *fresh);
+    int32_t want;
+    char **fresh;
     int32_t i;
+
+    if (p->tagSlots <= 0 || p->tagSlots > INT32_MAX / 2
+        || (size_t)p->tagSlots > SIZE_MAX / sizeof *fresh / 2)
+        return 0;
+    want = p->tagSlots * 2;
+    fresh = malloc((size_t)want * sizeof *fresh);
 
     if (fresh == 0)
         return 0;
@@ -154,9 +175,15 @@ THIS int32_t px_reallocTagStack(Parserxml *p)
 
 THIS int32_t px_reallocAtts(Parserxml *p)
 {
-    int32_t want = p->attsSlots * 2;
-    char  **fresh = malloc((size_t)want * sizeof *fresh);
+    int32_t want;
+    char **fresh;
     int32_t i;
+
+    if (p->attsSlots <= 0 || p->attsSlots > INT32_MAX / 2
+        || (size_t)p->attsSlots > SIZE_MAX / sizeof *fresh / 2)
+        return 0;
+    want = p->attsSlots * 2;
+    fresh = malloc((size_t)want * sizeof *fresh);
 
     if (fresh == 0)
         return 0;
@@ -207,6 +234,13 @@ THIS int8_t px_parseText(Parserxml *p, const char *text, int32_t len,
 
     (void)unused;
 
+    /* Conversion consumes a NUL-terminated string, while all scanner lengths
+       are signed 32-bit. Reject disagreement before sizing its expansion. */
+    if (text == 0 || len < 0
+        || (size_t)len > (SIZE_MAX - 1) / NARROW_FACTOR
+        || len > (INT32_MAX - 1) / NARROW_FACTOR
+        || strlen(text) != (size_t)len)
+        return 0;
     narrow = malloc((size_t)len * NARROW_FACTOR + 1);
     if (narrow == 0)
         return 0;

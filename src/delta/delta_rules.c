@@ -1296,7 +1296,7 @@ static int32_t run_bytecode(void *state, const delta_rule *r,
                nothing else moved, so both go back by hand. */
             depth = st.argn;
             at = st.pc;
-            st.reg[0] = EVV_LAND_SAVE((intptr_t)buf);
+            st.reg[0] = EVV_LAND_SAVE(EVV_AT(void *, buf));
             st.argn = depth;
             st.pc = at;
             planted = 1;

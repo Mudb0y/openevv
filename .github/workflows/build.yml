@@ -30,6 +30,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Check focused runtime safety regressions
+        run: |
+          python3 tools/check-release-safety.py
+          python3 tools/check-resampling.py
+
       - name: Build, with the rules as C
         run: make -j"$(nproc)" RULES=c
 

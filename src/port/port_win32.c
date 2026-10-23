@@ -123,7 +123,8 @@ void evv_event_pulse(evv_event *e)    { if (e) PulseEvent(e->h); }
 
 /* ---- threads --------------------------------------------------------- */
 
-struct evv_task { HANDLE h; };
+/* Opaque identity while running; nobody joins or queries an OS handle. */
+struct evv_task { unsigned unused; };
 
 struct evv_start {
     void (*entry)(void *);
@@ -154,8 +155,6 @@ static DWORD WINAPI evv_trampoline(LPVOID p)
        joins these threads, so a block naming one is otherwise held for the
        life of the process, and every allocation walks the whole region. The
        handle is good only while its task is running. */
-    if (self != NULL)
-        CloseHandle(self->h);
     free(self);
     return 0;
 }
@@ -164,6 +163,7 @@ evv_task *evv_task_start(void (*entry)(void *), void *arg, int stack_bytes)
 {
     struct evv_start *s;
     evv_task *t;
+    HANDLE h;
 
     if (entry == NULL)
         return NULL;
@@ -185,14 +185,17 @@ evv_task *evv_task_start(void (*entry)(void *), void *arg, int stack_bytes)
 
     /* Reserved rather than committed, or a megabyte would be charged to
        every thread up front. */
-    t->h = CreateThread(NULL, (SIZE_T)(stack_bytes > 0 ? stack_bytes : 0),
+    /* The child may finish and free t before CreateThread returns. Keep the
+       creation handle local and never access t again after starting it. */
+    h = CreateThread(NULL, (SIZE_T)(stack_bytes > 0 ? stack_bytes : 0),
                         evv_trampoline, s, STACK_SIZE_PARAM_IS_A_RESERVATION,
                         NULL);
-    if (t->h == NULL) {
+    if (h == NULL) {
         free(s);
         free(t);
         return NULL;
     }
+    CloseHandle(h);
     return t;
 }
 

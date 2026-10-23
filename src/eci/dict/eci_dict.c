@@ -170,8 +170,14 @@ int32_t ed_add_active_dict(OldInst *h, void *dict)
     int32_t lang;
     int32_t rc = api_get_dict_language(OI_NEW(h), dict, &lang);
 
-    if (rc >= 0)
+    if (rc >= 0) {
+        int family = (lang & 0xff0000) >> 16;
+        int dialect = lang & 0xff;
+
+        if (family < 1 || family > DICT_FAMILIES || dialect >= DICT_DIALECTS)
+            return -1;
         ACTIVE_DICT(h, (lang & 0xff0000) >> 16, lang & 0xff) = EVV_REF(dict);
+    }
     return rc;
 }
 
@@ -185,6 +191,8 @@ int32_t ed_delete_active_dict(OldInst *h, void *dict)
         int family = (lang & 0xff0000) >> 16;
         int dialect = lang & 0xff;
 
+        if (family < 1 || family > DICT_FAMILIES || dialect >= DICT_DIALECTS)
+            return -1;
         if (EVV_AT(void *, ACTIVE_DICT(h, family, dialect)) == dict)
             ACTIVE_DICT(h, family, dialect) = 0;
     }
@@ -435,9 +443,8 @@ static int ed_ownCopy(void **owned, const void *from, int32_t len, int wide)
 /* Look a key up. What comes back is the translation in the caller's own code
    set, or nothing.
  *
- * The copy of the converted key is never given back, which is the original's
- * and is left: it leaks a string per call whenever the conversion made one,
- * and the extended form below frees its own. */
+ * A converted key is copied only for the lookup and freed afterwards; a key
+ * supplied by the caller or converter remains theirs. */
 static const char *ed_lookup(OldInst *h, void *dict, int32_t volume,
                              const void *key)
 {
@@ -446,6 +453,7 @@ static const char *ed_lookup(OldInst *h, void *dict, int32_t volume,
     void   *own;
     int32_t len;
     int32_t room;
+    int32_t rc;
 
     if (UnicodeConverter(h, key, &wide, 1))
         return 0;
@@ -462,9 +470,12 @@ static const char *ed_lookup(OldInst *h, void *dict, int32_t volume,
     len = own ? (int32_t)strlen(own) : 0;
     room = OI_DICT_XLATLEN(h);
 
-    if (api_lookup_dict(OI_NEW(h), dict, volume, own, len,
+    rc = api_lookup_dict(OI_NEW(h), dict, volume, own, len,
                         &OI_DICT_XLAT(h), &room,
-                        ed_plainPos(h, dict)) != 0)
+                        ed_plainPos(h, dict));
+    if (own != wide)
+        cpp_delete(own);
+    if (rc != 0)
         return 0;
     if (room == 0)
         return 0;

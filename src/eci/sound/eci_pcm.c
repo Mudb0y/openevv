@@ -421,6 +421,8 @@ int pcm_resample_start(PcmResampler *r, int32_t from, int32_t to,
        struct nobody has cleared to decide whether to free it is how a stack
        variable becomes a crash. Whoever starts one ends it. */
     memset(r, 0, sizeof *r);
+    if (from <= 0 || to <= 0 || method < CVT_HOLD || method > CVT_SINC)
+        return 0;
     r->from = from;
     r->to = to;
     r->method = method;
@@ -520,12 +522,12 @@ uint32_t pcm_resample(PcmResampler *r, const int32_t *src, uint32_t n,
                       int32_t *out)
 {
     uint32_t made = 0;
-    int32_t  at = r->at;
+    int64_t  at = r->at;
     int32_t  last_i = -1;
 
     while ((int64_t)at < (int64_t)n * r->to) {
-        int32_t i = at / r->to;
-        int32_t rem = at - i * r->to;
+        int32_t i = (int32_t)(at / r->to);
+        int32_t rem = (int32_t)(at - (int64_t)i * r->to);
 
         switch (r->method) {
         case CVT_ZEROS:
@@ -587,7 +589,7 @@ uint32_t pcm_resample(PcmResampler *r, const int32_t *src, uint32_t n,
     }
 
     /* Rebase the walk on the run that follows, and keep its tail. */
-    r->at = at - (int32_t)((int64_t)n * r->to);
+    r->at = (int32_t)(at - (int64_t)n * r->to);
     {
         /* The last three samples of what has been handed over so far, which
            is some of this run and, where this run was shorter than three,
