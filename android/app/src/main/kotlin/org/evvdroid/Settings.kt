@@ -118,6 +118,11 @@ class Settings(context: Context) {
 		get() = prefs.getBoolean(KEY_READ_EMOJI, true)
 		set(value) = prefs.edit().putBoolean(KEY_READ_EMOJI, value).apply()
 
+	/** Update channel: Stable (0) or Development (1). Default is Stable. */
+	var updateChannel: Int
+		get() = prefs.getInt(KEY_UPDATE_CHANNEL, CHANNEL_STABLE).coerceIn(CHANNEL_STABLE, CHANNEL_DEV)
+		set(value) = prefs.edit().putInt(KEY_UPDATE_CHANNEL, value).apply()
+
 	// ---- one voice's own settings ----------------------------------------
 
 	fun shapeValue(voice: Int, param: Int): Int? {
@@ -224,6 +229,9 @@ class Settings(context: Context) {
 		const val KEY_READ_PUNCTUATION = "read_punctuation"
 		const val KEY_PUNCTUATION_LEVEL = "punctuation_level"
 		const val KEY_READ_EMOJI = "read_emoji"
+		const val KEY_UPDATE_CHANNEL = "update_channel"
+		const val CHANNEL_STABLE = 0
+		const val CHANNEL_DEV = 1
 		const val DEFAULT_SAMPLE_RATE = 11025
 
 		/** Where the copy taken of a picked dictionary is recorded. DirectBoot

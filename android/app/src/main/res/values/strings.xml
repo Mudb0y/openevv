@@ -121,4 +121,35 @@
 	<string name="stability_exits_unavailable">Android 11 and later can say why evvdroid stopped. This phone cannot.</string>
 	<string name="stability_exits_advice_killed">The phone has been closing evvdroid while your screen reader was using it, which is when speech cuts out. Turn on auto start and lock evvdroid in recent apps.</string>
 	<string name="stability_exits_advice_crashed">evvdroid itself has crashed or stopped responding. Please report it, with what you were doing at the time.</string>
+
+	<!-- Updates -->
+	<string name="updates_label">Updates</string>
+	<string name="update_channel_label">Update channel</string>
+	<string name="update_channel_desc">Select where you would like to receive updates from</string>
+	<string name="update_channel_selected">%1$s is selected</string>
+	<string name="update_channel_select_title">Select a channel</string>
+	<string name="update_channel_stable">Stable</string>
+	<string name="update_channel_stable_desc">Official stable releases</string>
+	<string name="update_channel_dev">Development</string>
+	<string name="update_channel_dev_desc">Pre-release development builds</string>
+	<string name="check_for_updates">Check for updates</string>
+	<string name="check_for_updates_idle">Check for the latest updates</string>
+	<string name="update_checking">Checking for updates…</string>
+	<string name="update_up_to_date">evvdroid is up to date (%1$s)</string>
+	<string name="update_available">Update available: %1$s</string>
+	<string name="update_dialog_title">Update</string>
+	<string name="update_download_install">Download and install</string>
+	<string name="update_downloading_progress">Downloading: %1$d%% (%2$s of %3$s)</string>
+	<string name="update_downloading_percent">Downloading: %1$d%%</string>
+	<string name="update_downloading_bytes">Downloading: %1$s</string>
+	<string name="update_ready_to_install">Update downloaded. Ready to install</string>
+	<string name="update_install">Install update</string>
+	<string name="update_error">Update check failed: %1$s</string>
+	<string name="update_download_error">Download failed: %1$s</string>
+	<string name="update_permission_needed">Please allow evvdroid to install unknown apps to continue.</string>
+	<string name="update_size">Size: %1$s</string>
+	<string name="update_tag">Version / Tag: %1$s</string>
+	<string name="update_channel_info">Channel: %1$s</string>
+	<string name="update_notes_label">Release notes:</string>
+	<string name="update_dismiss">Dismiss</string>
 </resources>

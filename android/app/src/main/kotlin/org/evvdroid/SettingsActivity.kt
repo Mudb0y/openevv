@@ -29,6 +29,7 @@ class SettingsActivity : ComponentActivity() {
 		// Coming back from one of Android's own screens, which may have changed
 		// how the phone treats the engine.
 		model?.refreshStability()
+		model?.resumeUpdate()
 	}
 
 	override fun onStop() {

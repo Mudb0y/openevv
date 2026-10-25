@@ -1,6 +1,7 @@
 package org.evvdroid
 
 import android.content.Context
+import android.text.format.Formatter
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -32,6 +33,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -44,6 +46,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -66,6 +69,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -74,6 +78,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogWindowProvider
 import java.text.DateFormat
 import java.util.Date
 import kotlin.math.roundToInt
@@ -242,6 +247,11 @@ fun SettingsScreen(state: SettingsModel) {
 
 			Gap()
 			ActionRow(stringResource(R.string.stability_label)) { stability = true }
+
+			// ---- Updates ----
+			Gap()
+			UpdateChannelRow(state = state)
+			CheckForUpdatesRow(state = state)
 		}
 	}
 
@@ -263,6 +273,408 @@ fun SettingsScreen(state: SettingsModel) {
 			entry = state.editingEntry
 		)
 	}
+
+	// Dialog for update info, downloading, and installation consent
+	if (state.isUpdateDialogOpen) {
+		UpdateDialog(state = state, onClose = state::closeUpdateDialog)
+	}
+}
+
+/**
+ * Row to select the update channel (Stable or Development) with clear accessibility announcements.
+ */
+@Composable
+private fun UpdateChannelRow(state: SettingsModel) {
+	var open by remember { mutableStateOf(false) }
+	val options = listOf(
+		stringResource(R.string.update_channel_stable),
+		stringResource(R.string.update_channel_dev)
+	)
+	val optionDescriptions = listOf(
+		stringResource(R.string.update_channel_stable_desc),
+		stringResource(R.string.update_channel_dev_desc)
+	)
+	val chosen = state.updateChannel
+	val now = options.getOrElse(chosen) { "" }
+
+	val label = stringResource(R.string.update_channel_label)
+	val desc = stringResource(R.string.update_channel_desc)
+	val selectedText = stringResource(R.string.update_channel_selected, now)
+	val fullAccessibilityDescription = "$label. $desc. $selectedText"
+
+	Column(
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(
+				role = Role.Button,
+				onClick = { open = true }
+			)
+			.clearAndSetSemantics {
+				contentDescription = fullAccessibilityDescription
+				role = Role.Button
+			}
+			.padding(horizontal = 16.dp, vertical = 14.dp)
+	) {
+		Text(
+			text = label,
+			style = MaterialTheme.typography.bodyLarge
+		)
+		Text(
+			text = desc,
+			style = MaterialTheme.typography.bodyMedium,
+			color = MaterialTheme.colorScheme.onSurfaceVariant
+		)
+		Text(
+			text = selectedText,
+			style = MaterialTheme.typography.bodySmall,
+			color = MaterialTheme.colorScheme.primary,
+			modifier = Modifier.padding(top = 2.dp)
+		)
+	}
+
+	if (open) {
+		val dialogTitle = stringResource(R.string.update_channel_select_title)
+		AlertDialog(
+			onDismissRequest = { open = false },
+			modifier = Modifier.semantics {
+				paneTitle = dialogTitle
+			},
+			title = {
+				DialogWindowTitle(dialogTitle)
+				Text(dialogTitle)
+			},
+			text = {
+				Column(
+					modifier = Modifier
+						.selectableGroup()
+						.verticalScroll(rememberScrollState())
+				) {
+					options.forEachIndexed { at, option ->
+						val optionDesc = optionDescriptions.getOrElse(at) { "" }
+						val optionSemantics = if (optionDesc.isNotBlank()) "$option, $optionDesc" else option
+						Row(
+							modifier = Modifier
+								.fillMaxWidth()
+								.selectable(
+									selected = at == chosen,
+									onClick = {
+										state.chooseUpdateChannel(at)
+										open = false
+									},
+									role = Role.RadioButton
+								)
+								.semantics {
+									contentDescription = optionSemantics
+								}
+								.padding(vertical = 12.dp),
+							verticalAlignment = Alignment.CenterVertically
+						) {
+							RadioButton(selected = at == chosen, onClick = null)
+							Column(modifier = Modifier.padding(start = 12.dp)) {
+								Text(
+									text = option,
+									style = MaterialTheme.typography.bodyLarge
+								)
+								if (optionDesc.isNotBlank()) {
+									Text(
+										text = optionDesc,
+										style = MaterialTheme.typography.bodySmall,
+										color = MaterialTheme.colorScheme.onSurfaceVariant
+									)
+								}
+							}
+						}
+					}
+				}
+			},
+			confirmButton = {
+				TextButton(onClick = { open = false }) {
+					Text(stringResource(R.string.cancel))
+				}
+			}
+		)
+	}
+}
+
+/**
+ * Row to trigger check for updates and view current update state.
+ */
+@Composable
+private fun CheckForUpdatesRow(state: SettingsModel) {
+	val context = LocalContext.current
+	val currentStatus = state.updateStatus
+	val label = stringResource(R.string.check_for_updates)
+	val statusDescription = when (currentStatus) {
+		is UpdateStatus.Idle -> stringResource(R.string.check_for_updates_idle)
+		is UpdateStatus.Checking -> stringResource(R.string.update_checking)
+		is UpdateStatus.UpdateAvailable -> stringResource(R.string.update_available, currentStatus.release.name)
+		is UpdateStatus.UpToDate -> stringResource(R.string.update_up_to_date, currentStatus.release.name)
+		is UpdateStatus.Downloading -> {
+			val pct = currentStatus.progressPercent
+			if (pct >= 0) stringResource(R.string.update_downloading_percent, pct)
+			else stringResource(R.string.update_downloading_bytes, Formatter.formatFileSize(context, currentStatus.bytesDownloaded))
+		}
+		is UpdateStatus.ReadyToInstall -> stringResource(R.string.update_ready_to_install)
+		is UpdateStatus.Error -> stringResource(R.string.update_error, currentStatus.message)
+	}
+
+	val fullContentDescription = "$label. $statusDescription"
+
+	Column(
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(
+				role = Role.Button,
+				onClick = {
+					when (state.updateStatus) {
+						is UpdateStatus.UpdateAvailable,
+						is UpdateStatus.ReadyToInstall,
+						is UpdateStatus.Downloading,
+						is UpdateStatus.UpToDate -> state.openUpdateDialog()
+						else -> state.checkForUpdates()
+					}
+				}
+			)
+			.clearAndSetSemantics {
+				contentDescription = fullContentDescription
+				role = Role.Button
+			}
+			.padding(horizontal = 16.dp, vertical = 14.dp)
+	) {
+		Text(
+			text = label,
+			style = MaterialTheme.typography.bodyLarge
+		)
+		Text(
+			text = statusDescription,
+			style = MaterialTheme.typography.bodyMedium,
+			color = MaterialTheme.colorScheme.onSurfaceVariant
+		)
+	}
+}
+
+/**
+ * Dialog displaying update details, line-by-line release notes, download progress, and installation consent.
+ */
+@Composable
+private fun UpdateDialog(state: SettingsModel, onClose: () -> Unit) {
+	val context = LocalContext.current
+	val currentStatus = state.updateStatus
+
+	val release: ReleaseInfo? = when (currentStatus) {
+		is UpdateStatus.UpdateAvailable -> currentStatus.release
+		is UpdateStatus.UpToDate -> currentStatus.release
+		is UpdateStatus.Downloading -> currentStatus.release
+		is UpdateStatus.ReadyToInstall -> currentStatus.release
+		else -> null
+	}
+
+	val dialogTitle = release?.name ?: stringResource(R.string.update_dialog_title)
+
+	AlertDialog(
+		onDismissRequest = onClose,
+		modifier = Modifier.semantics {
+			paneTitle = dialogTitle
+		},
+		title = {
+			DialogWindowTitle(dialogTitle)
+			Text(
+				text = dialogTitle,
+				style = MaterialTheme.typography.titleLarge
+			)
+		},
+		text = {
+			Column(
+				modifier = Modifier
+					.fillMaxWidth()
+					.verticalScroll(rememberScrollState())
+			) {
+				if (release != null) {
+					val channelName = if (release.isPrerelease || release.tagName == "dev") {
+						stringResource(R.string.update_channel_dev)
+					} else {
+						stringResource(R.string.update_channel_stable)
+					}
+					Text(
+						text = stringResource(R.string.update_channel_info, channelName),
+						style = MaterialTheme.typography.bodyMedium,
+						modifier = Modifier.padding(bottom = 4.dp)
+					)
+					Text(
+						text = stringResource(R.string.update_tag, release.tagName),
+						style = MaterialTheme.typography.bodyMedium,
+						modifier = Modifier.padding(bottom = 4.dp)
+					)
+					if (release.asset.size > 0) {
+						val formattedSize = Formatter.formatFileSize(context, release.asset.size)
+						Text(
+							text = stringResource(R.string.update_size, formattedSize),
+							style = MaterialTheme.typography.bodyMedium,
+							modifier = Modifier.padding(bottom = 8.dp)
+						)
+					}
+				}
+
+				when (currentStatus) {
+					is UpdateStatus.Downloading -> {
+						val pct = currentStatus.progressPercent
+						val downloadedBytes = currentStatus.bytesDownloaded
+						val totalBytes = currentStatus.totalBytes
+						val downloadedFormatted = Formatter.formatFileSize(context, downloadedBytes)
+						val totalFormatted = if (totalBytes > 0) Formatter.formatFileSize(context, totalBytes) else ""
+						val downloadText = if (totalBytes > 0 && pct >= 0) {
+							stringResource(R.string.update_downloading_progress, pct, downloadedFormatted, totalFormatted)
+						} else if (pct >= 0) {
+							stringResource(R.string.update_downloading_percent, pct)
+						} else {
+							stringResource(R.string.update_downloading_bytes, downloadedFormatted)
+						}
+
+						Text(
+							text = downloadText,
+							style = MaterialTheme.typography.bodyLarge,
+							modifier = Modifier
+								.fillMaxWidth()
+								.padding(vertical = 8.dp)
+						)
+
+						val progressFraction = if (pct >= 0) (pct / 100f).coerceIn(0f, 1f) else null
+						if (progressFraction != null) {
+							LinearProgressIndicator(
+								progress = { progressFraction },
+								modifier = Modifier
+									.fillMaxWidth()
+									.padding(bottom = 8.dp)
+									.clearAndSetSemantics {
+										progressBarRangeInfo = ProgressBarRangeInfo(pct.toFloat(), 0f..100f, 100)
+										contentDescription = downloadText
+									}
+							)
+						} else {
+							LinearProgressIndicator(
+								modifier = Modifier
+									.fillMaxWidth()
+									.padding(bottom = 8.dp)
+									.clearAndSetSemantics {
+										contentDescription = downloadText
+									}
+							)
+						}
+					}
+					is UpdateStatus.ReadyToInstall -> {
+						Text(
+							text = stringResource(R.string.update_ready_to_install),
+							style = MaterialTheme.typography.bodyLarge,
+							color = MaterialTheme.colorScheme.primary,
+							modifier = Modifier.padding(vertical = 8.dp)
+						)
+					}
+					is UpdateStatus.Error -> {
+						Text(
+							text = stringResource(R.string.update_error, currentStatus.message),
+							style = MaterialTheme.typography.bodyMedium,
+							color = MaterialTheme.colorScheme.error,
+							modifier = Modifier.padding(vertical = 8.dp)
+						)
+					}
+					else -> {}
+				}
+
+				if (release != null && release.body.isNotBlank()) {
+					HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+					Text(
+						text = stringResource(R.string.update_notes_label),
+						style = MaterialTheme.typography.titleMedium,
+						modifier = Modifier
+							.padding(bottom = 6.dp)
+							.semantics { heading() }
+					)
+					val noteItems = remember(release.body) { Updater.parseReleaseNotes(release.body) }
+					for ((_, item) in noteItems.withIndex()) {
+						if (item.isHeading) {
+							Text(
+								text = item.text,
+								style = MaterialTheme.typography.titleSmall,
+								modifier = Modifier
+									.fillMaxWidth()
+									.padding(top = 8.dp, bottom = 4.dp)
+									.semantics { heading() }
+							)
+						} else if (item.isBullet) {
+							Row(
+								modifier = Modifier
+									.fillMaxWidth()
+									.padding(vertical = 3.dp)
+									.semantics(mergeDescendants = true) {
+										contentDescription = item.text
+									},
+								verticalAlignment = Alignment.Top
+							) {
+								Text(
+									text = "• ",
+									style = MaterialTheme.typography.bodyMedium,
+									color = MaterialTheme.colorScheme.primary,
+									modifier = Modifier.padding(end = 6.dp)
+								)
+								Text(
+									text = item.text,
+									style = MaterialTheme.typography.bodyMedium,
+									modifier = Modifier.weight(1f)
+								)
+							}
+						} else {
+							Text(
+								text = item.text,
+								style = MaterialTheme.typography.bodyMedium,
+								modifier = Modifier
+									.fillMaxWidth()
+									.padding(vertical = 3.dp)
+									.semantics {
+										contentDescription = item.text
+									}
+							)
+						}
+					}
+				}
+			}
+		},
+		confirmButton = {
+			when (currentStatus) {
+				is UpdateStatus.UpdateAvailable -> {
+					Button(onClick = { state.downloadAndInstall(context, currentStatus.release) }) {
+						Text(stringResource(R.string.update_download_install))
+					}
+				}
+				is UpdateStatus.UpToDate -> {
+					Button(onClick = { state.downloadAndInstall(context, currentStatus.release) }) {
+						Text(stringResource(R.string.update_download_install))
+					}
+				}
+				is UpdateStatus.Downloading -> {
+					val pct = currentStatus.progressPercent.coerceAtLeast(0)
+					Button(onClick = {}, enabled = false) {
+						Text(stringResource(R.string.update_downloading_percent, pct))
+					}
+				}
+				is UpdateStatus.ReadyToInstall -> {
+					Button(onClick = { state.installUpdate(context, currentStatus.apkFile) }) {
+						Text(stringResource(R.string.update_install))
+					}
+				}
+				is UpdateStatus.Error -> {
+					Button(onClick = { state.checkForUpdates() }) {
+						Text(stringResource(R.string.check_for_updates))
+					}
+				}
+				else -> {}
+			}
+		},
+		dismissButton = {
+			TextButton(onClick = onClose) {
+				Text(stringResource(R.string.update_dismiss))
+			}
+		}
+	)
 }
 
 /**
@@ -924,4 +1336,14 @@ private fun ActionRow(label: String, onClick: () -> Unit) {
 			}
 			.padding(horizontal = 16.dp, vertical = 14.dp)
 	)
+}
+
+/**
+ * Compose names every dialog window "Dialog", which is what TalkBack announces when it opens.
+ * Setting paneTitle on the content doesn't change that, so give the window itself a title.
+ */
+@Composable
+private fun DialogWindowTitle(title: String) {
+	val window = (LocalView.current.parent as? DialogWindowProvider)?.window
+	SideEffect { window?.setTitle(title) }
 }

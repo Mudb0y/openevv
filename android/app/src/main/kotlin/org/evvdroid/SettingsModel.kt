@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import java.io.File
 
 /**
  * What the settings screen is showing, and the engine it can hear itself on.
@@ -104,6 +105,17 @@ class SettingsModel(context: Context) {
 
 	val gender: Int get() = shape[Eci.VOICE_GENDER] ?: 0
 
+	val currentVersionName: String = BuildConfig.VERSION_NAME
+
+	var updateChannel by mutableStateOf(settings.updateChannel)
+		private set
+
+	val updateStatus: UpdateStatus get() = UpdateController.status
+
+	var isUpdateDialogOpen: Boolean
+		get() = UpdateController.isDialogOpen
+		set(value) { UpdateController.isDialogOpen = value }
+
 	init {
 		preview?.open {
 			// A voice's own settings are what the sliders start at, and only
@@ -120,6 +132,29 @@ class SettingsModel(context: Context) {
 	fun close() {
 		preview?.close()
 	}
+
+	fun chooseUpdateChannel(which: Int) {
+		UpdateController.reset()
+		updateChannel = which
+		settings.updateChannel = which
+	}
+
+	fun checkForUpdates() = UpdateController.check(UpdateChannel.fromId(updateChannel), currentVersionName)
+
+	fun openUpdateDialog() {
+		isUpdateDialogOpen = true
+	}
+
+	fun closeUpdateDialog() {
+		isUpdateDialogOpen = false
+	}
+
+	fun downloadAndInstall(context: Context, release: ReleaseInfo) =
+		UpdateController.downloadAndInstall(context, release)
+
+	fun installUpdate(context: Context, file: File) = UpdateController.install(context, file)
+
+	fun resumeUpdate() = UpdateController.resumeInstall(app)
 
 	fun percentOf(param: Int): Int = Eci.toPercent(param, shape[param] ?: 0)
 

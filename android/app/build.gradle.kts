@@ -19,6 +19,13 @@ val abis = (findProperty("evvdroid.abis") as String? ?: "arm64-v8a,armeabi-v7a,x
 val rulesForm = findProperty("evvdroid.rules") as String? ?: "c"
 val languages = findProperty("evvdroid.langs") as String?
 	?: ALL_LANGUAGES.joinToString(" ") { "lang/$it" }
+// The number the development workflow publishes as "build: <n>" in the dev release's notes, the commit
+// count, so that the updater can tell whether the dev build on GitHub is newer than this one. A
+// checkout without history gives 0, which counts as older than any published build.
+val buildNumber = providers.exec {
+	commandLine("git", "rev-list", "--count", "HEAD")
+	isIgnoreExitValue = true
+}.standardOutput.asText.map { it.trim().toIntOrNull() ?: 0 }.orElse(0).get()
 val nativeOut = layout.buildDirectory.dir("native/jniLibs")
 
 // Release signing, from a keystore.properties the repo does not carry. Without
@@ -85,6 +92,7 @@ android {
 		targetSdk = 36
 		versionCode = 2
 		versionName = "0.2.0"
+		buildConfigField("int", "BUILD_NUMBER", buildNumber.toString())
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		ndk {
 			abiFilters += abis
