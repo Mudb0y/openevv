@@ -918,9 +918,12 @@ $(foreach l,$(LANGS),$(eval $(call entry_record,$(l))))
 $(foreach l,$(LANGS),$(eval $(call \
     $(if $(wildcard $(l)/rules),rulecode_from_text,rulecode_lifted),$(l))))
 
+# The directories are prerequisites too: a file taken out of one leaves no
+# prerequisite newer than the target, but it does change the directory.
 define builtin_for
 $(1)/delta_builtin_$(notdir $(1)).c: tools/module/builtindict.py \
-    $(wildcard $(1)/dictionary/*.dic $(1)/dictionary/held \
+    $(wildcard $(1)/dictionary $(1)/dictionary/community \
+               $(1)/dictionary/*.dic $(1)/dictionary/held \
                $(1)/dictionary/split $(1)/dictionary/community/*.dic)
 	@python3 tools/module/builtindict.py write $(1)
 	@touch $$@
