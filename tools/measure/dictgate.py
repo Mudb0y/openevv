@@ -19,11 +19,11 @@ tools/measure/referee.py judges them:
   ours         CMU supports the rules' reading and not the dictionary's
 
 The last is what lang/<tag>/dictionary/held is for: an entry CMU says makes
-a word worse is held out of the build until an ear has decided it, which
-loses nothing, since without it the word is said the way CMU supports. CMU
-is the wrong referee for a name it anglicises and for an all-capitals key
-the dictionary spells out as an acronym, so the held list is a list for
-listening rather than a list of mistakes.
+a word worse is held out of the build until it has been decided by the
+published pronunciation, which loses nothing, since without it the word is
+said the way CMU supports. CMU is the wrong referee for a name it anglicises
+and for an all-capitals key the dictionary spells out as an acronym, so the
+held list is a list of candidates rather than a list of mistakes.
 
 The library has to be built from the tree as it stands, held list and all,
 and an instance of it is made per worker: forty, as the machine allows.
@@ -176,7 +176,7 @@ HELD_HEAD = """\
 # volume, a tab, the word, a tab, and why. Each says the word one way where
 # the CMU Pronouncing Dictionary supports the way the rules already say it,
 # so holding it loses nothing; tools/measure/dictgate.py found them, and
-# each one comes back when an ear has decided it.
+# each comes back if the published pronunciation is the entry's.
 
 """
 

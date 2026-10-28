@@ -60,7 +60,7 @@ To bring the snapshot up to date, copy the three files of a newer commit over `c
 
     tools/measure/dictgate.py build/libeci.so lang/enus dictgate.tsv --held
 
-That speaks every entry with the dictionary off and on, forty instances at once, writes a verdict for each word it changes to `dictgate.tsv` and writes `held` anew from the words where CMU supports the rules and not the entry. It takes a few minutes and the whole machine, so run it in an idle-class scope. The verdicts are in its own head, and so is why an entry is held rather than dropped.
+That speaks every entry with the dictionary off and on, forty instances at once, writes a verdict for each word it changes to `dictgate.tsv` and writes `held` anew from the words where CMU supports the rules and not the entry. It takes a few minutes and the whole machine, so run it in an idle-class scope. The verdicts are in its own head, and so is why an entry is held rather than dropped. What it holds is a list of candidates: each is then decided by the published pronunciation, as `docs/quirks.md` says, and the reason beside each line of `held` says what decided it.
 
 ## Adding a language
 

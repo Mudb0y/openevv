@@ -11,8 +11,9 @@ BibTeX	`[.1bIb.2tEk]
 
 # Systems, desktops and the programs on them
 MacOS	mac O S
-openSUSE	open `[.1su.0sx]
+openSUSE	`[.2o.0pxn.1su.0zx]
 FreeDOS	free `[.1das]
+DOS	`[.1das]
 Qt	cute
 LXQt	L X cute
 GNOME	`[.0gx.1nom]
@@ -21,7 +22,7 @@ Xfce	X F C E
 Xorg	X org
 Xwayland	X wayland
 HAProxy	H A proxy
-Kdenlive	K den live
+Kdenlive	`[.2ke.0dEn.1lYv]
 ROCm	`[.1rak.0xm]
 CUDA	`[.1ku.0dx]
 
@@ -56,7 +57,7 @@ Wh	watt hours
 kWh	kilowatt hours
 KiB	kibibytes
 MiB	mebibytes
-GiB	gibibytes
+GiB	`[.1gI.0bX.2bYts]
 TiB	tebibytes
 kbps	kilobits per second
 Mbps	megabits per second
@@ -96,7 +97,6 @@ nginx	engine X
 mkdir	make dir
 rmdir	R M dir
 whoami	who am I
-ifconfig	if config
 nslookup	N S lookup
 tcpdump	T C P dump
 stdin	standard in
