@@ -796,6 +796,104 @@ static int32_t builtin_lookupAndTranslate(delta_state *d, int32_t vol,
     return UD_OK;
 }
 
+/* Ours as well, and for a caller's dictionary too. A main entry is a whole
+   token, and where the whole of a possessive is not held the rules ask for
+   it again without the 's. An entry in words then takes the ending back as
+   any word does, but one in phones is shut in its brackets, and the ending
+   was left standing on its own and spelled out: Frey's as fry ess. So where
+   a main volume holds the word without its ending and the entry ends in
+   phones, the possessive is read here as the entry with the ending's own
+   sound inside its last brackets -- z, s after a voiceless sound, and a
+   syllable of its own after a hissing one, the way the rules write boss's.
+   The caller's entry for the word is the one asked first, as it would be in
+   the lookup the rules make next, and one ending in words is left to
+   them. */
+
+#define UD_SAYS_ROOM 0x220
+
+static const char *main_says(delta_state *d, const char *word)
+{
+    DeltaLang            *lang = DT_LANG(d);
+    const delta_language *of   = delta_lang_of(d);
+    DictionarySet        *s    = DL_CURRENT(lang);
+    const char           *says;
+
+    if (s != 0 && s->status == 0 && s->vol[UD_MAIN] != 0
+        && (says = ud_lookup(s->vol[UD_MAIN], word)) != 0)
+        return says;
+    if (!lang->builtin_off && of != 0 && of->builtin_dict != 0) {
+        const delta_dict_entry *e = builtin_find(of->builtin_dict, UD_MAIN,
+                                                 word);
+
+        if (e != 0)
+            return e->says;
+    }
+    return 0;
+}
+
+static int32_t main_possessive(delta_state *d, int32_t l, int32_t r)
+{
+    DeltaLang            *lang   = DT_LANG(d);
+    const delta_language *of     = delta_lang_of(d);
+    int8_t                stream = DL_STREAM(lang);
+    char                 *w      = lang->builtin_last[UD_MAIN];
+    char                  stem[UD_LAST_ROOM];
+    char                  out[UD_SAYS_ROOM];
+    const char           *says, *p, *q;
+    size_t                n, k;
+    char                  last;
+
+    /* The ending's phones are English's; the same letters are other sounds
+       in another language's alphabet. */
+    if (of == 0 || of->tag == 0 || strncmp(of->tag, "en", 2) != 0)
+        return UD_NOT_FOUND;
+    if (!sync_in_stm(d, stream, l) || !sync_in_stm(d, stream, r))
+        return UD_NO_SPINE;
+    if (!extract_string(d, stream, l, r, w, UD_LAST_ROOM))
+        return UD_NO_SPINE;
+
+    n = strlen(w);
+    if (n < 3 || w[n - 2] != '\'' || w[n - 1] != 's')
+        return UD_NOT_FOUND;
+    memcpy(stem, w, n - 2);
+    stem[n - 2] = 0;
+
+    says = main_says(d, stem);
+    if (says == 0)
+        return UD_NOT_FOUND;
+    k = strlen(says);
+    for (p = 0, q = says; (q = strstr(q, "`[")) != 0; q++)
+        p = q;
+    if (p == 0 || k + 8 > sizeof out || says[k - 1] != ']'
+        || says + k - 1 - (p + 2) < 1
+        || strpbrk(p + 2, "`[") != 0 || strchr(p, ']') != says + k - 1)
+        return UD_NOT_FOUND;
+
+    k--;
+    last = says[k - 1];
+    memcpy(out, says, k);
+    if (strchr("szSZCJ", last) != 0) {
+        k--;
+        memcpy(out + k, ".0", 2);
+        out[k + 2] = last;
+        memcpy(out + k + 3, "Xz", 2);
+        k += 5;
+    } else
+        out[k++] = strchr("ptkfT", last) != 0 ? 's' : 'z';
+    out[k++] = ']';
+    out[k] = 0;
+    if (!builtin_sayable(d, stream, out))
+        return UD_NOT_FOUND;
+
+    del_two_point(d, stream, l, r);
+    OWNER_MOVED(d) = 1;
+    if (!insert_string(d, stream, r, out))
+        return UD_NO_SPINE;
+
+    lang->builtin_took[UD_MAIN] = 1;
+    return UD_OK;
+}
+
 /* Ours as well. Where the language asks for it, a word in the main volume's
    place that neither dictionary holds and that has a capital inside it is
    read as the words it is made of -- iPhone as i Phone, NixOS as Nix OS,
@@ -803,11 +901,12 @@ static int32_t builtin_lookupAndTranslate(delta_state *d, int32_t vol,
    starts one, the same way an entry saying so would. A capital starts a word
    after a small letter, and the last of a run of capitals does when small
    letters follow it, unless all that follows is a plural s, so that APIs and
-   IDs are left as they are. Two kinds of word are left whole: one beginning
-   with a beginning the language lists and a capital, which is a name --
-   McDonald, LeBron, DiCaprio -- and one a root volume holds in small
+   IDs are left as they are. Three kinds of word are left whole: one
+   beginning with a beginning the language lists and a capital, which is a
+   name -- McDonald, LeBron, DiCaprio -- one a root volume holds in small
    letters, as it is or without a plural or possessive ending, which the
-   root lookup will find later and say as the entry says. */
+   root lookup will find later and say as the entry says, and a possessive
+   whose word a main volume holds. */
 
 /* Only the letters of ASCII count. Text in UTF-8 handed over as the Western
    set arrives with each accented letter as a capital A with a mark and a sign
@@ -856,6 +955,16 @@ static int split_held(delta_state *d, const delta_builtin_dict *b,
 {
     char   low[UD_LAST_ROOM];
     size_t n;
+
+    /* The rules ask the main volume for a possessive's word next, so TeX's
+       is TeX's entry and PostgreSQL's PostgreSQL's. */
+    n = strlen(w);
+    if (n > 2 && n < sizeof low && w[n - 2] == '\'' && w[n - 1] == 's') {
+        memcpy(low, w, n - 2);
+        low[n - 2] = 0;
+        if (main_says(d, low) != 0)
+            return 1;
+    }
 
     for (n = 0; w[n] && n + 1 < sizeof low; n++)
         low[n] = (char)(split_upper((unsigned char)w[n]) ? w[n] + 0x20 : w[n]);
@@ -950,6 +1059,8 @@ int32_t callUserDictLookup(delta_state *d, const void *volume,
     }
 
     rc = builtin_lookupAndTranslate(d, vol, l->value, r->value);
+    if (rc == UD_NOT_FOUND && vol == UD_MAIN)
+        rc = main_possessive(d, l->value, r->value);
     if (rc == UD_NOT_FOUND && vol == UD_MAIN)
         rc = builtin_split(d, l->value, r->value);
     return rc != 0;

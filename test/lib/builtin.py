@@ -17,6 +17,12 @@ exactly as the parts written apart do, with a name beginning such as Mc, a
 plural of capitals and a word a root volume holds left whole, and British
 English, which carries no entries, splitting all the same.
 
+A main entry is a whole word, and one written in phones used to leave a
+possessive's ending outside its brackets to be spelled out. The possessive
+is held to reading exactly as an entry for it written out would, whichever
+dictionary holds the word, and a caller's entry in words for it to leave the
+ending to the rules as before.
+
 What a word is read as is asked of eciGeneratePhonemes, which says it plainly;
 one check holds the samples as well, so that what the synthesiser is handed
 is known to follow.
@@ -50,6 +56,7 @@ PHONEME_BUFFER = 1
 #: holds, written the way a caller would load it.
 CARRIED_ROOT = (b"teamtalk", b"`[.1tim.2tck]")
 CARRIED_MAIN = (b"Allrecipes", b"all recipes")
+CARRIED_PHONES = (b"TeX", b"`[.1tEk]")
 CARRIED_ABBR = (b"WWII", b"world war two")
 
 
@@ -251,6 +258,23 @@ def split_checks(dll, have):
               != read(dll, b"NixOS", lang=BRITISH, builtin=0))
 
 
+def possessive_checks(dll):
+    word, says = CARRIED_PHONES
+    mine = word + b"'s"
+    check("%s reads as an entry for it written out would" % mine.decode(),
+          read(dll, mine) == read(dll, mine, builtin=0,
+                                  entries=[(MAIN, mine, b"`[.1tEks]")])
+          and read(dll, mine) != read(dll, mine, builtin=0))
+    zorb = [(MAIN, b"Zorbas", b"`[.1zcr.0bxs]")]
+    check("and one of a caller's, the ending a syllable after a hiss",
+          read(dll, b"Zorbas's", entries=zorb)
+          == read(dll, b"Zorbas's",
+                  entries=[(MAIN, b"Zorbas's", b"`[.1zcr.0bx.0sXz]")]))
+    check("a caller's entry in words for the word leaves it to the rules",
+          read(dll, mine, entries=[(MAIN, word, b"tech")])
+          == read(dll, b"tech's"))
+
+
 def sample_checks(dll):
     text = "We met on teamtalk."
 
@@ -291,6 +315,7 @@ def main(path):
     setting_checks(dll)
     reading_checks(dll)
     split_checks(dll, have)
+    possessive_checks(dll)
     sample_checks(dll)
     if BRITISH in have:
         word = CARRIED_ROOT[0]
