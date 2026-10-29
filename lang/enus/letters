@@ -14,6 +14,7 @@
 
 rules in et_phone.obj named %s_rules
 a piece runs from 876 to 884
+gmute means b c d f j k m p q s t v x z
 
 letter b
   bt at end   says t     # debt
@@ -43,6 +44,7 @@ letter n
   ng before ton at end    says G
   ng before th            says G   # length, strength
   ngh before am           says G   # Bingham, gingham
+  ng before gmute         says G   # Lexingtonian, Gangtok, Helsingborg
   n                       says n
 
 letter q
