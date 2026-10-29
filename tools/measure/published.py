@@ -7,7 +7,9 @@ British one -- is spoken through the engine with its dictionary on and off.
 A word is clearly wrong when its reading differs from every form Wiktionary
 or CMU lists for it by two sounds or more, or at the vowel either side
 stresses; a difference of one unstressed sound is left alone, being as often
-a variant nobody listed as a mistake. For each clearly wrong word:
+a variant nobody listed as a mistake, and so is a main stress alone, since
+on that Wiktionary and CMU disagree with Merriam-Webster as often as the
+engine does. For each clearly wrong word:
 
   hold     the reading is a community entry's and the rules' own reading is
            one Wiktionary lists, so the entry is held out
@@ -26,15 +28,16 @@ entries, and held, the community entries held out. Nothing there is to be
 edited by hand, since this writes it again; a word to be said otherwise goes
 in the language's own main.dic or root.dic, which is read after it.
 
-An entry is a root, as the community's are, so that a plural and a
-possessive come with it: a whole-word entry spelled in phones loses the 's
-of a possessive to a spoken letter s, Frey's as fry ess. But a root is also
+An entry is a root, as the community's are, so that a plural comes with
+it, which a whole-word entry does not give. But a root is also
 the stem of longer words, and a part of a compound -- jete made Jeter
 zhuh-TAY-er, frey made Godfrey god-FRY -- so every entry is read back
 through the engine as a caller's dictionary over every word Wiktionary or
 CMU has, and one is dropped if the engine does not say it as written or if
 any word containing it moves further from what is published. A community
-entry is held only where no word containing it leans on it.
+entry is held only where no word containing it leans on it, and is read
+back the same way, the whole dictionary loaded as a caller's with the
+built-in one off, since nothing a caller loads can take an entry out.
 
 The library has to be built with published/ empty, since the question is
 what the engine says without it. A run takes the whole machine for some
@@ -582,6 +585,38 @@ def dictionary_words():
     return where, ours
 
 
+def as_built(entries, holds, tmp):
+    """The dictionary the build would lay down with these entries and holds,
+    written out as a caller's files: the community's less what is held,
+    these entries, then ours, each volume's later word winning. Read with
+    the built-in dictionary off it is read as the build would read it, which
+    is how a hold is tried, since a caller's dictionary can add an entry to
+    the built-in one but cannot take one out of it."""
+    built = sibling('module/builtindict')
+    here = os.path.join(LANG, 'dictionary')
+    held = built.read_held(os.path.join(here, 'held'))
+    held |= {(vol, word.encode('cp1252')) for vol, word in holds}
+    files = []
+    for n, vol in ((0, 'main'), (1, 'root')):
+        merged = {}
+        for word, says in built.read_dic(os.path.join(here, 'community', vol + '.dic'), False):
+            if (vol, word) not in held:
+                merged[word] = says
+        for word, says, _src, v in entries:
+            if v == vol:
+                merged[word.encode('cp1252')] = says.encode('cp1252')
+        for word, says in built.read_dic(os.path.join(here, vol + '.dic'), True):
+            merged[word] = says
+        path = os.path.join(tmp, vol + '.dic')
+        with open(path, 'wb') as f:
+            for word, says in sorted(merged.items()):
+                f.write(word + b'\t' + says + b'\r\n')
+            # The loader drops a file's last line.
+            f.write(b'\r\n')
+        files.append((n, path))
+    return files
+
+
 def write_files(entries, holds):
     os.makedirs(OUT, exist_ok=True)
     for vol in ('root', 'main'):
@@ -686,21 +721,20 @@ def main(argv):
     print('published: %d clearly wrong; %s' % (
         len(wrong), ', '.join('%s %d' % kv for kv in sorted(why.items()))), flush=True)
 
-    # Read every entry back, and drop any the engine does not say as
-    # written, or that makes a word wrong that was not.
+    # Read the build back with every entry and hold in it, and drop any
+    # entry the engine does not say as written, and any entry or hold that
+    # moves a word further from what is published. The build as it stands
+    # is read the same way first, as the check that the way is faithful.
     tmp = tempfile.mkdtemp()
+    now = speak_all(lib, words, 0, as_built([], [], tmp), jobs)
+    unlike = [w for w in words if now[w] != on[w]]
+    if unlike:
+        raise SystemExit('published: the build read as a caller\'s dictionary says %d '
+                         'words otherwise, %s among them' % (len(unlike), ', '.join(unlike[:5])))
     while True:
-        files = []
-        for n, vol in ((0, 'main'), (1, 'root')):
-            path = os.path.join(tmp, vol + '.dic')
-            with open(path, 'wb') as f:
-                for word, says, _src, v in entries:
-                    if v == vol:
-                        f.write(word.encode('cp1252') + b'\t' + says.encode('cp1252') + b'\r\n')
-                f.write(b'\r\n')
-            files.append((n, path))
-        now = speak_all(lib, words, 1, files, jobs)
+        now = speak_all(lib, words, 0, as_built(entries, holds, tmp), jobs)
         mine = {e[0].lower(): e for e in entries}
+        kept = {word.lower() for _vol, word in holds}
         unsaid = {k for k, e in mine.items() if distance(engine(now[k]), engine(e[1])) > 0}
         # Worse is any word further from what is published than it was,
         # not only one that has become clearly wrong: questar going from
@@ -709,19 +743,27 @@ def main(argv):
         worse = further({w: (on[w], now[w]) for w in moved}, accepted, jobs)
         culprits = set()
         for w in worse:
-            # The longest entry inside the word, at its start or anywhere
-            # a compound puts it.
-            inside = [k for k in mine if k in w and k != w]
+            # The longest entry or hold inside the word, at its start or
+            # anywhere a compound puts it, or with its final e gone before
+            # an ending, as tace is read in Tacy; a hold can be the word
+            # itself.
+            def within(k):
+                return k in w or (k.endswith('e') and len(k) > 3 and k[:-1] in w)
+
+            inside = [k for k in mine if within(k) and k != w] + [k for k in kept if within(k)]
             if inside:
                 culprits.add(max(inside, key=len))
             else:
-                print('published: %s is worse and no entry is inside it' % w, flush=True)
+                print('published: %s is worse and nothing written is inside it' % w,
+                      flush=True)
         drop = unsaid | culprits
-        print('published: %d entries, %d not said as written, %d made %d words worse'
-              % (len(entries), len(unsaid), len(culprits), len(worse)), flush=True)
+        print('published: %d entries and %d held, %d not said as written, %d made %d '
+              'words worse' % (len(entries), len(holds), len(unsaid), len(culprits),
+                               len(worse)), flush=True)
         if not drop:
             break
         entries = [e for e in entries if e[0].lower() not in drop]
+        holds = [h for h in holds if h[1].lower() not in drop]
     write_files(entries, holds)
     print('published: wrote %d entries and %d held to %s' % (len(entries), len(holds), OUT))
     return 0

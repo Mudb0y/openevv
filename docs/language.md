@@ -66,7 +66,7 @@ To write `published` again, empty it, build a library and give the tool that lib
 
     tools/measure/published.py build/libeci.so kaikki.jsonl.gz mpron.txt cmudict.0.3
 
-It speaks every word Wiktionary or CMU has, about 175,000 of them, several times over, which is twenty minutes of the whole machine, so run it in an idle-class scope. Its head says how a word is judged clearly wrong, why an entry is a root and how one that harms another word is found and dropped.
+It speaks every word Wiktionary or CMU has, about 175,000 of them, several times over, which is twenty minutes of the whole machine, so run it in an idle-class scope. Its head says how a word is judged clearly wrong, why an entry is a root and how an entry or a hold that harms another word is found and dropped.
 
 ## Adding a language
 
