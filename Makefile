@@ -924,7 +924,9 @@ define builtin_for
 $(1)/delta_builtin_$(notdir $(1)).c: tools/module/builtindict.py \
     $(wildcard $(1)/dictionary $(1)/dictionary/community \
                $(1)/dictionary/*.dic $(1)/dictionary/held \
-               $(1)/dictionary/split $(1)/dictionary/community/*.dic)
+               $(1)/dictionary/split $(1)/dictionary/community/*.dic \
+               $(1)/dictionary/published $(1)/dictionary/published/*.dic \
+               $(1)/dictionary/published/held)
 	@python3 tools/module/builtindict.py write $(1)
 	@touch $$@
 endef

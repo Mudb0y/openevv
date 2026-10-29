@@ -16,9 +16,13 @@ lang/<tag>/dictionary holds it as text:
   held
       entries of the snapshot held out of the build, one a line: the volume,
       a tab, the word, and after a tab why
+  published/main.dic, published/root.dic, published/held
+      written by tools/measure/published.py from published pronunciations
+      and never by hand: entries read after the snapshot, and entries of the
+      snapshot held out as held is
   main.dic, root.dic, abbr.dic
-      ours, in UTF-8, read after the snapshot so that an entry of ours is the
-      one used; a line starting # is a remark
+      ours, in UTF-8, read after the snapshot and published/ so that an entry
+      of ours is the one used; a line starting # is a remark
   split
       if it is there, a word with a capital inside it that no dictionary
       holds is read as the words it is made of; each line is a beginning
@@ -98,7 +102,8 @@ def read_held(path):
 def volumes(lang):
     """Each volume as the build lays it down: word to reading, sorted."""
     here = os.path.join(lang, "dictionary")
-    held = read_held(os.path.join(here, "held"))
+    held = (read_held(os.path.join(here, "held"))
+            | read_held(os.path.join(here, "published", "held")))
     out = {}
     for vol in VOLUMES:
         merged = {}
@@ -106,6 +111,9 @@ def volumes(lang):
                                                 vol + ".dic"), False):
             if (vol, word) not in held:
                 merged[word] = says
+        for word, says in read_dic(os.path.join(here, "published",
+                                                vol + ".dic"), True):
+            merged[word] = says
         for word, says in read_dic(os.path.join(here, vol + ".dic"), True):
             merged[word] = says
         out[vol] = sorted(merged.items())

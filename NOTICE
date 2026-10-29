@@ -196,6 +196,15 @@ The rest of `lang/enus/dictionary` is ours and the MIT licence covers it:
 which names the beginnings that keep a name whole, and `main.dic`,
 `root.dic` and `abbr.dic`, the words we add. So is `lang/engb/dictionary`.
 
+`lang/enus/dictionary/published` is written by tools/measure/published.py
+out of two dictionaries that ask nothing of whoever copies them. The Moby
+Pronunciator II is Grady Ward's, placed in the public domain by grant of its
+author in January 2001. The Carnegie Mellon Pronouncing Dictionary of 1993
+is Copyright 1993 by Carnegie Mellon University, which made its use for any
+research or commercial purpose completely unrestricted and asked only to be
+acknowledged, which this is. Wiktionary decides which of their readings is
+the published one and nothing of Wiktionary is copied.
+
 Where it came from
 ------------------
 
