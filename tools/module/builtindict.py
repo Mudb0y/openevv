@@ -2,27 +2,17 @@
 """The dictionary a language carries, written as C out of lang/<tag>/dictionary.
 
 A caller can load a dictionary of its own into an instance: a text file, one
-entry a line, the word, a tab and what is said in its place. The community
-keeps a large one for US English in exactly that form, and an instance
-consults the built-in dictionary after whatever the caller has loaded, so
-everything the caller says still wins. This writes the built-in one.
+entry a line, the word, a tab and what is said in its place. A language can
+carry one in the same form, and an instance consults it after whatever the
+caller has loaded, so everything the caller says still wins. This writes the
+one a language carries.
 
 lang/<tag>/dictionary holds it as text:
 
-  community/main.dic, community/root.dic, community/abbr.dic
-      a snapshot of the community's files, kept as they came, in the Windows
-      Western set with a carriage return on every line; community/source says
-      where and which commit
-  held
-      entries of the snapshot held out of the build, one a line: the volume,
-      a tab, the word, and after a tab why
-  published/main.dic, published/root.dic, published/held
-      written by tools/measure/published.py from published pronunciations
-      and never by hand: entries read after the snapshot, and entries of the
-      snapshot held out as held is
   main.dic, root.dic, abbr.dic
-      ours, in UTF-8, read after the snapshot and published/ so that an entry
-      of ours is the one used; a line starting # is a remark
+      the three volumes, in UTF-8, one entry a line; a line starting # is a
+      remark. US English's began as the community's IBMTTSDictionaries and
+      each file says how it is laid out
   split
       if it is there, a word with a capital inside it that no dictionary
       holds is read as the words it is made of; each line is a beginning
@@ -63,61 +53,102 @@ def parse(raw):
     return word[:WORD_MAX], says[:SAYS_MAX]
 
 
-def read_dic(path, ours):
+def read_dic(path):
     out = []
     if not os.path.exists(path):
         return out
     with open(path, "rb") as f:
         for n, raw in enumerate(f, 1):
-            if ours:
-                if raw.startswith(b"#"):
-                    continue
-                try:
-                    raw = raw.decode("utf-8").encode("cp1252")
-                except (UnicodeDecodeError, UnicodeEncodeError) as e:
-                    sys.exit("builtindict: %s line %d: %s" % (path, n, e))
+            if raw.startswith(b"#"):
+                continue
+            try:
+                raw = raw.decode("utf-8").encode("cp1252")
+            except (UnicodeDecodeError, UnicodeEncodeError) as e:
+                sys.exit("builtindict: %s line %d: %s" % (path, n, e))
             entry = parse(raw)
             if entry:
                 out.append(entry)
     return out
 
 
-def read_held(path):
-    held = set()
-    if not os.path.exists(path):
-        return held
-    with open(path, "rb") as f:
-        for n, raw in enumerate(f, 1):
-            if raw.startswith(b"#") or not raw.strip():
-                continue
-            parts = raw.rstrip(b"\r\n").split(b"\t")
-            if len(parts) < 2 or parts[0].decode() not in VOLUMES:
-                sys.exit("builtindict: %s line %d is not a volume and a word"
-                         % (path, n))
-            held.add((parts[0].decode(), parts[1].decode("utf-8")
-                      .encode("cp1252")))
-    return held
-
-
 def volumes(lang):
     """Each volume as the build lays it down: word to reading, sorted."""
     here = os.path.join(lang, "dictionary")
-    held = (read_held(os.path.join(here, "held"))
-            | read_held(os.path.join(here, "published", "held")))
+    return {vol: sorted(dict(read_dic(os.path.join(here, vol + ".dic"))).items())
+            for vol in VOLUMES}
+
+
+# A volume's file opens with remarks, then a blank line, then the body: the
+# entries the tools write, sorted and with no remark among them. Whatever
+# follows the body was decided by hand, each block under a remark saying
+# why, and the tools read it but never write it. The build reads the lot.
+
+def layout(path):
+    """A volume's file as (head, body, tail): the opening remarks with the
+    blank line after them, the body as a word to reading dict of text, and
+    the rest verbatim."""
+    lines = open(path, encoding="utf-8").read().split("\n")
+    at = lines.index("") + 1
+    end = at
+    while end < len(lines) and lines[end] and not lines[end].startswith("#"):
+        end += 1
+    body = {}
+    for line in lines[at:end]:
+        entry = parse(line.encode("utf-8"))
+        if entry:
+            body[entry[0].decode("utf-8")] = entry[1].decode("utf-8")
+    return ("\n".join(lines[:at]) + "\n", body,
+            "\n".join(lines[end:]).rstrip("\n"))
+
+
+def write_layout(path, head, body, tail):
+    rows = sorted(body.items(), key=lambda e: (e[0].lower(), e[0]))
+    text = head + "".join("%s\t%s\n" % r for r in rows)
+    if tail:
+        text += tail + "\n"
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(text)
+
+
+def hand_words(path):
+    """The words a volume's blocks decided by hand say something for."""
+    _head, _body, tail = layout(path)
+    return {parse(line.encode("utf-8"))[0].decode("utf-8")
+            for line in tail.split("\n")
+            if not line.startswith("#") and parse(line.encode("utf-8"))}
+
+
+def read_removed(lang):
+    """lang/<tag>/dictionary/removed as (volume, word) to (reading, why)."""
+    path = os.path.join(lang, "dictionary", "removed")
     out = {}
-    for vol in VOLUMES:
-        merged = {}
-        for word, says in read_dic(os.path.join(here, "community",
-                                                vol + ".dic"), False):
-            if (vol, word) not in held:
-                merged[word] = says
-        for word, says in read_dic(os.path.join(here, "published",
-                                                vol + ".dic"), True):
-            merged[word] = says
-        for word, says in read_dic(os.path.join(here, vol + ".dic"), True):
-            merged[word] = says
-        out[vol] = sorted(merged.items())
+    if not os.path.exists(path):
+        return out
+    for n, line in enumerate(open(path, encoding="utf-8"), 1):
+        if line.startswith("#") or not line.strip():
+            continue
+        f = line.rstrip("\n").split("\t")
+        if len(f) != 4 or f[0] not in VOLUMES:
+            sys.exit("builtindict: %s line %d is not a volume, a word, a "
+                     "reading and why" % (path, n))
+        out[(f[0], f[1])] = (f[2], f[3])
     return out
+
+
+def add_removed(lang, rows):
+    """Append (volume, word, reading, why) rows to removed, kept sorted."""
+    path = os.path.join(lang, "dictionary", "removed")
+    text = open(path, encoding="utf-8").read()
+    head = text[:text.index("\n\n") + 2]
+    have = read_removed(lang)
+    for vol, word, says, why in rows:
+        have[(vol, word)] = (says, why)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(head)
+        for (vol, word), (says, why) in sorted(
+                have.items(), key=lambda e: (VOLUMES.index(e[0][0]),
+                                             e[0][1].lower(), e[0][1])):
+            f.write("%s\t%s\t%s\t%s\n" % (vol, word, says, why))
 
 
 def read_split(lang):

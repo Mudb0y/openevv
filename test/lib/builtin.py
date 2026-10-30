@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """The dictionary a language carries, eciBuiltInDict.
 
-US English carries the community's IBMTTSDictionaries in the library, and an
-instance consults it after whatever dictionary the caller has given it. This
+US English carries a dictionary of its own in the library, begun from the
+community's IBMTTSDictionaries, and an instance consults it after whatever
+dictionary the caller has given it. This
 holds the engine to that: an entry it carries is read exactly as the same
 entry is when a caller loads it, the caller's own entry for a word wins over
 it in every volume, a dictionary the caller has given that does not hold the

@@ -1,0 +1,6 @@
+# The commit of the community's IBMTTSDictionaries whose changes this
+# dictionary has taken, up to and including. tools/measure/dictgate.py reads
+# it and writes it. Their ENUmain.dic, ENURoot.dic and ENUabbr.dic are
+# main.dic, root.dic and abbr.dic here.
+https://github.com/eigencrow/IBMTTSDictionaries
+cf365caa68c62596567a1e26bcfad9ee779b9b51

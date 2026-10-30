@@ -12,6 +12,12 @@
 # the voice settings, and none is the default -- installing the manager is not
 # the same as asking for the engine to sound different.
 #
+# A set made from IBMTTSDictionaries is not read for US English, whose own
+# dictionary in the library began as that and has been corrected since: a
+# reader's dictionary wins over the one the library carries, so reading the
+# set would put back every entry since taken out and every reading since
+# mended. Its files for any other language are read as before.
+#
 # Personal entries: what the reader has added in the manager's editor, which
 # it keeps in the NVDA configuration and shares with every synthesiser that
 # reads the contract. On unless the reader turns it off.
@@ -50,7 +56,11 @@ NO_SET = "none"
 
 _SET_ID = re.compile(r"^[a-z0-9]+(?:[.-][a-z0-9]+)+$")
 
-ManagedSet = namedtuple("ManagedSet", "id name version folder")
+ManagedSet = namedtuple("ManagedSet", "id name version folder source")
+
+#: The sources a language's carried dictionary began as, by the address a
+#: set gives as its source_url, and the languages each is not read for.
+CARRIED_FROM = {"github.com/eigencrow/ibmttsdictionaries": (0x10000,)}
 
 
 def _configPath():
@@ -124,7 +134,14 @@ def _oneSet(folder, name):
 		            % (folder, fields["id"]))
 		return None
 	return ManagedSet(name, fields["name"].strip(), fields["source_version"].strip(),
-	                  folder)
+	                  folder, fields["source_url"].strip())
+
+
+def _carried(source):
+	"""The languages a set from this source is not read for."""
+	where = re.sub(r"^[a-z]+://(www\.)?", "", source.strip().lower())
+	where = re.sub(r"(\.git)?/*$", "", where)
+	return CARRIED_FROM.get(where, ())
 
 
 def managedSets():
@@ -174,6 +191,12 @@ def folders(chosen, personal):
 		one = managedSets().get(chosen)
 		if one is None:
 			log.warning("openevv: the dictionary set %s is not installed" % chosen)
+		elif _carried(one.source):
+			# With the languages it is passed over for, which the engine
+			# layer reads as a pair.
+			log.info("openevv: the dictionary set %s is not read for US English,"
+			         " whose dictionary in the library began as it" % chosen)
+			out.append((one.folder, _carried(one.source)))
 		else:
 			out.append(one.folder)
 	if personal:

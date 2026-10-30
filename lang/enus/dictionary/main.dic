@@ -1,8 +1,1197 @@
-# Words of ours for US English's main volume: a word here is matched as the
-# whole token it is written as, capitals and all, so Qt here is not qt and
-# MATE is not mate. One a line, the word, a tab, and what is said in its
-# place; tools/module/builtindict.py reads it after the community's, so an
-# entry here replaces theirs. docs/language.md says how to add one.
+# US English's main volume. A word here is matched as the whole token it is
+# written as, capitals and all, so Qt here is not qt and MATE is not mate;
+# what is said in its place can be several words. One a line, the word, a
+# tab, and what is said; a line starting # is a remark.
+#
+# The entries straight after this are the body, kept sorted by the tools
+# that write it: tools/measure/dictgate.py, which takes in the community's
+# later changes, and tools/measure/published.py. Blocks decided by hand come
+# after it, each under a remark saying why, and the tools leave their words
+# alone. An entry taken out is in removed, and docs/language.md says how to
+# add one.
+
+65DAYSOFSTATIC	65 days of static
+8Dio	8 `0 Dio
+A-list	`[.1e.2lIst]
+A-lister	`[.1e.2lI.0stR]
+aaas	ay ay ay ess
+AAC	ay ay ce
+AAPI	ay ay pea igh
+AAS	`1 Ay Ay S
+abc	ay bea cea
+abdl	ay bea dee ell
+ABS	ay bea ess
+ABT	ay bea tea
+acb	ay cea bea
+ACCU	`[.1A.0kyu]
+Accu	`[.1A.0kyu]
+accu	`[.1A.0kyu]
+accuweather	`[.1A.0kyu.2wE.0DR]
+ACH	ay cea aitch
+ACIP	ay cea igh pea
+ACU	ay cea yue
+ADATA	ay data
+adata	ay data
+adsl	ay dee ess ell
+ADT	ay dee tea
+ADU	ay dee yue
+AEDT	ay ee dee tea
+AEM	ay ee em
+AEROHIVE	aero `0 hive
+Aerohive	aero `0 hive
+aerohive	aero `0 hive
+AESP	ay ee ess pee
+AEW	ay ee doubleyou
+AF	ay eff
+afb	ay eff bea
+Afp	ay eff pea
+afp	ay eff pea
+AGI	ay jee igh
+AGL	ay jee ell
+Agri-Food	`[.1Ag.0rX.2fud]
+Agri-food	`[.1Ag.0rX.2fud]
+agri-food	`[.1Ag.0rX.2fud]
+Ai	ay igh
+ai	aigh igh
+AIBA	ay igh bea ay
+AIFF	ay igh eff eff
+Airbnb	Air bea en bea
+airbnb	Air bea en bea
+Airbnbs	Air BN BEES
+airbnbs	air bea en beas
+Aix-en-Provence	`[.2eks.0an.0prx.1vans]
+AK	ay keigh
+AKA	ay keigh ay
+aka	ay keigh ay
+AKK	ay keigh keigh
+Allrecipes	all recipes
+ALM	ay ell em
+ALU	ay ell yue
+AM	ay em
+AMSAT	`[.1Am.2sAt]
+ANC	ay en cea
+AOB	ay oe bea
+AOC	ay oe cea
+AOD	ay oe dee
+aol	ay oe ell
+AOSP	ay oe ess pea
+APA	ay pea ay
+APH	ay pea aitch
+api	aigh pee igh
+apk	ay pee kay
+apm	ay pea em
+APU	ay pea yue
+AQI	aigh kew igh
+ARDS	ay ar dee ess
+ARL	ay ar ell
+arl	ay ar ell
+ASIC	ay ess igh cea
+ASIN	ay ess igh en
+ASIS	`[.1e.0sXs]
+ASM	ay ess em
+ATACMS	`[.0x.1tA.0kxmz]
+ATACMS's	`[.0x.1tA.0kxm.0zXz]
+ATH	ay tea aitch
+ATIA	ay tea igh ay
+ATVI	ay tea vee igh
+AUC	ay yue cea
+auditctl	audit ctl
+autofs	auto fs
+AWM	ay doubleyou em
+AWS	ay doubleyou es
+aws	ay doubleyou ess
+Axl	`[.1Ak.0sxl]
+AZT	ay zee tea
+AZW	aigh zee doubleyou
+azw	aigh zee doubleyou
+BADBADNOTGOOD	bad bad not good
+badbadnotgood	bad bad not good
+BAS-RELIEF	`[.2ba.0rX.1lif]
+Bas-Relief	`[.2ba.0rX.1lif]
+Bas-relief	`[.2ba.0rX.1lif]
+bas-relief	`[.2ba.0rX.1lif]
+batchcommand	batch command
+beat-em-up	`[.1bi.0txm.2Hp]
+beat-em-ups	`[.1bi.0txm.2Hps]
+BELLES-LETTRES	`[.0bEl.1lE.0trx]
+Belles-Lettres	`[.0bEl.1lE.0trx]
+Belles-lettres	`[.0bEl.1lE.0trx]
+belles-lettres	`[.0bEl.1lE.0trx]
+BIA	bea igh ay
+Billet-doux	`[.2bI.0le.1du]
+billet-doux	`[.2bI.0le.1du]
+BILLETS-DOUX	`[.2bI.0le.1du]
+Billets-Doux	`[.2bI.0le.1du]
+Billets-doux	`[.2bI.0le.1du]
+billets-doux	`[.2bI.0le.1du]
+BIOS	`[.1bY.0os]
+BIOS's	`[.1bY.0o.0sXz]
+BIPAC	buypaac
+BLOODRED	blood red
+Bloodred	blood red
+bloodred	blood red
+Bluemercury	blue mercury
+BOJ	bea oe jeigh
+bootctl	boot ctl
+brailleroledescription	braille role description
+brltty	bee ar ell tea tea wie
+bugreport	`[.1bHg.0rX.2pcrt]
+busctl	bus ctl
+BYD	bee wie dee
+BYOAI	bea wie oe ay igh
+BYOD	bea wie oe dee
+CA	cea ay
+CAGR	cea ay jee ar
+CAQI	cea aigh kew igh
+Cas	cass
+CATER-CORNER	`[.1kA.0Fi.2kcr.0nR]
+Cater-Corner	`[.1kA.0Fi.2kcr.0nR]
+Cater-corner	`[.1kA.0Fi.2kcr.0nR]
+cater-corner	`[.1kA.0Fi.2kcr.0nR]
+CATER-CORNERED	`[.1kA.0Fi.2kcr.0nRd]
+Cater-Cornered	`[.1kA.0Fi.2kcr.0nRd]
+Cater-cornered	`[.1kA.0Fi.2kcr.0nRd]
+cater-cornered	`[.1kA.0Fi.2kcr.0nRd]
+CC'd	cea seed
+cc'd	cea seed
+CC'ed	cea seed
+cc'ed	cea seed
+CC'ing	cea seaing
+cc'ing	cea seaing
+CE	cea ee
+CES	cea ee ess
+CEX	cea ee eks
+CFIT	seafit
+chalrestart	`[.1CAl.0ri.2start]
+Champs-Elysees	`[.2Scn.0ze.2li.1ze]
+Champs-Elysées	`[.2Scn.0ze.2li.1ze]
+Champs-Élysées	`[.2Scn.0ze.2li.1ze]
+Champs-Élysées's	`[.2Scn.0ze.0li.1zez]
+changemap	`[.1CenJ.2mAp]
+Chatgpt	chat gee pee tea
+chatgpt	chat gee pee tea
+chmod	ch mod
+chown	ch own
+CIAI	cea igh ay igh
+CIPP	cea igh pea pea
+CIS	cea igh ess
+CISA	cea igh ess ay
+CITIZENFOUR	citizen `1 four
+Citizenfour	citizen `1 four
+CNET	seanet
+cnet	seanet
+coderabbit	code rabbit
+coderabbitai	code rabbit ay igh
+compileall	compile all
+controlenter	control enter
+coredumpctl	coredump ctl
+CRE	sea ar ee
+creditsend	`[.1krE.0FXt.2sEnd]
+CRI	cea ar igh
+CRISPR	`[.1krIs.0pR]
+Crispr	`[.1krIs.0pR]
+Crowdsignal	Crowd signal
+Crwth	kruth
+crwth	kruth
+CSAM	`[.1si.2sAm]
+CSAM's	`[.1si.2sAmz]
+CSPAN	seespan
+CSUN	cea `0 sun
+csun	cee `0 sun
+CSUNATC	cea sun ay tea cea
+Cul-de-sac	`[.1kHl.0dx.2sAk]
+cul-de-sac	`[.1kHl.0dx.2sAk]
+Cul-de-sacs	`[.1kHl.0dx.2sAks]
+cul-de-sacs	`[.1kHl.0dx.2sAks]
+Culs-de-sac	`[.1kHlz.0dx.2sAk]
+culs-de-sac	`[.1kHlz.0dx.2sAk]
+CUS	cea yue ess
+CUV	cea yue vee
+CWTCH	`[.1kUC]
+Cwtch	`[.1kUC]
+cwtch	`[.1kUC]
+CZE	cea zee ee
+daysofstatic	days of static
+DAZN	`[.0dx.1zon]
+DAZN's	`[.0dx.1zonz]
+DE-EXTINCTION	`[.2di.0Xk.1stIGk.0SXn]
+De-Extinction	`[.2di.0Xk.1stIGk.0SXn]
+De-extinction	`[.2di.0Xk.1stIGk.0SXn]
+de-extinction	`[.2di.0Xk.1stIGk.0SXn]
+debugfs	debug fs
+Debuginfo	debug info
+debuginfo	debug info
+DEI	dee ee igh
+delattr	del `[.1At.0rx]
+deleteme	delete me
+delmap	`[.1dEl.2mAp]
+devpts	dev pts
+dgdebug	dee gee debug
+Digi	dijji
+DLA	dee ell ay
+dpi	dee pea igh
+Dpiano	dee piano
+Duckduckgo	Duck duck go
+Dvbviewer	dee vee bea viewer
+DXOMARK	dee eks oe mark
+E-ZINE	ee `0 zeen
+E-Zine	ee `0 zeen
+E-zine	ee `0 zeen
+e-zine	ee `0 zeen
+E-ZINES	ee `0 zeenz
+E-Zines	ee `0 zeenz
+E-zines	ee `0 zeenz
+e-zines	ee `0 zeenz
+EAP	ee ay pea
+EAQI	ee aigh kew igh
+EARC	ee ay ar cea
+EBU	ee bea yue
+ECT	ee cea tea
+EDIB	ee dee igh bea
+edu	ee dee yue
+Edu-Vacation	`[.2E.0JX.2ve.1ke.0SXn]
+Edu-vacation	`[.2E.0JX.2ve.1ke.0SXn]
+edu-vacation	`[.2E.0JX.2ve.1ke.0SXn]
+Edu-Vacations	`[.2E.0JX.2ve.1ke.0SXnz]
+Edu-vacations	`[.2E.0JX.2ve.1ke.0SXnz]
+edu-vacations	`[.2E.0JX.2ve.1ke.0SXnz]
+EFE	ee eff ee
+EFF	ee eff eff
+EFI	ee eff igh
+EFS	ee eff ess
+EGOT	`[.1i.2gat]
+EIS	ee igh ess
+Elibrary	ee library
+elibrary	ee library
+ELIQUID	ee liquid
+Eliquid	ee liquid
+eliquid	ee liquid
+ELIQUIDS	ee liquids
+Eliquids	ee liquids
+eliquids	ee liquids
+ELISA	`[.0X.1lY.0sx]
+elmercat	elmer cat
+ELN	ee ell en
+ELT	ee ell tea
+Elysées's	`[.2e.0li.1zez]
+emailget	`[.1i.2mel.2gEt]
+emailset	`[.1i.2mel.2sEt]
+ENC	ee en cea
+EOD	ee oh dee
+EOL	ee oe ell
+EP	ee pea
+EPS	ee pea ess
+EQT	ee kew tea
+errormessage	error message
+ESA	ee ess ay
+Esc	escape
+Escooter	ee scooter
+escooter	ee scooter
+Escooters	ee scooters
+escooters	ee scooters
+ESM	ee ess em
+ESOL	eesol
+espn	ee ess pea en
+ESU	ee ess yue
+EUV	ee yue vee
+EZ	ee zee
+FAQ	eff ay kew
+faq	eff ay kew
+fda	eff dee ay
+FERC	eff ee ar cea
+FFmpeg	eff eff `[.1Em.0pEg]
+Ffmpeg	eff eff `[.1Em.0pEg]
+ffmpeg	eff eff `[.1Em.0pEg]
+FHIR	fire
+filezilla	file zilla
+Flightradar	flight `1 radar
+flightradar	flight `1 radar
+FMOD	`[.1Ef.2mad]
+FMOD's	`[.1Ef.2madz]
+Fmpeg	eff `[.1Em.0pEg]
+FOIA	eff oe igh ay
+Freedb	Free DB
+freedb	Free DB
+freedomscientific	Freedom Scientific
+fstab	fs tab
+FULLMETAL	full `1 metal
+Fullmetal	full `1 metal
+fullmetal	full `1 metal
+fxbus	eff eks bus
+FYP	eff wie pea
+fyp	eff wie pea
+GAMELIT	game lit
+Gamelit	game lit
+gamelit	game lit
+Gamestop	game stop
+gamestop	game stop
+GEDI	jee ee dee igh
+Geeksfor	geeks for
+GEHA	jee ee aitch ay
+GEI	jee ee igh
+getattr	get `[.1At.0rx]
+getattribute	get attribute
+getdata	`[.1gEt.2de.0Fx]
+Getopts	get opts
+getopts	get opts
+getpaid	`[.1gEt.2ped]
+GNI	jee en igh
+GNU's	`[.0gx.1nuz]
+googlesource	google source
+GRIS-GRIS	`[.1gri.0gri]
+Gris-Gris	`[.1gri.0gri]
+Gris-gris	`[.1gri.0gri]
+gris-gris	`[.1gri.0gri]
+groupadd	group `0 add
+gsuite	jee Suite
+GUI	jee yue igh
+gui	jee yue igh
+GUID	jee yue igh dee
+gzip	jee `0 zip
+hbo	aitch bea oe
+HEIC	aitch ee igh cea
+heic	aitch ee igh cea
+HEV	aitch ee vee
+HIIT	hit
+HIQ	aitch igh kew
+histfile	hist file
+HLA	aitch ell ay
+HODL	`[.1ho.0dxl]
+homectl	home ctl
+hostnamectl	hostname ctl
+HOV	aitch oe vee
+htaccess	ht access
+hugepages	huge `0 pages
+HUNTR	huntar
+Hydrogenaudio	Hydrogen Audio
+IAC	igh ay cea
+IAF	igh ay eff
+IAP	igh ay pea
+IAPP	igh ay pea pea
+IB	igh bea
+ibm	igh bea em
+IBMECI	igh bee em ee sea igh
+ibmeci	igh bee em ee sea igh
+ibmtts	igh bee em tea tea ess
+IBS	`1 igh BS
+IBT	igh bea tea
+icarly	igh carly
+ICO	igh cea oe
+ICT	igh cea tea
+Id	igh dee
+ID'd	`1 igh `[did]
+IDCLIP	igh dee clip
+Idclip	igh dee clip
+idclip	igh dee clip
+IDFA	igh dee eff ay
+IDGAF	eye dee jee aigh eff
+Idk	igh dee keigh
+idk	igh dee keigh
+IDO	igh dee oe
+IEC	igh ee cea
+IED	igh ee dee
+IEEE	igh tripple ee
+IEP	igh ee pea
+IFA	igh eff ay
+ifa	`[.1i.0fx]
+IGN	igh jee en
+IHS	igh aitch ess
+IIHS	igh igh aitch ess
+IIS	igh igh ess
+IJBOL	igh jeigh bee oh ell
+ijbol	igh jeigh bee oh ell
+Ikr	igh keigh ar
+ikr	igh keigh ar
+ILM	igh ell em
+ILY	igh ell wie
+imdb	igh em dee bea
+IME	igh em ee
+IMEI	igh em ee igh
+IMHO	igh em aitch oe
+immersivecontrolpanel	immersive control panel
+Imo	igh em oe
+imo	igh em oe
+importctl	import ctl
+Init	`[.1In.0It]
+init	`[.1In.0It]
+initctl	init ctl
+initramfs	`[.1In.0It] ram fs
+initrd	`[.1In.0It] rd
+io	igh oe
+iocage	igh oe cage
+IOD	igh oe dee
+IOS	igh oe ess
+Ios	igh oe ess
+ios	igh oe ess
+ip	igh pea
+IPLAYER	igh Player
+Iplayer	igh Player
+IPS	igh pea ess
+IRC	igh ar cea
+IRIB	igh ar igh bea
+IRL	igh ar ell
+IRTVU	igh ar tea vee yue
+ISO	igh ess oe
+ISQ	igh ess kew
+ISS	igh ess ess
+ITU	igh tea yue
+IWC	igh doubleyou cea
+IYKYK	igh wie keigh wie keigh
+Iykyk	igh wie keigh wie keigh
+iykyk	igh wie keigh wie keigh
+JAMA	jamma
+Jos	joss
+journalctl	journal ctl
+JPEG	jeigh `0 peg
+JSON	`[.1Je.2san]
+KACU	keigh eigh sea yue
+KAGI	keigh eigh jee igh
+KAHU	keigh ay aiche yue
+KAIW	keigh eigh igh doubleyou
+KAJX	keigh ay jay ex
+KAMU	keigh eigh em yue
+KAMU-FM	keigh eigh em yue ef em
+KANH	keigh ay en aiche
+KANM	keigh ay en em
+KANO	keigh ay en oh
+KANQ	keigh ay en cue
+KANU	keigh ay en yue
+KASU	keigh eigh ess yue
+KAUD	keigh ay yue dee
+KAUR	keigh eigh yue ar
+KAWC	keigh ay doubleyou sea
+KAWP	keigh ay yue pee
+KAXE	keigh ay ex ee
+KAZU	keigh ay zee yue
+KEDT	keigh ee dee tea
+KEDT-FM	keigh ee dee tea ef em
+KENC	keigh ee en sea
+KENE	keigh ee en ee
+KENG	keigh ee en jee
+KENM	keigh ee en em
+KENU	keigh ee en yue
+KEOS	keigh ee oh ess
+KES	keigh ee ess
+KESC	keigh ee ess sea
+KEUW	keigh ee yue doubleyou
+KEYA	keigh ee wy ay
+keyctl	key ctl
+KHEC	keigh aiche ee sea
+KHUU	keigh aiche yue yue
+KIAN	keigh aye ay enn
+KICI	keigh igh cea igh
+KICO	keigh eye sea oh
+KIEA	keigh eye ee ay
+KIGG	keigh aye jee jee
+KIOS	keigh igh oh ess
+KIOS-FM	keigh eye oh ess eff em
+KIPH	keigh aye pee aiche
+KIPO	keigh eye pee oh
+KISU	keigh eye ess yue
+KIWR	keigh eye doubleyou ar
+KIYU	keigh eye wy yue
+KLOP	keigh ell oh pee
+KNAA	keigh en ay ay
+KNAD	keigh en ay dee
+KNAG	keigh en ay jee
+KNAQ	keigh en ay cue
+KNAU	keigh en ay yue
+KNIB	keigh en eye bea
+KNOW-FM	keigh en oh doubleyou ef em
+KNYR	keigh en wy ar
+KOAB	keigh oh eigh bea
+KOAB-FM	keigh oh eigh bea eff em
+KOAC	keigh oh eigh sea
+KOAC-FM	keigh oh eigh sea eff em
+KOAP	keigh oh eigh pee
+KOAZ	keigh oh ay zee
+KOCU	keigh oh sea yue
+KOFA	keigh oh eff aigh
+KOGL	keigh oh jee ell
+KOMQ	keigh oh em cue
+KOOZ	keigh oh oh zee
+KORI	keigh oh ar eye
+KOSU	keigh oh ess yue
+KOUA	keigh oh yue eigh
+KQED	keigh kew ee dee
+KQOU	keigh cue oh yue
+KQOW	keigh cue oh doubleyou
+KRAR	keigh ar ay ar
+KROU	keigh ar oh yue
+KUAF	keigh yue eigh eff
+KUAR	keigh yue eigh ar
+KUAT	keigh yue ay tea
+KUAZ	keigh yue ay zee
+KUER	keigh yue ee ar
+KUEU	keigh yue ee yue
+KUHM	keigh yue aiche em
+KUHU	keigh yue aiche yue
+KUNC	keigh yue en sea
+KUND	keigh yue en dee
+KUNI	keigh yue en eye
+KUNM	keigh yue en em
+KUOP	keigh yue oh pee
+KUOR	keigh yue oh ar
+KUOU	keigh yue oh yue
+KUOW	keigh yue oe doubleyou
+KUPS	keigh yue pea ess
+KUQU	keigh yue cue yue
+KUSC	keigh yue ess cea
+KUSF	keigh yue ess eff
+KUSK	keigh yue ess keigh
+KUST	keigh yue ess tea
+KUSU	keigh yue ess yue
+KUSU-FM	keigh yue ess yue ef em
+KUTE	keigh yue tea ee
+KUUK	keigh yue yue keigh
+KUUT	keigh yue yue tea
+KUVO	keigh yue vee oh
+KUWA	keigh yue doubleyou eigh
+KUWC	keigh yue doubleyou sea
+KUWD	keigh yue doubleyou dee
+KUWE	keigh yue doubleyou ee
+KUWG	keigh yue doubleyou jee
+KUWI	keigh yue doubleyou igh
+KUWJ	keigh you doubleyou jay
+KUWK	keigh yue doubleyou keigh
+KUWL	keigh yue doubleyou ell
+KUWN	keigh yue doubleyou en
+KUWP	keigh yue doubleyou pee
+KUWR	keigh yue doubleyou ar
+KUWS	keigh yue doubleyou ess
+KUWT	keigh yue doubleyou tea
+KUWV	keigh yue doubleyou vee
+KUWW	keigh yue doubleyou doubleyou
+KUWX	keigh yue doubleyou ex
+KUWY	keigh yue doubleyou wy
+KUWZ	keigh yue doubleyou zee
+KUXU	keigh yue ex yue
+KUYI	keigh yue wy igh
+KWIT	keigh doubleyou igh tea
+KWOU	keigh doubleyou oh yue
+KYAC	keigh yue ay sea
+Kyi	che
+KYPH	keigh wy pee aiche
+KYUK	keigh wy yue keigh
+KYVT	keigh wy vee tea
+Laissez-faire	`[.2lE.0se.1fer]
+laissez-faire	`[.2lE.0se.1fer]
+LAV	ell ay vee
+lbplayer	ell bea player
+LGBTIQA	elll jee bea tea igh kew ay
+LGBTQIA	ell jee bea tea kew igh ay
+Libarchive	lib archive
+libarchive	lib archive
+Libarchive's	lib archives
+libarchive's	lib archives
+libopenmpt	lib open mpt
+libxmp	lib eks em p
+likesclear	`[.1lYksh.2klir]
+LISZT	`[.1lIst]
+LISZT's	`[.1lIsts]
+litrpg	lit ar pee gee
+Livingetc	living etcetera
+lli	l l i
+Lmao	ell em ay oe
+lmao	ell em ay oe
+Lmfao	ell em eff aigh oe
+lmfao	ell em eff aigh oe
+localectl	locale ctl
+loginctl	login ctl
+LOL	ell oe ell
+Lol	elll oe ell
+lol	elll oe ell
+Louis-Dreyfus	`[.1lu.0i] `[.1drY.0fxs]
+LOUISVILLE'S	`[.1lu.0i.2vIlz]
+Louisville's	`[.1lu.0i.2vIlz]
+LVIV	`[.0lx.1viv]
+MABB	em ay bea bea
+machinectl	machine ctl
+macos	mak oh ess
+MAGA	`[.1mA.0gx]
+MAGA's	`[.1mA.0gxz]
+MANI-PEDI	`[.2mA.0ni.1pE.0Fi]
+Mani-pedi	`[.2mA.0ni.1pE.0Fi]
+mani-pedi	`[.2mA.0ni.1pE.0Fi]
+MANI-PEDIS	`[.2mA.0ni.1pE.0Fiz]
+Mani-pedis	`[.2mA.0ni.1pE.0Fiz]
+mani-pedis	`[.2mA.0ni.1pE.0Fiz]
+MAOI	em ay oe igh
+mapinfo	`[.1mAp.2In.0fo]
+Mar-A-Lago	`[.2mar.0x.1la.0go]
+Mar-a-Lago	`[.2mar.0x.1la.0go]
+Mar-A-Lago's	`[.2mar.0x.1la.0goz]
+Mar-a-Lago's	`[.2mar.0x.1la.0goz]
+mariadb	maria dee bea
+mbox	em `0 box
+MBROLA	`[.2Em.1bro.0lx]
+Mbrola	`[.2Em.1bro.0lx]
+MCAS	`[.1Em.2kAs]
+mcast	em `0 cast
+MCAT	`[.1Em.2kAt]
+MCAT's	`[.1Em.2kAts]
+McDede	`[.0mXk.1did]
+McDede's	`[.0mXk.1didz]
+Megaupload	mega `1 upload
+megaupload	mega `1 upload
+MEME'D	`[.1mimd]
+Meme'd	`[.1mimd]
+meme'd	`[.1mimd]
+Mentos	`[.1mEn.2tas]
+MINI-MES	`[.1mI.0ni.2miz]
+Mini-Mes	`[.1mI.0ni.2miz]
+Mini-mes	`[.1mI.0ni.2miz]
+mini-mes	`[.1mI.0ni.2miz]
+MINSK	`[.1mInsk]
+MISE-EN-SCENE	`[.2mi.0zcn.1sEn]
+MISE-EN-SCENES	`[.2mi.0zcn.1sEnz]
+MISE-EN-SCÈNE	`[.2mi.0zcn.1sEn]
+Mise-En-Scène	`[.2mi.0zcn.1sEn]
+Mise-en-scène	`[.2mi.0zcn.1sEn]
+mise-en-scène	`[.2mi.0zcn.1sEn]
+MISE-EN-SCÈNES	`[.2mi.0zcn.1sEnz]
+Mise-En-Scènes	`[.2mi.0zcn.1sEnz]
+Mise-en-scènes	`[.2mi.0zcn.1sEnz]
+mise-en-scènes	`[.2mi.0zcn.1sEnz]
+MIUI	mee yue igh
+mm	em em
+Mobipocket	mobi pocket
+mobipocket	mobi pocket
+MONTH	month
+MONTHS	months
+MOPP	em oe pea pea
+MOTD	em oe tea dee
+MOTORTREND	motor trend
+MPEG	em `0 peg
+mqueue	em `0 kew
+MU-MIMO	m yue mimo
+muteclear	`[.1myut.2klir]
+MYSQL	my ess kew l
+NADH	en ay dee aitch
+Naiveproxy	naive proxy
+naiveproxy	naive proxy
+Nanonets	nano `0 nets
+nanonets	nano `0 nets
+NAS	en ay ess
+NATIFS	naytifs
+NEEDTOBREATHE	need to breathe
+Nethome	net home
+nethome	net home
+networkctl	network ctl
+NEVERENDING	never ending
+Neverending	never ending
+neverending	never ending
+newmap	`[.1nu.2mAp]
+NGINX	`[.1En.0JX.2nEks]
+NIAMH	neev
+NIHL	en igh aitch ell
+NIJ	en igh jeigh
+nmap	en `0 map
+noexcept	no except
+Notebookcheck	notebook check
+nowplaying	now playing
+Nreal	en real
+nti	en tea igh
+NUC	nuck
+nvaccess	en vee access
+Nvda	en vee dee ay
+nvda	en vee dee ay
+nvdacon	en vee dee ay con
+Nvdaremote	en vee dee ay remote
+nvdaremote	en vee dee ay remote
+NVIDIA	`[.2En.1vI.0Fi.0x]
+NVIDIA's	`[.2En.1vI.0Fi.0xz]
+NXIVM	`[.1nEk.0si.0xm]
+NXIVM's	`[.1nEk.0si.0xmz]
+NXTPAPER	en eks tea paper
+NYC	en wie cea
+NYT	en wie tea
+NYU	en wie yue
+nyu	en wie yue
+OAN	oe ay en
+OANN	oe ay en en
+OB-GYN	oe bea jee wie en
+Ob-gyn	oe bea jee wie en
+ob-gyn	oe bea jee wie en
+OBGYN	oe bea jee wie en
+OBS	oe bee ess
+OC	oe sea
+OCR'd	oe cea ard
+ODI	oe dee igh
+OFDMA	oe eff dee em ay
+offlinemsg	offline em ess gee
+OFWGKTA	oe eff doubleyou jee keigh tea ay
+OIS	oe igh ess
+OK'd	`[.2o.1ked]
+OLED	oe ell ee dee
+OMB	oh em bee
+Omg	oe em jee
+omg	oe em jee
+onlinemsg	online em ess gee
+OOM	o o m
+oom	o o m
+oomctl	o o m ctl
+oomd	o o m d
+openevv	open ee vee vee
+openmpt	Open MPT
+Opensouls	open souls
+openssh	open ssh
+Openssl	Open SSL
+openssl	open SSL
+openvpn	open vee pea en
+os	oe ess
+OSM	oe ess em
+OST	oe ess tea
+OTOH	oe tea oe aitch
+OTS	oe tea ess
+OUP	oe yue pea
+ovpn	oe vee pea en
+ovpntray	oe vee pea en tray
+OWC	oe doubleyou SEA
+P!nk	pink
+PALSY-WALSY	`[.2pAl.0zi.1wAl.0zi]
+Palsy-Walsy	`[.2pAl.0zi.1wAl.0zi]
+Palsy-walsy	`[.2pAl.0zi.1wAl.0zi]
+palsy-walsy	`[.2pAl.0zi.1wAl.0zi]
+Parton	`[.1par.0?N]
+Parton's	`[.1par.0?Nz]
+PED	pea ee dee
+Perfctl	perf ctl
+perfctl	perf ctl
+pflog	pf log
+PHA	pea aitch ay
+PHEV	pea aitch ee vee
+PHONEARENA	phone arena
+Pianoforall	piano for all
+PLAYERUNKNOWN	player `1 unknown
+Playerunknown	player `1 unknown
+playerunknown	player `1 unknown
+Pocketnow	pocket now
+pocketnow	pocket now
+POCT	pea oe cea tea
+Poedit	pea oe edit
+poedit	pea oe edit
+portablectl	portable ctl
+POS	pea oe ess
+ppi	pea pea igh
+printf	print f
+Probraille	pro braille
+probraille	pro braille
+pronouncekiwi	pronounce kiwi
+PRVKE	`[.0prx.1vok]
+PSAT	pea ess ay tea
+PSU	pea ess yue
+Pulseaudio	Pulse Audio
+pulseaudio	Pulse Audio
+Puteketeke	`0 pu tehki tehki
+puteketeke	`0 pu tehki tehki
+Puteketekes	`0 pu tehki techies
+puteketekes	`0 pu tehki techies
+PWA	pea doubleyou ay
+Pwn	`[.1pon]
+pwn	`[.1pon]
+Pwns	`[.1ponz]
+pwns	`[.1ponz]
+Q-Tip	`[.1kyu.2tIp]
+Q-Tip's	`[.1kyu.2tIps]
+Q-Tips	`[.1kyu.2tIps]
+QA	kew ay
+qcsalon	qc salon
+Qi	`[.1Ci]
+QWERTY	`[.1kwR.0ti]
+randchal	`[.1rAnd.2CAl]
+randunofficial	rand unofficial
+rawdata	`[.1rc.2de.0Fx]
+rawmap	`[.1rc.2mAp]
+Read-Only	reed only
+Read-only	reed only
+read-only	reed only
+Readiris	reed iris
+Readonly	reed only
+readonly	reed only
+Realspeak	real speak
+realspeak	real speak
+Recorder's	`[.0rX.1kcr.0FRz]
+recorder's	`[.0rX.1kcr.0FRz]
+REDCEDAR	red `1 cedar
+Redcedar	red `1 cedar
+redcedar	red `1 cedar
+redomap	`[.0ri.1du.2mAp]
+Rege-Jean	`[.1re.0ge] `1 `[.1Zcn]
+Rege-Jean's	`[.1re.0ge] `1 `[.1Zcnz]
+Regedit	rej edit
+regedit	rej edit
+Regé-Jean	`[.1re.0ge] `1 `[.1Zcn]
+Regé-Jean's	`[.1re.0ge] `1 `[.1Zcnz]
+REIJN	rain
+renmap	`[.1rEn.2mAp]
+reqmap	`[.1rEk.2mAp]
+requestmap	`[.0rX.1kwEst.2mAp]
+resolvectl	resolve ctl
+RHYTHM	`[.1rI.0Dxm]
+RHYTHM'S	`[.1rI.0Dxmz]
+RHYTHM's	`[.1rI.0Dxmz]
+RINO	`[.1rY.0no]
+rnib	ar en igh bea
+Rofl	ar oe eff ell
+rofl	ar oe eff ell
+ROFLMAO	ar oe eff ell em ay oe
+roledescription	role description
+ROLY-POLIES	`[.2ro.0li.1po.0liz]
+Roly-Polies	`[.2ro.0li.1po.0liz]
+Roly-polies	`[.2ro.0li.1po.0liz]
+roly-polies	`[.2ro.0li.1po.0liz]
+ROLY-POLY	`[.2ro.0li.1po.0li]
+Roly-Poly	`[.2ro.0li.1po.0li]
+Roly-poly	`[.2ro.0li.1po.0li]
+roly-poly	`[.2ro.0li.1po.0li]
+ROS	ar oe ess
+rsgames	ar ess games
+RUR	ar yue ar
+rustc	rust `0 c
+rustfmt	rust `0 f `0 m t
+rustup	rust `0 up
+RZA	`[.1rI.0zx]
+RZA's	`[.1rI.0zxz]
+Saint-Germain	`[.2sAn.0ZR.1mAn]
+Saint-Germain's	`[.2sAn.0ZR.1mAnz]
+sbyw	ess bea wie doubleyou
+seanbudd	sean budd
+securityfs	security fs
+SEEG	ess ee ee jee
+SES	ess ee ess
+setattr	set `[.1At.0rx]
+SFO	ess eff oe
+SHANGRI-LA	`[.1SAG.0grX.2la]
+Shangri-La	`[.1SAG.0grX.2la]
+Shangri-la	`[.1SAG.0grX.2la]
+shangri-la	`[.1SAG.0grX.2la]
+SHANGRI-LAS	`[.1SAG.0grX.2laz]
+Shangri-Las	`[.1SAG.0grX.2laz]
+Shangri-las	`[.1SAG.0grX.2laz]
+shangri-las	`[.1SAG.0grX.2laz]
+shoot-em-up	`[.1Su.0txm.2Hp]
+shoot-em-ups	`[.1Su.0txm.2Hps]
+showme	show me
+SIO	ess igh oe
+SIV	ess igh vee
+SKU	`[.1skyu]
+SMA	ess em ay
+smartctl	smart ctl
+SMO	ess em oe
+Sndup	ess en dee up
+sndup	ess en dee up
+SNES	ess en ee ess
+Soniccouture	sonic `[.0kx.1Cur]
+SOS	ess oe ess
+Spec'd	specked
+spec'd	specked
+spyw	ess pea wie doubleyou
+SRAM	ess `0 ram
+SRI	ess ar igh
+stackexchange	`[.1stAk.0Xks.2CenJ]
+stackoverflow	stack overflow
+Statusbar	Status Bar
+statusbar	Status Bar
+Stfu	ess tea eff yue
+stfu	ess tea eff yue
+STORYCORPS	Story Corps
+SUBPACS	`[.1sHb.2pAks]
+SUSE	`[.1su.0sx]
+Suu	su
+SUV	ess yue vee
+SWI	ess doubleyou igh
+Sys	`[.1sIs]
+sys	`[.1sIs]
+Sysadmin	siss admin
+sysadmin	siss admin
+Sysadmins	siss adminz
+sysadmins	siss adminz
+sysctl	sys ctl
+sysfs	sis fs
+systemctl	system ctl
+T-Mobile	tea mobil
+tabindex	Tab Index
+Te'o	`[.1te.0o]
+Te'o's	`[.1te.0oz]
+teamdctl	`[.1tim.2di] ctl
+Teampixel	team pixel
+teampixel	team pixel
+TEAMTALK	team talk
+TEFL	`[.1tE.0fxl]
+TEFL's	`[.1tE.0fxlz]
+TESL	`[.1tE.0sxl]
+TESL's	`[.1tE.0sxlz]
+textarea	text area
+thespinoff	the spinoff
+thestar	the star
+thiserror	this error
+timedatectl	time date ctl
+tnauk	tea en ay yue keigh
+Transedit	trans `1 edit
+TSA	tea ess ay
+tsa	tea ess ay
+TSAT	tea ess ay tea
+TUK-TUK	`[.1tUk.2tUk]
+Tuk-Tuk	`[.1tUk.2tUk]
+Tuk-tuk	`[.1tUk.2tUk]
+tuk-tuk	`[.1tUk.2tUk]
+TUMBLR	`[.1tHm.0blR]
+TUMBLR's	`[.1tHm.0blRz]
+TWE	tea doubleyou ee
+TWU	tea doubleyou yue
+Tête-à-tête	`[.2tE.0Fx.1tEt]
+tête-à-tête	`[.2tE.0Fx.1tEt]
+Tête-à-têtes	`[.2tE.0Fx.1tEts]
+tête-à-têtes	`[.2tE.0Fx.1tEts]
+UAC	yue ay cea
+UAD	yue ay dee
+UAP	yue ay pea
+UAS	yue ay ess
+UAV	yue ay vee
+UBS	yue bea ess
+UCAS	`[.1yu.2kAs]
+UDID	yue dee igh dee
+udisksctl	udisks ctl
+UEB	yue ee bea
+UEFI	yue ee eff igh
+UFED	yue eff ee dee
+UFS	yue eff ess
+ufw	yue eff doubleyou
+UG	yue jee
+UGRS	yue jee ar ess
+ui	yue igh
+uk	yue keigh
+UKVI	yue keigh vee igh
+umich	yue mish
+uname	yue `0 name
+undomap	`[.0Hn.1du.2mAp]
+UNE	yue en ee
+une	yue en ee
+UNGA	yue en jee ay
+Uni	yuni
+uni	yuni
+UNOPS	yue en ops
+UNOPS's	yue en opses
+UNWTO	yue en doubleyou tea oe
+Uptodown	`[.2Hp.0tx.1dWn]
+uptodown	`[.2Hp.0tx.1dWn]
+url	yue ar ell
+urls	yue ar ells
+URS	yue ar ess
+usa	yue ess ay
+USAGM	yue ess aigh jee em
+Usb	yue ess bea
+usb	yue ess bea
+USCENTCOM	yue ess sent `0 caam
+userdb	user db
+userdbctl	user db ctl
+USF	yue ess eff
+usf	yue ess eff
+USFS	yue ess eff ess
+USIA	yue ess igh ay
+USO	yue ess oe
+USP	yue ess pea
+USSO	yue ess ess oe
+USSTRATCOM	yue ess strat `0 kaam
+USTA	yue ess tea ay
+usta	yue ess tea ay
+USTRANSCOM	yue ess trans `0 kaam
+utf	yew tea eff
+UTI	yue tea igh
+UUID	yue yue igh dee
+UVA	yue vee aigh
+UWB	yue doubleyou bea
+UWP	yue doubleyou pea
+UX	yue eks
+VAD	vee ay dee
+VAID-MENON	vad mennon
+Vaid-Menon	vad mennon
+VAR	vee ay ar
+varlinkctl	varlink ctl
+VBA	vee bea ay
+VDU	vee dee yue
+VFO	vee eff oe
+vfogroup	vee eff oe group
+VGA	vee jee ay
+vgmstream	vee jee em stream
+Vivosmart	veevo `0 smart
+vivosmart	veevo `0 smart
+VLE	vee ell ee
+VMI	vee em igh
+vmlinux	vm linux
+VMO	vee em oe
+vmware	vee em ware
+VOA	vee oe ay
+VOD	vee oe dee
+VOLTE-FACE	`[.2valt.1fas]
+Volte-Face	`[.2valt.1fas]
+Volte-face	`[.2valt.1fas]
+volte-face	`[.2valt.1fas]
+VSI	vee ess igh
+VTOL	`[.1vi.2tcl]
+Vypr	viper
+vívosmart	veevo `0 smart
+WABE	doubleyou aigh bea ee
+WAER	doubleyou ay ee ar
+WAIC	doubleyou ay eye sea
+WAMQ	doubleyou ay em cue
+WAMU	doubleyou ay em yue
+WANC	doubleyou ay en sea
+WANDRD	`[.1wan.0dRd]
+WANZ	doubleyou ay en zee
+washpost	wash post
+WASU	doubleyou aigh ess yue
+WAUS	doubleyou ay yue ess
+WEAA	doubleyou ee ay ay
+webui	web yue igh
+WECS	doubleyou ee sea ess
+Weeknd	`[.1wi.2kEnd]
+Weeknd's	`[.1wi.2kEndz]
+WEIU	doubleyou ee igh yue
+WEKH	doubleyou ee keigh aiche
+WEKU	doubleyou ee kay yue
+WEMU	doubleyou ee em yue
+WEOS	doubleyou ee oh es
+WEPS	doubleyou ee pee ess
+WERN	doubleyou ee ar en
+WERS	doubleyou ee ar ess
+WESA	doubleyou ee ess eigh
+WESM	doubleyou ee ess em
+WESU	doubleyou ee ess yue
+WETA	doubleyou ee tea aigh
+WETS	doubleyou ee tea es
+WETS-FM	doubleyou ee tea ess ef em
+WEVO	doubleyou ee vee oh
+WEVQ	doubleyou ee vee cue
+WEVS	doubleyou ee vee ess
+WEXT	doubleyou ee ex tea
+WHA	doubleyou aiche eigh
+WHAA	doubleyou aiche eigh eigh
+WHAD	doubleyou aiche eigh dee
+WHID	doubleyou aiche igh dee
+WHOO-EE	`[.2hu.1i]
+Whoo-ee	`[.2hu.1i]
+whoo-ee	`[.2hu.1i]
+WIAA	doubleyou eye ay ay
+WIAB	doubleyou eye ay b
+WICA	doubleyou eye sea ay
+Wii	`[.1wi]
+wii	`[.1wi]
+Wilkes-Barre	`[.1wIlks.2be.0rx]
+WILL-FM	doubleyou igh ell ell eff em
+WILL-O'-THE-WISP	`[.2wIl.0x.0DX.1wIsp]
+Will-O'-The-Wisp	`[.2wIl.0x.0DX.1wIsp]
+Will-o'-the-Wisp	`[.2wIl.0x.0DX.1wIsp]
+Will-o'-the-wisp	`[.2wIl.0x.0DX.1wIsp]
+will-o'-the-wisp	`[.2wIl.0x.0DX.1wIsp]
+WILL-O'-THE-WISPS	`[.2wIl.0x.0DX.1wIsps]
+Will-O'-The-Wisps	`[.2wIl.0x.0DX.1wIsps]
+Will-o'-the-Wisps	`[.2wIl.0x.0DX.1wIsps]
+Will-o'-the-wisps	`[.2wIl.0x.0DX.1wIsps]
+will-o'-the-wisps	`[.2wIl.0x.0DX.1wIsps]
+winscp	win ess cea p
+WIPA	doubleyou eye pee ay
+WIQR	doubleyou igh cue ar
+WIRN	doubleyou eye ar en
+WIRR	doubleyou eye ar ar
+WISE-FM	doubleyou igh ess ee ef em
+WISU	doubleyou eye ess yue
+WIUM	doubleyou eye yue em
+WIUW	doubleyou eye yue doubleyou
+wma	doubleyou em aigh
+WOI	doubleyou oh eye
+WOLN	doubleyou oh ell en
+WOSA	doubleyou oh ess eigh
+WOSE	doubleyou oh ess ee
+WOSP	doubleyou oh ess pee
+WOSU	doubleyou oh ess yue
+WOSU-FM	doubleyou oh ess yue eff em
+WOSV	doubleyou oh ess vee
+WOUB	doubleyou oe yue bea
+WOUC-FM	doubleyou oh yue sea eff em
+WOUH	doubleyou oh yue aiche
+WOUH-FM	doubleyou oh yue aich eff em
+WOUL	doubleyou oh yue ell
+WOUZ	doubleyou oh yue zee
+WOUZ-FM	doubleyou oh yue zee eff em
+WRAS	doubleyou ar ay ess
+WREM	doubleyou ar ee em
+WRIQ	doubleyou ar igh cue
+WRUN	doubleyou ar yue en
+WRUR	doubleyou ar yue ar
+WUAL	doubleyou yue ay ell
+WUEC	doubleyou yue ee sea
+WUFT	doubleyou yue eff tea
+WUGA	doubleyou yue jee ay
+WUIS	doubleyou yue eye ess
+WUKY	doubleyou yue keigh wie
+WUMB	doubleyou yue em bea
+WUNC	doubleyou yue en cea
+WUND	doubleyou yue en dee
+WUND-FM	doubleyou yue en dee eff em
+WUNY	doubleyou yue en wy
+WUOL	doubleyou yue oh ell
+WUOM	doubleyou yue oh em
+WUOT	doubleyou yue oh tea
+WURC	doubleyou yue ar sea
+WURI	doubleyou yue ar igh
+WUSF	doubleyou yue ess eff
+WUSI	doubleyou yue ess eye
+WUWF	doubleyou yue doubleyou eff
+WUWG	doubleyou yue doubleyou jee
+WUWM	doubleyou yue doubleyou em
+WUWS	doubleyou yue doubleyou ess
+WYEP	doubleyou wy ee pee
+WYEP-FM	doubleyou wy ee pee ef em
+WYMS	doubleyou wy em es
+WYPO	doubleyou wy pee oh
+WYQS	doubleyou wy cue es
+WYSO	doubleyou wie ess oe
+WYSU	doubleyou wy ess yue
+XAI	eks ay igh
+XAML	`[.1zA.0mxl]
+XAML's	`[.1zA.0mxlz]
+XCIENT	`[.1Ek.0si.0Xnt]
+XCIENT's	`[.1Ek.0si.0Xnts]
+Xclipse	eks clipse
+Xcover	eks cover
+XCRUISER	eks cruiser
+Xcruiser	eks cruiser
+xcruiser	eks cruiser
+XGIMI	`[.1Eks.2JI.0mi]
+XGIMI's	`[.1Eks.2JI.0miz]
+Xi	shee
+XLIM	`[.1zlIm]
+xmplay	eks em play
+XPENG	`[.1Eksh.2pEG]
+XRAI	`[.1Eks.0re]
+XRAI's	`[.1Eks.0rez]
+XREAL	`[.1Eks.2ril]
+XREAL's	`[.1Eks.2rilz]
+XROS	`[.1krcs]
+XTANDI	`[.0Xks.1tAn.0di]
+XTREAM	`[.0Xk.1strim]
+XYZ	eks wie zee
+xyz	eks wie zee
+YDD	wie  dee dee
+YMO	wie em oe
+YNAB	`[.1wY.2nAb]
+ynab	`[.1wY.2nAb]
+Yooka-Laylee	`[.2yu.0kx.1le.0li]
+yooka-laylee	`[.2yu.0kx.1le.0li]
+Yooka-Laylee's	`[.2yu.0kx.1le.0liz]
+YOU-UNS	yunz
+You-uns	yunz
+you-uns	yunz
+YPP	wie pea pea
+YPT	wie pea tea
+YT	wie tea
+Yu-Gi-Oh	`[.1yu.2gi.0o]
+ZDNET	zee dee net
+zdnet	zee dee net
+zram	z `0 ram
+zramctl	z `0 ram ctl
 
 # Typesetting
 TeX	`[.1tEk]

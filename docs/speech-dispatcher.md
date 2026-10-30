@@ -144,13 +144,13 @@ module reads its configuration when it starts, so a change takes effect the
 next time Speech Dispatcher starts it. `test/speechd.py` holds what comes back
 to what `evv -W -R 22050` makes for the same text, byte for byte.
 
-## The built-in dictionary
+## The dictionary US English carries
 
-US English carries the community's IBMTTSDictionaries in the library, with additions of ours, and reads a word it holds the way the entry says rather than the way the rules would. Both Englishes also read a word with a capital inside it that no dictionary holds as the words it is made of, NixOS as Nix OS. A line in `openevv.conf` turns both off:
+US English carries a dictionary of its own in the library, begun from the community's IBMTTSDictionaries and corrected since, and reads a word it holds the way the entry says rather than the way the rules would. Both Englishes also read a word with a capital inside it that no dictionary holds as the words it is made of, NixOS as Nix OS. Both are part of the voice and have no setting. Until 30 October 2026 a line in `openevv.conf` turned them off:
 
     BuiltInDictionary 0
 
-Every word is then read by the rules alone, which is how IBM's engine was. Like the wideband line it is read when the module starts. `test/speechd.py` holds what comes back to what `evv -D` makes for the same text, and checks first that the text says something different with the dictionary on, so a line that never reached the engine would fail.
+That line is now read and ignored, with a line in the module's log saying so, rather than refused: the module stops at a line it does not know, and a configuration that still had this one would have left the module with no voice. `test/speechd.py` checks that a configuration with it starts and says a word the dictionary has as `evv` says it.
 
 ## Supported behavior and limits
 

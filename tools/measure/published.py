@@ -11,8 +11,8 @@ a variant nobody listed as a mistake, and so is a main stress alone, since
 on that Wiktionary and CMU disagree with Merriam-Webster as often as the
 engine does. For each clearly wrong word:
 
-  hold     the reading is a community entry's and the rules' own reading is
-           one Wiktionary lists, so the entry is held out
+  remove   the reading is an entry's and the rules' own reading is one
+           Wiktionary lists, so the entry is taken out
   moby     the Moby Pronunciator II has a form Wiktionary lists, and an entry
            is written from it
   cmu      the same from CMU's dictionary of 1993
@@ -23,28 +23,31 @@ in the public domain by Grady Ward in 2001, and CMU said of its 1993 release
 that use for any purpose is completely unrestricted. The current CMU, under
 terms of its own, judges alongside Wiktionary and is never copied either.
 
-What it writes is lang/enus/dictionary/published: root.dic and main.dic, the
-entries, and held, the community entries held out. Nothing there is to be
-edited by hand, since this writes it again; a word to be said otherwise goes
-in the language's own main.dic or root.dic, which is read after it.
+It judges only the body of lang/enus/dictionary's volumes, the sorted
+entries the tools write, and leaves alone every word of a block decided by
+hand and every word lang/enus/dictionary/removed names. What it finds goes to
+the report, a line each: entry, the volume, the word, what to say and which
+source; or remove, the volume, the word, what the entry said and why. With
+--write it also puts the entries into the body and moves the removals from
+the body to removed, which git then shows as one change to listen to.
 
-An entry is a root, as the community's are, so that a plural comes with
+An entry is a root, as most of the dictionary's are, so that a plural comes with
 it, which a whole-word entry does not give. But a root is also
 the stem of longer words, and a part of a compound -- jete made Jeter
 zhuh-TAY-er, frey made Godfrey god-FRY -- so every entry is read back
 through the engine as a caller's dictionary over every word Wiktionary or
 CMU has, and one is dropped if the engine does not say it as written or if
-any word containing it moves further from what is published. A community
-entry is held only where no word containing it leans on it, and is read
-back the same way, the whole dictionary loaded as a caller's with the
+any word containing it moves further from what is published. An entry of
+the body is taken out only where no word containing it leans on it, and is
+read back the same way, the whole dictionary loaded as a caller's with the
 built-in one off, since nothing a caller loads can take an entry out.
 
-The library has to be built with published/ empty, since the question is
-what the engine says without it. A run takes the whole machine for some
-minutes, so give it an idle-class scope.
+The library has to be built from the tree as it stands, which the read-back
+checks before anything else. A run takes the whole machine for some minutes,
+so give it an idle-class scope.
 
 usage: tools/measure/published.py <libeci.so> <kaikki.jsonl.gz> <mpron.txt>
-           <cmudict.0.3> [--jobs N]
+           <cmudict.0.3> <report.tsv> [--write] [--jobs N]
 
   kaikki.jsonl.gz  https://kaikki.org/dictionary/English/
                    kaikki.org-dictionary-English.jsonl.gz
@@ -70,7 +73,7 @@ from evv import ROOT, sibling  # noqa: E402
 referee = sibling('measure/referee')
 
 LANG = os.path.join(ROOT, 'lang', 'enus')
-OUT = os.path.join(LANG, 'dictionary', 'published')
+WHY = "Wiktionary lists the rules' reading and not the entry's"
 VOWELS = referee.VOWELS
 WORD = re.compile(r"^[a-z][a-z']*[a-z]$")
 
@@ -569,44 +572,35 @@ def wrong_words(readings, refs, jobs):
 # ---- what is written -----------------------------------------------------
 
 def dictionary_words():
-    """The volume each community word is read from, as the build has it."""
+    """The volume each word of the body is read from, and the words decided
+    by hand or taken out on purpose, which this leaves alone."""
     built = sibling('module/builtindict')
-    held = built.read_held(os.path.join(LANG, 'dictionary', 'held'))
-    where = {}
+    where, mine = {}, set()
     for vol in ('root', 'main'):
-        path = os.path.join(LANG, 'dictionary', 'community', vol + '.dic')
-        for word, _says in built.read_dic(path, False):
-            if (vol, word) not in held:
-                where.setdefault(word.decode('cp1252').lower(), (vol, word.decode('cp1252')))
-    ours = set()
-    for vol in ('root', 'main'):
-        for word, _says in built.read_dic(os.path.join(LANG, 'dictionary', vol + '.dic'), True):
-            ours.add(word.decode('cp1252').lower())
-    return where, ours
+        path = os.path.join(LANG, 'dictionary', vol + '.dic')
+        for word in built.layout(path)[1]:
+            where.setdefault(word.lower(), (vol, word))
+        mine |= {w.lower() for w in built.hand_words(path)}
+    mine |= {w.lower() for _vol, w in built.read_removed(LANG)}
+    return where, mine
 
 
 def as_built(entries, holds, tmp):
-    """The dictionary the build would lay down with these entries and holds,
-    written out as a caller's files: the community's less what is held,
-    these entries, then ours, each volume's later word winning. Read with
-    the built-in dictionary off it is read as the build would read it, which
-    is how a hold is tried, since a caller's dictionary can add an entry to
-    the built-in one but cannot take one out of it."""
+    """The dictionary the build would lay down with these entries in and
+    these holds taken out, written out as a caller's files. Read with the
+    built-in dictionary off it is read as the build would read it, which is
+    how a hold is tried, since a caller's dictionary can add an entry to the
+    built-in one but cannot take one out of it."""
     built = sibling('module/builtindict')
-    here = os.path.join(LANG, 'dictionary')
-    held = built.read_held(os.path.join(here, 'held'))
-    held |= {(vol, word.encode('cp1252')) for vol, word in holds}
+    held = {(vol, word.encode('cp1252')) for vol, word in holds}
     files = []
     for n, vol in ((0, 'main'), (1, 'root')):
-        merged = {}
-        for word, says in built.read_dic(os.path.join(here, 'community', vol + '.dic'), False):
-            if (vol, word) not in held:
-                merged[word] = says
+        merged = dict(built.read_dic(os.path.join(LANG, 'dictionary', vol + '.dic')))
+        for word in [w for w in merged if (vol, w) in held]:
+            del merged[word]
         for word, says, _src, v in entries:
             if v == vol:
                 merged[word.encode('cp1252')] = says.encode('cp1252')
-        for word, says in built.read_dic(os.path.join(here, vol + '.dic'), True):
-            merged[word] = says
         path = os.path.join(tmp, vol + '.dic')
         with open(path, 'wb') as f:
             for word, says in sorted(merged.items()):
@@ -617,35 +611,28 @@ def as_built(entries, holds, tmp):
     return files
 
 
-def write_files(entries, holds):
-    os.makedirs(OUT, exist_ok=True)
-    for vol in ('root', 'main'):
-        with open(os.path.join(OUT, vol + '.dic'), 'w', encoding='utf-8') as f:
-            f.write(HEAD % vol)
-            for word, says, _src, v in sorted(entries, key=lambda e: (e[0].lower(), e[0])):
-                if v == vol:
-                    f.write('%s\t%s\n' % (word, says))
-    with open(os.path.join(OUT, 'held'), 'w', encoding='utf-8') as f:
-        f.write(HELD_HEAD)
-        for vol, word in sorted(holds, key=lambda h: (h[0], h[1].lower())):
-            f.write('%s\t%s\tWiktionary lists the rules\' reading and not the entry\'s\n'
-                    % (vol, word))
-
-
-HEAD = """\
-# Written by tools/measure/published.py; do not edit, run it again. The %s
-# volume: words the engine said clearly wrongly, each said
-# as the Moby Pronunciator II (public domain by grant of Grady Ward, 2001)
-# or the CMU Pronouncing Dictionary of 1993 (whose use CMU made completely
-# unrestricted) has it, where Wiktionary lists the same.
-
-"""
-HELD_HEAD = """\
-# Written by tools/measure/published.py; do not edit, run it again. Entries
-# of the community snapshot held out of the build where the rules already
-# say the word as Wiktionary lists it and the entry does not.
-
-"""
+def report(path, entries, holds, write):
+    """The report, and with write the body and removed as well."""
+    built = sibling('module/builtindict')
+    files = {vol: os.path.join(LANG, 'dictionary', vol + '.dic') for vol in ('main', 'root')}
+    laid = {vol: built.layout(p) for vol, p in files.items()}
+    gone = [(vol, word, laid[vol][1][word], WHY) for vol, word in holds]
+    with open(path, 'w', encoding='utf-8') as f:
+        for word, says, src, vol in sorted(entries, key=lambda e: (e[3], e[0].lower(), e[0])):
+            f.write('entry\t%s\t%s\t%s\t%s\n' % (vol, word, says, src))
+        for row in sorted(gone, key=lambda g: (g[0], g[1].lower(), g[1])):
+            f.write('remove\t%s\n' % '\t'.join(row))
+    if not write:
+        return
+    for vol, (head, body, tail) in laid.items():
+        for word, says, _src, v in entries:
+            if v == vol:
+                body[word] = says
+        for v, word, _says, _why in gone:
+            if v == vol:
+                del body[word]
+        built.write_layout(files[vol], head, body, tail)
+    built.add_removed(LANG, gone)
 
 
 def main(argv):
@@ -654,18 +641,13 @@ def main(argv):
         at = argv.index('--jobs')
         jobs = int(argv[at + 1])
         argv = argv[:at] + argv[at + 2:]
-    if len(argv) != 4:
+    write = '--write' in argv
+    argv = [a for a in argv if a != '--write']
+    if len(argv) != 5:
         print(__doc__.strip(), file=sys.stderr)
         return 2
-    lib, kaikki, mpron, cmu93 = argv
+    lib, kaikki, mpron, cmu93, out = argv
     lib = os.path.abspath(lib)
-    if os.path.isdir(OUT):
-        for name in os.listdir(OUT):
-            path = os.path.join(OUT, name)
-            if os.path.exists(path) and any(l.strip() and not l.startswith('#')
-                                            for l in open(path, encoding='utf-8')):
-                raise SystemExit('published: %s is not empty; empty it, build the '
-                                 'library again and run this on that' % path)
     if referee.cmudict is None:
         raise SystemExit('published: no CMU dictionary here; the dev shell has it')
     print('published: reading the sources', flush=True)
@@ -681,7 +663,7 @@ def main(argv):
     on = speak_all(lib, words, 1, [], jobs)
     off = speak_all(lib, words, 0, [], jobs)
     wrong = wrong_words(on, accepted, jobs)
-    where, ours = dictionary_words()
+    where, mine = dictionary_words()
     by_start = collections.defaultdict(list)
     for u in words:
         for i in range(len(u) - 2):
@@ -692,20 +674,20 @@ def main(argv):
 
     entries, holds, why = [], [], collections.Counter()
     for w in sorted(wrong):
-        if w in ours or w not in wk:
+        if w in mine or w not in wk:
             continue
         vol, spelt = where.get(w, ('root', w))
         from_dict = w in where
         spelt = spelt if vol == 'main' else w
         if from_dict and listed(engine(off[w]), wk[w]):
-            # A community root is also the stem of longer words, and held
-            # out it takes their readings with it: havering went wrong when
-            # haver was held. Hold one only where no word leans on it.
+            # A root is also the stem of longer words, and taken out it
+            # takes their readings with it: havering went wrong when haver
+            # was held. Take one out only where no word leans on it.
             if vol == 'root' and any(w in u and u != w and u not in wrong for u in leaning(w)):
                 why['kept as a stem'] += 1
             else:
                 holds.append((vol, spelt))
-                why['hold'] += 1
+                why['remove'] += 1
                 continue
         for name, lex in (('moby', mob), ('cmu', old)):
             forms = [p for p in lex.get(w, ()) if any(st == 1 for _ph, st in p)
@@ -757,15 +739,16 @@ def main(argv):
                 print('published: %s is worse and nothing written is inside it' % w,
                       flush=True)
         drop = unsaid | culprits
-        print('published: %d entries and %d held, %d not said as written, %d made %d '
+        print('published: %d entries and %d to take out, %d not said as written, %d made %d '
               'words worse' % (len(entries), len(holds), len(unsaid), len(culprits),
                                len(worse)), flush=True)
         if not drop:
             break
         entries = [e for e in entries if e[0].lower() not in drop]
         holds = [h for h in holds if h[1].lower() not in drop]
-    write_files(entries, holds)
-    print('published: wrote %d entries and %d held to %s' % (len(entries), len(holds), OUT))
+    report(out, entries, holds, write)
+    print('published: %d entries and %d to take out%s' % (
+        len(entries), len(holds), ', written into the dictionary' if write else ''))
     return 0
 
 

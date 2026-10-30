@@ -437,20 +437,15 @@ def main():
         os.rmdir(wideDir)
     assert result == 0
 
-    print("speechd: without the built-in dictionary", flush=True)
-    # Teamtalk is in the dictionary US English carries and its rules say it
-    # otherwise, so the two readings differ and the line is heard to reach
-    # the engine.
+    print("speechd: an old BuiltInDictionary line", flush=True)
+    # The line once turned off the dictionary US English carries, and a
+    # configuration may still have it. It is read and ignored now, so the
+    # module has to start and say teamtalk -- which that dictionary has and
+    # the rules say otherwise -- as evv says it with the dictionary in.
     dictText = "We met on teamtalk."
     withDict = subprocess.check_output([
         directBinary, "-v", "1", "-o", "-", dictText,
     ])
-    withoutDict = subprocess.check_output([
-        directBinary, "-v", "1", "-D", "-o", "-", dictText,
-    ])
-    assert withDict != withoutDict, (
-        "teamtalk is said the same with the built-in dictionary and without"
-    )
     plainDir = tempfile.mkdtemp()
     plainConfig = os.path.join(plainDir, "openevv.conf")
     with open(plainConfig, "w", encoding="utf-8") as out:
@@ -469,17 +464,16 @@ def main():
         module.set(voice="male1", language="en-US", synthesis_voice="NULL")
         audio, _, _, event = module.speak(dictText)
         assert event == "702 END"
-        assert audio == withoutDict[44:], (
-            "BuiltInDictionary 0 through Speech Dispatcher is not what "
-            f"evv -D makes ({len(audio)} versus {len(withoutDict) - 44} "
-            "PCM bytes)"
+        assert audio == withDict[44:], (
+            "an old BuiltInDictionary line changed what the module says "
+            f"({len(audio)} versus {len(withDict) - 44} PCM bytes from evv)"
         )
     finally:
         result = module.close()
         os.unlink(plainConfig)
         os.rmdir(plainDir)
     assert result == 0
-    print("speechd: protocol, voices, settings, audio, marks, stop, pause, the wideband voice and the built-in dictionary passed")
+    print("speechd: protocol, voices, settings, audio, marks, stop, pause, the wideband voice and an old dictionary line passed")
 
 
 if __name__ == "__main__":

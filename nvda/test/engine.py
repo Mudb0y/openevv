@@ -712,6 +712,19 @@ def dictionary_checks():
         engine.control = control
         engine.refreshDictionaries()
 
+        read = len(dll.dictFiles)
+        engine.setDictionaryFolders(((managed, (0x10000,)), personal, own))
+        check("a set paired with US English is not read for it",
+              [(v, data) for _d, v, data, _p in dll.dictFiles[read:]],
+              [(1, b"two\tpersonal two\r\nthree\town three, changed\r\n"),
+               (2, b"WWII\tworld war two\r\n")])
+        write(managed, "DEUmain.dic", b"eins\tverwaltet eins\r\n")
+        engine.setLanguage(0x40000)
+        check("and is read for any other",
+              dll.dictFiles[-1][1:3],
+              (0, b"eins\tverwaltet eins\r\nvier\teigene vier\r\n"))
+        engine.setLanguage(0x10000)
+
         made = len(dll.named("eciNewDict"))
         engine.setDictionaryFolders((empty,))
         check("folders with nothing in them make no dictionary",

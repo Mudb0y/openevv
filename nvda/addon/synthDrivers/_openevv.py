@@ -142,9 +142,6 @@ PARAM_WIDEBAND = 32
 PARAM_PAUSE_MODE = 33
 PAUSE_MODES = (0, 1, 2)
 DEFAULT_PAUSE_MODE = 1
-#: And whether a language consults the dictionary it carries, after the
-#: caller's own; one, the library's default, is yes.
-PARAM_BUILTIN_DICT = 34
 
 # A voice's, likewise.
 VOICE_GENDER = 0
@@ -299,7 +296,8 @@ def dictionaryFiles(folders, language):
 
 	Matched without regard to case. The community's files are called
 	ENURoot.dic and IBM's drivers ask for enuroot.dic, which is one file on
-	Windows and two names that miss each other anywhere else.
+	Windows and two names that miss each other anywhere else. A folder may
+	come paired with the languages it is not read for.
 	"""
 	code = DICTIONARY_CODES.get(language)
 	found = []
@@ -307,6 +305,10 @@ def dictionaryFiles(folders, language):
 		return found
 	listed = []
 	for folder in folders:
+		if not isinstance(folder, str):
+			folder, passed = folder
+			if language in passed:
+				continue
 		try:
 			listed.append((folder, sorted(os.listdir(folder))))
 		except OSError:
@@ -482,8 +484,6 @@ class Engine:
 		#: above eleven thousand and twenty five, not the rate it hands over,
 		#: so the player stays as it is.
 		self.wideband = False
-		#: Whether US English consults the dictionary it carries.
-		self.builtinDict = True
 		self.pauseMode = DEFAULT_PAUSE_MODE
 		self.voiceNames = {}
 		#: Every language the library has, and the one in force.
@@ -713,18 +713,6 @@ class Engine:
 			log.error("openevv: the library has no wideband voice")
 			return False
 		self.wideband = enable
-		return True
-
-	def setBuiltinDict(self, enable):
-		"""Turn the dictionary a language carries on or off, between
-		utterances. A word in the reader's own dictionaries is said their way
-		either way."""
-		if enable == self.builtinDict:
-			return True
-		if self.setParam(PARAM_BUILTIN_DICT, 1 if enable else 0) < 0:
-			log.error("openevv: the library has no built-in dictionary switch")
-			return False
-		self.builtinDict = enable
 		return True
 
 	def setPauseMode(self, mode):

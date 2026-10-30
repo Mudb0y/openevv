@@ -52,8 +52,8 @@ and `lang/engb/dictionary` is transcribed out of IBM's Embedded ViaVoice objects
 `lang/enus` is US English, `lang/dede` is German, `lang/engb` is British
 English, `lang/eses` and `lang/esus` are the two Spanishes, `lang/frfr` and
 `lang/frca` the two Frenches and `lang/itit` is Italian. `lang/fifi` and
-`lang/ptbr` are ETI's and `lang/enus/dictionary` is the community's and ours,
-and the two sections after this one say so, as they do of
+`lang/ptbr` are ETI's and `lang/enus/dictionary` is ours, begun from the
+community's, and the two sections after this one say so, as they do of
 `lang/engb/dictionary`, which is ours.
 
 `lang/jajp` is Japanese and is not in the tree, because a language module that
@@ -178,26 +178,30 @@ transcription and on the same footing. None of it is ours to license.
 terms, read out of the Portuguese module Apple ships, and the one rule in its
 `rules/written.up` is the same transcription as Finnish's.
 
-The community's
----------------
+The dictionary US English carries
+---------------------------------
 
-`lang/enus/dictionary/community` is a snapshot of IBMTTSDictionaries,
+`lang/enus/dictionary` began on 14 October 2026 as a snapshot of
+IBMTTSDictionaries,
 
     https://github.com/eigencrow/IBMTTSDictionaries
 
 pronunciations written for this engine by the people who listen to it,
 maintained by amirsol81, x0 and thunderdrop with contributions from many.
-Its authors dedicated it to the public domain under CC0 1.0, whose text is
-beside it in `LICENSE.md`, and `source` there says which commit it is. It is
-here as it came and is nobody's to license, ours least of all.
+Its authors dedicated it to the public domain under CC0 1.0,
 
-The rest of `lang/enus/dictionary` is ours and the MIT licence covers it:
-`held`, which names entries of the snapshot the build leaves out, `split`,
-which names the beginnings that keep a name whole, and `main.dic`,
-`root.dic` and `abbr.dic`, the words we add. So is `lang/engb/dictionary`.
+    https://creativecommons.org/publicdomain/zero/1.0/
 
-`lang/enus/dictionary/published` is written by tools/measure/published.py
-out of two dictionaries that ask nothing of whoever copies them. The Moby
+and on 30 October 2026 it became ours: one set of files, with the entries
+we took out of it named in `removed` and the commit of theirs whose changes
+it has taken named in `upstream`. The MIT licence covers what we wrote and
+the whole as it is put together, and so `split`, `removed`, `upstream` and
+`lang/engb/dictionary` as well. The community's entries in it were given to
+the public domain by their authors and stay free to anyone, whatever this
+file says.
+
+Some of its entries were written by tools/measure/published.py out of two
+dictionaries that ask nothing of whoever copies them. The Moby
 Pronunciator II is Grady Ward's, placed in the public domain by grant of its
 author in January 2001. The Carnegie Mellon Pronouncing Dictionary of 1993
 is Copyright 1993 by Carnegie Mellon University, which made its use for any

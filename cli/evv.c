@@ -39,7 +39,7 @@ enum ECICallbackReturn {
 
 /* The engine's own parameters, and a voice's. Only the few this needs. */
 enum { P_INPUT_TYPE = 1, P_SAMPLE_RATE = 5,
-       P_REAL_WORLD_UNITS = 8, P_WIDEBAND = 32, P_BUILTIN_DICT = 34 };
+       P_REAL_WORLD_UNITS = 8, P_WIDEBAND = 32 };
 enum { V_GENDER, V_HEAD_SIZE, V_PITCH, V_FLUCTUATION, V_ROUGHNESS,
        V_BREATHINESS, V_SPEED, V_VOLUME, V_COUNT };
 
@@ -231,8 +231,6 @@ static void usage(FILE *f)
 "            hold or zeros, or none to synthesise at the rate instead\n"
 "  -W        the wideband voice above 11025: the same voice below about\n"
 "            5.4 kHz and a second synthesiser's top above it\n"
-"  -D        leave out the dictionary the language carries, so every word\n"
-"            is read by the rules alone\n"
 "  -A        take annotations in the text: a backquote and a name, with\n"
 "            what it applies to in square brackets. `[ ] is a\n"
 "            pronunciation in the engine's own phoneme alphabet\n"
@@ -251,7 +249,6 @@ int main(int argc, char **argv)
 {
     const char *out = NULL, *from = NULL, *lang = NULL;
     int         voice = 0, real = 0, list = 0, want_rate = -1, wide = 0;
-    int         nodict = 0;
     int         langlist = 0;
     int         set[V_COUNT];
     int         annotations = 0;
@@ -278,7 +275,7 @@ int main(int argc, char **argv)
     for (i = 0; i < V_COUNT; i++)
         set[i] = -1;
 
-    while ((i = getopt(argc, argv, "o:f:v:s:p:P:V:R:L:rlhAWD")) != -1) {
+    while ((i = getopt(argc, argv, "o:f:v:s:p:P:V:R:L:rlhAW")) != -1) {
         switch (i) {
         case 'o': out = optarg; break;
         case 'f': from = optarg; break;
@@ -299,7 +296,6 @@ int main(int argc, char **argv)
         case 'l': list = 1; break;
         case 'A': annotations = 1; break;
         case 'W': wide = 1; break;
-        case 'D': nodict = 1; break;
         case 'h': usage(stdout); return 0;
         default:  usage(stderr); return 2;
         }
@@ -446,10 +442,6 @@ int main(int argc, char **argv)
     }
     if (wide && ev_setParam(h, P_WIDEBAND, 1) < 0) {
         fprintf(stderr, "evv: the engine refused the wideband voice\n");
-        return 1;
-    }
-    if (nodict && ev_setParam(h, P_BUILTIN_DICT, 0) < 0) {
-        fprintf(stderr, "evv: the engine has no dictionary to leave out\n");
         return 1;
     }
 

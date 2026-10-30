@@ -22,8 +22,7 @@
 #include "evv_abi.h"
 
 enum { FRAME_SAMPLES = 2048, MAX_LANGUAGES = 32, VOICES_PER_LANGUAGE = 8 };
-enum { PARAM_TEXT_MODE = 2, PARAM_SAMPLE_RATE = 5, PARAM_WIDEBAND = 32,
-       PARAM_BUILTIN_DICT = 34 };
+enum { PARAM_TEXT_MODE = 2, PARAM_SAMPLE_RATE = 5, PARAM_WIDEBAND = 32 };
 enum { TEXT_MODE_DEFAULT = 0, TEXT_MODE_ALPHA_SPELL = 1,
        TEXT_MODE_ALL_SPELL = 2 };
 enum { VOICE_GENDER, VOICE_HEAD_SIZE, VOICE_PITCH, VOICE_FLUCTUATION,
@@ -109,9 +108,6 @@ static int debugEnabled;
    own sound below about 5.4 kHz and a top above it, made at 22,050 and so
    handed to the server at that rate rather than at 11,025. */
 static int widebandEnabled;
-/* Whether US English consults the dictionary it carries, which it does
-   unless the configuration file says otherwise. */
-static int builtinDictEnabled = 1;
 static int outputRate = 11025;
 static int logLevel;
 static FILE *debugFile;
@@ -329,9 +325,7 @@ static int open_engine(uint32_t language)
     if (!ev_setOutputBuffer(engine, FRAME_SAMPLES, audioFrame)
         || (widebandEnabled
             && (ev_setParam(engine, PARAM_SAMPLE_RATE, outputRate) < 0
-                || ev_setParam(engine, PARAM_WIDEBAND, 1) < 0))
-        || (!builtinDictEnabled
-            && ev_setParam(engine, PARAM_BUILTIN_DICT, 0) < 0)) {
+                || ev_setParam(engine, PARAM_WIDEBAND, 1) < 0))) {
         es_delete(engine);
         engine = NULL;
         return -1;
@@ -993,13 +987,12 @@ int module_config(const char *configFile)
             widebandEnabled = enabled;
             outputRate = enabled ? 22050 : 11025;
         } else if (!strcasecmp(at, "BuiltInDictionary")) {
-            int enabled;
-
-            if (parse_number(value, 0, 1, &enabled) != 0) {
-                fclose(file);
-                return -1;
-            }
-            builtinDictEnabled = enabled;
+            /* It once turned the dictionary US English carries off, which a
+               reader can no longer do. Refusing the line would leave the
+               module with no voice over a setting that is gone, so it is
+               read and ignored, whatever it says. */
+            fprintf(stderr, "OpenEVV: BuiltInDictionary is no longer a "
+                    "setting; the line is ignored\n");
         } else {
             fclose(file);
             return -1;
