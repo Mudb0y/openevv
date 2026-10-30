@@ -4,7 +4,7 @@
 # test/words.sh record. The list is test/cases/words-enus.txt.
 # These are what this engine does, not what IBM's did: the
 # differential suite speaks sentences, not word lists.
-# CMU's dictionary agrees with the sounds of 19123 of the 20191 words both these answers and the ones before them have, where it agreed with 19122.
+# CMU's dictionary agrees with the sounds of 19123 of the 20191 words both these answers and the ones before them have, where it agreed with 19123.
 a	[`[.1e]]
 aardvark	[`[.1ard.2vark]]
 aaron	[`[.1er.0Xn]]
@@ -8988,7 +8988,7 @@ geometry	[`[.0Ji.1a.0mX.0tri]]
 georg	[`[.1ge.2crg]]
 georgia	[`[.1Jcr.0Jx]]
 gephardt	[`[.1gEp.0hart]]
-gerais	[`[.0ZR.1e]]
+gerais	[`[.0ZX.1rYs]]
 geraldo	[`[.0hR.1al.0do]]
 geraniums	[`[.0Jx.1re.0ni.0xmz]]
 gerasimov	[`[.0gx.1rA.0sX.2maf]]
