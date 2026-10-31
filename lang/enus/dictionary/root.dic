@@ -36781,7 +36781,6 @@ matisse	`[.2mA.1tis]
 matière	`[.2mA.2ti.1R]
 matjes	`[.1mat.0yXs]
 matlacha	`[.2mAt.0lx.1Se]
-matplotlib	`[.2mAt.1plat.2lIb]
 matranee	`[.0mx.1tra.0ni]
 matravers	`[.0mx.1trA.0vRz]
 matriarch	`[.1me.0tri.2ark]
@@ -70217,7 +70216,20 @@ toml	`[.1ta.0mxl]
 devops	`[.1dEv.2aps]
 sonarr	`[.1so.2nar]
 radarr	`[.1re.2dar]
-passwd	password
+etcd	`[.1Et.2si.2di]
+esbuild	`[.2i.2Es.1bIld]
+vitest	`[.1vi.2tEst]
+gunicorn	`[.2Ji.1yu.0nX.2kcrn]
+axum	`[.1Ak.0sxm]
+serde	`[.1sR.0di]
+istio	`[.1Is.0ti.2o]
+kubelet	`[.1kub.2lXt]
+pypi	`[.2pY.2pi.1Y]
+alsa	`[.1Al.0sx]
+monorepo	`[.1ma.0nx.2ri.0po]
+monorepos	`[.1ma.0nx.2ri.0poz]
+matplotlib	`[.1mAt.2plat.2lIb]
+heisenbug	`[.1hY.0zXn.2bHg]
 
 # What a program is written in
 async	`[.1e.2sIGk]
@@ -70383,3 +70395,15 @@ triathlons	`[.2trY.1AT.0lXnz]
 finitism	`[.1fY.2nY.2tI.0zxm]
 prodromal	`[.2pro.1dro.0mxl]
 vivace	`[.0vi.1va.2Ce]
+
+# Words said as Merriam-Webster lists them first, where the engine said
+# another of the forms it lists or none of them
+ratio	`[.1re.0Si.2o]
+heisenberg	`[.1hY.0zXn.2bRg]
+etc	`[.2Et.1sE.0Fx.0rx]
+
+# Names shortened out of words that turn up in paths, said by their letters
+# as main.dic's are; they are here because only a root entry is found after
+# a slash, as in /usr/bin
+usr	`[.1yu.2Es.2ar]
+passwd	`[.1pAs.2dH.0bxl.2yu.2di]

@@ -907,7 +907,6 @@ Sysadmin	siss admin
 sysadmin	siss admin
 Sysadmins	siss adminz
 sysadmins	siss adminz
-sysctl	sys ctl
 sysfs	sis fs
 systemctl	system ctl
 T-Mobile	tea mobil
@@ -1214,6 +1213,7 @@ HAProxy	H A proxy
 Kdenlive	`[.2ke.0dEn.1lYv]
 ROCm	`[.1rak.0xm]
 CUDA	`[.1ku.0dx]
+uv	yue vee
 
 # Formats and languages
 YAML	`[.1yA.0mxl]
@@ -1255,15 +1255,12 @@ ms	milliseconds
 
 # Several words in place of one, which only the main volume can say, so
 # these are matched as written, in small letters.
-nixpkgs	nix packages
 egrep	E grep
 nvim	N vim
 cmake	C make
 strace	S trace
 ltrace	L trace
 htop	H top
-dmesg	D message
-udevadm	you dev admin
 gdisk	G disk
 btrfs	butter F S
 cryptsetup	crypt setup
@@ -1280,33 +1277,80 @@ nmcli	N M C L I
 iwd	I W D
 nftables	N F tables
 firewalld	firewall D
+containerd	container D
+journald	journal D
+logind	login D
+readelf	read elf
+virtualenv	virtual env
+pyenv	pie env
 pipx	pip X
-kubectl	cube control
 nginx	engine X
-mkdir	make dir
 rmdir	R M dir
 whoami	who am I
 nslookup	N S lookup
 tcpdump	T C P dump
-stdin	standard in
-stdout	standard out
-stderr	standard error
-stdlib	standard lib
 argv	arg V
 argc	arg C
 sprintf	S print F
 snprintf	S N print F
 scanf	scan F
-strcpy	stir copy
-strncpy	stir N copy
-strcat	stir cat
-strlen	stir len
-memcpy	mem copy
 uint	you int
-nullptr	null pointer
 libc	lib C
 glibc	G lib C
 pthread	P thread
 ioctl	I O C T L
 mmap	M map
 execve	exec V
+
+# Names shortened out of words, said by the letters they are written with
+# rather than by the words they stand for, so that what is heard can be
+# typed: kubectl as kube C T L and not cube control, which a listener new to
+# it would spell with the whole word. A name its maker says otherwise keeps
+# the maker's reading, as nginx, btrfs and Qt do.
+kubectl	kube C T L
+kubeadm	kube ay D M
+sysctl	sis C T L
+bluetoothctl	bluetooth C T L
+hyprctl	hyper C T L
+playerctl	player C T L
+brightnessctl	brightness C T L
+powerprofilesctl	power profiles C T L
+dmesg	D M E S G
+swaymsg	sway M S G
+nixpkgs	nix P K G S
+udevadm	yue dev ay D M
+efibootmgr	E F igh boot M G R
+pkexec	P K exec
+nmtui	N M T U I
+mkdir	M K dir
+lsusb	L S U S B
+lspci	L S P C I
+lscpu	L S C P U
+lsof	L S O F
+findmnt	find M N T
+btop	B top
+nvtop	N V top
+ffplay	F F play
+yq	Y Q
+runc	run C
+stdin	S T D in
+stdout	S T D out
+stderr	S T D err
+stdlib	S T D lib
+nullptr	null P T R
+strcpy	S T R C P Y
+strncpy	S T R N C P Y
+strcat	S T R cat
+strlen	S T R len
+memcpy	mem C P Y
+
+# Abbreviations from chat, said by their letters
+IIRC	igh igh ar cea
+Iirc	igh igh ar cea
+iirc	igh igh ar cea
+FWIW	eff doubleyou igh doubleyou
+Fwiw	eff doubleyou igh doubleyou
+fwiw	eff doubleyou igh doubleyou
+AFAIK	ay eff ay igh keigh
+Afaik	ay eff ay igh keigh
+afaik	ay eff ay igh keigh
