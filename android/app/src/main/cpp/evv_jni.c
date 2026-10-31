@@ -22,6 +22,7 @@
 
 #define TAG "evvdroid"
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
 
 /* What the engine writes at a time, in samples, and what the ring holds, in
    bytes. The ring has to be bigger than one frame or the callback would wait
@@ -132,7 +133,17 @@ static void* worker_loop(void* data) {
 				break;
 			nanosleep(&tick, NULL);
 		}
-		eciSynchronize(in->eci);
+		{
+			struct timespec t0, t1;
+			clock_gettime(CLOCK_MONOTONIC, &t0);
+			eciSynchronize(in->eci);
+			clock_gettime(CLOCK_MONOTONIC, &t1);
+			pthread_mutex_lock(&in->lock);
+			LOGI("worker: synchronize took %ldms spins=%d started=%d aborted=%d count=%zu",
+				(long)((t1.tv_sec - t0.tv_sec) * 1000L + (t1.tv_nsec - t0.tv_nsec) / 1000000L),
+				spins, in->started, in->aborted, in->count);
+			pthread_mutex_unlock(&in->lock);
+		}
 		pthread_mutex_lock(&in->lock);
 		in->done = 1;
 		in->busy = 0;
@@ -178,6 +189,7 @@ static int ECICALL on_message(ECIHand handle, ECIMessage message, int param, voi
 	while (!in->aborted && RING_BYTES - in->count < want)
 		pthread_cond_wait(&in->room, &in->lock);
 	if (in->aborted) {
+		LOGI("on_message: aborted while waiting for ring room");
 		pthread_mutex_unlock(&in->lock);
 		return eciDataAbort;
 	}
@@ -328,6 +340,7 @@ JNIEXPORT jint JNICALL Java_org_evvdroid_EvvNative_read(JNIEnv* env, jclass cls,
 	while (in->count == 0 && !in->done && !in->aborted)
 		pthread_cond_wait(&in->filled, &in->lock);
 	if (in->aborted) {
+		LOGI("read: aborted with %zu bytes unread", in->count);
 		pthread_mutex_unlock(&in->lock);
 		return -1;
 	}

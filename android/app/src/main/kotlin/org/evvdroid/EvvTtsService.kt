@@ -26,6 +26,9 @@ class EvvTtsService : TextToSpeechService() {
 	@Volatile
 	private var stopped = false
 
+	@Volatile
+	private var utterance = 0
+
 	private var appliedRevision = -1
 
 	private data class LoadedDictState(val path: String, val lastModified: Long, val length: Long)
@@ -41,6 +44,7 @@ class EvvTtsService : TextToSpeechService() {
 	}
 
 	override fun onDestroy() {
+		Log.w(TAG, "service destroyed after $utterance utterances")
 		super.onDestroy()
 		engine?.close()
 		engine = null
@@ -183,12 +187,26 @@ class EvvTtsService : TextToSpeechService() {
 	}
 
 	override fun onStop() {
+		Log.i(TAG, "#$utterance onStop")
 		stopped = true
 		engine?.stop()
 	}
 
 	override fun onSynthesizeText(request: SynthesisRequest?, callback: SynthesisCallback?) {
 		if (request == null || callback == null) return
+		val id = ++utterance
+		val began = System.nanoTime()
+		Log.i(TAG, "#$id begin voice=${request.voiceName} lang=${request.language}-${request.country} rate=${request.speechRate} pitch=${request.pitch} chars=${request.charSequenceText?.length}")
+		try {
+			synthesize(id, request, callback)
+		} catch (t: Throwable) {
+			Log.e(TAG, "#$id threw after ${(System.nanoTime() - began) / 1_000_000}ms", t)
+			throw t
+		}
+		Log.i(TAG, "#$id end after ${(System.nanoTime() - began) / 1_000_000}ms stopped=$stopped")
+	}
+
+	private fun synthesize(id: Int, request: SynthesisRequest, callback: SynthesisCallback) {
 		stopped = false
 		val found = Languages.match(request.language, request.country)
 		if (found == null) {
@@ -284,11 +302,16 @@ class EvvTtsService : TextToSpeechService() {
 		val pauses = settings?.pauses ?: Pauses.ALL
 		val prosody = Prosody.prefix(settings?.phrasePrediction ?: false)
 		val pieces = TextPieces.split(text)
+		Log.i(TAG, "#$id ${text.length} chars in ${pieces.size} pieces")
 		for ((at, raw) in pieces.withIndex()) {
-			if (stopped) break
+			if (stopped) {
+				Log.i(TAG, "#$id stopped before piece $at")
+				break
+			}
 			val piece = prosody + Pauses.apply(raw, pauses, at == pieces.lastIndex)
 			if (!target.speak(piece)) {
-				Log.e(TAG, "the engine refused ${piece.length} characters")
+				Log.e(TAG, "#$id the engine refused ${piece.length} characters")
+				Log.e(TAG, "#$id refused piece $at: ${piece.take(200)}")
 				callback.error(TextToSpeech.ERROR_SYNTHESIS)
 				return
 			}
@@ -299,28 +322,42 @@ class EvvTtsService : TextToSpeechService() {
 				target.stop()
 				break
 			}
-			if (!pump(target, callback, pace, opening)) {
+			if (!pump(id, target, callback, pace, opening)) {
+				Log.w(TAG, "#$id pump gave up at piece $at of ${pieces.size}")
 				remember(pace)
 				return
 			}
 		}
 		remember(pace)
+		Log.i(TAG, "#$id finished, handed ${pace.handedMs()}ms began=${opening.began}")
+		if (!opening.began && !stopped) {
+			Log.w(TAG, "#$id the engine said nothing for: ${text.take(200)}")
+			opening.open()
+		}
 		if (opening.began) callback.done()
 	}
 
 	/** Hands one piece's samples on as they arrive, and answers whether the
 	 *  caller may go on to the next. */
-	private fun pump(target: EvvEngine, callback: SynthesisCallback, pace: Pace, opening: Opening): Boolean {
+	private fun pump(id: Int, target: EvvEngine, callback: SynthesisCallback, pace: Pace, opening: Opening): Boolean {
 		val size = callback.maxBufferSize.coerceIn(MIN_CHUNK, MAX_CHUNK)
 		val buffer = ByteArray(size)
+		var chunks = 0
 		while (!stopped) {
 			val n = target.read(buffer)
-			if (n <= 0) break
+			if (n <= 0) {
+				Log.i(TAG, "#$id read answered $n after $chunks chunks")
+				break
+			}
+			chunks++
 			if (!opening.open()) {
+				Log.w(TAG, "#$id the framework refused start()")
 				target.stop()
 				return false
 			}
-			if (callback.audioAvailable(buffer, 0, n) != TextToSpeech.SUCCESS) {
+			val delivered = callback.audioAvailable(buffer, 0, n)
+			if (delivered != TextToSpeech.SUCCESS) {
+				Log.w(TAG, "#$id audioAvailable answered $delivered after $chunks chunks")
 				// The framework has torn the callback down already, so done()
 				// is neither wanted nor listened to.
 				target.stop()
