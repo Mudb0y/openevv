@@ -134,6 +134,9 @@ struct SynthThread {
        stw_processRemaining. */
     int32_t       pauses;
     int32_t       tail;
+    /* Ours: the text mode the romanizer was last told, which decides
+       whether a bracket may be read as a round one -- see stw_roundBrackets. */
+    int32_t       textmode;
     /* Ours: whether the language's own dictionary is consulted, which every
        engine the thread takes up is told. */
     int32_t       builtin;
@@ -193,6 +196,7 @@ struct SynthThread {
 #define ST_PAUSES(t)    ((t)->pauses)
 #define ST_BUILTIN(t)   ((t)->builtin)
 #define ST_TAIL(t)      ((t)->tail)
+#define ST_TEXTMODE(t)  ((t)->textmode)
 
 /* What the wideband voice is called by the newer interface's settings and
    by the older one's. Both are ours, and include/eci.h publishes the older

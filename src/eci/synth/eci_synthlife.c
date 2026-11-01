@@ -340,6 +340,7 @@ static void stl_build(SynthThread *t, void *app, void *state)
     ST_WIDEBAND(t) = 0;
     ST_PAUSES(t) = PAUSES_DEFAULT;
     ST_TAIL(t) = 0;
+    ST_TEXTMODE(t) = 0;
     ST_BUILTIN(t) = BUILTIN_DEFAULT;
 
     p = cpp_new(rm_bytes);

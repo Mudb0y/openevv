@@ -41,6 +41,7 @@
 #define ROM_SAMPLE_RATE   0x3eb
 
 /* Which parameter a change is being reported back under. */
+#define ECI_PARAM_TEXTMODE 0
 #define ECI_PARAM_PHONEMES 4
 #define ECI_PARAM_VOICE    0x10
 #define ECI_PARAM_ROM      0x0e
@@ -343,6 +344,8 @@ THIS void changeRomParamRun(SynthThread *t, int32_t param, int32_t value,
         stb_postRomanizerError(t, 0);
         return;
     }
+    if (param == ECI_PARAM_TEXTMODE)
+        ST_TEXTMODE(t) = value;
     finished(t);
 }
 
