@@ -316,7 +316,7 @@ ALL_CFLAGS := $(OPT) $(ALIAS) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEF
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe so so32 sotest phonemes dict dictfile objects stubs rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices wide inikeys stopthread pieces prims ipa xmltok ssml romcan romprims speechd speechd-install speechd-enable-test speechd-test speechd-test-all say-test
+.PHONY: all probe so so32 sotest phonemes dict dictfile objects stubs rules missing install install-lib clean evv32 probe32 instances interrupt landing landsaves rate rates voices wide inikeys stopthread pieces prims ipa xmltok ssml romcan romprims speechd speechd-install speechd-enable-test speechd-test speechd-test-all say-test
 all: $(BUILD)/evv $(BUILD)/openevv-say
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -591,6 +591,18 @@ landing: $(BUILD)/landing
 
 $(BUILD)/landing: test/harness/landing.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/harness/landing.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# Whether a landing puts back every register the calling convention makes a
+# function hand back. It builds the landing on its own rather than out of the
+# engine, so it costs seconds; `win-landsaves' is the one that matters, since
+# Windows is where the convention asks for more than the general registers.
+landsaves: $(BUILD)/landsaves
+	@$(BUILD)/landsaves
+
+$(BUILD)/landsaves: test/harness/landsaves.c src/port/evv_land.c src/port/evv_land.h
+	@mkdir -p $(BUILD)
+	@$(CC) $(ALL_CFLAGS) test/harness/landsaves.c src/port/evv_land.c -o $@
 	@echo "built $@"
 
 # A stop from a thread that is not the one speaking, which is what a screen
@@ -1261,7 +1273,7 @@ SOURCESWIN := $(filter-out %/port_posix.c, \
               $(ROMS) $(RULESRC) $(LANGLIST)
 OBJECTSWIN := $(patsubst %.c,$(OBJDIRWIN)/%.o,$(notdir $(SOURCESWIN)))
 
-.PHONY: win win-probe win-dlltest win-stopthread
+.PHONY: win win-probe win-dlltest win-stopthread win-landsaves
 win: $(BUILD)/evv.exe $(BUILD)/evvspeak.exe $(BUILD)/eci.dll
 
 # The cross-thread stop, for Windows, because that is where it used to fault:
@@ -1272,6 +1284,16 @@ win-stopthread: $(BUILD)/stopthread$(SUF).exe
 
 $(BUILD)/stopthread$(SUF).exe: test/harness/stopthread.c $(BUILD)/libevv-win$(SUF).a
 	@$(CCWIN) $(CFLAGSWIN) test/harness/stopthread.c $(BUILD)/libevv-win$(SUF).a $(LDFLAGSWIN) -o $@
+	@echo "built $@"
+
+# A landing on Windows has to put back xmm6 to xmm15 and both control words as
+# well as the general registers, and none of that is visible to a Linux run.
+win-landsaves: $(BUILD)/landsaves.exe
+	@wine $(BUILD)/landsaves.exe
+
+$(BUILD)/landsaves.exe: test/harness/landsaves.c src/port/evv_land.c src/port/evv_land.h
+	@mkdir -p $(BUILD)
+	@$(CCWIN) $(CFLAGSWIN) test/harness/landsaves.c src/port/evv_land.c $(LDFLAGSWIN) -o $@
 	@echo "built $@"
 
 # The probe, for Windows, which is how a fault there gets localised: it says

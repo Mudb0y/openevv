@@ -169,6 +169,9 @@ jobs:
       - name: Check a stop from another thread leaves the engine whole
         run: make RULES=bytecode stopthread
 
+      - name: Check a landing puts back every register it has to
+        run: make landsaves
+
       # Half of test/harness/prims.sh. The comparison against IBM's own objects wants
       # Wine and the SDK and cannot run here, but our side of it exercises
       # every machine primitive no rule calls -- fifty thousand calls that
@@ -342,7 +345,8 @@ jobs:
           refs/tags/v*) version=${GITHUB_REF_NAME#v} ;;
           *)            version=0.0.0 ;;
           esac
-          make -j"$(nproc)" LANGS="$langs" EVV_VERSION="$version" win win-dlltest win32
+          make -j"$(nproc)" LANGS="$langs" EVV_VERSION="$version" win win-dlltest win32 \
+            build/landsaves.exe
 
       - name: Say what came out
         run: |
@@ -385,6 +389,7 @@ jobs:
             build/eci.ini
             build/dlltest.exe
             build/dlltest32.exe
+            build/landsaves.exe
             build/openevv-*.nvda-addon
           if-no-files-found: error
 
@@ -428,6 +433,13 @@ jobs:
           "from ctypes: $havep"
           "wanted:      $want"
           if ($havep -ne $want) { throw "the library says something else through ctypes" }
+
+      # Wine runs the same instructions, but this is the convention's home.
+      - name: Check a landing puts back every register Windows asks for
+        shell: pwsh
+        run: |
+          .\landsaves.exe
+          if ($LASTEXITCODE -ne 0) { throw "landsaves ended with $LASTEXITCODE" }
 
       # The thirty-two bit library, which is what the most used driver loads --
       # it hosts the engine in a 32-bit process of its own whatever bitness the
