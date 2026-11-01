@@ -1244,18 +1244,20 @@ CFLAGSWIN  := $(OPT) $(ALIAS) -std=gnu99 $(INCS) $(WARN) -DEVV_ARENA=1 \
 # as the releases' do, and need neither.
 LDFLAGSWIN := -static $(MINGW64_LDFLAGS)
 
-# The same list for Windows, and RULECODE is named here for the same reason
-# it is named above: a wildcard answers with what is on disk when the Makefile
-# is read, and on a fresh clone the three files a build writes out of
-# lang/<tag>/rules are not there yet. This list had been left to the wildcard,
+# The same list for Windows, and RULECODE and BUILTIN are named here for the
+# same reason they are named above: a wildcard answers with what is on disk
+# when the Makefile is read, and on a fresh clone the files a build writes out
+# of lang/<tag> are not there yet. This list had been left to the wildcard,
 # so a first build of a clean checkout linked without the bytecode array, the
 # rule count and the symbol table, and failed with four undefined references
-# that a second build would not reproduce.
+# that a second build would not reproduce. BUILTIN was then added to the list
+# above and not to this one, and every Windows link in CI failed the same way
+# while every local build, with the files already on disk, passed.
 SOURCESWIN := $(filter-out %/port_posix.c, \
                 $(foreach d,$(SRCDIRS),$(wildcard $(d)/*.c))) \
-              $(filter-out $(STALE) $(GENERATED) $(STUBS) $(RULECODE), \
+              $(filter-out $(STALE) $(GENERATED) $(STUBS) $(RULECODE) $(BUILTIN), \
                 $(sort $(foreach l,$(LANGS),$(wildcard $(l)/*.c)))) \
-              $(filter %.c,$(RULECODE)) \
+              $(filter %.c,$(RULECODE)) $(BUILTIN) \
               $(ROMS) $(RULESRC) $(LANGLIST)
 OBJECTSWIN := $(patsubst %.c,$(OBJDIRWIN)/%.o,$(notdir $(SOURCESWIN)))
 
