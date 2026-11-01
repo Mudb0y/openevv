@@ -462,6 +462,57 @@ def main():
         os.rmdir(wideDir)
     assert result == 0
 
+    print("speechd: what Speech Dispatcher keeps for the synthesiser",
+          flush=True)
+    # With its own symbol processing Speech Dispatcher asks for punctuation
+    # mode none and leaves in the text what it keeps for the synthesiser,
+    # which the module had been throwing away with what it does not: so
+    # "(unread)" and "artist - album" ran on unpaused, 3-5 was three five and
+    # $5.50 had no dollars. Each is spoken by a module of its own, so that it
+    # is the module's first utterance as evv's is; on the left what has to
+    # reach the engine as it is written, on the right what has to reach it
+    # without the symbol, because the engine would name it.
+    def first_utterance(text):
+        module = ModuleProcess(binary, config)
+        try:
+            module.send("INIT\n")
+            module.expect(b"299-OpenEVV initialized\n")
+            module.expect(b"299 OK LOADED SUCCESSFULLY\n")
+            module.command_with_data(
+                "AUDIO",
+                ["audio_output_method=server"],
+                b"207 OK RECEIVING AUDIO SETTINGS\n",
+            )
+            module.expect(b"203 OK AUDIO INITIALIZED\n")
+            module.set(punctuation_mode="none", voice="male1",
+                       language="en-US", synthesis_voice="NULL")
+            audio, _, _, event = module.speak(text)
+            assert event == "702 END"
+            return audio
+        finally:
+            assert module.close() == 0
+
+    def evv(text):
+        return subprocess.check_output(
+            [directBinary, "-v", "1", "-o", "-", text])[44:]
+
+    for text, reaches in (
+        ("Inbox (unread) now.", "Inbox (unread) now."),
+        ("See [optional] here.", "See [optional] here."),
+        ("Pick <one> now.", "Pick <one> now."),
+        ("Beatles - Abbey Road.", "Beatles - Abbey Road."),
+        ("Ages 3-5 only.", "Ages 3-5 only."),
+        ("It costs $5.50 today.", "It costs $5.50 today."),
+        ("Set $HOME now.", "Set  HOME now."),
+        ("Go ( back ) now.", "Go   back   now."),
+        ("If a > b then.", "If a   b then."),
+        # A name Speech Dispatcher writes in front of the symbol it names.
+        ("Inbox left paren(unread now.", "Inbox left paren unread now."),
+    ):
+        assert first_utterance(text) == evv(reaches), (
+            f"in punctuation mode none the engine was not given {reaches!r}"
+        )
+
     print("speechd: an old BuiltInDictionary line", flush=True)
     # The line once turned off the dictionary US English carries, and a
     # configuration may still have it. It is read and ignored now, so the
