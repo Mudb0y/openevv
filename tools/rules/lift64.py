@@ -1773,7 +1773,15 @@ class Rule:
             if reg_of(o[0]) in ("rbp", "rbx", "r12", "r13", "r14", "r15") \
                     and b == self.lo and not st["begun"]:
                 return
-            st["pushes"].append(self.value_of(st, o[0], 8))
+            v = self.value_of(st, o[0], 8)
+            # A register with a local of its own is kept as the local's name,
+            # and the local may be written again before the pop, which would
+            # then take back what it held by then. No rule of the six modules
+            # read so far pushes one; a module that does gets a hole here.
+            if v[0] == "home":
+                raise Hole("a register's local pushed, which the pop would"
+                           " read as it is by then")
+            st["pushes"].append(v)
             return
         if m == "popq":
             if not st["pushes"] and st.get("cleanup"):
