@@ -164,8 +164,9 @@ THIS int32_t pcm_setup(SoundOutput *o, char *a, int32_t *b, int32_t *c,
    soxr works in floating point, for the reason src/klatt/klatt_fx.h gives.
 
    Both interpolating ways look only backwards, at samples already handed
-   over, so a run joins the one before it with no seam and nothing is held
-   back at the end. What that costs is a constant delay of one input sample
+   over, so a run joins the one before it with no seam, and the end of the
+   last is pushed out by the engine rather than held back: pcm_cvt_tail
+   below. What that costs is a constant delay of one input sample
    for linear and two for cubic -- under two tenths of a millisecond -- which
    is why the history below is three samples deep.
 
@@ -447,6 +448,12 @@ void pcm_resample_end(PcmResampler *r)
     free(r->weights);
     r->weights = 0;
     r->half = 0;
+}
+
+void pcm_resample_clear(PcmResampler *r)
+{
+    r->at = 0;
+    memset(r->history, 0, sizeof r->history);
 }
 
 int32_t pcm_resample_delay(const PcmResampler *r)
@@ -735,6 +742,23 @@ THIS int32_t pcm_cvt_convert(AudioConverter *c, SDATA in, SDATA **out)
 THIS void pcm_cvt_storeHistory(AudioConverter *c)
 {
     (void)c;
+}
+
+/* Ours, for the end of a run and for a stop: how many samples of nothing
+   carry everything handed over out the far side, which is the delay twice
+   so that the sinc's ringing after the last sample comes out too; and
+   forgetting what is held, so that the next run starts from silence rather
+   than from the end of this one. */
+int32_t pcm_cvt_tail(const AudioConverter *c)
+{
+    if (c->walk.to == c->walk.from)
+        return 0;
+    return 2 * pcm_resample_delay(&c->walk);
+}
+
+void pcm_cvt_clear(AudioConverter *c)
+{
+    pcm_resample_clear(&c->walk);
 }
 
 /* The format descriptor the format table asks for. */

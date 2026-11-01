@@ -769,8 +769,21 @@ int main(void)
                 printf("rates: nothing to hold %d hertz against\n", (int)hz);
                 return 1;
             }
-            /* However many output samples have an input sample under them. */
-            owedN = (long)(((long long)baseN * hz + from - 1) / from);
+            /* However many output samples have an input sample under them,
+               once the end of the run has pushed twice the converter's delay
+               of nothing through it so that the last of the sentence and its
+               ringing come out. */
+            {
+                PcmResampler probe;
+                long tail = 0;
+
+                if (pcm_resample_start(&probe, from, hz, method)) {
+                    tail = 2 * (long)pcm_resample_delay(&probe);
+                    pcm_resample_end(&probe);
+                }
+                owedN = (long)(((long long)(baseN + tail) * hz + from - 1)
+                               / from);
+            }
             if (got != owedN) {
                 printf("rates: %ld samples at %d hertz where taking %ld of "
                        "%d owes %ld\n", got, (int)hz, baseN, (int)from,

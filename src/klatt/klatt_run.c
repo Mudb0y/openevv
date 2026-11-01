@@ -827,6 +827,37 @@ int ourKlattCallback(void *user, KlattSamples *s)
     return 1;
 }
 
+/* Ours. The wideband voice hands each sample over nine milliseconds after
+   it was made, the time its two filters take, and keeps the rest until more
+   comes. Within a run that is only a delay. At the end of one it is the
+   last of the utterance not said until the next begins: a Speech Dispatcher
+   reader heard the end of every letter clipped and then played under the
+   start of the one typed after it. So the end of a run pushes nothing
+   through until all of it is out, and a stop throws it away. */
+int flushSynthesisTail(DeltaThis *d)
+{
+    WideBand *w = DL_WIDE(DT_LANG(d));
+    KlattSamples s;
+    int ok;
+
+    if (!w)
+        return 1;
+    s.count = klatt_wide_tail(w);
+    s.samples = calloc((size_t)s.count, sizeof(int32_t));
+    if (!s.samples)
+        return 0;
+    ok = ourKlattCallback(d, &s);
+    free(s.samples);
+    klatt_wide_clear(w);
+    return ok;
+}
+
+void clearSynthesisTail(DeltaThis *d)
+{
+    if (DL_WIDE(DT_LANG(d)))
+        klatt_wide_clear(DL_WIDE(DT_LANG(d)));
+}
+
 /* ---- a rate the language cannot name --------------------------------- */
 
 /* What the caller asked the synthesiser to run at, in hertz.

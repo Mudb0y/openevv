@@ -405,3 +405,18 @@ const int32_t *klatt_wide_mix(WideBand *w, const int32_t *in, int32_t n,
     *made = got;
     return w->out;
 }
+
+/* Both halves are held back by the same amount, the partner by the sinc
+   and the companion by the line, so one length of nothing clears both. */
+int32_t klatt_wide_tail(const WideBand *w)
+{
+    return 2 * pcm_resample_delay(&w->up);
+}
+
+void klatt_wide_clear(WideBand *w)
+{
+    pcm_resample_clear(&w->up);
+    memset(w->line, 0, (size_t)w->line_room * sizeof(int32_t));
+    w->have = 0;
+    w->used = 0;
+}

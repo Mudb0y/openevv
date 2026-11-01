@@ -128,15 +128,15 @@ ssml 7 4cd78177c8895c6f aed3d33120b156d1 <speak version="1.0" xml:lang="en-US">S
 ssml 8 f8a129e665d4356d 5b87110639e79eb6 <speak version="1.0" xml:lang="en-US">Wait<break time="500ms"/>for it.<mark name="here"/> There.</speak>
 ssml 9 e38f0b0f18d5ea04 3292e9857759cc73 <speak version="1.0" xml:lang="en-US"><sub alias="World Wide Web">WWW</sub> and <phoneme ph="h.E.l.oU">hello</phoneme>.</speak>
 ssml 10 019301a1b2fb4152 957d5569e0328ef0 <speak version="1.0" xml:lang="en-US">The café near the naïve façade, with a &amp; b &lt; c.</speak>
-wide 1 08d983deab11daf5 5d79ca06a0beb05f Hello. This is the Eloquence synthesizer speaking.
-wide 2 f8888e238a6898ca 28ee60604cdcfc2d Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
-wide 3 cd256e86e00a5763 ffb938aee70fd110 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
-wide 4 56281b0398e237eb 26a56ac7931e3b1b Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
-wide 5 b360ab470a285d8c a630d67ae7163cd0 A one-word line. And another; plus "quoted text" inside.
-wide 6 d89223ae2b66cbe2 6890b36335e24925 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
-wide 7 2b23566b6d7bb5cd 8af97f7b9e4451f5 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
-wide 8 1d74f68a469d0099 cadc5e86a4493186 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-wide 9 c50ba6e77883dffe ea774bbef73d8cb9 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-wide 10 a626dc44994e6fcd a2c7361b0f9cc475 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
-wide 11 62ddc27c9774e6c1 223c149dd8257c3c On 2026-10-11 part 123-456-789 suited ages 3-5, and 10-5-2=3.
-wide 12 ed3298ac84d139b2 c8ae12798f80fff2 It cost US$5.50 here, EUR 20.50 there, $5-$10 a head, or DM 5.
+wide 1 facab243ae0910b2 3651b4b3efa531c2 Hello. This is the Eloquence synthesizer speaking.
+wide 2 9919e1f5445a44ff 1884923de38b0087 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
+wide 3 d5ae4e9bb50a2873 82a265b66cb9c7b0 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
+wide 4 f0ff55a219b6f0f8 5838bcd7023aeb47 Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
+wide 5 b9bbd0e35025a3c4 2f1bfc3b108ca449 A one-word line. And another; plus "quoted text" inside.
+wide 6 d83d32dcc0d77972 33c4222d2a6ca8df Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+wide 7 b6b726fc30c677ff 5c95f1aae2edbe1d He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
+wide 8 bf12f7c775d32f7a aea2dc0321e26d6b A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
+wide 9 b8158ca22dfd2a6c 8b2cde90fdc9d00a Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+wide 10 7a4c5c26644ae945 7ba4f973d4686967 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+wide 11 7921ade5bc7c8478 9557587d24245b05 On 2026-10-11 part 123-456-789 suited ages 3-5, and 10-5-2=3.
+wide 12 e1a8a2b0e2ba296d 8608c6169e073d59 It cost US$5.50 here, EUR 20.50 there, $5-$10 a head, or DM 5.

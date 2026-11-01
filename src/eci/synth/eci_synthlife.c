@@ -63,6 +63,11 @@ typedef void (*VoiceCallback)(int32_t, int16_t *, int16_t *, int16_t *,
 
 typedef ENGCALL int32_t (*EngCommand)(void *engine, const char *line);
 typedef ENGCALL int32_t (*EngReset)(void *engine, int32_t how);
+
+struct delta_state;
+extern struct delta_state *ew_machine(void *engine);
+extern void clearSynthesisTail(struct delta_state *d);
+extern void pcm_cvt_clear(void *c);
 typedef ENGCALL void (*EngSetPhonemes)(void *engine, int32_t on);
 typedef ENGCALL void (*EngSetIndex)(void *engine, IndexCallback cb, void *p);
 typedef ENGCALL void (*EngSetUser)(void *engine, UserCallback cb, void *p);
@@ -589,7 +594,13 @@ THIS int32_t stl_stop(SynthThread *t)
 
         if (reset(ST_ENGINE(t), 0))
             rc = ERR_ENGINE;
+        /* What the filters still held belongs to what was stopped; left,
+           it would be the first thing heard of whatever is said next. */
+        if (ew_machine(ST_ENGINE(t)))
+            clearSynthesisTail(ew_machine(ST_ENGINE(t)));
     }
+    if (ST_CONVERTER(t))
+        pcm_cvt_clear(ST_CONVERTER(t));
 
     ST_INDEXQ(t)->total = 0;
     el_listReset(ST_INDEXQ(t));

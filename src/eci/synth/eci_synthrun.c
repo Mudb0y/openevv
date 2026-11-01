@@ -75,6 +75,7 @@ extern THIS void stw_processRemaining(SynthThread *t)
     MANGLED("?processRemaining@SynthThread@@QAEXXZ");
 extern THIS void stw_shutDown(SynthThread *t)
     MANGLED("?shutDown@SynthThread@@AAEXXZ");
+extern void stb_flushTail(SynthThread *t);
 extern THIS void stw_stopSynthesis(SynthThread *t, int32_t seq)
     MANGLED("?stopSynthesis@SynthThread@@AAEXJ@Z");
 extern THIS void stb_postRomanizerError(SynthThread *t, int32_t which)
@@ -473,8 +474,10 @@ THIS void synthesizeRun(SynthThread *t, int32_t seq)
     was_last = ST_PENDING(t) == 0;
     sy_mutexRelease(lock);
 
-    if (was_last)
+    if (was_last) {
         stw_processRemaining(t);
+        stb_flushTail(t);
+    }
     stw_shutDown(t);
     stw_stopSynthesis(t, seq);
 }

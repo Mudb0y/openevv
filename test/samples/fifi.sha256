@@ -113,10 +113,10 @@ ssml 7 41a764e191a47c1d 09427aca1499057d <speak version="1.0" xml:lang="fi-FI">T
 ssml 8 4e7da08cb262f7c7 35f8982781c11d02 <speak version="1.0" xml:lang="fi-FI">Odota<break time="500ms"/>hetki.<mark name="tassa"/> Tuolla.</speak>
 ssml 9 57f4e706d3e87bba b2c79b95a8ffd00b <speak version="1.0" xml:lang="fi-FI"><sub alias="maailmanlaajuinen verkko">WWW</sub> ja <phoneme ph="h.E.l.oU">hei</phoneme>.</speak>
 ssml 10 0c68aa08f9c63b26 1e934f48631927c0 <speak version="1.0" xml:lang="fi-FI">Hyvää päivää, a &amp; b &lt; c.</speak>
-wide 1 6e55617a6a865417 530cbdf3544b74a9 Kello on kolme ja ulkona sataa lunta.
-wide 2 1cdcf3ac8fd65372 b9da771eca91afe9 Tohtori Virtanen maksoi 1234,56 euroa 3. toukokuuta 2026 kello 19.45.
-wide 3 e04b6be0cab4872a 2bd20d3eb7cd7704 Osoite on www.esimerkki.fi/polku?q=1 ja puhelin 09 123 4567.
-wide 4 a9f3e8fb173b55ad 500b70abc71f21b5 Testi 1 2 3, ABC XYZ, yhdys-sana-testi ja ISOT KIRJAIMET.
-wide 5 df564115848774ee 22b8202cb2f6e57d Yksi sana rivilla. Ja viela yksi; lisaksi "teksti lainausmerkeissa" keskella.
-wide 6 19beac796983d4b5 2e6d89c2c0e27ccb Lentokonesuihkuturbiinimoottoriapumekaanikkoaliupseerioppilas, Kuopio ja 42 % luvusta 3,14159.
-wide 7 a1bd2ca3657c11c9 072aa993dbbaeada Han sanoi: ala tee sita! Sitten (sivumennen sanoen) 1/2 + 3/4 = 5/4; katso s. 12.
+wide 1 a901929c58fb132e 9bb122e7771aeb11 Kello on kolme ja ulkona sataa lunta.
+wide 2 0eb8bef878fc1181 b7957767cdaaf289 Tohtori Virtanen maksoi 1234,56 euroa 3. toukokuuta 2026 kello 19.45.
+wide 3 a449e827f2ebf4f1 92f745f96e7db6c7 Osoite on www.esimerkki.fi/polku?q=1 ja puhelin 09 123 4567.
+wide 4 49f33d8dd7be2491 541cdb162fc76d6b Testi 1 2 3, ABC XYZ, yhdys-sana-testi ja ISOT KIRJAIMET.
+wide 5 3ab60a992645274c 5f5bf73b62052e5d Yksi sana rivilla. Ja viela yksi; lisaksi "teksti lainausmerkeissa" keskella.
+wide 6 4a83c665cc6480b9 5b68708f3624f3ac Lentokonesuihkuturbiinimoottoriapumekaanikkoaliupseerioppilas, Kuopio ja 42 % luvusta 3,14159.
+wide 7 50b3318b40bb75ff 091402c120a7de9d Han sanoi: ala tee sita! Sitten (sivumennen sanoen) 1/2 + 3/4 = 5/4; katso s. 12.

@@ -431,6 +431,31 @@ def main():
             "the wideband voice through Speech Dispatcher is not the one "
             f"evv makes ({len(audio)} versus {len(direct) - 44} PCM bytes)"
         )
+
+        # Its filters hand each sample over nine milliseconds late, and the
+        # end of a run has to push the last of it out: left inside, the end
+        # of every utterance was heard under the start of the next, and
+        # after a stop that was the stopped speech, the tail of one typed
+        # letter under the next. b opens on its own silence, so its first
+        # ten milliseconds have to be quiet after an utterance that ended
+        # and after one that was stopped, and its last two have to be quiet
+        # because its own tail came out with it.
+        for interrupt in (None, "STOP"):
+            spoken = text if interrupt is None else " ".join([text] * 20)
+            module.speak(spoken, interrupt=interrupt)
+            audio, _, _, event = module.speak("b")
+            assert event == "702 END"
+            opening = struct.unpack("<220h", audio[:440])
+            closing = struct.unpack("<44h", audio[-88:])
+            assert max(abs(x) for x in opening) < 32, (
+                "the wideband voice began b with the end of what was said "
+                f"before it ({max(abs(x) for x in opening)} after "
+                f"{'a stop' if interrupt else 'an end'})"
+            )
+            assert max(abs(x) for x in closing) < 32, (
+                "the wideband voice kept the end of b back "
+                f"({max(abs(x) for x in closing)} in its last 2 ms)"
+            )
     finally:
         result = module.close()
         os.unlink(wideConfig)

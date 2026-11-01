@@ -113,10 +113,10 @@ ssml 7 1328a13f192e6b52 31cf8c1b62f5fcac <speak version="1.0" xml:lang="pt-BR">S
 ssml 8 d81272c703efee9d 318bb37215cc0b66 <speak version="1.0" xml:lang="pt-BR">Espere<break time="500ms"/>um pouco.<mark name="aqui"/> Ali.</speak>
 ssml 9 5fa96089d5ec3569 3d65ffe01d215c58 <speak version="1.0" xml:lang="pt-BR"><sub alias="rede mundial">WWW</sub> e <phoneme ph="h.E.l.oU">oi</phoneme>.</speak>
 ssml 10 0198e45207fc6c09 b8175a591c47fc0c <speak version="1.0" xml:lang="pt-BR">Ação e coração, a &amp; b &lt; c.</speak>
-wide 1 6bc3d9be622ece76 b3bf731dd5922621 Sao tres horas e la fora esta chovendo muito.
-wide 2 4e1b0612dc25cb02 bad30738a6b9f45f O Dr. Pereira pagou R$ 1.234,56 no dia 3 de maio de 2026 as 19h45.
-wide 3 53841c992568c840 d23b041733d401a7 O endereco e www.exemplo.com.br/caminho?q=1 e o telefone (11) 3456-7890.
-wide 4 c68dfbd23d429eb8 72c744873277894e Teste 1 2 3, ABC XYZ, palavra-com-hifen e LETRAS MAIUSCULAS.
-wide 5 ec2f5137ace98cab de7817e050bebf63 Uma palavra por linha. E mais uma; alem disso "texto entre aspas" no meio.
-wide 6 a08f5d21b4a63efb eeedcbd02ed0a9cc Inconstitucionalissimamente, Campinas e 42 % do total de 3,14159.
-wide 7 a63b28eeb0fb0b05 44d41f4ffe726773 Ele disse: nao faca isso! Depois (de passagem) 1/2 + 3/4 = 5/4; veja p. 12.
+wide 1 8c6a177f1b125e15 2fe901f0b4ff6b2c Sao tres horas e la fora esta chovendo muito.
+wide 2 fd33b621a17efaf2 ed8dee8ed9b0bb82 O Dr. Pereira pagou R$ 1.234,56 no dia 3 de maio de 2026 as 19h45.
+wide 3 f42ac9783e2e98bc 647819113436fbfd O endereco e www.exemplo.com.br/caminho?q=1 e o telefone (11) 3456-7890.
+wide 4 268e3d1ff196670c 78ae625671da9511 Teste 1 2 3, ABC XYZ, palavra-com-hifen e LETRAS MAIUSCULAS.
+wide 5 fedc870afe7e1c56 31fa0e701eb5c612 Uma palavra por linha. E mais uma; alem disso "texto entre aspas" no meio.
+wide 6 47bd98eba59d0b2f fed471048f1d885c Inconstitucionalissimamente, Campinas e 42 % do total de 3,14159.
+wide 7 3d107bff17f0b680 0b049ef4e90b2f02 Ele disse: nao faca isso! Depois (de passagem) 1/2 + 3/4 = 5/4; veja p. 12.
