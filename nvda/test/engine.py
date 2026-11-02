@@ -408,6 +408,30 @@ def pause_mode_checks():
     engine.close()
 
 
+def builtin_dict_checks():
+    """The dictionary a language carries is on until the reader says not."""
+    dll = FakeDll()
+    players = []
+    mod = engine_module(dll, players)
+    engine = mod.Engine(lambda index: None)
+    engine.open()
+
+    check("the carried dictionary starts on", engine.builtinDict, True)
+    check("asking for that again tells the engine nothing",
+          (engine.setBuiltinDict(True), mod.PARAM_BUILTIN_DICT in dll.params),
+          (True, False))
+    check("turning it off is taken", engine.setBuiltinDict(False), True)
+    check("the engine is told", dll.params.get(mod.PARAM_BUILTIN_DICT), 0)
+    check("and says so", engine.builtinDict, False)
+    check("turning it on is taken", engine.setBuiltinDict(True), True)
+    check("the engine is told that too", dll.params.get(mod.PARAM_BUILTIN_DICT), 1)
+
+    dll.refuse = mod.PARAM_BUILTIN_DICT
+    check("a refusal is reported", engine.setBuiltinDict(False), False)
+    check("and the setting stays on", engine.builtinDict, True)
+    engine.close()
+
+
 def stall_checks():
     """A player that stops taking audio must not silence the synthesiser.
 
@@ -940,6 +964,7 @@ def main():
     samplerate_checks()
     wideband_checks()
     pause_mode_checks()
+    builtin_dict_checks()
     stall_checks()
     idle_stall_checks()
     dictionary_checks()

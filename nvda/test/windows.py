@@ -348,6 +348,40 @@ def main():
     check("nor after ten cancelled ones with spelling mixed in",
           player.samples(), plain)
 
+    # ---- the dictionary US English carries, and the checkbox that turns it off
+    #
+    # "always" is a word its entry and the rules disagree about, in length as
+    # well as sound, so the samples say which was read. The setting goes through
+    # control() as the driver's does, and a round trip through another language
+    # is what a document that changes language does to it.
+
+    def samplesOf(text):
+        player.chunks = []
+        engine.post(batch(text))
+        engine._work.join()
+        return player.samples()
+
+    def builtin(enable):
+        engine.control([(engine.setBuiltinDict, (enable,))])
+        engine._work.join()
+
+    carried = samplesOf(b"always")
+    builtin(False)
+    rules = samplesOf(b"always")
+    check("turning the carried dictionary off changes what a word it holds says",
+          rules != carried, True)
+    note("always is %d samples with it and %d without" % (carried, rules))
+    if 0x40000 in engine.languages:
+        english = engine.language
+        engine.control([(engine.setLanguage, (0x40000,))])
+        engine._work.join()
+        samplesOf(b"Hallo.")
+        engine.control([(engine.setLanguage, (english,))])
+        engine._work.join()
+        check("and it stays off through a change of language", samplesOf(b"always"), rules)
+    builtin(True)
+    check("turning it back on gives the word back", samplesOf(b"always"), carried)
+
     # ---- and shutting down, which is what switching synthesiser away does --
 
     try:
