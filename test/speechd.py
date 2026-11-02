@@ -503,7 +503,10 @@ def main():
         ("Beatles - Abbey Road.", "Beatles - Abbey Road."),
         ("Ages 3-5 only.", "Ages 3-5 only."),
         ("It costs $5.50 today.", "It costs $5.50 today."),
-        ("Set $HOME now.", "Set  HOME now."),
+        ("Set $HOME now.", "Set $HOME now."),
+        # A shell prompt, whose dollar Speech Dispatcher leaves for the
+        # synthesiser to read at every level below all.
+        ("stas at Precision:~$ ls", "stas at Precision: $ ls"),
         ("Go ( back ) now.", "Go   back   now."),
         ("If a > b then.", "If a   b then."),
         # A name Speech Dispatcher writes in front of the symbol it names.

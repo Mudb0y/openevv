@@ -577,12 +577,14 @@ static int byte_is_a_character(unsigned char value, int utf8)
 }
 
 /* What Speech Dispatcher's symbol tables keep in the text for the
- * synthesiser rather than for the listener, and which the engine never names:
- * the hyphen and the two dashes, which it pauses at as at a comma between
- * words and reads as a range or a minus between numbers; and a currency sign,
- * which it reads as money, but names on its own -- $HOME is dollar home in
- * every language -- so only beside a number. The guillemets are kept by the
- * tables too and are not here: German names them whatever they touch. */
+ * synthesiser: the hyphen and the two dashes, which the engine pauses at as
+ * at a comma between words and reads as a range or a minus between numbers;
+ * and a currency sign, which the tables leave for the synthesiser to read
+ * below the level where they would name it themselves, and which the engine
+ * reads as money beside a number and by its name anywhere else, so that the
+ * $ of a shell prompt is heard. The guillemets are kept by the tables too and
+ * are not here: they are kept for the pause alone, and German names them
+ * whatever they touch. */
 static int dash(unsigned char value)
 {
     return value == '-' || value == 0x96 || value == 0x97;
@@ -592,19 +594,6 @@ static int currency(unsigned char value)
 {
     return value == '$' || value == 0x80 || value == 0x83 || value == 0xa2
         || value == 0xa3 || value == 0xa4 || value == 0xa5;
-}
-
-static int beside_a_number(const unsigned char *text, const unsigned char *at)
-{
-    const unsigned char *before = at;
-    const unsigned char *after = at + 1;
-
-    if (*after == ' ')
-        after++;
-    if (before > text && before[-1] == ' ')
-        before--;
-    return (*after >= '0' && *after <= '9')
-        || (before > text && before[-1] >= '0' && before[-1] <= '9');
 }
 
 static int opening_bracket(unsigned char value)
@@ -685,9 +674,8 @@ static void suppress_spoken_punctuation(char *text, int utf8)
             at++;
             continue;
         }
-        if (dash(value) || opening_bracket(value) || closing_bracket(value)
-            || (currency(value)
-                && beside_a_number((unsigned char *)text, at))) {
+        if (dash(value) || currency(value) || opening_bracket(value)
+            || closing_bracket(value)) {
             at++;
             continue;
         }
