@@ -277,6 +277,8 @@ jobs:
             build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp-fifi-ptbr.so
           python3 test/lib/dictlangs.py \
             build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp-fifi-ptbr.so
+          python3 test/lib/bigdict.py \
+            build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp-fifi-ptbr.so
           python3 test/lib/pauses.py \
             build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp-fifi-ptbr.so
           python3 test/lib/brackets.py \
@@ -435,6 +437,14 @@ jobs:
           "from ctypes: $havep"
           "wanted:      $want"
           if ($havep -ne $want) { throw "the library says something else through ctypes" }
+
+      # Where issue 49 was found: a dictionary the size of the community's
+      # root file given back, in the kind of process an add-on loads into.
+      - name: Give a big dictionary back quickly
+        shell: pwsh
+        run: |
+          python test/lib/bigdict.py eci.dll
+          if ($LASTEXITCODE -ne 0) { throw "bigdict.py ended with $LASTEXITCODE" }
 
       # Wine runs the same instructions, but this is the convention's home.
       - name: Check a landing puts back every register Windows asks for
